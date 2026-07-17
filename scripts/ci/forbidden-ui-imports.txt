@@ -1,0 +1,15 @@
+# Forbidden upstream SDK / path patterns in apps/web (23 R-ARCH-01).
+# One regex per line. CI fails if any match in apps/web source.
+from ['\"]@?litellm
+from ['\"]openai
+from ['\"]@anthropic
+from ['\"]airbyte
+from ['\"]openfga
+from ['\"]@?openfga
+from ['\"]node-vault
+from ['\"]@?minio
+require\(['\"]litellm
+require\(['\"]openai
+mybuddy-v01/
+dify/api
+openocta/

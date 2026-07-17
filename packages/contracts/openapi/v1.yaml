@@ -1,0 +1,712 @@
+openapi: 3.0.3
+info:
+  title: aos-api
+  version: 0.3.0
+  description: >
+    Stable contract surface per docs/palantier/20_tech/T-API-aos-api稳定契约.md.
+    Aligned Wave-0～5 + G-ALIGN (47) — main paths listed; see T-API for full narrative.
+servers:
+  - url: /v1
+paths:
+  /health:
+    get:
+      operationId: health
+      summary: Liveness
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+  /ready:
+    get:
+      operationId: ready
+      summary: Readiness
+      responses:
+        "200":
+          description: ready
+  /me:
+    get:
+      operationId: me
+      summary: Current user · roles · Markings
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /authz/status:
+    get:
+      operationId: authzStatus
+      summary: OpenFGA facade status (local vs remote sidecar · schemes 58/61)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: mode · reachable · storeId · modelVersion
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /authz/model:
+    get:
+      operationId: authzModel
+      summary: OpenFGA type/relation catalog (scheme 61 aos-prod-v1)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: modelVersion · types · relations
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /authz/check:
+    post:
+      operationId: authzCheck
+      summary: OpenFGA-shaped authorization check (T-CROSS · schemes 55/58)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [object]
+              properties:
+                user:
+                  type: string
+                  description: defaults to user:{sub}
+                relation:
+                  type: string
+                  default: viewer
+                object:
+                  type: string
+                  example: object:WorkOrder:wo-fga-demo
+      responses:
+        "200":
+          description: allowed boolean
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /authz/tuples:
+    post:
+      operationId: authzWriteTuple
+      summary: Write authz tuple (local + optional OpenFGA Write)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [object]
+              properties:
+                user:
+                  type: string
+                relation:
+                  type: string
+                  default: viewer
+                object:
+                  type: string
+      responses:
+        "200":
+          description: ok
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /buddy/ask:
+    post:
+      operationId: buddyAsk
+      summary: v0.1 compatible Buddy ask (permanent)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BuddyAskRequest"
+      responses:
+        "200":
+          description: answer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BuddyAskResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /aip/chat:
+    post:
+      operationId: aipChat
+      summary: Buddy / Studio chat (maps from buddy/ask)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+        "501":
+          description: not implemented in Wave-0
+  /modules:
+    get:
+      operationId: listModules
+      summary: Module list (T08)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+        "501":
+          description: Wave-1
+    post:
+      operationId: createModule
+      summary: Create Module
+      security:
+        - bearerAuth: []
+      responses:
+        "201":
+          description: created
+        "501":
+          description: Wave-1
+  /object-sets/query:
+    post:
+      operationId: objectSetsQuery
+      summary: filters≤10 · page · pageSize≤1000
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+        "501":
+          description: Wave-1
+  /actions/execute:
+    post:
+      operationId: actionsExecute
+      summary: Write path — Idempotency-Key required; production write only via Draft
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Allow-Conflicts
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                draftId:
+                  type: string
+                actionTypeId:
+                  type: string
+                objectType:
+                  type: string
+                objectId:
+                  type: string
+                payload:
+                  type: object
+                  additionalProperties: true
+                proposed:
+                  type: object
+                  additionalProperties: true
+                autoApprove:
+                  type: boolean
+                  default: false
+      responses:
+        "200":
+          description: ok (proposed draft or production written)
+        "400":
+          description: missing Idempotency-Key / validation
+        "403":
+          description: FORBIDDEN markings
+        "409":
+          description: field conflict
+  /modules/{id}:
+    get:
+      operationId: getModule
+      summary: Get Module
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ok
+        "403":
+          description: FORBIDDEN
+        "404":
+          description: missing
+    patch:
+      operationId: patchModule
+      summary: Patch Module definition
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ok
+  /modules/{id}/publish:
+    post:
+      operationId: publishModule
+      summary: Apollo Publish Adapter (Lite)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: published
+  /modules/{id}/runtime:
+    get:
+      operationId: moduleRuntime
+      summary: Module runtime schema
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ok
+  /aip/models:
+    get:
+      operationId: listModels
+      summary: Routable models
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+  /aip/providers:
+    get:
+      operationId: listProviders
+      summary: Model providers
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+  /aip/evals:
+    get:
+      operationId: getEvals
+      summary: Eval gate status
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+    post:
+      operationId: setEvals
+      summary: Set eval gate
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+  /aip/capabilities:
+    get:
+      operationId: listCapabilities
+      summary: Capability Facade (07b)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+    post:
+      operationId: registerCapability
+      summary: Register capability
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+  /aip/capabilities/{id}/invoke:
+    post:
+      operationId: invokeCapability
+      summary: Capability invoke (sync or job)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ok
+  /functions/{id}/invoke:
+    post:
+      operationId: invokeFunction
+      summary: Function runtime invoke
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ok
+  /apollo/fleet:
+    get:
+      operationId: apolloFleet
+      summary: Hub fleet (Channel/Spoke catalog · scheme 66)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: hub · spokes · channels
+  /apollo/channels:
+    get:
+      operationId: apolloChannels
+      summary: List release channels
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: items
+  /apollo/channels/{id}:
+    get:
+      operationId: apolloChannelGet
+      summary: Channel detail
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ok
+        "404":
+          description: missing
+  /apollo/channels/{id}/promote:
+    post:
+      operationId: apolloChannelPromote
+      summary: Promote channel (dev→staging→stable)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ok
+        "400":
+          description: blocked
+  /apollo/channels/{id}/recall:
+    post:
+      operationId: apolloChannelRecall
+      summary: Recall channel toward previous rank
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ok
+        "400":
+          description: blocked
+  /apollo/spokes:
+    get:
+      operationId: apolloSpokes
+      summary: List spokes
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: items
+  /apollo/spokes/{id}:
+    get:
+      operationId: apolloSpoke
+      summary: Spoke detail (PG catalog · lite|full metadata)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ok
+        "404":
+          description: missing
+  /plugins:
+    get:
+      operationId: listPlugins
+      summary: Unified plugin catalog
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+  /metrics:
+    get:
+      operationId: metrics
+      summary: RED metrics (TX.2)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+  /auth/oidc:
+    get:
+      operationId: authOidcConfig
+      summary: Public OIDC config (no secrets)
+      responses:
+        "200":
+          description: ok
+  /auth/jwks:
+    get:
+      operationId: authJwks
+      summary: Dev-shaped JWKS (or proxy to Keycloak via AOS_OIDC_JWKS_URL)
+      responses:
+        "200":
+          description: JWKS
+  /auth/token:
+    post:
+      operationId: authToken
+      summary: Dev grantType=dev → JWT (HS256 or RS256)
+      responses:
+        "200":
+          description: accessToken
+  /ontology/object-types:
+    get:
+      operationId: listObjectTypes
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+    post:
+      operationId: createObjectType
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+  /ontology/link-types:
+    get:
+      operationId: listLinkTypes
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+    post:
+      operationId: createLinkType
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+  /datasets:
+    get:
+      operationId: listDatasets
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+  /datasets/{rid}:
+    get:
+      operationId: getDataset
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: rid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ok
+  /syncs:
+    get:
+      operationId: listSyncs
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+    post:
+      operationId: createSync
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+  /media-sets:
+    get:
+      operationId: listMediaSets
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+    post:
+      operationId: createMediaSet
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+  /pipelines:
+    get:
+      operationId: listPipelines
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+    post:
+      operationId: createPipeline
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+  /code-repos:
+    get:
+      operationId: listCodeRepos
+      summary: Dev code-repo catalog (not a git host)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+  /apollo/ferry/status:
+    get:
+      operationId: ferryStatus
+      summary: Ferry status (HMAC + image layer; skopeo/cosign probed)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: deferred=false mode=mvp-hmac+images
+  /apollo/ferry/export:
+    post:
+      operationId: ferryExport
+      summary: Air-gap ferry export (signed tar.gz + artifacts/images)
+      description: >
+        T5.6 — HMAC on manifest; artifacts/images.json signed (cosign or cosign-dev-hmac).
+        includeImages=false for assets-only (scheme 53 compat).
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: contentBase64 tar.gz
+  /apollo/ferry/import:
+    post:
+      operationId: ferryImport
+      summary: Air-gap ferry import (reject if signature missing)
+      description: >
+        T09 A6 — missing manifest signature refused;
+        scheme 56 — missing images.sig when images.json present refused.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: verified
+        "403":
+          description: signature missing/invalid
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+  schemas:
+    ErrorBody:
+      type: object
+      required: [code, message, traceId]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        traceId:
+          type: string
+    BuddyAskRequest:
+      type: object
+      required: [query]
+      properties:
+        query:
+          type: string
+          minLength: 1
+        context:
+          type: object
+          additionalProperties: true
+    BuddyAskResponse:
+      type: object
+      required: [answer, traceId]
+      properties:
+        answer:
+          type: string
+        traceId:
+          type: string
+        sources:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+  responses:
+    Unauthorized:
+      description: AUTH_REQUIRED
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"

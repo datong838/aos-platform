@@ -1,0 +1,13 @@
+# LiteLLM proxy config — Dev only. Upstream = aos-dev-llm-echo (swap to real vendor later).
+model_list:
+  - model_name: aos-dev
+    litellm_params:
+      model: openai/aos-echo
+      api_base: http://aos-dev-llm-echo:8081/v1
+      api_key: os.environ/AOS_LLM_UPSTREAM_KEY
+
+litellm_settings:
+  drop_params: true
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

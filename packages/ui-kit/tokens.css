@@ -1,0 +1,37 @@
+/* TX.1 / T-UI — keys aligned with foundry/html demo.css v1.6.5 */
+:root,
+html[data-aos-theme="dark"] {
+  --aos-bg: #020617;
+  --aos-aside: rgba(15, 23, 42, 0.92);
+  --aos-header: rgba(2, 6, 23, 0.92);
+  --aos-card: rgba(15, 23, 42, 0.72);
+  --aos-elevated: #0f172a;
+  --aos-border: rgba(255, 255, 255, 0.08);
+  --aos-border-strong: rgba(255, 255, 255, 0.14);
+  --aos-text: #f3f4f6;
+  --aos-muted: #9ca3af;
+  --aos-faint: #6b7280;
+  --aos-hover: rgba(255, 255, 255, 0.04);
+  --aos-active: rgba(255, 255, 255, 0.06);
+  --aos-accent: rgb(34 211 238);
+  --aos-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --aos-input-bg: #0f172a;
+}
+
+html[data-aos-theme="light"] {
+  --aos-bg: #f1f5f9;
+  --aos-aside: #ffffff;
+  --aos-header: rgba(255, 255, 255, 0.92);
+  --aos-card: #ffffff;
+  --aos-elevated: #ffffff;
+  --aos-border: rgba(15, 23, 42, 0.1);
+  --aos-border-strong: rgba(15, 23, 42, 0.16);
+  --aos-text: #0f172a;
+  --aos-muted: #475569;
+  --aos-faint: #94a3b8;
+  --aos-hover: rgba(15, 23, 42, 0.04);
+  --aos-active: rgba(15, 23, 42, 0.06);
+  --aos-accent: rgb(8 145 178);
+  --aos-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --aos-input-bg: #f8fafc;
+}

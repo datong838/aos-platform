@@ -1,0 +1,21 @@
+# Dev secrets — never commit real production credentials.
+# This file holds LOCAL_DEV placeholders only.
+deploy/dev/.secrets.env
+deploy/dev/*.log
+deploy/dev/demo-pids/
+deploy/dev/openfga-store.env
+deploy/dev/_skopeo_probe/
+deploy/dev/_ferry_onsite/
+deploy/dev/cosign/
+deploy/dev/sbom-syft.json
+deploy/dev/trivy-fs.json
+deploy/dev/syft-trivy-report.md
+.env
+.env.local
+**/.env
+!**/.env.example
+apps/web/node_modules/
+apps/web/dist/
+**/__pycache__/
+*.egg-info/
+.venv/
