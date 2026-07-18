@@ -1,7 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./shell/AppShell";
 import { OverviewPage } from "./pages/OverviewPage";
-import { DemoPage } from "./pages/DemoPage";
 import { WorkshopListPage } from "./pages/WorkshopListPage";
 import { InboxPage } from "./pages/InboxPage";
 import { PublishPage } from "./pages/PublishPage";
@@ -34,7 +33,6 @@ export function App() {
       <Routes>
         <Route element={<AppShell />}>
           <Route index element={<OverviewPage />} />
-          <Route path="demo" element={<DemoPage />} />
           <Route path="workshop" element={<WorkshopListPage />} />
           <Route path="workshop/inbox" element={<InboxPage />} />
           <Route path="workshop/canvas" element={<CanvasPage />} />

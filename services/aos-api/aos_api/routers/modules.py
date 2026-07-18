@@ -23,7 +23,8 @@ class CreateModuleRequest(BaseModel):
     objectType: str | None = None
     markings: list[str] | None = None
     entryPath: str | None = None
-    widgets: list[str] | None = None
+    # 75 W1: may be string[] (legacy) or layout node objects
+    widgets: list[Any] | None = None
     buddyBound: bool | None = None
 
 
@@ -33,7 +34,7 @@ class PatchModuleRequest(BaseModel):
     objectType: str | None = None
     markings: list[str] | None = None
     entryPath: str | None = None
-    widgets: list[str] | None = None
+    widgets: list[Any] | None = None
     buddyBound: bool | None = None
     status: str | None = None
 

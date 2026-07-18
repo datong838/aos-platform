@@ -177,4 +177,4 @@ def validate_action(
                 status_code=400,
                 details=result,
             )
-            return {"ok": True, "actionTypeId": body.actionTypeId}
+        return {"ok": True, "actionTypeId": body.actionTypeId}

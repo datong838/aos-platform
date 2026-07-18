@@ -21,6 +21,20 @@ def test_providers_never_leak_plaintext_key(monkeypatch):
     assert payload["apiKeyRef"].startswith("vault:")
 
 
+def test_providers_agnes_when_configured(monkeypatch):
+    monkeypatch.setenv("AGNES_API_KEY", "sk-test-only")
+    monkeypatch.setenv("AGNES_BASE_URL", "https://example.com/v1")
+    monkeypatch.setenv("AGNES_TEXT_MODEL", "agnes-2.0-flash")
+    monkeypatch.setenv("AGNES_IMAGE_MODEL", "agnes-image-2.1-flash")
+    monkeypatch.delenv("AOS_LITELLM_URL", raising=False)
+    payload = providers_payload()
+    assert payload["sidecar"] == "agnes-openai-compatible"
+    assert payload["endpoint"] == "https://example.com/v1"
+    assert payload["defaultTextModel"] == "agnes-2.0-flash"
+    assert any(i["id"] == "agnes-2.0-flash" for i in payload["items"])
+    assert "sk-test-only" not in str(payload)
+
+
 def test_chat_via_api_fallback(client, auth_headers, monkeypatch):
     monkeypatch.delenv("AOS_LITELLM_URL", raising=False)
     monkeypatch.setenv("AOS_LITELLM_FALLBACK", "mock")

@@ -226,6 +226,8 @@ def providers_payload() -> dict[str, Any]:
             "items": items,
             "sidecar": "agnes-openai-compatible",
             "apiKeyRef": key_ref(),
+            "endpoint": agnes_base_url(),
+            "defaultTextModel": agnes_text_model(),
             "probe": {"ok": True, "sidecar": "agnes"},
         }
 

@@ -1,116 +1,262 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { apiGet, apiPost, JsonBlock, S2Chrome, useJsonGet } from "./shared";
+import { apiGet, apiPost } from "../../api/client";
+import {
+  BpBanner,
+  BpDebugPanel,
+  BpKvList,
+  BpLineageTimeline,
+  BpLinkRow,
+  BpMetricGrid,
+  BpPropGrid,
+  BpSplit,
+  BpTable,
+  BpTabs,
+  BpToolbar,
+} from "./blueprintUi";
+import { JsonBlock, S2Chrome, useJsonGet } from "./shared";
 
-/** S2 knife-3 ([49]) — remaining stubs → live / honest deferred */
-
+/** 77 · 对齐 okf-funnel / funnel.html */
 export function OkfFunnelPage() {
   const funnel = useJsonGet<Record<string, unknown>>("/v1/funnel/WorkOrder/status");
-  const modules = useJsonGet<{ items: unknown[] }>("/v1/modules");
-  const [lint, setLint] = useState<unknown>(null);
+  const modules = useJsonGet<{ items: { id: string; name?: string }[] }>("/v1/modules");
+  const [industry, setIndustry] = useState("ecom");
+  const [lint, setLint] = useState<{ ok?: boolean; issues?: unknown[] } | null>(null);
   const [msg, setMsg] = useState("");
+
+  const columns = [
+    { src: "order_id", dst: "WorkOrder.id", ok: true },
+    { src: "title", dst: "WorkOrder.title", ok: true },
+    { src: "status", dst: "WorkOrder.status", ok: true },
+    { src: "site", dst: "WorkOrder.site", ok: true },
+  ];
 
   async function runLint() {
     setMsg("");
-    const r = await apiPost("/v1/ontology/constitution/lint", {
+    const r = await apiPost<{ ok?: boolean; issues?: unknown[] }>("/v1/ontology/constitution/lint", {
       id: "WorkOrder",
       name: "WorkOrder",
       published: true,
-      properties: [{ name: "status", type: "string" }],
+      properties: [
+        { name: "status", type: "string" },
+        { name: "site", type: "string" },
+      ],
     });
     setLint(r);
-    setMsg("Constitution lint 完成");
+    setMsg(r.ok ? "Lint 通过" : "Lint 有告警");
   }
 
   return (
-    <S2Chrome title="OKF 行业漏斗" lede="对齐 okf-funnel · Constitution + Funnel + Module（行业全量后置）">
-      <button type="button" className="btn" onClick={() => void runLint().catch((e) => setMsg(String(e)))}>
-        跑 Constitution Lint
-      </button>
-      <button
-        type="button"
-        className="btn"
-        style={{ marginLeft: 8 }}
-        onClick={() => {
-          funnel.reload();
-          modules.reload();
-        }}
-      >
-        刷新
-      </button>
+    <S2Chrome title="OKF 行业漏斗" lede="对齐 okf-funnel · 行业模板 + 列映射 + Constitution">
+      <BpToolbar>
+        <button type="button" className="btn" onClick={() => void runLint().catch((e) => setMsg(String(e)))}>
+          Lint 检查
+        </button>
+        <button type="button" className="btn" onClick={() => { funnel.reload(); modules.reload(); }}>
+          刷新
+        </button>
+        <Link to="/ontology/funnel" className="muted">
+          通用漏斗 →
+        </Link>
+      </BpToolbar>
       {msg && <p className="aos-text">{msg}</p>}
       {(funnel.err || modules.err) && <p className="error">{funnel.err || modules.err}</p>}
-      <h2 className="aos-text" style={{ fontSize: "0.875rem" }}>
-        Funnel · WorkOrder
-      </h2>
-      <JsonBlock value={funnel.data} />
-      <h2 className="aos-text" style={{ fontSize: "0.875rem" }}>
-        Modules（OKF 绑包入口）
-      </h2>
-      <JsonBlock value={modules.data?.items} />
-      {lint != null && (
-        <>
-          <h2 className="aos-text" style={{ fontSize: "0.875rem" }}>
-            Lint
-          </h2>
-          <JsonBlock value={lint} />
-        </>
-      )}
-      <p className="muted">
-        相关：
-        <Link to="/ontology/funnel"> 通用漏斗</Link> ·
-        <Link to="/workshop/module-interface"> 模块接口</Link>
-      </p>
+
+      <BpSplit
+        left={
+          <>
+            <h2 className="aos-text" style={{ fontSize: "0.875rem" }}>
+              OKF · 行业垂直定制
+            </h2>
+            {[
+              { id: "ecom", label: "跨境电商 · WorkOrder" },
+              { id: "env", label: "环科院 · Pollutant" },
+              { id: "bio", label: "生物 · Batch" },
+            ].map((i) => (
+              <button
+                key={i.id}
+                type="button"
+                className={industry === i.id ? "nav-link active card" : "nav-link card"}
+                style={{ width: "100%", textAlign: "left", marginBottom: 4 }}
+                onClick={() => setIndustry(i.id)}
+              >
+                {i.label}
+              </button>
+            ))}
+            <p className="muted" style={{ fontSize: "0.75rem", marginTop: 12 }}>
+              源 Dataset: <Link to="/data/datasets">WorkOrder-demo</Link>
+            </p>
+          </>
+        }
+        right={
+          <>
+            <h1 className="aos-text" style={{ fontSize: "1rem" }}>
+              列 → Object Type 映射
+            </h1>
+            <BpMetricGrid
+              items={[
+                { label: "完成度", value: `${Math.round((columns.filter((c) => c.ok).length / columns.length) * 100)}%`, tone: "ok" },
+                { label: "Funnel stage", value: String(funnel.data?.stage || "—"), tone: "muted" },
+                { label: "Modules", value: modules.data?.items?.length ?? 0, tone: "muted" },
+              ]}
+            />
+            <BpTable
+              columns={["源列", "目标 Property", "状态"]}
+              rows={columns.map((c) => [
+                c.src,
+                c.dst,
+                c.ok ? <span className="aos-text">已映射</span> : <span className="error">待补</span>,
+              ])}
+            />
+            {lint && (
+              <BpBanner tone={lint.ok ? "info" : "warn"}>
+                Constitution lint ok={String(lint.ok)} · issues={lint.issues?.length ?? 0}
+              </BpBanner>
+            )}
+            <BpLinkRow
+              links={[
+                { to: "/workshop/module-interface", label: "模块接口" },
+                { to: "/ontology", label: "本体管理" },
+              ]}
+            />
+          </>
+        }
+      />
     </S2Chrome>
   );
 }
 
+/** 85 · 对齐 pipeline-proposals · 待审/历史 Tab + 提案卡 */
 export function PipelineProposalsPage() {
-  const { data, err, reload } = useJsonGet<{ items: unknown[] }>("/v1/pipelines");
+  const { data, err, reload } = useJsonGet<{ items: { id: string; sourceId?: string; target?: string }[] }>(
+    "/v1/pipelines",
+  );
+  const [tab, setTab] = useState<"proposals" | "history">("proposals");
   const [msg, setMsg] = useState("");
+  const [diffId, setDiffId] = useState<string | null>(null);
 
   async function propose() {
     const id = `prop-${Date.now().toString(36)}`;
-    await apiPost("/v1/pipelines", { id, sourceId: "src-demo" });
+    await apiPost("/v1/pipelines", { id, sourceId: "demo-file-wo" });
     setMsg(`已创建管道提案 ${id}`);
     reload();
   }
 
+  const historyRows = [
+    ["v12 · 合并提案 #prop-115", "7 天前 · 张三"],
+    ["v11 · 修复空值过滤", "14 天前 · 李四"],
+    ["v10 · 初始上线", "30 天前 · 系统"],
+  ];
+
   return (
-    <S2Chrome title="管道提案" lede="对齐 pipeline-proposals · 管道即提案（MVP）">
-      <button type="button" className="btn" onClick={() => void propose().catch((e) => setMsg(String(e)))}>
-        新建提案
-      </button>
-      <button type="button" className="btn" style={{ marginLeft: 8 }} onClick={() => reload()}>
-        刷新
-      </button>
+    <S2Chrome title="管道提案与历史" lede="变更提案审阅与版本回溯 · 管道即提案">
+      <BpToolbar>
+        <button type="button" className="btn" onClick={() => void propose().catch((e) => setMsg(String(e)))}>
+          新建提案
+        </button>
+        <button type="button" className="btn" onClick={() => reload()}>
+          刷新
+        </button>
+        <Link to="/data/pipelines" className="muted">
+          打开管道画布 →
+        </Link>
+      </BpToolbar>
+
+      <BpTabs
+        tabs={[
+          { id: "proposals", label: "待审提案" },
+          { id: "history", label: "历史版本" },
+        ]}
+        active={tab}
+        onChange={(id) => setTab(id as "proposals" | "history")}
+      />
+
       {msg && <p className="aos-text">{msg}</p>}
       {err && <p className="error">{err}</p>}
-      <JsonBlock value={data?.items} />
-      <p className="muted">
-        构建明细见 <Link to="/data/pipelines">管道构建</Link>
-      </p>
+
+      {tab === "proposals" && (
+        <div className="bp-discover-grid">
+          {(data?.items || []).slice(0, 5).map((p, i) => (
+            <div
+              key={p.id}
+              className={`bp-discover-card bp-discover-${i === 0 ? "violet" : "muted"}`}
+            >
+              <div className="bp-discover-head">
+                <span className="bp-discover-title">提案 {p.id}</span>
+                <span className="bp-tag bp-tag-warn">待审</span>
+              </div>
+              <p className="bp-discover-meta">
+                source={p.sourceId} → {p.target || "dataset"}
+              </p>
+              <p className="muted" style={{ fontSize: "0.75rem" }}>
+                +1 节点 Use LLM · 输出 summary_zh（示意）
+              </p>
+              <div className="bp-object-actions">
+                <button type="button" className="btn">
+                  合并到主分支
+                </button>
+                <button type="button" className="btn" onClick={() => setDiffId(p.id)}>
+                  预览 Diff
+                </button>
+              </div>
+            </div>
+          ))}
+          {(data?.items?.length || 0) === 0 && (
+            <p className="muted">暂无提案 · 点「新建提案」</p>
+          )}
+        </div>
+      )}
+
+      {tab === "history" && (
+        <BpTable columns={["版本", "说明"]} rows={historyRows} />
+      )}
+
+      {diffId && (
+        <BpBanner tone="info">
+          Diff 预览 · {diffId} · + Use LLM 节点 · + summary_zh 字段（引擎后置 · 当前为蓝图占位）
+        </BpBanner>
+      )}
+
+      <BpLinkRow links={[{ to: "/data/pipelines", label: "← 管道列表" }]} />
     </S2Chrome>
   );
 }
 
+/** 77 · 对齐 code-repositories.html */
 export function CodeReposPage() {
-  const { data, err, reload } = useJsonGet<{ items: unknown[]; store?: string }>("/v1/code-repos");
+  const { data, err, reload } = useJsonGet<{
+    items: { id: string; name: string; url?: string; branch?: string; status?: string }[];
+    store?: string;
+  }>("/v1/code-repos");
+
   return (
     <S2Chrome title="代码库" lede="对齐 code-repositories · Dev 目录（非 Git 主机）">
-      <button type="button" className="btn" onClick={() => reload()}>
-        刷新
-      </button>
+      <BpToolbar>
+        <button type="button" className="btn" onClick={() => reload()}>
+          刷新
+        </button>
+      </BpToolbar>
       {err && <p className="error">{err}</p>}
       <p className="muted">store={data?.store ?? "—"}</p>
-      <JsonBlock value={data?.items} />
+      <BpTable
+        columns={["仓库", "URL", "分支", "状态"]}
+        rows={(data?.items || []).map((r) => [
+          <strong>{r.name}</strong>,
+          <span className="muted">{r.url}</span>,
+          r.branch || "—",
+          r.status || "—",
+        ])}
+      />
     </S2Chrome>
   );
 }
 
+/** 77 · 对齐 lineage.html */
 export function DataLineagePage() {
-  const datasets = useJsonGet<{ items: { rid: string; name?: string }[] }>("/v1/datasets");
-  const syncs = useJsonGet<{ items: unknown[] }>("/v1/syncs");
+  const datasets = useJsonGet<{ items: { rid: string; name?: string; pipelineId?: string; sourceId?: string }[] }>(
+    "/v1/datasets",
+  );
+  const syncs = useJsonGet<{ items: { id: string; sourceId?: string; status?: string }[] }>("/v1/syncs");
   const [history, setHistory] = useState<unknown>(null);
   const [rid, setRid] = useState("");
 
@@ -121,37 +267,65 @@ export function DataLineagePage() {
   }
 
   return (
-    <S2Chrome title="数据沿袭" lede="对齐 data lineage · datasets history + syncs（≠ AIP 决策谱系）">
-      <button
-        type="button"
-        className="btn"
-        onClick={() => {
-          datasets.reload();
-          syncs.reload();
-        }}
-      >
-        刷新
-      </button>
+    <S2Chrome title="数据沿袭" lede="对齐 lineage · Source → Sync → Dataset → Build">
+      <BpToolbar>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => {
+            datasets.reload();
+            syncs.reload();
+          }}
+        >
+          刷新
+        </button>
+        <Link to="/aip/lineage" className="muted">
+          AIP 决策谱系 →
+        </Link>
+      </BpToolbar>
       {(datasets.err || syncs.err) && <p className="error">{datasets.err || syncs.err}</p>}
+
       <h2 className="aos-text" style={{ fontSize: "0.875rem" }}>
-        Datasets
+        沿袭链
       </h2>
-      <ul className="card-list">
-        {(datasets.data?.items || []).map((d) => (
-          <li key={d.rid} className="card">
-            <strong>{d.name || d.rid}</strong>{" "}
-            <span className="muted">{d.rid}</span>
+      {(datasets.data?.items || []).map((d) => {
+        const syncId =
+          (syncs.data?.items || []).find((s) => s.sourceId === d.sourceId)?.id || "—";
+        return (
+          <div key={d.rid} style={{ marginBottom: "1rem" }}>
+            <div className="bp-section-label">{d.name || d.rid}</div>
+            <BpLineageTimeline
+              steps={[
+                { phase: "Source", title: d.sourceId || "—", tone: "input" },
+                { phase: "Sync", title: syncId, subtitle: d.sourceId, tone: "process" },
+                { phase: "Pipeline", title: d.pipelineId || "—", tone: "process" },
+                { phase: "Dataset", title: d.rid, subtitle: d.name, tone: "output" },
+              ]}
+            />
             <button
               type="button"
               className="btn"
-              style={{ marginLeft: 8 }}
+              style={{ marginTop: 8 }}
               onClick={() => void loadHistory(d.rid).catch(console.error)}
             >
-              History
+              查看 History
             </button>
-          </li>
-        ))}
-      </ul>
+          </div>
+        );
+      })}
+
+      {(syncs.data?.items || []).length > 0 && (
+        <>
+          <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: "1rem" }}>
+            Syncs
+          </h2>
+          <BpTable
+            columns={["Sync", "Source", "状态"]}
+            rows={(syncs.data?.items || []).map((s) => [s.id, s.sourceId || "—", s.status || "—"])}
+          />
+        </>
+      )}
+
       {history != null && (
         <>
           <h2 className="aos-text" style={{ fontSize: "0.875rem" }}>
@@ -160,13 +334,11 @@ export function DataLineagePage() {
           <JsonBlock value={history} />
         </>
       )}
-      <h2 className="aos-text" style={{ fontSize: "0.875rem" }}>
-        Syncs
-      </h2>
-      <JsonBlock value={syncs.data?.items} />
-      <p className="muted">
-        决策谱系请用 <Link to="/aip/lineage">AIP 谱系</Link>
-      </p>
+      {(datasets.data?.items?.length || 0) === 0 && (
+        <p className="muted">
+          空 · <Link to="/data">确保演示种子</Link>
+        </p>
+      )}
     </S2Chrome>
   );
 }
@@ -288,11 +460,52 @@ export function ApolloReleasePage() {
         })}
       </ul>
       <h2 className="aos-text" style={{ fontSize: "0.875rem" }}>
-        Fleet
+        Hub 舰队
       </h2>
-      <JsonBlock value={fleet.data} />
-      {action != null && <JsonBlock value={action} />}
-      {upgrade != null && <JsonBlock value={upgrade} />}
+      {fleet.data && (
+        <>
+          <BpMetricGrid
+            items={[
+              {
+                label: "Hub",
+                value: String((fleet.data as { hub?: { id?: string; status?: string } }).hub?.id || "—"),
+                tone: "ok",
+              },
+              {
+                label: "Hub 状态",
+                value: String((fleet.data as { hub?: { status?: string } }).hub?.status || "—"),
+                tone: "ok",
+              },
+              {
+                label: "Spokes",
+                value: String((fleet.data as { spokes?: unknown[] }).spokes?.length ?? 0),
+                tone: "muted",
+              },
+              {
+                label: "Full 运行时",
+                value: (fleet.data as { hub?: { fullSpokeRuntimeDeferred?: boolean } }).hub
+                  ?.fullSpokeRuntimeDeferred
+                  ? "延期"
+                  : "—",
+                tone: "warn",
+              },
+            ]}
+          />
+          <BpTable
+            columns={["Channel", "状态", "rank"]}
+            rows={(
+              (fleet.data as { channels?: { id: string; name?: string; status?: string; rank?: number }[] })
+                .channels || []
+            ).map((c) => [c.name || c.id, c.status || "—", String(c.rank ?? "—")])}
+          />
+        </>
+      )}
+      {action != null && (
+        <BpDebugPanel value={action} title="最近操作 JSON" />
+      )}
+      {upgrade != null && (
+        <BpDebugPanel value={upgrade} title="Upgrade JSON" />
+      )}
       <p className="muted">
         变更审批 <Link to="/apollo/change">Change</Link> · 资产包 <Link to="/apollo/assets">Assets</Link> ·
         Full Spoke 运行时仍延期（目录骨架 ✅）
@@ -353,7 +566,23 @@ export function ApolloFerryPage() {
         Import 去签（预期拒）
       </button>
       {status.err && <p className="error">{status.err}</p>}
-      <JsonBlock value={status.data} />
+      {status.data && (
+        <BpPropGrid
+          items={Object.entries(status.data)
+            .slice(0, 8)
+            .map(([k, v]) => ({
+              label: k,
+              value:
+                v == null
+                  ? "—"
+                  : typeof v === "object"
+                    ? Array.isArray(v)
+                      ? `[${(v as unknown[]).length}]`
+                      : "{…}"
+                    : String(v),
+            }))}
+        />
+      )}
       {exportMsg && <p className="aos-text">{exportMsg}</p>}
       {importMsg && <p className="aos-text">{importMsg}</p>}
       <p className="muted">
@@ -413,7 +642,22 @@ export function ApolloChangePage() {
           </li>
         ))}
       </ul>
-      {fleet.data && <JsonBlock value={{ hub: (fleet.data as { hub?: unknown }).hub, channels: (fleet.data as { channels?: unknown }).channels }} />}
+      {fleet.data && (
+        <BpMetricGrid
+          items={[
+            {
+              label: "Hub",
+              value: String((fleet.data as { hub?: { id?: string } }).hub?.id || "—"),
+              tone: "ok",
+            },
+            {
+              label: "Channels",
+              value: String((fleet.data as { channels?: unknown[] }).channels?.length ?? 0),
+              tone: "muted",
+            },
+          ]}
+        />
+      )}
       <p className="muted">
         晋升/召回操作：
         <Link to="/apollo/release"> Release 通道</Link> · 审批入口：

@@ -41,14 +41,6 @@ export type IconName =
 
 export const NAV_ITEMS: NavItem[] = [
   { id: "index", path: "/", label: "概览", icon: "home", status: "live", crumbs: ["概览"] },
-  {
-    id: "demo-story",
-    path: "/demo",
-    label: "客户演示",
-    icon: "stairs",
-    status: "live",
-    crumbs: ["演示", "WorkOrder"],
-  },
   { section: "工作台 L3" },
   { id: "workshop", path: "/workshop", label: "应用列表", icon: "apps", status: "live", crumbs: ["工作台", "应用列表"] },
   {

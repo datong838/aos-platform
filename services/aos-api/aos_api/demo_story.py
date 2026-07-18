@@ -177,7 +177,6 @@ def run_writeback_story(principal: Principal) -> dict[str, Any]:
             "inbox": "/workshop/inbox",
             "drafts": "/aip/drafts",
             "lineage": "/aip/lineage",
-            "demo": "/demo",
         },
     }
 
@@ -276,7 +275,7 @@ def governance_probe(principal: Principal) -> dict[str, Any]:
         },
         "markingForbidden": forbidden,
         "latestLineage": lineage,
-        "uiPaths": {"lineage": "/aip/lineage", "demo": "/demo", "data": "/data"},
+        "uiPaths": {"lineage": "/aip/lineage", "drafts": "/aip/drafts", "data": "/data"},
         "say": "无 secret 标记时 internalCost 脱敏；Marking 不足返回 FORBIDDEN；写回后可查谱系",
     }
 
@@ -359,7 +358,7 @@ def run_capability_mirror(principal: Principal) -> dict[str, Any]:
         "uiPaths": {
             "capabilities": "/aip/capabilities",
             "mediaSets": "/data/media-sets",
-            "demo": "/demo",
+            "overview": "/",
         },
         "say": "Capability Job 产物挂 MediaSet；CSV 解析可指；OCR 边车有则绿、无则诚实 unset/mock",
     }
@@ -420,16 +419,16 @@ def demo_story_payload() -> dict[str, Any]:
         {
             "id": "TB.7",
             "title": "治理可见",
-            "uiPath": "/demo",
+            "uiPath": "/aip/lineage",
             "api": "GET /v1/demo/governance",
             "say": "internalCost 脱敏对比 + Marking FORBIDDEN + 最近谱系",
         },
         {
             "id": "TB.8",
-            "title": "彩排脚本",
-            "uiPath": "/demo",
-            "api": "scripts/demo/CUSTOMER-DEMO.md",
-            "say": "15～20 分钟客户演示；Apollo 运维不讲",
+            "title": "业务主链",
+            "uiPath": "/",
+            "api": "GET /v1/demo/story · scripts/demo/CUSTOMER-DEMO.md",
+            "say": "概览 StoryChain 链真实页；Apollo 运维不讲",
         },
         {
             "id": "TB.9",

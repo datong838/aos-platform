@@ -135,6 +135,17 @@ def ensure_demo_data_seed() -> dict[str, Any]:
             "pipelineId": pipe_id,
             "enabled": True,
         }
+    sync_id = "sync-demo-wo"
+    if sync_id not in _syncs:
+        now = time.time()
+        _syncs[sync_id] = {
+            "id": sync_id,
+            "sourceId": src_id,
+            "status": "SUCCEEDED",
+            "startedAt": now,
+            "finishedAt": now,
+            "rowsSynced": 3,
+        }
     if not any(isinstance(d, dict) and d.get("id") == dlq_id for d in _dlq):
         _dlq.append(
             {
@@ -150,6 +161,7 @@ def ensure_demo_data_seed() -> dict[str, Any]:
         )
     return {
         "sources": len(_connectors),
+        "syncs": len(_syncs),
         "pipelines": len(_pipelines),
         "datasets": len(_datasets),
         "builds": len(_pipelines),
@@ -848,7 +860,13 @@ def list_builds(principal: Principal = Depends(require_principal)):
 def create_schedule(body: dict[str, Any], principal: Principal = Depends(require_principal)):
     _ = principal
     sid = body.get("id") or f"sch-{uuid.uuid4().hex[:6]}"
-    item = {"id": sid, "cron": body.get("cron", "0 * * * *"), "pipelineId": body.get("pipelineId"), "enabled": True}
+    item = {
+        "id": sid,
+        "cron": body.get("cron", "0 * * * *"),
+        "pipelineId": body.get("pipelineId"),
+        "enabled": bool(body.get("enabled", True)),
+        "name": body.get("name") or sid,
+    }
     _schedules[sid] = item
     return item
 
@@ -858,6 +876,38 @@ def list_schedules(principal: Principal = Depends(require_principal)):
     """T-UI S2 · schedules list for 计划编辑器."""
     _ = principal
     return {"items": list(_schedules.values())}
+
+
+@router.get("/v1/schedules/{schedule_id}")
+def get_schedule(schedule_id: str, principal: Principal = Depends(require_principal)):
+    _ = principal
+    item = _schedules.get(schedule_id)
+    if not item:
+        raise ApiError(code="NOT_FOUND", message="schedule missing", status_code=404)
+    return item
+
+
+@router.patch("/v1/schedules/{schedule_id}")
+def patch_schedule(
+    schedule_id: str,
+    body: dict[str, Any],
+    principal: Principal = Depends(require_principal),
+):
+    """74 · edit cron / enabled / pipelineId for 计划编辑器."""
+    _ = principal
+    item = _schedules.get(schedule_id)
+    if not item:
+        raise ApiError(code="NOT_FOUND", message="schedule missing", status_code=404)
+    if "cron" in body and body["cron"] is not None:
+        item["cron"] = str(body["cron"])
+    if "pipelineId" in body:
+        item["pipelineId"] = body["pipelineId"]
+    if "enabled" in body:
+        item["enabled"] = bool(body["enabled"])
+    if "name" in body and body["name"] is not None:
+        item["name"] = str(body["name"])
+    _schedules[schedule_id] = item
+    return item
 
 
 @router.get("/v1/dlq")
@@ -1123,12 +1173,30 @@ def ocr_page(body: dict[str, Any], principal: Principal = Depends(require_princi
 
 @router.post("/v1/sync-routing")
 def sync_routing(body: dict[str, Any], principal: Principal = Depends(require_principal)):
+    """Storage Router · size threshold + optional target hint (74 / data-connection)."""
     _ = principal
-    size = int(body.get("sizeBytes", 0))
+    size = int(body.get("sizeBytes", 0) or 0)
+    target = str(body.get("target") or body.get("targetHint") or "").strip().lower()
+    threshold = 128 * 1024
+    if target in {"mediaset", "media-set", "media"}:
+        route = "object-store"
+        reason = "媒体集目标强制对象仓"
+    elif target in {"stream", "kafka"}:
+        route = "stream"
+        reason = "流目标"
+    elif size > 0 and size < threshold:
+        route = "dataset-inline"
+        reason = f"单文件 <{threshold}B 且无需原件预览 → 直入 Dataset"
+    else:
+        route = "object-store"
+        reason = "≥128KB 或需原件 → MediaSet/对象仓"
     return {
-        "route": "dataset-inline" if size < 128 * 1024 else "object-store",
+        "route": route,
         "sizeBytes": size,
-        "threshold": 128 * 1024,
+        "threshold": threshold,
+        "target": target or None,
+        "reason": reason,
+        "pathStyle": True,
     }
 
 

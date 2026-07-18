@@ -609,6 +609,63 @@ paths:
       responses:
         "200":
           description: ok
+  /schedules:
+    get:
+      operationId: listSchedules
+      summary: 计划列表（T-UI S2 / 74）
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+    post:
+      operationId: createSchedule
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
+  /schedules/{schedule_id}:
+    get:
+      operationId: getSchedule
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: schedule_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ok
+        "404":
+          description: missing
+    patch:
+      operationId: patchSchedule
+      summary: 更新 cron / enabled / pipelineId（74）
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: schedule_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ok
+        "404":
+          description: missing
+  /sync-routing:
+    post:
+      operationId: syncRouting
+      summary: Storage Router · size/target → route（74）
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: ok
   /code-repos:
     get:
       operationId: listCodeRepos

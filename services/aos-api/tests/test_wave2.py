@@ -57,4 +57,6 @@ def test_object_sets_pg_source(client, auth_headers):
     assert r.status_code == 200
     body = r.json()
     assert body["source"] == "pg"
-    assert body["total"] == 2
+    # seed has ≥2 DC-East; PG may accumulate extras from demo smoke — assert filter semantics
+    assert body["total"] >= 2
+    assert all(i.get("site") == "DC-East" for i in body["items"])

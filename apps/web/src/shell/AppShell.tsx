@@ -8,6 +8,7 @@ import {
   resolveTheme,
   type AppearancePreference,
 } from "../lib/appearance";
+import { ApiStatusBar } from "../components/ApiStatusBar";
 import { DEMO_VERSION, findNavPage, isNavPage, NAV_ITEMS } from "../nav";
 import { NavIcon } from "./icons";
 
@@ -168,6 +169,7 @@ export function AppShell() {
             </div>
           </div>
         </header>
+        <ApiStatusBar />
         <div className="content">
           <Outlet />
         </div>

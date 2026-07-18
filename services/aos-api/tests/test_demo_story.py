@@ -10,6 +10,7 @@ def test_demo_ensure_seed_and_story(client, auth_headers):
     assert body["snapshot"]["objectCount"] >= 3
     assert body["snapshot"]["dataSurface"]["datasets"] >= 1
     assert body["snapshot"]["dataSurface"]["dlq"] >= 1
+    assert body["snapshot"]["dataSurface"].get("syncs", 0) >= 1
 
     s = client.get("/v1/demo/story", headers=auth_headers)
     assert s.status_code == 200
@@ -25,6 +26,10 @@ def test_demo_ensure_seed_and_story(client, auth_headers):
     builds = client.get("/v1/builds", headers=auth_headers)
     assert builds.status_code == 200
     assert len(builds.json()["items"]) >= 1
+    syncs = client.get("/v1/syncs", headers=auth_headers)
+    assert syncs.status_code == 200
+    assert len(syncs.json()["items"]) >= 1
+    assert any(s.get("sourceId") == "demo-file-wo" for s in syncs.json()["items"])
     funnel = client.get("/v1/funnel/WorkOrder/status", headers=auth_headers)
     assert funnel.status_code == 200
 

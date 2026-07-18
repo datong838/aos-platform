@@ -1,167 +1,104 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiGet, API_BASE } from "../api/client";
+import { API_BASE } from "../api/client";
+import { OverviewDomainGrid } from "../components/OverviewDomainGrid";
 import { PageChrome } from "../components/PageChrome";
+import { fetchOverviewMetrics, type OverviewMetrics } from "../overviewMetrics";
+import { BpBanner, BpDomainPanel, BpIndexTile, BpMetricGrid, BpToolbar } from "./s2/blueprintUi";
 
-type Counts = { modules: number; models: number; plugins: number; tools: number };
-
-/** AI OS control plane — not just a shell. */
+/** 97 · 对齐 index.html · 控制面 + 四域 live 指标（无业务主链） */
 export function OverviewPage() {
-  const [health, setHealth] = useState("…");
-  const [counts, setCounts] = useState<Counts>({ modules: 0, models: 0, plugins: 0, tools: 0 });
-  const [sidecar, setSidecar] = useState("…");
+  const [metrics, setMetrics] = useState<OverviewMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const reload = useCallback(() => {
+    setLoading(true);
+    void fetchOverviewMetrics()
+      .then(setMetrics)
+      .finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
-    apiGet<{ status: string }>("/v1/health")
-      .then((j) => setHealth(j.status))
-      .catch((e) => setHealth(String(e)));
-    Promise.all([
-      apiGet<{ items: unknown[] }>("/v1/modules"),
-      apiGet<{ items: unknown[]; sidecar?: string }>("/v1/aip/models"),
-      apiGet<{ items: unknown[]; totals?: { all: number } }>("/v1/plugins"),
-      apiGet<{ items: unknown[] }>("/v1/aip/tools"),
-    ])
-      .then(([mod, models, plugins, tools]) => {
-        setCounts({
-          modules: mod.items.length,
-          models: models.items.length,
-          plugins: plugins.totals?.all ?? plugins.items.length,
-          tools: tools.items.length,
-        });
-        setSidecar(models.sidecar || "—");
-      })
-      .catch(() => undefined);
-  }, []);
+    reload();
+  }, [reload]);
+
+  const m = metrics;
+  const health = m?.health ?? "…";
+  const healthOk = health === "ok" || health === "healthy";
+  const agnesReady = m?.sidecar === "agnes-openai-compatible";
 
   return (
     <PageChrome
       title="AI操作系统"
-      lede="数据操作系统 · 本体数字孪生 · AIP · 工作台 — 模型 / 插件 / 模块可运营，不只是壳。"
+      lede="日常从工作台进入；建设路径：Connector → Pipeline → Dataset → OKF / Ontology → AIP → 工作台。"
     >
+      <BpToolbar>
+        <button type="button" className="btn" onClick={reload} disabled={loading}>
+          {loading ? "刷新中…" : "刷新指标"}
+        </button>
+        <Link to="/data" className="muted" style={{ fontSize: "0.75rem" }}>
+          数据连接 →
+        </Link>
+      </BpToolbar>
+
       <p className="status-pill" style={{ marginBottom: "1rem" }}>
         <span className="status-dot" />
-        {API_BASE} · health: {health} · LLM: {sidecar}
+        {API_BASE} · health: {health} · LLM: {m?.sidecar ?? "…"}
+        {agnesReady && m?.defaultModel ? ` · ${m.defaultModel}` : ""}
       </p>
 
-      <section className="panel aip" style={{ marginBottom: "1.5rem" }}>
-        <h2>操作系统控制面</h2>
-        <p className="hint">模型可路由 · 插件可调用 · 模块可打开</p>
-        <div className="tile-grid cols-4">
-          <Link to="/aip/model-router" className="tile">
-            <div className="eyebrow">模型</div>
-            <div className="title">{counts.models}</div>
-            <p className="desc">可路由模型 · 试聊</p>
-          </Link>
-          <Link to="/aip/tools" className="tile">
-            <div className="eyebrow">插件 / Tools</div>
-            <div className="title">{counts.plugins}</div>
-            <p className="desc">tools {counts.tools} · parsers/sources/caps</p>
-          </Link>
-          <Link to="/workshop" className="tile">
-            <div className="eyebrow">模块</div>
-            <div className="title">{counts.modules}</div>
-            <p className="desc">应用列表 · entryPath 绑定</p>
-          </Link>
-          <Link to="/aip/capabilities" className="tile">
-            <div className="eyebrow">重能力</div>
-            <div className="title">Job</div>
-            <p className="desc">产物 → MediaSet</p>
-          </Link>
-        </div>
-      </section>
+      {m && m.workOrders === 0 && (
+        <BpBanner tone="warn">
+          尚无 WorkOrder 实例 · 请到 <Link to="/data">数据连接</Link> 点击「初始化业务数据」后再演示 Inbox/Buddy。
+        </BpBanner>
+      )}
 
-      <section className="panel workshop">
-        <h2>客户演示（TB.*）</h2>
-        <p className="hint">本地可部署故事线 · Apollo 运维后置 · 不对标 Jupyter</p>
-        <Link to="/demo" className="tile-hero">
-          <div>
-            <div className="eyebrow">15～20 分钟</div>
-            <div className="title">WorkOrder 演示导航</div>
-            <p className="desc">数据 → 本体 → 写回 → 画布 → Buddy → 治理</p>
-          </div>
-          <span className="aos-muted">打开演示 →</span>
-        </Link>
-      </section>
-
-      <section className="panel workshop">
-        <h2>工作台</h2>
-        <p className="hint">
-          入口只有「应用列表」；运营台 / 知识图谱 / Buddy 都是列表里打开的 Module。
-        </p>
-        <Link to="/workshop" className="tile-hero">
-          <div>
-            <div className="eyebrow">唯一入口</div>
-            <div className="title">应用列表</div>
-            <p className="desc">按业务场景打开 Module · 含运营台、知识图谱、Buddy…</p>
-          </div>
-          <span className="aos-muted">进入列表 →</span>
-        </Link>
-        <div className="tile-grid">
-          <Link to="/workshop/inbox" className="tile">
-            <div className="eyebrow">运营 Inbox</div>
-            <div className="title">运营台</div>
-            <p className="desc">Filter · Table · Object View · 变量条</p>
-          </Link>
-          <Link to="/workshop/graph" className="tile">
-            <div className="eyebrow">本体前端</div>
-            <div className="title">知识图谱</div>
-            <p className="desc">Object+Link 图谱 · Wiki · Action</p>
-          </Link>
-          <Link to="/workshop/buddy" className="tile">
-            <div className="eyebrow">AIP 嵌入</div>
-            <div className="title">Buddy · Assist</div>
-            <p className="desc">挂在任意 Module 侧栏 / 表旁</p>
-          </Link>
+      <BpDomainPanel
+        tone="aip"
+        title="操作系统控制面"
+        hint={`WorkOrder ${m?.workOrders ?? "…"} · Draft 待审 ${m?.pendingDrafts ?? "…"} · 模型 ${m?.models ?? "…"}`}
+      >
+        <BpMetricGrid
+          items={[
+            { label: "API 健康", value: health, tone: healthOk ? "ok" : "warn" },
+            { label: "LLM", value: m?.defaultModel || m?.sidecar || "…", tone: agnesReady ? "ok" : "muted" },
+            { label: "Evals 门控", value: m?.evalsGreen ? "绿" : "—", tone: m?.evalsGreen ? "ok" : "warn" },
+            { label: "Workbench 模块", value: m?.modules ?? "…", tone: "muted" },
+          ]}
+        />
+        <div className="bp-index-grid bp-index-grid-4" style={{ marginTop: "1rem" }}>
+          <BpIndexTile
+            to="/aip/model-router"
+            eyebrow="模型"
+            title={`${m?.models ?? "…"} 可路由`}
+            desc="任务路由 · 试聊 · 预热"
+            accent="amber"
+          />
+          <BpIndexTile
+            to="/aip/tools"
+            eyebrow="插件"
+            title={`${m?.plugins ?? "…"} 已登记`}
+            desc="parsers · capabilities"
+            accent="amber"
+          />
+          <BpIndexTile
+            to="/workshop"
+            eyebrow="模块"
+            title={`${m?.modules ?? "…"} Module`}
+            desc="应用列表 · 运营 Inbox"
+            accent="sky"
+          />
+          <BpIndexTile
+            to="/aip/drafts"
+            eyebrow="HITL"
+            title={m?.pendingDrafts ? `${m.pendingDrafts} 待审` : "Draft 审批"}
+            desc="提案 → 写生产 Ontology"
+            accent="emerald"
+          />
         </div>
-      </section>
+      </BpDomainPanel>
 
-      <section className="panel aip">
-        <h2>AIP 人工智能平台</h2>
-        <p className="hint">k-LLM · Logic · Agent Studio · Assist · Draft HITL</p>
-        <div className="tile-grid cols-4">
-          <Link to="/aip/drafts" className="tile">
-            <div className="eyebrow">HITL</div>
-            <div className="title">Draft 审批台</div>
-            <p className="desc">提案批准 → 写生产</p>
-          </Link>
-          <Link to="/aip/logic" className="tile">
-            <div className="eyebrow">Logic</div>
-            <div className="title">逻辑画布</div>
-            <p className="desc">dryRun 不落库</p>
-          </Link>
-          <Link to="/aip/studio" className="tile">
-            <div className="eyebrow">Studio</div>
-            <div className="title">Chatbot Studio</div>
-            <p className="desc">Agent · 真 Tool 执行</p>
-          </Link>
-          <Link to="/aip/capabilities" className="tile">
-            <div className="eyebrow">Capability</div>
-            <div className="title">重能力接入</div>
-            <p className="desc">Job · MediaSet</p>
-          </Link>
-        </div>
-      </section>
-
-      <section className="panel ontology">
-        <h2>本体 · 数据 · Apollo</h2>
-        <div className="tile-grid">
-          <Link to="/ontology" className="tile">
-            <div className="eyebrow">L2</div>
-            <div className="title">本体管理</div>
-            <p className="desc">Object Type · Link · Wiki</p>
-          </Link>
-          <Link to="/data" className="tile">
-            <div className="eyebrow">L1</div>
-            <div className="title">数据连接</div>
-            <p className="desc">Pipeline · 解析插件</p>
-          </Link>
-          <Link to="/apollo" className="tile">
-            <div className="eyebrow">交付</div>
-            <div className="title">Apollo Hub</div>
-            <p className="desc">Spoke · Asset Bundle</p>
-          </Link>
-        </div>
-      </section>
+      <OverviewDomainGrid metrics={m} />
     </PageChrome>
   );
 }

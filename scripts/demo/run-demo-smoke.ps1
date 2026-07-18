@@ -47,6 +47,17 @@ Ok "datasets-builds-dlq" {
   $d = Invoke-RestMethod -Uri "http://127.0.0.1:8080/v1/dlq" -Headers $headers
   if (-not $d.items -or $d.items.Count -lt 1) { throw "no dlq sample" }
 }
+Ok "l1-chain" {
+  $src = Invoke-RestMethod -Uri "http://127.0.0.1:8080/v1/sources" -Headers $headers
+  if (-not $src.items -or $src.items.Count -lt 1) { throw "no sources" }
+  $srcIds = @($src.items | ForEach-Object { $_.id })
+  $syncs = Invoke-RestMethod -Uri "http://127.0.0.1:8080/v1/syncs" -Headers $headers
+  $syncLinked = @($syncs.items | Where-Object { $srcIds -contains $_.sourceId })
+  if ($syncLinked.Count -lt 1) { throw "no sync linked to demo source" }
+  $pipes = Invoke-RestMethod -Uri "http://127.0.0.1:8080/v1/pipelines" -Headers $headers
+  $pipeLinked = @($pipes.items | Where-Object { $srcIds -contains $_.sourceId })
+  if ($pipeLinked.Count -lt 1) { throw "no pipeline linked to demo source" }
+}
 Ok "funnel" {
   Invoke-RestMethod -Uri "http://127.0.0.1:8080/v1/funnel/WorkOrder/status" -Headers $headers | Out-Null
 }

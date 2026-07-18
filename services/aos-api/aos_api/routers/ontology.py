@@ -286,7 +286,9 @@ def delete_link_type(
 def list_objects(
     object_type: str,
     principal: Principal = Depends(require_principal),
+    branch: str | None = None,
 ) -> dict[str, Any]:
+    """List instances. Optional ``branch`` is echoed for UI (75 W3); filter by branch is future."""
     with connect() as conn:
         prop_defs = _object_type_properties(conn, object_type)
         rows = conn.execute(
@@ -299,7 +301,10 @@ def list_objects(
                 continue
             raw = {"id": r["object_id"], "type": object_type, **(r["props"] or {})}
             items.append(apply_field_redaction(principal, raw, prop_defs, conn=conn))
-    return {"items": items, "total": len(items)}
+    out: dict[str, Any] = {"items": items, "total": len(items)}
+    if branch:
+        out["branch"] = branch
+    return out
 
 
 @router.get("/v1/objects/{object_type}/{object_id}")

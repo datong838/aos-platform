@@ -1,13 +1,10 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { apiGet, apiPost } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
+import { BpDebugPanel } from "./blueprintUi";
 
 export function JsonBlock({ value }: { value: unknown }) {
-  return (
-    <pre className="card" style={{ whiteSpace: "pre-wrap", fontSize: "0.8rem" }}>
-      {JSON.stringify(value, null, 2)}
-    </pre>
-  );
+  return <BpDebugPanel value={value} title="完整 JSON" />;
 }
 
 export function useJsonGet<T>(path: string | null) {
@@ -46,33 +43,6 @@ export function S2Chrome({
     <PageChrome title={title} lede={`S2 MVP · ${lede}`}>
       {children}
     </PageChrome>
-  );
-}
-
-export function ItemsPage({
-  title,
-  lede,
-  path,
-}: {
-  title: string;
-  lede: string;
-  path: string;
-}) {
-  const { data, err, loading, reload } = useJsonGet<{ items: unknown[] }>(path);
-  return (
-    <S2Chrome title={title} lede={lede}>
-      <button type="button" className="btn" onClick={() => reload()}>
-        刷新
-      </button>
-      {loading && <p className="muted">加载中…</p>}
-      {err && <p className="error">{err}</p>}
-      {data && (
-        <>
-          <p className="muted">共 {data.items?.length ?? 0} 条</p>
-          <JsonBlock value={data.items} />
-        </>
-      )}
-    </S2Chrome>
   );
 }
 
