@@ -20,7 +20,7 @@ const BLUEPRINT_CAPS = [
   { id: "avatar-edu", title: "教育可交互数字人", kind: "session", desc: "C2 Session · 课纲 Wiki · CourseSession", tone: "muted" as const },
 ];
 
-/** 83 · 对齐 aip-capabilities · 能力卡片 + Session + Job（TB.9 一镜保留） */
+/** 83 · 对齐 aip-capabilities · 能力卡片 + Session + Job */
 export function CapabilityPage() {
   const [items, setItems] = useState<CapItem[]>([]);
   const [mediaRid, setMediaRid] = useState<string | null>(null);
@@ -66,26 +66,6 @@ export function CapabilityPage() {
     }
   }
 
-  async function runMirror() {
-    setErr(null);
-    setMsg("");
-    setLastPayload(null);
-    try {
-      const r = await apiPost<{
-        job?: { jobId?: string; mediaRid?: string; status?: string };
-        parser?: { ok?: boolean; parser?: string };
-        ocrProbe?: { ok?: boolean; sidecar?: string };
-      }>("/v1/demo/run-capability", {});
-      setMsg("业务一镜完成（Job+解析+OCR）");
-      setLastPayload(r);
-      const rid = r.job?.mediaRid;
-      if (rid) setMediaRid(rid);
-      await reloadCaps();
-    } catch (e) {
-      setErr(String((e as Error).message || e));
-    }
-  }
-
   async function openSession() {
     setErr(null);
     try {
@@ -109,9 +89,6 @@ export function CapabilityPage() {
       <BpToolbar>
         <button type="button" className="btn" onClick={() => void runJob()}>
           登记并提交 Job
-        </button>
-        <button type="button" className="btn" onClick={() => void runMirror()}>
-          业务一镜（TB.9）
         </button>
         <button type="button" className="btn" onClick={() => void openSession()}>
           打开 C2 Session

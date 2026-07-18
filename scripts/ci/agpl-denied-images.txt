@@ -1,6 +1,10 @@
 # AGPL / BSL server images that MUST NOT appear in customer-facing AOS packages.
 # Dev compose under deploy/dev/ is allowed (23 §5 exception).
-# One image name substring per line.
+# One image name substring per line (case-insensitive match).
 minio/minio
 grafana/grafana
 quay.io/minio/minio
+metabase/metabase
+docker.io/metabase/metabase
+tooljet/tooljet
+appsmith/appsmith

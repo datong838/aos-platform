@@ -9,9 +9,7 @@ import {
   type SelectionFilter,
 } from "../selection";
 import {
-  LargeResultSimulator,
   PaginationGuardBanner,
-  useDisplayTotal,
 } from "../paginationGuard";
 import { BpPropGrid, BpToolbar, BpVarBar, BpWsGrid } from "./s2/blueprintUi";
 
@@ -39,7 +37,6 @@ export function InboxPage() {
   const [value, setValue] = useState("DC-East");
   const [rows, setRows] = useState<Row[]>([]);
   const [total, setTotal] = useState(0);
-  const [totalOverride, setTotalOverride] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [gateMsg, setGateMsg] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
@@ -47,7 +44,7 @@ export function InboxPage() {
   const [actionMsg, setActionMsg] = useState<string | null>(null);
   const [wikiText, setWikiText] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const displayTotal = useDisplayTotal(total, totalOverride);
+  const displayTotal = total;
 
   const selectedRows = useMemo(
     () => rows.filter((r) => selected.has(String(r.id))),
@@ -64,7 +61,6 @@ export function InboxPage() {
 
   async function runQuery(nextFilters: SelectionFilter[]) {
     setError(null);
-    setTotalOverride(null);
     try {
       const res = await apiPost<{
         items: Row[];
@@ -256,7 +252,6 @@ export function InboxPage() {
         trailing="不做 SQL · 只认变量"
       />
 
-      <LargeResultSimulator onSimulate={(n) => setTotalOverride(n)} />
       <PaginationGuardBanner total={displayTotal} />
       {gateMsg && <p className="error">{gateMsg}</p>}
       {error && <p className="error">{error}</p>}
@@ -324,7 +319,7 @@ export function InboxPage() {
               })}
               {rows.length === 0 && !error && (
                 <p className="muted" style={{ padding: "0.75rem" }}>
-                  无行 · 改 Filter 或先在 /data 初始化业务数据
+                  无行 · 改 Filter 或到数据连接接入源后刷新
                 </p>
               )}
             </div>

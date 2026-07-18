@@ -121,12 +121,12 @@ export function PublishPage() {
               模块接口
             </Link>
             <span className="bp-publish-link muted" style={{ cursor: "default", opacity: 0.65 }}>
-              Apollo Release（后置）
+              Apollo Release（规划中）
             </span>
           </div>
 
           <BpBanner tone="info">
-            Module 发布走 API 幂等 · Apollo 舰队/Channel/资产包能力<strong>后置</strong>，不在本阶段深化
+            Module 发布走 API 幂等 · Apollo 舰队 / Channel / 资产包能力规划中
           </BpBanner>
 
           {lastPub && (

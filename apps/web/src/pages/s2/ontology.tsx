@@ -87,8 +87,8 @@ export function GraphHealthPage() {
             : []),
           [
             <span className="bp-tag">GH-04</span>,
-            <span>WorkOrder 演示</span>,
-            <span className="muted">seed 工单 wo-1001↔wo-1003</span>,
+            <span>WorkOrder</span>,
+            <span className="muted">工单对象一致性巡检</span>,
             <Link to="/aip/drafts">开 Draft 修复</Link>,
           ],
         ]}
@@ -168,8 +168,8 @@ export function FunnelPage() {
       )}
 
       <BpBanner tone="warn">
-        最近错误 · Type Coherence · demo DLQ 样例见{" "}
-        <Link to="/data/health">Data Health</Link>
+        最近错误 · Type Coherence · DLQ 见{" "}
+        <Link to="/data/health">数据健康</Link>
       </BpBanner>
       <BpBanner tone="info">
         Funnel 不是 ETL，而是事务监听器——湖仓每一次 COMMIT，都驱动业务 Object 刷新。
@@ -264,17 +264,17 @@ export function WikiPage() {
 
       {tab === "sync" && (
         <BpBanner tone="info">
-          WIKI-002 双向绑定：Object 变更 → Wiki specification 刷新；Wiki remark → Draft → Object（演示只读）。
+          WIKI-002 双向绑定：Object 变更 → Wiki specification 刷新；Wiki remark → Draft → Object。
         </BpBanner>
       )}
       {tab === "agent" && (
         <p className="muted">
-          Agent 读字段：tools.invoke / wiki.read 已接 seed summary · 见{" "}
+          Agent 读字段：tools.invoke / wiki.read · 见{" "}
           <Link to="/aip/tools">Agent 工具面板</Link>
         </p>
       )}
       {tab === "versions" && (
-        <p className="muted">版本历史 MVP 后置 · 当前仅展示最新 wiki_page 行。</p>
+        <p className="muted">版本历史规划中 · 当前仅展示最新 wiki_page 行。</p>
       )}
     </S2Chrome>
   );
@@ -290,7 +290,7 @@ export function BranchesPage() {
         <button type="button" className="btn" onClick={() => reload()}>
           刷新
         </button>
-        <span className="muted">+ 新建分支（MVP 后置）</span>
+        <span className="muted">+ 新建分支</span>
       </BpToolbar>
       {err && <p className="error">{err}</p>}
 
@@ -318,7 +318,7 @@ export function BranchesPage() {
 
       {(data?.items || []).some((b) => b.id === "sandbox") && (
         <BpBanner tone="warn">
-          ⚠ sandbox 的 backing dataset 建议与 Dataset 分支同步合并（演示提示 · 对齐蓝图）。
+          ⚠ sandbox 的 backing dataset 建议与 Dataset 分支同步合并。
         </BpBanner>
       )}
       <BpLinkRow links={[{ to: "/ontology", label: "本体管理" }]} />

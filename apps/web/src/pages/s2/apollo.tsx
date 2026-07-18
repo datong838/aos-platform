@@ -71,7 +71,7 @@ export function ApolloSpokePage() {
       <div className="bp-domain bp-domain-apollo" style={{ marginBottom: "1rem" }}>
         <h2 style={{ fontSize: "0.875rem", margin: "0 0 0.5rem" }}>Spoke 形态</h2>
         <p className="muted" style={{ fontSize: "0.75rem" }}>
-          当前：<strong>Lite Spoke</strong>（本地 dev）· Full Spoke 目录骨架可指屏 · 运行时后置
+          当前：<strong>Lite Spoke</strong> · Full Spoke 目录骨架可用 · 完整运行时规划中
         </p>
         <BpPropGrid
           items={[

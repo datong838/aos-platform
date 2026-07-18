@@ -189,7 +189,7 @@ export function PipelineProposalsPage() {
                 source={p.sourceId} → {p.target || "dataset"}
               </p>
               <p className="muted" style={{ fontSize: "0.75rem" }}>
-                +1 节点 Use LLM · 输出 summary_zh（示意）
+                +1 节点 Use LLM · 输出 summary_zh
               </p>
               <div className="bp-object-actions">
                 <button type="button" className="btn">
@@ -213,7 +213,7 @@ export function PipelineProposalsPage() {
 
       {diffId && (
         <BpBanner tone="info">
-          Diff 预览 · {diffId} · + Use LLM 节点 · + summary_zh 字段（引擎后置 · 当前为蓝图占位）
+          Diff 预览 · {diffId} · + Use LLM 节点 · + summary_zh 字段
         </BpBanner>
       )}
 
@@ -230,7 +230,7 @@ export function CodeReposPage() {
   }>("/v1/code-repos");
 
   return (
-    <S2Chrome title="代码库" lede="对齐 code-repositories · Dev 目录（非 Git 主机）">
+    <S2Chrome title="代码库" lede="对齐 code-repositories · 工程目录（非 Git 主机）">
       <BpToolbar>
         <button type="button" className="btn" onClick={() => reload()}>
           刷新
@@ -336,7 +336,7 @@ export function DataLineagePage() {
       )}
       {(datasets.data?.items?.length || 0) === 0 && (
         <p className="muted">
-          空 · <Link to="/data">确保演示种子</Link>
+          空 · <Link to="/data">数据连接</Link>
         </p>
       )}
     </S2Chrome>

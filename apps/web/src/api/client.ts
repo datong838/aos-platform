@@ -16,7 +16,7 @@ export function formatNetworkError(err: unknown, method: string, path: string): 
     raw.includes("Load failed") ||
     raw.includes("ECONNREFUSED");
   const message = unreachable
-    ? `无法连接 aos-api（${API_BASE}${path}）· 请执行 scripts/demo/ensure-api.sh 或查看 deploy/dev/aos-api.*.log`
+    ? `无法连接 aos-api（${API_BASE}${path}）· 请确认 API 已启动并检查网络`
     : raw;
   const out = Object.assign(new Error(message), {
     status: 0,

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { API_BASE, probeApiHealth } from "../api/client";
+import { probeApiHealth } from "../api/client";
 
 const POLL_MS = 12_000;
 
-/** 76 · 顶栏 API 可达性；宕机时指向日志与 ensure-api */
+/** 76 / 38 §8 · 顶栏仅宕机告警；可达时静默（不与页内状态条重复） */
 export function ApiStatusBar() {
   const [ok, setOk] = useState<boolean | null>(null);
   const [detail, setDetail] = useState("");
@@ -26,13 +26,7 @@ export function ApiStatusBar() {
   }, []);
 
   if (ok === null) return null;
-  if (ok) {
-    return (
-      <div className="api-status api-status-ok" role="status">
-        API {API_BASE.replace(/^https?:\/\//, "")} · 可达
-      </div>
-    );
-  }
+  if (ok) return null;
   return (
     <div className="api-status api-status-down" role="alert">
       aos-api 不可达 · {detail} · 浏览器控制台见 [aos-api] 日志

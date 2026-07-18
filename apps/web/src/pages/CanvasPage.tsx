@@ -443,7 +443,7 @@ export function CanvasPage() {
             })}
           </ul>
           {rows.length === 0 && !err && (
-            <p className="muted">无行 · 改 Filter site 或先在 /data 初始化业务数据</p>
+            <p className="muted">无行 · 改 Filter site 或到数据连接接入源后刷新</p>
           )}
         </div>
 

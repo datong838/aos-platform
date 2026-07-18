@@ -119,7 +119,7 @@ export function MaturityPage() {
             ? "挂 Workshop Agent 组件 → 升 L3；勿直接开 L4。"
             : level === 3
               ? "Eval 绿 + Draft 流程稳定后再申请 L4。"
-              : "L4 须 Evals 门控 + 熔断护栏；Full 运行时仍后置。"}
+              : "L4 须 Evals 门控 + 熔断护栏；完整运行时规划中。"}
         </p>
         <div className="bp-object-actions">
           <button type="button" className="btn" onClick={() => { setLevel(3); setToast("已标记 L3（本地 UI）"); }}>
@@ -212,7 +212,7 @@ export function CopPage() {
           全屏态势布局 · 非独立大屏产品
         </span>
         <Link to="/workshop" className="muted">
-          退出全屏示意 →
+          退出全屏 →
         </Link>
       </BpToolbar>
       {(health.err || metrics.err || evals.err) && (
@@ -263,7 +263,7 @@ export function CopPage() {
                 </button>
               ))}
               {(types.data?.items?.length || 0) === 0 && (
-                <span className="muted">暂无 Object Type · 先初始化种子</span>
+                <span className="muted">暂无 Object Type · 请到本体管理发布类型</span>
               )}
             </div>
           </div>

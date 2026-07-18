@@ -166,7 +166,7 @@ export function PipelinesPage() {
             ))}
             {(data?.items?.length || 0) === 0 && (
               <p className="muted">
-                空 · <Link to="/data">初始化业务数据</Link>
+                空 · <Link to="/data">新建数据源</Link>
               </p>
             )}
             {sourceFilter && items.length === 0 && (data?.items?.length || 0) > 0 && (
@@ -368,7 +368,7 @@ export function DatasetsPage() {
           )}
         </>
       )}
-      {!rid && <p className="muted">空 · 先到 <Link to="/data">数据连接</Link> 确保种子</p>}
+      {!rid && <p className="muted">空 · 先到 <Link to="/data">数据连接</Link> 接入源</p>}
     </S2Chrome>
   );
 }
@@ -450,8 +450,8 @@ export function DataHealthPage() {
             <Link to="/data/datasets">WorkOrder-demo</Link>,
             "新鲜度",
             <span className="aos-text">通过</span>,
-            "seed dataset READY",
-            "演示",
+            "数据集 READY",
+            "—",
           ],
         ]}
       />
@@ -459,7 +459,7 @@ export function DataHealthPage() {
       {dlqCount > 0 && (
         <>
           <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: "1rem" }}>
-            DLQ 样例
+            DLQ
           </h2>
           <ul className="card-list">
             {(dlq.data?.items || []).map((d) => (
@@ -501,7 +501,9 @@ export function EdgeAgentsPage() {
         <button type="button" className="btn" onClick={() => reload()}>
           刷新
         </button>
-        <span className="muted">+ 注册代理（MVP 后置）</span>
+        <button type="button" className="btn-outline-cyan" disabled title="登记接口规划中">
+          + 注册代理
+        </button>
       </BpToolbar>
       {err && <p className="error">{err}</p>}
 

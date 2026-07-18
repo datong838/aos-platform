@@ -38,16 +38,25 @@ export function BpTabs({
 
 export function BpMetricGrid({
   items,
+  density = "default",
 }: {
-  items: { code?: string; label: string; value: string | number; tone?: "ok" | "warn" | "bad" | "muted" }[];
+  items: {
+    code?: string;
+    label: string;
+    value: ReactNode;
+    hint?: ReactNode;
+    tone?: "ok" | "warn" | "bad" | "muted";
+  }[];
+  density?: "default" | "compact";
 }) {
   return (
-    <div className="bp-metric-grid">
+    <div className={`bp-metric-grid${density === "compact" ? " bp-metric-grid-compact" : ""}`}>
       {items.map((m) => (
         <div key={m.code || m.label} className={`bp-metric bp-metric-${m.tone || "muted"}`}>
           {m.code && <div className="bp-metric-code">{m.code}</div>}
           <div className="bp-metric-label">{m.label}</div>
           <div className="bp-metric-value">{m.value}</div>
+          {m.hint != null && m.hint !== "" ? <div className="bp-metric-hint">{m.hint}</div> : null}
         </div>
       ))}
     </div>
@@ -231,16 +240,28 @@ export function BpDomainPanel({
   tone,
   title,
   hint,
+  health,
   children,
 }: {
   tone: "workshop" | "aip" | "ontology" | "data" | "apollo";
   title: string;
   hint?: string;
+  /** 标题旁健康点：ok | warn · 省略则不显示 */
+  health?: "ok" | "warn";
   children: ReactNode;
 }) {
   return (
     <section className={`bp-domain bp-domain-${tone}`}>
-      <h2>{title}</h2>
+      <h2 className="bp-domain-heading">
+        {health ? (
+          <span
+            className={`status-dot${health === "warn" ? " is-bad" : ""}`}
+            title={health === "ok" ? "接口健康" : "接口异常"}
+            aria-label={health === "ok" ? "接口健康" : "接口异常"}
+          />
+        ) : null}
+        {title}
+      </h2>
       {hint && <p className="hint">{hint}</p>}
       {children}
     </section>

@@ -16,38 +16,60 @@ export function OverviewDomainGrid({ metrics }: { metrics: OverviewMetrics | nul
       <BpDomainPanel
         tone="workshop"
         title="工作台"
-        hint="入口只有「应用列表」；运营台 / 知识图谱 / Buddy 都是列表里打开的 Module。"
+        health={(m?.health === "ok" || m?.health === "healthy") ? "ok" : m ? "warn" : undefined}
+        hint="入口只有「应用列表」；运营台 / 知识图谱 / 智能助手 都是列表里打开的模块，不是并列产品。"
       >
         <BpMetricGrid
+          density="compact"
           items={[
-            { label: "Module", value: m?.modules ?? "…", tone: "muted" },
-            { label: "WorkOrder", value: m?.workOrders ?? "…", tone: (m?.workOrders ?? 0) > 0 ? "ok" : "warn" },
-            { label: "Evals", value: m?.evalsGreen ? "绿" : "—", tone: m?.evalsGreen ? "ok" : "warn" },
-            { label: "入口", value: "应用列表", tone: "muted" },
+            {
+              label: "接口",
+              value: m ? ((m.health === "ok" || m.health === "healthy") ? "正常" : m.health) : "…",
+              tone: m && (m.health === "ok" || m.health === "healthy") ? "ok" : "warn",
+            },
+            {
+              label: "默认大模型",
+              value: m?.defaultModel || m?.sidecar || "…",
+              tone: m?.sidecar === "agnes-openai-compatible" ? "ok" : "muted",
+            },
+            {
+              label: "工单",
+              value: m?.workOrders ?? "…",
+              tone: (m?.workOrders ?? 0) > 0 ? "ok" : "warn",
+            },
+            {
+              label: "评测",
+              value: m?.evalsGreen ? (
+                <span className="status-dot" title="评测通过" aria-label="评测通过" />
+              ) : (
+                "—"
+              ),
+              tone: m?.evalsGreen ? "ok" : "warn",
+            },
           ]}
         />
         <BpHeroLink
           to="/workshop"
           eyebrow="唯一入口"
           title="应用列表"
-          desc="按业务场景打开 Module · 含运营台、知识图谱、Buddy…"
+          desc="按业务场景打开模块 · 含运营台、知识图谱、智能助手…"
           cta="进入列表 →"
           accent="sky"
         />
-        <div className="bp-section-micro">列表内 Module 示例</div>
+        <div className="bp-section-micro">列表内模块示例（勿与入口平级理解）</div>
         <div className="bp-index-grid bp-index-grid-3">
           <BpIndexTile
             to="/workshop/inbox"
-            eyebrow="运营 Inbox"
+            eyebrow="运营收件箱"
             title="运营台"
-            desc="Filter · Table · Object View · 变量条"
+            desc="筛选 · 表格 · 对象视图 · 变量条"
             accent="sky"
           />
           <BpIndexTile
             to="/workshop/graph"
             eyebrow="本体前端"
             title="知识图谱"
-            desc="Object+Link 图谱 · Wiki · Action"
+            desc="对象+关系图谱 · Wiki · 动作"
             accent="violet"
           />
           <BpIndexTile
@@ -56,9 +78,9 @@ export function OverviewDomainGrid({ metrics }: { metrics: OverviewMetrics | nul
                 ? `/workshop/buddy?order=wo-1001&assist=1`
                 : "/workshop/buddy"
             }
-            eyebrow="AIP 嵌入"
-            title="Buddy · Assist"
-            desc="挂在任意 Module 侧栏 / 表旁"
+            eyebrow="智能嵌入"
+            title="智能助手"
+            desc="挂在任意模块侧栏 / 表旁"
             accent="amber"
           />
         </div>
@@ -67,84 +89,109 @@ export function OverviewDomainGrid({ metrics }: { metrics: OverviewMetrics | nul
             { to: "/workshop/canvas", label: "画布编辑" },
             { to: "/workshop/cop", label: "态势大屏" },
             { to: "/workshop/publish", label: "发布入口" },
+            { to: "/aip/model-router", label: `模型路由${m?.models != null ? ` · ${m.models}` : ""}` },
+            { to: "/aip/tools", label: `插件${m?.plugins != null ? ` · ${m.plugins}` : ""}` },
+            {
+              to: "/aip/drafts",
+              label: m?.pendingDrafts ? `提案待审 · ${m.pendingDrafts}` : "提案审批",
+            },
           ]}
         />
       </BpDomainPanel>
 
       <BpDomainPanel
         tone="aip"
-        title="AIP 人工智能平台"
-        hint="成熟度楼梯 → 工具面板 → Logic 三栏（试跑不落库）"
+        title="AIP 人工智能平台 · k-LLM（核心调度） + Logic（编排引擎） + Agent Studio（Agent 开发工坊） + Assist（智能助手）"
+        hint="成熟度楼梯 → 工具面板 → 逻辑三栏（试跑不落库）"
       >
         <BpMetricGrid
+          density="compact"
           items={[
             { label: "可路由模型", value: m?.models ?? "…", tone: "ok" },
-            { label: "默认模型", value: m?.defaultModel ?? "…", tone: "muted" },
-            { label: "Tools", value: m?.tools ?? "…", tone: "muted" },
-            { label: "Draft 待审", value: m?.pendingDrafts ?? "…", tone: (m?.pendingDrafts ?? 0) > 0 ? "warn" : "ok" },
+            { label: "工具", value: m?.tools ?? "…", tone: "muted" },
+            { label: "插件", value: m?.plugins ?? "…", tone: "muted" },
           ]}
         />
         <div className="bp-index-grid bp-index-grid-4">
-          <BpIndexTile to="/aip/maturity" eyebrow="成熟度" title="成熟度楼梯" desc="Threads → Agent → 自动化门控" accent="amber" />
-          <BpIndexTile to="/aip/tools" eyebrow="工具" title="Agent 工具面板" desc="六类工具 · Wiki 子集" accent="amber" />
-          <BpIndexTile to="/aip/logic" eyebrow="Logic" title="AIP Logic 画布" desc="三栏 · CoT Debugger" accent="amber" />
-          <BpIndexTile to="/aip/capabilities" eyebrow="Capability" title="重能力接入" desc="Job · Session · MediaSet" accent="cyan" />
-          <BpIndexTile to="/aip/model-providers" eyebrow="接入" title="模型供应商" desc="卡片 · Adapter" accent="amber" />
+          <BpIndexTile to="/aip/maturity" eyebrow="成熟度" title="成熟度楼梯" desc="对话线程 → 智能体 → 自动化门控" accent="amber" />
+          <BpIndexTile to="/aip/tools" eyebrow="工具" title="智能体工具面板" desc="六类工具 · Wiki 子集" accent="amber" />
+          <BpIndexTile to="/aip/logic" eyebrow="逻辑" title="AIP 逻辑画布" desc="三栏 · 思维链调试" accent="amber" />
+          <BpIndexTile to="/aip/capabilities" eyebrow="能力" title="重能力接入" desc="任务 · 会话 · 媒体集" accent="cyan" />
+          <BpIndexTile to="/aip/model-providers" eyebrow="接入" title="模型供应商" desc="卡片 · 适配器" accent="amber" />
           <BpIndexTile to="/aip/model-router" eyebrow="路由" title="模型路由" desc="任务类型 · 预热熔断" accent="amber" />
-          <BpIndexTile to="/aip/drafts" eyebrow="Draft" title="提案审批台" desc="HITL 批准/拒绝" accent="emerald" />
-          <BpIndexTile to="/aip/evals" eyebrow="Evals" title="评测门控" desc="L4 须 Eval 绿" accent="amber" />
-          <BpIndexTile to="/aip/lineage" eyebrow="谱系" title="决策谱系" desc="Draft → Action 复盘" accent="violet" />
-          <BpIndexTile to="/aip/studio" eyebrow="Studio" title="Chatbot Studio" desc="Prompt · Agent 配置" accent="amber" />
+          <BpIndexTile to="/aip/drafts" eyebrow="提案" title="提案审批台" desc="人工批准 / 拒绝" accent="emerald" />
+          <BpIndexTile to="/aip/evals" eyebrow="评测" title="评测门控" desc="高级自动化须评测通过" accent="amber" />
+          <BpIndexTile to="/aip/lineage" eyebrow="谱系" title="决策谱系" desc="提案 → 动作 复盘" accent="violet" />
+          <BpIndexTile to="/aip/studio" eyebrow="工作室" title="对话工作室" desc="提示词 · 智能体配置" accent="amber" />
         </div>
       </BpDomainPanel>
 
-      <BpDomainPanel tone="ontology" title="语义本体 Ontology · 数字孪生" hint="OKF → Overview → Funnel 水合 · 图谱健康">
+      <BpDomainPanel
+        tone="ontology"
+        title="语义本体 Ontology · 数字孪生"
+        hint="OKF → 总览 → 漏斗水合 · 图谱健康"
+      >
         <BpMetricGrid
+          density="compact"
           items={[
-            { label: "WorkOrder", value: m?.workOrders ?? "…", tone: (m?.workOrders ?? 0) > 0 ? "ok" : "warn" },
-            { label: "OT 已发布", value: m?.objectTypePublished ? "是" : "否", tone: m?.objectTypePublished ? "ok" : "warn" },
-            { label: "Draft 待审", value: m?.pendingDrafts ?? "…", tone: "muted" },
-            { label: "图谱", value: "1-hop", tone: "muted" },
+            {
+              label: "对象类型",
+              value: m?.objectTypePublished ? "已发布" : "未发布",
+              tone: m?.objectTypePublished ? "ok" : "warn",
+            },
+            { label: "图谱", value: "一跳邻接", tone: "muted" },
           ]}
         />
         <div className="bp-index-grid bp-index-grid-4">
-          <BpIndexTile to="/ontology" eyebrow="Discover" title="本体管理" desc="收藏 / 最近 / Object Type" accent="violet" />
-          <BpIndexTile to="/ontology/funnel" eyebrow="Funnel" title="漏斗管道" desc="Changelog → Hydration" accent="violet" />
+          <BpIndexTile to="/ontology" eyebrow="发现" title="本体管理" desc="收藏 / 最近 / 对象类型" accent="violet" />
+          <BpIndexTile to="/ontology/funnel" eyebrow="漏斗" title="漏斗管道" desc="变更日志 → 水合" accent="violet" />
           <BpIndexTile to="/ontology/graph-health" eyebrow="健康" title="图谱健康度" desc="悬空 / 冲突 / 僵尸" accent="violet" />
-          <BpIndexTile to="/ontology/wiki" eyebrow="Wiki" title="活知识 Wiki" desc="Object ↔ Wiki 双向" accent="violet" />
+          <BpIndexTile to="/ontology/wiki" eyebrow="Wiki" title="活知识 Wiki" desc="对象 ↔ Wiki 双向" accent="violet" />
         </div>
       </BpDomainPanel>
 
       <BpDomainPanel tone="data" title="数据集成 · 三阶段链路 + OKF">
         <BpMetricGrid
+          density="compact"
           items={[
-            { label: "Dataset", value: m?.datasets ?? "…", tone: (m?.datasets ?? 0) > 0 ? "ok" : "warn" },
-            { label: "Build", value: m?.builds ?? "…", tone: "muted" },
-            { label: "WorkOrder", value: m?.workOrders ?? "…", tone: "muted" },
-            { label: "种子", value: (m?.workOrders ?? 0) > 0 ? "已就绪" : "待初始化", tone: (m?.workOrders ?? 0) > 0 ? "ok" : "warn" },
+            {
+              label: "数据集",
+              value: m?.datasets ?? "…",
+              tone: (m?.datasets ?? 0) > 0 ? "ok" : "warn",
+            },
+            { label: "构建", value: m?.builds ?? "…", tone: "muted" },
+            {
+              label: "工单",
+              value: m?.workOrders ?? "…",
+              tone: (m?.workOrders ?? 0) > 0 ? "ok" : "warn",
+            },
           ]}
         />
         <div className="bp-index-grid bp-index-grid-4">
-          <BpIndexTile to="/data" eyebrow="① Connector" title="数据连接" desc="Sources · Router · Sync" accent="cyan" />
-          <BpIndexTile to="/data/pipelines" eyebrow="② Pipeline" title="管道构建" desc="DAG 清洗" accent="cyan" />
-          <BpIndexTile to="/data/datasets" eyebrow="③ Dataset" title="Lakehouse" desc="预览 · 历史" accent="cyan" />
-          <BpIndexTile to="/ontology/okf-funnel" eyebrow="④ OKF" title="Funnel 映射" desc="列 → Property 映射" accent="emerald" />
+          <BpIndexTile to="/data" eyebrow="① 连接器" title="数据连接" desc="数据源 · 路由 · 同步" accent="cyan" />
+          <BpIndexTile to="/data/pipelines" eyebrow="② 管道" title="管道构建" desc="流程清洗" accent="cyan" />
+          <BpIndexTile to="/data/datasets" eyebrow="③ 数据集" title="数据湖仓" desc="预览 · 历史" accent="cyan" />
+          <BpIndexTile to="/ontology/okf-funnel" eyebrow="④ OKF" title="漏斗映射" desc="列 → 属性 映射" accent="emerald" />
         </div>
       </BpDomainPanel>
 
-      <BpDomainPanel tone="apollo" title="Apollo 交付引擎" hint="Hub · Release · 资产包 — Full 运行时与 Ferry 运维后置（本阶段不深化，仅保留导航）">
+      <BpDomainPanel
+        tone="apollo"
+        title="Apollo 交付引擎"
+        hint="枢纽 · 发布 · 资产包"
+      >
         <BpMetricGrid
+          density="compact"
           items={[
-            { label: "Lite", value: "已就绪", tone: "ok" },
-            { label: "Full 运行时", value: "后置", tone: "muted" },
-            { label: "Ferry 现场", value: "后置", tone: "muted" },
-            { label: "本波", value: "仅导航", tone: "muted" },
+            { label: "轻量版", value: "已就绪", tone: "ok" },
+            { label: "完整运行时", value: "规划中", tone: "muted" },
+            { label: "现场摆渡", value: "规划中", tone: "muted" },
           ]}
         />
         <div className="bp-index-grid bp-index-grid-3">
-          <BpIndexTile to="/apollo" eyebrow="Hub" title="舰队视图" desc="Spoke 健康 · Probe" accent="indigo" />
-          <BpIndexTile to="/apollo/release" eyebrow="Release" title="发布通道" desc="rc → beta → stable" accent="indigo" />
-          <BpIndexTile to="/apollo/assets" eyebrow="Assets" title="FDE 资产包" desc="SemVer · Channel" accent="indigo" />
+          <BpIndexTile to="/apollo" eyebrow="枢纽" title="舰队视图" desc="节点健康 · 探活" accent="indigo" />
+          <BpIndexTile to="/apollo/release" eyebrow="发布" title="发布通道" desc="预发 → 公测 → 稳定" accent="indigo" />
+          <BpIndexTile to="/apollo/assets" eyebrow="资产" title="现场资产包" desc="版本号 · 通道" accent="indigo" />
         </div>
       </BpDomainPanel>
     </>

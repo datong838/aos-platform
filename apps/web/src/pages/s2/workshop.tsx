@@ -168,7 +168,7 @@ export function GraphExplorerPage() {
                 );
               })}
               {!graphNodes.center && (
-                <p className="muted" style={{ textAlign: "center" }}>暂无实例 · 先初始化种子</p>
+                <p className="muted" style={{ textAlign: "center" }}>暂无实例 · 请到数据连接接入源</p>
               )}
             </div>
             <ul className="card-list" style={{ marginTop: "1rem" }}>

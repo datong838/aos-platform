@@ -58,7 +58,7 @@ export function AppShell() {
   }, []);
 
   const crumbs = useMemo(
-    () => active?.crumbs ?? ["概览"],
+    () => active?.crumbs ?? ["工作区", "AOS 概览"],
     [active],
   );
 
@@ -96,8 +96,8 @@ export function AppShell() {
                 <NavIcon name={item.icon} />
                 <span className="aos-nav-label">{item.label}</span>
                 {item.status === "s2" ? (
-                  <span className="aos-nav-badge" title="蓝图占位 · T-UI S2">
-                    S2
+                  <span className="aos-nav-badge" title="导航占位">
+                    占位
                   </span>
                 ) : null}
               </NavLink>

@@ -141,7 +141,7 @@ export function StudioPage() {
 
         {tab === "tools" && (
           <div className="bp-object-panel">
-            <p className="muted">已绑定工具（示意 + API 目录）</p>
+            <p className="muted">已绑定工具（含 API 目录）</p>
             <BpTable columns={["工具", "开关", "策略"]} rows={toolRows} />
             <BpLinkRow links={[{ to: "/aip/tools", label: "打开完整工具面板" }]} />
           </div>
@@ -196,7 +196,7 @@ export function StudioPage() {
               <div className="bp-object-panel">
                 <div className="bp-ws-section-title">工作台预览</div>
                 <p className="muted" style={{ fontSize: "0.875rem" }}>
-                  已读 WorkOrder + Wiki。建议 Action「更新状态」→ 进入 Draft（示意）。
+                  已读 WorkOrder + Wiki。建议 Action「更新状态」→ 进入提案审批。
                 </p>
                 <Link
                   to="/workshop/buddy?order=wo-1001&assist=1"

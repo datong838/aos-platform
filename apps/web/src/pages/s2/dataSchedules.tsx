@@ -55,7 +55,7 @@ export function SchedulesPage() {
   }>("/v1/schedules");
   const [tab, setTab] = useState<"cron" | "upstream">("cron");
   const [cron, setCron] = useState("0 2 * * *");
-  const [pipelineId, setPipelineId] = useState("demo-pipe-wo");
+  const [pipelineId, setPipelineId] = useState("");
   const [name, setName] = useState("订单清洗 · 每日增量");
   const [editId, setEditId] = useState<string | null>(null);
   const [upstreamA, setUpstreamA] = useState(true);
@@ -185,8 +185,8 @@ export function SchedulesPage() {
             </label>
 
             <BpToolbar>
-              <button type="button" className="btn" onClick={() => void createSch()}>
-                新建
+              <button type="button" className="btn-primary" onClick={() => void createSch()}>
+                + 新建计划
               </button>
               <button type="button" className="btn" onClick={() => void saveSch()}>
                 保存计划

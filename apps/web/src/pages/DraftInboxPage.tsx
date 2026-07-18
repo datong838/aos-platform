@@ -76,32 +76,11 @@ export function DraftInboxPage() {
         actionTypeId: "CloseWorkOrder",
         objectType: "WorkOrder",
         objectId: "wo-1001",
-        proposed: { reason: "ui-demo" },
-        title: "UI 关闭工单提案",
+        proposed: { reason: "manual" },
+        title: "关闭工单提案",
       });
       setMsg(`已创建 ${d.id}（未写生产）`);
       setSelectedId(d.id);
-      await reload();
-    } catch (e) {
-      setErr(String((e as Error).message || e));
-    }
-  }
-
-  async function runWriteback() {
-    setErr(null);
-    setMsg("");
-    try {
-      const r = await apiPost<{
-        before?: { status?: string };
-        after?: { status?: string };
-        draftId?: string;
-        lineageId?: string;
-        objectId?: string;
-      }>("/v1/demo/run-story", {});
-      setMsg(
-        `写回 OK · ${r.objectId} status ${r.before?.status} → ${r.after?.status} · draft=${r.draftId} · lineage=${r.lineageId}`,
-      );
-      if (r.draftId) setSelectedId(r.draftId);
       await reload();
     } catch (e) {
       setErr(String((e as Error).message || e));
@@ -212,10 +191,7 @@ export function DraftInboxPage() {
 
       <BpToolbar>
         <button type="button" className="btn" onClick={() => void createSample()}>
-          新建示例 Draft
-        </button>
-        <button type="button" className="btn" onClick={() => void runWriteback()}>
-          一键写回闭环
+          新建提案
         </button>
       </BpToolbar>
 
@@ -231,7 +207,7 @@ export function DraftInboxPage() {
 
       <div style={{ marginTop: "1rem" }}>
         {items.length === 0 && !err && (
-          <p className="muted">队列为空 · 可新建示例或一键写回</p>
+          <p className="muted">队列为空 · 可新建提案</p>
         )}
         {items.length > 0 && (
           <BpSplit

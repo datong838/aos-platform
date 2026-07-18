@@ -40,7 +40,7 @@ export type IconName =
   | "search";
 
 export const NAV_ITEMS: NavItem[] = [
-  { id: "index", path: "/", label: "概览", icon: "home", status: "live", crumbs: ["概览"] },
+  { id: "index", path: "/", label: "概览", icon: "home", status: "live", crumbs: ["工作区", "AOS 概览"] },
   { section: "工作台 L3" },
   { id: "workshop", path: "/workshop", label: "应用列表", icon: "apps", status: "live", crumbs: ["工作台", "应用列表"] },
   {
@@ -70,10 +70,10 @@ export const NAV_ITEMS: NavItem[] = [
   {
     id: "workshop-aip-chat",
     path: "/workshop/buddy",
-    label: "Buddy · 智能助手",
+    label: "智能助手",
     icon: "chat",
     status: "live",
-    crumbs: ["工作台", "Buddy"],
+    crumbs: ["工作台", "智能助手"],
   },
   {
     id: "workshop-cop",
@@ -143,18 +143,18 @@ export const NAV_ITEMS: NavItem[] = [
   {
     id: "agents",
     path: "/aip/studio",
-    label: "Chatbot Studio",
+    label: "对话工作室",
     icon: "chat",
     status: "live",
-    crumbs: ["AIP", "Chatbot Studio"],
+    crumbs: ["AIP", "对话工作室"],
   },
   {
     id: "aip-tools",
     path: "/aip/tools",
-    label: "Agent 工具面板",
+    label: "智能体工具面板",
     icon: "wrench",
     status: "live",
-    crumbs: ["AIP", "Agent 工具面板"],
+    crumbs: ["AIP", "智能体工具面板"],
   },
   {
     id: "aip-logic",
@@ -167,10 +167,10 @@ export const NAV_ITEMS: NavItem[] = [
   {
     id: "aip-draft-inbox",
     path: "/aip/drafts",
-    label: "Draft 审批台",
+    label: "提案审批台",
     icon: "inbox",
     status: "live",
-    crumbs: ["AIP", "Draft 审批台"],
+    crumbs: ["AIP", "提案审批台"],
   },
   {
     id: "aip-decision-lineage",
@@ -183,10 +183,10 @@ export const NAV_ITEMS: NavItem[] = [
   {
     id: "aip-evals",
     path: "/aip/evals",
-    label: "Evals 门控",
+    label: "评测门控",
     icon: "check",
     status: "live",
-    crumbs: ["AIP", "Evals"],
+    crumbs: ["AIP", "评测门控"],
   },
   { section: "本体 · 数字孪生" },
   {

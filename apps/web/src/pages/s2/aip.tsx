@@ -265,11 +265,11 @@ export function ProvidersPage() {
     { label: "secret ref", value: vaultRef },
     { label: "defaultTextModel", value: data?.defaultTextModel || "—", tone: "ok" },
     { label: "probe", value: data?.probe?.ok ? "OK" : "—", tone: data?.probe?.ok ? "ok" : "warn" },
-    { label: "Dev 配置", value: agnesReady ? "aos-platform/.env" : "LiteLLM / mock" },
+    { label: "配置源", value: agnesReady ? "aos-platform/.env" : "LiteLLM / mock" },
   ];
 
   return (
-    <S2Chrome title="模型供应商" lede="先接入供应商 · 再配路由；Dev 默认 Agnes（.env）· Facade 不直连厂商 SDK">
+    <S2Chrome title="模型供应商" lede="先接入供应商 · 再配路由；默认读环境变量 · Facade 不直连厂商 SDK">
       <BpToolbar>
         <button type="button" className="btn" onClick={() => reload()}>
           刷新
@@ -354,14 +354,14 @@ export function ProvidersPage() {
           </div>
           {catalogType && !agnesReady && (
             <BpBanner tone="info">
-              「{PROVIDER_CATALOG.find((c) => c.id === catalogType)?.title}」持久化接入 API 后置 · 当前仅示意表单。
+              「{PROVIDER_CATALOG.find((c) => c.id === catalogType)?.title}」持久化接入规划中 · 当前为配置预览表单。
             </BpBanner>
           )}
           <BpPropGrid items={credItems} />
           {!catalogType && (
             <>
               <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginTop: "0.75rem" }}>
-                Endpoint（Dev 只读 · 来自 API）
+                Endpoint（只读 · 来自 API）
                 <input value={endpoint} readOnly style={{ width: "100%", opacity: 0.85 }} />
               </label>
               <label className="muted" style={{ display: "block", marginTop: 8, fontSize: "0.75rem" }}>
@@ -404,7 +404,7 @@ export function ProvidersPage() {
       )}
 
       <div className="bp-ws-section-title" style={{ marginTop: "1rem" }}>
-        可接入类型（示意）
+        可接入类型
       </div>
       <div className="bp-discover-grid">
         {PROVIDER_CATALOG.map((c) => (
@@ -413,7 +413,7 @@ export function ProvidersPage() {
             onClick={() => {
               setCatalogType(c.id);
               setCfgOpen(true);
-              setMsg("该类型持久化接入 API 后置（Dev 请先用 .env Agnes）");
+              setMsg("该类型持久化接入规划中 · 请先用环境变量配置默认供应商");
             }}
             title={c.title}
             meta={c.meta}
@@ -438,8 +438,7 @@ export function ProvidersPage() {
       />
 
       <BpBanner tone="info">
-        Dev 默认在 <code>.env</code> 配置 Agnes；改后{" "}
-        <code>bash scripts/demo/ensure-api.sh --restart</code>。路由策略在
+        在环境变量中配置默认模型供应商；改后重启 API。路由策略在
         <Link to="/aip/model-router"> 模型路由</Link> 配置。
       </BpBanner>
     </S2Chrome>
@@ -555,7 +554,7 @@ export function ModelRouterPage() {
       {(err || models.err || warm.err) && <p className="error">{err || models.err || warm.err}</p>}
 
       <BpBanner tone="info">
-        Dev 默认使用 <strong>.env</strong> 中的 Agnes 模型；试聊与 Buddy 走同一网关。新增供应商 →
+        默认使用环境变量中的模型配置；试聊与智能助手走同一网关。新增供应商 →
         <Link to="/aip/model-providers"> 模型供应商</Link>。
       </BpBanner>
 
@@ -565,7 +564,7 @@ export function ModelRouterPage() {
         </div>
         <BpTable columns={["任务类型", "首选", "回退", "出境"]} rows={routeRows} />
         <p className="muted" style={{ fontSize: "0.75rem", marginTop: "0.5rem" }}>
-          sidecar={models.data?.sidecar || warm.data?.sidecar || "—"} · 策略持久化 API 后置，当前由 catalog 推导
+          sidecar={models.data?.sidecar || warm.data?.sidecar || "—"} · 路由策略由当前 catalog 推导
         </p>
       </div>
 
@@ -689,7 +688,7 @@ export function EvalsPage() {
           {
             value: green ? "42" : "—",
             label: "测试用例（登记）",
-            hint: "含回归黄金集（引擎后置）",
+            hint: "含回归黄金集",
             tone: "warn",
           },
           {
@@ -902,7 +901,7 @@ export function DecisionLineagePage() {
         <BpLineageTimeline steps={timelineSteps} />
       ) : (
         <p className="muted" style={{ marginTop: "0.75rem" }}>
-          暂无谱系 · 先在 Draft 审批台批准或一键写回，再点治理探针
+          暂无谱系 · 请先在提案审批台批准写入，再点治理探针
         </p>
       )}
 

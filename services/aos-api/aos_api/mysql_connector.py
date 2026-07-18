@@ -71,6 +71,8 @@ def _connect(settings: dict[str, Any] | None = None):
         user=s["user"],
         password=s["password"],
         database=s["database"],
+        charset="utf8mb4",
+        use_unicode=True,
         cursorclass=pymysql.cursors.DictCursor,
         connect_timeout=5,
         read_timeout=10,
@@ -140,6 +142,45 @@ def map_row(row: dict[str, Any], mapping: dict[str, str] | None = None) -> tuple
     return object_id, props
 
 
+# Canonical Dev seed titles (must match deploy/dev/mysql/init.sql)
+_SOURCE_TITLE_SEED = (
+    ("mysql-wo-001", "MySQL供数-巡检单", "open", "DC-East", "P1"),
+    ("mysql-wo-002", "MySQL供数-备件", "in_progress", "DC-West", "P0"),
+)
+
+
+def repair_mysql_source_titles() -> dict[str, Any]:
+    """36 §7 · Fix double-encoded Dev source titles (idempotent)."""
+    if disabled():
+        return {"ok": True, "mode": "disabled", "updated": 0}
+    s = get_settings()
+    try:
+        with _connect(s) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci")
+                updated = 0
+                for oid, title, status, site, priority in _SOURCE_TITLE_SEED:
+                    cur.execute(
+                        f"""
+                        INSERT INTO `{s['table']}` (id, title, status, site, priority)
+                        VALUES (%s, %s, %s, %s, %s)
+                        ON DUPLICATE KEY UPDATE
+                          title=VALUES(title),
+                          status=VALUES(status),
+                          site=VALUES(site),
+                          priority=VALUES(priority)
+                        """,
+                        (oid, title, status, site, priority),
+                    )
+                    updated += cur.rowcount if cur.rowcount and cur.rowcount > 0 else 0
+            conn.commit()
+        log.info("mysql_source_titles_repaired updated=%s", updated)
+        return {"ok": True, "mode": "live", "updated": updated, "table": s["table"]}
+    except Exception as exc:  # noqa: BLE001
+        log.warning("mysql_source_titles_repair_fail err=%s", exc)
+        return {"ok": False, "mode": "error", "detail": str(exc), "updated": 0}
+
+
 def ingest(
     *,
     object_type: str = "WorkOrder",
@@ -152,6 +193,7 @@ def ingest(
     if disabled():
         return {"ok": False, "mode": "disabled", "written": 0}
 
+    repair_mysql_source_titles()
     probed = probe(limit=limit, object_type=object_type)
     if not probed.get("ok") or probed.get("mode") != "live":
         return {**probed, "written": 0}

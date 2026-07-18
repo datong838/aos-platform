@@ -181,7 +181,7 @@ export function BuddyPage({
 
             {!loading && rows.length === 0 && (
               <p className="muted" style={{ padding: "0.75rem" }}>
-                暂无工单 · 先到 <Link to="/data">数据连接</Link> 初始化种子
+                暂无工单 · 请到 <Link to="/data">数据连接</Link> 新建数据源并完成同步
               </p>
             )}
 

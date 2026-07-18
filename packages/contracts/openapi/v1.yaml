@@ -1,10 +1,11 @@
 openapi: 3.0.3
 info:
   title: aos-api
-  version: 0.3.0
+  version: 0.3.1
   description: >
     Stable contract surface per docs/palantier/20_tech/T-API-aos-api稳定契约.md.
-    Aligned Wave-0～5 + G-ALIGN (47) — main paths listed; see T-API for full narrative.
+    Aligned Wave-0～5 + G-ALIGN + TA.0 analytics stubs (scheme 73 v1.1).
+    See T-API for full narrative.
 servers:
   - url: /v1
 paths:
@@ -710,6 +711,143 @@ paths:
           description: verified
         "403":
           description: signature missing/invalid
+
+  # —— TA.0 · Analytics / Notebooks (scheme 73 v1.1 · stub; implement TA.1+) ——
+  /notebooks/sessions:
+    post:
+      operationId: createNotebookSession
+      summary: Create analytics notebook session (Facade → Jupyter sidecar ticket)
+      description: >
+        TA.0 contract stub. Web must not hold Jupyter admin credentials.
+        Returns short-lived ticket / controlled URL for Notebook 7 embed.
+        Write-back of analysis results MUST go via /aip/drafts (no analyst self-approve).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                objectType:
+                  type: string
+                  description: Optional Ontology type context (e.g. WorkOrder)
+                datasetRid:
+                  type: string
+                purpose:
+                  type: string
+                  enum: [explore, writeback-prep]
+      responses:
+        "200":
+          description: session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotebookSession"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          description: analytics-runtime sidecar unavailable
+    get:
+      operationId: listNotebookSessions
+      summary: List notebook sessions for current principal
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: sessions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/NotebookSession"
+  /notebooks/sessions/{sessionId}:
+    get:
+      operationId: getNotebookSession
+      summary: Session status / controlled UI URL
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotebookSession"
+        "404":
+          description: not found
+    delete:
+      operationId: stopNotebookSession
+      summary: Stop session / revoke ticket
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: stopped
+  /analytics/sql/preview:
+    post:
+      operationId: analyticsSqlPreview
+      summary: SQL explore preview (DuckDB / Dataset; read-only)
+      description: TA.0 stub · TA.4 implements. Does not write production Ontology.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sql]
+              properties:
+                sql:
+                  type: string
+                datasetRid:
+                  type: string
+                limit:
+                  type: integer
+                  default: 100
+                  maximum: 1000
+      responses:
+        "200":
+          description: preview rows
+        "400":
+          description: invalid sql / marking deny
+  /analytics/health:
+    get:
+      operationId: analyticsHealth
+      summary: Analytics runtime sidecar health
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  sidecar:
+                    type: string
+                  notebookUi:
+                    type: string
+                    description: notebook7 | deferred
 components:
   securitySchemes:
     bearerAuth:
@@ -760,6 +898,27 @@ components:
           items:
             type: object
             additionalProperties: true
+    NotebookSession:
+      type: object
+      required: [id, status]
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [creating, idle, busy, stopped, error]
+        uiUrl:
+          type: string
+          description: Controlled Notebook 7 URL (ticketed; not raw Jupyter admin)
+        ticketExpiresAt:
+          type: string
+          format: date-time
+        objectType:
+          type: string
+        datasetRid:
+          type: string
+        sidecar:
+          type: string
   responses:
     Unauthorized:
       description: AUTH_REQUIRED

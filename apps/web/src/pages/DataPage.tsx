@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { apiGet, apiPost } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
@@ -7,7 +7,6 @@ import {
   BpLinkRow,
   BpMetricGrid,
   BpPropGrid,
-  BpStagePipeline,
   BpTable,
   BpTabs,
   BpToolbar,
@@ -18,6 +17,7 @@ type DatasetRow = {
   name?: string;
   status?: string;
   pipelineId?: string;
+  sourceId?: string;
   objectTypeHint?: string;
 };
 
@@ -34,371 +34,447 @@ type DlqRow = {
   pipelineId?: string;
 };
 
-type RouteOut = {
-  route: string;
-  sizeBytes: number;
-  threshold: number;
-  reason?: string;
-  target?: string | null;
-};
-
-type SourceRow = { id?: string; type?: string; status?: string };
-type SyncRow = { id?: string; sourceId?: string; status?: string };
+type SourceRow = { id?: string; type?: string; status?: string; runtimeMode?: string };
+type SyncRow = { id?: string; sourceId?: string; status?: string; finishedAt?: number };
 type PipelineRow = { id?: string; sourceId?: string; status?: string };
 
-/** 100 · data hub + Source 向导 · Hub live 指标 + L1 链路态 */
+type MainTab = "sources" | "syncs" | "agents" | "exports";
+type SourceView = "list" | "new" | "detail";
+type RuntimeMode = "direct" | "agent" | "worker";
+
+function statusZh(s?: string): string {
+  const v = (s || "").toUpperCase();
+  if (!s) return "—";
+  if (v === "SUCCEEDED" || v === "SUCCESS" || v === "OK" || v === "ACTIVE" || v === "ONLINE" || v === "REGISTERED")
+    return "在线";
+  if (v === "RUNNING" || v === "IN_PROGRESS") return "同步中";
+  if (v === "FAILED" || v === "ERROR") return "失败";
+  if (v === "OPEN") return "打开";
+  return s;
+}
+
+function connectorLabel(t?: string): string {
+  if (!t) return "—";
+  if (t === "file") return "文件 · 文档";
+  if (t === "jdbc") return "MySQL JDBC";
+  return t;
+}
+
+function connectorTone(t?: string): "sky" | "emerald" | "amber" | "muted" {
+  if (t === "jdbc") return "sky";
+  if (t === "file") return "emerald";
+  return "muted";
+}
+
+function storageLabel(t?: string): { text: string; kind: "dataset" | "media" | "stream" } {
+  if (t === "file") return { text: "媒体集·文档", kind: "media" };
+  return { text: "数据集", kind: "dataset" };
+}
+
+function sourceSubtitle(t?: string): string {
+  if (t === "file") return "文件接入 · 文档 / 表格";
+  if (t === "jdbc") return "结构化入库 · JDBC";
+  return "外部系统接入";
+}
+
+function runtimeLabel(s: SourceRow): string {
+  const mode = (s.runtimeMode || "").toLowerCase();
+  if (mode === "agent") return "代理 · agent-local";
+  if (mode === "worker") return "代理工作者";
+  if (mode === "direct") return "直接连接";
+  if (s.type === "jdbc") return "代理 · agent-local";
+  return "直接连接";
+}
+
+function formatRelative(ts?: number): string {
+  if (!ts || !Number.isFinite(ts)) return "—";
+  const sec = Math.max(0, Math.round(Date.now() / 1000 - ts));
+  if (sec < 60) return "刚刚";
+  if (sec < 3600) return `${Math.floor(sec / 60)} 分钟前`;
+  if (sec < 86400) return `${Math.floor(sec / 3600)} 小时前`;
+  return `${Math.floor(sec / 86400)} 天前`;
+}
+
+function lastSyncFor(sourceId: string | undefined, syncs: SyncRow[]): string {
+  if (!sourceId) return "—";
+  const linked = syncs.filter((s) => s.sourceId === sourceId);
+  if (!linked.length) return "—";
+  const latest = linked.reduce((a, b) => ((a.finishedAt || 0) >= (b.finishedAt || 0) ? a : b));
+  const st = (latest.status || "").toUpperCase();
+  if (st === "RUNNING" || st === "IN_PROGRESS") return "持续运行";
+  return formatRelative(latest.finishedAt);
+}
+
+function StatusDot({ status }: { status?: string }) {
+  const label = statusZh(status);
+  const v = (status || "").toUpperCase();
+  let tone: "ok" | "warn" | "run" | "bad" | "muted" = "muted";
+  if (label === "在线" || v === "SUCCEEDED" || v === "REGISTERED" || v === "ACTIVE") tone = "ok";
+  else if (label === "同步中") tone = "run";
+  else if (label === "失败") tone = "bad";
+  else if (v.includes("WARN") || v.includes("ALERT")) tone = "warn";
+  return (
+    <span className={`data-status data-status-${tone}`}>
+      <span className="data-status-dot" aria-hidden />
+      <span>{label}</span>
+    </span>
+  );
+}
+
+function ConnectorTag({ type }: { type?: string }) {
+  return <span className={`data-tag data-tag-${connectorTone(type)}`}>{connectorLabel(type)}</span>;
+}
+
+function StoragePill({ type }: { type?: string }) {
+  const s = storageLabel(type);
+  return <span className={`data-storage data-storage-${s.kind}`}>{s.text}</span>;
+}
+
+function syncRunStatus(s?: string): { label: string; tone: "ok" | "run" | "bad" | "muted" } {
+  const v = (s || "").toUpperCase();
+  if (v === "SUCCEEDED" || v === "SUCCESS" || v === "OK") return { label: "成功", tone: "ok" };
+  if (v === "RUNNING" || v === "IN_PROGRESS") return { label: "运行中", tone: "run" };
+  if (v === "FAILED" || v === "ERROR") return { label: "失败", tone: "bad" };
+  if (!s) return { label: "—", tone: "muted" };
+  return { label: statusZh(s), tone: "muted" };
+}
+
+function SyncStatusText({ status }: { status?: string }) {
+  const { label, tone } = syncRunStatus(status);
+  return <span className={`data-sync-status-${tone}`}>{label}</span>;
+}
+
+function ActionLinks({ items }: { items: { to?: string; label: string; onClick?: () => void }[] }) {
+  return (
+    <div className="bp-action-links">
+      {items.map((it, i) => (
+        <Fragment key={it.label}>
+          {i > 0 ? <span className="bp-action-sep">·</span> : null}
+          {it.to ? (
+            <Link to={it.to} className="bp-action-link">
+              {it.label}
+            </Link>
+          ) : (
+            <button type="button" className="bp-action-link" onClick={it.onClick}>
+              {it.label}
+            </button>
+          )}
+        </Fragment>
+      ))}
+    </div>
+  );
+}
+
+type ScheduleRow = { id?: string; pipelineId?: string; cron?: string; name?: string; enabled?: boolean };
+type EdgeAgent = { id?: string; probeOk?: boolean; outbound?: boolean };
+
+/** 74/76 · 对齐 data-connection · 六列表 · 蓝图按钮风格 */
 export function DataPage() {
-  const [tab, setTab] = useState("hub");
+  const [tab, setTab] = useState<MainTab>("sources");
+  const [sourceView, setSourceView] = useState<SourceView>("list");
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [datasets, setDatasets] = useState<DatasetRow[]>([]);
-  const [builds, setBuilds] = useState<BuildRow[]>([]);
   const [dlq, setDlq] = useState<DlqRow[]>([]);
   const [sources, setSources] = useState<SourceRow[]>([]);
   const [syncs, setSyncs] = useState<SyncRow[]>([]);
   const [pipelines, setPipelines] = useState<PipelineRow[]>([]);
+  const [schedules, setSchedules] = useState<ScheduleRow[]>([]);
+  const [edgeAgent, setEdgeAgent] = useState<EdgeAgent | null>(null);
   const [mediaCount, setMediaCount] = useState(0);
-  const [workOrders, setWorkOrders] = useState(0);
   const [selectedSource, setSelectedSource] = useState<SourceRow | null>(null);
-  const [sizeKb, setSizeKb] = useState("64");
-  const [target, setTarget] = useState("dataset");
-  const [routeOut, setRouteOut] = useState<RouteOut | null>(null);
   const [newSourceId, setNewSourceId] = useState("");
   const [connectorType, setConnectorType] = useState("file");
+  const [runtimeMode, setRuntimeMode] = useState<RuntimeMode>("agent");
   const [wizardStep, setWizardStep] = useState(1);
+  /** 前端记忆新建时的运行时（API 暂未持久化 runtimeMode） */
+  const [runtimeById, setRuntimeById] = useState<Record<string, RuntimeMode>>({});
 
   async function refresh() {
-    const [ds, b, d, src, syn, pipes, media, story] = await Promise.all([
+    const [ds, d, src, syn, pipes, media, sch, agent] = await Promise.all([
       apiGet<{ items: DatasetRow[] }>("/v1/datasets"),
-      apiGet<{ items: BuildRow[] }>("/v1/builds"),
       apiGet<{ items: DlqRow[] }>("/v1/dlq"),
       apiGet<{ items: SourceRow[] }>("/v1/sources"),
       apiGet<{ items: SyncRow[] }>("/v1/syncs"),
       apiGet<{ items: PipelineRow[] }>("/v1/pipelines"),
       apiGet<{ items: unknown[] }>("/v1/media-sets"),
-      apiGet<{ snapshot?: { objectCount?: number } }>("/v1/demo/story"),
+      apiGet<{ items: ScheduleRow[] }>("/v1/schedules").catch(() => ({ items: [] as ScheduleRow[] })),
+      apiGet<EdgeAgent>("/v1/edge/agents/local").catch(() => null),
     ]);
     setDatasets(ds.items || []);
-    setBuilds(b.items || []);
     setDlq(d.items || []);
     setSources(src.items || []);
     setSyncs(syn.items || []);
     setPipelines(pipes.items || []);
     setMediaCount((media.items || []).length);
-    setWorkOrders(story.snapshot?.objectCount ?? 0);
+    setSchedules(sch.items || []);
+    setEdgeAgent(agent);
     if (selectedSource?.id) {
       const found = (src.items || []).find((s) => s.id === selectedSource.id);
-      if (found) setSelectedSource(found);
+      if (found) setSelectedSource(enrichSource(found));
     }
+  }
+
+  function enrichSource(s: SourceRow): SourceRow {
+    if (s.runtimeMode) return s;
+    const remembered = s.id ? runtimeById[s.id] : undefined;
+    return remembered ? { ...s, runtimeMode: remembered } : s;
   }
 
   useEffect(() => {
     refresh().catch((e) => setErr(String(e.message || e)));
   }, []);
 
-  async function ensureSeed() {
-    setErr(null);
-    try {
-      await apiPost("/v1/demo/ensure-seed", {});
-      setMsg("业务数据已初始化 · Dataset/Build/DLQ 可指屏");
-      await refresh();
-    } catch (e) {
-      setErr(String((e as Error).message || e));
-    }
-  }
-
-  async function demoPipeline() {
-    setErr(null);
-    try {
-      await apiPost("/v1/sources", { id: "file-ui", type: "file" });
-      const media = await apiPost<{ rid: string }>("/v1/media-sets", {
-        name: "ui-clip.bin",
-        bytesBase64: "dWk=",
-      });
-      await apiPost("/v1/pipelines", { id: "ui-p1", sourceId: "file-ui" });
-      await apiPost("/v1/schedules", { id: "ui-sch", pipelineId: "ui-p1" });
-      setMsg(`现场 Pipeline OK · Media ${media.rid}`);
-      await refresh();
-    } catch (e) {
-      setErr(String((e as Error).message || e));
-    }
-  }
-
-  async function probeRoute() {
-    setErr(null);
-    try {
-      const sizeBytes = Math.max(0, Math.round(Number(sizeKb) * 1024));
-      const out = await apiPost<RouteOut>("/v1/sync-routing", { sizeBytes, target });
-      setRouteOut(out);
-      setMsg(`Router → ${out.route}${out.reason ? ` · ${out.reason}` : ""}`);
-    } catch (e) {
-      setErr(String((e as Error).message || e));
-    }
-  }
-
-  async function createFromRoute() {
-    setErr(null);
-    try {
-      const sizeBytes = Math.max(0, Math.round(Number(sizeKb) * 1024));
-      const routed = await apiPost<RouteOut>("/v1/sync-routing", { sizeBytes, target });
-      setRouteOut(routed);
-      const sid = `src-router-${Date.now().toString(36)}`;
-      await apiPost("/v1/sources", { id: sid, type: "file" });
-      const sync = await apiPost<{ id: string }>("/v1/syncs", { sourceId: sid });
-      setMsg(`已建 source=${sid} · sync=${sync.id} · route=${routed.route}`);
-      await refresh();
-    } catch (e) {
-      setErr(String((e as Error).message || e));
-    }
-  }
-
   async function createSource() {
     const id = newSourceId.trim() || `src-${Date.now().toString(36)}`;
     setErr(null);
     try {
       await apiPost("/v1/sources", { id, type: connectorType });
-      setMsg(`已创建 Source ${id}`);
+      setRuntimeById((prev) => ({ ...prev, [id]: runtimeMode }));
+      setMsg(`已创建数据源 ${id}`);
       setNewSourceId("");
-      setWizardStep(4);
+      setWizardStep(1);
       await refresh();
-      setSelectedSource({ id, type: connectorType, status: "active" });
-      setTab("detail");
+      setSelectedSource({ id, type: connectorType, status: "registered", runtimeMode });
+      setSourceView("detail");
+      setTab("sources");
     } catch (e) {
       setErr(String((e as Error).message || e));
     }
   }
 
+  async function createSyncJob() {
+    setErr(null);
+    if (!sources.length) {
+      setErr("请先新建数据源");
+      setTab("sources");
+      setSourceView("new");
+      return;
+    }
+    try {
+      const sourceId = sources[0].id!;
+      const sync = await apiPost<{ id: string }>("/v1/syncs", { sourceId });
+      setMsg(`已创建同步 ${sync.id}`);
+      await refresh();
+      setTab("syncs");
+    } catch (e) {
+      setErr(String((e as Error).message || e));
+    }
+  }
+
+  function scheduleForSource(sourceId?: string): string {
+    if (!sourceId) return "—";
+    const pipeIds = new Set(pipelines.filter((p) => p.sourceId === sourceId).map((p) => p.id));
+    const hit = schedules.find((s) => s.pipelineId && pipeIds.has(s.pipelineId));
+    if (hit?.cron) return hit.cron;
+    if (hit?.name) return hit.name;
+    return "—";
+  }
+
+  function targetForSource(sourceId?: string): ReactNode {
+    const src = sources.find((s) => s.id === sourceId);
+    if (!src) return "—";
+    const ds = datasets.find((d) => d.sourceId === sourceId);
+    if (ds?.name || ds?.rid) {
+      return <span className="data-storage data-storage-dataset">{ds.name || ds.rid}</span>;
+    }
+    return <StoragePill type={src.type} />;
+  }
+
   const linkedSyncs = syncs.filter((s) => s.sourceId === selectedSource?.id);
   const linkedPipelines = pipelines.filter((p) => p.sourceId === selectedSource?.id);
-  const seedReady = datasets.length > 0 && workOrders > 0;
 
   const pipelineLinkForSource = (sourceId?: string) =>
     sourceId ? `/data/pipelines?sourceId=${encodeURIComponent(sourceId)}` : "/data/pipelines";
 
-  const l1Stages = [
-    {
-      step: "① Connector",
-      title: `Sources · ${sources.length}`,
-      subtitle: "file / jdbc · 注册入口",
-      status: sources.length > 0 ? "已接入" : "待建",
-      tone: (sources.length > 0 ? "done" : "wait") as "done" | "wait",
-      href: sources.length ? "#data-sources" : undefined,
-      linkLabel: "Sources 列表 →",
-    },
-    {
-      step: "② Sync",
-      title: `Sync Jobs · ${syncs.length}`,
-      subtitle: "Source → 路由 · sync-routing",
-      status: syncs.length > 0 ? "运行中" : "—",
-      tone: (syncs.length > 0 ? "done" : "wait") as "done" | "wait",
-      href: syncs.length ? "#data-syncs" : undefined,
-      linkLabel: "Sync 列表 →",
-    },
-    {
-      step: "③ Pipeline",
-      title: `Pipelines · ${pipelines.length} · Builds ${builds.length}`,
-      subtitle: `Datasets ${datasets.length} · DLQ ${dlq.length}`,
-      status: datasets.length > 0 ? "有产物" : "待 seed",
-      tone: (datasets.length > 0 ? "active" : "wait") as "active" | "wait",
-      href: "/data/pipelines",
-      linkLabel: "管道构建 →",
-    },
-    {
-      step: "④ 故事",
-      title: `WorkOrder · ${workOrders}`,
-      subtitle: "Ontology 实例 · Inbox/Buddy 同源",
-      status: workOrders > 0 ? "可演示" : "初始化业务数据",
-      tone: (workOrders > 0 ? "done" : "wait") as "done" | "wait",
-    },
-  ];
+  function openNewSource() {
+    setWizardStep(1);
+    setConnectorType("file");
+    setRuntimeMode("agent");
+    setNewSourceId("");
+    setSourceView("new");
+    setTab("sources");
+  }
+
+  function openSourceDetail(s: SourceRow) {
+    setSelectedSource(enrichSource(s));
+    setSourceView("detail");
+    setTab("sources");
+  }
+
+  const onlineCount = sources.filter((s) => statusZh(s.status) === "在线").length;
+  const syncOk = syncs.filter((s) => {
+    const v = (s.status || "").toUpperCase();
+    return v === "SUCCEEDED" || v === "SUCCESS" || v === "OK";
+  }).length;
+  const syncFail = syncs.length - syncOk;
+
+  function sourceRows(): ReactNode[][] {
+    if (!sources.length) return [["—", "—", "—", "—", "—", "暂无数据源"]];
+    return sources.map((raw) => {
+      const s = enrichSource(raw);
+      return [
+        <button key={`n-${s.id}`} type="button" className="data-src-name" onClick={() => openSourceDetail(s)}>
+          <span className="data-src-title">{s.id}</span>
+          <span className="data-src-sub">{sourceSubtitle(s.type)}</span>
+        </button>,
+        <ConnectorTag key={`c-${s.id}`} type={s.type} />,
+        <StoragePill key={`st-${s.id}`} type={s.type} />,
+        <span key={`r-${s.id}`} className="aos-text">
+          {runtimeLabel(s)}
+        </span>,
+        <span key={`ls-${s.id}`} className="aos-text">
+          {lastSyncFor(s.id, syncs)}
+        </span>,
+        <StatusDot key={`ss-${s.id}`} status={s.status} />,
+      ];
+    });
+  }
 
   return (
-    <PageChrome title="数据连接" lede="Sources/Syncs + Storage Router · 对齐 data-connection / source-new">
-      <BpToolbar>
-        <button type="button" className="btn" onClick={() => void ensureSeed()}>
-          初始化业务数据
-        </button>
-        <button type="button" className="btn" onClick={() => void demoPipeline()}>
-          再跑一趟文件 Pipeline
-        </button>
-        <button type="button" className="btn" onClick={() => void refresh().catch((e) => setErr(String(e)))}>
-          刷新
-        </button>
-      </BpToolbar>
-
+    <PageChrome
+      title="数据连接"
+      lede="把外部系统接入平台：先管数据源，再看同步与代理。日常从「数据源」列表运营。"
+    >
       <BpTabs
         tabs={[
-          { id: "hub", label: "连接 Hub" },
-          { id: "new", label: "新建 Source" },
-          { id: "detail", label: "Source 详情" },
+          { id: "sources", label: "数据源" },
+          { id: "syncs", label: "同步" },
+          { id: "agents", label: "代理" },
+          { id: "exports", label: "导出" },
         ]}
         active={tab}
-        onChange={setTab}
+        onChange={(id) => setTab(id as MainTab)}
       />
 
-      {msg && <p className="aos-text">{msg}</p>}
+      {msg && (
+        <p className="aos-text" style={{ marginTop: "0.75rem" }}>
+          {msg}
+        </p>
+      )}
       {err && <p className="error">{err}</p>}
 
-      {tab === "hub" && (
+      {tab === "sources" && sourceView === "list" && (
         <>
-          {!seedReady && (
-            <BpBanner tone="warn">
-              L1 故事未就绪（Dataset 或 WorkOrder 为 0）· 点上方「初始化业务数据」后再指屏演示。
-            </BpBanner>
-          )}
-
           <BpMetricGrid
             items={[
-              { label: "Sources", value: sources.length, tone: sources.length ? "ok" : "warn" },
-              { label: "Syncs", value: syncs.length, tone: "muted" },
-              { label: "Pipelines", value: pipelines.length, tone: "muted" },
-              { label: "Datasets", value: datasets.length, tone: datasets.length ? "ok" : "warn" },
-              { label: "Builds", value: builds.length, tone: "muted" },
-              { label: "DLQ", value: dlq.length, tone: dlq.length ? "warn" : "ok" },
-              { label: "MediaSets", value: mediaCount, tone: "muted" },
-              { label: "WorkOrder", value: workOrders, tone: workOrders ? "ok" : "warn" },
+              {
+                label: "数据源总数",
+                value: sources.length,
+                hint:
+                  sources.length === 0
+                    ? "暂无登记"
+                    : `${onlineCount} 在线${sources.length - onlineCount ? ` · ${sources.length - onlineCount} 需关注` : ""}`,
+                tone: sources.length ? "ok" : "warn",
+              },
+              {
+                label: "今日同步",
+                value: syncs.length,
+                hint:
+                  syncs.length === 0
+                    ? "尚无同步任务"
+                    : `成功 ${syncOk}${syncFail > 0 ? ` · 失败 ${syncFail}` : ""}`,
+                tone: syncFail > 0 ? "warn" : "muted",
+              },
+              {
+                label: "数据体量",
+                value: datasets.length || mediaCount ? `${datasets.length + mediaCount}` : "—",
+                hint: `数据集 ${datasets.length} · 媒体集 ${mediaCount}`,
+                tone: datasets.length || mediaCount ? "ok" : "muted",
+              },
+              {
+                label: "数据健康",
+                value: dlq.length ? (
+                  <span className="data-status data-status-warn">
+                    <span className="data-status-dot" aria-hidden />
+                    <span>{dlq.length} 告警</span>
+                  </span>
+                ) : (
+                  <span className="data-status data-status-ok">
+                    <span className="data-status-dot" aria-hidden />
+                    <span>正常</span>
+                  </span>
+                ),
+                hint: (
+                  <Link to="/data/health" className="nav-link">
+                    查看健康检查 →
+                  </Link>
+                ),
+                tone: dlq.length ? "warn" : "ok",
+              },
             ]}
           />
 
-          <div style={{ marginTop: "1rem" }}>
-            <div className="bp-ws-section-title">L1 链路态</div>
-            <BpStagePipeline stages={l1Stages} />
-          </div>
-
-          <BpLinkRow
-            links={[
-              { to: "/data/datasets", label: "Datasets" },
-              { to: "/data/schedules", label: "计划编辑器" },
-              { to: "/data/builds", label: "Builds" },
-              { to: "/data/health", label: "健康" },
-            ]}
-          />
-
-          <div className="bp-object-panel" style={{ marginTop: "1rem" }}>
-            <div className="bp-ws-section-title">Storage Router（sync-routing）</div>
-            <div className="filter-bar">
-              <label className="muted">
-                大小 KB{" "}
-                <input value={sizeKb} onChange={(e) => setSizeKb(e.target.value)} style={{ width: 72 }} />
-              </label>
-              <label className="muted">
-                目标{" "}
-                <select value={target} onChange={(e) => setTarget(e.target.value)}>
-                  <option value="dataset">Dataset</option>
-                  <option value="mediaset">MediaSet</option>
-                  <option value="stream">Stream</option>
-                </select>
-              </label>
-              <button type="button" className="btn" onClick={() => void probeRoute()}>
-                探测路由
-              </button>
-              <button type="button" className="btn" onClick={() => void createFromRoute()}>
-                按路由建 Source+Sync
+          <div className="filter-bar" style={{ marginTop: "0.75rem", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <select className="btn" disabled title="筛选占位 · 对齐蓝图">
+                <option>全部类型</option>
+                <option>JDBC</option>
+                <option>文件</option>
+              </select>
+              <select className="btn" disabled title="筛选占位 · 对齐蓝图">
+                <option>全部状态</option>
+                <option>在线</option>
+                <option>告警</option>
+              </select>
+              <button type="button" className="btn" onClick={() => void refresh().catch((e) => setErr(String(e)))}>
+                刷新
               </button>
             </div>
-            {routeOut && (
-              <BpPropGrid
-                items={[
-                  { label: "route", value: routeOut.route },
-                  { label: "sizeBytes", value: String(routeOut.sizeBytes) },
-                  { label: "threshold", value: String(routeOut.threshold) },
-                  { label: "reason", value: routeOut.reason || "—" },
-                ]}
-              />
-            )}
+            <button type="button" className="btn-primary" onClick={openNewSource}>
+              + 新建数据源
+            </button>
           </div>
 
-          <div className="canvas-grid" style={{ marginTop: "1rem" }}>
-            <div id="data-sources">
-              <div className="bp-ws-section-title">Sources（{sources.length}）</div>
-              <BpTable
-                columns={["id", "type", "status", ""]}
-                rows={
-                  sources.length
-                    ? sources.map((s) => [
-                        s.id,
-                        s.type,
-                        s.status || "—",
-                        <button
-                          key={String(s.id)}
-                          type="button"
-                          className="nav-link"
-                          onClick={() => {
-                            setSelectedSource(s);
-                            setTab("detail");
-                          }}
-                        >
-                          详情
-                        </button>,
-                      ])
-                    : [["—", "—", "—", ""]]
-                }
-              />
-            </div>
-            <div id="data-syncs">
-              <div className="bp-ws-section-title">Syncs（{syncs.length}）</div>
-              <BpTable
-                columns={["id", "sourceId", "status", ""]}
-                rows={
-                  syncs.length
-                    ? syncs.map((s) => [
-                        s.id,
-                        s.sourceId,
-                        s.status || "—",
-                        <Link key={String(s.id)} to={pipelineLinkForSource(s.sourceId)} className="nav-link">
-                          Pipeline →
-                        </Link>,
-                      ])
-                    : [["—", "—", "—", ""]]
-                }
-              />
-            </div>
+          <div id="data-sources" className="data-conn-table" style={{ marginTop: "0.75rem" }}>
+            <BpTable columns={["名称", "连接器", "存储类型", "运行时", "上次同步", "状态"]} rows={sourceRows()} />
           </div>
-
-          <div className="bp-ws-section-title" style={{ marginTop: "1rem" }}>
-            Datasets / Builds / DLQ
-          </div>
-          <BpTable
-            columns={["Dataset", "status", "pipeline"]}
-            rows={datasets.map((d) => [d.name || d.rid, d.status, d.pipelineId || "—"])}
-          />
-          <BpTable
-            columns={["Build", "status", "pipeline"]}
-            rows={builds.map((b) => [b.id, b.status, b.pipelineId || "—"])}
-          />
-          {dlq.length > 0 && (
-            <BpTable
-              columns={["DLQ", "status", "reason"]}
-              rows={dlq.map((row) => [row.id, row.status, row.reason || "—"])}
-            />
-          )}
         </>
       )}
 
-      {tab === "new" && (
-        <div className="bp-object-panel">
-          <div className="bp-ws-section-title">新建数据源 · 4 步向导</div>
-          <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", fontSize: "0.75rem" }}>
-            {[1, 2, 3, 4].map((n) => (
-              <span
-                key={n}
-                className={`bp-tag${wizardStep >= n ? " bp-tag-ok" : ""}`}
-                style={{ borderRadius: "999px", padding: "0.2rem 0.5rem" }}
-              >
-                {n}. {["连接器", "运行时", "连接", "凭证"][n - 1]}
-              </span>
-            ))}
+      {tab === "sources" && sourceView === "new" && (
+        <div className="bp-object-panel" style={{ marginTop: "0.75rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+            <div>
+              <div className="bp-object-title">新建数据源</div>
+              <p className="muted" style={{ fontSize: "0.8rem", marginTop: 4 }}>
+                配置连接器、运行时与凭证，将外部系统接入数据湖仓。
+              </p>
+            </div>
+            <button type="button" className="nav-link" onClick={() => setSourceView("list")}>
+              ← 返回列表
+            </button>
+          </div>
+
+          <div className="data-wizard-steps" aria-label="新建步骤">
+            {(["连接器", "运行时", "连接", "凭证"] as const).map((label, i) => {
+              const n = i + 1;
+              const active = wizardStep === n;
+              const done = wizardStep > n;
+              return (
+                <div key={label} className="data-wizard-step">
+                  <span className={`data-wizard-dot${active ? " is-active" : ""}${done ? " is-done" : ""}`}>
+                    {n}
+                  </span>
+                  <span className={active ? "aos-text" : "muted"} style={{ fontSize: "0.8rem" }}>
+                    {label}
+                  </span>
+                  {n < 4 && <span className="data-wizard-line" />}
+                </div>
+              );
+            })}
           </div>
 
           {wizardStep === 1 && (
             <>
-              <p className="muted" style={{ fontSize: "0.875rem" }}>
-                P0 文件类型优先 · P1 JDBC/MySQL 结构化入库
+              <div className="bp-ws-section-title">选择连接器类型</div>
+              <p className="muted" style={{ fontSize: "0.75rem" }}>
+                优先文件类型 · JDBC / MySQL 结构化入库
               </p>
               <div className="bp-discover-grid">
                 {[
                   { id: "file", title: "文件 · 文档", desc: "Word · Excel · PDF · csv", tone: "violet" as const },
-                  { id: "jdbc", title: "JDBC · MySQL", desc: "结构化入库 · T4.6", tone: "muted" as const },
+                  { id: "jdbc", title: "JDBC · MySQL", desc: "结构化入库", tone: "muted" as const },
                 ].map((c) => (
                   <button
                     key={c.id}
@@ -407,7 +483,7 @@ export function DataPage() {
                     style={{
                       cursor: "pointer",
                       textAlign: "left",
-                      borderColor: connectorType === c.id ? "rgba(56,189,248,0.5)" : undefined,
+                      borderColor: connectorType === c.id ? "rgba(56,189,248,0.55)" : undefined,
                     }}
                     onClick={() => setConnectorType(c.id)}
                   >
@@ -416,99 +492,176 @@ export function DataPage() {
                   </button>
                 ))}
               </div>
-              <button type="button" className="btn" style={{ marginTop: 8 }} onClick={() => setWizardStep(2)}>
+              <button type="button" className="btn" style={{ marginTop: 12 }} onClick={() => setWizardStep(2)}>
                 下一步 →
               </button>
             </>
           )}
 
-          {wizardStep >= 2 && wizardStep < 4 && (
+          {wizardStep === 2 && (
             <>
-              <BpBanner tone="info">
-                步骤 {wizardStep} · 运行时/连接（MVP 默认 local agent · 凭证 vault ref 后置）
-              </BpBanner>
-              <label className="muted" style={{ display: "block", marginTop: 8 }}>
-                Source id{" "}
-                <input
-                  value={newSourceId}
-                  onChange={(e) => setNewSourceId(e.target.value)}
-                  placeholder="prod-mysql-orders"
-                />
-              </label>
+              <div className="bp-ws-section-title">运行时模式</div>
+              <div className="data-runtime-stack">
+                {(
+                  [
+                    {
+                      id: "direct" as const,
+                      title: "直接连接",
+                      desc: "公网可达的数据库 / 接口，由平台侧直连拉取。",
+                    },
+                    {
+                      id: "agent" as const,
+                      title: "代理连接",
+                      desc: "内网源通过边缘代理出站拉取（推荐 VPC / 专网）。",
+                    },
+                    {
+                      id: "worker" as const,
+                      title: "代理工作者",
+                      desc: "高吞吐批量同步时使用专用工作者节点。",
+                    },
+                  ] as const
+                ).map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    className={`data-runtime-card${runtimeMode === m.id ? " is-selected" : ""}`}
+                    onClick={() => setRuntimeMode(m.id)}
+                  >
+                    <div className="aos-text" style={{ fontWeight: 500 }}>
+                      {m.title}
+                    </div>
+                    <p className="muted" style={{ fontSize: "0.75rem", marginTop: 4 }}>
+                      {m.desc}
+                    </p>
+                  </button>
+                ))}
+              </div>
               <BpToolbar>
-                <button type="button" className="btn" onClick={() => setWizardStep((s) => Math.max(1, s - 1))}>
+                <button type="button" className="btn" onClick={() => setWizardStep(1)}>
                   上一步
                 </button>
-                <button type="button" className="btn" onClick={() => setWizardStep((s) => s + 1)}>
-                  下一步
+                <button type="button" className="btn" onClick={() => setWizardStep(3)}>
+                  下一步 →
                 </button>
               </BpToolbar>
             </>
           )}
 
-          {wizardStep >= 4 && (
+          {wizardStep === 3 && (
             <>
+              <div className="bp-ws-section-title">连接配置</div>
+              <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                数据源名称{" "}
+                <input
+                  value={newSourceId}
+                  onChange={(e) => setNewSourceId(e.target.value)}
+                  placeholder="prod-mysql-orders"
+                  style={{ minWidth: "16rem" }}
+                />
+              </label>
+              <p className="muted" style={{ fontSize: "0.75rem", marginTop: 8 }}>
+                连接器：{connectorLabel(connectorType)} · 运行时：
+                {runtimeMode === "direct" ? "直接连接" : runtimeMode === "agent" ? "代理连接" : "代理工作者"}
+              </p>
+              <BpToolbar>
+                <button type="button" className="btn" onClick={() => setWizardStep(2)}>
+                  上一步
+                </button>
+                <button type="button" className="btn" onClick={() => setWizardStep(4)}>
+                  下一步 →
+                </button>
+              </BpToolbar>
+            </>
+          )}
+
+          {wizardStep === 4 && (
+            <>
+              <div className="bp-ws-section-title">凭证</div>
+              <BpBanner tone="info">凭证走密钥引用（vault ref）· 不落明文。</BpBanner>
               <BpPropGrid
                 items={[
-                  { label: "连接器", value: connectorType },
-                  { label: "运行时", value: "local-agent" },
-                  { label: "凭证", value: "vault://data/sources#ref" },
+                  { label: "连接器", value: connectorLabel(connectorType) },
+                  {
+                    label: "运行时",
+                    value: runtimeMode === "direct" ? "直接连接" : runtimeMode === "agent" ? "代理连接" : "代理工作者",
+                  },
+                  { label: "凭证", value: "密钥引用" },
+                  { label: "名称", value: newSourceId.trim() || "（自动生成）" },
                 ]}
               />
-              <button type="button" className="btn" onClick={() => void createSource()}>
-                创建 Source
-              </button>
+              <BpToolbar>
+                <button type="button" className="btn" onClick={() => setWizardStep(3)}>
+                  上一步
+                </button>
+                <button type="button" className="btn" onClick={() => void createSource()}>
+                  创建数据源
+                </button>
+              </BpToolbar>
             </>
           )}
         </div>
       )}
 
-      {tab === "detail" && (
-        <div className="bp-object-panel">
+      {tab === "sources" && sourceView === "detail" && (
+        <div className="bp-object-panel" style={{ marginTop: "0.75rem" }}>
           {selectedSource ? (
             <>
-              <div className="bp-object-title">{selectedSource.id}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                <div>
+                  <div className="bp-object-title">{selectedSource.id}</div>
+                  <p className="muted" style={{ fontSize: "0.75rem", marginTop: 4 }}>
+                    {sourceSubtitle(selectedSource.type)}
+                  </p>
+                </div>
+                <button type="button" className="nav-link" onClick={() => setSourceView("list")}>
+                  ← 返回列表
+                </button>
+              </div>
               <BpPropGrid
                 items={[
-                  { label: "type", value: selectedSource.type || "—" },
-                  { label: "status", value: selectedSource.status || "—" },
-                  { label: "Sync 数", value: String(linkedSyncs.length) },
+                  { label: "连接器", value: <ConnectorTag type={selectedSource.type} /> },
+                  { label: "存储类型", value: <StoragePill type={selectedSource.type} /> },
+                  { label: "运行时", value: runtimeLabel(selectedSource) },
+                  { label: "上次同步", value: lastSyncFor(selectedSource.id, syncs) },
+                  { label: "状态", value: <StatusDot status={selectedSource.status} /> },
+                  { label: "关联同步", value: String(linkedSyncs.length) },
                 ]}
               />
-              <div className="bp-ws-section-title">关联 Sync</div>
+              <div className="bp-ws-section-title">关联同步</div>
               <BpTable
-                columns={["syncId", "status", ""]}
+                columns={["同步编号", "状态", "完成时间", ""]}
                 rows={
                   linkedSyncs.length
                     ? linkedSyncs.map((s) => [
                         s.id,
-                        s.status || "—",
+                        statusZh(s.status),
+                        formatRelative(s.finishedAt),
                         <Link key={String(s.id)} to={pipelineLinkForSource(s.sourceId)} className="nav-link">
-                          Pipeline →
+                          管道 →
                         </Link>,
                       ])
-                    : [["—", "—", ""]]
+                    : [["—", "—", "—", ""]]
                 }
               />
-              <div className="bp-ws-section-title">关联 Pipeline</div>
+              <div className="bp-ws-section-title">关联管道</div>
               <BpTable
-                columns={["pipelineId", "status", ""]}
+                columns={["管道编号", "状态", ""]}
                 rows={
                   linkedPipelines.length
                     ? linkedPipelines.map((p) => [
                         p.id,
-                        p.status || "—",
+                        statusZh(p.status),
                         <span key={String(p.id)}>
                           <Link to="/data/pipelines" className="nav-link">
                             管道
                           </Link>
                           {" · "}
                           <Link to="/data/builds" className="nav-link">
-                            Builds
+                            构建
                           </Link>
                           {" · "}
                           <Link to="/data/datasets" className="nav-link">
-                            Datasets
+                            数据集
                           </Link>
                         </span>,
                       ])
@@ -517,14 +670,137 @@ export function DataPage() {
               />
               <BpLinkRow
                 links={[
-                  { to: pipelineLinkForSource(selectedSource.id), label: "按 Source 过滤管道" },
-                  { to: "/data/datasets", label: "Datasets" },
+                  { to: pipelineLinkForSource(selectedSource.id), label: "按数据源过滤管道" },
+                  { to: "/data/datasets", label: "数据集" },
                 ]}
               />
             </>
           ) : (
-            <p className="muted">请从 Hub 表或新建 Source 后选择一条记录</p>
+            <p className="muted">
+              请从列表选择一条记录 ·{" "}
+              <button type="button" className="nav-link" onClick={() => setSourceView("list")}>
+                返回列表
+              </button>
+            </p>
           )}
+        </div>
+      )}
+
+      {tab === "syncs" && (
+        <div style={{ marginTop: "0.75rem" }}>
+          <div className="data-section-head">
+            <div>
+              <h2 className="data-section-title">同步任务</h2>
+              <p className="data-section-sub">对标 Foundry Syncs · 源 → Dataset / MediaSet / Stream</p>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <ActionLinks
+                items={[
+                  { to: "/data/schedules", label: "计划编辑器" },
+                  { to: "/data/pipelines", label: "管道构建" },
+                ]}
+              />
+              <button type="button" className="btn-primary" onClick={() => void createSyncJob()}>
+                + 新建同步
+              </button>
+            </div>
+          </div>
+          <div className="data-conn-table">
+            <BpTable
+              columns={["同步名称", "数据源", "目标", "调度", "上次运行", "状态"]}
+              rows={
+                syncs.length
+                  ? syncs.map((s) => [
+                      <span key={`nm-${s.id}`} style={{ display: "inline-flex", flexDirection: "column", gap: 4 }}>
+                        <Link to={pipelineLinkForSource(s.sourceId)} className="bp-action-link" style={{ fontWeight: 500 }}>
+                          {s.id}
+                        </Link>
+                        <Link to={pipelineLinkForSource(s.sourceId)} className="bp-action-link" style={{ fontSize: "0.75rem" }}>
+                          管道 →
+                        </Link>
+                      </span>,
+                      <span key={`src-${s.id}`} className="muted">
+                        {s.sourceId || "—"}
+                      </span>,
+                      <span key={`tg-${s.id}`}>{targetForSource(s.sourceId)}</span>,
+                      <span key={`sc-${s.id}`} className="muted">
+                        {scheduleForSource(s.sourceId)}
+                      </span>,
+                      <span key={`lr-${s.id}`} className="muted">
+                        {formatRelative(s.finishedAt)}
+                      </span>,
+                      <SyncStatusText key={`st-${s.id}`} status={s.status} />,
+                    ])
+                  : [["—", "—", "—", "—", "—", "暂无同步"]]
+              }
+            />
+          </div>
+        </div>
+      )}
+
+      {tab === "agents" && (
+        <div style={{ marginTop: "0.75rem" }}>
+          <div className="data-section-head">
+            <div>
+              <h2 className="data-section-title">边缘代理</h2>
+              <p className="data-section-sub">内网源通过 Agent 出站拉取</p>
+            </div>
+            <Link to="/data/agents" className="btn-outline-cyan">
+              打开代理管理 →
+            </Link>
+          </div>
+          {edgeAgent ? (
+            <div className="data-agent-grid">
+              <div className={`data-agent-card${edgeAgent.probeOk === false ? " is-offline" : ""}`}>
+                <div className="data-agent-card-head">
+                  <span className="data-agent-name">{edgeAgent.id || "agent-local"}</span>
+                  <span className={edgeAgent.probeOk === false ? "data-sync-status-bad" : "data-sync-status-ok"}>
+                    {edgeAgent.probeOk === false ? "离线" : "在线"}
+                  </span>
+                </div>
+                <p className="data-agent-meta">
+                  默认代理 · 承载 JDBC / 文件
+                  {edgeAgent.outbound != null ? ` · outbound=${String(edgeAgent.outbound)}` : ""}
+                </p>
+                <p className="data-agent-stats">心跳 · 本机节点</p>
+              </div>
+            </div>
+          ) : (
+            <p className="muted" style={{ marginTop: "0.75rem" }}>
+              暂无已登记代理 ·{" "}
+              <Link to="/data/agents" className="bp-action-link">
+                打开代理管理 →
+              </Link>
+            </p>
+          )}
+        </div>
+      )}
+
+      {tab === "exports" && (
+        <div style={{ marginTop: "0.75rem" }}>
+          <div className="data-section-head">
+            <div>
+              <h2 className="data-section-title">导出任务</h2>
+              <p className="data-section-sub">Dataset / Object → 外部系统（JDBC / S3 / REST）</p>
+            </div>
+            <button type="button" className="btn-ghost" disabled title="导出创建后置接线">
+              + 新建导出
+            </button>
+          </div>
+          <div className="data-conn-table">
+            <BpTable
+              columns={["导出名称", "源", "目标", "调度", "上次导出", "状态"]}
+              rows={[["—", "—", "—", "—", "—", "暂无导出"]]}
+            />
+          </div>
+          <div style={{ marginTop: "0.75rem" }}>
+            <ActionLinks
+              items={[
+                { to: "/data/datasets", label: "数据集" },
+                { to: "/apollo/assets", label: "资产包" },
+              ]}
+            />
+          </div>
         </div>
       )}
     </PageChrome>

@@ -133,6 +133,17 @@ def repair_demo_workorders(conn=None) -> None:
             "wo-1003",
             '{"title":"备件更换","status":"open","site":"DC-East","priority":"P2","internalCost":320}',
         ),
+        # 36 §7 · MySQL 供数样例（防 utf8 双重编码乱码残留）
+        (
+            "WorkOrder",
+            "mysql-wo-001",
+            '{"title":"MySQL供数-巡检单","status":"open","site":"DC-East","priority":"P1"}',
+        ),
+        (
+            "WorkOrder",
+            "mysql-wo-002",
+            '{"title":"MySQL供数-备件","status":"in_progress","site":"DC-West","priority":"P0"}',
+        ),
     ]
 
     def _run(c) -> None:

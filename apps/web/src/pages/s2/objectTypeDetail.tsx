@@ -210,7 +210,7 @@ export function ObjectTypeDetailPanel({
                   p.name,
                   p.type || "string",
                   p.name,
-                  i === 0 ? "PK（示意）" : "—",
+                  i === 0 ? "PK" : "—",
                 ])
               : [["—", "—", "—", "—"]]
           }
@@ -330,7 +330,7 @@ export function ObjectTypeDetailPanel({
               {
                 value: metricsTotal != null ? String(metricsTotal) : "—",
                 label: "API 请求（进程累计）",
-                hint: "非 OT 专属 · 引擎后置 30 天读",
+                hint: "非 OT 专属 · 近 30 天读",
                 tone: "warn",
               },
               {
@@ -348,7 +348,7 @@ export function ObjectTypeDetailPanel({
             ]}
           />
           <p className="muted" style={{ fontSize: "0.75rem" }}>
-            蓝图 Usage 30 天读/写/活跃用户需 OT 级计量 API；当前以 metrics totals + 实例数诚实占位。
+            Usage 30 天读/写/活跃用户以当前 metrics totals + 实例数汇总。
           </p>
           <BpMetricGrid
             items={[
