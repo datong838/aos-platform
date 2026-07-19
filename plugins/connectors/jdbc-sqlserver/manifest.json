@@ -2,14 +2,15 @@
   "id": "jdbc-sqlserver",
   "name": "JDBC SQL Server",
   "nameZh": "SQL Server JDBC",
-  "description": "鼓励排期 · 本刀仅注册表占位",
+  "description": "可选探针 + ingest（MOCK 或 HOST）",
   "kind": "source",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "aos",
-  "runtime": "stub",
+  "runtime": "live",
   "capabilities": [
     "jdbc",
-    "sqlserver"
+    "sqlserver",
+    "ingest"
   ],
   "configSchema": {
     "type": "object",

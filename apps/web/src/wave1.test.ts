@@ -4,7 +4,8 @@ import {
   needsPaginationHint,
 } from "./paginationGuard";
 import { layoutNodeCount, normalizeLayout } from "./pages/CanvasPage";
-import { resolveRenderKind, buildActionExecuteBody, newCanvasIdempotencyKey, summarizeMetricRows } from "./pages/canvasWidgets";
+import { resolveRenderKind, buildActionExecuteBody, newCanvasIdempotencyKey, summarizeMetricRows, formatActionSubmitCatch } from "./pages/canvasWidgets";
+import { OfflineQueuedError } from "./lib/offlineQueuedError";
 import { parseCronFields } from "./pages/s2/dataSchedules";
 
 describe("pagination guard", () => {
@@ -67,6 +68,15 @@ describe("canvas layout", () => {
     const k = newCanvasIdempotencyKey();
     expect(k.startsWith("canvas-af-")).toBe(true);
     expect(newCanvasIdempotencyKey()).not.toBe(k);
+  });
+
+  it("210m formatActionSubmitCatch queued vs error", () => {
+    const q = formatActionSubmitCatch(new OfflineQueuedError("q1", "POST /v1/actions/execute"));
+    expect(q.kind).toBe("queued");
+    expect(q.text).toContain("已入待同步");
+    const err = formatActionSubmitCatch(new Error("boom"));
+    expect(err.kind).toBe("error");
+    expect(err.text).toBe("boom");
   });
 
   it("108 resolveRenderKind metric-card", () => {

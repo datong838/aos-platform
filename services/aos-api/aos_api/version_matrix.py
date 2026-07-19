@@ -145,6 +145,17 @@ def check_component(
     }
 
 
+def force_reject_enabled() -> bool:
+    import os
+
+    return (os.getenv("AOS_DESKTOP_FORCE_REJECT") or "0").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
 def check_versions(
     *,
     desktop: str | None = None,
@@ -169,9 +180,14 @@ def check_versions(
     blocked = any(i["status"] == "block" for i in items)
     warned = any(i["status"] == "warn" for i in items)
     overall: Status = "block" if blocked else ("warn" if warned else "ok")
+    desktop_blocked = any(
+        i["component"] == "desktop" and i["status"] == "block" for i in items
+    )
+    force = force_reject_enabled() and desktop_blocked
     log.info(
-        "version_matrix_check overall=%s desktop=%s spoke=%s ferry=%s",
+        "version_matrix_check overall=%s forceReject=%s desktop=%s spoke=%s ferry=%s",
         overall,
+        force,
         desktop,
         spoke,
         ferry_bundle,
@@ -180,5 +196,28 @@ def check_versions(
         "ok": overall == "ok",
         "overall": overall,
         "hubVersion": _MATRIX["hubVersion"],
+        "forceReject": force,
         "items": items,
     }
+
+
+def assert_desktop_header_allowed(desktop_version: str | None) -> None:
+    """188m — when forceReject on and desktop below min, raise ApiError 403."""
+    if not desktop_version or not str(desktop_version).strip():
+        return
+    if not force_reject_enabled():
+        return
+    result = check_versions(desktop=str(desktop_version).strip())
+    if result.get("forceReject"):
+        from aos_api.errors import ApiError
+
+        raise ApiError(
+            code="DESKTOP_VERSION_BLOCKED",
+            message="desktop client below minimum; upgrade required",
+            status_code=403,
+            details={
+                "overall": result.get("overall"),
+                "items": result.get("items"),
+                "hubVersion": result.get("hubVersion"),
+            },
+        )

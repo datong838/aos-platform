@@ -1,4 +1,4 @@
-"""TWA.10 — mutable workspace catalog (seed + created; in-memory)."""
+"""TWA.10 — mutable workspace catalog (seed + created; memory + optional PG 181m)."""
 from __future__ import annotations
 
 import re
@@ -16,6 +16,9 @@ _WS: dict[tuple[str, str], dict[str, Any]] = {}
 
 def reset_workspace_catalog() -> None:
     _WS.clear()
+    from aos_api import twa_pg
+
+    twa_pg.truncate_workspaces()
 
 
 def seed_dev_workspaces() -> None:
@@ -55,6 +58,9 @@ def ensure_workspace(
         }
     elif name:
         _WS[key]["name"] = name
+    from aos_api import twa_pg
+
+    twa_pg.upsert_workspace(_WS[key])
     return dict(_WS[key])
 
 
@@ -103,6 +109,9 @@ def remove_workspace(org_id: str, project_id: str) -> bool:
     if key not in _WS:
         return False
     del _WS[key]
+    from aos_api import twa_pg
+
+    twa_pg.delete_workspace(org_id, project_id)
     log.info("workspace_catalog_remove org=%s project=%s", org_id, project_id)
     return True
 

@@ -26,6 +26,7 @@ class ProfilePatchIn(BaseModel):
     email: str | None = Field(default=None, max_length=120)
     phone: str | None = Field(default=None, max_length=32)
     title: str | None = Field(default=None, max_length=80)
+    otpTicket: str | None = None
 
 
 @router.get("/v1/me")
@@ -71,7 +72,17 @@ def patch_my_profile(
     body: ProfilePatchIn,
     principal: Principal = Depends(require_principal),
 ) -> dict:
+    from aos_api import otp as otp_mod
+
     try:
+        # OTP only when changing email/phone
+        if body.email is not None or body.phone is not None:
+            otp_mod.require_ticket_for_contact(
+                ticket=body.otpTicket,
+                email=body.email if body.email else None,
+                phone=body.phone if body.phone else None,
+                purpose="profile",
+            )
         profile = person.update_own_profile(
             principal.subject,
             display_name=body.displayName,
@@ -94,3 +105,65 @@ def patch_my_profile(
     )
     log.info("me_profile_patch subject=%s", principal.subject)
     return {"ok": True, "subject": principal.subject, "profile": profile}
+
+
+class AccountLinkIn(BaseModel):
+    email: str | None = Field(default=None, max_length=120)
+    phone: str | None = Field(default=None, max_length=32)
+    otpTicket: str | None = None
+
+
+@router.get("/v1/me/account-links")
+def list_my_account_links(
+    principal: Principal = Depends(require_principal),
+) -> dict:
+    """200m — list IdP subject ↔ contact links."""
+    from aos_api import account_link as alink
+
+    return {"items": alink.list_links_for_subject(principal.subject)}
+
+
+@router.post("/v1/me/account-links")
+def create_my_account_link(
+    body: AccountLinkIn,
+    principal: Principal = Depends(require_principal),
+) -> dict:
+    """200m — bind verified email/phone to current IdP subject."""
+    from aos_api import account_link as alink
+    from aos_api import otp as otp_mod
+
+    try:
+        otp_mod.require_ticket_for_contact(
+            ticket=body.otpTicket,
+            email=body.email,
+            phone=body.phone,
+            purpose="profile",
+        )
+        row = alink.create_link(
+            subject=principal.subject,
+            email=body.email,
+            phone=body.phone,
+        )
+    except ValueError as exc:
+        raise ApiError(code="VALIDATION", message=str(exc), status_code=400) from exc
+    mem.append_audit(
+        org_id=principal.org_id,
+        project_id=principal.project_id,
+        actor_id=principal.subject,
+        action="account_link.create",
+        detail={"linkId": row.get("id"), "email": row.get("email"), "phone": row.get("phone")},
+    )
+    return {"ok": True, "link": row}
+
+
+@router.delete("/v1/me/account-links/{link_id}")
+def delete_my_account_link(
+    link_id: str,
+    principal: Principal = Depends(require_principal),
+) -> dict:
+    from aos_api import account_link as alink
+
+    ok = alink.delete_link(subject=principal.subject, link_id=link_id)
+    if not ok:
+        raise ApiError(code="NOT_FOUND", message="link not found", status_code=404)
+    return {"ok": True, "id": link_id}

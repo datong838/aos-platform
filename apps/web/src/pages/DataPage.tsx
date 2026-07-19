@@ -427,7 +427,7 @@ export function DataPage() {
                   </span>
                 ),
                 hint: (
-                  <Link to="/data/health" className="nav-link">
+                  <Link to="/data/health" className="btn-nav">
                     查看健康检查 →
                   </Link>
                 ),
@@ -472,7 +472,7 @@ export function DataPage() {
                 配置连接器、运行时与凭证，将外部系统接入数据湖仓。
               </p>
             </div>
-            <button type="button" className="nav-link" onClick={() => setSourceView("list")}>
+            <button type="button" className="btn-nav" onClick={() => setSourceView("list")}>
               ← 返回列表
             </button>
           </div>
@@ -522,12 +522,7 @@ export function DataPage() {
                     >
                       <button
                         type="button"
-                        style={{
-                          all: "unset",
-                          cursor: c.installed ? "pointer" : "default",
-                          display: "block",
-                          width: "100%",
-                        }}
+                        className="bp-card-hit"
                         disabled={!c.installed}
                         onClick={() => c.installed && setConnectorType(c.id)}
                       >
@@ -663,7 +658,7 @@ export function DataPage() {
                 <button type="button" className="btn" onClick={() => setWizardStep(3)}>
                   上一步
                 </button>
-                <button type="button" className="btn" onClick={() => void createSource()}>
+                <button type="button" className="btn-primary" onClick={() => void createSource()}>
                   创建数据源
                 </button>
               </BpToolbar>
@@ -683,7 +678,7 @@ export function DataPage() {
                     {sourceSubtitle(selectedSource.type)}
                   </p>
                 </div>
-                <button type="button" className="nav-link" onClick={() => setSourceView("list")}>
+                <button type="button" className="btn-nav" onClick={() => setSourceView("list")}>
                   ← 返回列表
                 </button>
               </div>
@@ -706,7 +701,7 @@ export function DataPage() {
                         s.id,
                         statusZh(s.status),
                         formatRelative(s.finishedAt),
-                        <Link key={String(s.id)} to={pipelineLinkForSource(s.sourceId)} className="nav-link">
+                        <Link key={String(s.id)} to={pipelineLinkForSource(s.sourceId)} className="btn-nav">
                           管道 →
                         </Link>,
                       ])
@@ -722,15 +717,15 @@ export function DataPage() {
                         p.id,
                         statusZh(p.status),
                         <span key={String(p.id)}>
-                          <Link to="/data/pipelines" className="nav-link">
+                          <Link to="/data/pipelines" className="btn-nav">
                             管道
                           </Link>
                           {" · "}
-                          <Link to="/data/builds" className="nav-link">
+                          <Link to="/data/builds" className="btn-nav">
                             构建
                           </Link>
                           {" · "}
-                          <Link to="/data/datasets" className="nav-link">
+                          <Link to="/data/datasets" className="btn-nav">
                             数据集
                           </Link>
                         </span>,
@@ -748,7 +743,7 @@ export function DataPage() {
           ) : (
             <p className="muted">
               请从列表选择一条记录 ·{" "}
-              <button type="button" className="nav-link" onClick={() => setSourceView("list")}>
+              <button type="button" className="btn-nav" onClick={() => setSourceView("list")}>
                 返回列表
               </button>
             </p>

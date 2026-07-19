@@ -170,9 +170,96 @@ def dispatch_rerank(plugin_id: str, payload: dict[str, Any] | None = None) -> di
         raise ApiError(code="VALIDATION", message="query required", status_code=400)
     if not isinstance(docs, list) or not docs:
         raise ApiError(code="VALIDATION", message="documents (non-empty list) required", status_code=400)
-    # Cohere / 其他 provider 未接 Key：诚实 501，不返回假分数
+    docs_s = [str(d) for d in docs]
+    if pid == "rerank-cohere":
+        if not rerank_configured():
+            _stub(pid, "rerank")
+        log.info("embedding_rerank plugin=%s n=%s", pid, len(docs_s))
+        return _call_cohere_rerank(query=query, documents=docs_s, top_n=body.get("topN"))
     _stub(pid, "rerank")
     raise AssertionError("unreachable")  # pragma: no cover
+
+
+def rerank_api_key() -> str:
+    return _env("AOS_RERANK_API_KEY") or _env("AOS_COHERE_API_KEY")
+
+
+def rerank_base_url() -> str:
+    return (_env("AOS_RERANK_BASE_URL") or "https://api.cohere.com").rstrip("/")
+
+
+def rerank_model(override: str | None = None) -> str:
+    return (override or "").strip() or _env("AOS_RERANK_MODEL") or "rerank-english-v3.0"
+
+
+def rerank_configured() -> bool:
+    return bool(rerank_api_key())
+
+
+def _call_cohere_rerank(
+    *, query: str, documents: list[str], top_n: Any = None
+) -> dict[str, Any]:
+    key = rerank_api_key()
+    if not key:
+        _stub("rerank-cohere", "rerank")
+    base = rerank_base_url()
+    url = f"{base}/v1/rerank" if not base.endswith("/rerank") else base
+    model = rerank_model()
+    payload: dict[str, Any] = {
+        "model": model,
+        "query": query,
+        "documents": documents,
+    }
+    if top_n is not None:
+        try:
+            payload["top_n"] = int(top_n)
+        except (TypeError, ValueError):
+            pass
+    data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {key}",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")[:500]
+        raise ApiError(
+            code="EMBEDDING_UPSTREAM",
+            message=f"upstream rerank HTTP {exc.code}",
+            status_code=502,
+            details={"status": exc.code, "body": detail},
+        ) from None
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, ValueError) as exc:
+        raise ApiError(
+            code="EMBEDDING_UPSTREAM",
+            message=f"upstream rerank failed: {exc}",
+            status_code=502,
+        ) from None
+
+    rows = body.get("results") if isinstance(body, dict) else None
+    if not isinstance(rows, list):
+        raise ApiError(code="EMBEDDING_UPSTREAM", message="invalid rerank response", status_code=502)
+    results: list[dict[str, Any]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        idx = int(row.get("index") if row.get("index") is not None else -1)
+        score = float(row.get("relevance_score") or row.get("score") or 0.0)
+        doc = documents[idx] if 0 <= idx < len(documents) else str(row.get("document") or "")
+        results.append({"index": idx, "score": score, "document": doc})
+    return {
+        "pluginId": "rerank-cohere",
+        "model": body.get("model") or model if isinstance(body, dict) else model,
+        "sidecar": "cohere",
+        "results": results,
+    }
 
 
 def embedding_health(plugin_id: str) -> dict[str, Any]:
@@ -188,11 +275,13 @@ def embedding_health(plugin_id: str) -> dict[str, Any]:
             "capabilities": ["embed"],
         }
     if pid == "rerank-cohere":
+        ok = rerank_configured()
         return {
-            "ok": False,
+            "ok": ok,
             "pluginId": pid,
-            "configured": False,
-            "mode": "stub",
+            "configured": ok,
+            "mode": "cohere" if ok else "stub",
+            "model": rerank_model() if ok else None,
             "capabilities": ["rerank"],
         }
     return {"ok": False, "pluginId": pid, "mode": "stub"}

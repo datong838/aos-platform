@@ -194,6 +194,38 @@ def preview_invite(
     return pub
 
 
+@router.get("/v1/org-invites/{token}/qr")
+def invite_qr(
+    token: str,
+    origin: str = "",
+    principal: Principal = Depends(require_principal),
+) -> dict:
+    """193m — SVG QR for invite deep link (admin of invite org)."""
+    from aos_api import invite_qr as iqr
+
+    row = invites.get_invite(token)
+    if not row:
+        raise ApiError(code="NOT_FOUND", message="invite not found", status_code=404)
+    if not mem.can_manage_org(row["orgId"], principal.subject):
+        raise ApiError(
+            code="FORBIDDEN",
+            message="organization admin required",
+            status_code=403,
+        )
+    pub = invites.public_invite(row)
+    try:
+        invite_url = iqr.build_invite_url(origin=origin, invite_path=pub["invitePath"])
+        svg = iqr.invite_qr_svg(invite_url)
+    except ValueError as exc:
+        raise ApiError(code="VALIDATION", message=str(exc), status_code=400) from exc
+    return {
+        "invitePath": pub["invitePath"],
+        "inviteUrl": invite_url,
+        "contentType": "image/svg+xml",
+        "svg": svg,
+    }
+
+
 @router.post("/v1/org-invites/{token}/accept")
 def accept_invite(
     token: str,

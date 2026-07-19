@@ -1,4 +1,4 @@
-"""TWA.9 / TWA.10 — Organization catalog (P3 multi-org; in-memory)."""
+"""TWA.9 / TWA.10 — Organization catalog (P3 multi-org; memory + optional PG 181m)."""
 from __future__ import annotations
 
 import re
@@ -19,6 +19,9 @@ _ORGS: dict[str, dict[str, Any]] = {}
 
 def reset_org_store() -> None:
     _ORGS.clear()
+    from aos_api import twa_pg
+
+    twa_pg.truncate_orgs()
 
 
 def seed_dev_orgs() -> None:
@@ -27,13 +30,7 @@ def seed_dev_orgs() -> None:
         ("org-a", "组织 A", "group"),
         ("org-b", "组织 B", "group"),
     ):
-        _ORGS[oid] = {
-            "id": oid,
-            "name": name,
-            "kind": kind,
-            "joinPolicy": "invite_or_apply",
-            "discoverable": True,
-        }
+        ensure_org(oid, name=name, kind=kind, join_policy="invite_or_apply", discoverable=True)
 
 
 def ensure_org(
@@ -60,6 +57,9 @@ def ensure_org(
             _ORGS[org_id]["kind"] = kind
         if join_policy in JOIN_POLICIES:
             _ORGS[org_id]["joinPolicy"] = join_policy
+    from aos_api import twa_pg
+
+    twa_pg.upsert_org(_ORGS[org_id])
     return dict(_ORGS[org_id])
 
 
@@ -155,6 +155,9 @@ def remove_org(org_id: str) -> bool:
     if org_id not in _ORGS:
         return False
     del _ORGS[org_id]
+    from aos_api import twa_pg
+
+    twa_pg.delete_org(org_id)
     log.info("org_remove id=%s", org_id)
     return True
 

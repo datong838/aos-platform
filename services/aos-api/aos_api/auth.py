@@ -231,6 +231,9 @@ async def require_principal(
     authorization: str | None = Header(default=None),
     x_org_id: str | None = Header(default=None, alias="X-Org-Id"),
     x_project_id: str | None = Header(default=None, alias="X-Project-Id"),
+    x_aos_desktop_version: str | None = Header(
+        default=None, alias="X-AOS-Desktop-Version"
+    ),
 ) -> Principal:
     token = parse_bearer(authorization)
     # TWA.1: only *explicit* X-Org-Id / X-Project-Id count for mismatch.
@@ -240,6 +243,12 @@ async def require_principal(
         header_org=x_org_id,
         header_project=x_project_id,
     )
+    # 188m — optional force-reject old desktop (skip matrix endpoints)
+    path = request.url.path or ""
+    if x_aos_desktop_version and not path.startswith("/v1/ops/version-matrix"):
+        from aos_api.version_matrix import assert_desktop_header_allowed
+
+        assert_desktop_header_allowed(x_aos_desktop_version)
     request.state.principal = principal
     request.state.org_id = principal.org_id
     request.state.project_id = principal.project_id

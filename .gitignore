@@ -9,6 +9,9 @@ deploy/dev/_ferry_onsite/
 deploy/dev/_ferry_onsite_sh/
 deploy/dev/_helm_spoke_full/
 deploy/dev/_idp_accept/
+deploy/dev/_ferry_drill/
+deploy/dev/_desktop_update_drill/
+deploy/dev/_install_drill/
 deploy/dev/customer-idp.mall.env
 deploy/dev/cosign/
 # Jupyter session notebooks (keep aos_smoke.ipynb only)

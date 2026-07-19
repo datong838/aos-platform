@@ -38,6 +38,10 @@ export function WorkspaceMembersPage() {
   const [identity, setIdentity] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [role, setRole] = useState<string>("viewer");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpId, setOtpId] = useState("");
+  const [devHint, setDevHint] = useState("");
+  const [csvText, setCsvText] = useState("");
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
 
@@ -67,6 +71,36 @@ export function WorkspaceMembersPage() {
     return () => window.removeEventListener("aos-workspace-changed", onWs);
   }, [reload]);
 
+  async function onSendOtp() {
+    setMsg("");
+    setErr("");
+    setDevHint("");
+    const raw = identity.trim();
+    if (!raw || (!looksLikeEmail(raw) && !looksLikePhone(raw))) {
+      setErr("请先填写邮箱或手机号再获取验证码");
+      return;
+    }
+    try {
+      const out = await apiPost<{
+        otpId: string;
+        devCode?: string;
+        delivered?: string;
+      }>("/v1/otp/send", {
+        channel: looksLikeEmail(raw) ? "email" : "phone",
+        to: raw,
+        purpose: "invite",
+      });
+      setOtpId(out.otpId);
+      if (out.devCode) {
+        setDevHint(`本机验证码：${out.devCode}`);
+        setOtpCode(out.devCode);
+      }
+      setMsg("验证码已发送（本机可能直接显示在框内）");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    }
+  }
+
   async function onAdd() {
     setMsg("");
     setErr("");
@@ -74,6 +108,7 @@ export function WorkspaceMembersPage() {
     if (!raw) return;
     const body: Record<string, string> = { role };
     if (displayName.trim()) body.displayName = displayName.trim();
+    const contact = looksLikeEmail(raw) || looksLikePhone(raw);
     if (looksLikeEmail(raw)) {
       body.email = raw;
     } else if (looksLikePhone(raw)) {
@@ -82,12 +117,22 @@ export function WorkspaceMembersPage() {
       body.subject = raw;
     }
     try {
+      if (contact && otpId && otpCode.trim()) {
+        const ver = await apiPost<{ ticket: string }>("/v1/otp/verify", {
+          otpId,
+          code: otpCode.trim(),
+        });
+        body.otpTicket = ver.ticket;
+      }
       await apiPost(
         `/v1/workspaces/${encodeURIComponent(getTenant().projectId)}/members`,
         body,
       );
       setIdentity("");
       setDisplayName("");
+      setOtpCode("");
+      setOtpId("");
+      setDevHint("");
       setMsg("已添加成员");
       await reload();
     } catch (e) {
@@ -101,6 +146,34 @@ export function WorkspaceMembersPage() {
       await apiDelete(
         `/v1/workspaces/${encodeURIComponent(getTenant().projectId)}/members/${encodeURIComponent(sub)}`,
       );
+      await reload();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function onImportCsv() {
+    setErr("");
+    setMsg("");
+    const raw = csvText.trim();
+    if (!raw) {
+      setErr("请粘贴 CSV（email,phone,displayName,role）");
+      return;
+    }
+    try {
+      const out = await apiPost<{
+        imported: number;
+        skipped: number;
+        errors: Array<{ line?: number; message: string }>;
+      }>(
+        `/v1/workspaces/${encodeURIComponent(getTenant().projectId)}/members/import`,
+        { csv: raw, defaultRole: role },
+      );
+      const errN = out.errors?.length || 0;
+      setMsg(
+        `导入完成：成功 ${out.imported} · 跳过 ${out.skipped}${errN ? ` · 行错误 ${errN}` : ""}`,
+      );
+      if (out.imported > 0) setCsvText("");
       await reload();
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
@@ -142,11 +215,49 @@ export function WorkspaceMembersPage() {
         </select>
         <button
           type="button"
+          className="btn"
+          onClick={() => void onSendOtp()}
+          disabled={!identity.trim()}
+        >
+          获取验证码
+        </button>
+        <input
+          value={otpCode}
+          onChange={(e) => setOtpCode(e.target.value)}
+          placeholder="验证码（强制 OTP 时必填）"
+          aria-label="验证码"
+        />
+        <button
+          type="button"
           className="btn-primary"
           onClick={() => void onAdd()}
           disabled={!identity.trim()}
         >
           添加
+        </button>
+      </div>
+      {devHint ? <p className="aos-muted">{devHint}</p> : null}
+
+      <h3 className="aos-h3">通讯录 CSV 导入</h3>
+      <p className="aos-muted">
+        表头可选：<code>email,phone,displayName,role</code> · 每行至少邮箱或手机
+      </p>
+      <textarea
+        value={csvText}
+        onChange={(e) => setCsvText(e.target.value)}
+        rows={5}
+        style={{ width: "100%", fontFamily: "monospace" }}
+        placeholder={"email,phone,displayName,role\nalice@acme.example,,Alice,viewer"}
+        aria-label="通讯录 CSV"
+      />
+      <div className="aos-members-form" style={{ marginTop: "0.5rem" }}>
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={() => void onImportCsv()}
+          disabled={!csvText.trim()}
+        >
+          导入 CSV
         </button>
       </div>
 

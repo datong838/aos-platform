@@ -259,6 +259,13 @@ export function GraphExplorerPage() {
 }
 
 type WebhookRow = { id?: string; url?: string; event?: string; status?: string };
+type OutboxRow = {
+  id?: string;
+  channel?: string;
+  ok?: boolean;
+  status?: string;
+  pluginId?: string;
+};
 type ChannelPlugin = {
   id: string;
   nameZh?: string;
@@ -267,10 +274,25 @@ type ChannelPlugin = {
   runtime?: string;
 };
 
-/** 83/101 · 对齐 workshop-events · 通道插件 + Webhook 持久化 */
+/** 218m · outbox 表格行文案 */
+export function formatOutboxRow(row: OutboxRow): {
+  id: string;
+  channel: string;
+  result: string;
+  status: string;
+} {
+  const id = String(row.id || "—");
+  const channel = String(row.channel || row.pluginId || "—");
+  const result = row.ok === true ? "ok" : row.ok === false ? "fail" : "—";
+  const status = String(row.status || "—");
+  return { id, channel, result, status };
+}
+
+/** 83/101 · 对齐 workshop-events · 通道插件 + Webhook 持久化 · 218m outbox */
 export function EventsPage() {
   const { data, err, reload } = useJsonGet<{ items: WebhookRow[] }>("/v1/actions/webhooks");
   const channelsApi = useJsonGet<{ items: ChannelPlugin[] }>("/v1/channel-plugins");
+  const outboxApi = useJsonGet<{ items: OutboxRow[]; count?: number }>("/v1/channels/outbox");
   const [msg, setMsg] = useState("");
   const [hookUrl, setHookUrl] = useState("http://127.0.0.1:9999/hook");
   const [hookEvent, setHookEvent] = useState("action.approved");
@@ -290,12 +312,22 @@ export function EventsPage() {
       body: { ping: true },
     });
     setMsg(`通道投递 · matched=${r.matched ?? 0} · ok=${String(r.ok)}`);
+    outboxApi.reload();
   }
 
   async function installChannel(id: string) {
     await apiPost(`/v1/channel-plugins/${encodeURIComponent(id)}/install`, {});
     setMsg(`已安装通道 ${id}`);
     channelsApi.reload();
+  }
+
+  async function retryOutbox(id: string) {
+    const r = await apiPost<{ ok?: boolean; retriedId?: string }>(
+      `/v1/channels/outbox/${encodeURIComponent(id)}/retry`,
+      {},
+    );
+    setMsg(`outbox 重投 · id=${r.retriedId || id} · ok=${String(r.ok)}`);
+    outboxApi.reload();
   }
 
   const blueprintRows = [
@@ -332,6 +364,29 @@ export function EventsPage() {
     ),
   ]);
 
+  const outboxRows = (outboxApi.data?.items || []).map((o) => {
+    const f = formatOutboxRow(o);
+    return [
+      f.id,
+      f.channel,
+      f.result,
+      f.status,
+      o.id ? (
+        <button
+          key={o.id}
+          type="button"
+          className="bp-action-link"
+          data-testid="outbox-retry"
+          onClick={() => void retryOutbox(String(o.id)).catch((e) => setMsg(String(e)))}
+        >
+          重投
+        </button>
+      ) : (
+        "—"
+      ),
+    ];
+  });
+
   return (
     <S2Chrome title="Events 配置面板" lede="Widget 事件绑定、通道插件与幂等键配置。">
       <BpToolbar>
@@ -347,6 +402,9 @@ export function EventsPage() {
         </button>
         <button type="button" className="btn" onClick={() => reload()}>
           刷新
+        </button>
+        <button type="button" className="btn-nav" onClick={() => outboxApi.reload()}>
+          刷新 outbox
         </button>
         <Link to="/workshop/canvas" className="btn-nav">
           画布配置 →
@@ -365,6 +423,7 @@ export function EventsPage() {
       {msg && <p className="aos-text">{msg}</p>}
       {err && <p className="error">{err}</p>}
       {channelsApi.err && <p className="error">{channelsApi.err}</p>}
+      {outboxApi.err && <p className="error">{outboxApi.err}</p>}
 
       <div className="bp-object-panel">
         <div className="bp-ws-section-title">通知通道插件</div>
@@ -376,6 +435,13 @@ export function EventsPage() {
           已注册事件
         </div>
         <BpTable columns={["触发器", "动作", "目标变量", "幂等"]} rows={[...blueprintRows, ...apiRows]} />
+        <div className="bp-ws-section-title" style={{ marginTop: "1rem" }}>
+          Channel outbox（212m/218m）
+        </div>
+        <BpTable
+          columns={["id", "channel", "结果", "status", ""]}
+          rows={outboxRows.length ? outboxRows : [["—", "—", "—", "—", "—"]]}
+        />
       </div>
 
       <BpBanner tone="warn">

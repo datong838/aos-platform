@@ -139,6 +139,12 @@ def init_schema() -> None:
 
         ensure_apollo_schema(conn)
         ensure_overlay_table(conn)
+        from aos_api.twa_pg import ensure_schema as ensure_twa_schema
+
+        ensure_twa_schema(conn)
+        from aos_api.retention_jobs import ensure_lifecycle_schema
+
+        ensure_lifecycle_schema(conn)
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS wiki_page_version (
@@ -184,6 +190,12 @@ def init_schema() -> None:
         )
         conn.commit()
     log.info("db_schema_ready")
+    try:
+        from aos_api.twa_pg import bootstrap as twa_bootstrap
+
+        twa_bootstrap()
+    except Exception as exc:  # pragma: no cover
+        log.warning("twa_store_bootstrap_skip err=%s", exc)
 
 
 def repair_demo_workorders(conn=None) -> None:

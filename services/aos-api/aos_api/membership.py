@@ -1,4 +1,4 @@
-"""TWA.7 — in-memory membership + audit (no PG)."""
+"""TWA.7 — membership + audit (memory + optional PG 181m)."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -20,6 +20,9 @@ _AUDIT: list[dict[str, Any]] = []
 def reset_membership_store() -> None:
     _MEMBERS.clear()
     _AUDIT.clear()
+    from aos_api import twa_pg
+
+    twa_pg.truncate_members()
 
 
 def seed_dev_defaults() -> None:
@@ -39,7 +42,7 @@ def seed_dev_defaults() -> None:
             ("prj-2", "user:dev", "owner"),
             ("prj-ops", "bob", "viewer"),
         ):
-            _MEMBERS[(org, project, sub)] = role
+            upsert_member(org, project, sub, role, actor_id="system:seed", _silent=True)
 
 
 def ensure_default_membership(org_id: str, project_id: str, subject: str) -> None:
@@ -47,6 +50,9 @@ def ensure_default_membership(org_id: str, project_id: str, subject: str) -> Non
     if member_project_ids(org_id, subject):
         return
     _MEMBERS[(org_id, project_id, subject)] = "owner"
+    from aos_api import twa_pg
+
+    twa_pg.upsert_member(org_id, project_id, subject, "owner")
     append_audit(
         org_id=org_id,
         project_id=project_id,
@@ -103,31 +109,36 @@ def upsert_member(
     role: str,
     *,
     actor_id: str,
+    _silent: bool = False,
 ) -> dict[str, Any]:
     if role not in ROLES:
         raise ValueError(f"invalid role {role}")
     _MEMBERS[(org_id, project_id, subject)] = role
+    from aos_api import twa_pg
+
+    twa_pg.upsert_member(org_id, project_id, subject, role)
     row = {
         "subject": subject,
         "role": role,
         "orgId": org_id,
         "projectId": project_id,
     }
-    append_audit(
-        org_id=org_id,
-        project_id=project_id,
-        actor_id=actor_id,
-        action="membership.upsert",
-        detail={"subject": subject, "role": role},
-    )
-    log.info(
-        "membership_upsert org=%s project=%s subject=%s role=%s actor=%s",
-        org_id,
-        project_id,
-        subject,
-        role,
-        actor_id,
-    )
+    if not _silent:
+        append_audit(
+            org_id=org_id,
+            project_id=project_id,
+            actor_id=actor_id,
+            action="membership.upsert",
+            detail={"subject": subject, "role": role},
+        )
+        log.info(
+            "membership_upsert org=%s project=%s subject=%s role=%s actor=%s",
+            org_id,
+            project_id,
+            subject,
+            role,
+            actor_id,
+        )
     return row
 
 
@@ -142,6 +153,9 @@ def remove_member(
     if key not in _MEMBERS:
         return False
     del _MEMBERS[key]
+    from aos_api import twa_pg
+
+    twa_pg.delete_member(org_id, project_id, subject)
     append_audit(
         org_id=org_id,
         project_id=project_id,
@@ -177,6 +191,9 @@ def remove_all_members_for_project(
     keys = [(o, p, s) for (o, p, s) in list(_MEMBERS) if o == org_id and p == project_id]
     for key in keys:
         del _MEMBERS[key]
+    from aos_api import twa_pg
+
+    twa_pg.delete_members_for_project(org_id, project_id)
     if keys:
         append_audit(
             org_id=org_id,
@@ -192,6 +209,9 @@ def remove_all_members_for_org(org_id: str, *, actor_id: str) -> int:
     keys = [(o, p, s) for (o, p, s) in list(_MEMBERS) if o == org_id]
     for key in keys:
         del _MEMBERS[key]
+    from aos_api import twa_pg
+
+    twa_pg.delete_members_for_org(org_id)
     if keys:
         append_audit(
             org_id=org_id,
@@ -221,6 +241,9 @@ def append_audit(
         "detail": detail or {},
     }
     _AUDIT.append(row)
+    from aos_api import twa_pg
+
+    twa_pg.append_audit(row)
     log.info(
         "audit_append id=%s action=%s org=%s project=%s actor=%s",
         row["id"],

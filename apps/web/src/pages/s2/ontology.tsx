@@ -37,10 +37,14 @@ export function GraphHealthPage() {
       danglingEdges?: number;
       propConflicts?: number;
       archiveCandidates?: number;
+      insightTtlDays?: number;
       engine: string;
     };
     issues?: GhIssue[];
+    archivePreview?: { id: string; createdAt?: string; objectId?: string }[];
   }>("/v1/ontology/graph-health");
+  const [ttlMsg, setTtlMsg] = useState("");
+  const [ttlBusy, setTtlBusy] = useState(false);
 
   const m = data?.metrics;
   const issues = data?.issues || [];
@@ -48,15 +52,42 @@ export function GraphHealthPage() {
   const gh02 = m?.propConflicts ?? issues.filter((i) => i.code === "GH-02").length;
   const gh04 = issues.filter((i) => i.code === "GH-04").length;
 
+  async function runTtl() {
+    setTtlBusy(true);
+    setTtlMsg("");
+    try {
+      const out = await apiPost<{ archivedCount: number; candidateCount: number }>(
+        "/v1/ops/ttl/run",
+        { dryRun: false },
+      );
+      setTtlMsg(
+        `TTL 归档完成：候选 ${out.candidateCount} · 已归档 ${out.archivedCount}`,
+      );
+      reload();
+    } catch (e) {
+      setTtlMsg(e instanceof Error ? e.message : String(e));
+    } finally {
+      setTtlBusy(false);
+    }
+  }
+
   return (
     <S2Chrome
       title="图谱健康度"
-      lede="悬空链接 · 属性冲突 · 孤立对象 · 与 L1 数据健康分责"
+      lede="悬空链接 · 属性冲突 · 孤立对象 · Insight TTL 归档候选"
     >
       <div className="ont-page">
       <BpToolbar>
-        <button type="button" className="btn-primary" onClick={() => reload()}>
+        <button type="button" className="btn" onClick={() => reload()}>
           重新扫描
+        </button>
+        <button
+          type="button"
+          className="btn"
+          disabled={ttlBusy}
+          onClick={() => void runTtl()}
+        >
+          {ttlBusy ? "归档中…" : "运行 TTL 归档"}
         </button>
         <Link to="/data/health" className="btn-nav">
           L1 数据健康 →
@@ -66,9 +97,10 @@ export function GraphHealthPage() {
         </Link>
       </BpToolbar>
       {err && <p className="error">{err}</p>}
+      {ttlMsg ? <p className="muted">{ttlMsg}</p> : null}
       <p className="muted" style={{ fontSize: "0.8rem" }}>
         当前 score={data?.score ?? "—"} · engine={m?.engine ?? "—"} · instances={m?.instances ?? "—"} ·
-        dangling={m?.danglingEdges ?? "—"}
+        dangling={m?.danglingEdges ?? "—"} · Insight TTL={m?.insightTtlDays ?? "—"} 天
       </p>
 
       <BpMetricGrid
@@ -105,6 +137,21 @@ export function GraphHealthPage() {
           },
         ]}
       />
+
+      {(data?.archivePreview?.length ?? 0) > 0 ? (
+        <>
+          <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: "1.25rem" }}>
+            Insight 归档候选预览
+          </h2>
+          <ul className="muted" style={{ fontSize: "0.8rem" }}>
+            {(data?.archivePreview || []).map((p) => (
+              <li key={p.id}>
+                {p.id} · {p.objectId || "—"} · {p.createdAt || "—"}
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
 
       <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: "1.25rem" }}>
         问题列表

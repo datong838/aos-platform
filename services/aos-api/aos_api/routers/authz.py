@@ -82,3 +82,50 @@ def authz_write_tuple(
         body.object,
     )
     return {"ok": True, "user": user, "relation": body.relation, "object": body.object}
+
+
+@router.get("/v1/authz/tuples")
+def authz_list_tuples(
+    object: str | None = None,
+    user: str | None = None,
+    limit: int = 100,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """207m — list local authz tuples (optional object/user filter)."""
+    _ = principal
+    with connect() as conn:
+        items = fga.list_tuples_local(
+            conn,
+            object_key=(object or "").strip() or None,
+            user_key=(user or "").strip() or None,
+            limit=limit,
+        )
+    return {
+        "items": items,
+        "count": len(items),
+        "mode": fga.status_payload()["mode"],
+    }
+
+
+@router.delete("/v1/authz/tuples")
+def authz_delete_tuple(
+    body: TupleBody,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """211m — revoke a local authz tuple."""
+    from aos_api.errors import ApiError
+
+    user = body.user or fga.user_key(principal.subject)
+    with connect() as conn:
+        ok = fga.delete_tuple(conn, user, body.relation, body.object)
+        conn.commit()
+    if not ok:
+        raise ApiError(code="NOT_FOUND", message="authz tuple not found", status_code=404)
+    log.info(
+        "authz_tuple_deleted by=%s user=%s rel=%s obj=%s",
+        principal.subject,
+        user,
+        body.relation,
+        body.object,
+    )
+    return {"ok": True, "user": user, "relation": body.relation, "object": body.object}

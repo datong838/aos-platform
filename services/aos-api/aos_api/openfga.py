@@ -310,6 +310,104 @@ def write_tuple(conn: Any, user: str, relation: str, obj: str) -> None:
             )
 
 
+def delete_tuple_remote(user: str, relation: str, obj: str) -> bool:
+    """211m — best-effort OpenFGA remote delete."""
+    if not openfga_api_url():
+        return False
+    store = openfga_store_id()
+    try:
+        _http_json(
+            "POST",
+            f"/stores/{store}/write",
+            {
+                "deletes": {
+                    "tuple_keys": [
+                        {"user": user, "relation": relation, "object": obj},
+                    ]
+                }
+            },
+        )
+        return True
+    except Exception as exc:  # noqa: BLE001
+        log.warning("openfga_remote_delete_failed err=%s", type(exc).__name__)
+        return False
+
+
+def delete_tuple(conn: Any, user: str, relation: str, obj: str) -> bool:
+    """211m — delete local tuple; optional remote deletes."""
+    validate_relation(relation)
+    existing = conn.execute(
+        """
+        SELECT 1 FROM authz_tuple
+        WHERE user_key=%s AND relation=%s AND object_key=%s
+        LIMIT 1
+        """,
+        (user, relation, obj),
+    ).fetchone()
+    if not existing:
+        return False
+    conn.execute(
+        """
+        DELETE FROM authz_tuple
+        WHERE user_key=%s AND relation=%s AND object_key=%s
+        """,
+        (user, relation, obj),
+    )
+    if openfga_api_url():
+        ok = delete_tuple_remote(user, relation, obj)
+        if not ok and openfga_strict():
+            raise ApiError(
+                code="OPENFGA_DELETE_FAILED",
+                message="openfga remote delete failed (strict)",
+                status_code=502,
+            )
+    return True
+
+
+def list_tuples_local(
+    conn: Any,
+    *,
+    object_key: str | None = None,
+    user_key: str | None = None,
+    limit: int = 100,
+) -> list[dict[str, Any]]:
+    """207m — list local PG authz tuples with optional filters."""
+    clauses: list[str] = []
+    params: list[Any] = []
+    if object_key:
+        clauses.append("object_key=%s")
+        params.append(object_key)
+    if user_key:
+        clauses.append("user_key=%s")
+        params.append(user_key)
+    where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
+    lim = max(1, min(int(limit or 100), 500))
+    cur = conn.execute(
+        f"""
+        SELECT user_key, relation, object_key
+        FROM authz_tuple
+        {where}
+        ORDER BY object_key, user_key, relation
+        LIMIT %s
+        """,
+        (*params, lim),
+    )
+    rows = cur.fetchall()
+    out: list[dict[str, Any]] = []
+    for r in rows:
+        if isinstance(r, dict):
+            out.append(
+                {
+                    "user": r.get("user_key"),
+                    "relation": r.get("relation"),
+                    "object": r.get("object_key"),
+                }
+            )
+        else:
+            out.append({"user": r[0], "relation": r[1], "object": r[2]})
+    return out
+
+
 def ensure_object_viewer(
     principal: Principal,
     object_type: str,

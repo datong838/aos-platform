@@ -2,14 +2,15 @@
   "id": "rest-generic",
   "name": "Generic REST",
   "nameZh": "通用 REST",
-  "description": "HTTP/JSON 源占位",
+  "description": "HTTP/JSON 源 · 可选探针与 ingest",
   "kind": "source",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "aos",
-  "runtime": "stub",
+  "runtime": "live",
   "capabilities": [
     "rest",
-    "http"
+    "http",
+    "ingest"
   ],
   "configSchema": {
     "type": "object",

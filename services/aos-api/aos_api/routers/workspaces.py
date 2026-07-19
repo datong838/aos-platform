@@ -72,6 +72,16 @@ def create_workspace(
                 message="organization admin required to create workspace",
                 status_code=403,
             )
+    # 189m — quota before catalog mutate
+    from aos_api import provisioning as prov
+
+    try:
+        prov.assert_workspace_quota(
+            principal.org_id,
+            len(ws_cat.list_workspaces_for_org(principal.org_id)),
+        )
+    except ApiError:
+        raise
     try:
         ws = ws_cat.create_workspace(
             principal.org_id,
@@ -225,6 +235,7 @@ class MemberIn(BaseModel):
     phone: str | None = None
     displayName: str | None = None
     role: str = Field(min_length=1)
+    otpTicket: str | None = None
 
 
 @router.get("/v1/workspaces/{workspace_id}/members")
@@ -265,9 +276,16 @@ def add_workspace_member(
         )
     if body.role not in mem.ROLES:
         raise ApiError(code="BAD_REQUEST", message="invalid role", status_code=400)
+    from aos_api import otp as otp_mod
     from aos_api import person_identity as person
 
     try:
+        otp_mod.require_ticket_for_contact(
+            ticket=body.otpTicket,
+            email=body.email,
+            phone=body.phone,
+            purpose="invite",
+        )
         identity = person.resolve_member_identity(
             subject=body.subject,
             email=body.email,
@@ -276,6 +294,14 @@ def add_workspace_member(
         )
     except ValueError as exc:
         raise ApiError(code="VALIDATION", message=str(exc), status_code=400) from exc
+    from aos_api import provisioning as prov
+
+    if not mem.is_member(principal.org_id, workspace_id, identity["subject"]):
+        prov.assert_member_quota(
+            principal.org_id,
+            len(mem.list_members(principal.org_id, workspace_id)),
+            adding=1,
+        )
     row = mem.upsert_member(
         principal.org_id,
         workspace_id,
@@ -284,6 +310,95 @@ def add_workspace_member(
         actor_id=principal.subject,
     )
     return person.enrich_member_row(row)
+
+
+class MembersImportIn(BaseModel):
+    csv: str = Field(min_length=1)
+    defaultRole: str = "viewer"
+
+
+@router.post("/v1/workspaces/{workspace_id}/members/import")
+def import_workspace_members(
+    workspace_id: str,
+    body: MembersImportIn,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """194m — CSV contacts import (admin bulk; per-row OTP skipped)."""
+    if not _find_workspace(principal.org_id, workspace_id):
+        raise ApiError(code="NOT_FOUND", message="workspace not found", status_code=404)
+    if not mem.can_manage_members(principal.org_id, workspace_id, principal.subject):
+        raise ApiError(
+            code="WORKSPACE_FORBIDDEN",
+            message="admin or owner required",
+            status_code=403,
+        )
+    if body.defaultRole not in mem.ROLES:
+        raise ApiError(code="BAD_REQUEST", message="invalid defaultRole", status_code=400)
+    from aos_api import members_import as mim
+    from aos_api import person_identity as person
+
+    rows, parse_errors = mim.parse_members_csv(
+        body.csv, default_role=body.defaultRole, allowed_roles=mem.ROLES
+    )
+    if parse_errors and not rows and any(e.get("line") == 0 for e in parse_errors):
+        raise ApiError(
+            code="VALIDATION",
+            message=parse_errors[0]["message"],
+            status_code=400,
+        )
+    imported = 0
+    skipped = 0
+    errors: list[dict[str, Any]] = list(parse_errors)
+    from aos_api import provisioning as prov
+
+    for item in rows:
+        try:
+            identity = person.resolve_member_identity(
+                subject=None,
+                email=item.get("email"),
+                phone=item.get("phone"),
+                display_name=item.get("displayName"),
+            )
+            if not mem.is_member(principal.org_id, workspace_id, identity["subject"]):
+                prov.assert_member_quota(
+                    principal.org_id,
+                    len(mem.list_members(principal.org_id, workspace_id)),
+                    adding=1,
+                )
+            mem.upsert_member(
+                principal.org_id,
+                workspace_id,
+                identity["subject"],
+                item["role"],
+                actor_id=principal.subject,
+            )
+            imported += 1
+        except ApiError as exc:
+            if exc.code == "QUOTA_EXCEEDED":
+                errors.append({"line": item.get("line"), "message": exc.message})
+                skipped += 1
+                break
+            raise
+        except ValueError as exc:
+            errors.append({"line": item.get("line"), "message": str(exc)})
+            skipped += 1
+        except Exception as exc:  # noqa: BLE001 — row isolation
+            errors.append({"line": item.get("line"), "message": str(exc)})
+            skipped += 1
+    mem.append_audit(
+        org_id=principal.org_id,
+        project_id=workspace_id,
+        actor_id=principal.subject,
+        action="members.import",
+        detail={"imported": imported, "skipped": skipped, "errors": len(errors)},
+    )
+    return {
+        "ok": True,
+        "imported": imported,
+        "skipped": skipped,
+        "errors": errors,
+        "workspaceId": workspace_id,
+    }
 
 
 @router.delete("/v1/workspaces/{workspace_id}/members/{member_subject}")

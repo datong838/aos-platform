@@ -51,6 +51,30 @@ def register_webhook(*, url: str, event: str, **extra: Any) -> dict[str, Any]:
     return item
 
 
+def delete_webhook(webhook_id: str) -> bool:
+    """209m — unregister webhook by id."""
+    wid = (webhook_id or "").strip()
+    items = _load_webhooks()
+    nxt = [h for h in items if str(h.get("id")) != wid]
+    if len(nxt) == len(items):
+        return False
+    _save_webhooks(nxt)
+    log.info("webhook_deleted id=%s", wid)
+    return True
+
+
+def _webhook_signature_headers(body: bytes) -> dict[str, str]:
+    """209m — optional HMAC-SHA256 when AOS_WEBHOOK_SIGNING_SECRET set."""
+    import hashlib
+    import hmac
+
+    secret = _env("AOS_WEBHOOK_SIGNING_SECRET")
+    if not secret:
+        return {}
+    dig = hmac.new(secret.encode("utf-8"), body, hashlib.sha256).hexdigest()
+    return {"X-AOS-Signature": f"sha256={dig}"}
+
+
 def _append_outbox(row: dict[str, Any]) -> dict[str, Any]:
     stored = get_payload(KEY_OUTBOX) or {}
     items = list(stored.get("items") or []) if isinstance(stored.get("items"), list) else []
@@ -58,6 +82,48 @@ def _append_outbox(row: dict[str, Any]) -> dict[str, Any]:
     # keep last 200
     put_payload(KEY_OUTBOX, {"items": items[-200:]})
     return row
+
+
+def list_outbox(*, limit: int = 50) -> list[dict[str, Any]]:
+    """212m — recent channel deliveries."""
+    stored = get_payload(KEY_OUTBOX) or {}
+    items = list(stored.get("items") or []) if isinstance(stored.get("items"), list) else []
+    lim = max(1, min(int(limit or 50), 200))
+    return list(reversed(items[-lim:]))
+
+
+def _save_outbox(items: list[dict[str, Any]]) -> None:
+    put_payload(KEY_OUTBOX, {"items": items[-200:]})
+
+
+def retry_outbox(outbox_id: str) -> dict[str, Any]:
+    """212m — re-dispatch using stored payload."""
+    oid = (outbox_id or "").strip()
+    stored = get_payload(KEY_OUTBOX) or {}
+    items = list(stored.get("items") or []) if isinstance(stored.get("items"), list) else []
+    hit = next((i for i in items if str(i.get("id")) == oid), None)
+    if not hit:
+        raise ApiError(code="NOT_FOUND", message="outbox item not found", status_code=404)
+    channel = str(hit.get("channel") or hit.get("pluginId") or "").strip()
+    payload = hit.get("payload")
+    if not isinstance(payload, dict):
+        raise ApiError(
+            code="OUTBOX_NO_PAYLOAD",
+            message="outbox item has no payload to retry (pre-212m entry)",
+            status_code=400,
+        )
+    if not channel:
+        raise ApiError(code="VALIDATION", message="outbox channel missing", status_code=400)
+    result = dispatch_send(channel, payload)
+    # reload after dispatch (which appends a new outbox row)
+    stored2 = get_payload(KEY_OUTBOX) or {}
+    items2 = list(stored2.get("items") or []) if isinstance(stored2.get("items"), list) else []
+    for row in items2:
+        if str(row.get("id")) == oid:
+            row["status"] = "retried"
+            break
+    _save_outbox(items2)
+    return {"ok": True, "retriedId": oid, "result": result}
 
 
 def _env(name: str, default: str = "") -> str:
@@ -88,10 +154,16 @@ def _send_webhook(payload: dict[str, Any]) -> dict[str, Any]:
             continue
         try:
             data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+            headers = {
+                "Content-Type": "application/json",
+                **_webhook_signature_headers(data),
+            }
+            if "X-AOS-Signature" in headers:
+                entry["signed"] = True
             req = urlrequest.Request(
                 url,
                 data=data,
-                headers={"Content-Type": "application/json"},
+                headers=headers,
                 method="POST",
             )
             with urlrequest.urlopen(req, timeout=5) as resp:
@@ -108,7 +180,14 @@ def _send_webhook(payload: dict[str, Any]) -> dict[str, Any]:
         "deliveries": deliveries,
         "matched": len(matched),
     }
-    _append_outbox({"id": f"ob-{uuid.uuid4().hex[:8]}", "channel": "channel-webhook", **out})
+    _append_outbox(
+        {
+            "id": f"ob-{uuid.uuid4().hex[:8]}",
+            "channel": "channel-webhook",
+            "payload": payload,
+            **out,
+        }
+    )
     return out
 
 
@@ -153,18 +232,77 @@ def _send_email(payload: dict[str, Any]) -> dict[str, Any]:
         "to": to,
         "subject": subject,
     }
-    _append_outbox({"id": f"ob-{uuid.uuid4().hex[:8]}", "channel": "channel-email", **out})
+    _append_outbox(
+        {
+            "id": f"ob-{uuid.uuid4().hex[:8]}",
+            "channel": "channel-email",
+            "payload": payload,
+            **out,
+        }
+    )
     return out
 
 
 def _send_sms(payload: dict[str, Any]) -> dict[str, Any]:
-    _ = payload
-    raise ApiError(
-        code="CHANNEL_STUB",
-        message="channel-sms has no live provider configured",
-        status_code=501,
-        details={"pluginId": "channel-sms"},
+    """198m — optional HTTP/Webhook SMS; unconfigured → 501."""
+    if not sms_configured():
+        raise ApiError(
+            code="CHANNEL_STUB",
+            message="channel-sms requires AOS_SMS_WEBHOOK_URL or AOS_SMS_API_URL+AOS_SMS_API_KEY",
+            status_code=501,
+            details={"pluginId": "channel-sms"},
+        )
+    to = str(payload.get("to") or payload.get("phone") or payload.get("recipient") or "").strip()
+    body = str(payload.get("body") or payload.get("text") or payload.get("message") or "")
+    if not to:
+        raise ApiError(code="VALIDATION", message="sms.to required", status_code=400)
+    webhook = _env("AOS_SMS_WEBHOOK_URL")
+    api_url = _env("AOS_SMS_API_URL")
+    api_key = _env("AOS_SMS_API_KEY")
+    url = webhook or api_url
+    headers = {"Content-Type": "application/json"}
+    if api_key and not webhook:
+        headers["Authorization"] = f"Bearer {api_key}"
+    data = json.dumps({"to": to, "body": body}, ensure_ascii=False).encode("utf-8")
+    req = urlrequest.Request(url, data=data, headers=headers, method="POST")
+    try:
+        with urlrequest.urlopen(req, timeout=10) as resp:
+            status = int(resp.status)
+            if not (200 <= status < 300):
+                raise ApiError(
+                    code="CHANNEL_UPSTREAM",
+                    message=f"sms upstream HTTP {status}",
+                    status_code=502,
+                )
+    except ApiError:
+        raise
+    except (urlerror.URLError, TimeoutError, ValueError) as exc:
+        raise ApiError(
+            code="CHANNEL_UPSTREAM",
+            message=f"sms upstream failed: {exc}",
+            status_code=502,
+        ) from None
+    out = {
+        "ok": True,
+        "pluginId": "channel-sms",
+        "mode": "http",
+        "to": to,
+    }
+    _append_outbox(
+        {
+            "id": f"ob-{uuid.uuid4().hex[:8]}",
+            "channel": "channel-sms",
+            "payload": payload,
+            **out,
+        }
     )
+    return out
+
+
+def sms_configured() -> bool:
+    if _env("AOS_SMS_WEBHOOK_URL"):
+        return True
+    return bool(_env("AOS_SMS_API_URL") and _env("AOS_SMS_API_KEY"))
 
 
 _HANDLERS = {
@@ -218,5 +356,12 @@ def channel_health(plugin_id: str) -> dict[str, Any]:
             "pluginId": pid,
             "smtpConfigured": smtp_configured(),
             "mode": "smtp" if smtp_configured() else "stub",
+        }
+    if pid == "channel-sms":
+        return {
+            "ok": sms_configured(),
+            "pluginId": pid,
+            "smsConfigured": sms_configured(),
+            "mode": "http" if sms_configured() else "stub",
         }
     return {"ok": False, "pluginId": pid, "mode": "stub"}

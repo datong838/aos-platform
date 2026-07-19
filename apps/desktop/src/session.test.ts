@@ -1,18 +1,26 @@
-/** TWC.3 session unit tests (memory fallback, no Tauri) */
+/** TWC.3 session unit tests (memory fallback, no Tauri) · 196m unlock gate */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   applyTokens,
   isLoggedIn,
+  isUnlockPending,
   logout,
   restoreSession,
+  unlockSession,
   secureGet,
   secureSet,
   REFRESH_KEY,
 } from "./session";
+import {
+  getRequireUnlockOnResume,
+  setRequireUnlockOnResume,
+  REQUIRE_UNLOCK_KEY,
+} from "./lockSettings";
 import { clearAccessToken, getAccessToken, tenantAuthHeaders } from "@aos-web/api/tenant";
 
 describe("TWC.3 session", () => {
   beforeEach(async () => {
+    setRequireUnlockOnResume(false);
     clearAccessToken();
     await logout();
   });
@@ -28,6 +36,7 @@ describe("TWC.3 session", () => {
     expect(isLoggedIn()).toBe(false);
     const ok = await restoreSession();
     expect(ok).toBe(true);
+    expect(isUnlockPending()).toBe(false);
     expect(getAccessToken()).toBe("tok-access-1");
   });
 
@@ -45,5 +54,37 @@ describe("TWC.3 session", () => {
     const joined = spy.mock.calls.map((c) => JSON.stringify(c)).join(" ");
     expect(joined).not.toContain("super-secret-token");
     spy.mockRestore();
+  });
+});
+
+describe("196m require unlock on resume", () => {
+  beforeEach(async () => {
+    setRequireUnlockOnResume(false);
+    clearAccessToken();
+    await logout();
+  });
+
+  it("settings roundtrip", () => {
+    expect(getRequireUnlockOnResume()).toBe(false);
+    setRequireUnlockOnResume(true);
+    expect(localStorage.getItem(REQUIRE_UNLOCK_KEY)).toBe("1");
+    expect(getRequireUnlockOnResume()).toBe(true);
+    setRequireUnlockOnResume(false);
+    expect(getRequireUnlockOnResume()).toBe(false);
+  });
+
+  it("when enabled: restore leaves access unset until unlock", async () => {
+    setRequireUnlockOnResume(true);
+    await applyTokens({ accessToken: "tok-lock-1" });
+    clearAccessToken();
+    const ok = await restoreSession();
+    expect(ok).toBe(true);
+    expect(isUnlockPending()).toBe(true);
+    expect(getAccessToken()).toBeNull();
+    expect(isLoggedIn()).toBe(false);
+    const unlocked = await unlockSession();
+    expect(unlocked).toBe(true);
+    expect(isUnlockPending()).toBe(false);
+    expect(getAccessToken()).toBe("tok-lock-1");
   });
 });

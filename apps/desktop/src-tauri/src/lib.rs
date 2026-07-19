@@ -1,5 +1,6 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 mod desktop_shell;
+mod offline_queue;
 
 use tauri::Manager;
 
@@ -20,6 +21,11 @@ pub fn run() {
             desktop_shell::secure_delete,
             desktop_shell::about_info,
             desktop_shell::verify_update_signature,
+            desktop_shell::tray_update_status,
+            offline_queue::oq_list,
+            offline_queue::oq_replace,
+            offline_queue::oq_clear,
+            offline_queue::oq_clear_all,
         ])
         .setup(|app| {
             desktop_shell::setup_tray(app.handle())?;

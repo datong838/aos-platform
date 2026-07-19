@@ -1,5 +1,6 @@
 import { tenantAuthHeaders, type MeResponse, applyMeToTenant } from "./tenant";
 import { getApiBase } from "./apiBase";
+import { getDesktopClientVersion } from "./desktopClient";
 import { applyProbeResult, isOffline } from "../lib/offlineStore";
 import {
   enqueueOfflineWrite,
@@ -39,7 +40,10 @@ export function formatNetworkError(err: unknown, method: string, path: string): 
 }
 
 function authHeaders(): HeadersInit {
-  return tenantAuthHeaders();
+  const h: Record<string, string> = { ...tenantAuthHeaders() };
+  const dv = getDesktopClientVersion();
+  if (dv) h["X-AOS-Desktop-Version"] = dv;
+  return h;
 }
 
 async function parseError(res: Response, method: string, path: string): Promise<Error> {
@@ -245,6 +249,37 @@ export async function flushOfflineQueue(): Promise<{
   const remaining = listOfflineQueue().length;
   console.info("[aos-offline]", { event: "flush", ok, fail, remaining });
   return { ok, fail, remaining };
+}
+
+/** 214m — 在线时重放单条待同步；离线则不改队列。 */
+export async function flushOfflineQueueItem(
+  id: string,
+): Promise<{ ok: boolean; remaining: number; error?: string }> {
+  if (isOffline()) {
+    return { ok: false, remaining: listOfflineQueue().length, error: "offline" };
+  }
+  const item = listOfflineQueue().find((x) => x.id === id);
+  if (!item) {
+    return { ok: false, remaining: listOfflineQueue().length, error: "not_found" };
+  }
+  try {
+    await request(item.method, item.path, {
+      body: item.body !== undefined ? JSON.stringify(item.body) : undefined,
+      headers:
+        item.body !== undefined
+          ? { "Content-Type": "application/json" }
+          : undefined,
+    });
+    removeOfflineQueueItem(item.id);
+    const remaining = listOfflineQueue().length;
+    console.info("[aos-offline]", { event: "flush_one", id, ok: true, remaining });
+    return { ok: true, remaining };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    markOfflineQueueError(item.id, msg);
+    console.info("[aos-offline]", { event: "flush_one", id, ok: false, error: msg });
+    return { ok: false, remaining: listOfflineQueue().length, error: msg };
+  }
 }
 
 export { getApiBase, OfflineQueuedError };

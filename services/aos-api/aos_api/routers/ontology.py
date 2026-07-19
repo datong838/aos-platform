@@ -662,6 +662,9 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
                 conflict_samples.append(f"{r['object_type']}/{r['object_id']}:{','.join(extra[:3])}")
 
     orphan_n = int(orphans["c"])
+    from aos_api import ttl_job
+
+    ttl_snap = ttl_job.status_snapshot()
     metrics = {
         "objectTypes": int(types["c"]),
         "instances": int(objs["c"]),
@@ -669,9 +672,10 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
         "orphanInstances": orphan_n,
         "danglingEdges": dangling_n,
         "propConflicts": conflict_n,
-        "archiveCandidates": min(orphan_n, 8) if orphan_n else 0,
+        "archiveCandidates": int(ttl_snap["archiveCandidates"]),
         "engine": "adjacency_table",
         "ageAvailable": False,
+        "insightTtlDays": ttl_snap["ttlDays"],
     }
     score = 100
     issues: list[dict[str, Any]] = []
@@ -749,7 +753,12 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
         conflict_n,
         len(issues),
     )
-    return {"score": score, "metrics": metrics, "issues": issues}
+    return {
+        "score": score,
+        "metrics": metrics,
+        "issues": issues,
+        "archivePreview": ttl_snap.get("preview") or [],
+    }
 
 
 class BranchIn(BaseModel):

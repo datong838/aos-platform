@@ -40,6 +40,7 @@ export function OrgMembershipPage() {
   const [directory, setDirectory] = useState<DirOrg[]>([]);
   const [pending, setPending] = useState<JoinReq[]>([]);
   const [invite, setInvite] = useState<InviteOut | null>(null);
+  const [inviteQrSvg, setInviteQrSvg] = useState("");
   const [applyMsg, setApplyMsg] = useState("");
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
@@ -175,6 +176,7 @@ export function OrgMembershipPage() {
   async function onCreateInvite() {
     setErr("");
     setMsg("");
+    setInviteQrSvg("");
     try {
       const out = await apiPost<InviteOut>(
         `/v1/orgs/${encodeURIComponent(getTenant().orgId)}/invites`,
@@ -182,6 +184,14 @@ export function OrgMembershipPage() {
       );
       setInvite(out);
       setMsg("邀请链接已生成");
+      try {
+        const qr = await apiGet<{ svg: string }>(
+          `/v1/org-invites/${encodeURIComponent(out.token)}/qr?origin=${encodeURIComponent(window.location.origin)}`,
+        );
+        setInviteQrSvg(qr.svg || "");
+      } catch {
+        setInviteQrSvg("");
+      }
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     }
@@ -325,8 +335,15 @@ export function OrgMembershipPage() {
           </p>
           <code style={{ wordBreak: "break-all" }}>{inviteUrl}</code>
           <p className="aos-muted">
-            将链接发给对方；对方打开后点「接受邀请」即可加入。
+            将链接发给对方；对方打开后点「接受邀请」即可加入。也可扫下方二维码。
           </p>
+          {inviteQrSvg ? (
+            <div
+              data-testid="invite-qr"
+              style={{ marginTop: "0.75rem", maxWidth: 180 }}
+              dangerouslySetInnerHTML={{ __html: inviteQrSvg }}
+            />
+          ) : null}
         </div>
       ) : null}
 
