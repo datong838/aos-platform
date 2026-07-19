@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getApiBase } from "@aos-web/api/apiBase";
-import { LOCAL_PLATFORM_NAME } from "@aos-web/lib/productCopy";
 
 type About = {
   productName: string;
@@ -46,12 +45,8 @@ export function AboutDialog({ open, onClose }: { open: boolean; onClose: () => v
           <dd>
             <code>{getApiBase()}</code>
           </dd>
-          <dt>协议</dt>
-          <dd>aos-api /v1</dd>
           <dt>说明</dt>
-          <dd>
-            安装器/关于可称「AOS 工作站」· Local-First 名「{LOCAL_PLATFORM_NAME}」· 非 Apollo
-          </dd>
+          <dd>连接企业 AI 操作系统的桌面座舱</dd>
         </dl>
         <button type="button" onClick={onClose}>
           关闭

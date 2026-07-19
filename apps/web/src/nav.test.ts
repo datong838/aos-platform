@@ -3,7 +3,7 @@ import { isNavPage, NAV_ITEMS, navPages } from "./nav";
 import { readAppearancePreference } from "./lib/appearance";
 import { S2_LIVE_PATHS, S2_LIVE_ROUTES } from "./pages/s2/routes";
 
-describe("nav DEMO_PAGES alignment", () => {
+describe("nav product sections alignment", () => {
   it("keeps narrative sections in order", () => {
     const sections = NAV_ITEMS.filter((i) => "section" in i).map(
       (i) => (i as { section: string }).section,
@@ -25,7 +25,7 @@ describe("nav DEMO_PAGES alignment", () => {
     expect(navPages().filter((p) => p.path.startsWith("/apollo")).length).toBeGreaterThanOrEqual(7);
   });
 
-  it("exposes full DEMO page count with live paths", () => {
+  it("exposes full page count with live paths", () => {
     const pages = navPages();
     expect(pages.length).toBeGreaterThanOrEqual(35);
     expect(pages.every((p) => p.icon && p.path && p.id)).toBe(true);

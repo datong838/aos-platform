@@ -1,5 +1,6 @@
-/** TWA.9 — 顶栏组织切换器（UI 称「组织」） */
+/** TWA.9 / TWA.10 — 顶栏组织切换器（含新建组织） */
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { apiGet, apiPost } from "../api/client";
 import { getTenant, setTenant } from "../api/tenant";
 import { clearWorkspaceLocalCache } from "../lib/workspaceCache";
@@ -93,6 +94,46 @@ export function OrgSwitcher() {
     }
   }
 
+  async function onCreate() {
+    const name = window.prompt("新组织名称");
+    if (!name?.trim()) return;
+    try {
+      const created = await apiPost<{
+        id: string;
+        name: string;
+        defaultProjectId: string;
+        workspaceName: string;
+      }>("/v1/orgs", { name: name.trim() });
+      clearWorkspaceLocalCache("org-create");
+      setTenant({
+        orgId: created.id,
+        projectId: created.defaultProjectId,
+        workspaceName: created.workspaceName,
+      });
+      setTenantState(getTenant());
+      setItems((prev) =>
+        prev.some((i) => i.id === created.id)
+          ? prev
+          : [...prev, { id: created.id, name: created.name }],
+      );
+      setOpen(false);
+      window.dispatchEvent(
+        new CustomEvent("aos-workspace-changed", {
+          detail: {
+            orgId: created.id,
+            projectId: created.defaultProjectId,
+          },
+        }),
+      );
+    } catch (e) {
+      console.warn("[aos-org]", {
+        event: "create_failed",
+        error: e instanceof Error ? e.message : String(e),
+      });
+      window.alert(e instanceof Error ? e.message : String(e));
+    }
+  }
+
   const label =
     items.find((i) => i.id === tenant.orgId)?.name || tenant.orgId;
 
@@ -131,6 +172,20 @@ export function OrgSwitcher() {
               <span className="aos-muted"> · {o.id}</span>
             </button>
           ))}
+          <button
+            type="button"
+            className="aos-workspace-item"
+            onClick={() => void onCreate()}
+          >
+            新建组织…
+          </button>
+          <Link
+            to="/org/membership"
+            className="aos-workspace-item"
+            onClick={() => setOpen(false)}
+          >
+            组织与加入…
+          </Link>
         </div>
       ) : null}
     </div>

@@ -3,8 +3,6 @@ import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { App as WebApp } from "@aos-web/App";
 import { probeApiHealth, bootstrapTenantFromMe } from "@aos-web/api/client";
-import { expandOpsNav } from "@aos-web/lib/opsNav";
-import { LOCAL_PLATFORM_NAME } from "@aos-web/lib/productCopy";
 import { clearWorkspaceLocalCache } from "@aos-web/lib/workspaceCache";
 import { Welcome } from "./Welcome";
 import { Login } from "./Login";
@@ -30,13 +28,6 @@ type Phase = "checking" | "welcome" | "login" | "shell";
 
 function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
-}
-
-function openPlatformAdmin() {
-  expandOpsNav();
-  window.history.pushState({}, "", "/apollo");
-  window.dispatchEvent(new PopStateEvent("popstate"));
-  console.info("[aos-desktop]", { event: "ui14_platform_admin" });
 }
 
 export default function App() {
@@ -87,7 +78,7 @@ export default function App() {
       return;
     }
     if (parsed.kind === "auth_callback") {
-      showToast("已收到登录回调 · 请完成开发令牌登录（OIDC 完整流见后续）");
+      showToast("已收到登录回调，请完成登录");
       if (!loggedIn) setPhase("login");
       return;
     }
@@ -236,29 +227,9 @@ export default function App() {
 
   return (
     <div className="aos-desktop-root" data-shell="desktop">
-      <div className="aos-desktop-ribbon" title={LOCAL_PLATFORM_NAME}>
-        <span>AOS 桌面 · 同构座舱（≥ Web）</span>
+      <div className="aos-desktop-ribbon">
+        <span>AOS 桌面</span>
         <div className="aos-desktop-ribbon-actions">
-          <button
-            type="button"
-            className="aos-desktop-ribbon-btn"
-            data-ui="UI-14"
-            onClick={openPlatformAdmin}
-            title="展开运维交付 · 进入 Hub（克制入口）"
-          >
-            平台管理
-          </button>
-          <button
-            type="button"
-            className="aos-desktop-ribbon-btn"
-            data-ui="UI-13"
-            onClick={() => {
-              setViewMode("buddy-classic");
-              console.info("[aos-desktop]", { event: "ui13_buddy_classic" });
-            }}
-          >
-            Buddy 三栏
-          </button>
           <button
             type="button"
             className="aos-desktop-ribbon-btn"

@@ -24,8 +24,15 @@ export function OverviewDomainGrid({ metrics }: { metrics: OverviewMetrics | nul
           items={[
             {
               label: "接口",
-              value: m ? ((m.health === "ok" || m.health === "healthy") ? "正常" : m.health) : "…",
-              tone: m && (m.health === "ok" || m.health === "healthy") ? "ok" : "warn",
+              value: m
+                ? m.health === "ok" || m.health === "healthy"
+                  ? "正常"
+                  : "暂不可用"
+                : "…",
+              tone:
+                m && (m.health === "ok" || m.health === "healthy")
+                  ? "ok"
+                  : "warn",
             },
             {
               label: "默认大模型",

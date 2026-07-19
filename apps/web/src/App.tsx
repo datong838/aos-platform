@@ -14,7 +14,11 @@ import { DataPage } from "./pages/DataPage";
 import { ApolloPage } from "./pages/ApolloPage";
 import { CapabilityPage } from "./pages/CapabilityPage";
 import { WorkspaceMembersPage } from "./pages/WorkspaceMembersPage";
+import { MyProfilePage } from "./pages/MyProfilePage";
+import { OrgMembershipPage } from "./pages/OrgMembershipPage";
+import { InviteAcceptPage } from "./pages/InviteAcceptPage";
 import { LocalPlatformPage } from "./pages/LocalPlatformPage";
+import { OpsStartGuidePage } from "./pages/OpsStartGuidePage";
 import { SaasProvisioningPage } from "./pages/SaasProvisioningPage";
 import { BlueprintStubPage } from "./pages/BlueprintStubPage";
 import { S2_LIVE_PATHS, S2_LIVE_ROUTES } from "./pages/s2/routes";
@@ -37,7 +41,11 @@ export function App() {
         <Route element={<AppShell />}>
           <Route index element={<OverviewPage />} />
           <Route path="workspace/members" element={<WorkspaceMembersPage />} />
+          <Route path="settings/profile" element={<MyProfilePage />} />
+          <Route path="org/membership" element={<OrgMembershipPage />} />
+          <Route path="org/invite/:token" element={<InviteAcceptPage />} />
           <Route path="settings/local-platform" element={<LocalPlatformPage />} />
+          <Route path="settings/ops-start-guide" element={<OpsStartGuidePage />} />
           <Route path="workshop" element={<WorkshopListPage />} />
           <Route path="workshop/inbox" element={<InboxPage />} />
           <Route path="workshop/canvas" element={<CanvasPage />} />

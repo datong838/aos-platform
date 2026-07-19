@@ -40,7 +40,7 @@ describe("TWC.2 desktop ≥ Web parity", () => {
     expect(ops?.collapseDefault).toBe(true);
   });
 
-  it("includes 本机平台 and members (TWB.3 / TWA.7)", () => {
+  it("includes 本机探活 and members (TWB.3 / TWA.7)", () => {
     expect(navPages().some((p) => p.path === "/settings/local-platform")).toBe(true);
     expect(navPages().find((p) => p.path === "/settings/local-platform")?.label).toBe(
       LOCAL_PLATFORM_NAME,

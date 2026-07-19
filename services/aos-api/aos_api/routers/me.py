@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel, Field
 
 from aos_api.auth import Principal, require_principal
+from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
 from aos_api import orgs as org_store
 from aos_api import membership as mem
+from aos_api import person_identity as person
 
 router = APIRouter(tags=["me"])
 log = get_logger("aos-api.me")
@@ -16,6 +19,13 @@ def _workspace_name(project_id: str) -> str:
     if project_id in ("dev-project", "test-workspace"):
         return "测试工作区"
     return project_id
+
+
+class ProfilePatchIn(BaseModel):
+    displayName: str | None = Field(default=None, max_length=80)
+    email: str | None = Field(default=None, max_length=120)
+    phone: str | None = Field(default=None, max_length=32)
+    title: str | None = Field(default=None, max_length=80)
 
 
 @router.get("/v1/me")
@@ -30,6 +40,7 @@ def me(principal: Principal = Depends(require_principal)) -> dict:
         cur = org_store.get_org(principal.org_id)
         if cur:
             org_items = [cur, *org_items]
+    profile = person.get_profile(principal.subject)
     log.info(
         "me_probe subject=%s org=%s project=%s workspace=%s",
         principal.subject,
@@ -47,4 +58,39 @@ def me(principal: Principal = Depends(require_principal)) -> dict:
         "markings": principal.markings,
         "tokenKind": principal.token_kind,
         "orgs": org_items,
+        "profile": profile,
+        "displayName": profile.get("displayName"),
+        "email": profile.get("email"),
+        "phone": profile.get("phone"),
+        "title": profile.get("title"),
     }
+
+
+@router.patch("/v1/me/profile")
+def patch_my_profile(
+    body: ProfilePatchIn,
+    principal: Principal = Depends(require_principal),
+) -> dict:
+    try:
+        profile = person.update_own_profile(
+            principal.subject,
+            display_name=body.displayName,
+            email=body.email,
+            phone=body.phone,
+            title=body.title,
+        )
+    except ValueError as exc:
+        raise ApiError(code="VALIDATION", message=str(exc), status_code=400) from exc
+    mem.append_audit(
+        org_id=principal.org_id,
+        project_id=principal.project_id,
+        actor_id=principal.subject,
+        action="profile.update",
+        detail={
+            "displayName": profile.get("displayName"),
+            "email": profile.get("email"),
+            "phone": profile.get("phone"),
+        },
+    )
+    log.info("me_profile_patch subject=%s", principal.subject)
+    return {"ok": True, "subject": principal.subject, "profile": profile}

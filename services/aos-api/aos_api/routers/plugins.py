@@ -47,6 +47,17 @@ def reset_plugin_store() -> None:
     _CONFIGS.clear()
 
 
+def count_configs(org_id: str, project_id: str) -> int:
+    return sum(1 for (o, p, _) in _CONFIGS if o == org_id and p == project_id)
+
+
+def clear_configs(org_id: str, project_id: str) -> int:
+    keys = [k for k in _CONFIGS if k[0] == org_id and k[1] == project_id]
+    for k in keys:
+        del _CONFIGS[k]
+    return len(keys)
+
+
 @router.get("/v1/plugin-catalog")
 def list_plugin_catalog(
     principal: Principal = Depends(require_principal),

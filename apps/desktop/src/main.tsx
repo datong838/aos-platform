@@ -6,7 +6,18 @@ import { applyChannelApiBase } from "./channel";
 import "@aos-web/styles.css";
 import App from "./App";
 
+/** 176 · 桌面非浏览器：补 Cmd/Ctrl+R 整页刷新 */
+function bindDesktopReload() {
+  window.addEventListener("keydown", (e) => {
+    const mod = e.metaKey || e.ctrlKey;
+    if (!mod || e.key.toLowerCase() !== "r") return;
+    e.preventDefault();
+    window.location.reload();
+  });
+}
+
 async function boot() {
+  bindDesktopReload();
   applyChannelApiBase(setApiBase, () => {
     try {
       return Boolean(localStorage.getItem(API_BASE_KEY));

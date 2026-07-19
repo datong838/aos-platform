@@ -135,7 +135,7 @@ export default function BuddyLegacyApp() {
   }
 
   return (
-    <div className="app-shell">
+    <div className="buddy-legacy-shell app-shell">
       <header className="topbar">
         <div className="brand">AOS 桌面 · Buddy 三栏（增量）</div>
         <div className="health" title="状态指示；点「刷新健康」重新探测">

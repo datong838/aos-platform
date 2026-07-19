@@ -1,4 +1,4 @@
-/** TWA.3 — 顶栏工作区切换器 · TWA.7 enter 审计 */
+/** TWA.3 / TWA.10 — 顶栏工作区切换器 · 新建工作区 */
 import { useEffect, useRef, useState } from "react";
 import { apiGet, apiPost } from "../api/client";
 import { getTenant, setTenant } from "../api/tenant";
@@ -88,6 +88,24 @@ export function WorkspaceSwitcher() {
     );
   }
 
+  async function onCreate() {
+    const name = window.prompt("新工作区名称");
+    if (!name?.trim()) return;
+    try {
+      const ws = await apiPost<WorkspaceItem>("/v1/workspaces", {
+        name: name.trim(),
+      });
+      setItems((prev) => (prev.some((i) => i.id === ws.id) ? prev : [...prev, ws]));
+      onSelect(ws);
+    } catch (e) {
+      console.warn("[aos-workspace]", {
+        event: "create_failed",
+        error: e instanceof Error ? e.message : String(e),
+      });
+      window.alert(e instanceof Error ? e.message : String(e));
+    }
+  }
+
   const label = tenant.workspaceName || tenant.projectId;
 
   return (
@@ -127,6 +145,14 @@ export function WorkspaceSwitcher() {
               <span className="aos-check">✓</span>
             </button>
           ))}
+          <button
+            type="button"
+            role="menuitem"
+            className="aos-workspace-item"
+            onClick={() => void onCreate()}
+          >
+            新建工作区…
+          </button>
         </div>
       ) : null}
     </div>

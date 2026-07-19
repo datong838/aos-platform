@@ -8,10 +8,10 @@ import {
 import { isNavPage, NAV_ITEMS, navPages } from "../nav";
 
 describe("TWB.2 / TWB.3 product copy & nav", () => {
-  it("本机平台 never equals Apollo", () => {
-    expect(LOCAL_PLATFORM_NAME).toBe("本机平台");
+  it("本机探活 never equals Apollo", () => {
+    expect(LOCAL_PLATFORM_NAME).toBe("本机探活");
     expect(LOCAL_PLATFORM_NAME.toLowerCase()).not.toContain("apollo");
-    expect(assertNotCallingLocalPlatformApollo("本机平台")).toBe(true);
+    expect(assertNotCallingLocalPlatformApollo("本机探活")).toBe(true);
     expect(assertNotCallingLocalPlatformApollo("本机 Apollo")).toBe(false);
   });
 
@@ -26,10 +26,20 @@ describe("TWB.2 / TWB.3 product copy & nav", () => {
     expect(apolloPages.every((p) => p.status === "live")).toBe(true);
   });
 
-  it("local platform page is live in nav", () => {
+  it("local platform page is live under 运维交付", () => {
     const page = navPages().find((p) => p.path === "/settings/local-platform");
     expect(page?.label).toBe(LOCAL_PLATFORM_NAME);
     expect(page?.status).toBe("live");
+    expect(page?.crumbs?.[0]).toBe(OPS_NAV_SECTION);
+
+    const opsIdx = NAV_ITEMS.findIndex(
+      (i) => "section" in i && (i as { section: string }).section === OPS_NAV_SECTION,
+    );
+    const lpIdx = NAV_ITEMS.findIndex(
+      (i) => isNavPage(i) && i.path === "/settings/local-platform",
+    );
+    expect(opsIdx).toBeGreaterThanOrEqual(0);
+    expect(lpIdx).toBeGreaterThan(opsIdx);
   });
 
   it("model config copy forbids vault console from业务座舱", () => {

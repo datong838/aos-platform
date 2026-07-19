@@ -21,11 +21,14 @@ export function OfflineBanner() {
   const [drawer, setDrawer] = useState(false);
   const [items, setItems] = useState<OfflineQueueItem[]>([]);
   const [flushMsg, setFlushMsg] = useState("");
+  const [retrying, setRetrying] = useState(false);
+  const [retryMsg, setRetryMsg] = useState("");
 
   useEffect(() => {
     const unbind = bindBrowserOnlineListeners();
     function onConn() {
       setOffline(getConnectivity() === "offline");
+      if (getConnectivity() !== "offline") setRetryMsg("");
     }
     function onQ() {
       setQueueSize(listOfflineQueue().length);
@@ -57,6 +60,24 @@ export function OfflineBanner() {
     }
   };
 
+  async function onRetry() {
+    setRetrying(true);
+    setRetryMsg("探测中…");
+    try {
+      const r = await probeApiHealth();
+      if (r.ok) {
+        setOffline(false);
+        setRetryMsg("");
+      } else {
+        setRetryMsg(
+          `仍不可达 · ${r.detail} · 本机执行 bash scripts/demo/ensure-api.sh，或打开启停说明`,
+        );
+      }
+    } finally {
+      setRetrying(false);
+    }
+  }
+
   return (
     <div
       className={
@@ -77,9 +98,11 @@ export function OfflineBanner() {
         <button
           type="button"
           className="aos-offline-banner-btn"
-          onClick={() => void probeApiHealth()}
+          data-testid="offline-retry-connect"
+          disabled={retrying}
+          onClick={() => void onRetry()}
         >
-          重试连接
+          {retrying ? "探测中…" : "重试连接"}
         </button>
       ) : (
         <button
@@ -99,6 +122,12 @@ export function OfflineBanner() {
           冲刷队列
         </button>
       )}
+      {retryMsg ? (
+        <span className="aos-muted" data-testid="offline-retry-msg">
+          {" "}
+          · {retryMsg}
+        </span>
+      ) : null}
       {flushMsg ? <span className="aos-muted"> · {flushMsg}</span> : null}
       {drawer ? (
         <div className="aos-offline-drawer" role="dialog" aria-label="待同步队列">

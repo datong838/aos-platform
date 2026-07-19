@@ -1,4 +1,4 @@
-"""TWA.3/TWA.4/TWA.7 — workspaces catalog, isolation probe, members, enter."""
+"""TWA.3/TWA.4/TWA.7/TWA.10/TWA.11 — workspaces catalog, members, create, delete."""
 from __future__ import annotations
 
 import uuid
@@ -11,40 +11,18 @@ from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
 from aos_api import membership as mem
+from aos_api import orgs as org_store
+from aos_api import tenant_data as tdata
+from aos_api import workspace_isolation as iso
+from aos_api import workspaces_catalog as ws_cat
 from aos_api.oidc import allow_dev
 
 router = APIRouter(tags=["workspaces"])
 log = get_logger("aos-api.workspaces")
 
-# (org_id, project_id, item_id) -> payload
-_ITEMS: dict[tuple[str, str, str], dict[str, Any]] = {}
-
-
-def _workspace_catalog(org_id: str) -> list[dict[str, Any]]:
-    """Dev catalog — product names; ids are project_id."""
-    return [
-        {
-            "id": "dev-project",
-            "orgId": org_id,
-            "name": "测试工作区",
-            "deletable": True,
-            "kind": "test",
-        },
-        {
-            "id": "prj-ops",
-            "orgId": org_id,
-            "name": "生产运营工作区",
-            "deletable": False,
-            "kind": "ops",
-        },
-    ]
-
 
 def _find_workspace(org_id: str, workspace_id: str) -> dict[str, Any] | None:
-    for w in _workspace_catalog(org_id):
-        if w["id"] == workspace_id:
-            return w
-    return None
+    return ws_cat.get_workspace(org_id, workspace_id)
 
 
 @router.get("/v1/workspaces")
@@ -53,7 +31,14 @@ def list_workspaces(principal: Principal = Depends(require_principal)) -> dict[s
     mem.ensure_default_membership(
         principal.org_id, principal.project_id, principal.subject
     )
-    catalog = _workspace_catalog(principal.org_id)
+    # Ensure current project exists in catalog for continuity
+    if not ws_cat.get_workspace(principal.org_id, principal.project_id):
+        ws_cat.ensure_workspace(
+            principal.org_id,
+            principal.project_id,
+            name=org_store.workspace_display_name(principal.org_id, principal.project_id),
+        )
+    catalog = ws_cat.list_workspaces_for_org(principal.org_id)
     member_ids = mem.member_project_ids(principal.org_id, principal.subject)
     items = [w for w in catalog if w["id"] in member_ids]
     log.info(
@@ -63,6 +48,133 @@ def list_workspaces(principal: Principal = Depends(require_principal)) -> dict[s
         principal.subject,
     )
     return {"items": items, "currentProjectId": principal.project_id}
+
+
+class WorkspaceCreateIn(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    id: str | None = None
+
+
+@router.post("/v1/workspaces")
+def create_workspace(
+    body: WorkspaceCreateIn,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    if not mem.can_manage_org(principal.org_id, principal.subject):
+        # bootstrap: if user somehow has no admin but is only member via ensure — still require admin
+        if not mem.is_member(principal.org_id, principal.project_id, principal.subject):
+            mem.ensure_default_membership(
+                principal.org_id, principal.project_id, principal.subject
+            )
+        if not mem.can_manage_org(principal.org_id, principal.subject):
+            raise ApiError(
+                code="FORBIDDEN",
+                message="organization admin required to create workspace",
+                status_code=403,
+            )
+    try:
+        ws = ws_cat.create_workspace(
+            principal.org_id,
+            name=body.name,
+            project_id=body.id,
+            kind="custom",
+        )
+    except ValueError as exc:
+        msg = str(exc)
+        code = "CONFLICT" if "already exists" in msg else "VALIDATION"
+        raise ApiError(
+            code=code,
+            message=msg,
+            status_code=409 if code == "CONFLICT" else 400,
+        ) from exc
+    mem.upsert_member(
+        principal.org_id,
+        ws["id"],
+        principal.subject,
+        "owner",
+        actor_id=principal.subject,
+    )
+    mem.append_audit(
+        org_id=principal.org_id,
+        project_id=ws["id"],
+        actor_id=principal.subject,
+        action="workspace.create",
+        detail={"name": ws["name"]},
+    )
+    log.info(
+        "workspace_create org=%s project=%s subject=%s",
+        principal.org_id,
+        ws["id"],
+        principal.subject,
+    )
+    return ws
+
+
+@router.get("/v1/workspaces/{workspace_id}/data")
+def workspace_data_summary(
+    workspace_id: str,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    if not _find_workspace(principal.org_id, workspace_id):
+        raise ApiError(code="NOT_FOUND", message="workspace not found", status_code=404)
+    if not mem.is_member(principal.org_id, workspace_id, principal.subject):
+        raise ApiError(
+            code="WORKSPACE_FORBIDDEN",
+            message="not a member of this workspace",
+            status_code=403,
+        )
+    return tdata.summarize_workspace(principal.org_id, workspace_id)
+
+
+@router.post("/v1/workspaces/{workspace_id}/data/clear")
+def workspace_data_clear(
+    workspace_id: str,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    if not _find_workspace(principal.org_id, workspace_id):
+        raise ApiError(code="NOT_FOUND", message="workspace not found", status_code=404)
+    if not tdata.can_admin_workspace(
+        principal.org_id, workspace_id, principal.subject
+    ):
+        raise ApiError(
+            code="FORBIDDEN",
+            message="admin or owner required to clear workspace data",
+            status_code=403,
+        )
+    return tdata.clear_workspace_data(
+        principal.org_id, workspace_id, actor_id=principal.subject
+    )
+
+
+@router.delete("/v1/workspaces/{workspace_id}")
+def delete_workspace(
+    workspace_id: str,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    if not _find_workspace(principal.org_id, workspace_id):
+        raise ApiError(code="NOT_FOUND", message="workspace not found", status_code=404)
+    if not tdata.can_admin_workspace(
+        principal.org_id, workspace_id, principal.subject
+    ):
+        raise ApiError(
+            code="FORBIDDEN",
+            message="admin or owner required to delete workspace",
+            status_code=403,
+        )
+    try:
+        return tdata.delete_workspace(
+            principal.org_id, workspace_id, actor_id=principal.subject
+        )
+    except ValueError as exc:
+        if str(exc) == "NOT_EMPTY":
+            summary = tdata.summarize_workspace(principal.org_id, workspace_id)
+            raise ApiError(
+                code="NOT_EMPTY",
+                message="workspace still has business data; clear data first",
+                status_code=409,
+                details=summary,
+            ) from exc
+        raise ApiError(code="VALIDATION", message=str(exc), status_code=400) from exc
 
 
 @router.post("/v1/workspaces/{workspace_id}/enter")
@@ -108,7 +220,10 @@ def enter_workspace(
 
 
 class MemberIn(BaseModel):
-    subject: str = Field(min_length=1)
+    subject: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    displayName: str | None = None
     role: str = Field(min_length=1)
 
 
@@ -125,7 +240,12 @@ def list_workspace_members(
             message="not a member of this workspace",
             status_code=403,
         )
-    items = mem.list_members(principal.org_id, workspace_id)
+    from aos_api import person_identity as person
+
+    items = [
+        person.enrich_member_row(m)
+        for m in mem.list_members(principal.org_id, workspace_id)
+    ]
     return {"items": items, "workspaceId": workspace_id}
 
 
@@ -145,13 +265,25 @@ def add_workspace_member(
         )
     if body.role not in mem.ROLES:
         raise ApiError(code="BAD_REQUEST", message="invalid role", status_code=400)
-    return mem.upsert_member(
+    from aos_api import person_identity as person
+
+    try:
+        identity = person.resolve_member_identity(
+            subject=body.subject,
+            email=body.email,
+            phone=body.phone,
+            display_name=body.displayName,
+        )
+    except ValueError as exc:
+        raise ApiError(code="VALIDATION", message=str(exc), status_code=400) from exc
+    row = mem.upsert_member(
         principal.org_id,
         workspace_id,
-        body.subject,
+        identity["subject"],
         body.role,
         actor_id=principal.subject,
     )
+    return person.enrich_member_row(row)
 
 
 @router.delete("/v1/workspaces/{workspace_id}/members/{member_subject}")
@@ -193,14 +325,13 @@ def create_workspace_item(
     if not allow_dev() and principal.token_kind == "dev":
         raise ApiError(code="AUTH_DEV_DISABLED", message="dev disabled", status_code=401)
     iid = body.id or f"wi-{uuid.uuid4().hex[:8]}"
-    key = (principal.org_id, principal.project_id, iid)
     item = {
         "id": iid,
         "name": body.name,
         "orgId": principal.org_id,
         "projectId": principal.project_id,
     }
-    _ITEMS[key] = item
+    iso.put_item(principal.org_id, principal.project_id, item)
     log.info(
         "workspace_item_create id=%s org=%s project=%s",
         iid,
@@ -214,18 +345,14 @@ def create_workspace_item(
 def list_workspace_items(
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    items = [
-        v
-        for (o, p, _), v in _ITEMS.items()
-        if o == principal.org_id and p == principal.project_id
-    ]
+    listed = iso.list_items(principal.org_id, principal.project_id)
     log.info(
         "workspace_items_list org=%s project=%s count=%s",
         principal.org_id,
         principal.project_id,
-        len(items),
+        len(listed),
     )
-    return {"items": items}
+    return {"items": listed}
 
 
 @router.get("/v1/workspace-items/{item_id}")
@@ -233,8 +360,7 @@ def get_workspace_item(
     item_id: str,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    key = (principal.org_id, principal.project_id, item_id)
-    item = _ITEMS.get(key)
+    item = iso.get_item(principal.org_id, principal.project_id, item_id)
     if not item:
         log.warning(
             "workspace_item_denied id=%s org=%s project=%s",
@@ -252,18 +378,28 @@ def get_workspace_item(
 
 @router.get("/v1/audit")
 def list_audit(principal: Principal = Depends(require_principal)) -> dict[str, Any]:
-    items = mem.list_audit(principal.org_id, principal.project_id)
+    listed = mem.list_audit(principal.org_id, principal.project_id)
     log.info(
         "audit_list org=%s project=%s count=%s",
         principal.org_id,
         principal.project_id,
-        len(items),
+        len(listed),
     )
-    return {"items": items}
+    return {"items": listed}
 
 
 def reset_isolation_store() -> None:
     """Test helper."""
-    _ITEMS.clear()
+    iso.reset_items()
     mem.reset_membership_store()
     mem.seed_dev_defaults()
+    ws_cat.reset_workspace_catalog()
+    ws_cat.seed_dev_workspaces()
+    org_store.reset_org_store()
+    org_store.seed_dev_orgs()
+    from aos_api import org_invites as invites
+    from aos_api.person_identity import reset_person_store, seed_dev_persons
+
+    invites.reset_org_invites_store()
+    reset_person_store()
+    seed_dev_persons()

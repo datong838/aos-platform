@@ -1,4 +1,4 @@
-/** DEMO_PAGES full narrative — order locked to foundry/html demo.js v1.6.5 */
+/** Side-nav narrative — order locked to foundry/html + product sections (运维交付收口见 163) */
 import { LOCAL_PLATFORM_NAME, OPS_NAV_SECTION } from "./lib/productCopy";
 
 export type NavSection = {
@@ -56,12 +56,20 @@ export const NAV_ITEMS: NavItem[] = [
     crumbs: ["工作区", "成员"],
   },
   {
-    id: "local-platform",
-    path: "/settings/local-platform",
-    label: LOCAL_PLATFORM_NAME,
-    icon: "server",
+    id: "my-profile",
+    path: "/settings/profile",
+    label: "我的资料",
+    icon: "apps",
     status: "live",
-    crumbs: ["设置", LOCAL_PLATFORM_NAME],
+    crumbs: ["工作区", "我的资料"],
+  },
+  {
+    id: "org-membership",
+    path: "/org/membership",
+    label: "组织与加入",
+    icon: "apps",
+    status: "live",
+    crumbs: ["工作区", "组织与加入"],
   },
   { section: "工作台" },
   { id: "workshop", path: "/workshop", label: "应用列表", icon: "apps", status: "live", crumbs: ["工作台", "应用列表"] },
@@ -357,6 +365,22 @@ export const NAV_ITEMS: NavItem[] = [
     crumbs: ["数据", "健康"],
   },
   { section: OPS_NAV_SECTION, collapseDefault: true },
+  {
+    id: "local-platform",
+    path: "/settings/local-platform",
+    label: LOCAL_PLATFORM_NAME,
+    icon: "monitor",
+    status: "live",
+    crumbs: [OPS_NAV_SECTION, LOCAL_PLATFORM_NAME],
+  },
+  {
+    id: "ops-start-guide",
+    path: "/settings/ops-start-guide",
+    label: "启停说明",
+    icon: "wrench",
+    status: "live",
+    crumbs: [OPS_NAV_SECTION, "启停说明"],
+  },
   {
     id: "apollo-hub",
     path: "/apollo",

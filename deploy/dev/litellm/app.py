@@ -11,17 +11,41 @@ from typing import Any
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 
-app = FastAPI(title="aos-dev-litellm-sidecar", version="0.2.0")
+app = FastAPI(title="aos-dev-litellm-sidecar", version="0.2.1")
+
+
+def _env_file_candidates(here: Path | None = None) -> list[Path]:
+    """Host: aos-platform/.env; Docker: /app/app.py has shallow parents — never IndexError."""
+    here = (here or Path(__file__)).resolve()
+    parents = list(here.parents)
+    out: list[Path] = []
+    override = (os.environ.get("AOS_ENV_FILE") or "").strip()
+    if override:
+        out.append(Path(override))
+    # deploy/dev/litellm → parents[3]=aos-platform; older deploy/litellm → parents[2]
+    for idx in (3, 2, 1, 0):
+        if idx < len(parents):
+            out.append(parents[idx] / ".env")
+    seen: set[str] = set()
+    uniq: list[Path] = []
+    for p in out:
+        key = str(p)
+        if key in seen:
+            continue
+        seen.add(key)
+        uniq.append(p)
+    return uniq
 
 
 def _load_env_file() -> None:
-    for p in (
-        Path(__file__).resolve().parents[2] / ".env",  # aos-platform/.env
-        Path(__file__).resolve().parents[1] / ".env",
-    ):
-        if not p.is_file():
+    for p in _env_file_candidates():
+        try:
+            if not p.is_file():
+                continue
+            text = p.read_text(encoding="utf-8")
+        except OSError:
             continue
-        for raw in p.read_text(encoding="utf-8").splitlines():
+        for raw in text.splitlines():
             line = raw.strip()
             if not line or line.startswith("#") or "=" not in line:
                 continue

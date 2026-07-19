@@ -1,7 +1,6 @@
-/** TWC.2 / TWC.12 · UI-01 首次启动欢迎（API 不可达） */
+/** TWC.2 / TWC.12 / 173 · UI-01 首次启动欢迎（产品话术） */
 import { FormEvent, useMemo, useState } from "react";
-import { getApiBase, setApiBase, STORAGE_KEY } from "@aos-web/api/apiBase";
-import { LOCAL_PLATFORM_NAME } from "@aos-web/lib/productCopy";
+import { getApiBase, setApiBase } from "@aos-web/api/apiBase";
 import { getChannelConfig, shouldSkipWelcomeForce } from "./channel";
 
 export function Welcome({ onEnterShell }: { onEnterShell: () => void }) {
@@ -18,39 +17,36 @@ export function Welcome({ onEnterShell }: { onEnterShell: () => void }) {
   return (
     <div className="aos-desktop-welcome" data-ui="UI-01">
       <h1>欢迎使用 AOS 桌面</h1>
-      <p>
-        渠道：<code>{channel.channel}</code>
-        {channel.productLabel ? ` · ${channel.productLabel}` : ""}
-      </p>
-      <p>
-        请连接平台（aos-api）。本产品名是「{LOCAL_PLATFORM_NAME}」相关能力入口，
-        <strong>不是</strong> Apollo。
-      </p>
+      <p>业务操作系统座舱 · 请连接您的平台</p>
       {canSkip ? (
         <p className="aos-desktop-welcome-hint">
-          已有渠道包预置地址，可跳过本页直接进入。
+          也可改地址后点「保存并进入」。
         </p>
       ) : null}
       <form onSubmit={onSave}>
         <label>
-          平台地址（API Base）
+          平台地址
           <input
             value={base}
             onChange={(e) => setBase(e.target.value)}
-            placeholder="http://127.0.0.1:8080"
+            placeholder="https://aos.example.com"
             required={channel.channel === "private"}
+            aria-label="平台地址"
           />
         </label>
         <div className="aos-desktop-welcome-actions">
-          <button type="submit">保存并进入</button>
-          <button type="button" onClick={onEnterShell}>
-            {canSkip ? "使用渠道预置，进入座舱" : "稍后配置，先进入座舱"}
+          <button
+            type="button"
+            className="aos-desktop-welcome-primary"
+            onClick={onEnterShell}
+          >
+            直接进入
+          </button>
+          <button type="submit" className="aos-desktop-welcome-secondary">
+            保存并进入
           </button>
         </div>
       </form>
-      <p className="aos-desktop-welcome-hint">
-        存储键 {STORAGE_KEY} · 启停见 72 手册
-      </p>
     </div>
   );
 }

@@ -1,7 +1,6 @@
-/** TWC.3 · UI-03 登录 */
+/** TWC.3 / 173 · UI-03 登录（产品话术；Dev 入口仅非生产） */
 import { FormEvent, useState } from "react";
 import { getApiBase } from "@aos-web/api/apiBase";
-import { LOCAL_PLATFORM_NAME } from "@aos-web/lib/productCopy";
 import { loginDev } from "./session";
 
 export function Login({ onLoggedIn }: { onLoggedIn: () => void }) {
@@ -17,7 +16,14 @@ export function Login({ onLoggedIn }: { onLoggedIn: () => void }) {
       await loginDev({ subject: subject.trim() || "alice" });
       onLoggedIn();
     } catch (ex) {
-      setErr(ex instanceof Error ? ex.message : String(ex));
+      const raw = ex instanceof Error ? ex.message : String(ex);
+      const network =
+        /load failed|failed to fetch|networkerror|无法连接|offline/i.test(raw);
+      setErr(
+        network
+          ? "连不上平台，请确认平台已启动后再试"
+          : raw || "登录失败",
+      );
     } finally {
       setBusy(false);
     }
@@ -25,30 +31,26 @@ export function Login({ onLoggedIn }: { onLoggedIn: () => void }) {
 
   return (
     <div className="aos-desktop-welcome" data-ui="UI-03">
-      <h1>登录 AOS 桌面</h1>
-      <p>
-        连接 <code>{getApiBase()}</code> · 会话 Refresh 存钥匙串（生产）· Access 仅内存
-      </p>
+      <h1>登录</h1>
+      <p>正在连接 {getApiBase()}</p>
       <form onSubmit={(e) => void onDev(e)}>
         <label>
-          开发账号 subject（非生产）
+          账号
           <input
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             disabled={busy}
+            aria-label="账号"
+            autoComplete="username"
           />
         </label>
         {err ? <p className="aos-desktop-err">{err}</p> : null}
         <div className="aos-desktop-welcome-actions">
           <button type="submit" disabled={busy}>
-            {busy ? "登录中…" : "开发令牌登录"}
+            {busy ? "登录中…" : "进入"}
           </button>
         </div>
       </form>
-      <p className="aos-desktop-welcome-hint">
-        企业 OIDC：请使用系统浏览器回调 <code>aos://auth/callback</code>（TWC.5）。
-        勿将「{LOCAL_PLATFORM_NAME}」称为 Apollo。
-      </p>
     </div>
   );
 }

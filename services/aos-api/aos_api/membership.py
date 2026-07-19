@@ -23,6 +23,10 @@ def reset_membership_store() -> None:
 
 
 def seed_dev_defaults() -> None:
+    from aos_api.person_identity import reset_person_store, seed_dev_persons
+
+    reset_person_store()
+    seed_dev_persons()
     for org in ("dev-org", "org-a", "org-b"):
         for project, sub, role in (
             ("dev-project", "alice", "owner"),
@@ -82,6 +86,14 @@ def is_member(org_id: str, project_id: str, subject: str) -> bool:
 def can_manage_members(org_id: str, project_id: str, subject: str) -> bool:
     role = get_role(org_id, project_id, subject)
     return role in ADMIN_ROLES if role else False
+
+
+def can_manage_org(org_id: str, subject: str) -> bool:
+    """Org admin if owner/admin on any workspace in the org (TWA.10)."""
+    for (o, _p, s), role in _MEMBERS.items():
+        if o == org_id and s == subject and role in ADMIN_ROLES:
+            return True
+    return False
 
 
 def upsert_member(
@@ -153,6 +165,42 @@ def member_project_ids(org_id: str, subject: str) -> set[str]:
 
 def member_org_ids(subject: str) -> set[str]:
     return {o for (o, _p, s), _ in _MEMBERS.items() if s == subject}
+
+
+def project_ids_for_org(org_id: str) -> set[str]:
+    return {p for (o, p, _s) in _MEMBERS if o == org_id}
+
+
+def remove_all_members_for_project(
+    org_id: str, project_id: str, *, actor_id: str
+) -> int:
+    keys = [(o, p, s) for (o, p, s) in list(_MEMBERS) if o == org_id and p == project_id]
+    for key in keys:
+        del _MEMBERS[key]
+    if keys:
+        append_audit(
+            org_id=org_id,
+            project_id=project_id,
+            actor_id=actor_id,
+            action="membership.clear_project",
+            detail={"removed": len(keys)},
+        )
+    return len(keys)
+
+
+def remove_all_members_for_org(org_id: str, *, actor_id: str) -> int:
+    keys = [(o, p, s) for (o, p, s) in list(_MEMBERS) if o == org_id]
+    for key in keys:
+        del _MEMBERS[key]
+    if keys:
+        append_audit(
+            org_id=org_id,
+            project_id="-",
+            actor_id=actor_id,
+            action="membership.clear_org",
+            detail={"removed": len(keys)},
+        )
+    return len(keys)
 
 
 def append_audit(

@@ -1,19 +1,42 @@
-/** TWA.7 — 工作区成员管理 */
+/** TWA.7 / TWA.12 — 工作区成员（姓名/邮箱/手机） */
 import { useCallback, useEffect, useState } from "react";
 import { PageChrome } from "../components/PageChrome";
 import { apiGet, apiPost, apiDelete } from "../api/client";
 import { getTenant } from "../api/tenant";
 
-type Member = { subject: string; role: string; orgId?: string; projectId?: string };
+type Member = {
+  subject: string;
+  role: string;
+  orgId?: string;
+  projectId?: string;
+  email?: string;
+  phone?: string;
+  title?: string;
+  displayName?: string;
+  displayLabel?: string;
+};
 type AuditRow = { id: string; ts: string; action: string; actorId: string };
 
 const ROLES = ["owner", "admin", "editor", "viewer"] as const;
+
+function looksLikeEmail(v: string): boolean {
+  return v.includes("@");
+}
+
+function looksLikePhone(v: string): boolean {
+  const d = v.replace(/[^\d+]/g, "");
+  return (
+    d.length >= 8 &&
+    (/^\+?\d+$/.test(d) || /^1\d{10}$/.test(v.replace(/\s/g, "")))
+  );
+}
 
 export function WorkspaceMembersPage() {
   const tenant = getTenant();
   const [members, setMembers] = useState<Member[]>([]);
   const [audit, setAudit] = useState<AuditRow[]>([]);
-  const [subject, setSubject] = useState("");
+  const [identity, setIdentity] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [role, setRole] = useState<string>("viewer");
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
@@ -23,7 +46,9 @@ export function WorkspaceMembersPage() {
     try {
       const wid = getTenant().projectId;
       const [m, a] = await Promise.all([
-        apiGet<{ items: Member[] }>(`/v1/workspaces/${encodeURIComponent(wid)}/members`),
+        apiGet<{ items: Member[] }>(
+          `/v1/workspaces/${encodeURIComponent(wid)}/members`,
+        ),
         apiGet<{ items: AuditRow[] }>("/v1/audit"),
       ]);
       setMembers(m.items || []);
@@ -45,12 +70,24 @@ export function WorkspaceMembersPage() {
   async function onAdd() {
     setMsg("");
     setErr("");
+    const raw = identity.trim();
+    if (!raw) return;
+    const body: Record<string, string> = { role };
+    if (displayName.trim()) body.displayName = displayName.trim();
+    if (looksLikeEmail(raw)) {
+      body.email = raw;
+    } else if (looksLikePhone(raw)) {
+      body.phone = raw;
+    } else {
+      body.subject = raw;
+    }
     try {
-      await apiPost(`/v1/workspaces/${encodeURIComponent(getTenant().projectId)}/members`, {
-        subject: subject.trim(),
-        role,
-      });
-      setSubject("");
+      await apiPost(
+        `/v1/workspaces/${encodeURIComponent(getTenant().projectId)}/members`,
+        body,
+      );
+      setIdentity("");
+      setDisplayName("");
       setMsg("已添加成员");
       await reload();
     } catch (e) {
@@ -73,26 +110,42 @@ export function WorkspaceMembersPage() {
   return (
     <PageChrome
       title="工作区成员"
-      lede={`${tenant.workspaceName} · 成员角色与审计（TWA.7）`}
+      lede={`${tenant.workspaceName} · 姓名 / 邮箱 / 手机 · 角色与审计`}
     >
+      <p className="aos-muted">请用下方表单继续添加真实同事。</p>
       {err ? <p className="aos-error">{err}</p> : null}
       {msg ? <p className="aos-muted">{msg}</p> : null}
 
       <div className="aos-members-form">
         <input
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          placeholder="subject（如 carol）"
-          aria-label="成员 subject"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          placeholder="姓名（可选）"
+          aria-label="姓名"
         />
-        <select value={role} onChange={(e) => setRole(e.target.value)} aria-label="角色">
+        <input
+          value={identity}
+          onChange={(e) => setIdentity(e.target.value)}
+          placeholder="邮箱或手机号"
+          aria-label="邮箱或手机号"
+        />
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          aria-label="角色"
+        >
           {ROLES.map((r) => (
             <option key={r} value={r}>
               {r}
             </option>
           ))}
         </select>
-        <button type="button" onClick={() => void onAdd()} disabled={!subject.trim()}>
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={() => void onAdd()}
+          disabled={!identity.trim()}
+        >
           添加
         </button>
       </div>
@@ -100,18 +153,28 @@ export function WorkspaceMembersPage() {
       <table className="aos-table">
         <thead>
           <tr>
-            <th>成员</th>
+            <th>姓名</th>
+            <th>邮箱</th>
+            <th>手机</th>
             <th>角色</th>
+            <th>说明</th>
             <th />
           </tr>
         </thead>
         <tbody>
           {members.map((m) => (
             <tr key={m.subject}>
-              <td>{m.subject}</td>
+              <td>{m.displayName || m.displayLabel || m.subject}</td>
+              <td>{m.email || "—"}</td>
+              <td>{m.phone || "—"}</td>
               <td>{m.role}</td>
+              <td className="aos-muted">{m.title || <code>{m.subject}</code>}</td>
               <td>
-                <button type="button" onClick={() => void onRemove(m.subject)}>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => void onRemove(m.subject)}
+                >
                   移除
                 </button>
               </td>

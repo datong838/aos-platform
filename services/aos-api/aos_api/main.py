@@ -25,6 +25,7 @@ from aos_api.routers import (
     object_sets,
     ontology,
     orgs,
+    ops_local,
     ops_tenants,
     ops_version_matrix,
     plugins,
@@ -66,7 +67,15 @@ def create_app() -> FastAPI:
     application = FastAPI(title="aos-api", version="0.3.0", lifespan=lifespan)
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
+        # Web :5173 · 桌面 Tauri dev :1420 · 打包壳 tauri://
+        allow_origins=[
+            "http://127.0.0.1:5173",
+            "http://localhost:5173",
+            "http://127.0.0.1:1420",
+            "http://localhost:1420",
+            "tauri://localhost",
+            "https://tauri.localhost",
+        ],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -82,6 +91,7 @@ def create_app() -> FastAPI:
     application.include_router(orgs.router)
     application.include_router(ops_tenants.router)
     application.include_router(ops_version_matrix.router)
+    application.include_router(ops_local.router)
     application.include_router(workspaces.router)
     application.include_router(buddy.router)
     application.include_router(modules.router)

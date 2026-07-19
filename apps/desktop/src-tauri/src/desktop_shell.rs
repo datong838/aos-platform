@@ -114,7 +114,7 @@ pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
     let about = MenuItem::with_id(app, "about", "关于本机", true, None::<&str>)?;
     let check_update = MenuItem::with_id(app, "check_update", "检查更新", true, None::<&str>)?;
     let buddy = MenuItem::with_id(app, "buddy_classic", "Buddy 经典三栏", true, None::<&str>)?;
-    let local = MenuItem::with_id(app, "local_platform", "本机平台", true, None::<&str>)?;
+    let local = MenuItem::with_id(app, "local_platform", "本机探活", true, None::<&str>)?;
     let sep = PredefinedMenuItem::separator(app)?;
     let quit = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
     let menu = Menu::with_items(

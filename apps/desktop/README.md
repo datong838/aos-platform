@@ -1,7 +1,8 @@
 # AOS 桌面（`apps/desktop`）
 
 > **状态**：TWC.1～6 ✅（同构 · 登录 · 托盘 · 深链 · 切区清缓存）  
-> **详稿**：[20c](../../../docs/palantier/20_tech/20c-AOS桌面端详细技术方案.md) · [131](../../../docs/palantier/20_tech/131-TWC2-桌面同构主壳方案.md)～[135](../../../docs/palantier/20_tech/135-TWC6-桌面工作区切区清缓存方案.md)
+> **详稿**：[20c](../../../docs/palantier/20_tech/20c-AOS桌面端详细技术方案.md) · [131](../../../docs/palantier/20_tech/131-TWC2-桌面同构主壳方案.md)～[135](../../../docs/palantier/20_tech/135-TWC6-桌面工作区切区清缓存方案.md)  
+> **启停真源**：[72 §1～§4](../../../docs/palantier/20_tech/72-系统启停与健康检查手册.md)（**四版 SOP**；桌面常见于单机/企业/SaaS）
 
 ## DoD
 

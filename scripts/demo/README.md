@@ -1,7 +1,7 @@
 # TB.0 · 本地演示 10 分钟路径
 
-> **对齐**：[70](../../../docs/palantier/20_tech/70-业务平台可演示优先计划.md) · [26 §12](../../../docs/palantier/20_tech/26-AOS目标态开发计划.md) · **[72 启停手册](../../../docs/palantier/20_tech/72-系统启停与健康检查手册.md)** · [98 W21](../../../docs/palantier/20_tech/98-W21-演示脚本README与72手册对齐方案.md)  
-> **目标**：本机 Docker + API + Web，**不依赖** Apollo Full / 客户 IdP / 现场 Ferry。
+> **对齐**：[70](../../../docs/palantier/20_tech/70-业务平台可演示优先计划.md) · [26 §12](../../../docs/palantier/20_tech/26-AOS目标态开发计划.md) · **[72 启停手册 v1.6](../../../docs/palantier/20_tech/72-系统启停与健康检查手册.md)**（**四版 SOP**：单机/标准企业/集团/SaaS）· [98 W21](../../../docs/palantier/20_tech/98-W21-演示脚本README与72手册对齐方案.md)  
+> **目标**：本机 Docker + API + Web = **① 单机版**路径；**不依赖** 集团真舰队 / 客户 IdP / 现场 Ferry。
 
 ## 分轨（Windows / macOS / Linux）
 

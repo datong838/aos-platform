@@ -77,6 +77,10 @@ services:
   aos-dev-litellm:
     build: ./litellm
     container_name: aos-dev-litellm
+    # Optional Agnes keys from aos-platform/.env (compose file is under deploy/dev/)
+    env_file:
+      - path: ../../.env
+        required: false
     environment:
       LITELLM_MASTER_KEY: aos_dev_litellm_master
       AOS_LLM_UPSTREAM_KEY: aos_dev_upstream_only
