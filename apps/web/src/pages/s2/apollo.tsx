@@ -35,7 +35,7 @@ export function ApolloSpokePage() {
   const primary = local.data || list.data?.items?.[0];
 
   return (
-    <S2Chrome title="Spoke 详情" lede="出站轮询 · Lite/FULL 形态 · Full 运行时仍延期">
+    <S2Chrome title="Spoke 详情" lede="出站轮询 · Lite/compose · Full helm-mock MVP（真 K8s 仍延期）">
       <BpToolbar>
         <button
           type="button"
@@ -47,6 +47,38 @@ export function ApolloSpokePage() {
           }}
         >
           刷新
+        </button>
+        <button
+          type="button"
+          className="btn"
+          disabled={!selectedId}
+          onClick={() => {
+            if (!selectedId) return;
+            void apiPost(`/v1/apollo/spokes/${encodeURIComponent(selectedId)}/heartbeat`, {
+              ok: true,
+            }).then(() => {
+              list.reload();
+              detail.reload();
+            });
+          }}
+        >
+          心跳
+        </button>
+        <button
+          type="button"
+          className="btn"
+          disabled={!selectedId || (detail.data || primary)?.kind !== "full"}
+          onClick={() => {
+            if (!selectedId) return;
+            void apiPost(`/v1/apollo/spokes/${encodeURIComponent(selectedId)}/apply-plan`, {}).then(
+              () => {
+                list.reload();
+                detail.reload();
+              },
+            );
+          }}
+        >
+          Apply Plan（mock）
         </button>
         <Link to="/apollo/release" className="btn-nav">
           Release 通道
@@ -65,18 +97,19 @@ export function ApolloSpokePage() {
 
       <div className="bp-apollo-callout">
         <strong>出站轮询（Outbound Polling）</strong>
-        Spoke 主动拉取 Hub 变更队列；气隙环境无入站时仅此路径可用。Lite MVP · Full 运行时延期。
+        Spoke 主动拉取 Hub 变更队列。Lite = compose；Full = helm-mock MVP（[158]）；真 kind/K8s 舰队仍延期。
       </div>
 
       <div className="bp-domain bp-domain-apollo" style={{ marginBottom: "1rem" }}>
         <h2 style={{ fontSize: "0.875rem", margin: "0 0 0.5rem" }}>Spoke 形态</h2>
         <p className="muted" style={{ fontSize: "0.75rem" }}>
-          当前：<strong>Lite Spoke</strong> · Full Spoke 目录骨架可用 · 完整运行时规划中
+          Lite 与 Full 分行展示；Full 行 runtime 为 <code>helm-mock</code> 时表示本地 MVP，不是客户现场 K8s。
         </p>
         <BpPropGrid
           items={[
-            { label: "Lite", value: "轻量代理 · 出站轮询" },
-            { label: "Full", value: "完整运行时（延期）" },
+            { label: "Lite", value: "compose · 出站轮询" },
+            { label: "Full MVP", value: "helm-mock · chart stub" },
+            { label: "Full 真集群", value: "仍延期（kind 后置）" },
           ]}
         />
       </div>

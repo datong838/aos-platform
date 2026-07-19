@@ -13,6 +13,9 @@ import { StudioPage } from "./pages/StudioPage";
 import { DataPage } from "./pages/DataPage";
 import { ApolloPage } from "./pages/ApolloPage";
 import { CapabilityPage } from "./pages/CapabilityPage";
+import { WorkspaceMembersPage } from "./pages/WorkspaceMembersPage";
+import { LocalPlatformPage } from "./pages/LocalPlatformPage";
+import { SaasProvisioningPage } from "./pages/SaasProvisioningPage";
 import { BlueprintStubPage } from "./pages/BlueprintStubPage";
 import { S2_LIVE_PATHS, S2_LIVE_ROUTES } from "./pages/s2/routes";
 import { RestrictedWidget } from "./marking";
@@ -33,6 +36,8 @@ export function App() {
       <Routes>
         <Route element={<AppShell />}>
           <Route index element={<OverviewPage />} />
+          <Route path="workspace/members" element={<WorkspaceMembersPage />} />
+          <Route path="settings/local-platform" element={<LocalPlatformPage />} />
           <Route path="workshop" element={<WorkshopListPage />} />
           <Route path="workshop/inbox" element={<InboxPage />} />
           <Route path="workshop/canvas" element={<CanvasPage />} />
@@ -55,6 +60,7 @@ export function App() {
           <Route path="ontology" element={<OntologyPage />} />
           <Route path="data" element={<DataPage />} />
           <Route path="apollo" element={<ApolloPage />} />
+          <Route path="apollo/provisioning" element={<SaasProvisioningPage />} />
           {S2_LIVE_ROUTES.map(({ path, Component }) => (
             <Route key={path} path={path} element={<Component />} />
           ))}

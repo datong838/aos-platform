@@ -1,5 +1,11 @@
 /** DEMO_PAGES full narrative — order locked to foundry/html demo.js v1.6.5 */
-export type NavSection = { section: string };
+import { LOCAL_PLATFORM_NAME, OPS_NAV_SECTION } from "./lib/productCopy";
+
+export type NavSection = {
+  section: string;
+  /** TWB.2 · 运维面默认折叠 */
+  collapseDefault?: boolean;
+};
 export type NavPage = {
   id: string;
   path: string;
@@ -41,6 +47,22 @@ export type IconName =
 
 export const NAV_ITEMS: NavItem[] = [
   { id: "index", path: "/", label: "概览", icon: "home", status: "live", crumbs: ["工作区", "AOS 概览"] },
+  {
+    id: "workspace-members",
+    path: "/workspace/members",
+    label: "工作区成员",
+    icon: "apps",
+    status: "live",
+    crumbs: ["工作区", "成员"],
+  },
+  {
+    id: "local-platform",
+    path: "/settings/local-platform",
+    label: LOCAL_PLATFORM_NAME,
+    icon: "server",
+    status: "live",
+    crumbs: ["设置", LOCAL_PLATFORM_NAME],
+  },
   { section: "工作台" },
   { id: "workshop", path: "/workshop", label: "应用列表", icon: "apps", status: "live", crumbs: ["工作台", "应用列表"] },
   {
@@ -334,14 +356,14 @@ export const NAV_ITEMS: NavItem[] = [
     status: "live",
     crumbs: ["数据", "健康"],
   },
-  { section: "交付 Apollo" },
+  { section: OPS_NAV_SECTION, collapseDefault: true },
   {
     id: "apollo-hub",
     path: "/apollo",
     label: "Hub 舰队",
     icon: "server",
     status: "live",
-    crumbs: ["Apollo", "Hub 舰队"],
+    crumbs: [OPS_NAV_SECTION, "Hub 舰队"],
   },
   {
     id: "apollo-release",
@@ -349,7 +371,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Release 通道",
     icon: "stairs",
     status: "live",
-    crumbs: ["Apollo", "Release"],
+    crumbs: [OPS_NAV_SECTION, "Release"],
   },
   {
     id: "apollo-spoke",
@@ -357,7 +379,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Spoke 详情",
     icon: "plug",
     status: "live",
-    crumbs: ["Apollo", "Spoke"],
+    crumbs: [OPS_NAV_SECTION, "Spoke"],
   },
   {
     id: "apollo-ferry",
@@ -365,7 +387,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Ferry 摆渡",
     icon: "film",
     status: "live",
-    crumbs: ["Apollo", "Ferry"],
+    crumbs: [OPS_NAV_SECTION, "Ferry"],
   },
   {
     id: "apollo-assets",
@@ -373,7 +395,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: "FDE 资产包",
     icon: "spark",
     status: "live",
-    crumbs: ["Apollo", "资产包"],
+    crumbs: [OPS_NAV_SECTION, "资产包"],
   },
   {
     id: "apollo-change-mgmt",
@@ -381,7 +403,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: "变更审批",
     icon: "inbox",
     status: "live",
-    crumbs: ["Apollo", "变更审批"],
+    crumbs: [OPS_NAV_SECTION, "变更审批"],
   },
   {
     id: "apollo-config",
@@ -389,7 +411,15 @@ export const NAV_ITEMS: NavItem[] = [
     label: "配置与密钥",
     icon: "wrench",
     status: "live",
-    crumbs: ["Apollo", "配置与密钥"],
+    crumbs: [OPS_NAV_SECTION, "配置与密钥"],
+  },
+  {
+    id: "apollo-saas-provisioning",
+    path: "/apollo/provisioning",
+    label: "SaaS 开通",
+    icon: "apps",
+    status: "live",
+    crumbs: [OPS_NAV_SECTION, "SaaS 开通"],
   },
 ];
 

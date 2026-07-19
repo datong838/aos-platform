@@ -21,12 +21,6 @@ type DatasetRow = {
   objectTypeHint?: string;
 };
 
-type BuildRow = {
-  id?: string;
-  status?: string;
-  pipelineId?: string;
-};
-
 type DlqRow = {
   id?: string;
   status?: string;

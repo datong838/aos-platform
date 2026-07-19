@@ -26,7 +26,7 @@ def test_demo_story_lists_ta7_step(client, auth_headers):
     steps = story.get("steps") or []
     assert any(st.get("id") == "TA.7" for st in steps)
     assert story["deferred"]["analyticsNotebook"] is False
-    assert story["deferred"]["apolloOps"] is True
+    assert story["deferred"]["apolloOps"] is False
 
 
 def test_analytics_propose_still_forbids_self_approve(client, auth_headers):

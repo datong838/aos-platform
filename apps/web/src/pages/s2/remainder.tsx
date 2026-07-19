@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiGet, apiPost, apiPut } from "../../api/client";
+import { useOntologyDrafts } from "../../api/ontologyHooks";
 import {
   BpBanner,
   BpDebugPanel,
-  BpKvList,
   BpLineageTimeline,
   BpLinkRow,
   BpMetricGrid,
@@ -514,7 +514,7 @@ export function ApolloReleasePage() {
   }
 
   return (
-    <S2Chrome title="Release 通道" lede="对齐 apollo-release · Channel 目录 promote/recall（Full 运行时仍延期）">
+    <S2Chrome title="Release 通道" lede="Channel 目录 promote/recall · 健康门控/Asset 同绑（160）· 真舰队仍延期">
       <button type="button" className="btn" onClick={() => void runUpgrade().catch((e) => setMsg(String(e)))}>
         Lite Upgrade
       </button>
@@ -616,9 +616,38 @@ export function ApolloReleasePage() {
 
 export function ApolloFerryPage() {
   const status = useJsonGet<Record<string, unknown>>("/v1/apollo/ferry/status");
+  const matrix = useJsonGet<{
+    hubVersion?: string;
+    notes?: string;
+    rules?: { component: string; label?: string; min: string; recommended: string }[];
+  }>("/v1/ops/version-matrix");
   const [exportMsg, setExportMsg] = useState("");
   const [bundleB64, setBundleB64] = useState("");
   const [importMsg, setImportMsg] = useState("");
+  const [desktopVer, setDesktopVer] = useState("0.2.0");
+  const [spokeVer, setSpokeVer] = useState("0.3.0");
+  const [ferryVer, setFerryVer] = useState("1.0");
+  const [checkMsg, setCheckMsg] = useState("");
+
+  async function doCompatCheck() {
+    setCheckMsg("");
+    try {
+      const r = (await apiPost("/v1/ops/version-matrix/check", {
+        desktop: desktopVer || undefined,
+        spoke: spokeVer || undefined,
+        ferryBundle: ferryVer || undefined,
+      })) as {
+        overall?: string;
+        items?: { component: string; status: string; reason?: string; actual?: string }[];
+      };
+      const lines = (r.items || []).map(
+        (i) => `${i.component}=${i.status}${i.actual ? `(${i.actual})` : ""} · ${i.reason || ""}`,
+      );
+      setCheckMsg(`overall=${r.overall} · ${lines.join("；")}`);
+    } catch (e) {
+      setCheckMsg(String(e));
+    }
+  }
 
   async function doExport() {
     setExportMsg("");
@@ -685,6 +714,40 @@ export function ApolloFerryPage() {
       )}
       {exportMsg && <p className="aos-text">{exportMsg}</p>}
       {importMsg && <p className="aos-text">{importMsg}</p>}
+      <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: 16 }}>
+        版本矩阵（TWB.7 · 气隙端对照）
+      </h2>
+      {matrix.err && <p className="error">{matrix.err}</p>}
+      {matrix.data?.notes && <p className="muted">{matrix.data.notes}</p>}
+      {matrix.data?.rules && (
+        <BpPropGrid
+          items={(matrix.data.rules || []).map((r) => ({
+            label: r.label || r.component,
+            value: `min ${r.min} · 荐 ${r.recommended}`,
+          }))}
+        />
+      )}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8, alignItems: "center" }}>
+        <label className="muted">
+          desktop{" "}
+          <input value={desktopVer} onChange={(e) => setDesktopVer(e.target.value)} style={{ width: 88 }} />
+        </label>
+        <label className="muted">
+          spoke{" "}
+          <input value={spokeVer} onChange={(e) => setSpokeVer(e.target.value)} style={{ width: 88 }} />
+        </label>
+        <label className="muted">
+          ferry{" "}
+          <input value={ferryVer} onChange={(e) => setFerryVer(e.target.value)} style={{ width: 72 }} />
+        </label>
+        <button type="button" className="btn" onClick={() => void doCompatCheck()}>
+          兼容检查
+        </button>
+        <button type="button" className="btn" onClick={() => matrix.reload()}>
+          刷新矩阵
+        </button>
+      </div>
+      {checkMsg && <p className="aos-text">{checkMsg}</p>}
       <p className="muted">
         镜像层：默认含 artifacts/images.json + images.sig（cosign-dev-hmac；PATH 有 cosign/skopeo 时增强）。
         相关：
@@ -696,37 +759,161 @@ export function ApolloFerryPage() {
 }
 
 export function ApolloChangePage() {
-  const { data, err, reload } = useJsonGet<{
-    items: { id: string; title?: string; status: string; objectType: string; objectId: string }[];
-  }>("/v1/aip/drafts");
+  const ontologyDrafts = useOntologyDrafts();
+  const changes = useJsonGet<{ items?: { id?: string; title?: string; kind?: string; status?: string; emergency?: boolean; decidedBy?: string; channelId?: string }[] }>(
+    "/v1/apollo/changes",
+  );
   const channels = useJsonGet<{ items: ApolloChannel[] }>("/v1/apollo/channels");
   const fleet = useJsonGet<Record<string, unknown>>("/v1/apollo/fleet");
+  const [chgTitle, setChgTitle] = useState("channel-promote-review");
+  const [chgKind, setChgKind] = useState<"channel" | "hotfix" | "config">("channel");
+  const [localErr, setLocalErr] = useState<string | null>(null);
 
   function refreshAll() {
-    reload();
+    ontologyDrafts.reload();
+    changes.reload();
     channels.reload();
     fleet.reload();
   }
 
+  async function createChange() {
+    setLocalErr(null);
+    try {
+      await apiPost("/v1/apollo/changes", {
+        title: chgTitle.trim() || "change",
+        kind: chgKind,
+        channelId: chgKind === "hotfix" ? "hotfix" : "staging",
+        summary: "apollo-ops-160",
+        emergency: chgKind === "hotfix",
+      });
+      changes.reload();
+    } catch (e) {
+      setLocalErr(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function decide(id: string, approve: boolean) {
+    setLocalErr(null);
+    try {
+      await apiPost(
+        `/v1/apollo/changes/${encodeURIComponent(id)}/${approve ? "approve" : "reject"}`,
+        { note: approve ? "ok" : "reject" },
+      );
+      changes.reload();
+    } catch (e) {
+      setLocalErr(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function mergeStable(id: string) {
+    setLocalErr(null);
+    try {
+      await apiPost(`/v1/apollo/changes/${encodeURIComponent(id)}/merge-stable`, {});
+      changes.reload();
+    } catch (e) {
+      setLocalErr(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  const hub = fleet.data as {
+    hub?: { apolloOpsDeepeningReady?: boolean; fullSpokeRuntimeDeferred?: boolean };
+  };
+
   return (
-    <S2Chrome title="变更审批" lede="对齐 apollo-change-mgmt · Draft + Channel 梯子摘要（无独立审批引擎）">
-      <button type="button" className="btn" onClick={() => refreshAll()}>
-        刷新
-      </button>
-      {(err || channels.err) && <p className="error">{err || channels.err}</p>}
+    <S2Chrome
+      title="变更审批"
+      lede="Apollo 运维深水 MVP（160）· 环境 Change 单 · ≠ Ontology Draft · ≠ 真多集群"
+    >
+      <BpToolbar>
+        <button type="button" className="btn" onClick={() => refreshAll()}>
+          刷新
+        </button>
+        <Link to="/apollo/release" className="btn-nav">
+          Release 通道
+        </Link>
+      </BpToolbar>
+      {(ontologyDrafts.err || channels.err || changes.err || localErr) && (
+        <p className="error">{ontologyDrafts.err || channels.err || changes.err || localErr}</p>
+      )}
+      <p className="muted" style={{ fontSize: "0.75rem" }}>
+        opsDeepening=
+        {hub?.hub?.apolloOpsDeepeningReady ? "ready" : "—"} · fullK8s=
+        {hub?.hub?.fullSpokeRuntimeDeferred ? "deferred" : "—"}
+      </p>
+
       <h2 className="aos-text" style={{ fontSize: "0.875rem" }}>
-        Drafts
+        环境 Change
       </h2>
+      <div
+        style={{
+          display: "grid",
+          gap: 8,
+          gridTemplateColumns: "1fr auto auto",
+          maxWidth: 520,
+          fontSize: "0.8rem",
+          alignItems: "end",
+          marginBottom: 8,
+        }}
+      >
+        <label>
+          title
+          <input
+            value={chgTitle}
+            onChange={(e) => setChgTitle(e.target.value)}
+            style={{ display: "block", width: "100%", marginTop: 4 }}
+          />
+        </label>
+        <label>
+          kind
+          <select
+            value={chgKind}
+            onChange={(e) => setChgKind(e.target.value as "channel" | "hotfix" | "config")}
+            style={{ display: "block", marginTop: 4 }}
+          >
+            <option value="channel">channel</option>
+            <option value="hotfix">hotfix</option>
+            <option value="config">config</option>
+          </select>
+        </label>
+        <button type="button" className="btn" onClick={() => void createChange()}>
+          创建
+        </button>
+      </div>
       <ul className="card-list">
-        {(data?.items || []).map((d) => (
-          <li key={d.id} className="card">
-            <strong>{d.title || d.id}</strong>{" "}
+        {(changes.data?.items || []).map((c) => (
+          <li key={c.id} className="card">
+            <strong>{c.title || c.id}</strong>{" "}
             <span className="muted">
-              {d.status} · {d.objectType}/{d.objectId}
+              {c.kind} · {c.status}
+              {c.emergency ? " · emergency" : ""}
+              {c.channelId ? ` · ${c.channelId}` : ""}
+              {c.decidedBy ? ` · by ${c.decidedBy}` : ""}
             </span>
+            <div style={{ marginTop: 6, display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {c.status === "pending" && (
+                <>
+                  <button type="button" className="btn" onClick={() => void decide(String(c.id), true)}>
+                    批准
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-nav"
+                    onClick={() => void decide(String(c.id), false)}
+                  >
+                    驳回
+                  </button>
+                </>
+              )}
+              {c.kind === "hotfix" && c.status === "approved" && (
+                <button type="button" className="btn" onClick={() => void mergeStable(String(c.id))}>
+                  合并回 stable（stub）
+                </button>
+              )}
+            </div>
           </li>
         ))}
       </ul>
+
       <h2 className="aos-text" style={{ fontSize: "0.875rem" }}>
         Channel 梯子
       </h2>
@@ -742,25 +929,23 @@ export function ApolloChangePage() {
           </li>
         ))}
       </ul>
-      {fleet.data && (
-        <BpMetricGrid
-          items={[
-            {
-              label: "Hub",
-              value: String((fleet.data as { hub?: { id?: string } }).hub?.id || "—"),
-              tone: "ok",
-            },
-            {
-              label: "Channels",
-              value: String((fleet.data as { channels?: unknown[] }).channels?.length ?? 0),
-              tone: "muted",
-            },
-          ]}
-        />
-      )}
+
+      <h2 className="aos-text" style={{ fontSize: "0.875rem" }}>
+        Ontology Drafts（旁路 · 非环境变更）
+      </h2>
+      <ul className="card-list">
+        {(ontologyDrafts.data?.items || []).slice(0, 5).map((d) => (
+          <li key={d.id} className="card">
+            <strong>{d.title || d.id}</strong>{" "}
+            <span className="muted">
+              {d.status} · {d.objectType}/{d.objectId}
+            </span>
+          </li>
+        ))}
+      </ul>
       <p className="muted">
-        晋升/召回操作：
-        <Link to="/apollo/release"> Release 通道</Link> · 审批入口：
+        晋升/召回：
+        <Link to="/apollo/release"> Release 通道</Link> · Ontology 审批：
         <Link to="/aip/drafts"> Draft 收件箱</Link>
       </p>
     </S2Chrome>

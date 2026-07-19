@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiGet, apiPost, API_BASE } from "../api/client";
+import { getOntologyClient } from "../api/ontologyClient";
 import { PageChrome } from "../components/PageChrome";
 import {
   BpBanner,
@@ -36,7 +36,7 @@ function proposedProps(proposed?: Record<string, unknown>) {
   }));
 }
 
-/** 86 · 对齐 aip-draft-inbox · 队列 + 详情分栏 · TB.4 写回闭环 */
+/** 86 · 对齐 aip-draft-inbox · 队列 + 详情分栏 · TB.4 写回闭环 · 147 SDK list/create */
 export function DraftInboxPage() {
   const [items, setItems] = useState<Draft[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -44,8 +44,8 @@ export function DraftInboxPage() {
   const [err, setErr] = useState<string | null>(null);
 
   async function reload() {
-    const res = await apiGet<{ items: Draft[] }>("/v1/aip/drafts");
-    setItems(res.items);
+    const res = await getOntologyClient().listDrafts();
+    setItems((res.items || []) as Draft[]);
   }
 
   useEffect(() => {
@@ -72,13 +72,13 @@ export function DraftInboxPage() {
   async function createSample() {
     setErr(null);
     try {
-      const d = await apiPost<Draft>("/v1/aip/drafts", {
+      const d = (await getOntologyClient().createDraft({
         actionTypeId: "CloseWorkOrder",
         objectType: "WorkOrder",
         objectId: "wo-1001",
         proposed: { reason: "manual" },
         title: "关闭工单提案",
-      });
+      })) as Draft;
       setMsg(`已创建 ${d.id}（未写生产）`);
       setSelectedId(d.id);
       await reload();
@@ -90,18 +90,10 @@ export function DraftInboxPage() {
   async function approve(id: string) {
     setErr(null);
     try {
-      const res = await fetch(`${API_BASE}/v1/aip/drafts/${id}/approve`, {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer dev",
-          "X-Org-Id": "dev-org",
-          "X-Project-Id": "dev-project",
-          "Idempotency-Key": `ui-approve-${id}`,
-          "X-Allow-Conflicts": "true",
-        },
+      const body = await getOntologyClient().approveDraft(id, {
+        idempotencyKey: `ui-approve-${id}`,
+        allowConflicts: true,
       });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.message || res.statusText);
       setMsg(
         `已批准并写生产 · object=${body.objectId} · lineage=${body.lineageId}`,
       );
@@ -114,7 +106,7 @@ export function DraftInboxPage() {
   async function reject(id: string) {
     setErr(null);
     try {
-      await apiPost(`/v1/aip/drafts/${id}/reject`, {});
+      await getOntologyClient().rejectDraft(id, {});
       setMsg(`已驳回 ${id}`);
       await reload();
     } catch (e) {

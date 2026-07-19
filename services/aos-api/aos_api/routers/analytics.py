@@ -35,6 +35,25 @@ _TA8_DISCLAIMER = (
     "subset only · not Contour/Quiver/Vertex full product · "
     "not Superset/Metabase/Grafana/MLflow server"
 )
+
+
+def _fill_quiver_day_gaps(
+    points: list[dict[str, Any]],
+    limit_days: int,
+) -> list[dict[str, Any]]:
+    """159 · Fill missing calendar days with v=0 for continuous sparkline."""
+    from datetime import date, timedelta
+
+    end = date.today()
+    start = end - timedelta(days=max(1, int(limit_days)) - 1)
+    by_day = {str(p.get("t")): int(p.get("v") or 0) for p in points if p.get("t")}
+    out: list[dict[str, Any]] = []
+    cur = start
+    while cur <= end:
+        key = cur.isoformat()
+        out.append({"t": key, "v": int(by_day.get(key, 0))})
+        cur += timedelta(days=1)
+    return out
 _SQL_DENY = re.compile(
     r"\b(insert|update|delete|drop|alter|create|attach|copy|pragma|call|execute)\b",
     re.I,
@@ -982,21 +1001,41 @@ def analytics_contour_explore(
     if not ot:
         raise ApiError(code="VALIDATION", message="objectType required", status_code=400)
     table = _list_objects_table(principal, ot, limit=limit)
+    rows = list(table.get("rows") or [])
+    cols_raw = table.get("columns")
+    if isinstance(cols_raw, list) and cols_raw:
+        columns = [str(c) for c in cols_raw]
+    elif rows:
+        columns = [str(k) for k in rows[0].keys()]
+    else:
+        columns = ["status"]
+    skip = {"id", "rid", "objectId", "object_id"}
+    group_by_options = [c for c in columns if c not in skip][:16] or ["status"]
+    if field not in group_by_options and field not in columns:
+        # still allow explicit field; surface in options for honesty
+        group_by_options = [field, *group_by_options]
     buckets: dict[str, int] = {}
-    for row in table.get("rows") or []:
+    for row in rows:
         raw = row.get(field)
         key = "(null)" if raw is None or raw == "" else str(raw)
         buckets[key] = buckets.get(key, 0) + 1
+    total_bucket = sum(buckets.values()) or 1
     items = [
-        {"key": k, "count": v}
+        {
+            "key": k,
+            "count": v,
+            "share": round(v / total_bucket, 4),
+        }
         for k, v in sorted(buckets.items(), key=lambda kv: (-kv[1], kv[0]))
     ]
     log.info("analytics_contour type=%s groupBy=%s buckets=%s", ot, field, len(items))
     return {
         "mode": "ta8-contour-subset",
+        "scheme": "159",
         "kind": "explore",
         "objectType": ot,
         "groupBy": field,
+        "groupByOptions": group_by_options,
         "chartHint": "bar",
         "buckets": items,
         "totalRows": table.get("total") or 0,
@@ -1012,8 +1051,9 @@ def analytics_quiver_series(
     principal: Principal = Depends(require_principal),
     objectType: str = Query(default="WorkOrder"),
     limitDays: int = Query(default=14, ge=1, le=90),
+    fillGaps: bool = Query(default=True),
 ) -> dict[str, Any]:
-    """TA.8 · Quiver subset: daily counts from decision_lineage (honest empty ok)."""
+    """TA.8 / 159 · Quiver subset: daily lineage density (+ optional day gaps)."""
     from aos_api.db import connect
     from aos_api.routers.runtime_write import ensure_lineage_schema
 
@@ -1035,15 +1075,21 @@ def analytics_quiver_series(
             """,
             (ot, int(limitDays)),
         ).fetchall()
-    points = [{"t": r["day"], "v": int(r["n"] or 0)} for r in rows]
-    log.info("analytics_quiver type=%s points=%s", ot, len(points))
+    raw_points = [{"t": r["day"], "v": int(r["n"] or 0)} for r in rows]
+    points = _fill_quiver_day_gaps(raw_points, int(limitDays)) if fillGaps else raw_points
+    max_v = max((int(p.get("v") or 0) for p in points), default=0)
+    log.info("analytics_quiver type=%s points=%s fillGaps=%s", ot, len(points), fillGaps)
     return {
         "mode": "ta8-quiver-subset",
+        "scheme": "159",
         "kind": "timeseries",
         "objectType": ot,
         "metric": "lineageEventsPerDay",
         "chartHint": "line",
         "points": points,
+        "rawPointCount": len(raw_points),
+        "maxV": max_v,
+        "fillGaps": bool(fillGaps),
         "total": len(points),
         "source": "decision_lineage",
         "disclaimer": _TA8_DISCLAIMER,
@@ -1077,6 +1123,7 @@ def analytics_vertex_list(
     )[:limit]
     return {
         "mode": "ta8-vertex-subset",
+        "scheme": "159",
         "kind": "experiments",
         "items": items_sorted,
         "total": len(items),
@@ -1114,6 +1161,7 @@ def analytics_vertex_create(
     out = {
         **row,
         "mode": "ta8-vertex-subset",
+        "scheme": "159",
         "disclaimer": _TA8_DISCLAIMER,
         "productionWritten": False,
         "message": "experiment registered; Ontology write still requires Draft approve",

@@ -178,9 +178,18 @@ def _aws4_request(
         raise RuntimeError(f"s3_http_{exc.code}: {body_err[:200]!r}") from exc
 
 
-def object_key_for(rid: str, name: str) -> str:
+def object_key_for(
+    rid: str,
+    name: str,
+    *,
+    org_id: str,
+    project_id: str,
+) -> str:
+    """TWA.8 — key always under {org}/{project}/mediasets/…"""
+    from aos_api.tenant_prefix import build_object_key
+
     safe = "".join(c if c.isalnum() or c in "._-" else "_" for c in name)[:80]
-    return f"mediasets/{rid}/{safe or 'blob'}"
+    return build_object_key(org_id, project_id, "mediasets", rid, safe or "blob")
 
 
 def put_bytes(

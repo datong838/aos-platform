@@ -51,9 +51,15 @@ def _visible(principal: Principal, mod: dict[str, Any]) -> bool:
 
 @router.get("/v1/modules")
 def list_modules(principal: Principal = Depends(require_principal)) -> dict[str, Any]:
-    items = module_store.list_modules()
+    items = module_store.list_modules(principal.org_id, principal.project_id)
     visible = [m for m in items if _visible(principal, m)]
-    log.info("list_modules store=pg visible=%s subject=%s", len(visible), principal.subject)
+    log.info(
+        "list_modules store=pg visible=%s subject=%s org=%s project=%s",
+        len(visible),
+        principal.subject,
+        principal.org_id,
+        principal.project_id,
+    )
     return {"items": visible, "store": "postgres"}
 
 
@@ -72,7 +78,11 @@ def create_module(
                 status_code=cached["status_code"],
                 content={**cached["body"], "idempotentReplay": True},
             )
-    created = module_store.create_module(body.model_dump())
+    created = module_store.create_module(
+        body.model_dump(),
+        org_id=principal.org_id,
+        project_id=principal.project_id,
+    )
     if idempotency_key:
         idempotency_store.put(
             principal.org_id,
@@ -89,7 +99,9 @@ def get_module(
     module_id: str,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    mod = module_store.get_module(module_id)
+    mod = module_store.get_module(
+        module_id, principal.org_id, principal.project_id
+    )
     if not mod:
         raise ApiError(code="NOT_FOUND", message=f"module {module_id} not found", status_code=404)
     ensure_markings(principal, mod.get("markings") or ["public"])
@@ -102,11 +114,18 @@ def patch_module(
     body: PatchModuleRequest,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    mod = module_store.get_module(module_id)
+    mod = module_store.get_module(
+        module_id, principal.org_id, principal.project_id
+    )
     if not mod:
         raise ApiError(code="NOT_FOUND", message=f"module {module_id} not found", status_code=404)
     ensure_markings(principal, mod.get("markings") or ["public"])
-    updated = module_store.update_module(module_id, body.model_dump(exclude_unset=True))
+    updated = module_store.update_module(
+        module_id,
+        body.model_dump(exclude_unset=True),
+        org_id=principal.org_id,
+        project_id=principal.project_id,
+    )
     assert updated is not None
     return updated
 
@@ -127,13 +146,23 @@ def publish_module(
                 status_code=cached["status_code"],
                 content={**cached["body"], "idempotentReplay": True},
             )
-    mod = module_store.get_module(module_id)
+    mod = module_store.get_module(
+        module_id, principal.org_id, principal.project_id
+    )
     if not mod:
         raise ApiError(code="NOT_FOUND", message=f"module {module_id} not found", status_code=404)
     ensure_markings(principal, mod.get("markings") or ["public"])
-    published = module_store.publish_module(module_id)
+    published = module_store.publish_module(
+        module_id, org_id=principal.org_id, project_id=principal.project_id
+    )
     assert published is not None
-    log.info("module_publish id=%s subject=%s", module_id, principal.subject)
+    log.info(
+        "module_publish id=%s subject=%s org=%s project=%s",
+        module_id,
+        principal.subject,
+        principal.org_id,
+        principal.project_id,
+    )
     if idempotency_key:
         idempotency_store.put(
             principal.org_id,
@@ -150,11 +179,15 @@ def get_runtime(
     module_id: str,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    mod = module_store.get_module(module_id)
+    mod = module_store.get_module(
+        module_id, principal.org_id, principal.project_id
+    )
     if not mod:
         raise ApiError(code="NOT_FOUND", message=f"module {module_id} not found", status_code=404)
     ensure_markings(principal, mod.get("markings") or ["public"])
-    rt = module_store.module_runtime(module_id)
+    rt = module_store.module_runtime(
+        module_id, org_id=principal.org_id, project_id=principal.project_id
+    )
     if not rt:
         raise ApiError(code="NOT_FOUND", message=f"module {module_id} not found", status_code=404)
     return rt

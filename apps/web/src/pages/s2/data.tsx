@@ -4,7 +4,6 @@ import { apiGet, apiPost } from "../../api/client";
 import {
   BpBanner,
   BpDebugPanel,
-  BpLinkRow,
   BpMetricGrid,
   BpPropGrid,
   BpSplit,
@@ -417,7 +416,7 @@ export function DatasetsPage() {
           {tab === "preview" && (
             <>
               <h1 className="aos-text" style={{ fontSize: "1.1rem" }}>
-                {detail?.name || ds?.name || rid}
+                {String(detail?.name || ds?.name || rid)}
               </h1>
               <p className="muted">objectTypeHint={String(detail?.objectTypeHint || ds?.objectTypeHint || "WorkOrder")}</p>
               <BpMetricGrid

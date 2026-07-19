@@ -178,8 +178,8 @@ export function OverviewDomainGrid({ metrics }: { metrics: OverviewMetrics | nul
 
       <BpDomainPanel
         tone="apollo"
-        title="Apollo 交付引擎"
-        hint="枢纽 · 发布 · 资产包"
+        title="运维交付"
+        hint="Apollo 通道在运维面 · 默认可收 · 非业务主座舱"
       >
         <BpMetricGrid
           density="compact"

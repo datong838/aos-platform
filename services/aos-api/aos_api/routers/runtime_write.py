@@ -92,25 +92,45 @@ def apply_draft_approval(
 
         if isinstance(wiki_body, dict):
             prev = conn.execute(
-                "SELECT body FROM wiki_page WHERE object_type=%s AND object_id=%s",
-                (object_type, object_id),
+                """
+                SELECT body FROM wiki_page
+                WHERE object_type=%s AND object_id=%s
+                  AND org_id=%s AND project_id=%s
+                """,
+                (object_type, object_id, principal.org_id, principal.project_id),
             ).fetchone()
             if prev and prev.get("body") is not None:
                 conn.execute(
                     """
-                    INSERT INTO wiki_page_version (object_type, object_id, body, draft_id)
-                    VALUES (%s,%s,%s::jsonb,%s)
+                    INSERT INTO wiki_page_version
+                      (object_type, object_id, body, draft_id, org_id, project_id)
+                    VALUES (%s,%s,%s::jsonb,%s,%s,%s)
                     """,
-                    (object_type, object_id, json.dumps(prev["body"]), draft_id),
+                    (
+                        object_type,
+                        object_id,
+                        json.dumps(prev["body"]),
+                        draft_id,
+                        principal.org_id,
+                        principal.project_id,
+                    ),
                 )
             conn.execute(
                 """
-                INSERT INTO wiki_page (object_type, object_id, body)
-                VALUES (%s,%s,%s::jsonb)
+                INSERT INTO wiki_page (object_type, object_id, body, org_id, project_id)
+                VALUES (%s,%s,%s::jsonb,%s,%s)
                 ON CONFLICT (object_type, object_id)
-                DO UPDATE SET body = EXCLUDED.body
+                DO UPDATE SET body = EXCLUDED.body,
+                  org_id = EXCLUDED.org_id,
+                  project_id = EXCLUDED.project_id
                 """,
-                (object_type, object_id, json.dumps(wiki_body)),
+                (
+                    object_type,
+                    object_id,
+                    json.dumps(wiki_body),
+                    principal.org_id,
+                    principal.project_id,
+                ),
             )
             wiki_written = True
         elif action_type_id == "UpdateWikiCard":

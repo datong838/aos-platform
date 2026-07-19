@@ -58,6 +58,8 @@ CREATE TABLE IF NOT EXISTS wiki_page (
   object_type TEXT NOT NULL,
   object_id TEXT NOT NULL,
   body JSONB NOT NULL DEFAULT '{}'::jsonb,
+  org_id TEXT NOT NULL DEFAULT 'dev-org',
+  project_id TEXT NOT NULL DEFAULT 'dev-project',
   PRIMARY KEY (object_type, object_id)
 );
 
@@ -67,6 +69,8 @@ CREATE TABLE IF NOT EXISTS wiki_page_version (
   object_id TEXT NOT NULL,
   body JSONB NOT NULL DEFAULT '{}'::jsonb,
   draft_id TEXT,
+  org_id TEXT NOT NULL DEFAULT 'dev-org',
+  project_id TEXT NOT NULL DEFAULT 'dev-project',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -151,6 +155,31 @@ def init_schema() -> None:
             """
             CREATE INDEX IF NOT EXISTS idx_wiki_page_version_obj
               ON wiki_page_version (object_type, object_id, id DESC)
+            """
+        )
+        # TWA.8 — wiki tenant columns
+        conn.execute(
+            """
+            ALTER TABLE wiki_page
+            ADD COLUMN IF NOT EXISTS org_id TEXT NOT NULL DEFAULT 'dev-org'
+            """
+        )
+        conn.execute(
+            """
+            ALTER TABLE wiki_page
+            ADD COLUMN IF NOT EXISTS project_id TEXT NOT NULL DEFAULT 'dev-project'
+            """
+        )
+        conn.execute(
+            """
+            ALTER TABLE wiki_page_version
+            ADD COLUMN IF NOT EXISTS org_id TEXT NOT NULL DEFAULT 'dev-org'
+            """
+        )
+        conn.execute(
+            """
+            ALTER TABLE wiki_page_version
+            ADD COLUMN IF NOT EXISTS project_id TEXT NOT NULL DEFAULT 'dev-project'
             """
         )
         conn.commit()
@@ -358,8 +387,12 @@ def seed_if_empty() -> None:
             )
             conn.execute(
                 """
-                INSERT INTO wiki_page (object_type, object_id, body)
-                VALUES ('WorkOrder','wo-1001','{"summary":"A区巡检知识","fields":{"sla":"4h"}}'::jsonb)
+                INSERT INTO wiki_page (object_type, object_id, body, org_id, project_id)
+                VALUES (
+                  'WorkOrder','wo-1001',
+                  '{"summary":"A区巡检知识","fields":{"sla":"4h"}}'::jsonb,
+                  'dev-org','dev-project'
+                )
                 ON CONFLICT DO NOTHING
                 """
             )

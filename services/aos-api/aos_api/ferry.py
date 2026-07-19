@@ -198,6 +198,9 @@ def ferry_status_payload() -> dict[str, Any]:
     mode = skopeo_mode()
     enabled = _skopeo_enabled()
     manifest = (os.environ.get("AOS_FERRY_IMAGES_MANIFEST") or "").strip() or None
+    from aos_api.version_matrix import get_matrix
+    from aos_api.apollo_catalog import full_spoke_mode, full_spoke_mock_ready
+
     return {
         "deferred": False,
         "mode": "mvp-hmac+images",
@@ -205,11 +208,13 @@ def ferry_status_payload() -> dict[str, Any]:
         "message": (
             "Ferry: signed tar.gz + artifacts/images (HMAC manifest; "
             "cosign PATH|docker or cosign-dev-hmac; skopeo archive opt-in; "
-            "large images onsite scheme 62; Full Channel deferred scheme 64)"
+            "large images onsite scheme 62/162; Full Channel deferred scheme 64)"
         ),
         "channels": ["lite", "dev", "staging", "stable"],
         "fullChannelDeferred": True,
         "fullSpokeRuntimeDeferred": True,
+        "fullSpokeMockReady": full_spoke_mock_ready(),
+        "fullSpokeMode": full_spoke_mode(),
         "channelCatalogReady": True,
         "exportImport": "200",
         "skopeo": mode != "none",
@@ -225,7 +230,8 @@ def ferry_status_payload() -> dict[str, Any]:
         "skopeoMaxEmbedMiB": _skopeo_max_embed_bytes() // (1024 * 1024),
         "imagesManifest": manifest,
         "imageFerry": "digest+sig",
-        "planRef": "T5.6 / T09 §9.1 / schemes 56/59/62/64",
+        "planRef": "T5.6 / T09 §9.1 / schemes 56/59/62/64/162 / TWB.7 145",
+        "versionMatrix": get_matrix(),
     }
 
 
@@ -249,6 +255,21 @@ def _sign_images_dev(images_bytes: bytes) -> str:
 def _verify_images_dev(images_bytes: bytes, signature_hex: str) -> bool:
     expected = _sign_images_dev(images_bytes)
     return hmac.compare_digest(expected, (signature_hex or "").strip())
+
+
+def archive_exceeds_max_gib(nbytes: int, max_gib: float) -> bool:
+    """Onsite pack maxGiB gate — scheme 62/162 (max_gib<=0 disables)."""
+    if max_gib <= 0 or nbytes <= 0:
+        return False
+    return (nbytes / (1024**3)) > float(max_gib)
+
+
+def onsite_images_members(images_bytes: bytes, sig_text: str) -> dict[str, bytes]:
+    """Build ferry import member map from onsite pack files — scheme 162."""
+    return {
+        IMAGES_JSON: images_bytes,
+        IMAGES_SIG: (sig_text or "").encode("utf-8"),
+    }
 
 
 def _image_refs() -> list[str]:

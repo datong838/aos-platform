@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiGet, apiPost } from "../api/client";
+import { getOntologyClient } from "../api/ontologyClient";
 import { PageChrome } from "../components/PageChrome";
 import {
   formatRelativeZh,
@@ -83,7 +84,7 @@ export function OntologyPage() {
       let instanceCount = 0;
       let funnelStage: string | undefined;
       try {
-        const list = await apiGet<{ items: unknown[] }>(`/v1/objects/${encodeURIComponent(t.id)}`);
+        const list = await getOntologyClient().listObjects(t.id);
         instanceCount = list.items?.length ?? 0;
       } catch {
         instanceCount = 0;
@@ -206,11 +207,9 @@ export function OntologyPage() {
     setDetail(null);
     setNeighbors([]);
     setErr(null);
-    const q = branch ? `?branch=${encodeURIComponent(branch)}` : "";
-    const list = await apiGet<{ items: Record<string, unknown>[] }>(
-      `/v1/objects/${encodeURIComponent(id)}${q}`,
-    );
-    setObjects(list.items);
+    const q = branch ? { branch } : undefined;
+    const list = await getOntologyClient().listObjects(id, q);
+    setObjects(list.items as Record<string, unknown>[]);
   }
 
   function openDeep(id: string) {
@@ -233,13 +232,14 @@ export function OntologyPage() {
 
   async function openObject(type: string, id: string) {
     setErr(null);
-    const q = branchId ? `?branch=${encodeURIComponent(branchId)}` : "";
-    const d = await apiGet<Record<string, unknown>>(`/v1/objects/${type}/${id}${q}`);
-    setDetail(d);
-    const n = await apiGet<{ items: { id?: string; type?: string; rel?: string }[] }>(
-      `/v1/objects/${type}/${id}/neighbors`,
-    );
-    setNeighbors(n.items);
+    const q = branchId ? { branch: branchId } : undefined;
+    const ont = getOntologyClient();
+    const d = await ont.getObject(type, id, q);
+    setDetail(d as Record<string, unknown>);
+    const n = (await ont.neighbors(type, id)) as {
+      items?: { id?: string; type?: string; rel?: string }[];
+    };
+    setNeighbors(n.items || []);
   }
 
   async function createType() {

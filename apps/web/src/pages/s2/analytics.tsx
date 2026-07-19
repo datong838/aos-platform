@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiGet, apiPost, JsonBlock, S2Chrome, useJsonGet } from "./shared";
-import { BpBanner, BpLinkRow, BpToolbar } from "./blueprintUi";
+import { BpBanner, BpLinkRow, BpTable, BpToolbar } from "./blueprintUi";
 
 type Health = {
   status?: string;
@@ -75,10 +75,12 @@ type LineageItem = {
   uiPath?: string;
 };
 
-type ContourBucket = { key?: string; count?: number };
+type ContourBucket = { key?: string; count?: number; share?: number };
 type ContourExplore = {
   mode?: string;
+  scheme?: string;
   groupBy?: string;
+  groupByOptions?: string[];
   buckets?: ContourBucket[];
   totalRows?: number;
   disclaimer?: string;
@@ -86,15 +88,20 @@ type ContourExplore = {
 type QuiverPoint = { t?: string; v?: number };
 type QuiverSeries = {
   mode?: string;
+  scheme?: string;
   points?: QuiverPoint[];
   metric?: string;
+  maxV?: number;
+  fillGaps?: boolean;
   note?: string;
   disclaimer?: string;
 };
 type VertexExp = {
   id?: string;
   name?: string;
+  objectType?: string;
   metrics?: Record<string, unknown>;
+  mediaRid?: string | null;
   status?: string;
   createdAt?: string;
 };
@@ -130,6 +137,8 @@ export function AnalyticsPage() {
   const [subsetErr, setSubsetErr] = useState<string | null>(null);
   const [vxName, setVxName] = useState("wo-risk-baseline");
   const [vxMetric, setVxMetric] = useState("0.82");
+  const [vxMediaRid, setVxMediaRid] = useState("");
+  const [contourGroupBy, setContourGroupBy] = useState("status");
 
   const types = rail.data?.objectTypes ?? [];
   const datasets = rail.data?.datasets ?? [];
@@ -245,14 +254,16 @@ export function AnalyticsPage() {
     }
   }
 
-  async function tryContour() {
+  async function tryContour(groupByOverride?: string) {
     setSubsetErr(null);
     try {
       const ot = encodeURIComponent(selectedType || "WorkOrder");
+      const gb = encodeURIComponent(groupByOverride || contourGroupBy || "status");
       const row = await apiGet<ContourExplore>(
-        `/v1/analytics/contour/explore?objectType=${ot}&groupBy=status&limit=200`,
+        `/v1/analytics/contour/explore?objectType=${ot}&groupBy=${gb}&limit=200`,
       );
       setContour(row);
+      if (row.groupBy) setContourGroupBy(row.groupBy);
       setSubsetTab("contour");
     } catch (e) {
       setSubsetErr(e instanceof Error ? e.message : String(e));
@@ -264,7 +275,7 @@ export function AnalyticsPage() {
     try {
       const ot = encodeURIComponent(selectedType || "WorkOrder");
       const row = await apiGet<QuiverSeries>(
-        `/v1/analytics/quiver/series?objectType=${ot}&limitDays=14`,
+        `/v1/analytics/quiver/series?objectType=${ot}&limitDays=14&fillGaps=true`,
       );
       setQuiver(row);
       setSubsetTab("quiver");
@@ -293,8 +304,9 @@ export function AnalyticsPage() {
       await apiPost("/v1/analytics/vertex/experiments", {
         name: vxName.trim() || "exp",
         objectType: selectedType || "WorkOrder",
-        params: { source: "analytics-ta8" },
+        params: { source: "analytics-159" },
         metrics: { score: Number.isFinite(score) ? score : 0 },
+        ...(vxMediaRid.trim() ? { mediaRid: vxMediaRid.trim() } : {}),
         note: "experiment registry",
       });
       await tryVertexList();
@@ -302,6 +314,21 @@ export function AnalyticsPage() {
       setSubsetErr(e instanceof Error ? e.message : String(e));
     }
   }
+
+  const quiverSpark = useMemo(() => {
+    const pts = quiver?.points || [];
+    if (!pts.length) return null;
+    const max = Math.max(1, quiver?.maxV ?? Math.max(...pts.map((p) => Number(p.v) || 0), 0));
+    const w = 280;
+    const h = 56;
+    const n = pts.length;
+    const coords = pts.map((p, i) => {
+      const x = n <= 1 ? 0 : (i / (n - 1)) * w;
+      const y = h - ((Number(p.v) || 0) / max) * (h - 4) - 2;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    return { w, h, polyline: coords.join(" "), max };
+  }, [quiver]);
 
   async function trySqlPreview() {
     setSqlErr(null);
@@ -392,7 +419,7 @@ export function AnalyticsPage() {
 
       <BpBanner tone="info">
         写回须经 Draft 审批台批准后落库；本页不可自批。含 Marking 脱敏字段时导出将被拒绝。
-        分组 / 时序 / 实验为探索能力，不等于完整 BI / ML 平台。
+        分组 / 时序 / 实验为探索子集（[159] 加深），不等于完整 BI / ML 平台，亦不捆绑 Superset/Metabase/Grafana。
       </BpBanner>
 
       {health.err && <p className="error">{health.err}</p>}
@@ -647,8 +674,9 @@ export function AnalyticsPage() {
             探索分析
           </h2>
           <p className="muted" style={{ fontSize: "0.75rem" }}>
-            分组桶 · 谱系日密度时序 · 实验元数据登记
+            分组桶 · 谱系日密度时序 · 实验元数据登记（子集加深 · 非完整 BI/ML）
           </p>
+          {subsetErr && <p className="error">{subsetErr}</p>}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
             <button
               type="button"
@@ -672,61 +700,109 @@ export function AnalyticsPage() {
               实验
             </button>
           </div>
-          {subsetTab === "contour" && contour && (
+          {subsetTab === "contour" && (
             <>
-              <p className="muted" style={{ fontSize: "0.75rem" }}>
-                groupBy={contour.groupBy} · rows={contour.totalRows ?? 0}
-              </p>
-              <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", maxWidth: 420 }}>
-                {(contour.buckets || []).map((b) => {
-                  const max = Math.max(
-                    1,
-                    ...(contour.buckets || []).map((x) => Number(x.count) || 0),
-                  );
-                  const w = Math.round(((Number(b.count) || 0) / max) * 100);
-                  return (
-                    <li key={String(b.key)} style={{ marginBottom: 6, fontSize: "0.8rem" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span>{b.key}</span>
-                        <span>{b.count}</span>
-                      </div>
-                      <div
-                        style={{
-                          height: 6,
-                          background: "var(--aos-border, #2a3540)",
-                          marginTop: 2,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: `${w}%`,
-                            height: "100%",
-                            background: "var(--aos-accent, #5b8def)",
-                          }}
-                        />
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+              <label style={{ fontSize: "0.8rem", display: "inline-block", marginBottom: 8 }}>
+                groupBy{" "}
+                <select
+                  value={contourGroupBy}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setContourGroupBy(next);
+                    void tryContour(next);
+                  }}
+                  style={{ marginLeft: 6 }}
+                >
+                  {(contour?.groupByOptions || ["status", "site", "priority"]).map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {contour && (
+                <>
+                  <p className="muted" style={{ fontSize: "0.75rem" }}>
+                    groupBy={contour.groupBy} · rows={contour.totalRows ?? 0}
+                    {contour.scheme ? ` · scheme=${contour.scheme}` : ""}
+                  </p>
+                  <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", maxWidth: 420 }}>
+                    {(contour.buckets || []).map((b) => {
+                      const max = Math.max(
+                        1,
+                        ...(contour.buckets || []).map((x) => Number(x.count) || 0),
+                      );
+                      const w = Math.round(((Number(b.count) || 0) / max) * 100);
+                      const sharePct =
+                        typeof b.share === "number" ? Math.round(b.share * 1000) / 10 : null;
+                      return (
+                        <li key={String(b.key)} style={{ marginBottom: 6, fontSize: "0.8rem" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span>{b.key}</span>
+                            <span>
+                              {b.count}
+                              {sharePct != null ? ` · ${sharePct}%` : ""}
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              height: 6,
+                              background: "var(--aos-border, #2a3540)",
+                              marginTop: 2,
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: `${w}%`,
+                                height: "100%",
+                                background: "var(--aos-accent, #5b8def)",
+                              }}
+                            />
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              )}
             </>
           )}
           {subsetTab === "quiver" && quiver && (
             <>
               <p className="muted" style={{ fontSize: "0.75rem" }}>
                 指标={quiver.metric || "—"} · 点数={(quiver.points || []).length}
+                {quiver.fillGaps ? " · fillGaps" : ""} · 非传感器时序
               </p>
-              {(quiver.points || []).length === 0 ? (
+              {quiverSpark && (
+                <svg
+                  width={quiverSpark.w}
+                  height={quiverSpark.h}
+                  viewBox={`0 0 ${quiverSpark.w} ${quiverSpark.h}`}
+                  role="img"
+                  aria-label="lineage density sparkline"
+                  style={{ display: "block", margin: "8px 0", maxWidth: "100%" }}
+                >
+                  <polyline
+                    fill="none"
+                    stroke="var(--aos-accent, #5b8def)"
+                    strokeWidth="2"
+                    points={quiverSpark.polyline}
+                  />
+                </svg>
+              )}
+              {(quiver.points || []).every((p) => !Number(p.v)) ? (
                 <p className="muted" style={{ fontSize: "0.75rem" }}>
-                  （尚无时序点 · 批准 Draft 写回后可出现谱系密度）
+                  （各日为 0 · 批准 Draft 写回后可出现谱系密度）
                 </p>
               ) : (
                 <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", fontSize: "0.8rem" }}>
-                  {(quiver.points || []).map((p) => (
-                    <li key={String(p.t)}>
-                      {p.t} · {p.v}
-                    </li>
-                  ))}
+                  {(quiver.points || [])
+                    .filter((p) => Number(p.v) > 0)
+                    .map((p) => (
+                      <li key={String(p.t)}>
+                        {p.t} · {p.v}
+                      </li>
+                    ))}
                 </ul>
               )}
             </>
@@ -737,8 +813,8 @@ export function AnalyticsPage() {
                 style={{
                   display: "grid",
                   gap: 8,
-                  gridTemplateColumns: "1fr 1fr auto",
-                  maxWidth: 520,
+                  gridTemplateColumns: "1fr 1fr 1fr auto",
+                  maxWidth: 640,
                   fontSize: "0.8rem",
                   alignItems: "end",
                 }}
@@ -759,14 +835,34 @@ export function AnalyticsPage() {
                     style={{ display: "block", width: "100%", marginTop: 4 }}
                   />
                 </label>
+                <label>
+                  mediaRid（可选）
+                  <input
+                    value={vxMediaRid}
+                    onChange={(e) => setVxMediaRid(e.target.value)}
+                    placeholder="ri.media…"
+                    style={{ display: "block", width: "100%", marginTop: 4 }}
+                  />
+                </label>
                 <button type="button" className="btn" onClick={() => void tryVertexCreate()}>
                   登记实验
                 </button>
               </div>
               <p className="muted" style={{ fontSize: "0.75rem", marginTop: 8 }}>
-                experiments={vertexItems.length} · 不写 Ontology
+                experiments={vertexItems.length} · 不写 Ontology · 非 MLflow Server
               </p>
-              {vertexItems.length > 0 && <JsonBlock value={vertexItems} />}
+              {vertexItems.length > 0 && (
+                <BpTable
+                  columns={["id", "name", "score", "mediaRid", "created"]}
+                  rows={vertexItems.map((v) => [
+                    v.id || "—",
+                    v.name || "—",
+                    String(v.metrics?.score ?? "—"),
+                    v.mediaRid || "—",
+                    (v.createdAt || "—").slice(0, 19),
+                  ])}
+                />
+              )}
             </>
           )}
 

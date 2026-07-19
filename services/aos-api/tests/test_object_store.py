@@ -7,8 +7,13 @@ from aos_api.object_store import get_config, health_probe, object_key_for
 
 
 def test_object_key_sanitizes():
-    k = object_key_for("ri.mediaset.abc", "a b/c?.bin")
-    assert k.startswith("mediasets/ri.mediaset.abc/")
+    k = object_key_for(
+        "ri.mediaset.abc",
+        "a b/c?.bin",
+        org_id="dev-org",
+        project_id="dev-project",
+    )
+    assert k.startswith("dev-org/dev-project/mediasets/ri.mediaset.abc/")
     assert " " not in k
 
 

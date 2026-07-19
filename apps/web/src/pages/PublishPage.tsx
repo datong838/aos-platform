@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageChrome } from "../components/PageChrome";
+import { tenantAuthHeaders } from "../api/tenant";
+import { getApiBase } from "../api/apiBase";
 import { BpBanner, BpPropGrid, BpToolbar } from "./s2/blueprintUi";
-
-const API_BASE = import.meta.env.VITE_AOS_API_BASE ?? "http://127.0.0.1:8080";
 
 const CHANNELS = [
   { id: "rc", label: "开发 (rc)" },
@@ -26,14 +26,11 @@ export function PublishPage() {
     setBusy(true);
     const key = `publish-${Date.now()}`;
     const headers = {
-      Authorization: "Bearer dev",
-      "X-Org-Id": "dev-org",
-      "X-Project-Id": "dev-project",
-      "Content-Type": "application/json",
+      ...tenantAuthHeaders(),
       "Idempotency-Key": key,
     };
     try {
-      const created = await fetch(`${API_BASE}/v1/modules`, {
+      const created = await fetch(`${getApiBase()}/v1/modules`, {
         method: "POST",
         headers,
         body: JSON.stringify({
@@ -44,13 +41,13 @@ export function PublishPage() {
       });
       const body1 = await created.json();
       const mid = body1.id as string;
-      const once = await fetch(`${API_BASE}/v1/modules/${mid}/publish`, {
+      const once = await fetch(`${getApiBase()}/v1/modules/${mid}/publish`, {
         method: "POST",
         headers,
         body: "{}",
       });
       const pub1 = await once.json();
-      const twice = await fetch(`${API_BASE}/v1/modules/${mid}/publish`, {
+      const twice = await fetch(`${getApiBase()}/v1/modules/${mid}/publish`, {
         method: "POST",
         headers,
         body: "{}",
@@ -76,13 +73,13 @@ export function PublishPage() {
   return (
     <PageChrome
       title="发布入口"
-      lede="90 · 发布 · 运营台 Module · Apollo Lite Adapter"
+      lede="90 · 发布 · 运营台 Module · 经 aos-api（Lite Adapter）"
     >
       <div className="bp-publish-shell">
         <div className="bp-publish-card">
           <div className="bp-ws-section-title">发布 · 运营台 Module</div>
           <p className="muted" style={{ fontSize: "0.875rem" }}>
-            工作台只提供入口；舰队 / Channel / Asset Bundle 在 Apollo 完成。
+            工作台提供业务发布入口；舰队 / Channel / 资产包在侧栏「运维交付」（默认可收）。
           </p>
 
           <div className="bp-ws-section-title" style={{ marginTop: "1rem" }}>
@@ -120,13 +117,13 @@ export function PublishPage() {
             <Link to="/workshop/module-interface" className="bp-publish-link">
               模块接口
             </Link>
-            <span className="bp-publish-link muted" style={{ cursor: "default", opacity: 0.65 }}>
-              Apollo Release（规划中）
-            </span>
+            <Link to="/apollo/release" className="bp-publish-link muted">
+              运维 · Release →
+            </Link>
           </div>
 
           <BpBanner tone="info">
-            Module 发布走 API 幂等 · Apollo 舰队 / Channel / 资产包能力规划中
+            Module 发布走 API 幂等 · 运维面 Channel / 舰队能力见「运维交付」分组
           </BpBanner>
 
           {lastPub && (

@@ -9,7 +9,7 @@ def test_channels_seeded(client, auth_headers):
     r = client.get("/v1/apollo/channels", headers=auth_headers)
     assert r.status_code == 200
     ids = {c["id"] for c in r.json()["items"]}
-    assert ids == {"dev", "staging", "stable"}
+    assert ids == {"dev", "staging", "stable", "hotfix"}
 
 
 def test_promote_and_recall(client, auth_headers):
@@ -56,16 +56,26 @@ def test_fleet_from_catalog(client, auth_headers):
     body = r.json()
     assert body["hub"]["channelCatalogReady"] is True
     assert body["hub"]["fullSpokeRuntimeDeferred"] is True
-    assert len(body["channels"]) == 3
+    assert len(body["channels"]) == 4
     kinds = {s["kind"] for s in body["spokes"]}
     assert "lite" in kinds
     assert "full" in kinds
 
 
-def test_full_spoke_runtime_deferred(client, auth_headers):
+def test_full_spoke_runtime_deferred(client, auth_headers, monkeypatch):
+    """MODE=off keeps deferred; default mock is covered in test_full_spoke_158."""
+    monkeypatch.setenv("AOS_FULL_SPOKE_MODE", "off")
     init_schema()
     seed_if_empty()
-    r = client.get("/v1/apollo/spokes/spoke-full-stub", headers=auth_headers)
+    from aos_api.db import connect
+
+    with connect() as conn:
+        from aos_api.apollo_catalog import ensure_seed
+
+        ensure_seed(conn)
+        conn.commit()
+    headers = {**auth_headers, "X-Org-Id": "org-a"}
+    r = client.get("/v1/apollo/spokes/spoke-full-stub", headers=headers)
     assert r.status_code == 200
     assert r.json()["kind"] == "full"
     assert r.json()["runtime"] == "deferred"
@@ -78,3 +88,4 @@ def test_ferry_status_catalog_flags(client, auth_headers):
     assert body["channelCatalogReady"] is True
     assert body["fullSpokeRuntimeDeferred"] is True
     assert body["fullChannelDeferred"] is True
+    assert "fullSpokeMockReady" in body

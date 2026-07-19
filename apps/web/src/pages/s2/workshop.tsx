@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { getOntologyClient } from "../../api/ontologyClient";
 import { apiGet, apiPost, S2Chrome, useJsonGet } from "./shared";
 import {
   BpBanner,
@@ -12,7 +13,7 @@ import {
 
 type Neighbor = { id?: string; type?: string; rel?: string; title?: string };
 
-/** 83 · 对齐 workshop-object-view · Graph + Object View + Wiki */
+/** 83 · 对齐 workshop-object-view · Graph + Object View + Wiki · 147 SDK 读对象 */
 export function GraphExplorerPage() {
   const { data: types, err: tErr } = useJsonGet<{ items: { id: string; name: string }[] }>(
     "/v1/ontology/object-types",
@@ -43,8 +44,8 @@ export function GraphExplorerPage() {
     setNeighbors([]);
     setWiki(null);
     try {
-      const r = await apiGet<{ items: Record<string, unknown>[] }>(`/v1/objects/${t}`);
-      setObjects(r.items);
+      const r = await getOntologyClient().listObjects(t);
+      setObjects((r.items || []) as Record<string, unknown>[]);
       if (r.items.length > 0) {
         await openObject(t, String(r.items[0].id));
       }
@@ -58,9 +59,10 @@ export function GraphExplorerPage() {
     setObjectId(id);
     setWiki(null);
     try {
-      const d = await apiGet<Record<string, unknown>>(`/v1/objects/${t}/${id}`);
-      const n = await apiGet<{ items: Neighbor[] }>(`/v1/objects/${t}/${id}/neighbors`);
-      setDetail(d);
+      const ont = getOntologyClient();
+      const d = await ont.getObject(t, id);
+      const n = (await ont.neighbors(t, id)) as { items?: Neighbor[] };
+      setDetail(d as Record<string, unknown>);
       setNeighbors(n.items || []);
       try {
         const w = await apiGet<{ body?: string }>(`/v1/wiki/${encodeURIComponent(t)}/${encodeURIComponent(id)}`);
@@ -152,7 +154,7 @@ export function GraphExplorerPage() {
                     type="button"
                     className={`bp-graph-node ${positions[i % positions.length]}`}
                     onClick={() =>
-                      void openObject(String(n.type || typeId), n.id).catch((e) =>
+                      void openObject(typeId, n.id).catch((e) =>
                         setErr(String(e.message || e)),
                       )
                     }

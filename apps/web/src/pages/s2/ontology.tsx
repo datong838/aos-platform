@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { apiGet, apiPost } from "../../api/client";
+import { getOntologyClient } from "../../api/ontologyClient";
+import { useOntologyObject } from "../../api/ontologyHooks";
 import { fieldDiff } from "../../lib/ontologyRecent";
 import {
   BpBanner,
@@ -290,9 +292,7 @@ export function WikiPage() {
   const wiki = useJsonGet<{ objectType: string; objectId: string; body: Record<string, unknown> }>(
     `/v1/wiki/${encodeURIComponent(objectType)}/${encodeURIComponent(objectId)}`,
   );
-  const obj = useJsonGet<Record<string, unknown>>(
-    `/v1/objects/${encodeURIComponent(objectType)}/${encodeURIComponent(objectId)}`,
-  );
+  const obj = useOntologyObject(objectType, objectId);
   const [summary, setSummary] = useState("");
   const [fieldsText, setFieldsText] = useState("{}");
   const [dirty, setDirty] = useState(false);
@@ -318,7 +318,7 @@ export function WikiPage() {
       } catch {
         throw new Error("specification 须为合法 JSON");
       }
-      const d = await apiPost<{ id: string }>("/v1/aip/drafts", {
+      const d = await getOntologyClient().createDraft({
         actionTypeId: "UpdateWikiCard",
         objectType,
         objectId,

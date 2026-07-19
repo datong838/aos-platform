@@ -24,8 +24,13 @@ from aos_api.routers import (
     modules,
     object_sets,
     ontology,
+    orgs,
+    ops_tenants,
+    ops_version_matrix,
+    plugins,
     runtime_write,
     wave_ext,
+    workspaces,
 )
 
 configure_logging()
@@ -74,8 +79,13 @@ def create_app() -> FastAPI:
     application.include_router(auth_oidc.router)
     application.include_router(authz.router)
     application.include_router(me.router)
+    application.include_router(orgs.router)
+    application.include_router(ops_tenants.router)
+    application.include_router(ops_version_matrix.router)
+    application.include_router(workspaces.router)
     application.include_router(buddy.router)
     application.include_router(modules.router)
+    application.include_router(plugins.router)
     application.include_router(object_sets.router)
     application.include_router(ontology.router)
     application.include_router(actions.router)

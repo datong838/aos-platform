@@ -483,32 +483,19 @@ def list_wiki_versions(
     object_id: str,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    """93 · 只读历史版本（审批写回前快照）。"""
-    _ = principal
+    """93 · 只读历史版本（审批写回前快照）· TWA.8 按区。"""
     with connect() as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS wiki_page_version (
-              id BIGSERIAL PRIMARY KEY,
-              object_type TEXT NOT NULL,
-              object_id TEXT NOT NULL,
-              body JSONB NOT NULL DEFAULT '{}'::jsonb,
-              draft_id TEXT,
-              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-            """
-        )
         rows = conn.execute(
             """
             SELECT id, body, draft_id, created_at
             FROM wiki_page_version
             WHERE object_type=%s AND object_id=%s
+              AND org_id=%s AND project_id=%s
             ORDER BY id DESC
             LIMIT 50
             """,
-            (object_type, object_id),
+            (object_type, object_id, principal.org_id, principal.project_id),
         ).fetchall()
-        conn.commit()
     items = []
     for r in rows:
         body = r["body"] or {}
@@ -532,15 +519,21 @@ def get_wiki_version(
     version_id: int,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    _ = principal
     with connect() as conn:
         row = conn.execute(
             """
             SELECT id, body, draft_id, created_at
             FROM wiki_page_version
             WHERE object_type=%s AND object_id=%s AND id=%s
+              AND org_id=%s AND project_id=%s
             """,
-            (object_type, object_id, version_id),
+            (
+                object_type,
+                object_id,
+                version_id,
+                principal.org_id,
+                principal.project_id,
+            ),
         ).fetchone()
     if not row:
         raise ApiError(code="NOT_FOUND", message="wiki version not found", status_code=404)
@@ -561,15 +554,27 @@ def get_wiki(
     object_id: str,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    _ = principal
+    from aos_api.tenant_prefix import wiki_space_id
+
     with connect() as conn:
         row = conn.execute(
-            "SELECT body FROM wiki_page WHERE object_type=%s AND object_id=%s",
-            (object_type, object_id),
+            """
+            SELECT body FROM wiki_page
+            WHERE object_type=%s AND object_id=%s
+              AND org_id=%s AND project_id=%s
+            """,
+            (object_type, object_id, principal.org_id, principal.project_id),
         ).fetchone()
     if not row:
         raise ApiError(code="NOT_FOUND", message="wiki not found", status_code=404)
-    return {"objectType": object_type, "objectId": object_id, "body": row["body"]}
+    return {
+        "objectType": object_type,
+        "objectId": object_id,
+        "body": row["body"],
+        "orgId": principal.org_id,
+        "projectId": principal.project_id,
+        "spaceId": wiki_space_id(principal.org_id, principal.project_id),
+    }
 
 
 @router.get("/v1/funnel/{object_type}/status")

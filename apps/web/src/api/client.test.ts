@@ -5,6 +5,6 @@ describe("api client network errors", () => {
   it("rewrites Failed to fetch", () => {
     const err = formatNetworkError(new Error("Failed to fetch"), "GET", "/v1/datasets");
     expect(err.message).toMatch(/aos-api/);
-    expect(err.message).toMatch(/ensure-api/);
+    expect(err.message).toMatch(/API 已启动|网络/);
   });
 });

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiGet, apiPut } from "../../api/client";
+import { getOntologyClient } from "../../api/ontologyClient";
 import {
   BpBanner,
   BpMetricGrid,
@@ -145,10 +146,12 @@ export function ObjectTypeDetailPanel({
       delete props.branch;
       props.title = editTitle;
       props.status = editStatus;
-      await apiPut(`/v1/objects/${encodeURIComponent(typeId)}/${encodeURIComponent(String(detail.id))}?branch=${encodeURIComponent(branchId)}`, {
-        props,
-        op: "upsert",
-      });
+      await getOntologyClient().putObject(
+        typeId,
+        String(detail.id),
+        { props, op: "upsert" },
+        { branch: branchId },
+      );
       setEditMsg(`已写入分支 overlay · ${branchId}`);
       onBranchSaved?.();
     } catch (e) {
@@ -299,7 +302,7 @@ export function ObjectTypeDetailPanel({
                 {
                   label: "管道",
                   value: funnelStage || "未配置",
-                  tone: funnelTone === "ok" ? "ok" : funnelTone === "bad" ? "warn" : "muted",
+                  tone: funnelTone === "ok" ? "ok" : "warn",
                 },
               ]}
             />

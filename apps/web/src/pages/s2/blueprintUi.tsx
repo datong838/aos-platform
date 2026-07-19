@@ -409,7 +409,7 @@ export function BpWsGrid({
   );
 }
 
-export function BpPropGrid({ items }: { items: { label: string; value: string; tone?: string }[] }) {
+export function BpPropGrid({ items }: { items: { label: string; value: ReactNode; tone?: string }[] }) {
   return (
     <div className="bp-prop-grid">
       {items.map((p) => (

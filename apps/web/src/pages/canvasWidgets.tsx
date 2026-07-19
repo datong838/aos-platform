@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiGet, apiPost } from "../api/client";
+import { getOntologyClient } from "../api/ontologyClient";
 import { BpBanner } from "./s2/blueprintUi";
 
 export type WidgetCanvasNode = {
@@ -284,9 +285,10 @@ export function GraphViewWidget({
     setBusy(true);
     setErr(null);
     try {
-      const res = await apiGet<{ items?: Neighbor[]; engine?: string }>(
-        `/v1/objects/${encodeURIComponent(objectType)}/${encodeURIComponent(objectId)}/neighbors`,
-      );
+      const res = (await getOntologyClient().neighbors(objectType, objectId)) as {
+        items?: Neighbor[];
+        engine?: string;
+      };
       setItems(Array.isArray(res.items) ? res.items : []);
       setEngine(res.engine || "adjacency_table");
     } catch (e) {

@@ -104,13 +104,23 @@ services:
       timeout: 3s
       retries: 10
 
-  # TA.1 / doc 110 — analytics-runtime sidecar (shaped; UI never talks to this)
-  # Host port 8084 — do NOT use 8083 (Keycloak oidc / oidc-ha).
+  # TA.1 / 110 · analytics-runtime · 157 真 Jupyter（Notebook 7）MVP
+  # Host :8084 = ticket Facade；:8888 = Jupyter UI（ticket 302 后）。勿占 8083（Keycloak）。
   aos-dev-analytics:
     build: ./analytics-runtime
     container_name: aos-dev-analytics
+    environment:
+      AOS_ANALYTICS_ENGINE: jupyter
+      AOS_JUPYTER_ROOT: /notebooks
+      AOS_JUPYTER_PORT: "8888"
+      AOS_JUPYTER_PUBLIC_URL: http://127.0.0.1:8888
+      AOS_ANALYTICS_PUBLIC_URL: http://127.0.0.1:8084
+      AOS_ANALYTICS_TICKET_TTL_SEC: "900"
     ports:
       - "8084:8084"
+      - "8888:8888"
+    volumes:
+      - ./analytics-runtime/notebooks:/notebooks
     healthcheck:
       test:
         [
@@ -119,7 +129,8 @@ services:
         ]
       interval: 5s
       timeout: 3s
-      retries: 10
+      retries: 15
+      start_period: 40s
 
   # T4.6 — Dev MySQL source (customer brings own DB in prod; not in customer AOS package)
   aos-dev-mysql:

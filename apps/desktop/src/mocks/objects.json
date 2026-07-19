@@ -1,0 +1,27 @@
+[
+  {
+    "object_id": "OBJ-1001",
+    "display_name": "一号产线主机",
+    "type": "Equipment"
+  },
+  {
+    "object_id": "OBJ-1002",
+    "display_name": "二号维保单元",
+    "type": "Equipment"
+  },
+  {
+    "object_id": "OBJ-1003",
+    "display_name": "标定仪",
+    "type": "Instrument"
+  },
+  {
+    "object_id": "LINE-A",
+    "display_name": "A 产线",
+    "type": "Line"
+  },
+  {
+    "object_id": "HYD-01",
+    "display_name": "液压站",
+    "type": "Utility"
+  }
+]

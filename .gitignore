@@ -6,7 +6,13 @@ deploy/dev/demo-pids/
 deploy/dev/openfga-store.env
 deploy/dev/_skopeo_probe/
 deploy/dev/_ferry_onsite/
+deploy/dev/_ferry_onsite_sh/
+deploy/dev/_helm_spoke_full/
+deploy/dev/_idp_accept/
+deploy/dev/customer-idp.mall.env
 deploy/dev/cosign/
+# Jupyter session notebooks (keep aos_smoke.ipynb only)
+deploy/dev/analytics-runtime/notebooks/nb-*.ipynb
 deploy/dev/sbom-syft.json
 deploy/dev/trivy-fs.json
 deploy/dev/syft-trivy-report.md
@@ -16,6 +22,8 @@ deploy/dev/syft-trivy-report.md
 !**/.env.example
 apps/web/node_modules/
 apps/web/dist/
+apps/desktop/node_modules/
+packages/*/node_modules/
 **/__pycache__/
 *.egg-info/
 .venv/

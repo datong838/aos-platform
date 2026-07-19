@@ -13,6 +13,7 @@ import {
   BpToolbar,
   BpToolGrid,
 } from "./blueprintUi";
+import { MODEL_CONFIG_NO_VAULT } from "../../lib/productCopy";
 
 const TOOL_CATS = [
   { id: "action", label: "Action", zh: "写回动作（可 HITL）", defaultOn: true },
@@ -1401,6 +1402,7 @@ export function ProvidersPage() {
         <p className="error">{err || pluginsApi.err || gatewayApi.err || msg}</p>
       )}
       {saveMsg && <p className="bp-prop-ok">{saveMsg}</p>}
+      <BpBanner tone="info">{MODEL_CONFIG_NO_VAULT}</BpBanner>
 
       <section className="mp-section">
         <div className="mp-section-head">

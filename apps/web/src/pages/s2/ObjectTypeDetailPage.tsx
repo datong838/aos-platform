@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { apiGet } from "../../api/client";
+import { getOntologyClient } from "../../api/ontologyClient";
 import {
   loadBranchPref,
   pushRecent,
@@ -39,16 +40,14 @@ export function ObjectTypeDetailPage() {
       try {
         const [types, list, funnel, br] = await Promise.all([
           apiGet<{ items: ObjectTypeRow[] }>("/v1/ontology/object-types"),
-          apiGet<{ items: Record<string, unknown>[] }>(
-            `/v1/objects/${encodeURIComponent(typeId)}?branch=${encodeURIComponent(branchId)}`,
-          ),
+          getOntologyClient().listObjects(typeId, { branch: branchId }),
           apiGet<{ stage?: string }>(`/v1/funnel/${encodeURIComponent(typeId)}/status`).catch(() => ({})),
           apiGet<{ items: Branch[] }>("/v1/ontology/branches").catch(() => ({ items: [] })),
         ]);
         if (cancelled) return;
         const hit = types.items.find((t) => t.id === typeId) || null;
         setMeta(hit);
-        setObjects(list.items || []);
+        setObjects((list.items || []) as Record<string, unknown>[]);
         setFunnelStage((funnel as { stage?: string }).stage);
         setBranches(br.items || []);
         if (hit) {
@@ -78,26 +77,23 @@ export function ObjectTypeDetailPage() {
 
   async function openInstance(id: string) {
     setErr(null);
-    const q = `?branch=${encodeURIComponent(branchId)}`;
-    const d = await apiGet<Record<string, unknown>>(`/v1/objects/${typeId}/${id}${q}`);
-    setDetail(d);
-    const n = await apiGet<{ items: { id?: string; type?: string; rel?: string }[] }>(
-      `/v1/objects/${typeId}/${id}/neighbors`,
-    );
+    const ont = getOntologyClient();
+    const d = await ont.getObject(typeId, id, { branch: branchId });
+    setDetail(d as Record<string, unknown>);
+    const n = (await ont.neighbors(typeId, id)) as {
+      items?: { id?: string; type?: string; rel?: string }[];
+    };
     setNeighbors(n.items || []);
   }
 
   async function reloadObjects() {
     if (!typeId) return;
-    const list = await apiGet<{ items: Record<string, unknown>[] }>(
-      `/v1/objects/${encodeURIComponent(typeId)}?branch=${encodeURIComponent(branchId)}`,
-    );
-    setObjects(list.items || []);
+    const ont = getOntologyClient();
+    const list = await ont.listObjects(typeId, { branch: branchId });
+    setObjects((list.items || []) as Record<string, unknown>[]);
     if (detail?.id) {
-      const d = await apiGet<Record<string, unknown>>(
-        `/v1/objects/${typeId}/${String(detail.id)}?branch=${encodeURIComponent(branchId)}`,
-      );
-      setDetail(d);
+      const d = await ont.getObject(typeId, String(detail.id), { branch: branchId });
+      setDetail(d as Record<string, unknown>);
     }
   }
 

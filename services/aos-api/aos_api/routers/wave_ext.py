@@ -766,6 +766,8 @@ def submit_job(
         "bytes": 0,
         "fromCapability": cap_id,
         "jobId": job_id,
+        "orgId": principal.org_id,
+        "projectId": principal.project_id,
     }
     _media[media_rid] = meta
     _jobs[job_id] = {
@@ -1102,11 +1104,11 @@ def dataset_history(rid: str, principal: Principal = Depends(require_principal))
 
 @router.post("/v1/media-sets")
 def create_media(body: MediaIn, principal: Principal = Depends(require_principal)):
-    """T4.2/T4.3 — metadata + real MinIO put when bytes provided."""
-    _ = principal
+    """T4.2/T4.3 — metadata + real MinIO put when bytes provided · TWA.8 前缀。"""
     import base64
 
     from aos_api.object_store import get_config, object_key_for, put_bytes
+    from aos_api.tenant_prefix import assert_object_key_tenant
 
     rid = f"ri.mediaset.{uuid.uuid4().hex[:10]}"
     stored = False
@@ -1118,7 +1120,13 @@ def create_media(body: MediaIn, principal: Principal = Depends(require_principal
         raw = base64.b64decode(body.bytesBase64)
         raw_len = len(raw)
         _media_bytes[rid] = raw
-        object_key = object_key_for(rid, body.name)
+        object_key = object_key_for(
+            rid,
+            body.name,
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+        )
+        assert_object_key_tenant(object_key, principal.org_id, principal.project_id)
         try:
             put = put_bytes(
                 key=object_key,
@@ -1140,38 +1148,59 @@ def create_media(body: MediaIn, principal: Principal = Depends(require_principal
         "bytes": raw_len,
         "objectKey": object_key,
         "etag": etag,
+        "orgId": principal.org_id,
+        "projectId": principal.project_id,
         "accessKeyRef": "env:AOS_S3_ACCESS_KEY|MINIO_ROOT_USER",
     }
     _media[rid] = item
-    log.info("media_created rid=%s stored=%s bytes=%s", rid, stored, raw_len)
+    log.info(
+        "media_created rid=%s stored=%s bytes=%s org=%s project=%s",
+        rid,
+        stored,
+        raw_len,
+        principal.org_id,
+        principal.project_id,
+    )
     return item
 
 
 @router.get("/v1/media-sets")
 def list_media(principal: Principal = Depends(require_principal)):
-    _ = principal
-    return {"items": list(_media.values())}
+    items = [
+        m
+        for m in _media.values()
+        if m.get("orgId") == principal.org_id and m.get("projectId") == principal.project_id
+    ]
+    return {"items": items}
 
 
 @router.get("/v1/media-sets/{rid}")
 def get_media(rid: str, principal: Principal = Depends(require_principal)):
-    _ = principal
     if rid not in _media:
         raise ApiError(code="NOT_FOUND", message="media missing", status_code=404)
-    return _media[rid]
+    meta = _media[rid]
+    if meta.get("orgId") and (
+        meta.get("orgId") != principal.org_id or meta.get("projectId") != principal.project_id
+    ):
+        raise ApiError(code="NOT_FOUND", message="media missing", status_code=404)
+    return meta
 
 
 @router.get("/v1/media-sets/{rid}/content")
 def get_media_content(rid: str, principal: Principal = Depends(require_principal)):
     """T4.2 — fetch bytes from object store (base64 in JSON for easy smoke)."""
-    _ = principal
     import base64
 
     from aos_api.object_store import get_bytes
+    from aos_api.tenant_prefix import assert_object_key_tenant
 
     if rid not in _media:
         raise ApiError(code="NOT_FOUND", message="media missing", status_code=404)
     meta = _media[rid]
+    if meta.get("orgId") and (
+        meta.get("orgId") != principal.org_id or meta.get("projectId") != principal.project_id
+    ):
+        raise ApiError(code="NOT_FOUND", message="media missing", status_code=404)
     key = meta.get("objectKey")
     if not key or not meta.get("stored"):
         raise ApiError(
@@ -1179,6 +1208,7 @@ def get_media_content(rid: str, principal: Principal = Depends(require_principal
             message="media has no object-store bytes",
             status_code=404,
         )
+    assert_object_key_tenant(key, principal.org_id, principal.project_id)
     try:
         raw = get_bytes(key=key)
     except Exception as exc:  # noqa: BLE001
@@ -1311,14 +1341,16 @@ def pipeline_embed(
 
 @router.post("/v1/aip/vector-index/upsert")
 def vector_index_upsert(body: dict[str, Any] | None = None, principal: Principal = Depends(require_principal)):
-    """104 · 直接写入本地向量集合。"""
-    _ = principal
+    """104 · 直接写入本地向量集合 · TWA.8 租户 collection 前缀。"""
+    from aos_api.tenant_prefix import scoped_collection_name
     from aos_api.vector_index import _normalize_documents, upsert
 
     payload = body or {}
-    collection = str(payload.get("collection") or "").strip()
-    if not collection:
-        raise ApiError(code="VALIDATION", message="collection required", status_code=400)
+    collection = scoped_collection_name(
+        principal.org_id,
+        principal.project_id,
+        str(payload.get("collection") or "").strip(),
+    )
     docs = _normalize_documents(payload.get("documents"))
     return upsert(
         collection=collection,
@@ -1331,13 +1363,18 @@ def vector_index_upsert(body: dict[str, Any] | None = None, principal: Principal
 
 @router.post("/v1/aip/vector-index/search")
 def vector_index_search(body: dict[str, Any] | None = None, principal: Principal = Depends(require_principal)):
-    """104 · 本地余弦检索（query 亦走 embedding 插件）。"""
-    _ = principal
+    """104 · 本地余弦检索 · TWA.8 租户 collection 前缀。"""
+    from aos_api.tenant_prefix import scoped_collection_name
     from aos_api.vector_index import search
 
     payload = body or {}
+    collection = scoped_collection_name(
+        principal.org_id,
+        principal.project_id,
+        str(payload.get("collection") or "").strip(),
+    )
     return search(
-        collection=str(payload.get("collection") or "").strip(),
+        collection=collection,
         query=str(payload.get("query") or ""),
         plugin_id=str(payload.get("pluginId") or "") or None,
         top_k=int(payload.get("topK") or 5),
@@ -1355,10 +1392,11 @@ def vector_index_backend(principal: Principal = Depends(require_principal)):
 
 @router.get("/v1/aip/vector-index/{collection}")
 def vector_index_get(collection: str, principal: Principal = Depends(require_principal)):
-    _ = principal
+    from aos_api.tenant_prefix import scoped_collection_name
     from aos_api.vector_index import collection_stats
 
-    return collection_stats(collection)
+    scoped = scoped_collection_name(principal.org_id, principal.project_id, collection)
+    return collection_stats(scoped)
 
 
 @router.get("/v1/builds")
@@ -1512,10 +1550,9 @@ def apollo_channel_recall(
 
 @router.get("/v1/apollo/spokes")
 def apollo_spokes_list(principal: Principal = Depends(require_principal)):
-    _ = principal
     from aos_api.apollo_catalog import list_spokes
 
-    return {"items": list_spokes()}
+    return {"items": list_spokes(org_id=principal.org_id)}
 
 
 @router.get("/v1/apollo/spokes/local")
@@ -1523,37 +1560,167 @@ def spoke_probe(principal: Principal = Depends(require_principal)):
     """Compat · Lite local spoke (scheme 66 reads catalog)."""
     from aos_api.apollo_catalog import get_spoke
 
-    return get_spoke("spoke-local-dev")
+    return get_spoke("spoke-local-dev", org_id=principal.org_id)
 
 
 @router.get("/v1/apollo/spokes/{spoke_id}")
 def spoke_by_id(spoke_id: str, principal: Principal = Depends(require_principal)):
-    """T-API · Spoke detail (PG catalog · scheme 66)."""
-    _ = principal
+    """T-API · Spoke detail (PG catalog · scheme 66) · TWA.9 按 Org。"""
     from aos_api.apollo_catalog import get_spoke
 
-    return get_spoke(spoke_id)
+    return get_spoke(spoke_id, org_id=principal.org_id)
+
+
+@router.post("/v1/apollo/spokes/{spoke_id}/heartbeat")
+def spoke_heartbeat(
+    spoke_id: str,
+    body: dict[str, Any] | None = None,
+    principal: Principal = Depends(require_principal),
+):
+    """158 · Spoke heartbeat (Lite/Full)."""
+    from aos_api.apollo_catalog import record_spoke_heartbeat
+
+    payload = body or {}
+    ok = bool(payload.get("ok", True))
+    return record_spoke_heartbeat(spoke_id, org_id=principal.org_id, ok=ok)
+
+
+@router.post("/v1/apollo/spokes/{spoke_id}/apply-plan")
+def spoke_apply_plan(
+    spoke_id: str,
+    body: dict[str, Any] | None = None,
+    principal: Principal = Depends(require_principal),
+):
+    """158 · Full Spoke mock Helm apply (no cluster mutate)."""
+    from aos_api.apollo_catalog import apply_full_spoke_plan
+
+    payload = body or {}
+    return apply_full_spoke_plan(
+        spoke_id,
+        org_id=principal.org_id,
+        plan_id=payload.get("planId"),
+    )
+
+
+@router.get("/v1/apollo/spokes/full/plan")
+def spoke_full_plan(principal: Principal = Depends(require_principal)):
+    """158 · Full Spoke chart stub metadata."""
+    _ = principal
+    from aos_api.apollo_catalog import full_spoke_plan_artifact
+
+    return full_spoke_plan_artifact()
 
 
 @router.get("/v1/apollo/fleet")
 def apollo_fleet(principal: Principal = Depends(require_principal)):
-    """T-API · Hub fleet (Channel/Spoke catalog)."""
-    _ = principal
+    """T-API · Hub fleet (Channel/Spoke catalog) · Spoke 按 Org。"""
     from aos_api.apollo_catalog import fleet_payload
 
-    return fleet_payload()
+    return fleet_payload(org_id=principal.org_id)
 
 
 @router.post("/v1/apollo/assets")
 def asset_bundle(body: dict[str, Any], principal: Principal = Depends(require_principal)):
+    """160 · persist Asset Bundle metadata (compatibleChannels for promote gate)."""
+    from aos_api.apollo_ops import register_asset
+
+    contents = body.get("contents")
+    if contents is not None and not isinstance(contents, list):
+        contents = [str(contents)]
+    compatible = body.get("compatibleChannels")
+    if compatible is not None and not isinstance(compatible, list):
+        compatible = [str(compatible)]
+    return register_asset(
+        contents=contents,
+        hotfix=bool(body.get("hotfix", False)),
+        compatible_channels=compatible,
+        subject=principal.subject,
+    )
+
+
+@router.get("/v1/apollo/assets")
+def asset_list(
+    principal: Principal = Depends(require_principal),
+    limit: int = 50,
+):
     _ = principal
-    return {
-        "bundleId": f"ab-{uuid.uuid4().hex[:8]}",
-        "platformVersion": "0.3.0-dev",
-        "contents": body.get("contents", ["WorkOrder", "CloseWorkOrder"]),
-        "hotfix": bool(body.get("hotfix", False)),
-        "validated": True,
-    }
+    from aos_api.apollo_ops import list_assets
+
+    return {"items": list_assets(limit=limit), "scheme": "160"}
+
+
+@router.get("/v1/apollo/changes")
+def apollo_changes_list(
+    principal: Principal = Depends(require_principal),
+    limit: int = 50,
+):
+    _ = principal
+    from aos_api.apollo_ops import list_changes
+
+    return {"items": list_changes(limit=limit), "scheme": "160"}
+
+
+@router.post("/v1/apollo/changes")
+def apollo_changes_create(
+    body: dict[str, Any],
+    principal: Principal = Depends(require_principal),
+):
+    from aos_api.apollo_ops import create_change
+
+    return create_change(
+        title=str(body.get("title") or ""),
+        kind=str(body.get("kind") or "channel"),
+        channelId=body.get("channelId"),
+        summary=body.get("summary"),
+        subject=principal.subject,
+        org_id=principal.org_id,
+        project_id=principal.project_id,
+        emergency=bool(body.get("emergency", False)),
+    )
+
+
+@router.post("/v1/apollo/changes/{change_id}/approve")
+def apollo_changes_approve(
+    change_id: str,
+    body: dict[str, Any] | None = None,
+    principal: Principal = Depends(require_principal),
+):
+    from aos_api.apollo_ops import decide_change
+
+    payload = body or {}
+    return decide_change(
+        change_id,
+        approve=True,
+        subject=principal.subject,
+        note=payload.get("note"),
+    )
+
+
+@router.post("/v1/apollo/changes/{change_id}/reject")
+def apollo_changes_reject(
+    change_id: str,
+    body: dict[str, Any] | None = None,
+    principal: Principal = Depends(require_principal),
+):
+    from aos_api.apollo_ops import decide_change
+
+    payload = body or {}
+    return decide_change(
+        change_id,
+        approve=False,
+        subject=principal.subject,
+        note=payload.get("note"),
+    )
+
+
+@router.post("/v1/apollo/changes/{change_id}/merge-stable")
+def apollo_changes_merge_stable(
+    change_id: str,
+    principal: Principal = Depends(require_principal),
+):
+    from aos_api.apollo_ops import merge_hotfix_to_stable
+
+    return merge_hotfix_to_stable(change_id, subject=principal.subject)
 
 
 @router.get("/v1/apollo/config")

@@ -13,8 +13,16 @@ describe("nav DEMO_PAGES alignment", () => {
       "AIP 决策引擎",
       "本体 · 数字孪生",
       "数据集成",
-      "交付 Apollo",
+      "运维交付",
     ]);
+  });
+
+  it("TWB.2 ops section collapses by default flag", () => {
+    const ops = NAV_ITEMS.find(
+      (i) => "section" in i && (i as { section: string }).section === "运维交付",
+    ) as { collapseDefault?: boolean };
+    expect(ops.collapseDefault).toBe(true);
+    expect(navPages().filter((p) => p.path.startsWith("/apollo")).length).toBeGreaterThanOrEqual(7);
   });
 
   it("exposes full DEMO page count with live paths", () => {

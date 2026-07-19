@@ -1,0 +1,6 @@
+{
+  "channel": "saas",
+  "defaultApiBase": "https://aos.example.com",
+  "skipWelcomeWhenBasePreset": true,
+  "note": "TWC.12 SaaS 渠道样例"
+}

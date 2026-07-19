@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aos-spoke-full.name" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "aos-spoke-full.name" . }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app.kubernetes.io/name: {{ include "aos-spoke-full.name" . }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
+      name: http

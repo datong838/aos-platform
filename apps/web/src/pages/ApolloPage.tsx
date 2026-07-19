@@ -34,6 +34,8 @@ type FleetPayload = {
     status?: string;
     channelCatalogReady?: boolean;
     fullSpokeRuntimeDeferred?: boolean;
+    fullSpokeMockReady?: boolean;
+    fullSpokeMode?: string;
   };
   spokes?: Spoke[];
   channels?: Channel[];
@@ -163,9 +165,14 @@ export function ApolloPage() {
               tone: "ok",
             },
             {
-              label: "Full 运行时",
+              label: "Full 真集群",
               value: hub.fullSpokeRuntimeDeferred ? "延期" : "—",
               tone: "warn",
+            },
+            {
+              label: "Full mock",
+              value: hub.fullSpokeMockReady ? hub.fullSpokeMode || "ready" : "off",
+              tone: hub.fullSpokeMockReady ? "ok" : "muted",
             },
           ]}
         />

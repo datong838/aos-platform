@@ -12,6 +12,7 @@ def test_me_with_dev_token(client, auth_headers):
     body = r.json()
     assert body["orgId"] == "dev-org"
     assert body["projectId"] == "dev-project"
+    assert body["workspaceName"] == "测试工作区"
     assert "admin" in body["roles"]
     assert "restricted" in body["markings"]
 

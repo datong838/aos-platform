@@ -1,4 +1,7 @@
-"""Module Meta Store on PostgreSQL (T08) — replaces in-memory mock for modules."""
+"""Module Meta Store on PostgreSQL (T08) — replaces in-memory mock for modules.
+
+TWA.5: rows scoped by org_id + project_id (configured instances are per-workspace).
+"""
 from __future__ import annotations
 
 import json
@@ -8,6 +11,9 @@ from aos_api.db import connect
 from aos_api.logging_facade import get_logger
 
 log = get_logger("aos-api.module_store")
+
+_DEFAULT_ORG = "dev-org"
+_DEFAULT_PROJECT = "dev-project"
 
 _SEED = [
     {
@@ -60,8 +66,30 @@ def ensure_module_schema() -> None:
               entry_path TEXT NOT NULL DEFAULT '/workshop/inbox',
               widgets JSONB NOT NULL DEFAULT '["table"]'::jsonb,
               buddy_bound BOOLEAN NOT NULL DEFAULT TRUE,
+              org_id TEXT NOT NULL DEFAULT 'dev-org',
+              project_id TEXT NOT NULL DEFAULT 'dev-project',
               created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
+            """
+        )
+        # migrate pre-TWA.5 tables
+        conn.execute(
+            """
+            ALTER TABLE meta_module
+              ADD COLUMN IF NOT EXISTS org_id TEXT NOT NULL DEFAULT 'dev-org'
+            """
+        )
+        conn.execute(
+            """
+            ALTER TABLE meta_module
+              ADD COLUMN IF NOT EXISTS project_id TEXT NOT NULL DEFAULT 'dev-project'
+            """
+        )
+        conn.execute(
+            """
+            UPDATE meta_module
+               SET org_id = COALESCE(NULLIF(org_id, ''), 'dev-org'),
+                   project_id = COALESCE(NULLIF(project_id, ''), 'dev-project')
             """
         )
         conn.commit()
@@ -78,6 +106,8 @@ def _row_to_mod(r: dict[str, Any]) -> dict[str, Any]:
         "entryPath": r["entry_path"],
         "widgets": r["widgets"] if isinstance(r["widgets"], list) else list(r["widgets"] or []),
         "buddyBound": bool(r["buddy_bound"]),
+        "orgId": r.get("org_id") or _DEFAULT_ORG,
+        "projectId": r.get("project_id") or _DEFAULT_PROJECT,
     }
 
 
@@ -89,8 +119,8 @@ def seed_modules_if_empty() -> None:
                 """
                 INSERT INTO meta_module (
                   id, name, status, description, object_type, markings,
-                  entry_path, widgets, buddy_bound
-                ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s::jsonb,%s)
+                  entry_path, widgets, buddy_bound, org_id, project_id
+                ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s::jsonb,%s,%s,%s)
                 ON CONFLICT (id) DO NOTHING
                 """,
                 (
@@ -103,31 +133,64 @@ def seed_modules_if_empty() -> None:
                     s["entryPath"],
                     json.dumps(s["widgets"]),
                     s["buddyBound"],
+                    _DEFAULT_ORG,
+                    _DEFAULT_PROJECT,
                 ),
             )
         conn.commit()
-    log.info("module_store_seed_ensured")
+    log.info(
+        "module_store_seed_ensured org=%s project=%s",
+        _DEFAULT_ORG,
+        _DEFAULT_PROJECT,
+    )
 
 
-def list_modules() -> list[dict[str, Any]]:
+def list_modules(org_id: str, project_id: str) -> list[dict[str, Any]]:
     ensure_module_schema()
     with connect() as conn:
         rows = conn.execute(
-            "SELECT * FROM meta_module ORDER BY id"
+            """
+            SELECT * FROM meta_module
+             WHERE org_id=%s AND project_id=%s
+             ORDER BY id
+            """,
+            (org_id, project_id),
         ).fetchall()
+    log.info(
+        "module_list org=%s project=%s count=%s",
+        org_id,
+        project_id,
+        len(rows),
+    )
     return [_row_to_mod(r) for r in rows]
 
 
-def get_module(module_id: str) -> dict[str, Any] | None:
+def get_module(
+    module_id: str, org_id: str, project_id: str
+) -> dict[str, Any] | None:
     ensure_module_schema()
     with connect() as conn:
         row = conn.execute(
-            "SELECT * FROM meta_module WHERE id=%s", (module_id,)
+            """
+            SELECT * FROM meta_module
+             WHERE id=%s AND org_id=%s AND project_id=%s
+            """,
+            (module_id, org_id, project_id),
         ).fetchone()
-    return _row_to_mod(row) if row else None
+    if not row:
+        log.warning(
+            "module_miss id=%s org=%s project=%s",
+            module_id,
+            org_id,
+            project_id,
+        )
+        return None
+    return _row_to_mod(row)
 
 
-def create_module(payload: dict[str, Any]) -> dict[str, Any]:
+def create_module(
+    payload: dict[str, Any], *, org_id: str, project_id: str
+) -> dict[str, Any]:
     ensure_module_schema()
     import uuid
 
@@ -142,14 +205,16 @@ def create_module(payload: dict[str, Any]) -> dict[str, Any]:
         "entryPath": payload.get("entryPath") or "/workshop/inbox",
         "widgets": payload.get("widgets") or ["table", "filters"],
         "buddyBound": bool(payload.get("buddyBound", True)),
+        "orgId": org_id,
+        "projectId": project_id,
     }
     with connect() as conn:
         conn.execute(
             """
             INSERT INTO meta_module (
               id, name, status, description, object_type, markings,
-              entry_path, widgets, buddy_bound
-            ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s::jsonb,%s)
+              entry_path, widgets, buddy_bound, org_id, project_id
+            ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s::jsonb,%s,%s,%s)
             """,
             (
                 item["id"],
@@ -161,15 +226,28 @@ def create_module(payload: dict[str, Any]) -> dict[str, Any]:
                 item["entryPath"],
                 json.dumps(item["widgets"]),
                 item["buddyBound"],
+                org_id,
+                project_id,
             ),
         )
         conn.commit()
-    log.info("module_create id=%s", mid)
+    log.info(
+        "module_create id=%s org=%s project=%s",
+        mid,
+        org_id,
+        project_id,
+    )
     return item
 
 
-def update_module(module_id: str, patch: dict[str, Any]) -> dict[str, Any] | None:
-    cur = get_module(module_id)
+def update_module(
+    module_id: str,
+    patch: dict[str, Any],
+    *,
+    org_id: str,
+    project_id: str,
+) -> dict[str, Any] | None:
+    cur = get_module(module_id, org_id, project_id)
     if not cur:
         return None
     mapping = {
@@ -191,7 +269,7 @@ def update_module(module_id: str, patch: dict[str, Any]) -> dict[str, Any] | Non
             UPDATE meta_module SET
               name=%s, status=%s, description=%s, object_type=%s,
               markings=%s::jsonb, entry_path=%s, widgets=%s::jsonb, buddy_bound=%s
-            WHERE id=%s
+            WHERE id=%s AND org_id=%s AND project_id=%s
             """,
             (
                 cur["name"],
@@ -203,14 +281,20 @@ def update_module(module_id: str, patch: dict[str, Any]) -> dict[str, Any] | Non
                 json.dumps(cur["widgets"]),
                 cur["buddyBound"],
                 module_id,
+                org_id,
+                project_id,
             ),
         )
         conn.commit()
-    return get_module(module_id)
+    return get_module(module_id, org_id, project_id)
 
 
-def publish_module(module_id: str) -> dict[str, Any] | None:
-    mod = update_module(module_id, {"status": "published"})
+def publish_module(
+    module_id: str, *, org_id: str, project_id: str
+) -> dict[str, Any] | None:
+    mod = update_module(
+        module_id, {"status": "published"}, org_id=org_id, project_id=project_id
+    )
     if not mod:
         return None
     return {
@@ -223,8 +307,10 @@ def publish_module(module_id: str) -> dict[str, Any] | None:
     }
 
 
-def module_runtime(module_id: str) -> dict[str, Any] | None:
-    mod = get_module(module_id)
+def module_runtime(
+    module_id: str, *, org_id: str, project_id: str
+) -> dict[str, Any] | None:
+    mod = get_module(module_id, org_id, project_id)
     if not mod:
         return None
     return {
@@ -235,5 +321,7 @@ def module_runtime(module_id: str) -> dict[str, Any] | None:
         "objectType": mod["objectType"],
         "entryPath": mod.get("entryPath") or "/workshop/inbox",
         "buddyBound": bool(mod.get("buddyBound", False)),
+        "orgId": org_id,
+        "projectId": project_id,
         "store": "postgres",
     }

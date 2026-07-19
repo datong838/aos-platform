@@ -1,0 +1,6 @@
+{
+  "channel": "private",
+  "defaultApiBase": "",
+  "skipWelcomeWhenBasePreset": false,
+  "note": "TWC.12 私有化渠道样例 · 须用户填写 API Base"
+}

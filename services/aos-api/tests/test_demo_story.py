@@ -16,7 +16,7 @@ def test_demo_ensure_seed_and_story(client, auth_headers):
     assert s.status_code == 200
     story = s.json()
     assert story["storyId"] == "workorder-local-demo"
-    assert story["deferred"]["apolloOps"] is True
+    assert story["deferred"]["apolloOps"] is False
     assert len(story["steps"]) >= 8
     assert story["snapshot"]["objectCount"] >= 3
 

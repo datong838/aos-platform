@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "aos-spoke-full.name" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "aos-spoke-full.name" . }}
+    aos.platform/spoke-id: {{ .Values.spoke.id | quote }}
+    aos.platform/mode: full
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "aos-spoke-full.name" . }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "aos-spoke-full.name" . }}
+        aos.platform/spoke-id: {{ .Values.spoke.id | quote }}
+    spec:
+      containers:
+        - name: spoke-agent
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          env:
+            - name: AOS_SPOKE_ID
+              value: {{ .Values.spoke.id | quote }}
+            - name: AOS_HUB
+              value: {{ .Values.spoke.hub | quote }}
+            - name: AOS_CHANNEL
+              value: {{ .Values.spoke.channel | quote }}
+            - name: AOS_OUTBOUND_POLL
+              value: {{ .Values.spoke.outboundPoll | quote }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
