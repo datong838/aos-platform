@@ -1,0 +1,43 @@
+{
+  "id": "xai-grok",
+  "name": "xAI Grok",
+  "nameZh": "xAI Grok",
+  "description": "Grok 系列",
+  "tier": "high",
+  "modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "llm",
+    "chat"
+  ],
+  "formFamily": "openai_compatible",
+  "defaultModels": [
+    "grok-2"
+  ],
+  "litellmPrefix": "xai/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "grok-2"
+        ]
+      },
+      "baseUrl": {
+        "type": "string",
+        "default": "https://api.x.ai/v1"
+      }
+    }
+  }
+}

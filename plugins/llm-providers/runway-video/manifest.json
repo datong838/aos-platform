@@ -1,0 +1,42 @@
+{
+  "id": "runway-video",
+  "name": "Runway",
+  "nameZh": "Runway 视频",
+  "description": "Gen-3 视频生成",
+  "tier": "high",
+  "modalities": [
+    "video"
+  ],
+  "capabilities": [
+    "video"
+  ],
+  "formFamily": "video",
+  "defaultModels": [
+    "gen3a_turbo"
+  ],
+  "litellmPrefix": "",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "gen3a_turbo"
+        ]
+      },
+      "baseUrl": {
+        "type": "string",
+        "default": "https://api.dev.runwayml.com"
+      }
+    }
+  }
+}

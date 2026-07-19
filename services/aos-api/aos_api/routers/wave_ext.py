@@ -45,6 +45,17 @@ def demo_run_story(principal: Principal = Depends(require_principal)):
     return run_writeback_story(principal)
 
 
+@router.post("/v1/demo/run-analytics-story")
+def demo_run_analytics_story(principal: Principal = Depends(require_principal)):
+    """TA.7 · Demo one-shot: analytics read → Draft → approve → lineage.
+
+    Includes approve only inside this demo story; product /analytics stays propose-only.
+    """
+    from aos_api.demo_story import run_analytics_story
+
+    return run_analytics_story(principal)
+
+
 @router.get("/v1/demo/governance")
 def demo_governance(principal: Principal = Depends(require_principal)):
     """TB.7 · Field redaction contrast + Marking FORBIDDEN + latest lineage."""
@@ -72,7 +83,6 @@ _tools: list[dict[str, Any]] = [
 ]
 _capabilities: dict[str, dict[str, Any]] = {}
 _jobs: dict[str, dict[str, Any]] = {}
-_webhooks: list[dict[str, Any]] = []
 _media: dict[str, dict[str, Any]] = {}
 _media_bytes: dict[str, bytes] = {}
 _connectors: dict[str, dict[str, Any]] = {}
@@ -219,20 +229,42 @@ class SyncIn(BaseModel):
     id: str | None = None
 
 
-# —— T3.5 webhook ——
+# —— T3.5 / 101 webhook（持久化）——
 @router.post("/v1/actions/webhooks")
 def register_webhook(body: WebhookIn, principal: Principal = Depends(require_principal)):
     _ = principal
-    item = {"id": f"wh-{uuid.uuid4().hex[:8]}", **body.model_dump(), "status": "registered"}
-    _webhooks.append(item)
-    log.info("webhook_registered id=%s", item["id"])
-    return item
+    from aos_api.channel_runtime import register_webhook as persist_webhook
+
+    return persist_webhook(url=body.url, event=body.event)
 
 
 @router.get("/v1/actions/webhooks")
 def list_webhooks(principal: Principal = Depends(require_principal)):
     _ = principal
-    return {"items": _webhooks}
+    from aos_api.channel_runtime import list_webhooks as load_webhooks
+
+    return {"items": load_webhooks()}
+
+
+@router.post("/v1/channels/{plugin_id}/send")
+def channel_send(
+    plugin_id: str,
+    body: dict[str, Any] | None = None,
+    principal: Principal = Depends(require_principal),
+):
+    """101 · 通知通道投递（按已安装插件分发）。"""
+    _ = principal
+    from aos_api.channel_runtime import dispatch_send
+
+    return dispatch_send(plugin_id, body or {})
+
+
+@router.get("/v1/channels/{plugin_id}/health")
+def channel_health_api(plugin_id: str, principal: Principal = Depends(require_principal)):
+    _ = principal
+    from aos_api.channel_runtime import channel_health
+
+    return channel_health(plugin_id)
 
 
 # —— T3.6 Function runtime with timeout kill ——
@@ -294,21 +326,82 @@ def invoke_tool_endpoint(
 # —— T3.8 统一插件目录 ——
 @router.get("/v1/plugins")
 def list_plugins_catalog(principal: Principal = Depends(require_principal)):
-    """Aggregate tools + parsers + sources + capabilities (T3.8 facade)."""
+    """Aggregate tools + parsers + sources + capabilities + llm providers (T3.8 / 83)."""
     _ = principal
     from aos_api.file_parsers import list_plugins as list_parsers
+    from aos_api.llm_provider_registry import list_llm_provider_plugins
+    from aos_api.connector_registry import list_connector_plugins
+    from aos_api.parser_registry import list_parser_plugins
+    from aos_api.widget_registry import list_widget_plugins
+    from aos_api.channel_registry import list_channel_plugins
+    from aos_api.embedding_registry import list_embedding_plugins
+    from aos_api.action_template_registry import list_action_plugins
 
     items: list[dict[str, Any]] = []
     for t in _tools:
         items.append({"id": t["id"], "kind": "tool", "subKind": t.get("kind"), "status": "ready"})
-    for p in list_parsers():
+    for p in list_parser_plugins().get("items") or []:
         items.append(
             {
-                "id": p["id"],
+                "id": f"parser.{p['id']}",
                 "kind": "parser",
                 "formats": p.get("formats"),
-                "status": "ready",
-                "note": p.get("note"),
+                "status": "installed" if p.get("installed") else "catalog",
+                "runtime": p.get("runtime"),
+                "note": p.get("description"),
+            }
+        )
+    for cp in list_connector_plugins().get("items") or []:
+        items.append(
+            {
+                "id": f"connector.{cp['id']}",
+                "kind": "connector",
+                "subKind": cp.get("kind"),
+                "name": cp.get("nameZh") or cp.get("name"),
+                "status": "installed" if cp.get("installed") else "catalog",
+                "runtime": cp.get("runtime"),
+            }
+        )
+    for wp in list_widget_plugins().get("items") or []:
+        items.append(
+            {
+                "id": f"widget.{wp['id']}",
+                "kind": "widget",
+                "name": wp.get("nameZh") or wp.get("name"),
+                "status": "installed" if wp.get("installed") else "catalog",
+                "runtime": wp.get("runtime"),
+                "canvasKind": wp.get("canvasKind"),
+            }
+        )
+    for ch in list_channel_plugins().get("items") or []:
+        items.append(
+            {
+                "id": f"channel.{ch['id']}",
+                "kind": "channel",
+                "name": ch.get("nameZh") or ch.get("name"),
+                "status": "installed" if ch.get("installed") else "catalog",
+                "runtime": ch.get("runtime"),
+            }
+        )
+    for em in list_embedding_plugins().get("items") or []:
+        items.append(
+            {
+                "id": f"embedding.{em['id']}",
+                "kind": "embedding",
+                "name": em.get("nameZh") or em.get("name"),
+                "status": "installed" if em.get("installed") else "catalog",
+                "runtime": em.get("runtime"),
+            }
+        )
+    for ap in list_action_plugins().get("items") or []:
+        items.append(
+            {
+                "id": f"action.{ap['id']}",
+                "kind": "action-template",
+                "name": ap.get("nameZh") or ap.get("name"),
+                "actionTypeId": ap.get("actionTypeId"),
+                "status": "installed" if ap.get("installed") else "catalog",
+                "runtime": ap.get("runtime"),
             }
         )
     for s in _connectors.values():
@@ -317,6 +410,18 @@ def list_plugins_catalog(principal: Principal = Depends(require_principal)):
         )
     for c in _capabilities.values():
         items.append({"id": c["id"], "kind": "capability", "subKind": c.get("kind"), "status": "registered"})
+    for lp in list_llm_provider_plugins().get("items") or []:
+        items.append(
+            {
+                "id": f"llm.{lp['id']}",
+                "kind": "llm-provider",
+                "subKind": lp.get("formFamily"),
+                "name": lp.get("nameZh") or lp.get("name"),
+                "status": "installed" if lp.get("installed") else "catalog",
+                "tier": lp.get("tier"),
+                "modalities": lp.get("modalities"),
+            }
+        )
     log.info("plugins_catalog count=%s", len(items))
     return {"items": items, "totals": {"all": len(items)}}
 
@@ -336,6 +441,162 @@ def list_models(principal: Principal = Depends(require_principal)):
     from aos_api.llm_gateway import models_payload
 
     return models_payload()
+
+
+@router.get("/v1/aip/gateway-default")
+def get_gateway_default_route(principal: Principal = Depends(require_principal)):
+    """85 · 平台默认网关（运行态 + 无 model 的 chat）。"""
+    _ = principal
+    from aos_api.gateway_default import gateway_default_payload
+
+    return gateway_default_payload()
+
+
+@router.put("/v1/aip/gateway-default")
+def put_gateway_default_route(
+    body: dict[str, Any],
+    principal: Principal = Depends(require_principal),
+):
+    _ = principal
+    from aos_api.gateway_default import gateway_default_payload, put_gateway_default
+
+    put_gateway_default(body or {})
+    return gateway_default_payload()
+
+
+@router.get("/v1/aip/model-routes")
+def get_model_routes(principal: Principal = Depends(require_principal)):
+    """81 · 任务类型 → 首选/回退/出境（可编辑持久化）。"""
+    _ = principal
+    from aos_api.aip_kv_store import get_model_routes as load_routes
+    from aos_api.llm_gateway import models_payload
+
+    model_ids = [str(m.get("id") or "") for m in (models_payload().get("items") or []) if m.get("id")]
+    return {"items": load_routes(model_ids)}
+
+
+@router.put("/v1/aip/model-routes")
+def put_model_routes(
+    body: dict[str, Any],
+    principal: Principal = Depends(require_principal),
+):
+    _ = principal
+    from aos_api.aip_kv_store import put_model_routes as save_routes
+
+    items = body.get("items")
+    if not isinstance(items, list):
+        raise ApiError(code="VALIDATION", message="items must be a list", status_code=400)
+    return {"items": save_routes(items)}
+
+
+@router.post("/v1/aip/model-routes/circuit-drill")
+def model_routes_circuit_drill(
+    body: dict[str, Any] | None = None,
+    principal: Principal = Depends(require_principal),
+):
+    _ = principal
+    from aos_api.aip_kv_store import circuit_drill, get_model_routes as load_routes
+
+    items = (body or {}).get("items")
+    if not isinstance(items, list):
+        items = load_routes()
+    return circuit_drill(items)
+
+
+@router.get("/v1/aip/tools/config")
+def get_tools_config(principal: Principal = Depends(require_principal)):
+    _ = principal
+    from aos_api.aip_kv_store import get_tools_config as load_cfg
+
+    return load_cfg()
+
+
+@router.put("/v1/aip/tools/config")
+def put_tools_config(
+    body: dict[str, Any],
+    principal: Principal = Depends(require_principal),
+):
+    _ = principal
+    from aos_api.aip_kv_store import put_tools_config as save_cfg
+
+    return save_cfg(body or {})
+
+
+@router.get("/v1/aip/llm-provider-plugins")
+def list_llm_provider_plugins(principal: Principal = Depends(require_principal)):
+    """83 · 对齐 20 §3.1 · LLM Provider 插件目录。"""
+    _ = principal
+    from aos_api.llm_provider_registry import list_llm_provider_plugins as load
+
+    return load()
+
+
+@router.post("/v1/aip/llm-provider-plugins/{plugin_id}/install")
+def install_llm_provider_plugin(
+    plugin_id: str,
+    principal: Principal = Depends(require_principal),
+):
+    _ = principal
+    from aos_api.llm_provider_registry import install_plugin
+
+    return install_plugin(plugin_id)
+
+
+@router.post("/v1/aip/llm-provider-plugins/{plugin_id}/uninstall")
+def uninstall_llm_provider_plugin(
+    plugin_id: str,
+    principal: Principal = Depends(require_principal),
+):
+    _ = principal
+    from aos_api.llm_provider_registry import uninstall_plugin
+
+    return uninstall_plugin(plugin_id)
+
+
+@router.put("/v1/aip/llm-provider-plugins/custom")
+def publish_custom_llm_provider_plugin(
+    body: dict[str, Any],
+    principal: Principal = Depends(require_principal),
+):
+    _ = principal
+    from aos_api.llm_provider_registry import publish_custom_plugin
+
+    return publish_custom_plugin(body or {})
+
+
+@router.put("/v1/aip/llm-provider-plugins/{plugin_id}/config")
+def put_llm_provider_plugin_config(
+    plugin_id: str,
+    body: dict[str, Any],
+    principal: Principal = Depends(require_principal),
+):
+    """84 · 保存配置并可选标就绪（进入可路由模型目录）。"""
+    _ = principal
+    from aos_api.llm_provider_registry import put_plugin_config
+
+    return put_plugin_config(plugin_id, body or {})
+
+
+@router.post("/v1/aip/llm-provider-plugins/{plugin_id}/enable")
+def enable_llm_provider_plugin(
+    plugin_id: str,
+    principal: Principal = Depends(require_principal),
+):
+    _ = principal
+    from aos_api.llm_provider_registry import enable_plugin
+
+    return enable_plugin(plugin_id)
+
+
+@router.post("/v1/aip/llm-provider-plugins/{plugin_id}/disable")
+def disable_llm_provider_plugin(
+    plugin_id: str,
+    principal: Principal = Depends(require_principal),
+):
+    _ = principal
+    from aos_api.llm_provider_registry import disable_plugin
+
+    return disable_plugin(plugin_id)
 
 
 @router.post("/v1/aip/chat")
@@ -359,6 +620,7 @@ def aip_chat(
 
         result = llm_chat(
             q,
+            model=str(body.get("model") or "").strip() or None,
             with_tools=with_tools,
             tools=list(tools_used) if isinstance(tools_used, list) else None,
         )
@@ -572,11 +834,194 @@ def job_status_scoped(
 
 
 # —— Wave-4 L1 minimal ——
+@router.get("/v1/connector-plugins")
+def list_connector_plugins_api(principal: Principal = Depends(require_principal)):
+    """97 · Connector 插件目录 · 对齐 20 §3.1。"""
+    _ = principal
+    from aos_api.connector_registry import list_connector_plugins
+
+    return list_connector_plugins()
+
+
+@router.post("/v1/connector-plugins/{plugin_id}/install")
+def install_connector_plugin(plugin_id: str, principal: Principal = Depends(require_principal)):
+    _ = principal
+    from aos_api.connector_registry import install_plugin
+
+    try:
+        return install_plugin(plugin_id)
+    except KeyError:
+        raise ApiError(code="NOT_FOUND", message="connector plugin not found", status_code=404) from None
+    except ValueError as exc:
+        raise ApiError(code="VALIDATION", message=str(exc), status_code=400) from None
+
+
+@router.post("/v1/connector-plugins/{plugin_id}/uninstall")
+def uninstall_connector_plugin(plugin_id: str, principal: Principal = Depends(require_principal)):
+    _ = principal
+    from aos_api.connector_registry import uninstall_plugin
+
+    try:
+        return uninstall_plugin(plugin_id)
+    except PermissionError as exc:
+        raise ApiError(code="FORBIDDEN", message=str(exc), status_code=403) from None
+
+
+def _plugin_install_route(install_fn, plugin_id: str):
+    try:
+        return install_fn(plugin_id)
+    except KeyError:
+        raise ApiError(code="NOT_FOUND", message="plugin not found", status_code=404) from None
+    except ValueError as exc:
+        raise ApiError(code="VALIDATION", message=str(exc), status_code=400) from None
+
+
+def _plugin_uninstall_route(uninstall_fn, plugin_id: str):
+    try:
+        return uninstall_fn(plugin_id)
+    except PermissionError as exc:
+        raise ApiError(code="FORBIDDEN", message=str(exc), status_code=403) from None
+
+
+@router.get("/v1/parser-plugins")
+def list_parser_plugins_api(principal: Principal = Depends(require_principal)):
+    _ = principal
+    from aos_api.parser_registry import list_parser_plugins
+
+    return list_parser_plugins()
+
+
+@router.post("/v1/parser-plugins/{plugin_id}/install")
+def install_parser_plugin(plugin_id: str, principal: Principal = Depends(require_principal)):
+    _ = principal
+    from aos_api.parser_registry import install_plugin
+
+    return _plugin_install_route(install_plugin, plugin_id)
+
+
+@router.get("/v1/widget-plugins")
+def list_widget_plugins_api(principal: Principal = Depends(require_principal)):
+    _ = principal
+    from aos_api.widget_registry import list_widget_plugins, palette_items
+
+    body = list_widget_plugins()
+    body["palette"] = palette_items()
+    return body
+
+
+@router.post("/v1/widget-plugins/{plugin_id}/install")
+def install_widget_plugin(plugin_id: str, principal: Principal = Depends(require_principal)):
+    _ = principal
+    from aos_api.widget_registry import install_plugin
+
+    return _plugin_install_route(install_plugin, plugin_id)
+
+
+@router.get("/v1/channel-plugins")
+def list_channel_plugins_api(principal: Principal = Depends(require_principal)):
+    _ = principal
+    from aos_api.channel_registry import list_channel_plugins
+
+    return list_channel_plugins()
+
+
+@router.post("/v1/channel-plugins/{plugin_id}/install")
+def install_channel_plugin(plugin_id: str, principal: Principal = Depends(require_principal)):
+    _ = principal
+    from aos_api.channel_registry import install_plugin
+
+    return _plugin_install_route(install_plugin, plugin_id)
+
+
+@router.get("/v1/embedding-plugins")
+def list_embedding_plugins_api(principal: Principal = Depends(require_principal)):
+    _ = principal
+    from aos_api.embedding_registry import list_embedding_plugins
+
+    return list_embedding_plugins()
+
+
+@router.post("/v1/embedding-plugins/{plugin_id}/install")
+def install_embedding_plugin(plugin_id: str, principal: Principal = Depends(require_principal)):
+    _ = principal
+    from aos_api.embedding_registry import install_plugin
+
+    return _plugin_install_route(install_plugin, plugin_id)
+
+
+@router.post("/v1/embeddings/{plugin_id}/embed")
+def embedding_embed(
+    plugin_id: str,
+    body: dict[str, Any] | None = None,
+    principal: Principal = Depends(require_principal),
+):
+    """103 · 向量化（按已安装 embedding 插件分发）。"""
+    _ = principal
+    from aos_api.embedding_runtime import dispatch_embed
+
+    return dispatch_embed(plugin_id, body or {})
+
+
+@router.post("/v1/embeddings/{plugin_id}/rerank")
+def embedding_rerank(
+    plugin_id: str,
+    body: dict[str, Any] | None = None,
+    principal: Principal = Depends(require_principal),
+):
+    """103 · 重排（按已安装 embedding 插件分发；无 Key 时 501）。"""
+    _ = principal
+    from aos_api.embedding_runtime import dispatch_rerank
+
+    return dispatch_rerank(plugin_id, body or {})
+
+
+@router.get("/v1/embeddings/{plugin_id}/health")
+def embedding_health_api(plugin_id: str, principal: Principal = Depends(require_principal)):
+    _ = principal
+    from aos_api.embedding_runtime import embedding_health
+
+    return embedding_health(plugin_id)
+
+
+@router.get("/v1/action-plugins")
+def list_action_plugins_api(principal: Principal = Depends(require_principal)):
+    """99 · Action 模板插件目录。"""
+    _ = principal
+    from aos_api.action_template_registry import list_action_plugins
+
+    return list_action_plugins()
+
+
+@router.post("/v1/action-plugins/{plugin_id}/install")
+def install_action_plugin(plugin_id: str, principal: Principal = Depends(require_principal)):
+    _ = principal
+    from aos_api.action_template_registry import install_plugin
+
+    return _plugin_install_route(install_plugin, plugin_id)
+
+
+@router.post("/v1/action-plugins/{plugin_id}/uninstall")
+def uninstall_action_plugin(plugin_id: str, principal: Principal = Depends(require_principal)):
+    _ = principal
+    from aos_api.action_template_registry import uninstall_plugin
+
+    return _plugin_uninstall_route(uninstall_plugin, plugin_id)
+
+
 @router.post("/v1/sources")
 def create_source(body: ConnectorIn, principal: Principal = Depends(require_principal)):
     _ = principal
-    _connectors[body.id] = {**body.model_dump(), "status": "registered"}
-    return _connectors[body.id]
+    from aos_api.connector_registry import assert_type_installed
+
+    try:
+        plugin_id = assert_type_installed(body.type)
+    except KeyError as exc:
+        raise ApiError(code="UNKNOWN_CONNECTOR", message=str(exc), status_code=400) from None
+    except PermissionError as exc:
+        raise ApiError(code="PLUGIN_NOT_INSTALLED", message=str(exc), status_code=400) from None
+    item = {**body.model_dump(), "type": plugin_id, "status": "registered", "pluginId": plugin_id}
+    _connectors[body.id] = item
+    return item
 
 
 @router.get("/v1/sources")
@@ -846,7 +1291,74 @@ def create_pipeline(body: PipelineIn, principal: Principal = Depends(require_pri
 @router.get("/v1/pipelines")
 def list_pipelines(principal: Principal = Depends(require_principal)):
     _ = principal
+    ensure_demo_data_seed()
     return {"items": list(_pipelines.values())}
+
+
+@router.post("/v1/pipelines/{pipeline_id}/embed")
+def pipeline_embed(
+    pipeline_id: str,
+    body: dict[str, Any] | None = None,
+    principal: Principal = Depends(require_principal),
+):
+    """104 · Pipeline → 本地向量索引（经 embedding 插件；无网关不写假向量）。"""
+    _ = principal
+    ensure_demo_data_seed()
+    from aos_api.vector_index import embed_pipeline
+
+    return embed_pipeline(pipeline_id, body or {}, pipelines=_pipelines)
+
+
+@router.post("/v1/aip/vector-index/upsert")
+def vector_index_upsert(body: dict[str, Any] | None = None, principal: Principal = Depends(require_principal)):
+    """104 · 直接写入本地向量集合。"""
+    _ = principal
+    from aos_api.vector_index import _normalize_documents, upsert
+
+    payload = body or {}
+    collection = str(payload.get("collection") or "").strip()
+    if not collection:
+        raise ApiError(code="VALIDATION", message="collection required", status_code=400)
+    docs = _normalize_documents(payload.get("documents"))
+    return upsert(
+        collection=collection,
+        documents=docs or None,
+        plugin_id=str(payload.get("pluginId") or "embed-openai-compatible"),
+        replace=bool(payload.get("replace", False)),
+        auto_sample=bool(payload.get("autoSample", False)),
+    )
+
+
+@router.post("/v1/aip/vector-index/search")
+def vector_index_search(body: dict[str, Any] | None = None, principal: Principal = Depends(require_principal)):
+    """104 · 本地余弦检索（query 亦走 embedding 插件）。"""
+    _ = principal
+    from aos_api.vector_index import search
+
+    payload = body or {}
+    return search(
+        collection=str(payload.get("collection") or "").strip(),
+        query=str(payload.get("query") or ""),
+        plugin_id=str(payload.get("pluginId") or "") or None,
+        top_k=int(payload.get("topK") or 5),
+    )
+
+
+@router.get("/v1/aip/vector-index/_backend")
+def vector_index_backend(principal: Principal = Depends(require_principal)):
+    """105 · 当前向量后端（local-kv | qdrant）。"""
+    _ = principal
+    from aos_api.vector_index import backend_info
+
+    return backend_info()
+
+
+@router.get("/v1/aip/vector-index/{collection}")
+def vector_index_get(collection: str, principal: Principal = Depends(require_principal)):
+    _ = principal
+    from aos_api.vector_index import collection_stats
+
+    return collection_stats(collection)
 
 
 @router.get("/v1/builds")
@@ -854,7 +1366,6 @@ def list_builds(principal: Principal = Depends(require_principal)):
     _ = principal
     builds = [p["lastBuild"] | {"pipelineId": pid} for pid, p in _pipelines.items()]
     return {"items": builds}
-
 
 @router.post("/v1/schedules")
 def create_schedule(body: dict[str, Any], principal: Principal = Depends(require_principal)):
@@ -936,9 +1447,21 @@ def retry_dlq(dlq_id: str, principal: Principal = Depends(require_principal)):
 
 @router.get("/v1/funnel/{object_type}/worker")
 def funnel_worker(object_type: str, principal: Principal = Depends(require_principal)):
+    """Prefer persisted funnel_status.detail.worker after rerun; else default snapshot."""
     _ = principal
+    from aos_api.db import connect
+
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT detail FROM funnel_status WHERE object_type=%s",
+            (object_type,),
+        ).fetchone()
+    detail = row["detail"] if row else None
+    if isinstance(detail, dict) and isinstance(detail.get("worker"), list) and detail["worker"]:
+        return {"objectType": object_type, "stages": detail["worker"], "source": "persisted"}
     return {
         "objectType": object_type,
+        "source": "default",
         "stages": [
             {"name": "Changelog", "progress": 1.0},
             {"name": "Merge", "progress": 1.0},
@@ -1112,50 +1635,69 @@ def session_open(body: dict[str, Any], principal: Principal = Depends(require_pr
     }
 
 
-# —— T4.6 MySQL (PyMySQL) + T4.7 minimal mapping ——
+# —— T4.6 / 100 · Connector Host 按插件分发（兼容旧 mysql 路径）——
 @router.post("/v1/connectors/mysql/probe")
 def mysql_probe(body: dict[str, Any], principal: Principal = Depends(require_principal)):
-    _ = principal
-    from aos_api.mysql_connector import probe
-
-    limit = int(body.get("limit") or 5)
-    return probe(limit=limit, object_type=str(body.get("objectType") or "WorkOrder"))
+    """兼容别名 → jdbc-mysql。"""
+    return connector_probe("jdbc-mysql", body, principal)
 
 
 @router.post("/v1/connectors/mysql/ingest")
 def mysql_ingest(body: dict[str, Any], principal: Principal = Depends(require_principal)):
-    _ = principal
-    from aos_api.mysql_connector import ingest
-
-    mapping = body.get("mapping")
-    if mapping is not None and not isinstance(mapping, dict):
-        raise ApiError(code="VALIDATION", message="mapping must be object", status_code=400)
-    return ingest(
-        object_type=str(body.get("objectType") or "WorkOrder"),
-        limit=int(body.get("limit") or 100),
-        mapping=mapping,
-    )
+    return connector_ingest("jdbc-mysql", body, principal)
 
 
 @router.get("/v1/connectors/mysql/health")
 def mysql_health(principal: Principal = Depends(require_principal)):
-    _ = principal
-    from aos_api.mysql_connector import probe
+    return connector_health("jdbc-mysql", principal)
 
-    r = probe(limit=1)
-    # never echo sample passwords
-    return {
-        "ok": r.get("ok"),
-        "mode": r.get("mode"),
-        "host": r.get("host"),
-        "port": r.get("port"),
-        "database": r.get("database"),
-        "table": r.get("table"),
-        "rowsSampled": r.get("rowsSampled"),
-        "passwordRef": r.get("passwordRef"),
-        "driver": r.get("driver"),
-        "detail": r.get("detail"),
-    }
+
+@router.get("/v1/connectors/{plugin_id}/health")
+def connector_health(plugin_id: str, principal: Principal = Depends(require_principal)):
+    _ = principal
+    from aos_api.connector_runtime import dispatch
+
+    return dispatch(plugin_id, "health")
+
+
+@router.post("/v1/connectors/{plugin_id}/probe")
+def connector_probe(
+    plugin_id: str,
+    body: dict[str, Any] | None = None,
+    principal: Principal = Depends(require_principal),
+):
+    _ = principal
+    from aos_api.connector_runtime import dispatch
+
+    body = body or {}
+    return dispatch(
+        plugin_id,
+        "probe",
+        limit=int(body.get("limit") or 5),
+        object_type=str(body.get("objectType") or "WorkOrder"),
+    )
+
+
+@router.post("/v1/connectors/{plugin_id}/ingest")
+def connector_ingest(
+    plugin_id: str,
+    body: dict[str, Any] | None = None,
+    principal: Principal = Depends(require_principal),
+):
+    _ = principal
+    from aos_api.connector_runtime import dispatch
+
+    body = body or {}
+    mapping = body.get("mapping")
+    if mapping is not None and not isinstance(mapping, dict):
+        raise ApiError(code="VALIDATION", message="mapping must be object", status_code=400)
+    return dispatch(
+        plugin_id,
+        "ingest",
+        object_type=str(body.get("objectType") or "WorkOrder"),
+        limit=int(body.get("limit") or 100),
+        mapping=mapping,
+    )
 
 
 @router.post("/v1/docintel/ocr")

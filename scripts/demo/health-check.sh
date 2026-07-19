@@ -51,6 +51,7 @@ if [ "$INFRA_ONLY" = 0 ]; then
   http_test "aos-api /v1/health" "http://127.0.0.1:8080/v1/health" 1 || true
   http_test "LiteLLM :4001" "http://127.0.0.1:4001/health/liveliness" 0 || true
   http_test "OCR :8082" "http://127.0.0.1:8082/health" 0 || true
+  http_test "Analytics :8084" "http://127.0.0.1:8084/health" 0 || true
   if [ "$REQUIRE_WEB" = 1 ]; then
     http_test "web :5173" "http://127.0.0.1:5173/" 1 || true
   else

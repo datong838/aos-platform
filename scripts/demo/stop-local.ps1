@@ -39,7 +39,7 @@ if ($AlsoInfra) {
   Set-Location $Root
   Write-Host "docker compose stop core..."
   docker compose -f deploy/dev/docker-compose.yml stop `
-    aos-dev-pg aos-dev-minio aos-dev-mysql aos-dev-llm-echo aos-dev-litellm aos-dev-ocr 2>$null
+    aos-dev-pg aos-dev-minio aos-dev-mysql aos-dev-llm-echo aos-dev-litellm aos-dev-ocr aos-dev-analytics 2>$null
 }
 
 Write-Host "DONE"

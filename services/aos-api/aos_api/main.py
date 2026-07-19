@@ -13,6 +13,7 @@ from aos_api.logging_facade import configure_logging, get_logger
 from aos_api.middleware import TraceLogMiddleware
 from aos_api.routers import (
     actions,
+    analytics,
     auth_oidc,
     authz,
     buddy,
@@ -80,6 +81,7 @@ def create_app() -> FastAPI:
     application.include_router(actions.router)
     application.include_router(drafts.router)
     application.include_router(runtime_write.router)
+    application.include_router(analytics.router)
     application.include_router(wave_ext.router)
     log.info("aos-api_app_created version=%s", application.version)
     return application

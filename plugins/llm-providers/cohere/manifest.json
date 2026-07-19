@@ -1,0 +1,43 @@
+{
+  "id": "cohere",
+  "name": "Cohere",
+  "nameZh": "Cohere",
+  "description": "Command 系列",
+  "tier": "mid",
+  "modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "llm",
+    "chat"
+  ],
+  "formFamily": "openai_compatible",
+  "defaultModels": [
+    "command-r-plus"
+  ],
+  "litellmPrefix": "cohere/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "command-r-plus"
+        ]
+      },
+      "baseUrl": {
+        "type": "string",
+        "default": "https://api.cohere.ai"
+      }
+    }
+  }
+}

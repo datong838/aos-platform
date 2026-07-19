@@ -108,6 +108,24 @@ def check_run_capability():
         raise ValueError("parser extract failed")
 
 
+def check_run_analytics_story():
+    a = req("POST", "/v1/demo/run-analytics-story", {})
+    if not a.get("ok"):
+        raise ValueError("analytics story not ok")
+    if not a.get("productionWritten"):
+        raise ValueError("not written")
+    if not a.get("draftId"):
+        raise ValueError("no draftId")
+    if not a.get("lineageId"):
+        raise ValueError("no lineageId")
+    if int((a.get("read") or {}).get("total") or 0) < 1:
+        raise ValueError("read.total < 1")
+    if (a.get("before") or {}).get("status") == (a.get("after") or {}).get("status"):
+        raise ValueError("status unchanged")
+    if not (a.get("exportProbePublic") or {}).get("expected"):
+        raise ValueError("export probe should expect FORBIDDEN")
+
+
 print("=== TB demo smoke ===")
 
 ok("health", lambda: req("GET", "/v1/health"))
@@ -124,6 +142,7 @@ ok("buddy", lambda: req("POST", "/v1/buddy/ask", {
 }))
 ok("governance", check_governance)
 ok("run-capability", check_run_capability)
+ok("run-analytics-story", check_run_analytics_story)
 ok("modules", lambda: req("GET", "/v1/modules"))
 
 print()

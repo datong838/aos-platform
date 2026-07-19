@@ -40,3 +40,58 @@ def test_publish_gate_requires_properties(client, auth_headers):
     )
     assert r.status_code == 422
     assert r.json()["code"] == "BACKING_NOT_UNIQUE"
+
+
+def test_put_object_type_properties(client, auth_headers):
+    created = client.post(
+        "/v1/ontology/object-types",
+        headers=auth_headers,
+        json={
+            "id": "Ot95Edit",
+            "name": "OT95",
+            "description": "before",
+            "publish": False,
+            "properties": [{"name": "id", "type": "string"}],
+        },
+    )
+    assert created.status_code == 200
+    put = client.put(
+        "/v1/ontology/object-types/Ot95Edit",
+        headers=auth_headers,
+        json={
+            "name": "OT95 updated",
+            "description": "after",
+            "properties": [
+                {"name": "id", "type": "string"},
+                {"name": "title", "type": "string"},
+            ],
+            "publish": False,
+        },
+    )
+    assert put.status_code == 200
+    assert put.json()["name"] == "OT95 updated"
+    assert len(put.json()["properties"]) == 2
+    got = client.get("/v1/ontology/object-types/Ot95Edit", headers=auth_headers)
+    assert got.status_code == 200
+    assert got.json()["description"] == "after"
+    assert any(p["name"] == "title" for p in got.json()["properties"])
+
+
+def test_put_object_type_publish_empty_props_422(client, auth_headers):
+    client.post(
+        "/v1/ontology/object-types",
+        headers=auth_headers,
+        json={
+            "id": "Ot95Empty",
+            "name": "empty",
+            "publish": False,
+            "properties": [{"name": "id", "type": "string"}],
+        },
+    )
+    r = client.put(
+        "/v1/ontology/object-types/Ot95Empty",
+        headers=auth_headers,
+        json={"name": "empty", "description": "", "properties": [], "publish": True},
+    )
+    assert r.status_code == 422
+    assert r.json()["code"] == "BACKING_NOT_UNIQUE"

@@ -98,7 +98,7 @@ export function StudioPage() {
         <Link to="/aip/tools" className="btn" style={{ textDecoration: "none", fontSize: "0.75rem" }}>
           工具面板
         </Link>
-        <Link to="/aip/evals" className="muted" style={{ fontSize: "0.75rem" }}>
+        <Link to="/aip/evals" className="btn-nav">
           Evals
         </Link>
       </BpToolbar>

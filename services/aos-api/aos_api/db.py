@@ -61,12 +61,34 @@ CREATE TABLE IF NOT EXISTS wiki_page (
   PRIMARY KEY (object_type, object_id)
 );
 
+CREATE TABLE IF NOT EXISTS wiki_page_version (
+  id BIGSERIAL PRIMARY KEY,
+  object_type TEXT NOT NULL,
+  object_id TEXT NOT NULL,
+  body JSONB NOT NULL DEFAULT '{}'::jsonb,
+  draft_id TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_wiki_page_version_obj
+  ON wiki_page_version (object_type, object_id, id DESC);
+
 CREATE TABLE IF NOT EXISTS meta_branch (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   base_ref TEXT NOT NULL DEFAULT 'main',
   readonly BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS obj_branch_overlay (
+  branch_id TEXT NOT NULL REFERENCES meta_branch(id) ON DELETE CASCADE,
+  object_type TEXT NOT NULL,
+  object_id TEXT NOT NULL,
+  props JSONB NOT NULL DEFAULT '{}'::jsonb,
+  op TEXT NOT NULL DEFAULT 'upsert',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (branch_id, object_type, object_id)
 );
 
 CREATE TABLE IF NOT EXISTS meta_link_type (
@@ -109,8 +131,28 @@ def init_schema() -> None:
             """
         )
         from aos_api.apollo_catalog import ensure_schema as ensure_apollo_schema
+        from aos_api.branch_store import ensure_overlay_table
 
         ensure_apollo_schema(conn)
+        ensure_overlay_table(conn)
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS wiki_page_version (
+              id BIGSERIAL PRIMARY KEY,
+              object_type TEXT NOT NULL,
+              object_id TEXT NOT NULL,
+              body JSONB NOT NULL DEFAULT '{}'::jsonb,
+              draft_id TEXT,
+              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_wiki_page_version_obj
+              ON wiki_page_version (object_type, object_id, id DESC)
+            """
+        )
         conn.commit()
     log.info("db_schema_ready")
 

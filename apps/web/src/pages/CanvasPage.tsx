@@ -2,19 +2,38 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiGet, apiPatch, apiPost } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
-import { BpLinkRow, BpToolbar } from "./s2/blueprintUi";
+import { BpBanner, BpLinkRow, BpToolbar } from "./s2/blueprintUi";
+import { ActionFormWidget, GraphViewWidget, MetricCardWidget, resolveRenderKind } from "./canvasWidgets";
+
+export type CanvasKind = "table" | "filter" | "buddy" | "overlay" | "stub" | "action" | "graph" | "metric";
 
 export type CanvasNode = {
   id: string;
-  kind: "table" | "filter" | "buddy" | "overlay";
+  kind: CanvasKind;
   title: string;
-  config?: { site?: string; objectType?: string };
+  pluginId?: string;
+  config?: { site?: string; objectType?: string; objectId?: string; actionTypeId?: string; groupBy?: string };
+};
+
+type PaletteItem = {
+  kind: CanvasKind;
+  label: string;
+  tone?: "violet";
+  pluginId?: string;
+  runtime?: string;
+  stub?: boolean;
 };
 
 const DEFAULT_LAYOUT: CanvasNode[] = [
-  { id: "n-filter", kind: "filter", title: "Filter · site", config: { site: "DC-East" } },
-  { id: "n-table", kind: "table", title: "Object Table · WorkOrder", config: { objectType: "WorkOrder" } },
-  { id: "n-buddy", kind: "buddy", title: "Buddy Chip" },
+  { id: "n-filter", kind: "filter", title: "Filter · site", pluginId: "filter-list", config: { site: "DC-East" } },
+  {
+    id: "n-table",
+    kind: "table",
+    title: "Object Table · WorkOrder",
+    pluginId: "object-table",
+    config: { objectType: "WorkOrder" },
+  },
+  { id: "n-buddy", kind: "buddy", title: "Buddy Chip", pluginId: "buddy-chip" },
 ];
 
 type ModuleRow = {
@@ -33,54 +52,134 @@ type Row = {
   site?: string;
 };
 
+const KIND_SET = new Set<CanvasKind>(["table", "filter", "buddy", "overlay", "stub", "action", "graph", "metric"]);
+
 export function normalizeLayout(widgets: unknown): CanvasNode[] {
   if (!Array.isArray(widgets) || widgets.length === 0) return structuredClone(DEFAULT_LAYOUT);
   if (typeof widgets[0] === "string") {
     return (widgets as string[]).map((w, i) => {
       const lower = w.toLowerCase();
-      const kind: CanvasNode["kind"] = lower.includes("filter")
+      const kind: CanvasKind = lower.includes("filter")
         ? "filter"
         : lower.includes("buddy") || lower.includes("chat")
           ? "buddy"
-          : lower.includes("overlay")
-            ? "overlay"
-            : "table";
+          : lower.includes("action")
+            ? "action"
+            : lower.includes("graph")
+              ? "graph"
+              : lower.includes("metric")
+                ? "metric"
+                : lower.includes("overlay") || (lower.includes("view") && !lower.includes("graph"))
+                  ? "overlay"
+                  : lower.includes("stub")
+                    ? "stub"
+                    : "table";
       return {
         id: `n-${i}-${kind}`,
         kind,
         title: w,
+        pluginId:
+          kind === "action"
+            ? "action-form"
+            : kind === "graph"
+              ? "graph-view"
+              : kind === "metric"
+                ? "metric-card"
+                : undefined,
         config:
           kind === "filter"
             ? { site: "DC-East" }
             : kind === "table"
               ? { objectType: "WorkOrder" }
-              : undefined,
+              : kind === "action"
+                ? { actionTypeId: "CloseWorkOrder" }
+                : kind === "graph"
+                  ? { objectType: "WorkOrder", objectId: "wo-1001" }
+                  : kind === "metric"
+                    ? { objectType: "WorkOrder", groupBy: "status" }
+                    : undefined,
       };
     });
   }
-  return (widgets as CanvasNode[]).map((n, i) => ({
-    id: n.id || `n-${i}`,
-    kind: n.kind || "table",
-    title: n.title || n.kind || `node-${i}`,
-    config: n.config,
-  }));
+  return (widgets as CanvasNode[]).map((n, i) => {
+    const rawKind = (KIND_SET.has(n.kind as CanvasKind) ? n.kind : "table") as CanvasKind;
+    const kind = resolveRenderKind({ kind: rawKind, pluginId: n.pluginId }) as CanvasKind;
+    return {
+      id: n.id || `n-${i}`,
+      kind,
+      title: n.title || n.kind || `node-${i}`,
+      pluginId: n.pluginId,
+      config: n.config,
+    };
+  });
 }
 
-const WIDGET_PALETTE: { kind: CanvasNode["kind"]; label: string; tone?: "violet" }[] = [
-  { kind: "filter", label: "+ Filter List" },
-  { kind: "table", label: "+ Object Table" },
-  { kind: "buddy", label: "+ Buddy Chip" },
-  { kind: "overlay", label: "+ Object View · Wiki", tone: "violet" },
+const FALLBACK_PALETTE: PaletteItem[] = [
+  { kind: "filter", label: "+ Filter List", pluginId: "filter-list" },
+  { kind: "table", label: "+ Object Table", pluginId: "object-table" },
+  { kind: "buddy", label: "+ Buddy Chip", pluginId: "buddy-chip" },
+  { kind: "overlay", label: "+ Object View · Wiki", tone: "violet", pluginId: "object-view" },
 ];
 
-function sectionLabel(kind: CanvasNode["kind"]): string {
+function sectionLabel(kind: CanvasKind): string {
   if (kind === "filter") return "筛选";
   if (kind === "table") return "主表";
   if (kind === "buddy") return "Buddy";
+  if (kind === "action") return "Action 表单";
+  if (kind === "graph") return "关系图";
+  if (kind === "metric") return "指标卡";
+  if (kind === "stub") return "Stub 插件";
   return "Overlay 详情";
 }
 
-function WidgetPreview({ node }: { node: CanvasNode }) {
+function WidgetPreview({
+  node,
+  rows,
+  onConfig,
+}: {
+  node: CanvasNode;
+  rows: Row[];
+  onConfig?: (patch: Partial<NonNullable<CanvasNode["config"]>>) => void;
+}) {
+  const renderKind = resolveRenderKind(node) as CanvasKind;
+  if (renderKind === "action") {
+    return (
+      <ActionFormWidget
+        node={node}
+        onConfig={onConfig ? (p) => onConfig(p) : undefined}
+      />
+    );
+  }
+  if (renderKind === "graph") {
+    const fallbackId = String(rows[0]?.id || rows[0]?.objectId || "wo-1001");
+    return (
+      <GraphViewWidget
+        node={node}
+        fallbackObjectId={fallbackId}
+        onConfig={onConfig ? (p) => onConfig(p) : undefined}
+      />
+    );
+  }
+  if (renderKind === "metric") {
+    return (
+      <MetricCardWidget
+        node={node}
+        onConfig={onConfig ? (p) => onConfig(p) : undefined}
+      />
+    );
+  }
+  if (renderKind === "stub") {
+    return (
+      <div className="bp-canvas-widget">
+        <BpBanner tone="warn">
+          <strong>{node.title || node.pluginId || "Widget"}</strong>
+          <p className="muted" style={{ margin: "0.35rem 0 0", fontSize: "0.8rem" }}>
+            runtime=stub · pluginId={node.pluginId || "—"} · 尚未实现真渲染
+          </p>
+        </BpBanner>
+      </div>
+    );
+  }
   if (node.kind === "filter") {
     return (
       <div className="bp-canvas-widget">
@@ -90,6 +189,7 @@ function WidgetPreview({ node }: { node: CanvasNode }) {
     );
   }
   if (node.kind === "table") {
+    const previewRows = rows.slice(0, 3);
     return (
       <div className="bp-canvas-widget bp-canvas-widget-table">
         <div className="bp-canvas-widget-row bp-canvas-widget-head">
@@ -97,16 +197,26 @@ function WidgetPreview({ node }: { node: CanvasNode }) {
           <span>title</span>
           <span>status</span>
         </div>
-        <div className="bp-canvas-widget-row muted">
-          <span>wo-1001</span>
-          <span>泵房巡检</span>
-          <span>open</span>
-        </div>
-        <div className="bp-canvas-widget-row muted">
-          <span>wo-1002</span>
-          <span>…</span>
-          <span>…</span>
-        </div>
+        {previewRows.length === 0 ? (
+          <div className="bp-canvas-widget-row muted">
+            <span>—</span>
+            <span>无预览行 · 刷新 Object Table</span>
+            <span>—</span>
+          </div>
+        ) : (
+          previewRows.map((row, i) => {
+            const id = String(row.id || row.objectId || `row-${i}`);
+            const title = String(row.title || (row.props?.title as string) || "—");
+            const status = String(row.status || (row.props?.status as string) || "—");
+            return (
+              <div key={id} className="bp-canvas-widget-row muted">
+                <span>{id}</span>
+                <span>{title}</span>
+                <span>{status}</span>
+              </div>
+            );
+          })
+        )}
       </div>
     );
   }
@@ -138,6 +248,8 @@ export function CanvasPage() {
   const [previewOn, setPreviewOn] = useState(true);
   const [dirty, setDirty] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [palette, setPalette] = useState(FALLBACK_PALETTE);
+  const [paletteNote, setPaletteNote] = useState<string | null>(null);
 
   const node = useMemo(
     () => nodes.find((n) => n.id === selected) ?? nodes[0],
@@ -168,6 +280,54 @@ export function CanvasPage() {
   useEffect(() => {
     loadModules().catch((e) => setErr(String(e.message || e)));
   }, [loadModules]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiGet<{
+          palette?: {
+            kind?: string;
+            label?: string;
+            id?: string;
+            pluginId?: string;
+            runtime?: string;
+            stub?: boolean;
+          }[];
+        }>("/v1/widget-plugins");
+        if (cancelled) return;
+        const items = (res.palette || [])
+          .map((p) => {
+            const kind = p.kind as CanvasKind | undefined;
+            if (!kind || !KIND_SET.has(kind)) return null;
+            return {
+              kind,
+              label: p.label || `+ ${p.id || kind}`,
+              tone: kind === "overlay" ? ("violet" as const) : undefined,
+              pluginId: p.pluginId || p.id,
+              runtime: p.runtime,
+              stub: !!p.stub || kind === "stub",
+            } satisfies PaletteItem;
+          })
+          .filter(Boolean) as PaletteItem[];
+        if (items.length) {
+          setPalette(items);
+          setPaletteNote(null);
+        } else {
+          setPalette(FALLBACK_PALETTE);
+          setPaletteNote("Widget 插件目录为空 · 暂用本地兜底调色板");
+        }
+      } catch {
+        if (!cancelled) {
+          setPalette(FALLBACK_PALETTE);
+          setPaletteNote("无法加载 widget-plugins · 暂用本地兜底调色板");
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function onSelectModule(id: string) {
     setModuleId(id);
@@ -208,23 +368,49 @@ export function CanvasPage() {
     setDirty(true);
   }
 
-  function addNode(kind: CanvasNode["kind"]) {
+  function addNode(item: PaletteItem | CanvasKind) {
+    const pal = typeof item === "string" ? { kind: item, label: item } : item;
+    const kind = pal.kind;
     const id = `n-${kind}-${Date.now().toString(36)}`;
     const title =
-      kind === "filter"
+      pal.label?.replace(/^\+\s*/, "") ||
+      (kind === "filter"
         ? "Filter · site"
         : kind === "table"
           ? "Object Table"
           : kind === "buddy"
             ? "Buddy Chip"
-            : "Overlay · Object View";
+            : kind === "action"
+              ? "Action Form"
+              : kind === "graph"
+                ? "Graph View"
+                : kind === "metric"
+                  ? "Metric Card"
+                  : kind === "stub"
+                    ? pal.pluginId || "Stub Widget"
+                    : "Overlay · Object View");
     const config =
       kind === "filter"
         ? { site: "DC-East" }
         : kind === "table"
           ? { objectType: "WorkOrder" }
-          : undefined;
-    setNodes((prev) => [...prev, { id, kind, title, config }]);
+          : kind === "action" || pal.pluginId === "action-form"
+            ? { actionTypeId: "CloseWorkOrder" }
+            : kind === "graph" || pal.pluginId === "graph-view"
+              ? { objectType: "WorkOrder", objectId: "wo-1001" }
+              : kind === "metric" || pal.pluginId === "metric-card"
+                ? { objectType: "WorkOrder", groupBy: "status" }
+                : undefined;
+    const pluginId =
+      pal.pluginId ||
+      (kind === "action"
+        ? "action-form"
+        : kind === "graph"
+          ? "graph-view"
+          : kind === "metric"
+            ? "metric-card"
+            : undefined);
+    setNodes((prev) => [...prev, { id, kind, title, pluginId, config }]);
     setSelected(id);
     setDirty(true);
   }
@@ -313,7 +499,7 @@ export function CanvasPage() {
         <Link to="/workshop/inbox" className="btn" style={{ textDecoration: "none" }}>
           预览运行态 →
         </Link>
-        <Link to="/workshop/publish" className="muted">
+        <Link to="/workshop/publish" className="btn-nav">
           发布 ▾
         </Link>
       </BpToolbar>
@@ -365,16 +551,23 @@ export function CanvasPage() {
             画布 · Header / Page / Section / Overlay · 先建 Object Set 变量再拖 Widget
           </p>
           <div className="bp-canvas-palette">
-            {WIDGET_PALETTE.map((w) => (
+            {palette.map((w) => (
               <button
-                key={w.label}
+                key={`${w.pluginId || w.kind}-${w.label}`}
                 type="button"
                 className={w.tone === "violet" ? "bp-canvas-chip bp-canvas-chip-violet" : "bp-canvas-chip"}
-                onClick={() => addNode(w.kind)}
+                onClick={() => addNode(w)}
+                title={w.runtime ? `runtime=${w.runtime}` : undefined}
               >
                 {w.label}
+                {w.stub ? " · stub" : ""}
               </button>
             ))}
+            {paletteNote && (
+              <span className="muted" style={{ fontSize: "0.7rem", marginLeft: 8 }}>
+                {paletteNote}
+              </span>
+            )}
           </div>
 
           {nodes.map((n) => (
@@ -406,7 +599,11 @@ export function CanvasPage() {
                   </button>
                 </div>
               </div>
-              <WidgetPreview node={n} />
+              <WidgetPreview
+                node={n}
+                rows={rows}
+                onConfig={(patch) => updateNode(n.id, { config: { ...n.config, ...patch } })}
+              />
             </div>
           ))}
 
@@ -465,6 +662,9 @@ export function CanvasPage() {
               </div>
               <p style={{ marginTop: 8 }}>
                 <strong>{node.kind}</strong> · {node.id}
+                {node.pluginId ? (
+                  <span className="muted"> · plugin={node.pluginId}</span>
+                ) : null}
               </p>
               <label className="muted">
                 标题{" "}
@@ -496,6 +696,106 @@ export function CanvasPage() {
                     }
                   />
                 </label>
+              )}
+              {(node.kind === "action" || node.pluginId === "action-form") && (
+                <>
+                  <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                    actionTypeId{" "}
+                    <input
+                      value={node.config?.actionTypeId || "CloseWorkOrder"}
+                      onChange={(e) =>
+                        updateNode(node.id, {
+                          config: { ...node.config, actionTypeId: e.target.value },
+                        })
+                      }
+                    />
+                  </label>
+                  <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                    objectType{" "}
+                    <input
+                      value={node.config?.objectType || "WorkOrder"}
+                      onChange={(e) =>
+                        updateNode(node.id, {
+                          config: { ...node.config, objectType: e.target.value },
+                        })
+                      }
+                    />
+                  </label>
+                  <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                    objectId{" "}
+                    <input
+                      value={node.config?.objectId || ""}
+                      onChange={(e) =>
+                        updateNode(node.id, {
+                          config: { ...node.config, objectId: e.target.value },
+                        })
+                      }
+                    />
+                  </label>
+                </>
+              )}
+              {(node.kind === "graph" || node.pluginId === "graph-view") && (
+                <>
+                  <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                    objectType{" "}
+                    <input
+                      value={node.config?.objectType || "WorkOrder"}
+                      onChange={(e) =>
+                        updateNode(node.id, {
+                          config: { ...node.config, objectType: e.target.value },
+                        })
+                      }
+                    />
+                  </label>
+                  <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                    objectId{" "}
+                    <input
+                      value={node.config?.objectId || "wo-1001"}
+                      onChange={(e) =>
+                        updateNode(node.id, {
+                          config: { ...node.config, objectId: e.target.value },
+                        })
+                      }
+                    />
+                  </label>
+                </>
+              )}
+              {(node.kind === "metric" || node.pluginId === "metric-card") && (
+                <>
+                  <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                    objectType{" "}
+                    <input
+                      value={node.config?.objectType || "WorkOrder"}
+                      onChange={(e) =>
+                        updateNode(node.id, {
+                          config: { ...node.config, objectType: e.target.value },
+                        })
+                      }
+                    />
+                  </label>
+                  <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                    groupBy{" "}
+                    <input
+                      value={node.config?.groupBy || "status"}
+                      onChange={(e) =>
+                        updateNode(node.id, {
+                          config: { ...node.config, groupBy: e.target.value },
+                        })
+                      }
+                    />
+                  </label>
+                  <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                    site{" "}
+                    <input
+                      value={node.config?.site || ""}
+                      onChange={(e) =>
+                        updateNode(node.id, {
+                          config: { ...node.config, site: e.target.value },
+                        })
+                      }
+                    />
+                  </label>
+                </>
               )}
               <p className="muted" style={{ marginTop: 12, fontSize: "0.625rem" }}>
                 构建态 · 非运行态

@@ -3,7 +3,8 @@
 > **对齐**：[78](../../../docs/palantier/20_tech/78-蓝图页面对齐差距台账与去演示Hub方案.md) · [110](../../../docs/palantier/20_tech/110-W33-可演示冻结维护Runbook方案.md) · [103](../../../docs/palantier/20_tech/103-W26-DataPage-Sync-Pipeline跳转链方案.md) · [104](../../../docs/palantier/20_tech/104-W27-彩排L1链路与ensure-seed同步Sync方案.md)  
 > **故事**：WorkOrder 工单运营 · **本地 Docker**  
 > **原则**：**只走真实功能页**（无 `/demo` Hub · 概览无业务主链区块）  
-> **不讲**：Full Spoke / Helm / 现场 Ferry / 生产 IdP / Jupyter·产品 1.3 / Apollo 运维深水
+> **不讲**：Full Spoke / Helm / 现场 Ferry / 生产 IdP / 真 Jupyter·nbclient / Apollo 运维深水  
+> **可讲（TA.7）**：`/analytics` 演示一镜（读数→Draft→批准→谱系）；日常写回仍走审批台
 
 ## 0. 开场前（你这边 · 2 分钟）
 
@@ -41,7 +42,9 @@ powershell -File scripts\demo\run-demo-smoke.ps1   # 或仅 demo smoke
 | 16–18 | `/aip/studio` 或 `/aip/logic` | Studio 试对话 / Logic Use LLM 块（可选） |
 | 16–18 | `/aip/lineage` → **治理探针** | 脱敏 `internalCost` · Marking FORBIDDEN |
 | 18–19 | `/aip/capabilities` → **业务一镜**（可选） | Job→MediaSet · CSV 解析 |
-| 19–20 | 收束 | 「本地可装可演示；Apollo Full 与 Notebook 分析另排期」 |
+| 19–21 | `/analytics` → **演示一镜（含批准）** | 读数→propose→一镜批准→谱系；强调日常仍「提交为 Draft」+ 审批台 |
+| 21–22 | `/analytics` → **Contour / Quiver / Vertex 子集** | 各点一屏；话术「子集可讲 · 非全集 · 非 Superset/MLflow」 |
+| 22–23 | 收束 | 「分析建模 MVP；Apollo Full / 真 Jupyter / BI·ML 全集另排期」 |
 
 ## 2. 故障回退
 
@@ -51,7 +54,8 @@ powershell -File scripts\demo\run-demo-smoke.ps1   # 或仅 demo smoke
 | 无对象 | `/data` → 初始化业务数据；或 `POST /v1/demo/ensure-seed` |
 | Buddy/Studio 仍 mock | `.env` 填 `AGNES_*` 后 `bash scripts/demo/ensure-api.sh --restart` |
 | API 掉线 · Failed to fetch | `bash scripts/demo/ensure-api.sh` |
-| 客户问 Jupyter | 「产品 1.3 显式后置；今天演示运营写回」 |
+| 客户问 Jupyter | 「MVP 是 shaped 边车+Facade；真 Jupyter/nbclient 另排；今天看演示一镜写回」 |
+| 演示一镜失败 | `POST /v1/demo/ensure-seed` 后重点；或 `POST /v1/demo/run-analytics-story` |
 
 ## 3. 收尾
 

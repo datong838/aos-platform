@@ -1,0 +1,43 @@
+{
+  "id": "volcengine-doubao",
+  "name": "Doubao",
+  "nameZh": "火山豆包",
+  "description": "字节火山方舟",
+  "tier": "mid",
+  "modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "llm",
+    "chat"
+  ],
+  "formFamily": "openai_compatible",
+  "defaultModels": [
+    "doubao-pro-32k"
+  ],
+  "litellmPrefix": "volcengine/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "doubao-pro-32k"
+        ]
+      },
+      "baseUrl": {
+        "type": "string",
+        "default": "https://ark.cn-beijing.volces.com/api/v3"
+      }
+    }
+  }
+}

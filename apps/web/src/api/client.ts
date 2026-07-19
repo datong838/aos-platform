@@ -86,6 +86,17 @@ export async function apiPost<T>(
   });
 }
 
+export async function apiPut<T>(
+  path: string,
+  body: unknown,
+  extraHeaders?: HeadersInit,
+): Promise<T> {
+  return request<T>("PUT", path, {
+    headers: extraHeaders,
+    body: JSON.stringify(body),
+  });
+}
+
 export async function apiPatch<T>(
   path: string,
   body: unknown,
@@ -95,6 +106,10 @@ export async function apiPatch<T>(
     headers: extraHeaders,
     body: JSON.stringify(body),
   });
+}
+
+export async function apiDelete<T>(path: string, extraHeaders?: HeadersInit): Promise<T> {
+  return request<T>("DELETE", path, { headers: extraHeaders });
 }
 
 /** 轻量健康探针（状态条用；失败不抛业务码） */

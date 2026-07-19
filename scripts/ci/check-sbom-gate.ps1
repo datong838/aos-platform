@@ -1,7 +1,8 @@
 #Requires -Version 5.1
 <#
-  T0.10 — SBOM / delivery gate (23 §5).
+  T0.10 — SBOM / delivery gate (23 §5 · 73 License).
   - AGPL denied images outside deploy/dev & docs
+  - AGPL denied package names in SBOM / product manifests
   - Forbidden refs/ToolJet paths in product source
   - Extra scan if dist/customer exists
 
@@ -29,7 +30,6 @@ if ($GenerateFirst) {
 }
 
 if ($WithTools) {
-  # Named args only — avoid splat / unknown-switch binding quirks on PS 5.1
   & (Join-Path $PSScriptRoot "run-syft-trivy.ps1") `
     -Root $Root `
     -Strict:$Strict `
@@ -39,9 +39,11 @@ if ($WithTools) {
 }
 
 $deniedFile = Join-Path $PSScriptRoot "agpl-denied-images.txt"
+$pkgFile = Join-Path $PSScriptRoot "agpl-denied-packages.txt"
 $pathFile = Join-Path $PSScriptRoot "forbidden-product-paths.txt"
-$denied = Get-Content $deniedFile | Where-Object { $_ -and -not $_.StartsWith("#") }
-$pathPatterns = Get-Content $pathFile | Where-Object { $_ -and -not $_.StartsWith("#") }
+$denied = @(Get-Content $deniedFile | Where-Object { $_ -and -not $_.StartsWith("#") })
+$deniedPkgs = @(Get-Content $pkgFile | Where-Object { $_ -and -not $_.StartsWith("#") })
+$pathPatterns = @(Get-Content $pathFile | Where-Object { $_ -and -not $_.StartsWith("#") })
 
 $hits = New-Object System.Collections.Generic.List[string]
 
@@ -65,8 +67,9 @@ foreach ($sr in $scanRoots) {
     ForEach-Object {
       $rel = $_.FullName.Substring($Root.Length)
       if ($rel -match $allowDirRx) { return }
-      # allow deploy/dev even if somehow under scan (usually not)
       if ($_.FullName -match '[\\/]deploy[\\/]dev[\\/]') { return }
+      # Ferry inventories skopeo refs including AGPL images for air-gap policy — not a product COPY
+      if ($_.FullName -match '[\\/]ferry\.py$') { return }
       $text = Get-Content -Raw -Path $_.FullName -ErrorAction SilentlyContinue
       if (-not $text) { return }
       foreach ($d in $denied) {
@@ -100,14 +103,56 @@ foreach ($sr in $prodRoots) {
     }
 }
 
-# --- 3) SBOM file presence hint ---
-$sbom = Join-Path $Root "deploy\dev\sbom-dev.json"
-if (-not (Test-Path $sbom)) {
+# --- 3) customer SBOM only: deny AGPL server package names ---
+# deploy/dev/*.json may inventory Dev/Ferry images — not a customer-package fail.
+$sbomCandidates = @()
+$customerSbomDir = Join-Path $Root "dist\customer"
+if (Test-Path $customerSbomDir) {
+  $sbomCandidates += Get-ChildItem -Path $customerSbomDir -Recurse -Filter "*sbom*.json" -ErrorAction SilentlyContinue |
+    ForEach-Object { $_.FullName }
+}
+foreach ($sbom in $sbomCandidates) {
+  if (-not (Test-Path $sbom)) { continue }
+  $raw = Get-Content -Raw -Path $sbom -ErrorAction SilentlyContinue
+  if (-not $raw) { continue }
+  $rel = $sbom.Substring($Root.Length)
+  foreach ($pkg in $deniedPkgs) {
+    $rx = '(?i)("name"\s*:\s*"[^"]*' + [regex]::Escape($pkg) + '[^"]*"|"purl"\s*:\s*"[^"]*' + [regex]::Escape($pkg) + '[^"]*")'
+    if ($raw -match $rx) {
+      Add-Hit ("AGPL_PKG_SBOM {0} :: {1}" -f $rel, $pkg)
+    }
+  }
+}
+
+# --- 4) product lockfiles / manifests ---
+$manifestNames = @("package-lock.json", "pnpm-lock.yaml", "requirements.txt", "pyproject.toml", "poetry.lock")
+foreach ($sr in $prodRoots) {
+  if (-not (Test-Path $sr)) { continue }
+  Get-ChildItem -Path $sr -Recurse -File -ErrorAction SilentlyContinue |
+    Where-Object {
+      ($manifestNames -contains $_.Name -or $_.Name -like "requirements*.txt") -and
+      ($_.FullName -notmatch 'node_modules|[\\/]dist[\\/]')
+    } |
+    ForEach-Object {
+      $rel = $_.FullName.Substring($Root.Length)
+      $text = Get-Content -Raw -Path $_.FullName -ErrorAction SilentlyContinue
+      if (-not $text) { return }
+      foreach ($pkg in $deniedPkgs) {
+        if ($text -match ('(?i)(^|[\s"/@])' + [regex]::Escape($pkg) + '([/\s":@]|$)')) {
+          Add-Hit ("AGPL_PKG_MANIFEST {0} :: {1}" -f $rel, $pkg)
+        }
+      }
+    }
+}
+
+# --- 5) SBOM file presence hint ---
+$sbomMain = Join-Path $Root "deploy\dev\sbom-dev.json"
+if (-not (Test-Path $sbomMain)) {
   Add-Hit "SBOM_MISSING deploy/dev/sbom-dev.json (run generate-sbom.ps1)"
 }
 
 if ($hits.Count -eq 0) {
-  Write-Host "T0.10 PASS: SBOM gate clean"
+  Write-Host "T0.10 PASS: SBOM gate clean (AGPL server images/packages blocked)"
   exit 0
 }
 

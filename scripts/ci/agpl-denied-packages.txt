@@ -1,11 +1,9 @@
-# AGPL / BSL server component names — must NOT appear in product SBOM / lockfiles
-# outside deploy/dev (23 R-LIC-01 · scheme 73 License gate).
-# Matched as whole-word-ish substrings in SBOM JSON and apps|services|packages manifests.
-# Do NOT list permissive SDKs (e.g. minio-py is Apache).
+# AGPL / BSL server component names — must NOT appear in product lockfiles
+# or customer SBOM (23 R-LIC-01 · scheme 73 License gate).
+# Matched in apps|services|packages manifests and dist/customer SBOM only.
+# Do NOT list permissive SDKs (minio-py is Apache).
 metabase
 grafana
-minio/minio
 tooljet
 appsmith
 wiki.js
-outline

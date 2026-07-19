@@ -141,10 +141,10 @@ export function ApolloPage() {
         <button type="button" className="btn" onClick={() => void refresh().catch((e) => setErr(String(e)))}>
           刷新舰队
         </button>
-        <Link to="/apollo/release" className="muted">
+        <Link to="/apollo/release" className="btn-nav">
           发布通道 →
         </Link>
-        <Link to="/apollo/ferry" className="muted">
+        <Link to="/apollo/ferry" className="btn-nav">
           Ferry 向导
         </Link>
       </BpToolbar>

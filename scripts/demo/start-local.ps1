@@ -3,7 +3,7 @@
 .SYNOPSIS
   TB.0 · 本地演示一键启动（业务平台优先 · Apollo 运维后置）
 .DESCRIPTION
-  1) docker compose 拉起 PG/MinIO/MySQL/LLM/OCR（不含 oidc/openfga profile）
+  1) docker compose 拉起 PG/MinIO/MySQL/LLM/OCR/analytics（不含 oidc/openfga profile）
   2) 后台启动 aos-api :8080 与 web :5173（可用 -InfraOnly 跳过）
   3) 跑 health-check
 .PARAMETER InfraOnly
@@ -36,7 +36,7 @@ Write-Step "TB.0 start-local · root=$Root"
 Write-Step "Docker compose up (core stack)"
 $compose = "deploy/dev/docker-compose.yml"
 if (-not (Test-Path $compose)) { throw "missing $compose" }
-docker compose -f $compose up -d aos-dev-pg aos-dev-minio aos-dev-minio-init aos-dev-mysql aos-dev-llm-echo aos-dev-litellm aos-dev-ocr
+docker compose -f $compose up -d aos-dev-pg aos-dev-minio aos-dev-minio-init aos-dev-mysql aos-dev-llm-echo aos-dev-litellm aos-dev-ocr aos-dev-analytics
 if ($LASTEXITCODE -ne 0) { throw "docker compose up failed" }
 
 Write-Step "Wait PostgreSQL"
@@ -83,6 +83,8 @@ $apiErr = Join-Path $LogDir "aos-api.err.log"
 $env:AOS_LOG_LEVEL = "debug"
 $env:AOS_LOG_FORMAT = "json"
 $env:AOS_AUTH_ALLOW_DEV = "1"
+# TA.1 · analytics-runtime (compose :8084); override via env before start if needed
+if (-not $env:AOS_ANALYTICS_URL) { $env:AOS_ANALYTICS_URL = "http://127.0.0.1:8084" }
 $pApi = Start-Process -FilePath "python" `
   -ArgumentList @("-m", "uvicorn", "aos_api.main:app", "--host", "127.0.0.1", "--port", "8080") `
   -WorkingDirectory $apiDir `

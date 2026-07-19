@@ -75,6 +75,16 @@ Ok "run-capability" {
   if (-not $c.job.mediaRid) { throw "no capability mediaRid" }
   if (-not $c.parser.ok) { throw "parser extract failed" }
 }
+Ok "run-analytics-story" {
+  $a = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8080/v1/demo/run-analytics-story" -Headers $headers -Body "{}"
+  if (-not $a.ok) { throw "analytics story not ok" }
+  if (-not $a.productionWritten) { throw "not written" }
+  if (-not $a.draftId) { throw "no draftId" }
+  if (-not $a.lineageId) { throw "no lineageId" }
+  if ([int]$a.read.total -lt 1) { throw "read.total < 1" }
+  if ($a.before.status -eq $a.after.status) { throw "status unchanged" }
+  if (-not $a.exportProbePublic.expected) { throw "export probe should expect FORBIDDEN" }
+}
 Ok "modules" { Invoke-RestMethod -Uri "http://127.0.0.1:8080/v1/modules" -Headers $headers | Out-Null }
 
 Write-Host ""

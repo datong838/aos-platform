@@ -16,7 +16,14 @@ import {
 import { JsonBlock, S2Chrome, useJsonGet } from "./shared";
 
 type MediaRow = { rid: string; name?: string; bytes?: number; stored?: boolean; contentType?: string };
-type PipelineRow = { id: string; sourceId?: string; target?: string; datasetRid?: string; lastBuild?: BuildRow };
+type PipelineRow = {
+  id: string;
+  sourceId?: string;
+  target?: string;
+  datasetRid?: string;
+  lastBuild?: BuildRow;
+  vectorCollection?: string;
+};
 type BuildRow = { id?: string; status?: string; tasks?: { name: string; ok: boolean }[]; pipelineId?: string };
 type DatasetRow = {
   rid: string;
@@ -97,18 +104,64 @@ export function PipelinesPage() {
     if (!sourceFilter) return all;
     return all.filter((p) => p.sourceId === sourceFilter);
   }, [data?.items, sourceFilter]);
+  const [activeId, setActiveId] = useState<string>("");
+  const [query, setQuery] = useState("巡检");
+  const [embedOut, setEmbedOut] = useState<unknown>(null);
+  const [searchOut, setSearchOut] = useState<unknown>(null);
+  const [localErr, setLocalErr] = useState<string | null>(null);
+  const active = items.find((p) => p.id === activeId) || items[0];
+
+  async function runEmbed() {
+    if (!active?.id) return;
+    setLocalErr(null);
+    setEmbedOut(null);
+    try {
+      const out = await apiPost(`/v1/pipelines/${encodeURIComponent(active.id)}/embed`, {
+        pluginId: "embed-openai-compatible",
+        autoSample: true,
+        replace: true,
+        documents: [
+          { id: "demo-1", text: "机房巡检-A区" },
+          { id: "demo-2", text: "链路告警复核" },
+          { id: "demo-3", text: "备件更换" },
+        ],
+      });
+      setEmbedOut(out);
+      reload();
+    } catch (e) {
+      setLocalErr(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function runSearch() {
+    if (!active?.id) return;
+    setLocalErr(null);
+    setSearchOut(null);
+    try {
+      const collection = active.vectorCollection || active.id;
+      const out = await apiPost("/v1/aip/vector-index/search", {
+        collection,
+        query,
+        pluginId: "embed-openai-compatible",
+        topK: 5,
+      });
+      setSearchOut(out);
+    } catch (e) {
+      setLocalErr(e instanceof Error ? e.message : String(e));
+    }
+  }
 
   return (
-    <S2Chrome title="管道构建" lede="对齐 pipeline-list · 项目树 + 最近编辑">
+    <S2Chrome title="管道构建" lede="对齐 pipeline-list · 项目树 + 最近编辑 · 104 向量索引接线">
       <BpToolbar>
         <button type="button" className="btn" onClick={() => reload()}>
           刷新
         </button>
-        <Link to="/data/pipeline-proposals" className="muted">
+        <Link to="/data/pipeline-proposals" className="btn-nav">
           管道提案 →
         </Link>
         {sourceFilter && (
-          <Link to="/data/pipelines" className="muted">
+          <Link to="/data/pipelines" className="btn-nav">
             清除 Source 过滤 ({sourceFilter}) ×
           </Link>
         )}
@@ -119,6 +172,7 @@ export function PipelinesPage() {
         </BpBanner>
       )}
       {err && <p className="error">{err}</p>}
+      {localErr && <p className="error">{localErr}</p>}
 
       <BpSplit
         left={
@@ -131,9 +185,18 @@ export function PipelinesPage() {
             <ul className="card-list">
               {items.map((p) => (
                 <li key={p.id}>
-                  <Link to="/data/builds" className="nav-link card">
+                  <button
+                    type="button"
+                    className="nav-link card"
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      border: active?.id === p.id ? "1px solid var(--bp-accent, #0ea5e9)" : undefined,
+                    }}
+                    onClick={() => setActiveId(p.id)}
+                  >
                     {p.id}
-                  </Link>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -145,7 +208,7 @@ export function PipelinesPage() {
             <div className="bp-section-label" style={{ marginTop: 12 }}>
               数据集
             </div>
-            <Link to="/data/datasets" className="muted">
+            <Link to="/data/datasets" className="btn-nav">
               WorkOrder-demo →
             </Link>
           </>
@@ -160,6 +223,7 @@ export function PipelinesPage() {
                 <strong>{p.id}</strong>
                 <p className="muted" style={{ fontSize: "0.75rem" }}>
                   source={p.sourceId} → {p.target} · build={p.lastBuild?.status || "—"}
+                  {p.vectorCollection ? ` · vec=${p.vectorCollection}` : ""}
                 </p>
                 <Link to="/data/datasets">Dataset {p.datasetRid}</Link>
               </div>
@@ -171,6 +235,35 @@ export function PipelinesPage() {
             )}
             {sourceFilter && items.length === 0 && (data?.items?.length || 0) > 0 && (
               <p className="muted">当前 Source 无关联 Pipeline · 可清除过滤查看全部</p>
+            )}
+
+            {active && (
+              <>
+                <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: 16 }}>
+                  向量索引（104 · 本地 KV，非 Milvus）
+                </h2>
+                <BpBanner tone="info">
+                  经已安装 <code>embed-openai-compatible</code>；默认 local-kv · 可选{" "}
+                  <code>AOS_VECTOR_BACKEND=qdrant</code>；无网关返回 501，不写假向量。
+                </BpBanner>
+                <BpToolbar>
+                  <button type="button" className="btn" onClick={() => void runEmbed()}>
+                    写入索引 · {active.id}
+                  </button>
+                  <input
+                    className="bp-input"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="检索 query"
+                    style={{ minWidth: 120 }}
+                  />
+                  <button type="button" className="btn-nav" onClick={() => void runSearch()}>
+                    检索试跑
+                  </button>
+                </BpToolbar>
+                {embedOut != null && <JsonBlock value={embedOut} />}
+                {searchOut != null && <JsonBlock value={searchOut} />}
+              </>
             )}
           </>
         }
@@ -192,7 +285,7 @@ export function BuildsPage() {
         <button type="button" className="btn" onClick={() => reload()}>
           刷新
         </button>
-        <Link to="/data/pipelines" className="muted">
+        <Link to="/data/pipelines" className="btn-nav">
           管道构建 →
         </Link>
       </BpToolbar>
@@ -292,7 +385,7 @@ export function DatasetsPage() {
             打开 {rid}
           </button>
         )}
-        <Link to="/data/lineage" className="muted">
+        <Link to="/data/lineage" className="btn-nav">
           在沿袭中打开 →
         </Link>
       </BpToolbar>
@@ -376,7 +469,7 @@ export function DatasetsPage() {
 /** 77 · 对齐 health.html */
 export function DataHealthPage() {
   const store = useJsonGet<Record<string, unknown>>("/v1/object-store/health");
-  const mysql = useJsonGet<Record<string, unknown>>("/v1/connectors/mysql/health");
+  const mysql = useJsonGet<Record<string, unknown>>("/v1/connectors/jdbc-mysql/health");
   const dlq = useJsonGet<{ items: { id: string; reason?: string; status?: string }[] }>("/v1/dlq");
 
   const dlqCount = dlq.data?.items?.length || 0;
@@ -400,10 +493,10 @@ export function DataHealthPage() {
         >
           刷新
         </button>
-        <Link to="/data" className="muted">
+        <Link to="/data" className="btn-nav">
           返回数据连接
         </Link>
-        <Link to="/ontology/graph-health" className="muted">
+        <Link to="/ontology/graph-health" className="btn-nav">
           图谱健康度 →
         </Link>
       </BpToolbar>

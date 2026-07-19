@@ -1,0 +1,39 @@
+{
+  "id": "google-vertex",
+  "name": "Vertex AI",
+  "nameZh": "Vertex AI",
+  "description": "GCP Vertex 企业接入",
+  "tier": "high",
+  "modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "llm",
+    "chat"
+  ],
+  "formFamily": "openai_compatible",
+  "defaultModels": [
+    "gemini-1.5-pro"
+  ],
+  "litellmPrefix": "vertex_ai/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "gemini-1.5-pro"
+        ]
+      }
+    }
+  }
+}

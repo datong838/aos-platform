@@ -1,0 +1,43 @@
+{
+  "id": "together-ai",
+  "name": "Together AI",
+  "nameZh": "Together AI",
+  "description": "开源模型托管",
+  "tier": "mid",
+  "modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "llm",
+    "chat"
+  ],
+  "formFamily": "openai_compatible",
+  "defaultModels": [
+    "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
+  ],
+  "litellmPrefix": "together_ai/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
+        ]
+      },
+      "baseUrl": {
+        "type": "string",
+        "default": "https://api.together.xyz/v1"
+      }
+    }
+  }
+}

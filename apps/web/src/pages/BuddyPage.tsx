@@ -123,12 +123,11 @@ export function BuddyPage({
         >
           💡 Assist
         </button>
-        <Link to="/workshop/inbox" className="muted" style={{ fontSize: "0.75rem" }}>
+        <Link to="/workshop/inbox" className="btn-nav">
           Inbox →
         </Link>
         <Link
-          to={activeRow ? `/workshop/graph` : "/workshop/graph"}
-          className="muted"
+          to={activeRow ? `/workshop/graph` : "/workshop/graph"} className="btn-nav"
           style={{ fontSize: "0.75rem" }}
         >
           图谱 →

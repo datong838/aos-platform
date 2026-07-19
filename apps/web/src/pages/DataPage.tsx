@@ -34,9 +34,19 @@ type DlqRow = {
   pipelineId?: string;
 };
 
-type SourceRow = { id?: string; type?: string; status?: string; runtimeMode?: string };
+type SourceRow = { id?: string; type?: string; status?: string; runtimeMode?: string; pluginId?: string };
 type SyncRow = { id?: string; sourceId?: string; status?: string; finishedAt?: number };
 type PipelineRow = { id?: string; sourceId?: string; status?: string };
+type ConnectorPlugin = {
+  id: string;
+  nameZh?: string;
+  name?: string;
+  description?: string;
+  installed?: boolean;
+  required?: boolean;
+  runtime?: string;
+  capabilities?: string[];
+};
 
 type MainTab = "sources" | "syncs" | "agents" | "exports";
 type SourceView = "list" | "new" | "detail";
@@ -53,27 +63,33 @@ function statusZh(s?: string): string {
   return s;
 }
 
-function connectorLabel(t?: string): string {
+function connectorLabel(t?: string, plugins?: ConnectorPlugin[]): string {
   if (!t) return "—";
-  if (t === "file") return "文件 · 文档";
-  if (t === "jdbc") return "MySQL JDBC";
+  const hit = plugins?.find((p) => p.id === t);
+  if (hit) return hit.nameZh || hit.name || t;
+  if (t === "file" || t === "file-local") return "本地文件";
+  if (t === "file-object-store") return "对象存储文件";
+  if (t === "jdbc" || t === "jdbc-mysql") return "MySQL JDBC";
   return t;
 }
 
-function connectorTone(t?: string): "sky" | "emerald" | "amber" | "muted" {
-  if (t === "jdbc") return "sky";
-  if (t === "file") return "emerald";
+function connectorTone(t?: string): "sky" | "emerald" | "amber" | "muted" | "violet" {
+  if (t?.includes("jdbc") || t === "mysql") return "sky";
+  if (t?.startsWith("file") || t === "file") return "emerald";
+  if (t?.startsWith("rest")) return "amber";
   return "muted";
 }
 
 function storageLabel(t?: string): { text: string; kind: "dataset" | "media" | "stream" } {
-  if (t === "file") return { text: "媒体集·文档", kind: "media" };
+  if (t === "file" || t?.startsWith("file")) return { text: "媒体集·文档", kind: "media" };
   return { text: "数据集", kind: "dataset" };
 }
 
 function sourceSubtitle(t?: string): string {
-  if (t === "file") return "文件接入 · 文档 / 表格";
-  if (t === "jdbc") return "结构化入库 · JDBC";
+  if (t === "file" || t === "file-local") return "文件接入 · 本地 / 上传";
+  if (t === "file-object-store") return "文件接入 · 对象存储";
+  if (t === "jdbc" || t === "jdbc-mysql") return "结构化入库 · MySQL";
+  if (t?.startsWith("jdbc")) return "结构化入库 · JDBC";
   return "外部系统接入";
 }
 
@@ -184,14 +200,15 @@ export function DataPage() {
   const [mediaCount, setMediaCount] = useState(0);
   const [selectedSource, setSelectedSource] = useState<SourceRow | null>(null);
   const [newSourceId, setNewSourceId] = useState("");
-  const [connectorType, setConnectorType] = useState("file");
+  const [connectorType, setConnectorType] = useState("file-local");
   const [runtimeMode, setRuntimeMode] = useState<RuntimeMode>("agent");
   const [wizardStep, setWizardStep] = useState(1);
   /** 前端记忆新建时的运行时（API 暂未持久化 runtimeMode） */
   const [runtimeById, setRuntimeById] = useState<Record<string, RuntimeMode>>({});
+  const [connectorPlugins, setConnectorPlugins] = useState<ConnectorPlugin[]>([]);
 
   async function refresh() {
-    const [ds, d, src, syn, pipes, media, sch, agent] = await Promise.all([
+    const [ds, d, src, syn, pipes, media, sch, agent, cps] = await Promise.all([
       apiGet<{ items: DatasetRow[] }>("/v1/datasets"),
       apiGet<{ items: DlqRow[] }>("/v1/dlq"),
       apiGet<{ items: SourceRow[] }>("/v1/sources"),
@@ -200,6 +217,7 @@ export function DataPage() {
       apiGet<{ items: unknown[] }>("/v1/media-sets"),
       apiGet<{ items: ScheduleRow[] }>("/v1/schedules").catch(() => ({ items: [] as ScheduleRow[] })),
       apiGet<EdgeAgent>("/v1/edge/agents/local").catch(() => null),
+      apiGet<{ items: ConnectorPlugin[] }>("/v1/connector-plugins").catch(() => ({ items: [] as ConnectorPlugin[] })),
     ]);
     setDatasets(ds.items || []);
     setDlq(d.items || []);
@@ -209,6 +227,7 @@ export function DataPage() {
     setMediaCount((media.items || []).length);
     setSchedules(sch.items || []);
     setEdgeAgent(agent);
+    setConnectorPlugins(cps.items || []);
     if (selectedSource?.id) {
       const found = (src.items || []).find((s) => s.id === selectedSource.id);
       if (found) setSelectedSource(enrichSource(found));
@@ -229,15 +248,33 @@ export function DataPage() {
     const id = newSourceId.trim() || `src-${Date.now().toString(36)}`;
     setErr(null);
     try {
-      await apiPost("/v1/sources", { id, type: connectorType });
+      const created = await apiPost<SourceRow>("/v1/sources", { id, type: connectorType });
       setRuntimeById((prev) => ({ ...prev, [id]: runtimeMode }));
       setMsg(`已创建数据源 ${id}`);
       setNewSourceId("");
       setWizardStep(1);
       await refresh();
-      setSelectedSource({ id, type: connectorType, status: "registered", runtimeMode });
+      setSelectedSource({
+        id,
+        type: created.type || connectorType,
+        status: "registered",
+        runtimeMode,
+        pluginId: created.pluginId,
+      });
       setSourceView("detail");
       setTab("sources");
+    } catch (e) {
+      setErr(String((e as Error).message || e));
+    }
+  }
+
+  async function installConnector(pluginId: string) {
+    setErr(null);
+    try {
+      await apiPost(`/v1/connector-plugins/${encodeURIComponent(pluginId)}/install`, {});
+      setMsg(`已安装连接器插件 ${pluginId}`);
+      setConnectorType(pluginId);
+      await refresh();
     } catch (e) {
       setErr(String((e as Error).message || e));
     }
@@ -467,32 +504,71 @@ export function DataPage() {
 
           {wizardStep === 1 && (
             <>
-              <div className="bp-ws-section-title">选择连接器类型</div>
+              <div className="bp-ws-section-title">选择连接器插件</div>
               <p className="muted" style={{ fontSize: "0.75rem" }}>
-                优先文件类型 · JDBC / MySQL 结构化入库
+                目录来自 `plugins/connectors` · 对齐 20 §3.1 · stub 仅可装不可拉数
               </p>
               <div className="bp-discover-grid">
-                {[
-                  { id: "file", title: "文件 · 文档", desc: "Word · Excel · PDF · csv", tone: "violet" as const },
-                  { id: "jdbc", title: "JDBC · MySQL", desc: "结构化入库", tone: "muted" as const },
-                ].map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    className={`bp-discover-card bp-discover-${c.tone}`}
-                    style={{
-                      cursor: "pointer",
-                      textAlign: "left",
-                      borderColor: connectorType === c.id ? "rgba(56,189,248,0.55)" : undefined,
-                    }}
-                    onClick={() => setConnectorType(c.id)}
-                  >
-                    <div className="bp-discover-title">{c.title}</div>
-                    <p className="bp-discover-meta">{c.desc}</p>
-                  </button>
-                ))}
+                {connectorPlugins.length === 0 ? (
+                  <p className="muted" style={{ fontSize: "0.85rem" }}>
+                    暂无连接器插件目录 · 请确认 API `/v1/connector-plugins` 与 `plugins/connectors` 可用
+                  </p>
+                ) : (
+                  connectorPlugins.map((c) => {
+                  const tone = connectorTone(c.id);
+                  const selected = connectorType === c.id;
+                  return (
+                    <div
+                      key={c.id}
+                      className={`bp-discover-card bp-discover-${tone}`}
+                      style={{
+                        borderColor: selected ? "rgba(56,189,248,0.55)" : undefined,
+                        textAlign: "left",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        style={{
+                          all: "unset",
+                          cursor: c.installed ? "pointer" : "default",
+                          display: "block",
+                          width: "100%",
+                        }}
+                        disabled={!c.installed}
+                        onClick={() => c.installed && setConnectorType(c.id)}
+                      >
+                        <div className="bp-discover-title">
+                          {c.nameZh || c.name || c.id}
+                          {c.runtime === "stub" ? " · stub" : ""}
+                          {c.required ? " · 必做" : ""}
+                        </div>
+                        <p className="bp-discover-meta">{c.description || c.id}</p>
+                        <p className="muted" style={{ fontSize: "0.7rem", margin: "0.35rem 0 0" }}>
+                          {c.installed ? "已安装" : "未安装"}
+                        </p>
+                      </button>
+                      {!c.installed && (
+                        <button
+                          type="button"
+                          className="btn-nav"
+                          style={{ marginTop: 8 }}
+                          onClick={() => void installConnector(c.id)}
+                        >
+                          安装
+                        </button>
+                      )}
+                    </div>
+                  );
+                })
+                )}
               </div>
-              <button type="button" className="btn" style={{ marginTop: 12 }} onClick={() => setWizardStep(2)}>
+              <button
+                type="button"
+                className="btn"
+                style={{ marginTop: 12 }}
+                disabled={!connectorPlugins.find((p) => p.id === connectorType)?.installed && connectorPlugins.length > 0}
+                onClick={() => setWizardStep(2)}
+              >
                 下一步 →
               </button>
             </>
@@ -560,7 +636,7 @@ export function DataPage() {
                 />
               </label>
               <p className="muted" style={{ fontSize: "0.75rem", marginTop: 8 }}>
-                连接器：{connectorLabel(connectorType)} · 运行时：
+                连接器：{connectorLabel(connectorType, connectorPlugins)} · 运行时：
                 {runtimeMode === "direct" ? "直接连接" : runtimeMode === "agent" ? "代理连接" : "代理工作者"}
               </p>
               <BpToolbar>
@@ -580,7 +656,7 @@ export function DataPage() {
               <BpBanner tone="info">凭证走密钥引用（vault ref）· 不落明文。</BpBanner>
               <BpPropGrid
                 items={[
-                  { label: "连接器", value: connectorLabel(connectorType) },
+                  { label: "连接器", value: connectorLabel(connectorType, connectorPlugins) },
                   {
                     label: "运行时",
                     value: runtimeMode === "direct" ? "直接连接" : runtimeMode === "agent" ? "代理连接" : "代理工作者",

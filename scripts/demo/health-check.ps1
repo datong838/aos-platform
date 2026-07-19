@@ -50,6 +50,7 @@ if (-not $InfraOnly) {
   # optional sidecars — warn only
   Test-Http "LiteLLM :4001" "http://127.0.0.1:4001/health/liveliness" | Out-Null
   Test-Http "OCR :8082" "http://127.0.0.1:8082/health" | Out-Null
+  Test-Http "Analytics :8084" "http://127.0.0.1:8084/health" | Out-Null
   if ($RequireWeb) {
     Test-Http "web :5173" "http://127.0.0.1:5173/" -Required | Out-Null
   } else {

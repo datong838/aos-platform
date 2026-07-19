@@ -84,14 +84,48 @@ def apply_draft_approval(
             )
         object_id = draft["object_id"] or f"auto-{draft_id[-8:]}"
         object_type = draft["object_type"]
-        proposed = draft["proposed"] or {}
+        proposed_raw = dict(draft["proposed"] or {})
+        action_type_id = str(draft["action_type_id"] or "")
+        wiki_body = proposed_raw.pop("wikiBody", None)
+        proposed = proposed_raw
+        wiki_written = False
+
+        if isinstance(wiki_body, dict):
+            prev = conn.execute(
+                "SELECT body FROM wiki_page WHERE object_type=%s AND object_id=%s",
+                (object_type, object_id),
+            ).fetchone()
+            if prev and prev.get("body") is not None:
+                conn.execute(
+                    """
+                    INSERT INTO wiki_page_version (object_type, object_id, body, draft_id)
+                    VALUES (%s,%s,%s::jsonb,%s)
+                    """,
+                    (object_type, object_id, json.dumps(prev["body"]), draft_id),
+                )
+            conn.execute(
+                """
+                INSERT INTO wiki_page (object_type, object_id, body)
+                VALUES (%s,%s,%s::jsonb)
+                ON CONFLICT (object_type, object_id)
+                DO UPDATE SET body = EXCLUDED.body
+                """,
+                (object_type, object_id, json.dumps(wiki_body)),
+            )
+            wiki_written = True
+        elif action_type_id == "UpdateWikiCard":
+            raise ApiError(
+                code="VALIDATION",
+                message="UpdateWikiCard requires proposed.wikiBody object",
+                status_code=400,
+            )
 
         props_row = conn.execute(
             "SELECT properties FROM meta_object_type WHERE id=%s",
             (object_type,),
         ).fetchone()
         props = props_row["properties"] if props_row else None
-        if isinstance(props, list):
+        if isinstance(props, list) and proposed:
             ensure_field_writes(principal, proposed, props, conn=conn)
 
         existing = conn.execute(
@@ -108,23 +142,26 @@ def apply_draft_approval(
                 message=f"field conflicts: {conflicts}; send X-Allow-Conflicts: true to force",
                 status_code=409,
             )
-        merged = {**base, **proposed}
-        if existing:
-            conn.execute(
-                """
-                UPDATE obj_instance SET props=%s::jsonb
-                WHERE object_type=%s AND object_id=%s
-                """,
-                (json.dumps(merged), object_type, object_id),
-            )
-        else:
-            conn.execute(
-                """
-                INSERT INTO obj_instance (object_type, object_id, props)
-                VALUES (%s,%s,%s::jsonb)
-                """,
-                (object_type, object_id, json.dumps(merged)),
-            )
+        merged = {**base, **proposed} if proposed else base
+        # Wiki-only drafts may leave obj_instance untouched when proposed empty
+        if proposed or not wiki_written:
+            if existing:
+                if proposed:
+                    conn.execute(
+                        """
+                        UPDATE obj_instance SET props=%s::jsonb
+                        WHERE object_type=%s AND object_id=%s
+                        """,
+                        (json.dumps(merged), object_type, object_id),
+                    )
+            else:
+                conn.execute(
+                    """
+                    INSERT INTO obj_instance (object_type, object_id, props)
+                    VALUES (%s,%s,%s::jsonb)
+                    """,
+                    (object_type, object_id, json.dumps(merged)),
+                )
         conn.execute(
             """
             UPDATE draft_dataset SET status='approved', updated_at=NOW()
@@ -137,7 +174,12 @@ def apply_draft_approval(
             {"step": "read", "objectType": object_type, "objectId": object_id},
             {"step": "draft", "draftId": draft_id},
             {"step": "approve", "actor": principal.subject},
-            {"step": "write", "mergedKeys": list(proposed.keys()), "conflicts": conflicts},
+            {
+                "step": "write",
+                "mergedKeys": list(proposed.keys()),
+                "conflicts": conflicts,
+                "wikiWritten": wiki_written,
+            },
         ]
         conn.execute(
             """
@@ -165,13 +207,15 @@ def apply_draft_approval(
         "merged": merged,
         "conflicts": conflicts,
         "lineageId": lineage_id,
+        "wikiWritten": wiki_written,
     }
     log.info(
-        "draft_approved id=%s object=%s/%s conflicts=%s",
+        "draft_approved id=%s object=%s/%s conflicts=%s wiki=%s",
         draft_id,
         object_type,
         object_id,
         len(conflicts),
+        wiki_written,
     )
     return body
 

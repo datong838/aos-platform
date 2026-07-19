@@ -31,8 +31,14 @@ def test_constitution_endpoint(client, auth_headers):
 def test_graph_health(client, auth_headers):
     r = client.get("/v1/ontology/graph-health", headers=auth_headers)
     assert r.status_code == 200
-    assert "score" in r.json()
-    assert r.json()["metrics"]["engine"] == "adjacency_table"
+    body = r.json()
+    assert "score" in body
+    assert body["metrics"]["engine"] == "adjacency_table"
+    assert "danglingEdges" in body["metrics"]
+    assert "propConflicts" in body["metrics"]
+    assert "issues" in body
+    # GH-02 must not be frontend-hardcoded; server may emit 0 issues
+    assert all("code" in i for i in body["issues"])
 
 
 def test_branches(client, auth_headers):

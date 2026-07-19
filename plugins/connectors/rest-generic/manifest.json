@@ -1,0 +1,23 @@
+{
+  "id": "rest-generic",
+  "name": "Generic REST",
+  "nameZh": "通用 REST",
+  "description": "HTTP/JSON 源占位",
+  "kind": "source",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "stub",
+  "capabilities": [
+    "rest",
+    "http"
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "secretRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      }
+    }
+  }
+}

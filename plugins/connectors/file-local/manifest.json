@@ -1,0 +1,24 @@
+{
+  "id": "file-local",
+  "name": "Local File",
+  "nameZh": "本地文件",
+  "description": "本地/浏览器上传 · MediaSet",
+  "kind": "source",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "live",
+  "capabilities": [
+    "file",
+    "upload",
+    "media"
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "secretRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      }
+    }
+  }
+}

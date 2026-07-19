@@ -32,7 +32,7 @@ import shlex
 from pathlib import Path
 
 root = Path(os.environ["ROOT"])
-prefixes = ("AGNES_", "AOS_LLM_", "AOS_LITELLM_", "AOS_S3_", "MINIO_", "AOS_MYSQL_", "MYSQL_", "AOS_OCR_")
+prefixes = ("AGNES_", "AOS_LLM_", "AOS_LITELLM_", "AOS_S3_", "MINIO_", "AOS_MYSQL_", "MYSQL_", "AOS_OCR_", "AOS_ANALYTICS_")
 for path in (root / ".env", root / "deploy" / "dev" / ".env"):
     if not path.is_file():
         continue
@@ -80,6 +80,7 @@ export AOS_S3_ENDPOINT="${AOS_S3_ENDPOINT:-http://127.0.0.1:9000}"
 export AOS_S3_BUCKET="${AOS_S3_BUCKET:-aos-media}"
 export AOS_S3_ACCESS_KEY="${AOS_S3_ACCESS_KEY:-aosdev}"
 export AOS_S3_SECRET_KEY="${AOS_S3_SECRET_KEY:-aos_dev_only_change_me}"
+export AOS_ANALYTICS_URL="${AOS_ANALYTICS_URL:-http://127.0.0.1:8084}"
 export PYTHONPATH="$ROOT/services/aos-api${PYTHONPATH:+:$PYTHONPATH}"
 
 export AOS_ENSURE_ROOT="$ROOT"

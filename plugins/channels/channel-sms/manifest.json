@@ -1,0 +1,17 @@
+{
+  "id": "channel-sms",
+  "name": "SMS",
+  "nameZh": "短信通道",
+  "description": "诚实 stub · 另刀实现",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "stub",
+  "capabilities": [
+    "notify",
+    "sms"
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {}
+  }
+}

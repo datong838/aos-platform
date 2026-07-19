@@ -1,5 +1,5 @@
 # AOS local Dev prerequisites ONLY — never ship in customer dist.
-# Spec: docs/palantier/20_tech/24 §4 · 23 R-INST / R-LIC · 33 T3.9 LiteLLM · 37 T4.8 OCR
+# Spec: docs/palantier/20_tech/24 §4 · 23 R-INST / R-LIC · 33 T3.9 LiteLLM · 37 T4.8 OCR · 110 TA.1 analytics
 # Usage: docker compose -f deploy/dev/docker-compose.yml up -d
 
 name: aos-dev-prereq
@@ -99,6 +99,23 @@ services:
         [
           "CMD-SHELL",
           "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8082/health')\"",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # TA.1 / doc 110 — analytics-runtime sidecar (shaped; UI never talks to this)
+  # Host port 8084 — do NOT use 8083 (Keycloak oidc / oidc-ha).
+  aos-dev-analytics:
+    build: ./analytics-runtime
+    container_name: aos-dev-analytics
+    ports:
+      - "8084:8084"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8084/health')\"",
         ]
       interval: 5s
       timeout: 3s

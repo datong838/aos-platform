@@ -36,10 +36,10 @@ export function MaturityPage() {
       lede="别一上来做自动化。先 Threads，再固化 Agent，再嵌应用，最后才自动化。"
     >
       <BpToolbar>
-        <Link to="/aip/tools" className="muted">
+        <Link to="/aip/tools" className="btn-nav">
           工具面板 →
         </Link>
-        <Link to="/aip/logic" className="muted">
+        <Link to="/aip/logic" className="btn-nav">
           Logic 画布
         </Link>
       </BpToolbar>
@@ -58,7 +58,7 @@ export function MaturityPage() {
             </div>
             <div style={{ color: "#fcd34d", fontWeight: 500 }}>◆ L{level} 任务 Agent</div>
           </div>
-          <div className="muted" style={{ fontSize: "0.75rem" }}>
+          <div className="btn-nav">
             Eval {green ? "● 绿" : "○ 未绿"} · Draft ● 默认暂存 · 执行范围 ● 用户范围
           </div>
         </div>
@@ -208,10 +208,10 @@ export function CopPage() {
         >
           刷新态势
         </button>
-        <span className="muted" style={{ fontSize: "0.75rem" }}>
+        <span className="btn-nav">
           全屏态势布局 · 非独立大屏产品
         </span>
-        <Link to="/workshop" className="muted">
+        <Link to="/workshop" className="btn-nav">
           退出全屏 →
         </Link>
       </BpToolbar>
@@ -370,7 +370,7 @@ export function ModuleInterfacePage() {
         <button type="button" className="btn" onClick={() => reload()}>
           刷新
         </button>
-        <Link to="/workshop/canvas" className="muted">
+        <Link to="/workshop/canvas" className="btn-nav">
           返回画布 →
         </Link>
       </BpToolbar>

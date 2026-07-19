@@ -1,0 +1,19 @@
+{
+  "id": "graph-view",
+  "name": "Graph View",
+  "nameZh": "关系图",
+  "description": "1-hop 邻接列表 · adjacency_table（非 G6 · 106）",
+  "version": "0.2.0",
+  "author": "aos",
+  "runtime": "inproc",
+  "capabilities": ["widget", "graph"],
+  "canvasKind": "graph",
+  "palette": true,
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "objectType": { "type": "string" },
+      "objectId": { "type": "string" }
+    }
+  }
+}

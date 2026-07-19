@@ -33,7 +33,7 @@ export function OverviewPage() {
         <button type="button" className="btn" onClick={reload} disabled={loading}>
           {loading ? "刷新中…" : "刷新指标"}
         </button>
-        <Link to="/data" className="muted" style={{ fontSize: "0.75rem" }}>
+        <Link to="/data" className="btn-nav">
           数据连接 →
         </Link>
       </BpToolbar>

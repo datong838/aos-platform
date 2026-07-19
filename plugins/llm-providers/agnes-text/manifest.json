@@ -1,0 +1,39 @@
+{
+  "id": "agnes-text",
+  "name": "Agnes Text",
+  "nameZh": "Agnes Text（内网）",
+  "description": "平台内网文本推理",
+  "tier": "high",
+  "modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "llm",
+    "chat"
+  ],
+  "formFamily": "openai_compatible",
+  "defaultModels": [
+    "agnes-2.0-flash"
+  ],
+  "litellmPrefix": "openai/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "agnes-2.0-flash"
+        ]
+      }
+    }
+  }
+}

@@ -57,10 +57,10 @@ export function WorkshopListPage() {
         <button type="button" className="btn" onClick={() => void createDemo()}>
           + 新建 Module
         </button>
-        <Link to="/workshop/canvas" className="muted">
+        <Link to="/workshop/canvas" className="btn-nav">
           画布编辑 →
         </Link>
-        <Link to="/workshop/inbox" className="muted">
+        <Link to="/workshop/inbox" className="btn-nav">
           运营台 →
         </Link>
       </BpToolbar>

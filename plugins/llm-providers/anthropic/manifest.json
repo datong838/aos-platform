@@ -1,0 +1,45 @@
+{
+  "id": "anthropic",
+  "name": "Anthropic",
+  "nameZh": "Anthropic Claude",
+  "description": "Claude 系列",
+  "tier": "high",
+  "modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "llm",
+    "chat"
+  ],
+  "formFamily": "anthropic",
+  "defaultModels": [
+    "claude-sonnet-4",
+    "claude-opus"
+  ],
+  "litellmPrefix": "anthropic/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "claude-sonnet-4",
+          "claude-opus"
+        ]
+      },
+      "baseUrl": {
+        "type": "string",
+        "default": "https://api.anthropic.com"
+      }
+    }
+  }
+}

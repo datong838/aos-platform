@@ -13,13 +13,10 @@ A_NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
 
 
 def list_plugins() -> list[dict[str, str]]:
-    return [
-        {"id": "parser-text", "formats": "txt,md,csv", "note": "stdlib"},
-        {"id": "parser-office-word", "formats": "docx", "note": "OOXML zip+xml"},
-        {"id": "parser-office-sheet", "formats": "xlsx", "note": "OOXML zip+xml"},
-        {"id": "parser-pdf-text", "formats": "pdf", "note": "pypdf or heuristic"},
-        {"id": "parser-pdf-ocr", "formats": "pdf-scan,image", "note": "delegate OCR sidecar"},
-    ]
+    """98 · 清单来自 plugins/parsers 注册表；实现仍 inproc。"""
+    from aos_api.parser_registry import list_plugins_compat
+
+    return list_plugins_compat()
 
 
 def detect_format(name: str | None, content_type: str | None, data: bytes) -> str:

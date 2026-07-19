@@ -8,6 +8,9 @@ import {
   DecisionLineagePage,
 } from "./aip";
 import { GraphHealthPage, FunnelPage, WikiPage, BranchesPage } from "./ontology";
+import { ObjectTypeDetailPage } from "./ObjectTypeDetailPage";
+import { LinkTypeEditorPage } from "./LinkTypeEditorPage";
+import { ActionTypeEditorPage } from "./ActionTypeEditorPage";
 import {
   MediaSetsPage,
   PipelinesPage,
@@ -28,6 +31,7 @@ import {
   ApolloFerryPage,
   ApolloChangePage,
 } from "./remainder";
+import { AnalyticsPage } from "./analytics";
 
 /** Paths promoted in T-UI S2 knife-1～3 ([43]/[45]/[49]). */
 export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
@@ -46,6 +50,9 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "ontology/okf-funnel", Component: OkfFunnelPage },
   { path: "ontology/wiki", Component: WikiPage },
   { path: "ontology/branches", Component: BranchesPage },
+  { path: "ontology/object-types/:typeId", Component: ObjectTypeDetailPage },
+  { path: "ontology/link-types/:linkId", Component: LinkTypeEditorPage },
+  { path: "ontology/action-types/:actionId", Component: ActionTypeEditorPage },
   { path: "data/media-sets", Component: MediaSetsPage },
   { path: "data/pipelines", Component: PipelinesPage },
   { path: "data/pipeline-proposals", Component: PipelineProposalsPage },
@@ -62,6 +69,7 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "apollo/assets", Component: ApolloAssetsPage },
   { path: "apollo/change", Component: ApolloChangePage },
   { path: "apollo/config", Component: ApolloConfigPage },
+  { path: "analytics", Component: AnalyticsPage },
 ];
 
 export const S2_LIVE_PATHS = new Set(S2_LIVE_ROUTES.map((r) => `/${r.path}`));

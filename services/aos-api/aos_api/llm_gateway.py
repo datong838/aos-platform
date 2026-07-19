@@ -122,29 +122,73 @@ def probe_sidecar(timeout: float = 1.5) -> dict[str, Any]:
     return {"ok": False, "sidecar": "litellm-down", "detail": last}
 
 
-def chat(query: str, *, with_tools: bool = False, tools: list[str] | None = None) -> dict[str, Any]:
-    """Prefer Agnes (.env) → LiteLLM sidecar → mock fallback."""
+def chat(
+    query: str,
+    *,
+    model: str | None = None,
+    with_tools: bool = False,
+    tools: list[str] | None = None,
+) -> dict[str, Any]:
+    """Honor explicit model when provided; else follow platform default gateway (85)."""
     load_dotenv()
     tools_used = tools or ([] if not with_tools else ["query.objects"])
     tool_calls = [{"toolId": t, "ok": True} for t in tools_used]
+    requested = (model or "").strip() or None
 
-    # 1) Agnes OpenAI-compatible (configured via .env)
-    if agnes_configured():
+    if requested:
+        return _chat_for_model(requested, query=query, tool_calls=tool_calls)
+
+    from aos_api.gateway_default import get_gateway_default
+
+    gd = get_gateway_default()
+    kind = str(gd.get("kind") or "")
+    default_model = str(gd.get("defaultModel") or "").strip() or None
+
+    if kind == "plugin" and default_model:
+        return _chat_for_model(default_model, query=query, tool_calls=tool_calls)
+
+    if kind == "litellm" or (kind in {"", "mock"} and not agnes_configured() and litellm_url()):
+        base = litellm_url()
+        litellm_m = default_model or litellm_model()
+        if base:
+            try:
+                out = _openai_chat(
+                    base_url=base,
+                    api_key=resolve_master_key(),
+                    model=litellm_m,
+                    query=query,
+                    timeout=30,
+                )
+                log.info("llm_chat via=litellm model=%s answer_len=%s", litellm_m, len(out["answer"]))
+                return {
+                    "answer": out["answer"],
+                    "provider": litellm_m,
+                    "model": litellm_m,
+                    "warm": True,
+                    "route": "litellm-sidecar",
+                    "sidecar": "litellm",
+                    "apiKeyRef": key_ref(),
+                    "toolCalls": tool_calls,
+                }
+            except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError, json.JSONDecodeError) as exc:
+                log.warning("llm_chat_sidecar_fail err=%s", exc)
+                if fallback_mode() == "off":
+                    raise
+
+    if kind in {"agnes", ""} and agnes_configured():
         try:
+            use_model = default_model or agnes_text_model()
             out = _openai_chat(
                 base_url=agnes_base_url(),
                 api_key=agnes_api_key(),
-                model=agnes_text_model(),
+                model=use_model,
                 query=query,
             )
-            log.info(
-                "llm_chat via=agnes model=%s answer_len=%s",
-                agnes_text_model(),
-                len(out["answer"]),
-            )
+            log.info("llm_chat via=agnes model=%s answer_len=%s", use_model, len(out["answer"]))
             return {
                 "answer": out["answer"],
-                "provider": agnes_text_model(),
+                "provider": use_model,
+                "model": use_model,
                 "warm": True,
                 "route": "agnes",
                 "sidecar": "agnes-openai-compatible",
@@ -157,40 +201,14 @@ def chat(query: str, *, with_tools: bool = False, tools: list[str] | None = None
             if fallback_mode() == "off":
                 raise
 
-    # 2) LiteLLM-shaped sidecar
-    base = litellm_url()
-    model = litellm_model()
-    if base:
-        try:
-            out = _openai_chat(
-                base_url=base,
-                api_key=resolve_master_key(),
-                model=model,
-                query=query,
-                timeout=30,
-            )
-            log.info("llm_chat via=litellm model=%s answer_len=%s", model, len(out["answer"]))
-            return {
-                "answer": out["answer"],
-                "provider": model,
-                "warm": True,
-                "route": "litellm-sidecar",
-                "sidecar": "litellm",
-                "apiKeyRef": key_ref(),
-                "toolCalls": tool_calls,
-            }
-        except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError, json.JSONDecodeError) as exc:
-            log.warning("llm_chat_sidecar_fail err=%s", exc)
-            if fallback_mode() == "off":
-                raise
-
     if fallback_mode() == "off":
-        raise RuntimeError("No LLM provider available (Agnes/.env or AOS_LITELLM_URL)")
+        raise RuntimeError("No LLM provider available (默认网关 / Agnes / LiteLLM)")
 
     log.info("llm_chat via=fallback-mock query_len=%s", len(query))
     return {
         "answer": f"[mock-llm] {query}",
         "provider": "mock-llm",
+        "model": "mock-llm",
         "warm": True,
         "route": "fallback-mock",
         "sidecar": "fallback-mock",
@@ -199,38 +217,181 @@ def chat(query: str, *, with_tools: bool = False, tools: list[str] | None = None
     }
 
 
-def providers_payload() -> dict[str, Any]:
-    load_dotenv()
-    items: list[dict[str, Any]] = []
-    if agnes_configured():
-        items.append(
-            {
-                "id": agnes_text_model(),
-                "name": "Agnes Text",
-                "ready": True,
-                "apiKeyRef": key_ref(),
-                "kind": "text",
-            }
+def _chat_for_model(requested: str, *, query: str, tool_calls: list[dict[str, Any]]) -> dict[str, Any]:
+    agnes_ids = {x for x in (agnes_text_model(), agnes_image_model()) if x}
+    if requested in agnes_ids or (agnes_configured() and requested.startswith("agnes-")):
+        if not agnes_configured():
+            raise RuntimeError(f"模型 {requested} 需要 Agnes 网关，但未配置 AGNES_*")
+        use_model = requested if requested != agnes_image_model() else agnes_text_model()
+        out = _openai_chat(
+            base_url=agnes_base_url(),
+            api_key=agnes_api_key(),
+            model=use_model,
+            query=query,
         )
-        if agnes_image_model():
-            items.append(
-                {
-                    "id": agnes_image_model(),
-                    "name": "Agnes Image",
-                    "ready": True,
-                    "apiKeyRef": key_ref(),
-                    "kind": "image",
-                }
-            )
         return {
-            "items": items,
+            "answer": out["answer"],
+            "provider": requested,
+            "model": requested,
+            "warm": True,
+            "route": "agnes",
             "sidecar": "agnes-openai-compatible",
             "apiKeyRef": key_ref(),
-            "endpoint": agnes_base_url(),
-            "defaultTextModel": agnes_text_model(),
-            "probe": {"ok": True, "sidecar": "agnes"},
+            "toolCalls": tool_calls,
         }
 
+    from aos_api.llm_provider_registry import (
+        find_plugin_for_model,
+        plugin_base_url,
+        resolve_plugin_api_key,
+    )
+
+    hit = find_plugin_for_model(requested)
+    if hit:
+        pid = str(hit["pluginId"])
+        cfg = hit.get("config") or {}
+        man = hit.get("manifest") or {}
+        base = plugin_base_url(pid, cfg, man)
+        if not base:
+            raise RuntimeError(f"插件 {pid} 未配置 Base URL，请到供应商页保存配置")
+        api_key = resolve_plugin_api_key(pid, str(cfg.get("secretRef") or ""))
+        if not api_key:
+            raise RuntimeError(
+                f"模型 {requested}（插件 {pid}）未绑定可用密钥。"
+                "请在「管理凭据」粘贴 API Key 并保存，或设置环境变量 "
+                "AOS_DEEPSEEK_API_KEY / DEEPSEEK_API_KEY"
+            )
+        out = _openai_chat(base_url=base, api_key=api_key, model=requested, query=query)
+        log.info("llm_chat via=plugin id=%s model=%s answer_len=%s", pid, requested, len(out["answer"]))
+        return {
+            "answer": out["answer"],
+            "provider": requested,
+            "model": requested,
+            "warm": True,
+            "route": f"plugin:{pid}",
+            "sidecar": "plugin-openai-compatible",
+            "pluginId": pid,
+            "apiKeyRef": cfg.get("secretRef") or f"plugin:{pid}",
+            "toolCalls": tool_calls,
+        }
+
+    base = litellm_url()
+    if base:
+        out = _openai_chat(
+            base_url=base,
+            api_key=resolve_master_key(),
+            model=requested,
+            query=query,
+            timeout=30,
+        )
+        return {
+            "answer": out["answer"],
+            "provider": requested,
+            "model": requested,
+            "warm": True,
+            "route": "litellm-sidecar",
+            "sidecar": "litellm",
+            "apiKeyRef": key_ref(),
+            "toolCalls": tool_calls,
+        }
+
+    raise RuntimeError(
+        f"无法路由模型 {requested}：未找到就绪插件，且 LiteLLM 未配置。"
+        "请先在供应商页「启用就绪」并绑定密钥。"
+    )
+
+
+def _providers_from_agnes() -> dict[str, Any]:
+    items: list[dict[str, Any]] = [
+        {
+            "id": agnes_text_model(),
+            "name": "Agnes Text",
+            "ready": True,
+            "apiKeyRef": key_ref(),
+            "kind": "text",
+        }
+    ]
+    if agnes_image_model():
+        items.append(
+            {
+                "id": agnes_image_model(),
+                "name": "Agnes Image",
+                "ready": True,
+                "apiKeyRef": key_ref(),
+                "kind": "image",
+            }
+        )
+    return {
+        "items": items,
+        "sidecar": "agnes-openai-compatible",
+        "apiKeyRef": key_ref(),
+        "endpoint": agnes_base_url(),
+        "defaultTextModel": agnes_text_model(),
+        "probe": {"ok": True, "sidecar": "agnes"},
+        "gatewayKind": "agnes",
+    }
+
+
+def _providers_from_plugin(plugin_id: str, default_model: str | None) -> dict[str, Any]:
+    from aos_api.llm_provider_registry import (
+        get_plugin_config,
+        list_llm_provider_plugins,
+        plugin_base_url,
+    )
+
+    plug = next(
+        (i for i in list_llm_provider_plugins().get("items") or [] if i.get("id") == plugin_id),
+        None,
+    )
+    if not plug or not plug.get("ready"):
+        # Fall back so UI still loads
+        if agnes_configured():
+            return _providers_from_agnes()
+        return {
+            "items": [{"id": "mock-llm", "name": "Fallback Mock", "ready": True, "apiKeyRef": key_ref()}],
+            "sidecar": "fallback-mock",
+            "apiKeyRef": key_ref(),
+            "probe": {"ok": False, "sidecar": "fallback-mock"},
+            "gatewayKind": "mock",
+        }
+
+    cfg = get_plugin_config(plugin_id)
+    models = list(cfg.get("models") or plug.get("enabledModels") or plug.get("defaultModels") or [plugin_id])
+    label = str(plug.get("nameZh") or plug.get("name") or plugin_id)
+    secret = str(cfg.get("secretRef") or f"vault:secret/data/aos/llm#{plugin_id}")
+    items = []
+    for mid in models:
+        mid_s = str(mid)
+        kind = "image" if "image" in mid_s.lower() else ("video" if "video" in mid_s.lower() else "text")
+        items.append(
+            {
+                "id": mid_s,
+                "name": f"{label} · {mid_s}",
+                "ready": True,
+                "apiKeyRef": secret,
+                "kind": kind,
+                "pluginId": plugin_id,
+            }
+        )
+    endpoint = plugin_base_url(
+        plugin_id,
+        cfg,
+        {"configSchema": plug.get("configSchema") or {}},
+    ) or ""
+    text_default = default_model or next((i["id"] for i in items if i["kind"] == "text"), items[0]["id"] if items else None)
+    return {
+        "items": items,
+        "sidecar": f"plugin:{plugin_id}",
+        "apiKeyRef": secret,
+        "endpoint": endpoint,
+        "defaultTextModel": text_default,
+        "probe": {"ok": True, "sidecar": f"plugin:{plugin_id}"},
+        "gatewayKind": "plugin",
+        "pluginId": plugin_id,
+    }
+
+
+def _providers_from_litellm() -> dict[str, Any]:
     probe = probe_sidecar()
     if probe.get("ok"):
         items = [
@@ -239,6 +400,7 @@ def providers_payload() -> dict[str, Any]:
                 "name": "LiteLLM Dev Provider",
                 "ready": True,
                 "apiKeyRef": key_ref(),
+                "kind": "text",
             }
         ]
         sidecar = "litellm"
@@ -249,6 +411,7 @@ def providers_payload() -> dict[str, Any]:
                 "name": "Fallback Mock (no Agnes / sidecar)",
                 "ready": True,
                 "apiKeyRef": key_ref(),
+                "kind": "text",
             }
         ]
         sidecar = str(probe.get("sidecar") or "fallback-mock")
@@ -256,39 +419,65 @@ def providers_payload() -> dict[str, Any]:
         "items": items,
         "sidecar": sidecar,
         "apiKeyRef": key_ref(),
+        "defaultTextModel": items[0]["id"] if items else None,
         "probe": probe,
+        "gatewayKind": "litellm" if probe.get("ok") else "mock",
+    }
+
+
+def providers_payload() -> dict[str, Any]:
+    """GET /v1/aip/providers — 运行态卡片跟随平台默认网关（85）。"""
+    load_dotenv()
+    from aos_api.gateway_default import get_gateway_default
+
+    gd = get_gateway_default()
+    kind = str(gd.get("kind") or "")
+    if kind == "plugin" and gd.get("pluginId"):
+        return _providers_from_plugin(str(gd["pluginId"]), gd.get("defaultModel"))
+    if kind == "litellm":
+        return _providers_from_litellm()
+    if kind == "agnes" or (not kind and agnes_configured()):
+        if agnes_configured():
+            return _providers_from_agnes()
+    if litellm_url():
+        return _providers_from_litellm()
+    return {
+        "items": [
+            {
+                "id": "mock-llm",
+                "name": "Fallback Mock (no Agnes / sidecar)",
+                "ready": True,
+                "apiKeyRef": key_ref(),
+                "kind": "text",
+            }
+        ],
+        "sidecar": "fallback-mock",
+        "apiKeyRef": key_ref(),
+        "defaultTextModel": "mock-llm",
+        "probe": {"ok": False, "sidecar": "fallback-mock"},
+        "gatewayKind": "mock",
     }
 
 
 def warmup_payload() -> dict[str, Any]:
     load_dotenv()
-    if agnes_configured():
-        models = [{"id": agnes_text_model(), "state": "ready"}]
-        if agnes_image_model():
-            models.append({"id": agnes_image_model(), "state": "ready"})
-        return {
-            "ready": True,
-            "models": models,
-            "sidecar": "agnes-openai-compatible",
-            "apiKeyRef": key_ref(),
-        }
-    probe = probe_sidecar()
-    ready = bool(probe.get("ok")) or fallback_mode() != "off"
-    model_id = litellm_model() if probe.get("ok") else "mock-llm"
+    providers = providers_payload()
+    models = [{"id": p["id"], "state": "ready" if p.get("ready") is not False else "cold"} for p in providers.get("items") or []]
     return {
-        "ready": ready,
-        "models": [{"id": model_id, "state": "ready" if ready else "cold"}],
-        "sidecar": "litellm" if probe.get("ok") else probe.get("sidecar"),
-        "apiKeyRef": key_ref(),
+        "ready": bool(models) and providers.get("probe", {}).get("ok", True) is not False,
+        "models": models or [{"id": "mock-llm", "state": "cold"}],
+        "sidecar": providers.get("sidecar"),
+        "apiKeyRef": providers.get("apiKeyRef"),
     }
 
 
 def models_payload() -> dict[str, Any]:
-    """GET /v1/aip/models — routable model catalog (T-API)."""
+    """GET /v1/aip/models — routable model catalog (T-API) · 运行态 ∪ 已就绪插件模型。"""
     warm = warmup_payload()
     providers = providers_payload()
     by_id = {p["id"]: p for p in providers.get("items") or []}
     items = []
+    seen: set[str] = set()
     for m in warm.get("models") or []:
         mid = m["id"]
         meta = by_id.get(mid) or {}
@@ -300,11 +489,33 @@ def models_payload() -> dict[str, Any]:
                 "ready": m.get("state") == "ready",
                 "provider": meta.get("name") or mid,
                 "apiKeyRef": warm.get("apiKeyRef"),
+                "source": "runtime",
             }
         )
+        seen.add(mid)
+    try:
+        from aos_api.llm_provider_registry import routable_models_from_plugins
+
+        for pm in routable_models_from_plugins():
+            mid = str(pm.get("id") or "")
+            if not mid or mid in seen:
+                continue
+            items.append(pm)
+            seen.add(mid)
+    except Exception as exc:  # noqa: BLE001
+        log.warning("plugin_models_merge_skip err=%s", exc)
+
+    from aos_api.gateway_default import get_gateway_default
+
+    gd = get_gateway_default()
+    default_text = gd.get("defaultModel") or providers.get("defaultTextModel")
+    if not default_text:
+        default_text = next((i["id"] for i in items if i.get("kind") == "text"), None)
     return {
         "items": items,
-        "defaultTextModel": next((i["id"] for i in items if i["kind"] == "text"), None),
+        "defaultTextModel": default_text,
         "sidecar": warm.get("sidecar"),
         "apiKeyRef": warm.get("apiKeyRef"),
+        "gatewayKind": providers.get("gatewayKind"),
+        "pluginId": providers.get("pluginId"),
     }

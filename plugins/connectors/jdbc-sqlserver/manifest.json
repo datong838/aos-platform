@@ -1,0 +1,23 @@
+{
+  "id": "jdbc-sqlserver",
+  "name": "JDBC SQL Server",
+  "nameZh": "SQL Server JDBC",
+  "description": "鼓励排期 · 本刀仅注册表占位",
+  "kind": "source",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "stub",
+  "capabilities": [
+    "jdbc",
+    "sqlserver"
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "secretRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      }
+    }
+  }
+}

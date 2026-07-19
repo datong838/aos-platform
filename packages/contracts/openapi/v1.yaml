@@ -4,7 +4,7 @@ info:
   version: 0.3.1
   description: >
     Stable contract surface per docs/palantier/20_tech/T-API-aos-api稳定契约.md.
-    Aligned Wave-0～5 + G-ALIGN + TA.0 analytics stubs (scheme 73 v1.1).
+    Aligned Wave-0～5 + G-ALIGN + TA.0–TA.6 analytics (scheme 73 · 115 governance).
     See T-API for full narrative.
 servers:
   - url: /v1
@@ -716,10 +716,10 @@ paths:
   /notebooks/sessions:
     post:
       operationId: createNotebookSession
-      summary: Create analytics notebook session (Facade → Jupyter sidecar ticket)
+      summary: Create analytics notebook session (Facade → sidecar ticket)
       description: >
-        TA.0 contract stub. Web must not hold Jupyter admin credentials.
-        Returns short-lived ticket / controlled URL for Notebook 7 embed.
+        TA.2 implemented (shaped Dev). Web must not hold Jupyter/sidecar admin credentials.
+        Returns short-lived ticketed uiUrl for Notebook 7 (shaped) embed.
         Write-back of analysis results MUST go via /aip/drafts (no analyst self-approve).
       security:
         - bearerAuth: []
@@ -801,11 +801,177 @@ paths:
       responses:
         "200":
           description: stopped
+  /analytics/ontology-rail:
+    get:
+      operationId: analyticsOntologyRail
+      summary: Ontology left-rail catalog with insertable code snippets (TA.3)
+      description: >
+        Aggregates object types, sampled instances, and datasets with explore-only
+        code snippets (aos.objects / aos.datasets placeholders; TA.4 binds reads).
+        Does not execute cells or write production Ontology.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: typeLimit
+          in: query
+          schema: { type: integer, default: 20, maximum: 50 }
+        - name: instanceLimit
+          in: query
+          schema: { type: integer, default: 5, maximum: 20 }
+        - name: datasetLimit
+          in: query
+          schema: { type: integer, default: 20, maximum: 50 }
+      responses:
+        "200":
+          description: rail catalog
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /analytics/objects/list:
+    post:
+      operationId: analyticsObjectsList
+      summary: ObjectSet sample as table (TA.4 · aos.objects.list)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [objectType]
+              properties:
+                objectType: { type: string }
+                limit: { type: integer, default: 50, maximum: 1000 }
+                filters: { type: array, items: { type: object } }
+      responses:
+        "200":
+          description: tabular sample
+  /analytics/objects/get:
+    post:
+      operationId: analyticsObjectsGet
+      summary: Single object as table row (TA.4 · aos.objects.get)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [objectType, objectId]
+              properties:
+                objectType: { type: string }
+                objectId: { type: string }
+      responses:
+        "200":
+          description: one row
+        "404":
+          description: not found
+  /analytics/datasets/preview:
+    post:
+      operationId: analyticsDatasetsPreview
+      summary: Dataset preview via objectTypeHint (TA.4 · aos.datasets.preview)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [datasetRid]
+              properties:
+                datasetRid: { type: string }
+                limit: { type: integer, default: 100, maximum: 1000 }
+      responses:
+        "200":
+          description: tabular preview
+        "404":
+          description: dataset missing
+  /analytics/export:
+    post:
+      operationId: analyticsExport
+      summary: Export analysis sample (TA.6; deny if Marking-redacted)
+      description: >
+        Builds the same sample as objects/list or datasets/preview.
+        If any field was redacted for the principal, returns 403 ANALYTICS_EXPORT_FORBIDDEN.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                objectType: { type: string }
+                datasetRid: { type: string }
+                limit: { type: integer, default: 100 }
+                format: { type: string, default: json, enum: [json] }
+      responses:
+        "200":
+          description: export payload
+        "403":
+          description: redacted fields present
+  /analytics/lineage:
+    get:
+      operationId: analyticsLineage
+      summary: List decision_lineage for analytics object context (TA.6)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: objectType
+          in: query
+          required: true
+          schema: { type: string }
+        - name: objectId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 5, maximum: 20 }
+      responses:
+        "200":
+          description: lineage items
+  /analytics/writeback/propose:
+    post:
+      operationId: analyticsWritebackPropose
+      summary: Propose Draft from analysis (TA.5; no self-approve)
+      description: >
+        Creates draft_dataset only. autoApprove=true is rejected.
+        Production write requires POST /aip/drafts/{id}/approve (HITL).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [objectType, objectId]
+              properties:
+                objectType: { type: string }
+                objectId: { type: string }
+                proposed: { type: object }
+                actionTypeId: { type: string, default: CloseWorkOrder }
+                title: { type: string }
+                analysisNote: { type: string }
+                autoApprove: { type: boolean, default: false }
+      responses:
+        "201":
+          description: draft proposed
+        "400":
+          description: validation / self-approve / missing Idempotency-Key
   /analytics/sql/preview:
     post:
       operationId: analyticsSqlPreview
-      summary: SQL explore preview (DuckDB / Dataset; read-only)
-      description: TA.0 stub · TA.4 implements. Does not write production Ontology.
+      summary: Whitelist SQL preview (select 1 | select * over sample)
+      description: >
+        TA.4 read-only. Supports select 1 and select * with objectType/datasetRid.
+        Does not write production Ontology. Full DuckDB dialect deferred.
       security:
         - bearerAuth: []
       requestBody:
@@ -820,6 +986,8 @@ paths:
                   type: string
                 datasetRid:
                   type: string
+                objectType:
+                  type: string
                 limit:
                   type: integer
                   default: 100
@@ -828,7 +996,83 @@ paths:
         "200":
           description: preview rows
         "400":
-          description: invalid sql / marking deny
+          description: invalid / unsupported / forbidden sql
+  /analytics/contour/explore:
+    get:
+      operationId: analyticsContourExplore
+      summary: Contour subset — group-by bucket explore (TA.8)
+      description: >
+        ObjectSet sample aggregation. Not Superset / full Contour.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: objectType
+          in: query
+          schema: { type: string, default: WorkOrder }
+        - name: groupBy
+          in: query
+          schema: { type: string, default: status }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 200, maximum: 1000 }
+      responses:
+        "200":
+          description: buckets
+  /analytics/quiver/series:
+    get:
+      operationId: analyticsQuiverSeries
+      summary: Quiver subset — lineage-density timeseries (TA.8)
+      description: >
+        Daily decision_lineage counts. Not sensor Quiver / Timescale product.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: objectType
+          in: query
+          schema: { type: string, default: WorkOrder }
+        - name: limitDays
+          in: query
+          schema: { type: integer, default: 14, maximum: 90 }
+      responses:
+        "200":
+          description: series points
+  /analytics/vertex/experiments:
+    get:
+      operationId: analyticsVertexList
+      summary: Vertex subset — list experiment metadata (TA.8)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, maximum: 100 }
+      responses:
+        "200":
+          description: experiments
+    post:
+      operationId: analyticsVertexCreate
+      summary: Vertex subset — register experiment metadata (TA.8)
+      description: >
+        Metadata only; does not write Ontology. Not MLflow server.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                objectType: { type: string, default: WorkOrder }
+                params: { type: object }
+                metrics: { type: object }
+                mediaRid: { type: string }
+                note: { type: string }
+      responses:
+        "201":
+          description: experiment registered
   /analytics/health:
     get:
       operationId: analyticsHealth

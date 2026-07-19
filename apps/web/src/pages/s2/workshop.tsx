@@ -98,7 +98,7 @@ export function GraphExplorerPage() {
   return (
     <S2Chrome title="知识图谱" lede="Object+Link 页面展示 · 邻接 1-hop · Selection 绑定 Object View">
       <BpToolbar>
-        <span className="muted" style={{ fontSize: "0.75rem" }}>
+        <span className="btn-nav">
           Selection ·{" "}
           <span className="aos-text">{detail ? String(detail.title || objectId) : "—"}</span> · 维数{" "}
           <span style={{ color: "#fcd34d" }}>{neighbors.length + (objectId ? 1 : 0)} / 10</span>
@@ -113,7 +113,7 @@ export function GraphExplorerPage() {
             ))}
           </select>
         </label>
-        <Link to="/workshop/inbox" className="muted">
+        <Link to="/workshop/inbox" className="btn-nav">
           Inbox →
         </Link>
       </BpToolbar>
@@ -257,19 +257,43 @@ export function GraphExplorerPage() {
 }
 
 type WebhookRow = { id?: string; url?: string; event?: string; status?: string };
+type ChannelPlugin = {
+  id: string;
+  nameZh?: string;
+  name?: string;
+  installed?: boolean;
+  runtime?: string;
+};
 
-/** 83 · 对齐 workshop-events · 触发器表 + 幂等护栏 */
+/** 83/101 · 对齐 workshop-events · 通道插件 + Webhook 持久化 */
 export function EventsPage() {
   const { data, err, reload } = useJsonGet<{ items: WebhookRow[] }>("/v1/actions/webhooks");
+  const channelsApi = useJsonGet<{ items: ChannelPlugin[] }>("/v1/channel-plugins");
   const [msg, setMsg] = useState("");
+  const [hookUrl, setHookUrl] = useState("http://127.0.0.1:9999/hook");
+  const [hookEvent, setHookEvent] = useState("action.approved");
 
   async function register() {
     await apiPost("/v1/actions/webhooks", {
-      url: "http://127.0.0.1:9999/hook",
-      event: "action.approved",
+      url: hookUrl.trim() || "http://127.0.0.1:9999/hook",
+      event: hookEvent.trim() || "action.approved",
     });
-    setMsg("已注册 Demo webhook");
+    setMsg("已注册 webhook（已持久化）");
     reload();
+  }
+
+  async function sendWebhookDry() {
+    const r = await apiPost<{ ok?: boolean; matched?: number }>("/v1/channels/channel-webhook/send", {
+      event: hookEvent.trim() || "action.approved",
+      body: { ping: true },
+    });
+    setMsg(`通道投递 · matched=${r.matched ?? 0} · ok=${String(r.ok)}`);
+  }
+
+  async function installChannel(id: string) {
+    await apiPost(`/v1/channel-plugins/${encodeURIComponent(id)}/install`, {});
+    setMsg(`已安装通道 ${id}`);
+    channelsApi.reload();
   }
 
   const blueprintRows = [
@@ -285,29 +309,76 @@ export function EventsPage() {
     w.status === "registered" ? "● 已注册" : String(w.status || "—"),
   ]);
 
+  const channelRows = (channelsApi.data?.items || []).map((c) => [
+    c.nameZh || c.name || c.id,
+    c.id,
+    c.installed ? "已安装" : "未安装",
+    c.runtime || "—",
+    c.installed ? (
+      <span className="muted" key={c.id}>
+        —
+      </span>
+    ) : (
+      <button
+        key={c.id}
+        type="button"
+        className="bp-action-link"
+        onClick={() => void installChannel(c.id).catch((e) => setMsg(String(e)))}
+      >
+        安装
+      </button>
+    ),
+  ]);
+
   return (
-    <S2Chrome title="Events 配置面板" lede="Widget 事件绑定、变量写入与幂等键配置。">
+    <S2Chrome title="Events 配置面板" lede="Widget 事件绑定、通道插件与幂等键配置。">
       <BpToolbar>
         <button type="button" className="btn" onClick={() => void register().catch((e) => setMsg(String(e)))}>
-          + 注册 Demo Webhook
+          + 注册 Webhook
+        </button>
+        <button
+          type="button"
+          className="btn-nav"
+          onClick={() => void sendWebhookDry().catch((e) => setMsg(String(e)))}
+        >
+          试投递 channel-webhook
         </button>
         <button type="button" className="btn" onClick={() => reload()}>
           刷新
         </button>
-        <Link to="/workshop/canvas" className="muted">
+        <Link to="/workshop/canvas" className="btn-nav">
           画布配置 →
         </Link>
       </BpToolbar>
+      <div className="ont-form-grid" style={{ marginBottom: 12 }}>
+        <label className="ont-form-field">
+          <span>webhook URL</span>
+          <input className="aos-input" value={hookUrl} onChange={(e) => setHookUrl(e.target.value)} />
+        </label>
+        <label className="ont-form-field">
+          <span>event</span>
+          <input className="aos-input" value={hookEvent} onChange={(e) => setHookEvent(e.target.value)} />
+        </label>
+      </div>
       {msg && <p className="aos-text">{msg}</p>}
       {err && <p className="error">{err}</p>}
+      {channelsApi.err && <p className="error">{channelsApi.err}</p>}
 
       <div className="bp-object-panel">
-        <div className="bp-ws-section-title">已注册事件</div>
+        <div className="bp-ws-section-title">通知通道插件</div>
+        <BpTable
+          columns={["名称", "id", "安装", "runtime", ""]}
+          rows={channelRows.length ? channelRows : [["—", "—", "—", "—", "—"]]}
+        />
+        <div className="bp-ws-section-title" style={{ marginTop: "1rem" }}>
+          已注册事件
+        </div>
         <BpTable columns={["触发器", "动作", "目标变量", "幂等"]} rows={[...blueprintRows, ...apiRows]} />
       </div>
 
       <BpBanner tone="warn">
         <strong>幂等护栏</strong> · 写操作事件须配置 idempotencyKey，防止双击重复提交（对齐 ACT-07）。
+        Webhook 默认 dry-run（AOS_WEBHOOK_DRY_RUN=1）；邮件需 AOS_SMTP_HOST。
       </BpBanner>
     </S2Chrome>
   );

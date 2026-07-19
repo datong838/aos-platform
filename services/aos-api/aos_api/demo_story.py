@@ -1,4 +1,4 @@
-"""TB.1～TB.8 · Customer demo story surface (WorkOrder narrative)."""
+"""TB.1～TB.9 + TA.7 · Customer demo story surface (WorkOrder + analytics)."""
 from __future__ import annotations
 
 import json
@@ -185,6 +185,137 @@ def run_writeback_story(principal: Principal) -> dict[str, Any]:
             "drafts": "/aip/drafts",
             "lineage": "/aip/lineage",
         },
+    }
+
+
+def run_analytics_story(principal: Principal) -> dict[str, Any]:
+    """TA.7 · One-shot: analytics read → propose Draft → approve → lineage.
+
+    Demo-only auto-approve inside this story. Product path on /analytics remains
+    propose-only (no analyst self-approve).
+    """
+    from aos_api.auth import Principal as P
+    from aos_api.errors import ApiError
+    from aos_api.routers.actions import ensure_action_schema
+    from aos_api.routers.analytics import (
+        AnalyticsExportIn,
+        _list_objects_table,
+        analytics_export,
+        analytics_lineage,
+    )
+    from aos_api.routers.drafts import ensure_draft_schema
+    from aos_api.routers.runtime_write import _create_draft_from_execute, apply_draft_approval
+
+    ensure_demo_seed(repair=False)
+    ensure_action_schema()
+    ensure_draft_schema()
+
+    object_type = "WorkOrder"
+    object_id = "wo-1001"
+    read = _list_objects_table(principal, object_type, limit=10)
+    if int(read.get("total") or 0) < 1:
+        raise ApiError(
+            code="ANALYTICS_STORY_EMPTY",
+            message="analytics story requires WorkOrder sample rows",
+            status_code=503,
+        )
+
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s",
+            (object_type, object_id),
+        ).fetchone()
+    before = dict(row["props"]) if row and isinstance(row["props"], dict) else {}
+    cur_status = str(before.get("status") or "open")
+    next_status = "closed" if cur_status != "closed" else "open"
+    proposed = {
+        "reason": f"analytics-story-{next_status}",
+        "status": next_status,
+    }
+
+    created = _create_draft_from_execute(
+        principal=principal,
+        action_type_id="CloseWorkOrder",
+        object_type=object_type,
+        object_id=object_id,
+        proposed=proposed,
+    )
+    draft_id = str(created["id"])
+    approved = apply_draft_approval(
+        draft_id=draft_id,
+        principal=principal,
+        allow_conflicts=True,
+    )
+
+    with connect() as conn:
+        row2 = conn.execute(
+            "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s",
+            (object_type, object_id),
+        ).fetchone()
+    after = dict(row2["props"]) if row2 and isinstance(row2["props"], dict) else {}
+
+    lineage = analytics_lineage(
+        principal=principal,
+        objectType=object_type,
+        objectId=object_id,
+        limit=5,
+    )
+
+    export_probe: dict[str, Any] = {"ok": False}
+    public = P(
+        subject="demo:public-viewer-ta7",
+        org_id=principal.org_id,
+        project_id=principal.project_id,
+        roles=["viewer"],
+        markings=["public"],
+        token_kind="demo-probe",
+    )
+    try:
+        analytics_export(
+            AnalyticsExportIn(objectType=object_type, format="json", limit=5),
+            public,
+        )
+        export_probe = {"ok": True, "note": "unexpected allow for public export"}
+    except ApiError as exc:
+        export_probe = {
+            "ok": False,
+            "code": exc.code,
+            "statusCode": exc.status_code,
+            "expected": exc.code == "ANALYTICS_EXPORT_FORBIDDEN",
+        }
+
+    log.info(
+        "analytics_story_ok draft=%s lineage=%s before=%s after=%s",
+        draft_id,
+        approved.get("lineageId"),
+        before.get("status"),
+        after.get("status"),
+    )
+    return {
+        "ok": True,
+        "mode": "ta7-analytics-story",
+        "storyId": STORY_ID,
+        "objectType": object_type,
+        "objectId": object_id,
+        "read": {
+            "total": read.get("total"),
+            "governance": read.get("governance"),
+            "source": read.get("source"),
+        },
+        "draftId": draft_id,
+        "before": {"status": before.get("status")},
+        "after": {"status": after.get("status")},
+        "proposed": proposed,
+        "lineageId": approved.get("lineageId"),
+        "lineageItems": lineage.get("items") or [],
+        "exportProbePublic": export_probe,
+        "productionWritten": True,
+        "uiPaths": {
+            "analytics": "/analytics",
+            "drafts": "/aip/drafts",
+            "lineage": "/aip/lineage",
+        },
+        "note": "demo one-shot includes approve; product /analytics propose stays HITL-only",
     }
 
 
@@ -444,14 +575,30 @@ def demo_story_payload() -> dict[str, Any]:
             "api": "POST /v1/demo/run-capability",
             "say": "Job→MediaSet + CSV 解析 + OCR probe（不宣称生产 GPU）",
         },
+        {
+            "id": "TA.7",
+            "title": "分析→回写一镜",
+            "uiPath": "/analytics",
+            "api": "POST /v1/demo/run-analytics-story",
+            "say": "读数→propose Draft→（演示内）批准→谱系；产品路径仍禁自批",
+        },
+        {
+            "id": "TA.8",
+            "title": "Contour/Quiver/Vertex 子集",
+            "uiPath": "/analytics",
+            "api": "GET /v1/analytics/contour/explore · quiver/series · vertex/experiments",
+            "say": "各一屏可讲；明确子集非全集、非 Superset/MLflow 服务端",
+        },
     ]
     return {
         "storyId": STORY_ID,
         "title": STORY_TITLE,
         "deferred": {
             "apolloOps": True,
-            "analyticsNotebook": True,
-            "note": "Apollo 运维加深与产品 1.3 Jupyter/R/SQL 后置",
+            "analyticsNotebook": False,
+            "analyticsNotebookNote": "TA.0～8 MVP 已交付（shaped 边车+Facade+子集）；真 Jupyter/nbclient 仍后置",
+            "analyticsFullBiMl": True,
+            "note": "Apollo 运维加深与真 Jupyter/R/任意 SQL/BI·ML 全集后置",
         },
         "snapshot": snap,
         "steps": steps,

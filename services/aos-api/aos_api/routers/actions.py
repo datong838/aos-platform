@@ -53,32 +53,11 @@ def ensure_action_schema() -> None:
             ADD COLUMN IF NOT EXISTS submission_criteria JSONB NOT NULL DEFAULT '[]'::jsonb
             """
         )
-        row = conn.execute("SELECT COUNT(*) AS c FROM meta_action_type").fetchone()
-        if row and int(row["c"]) == 0:
-            conn.execute(
-                """
-                INSERT INTO meta_action_type
-                  (id, name, object_type, parameters, required_markings, submission_criteria)
-                VALUES (
-                  'CloseWorkOrder',
-                  '关闭工单',
-                  'WorkOrder',
-                  '[{"name":"reason","type":"string","required":true}]'::jsonb,
-                  '["public"]'::jsonb,
-                  '[{"field":"reason","op":"required"}]'::jsonb
-                )
-                """
-            )
-        else:
-            conn.execute(
-                """
-                UPDATE meta_action_type
-                SET submission_criteria = '[{"field":"reason","op":"required"}]'::jsonb
-                WHERE id='CloseWorkOrder'
-                  AND (submission_criteria IS NULL OR submission_criteria = '[]'::jsonb)
-                """
-            )
         conn.commit()
+    # 99 · 种子来自 plugins/actions，不再硬编码 INSERT
+    from aos_api.action_template_registry import seed_installed_action_types
+
+    seed_installed_action_types()
     log.info("action_schema_ready")
 
 
@@ -137,6 +116,64 @@ def create_action_type(
         )
         conn.commit()
     log.info("create_action_type id=%s", body.id)
+    return body.model_dump()
+
+
+@router.get("/v1/actions/types/{action_id}")
+def get_action_type(
+    action_id: str,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    _ = principal
+    ensure_action_schema()
+    with connect() as conn:
+        row = conn.execute(
+            """
+            SELECT id, name, object_type, parameters, required_markings, submission_criteria
+            FROM meta_action_type WHERE id=%s
+            """,
+            (action_id,),
+        ).fetchone()
+    if not row:
+        raise ApiError(code="NOT_FOUND", message="action type not found", status_code=404)
+    return _row_to_item(row)
+
+
+@router.put("/v1/actions/types/{action_id}")
+def update_action_type(
+    action_id: str,
+    body: ActionTypeIn,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """95 · 更新 Action Type 元数据。"""
+    _ = principal
+    if body.id != action_id:
+        raise ApiError(code="VALIDATION", message="id mismatch", status_code=400)
+    ensure_action_schema()
+    with connect() as conn:
+        exists = conn.execute(
+            "SELECT 1 FROM meta_action_type WHERE id=%s", (action_id,)
+        ).fetchone()
+        if not exists:
+            raise ApiError(code="NOT_FOUND", message="action type not found", status_code=404)
+        conn.execute(
+            """
+            UPDATE meta_action_type SET
+              name=%s, object_type=%s, parameters=%s::jsonb,
+              required_markings=%s::jsonb, submission_criteria=%s::jsonb
+            WHERE id=%s
+            """,
+            (
+                body.name,
+                body.objectType,
+                json.dumps(body.parameters),
+                json.dumps(body.requiredMarkings),
+                json.dumps(body.submissionCriteria),
+                action_id,
+            ),
+        )
+        conn.commit()
+    log.info("update_action_type id=%s", action_id)
     return body.model_dump()
 
 

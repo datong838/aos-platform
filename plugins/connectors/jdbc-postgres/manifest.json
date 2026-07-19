@@ -1,0 +1,23 @@
+{
+  "id": "jdbc-postgres",
+  "name": "JDBC PostgreSQL",
+  "nameZh": "PostgreSQL JDBC",
+  "description": "鼓励排期 · 本刀仅注册表占位",
+  "kind": "source",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "stub",
+  "capabilities": [
+    "jdbc",
+    "postgres"
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "secretRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      }
+    }
+  }
+}

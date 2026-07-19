@@ -1,0 +1,43 @@
+{
+  "id": "openrouter",
+  "name": "OpenRouter",
+  "nameZh": "OpenRouter",
+  "description": "多供应商聚合路由",
+  "tier": "mid",
+  "modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "llm",
+    "chat"
+  ],
+  "formFamily": "openai_compatible",
+  "defaultModels": [
+    "openrouter/auto"
+  ],
+  "litellmPrefix": "openrouter/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "openrouter/auto"
+        ]
+      },
+      "baseUrl": {
+        "type": "string",
+        "default": "https://openrouter.ai/api/v1"
+      }
+    }
+  }
+}

@@ -53,7 +53,7 @@ COMPOSE="deploy/dev/docker-compose.yml"
 step "Docker compose up (core stack)"
 docker compose -f "$COMPOSE" up -d \
   aos-dev-pg aos-dev-minio aos-dev-minio-init \
-  aos-dev-mysql aos-dev-llm-echo aos-dev-litellm aos-dev-ocr
+  aos-dev-mysql aos-dev-llm-echo aos-dev-litellm aos-dev-ocr aos-dev-analytics
 
 step "Wait PostgreSQL"
 ok=0
@@ -91,6 +91,7 @@ export AOS_AUTH_ALLOW_DEV=1
 export AOS_DATABASE_URL="${AOS_DATABASE_URL:-postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta}"
 export AOS_S3_ENDPOINT="${AOS_S3_ENDPOINT:-http://127.0.0.1:9000}"
 export AOS_S3_BUCKET="${AOS_S3_BUCKET:-aos-media}"
+export AOS_ANALYTICS_URL="${AOS_ANALYTICS_URL:-http://127.0.0.1:8084}"
 
 nohup "$PYTHON" -m uvicorn aos_api.main:app --host 127.0.0.1 --port 8080 \
   >"$LOG_DIR/aos-api.out.log" 2>"$LOG_DIR/aos-api.err.log" &

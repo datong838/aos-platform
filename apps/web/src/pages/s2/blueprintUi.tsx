@@ -157,16 +157,19 @@ export function BpTable({
   );
 }
 
-export function BpLinkRow({ links }: { links: { to: string; label: string }[] }) {
+export function BpLinkRow({
+  links,
+}: {
+  links: { to: string; label: string; accent?: boolean }[];
+}) {
   return (
-    <p className="muted" style={{ marginTop: "0.75rem" }}>
-      {links.map((l, i) => (
-        <span key={l.to}>
-          {i > 0 ? " · " : null}
-          <Link to={l.to}>{l.label}</Link>
-        </span>
+    <div className="bp-link-row">
+      {links.map((l) => (
+        <Link key={l.to} to={l.to} className={l.accent ? "btn-nav-accent" : "btn-nav"}>
+          {l.label}
+        </Link>
       ))}
-    </p>
+    </div>
   );
 }
 

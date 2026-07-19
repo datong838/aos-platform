@@ -223,10 +223,10 @@ export function InboxPage() {
         <Link to="/workshop/graph" className="bp-buddy-toolbar-btn" style={{ textDecoration: "none" }}>
           图谱台
         </Link>
-        <Link to="/workshop/canvas" className="muted" style={{ fontSize: "0.75rem" }}>
+        <Link to="/workshop/canvas" className="btn-nav">
           画布编辑 →
         </Link>
-        <Link to="/aip/drafts" className="muted" style={{ fontSize: "0.75rem" }}>
+        <Link to="/aip/drafts" className="btn-nav">
           Draft 审批 →
         </Link>
       </BpToolbar>

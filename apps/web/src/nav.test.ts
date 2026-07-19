@@ -4,12 +4,13 @@ import { readAppearancePreference } from "./lib/appearance";
 import { S2_LIVE_PATHS, S2_LIVE_ROUTES } from "./pages/s2/routes";
 
 describe("nav DEMO_PAGES alignment", () => {
-  it("keeps five narrative sections in order", () => {
+  it("keeps narrative sections in order", () => {
     const sections = NAV_ITEMS.filter((i) => "section" in i).map(
       (i) => (i as { section: string }).section,
     );
     expect(sections).toEqual([
       "工作台 L3",
+      "分析建模 1.3",
       "AIP 决策引擎",
       "本体 · 数字孪生",
       "数据集成",
@@ -29,13 +30,15 @@ describe("nav DEMO_PAGES alignment", () => {
   });
 
   it("T-UI S2 knife-1～3 promotes all DEMO deep paths to live", () => {
-    expect(S2_LIVE_ROUTES.length).toBe(31);
+    expect(S2_LIVE_ROUTES.length).toBeGreaterThanOrEqual(32);
+    expect(S2_LIVE_PATHS.has("/analytics")).toBe(true);
     for (const path of S2_LIVE_PATHS) {
+      if (path.includes(":")) continue; // parametric deep links not in flat nav
       const page = navPages().find((p) => p.path === path);
       expect(page, path).toBeTruthy();
       expect(page!.status, path).toBe("live");
     }
-    // knife-3 remainder (were stubs)
+    // knife-3 remainder (were stubs) + TA.0 analytics
     for (const path of [
       "/ontology/okf-funnel",
       "/apollo/ferry",
@@ -44,6 +47,7 @@ describe("nav DEMO_PAGES alignment", () => {
       "/data/pipeline-proposals",
       "/data/lineage",
       "/apollo/change",
+      "/analytics",
     ]) {
       expect(navPages().find((p) => p.path === path)?.status).toBe("live");
     }

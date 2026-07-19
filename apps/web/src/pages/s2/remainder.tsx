@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiGet, apiPost } from "../../api/client";
+import { apiGet, apiPost, apiPut } from "../../api/client";
 import {
   BpBanner,
   BpDebugPanel,
@@ -16,58 +16,134 @@ import {
 } from "./blueprintUi";
 import { JsonBlock, S2Chrome, useJsonGet } from "./shared";
 
-/** 77 · 对齐 okf-funnel / funnel.html */
+type OkfCol = { src: string; dst: string; ok: boolean };
+type OkfMapping = {
+  industry: string;
+  objectType?: string;
+  label?: string;
+  columns: OkfCol[];
+};
+
+/** 89 · OKF 映射真持久化 + Lint errors */
 export function OkfFunnelPage() {
   const funnel = useJsonGet<Record<string, unknown>>("/v1/funnel/WorkOrder/status");
   const modules = useJsonGet<{ items: { id: string; name?: string }[] }>("/v1/modules");
   const [industry, setIndustry] = useState("ecom");
-  const [lint, setLint] = useState<{ ok?: boolean; issues?: unknown[] } | null>(null);
+  const [mapping, setMapping] = useState<OkfMapping | null>(null);
+  const [lint, setLint] = useState<{ ok?: boolean; errors?: { rule?: string; message?: string }[] } | null>(
+    null,
+  );
   const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const columns = [
-    { src: "order_id", dst: "WorkOrder.id", ok: true },
-    { src: "title", dst: "WorkOrder.title", ok: true },
-    { src: "status", dst: "WorkOrder.status", ok: true },
-    { src: "site", dst: "WorkOrder.site", ok: true },
-  ];
+  async function loadMapping(ind: string) {
+    setErr("");
+    try {
+      const m = await apiGet<OkfMapping>(`/v1/ontology/okf-mappings/${encodeURIComponent(ind)}`);
+      setMapping(m);
+    } catch (e) {
+      setErr(String((e as Error).message || e));
+      setMapping(null);
+    }
+  }
+
+  useEffect(() => {
+    void loadMapping(industry);
+  }, [industry]);
+
+  const columns = mapping?.columns || [];
 
   async function runLint() {
     setMsg("");
-    const r = await apiPost<{ ok?: boolean; issues?: unknown[] }>("/v1/ontology/constitution/lint", {
-      id: "WorkOrder",
-      name: "WorkOrder",
-      published: true,
-      properties: [
-        { name: "status", type: "string" },
-        { name: "site", type: "string" },
-      ],
-    });
+    setErr("");
+    const ot = mapping?.objectType || "WorkOrder";
+    const r = await apiPost<{ ok?: boolean; errors?: { rule?: string; message?: string }[] }>(
+      "/v1/ontology/constitution/lint",
+      {
+        id: ot,
+        name: ot,
+        published: true,
+        properties: columns.filter((c) => c.ok).map((c) => ({
+          name: c.dst.split(".").pop() || c.src,
+          type: "string",
+        })),
+      },
+    );
     setLint(r);
-    setMsg(r.ok ? "Lint 通过" : "Lint 有告警");
+    setMsg(r.ok ? "Lint 通过" : `Lint 有告警 · ${r.errors?.length ?? 0} 条`);
+  }
+
+  async function saveMapping() {
+    if (!mapping) return;
+    setBusy(true);
+    setMsg("");
+    setErr("");
+    try {
+      const saved = await apiPut<OkfMapping>(
+        `/v1/ontology/okf-mappings/${encodeURIComponent(industry)}`,
+        mapping,
+      );
+      setMapping(saved);
+      setMsg(`已保存 ${industry} 映射 · ${saved.columns.length} 列`);
+    } catch (e) {
+      setErr(String((e as Error).message || e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function toggleCol(idx: number) {
+    if (!mapping) return;
+    const next = mapping.columns.map((c, i) => (i === idx ? { ...c, ok: !c.ok } : c));
+    setMapping({ ...mapping, columns: next });
   }
 
   return (
-    <S2Chrome title="OKF 行业漏斗" lede="对齐 okf-funnel · 行业模板 + 列映射 + Constitution">
+    <S2Chrome
+      title="OKF 行业漏斗"
+      lede="行业模板 · 列 → Object Type 映射（可保存）· Constitution Lint"
+    >
+      <div className="ont-page">
       <BpToolbar>
-        <button type="button" className="btn" onClick={() => void runLint().catch((e) => setMsg(String(e)))}>
+        <button
+          type="button"
+          className="btn-outline-cyan"
+          onClick={() => void runLint().catch((e) => setErr(String(e)))}
+        >
           Lint 检查
         </button>
-        <button type="button" className="btn" onClick={() => { funnel.reload(); modules.reload(); }}>
+        <button type="button" className="btn-primary" disabled={busy || !mapping} onClick={() => void saveMapping()}>
+          {busy ? "保存中…" : "保存映射"}
+        </button>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => {
+            funnel.reload();
+            modules.reload();
+            void loadMapping(industry);
+          }}
+        >
           刷新
         </button>
-        <Link to="/ontology/funnel" className="muted">
+        <Link to="/ontology/funnel" className="btn-nav">
           通用漏斗 →
         </Link>
+        <Link to="/ontology" className="btn-nav">
+          ← 本体管理
+        </Link>
       </BpToolbar>
-      {msg && <p className="aos-text">{msg}</p>}
-      {(funnel.err || modules.err) && <p className="error">{funnel.err || modules.err}</p>}
+      {msg && <p className="bp-prop-ok">{msg}</p>}
+      {(funnel.err || modules.err || err) && (
+        <p className="error">{funnel.err || modules.err || err}</p>
+      )}
 
       <BpSplit
         left={
-          <>
-            <h2 className="aos-text" style={{ fontSize: "0.875rem" }}>
-              OKF · 行业垂直定制
-            </h2>
+          <aside className="okf-industry-pane">
+            <h2 className="okf-industry-title">行业模板</h2>
+            <p className="okf-industry-hint">垂直行业定制 · 选中后右侧编辑映射</p>
             {[
               { id: "ecom", label: "跨境电商 · WorkOrder" },
               { id: "env", label: "环科院 · Pollutant" },
@@ -76,8 +152,7 @@ export function OkfFunnelPage() {
               <button
                 key={i.id}
                 type="button"
-                className={industry === i.id ? "nav-link active card" : "nav-link card"}
-                style={{ width: "100%", textAlign: "left", marginBottom: 4 }}
+                className={`okf-industry-item${industry === i.id ? " is-active" : ""}`}
                 onClick={() => setIndustry(i.id)}
               >
                 {i.label}
@@ -85,43 +160,68 @@ export function OkfFunnelPage() {
             ))}
             <p className="muted" style={{ fontSize: "0.75rem", marginTop: 12 }}>
               源 Dataset: <Link to="/data/datasets">WorkOrder-demo</Link>
+              <br />
+              Object Type: <span className="aos-text">{mapping?.objectType || "—"}</span>
             </p>
-          </>
+          </aside>
         }
         right={
-          <>
-            <h1 className="aos-text" style={{ fontSize: "1rem" }}>
-              列 → Object Type 映射
-            </h1>
+          <div className="okf-map-pane">
+            <div className="mp-section-head">
+              <h2 className="aos-text" style={{ fontSize: "0.95rem", margin: 0 }}>
+                列映射工作台
+              </h2>
+              <span className="mp-section-hint">{mapping?.label || industry}</span>
+            </div>
             <BpMetricGrid
               items={[
-                { label: "完成度", value: `${Math.round((columns.filter((c) => c.ok).length / columns.length) * 100)}%`, tone: "ok" },
+                {
+                  label: "完成度",
+                  value:
+                    columns.length === 0
+                      ? "—"
+                      : `${Math.round((columns.filter((c) => c.ok).length / columns.length) * 100)}%`,
+                  tone: "ok",
+                },
                 { label: "Funnel stage", value: String(funnel.data?.stage || "—"), tone: "muted" },
                 { label: "Modules", value: modules.data?.items?.length ?? 0, tone: "muted" },
               ]}
             />
             <BpTable
-              columns={["源列", "目标 Property", "状态"]}
-              rows={columns.map((c) => [
+              columns={["源列", "目标 Property", "状态", ""]}
+              rows={columns.map((c, idx) => [
                 c.src,
                 c.dst,
                 c.ok ? <span className="aos-text">已映射</span> : <span className="error">待补</span>,
+                <button
+                  key={`tog-${c.src}`}
+                  type="button"
+                  className="bp-action-link"
+                  onClick={() => toggleCol(idx)}
+                >
+                  {c.ok ? "标为待补" : "标为已映射"}
+                </button>,
               ])}
             />
             {lint && (
               <BpBanner tone={lint.ok ? "info" : "warn"}>
-                Constitution lint ok={String(lint.ok)} · issues={lint.issues?.length ?? 0}
+                Constitution lint ok={String(lint.ok)} · errors={lint.errors?.length ?? 0}
+                {(lint.errors || []).length > 0 && (
+                  <ul style={{ margin: "0.5rem 0 0", paddingLeft: "1.1rem", fontSize: "0.8rem" }}>
+                    {lint.errors!.map((e, i) => (
+                      <li key={i}>
+                        {e.rule}: {e.message}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </BpBanner>
             )}
-            <BpLinkRow
-              links={[
-                { to: "/workshop/module-interface", label: "模块接口" },
-                { to: "/ontology", label: "本体管理" },
-              ]}
-            />
-          </>
+            <BpLinkRow links={[{ to: "/workshop/module-interface", label: "模块接口 →" }]} />
+          </div>
         }
       />
+      </div>
     </S2Chrome>
   );
 }
@@ -157,7 +257,7 @@ export function PipelineProposalsPage() {
         <button type="button" className="btn" onClick={() => reload()}>
           刷新
         </button>
-        <Link to="/data/pipelines" className="muted">
+        <Link to="/data/pipelines" className="btn-nav">
           打开管道画布 →
         </Link>
       </BpToolbar>
@@ -279,7 +379,7 @@ export function DataLineagePage() {
         >
           刷新
         </button>
-        <Link to="/aip/lineage" className="muted">
+        <Link to="/aip/lineage" className="btn-nav">
           AIP 决策谱系 →
         </Link>
       </BpToolbar>

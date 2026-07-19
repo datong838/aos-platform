@@ -48,7 +48,7 @@ export function ApolloSpokePage() {
         >
           刷新
         </button>
-        <Link to="/apollo/release" className="muted">
+        <Link to="/apollo/release" className="btn-nav">
           Release 通道
         </Link>
       </BpToolbar>
@@ -209,7 +209,7 @@ export function ApolloAssetsPage() {
         <button type="button" className="btn" onClick={() => void pack()}>
           + 新建资产包
         </button>
-        <Link to="/apollo/release" className="muted">
+        <Link to="/apollo/release" className="btn-nav">
           Release 通道
         </Link>
       </BpToolbar>

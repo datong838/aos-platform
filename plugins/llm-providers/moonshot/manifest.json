@@ -1,0 +1,43 @@
+{
+  "id": "moonshot",
+  "name": "Moonshot",
+  "nameZh": "月之暗面 Kimi",
+  "description": "Kimi 长上下文",
+  "tier": "mid",
+  "modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "llm",
+    "chat"
+  ],
+  "formFamily": "openai_compatible",
+  "defaultModels": [
+    "moonshot-v1-128k"
+  ],
+  "litellmPrefix": "moonshot/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "moonshot-v1-128k"
+        ]
+      },
+      "baseUrl": {
+        "type": "string",
+        "default": "https://api.moonshot.cn/v1"
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "id": "openai-compatible",
+  "name": "OpenAI Compatible",
+  "nameZh": "OpenAI 兼容通用",
+  "description": "任意 OpenAI 兼容端点",
+  "tier": "mid",
+  "modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "llm",
+    "chat"
+  ],
+  "formFamily": "openai_compatible",
+  "defaultModels": [],
+  "litellmPrefix": "openai/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": []
+      },
+      "baseUrl": {
+        "type": "string",
+        "default": "https://api.example.com/v1"
+      }
+    }
+  }
+}

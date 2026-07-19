@@ -156,7 +156,7 @@ export function DraftInboxPage() {
                 </Link>
               </>
             ) : st === "approved" ? (
-              <Link to="/aip/lineage" className="muted">
+              <Link to="/aip/lineage" className="btn-nav">
                 查看决策链 →
               </Link>
             ) : null

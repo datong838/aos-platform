@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { apiGet, apiPost } from "../../api/client";
+import { apiGet, apiPost, apiPut } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
 import { BpDebugPanel } from "./blueprintUi";
 
@@ -40,10 +40,10 @@ export function S2Chrome({
   children: ReactNode;
 }) {
   return (
-    <PageChrome title={title} lede={`S2 MVP · ${lede}`}>
+    <PageChrome title={title} lede={lede}>
       {children}
     </PageChrome>
   );
 }
 
-export { apiGet, apiPost };
+export { apiGet, apiPost, apiPut };

@@ -102,7 +102,7 @@ export function OverviewDomainGrid({ metrics }: { metrics: OverviewMetrics | nul
       <BpDomainPanel
         tone="aip"
         title="AIP 人工智能平台 · k-LLM（核心调度） + Logic（编排引擎） + Agent Studio（Agent 开发工坊） + Assist（智能助手）"
-        hint="成熟度楼梯 → 工具面板 → 逻辑三栏（试跑不落库）"
+        hint="业务工作室 → 逻辑/工具 → 提案决策 → 模型配置"
       >
         <BpMetricGrid
           density="compact"
@@ -113,16 +113,17 @@ export function OverviewDomainGrid({ metrics }: { metrics: OverviewMetrics | nul
           ]}
         />
         <div className="bp-index-grid bp-index-grid-4">
-          <BpIndexTile to="/aip/maturity" eyebrow="成熟度" title="成熟度楼梯" desc="对话线程 → 智能体 → 自动化门控" accent="amber" />
-          <BpIndexTile to="/aip/tools" eyebrow="工具" title="智能体工具面板" desc="六类工具 · Wiki 子集" accent="amber" />
+          {/* 38 v1.5 · 业务 → 决策 → 配置；成熟度不放首位 */}
+          <BpIndexTile to="/aip/studio" eyebrow="工作室" title="对话工作室" desc="提示词 · 智能体配置" accent="amber" />
           <BpIndexTile to="/aip/logic" eyebrow="逻辑" title="AIP 逻辑画布" desc="三栏 · 思维链调试" accent="amber" />
+          <BpIndexTile to="/aip/tools" eyebrow="工具" title="智能体管理工作台" desc="六类工具 · Wiki 子集" accent="amber" />
           <BpIndexTile to="/aip/capabilities" eyebrow="能力" title="重能力接入" desc="任务 · 会话 · 媒体集" accent="cyan" />
-          <BpIndexTile to="/aip/model-providers" eyebrow="接入" title="模型供应商" desc="卡片 · 适配器" accent="amber" />
-          <BpIndexTile to="/aip/model-router" eyebrow="路由" title="模型路由" desc="任务类型 · 预热熔断" accent="amber" />
           <BpIndexTile to="/aip/drafts" eyebrow="提案" title="提案审批台" desc="人工批准 / 拒绝" accent="emerald" />
           <BpIndexTile to="/aip/evals" eyebrow="评测" title="评测门控" desc="高级自动化须评测通过" accent="amber" />
           <BpIndexTile to="/aip/lineage" eyebrow="谱系" title="决策谱系" desc="提案 → 动作 复盘" accent="violet" />
-          <BpIndexTile to="/aip/studio" eyebrow="工作室" title="对话工作室" desc="提示词 · 智能体配置" accent="amber" />
+          <BpIndexTile to="/aip/model-providers" eyebrow="接入" title="大模型接入(插件)" desc="卡片 · 适配器" accent="amber" />
+          <BpIndexTile to="/aip/model-router" eyebrow="路由" title="模型路由" desc="任务类型 · 预热熔断" accent="amber" />
+          <BpIndexTile to="/aip/maturity" eyebrow="成熟度" title="成熟度楼梯" desc="对话线程 → 智能体 → 自动化门控" accent="amber" />
         </div>
       </BpDomainPanel>
 

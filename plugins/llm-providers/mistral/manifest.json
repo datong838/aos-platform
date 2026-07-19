@@ -1,0 +1,43 @@
+{
+  "id": "mistral",
+  "name": "Mistral",
+  "nameZh": "Mistral",
+  "description": "Mistral / Mixtral",
+  "tier": "mid",
+  "modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "llm",
+    "chat"
+  ],
+  "formFamily": "openai_compatible",
+  "defaultModels": [
+    "mistral-large-latest"
+  ],
+  "litellmPrefix": "mistral/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "mistral-large-latest"
+        ]
+      },
+      "baseUrl": {
+        "type": "string",
+        "default": "https://api.mistral.ai/v1"
+      }
+    }
+  }
+}
