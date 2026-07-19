@@ -42,8 +42,8 @@ powershell -File scripts\demo\run-demo-smoke.ps1   # 或仅 demo smoke
 | 16–18 | `/aip/studio` 或 `/aip/logic` | Studio 试对话 / Logic Use LLM 块（可选） |
 | 16–18 | `/aip/lineage` → **治理探针** | 脱敏 `internalCost` · Marking FORBIDDEN |
 | 18–19 | `/aip/capabilities` → **业务一镜**（可选） | Job→MediaSet · CSV 解析 |
-| 19–21 | `/analytics` → **演示一镜（含批准）** | 读数→propose→一镜批准→谱系；强调日常仍「提交为 Draft」+ 审批台 |
-| 21–22 | `/analytics` → **Contour / Quiver / Vertex 子集** | 各点一屏；话术「子集可讲 · 非全集 · 非 Superset/MLflow」 |
+| 19–21 | `/analytics` | 产品面：读数 → 提交 Draft → 审批台；分组/时序/实验 |
+| 21–22 | API（彩排） | `POST /v1/demo/run-analytics-story`（**不**在产品页点；仅脚本/冒烟） |
 | 22–23 | 收束 | 「分析建模 MVP；Apollo Full / 真 Jupyter / BI·ML 全集另排期」 |
 
 ## 2. 故障回退

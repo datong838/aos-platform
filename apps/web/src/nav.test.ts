@@ -9,8 +9,7 @@ describe("nav DEMO_PAGES alignment", () => {
       (i) => (i as { section: string }).section,
     );
     expect(sections).toEqual([
-      "工作台 L3",
-      "分析建模 1.3",
+      "工作台",
       "AIP 决策引擎",
       "本体 · 数字孪生",
       "数据集成",

@@ -41,7 +41,7 @@ export type IconName =
 
 export const NAV_ITEMS: NavItem[] = [
   { id: "index", path: "/", label: "概览", icon: "home", status: "live", crumbs: ["工作区", "AOS 概览"] },
-  { section: "工作台 L3" },
+  { section: "工作台" },
   { id: "workshop", path: "/workshop", label: "应用列表", icon: "apps", status: "live", crumbs: ["工作台", "应用列表"] },
   {
     id: "workshop-canvas",
@@ -107,14 +107,13 @@ export const NAV_ITEMS: NavItem[] = [
     status: "live",
     crumbs: ["工作台", "事件配置"],
   },
-  { section: "分析建模 1.3" },
   {
     id: "analytics",
     path: "/analytics",
     label: "分析建模",
     icon: "table",
     status: "live",
-    crumbs: ["分析建模", "契约"],
+    crumbs: ["工作台", "分析建模"],
   },
   { section: "AIP 决策引擎" },
   {

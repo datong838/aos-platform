@@ -99,7 +99,7 @@ type VertexExp = {
   createdAt?: string;
 };
 
-/** 117 · TA.8 子集 · TA.7 演示 · 治理/读数/Draft · ≠ Workshop */
+/** 分析建模产品页 · 读数 / Draft / 治理 / 探索 · 对齐 75 去端面壳 */
 export function AnalyticsPage() {
   const health = useJsonGet<Health>("/v1/analytics/health");
   const sessions = useJsonGet<{ items?: SessionRow[] }>("/v1/notebooks/sessions");
@@ -111,7 +111,7 @@ export function AnalyticsPage() {
   const [exportErr, setExportErr] = useState<string | null>(null);
   const [lineageErr, setLineageErr] = useState<string | null>(null);
   const [lastCreated, setLastCreated] = useState<SessionRow | null>(null);
-  const [cell, setCell] = useState("# analytics cell buffer · click left rail to insert\n");
+  const [cell, setCell] = useState("# 分析单元格 · 点击左侧 Ontology 插入片段\n");
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -119,12 +119,10 @@ export function AnalyticsPage() {
   const [readResult, setReadResult] = useState<ReadResult | null>(null);
   const [wbObjectId, setWbObjectId] = useState("wo-1001");
   const [wbStatus, setWbStatus] = useState("closed");
-  const [wbReason, setWbReason] = useState("from-analytics-ta5");
+  const [wbReason, setWbReason] = useState("analysis-writeback");
   const [lastDraft, setLastDraft] = useState<DraftPropose | null>(null);
   const [exportResult, setExportResult] = useState<ReadResult | null>(null);
   const [lineageItems, setLineageItems] = useState<LineageItem[]>([]);
-  const [storyErr, setStoryErr] = useState<string | null>(null);
-  const [storyResult, setStoryResult] = useState<Record<string, unknown> | null>(null);
   const [subsetTab, setSubsetTab] = useState<"contour" | "quiver" | "vertex">("contour");
   const [contour, setContour] = useState<ContourExplore | null>(null);
   const [quiver, setQuiver] = useState<QuiverSeries | null>(null);
@@ -297,37 +295,11 @@ export function AnalyticsPage() {
         objectType: selectedType || "WorkOrder",
         params: { source: "analytics-ta8" },
         metrics: { score: Number.isFinite(score) ? score : 0 },
-        note: "subset registry only",
+        note: "experiment registry",
       });
       await tryVertexList();
     } catch (e) {
       setSubsetErr(e instanceof Error ? e.message : String(e));
-    }
-  }
-
-  /** TA.7 · 演示面一镜（含批准）；≠ 产品主路径自批 */
-  async function tryDemoAnalyticsStory() {
-    setStoryErr(null);
-    setStoryResult(null);
-    try {
-      const row = await apiPost<Record<string, unknown>>(
-        "/v1/demo/run-analytics-story",
-        {},
-      );
-      setStoryResult(row);
-      if (typeof row.draftId === "string") {
-        setLastDraft({
-          id: row.draftId,
-          status: "approved",
-          productionWritten: Boolean(row.productionWritten),
-          mode: "ta7-analytics-story",
-          message: String(row.note || "demo story wrote production via HITL approve"),
-          objectId: typeof row.objectId === "string" ? row.objectId : "wo-1001",
-        });
-      }
-      void tryLineage();
-    } catch (e) {
-      setStoryErr(e instanceof Error ? e.message : String(e));
     }
   }
 
@@ -374,17 +346,17 @@ export function AnalyticsPage() {
   return (
     <S2Chrome
       title="分析建模"
-      lede="117 · TA.8 探索子集 · TA.7 演示一镜 · 产品路径禁自批"
+      lede="读 Ontology / Dataset · 提交 Draft 写回 · Marking 治理 · 探索分析"
     >
       <BpToolbar>
         <button type="button" className="btn" onClick={() => { health.reload(); rail.reload(); }}>
           刷新
         </button>
         <button type="button" className="btn" onClick={() => void tryRead()}>
-          试跑读数
+          读数
         </button>
         <button type="button" className="btn" onClick={() => void tryExport()}>
-          试导出
+          导出
         </button>
         <button type="button" className="btn-nav" onClick={() => void tryLineage()}>
           查谱系
@@ -392,28 +364,20 @@ export function AnalyticsPage() {
         <button type="button" className="btn" onClick={() => void tryProposeDraft()}>
           提交为 Draft
         </button>
-        <button
-          type="button"
-          className="btn-nav-accent"
-          title="演示面：读数→propose→批准→谱系；日常请用「提交为 Draft」+ 审批台"
-          onClick={() => void tryDemoAnalyticsStory()}
-        >
-          演示一镜（含批准）
-        </button>
         <button type="button" className="btn-nav" onClick={() => void tryContour()}>
-          Contour 子集
+          分组探索
         </button>
         <button type="button" className="btn-nav" onClick={() => void tryQuiver()}>
-          Quiver 子集
+          时序
         </button>
         <button type="button" className="btn-nav" onClick={() => void tryVertexList()}>
-          Vertex 子集
+          实验登记
         </button>
         <button type="button" className="btn-nav" onClick={() => void tryCreateSession()}>
-          试创建会话
+          创建会话
         </button>
         <button type="button" className="btn-nav" onClick={() => void trySqlPreview()}>
-          试 SQL Preview
+          SQL 预览
         </button>
         <Link to="/aip/drafts" className="btn-nav-accent">
           Draft 审批台 →
@@ -422,13 +386,13 @@ export function AnalyticsPage() {
           决策谱系 →
         </Link>
         <Link to="/workshop/canvas" className="btn-nav">
-          Workshop 画布（≠ 1.3）→
+          工作台画布 →
         </Link>
       </BpToolbar>
 
       <BpBanner tone="info">
-        日常写回：提交为 Draft → 审批台。「演示一镜」仅彩排。Contour/Quiver/Vertex 为
-        <strong>子集</strong>，非全集、非 Superset/MLflow 服务端。≠ Workshop。
+        写回须经 Draft 审批台批准后落库；本页不可自批。含 Marking 脱敏字段时导出将被拒绝。
+        分组 / 时序 / 实验为探索能力，不等于完整 BI / ML 平台。
       </BpBanner>
 
       {health.err && <p className="error">{health.err}</p>}
@@ -438,10 +402,8 @@ export function AnalyticsPage() {
       {exportErr && <p className="error">export: {exportErr}</p>}
       {lineageErr && <p className="error">lineage: {lineageErr}</p>}
       {draftErr && <p className="error">draft: {draftErr}</p>}
-      {storyErr && <p className="error">demo-story: {storyErr}</p>}
-      {subsetErr && <p className="error">subset: {subsetErr}</p>}
+      {subsetErr && <p className="error">explore: {subsetErr}</p>}
       {sqlErr && <p className="error">sql: {sqlErr}</p>}
-      {storyResult && <JsonBlock value={storyResult} />}
 
       <div style={layout}>
         <aside
@@ -519,7 +481,7 @@ export function AnalyticsPage() {
           <ul style={{ listStyle: "none", padding: 0, margin: "0.5rem 0 0" }}>
             {datasets.length === 0 && (
               <li className="muted" style={{ fontSize: "0.7rem" }}>
-                （空 · 可先跑演示种子）
+                （暂无实例抽样）
               </li>
             )}
             {datasets.map((d) => (
@@ -571,7 +533,7 @@ export function AnalyticsPage() {
               type="button"
               className="btn-nav"
               onClick={() => {
-                setCell("# analytics cell buffer · click left rail to insert\n");
+                setCell("# 分析单元格 · 点击左侧 Ontology 插入片段\n");
                 setCopyHint(null);
               }}
             >
@@ -590,7 +552,7 @@ export function AnalyticsPage() {
           <p className="muted" style={{ fontSize: "0.75rem" }}>
             {readResult
               ? `kind=${readResult.kind} · total=${readResult.total ?? 0} · source=${readResult.source || "—"}`
-              : "尚未试跑"}
+              : "尚未读数"}
           </p>
           {readResult?.governance && (
             <p className="muted" style={{ fontSize: "0.75rem" }}>
@@ -624,7 +586,7 @@ export function AnalyticsPage() {
             写回 · 提交 Draft
           </h2>
           <p className="muted" style={{ fontSize: "0.75rem" }}>
-            productionWritten 恒为 false · 本页无批准按钮
+            本页只提案，批准请到 Draft 审批台
           </p>
           <div
             style={{
@@ -682,10 +644,10 @@ export function AnalyticsPage() {
           )}
 
           <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: 20 }}>
-            探索子集 · TA.8
+            探索分析
           </h2>
           <p className="muted" style={{ fontSize: "0.75rem" }}>
-            Contour=分组桶 · Quiver=谱系日密度 · Vertex=实验登记（元数据）
+            分组桶 · 谱系日密度时序 · 实验元数据登记
           </p>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
             <button
@@ -693,21 +655,21 @@ export function AnalyticsPage() {
               className={subsetTab === "contour" ? "btn" : "btn-nav"}
               onClick={() => void tryContour()}
             >
-              Contour
+              分组
             </button>
             <button
               type="button"
               className={subsetTab === "quiver" ? "btn" : "btn-nav"}
               onClick={() => void tryQuiver()}
             >
-              Quiver
+              时序
             </button>
             <button
               type="button"
               className={subsetTab === "vertex" ? "btn" : "btn-nav"}
               onClick={() => void tryVertexList()}
             >
-              Vertex
+              实验
             </button>
           </div>
           {subsetTab === "contour" && contour && (
@@ -752,12 +714,11 @@ export function AnalyticsPage() {
           {subsetTab === "quiver" && quiver && (
             <>
               <p className="muted" style={{ fontSize: "0.75rem" }}>
-                metric={quiver.metric} · points={(quiver.points || []).length}
-                {quiver.note ? ` · ${quiver.note}` : ""}
+                指标={quiver.metric || "—"} · 点数={(quiver.points || []).length}
               </p>
               {(quiver.points || []).length === 0 ? (
                 <p className="muted" style={{ fontSize: "0.75rem" }}>
-                  （尚无谱系日点 · 可先跑演示一镜或批准 Draft）
+                  （尚无时序点 · 批准 Draft 写回后可出现谱系密度）
                 </p>
               ) : (
                 <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", fontSize: "0.8rem" }}>
