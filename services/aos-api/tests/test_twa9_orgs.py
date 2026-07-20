@@ -16,6 +16,33 @@ from aos_api.orgs import reset_org_store, seed_dev_orgs
 from aos_api import mock_data
 
 
+def _seed_multi_org_test_fixtures() -> None:
+    """测试夹具：多组织场景用 org-a/org-b（产品默认种子已废止）。"""
+    from aos_api.membership import upsert_member
+    from aos_api.orgs import ensure_org
+    from aos_api.workspaces_catalog import ensure_workspace
+
+    for oid, name in (("org-a", "组织 A"), ("org-b", "组织 B")):
+        ensure_org(oid, name=name)
+        ensure_workspace(oid, "dev-project", name="默认工作区")
+        upsert_member(oid, "dev-project", "alice", "owner", actor_id="alice")
+
+
+def _scrub_ephemeral_test_orgs() -> None:
+    """共享 aos_meta 时清掉多组织夹具，勿动 org-qyh。"""
+    from aos_api.db import connect
+
+    try:
+        with connect() as conn:
+            for oid in ("org-a", "org-b", "org-x-unknown"):
+                conn.execute("DELETE FROM meta_membership WHERE org_id=%s", (oid,))
+                conn.execute("DELETE FROM meta_workspace WHERE org_id=%s", (oid,))
+                conn.execute("DELETE FROM meta_org WHERE id=%s", (oid,))
+            conn.commit()
+    except Exception:  # noqa: BLE001
+        pass
+
+
 @pytest.fixture()
 def api_client():
     idempotency_store.clear()
@@ -25,12 +52,14 @@ def api_client():
     seed_dev_defaults()
     reset_org_store()
     seed_dev_orgs()
+    _seed_multi_org_test_fixtures()
     for k in ("AGNES_API_KEY", "AGNES_BASE_URL", "AOS_LITELLM_URL"):
         os.environ.pop(k, None)
     os.environ["AOS_LITELLM_FALLBACK"] = "mock"
     app = create_app()
     with TestClient(app) as c:
         yield c
+    _scrub_ephemeral_test_orgs()
 
 
 def _auth(org: str, project: str, subject: str = "alice"):

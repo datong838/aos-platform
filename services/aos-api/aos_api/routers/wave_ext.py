@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeout
@@ -18,6 +19,44 @@ from aos_api.logging_facade import get_logger
 router = APIRouter(tags=["wave3-plus"])
 log = get_logger("aos-api.wave3_plus")
 
+
+def _demo_data_seed_enabled() -> bool:
+    return (os.environ.get("AOS_DEMO_DATA_SEED") or "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+
+
+def clear_demo_data_surface() -> dict[str, Any]:
+    """Remove demo-file-wo / demo-pipe-wo / demo dataset / demo sync / dlq sample."""
+    removed: dict[str, Any] = {"sources": [], "pipelines": [], "datasets": [], "syncs": [], "schedules": [], "dlq": 0}
+    for sid in ("demo-file-wo",):
+        if sid in _connectors:
+            del _connectors[sid]
+            removed["sources"].append(sid)
+    for pid in ("demo-pipe-wo",):
+        if pid in _pipelines:
+            del _pipelines[pid]
+            removed["pipelines"].append(pid)
+    for rid in ("ri.dataset.demo-workorder",):
+        if rid in _datasets:
+            del _datasets[rid]
+            removed["datasets"].append(rid)
+        _dataset_history.pop(rid, None)
+    for sid in ("sync-demo-wo",):
+        if sid in _syncs:
+            del _syncs[sid]
+            removed["syncs"].append(sid)
+    for sch in ("demo-sch-wo",):
+        if sch in _schedules:
+            del _schedules[sch]
+            removed["schedules"].append(sch)
+    before = len(_dlq)
+    _dlq[:] = [d for d in _dlq if not (isinstance(d, dict) and str(d.get("id", "")).startswith("dlq-demo"))]
+    removed["dlq"] = before - len(_dlq)
+    log.info("demo_data_cleared %s", removed)
+    return {"ok": True, "removed": removed}
 
 @router.get("/v1/demo/story")
 def demo_story(principal: Principal = Depends(require_principal)):
@@ -94,8 +133,14 @@ _datasets: dict[str, dict[str, Any]] = {}
 _dataset_history: dict[str, list[dict[str, Any]]] = {}
 
 
-def ensure_demo_data_seed() -> dict[str, Any]:
-    """TB.2 · Idempotent in-memory source/pipeline/dataset + sample DLQ for /data demo."""
+def ensure_demo_data_seed(*, force: bool = False) -> dict[str, Any]:
+    """TB.2 · Idempotent demo source/pipeline/dataset.
+
+    默认 **不** 自动播种（产品数据连接页禁止演示垃圾）。
+    仅当 force=True（demo story / 单测）或 AOS_DEMO_DATA_SEED=1 时写入。
+    """
+    if not force and not _demo_data_seed_enabled():
+        return {"ok": True, "mode": "skipped", "reason": "AOS_DEMO_DATA_SEED off"}
     src_id = "demo-file-wo"
     pipe_id = "demo-pipe-wo"
     ds_rid = "ri.dataset.demo-workorder"
@@ -222,6 +267,9 @@ class PipelineIn(BaseModel):
     sourceId: str
     target: str = "dataset"
     datasetRid: str | None = None
+    objectTypeHint: str | None = None
+    name: str | None = None
+    displayName: str | None = None
 
 
 class SyncIn(BaseModel):
@@ -1010,9 +1058,36 @@ def uninstall_action_plugin(plugin_id: str, principal: Principal = Depends(requi
     return _plugin_uninstall_route(uninstall_plugin, plugin_id)
 
 
+def _persist_safe(fn_name: str, *args: Any, **kwargs: Any) -> None:
+    try:
+        from aos_api import data_os_store as dos
+
+        getattr(dos, fn_name)(*args, **kwargs)
+    except Exception:  # noqa: BLE001
+        log.warning("data_os_persist_fail op=%s", fn_name, exc_info=True)
+
+
+def _org_visible(item: dict[str, Any] | None, org_id: str) -> bool:
+    """185w v1.2 · stamped orgId must match; unstamped legacy visible to current org."""
+    if not item:
+        return False
+    stamped = item.get("orgId")
+    if stamped:
+        return stamped == org_id
+    return True
+
+
+def _source_org_visible(source_id: str | None, org_id: str) -> bool:
+    if not source_id:
+        return True
+    src = _connectors.get(source_id)
+    if src is None:
+        return False
+    return _org_visible(src, org_id)
+
+
 @router.post("/v1/sources")
 def create_source(body: ConnectorIn, principal: Principal = Depends(require_principal)):
-    _ = principal
     from aos_api.connector_registry import assert_type_installed
 
     try:
@@ -1021,15 +1096,23 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
         raise ApiError(code="UNKNOWN_CONNECTOR", message=str(exc), status_code=400) from None
     except PermissionError as exc:
         raise ApiError(code="PLUGIN_NOT_INSTALLED", message=str(exc), status_code=400) from None
-    item = {**body.model_dump(), "type": plugin_id, "status": "registered", "pluginId": plugin_id}
+    item = {
+        **body.model_dump(),
+        "type": plugin_id,
+        "status": "registered",
+        "pluginId": plugin_id,
+        "orgId": principal.org_id,
+        "projectId": principal.project_id,
+    }
     _connectors[body.id] = item
+    _persist_safe("persist_source", item)
     return item
 
 
 @router.get("/v1/sources")
 def list_sources(principal: Principal = Depends(require_principal)):
-    _ = principal
-    return {"items": list(_connectors.values())}
+    items = [c for c in _connectors.values() if _org_visible(c, principal.org_id)]
+    return {"items": items}
 
 
 @router.post("/v1/syncs")
@@ -1048,6 +1131,7 @@ def create_sync(body: SyncIn, principal: Principal = Depends(require_principal))
         "rowsSynced": 0,
     }
     _syncs[sid] = item
+    _persist_safe("persist_sync", item)
     # Reflect sync into dataset history if a dataset is bound to this source
     for rid, ds in _datasets.items():
         if ds.get("sourceId") == body.sourceId:
@@ -1062,14 +1146,20 @@ def create_sync(body: SyncIn, principal: Principal = Depends(require_principal))
             )
             ds["lastSyncId"] = sid
             ds["updatedAt"] = item["finishedAt"]
+            _persist_safe("persist_dataset", ds)
+            _persist_safe("persist_dataset_history", rid, hist)
     log.info("sync_created id=%s source=%s", sid, body.sourceId)
     return item
 
 
 @router.get("/v1/syncs")
 def list_syncs(principal: Principal = Depends(require_principal)):
-    _ = principal
-    return {"items": list(_syncs.values())}
+    items = [
+        s
+        for s in _syncs.values()
+        if _source_org_visible(s.get("sourceId"), principal.org_id)
+    ]
+    return {"items": items}
 
 
 @router.get("/v1/syncs/{sync_id}")
@@ -1082,8 +1172,16 @@ def get_sync(sync_id: str, principal: Principal = Depends(require_principal)):
 
 @router.get("/v1/datasets")
 def list_datasets(principal: Principal = Depends(require_principal)):
-    _ = principal
-    return {"items": list(_datasets.values())}
+    items = [
+        d
+        for d in _datasets.values()
+        if _org_visible(d, principal.org_id)
+        or (
+            not d.get("orgId")
+            and _source_org_visible(d.get("sourceId"), principal.org_id)
+        )
+    ]
+    return {"items": items}
 
 
 @router.get("/v1/datasets/{rid}")
@@ -1286,24 +1384,32 @@ def parse_media(rid: str, principal: Principal = Depends(require_principal)):
 
 @router.post("/v1/pipelines")
 def create_pipeline(body: PipelineIn, principal: Principal = Depends(require_principal)):
-    _ = principal
     build_id = f"build-{uuid.uuid4().hex[:8]}"
     dataset_rid = body.datasetRid or f"ri.dataset.{body.id}"
     item = {
         **body.model_dump(),
         "datasetRid": dataset_rid,
         "lastBuild": {"id": build_id, "status": "SUCCEEDED", "tasks": [{"name": "ingest", "ok": True}]},
+        "orgId": principal.org_id,
+        "projectId": principal.project_id,
     }
     _pipelines[body.id] = item
     now = time.time()
+    display = (body.displayName or body.name or body.id or "").strip() or body.id
+    hint = (body.objectTypeHint or "").strip() or None
+    prev = _datasets.get(dataset_rid) or {}
     ds = {
         "rid": dataset_rid,
-        "name": body.id,
+        "name": display,
         "pipelineId": body.id,
         "sourceId": body.sourceId,
         "status": "READY",
-        "createdAt": now,
+        "createdAt": prev.get("createdAt") or now,
         "updatedAt": now,
+        "objectTypeHint": hint or prev.get("objectTypeHint"),
+        "displayName": display,
+        "orgId": principal.org_id,
+        "projectId": principal.project_id,
     }
     _datasets[dataset_rid] = ds
     hist = _dataset_history.setdefault(dataset_rid, [])
@@ -1315,14 +1421,51 @@ def create_pipeline(body: PipelineIn, principal: Principal = Depends(require_pri
             "at": now,
         }
     )
+    _persist_safe("persist_pipeline", item)
+    _persist_safe("persist_dataset", ds)
+    _persist_safe("persist_dataset_history", dataset_rid, hist)
     return item
+
+
+@router.patch("/v1/datasets/{rid:path}")
+def patch_dataset(
+    rid: str,
+    body: dict[str, Any],
+    principal: Principal = Depends(require_principal),
+):
+    """Update dataset display / objectTypeHint (preview wiring)."""
+    _ = principal
+    ds = _datasets.get(rid)
+    if not ds:
+        raise ApiError(code="NOT_FOUND", message="dataset missing", status_code=404)
+    if "name" in body and body["name"] is not None:
+        ds["name"] = str(body["name"])
+    if "displayName" in body and body["displayName"] is not None:
+        ds["displayName"] = str(body["displayName"])
+        if not body.get("name"):
+            ds["name"] = str(body["displayName"])
+    if "objectTypeHint" in body and body["objectTypeHint"] is not None:
+        ds["objectTypeHint"] = str(body["objectTypeHint"]).strip() or None
+    if "status" in body and body["status"] is not None:
+        ds["status"] = str(body["status"])
+    ds["updatedAt"] = time.time()
+    _datasets[rid] = ds
+    _persist_safe("persist_dataset", ds)
+    return ds
 
 
 @router.get("/v1/pipelines")
 def list_pipelines(principal: Principal = Depends(require_principal)):
-    _ = principal
-    ensure_demo_data_seed()
-    return {"items": list(_pipelines.values())}
+    items = [
+        p
+        for p in _pipelines.values()
+        if _org_visible(p, principal.org_id)
+        or (
+            not p.get("orgId")
+            and _source_org_visible(p.get("sourceId"), principal.org_id)
+        )
+    ]
+    return {"items": items}
 
 
 @router.post("/v1/pipelines/{pipeline_id}/embed")
@@ -1333,7 +1476,6 @@ def pipeline_embed(
 ):
     """104 · Pipeline → 本地向量索引（经 embedding 插件；无网关不写假向量）。"""
     _ = principal
-    ensure_demo_data_seed()
     from aos_api.vector_index import embed_pipeline
 
     return embed_pipeline(pipeline_id, body or {}, pipelines=_pipelines)
@@ -1415,16 +1557,22 @@ def create_schedule(body: dict[str, Any], principal: Principal = Depends(require
         "pipelineId": body.get("pipelineId"),
         "enabled": bool(body.get("enabled", True)),
         "name": body.get("name") or sid,
+        # optional: {"pluginId":"jdbc-mysql", ...ingest body fields}
+        "ingest": body.get("ingest") if isinstance(body.get("ingest"), dict) else None,
+        "orgId": principal.org_id,
+        "projectId": principal.project_id,
+        "lastRun": None,
     }
     _schedules[sid] = item
+    _persist_safe("persist_schedule", item)
     return item
 
 
 @router.get("/v1/schedules")
 def list_schedules(principal: Principal = Depends(require_principal)):
     """T-UI S2 · schedules list for 计划编辑器."""
-    _ = principal
-    return {"items": list(_schedules.values())}
+    items = [s for s in _schedules.values() if _org_visible(s, principal.org_id)]
+    return {"items": items}
 
 
 @router.get("/v1/schedules/{schedule_id}")
@@ -1455,8 +1603,43 @@ def patch_schedule(
         item["enabled"] = bool(body["enabled"])
     if "name" in body and body["name"] is not None:
         item["name"] = str(body["name"])
+    if "ingest" in body and (body["ingest"] is None or isinstance(body["ingest"], dict)):
+        item["ingest"] = body["ingest"]
     _schedules[schedule_id] = item
+    _persist_safe("persist_schedule", item)
     return item
+
+
+@router.post("/v1/schedules/{schedule_id}/run")
+def run_schedule(schedule_id: str, principal: Principal = Depends(require_principal)):
+    """Execute bound connector ingest once (manual/batch face; not a cron daemon)."""
+    item = _schedules.get(schedule_id)
+    if not item:
+        raise ApiError(code="NOT_FOUND", message="schedule missing", status_code=404)
+    if not item.get("enabled", True):
+        raise ApiError(code="VALIDATION", message="schedule disabled", status_code=400)
+    ingest_spec = item.get("ingest")
+    if not isinstance(ingest_spec, dict) or not ingest_spec:
+        raise ApiError(
+            code="VALIDATION",
+            message="schedule has no ingest spec; PATCH ingest={pluginId,...}",
+            status_code=400,
+        )
+    plugin_id = str(ingest_spec.get("pluginId") or "jdbc-mysql")
+    body = {k: v for k, v in ingest_spec.items() if k != "pluginId"}
+    body.setdefault("autoCreateObjectType", True)
+    result = connector_ingest(plugin_id, body, principal)
+    item["lastRun"] = {
+        "at": time.time(),
+        "ok": bool(result.get("ok")),
+        "written": result.get("written"),
+        "objectType": result.get("objectType"),
+        "mode": result.get("mode"),
+    }
+    _schedules[schedule_id] = item
+    _persist_safe("persist_schedule", item)
+    log.info("schedule_run id=%s written=%s", schedule_id, result.get("written"))
+    return {"scheduleId": schedule_id, "lastRun": item["lastRun"], "ingest": result}
 
 
 @router.get("/v1/dlq")
@@ -1803,6 +1986,18 @@ def session_open(body: dict[str, Any], principal: Principal = Depends(require_pr
 
 
 # —— T4.6 / 100 · Connector Host 按插件分发（兼容旧 mysql 路径）——
+
+
+def _connector_limit(body: dict[str, Any], *, default: int) -> int:
+    """Parse limit. Missing → default. ``<=0`` means full table (188w digital twin).
+
+    Critical: do **not** use ``body.get("limit") or default`` — that turns 0 into default.
+    """
+    if "limit" not in body or body.get("limit") is None or body.get("limit") == "":
+        return default
+    return int(body.get("limit"))
+
+
 @router.post("/v1/connectors/mysql/probe")
 def mysql_probe(body: dict[str, Any], principal: Principal = Depends(require_principal)):
     """兼容别名 → jdbc-mysql。"""
@@ -1837,11 +2032,18 @@ def connector_probe(
     from aos_api.connector_runtime import dispatch
 
     body = body or {}
+    port = body.get("port")
     return dispatch(
         plugin_id,
         "probe",
-        limit=int(body.get("limit") or 5),
+        limit=_connector_limit(body, default=5),
         object_type=str(body.get("objectType") or "WorkOrder"),
+        table=body.get("table"),
+        host=body.get("host"),
+        port=int(port) if port is not None and str(port).strip() != "" else None,
+        user=body.get("user"),
+        password=body.get("password"),
+        database=body.get("database"),
     )
 
 
@@ -1851,19 +2053,30 @@ def connector_ingest(
     body: dict[str, Any] | None = None,
     principal: Principal = Depends(require_principal),
 ):
-    _ = principal
     from aos_api.connector_runtime import dispatch
 
     body = body or {}
     mapping = body.get("mapping")
     if mapping is not None and not isinstance(mapping, dict):
         raise ApiError(code="VALIDATION", message="mapping must be object", status_code=400)
+    port = body.get("port")
     return dispatch(
         plugin_id,
         "ingest",
         object_type=str(body.get("objectType") or "WorkOrder"),
-        limit=int(body.get("limit") or 100),
+        limit=_connector_limit(body, default=0),
         mapping=mapping,
+        table=body.get("table"),
+        host=body.get("host"),
+        port=int(port) if port is not None and str(port).strip() != "" else None,
+        user=body.get("user"),
+        password=body.get("password"),
+        database=body.get("database"),
+        include_all=bool(body.get("includeAll")),
+        id_field=body.get("idField"),
+        auto_create_object_type=bool(body.get("autoCreateObjectType")),
+        org_id=principal.org_id,
+        project_id=principal.project_id,
     )
 
 

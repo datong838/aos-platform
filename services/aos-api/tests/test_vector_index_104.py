@@ -58,7 +58,7 @@ def test_pipeline_embed_no_gateway_501(client, auth_headers, monkeypatch):
     client.get("/v1/pipelines", headers=auth_headers)
     from aos_api.routers import wave_ext
 
-    wave_ext.ensure_demo_data_seed()
+    wave_ext.ensure_demo_data_seed(force=True)
     r = client.post(
         "/v1/pipelines/demo-pipe-wo/embed",
         headers=auth_headers,
@@ -85,7 +85,7 @@ def test_pipeline_embed_and_search(client, auth_headers, monkeypatch):
     client.post("/v1/embedding-plugins/embed-openai-compatible/install", headers=auth_headers)
     from aos_api.routers import wave_ext
 
-    wave_ext.ensure_demo_data_seed()
+    wave_ext.ensure_demo_data_seed(force=True)
     up = client.post(
         "/v1/pipelines/demo-pipe-wo/embed",
         headers=auth_headers,

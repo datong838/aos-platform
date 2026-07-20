@@ -12,10 +12,30 @@ log = get_logger("aos-api.connector_runtime")
 Handler = Callable[..., dict[str, Any]]
 
 
-def _mysql_probe(*, limit: int = 5, object_type: str = "WorkOrder", **_: Any) -> dict[str, Any]:
+def _mysql_probe(
+    *,
+    limit: int = 5,
+    object_type: str = "WorkOrder",
+    table: str | None = None,
+    host: str | None = None,
+    port: int | None = None,
+    user: str | None = None,
+    password: str | None = None,
+    database: str | None = None,
+    **_: Any,
+) -> dict[str, Any]:
     from aos_api.mysql_connector import probe
 
-    return probe(limit=limit, object_type=object_type)
+    return probe(
+        limit=limit,
+        object_type=object_type,
+        table=table,
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
+    )
 
 
 def _mysql_ingest(
@@ -23,11 +43,37 @@ def _mysql_ingest(
     object_type: str = "WorkOrder",
     limit: int = 100,
     mapping: dict[str, Any] | None = None,
+    table: str | None = None,
+    host: str | None = None,
+    port: int | None = None,
+    user: str | None = None,
+    password: str | None = None,
+    database: str | None = None,
+    include_all: bool = False,
+    id_field: str | None = None,
+    auto_create_object_type: bool = False,
+    org_id: str | None = None,
+    project_id: str | None = None,
     **_: Any,
 ) -> dict[str, Any]:
     from aos_api.mysql_connector import ingest
 
-    return ingest(object_type=object_type, limit=limit, mapping=mapping)
+    return ingest(
+        object_type=object_type,
+        limit=limit,
+        mapping=mapping,
+        table=table,
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
+        include_all=include_all,
+        id_field=id_field,
+        auto_create_object_type=auto_create_object_type,
+        org_id=org_id,
+        project_id=project_id,
+    )
 
 
 def _mysql_health(**_: Any) -> dict[str, Any]:

@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { apiGet, apiPost } from "../../api/client";
+import { apiGet, apiPatch, apiPost } from "../../api/client";
 import {
   BpBanner,
   BpDebugPanel,
@@ -13,25 +13,67 @@ import {
   flattenRecordProps,
 } from "./blueprintUi";
 import { JsonBlock, S2Chrome, useJsonGet } from "./shared";
+import {
+  TABLE_LABELS,
+  buildStatusBadge,
+  pipelineDisplayTitle,
+  pipelineFlowLine,
+  tableKeyFromBlob,
+  type PipelineMeta,
+} from "./pipelineMeta";
 
 type MediaRow = { rid: string; name?: string; bytes?: number; stored?: boolean; contentType?: string };
-type PipelineRow = {
-  id: string;
-  sourceId?: string;
-  target?: string;
-  datasetRid?: string;
-  lastBuild?: BuildRow;
-  vectorCollection?: string;
-};
+type PipelineRow = PipelineMeta & { vectorCollection?: string };
 type BuildRow = { id?: string; status?: string; tasks?: { name: string; ok: boolean }[]; pipelineId?: string };
 type DatasetRow = {
   rid: string;
   name?: string;
+  displayName?: string;
   status?: string;
   pipelineId?: string;
   objectTypeHint?: string;
   sourceId?: string;
 };
+
+type PreviewResult = {
+  columns?: string[];
+  rows?: Record<string, unknown>[];
+  total?: number;
+  objectType?: string;
+  detail?: string;
+  source?: string;
+};
+
+function tableKeyFromDataset(d: DatasetRow): string | null {
+  return tableKeyFromBlob(d.rid, d.pipelineId, d.name);
+}
+
+function datasetLabel(d: DatasetRow): { title: string; ot: string; table: string | null } {
+  const table = tableKeyFromDataset(d);
+  const mapped = table ? TABLE_LABELS[table] : undefined;
+  const ot = (d.objectTypeHint || mapped?.ot || "—").trim();
+  const title =
+    (d.displayName || "").trim() ||
+    (mapped?.zh ? mapped.zh : "") ||
+    (d.name && !String(d.name).startsWith("pipe-") ? String(d.name) : "") ||
+    mapped?.zh ||
+    ot ||
+    d.rid;
+  return { title, ot, table };
+}
+
+function cellText(v: unknown): string {
+  if (v == null) return "—";
+  if (typeof v === "object") {
+    try {
+      return JSON.stringify(v);
+    } catch {
+      return String(v);
+    }
+  }
+  const s = String(v);
+  return s.length > 80 ? `${s.slice(0, 77)}…` : s;
+}
 
 /** 77 · 对齐 media-sets.html */
 export function MediaSetsPage() {
@@ -93,65 +135,21 @@ export function MediaSetsPage() {
   );
 }
 
-/** 77 · 对齐 pipeline-list.html · 103 sourceId 过滤 */
+/** 186w · 对齐 pipeline-list.html（图2）· 左项目树 + 右最近编辑大卡 → 画布 */
 export function PipelinesPage() {
   const [searchParams] = useSearchParams();
   const sourceFilter = searchParams.get("sourceId")?.trim() || "";
   const { data, err, reload } = useJsonGet<{ items: PipelineRow[] }>("/v1/pipelines");
+  const { data: dsData } = useJsonGet<{ items: DatasetRow[] }>("/v1/datasets");
   const items = useMemo(() => {
     const all = data?.items || [];
     if (!sourceFilter) return all;
     return all.filter((p) => p.sourceId === sourceFilter);
   }, [data?.items, sourceFilter]);
-  const [activeId, setActiveId] = useState<string>("");
-  const [query, setQuery] = useState("巡检");
-  const [embedOut, setEmbedOut] = useState<unknown>(null);
-  const [searchOut, setSearchOut] = useState<unknown>(null);
-  const [localErr, setLocalErr] = useState<string | null>(null);
-  const active = items.find((p) => p.id === activeId) || items[0];
-
-  async function runEmbed() {
-    if (!active?.id) return;
-    setLocalErr(null);
-    setEmbedOut(null);
-    try {
-      const out = await apiPost(`/v1/pipelines/${encodeURIComponent(active.id)}/embed`, {
-        pluginId: "embed-openai-compatible",
-        autoSample: true,
-        replace: true,
-        documents: [
-          { id: "demo-1", text: "机房巡检-A区" },
-          { id: "demo-2", text: "链路告警复核" },
-          { id: "demo-3", text: "备件更换" },
-        ],
-      });
-      setEmbedOut(out);
-      reload();
-    } catch (e) {
-      setLocalErr(e instanceof Error ? e.message : String(e));
-    }
-  }
-
-  async function runSearch() {
-    if (!active?.id) return;
-    setLocalErr(null);
-    setSearchOut(null);
-    try {
-      const collection = active.vectorCollection || active.id;
-      const out = await apiPost("/v1/aip/vector-index/search", {
-        collection,
-        query,
-        pluginId: "embed-openai-compatible",
-        topK: 5,
-      });
-      setSearchOut(out);
-    } catch (e) {
-      setLocalErr(e instanceof Error ? e.message : String(e));
-    }
-  }
+  const datasets = dsData?.items || [];
 
   return (
-    <S2Chrome title="管道构建" lede="对齐 pipeline-list · 项目树 + 最近编辑 · 104 向量索引接线">
+    <S2Chrome title="Pipeline Builder" lede={`Ecom-Data-Project · ${items.length} 个管道`}>
       <BpToolbar>
         <button type="button" className="btn" onClick={() => reload()}>
           刷新
@@ -159,114 +157,101 @@ export function PipelinesPage() {
         <Link to="/data/pipeline-proposals" className="btn-nav">
           管道提案 →
         </Link>
+        {items[0] && (
+          <Link to={`/data/pipelines/${encodeURIComponent(items[0].id)}`} className="btn-nav-accent">
+            打开画布 →
+          </Link>
+        )}
         {sourceFilter && (
           <Link to="/data/pipelines" className="btn-nav">
-            清除 Source 过滤 ({sourceFilter}) ×
+            清除 Source 过滤 ×
           </Link>
         )}
       </BpToolbar>
       {sourceFilter && (
         <BpBanner tone="info">
-          已按 Source <strong>{sourceFilter}</strong> 过滤 · 来自 Data 连接 Sync→Pipeline 链
+          已按 Source <strong>{sourceFilter}</strong> 过滤
         </BpBanner>
       )}
       {err && <p className="error">{err}</p>}
-      {localErr && <p className="error">{localErr}</p>}
 
-      <BpSplit
-        left={
-          <>
+      <div className="bp-pipe-list-shell">
+        <aside className="bp-pipe-tree">
+          <div className="bp-pipe-tree-head">
             <div className="bp-section-label">项目</div>
-            <p className="aos-text">Ecom-Data-Project</p>
-            <div className="bp-section-label" style={{ marginTop: 12 }}>
-              管道
+            <div className="bp-pipe-project">
+              <span className="bp-pipe-project-icon" aria-hidden />
+              Ecom-Data-Project
             </div>
-            <ul className="card-list">
-              {items.map((p) => (
-                <li key={p.id}>
-                  <button
-                    type="button"
-                    className="nav-link card"
-                    style={{
-                      width: "100%",
-                      textAlign: "left",
-                      border: active?.id === p.id ? "1px solid var(--bp-accent, #0ea5e9)" : undefined,
-                    }}
-                    onClick={() => setActiveId(p.id)}
-                  >
-                    {p.id}
-                  </button>
-                </li>
-              ))}
-            </ul>
-            {items.length === 0 && sourceFilter && (
-              <p className="muted" style={{ fontSize: "0.75rem" }}>
-                无匹配管道 · <Link to="/data">返回 Data 连接</Link>
-              </p>
-            )}
-            <div className="bp-section-label" style={{ marginTop: 12 }}>
-              数据集
-            </div>
-            <Link to="/data/datasets" className="btn-nav">
-              WorkOrder-demo →
-            </Link>
-          </>
-        }
-        right={
-          <>
-            <h2 className="aos-text" style={{ fontSize: "0.875rem" }}>
-              最近编辑
-            </h2>
+          </div>
+          <nav className="bp-pipe-tree-nav">
+            <div className="bp-section-label">管道</div>
             {items.map((p) => (
-              <div key={p.id} className="card" style={{ marginBottom: 8 }}>
-                <strong>{p.id}</strong>
-                <p className="muted" style={{ fontSize: "0.75rem" }}>
-                  source={p.sourceId} → {p.target} · build={p.lastBuild?.status || "—"}
-                  {p.vectorCollection ? ` · vec=${p.vectorCollection}` : ""}
-                </p>
-                <Link to="/data/datasets">Dataset {p.datasetRid}</Link>
-              </div>
+              <Link
+                key={p.id}
+                to={`/data/pipelines/${encodeURIComponent(p.id)}`}
+                className="bp-pipe-tree-link"
+                title={p.id}
+              >
+                {pipelineDisplayTitle(p)}
+              </Link>
             ))}
-            {(data?.items?.length || 0) === 0 && (
-              <p className="muted">
-                空 · <Link to="/data">新建数据源</Link>
-              </p>
-            )}
-            {sourceFilter && items.length === 0 && (data?.items?.length || 0) > 0 && (
-              <p className="muted">当前 Source 无关联 Pipeline · 可清除过滤查看全部</p>
-            )}
+            {items.length === 0 && <p className="muted">暂无管道</p>}
+            <div className="bp-section-label bp-pipe-tree-gap">媒体集</div>
+            <Link to="/data/media-sets" className="bp-pipe-tree-link bp-pipe-tree-link-muted">
+              媒体集浏览
+            </Link>
+            <div className="bp-section-label bp-pipe-tree-gap">数据集</div>
+            {datasets.slice(0, 8).map((d) => (
+              <Link
+                key={d.rid}
+                to={`/data/datasets?rid=${encodeURIComponent(d.rid)}`}
+                className="bp-pipe-tree-link bp-pipe-tree-link-muted"
+                title={d.rid}
+              >
+                {datasetLabel(d).title}
+              </Link>
+            ))}
+            <Link to="/data/datasets" className="bp-pipe-tree-link bp-pipe-tree-link-muted">
+              全部数据集 →
+            </Link>
+          </nav>
+        </aside>
 
-            {active && (
-              <>
-                <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: 16 }}>
-                  向量索引（104 · 本地 KV，非 Milvus）
-                </h2>
-                <BpBanner tone="info">
-                  经已安装 <code>embed-openai-compatible</code>；默认 local-kv · 可选{" "}
-                  <code>AOS_VECTOR_BACKEND=qdrant</code>；无网关返回 501，不写假向量。
-                </BpBanner>
-                <BpToolbar>
-                  <button type="button" className="btn" onClick={() => void runEmbed()}>
-                    写入索引 · {active.id}
-                  </button>
-                  <input
-                    className="bp-input"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="检索 query"
-                    style={{ minWidth: 120 }}
-                  />
-                  <button type="button" className="btn-nav" onClick={() => void runSearch()}>
-                    检索试跑
-                  </button>
-                </BpToolbar>
-                {embedOut != null && <JsonBlock value={embedOut} />}
-                {searchOut != null && <JsonBlock value={searchOut} />}
-              </>
-            )}
-          </>
-        }
-      />
+        <div className="bp-pipe-list-main">
+          <h2 className="bp-pipe-list-section">最近编辑</h2>
+          <div className="bp-pipe-card-grid">
+            {items.map((p) => {
+              const badge = buildStatusBadge(p.lastBuild?.status);
+              return (
+                <Link
+                  key={p.id}
+                  to={`/data/pipelines/${encodeURIComponent(p.id)}`}
+                  className="bp-pipe-card"
+                >
+                  <div className="bp-pipe-card-top">
+                    <div>
+                      <div className="bp-pipe-card-title">{pipelineDisplayTitle(p)}</div>
+                      <div className="bp-pipe-card-flow">{pipelineFlowLine(p)}</div>
+                    </div>
+                    <span className={`bp-pipe-badge bp-pipe-badge-${badge.tone}`}>{badge.label}</span>
+                  </div>
+                  <div className="bp-pipe-card-meta">
+                    <span>分支 master</span>
+                    <span>build {p.lastBuild?.status || "—"}</span>
+                    <span>3 个节点</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+          {items.length === 0 && (
+            <p className="muted">
+              空 · 先到 <Link to="/data">数据连接</Link> 注册 Source / 跑 ingest
+            </p>
+          )}
+        </div>
+      </div>
     </S2Chrome>
   );
 }
@@ -285,7 +270,7 @@ export function BuildsPage() {
           刷新
         </button>
         <Link to="/data/pipelines" className="btn-nav">
-          管道构建 →
+          ← 管道列表
         </Link>
       </BpToolbar>
       {err && <p className="error">{err}</p>}
@@ -321,7 +306,14 @@ export function BuildsPage() {
                 Build {active.id}
               </h1>
               <p className="muted">
-                Pipeline <Link to="/data/pipelines">{active.pipelineId}</Link>
+                Pipeline{" "}
+                {active.pipelineId ? (
+                  <Link to={`/data/pipelines/${encodeURIComponent(active.pipelineId)}`}>
+                    {active.pipelineId}
+                  </Link>
+                ) : (
+                  "—"
+                )}
               </p>
               <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: 12 }}>
                 任务
@@ -345,122 +337,264 @@ export function BuildsPage() {
 
 export { SchedulesPage } from "./dataSchedules";
 
-/** 77 · 对齐 dataset.html */
+/** 77 · 对齐 dataset.html · 182w §4.2 可读性 */
 export function DatasetsPage() {
+  const [searchParams] = useSearchParams();
+  const ridParam = searchParams.get("rid");
+  const sourceIdParam = searchParams.get("sourceId");
   const { data, err, reload } = useJsonGet<{ items: DatasetRow[] }>("/v1/datasets");
   const [tab, setTab] = useState("preview");
   const [selected, setSelected] = useState<string | null>(null);
-  const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
+  const [detail, setDetail] = useState<DatasetRow | null>(null);
   const [hist, setHist] = useState<{ items?: unknown[] } | null>(null);
+  const [preview, setPreview] = useState<PreviewResult | null>(null);
+  const [previewErr, setPreviewErr] = useState<string | null>(null);
+  const [loadingPrev, setLoadingPrev] = useState(false);
 
-  const ds = data?.items?.[0];
-  const rid = selected || ds?.rid || "";
+  const items = useMemo(() => {
+    const all = data?.items || [];
+    if (sourceIdParam) return all.filter((d) => d.sourceId === sourceIdParam);
+    return all;
+  }, [data?.items, sourceIdParam]);
+  const active = useMemo(() => {
+    if (!items.length) return null;
+    return items.find((d) => d.rid === selected) || items[0];
+  }, [items, selected]);
+  const rid = active?.rid || "";
+  const label = active ? datasetLabel(active) : null;
+
+  async function loadPreviewFor(row: DatasetRow) {
+    setLoadingPrev(true);
+    setPreviewErr(null);
+    const { title, ot, table } = datasetLabel(row);
+    try {
+      if (!row.objectTypeHint && ot && ot !== "—") {
+        await apiPatch(`/v1/datasets/${encodeURIComponent(row.rid)}`, {
+          objectTypeHint: ot,
+          displayName: title,
+          name: title,
+        }).catch(() => null);
+      }
+      let result: PreviewResult;
+      try {
+        result = await apiPost<PreviewResult>("/v1/analytics/datasets/preview", {
+          datasetRid: row.rid,
+          limit: 40,
+        });
+      } catch {
+        result = { columns: [], rows: [], total: 0 };
+      }
+      if ((!result.rows || result.rows.length === 0) && ot && ot !== "—") {
+        result = await apiPost<PreviewResult>("/v1/analytics/objects/list", {
+          objectType: ot,
+          limit: 40,
+        });
+        result = { ...result, objectType: ot, source: result.source || "objects-list" };
+      }
+      setPreview(result);
+      if (!result.rows?.length && result.detail) setPreviewErr(String(result.detail));
+    } catch (e) {
+      setPreview(null);
+      setPreviewErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoadingPrev(false);
+    }
+    void table;
+  }
 
   async function openDataset(id: string) {
     setSelected(id);
-    const d = await apiGet<Record<string, unknown>>(`/v1/datasets/${encodeURIComponent(id)}`);
+    setTab("preview");
+    const d = await apiGet<DatasetRow>(`/v1/datasets/${encodeURIComponent(id)}`);
     setDetail(d);
     const h = await apiGet<{ items: unknown[] }>(`/v1/datasets/${encodeURIComponent(id)}/history`);
     setHist(h);
+    await loadPreviewFor({ ...d, rid: id });
   }
 
-  const previewRows = useMemo(
-    () => [
-      ["wo-1001", "机房巡检-A区", "open", "DC-East"],
-      ["wo-1002", "链路告警复核", "in_progress", "DC-West"],
-      ["wo-1003", "备件更换", "open", "DC-East"],
-    ],
-    [],
-  );
+  useEffect(() => {
+    if (ridParam && items.some((d) => d.rid === ridParam)) {
+      void openDataset(ridParam).catch(console.error);
+      return;
+    }
+    if (!selected && items[0]?.rid) {
+      void openDataset(items[0].rid).catch(console.error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 深链 rid / 列表首次加载
+  }, [items.length, ridParam, sourceIdParam]);
+
+  const previewColumns = useMemo(() => {
+    if (preview?.columns?.length) return preview.columns.slice(0, 8);
+    const row0 = preview?.rows?.[0];
+    if (!row0) return ["id"];
+    return Object.keys(row0).slice(0, 8);
+  }, [preview]);
+
+  const previewTableRows = useMemo(() => {
+    return (preview?.rows || []).map((r) =>
+      previewColumns.map((c) => <span key={c}>{cellText(r[c])}</span>),
+    );
+  }, [preview, previewColumns]);
 
   return (
-    <S2Chrome title="数据集预览" lede="对齐 dataset · 预览/历史/详情/健康 Tab">
+    <S2Chrome title="数据集预览" lede="左栏选数据集 · 右栏为采样预览（非全表浏览）；总数见指标「预览行数/库内」">
       <BpToolbar>
-        <button type="button" className="btn" onClick={() => reload()}>
-          刷新列表
+        <button
+          type="button"
+          className="btn"
+          onClick={() => {
+            reload();
+            if (rid) void openDataset(rid).catch(console.error);
+          }}
+        >
+          刷新
         </button>
-        {rid && (
-          <button type="button" className="btn" onClick={() => void openDataset(rid).catch(console.error)}>
-            打开 {rid}
-          </button>
-        )}
         <Link to="/data/lineage" className="btn-nav">
           在沿袭中打开 →
         </Link>
+        <Link to="/analytics" className="btn-nav">
+          分析读数 →
+        </Link>
       </BpToolbar>
       {err && <p className="error">{err}</p>}
-
-      <ul className="card-list" style={{ marginBottom: "0.75rem" }}>
-        {(data?.items || []).map((d) => (
-          <li key={d.rid}>
-            <button type="button" className="nav-link card" onClick={() => void openDataset(d.rid)}>
-              {d.name || d.rid} · {d.status}
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      {rid && (
-        <>
-          <BpTabs
-            active={tab}
-            onChange={setTab}
-            tabs={[
-              { id: "preview", label: "预览" },
-              { id: "history", label: "历史" },
-              { id: "details", label: "详情" },
-              { id: "health", label: "健康" },
-            ]}
-          />
-
-          {tab === "preview" && (
-            <>
-              <h1 className="aos-text" style={{ fontSize: "1.1rem" }}>
-                {String(detail?.name || ds?.name || rid)}
-              </h1>
-              <p className="muted">objectTypeHint={String(detail?.objectTypeHint || ds?.objectTypeHint || "WorkOrder")}</p>
-              <BpMetricGrid
-                items={[
-                  { label: "行数", value: previewRows.length, tone: "muted" },
-                  { label: "状态", value: String(detail?.status || "READY"), tone: "ok" },
-                  { label: "Pipeline", value: String(detail?.pipelineId || "—"), tone: "muted" },
-                  { label: "Source", value: String(detail?.sourceId || "—"), tone: "muted" },
-                ]}
-              />
-              <BpTable
-                columns={["object_id", "title", "status", "site"]}
-                rows={previewRows.map((r) => r.map((c) => <span>{c}</span>))}
-              />
-            </>
-          )}
-          {tab === "history" && (
-            <ul className="card-list">
-              {(hist?.items || []).map((h, i) => (
-                <li key={i} className="card">
-                  <JsonBlock value={h} />
-                </li>
-              ))}
-              {(hist?.items?.length || 0) === 0 && <p className="muted">无历史版本</p>}
-            </ul>
-          )}
-          {tab === "details" && detail && (
-            <>
-              <BpPropGrid items={flattenRecordProps(detail)} />
-              <details style={{ marginTop: "0.75rem" }}>
-                <summary className="muted">完整 JSON</summary>
-                <JsonBlock value={detail} />
-              </details>
-            </>
-          )}
-          {tab === "health" && (
-            <BpBanner tone="info">
-              Dataset 健康见 <Link to="/data/health">L1 数据健康</Link> · 图谱见{" "}
-              <Link to="/ontology/graph-health">图谱健康度</Link>
-            </BpBanner>
-          )}
-        </>
+      {sourceIdParam && items.length > 0 && (
+        <BpBanner tone="info">
+          已按数据源 <code>{sourceIdParam}</code> 过滤 ·{" "}
+          <Link to="/data/datasets" className="nav-link">
+            查看全部数据集
+          </Link>
+        </BpBanner>
       )}
-      {!rid && <p className="muted">空 · 先到 <Link to="/data">数据连接</Link> 接入源</p>}
+
+      {!items.length && (
+        <p className="muted">
+          暂无数据集 · 先到 <Link to="/data">数据连接</Link> 接入，或跑案例 bootstrap 脚本
+        </p>
+      )}
+
+      {items.length > 0 && (
+        <BpSplit
+          left={
+            <ul className="card-list" style={{ gap: "0.4rem" }}>
+              {items.map((d) => {
+                const L = datasetLabel(d);
+                const on = d.rid === rid;
+                return (
+                  <li key={d.rid}>
+                    <button
+                      type="button"
+                      className={on ? "nav-link card active" : "nav-link card"}
+                      onClick={() => void openDataset(d.rid).catch(console.error)}
+                    >
+                      <span className="nav-link-title">{L.title}</span>
+                      <span className="nav-link-meta">
+                        {L.ot}
+                        {L.table ? ` · ${L.table}` : ""} · {d.status || "READY"}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          }
+          right={
+            rid && label ? (
+              <>
+                <BpTabs
+                  active={tab}
+                  onChange={setTab}
+                  tabs={[
+                    { id: "preview", label: "预览" },
+                    { id: "history", label: "历史" },
+                    { id: "details", label: "详情" },
+                    { id: "health", label: "健康" },
+                  ]}
+                />
+                {tab === "preview" && (
+                  <>
+                    <h1 className="aos-text" style={{ fontSize: "1.25rem", margin: "0.5rem 0 0.25rem" }}>
+                      {label.title}
+                    </h1>
+                    <p className="muted" style={{ marginTop: 0 }}>
+                      对象类型 <strong className="aos-text">{label.ot}</strong>
+                      {label.table ? (
+                        <>
+                          {" "}
+                          · 源表 <code>{label.table}</code>
+                        </>
+                      ) : null}
+                      <br />
+                      <span style={{ fontSize: "0.75rem" }}>{rid}</span>
+                    </p>
+                    <BpMetricGrid
+                      items={[
+                        {
+                          label: "本页采样",
+                          value: preview?.rows?.length ?? 0,
+                          tone: "muted",
+                        },
+                        {
+                          label: "库内总数",
+                          value: preview?.total ?? "—",
+                          tone: "ok",
+                        },
+                        {
+                          label: "状态",
+                          value: String(detail?.status || active?.status || "READY"),
+                          tone: "ok",
+                        },
+                        {
+                          label: "Pipeline",
+                          value: String(detail?.pipelineId || active?.pipelineId || "—"),
+                          tone: "muted",
+                        },
+                      ]}
+                    />
+                    {previewErr && <p className="error">{previewErr}</p>}
+                    {loadingPrev && <p className="muted">加载预览…</p>}
+                    {!loadingPrev && previewTableRows.length > 0 && (
+                      <BpTable columns={previewColumns} rows={previewTableRows} />
+                    )}
+                    {!loadingPrev && !previewTableRows.length && !previewErr && (
+                      <BpBanner tone="warn">
+                        该对象类型暂无实例行。确认已在当前工作区完成 ingest，或到{" "}
+                        <Link to="/ontology/objects">对象浏览</Link> 核对。
+                      </BpBanner>
+                    )}
+                  </>
+                )}
+                {tab === "history" && (
+                  <ul className="card-list">
+                    {(hist?.items || []).map((h, i) => (
+                      <li key={i} className="card">
+                        <JsonBlock value={h} />
+                      </li>
+                    ))}
+                    {(hist?.items?.length || 0) === 0 && <p className="muted">无历史版本</p>}
+                  </ul>
+                )}
+                {tab === "details" && (detail || active) && (
+                  <>
+                    <BpPropGrid items={flattenRecordProps((detail || active) as Record<string, unknown>)} />
+                    <details style={{ marginTop: "0.75rem" }}>
+                      <summary className="muted">完整 JSON</summary>
+                      <JsonBlock value={detail || active} />
+                    </details>
+                  </>
+                )}
+                {tab === "health" && (
+                  <BpBanner tone="info">
+                    Dataset 健康见 <Link to="/data/health">L1 数据健康</Link> · 图谱见{" "}
+                    <Link to="/ontology/graph-health">图谱健康度</Link>
+                  </BpBanner>
+                )}
+              </>
+            ) : (
+              <p className="muted">在左侧选择一个数据集</p>
+            )
+          }
+        />
+      )}
     </S2Chrome>
   );
 }

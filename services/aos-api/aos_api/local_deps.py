@@ -214,7 +214,7 @@ def probe_docker_hub(*, timeout: float = 8.0) -> dict[str, Any]:
             "httpStatus": code,
             "latencyMs": latency_ms,
             "message": "可达",
-            "hint": "可用 bash scripts/demo/start-local.sh",
+            "hint": "Win: scripts/demo/start-local.ps1 · mac/Linux: start-local.sh",
         }
     except urllib.error.HTTPError as exc:
         # Anonymous v2 often returns 401 — registry is reachable.
@@ -228,9 +228,9 @@ def probe_docker_hub(*, timeout: float = 8.0) -> dict[str, Any]:
             "latencyMs": latency_ms,
             "message": "可达" if ok else f"HTTP {code}",
             "hint": (
-                "可用 bash scripts/demo/start-local.sh"
+                "Win: scripts/demo/start-local.ps1 · mac/Linux: start-local.sh"
                 if ok
-                else "改用 bash scripts/demo/start-local-native.sh"
+                else "缺镜像时：mac/Linux → start-local-native.sh；Win 用已缓存镜像/加速（见 72 §1.3.1）"
             ),
         }
     except Exception as exc:  # noqa: BLE001 — surface any network/timeout to UI
@@ -242,5 +242,10 @@ def probe_docker_hub(*, timeout: float = 8.0) -> dict[str, Any]:
             "httpStatus": None,
             "latencyMs": latency_ms,
             "message": f"不可达 · {detail}",
-            "hint": "改用 bash scripts/demo/start-local-native.sh（见启停手册 72 §1.3.1）",
+            # Hub 不通 ≠ 引擎挂；栈已绿可忽略。仅「缺镜像 pull 失败」才换 native（mac/Linux）
+            "hint": (
+                "Hub 仅影响拉新镜像。栈已绿可忽略。"
+                "缺镜像：mac/Linux → bash scripts/demo/start-local-native.sh；"
+                "Win → start-local.ps1（已缓存）或配置镜像加速（72 §1.3.1）"
+            ),
         }

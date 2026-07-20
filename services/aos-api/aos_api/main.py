@@ -57,6 +57,19 @@ async def lifespan(_app: FastAPI):
             seed_modules_if_empty()
         except Exception:
             log.exception("startup_module_store_failed_continue")
+        try:
+            from aos_api.tenant_catalog import boot_tenant_catalogs
+
+            boot_tenant_catalogs()
+        except Exception:
+            log.exception("startup_tenant_catalog_failed_continue")
+        try:
+            from aos_api import data_os_store
+            from aos_api.routers import wave_ext as wave_ext_mod
+
+            data_os_store.boot_data_os(wave_ext_mod)
+        except Exception:
+            log.exception("startup_data_os_failed_continue")
         log.info("startup_meta_store_ok")
     except Exception:
         log.exception("startup_meta_store_failed_continue")

@@ -120,8 +120,8 @@ export function LocalPlatformPage() {
           ok: false,
           message: `探活失败 · ${detail}`,
           hint: apiOffline
-            ? "请先恢复 aos-api（顶栏「重试连接」或 bash scripts/demo/ensure-api.sh），再探 Docker Hub"
-            : "改用 bash scripts/demo/start-local-native.sh（见启停手册 72 §1.3.1）",
+            ? "请先恢复 aos-api（顶栏「重试连接」或 scripts/demo/ensure-api），再探 Docker Hub"
+            : "Hub 仅影响拉新镜像。栈已绿可忽略。缺镜像：mac/Linux → start-local-native.sh；Win → start-local.ps1 / 镜像加速（72 §1.3.1）",
         });
       }
     } catch (e) {

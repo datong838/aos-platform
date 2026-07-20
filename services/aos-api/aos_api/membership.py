@@ -1,9 +1,10 @@
-"""TWA.7 — in-memory membership + audit (no PG)."""
+"""TWA.7 — membership + audit (membership PG-backed · 164 v1.1; audit still memory)."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any, Literal
 
+from aos_api.db import connect
 from aos_api.logging_facade import get_logger
 
 log = get_logger("aos-api.membership")
@@ -17,29 +18,117 @@ _MEMBERS: dict[tuple[str, str, str], str] = {}
 _AUDIT: list[dict[str, Any]] = []
 
 
-def reset_membership_store() -> None:
+def membership_count() -> int:
+    return len(_MEMBERS)
+
+
+def reset_membership_store(*, purge_db: bool = False) -> None:
+    """Clear in-memory membership; 默认不清 PG（避免单测误删真实租户成员）。"""
     _MEMBERS.clear()
     _AUDIT.clear()
+    if not purge_db:
+        return
+    try:
+        with connect() as conn:
+            conn.execute("DELETE FROM meta_membership")
+            conn.commit()
+    except Exception:  # noqa: BLE001
+        log.debug("membership_purge_skip", exc_info=True)
 
 
-def seed_dev_defaults() -> None:
+def _persist_member(org_id: str, project_id: str, subject: str, role: str) -> None:
+    try:
+        from aos_api.tenant_catalog import ensure_tenant_catalog_schema
+
+        ensure_tenant_catalog_schema()
+        with connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO meta_membership (org_id, project_id, subject, role, updated_at)
+                VALUES (%s,%s,%s,%s,NOW())
+                ON CONFLICT (org_id, project_id, subject) DO UPDATE SET
+                  role=EXCLUDED.role,
+                  updated_at=NOW()
+                """,
+                (org_id, project_id, subject, role),
+            )
+            conn.commit()
+    except Exception:  # noqa: BLE001
+        log.warning(
+            "membership_persist_fail org=%s project=%s subject=%s",
+            org_id,
+            project_id,
+            subject,
+            exc_info=True,
+        )
+
+
+def _delete_member_db(org_id: str, project_id: str, subject: str) -> None:
+    try:
+        with connect() as conn:
+            conn.execute(
+                """
+                DELETE FROM meta_membership
+                WHERE org_id=%s AND project_id=%s AND subject=%s
+                """,
+                (org_id, project_id, subject),
+            )
+            conn.commit()
+    except Exception:  # noqa: BLE001
+        log.warning(
+            "membership_delete_fail org=%s project=%s subject=%s",
+            org_id,
+            project_id,
+            subject,
+            exc_info=True,
+        )
+
+
+def load_memberships_from_db() -> int:
+    _MEMBERS.clear()
+    try:
+        with connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT org_id, project_id, subject, role
+                FROM meta_membership
+                ORDER BY org_id, project_id, subject
+                """
+            ).fetchall()
+    except Exception:  # noqa: BLE001
+        log.warning("membership_load_fail", exc_info=True)
+        return 0
+    for r in rows:
+        _MEMBERS[(str(r["org_id"]), str(r["project_id"]), str(r["subject"]))] = str(r["role"])
+    log.info("membership_load count=%s", len(_MEMBERS))
+    return len(_MEMBERS)
+
+
+def seed_dev_defaults(*, reset_persons: bool = True) -> None:
+    """Upsert Dev seed memberships; does not wipe user-created org members."""
     from aos_api.person_identity import reset_person_store, seed_dev_persons
 
-    reset_person_store()
-    seed_dev_persons()
-    for org in ("dev-org", "org-a", "org-b"):
-        for project, sub, role in (
-            ("dev-project", "alice", "owner"),
-            ("prj-ops", "alice", "owner"),
-            ("prj-1", "alice", "owner"),
-            ("prj-2", "alice", "owner"),
-            ("dev-project", "user:dev", "owner"),
-            ("prj-ops", "user:dev", "owner"),
-            ("prj-1", "user:dev", "owner"),
-            ("prj-2", "user:dev", "owner"),
-            ("prj-ops", "bob", "viewer"),
-        ):
-            _MEMBERS[(org, project, sub)] = role
+    if reset_persons:
+        reset_person_store()
+        seed_dev_persons()
+    # 仅默认组织成员种子；不再为 org-a/org-b 播种
+    org = "dev-org"
+    for project, sub, role in (
+        ("dev-project", "alice", "owner"),
+        ("prj-ops", "alice", "owner"),
+        ("prj-1", "alice", "owner"),
+        ("prj-2", "alice", "owner"),
+        ("dev-project", "user:dev", "owner"),
+        ("prj-ops", "user:dev", "owner"),
+        ("prj-1", "user:dev", "owner"),
+        ("prj-2", "user:dev", "owner"),
+        ("prj-ops", "bob", "viewer"),
+    ):
+        key = (org, project, sub)
+        if key in _MEMBERS:
+            continue
+        _MEMBERS[key] = role
+        _persist_member(org, project, sub, role)
 
 
 def ensure_default_membership(org_id: str, project_id: str, subject: str) -> None:
@@ -47,6 +136,7 @@ def ensure_default_membership(org_id: str, project_id: str, subject: str) -> Non
     if member_project_ids(org_id, subject):
         return
     _MEMBERS[(org_id, project_id, subject)] = "owner"
+    _persist_member(org_id, project_id, subject, "owner")
     append_audit(
         org_id=org_id,
         project_id=project_id,
@@ -107,6 +197,7 @@ def upsert_member(
     if role not in ROLES:
         raise ValueError(f"invalid role {role}")
     _MEMBERS[(org_id, project_id, subject)] = role
+    _persist_member(org_id, project_id, subject, role)
     row = {
         "subject": subject,
         "role": role,
@@ -142,6 +233,7 @@ def remove_member(
     if key not in _MEMBERS:
         return False
     del _MEMBERS[key]
+    _delete_member_db(org_id, project_id, subject)
     append_audit(
         org_id=org_id,
         project_id=project_id,
@@ -177,6 +269,7 @@ def remove_all_members_for_project(
     keys = [(o, p, s) for (o, p, s) in list(_MEMBERS) if o == org_id and p == project_id]
     for key in keys:
         del _MEMBERS[key]
+        _delete_member_db(key[0], key[1], key[2])
     if keys:
         append_audit(
             org_id=org_id,
@@ -192,6 +285,7 @@ def remove_all_members_for_org(org_id: str, *, actor_id: str) -> int:
     keys = [(o, p, s) for (o, p, s) in list(_MEMBERS) if o == org_id]
     for key in keys:
         del _MEMBERS[key]
+        _delete_member_db(key[0], key[1], key[2])
     if keys:
         append_audit(
             org_id=org_id,
@@ -241,6 +335,3 @@ def list_audit(
         if r["orgId"] == org_id and r["projectId"] == project_id
     ]
     return rows[:limit]
-
-
-seed_dev_defaults()

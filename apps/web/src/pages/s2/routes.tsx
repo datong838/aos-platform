@@ -20,6 +20,8 @@ import {
   DataHealthPage,
   EdgeAgentsPage,
 } from "./data";
+import { PipelineCanvasPage } from "./pipelineCanvas";
+import { SourceDetailPage } from "./sourceDetailPage";
 import { ApolloSpokePage, ApolloConfigPage, ApolloAssetsPage } from "./apollo";
 import { MaturityPage, CopPage, ModuleInterfacePage } from "./extras";
 import {
@@ -54,7 +56,9 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "ontology/link-types/:linkId", Component: LinkTypeEditorPage },
   { path: "ontology/action-types/:actionId", Component: ActionTypeEditorPage },
   { path: "data/media-sets", Component: MediaSetsPage },
+  { path: "data/sources/:sourceId", Component: SourceDetailPage },
   { path: "data/pipelines", Component: PipelinesPage },
+  { path: "data/pipelines/:pipelineId", Component: PipelineCanvasPage },
   { path: "data/pipeline-proposals", Component: PipelineProposalsPage },
   { path: "data/builds", Component: BuildsPage },
   { path: "data/datasets", Component: DatasetsPage },

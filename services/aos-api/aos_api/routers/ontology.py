@@ -291,6 +291,44 @@ def create_link_type(
     return body.model_dump()
 
 
+class GraphEdgeIn(BaseModel):
+    srcType: str = Field(min_length=1)
+    srcId: str = Field(min_length=1)
+    rel: str = Field(min_length=1)
+    dstType: str = Field(min_length=1)
+    dstId: str = Field(min_length=1)
+
+
+class GraphEdgeBatchIn(BaseModel):
+    edges: list[GraphEdgeIn] = Field(default_factory=list)
+
+
+@router.post("/v1/ontology/edges")
+def upsert_graph_edges(
+    body: GraphEdgeBatchIn,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """Upsert link instances into graph_edge (scripted twin / VERIFY.2)."""
+    _ = principal
+    if not body.edges:
+        raise ApiError(code="VALIDATION", message="edges required", status_code=400)
+    written = 0
+    with connect() as conn:
+        for e in body.edges:
+            conn.execute(
+                """
+                INSERT INTO graph_edge (src_type, src_id, rel, dst_type, dst_id)
+                VALUES (%s,%s,%s,%s,%s)
+                ON CONFLICT (src_type, src_id, rel, dst_type, dst_id) DO NOTHING
+                """,
+                (e.srcType, e.srcId, e.rel, e.dstType, e.dstId),
+            )
+            written += 1
+        conn.commit()
+    log.info("graph_edges_upsert count=%s", written)
+    return {"ok": True, "submitted": written}
+
+
 @router.get("/v1/ontology/link-types/{link_id}")
 def get_link_type(
     link_id: str,

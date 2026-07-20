@@ -491,7 +491,9 @@ def _list_objects_table(
             "objectType": object_type,
             "columns": columns,
             "rows": rows,
-            "total": len(rows),
+            # 188w：total = 库内匹配总数；rows 仅为本页采样
+            "total": int(result.get("total") or len(rows)),
+            "pageSize": limit,
             "source": result.get("source") or "pg",
         }
     )

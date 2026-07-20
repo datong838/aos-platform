@@ -12,7 +12,7 @@ const apiGet = vi.fn(async (path: string) => {
       ok: true,
       endpoint: "https://registry-1.docker.io/v2/",
       message: "可达",
-      hint: "可用 bash scripts/demo/start-local.sh",
+      hint: "Win: scripts/demo/start-local.ps1 · mac/Linux: start-local.sh",
       latencyMs: 120,
     };
   }
@@ -82,7 +82,7 @@ describe("TWC.10 / 165 LocalPlatformPage", () => {
     expect(text).toContain("可达");
     expect(text).toContain("依赖已就绪");
     expect(text).toContain("Docker Hub");
-    expect(text).toContain("start-local.sh");
+    expect(text).toContain("start-local.ps1");
     expect(text).not.toContain("禁止演示临时候补");
     expect(text).not.toContain("不是 Apollo");
     expect(text).not.toContain("摘要探活不在本页伪造");
@@ -110,7 +110,7 @@ describe("TWC.10 / 165 LocalPlatformPage", () => {
         return {
           ok: false,
           message: "不可达 · timeout",
-          hint: "改用 bash scripts/demo/start-local-native.sh",
+          hint: "Hub 仅影响拉新镜像。栈已绿可忽略。缺镜像：mac/Linux → start-local-native.sh；Win → start-local.ps1",
         };
       }
       return {
@@ -144,6 +144,6 @@ describe("TWC.10 / 165 LocalPlatformPage", () => {
     });
     expect(apiPost).toHaveBeenCalled();
     expect(host.textContent || "").toContain("依赖已自动拉起并就绪");
-    expect(host.textContent || "").toContain("start-local-native.sh");
+    expect(host.textContent || "").toContain("栈已绿可忽略");
   });
 });

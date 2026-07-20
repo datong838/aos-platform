@@ -125,7 +125,7 @@ def test_probe_docker_hub_401_is_ok(api_client):
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["ok"] is True
-    assert "start-local.sh" in body["hint"]
+    assert "start-local" in body["hint"]
 
 
 def test_probe_docker_hub_timeout(api_client):
@@ -134,4 +134,5 @@ def test_probe_docker_hub_timeout(api_client):
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["ok"] is False
-    assert "start-local-native" in body["hint"]
+    assert "栈已绿可忽略" in body["hint"]
+    assert "start-local.ps1" in body["hint"] or "start-local-native" in body["hint"]

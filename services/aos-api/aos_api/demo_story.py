@@ -24,7 +24,7 @@ def ensure_demo_seed(*, repair: bool = True) -> dict[str, Any]:
 
     ensure_action_schema()
     ensure_draft_schema()
-    data_surface = ensure_demo_data_seed()
+    data_surface = ensure_demo_data_seed(force=True)
     if repair:
         # 36 §7 · 先修 MySQL 源表中文，再钉死 Object 标题（含 mysql-wo-*）
         try:

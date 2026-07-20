@@ -237,7 +237,10 @@ export function PipelineProposalsPage() {
 
   async function propose() {
     const id = `prop-${Date.now().toString(36)}`;
-    await apiPost("/v1/pipelines", { id, sourceId: "demo-file-wo" });
+    const seedSource =
+      (data?.items || []).find((p) => p.sourceId && p.sourceId !== "demo-file-wo")?.sourceId ||
+      "src-qyh-jdbc";
+    await apiPost("/v1/pipelines", { id, sourceId: seedSource });
     setMsg(`已创建管道提案 ${id}`);
     reload();
   }
@@ -258,8 +261,16 @@ export function PipelineProposalsPage() {
           刷新
         </button>
         <Link to="/data/pipelines" className="btn-nav">
-          打开管道画布 →
+          ← 管道列表
         </Link>
+        {(data?.items || [])[0] && (
+          <Link
+            to={`/data/pipelines/${encodeURIComponent((data?.items || [])[0].id)}`}
+            className="btn-nav-accent"
+          >
+            打开管道画布 →
+          </Link>
+        )}
       </BpToolbar>
 
       <BpTabs

@@ -24,6 +24,8 @@ def connect() -> Iterator[psycopg.Connection]:
     dsn = get_dsn()
     log.debug("db_connect host_port_from_env=%s", "AOS_DATABASE_URL" in os.environ)
     with psycopg.connect(dsn, row_factory=dict_row) as conn:
+        # 强制 UTF-8，避免客户端/驱动默认编码把中文写成 ???
+        conn.execute("SET client_encoding TO 'UTF8'")
         yield conn
 
 

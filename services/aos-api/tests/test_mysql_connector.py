@@ -36,6 +36,16 @@ def test_map_row_default():
     assert props["site"] == "DC-East"
 
 
+def test_connector_limit_zero_means_full():
+    """188w · limit=0 must not fall back to default (or-trap)."""
+    from aos_api.routers.wave_ext import _connector_limit
+
+    assert _connector_limit({}, default=100) == 100
+    assert _connector_limit({"limit": None}, default=100) == 100
+    assert _connector_limit({"limit": 0}, default=100) == 0
+    assert _connector_limit({"limit": 40}, default=100) == 40
+
+
 @pytest.mark.skipif(os.environ.get("AOS_MYSQL_LIVE") != "1", reason="set AOS_MYSQL_LIVE=1")
 def test_live_mysql_ingest(client, auth_headers):
     probe = client.post(
