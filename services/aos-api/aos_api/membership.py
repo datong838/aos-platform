@@ -23,9 +23,15 @@ def membership_count() -> int:
 
 
 def reset_membership_store(*, purge_db: bool = False) -> None:
-    """Clear in-memory membership; 默认不清 PG（避免单测误删真实租户成员）。"""
+    """Clear in-memory membership; 默认不清 meta_membership（避免单测误删真实租户成员）。"""
+    import os
+
     _MEMBERS.clear()
     _AUDIT.clear()
+    from aos_api import twa_pg
+
+    if (os.getenv("AOS_TWA_STORE") or "").strip().lower() == "pg":
+        twa_pg.truncate_members()
     if not purge_db:
         return
     try:
@@ -61,6 +67,12 @@ def _persist_member(org_id: str, project_id: str, subject: str, role: str) -> No
             subject,
             exc_info=True,
         )
+    try:
+        from aos_api import twa_pg
+
+        twa_pg.upsert_member(org_id, project_id, subject, role)
+    except Exception:  # noqa: BLE001
+        log.debug("membership_twa_dual_write_skip", exc_info=True)
 
 
 def _delete_member_db(org_id: str, project_id: str, subject: str) -> None:
@@ -82,6 +94,12 @@ def _delete_member_db(org_id: str, project_id: str, subject: str) -> None:
             subject,
             exc_info=True,
         )
+    try:
+        from aos_api import twa_pg
+
+        twa_pg.delete_member(org_id, project_id, subject)
+    except Exception:  # noqa: BLE001
+        log.debug("membership_twa_delete_skip", exc_info=True)
 
 
 def load_memberships_from_db() -> int:
@@ -315,6 +333,12 @@ def append_audit(
         "detail": detail or {},
     }
     _AUDIT.append(row)
+    try:
+        from aos_api import twa_pg
+
+        twa_pg.append_audit(row)
+    except Exception:  # noqa: BLE001
+        log.debug("audit_twa_dual_write_skip", exc_info=True)
     log.info(
         "audit_append id=%s action=%s org=%s project=%s actor=%s",
         row["id"],

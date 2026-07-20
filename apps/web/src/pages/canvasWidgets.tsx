@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiGet, apiPost } from "../api/client";
 import { getOntologyClient } from "../api/ontologyClient";
+import { isOfflineQueuedError } from "../lib/offlineQueuedError";
 import { BpBanner } from "./s2/blueprintUi";
 
 export type WidgetCanvasNode = {
@@ -73,6 +74,20 @@ export function buildActionExecuteBody(opts: {
     proposed: opts.payload,
     autoApprove: opts.autoApprove === true,
   };
+}
+
+/** 210m · Action Form 提交 Draft：离线入队 vs 真错 */
+export function formatActionSubmitCatch(e: unknown): {
+  kind: "queued" | "error";
+  text: string;
+} {
+  if (isOfflineQueuedError(e)) {
+    return {
+      kind: "queued",
+      text: `已入待同步队列 · ${(e as Error).message}`,
+    };
+  }
+  return { kind: "error", text: e instanceof Error ? e.message : String(e) };
 }
 
 type ActionParam = { name: string; type?: string; required?: boolean };
@@ -172,7 +187,12 @@ export function ActionFormWidget({
         `已创建 Draft · ${id || "—"} · status=${res.status || "proposed"} · productionWritten=${String(res.productionWritten)} · via=${res.via || "hitl-draft"}`,
       );
     } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e));
+      const formatted = formatActionSubmitCatch(e);
+      if (formatted.kind === "queued") {
+        setMsg(formatted.text);
+      } else {
+        setErr(formatted.text);
+      }
     } finally {
       setBusy(false);
     }

@@ -6,6 +6,7 @@ import { probeApiHealth, bootstrapTenantFromMe } from "@aos-web/api/client";
 import { clearWorkspaceLocalCache } from "@aos-web/lib/workspaceCache";
 import { Welcome } from "./Welcome";
 import { Login } from "./Login";
+import { UnlockGate } from "./UnlockGate";
 import { AboutDialog } from "./AboutDialog";
 import { UpdateDialog } from "./UpdateDialog";
 import { checkDesktopUpdate } from "./update/check";
@@ -15,7 +16,7 @@ import {
   DEFAULT_DESKTOP_VIEW,
   type DesktopViewMode,
 } from "./buddyMode";
-import { isLoggedIn, restoreSession } from "./session";
+import { isLoggedIn, restoreSession, isUnlockPending } from "./session";
 import {
   navigateFromDeepLink,
   parseAosDeepLink,
@@ -24,7 +25,7 @@ import {
 } from "./deepLink";
 import "./desktop.css";
 
-type Phase = "checking" | "welcome" | "login" | "shell";
+type Phase = "checking" | "welcome" | "login" | "locked" | "shell";
 
 function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -101,6 +102,13 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
+      if (isTauri()) {
+        const { initOfflineQueueBackend } = await import("@aos-web/lib/offlineQueue");
+        const { setDesktopClientVersion } = await import("@aos-web/api/desktopClient");
+        setDesktopClientVersion("0.2.0");
+        const { invoke } = await import("@tauri-apps/api/core");
+        await initOfflineQueueBackend(invoke);
+      }
       const health = await probeApiHealth();
       if (cancelled) return;
       console.info("[aos-desktop]", {
@@ -112,9 +120,29 @@ export default function App() {
         setPhase("welcome");
         return;
       }
+      // 188m — version matrix check (forceReject stops at welcome)
+      try {
+        const { apiPost } = await import("@aos-web/api/client");
+        const chk = await apiPost<{ forceReject?: boolean; overall?: string }>(
+          "/v1/ops/version-matrix/check",
+          { desktop: "0.2.0" },
+        );
+        if (chk.forceReject) {
+          showToast("当前桌面版本过旧，请升级后再进入");
+          setPhase("welcome");
+          return;
+        }
+      } catch (e) {
+        console.warn("[aos-desktop]", {
+          event: "version_check_skip",
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
       const restored = await restoreSession();
       if (cancelled) return;
-      if (restored || isLoggedIn()) {
+      if (restored && isUnlockPending()) {
+        setPhase("locked");
+      } else if (restored || isLoggedIn()) {
         await bootstrapTenantFromMe();
         setPhase("shell");
         flushPendingDeepLink();
@@ -176,6 +204,40 @@ export default function App() {
     return () => unsubs.forEach((u) => u());
   }, [phase]);
 
+  // 195m — sync offline/queue state into tray tooltip
+  useEffect(() => {
+    if (!isTauri()) return;
+    let cancelled = false;
+    async function pushTray() {
+      try {
+        const { getConnectivity } = await import("@aos-web/lib/offlineStore");
+        const { listOfflineQueue } = await import("@aos-web/lib/offlineQueue");
+        const { formatTrayTooltip } = await import("@aos-web/lib/trayTooltip");
+        const { invoke } = await import("@tauri-apps/api/core");
+        const tip = formatTrayTooltip(getConnectivity(), listOfflineQueue().length);
+        if (!cancelled) {
+          await invoke("tray_update_status", { tooltip: tip });
+        }
+      } catch (e) {
+        console.warn("[aos-desktop]", {
+          event: "tray_status_skip",
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
+    }
+    void pushTray();
+    function onChange() {
+      void pushTray();
+    }
+    window.addEventListener("aos-offline-changed", onChange);
+    window.addEventListener("aos-offline-queue-changed", onChange);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("aos-offline-changed", onChange);
+      window.removeEventListener("aos-offline-queue-changed", onChange);
+    };
+  }, [phase]);
+
   async function enterShellAfterLogin() {
     await bootstrapTenantFromMe();
     setPhase("shell");
@@ -203,6 +265,16 @@ export default function App() {
 
   if (phase === "login") {
     return <Login onLoggedIn={() => void enterShellAfterLogin()} />;
+  }
+
+  if (phase === "locked") {
+    return (
+      <UnlockGate
+        onUnlocked={() => {
+          void enterShellAfterLogin();
+        }}
+      />
+    );
   }
 
   if (viewMode === "buddy-classic") {

@@ -1,44 +1,68 @@
 /**
- * TWC.8 — 待同步队列（按工作区隔离；禁离线直写）
+ * TWC.8 / 187m — 待同步队列（按工作区隔离；禁离线直写）
+ * 默认同构 localStorage；桌面可切 Tauri SQLite（缓存同步 API + 后台持久化）
  */
 import { getTenant } from "../api/tenant";
+import type { OfflineQueueItem } from "./offlineQueueTypes";
+import {
+  createMemoryBackend,
+  createTauriSqliteBackend,
+  getOfflineQueueBackend,
+  initOfflineQueueBackend,
+  isTauriRuntime,
+  localStorageBackend,
+  OFFLINE_QUEUE_PREFIX,
+  resetOfflineQueueBackend,
+  setOfflineQueueBackend,
+  type OfflineQueueBackend,
+} from "./offlineQueueBackend";
 
-export type OfflineQueueItem = {
-  id: string;
-  method: string;
-  path: string;
-  body?: unknown;
-  summary: string;
-  createdAt: string;
-  lastError?: string;
+export type { OfflineQueueItem } from "./offlineQueueTypes";
+export {
+  setOfflineQueueBackend,
+  resetOfflineQueueBackend,
+  createMemoryBackend,
+  createTauriSqliteBackend,
+  initOfflineQueueBackend,
+  getOfflineQueueBackend,
+  isTauriRuntime,
 };
 
-const PREFIX = "aos.offline.queue.v1:";
-
-function scopeKey(orgId?: string, projectId?: string): string {
+function scopeIds(orgId?: string, projectId?: string): {
+  orgId: string;
+  projectId: string;
+} {
   const t = getTenant();
-  return `${PREFIX}${orgId ?? t.orgId}:${projectId ?? t.projectId}`;
+  return { orgId: orgId ?? t.orgId, projectId: projectId ?? t.projectId };
 }
 
-function readRaw(key: string): OfflineQueueItem[] {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as OfflineQueueItem[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
+function syncList(backend: OfflineQueueBackend, orgId: string, projectId: string): OfflineQueueItem[] {
+  const out = backend.list(orgId, projectId);
+  if (out && typeof (out as Promise<unknown>).then === "function") {
     return [];
+  }
+  return (out as OfflineQueueItem[]) || [];
+}
+
+function syncWrite(
+  backend: OfflineQueueBackend,
+  orgId: string,
+  projectId: string,
+  items: OfflineQueueItem[],
+): void {
+  const r = backend.write(orgId, projectId, items);
+  if (r && typeof (r as Promise<unknown>).then === "function") {
+    void (r as Promise<void>);
   }
 }
 
-function writeRaw(key: string, items: OfflineQueueItem[]): void {
-  try {
-    localStorage.setItem(key, JSON.stringify(items));
-  } catch (e) {
-    console.warn("[aos-offline]", {
-      event: "queue_persist_failed",
-      error: e instanceof Error ? e.message : String(e),
-    });
+function emitChanged(size: number) {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("aos-offline-queue-changed", {
+        detail: { size },
+      }),
+    );
   }
 }
 
@@ -46,7 +70,8 @@ export function listOfflineQueue(
   orgId?: string,
   projectId?: string,
 ): OfflineQueueItem[] {
-  return readRaw(scopeKey(orgId, projectId));
+  const { orgId: o, projectId: p } = scopeIds(orgId, projectId);
+  return syncList(getOfflineQueueBackend(), o, p);
 }
 
 export function enqueueOfflineWrite(input: {
@@ -55,8 +80,9 @@ export function enqueueOfflineWrite(input: {
   body?: unknown;
   summary?: string;
 }): OfflineQueueItem {
-  const key = scopeKey();
-  const items = readRaw(key);
+  const { orgId, projectId } = scopeIds();
+  const backend = getOfflineQueueBackend();
+  const items = syncList(backend, orgId, projectId);
   const item: OfflineQueueItem = {
     id: `oq-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     method: input.method.toUpperCase(),
@@ -68,78 +94,58 @@ export function enqueueOfflineWrite(input: {
     createdAt: new Date().toISOString(),
   };
   items.push(item);
-  writeRaw(key, items);
-  const t = getTenant();
+  syncWrite(backend, orgId, projectId, items);
   console.info("[aos-offline]", {
     event: "enqueued",
-    orgId: t.orgId,
-    projectId: t.projectId,
+    orgId,
+    projectId,
     method: item.method,
     path: item.path,
     queueSize: items.length,
+    backend: backend.kind,
   });
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(
-      new CustomEvent("aos-offline-queue-changed", {
-        detail: { size: items.length },
-      }),
-    );
-  }
+  emitChanged(items.length);
   return item;
 }
 
 export function removeOfflineQueueItem(id: string): void {
-  const key = scopeKey();
-  const next = readRaw(key).filter((x) => x.id !== id);
-  writeRaw(key, next);
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(
-      new CustomEvent("aos-offline-queue-changed", {
-        detail: { size: next.length },
-      }),
-    );
-  }
+  const { orgId, projectId } = scopeIds();
+  const backend = getOfflineQueueBackend();
+  const next = syncList(backend, orgId, projectId).filter((x) => x.id !== id);
+  syncWrite(backend, orgId, projectId, next);
+  emitChanged(next.length);
 }
 
 export function markOfflineQueueError(id: string, lastError: string): void {
-  const key = scopeKey();
-  const items = readRaw(key).map((x) =>
+  const { orgId, projectId } = scopeIds();
+  const backend = getOfflineQueueBackend();
+  const items = syncList(backend, orgId, projectId).map((x) =>
     x.id === id ? { ...x, lastError } : x,
   );
-  writeRaw(key, items);
+  syncWrite(backend, orgId, projectId, items);
 }
 
 export function clearOfflineQueueForWorkspace(
   orgId: string,
   projectId: string,
 ): number {
-  const key = scopeKey(orgId, projectId);
-  const n = readRaw(key).length;
-  try {
-    localStorage.removeItem(key);
-  } catch {
-    /* ignore */
+  const backend = getOfflineQueueBackend();
+  const r = backend.clearScope(orgId, projectId);
+  if (r && typeof (r as Promise<unknown>).then === "function") {
+    void (r as Promise<number>);
+    return 0;
   }
-  return n;
+  return r as number;
 }
 
-/** 切区：清除所有 aos.offline.queue.v1:* */
 export function clearAllOfflineQueues(): number {
-  let n = 0;
-  try {
-    const keys: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k?.startsWith(PREFIX)) keys.push(k);
-    }
-    for (const k of keys) {
-      localStorage.removeItem(k);
-      n += 1;
-    }
-  } catch {
-    /* ignore */
+  const backend = getOfflineQueueBackend();
+  const r = backend.clearAll();
+  if (r && typeof (r as Promise<unknown>).then === "function") {
+    void (r as Promise<number>);
+    return 0;
   }
-  return n;
+  return r as number;
 }
 
-export { PREFIX as OFFLINE_QUEUE_PREFIX };
+export { OFFLINE_QUEUE_PREFIX as PREFIX, localStorageBackend };

@@ -493,10 +493,10 @@ export function CanvasPage() {
             ))}
           </select>
         </label>
-        <button type="button" className="btn" disabled={!dirty} onClick={() => void saveLayout()}>
+        <button type="button" className="btn-primary" disabled={!dirty} onClick={() => void saveLayout()}>
           {dirty ? "保存 Layout *" : "已保存"}
         </button>
-        <Link to="/workshop/inbox" className="btn" style={{ textDecoration: "none" }}>
+        <Link to="/workshop/inbox" className="btn-nav" style={{ textDecoration: "none" }}>
           预览运行态 →
         </Link>
         <Link to="/workshop/publish" className="btn-nav">

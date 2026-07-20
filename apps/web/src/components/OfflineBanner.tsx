@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { flushOfflineQueue, probeApiHealth } from "../api/client";
+import { flushOfflineQueue, flushOfflineQueueItem, probeApiHealth } from "../api/client";
 import {
   bindBrowserOnlineListeners,
   getConnectivity,
@@ -58,6 +58,19 @@ export function OfflineBanner() {
       setItems(listOfflineQueue());
       setQueueSize(listOfflineQueue().length);
     }
+  };
+
+  const retryOne = (id: string) => {
+    void (async () => {
+      const r = await flushOfflineQueueItem(id);
+      if (r.ok) {
+        setFlushMsg(`单条已同步 · 剩余 ${r.remaining}`);
+      } else {
+        setFlushMsg(`单条失败 · ${r.error || "unknown"} · 剩余 ${r.remaining}`);
+      }
+      setQueueSize(r.remaining);
+      setItems(listOfflineQueue());
+    })();
   };
 
   async function onRetry() {
@@ -154,6 +167,15 @@ export function OfflineBanner() {
                       <div className="aos-offline-err">{it.lastError}</div>
                     ) : null}
                   </div>
+                  <button
+                    type="button"
+                    className="aos-offline-banner-btn"
+                    data-testid="offline-retry-one"
+                    disabled={offline}
+                    onClick={() => retryOne(it.id)}
+                  >
+                    重试此条
+                  </button>
                   <button
                     type="button"
                     className="aos-offline-banner-btn"

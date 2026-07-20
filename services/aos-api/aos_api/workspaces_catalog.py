@@ -20,8 +20,14 @@ def workspace_count() -> int:
 
 
 def reset_workspace_catalog(*, purge_db: bool = False) -> None:
-    """Clear in-memory workspace cache; 默认不清 PG。"""
+    """Clear in-memory workspace cache; 默认不清 meta_workspace。"""
+    import os
+
     _WS.clear()
+    from aos_api import twa_pg
+
+    if (os.getenv("AOS_TWA_STORE") or "").strip().lower() == "pg":
+        twa_pg.truncate_workspaces()
     if not purge_db:
         return
     try:
@@ -65,6 +71,12 @@ def _persist_ws(row: dict[str, Any]) -> None:
             row.get("id"),
             exc_info=True,
         )
+    try:
+        from aos_api import twa_pg
+
+        twa_pg.upsert_workspace(row)
+    except Exception:  # noqa: BLE001
+        log.debug("workspace_twa_dual_write_skip", exc_info=True)
 
 
 def _delete_ws_db(org_id: str, project_id: str) -> None:
@@ -79,6 +91,12 @@ def _delete_ws_db(org_id: str, project_id: str) -> None:
         log.warning(
             "workspace_delete_fail org=%s project=%s", org_id, project_id, exc_info=True
         )
+    try:
+        from aos_api import twa_pg
+
+        twa_pg.delete_workspace(org_id, project_id)
+    except Exception:  # noqa: BLE001
+        log.debug("workspace_twa_delete_skip", exc_info=True)
 
 
 def load_workspaces_from_db() -> int:

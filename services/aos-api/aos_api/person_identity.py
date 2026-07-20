@@ -17,6 +17,9 @@ _PERSONS: dict[str, dict[str, Any]] = {}
 
 def reset_person_store() -> None:
     _PERSONS.clear()
+    from aos_api import twa_pg
+
+    twa_pg.truncate_persons()
 
 
 def upsert_person_profile(
@@ -41,6 +44,9 @@ def upsert_person_profile(
         prev["title"] = title.strip()
     prev["subject"] = sub
     _PERSONS[sub] = prev
+    from aos_api import twa_pg
+
+    twa_pg.upsert_person(prev)
     return dict(prev)
 
 
@@ -107,10 +113,32 @@ def resolve_member_identity(
     display_name: str | None = None,
 ) -> dict[str, Any]:
     """Prefer email > phone > subject. Returns canonical subject + profile fields."""
+    from aos_api import account_link as alink
+
     sub = (subject or "").strip()
     em = (email or "").strip()
     ph = (phone or "").strip()
-    if em:
+    # 200m — if contact is linked to an IdP subject, use that subject
+    linked = None
+    try:
+        linked = alink.find_subject_by_contact(
+            email=em or None,
+            phone=ph or None,
+        )
+    except ValueError:
+        linked = None
+    if linked:
+        existing = _PERSONS.get(linked, {})
+        profile = {
+            "subject": linked,
+            "email": normalize_email(em) if em else existing.get("email"),
+            "phone": normalize_phone(ph) if ph else existing.get("phone"),
+            "displayName": (display_name or "").strip()
+            or existing.get("displayName")
+            or linked,
+            "kind": "linked",
+        }
+    elif em:
         canon = subject_from_email(em)
         profile = {
             "subject": canon,
@@ -146,6 +174,9 @@ def resolve_member_identity(
     prev = _PERSONS.get(profile["subject"], {})
     merged = {**prev, **{k: v for k, v in profile.items() if v}}
     _PERSONS[profile["subject"]] = merged
+    from aos_api import twa_pg
+
+    twa_pg.upsert_person(merged)
     log.info(
         "person_resolve subject=%s kind=%s",
         profile["subject"],
@@ -213,6 +244,9 @@ def update_own_profile(
             prev["phone"] = normalize_phone(phone)
     prev["subject"] = sub
     _PERSONS[sub] = prev
+    from aos_api import twa_pg
+
+    twa_pg.upsert_person(prev)
     log.info("person_profile_update subject=%s", sub)
     return get_profile(sub)
 

@@ -106,7 +106,7 @@ export function MediaSetsPage() {
   return (
     <S2Chrome title="媒体集" lede="对齐 media-sets · 上传 + 解析插件">
       <BpToolbar>
-        <button type="button" className="btn" onClick={() => void uploadAndParse()}>
+        <button type="button" className="btn-primary" onClick={() => void uploadAndParse()}>
           上传 CSV 并解析
         </button>
         <button type="button" className="btn" onClick={() => reload()}>

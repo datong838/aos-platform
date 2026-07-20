@@ -94,6 +94,8 @@ def clear_workspace_data(
         "DELETE FROM wiki_page_version WHERE org_id=%s AND project_id=%s",
         (org_id, project_id),
     )
+    # 183m — optional MinIO physical delete under tenant prefix
+    cleared["objects"] = _clear_object_prefix(org_id, project_id)
     mem.append_audit(
         org_id=org_id,
         project_id=project_id,
@@ -110,6 +112,23 @@ def clear_workspace_data(
     )
     summary = summarize_workspace(org_id, project_id)
     return {"cleared": cleared, **summary}
+
+
+def _clear_object_prefix(org_id: str, project_id: str) -> dict[str, Any]:
+    import os
+
+    flag = (os.getenv("AOS_CLEAR_DELETE_OBJECTS") or "1").strip().lower()
+    if flag in {"0", "false", "no", "off"}:
+        return {"deleted": 0, "failed": 0, "skipped": True, "detail": "disabled"}
+    try:
+        from aos_api.object_store import delete_prefix
+        from aos_api.tenant_prefix import tenant_key_prefix
+
+        prefix = tenant_key_prefix(org_id, project_id)
+        return delete_prefix(prefix=prefix)
+    except Exception as exc:  # pragma: no cover
+        log.warning("clear_objects_skip err=%s", exc)
+        return {"deleted": 0, "failed": 0, "skipped": True, "detail": str(exc)}
 
 
 def can_admin_workspace(org_id: str, project_id: str, subject: str) -> bool:

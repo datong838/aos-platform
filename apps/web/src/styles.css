@@ -2832,6 +2832,25 @@ button.bp-discover-violet:hover {
   width: 100%;
 }
 
+/* 186m · 卡片内点选命中区：透明底，禁止 UA 白底 */
+.bp-card-hit {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.bp-card-hit:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
 .bp-discover-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);

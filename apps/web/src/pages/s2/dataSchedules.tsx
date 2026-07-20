@@ -187,7 +187,7 @@ export function SchedulesPage() {
               <button type="button" className="btn-primary" onClick={() => void createSch()}>
                 + 新建计划
               </button>
-              <button type="button" className="btn" onClick={() => void saveSch()}>
+              <button type="button" className="btn-primary" onClick={() => void saveSch()}>
                 保存计划
               </button>
             </BpToolbar>

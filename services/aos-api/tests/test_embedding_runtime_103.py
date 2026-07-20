@@ -109,3 +109,48 @@ def test_embed_live_mocked(client, auth_headers, monkeypatch):
     assert body["pluginId"] == "embed-openai-compatible"
     assert body["vectors"] == [[0.1, 0.2], [0.3, 0.4]]
     assert body["dimensions"] == 2
+
+
+def test_197m_rerank_with_key_mocked(client, auth_headers, monkeypatch):
+    """197m — AOS_RERANK_API_KEY set → rerank 200 (urlopen mocked)."""
+    import json
+    from urllib import request as urlrequest
+
+    monkeypatch.setenv("AOS_RERANK_API_KEY", "rk-test")
+    monkeypatch.setenv("AOS_RERANK_BASE_URL", "http://rerank.test")
+    monkeypatch.delenv("AOS_COHERE_API_KEY", raising=False)
+
+    class _Resp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self):
+            payload = {
+                "model": "rerank-english-v3.0",
+                "results": [
+                    {"index": 1, "relevance_score": 0.9},
+                    {"index": 0, "relevance_score": 0.2},
+                ],
+            }
+            return json.dumps(payload).encode("utf-8")
+
+    monkeypatch.setattr(urlrequest, "urlopen", lambda *a, **k: _Resp())
+    client.post("/v1/embedding-plugins/rerank-cohere/install", headers=auth_headers)
+    health = client.get("/v1/embeddings/rerank-cohere/health", headers=auth_headers)
+    assert health.status_code == 200
+    assert health.json()["configured"] is True
+    assert health.json()["mode"] == "cohere"
+    r = client.post(
+        "/v1/embeddings/rerank-cohere/rerank",
+        headers=auth_headers,
+        json={"query": "q", "documents": ["a", "b"]},
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["pluginId"] == "rerank-cohere"
+    assert body["results"][0]["index"] == 1
+    assert body["results"][0]["score"] == 0.9
+    assert body["results"][0]["document"] == "b"

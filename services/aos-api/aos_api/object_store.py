@@ -112,7 +112,7 @@ def _aws4_request(
     amz_date = now.strftime("%Y%m%dT%H%M%SZ")
     datestamp = now.strftime("%Y%m%d")
     payload_hash = hashlib.sha256(body).hexdigest()
-    if method.upper() == "GET":
+    if method.upper() in {"GET", "DELETE", "HEAD"}:
         canonical_headers = (
             f"host:{host}\n"
             f"x-amz-content-sha256:{payload_hash}\n"
@@ -167,7 +167,10 @@ def _aws4_request(
         f"SignedHeaders={signed_headers}, Signature={signature}"
     )
     req = urllib.request.Request(
-        url, data=body if method.upper() != "GET" else None, headers=headers, method=method
+        url,
+        data=body if method.upper() not in {"GET", "DELETE", "HEAD"} else None,
+        headers=headers,
+        method=method,
     )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -270,6 +273,198 @@ def get_bytes(*, key: str, cfg: S3Config | None = None) -> bytes:
             last_err = exc
             log.warning("s3_get_retry endpoint=%s err=%s", endpoint, exc)
     raise RuntimeError(str(last_err) if last_err else "s3_get_failed")
+
+
+def delete_object(*, key: str, cfg: S3Config | None = None) -> bool:
+    """183m — DELETE single object."""
+    cfg = cfg or get_config()
+    if not cfg.enabled:
+        raise RuntimeError("object_store_not_configured")
+    last_err: Exception | None = None
+    for endpoint in _endpoint_candidates(cfg):
+        try:
+            host = endpoint.split("://", 1)[-1]
+            path = f"/{cfg.bucket}/{quote(key, safe='/')}"
+            url = f"{endpoint}{path}"
+            status, _body, _headers = _aws4_request(
+                method="DELETE",
+                url=url,
+                host=host,
+                path=path,
+                body=b"",
+                access_key=cfg.access_key,
+                secret_key=cfg.secret_key,
+                region=cfg.region,
+            )
+            ok = status in (200, 204)
+            log.info("s3_delete key=%s status=%s endpoint=%s", key, status, endpoint)
+            return ok
+        except Exception as exc:  # noqa: BLE001
+            last_err = exc
+            log.warning("s3_delete_retry endpoint=%s err=%s", endpoint, exc)
+    raise RuntimeError(str(last_err) if last_err else "s3_delete_failed")
+
+
+def _aws4_get_query(
+    *,
+    endpoint: str,
+    bucket: str,
+    query: str,
+    access_key: str,
+    secret_key: str,
+    region: str,
+    timeout: float = 30,
+) -> bytes:
+    """Signed GET with canonical query string (ListObjectsV2)."""
+    host = endpoint.split("://", 1)[-1]
+    path = f"/{bucket}"
+    url = f"{endpoint}{path}?{query}"
+    now = datetime.now(timezone.utc)
+    amz_date = now.strftime("%Y%m%dT%H%M%SZ")
+    datestamp = now.strftime("%Y%m%d")
+    payload_hash = hashlib.sha256(b"").hexdigest()
+    canonical_headers = (
+        f"host:{host}\n"
+        f"x-amz-content-sha256:{payload_hash}\n"
+        f"x-amz-date:{amz_date}\n"
+    )
+    signed_headers = "host;x-amz-content-sha256;x-amz-date"
+    canonical_request = "\n".join(
+        [
+            "GET",
+            path,
+            query,
+            canonical_headers,
+            signed_headers,
+            payload_hash,
+        ]
+    )
+    credential_scope = f"{datestamp}/{region}/s3/aws4_request"
+    string_to_sign = "\n".join(
+        [
+            "AWS4-HMAC-SHA256",
+            amz_date,
+            credential_scope,
+            hashlib.sha256(canonical_request.encode("utf-8")).hexdigest(),
+        ]
+    )
+    signature = hmac.new(
+        _signing_key(secret_key, datestamp, region, "s3"),
+        string_to_sign.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    headers = {
+        "Host": host,
+        "X-Amz-Content-Sha256": payload_hash,
+        "X-Amz-Date": amz_date,
+        "Authorization": (
+            f"AWS4-HMAC-SHA256 Credential={access_key}/{credential_scope}, "
+            f"SignedHeaders={signed_headers}, Signature={signature}"
+        ),
+    }
+    req = urllib.request.Request(url, data=None, headers=headers, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return resp.read()
+    except urllib.error.HTTPError as exc:
+        body_err = exc.read() if hasattr(exc, "read") else b""
+        raise RuntimeError(f"s3_list_http_{exc.code}: {body_err[:200]!r}") from exc
+
+
+def list_keys_with_prefix(*, prefix: str, cfg: S3Config | None = None) -> list[str]:
+    """183m — ListObjectsV2 keys under prefix."""
+    cfg = cfg or get_config()
+    if not cfg.enabled:
+        raise RuntimeError("object_store_not_configured")
+    import xml.etree.ElementTree as ET
+
+    keys: list[str] = []
+    token: str | None = None
+    last_err: Exception | None = None
+    while True:
+        parts = [
+            "list-type=2",
+            f"prefix={quote(prefix, safe='')}",
+        ]
+        if token:
+            parts.append(f"continuation-token={quote(token, safe='')}")
+        query = "&".join(parts)
+        body: bytes | None = None
+        for endpoint in _endpoint_candidates(cfg):
+            try:
+                body = _aws4_get_query(
+                    endpoint=endpoint,
+                    bucket=cfg.bucket,
+                    query=query,
+                    access_key=cfg.access_key,
+                    secret_key=cfg.secret_key,
+                    region=cfg.region,
+                )
+                last_err = None
+                break
+            except Exception as exc:  # noqa: BLE001
+                last_err = exc
+                log.warning("s3_list_retry endpoint=%s err=%s", endpoint, exc)
+        if body is None:
+            raise RuntimeError(str(last_err) if last_err else "s3_list_failed")
+        root = ET.fromstring(body)
+        ns = ""
+        if root.tag.startswith("{"):
+            ns = root.tag.split("}")[0] + "}"
+        for contents in root.findall(f"{ns}Contents"):
+            key_el = contents.find(f"{ns}Key")
+            if key_el is not None and key_el.text:
+                keys.append(key_el.text)
+        is_truncated = root.findtext(f"{ns}IsTruncated") == "true"
+        token = root.findtext(f"{ns}NextContinuationToken")
+        if not is_truncated or not token:
+            break
+    log.info("s3_list prefix=%s count=%s", prefix, len(keys))
+    return keys
+
+
+def delete_prefix(*, prefix: str, cfg: S3Config | None = None) -> dict[str, Any]:
+    """183m — list + delete all objects under tenant prefix."""
+    cfg = cfg or get_config()
+    if not cfg.enabled:
+        return {
+            "deleted": 0,
+            "failed": 0,
+            "prefix": prefix,
+            "skipped": True,
+            "detail": "object_store_not_configured",
+        }
+    deleted = 0
+    failed = 0
+    errors: list[str] = []
+    try:
+        keys = list_keys_with_prefix(prefix=prefix, cfg=cfg)
+    except Exception as exc:  # noqa: BLE001
+        log.warning("s3_delete_prefix_list_fail prefix=%s err=%s", prefix, exc)
+        return {
+            "deleted": 0,
+            "failed": 0,
+            "prefix": prefix,
+            "skipped": True,
+            "detail": str(exc),
+        }
+    for key in keys:
+        try:
+            if delete_object(key=key, cfg=cfg):
+                deleted += 1
+            else:
+                failed += 1
+                errors.append(key)
+        except Exception as exc:  # noqa: BLE001
+            failed += 1
+            errors.append(f"{key}:{exc}")
+    return {
+        "deleted": deleted,
+        "failed": failed,
+        "prefix": prefix,
+        "bucket": cfg.bucket,
+        "errors": errors[:20],
+    }
 
 
 def health_probe() -> dict[str, Any]:

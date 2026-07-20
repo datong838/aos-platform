@@ -1,5 +1,8 @@
 import os
 
+# Unit tests default to in-memory TWA (181m PG via AOS_TWA_STORE=pg / auto outside tests).
+os.environ.setdefault("AOS_TWA_STORE", "memory")
+
 import pytest
 
 from aos_api.db import init_schema, seed_if_empty
@@ -26,6 +29,13 @@ def client():
     ):
         os.environ.pop(k, None)
     os.environ["AOS_LITELLM_FALLBACK"] = "mock"
+    os.environ.setdefault("AOS_TWA_STORE", "memory")
+    try:
+        from aos_api import twa_pg
+
+        twa_pg.clear_mode_cache()
+    except Exception:
+        pass
     # ensure schema for ontology tests
     try:
         init_schema()

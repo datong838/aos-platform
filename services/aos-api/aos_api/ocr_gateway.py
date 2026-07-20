@@ -55,13 +55,36 @@ def probe_sidecar(timeout: float = 1.5) -> dict[str, Any]:
 
 
 def _fallback(page: int, text_hint: str | None) -> dict[str, Any]:
+    """215m — mock boxes + non-zero confidence from textHint (≠ GPU OCR)."""
+    text = (text_hint or "OCR fallback mock text").strip() or "OCR fallback mock text"
+    tokens = [t for t in text.replace("\n", " ").split(" ") if t] or [text]
+    boxes: list[dict[str, Any]] = []
+    x = 8.0
+    y = 12.0 + max(0, int(page) - 1) * 24.0
+    for i, tok in enumerate(tokens[:32]):
+        w = max(12.0, min(180.0, 7.0 * len(tok)))
+        boxes.append(
+            {
+                "text": tok,
+                "x": round(x, 1),
+                "y": round(y, 1),
+                "w": round(w, 1),
+                "h": 14.0,
+                "confidence": round(0.72 + (i % 5) * 0.04, 2),
+            }
+        )
+        x += w + 6.0
+        if x > 520:
+            x = 8.0
+            y += 18.0
+    avg = sum(float(b["confidence"]) for b in boxes) / len(boxes)
     return {
         "engine": "fallback-mock",
         "page": page,
-        "text": (text_hint or "OCR fallback mock text").strip() or "OCR fallback mock text",
+        "text": text,
         "sidecar": "fallback-mock",
-        "confidence": 0.0,
-        "boxes": [],
+        "confidence": round(avg, 3),
+        "boxes": boxes,
     }
 
 

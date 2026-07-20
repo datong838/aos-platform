@@ -9,6 +9,18 @@ def test_fallback_mock_when_url_unset(monkeypatch):
     assert out["sidecar"] == "fallback-mock"
     assert out["page"] == 2
     assert out["text"] == "hello-ocr"
+    assert out["confidence"] > 0
+    assert len(out["boxes"]) >= 1
+    assert out["boxes"][0]["text"] == "hello-ocr"
+
+
+def test_215m_fallback_mock_boxes_multi_token(monkeypatch):
+    monkeypatch.delenv("AOS_OCR_URL", raising=False)
+    monkeypatch.setenv("AOS_OCR_FALLBACK", "mock")
+    out = ocr_page(page=1, text_hint="alpha beta gamma")
+    assert len(out["boxes"]) == 3
+    assert out["confidence"] > 0.5
+    assert {b["text"] for b in out["boxes"]} == {"alpha", "beta", "gamma"}
 
 
 def test_probe_unset(monkeypatch):

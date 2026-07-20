@@ -111,6 +111,7 @@ fn log_safe(op: &str, key: &str, ok: bool) {
 
 pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
     let show = MenuItem::with_id(app, "show", "打开主窗口", true, None::<&str>)?;
+    let status = MenuItem::with_id(app, "status", "连通：—", false, None::<&str>)?;
     let about = MenuItem::with_id(app, "about", "关于本机", true, None::<&str>)?;
     let check_update = MenuItem::with_id(app, "check_update", "检查更新", true, None::<&str>)?;
     let buddy = MenuItem::with_id(app, "buddy_classic", "Buddy 经典三栏", true, None::<&str>)?;
@@ -119,7 +120,7 @@ pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
     let quit = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
     let menu = Menu::with_items(
         app,
-        &[&show, &about, &check_update, &buddy, &local, &sep, &quit],
+        &[&show, &status, &about, &check_update, &buddy, &local, &sep, &quit],
     )?;
 
     let icon = app
@@ -164,6 +165,21 @@ pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
         })
         .build(app)?;
 
+    Ok(())
+}
+
+/// 195m — update tray tooltip from web/desktop offline events.
+#[tauri::command]
+pub fn tray_update_status(app: AppHandle, tooltip: String) -> Result<(), String> {
+    let tip = if tooltip.trim().is_empty() {
+        "AOS 桌面".to_string()
+    } else {
+        tooltip
+    };
+    let tray = app
+        .tray_by_id("main-tray")
+        .ok_or_else(|| "tray main-tray not found".to_string())?;
+    tray.set_tooltip(Some(&tip)).map_err(|e| e.to_string())?;
     Ok(())
 }
 

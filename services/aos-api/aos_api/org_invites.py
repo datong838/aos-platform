@@ -24,6 +24,9 @@ def reset_org_invites_store() -> None:
     _INVITES.clear()
     _JOIN_REQS.clear()
     _JR_SEQ = 0
+    from aos_api import twa_pg
+
+    twa_pg.truncate_invites()
 
 
 def clear_org_artifacts(org_id: str) -> dict[str, int]:
@@ -33,6 +36,9 @@ def clear_org_artifacts(org_id: str) -> dict[str, int]:
     jr = [i for i, r in list(_JOIN_REQS.items()) if r.get("orgId") == org_id]
     for i in jr:
         del _JOIN_REQS[i]
+    from aos_api import twa_pg
+
+    twa_pg.delete_invites_for_org(org_id)
     return {"invites": len(inv), "joinRequests": len(jr)}
 
 
@@ -65,6 +71,9 @@ def create_invite(
         "status": "active",
     }
     _INVITES[token] = row
+    from aos_api import twa_pg
+
+    twa_pg.upsert_invite(row)
     mem.append_audit(
         org_id=org_id,
         project_id=project_id,
@@ -106,8 +115,14 @@ def get_invite(token: str) -> dict[str, Any] | None:
         return dict(row)
     if time.time() > float(row.get("_expiresTs", 0)):
         row["status"] = "expired"
+        from aos_api import twa_pg
+
+        twa_pg.upsert_invite(row)
     if int(row["uses"]) >= int(row["maxUses"]):
         row["status"] = "exhausted"
+        from aos_api import twa_pg
+
+        twa_pg.upsert_invite(row)
     return dict(row)
 
 
@@ -134,6 +149,9 @@ def accept_invite(*, token: str, subject: str) -> dict[str, Any]:
     stored["uses"] = int(stored["uses"]) + 1
     if int(stored["uses"]) >= int(stored["maxUses"]):
         stored["status"] = "exhausted"
+    from aos_api import twa_pg
+
+    twa_pg.upsert_invite(stored)
     mem.append_audit(
         org_id=stored["orgId"],
         project_id=stored["projectId"],
@@ -185,6 +203,9 @@ def create_join_request(
         "decidedAt": None,
     }
     _JOIN_REQS[rid] = row
+    from aos_api import twa_pg
+
+    twa_pg.upsert_join_request(row)
     mem.append_audit(
         org_id=org_id,
         project_id=project_id,
@@ -226,6 +247,9 @@ def decide_join_request(
     row["decidedBy"] = actor_id
     row["decidedAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     row["projectId"] = pid
+    from aos_api import twa_pg
+
+    twa_pg.upsert_join_request(row)
     if decision == "approve":
         mem.upsert_member(org_id, pid, row["subject"], role, actor_id=actor_id)
         mem.append_audit(

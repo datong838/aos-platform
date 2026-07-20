@@ -294,6 +294,40 @@ def list_webhooks(principal: Principal = Depends(require_principal)):
     return {"items": load_webhooks()}
 
 
+@router.delete("/v1/actions/webhooks/{webhook_id}")
+def delete_webhook(webhook_id: str, principal: Principal = Depends(require_principal)):
+    """209m — unregister webhook."""
+    _ = principal
+    from aos_api.channel_runtime import delete_webhook as drop_webhook
+    from aos_api.errors import ApiError
+
+    if not drop_webhook(webhook_id):
+        raise ApiError(code="NOT_FOUND", message="webhook not found", status_code=404)
+    return {"ok": True, "id": webhook_id}
+
+
+@router.get("/v1/channels/outbox")
+def list_channel_outbox(
+    limit: int = 50,
+    principal: Principal = Depends(require_principal),
+):
+    """212m — list recent channel deliveries."""
+    _ = principal
+    from aos_api.channel_runtime import list_outbox
+
+    items = list_outbox(limit=limit)
+    return {"items": items, "count": len(items)}
+
+
+@router.post("/v1/channels/outbox/{outbox_id}/retry")
+def retry_channel_outbox(outbox_id: str, principal: Principal = Depends(require_principal)):
+    """212m — re-dispatch stored payload."""
+    _ = principal
+    from aos_api.channel_runtime import retry_outbox
+
+    return retry_outbox(outbox_id)
+
+
 @router.post("/v1/channels/{plugin_id}/send")
 def channel_send(
     plugin_id: str,
@@ -1217,6 +1251,9 @@ def create_media(body: MediaIn, principal: Principal = Depends(require_principal
     if body.bytesBase64:
         raw = base64.b64decode(body.bytesBase64)
         raw_len = len(raw)
+        from aos_api import provisioning as prov
+
+        prov.assert_storage_quota(principal.org_id, raw_len)
         _media_bytes[rid] = raw
         object_key = object_key_for(
             rid,
@@ -1237,6 +1274,7 @@ def create_media(body: MediaIn, principal: Principal = Depends(require_principal
         except Exception as exc:  # noqa: BLE001
             log.warning("media_store_minio_skip err=%s endpoint=%s", exc, get_config().endpoint)
             store_mode = "metadata-only"
+        prov.record_storage_usage(principal.org_id, raw_len)
     item = {
         "rid": rid,
         "name": body.name,
@@ -1250,6 +1288,14 @@ def create_media(body: MediaIn, principal: Principal = Depends(require_principal
         "projectId": principal.project_id,
         "accessKeyRef": "env:AOS_S3_ACCESS_KEY|MINIO_ROOT_USER",
     }
+    from aos_api.media_meta import extract_metadata
+
+    raw_for_meta = _media_bytes.get(rid) if body.bytesBase64 else None
+    item["metadata"] = extract_metadata(
+        raw_for_meta,
+        content_type=body.contentType or "application/octet-stream",
+        name=body.name,
+    )
     _media[rid] = item
     log.info(
         "media_created rid=%s stored=%s bytes=%s org=%s project=%s",
@@ -1260,6 +1306,29 @@ def create_media(body: MediaIn, principal: Principal = Depends(require_principal
         principal.project_id,
     )
     return item
+
+
+@router.post("/v1/media-sets/{rid}/enrich")
+def enrich_media(rid: str, principal: Principal = Depends(require_principal)):
+    """185m — re-extract metadata from in-memory bytes (or empty)."""
+    from aos_api.media_meta import extract_metadata
+
+    if rid not in _media:
+        raise ApiError(code="NOT_FOUND", message="media missing", status_code=404)
+    meta = _media[rid]
+    if meta.get("orgId") and (
+        meta.get("orgId") != principal.org_id or meta.get("projectId") != principal.project_id
+    ):
+        raise ApiError(code="NOT_FOUND", message="media missing", status_code=404)
+    raw = _media_bytes.get(rid)
+    enriched = extract_metadata(
+        raw,
+        content_type=str(meta.get("contentType") or "application/octet-stream"),
+        name=str(meta.get("name") or ""),
+    )
+    meta["metadata"] = enriched
+    _media[rid] = meta
+    return meta
 
 
 @router.get("/v1/media-sets")
@@ -1947,6 +2016,8 @@ def apollo_upgrade(body: dict[str, Any], principal: Principal = Depends(require_
 @router.post("/v1/aip/insights/backfill")
 def insight_backfill(body: dict[str, Any], principal: Principal = Depends(require_principal)):
     _ = principal
+    from aos_api import ttl_job
+
     draft_id = f"draft-bf-{uuid.uuid4().hex[:8]}"
     insight = {
         "id": f"ins-{uuid.uuid4().hex[:8]}",
@@ -1956,9 +2027,28 @@ def insight_backfill(body: dict[str, Any], principal: Principal = Depends(requir
         "text": body.get("text", "high-confidence insight"),
         "viaDraftId": draft_id,
         "status": "proposed",
+        "orgId": principal.org_id,
+        "projectId": principal.project_id,
     }
-    log.info("insight_backfill id=%s", insight["id"])
-    return insight
+    # optional backdate for tests / ops: createdAt ISO
+    if body.get("createdAt"):
+        insight["createdAt"] = str(body["createdAt"])
+        insight["lastRefAt"] = str(body.get("lastRefAt") or body["createdAt"])
+    stored = ttl_job.upsert_insight(insight)
+    log.info("insight_backfill id=%s", stored["id"])
+    return stored
+
+
+@router.get("/v1/aip/insights")
+def list_insights(
+    status: str | None = None,
+    principal: Principal = Depends(require_principal),
+):
+    _ = principal
+    from aos_api import ttl_job
+
+    items = ttl_job.list_insights(status=status)
+    return {"items": items}
 
 
 # —— TC.5 / TC.6 ——

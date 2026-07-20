@@ -1,15 +1,20 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   gateInstall,
   signManifest,
   verifyUpdateSignature,
   type UpdateManifest,
 } from "./verify";
-import { checkDesktopUpdate, injectUpdateManifest } from "./check";
+import {
+  checkDesktopUpdate,
+  injectUpdateManifest,
+  setUpdateSourceUrl,
+} from "./check";
 
 describe("TWC.9 signed update", () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.unstubAllGlobals();
   });
 
   it("rejects missing or bad signature (拒装)", async () => {
@@ -66,5 +71,31 @@ describe("TWC.9 signed update", () => {
     });
     const r = await checkDesktopUpdate("0.1.0");
     expect(r.status).toBe("invalid");
+  });
+
+  it("199m: fetch from update source URL", async () => {
+    const base = {
+      version: "1.2.3",
+      url: "https://cdn.example/a.dmg",
+      sha256: "aa",
+    };
+    const manifest: UpdateManifest = {
+      ...base,
+      signature: await signManifest(base),
+    };
+    setUpdateSourceUrl("https://cdn.example/manifest.json");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify(manifest),
+      })),
+    );
+    const r = await checkDesktopUpdate("0.1.0");
+    expect(r.status).toBe("available");
+    if (r.status === "available") {
+      expect(r.manifest.version).toBe("1.2.3");
+    }
   });
 });

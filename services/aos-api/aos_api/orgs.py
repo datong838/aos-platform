@@ -25,10 +25,17 @@ def org_count() -> int:
 def reset_org_store(*, purge_db: bool = False) -> None:
     """Clear in-memory org cache.
 
-    默认 **不** 清 PG：单测与本机共享 aos_meta 时，purge 会误删 org-qyh 等真实组织。
+    默认 **不** 清 meta_org：单测与本机共享 aos_meta 时，purge 会误删 org-qyh 等真实组织。
     需要隔离库时显式传 purge_db=True。
+    显式 AOS_TWA_STORE=pg（181m）时同步清空 twa_org。
     """
     _ORGS.clear()
+    import os
+
+    from aos_api import twa_pg
+
+    if (os.getenv("AOS_TWA_STORE") or "").strip().lower() == "pg":
+        twa_pg.truncate_orgs()
     if not purge_db:
         return
     try:
@@ -67,6 +74,12 @@ def _persist_org(row: dict[str, Any]) -> None:
             conn.commit()
     except Exception:  # noqa: BLE001
         log.warning("org_persist_fail id=%s", row.get("id"), exc_info=True)
+    try:
+        from aos_api import twa_pg
+
+        twa_pg.upsert_org(row)
+    except Exception:  # noqa: BLE001
+        log.debug("org_twa_dual_write_skip", exc_info=True)
 
 
 def _delete_org_db(org_id: str) -> None:
@@ -76,6 +89,12 @@ def _delete_org_db(org_id: str) -> None:
             conn.commit()
     except Exception:  # noqa: BLE001
         log.warning("org_delete_fail id=%s", org_id, exc_info=True)
+    try:
+        from aos_api import twa_pg
+
+        twa_pg.delete_org(org_id)
+    except Exception:  # noqa: BLE001
+        log.debug("org_twa_delete_skip", exc_info=True)
 
 
 def load_orgs_from_db() -> int:

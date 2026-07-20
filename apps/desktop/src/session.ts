@@ -1,13 +1,17 @@
-/** TWC.3 — 会话：Access 内存 · Refresh/令牌 → 钥匙串（Tauri）或内存回退 */
+/** TWC.3 — 会话：Access 内存 · Refresh/令牌 → 钥匙串（Tauri）或内存回退 · 196m 解锁闸门 */
 import { invoke } from "@tauri-apps/api/core";
 import { setAccessToken, clearAccessToken, getAccessToken } from "@aos-web/api/tenant";
 import { getApiBase } from "@aos-web/api/apiBase";
 import { getTenant } from "@aos-web/api/tenant";
+import { getRequireUnlockOnResume } from "./lockSettings";
 
 const REFRESH_KEY = "aos.refreshToken";
 
 /** vitest / 浏览器预览回退（非钥匙串；仅开发） */
 const memStore = new Map<string, string>();
+
+/** 196m — session present but access not applied until unlock */
+let pendingUnlockToken: string | null = null;
 
 function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -80,6 +84,7 @@ export async function loginDev(opts?: {
 }
 
 export async function applyTokens(data: TokenResponse): Promise<void> {
+  pendingUnlockToken = null;
   setAccessToken(data.accessToken);
   const refresh = data.refreshToken || data.accessToken;
   await secureSet(REFRESH_KEY, refresh);
@@ -87,13 +92,38 @@ export async function applyTokens(data: TokenResponse): Promise<void> {
 
 export async function restoreSession(): Promise<boolean> {
   const stored = await secureGet(REFRESH_KEY);
-  if (!stored) return false;
+  if (!stored) {
+    pendingUnlockToken = null;
+    return false;
+  }
+  if (getRequireUnlockOnResume()) {
+    pendingUnlockToken = stored;
+    console.info("[aos-desktop-session]", { event: "session_locked_pending_unlock" });
+    return true;
+  }
+  pendingUnlockToken = null;
   setAccessToken(stored);
   console.info("[aos-desktop-session]", { event: "session_restored" });
   return true;
 }
 
+/** 196m — true when restore found a session but did not apply access yet. */
+export function isUnlockPending(): boolean {
+  return Boolean(pendingUnlockToken);
+}
+
+/** 196m — apply pending / stored refresh as access token. */
+export async function unlockSession(): Promise<boolean> {
+  const t = pendingUnlockToken || (await secureGet(REFRESH_KEY));
+  if (!t) return false;
+  setAccessToken(t);
+  pendingUnlockToken = null;
+  console.info("[aos-desktop-session]", { event: "session_unlocked" });
+  return true;
+}
+
 export async function logout(): Promise<void> {
+  pendingUnlockToken = null;
   clearAccessToken();
   await secureDelete(REFRESH_KEY);
   console.info("[aos-desktop-session]", { event: "logout" });
