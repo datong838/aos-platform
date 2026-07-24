@@ -1,0 +1,25 @@
+{
+  "id": "file-object-store",
+  "name": "Object Store File",
+  "nameZh": "对象存储文件",
+  "description": "S3 兼容对象仓原件",
+  "kind": "source",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "live",
+  "capabilities": [
+    "file",
+    "s3",
+    "media"
+  ],
+  "healthPath": "/v1/object-store/health",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "secretRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      }
+    }
+  }
+}

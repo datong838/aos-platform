@@ -1,0 +1,84 @@
+import os
+
+# Unit tests default to in-memory TWA (181m PG via AOS_TWA_STORE=pg / auto outside tests).
+os.environ.setdefault("AOS_TWA_STORE", "memory")
+
+import pytest
+
+from aos_api.db import init_schema, seed_if_empty
+from aos_api.idempotency import idempotency_store
+from aos_api.main import create_app
+from aos_api.metrics import reset_metrics
+from aos_api.module_store import seed_modules_if_empty
+from aos_api import mock_data
+from fastapi.testclient import TestClient
+
+
+@pytest.fixture()
+def client():
+    idempotency_store.clear()
+    mock_data.reset_mock_state()
+    reset_metrics()
+    # Unit tests must not hit real Agnes / network LLM
+    for k in (
+        "AGNES_API_KEY",
+        "AGNES_BASE_URL",
+        "AGNES_TEXT_MODEL",
+        "AGNES_IMAGE_MODEL",
+        "AOS_LITELLM_URL",
+    ):
+        os.environ.pop(k, None)
+    os.environ["AOS_LITELLM_FALLBACK"] = "mock"
+    os.environ.setdefault("AOS_TWA_STORE", "memory")
+    try:
+        from aos_api import twa_pg
+
+        twa_pg.clear_mode_cache()
+    except Exception:
+        pass
+    # ensure schema for ontology tests
+    try:
+        init_schema()
+        seed_if_empty()
+        seed_modules_if_empty()
+        from aos_api.db import connect as _connect
+
+        with _connect() as _c:
+            _c.execute("DELETE FROM obj_instance WHERE props->>'source' IS NOT NULL")
+            _c.execute("DELETE FROM meta_aip_kv WHERE key='apollo_ops_assets'")
+            _c.execute("DELETE FROM meta_object_type WHERE id NOT IN ('WorkOrder','Site')")
+            _c.commit()
+    except Exception as exc:  # pragma: no cover
+        pytest.skip(f"PG unavailable: {exc}")
+    app = create_app()
+    with TestClient(app) as c:
+        yield c
+
+
+@pytest.fixture()
+def auth_headers():
+    return {
+        "Authorization": "Bearer dev",
+        "X-Org-Id": "dev-org",
+        "X-Project-Id": "dev-project",
+        "X-Trace-Id": "test-trace-1",
+    }
+
+
+@pytest.fixture(autouse=True)
+def _scrub_org_workspace_membership_residue():
+    try:
+        from aos_api.db import connect as _connect
+
+        with _connect() as _c:
+            _c.execute(
+                "DELETE FROM meta_workspace WHERE project_id NOT IN "
+                "('dev-project','prj-ops','prj-1','prj-2')"
+            )
+            _c.execute(
+                "DELETE FROM meta_membership WHERE subject IN ('carol','dave','erin')"
+            )
+            _c.commit()
+    except Exception:
+        pass
+    yield

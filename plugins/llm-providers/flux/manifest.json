@@ -1,0 +1,38 @@
+{
+  "id": "flux",
+  "name": "Flux",
+  "nameZh": "Flux 图像",
+  "description": "Flux 高质量生图",
+  "tier": "mid",
+  "modalities": [
+    "image"
+  ],
+  "capabilities": [
+    "image"
+  ],
+  "formFamily": "image",
+  "defaultModels": [
+    "flux-pro"
+  ],
+  "litellmPrefix": "openai/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "flux-pro"
+        ]
+      }
+    }
+  }
+}

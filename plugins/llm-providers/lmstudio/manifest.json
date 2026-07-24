@@ -1,0 +1,50 @@
+{
+  "id": "lmstudio",
+  "name": "LM Studio",
+  "nameZh": "LM Studio",
+  "description": "桌面本地模型",
+  "tier": "free",
+  "modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "llm",
+    "chat"
+  ],
+  "formFamily": "local",
+  "defaultModels": [
+    "local-model"
+  ],
+  "litellmPrefix": "openai/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "local-model"
+        ]
+      },
+      "baseUrl": {
+        "type": "string",
+        "default": "http://127.0.0.1:1234/v1"
+      },
+      "modelPath": {
+        "type": "string"
+      },
+      "warmup": {
+        "type": "boolean",
+        "default": true
+      }
+    }
+  }
+}

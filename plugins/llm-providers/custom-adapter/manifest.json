@@ -1,0 +1,39 @@
+{
+  "id": "custom-adapter",
+  "name": "Custom Adapter",
+  "nameZh": "自定义 Adapter 包",
+  "description": "非标准协议 · 钩子 · 容器",
+  "tier": "mid",
+  "modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "llm",
+    "adapter"
+  ],
+  "formFamily": "adapter",
+  "defaultModels": [],
+  "litellmPrefix": "",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": []
+      },
+      "artifacts": {
+        "type": "string",
+        "description": "容器或 Source API"
+      }
+    }
+  }
+}

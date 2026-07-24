@@ -1,0 +1,50 @@
+{
+  "id": "vllm",
+  "name": "vLLM",
+  "nameZh": "vLLM（本地）",
+  "description": "本机 OpenAI 兼容推理服务",
+  "tier": "free",
+  "modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "llm",
+    "chat"
+  ],
+  "formFamily": "local",
+  "defaultModels": [
+    "Qwen2.5-72B-Instruct"
+  ],
+  "litellmPrefix": "hosted_vllm/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "Qwen2.5-72B-Instruct"
+        ]
+      },
+      "baseUrl": {
+        "type": "string",
+        "default": "http://127.0.0.1:8000/v1"
+      },
+      "modelPath": {
+        "type": "string"
+      },
+      "warmup": {
+        "type": "boolean",
+        "default": true
+      }
+    }
+  }
+}

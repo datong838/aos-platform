@@ -1,0 +1,20 @@
+{
+  "id": "metric-card",
+  "name": "Metric Card",
+  "nameZh": "指标卡",
+  "description": "ObjectSet 计数 + 分桶 · source=object-sets（108）",
+  "version": "0.2.0",
+  "author": "aos",
+  "runtime": "inproc",
+  "capabilities": ["widget", "metric"],
+  "canvasKind": "metric",
+  "palette": true,
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "objectType": { "type": "string" },
+      "groupBy": { "type": "string", "description": "default status" },
+      "site": { "type": "string" }
+    }
+  }
+}

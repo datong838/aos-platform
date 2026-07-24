@@ -1,0 +1,43 @@
+{
+  "id": "groq",
+  "name": "Groq",
+  "nameZh": "Groq",
+  "description": "高速推理 · 免费档友好",
+  "tier": "free",
+  "modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "llm",
+    "chat"
+  ],
+  "formFamily": "openai_compatible",
+  "defaultModels": [
+    "llama-3.3-70b-versatile"
+  ],
+  "litellmPrefix": "groq/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "llama-3.3-70b-versatile"
+        ]
+      },
+      "baseUrl": {
+        "type": "string",
+        "default": "https://api.groq.com/openai/v1"
+      }
+    }
+  }
+}

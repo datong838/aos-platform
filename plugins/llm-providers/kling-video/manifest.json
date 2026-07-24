@@ -1,0 +1,38 @@
+{
+  "id": "kling-video",
+  "name": "Kling",
+  "nameZh": "可灵 Kling 视频",
+  "description": "快手可灵文生视频",
+  "tier": "high",
+  "modalities": [
+    "video"
+  ],
+  "capabilities": [
+    "video"
+  ],
+  "formFamily": "video",
+  "defaultModels": [
+    "kling-v1"
+  ],
+  "litellmPrefix": "",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "kling-v1"
+        ]
+      }
+    }
+  }
+}

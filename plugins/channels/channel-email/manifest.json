@@ -1,0 +1,16 @@
+{
+  "id": "channel-email",
+  "name": "Email",
+  "nameZh": "邮件通道",
+  "description": "SMTP 投递 · 需 AOS_SMTP_HOST；未配置时 send 返回 501",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "inproc",
+  "capabilities": ["notify", "email"],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "smtpHostEnv": { "type": "string", "default": "AOS_SMTP_HOST" }
+    }
+  }
+}

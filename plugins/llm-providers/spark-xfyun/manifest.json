@@ -1,0 +1,43 @@
+{
+  "id": "spark-xfyun",
+  "name": "iFlytek Spark",
+  "nameZh": "讯飞星火",
+  "description": "科大讯飞星火",
+  "tier": "mid",
+  "modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "llm",
+    "chat"
+  ],
+  "formFamily": "openai_compatible",
+  "defaultModels": [
+    "generalv3.5"
+  ],
+  "litellmPrefix": "openai/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "generalv3.5"
+        ]
+      },
+      "baseUrl": {
+        "type": "string",
+        "default": "https://spark-api-open.xf-yun.com/v1"
+      }
+    }
+  }
+}

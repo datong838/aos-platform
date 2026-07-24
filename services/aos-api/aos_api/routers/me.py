@@ -1,0 +1,169 @@
+from __future__ import annotations
+
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel, Field
+
+from aos_api.auth import Principal, require_principal
+from aos_api.errors import ApiError
+from aos_api.logging_facade import get_logger
+from aos_api import orgs as org_store
+from aos_api import membership as mem
+from aos_api import person_identity as person
+
+router = APIRouter(tags=["me"])
+log = get_logger("aos-api.me")
+
+
+def _workspace_name(project_id: str) -> str:
+    """TWA.2 · 产品名；技术 id 仍为 project_id。"""
+    if project_id in ("dev-project", "test-workspace"):
+        return "测试工作区"
+    return project_id
+
+
+class ProfilePatchIn(BaseModel):
+    displayName: str | None = Field(default=None, max_length=80)
+    email: str | None = Field(default=None, max_length=120)
+    phone: str | None = Field(default=None, max_length=32)
+    title: str | None = Field(default=None, max_length=80)
+    otpTicket: str | None = None
+
+
+@router.get("/v1/me")
+def me(principal: Principal = Depends(require_principal)) -> dict:
+    mem.ensure_default_membership(
+        principal.org_id, principal.project_id, principal.subject
+    )
+    ws = _workspace_name(principal.project_id)
+    org_items = org_store.list_orgs_for_subject(principal.subject)
+    if not any(i["id"] == principal.org_id for i in org_items):
+        org_store.ensure_org(principal.org_id)
+        cur = org_store.get_org(principal.org_id)
+        if cur:
+            org_items = [cur, *org_items]
+    profile = person.get_profile(principal.subject)
+    log.info(
+        "me_probe subject=%s org=%s project=%s workspace=%s",
+        principal.subject,
+        principal.org_id,
+        principal.project_id,
+        ws,
+    )
+    return {
+        "subject": principal.subject,
+        "orgId": principal.org_id,
+        "orgName": org_store.org_name(principal.org_id),
+        "projectId": principal.project_id,
+        "workspaceName": ws,
+        "roles": principal.roles,
+        "markings": principal.markings,
+        "tokenKind": principal.token_kind,
+        "orgs": org_items,
+        "profile": profile,
+        "displayName": profile.get("displayName"),
+        "email": profile.get("email"),
+        "phone": profile.get("phone"),
+        "title": profile.get("title"),
+    }
+
+
+@router.patch("/v1/me/profile")
+def patch_my_profile(
+    body: ProfilePatchIn,
+    principal: Principal = Depends(require_principal),
+) -> dict:
+    from aos_api import otp as otp_mod
+
+    try:
+        # OTP only when changing email/phone
+        if body.email is not None or body.phone is not None:
+            otp_mod.require_ticket_for_contact(
+                ticket=body.otpTicket,
+                email=body.email if body.email else None,
+                phone=body.phone if body.phone else None,
+                purpose="profile",
+            )
+        profile = person.update_own_profile(
+            principal.subject,
+            display_name=body.displayName,
+            email=body.email,
+            phone=body.phone,
+            title=body.title,
+        )
+    except ValueError as exc:
+        raise ApiError(code="VALIDATION", message=str(exc), status_code=400) from exc
+    mem.append_audit(
+        org_id=principal.org_id,
+        project_id=principal.project_id,
+        actor_id=principal.subject,
+        action="profile.update",
+        detail={
+            "displayName": profile.get("displayName"),
+            "email": profile.get("email"),
+            "phone": profile.get("phone"),
+        },
+    )
+    log.info("me_profile_patch subject=%s", principal.subject)
+    return {"ok": True, "subject": principal.subject, "profile": profile}
+
+
+class AccountLinkIn(BaseModel):
+    email: str | None = Field(default=None, max_length=120)
+    phone: str | None = Field(default=None, max_length=32)
+    otpTicket: str | None = None
+
+
+@router.get("/v1/me/account-links")
+def list_my_account_links(
+    principal: Principal = Depends(require_principal),
+) -> dict:
+    """200m — list IdP subject ↔ contact links."""
+    from aos_api import account_link as alink
+
+    return {"items": alink.list_links_for_subject(principal.subject)}
+
+
+@router.post("/v1/me/account-links")
+def create_my_account_link(
+    body: AccountLinkIn,
+    principal: Principal = Depends(require_principal),
+) -> dict:
+    """200m — bind verified email/phone to current IdP subject."""
+    from aos_api import account_link as alink
+    from aos_api import otp as otp_mod
+
+    try:
+        otp_mod.require_ticket_for_contact(
+            ticket=body.otpTicket,
+            email=body.email,
+            phone=body.phone,
+            purpose="profile",
+        )
+        row = alink.create_link(
+            subject=principal.subject,
+            email=body.email,
+            phone=body.phone,
+        )
+    except ValueError as exc:
+        raise ApiError(code="VALIDATION", message=str(exc), status_code=400) from exc
+    mem.append_audit(
+        org_id=principal.org_id,
+        project_id=principal.project_id,
+        actor_id=principal.subject,
+        action="account_link.create",
+        detail={"linkId": row.get("id"), "email": row.get("email"), "phone": row.get("phone")},
+    )
+    return {"ok": True, "link": row}
+
+
+@router.delete("/v1/me/account-links/{link_id}")
+def delete_my_account_link(
+    link_id: str,
+    principal: Principal = Depends(require_principal),
+) -> dict:
+    from aos_api import account_link as alink
+
+    ok = alink.delete_link(subject=principal.subject, link_id=link_id)
+    if not ok:
+        raise ApiError(code="NOT_FOUND", message="link not found", status_code=404)
+    return {"ok": True, "id": link_id}

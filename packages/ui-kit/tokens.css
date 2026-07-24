@@ -1,0 +1,100 @@
+/* TX.1 / T-UI — keys aligned with foundry/html demo.css v4.0 */
+
+/* === 浅色主题（默认） === */
+:root,
+html[data-aos-theme="light"] {
+  /* 品牌色 */
+  --aos-accent: #2B6CB0;
+  --aos-accent-hover: #2C5282;
+  --aos-accent-light: #EBF4FF;
+  --aos-accent-border: #BEE3F8;
+
+  /* 背景 */
+  --aos-bg: #F0F2F5;
+  --aos-aside: #FFFFFF;
+  --aos-header: #FFFFFF;
+  --aos-card: #FFFFFF;
+  --aos-elevated: #FFFFFF;
+  --aos-surface: #FFFFFF;
+  --aos-surface-hover: #F7F8FA;
+  --aos-nav-dark: #1A1D29;
+  --aos-nav-dark-hover: #252A3A;
+
+  /* 边框 */
+  --aos-border: #E2E8F0;
+  --aos-border-strong: #CBD5E0;
+  --aos-divider: #EDF2F7;
+
+  /* 文字 */
+  --aos-text: #1A202C;
+  --aos-text-secondary: #4A5568;
+  --aos-muted: #4A5568;
+  --aos-text-tertiary: #718096;
+  --aos-faint: #A0AEC0;
+
+  /* 交互 */
+  --aos-hover: #F7F8FA;
+  --aos-active: #EBF4FF;
+  --aos-input-bg: #FFFFFF;
+  --aos-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+
+  /* 状态色 */
+  --aos-green: #38A169;
+  --aos-green-bg: #F0FFF4;
+  --aos-green-border: #9AE6B4;
+  --aos-amber: #D69E2E;
+  --aos-amber-bg: #FFFAF0;
+  --aos-amber-border: #FBD38D;
+  --aos-red: #E53E3E;
+  --aos-red-bg: #FFF5F5;
+  --aos-red-border: #FEB2B2;
+}
+
+/* === 深色主题 === */
+html[data-aos-theme="dark"] {
+  /* 品牌色 */
+  --aos-accent: #22d3ee;
+  --aos-accent-hover: #67e8f9;
+  --aos-accent-light: rgba(34, 211, 238, 0.1);
+  --aos-accent-border: rgba(34, 211, 238, 0.3);
+
+  /* 背景 */
+  --aos-bg: #020617;
+  --aos-aside: rgba(15, 23, 42, 0.92);
+  --aos-header: rgba(2, 6, 23, 0.92);
+  --aos-card: rgba(15, 23, 42, 0.72);
+  --aos-elevated: #0f172a;
+  --aos-surface: rgba(15, 23, 42, 0.72);
+  --aos-surface-hover: rgba(255, 255, 255, 0.04);
+  --aos-nav-dark: #1A1D29;
+  --aos-nav-dark-hover: #252A3A;
+
+  /* 边框 */
+  --aos-border: rgba(255, 255, 255, 0.08);
+  --aos-border-strong: rgba(255, 255, 255, 0.14);
+  --aos-divider: rgba(255, 255, 255, 0.06);
+
+  /* 文字 */
+  --aos-text: #f3f4f6;
+  --aos-muted: #9ca3af;
+  --aos-text-secondary: #9ca3af;
+  --aos-text-tertiary: #6b7280;
+  --aos-faint: #6b7280;
+
+  /* 交互 */
+  --aos-hover: rgba(255, 255, 255, 0.04);
+  --aos-active: rgba(255, 255, 255, 0.06);
+  --aos-input-bg: #0f172a;
+  --aos-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+
+  /* 状态色 */
+  --aos-green: #38A169;
+  --aos-green-bg: rgba(56, 161, 105, 0.1);
+  --aos-green-border: rgba(56, 161, 105, 0.3);
+  --aos-amber: #D69E2E;
+  --aos-amber-bg: rgba(214, 158, 46, 0.1);
+  --aos-amber-border: rgba(214, 158, 46, 0.3);
+  --aos-red: #E53E3E;
+  --aos-red-bg: rgba(229, 62, 62, 0.1);
+  --aos-red-border: rgba(229, 62, 62, 0.3);
+}

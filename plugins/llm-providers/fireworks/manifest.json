@@ -1,0 +1,43 @@
+{
+  "id": "fireworks",
+  "name": "Fireworks",
+  "nameZh": "Fireworks",
+  "description": "高速开源推理",
+  "tier": "mid",
+  "modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "llm",
+    "chat"
+  ],
+  "formFamily": "openai_compatible",
+  "defaultModels": [
+    "accounts/fireworks/models/llama-v3p1-70b-instruct"
+  ],
+  "litellmPrefix": "fireworks_ai/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "accounts/fireworks/models/llama-v3p1-70b-instruct"
+        ]
+      },
+      "baseUrl": {
+        "type": "string",
+        "default": "https://api.fireworks.ai/inference/v1"
+      }
+    }
+  }
+}

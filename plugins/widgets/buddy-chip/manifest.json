@@ -1,0 +1,19 @@
+{
+  "id": "buddy-chip",
+  "name": "Buddy Chip",
+  "nameZh": "Buddy",
+  "description": "AIP Assist 入口",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "inproc",
+  "capabilities": [
+    "widget",
+    "chat"
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {}
+  },
+  "canvasKind": "buddy",
+  "palette": true
+}

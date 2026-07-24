@@ -1,0 +1,35 @@
+{
+  "id": "close-work-order",
+  "actionTypeId": "CloseWorkOrder",
+  "name": "Close Work Order",
+  "nameZh": "关闭工单",
+  "description": "关闭工单 · reason 必填",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "inproc",
+  "capabilities": [
+    "action",
+    "writeback"
+  ],
+  "objectType": "WorkOrder",
+  "parameters": [
+    {
+      "name": "reason",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "requiredMarkings": [
+    "public"
+  ],
+  "submissionCriteria": [
+    {
+      "field": "reason",
+      "op": "required"
+    }
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {}
+  }
+}

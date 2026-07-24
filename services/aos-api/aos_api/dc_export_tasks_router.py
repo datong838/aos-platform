@@ -1,0 +1,58 @@
+"W4 · Export Tasks（220w L208） Router."""
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException
+
+from aos_api.dc_export_tasks import (
+    ExportTask,
+    ExportTaskEngine,
+    ExportTaskError,
+    get_engine,
+)
+
+router = APIRouter(prefix="/api/dc/export-tasks", tags=["DC Export Tasks"])
+
+
+def _eng() -> ExportTaskEngine:
+    return get_engine()
+
+
+@router.post("")
+def create(item: ExportTask):
+    try:
+        return _eng().register(item)
+    except ExportTaskError as e:
+        raise HTTPException(status_code=400, detail={"code": e.code, "message": e.message})
+
+
+@router.get("")
+def list_all(**kwargs):
+    return _eng().list(**kwargs)
+
+
+@router.get("/{item_id}")
+def get_one(item_id: str):
+    try:
+        return _eng().get(item_id)
+    except ExportTaskError as e:
+        raise HTTPException(status_code=404, detail={"code": e.code, "message": e.message})
+
+
+@router.patch("/{item_id}")
+def update_one(item_id: str, patch: dict):
+    try:
+        return _eng().update(item_id, patch)
+    except ExportTaskError as e:
+        raise HTTPException(
+            status_code=404 if e.code == "NOT_FOUND" else 400,
+            detail={"code": e.code, "message": e.message},
+        )
+
+
+@router.delete("/{item_id}")
+def delete_one(item_id: str):
+    try:
+        _eng().delete(item_id)
+        return {"ok": True}
+    except ExportTaskError as e:
+        raise HTTPException(status_code=404, detail={"code": e.code, "message": e.message})

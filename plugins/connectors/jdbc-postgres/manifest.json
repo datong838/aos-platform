@@ -1,0 +1,24 @@
+{
+  "id": "jdbc-postgres",
+  "name": "JDBC PostgreSQL",
+  "nameZh": "PostgreSQL JDBC",
+  "description": "可选探针 + ingest（MOCK 或 DSN）",
+  "kind": "source",
+  "version": "0.2.0",
+  "author": "aos",
+  "runtime": "live",
+  "capabilities": [
+    "jdbc",
+    "postgres",
+    "ingest"
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "secretRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      }
+    }
+  }
+}

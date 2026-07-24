@@ -1,0 +1,45 @@
+{
+  "id": "google-gemini",
+  "name": "Google Gemini",
+  "nameZh": "Gemini",
+  "description": "谷歌 Gemini 多模态",
+  "tier": "mid",
+  "modalities": [
+    "text",
+    "image"
+  ],
+  "capabilities": [
+    "llm",
+    "chat",
+    "image"
+  ],
+  "formFamily": "openai_compatible",
+  "defaultModels": [
+    "gemini-2.0-flash"
+  ],
+  "litellmPrefix": "gemini/",
+  "version": "0.1.0",
+  "author": "aos",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKeyRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "models": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "gemini-2.0-flash"
+        ]
+      },
+      "baseUrl": {
+        "type": "string",
+        "default": "https://generativelanguage.googleapis.com/v1beta"
+      }
+    }
+  }
+}
