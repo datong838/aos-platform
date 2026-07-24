@@ -1,9 +1,0 @@
-# Forbidden path / product-shell references in apps|services|packages (23 R-DIR).
-# One regex per line (PowerShell -match).
-[\\/]refs[\\/]
-mybuddy-v01[\\/]refs
-B7_Wiki[\\/]outline
-B7_Wiki[\\/]wiki
-D1_WorkshopFactory[\\/]ToolJet
-D1_WorkshopFactory[\\/]appsmith
-ClaudeSkills[\\/]

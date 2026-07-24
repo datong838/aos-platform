@@ -1,6 +1,0 @@
-apiVersion: v2
-name: aos-spoke-full
-description: AOS Full Spoke Helm stub (scheme 158 · MVP mock/template only; not customer package)
-type: application
-version: 0.1.0
-appVersion: "0.3.0-dev"

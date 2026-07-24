@@ -1,8 +1,0 @@
-fastapi==0.115.6
-uvicorn==0.34.0
-notebook==7.3.2
-jupyter_server==2.15.0
-ipykernel==6.29.5
-nbclient==0.10.2
-nbformat==5.10.4
-pandas==2.2.3

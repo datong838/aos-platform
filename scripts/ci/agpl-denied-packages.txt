@@ -1,9 +1,0 @@
-# AGPL / BSL server component names — must NOT appear in product lockfiles
-# or customer SBOM (23 R-LIC-01 · scheme 73 License gate).
-# Matched in apps|services|packages manifests and dist/customer SBOM only.
-# Do NOT list permissive SDKs (minio-py is Apache).
-metabase
-grafana
-tooljet
-appsmith
-wiki.js

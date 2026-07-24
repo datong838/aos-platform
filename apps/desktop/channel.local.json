@@ -1,6 +1,0 @@
-{
-  "channel": "local",
-  "defaultApiBase": "http://127.0.0.1:8080",
-  "skipWelcomeWhenBasePreset": true,
-  "note": "TWC.12 本机渠道样例 · 构建时可用 VITE_AOS_CHANNEL=local"
-}
