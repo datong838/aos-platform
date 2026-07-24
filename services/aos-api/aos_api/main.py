@@ -21,6 +21,29 @@ from aos_api.routers import (
     action_visual_editor,
     action_webhook,
     aip_assist,
+    dc_completion_strategy,
+    dc_stream_mgmt,
+    dc_erp_crm,
+    di_view_lineage,
+    di_task_debug,
+    dl_build_strategy,
+    dl_build_preview,
+    dl_dep_order,
+    dl_stale_diagnosis,
+    ds_context_menu,
+    pp_toolbar_settings,
+    pb_build_vs_deploy,
+    pb_build_profiles,
+    pb_task_groups,
+    pb_health_checks,
+    cr_branch_menu,
+    cr_pipeline_review,
+    ms_header_extractor,
+    ob_index_debug,
+    es_sap_stream,
+    id_py_transform_preview,
+    id_build_panel,
+    id_build_status,
     aip_extras,
     aip_nodes,
     analytics,
@@ -314,6 +337,29 @@ def create_app() -> FastAPI:
     application.include_router(web_ide.router)
     application.include_router(workshop_compute_api.router)
     application.include_router(timeseries_sap_functions.router)
+    application.include_router(dc_completion_strategy.router)
+    application.include_router(dc_stream_mgmt.router)
+    application.include_router(dc_erp_crm.router)
+    application.include_router(di_view_lineage.router)
+    application.include_router(di_task_debug.router)
+    application.include_router(dl_build_strategy.router)
+    application.include_router(dl_build_preview.router)
+    application.include_router(dl_dep_order.router)
+    application.include_router(dl_stale_diagnosis.router)
+    application.include_router(ds_context_menu.router)
+    application.include_router(pp_toolbar_settings.router)
+    application.include_router(pb_build_vs_deploy.router)
+    application.include_router(pb_build_profiles.router)
+    application.include_router(pb_task_groups.router)
+    application.include_router(pb_health_checks.router)
+    application.include_router(cr_branch_menu.router)
+    application.include_router(cr_pipeline_review.router)
+    application.include_router(ms_header_extractor.router)
+    application.include_router(ob_index_debug.router)
+    application.include_router(es_sap_stream.router)
+    application.include_router(id_py_transform_preview.router)
+    application.include_router(id_build_panel.router)
+    application.include_router(id_build_status.router)
     log.info("aos-api_app_created version=%s", application.version)
     return application
 
