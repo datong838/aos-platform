@@ -203,6 +203,14 @@ export const NAV_ITEMS: NavItem[] = [
     crumbs: ["AIP", "Agent 工具面板"],
   },
   {
+    id: "aip-maturity",
+    path: "/aip/maturity",
+    label: "成熟度楼梯",
+    icon: "stairs",
+    status: "live",
+    crumbs: ["AIP", "成熟度楼梯"],
+  },
+  {
     id: "aip-capabilities",
     path: "/aip/capabilities",
     label: "重能力接入",
@@ -452,6 +460,14 @@ export const NAV_ITEMS: NavItem[] = [
     icon: "film",
     status: "live",
     crumbs: ["数据源", "媒体集"],
+  },
+  {
+    id: "aip-doc-intelligence",
+    path: "/aip/doc-intelligence",
+    label: "文档智能",
+    icon: "folder",
+    status: "live",
+    crumbs: ["数据源", "文档智能"],
   },
 
   { section: OPS_NAV_SECTION, collapseDefault: true },
