@@ -1544,10 +1544,15 @@ def pipeline_embed(
     principal: Principal = Depends(require_principal),
 ):
     """104 · Pipeline → 本地向量索引（经 embedding 插件；无网关不写假向量）。"""
-    _ = principal
+    from aos_api.tenant_prefix import scoped_collection_name
     from aos_api.vector_index import embed_pipeline
 
-    return embed_pipeline(pipeline_id, body or {}, pipelines=_pipelines)
+    payload = dict(body or {})
+    raw_collection = str(payload.get("collection") or pipeline_id).strip()
+    payload["collection"] = scoped_collection_name(
+        principal.org_id, principal.project_id, raw_collection
+    )
+    return embed_pipeline(pipeline_id, payload, pipelines=_pipelines)
 
 
 @router.post("/v1/aip/vector-index/upsert")

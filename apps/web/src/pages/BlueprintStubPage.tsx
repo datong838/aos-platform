@@ -18,10 +18,10 @@ export function BlueprintStubPage({
       </div>
       <p className="muted">
         可先使用已接线页：
-        <Link to="/workshop/inbox"> 运营台</Link> ·
-        <Link to="/aip/drafts"> 提案审批</Link> ·
+        <Link to="/workshop/inbox"> 风险告警管理</Link> ·
+        <Link to="/aip/drafts"> Draft 审批</Link> ·
         <Link to="/ontology"> 本体</Link> ·
-        <Link to="/data"> 数据连接</Link>
+        <Link to="/data"> 数据链接器</Link>
       </p>
     </PageChrome>
   );

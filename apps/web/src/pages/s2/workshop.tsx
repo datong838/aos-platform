@@ -13,7 +13,7 @@ import {
 
 type Neighbor = { id?: string; type?: string; rel?: string; title?: string };
 
-/** 83 · 对齐 workshop-object-view · Graph + Object View + Wiki · 147 SDK 读对象 */
+/** 83 · 对齐 Object Explorer · 标签+搜索+视图栏+表格+Object View 侧边栏 */
 export function GraphExplorerPage() {
   const { data: types, err: tErr } = useJsonGet<{ items: { id: string; name: string }[] }>(
     "/v1/ontology/object-types",
@@ -26,6 +26,8 @@ export function GraphExplorerPage() {
   const [wiki, setWiki] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [toast, setToast] = useState("");
+  const [query, setQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"table" | "graph">("table");
 
   useEffect(() => {
     if (types?.items?.length && !types.items.some((t) => t.id === typeId)) {
@@ -97,161 +99,327 @@ export function GraphExplorerPage() {
       .slice(0, 6)
       .map(([k, v]) => ({ label: k, value: String(v ?? "—") }));
 
+  const currentTypeName = types?.items?.find((t) => t.id === typeId)?.name || typeId;
+
+  const filteredObjects = useMemo(() => {
+    if (!query.trim()) return objects;
+    const q = query.toLowerCase();
+    return objects.filter((o) =>
+      String(o.title || o.id || "").toLowerCase().includes(q),
+    );
+  }, [objects, query]);
+
+  const objectColumns = useMemo(() => {
+    if (objects.length === 0) return ["id", "title"];
+    const sample = objects[0];
+    const cols = Object.keys(sample).filter((k) => !k.startsWith("_")).slice(0, 5);
+    return cols;
+  }, [objects]);
+
   return (
-    <S2Chrome title="知识图谱" lede="Object+Link 页面展示 · 邻接 1-hop · Selection 绑定 Object View">
-      <BpToolbar>
-        <span className="btn-nav">
-          Selection ·{" "}
-          <span className="aos-text">{detail ? String(detail.title || objectId) : "—"}</span> · 维数{" "}
-          <span style={{ color: "#fcd34d" }}>{neighbors.length + (objectId ? 1 : 0)} / 10</span>
-        </span>
-        <label className="muted">
-          类型{" "}
-          <select value={typeId} onChange={(e) => setTypeId(e.target.value)}>
-            {(types?.items || []).map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <Link to="/workshop/inbox" className="btn-nav">
-          Inbox →
-        </Link>
-      </BpToolbar>
+    <S2Chrome title="对象探索" lede="Object Explorer · 按类型浏览对象 · Selection 绑定 Object View + Wiki">
+      <div className="p-objx-app">
+        {/* 标签栏 */}
+        <div className="p-objx-tabs-bar">
+          <div className="p-objx-tab is-active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            {currentTypeName}
+          </div>
+          <button type="button" className="p-objx-tab-new" title="新建标签">
+            +
+          </button>
+          <div className="p-objx-tab-actions">
+            <button type="button" className="p-objx-action">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              新建对象集
+            </button>
+          </div>
+        </div>
+
+        {/* 搜索栏 */}
+        <div className="p-objx-search-bar">
+          <div className="p-objx-search-left">
+            <div className="p-objx-type-pill">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+              </svg>
+              {currentTypeName}
+            </div>
+            <div className="p-objx-search-field">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              <input
+                type="text"
+                placeholder={`搜索 ${currentTypeName}...`}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+            <label className="muted">
+              类型
+              <select value={typeId} onChange={(e) => setTypeId(e.target.value)}>
+                {(types?.items || []).map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="p-objx-search-right">
+            <button type="button" className="p-objx-icon-btn" title="筛选器">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+              </svg>
+            </button>
+            <button type="button" className="p-objx-icon-btn" title="列设置">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M9 3v18" />
+                <path d="M15 3v18" />
+              </svg>
+            </button>
+            <button type="button" className="p-objx-share">共享</button>
+            <button type="button" className="p-objx-save">保存</button>
+          </div>
+        </div>
+
+        {/* 视图栏 */}
+        <div className="p-objx-view-bar">
+          <div className="p-objx-view-left">
+            <button
+              type="button"
+              className={`p-objx-view-btn ${viewMode === "table" ? "is-active" : ""}`}
+              onClick={() => setViewMode("table")}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18" />
+                <path d="M3 15h18" />
+                <path d="M9 3v18" />
+                <path d="M15 3v18" />
+              </svg>
+              表格
+            </button>
+            <button
+              type="button"
+              className={`p-objx-view-btn ${viewMode === "graph" ? "is-active" : ""}`}
+              onClick={() => setViewMode("graph")}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="5" r="3" />
+                <circle cx="5" cy="19" r="3" />
+                <circle cx="19" cy="19" r="3" />
+                <path d="M12 8v8M9.5 16.5l-2.5 1M14.5 16.5l2.5 1" />
+              </svg>
+              图谱
+            </button>
+            <button type="button" className="p-objx-view-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+              注释
+            </button>
+          </div>
+          <div className="p-objx-view-center">
+            <span className="p-objx-results-count">{filteredObjects.length} 条结果</span>
+          </div>
+          <div className="p-objx-view-right">
+            <button type="button" className="p-objx-view-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              展开
+            </button>
+            <button type="button" className="p-objx-view-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+              更多
+            </button>
+          </div>
+        </div>
+
+        {/* 主体：表格视图 + 右侧对象详情 */}
+        <BpSplit
+          left={
+            viewMode === "table" ? (
+              <div className="p-objx-table-wrap">
+                <table className="p-objx-table">
+                  <thead>
+                    <tr>
+                      <th className="p-objx-check">
+                        <input type="checkbox" />
+                      </th>
+                      {objectColumns.map((col) => (
+                        <th key={col}>{col}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredObjects.map((o) => (
+                      <tr
+                        key={String(o.id)}
+                        style={{ cursor: "pointer" }}
+                        onClick={() => void openObject(typeId, String(o.id))}
+                      >
+                        <td className="p-objx-check">
+                          <input type="checkbox" checked={objectId === String(o.id)} readOnly />
+                        </td>
+                        {objectColumns.map((col, idx) => (
+                          <td key={col}>
+                            {idx === 0 ? (
+                              <div className="p-objx-cell-title">
+                                <div className="p-objx-avatar">
+                                  {String(o[col] || "?").charAt(0).toUpperCase()}
+                                </div>
+                                {String(o[col] ?? "—")}
+                              </div>
+                            ) : (
+                              String(o[col] ?? "—")
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                    {filteredObjects.length === 0 && (
+                      <tr>
+                        <td colSpan={objectColumns.length + 1} style={{ textAlign: "center", padding: "2rem" }}>
+                          <span className="muted">暂无对象 · 请到数据链接器接入源</span>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="bp-graph-canvas">
+                <p className="muted" style={{ fontSize: "0.75rem", marginBottom: "0.75rem" }}>
+                  知识图谱 · 边=Link · 节点=Object · 高亮 1-hop 传导
+                </p>
+                <div className="bp-graph-stage">
+                  {graphNodes.center && (
+                    <button
+                      type="button"
+                      className="bp-graph-node bp-graph-node-center"
+                      onClick={() => setToast(`中心节点 ${graphNodes.center!.label}`)}
+                    >
+                      {graphNodes.center.label}
+                    </button>
+                  )}
+                  {graphNodes.outer.map((n, i) => {
+                    const positions = [
+                      "bp-graph-pos-n",
+                      "bp-graph-pos-e",
+                      "bp-graph-pos-s",
+                      "bp-graph-pos-w",
+                      "bp-graph-pos-ne",
+                      "bp-graph-pos-nw",
+                    ];
+                    return (
+                      <button
+                        key={n.id}
+                        type="button"
+                        className={`bp-graph-node ${positions[i % positions.length]}`}
+                        onClick={() =>
+                          void openObject(typeId, n.id).catch((e) =>
+                            setErr(String(e.message || e)),
+                          )
+                        }
+                        title={n.rel}
+                      >
+                        {n.label}
+                        {n.rel && (
+                          <span className="muted" style={{ display: "block", fontSize: "0.6rem" }}>
+                            {n.rel}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                  {!graphNodes.center && (
+                    <p className="muted" style={{ textAlign: "center" }}>暂无实例 · 请到数据链接器接入源</p>
+                  )}
+                </div>
+              </div>
+            )
+          }
+          right={
+            <div className="bp-cop-sidebar">
+              <div className="bp-ws-section-title">Object View + Wiki</div>
+              {detail ? (
+                <>
+                  <div className="bp-object-title">{String(detail.title || detail.id)}</div>
+                  <p className="muted" style={{ fontSize: "0.75rem" }}>
+                    {typeId}/{objectId} · Selection 绑定
+                  </p>
+                  {wiki ? (
+                    <div className="bp-domain bp-domain-wiki" style={{ padding: "0.75rem", margin: "0.75rem 0" }}>
+                      <div style={{ color: "#fb923c", fontSize: "0.7rem", marginBottom: 4 }}>🟣 Wiki</div>
+                      <p className="muted" style={{ fontSize: "0.8rem", margin: 0 }}>{wiki.slice(0, 200)}</p>
+                    </div>
+                  ) : (
+                    <p className="muted" style={{ fontSize: "0.75rem" }}>
+                      暂无 Wiki 页 · <Link to="/ontology/wiki">去 Wiki</Link>
+                    </p>
+                  )}
+                  {detailProps && <BpPropGrid items={detailProps} />}
+                  {neighbors.length > 0 && (
+                    <BpTable
+                      columns={["邻居", "type", "rel"]}
+                      rows={neighbors.map((n) => [
+                        String(n.id ?? "—"),
+                        String(n.type ?? "—"),
+                        String(n.rel ?? "—"),
+                      ])}
+                    />
+                  )}
+                  <div className="bp-object-actions">
+                    <Link to="/aip/drafts" className="btn">
+                      立案 Action 🟡
+                    </Link>
+                    <Link to="/ontology/wiki" className="btn">
+                      Wiki 全页
+                    </Link>
+                    <Link
+                      to={
+                        objectId
+                          ? `/workshop/buddy?order=${encodeURIComponent(objectId)}&assist=1`
+                          : "/workshop/buddy"
+                      }
+                      className="btn"
+                    >
+                      @Buddy
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <p className="muted">选择左侧实例查看 Object View</p>
+              )}
+              <p className="muted" style={{ fontSize: "0.65rem", marginTop: "1rem" }}>
+                硬约束：顶层须 Action；不可「仅调 Logic」写回 Ontology。
+              </p>
+            </div>
+          }
+        />
+      </div>
 
       {(tErr || err) && <p className="error">{tErr || err}</p>}
       {toast && <p className="aos-text">{toast}</p>}
-
-      <BpSplit
-        left={
-          <div className="bp-graph-canvas">
-            <p className="muted" style={{ fontSize: "0.75rem", marginBottom: "0.75rem" }}>
-              知识图谱 · 边=Link · 节点=Object · 高亮 1-hop 传导
-            </p>
-            <div className="bp-graph-stage">
-              {graphNodes.center && (
-                <button
-                  type="button"
-                  className="bp-graph-node bp-graph-node-center"
-                  onClick={() => setToast(`中心节点 ${graphNodes.center!.label}`)}
-                >
-                  {graphNodes.center.label}
-                </button>
-              )}
-              {graphNodes.outer.map((n, i) => {
-                const positions = [
-                  "bp-graph-pos-n",
-                  "bp-graph-pos-e",
-                  "bp-graph-pos-s",
-                  "bp-graph-pos-w",
-                  "bp-graph-pos-ne",
-                  "bp-graph-pos-nw",
-                ];
-                return (
-                  <button
-                    key={n.id}
-                    type="button"
-                    className={`bp-graph-node ${positions[i % positions.length]}`}
-                    onClick={() =>
-                      void openObject(typeId, n.id).catch((e) =>
-                        setErr(String(e.message || e)),
-                      )
-                    }
-                    title={n.rel}
-                  >
-                    {n.label}
-                    {n.rel && (
-                      <span className="muted" style={{ display: "block", fontSize: "0.6rem" }}>
-                        {n.rel}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-              {!graphNodes.center && (
-                <p className="muted" style={{ textAlign: "center" }}>暂无实例 · 请到数据连接接入源</p>
-              )}
-            </div>
-            <ul className="card-list" style={{ marginTop: "1rem" }}>
-              {objects.map((o) => (
-                <li key={String(o.id)} className="card">
-                  <button
-                    type="button"
-                    className={objectId === String(o.id) ? "nav-link active" : "nav-link"}
-                    onClick={() => void openObject(typeId, String(o.id))}
-                  >
-                    {String(o.id)} · {String(o.title || "")}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        }
-        right={
-          <div className="bp-cop-sidebar">
-            <div className="bp-ws-section-title">Object View + Wiki</div>
-            {detail ? (
-              <>
-                <div className="bp-object-title">{String(detail.title || detail.id)}</div>
-                <p className="muted" style={{ fontSize: "0.75rem" }}>
-                  {typeId}/{objectId} · Selection 绑定
-                </p>
-                {wiki ? (
-                  <div className="bp-domain bp-domain-wiki" style={{ padding: "0.75rem", margin: "0.75rem 0" }}>
-                    <div style={{ color: "#fb923c", fontSize: "0.7rem", marginBottom: 4 }}>🟣 Wiki</div>
-                    <p className="muted" style={{ fontSize: "0.8rem", margin: 0 }}>{wiki.slice(0, 200)}</p>
-                  </div>
-                ) : (
-                  <p className="muted" style={{ fontSize: "0.75rem" }}>
-                    暂无 Wiki 页 · <Link to="/ontology/wiki">去 Wiki</Link>
-                  </p>
-                )}
-                {detailProps && <BpPropGrid items={detailProps} />}
-                {neighbors.length > 0 && (
-                  <BpTable
-                    columns={["邻居", "type", "rel"]}
-                    rows={neighbors.map((n) => [
-                      String(n.id ?? "—"),
-                      String(n.type ?? "—"),
-                      String(n.rel ?? "—"),
-                    ])}
-                  />
-                )}
-                <div className="bp-object-actions">
-                  <Link to="/aip/drafts" className="btn">
-                    立案 Action 🟡
-                  </Link>
-                  <Link to="/ontology/wiki" className="btn">
-                    Wiki 全页
-                  </Link>
-                  <Link
-                    to={
-                      objectId
-                        ? `/workshop/buddy?order=${encodeURIComponent(objectId)}&assist=1`
-                        : "/workshop/buddy"
-                    }
-                    className="btn"
-                  >
-                    @Buddy
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <p className="muted">选择左侧实例查看 Object View</p>
-            )}
-            <p className="muted" style={{ fontSize: "0.65rem", marginTop: "1rem" }}>
-              硬约束：顶层须 Action；不可「仅调 Logic」写回 Ontology。
-            </p>
-          </div>
-        }
-      />
 
       <BpLinkRow
         links={[
           { to: "/ontology", label: "本体管理" },
           { to: "/ontology/graph-health", label: "图谱健康" },
-          { to: "/workshop/inbox", label: "运营 Inbox" },
+          { to: "/workshop/inbox", label: "风险告警 Inbox" },
         ]}
       />
     </S2Chrome>

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiGet, apiPatch, apiPost } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
-import { BpBanner, BpLinkRow, BpToolbar } from "./s2/blueprintUi";
+import { NavIcon } from "../shell/icons";
+import { BpBanner } from "./s2/blueprintUi";
 import { ActionFormWidget, GraphViewWidget, MetricCardWidget, resolveRenderKind } from "./canvasWidgets";
 
 export type CanvasKind = "table" | "filter" | "buddy" | "overlay" | "stub" | "action" | "graph" | "metric";
@@ -472,345 +473,612 @@ export function CanvasPage() {
     }
   }
 
+  const TOOLBAR_TABS = [
+    { id: "dashboard", label: "Dashboard" },
+    { id: "queries", label: "Queries" },
+    { id: "functions", label: "Functions" },
+    { id: "objects", label: "Objects" },
+    { id: "events", label: "Events" },
+    { id: "data", label: "Data" },
+    { id: "dependencies", label: "Dependencies" },
+    { id: "styles", label: "Styles" },
+    { id: "variables", label: "Variables" },
+  ];
+
+  const currentModule = modules.find((m) => m.id === moduleId);
+
   return (
     <PageChrome
       title="画布编辑"
       lede="90 · Layout 树 / Widget 调色板 / 配置面板 · 构建态非运行态"
     >
-      <BpToolbar>
-        <label className="muted">
-          Module{" "}
-          <select
-            aria-label="module"
-            value={moduleId}
-            onChange={(e) => void onSelectModule(e.target.value)}
-          >
-            {modules.length === 0 && <option value="">（无模块）</option>}
-            {modules.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name} ({m.id})
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="button" className="btn-primary" disabled={!dirty} onClick={() => void saveLayout()}>
-          {dirty ? "保存 Layout *" : "已保存"}
-        </button>
-        <Link to="/workshop/inbox" className="btn-nav" style={{ textDecoration: "none" }}>
-          预览运行态 →
-        </Link>
-        <Link to="/workshop/publish" className="btn-nav">
-          发布 ▾
-        </Link>
-      </BpToolbar>
       {msg && <p className="aos-text">{msg}</p>}
       {err && <p className="error">{err}</p>}
 
-      <div className="bp-canvas-shell">
-        <div className="bp-canvas-tree">
-          <div className="bp-ws-section-title">Layout</div>
-          <div className="bp-canvas-layout-item bp-canvas-layout-active">▾ Header</div>
-          <div className="bp-canvas-layout-item" style={{ paddingLeft: "0.5rem" }}>
-            图标 / 标题
+      <div className="p-slate-app" style={{ minHeight: "600px" }}>
+        <header className="p-slate-topbar">
+          <div className="p-slate-topbar-left">
+            <span className="p-slate-breadcrumb">Workshop</span>
+            <NavIcon name="chevron" style={{ width: "12px", height: "12px", color: "var(--aos-text-tertiary)" }} />
+            <h1 className="p-slate-title">
+              {currentModule?.name || "画布编辑"}
+              <NavIcon name="star" style={{ width: "12px", height: "12px", color: "var(--aos-text-tertiary)" }} />
+            </h1>
           </div>
-          <div className="bp-canvas-layout-item bp-canvas-layout-active">▾ Page: Inbox</div>
-          {nodes.map((n) => (
-            <button
-              key={n.id}
-              type="button"
-              className={
-                n.id === selected
-                  ? "bp-canvas-layout-item bp-canvas-layout-active"
-                  : "bp-canvas-layout-item"
-              }
-              style={{
-                paddingLeft: "0.5rem",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                textAlign: "left",
-                width: "100%",
-              }}
-              onClick={() => setSelected(n.id)}
-            >
-              {sectionLabel(n.kind)} · {n.title}
+          <nav className="p-slate-tabs">
+            <button type="button" className="p-slate-tab">File</button>
+            <button type="button" className="p-slate-tab">Help</button>
+            <button type="button" className="p-slate-tab is-active">
+              {currentModule?.name || "Module"} <span className="p-slate-version">v1</span>
             </button>
-          ))}
-          {nodes.some((n) => n.kind === "overlay") && (
-            <div className="bp-canvas-layout-item" style={{ paddingLeft: "0.5rem", opacity: 0.85 }}>
-              Overlay 详情
-            </div>
-          )}
-          <div className="bp-canvas-layout-item" style={{ marginTop: "0.75rem", opacity: 0.6 }}>
-            变量 / Events
+          </nav>
+          <div className="p-slate-topbar-right">
+            <select
+              aria-label="module"
+              value={moduleId}
+              onChange={(e) => void onSelectModule(e.target.value)}
+              style={{
+                fontSize: "12px",
+                padding: "4px 8px",
+                borderRadius: "4px",
+                border: "1px solid var(--aos-border)",
+                background: "var(--aos-aside)",
+                color: "var(--aos-text)",
+              }}
+            >
+              {modules.length === 0 && <option value="">（无模块）</option>}
+              {modules.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="p-btn p-btn-secondary p-btn-sm"
+              disabled={!dirty}
+              onClick={() => void saveLayout()}
+              style={{
+                fontSize: "12px",
+                padding: "5px 12px",
+                borderRadius: "4px",
+                border: "1px solid var(--aos-border)",
+                background: dirty ? "var(--aos-accent)" : "var(--aos-aside)",
+                color: dirty ? "#fff" : "var(--aos-text-secondary)",
+                cursor: dirty ? "pointer" : "default",
+              }}
+            >
+              {dirty ? "保存 *" : "已保存"}
+            </button>
+            <button type="button" className="p-slate-close" title="关闭">
+              <NavIcon name="close" style={{ width: "14px", height: "14px" }} />
+            </button>
+          </div>
+        </header>
+
+        <div className="p-slate-toolbar">
+          <div className="p-slate-toolbar-left">
+            <button type="button" className="p-slate-mode is-active">
+              <NavIcon name="apps" style={{ width: "14px", height: "14px" }} />
+              Widget
+            </button>
+            <button type="button" className="p-slate-mode">
+              <NavIcon name="workflow" style={{ width: "14px", height: "14px" }} />
+              Workflow
+            </button>
+          </div>
+          <div className="p-slate-toolbar-tabs">
+            {TOOLBAR_TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className={`p-slate-toolbar-tab${t.id === "objects" ? " is-active" : ""}`}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="bp-canvas-center">
-          <p className="muted" style={{ fontSize: "0.75rem", marginBottom: "0.65rem" }}>
-            画布 · Header / Page / Section / Overlay · 先建 Object Set 变量再拖 Widget
-          </p>
-          <div className="bp-canvas-palette">
+        <div className="p-slate-body">
+          <aside className="p-slate-tree">
+            <div className="p-slate-tree-search">
+              <NavIcon name="search" />
+              <input type="search" placeholder="Search widgets..." />
+            </div>
+
+            <div className="p-slate-tree-section-title">Layout</div>
+            <button type="button" className="p-slate-tree-item">
+              <NavIcon name="menu" style={{ width: "12px", height: "12px" }} />
+              <span>fullscreen</span>
+            </button>
+            <button type="button" className="p-slate-tree-item is-expanded">
+              <NavIcon name="chevron" style={{ width: "12px", height: "12px", transform: "rotate(90deg)" }} />
+              <NavIcon name="apps" style={{ width: "14px", height: "14px", color: "var(--aos-accent)" }} />
+              <span>w_nav_bar</span>
+            </button>
+            {nodes.map((n) => (
+              <button
+                key={n.id}
+                type="button"
+                className={`p-slate-tree-item is-child${n.id === selected ? " is-selected" : ""}`}
+                onClick={() => setSelected(n.id)}
+              >
+                <NavIcon name="menu" style={{ width: "12px", height: "12px" }} />
+                <NavIcon
+                  name={n.kind === "table" ? "table" : n.kind === "graph" ? "graph" : "apps"}
+                  style={{ width: "14px", height: "14px", color: "var(--aos-accent)" }}
+                />
+                <span style={{ fontSize: "11px" }}>{sectionLabel(n.kind)}</span>
+              </button>
+            ))}
+
+            <div className="p-slate-tree-section-title" style={{ marginTop: "8px" }}>
+              Widget 调色板
+            </div>
             {palette.map((w) => (
               <button
                 key={`${w.pluginId || w.kind}-${w.label}`}
                 type="button"
-                className={w.tone === "violet" ? "bp-canvas-chip bp-canvas-chip-violet" : "bp-canvas-chip"}
+                className="p-slate-tree-item is-child"
                 onClick={() => addNode(w)}
                 title={w.runtime ? `runtime=${w.runtime}` : undefined}
               >
-                {w.label}
-                {w.stub ? " · stub" : ""}
+                <NavIcon name="apps" style={{ width: "12px", height: "12px" }} />
+                <span style={{ fontSize: "11px" }}>
+                  {w.label.replace(/^\+\s*/, "")}
+                  {w.stub ? " · stub" : ""}
+                </span>
               </button>
             ))}
             {paletteNote && (
-              <span className="muted" style={{ fontSize: "0.7rem", marginLeft: 8 }}>
+              <div className="p-slate-tree-item is-child" style={{ opacity: 0.6, fontSize: "10px" }}>
                 {paletteNote}
-              </span>
+              </div>
             )}
-          </div>
 
-          {nodes.map((n) => (
-            <div
-              key={n.id}
-              className={n.kind === "overlay" ? "bp-canvas-section bp-canvas-section-violet" : "bp-canvas-section"}
-              draggable
-              onDragStart={() => setDragId(n.id)}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={() => onDrop(n.id)}
-              style={{
-                outline: n.id === selected ? "1px solid rgba(56,189,248,0.45)" : undefined,
-              }}
-              onClick={() => setSelected(n.id)}
+            <button
+              type="button"
+              className="p-slate-tree-footer"
+              onClick={() => node && removeNode(node.id)}
+              disabled={!node}
+              style={{ opacity: node ? 1 : 0.5, cursor: node ? "pointer" : "not-allowed" }}
             >
-              <div className="bp-canvas-section-head">
-                <span className="muted" style={{ fontSize: "0.625rem" }}>
-                  Section · {sectionLabel(n.kind)}
-                </span>
-                <div className="bp-canvas-section-actions">
-                  <button type="button" className="btn" onClick={(e) => { e.stopPropagation(); moveNode(n.id, -1); }}>
-                    ↑
-                  </button>
-                  <button type="button" className="btn" onClick={(e) => { e.stopPropagation(); moveNode(n.id, 1); }}>
-                    ↓
-                  </button>
-                  <button type="button" className="btn" onClick={(e) => { e.stopPropagation(); removeNode(n.id); }}>
-                    删
-                  </button>
+              <NavIcon name="trash" style={{ width: "14px", height: "14px" }} />
+              Delete widget
+            </button>
+          </aside>
+
+          <div className="p-slate-canvas">
+            {nodes.length === 0 ? (
+              <p className="muted" style={{ textAlign: "center", padding: "40px" }}>
+                从左侧调色板添加 Widget 开始构建
+              </p>
+            ) : (
+              nodes.map((n) => (
+                <div
+                  key={n.id}
+                  className={`p-slate-widget${n.id === selected ? " is-selected" : ""}`}
+                  style={{ marginBottom: "16px" }}
+                  draggable
+                  onDragStart={() => setDragId(n.id)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => onDrop(n.id)}
+                  onClick={() => setSelected(n.id)}
+                >
+                  <div className="p-slate-widget-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span className="p-slate-widget-title">{n.title}</span>
+                    <div style={{ display: "flex", gap: "4px" }}>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); moveNode(n.id, -1); }}
+                        style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", opacity: 0.7, padding: "2px 4px" }}
+                        title="上移"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); moveNode(n.id, 1); }}
+                        style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", opacity: 0.7, padding: "2px 4px" }}
+                        title="下移"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); removeNode(n.id); }}
+                        style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", opacity: 0.7, padding: "2px 4px" }}
+                        title="删除"
+                      >
+                        <NavIcon name="trash" style={{ width: "12px", height: "12px" }} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-slate-widget-body">
+                    <WidgetPreview
+                      node={n}
+                      rows={rows}
+                      onConfig={(patch) => updateNode(n.id, { config: { ...n.config, ...patch } })}
+                    />
+                  </div>
                 </div>
+              ))
+            )}
+
+            <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px solid var(--aos-border)" }}>
+              <div className="p-slate-tree-section-title" style={{ padding: "0", marginBottom: "12px" }}>
+                预览运行态
               </div>
-              <WidgetPreview
-                node={n}
-                rows={rows}
-                onConfig={(patch) => updateNode(n.id, { config: { ...n.config, ...patch } })}
-              />
-            </div>
-          ))}
-
-          <div className="bp-ws-section-title" style={{ marginTop: "1rem" }}>
-            预览运行态
-          </div>
-          <p className="muted">
-            Filter site=<strong>{site}</strong> · Table=<strong>{objectType}</strong>
-          </p>
-          <button type="button" className="btn" onClick={() => void runPreview()}>
-            刷新 Object Table
-          </button>
-          <button
-            type="button"
-            className="btn"
-            style={{ marginLeft: 8 }}
-            onClick={() => setPreviewOn((v) => !v)}
-          >
-            {previewOn ? "暂停预览" : "开启预览"}
-          </button>
-          <ul className="card-list" style={{ marginTop: 12 }}>
-            {rows.map((row, i) => {
-              const id = String(row.id || row.objectId || `row-${i}`);
-              const title = String(row.title || (row.props?.title as string) || id);
-              const status = String(row.status || (row.props?.status as string) || "");
-              return (
-                <li key={id} className="card">
-                  <strong>{id}</strong>{" "}
-                  <span className="muted">
-                    {title} · {status}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-          {rows.length === 0 && !err && (
-            <p className="muted">无行 · 改 Filter site 或到数据连接接入源后刷新</p>
-          )}
-        </div>
-
-        <div className="bp-canvas-config">
-          <div className="bp-ws-section-title">配置面板</div>
-          {!node ? (
-            <p className="muted">未选中 Widget</p>
-          ) : (
-            <>
-              <p className="muted">Section · 条件显隐：关</p>
-              <p className="muted">列宽：Flex</p>
-              <div
-                className="bp-object-panel"
-                style={{ padding: "0.5rem", marginTop: "0.5rem", fontSize: "0.75rem" }}
+              <p className="muted" style={{ marginBottom: "8px" }}>
+                Filter site=<strong>{site}</strong> · Table=<strong>{objectType}</strong>
+              </p>
+              <button
+                type="button"
+                onClick={() => void runPreview()}
+                style={{
+                  fontSize: "12px",
+                  padding: "5px 12px",
+                  borderRadius: "4px",
+                  border: "1px solid var(--aos-border)",
+                  background: "var(--aos-aside)",
+                  color: "var(--aos-text)",
+                  cursor: "pointer",
+                  marginRight: "8px",
+                }}
               >
-                Widget 选择器
-                <br />
-                {node.kind} ▾
+                刷新 Object Table
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewOn((v) => !v)}
+                style={{
+                  fontSize: "12px",
+                  padding: "5px 12px",
+                  borderRadius: "4px",
+                  border: "1px solid var(--aos-border)",
+                  background: "var(--aos-aside)",
+                  color: "var(--aos-text)",
+                  cursor: "pointer",
+                }}
+              >
+                {previewOn ? "暂停预览" : "开启预览"}
+              </button>
+              <ul className="card-list" style={{ marginTop: "12px" }}>
+                {rows.map((row, i) => {
+                  const id = String(row.id || row.objectId || `row-${i}`);
+                  const title = String(row.title || (row.props?.title as string) || id);
+                  const status = String(row.status || (row.props?.status as string) || "");
+                  return (
+                    <li key={id} className="card">
+                      <strong>{id}</strong>{" "}
+                      <span className="muted">
+                        {title} · {status}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+              {rows.length === 0 && !err && (
+                <p className="muted">无行 · 改 Filter site 或到数据连接接入源后刷新</p>
+              )}
+            </div>
+          </div>
+
+          <aside className="p-slate-props">
+            <div className="p-slate-props-header">
+              <NavIcon name="apps" style={{ width: "14px", height: "14px", color: "var(--aos-accent)" }} />
+              <span>{node ? node.title : "未选中 Widget"}</span>
+            </div>
+
+            {!node ? (
+              <div className="p-slate-props-section">
+                <p className="muted" style={{ fontSize: "12px" }}>选择左侧画布中的 Widget 查看配置</p>
               </div>
-              <p style={{ marginTop: 8 }}>
-                <strong>{node.kind}</strong> · {node.id}
-                {node.pluginId ? (
-                  <span className="muted"> · plugin={node.pluginId}</span>
-                ) : null}
-              </p>
-              <label className="muted">
-                标题{" "}
-                <input
-                  value={node.title}
-                  onChange={(e) => updateNode(node.id, { title: e.target.value })}
-                />
-              </label>
-              {node.kind === "filter" && (
-                <label className="muted" style={{ display: "block", marginTop: 8 }}>
-                  site{" "}
-                  <input
-                    value={node.config?.site || ""}
-                    onChange={(e) =>
-                      updateNode(node.id, { config: { ...node.config, site: e.target.value } })
-                    }
-                  />
-                </label>
-              )}
-              {node.kind === "table" && (
-                <label className="muted" style={{ display: "block", marginTop: 8 }}>
-                  objectType{" "}
-                  <input
-                    value={node.config?.objectType || "WorkOrder"}
-                    onChange={(e) =>
-                      updateNode(node.id, {
-                        config: { ...node.config, objectType: e.target.value },
-                      })
-                    }
-                  />
-                </label>
-              )}
-              {(node.kind === "action" || node.pluginId === "action-form") && (
-                <>
-                  <label className="muted" style={{ display: "block", marginTop: 8 }}>
-                    actionTypeId{" "}
+            ) : (
+              <>
+                <div className="p-slate-props-section">
+                  <div className="p-slate-props-label">CONTENT</div>
+                  <div className="p-slate-props-toggle">
+                    <button type="button">Markdown</button>
+                    <button type="button" className="is-active">HTML</button>
+                  </div>
+                  <div className="p-slate-props-code">
+                    {`// ${node.kind} · ${node.id}\n// plugin: ${node.pluginId || "built-in"}`}
+                  </div>
+                </div>
+
+                <div className="p-slate-props-section" style={{ paddingTop: "0" }}>
+                  <div className="p-slate-props-label">WIDGET CONFIG</div>
+                  <div style={{ marginBottom: "10px" }}>
+                    <label className="p-slate-props-label" style={{ display: "block", marginBottom: "6px" }}>
+                      标题
+                    </label>
                     <input
-                      value={node.config?.actionTypeId || "CloseWorkOrder"}
-                      onChange={(e) =>
-                        updateNode(node.id, {
-                          config: { ...node.config, actionTypeId: e.target.value },
-                        })
-                      }
+                      value={node.title}
+                      onChange={(e) => updateNode(node.id, { title: e.target.value })}
+                      style={{
+                        width: "100%",
+                        padding: "6px 8px",
+                        fontSize: "12px",
+                        border: "1px solid var(--aos-border)",
+                        borderRadius: "4px",
+                        background: "var(--aos-aside)",
+                        color: "var(--aos-text)",
+                        boxSizing: "border-box",
+                      }}
                     />
-                  </label>
-                  <label className="muted" style={{ display: "block", marginTop: 8 }}>
-                    objectType{" "}
-                    <input
-                      value={node.config?.objectType || "WorkOrder"}
-                      onChange={(e) =>
-                        updateNode(node.id, {
-                          config: { ...node.config, objectType: e.target.value },
-                        })
-                      }
-                    />
-                  </label>
-                  <label className="muted" style={{ display: "block", marginTop: 8 }}>
-                    objectId{" "}
-                    <input
-                      value={node.config?.objectId || ""}
-                      onChange={(e) =>
-                        updateNode(node.id, {
-                          config: { ...node.config, objectId: e.target.value },
-                        })
-                      }
-                    />
-                  </label>
-                </>
-              )}
-              {(node.kind === "graph" || node.pluginId === "graph-view") && (
-                <>
-                  <label className="muted" style={{ display: "block", marginTop: 8 }}>
-                    objectType{" "}
-                    <input
-                      value={node.config?.objectType || "WorkOrder"}
-                      onChange={(e) =>
-                        updateNode(node.id, {
-                          config: { ...node.config, objectType: e.target.value },
-                        })
-                      }
-                    />
-                  </label>
-                  <label className="muted" style={{ display: "block", marginTop: 8 }}>
-                    objectId{" "}
-                    <input
-                      value={node.config?.objectId || "wo-1001"}
-                      onChange={(e) =>
-                        updateNode(node.id, {
-                          config: { ...node.config, objectId: e.target.value },
-                        })
-                      }
-                    />
-                  </label>
-                </>
-              )}
-              {(node.kind === "metric" || node.pluginId === "metric-card") && (
-                <>
-                  <label className="muted" style={{ display: "block", marginTop: 8 }}>
-                    objectType{" "}
-                    <input
-                      value={node.config?.objectType || "WorkOrder"}
-                      onChange={(e) =>
-                        updateNode(node.id, {
-                          config: { ...node.config, objectType: e.target.value },
-                        })
-                      }
-                    />
-                  </label>
-                  <label className="muted" style={{ display: "block", marginTop: 8 }}>
-                    groupBy{" "}
-                    <input
-                      value={node.config?.groupBy || "status"}
-                      onChange={(e) =>
-                        updateNode(node.id, {
-                          config: { ...node.config, groupBy: e.target.value },
-                        })
-                      }
-                    />
-                  </label>
-                  <label className="muted" style={{ display: "block", marginTop: 8 }}>
-                    site{" "}
-                    <input
-                      value={node.config?.site || ""}
-                      onChange={(e) =>
-                        updateNode(node.id, {
-                          config: { ...node.config, site: e.target.value },
-                        })
-                      }
-                    />
-                  </label>
-                </>
-              )}
-              <p className="muted" style={{ marginTop: 12, fontSize: "0.625rem" }}>
-                构建态 · 非运行态
-              </p>
-            </>
-          )}
+                  </div>
+
+                  {node.kind === "filter" && (
+                    <div style={{ marginBottom: "10px" }}>
+                      <label className="p-slate-props-label" style={{ display: "block", marginBottom: "6px" }}>
+                        site
+                      </label>
+                      <input
+                        value={node.config?.site || ""}
+                        onChange={(e) =>
+                          updateNode(node.id, { config: { ...node.config, site: e.target.value } })
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "6px 8px",
+                          fontSize: "12px",
+                          border: "1px solid var(--aos-border)",
+                          borderRadius: "4px",
+                          background: "var(--aos-aside)",
+                          color: "var(--aos-text)",
+                          boxSizing: "border-box",
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {node.kind === "table" && (
+                    <div style={{ marginBottom: "10px" }}>
+                      <label className="p-slate-props-label" style={{ display: "block", marginBottom: "6px" }}>
+                        objectType
+                      </label>
+                      <input
+                        value={node.config?.objectType || "WorkOrder"}
+                        onChange={(e) =>
+                          updateNode(node.id, {
+                            config: { ...node.config, objectType: e.target.value },
+                          })
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "6px 8px",
+                          fontSize: "12px",
+                          border: "1px solid var(--aos-border)",
+                          borderRadius: "4px",
+                          background: "var(--aos-aside)",
+                          color: "var(--aos-text)",
+                          boxSizing: "border-box",
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {(node.kind === "action" || node.pluginId === "action-form") && (
+                    <>
+                      <div style={{ marginBottom: "10px" }}>
+                        <label className="p-slate-props-label" style={{ display: "block", marginBottom: "6px" }}>
+                          actionTypeId
+                        </label>
+                        <input
+                          value={node.config?.actionTypeId || "CloseWorkOrder"}
+                          onChange={(e) =>
+                            updateNode(node.id, {
+                              config: { ...node.config, actionTypeId: e.target.value },
+                            })
+                          }
+                          style={{
+                            width: "100%",
+                            padding: "6px 8px",
+                            fontSize: "12px",
+                            border: "1px solid var(--aos-border)",
+                            borderRadius: "4px",
+                            background: "var(--aos-aside)",
+                            color: "var(--aos-text)",
+                            boxSizing: "border-box",
+                          }}
+                        />
+                      </div>
+                      <div style={{ marginBottom: "10px" }}>
+                        <label className="p-slate-props-label" style={{ display: "block", marginBottom: "6px" }}>
+                          objectType
+                        </label>
+                        <input
+                          value={node.config?.objectType || "WorkOrder"}
+                          onChange={(e) =>
+                            updateNode(node.id, {
+                              config: { ...node.config, objectType: e.target.value },
+                            })
+                          }
+                          style={{
+                            width: "100%",
+                            padding: "6px 8px",
+                            fontSize: "12px",
+                            border: "1px solid var(--aos-border)",
+                            borderRadius: "4px",
+                            background: "var(--aos-aside)",
+                            color: "var(--aos-text)",
+                            boxSizing: "border-box",
+                          }}
+                        />
+                      </div>
+                      <div style={{ marginBottom: "10px" }}>
+                        <label className="p-slate-props-label" style={{ display: "block", marginBottom: "6px" }}>
+                          objectId
+                        </label>
+                        <input
+                          value={node.config?.objectId || ""}
+                          onChange={(e) =>
+                            updateNode(node.id, {
+                              config: { ...node.config, objectId: e.target.value },
+                            })
+                          }
+                          style={{
+                            width: "100%",
+                            padding: "6px 8px",
+                            fontSize: "12px",
+                            border: "1px solid var(--aos-border)",
+                            borderRadius: "4px",
+                            background: "var(--aos-aside)",
+                            color: "var(--aos-text)",
+                            boxSizing: "border-box",
+                          }}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {(node.kind === "graph" || node.pluginId === "graph-view") && (
+                    <>
+                      <div style={{ marginBottom: "10px" }}>
+                        <label className="p-slate-props-label" style={{ display: "block", marginBottom: "6px" }}>
+                          objectType
+                        </label>
+                        <input
+                          value={node.config?.objectType || "WorkOrder"}
+                          onChange={(e) =>
+                            updateNode(node.id, {
+                              config: { ...node.config, objectType: e.target.value },
+                            })
+                          }
+                          style={{
+                            width: "100%",
+                            padding: "6px 8px",
+                            fontSize: "12px",
+                            border: "1px solid var(--aos-border)",
+                            borderRadius: "4px",
+                            background: "var(--aos-aside)",
+                            color: "var(--aos-text)",
+                            boxSizing: "border-box",
+                          }}
+                        />
+                      </div>
+                      <div style={{ marginBottom: "10px" }}>
+                        <label className="p-slate-props-label" style={{ display: "block", marginBottom: "6px" }}>
+                          objectId
+                        </label>
+                        <input
+                          value={node.config?.objectId || "wo-1001"}
+                          onChange={(e) =>
+                            updateNode(node.id, {
+                              config: { ...node.config, objectId: e.target.value },
+                            })
+                          }
+                          style={{
+                            width: "100%",
+                            padding: "6px 8px",
+                            fontSize: "12px",
+                            border: "1px solid var(--aos-border)",
+                            borderRadius: "4px",
+                            background: "var(--aos-aside)",
+                            color: "var(--aos-text)",
+                            boxSizing: "border-box",
+                          }}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {(node.kind === "metric" || node.pluginId === "metric-card") && (
+                    <>
+                      <div style={{ marginBottom: "10px" }}>
+                        <label className="p-slate-props-label" style={{ display: "block", marginBottom: "6px" }}>
+                          objectType
+                        </label>
+                        <input
+                          value={node.config?.objectType || "WorkOrder"}
+                          onChange={(e) =>
+                            updateNode(node.id, {
+                              config: { ...node.config, objectType: e.target.value },
+                            })
+                          }
+                          style={{
+                            width: "100%",
+                            padding: "6px 8px",
+                            fontSize: "12px",
+                            border: "1px solid var(--aos-border)",
+                            borderRadius: "4px",
+                            background: "var(--aos-aside)",
+                            color: "var(--aos-text)",
+                            boxSizing: "border-box",
+                          }}
+                        />
+                      </div>
+                      <div style={{ marginBottom: "10px" }}>
+                        <label className="p-slate-props-label" style={{ display: "block", marginBottom: "6px" }}>
+                          groupBy
+                        </label>
+                        <input
+                          value={node.config?.groupBy || "status"}
+                          onChange={(e) =>
+                            updateNode(node.id, {
+                              config: { ...node.config, groupBy: e.target.value },
+                            })
+                          }
+                          style={{
+                            width: "100%",
+                            padding: "6px 8px",
+                            fontSize: "12px",
+                            border: "1px solid var(--aos-border)",
+                            borderRadius: "4px",
+                            background: "var(--aos-aside)",
+                            color: "var(--aos-text)",
+                            boxSizing: "border-box",
+                          }}
+                        />
+                      </div>
+                      <div style={{ marginBottom: "10px" }}>
+                        <label className="p-slate-props-label" style={{ display: "block", marginBottom: "6px" }}>
+                          site
+                        </label>
+                        <input
+                          value={node.config?.site || ""}
+                          onChange={(e) =>
+                            updateNode(node.id, {
+                              config: { ...node.config, site: e.target.value },
+                            })
+                          }
+                          style={{
+                            width: "100%",
+                            padding: "6px 8px",
+                            fontSize: "12px",
+                            border: "1px solid var(--aos-border)",
+                            borderRadius: "4px",
+                            background: "var(--aos-aside)",
+                            color: "var(--aos-text)",
+                            boxSizing: "border-box",
+                          }}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="p-slate-props-section" style={{ marginTop: "auto", borderTop: "1px solid var(--aos-border-light)" }}>
+                  <p className="muted" style={{ fontSize: "10px", margin: 0 }}>
+                    构建态 · 非运行态
+                  </p>
+                </div>
+              </>
+            )}
+          </aside>
         </div>
       </div>
 
-      <BpLinkRow
-        links={[
-          { to: "/workshop/module-interface", label: "模块接口" },
-          { to: "/workshop/inbox", label: "运营 Inbox" },
-        ]}
-      />
+      <div style={{ marginTop: "12px", display: "flex", gap: "12px", fontSize: "12px" }}>
+        <Link to="/workshop/module-interface" className="btn-nav" style={{ textDecoration: "none" }}>
+          模块接口 →
+        </Link>
+        <Link to="/workshop/inbox" className="btn-nav" style={{ textDecoration: "none" }}>
+          运营 Inbox →
+        </Link>
+      </div>
     </PageChrome>
   );
 }

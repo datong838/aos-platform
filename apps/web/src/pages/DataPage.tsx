@@ -292,7 +292,7 @@ export function DataPage() {
 
   return (
     <PageChrome
-      title="数据连接"
+      title="数据链接器"
       lede="把外部系统接入平台：先管数据源，再看同步与代理。日常从「数据源」列表运营。"
     >
       <BpTabs
@@ -400,7 +400,7 @@ export function DataPage() {
                 配置连接器、运行时与凭证，将外部系统接入数据湖仓。
               </p>
             </div>
-            <button type="button" className="nav-link" onClick={() => setSourceView("list")}>
+            <button type="button" className="btn-nav" onClick={() => setSourceView("list")}>
               ← 返回列表
             </button>
           </div>
@@ -450,8 +450,8 @@ export function DataPage() {
                     >
                       <button
                         type="button"
+                        className="bp-card-hit"
                         style={{
-                          all: "unset",
                           cursor: c.installed ? "pointer" : "default",
                           display: "block",
                           width: "100%",
@@ -591,7 +591,7 @@ export function DataPage() {
                 <button type="button" className="btn" onClick={() => setWizardStep(3)}>
                   上一步
                 </button>
-                <button type="button" className="btn" onClick={() => void createSource()}>
+                <button type="button" className="btn-primary" onClick={() => void createSource()}>
                   创建数据源
                 </button>
               </BpToolbar>
@@ -610,6 +610,8 @@ export function DataPage() {
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <ActionLinks
                 items={[
+                  { to: "/data/sync-config", label: "同步配置" },
+                  { to: "/data/sync-routes", label: "同步路由" },
                   { to: "/data/schedules", label: "计划编辑器" },
                   { to: "/data/pipelines", label: "管道构建" },
                 ]}

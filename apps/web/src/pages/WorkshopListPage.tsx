@@ -46,13 +46,13 @@ export function WorkshopListPage() {
 
   const filtered = items.filter((m) => {
     if (filter === "全部") return true;
-    if (filter === "知识图谱") return (m.entryPath || "").includes("graph");
+    if (filter === "对象探索") return (m.entryPath || "").includes("graph");
     if (filter === "电商") return m.objectType === "WorkOrder";
     return true;
   });
 
   return (
-    <PageChrome title="工作台 · 应用列表" lede="业务人员从这里打开 Module · 运营台/图谱都是列表条目">
+    <PageChrome title="工作台 · 应用列表" lede="业务人员从这里打开 Module · 风险告警/对象探索都是列表条目">
       <BpToolbar>
         <button type="button" className="btn" onClick={() => void createDemo()}>
           + 新建 Module
@@ -61,21 +61,21 @@ export function WorkshopListPage() {
           画布编辑 →
         </Link>
         <Link to="/workshop/inbox" className="btn-nav">
-          运营台 →
+          风险告警管理 →
         </Link>
       </BpToolbar>
 
       <BpHeroLink
         to="/workshop/inbox"
         eyebrow="推荐打开"
-        title="运营 Inbox Module"
+        title="风险告警 Inbox Module"
         desc="Filter · Table · Object View · 变量条 · 从 Inbox 可带 Selection 进 Buddy"
-        cta="进入运营台 →"
+        cta="进入风险告警管理 →"
         accent="sky"
       />
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: "1rem" }}>
-        {["全部", "电商", "知识图谱", "供应链"].map((f) => (
+        {["全部", "电商", "对象探索", "供应链"].map((f) => (
           <button
             key={f}
             type="button"
@@ -124,7 +124,7 @@ export function WorkshopListPage() {
         links={[
           { to: "/workshop/module-interface", label: "模块接口" },
           { to: "/workshop/buddy", label: "Buddy" },
-          { to: "/workshop/graph", label: "知识图谱" },
+          { to: "/workshop/graph", label: "对象探索" },
         ]}
       />
     </PageChrome>

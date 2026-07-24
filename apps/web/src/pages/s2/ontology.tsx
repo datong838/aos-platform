@@ -410,7 +410,7 @@ export function WikiPage() {
           Draft 审批台 →
         </Link>
         <Link to="/aip/tools" className="btn-nav">
-          智能体管理工作台 →
+          Agent 工具面板 →
         </Link>
         <Link to="/ontology" className="btn-nav">
           ← 本体管理
@@ -501,7 +501,7 @@ export function WikiPage() {
         <BpBanner tone="info">
           Agent 经工具读 Wiki 字段（wiki.read / tools.invoke）。配置入口：{" "}
           <Link to="/aip/tools" className="bp-action-link">
-            智能体管理工作台
+            Agent 工具面板
           </Link>
         </BpBanner>
       )}

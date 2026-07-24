@@ -184,7 +184,7 @@ export function ToolsPage() {
               试跑
             </button>
             <Link to="/aip/drafts" className="btn-nav">
-              打开提案审批台 →
+              打开 Draft 审批台 →
             </Link>
           </div>
         </>
@@ -300,7 +300,7 @@ export function ToolsPage() {
 
   return (
     <S2Chrome
-      title="智能体管理工作台"
+      title="Agent 工具面板"
       lede="配置当前智能体可用工具类型与细项。LLM 只「请求」工具；平台以调用用户权限代调。写路径默认可提案。"
     >
       <BpToolbar>
@@ -327,6 +327,9 @@ export function ToolsPage() {
         </Link>
         <Link to="/aip/logic" className="btn-nav-accent">
           Logic →
+        </Link>
+        <Link to="/aip/studio" className="btn-nav">
+          Chatbot Studio →
         </Link>
       </BpToolbar>
       {(err || localErr || toolsCfg.err) && <p className="error">{err || localErr || toolsCfg.err}</p>}
@@ -2084,6 +2087,12 @@ export function EvalsPage() {
       <BpBanner tone="warn">
         <strong>L4 门控状态</strong> · 须 Eval 绿且 Draft 审批通过后方可申请 L4 上线 ·{" "}
         <Link to="/aip/drafts">查看 Draft →</Link>
+        {green && (
+          <>
+            {" · "}
+            <Link to="/aip/studio">Chatbot Studio 测试 →</Link>
+          </>
+        )}
       </BpBanner>
 
       <BpLinkRow
@@ -2272,7 +2281,7 @@ export function DecisionLineagePage() {
         <BpLineageTimeline steps={timelineSteps} />
       ) : (
         <p className="muted" style={{ marginTop: "0.75rem" }}>
-          暂无谱系 · 请先在提案审批台批准写入，再点治理探针
+          暂无谱系 · 请先在 Draft 审批台批准写入，再点治理探针
         </p>
       )}
 

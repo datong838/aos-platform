@@ -173,6 +173,7 @@ def _start_jupyter() -> None:
         f"--ip=0.0.0.0",
         f"--port={port}",
         "--no-browser",
+        "--allow-root",
         f"--NotebookApp.token={_JUPYTER_TOKEN}",
         "--NotebookApp.password=",
         f"--NotebookApp.notebook_dir={str(root)}",

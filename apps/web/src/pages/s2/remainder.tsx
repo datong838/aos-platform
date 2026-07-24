@@ -962,3 +962,229 @@ export function ApolloChangePage() {
     </S2Chrome>
   );
 }
+
+/** 数据源与同步 · 同步配置 — 管理同步任务与调度参数 */
+export function SyncConfigPage() {
+  const schedules = useJsonGet<{ items: { id: string; name?: string; cron?: string; active?: boolean }[] }>("/v1/schedules");
+  const [msg, setMsg] = useState("");
+
+  async function toggle(id: string, active: boolean) {
+    try {
+      await apiPost(`/v1/schedules/${encodeURIComponent(id)}/status`, { active });
+      setMsg(`已${active ? "启用" : "停用"} ${id}`);
+      schedules.reload();
+    } catch (e) {
+      setMsg(String((e as Error).message || e));
+    }
+  }
+
+  const rows = (schedules.data?.items || []).map((s) => [
+    s.id,
+    s.name || "—",
+    s.cron || "—",
+    s.active ? "运行中" : "停用",
+    <button
+      key={s.id}
+      type="button"
+      className="bp-action-link"
+      onClick={() => void toggle(s.id, !s.active)}
+    >
+      {s.active ? "停用" : "启用"}
+    </button>,
+  ]);
+
+  return (
+    <S2Chrome title="同步配置" lede="管理数据源同步计划与任务启停 · 与计划编辑器联动">
+      <BpToolbar>
+        <Link to="/data/schedules" className="btn-nav">
+          打开计划编辑器 →
+        </Link>
+        <Link to="/data" className="btn-nav">
+          数据链接器 →
+        </Link>
+        <button type="button" className="btn" onClick={() => schedules.reload()}>
+          刷新
+        </button>
+      </BpToolbar>
+      {schedules.err && <p className="error">{schedules.err}</p>}
+      {msg && <p className="aos-text">{msg}</p>}
+      <BpTable
+        columns={["id", "名称", "Cron", "状态", ""]}
+        rows={rows.length ? rows : [["—", "—", "—", "—", "—"]]}
+      />
+      <BpBanner tone="info">
+        同步配置聚焦「任务是否启用、调度参数」；具体 Cron 与上游触发请在「计划编辑器」编辑。
+      </BpBanner>
+    </S2Chrome>
+  );
+}
+
+/** 数据源与同步 · 同步路由 — 按源/目标/规则查看同步分发路径 */
+export function SyncRoutesPage() {
+  const routes = useJsonGet<{ items: { id: string; source?: string; target?: string; rule?: string }[] }>("/v1/sync-routes");
+  const [msg, setMsg] = useState("");
+
+  const rows = (routes.data?.items || []).map((r) => [
+    r.id,
+    r.source || "—",
+    r.target || "—",
+    r.rule || "—",
+  ]);
+
+  return (
+    <S2Chrome title="同步路由" lede="按源、目标、规则查看同步分发路径 · 支持路由规则调试">
+      <BpToolbar>
+        <Link to="/data" className="btn-nav">
+          数据链接器 →
+        </Link>
+        <Link to="/data/sync-config" className="btn-nav">
+          同步配置 →
+        </Link>
+        <button type="button" className="btn" onClick={() => routes.reload()}>
+          刷新
+        </button>
+      </BpToolbar>
+      {routes.err && <p className="error">{routes.err}</p>}
+      {msg && <p className="aos-text">{msg}</p>}
+      <BpTable
+        columns={["id", "源", "目标", "规则"]}
+        rows={rows.length ? rows : [["—", "—", "—", "—"]]}
+      />
+      <BpBanner tone="info">
+        路由规则决定数据从哪个源同步到哪个目标；与「同步配置」中的任务一一对应。
+      </BpBanner>
+    </S2Chrome>
+  );
+}
+
+/** 本体 · 数字孪生 · OKF 概览 — 行业模板与映射活动概览 */
+export function OkfOverviewPage() {
+  const funnel = useJsonGet<Record<string, unknown>>("/v1/funnel/WorkOrder/status");
+  const [industries] = useState([
+    { id: "ecom", name: "电商", mapped: true },
+    { id: "supply", name: "供应链", mapped: true },
+    { id: "finance", name: "金融", mapped: false },
+    { id: "healthcare", name: "医疗", mapped: false },
+  ]);
+
+  return (
+    <S2Chrome title="OKF 概览" lede="行业漏斗模板与映射活动概览 · 选择行业查看详情">
+      <BpToolbar>
+        <Link to="/ontology/okf-funnel" className="btn-nav">
+          OKF 行业漏斗 →
+        </Link>
+        <Link to="/ontology/funnel" className="btn-nav">
+          漏斗管道 →
+        </Link>
+        <button type="button" className="btn" onClick={() => funnel.reload()}>
+          刷新
+        </button>
+      </BpToolbar>
+      {funnel.err && <p className="error">{funnel.err}</p>}
+
+      <div className="bp-ws-section-title">行业模板</div>
+      <div className="bp-index-grid bp-index-grid-4" style={{ marginBottom: "1rem" }}>
+        {industries.map((ind) => (
+          <Link
+            key={ind.id}
+            to={`/ontology/okf-funnel?industry=${ind.id}`}
+            className="bp-discover-card bp-discover-violet"
+            style={{ textDecoration: "none" }}
+          >
+            <div className="bp-discover-head">
+              <span className="bp-discover-title">{ind.name}</span>
+              <span className={`bp-tag ${ind.mapped ? "bp-tag-ok" : "bp-tag-warn"}`}>
+                {ind.mapped ? "已映射" : "待映射"}
+              </span>
+            </div>
+            <p className="bp-discover-meta">{ind.id}</p>
+          </Link>
+        ))}
+      </div>
+
+      <BpBanner tone="info">
+        OKF（Ontology Kernel Framework）行业漏斗将外部数据模型映射为本体属性；
+        每个行业有预置模板，可在「OKF 行业漏斗」页面编辑映射规则。
+      </BpBanner>
+    </S2Chrome>
+  );
+}
+
+/** 运维交付 · 接入案例 — 端到端链路案例展示 */
+export function IntegrationCasesPage() {
+  const [cases] = useState([
+    {
+      id: "ecom-e2e",
+      title: "电商平台端到端链路",
+      platforms: 9,
+      connectors: 12,
+      status: "live",
+      stages: ["数据接入", "同步", "管道清洗", "OKF 映射", "本体实例化", "应用层消费"],
+    },
+    {
+      id: "supply-chain",
+      title: "供应链全程追溯",
+      platforms: 5,
+      connectors: 8,
+      status: "live",
+      stages: ["数据接入", "同步", "管道清洗", "OKF 映射", "本体实例化", "应用层消费"],
+    },
+    {
+      id: "finance-risk",
+      title: "金融风控实时告警",
+      platforms: 3,
+      connectors: 4,
+      status: "wip",
+      stages: ["数据接入", "同步", "管道清洗", "OKF 映射"],
+    },
+  ]);
+
+  return (
+    <S2Chrome title="接入案例" lede="从数据接入到应用层消费的端到端案例 · 每条案例展示一条完整链路">
+      <BpToolbar>
+        <Link to="/data" className="btn-nav">
+          数据链接器 →
+        </Link>
+        <Link to="/ontology" className="btn-nav">
+          本体管理 →
+        </Link>
+      </BpToolbar>
+
+      <BpMetricGrid
+        items={[
+          { label: "平台总数", value: "9", tone: "ok" },
+          { label: "总连接器数", value: "24", tone: "muted" },
+          { label: "已上线", value: "7", tone: "ok" },
+          { label: "进行中", value: "2", tone: "warn" },
+        ]}
+      />
+
+      <div className="bp-discover-grid" style={{ marginTop: "1rem" }}>
+        {cases.map((c) => (
+          <div key={c.id} className="bp-discover-card bp-discover-violet">
+            <div className="bp-discover-head">
+              <span className="bp-discover-title">{c.title}</span>
+              <span className={`bp-tag ${c.status === "live" ? "bp-tag-ok" : "bp-tag-warn"}`}>
+                {c.status === "live" ? "已上线" : "进行中"}
+              </span>
+            </div>
+            <p className="bp-discover-meta">
+              {c.platforms} 平台 · {c.connectors} 连接器
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 8 }}>
+              {c.stages.map((s, i) => (
+                <span key={s} className="bp-tag" style={{ fontSize: "0.65rem" }}>
+                  {i + 1}. {s}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <BpBanner tone="info">
+        每个案例展示一条完整链路：数据接入 → 同步 → 管道清洗 → OKF 映射 → 本体实例化 → 应用层消费。
+      </BpBanner>
+    </S2Chrome>
+  );
+}

@@ -43,18 +43,29 @@ const PATHS: Record<IconName, string> = {
     '<rect x="3" y="4" width="18" height="12" rx="1"/><path stroke-linecap="round" d="M8 20h8M12 16v4"/>',
   search:
     '<circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M20 20l-3-3"/>',
+  menu: '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/>',
+  folder: '<path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>',
+  database: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path stroke-linecap="round" d="M3 5v6c0 1.7 4 3 9 3s9-1.3 9-3V5M3 11v6c0 1.7 4 3 9 3s9-1.3 9-3v-6"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 20c0-4 4-6 8-6s8 2 8 6"/>',
+  star: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3l2.9 6.3 6.6.9-4.8 4.6 1.2 6.5L12 18.3 6.1 21.3l1.2-6.5L2.5 10.2l6.6-.9L12 3z"/>',
+  close: '<path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18"/>',
+  trash: '<path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2"/>',
+  sync: '<path stroke-linecap="round" stroke-linejoin="round" d="M21.5 8A9.5 9.5 0 0 0 8 3.5M2.5 16A9.5 9.5 0 0 0 16 20.5M19 5v3h-3M5 19v-3h3"/>',
+  route: '<circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path stroke-linecap="round" d="M8 18h5a3 3 0 0 0 3-3v-2M16 8h-5a3 3 0 0 0-3 3v2"/>',
+  activity: '<path stroke-linecap="round" stroke-linejoin="round" d="M3 12h6l3-9 3 18 3-9h3"/>',
 };
 
 export function NavIcon({
   name,
-  className = "nav-icon",
+  className = "",
 }: {
   name: IconName;
   className?: string;
 }) {
   return (
     <svg
-      className={className}
+      className={`nav-icon ${className}`.trim()}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

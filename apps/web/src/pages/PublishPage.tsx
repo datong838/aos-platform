@@ -34,7 +34,7 @@ export function PublishPage() {
         method: "POST",
         headers,
         body: JSON.stringify({
-          name: `运营台 Module · ${channel}`,
+          name: `风险告警 Module · ${channel}`,
           entryPath: "/workshop/inbox",
           objectType: "WorkOrder",
         }),
@@ -73,11 +73,11 @@ export function PublishPage() {
   return (
     <PageChrome
       title="发布入口"
-      lede="90 · 发布 · 运营台 Module · 经 aos-api（Lite Adapter）"
+      lede="90 · 发布 · 风险告警 Module · 经 aos-api（Lite Adapter）"
     >
       <div className="bp-publish-shell">
         <div className="bp-publish-card">
-          <div className="bp-ws-section-title">发布 · 运营台 Module</div>
+          <div className="bp-ws-section-title">发布 · 风险告警 Module</div>
           <p className="muted" style={{ fontSize: "0.875rem" }}>
             工作台提供业务发布入口；舰队 / Channel / 资产包在侧栏「运维交付」（默认可收）。
           </p>
@@ -109,7 +109,7 @@ export function PublishPage() {
 
           <div className="bp-publish-links">
             <Link to="/workshop/inbox" className="bp-publish-link bp-publish-link-emerald">
-              预览运营台 →
+              预览风险告警 →
             </Link>
             <Link to="/workshop/canvas" className="bp-publish-link bp-publish-link-sky">
               返回画布 →

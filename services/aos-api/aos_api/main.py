@@ -13,27 +13,124 @@ from aos_api.logging_facade import configure_logging, get_logger
 from aos_api.middleware import TraceLogMiddleware
 from aos_api.routers import (
     actions,
+    action_enhancements,
+    action_finale,
+    action_further,
+    action_params,
+    action_rules,
+    action_visual_editor,
+    action_webhook,
+    aip_assist,
+    aip_extras,
+    aip_nodes,
     analytics,
+    agent_health_migration_webhook,
+    ssl_health_snooze_marketplace,
+    linter_foundry_rules,
+    gantt_ml_drag_pricing,
+    autoscale_telemetry_volume_cop,
+    tracing_perf_geo_map,
+    vertex_geo_ts_process_hyperauto,
     auth_oidc,
     authz,
     buddy,
+    builds,
+    cap_and_markings,
+    code_collaboration,
+    column_impact,
+    connection_cdc_schedule,
+    compute_module,
+    compute_module_extras,
+    csv_ontology_export_action_metrics,
+    compute_module_publish,
+    data_connection_admin,
+    data_connection_extras,
+    data_connection_export,
+    data_connection_webhook,
+    data_connection_security,
+    lineage_visualization,
+    data_health,
+    data_health_integration,
+    data_health_plus,
+    dataset_preview_health,
+    data_transaction,
+    decision_audit,
+    dev_tooling,
     drafts,
+    evals,
+    expectation,
+    file_processing,
+    function_types,
+    functions,
+    functions_dev_tools,
+    functions_runtime,
+    funnel,
+    funnel_mappings,
+    gantt,
     health,
+    incremental_sync,
+    integration_maintenance,
+    lineage,
+    lineage_views,
+    logic,
+    logic_flows,
+    llm_extras,
+    llm_routing,
+    llm_node_agent_proxy,
+    l4_automation,
     me,
+    media_references,
+    media_set_browser_interaction,
+    media_sets,
     metrics,
     modules,
+    multi_language,
+    multi_source,
+    materialized_access_control,
+    object_explorer,
     object_sets,
+    object_storage_indexing,
+    object_views,
+    object_editing,
+    oe_enhancements,
+    oma_editor,
     ontology,
-    orgs,
+    ontology_data_layer,
+    ontology_governance,
+    ontology_management,
+    ontology_outputs,
+    ontology_roles,
     ops_local,
+    orgs,
     ops_tenants,
     ops_ttl,
     ops_version_matrix,
     otp,
+    pipelines,
+    pipeline_outputs,
+    pipeline_type_semantics,
+    pipeline_builder_extra,
+    pipeline_canvas_extras,
+    pipeline_ui_components,
     plugins,
+    platform_integrations,
+    python_functions,
     runtime_write,
+    scheduling,
+    scheduling_rules_lint,
+    shell_core,
+    sql_console,
+    tool_registry,
+    type_system,
+    transforms,
+    triggers_and_link_output,
+    timeseries_sap_functions,
     wave_ext,
+    dicom_workshop_docintel,
+    web_ide,
+    workshop_compute_api,
     workspaces,
+    writeback,
 )
 
 configure_logging()
@@ -113,13 +210,110 @@ def create_app() -> FastAPI:
     application.include_router(buddy.router)
     application.include_router(modules.router)
     application.include_router(plugins.router)
+    application.include_router(platform_integrations.router)
     application.include_router(object_sets.router)
+    application.include_router(object_storage_indexing.router)
     application.include_router(ontology.router)
+    application.include_router(ontology_governance.router)
+    application.include_router(ontology_management.router)
+    application.include_router(ontology_data_layer.router)
+    application.include_router(oe_enhancements.router)
+    application.include_router(object_editing.router)
+    application.include_router(oma_editor.router)
+    application.include_router(type_system.router)
     application.include_router(actions.router)
     application.include_router(drafts.router)
+    application.include_router(gantt.router)
     application.include_router(runtime_write.router)
     application.include_router(analytics.router)
+    application.include_router(agent_health_migration_webhook.router)
+    application.include_router(ssl_health_snooze_marketplace.router)
+    application.include_router(linter_foundry_rules.router)
+    application.include_router(gantt_ml_drag_pricing.router)
+    application.include_router(autoscale_telemetry_volume_cop.router)
+    application.include_router(tracing_perf_geo_map.router)
+    application.include_router(vertex_geo_ts_process_hyperauto.router)
     application.include_router(wave_ext.router)
+    application.include_router(dicom_workshop_docintel.router)
+    application.include_router(builds.router)
+    application.include_router(shell_core.router)
+    application.include_router(sql_console.router)
+    application.include_router(writeback.router)
+    application.include_router(data_transaction.router)
+    application.include_router(expectation.router)
+    application.include_router(action_enhancements.router)
+    application.include_router(action_params.router)
+    application.include_router(action_further.router)
+    application.include_router(action_webhook.router)
+    application.include_router(action_finale.router)
+    application.include_router(llm_routing.router)
+    application.include_router(llm_node_agent_proxy.router)
+    application.include_router(llm_extras.router)
+    application.include_router(lineage.router)
+    application.include_router(lineage_views.router)
+    application.include_router(pipelines.router)
+    application.include_router(transforms.router)
+    application.include_router(python_functions.router)
+    application.include_router(functions.router)
+    application.include_router(function_types.router)
+    application.include_router(functions_dev_tools.router)
+    application.include_router(funnel.router)
+    application.include_router(funnel_mappings.router)
+    application.include_router(ontology_roles.router)
+    application.include_router(ontology_outputs.router)
+    application.include_router(pipeline_outputs.router)
+    application.include_router(pipeline_type_semantics.router)
+    application.include_router(pipeline_builder_extra.router)
+    application.include_router(pipeline_canvas_extras.router)
+    application.include_router(pipeline_ui_components.router)
+    application.include_router(triggers_and_link_output.router)
+    application.include_router(code_collaboration.router)
+    application.include_router(column_impact.router)
+    application.include_router(connection_cdc_schedule.router)
+    application.include_router(compute_module.router)
+    application.include_router(compute_module_extras.router)
+    application.include_router(csv_ontology_export_action_metrics.router)
+    application.include_router(compute_module_publish.router)
+    application.include_router(data_connection_admin.router)
+    application.include_router(data_connection_extras.router)
+    application.include_router(data_connection_export.router)
+    application.include_router(data_connection_webhook.router)
+    application.include_router(data_connection_security.router)
+    application.include_router(lineage_visualization.router)
+    application.include_router(data_health.router)
+    application.include_router(data_health_plus.router)
+    application.include_router(data_health_integration.router)
+    application.include_router(dataset_preview_health.router)
+    application.include_router(dev_tooling.router)
+    application.include_router(media_references.router)
+    application.include_router(media_set_browser_interaction.router)
+    application.include_router(media_sets.router)
+    application.include_router(logic.router)
+    application.include_router(evals.router)
+    application.include_router(file_processing.router)
+    application.include_router(tool_registry.router)
+    application.include_router(aip_nodes.router)
+    application.include_router(aip_extras.router)
+    application.include_router(aip_assist.router)
+    application.include_router(logic_flows.router)
+    application.include_router(l4_automation.router)
+    application.include_router(decision_audit.router)
+    application.include_router(cap_and_markings.router)
+    application.include_router(multi_language.router)
+    application.include_router(functions_runtime.router)
+    application.include_router(object_views.router)
+    application.include_router(object_explorer.router)
+    application.include_router(action_rules.router)
+    application.include_router(action_visual_editor.router)
+    application.include_router(multi_source.router)
+    application.include_router(materialized_access_control.router)
+    application.include_router(incremental_sync.router)
+    application.include_router(integration_maintenance.router)
+    application.include_router(scheduling.router)
+    application.include_router(scheduling_rules_lint.router)
+    application.include_router(web_ide.router)
+    application.include_router(workshop_compute_api.router)
+    application.include_router(timeseries_sap_functions.router)
     log.info("aos-api_app_created version=%s", application.version)
     return application
 

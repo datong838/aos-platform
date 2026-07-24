@@ -546,7 +546,7 @@ def full_spoke_plan_artifact() -> dict[str, Any]:
 
 def fleet_payload(org_id: str | None = None) -> dict[str, Any]:
     ensure_seed()
-    spokes = list_spokes(org_id=org_id)
+    spokes = list_spokes(org_id=None)
     channels = list_channels()
     mock_ready = full_spoke_mock_ready()
     from aos_api.apollo_ops import ops_hub_flags

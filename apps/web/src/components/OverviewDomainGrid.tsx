@@ -17,7 +17,7 @@ export function OverviewDomainGrid({ metrics }: { metrics: OverviewMetrics | nul
         tone="workshop"
         title="工作台"
         health={(m?.health === "ok" || m?.health === "healthy") ? "ok" : m ? "warn" : undefined}
-        hint="入口只有「应用列表」；运营台 / 知识图谱 / 智能助手 都是列表里打开的模块，不是并列产品。"
+        hint="入口只有「应用列表」；风险告警管理 / 对象探索 / Buddy 智能助手 都是列表里打开的模块，不是并列产品。"
       >
         <BpMetricGrid
           density="compact"
@@ -59,7 +59,7 @@ export function OverviewDomainGrid({ metrics }: { metrics: OverviewMetrics | nul
           to="/workshop"
           eyebrow="唯一入口"
           title="应用列表"
-          desc="按业务场景打开模块 · 含运营台、知识图谱、智能助手…"
+          desc="按业务场景打开模块 · 含风险告警管理、对象探索、Buddy 智能助手…"
           cta="进入列表 →"
           accent="sky"
         />
@@ -67,15 +67,15 @@ export function OverviewDomainGrid({ metrics }: { metrics: OverviewMetrics | nul
         <div className="bp-index-grid bp-index-grid-3">
           <BpIndexTile
             to="/workshop/inbox"
-            eyebrow="运营收件箱"
-            title="运营台"
+            eyebrow="风险告警收件箱"
+            title="风险告警管理"
             desc="筛选 · 表格 · 对象视图 · 变量条"
             accent="sky"
           />
           <BpIndexTile
             to="/workshop/graph"
             eyebrow="本体前端"
-            title="知识图谱"
+            title="对象探索"
             desc="对象+关系图谱 · Wiki · 动作"
             accent="violet"
           />
@@ -86,7 +86,7 @@ export function OverviewDomainGrid({ metrics }: { metrics: OverviewMetrics | nul
                 : "/workshop/buddy"
             }
             eyebrow="智能嵌入"
-            title="智能助手"
+            title="Buddy 智能助手"
             desc="挂在任意模块侧栏 / 表旁"
             accent="amber"
           />
@@ -100,7 +100,7 @@ export function OverviewDomainGrid({ metrics }: { metrics: OverviewMetrics | nul
             { to: "/aip/tools", label: `插件${m?.plugins != null ? ` · ${m.plugins}` : ""}` },
             {
               to: "/aip/drafts",
-              label: m?.pendingDrafts ? `提案待审 · ${m.pendingDrafts}` : "提案审批",
+              label: m?.pendingDrafts ? `提案待审 · ${m.pendingDrafts}` : "Draft 审批",
             },
           ]}
         />
@@ -121,12 +121,12 @@ export function OverviewDomainGrid({ metrics }: { metrics: OverviewMetrics | nul
         />
         <div className="bp-index-grid bp-index-grid-4">
           {/* 38 v1.5 · 业务 → 决策 → 配置；成熟度不放首位 */}
-          <BpIndexTile to="/aip/studio" eyebrow="工作室" title="对话工作室" desc="提示词 · 智能体配置" accent="amber" />
+          <BpIndexTile to="/aip/studio" eyebrow="测试壳" title="Chatbot Studio" desc="Prompt · 工具 · Evals 后测试" accent="amber" />
           <BpIndexTile to="/aip/logic" eyebrow="逻辑" title="AIP 逻辑画布" desc="三栏 · 思维链调试" accent="amber" />
-          <BpIndexTile to="/aip/tools" eyebrow="工具" title="智能体管理工作台" desc="六类工具 · Wiki 子集" accent="amber" />
+          <BpIndexTile to="/aip/tools" eyebrow="工具" title="Agent 工具面板" desc="六类工具 · Wiki 子集" accent="amber" />
           <BpIndexTile to="/aip/capabilities" eyebrow="能力" title="重能力接入" desc="任务 · 会话 · 媒体集" accent="cyan" />
-          <BpIndexTile to="/aip/drafts" eyebrow="提案" title="提案审批台" desc="人工批准 / 拒绝" accent="emerald" />
-          <BpIndexTile to="/aip/evals" eyebrow="评测" title="评测门控" desc="高级自动化须评测通过" accent="amber" />
+          <BpIndexTile to="/aip/drafts" eyebrow="提案" title="Draft 审批台" desc="人工批准 / 拒绝" accent="emerald" />
+          <BpIndexTile to="/aip/evals" eyebrow="评测" title="Evals 门控" desc="高级自动化须评测通过" accent="amber" />
           <BpIndexTile to="/aip/lineage" eyebrow="谱系" title="决策谱系" desc="提案 → 动作 复盘" accent="violet" />
           <BpIndexTile to="/aip/model-providers" eyebrow="接入" title="大模型接入(插件)" desc="卡片 · 适配器" accent="amber" />
           <BpIndexTile to="/aip/model-router" eyebrow="路由" title="模型路由" desc="任务类型 · 预热熔断" accent="amber" />
@@ -176,7 +176,7 @@ export function OverviewDomainGrid({ metrics }: { metrics: OverviewMetrics | nul
           ]}
         />
         <div className="bp-index-grid bp-index-grid-4">
-          <BpIndexTile to="/data" eyebrow="① 连接器" title="数据连接" desc="数据源 · 路由 · 同步" accent="cyan" />
+          <BpIndexTile to="/data" eyebrow="① 连接器" title="数据链接器" desc="数据源 · 路由 · 同步" accent="cyan" />
           <BpIndexTile to="/data/pipelines" eyebrow="② 管道" title="管道构建" desc="流程清洗" accent="cyan" />
           <BpIndexTile to="/data/datasets" eyebrow="③ 数据集" title="数据湖仓" desc="预览 · 历史" accent="cyan" />
           <BpIndexTile to="/ontology/okf-funnel" eyebrow="④ OKF" title="漏斗映射" desc="列 → 属性 映射" accent="emerald" />

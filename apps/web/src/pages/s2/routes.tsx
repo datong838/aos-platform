@@ -32,6 +32,10 @@ import {
   ApolloReleasePage,
   ApolloFerryPage,
   ApolloChangePage,
+  SyncConfigPage,
+  SyncRoutesPage,
+  OkfOverviewPage,
+  IntegrationCasesPage,
 } from "./remainder";
 import { AnalyticsPage } from "./analytics";
 
@@ -67,6 +71,10 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "data/lineage", Component: DataLineagePage },
   { path: "data/health", Component: DataHealthPage },
   { path: "data/agents", Component: EdgeAgentsPage },
+  { path: "data/sync-config", Component: SyncConfigPage },
+  { path: "data/sync-routes", Component: SyncRoutesPage },
+  { path: "ontology/okf-overview", Component: OkfOverviewPage },
+  { path: "apollo/cases", Component: IntegrationCasesPage },
   { path: "apollo/release", Component: ApolloReleasePage },
   { path: "apollo/spoke", Component: ApolloSpokePage },
   { path: "apollo/ferry", Component: ApolloFerryPage },

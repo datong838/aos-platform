@@ -213,7 +213,7 @@ export function InboxPage() {
 
   return (
     <PageChrome
-      title="运营台"
+      title="风险告警管理"
       lede="91 · Filter · Object Table · Object View · 变量条 · Action→Draft HITL"
     >
       <BpToolbar>
