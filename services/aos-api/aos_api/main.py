@@ -133,6 +133,40 @@ from aos_api.routers import (
     writeback,
 )
 
+from aos_api import aip_langgraph_runtime_router as aip_langgraph_runtime_router
+from aos_api import aip_propose_edits_router as aip_propose_edits_router
+from aos_api import aip_wiki_field_router as aip_wiki_field_router
+from aos_api import aip_logic_state_router as aip_logic_state_router
+from aos_api import aip_logic_version_router as aip_logic_version_router
+from aos_api import aip_debug_cot_router as aip_debug_cot_router
+from aos_api import aip_debug_tools_router as aip_debug_tools_router
+from aos_api import aip_eval_crud_router as aip_eval_crud_router
+from aos_api import aip_eval_gate_router as aip_eval_gate_router
+from aos_api import aip_eval_cross_model_router as aip_eval_cross_model_router
+from aos_api import aip_eval_dashboard_router as aip_eval_dashboard_router
+from aos_api import aip_eval_rag_router as aip_eval_rag_router
+from aos_api import aip_eval_gen_router as aip_eval_gen_router
+from aos_api import aip_eval_tool_router as aip_eval_tool_router
+from aos_api import aip_l4_gate_router as aip_l4_gate_router
+from aos_api import aip_l4_circuit_router as aip_l4_circuit_router
+from aos_api import aip_app_state_router as aip_app_state_router
+from aos_api import aip_rag_context_router as aip_rag_context_router
+from aos_api import aip_long_memory_router as aip_long_memory_router
+from aos_api import aip_trace_logic_router as aip_trace_logic_router
+from aos_api import aip_metrics_router as aip_metrics_router
+from aos_api import aip_obs_dashboard_router as aip_obs_dashboard_router
+from aos_api import aip_alerts_router as aip_alerts_router
+from aos_api import aip_model_catalog_router as aip_model_catalog_router
+from aos_api import aip_model_capacity_router as aip_model_capacity_router
+from aos_api import aip_model_lifecycle_router as aip_model_lifecycle_router
+from aos_api import aip_assist_context_router as aip_assist_context_router
+from aos_api import aip_assist_perms_router as aip_assist_perms_router
+from aos_api import aip_analyst_chart_router as aip_analyst_chart_router
+from aos_api import aip_analyst_explore_router as aip_analyst_explore_router
+from aos_api import aip_docintel_parse_router as aip_docintel_parse_router
+from aos_api import aip_docintel_extract_router as aip_docintel_extract_router
+from aos_api import aip_docintel_semantic_router as aip_docintel_semantic_router
+
 configure_logging()
 log = get_logger("aos-api")
 
@@ -314,6 +348,39 @@ def create_app() -> FastAPI:
     application.include_router(web_ide.router)
     application.include_router(workshop_compute_api.router)
     application.include_router(timeseries_sap_functions.router)
+    application.include_router(aip_langgraph_runtime_router.router)
+    application.include_router(aip_propose_edits_router.router)
+    application.include_router(aip_wiki_field_router.router)
+    application.include_router(aip_logic_state_router.router)
+    application.include_router(aip_logic_version_router.router)
+    application.include_router(aip_debug_cot_router.router)
+    application.include_router(aip_debug_tools_router.router)
+    application.include_router(aip_eval_crud_router.router)
+    application.include_router(aip_eval_gate_router.router)
+    application.include_router(aip_eval_cross_model_router.router)
+    application.include_router(aip_eval_dashboard_router.router)
+    application.include_router(aip_eval_rag_router.router)
+    application.include_router(aip_eval_gen_router.router)
+    application.include_router(aip_eval_tool_router.router)
+    application.include_router(aip_l4_gate_router.router)
+    application.include_router(aip_l4_circuit_router.router)
+    application.include_router(aip_app_state_router.router)
+    application.include_router(aip_rag_context_router.router)
+    application.include_router(aip_long_memory_router.router)
+    application.include_router(aip_trace_logic_router.router)
+    application.include_router(aip_metrics_router.router)
+    application.include_router(aip_obs_dashboard_router.router)
+    application.include_router(aip_alerts_router.router)
+    application.include_router(aip_model_catalog_router.router)
+    application.include_router(aip_model_capacity_router.router)
+    application.include_router(aip_model_lifecycle_router.router)
+    application.include_router(aip_assist_context_router.router)
+    application.include_router(aip_assist_perms_router.router)
+    application.include_router(aip_analyst_chart_router.router)
+    application.include_router(aip_analyst_explore_router.router)
+    application.include_router(aip_docintel_parse_router.router)
+    application.include_router(aip_docintel_extract_router.router)
+    application.include_router(aip_docintel_semantic_router.router)
     log.info("aos-api_app_created version=%s", application.version)
     return application
 
