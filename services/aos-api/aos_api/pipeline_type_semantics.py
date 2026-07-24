@@ -642,6 +642,332 @@ class StreamingPipelineEngine:
 
 
 # ════════════════════════════════════════════════════════════════
+# #97 Compute Profile（计算选项：Standard / Faster / External）
+# ════════════════════════════════════════════════════════════════
+
+_VALID_COMPUTE_PROFILES = {"standard", "faster", "external"}
+
+
+class ComputeProfileSpec(BaseModel):
+    """计算配置文件。"""
+
+    profile: str                         # standard / faster / external
+    description: str = ""
+    driver_cores: float = 1.0
+    driver_memory_mb: int = 2048
+    executor_cores: float = 1.0
+    executor_memory_mb: int = 4096
+    executor_count: int = 2
+    external_endpoint: str = ""          # external 模式的远端计算端点
+    auto_scale: bool = False
+    cost_weight: float = 1.0             # 成本权重（用于计费估算）
+    enabled: bool = True
+
+
+DEFAULT_COMPUTE_PROFILES: list[ComputeProfileSpec] = [
+    ComputeProfileSpec(
+        profile="standard",
+        description="标准计算配置：均衡成本与性能",
+        driver_cores=1.0, driver_memory_mb=2048,
+        executor_cores=1.0, executor_memory_mb=4096,
+        executor_count=2, auto_scale=False, cost_weight=1.0,
+    ),
+    ComputeProfileSpec(
+        profile="faster",
+        description="加速计算配置：更多资源、并行优化",
+        driver_cores=2.0, driver_memory_mb=4096,
+        executor_cores=2.0, executor_memory_mb=8192,
+        executor_count=4, auto_scale=True, cost_weight=2.5,
+    ),
+    ComputeProfileSpec(
+        profile="external",
+        description="外部计算配置：委托远端计算引擎",
+        driver_cores=0, driver_memory_mb=0,
+        executor_cores=0, executor_memory_mb=0,
+        executor_count=0,
+        external_endpoint="https://compute.external.local",
+        auto_scale=False, cost_weight=1.5,
+    ),
+]
+
+
+class ComputeProfileEngine:
+    """#97 · 计算选项引擎（Standard / Faster / External）。"""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._profiles: dict[str, ComputeProfileSpec] = {}
+        self._assignments: dict[str, str] = {}   # pipeline_id -> profile
+        for spec in DEFAULT_COMPUTE_PROFILES:
+            self._profiles[spec.profile] = spec.model_copy()
+
+    def register(self, spec: ComputeProfileSpec) -> ComputeProfileSpec:
+        if spec.profile not in _VALID_COMPUTE_PROFILES:
+            raise PipelineTypeError(
+                "INVALID_PROFILE", f"未知计算选项：{spec.profile}",
+            )
+        if not spec.description:
+            raise PipelineTypeError("MISSING_DESC", "描述不能为空")
+        if spec.profile == "external" and not spec.external_endpoint:
+            raise PipelineTypeError(
+                "MISSING_ENDPOINT", "external 模式必须指定 external_endpoint",
+            )
+        with self._lock:
+            self._profiles[spec.profile] = spec.model_copy()
+            return spec.model_copy()
+
+    def get(self, profile: str) -> ComputeProfileSpec:
+        with self._lock:
+            s = self._profiles.get(profile)
+        if not s:
+            raise PipelineTypeError("NOT_FOUND", f"计算选项 {profile} 未注册")
+        return s.model_copy()
+
+    def list(self, enabled_only: bool = False) -> list[ComputeProfileSpec]:
+        with self._lock:
+            items = list(self._profiles.values())
+        if enabled_only:
+            items = [s for s in items if s.enabled]
+        return [s.model_copy() for s in items]
+
+    def update(self, profile: str, updates: dict[str, Any]) -> ComputeProfileSpec:
+        if "profile" in updates:
+            raise PipelineTypeError("IMMUTABLE_FIELD", "profile 字段不可修改")
+        with self._lock:
+            s = self._profiles.get(profile)
+            if not s:
+                raise PipelineTypeError("NOT_FOUND", f"计算选项 {profile} 未注册")
+            if "external_endpoint" in updates and updates["external_endpoint"]:
+                if profile != "external":
+                    raise PipelineTypeError(
+                        "ENDPOINT_MISMATCH",
+                        "只有 external 模式可设 external_endpoint",
+                    )
+            new_s = s.model_copy(update=updates)
+            self._profiles[profile] = new_s
+            return new_s.model_copy()
+
+    def assign(self, pipeline_id: str, profile: str) -> dict[str, Any]:
+        if profile not in _VALID_COMPUTE_PROFILES:
+            raise PipelineTypeError(
+                "INVALID_PROFILE", f"未知计算选项：{profile}",
+            )
+        if not pipeline_id:
+            raise PipelineTypeError("INVALID_PIPELINE_ID", "pipeline_id 不能为空")
+        with self._lock:
+            self._assignments[pipeline_id] = profile
+            spec = self._profiles.get(profile)
+        return {
+            "pipeline_id": pipeline_id,
+            "profile": profile,
+            "spec": spec.model_copy() if spec else None,
+        }
+
+    def get_assignment(self, pipeline_id: str) -> dict[str, Any]:
+        with self._lock:
+            profile = self._assignments.get(pipeline_id)
+            spec = self._profiles.get(profile) if profile else None
+        return {
+            "pipeline_id": pipeline_id,
+            "profile": profile,
+            "spec": spec.model_copy() if spec else None,
+        }
+
+    def estimate_cost(
+        self, profile: str, duration_minutes: float,
+    ) -> dict[str, Any]:
+        spec = self.get(profile)
+        if spec.profile == "external":
+            cost = duration_minutes * spec.cost_weight * 0.5
+        else:
+            total_cores = spec.driver_cores + spec.executor_cores * spec.executor_count
+            total_mem_gb = (spec.driver_memory_mb + spec.executor_memory_mb * spec.executor_count) / 1024
+            cost = duration_minutes * (total_cores * 0.08 + total_mem_gb * 0.02) * spec.cost_weight
+        return {
+            "profile": profile,
+            "duration_minutes": duration_minutes,
+            "estimated_cost": round(cost, 4),
+            "currency": "CNY",
+        }
+
+
+# ════════════════════════════════════════════════════════════════
+# #98 Streaming Performance & Fault Tolerance（流式性能 / 容错）
+# ════════════════════════════════════════════════════════════════
+
+_VALID_BACKPRESSURE = {"none", "buffer", "drop_oldest", "block"}
+_VALID_FAULT_TOLERANCE = {"at_most_once", "at_least_once", "exactly_once"}
+
+
+class BackpressurePolicy(BaseModel):
+    """背压策略。"""
+
+    strategy: str = "buffer"            # none / buffer / drop_oldest / block
+    buffer_size: int = 10000
+    high_watermark_pct: float = 80.0    # 触发背压阈值（缓冲区占用率）
+    low_watermark_pct: float = 50.0     # 解除背压阈值
+    drop_count: int = 0                 # 累计丢弃事件数（只读）
+
+
+class ResourceLimit(BaseModel):
+    """资源限制。"""
+
+    max_in_flight: int = 1000           # 最大在途事件数
+    max_parallelism: int = 4            # 最大并行度
+    cpu_limit_cores: float = 2.0
+    memory_limit_mb: int = 4096
+    network_bandwidth_mbps: int = 0     # 0 = 不限
+
+
+class FaultToleranceSpec(BaseModel):
+    """容错配置。"""
+
+    level: str = "at_least_once"        # at_most_once / at_least_once / exactly_once
+    checkpoint_interval_ms: int = 30000
+    max_retries: int = 3
+    retry_backoff_ms: int = 1000
+    dead_letter_queue: bool = True
+    auto_restart: bool = True
+    restart_delay_ms: int = 5000
+
+
+class StreamingPerfConfig(BaseModel):
+    """流式性能综合配置。"""
+
+    pipeline_id: str
+    backpressure: BackpressurePolicy = Field(default_factory=BackpressurePolicy)
+    resource: ResourceLimit = Field(default_factory=ResourceLimit)
+    fault: FaultToleranceSpec = Field(default_factory=FaultToleranceSpec)
+    enabled: bool = True
+
+
+class StreamingPerfEngine:
+    """#98 · 流式性能 / 背压 / 资源管理 / 容错引擎。"""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._configs: dict[str, StreamingPerfConfig] = {}
+        self._dlq: list[dict[str, Any]] = []       # dead letter queue
+        self._current_load: dict[str, int] = {}    # pipeline_id -> 在途事件数
+
+    def set_config(self, cfg: StreamingPerfConfig) -> StreamingPerfConfig:
+        if cfg.backpressure.strategy not in _VALID_BACKPRESSURE:
+            raise PipelineTypeError(
+                "INVALID_BACKPRESSURE", f"未知背压策略：{cfg.backpressure.strategy}",
+            )
+        if cfg.fault.level not in _VALID_FAULT_TOLERANCE:
+            raise PipelineTypeError(
+                "INVALID_FAULT_LEVEL", f"未知容错级别：{cfg.fault.level}",
+            )
+        if not cfg.pipeline_id:
+            raise PipelineTypeError("INVALID_PIPELINE_ID", "pipeline_id 不能为空")
+        if cfg.resource.max_parallelism < 1:
+            raise PipelineTypeError(
+                "INVALID_PARALLELISM", "max_parallelism 必须 >= 1",
+            )
+        with self._lock:
+            self._configs[cfg.pipeline_id] = cfg.model_copy()
+            return cfg.model_copy()
+
+    def get_config(self, pipeline_id: str) -> StreamingPerfConfig:
+        with self._lock:
+            cfg = self._configs.get(pipeline_id)
+        if not cfg:
+            # 返回默认配置
+            return StreamingPerfConfig(pipeline_id=pipeline_id)
+        return cfg.model_copy()
+
+    def check_backpressure(
+        self, pipeline_id: str, current_buffer_usage: int,
+    ) -> dict[str, Any]:
+        cfg = self.get_config(pipeline_id)
+        bp = cfg.backpressure
+        capacity = bp.buffer_size
+        usage_pct = (current_buffer_usage / capacity * 100) if capacity > 0 else 0
+
+        action = "normal"
+        if usage_pct >= bp.high_watermark_pct:
+            if bp.strategy == "drop_oldest":
+                action = "drop"
+            elif bp.strategy == "block":
+                action = "block"
+            elif bp.strategy == "buffer":
+                action = "warn"
+            elif bp.strategy == "none":
+                action = "ignore"
+        elif usage_pct <= bp.low_watermark_pct:
+            action = "normal"
+
+        return {
+            "pipeline_id": pipeline_id,
+            "strategy": bp.strategy,
+            "buffer_usage": current_buffer_usage,
+            "buffer_capacity": capacity,
+            "usage_pct": round(usage_pct, 2),
+            "high_watermark_pct": bp.high_watermark_pct,
+            "low_watermark_pct": bp.low_watermark_pct,
+            "action": action,
+            "should_throttle": action in ("drop", "block", "warn"),
+        }
+
+    def record_load(self, pipeline_id: str, delta: int) -> dict[str, Any]:
+        with self._lock:
+            current = self._current_load.get(pipeline_id, 0)
+            new_val = max(0, current + delta)
+            self._current_load[pipeline_id] = new_val
+            cfg = self._configs.get(pipeline_id)
+        limit = cfg.resource.max_in_flight if cfg else 1000
+        return {
+            "pipeline_id": pipeline_id,
+            "in_flight": new_val,
+            "max_in_flight": limit,
+            "overloaded": new_val >= limit,
+        }
+
+    def send_to_dlq(
+        self, pipeline_id: str, event: dict[str, Any], reason: str,
+    ) -> dict[str, Any]:
+        with self._lock:
+            entry = {
+                "id": _uid("dlq"),
+                "pipeline_id": pipeline_id,
+                "event": event,
+                "reason": reason,
+                "sent_at": _now_ts(),
+            }
+            self._dlq.append(entry)
+            if len(self._dlq) > 500:
+                self._dlq = self._dlq[-500:]
+            return entry
+
+    def list_dlq(
+        self, pipeline_id: str | None = None, limit: int = 50,
+    ) -> list[dict[str, Any]]:
+        with self._lock:
+            items = list(self._dlq)
+        if pipeline_id:
+            items = [d for d in items if d["pipeline_id"] == pipeline_id]
+        return items[-limit:]
+
+    def get_health(self, pipeline_id: str) -> dict[str, Any]:
+        cfg = self.get_config(pipeline_id)
+        with self._lock:
+            in_flight = self._current_load.get(pipeline_id, 0)
+            dlq_count = sum(1 for d in self._dlq if d["pipeline_id"] == pipeline_id)
+        load_pct = (in_flight / cfg.resource.max_in_flight * 100) if cfg.resource.max_in_flight > 0 else 0
+        return {
+            "pipeline_id": pipeline_id,
+            "in_flight": in_flight,
+            "max_in_flight": cfg.resource.max_in_flight,
+            "load_pct": round(load_pct, 2),
+            "dlq_count": dlq_count,
+            "fault_level": cfg.fault.level,
+            "auto_restart": cfg.fault.auto_restart,
+            "status": "healthy" if load_pct < 80 else "stressed" if load_pct < 100 else "overloaded",
+        }
+
+
+# ════════════════════════════════════════════════════════════════
 # 单例
 # ════════════════════════════════════════════════════════════════
 
@@ -653,6 +979,12 @@ _incremental_lock = threading.Lock()
 
 _streaming_engine: StreamingPipelineEngine | None = None
 _streaming_lock = threading.Lock()
+
+_compute_profile_engine: ComputeProfileEngine | None = None
+_compute_profile_lock = threading.Lock()
+
+_streaming_perf_engine: StreamingPerfEngine | None = None
+_streaming_perf_lock = threading.Lock()
 
 
 def get_pipeline_type_engine() -> PipelineTypeEngine:
@@ -680,3 +1012,21 @@ def get_streaming_engine() -> StreamingPipelineEngine:
             if _streaming_engine is None:
                 _streaming_engine = StreamingPipelineEngine()
     return _streaming_engine
+
+
+def get_compute_profile_engine() -> ComputeProfileEngine:
+    global _compute_profile_engine
+    if _compute_profile_engine is None:
+        with _compute_profile_lock:
+            if _compute_profile_engine is None:
+                _compute_profile_engine = ComputeProfileEngine()
+    return _compute_profile_engine
+
+
+def get_streaming_perf_engine() -> StreamingPerfEngine:
+    global _streaming_perf_engine
+    if _streaming_perf_engine is None:
+        with _streaming_perf_lock:
+            if _streaming_perf_engine is None:
+                _streaming_perf_engine = StreamingPerfEngine()
+    return _streaming_perf_engine

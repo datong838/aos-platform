@@ -1,4 +1,4 @@
-"""W2-Z · Pipeline 类型语义组路由：#94 Pipeline Types + #95 Incremental + #96 Streaming."""
+"""W2-Z · Pipeline 类型语义组路由：#94 Pipeline Types + #95 Incremental + #96 Streaming + #97 Compute Profile + #98 Streaming Performance."""
 from __future__ import annotations
 
 from typing import Any
@@ -18,6 +18,8 @@ from aos_api.pipeline_type_semantics import (
     get_incremental_engine,
     get_pipeline_type_engine,
     get_streaming_engine,
+    get_compute_profile_engine,
+    get_streaming_perf_engine,
 )
 
 router = APIRouter(tags=["pipeline-type-semantics"])
@@ -389,3 +391,266 @@ def close_window(
         return get_streaming_engine().close_window(window_id).model_dump()
     except PipelineTypeError as e:
         raise _map_err(e)
+
+
+# ════════════════════ #97 Compute Profile ════════════════════
+
+class ComputeProfileIn(BaseModel):
+    profile: str = Field(min_length=1)
+    description: str = ""
+    driver_cores: float = 1.0
+    driver_memory_mb: int = 2048
+    executor_cores: float = 1.0
+    executor_memory_mb: int = 4096
+    executor_count: int = 2
+    external_endpoint: str = ""
+    auto_scale: bool = False
+    cost_weight: float = 1.0
+    enabled: bool = True
+
+
+class ComputeProfileUpdateIn(BaseModel):
+    description: str | None = None
+    driver_cores: float | None = None
+    driver_memory_mb: int | None = None
+    executor_cores: float | None = None
+    executor_memory_mb: int | None = None
+    executor_count: int | None = None
+    external_endpoint: str | None = None
+    auto_scale: bool | None = None
+    cost_weight: float | None = None
+    enabled: bool | None = None
+
+
+class AssignProfileIn(BaseModel):
+    profile: str = Field(min_length=1)
+
+
+class EstimateCostIn(BaseModel):
+    duration_minutes: float = Field(gt=0)
+
+
+@router.post("/v1/compute-profiles")
+def register_compute_profile(
+    req: ComputeProfileIn,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#97 · 注册计算配置。"""
+    _ = principal
+    try:
+        from aos_api.pipeline_type_semantics import ComputeProfileSpec
+        spec = ComputeProfileSpec(**req.model_dump())
+        return get_compute_profile_engine().register(spec).model_dump()
+    except PipelineTypeError as e:
+        raise _map_err(e)
+
+
+@router.get("/v1/compute-profiles")
+def list_compute_profiles(
+    enabled_only: bool = False,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#97 · 列出计算配置。"""
+    _ = principal
+    items = get_compute_profile_engine().list(enabled_only=enabled_only)
+    return {"items": [s.model_dump() for s in items], "count": len(items)}
+
+
+@router.get("/v1/compute-profiles/{profile}")
+def get_compute_profile(
+    profile: str,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#97 · 单条计算配置。"""
+    _ = principal
+    try:
+        return get_compute_profile_engine().get(profile).model_dump()
+    except PipelineTypeError as e:
+        raise _map_err(e)
+
+
+@router.put("/v1/compute-profiles/{profile}")
+def update_compute_profile(
+    profile: str,
+    req: ComputeProfileUpdateIn,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#97 · 更新计算配置。"""
+    _ = principal
+    try:
+        updates = {k: v for k, v in req.model_dump().items() if v is not None}
+        return get_compute_profile_engine().update(profile, updates).model_dump()
+    except PipelineTypeError as e:
+        raise _map_err(e)
+
+
+@router.post("/v1/pipelines/{pipeline_id}/compute-profile")
+def assign_compute_profile(
+    pipeline_id: str,
+    req: AssignProfileIn,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#97 · 给管道分配计算配置。"""
+    _ = principal
+    try:
+        return get_compute_profile_engine().assign(pipeline_id, req.profile)
+    except PipelineTypeError as e:
+        raise _map_err(e)
+
+
+@router.get("/v1/pipelines/{pipeline_id}/compute-profile")
+def get_assigned_profile(
+    pipeline_id: str,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#97 · 查询管道的计算配置。"""
+    _ = principal
+    return get_compute_profile_engine().get_assignment(pipeline_id)
+
+
+@router.post("/v1/compute-profiles/{profile}/estimate-cost")
+def estimate_cost(
+    profile: str,
+    req: EstimateCostIn,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#97 · 成本估算。"""
+    _ = principal
+    try:
+        return get_compute_profile_engine().estimate_cost(profile, req.duration_minutes)
+    except PipelineTypeError as e:
+        raise _map_err(e)
+
+
+# ════════════════════ #98 Streaming Performance ════════════════════
+
+class BackpressureIn(BaseModel):
+    strategy: str = "buffer"
+    buffer_size: int = 10000
+    high_watermark_pct: float = 80.0
+    low_watermark_pct: float = 50.0
+
+
+class ResourceIn(BaseModel):
+    max_in_flight: int = 1000
+    max_parallelism: int = 4
+    cpu_limit_cores: float = 2.0
+    memory_limit_mb: int = 4096
+    network_bandwidth_mbps: int = 0
+
+
+class FaultIn(BaseModel):
+    level: str = "at_least_once"
+    checkpoint_interval_ms: int = 30000
+    max_retries: int = 3
+    retry_backoff_ms: int = 1000
+    dead_letter_queue: bool = True
+    auto_restart: bool = True
+    restart_delay_ms: int = 5000
+
+
+class StreamingPerfConfigIn(BaseModel):
+    backpressure: BackpressureIn = Field(default_factory=BackpressureIn)
+    resource: ResourceIn = Field(default_factory=ResourceIn)
+    fault: FaultIn = Field(default_factory=FaultIn)
+    enabled: bool = True
+
+
+class CheckBackpressureIn(BaseModel):
+    current_buffer_usage: int = Field(ge=0)
+
+
+class RecordLoadIn(BaseModel):
+    delta: int
+
+
+class SendDlqIn(BaseModel):
+    event: dict[str, Any] = Field(default_factory=dict)
+    reason: str = Field(min_length=1)
+
+
+@router.put("/v1/pipelines/{pipeline_id}/streaming-perf")
+def set_streaming_perf(
+    pipeline_id: str,
+    req: StreamingPerfConfigIn,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#98 · 设置流式性能配置。"""
+    _ = principal
+    try:
+        from aos_api.pipeline_type_semantics import StreamingPerfConfig
+        cfg = StreamingPerfConfig(
+            pipeline_id=pipeline_id, **req.model_dump(),
+        )
+        return get_streaming_perf_engine().set_config(cfg).model_dump()
+    except PipelineTypeError as e:
+        raise _map_err(e)
+
+
+@router.get("/v1/pipelines/{pipeline_id}/streaming-perf")
+def get_streaming_perf(
+    pipeline_id: str,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#98 · 查询流式性能配置。"""
+    _ = principal
+    return get_streaming_perf_engine().get_config(pipeline_id).model_dump()
+
+
+@router.post("/v1/pipelines/{pipeline_id}/streaming-perf/backpressure-check")
+def check_backpressure(
+    pipeline_id: str,
+    req: CheckBackpressureIn,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#98 · 检查背压状态。"""
+    _ = principal
+    return get_streaming_perf_engine().check_backpressure(
+        pipeline_id, req.current_buffer_usage,
+    )
+
+
+@router.post("/v1/pipelines/{pipeline_id}/streaming-perf/load")
+def record_load(
+    pipeline_id: str,
+    req: RecordLoadIn,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#98 · 记录负载变化。"""
+    _ = principal
+    return get_streaming_perf_engine().record_load(pipeline_id, req.delta)
+
+
+@router.get("/v1/pipelines/{pipeline_id}/streaming-perf/health")
+def get_streaming_health(
+    pipeline_id: str,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#98 · 查询管道健康状态。"""
+    _ = principal
+    return get_streaming_perf_engine().get_health(pipeline_id)
+
+
+@router.post("/v1/pipelines/{pipeline_id}/streaming-perf/dlq")
+def send_to_dlq(
+    pipeline_id: str,
+    req: SendDlqIn,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#98 · 发送到死信队列。"""
+    _ = principal
+    return get_streaming_perf_engine().send_to_dlq(
+        pipeline_id, req.event, req.reason,
+    )
+
+
+@router.get("/v1/pipelines/{pipeline_id}/streaming-perf/dlq")
+def list_dlq(
+    pipeline_id: str,
+    limit: int = 50,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#98 · 查询死信队列。"""
+    _ = principal
+    items = get_streaming_perf_engine().list_dlq(pipeline_id, limit=limit)
+    return {"items": items, "count": len(items)}
