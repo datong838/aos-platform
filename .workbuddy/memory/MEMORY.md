@@ -63,9 +63,12 @@
 ### 220plan2 编码进度
 - **W3 ✅ 完成**（23项/69文件/218测试PASS）— commit `5c70557`
 - **W4 ✅ 完成**（123项/369文件/5627回归PASS）— commit `edfa0de`，269 routes
-- ⬜ W5 待编码（123项） / ⬜ W6 待编码（47项）
+- **W5 ✅ 完成**（123项/369文件/1107测试PASS）— commit `697fce8`，392 routes
+- ⬜ W6 待编码（47项）
 - 编码模式：Engine(Pydantic+Singleton+threading.Lock) + Router(FastAPI APIRouter) + Test(pytest 9用例)
 - worktree：`aos-platform-220plan2/` → feature/220plan2
+- main.py include_router 用 `application.include_router()` 模式
+- 前端路由通过 nav.ts (status="s2") + BlueprintStubPage 自动加载 foundry/html
 
 ### 221plan AIP 决策引擎（v1.0 · ~35 任务）
 - 文件：`20_tech/221plan-分阶段开发与里程碑计划.md` v1.0
