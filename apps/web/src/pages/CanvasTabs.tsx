@@ -977,3 +977,249 @@ function useJsonGet<T>(url: string): {
     refetch: () => setNonce((n) => n + 1),
   };
 }
+
+// ============================================================
+// Workflow Mode — SVG 事件编排图
+// ============================================================
+
+type WorkflowNode = {
+  id: string;
+  type: "trigger" | "condition" | "action";
+  label: string;
+  icon: string;
+  detail?: string;
+  enabled?: boolean;
+};
+
+type WorkflowEdge = {
+  from: string;
+  to: string;
+  condition?: "true" | "false" | "always";
+};
+
+export function WorkflowMode({ moduleId }: { moduleId: string }) {
+  const { data, loading, error } = useJsonGet<{ items: ModuleEvent[] }>(
+    `/v1/modules/${moduleId}/events`
+  );
+
+  const events = data?.items || [];
+  const [selectedNode, setSelectedNode] = useState<string>("");
+
+  // Build workflow nodes and edges from events
+  const { nodes, edges } = buildWorkflowGraph(events);
+
+  return (
+    <div style={{ display: "flex", height: "100%", minHeight: "400px" }}>
+      {/* Left: Trigger List */}
+      <aside style={{ width: "200px", borderRight: "1px solid var(--aos-border)", padding: "8px", overflowY: "auto" }}>
+        <div style={{ fontSize: "11px", fontWeight: 600, marginBottom: "8px", color: "var(--aos-text-secondary)" }}>
+          事件触发器 ({events.length})
+        </div>
+        {loading && <TabLoading />}
+        {error && <TabError msg={error} />}
+        {!loading && !error && events.length === 0 && (
+          <p className="muted" style={{ fontSize: "11px" }}>无触发器</p>
+        )}
+        {events.map((evt) => {
+          const trigType = String((evt.trigger as Record<string, unknown>)?.type || "unknown");
+          const actType = String((evt.action as Record<string, unknown>)?.type || "unknown");
+          const icon = TRIGGER_ICONS[trigType] || "⚡";
+          return (
+            <div
+              key={evt.id}
+              onClick={() => setSelectedNode(evt.id)}
+              style={{
+                padding: "6px 8px",
+                borderRadius: "6px",
+                marginBottom: "4px",
+                cursor: "pointer",
+                background: selectedNode === evt.id ? "#EFF6FF" : "var(--aos-aside)",
+                border: selectedNode === evt.id ? "1px solid #BFDBFE" : "1px solid transparent",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                <span style={{ fontSize: "12px" }}>{icon}</span>
+                <span style={{ fontSize: "11px", fontWeight: 600, color: evt.enabled ? "#1E40AF" : "#999" }}>
+                  {evt.name}
+                </span>
+              </div>
+              <div className="muted" style={{ fontSize: "10px" }}>
+                {trigType} → {actType}
+              </div>
+            </div>
+          );
+        })}
+      </aside>
+
+      {/* Center: SVG Canvas */}
+      <div style={{ flex: 1, padding: "12px", overflow: "auto", position: "relative" }}>
+        <svg width="100%" height="100%" viewBox="0 0 600 400" style={{ minWidth: "500px" }}>
+          {/* Render edges (connection lines) */}
+          {edges.map((edge, i) => {
+            const fromNode = nodes.find((n) => n.id === edge.from);
+            const toNode = nodes.find((n) => n.id === edge.to);
+            if (!fromNode || !toNode) return null;
+            const fx = fromNode.x + 80;
+            const fy = fromNode.y + 20;
+            const tx = toNode.x;
+            const ty = toNode.y + 20;
+            const midX = (fx + tx) / 2;
+            const color = edge.condition === "false" ? "#ef4444" : "#10b981";
+            const dashArray = edge.condition === "false" ? "4 4" : "none";
+            return (
+              <g key={`edge-${i}`}>
+                <path
+                  d={`M ${fx} ${fy} C ${midX} ${fy}, ${midX} ${ty}, ${tx} ${ty}`}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth="2"
+                  strokeDasharray={dashArray}
+                  markerEnd={`url(#arrow-${color === "#ef4444" ? "red" : "green"})`}
+                />
+                {edge.condition && edge.condition !== "always" && (
+                  <text x={midX} y={(fy + ty) / 2 - 5} fill={color} fontSize="9" textAnchor="middle">
+                    {edge.condition}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Arrow markers */}
+          <defs>
+            <marker id="arrow-green" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 7 3, 0 6" fill="#10b981" />
+            </marker>
+            <marker id="arrow-red" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 7 3, 0 6" fill="#ef4444" />
+            </marker>
+            <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 7 3, 0 6" fill="#3b82f6" />
+            </marker>
+          </defs>
+
+          {/* Render nodes */}
+          {nodes.map((node) => {
+            const colors = NODE_COLORS[node.type];
+            return (
+              <g
+                key={node.id}
+                transform={`translate(${node.x}, ${node.y})`}
+                onClick={() => setSelectedNode(node.id)}
+                style={{ cursor: "pointer" }}
+              >
+                {node.type === "trigger" && (
+                  <circle cx="40" cy="20" r="24" fill={colors.fill} stroke={colors.stroke} strokeWidth="2" />
+                )}
+                {node.type === "condition" && (
+                  <rect x="10" y="0" width="60" height="40" rx="4" fill={colors.fill} stroke={colors.stroke} strokeWidth="2" transform="rotate(45 40 20)" />
+                )}
+                {node.type === "action" && (
+                  <rect x="8" y="2" width="64" height="36" rx="6" fill={colors.fill} stroke={colors.stroke} strokeWidth="2" />
+                )}
+                <text x="40" y="16" textAnchor="middle" fontSize="14" fill={colors.text}>
+                  {node.icon}
+                </text>
+                <text x="40" y="32" textAnchor="middle" fontSize="8" fill={colors.text} fontWeight="600">
+                  {node.label.length > 12 ? node.label.slice(0, 10) + "…" : node.label}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+        {nodes.length === 0 && !loading && (
+          <p className="muted" style={{ textAlign: "center", fontSize: "12px", marginTop: "40px" }}>
+            无事件。在 Events Tab 添加事件后，工作流图将自动生成。
+          </p>
+        )}
+      </div>
+
+      {/* Right: Node Detail */}
+      <aside style={{ width: "200px", borderLeft: "1px solid var(--aos-border)", padding: "8px" }}>
+        {selectedNode ? (
+          <NodeDetail node={nodes.find((n) => n.id === selectedNode)} event={events.find((e) => e.id === selectedNode)} />
+        ) : (
+          <p className="muted" style={{ fontSize: "11px" }}>选择一个节点查看详情</p>
+        )}
+      </aside>
+    </div>
+  );
+}
+
+function NodeDetail({ node, event }: { node: WorkflowNode | undefined; event: ModuleEvent | undefined }) {
+  if (!node) return <p className="muted" style={{ fontSize: "11px" }}>节点不存在</p>;
+  return (
+    <div>
+      <div style={{ fontSize: "11px", fontWeight: 600, marginBottom: "8px" }}>
+        {node.icon} {node.label}
+      </div>
+      <div className="muted" style={{ fontSize: "10px", marginBottom: "6px" }}>
+        类型: {node.type}
+      </div>
+      {event && (
+        <>
+          <div style={{ fontSize: "10px", marginBottom: "4px" }}>
+            <strong>触发器:</strong> {String((event.trigger as Record<string, unknown>)?.type || "—")}
+          </div>
+          <div style={{ fontSize: "10px", marginBottom: "4px" }}>
+            <strong>动作:</strong> {String((event.action as Record<string, unknown>)?.type || "—")}
+          </div>
+          <div style={{ fontSize: "10px", marginBottom: "4px" }}>
+            <strong>状态:</strong> {event.enabled ? "✅ 启用" : "⏸ 禁用"}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+const TRIGGER_ICONS: Record<string, string> = {
+  on_click: "🖱",
+  on_select: "👆",
+  on_change: "✏️",
+  on_load: "🕐",
+  interval: "⏰",
+  custom: "⚙️",
+};
+
+const NODE_COLORS = {
+  trigger: { fill: "#DBEAFE", stroke: "#3B82F6", text: "#1E40AF" },
+  condition: { fill: "#FEF3C7", stroke: "#F59E0B", text: "#92400E" },
+  action: { fill: "#D1FAE5", stroke: "#10B981", text: "#065F46" },
+};
+
+function buildWorkflowGraph(events: ModuleEvent[]): { nodes: (WorkflowNode & { x: number; y: number })[]; edges: WorkflowEdge[] } {
+  const nodes: (WorkflowNode & { x: number; y: number })[] = [];
+  const edges: WorkflowEdge[] = [];
+
+  events.forEach((evt, idx) => {
+    const trigType = String((evt.trigger as Record<string, unknown>)?.type || "unknown");
+    const actType = String((evt.action as Record<string, unknown>)?.type || "unknown");
+    const y = idx * 80 + 20;
+    const trigId = `trig-${evt.id}`;
+    const actId = `act-${evt.id}`;
+
+    nodes.push({
+      id: trigId,
+      type: "trigger",
+      label: evt.name,
+      icon: TRIGGER_ICONS[trigType] || "⚡",
+      x: 40,
+      y,
+      enabled: evt.enabled,
+    });
+    nodes.push({
+      id: actId,
+      type: "action",
+      label: actType,
+      icon: "▶",
+      x: 300,
+      y,
+      enabled: evt.enabled,
+    });
+    edges.push({ from: trigId, to: actId, condition: "always" });
+  });
+
+  return { nodes, edges };
+}
+

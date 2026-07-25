@@ -14,6 +14,7 @@ import {
   QueriesTab,
   StylesTab,
   VariablesTab,
+  WorkflowMode,
 } from "./CanvasTabs";
 
 export type CanvasKind = "table" | "filter" | "buddy" | "overlay" | "stub" | "action" | "graph" | "metric";
@@ -601,6 +602,11 @@ export function CanvasPage() {
           </div>
         </div>
 
+        {canvasMode === "workflow" ? (
+          <div className="p-slate-body">
+            <WorkflowMode moduleId={moduleId || "mod-canvas-draft"} />
+          </div>
+        ) : (
         <div className="p-slate-body">
           <aside className="p-slate-tree">
             <div className="p-slate-tree-search">
@@ -1106,6 +1112,7 @@ export function CanvasPage() {
             )}
           </aside>
         </div>
+        )}
       </div>
 
       <div style={{ marginTop: "12px", display: "flex", gap: "12px", fontSize: "12px" }}>
