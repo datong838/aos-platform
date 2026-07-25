@@ -186,6 +186,7 @@ from aos_api import model_provider_credential_router as model_provider_credentia
 from aos_api import provider_security_router as provider_security_router
 from aos_api import provider_call_log_router as provider_call_log_router
 from aos_api import model_router_config_router as model_router_config_router
+from aos_api import module_events_router as module_events_router
 from aos_api import aip_assist_context_router as aip_assist_context_router
 from aos_api import aip_assist_perms_router as aip_assist_perms_router
 from aos_api import aip_analyst_chart_router as aip_analyst_chart_router
@@ -1016,6 +1017,7 @@ def create_app() -> FastAPI:
     application.include_router(provider_security_router.router)
     application.include_router(provider_call_log_router.router)
     application.include_router(model_router_config_router.router)
+    application.include_router(module_events_router.router)
     application.include_router(aip_assist_context_router.router)
     application.include_router(aip_assist_perms_router.router)
     application.include_router(aip_analyst_chart_router.router)

@@ -1,10 +1,20 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiGet, apiPatch, apiPost } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
 import { NavIcon } from "../shell/icons";
 import { BpBanner } from "./s2/blueprintUi";
 import { ActionFormWidget, GraphViewWidget, MetricCardWidget, resolveRenderKind } from "./canvasWidgets";
+import {
+  DashboardTab,
+  DataTab,
+  DependenciesTab,
+  EventsTab,
+  FunctionsTab,
+  QueriesTab,
+  StylesTab,
+  VariablesTab,
+} from "./CanvasTabs";
 
 export type CanvasKind = "table" | "filter" | "buddy" | "overlay" | "stub" | "action" | "graph" | "metric";
 
@@ -251,6 +261,8 @@ export function CanvasPage() {
   const [dragId, setDragId] = useState<string | null>(null);
   const [palette, setPalette] = useState(FALLBACK_PALETTE);
   const [paletteNote, setPaletteNote] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("objects");
+  const [canvasMode, setCanvasMode] = useState<"widget" | "workflow">("widget");
 
   const node = useMemo(
     () => nodes.find((n) => n.id === selected) ?? nodes[0],
@@ -558,11 +570,19 @@ export function CanvasPage() {
 
         <div className="p-slate-toolbar">
           <div className="p-slate-toolbar-left">
-            <button type="button" className="p-slate-mode is-active">
+            <button
+              type="button"
+              className={`p-slate-mode${canvasMode === "widget" ? " is-active" : ""}`}
+              onClick={() => setCanvasMode("widget")}
+            >
               <NavIcon name="apps" style={{ width: "14px", height: "14px" }} />
               Widget
             </button>
-            <button type="button" className="p-slate-mode">
+            <button
+              type="button"
+              className={`p-slate-mode${canvasMode === "workflow" ? " is-active" : ""}`}
+              onClick={() => setCanvasMode("workflow")}
+            >
               <NavIcon name="workflow" style={{ width: "14px", height: "14px" }} />
               Workflow
             </button>
@@ -572,7 +592,8 @@ export function CanvasPage() {
               <button
                 key={t.id}
                 type="button"
-                className={`p-slate-toolbar-tab${t.id === "objects" ? " is-active" : ""}`}
+                className={`p-slate-toolbar-tab${t.id === activeTab ? " is-active" : ""}`}
+                onClick={() => setActiveTab(t.id)}
               >
                 {t.label}
               </button>
@@ -650,6 +671,20 @@ export function CanvasPage() {
           </aside>
 
           <div className="p-slate-canvas">
+            {activeTab !== "objects" && (
+              <div style={{ padding: "16px" }}>
+                {activeTab === "dashboard" && <DashboardTab moduleId={moduleId || "mod-canvas-draft"} />}
+                {activeTab === "queries" && <QueriesTab moduleId={moduleId || "mod-canvas-draft"} />}
+                {activeTab === "functions" && <FunctionsTab moduleId={moduleId || "mod-canvas-draft"} />}
+                {activeTab === "events" && <EventsTab moduleId={moduleId || "mod-canvas-draft"} />}
+                {activeTab === "data" && <DataTab moduleId={moduleId || "mod-canvas-draft"} />}
+                {activeTab === "dependencies" && <DependenciesTab moduleId={moduleId || "mod-canvas-draft"} />}
+                {activeTab === "styles" && <StylesTab moduleId={moduleId || "mod-canvas-draft"} />}
+                {activeTab === "variables" && <VariablesTab moduleId={moduleId || "mod-canvas-draft"} />}
+              </div>
+            )}
+            {activeTab === "objects" && (
+            <React.Fragment>
             {nodes.length === 0 ? (
               <p className="muted" style={{ textAlign: "center", padding: "40px" }}>
                 从左侧调色板添加 Widget 开始构建
@@ -763,6 +798,8 @@ export function CanvasPage() {
                 <p className="muted">无行 · 改 Filter site 或到数据连接接入源后刷新</p>
               )}
             </div>
+            </React.Fragment>
+            )}
           </div>
 
           <aside className="p-slate-props">

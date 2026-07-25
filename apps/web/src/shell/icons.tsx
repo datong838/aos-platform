@@ -1,3 +1,4 @@
+import type React from "react";
 import type { IconName } from "../nav";
 
 const PATHS: Record<IconName, string> = {
@@ -59,9 +60,11 @@ const PATHS: Record<IconName, string> = {
 export function NavIcon({
   name,
   className = "",
+  style,
 }: {
   name: IconName;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   return (
     <svg
@@ -71,6 +74,7 @@ export function NavIcon({
       stroke="currentColor"
       strokeWidth="1.5"
       aria-hidden="true"
+      style={style}
       dangerouslySetInnerHTML={{ __html: PATHS[name] || PATHS.home }}
     />
   );
