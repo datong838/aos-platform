@@ -1633,6 +1633,36 @@ type RouteRule = {
 
 const EGRESS_OPTIONS = ["禁公网", "审批后", "继承", "强制不出域", "fallback"] as const;
 
+/** Phase B — V2 RouteRule with weights/fallback_chain/circuit_config */
+type V2RouteRule = RouteRule & {
+  weights?: { model: string; pct: number }[];
+  fallback_chain?: string[];
+  circuit_config?: Record<string, number>;
+  strategy?: string;
+  enabled?: boolean;
+};
+
+/** Phase B — Global circuit breaker config */
+type GlobalCircuitConfig = {
+  error_rate_threshold_pct?: number;
+  latency_p99_ms?: number;
+  cooldown_seconds?: number;
+  half_open_probes?: number;
+};
+
+/** Phase B — Route test result */
+type RouteTestResult = {
+  route_id: string;
+  strategy: string;
+  prompt: string;
+  selected: { model: string; weight_pct: number; reason: string }[];
+  estimated_latency_ms: number;
+  estimated_input_tokens: number;
+  estimated_output_tokens: number;
+  circuit_state: string;
+  tested_at: string;
+};
+
 function egressTone(egress: string): "ok" | "warn" | "bad" | "muted" {
   if (egress.includes("禁公网")) return "ok";
   if (egress.includes("审批")) return "warn";
@@ -2024,7 +2054,517 @@ export function ModelRouterPage() {
           </p>
         )}
       </div>
+
+      {/* === Phase B 新增面板 === */}
+      <ModelRouterPanels routeRows={routeRows} modelOptions={modelOptions} />
     </S2Chrome>
+  );
+}
+
+/** Phase B · 权重分配 / 全局熔断配置 / Fallback 链 / 路由测试 */
+function ModelRouterPanels(_props: { routeRows: RouteRule[]; modelOptions: string[] }) {
+  const [activePanel, setActivePanel] = useState<"weights" | "circuit" | "fallback" | "test">(
+    "weights",
+  );
+  const routerV2 = useJsonGet<{ items: V2RouteRule[] }>("/api/models/router");
+  const circuitApi = useJsonGet<GlobalCircuitConfig>("/api/models/router/circuit-config");
+  const [circuitDraft, setCircuitDraft] = useState<GlobalCircuitConfig | null>(null);
+  const [circuitSaving, setCircuitSaving] = useState(false);
+  const [circuitMsg, setCircuitMsg] = useState("");
+  const [testRouteId, setTestRouteId] = useState("");
+  const [testPrompt, setTestPrompt] = useState("你好，介绍一下本系统的模型路由");
+  const [testResult, setTestResult] = useState<RouteTestResult | null>(null);
+  const [testLoading, setTestLoading] = useState(false);
+  const [testErr, setTestErr] = useState<string | null>(null);
+
+  const v2Rules = routerV2.data?.items || [];
+  const circuitCfg = circuitDraft || circuitApi.data || {
+    error_rate_threshold_pct: 10,
+    latency_p99_ms: 3000,
+    cooldown_seconds: 30,
+    half_open_probes: 3,
+  };
+
+  useEffect(() => {
+    if (!circuitDraft && circuitApi.data) {
+      setCircuitDraft(circuitApi.data);
+    }
+  }, [circuitApi.data]);
+
+  useEffect(() => {
+    if (!testRouteId && v2Rules.length > 0) {
+      setTestRouteId(v2Rules[0].id);
+    }
+  }, [v2Rules]);
+
+  async function saveCircuitConfig() {
+    if (!circuitDraft) return;
+    setCircuitSaving(true);
+    setCircuitMsg("");
+    try {
+      await apiPut("/api/models/router/circuit-config", circuitDraft);
+      setCircuitMsg("全局熔断配置已保存");
+      circuitApi.reload();
+    } catch (e) {
+      setCircuitMsg(String((e as Error).message || e));
+    } finally {
+      setCircuitSaving(false);
+    }
+  }
+
+  async function runRouteTest() {
+    if (!testRouteId) return;
+    setTestLoading(true);
+    setTestErr(null);
+    setTestResult(null);
+    try {
+      const r = await apiPost<RouteTestResult>(
+        `/api/models/router/${testRouteId}/test`,
+        { prompt: testPrompt, context_length: testPrompt.length * 2 },
+      );
+      setTestResult(r);
+    } catch (e) {
+      setTestErr(String((e as Error).message || e));
+    } finally {
+      setTestLoading(false);
+    }
+  }
+
+  const tabBtn = (id: typeof activePanel, label: string) => (
+    <button
+      type="button"
+      key={id}
+      className={`btn-nav${activePanel === id ? " btn-nav-accent" : ""}`}
+      onClick={() => setActivePanel(id)}
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <div className="mr-rules-card" style={{ marginTop: "1rem" }}>
+      <div className="mr-rules-head">
+        <h2 className="mr-rules-title">高级配置</h2>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          {tabBtn("weights", "权重分配")}
+          {tabBtn("circuit", "熔断器配置")}
+          {tabBtn("fallback", "Fallback 链")}
+          {tabBtn("test", "路由测试")}
+        </div>
+      </div>
+
+      {/* === 权重分配可视化 === */}
+      {activePanel === "weights" && (
+        <div style={{ padding: "1rem" }}>
+          {v2Rules.length === 0 && <p className="muted">暂无路由规则</p>}
+          {v2Rules.map((rule) => {
+            const weights = rule.weights || [];
+            const totalPct = weights.reduce((s, w) => s + (w.pct || 0), 0);
+            const hasWeights = totalPct > 0;
+            return (
+              <div key={rule.id} style={{ marginBottom: "1rem" }}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#1f2937" }}>
+                    {rule.task}
+                    <span style={{ marginLeft: "0.5rem", fontSize: "0.65rem", color: "#9ca3af" }}>
+                      策略: {rule.strategy}
+                    </span>
+                  </span>
+                </div>
+                {hasWeights ? (
+                  <div
+                    style={{
+                      height: "1.75rem",
+                      borderRadius: "0.5rem",
+                      overflow: "hidden",
+                      display: "flex",
+                      border: "1px solid #e5e7eb",
+                    }}
+                  >
+                    {weights.map((w, i) => {
+                      const colors = ["#4f46e5", "#6366f1", "#818cf8", "#a5b4fc"];
+                      return (
+                        <div
+                          key={w.model}
+                          style={{
+                            width: `${w.pct}%`,
+                            background: colors[i % colors.length],
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "white",
+                            fontSize: "0.625rem",
+                            fontWeight: 500,
+                          }}
+                        >
+                          {w.pct > 10 ? `${w.model} · ${w.pct}%` : ""}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      height: "1.75rem",
+                      borderRadius: "0.5rem",
+                      background: "#f3f4f6",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      border: "1px solid #e5e7eb",
+                      fontSize: "0.625rem",
+                      color: "#9ca3af",
+                    }}
+                  >
+                    {rule.primary}（failover 模式 · 无权重分配）
+                  </div>
+                )}
+                {rule.circuit_config && Object.keys(rule.circuit_config).length > 0 && (
+                  <div
+                    style={{
+                      marginTop: "0.375rem",
+                      fontSize: "0.625rem",
+                      color: "#6b7280",
+                      display: "flex",
+                      gap: "0.75rem",
+                    }}
+                  >
+                    <span>熔断: 5xx &gt; {(rule.circuit_config.error_rate_threshold_pct || 10)}%</span>
+                    <span>·</span>
+                    <span>p99 &gt; {(rule.circuit_config.latency_p99_ms || 3000)}ms</span>
+                    <span>·</span>
+                    <span>恢复: {(rule.circuit_config.cooldown_seconds || 30)}s</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* === 全局熔断器配置面板 === */}
+      {activePanel === "circuit" && (
+        <div style={{ padding: "1rem" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(12rem, 1fr))",
+              gap: "0.75rem",
+              fontSize: "0.75rem",
+            }}
+          >
+            <label style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+              <span style={{ color: "#6b7280" }}>5xx 错误率阈值</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input
+                  type="range"
+                  min={1}
+                  max={50}
+                  value={circuitCfg.error_rate_threshold_pct ?? 10}
+                  onChange={(e) =>
+                    setCircuitDraft({
+                      ...circuitCfg,
+                      error_rate_threshold_pct: Number(e.target.value),
+                    })
+                  }
+                  style={{ flex: 1, accentColor: "#4f46e5" }}
+                />
+                <span style={{ fontWeight: 600, width: "2rem", textAlign: "right" }}>
+                  {circuitCfg.error_rate_threshold_pct ?? 10}%
+                </span>
+              </div>
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+              <span style={{ color: "#6b7280" }}>延迟 p99 阈值</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input
+                  type="range"
+                  min={500}
+                  max={10000}
+                  step={500}
+                  value={circuitCfg.latency_p99_ms ?? 3000}
+                  onChange={(e) =>
+                    setCircuitDraft({
+                      ...circuitCfg,
+                      latency_p99_ms: Number(e.target.value),
+                    })
+                  }
+                  style={{ flex: 1, accentColor: "#4f46e5" }}
+                />
+                <span style={{ fontWeight: 600, width: "3rem", textAlign: "right" }}>
+                  {circuitCfg.latency_p99_ms ?? 3000}ms
+                </span>
+              </div>
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+              <span style={{ color: "#6b7280" }}>熔断时长</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input
+                  type="range"
+                  min={10}
+                  max={300}
+                  step={10}
+                  value={circuitCfg.cooldown_seconds ?? 30}
+                  onChange={(e) =>
+                    setCircuitDraft({
+                      ...circuitCfg,
+                      cooldown_seconds: Number(e.target.value),
+                    })
+                  }
+                  style={{ flex: 1, accentColor: "#4f46e5" }}
+                />
+                <span style={{ fontWeight: 600, width: "2.5rem", textAlign: "right" }}>
+                  {circuitCfg.cooldown_seconds ?? 30}s
+                </span>
+              </div>
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+              <span style={{ color: "#6b7280" }}>半开探测请求数</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input
+                  type="range"
+                  min={1}
+                  max={20}
+                  value={circuitCfg.half_open_probes ?? 3}
+                  onChange={(e) =>
+                    setCircuitDraft({
+                      ...circuitCfg,
+                      half_open_probes: Number(e.target.value),
+                    })
+                  }
+                  style={{ flex: 1, accentColor: "#4f46e5" }}
+                />
+                <span style={{ fontWeight: 600, width: "1.5rem", textAlign: "right" }}>
+                  {circuitCfg.half_open_probes ?? 3}
+                </span>
+              </div>
+            </label>
+          </div>
+          <div
+            style={{
+              marginTop: "0.75rem",
+              padding: "0.5rem 0.75rem",
+              borderRadius: "0.5rem",
+              background: "#f9fafb",
+              border: "1px solid #e5e7eb",
+              fontSize: "0.6875rem",
+              color: "#4b5563",
+            }}
+          >
+            <strong>熔断状态机</strong>：Closed（正常）→ 达到阈值 →{" "}
+            <span style={{ color: "#ef4444" }}>
+              Open（熔断中，直接返回降级响应）
+            </span>{" "}
+            → 等待熔断时长 →{" "}
+            <span style={{ color: "#d97706" }}>Half-Open（放探测请求）</span> →
+            成功率恢复 → Closed；否则回到 Open
+          </div>
+          <div style={{ marginTop: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <button
+              type="button"
+              className="btn-nav-accent"
+              disabled={circuitSaving}
+              onClick={() => void saveCircuitConfig()}
+            >
+              {circuitSaving ? "保存中…" : "保存熔断配置"}
+            </button>
+            {circuitMsg && (
+              <span style={{ fontSize: "0.7rem", color: circuitMsg.includes("失败") ? "#ef4444" : "#059669" }}>
+                {circuitMsg}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* === Fallback 链可视化 === */}
+      {activePanel === "fallback" && (
+        <div style={{ padding: "1rem" }}>
+          {v2Rules.length === 0 && <p className="muted">暂无路由规则</p>}
+          {v2Rules.map((rule) => {
+            const chain = rule.fallback_chain || [];
+            const isPII = rule.id === "pii" || rule.egress?.includes("不出域");
+            return (
+              <div
+                key={rule.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  fontSize: "0.75rem",
+                  marginBottom: "0.75rem",
+                }}
+              >
+                <span style={{ width: "5rem", color: "#6b7280", flexShrink: 0 }}>
+                  {rule.task}
+                </span>
+                {chain.map((model, i) => {
+                  const isEnd = model === "报错" || model === "拒绝" || model === "拒绝（不出域）";
+                  const isPrimary = i === 0;
+                  return (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      {i > 0 && (
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#9ca3af"
+                          strokeWidth="1.5"
+                        >
+                          <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" />
+                        </svg>
+                      )}
+                      <span
+                        style={{
+                          padding: "0.25rem 0.5rem",
+                          borderRadius: "0.375rem",
+                          fontSize: "0.6875rem",
+                          fontWeight: 500,
+                          ...(isEnd
+                            ? {
+                                background: isPII ? "#fee2e2" : "#fef3c7",
+                                color: isPII ? "#dc2626" : "#d97706",
+                              }
+                            : isPrimary
+                              ? {
+                                  background: isPII ? "#dc2626" : "#4f46e5",
+                                  color: "white",
+                                }
+                              : {
+                                  background: isPII ? "#fecaca" : "#818cf8",
+                                  color: "white",
+                                }),
+                        }}
+                      >
+                        {model}
+                      </span>
+                    </div>
+                  );
+                })}
+                {chain.length === 0 && (
+                  <span style={{ color: "#9ca3af", fontSize: "0.6875rem" }}>
+                    {rule.primary}（无回退链）
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* === 路由测试面板 === */}
+      {activePanel === "test" && (
+        <div style={{ padding: "1rem" }}>
+          <div style={{ display: "flex", gap: "0.75rem", marginBottom: "0.75rem" }}>
+            <select
+              className="mr-select"
+              value={testRouteId}
+              onChange={(e) => setTestRouteId(e.target.value)}
+              aria-label="test-route-select"
+              style={{ minWidth: "10rem" }}
+            >
+              {v2Rules.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.task}
+                </option>
+              ))}
+            </select>
+            <input
+              value={testPrompt}
+              onChange={(e) => setTestPrompt(e.target.value)}
+              style={{ flex: 1, minWidth: "16rem" }}
+              aria-label="test-prompt"
+            />
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={testLoading || !testRouteId}
+              onClick={() => void runRouteTest()}
+            >
+              {testLoading ? "测试中…" : "测试路由"}
+            </button>
+          </div>
+          {testErr && <p className="error">{testErr}</p>}
+          {testResult && (
+            <div
+              style={{
+                borderRadius: "0.5rem",
+                border: "1px solid #e5e7eb",
+                padding: "0.75rem",
+                background: "#f9fafb",
+                fontSize: "0.75rem",
+              }}
+            >
+              <div style={{ fontWeight: 600, marginBottom: "0.5rem", color: "#1f2937" }}>
+                路由测试结果
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+                <div>
+                  <span style={{ color: "#6b7280" }}>策略: </span>
+                  <strong>{testResult.strategy}</strong>
+                </div>
+                <div>
+                  <span style={{ color: "#6b7280" }}>熔断状态: </span>
+                  <span
+                    style={{
+                      color:
+                        testResult.circuit_state === "closed"
+                          ? "#059669"
+                          : testResult.circuit_state === "open"
+                            ? "#ef4444"
+                            : "#d97706",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {testResult.circuit_state}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ color: "#6b7280" }}>选中模型: </span>
+                  <strong>{testResult.selected?.[0]?.model || "—"}</strong>
+                </div>
+                <div>
+                  <span style={{ color: "#6b7280" }}>选择原因: </span>
+                  <span>{testResult.selected?.[0]?.reason || "—"}</span>
+                </div>
+                <div>
+                  <span style={{ color: "#6b7280" }}>预估延迟: </span>
+                  <strong>{testResult.estimated_latency_ms}ms</strong>
+                </div>
+                <div>
+                  <span style={{ color: "#6b7280" }}>预估 Token: </span>
+                  <span>
+                    {testResult.estimated_input_tokens} → {testResult.estimated_output_tokens}
+                  </span>
+                </div>
+              </div>
+              {testResult.selected && testResult.selected.length > 1 && (
+                <div style={{ marginTop: "0.5rem", fontSize: "0.6875rem", color: "#6b7280" }}>
+                  <span>备选模型链: </span>
+                  {testResult.selected.map((s, i) => (
+                    <span key={i}>
+                      {i > 0 && " → "}
+                      <strong>{s.model}</strong> ({s.weight_pct}%)
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {(routerV2.err || circuitApi.err) && (
+        <p className="error" style={{ margin: "0.5rem 1rem" }}>
+          {routerV2.err === "Not Found"
+            ? "路由配置 V2 API 未就绪 (/api/models/router 404)"
+            : circuitApi.err === "Not Found"
+              ? "熔断配置 API 未就绪"
+              : routerV2.err || circuitApi.err}
+        </p>
+      )}
+    </div>
   );
 }
 
