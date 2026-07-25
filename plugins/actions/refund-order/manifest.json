@@ -1,0 +1,40 @@
+{
+  "id": "refund-order",
+  "actionTypeId": "RefundOrder",
+  "name": "Refund Order",
+  "nameZh": "退款",
+  "description": "订单退款 · reason 必填",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "inproc",
+  "capabilities": [
+    "action",
+    "writeback"
+  ],
+  "objectType": "Order",
+  "parameters": [
+    {
+      "name": "reason",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "refund_amount",
+      "type": "number",
+      "required": false
+    }
+  ],
+  "requiredMarkings": [
+    "public"
+  ],
+  "submissionCriteria": [
+    {
+      "field": "reason",
+      "op": "required"
+    }
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {}
+  }
+}

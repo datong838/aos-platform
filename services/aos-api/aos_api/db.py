@@ -449,3 +449,11 @@ def seed_if_empty() -> None:
         )
         conn.commit()
         log.debug("db_seed_branches_and_link_types_ensured")
+
+    # Phase C+ — Order management seed (always ensure, idempotent)
+    try:
+        from aos_api.order_seed import ensure_order_seed
+
+        ensure_order_seed()
+    except Exception as exc:  # noqa: BLE001
+        log.warning("order_seed_skipped: %s", exc)

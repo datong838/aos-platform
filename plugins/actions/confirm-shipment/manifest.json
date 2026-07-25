@@ -1,0 +1,40 @@
+{
+  "id": "confirm-shipment",
+  "actionTypeId": "ConfirmShipment",
+  "name": "Confirm Shipment",
+  "nameZh": "确认发货",
+  "description": "确认订单发货 · tracking_no 必填",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "inproc",
+  "capabilities": [
+    "action",
+    "writeback"
+  ],
+  "objectType": "Order",
+  "parameters": [
+    {
+      "name": "tracking_no",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "carrier",
+      "type": "string",
+      "required": false
+    }
+  ],
+  "requiredMarkings": [
+    "public"
+  ],
+  "submissionCriteria": [
+    {
+      "field": "tracking_no",
+      "op": "required"
+    }
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {}
+  }
+}

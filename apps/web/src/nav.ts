@@ -93,6 +93,14 @@ export const NAV_ITEMS: NavItem[] = [
   { section: "工作台" },
   { id: "workshop", path: "/workshop", label: "应用列表", icon: "apps", status: "live", crumbs: ["工作台", "应用列表"] },
   {
+    id: "workshop-orders",
+    path: "/workshop/orders",
+    label: "订单管理",
+    icon: "inbox",
+    status: "live",
+    crumbs: ["工作台", "订单管理"],
+  },
+  {
     id: "workshop-module",
     path: "/workshop/inbox",
     label: "风险告警管理",

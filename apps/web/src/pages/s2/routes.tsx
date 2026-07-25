@@ -39,6 +39,7 @@ import {
   IntegrationCasesPage,
 } from "./remainder";
 import { AnalyticsPage } from "./analytics";
+import { OrderManagementPage } from "./OrderManagementPage";
 
 /** Paths promoted in T-UI S2 knife-1～3 ([43]/[45]/[49]). */
 export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
@@ -84,6 +85,7 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "apollo/change", Component: ApolloChangePage },
   { path: "apollo/config", Component: ApolloConfigPage },
   { path: "analytics", Component: AnalyticsPage },
+  { path: "workshop/orders", Component: OrderManagementPage },
 ];
 
 export const S2_LIVE_PATHS = new Set(S2_LIVE_ROUTES.map((r) => `/${r.path}`));
