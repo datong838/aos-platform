@@ -182,6 +182,9 @@ from aos_api import aip_alerts_router as aip_alerts_router
 from aos_api import aip_model_catalog_router as aip_model_catalog_router
 from aos_api import aip_model_capacity_router as aip_model_capacity_router
 from aos_api import aip_model_lifecycle_router as aip_model_lifecycle_router
+from aos_api import model_provider_credential_router as model_provider_credential_router
+from aos_api import provider_security_router as provider_security_router
+from aos_api import provider_call_log_router as provider_call_log_router
 from aos_api import aip_assist_context_router as aip_assist_context_router
 from aos_api import aip_assist_perms_router as aip_assist_perms_router
 from aos_api import aip_analyst_chart_router as aip_analyst_chart_router
@@ -1008,6 +1011,9 @@ def create_app() -> FastAPI:
     application.include_router(aip_model_catalog_router.router)
     application.include_router(aip_model_capacity_router.router)
     application.include_router(aip_model_lifecycle_router.router)
+    application.include_router(model_provider_credential_router.router)
+    application.include_router(provider_security_router.router)
+    application.include_router(provider_call_log_router.router)
     application.include_router(aip_assist_context_router.router)
     application.include_router(aip_assist_perms_router.router)
     application.include_router(aip_analyst_chart_router.router)

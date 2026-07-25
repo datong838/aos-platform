@@ -339,11 +339,21 @@ def routable_models_from_plugins() -> list[dict[str, Any]]:
 
 
 def put_plugin_secret(plugin_id: str, api_key: str) -> None:
+    """Store API key with transparent KMS encryption (222plan Phase A)."""
+    from aos_api.kms_crypto import encrypt
+
     stored = get_payload(KEY_SECRETS) or {"byId": {}}
     by_id = dict(stored.get("byId") or {})
-    by_id[plugin_id] = api_key
+    by_id[plugin_id] = encrypt(api_key)
     put_payload(KEY_SECRETS, {"byId": by_id})
-    log.info("llm_plugin_secret_put id=%s", plugin_id)
+    # Also register in credential engine for richer management
+    try:
+        from aos_api.model_provider_credential import get_credential_engine
+        engine = get_credential_engine()
+        engine.migrate_legacy_secret(plugin_id, api_key)
+    except Exception:
+        pass  # Non-fatal
+    log.info("llm_plugin_secret_put id=%s (encrypted)", plugin_id)
 
 
 def has_plugin_secret(plugin_id: str) -> bool:
@@ -353,16 +363,33 @@ def has_plugin_secret(plugin_id: str) -> bool:
 
 
 def resolve_plugin_api_key(plugin_id: str, secret_ref: str = "") -> str:
-    """Resolve API key: Dev secrets 槽 → 环境变量。非 agnes 插件不得回落到 Agnes Key。"""
+    """Resolve API key: Credential Engine → Dev secrets 槽 → 环境变量。
+
+    Transparently decrypts KMS-encrypted values (222plan Phase A).
+    Also falls back to credential engine for multi-credential support.
+    """
     from aos_api.env_load import load_dotenv
+    from aos_api.kms_crypto import decrypt
 
     load_dotenv()
+
+    # 1. Try credential engine first (222plan Phase A)
+    try:
+        from aos_api.model_provider_credential import get_credential_engine
+        engine = get_credential_engine()
+        cred_key = engine.resolve_api_key(plugin_id)
+        if cred_key:
+            return cred_key
+    except Exception:
+        pass
+
+    # 2. Legacy secrets slot (with transparent decryption)
     stored = get_payload(KEY_SECRETS) or {}
     by_id = stored.get("byId") or {}
     if isinstance(by_id, dict):
-        got = str(by_id.get(plugin_id) or "").strip()
-        if got:
-            return got
+        raw = str(by_id.get(plugin_id) or "").strip()
+        if raw:
+            return decrypt(raw)  # Transparently decrypts if encrypted, passthrough if not
 
     pid_env = plugin_id.upper().replace("-", "_")
     candidates = [

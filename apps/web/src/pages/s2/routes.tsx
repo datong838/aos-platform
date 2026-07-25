@@ -3,6 +3,7 @@ import { GraphExplorerPage, EventsPage } from "./workshop";
 import {
   ToolsPage,
   ProvidersPage,
+  ProviderDetailPage,
   ModelRouterPage,
   EvalsPage,
   DecisionLineagePage,
@@ -47,6 +48,7 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "workshop/module-interface", Component: ModuleInterfacePage },
   { path: "aip/tools", Component: ToolsPage },
   { path: "aip/model-providers", Component: ProvidersPage },
+  { path: "aip/model-providers/:providerId", Component: ProviderDetailPage },
   { path: "aip/model-router", Component: ModelRouterPage },
   { path: "aip/evals", Component: EvalsPage },
   { path: "aip/lineage", Component: DecisionLineagePage },

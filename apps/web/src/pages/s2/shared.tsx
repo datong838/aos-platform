@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { apiGet, apiPost, apiPut } from "../../api/client";
+import { apiGet, apiPost, apiPut, apiDelete } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
 import { BpDebugPanel } from "./blueprintUi";
 
@@ -46,4 +46,4 @@ export function S2Chrome({
   );
 }
 
-export { apiGet, apiPost, apiPut };
+export { apiGet, apiPost, apiPut, apiDelete };

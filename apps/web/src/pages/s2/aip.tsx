@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { apiGet, apiPost, apiPut, S2Chrome, useJsonGet } from "./shared";
+import { Link, useParams } from "react-router-dom";
+import { apiGet, apiPost, apiPut, apiDelete, S2Chrome, useJsonGet } from "./shared";
 import {
   BpBanner,
   BpDebugPanel,
@@ -523,7 +523,7 @@ function secretBoundLabel(ref?: string): string {
   return short ? `已绑定 · ${short}` : "已绑定凭据";
 }
 
-type ProviderView = "list" | "configure" | "credentials" | "studio";
+type ProviderView = "list" | "configure" | "credentials" | "studio" | "detail";
 
 type MpDraft = {
   displayName?: string;
@@ -1473,6 +1473,12 @@ export function ProvidersPage() {
                   </span>
                 </div>
                 <div className="mp-provider-actions">
+                  <Link
+                    to={`/aip/model-providers/${p.id}`}
+                    className="btn btn-nav-accent"
+                  >
+                    详情
+                  </Link>
                   <button
                     type="button"
                     className="btn"
@@ -1512,6 +1518,12 @@ export function ProvidersPage() {
                 </span>
               </div>
               <div className="mp-provider-actions">
+                <Link
+                  to={`/aip/model-providers/${p.id}`}
+                  className="btn btn-nav-accent"
+                >
+                  详情
+                </Link>
                 <button type="button" className="btn" onClick={() => openConfigure({ plugin: p })}>
                   配置
                 </button>
@@ -2295,5 +2307,586 @@ export function DecisionLineagePage() {
         ]}
       />
     </S2Chrome>
+  );
+}
+
+// ── Provider Detail Page (222plan Phase A · 222 第23章) ───────────────────────
+
+type Credential = {
+  key_id: string;
+  provider_id: string;
+  label: string;
+  key_masked: string;
+  rotation_policy: string;
+  last_rotated_at: string;
+  next_rotation_at: string;
+  rotation_history: Array<{ date: string; operator: string; old_key_tail: string }>;
+  created_at: string;
+};
+
+type SecurityPolicy = {
+  provider_id: string;
+  content_filter: boolean;
+  max_tokens: number;
+  qps_limit: number;
+  ip_allowlist: string[];
+  audit_log: boolean;
+  data_residency: string;
+};
+
+type CallLogEntry = {
+  log_id: string;
+  provider_id: string;
+  model: string;
+  input_tokens: number;
+  output_tokens: number;
+  latency_ms: number;
+  cost_usd: number;
+  status: string;
+  trace_id: string;
+  created_at: string;
+};
+
+type CallLogStats = {
+  total_calls: number;
+  success: number;
+  failed: number;
+  timeout: number;
+  total_tokens: number;
+  total_cost_usd: number;
+  avg_latency_ms: number;
+};
+
+type DetailTab = "credentials" | "models" | "security" | "logs";
+
+export function ProviderDetailPage() {
+  const { providerId = "" } = useParams<{ providerId: string }>();
+  const [tab, setTab] = useState<DetailTab>("credentials");
+  const [creds, setCreds] = useState<Credential[]>([]);
+  const [credsLoading, setCredsLoading] = useState(true);
+  const [showAddKey, setShowAddKey] = useState(false);
+  const [newKey, setNewKey] = useState("");
+  const [newLabel, setNewLabel] = useState("默认");
+  const [newPolicy, setNewPolicy] = useState("manual");
+  const [security, setSecurity] = useState<SecurityPolicy | null>(null);
+  const [logs, setLogs] = useState<CallLogEntry[]>([]);
+  const [logStats, setLogStats] = useState<CallLogStats | null>(null);
+  const [connResult, setConnResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [testing, setTesting] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  function loadCreds() {
+    setCredsLoading(true);
+    apiGet<{ items?: Credential[] } | Credential[]>(`/api/models/providers/${providerId}/credentials`)
+      .then((r) => setCreds(Array.isArray(r) ? r : (r.items || [])))
+      .catch(() => setCreds([]))
+      .finally(() => setCredsLoading(false));
+  }
+
+  function loadSecurity() {
+    apiGet<SecurityPolicy>(`/api/models/providers/${providerId}/security`)
+      .then(setSecurity)
+      .catch(() => setSecurity(null));
+  }
+
+  function loadLogs() {
+    apiGet<{ items: CallLogEntry[] }>(`/api/models/providers/${providerId}/logs?limit=50`)
+      .then((r) => setLogs(r.items || []))
+      .catch(() => setLogs([]));
+    apiGet<CallLogStats>(`/api/models/providers/${providerId}/logs/stats`)
+      .then(setLogStats)
+      .catch(() => setLogStats(null));
+  }
+
+  useEffect(() => {
+    loadCreds();
+    loadSecurity();
+    loadLogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [providerId]);
+
+  function handleAddKey() {
+    if (!newKey.trim()) return;
+    apiPost<Credential>(`/api/models/providers/${providerId}/credentials`, {
+      api_key: newKey.trim(),
+      label: newLabel,
+      rotation_policy: newPolicy,
+    })
+      .then(() => {
+        setMsg("凭据已创建（KMS 加密存储）");
+        setNewKey("");
+        setShowAddKey(false);
+        loadCreds();
+      })
+      .catch((e) => setMsg(`创建失败：${e}`));
+  }
+
+  function handleRotate(keyId: string) {
+    const newApiKey = prompt("输入新的 API Key：");
+    if (!newApiKey) return;
+    apiPut<Credential>(`/api/models/providers/${providerId}/credentials/${keyId}`, {
+      api_key: newApiKey,
+    })
+      .then(() => {
+        setMsg("密钥已轮换");
+        loadCreds();
+      })
+      .catch((e) => setMsg(`轮换失败：${e}`));
+  }
+
+  function handleDeleteKey(keyId: string) {
+    if (!confirm("确认删除此凭据？此操作不可撤销。")) return;
+    apiDelete(`/api/models/providers/${providerId}/credentials/${keyId}`)
+      .then(() => {
+        setMsg("凭据已删除");
+        loadCreds();
+      })
+      .catch((e: unknown) => setMsg(`删除失败：${e}`));
+  }
+
+  function handleTestConnection() {
+    setTesting(true);
+    setConnResult(null);
+    apiPost<{ ok: boolean; message: string; latency_ms?: number; model_count?: number }>(
+      `/api/models/providers/${providerId}/test-connection`,
+      {}
+    )
+      .then((r) => setConnResult(r))
+      .catch((e) => setConnResult({ ok: false, message: String(e) }))
+      .finally(() => setTesting(false));
+  }
+
+  function handleSaveSecurity() {
+    if (!security) return;
+    apiPut<SecurityPolicy>(`/api/models/providers/${providerId}/security`, security)
+      .then(() => setMsg("安全策略已保存"))
+      .catch((e) => setMsg(`保存失败：${e}`));
+  }
+
+  return (
+    <S2Chrome
+      title={`供应商详情 · ${providerId}`}
+      lede="管理凭据、查看模型列表、配置安全策略、查看调用日志"
+    >
+      <Link to="/aip/model-providers" className="btn btn-nav">← 返回供应商列表</Link>
+
+      {/* 供应商信息卡 */}
+      <div className="bp-banner" style={{ marginTop: 12, marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ fontSize: 48 }}>🔌</div>
+          <div>
+            <h2 style={{ margin: 0 }}>{providerId}</h2>
+            <p style={{ margin: "4px 0", color: "#666" }}>
+              {creds.length > 0 ? `已配置 ${creds.length} 个凭据` : "未配置凭据"}
+              {" · "}
+              {logStats ? `${logStats.total_calls} 次调用` : ""}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {msg && <p className="bp-prop-ok">{msg}</p>}
+
+      {/* Tab 栏 */}
+      <div style={{ display: "flex", gap: 4, borderBottom: "2px solid #e0e0e0", marginBottom: 16 }}>
+        {([
+          ["credentials", "凭据管理"],
+          ["models", "模型列表"],
+          ["security", "安全策略"],
+          ["logs", "调用日志"],
+        ] as [DetailTab, string][]).map(([t, label]) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            style={{
+              padding: "8px 16px",
+              border: "none",
+              background: tab === t ? "#2563eb" : "transparent",
+              color: tab === t ? "#fff" : "#333",
+              borderRadius: "4px 4px 0 0",
+              cursor: "pointer",
+              fontWeight: tab === t ? 600 : 400,
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab 1: 凭据管理 */}
+      {tab === "credentials" && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+            <h3>API Key 凭据</h3>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                type="button"
+                className="btn btn-nav-accent"
+                onClick={handleTestConnection}
+                disabled={testing}
+              >
+                {testing ? "测试中…" : "测试连接"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => setShowAddKey((v) => !v)}
+              >
+                {showAddKey ? "取消" : "+ 添加凭据"}
+              </button>
+            </div>
+          </div>
+
+          {/* 连接测试结果 */}
+          {connResult && (
+            <div style={{
+              padding: 12,
+              borderRadius: 8,
+              background: connResult.ok ? "#f0fdf4" : "#fef2f2",
+              border: `1px solid ${connResult.ok ? "#86efac" : "#fca5a5"}`,
+              marginBottom: 12,
+            }}>
+              <strong>{connResult.ok ? "✅ " : "❌ "}</strong>
+              {connResult.message}
+            </div>
+          )}
+
+          {/* 添加凭据表单 */}
+          {showAddKey && (
+            <div style={{
+              padding: 16,
+              borderRadius: 8,
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              marginBottom: 16,
+            }}>
+              <label style={{ display: "block", marginBottom: 8 }}>
+                <span style={{ fontWeight: 600 }}>API Key</span>
+                <input
+                  type="password"
+                  value={newKey}
+                  onChange={(e) => setNewKey(e.target.value)}
+                  placeholder="sk-..."
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: 4, border: "1px solid #ccc", marginTop: 4 }}
+                />
+              </label>
+              <div style={{ display: "flex", gap: 12, marginBottom: 8 }}>
+                <label>
+                  <span style={{ fontWeight: 600 }}>标签</span>
+                  <input
+                    value={newLabel}
+                    onChange={(e) => setNewLabel(e.target.value)}
+                    style={{ padding: "4px 8px", borderRadius: 4, border: "1px solid #ccc", marginLeft: 4 }}
+                  />
+                </label>
+                <label>
+                  <span style={{ fontWeight: 600 }}>轮换策略</span>
+                  <select
+                    value={newPolicy}
+                    onChange={(e) => setNewPolicy(e.target.value)}
+                    style={{ padding: "4px 8px", borderRadius: 4, border: "1px solid #ccc", marginLeft: 4 }}
+                  >
+                    <option value="manual">手动</option>
+                    <option value="30d">每 30 天</option>
+                    <option value="90d">每 90 天</option>
+                  </select>
+                </label>
+              </div>
+              <div style={{ fontSize: 12, color: "#666", marginBottom: 8 }}>
+                密钥使用 AES-256-GCM 加密存储，不会明文落库。
+              </div>
+              <button type="button" className="btn btn-primary" onClick={handleAddKey} disabled={!newKey.trim()}>
+                创建凭据
+              </button>
+            </div>
+          )}
+
+          {/* 凭据列表 */}
+          {credsLoading ? (
+            <p className="muted">加载中…</p>
+          ) : creds.length === 0 ? (
+            <p className="muted">暂无凭据。点击「+ 添加凭据」创建。</p>
+          ) : (
+            <table className="bp-table" style={{ width: "100%" }}>
+              <thead>
+                <tr>
+                  <th>标签</th>
+                  <th>Key（掩码）</th>
+                  <th>KMS</th>
+                  <th>轮换策略</th>
+                  <th>上次轮换</th>
+                  <th>下次轮换</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {creds.map((c) => (
+                  <tr key={c.key_id}>
+                    <td>{c.label}</td>
+                    <td><code>{c.key_masked}</code></td>
+                    <td><span className="mp-badge-ok">已加密</span></td>
+                    <td>{c.rotation_policy === "manual" ? "手动" : c.rotation_policy === "30d" ? "每30天" : "每90天"}</td>
+                    <td>{c.last_rotated_at ? new Date(c.last_rotated_at).toLocaleDateString() : "—"}</td>
+                    <td>{c.next_rotation_at ? new Date(c.next_rotation_at).toLocaleDateString() : "—"}</td>
+                    <td>
+                      <button type="button" className="btn" onClick={() => handleRotate(c.key_id)}>轮换</button>
+                      {" "}
+                      <button type="button" className="btn" onClick={() => handleDeleteKey(c.key_id)}>删除</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {/* 轮换历史 */}
+          {creds.some((c) => c.rotation_history.length > 0) && (
+            <details style={{ marginTop: 16 }}>
+              <summary style={{ cursor: "pointer", fontWeight: 600 }}>轮换历史</summary>
+              {creds.filter((c) => c.rotation_history.length > 0).map((c) => (
+                <div key={c.key_id} style={{ marginTop: 8 }}>
+                  <strong>{c.label}</strong>（{c.key_masked}）
+                  <ul>
+                    {c.rotation_history.map((h, i) => (
+                      <li key={i}>
+                        {new Date(h.date).toLocaleString()} · {h.operator} · 旧Key: {h.old_key_tail}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </details>
+          )}
+        </div>
+      )}
+
+      {/* Tab 2: 模型列表 */}
+      {tab === "models" && (
+        <div>
+          <h3>可用模型</h3>
+          <p className="muted">
+            模型列表来自供应商 API + 平台注册。点击「注册到路由」跳转路由配置页。
+          </p>
+          <ModelListTab providerId={providerId} />
+        </div>
+      )}
+
+      {/* Tab 3: 安全策略 */}
+      {tab === "security" && security && (
+        <div>
+          <h3>安全策略</h3>
+          <div style={{ maxWidth: 600 }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <input
+                type="checkbox"
+                checked={security.content_filter}
+                onChange={(e) => setSecurity({ ...security, content_filter: e.target.checked })}
+              />
+              <span>内容过滤（PII 脱敏 + 敏感词过滤）</span>
+            </label>
+
+            <label style={{ display: "block", marginBottom: 12 }}>
+              <span style={{ fontWeight: 600 }}>最大 Token 限制</span>
+              <input
+                type="number"
+                value={security.max_tokens}
+                onChange={(e) => setSecurity({ ...security, max_tokens: parseInt(e.target.value) || 0 })}
+                style={{ width: 120, padding: "4px 8px", borderRadius: 4, border: "1px solid #ccc", marginLeft: 8 }}
+              />
+            </label>
+
+            <label style={{ display: "block", marginBottom: 12 }}>
+              <span style={{ fontWeight: 600 }}>QPS 限制</span>
+              <input
+                type="number"
+                value={security.qps_limit}
+                onChange={(e) => setSecurity({ ...security, qps_limit: parseInt(e.target.value) || 0 })}
+                style={{ width: 120, padding: "4px 8px", borderRadius: 4, border: "1px solid #ccc", marginLeft: 8 }}
+              />
+            </label>
+
+            <label style={{ display: "block", marginBottom: 12 }}>
+              <span style={{ fontWeight: 600 }}>IP 白名单（CIDR，每行一条）</span>
+              <textarea
+                value={security.ip_allowlist.join("\n")}
+                onChange={(e) => setSecurity({ ...security, ip_allowlist: e.target.value.split("\n").filter(Boolean) })}
+                rows={4}
+                placeholder="10.0.0.0/8&#10;192.168.0.0/16"
+                style={{ width: "100%", padding: "8px 12px", borderRadius: 4, border: "1px solid #ccc", marginTop: 4 }}
+              />
+            </label>
+
+            <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <input
+                type="checkbox"
+                checked={security.audit_log}
+                onChange={(e) => setSecurity({ ...security, audit_log: e.target.checked })}
+              />
+              <span>审计日志（记录所有 prompt + response）</span>
+            </label>
+
+            <label style={{ display: "block", marginBottom: 12 }}>
+              <span style={{ fontWeight: 600 }}>数据驻留</span>
+              <select
+                value={security.data_residency}
+                onChange={(e) => setSecurity({ ...security, data_residency: e.target.value })}
+                style={{ padding: "4px 8px", borderRadius: 4, border: "1px solid #ccc", marginLeft: 8 }}
+              >
+                <option value="provider">跟随供应商</option>
+                <option value="local_cache">本地缓存（加密）</option>
+                <option value="no_cache">不缓存</option>
+              </select>
+            </label>
+
+            <button type="button" className="btn btn-primary" onClick={handleSaveSecurity}>
+              保存策略
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tab 4: 调用日志 */}
+      {tab === "logs" && (
+        <div>
+          <h3>调用日志</h3>
+          {logStats && (
+            <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
+              {[
+                ["总调用", logStats.total_calls],
+                ["成功", logStats.success],
+                ["失败", logStats.failed],
+                ["超时", logStats.timeout],
+                ["总 Token", logStats.total_tokens.toLocaleString()],
+                ["总费用", `$${logStats.total_cost_usd.toFixed(4)}`],
+                ["平均延迟", `${logStats.avg_latency_ms}ms`],
+              ].map(([label, val]) => (
+                <div key={label} style={{
+                  padding: "12px 16px",
+                  borderRadius: 8,
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  textAlign: "center",
+                  minWidth: 80,
+                }}>
+                  <div style={{ fontSize: 20, fontWeight: 700 }}>{val}</div>
+                  <div style={{ fontSize: 12, color: "#666" }}>{label}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          {logs.length === 0 ? (
+            <p className="muted">暂无调用记录。</p>
+          ) : (
+            <table className="bp-table" style={{ width: "100%" }}>
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>模型</th>
+                  <th>输入/输出 Token</th>
+                  <th>延迟</th>
+                  <th>费用</th>
+                  <th>状态</th>
+                  <th>Trace ID</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((l) => (
+                  <tr key={l.log_id}>
+                    <td>{new Date(l.created_at).toLocaleString()}</td>
+                    <td>{l.model || "—"}</td>
+                    <td>{l.input_tokens} / {l.output_tokens}</td>
+                    <td>{l.latency_ms}ms</td>
+                    <td>${l.cost_usd.toFixed(4)}</td>
+                    <td>
+                      {l.status === "success" ? "✅" : l.status === "timeout" ? "⏱" : "❌"}
+                      {" "}{l.status}
+                    </td>
+                    <td>
+                      {l.trace_id ? (
+                        <Link to={`/aip/observability?trace=${l.trace_id}`}>{l.trace_id.slice(0, 8)}</Link>
+                      ) : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+    </S2Chrome>
+  );
+}
+
+// ── Model List Tab (Tab 2) ────────────────────────────────────
+
+function ModelListTab({ providerId }: { providerId: string }) {
+  const { data: models } = useJsonGet<{
+    items?: Array<{ id: string; provider?: string }>;
+  }>("/v1/aip/models");
+
+  const providerModels = (models?.items || []).filter(
+    (m) => m.provider === providerId || m.id.toLowerCase().includes(providerId.split("-")[0])
+  );
+
+  const knownModels: Array<{ id: string; name: string; context: string; price: string; tags: string[] }> = ({
+    openai: [
+      { id: "gpt-4o-2024-08-06", name: "GPT-4o", context: "128K", price: "$2.50/1M", tags: ["chat", "vision", "function-calling"] },
+      { id: "gpt-4o-mini-2024-07-18", name: "GPT-4o mini", context: "128K", price: "$0.15/1M", tags: ["chat", "function-calling"] },
+      { id: "o1-preview", name: "o1-preview", context: "128K", price: "$15/1M", tags: ["reasoning"] },
+    ],
+    anthropic: [
+      { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet", context: "200K", price: "$3/1M", tags: ["chat", "vision"] },
+      { id: "claude-3-opus-20240229", name: "Claude 3 Opus", context: "200K", price: "$15/1M", tags: ["chat"] },
+    ],
+    deepseek: [
+      { id: "deepseek-chat", name: "DeepSeek Chat", context: "64K", price: "¥1/1M", tags: ["chat"] },
+      { id: "deepseek-reasoner", name: "DeepSeek Reasoner", context: "64K", price: "¥4/1M", tags: ["reasoning"] },
+    ],
+  } as Record<string, Array<{ id: string; name: string; context: string; price: string; tags: string[] }>>)[providerId] || [];
+
+  if (knownModels.length === 0 && providerModels.length === 0) {
+    return (
+      <div>
+        <p className="muted">该供应商暂无已知模型列表。</p>
+        <p className="muted">
+          可以点击「测试连接」获取供应商可用模型列表。
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <table className="bp-table" style={{ width: "100%" }}>
+      <thead>
+        <tr>
+          <th>模型 ID</th>
+          <th>显示名</th>
+          <th>上下文窗口</th>
+          <th>价格</th>
+          <th>能力标签</th>
+          <th>已注册</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {knownModels.map((m) => {
+          const registered = providerModels.some((pm) => pm.id === m.id);
+          return (
+            <tr key={m.id}>
+              <td><code>{m.id}</code></td>
+              <td>{m.name}</td>
+              <td>{m.context}</td>
+              <td>{m.price}</td>
+              <td>{m.tags.map((t) => <span key={t} className="mp-badge-ok" style={{ marginRight: 4 }}>{t}</span>)}</td>
+              <td>{registered ? "✅" : "❌"}</td>
+              <td>
+                <Link to="/aip/model-router" className="btn">注册到路由</Link>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }
