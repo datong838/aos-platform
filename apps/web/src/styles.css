@@ -7057,6 +7057,131 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
   color: var(--aos-text-tertiary, #9CA3AF);
 }
 
+/* Widget detail modal */
+.wr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wr-modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 520px;
+  max-width: 90vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+.wr-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #E5E7EB;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.wr-modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.wr-modal-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--aos-indigo-50, #EEF2FF);
+  color: var(--aos-indigo-600, #4F46E5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wr-modal-icon svg { width: 20px; height: 20px; }
+.wr-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+.wr-modal-close {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #6B7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+.wr-modal-close:hover { background: #F3F4F6; }
+.wr-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+.wr-modal-desc {
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+}
+.wr-modal-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  margin: 0;
+}
+.wr-modal-meta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wr-modal-meta dt {
+  font-size: 10px;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.wr-modal-meta dd {
+  margin: 0;
+  font-size: 12px;
+  color: #374151;
+}
+.wr-modal-meta code {
+  background: #F3F4F6;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+}
+.wr-modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid #E5E7EB;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.wr-modal-btn {
+  padding: 6px 16px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.wr-modal-btn-secondary {
+  border: 1px solid #D1D5DB;
+  background: #fff;
+  color: #374151;
+}
+.wr-modal-btn-primary {
+  border: none;
+  background: #4F46E5;
+  color: #fff;
+}
+
 /* ===== Variables Page (vr-*) ===== */
 
 .vr-page {

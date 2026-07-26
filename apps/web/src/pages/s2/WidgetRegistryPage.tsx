@@ -177,6 +177,7 @@ export function WidgetRegistryPage() {
   const [query, setQuery] = useState("");
   const [widgets, setWidgets] = useState<WidgetItem[]>(WIDGETS);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<WidgetItem | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -262,7 +263,19 @@ export function WidgetRegistryPage() {
 
         <div className="wr-grid">
           {filtered.map((w) => (
-            <div key={w.id} className="wr-card">
+            <div
+              key={w.id}
+              className="wr-card"
+              onClick={() => setSelected(w)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setSelected(w);
+                }
+              }}
+            >
               <div className="wr-card-top">
                 <div className="wr-icon">
                   <WidgetIcon name={w.icon} />
@@ -276,7 +289,7 @@ export function WidgetRegistryPage() {
               <div className="wr-card-meta">
                 <span>{w.version}</span>
                 <span>·</span>
-                <span>被 {w.usedBy} 个应用使用</span>
+                <span>{w.usedBy > 0 ? `被 ${w.usedBy} 个应用使用` : "暂无应用使用"}</span>
               </div>
             </div>
           ))}
@@ -287,6 +300,82 @@ export function WidgetRegistryPage() {
           )}
         </div>
       </div>
+
+      {selected && (
+        <div
+          className="wr-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${selected.name} 详情`}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelected(null);
+          }}
+        >
+          <div className="wr-modal">
+            <div className="wr-modal-header">
+              <div className="wr-modal-title-row">
+                <div className="wr-modal-icon">
+                  <WidgetIcon name={selected.icon} />
+                </div>
+                <div>
+                  <h2 className="wr-modal-title">{selected.name}</h2>
+                  <span className={`wr-source-tag ${selected.source}`}>
+                    {selected.source === "builtin"
+                      ? "平台内置"
+                      : selected.source === "market"
+                        ? "市场安装"
+                        : "代码开发"}
+                  </span>
+                </div>
+              </div>
+              <button
+                className="wr-modal-close"
+                onClick={() => setSelected(null)}
+                aria-label="关闭"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+            <div className="wr-modal-body">
+              <p className="wr-modal-desc">{selected.description}</p>
+              <dl className="wr-modal-meta">
+                <div>
+                  <dt>组件 ID</dt>
+                  <dd><code>{selected.id}</code></dd>
+                </div>
+                <div>
+                  <dt>版本</dt>
+                  <dd>{selected.version}</dd>
+                </div>
+                <div>
+                  <dt>使用次数</dt>
+                  <dd>{selected.usedBy > 0 ? `${selected.usedBy} 个应用` : "暂未使用"}</dd>
+                </div>
+                <div>
+                  <dt>来源</dt>
+                  <dd>
+                    {selected.source === "builtin"
+                      ? "平台内置（随 AOS 发布）"
+                      : selected.source === "market"
+                        ? "市场安装"
+                        : "代码开发（自定义）"}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+            <div className="wr-modal-footer">
+              <button className="wr-modal-btn wr-modal-btn-secondary" onClick={() => setSelected(null)}>
+                关闭
+              </button>
+              <button className="wr-modal-btn wr-modal-btn-primary" onClick={() => setSelected(null)}>
+                在画布中使用
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageChrome>
   );
 }

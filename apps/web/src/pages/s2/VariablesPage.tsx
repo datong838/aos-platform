@@ -16,6 +16,35 @@ type VariableItem = {
   isSystem?: boolean;
 };
 
+/**按类型分组的类别（合并为 5 大组，便于左侧分组导航）*/
+export type VarTypeGroup = "data" | "scalar" | "flag" | "time" | "list";
+
+/**将 VarType 映射到 5 大分组（纯函数，便于测试）*/
+export function classifyVarType(type: VarType): VarTypeGroup {
+  switch (type) {
+    case "ObjectSet":
+    case "Object":
+      return "data";
+    case "String":
+    case "Number":
+      return "scalar";
+    case "Boolean":
+      return "flag";
+    case "DateRange":
+      return "time";
+    case "Array":
+      return "list";
+  }
+}
+
+export const VAR_TYPE_GROUP_LABELS: Record<VarTypeGroup, string> = {
+  data: "数据对象",
+  scalar: "标量",
+  flag: "布尔",
+  time: "时间",
+  list: "数组",
+};
+
 const VARIABLES: VariableItem[] = [
   { id: "all_orders", name: "all_orders", type: "ObjectSet", scope: "page", initialValue: "Order · 全量查询 (status != archived)", bindings: ["📊 订单表格", "📈 统计卡片"], description: "全部订单对象集" },
   { id: "selected_order", name: "selected_order", type: "Object", scope: "page", initialValue: "← 表格行选中事件写入", bindings: ["📋 详情面板", "🔧 操作按钮组"] },
@@ -107,15 +136,32 @@ function VarTypeIcon({ type }: { type: VarType }) {
 export function VariablesPage() {
   const [scope, setScope] = useState<string>("all");
   const [query, setQuery] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(VARIABLES[0]?.id ?? null);
+  const [typeGroup, setTypeGroup] = useState<VarTypeGroup | "all">("all");
 
   const filtered = useMemo(() => {
     return VARIABLES.filter((v) => {
       if (scope !== "all" && v.scope !== scope) return false;
+      if (typeGroup !== "all" && classifyVarType(v.type) !== typeGroup) return false;
       if (!query.trim()) return true;
       const q = query.toLowerCase();
       return v.name.toLowerCase().includes(q) || v.initialValue.toLowerCase().includes(q);
     });
-  }, [scope, query]);
+  }, [scope, query, typeGroup]);
+
+  const selected = useMemo(
+    () => VARIABLES.find((v) => v.id === selectedId) ?? filtered[0] ?? null,
+    [selectedId, filtered],
+  );
+
+  /**5 类型分组的计数（用于左侧分组导航）*/
+  const groupCounts = useMemo(() => {
+    const counts: Record<VarTypeGroup, number> = { data: 0, scalar: 0, flag: 0, time: 0, list: 0 };
+    for (const v of VARIABLES) {
+      counts[classifyVarType(v.type)]++;
+    }
+    return counts;
+  }, []);
 
   const stats = {
     total: VARIABLES.length,
