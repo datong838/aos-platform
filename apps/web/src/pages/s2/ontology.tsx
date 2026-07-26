@@ -520,6 +520,9 @@ function WikiVersionsPanel({ objectType, objectId }: { objectType: string; objec
   const [err, setErr] = useState("");
   const [selected, setSelected] = useState<Record<string, unknown> | null>(null);
   const [busy, setBusy] = useState(false);
+  // Phase E-14: 版本对比
+  const [compareIds, setCompareIds] = useState<number[]>([]);
+  const [diffResult, setDiffResult] = useState<{ left: Record<string, unknown>; right: Record<string, unknown> } | null>(null);
 
   async function reload() {
     setBusy(true);
@@ -557,6 +560,46 @@ function WikiVersionsPanel({ objectType, objectId }: { objectType: string; objec
     }
   }
 
+  // Phase E-14: 版本对比
+  function toggleCompare(id: number) {
+    setCompareIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= 2) return [prev[1], id];
+      return [...prev, id];
+    });
+    setDiffResult(null);
+  }
+
+  async function runCompare() {
+    if (compareIds.length !== 2) return;
+    setBusy(true);
+    setErr("");
+    try {
+      const [a, b] = await Promise.all([
+        apiGet<{ body: Record<string, unknown> }>(
+          `/v1/wiki/${encodeURIComponent(objectType)}/${encodeURIComponent(objectId)}/versions/${compareIds[0]}`,
+        ),
+        apiGet<{ body: Record<string, unknown> }>(
+          `/v1/wiki/${encodeURIComponent(objectType)}/${encodeURIComponent(objectId)}/versions/${compareIds[1]}`,
+        ),
+      ]);
+      setDiffResult({ left: a.body, right: b.body });
+    } catch (e) {
+      setErr(String((e as Error).message || e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // 计算字段差异
+  const diffFields = diffResult
+    ? Object.keys({ ...diffResult.left, ...diffResult.right }).map((key) => {
+        const leftVal = JSON.stringify(diffResult.left[key] ?? null);
+        const rightVal = JSON.stringify(diffResult.right[key] ?? null);
+        return { key, left: leftVal, right: rightVal, changed: leftVal !== rightVal };
+      })
+    : [];
+
   return (
     <div className="card">
       <div className="mp-section-head">
@@ -570,23 +613,76 @@ function WikiVersionsPanel({ objectType, objectId }: { objectType: string; objec
         <p className="muted">暂无历史。编辑 Wiki 并经 Draft 审批通过后，会在此保留上一版快照。</p>
       )}
       {items.length > 0 && (
-        <BpTable
-          columns={["版本", "时间", "摘要", ""]}
-          rows={items.map((v) => [
-            `#${v.id}`,
-            v.createdAt,
-            v.summary || "—",
-            <button
-              key={v.id}
-              type="button"
-              className="bp-action-link"
-              disabled={busy}
-              onClick={() => void openVersion(v.id)}
-            >
-              查看
-            </button>,
-          ])}
-        />
+        <>
+          <BpTable
+            columns={["版本", "时间", "摘要", "查看", "对比"]}
+            rows={items.map((v) => [
+              `#${v.id}`,
+              v.createdAt,
+              v.summary || "—",
+              <button
+                key={`view-${v.id}`}
+                type="button"
+                className="bp-action-link"
+                disabled={busy}
+                onClick={() => void openVersion(v.id)}
+              >
+                查看
+              </button>,
+              <input
+                key={`cmp-${v.id}`}
+                type="checkbox"
+                checked={compareIds.includes(v.id)}
+                onChange={() => toggleCompare(v.id)}
+                disabled={busy}
+                aria-label={`对比版本 ${v.id}`}
+              />,
+            ])}
+          />
+          {/* Phase E-14: 版本对比操作栏 */}
+          {compareIds.length > 0 && (
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
+              <span className="muted" style={{ fontSize: "0.75rem" }}>
+                已选 {compareIds.length}/2 版本：{compareIds.map((id) => `#${id}`).join(" vs ")}
+              </span>
+              <button
+                type="button"
+                className="btn"
+                disabled={busy || compareIds.length !== 2}
+                onClick={() => void runCompare()}
+              >
+                对比
+              </button>
+              <button type="button" className="btn-nav" onClick={() => { setCompareIds([]); setDiffResult(null); }}>
+                清除
+              </button>
+            </div>
+          )}
+          {/* Phase E-14: Diff 视图 */}
+          {diffResult && (
+            <div style={{ marginTop: 12 }}>
+              <h4 className="aos-text" style={{ fontSize: "0.8rem" }}>字段差异（#{compareIds[0]} → #{compareIds[1]}）</h4>
+              <table className="bp-pipe-schema-table" style={{ width: "100%" }}>
+                <thead>
+                  <tr>
+                    <th>字段</th>
+                    <th>#{compareIds[0]}</th>
+                    <th>#{compareIds[1]}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {diffFields.map((f) => (
+                    <tr key={f.key} style={{ background: f.changed ? "rgba(91, 141, 239, 0.1)" : undefined }}>
+                      <td className="mono" style={{ fontWeight: f.changed ? 600 : 400 }}>{f.key}</td>
+                      <td className={f.changed ? "aos-text" : "muted"} style={{ fontSize: "0.75rem" }}>{f.left}</td>
+                      <td className={f.changed ? "aos-text" : "muted"} style={{ fontSize: "0.75rem" }}>{f.right}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
       {selected && (
         <pre className="aos-pre" style={{ marginTop: "0.75rem", maxHeight: 240, overflow: "auto" }}>

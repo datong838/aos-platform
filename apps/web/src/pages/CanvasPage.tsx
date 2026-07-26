@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiGet, apiPatch, apiPost } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
 import { NavIcon } from "../shell/icons";
 import { BpBanner } from "./s2/blueprintUi";
 import { ActionFormWidget, GraphViewWidget, MetricCardWidget, resolveRenderKind } from "./canvasWidgets";
+import { ComponentRenderer, type ComponentTree } from "./ComponentRenderer";
 import {
   DashboardTab,
   DataTab,
@@ -16,15 +17,71 @@ import {
   VariablesTab,
   WorkflowMode,
 } from "./CanvasTabs";
+import {
+  DndContext,
+  DragOverlay,
+  pointerWithin,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDraggable,
+  useDroppable,
+  type DragStartEvent,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
-export type CanvasKind = "table" | "filter" | "buddy" | "overlay" | "stub" | "action" | "graph" | "metric";
+export type CanvasKind =
+  | "table"
+  | "filter"
+  | "buddy"
+  | "overlay"
+  | "stub"
+  | "action"
+  | "graph"
+  | "metric"
+  | "page-header"
+  | "stat-card"
+  | "filter-bar"
+  | "detail-drawer"
+  | "trend-chart";
 
 export type CanvasNode = {
   id: string;
   kind: CanvasKind;
   title: string;
   pluginId?: string;
-  config?: { site?: string; objectType?: string; objectId?: string; actionTypeId?: string; groupBy?: string };
+  config?: {
+    site?: string;
+    objectType?: string;
+    objectId?: string;
+    actionTypeId?: string;
+    groupBy?: string;
+    title?: string;
+    subtitle?: string;
+    icon?: string;
+    metric?: string;
+    field?: string;
+    filter?: Record<string, unknown>;
+    tabs?: Array<Record<string, unknown>>;
+    search?: Record<string, unknown>;
+    filters?: Array<Record<string, unknown>>;
+    width?: number;
+    sections?: Array<Record<string, unknown>>;
+    actions?: Array<Record<string, unknown>>;
+    dateField?: string;
+    days?: number;
+    endDate?: string;
+    [key: string]: unknown;
+  };
 };
 
 type PaletteItem = {
@@ -52,6 +109,7 @@ type ModuleRow = {
   id: string;
   name: string;
   widgets?: unknown[];
+  components?: ComponentTree;
   objectType?: string;
 };
 
@@ -64,7 +122,38 @@ type Row = {
   site?: string;
 };
 
-const KIND_SET = new Set<CanvasKind>(["table", "filter", "buddy", "overlay", "stub", "action", "graph", "metric"]);
+const KIND_SET = new Set<CanvasKind>([
+  "table",
+  "filter",
+  "buddy",
+  "overlay",
+  "stub",
+  "action",
+  "graph",
+  "metric",
+  "page-header",
+  "stat-card",
+  "filter-bar",
+  "detail-drawer",
+  "trend-chart",
+]);
+
+/** Widget emoji 图标映射 · 由 kind 查 emoji（唯一来源：palette API） */
+const KIND_ICON: Record<CanvasKind, string> = {
+  table: "📊",
+  graph: "📈",
+  action: "📝",
+  stub: "🔘",
+  overlay: "🗺",
+  metric: "📄",
+  filter: "🔽",
+  buddy: "💬",
+  "page-header": "🏷",
+  "stat-card": "🔢",
+  "filter-bar": "📋",
+  "detail-drawer": "🗂",
+  "trend-chart": "📉",
+};
 
 export function normalizeLayout(widgets: unknown): CanvasNode[] {
   if (!Array.isArray(widgets) || widgets.length === 0) return structuredClone(DEFAULT_LAYOUT);
@@ -141,6 +230,11 @@ function sectionLabel(kind: CanvasKind): string {
   if (kind === "graph") return "关系图";
   if (kind === "metric") return "指标卡";
   if (kind === "stub") return "Stub 插件";
+  if (kind === "page-header") return "页面头";
+  if (kind === "stat-card") return "统计卡";
+  if (kind === "filter-bar") return "筛选栏";
+  if (kind === "detail-drawer") return "详情抽屉";
+  if (kind === "trend-chart") return "趋势图";
   return "Overlay 详情";
 }
 
@@ -240,6 +334,122 @@ function WidgetPreview({
       </div>
     );
   }
+  if (node.kind === "page-header") {
+    return (
+      <div className="bp-canvas-widget">
+        <strong style={{ fontSize: "1.05rem" }}>{node.config?.title || "页面标题"}</strong>
+        <span className="muted" style={{ display: "block", marginTop: 4 }}>
+          {node.config?.subtitle || "副标题"}
+        </span>
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          {(node.config?.actions as Array<{ label?: string; variant?: string }> | undefined)?.map((a, i) => (
+            <span
+              key={i}
+              className="bp-tag"
+              style={{
+                background: a?.variant === "primary" ? "var(--aos-accent)" : undefined,
+                color: a?.variant === "primary" ? "#fff" : undefined,
+              }}
+            >
+              {a?.label || `按钮${i + 1}`}
+            </span>
+          )) || <span className="muted">无操作按钮</span>}
+        </div>
+      </div>
+    );
+  }
+  if (node.kind === "stat-card") {
+    return (
+      <div className="bp-canvas-widget" style={{ borderLeft: "3px solid var(--aos-accent)", padding: "8px 12px" }}>
+        <div className="muted" style={{ fontSize: "11px" }}>
+          {node.config?.title || "统计卡"} · {node.config?.objectType || "Order"}
+        </div>
+        <div style={{ fontSize: "1.3rem", fontWeight: 600, margin: "4px 0" }}>
+          {node.config?.metric === "sum" ? "Σ" : "#"} —
+        </div>
+        <div className="muted" style={{ fontSize: "10px" }}>
+          metric={node.config?.metric || "count"}
+          {node.config?.field ? ` · field=${node.config.field}` : ""}
+        </div>
+      </div>
+    );
+  }
+  if (node.kind === "filter-bar") {
+    const tabs = (node.config?.tabs as Array<{ key?: string; label?: string }> | undefined) || [
+      { key: "all", label: "全部" },
+    ];
+    return (
+      <div className="bp-canvas-widget">
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
+          {tabs.slice(0, 5).map((t, i) => (
+            <span key={t.key || i} className="bp-tag" style={i === 0 ? { background: "var(--aos-accent)", color: "#fff" } : undefined}>
+              {t.label || t.key}
+            </span>
+          ))}
+          {tabs.length > 5 && <span className="muted">+{tabs.length - 5}</span>}
+        </div>
+        <span className="muted" style={{ fontSize: "11px" }}>
+          🔍 搜索 · {node.config?.objectType || "Order"}
+        </span>
+      </div>
+    );
+  }
+  if (node.kind === "detail-drawer") {
+    const sections = (node.config?.sections as Array<{ title?: string }> | undefined) || [];
+    return (
+      <div className="bp-canvas-widget" style={{ borderLeft: "3px solid var(--aos-accent)", padding: "8px 12px" }}>
+        <span className="bp-tag">详情抽屉</span>
+        <span className="muted" style={{ marginLeft: 6, fontSize: "11px" }}>
+          {node.config?.objectType || "Order"} · width={node.config?.width || 400}
+        </span>
+        <div style={{ marginTop: 6, fontSize: "11px" }}>
+          {sections.length > 0
+            ? sections.map((s, i) => (
+                <div key={i} className="muted">· {s.title || `section-${i + 1}`}</div>
+              ))
+            : <span className="muted">无 section</span>}
+        </div>
+      </div>
+    );
+  }
+  if (node.kind === "trend-chart") {
+    return (
+      <div className="bp-canvas-widget">
+        <strong>{node.config?.title || "趋势图"}</strong>
+        <span className="muted" style={{ marginLeft: 6, fontSize: "11px" }}>
+          {node.config?.objectType || "Order"} · {node.config?.days || 7} 天
+        </span>
+        <div
+          style={{
+            marginTop: 8,
+            height: 60,
+            background: "var(--aos-surface-hover)",
+            borderRadius: 4,
+            display: "flex",
+            alignItems: "flex-end",
+            padding: "4px 8px",
+            gap: 3,
+          }}
+        >
+          {[12, 28, 18, 40, 30, 52, 36].map((h, i) => (
+            <div
+              key={i}
+              style={{
+                flex: 1,
+                height: `${h * 1.2}%`,
+                background: "var(--aos-accent)",
+                opacity: 0.5 + i * 0.07,
+                borderRadius: 2,
+              }}
+            />
+          ))}
+        </div>
+        <div className="muted" style={{ fontSize: "10px", marginTop: 4 }}>
+          dateField={node.config?.dateField || "order_date"}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="bp-canvas-widget bp-canvas-widget-overlay">
       <span className="bp-tag">Object View</span>
@@ -259,11 +469,115 @@ export function CanvasPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [previewOn, setPreviewOn] = useState(true);
   const [dirty, setDirty] = useState(false);
-  const [dragId, setDragId] = useState<string | null>(null);
+  const [propTab, setPropTab] = useState<"content" | "style" | "events" | "data">("content");
   const [palette, setPalette] = useState(FALLBACK_PALETTE);
   const [paletteNote, setPaletteNote] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("objects");
-  const [canvasMode, setCanvasMode] = useState<"widget" | "workflow">("widget");
+  const [canvasMode, setCanvasMode] = useState<"widget" | "workflow" | "preview">("widget");
+  const [bottomPanelCollapsed, setBottomPanelCollapsed] = useState(true);
+  const [bottomPanelHeight, setBottomPanelHeight] = useState<number>(280);
+  const [componentTree, setComponentTree] = useState<ComponentTree | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(
+    () => typeof document !== "undefined" && !!document.fullscreenElement,
+  );
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+  const toggleFullscreen = () => {
+    if (typeof document === "undefined") return;
+    if (document.fullscreenElement) {
+      void document.exitFullscreen();
+    } else {
+      void document.documentElement.requestFullscreen();
+    }
+  };
+  const [leftCollapsed, setLeftCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("canvas.sidebar.leftCollapsed") === "1";
+  });
+  const [rightCollapsed, setRightCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("canvas.sidebar.rightCollapsed") === "1";
+  });
+
+  const [activeItem, setActiveItem] = useState<PaletteItem | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 0 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    console.log("[dnd-kit] dragStart", active.id);
+    const item = palette.find((p) => p.kind === active.id);
+    if (item) {
+      setActiveItem(item);
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    console.log("[dnd-kit] dragEnd", active.id, over?.id, JSON.stringify(over));
+    setActiveItem(null);
+
+    const activeKind = active.id as CanvasKind;
+    if (KIND_SET.has(activeKind)) {
+      if (over?.id === "canvas-drop-zone") {
+        addNode(activeKind);
+        setDirty(true);
+        console.log("[dnd-kit] node added:", activeKind);
+      } else {
+        console.log("[dnd-kit] over id mismatch:", over?.id, "expected: canvas-drop-zone");
+      }
+      return;
+    }
+
+    if (over && active.id !== over.id) {
+      setNodes((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        if (oldIndex >= 0 && newIndex >= 0) {
+          return arrayMove(items, oldIndex, newIndex);
+        }
+        return items;
+      });
+      setDirty(true);
+    }
+  };
+
+  const draggingRef = useRef<{ startY: number; startH: number } | null>(null);
+
+  useEffect(() => {
+    window.localStorage.setItem("canvas.sidebar.leftCollapsed", leftCollapsed ? "1" : "0");
+  }, [leftCollapsed]);
+
+  useEffect(() => {
+    window.localStorage.setItem("canvas.sidebar.rightCollapsed", rightCollapsed ? "1" : "0");
+  }, [rightCollapsed]);
+
+  useEffect(() => {
+    function onMove(e: MouseEvent) {
+      const drag = draggingRef.current;
+      if (!drag) return;
+      const delta = drag.startY - e.clientY;
+      const next = Math.max(120, Math.min(window.innerHeight * 0.7, drag.startH + delta));
+      setBottomPanelHeight(next);
+    }
+    function onUp() {
+      draggingRef.current = null;
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, []);
 
   const node = useMemo(
     () => nodes.find((n) => n.id === selected) ?? nodes[0],
@@ -280,6 +594,7 @@ export function CanvasPage() {
     const res = await apiGet<{ items: ModuleRow[] }>("/v1/modules");
     setModules(res.items || []);
     const prefer =
+      res.items?.find((m) => m.components && Object.keys(m.components).length > 0) ||
       res.items?.find((m) => m.id.includes("canvas") || (m.widgets || []).length > 0) ||
       res.items?.[0];
     if (prefer) {
@@ -287,6 +602,7 @@ export function CanvasPage() {
       const layout = normalizeLayout(prefer.widgets);
       setNodes(layout);
       setSelected(layout[0]?.id || "");
+      setComponentTree(prefer.components && Object.keys(prefer.components).length > 0 ? prefer.components : null);
       setDirty(false);
     }
   }, []);
@@ -351,8 +667,15 @@ export function CanvasPage() {
       const layout = normalizeLayout(mod.widgets);
       setNodes(layout);
       setSelected(layout[0]?.id || "");
+      const tree =
+        mod.components && Object.keys(mod.components).length > 0 ? mod.components : null;
+      setComponentTree(tree);
       setDirty(false);
-      setMsg(`已加载 ${mod.name || id}`);
+      setMsg(
+        tree
+          ? `已加载 ${mod.name || id} · 应用预览（${Object.keys(tree).length} 组件）`
+          : `已加载 ${mod.name || id} · widgets 模式`,
+      );
     } catch (e) {
       setErr(String((e as Error).message || e));
     }
@@ -402,7 +725,17 @@ export function CanvasPage() {
                   ? "Metric Card"
                   : kind === "stub"
                     ? pal.pluginId || "Stub Widget"
-                    : "Overlay · Object View");
+                    : kind === "page-header"
+                      ? "页面头"
+                      : kind === "stat-card"
+                        ? "统计卡"
+                        : kind === "filter-bar"
+                          ? "筛选栏"
+                          : kind === "detail-drawer"
+                            ? "详情抽屉"
+                            : kind === "trend-chart"
+                              ? "趋势图"
+                              : "Overlay · Object View");
     const config =
       kind === "filter"
         ? { site: "DC-East" }
@@ -414,7 +747,17 @@ export function CanvasPage() {
               ? { objectType: "WorkOrder", objectId: "wo-1001" }
               : kind === "metric" || pal.pluginId === "metric-card"
                 ? { objectType: "WorkOrder", groupBy: "status" }
-                : undefined;
+                : kind === "page-header"
+                  ? { title: "页面标题", subtitle: "副标题" }
+                  : kind === "stat-card"
+                    ? { objectType: "Order", metric: "count", title: "统计卡" }
+                    : kind === "filter-bar"
+                      ? { objectType: "Order" }
+                      : kind === "detail-drawer"
+                        ? { objectType: "Order", width: 400 }
+                        : kind === "trend-chart"
+                          ? { objectType: "Order", dateField: "order_date", days: 7, title: "趋势图" }
+                          : undefined;
     const pluginId =
       pal.pluginId ||
       (kind === "action"
@@ -423,7 +766,17 @@ export function CanvasPage() {
           ? "graph-view"
           : kind === "metric"
             ? "metric-card"
-            : undefined);
+            : kind === "page-header"
+              ? "page-header"
+              : kind === "stat-card"
+                ? "stat-card"
+                : kind === "filter-bar"
+                  ? "filter-bar"
+                  : kind === "detail-drawer"
+                    ? "detail-drawer"
+                    : kind === "trend-chart"
+                      ? "trend-chart"
+                      : undefined);
     setNodes((prev) => [...prev, { id, kind, title, pluginId, config }]);
     setSelected(id);
     setDirty(true);
@@ -448,21 +801,6 @@ export function CanvasPage() {
       [copy[i], copy[j]] = [copy[j], copy[i]];
       return copy;
     });
-    setDirty(true);
-  }
-
-  function onDrop(targetId: string) {
-    if (!dragId || dragId === targetId) return;
-    setNodes((prev) => {
-      const from = prev.findIndex((n) => n.id === dragId);
-      const to = prev.findIndex((n) => n.id === targetId);
-      if (from < 0 || to < 0) return prev;
-      const copy = [...prev];
-      const [item] = copy.splice(from, 1);
-      copy.splice(to, 0, item);
-      return copy;
-    });
-    setDragId(null);
     setDirty(true);
   }
 
@@ -508,7 +846,13 @@ export function CanvasPage() {
       {msg && <p className="aos-text">{msg}</p>}
       {err && <p className="error">{err}</p>}
 
-      <div className="p-slate-app" style={{ minHeight: "600px" }}>
+      <DndContext
+          sensors={sensors}
+          collisionDetection={pointerWithin}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+        <div className="p-slate-app" style={{ minHeight: "calc(100vh - 200px)" }}>
         <header className="p-slate-topbar">
           <div className="p-slate-topbar-left">
             <span className="p-slate-breadcrumb">Workshop</span>
@@ -587,6 +931,16 @@ export function CanvasPage() {
               <NavIcon name="workflow" style={{ width: "14px", height: "14px" }} />
               Workflow
             </button>
+            <button
+              type="button"
+              className={`p-slate-mode${canvasMode === "preview" ? " is-active" : ""}`}
+              onClick={() => setCanvasMode("preview")}
+              title="预览应用（运行态只读）"
+              aria-label="切换到预览模式"
+            >
+              <NavIcon name="eye" style={{ width: "14px", height: "14px" }} />
+              Preview
+            </button>
           </div>
           <div className="p-slate-toolbar-tabs">
             {TOOLBAR_TABS.map((t) => (
@@ -594,7 +948,10 @@ export function CanvasPage() {
                 key={t.id}
                 type="button"
                 className={`p-slate-toolbar-tab${t.id === activeTab ? " is-active" : ""}`}
-                onClick={() => setActiveTab(t.id)}
+                onClick={() => {
+                  setActiveTab(t.id);
+                  setBottomPanelCollapsed(t.id === "objects");
+                }}
               >
                 {t.label}
               </button>
@@ -602,27 +959,138 @@ export function CanvasPage() {
           </div>
         </div>
 
-        {canvasMode === "workflow" ? (
-          <div className="p-slate-body">
-            <WorkflowMode moduleId={moduleId || "mod-canvas-draft"} />
-          </div>
-        ) : (
-        <div className="p-slate-body">
-          <aside className="p-slate-tree">
+        <div className="p-slate-main">
+          <div className={`p-slate-canvas-area${bottomPanelCollapsed ? " is-full" : ""}`}>
+            {canvasMode === "preview" ? (
+              <div className="p-slate-body">
+                <div className="p-slate-canvas" style={{ padding: 16 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "6px 10px",
+                      borderRadius: 6,
+                      background: "rgba(79,70,229,0.08)",
+                      border: "1px solid #c7d2fe",
+                      fontSize: 11,
+                      color: "#4f46e5",
+                      marginBottom: 12,
+                    }}
+                  >
+                    <span>
+                      ● 应用预览（运行态）·
+                      {componentTree ? `${Object.keys(componentTree).length} 组件 · root=${componentTree.root?.type || "—"}` : `${nodes.length} widgets`}
+                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 10, opacity: 0.7 }}>
+                        可编辑应用（运行态只读预览）
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setCanvasMode("widget")}
+                        title="切回编辑态"
+                        aria-label="切回编辑态"
+                        style={{
+                          fontSize: 11,
+                          padding: "3px 10px",
+                          borderRadius: 4,
+                          background: "#4f46e5",
+                          color: "#fff",
+                          border: "none",
+                          cursor: "pointer",
+                          fontWeight: 500,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                      >
+                        ✎ 编辑
+                      </button>
+                    </div>
+                  </div>
+
+                  {componentTree ? (
+                    <ComponentRenderer components={componentTree} />
+                  ) : nodes.length === 0 ? (
+                    <p className="muted" style={{ textAlign: "center", padding: "40px" }}>
+                      当前模块没有可预览的内容，请先在编辑态添加 Widget
+                    </p>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                      {nodes.map((n) => (
+                        <div key={n.id} className="p-slate-widget">
+                          <div className="p-slate-widget-header">
+                            <span className="p-slate-widget-title">{n.title}</span>
+                          </div>
+                          <div className="p-slate-widget-body">
+                            <WidgetPreview node={n} rows={rows} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : canvasMode === "workflow" ? (
+              <div className="p-slate-body">
+                <WorkflowMode moduleId={moduleId || "mod-canvas-draft"} />
+              </div>
+            ) : (
+            <div className="p-slate-body">
+          <aside className={`p-slate-tree${leftCollapsed ? " is-collapsed" : ""}`}>
+            {leftCollapsed ? (
+              <button
+                type="button"
+                className="p-slate-side-restore"
+                onClick={() => setLeftCollapsed(false)}
+                title="展开组件列表"
+                aria-label="展开组件列表"
+              >
+                <NavIcon name="chevron" style={{ width: "12px", height: "12px", color: "var(--aos-text-tertiary)" }} />
+                <span className="p-slate-side-restore-label">组件</span>
+              </button>
+            ) : (
+              <>
+            <div className="p-slate-side-pin">
+              <button
+                type="button"
+                className="p-slate-side-collapse-btn"
+                onClick={() => setLeftCollapsed(true)}
+                title="折叠组件列表（向左收起）"
+                aria-label="折叠组件列表"
+              >
+                <NavIcon name="chevron" style={{ width: "12px", height: "12px", transform: "rotate(180deg)" }} />
+              </button>
+            </div>
             <div className="p-slate-tree-search">
               <NavIcon name="search" />
               <input type="search" placeholder="Search widgets..." />
             </div>
 
             <div className="p-slate-tree-section-title">Layout</div>
-            <button type="button" className="p-slate-tree-item">
+            <button
+              type="button"
+              className="p-slate-tree-item"
+              onClick={toggleFullscreen}
+              title={isFullscreen ? "退出浏览器全屏" : "进入浏览器全屏"}
+              aria-label={isFullscreen ? "退出全屏" : "进入全屏"}
+              style={{ cursor: "pointer" }}
+            >
               <NavIcon name="menu" style={{ width: "12px", height: "12px" }} />
-              <span>fullscreen</span>
+              <span>{isFullscreen ? "fullscreen · 已开启" : "fullscreen"}</span>
             </button>
-            <button type="button" className="p-slate-tree-item is-expanded">
+            <button
+              type="button"
+              className="p-slate-tree-item is-expanded"
+              onClick={() => addNode("page-header")}
+              title="添加页面头 Widget（page-header）"
+              aria-label="添加页面头 Widget"
+              style={{ cursor: "pointer" }}
+            >
               <NavIcon name="chevron" style={{ width: "12px", height: "12px", transform: "rotate(90deg)" }} />
               <NavIcon name="apps" style={{ width: "14px", height: "14px", color: "var(--aos-accent)" }} />
-              <span>w_nav_bar</span>
+              <span>w_nav_bar · 点击添加</span>
             </button>
             {nodes.map((n) => (
               <button
@@ -641,28 +1109,54 @@ export function CanvasPage() {
             ))}
 
             <div className="p-slate-tree-section-title" style={{ marginTop: "8px" }}>
-              Widget 调色板
+              Widget 组件
             </div>
-            {palette.map((w) => (
-              <button
-                key={`${w.pluginId || w.kind}-${w.label}`}
-                type="button"
-                className="p-slate-tree-item is-child"
-                onClick={() => addNode(w)}
-                title={w.runtime ? `runtime=${w.runtime}` : undefined}
-              >
-                <NavIcon name="apps" style={{ width: "12px", height: "12px" }} />
-                <span style={{ fontSize: "11px" }}>
-                  {w.label.replace(/^\+\s*/, "")}
-                  {w.stub ? " · stub" : ""}
-                </span>
-              </button>
-            ))}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "4px",
+                padding: "4px",
+                borderRadius: "6px",
+                background: "var(--aos-aside)",
+                border: "1px dashed var(--aos-border)",
+              }}
+            >
+              {palette.length === 0 && (
+                <div style={{ gridColumn: "1 / -1", fontSize: "10px", opacity: 0.6, padding: "4px" }}>
+                  {paletteNote || "调色板为空"}
+                </div>
+              )}
+              {palette.map((w) => (
+                <DraggablePaletteItem key={`${w.pluginId || w.kind}-${w.label}`} item={w} onClick={() => addNode(w)} />
+              ))}
+            </div>
             {paletteNote && (
               <div className="p-slate-tree-item is-child" style={{ opacity: 0.6, fontSize: "10px" }}>
                 {paletteNote}
               </div>
             )}
+
+            <Link
+              to="/workshop/widget-registry"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "6px 10px",
+                marginTop: "6px",
+                borderRadius: "6px",
+                background: "rgba(79,70,229,0.06)",
+                color: "#4f46e5",
+                fontSize: "11px",
+                fontWeight: 500,
+                textDecoration: "none",
+                border: "1px dashed #c7d2fe",
+              }}
+            >
+              <span style={{ fontSize: "14px" }}>+</span>
+              添加组件 · 浏览注册表
+            </Link>
 
             <button
               type="button"
@@ -674,77 +1168,58 @@ export function CanvasPage() {
               <NavIcon name="trash" style={{ width: "14px", height: "14px" }} />
               Delete widget
             </button>
+              </>
+            )}
           </aside>
 
-          <div className="p-slate-canvas">
-            {activeTab !== "objects" && (
-              <div style={{ padding: "16px" }}>
-                {activeTab === "dashboard" && <DashboardTab moduleId={moduleId || "mod-canvas-draft"} />}
-                {activeTab === "queries" && <QueriesTab moduleId={moduleId || "mod-canvas-draft"} />}
-                {activeTab === "functions" && <FunctionsTab moduleId={moduleId || "mod-canvas-draft"} />}
-                {activeTab === "events" && <EventsTab moduleId={moduleId || "mod-canvas-draft"} />}
-                {activeTab === "data" && <DataTab moduleId={moduleId || "mod-canvas-draft"} />}
-                {activeTab === "dependencies" && <DependenciesTab moduleId={moduleId || "mod-canvas-draft"} />}
-                {activeTab === "styles" && <StylesTab moduleId={moduleId || "mod-canvas-draft"} />}
-                {activeTab === "variables" && <VariablesTab moduleId={moduleId || "mod-canvas-draft"} />}
+          <CanvasDropZone disabled={!!componentTree}>
+            {componentTree ? (
+              <div className="p-slate-live-app" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "6px 10px",
+                    borderRadius: 6,
+                    background: "rgba(79,70,229,0.08)",
+                    border: "1px solid #c7d2fe",
+                    fontSize: 11,
+                    color: "#4f46e5",
+                  }}
+                >
+                  <span>
+                    ● 应用预览（运行态）· {Object.keys(componentTree).length} 组件 ·
+                    root={componentTree.root?.type || "—"}
+                  </span>
+                  <span style={{ fontSize: 10, opacity: 0.7 }}>
+                    可编辑应用（运行态只读预览）
+                  </span>
+                </div>
+                <ComponentRenderer components={componentTree} />
               </div>
-            )}
-            {activeTab === "objects" && (
-            <React.Fragment>
-            {nodes.length === 0 ? (
+            ) : nodes.length === 0 ? (
               <p className="muted" style={{ textAlign: "center", padding: "40px" }}>
                 从左侧调色板添加 Widget 开始构建
               </p>
             ) : (
-              nodes.map((n) => (
-                <div
-                  key={n.id}
-                  className={`p-slate-widget${n.id === selected ? " is-selected" : ""}`}
-                  style={{ marginBottom: "16px" }}
-                  draggable
-                  onDragStart={() => setDragId(n.id)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={() => onDrop(n.id)}
-                  onClick={() => setSelected(n.id)}
-                >
-                  <div className="p-slate-widget-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span className="p-slate-widget-title">{n.title}</span>
-                    <div style={{ display: "flex", gap: "4px" }}>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); moveNode(n.id, -1); }}
-                        style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", opacity: 0.7, padding: "2px 4px" }}
-                        title="上移"
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); moveNode(n.id, 1); }}
-                        style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", opacity: 0.7, padding: "2px 4px" }}
-                        title="下移"
-                      >
-                        ↓
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); removeNode(n.id); }}
-                        style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", opacity: 0.7, padding: "2px 4px" }}
-                        title="删除"
-                      >
-                        <NavIcon name="trash" style={{ width: "12px", height: "12px" }} />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="p-slate-widget-body">
-                    <WidgetPreview
+              <SortableContext items={nodes.map((n) => n.id)} strategy={verticalListSortingStrategy}>
+                {nodes.map((n) => (
+                  <div
+                    key={n.id}
+                    className={`p-slate-widget${n.id === selected ? " is-selected" : ""}`}
+                    style={{ marginBottom: "16px" }}
+                  >
+                    <SortableCanvasNode
                       node={n}
+                      onClick={() => setSelected(n.id)}
+                      onRemove={() => removeNode(n.id)}
                       rows={rows}
-                      onConfig={(patch) => updateNode(n.id, { config: { ...n.config, ...patch } })}
+                      moveNode={moveNode}
                     />
                   </div>
-                </div>
-              ))
+                ))}
+              </SortableContext>
             )}
 
             <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px solid var(--aos-border)" }}>
@@ -804,14 +1279,75 @@ export function CanvasPage() {
                 <p className="muted">无行 · 改 Filter site 或到数据连接接入源后刷新</p>
               )}
             </div>
-            </React.Fragment>
-            )}
-          </div>
 
-          <aside className="p-slate-props">
+            {/* 底部相关配置链接 · 对齐视觉稿 */}
+            <div style={{ padding: "8px 16px", borderTop: "1px solid var(--aos-border)", fontSize: "12px", color: "var(--aos-text-muted)", display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
+              <span>相关配置:</span>
+              <Link to="/workshop/events" style={{ color: "var(--aos-accent)", textDecoration: "none" }}>事件配置 →</Link>
+              <Link to="/workshop/module-interface" style={{ color: "var(--aos-accent)", textDecoration: "none" }}>模块接口 →</Link>
+            </div>
+          </CanvasDropZone>
+
+          <aside className={`p-slate-props${rightCollapsed ? " is-collapsed" : ""}`}>
+            {rightCollapsed ? (
+              <button
+                type="button"
+                className="p-slate-side-restore"
+                onClick={() => setRightCollapsed(false)}
+                title="展开属性面板"
+                aria-label="展开属性面板"
+              >
+                <span className="p-slate-side-restore-label">属性</span>
+                <NavIcon name="chevron" style={{ width: "12px", height: "12px", color: "var(--aos-text-tertiary)" }} />
+              </button>
+            ) : (
+              <>
             <div className="p-slate-props-header">
               <NavIcon name="apps" style={{ width: "14px", height: "14px", color: "var(--aos-accent)" }} />
-              <span>{node ? node.title : "未选中 Widget"}</span>
+              <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {node ? node.title : "未选中 Widget"}
+              </span>
+              <button
+                type="button"
+                className="p-slate-side-collapse-btn"
+                onClick={() => setRightCollapsed(true)}
+                title="折叠属性面板（向右收起）"
+                aria-label="折叠属性面板"
+                style={{ position: "static", width: 22, height: 22 }}
+              >
+                <NavIcon name="chevron" style={{ width: "12px", height: "12px" }} />
+              </button>
+            </div>
+
+            {/* 属性面板 Tab 切换 · 对齐视觉稿 */}
+            <div style={{ display: "flex", borderBottom: "1px solid var(--aos-border)", padding: "0 4px" }}>
+              {([
+                { id: "content", label: "内容" },
+                { id: "style", label: "样式" },
+                { id: "events", label: "事件" },
+                { id: "data", label: "数据" },
+              ] as const).map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setPropTab(tab.id)}
+                  style={{
+                    padding: "6px 10px",
+                    fontSize: "11px",
+                    fontWeight: propTab === tab.id ? 500 : 400,
+                    borderBottom: propTab === tab.id ? "2px solid var(--aos-accent)" : "none",
+                    color: propTab === tab.id ? "var(--aos-accent)" : "var(--aos-text-muted)",
+                    background: "none",
+                    border: "none",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    borderRight: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
             {!node ? (
@@ -820,16 +1356,19 @@ export function CanvasPage() {
               </div>
             ) : (
               <>
-                <div className="p-slate-props-section">
-                  <div className="p-slate-props-label">CONTENT</div>
-                  <div className="p-slate-props-toggle">
-                    <button type="button">Markdown</button>
-                    <button type="button" className="is-active">HTML</button>
-                  </div>
-                  <div className="p-slate-props-code">
-                    {`// ${node.kind} · ${node.id}\n// plugin: ${node.pluginId || "built-in"}`}
-                  </div>
-                </div>
+                {/* 内容 Tab */}
+                {propTab === "content" && (
+                  <>
+                    <div className="p-slate-props-section">
+                      <div className="p-slate-props-label">CONTENT</div>
+                      <div className="p-slate-props-toggle">
+                        <button type="button">Markdown</button>
+                        <button type="button" className="is-active">HTML</button>
+                      </div>
+                      <div className="p-slate-props-code">
+                        {`// ${node.kind} · ${node.id}\n// plugin: ${node.pluginId || "built-in"}`}
+                      </div>
+                    </div>
 
                 <div className="p-slate-props-section" style={{ paddingTop: "0" }}>
                   <div className="p-slate-props-label">WIDGET CONFIG</div>
@@ -1102,6 +1641,66 @@ export function CanvasPage() {
                     </>
                   )}
                 </div>
+                  </>
+                )}
+
+                {/* 样式 Tab · 对齐视觉稿 */}
+                {propTab === "style" && (
+                  <div style={{ padding: "8px" }}>
+                    <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--aos-text-muted)", marginBottom: "8px" }}>布局</div>
+                    <div style={{ display: "flex", gap: "4px", marginBottom: "8px" }}>
+                      <button style={{ flex: 1, padding: "4px", fontSize: "10px", border: "1px solid var(--aos-border)", borderRadius: "4px", background: "var(--aos-surface)", cursor: "pointer", color: "var(--aos-text)" }}>横向</button>
+                      <button style={{ flex: 1, padding: "4px", fontSize: "10px", border: "1px solid #c7d2fe", borderRadius: "4px", background: "rgba(79,70,229,0.06)", color: "#4f46e5", cursor: "pointer" }}>纵向</button>
+                      <button style={{ flex: 1, padding: "4px", fontSize: "10px", border: "1px solid var(--aos-border)", borderRadius: "4px", background: "var(--aos-surface)", cursor: "pointer", color: "var(--aos-text)" }}>栅格</button>
+                    </div>
+                    <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--aos-text-muted)", marginBottom: "4px" }}>间距</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+                      <input type="range" min={0} max={40} defaultValue={16} style={{ flex: 1, colorScheme: "dark" }} />
+                      <span style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>16px</span>
+                    </div>
+                    <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--aos-text-muted)", marginBottom: "4px" }}>背景色</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      <div style={{ width: 20, height: 20, borderRadius: "4px", border: "1px solid var(--aos-border)", background: "var(--aos-surface)" }} />
+                      <span style={{ fontSize: "10px", color: "var(--aos-text-muted)", fontFamily: "monospace" }}>#FFFFFF</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 事件 Tab · 对齐视觉稿 */}
+                {propTab === "events" && (
+                  <div style={{ padding: "8px" }}>
+                    <div style={{ fontSize: "11px", color: "var(--aos-text-muted)", marginBottom: "6px" }}>绑定此组件的事件处理：</div>
+                    <div style={{ border: "1px solid var(--aos-border)", borderRadius: "6px", padding: "6px", marginBottom: "4px" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--aos-text)" }}>onPageLoad</div>
+                      <div style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>→ initDefaultFilter()</div>
+                    </div>
+                    <div style={{ border: "1px solid var(--aos-border)", borderRadius: "6px", padding: "6px", marginBottom: "4px" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--aos-text)" }}>onResize</div>
+                      <div style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>→ setBreakpoint(width)</div>
+                    </div>
+                    <Link to="/workshop/events" style={{ display: "block", fontSize: "11px", color: "#4f46e5", textAlign: "center", padding: "4px", border: "1px dashed #c7d2fe", borderRadius: "6px", textDecoration: "none", marginTop: "4px" }}>
+                      + 绑定新事件 →
+                    </Link>
+                  </div>
+                )}
+
+                {/* 数据 Tab · 对齐视觉稿 */}
+                {propTab === "data" && (
+                  <div style={{ padding: "8px" }}>
+                    <div style={{ fontSize: "11px", color: "var(--aos-text-muted)", marginBottom: "6px" }}>绑定数据源：</div>
+                    <div style={{ border: "1px solid var(--aos-border)", borderRadius: "6px", padding: "6px", marginBottom: "4px" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--aos-text)" }}>ObjectSet: {node.config?.objectType || "WorkOrder"}</div>
+                      <div style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>属性: id, title, site, status</div>
+                    </div>
+                    <div style={{ border: "1px solid var(--aos-border)", borderRadius: "6px", padding: "6px", marginBottom: "4px" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--aos-text)" }}>变量: $selected_site</div>
+                      <div style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>类型: String · 默认: "DC-East"</div>
+                    </div>
+                    <Link to="/workshop/variables" style={{ display: "block", fontSize: "11px", color: "#4f46e5", textAlign: "center", padding: "4px", border: "1px dashed #c7d2fe", borderRadius: "6px", textDecoration: "none", marginTop: "4px" }}>
+                      + 绑定变量或 ObjectSet
+                    </Link>
+                  </div>
+                )}
 
                 <div className="p-slate-props-section" style={{ marginTop: "auto", borderTop: "1px solid var(--aos-border-light)" }}>
                   <p className="muted" style={{ fontSize: "10px", margin: 0 }}>
@@ -1110,10 +1709,119 @@ export function CanvasPage() {
                 </div>
               </>
             )}
+              </>
+            )}
           </aside>
         </div>
-        )}
-      </div>
+            )}
+          </div>
+
+          {/* 下半屏 · Tab 内容面板（与画布正交展示） */}
+          <div
+            className={`p-slate-bottom-panel${bottomPanelCollapsed ? " is-collapsed" : ""}`}
+            style={!bottomPanelCollapsed ? { height: bottomPanelHeight, flex: "0 0 auto" } : undefined}
+          >
+            {!bottomPanelCollapsed && (
+              <div
+                className="p-slate-bottom-panel-resizer"
+                onMouseDown={(e) => {
+                  draggingRef.current = { startY: e.clientY, startH: bottomPanelHeight };
+                  document.body.style.userSelect = "none";
+                  document.body.style.cursor = "row-resize";
+                }}
+              >
+                <span className="p-slate-bottom-panel-resizer-grip" />
+              </div>
+            )}
+            <div className="p-slate-bottom-panel-header">
+              <div className="p-slate-bottom-panel-title">
+                <span>{TOOLBAR_TABS.find((t) => t.id === activeTab)?.label || "Objects"}</span>
+                <span className="muted" style={{ fontSize: "11px", fontWeight: 400 }}>
+                  · 与上方画布正交展示 · 切换 Tab 不影响画布
+                </span>
+              </div>
+              <button
+                type="button"
+                className="p-slate-bottom-panel-toggle"
+                onClick={() => setBottomPanelCollapsed((v) => !v)}
+                title={bottomPanelCollapsed ? "展开面板" : "折叠面板"}
+              >
+                {bottomPanelCollapsed ? "▲ 展开" : "▼ 折叠"}
+              </button>
+            </div>
+            {!bottomPanelCollapsed && (
+              <div className="p-slate-bottom-panel-content">
+                {activeTab === "objects" && (
+                  <div style={{ padding: "12px", fontSize: "12px" }}>
+                    <div className="muted" style={{ marginBottom: "10px" }}>
+                      当前画布对象（{nodes.length}）· 选中后在上方画布中编辑
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "6px" }}>
+                      {nodes.map((n) => (
+                        <button
+                          key={n.id}
+                          type="button"
+                          onClick={() => setSelected(n.id)}
+                          style={{
+                            padding: "8px 10px",
+                            borderRadius: "4px",
+                            background: n.id === selected ? "var(--aos-accent-light)" : "var(--aos-surface)",
+                            border: `1px solid ${n.id === selected ? "var(--aos-accent)" : "var(--aos-border)"}`,
+                            color: n.id === selected ? "var(--aos-accent)" : "var(--aos-text)",
+                            cursor: "pointer",
+                            textAlign: "left",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "2px",
+                          }}
+                        >
+                          <span style={{ fontSize: "11px", fontWeight: 500 }}>{n.title}</span>
+                          <span style={{ fontSize: "10px", opacity: 0.7 }}>
+                            {sectionLabel(n.kind)} · {n.pluginId || "built-in"}
+                          </span>
+                        </button>
+                      ))}
+                      {nodes.length === 0 && (
+                        <span className="muted" style={{ fontSize: "11px" }}>画布为空，从左侧调色板添加 Widget</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {activeTab === "dashboard" && <DashboardTab moduleId={moduleId || "mod-canvas-draft"} />}
+                {activeTab === "queries" && <QueriesTab moduleId={moduleId || "mod-canvas-draft"} />}
+                {activeTab === "functions" && <FunctionsTab moduleId={moduleId || "mod-canvas-draft"} />}
+                {activeTab === "events" && <EventsTab moduleId={moduleId || "mod-canvas-draft"} />}
+                {activeTab === "data" && <DataTab moduleId={moduleId || "mod-canvas-draft"} />}
+                {activeTab === "dependencies" && <DependenciesTab moduleId={moduleId || "mod-canvas-draft"} />}
+                {activeTab === "styles" && <StylesTab moduleId={moduleId || "mod-canvas-draft"} />}
+                {activeTab === "variables" && <VariablesTab moduleId={moduleId || "mod-canvas-draft"} />}
+              </div>
+            )}
+          </div>
+        </div>
+        </div>
+
+        <DragOverlay>
+          {activeItem && (
+            <div
+              style={{
+                padding: "8px 12px",
+                borderRadius: "6px",
+                background: "var(--aos-surface)",
+                border: "1px solid var(--aos-accent)",
+                fontSize: "12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              }}
+            >
+              <span>{KIND_ICON[activeItem.kind] || "📦"}</span>
+              <span>{activeItem.label.replace(/^\+\s*/, "")}</span>
+            </div>
+          )}
+        </DragOverlay>
+      </DndContext>
 
       <div style={{ marginTop: "12px", display: "flex", gap: "12px", fontSize: "12px" }}>
         <Link to="/workshop/module-interface" className="btn-nav" style={{ textDecoration: "none" }}>
@@ -1124,6 +1832,96 @@ export function CanvasPage() {
         </Link>
       </div>
     </PageChrome>
+  );
+}
+
+function CanvasDropZone({ children, disabled }: { children: React.ReactNode; disabled: boolean }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: "canvas-drop-zone",
+    disabled,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className="p-slate-canvas"
+      style={{
+        border: isOver && !disabled ? "2px dashed var(--aos-accent)" : undefined,
+        background: isOver && !disabled ? "rgba(79,70,229,0.04)" : undefined,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function DraggablePaletteItem({ item, onClick }: { item: PaletteItem; onClick: () => void }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: item.kind,
+    data: { item },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      onClick={onClick}
+      title={item.runtime ? `runtime=${item.runtime}` : undefined}
+      style={{
+        padding: "5px 6px",
+        borderRadius: "4px",
+        background: isDragging ? "var(--aos-accent-light)" : "var(--aos-surface)",
+        border: `0.5px solid ${isDragging ? "var(--aos-accent)" : "var(--aos-border)"}`,
+        fontSize: "10px",
+        cursor: "grab",
+        display: "flex",
+        alignItems: "center",
+        gap: "4px",
+        color: "var(--aos-text)",
+        opacity: isDragging ? 0.5 : 1,
+      }}
+    >
+      <span style={{ fontSize: "12px" }}>{KIND_ICON[item.kind] || "📦"}</span>
+      <span style={{ fontSize: "11px" }}>
+        {item.label.replace(/^\+\s*/, "")}
+        {item.stub ? " · stub" : ""}
+      </span>
+    </div>
+  );
+}
+
+function SortableCanvasNode({ node, onClick, onRemove, rows, moveNode }: { node: CanvasNode; onClick: () => void; onRemove: () => void; rows: Row[]; moveNode: (id: string, dir: -1 | 1) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: node.id,
+    data: { node },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="p-slate-widget">
+      <div className="p-slate-widget-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <button type="button" className="p-slate-widget-title" {...attributes} {...listeners} onClick={onClick} style={{ background: "none", border: "none", cursor: "grab", display: "flex", alignItems: "center", gap: "4px" }}>
+          <span>{KIND_ICON[node.kind] || "📦"}</span>
+          <span>{node.title || node.kind}</span>
+        </button>
+        <div style={{ display: "flex", gap: "4px" }}>
+          <button type="button" onClick={(e) => { e.stopPropagation(); moveNode(node.id, -1); }} style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", opacity: 0.7, padding: "2px 4px" }} title="上移">↑</button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); moveNode(node.id, 1); }} style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", opacity: 0.7, padding: "2px 4px" }} title="下移">↓</button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); onRemove(); }} style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", opacity: 0.7, padding: "2px 4px" }} title="删除">
+            <NavIcon name="trash" style={{ width: "12px", height: "12px" }} />
+          </button>
+        </div>
+      </div>
+      <div className="p-slate-widget-body">
+        <WidgetPreview node={node} rows={rows} />
+      </div>
+    </div>
   );
 }
 

@@ -48,14 +48,6 @@ export async function fetchOverviewMetrics(): Promise<OverviewMetrics> {
     apiGet<{ items: unknown[]; sidecar?: string; defaultTextModel?: string }>("/v1/aip/models"),
     apiGet<{ items: unknown[]; totals?: { all: number } }>("/v1/plugins"),
     apiGet<{ items: unknown[] }>("/v1/aip/tools"),
-    apiGet<{
-      snapshot?: {
-        objectCount?: number;
-        pendingDrafts?: number;
-        objectTypePublished?: boolean;
-        modules?: number;
-      };
-    }>("/v1/demo/story"),
     apiGet<{ items: unknown[] }>("/v1/datasets"),
     apiGet<{ items: unknown[] }>("/v1/builds"),
     apiGet<{ green?: boolean }>("/v1/aip/evals/status"),
@@ -65,20 +57,22 @@ export async function fetchOverviewMetrics(): Promise<OverviewMetrics> {
   const models = results[1].status === "fulfilled" ? results[1].value : null;
   const plugins = results[2].status === "fulfilled" ? results[2].value : null;
   const tools = results[3].status === "fulfilled" ? results[3].value : null;
-  const story = results[4].status === "fulfilled" ? results[4].value : null;
-  const datasets = results[5].status === "fulfilled" ? results[5].value : null;
-  const builds = results[6].status === "fulfilled" ? results[6].value : null;
-  const evals = results[7].status === "fulfilled" ? results[7].value : null;
+  const datasets = results[4].status === "fulfilled" ? results[4].value : null;
+  const builds = results[5].status === "fulfilled" ? results[5].value : null;
+  const evals = results[6].status === "fulfilled" ? results[6].value : null;
 
-  next.modules = mod?.items?.length ?? story?.snapshot?.modules ?? 0;
+  next.modules = mod?.items?.length ?? 0;
   next.models = models?.items?.length ?? 0;
   next.plugins = plugins?.totals?.all ?? plugins?.items?.length ?? 0;
   next.tools = tools?.items?.length ?? 0;
   next.sidecar = models?.sidecar || "—";
   next.defaultModel = models?.defaultTextModel || "—";
-  next.workOrders = story?.snapshot?.objectCount ?? 0;
-  next.pendingDrafts = story?.snapshot?.pendingDrafts ?? 0;
-  next.objectTypePublished = Boolean(story?.snapshot?.objectTypePublished);
+  // TODO(持久化改造): workOrders / pendingDrafts / objectTypePublished
+  //   原 /v1/demo/story 接口已下线（种子数据收敛 v2.2 Phase 5）。
+  //   后续改为通过 /v1/object-sets/query (WorkOrder) + /v1/aip/drafts 真实接口获取。
+  next.workOrders = 0;
+  next.pendingDrafts = 0;
+  next.objectTypePublished = false;
   next.datasets = datasets?.items?.length ?? 0;
   next.builds = builds?.items?.length ?? 0;
   next.evalsGreen = Boolean(evals?.green);

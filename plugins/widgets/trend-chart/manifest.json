@@ -1,0 +1,22 @@
+{
+  "id": "trend-chart",
+  "name": "Trend Chart",
+  "nameZh": "趋势图",
+  "description": "时间序列折线：按 dateField 聚合 N 天 · scheme 223",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "inproc",
+  "capabilities": ["widget", "trend-chart"],
+  "canvasKind": "trend-chart",
+  "palette": true,
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "title": { "type": "string" },
+      "objectType": { "type": "string" },
+      "dateField": { "type": "string" },
+      "days": { "type": "number" },
+      "endDate": { "type": "string" }
+    }
+  }
+}

@@ -181,14 +181,9 @@ def _sample_workorder_docs(limit: int = 8) -> list[dict[str, Any]]:
             items.append({"id": r["object_id"], **props})
     except Exception as exc:  # noqa: BLE001
         log.debug("vector_index_sample_pg_skip err=%s", exc)
-        try:
-            from aos_api import mock_data
-
-            blob = mock_data.query_objects(filters=[], page=1, page_size=limit)
-            items = list(blob.get("items") or []) if isinstance(blob, dict) else []
-        except Exception as exc2:  # noqa: BLE001
-            log.debug("vector_index_sample_mock_skip err=%s", exc2)
-            return []
+        return []
+        # TODO(持久化改造): PG 不可用时不再降级到 mock_data 假数据。
+        # 真实向量索引持久化实现待补齐。
 
     out: list[dict[str, Any]] = []
     for it in items:

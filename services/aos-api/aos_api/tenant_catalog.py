@@ -57,7 +57,11 @@ def ensure_tenant_catalog_schema() -> None:
 
 
 def boot_tenant_catalogs() -> None:
-    """Load PG → memory, then upsert Dev seeds (do not wipe user orgs)."""
+    """Load PG → memory only; do **not** auto-seed dev-org.
+
+    dev-org / dev-project / 默认人员等测试数据已迁移到 ``aos_api.demo.seed_test_org``。
+    企业上线后由管理员自建组织；开发/测试显式执行 ``seed_test_org()``。
+    """
     ensure_tenant_catalog_schema()
     from aos_api import membership as mem
     from aos_api import orgs as org_store
@@ -66,9 +70,6 @@ def boot_tenant_catalogs() -> None:
     org_store.load_orgs_from_db()
     ws_cat.load_workspaces_from_db()
     mem.load_memberships_from_db()
-    org_store.seed_dev_orgs()
-    ws_cat.seed_dev_workspaces()
-    mem.seed_dev_defaults(reset_persons=False)
     log.info(
         "tenant_catalog_booted orgs=%s workspaces=%s members=%s",
         org_store.org_count(),

@@ -1,0 +1,1612 @@
+import { useState } from "react";
+import { PageChrome } from "../../components/PageChrome";
+import { apiPost } from "../../api/client";
+
+type SourceType = "github" | "local" | "market";
+type AdapterType = "http" | "process" | "mcp" | "docker" | "session";
+
+const STEPS = [
+  { num: 1, label: "选择来源" },
+  { num: 2, label: "仓库扫描" },
+  { num: 3, label: "配置 Manifest" },
+  { num: 4, label: "安全与网络" },
+  { num: 5, label: "连通测试与安全扫描" },
+];
+
+const ADAPTER_TYPES = [
+  { key: "http", label: "HTTP API", desc: "外部服务 URL", tag: "REST/GraphQL", color: "blue" },
+  { key: "process", label: "Process Wrapper", desc: "沙箱子进程", tag: "Python/Node 脚本", color: "green", recommended: true },
+  { key: "mcp", label: "MCP Bridge", desc: "协议桥接", tag: "MCP Server", color: "purple" },
+  { key: "docker", label: "Docker Container", desc: "K8s Pod", tag: "独立运行环境", color: "amber" },
+  { key: "session", label: "Session Gateway", desc: "长连接", tag: "音视频/数字人", color: "pink" },
+];
+
+const SCAN_RESULTS = [
+  { label: "框架检测", value: "Streamlit + LangChain", status: "pass", statusText: "已识别" },
+  { label: "入口文件", value: "agent.py · main()", status: "pass", statusText: "已识别", mono: true },
+  { label: "依赖清单", value: "langchain, openai, pydantic", status: "pass", statusText: "兼容" },
+  { label: "模型依赖", value: "OpenAI GPT-4", status: "info", statusText: "→ 路由 gpt-5.2" },
+  { label: "运行模式", value: "sync（单次调用 <15s）", status: "info", statusText: "C0" },
+  { label: "外部服务", value: "无（纯 LLM 调用）", status: "pass", statusText: "安全" },
+  { label: "代码量", value: "~450 行 Python", status: "muted", statusText: "轻量" },
+];
+
+const CONNECT_TESTS = [
+  { label: "代码拉取", detail: "git clone · 2.3MB · 完成", status: "pass" },
+  { label: "依赖安装", detail: "pip install · 8 packages · 完成", status: "pass" },
+  { label: "沙箱启动", detail: "cgroups + seccomp · 就绪", status: "pass" },
+  { label: "LLM 路由", detail: "gpt-5.2-prod · 可达 (23ms)", status: "pass" },
+  { label: "冒烟测试", detail: "发送测试请求 → 等待响应…", status: "pending" },
+];
+
+const SECURITY_SCANS = [
+  { category: "命令注入", content: "os.system() · subprocess 无沙箱调用", result: "pass", resultText: "通过" },
+  { category: "代码执行", content: "eval() · __import__() · compile()", result: "fail", resultText: "P1 · 2 处", highlight: true },
+  { category: "数据泄露", content: "硬编码密钥 · 明文 Token · 日志敏感信息", result: "pass", resultText: "通过" },
+  { category: "Prompt 注入", content: "用户输入拼入系统提示词 · 模板变量未转义", result: "warn", resultText: "P2 · 1 处", highlight: true },
+  { category: "依赖供应链", content: "requirements.txt 已知恶意包 · 版本漏洞", result: "pass", resultText: "通过" },
+  { category: "权限提升", content: "文件系统越权 · 网络端口越权 · cgroups 逃逸", result: "pass", resultText: "通过" },
+];
+
+export function AgentImportPage() {
+  const [step, setStep] = useState(1);
+  const [sourceType, setSourceType] = useState<SourceType>("github");
+  const [adapterType, setAdapterType] = useState<AdapterType>("process");
+  const [securityApproved, setSecurityApproved] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [githubUrl, setGithubUrl] = useState("github.com/Shubhamsaboo/awesome-llm-apps");
+  const [agentPath, setAgentPath] = useState("advanced_ai_agents/single_agent_apps/ai_fraud_investigation_agent");
+  const [branch, setBranch] = useState("main");
+
+  const [capName, setCapName] = useState("fraud-investigation");
+  const [capDisplayName, setCapDisplayName] = useState("欺诈调查分析 Agent");
+  const [capDesc, setCapDesc] = useState("分析交易记录，识别欺诈模式，生成调查报告");
+  const [capLevel, setCapLevel] = useState("C0 sync");
+  const [timeout, setTimeout] = useState("60");
+  const [memory, setMemory] = useState("512Mi");
+
+  const [sandboxLevel, setSandboxLevel] = useState("strict");
+  const [cpuLimit, setCpuLimit] = useState("1 core");
+  const [rateLimit, setRateLimit] = useState("30");
+  const [guardrails, setGuardrails] = useState({
+    noFsWrite: true,
+    noFork: true,
+    tokenLimit: true,
+    autoDraft: true,
+  });
+  const [showGuide, setShowGuide] = useState(true);
+
+  const goStep = (n: number) => {
+    if (n < 1 || n > 5) return;
+    setStep(n);
+    setError(null);
+  };
+
+  const handleFinish = async () => {
+    if (!securityApproved) {
+      setError("请管理员确认接受安全风险后再继续");
+      return;
+    }
+    setError(null);
+    setImporting(true);
+    try {
+      await apiPost("/v1/aip/agent-import", {
+        source_type: sourceType,
+        adapter_type: adapterType,
+        name: capName,
+        security_approved: securityApproved,
+      });
+      setImporting(false);
+      setSuccess(true);
+    } catch (e) {
+      setError(String((e as Error).message || e));
+      setImporting(false);
+    }
+  };
+
+  const adapterInfo = ADAPTER_TYPES.find((a) => a.key === adapterType);
+
+  const yamlContent = `# Capability Manifest — auto-filled
+apiVersion: v1
+kind: Capability
+metadata:
+  name: ${capName}
+  displayName: ${capDisplayName}
+  version: 1.0.0
+  source:
+    repo: awesome-llm-apps
+    path: advanced_ai_agents/.../ai_fraud
+    license: Apache-2.0
+spec:
+  adapter: ${adapterInfo?.label || "Process Wrapper"}
+  capabilityLevel: ${capLevel.split(" ")[0]}
+  runtime:
+    entrypoint: agent.py:main()
+    timeout: ${timeout}
+    memory: ${memory}
+  model:
+    provider: openai
+    routing: gpt-5.2-prod
+  interface:
+    input: "{transactions: []}"
+    output: "{report: string}"
+    writeBack: false`;
+
+  if (success) {
+    return (
+      <PageChrome title="智能体导入" lede="从外部来源导入智能体 · 支持 Adapter 桥接">
+        <div style={{ textAlign: "center", padding: "64px 24px" }}>
+          <div style={{ fontSize: 56, marginBottom: 16, color: "#059669" }}>✓</div>
+          <div style={{ fontSize: 22, fontWeight: 600, color: "#1F2937", marginBottom: 8 }}>导入成功</div>
+          <p style={{ fontSize: 14, color: "#6B7280", marginBottom: 4 }}>
+            <strong style={{ color: "#374151" }}>{capDisplayName}</strong> 已成功导入并注册为 Capability
+          </p>
+          <p style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 20 }}>
+            Adapter: {adapterInfo?.label} · 能力等级: {capLevel}
+          </p>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+            <button
+              onClick={() => {
+                setSuccess(false);
+                setStep(1);
+              }}
+              style={{
+                padding: "8px 20px",
+                fontSize: 13,
+                borderRadius: 6,
+                border: "1px solid #D1D5DB",
+                background: "#fff",
+                color: "#374151",
+                cursor: "pointer",
+              }}
+            >
+              继续导入
+            </button>
+            <button
+              style={{
+                padding: "8px 20px",
+                fontSize: 13,
+                fontWeight: 500,
+                borderRadius: 6,
+                border: "none",
+                background: "#B45309",
+                color: "#fff",
+                cursor: "pointer",
+              }}
+            >
+              去智能体目录
+            </button>
+          </div>
+        </div>
+      </PageChrome>
+    );
+  }
+
+  return (
+    <PageChrome title="导入外部 Agent（Adapter 桥接）" lede="从开源社区或自有代码导入 Agent，通过 Adapter 桥接为平台 Capability。">
+      {/* Adapter 路径说明 */}
+      <div
+        style={{
+          borderRadius: 12,
+          border: "1px solid rgba(59, 130, 246, 0.2)",
+          background: "rgba(239, 246, 255, 0.6)",
+          padding: "14px 16px",
+          marginBottom: "1.25rem",
+        }}
+      >
+        <div style={{ fontSize: 13, fontWeight: 600, color: "#1D4ED8", marginBottom: 8 }}>Adapter 路径说明</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+          {ADAPTER_TYPES.map((a) => (
+            <div
+              key={a.key}
+              style={{
+                textAlign: "center",
+                padding: "10px 6px",
+                borderRadius: 6,
+                background: "rgba(255,255,255,0.7)",
+                border: adapterType === a.key ? "1px solid #B45309" : "1px solid transparent",
+                cursor: "pointer",
+                transition: "all 0.15s",
+              }}
+              onClick={() => setAdapterType(a.key as AdapterType)}
+            >
+              <div style={{ fontWeight: 600, color: "#111827", fontSize: 12 }}>{a.label}</div>
+              <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>{a.desc}</div>
+              <div
+                style={{
+                  fontSize: 9,
+                  marginTop: 3,
+                  color:
+                    a.color === "blue"
+                      ? "#3B82F6"
+                      : a.color === "green"
+                        ? "#10B981"
+                        : a.color === "purple"
+                          ? "#8B5CF6"
+                          : a.color === "amber"
+                            ? "#F59E0B"
+                            : "#EC4899",
+                }}
+              >
+                {a.tag}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 24 }}>
+        {/* 左侧步骤导航 */}
+        <aside style={{ width: 224, flexShrink: 0 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {STEPS.map((s) => {
+              const isActive = step === s.num;
+              const isDone = step > s.num;
+              return (
+                <div
+                  key={s.num}
+                  onClick={() => goStep(s.num)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "10px 12px",
+                    borderRadius: 6,
+                    cursor: "pointer",
+                    fontSize: 13,
+                    color: isActive ? "#B45309" : isDone ? "#B45309" : "#5F5E5A",
+                    fontWeight: isActive ? 500 : 400,
+                    background: isActive ? "#FEF3E8" : "transparent",
+                    border: isActive ? "0.5px solid #F59E0B" : "0.5px solid transparent",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 11,
+                      fontWeight: 500,
+                      background: isDone ? "#B45309" : isActive ? "#B45309" : "#D3D1C7",
+                      color: isDone || isActive ? "#fff" : "#5F5E5A",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {isDone ? "✓" : s.num}
+                  </div>
+                  <span>{s.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </aside>
+
+        {/* 右侧内容区 */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {error && (
+            <div
+              style={{
+                background: "#FEE2E2",
+                color: "#991B1B",
+                padding: "8px 12px",
+                borderRadius: 6,
+                marginBottom: 12,
+                fontSize: 13,
+              }}
+            >
+              {error}
+            </div>
+          )}
+
+          {/* Step 1: 选择来源 */}
+          {step === 1 && (
+            <div>
+              <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: "0 0 4px 0" }}>选择 Agent 来源</h2>
+              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px 0" }}>
+                支持从 GitHub 仓库、本地代码库或市场导入
+              </p>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                {[
+                  { key: "github", label: "GitHub 仓库", desc: "从 awesome-llm-apps 或任意 GitHub 仓库导入", icon: "⌨" },
+                  { key: "local", label: "本地代码库", desc: "从 AOS 代码库中已有的 Agent 代码导入", icon: "📁" },
+                  { key: "market", label: "市场安装", desc: "从 AOS Capability Marketplace 搜索安装", icon: "🛒" },
+                ].map((src) => (
+                  <div
+                    key={src.key}
+                    onClick={() => setSourceType(src.key as SourceType)}
+                    style={{
+                      border: sourceType === src.key ? "1.5px solid #B45309" : "0.5px solid #B4B2A9",
+                      borderRadius: 8,
+                      padding: 14,
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                      background: sourceType === src.key ? "#FEF3E8" : "#fff",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                      <span style={{ fontSize: 18 }}>{src.icon}</span>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>{src.label}</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: "#6B7280", lineHeight: 1.5 }}>{src.desc}</div>
+                  </div>
+                ))}
+              </div>
+
+              {sourceType === "github" && (
+                <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div>
+                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>
+                      仓库地址（GitHub URL）
+                    </label>
+                    <input
+                      value={githubUrl}
+                      onChange={(e) => setGithubUrl(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "6px 10px",
+                        border: "0.5px solid #B4B2A9",
+                        borderRadius: 4,
+                        fontSize: 12,
+                        background: "#fff",
+                        color: "#1A1A1A",
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div>
+                      <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>
+                        Agent 路径（仓库内子目录）
+                      </label>
+                      <input
+                        value={agentPath}
+                        onChange={(e) => setAgentPath(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: "6px 10px",
+                          border: "0.5px solid #B4B2A9",
+                          borderRadius: 4,
+                          fontSize: 12,
+                          background: "#fff",
+                          color: "#1A1A1A",
+                          outline: "none",
+                          boxSizing: "border-box",
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>分支</label>
+                      <input
+                        value={branch}
+                        onChange={(e) => setBranch(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: "6px 10px",
+                          border: "0.5px solid #B4B2A9",
+                          borderRadius: 4,
+                          fontSize: 12,
+                          background: "#fff",
+                          color: "#1A1A1A",
+                          outline: "none",
+                          boxSizing: "border-box",
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: 8,
+                      background: "rgba(240, 253, 244, 0.7)",
+                      border: "1px solid #BBF7D0",
+                      fontSize: 11,
+                      color: "#374151",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <span style={{ color: "#059669", fontSize: 14 }}>✓</span>
+                    <span>仓库可达 · Apache-2.0 许可证 · 包含 requirements.txt + agent.py</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 2: 仓库扫描 */}
+          {step === 2 && (
+            <div>
+              <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: "0 0 4px 0" }}>仓库自动扫描</h2>
+              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px 0" }}>
+                平台分析 Agent 代码结构，自动推荐 Adapter 类型和运行模式
+              </p>
+
+              {/* 扫描结果 */}
+              <div
+                style={{
+                  borderRadius: 8,
+                  border: "1px solid #E5E7EB",
+                  background: "#fff",
+                  overflow: "hidden",
+                  marginBottom: 16,
+                }}
+              >
+                <div
+                  style={{
+                    padding: "8px 14px",
+                    borderBottom: "1px solid #E5E7EB",
+                    background: "#F9FAFB",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: "#111827",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <span style={{ color: "#F59E0B" }}>⌕</span>
+                  扫描结果
+                </div>
+                <div>
+                  {SCAN_RESULTS.map((r, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "6px 14px",
+                        fontSize: 12,
+                        borderBottom: i < SCAN_RESULTS.length - 1 ? "0.5px solid #E5E5E2" : "none",
+                      }}
+                    >
+                      <span style={{ width: 100, color: "#6B7280", flexShrink: 0 }}>{r.label}</span>
+                      <span
+                        style={{
+                          fontWeight: 500,
+                          color: "#111827",
+                          fontFamily: r.mono ? "Menlo, Monaco, monospace" : "inherit",
+                          fontSize: r.mono ? 11 : 12,
+                        }}
+                      >
+                        {r.value}
+                      </span>
+                      <span
+                        style={{
+                          marginLeft: "auto",
+                          padding: "2px 8px",
+                          borderRadius: 3,
+                          fontSize: 10,
+                          background:
+                            r.status === "pass"
+                              ? "#DCFCE7"
+                              : r.status === "info"
+                                ? "#DBEAFE"
+                                : "transparent",
+                          color:
+                            r.status === "pass"
+                              ? "#15803D"
+                              : r.status === "info"
+                                ? "#1D4ED8"
+                                : "#9CA3AF",
+                        }}
+                      >
+                        {r.statusText}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Adapter 类型选择 */}
+              <div>
+                <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 8, display: "block" }}>
+                  推荐 Adapter 类型（可修改）
+                </label>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+                  {ADAPTER_TYPES.map((a) => (
+                    <div
+                      key={a.key}
+                      onClick={() => setAdapterType(a.key as AdapterType)}
+                      style={{
+                        border:
+                          adapterType === a.key
+                            ? "1.5px solid #B45309"
+                            : a.recommended
+                              ? "1px solid #86EFAC"
+                              : "0.5px solid #B4B2A9",
+                        borderRadius: 8,
+                        padding: 10,
+                        cursor: "pointer",
+                        transition: "all 0.15s",
+                        background:
+                          adapterType === a.key
+                            ? "#FEF3E8"
+                            : a.recommended
+                              ? "#F0FDF4"
+                              : "#fff",
+                      }}
+                    >
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{a.label}</div>
+                      {a.recommended && (
+                        <span
+                          style={{
+                            display: "inline-block",
+                            padding: "1px 6px",
+                            borderRadius: 3,
+                            fontSize: 9,
+                            background: "#86EFAC",
+                            color: "#14532D",
+                            fontWeight: 500,
+                            marginTop: 4,
+                          }}
+                        >
+                          推荐
+                        </span>
+                      )}
+                      <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 4 }}>{a.desc}</div>
+                      <div
+                        style={{
+                          fontSize: 9,
+                          marginTop: 4,
+                          fontWeight: 500,
+                          color:
+                            a.color === "blue"
+                              ? "#2563EB"
+                              : a.color === "green"
+                                ? "#059669"
+                                : a.color === "purple"
+                                  ? "#7C3AED"
+                                  : a.color === "amber"
+                                    ? "#D97706"
+                                    : "#DB2777",
+                        }}
+                      >
+                        ⏱ {a.color === "blue" ? "毫秒级" : a.color === "amber" ? "冷启动慢" : a.color === "pink" ? "长连接" : "秒级"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Adapter 选用决策指南 */}
+                <details
+                  open={showGuide}
+                  onToggle={(e) => setShowGuide((e.target as HTMLDetailsElement).open)}
+                  style={{
+                    marginTop: 12,
+                    borderRadius: 8,
+                    border: "1px solid #E5E7EB",
+                    background: "#fff",
+                    overflow: "hidden",
+                  }}
+                >
+                  <summary
+                    style={{
+                      padding: "10px 14px",
+                      fontSize: 12,
+                      fontWeight: 500,
+                      color: "#374151",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      listStyle: "none",
+                    }}
+                  >
+                    <span style={{ color: "#3B82F6", fontSize: 14 }}>ⓘ</span>
+                    如何选用 Adapter 类型？
+                    <span style={{ marginLeft: "auto", fontSize: 10, color: "#9CA3AF" }}>
+                      {showGuide ? "点击收起" : "点击展开"}
+                    </span>
+                  </summary>
+                  <div style={{ borderTop: "1px solid #E5E7EB", padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+                    {/* HTTP API */}
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 10,
+                        padding: 8,
+                        borderRadius: 6,
+                        background: adapterType === "http" ? "#FEF3E8" : "transparent",
+                        border: adapterType === "http" ? "1px solid #F59E0B" : "1px solid transparent",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 6,
+                          background: "#DBEAFE",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          fontSize: 14,
+                        }}
+                      >
+                        🌐
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontWeight: 700, color: "#111827", fontSize: 12 }}>HTTP API</span>
+                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "#DBEAFE", color: "#1E40AF" }}>
+                            最轻量
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>
+                          <strong style={{ color: "#374151" }}>什么时候选：</strong>
+                          Agent 已经部署成 Web 服务，有现成的 REST/GraphQL 端点可以调用
+                        </div>
+                        <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
+                          <strong style={{ color: "#6B7280" }}>典型场景：</strong>
+                          接入第三方 SaaS API、企业内部已有的微服务
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Process Wrapper */}
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 10,
+                        padding: 8,
+                        borderRadius: 6,
+                        background: adapterType === "process" ? "#FEF3E8" : "rgba(240,253,244,0.5)",
+                        border: adapterType === "process" ? "1px solid #F59E0B" : "1px solid #BBF7D0",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 6,
+                          background: "#DCFCE7",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          fontSize: 14,
+                        }}
+                      >
+                        ⚙
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontWeight: 700, color: "#111827", fontSize: 12 }}>Process Wrapper</span>
+                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "#DCFCE7", color: "#166534" }}>
+                            最常用
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>
+                          <strong style={{ color: "#374151" }}>什么时候选：</strong>
+                          Agent 是 Python/Node 脚本，有 main() 入口，可以在沙箱里 fork 子进程跑起来
+                        </div>
+                        <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
+                          <strong style={{ color: "#6B7280" }}>典型场景：</strong>
+                          awesome-llm-apps 的 Streamlit/Flask 单文件 Agent、内部快速原型
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* MCP Bridge */}
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 10,
+                        padding: 8,
+                        borderRadius: 6,
+                        background: adapterType === "mcp" ? "#FEF3E8" : "transparent",
+                        border: adapterType === "mcp" ? "1px solid #F59E0B" : "1px solid transparent",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 6,
+                          background: "#EDE9FE",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          fontSize: 14,
+                        }}
+                      >
+                        ✦
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontWeight: 700, color: "#111827", fontSize: 12 }}>MCP Bridge</span>
+                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "#EDE9FE", color: "#5B21B6" }}>
+                            标准化协议
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>
+                          <strong style={{ color: "#374151" }}>什么时候选：</strong>
+                          Agent 已经按 MCP（Model Context Protocol）标准实现了 Server
+                        </div>
+                        <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
+                          <strong style={{ color: "#6B7280" }}>典型场景：</strong>
+                          awesome-llm-apps 的 MCP AI Agents 分支、标准化的工具服务
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Docker Container */}
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 10,
+                        padding: 8,
+                        borderRadius: 6,
+                        background: adapterType === "docker" ? "#FEF3E8" : "transparent",
+                        border: adapterType === "docker" ? "1px solid #F59E0B" : "1px solid transparent",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 6,
+                          background: "#FEF3C7",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          fontSize: 14,
+                        }}
+                      >
+                        ▦
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontWeight: 700, color: "#111827", fontSize: 12 }}>Docker Container</span>
+                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "#FEF3C7", color: "#92400E" }}>
+                            重量级
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>
+                          <strong style={{ color: "#374151" }}>什么时候选：</strong>
+                          Agent 需要特殊系统依赖（如 GPU 驱动、C++ 库），或者已经有 Dockerfile
+                        </div>
+                        <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
+                          <strong style={{ color: "#6B7280" }}>典型场景：</strong>
+                          需 GPU 推理的 Agent、含复杂数据处理 pipeline 的 Agent
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Session Gateway */}
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 10,
+                        padding: 8,
+                        borderRadius: 6,
+                        background: adapterType === "session" ? "#FEF3E8" : "transparent",
+                        border: adapterType === "session" ? "1px solid #F59E0B" : "1px solid transparent",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 6,
+                          background: "#FCE7F3",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          fontSize: 14,
+                        }}
+                      >
+                        ◎
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontWeight: 700, color: "#111827", fontSize: 12 }}>Session Gateway</span>
+                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "#FCE7F3", color: "#BE185D" }}>
+                            实时会话
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>
+                          <strong style={{ color: "#374151" }}>什么时候选：</strong>
+                          Agent 涉及语音对话、视频通话、数字人/虚拟形象等实时流式交互
+                        </div>
+                        <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
+                          <strong style={{ color: "#6B7280" }}>典型场景：</strong>
+                          Voice AI Agent、直播数字人、视频客服 Bot
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 快速决策路径 */}
+                    <div style={{ marginTop: 4, paddingTop: 10, borderTop: "1px solid #F3F4F6" }}>
+                      <div style={{ fontSize: 10, color: "#6B7280", fontWeight: 500, marginBottom: 6 }}>⚡ 快速决策路径：</div>
+                      <div style={{ fontSize: 10, color: "#9CA3AF", lineHeight: 1.8 }}>
+                        <div>
+                          <span style={{ color: "#4B5563" }}>①</span> Agent 已有 HTTP 接口？→{" "}
+                          <strong style={{ color: "#2563EB" }}>HTTP API</strong>
+                        </div>
+                        <div>
+                          <span style={{ color: "#4B5563" }}>②</span> 是 Python/Node 脚本？→{" "}
+                          <strong style={{ color: "#059669" }}>Process Wrapper</strong>（默认推荐）
+                        </div>
+                        <div>
+                          <span style={{ color: "#4B5563" }}>③</span> 实现了 MCP 协议？→{" "}
+                          <strong style={{ color: "#7C3AED" }}>MCP Bridge</strong>
+                        </div>
+                        <div>
+                          <span style={{ color: "#4B5563" }}>④</span> 需要 Docker 环境？→{" "}
+                          <strong style={{ color: "#D97706" }}>Docker Container</strong>
+                        </div>
+                        <div>
+                          <span style={{ color: "#4B5563" }}>⑤</span> 有音视频流？→{" "}
+                          <strong style={{ color: "#DB2777" }}>Session Gateway</strong>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+
+                {/* 推荐理由 */}
+                <div
+                  style={{
+                    marginTop: 12,
+                    padding: "10px 12px",
+                    borderRadius: 8,
+                    background: "rgba(255, 251, 235, 0.8)",
+                    border: "1px solid #FDE68A",
+                    fontSize: 11,
+                    color: "#374151",
+                  }}
+                >
+                  <strong style={{ color: "#B45309" }}>推荐理由：</strong>
+                  {adapterType === "process"
+                    ? "检测到 Streamlit 框架 + Python 单进程运行，适合 Process Wrapper（沙箱内 fork 子进程 + stdin/stdout JSON-RPC 通信）。"
+                    : `已选择 ${adapterInfo?.label} — 请确认该 Adapter 类型适合您的 Agent 运行模式。`}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: 配置 Manifest */}
+          {step === 3 && (
+            <div>
+              <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: "0 0 4px 0" }}>
+                配置 Capability Manifest
+              </h2>
+              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px 0" }}>
+                基于扫描结果预填的 Manifest，用户可修改
+              </p>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                {/* 左栏：表单 */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div>
+                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>能力名称</label>
+                    <input
+                      value={capName}
+                      onChange={(e) => setCapName(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "6px 10px",
+                        border: "0.5px solid #B4B2A9",
+                        borderRadius: 4,
+                        fontSize: 12,
+                        background: "#fff",
+                        color: "#1A1A1A",
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>显示名称</label>
+                    <input
+                      value={capDisplayName}
+                      onChange={(e) => setCapDisplayName(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "6px 10px",
+                        border: "0.5px solid #B4B2A9",
+                        borderRadius: 4,
+                        fontSize: 12,
+                        background: "#fff",
+                        color: "#1A1A1A",
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>角色描述</label>
+                    <textarea
+                      value={capDesc}
+                      onChange={(e) => setCapDesc(e.target.value)}
+                      rows={2}
+                      style={{
+                        width: "100%",
+                        padding: "6px 10px",
+                        border: "0.5px solid #B4B2A9",
+                        borderRadius: 4,
+                        fontSize: 12,
+                        background: "#fff",
+                        color: "#1A1A1A",
+                        outline: "none",
+                        boxSizing: "border-box",
+                        resize: "vertical",
+                        fontFamily: "inherit",
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>能力标签</label>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {["交易分析", "风险识别", "报告生成"].map((tag, i) => (
+                        <span
+                          key={i}
+                          style={{
+                            padding: "2px 8px",
+                            borderRadius: 3,
+                            fontSize: 10,
+                            background: i === 0 ? "#DBEAFE" : i === 1 ? "#EDE9FE" : "#DCFCE7",
+                            color: i === 0 ? "#1D4ED8" : i === 1 ? "#6D28D9" : "#15803D",
+                          }}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>
+                      Capability Level
+                    </label>
+                    <select
+                      value={capLevel}
+                      onChange={(e) => setCapLevel(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "6px 10px",
+                        border: "0.5px solid #B4B2A9",
+                        borderRadius: 4,
+                        fontSize: 12,
+                        background: "#fff",
+                        color: "#1A1A1A",
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    >
+                      <option>C0 sync</option>
+                      <option>C1 Job</option>
+                      <option>C2 Session</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>超时（秒）</label>
+                    <input
+                      type="number"
+                      value={timeout}
+                      onChange={(e) => setTimeout(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "6px 10px",
+                        border: "0.5px solid #B4B2A9",
+                        borderRadius: 4,
+                        fontSize: 12,
+                        background: "#fff",
+                        color: "#1A1A1A",
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>内存限制</label>
+                    <input
+                      value={memory}
+                      onChange={(e) => setMemory(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "6px 10px",
+                        border: "0.5px solid #B4B2A9",
+                        borderRadius: 4,
+                        fontSize: 12,
+                        background: "#fff",
+                        color: "#1A1A1A",
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* 右栏：YAML 预览 */}
+                <div>
+                  <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>
+                    Manifest YAML 预览
+                  </label>
+                  <div
+                    style={{
+                      background: "#1E293B",
+                      color: "#CBD5E1",
+                      padding: 16,
+                      borderRadius: 6,
+                      fontFamily: "Menlo, Monaco, monospace",
+                      fontSize: 11,
+                      lineHeight: 1.7,
+                      overflowX: "auto",
+                      whiteSpace: "pre",
+                      height: 400,
+                    }}
+                  >
+                    {yamlContent.split("\n").map((line, i) => {
+                      if (line.startsWith("#")) {
+                        return (
+                          <div key={i} style={{ color: "#64748B" }}>
+                            {line}
+                          </div>
+                        );
+                      }
+                      const colonIdx = line.indexOf(":");
+                      if (colonIdx > 0 && !line.trim().startsWith("-")) {
+                        const key = line.slice(0, colonIdx);
+                        const rest = line.slice(colonIdx);
+                        let restColor = "#CBD5E1";
+                        if (rest.match(/: ["']/)) {
+                          restColor = "#FCD34D";
+                        }
+                        return (
+                          <div key={i}>
+                            <span style={{ color: "#93C5FD" }}>{key}</span>
+                            <span style={{ color: restColor }}>{rest}</span>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div key={i} style={{ color: "#CBD5E1" }}>
+                          {line}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: 安全与网络 */}
+          {step === 4 && (
+            <div>
+              <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: "0 0 4px 0" }}>
+                安全等级与网络白名单
+              </h2>
+              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px 0" }}>外部代码运行需配置安全护栏</p>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                {/* 左栏 */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div>
+                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 6, display: "block" }}>
+                      沙箱隔离级别
+                    </label>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      {[
+                        { key: "strict", label: "严格隔离", desc: "cgroups + seccomp" },
+                        { key: "standard", label: "标准隔离", desc: "进程级" },
+                        { key: "none", label: "无隔离", desc: "不推荐", warn: true },
+                      ].map((opt) => (
+                        <label
+                          key={opt.key}
+                          style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, cursor: "pointer" }}
+                        >
+                          <input
+                            type="radio"
+                            name="sandbox"
+                            checked={sandboxLevel === opt.key}
+                            onChange={() => setSandboxLevel(opt.key)}
+                          />
+                          <span style={{ color: "#374151", fontWeight: opt.key === "strict" ? 500 : 400 }}>
+                            {opt.label}
+                          </span>
+                          <span style={{ fontSize: 10, color: opt.warn ? "#EF4444" : "#9CA3AF" }}>{opt.desc}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div>
+                      <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>CPU 上限</label>
+                      <input
+                        value={cpuLimit}
+                        onChange={(e) => setCpuLimit(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: "6px 10px",
+                          border: "0.5px solid #B4B2A9",
+                          borderRadius: 4,
+                          fontSize: 12,
+                          background: "#fff",
+                          color: "#1A1A1A",
+                          outline: "none",
+                          boxSizing: "border-box",
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>
+                        速率限制（次/分）
+                      </label>
+                      <input
+                        type="number"
+                        value={rateLimit}
+                        onChange={(e) => setRateLimit(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: "6px 10px",
+                          border: "0.5px solid #B4B2A9",
+                          borderRadius: 4,
+                          fontSize: 12,
+                          background: "#fff",
+                          color: "#1A1A1A",
+                          outline: "none",
+                          boxSizing: "border-box",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 6, display: "block" }}>护栏配置</label>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      {[
+                        { key: "noFsWrite", label: "禁止文件系统写入" },
+                        { key: "noFork", label: "禁止子进程派生" },
+                        { key: "tokenLimit", label: "Token 上限（4096）" },
+                        { key: "autoDraft", label: "自动入 Draft" },
+                      ].map((opt) => (
+                        <label
+                          key={opt.key}
+                          style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, cursor: "pointer" }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={guardrails[opt.key as keyof typeof guardrails]}
+                            onChange={(e) =>
+                              setGuardrails({ ...guardrails, [opt.key]: e.target.checked })
+                            }
+                          />
+                          <span style={{ color: "#374151" }}>{opt.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 右栏 */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div>
+                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 6, display: "block" }}>
+                      网络白名单
+                    </label>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, cursor: "pointer" }}>
+                        <input type="checkbox" defaultChecked />
+                        <span style={{ color: "#374151" }}>api.openai.com</span>
+                        <span style={{ fontSize: 10, color: "#9CA3AF" }}>LLM</span>
+                      </label>
+                      <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, cursor: "pointer" }}>
+                        <input type="checkbox" />
+                        <span style={{ color: "#9CA3AF" }}>自定义域名…</span>
+                      </label>
+                    </div>
+                    <p style={{ fontSize: 10, color: "#9CA3AF", marginTop: 6 }}>
+                      默认仅允许 LLM API 域名。添加其他域名需 L2+ 审批。
+                    </p>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 6, display: "block" }}>
+                      环境变量注入
+                    </label>
+                    <div
+                      style={{
+                        fontFamily: "Menlo, Monaco, monospace",
+                        fontSize: 10,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <span style={{ color: "#6B7280" }}>OPENAI_API_KEY</span>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          padding: "2px 6px",
+                          borderRadius: 3,
+                          background: "#DCFCE7",
+                          color: "#15803D",
+                        }}
+                      >
+                        → vault://aip/models/openai
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: 8,
+                      background: "rgba(254, 242, 242, 0.7)",
+                      border: "1px solid #FECACA",
+                      fontSize: 11,
+                      color: "#374151",
+                    }}
+                  >
+                    <strong style={{ color: "#B91C1C" }}>安全提示：</strong>
+                    外部代码在沙箱内运行。平台已自动配置 cgroups（CPU/内存限制）+ seccomp（系统调用过滤），防止恶意操作。
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 5: 连通测试与安全扫描 */}
+          {step === 5 && (
+            <div>
+              <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: "0 0 4px 0" }}>
+                连通测试与安全扫描
+              </h2>
+              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px 0" }}>
+                验证沙箱启动、子进程通信、LLM 路由，并执行 6 类安全风险扫描
+              </p>
+
+              {/* 连通测试 */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 16 }}>
+                {CONNECT_TESTS.map((t, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "8px 12px",
+                      borderRadius: 4,
+                      fontSize: 12,
+                      background: t.status === "pass" ? "#F0FDF4" : t.status === "pending" ? "#FFFBEB" : "#fff",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 14,
+                        color:
+                          t.status === "pass"
+                            ? "#16A34A"
+                            : t.status === "pending"
+                              ? "#D97706"
+                              : "#6B7280",
+                      }}
+                    >
+                      {t.status === "pass" ? "✓" : t.status === "pending" ? "⏱" : "…"}
+                    </span>
+                    <span style={{ fontWeight: 500, color: "#111827" }}>{t.label}</span>
+                    <span style={{ fontSize: 10, color: "#6B7280", marginLeft: "auto" }}>{t.detail}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* 安全扫描 */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <h3 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: 0 }}>安全扫描</h3>
+                  <span style={{ fontSize: 10, color: "#9CA3AF" }}>基于 skill-security-auditor · 零依赖静态分析</span>
+                </div>
+                <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 10px 0" }}>
+                  扫描已导入的 Agent 源码，检测 6 类安全风险。高风险项需管理员审批方可继续导入。
+                </p>
+
+                <div style={{ borderRadius: 8, border: "1px solid #E5E7EB", overflow: "hidden" }}>
+                  {/* 表头 */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "8px 12px",
+                      background: "#F9FAFB",
+                      borderBottom: "1px solid #E5E7EB",
+                      fontSize: 10,
+                      fontWeight: 500,
+                      color: "#6B7280",
+                    }}
+                  >
+                    <span style={{ width: 100 }}>风险类别</span>
+                    <span style={{ flex: 1 }}>扫描内容</span>
+                    <span style={{ width: 80, textAlign: "right" }}>结果</span>
+                  </div>
+                  {SECURITY_SCANS.map((s, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "10px 12px",
+                        borderBottom: i < SECURITY_SCANS.length - 1 ? "1px solid #F3F4F6" : "none",
+                        fontSize: 12,
+                        background: s.highlight
+                          ? s.result === "fail"
+                            ? "rgba(254,242,242,0.4)"
+                            : "rgba(255,251,235,0.4)"
+                          : "transparent",
+                      }}
+                    >
+                      <span style={{ width: 100, color: "#374151", fontWeight: 500, flexShrink: 0 }}>
+                        {s.category}
+                      </span>
+                      <span style={{ flex: 1, color: "#6B7280" }}>
+                        {s.result === "fail" && (
+                          <span style={{ color: "#DC2626", fontWeight: 500 }}>eval()</span>
+                        )}
+                        {s.result !== "fail" && s.content}
+                        {s.result === "fail" && " · __import__() · compile()"}
+                      </span>
+                      <span style={{ width: 80, textAlign: "right" }}>
+                        {s.result === "pass" && (
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "#16A34A" }}>
+                            <span>✓</span>通过
+                          </span>
+                        )}
+                        {s.result === "fail" && (
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                              color: "#DC2626",
+                              fontWeight: 500,
+                            }}
+                          >
+                            <span>⚠</span>
+                            {s.resultText}
+                          </span>
+                        )}
+                        {s.result === "warn" && (
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                              color: "#D97706",
+                              fontWeight: 500,
+                            }}
+                          >
+                            <span>⚡</span>
+                            {s.resultText}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* 扫描结论 */}
+                <div
+                  style={{
+                    marginTop: 8,
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 8,
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    background: "rgba(254, 242, 242, 0.7)",
+                    border: "1px solid #FECACA",
+                  }}
+                >
+                  <span style={{ color: "#EF4444", fontSize: 16, flexShrink: 0 }}>⚠</span>
+                  <div style={{ fontSize: 11, color: "#374151" }}>
+                    <strong style={{ color: "#B91C1C" }}>检测到 P1 风险：</strong>
+                    代码执行模块发现 2 处{" "}
+                    <code
+                      style={{
+                        color: "#DC2626",
+                        background: "#FEE2E2",
+                        padding: "1px 4px",
+                        borderRadius: 3,
+                        fontSize: 10,
+                      }}
+                    >
+                      eval()
+                    </code>{" "}
+                    调用（llm_eval.py:34, agent_chain.py:71）。
+                    <div style={{ marginTop: 2, color: "#6B7280" }}>
+                      建议：将 eval() 替换为 ast.literal_eval()，或在沙箱中限制执行权限。需管理员审批方可继续导入。
+                    </div>
+                  </div>
+                </div>
+
+                {/* 管理员审批 */}
+                <div
+                  style={{
+                    marginTop: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    background: "rgba(255, 251, 235, 0.8)",
+                    border: "1px solid #FCD34D",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    id="sec-approve"
+                    checked={securityApproved}
+                    onChange={(e) => setSecurityApproved(e.target.checked)}
+                    style={{ accentColor: "#D97706" }}
+                  />
+                  <label htmlFor="sec-approve" style={{ fontSize: 11, color: "#374151", cursor: "pointer" }}>
+                    <strong style={{ color: "#B45309" }}>管理员确认接受风险</strong> — 勾选后允许跳过 P1 门控继续导入，风险记录将写入审计日志
+                  </label>
+                </div>
+              </div>
+
+              {/* 导入汇总 */}
+              <div
+                style={{
+                  borderRadius: 8,
+                  border: "1px solid #E5E7EB",
+                  background: "#F9FAFB",
+                  padding: 16,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 6,
+                  fontSize: 12,
+                }}
+              >
+                <div style={{ color: "#111827", fontWeight: 500, marginBottom: 4 }}>导入汇总</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 24px", color: "#6B7280" }}>
+                  <div>
+                    Agent 名称：<span style={{ color: "#111827", fontWeight: 500 }}>{capDisplayName}</span>
+                  </div>
+                  <div>
+                    来源：<span style={{ color: "#111827" }}>awesome-llm-apps</span>
+                  </div>
+                  <div>
+                    Adapter：<span style={{ color: "#D97706", fontWeight: 500 }}>{adapterInfo?.label}</span>
+                  </div>
+                  <div>
+                    能力类型：<span style={{ color: "#2563EB", fontWeight: 500 }}>{capLevel}</span>
+                  </div>
+                  <div>
+                    沙箱：<span style={{ color: "#111827" }}>严格隔离</span>
+                  </div>
+                  <div>
+                    速率限制：<span style={{ color: "#111827" }}>{rateLimit} 次/分</span>
+                  </div>
+                  <div>
+                    模型路由：<span style={{ color: "#111827" }}>gpt-5.2-prod</span>
+                  </div>
+                  <div>
+                    许可证：<span style={{ color: "#111827" }}>Apache-2.0</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 导入后说明 */}
+              <div
+                style={{
+                  marginTop: 16,
+                  padding: "10px 12px",
+                  borderRadius: 8,
+                  background: "rgba(240, 253, 244, 0.7)",
+                  border: "1px solid #BBF7D0",
+                  fontSize: 11,
+                  color: "#374151",
+                }}
+              >
+                <strong style={{ color: "#059669" }}>导入后：</strong>
+                该 Agent 将出现在「智能体目录」和「智能体插件」列表中。可在「智能体工具面板」挂载为 Function Tool，供平台内 Agent 调用。
+                <a style={{ color: "#2563EB", marginLeft: 4 }}>去挂载 →</a>
+              </div>
+            </div>
+          )}
+
+          {/* 底部操作栏 */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginTop: 24,
+              paddingTop: 16,
+              borderTop: "1px solid #E5E7EB",
+            }}
+          >
+            <button
+              onClick={() => goStep(step - 1)}
+              disabled={step === 1}
+              style={{
+                padding: "8px 20px",
+                fontSize: 13,
+                borderRadius: 6,
+                border: step === 1 ? "1px solid #E5E7EB" : "0.5px solid #888780",
+                background: "#fff",
+                color: step === 1 ? "#9CA3AF" : "#444441",
+                cursor: step === 1 ? "default" : "pointer",
+                visibility: step === 1 ? "hidden" : "visible",
+              }}
+            >
+              上一步
+            </button>
+            <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
+              <button
+                onClick={() => {
+                  setSuccess(false);
+                  setStep(1);
+                }}
+                style={{
+                  padding: "8px 20px",
+                  fontSize: 13,
+                  borderRadius: 6,
+                  border: "0.5px solid #888780",
+                  background: "#fff",
+                  color: "#444441",
+                  cursor: "pointer",
+                }}
+              >
+                取消
+              </button>
+              {step < 5 && (
+                <button
+                  onClick={() => goStep(step + 1)}
+                  style={{
+                    padding: "8px 20px",
+                    fontSize: 13,
+                    fontWeight: 500,
+                    borderRadius: 6,
+                    border: "none",
+                    background: "#B45309",
+                    color: "#fff",
+                    cursor: "pointer",
+                  }}
+                >
+                  {step === 4 ? "运行测试" : "下一步"}
+                </button>
+              )}
+              {step === 5 && (
+                <button
+                  onClick={handleFinish}
+                  disabled={importing}
+                  style={{
+                    padding: "8px 20px",
+                    fontSize: 13,
+                    fontWeight: 500,
+                    borderRadius: 6,
+                    border: "none",
+                    background: "#0F6E56",
+                    color: "#fff",
+                    cursor: importing ? "default" : "pointer",
+                    opacity: importing ? 0.7 : 1,
+                  }}
+                >
+                  {importing ? "导入中..." : "确认导入"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </PageChrome>
+  );
+}

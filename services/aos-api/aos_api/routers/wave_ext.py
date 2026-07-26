@@ -1,4 +1,14 @@
-"""T3.5～T3.11 / T3.16 / T3.19 / TC / T4 / T5 minimal surfaces — one module to close gaps."""
+"""T3.5～T3.11 / T3.16 / T3.19 / TC / T4 / T5 minimal surfaces — one module to close gaps.
+
+TODO(持久化改造): 以下接口使用模块级全局变量（``_connectors`` / ``_pipelines`` /
+``_datasets`` / ``_syncs`` / ``_media`` / ``_capabilities`` / ``_jobs`` /
+``_tools`` / ``_evals_green`` / ``_circuit`` 等）做内存存储，重启即丢。
+接口契约与线上一致，但持久化实现待后续迭代补齐。
+
+已下线的接口：
+  - ``GET/POST /v1/demo/*``（共 6 个）：演示故事线不再暴露 HTTP 路由。
+    测试代码请直接 ``from aos_api.demo.demo_story import ...`` 调用。
+"""
 from __future__ import annotations
 
 import json
@@ -26,89 +36,6 @@ def _demo_data_seed_enabled() -> bool:
         "true",
         "yes",
     }
-
-
-def clear_demo_data_surface() -> dict[str, Any]:
-    """Remove demo-file-wo / demo-pipe-wo / demo dataset / demo sync / dlq sample."""
-    removed: dict[str, Any] = {"sources": [], "pipelines": [], "datasets": [], "syncs": [], "schedules": [], "dlq": 0}
-    for sid in ("demo-file-wo",):
-        if sid in _connectors:
-            del _connectors[sid]
-            removed["sources"].append(sid)
-    for pid in ("demo-pipe-wo",):
-        if pid in _pipelines:
-            del _pipelines[pid]
-            removed["pipelines"].append(pid)
-    for rid in ("ri.dataset.demo-workorder",):
-        if rid in _datasets:
-            del _datasets[rid]
-            removed["datasets"].append(rid)
-        _dataset_history.pop(rid, None)
-    for sid in ("sync-demo-wo",):
-        if sid in _syncs:
-            del _syncs[sid]
-            removed["syncs"].append(sid)
-    for sch in ("demo-sch-wo",):
-        if sch in _schedules:
-            del _schedules[sch]
-            removed["schedules"].append(sch)
-    before = len(_dlq)
-    _dlq[:] = [d for d in _dlq if not (isinstance(d, dict) and str(d.get("id", "")).startswith("dlq-demo"))]
-    removed["dlq"] = before - len(_dlq)
-    log.info("demo_data_cleared %s", removed)
-    return {"ok": True, "removed": removed}
-
-@router.get("/v1/demo/story")
-def demo_story(principal: Principal = Depends(require_principal)):
-    """TB.1～TB.8 · WorkOrder customer demo narrative (local deploy)."""
-    _ = principal
-    from aos_api.demo_story import demo_story_payload
-
-    return demo_story_payload()
-
-
-@router.post("/v1/demo/ensure-seed")
-def demo_ensure_seed(principal: Principal = Depends(require_principal)):
-    """TB.1 · Idempotent WorkOrder demo seed repair."""
-    _ = principal
-    from aos_api.demo_story import ensure_demo_seed
-
-    return ensure_demo_seed()
-
-
-@router.post("/v1/demo/run-story")
-def demo_run_story(principal: Principal = Depends(require_principal)):
-    """TB.4 · One-shot writeback: Draft → approve → object change + lineage."""
-    from aos_api.demo_story import run_writeback_story
-
-    return run_writeback_story(principal)
-
-
-@router.post("/v1/demo/run-analytics-story")
-def demo_run_analytics_story(principal: Principal = Depends(require_principal)):
-    """TA.7 · Demo one-shot: analytics read → Draft → approve → lineage.
-
-    Includes approve only inside this demo story; product /analytics stays propose-only.
-    """
-    from aos_api.demo_story import run_analytics_story
-
-    return run_analytics_story(principal)
-
-
-@router.get("/v1/demo/governance")
-def demo_governance(principal: Principal = Depends(require_principal)):
-    """TB.7 · Field redaction contrast + Marking FORBIDDEN + latest lineage."""
-    from aos_api.demo_story import governance_probe
-
-    return governance_probe(principal)
-
-
-@router.post("/v1/demo/run-capability")
-def demo_run_capability(principal: Principal = Depends(require_principal)):
-    """71 · Capability Job → MediaSet + parser extract + OCR probe."""
-    from aos_api.demo_story import run_capability_mirror
-
-    return run_capability_mirror(principal)
 
 
 _executor = ThreadPoolExecutor(max_workers=4)

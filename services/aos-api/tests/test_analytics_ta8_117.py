@@ -1,8 +1,19 @@
-"""117 · TA.8 Contour / Quiver / Vertex subset surfaces."""
+"""117 · TA.8 Contour / Quiver / Vertex subset surfaces.
+
+注：``/v1/demo/*`` HTTP 路由已在种子数据收敛（v2.2 Phase 5）中下线，
+测试改为直接调用 ``aos_api.demo`` Python 函数。
+"""
+
+from aos_api.demo import seed_test_org
+from aos_api.demo.demo_story import (
+    demo_story_payload,
+    run_analytics_story,
+)
 
 
-def test_contour_explore_buckets(client, auth_headers):
-    client.post("/v1/demo/ensure-seed", headers=auth_headers)
+def test_contour_explore_buckets(client, auth_headers, dev_principal):
+    _ = dev_principal
+    seed_test_org()
     r = client.get(
         "/v1/analytics/contour/explore",
         headers=auth_headers,
@@ -18,9 +29,10 @@ def test_contour_explore_buckets(client, auth_headers):
     assert any(int(b.get("count") or 0) >= 1 for b in body["buckets"])
 
 
-def test_quiver_series_shape(client, auth_headers):
-    client.post("/v1/demo/ensure-seed", headers=auth_headers)
-    client.post("/v1/demo/run-analytics-story", headers=auth_headers)
+def test_quiver_series_shape(client, auth_headers, dev_principal):
+    _ = auth_headers
+    seed_test_org()
+    run_analytics_story(dev_principal)
     r = client.get(
         "/v1/analytics/quiver/series",
         headers=auth_headers,
@@ -60,9 +72,8 @@ def test_vertex_experiment_register_and_list(client, auth_headers):
     assert any(i.get("id") == row["id"] for i in items)
 
 
-def test_demo_story_lists_ta8_step(client, auth_headers):
-    s = client.get("/v1/demo/story", headers=auth_headers)
-    assert s.status_code == 200
-    story = s.json()
+def test_demo_story_lists_ta8_step(client, auth_headers, dev_principal):
+    _ = client, auth_headers, dev_principal
+    story = demo_story_payload()
     assert any(st.get("id") == "TA.8" for st in (story.get("steps") or []))
     assert story["deferred"].get("analyticsFullBiMl") is True

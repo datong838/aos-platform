@@ -6,7 +6,6 @@ from typing import Any
 from aos_api.db import connect
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
-from aos_api import mock_data
 
 log = get_logger("aos-api.tool_runtime")
 
@@ -25,7 +24,7 @@ def invoke_tool(tool_id: str, payload: dict[str, Any] | None = None) -> dict[str
 
     if tool_id == "query.objects":
         object_type = str(payload.get("objectType") or "WorkOrder")
-        # Prefer PG when available; fallback mock
+        # 只走真实 PG；不再降级到 mock_data 假数据
         try:
             with connect() as conn:
                 rows = conn.execute(
@@ -35,11 +34,15 @@ def invoke_tool(tool_id: str, payload: dict[str, Any] | None = None) -> dict[str
             items = [
                 {"id": r["object_id"], "type": object_type, **(r["props"] or {})} for r in rows
             ]
-            result = {"items": items, "total": len(items), "source": "pg"}
+            result: dict[str, Any] = {"items": items, "total": len(items), "source": "pg"}
         except Exception as exc:  # noqa: BLE001
-            log.warning("tool_query_pg_fallback err=%s", exc)
-            result = mock_data.query_objects(filters=payload.get("filters") or [], page=1, page_size=20)
-            result["source"] = "mock"
+            # TODO(持久化改造): PG 不可用时不再降级到 mock 假数据；真实数据库高可用待补齐
+            log.warning("tool_query_pg_failed err=%s", exc)
+            raise ApiError(
+                code="OBJECT_STORE",
+                message=f"object query failed: {exc}",
+                status_code=502,
+            ) from exc
         log.info("tool_invoke id=%s items=%s", tool_id, result.get("total"))
         return {"toolId": tool_id, "ok": True, "kind": KNOWN[tool_id], "result": result}
 

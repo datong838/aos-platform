@@ -1022,7 +1022,6 @@ export function SyncConfigPage() {
 /** 数据源与同步 · 同步路由 — 按源/目标/规则查看同步分发路径 */
 export function SyncRoutesPage() {
   const routes = useJsonGet<{ items: { id: string; source?: string; target?: string; rule?: string }[] }>("/v1/sync-routes");
-  const [msg, setMsg] = useState("");
 
   const rows = (routes.data?.items || []).map((r) => [
     r.id,
@@ -1045,7 +1044,6 @@ export function SyncRoutesPage() {
         </button>
       </BpToolbar>
       {routes.err && <p className="error">{routes.err}</p>}
-      {msg && <p className="aos-text">{msg}</p>}
       <BpTable
         columns={["id", "源", "目标", "规则"]}
         rows={rows.length ? rows : [["—", "—", "—", "—"]]}

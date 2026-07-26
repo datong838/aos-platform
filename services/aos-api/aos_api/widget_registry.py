@@ -7,7 +7,17 @@ from aos_api import plugin_disk
 
 KEY = "widget_plugin_installs"
 SUBDIR = "widgets"
-DEFAULTS = ("filter-list", "object-table", "buddy-chip", "object-view")
+DEFAULTS = (
+    "filter-list",
+    "object-table",
+    "buddy-chip",
+    "object-view",
+    "page-header",
+    "stat-card",
+    "filter-bar",
+    "detail-drawer",
+    "trend-chart",
+)
 
 
 def list_widget_plugins() -> dict[str, Any]:

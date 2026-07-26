@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { PageChrome } from "../components/PageChrome";
 import { tenantAuthHeaders } from "../api/tenant";
 import { getApiBase } from "../api/apiBase";
-import { BpBanner, BpPropGrid, BpToolbar } from "./s2/blueprintUi";
 
 const CHANNELS = [
   { id: "rc", label: "开发 (rc)" },
@@ -12,7 +11,6 @@ const CHANNELS = [
   { id: "hotfix", label: "紧急 hotfix", tone: "bad" as const },
 ];
 
-/** 90 · 对齐 workshop-publish · 居中卡片 + 2×2 通道链接格 */
 export function PublishPage() {
   const [channel, setChannel] = useState("beta");
   const [msg, setMsg] = useState("");
@@ -73,73 +71,154 @@ export function PublishPage() {
   return (
     <PageChrome
       title="发布入口"
-      lede="90 · 发布 · 风险告警 Module · 经 aos-api（Lite Adapter）"
+      lede="订单管理 · 发布入口"
     >
-      <div className="bp-publish-shell">
-        <div className="bp-publish-card">
-          <div className="bp-ws-section-title">发布 · 风险告警 Module</div>
-          <p className="muted" style={{ fontSize: "0.875rem" }}>
-            工作台提供业务发布入口；舰队 / Channel / 资产包在侧栏「运维交付」（默认可收）。
+      <div style={{ maxWidth: 480, margin: "0 auto" }}>
+        <div style={{
+          background: "#fff",
+          borderRadius: 12,
+          border: "1px solid rgba(255,255,255,0.1)",
+          padding: 24,
+        }}>
+          <div style={{ fontSize: 16, fontWeight: 500, color: "#111827", marginBottom: 4 }}>
+            发布 · 风险告警管理 Module
+          </div>
+          <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px 0", lineHeight: 1.5 }}>
+            工作台只提供入口；舰队 / Channel / Asset Bundle 在 Apollo 完成。
           </p>
 
-          <div className="bp-ws-section-title" style={{ marginTop: "1rem" }}>
-            目标通道
-          </div>
-          <ul style={{ listStyle: "none", padding: 0, margin: "0.5rem 0" }}>
-            {CHANNELS.map((c) => (
-              <li key={c.id} style={{ marginBottom: 6 }}>
-                <label className="aos-text" style={{ fontSize: "0.875rem" }}>
+          <div style={{ fontSize: 13, marginBottom: 8 }}>
+            <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 8 }}>目标通道</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {CHANNELS.map((c) => (
+                <label key={c.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, cursor: "pointer" }}>
                   <input
                     type="radio"
                     name="channel"
                     checked={channel === c.id}
                     onChange={() => setChannel(c.id)}
-                  />{" "}
-                  <span className={c.tone === "bad" ? "bp-prop-warn" : ""}>{c.label}</span>
+                  />
+                  <span style={{ color: c.tone === "bad" ? "#DC2626" : "#111827" }}>{c.label}</span>
                 </label>
-              </li>
-            ))}
-          </ul>
+              ))}
+            </div>
+          </div>
 
-          <BpToolbar>
-            <button type="button" className="btn" disabled={busy} onClick={() => void onPublish()}>
-              {busy ? "提交中…" : "发布 Module"}
-            </button>
-          </BpToolbar>
-
-          <div className="bp-publish-links">
-            <Link to="/workshop/inbox" className="bp-publish-link bp-publish-link-emerald">
-              预览风险告警 →
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 8,
+            paddingTop: 8,
+            marginBottom: 16,
+          }}>
+            <Link
+              to="/apollo/release"
+              style={{
+                padding: "10px 12px",
+                borderRadius: 8,
+                background: "#ECFDF5",
+                border: "1px solid #86EFAC",
+                fontSize: 12,
+                color: "#047857",
+                textAlign: "center",
+                textDecoration: "none",
+              }}
+            >
+              打开 Release 通道 →
             </Link>
-            <Link to="/workshop/canvas" className="bp-publish-link bp-publish-link-sky">
-              返回画布 →
+            <Link
+              to="/apollo/assets"
+              style={{
+                padding: "10px 12px",
+                borderRadius: 8,
+                background: "#EFF6FF",
+                border: "1px solid #93C5FD",
+                fontSize: 12,
+                color: "#1D4ED8",
+                textAlign: "center",
+                textDecoration: "none",
+              }}
+            >
+              FDE 资产包 →
             </Link>
-            <Link to="/workshop/module-interface" className="bp-publish-link">
-              模块接口
+            <Link
+              to="/apollo/hub"
+              style={{
+                padding: "10px 12px",
+                borderRadius: 8,
+                border: "1px solid #E5E7EB",
+                fontSize: 12,
+                color: "#374151",
+                textAlign: "center",
+                textDecoration: "none",
+              }}
+            >
+              Hub 舰队
             </Link>
-            <Link to="/apollo/release" className="bp-publish-link muted">
-              运维 · Release →
+            <Link
+              to="/workshop/canvas"
+              style={{
+                padding: "10px 12px",
+                borderRadius: 8,
+                border: "1px solid #E5E7EB",
+                fontSize: 12,
+                color: "#374151",
+                textAlign: "center",
+                textDecoration: "none",
+              }}
+            >
+              返回画布
             </Link>
           </div>
 
-          <BpBanner tone="info">
-            Module 发布走 API 幂等 · 运维面 Channel / 舰队能力见「运维交付」分组
-          </BpBanner>
+          <button
+            type="button"
+            onClick={() => void onPublish()}
+            disabled={busy}
+            style={{
+              width: "100%",
+              padding: "10px 16px",
+              fontSize: 13,
+              fontWeight: 500,
+              border: "none",
+              borderRadius: 8,
+              background: busy ? "#E5E7EB" : "#2563EB",
+              color: busy ? "#9CA3AF" : "#fff",
+              cursor: busy ? "not-allowed" : "pointer",
+              marginBottom: 12,
+            }}
+          >
+            {busy ? "提交中…" : "发布 Module"}
+          </button>
+
+          <p style={{
+            fontSize: 10,
+            color: "#059669",
+            border: "1px solid #A7F3D0",
+            borderRadius: 8,
+            padding: "10px 12px",
+            background: "#ECFDF5",
+            margin: 0,
+            lineHeight: 1.5,
+          }}>
+            Spoke 出站轮询拉 Plan · Lite Spoke 同契约 · 见 Apollo 交付组
+          </p>
 
           {lastPub && (
-            <div style={{ marginTop: "0.75rem" }}>
-              <BpPropGrid
-                items={[
-                  { label: "Module ID", value: lastPub.id || "—" },
-                  { label: "通道", value: channel },
-                  { label: "状态", value: lastPub.status || "—", tone: "ok" },
-                  { label: "幂等", value: lastPub.idempotent ? "是" : "否" },
-                ]}
-              />
+            <div style={{ marginTop: 16, padding: 12, borderRadius: 8, background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: "#111827", marginBottom: 8 }}>上次发布结果</div>
+              <div style={{ fontSize: 11, color: "#6B7280", lineHeight: 1.8 }}>
+                <div>Module ID: <span style={{ fontFamily: "monospace", color: "#374151" }}>{lastPub.id || "—"}</span></div>
+                <div>通道: <span style={{ color: "#374151" }}>{channel}</span></div>
+                <div>状态: <span style={{ color: "#059669", fontWeight: 500 }}>{lastPub.status || "—"}</span></div>
+                <div>幂等: <span style={{ color: lastPub.idempotent ? "#059669" : "#D97706" }}>{lastPub.idempotent ? "是（重放成功）" : "否"}</span></div>
+              </div>
             </div>
           )}
 
-          {msg && <p className="aos-text" style={{ marginTop: "0.75rem" }}>{msg}</p>}
+          {msg && (
+            <p style={{ fontSize: 12, color: "#374151", marginTop: 12, marginBottom: 0 }}>{msg}</p>
+          )}
         </div>
       </div>
     </PageChrome>

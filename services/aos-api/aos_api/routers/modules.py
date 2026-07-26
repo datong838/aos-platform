@@ -25,7 +25,10 @@ class CreateModuleRequest(BaseModel):
     entryPath: str | None = None
     # 75 W1: may be string[] (legacy) or layout node objects
     widgets: list[Any] | None = None
+    components: dict[str, Any] | None = None
     buddyBound: bool | None = None
+    category: str | None = None
+    theme: str | None = None
 
 
 class PatchModuleRequest(BaseModel):
@@ -35,8 +38,11 @@ class PatchModuleRequest(BaseModel):
     markings: list[str] | None = None
     entryPath: str | None = None
     widgets: list[Any] | None = None
+    components: dict[str, Any] | None = None
     buddyBound: bool | None = None
     status: str | None = None
+    category: str | None = None
+    theme: str | None = None
 
 
 def _visible(principal: Principal, mod: dict[str, Any]) -> bool:
@@ -172,6 +178,24 @@ def publish_module(
             body=published,
         )
     return JSONResponse(status_code=200, content=published)
+
+
+@router.post("/v1/modules/{module_id}/touch")
+def touch_module(
+    module_id: str,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """Update module's last_opened_at timestamp."""
+    mod = module_store.get_module(
+        module_id, principal.org_id, principal.project_id
+    )
+    if not mod:
+        raise ApiError(code="NOT_FOUND", message=f"module {module_id} not found", status_code=404)
+    ensure_markings(principal, mod.get("markings") or ["public"])
+    ok = module_store.touch_module(
+        module_id, org_id=principal.org_id, project_id=principal.project_id
+    )
+    return {"ok": ok}
 
 
 @router.get("/v1/modules/{module_id}/runtime")

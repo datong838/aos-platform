@@ -52,7 +52,9 @@ def test_pipeline_embed_no_gateway_501(client, auth_headers, monkeypatch):
     monkeypatch.delenv("AOS_EMBED_API_KEY", raising=False)
     monkeypatch.delenv("AGNES_BASE_URL", raising=False)
     monkeypatch.delenv("AGNES_API_KEY", raising=False)
-    client.post("/v1/demo/ensure-seed", headers=auth_headers)
+    from aos_api.demo import seed_test_org
+
+    seed_test_org()
     client.post("/v1/embedding-plugins/embed-openai-compatible/install", headers=auth_headers)
     # ensure demo pipeline exists
     client.get("/v1/pipelines", headers=auth_headers)

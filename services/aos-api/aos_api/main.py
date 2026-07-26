@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from aos_api.db import init_schema, seed_if_empty
+from aos_api.db import ensure_system_meta, init_schema
 from aos_api.module_store import seed_modules_if_empty
 from aos_api.errors import register_exception_handlers
 from aos_api.logging_facade import configure_logging, get_logger
@@ -508,11 +508,11 @@ from aos_api.zz_graph_health_router import router as zz_graph_health_router
 async def lifespan(_app: FastAPI):
     try:
         init_schema()
-        seed_if_empty()
+        ensure_system_meta()
         try:
             seed_modules_if_empty()
         except Exception:
-            log.exception("startup_module_store_failed_continue")
+            log.exception("startup_module_seed_failed_continue")
         try:
             from aos_api.tenant_catalog import boot_tenant_catalogs
 

@@ -38,7 +38,7 @@ function scopeIds(orgId?: string, projectId?: string): {
 
 function syncList(backend: OfflineQueueBackend, orgId: string, projectId: string): OfflineQueueItem[] {
   const out = backend.list(orgId, projectId);
-  if (out && typeof (out as Promise<unknown>).then === "function") {
+  if (out != null && typeof (out as unknown as Promise<unknown>).then === "function") {
     return [];
   }
   return (out as OfflineQueueItem[]) || [];
@@ -51,8 +51,8 @@ function syncWrite(
   items: OfflineQueueItem[],
 ): void {
   const r = backend.write(orgId, projectId, items);
-  if (r && typeof (r as Promise<unknown>).then === "function") {
-    void (r as Promise<void>);
+  if (r != null && typeof (r as unknown as Promise<unknown>).then === "function") {
+    void (r as unknown as Promise<void>);
   }
 }
 
@@ -131,8 +131,8 @@ export function clearOfflineQueueForWorkspace(
 ): number {
   const backend = getOfflineQueueBackend();
   const r = backend.clearScope(orgId, projectId);
-  if (r && typeof (r as Promise<unknown>).then === "function") {
-    void (r as Promise<number>);
+  if (r != null && typeof (r as unknown as Promise<unknown>).then === "function") {
+    void (r as unknown as Promise<number>);
     return 0;
   }
   return r as number;
@@ -141,8 +141,8 @@ export function clearOfflineQueueForWorkspace(
 export function clearAllOfflineQueues(): number {
   const backend = getOfflineQueueBackend();
   const r = backend.clearAll();
-  if (r && typeof (r as Promise<unknown>).then === "function") {
-    void (r as Promise<number>);
+  if (r != null && typeof (r as unknown as Promise<unknown>).then === "function") {
+    void (r as unknown as Promise<number>);
     return 0;
   }
   return r as number;

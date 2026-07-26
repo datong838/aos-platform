@@ -6,7 +6,7 @@ import { MemoryRouter } from "react-router-dom";
 import { LOCAL_PLATFORM_NAME } from "../lib/productCopy";
 
 const probeApiHealth = vi.fn(async () => ({ ok: true, detail: "ok" }));
-const apiGet = vi.fn(async (path: string) => {
+const apiGet = vi.fn(async (path: string): Promise<unknown> => {
   if (path.includes("/hub")) {
     return {
       ok: true,
@@ -36,9 +36,9 @@ const apiPost = vi.fn(async () => ({
 }));
 
 vi.mock("../api/client", () => ({
-  probeApiHealth: (...args: unknown[]) => probeApiHealth(...args),
-  apiGet: (...args: unknown[]) => apiGet(...args),
-  apiPost: (...args: unknown[]) => apiPost(...args),
+  probeApiHealth: () => probeApiHealth(),
+  apiGet: (path: string) => apiGet(path),
+  apiPost: () => apiPost(),
 }));
 
 vi.mock("../api/apiBase", () => ({

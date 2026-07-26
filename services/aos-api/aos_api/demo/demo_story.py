@@ -1,4 +1,9 @@
-"""TB.1～TB.9 + TA.7 · Customer demo story surface (WorkOrder + analytics)."""
+"""演示故事线（仅供测试调用，不暴露 HTTP 接口）。
+
+从原 ``aos_api.demo_story`` 搬迁而来。改造要点：
+  - ``seed_if_empty`` / ``repair_demo_workorders`` → ``demo.seed_test_org``
+  - 仅作为开发/测试时的一键演示故事入口，不暴露 /v1/demo/* 路由
+"""
 from __future__ import annotations
 
 import json
@@ -6,10 +11,9 @@ import uuid
 from typing import Any
 
 from aos_api.auth import Principal
-from aos_api.db import connect, repair_demo_workorders, seed_if_empty
 from aos_api.logging_facade import get_logger
 
-log = get_logger("aos-api.demo_story")
+log = get_logger("aos-api.demo.demo_story")
 
 STORY_ID = "workorder-local-demo"
 STORY_TITLE = "工单运营演示（本地可部署）"
@@ -17,48 +21,60 @@ STORY_TITLE = "工单运营演示（本地可部署）"
 
 def ensure_demo_seed(*, repair: bool = True) -> dict[str, Any]:
     """Idempotent: schema seed + optional WorkOrder repair for customer demo."""
-    seed_if_empty()
+    from aos_api.demo import seed_test_org
+
+    result = seed_test_org(repair=repair)
     from aos_api.routers.actions import ensure_action_schema
     from aos_api.routers.drafts import ensure_draft_schema
-    from aos_api.routers.wave_ext import ensure_demo_data_seed
 
     ensure_action_schema()
     ensure_draft_schema()
-    data_surface = ensure_demo_data_seed(force=True)
     if repair:
-        # 36 §7 · 先修 MySQL 源表中文，再钉死 Object 标题（含 mysql-wo-*）
         try:
             from aos_api.mysql_connector import repair_mysql_source_titles
 
-            data_surface["mysqlTitleRepair"] = repair_mysql_source_titles()
+            result["mysqlTitleRepair"] = repair_mysql_source_titles()
         except Exception as exc:  # noqa: BLE001
-            data_surface["mysqlTitleRepair"] = {"ok": False, "detail": str(exc)}
-        repair_demo_workorders()
-    else:
-        # Ensure demo rows exist without clobbering status (TB.4 writeback toggle)
-        with connect() as conn:
-            row = conn.execute(
-                "SELECT 1 FROM obj_instance WHERE object_type=%s AND object_id=%s",
-                ("WorkOrder", "wo-1001"),
-            ).fetchone()
-            if not row:
-                repair_demo_workorders(conn)
-                conn.commit()
+            result["mysqlTitleRepair"] = {"ok": False, "detail": str(exc)}
     snap = story_snapshot()
-    snap["dataSurface"] = data_surface
+    snap["seedResult"] = result
     log.info(
-        "demo_seed_ensured objects=%s type=%s repair=%s datasets=%s dlq=%s",
+        "demo_seed_ensured objects=%s type=%s repair=%s",
         snap.get("objectCount"),
         snap.get("objectType"),
         repair,
-        data_surface.get("datasets"),
-        data_surface.get("dlq"),
     )
     return {"ok": True, "storyId": STORY_ID, "snapshot": snap}
 
 
+def ensure_demo_seed_full(*, repair: bool = True) -> dict[str, Any]:
+    """[测试/开发用] 组合数据库 + wave_ext 内存数据面的 demo seed。
+
+    返回结构兼容原 ``POST /v1/demo/ensure-seed`` HTTP 接口的 payload：
+    ``{ok, storyId, snapshot:{..., dataSurface:{datasets, dlq, syncs, ...}}}``。
+
+    仅供测试代码 / 演示脚本直接调用；不暴露 HTTP 路由。
+    """
+    base = ensure_demo_seed(repair=repair)
+    from aos_api.routers.wave_ext import ensure_demo_data_seed
+
+    surface = ensure_demo_data_seed(force=True)
+    snap = base.get("snapshot") or {}
+    snap["dataSurface"] = {
+        "sources": int(surface.get("sources", 0)),
+        "pipelines": int(surface.get("pipelines", 0)),
+        "datasets": int(surface.get("datasets", 0)),
+        "builds": int(surface.get("builds", 0)),
+        "dlq": int(surface.get("dlq", 0)),
+        "syncs": int(surface.get("syncs", 0)),
+    }
+    base["snapshot"] = snap
+    return base
+
+
 def story_snapshot() -> dict[str, Any]:
-    seed_if_empty()
+    from aos_api.db import connect
+
     with connect() as conn:
         ot = conn.execute(
             "SELECT id, name, published FROM meta_object_type WHERE id=%s",
@@ -121,6 +137,8 @@ def run_writeback_story(principal: Principal) -> dict[str, Any]:
 
     object_type = "WorkOrder"
     object_id = "wo-1001"
+    from aos_api.db import connect
+
     with connect() as conn:
         row = conn.execute(
             "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s",
@@ -189,11 +207,7 @@ def run_writeback_story(principal: Principal) -> dict[str, Any]:
 
 
 def run_analytics_story(principal: Principal) -> dict[str, Any]:
-    """TA.7 · One-shot: analytics read → propose Draft → approve → lineage.
-
-    Demo-only auto-approve inside this story. Product path on /analytics remains
-    propose-only (no analyst self-approve).
-    """
+    """TA.7 · One-shot: analytics read → propose Draft → approve → lineage."""
     from aos_api.auth import Principal as P
     from aos_api.errors import ApiError
     from aos_api.routers.actions import ensure_action_schema
@@ -219,6 +233,8 @@ def run_analytics_story(principal: Principal) -> dict[str, Any]:
             message="analytics story requires WorkOrder sample rows",
             status_code=503,
         )
+
+    from aos_api.db import connect
 
     with connect() as conn:
         row = conn.execute(
@@ -327,6 +343,8 @@ def governance_probe(principal: Principal) -> dict[str, Any]:
     ensure_demo_seed(repair=False)
     object_type = "WorkOrder"
     object_id = "wo-1001"
+    from aos_api.db import connect
+
     with connect() as conn:
         ot = conn.execute(
             "SELECT properties FROM meta_object_type WHERE id=%s",
@@ -449,9 +467,7 @@ def run_capability_mirror(principal: Principal) -> dict[str, Any]:
         ),
         principal,
     )
-    media_rid = (job.get("artifact") or {}).get("mediaRid") or (job.get("artifact") or {}).get(
-        "rid"
-    )
+    media_rid = (job.get("artifact") or {}).get("mediaRid") or (job.get("artifact") or {}).get("rid")
 
     csv_text = "title,status\n机房巡检-A区,open\n"
     csv_b64 = base64.b64encode(csv_text.encode("utf-8")).decode("ascii")
@@ -516,7 +532,7 @@ def demo_story_payload() -> dict[str, Any]:
             "id": "TB.1",
             "title": "行业种子",
             "uiPath": "/ontology",
-            "api": "GET /v1/demo/story",
+            "api": "（测试脚本 seed_test_org）",
             "say": f"Object Type WorkOrder · {snap['objectCount']} 条样例对象",
         },
         {
@@ -537,7 +553,7 @@ def demo_story_payload() -> dict[str, Any]:
             "id": "TB.4",
             "title": "写回闭环",
             "uiPath": "/aip/drafts",
-            "api": "POST /v1/demo/run-story",
+            "api": "（测试脚本 run_writeback_story）",
             "say": "一键 Draft→批准→对象 status 变→谱系",
         },
         {
@@ -558,28 +574,28 @@ def demo_story_payload() -> dict[str, Any]:
             "id": "TB.7",
             "title": "治理可见",
             "uiPath": "/aip/lineage",
-            "api": "GET /v1/demo/governance",
+            "api": "（测试脚本 governance_probe）",
             "say": "internalCost 脱敏对比 + Marking FORBIDDEN + 最近谱系",
         },
         {
             "id": "TB.8",
             "title": "业务主链",
             "uiPath": "/",
-            "api": "GET /v1/demo/story · scripts/demo/CUSTOMER-DEMO.md",
+            "api": "（测试脚本 demo_story_payload）",
             "say": "概览 StoryChain 链真实页；Apollo 运维不讲",
         },
         {
             "id": "TB.9",
             "title": "Capability / OCR 一镜（可选）",
             "uiPath": "/aip/capabilities",
-            "api": "POST /v1/demo/run-capability",
+            "api": "（测试脚本 run_capability_mirror）",
             "say": "Job→MediaSet + CSV 解析 + OCR probe（不宣称生产 GPU）",
         },
         {
             "id": "TA.7",
             "title": "分析→回写一镜",
             "uiPath": "/analytics",
-            "api": "POST /v1/demo/run-analytics-story",
+            "api": "（测试脚本 run_analytics_story）",
             "say": "读数→propose Draft→（演示内）批准→谱系；产品路径仍禁自批",
         },
         {

@@ -8,10 +8,7 @@ import {
   SELECTION_LIMIT,
   type SelectionFilter,
 } from "../selection";
-import {
-  PaginationGuardBanner,
-} from "../paginationGuard";
-import { BpPropGrid, BpToolbar, BpVarBar, BpWsGrid } from "./s2/blueprintUi";
+import { PaginationGuardBanner } from "../paginationGuard";
 
 type Row = Record<string, string>;
 
@@ -24,12 +21,31 @@ type ExecuteOut = {
   idempotentReplay?: boolean;
 };
 
-const PRESET_FILTERS: { id: string; label: string; field: string; value: string }[] = [
-  { id: "site-east", label: "站点：DC-East", field: "site", value: "DC-East" },
-  { id: "site-west", label: "站点：DC-West", field: "site", value: "DC-West" },
+type ActivityLog = {
+  id: string;
+  text: string;
+  actor: string;
+  time: string;
+  color: string;
+};
+
+const PRESET_FILTERS: { id: string; label: string; field: string; value: string; group: string }[] = [
+  { id: "status-open", label: "异常", field: "status", value: "open", group: "状态" },
+  { id: "status-handled", label: "已处理", field: "status", value: "handled", group: "状态" },
+  { id: "status-closed", label: "已关闭", field: "status", value: "closed", group: "状态" },
+  { id: "prio-high", label: "高", field: "priority", value: "high", group: "优先级" },
+  { id: "prio-mid", label: "中", field: "priority", value: "mid", group: "优先级" },
+  { id: "prio-low", label: "低", field: "priority", value: "low", group: "优先级" },
 ];
 
-/** 80 · 对齐 workshop-module.html · 变量条 + 三栏 + Action HITL */
+function priorityBadge(v: string) {
+  const p = (v || "").toLowerCase();
+  if (p === "high") return { bg: "#FEE2E2", color: "#DC2626", label: "高" };
+  if (p === "mid") return { bg: "#FEF3C7", color: "#D97706", label: "中" };
+  return { bg: "#F3F4F6", color: "#6B7280", label: p === "low" ? "低" : "—" };
+}
+
+/** 80 · 对齐 workshop-module.html · 三栏 + Filter + Object Table + Object View + 活动日志 */
 export function InboxPage() {
   const [filters, setFilters] = useState<SelectionFilter[]>([]);
   const [presetOn, setPresetOn] = useState<Record<string, boolean>>({});
@@ -58,6 +74,15 @@ export function InboxPage() {
     }
     return selectedRows[0] || rows[0] || null;
   }, [activeId, rows, selectedRows]);
+
+  const activityLog: ActivityLog[] = useMemo(() => {
+    if (!activeRow) return [];
+    return [
+      { id: "a1", text: "风控告警触发", actor: "系统", time: "18:32", color: "#DC2626" },
+      { id: "a2", text: "Wiki 规则匹配", actor: "Agent", time: "18:33", color: "#F59E0B" },
+      { id: "a3", text: "等待人工审核", actor: "系统", time: "18:34", color: "#3B82F6" },
+    ];
+  }, [activeRow]);
 
   async function runQuery(nextFilters: SelectionFilter[]) {
     setError(null);
@@ -202,189 +227,291 @@ export function InboxPage() {
     }
   }
 
-  const filterSummary =
-    filters.length > 0
-      ? filters.map((f) => `${f.field}=${f.value}`).join(" · ")
-      : "无";
-
   const buddyHref = activeRow
     ? `/workshop/buddy?order=${encodeURIComponent(String(activeRow.id))}&assist=1`
     : "/workshop/buddy";
 
+  const filterGroups = ["状态", "优先级"];
+  const customFilters = filters.filter(
+    (f) => !PRESET_FILTERS.some((p) => p.field === f.field && p.value === f.value),
+  );
+
   return (
     <PageChrome
       title="风险告警管理"
-      lede="91 · Filter · Object Table · Object View · 变量条 · Action→Draft HITL"
+      lede="Filter · Object Table · Object View · Action→Draft HITL"
     >
-      <BpToolbar>
-        <Link to={buddyHref} className="bp-buddy-toolbar-btn bp-buddy-toolbar-btn-active" style={{ textDecoration: "none" }}>
-          💬 Buddy
-        </Link>
-        <Link to="/workshop/graph" className="bp-buddy-toolbar-btn" style={{ textDecoration: "none" }}>
-          图谱台
-        </Link>
-        <Link to="/workshop/canvas" className="btn-nav">
-          画布编辑 →
-        </Link>
-        <Link to="/aip/drafts" className="btn-nav">
-          Draft 审批 →
-        </Link>
-      </BpToolbar>
+      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        {/* Top bar */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "10px 20px",
+          borderBottom: "1px solid #E5E7EB",
+          background: "white",
+          borderRadius: 8,
+          marginBottom: 12,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="1.5">
+              <path d="M4 4h6l2 3h8v13H4V4z" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span style={{ fontSize: 14, fontWeight: 500, color: "#111827" }}>风险告警管理 · Risk Alert Manager</span>
+            <span style={{ fontSize: 11, color: "#6B7280", padding: "2px 8px", background: "#F3F4F6", borderRadius: 4 }}>v2 · 已发布</span>
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <Link to="/workshop/canvas" style={{ padding: "5px 12px", fontSize: 12, border: "1px solid #D1D5DB", borderRadius: 6, background: "white", color: "#374151", textDecoration: "none" }}>
+              编辑模块
+            </Link>
+            <Link to="/workshop" style={{ padding: "5px 12px", fontSize: 12, border: "1px solid #D1D5DB", borderRadius: 6, background: "white", color: "#374151", textDecoration: "none" }}>
+              ← 返回列表
+            </Link>
+          </div>
+        </div>
 
-      <BpVarBar
-        chips={[
-          {
-            label: `Selection=${activeRow ? String(activeRow.id) : "—"}`,
-            tone: "sky",
-          },
-          {
-            label: `Selection 维数 ${selected.size} / 10`,
-            tone: "amber",
-          },
-          { label: `Filter=${filterSummary}`, tone: "muted" },
-          { label: "User=当前用户", tone: "muted" },
-          {
-            label: `Table · 命中 ${displayTotal}`,
-            tone: "violet",
-          },
-          { label: "WorkOrder · HITL Action", tone: "emerald" },
-        ]}
-        trailing="不做 SQL · 只认变量"
-      />
+        <PaginationGuardBanner total={displayTotal} />
+        {gateMsg && <p className="error" style={{ fontSize: 12 }}>{gateMsg}</p>}
+        {error && <p className="error" style={{ fontSize: 12 }}>{error}</p>}
+        {actionMsg && <p className="aos-text" style={{ fontSize: 12 }}>{actionMsg}</p>}
 
-      <PaginationGuardBanner total={displayTotal} />
-      {gateMsg && <p className="error">{gateMsg}</p>}
-      {error && <p className="error">{error}</p>}
-      {actionMsg && <p className="aos-text">{actionMsg}</p>}
-
-      <BpWsGrid
-        filter={
-          <>
-            <div className="bp-ws-section-title">Filter List</div>
-            {PRESET_FILTERS.map((p) => (
-              <label key={p.id} className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 6 }}>
-                <input
-                  type="checkbox"
-                  checked={!!presetOn[p.id]}
-                  onChange={() => togglePreset(p.id)}
-                  style={{ marginRight: 6 }}
-                />
-                {p.label}
-              </label>
-            ))}
-            <form onSubmit={onAdd} style={{ marginTop: "0.75rem" }}>
-              <label className="muted" style={{ display: "block", fontSize: "0.75rem" }}>
-                field{" "}
-                <input value={field} onChange={(e) => setField(e.target.value)} style={{ width: "100%" }} />
-              </label>
-              <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginTop: 4 }}>
-                value{" "}
-                <input value={value} onChange={(e) => setValue(e.target.value)} style={{ width: "100%" }} />
-              </label>
-              <button type="submit" className="btn" style={{ marginTop: 6 }}>
-                添加维
-              </button>
-            </form>
-            <p className="muted" style={{ fontSize: "0.625rem", marginTop: "0.75rem" }}>
-              输出 → Object Set Filter · 维数 {filters.length}/{SELECTION_LIMIT}
-            </p>
-          </>
-        }
-        table={
-          <>
-            <div className="bp-ws-section-title">Object Table · WorkOrder</div>
-            <div className="bp-module-frame">
-              <div className="bp-module-frame-head">
-                <span>工单</span>
-                <span>标题</span>
-                <span>站点</span>
-                <span>状态</span>
-              </div>
-              {rows.map((r) => {
-                const id = String(r.id);
-                const isActive = activeRow && String(activeRow.id) === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    className={isActive ? "bp-module-row bp-module-row-active" : "bp-module-row"}
-                    onClick={() => toggleRow(id)}
-                  >
-                    <span style={{ color: "var(--aos-text)" }}>{id}</span>
-                    <span>{r.title || "—"}</span>
-                    <span>{r.site || "—"}</span>
-                    <span className={r.status === "open" ? "" : "bp-prop-warn"}>{r.status || "—"}</span>
-                  </button>
-                );
-              })}
-              {rows.length === 0 && !error && (
-                <p className="muted" style={{ padding: "0.75rem" }}>
-                  无行 · 改 Filter 或到数据连接接入源后刷新
-                </p>
-              )}
-            </div>
-            <p className="muted" style={{ fontSize: "0.625rem", marginTop: "0.5rem" }}>
-              Active / Selected → 右栏 Object View · 已选 {selected.size}
-            </p>
-          </>
-        }
-        objectView={
-          activeRow ? (
-            <>
-              <div className="bp-ws-section-title">
-                Object View <span className="muted">· Wiki 侧栏</span>
-              </div>
-              <div className="bp-object-panel">
-                <div className="bp-object-title">{String(activeRow.id)}</div>
-                <p className="muted" style={{ fontSize: "0.75rem", marginTop: 4 }}>
-                  类型：WorkOrder · 状态：{activeRow.status || "—"}
-                </p>
-                <BpPropGrid
-                  items={[
-                    { label: "标题", value: String(activeRow.title || "—") },
-                    { label: "站点", value: String(activeRow.site || "—") },
-                    {
-                      label: "状态",
-                      value: String(activeRow.status || "—"),
-                      tone: activeRow.status === "open" ? undefined : "warn",
-                    },
-                    { label: "internalCost", value: activeRow.internalCost != null ? String(activeRow.internalCost) : "—" },
-                  ]}
-                />
-                {wikiText && (
-                  <div className="bp-wiki-snippet">
-                    <strong>Wiki · 工单说明</strong>
-                    {wikiText}
-                  </div>
-                )}
-                <div className="bp-object-actions">
-                  <button
-                    type="button"
-                    className="btn"
-                    disabled={busy}
-                    onClick={() => void proposeClose([activeRow])}
-                  >
-                    发起申诉 · HITL
-                  </button>
-                  <button
-                    type="button"
-                    className="btn"
-                    disabled={busy || selected.size === 0}
-                    onClick={() => void proposeClose()}
-                  >
-                    批量关闭（{selected.size}）
-                  </button>
-                  <Link to={buddyHref} className="btn" style={{ textDecoration: "none" }}>
-                    💡 Assist
-                  </Link>
+        {/* 3-pane layout */}
+        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "200px 1fr 1fr", minHeight: 500, gap: 0, borderRadius: 8, overflow: "hidden", border: "1px solid #E5E7EB" }}>
+          {/* Left: Filter List */}
+          <div style={{ padding: 16, borderRight: "1px solid #E5E7EB", overflowY: "auto", background: "#F9FAFB" }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#111827", marginBottom: 12 }}>筛选列表</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {filterGroups.map((group) => (
+                <div key={group}>
+                  <div style={{ fontSize: 11, fontWeight: 500, color: "#6B7280", marginTop: group === "状态" ? 0 : 12 }}>{group}</div>
+                  {PRESET_FILTERS.filter((p) => p.group === group).map((p) => (
+                    <label key={p.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#374151", cursor: "pointer", marginTop: 4 }}>
+                      <input
+                        type="checkbox"
+                        checked={!!presetOn[p.id]}
+                        onChange={() => togglePreset(p.id)}
+                      />
+                      {p.label}
+                    </label>
+                  ))}
                 </div>
+              ))}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 500, color: "#6B7280", marginTop: 12 }}>自定义</div>
+                <form onSubmit={onAdd} style={{ marginTop: 6 }}>
+                  <input
+                    value={field}
+                    onChange={(e) => setField(e.target.value)}
+                    placeholder="field"
+                    style={{ width: "100%", padding: "4px 6px", fontSize: 11, border: "1px solid #D1D5DB", borderRadius: 4, marginBottom: 4 }}
+                  />
+                  <input
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    placeholder="value"
+                    style={{ width: "100%", padding: "4px 6px", fontSize: 11, border: "1px solid #D1D5DB", borderRadius: 4, marginBottom: 6 }}
+                  />
+                  <button type="submit" style={{ width: "100%", padding: "4px 8px", fontSize: 11, border: "none", borderRadius: 4, background: "#3B82F6", color: "#fff", cursor: "pointer" }}>
+                    添加筛选
+                  </button>
+                </form>
               </div>
-            </>
-          ) : (
-            <p className="muted">选择左侧行查看 Object View</p>
-          )
-        }
-      />
+            </div>
+            <div style={{ marginTop: 16, padding: 8, background: "#EFF6FF", borderRadius: 6, fontSize: 11, color: "#2563EB" }}>
+              输出 → Object Set Filter
+              <br />
+              维数 {filters.length}/{SELECTION_LIMIT}
+            </div>
+            {customFilters.length > 0 && (
+              <div style={{ marginTop: 8, fontSize: 10, color: "#9CA3AF" }}>
+                自定义: {customFilters.map((f) => `${f.field}=${f.value}`).join(", ")}
+              </div>
+            )}
+          </div>
+
+          {/* Middle: Object Table */}
+          <div style={{ padding: 16, borderRight: "1px solid #E5E7EB", overflowY: "auto", background: "#fff" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>风控告警列表</div>
+              <span style={{ fontSize: 12, color: "#6B7280" }}>{rows.length} 条结果</span>
+            </div>
+            <div style={{ border: "1px solid #E5E7EB", borderRadius: 8, overflow: "hidden", background: "white" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left", padding: "10px 12px", background: "#F3F4F6", borderBottom: "1px solid #E5E7EB", fontWeight: 600, color: "#6B7280", fontSize: 11 }}>订单号</th>
+                    <th style={{ textAlign: "left", padding: "10px 12px", background: "#F3F4F6", borderBottom: "1px solid #E5E7EB", fontWeight: 600, color: "#6B7280", fontSize: 11 }}>问题</th>
+                    <th style={{ textAlign: "left", padding: "10px 12px", background: "#F3F4F6", borderBottom: "1px solid #E5E7EB", fontWeight: 600, color: "#6B7280", fontSize: 11 }}>站点</th>
+                    <th style={{ textAlign: "left", padding: "10px 12px", background: "#F3F4F6", borderBottom: "1px solid #E5E7EB", fontWeight: 600, color: "#6B7280", fontSize: 11 }}>等级</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r) => {
+                    const id = String(r.id);
+                    const isActive = activeRow && String(activeRow.id) === id;
+                    const badge = priorityBadge(String(r.priority || ""));
+                    return (
+                      <tr
+                        key={id}
+                        onClick={() => toggleRow(id)}
+                        style={{
+                          cursor: "pointer",
+                          background: isActive ? "#EFF6FF" : undefined,
+                          borderLeft: isActive ? "3px solid #2563EB" : undefined,
+                          borderBottom: "1px solid #E5E7EB",
+                        }}
+                      >
+                        <td style={{ padding: "10px 12px", fontFamily: "monospace", fontSize: 12 }}>{id}</td>
+                        <td style={{ padding: "10px 12px", fontSize: 12 }}>{r.title || "—"}</td>
+                        <td style={{ padding: "10px 12px", fontSize: 12 }}>{r.site || "—"}</td>
+                        <td style={{ padding: "10px 12px" }}>
+                          <span style={{ padding: "2px 6px", borderRadius: 3, fontSize: 10, background: badge.bg, color: badge.color }}>
+                            {badge.label}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {rows.length === 0 && !error && (
+                    <tr>
+                      <td colSpan={4} style={{ padding: "24px 12px", textAlign: "center", color: "#9CA3AF", fontSize: 12 }}>
+                        无行 · 改 Filter 或到数据连接接入源后刷新
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ marginTop: 8, fontSize: 11, color: "#9CA3AF" }}>
+              Active / Selected → 右栏 Object View · 已选 {selected.size}
+            </div>
+          </div>
+
+          {/* Right: Object View + Actions + Activity Log */}
+          <div style={{ padding: 16, overflowY: "auto", background: "#fff" }}>
+            {activeRow ? (
+              <>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>订单详情</div>
+                  <span style={{ fontSize: 11, color: "#EA580C" }}>Wiki 侧栏</span>
+                </div>
+                <div style={{ border: "1px solid #E5E7EB", borderRadius: 12, background: "white", padding: 16 }}>
+                  <div style={{ fontSize: 18, fontWeight: 600, color: "#111827", marginBottom: 4 }}>
+                    {String(activeRow.id)}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 16 }}>
+                    类型：WorkOrder · 状态：{activeRow.status || "—"}
+                  </div>
+
+                  {/* Detail grid */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+                    <div style={{ padding: 10, background: "#F9FAFB", borderRadius: 8 }}>
+                      <div style={{ fontSize: 10, color: "#6B7280" }}>标题</div>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: "#111827", marginTop: 2 }}>
+                        {String(activeRow.title || "—")}
+                      </div>
+                    </div>
+                    <div style={{ padding: 10, background: "#F9FAFB", borderRadius: 8 }}>
+                      <div style={{ fontSize: 10, color: "#6B7280" }}>站点</div>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: "#111827", marginTop: 2 }}>
+                        {String(activeRow.site || "—")}
+                      </div>
+                    </div>
+                    <div style={{ padding: 10, background: "#F9FAFB", borderRadius: 8 }}>
+                      <div style={{ fontSize: 10, color: "#6B7280" }}>状态</div>
+                      <div style={{ fontSize: 14, fontWeight: 500, marginTop: 2, color: activeRow.status === "open" ? "#DC2626" : "#059669" }}>
+                        {activeRow.status || "—"}
+                      </div>
+                    </div>
+                    <div style={{ padding: 10, background: "#F9FAFB", borderRadius: 8 }}>
+                      <div style={{ fontSize: 10, color: "#6B7280" }}>内部成本</div>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: "#111827", marginTop: 2 }}>
+                        {activeRow.internalCost != null ? String(activeRow.internalCost) : "—"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Wiki section */}
+                  {wikiText && (
+                    <div style={{ border: "1px solid #FED7AA", background: "#FFF7ED", borderRadius: 8, padding: 12, marginBottom: 16 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#EA580C", marginBottom: 4 }}>Wiki · 工单说明</div>
+                      <p style={{ fontSize: 12, color: "#9A3412", margin: 0, lineHeight: 1.5 }}>{wikiText}</p>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    <button
+                      type="button"
+                      onClick={() => void proposeClose([activeRow])}
+                      disabled={busy}
+                      style={{
+                        padding: "8px 14px",
+                        borderRadius: 8,
+                        background: "#FEF3C7",
+                        border: "1px solid #FCD34D",
+                        fontSize: 12,
+                        color: "#92400E",
+                        cursor: busy ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      发起申诉 · HITL
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void proposeClose()}
+                      disabled={busy || selected.size === 0}
+                      style={{
+                        padding: "8px 14px",
+                        borderRadius: 8,
+                        border: "1px solid #D1D5DB",
+                        background: "white",
+                        fontSize: 12,
+                        color: "#374151",
+                        cursor: busy || selected.size === 0 ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      批量关闭（{selected.size}）
+                    </button>
+                    <Link
+                      to={buddyHref}
+                      style={{
+                        padding: "8px 14px",
+                        borderRadius: 8,
+                        border: "1px solid #BFDBFE",
+                        background: "#EFF6FF",
+                        fontSize: 12,
+                        color: "#2563EB",
+                        textDecoration: "none",
+                      }}
+                    >
+                      Assist
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Activity log */}
+                <div style={{ marginTop: 16, border: "1px solid #E5E7EB", borderRadius: 12, background: "white", padding: 16 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#111827", marginBottom: 12 }}>活动日志</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {activityLog.map((log) => (
+                      <div key={log.id} style={{ display: "flex", gap: 8, fontSize: 12 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: log.color, marginTop: 5, flexShrink: 0 }} />
+                        <div>
+                          <span style={{ color: "#111827" }}>{log.text}</span>
+                          <span style={{ color: "#6B7280" }}> · {log.actor} · {log.time}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p style={{ color: "#9CA3AF", fontSize: 12, textAlign: "center", paddingTop: 40 }}>选择左侧行查看 Object View</p>
+            )}
+          </div>
+        </div>
+      </div>
     </PageChrome>
   );
 }

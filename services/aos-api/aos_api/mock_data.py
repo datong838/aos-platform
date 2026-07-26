@@ -1,7 +1,19 @@
-"""Wave-0 in-memory Mock aligned with foundry/html Inbox narrative (T0.7)."""
+"""[Deprecated · 测试辅助] Wave-0 内存 Mock — 仅保留 reset 辅助。
+
+**重要变更**：本模块已不再被生产代码引用：
+- ``routers/object_sets.py`` 只走真实 PG（移除 ``source=mock`` 参数和 fallback）
+- ``vector_index.py`` 移除 mock fallback，PG 不可用时返回空
+- ``tool_runtime.py`` ``query.objects`` 工具改为真实 PG 查询
+- Phase 6 (v2.3) 已删除 list_modules / get_module / create_module / update_module /
+  publish_module / module_runtime / query_objects 7 个 0 引用 CRUD 函数 + _OBJECTS 列表
+
+保留本模块的原因：
+- 28 个单测 + conftest 在 setup 时调用 ``mock_data.reset_mock_state()`` 作为清理动作。
+- 全局 grep 确认：生产代码（aos_api/ 内）0 引用，main.py 启动流程不调用，纯测试辅助。
+- 后续单测可逐步改用 ``from aos_api.demo import clear_test_org`` 替代，最终删除本文件。
+"""
 from __future__ import annotations
 
-from copy import deepcopy
 from typing import Any
 
 from aos_api.logging_facade import get_logger
@@ -44,162 +56,15 @@ _MODULES: list[dict[str, Any]] = [
     },
 ]
 
-_OBJECTS: list[dict[str, Any]] = [
-    {
-        "id": "wo-1001",
-        "type": "WorkOrder",
-        "title": "机房巡检-A区",
-        "status": "open",
-        "priority": "P1",
-        "owner": "ops-alice",
-        "site": "DC-East",
-    },
-    {
-        "id": "wo-1002",
-        "type": "WorkOrder",
-        "title": "链路告警复核",
-        "status": "in_progress",
-        "priority": "P0",
-        "owner": "ops-bob",
-        "site": "DC-West",
-    },
-    {
-        "id": "wo-1003",
-        "type": "WorkOrder",
-        "title": "备件更换",
-        "status": "open",
-        "priority": "P2",
-        "owner": "ops-carol",
-        "site": "DC-East",
-    },
-]
-
-
-def list_modules() -> list[dict[str, Any]]:
-    log.debug("mock_list_modules count=%s", len(_MODULES))
-    return deepcopy(_MODULES)
-
-
-def get_module(module_id: str) -> dict[str, Any] | None:
-    for m in _MODULES:
-        if m["id"] == module_id:
-            return deepcopy(m)
-    return None
-
-
-def create_module(payload: dict[str, Any]) -> dict[str, Any]:
-    mid = payload.get("id") or f"mod-{len(_MODULES) + 1}"
-    item = {
-        "id": mid,
-        "name": payload.get("name") or mid,
-        "status": payload.get("status") or "draft",
-        "description": payload.get("description") or "",
-        "objectType": payload.get("objectType") or "WorkOrder",
-        "markings": payload.get("markings") or ["public"],
-        "entryPath": payload.get("entryPath") or "/workshop/inbox",
-        "widgets": payload.get("widgets") or ["table", "filters"],
-        "buddyBound": bool(payload.get("buddyBound", True)),
-    }
-    _MODULES.append(item)
-    log.info("mock_create_module id=%s entry=%s", mid, item["entryPath"])
-    return deepcopy(item)
-
-
-def update_module(module_id: str, patch: dict[str, Any]) -> dict[str, Any] | None:
-    for i, m in enumerate(_MODULES):
-        if m["id"] != module_id:
-            continue
-        allowed = {
-            "name",
-            "description",
-            "objectType",
-            "markings",
-            "entryPath",
-            "widgets",
-            "buddyBound",
-            "status",
-        }
-        updated = deepcopy(m)
-        for k, v in patch.items():
-            if k in allowed and v is not None:
-                updated[k] = v
-        _MODULES[i] = updated
-        log.info("mock_update_module id=%s", module_id)
-        return deepcopy(updated)
-    return None
-
-
-def publish_module(module_id: str) -> dict[str, Any] | None:
-    mod = update_module(module_id, {"status": "published"})
-    if not mod:
-        return None
-    return {
-        **mod,
-        "publish": {
-            "adapter": "apollo-lite",
-            "channel": "dev",
-            "status": "ACCEPTED",
-        },
-    }
-
-
-def module_runtime(module_id: str) -> dict[str, Any] | None:
-    mod = get_module(module_id)
-    if not mod:
-        return None
-    return {
-        "moduleId": module_id,
-        "layout": {"widgets": mod.get("widgets") or ["table", "filters", "selection"]},
-        "variables": {"selectionLimit": 10},
-        "events": [{"id": "refresh", "type": "query"}],
-        "objectType": mod["objectType"],
-        "entryPath": mod.get("entryPath") or "/workshop/inbox",
-        "buddyBound": bool(mod.get("buddyBound", False)),
-    }
-
-
-def query_objects(
-    *,
-    filters: list[dict[str, Any]] | None,
-    page: int,
-    page_size: int,
-) -> dict[str, Any]:
-    filters = filters or []
-    if len(filters) > 10:
-        raise ValueError("filters exceed 10 dimensions")
-    rows = deepcopy(_OBJECTS)
-    for f in filters:
-        field = f.get("field")
-        value = f.get("value")
-        if field and value is not None:
-            rows = [r for r in rows if str(r.get(field)) == str(value)]
-    total = len(rows)
-    start = max(page - 1, 0) * page_size
-    end = start + page_size
-    page_rows = rows[start:end]
-    log.info(
-        "mock_object_query filters=%s page=%s size=%s total=%s returned=%s",
-        len(filters),
-        page,
-        page_size,
-        total,
-        len(page_rows),
-    )
-    return {
-        "items": page_rows,
-        "page": page,
-        "pageSize": page_size,
-        "total": total,
-        "selectionLimit": 10,
-    }
-
 
 def reset_mock_state() -> None:
-    """Tests only — re-seed is implicit via module-level lists; recreate known ids."""
-    global _MODULES, _OBJECTS
+    """[测试辅助] 清空内存 module 列表，重建已知 id。
+
+    仅供单测 setup 调用；新测试建议改用 ``from aos_api.demo import clear_test_org``。
+    """
+    global _MODULES
     seed_ids = {"mod-ops-inbox", "mod-canvas-draft", "mod-buddy-assist"}
     _MODULES[:] = [m for m in _MODULES if m["id"] in seed_ids]
-    # ensure buddy module exists after older test runs
     if not any(m["id"] == "mod-buddy-assist" for m in _MODULES):
         _MODULES.append(
             {

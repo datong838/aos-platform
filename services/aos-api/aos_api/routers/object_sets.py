@@ -10,7 +10,6 @@ from aos_api.db import connect
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
 from aos_api.marking import apply_field_redaction, can_access_object
-from aos_api import mock_data
 
 router = APIRouter(tags=["object-sets"])
 log = get_logger("aos-api.object_sets")
@@ -36,7 +35,6 @@ class ObjectSetQuery(BaseModel):
     page: int = Field(default=1, ge=1)
     pageSize: int = Field(default=50, ge=1, le=1000)
     objectType: str = "WorkOrder"
-    source: str = Field(default="pg", description="pg|mock")
 
 
 def _query_pg(
@@ -83,6 +81,10 @@ def object_sets_query(
     body: ObjectSetQuery,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
+    """Object Set 查询 — 只走真实 PG，不再有 mock fallback。
+
+    线上行为：PG 异常直接报 500；不再降级返回内存假数据。
+    """
     if len(body.filters) > 10:
         raise ApiError(
             code="VALIDATION",
@@ -90,33 +92,12 @@ def object_sets_query(
             status_code=400,
             details={"maxFilters": 10, "got": len(body.filters)},
         )
-    if body.source == "mock":
-        try:
-            result = mock_data.query_objects(
-                filters=body.filters,
-                page=body.page,
-                page_size=body.pageSize,
-            )
-        except ValueError as exc:
-            raise ApiError(code="VALIDATION", message=str(exc), status_code=400) from exc
-        result["source"] = "mock"
-    else:
-        try:
-            result = _query_pg(
-                object_type=body.objectType,
-                filters=body.filters,
-                page=body.page,
-                page_size=body.pageSize,
-            )
-        except Exception as exc:
-            log.exception("pg_query_failed_fallback_mock")
-            result = mock_data.query_objects(
-                filters=body.filters,
-                page=body.page,
-                page_size=body.pageSize,
-            )
-            result["source"] = "mock-fallback"
-            result["fallbackReason"] = str(exc)
+    result = _query_pg(
+        object_type=body.objectType,
+        filters=body.filters,
+        page=body.page,
+        page_size=body.pageSize,
+    )
     log.info(
         "object_sets_query org=%s total=%s source=%s",
         principal.org_id,

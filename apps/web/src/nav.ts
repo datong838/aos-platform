@@ -6,6 +6,9 @@ export type NavSection = {
   /** 默认折叠（如运维交付） */
   collapseDefault?: boolean;
 };
+export type NavSubgroup = {
+  subgroup: string;
+};
 export type NavPage = {
   id: string;
   path: string;
@@ -17,7 +20,7 @@ export type NavPage = {
   /** hidden = 不在侧边栏渲染，但路由保留 */
   hidden?: boolean;
 };
-export type NavItem = NavSection | NavPage;
+export type NavItem = NavSection | NavSubgroup | NavPage;
 
 export type IconName =
   | "home"
@@ -56,7 +59,8 @@ export type IconName =
   | "trash"
   | "sync"
   | "route"
-  | "activity";
+  | "activity"
+  | "eye";
 
 export const NAV_ITEMS: NavItem[] = [
   { id: "index", path: "/", label: "概览", icon: "home", status: "live", crumbs: ["工作区", "AOS 概览"] },
@@ -93,6 +97,22 @@ export const NAV_ITEMS: NavItem[] = [
   { section: "工作台" },
   { id: "workshop", path: "/workshop", label: "应用列表", icon: "apps", status: "live", crumbs: ["工作台", "应用列表"] },
   {
+    id: "workshop-create",
+    path: "/workshop/create",
+    label: "创建应用",
+    icon: "inbox",
+    status: "live",
+    crumbs: ["工作台", "创建应用"],
+  },
+  {
+    id: "workshop-module",
+    path: "/workshop/module",
+    label: "模块管理",
+    icon: "layers",
+    status: "live",
+    crumbs: ["工作台", "模块管理"],
+  },
+  {
     id: "workshop-orders",
     path: "/workshop/orders",
     label: "订单管理",
@@ -101,7 +121,7 @@ export const NAV_ITEMS: NavItem[] = [
     crumbs: ["工作台", "订单管理"],
   },
   {
-    id: "workshop-module",
+    id: "workshop-inbox",
     path: "/workshop/inbox",
     label: "风险告警管理",
     icon: "inbox",
@@ -119,10 +139,10 @@ export const NAV_ITEMS: NavItem[] = [
   {
     id: "workshop-aip-chat",
     path: "/workshop/buddy",
-    label: "Buddy 智能助手",
+    label: "Buddy · 智能助手",
     icon: "chat",
     status: "live",
-    crumbs: ["工作台", "Buddy 智能助手"],
+    crumbs: ["工作台", "Buddy · 智能助手"],
   },
   {
     id: "analytics",
@@ -141,6 +161,30 @@ export const NAV_ITEMS: NavItem[] = [
     icon: "layers",
     status: "live",
     crumbs: ["构建工具", "画布编辑"],
+  },
+  {
+    id: "workshop-widget-registry",
+    path: "/workshop/widget-registry",
+    label: "组件注册表",
+    icon: "apps",
+    status: "s2",
+    crumbs: ["构建工具", "组件注册表"],
+  },
+  {
+    id: "workshop-variables",
+    path: "/workshop/variables",
+    label: "变量管理器",
+    icon: "layers",
+    status: "s2",
+    crumbs: ["构建工具", "变量管理器"],
+  },
+  {
+    id: "workshop-styles",
+    path: "/workshop/styles",
+    label: "主题与样式",
+    icon: "sun",
+    status: "s2",
+    crumbs: ["构建工具", "主题与样式"],
   },
   {
     id: "workshop-module-interface",
@@ -168,32 +212,32 @@ export const NAV_ITEMS: NavItem[] = [
   },
 
   { section: "AIP 决策引擎" },
-  // ─── 应用层（User Facing） ───
+  { subgroup: "应用层" },
   {
     id: "aip-assist",
     path: "/aip/assist",
-    label: "AIP Assist",
+    label: "AIP 助手",
     icon: "chat",
     status: "live",
-    crumbs: ["AIP", "AIP Assist"],
+    crumbs: ["AIP", "AIP 助手"],
   },
   {
     id: "agents",
     path: "/aip/studio",
-    label: "Chatbot Studio",
+    label: "对话机器人",
     icon: "chat",
     status: "live",
-    crumbs: ["AIP", "Chatbot Studio"],
+    crumbs: ["AIP", "对话机器人"],
   },
   {
     id: "aip-analyst",
     path: "/aip/analyst",
-    label: "AIP Analyst",
+    label: "AIP 分析师",
     icon: "table",
     status: "live",
-    crumbs: ["AIP", "AIP Analyst"],
+    crumbs: ["AIP", "AIP 分析师"],
   },
-  // ─── 编排构建层（Build Layer） ───
+  { subgroup: "逻辑编排层" },
   {
     id: "aip-logic",
     path: "/aip/logic",
@@ -218,15 +262,48 @@ export const NAV_ITEMS: NavItem[] = [
     status: "live",
     crumbs: ["AIP", "成熟度楼梯"],
   },
+  { subgroup: "智能体" },
   {
     id: "aip-capabilities",
     path: "/aip/capabilities",
-    label: "重能力接入",
+    label: "智能体插件",
     icon: "film",
     status: "live",
-    crumbs: ["AIP", "重能力接入"],
+    crumbs: ["AIP", "智能体插件"],
   },
-  // ─── 质量保障层（Quality Gate） ───
+  {
+    id: "aip-agent-registry",
+    path: "/aip/agent-registry",
+    label: "智能体目录",
+    icon: "plug",
+    status: "live",
+    crumbs: ["AIP", "智能体目录"],
+  },
+  {
+    id: "aip-agents",
+    path: "/aip/agents",
+    label: "智能体列表",
+    icon: "apps",
+    status: "live",
+    crumbs: ["AIP", "智能体列表"],
+  },
+  {
+    id: "aip-agent-import",
+    path: "/aip/agent-import",
+    label: "智能体导入",
+    icon: "sync",
+    status: "live",
+    crumbs: ["AIP", "智能体导入"],
+  },
+  {
+    id: "aip-capability-import",
+    path: "/aip/capability-import",
+    label: "能力导入",
+    icon: "spark",
+    status: "live",
+    crumbs: ["AIP", "能力导入"],
+  },
+  { subgroup: "评测与治理" },
   {
     id: "aip-evals",
     path: "/aip/evals",
@@ -251,7 +328,6 @@ export const NAV_ITEMS: NavItem[] = [
     status: "live",
     crumbs: ["AIP", "决策谱系"],
   },
-  // ─── 可观测性层（Observability） ───
   {
     id: "aip-observability",
     path: "/aip/observability",
@@ -316,18 +392,18 @@ export const NAV_ITEMS: NavItem[] = [
   {
     id: "ontology-funnel",
     path: "/ontology/funnel",
-    label: "漏斗管道",
+    label: "本体提案",
     icon: "funnel",
     status: "live",
-    crumbs: ["本体", "漏斗管道"],
+    crumbs: ["本体", "本体提案"],
   },
   {
     id: "funnel",
     path: "/ontology/okf-funnel",
-    label: "OKF 行业漏斗",
+    label: "OKF funnel",
     icon: "spark",
     status: "live",
-    crumbs: ["本体", "OKF 漏斗"],
+    crumbs: ["本体", "OKF funnel"],
   },
   {
     id: "okf-overview",
@@ -352,6 +428,14 @@ export const NAV_ITEMS: NavItem[] = [
     icon: "wiki",
     status: "live",
     crumbs: ["本体", "Wiki"],
+  },
+  {
+    id: "ontology-wiki-index",
+    path: "/ontology/wiki-index",
+    label: "Wiki 索引",
+    icon: "search",
+    status: "live",
+    crumbs: ["本体", "Wiki 索引"],
   },
   {
     id: "ontology-branches",
@@ -568,6 +652,14 @@ export const NAV_ITEMS: NavItem[] = [
     crumbs: [OPS_NAV_SECTION, "SaaS 开通"],
   },
 ];
+
+export function isNavSection(item: NavItem): item is NavSection {
+  return "section" in item;
+}
+
+export function isNavSubgroup(item: NavItem): item is NavSubgroup {
+  return "subgroup" in item;
+}
 
 export function isNavPage(item: NavItem): item is NavPage {
   return "path" in item;

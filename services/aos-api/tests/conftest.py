@@ -65,6 +65,25 @@ def auth_headers():
     }
 
 
+@pytest.fixture()
+def dev_principal(auth_headers):
+    """构造与 ``Bearer dev`` + dev-org/dev-project header 等价的 Principal。
+
+    供需要直接调用 ``aos_api.demo.demo_story`` Python 函数的测试使用，
+    替代已下线的 ``/v1/demo/*`` HTTP 路由。
+    """
+    from aos_api.auth import Principal
+
+    return Principal(
+        subject="user:dev",
+        org_id=auth_headers["X-Org-Id"],
+        project_id=auth_headers["X-Project-Id"],
+        roles=["developer", "admin"],
+        markings=["public", "restricted"],
+        token_kind="dev",
+    )
+
+
 @pytest.fixture(autouse=True)
 def _scrub_org_workspace_membership_residue():
     try:

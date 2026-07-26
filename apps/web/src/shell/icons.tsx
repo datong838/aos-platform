@@ -55,6 +55,7 @@ const PATHS: Record<IconName, string> = {
   sync: '<path stroke-linecap="round" stroke-linejoin="round" d="M21.5 8A9.5 9.5 0 0 0 8 3.5M2.5 16A9.5 9.5 0 0 0 16 20.5M19 5v3h-3M5 19v-3h3"/>',
   route: '<circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path stroke-linecap="round" d="M8 18h5a3 3 0 0 0 3-3v-2M16 8h-5a3 3 0 0 0-3 3v2"/>',
   activity: '<path stroke-linecap="round" stroke-linejoin="round" d="M3 12h6l3-9 3 18 3-9h3"/>',
+  eye: '<path stroke-linecap="round" stroke-linejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
 };
 
 export function NavIcon({

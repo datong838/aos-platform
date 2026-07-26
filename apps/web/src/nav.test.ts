@@ -10,9 +10,12 @@ describe("nav product sections alignment", () => {
     );
     expect(sections).toEqual([
       "工作台",
+      "应用程序构建工具",
       "AIP 决策引擎",
+      "模型管理",
       "本体 · 数字孪生",
-      "数据集成",
+      "管道与数据治理",
+      "数据源与同步",
       "运维交付",
     ]);
   });
@@ -58,8 +61,16 @@ describe("nav product sections alignment", () => {
     ]) {
       expect(navPages().find((p) => p.path === path)?.status).toBe("live");
     }
-    // no remaining DEMO s2 stubs
-    expect(navPages().filter((p) => p.status === "s2")).toEqual([]);
+    // no remaining DEMO s2 stubs except explicitly planned pages (223-plan W4)
+    const PLANNED_S2 = new Set([
+      "/workshop/widget-registry",
+      "/workshop/variables",
+      "/workshop/styles",
+    ]);
+    const remainingS2 = navPages().filter((p) => p.status === "s2");
+    for (const p of remainingS2) {
+      expect(PLANNED_S2.has(p.path), `unexpected s2 stub: ${p.path}`).toBe(true);
+    }
   });
 });
 

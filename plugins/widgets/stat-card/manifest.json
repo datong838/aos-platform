@@ -1,0 +1,24 @@
+{
+  "id": "stat-card",
+  "name": "Stat Card",
+  "nameZh": "统计卡",
+  "description": "指标统计卡 · 支持 count/sum，含 trend 与色彩 · scheme 223",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "inproc",
+  "capabilities": ["widget", "stat-card"],
+  "canvasKind": "stat-card",
+  "palette": true,
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "title": { "type": "string" },
+      "objectType": { "type": "string" },
+      "metric": { "type": "string", "enum": ["count", "sum"] },
+      "field": { "type": "string" },
+      "filter": { "type": "object" },
+      "icon": { "type": "string" },
+      "color": { "type": "string" }
+    }
+  }
+}

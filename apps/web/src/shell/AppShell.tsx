@@ -22,7 +22,7 @@ import { OrgSwitcher } from "../components/OrgSwitcher";
 import { PlatformBaseSwitcher } from "../components/PlatformBaseSwitcher";
 import { EnvReadonlyBadge } from "../components/EnvReadonlyBadge";
 import { getTenant } from "../api/tenant";
-import { DEMO_VERSION, findNavPage, isNavPage, NAV_ITEMS } from "../nav";
+import { DEMO_VERSION, findNavPage, isNavPage, isNavSubgroup, NAV_ITEMS } from "../nav";
 import { NavIcon } from "./icons";
 import type { IconName, NavPage } from "../nav";
 import { OPS_NAV_SECTION } from "../lib/productCopy";
@@ -366,16 +366,27 @@ export function AppShell() {
       </NavLink>
     );
 
+    const renderSubgroup = (label: string) => (
+      <div key={`sub-${label}`} className="aos-nav-subgroup">
+        {label}
+      </div>
+    );
+
     for (const item of NAV_ITEMS) {
-      if (!isNavPage(item)) {
-        // 遇到新分组：先 flush 上一组
+      if (isNavSubgroup(item)) {
+        // subgroup：添加到当前分组的页面列表中
+        if (currentSectionKey !== null) {
+          currentSectionPages.push(renderSubgroup(item.subgroup));
+        }
+      } else if (!isNavPage(item)) {
+        // section：遇到新分组，先 flush 上一组
         if (currentSectionKey !== null) {
           flushSection(currentSectionKey, currentSectionPages);
           currentSectionPages = [];
         }
         currentSectionKey = item.section;
       } else {
-        // hidden 页面不在侧边栏渲染，但路由保留
+        // page：hidden 页面不在侧边栏渲染，但路由保留
         if (item.hidden) continue;
         if (currentSectionKey === null) {
           // 不属于任何分组的页面（如概览）直接渲染

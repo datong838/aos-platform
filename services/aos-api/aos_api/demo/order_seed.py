@@ -1,20 +1,14 @@
-"""Phase C+ — Order Management seed data.
+"""订单测试数据种子：Order ObjectType + 20 条订单 + OrderItem + LinkType。
 
-Injects Order ObjectType + 20 sample orders covering 6 statuses,
-OrderItem ObjectType, and link types (Order → OrderItem).
-
-Called from db.py seed_if_empty() after WorkOrder seed.
+从原 ``aos_api/order_seed.py`` 搬迁而来。仅在 ``demo.seed_test_org()`` 时调用。
 """
 from __future__ import annotations
 
 import json
-import logging
 
-from aos_api.db import connect
+from aos_api.logging_facade import get_logger
 
-log = logging.getLogger("aos-api.order_seed")
-
-# ── ObjectType property definitions ──────────────────────────────────────────
+log = get_logger("aos-api.demo.order_seed")
 
 _ORDER_PROPS = json.dumps(
     [
@@ -41,10 +35,7 @@ _ORDER_ITEM_PROPS = json.dumps(
     ]
 )
 
-# ── 20 sample orders ─────────────────────────────────────────────────────────
-
 _SAMPLE_ORDERS = [
-    # (order_id, order_no, customer_id, customer_name, date, amount, status, address, items, tracking, remark)
     ("ord-001", "ORD-20251", "CUST-8847", "张伟", "2026-07-22", 1299, "shipped", "北京市朝阳区建国路88号", [{"product": "无线蓝牙耳机", "qty": 1, "price": 1299}], "SF1234567890", ""),
     ("ord-002", "ORD-20252", "CUST-2391", "李娜", "2026-07-22", 459, "delivered", "上海市浦东新区世纪大道100号", [{"product": "便携充电宝", "qty": 1, "price": 459}], "YT9876543210", ""),
     ("ord-003", "ORD-20253", "CUST-7102", "王芳", "2026-07-22", 2880, "paid", "广州市天河区体育西路191号", [{"product": "智能手表", "qty": 2, "price": 1440}], "", ""),
@@ -69,7 +60,6 @@ _SAMPLE_ORDERS = [
 
 
 def _build_order_props(record: tuple) -> str:
-    """Build JSONB props dict from a sample tuple."""
     (
         _oid,
         order_no,
@@ -100,41 +90,32 @@ def _build_order_props(record: tuple) -> str:
     )
 
 
-def ensure_order_seed() -> None:
-    """Idempotently seed Order + OrderItem ObjectTypes and sample data.
+def seed_orders() -> int:
+    """幂等灌入 Order + OrderItem ObjectType + 20 条样例订单 + LinkType。
 
-    Safe to call on every startup — uses ON CONFLICT DO NOTHING.
+    Returns:
+        样例订单数（20）。
     """
+    from aos_api.db import connect
+
     with connect() as conn:
-        # 1. Create Order ObjectType if missing
-        exists = conn.execute(
-            "SELECT 1 FROM meta_object_type WHERE id = 'Order'"
-        ).fetchone()
-        if not exists:
-            conn.execute(
-                """
-                INSERT INTO meta_object_type (id, name, description, published, properties)
-                VALUES (%s, %s, %s, %s, %s::jsonb)
-                """,
-                ("Order", "订单", "Phase C+ 电商订单管理", True, _ORDER_PROPS),
-            )
-            log.info("order_seed: created Order ObjectType")
+        conn.execute(
+            """
+            INSERT INTO meta_object_type (id, name, description, published, properties)
+            VALUES (%s, %s, %s, %s, %s::jsonb)
+            ON CONFLICT (id) DO NOTHING
+            """,
+            ("Order", "订单", "Phase C+ 电商订单管理", True, _ORDER_PROPS),
+        )
+        conn.execute(
+            """
+            INSERT INTO meta_object_type (id, name, description, published, properties)
+            VALUES (%s, %s, %s, %s, %s::jsonb)
+            ON CONFLICT (id) DO NOTHING
+            """,
+            ("OrderItem", "订单明细", "Phase C+ 订单明细子表", True, _ORDER_ITEM_PROPS),
+        )
 
-        # 2. Create OrderItem ObjectType if missing
-        exists_item = conn.execute(
-            "SELECT 1 FROM meta_object_type WHERE id = 'OrderItem'"
-        ).fetchone()
-        if not exists_item:
-            conn.execute(
-                """
-                INSERT INTO meta_object_type (id, name, description, published, properties)
-                VALUES (%s, %s, %s, %s, %s::jsonb)
-                """,
-                ("OrderItem", "订单明细", "Phase C+ 订单明细子表", True, _ORDER_ITEM_PROPS),
-            )
-            log.info("order_seed: created OrderItem ObjectType")
-
-        # 3. Seed 20 orders if obj_instance has zero Order rows
         count_row = conn.execute(
             "SELECT COUNT(*) AS c FROM obj_instance WHERE object_type = 'Order'"
         ).fetchone()
@@ -151,21 +132,16 @@ def ensure_order_seed() -> None:
                 )
             log.info("order_seed: inserted %d sample orders", len(_SAMPLE_ORDERS))
 
-        # 4. LinkType: Order → OrderItem
-        lt_exists = conn.execute(
-            "SELECT 1 FROM meta_link_type WHERE id = 'lt-order-item'"
-        ).fetchone()
-        if not lt_exists:
-            conn.execute(
-                """
-                INSERT INTO meta_link_type
-                  (id, name, src_type, dst_type, rel, cardinality, published, description)
-                VALUES
-                  ('lt-order-item', '订单明细', 'Order', 'OrderItem', 'has_item', 'ONE_TO_MANY', TRUE, '订单包含多个明细项')
-                ON CONFLICT (id) DO NOTHING
-                """
-            )
-            log.info("order_seed: created LinkType lt-order-item")
-
+        conn.execute(
+            """
+            INSERT INTO meta_link_type
+              (id, name, src_type, dst_type, rel, cardinality, published, description)
+            VALUES
+              ('lt-order-item', '订单明细', 'Order', 'OrderItem', 'has_item', 'ONE_TO_MANY', TRUE, '订单包含多个明细项')
+            ON CONFLICT (id) DO NOTHING
+            """
+        )
         conn.commit()
-        log.info("order_seed: complete")
+
+    log.info("seed_orders_done samples=%s", len(_SAMPLE_ORDERS))
+    return len(_SAMPLE_ORDERS)

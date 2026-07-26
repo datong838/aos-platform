@@ -1,0 +1,21 @@
+{
+  "id": "filter-bar",
+  "name": "Filter Bar",
+  "nameZh": "筛选栏",
+  "description": "对象集筛选栏：Tabs + 搜索 + 维度筛选 · scheme 223",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "inproc",
+  "capabilities": ["widget", "filter-bar"],
+  "canvasKind": "filter-bar",
+  "palette": true,
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "objectType": { "type": "string" },
+      "tabs": { "type": "array" },
+      "search": { "type": "object" },
+      "filters": { "type": "array" }
+    }
+  }
+}

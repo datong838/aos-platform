@@ -271,7 +271,3 @@ def enrich_member_row(row: dict[str, Any]) -> dict[str, Any]:
     )
     out["displayLabel"] = label
     return out
-
-
-# bootstrap profiles for seed subjects
-seed_dev_persons()

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiPost } from "../api/client";
-import { PageChrome } from "../components/PageChrome";
+import { apiPost } from "../../api/client";
+import { PageChrome } from "../../components/PageChrome";
 
 /* ── 类型定义 ── */
 
@@ -101,6 +101,24 @@ function uid(): string {
 
 /* ── 主组件 ── */
 
+type RightPanelTab = "config" | "history" | "automation";
+
+interface RunHistoryEntry {
+  timestamp: string;
+  blockCount: number;
+  dryRun: boolean;
+  success: boolean;
+  output: string;
+}
+
+const TRIGGER_TYPES = [
+  { kind: "object_change", label: "对象变更", icon: "🔄", desc: "当 ObjectType 数据变化时触发" },
+  { kind: "schedule", label: "定时触发", icon: "⏰", desc: "按 cron 表达式定时执行" },
+  { kind: "manual", label: "人工触发", icon: "👤", desc: "用户手动点击执行" },
+  { kind: "webhook", label: "Webhook", icon: "🔗", desc: "外部系统通过 HTTP 调用触发" },
+  { kind: "threshold", label: "阈值告警", icon: "📊", desc: "当指标超过阈值时触发" },
+];
+
 export function LogicCanvasPage() {
   const [blocks, setBlocks] = useState<BlockDef[]>(() => [
     { id: uid(), kind: "input", label: "WorkOrder 输入", config: { objectType: "WorkOrder", objectId: "wo-1001" } },
@@ -114,7 +132,15 @@ export function LogicCanvasPage() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [dryRun, setDryRun] = useState(true);
-  const [showHistory, setShowHistory] = useState(false);
+  const [rightTab, setRightTab] = useState<RightPanelTab>("config");
+  const [history, setHistory] = useState<RunHistoryEntry[]>([]);
+  const [automationTriggers, setAutomationTriggers] = useState<Record<string, boolean>>({
+    object_change: false,
+    schedule: false,
+    manual: true,
+    webhook: false,
+    threshold: false,
+  });
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragNode = useRef<{ kind: BlockKind; title: string } | null>(null);
@@ -135,6 +161,18 @@ export function LogicCanvasPage() {
     setBlocks((p) => p.filter((b) => b.id !== selectedId));
     setSelectedId("");
   }, [selectedId]);
+
+  const moveBlock = useCallback((id: string, dir: -1 | 1) => {
+    setBlocks((p) => {
+      const idx = p.findIndex((b) => b.id === id);
+      if (idx < 0) return p;
+      const newIdx = idx + dir;
+      if (newIdx < 0 || newIdx >= p.length) return p;
+      const arr = [...p];
+      [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+      return arr;
+    });
+  }, []);
 
   const updateConfig = useCallback(
     (key: string, value: unknown) => {
@@ -194,7 +232,14 @@ export function LogicCanvasPage() {
           2,
         ),
       );
-      setShowHistory(true);
+      setRightTab("history");
+      setHistory((prev) => [{
+        timestamp: new Date().toISOString().slice(11, 19),
+        blockCount: blocks.length,
+        dryRun,
+        success: true,
+        output: JSON.stringify(res.output, null, 2).slice(0, 200),
+      }, ...prev].slice(0, 20));
     } catch (e: unknown) {
       setErr(String((e as Error).message || e));
     } finally {
@@ -405,6 +450,33 @@ export function LogicCanvasPage() {
                     <span style={{ flex: 1, fontSize: "0.82rem", color: "var(--aos-text)" }}>
                       {b.label}
                     </span>
+                    {/* Move up/down */}
+                    <span style={{ display: "flex", flexDirection: "column", gap: 1 }} onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => moveBlock(b.id, -1)}
+                        disabled={i === 0}
+                        style={{
+                          background: "none", border: "none", cursor: i === 0 ? "default" : "pointer",
+                          fontSize: "0.6rem", color: i === 0 ? "var(--aos-border)" : "var(--aos-muted)",
+                          padding: "0 4px",
+                        }}
+                      >
+                        ▲
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveBlock(b.id, 1)}
+                        disabled={i === blocks.length - 1}
+                        style={{
+                          background: "none", border: "none", cursor: i === blocks.length - 1 ? "default" : "pointer",
+                          fontSize: "0.6rem", color: i === blocks.length - 1 ? "var(--aos-border)" : "var(--aos-muted)",
+                          padding: "0 4px",
+                        }}
+                      >
+                        ▼
+                      </button>
+                    </span>
                   </button>
                 </div>
               ))}
@@ -412,9 +484,38 @@ export function LogicCanvasPage() {
           )}
         </div>
 
-        {/* ── 右栏：属性面板 + 执行结果 ── */}
+        {/* ── 右栏：属性面板 + 历史 + 自动化 ── */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12, overflowY: "auto" }}>
-          {/* 属性编辑 */}
+          {/* Tab switcher */}
+          <div style={{ display: "flex", gap: 2, borderBottom: "2px solid var(--aos-border)" }}>
+            {([
+              { key: "config", label: "属性" },
+              { key: "history", label: `历史 (${history.length})` },
+              { key: "automation", label: "自动化" },
+            ] as { key: RightPanelTab; label: string }[]).map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setRightTab(t.key)}
+                style={{
+                  padding: "6px 14px",
+                  fontSize: "0.78rem",
+                  fontWeight: rightTab === t.key ? 600 : 400,
+                  border: "none",
+                  borderBottom: rightTab === t.key ? "2px solid #3B82F6" : "2px solid transparent",
+                  background: "none",
+                  color: rightTab === t.key ? "#3B82F6" : "var(--aos-muted)",
+                  cursor: "pointer",
+                  marginBottom: "-2px",
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Config tab */}
+          {rightTab === "config" && (
           <div
             style={{
               background: "var(--aos-card)",
@@ -590,40 +691,29 @@ export function LogicCanvasPage() {
               </p>
             )}
           </div>
+          )}
 
-          {/* 执行结果 */}
-          {showHistory && (
-            <div
-              style={{
-                background: "var(--aos-card)",
-                border: "1px solid var(--aos-border)",
-                borderRadius: 8,
-                padding: 12,
-                flex: 1,
-                overflowY: "auto",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: 8,
-                }}
-              >
-                <h3 style={{ fontSize: "0.85rem", margin: 0, color: "var(--aos-text)" }}>
-                  执行结果
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => { setShowHistory(false); setExecResults([]); setOutput(""); }}
-                  style={{ fontSize: "0.7rem", background: "none", border: "none", color: "var(--aos-muted)", cursor: "pointer" }}
-                >
-                  清除
-                </button>
+          {/* History tab */}
+          {rightTab === "history" && (
+            <div style={{
+              background: "var(--aos-card)",
+              border: "1px solid var(--aos-border)",
+              borderRadius: 8,
+              padding: 12,
+              flex: 1,
+              overflowY: "auto",
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <h3 style={{ fontSize: "0.85rem", margin: 0, color: "var(--aos-text)" }}>执行历史</h3>
+                {history.length > 0 && (
+                  <button type="button" onClick={() => { setHistory([]); setExecResults([]); setOutput(""); }}
+                    style={{ fontSize: "0.7rem", background: "none", border: "none", color: "var(--aos-muted)", cursor: "pointer" }}>
+                    清除
+                  </button>
+                )}
               </div>
 
-              {/* CoT 链 */}
+              {/* Latest results */}
               {execResults.length > 0 && (
                 <details open style={{ marginBottom: 8 }}>
                   <summary style={{ fontSize: "0.75rem", cursor: "pointer", color: "var(--aos-muted)" }}>
@@ -631,8 +721,7 @@ export function LogicCanvasPage() {
                   </summary>
                   <div style={{ marginTop: 6 }}>
                     {execResults.map((r, i) => (
-                      <div
-                        key={r.block_id}
+                      <div key={r.block_id}
                         style={{
                           borderLeft: `3px solid ${KIND_COLORS[blocks[i]?.kind] || "#666"}`,
                           padding: "4px 8px",
@@ -640,13 +729,10 @@ export function LogicCanvasPage() {
                           fontSize: "0.72rem",
                           background: "var(--aos-card)",
                           borderRadius: "0 4px 4px 0",
-                        }}
-                      >
+                        }}>
                         <strong>Step {i + 1}</strong>{" "}
                         {r.cot.map((line, j) => (
-                          <div key={j} style={{ color: "var(--aos-text)", marginTop: 2 }}>
-                            {line}
-                          </div>
+                          <div key={j} style={{ color: "var(--aos-text)", marginTop: 2 }}>{line}</div>
                         ))}
                       </div>
                     ))}
@@ -654,29 +740,85 @@ export function LogicCanvasPage() {
                 </details>
               )}
 
-              {/* 完整 JSON */}
               {output && (
                 <details open>
                   <summary style={{ fontSize: "0.75rem", cursor: "pointer", color: "var(--aos-muted)" }}>
-                    完整输出 JSON
+                    最新输出 JSON
                   </summary>
-                  <pre
-                    style={{
-                      fontSize: "0.7rem",
-                      overflow: "auto",
-                      maxHeight: 300,
-                      marginTop: 6,
-                      padding: 8,
-                      background: "#0d1117",
-                      color: "#c9d1d9",
-                      borderRadius: 6,
-                      lineHeight: 1.4,
-                    }}
-                  >
+                  <pre style={{
+                    fontSize: "0.7rem", overflow: "auto", maxHeight: 200, marginTop: 6, padding: 8,
+                    background: "#0d1117", color: "#c9d1d9", borderRadius: 6, lineHeight: 1.4,
+                  }}>
                     {output}
                   </pre>
                 </details>
               )}
+
+              {/* History list */}
+              {history.length > 0 ? (
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ fontSize: "0.72rem", color: "var(--aos-muted)", marginBottom: 4 }}>运行记录</div>
+                  {history.map((h, i) => (
+                    <div key={i} style={{
+                      display: "flex", alignItems: "center", gap: 6, padding: "4px 6px",
+                      borderBottom: "1px solid var(--aos-border)", fontSize: "0.72rem",
+                    }}>
+                      <span style={{ color: h.success ? "#10B981" : "#EF4444" }}>{h.success ? "✓" : "✗"}</span>
+                      <span style={{ color: "var(--aos-muted)", fontFamily: "monospace" }}>{h.timestamp}</span>
+                      <span style={{ color: "var(--aos-text)" }}>{h.blockCount} blocks</span>
+                      <span style={{ fontSize: "0.65rem", padding: "1px 4px", borderRadius: 3,
+                        background: h.dryRun ? "#FEF3C7" : "#D1FAE5", color: h.dryRun ? "#92400E" : "#065F46" }}>
+                        {h.dryRun ? "dry" : "prod"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ fontSize: "0.78rem", color: "var(--aos-muted)", marginTop: 8 }}>
+                  点击 ▶ 执行按钮运行 Logic，历史记录将显示在此
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Automation tab */}
+          {rightTab === "automation" && (
+            <div style={{
+              background: "var(--aos-card)",
+              border: "1px solid var(--aos-border)",
+              borderRadius: 8,
+              padding: 12,
+              flex: 1,
+              overflowY: "auto",
+            }}>
+              <h3 style={{ fontSize: "0.85rem", margin: "0 0 10px", color: "var(--aos-text)" }}>自动化触发器</h3>
+              <p style={{ fontSize: "0.72rem", color: "var(--aos-muted)", marginBottom: 10 }}>
+                配置 Logic 何时自动执行。可启用多种触发器组合。
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {TRIGGER_TYPES.map((t) => (
+                  <label key={t.kind} style={{
+                    display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
+                    border: `1px solid ${automationTriggers[t.kind] ? "#3B82F6" : "var(--aos-border)"}`,
+                    borderRadius: 6, cursor: "pointer", fontSize: "0.78rem",
+                    background: automationTriggers[t.kind] ? "#3B82F610" : "transparent",
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={automationTriggers[t.kind] || false}
+                      onChange={() => setAutomationTriggers((prev) => ({ ...prev, [t.kind]: !prev[t.kind] }))}
+                    />
+                    <span style={{ fontSize: "1rem" }}>{t.icon}</span>
+                    <div>
+                      <div style={{ fontWeight: 500, color: "var(--aos-text)" }}>{t.label}</div>
+                      <div style={{ fontSize: "0.68rem", color: "var(--aos-muted)" }}>{t.desc}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              <div style={{ marginTop: 12, padding: "8px 10px", background: "#FEF3C7", borderRadius: 6, fontSize: "0.7rem", color: "#92400E" }}>
+                💡 已启用 {Object.values(automationTriggers).filter(Boolean).length} 个触发器。变更将在下次执行时生效。
+              </div>
             </div>
           )}
         </div>

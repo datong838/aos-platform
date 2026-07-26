@@ -4,9 +4,7 @@ import { apiGet, apiPost, S2Chrome, useJsonGet } from "./shared";
 import {
   BpBanner,
   BpKvList,
-  BpLinkRow,
   BpMaturityStairs,
-  BpMetricGrid,
   BpSplit,
   BpTable,
   BpToolbar,
@@ -30,40 +28,50 @@ export function MaturityPage() {
 
   const green = evals.data?.green === true;
 
+  const levelLabel = level === 1 ? "临时分析" : level === 2 ? "任务 Agent" : level === 3 ? "Agentic 应用" : "自动化 Agent";
+
   return (
     <S2Chrome
       title="Agent 成熟度楼梯"
       lede="别一上来做自动化。先 Threads，再固化 Agent，再嵌应用，最后才自动化。"
     >
-      <BpToolbar>
-        <Link to="/aip/tools" className="btn-nav">
-          工具面板 →
-        </Link>
-        <Link to="/aip/logic" className="btn-nav">
-          Logic 画布
-        </Link>
-      </BpToolbar>
-
-      <div className="bp-domain bp-domain-aip" style={{ marginBottom: "1rem" }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "1.5rem", fontSize: "0.875rem" }}>
+      {/* 顶部状态条 · 对齐 aip-maturity.html 黄色背景卡片 */}
+      <div
+        style={{
+          borderRadius: 12,
+          border: "1px solid rgba(251, 191, 36, 0.25)",
+          background: "rgba(254, 243, 199, 0.5)",
+          padding: "16px",
+          marginBottom: "1rem",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "1rem",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontSize: 14,
+        }}
+      >
+        <div>
+          <div style={{ fontSize: 12, color: "var(--aos-muted)", marginBottom: 2 }}>当前工作区</div>
+          <div style={{ color: "var(--aos-text)", fontWeight: 500 }}>维修派单 Buddy</div>
+        </div>
+        <div>
+          <div style={{ fontSize: 12, color: "var(--aos-muted)", marginBottom: 2 }}>判定层</div>
+          <div style={{ color: "#ca8a04", fontWeight: 500 }}>◆ L{level} {levelLabel}</div>
+        </div>
+        <div style={{ fontSize: 12, color: "var(--aos-muted)", lineHeight: 1.6 }}>
           <div>
-            <div className="muted" style={{ fontSize: "0.65rem" }}>
-              当前工作区
-            </div>
-            <div style={{ color: "var(--aos-text)", fontWeight: 500 }}>维修派单 Buddy</div>
+            Eval <span style={{ color: green ? "#16a34a" : "#ca8a04" }}>{green ? "● 绿" : "○ 未跑"}</span>
+            {" · "}
+            Draft <span style={{ color: "#16a34a" }}>● 默认暂存</span>
           </div>
           <div>
-            <div className="muted" style={{ fontSize: "0.65rem" }}>
-              判定层
-            </div>
-            <div style={{ color: "#fcd34d", fontWeight: 500 }}>◆ L{level} 任务 Agent</div>
-          </div>
-          <div className="btn-nav">
-            Eval {green ? "● 绿" : "○ 未绿"} · Draft ● 默认暂存 · 执行范围 ● 用户范围
+            执行范围 <span style={{ color: "var(--aos-text)" }}>● 用户范围</span>
           </div>
         </div>
       </div>
 
+      {/* 楼梯卡片网格 */}
       <BpMaturityStairs
         active={level}
         onSelect={setLevel}
@@ -73,7 +81,7 @@ export function MaturityPage() {
             label: "L1",
             title: "临时分析",
             desc: "AIP Threads · 拖文档即问即答",
-            foot: <span className="muted" style={{ fontSize: "0.625rem" }}>沙箱 / 售前</span>,
+            foot: <span style={{ fontSize: 11, color: "#4338ca" }}>沙箱 / 售前</span>,
           },
           {
             level: 2,
@@ -81,7 +89,7 @@ export function MaturityPage() {
             title: "任务专用 Agent",
             desc: "Chatbot Studio · Prompt · 工具 · Ontology/Wiki",
             foot: (
-              <Link to="/aip/tools" style={{ fontSize: "0.625rem", color: "#fcd34d" }}>
+              <Link to="/aip/tools" style={{ fontSize: 11, color: "#ca8a04", textDecoration: "none" }}>
                 打开工具面板 →
               </Link>
             ),
@@ -92,7 +100,7 @@ export function MaturityPage() {
             title: "Agentic 应用",
             desc: "工作台 / OSDK · Agent 组件 · 变量绑定",
             foot: (
-              <Link to="/workshop" style={{ fontSize: "0.625rem", color: "#7dd3fc" }}>
+              <Link to="/workshop" style={{ fontSize: 11, color: "#0284c7", textDecoration: "none" }}>
                 打开工作台 →
               </Link>
             ),
@@ -104,7 +112,16 @@ export function MaturityPage() {
             desc: "发布为 Function · Automate · 须 Eval + Draft · 失败率>5% 熔断降 L3",
             tone: "rose",
             foot: (
-              <span className="bp-tag bp-tag-bad" style={{ fontSize: "0.625rem" }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  color: "#dc2626",
+                  padding: "2px 6px",
+                  borderRadius: 4,
+                  border: "1px solid #fecaca",
+                  background: "#fef2f2",
+                }}
+              >
                 私有模 · 预热中
               </span>
             ),
@@ -112,53 +129,159 @@ export function MaturityPage() {
         ]}
       />
 
-      <div className="bp-object-panel" style={{ marginTop: "1rem" }}>
-        <h2 className="bp-ws-section-title">下一推荐</h2>
-        <p className="muted" style={{ fontSize: "0.875rem" }}>
+      {/* 下一推荐 + 熔断护栏整合卡片 */}
+      <div
+        style={{
+          marginTop: "1rem",
+          borderRadius: 12,
+          border: "1px solid var(--aos-border)",
+          background: "rgba(255, 255, 255, 0.4)",
+          padding: "20px",
+        }}
+      >
+        <h2 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: "0 0 12px" }}>下一推荐</h2>
+        <p style={{ fontSize: 14, color: "var(--aos-text-secondary)", margin: "0 0 12px" }}>
           {level < 3
             ? "挂 Workshop Agent 组件 → 升 L3；勿直接开 L4。"
             : level === 3
               ? "Eval 绿 + Draft 流程稳定后再申请 L4。"
               : "L4 须 Evals 门控 + 熔断护栏；完整运行时规划中。"}
         </p>
-        <div className="bp-object-actions">
-          <button type="button" className="btn" onClick={() => { setLevel(3); setToast("已标记 L3（本地 UI）"); }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: toast ? 8 : 0 }}>
+          <button
+            type="button"
+            onClick={() => { setLevel(3); setToast("已标记 L3（本地 UI）"); }}
+            style={{
+              padding: "6px 12px",
+              fontSize: 12,
+              fontWeight: 500,
+              borderRadius: 8,
+              border: "none",
+              background: "#fbbf24",
+              color: "#fff",
+              cursor: "pointer",
+            }}
+          >
             标记升级到 L3
           </button>
-          <button type="button" className="btn" onClick={() => setToast("L4 评审须 Eval 绿 · 见 Evals 门控")}>
+          <button
+            type="button"
+            onClick={() => setToast("L4 评审须 Eval 绿 · 见 Evals 门控")}
+            style={{
+              padding: "6px 12px",
+              fontSize: 12,
+              borderRadius: 8,
+              border: "1px solid #fca5a5",
+              background: "transparent",
+              color: "#dc2626",
+              cursor: "pointer",
+            }}
+          >
             申请 L4 上线评审
           </button>
-          <Link to="/aip/logic" className="btn" style={{ textDecoration: "none" }}>
-            Logic 画布
+          <Link
+            to="/aip/logic"
+            style={{
+              padding: "6px 12px",
+              fontSize: 12,
+              borderRadius: 8,
+              border: "1px solid var(--aos-border)",
+              background: "transparent",
+              color: "var(--aos-text)",
+              cursor: "pointer",
+              textDecoration: "none",
+            }}
+          >
+            并行：Logic 画布（可 Automate）
           </Link>
         </div>
-        {toast && <p className="aos-text">{toast}</p>}
+        {toast && <p style={{ fontSize: 11, color: "var(--aos-muted)", margin: "4px 0 0" }}>{toast}</p>}
+
+        {/* 熔断护栏子卡片 */}
+        <div
+          style={{
+            marginTop: 12,
+            borderRadius: 8,
+            border: "1px solid rgba(244, 63, 94, 0.25)",
+            background: "#fef2f2",
+            padding: "16px",
+          }}
+        >
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 8 }}>
+            <span style={{ color: "#dc2626", fontWeight: 500, fontSize: 12 }}>L4 熔断护栏</span>
+            <span
+              style={{
+                fontSize: 11,
+                padding: "2px 8px",
+                borderRadius: 4,
+                border: "1px solid #fecaca",
+                color: "#dc2626",
+              }}
+            >
+              失败率&gt;5% 自动降 L3
+            </span>
+            <span
+              style={{
+                fontSize: 11,
+                padding: "2px 8px",
+                borderRadius: 4,
+                border: "1px solid #fde68a",
+                color: "#ca8a04",
+              }}
+            >
+              私有模 · 预热中
+            </span>
+          </div>
+          <p style={{ fontSize: 12, color: "var(--aos-muted)", margin: "0 0 12px" }}>
+            上线前须 Eval 绿 + Draft 默认暂存；冷模型预热完成前禁止全量自动化。
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <Link
+              to="/aip/evals"
+              style={{
+                fontSize: 11,
+                padding: "4px 8px",
+                borderRadius: 4,
+                border: "1px solid var(--aos-border)",
+                color: "#ca8a04",
+                textDecoration: "none",
+              }}
+            >
+              Evals 门控
+            </Link>
+            <Link
+              to="/aip/model-router"
+              style={{
+                fontSize: 11,
+                padding: "4px 8px",
+                borderRadius: 4,
+                border: "1px solid var(--aos-border)",
+                color: "var(--aos-text)",
+                textDecoration: "none",
+              }}
+            >
+              模型路由
+            </Link>
+            <button
+              type="button"
+              onClick={() => void simBreaker()}
+              style={{
+                fontSize: 11,
+                padding: "4px 8px",
+                borderRadius: 4,
+                border: "1px solid #fca5a5",
+                background: "transparent",
+                color: "#dc2626",
+                cursor: "pointer",
+              }}
+            >
+              模拟熔断降级
+            </button>
+          </div>
+        </div>
       </div>
 
-      <BpBanner tone="warn">
-        <strong>L4 熔断护栏</strong> · 失败率&gt;5% 自动降 L3 · 上线前须 Eval 绿 + Draft 默认暂存
-        <div className="bp-object-actions" style={{ marginTop: "0.5rem" }}>
-          <Link to="/aip/evals">Evals 门控</Link>
-          {" · "}
-          <Link to="/aip/drafts">Draft 审批台</Link>
-          {" · "}
-          <Link to="/aip/model-router">模型路由</Link>
-          {" · "}
-          <button type="button" className="btn" onClick={() => void simBreaker()}>
-            模拟熔断降级
-          </button>
-        </div>
-      </BpBanner>
-
       {evals.err && <p className="error">{evals.err}</p>}
-
-      <BpLinkRow
-        links={[
-          { to: "/aip/evals", label: "Evals" },
-          { to: "/aip/drafts", label: "Draft" },
-          { to: "/aip/logic", label: "Logic" },
-        ]}
-      />
     </S2Chrome>
   );
 }
@@ -236,12 +359,12 @@ export function CopPage() {
     { name: "华东 CDC-3", tag: "出库延迟 2.1h", desc: "WMS 批次作业排队中", tone: "warn" as const },
   ];
 
-  const eventItems = [
-    { title: "调拨完成", desc: "F1 → 华南仓 · 电容组件 500 件", time: "2 分钟前", tone: "ok" as const },
-    { title: "SLA 预警", desc: "华南 F3 · 交期超时 12 单", time: "8 分钟前", tone: "warn" as const },
-    { title: "库存盘点", desc: "CDC-1 · 差异率 0.03% · 通过", time: "25 分钟前", tone: "ok" as const },
-    { title: "订单履约", desc: "ORD-8821 · 发货完成 · 物流 SF", time: "42 分钟前", tone: "ok" as const },
-    { title: "AIP 决策", desc: "Buddy 建议对华南 F3 发起调拨", time: "1 小时前", tone: "default" as const },
+  const eventItems: { title: string; desc: string; time: string; tone: "ok" | "warn" | "bad" | "default" }[] = [
+    { title: "调拨完成", desc: "F1 → 华南仓 · 电容组件 500 件", time: "2 分钟前", tone: "ok" },
+    { title: "SLA 预警", desc: "华南 F3 · 交期超时 12 单", time: "8 分钟前", tone: "warn" },
+    { title: "库存盘点", desc: "CDC-1 · 差异率 0.03% · 通过", time: "25 分钟前", tone: "ok" },
+    { title: "订单履约", desc: "ORD-8821 · 发货完成 · 物流 SF", time: "42 分钟前", tone: "ok" },
+    { title: "AIP 决策", desc: "Buddy 建议对华南 F3 发起调拨", time: "1 小时前", tone: "default" },
   ];
 
   return (

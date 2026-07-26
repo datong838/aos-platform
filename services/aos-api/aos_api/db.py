@@ -290,7 +290,11 @@ def ensure_field_marking_seed(conn=None) -> None:
 
 
 def ensure_inherit_openfga_seed(conn=None) -> None:
-    """TX.4 scheme 55: marking inheritance + OpenFGA demo tuples."""
+    """TX.4 scheme 55: Site ObjectType schema only (no demo instances).
+
+    测试数据（site-east / wo-fga-demo / authz_tuple）已迁移到
+    ``aos_api.demo.workorder_seed``，这里只保留 schema 级 ObjectType。
+    """
     def _run(c) -> None:
         c.execute(
             """
@@ -300,50 +304,7 @@ def ensure_inherit_openfga_seed(conn=None) -> None:
             """,
             ("Site", "站点", "Marking inheritance parent (scheme 55)", True),
         )
-        c.execute(
-            """
-            INSERT INTO obj_instance (object_type, object_id, props)
-            VALUES (
-              'Site', 'site-east',
-              '{"name":"DC-East","_requiredMarkings":["restricted"]}'::jsonb
-            )
-            ON CONFLICT (object_type, object_id)
-            DO UPDATE SET props = EXCLUDED.props
-            """
-        )
-        c.execute(
-            """
-            INSERT INTO graph_edge (src_type, src_id, rel, dst_type, dst_id)
-            VALUES ('WorkOrder','wo-1003','inherits_markings_from','Site','site-east')
-            ON CONFLICT DO NOTHING
-            """
-        )
-        c.execute(
-            """
-            INSERT INTO obj_instance (object_type, object_id, props)
-            VALUES (
-              'WorkOrder', 'wo-fga-demo',
-              '{"title":"OpenFGA demo","status":"open","site":"DC-East","priority":"P2"}'::jsonb
-            )
-            ON CONFLICT (object_type, object_id) DO NOTHING
-            """
-        )
-        c.execute(
-            """
-            INSERT INTO authz_tuple (user_key, relation, object_key)
-            VALUES
-              ('user:secret-user', 'viewer', 'object:WorkOrder:wo-fga-demo'),
-              ('user:secret-user', 'member', 'organization:dev-org'),
-              ('organization:dev-org', 'parent', 'project:dev-project'),
-              ('user:secret-user', 'bearer', 'marking:restricted'),
-              ('user:bearer-only', 'bearer', 'marking:restricted'),
-              ('user:field-bearer', 'bearer', 'marking:secret')
-            ON CONFLICT DO NOTHING
-            """
-        )
-        log.info(
-            "inherit_openfga_seed_ensured wo-1003←site-east · wo-fga-demo · org/project/marking · bearer-only · field-bearer"
-        )
+        log.info("inherit_openfga_seed_ensured objectType=Site schema_only")
 
     if conn is None:
         with connect() as c:
@@ -353,78 +314,25 @@ def ensure_inherit_openfga_seed(conn=None) -> None:
         _run(conn)
 
 
-def seed_if_empty() -> None:
+def ensure_system_meta() -> None:
+    """系统启动时调用的元数据初始化（不含任何测试数据）。
+
+    包含：
+      - field marking seed（WorkOrder ObjectType schema 定义）
+      - inherit_openfga seed（Site ObjectType schema 定义）
+      - apollo catalog seed
+      - main/sandbox 分支
+      - lt-related-to 默认 link type
+
+    **不**包含：dev-org / dev-project / 工单样例 / 订单 / 模块等测试数据。
+    测试数据请用 ``aos_api.demo.seed_test_org()``。
+    """
     with connect() as conn:
-        row = conn.execute("SELECT COUNT(*) AS c FROM meta_object_type").fetchone()
-        if not row or int(row["c"]) == 0:
-            conn.execute(
-                """
-                INSERT INTO meta_object_type (id, name, description, published, properties)
-                VALUES (%s, %s, %s, %s, %s::jsonb)
-                """,
-                (
-                    "WorkOrder",
-                    "工单",
-                    "Wave-2 seed Object Type",
-                    True,
-                    _WORKORDER_PROPS,
-                ),
-            )
-            samples = [
-                (
-                    "WorkOrder",
-                    "wo-1001",
-                    '{"title":"机房巡检-A区","status":"open","site":"DC-East","priority":"P1","internalCost":1280}',
-                ),
-                (
-                    "WorkOrder",
-                    "wo-1002",
-                    '{"title":"链路告警复核","status":"in_progress","site":"DC-West","priority":"P0","internalCost":640}',
-                ),
-                (
-                    "WorkOrder",
-                    "wo-1003",
-                    '{"title":"备件更换","status":"open","site":"DC-East","priority":"P2","internalCost":320}',
-                ),
-            ]
-            for t, i, p in samples:
-                conn.execute(
-                    "INSERT INTO obj_instance (object_type, object_id, props) VALUES (%s,%s,%s::jsonb)",
-                    (t, i, p),
-                )
-            conn.execute(
-                """
-                INSERT INTO graph_edge (src_type, src_id, rel, dst_type, dst_id)
-                VALUES ('WorkOrder','wo-1001','related_to','WorkOrder','wo-1003')
-                ON CONFLICT DO NOTHING
-                """
-            )
-            conn.execute(
-                """
-                INSERT INTO wiki_page (object_type, object_id, body, org_id, project_id)
-                VALUES (
-                  'WorkOrder','wo-1001',
-                  '{"summary":"A区巡检知识","fields":{"sla":"4h"}}'::jsonb,
-                  'dev-org','dev-project'
-                )
-                ON CONFLICT DO NOTHING
-                """
-            )
-            conn.execute(
-                """
-                INSERT INTO funnel_status (object_type, stage, detail)
-                VALUES ('WorkOrder','enrich','{"stages":["ingest","normalize","enrich","publish"]}'::jsonb)
-                ON CONFLICT (object_type) DO NOTHING
-                """
-            )
-            log.info("db_seed_workorder_done")
         ensure_field_marking_seed(conn)
-        repair_demo_workorders(conn)
         ensure_inherit_openfga_seed(conn)
         from aos_api.apollo_catalog import ensure_seed as ensure_apollo_catalog_seed
 
         ensure_apollo_catalog_seed(conn)
-        # Always ensure branch seed (table may be added after first seed)
         conn.execute(
             """
             INSERT INTO meta_branch (id, name, base_ref, readonly)
@@ -448,12 +356,21 @@ def seed_if_empty() -> None:
             """
         )
         conn.commit()
-        log.debug("db_seed_branches_and_link_types_ensured")
+        log.debug("ensure_system_meta_done branches_and_link_types_ensured")
 
-    # Phase C+ — Order management seed (always ensure, idempotent)
+
+def seed_if_empty() -> None:
+    """[Deprecated] 兼容入口：系统元数据 + 测试组织数据。
+
+    保留是为了向后兼容现有测试代码（conftest 等）。生产启动请用
+    ``ensure_system_meta``，开发/测试请显式调 ``aos_api.demo.seed_test_org``。
+
+    内部行为：``ensure_system_meta() + demo.seed_test_org()``
+    """
+    ensure_system_meta()
     try:
-        from aos_api.order_seed import ensure_order_seed
+        from aos_api.demo import seed_test_org
 
-        ensure_order_seed()
+        seed_test_org()
     except Exception as exc:  # noqa: BLE001
-        log.warning("order_seed_skipped: %s", exc)
+        log.warning("seed_test_org_skipped: %s", exc)

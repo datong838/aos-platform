@@ -139,6 +139,8 @@ export function AnalyticsPage() {
   const [vxMetric, setVxMetric] = useState("0.82");
   const [vxMediaRid, setVxMediaRid] = useState("");
   const [contourGroupBy, setContourGroupBy] = useState("status");
+  // Phase E-08: 主内容区 Tab 切换
+  const [mainTab, setMainTab] = useState<"read" | "draft" | "explore">("read");
 
   const types = rail.data?.objectTypes ?? [];
   const datasets = rail.data?.datasets ?? [];
@@ -533,6 +535,15 @@ export function AnalyticsPage() {
         </aside>
 
         <main>
+          {/* Phase E-08: 主内容区 Tab 切换 */}
+          <div style={{ display: "flex", gap: 4, marginBottom: 12, borderBottom: "1px solid var(--aos-border, #2a3540)", paddingBottom: 6 }}>
+            <button type="button" className={mainTab === "read" ? "btn" : "btn-nav"} onClick={() => setMainTab("read")}>读数</button>
+            <button type="button" className={mainTab === "draft" ? "btn" : "btn-nav"} onClick={() => setMainTab("draft")}>Draft 写回</button>
+            <button type="button" className={mainTab === "explore" ? "btn" : "btn-nav"} onClick={() => setMainTab("explore")}>探索</button>
+          </div>
+
+          {mainTab === "read" && (
+          <>
           <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: 0 }}>
             单元格缓冲
           </h2>
@@ -608,8 +619,12 @@ export function AnalyticsPage() {
             lineage items={lineageItems.length}
           </p>
           {lineageItems.length > 0 && <JsonBlock value={lineageItems} />}
+          </>
+          )}
 
-          <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: 20 }}>
+          {mainTab === "draft" && (
+          <>
+          <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: 0 }}>
             写回 · 提交 Draft
           </h2>
           <p className="muted" style={{ fontSize: "0.75rem" }}>
@@ -669,8 +684,12 @@ export function AnalyticsPage() {
               <JsonBlock value={lastDraft} />
             </>
           )}
+          </>
+          )}
 
-          <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: 20 }}>
+          {mainTab === "explore" && (
+          <>
+          <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: 0 }}>
             探索分析
           </h2>
           <p className="muted" style={{ fontSize: "0.75rem" }}>
@@ -864,6 +883,8 @@ export function AnalyticsPage() {
                 />
               )}
             </>
+          )}
+          </>
           )}
 
           <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: 20 }}>

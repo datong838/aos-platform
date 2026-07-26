@@ -1,10 +1,16 @@
-"""159 · BI subset deepen (needs PG for contour/vertex roundtrip)."""
+"""159 · BI subset deepen (needs PG for contour/vertex roundtrip).
+
+注：``/v1/demo/*`` HTTP 路由已在种子数据收敛（v2.2 Phase 5）中下线，
+测试改为直接调用 ``aos_api.demo.seed_test_org``。
+"""
 
 from __future__ import annotations
 
+from aos_api.demo import seed_test_org
+
 
 def test_contour_share_and_options(client, auth_headers):
-    client.post("/v1/demo/ensure-seed", headers=auth_headers)
+    seed_test_org()
     r = client.get(
         "/v1/analytics/contour/explore",
         headers=auth_headers,
@@ -22,7 +28,7 @@ def test_contour_share_and_options(client, auth_headers):
 
 
 def test_quiver_fill_gaps_length(client, auth_headers):
-    client.post("/v1/demo/ensure-seed", headers=auth_headers)
+    seed_test_org()
     r = client.get(
         "/v1/analytics/quiver/series",
         headers=auth_headers,

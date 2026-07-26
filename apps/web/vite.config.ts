@@ -13,6 +13,16 @@ export default defineConfig({
     },
   },
   server: { port: 5173 },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom"],
+          "vendor-router": ["react-router-dom"],
+        },
+      },
+    },
+  },
   test: {
     environment: "jsdom",
     include: ["src/**/*.test.ts"],

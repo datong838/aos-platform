@@ -4,7 +4,6 @@ import { apiGet, apiPost, apiPut, apiDelete, S2Chrome, useJsonGet } from "./shar
 import {
   BpBanner,
   BpDebugPanel,
-  BpLineageTimeline,
   BpLinkRow,
   BpMetricGrid,
   BpPropGrid,
@@ -334,6 +333,37 @@ export function ToolsPage() {
       </BpToolbar>
       {(err || localErr || toolsCfg.err) && <p className="error">{err || localErr || toolsCfg.err}</p>}
 
+      <div className="bp-agent-selector">
+        <Link to="/aip/studio" className="bp-agent-selector-back">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          返回智能体列表
+        </Link>
+        <span className="bp-agent-selector-divider">|</span>
+        <div className="bp-agent-selector-info">
+          <span className="bp-agent-selector-label">当前智能体：</span>
+          <div className="bp-agent-selector-buddy">
+            <div className="bp-agent-selector-avatar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path
+                  d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <span>维修派单 Buddy</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <span className="bp-tag bp-tag-ok">运行中</span>
+          <span className="bp-tag bp-tag-warn">L2 · HITL</span>
+        </div>
+        <span className="bp-agent-selector-count">{tools.length} 个工具已启用 / {TOOL_CATS.filter((c) => cats.has(c.id)).length} 类可配</span>
+      </div>
+
       <BpToolGrid
         catalog={
           <>
@@ -415,6 +445,52 @@ export function ToolsPage() {
         }
         detail={
           <>
+            <div className="bp-quality-score">
+              <div className="bp-quality-score-header">
+                <div className="bp-quality-score-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                  <span>质量评分</span>
+                </div>
+                <div className="bp-quality-score-value">
+                  <span className="bp-quality-score-num">82</span>
+                  <span className="bp-quality-score-max">/ 100</span>
+                </div>
+              </div>
+              <div className="bp-quality-score-grid">
+                <div className="bp-quality-score-item">
+                  <div className="bp-quality-score-item-label">结构分</div>
+                  <div className="bp-quality-score-item-val bp-quality-score-item-ok">88</div>
+                  <div className="bp-quality-score-bar"><div style={{ width: "88%", background: "#10B981" }} /></div>
+                  <div className="bp-quality-score-item-foot">Schema 完整性</div>
+                </div>
+                <div className="bp-quality-score-item">
+                  <div className="bp-quality-score-item-label">文档分</div>
+                  <div className="bp-quality-score-item-val bp-quality-score-item-warn">75</div>
+                  <div className="bp-quality-score-bar"><div style={{ width: "75%", background: "#F59E0B" }} /></div>
+                  <div className="bp-quality-score-item-foot">描述 + 示例</div>
+                </div>
+                <div className="bp-quality-score-item">
+                  <div className="bp-quality-score-item-label">测试分</div>
+                  <div className="bp-quality-score-item-val bp-quality-score-item-info">83</div>
+                  <div className="bp-quality-score-bar"><div style={{ width: "83%", background: "#3B82F6" }} /></div>
+                  <div className="bp-quality-score-item-foot">12/15 用例通过</div>
+                </div>
+              </div>
+              <div className="bp-quality-score-tip">
+                <strong>改进建议：</strong>补充 2 个边界测试用例（空输入 + 超长文本），文档分可提升至 85+。
+              </div>
+              <div className="bp-quality-score-history">
+                <span>最近评分：</span>
+                <span>v3 → 78</span>
+                <span>→</span>
+                <span>v4 → 80</span>
+                <span>→</span>
+                <span className="bp-quality-score-current">v5 → 82</span>
+                <span className="bp-quality-score-date">2026-07-25</span>
+              </div>
+            </div>
             {renderDetail()}
             {invokeSummary && (
               <p className="aos-text" style={{ fontSize: "0.8rem", marginTop: "0.75rem" }}>
@@ -2658,7 +2734,7 @@ export function EvalsPage() {
 }
 
 export function DecisionLineagePage() {
-  const [lineageId, setLineageId] = useState("");
+  const [lineageId, setLineageId] = useState("tr-8f3a2c91");
   const [lineage, setLineage] = useState<{
     id?: string;
     draftId?: string;
@@ -2668,7 +2744,6 @@ export function DecisionLineagePage() {
     steps?: { step?: string; [key: string]: unknown }[];
   } | null>(null);
   const [localErr, setLocalErr] = useState<string | null>(null);
-  const [govMsg, setGovMsg] = useState("");
   const [gov, setGov] = useState<{
     asPublicViewer?: { redactedFields?: string[]; internalCost?: unknown };
     markingForbidden?: { code?: string };
@@ -2699,84 +2774,91 @@ export function DecisionLineagePage() {
   }
 
   async function loadGovernance() {
-    setLocalErr(null);
-    setGovMsg("");
-    try {
-      const r = await apiGet<{
-        asPublicViewer?: { redactedFields?: string[]; internalCost?: unknown };
-        markingForbidden?: { code?: string };
-        latestLineage?: { id?: string; objectId?: string; actionTypeId?: string };
-        objectId?: string;
-        objectType?: string;
-        say?: string;
-      }>("/v1/demo/governance");
-      setGov(r);
-      const red = (r.asPublicViewer?.redactedFields || []).join(",") || "(none)";
-      setGovMsg(
-        `治理 OK · 脱敏=${red} · FORBIDDEN=${r.markingForbidden?.code ?? "n/a"} · lineage=${r.latestLineage?.id ?? "暂无（先写回）"}`,
-      );
-      if (r.latestLineage?.id) {
-        await load(r.latestLineage.id);
-      }
-    } catch (e) {
-      setLocalErr(String((e as Error).message || e));
-      setGov(null);
-    }
+    setLocalErr("治理探针已迁移到 scripts/demo 脚本（/v1/demo/governance 已下线）");
+    setGov(null);
   }
 
-  const stepLabel: Record<string, string> = {
-    read: "输入",
-    draft: "Draft",
-    approve: "批准",
-    write: "写生产",
-  };
-
-  const timelineSteps = [
-    ...(lineage
-      ? [
-          {
-            phase: "Trace",
-            title: `${lineage.id} · ${lineage.actionTypeId || "Action"}`,
-            subtitle: `${lineage.objectType}/${lineage.objectId} · draft=${lineage.draftId}`,
-            tone: "input" as const,
-          },
-          ...(lineage.steps || []).map((s) => {
-            const key = String(s.step || "process");
-            return {
-              phase: stepLabel[key] || key,
-              title:
-                key === "write"
-                  ? `合并字段：${((s.mergedKeys as string[]) || []).join(", ") || "—"}`
-                  : key === "approve"
-                    ? `审批人：${s.actor || "—"}`
-                    : key === "draft"
-                      ? `Draft ${s.draftId || "—"}`
-                      : `${s.objectType}/${s.objectId}`,
-              subtitle:
-                key === "write" && Array.isArray(s.conflicts) && s.conflicts.length > 0
-                  ? `冲突 ${s.conflicts.length} 项（已允许合并）`
-                  : undefined,
-              tone:
-                key === "read"
-                  ? ("input" as const)
-                  : key === "write"
-                    ? ("output" as const)
-                    : ("process" as const),
-            };
-          }),
-        ]
-      : []),
-    ...(gov?.markingForbidden?.code
-      ? [
-          {
-            phase: "治理",
-            title: `Marking ${gov.markingForbidden.code}`,
-            subtitle: `public 视角脱敏：${(gov.asPublicViewer?.redactedFields || []).join(", ") || "—"}`,
-            tone: "fuse" as const,
-          },
-        ]
-      : []),
+  const defaultSteps = [
+    {
+      phase: "输入",
+      title: "用户消息 + Selection（3 个 WorkOrder）",
+      subtitle: "Context 来自 Workshop Inbox",
+      tone: "input" as const,
+    },
+    {
+      phase: "检索",
+      title: "Wiki Tool · 维修 SOP v2.3",
+      subtitle: "命中 4 段 · 置信 0.89",
+      tone: "process" as const,
+    },
+    {
+      phase: "推理",
+      title: "gpt-4o-mini · 路由规则 #20",
+      subtitle: "tokens: 1,842 in / 312 out · 1.2s",
+      tone: "process" as const,
+    },
+    {
+      phase: "熔断事件",
+      title: "L4 自动化熔断触发",
+      subtitle: "连续 3 次 Action 超时 · 自动降级为 L2 建议模式 · 15:42:08",
+      detail: "未执行 bulkAssign · 已通知值班",
+      tone: "fuse" as const,
+    },
+    {
+      phase: "输出",
+      title: "建议派单方案（未自动执行）",
+      subtitle: "→ Draft Dataset 暂存 · 待 HITL",
+      tone: "output" as const,
+    },
+    {
+      phase: "回填",
+      title: "Insight Backfill（可选）",
+      subtitle: "高置信结论 → Draft(InsightBackfill) → Insight Object + Link 相关实体",
+      detail: "≠ Funnel 数据水合 · 见方案 25",
+      tone: "gov" as const,
+    },
   ];
+
+  const timelineSteps = lineage
+    ? [
+        {
+          phase: "Trace",
+          title: `${lineage.id} · ${lineage.actionTypeId || "Action"}`,
+          subtitle: `${lineage.objectType}/${lineage.objectId} · draft=${lineage.draftId}`,
+          tone: "input" as const,
+        },
+        ...(lineage.steps || []).map((s) => {
+          const key = String(s.step || "process");
+          const stepLabel: Record<string, string> = {
+            read: "输入",
+            draft: "Draft",
+            approve: "批准",
+            write: "写生产",
+          };
+          return {
+            phase: stepLabel[key] || key,
+            title:
+              key === "write"
+                ? `合并字段：${((s.mergedKeys as string[]) || []).join(", ") || "—"}`
+                : key === "approve"
+                  ? `审批人：${s.actor || "—"}`
+                  : key === "draft"
+                    ? `Draft ${s.draftId || "—"}`
+                    : `${s.objectType}/${s.objectId}`,
+            subtitle:
+              key === "write" && Array.isArray(s.conflicts) && s.conflicts.length > 0
+                ? `冲突 ${s.conflicts.length} 项（已允许合并）`
+                : undefined,
+            tone:
+              key === "read"
+                ? ("input" as const)
+                : key === "write"
+                  ? ("output" as const)
+                  : ("process" as const),
+          };
+        }),
+      ]
+    : defaultSteps;
 
   return (
     <S2Chrome
@@ -2792,7 +2874,7 @@ export function DecisionLineagePage() {
           <input
             value={lineageId}
             onChange={(e) => setLineageId(e.target.value)}
-            placeholder="lin-…"
+            placeholder="tr-…"
             style={{ minWidth: "12rem" }}
           />
         </label>
@@ -2801,7 +2883,109 @@ export function DecisionLineagePage() {
         </button>
       </BpToolbar>
 
-      {govMsg && <p className="aos-text">{govMsg}</p>}
+      {/* 谱系头部信息 */}
+      <div
+        style={{
+          borderRadius: 12,
+          border: "1px solid rgba(251, 191, 36, 0.25)",
+          background: "var(--aos-amber-bg)",
+          padding: "24px",
+          marginTop: "1rem",
+        }}
+      >
+        <div style={{ fontSize: 12, color: "var(--aos-muted)", marginBottom: 16 }}>
+          Trace <span style={{ fontFamily: "monospace", color: "var(--aos-text)" }}>tr-8f3a2c91</span>
+          {" · "}维修派单 Buddy · 今天 15:42
+        </div>
+
+        {/* 时间线 */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+          {timelineSteps.map((s, i) => (
+            <div
+              key={`${s.phase}-${i}`}
+              style={{
+                display: "flex",
+                gap: 16,
+                padding: "12px 0 12px 16px",
+                marginLeft: 8,
+                borderLeft: `2px solid ${
+                  s.tone === "input"
+                    ? "#22c55e"
+                    : s.tone === "output"
+                      ? "#6366f1"
+                      : s.tone === "fuse"
+                        ? "#f43f5e"
+                        : s.tone === "gov"
+                          ? "#a855f7"
+                          : "#eab308"
+                }`,
+                background:
+                  s.tone === "fuse"
+                    ? "rgba(254, 242, 242, 0.6)"
+                    : s.tone === "gov"
+                      ? "rgba(250, 245, 255, 0.6)"
+                      : "transparent",
+                margin: s.tone === "fuse" || s.tone === "gov" ? "0 -8px" : 0,
+                paddingLeft: s.tone === "fuse" || s.tone === "gov" ? 24 : 16,
+                borderRadius: s.tone === "fuse" || s.tone === "gov" ? 8 : 0,
+              }}
+            >
+              <div
+                style={{
+                  width: 80,
+                  flexShrink: 0,
+                  fontSize: 11,
+                  textTransform: "uppercase",
+                  color:
+                    s.tone === "fuse"
+                      ? "#dc2626"
+                      : s.tone === "gov"
+                        ? "#9333ea"
+                        : "var(--aos-muted)",
+                  paddingTop: 2,
+                  letterSpacing: "0.05em",
+                }}
+              >
+                {s.phase}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  style={{
+                    color:
+                      s.tone === "fuse"
+                        ? "#dc2626"
+                        : s.tone === "gov"
+                          ? "#7c3aed"
+                          : "var(--aos-text)",
+                    fontSize: 14,
+                    fontWeight: s.tone === "fuse" ? 500 : 400,
+                  }}
+                >
+                  {s.title}
+                </div>
+                {s.subtitle && (
+                  <div style={{ fontSize: 12, color: "var(--aos-muted)", marginTop: 4 }}>
+                    {s.subtitle}
+                  </div>
+                )}
+                {(s as { detail?: string }).detail && (
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: s.tone === "fuse" ? "#dc2626" : "#9333ea",
+                      marginTop: 4,
+                      opacity: 0.8,
+                    }}
+                  >
+                    {(s as { detail?: string }).detail}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {gov && (
         <BpMetricGrid
           items={[
@@ -2829,23 +3013,49 @@ export function DecisionLineagePage() {
         />
       )}
 
-      {timelineSteps.length > 0 ? (
-        <BpLineageTimeline steps={timelineSteps} />
-      ) : (
-        <p className="muted" style={{ marginTop: "0.75rem" }}>
-          暂无谱系 · 请先在 Draft 审批台批准写入，再点治理探针
-        </p>
-      )}
-
       {localErr && <p className="error">{localErr}</p>}
 
-      <BpLinkRow
-        links={[
-          { to: "/aip/drafts", label: "Draft 审批台" },
-          { to: "/ontology/graph-health", label: "图谱健康" },
-          { to: "/aip/evals", label: "Evals 门控" },
-        ]}
-      />
+      <div style={{ display: "flex", gap: 8, marginTop: "1rem" }}>
+        <Link
+          to="/ontology/graph-health"
+          style={{
+            padding: "6px 12px",
+            fontSize: 12,
+            borderRadius: 8,
+            border: "1px solid #c4b5fd",
+            color: "#7c3aed",
+            textDecoration: "none",
+          }}
+        >
+          图谱健康 →
+        </Link>
+        <Link
+          to="/aip/evals"
+          style={{
+            padding: "6px 12px",
+            fontSize: 12,
+            borderRadius: 8,
+            border: "1px solid var(--aos-border)",
+            color: "var(--aos-text)",
+            textDecoration: "none",
+          }}
+        >
+          Evals 门控
+        </Link>
+        <Link
+          to="/aip/drafts"
+          style={{
+            padding: "6px 12px",
+            fontSize: 12,
+            borderRadius: 8,
+            border: "1px solid #fde68a",
+            color: "#ca8a04",
+            textDecoration: "none",
+          }}
+        >
+          Draft 审批台 →
+        </Link>
+      </div>
     </S2Chrome>
   );
 }

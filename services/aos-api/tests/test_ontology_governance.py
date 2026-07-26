@@ -1,6 +1,8 @@
 """W2-I · Ontology 治理组测试：#38 Usage Metrics + #69 Graph Query."""
 from __future__ import annotations
 
+from datetime import date, timedelta
+
 import pytest
 
 from aos_api.ontology_governance import (
@@ -63,23 +65,27 @@ def test_usage_per_link_type():
 
 
 def test_usage_daily_series():
+    today = date.today()
+    day1 = (today - timedelta(days=2)).strftime("%Y-%m-%d")
+    day2 = (today - timedelta(days=1)).strftime("%Y-%m-%d")
     eng = UsageMetricsEngine(window_days=5)
-    eng.record("read", day="2026-07-20")
-    eng.record("write", day="2026-07-21")
-    eng.record("read", day="2026-07-21")
+    eng.record("read", day=day1)
+    eng.record("write", day=day2)
+    eng.record("read", day=day2)
 
     m = eng.get_global()
     assert len(m.daily_series) == 5
     # 找到有数据的天
     reads_by_day = {d["date"]: d["reads"] for d in m.daily_series}
-    assert reads_by_day.get("2026-07-20", 0) == 1
-    assert reads_by_day.get("2026-07-21", 0) == 1
+    assert reads_by_day.get(day1, 0) == 1
+    assert reads_by_day.get(day2, 0) == 1
 
 
 def test_usage_prune_old():
+    today = date.today()
     eng = UsageMetricsEngine(window_days=3)
-    eng.record("read", day="2026-07-01")  # 太早了
-    eng.record("read", day="2026-07-20")
+    eng.record("read", day=(today - timedelta(days=10)).strftime("%Y-%m-%d"))  # 太早了
+    eng.record("read", day=(today - timedelta(days=1)).strftime("%Y-%m-%d"))  # 窗口内
 
     m = eng.get_global()
     assert m.reads == 1  # 只算窗口内的

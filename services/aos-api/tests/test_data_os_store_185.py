@@ -31,7 +31,7 @@ def api_client():
     for k in ("AGNES_API_KEY", "AGNES_BASE_URL", "AOS_LITELLM_URL"):
         os.environ.pop(k, None)
     os.environ["AOS_LITELLM_FALLBACK"] = "mock"
-    wave_ext.clear_demo_data_surface()
+    dos.purge_demo_surface(wave_ext)
     app = create_app()
     with TestClient(app) as c:
         yield c

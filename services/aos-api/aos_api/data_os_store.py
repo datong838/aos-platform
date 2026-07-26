@@ -11,6 +11,63 @@ log = get_logger("aos-api.data-os")
 
 _schema_ready = False
 
+DEMO_SURFACE_IDS: dict[str, tuple[str, ...]] = {
+    "sources": ("demo-file-wo",),
+    "pipelines": ("demo-pipe-wo",),
+    "datasets": ("ri.dataset.demo-workorder",),
+    "syncs": ("sync-demo-wo",),
+    "schedules": ("demo-sch-wo",),
+}
+"""已知 demo 专用 id 清单。``boot_data_os`` 启动时强制从产品 surface 清除。"""
+
+_DEMO_DLQ_PREFIX = "dlq-demo"
+
+
+def purge_demo_surface(wave_ext_module: Any) -> dict[str, Any]:
+    """从 wave_ext 内存数据面清除已知 demo 条目（产品 surface 反 demo 守门）。
+
+    替代原 ``wave_ext.clear_demo_data_surface``，把"反 demo 清理"职责收敛到 data_os 层，
+    生产代码不再反向依赖 wave_ext 的 demo 函数。
+    """
+    removed: dict[str, Any] = {
+        "sources": [],
+        "pipelines": [],
+        "datasets": [],
+        "syncs": [],
+        "schedules": [],
+        "dlq": 0,
+    }
+    for sid in DEMO_SURFACE_IDS["sources"]:
+        if sid in wave_ext_module._connectors:
+            del wave_ext_module._connectors[sid]
+            removed["sources"].append(sid)
+    for pid in DEMO_SURFACE_IDS["pipelines"]:
+        if pid in wave_ext_module._pipelines:
+            del wave_ext_module._pipelines[pid]
+            removed["pipelines"].append(pid)
+    for rid in DEMO_SURFACE_IDS["datasets"]:
+        if rid in wave_ext_module._datasets:
+            del wave_ext_module._datasets[rid]
+            removed["datasets"].append(rid)
+        wave_ext_module._dataset_history.pop(rid, None)
+    for sid in DEMO_SURFACE_IDS["syncs"]:
+        if sid in wave_ext_module._syncs:
+            del wave_ext_module._syncs[sid]
+            removed["syncs"].append(sid)
+    for sch in DEMO_SURFACE_IDS["schedules"]:
+        if sch in wave_ext_module._schedules:
+            del wave_ext_module._schedules[sch]
+            removed["schedules"].append(sch)
+    before = len(wave_ext_module._dlq)
+    wave_ext_module._dlq[:] = [
+        d
+        for d in wave_ext_module._dlq
+        if not (isinstance(d, dict) and str(d.get("id", "")).startswith(_DEMO_DLQ_PREFIX))
+    ]
+    removed["dlq"] = before - len(wave_ext_module._dlq)
+    log.info("data_os_demo_purged %s", removed)
+    return {"ok": True, "removed": removed}
+
 
 def ensure_data_os_schema() -> None:
     global _schema_ready
@@ -454,7 +511,7 @@ def boot_data_os(wave_ext_module: Any) -> None:
     wave_ext_module._dataset_history.clear()
     wave_ext_module._dataset_history.update(data["dataset_history"])
     # Always purge known demo ids from runtime + PG (product surface)
-    cleared = wave_ext_module.clear_demo_data_surface()
+    cleared = purge_demo_surface(wave_ext_module)
     for sid in cleared.get("removed", {}).get("sources") or []:
         delete_source(sid)
     for pid in cleared.get("removed", {}).get("pipelines") or []:

@@ -1,0 +1,21 @@
+{
+  "id": "detail-drawer",
+  "name": "Detail Drawer",
+  "nameZh": "详情抽屉",
+  "description": "右侧详情抽屉：多 section + 行操作 · scheme 223",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "inproc",
+  "capabilities": ["widget", "detail-drawer"],
+  "canvasKind": "detail-drawer",
+  "palette": true,
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "objectType": { "type": "string" },
+      "width": { "type": "number" },
+      "sections": { "type": "array" },
+      "actions": { "type": "array" }
+    }
+  }
+}

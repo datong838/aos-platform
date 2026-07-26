@@ -1,11 +1,20 @@
-"""116 · TA.7 analytics demo story: read → propose → approve → lineage."""
+"""116 · TA.7 analytics demo story: read → propose → approve → lineage.
+
+注：``/v1/demo/*`` HTTP 路由已在种子数据收敛（v2.2 Phase 5）中下线，
+测试改为直接调用 ``aos_api.demo.demo_story`` Python 函数。
+"""
+
+from aos_api.demo.demo_story import (
+    demo_story_payload,
+    ensure_demo_seed_full,
+    run_analytics_story,
+)
 
 
-def test_run_analytics_story(client, auth_headers):
-    client.post("/v1/demo/ensure-seed", headers=auth_headers)
-    r = client.post("/v1/demo/run-analytics-story", headers=auth_headers)
-    assert r.status_code == 200, r.text
-    body = r.json()
+def test_run_analytics_story(client, auth_headers, dev_principal):
+    _ = auth_headers
+    ensure_demo_seed_full()
+    body = run_analytics_story(dev_principal)
     assert body["ok"] is True
     assert body["mode"] == "ta7-analytics-story"
     assert body["productionWritten"] is True
@@ -19,10 +28,9 @@ def test_run_analytics_story(client, auth_headers):
     assert body["uiPaths"]["analytics"] == "/analytics"
 
 
-def test_demo_story_lists_ta7_step(client, auth_headers):
-    s = client.get("/v1/demo/story", headers=auth_headers)
-    assert s.status_code == 200
-    story = s.json()
+def test_demo_story_lists_ta7_step(client, auth_headers, dev_principal):
+    _ = client, auth_headers, dev_principal
+    story = demo_story_payload()
     steps = story.get("steps") or []
     assert any(st.get("id") == "TA.7" for st in steps)
     assert story["deferred"]["analyticsNotebook"] is False

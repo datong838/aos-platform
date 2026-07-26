@@ -1,0 +1,20 @@
+{
+  "id": "page-header",
+  "name": "Page Header",
+  "nameZh": "页面头",
+  "description": "页面标题 + 副标题 + 操作按钮 · scheme 223",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "inproc",
+  "capabilities": ["widget", "page-header"],
+  "canvasKind": "page-header",
+  "palette": true,
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "title": { "type": "string" },
+      "subtitle": { "type": "string" },
+      "icon": { "type": "string" }
+    }
+  }
+}

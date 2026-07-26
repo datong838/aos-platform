@@ -23,7 +23,9 @@ def test_data_page_no_toolbar_nav_link_return():
 
 def test_canvas_save_layout_primary():
     text = _read("CanvasPage.tsx")
-    assert 'className="btn-primary" disabled={!dirty} onClick={() => void saveLayout()}' in text
+    # 保存布局按钮：dirty 状态控制 + saveLayout 回调（className 已迁移至 Palantir p-btn 体系）
+    assert 'disabled={!dirty}' in text
+    assert 'onClick={() => void saveLayout()}' in text
 
 
 def test_media_upload_primary():
