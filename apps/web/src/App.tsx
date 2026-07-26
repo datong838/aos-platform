@@ -35,7 +35,7 @@ const DataPage = lazy(() =>
   import("./pages/DataPage").then((m) => ({ default: m.DataPage })),
 );
 const ApolloPage = lazy(() =>
-  import("./pages/ApolloPage").then((m) => ({ default: m.ApolloPage })),
+  import("./pages/s2/HubFleetPage").then((m) => ({ default: m.HubFleetPage })),
 );
 const CapabilityPage = lazy(() =>
   import("./pages/CapabilityPage").then((m) => ({ default: m.CapabilityPage })),
