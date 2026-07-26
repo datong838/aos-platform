@@ -1,0 +1,93 @@
+"""Canvas config store — Phase 1 Workshop backend.
+
+Stores the complete canvas configuration (layout tree + components) for a module.
+"""
+from __future__ import annotations
+
+import json
+from typing import Any
+
+from aos_api.db import connect
+from aos_api.logging_facade import get_logger
+
+log = get_logger("aos-api.canvas_config")
+
+_DEFAULT_ORG = "dev-org"
+_DEFAULT_PROJECT = "dev-project"
+
+
+def ensure_schema() -> None:
+    with connect() as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS module_canvas_config (
+              module_id TEXT PRIMARY KEY,
+              layout JSONB NOT NULL DEFAULT '{}'::jsonb,
+              components JSONB NOT NULL DEFAULT '{}'::jsonb,
+              version INTEGER NOT NULL DEFAULT 1,
+              org_id TEXT NOT NULL DEFAULT 'dev-org',
+              project_id TEXT NOT NULL DEFAULT 'dev-project',
+              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+            """
+        )
+        conn.commit()
+
+
+def get_config(module_id: str) -> dict[str, Any] | None:
+    ensure_schema()
+    with connect() as conn:
+        row = conn.execute(
+            """
+            SELECT * FROM module_canvas_config
+             WHERE module_id=%s AND org_id=%s AND project_id=%s
+            """,
+            (module_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+        ).fetchone()
+    if not row:
+        return None
+    return _row(row)
+
+
+def put_config(
+    module_id: str, layout: dict, components: dict
+) -> dict[str, Any]:
+    ensure_schema()
+    with connect() as conn:
+        conn.execute(
+            """
+            INSERT INTO module_canvas_config (
+                module_id, layout, components, version, org_id, project_id
+            ) VALUES (%s, %s::jsonb, %s::jsonb, 1, %s, %s)
+            ON CONFLICT (module_id) DO UPDATE SET
+                layout = EXCLUDED.layout,
+                components = EXCLUDED.components,
+                version = module_canvas_config.version + 1,
+                updated_at = NOW()
+            """,
+            (
+                module_id,
+                json.dumps(layout),
+                json.dumps(components),
+                _DEFAULT_ORG,
+                _DEFAULT_PROJECT,
+            ),
+        )
+        conn.commit()
+    return get_config(module_id)  # type: ignore[return-value]
+
+
+def _row(r: dict[str, Any]) -> dict[str, Any]:
+    layout = r.get("layout") or {}
+    if isinstance(layout, str):
+        layout = json.loads(layout) if layout else {}
+    comps = r.get("components") or {}
+    if isinstance(comps, str):
+        comps = json.loads(comps) if comps else {}
+    return {
+        "moduleId": r["module_id"],
+        "layout": layout,
+        "components": comps,
+        "version": int(r.get("version", 1)),
+        "updatedAt": str(r.get("updated_at", "")),
+    }

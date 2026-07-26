@@ -107,6 +107,7 @@ from aos_api.routers import (
     media_sets,
     metrics,
     modules,
+    workshop_phase1,
     multi_language,
     multi_source,
     materialized_access_control,
@@ -566,6 +567,7 @@ def create_app() -> FastAPI:
     application.include_router(workspaces.router)
     application.include_router(buddy.router)
     application.include_router(modules.router)
+    application.include_router(workshop_phase1.router)
     application.include_router(plugins.router)
     application.include_router(platform_integrations.router)
     application.include_router(object_sets.router)
