@@ -25,7 +25,7 @@ const BranchesPage = lazify(() => import("./ontology"), "BranchesPage");
 const ObjectTypeDetailPage = lazify(() => import("./ObjectTypeDetailPage"), "ObjectTypeDetailPage");
 const LinkTypeEditorPage = lazify(() => import("./LinkTypeEditorPage"), "LinkTypeEditorPage");
 const ActionTypeEditorPage = lazify(() => import("./ActionTypeEditorPage"), "ActionTypeEditorPage");
-const MediaSetsPage = lazify(() => import("./data"), "MediaSetsPage");
+const MediaSetsPage = lazify(() => import("./MediaSetsPage"), "MediaSetsPage");
 const PipelinesPage = lazify(() => import("./data"), "PipelinesPage");
 const BuildsPage = lazify(() => import("./data"), "BuildsPage");
 const DatasetsPage = lazify(() => import("./data"), "DatasetsPage");
@@ -50,8 +50,8 @@ const DataLineagePage = lazify(() => import("./remainder"), "DataLineagePage");
 const ApolloReleasePage = lazify(() => import("./remainder"), "ApolloReleasePage");
 const ApolloFerryPage = lazify(() => import("./FerryPage"), "FerryPage");
 const ApolloChangePage = lazify(() => import("./ChangeOrdersPage"), "ChangeOrdersPage");
-const SyncConfigPage = lazify(() => import("./remainder"), "SyncConfigPage");
-const SyncRoutesPage = lazify(() => import("./remainder"), "SyncRoutesPage");
+const SyncConfigPage = lazify(() => import("./SyncConfigPage"), "SyncConfigPage");
+const SyncRoutesPage = lazify(() => import("./SyncRoutesPage"), "SyncRoutesPage");
 const OkfOverviewPage = lazify(() => import("./remainder"), "OkfOverviewPage");
 const IntegrationCasesPage = lazify(() => import("./IntegrationCasesPage"), "IntegrationCasesPage");
 const AnalyticsPage = lazify(() => import("./analytics"), "AnalyticsPage");
@@ -68,6 +68,8 @@ const WikiIndexPage = lazify(() => import("./WikiIndexPage"), "WikiIndexPage");
 const WidgetRegistryPage = lazify(() => import("./WidgetRegistryPage"), "WidgetRegistryPage");
 const VariablesPage = lazify(() => import("./VariablesPage"), "VariablesPage");
 const StylesPage = lazify(() => import("./StylesPage"), "StylesPage");
+const DataConnectionPage = lazify(() => import("./DataConnectionPage"), "DataConnectionPage");
+const DataSourceCreatePage = lazify(() => import("./DataSourceCreatePage"), "DataSourceCreatePage");
 const RiskAlertPage = lazify(() => import("./RiskAlertPage"), "RiskAlertPage");
 
 /** Paths promoted in T-UI S2 knife-1～3 ([43]/[45]/[49]). */
@@ -92,6 +94,8 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "ontology/link-types/:linkId", Component: LinkTypeEditorPage },
   { path: "ontology/action-types/:actionId", Component: ActionTypeEditorPage },
   { path: "data/media-sets", Component: MediaSetsPage },
+  { path: "data/connections", Component: DataConnectionPage },
+  { path: "data/sources/new", Component: DataSourceCreatePage },
   { path: "data/sources/:sourceId", Component: SourceDetailPage },
   { path: "data/pipelines", Component: PipelinesPage },
   { path: "data/pipelines/:pipelineId", Component: PipelineCanvasPage },
