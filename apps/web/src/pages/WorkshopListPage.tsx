@@ -6,7 +6,44 @@ import { BpCard } from "../components/bp/BpCard";
 import { BpEmpty } from "../components/bp/BpEmpty";
 import { BpToolbar } from "../components/bp/BpToolbar";
 
-type ModuleItem = {
+/* ============================================================================
+ * 常量与类型（导出用于测试）
+ * ========================================================================== */
+
+export type CategoryId =
+  | "all"
+  | "order"
+  | "risk"
+  | "customer"
+  | "asset"
+  | "analytics"
+  | "ticket"
+  | "inventory"
+  | "finance"
+  | "marketing";
+
+export interface CategoryDef {
+  id: CategoryId;
+  name: string;
+  color: string;
+}
+
+export const CATEGORIES: CategoryDef[] = [
+  { id: "all", name: "全部", color: "#374151" },
+  { id: "order", name: "订单", color: "#2563EB" },
+  { id: "risk", name: "风控", color: "#DC2626" },
+  { id: "customer", name: "客户", color: "#7C3AED" },
+  { id: "asset", name: "资产", color: "#0891B2" },
+  { id: "analytics", name: "分析", color: "#059669" },
+  { id: "ticket", name: "工单", color: "#D97706" },
+  { id: "inventory", name: "库存", color: "#4F46E5" },
+  { id: "finance", name: "财务", color: "#0D9488" },
+  { id: "marketing", name: "营销", color: "#DB2777" },
+];
+
+export type ModuleStatus = "published" | "draft" | "disabled";
+
+export interface ModuleItem {
   id: string;
   name: string;
   status: string;
@@ -18,76 +55,190 @@ type ModuleItem = {
   theme?: string;
   lastOpenedAt?: string;
   widgets?: string[];
-};
+}
 
-const CATEGORY_ALL = "全部";
+/** 当 API 不可用时的 fallback mock 数据 */
+export const MOCK_MODULES: ModuleItem[] = [
+  {
+    id: "mod-order-management",
+    name: "订单管理系统",
+    status: "published",
+    description: "统计卡片 · 订单列表 · 趋势图 · 详情面板",
+    category: "order",
+    lastOpenedAt: new Date(Date.now() - 2 * 3600_000).toISOString(),
+    entryPath: "/workshop/orders",
+  },
+  {
+    id: "mod-risk-alert",
+    name: "风险告警管理",
+    status: "published",
+    description: "筛选 · 风控告警表格 · 对象详情 · 活动日志",
+    category: "risk",
+    lastOpenedAt: new Date(Date.now() - 5 * 3600_000).toISOString(),
+    entryPath: "/workshop/module",
+  },
+  {
+    id: "mod-customer-center",
+    name: "客户档案中心",
+    status: "published",
+    description: "客户列表 · 画像卡片 · 标签管理 · 跟进记录",
+    category: "customer",
+    lastOpenedAt: new Date(Date.now() - 26 * 3600_000).toISOString(),
+    entryPath: "/workshop/module",
+  },
+  {
+    id: "mod-asset-tracker",
+    name: "资产追踪看板",
+    status: "published",
+    description: "资产地图 · 实时位置 · 维护日历 · 折旧曲线",
+    category: "asset",
+    lastOpenedAt: new Date(Date.now() - 48 * 3600_000).toISOString(),
+    entryPath: "/workshop/module",
+  },
+  {
+    id: "mod-analytics-dashboard",
+    name: "经营分析仪表盘",
+    status: "published",
+    description: "KPI 卡片 · 趋势图 · 同环比 · 下钻分析",
+    category: "analytics",
+    lastOpenedAt: new Date(Date.now() - 72 * 3600_000).toISOString(),
+    entryPath: "/workshop/module",
+  },
+  {
+    id: "mod-ticket-system",
+    name: "工单处理系统",
+    status: "draft",
+    description: "工单列表 · SLA 计时 · 分派 · 处理流程",
+    category: "ticket",
+    lastOpenedAt: new Date(Date.now() - 96 * 3600_000).toISOString(),
+    entryPath: "/workshop/module",
+  },
+  {
+    id: "mod-inventory-check",
+    name: "库存盘点看板",
+    status: "published",
+    description: "仓库视图 · 盘点任务 · 差异处理 · 入出库记录",
+    category: "inventory",
+    lastOpenedAt: new Date(Date.now() - 120 * 3600_000).toISOString(),
+    entryPath: "/workshop/module",
+  },
+  {
+    id: "mod-finance-reconcile",
+    name: "财务对账系统",
+    status: "published",
+    description: "流水匹配 · 差异标记 · 凭证生成 · 月度报表",
+    category: "finance",
+    lastOpenedAt: new Date(Date.now() - 144 * 3600_000).toISOString(),
+    entryPath: "/workshop/module",
+  },
+  {
+    id: "mod-marketing-campaign",
+    name: "营销活动管理",
+    status: "disabled",
+    description: "活动策划 · 渠道管理 · 效果分析 · A/B 测试",
+    category: "marketing",
+    lastOpenedAt: new Date(Date.now() - 168 * 3600_000).toISOString(),
+    entryPath: "/workshop/module",
+  },
+];
 
-const CATEGORY_TONE: Record<string, "blue" | "amber" | "neutral" | "green"> = {
-  运营: "blue",
-  业务应用: "blue",
-  风控: "amber",
-  "风控 Inbox": "amber",
-  本体前端: "neutral",
-  "AI 助手": "amber",
-  智能嵌入: "amber",
-  态势感知: "blue",
-  分析: "blue",
-  应用构建: "green",
-  系统集成: "neutral",
-  态势大屏: "blue",
-  发布管理: "blue",
-  自动化: "blue",
-};
+/* ============================================================================
+ * 纯函数（导出用于测试）
+ * ========================================================================== */
+
+export function filterModules(
+  items: ModuleItem[],
+  category: CategoryId,
+  query: string,
+): ModuleItem[] {
+  const q = query.trim().toLowerCase();
+  return items.filter((m) => {
+    if (category !== "all" && m.category !== category) return false;
+    if (!q) return true;
+    const name = m.name.toLowerCase();
+    const desc = (m.description ?? "").toLowerCase();
+    return name.includes(q) || desc.includes(q);
+  });
+}
+
+export function sortByRecent(items: ModuleItem[]): ModuleItem[] {
+  return [...items].sort((a, b) => {
+    const aTime = a.lastOpenedAt ? new Date(a.lastOpenedAt).getTime() : 0;
+    const bTime = b.lastOpenedAt ? new Date(b.lastOpenedAt).getTime() : 0;
+    return bTime - aTime;
+  });
+}
+
+export function formatRelativeTime(iso: string | undefined): string {
+  if (!iso) return "—";
+  const diff = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(diff / 60_000);
+  if (minutes < 1) return "刚刚";
+  if (minutes < 60) return `${minutes} 分钟前`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} 小时前`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} 天前`;
+  return new Date(iso).toLocaleDateString("zh-CN");
+}
+
+export function getStatusMeta(status: string): { label: string; bg: string; color: string } {
+  if (status === "published") return { label: "已发布", bg: "#D1FAE5", color: "#059669" };
+  if (status === "draft") return { label: "草稿", bg: "#FEF3C7", color: "#D97706" };
+  return { label: "已禁用", bg: "#FEE2E2", color: "#DC2626" };
+}
+
+export function getCategoryName(category: string | undefined): string {
+  const found = CATEGORIES.find((c) => c.id === category);
+  return found?.name || category || "未分类";
+}
+
+export function getCategoryColor(category: string | undefined): string {
+  const found = CATEGORIES.find((c) => c.id === category);
+  return found?.color || "#6B7280";
+}
+
+/* ============================================================================
+ * 页面组件
+ * ========================================================================== */
 
 export function WorkshopListPage() {
   const [items, setItems] = useState<ModuleItem[]>([]);
   const [err, setErr] = useState<string | null>(null);
-  const [filter, setFilter] = useState<string>(CATEGORY_ALL);
+  const [filter, setFilter] = useState<CategoryId>("all");
   const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     apiGet<{ items: ModuleItem[] }>("/v1/modules")
-      .then((j) => setItems(j.items))
-      .catch((e) => setErr(String(e.message || e)));
+      .then((j) => {
+        setItems(j.items?.length ? j.items : MOCK_MODULES);
+        setLoading(false);
+      })
+      .catch(() => {
+        // API 不可用时使用 mock 数据
+        setItems(MOCK_MODULES);
+        setErr(null);
+        setLoading(false);
+      });
   }, []);
 
   async function handleTouch(moduleId: string) {
     try {
       await apiPost(`/v1/modules/${moduleId}/touch`, {});
-      const j = await apiGet<{ items: ModuleItem[] }>("/v1/modules");
-      setItems(j.items);
     } catch {
+      // ignore
     }
   }
 
-  const sortedItems = useMemo(() => {
-    return [...items].sort((a, b) => {
-      const aTime = a.lastOpenedAt ? new Date(a.lastOpenedAt).getTime() : 0;
-      const bTime = b.lastOpenedAt ? new Date(b.lastOpenedAt).getTime() : 0;
-      return bTime - aTime;
-    });
-  }, [items]);
+  const sortedItems = useMemo(() => sortByRecent(items), [items]);
 
-  const recentlyUsed = sortedItems.slice(0, 3);
+  const recentItems = useMemo(() => sortedItems.slice(0, 5), [sortedItems]);
 
-  const categories = useMemo(() => {
-    const set = new Set<string>();
-    items.forEach((m) => {
-      if (m.category) set.add(m.category);
-    });
-    return [CATEGORY_ALL, ...Array.from(set)];
-  }, [items]);
-
-  const filteredItems = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return sortedItems.filter((m) => {
-      if (filter !== CATEGORY_ALL && m.category !== filter) return false;
-      if (!q) return true;
-      const name = m.name.toLowerCase();
-      const desc = (m.description ?? "").toLowerCase();
-      return name.includes(q) || desc.includes(q);
-    });
-  }, [sortedItems, filter, query]);
+  const filteredItems = useMemo(
+    () => filterModules(sortedItems, filter, query),
+    [sortedItems, filter, query],
+  );
 
   const getEntryPath = (m: ModuleItem) => {
     if (m.id === "mod-order-management") return "/workshop/orders";
@@ -97,125 +248,301 @@ export function WorkshopListPage() {
     return m.entryPath || "/workshop/inbox";
   };
 
-  const renderModuleCard = (m: ModuleItem, showBothLinks = false) => {
-    const entryPath = getEntryPath(m);
-    const tone = CATEGORY_TONE[m.category ?? "运营"] ?? "blue";
-    const toneCls = `wl-cat-label ${tone}`;
-    return (
-      <div key={m.id} className="aos-module-card group" style={{ cursor: "default" }}>
-        <Link to={entryPath} className="block" onClick={() => void handleTouch(m.id)}>
-          <div style={{ marginBottom: 6 }}>
-            <span className={toneCls}>{m.category || "业务应用"}</span>
-          </div>
-          <div className="text-gray-900 font-medium text-[13px] group-hover:text-[var(--aos-accent)] transition-colors">
-            {m.name}
-          </div>
-          <p className="text-[11px] text-gray-500 mt-1.5">{m.description || "—"}</p>
-        </Link>
-        <div className="mt-2 flex gap-2 text-[10px]">
-          {showBothLinks && (
-            <>
-              <Link
-                to={entryPath}
-                className="text-[var(--aos-accent)] hover:underline"
-                onClick={() => void handleTouch(m.id)}
-              >
-                ▶ 打开运行态
-              </Link>
-              <span className="text-gray-400">·</span>
-            </>
-          )}
-          <Link to="/workshop/canvas" className="text-[var(--aos-accent)] hover:underline">
-            ✏ 编辑画布 →
-          </Link>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <PageChrome title="工作台 · 应用列表" lede="按业务场景打开模块">
       <div className="max-w-[1100px] mx-auto space-y-6 py-6">
+        {/* 顶部标题区 */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-[13px] font-medium text-gray-900 tracking-tight leading-snug">应用列表</h1>
+            <h1 className="text-[13px] font-medium text-gray-900 tracking-tight leading-snug">
+              应用列表
+            </h1>
             <p className="mt-1.5 text-gray-600 text-[13px] leading-relaxed">
-              按业务场景打开模块。风险告警管理、对象探索、智能助手等都是从这里打开的模块，不是并列产品。
+              按业务场景打开模块。点击卡片进入画布编辑。
             </p>
           </div>
           <Link
             to="/workshop/create"
+            data-testid="btn-new-module"
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-medium text-white transition-colors"
-            style={{ background: "var(--aos-accent)" }}
+            style={{ background: "#0F6E56" }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path d="M12 5v14M5 12h14" strokeLinecap="round" />
             </svg>
-            新建 Module
+            + 新建
           </Link>
         </div>
 
-        {err && <p className="error">{err}</p>}
-
+        {/* 搜索框 */}
         <BpToolbar
           search={{ value: query, onChange: setQuery, placeholder: "搜索应用名称或描述…" }}
           count={filteredItems.length}
         />
 
-        <BpCard
-          title="最近使用"
-          subtitle="按打开时间排序"
-          padding="md"
-        >
-          {recentlyUsed.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {recentlyUsed.map((m) => renderModuleCard(m, true))}
+        {/* 最近使用区 — 横滑卡片 */}
+        <BpCard title="最近使用" subtitle="最近打开的 5 个模块" padding="md">
+          {recentItems.length > 0 ? (
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                overflowX: "auto",
+                paddingBottom: 4,
+              }}
+              data-testid="recent-scroll"
+            >
+              {recentItems.map((m) => {
+                const entryPath = getEntryPath(m);
+                const catColor = getCategoryColor(m.category);
+                const catName = getCategoryName(m.category);
+                return (
+                  <Link
+                    key={m.id}
+                    to={entryPath}
+                    onClick={() => void handleTouch(m.id)}
+                    data-testid={`recent-card-${m.id}`}
+                    style={{
+                      flex: "0 0 200px",
+                      maxWidth: 200,
+                      border: "1px solid #E5E7EB",
+                      borderRadius: 8,
+                      padding: 12,
+                      background: "#fff",
+                      cursor: "pointer",
+                      transition: "box-shadow 0.15s, border-color 0.15s",
+                      textDecoration: "none",
+                      display: "block",
+                    }}
+                    className="wl-recent-card"
+                  >
+                    {/* 缩略图 */}
+                    <div
+                      style={{
+                        width: "100%",
+                        height: 60,
+                        borderRadius: 4,
+                        background: `linear-gradient(135deg, ${catColor}25, ${catColor}08)`,
+                        marginBottom: 8,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: `1px solid ${catColor}20`,
+                      }}
+                    >
+                      <span style={{ fontSize: 11, fontWeight: 600, color: catColor }}>
+                        {m.name.slice(0, 2)}
+                      </span>
+                    </div>
+                    {/* 分类标签 */}
+                    <div style={{ marginBottom: 4 }}>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          padding: "1px 6px",
+                          borderRadius: 3,
+                          background: `${catColor}15`,
+                          color: catColor,
+                          fontWeight: 500,
+                        }}
+                      >
+                        {catName}
+                      </span>
+                    </div>
+                    {/* 名称 */}
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: "#1F2937",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {m.name}
+                    </div>
+                    {/* 最后打开时间 */}
+                    <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>
+                      {formatRelativeTime(m.lastOpenedAt)}
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           ) : (
             <BpEmpty title="暂无最近使用的模块" description="打开任意模块后会出现在这里" />
           )}
         </BpCard>
 
+        {/* 全部应用区 */}
         <BpCard
           title="全部应用"
           actions={
-            <div className="flex gap-1 items-center">
-              {categories.map((cat) => (
+            <div className="flex gap-1 items-center flex-wrap" data-testid="category-filters">
+              {CATEGORIES.map((cat) => (
                 <button
-                  key={cat}
+                  key={cat.id}
                   type="button"
-                  className={filter === cat ? "wl-cat-btn is-active" : "wl-cat-btn"}
-                  onClick={() => setFilter(cat)}
-                  aria-pressed={filter === cat}
+                  data-testid={`cat-filter-${cat.id}`}
+                  className={filter === cat.id ? "wl-cat-btn is-active" : "wl-cat-btn"}
+                  onClick={() => setFilter(cat.id)}
+                  aria-pressed={filter === cat.id}
+                  style={
+                    filter === cat.id
+                      ? {
+                          background: `${cat.color}15`,
+                          color: cat.color,
+                          borderColor: `${cat.color}40`,
+                        }
+                      : undefined
+                  }
                 >
-                  {cat}
+                  {cat.name}
                 </button>
               ))}
-              <span className="text-[11px] text-gray-400 ml-2">{filteredItems.length} / {items.length}</span>
+              <span className="text-[11px] text-gray-400 ml-2">
+                {filteredItems.length} / {items.length}
+              </span>
             </div>
           }
           padding="md"
         >
-          {filteredItems.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {filteredItems.map((m) => renderModuleCard(m))}
+          {!loading && filteredItems.length > 0 ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: 12,
+              }}
+              data-testid="app-grid"
+            >
+              {filteredItems.map((m) => {
+                const entryPath = getEntryPath(m);
+                const catColor = getCategoryColor(m.category);
+                const catName = getCategoryName(m.category);
+                const statusMeta = getStatusMeta(m.status);
+                return (
+                  <div
+                    key={m.id}
+                    data-testid={`app-card-${m.id}`}
+                    style={{
+                      border: "1px solid #E5E7EB",
+                      borderRadius: 8,
+                      padding: 14,
+                      background: "#fff",
+                      transition: "box-shadow 0.15s, border-color 0.15s",
+                    }}
+                    className="wl-app-card"
+                  >
+                    <Link
+                      to={entryPath}
+                      onClick={() => void handleTouch(m.id)}
+                      style={{ textDecoration: "none", display: "block" }}
+                    >
+                      {/* 缩略图 */}
+                      <div
+                        style={{
+                          width: "100%",
+                          height: 64,
+                          borderRadius: 6,
+                          background: `linear-gradient(135deg, ${catColor}20, ${catColor}05)`,
+                          marginBottom: 10,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          border: `1px solid ${catColor}15`,
+                        }}
+                      >
+                        <span style={{ fontSize: 13, fontWeight: 700, color: catColor }}>
+                          {m.name.slice(0, 2)}
+                        </span>
+                      </div>
+                      {/* 分类 + 状态 */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                        <span
+                          style={{
+                            fontSize: 10,
+                            padding: "1px 6px",
+                            borderRadius: 3,
+                            background: `${catColor}15`,
+                            color: catColor,
+                            fontWeight: 500,
+                          }}
+                        >
+                          {catName}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 500,
+                            padding: "1px 6px",
+                            borderRadius: 3,
+                            background: statusMeta.bg,
+                            color: statusMeta.color,
+                          }}
+                        >
+                          {statusMeta.label}
+                        </span>
+                      </div>
+                      {/* 名称 */}
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 600,
+                          color: "#1F2937",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {m.name}
+                      </div>
+                      {/* 描述 */}
+                      <p style={{ fontSize: 11, color: "#6B7280", marginTop: 4, lineHeight: 1.4 }}>
+                        {m.description || "—"}
+                      </p>
+                      {/* 最后打开时间 */}
+                      <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 8 }}>
+                        最后打开：{formatRelativeTime(m.lastOpenedAt)}
+                      </div>
+                    </Link>
+                    {/* 编辑入口 */}
+                    <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid #F3F4F6" }}>
+                      <Link
+                        to="/workshop/canvas"
+                        className="text-[var(--aos-accent)] hover:underline"
+                        style={{ fontSize: 10 }}
+                      >
+                        ✏ 编辑画布 →
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
+          ) : loading ? (
+            <div style={{ textAlign: "center", padding: 24, color: "#9CA3AF" }}>加载中...</div>
           ) : (
             <BpEmpty
               title={items.length === 0 ? "暂无应用" : "无匹配结果"}
               description={
                 items.length === 0
-                  ? "点「新建 Module」开始创建第一个应用"
+                  ? "点「+ 新建」开始创建第一个应用"
                   : "尝试调整搜索关键词或筛选条件"
               }
               action={
                 items.length === 0 ? (
-                  <Link to="/workshop/create" className="btn">新建 Module</Link>
+                  <Link to="/workshop/create" className="btn">
+                    + 新建
+                  </Link>
                 ) : undefined
               }
             />
           )}
         </BpCard>
+
+        {err && <p className="error">{err}</p>}
       </div>
     </PageChrome>
   );
