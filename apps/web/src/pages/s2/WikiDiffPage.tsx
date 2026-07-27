@@ -202,9 +202,9 @@ export function diffLineTypeColor(type: DiffLineType): string {
 export function diffLineTypeBg(type: DiffLineType): string {
   return {
     same: "transparent",
-    add: "var(--aos-success-bg, #DCFCE7)",
-    del: "var(--aos-danger-bg, #FEE2E2)",
-    mod: "var(--aos-warning-bg, #FEF3C7)",
+    add: "var(--aos-green-bg)",
+    del: "var(--aos-red-bg)",
+    mod: "var(--aos-amber-bg)",
   }[type];
 }
 
@@ -307,7 +307,7 @@ export function WikiDiffPage() {
                 </option>
               ))}
             </select>
-            <span style={{ color: "var(--aos-text-muted, #9CA3AF)", fontSize: "0.75rem" }}>vs</span>
+            <span style={{ color: "var(--aos-text-tertiary)", fontSize: "0.75rem" }}>vs</span>
             <select
               className="aos-input"
               style={styles.versionSelect}
@@ -339,28 +339,28 @@ export function WikiDiffPage() {
         <div style={styles.summaryBar}>
           <div style={styles.summaryItem}>
             <div style={{ ...styles.summaryDot, background: "#22C55E" }} />
-            <span style={{ fontSize: "0.7rem", color: "var(--aos-text-muted, #6B7280)" }}>
+            <span style={{ fontSize: "0.7rem", color: "var(--aos-text-secondary)" }}>
               新增 <strong style={{ color: "#22C55E" }}>{summary.added}</strong>
             </span>
           </div>
           <div style={styles.summaryItem}>
             <div style={{ ...styles.summaryDot, background: "#EF4444" }} />
-            <span style={{ fontSize: "0.7rem", color: "var(--aos-text-muted, #6B7280)" }}>
+            <span style={{ fontSize: "0.7rem", color: "var(--aos-text-secondary)" }}>
               删除 <strong style={{ color: "#EF4444" }}>{summary.deleted}</strong>
             </span>
           </div>
           <div style={styles.summaryItem}>
             <div style={{ ...styles.summaryDot, background: "#F59E0B" }} />
-            <span style={{ fontSize: "0.7rem", color: "var(--aos-text-muted, #6B7280)" }}>
+            <span style={{ fontSize: "0.7rem", color: "var(--aos-text-secondary)" }}>
               修改 <strong style={{ color: "#F59E0B" }}>{summary.modified}</strong>
             </span>
           </div>
-          <div style={{ marginLeft: "auto", fontSize: "0.7rem", color: "var(--aos-text-muted, #9CA3AF)" }}>
+          <div style={{ marginLeft: "auto", fontSize: "0.7rem", color: "var(--aos-text-tertiary)" }}>
             v{leftVersion} → v{rightVersion} · {rightContent.author} · {rightContent.commitMessage}
           </div>
         </div>
 
-        <label style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "0.5rem", fontSize: "0.7rem", color: "var(--aos-text-muted, #6B7280)" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "0.5rem", fontSize: "0.7rem", color: "var(--aos-text-secondary)" }}>
           <input type="checkbox" checked={showSame} onChange={(e) => setShowSame(e.target.checked)} />
           显示未变更行
         </label>
@@ -389,7 +389,7 @@ export function WikiDiffPage() {
                 ))}
               </div>
             </div>
-            <div style={{ ...styles.diffPanel, boxShadow: "0 0 0 2px var(--aos-accent-border, #C7D2FE)" }}>
+            <div style={{ ...styles.diffPanel, boxShadow: "0 0 0 2px var(--aos-accent-border)" }}>
               <div style={styles.diffPanelHeader}>
                 <span style={styles.versionBadgeRight}>{rightContent.label}</span>
                 <span style={styles.diffDate}>{rightContent.timestamp.slice(0, 10)}</span>
@@ -489,7 +489,7 @@ export function WikiDiffPage() {
                   {v.author} · {v.timestamp.slice(0, 10)}
                 </span>
                 {v.version === rightVersion && (
-                  <span style={{ ...styles.currentTag, color: "var(--aos-accent, #4F46E5)" }}>
+                  <span style={{ ...styles.currentTag, color: "var(--aos-accent)" }}>
                     查看
                   </span>
                 )}
@@ -513,10 +513,10 @@ export function WikiDiffPage() {
                   确认后将版本回退到 v{leftVersion}，v{rightVersion} 的所有变更将被丢弃。
                 </BpBanner>
                 <div style={{ marginTop: "0.75rem" }}>
-                  <p style={{ fontSize: "0.7rem", color: "var(--aos-text-muted, #6B7280)", marginBottom: "0.25rem" }}>
+                  <p style={{ fontSize: "0.7rem", color: "var(--aos-text-secondary)", marginBottom: "0.25rem" }}>
                     将丢弃的变更：
                   </p>
-                  <ul style={{ fontSize: "0.7rem", color: "var(--aos-text, #374151)", lineHeight: 1.8, paddingLeft: "1.25rem", listStyle: "disc" }}>
+                  <ul style={{ fontSize: "0.7rem", color: "var(--aos-text-secondary)", lineHeight: 1.8, paddingLeft: "1.25rem", listStyle: "disc" }}>
                     {diffLines.filter((l) => l.type !== "same").slice(0, 8).map((l, idx) => (
                       <li key={idx}>
                         <span style={{ color: diffLineTypeColor(l.type), fontWeight: 600 }}>
@@ -556,46 +556,46 @@ const styles: Record<string, React.CSSProperties> = {
     gap: "0.5rem",
   },
   versionSelect: { fontSize: "0.7rem", padding: "4px 8px", minWidth: 100 },
-  viewModeSwitch: { display: "flex", borderRadius: "6px", overflow: "hidden", border: "1px solid var(--aos-border, #E5E7EB)" },
-  viewModeBtn: { padding: "4px 12px", fontSize: "0.7rem", border: "none", background: "var(--aos-surface, #fff)", color: "var(--aos-text-muted, #6B7280)", cursor: "pointer" },
-  viewModeActive: { padding: "4px 12px", fontSize: "0.7rem", border: "none", background: "var(--aos-accent, #4F46E5)", color: "#fff", fontWeight: 600, cursor: "pointer" },
+  viewModeSwitch: { display: "flex", borderRadius: "6px", overflow: "hidden", border: "1px solid var(--aos-border)" },
+  viewModeBtn: { padding: "4px 12px", fontSize: "0.7rem", border: "none", background: "var(--aos-surface)", color: "var(--aos-text-secondary)", cursor: "pointer" },
+  viewModeActive: { padding: "4px 12px", fontSize: "0.7rem", border: "none", background: "var(--aos-accent)", color: "var(--text-on-brand)", fontWeight: 600, cursor: "pointer" },
   summaryBar: {
     display: "flex",
     alignItems: "center",
     gap: "1rem",
     padding: "0.5rem 0.75rem",
-    border: "1px solid var(--aos-border, #E5E7EB)",
+    border: "1px solid var(--aos-border)",
     borderRadius: "6px",
     marginBottom: "0.75rem",
-    background: "var(--aos-surface, #fff)",
+    background: "var(--aos-surface)",
   },
   summaryItem: { display: "flex", alignItems: "center", gap: "4px" },
   summaryDot: { width: 8, height: 8, borderRadius: "50%" },
   sideGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" },
-  diffPanel: { border: "1px solid var(--aos-border, #E5E7EB)", borderRadius: "8px", overflow: "hidden", background: "var(--aos-surface, #fff)" },
-  diffPanelHeader: { display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.75rem", borderBottom: "1px solid var(--aos-border, #E5E7EB)", background: "var(--aos-surface-hover, #F9FAFB)" },
-  versionBadgeLeft: { padding: "1px 6px", borderRadius: "3px", background: "var(--aos-surface-hover, #F3F4F6)", color: "var(--aos-text-muted, #6B7280)", fontSize: "0.6rem", fontWeight: 600 },
-  versionBadgeRight: { padding: "1px 6px", borderRadius: "3px", background: "var(--aos-accent-bg, #EEF2FF)", color: "var(--aos-accent, #4F46E5)", fontSize: "0.6rem", fontWeight: 600 },
-  diffDate: { fontSize: "0.65rem", color: "var(--aos-text-muted, #9CA3AF)" },
-  diffAuthor: { fontSize: "0.6rem", color: "var(--aos-text-muted, #9CA3AF)", marginLeft: "auto" },
+  diffPanel: { border: "1px solid var(--aos-border)", borderRadius: "8px", overflow: "hidden", background: "var(--aos-surface)" },
+  diffPanelHeader: { display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.75rem", borderBottom: "1px solid var(--aos-border)", background: "var(--aos-surface-hover)" },
+  versionBadgeLeft: { padding: "1px 6px", borderRadius: "3px", background: "var(--aos-gray-100)", color: "var(--aos-text-secondary)", fontSize: "0.6rem", fontWeight: 600 },
+  versionBadgeRight: { padding: "1px 6px", borderRadius: "3px", background: "var(--aos-accent-light)", color: "var(--aos-accent)", fontSize: "0.6rem", fontWeight: 600 },
+  diffDate: { fontSize: "0.65rem", color: "var(--aos-text-tertiary)" },
+  diffAuthor: { fontSize: "0.6rem", color: "var(--aos-text-tertiary)", marginLeft: "auto" },
   diffBlock: { fontFamily: "'Menlo','Monaco',monospace", fontSize: "0.7rem", lineHeight: 1.7, padding: "0.5rem" },
   diffLineRow: { display: "flex", alignItems: "baseline", padding: "0 4px", borderRadius: "2px" },
-  diffLineNum: { width: 32, textAlign: "right" as const, paddingRight: 8, color: "var(--aos-text-muted, #9CA3AF)", fontSize: "0.6rem", userSelect: "none", flexShrink: 0 },
+  diffLineNum: { width: 32, textAlign: "right" as const, paddingRight: 8, color: "var(--aos-text-tertiary)", fontSize: "0.6rem", userSelect: "none", flexShrink: 0 },
   diffPrefix: { width: 12, textAlign: "center" as const, fontWeight: 600, flexShrink: 0 },
-  diffContent: { whiteSpace: "pre-wrap" as const, wordBreak: "break-all" as const, color: "var(--aos-text, #374151)" },
-  sectionTitle: { fontSize: "0.85rem", fontWeight: 600, color: "var(--aos-text, #111827)", marginBottom: "0.5rem" },
-  versionTimeline: { border: "1px solid var(--aos-border, #E5E7EB)", borderRadius: "8px", background: "var(--aos-surface, #fff)" },
-  versionTimelineRow: { display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.75rem", borderBottom: "1px solid var(--aos-border, #E5E7EB)", cursor: "pointer" },
-  versionTimelineActive: { background: "var(--aos-accent-bg, #EEF2FF)" },
-  versionBadgeCurrent: { padding: "1px 6px", borderRadius: "3px", background: "var(--aos-accent-bg, #EEF2FF)", color: "var(--aos-accent, #4F46E5)", fontSize: "0.6rem", fontWeight: 600, width: 28, textAlign: "center" as const },
-  versionBadgeOld: { padding: "1px 6px", borderRadius: "3px", background: "var(--aos-surface-hover, #F3F4F6)", color: "var(--aos-text-muted, #6B7280)", fontSize: "0.6rem", fontWeight: 600, width: 28, textAlign: "center" as const },
-  versionMeta: { fontSize: "0.6rem", color: "var(--aos-text-muted, #9CA3AF)" },
+  diffContent: { whiteSpace: "pre-wrap" as const, wordBreak: "break-all" as const, color: "var(--aos-text-secondary)" },
+  sectionTitle: { fontSize: "0.85rem", fontWeight: 600, color: "var(--aos-text)", marginBottom: "0.5rem" },
+  versionTimeline: { border: "1px solid var(--aos-border)", borderRadius: "8px", background: "var(--aos-surface)" },
+  versionTimelineRow: { display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.75rem", borderBottom: "1px solid var(--aos-border)", cursor: "pointer" },
+  versionTimelineActive: { background: "var(--aos-accent-light)" },
+  versionBadgeCurrent: { padding: "1px 6px", borderRadius: "3px", background: "var(--aos-accent-light)", color: "var(--aos-accent)", fontSize: "0.6rem", fontWeight: 600, width: 28, textAlign: "center" as const },
+  versionBadgeOld: { padding: "1px 6px", borderRadius: "3px", background: "var(--aos-gray-100)", color: "var(--aos-text-secondary)", fontSize: "0.6rem", fontWeight: 600, width: 28, textAlign: "center" as const },
+  versionMeta: { fontSize: "0.6rem", color: "var(--aos-text-tertiary)" },
   currentTag: { fontSize: "0.6rem", fontWeight: 600 },
   modalOverlay: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center" },
-  modalCard: { background: "var(--aos-surface, #fff)", borderRadius: "12px", width: 520, maxHeight: "85vh", overflowY: "auto" as const, boxShadow: "0 20px 60px rgba(0,0,0,0.15)" },
-  modalHeader: { padding: "0.75rem 1.25rem", borderBottom: "1px solid var(--aos-border, #E5E7EB)", display: "flex", justifyContent: "space-between", alignItems: "center" },
-  modalClose: { color: "var(--aos-text-muted, #9CA3AF)", fontSize: "1.1rem", background: "none", border: "none", cursor: "pointer" },
-  modalFooter: { padding: "0.6rem 1.25rem", borderTop: "1px solid var(--aos-border, #E5E7EB)", background: "var(--aos-surface-hover, #F9FAFB)", display: "flex", justifyContent: "flex-end", gap: "0.5rem", borderRadius: "0 0 12px 12px" },
-  modalCancelBtn: { padding: "4px 16px", fontSize: "0.7rem", border: "1px solid var(--aos-border, #D1D5DB)", borderRadius: "6px", background: "var(--aos-surface, #fff)", color: "var(--aos-text, #374151)", cursor: "pointer" },
-  modalConfirmBtn: { padding: "4px 16px", fontSize: "0.7rem", border: "none", borderRadius: "6px", background: "var(--aos-accent, #4F46E5)", color: "#fff", cursor: "pointer", fontWeight: 600 },
+  modalCard: { background: "var(--aos-surface)", borderRadius: "12px", width: 520, maxHeight: "85vh", overflowY: "auto" as const, boxShadow: "0 20px 60px rgba(0,0,0,0.15)" },
+  modalHeader: { padding: "0.75rem 1.25rem", borderBottom: "1px solid var(--aos-border)", display: "flex", justifyContent: "space-between", alignItems: "center" },
+  modalClose: { color: "var(--aos-text-tertiary)", fontSize: "1.1rem", background: "none", border: "none", cursor: "pointer" },
+  modalFooter: { padding: "0.6rem 1.25rem", borderTop: "1px solid var(--aos-border)", background: "var(--aos-surface-hover)", display: "flex", justifyContent: "flex-end", gap: "0.5rem", borderRadius: "0 0 12px 12px" },
+  modalCancelBtn: { padding: "4px 16px", fontSize: "0.7rem", border: "1px solid var(--aos-border-strong)", borderRadius: "6px", background: "var(--aos-surface)", color: "var(--aos-text-secondary)", cursor: "pointer" },
+  modalConfirmBtn: { padding: "4px 16px", fontSize: "0.7rem", border: "none", borderRadius: "6px", background: "var(--aos-accent)", color: "var(--text-on-brand)", cursor: "pointer", fontWeight: 600 },
 };

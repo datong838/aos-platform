@@ -69,7 +69,7 @@ export function WikiIndexPage() {
         {/* 左侧分支树 */}
         <aside
           style={{
-            border: "1px solid var(--aos-border, #2a3540)",
+            border: "1px solid var(--aos-border)",
             padding: "0.75rem",
             minHeight: 400,
           }}
@@ -88,8 +88,8 @@ export function WikiIndexPage() {
                     fontSize: "0.75rem",
                     width: "100%",
                     textAlign: "left",
-                    background: selectedBranch === b.id ? "var(--aos-accent, #5b8def)" : undefined,
-                    color: selectedBranch === b.id ? "#fff" : undefined,
+                    background: selectedBranch === b.id ? "var(--aos-accent)" : undefined,
+                    color: selectedBranch === b.id ? "var(--text-on-brand)" : undefined,
                   }}
                   onClick={() => setSelectedBranch(b.id)}
                 >
@@ -138,9 +138,9 @@ export function WikiIndexPage() {
                 flex: 1,
                 padding: "6px 12px",
                 fontSize: "0.85rem",
-                background: "var(--aos-surface, #0f1419)",
+                background: "var(--aos-surface)",
                 color: "inherit",
-                border: "1px solid var(--aos-border, #2a3540)",
+                border: "1px solid var(--aos-border)",
                 borderRadius: 4,
               }}
             />
@@ -182,10 +182,10 @@ export function WikiIndexPage() {
                     style={{
                       display: "block",
                       padding: "0.75rem",
-                      border: "1px solid var(--aos-border, #2a3540)",
+                      border: "1px solid var(--aos-border)",
                       borderRadius: 6,
                       textDecoration: "none",
-                      background: "var(--aos-surface, #0f1419)",
+                      background: "var(--aos-surface)",
                     }}
                     className="bp-wiki-card"
                   >
@@ -200,7 +200,7 @@ export function WikiIndexPage() {
                         {card.summary}
                       </div>
                     )}
-                    <div style={{ fontSize: "0.7rem", marginTop: 8, color: "var(--aos-accent, #5b8def)" }}>
+                    <div style={{ fontSize: "0.7rem", marginTop: 8, color: "var(--aos-accent)" }}>
                       查看知识卡片 →
                     </div>
                   </Link>

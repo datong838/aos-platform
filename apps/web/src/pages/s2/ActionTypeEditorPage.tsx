@@ -32,11 +32,11 @@ export const ACTION_STATUS_LABELS: Record<ActionStatus, string> = {
 };
 
 export const ACTION_STATUS_COLORS: Record<ActionStatus, string> = {
-  draft: "#6B7280",
-  submitted: "#3B82F6",
-  validated: "#8B5CF6",
-  enabled: "#22C55E",
-  disabled: "#EF4444",
+  draft: "var(--aos-text-secondary)",
+  submitted: "var(--aos-accent)",
+  validated: "var(--aos-purple-600)",
+  enabled: "var(--aos-green)",
+  disabled: "var(--aos-red)",
 };
 
 export const SUBMISSION_STEPS: { key: ActionSubmissionStep; label: string; description: string }[] = [
@@ -401,7 +401,7 @@ export function ActionTypeEditorPage() {
               {!isNew && canTransitionTo(form.status, "enabled") && (
                 <button
                   type="button"
-                  style={{ ...actionStyles.transitionBtn, borderColor: "#22C55E", color: "#22C55E" }}
+                  style={{ ...actionStyles.transitionBtn, borderColor: "var(--aos-green)", color: "var(--aos-green)" }}
                   disabled={busy}
                   onClick={() => void transitionStatus("enabled")}
                 >
@@ -643,39 +643,39 @@ export function ActionTypeEditorPage() {
 
 const actionStyles: Record<string, React.CSSProperties> = {
   layout: { display: "flex", gap: "0.75rem", minHeight: "60vh" },
-  sideNav: { width: 220, flexShrink: 0, borderRight: "1px solid var(--aos-border, #E5E7EB)", padding: "0.5rem" },
-  backLink: { display: "flex", alignItems: "center", gap: "4px", fontSize: "0.75rem", color: "var(--aos-text-muted, #6B7280)", textDecoration: "none", marginBottom: "0.5rem" },
+  sideNav: { width: 220, flexShrink: 0, borderRight: "1px solid var(--aos-border)", padding: "0.5rem" },
+  backLink: { display: "flex", alignItems: "center", gap: "4px", fontSize: "0.75rem", color: "var(--aos-text-secondary)", textDecoration: "none", marginBottom: "0.5rem" },
   typeNameRow: { display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" },
   typeIcon: { fontSize: "1.1rem" },
-  typeName: { fontWeight: 600, fontSize: "0.85rem", color: "var(--aos-text, #111827)" },
+  typeName: { fontWeight: 600, fontSize: "0.85rem", color: "var(--aos-text)" },
   navSection: { display: "flex", flexDirection: "column" as const, gap: "1px" },
-  navItem: { display: "flex", alignItems: "center", gap: "6px", padding: "5px 8px", fontSize: "0.75rem", border: "none", background: "transparent", color: "var(--aos-text-muted, #6B7280)", cursor: "pointer", borderRadius: "4px", textAlign: "left" as const },
-  navItemActive: { display: "flex", alignItems: "center", gap: "6px", padding: "5px 8px", fontSize: "0.75rem", border: "none", background: "var(--aos-accent-bg, #EEF2FF)", color: "var(--aos-accent, #4F46E5)", cursor: "pointer", borderRadius: "4px", fontWeight: 600, textAlign: "left" as const },
+  navItem: { display: "flex", alignItems: "center", gap: "6px", padding: "5px 8px", fontSize: "0.75rem", border: "none", background: "transparent", color: "var(--aos-text-secondary)", cursor: "pointer", borderRadius: "4px", textAlign: "left" as const },
+  navItemActive: { display: "flex", alignItems: "center", gap: "6px", padding: "5px 8px", fontSize: "0.75rem", border: "none", background: "var(--aos-accent-light)", color: "var(--aos-accent)", cursor: "pointer", borderRadius: "4px", fontWeight: 600, textAlign: "left" as const },
   main: { flex: 1, minWidth: 0 },
-  statusBar: { display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.5rem 0", borderBottom: "1px solid var(--aos-border, #E5E7EB)", marginBottom: "0.75rem" },
+  statusBar: { display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.5rem 0", borderBottom: "1px solid var(--aos-border)", marginBottom: "0.75rem" },
   statusInfo: { display: "flex", alignItems: "center", gap: "0.5rem", flex: 1 },
   statusBadge: { padding: "2px 8px", borderRadius: "4px", fontSize: "0.7rem", fontWeight: 600 },
-  mutedText: { fontSize: "0.75rem", color: "var(--aos-text-muted, #9CA3AF)" },
-  monoText: { fontFamily: "ui-monospace, monospace", fontSize: "0.75rem", color: "var(--aos-text, #374151)" },
-  transitionBtn: { padding: "4px 12px", fontSize: "0.7rem", border: "1px solid var(--aos-border, #D1D5DB)", borderRadius: "6px", background: "var(--aos-surface, #fff)", color: "var(--aos-text, #374151)", cursor: "pointer", fontWeight: 500 },
+  mutedText: { fontSize: "0.75rem", color: "var(--aos-text-tertiary)" },
+  monoText: { fontFamily: "ui-monospace, monospace", fontSize: "0.75rem", color: "var(--aos-text-secondary)" },
+  transitionBtn: { padding: "4px 12px", fontSize: "0.7rem", border: "1px solid var(--aos-border-strong)", borderRadius: "6px", background: "var(--aos-surface)", color: "var(--aos-text-secondary)", cursor: "pointer", fontWeight: 500 },
   pipeline: { display: "flex", gap: "0.5rem", marginBottom: "0.75rem", flexWrap: "wrap" },
-  pipelineStep: { display: "flex", alignItems: "center", gap: "6px", padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--aos-border, #E5E7EB)", background: "var(--aos-surface, #fff)" },
-  pipelineStepDone: { borderColor: "var(--aos-success-border, #86EFAC)", background: "var(--aos-success-bg, #F0FDF4)" },
-  pipelineStepCurrent: { borderColor: "var(--aos-accent, #4F46E5)", boxShadow: "0 0 0 2px var(--aos-accent-bg, #EEF2FF)" },
-  pipelineDot: { width: 20, height: 20, borderRadius: "50%", background: "var(--aos-surface-hover, #F3F4F6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 600, color: "var(--aos-text-muted, #6B7280)" },
-  pipelineLabel: { fontSize: "0.7rem", fontWeight: 600, color: "var(--aos-text, #111827)" },
-  pipelineDesc: { fontSize: "0.6rem", color: "var(--aos-text-muted, #9CA3AF)" },
-  infoCard: { border: "1px solid var(--aos-border, #E5E7EB)", borderRadius: "8px", background: "var(--aos-surface, #fff)", marginBottom: "0.75rem" },
-  infoRow: { display: "flex", padding: "0.4rem 0.75rem", borderBottom: "1px solid var(--aos-border, #E5E7EB)", gap: "0.5rem", alignItems: "flex-start" },
-  infoKey: { width: 120, fontSize: "0.7rem", fontWeight: 600, color: "var(--aos-text-muted, #6B7280)", flexShrink: 0 },
-  infoValue: { flex: 1, fontSize: "0.75rem", color: "var(--aos-text, #374151)" },
-  sectionCard: { border: "1px solid var(--aos-border, #E5E7EB)", borderRadius: "8px", background: "var(--aos-surface, #fff)", padding: "0.75rem" },
-  sectionTitle: { fontSize: "0.85rem", fontWeight: 600, color: "var(--aos-text, #111827)", marginBottom: "0.5rem" },
+  pipelineStep: { display: "flex", alignItems: "center", gap: "6px", padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--aos-border)", background: "var(--aos-surface)" },
+  pipelineStepDone: { borderColor: "var(--aos-green-border)", background: "var(--aos-green-bg)" },
+  pipelineStepCurrent: { borderColor: "var(--aos-accent)", boxShadow: "0 0 0 2px var(--aos-accent-light)" },
+  pipelineDot: { width: 20, height: 20, borderRadius: "50%", background: "var(--aos-gray-100)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 600, color: "var(--aos-text-secondary)" },
+  pipelineLabel: { fontSize: "0.7rem", fontWeight: 600, color: "var(--aos-text)" },
+  pipelineDesc: { fontSize: "0.6rem", color: "var(--aos-text-tertiary)" },
+  infoCard: { border: "1px solid var(--aos-border)", borderRadius: "8px", background: "var(--aos-surface)", marginBottom: "0.75rem" },
+  infoRow: { display: "flex", padding: "0.4rem 0.75rem", borderBottom: "1px solid var(--aos-border)", gap: "0.5rem", alignItems: "flex-start" },
+  infoKey: { width: 120, fontSize: "0.7rem", fontWeight: 600, color: "var(--aos-text-secondary)", flexShrink: 0 },
+  infoValue: { flex: 1, fontSize: "0.75rem", color: "var(--aos-text-secondary)" },
+  sectionCard: { border: "1px solid var(--aos-border)", borderRadius: "8px", background: "var(--aos-surface)", padding: "0.75rem" },
+  sectionTitle: { fontSize: "0.85rem", fontWeight: 600, color: "var(--aos-text)", marginBottom: "0.5rem" },
   formGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" },
   capGrid: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "4px", marginTop: "0.5rem" },
   capItem: { display: "flex", alignItems: "center", gap: "4px", padding: "4px", fontSize: "0.7rem" },
-  autoRow: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 8px", borderBottom: "1px solid var(--aos-border, #E5E7EB)", fontSize: "0.75rem" },
-  autoTrigger: { fontFamily: "ui-monospace, monospace", color: "var(--aos-text, #374151)" },
-  autoEnabled: { color: "#22C55E", fontWeight: 600 },
-  autoDisabled: { color: "#EF4444", fontWeight: 600 },
+  autoRow: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 8px", borderBottom: "1px solid var(--aos-border)", fontSize: "0.75rem" },
+  autoTrigger: { fontFamily: "ui-monospace, monospace", color: "var(--aos-text-secondary)" },
+  autoEnabled: { color: "var(--aos-green)", fontWeight: 600 },
+  autoDisabled: { color: "var(--aos-red)", fontWeight: 600 },
 };
