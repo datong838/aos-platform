@@ -57,9 +57,9 @@ export const PROPERTY_TYPES: { value: PropertyType; label: string; icon: string 
 ];
 
 export const PROPERTY_STATUSES: { value: PropertyStatus; label: string; color: string }[] = [
-  { value: "active", label: "Active", color: "var(--aos-ok, #38a169)" },
-  { value: "experimental", label: "Experimental", color: "var(--aos-warn, #d69e2e)" },
-  { value: "deprecated", label: "Deprecated", color: "var(--aos-bad, #e53e3e)" },
+  { value: "active", label: "Active", color: "var(--aos-green)" },
+  { value: "experimental", label: "Experimental", color: "var(--aos-amber)" },
+  { value: "deprecated", label: "Deprecated", color: "var(--aos-red)" },
 ];
 
 // ==================== 纯函数 ====================
@@ -130,7 +130,7 @@ export function statusLabel(status: PropertyStatus): string {
 }
 
 export function statusColor(status: PropertyStatus): string {
-  return PROPERTY_STATUSES.find((s) => s.value === status)?.color || "var(--aos-muted, #718096)";
+  return PROPERTY_STATUSES.find((s) => s.value === status)?.color || "var(--aos-text-tertiary)";
 }
 
 /** 自动映射列名：属性名 -> 小写下划线 */
@@ -354,8 +354,8 @@ export function PropertyEditorPage() {
             alignItems: "center",
             gap: 12,
             padding: "8px 12px",
-            background: "var(--aos-surface, #0f1419)",
-            border: "1px solid var(--aos-border, #2a3540)",
+            background: "var(--aos-surface)",
+            border: "1px solid var(--aos-border)",
             borderRadius: 4,
             marginBottom: 8,
           }}
@@ -451,7 +451,7 @@ export function PropertyEditorPage() {
                           padding: "2px 6px",
                           borderRadius: 3,
                           background: statusColor(p.status),
-                          color: "#fff",
+                          color: "var(--text-on-brand)",
                         }}
                       >
                         {statusLabel(p.status)}
@@ -498,9 +498,9 @@ export function PropertyEditorPage() {
           {/* 右: 属性详情面板 */}
           <aside
             style={{
-              border: "1px solid var(--aos-border, #2a3540)",
+              border: "1px solid var(--aos-border)",
               borderRadius: 4,
-              background: "var(--aos-surface, #0f1419)",
+              background: "var(--aos-surface)",
               padding: 12,
               maxHeight: 500,
               overflowY: "auto",
@@ -551,7 +551,7 @@ function PropertyDetailPanel({
     <div>
       {/* 标题行 */}
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-        <span style={{ fontFamily: "monospace", color: "var(--aos-accent, #5b8def)" }}>
+        <span style={{ fontFamily: "monospace", color: "var(--aos-accent)" }}>
           {typeIcon(property.type)}
         </span>
         <strong style={{ flex: 1 }}>{property.name || "(unnamed)"}</strong>
@@ -705,7 +705,7 @@ function PropertyDetailPanel({
             </button>
 
             {showAdvanced && (
-              <div style={{ marginTop: 8, paddingLeft: 12, borderLeft: "2px solid var(--aos-border, #2a3540)" }}>
+              <div style={{ marginTop: 8, paddingLeft: 12, borderLeft: "2px solid var(--aos-border)" }}>
                 <label className="ont-form-field">
                   <span>Default value</span>
                   <input

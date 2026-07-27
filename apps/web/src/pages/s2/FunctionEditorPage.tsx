@@ -157,10 +157,10 @@ export function statusLabel(status: FunctionStatus): string {
 
 export function statusColor(status: FunctionStatus): string {
   return {
-    draft: "var(--aos-warn, #d69e2e)",
-    validated: "var(--aos-accent, #5b8def)",
-    published: "var(--aos-ok, #38a169)",
-    error: "var(--aos-bad, #e53e3e)",
+    draft: "var(--aos-amber)",
+    validated: "var(--aos-accent)",
+    published: "var(--aos-green)",
+    error: "var(--aos-red)",
   }[status];
 }
 
@@ -346,9 +346,9 @@ export function FunctionEditorPage() {
           {/* 左: 函数列表 */}
           <aside
             style={{
-              border: "1px solid var(--aos-border, #2a3540)",
+              border: "1px solid var(--aos-border)",
               borderRadius: 4,
-              background: "var(--aos-surface, #0f1419)",
+              background: "var(--aos-surface)",
               padding: 8,
             }}
           >
@@ -381,8 +381,8 @@ export function FunctionEditorPage() {
                       textAlign: "left",
                       fontSize: "0.75rem",
                       background:
-                        selected?.id === f.id ? "var(--aos-accent, #5b8def)" : undefined,
-                      color: selected?.id === f.id ? "#fff" : undefined,
+                        selected?.id === f.id ? "var(--aos-accent)" : undefined,
+                      color: selected?.id === f.id ? "var(--text-on-brand)" : undefined,
                     }}
                     onClick={() => setSelectedId(f.id)}
                   >
@@ -418,7 +418,7 @@ export function FunctionEditorPage() {
                       padding: "2px 6px",
                       borderRadius: 3,
                       background: statusColor(selected.status),
-                      color: "#fff",
+                      color: "var(--text-on-brand)",
                     }}
                   >
                     {statusLabel(selected.status)}
@@ -647,7 +647,7 @@ export function FunctionEditorPage() {
                           <div
                             className="bp-prop-value"
                             style={{
-                              color: testResult.ok ? "var(--aos-ok, #38a169)" : "var(--aos-bad, #e53e3e)",
+                              color: testResult.ok ? "var(--aos-green)" : "var(--aos-red)",
                             }}
                           >
                             {testResult.ok ? "✓ 通过" : "✗ 失败"}
@@ -658,7 +658,7 @@ export function FunctionEditorPage() {
                             )}
                           </div>
                           {testResult.errorRows && testResult.errorRows.length > 0 && (
-                            <ul style={{ color: "var(--aos-bad, #e53e3e)", fontSize: "0.75rem" }}>
+                            <ul style={{ color: "var(--aos-red)", fontSize: "0.75rem" }}>
                               {testResult.errorRows.map((e, i) => (
                                 <li key={i}>{e.param}: {e.message}</li>
                               ))}
