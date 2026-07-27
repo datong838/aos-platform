@@ -1071,6 +1071,15 @@ def create_app() -> FastAPI:
     application.include_router(phase4_ontology_actions_router)
     application.include_router(phase4_ontology_links_router)
 
+    # ── Phase 5 · Pipeline Core API (~20 API) ──
+    from aos_api.routers.phase5_pipelines import router as phase5_pipelines_router
+    from aos_api.routers.phase5_schedules import router as phase5_schedules_router
+    from aos_api.routers.phase5_datasets import router as phase5_datasets_router
+
+    application.include_router(phase5_pipelines_router)
+    application.include_router(phase5_schedules_router)
+    application.include_router(phase5_datasets_router)
+
     log.info("aos-api_app_created version=%s", application.version)
     return application
 
