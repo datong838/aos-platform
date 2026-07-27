@@ -389,7 +389,7 @@ export function EventsPage() {
         />
 
         {/* === 上半区：事件列表表格 === */}
-        <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #E5E7EB", marginTop: 16, overflow: "hidden" }}>
+        <div style={{ background: "var(--aos-surface)", borderRadius: 2, border: "1px solid var(--aos-border)", marginTop: 16, overflow: "hidden" }}>
           <div style={{ padding: "12px 16px", borderBottom: "1px solid #F3F4F6", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>已注册事件（{filtered.length}）</span>
             {loading && <span style={{ fontSize: 11, color: "#9CA3AF" }}>加载中…</span>}
@@ -430,7 +430,7 @@ export function EventsPage() {
                       )}
                     </td>
                     <td style={{ padding: "12px 16px" }}>
-                      <span style={{ background: sm.bg, color: sm.color, padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 500 }}>
+                      <span style={{ background: sm.bg, color: sm.color, padding: "2px 8px", borderRadius: 2, fontSize: 11, fontWeight: 500 }}>
                         {sm.label}
                       </span>
                     </td>
@@ -476,7 +476,7 @@ export function EventsPage() {
         </div>
 
         {/* 幂等护栏提示 */}
-        <div style={{ marginTop: 12, padding: 12, borderRadius: 8, background: "#FFFBEB", border: "1px solid #FDE68A", fontSize: 12 }}>
+        <div style={{ marginTop: 12, padding: 12, borderRadius: 2, background: "var(--aos-amber-bg)", border: "1px solid var(--aos-amber-border)", fontSize: 12 }}>
           <strong style={{ color: "#92400E" }}>幂等护栏（ACT-07）：</strong>
           <span style={{ color: "#78350F" }}>写操作事件（调用 API / 更新数据）须配置幂等键，防止双击或重试导致重复提交。</span>
         </div>
@@ -487,7 +487,7 @@ export function EventsPage() {
             style={{
               marginTop: 16,
               background: "#fff",
-              borderRadius: 8,
+              borderRadius: 2,
               border: "1px solid #E5E7EB",
               overflow: "hidden",
             }}
@@ -582,7 +582,7 @@ export function EventsPage() {
                         onClick={() => setTriggerId(t.id)}
                         style={{
                           padding: 14,
-                          borderRadius: 8,
+                          borderRadius: 2,
                           border: `1.5px solid ${triggerId === t.id ? "#3B82F6" : "#E5E7EB"}`,
                           background: triggerId === t.id ? "#EFF6FF" : "#fff",
                           cursor: "pointer",
@@ -612,7 +612,7 @@ export function EventsPage() {
                         onClick={() => setActionId(a.id)}
                         style={{
                           padding: 12,
-                          borderRadius: 8,
+                          borderRadius: 2,
                           border: `1.5px solid ${actionId === a.id ? "#10B981" : "#E5E7EB"}`,
                           background: actionId === a.id ? "#ECFDF5" : "#fff",
                           cursor: "pointer",
@@ -624,7 +624,7 @@ export function EventsPage() {
                         <span style={{
                           width: 32,
                           height: 32,
-                          borderRadius: 6,
+                          borderRadius: 2,
                           background: actionBg(a.color),
                           display: "flex",
                           alignItems: "center",
@@ -692,7 +692,7 @@ export function EventsPage() {
 
                   {/* 幂等键配置（写操作必填）*/}
                   {(actionId === "callApi" || actionId === "updateData") && (
-                    <div style={{ marginTop: 16, padding: 12, borderRadius: 8, background: "#FFFBEB", border: "1px solid #FDE68A" }}>
+                    <div style={{ marginTop: 16, padding: 12, borderRadius: 2, background: "var(--aos-amber-bg)", border: "1px solid var(--aos-amber-border)" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                         <input
                           type="checkbox"
@@ -729,7 +729,7 @@ export function EventsPage() {
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 12 }}>事件配置摘要</div>
                   <div style={{
                     padding: 16,
-                    borderRadius: 8,
+                    borderRadius: 2,
                     background: "#F9FAFB",
                     border: "1px solid #E5E7EB",
                     fontSize: 12,
@@ -807,7 +807,7 @@ const inputStyle = (invalid: boolean): React.CSSProperties => ({
   width: "100%",
   padding: "8px 10px",
   border: `1px solid ${invalid ? "#EF4444" : "#D1D5DB"}`,
-  borderRadius: 6,
+  borderRadius: 2,
   fontSize: 13,
   color: "#374151",
   fontFamily: "inherit",
@@ -820,7 +820,7 @@ const btnPrimary: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 600,
   border: "none",
-  borderRadius: 6,
+  borderRadius: 2,
   background: "#3B82F6",
   color: "#fff",
   cursor: "pointer",
@@ -831,7 +831,7 @@ const btnSecondary: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 500,
   border: "1px solid #D1D5DB",
-  borderRadius: 6,
+  borderRadius: 2,
   background: "#fff",
   color: "#374151",
   cursor: "pointer",

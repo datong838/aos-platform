@@ -250,7 +250,7 @@ export function InboxPage() {
           padding: "10px 20px",
           borderBottom: "1px solid #E5E7EB",
           background: "white",
-          borderRadius: 8,
+          borderRadius: 2,
           marginBottom: 12,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -261,10 +261,10 @@ export function InboxPage() {
             <span style={{ fontSize: 11, color: "#6B7280", padding: "2px 8px", background: "#F3F4F6", borderRadius: 4 }}>v2 · 已发布</span>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <Link to="/workshop/canvas" style={{ padding: "5px 12px", fontSize: 12, border: "1px solid #D1D5DB", borderRadius: 6, background: "white", color: "#374151", textDecoration: "none" }}>
+            <Link to="/workshop/canvas" style={{ padding: "5px 12px", fontSize: 12, border: "1px solid var(--aos-border)", borderRadius: 2, background: "var(--aos-surface)", color: "var(--aos-text-secondary)", textDecoration: "none" }}>
               编辑模块
             </Link>
-            <Link to="/workshop" style={{ padding: "5px 12px", fontSize: 12, border: "1px solid #D1D5DB", borderRadius: 6, background: "white", color: "#374151", textDecoration: "none" }}>
+            <Link to="/workshop" style={{ padding: "5px 12px", fontSize: 12, border: "1px solid var(--aos-border)", borderRadius: 2, background: "var(--aos-surface)", color: "var(--aos-text-secondary)", textDecoration: "none" }}>
               ← 返回列表
             </Link>
           </div>
@@ -276,7 +276,7 @@ export function InboxPage() {
         {actionMsg && <p className="aos-text" style={{ fontSize: 12 }}>{actionMsg}</p>}
 
         {/* 3-pane layout */}
-        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "200px 1fr 1fr", minHeight: 500, gap: 0, borderRadius: 8, overflow: "hidden", border: "1px solid #E5E7EB" }}>
+        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "200px 1fr 1fr", minHeight: 500, gap: 0, borderRadius: 2, overflow: "hidden", border: "1px solid var(--aos-border)" }}>
           {/* Left: Filter List */}
           <div style={{ padding: 16, borderRight: "1px solid #E5E7EB", overflowY: "auto", background: "#F9FAFB" }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "#111827", marginBottom: 12 }}>筛选列表</div>
@@ -317,7 +317,7 @@ export function InboxPage() {
                 </form>
               </div>
             </div>
-            <div style={{ marginTop: 16, padding: 8, background: "#EFF6FF", borderRadius: 6, fontSize: 11, color: "#2563EB" }}>
+            <div style={{ marginTop: 16, padding: 8, background: "var(--aos-accent-light)", borderRadius: 2, fontSize: 11, color: "var(--aos-blue-600)" }}>
               输出 → Object Set Filter
               <br />
               维数 {filters.length}/{SELECTION_LIMIT}
@@ -335,7 +335,7 @@ export function InboxPage() {
               <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>风控告警列表</div>
               <span style={{ fontSize: 12, color: "#6B7280" }}>{rows.length} 条结果</span>
             </div>
-            <div style={{ border: "1px solid #E5E7EB", borderRadius: 8, overflow: "hidden", background: "white" }}>
+            <div style={{ border: "1px solid var(--aos-border)", borderRadius: 2, overflow: "hidden", background: "var(--aos-surface)" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                 <thead>
                   <tr>
@@ -395,7 +395,7 @@ export function InboxPage() {
                   <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>订单详情</div>
                   <span style={{ fontSize: 11, color: "#EA580C" }}>Wiki 侧栏</span>
                 </div>
-                <div style={{ border: "1px solid #E5E7EB", borderRadius: 12, background: "white", padding: 16 }}>
+                <div style={{ border: "1px solid var(--aos-border)", borderRadius: 2, background: "var(--aos-surface)", padding: 16 }}>
                   <div style={{ fontSize: 18, fontWeight: 600, color: "#111827", marginBottom: 4 }}>
                     {String(activeRow.id)}
                   </div>
@@ -405,25 +405,25 @@ export function InboxPage() {
 
                   {/* Detail grid */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-                    <div style={{ padding: 10, background: "#F9FAFB", borderRadius: 8 }}>
+                    <div style={{ padding: 10, background: "var(--aos-surface-hover)", borderRadius: 2 }}>
                       <div style={{ fontSize: 10, color: "#6B7280" }}>标题</div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: "#111827", marginTop: 2 }}>
                         {String(activeRow.title || "—")}
                       </div>
                     </div>
-                    <div style={{ padding: 10, background: "#F9FAFB", borderRadius: 8 }}>
+                    <div style={{ padding: 10, background: "var(--aos-surface-hover)", borderRadius: 2 }}>
                       <div style={{ fontSize: 10, color: "#6B7280" }}>站点</div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: "#111827", marginTop: 2 }}>
                         {String(activeRow.site || "—")}
                       </div>
                     </div>
-                    <div style={{ padding: 10, background: "#F9FAFB", borderRadius: 8 }}>
+                    <div style={{ padding: 10, background: "var(--aos-surface-hover)", borderRadius: 2 }}>
                       <div style={{ fontSize: 10, color: "#6B7280" }}>状态</div>
                       <div style={{ fontSize: 14, fontWeight: 500, marginTop: 2, color: activeRow.status === "open" ? "#DC2626" : "#059669" }}>
                         {activeRow.status || "—"}
                       </div>
                     </div>
-                    <div style={{ padding: 10, background: "#F9FAFB", borderRadius: 8 }}>
+                    <div style={{ padding: 10, background: "var(--aos-surface-hover)", borderRadius: 2 }}>
                       <div style={{ fontSize: 10, color: "#6B7280" }}>内部成本</div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: "#111827", marginTop: 2 }}>
                         {activeRow.internalCost != null ? String(activeRow.internalCost) : "—"}
@@ -433,7 +433,7 @@ export function InboxPage() {
 
                   {/* Wiki section */}
                   {wikiText && (
-                    <div style={{ border: "1px solid #FED7AA", background: "#FFF7ED", borderRadius: 8, padding: 12, marginBottom: 16 }}>
+                    <div style={{ border: "1px solid var(--aos-amber-border)", background: "var(--aos-amber-bg)", borderRadius: 2, padding: 12, marginBottom: 16 }}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: "#EA580C", marginBottom: 4 }}>Wiki · 工单说明</div>
                       <p style={{ fontSize: 12, color: "#9A3412", margin: 0, lineHeight: 1.5 }}>{wikiText}</p>
                     </div>
@@ -447,7 +447,7 @@ export function InboxPage() {
                       disabled={busy}
                       style={{
                         padding: "8px 14px",
-                        borderRadius: 8,
+                        borderRadius: 2,
                         background: "#FEF3C7",
                         border: "1px solid #FCD34D",
                         fontSize: 12,
@@ -463,7 +463,7 @@ export function InboxPage() {
                       disabled={busy || selected.size === 0}
                       style={{
                         padding: "8px 14px",
-                        borderRadius: 8,
+                        borderRadius: 2,
                         border: "1px solid #D1D5DB",
                         background: "white",
                         fontSize: 12,
@@ -477,7 +477,7 @@ export function InboxPage() {
                       to={buddyHref}
                       style={{
                         padding: "8px 14px",
-                        borderRadius: 8,
+                        borderRadius: 2,
                         border: "1px solid #BFDBFE",
                         background: "#EFF6FF",
                         fontSize: 12,
@@ -491,7 +491,7 @@ export function InboxPage() {
                 </div>
 
                 {/* Activity log */}
-                <div style={{ marginTop: 16, border: "1px solid #E5E7EB", borderRadius: 12, background: "white", padding: 16 }}>
+                <div style={{ marginTop: 16, border: "1px solid var(--aos-border)", borderRadius: 2, background: "var(--aos-surface)", padding: 16 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#111827", marginBottom: 12 }}>活动日志</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {activityLog.map((log) => (

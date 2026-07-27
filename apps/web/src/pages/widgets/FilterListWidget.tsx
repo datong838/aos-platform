@@ -92,7 +92,7 @@ const outputStyle: CSSProperties = {
   color: ACCENT,
   background: "rgba(79, 70, 229, 0.10)",
   border: "1px dashed rgba(79, 70, 229, 0.45)",
-  borderRadius: 6,
+  borderRadius: 2,
   padding: "6px 8px",
   textAlign: "center",
 };

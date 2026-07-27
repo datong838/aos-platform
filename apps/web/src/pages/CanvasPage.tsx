@@ -1085,7 +1085,7 @@ export function CanvasPage() {
                       justifyContent: "space-between",
                       alignItems: "center",
                       padding: "6px 10px",
-                      borderRadius: 6,
+                      borderRadius: 2,
                       background: "var(--aos-indigo-bg)",
                       border: "1px solid var(--aos-indigo-border)",
                       fontSize: 11,
@@ -1233,7 +1233,7 @@ export function CanvasPage() {
                 gridTemplateColumns: "1fr 1fr",
                 gap: "4px",
                 padding: "4px",
-                borderRadius: "6px",
+                borderRadius: "2px",
                 background: "var(--aos-aside)",
                 border: "1px dashed var(--aos-border)",
               }}
@@ -1261,7 +1261,7 @@ export function CanvasPage() {
                 gap: "6px",
                 padding: "6px 10px",
                 marginTop: "6px",
-                borderRadius: "6px",
+                borderRadius: "2px",
                 background: "var(--aos-indigo-bg)",
                 color: "var(--aos-indigo-600)",
                 fontSize: "11px",
@@ -1774,15 +1774,15 @@ export function CanvasPage() {
                 {propTab === "events" && (
                   <div style={{ padding: "8px" }}>
                     <div style={{ fontSize: "11px", color: "var(--aos-text-muted)", marginBottom: "6px" }}>绑定此组件的事件处理：</div>
-                    <div style={{ border: "1px solid var(--aos-border)", borderRadius: "6px", padding: "6px", marginBottom: "4px" }}>
+                    <div style={{ border: "1px solid var(--aos-border)", borderRadius: "2px", padding: "6px", marginBottom: "4px" }}>
                       <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--aos-text)" }}>onPageLoad</div>
                       <div style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>→ initDefaultFilter()</div>
                     </div>
-                    <div style={{ border: "1px solid var(--aos-border)", borderRadius: "6px", padding: "6px", marginBottom: "4px" }}>
+                    <div style={{ border: "1px solid var(--aos-border)", borderRadius: "2px", padding: "6px", marginBottom: "4px" }}>
                       <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--aos-text)" }}>onResize</div>
                       <div style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>→ setBreakpoint(width)</div>
                     </div>
-                    <Link to="/workshop/events" style={{ display: "block", fontSize: "11px", color: "var(--aos-indigo-600)", textAlign: "center", padding: "4px", border: "1px dashed var(--aos-indigo-border)", borderRadius: "6px", textDecoration: "none", marginTop: "4px" }}>
+                    <Link to="/workshop/events" style={{ display: "block", fontSize: "11px", color: "var(--aos-indigo-600)", textAlign: "center", padding: "4px", border: "1px dashed var(--aos-indigo-border)", borderRadius: "2px", textDecoration: "none", marginTop: "4px" }}>
                       + 绑定新事件 →
                     </Link>
                   </div>
@@ -1792,15 +1792,15 @@ export function CanvasPage() {
                 {propTab === "data" && (
                   <div style={{ padding: "8px" }}>
                     <div style={{ fontSize: "11px", color: "var(--aos-text-muted)", marginBottom: "6px" }}>绑定数据源：</div>
-                    <div style={{ border: "1px solid var(--aos-border)", borderRadius: "6px", padding: "6px", marginBottom: "4px" }}>
+                    <div style={{ border: "1px solid var(--aos-border)", borderRadius: "2px", padding: "6px", marginBottom: "4px" }}>
                       <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--aos-text)" }}>ObjectSet: {node.config?.objectType || "WorkOrder"}</div>
                       <div style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>属性: id, title, site, status</div>
                     </div>
-                    <div style={{ border: "1px solid var(--aos-border)", borderRadius: "6px", padding: "6px", marginBottom: "4px" }}>
+                    <div style={{ border: "1px solid var(--aos-border)", borderRadius: "2px", padding: "6px", marginBottom: "4px" }}>
                       <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--aos-text)" }}>变量: $selected_site</div>
                       <div style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>类型: String · 默认: "DC-East"</div>
                     </div>
-                    <Link to="/workshop/variables" style={{ display: "block", fontSize: "11px", color: "var(--aos-indigo-600)", textAlign: "center", padding: "4px", border: "1px dashed var(--aos-indigo-border)", borderRadius: "6px", textDecoration: "none", marginTop: "4px" }}>
+                    <Link to="/workshop/variables" style={{ display: "block", fontSize: "11px", color: "var(--aos-indigo-600)", textAlign: "center", padding: "4px", border: "1px dashed var(--aos-indigo-border)", borderRadius: "2px", textDecoration: "none", marginTop: "4px" }}>
                       + 绑定变量或 ObjectSet
                     </Link>
                   </div>
@@ -1912,7 +1912,7 @@ export function CanvasPage() {
             <div
               style={{
                 padding: "8px 12px",
-                borderRadius: "6px",
+                borderRadius: "2px",
                 background: "var(--aos-surface)",
                 border: "1px solid var(--aos-accent)",
                 fontSize: "12px",

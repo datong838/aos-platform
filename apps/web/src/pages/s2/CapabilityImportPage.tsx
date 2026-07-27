@@ -265,7 +265,7 @@ permissions:
               to="/aip/capabilities"
               style={{
                 padding: "8px 20px",
-                borderRadius: 6,
+                borderRadius: 2,
                 fontSize: 13,
                 fontWeight: 500,
                 background: "var(--aos-accent)",
@@ -283,7 +283,7 @@ permissions:
               }}
               style={{
                 padding: "8px 20px",
-                borderRadius: 6,
+                borderRadius: 2,
                 fontSize: 13,
                 border: "1px solid var(--aos-border-strong)",
                 background: "var(--aos-surface)",
@@ -304,7 +304,7 @@ permissions:
       {/* C0/C1/C2 分层说明 */}
       <div
         style={{
-          borderRadius: 12,
+          borderRadius: 2,
           border: "1px solid var(--aos-amber-border)",
           background: "var(--aos-amber-bg)",
           padding: 16,
@@ -346,7 +346,7 @@ permissions:
                     alignItems: "center",
                     gap: 10,
                     padding: "10px 14px",
-                    borderRadius: 6,
+                    borderRadius: 2,
                     fontSize: 13,
                     color: isActive ? "var(--aos-blue-600)" : isDone ? "var(--aos-blue-600)" : "var(--aos-text-secondary)",
                     background: isActive ? "var(--aos-accent-light)" : "transparent",
@@ -399,7 +399,7 @@ permissions:
                       onClick={() => setCapType(ct.id)}
                       style={{
                         border: selected ? "1.5px solid var(--aos-blue-600)" : "1px solid var(--aos-border-strong)",
-                        borderRadius: 8,
+                        borderRadius: 2,
                         padding: 16,
                         cursor: "pointer",
                         background: selected ? "var(--aos-accent-light)" : "var(--aos-surface)",
@@ -446,7 +446,7 @@ permissions:
                   onClick={() => setStep(2)}
                   style={{
                     padding: "8px 24px",
-                    borderRadius: 6,
+                    borderRadius: 2,
                     fontSize: 13,
                     fontWeight: 500,
                     background: "var(--aos-blue-600)",
@@ -512,7 +512,7 @@ permissions:
                   background: "var(--aos-text)",
                   color: "var(--aos-border-strong)",
                   padding: 16,
-                  borderRadius: 6,
+                  borderRadius: 2,
                   fontSize: 11,
                   lineHeight: 1.7,
                   overflowX: "auto",
@@ -527,7 +527,7 @@ permissions:
               <div
                 style={{
                   marginTop: 20,
-                  borderRadius: 8,
+                  borderRadius: 2,
                   border: "1px solid var(--aos-accent-border)",
                   background: "rgba(239, 246, 255, 0.4)",
                   padding: 16,
@@ -557,7 +557,7 @@ permissions:
                         alignItems: "center",
                         gap: 10,
                         padding: "8px 12px",
-                        borderRadius: 6,
+                        borderRadius: 2,
                         background: "var(--aos-surface)",
                         border: "1px solid var(--aos-border)",
                       }}
@@ -625,7 +625,7 @@ permissions:
                     type="button"
                     style={{
                       padding: "6px 12px",
-                      borderRadius: 6,
+                      borderRadius: 2,
                       border: "1px solid var(--aos-accent-border)",
                       background: "var(--aos-surface)",
                       fontSize: 11,
@@ -640,7 +640,7 @@ permissions:
                     type="button"
                     style={{
                       padding: "6px 12px",
-                      borderRadius: 6,
+                      borderRadius: 2,
                       border: "1px solid var(--aos-border-strong)",
                       background: "var(--aos-surface)",
                       fontSize: 11,
@@ -662,7 +662,7 @@ permissions:
                   onClick={() => setStep(1)}
                   style={{
                     padding: "8px 24px",
-                    borderRadius: 6,
+                    borderRadius: 2,
                     fontSize: 13,
                     border: "1px solid var(--aos-border-strong)",
                     background: "var(--aos-surface)",
@@ -677,7 +677,7 @@ permissions:
                   onClick={() => setStep(3)}
                   style={{
                     padding: "8px 24px",
-                    borderRadius: 6,
+                    borderRadius: 2,
                     fontSize: 13,
                     fontWeight: 500,
                     background: "var(--aos-blue-600)",
@@ -714,7 +714,7 @@ permissions:
                       onClick={() => setSecLevel(lvl.id)}
                       style={{
                         border: selected ? `1.5px solid ${lvl.color}` : "1px solid var(--aos-border-strong)",
-                        borderRadius: 6,
+                        borderRadius: 2,
                         padding: "10px 14px",
                         cursor: "pointer",
                         background: selected ? `${lvl.color}10` : "var(--aos-surface)",
@@ -895,7 +895,7 @@ permissions:
               </div>
               <div
                 style={{
-                  borderRadius: 8,
+                  borderRadius: 2,
                   border: "1px solid var(--aos-border)",
                   background: "var(--aos-surface)",
                   padding: 14,
@@ -951,7 +951,7 @@ permissions:
                   style={{
                     marginTop: 10,
                     padding: "8px 12px",
-                    borderRadius: 6,
+                    borderRadius: 2,
                     background: "rgba(219, 234, 254, 0.5)",
                     border: "1px solid var(--aos-accent-border)",
                     fontSize: 10,
@@ -969,7 +969,7 @@ permissions:
               </div>
               <div
                 style={{
-                  borderRadius: 8,
+                  borderRadius: 2,
                   border: "1px solid var(--aos-border)",
                   background: "var(--aos-surface)",
                   overflow: "hidden",
@@ -1063,7 +1063,7 @@ permissions:
                   onClick={() => setStep(2)}
                   style={{
                     padding: "8px 24px",
-                    borderRadius: 6,
+                    borderRadius: 2,
                     fontSize: 13,
                     border: "1px solid var(--aos-border-strong)",
                     background: "var(--aos-surface)",
@@ -1078,7 +1078,7 @@ permissions:
                   onClick={() => setStep(4)}
                   style={{
                     padding: "8px 24px",
-                    borderRadius: 6,
+                    borderRadius: 2,
                     fontSize: 13,
                     fontWeight: 500,
                     background: "var(--aos-blue-600)",
@@ -1113,7 +1113,7 @@ permissions:
                     fontSize: 12,
                     fontWeight: 500,
                     border: "none",
-                    borderRadius: 6,
+                    borderRadius: 2,
                     background: testing ? "var(--aos-faint)" : "var(--aos-accent)",
                     color: "var(--text-on-brand)",
                     cursor: testing ? "default" : "pointer",
@@ -1168,7 +1168,7 @@ permissions:
               {/* 注册汇总 */}
               <div
                 style={{
-                  borderRadius: 8,
+                  borderRadius: 2,
                   border: "1px solid var(--aos-border)",
                   background: "var(--aos-surface-hover)",
                   padding: 16,
@@ -1208,7 +1208,7 @@ permissions:
               <div
                 style={{
                   padding: "10px 12px",
-                  borderRadius: 8,
+                  borderRadius: 2,
                   background: "rgba(240, 253, 244, 0.7)",
                   border: "1px solid var(--aos-green-border)",
                   fontSize: 11,
@@ -1228,7 +1228,7 @@ permissions:
                   onClick={() => setStep(3)}
                   style={{
                     padding: "8px 24px",
-                    borderRadius: 6,
+                    borderRadius: 2,
                     fontSize: 13,
                     border: "1px solid var(--aos-border-strong)",
                     background: "var(--aos-surface)",
@@ -1244,7 +1244,7 @@ permissions:
                   disabled={!testDone}
                   style={{
                     padding: "8px 24px",
-                    borderRadius: 6,
+                    borderRadius: 2,
                     fontSize: 13,
                     fontWeight: 500,
                     background: testDone ? "var(--aos-accent)" : "var(--aos-border-strong)",

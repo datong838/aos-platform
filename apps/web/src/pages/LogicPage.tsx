@@ -264,7 +264,7 @@ export function LogicPage() {
                     style={{
                       padding: "2.5px 10px",
                       fontSize: 10,
-                      borderRadius: 6,
+                      borderRadius: 2,
                       border: `1px solid ${isYellow ? "var(--aos-amber-border)" : isGreen ? "var(--aos-green-border)" : "var(--aos-border)"}`,
                       background: isYellow ? "var(--aos-amber-bg)" : isGreen ? "var(--aos-green-bg)" : "var(--aos-surface)",
                       color: isYellow ? "var(--aos-amber-600)" : isGreen ? "var(--aos-green-600)" : "var(--aos-text-secondary)",
@@ -317,7 +317,7 @@ export function LogicPage() {
                       <div
                         onClick={() => setSelectedId(block.id)}
                         style={{
-                          borderRadius: 8,
+                          borderRadius: 2,
                           border: `1px solid ${selected ? meta.color : meta.border}`,
                           background: meta.bg,
                           padding: 12,
@@ -422,7 +422,7 @@ export function LogicPage() {
                           key={i}
                           onClick={() => setSelectedId(`branch-${i}`)}
                           style={{
-                            borderRadius: 8,
+                            borderRadius: 2,
                             border: `1px solid ${p.tone === "red" ? "var(--aos-red-border)" : "var(--aos-green-border)"}`,
                             background: p.tone === "red" ? "var(--aos-red-bg)" : "var(--aos-green-bg)",
                             padding: 12,
@@ -480,7 +480,7 @@ export function LogicPage() {
                   <div
                     onClick={() => setSelectedId("handoff")}
                     style={{
-                      borderRadius: 8,
+                      borderRadius: 2,
                       border: "2px solid var(--aos-indigo-border)",
                       background: "var(--aos-indigo-bg)",
                       padding: 12,
@@ -583,7 +583,7 @@ export function LogicPage() {
                     {/* 决策摘要 */}
                     <div
                       style={{
-                        borderRadius: 6,
+                        borderRadius: 2,
                         border: "1px solid var(--aos-border)",
                         background: "var(--aos-surface)",
                         padding: 12,
@@ -647,7 +647,7 @@ export function LogicPage() {
                               display: "flex",
                               alignItems: "center",
                               gap: 8,
-                              borderRadius: 6,
+                              borderRadius: 2,
                               background: "var(--aos-surface)",
                               border: "1px solid var(--aos-border)",
                               padding: "6px 10px",
@@ -710,7 +710,7 @@ export function LogicPage() {
                       </div>
                       <div
                         style={{
-                          borderRadius: 6,
+                          borderRadius: 2,
                           background: "var(--aos-amber-bg)",
                           border: "1px solid var(--aos-amber-border)",
                           padding: 10,
@@ -739,7 +739,7 @@ export function LogicPage() {
                           width: "100%",
                           padding: "6px 12px",
                           fontSize: 12,
-                          borderRadius: 6,
+                          borderRadius: 2,
                           border: "1px solid var(--aos-border)",
                           background: "var(--aos-surface)",
                           color: "var(--aos-text)",
@@ -788,7 +788,7 @@ export function LogicPage() {
                           padding: "8px 10px",
                           fontSize: 11,
                           fontFamily: "monospace",
-                          borderRadius: 6,
+                          borderRadius: 2,
                           border: "1px solid var(--aos-border)",
                           background: "var(--aos-surface)",
                           resize: "vertical",
@@ -816,7 +816,7 @@ export function LogicPage() {
                             width: "100%",
                             padding: "6px 8px",
                             fontSize: 12,
-                            borderRadius: 6,
+                            borderRadius: 2,
                             border: "1px solid var(--aos-border)",
                             background: "var(--aos-surface)",
                           }}
@@ -835,7 +835,7 @@ export function LogicPage() {
                           width: "100%",
                           padding: "6px 10px",
                           fontSize: 12,
-                          borderRadius: 6,
+                          borderRadius: 2,
                           border: "1px solid var(--aos-border)",
                           background: "var(--aos-surface)",
                         }}
@@ -846,7 +846,7 @@ export function LogicPage() {
                         padding: "6px 10px",
                         background: "var(--aos-accent-light)",
                         border: "1px solid var(--aos-accent-border)",
-                        borderRadius: 6,
+                        borderRadius: 2,
                         fontSize: 10,
                         color: "var(--aos-blue-600)",
                         fontFamily: "monospace",
@@ -863,7 +863,7 @@ export function LogicPage() {
                     <div
                       style={{
                         padding: 12,
-                        borderRadius: 6,
+                        borderRadius: 2,
                         border: "1px solid var(--aos-border)",
                         background: "var(--aos-surface)",
                         fontSize: 12,
@@ -897,7 +897,7 @@ export function LogicPage() {
                     style={{
                       background: "var(--aos-red-bg)",
                       border: "1px solid var(--aos-red-border)",
-                      borderRadius: 8,
+                      borderRadius: 2,
                       padding: 12,
                       marginBottom: 12,
                       fontSize: 12,
@@ -911,7 +911,7 @@ export function LogicPage() {
                 {runResult && (
                   <div
                     style={{
-                      borderRadius: 8,
+                      borderRadius: 2,
                       border: "1px solid var(--aos-green-border)",
                       background: "var(--aos-green-bg)",
                       padding: 12,
@@ -961,7 +961,7 @@ export function LogicPage() {
                     marginTop: 12,
                     padding: "8px 16px",
                     fontSize: 12,
-                    borderRadius: 6,
+                    borderRadius: 2,
                     border: "1px solid var(--aos-amber-border)",
                     background: "var(--aos-amber-bg)",
                     color: "var(--aos-amber-600)",
@@ -1014,7 +1014,7 @@ export function LogicPage() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
                 <div
                   style={{
-                    borderRadius: 8,
+                    borderRadius: 2,
                     border: "1px solid var(--aos-border)",
                     background: "var(--aos-surface)",
                     padding: 16,
@@ -1027,7 +1027,7 @@ export function LogicPage() {
                 </div>
                 <div
                   style={{
-                    borderRadius: 8,
+                    borderRadius: 2,
                     border: "1px solid var(--aos-border)",
                     background: "var(--aos-surface)",
                     padding: 16,
@@ -1052,7 +1052,7 @@ export function LogicPage() {
               </h2>
               <div
                 style={{
-                  borderRadius: 8,
+                  borderRadius: 2,
                   border: "1px solid var(--aos-border)",
                   background: "var(--aos-surface)",
                   overflow: "hidden",
@@ -1111,7 +1111,7 @@ const selectStyle = {
   width: "100%",
   padding: "6px 10px",
   fontSize: 12,
-  borderRadius: 6,
+  borderRadius: 2,
   border: "1px solid var(--aos-border)",
   background: "var(--aos-surface)",
   color: "var(--aos-text)",

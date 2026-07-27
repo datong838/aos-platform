@@ -207,7 +207,7 @@ export function WorkshopCreatePage() {
               background: "var(--aos-red-bg, #FEE2E2)",
               color: "var(--aos-red, #DC2626)",
               padding: "8px 12px",
-              borderRadius: 6,
+              borderRadius: 2,
               marginBottom: 12,
               fontSize: 13,
               border: "1px solid var(--aos-red-border, #FCA5A5)",
@@ -224,7 +224,7 @@ export function WorkshopCreatePage() {
               background: "var(--aos-green-bg)",
               color: "var(--aos-green-700)",
               padding: "12px 16px",
-              borderRadius: 8,
+              borderRadius: 2,
               marginBottom: 16,
               fontSize: 13,
               border: "1px solid var(--aos-green-border)",
@@ -279,7 +279,7 @@ export function WorkshopCreatePage() {
                     data-testid={`create-cat-${cat.id}`}
                     style={{
                       padding: "6px 14px",
-                      borderRadius: 6,
+                      borderRadius: 2,
                       fontSize: 12,
                       fontWeight: 500,
                       cursor: "pointer",
@@ -339,7 +339,7 @@ export function WorkshopCreatePage() {
                     data-testid={`create-tpl-${t.id}`}
                     style={{
                       border: selected ? "2px solid var(--aos-accent)" : "1px solid var(--aos-border)",
-                      borderRadius: 8,
+                      borderRadius: 2,
                       padding: 14,
                       cursor: "pointer",
                       background: selected ? "var(--aos-accent-light)" : "var(--aos-surface)",
@@ -364,7 +364,7 @@ export function WorkshopCreatePage() {
                 data-testid="create-tpl-copy"
                 style={{
                   border: template === "copy" ? "2px solid var(--aos-accent)" : "1px solid var(--aos-border)",
-                  borderRadius: 8,
+                  borderRadius: 2,
                   padding: 14,
                   cursor: "pointer",
                   background: template === "copy" ? "var(--aos-accent-light)" : "var(--aos-surface)",
@@ -404,7 +404,7 @@ export function WorkshopCreatePage() {
                   marginTop: 16,
                   padding: 14,
                   border: "1px solid var(--aos-border)",
-                  borderRadius: 8,
+                  borderRadius: 2,
                   background: "var(--aos-surface-hover)",
                 }}
                 data-testid="create-copy-source"
@@ -425,7 +425,7 @@ export function WorkshopCreatePage() {
                         alignItems: "center",
                         justifyContent: "space-between",
                         padding: "8px 12px",
-                        borderRadius: 6,
+                        borderRadius: 2,
                         cursor: "pointer",
                         border: copyFromId === m.id ? "1.5px solid var(--aos-accent)" : "1px solid var(--aos-border)",
                         background: copyFromId === m.id ? "var(--aos-accent-light)" : "var(--aos-surface)",
@@ -460,7 +460,7 @@ export function WorkshopCreatePage() {
                 style={{
                   marginTop: 16,
                   padding: 12,
-                  borderRadius: 6,
+                  borderRadius: 2,
                   background: "var(--aos-accent-light)",
                   border: "1px solid var(--aos-green-border)",
                 }}
@@ -489,7 +489,7 @@ export function WorkshopCreatePage() {
             <div
               style={{
                 border: "1px solid var(--aos-border)",
-                borderRadius: 8,
+                borderRadius: 2,
                 overflow: "hidden",
                 background: "var(--aos-surface)",
                 marginBottom: 16,
@@ -558,7 +558,7 @@ export function WorkshopCreatePage() {
             <div
               style={{
                 padding: 12,
-                borderRadius: 6,
+                borderRadius: 2,
                 background: "var(--aos-accent-light)",
                 border: "1px solid var(--aos-accent-border)",
               }}

@@ -2889,7 +2889,7 @@ export function DecisionLineagePage() {
       {/* 谱系头部信息 */}
       <div
         style={{
-          borderRadius: 12,
+          borderRadius: 2,
           border: "1px solid rgba(251, 191, 36, 0.25)",
           background: "var(--aos-amber-bg)",
           padding: "24px",
@@ -3024,7 +3024,7 @@ export function DecisionLineagePage() {
           style={{
             padding: "6px 12px",
             fontSize: 12,
-            borderRadius: 8,
+            borderRadius: 2,
             border: "1px solid #c4b5fd",
             color: "#7c3aed",
             textDecoration: "none",
@@ -3037,7 +3037,7 @@ export function DecisionLineagePage() {
           style={{
             padding: "6px 12px",
             fontSize: 12,
-            borderRadius: 8,
+            borderRadius: 2,
             border: "1px solid var(--aos-border)",
             color: "var(--aos-text)",
             textDecoration: "none",
@@ -3050,7 +3050,7 @@ export function DecisionLineagePage() {
           style={{
             padding: "6px 12px",
             fontSize: 12,
-            borderRadius: 8,
+            borderRadius: 2,
             border: "1px solid #fde68a",
             color: "#ca8a04",
             textDecoration: "none",
@@ -3295,7 +3295,7 @@ export function ProviderDetailPage() {
           {connResult && (
             <div style={{
               padding: 12,
-              borderRadius: 8,
+              borderRadius: 2,
               background: connResult.ok ? "#f0fdf4" : "#fef2f2",
               border: `1px solid ${connResult.ok ? "#86efac" : "#fca5a5"}`,
               marginBottom: 12,
@@ -3309,7 +3309,7 @@ export function ProviderDetailPage() {
           {showAddKey && (
             <div style={{
               padding: 16,
-              borderRadius: 8,
+              borderRadius: 2,
               background: "#f8fafc",
               border: "1px solid #e2e8f0",
               marginBottom: 16,
@@ -3516,7 +3516,7 @@ export function ProviderDetailPage() {
               ].map(([label, val]) => (
                 <div key={label} style={{
                   padding: "12px 16px",
-                  borderRadius: 8,
+                  borderRadius: 2,
                   background: "#f8fafc",
                   border: "1px solid #e2e8f0",
                   textAlign: "center",

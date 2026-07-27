@@ -157,7 +157,7 @@ function GlobalNav({
   );
 }
 
-/** 用户菜单下拉 —— 含工作区成员/我的资料/组织与加入 + 外观切换 */
+/** 用户菜单下拉 —— 含工作区成员/我的资料/组织切换/平台地址/环境状态 + 外观切换 */
 function UserMenu({
   pref,
   onAppearanceChange,
@@ -220,6 +220,12 @@ function UserMenu({
             组织与加入
           </Link>
           <div style={{ borderTop: "1px solid var(--aos-border)", margin: "4px 0" }} />
+          <div className="p-user-menu-subheader">工作空间</div>
+          <OrgSwitcher />
+          <PlatformBaseSwitcher />
+          <EnvReadonlyBadge />
+          <div style={{ borderTop: "1px solid var(--aos-border)", margin: "4px 0" }} />
+          <div className="p-user-menu-subheader">外观</div>
           {APPEARANCE_OPTS.map((o) => (
             <button
               key={o.id}
@@ -424,36 +430,39 @@ export function AppShell() {
       />
       <div className="p-main">
         <header className="topbar">
-          <nav className="breadcrumb" aria-label="面包屑">
-            {crumbs.map((c, i) => (
-              <span key={`${c}-${i}`} className="breadcrumb-item">
-                {i > 0 ? (
-                  <NavIcon name="chevron" className="breadcrumb-chevron" />
-                ) : null}
-                <span className={i === crumbs.length - 1 ? "aos-text" : "aos-muted"}>
-                  {c}
+          <div className="topbar-left">
+            <nav className="breadcrumb" aria-label="面包屑">
+              {crumbs.map((c, i) => (
+                <span key={`${c}-${i}`} className="breadcrumb-item">
+                  {i > 0 ? (
+                    <span className="breadcrumb-sep">/</span>
+                  ) : null}
+                  <span className={i === crumbs.length - 1 ? "aos-text" : "aos-muted"}>
+                    {c}
+                  </span>
                 </span>
-              </span>
-            ))}
-          </nav>
-          <div className="top-search" aria-hidden>
-            <NavIcon name="search" className="top-search-icon" />
-            <input type="search" placeholder="搜索资源…" disabled />
+              ))}
+            </nav>
           </div>
-          <div className="topbar-actions">
-            <button
-              type="button"
-              className="topbar-theme-toggle"
-              title={topbarTheme === "dark" ? "切换到浅色主题" : "切换到深色主题"}
-              aria-label="切换主题"
-              onClick={onToggleTopbarTheme}
-            >
-              <NavIcon name={topbarTheme === "dark" ? "sun" : "moon"} />
-            </button>
-            <EnvReadonlyBadge />
-            <OrgSwitcher />
-            <WorkspaceSwitcher />
-            <PlatformBaseSwitcher />
+          <div className="topbar-center">
+            <div className="top-search">
+              <NavIcon name="search" className="top-search-icon" />
+              <input type="search" placeholder="搜索资源…" />
+            </div>
+          </div>
+          <div className="topbar-right">
+            <div className="topbar-actions">
+              <WorkspaceSwitcher />
+              <button
+                type="button"
+                className="topbar-theme-toggle"
+                title={topbarTheme === "dark" ? "切换到浅色主题" : "切换到深色主题"}
+                aria-label="切换主题"
+                onClick={onToggleTopbarTheme}
+              >
+                <NavIcon name={topbarTheme === "dark" ? "sun" : "moon"} />
+              </button>
+            </div>
           </div>
         </header>
         <div className="layout">

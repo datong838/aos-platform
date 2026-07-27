@@ -50,7 +50,7 @@ const baseBtn: CSSProperties = {
   padding: "7px 14px",
   fontSize: 12,
   fontWeight: 600,
-  borderRadius: 6,
+  borderRadius: 2,
   cursor: "pointer",
   border: "1px solid transparent",
   lineHeight: 1.2,

@@ -183,7 +183,7 @@ export function WikiIndexPage() {
                       display: "block",
                       padding: "0.75rem",
                       border: "1px solid var(--aos-border)",
-                      borderRadius: 6,
+                      borderRadius: 2,
                       textDecoration: "none",
                       background: "var(--aos-surface)",
                     }}

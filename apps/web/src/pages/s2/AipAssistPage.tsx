@@ -621,7 +621,7 @@ export function AipAssistPage() {
               title={sidebarOpen ? "折叠侧栏" : "展开侧栏"}
               onClick={() => setSidebarOpen((v) => !v)}
               style={{
-                width: 32, height: 32, borderRadius: 6, border: "1px solid var(--aos-border)", background: "var(--aos-surface)",
+                width: 32, height: 32, borderRadius: 2, border: "1px solid var(--aos-border)", background: "var(--aos-surface)",
                 cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
               }}
             >
@@ -634,7 +634,7 @@ export function AipAssistPage() {
                 type="button"
                 onClick={handleNewConversation}
                 style={{
-                  flex: 1, height: 32, borderRadius: 6, border: "1px solid var(--aos-indigo)",
+                  flex: 1, height: 32, borderRadius: 2, border: "1px solid var(--aos-indigo)",
                   background: "var(--aos-indigo-bg)", color: "var(--aos-indigo-600)", cursor: "pointer",
                   fontSize: 12, fontWeight: 500, display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
                 }}
@@ -656,7 +656,7 @@ export function AipAssistPage() {
                     style={{
                       display: "flex", alignItems: "center", gap: 4, marginBottom: 2,
                       background: active ? "var(--aos-indigo-bg)" : "transparent",
-                      borderRadius: 6, padding: "6px 8px",
+                      borderRadius: 2, padding: "6px 8px",
                     }}
                   >
                     <button
@@ -718,7 +718,7 @@ export function AipAssistPage() {
                   <div
                     key={m.id}
                     style={{
-                      background: "var(--aos-red-bg)", border: "1px solid var(--aos-red-border)", borderRadius: 12,
+                      background: "var(--aos-red-bg)", border: "1px solid var(--aos-red-border)", borderRadius: 2,
                       padding: 12, color: "var(--aos-red)", fontSize: 13,
                     }}
                   >
@@ -735,7 +735,7 @@ export function AipAssistPage() {
                         type="button"
                         onClick={retryLast}
                         style={{
-                          fontSize: 12, padding: "4px 10px", borderRadius: 6,
+                          fontSize: 12, padding: "4px 10px", borderRadius: 2,
                           border: "1px solid var(--aos-red-border)", background: "var(--aos-surface)", color: "var(--aos-red)", cursor: "pointer",
                         }}
                       >
@@ -760,7 +760,7 @@ export function AipAssistPage() {
                 <div key={m.id} style={{ display: "flex", justifyContent: "flex-end" }}>
                   <div
                     style={{
-                      background: "var(--aos-gray-100)", borderRadius: 12, padding: "10px 14px",
+                      background: "var(--aos-gray-100)", borderRadius: 2, padding: "10px 14px",
                       maxWidth: 480, marginLeft: 48,
                     }}
                   >
@@ -838,7 +838,7 @@ export function AipAssistPage() {
                 disabled={loading}
                 className="aip-assist-input"
                 style={{
-                  flex: 1, border: "1px solid var(--aos-border)", borderRadius: 12,
+                  flex: 1, border: "1px solid var(--aos-border)", borderRadius: 2,
                   padding: "12px 48px 12px 16px", fontSize: 14, outline: "none",
                   transition: "border-color 0.15s, box-shadow 0.15s",
                   opacity: loading ? 0.6 : 1,
@@ -850,7 +850,7 @@ export function AipAssistPage() {
                   type="button"
                   onClick={handleStop}
                   style={{
-                    position: "absolute", right: 8, bottom: 8, width: 32, height: 32, borderRadius: 8,
+                    position: "absolute", right: 8, bottom: 8, width: 32, height: 32, borderRadius: 2,
                     background: "var(--aos-red)", color: "var(--text-on-brand)", border: "none", cursor: "pointer",
                     display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
                   }}
@@ -865,7 +865,7 @@ export function AipAssistPage() {
                   type="submit"
                   disabled={!input.trim()}
                   style={{
-                    position: "absolute", right: 8, bottom: 8, width: 32, height: 32, borderRadius: 8,
+                    position: "absolute", right: 8, bottom: 8, width: 32, height: 32, borderRadius: 2,
                     background: input.trim() ? "var(--aos-indigo-600)" : "var(--aos-indigo-border)", color: "var(--text-on-brand)", border: "none",
                     cursor: input.trim() ? "pointer" : "not-allowed",
                     display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
@@ -888,7 +888,7 @@ export function AipAssistPage() {
 /* ----------------------------- AI 气泡子组件 ----------------------------- */
 
 const suggestionBtnStyle: React.CSSProperties = {
-  display: "flex", alignItems: "center", gap: 8, padding: "12px 16px", borderRadius: 8,
+  display: "flex", alignItems: "center", gap: 8, padding: "12px 16px", borderRadius: 2,
   border: "1px solid var(--aos-border)", background: "var(--aos-surface)", cursor: "pointer", textAlign: "left",
   fontSize: 13, color: "var(--aos-text)", transition: "all 0.15s",
 };
@@ -904,9 +904,9 @@ function AiBubble({
 }) {
   return (
     <div>
-      <div style={{ borderRadius: 12, padding: 16, background: "linear-gradient(135deg, var(--aos-indigo) 0%, var(--aos-purple-600) 100%)", color: "var(--text-on-brand)" }}>
+      <div style={{ borderRadius: 2, padding: 16, background: "linear-gradient(135deg, var(--aos-indigo) 0%, var(--aos-purple-600) 100%)", color: "var(--text-on-brand)" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 2, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--aos-surface)" strokeWidth="1.5">
               <circle cx="12" cy="12" r="10" />
               <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z" />
@@ -993,7 +993,7 @@ function CodeSuggestionCard({
   const saved = cs.status === "saved";
   const saving = (cs.status as string) === "saving";
   return (
-    <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 8, overflow: "hidden" }}>
+    <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 2, overflow: "hidden" }}>
       <div style={{ padding: "8px 12px", display: "flex", alignItems: "center", gap: 8 }}>
         <button
           type="button"

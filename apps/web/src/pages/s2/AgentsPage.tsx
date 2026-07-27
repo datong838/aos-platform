@@ -147,7 +147,7 @@ function CreateAgentWizard({
         aria-label="新建智能体向导"
         style={{
           background: "var(--aos-surface)",
-          borderRadius: 16,
+          borderRadius: 2,
           boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
           width: "100%",
           maxWidth: 768,
@@ -185,7 +185,7 @@ function CreateAgentWizard({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                borderRadius: 8,
+                borderRadius: 2,
                 color: "var(--aos-text-tertiary)",
                 background: "transparent",
                 border: "none",
@@ -275,7 +275,7 @@ function CreateAgentWizard({
                         style={{
                           width: 36,
                           height: 36,
-                          borderRadius: 8,
+                          borderRadius: 2,
                           background: sel ? "var(--aos-indigo-bg)" : "var(--aos-surface-hover)",
                           border: `2px solid ${sel ? "var(--aos-indigo)" : "var(--aos-border)"}`,
                           cursor: "pointer",
@@ -353,7 +353,7 @@ function CreateAgentWizard({
                       type="button"
                       onClick={() => setDraft({ ...draft, modelId: m.id })}
                       style={{
-                        borderRadius: 8,
+                        borderRadius: 2,
                         border: `2px solid ${sel ? "var(--aos-indigo)" : "var(--aos-border)"}`,
                         background: sel ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
                         padding: "8px 10px",
@@ -430,7 +430,7 @@ function CreateAgentWizard({
                 <div
                   style={{
                     padding: 10,
-                    borderRadius: 8,
+                    borderRadius: 2,
                     background: "var(--aos-surface-hover)",
                     border: "1px dashed var(--aos-border)",
                     fontSize: 10,
@@ -480,7 +480,7 @@ function CreateAgentWizard({
                         alignItems: "center",
                         gap: 8,
                         padding: "8px 12px",
-                        borderRadius: 8,
+                        borderRadius: 2,
                         border: `1px solid ${checked ? "var(--aos-indigo-border)" : "var(--aos-border)"}`,
                         background: checked ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
                         cursor: "pointer",
@@ -688,7 +688,7 @@ export function AgentsPage() {
               style={{
                 width: "100%",
                 padding: "6px 10px",
-                borderRadius: 8,
+                borderRadius: 2,
                 border: "1px solid var(--aos-border)",
                 fontSize: 11,
                 outline: "none",
@@ -714,7 +714,7 @@ export function AgentsPage() {
                       color: sel ? "var(--aos-indigo-600)" : "var(--aos-text-secondary)",
                       background: sel ? "var(--aos-indigo-bg)" : "transparent",
                       border: sel ? "1px solid var(--aos-indigo-border)" : "1px solid transparent",
-                      borderRadius: 6,
+                      borderRadius: 2,
                       cursor: "pointer",
                     }}
                   >
@@ -732,7 +732,7 @@ export function AgentsPage() {
                 justifyContent: "center",
                 gap: 6,
                 padding: "8px 12px",
-                borderRadius: 8,
+                borderRadius: 2,
                 fontSize: 12,
                 fontWeight: 500,
                 color: "var(--text-on-brand)",
@@ -776,7 +776,7 @@ export function AgentsPage() {
                     style={{
                       width: 32,
                       height: 32,
-                      borderRadius: 8,
+                      borderRadius: 2,
                       background: "var(--aos-gray-100)",
                       display: "flex",
                       alignItems: "center",
@@ -898,7 +898,7 @@ export function AgentsPage() {
                   style={{
                     width: "100%",
                     height: 128,
-                    borderRadius: 8,
+                    borderRadius: 2,
                     background: "var(--aos-bg)",
                     border: "1px solid var(--aos-border)",
                     padding: 12,
@@ -942,7 +942,7 @@ export function AgentsPage() {
                   <div
                     style={{
                       padding: 10,
-                      borderRadius: 8,
+                      borderRadius: 2,
                       background: "var(--aos-surface-hover)",
                       border: "1px dashed var(--aos-border)",
                       fontSize: 10,
@@ -991,7 +991,7 @@ export function AgentsPage() {
                           justifyContent: "space-between",
                           border: `1px solid ${hitl ? "var(--aos-amber-border)" : "var(--aos-border)"}`,
                           background: hitl ? "var(--aos-amber-bg)" : "var(--aos-surface)",
-                          borderRadius: 8,
+                          borderRadius: 2,
                           padding: "8px 12px",
                         }}
                       >
@@ -1043,7 +1043,7 @@ export function AgentsPage() {
                               onClick={() => handleApproveHitl(t.id)}
                               style={{
                                 padding: "3px 10px",
-                                borderRadius: 6,
+                                borderRadius: 2,
                                 fontSize: 10,
                                 fontWeight: 500,
                                 color: "var(--text-on-brand)",
@@ -1058,7 +1058,7 @@ export function AgentsPage() {
                               onClick={() => handleRejectHitl(t.id)}
                               style={{
                                 padding: "3px 10px",
-                                borderRadius: 6,
+                                borderRadius: 2,
                                 fontSize: 10,
                                 fontWeight: 500,
                                 color: "var(--aos-red)",
@@ -1126,7 +1126,7 @@ export function AgentsPage() {
                         alignSelf: m.role === "user" ? "flex-end" : "flex-start",
                         maxWidth: "80%",
                         padding: "8px 12px",
-                        borderRadius: 10,
+                        borderRadius: 2,
                         fontSize: 12,
                         lineHeight: 1.5,
                         background:
@@ -1168,7 +1168,7 @@ export function AgentsPage() {
                     style={{
                       flex: 1,
                       padding: "8px 12px",
-                      borderRadius: 8,
+                      borderRadius: 2,
                       border: "1px solid var(--aos-border)",
                       fontSize: 12,
                       outline: "none",
@@ -1202,7 +1202,7 @@ export function AgentsPage() {
                         key={e.env}
                         style={{
                           padding: "4px 12px",
-                          borderRadius: 6,
+                          borderRadius: 2,
                           fontSize: 10,
                           fontWeight: 500,
                           border: `1px solid ${e.color}40`,
@@ -1220,7 +1220,7 @@ export function AgentsPage() {
                   <div
                     style={{
                       padding: 10,
-                      borderRadius: 8,
+                      borderRadius: 2,
                       background: "var(--aos-amber-bg)",
                       border: "1px solid var(--aos-amber-border)",
                       fontSize: 10,
@@ -1245,7 +1245,7 @@ export function AgentsPage() {
                           alignItems: "center",
                           justifyContent: "space-between",
                           padding: "8px 12px",
-                          borderRadius: 8,
+                          borderRadius: 2,
                           border: "1px solid var(--aos-border)",
                           fontSize: 11,
                         }}
@@ -1366,7 +1366,7 @@ function ToggleSwitch({
 const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "6px 12px",
-  borderRadius: 8,
+  borderRadius: 2,
   border: "1px solid var(--aos-border-strong)",
   fontSize: 12,
   outline: "none",
@@ -1375,7 +1375,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 const cardStyle: React.CSSProperties = {
-  borderRadius: 12,
+  borderRadius: 2,
   border: "1px solid var(--aos-border)",
   background: "var(--aos-surface)",
   padding: 20,
@@ -1388,7 +1388,7 @@ const btnPrimary: React.CSSProperties = {
   padding: "6px 20px",
   fontSize: 12,
   fontWeight: 500,
-  borderRadius: 8,
+  borderRadius: 2,
   border: "none",
   background: "var(--aos-indigo-600)",
   color: "var(--text-on-brand)",
@@ -1403,7 +1403,7 @@ const btnSuccess: React.CSSProperties = {
 const btnGhost: React.CSSProperties = {
   padding: "6px 20px",
   fontSize: 12,
-  borderRadius: 8,
+  borderRadius: 2,
   border: "1px solid var(--aos-border-strong)",
   background: "var(--aos-surface)",
   color: "var(--aos-text)",
@@ -1413,7 +1413,7 @@ const btnGhost: React.CSSProperties = {
 const btnGhostSmall: React.CSSProperties = {
   padding: "3px 10px",
   fontSize: 10,
-  borderRadius: 6,
+  borderRadius: 2,
   border: "1px solid var(--aos-border)",
   background: "var(--aos-surface)",
   color: "var(--aos-text-secondary)",

@@ -76,7 +76,7 @@ export function PublishPage() {
       <div style={{ maxWidth: 480, margin: "0 auto" }}>
         <div style={{
           background: "#fff",
-          borderRadius: 12,
+          borderRadius: 2,
           border: "1px solid rgba(255,255,255,0.1)",
           padding: 24,
         }}>
@@ -115,7 +115,7 @@ export function PublishPage() {
               to="/apollo/release"
               style={{
                 padding: "10px 12px",
-                borderRadius: 8,
+                borderRadius: 2,
                 background: "#ECFDF5",
                 border: "1px solid #86EFAC",
                 fontSize: 12,
@@ -130,7 +130,7 @@ export function PublishPage() {
               to="/apollo/assets"
               style={{
                 padding: "10px 12px",
-                borderRadius: 8,
+                borderRadius: 2,
                 background: "#EFF6FF",
                 border: "1px solid #93C5FD",
                 fontSize: 12,
@@ -145,7 +145,7 @@ export function PublishPage() {
               to="/apollo/hub"
               style={{
                 padding: "10px 12px",
-                borderRadius: 8,
+                borderRadius: 2,
                 border: "1px solid #E5E7EB",
                 fontSize: 12,
                 color: "#374151",
@@ -159,7 +159,7 @@ export function PublishPage() {
               to="/workshop/canvas"
               style={{
                 padding: "10px 12px",
-                borderRadius: 8,
+                borderRadius: 2,
                 border: "1px solid #E5E7EB",
                 fontSize: 12,
                 color: "#374151",
@@ -181,7 +181,7 @@ export function PublishPage() {
               fontSize: 13,
               fontWeight: 500,
               border: "none",
-              borderRadius: 8,
+              borderRadius: 2,
               background: busy ? "#E5E7EB" : "#2563EB",
               color: busy ? "#9CA3AF" : "#fff",
               cursor: busy ? "not-allowed" : "pointer",
@@ -195,7 +195,7 @@ export function PublishPage() {
             fontSize: 10,
             color: "#059669",
             border: "1px solid #A7F3D0",
-            borderRadius: 8,
+            borderRadius: 2,
             padding: "10px 12px",
             background: "#ECFDF5",
             margin: 0,
@@ -205,7 +205,7 @@ export function PublishPage() {
           </p>
 
           {lastPub && (
-            <div style={{ marginTop: 16, padding: 12, borderRadius: 8, background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+            <div style={{ marginTop: 16, padding: 12, borderRadius: 2, background: "var(--aos-surface-hover)", border: "1px solid var(--aos-border)" }}>
               <div style={{ fontSize: 12, fontWeight: 500, color: "#111827", marginBottom: 8 }}>上次发布结果</div>
               <div style={{ fontSize: 11, color: "#6B7280", lineHeight: 1.8 }}>
                 <div>Module ID: <span style={{ fontFamily: "monospace", color: "#374151" }}>{lastPub.id || "—"}</span></div>

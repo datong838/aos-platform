@@ -196,7 +196,7 @@ export function CapacityPage() {
         </div>
 
         {/* 信息横幅 */}
-        <div style={{ background: "var(--aos-accent-light)", border: "1px solid var(--aos-accent-border)", borderRadius: 8, padding: 16, marginBottom: 24 }}>
+        <div style={{ background: "var(--aos-accent-light)", border: "1px solid var(--aos-accent-border)", borderRadius: 2, padding: 16, marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--aos-accent)" strokeWidth="1.5" style={{ flexShrink: 0, marginTop: 2 }}>
               <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" strokeLinecap="round" />
@@ -211,7 +211,7 @@ export function CapacityPage() {
         {tab === "usage" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {/* Period selector */}
-            <div style={{ display: "flex", gap: 6, background: "var(--aos-surface-hover)", padding: 4, borderRadius: 8, width: "fit-content" }}>
+            <div style={{ display: "flex", gap: 6, background: "var(--aos-surface-hover)", padding: 4, borderRadius: 2, width: "fit-content" }}>
               {(["today", "week", "month"] as const).map((p) => {
                 const b = USAGE_BUCKETS.find((x) => x.period === p)!;
                 return (
@@ -220,7 +220,7 @@ export function CapacityPage() {
                     type="button"
                     onClick={() => setUsagePeriod(p)}
                     style={{
-                      padding: "6px 14px", fontSize: 12, fontWeight: 500, borderRadius: 6, border: "none",
+                      padding: "6px 14px", fontSize: 12, fontWeight: 500, borderRadius: 2, border: "none",
                       background: usagePeriod === p ? "var(--aos-surface)" : "transparent", color: usagePeriod === p ? "var(--aos-indigo-600)" : "var(--aos-text-secondary)",
                       cursor: "pointer", boxShadow: usagePeriod === p ? "var(--shadow-sm)" : "none",
                     }}
@@ -233,17 +233,17 @@ export function CapacityPage() {
 
             {/* Metrics cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-              <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 20 }}>
+              <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 20 }}>
                 <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4 }}>总请求数</div>
                 <div style={{ fontSize: 28, fontWeight: 700, color: "var(--aos-indigo-600)" }}>{currentBucket.totalRequests.toLocaleString()}</div>
                 <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>{currentBucket.label}累计</div>
               </div>
-              <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 20 }}>
+              <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 20 }}>
                 <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4 }}>Token 消耗</div>
                 <div style={{ fontSize: 28, fontWeight: 700, color: "var(--aos-purple-600)" }}>{formatTokenCount(currentBucket.totalTokens)}</div>
                 <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>{currentBucket.totalTokens.toLocaleString()} tokens</div>
               </div>
-              <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 20 }}>
+              <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 20 }}>
                 <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4 }}>成本汇总</div>
                 <div style={{ fontSize: 28, fontWeight: 700, color: "var(--aos-amber-600)" }}>{formatUsd(currentBucket.totalCostUsd)}</div>
                 <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>{currentBucket.label} USD</div>
@@ -251,7 +251,7 @@ export function CapacityPage() {
             </div>
 
             {/* Quota progress bars */}
-            <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, overflow: "hidden" }}>
+            <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, overflow: "hidden" }}>
               <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--aos-border)" }}>
                 <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>模型配额使用</h3>
                 <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0" }}>各模型当前分钟级 Token 用量 vs 配额</p>
@@ -292,10 +292,10 @@ export function CapacityPage() {
           <>
             {/* 速率限制卡片 */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-              <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 20 }}>
+              <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 20 }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 8, background: "var(--aos-surface-hover)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 2, background: "var(--aos-surface-hover)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--aos-text-secondary)" strokeWidth="1.5"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" strokeLinecap="round" strokeLinejoin="round" /></svg>
                     </div>
                     <div>
@@ -306,10 +306,10 @@ export function CapacityPage() {
                 </div>
               </div>
 
-              <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 20 }}>
+              <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 20 }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 8, background: "var(--aos-surface-hover)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 2, background: "var(--aos-surface-hover)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--aos-text-secondary)" strokeWidth="1.5"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 4-6 8-6s8 2 8 6" strokeLinecap="round" /></svg>
                     </div>
                     <div>
@@ -322,7 +322,7 @@ export function CapacityPage() {
             </div>
 
             {/* 登记限制表 */}
-            <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, overflow: "hidden", marginBottom: 24 }}>
+            <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, overflow: "hidden", marginBottom: 24 }}>
               <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--aos-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>登记限制</h3>
@@ -332,7 +332,7 @@ export function CapacityPage() {
                   value={providerFilter}
                   onChange={(e) => setProviderFilter(e.target.value)}
                   aria-label="limit-provider-filter"
-                  style={{ padding: "6px 12px", fontSize: 12, border: "1px solid var(--aos-border)", borderRadius: 6, background: "var(--aos-surface)" }}
+                  style={{ padding: "6px 12px", fontSize: 12, border: "1px solid var(--aos-border)", borderRadius: 2, background: "var(--aos-surface)" }}
                 >
                   <option value="all">所有供应商</option>
                   {allProviders.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -367,7 +367,7 @@ export function CapacityPage() {
             </div>
 
             {/* 用户限制表 */}
-            <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, overflow: "hidden" }}>
+            <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, overflow: "hidden" }}>
               <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--aos-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>用户限制</h3>
@@ -377,7 +377,7 @@ export function CapacityPage() {
                   value={teamFilter}
                   onChange={(e) => setTeamFilter(e.target.value)}
                   aria-label="team-filter"
-                  style={{ padding: "6px 12px", fontSize: 12, border: "1px solid var(--aos-border)", borderRadius: 6, background: "var(--aos-surface)" }}
+                  style={{ padding: "6px 12px", fontSize: 12, border: "1px solid var(--aos-border)", borderRadius: 2, background: "var(--aos-surface)" }}
                 >
                   <option value="all">所有团队</option>
                   {allTeams.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -403,7 +403,7 @@ export function CapacityPage() {
                         <tr key={u.user} style={{ borderBottom: "1px solid var(--aos-divider)" }}>
                           <td style={{ padding: "10px 20px", fontWeight: 500, color: "var(--aos-text)" }}>{u.user}</td>
                           <td style={{ padding: "10px 20px" }}>
-                            <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 10, background: "var(--aos-surface-hover)", color: "var(--aos-text)" }}>{u.team}</span>
+                            <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 2, background: "var(--aos-surface-hover)", color: "var(--aos-text)" }}>{u.team}</span>
                           </td>
                           <td style={{ padding: "10px 20px", color: "var(--aos-text)" }}>{u.rpmLimit}</td>
                           <td style={{ padding: "10px 20px", color: "var(--aos-text)" }}>{formatTokenCount(u.tpmLimit)}</td>
@@ -430,7 +430,7 @@ export function CapacityPage() {
         {/* === Reserved Tab === */}
         {tab === "reserved" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 40, textAlign: "center" }}>
+            <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 40, textAlign: "center" }}>
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--aos-faint)" strokeWidth="1.5" style={{ margin: "0 auto 12px" }}>
                 <rect x="3" y="4" width="18" height="6" rx="1" /><rect x="3" y="14" width="18" height="6" rx="1" />
               </svg>
@@ -440,9 +440,9 @@ export function CapacityPage() {
               </p>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <Link to="/aip/model-catalog" style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid var(--aos-border)", color: "var(--aos-text)", textDecoration: "none", fontSize: 12 }}>模型目录 →</Link>
-              <Link to="/aip/model-router" style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid var(--aos-border)", color: "var(--aos-text)", textDecoration: "none", fontSize: 12 }}>模型路由 →</Link>
-              <Link to="/aip/model-providers" style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid var(--aos-border)", color: "var(--aos-text)", textDecoration: "none", fontSize: 12 }}>模型供应商 →</Link>
+              <Link to="/aip/model-catalog" style={{ padding: "6px 12px", borderRadius: 2, border: "1px solid var(--aos-border)", color: "var(--aos-text)", textDecoration: "none", fontSize: 12 }}>模型目录 →</Link>
+              <Link to="/aip/model-router" style={{ padding: "6px 12px", borderRadius: 2, border: "1px solid var(--aos-border)", color: "var(--aos-text)", textDecoration: "none", fontSize: 12 }}>模型路由 →</Link>
+              <Link to="/aip/model-providers" style={{ padding: "6px 12px", borderRadius: 2, border: "1px solid var(--aos-border)", color: "var(--aos-text)", textDecoration: "none", fontSize: 12 }}>模型供应商 →</Link>
             </div>
           </div>
         )}

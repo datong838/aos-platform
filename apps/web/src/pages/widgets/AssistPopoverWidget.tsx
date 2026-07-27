@@ -11,7 +11,7 @@ const ACCENT = "var(--aos-accent)";
 const cardStyle: CSSProperties = {
   position: "relative",
   padding: 14,
-  borderRadius: 10,
+  borderRadius: 2,
   border: `1.5px solid ${ACCENT}`,
   background: "var(--aos-surface)",
   boxShadow: "0 10px 30px rgba(79, 70, 229, 0.22)",

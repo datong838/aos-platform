@@ -322,7 +322,7 @@ export function StylesPage() {
         <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 16, marginTop: 16 }}>
 
           {/* === 左栏：主题列表 === */}
-          <aside style={{ background: "#fff", borderRadius: 8, padding: 12, border: "1px solid #E5E7EB" }}>
+          <aside style={{ background: "var(--aos-surface)", borderRadius: 2, padding: 12, border: "1px solid var(--aos-border)" }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
               主题列表 ({filteredThemes.length})
             </div>
@@ -333,7 +333,7 @@ export function StylesPage() {
                 onClick={() => selectTheme(t)}
                 style={{
                   padding: 10,
-                  borderRadius: 6,
+                  borderRadius: 2,
                   marginBottom: 6,
                   cursor: "pointer",
                   border: `1.5px solid ${activeThemeId === t.id ? config.primary : "#E5E7EB"}`,
@@ -449,7 +449,7 @@ export function StylesPage() {
                           onClick={() => patch({ fontId: f.id })}
                           style={{
                             padding: 14,
-                            borderRadius: 8,
+                            borderRadius: 2,
                             border: `1.5px solid ${config.fontId === f.id ? config.primary : "#E5E7EB"}`,
                             background: config.fontId === f.id ? "#EFF6FF" : "#fff",
                             cursor: "pointer",
@@ -525,7 +525,7 @@ export function StylesPage() {
                   {/* 字体预览 */}
                   <div style={{
                     padding: 20,
-                    borderRadius: 8,
+                    borderRadius: 2,
                     background: config.bg,
                     color: config.text,
                     fontFamily: currentFont.stack,
@@ -641,7 +641,7 @@ export function StylesPage() {
               <pre style={{
                 background: "#1F2937",
                 color: "#F9FAFB",
-                borderRadius: 8,
+                borderRadius: 2,
                 padding: 16,
                 fontSize: 12,
                 fontFamily: "monospace",
@@ -797,7 +797,7 @@ function ColorField({
             width: 36,
             height: 36,
             border: "1px solid #E5E7EB",
-            borderRadius: 6,
+            borderRadius: 2,
             cursor: "pointer",
             padding: 0,
             background: "none",

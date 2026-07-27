@@ -414,7 +414,7 @@ function Toolbar(props: {
             style={{
               padding: "4px 10px",
               fontSize: 12,
-              borderRadius: 6,
+              borderRadius: 2,
               border: props.range === r ? "1px solid var(--aos-indigo)" : "1px solid var(--aos-border)",
               background: props.range === r ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
               color: props.range === r ? "var(--aos-indigo)" : "var(--aos-muted)",
@@ -481,7 +481,7 @@ function OverviewPanel(props: {
               style={{
                 background: "var(--aos-surface)",
                 border: "1px solid var(--aos-border)",
-                borderRadius: 8,
+                borderRadius: 2,
                 padding: 14,
               }}
             >
@@ -596,13 +596,13 @@ function TracesPanel(props: {
           padding: "8px 12px",
           fontSize: 13,
           border: "1px solid var(--aos-border)",
-          borderRadius: 6,
+          borderRadius: 2,
           outline: "none",
         }}
       />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         {/* 列表 */}
-        <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, overflow: "hidden" }}>
+        <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, overflow: "hidden" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
               <tr>
@@ -638,7 +638,7 @@ function TracesPanel(props: {
         </div>
 
         {/* 瀑布图 */}
-        <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 12 }}>
+        <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 12 }}>
           <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8 }}>
             {props.selected ? `${props.selected.traceId} · ${formatDuration(props.selected.durationMs)}` : "选择一条 trace"}
           </div>
@@ -696,7 +696,7 @@ function MetricsPanel(props: { series: MetricSeries[] }) {
             style={{
               padding: "6px 12px",
               fontSize: 12,
-              borderRadius: 6,
+              borderRadius: 2,
               border: selected === s.name ? "1px solid var(--aos-indigo)" : "1px solid var(--aos-border)",
               background: selected === s.name ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
               color: selected === s.name ? "var(--aos-indigo)" : "var(--aos-muted)",
@@ -772,7 +772,7 @@ function AlertsPanel(props: {
             style={{
               padding: "4px 10px",
               fontSize: 12,
-              borderRadius: 6,
+              borderRadius: 2,
               border: props.filter === f ? "1px solid var(--aos-indigo)" : "1px solid var(--aos-border)",
               background: props.filter === f ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
               color: props.filter === f ? "var(--aos-indigo)" : "var(--aos-muted)",
@@ -797,7 +797,7 @@ function AlertsPanel(props: {
               padding: "10px 12px",
               background: "var(--aos-surface)",
               border: "1px solid var(--aos-border)",
-              borderRadius: 8,
+              borderRadius: 2,
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -823,7 +823,7 @@ function AlertsPanel(props: {
 function Stat(props: { label: string; value: number; tone: "danger" | "warning" | "default" }) {
   const color = props.tone === "danger" ? "var(--aos-red)" : props.tone === "warning" ? "var(--aos-amber-600)" : "var(--aos-muted)";
   return (
-    <div style={{ flex: 1, background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 12 }}>
+    <div style={{ flex: 1, background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 12 }}>
       <div style={{ fontSize: 11, color: "var(--aos-muted)" }}>{props.label}</div>
       <div style={{ fontSize: 20, fontWeight: 600, color }}>{props.value}</div>
     </div>
@@ -868,7 +868,7 @@ function DashboardsPanel(props: { widgets: DashboardWidget[]; onAdd: () => void 
  * ------------------------------------------------------------------------- */
 function Panel(props: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 12 }}>
+    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 12 }}>
       <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8 }}>{props.title}</div>
       {props.children}
     </div>
@@ -882,7 +882,7 @@ const btnPrimary: React.CSSProperties = {
   color: "var(--text-on-brand)",
   background: "var(--aos-indigo)",
   border: "none",
-  borderRadius: 6,
+  borderRadius: 2,
   cursor: "pointer",
 };
 
@@ -892,7 +892,7 @@ const btnSecondary: React.CSSProperties = {
   color: "var(--aos-text)",
   background: "var(--aos-surface)",
   border: "1px solid var(--aos-border)",
-  borderRadius: 6,
+  borderRadius: 2,
   cursor: "pointer",
 };
 

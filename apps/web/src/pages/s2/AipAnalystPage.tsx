@@ -391,7 +391,7 @@ export function AipAnalystPage() {
                     textAlign: "left",
                     padding: "8px 10px",
                     marginBottom: 2,
-                    borderRadius: 6,
+                    borderRadius: 2,
                     border: "none",
                     background: activeQueryId === q.id ? "var(--aos-gray-100)" : "transparent",
                     cursor: "pointer",
@@ -731,7 +731,7 @@ function MapView(props: { markers: MapMarker[] }) {
           height: 260,
           background: "linear-gradient(135deg, var(--aos-accent-light) 0%, var(--aos-green-bg) 100%)",
           position: "relative",
-          borderRadius: 8,
+          borderRadius: 2,
           overflow: "hidden",
         }}
       >
@@ -771,7 +771,7 @@ function RawView(props: { result: QueryResult }) {
         padding: 8,
         background: "var(--aos-text)",
         color: "var(--aos-text-tertiary)",
-        borderRadius: 6,
+        borderRadius: 2,
         fontSize: 11,
         fontFamily: "ui-monospace, monospace",
         overflow: "auto",
@@ -841,7 +841,7 @@ const btnPrimary: React.CSSProperties = {
   color: "var(--text-on-brand)",
   background: "var(--aos-indigo)",
   border: "none",
-  borderRadius: 6,
+  borderRadius: 2,
   cursor: "pointer",
 };
 
@@ -851,7 +851,7 @@ const btnSecondary: React.CSSProperties = {
   color: "var(--aos-text)",
   background: "var(--aos-surface)",
   border: "1px solid var(--aos-border)",
-  borderRadius: 6,
+  borderRadius: 2,
   cursor: "pointer",
 };
 

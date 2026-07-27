@@ -44,7 +44,7 @@ const scrollStyle: CSSProperties = {
 
 const itemStyle: CSSProperties = {
   padding: 12,
-  borderRadius: 8,
+  borderRadius: 2,
   border: "1px solid var(--aos-border)",
   background: "var(--aos-bg)",
   cursor: "pointer",

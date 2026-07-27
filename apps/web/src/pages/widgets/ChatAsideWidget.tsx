@@ -60,7 +60,7 @@ const inputPlaceholderStyle: CSSProperties = {
   color: "var(--aos-text-muted)",
   padding: "6px 10px",
   border: "1px dashed var(--aos-border)",
-  borderRadius: 6,
+  borderRadius: 2,
   background: "transparent",
 };
 
@@ -70,7 +70,7 @@ const sendBtnStyle: CSSProperties = {
   color: "#ffffff",
   background: ACCENT,
   border: "none",
-  borderRadius: 6,
+  borderRadius: 2,
   padding: "6px 12px",
   cursor: "not-allowed",
   opacity: 0.85,

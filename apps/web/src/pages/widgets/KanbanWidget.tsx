@@ -103,7 +103,7 @@ const countStyle: CSSProperties = {
 const cardStyle: CSSProperties = {
   background: "var(--aos-bg)",
   border: "1px solid var(--aos-border)",
-  borderRadius: 6,
+  borderRadius: 2,
   padding: "8px 10px",
   display: "flex",
   alignItems: "center",

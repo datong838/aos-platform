@@ -355,7 +355,7 @@ export function DataSourceCreatePage() {
                   textAlign: "left",
                   border: selectedType?.id === t.id ? "2px solid var(--aos-accent)" : "1px solid var(--aos-border)",
                   padding: "0.75rem",
-                  borderRadius: 6,
+                  borderRadius: 2,
                   background: "var(--aos-surface)",
                 }}
                 onClick={() => setSelectedType(t)}
@@ -367,7 +367,7 @@ export function DataSourceCreatePage() {
                 <p className="bp-discover-meta">{t.description}</p>
                 <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 4 }}>
                   {t.capabilities.map((c) => (
-                    <span key={c} className="muted" style={{ fontSize: "0.65rem", background: "var(--aos-surface-hover)", padding: "1px 4px", borderRadius: 3 }}>
+                    <span key={c} className="muted" style={{ fontSize: "0.65rem", background: "var(--aos-surface-hover)", padding: "1px 4px", borderRadius: 2 }}>
                       {c}
                     </span>
                   ))}

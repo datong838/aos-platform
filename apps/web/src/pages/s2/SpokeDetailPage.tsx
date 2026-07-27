@@ -250,7 +250,7 @@ export function SpokeDetailPage() {
       {/* Spoke type toggle */}
       <div className="bp-domain bp-domain-apollo">
         <h2 className="bp-domain-heading">Spoke 形态</h2>
-        <div style={{ display: "flex", gap: 8, padding: 4, borderRadius: 8, background: "var(--bg-muted, #f0f2f5)", width: "fit-content", border: "1px solid var(--border-muted, #d1d5db)" }}>
+        <div style={{ display: "flex", gap: 8, padding: 4, borderRadius: 2, background: "var(--bg-muted, #f0f2f5)", width: "fit-content", border: "1px solid var(--border-muted, #d1d5db)" }}>
           <button
             type="button"
             className={spoke.spokeType === "full" ? "btn" : "btn-muted"}

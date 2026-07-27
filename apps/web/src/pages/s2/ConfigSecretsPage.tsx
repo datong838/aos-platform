@@ -263,7 +263,7 @@ export function ConfigSecretsPage() {
             onClick={(e) => e.stopPropagation()}
             style={{
               background: "#fff",
-              borderRadius: 8,
+              borderRadius: 2,
               padding: "1.5rem",
               minWidth: 400,
               maxWidth: 500,

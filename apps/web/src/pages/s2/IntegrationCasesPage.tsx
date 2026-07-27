@@ -521,7 +521,7 @@ export function IntegrationCasesPage() {
                 style={{
                   minWidth: 130,
                   padding: "0.75rem",
-                  borderRadius: 8,
+                  borderRadius: 2,
                   border: "1px solid var(--aos-border)",
                   cursor: "pointer",
                   background: expandedStep === step.id ? "var(--aos-accent-light)" : "var(--aos-surface)",
@@ -597,7 +597,7 @@ export function IntegrationCasesPage() {
                         justifyContent: "center",
                         width: 32,
                         height: 32,
-                        borderRadius: 8,
+                        borderRadius: 2,
                         background: pc.iconBg,
                         color: pc.iconColor,
                         fontSize: "1.1rem",
@@ -655,7 +655,7 @@ export function IntegrationCasesPage() {
                       marginTop: "0.5rem",
                       padding: "0.5rem",
                       background: "var(--aos-bg-secondary)",
-                      borderRadius: 6,
+                      borderRadius: 2,
                       fontSize: "0.7rem",
                     }}
                   >
@@ -705,7 +705,7 @@ export function IntegrationCasesPage() {
                 onClick={() => setExpandedBlocker(isExpanded ? null : b.id)}
                 style={{
                   padding: "0.6rem 0.75rem",
-                  borderRadius: 8,
+                  borderRadius: 2,
                   border: "1px solid var(--aos-border)",
                   cursor: "pointer",
                   background: isExpanded ? "var(--aos-amber-bg)" : "var(--aos-surface)",

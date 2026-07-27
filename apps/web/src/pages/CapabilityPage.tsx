@@ -112,12 +112,12 @@ export function CapabilityPage() {
       </div>
 
       {msg && (
-        <div style={{ background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13, color: "#1E40AF" }}>
+        <div style={{ background: "var(--aos-accent-light)", border: "1px solid var(--aos-accent-border)", borderRadius: 2, padding: 12, marginBottom: 16, fontSize: 13, color: "var(--aos-blue-600)" }}>
           {msg}
         </div>
       )}
       {err && (
-        <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13, color: "#991B1B" }}>
+        <div style={{ background: "var(--aos-red-bg)", border: "1px solid var(--aos-red-border)", borderRadius: 2, padding: 12, marginBottom: 16, fontSize: 13, color: "var(--aos-red)" }}>
           {err}
         </div>
       )}
@@ -129,15 +129,15 @@ export function CapabilityPage() {
       )}
       {sessionId && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 16 }}>
-          <div style={{ border: "1px solid #E5E7EB", borderRadius: 8, padding: 12, background: "#fff" }}>
+          <div style={{ border: "1px solid var(--aos-border)", borderRadius: 2, padding: 12, background: "var(--aos-surface)" }}>
             <div style={{ fontSize: 11, color: "#6B7280" }}>Session ID</div>
             <div style={{ fontSize: 14, fontWeight: 500, color: "#16A34A", marginTop: 4 }}>{sessionId}</div>
           </div>
-          <div style={{ border: "1px solid #E5E7EB", borderRadius: 8, padding: 12, background: "#fff" }}>
+          <div style={{ border: "1px solid var(--aos-border)", borderRadius: 2, padding: 12, background: "var(--aos-surface)" }}>
             <div style={{ fontSize: 11, color: "#6B7280" }}>AV 外置</div>
             <div style={{ fontSize: 14, fontWeight: 500, color: "#16A34A", marginTop: 4 }}>是</div>
           </div>
-          <div style={{ border: "1px solid #E5E7EB", borderRadius: 8, padding: 12, background: "#fff" }}>
+          <div style={{ border: "1px solid var(--aos-border)", borderRadius: 2, padding: 12, background: "var(--aos-surface)" }}>
             <div style={{ fontSize: 11, color: "#6B7280" }}>Draft 门控</div>
             <div style={{ fontSize: 14, fontWeight: 500, color: "#D97706", marginTop: 4 }}>默认</div>
           </div>
@@ -149,7 +149,7 @@ export function CapabilityPage() {
         style={{
           background: "#FEF9C3",
           border: "1px solid #FDE68A",
-          borderRadius: 12,
+          borderRadius: 2,
           padding: 16,
           marginBottom: 24,
           fontSize: 12,
@@ -181,7 +181,7 @@ export function CapabilityPage() {
                 key={cap.id}
                 style={{
                   border: `1px solid ${statusMeta.border}`,
-                  borderRadius: 12,
+                  borderRadius: 2,
                   background: "#fff",
                   padding: 16,
                   display: "flex",
@@ -213,7 +213,7 @@ export function CapabilityPage() {
                     onClick={() => setCfgType(cap.kindLabel.includes("Job") ? "job" : cap.kindLabel.includes("Session") ? "session" : "script")}
                     style={{
                       padding: "4px 10px",
-                      borderRadius: 6,
+                      borderRadius: 2,
                       border: "1px solid #E5E7EB",
                       background: "#fff",
                       fontSize: 12,
@@ -227,7 +227,7 @@ export function CapabilityPage() {
                     type="button"
                     style={{
                       padding: "4px 10px",
-                      borderRadius: 6,
+                      borderRadius: 2,
                       border: "1px solid #E5E7EB",
                       background: "#fff",
                       fontSize: 12,
@@ -255,7 +255,7 @@ export function CapabilityPage() {
               display: "block",
               border: "2px solid #BFDBFE",
               background: "#EFF6FF",
-              borderRadius: 12,
+              borderRadius: 2,
               padding: 16,
               textDecoration: "none",
               transition: "all 0.15s",
@@ -266,7 +266,7 @@ export function CapabilityPage() {
                 style={{
                   width: 40,
                   height: 40,
-                  borderRadius: 8,
+                  borderRadius: 2,
                   background: "#DBEAFE",
                   display: "flex",
                   alignItems: "center",
@@ -293,7 +293,7 @@ export function CapabilityPage() {
               display: "block",
               border: "2px solid #FDE68A",
               background: "#FFFBEB",
-              borderRadius: 12,
+              borderRadius: 2,
               padding: 16,
               textDecoration: "none",
               transition: "all 0.15s",
@@ -304,7 +304,7 @@ export function CapabilityPage() {
                 style={{
                   width: 40,
                   height: 40,
-                  borderRadius: 8,
+                  borderRadius: 2,
                   background: "#FEF3C7",
                   display: "flex",
                   alignItems: "center",
@@ -341,7 +341,7 @@ export function CapabilityPage() {
                 onClick={() => setCfgType(t.id)}
                 style={{
                   textAlign: "left",
-                  borderRadius: 12,
+                  borderRadius: 2,
                   border: active ? "1px dashed #F59E0B" : "1px dashed #D1D5DB",
                   background: active ? "#FFFBEB" : "#F9FAFB",
                   padding: 16,
@@ -362,7 +362,7 @@ export function CapabilityPage() {
         <section
           style={{
             border: "1px solid #E5E7EB",
-            borderRadius: 12,
+            borderRadius: 2,
             background: "#fff",
             padding: 20,
             marginBottom: 24,
@@ -467,7 +467,7 @@ export function CapabilityPage() {
               type="button"
               style={{
                 padding: "6px 12px",
-                borderRadius: 6,
+                borderRadius: 2,
                 border: "1px solid #86EFAC",
                 background: "#fff",
                 fontSize: 12,
@@ -481,7 +481,7 @@ export function CapabilityPage() {
               type="button"
               style={{
                 padding: "6px 12px",
-                borderRadius: 6,
+                borderRadius: 2,
                 border: "1px solid #FDE68A",
                 background: "#FEF3C7",
                 fontSize: 12,
@@ -495,7 +495,7 @@ export function CapabilityPage() {
               to="/aip/tools"
               style={{
                 padding: "6px 12px",
-                borderRadius: 6,
+                borderRadius: 2,
                 border: "1px solid #E5E7EB",
                 background: "#fff",
                 fontSize: 12,
@@ -519,7 +519,7 @@ export function CapabilityPage() {
                 key={c.id}
                 style={{
                   border: "1px solid #E5E7EB",
-                  borderRadius: 8,
+                  borderRadius: 2,
                   padding: 12,
                   background: "#fff",
                   fontSize: 13,

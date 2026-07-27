@@ -45,7 +45,7 @@ const cellStyle: CSSProperties = {
   justifyContent: "center",
   gap: 2,
   aspectRatio: "1 / 1",
-  borderRadius: 6,
+  borderRadius: 2,
   fontSize: 12,
   color: "var(--aos-text)",
 };

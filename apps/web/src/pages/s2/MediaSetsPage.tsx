@@ -256,7 +256,7 @@ export function MediaSetsPage() {
         className={`card${dragOver ? " bp-drag-over" : ""}`}
         style={{
           border: dragOver ? "2px dashed var(--aos-accent)" : "2px dashed var(--aos-border-strong)",
-          borderRadius: 8,
+          borderRadius: 2,
           padding: "1.5rem",
           textAlign: "center",
           marginBottom: "1rem",
@@ -287,7 +287,7 @@ export function MediaSetsPage() {
 
       {/* Batch operations */}
       {selected.size > 0 && (
-        <div className="filter-bar" style={{ background: "var(--aos-accent-light)", padding: "0.5rem 0.75rem", borderRadius: 6, marginBottom: "0.75rem" }}>
+        <div className="filter-bar" style={{ background: "var(--aos-accent-light)", padding: "0.5rem 0.75rem", borderRadius: 2, marginBottom: "0.75rem" }}>
           <span className="aos-text">已选 {selected.size} 项</span>
           <input
             type="text"
@@ -338,7 +338,7 @@ export function MediaSetsPage() {
               style={{
                 padding: "0.5rem",
                 border: isSel ? "2px solid var(--aos-accent)" : "1px solid var(--aos-border)",
-                borderRadius: 6,
+                borderRadius: 2,
                 cursor: "pointer",
               }}
               onClick={() => toggleSelect(m.rid)}
@@ -352,7 +352,7 @@ export function MediaSetsPage() {
                 background: m.category === "image" ? "var(--aos-accent-light)" :
                   m.category === "video" ? "var(--aos-amber-bg)" :
                   m.category === "audio" ? "var(--aos-red-bg)" : "var(--aos-surface-hover)",
-                borderRadius: 4,
+                borderRadius: 2,
                 marginBottom: 4,
               }}>
                 {m.category === "image" ? "🖼" : m.category === "video" ? "🎬" : m.category === "audio" ? "🎵" : "📄"}

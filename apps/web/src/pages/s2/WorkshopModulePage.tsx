@@ -74,7 +74,7 @@ export function WorkshopModulePage() {
         </span>
         <button
           onClick={() => navigate("/workshop/create")}
-          style={{ padding: "6px 14px", fontSize: 12, fontWeight: 600, border: "none", borderRadius: 6, background: "var(--aos-accent)", color: "var(--text-on-brand)", cursor: "pointer" }}
+          style={{ padding: "6px 14px", fontSize: 12, fontWeight: 600, border: "none", borderRadius: 2, background: "var(--aos-accent)", color: "var(--text-on-brand)", cursor: "pointer" }}
         >
           + 创建模块
         </button>
@@ -107,7 +107,7 @@ export function WorkshopModulePage() {
       </div>
 
       {error && (
-        <div style={{ background: "var(--aos-red-bg)", color: "var(--aos-red)", padding: "8px 12px", borderRadius: 6, marginBottom: 12, fontSize: 13 }}>
+        <div style={{ background: "var(--aos-red-bg)", color: "var(--aos-red)", padding: "8px 12px", borderRadius: 2, marginBottom: 12, fontSize: 13 }}>
           {error}
         </div>
       )}
@@ -121,7 +121,7 @@ export function WorkshopModulePage() {
           {filteredModules.map((m) => (
             <div
               key={m.id}
-              style={{ background: "var(--aos-surface)", borderRadius: 12, border: "1px solid var(--aos-border)", padding: 16, transition: "box-shadow 0.15s" }}
+              style={{ background: "var(--aos-surface)", borderRadius: 2, border: "1px solid var(--aos-border)", padding: 16, transition: "box-shadow 0.15s" }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 8 }}>
                 <div>

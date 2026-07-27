@@ -10,7 +10,7 @@ const ACCENT = "#f59e0b";
 const cardStyle: CSSProperties = {
   position: "relative",
   padding: "14px 16px 14px 18px",
-  borderRadius: 8,
+  borderRadius: 2,
   border: `1px solid ${ACCENT}`,
   background: "rgba(245, 158, 11, 0.08)",
   overflow: "hidden",

@@ -307,7 +307,7 @@ spec:
               style={{
                 padding: "8px 20px",
                 fontSize: 13,
-                borderRadius: 6,
+                borderRadius: 2,
                 border: "1px solid var(--aos-border-strong)",
                 background: "var(--aos-surface)",
                 color: "var(--aos-text)",
@@ -321,7 +321,7 @@ spec:
                 padding: "8px 20px",
                 fontSize: 13,
                 fontWeight: 500,
-                borderRadius: 6,
+                borderRadius: 2,
                 border: "none",
                 background: "var(--aos-amber-700)",
                 color: "var(--text-on-brand)",
@@ -341,7 +341,7 @@ spec:
       {/* Adapter 路径说明 */}
       <div
         style={{
-          borderRadius: 12,
+          borderRadius: 2,
           border: "1px solid rgba(59, 130, 246, 0.2)",
           background: "rgba(239, 246, 255, 0.6)",
           padding: "14px 16px",
@@ -356,7 +356,7 @@ spec:
               style={{
                 textAlign: "center",
                 padding: "10px 6px",
-                borderRadius: 6,
+                borderRadius: 2,
                 background: "rgba(255,255,255,0.7)",
                 border: adapterType === a.key ? "1px solid var(--aos-amber-700)" : "1px solid transparent",
                 cursor: "pointer",
@@ -405,7 +405,7 @@ spec:
                     alignItems: "center",
                     gap: 10,
                     padding: "10px 12px",
-                    borderRadius: 6,
+                    borderRadius: 2,
                     cursor: "pointer",
                     fontSize: 13,
                     color: isActive ? "var(--aos-amber-700)" : isDone ? "var(--aos-amber-700)" : "var(--aos-text-secondary)",
@@ -447,7 +447,7 @@ spec:
                 background: "var(--aos-red-bg)",
                 color: "var(--aos-red)",
                 padding: "8px 12px",
-                borderRadius: 6,
+                borderRadius: 2,
                 marginBottom: 12,
                 fontSize: 13,
               }}
@@ -475,7 +475,7 @@ spec:
                     onClick={() => setSourceType(src.key as SourceType)}
                     style={{
                       border: sourceType === src.key ? "1.5px solid var(--aos-amber-700)" : "0.5px solid var(--aos-faint)",
-                      borderRadius: 8,
+                      borderRadius: 2,
                       padding: 14,
                       cursor: "pointer",
                       transition: "all 0.15s",
@@ -556,7 +556,7 @@ spec:
                   <div
                     style={{
                       padding: "10px 12px",
-                      borderRadius: 8,
+                      borderRadius: 2,
                       background: "rgba(240, 253, 244, 0.7)",
                       border: "1px solid var(--aos-green-border)",
                       fontSize: 11,
@@ -585,7 +585,7 @@ spec:
               {/* 扫描结果 */}
               <div
                 style={{
-                  borderRadius: 8,
+                  borderRadius: 2,
                   border: "1px solid var(--aos-border)",
                   background: "var(--aos-surface)",
                   overflow: "hidden",
@@ -676,7 +676,7 @@ spec:
                             : a.recommended
                               ? "1px solid var(--aos-green-border)"
                               : "0.5px solid var(--aos-faint)",
-                        borderRadius: 8,
+                        borderRadius: 2,
                         padding: 10,
                         cursor: "pointer",
                         transition: "all 0.15s",
@@ -735,7 +735,7 @@ spec:
                   onToggle={(e) => setShowGuide((e.target as HTMLDetailsElement).open)}
                   style={{
                     marginTop: 12,
-                    borderRadius: 8,
+                    borderRadius: 2,
                     border: "1px solid var(--aos-border)",
                     background: "var(--aos-surface)",
                     overflow: "hidden",
@@ -767,7 +767,7 @@ spec:
                         display: "flex",
                         gap: 10,
                         padding: 8,
-                        borderRadius: 6,
+                        borderRadius: 2,
                         background: adapterType === "http" ? "var(--aos-amber-bg)" : "transparent",
                         border: adapterType === "http" ? "1px solid var(--aos-amber)" : "1px solid transparent",
                       }}
@@ -776,7 +776,7 @@ spec:
                         style={{
                           width: 32,
                           height: 32,
-                          borderRadius: 6,
+                          borderRadius: 2,
                           background: "var(--aos-accent-light)",
                           display: "flex",
                           alignItems: "center",
@@ -811,7 +811,7 @@ spec:
                         display: "flex",
                         gap: 10,
                         padding: 8,
-                        borderRadius: 6,
+                        borderRadius: 2,
                         background: adapterType === "process" ? "var(--aos-amber-bg)" : "rgba(240,253,244,0.5)",
                         border: adapterType === "process" ? "1px solid var(--aos-amber)" : "1px solid var(--aos-green-border)",
                       }}
@@ -820,7 +820,7 @@ spec:
                         style={{
                           width: 32,
                           height: 32,
-                          borderRadius: 6,
+                          borderRadius: 2,
                           background: "var(--aos-green-bg)",
                           display: "flex",
                           alignItems: "center",
@@ -855,7 +855,7 @@ spec:
                         display: "flex",
                         gap: 10,
                         padding: 8,
-                        borderRadius: 6,
+                        borderRadius: 2,
                         background: adapterType === "mcp" ? "var(--aos-amber-bg)" : "transparent",
                         border: adapterType === "mcp" ? "1px solid var(--aos-amber)" : "1px solid transparent",
                       }}
@@ -864,7 +864,7 @@ spec:
                         style={{
                           width: 32,
                           height: 32,
-                          borderRadius: 6,
+                          borderRadius: 2,
                           background: "var(--aos-indigo-bg)",
                           display: "flex",
                           alignItems: "center",
@@ -899,7 +899,7 @@ spec:
                         display: "flex",
                         gap: 10,
                         padding: 8,
-                        borderRadius: 6,
+                        borderRadius: 2,
                         background: adapterType === "docker" ? "var(--aos-amber-bg)" : "transparent",
                         border: adapterType === "docker" ? "1px solid var(--aos-amber)" : "1px solid transparent",
                       }}
@@ -908,7 +908,7 @@ spec:
                         style={{
                           width: 32,
                           height: 32,
-                          borderRadius: 6,
+                          borderRadius: 2,
                           background: "var(--aos-amber-bg)",
                           display: "flex",
                           alignItems: "center",
@@ -943,7 +943,7 @@ spec:
                         display: "flex",
                         gap: 10,
                         padding: 8,
-                        borderRadius: 6,
+                        borderRadius: 2,
                         background: adapterType === "session" ? "var(--aos-amber-bg)" : "transparent",
                         border: adapterType === "session" ? "1px solid var(--aos-amber)" : "1px solid transparent",
                       }}
@@ -952,7 +952,7 @@ spec:
                         style={{
                           width: 32,
                           height: 32,
-                          borderRadius: 6,
+                          borderRadius: 2,
                           background: "var(--aos-indigo-bg)",
                           display: "flex",
                           alignItems: "center",
@@ -1015,7 +1015,7 @@ spec:
                   style={{
                     marginTop: 12,
                     padding: "10px 12px",
-                    borderRadius: 8,
+                    borderRadius: 2,
                     background: "rgba(255, 251, 235, 0.8)",
                     border: "1px solid var(--aos-amber-border)",
                     fontSize: 11,
@@ -1036,7 +1036,7 @@ spec:
                     <div
                       style={{
                         marginTop: 12,
-                        borderRadius: 10,
+                        borderRadius: 2,
                         border: "1px solid var(--aos-accent-border)",
                         background: "rgba(239, 246, 255, 0.5)",
                         overflow: "hidden",
@@ -1178,7 +1178,7 @@ spec:
               {/* Agent 名称映射 */}
               <div
                 style={{
-                  borderRadius: 8,
+                  borderRadius: 2,
                   border: "1px solid var(--aos-border)",
                   background: "var(--aos-surface)",
                   padding: 14,
@@ -1236,7 +1236,7 @@ spec:
               {/* 工具映射表 */}
               <div
                 style={{
-                  borderRadius: 8,
+                  borderRadius: 2,
                   border: "1px solid var(--aos-border)",
                   background: "var(--aos-surface)",
                   overflow: "hidden",
@@ -1341,7 +1341,7 @@ spec:
               {/* 权限映射表 */}
               <div
                 style={{
-                  borderRadius: 8,
+                  borderRadius: 2,
                   border: "1px solid var(--aos-border)",
                   background: "var(--aos-surface)",
                   overflow: "hidden",
@@ -1571,7 +1571,7 @@ spec:
                       background: "var(--aos-text)",
                       color: "var(--aos-border-strong)",
                       padding: 16,
-                      borderRadius: 6,
+                      borderRadius: 2,
                       fontFamily: "Menlo, Monaco, monospace",
                       fontSize: 11,
                       lineHeight: 1.7,
@@ -1777,7 +1777,7 @@ spec:
                   <div
                     style={{
                       padding: "10px 12px",
-                      borderRadius: 8,
+                      borderRadius: 2,
                       background: "rgba(254, 242, 242, 0.7)",
                       border: "1px solid var(--aos-red-border)",
                       fontSize: 11,
@@ -1846,7 +1846,7 @@ spec:
                   扫描已导入的 Agent 源码，检测 6 类安全风险。高风险项需管理员审批方可继续导入。
                 </p>
 
-                <div style={{ borderRadius: 8, border: "1px solid var(--aos-border)", overflow: "hidden" }}>
+                <div style={{ borderRadius: 2, border: "1px solid var(--aos-border)", overflow: "hidden" }}>
                   {/* 表头 */}
                   <div
                     style={{
@@ -1937,7 +1937,7 @@ spec:
                     alignItems: "flex-start",
                     gap: 8,
                     padding: "8px 12px",
-                    borderRadius: 8,
+                    borderRadius: 2,
                     background: "rgba(254, 242, 242, 0.7)",
                     border: "1px solid var(--aos-red-border)",
                   }}
@@ -1972,7 +1972,7 @@ spec:
                     alignItems: "center",
                     gap: 8,
                     padding: "8px 12px",
-                    borderRadius: 8,
+                    borderRadius: 2,
                     background: "rgba(255, 251, 235, 0.8)",
                     border: "1px solid var(--aos-amber-border)",
                   }}
@@ -1993,7 +1993,7 @@ spec:
               {/* 导入汇总 */}
               <div
                 style={{
-                  borderRadius: 8,
+                  borderRadius: 2,
                   border: "1px solid var(--aos-border)",
                   background: "var(--aos-surface-hover)",
                   padding: 16,
@@ -2037,7 +2037,7 @@ spec:
                 style={{
                   marginTop: 16,
                   padding: "10px 12px",
-                  borderRadius: 8,
+                  borderRadius: 2,
                   background: "rgba(240, 253, 244, 0.7)",
                   border: "1px solid var(--aos-green-border)",
                   fontSize: 11,
@@ -2068,7 +2068,7 @@ spec:
               style={{
                 padding: "8px 20px",
                 fontSize: 13,
-                borderRadius: 6,
+                borderRadius: 2,
                 border: step === 1 ? "1px solid var(--aos-border)" : "0.5px solid var(--aos-faint)",
                 background: "var(--aos-surface)",
                 color: step === 1 ? "var(--aos-text-tertiary)" : "var(--aos-text-secondary)",
@@ -2087,7 +2087,7 @@ spec:
                 style={{
                   padding: "8px 20px",
                   fontSize: 13,
-                  borderRadius: 6,
+                  borderRadius: 2,
                   border: "0.5px solid var(--aos-faint)",
                   background: "var(--aos-surface)",
                   color: "var(--aos-text-secondary)",
@@ -2103,7 +2103,7 @@ spec:
                     padding: "8px 20px",
                     fontSize: 13,
                     fontWeight: 500,
-                    borderRadius: 6,
+                    borderRadius: 2,
                     border: "none",
                     background: "var(--aos-amber-700)",
                     color: "var(--text-on-brand)",
@@ -2121,7 +2121,7 @@ spec:
                     padding: "8px 20px",
                     fontSize: 13,
                     fontWeight: 500,
-                    borderRadius: 6,
+                    borderRadius: 2,
                     border: "none",
                     background: "var(--aos-accent)",
                     color: "var(--text-on-brand)",

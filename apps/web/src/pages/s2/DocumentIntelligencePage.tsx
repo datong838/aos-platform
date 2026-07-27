@@ -315,7 +315,7 @@ const MOCK_EXTRACT_FIELDS: ExtractField[] = [
 
 function StatCard({ value, label, trend, trendUp }: { value: string; label: string; trend: string; trendUp?: boolean }) {
   return (
-    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 16 }}>
+    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 16 }}>
       <div style={{ fontSize: 24, fontWeight: 600, color: "var(--aos-text)", lineHeight: 1.2 }}>{value}</div>
       <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4 }}>{label}</div>
       <div style={{ fontSize: 11, marginTop: 6, color: trendUp ? "var(--aos-green)" : "var(--aos-text-secondary)" }}>
@@ -350,7 +350,7 @@ function StateStepper({ state, errorMessage }: { state: DocState; errorMessage?:
   ];
 
   return (
-    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: "16px 24px", marginBottom: 16 }}>
+    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: "16px 24px", marginBottom: 16 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
         {labels.map((label, i) => {
           const isDone = i < stepIdx;
@@ -457,7 +457,7 @@ function UploadDropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
       onClick={() => document.getElementById("doc-file-input")?.click()}
       style={{
         border: dragOver ? "2px dashed var(--aos-accent)" : "2px dashed var(--aos-border-strong)",
-        borderRadius: 8,
+        borderRadius: 2,
         padding: "28px 20px",
         textAlign: "center",
         cursor: "pointer",
@@ -495,7 +495,7 @@ function OcrPanel({ doc, onCorrectText }: { doc: DocItem; onCorrectText: (text: 
   const [text, setText] = useState(doc.ocrText ?? "");
 
   return (
-    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 16 }}>
+    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)" }}>OCR 识别结果</h3>
         <button
@@ -591,7 +591,7 @@ function ExtractionPanel({
   const [editValue, setEditValue] = useState("");
 
   return (
-    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 16 }}>
+    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)" }}>LLM 结构化提取结果</h3>
         <select
@@ -692,22 +692,22 @@ function ReviewPanel({
   const avgConf = fields.length > 0 ? fields.reduce((s, f) => s + f.confidence, 0) / fields.length : 0;
 
   return (
-    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 16 }}>
+    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 16 }}>
       <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", marginBottom: 12 }}>审核台</h3>
 
       {/* 总览 */}
       <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
-        <div style={{ flex: 1, padding: 12, background: "var(--aos-surface-hover)", borderRadius: 6 }}>
+        <div style={{ flex: 1, padding: 12, background: "var(--aos-surface-hover)", borderRadius: 2 }}>
           <div style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>提取字段数</div>
           <div style={{ fontSize: 20, fontWeight: 600, color: "var(--aos-text)", marginTop: 2 }}>{fields.length}</div>
         </div>
-        <div style={{ flex: 1, padding: 12, background: "var(--aos-surface-hover)", borderRadius: 6 }}>
+        <div style={{ flex: 1, padding: 12, background: "var(--aos-surface-hover)", borderRadius: 2 }}>
           <div style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>平均置信度</div>
           <div style={{ fontSize: 20, fontWeight: 600, color: getConfidenceColor(avgConf), marginTop: 2 }}>
             {(avgConf * 100).toFixed(1)}%
           </div>
         </div>
-        <div style={{ flex: 1, padding: 12, background: "var(--aos-surface-hover)", borderRadius: 6 }}>
+        <div style={{ flex: 1, padding: 12, background: "var(--aos-surface-hover)", borderRadius: 2 }}>
           <div style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>低置信度字段</div>
           <div style={{ fontSize: 20, fontWeight: 600, color: "var(--aos-red)", marginTop: 2 }}>
             {fields.filter((f) => getConfidenceLevel(f.confidence) === "low").length}
@@ -725,7 +725,7 @@ function ReviewPanel({
             padding: "8px 12px",
             fontSize: 13,
             fontWeight: 500,
-            borderRadius: 6,
+            borderRadius: 2,
             border: "1px solid var(--aos-green)",
             background: "var(--aos-green)",
             color: "var(--text-on-brand)",
@@ -742,7 +742,7 @@ function ReviewPanel({
             padding: "8px 12px",
             fontSize: 13,
             fontWeight: 500,
-            borderRadius: 6,
+            borderRadius: 2,
             border: "1px solid var(--aos-border)",
             background: "var(--aos-surface)",
             color: "var(--aos-red)",
@@ -893,7 +893,7 @@ export function DocumentIntelligencePage() {
 
       {/* 批量操作栏 */}
       {selectedIds.size > 0 && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 12, padding: "8px 12px", background: "var(--aos-accent-light)", borderRadius: 6, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8, marginBottom: 12, padding: "8px 12px", background: "var(--aos-accent-light)", borderRadius: 2, alignItems: "center" }}>
           <span style={{ fontSize: 12, color: "var(--aos-accent)" }}>已选择 {selectedIds.size} 个文件</span>
           <button type="button" onClick={handleBatchReprocess} style={batchBtnStyle}>重新处理</button>
           <button type="button" onClick={handleBatchDelete} style={{ ...batchBtnStyle, color: "var(--aos-red)", borderColor: "var(--aos-red-border)" }}>删除</button>
@@ -933,7 +933,7 @@ export function DocumentIntelligencePage() {
                     gap: 8,
                     padding: 10,
                     border: isSelected ? "1px solid var(--aos-accent)" : "1px solid var(--aos-border)",
-                    borderRadius: 6,
+                    borderRadius: 2,
                     background: isSelected ? "var(--aos-accent-light)" : "var(--aos-surface)",
                     cursor: "pointer",
                     boxShadow: isSelected ? "0 0 0 3px var(--aos-indigo-50)" : "none",

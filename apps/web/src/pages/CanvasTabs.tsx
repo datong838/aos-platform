@@ -392,7 +392,7 @@ function EventWizard({
                     style={{
                       padding: "8px",
                       border: selTrigger === t.type ? "2px solid #3b82f6" : "1px solid #e5e7eb",
-                      borderRadius: "6px",
+                      borderRadius: "2px",
                       background: selTrigger === t.type ? "#eff6ff" : "var(--aos-aside)",
                       cursor: "pointer",
                       textAlign: "left",
@@ -417,7 +417,7 @@ function EventWizard({
                     style={{
                       padding: "8px",
                       border: selAction === a.type ? "2px solid #10b981" : "1px solid #e5e7eb",
-                      borderRadius: "6px",
+                      borderRadius: "2px",
                       background: selAction === a.type ? "#ecfdf5" : "var(--aos-aside)",
                       cursor: "pointer",
                       textAlign: "left",
@@ -447,7 +447,7 @@ function EventWizard({
                   boxSizing: "border-box",
                 }}
               />
-              <div style={{ padding: "8px", background: "#f9fafb", borderRadius: "6px", fontSize: "12px" }}>
+              <div style={{ padding: "8px", background: "var(--aos-surface-hover)", borderRadius: "2px", fontSize: "12px" }}>
                 <strong>{triggers.find((t) => t.type === selTrigger)?.label || selTrigger}</strong>
                 <span style={{ margin: "0 8px", color: "#999" }}>→</span>
                 <strong>{actions.find((a) => a.type === selAction)?.label || selAction}</strong>
@@ -599,7 +599,7 @@ export function StylesTab({ moduleId: _moduleId }: { moduleId: string }) {
               style={{
                 padding: "8px",
                 border: activePreset === preset.id ? "2px solid #3b82f6" : "1px solid #e5e7eb",
-                borderRadius: "6px",
+                borderRadius: "2px",
                 background: preset.bg,
                 color: preset.text,
                 cursor: "pointer",
@@ -835,7 +835,7 @@ export function WidgetRegistryTab() {
       {plugins.length > 0 && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
           {plugins.map((p) => (
-            <div key={`${p.pluginId}-${p.kind}`} style={{ padding: "8px", border: "1px solid #e5e7eb", borderRadius: "6px" }}>
+            <div key={`${p.pluginId}-${p.kind}`} style={{ padding: "8px", border: "1px solid var(--aos-border)", borderRadius: "2px" }}>
               <div style={{ fontWeight: 500, fontSize: "11px" }}>{p.label}</div>
               <div className="muted" style={{ fontSize: "10px" }}>
                 {p.pluginId} · {p.kind}
@@ -878,7 +878,7 @@ const overlayStyle: React.CSSProperties = {
 
 const modalStyle: React.CSSProperties = {
   background: "var(--aos-aside, #fff)",
-  borderRadius: "8px",
+  borderRadius: "2px",
   padding: "16px",
   minWidth: "420px",
   maxWidth: "600px",
@@ -916,7 +916,7 @@ function FormField({ label, children }: { label: string; children: React.ReactNo
 
 function StatCard({ label, value, icon, color }: { label: string; value: string | number; icon: string; color: string }) {
   return (
-    <div style={{ padding: "12px", borderRadius: "8px", background: "var(--aos-aside)", border: "1px solid var(--aos-border-light)" }}>
+    <div style={{ padding: "12px", borderRadius: "2px", background: "var(--aos-aside)", border: "1px solid var(--aos-border-light)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontSize: "11px", color: "#999" }}>{label}</span>
         <NavIcon name={icon as "apps"} style={{ width: "14px", height: "14px", color }} />
@@ -1030,7 +1030,7 @@ export function WorkflowMode({ moduleId }: { moduleId: string }) {
               onClick={() => setSelectedNode(evt.id)}
               style={{
                 padding: "6px 8px",
-                borderRadius: "6px",
+                borderRadius: "2px",
                 marginBottom: "4px",
                 cursor: "pointer",
                 background: selectedNode === evt.id ? "#EFF6FF" : "var(--aos-aside)",

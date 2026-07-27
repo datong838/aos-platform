@@ -185,7 +185,7 @@ export function StudioPage() {
                 justifyContent: "center",
                 gap: 6,
                 padding: "8px 12px",
-                borderRadius: 8,
+                borderRadius: 2,
                 background: "var(--aos-indigo-600)",
                 color: "var(--text-on-brand)",
                 border: "none",
@@ -222,7 +222,7 @@ export function StudioPage() {
                     style={{
                       width: 32,
                       height: 32,
-                      borderRadius: 8,
+                      borderRadius: 2,
                       background: a.iconBg,
                       display: "flex",
                       alignItems: "center",
@@ -394,7 +394,7 @@ export function StudioPage() {
             {tab === "prompt" && (
               <div
                 style={{
-                  borderRadius: 12,
+                  borderRadius: 2,
                   border: "1px solid var(--aos-border)",
                   background: "var(--aos-surface)",
                   padding: 20,
@@ -411,7 +411,7 @@ export function StudioPage() {
                     width: "100%",
                     padding: "10px 12px",
                     fontSize: 13,
-                    borderRadius: 8,
+                    borderRadius: 2,
                     border: "1px solid var(--aos-border)",
                     background: "var(--aos-surface-hover)",
                     color: "var(--aos-text)",
@@ -463,7 +463,7 @@ export function StudioPage() {
             {tab === "tools" && (
               <div
                 style={{
-                  borderRadius: 12,
+                  borderRadius: 2,
                   border: "1px solid var(--aos-border)",
                   background: "var(--aos-surface)",
                   padding: 20,
@@ -485,7 +485,7 @@ export function StudioPage() {
                           alignItems: "center",
                           justifyContent: "space-between",
                           padding: "10px 12px",
-                          borderRadius: 8,
+                          borderRadius: 2,
                           border: `1px solid ${isWarn ? "var(--aos-amber-border)" : isWiki ? "var(--aos-amber-border)" : "var(--aos-border)"}`,
                           background: isWarn ? "var(--aos-amber-bg)" : isWiki ? "var(--aos-amber-bg)" : "var(--aos-surface)",
                         }}
@@ -524,7 +524,7 @@ export function StudioPage() {
                       alignItems: "center",
                       gap: 6,
                       padding: "6px 12px",
-                      borderRadius: 8,
+                      borderRadius: 2,
                       background: "var(--aos-indigo-bg)",
                       color: "var(--aos-indigo-600)",
                       fontSize: 12,
@@ -550,7 +550,7 @@ export function StudioPage() {
             {tab === "try" && (
               <div
                 style={{
-                  borderRadius: 12,
+                  borderRadius: 2,
                   border: "1px solid var(--aos-border)",
                   background: "var(--aos-surface)",
                   padding: 20,
@@ -558,7 +558,7 @@ export function StudioPage() {
               >
                 <div
                   style={{
-                    borderRadius: 8,
+                    borderRadius: 2,
                     background: "var(--aos-surface-hover)",
                     border: "1px solid var(--aos-border)",
                     padding: 12,
@@ -591,7 +591,7 @@ export function StudioPage() {
                       flex: 1,
                       padding: "8px 12px",
                       fontSize: 13,
-                      borderRadius: 8,
+                      borderRadius: 2,
                       border: "1px solid var(--aos-border)",
                       background: "var(--aos-surface)",
                     }}
@@ -601,7 +601,7 @@ export function StudioPage() {
                     type="submit"
                     style={{
                       padding: "8px 16px",
-                      borderRadius: 8,
+                      borderRadius: 2,
                       background: "var(--aos-indigo-600)",
                       color: "var(--text-on-brand)",
                       border: "none",
@@ -638,7 +638,7 @@ export function StudioPage() {
                         width: "100%",
                         fontSize: 11,
                         borderCollapse: "collapse",
-                        borderRadius: 6,
+                        borderRadius: 2,
                         overflow: "hidden",
                         border: "1px solid var(--aos-border)",
                       }}
@@ -674,7 +674,7 @@ export function StudioPage() {
             {tab === "publish" && (
               <div
                 style={{
-                  borderRadius: 12,
+                  borderRadius: 2,
                   border: "1px solid var(--aos-amber-border)",
                   background: "var(--aos-amber-bg)",
                   padding: 20,
@@ -705,7 +705,7 @@ export function StudioPage() {
                     to="/aip/evals"
                     style={{
                       padding: "6px 12px",
-                      borderRadius: 6,
+                      borderRadius: 2,
                       background: "var(--aos-surface)",
                       border: "1px solid var(--aos-amber-border)",
                       color: "var(--aos-amber-700)",
@@ -720,7 +720,7 @@ export function StudioPage() {
                     to="/aip/drafts"
                     style={{
                       padding: "6px 12px",
-                      borderRadius: 6,
+                      borderRadius: 2,
                       background: "var(--aos-surface)",
                       border: "1px solid var(--aos-amber-border)",
                       color: "var(--aos-amber-700)",
@@ -735,7 +735,7 @@ export function StudioPage() {
                     to="/aip/maturity"
                     style={{
                       padding: "6px 12px",
-                      borderRadius: 6,
+                      borderRadius: 2,
                       background: "var(--aos-surface)",
                       border: "1px solid var(--aos-amber-border)",
                       color: "var(--aos-amber-700)",

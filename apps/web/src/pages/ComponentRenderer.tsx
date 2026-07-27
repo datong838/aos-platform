@@ -175,7 +175,7 @@ function RenderNode({
           style={{
             padding: 12,
             border: "1px dashed var(--aos-border)",
-            borderRadius: 6,
+            borderRadius: 2,
             color: "var(--aos-text-muted)",
             fontSize: 12,
           }}
@@ -301,7 +301,7 @@ export function StatCardWidget({ config }: { config: Record<string, any> }) {
     <div
       style={{
         padding: 16,
-        borderRadius: 8,
+        borderRadius: 2,
         border: "1px solid var(--aos-border)",
         background: "var(--aos-surface)",
         display: "flex",
@@ -339,7 +339,7 @@ export function FilterBarWidget({ config }: { config: Record<string, any> }) {
     <div
       style={{
         padding: "8px 12px",
-        borderRadius: 6,
+        borderRadius: 2,
         border: "1px solid var(--aos-border)",
         background: "var(--aos-surface)",
         display: "flex",
@@ -458,7 +458,7 @@ export function ObjectTableWidget({
   return (
     <div
       style={{
-        borderRadius: 6,
+        borderRadius: 2,
         border: "1px solid var(--aos-border)",
         background: "var(--aos-surface)",
         overflow: "hidden",
@@ -643,7 +643,7 @@ export function DetailDrawerWidget({ config, external }: { config: Record<string
   return (
     <div
       style={{
-        borderRadius: 6,
+        borderRadius: 2,
         border: "1px solid var(--aos-border)",
         background: "var(--aos-aside)",
         padding: 12,
@@ -881,7 +881,7 @@ export function TrendChartWidget({ config }: { config: Record<string, any> }) {
   return (
     <div
       style={{
-        borderRadius: 6,
+        borderRadius: 2,
         border: "1px solid var(--aos-border)",
         background: "var(--aos-surface)",
         padding: 12,

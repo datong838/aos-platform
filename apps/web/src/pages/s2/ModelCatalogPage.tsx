@@ -358,29 +358,26 @@ export function ModelCatalogPage() {
 
   return (
     <PageChrome title="模型目录" lede="管理 AIP 启用状态、模型家族和已注册模型">
-      <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-        {/* 四层架构定位条 */}
-        <div style={{ marginBottom: 16 }}>
+      <div className="mc-wrap">
+        <div className="mc-arch-bar">
           <BpArchitectureBar activeLayer="L3" />
         </div>
 
-        {/* 统计概览 */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
+        <div className="mc-stats-grid">
           {[
             { label: "目录模型总数", value: catalogStats.total, color: "var(--aos-accent)" },
             { label: "已注册", value: catalogStats.registered, color: "var(--aos-green-600)" },
             { label: "供应商数", value: catalogStats.providers, color: "var(--aos-purple-600)" },
             { label: "免费模型", value: catalogStats.free, color: "var(--aos-amber-600)" },
           ].map((s) => (
-            <div key={s.label} style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 14 }}>
-              <div style={{ fontSize: 24, fontWeight: 700, color: s.color }}>{s.value}</div>
-              <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 2 }}>{s.label}</div>
+            <div key={s.label} className="mc-stat-card">
+              <div className="mc-stat-value" style={{ color: s.color }}>{s.value}</div>
+              <div className="mc-stat-label">{s.label}</div>
             </div>
           ))}
         </div>
 
-        {/* Tab 导航 */}
-        <div style={{ display: "flex", gap: 4, borderBottom: "1px solid var(--aos-border)", marginBottom: 16 }}>
+        <div className="mc-tabs">
           {([
             { id: "catalog", label: `目录浏览 (${catalogStats.total})` },
             { id: "settings", label: "AIP 设置" },
@@ -391,19 +388,7 @@ export function ModelCatalogPage() {
               key={t.id}
               type="button"
               onClick={() => setTab(t.id)}
-              style={{
-                padding: "8px 16px",
-                fontSize: 13,
-                fontWeight: tab === t.id ? 500 : 400,
-                borderBottom: tab === t.id ? "2px solid var(--aos-accent)" : "2px solid transparent",
-                color: tab === t.id ? "var(--aos-text)" : "var(--aos-text-secondary)",
-                background: "none",
-                border: "none",
-                borderTop: "none",
-                borderLeft: "none",
-                borderRight: "none",
-                cursor: "pointer",
-              }}
+              className={`mc-tab-btn ${tab === t.id ? "is-active" : ""}`}
             >
               {t.label}
             </button>
@@ -412,11 +397,10 @@ export function ModelCatalogPage() {
 
         {/* === Catalog Browse Tab === */}
         {tab === "catalog" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {/* 搜索 + 筛选条 */}
-            <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-              <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--aos-faint)" strokeWidth="2" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }}>
+          <div className="mc-catalog-col">
+            <div className="mc-filter-bar">
+              <div className="mc-search-wrap">
+                <svg className="mc-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="11" cy="11" r="7" /><path d="M20 20l-3-3" strokeLinecap="round" />
                 </svg>
                 <input
@@ -425,14 +409,14 @@ export function ModelCatalogPage() {
                   value={catalogFilter.query}
                   onChange={(e) => setCatalogFilter({ ...catalogFilter, query: e.target.value })}
                   aria-label="catalog-search"
-                  style={{ width: "100%", paddingLeft: 34, paddingRight: 12, padding: "8px 12px 8px 34px", fontSize: 13, border: "1px solid var(--aos-border)", borderRadius: 6, outline: "none" }}
+                  className="mc-search-input"
                 />
               </div>
               <select
                 value={catalogFilter.provider}
                 onChange={(e) => setCatalogFilter({ ...catalogFilter, provider: e.target.value })}
                 aria-label="filter-provider"
-                style={{ padding: "8px 12px", fontSize: 13, border: "1px solid var(--aos-border)", borderRadius: 6, background: "var(--aos-surface)" }}
+                className="mc-filter-select"
               >
                 <option value="all">所有供应商</option>
                 {allProviders.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -441,7 +425,7 @@ export function ModelCatalogPage() {
                 value={catalogFilter.capability}
                 onChange={(e) => setCatalogFilter({ ...catalogFilter, capability: e.target.value })}
                 aria-label="filter-capability"
-                style={{ padding: "8px 12px", fontSize: 13, border: "1px solid var(--aos-border)", borderRadius: 6, background: "var(--aos-surface)" }}
+                className="mc-filter-select"
               >
                 <option value="all">所有能力</option>
                 {allCapabilities.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -450,7 +434,7 @@ export function ModelCatalogPage() {
                 value={catalogFilter.priceTier}
                 onChange={(e) => setCatalogFilter({ ...catalogFilter, priceTier: e.target.value })}
                 aria-label="filter-price"
-                style={{ padding: "8px 12px", fontSize: 13, border: "1px solid var(--aos-border)", borderRadius: 6, background: "var(--aos-surface)" }}
+                className="mc-filter-select"
               >
                 <option value="all">所有价位</option>
                 <option value="free">免费</option>
@@ -460,30 +444,28 @@ export function ModelCatalogPage() {
               </select>
             </div>
 
-            {/* 对比操作条 */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 4px" }}>
-              <div style={{ fontSize: 13, color: "var(--aos-text-secondary)" }}>
-                找到 <strong style={{ color: "var(--aos-text)" }}>{filteredModels.length}</strong> 个模型
-                {compareSet.size > 0 && <> · 已选 <strong style={{ color: "var(--aos-accent)" }}>{compareSet.size}</strong>/3 用于对比</>}
+            <div className="mc-compare-bar">
+              <div className="mc-compare-info">
+                找到 <strong>{filteredModels.length}</strong> 个模型
+                {compareSet.size > 0 && <> · 已选 <strong className="accent">{compareSet.size}</strong>/3 用于对比</>}
               </div>
               {compareSet.size >= 2 && (
                 <button
                   type="button"
                   onClick={() => setShowCompare(true)}
-                  style={{ padding: "6px 14px", fontSize: 12, fontWeight: 500, border: "none", borderRadius: 6, background: "var(--aos-accent)", color: "var(--text-on-brand)", cursor: "pointer" }}
+                  className="mc-compare-btn"
                 >
                   对比 ({compareSet.size})
                 </button>
               )}
             </div>
 
-            {/* 模型卡片网格 */}
             {filteredModels.length === 0 ? (
-              <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 40, textAlign: "center" }}>
-                <p style={{ fontSize: 14, color: "var(--aos-text-secondary)", margin: 0 }}>无匹配模型，请调整筛选条件</p>
+              <div className="mc-empty">
+                <p>无匹配模型，请调整筛选条件</p>
               </div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+              <div className="mc-card-grid">
                 {filteredModels.map((m) => {
                   const isSelected = compareSet.has(m.id);
                   const providerInitial = m.provider.charAt(0).toUpperCase();
@@ -499,97 +481,71 @@ export function ModelCatalogPage() {
                   return (
                     <div
                       key={m.id}
-                      style={{
-                        background: "var(--aos-surface)",
-                        border: isSelected ? "2px solid var(--aos-accent)" : "1px solid var(--aos-border)",
-                        borderRadius: 8,
-                        padding: 14,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 10,
-                      }}
+                      className={`mc-model-card ${isSelected ? "is-selected" : ""}`}
                     >
-                      {/* Header */}
-                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <div style={{
-                            width: 32, height: 32, borderRadius: 6, background: providerColor, color: "var(--text-on-brand)",
-                            display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14,
-                          }}>
+                      <div className="mc-card-header">
+                        <div className="mc-card-title-row">
+                          <div className="mc-provider-avatar" style={{ background: providerColor }}>
                             {providerInitial}
                           </div>
                           <div>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)" }}>{m.name}</div>
-                            <div style={{ fontSize: 11, color: "var(--aos-faint)" }}>{m.provider}</div>
+                            <div className="mc-card-title">{m.name}</div>
+                            <div className="mc-card-provider">{m.provider}</div>
                           </div>
                         </div>
                         {m.registered && (
-                          <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: "var(--aos-green-bg)", color: "var(--aos-green-600)", fontWeight: 500 }}>已注册</span>
+                          <span className="mc-registered-badge">已注册</span>
                         )}
                       </div>
 
-                      {/* Specs */}
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 12 }}>
+                      <div className="mc-specs-grid">
                         <div>
-                          <span style={{ color: "var(--aos-faint)" }}>参数量 </span>
-                          <span style={{ fontWeight: 500, color: "var(--aos-text)" }}>{m.parameters}</span>
+                          <span className="mc-spec-label">参数量 </span>
+                          <span className="mc-spec-value">{m.parameters}</span>
                         </div>
                         <div>
-                          <span style={{ color: "var(--aos-faint)" }}>上下文 </span>
-                          <span style={{ fontWeight: 500, color: "var(--aos-text)" }}>{m.contextWindow}</span>
+                          <span className="mc-spec-label">上下文 </span>
+                          <span className="mc-spec-value">{m.contextWindow}</span>
                         </div>
                         <div>
-                          <span style={{ color: "var(--aos-faint)" }}>输入 </span>
-                          <span style={{ fontWeight: 500, color: "var(--aos-text)" }}>{m.inputPrice}</span>
+                          <span className="mc-spec-label">输入 </span>
+                          <span className="mc-spec-value">{m.inputPrice}</span>
                         </div>
                         <div>
-                          <span style={{ color: "var(--aos-faint)" }}>输出 </span>
-                          <span style={{ fontWeight: 500, color: "var(--aos-text)" }}>{m.outputPrice}</span>
+                          <span className="mc-spec-label">输出 </span>
+                          <span className="mc-spec-value">{m.outputPrice}</span>
                         </div>
                       </div>
 
-                      {/* Capability tags */}
-                      <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                      <div className="mc-cap-tags">
                         {m.capabilities.map((cap) => {
                           const c = CAPABILITY_COLORS[cap];
                           return (
-                            <span key={cap} style={{
-                              fontSize: 10, padding: "2px 8px", borderRadius: 10,
-                              background: c.bg, color: c.fg, fontWeight: 500,
-                            }}>
+                            <span key={cap} className="mc-cap-tag" style={{ background: c.bg, color: c.fg }}>
                               {cap}
                             </span>
                           );
                         })}
                       </div>
 
-                      {/* Actions */}
-                      <div style={{ display: "flex", gap: 6, marginTop: "auto", paddingTop: 8, borderTop: "1px solid var(--aos-divider)" }}>
-                        <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--aos-text-secondary)", cursor: "pointer" }}>
+                      <div className="mc-card-actions">
+                        <label className="mc-compare-label">
                           <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => toggleCompare(m.id)}
                             disabled={!isSelected && compareSet.size >= 3}
-                            style={{ accentColor: "var(--aos-accent)" }}
                           />
                           对比
                         </label>
                         {!m.registered ? (
-                          <button style={{
-                            marginLeft: "auto", padding: "4px 12px", fontSize: 12, fontWeight: 500,
-                            border: "none", borderRadius: 6, background: "var(--aos-accent)", color: "var(--text-on-brand)", cursor: "pointer",
-                          }}>
+                          <button className="mc-primary-btn">
                             注册到供应商
                           </button>
                         ) : (
                           <Link
                             to="/aip/model-router"
-                            style={{
-                              marginLeft: "auto", padding: "4px 12px", fontSize: 12, fontWeight: 500,
-                              border: "1px solid var(--aos-border)", borderRadius: 6, background: "var(--aos-surface)", color: "var(--aos-text)",
-                              textDecoration: "none",
-                            }}
+                            className="mc-secondary-link"
                           >
                             路由配置 →
                           </Link>
@@ -601,29 +557,24 @@ export function ModelCatalogPage() {
               </div>
             )}
 
-            {/* 对比弹层 */}
             {showCompare && compareModels.length >= 2 && (
-              <div style={{
-                position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-                background: "var(--overlay-scrim)", zIndex: 50,
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }} onClick={() => setShowCompare(false)}>
+              <div className="mc-modal-overlay" onClick={() => setShowCompare(false)}>
                 <div
-                  style={{ background: "var(--aos-surface)", borderRadius: 12, padding: 24, maxWidth: 800, width: "90%", maxHeight: "80vh", overflowY: "auto" }}
+                  className="mc-modal"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>模型对比</h3>
-                    <button type="button" onClick={() => setShowCompare(false)} style={{ border: "none", background: "none", fontSize: 20, cursor: "pointer", color: "var(--aos-text-secondary)" }}>×</button>
+                  <div className="mc-modal-header">
+                    <h3 className="mc-modal-title">模型对比</h3>
+                    <button type="button" onClick={() => setShowCompare(false)} className="mc-modal-close">×</button>
                   </div>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <table className="mc-compare-table">
                     <thead>
                       <tr>
-                        <th style={{ textAlign: "left", padding: 8, borderBottom: "2px solid var(--aos-border)", width: 100, color: "var(--aos-text-secondary)", fontSize: 12 }}>属性</th>
+                        <th>属性</th>
                         {compareModels.map((m) => (
-                          <th key={m.id} style={{ textAlign: "left", padding: 8, borderBottom: "2px solid var(--aos-border)", color: "var(--aos-text)" }}>
+                          <th key={m.id} className="model-col">
                             {m.name}
-                            <div style={{ fontSize: 11, fontWeight: 400, color: "var(--aos-faint)" }}>{m.provider}</div>
+                            <div className="model-sub">{m.provider}</div>
                           </th>
                         ))}
                       </tr>
@@ -631,9 +582,9 @@ export function ModelCatalogPage() {
                     <tbody>
                       {buildComparisonRows(compareModels).map((row) => (
                         <tr key={row.field}>
-                          <td style={{ padding: 8, borderBottom: "1px solid var(--aos-divider)", color: "var(--aos-text-secondary)", fontSize: 12, fontWeight: 500 }}>{row.field}</td>
+                          <td className="field-col">{row.field}</td>
                           {row.values.map((v, i) => (
-                            <td key={i} style={{ padding: 8, borderBottom: "1px solid var(--aos-divider)", color: "var(--aos-text)" }}>{v}</td>
+                            <td key={i}>{v}</td>
                           ))}
                         </tr>
                       ))}
@@ -647,27 +598,27 @@ export function ModelCatalogPage() {
 
         {/* === Settings Tab === */}
         {tab === "settings" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ borderRadius: 8, border: "1px solid var(--aos-border)", background: "var(--aos-surface)", overflow: "hidden" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px", borderBottom: "1px solid var(--aos-divider)" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--aos-purple-600)" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" strokeLinecap="round" /></svg>
-                <h2 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>AIP 启用</h2>
+          <div className="mc-settings-col">
+            <div className="mc-panel">
+              <div className="mc-panel-header">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" strokeLinecap="round" /></svg>
+                <h2 className="mc-panel-title">AIP 启用</h2>
               </div>
-              <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 20 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: 0 }}>启用初始 AIP 功能</h3>
-                    <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, lineHeight: 1.6, margin: "4px 0 0" }}>
+              <div className="mc-panel-body">
+                <div className="mc-setting-row">
+                  <div className="mc-setting-text">
+                    <h3 className="mc-setting-title">启用初始 AIP 功能</h3>
+                    <p className="mc-setting-desc">
                       Palantir AIP 将生成式 AI 与业务运营连接。这些功能和辅助服务利用托管在 Palantir Microsoft Azure 环境中的大语言模型。启用这些功能即表示您同意遵守 Palantir 的 AIP 补充协议。
                     </p>
                   </div>
                   <ToggleSwitch checked={aipEnabled} onChange={setAipEnabled} />
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: 0 }}>限制 AIP 到指定组织</h3>
-                    <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, lineHeight: 1.6, margin: "4px 0 0" }}>
+                <div className="mc-setting-row">
+                  <div className="mc-setting-text">
+                    <h3 className="mc-setting-title">限制 AIP 到指定组织</h3>
+                    <p className="mc-setting-desc">
                       将 AIP 启用限制到特定组织。如果启用此设置，则只有下方选中的组织才能使用 AIP，其他组织将无法使用。
                     </p>
                   </div>
@@ -675,9 +626,9 @@ export function ModelCatalogPage() {
                 </div>
 
                 {orgRestricted && (
-                  <div style={{ borderTop: "1px solid var(--aos-divider)", paddingTop: 16 }}>
-                    <div style={{ position: "relative", marginBottom: 8 }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--aos-faint)" strokeWidth="2" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}>
+                  <div className="mc-org-section">
+                    <div className="mc-org-search">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <circle cx="11" cy="11" r="7" /><path d="M20 20l-3-3" strokeLinecap="round" />
                       </svg>
                       <input
@@ -685,17 +636,16 @@ export function ModelCatalogPage() {
                         placeholder="搜索组织..."
                         value={orgSearch}
                         onChange={(e) => setOrgSearch(e.target.value)}
-                        style={{ width: "100%", paddingLeft: 36, paddingRight: 16, padding: "8px 16px 8px 36px", fontSize: 13, border: "1px solid var(--aos-border)", borderRadius: 8, outline: "none" }}
+                        className="mc-org-search-input"
                       />
                     </div>
-                    <div style={{ maxHeight: 160, overflowY: "auto" }}>
+                    <div className="mc-org-list">
                       {filteredOrgs.map(([name, checked]) => (
-                        <label key={name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", cursor: "pointer", borderRadius: 6, fontSize: 13, color: "var(--aos-text)" }}>
+                        <label key={name} className="mc-org-item">
                           <input
                             type="checkbox"
                             checked={checked}
                             onChange={() => setOrgs((prev) => ({ ...prev, [name]: !prev[name] }))}
-                            style={{ accentColor: "var(--aos-accent)" }}
                           />
                           {name}
                         </label>
@@ -706,49 +656,42 @@ export function ModelCatalogPage() {
               </div>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 16, borderTop: "1px solid var(--aos-divider)" }}>
-              <button style={{ padding: "6px 16px", fontSize: 12, border: "1px solid var(--aos-border)", borderRadius: 6, background: "var(--aos-surface)", color: "var(--aos-text)", cursor: "pointer" }}>取消</button>
-              <button style={{ padding: "6px 16px", fontSize: 12, border: "none", borderRadius: 6, background: "var(--aos-accent)", color: "var(--text-on-brand)", cursor: "pointer" }}>保存到分支</button>
+            <div className="mc-settings-actions">
+              <button className="mc-btn-default">取消</button>
+              <button className="mc-btn-primary">保存到分支</button>
             </div>
 
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", fontSize: 12 }}>
-              <span style={{ color: "var(--aos-text-secondary)", alignSelf: "center" }}>相关:</span>
-              <Link to="/aip/model-router" style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid var(--aos-border)", color: "var(--aos-text)", textDecoration: "none" }}>模型路由 →</Link>
-              <Link to="/aip/model-providers" style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid var(--aos-border)", color: "var(--aos-text)", textDecoration: "none" }}>模型供应商 →</Link>
+            <div className="mc-related-links">
+              <span className="mc-related-label">相关:</span>
+              <Link to="/aip/model-router" className="mc-related-link">模型路由 →</Link>
+              <Link to="/aip/model-providers" className="mc-related-link">模型供应商 →</Link>
             </div>
           </div>
         )}
 
         {/* === Enablement Tab === */}
         {tab === "enablement" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ background: "var(--aos-surface-hover)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: "12px 16px" }}>
-              <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", lineHeight: 1.6, margin: 0 }}>
+          <div className="mc-enablement-col">
+            <div className="mc-notice">
+              <p>
                 本页面反映的是从法律角度已启用的模型家族。实际可用的模型可能是这些模型的子集，具体取决于与 Palantir Hub 的连接情况以及地理限制对某些模型可用性的影响。
               </p>
             </div>
-            <div style={{ borderRadius: 8, border: "1px solid var(--aos-border)", background: "var(--aos-surface)", overflow: "hidden" }}>
-              <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--aos-divider)", fontSize: 14, fontWeight: 600, color: "var(--aos-text)" }}>
+            <div className="mc-family-list">
+              <div className="mc-family-header">
                 模型家族 ({MODEL_FAMILIES.length})
               </div>
               {MODEL_FAMILIES.map((f) => (
-                <div key={f.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: "1px solid var(--aos-divider)", fontSize: 13 }}>
+                <div key={f.id} className="mc-family-item">
                   <div>
-                    <div style={{ fontWeight: 500, color: "var(--aos-text)" }}>{f.name}</div>
-                    <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{f.provider}</div>
+                    <div className="mc-family-name">{f.name}</div>
+                    <div className="mc-family-provider">{f.provider}</div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <span style={{
-                      padding: "2px 10px",
-                      borderRadius: 12,
-                      fontSize: 11,
-                      fontWeight: 500,
-                      background: f.status === "enabled" ? "var(--aos-accent-light)" : "var(--aos-surface-hover)",
-                      color: f.status === "enabled" ? "var(--aos-blue-title)" : "var(--aos-text-secondary)",
-                    }}>
+                  <div className="mc-family-actions">
+                    <span className={`mc-status-badge ${f.status}`}>
                       {f.status === "enabled" ? "已启用" : "未启用"}
                     </span>
-                    <button style={{ fontSize: 12, color: "var(--aos-accent)", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>管理</button>
+                    <button className="mc-manage-btn">管理</button>
                   </div>
                 </div>
               ))}
@@ -758,28 +701,28 @@ export function ModelCatalogPage() {
 
         {/* === Registered Tab === */}
         {tab === "registered" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ borderRadius: 8, border: "1px solid var(--aos-border)", background: "var(--aos-surface)", overflow: "hidden" }}>
-              <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--aos-divider)", fontSize: 14, fontWeight: 600, color: "var(--aos-text)" }}>
+          <div className="mc-registered-col">
+            <div className="mc-panel">
+              <div className="mc-family-header">
                 已注册模型 ({MODEL_FAMILIES.filter((f) => f.status === "enabled").flatMap((f) => f.models).length})
               </div>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <table className="mc-reg-table">
                 <thead>
                   <tr>
-                    <th style={{ textAlign: "left", padding: "10px 16px", background: "var(--bg-surface-alt)", borderBottom: "1px solid var(--aos-border)", fontWeight: 600, color: "var(--aos-text-secondary)", fontSize: 11 }}>模型名称</th>
-                    <th style={{ textAlign: "left", padding: "10px 16px", background: "var(--bg-surface-alt)", borderBottom: "1px solid var(--aos-border)", fontWeight: 600, color: "var(--aos-text-secondary)", fontSize: 11 }}>供应商</th>
-                    <th style={{ textAlign: "left", padding: "10px 16px", background: "var(--bg-surface-alt)", borderBottom: "1px solid var(--aos-border)", fontWeight: 600, color: "var(--aos-text-secondary)", fontSize: 11 }}>配额状态</th>
+                    <th>模型名称</th>
+                    <th>供应商</th>
+                    <th>配额状态</th>
                   </tr>
                 </thead>
                 <tbody>
                   {MODEL_FAMILIES.filter((f) => f.status === "enabled").flatMap((f) =>
                     f.models.map((m) => ({ model: m, provider: f.provider, family: f.name })),
                   ).map((row) => (
-                    <tr key={row.model} style={{ borderBottom: "1px solid var(--aos-divider)" }}>
-                      <td style={{ padding: "10px 16px", fontWeight: 500, color: "var(--aos-text)" }}>{row.model}</td>
-                      <td style={{ padding: "10px 16px", color: "var(--aos-text-secondary)", fontSize: 12 }}>{row.provider}</td>
-                      <td style={{ padding: "10px 16px" }}>
-                        <span style={{ padding: "2px 8px", borderRadius: 12, fontSize: 11, background: "var(--aos-green-bg)", color: "var(--aos-green-600)" }}>已配额</span>
+                    <tr key={row.model}>
+                      <td className="mc-reg-name">{row.model}</td>
+                      <td className="secondary">{row.provider}</td>
+                      <td>
+                        <span className="mc-quota-badge">已配额</span>
                       </td>
                     </tr>
                   ))}
@@ -801,7 +744,7 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: b
       style={{
         width: 48,
         height: 24,
-        borderRadius: 12,
+        borderRadius: 2,
         background: checked ? "var(--aos-accent)" : "var(--aos-border-strong)",
         position: "relative",
         border: "none",

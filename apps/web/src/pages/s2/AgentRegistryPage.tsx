@@ -407,7 +407,7 @@ function AgentIcon({ type, bg, color }: { type: string; bg: string; color: strin
       style={{
         width: 40,
         height: 40,
-        borderRadius: 12,
+        borderRadius: 2,
         background: bg,
         display: "flex",
         alignItems: "center",
@@ -576,7 +576,7 @@ export function AgentRegistryPage() {
                 padding: "8px 16px",
                 fontSize: 13,
                 fontWeight: 500,
-                borderRadius: 8,
+                borderRadius: 2,
                 background: "var(--aos-indigo-600)",
                 color: "var(--text-on-brand)",
                 textDecoration: "none",
@@ -602,7 +602,7 @@ export function AgentRegistryPage() {
             <div
               key={i}
               style={{
-                borderRadius: 10,
+                borderRadius: 2,
                 border: "1px solid var(--aos-border)",
                 background: "var(--aos-surface)",
                 padding: 14,
@@ -634,7 +634,7 @@ export function AgentRegistryPage() {
                 onClick={() => setSourceTab(tab.id)}
                 style={{
                   padding: "6px 12px",
-                  borderRadius: 8,
+                  borderRadius: 2,
                   fontSize: 12,
                   fontWeight: 500,
                   border: `1px solid ${active ? "var(--aos-indigo-600)" : "var(--aos-border)"}`,
@@ -678,7 +678,7 @@ export function AgentRegistryPage() {
                 onClick={() => setStatusTab(tab.id)}
                 style={{
                   padding: "4px 10px",
-                  borderRadius: 6,
+                  borderRadius: 2,
                   fontSize: 11,
                   fontWeight: 500,
                   border: `1px solid ${active ? tab.color : "var(--aos-border)"}`,
@@ -707,7 +707,7 @@ export function AgentRegistryPage() {
               padding: "4px 10px",
               fontSize: 11,
               border: "1px solid var(--aos-border)",
-              borderRadius: 6,
+              borderRadius: 2,
               background: "var(--aos-surface)",
               color: "var(--aos-text)",
               outline: "none",
@@ -731,7 +731,7 @@ export function AgentRegistryPage() {
               padding: "6px 10px",
               fontSize: 12,
               border: "1px solid var(--aos-border)",
-              borderRadius: 8,
+              borderRadius: 2,
               width: 200,
               outline: "none",
             }}
@@ -744,7 +744,7 @@ export function AgentRegistryPage() {
               padding: "6px 10px",
               fontSize: 12,
               border: "1px solid var(--aos-border)",
-              borderRadius: 8,
+              borderRadius: 2,
               background: "var(--aos-surface)",
               color: "var(--aos-text)",
               outline: "none",
@@ -781,7 +781,7 @@ export function AgentRegistryPage() {
               <div
                 key={agent.id}
                 style={{
-                  borderRadius: 12,
+                  borderRadius: 2,
                   border: `1px solid ${isExternal ? "var(--aos-amber-border)" : "var(--aos-border)"}`,
                   background: isExternal ? "var(--aos-amber-bg)" : "var(--aos-surface)",
                   padding: 16,

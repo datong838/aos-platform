@@ -38,7 +38,7 @@ export function MaturityPage() {
       {/* 顶部状态条 · 对齐 aip-maturity.html 黄色背景卡片 */}
       <div
         style={{
-          borderRadius: 12,
+          borderRadius: 2,
           border: "1px solid rgba(251, 191, 36, 0.25)",
           background: "rgba(254, 243, 199, 0.5)",
           padding: "16px",
@@ -133,7 +133,7 @@ export function MaturityPage() {
       <div
         style={{
           marginTop: "1rem",
-          borderRadius: 12,
+          borderRadius: 2,
           border: "1px solid var(--aos-border)",
           background: "rgba(255, 255, 255, 0.4)",
           padding: "20px",
@@ -155,7 +155,7 @@ export function MaturityPage() {
               padding: "6px 12px",
               fontSize: 12,
               fontWeight: 500,
-              borderRadius: 8,
+              borderRadius: 2,
               border: "none",
               background: "#fbbf24",
               color: "#fff",
@@ -170,7 +170,7 @@ export function MaturityPage() {
             style={{
               padding: "6px 12px",
               fontSize: 12,
-              borderRadius: 8,
+              borderRadius: 2,
               border: "1px solid #fca5a5",
               background: "transparent",
               color: "#dc2626",
@@ -184,7 +184,7 @@ export function MaturityPage() {
             style={{
               padding: "6px 12px",
               fontSize: 12,
-              borderRadius: 8,
+              borderRadius: 2,
               border: "1px solid var(--aos-border)",
               background: "transparent",
               color: "var(--aos-text)",
@@ -201,7 +201,7 @@ export function MaturityPage() {
         <div
           style={{
             marginTop: 12,
-            borderRadius: 8,
+            borderRadius: 2,
             border: "1px solid rgba(244, 63, 94, 0.25)",
             background: "#fef2f2",
             padding: "16px",

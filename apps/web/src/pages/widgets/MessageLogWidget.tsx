@@ -27,7 +27,7 @@ const rowStyle = (mine: boolean): CSSProperties => ({
 const bubbleBase: CSSProperties = {
   maxWidth: "78%",
   padding: "8px 10px",
-  borderRadius: 10,
+  borderRadius: 2,
   fontSize: 12,
   lineHeight: 1.45,
 };

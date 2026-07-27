@@ -345,7 +345,7 @@ export function LogicCanvasPage() {
       </div>
 
       {err && (
-        <div style={{ background: "var(--aos-red-border)", color: "var(--aos-red)", padding: "8px 12px", borderRadius: 6, marginBottom: 12, fontSize: "0.85rem" }}>
+        <div style={{ background: "var(--aos-red-border)", color: "var(--aos-red)", padding: "8px 12px", borderRadius: 2, marginBottom: 12, fontSize: "0.85rem" }}>
           {err}
         </div>
       )}
@@ -364,7 +364,7 @@ export function LogicCanvasPage() {
           style={{
             background: "var(--aos-card)",
             border: "1px solid var(--aos-border)",
-            borderRadius: 8,
+            borderRadius: 2,
             padding: 12,
             overflowY: "auto",
           }}
@@ -388,7 +388,7 @@ export function LogicCanvasPage() {
                   padding: "8px 10px",
                   border: `1px solid ${KIND_COLORS[p.kind]}30`,
                   borderLeft: `3px solid ${KIND_COLORS[p.kind]}`,
-                  borderRadius: 6,
+                  borderRadius: 2,
                   background: "var(--aos-card)",
                   cursor: "grab",
                   textAlign: "left",
@@ -411,7 +411,7 @@ export function LogicCanvasPage() {
           style={{
             background: "var(--aos-card)",
             border: "1px solid var(--aos-border)",
-            borderRadius: 8,
+            borderRadius: 2,
             padding: 16,
             overflowY: "auto",
             minHeight: 400,
@@ -428,7 +428,7 @@ export function LogicCanvasPage() {
                 alignItems: "center",
                 justifyContent: "center",
                 border: "2px dashed var(--aos-border)",
-                borderRadius: 12,
+                borderRadius: 2,
                 color: "var(--aos-muted)",
                 fontSize: "0.95rem",
               }}
@@ -479,7 +479,7 @@ export function LogicCanvasPage() {
                         ? `2px solid ${KIND_COLORS[b.kind]}`
                         : "1px solid var(--aos-border)",
                       borderLeft: `4px solid ${KIND_COLORS[b.kind]}`,
-                      borderRadius: 6,
+                      borderRadius: 2,
                       background: selectedId === b.id
                         ? `${KIND_COLORS[b.kind]}10`
                         : "var(--aos-card)",
@@ -545,7 +545,7 @@ export function LogicCanvasPage() {
                           <div
                             key={p.id}
                             style={{
-                              borderRadius: 6,
+                              borderRadius: 2,
                               border: `1px solid ${p.color}60`,
                               background: `${p.color}0A`,
                               padding: "6px 8px",
@@ -571,7 +571,7 @@ export function LogicCanvasPage() {
                     <div
                       style={{
                         width: "100%", marginTop: 2,
-                        borderRadius: 6, border: "2px solid var(--aos-indigo-border)", background: "var(--aos-indigo-bg)",
+                        borderRadius: 2, border: "2px solid var(--aos-indigo-border)", background: "var(--aos-indigo-bg)",
                         padding: 8, fontSize: "0.68rem",
                       }}
                     >
@@ -643,7 +643,7 @@ export function LogicCanvasPage() {
             style={{
               background: "var(--aos-card)",
               border: "1px solid var(--aos-border)",
-              borderRadius: 8,
+              borderRadius: 2,
               padding: 12,
             }}
           >
@@ -811,7 +811,7 @@ export function LogicCanvasPage() {
                 {/* Branch 配置：条件表达式 + 双路分叉 */}
                 {selected.kind === "branch" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    <div style={{ fontSize: "0.72rem", color: "var(--aos-muted)", background: "var(--aos-red-bg)", padding: "6px 8px", borderRadius: 6, border: "1px solid var(--aos-red-border)" }}>
+                    <div style={{ fontSize: "0.72rem", color: "var(--aos-muted)", background: "var(--aos-red-bg)", padding: "6px 8px", borderRadius: 2, border: "1px solid var(--aos-red-border)" }}>
                       🔀 Branch Block · 根据 condition 表达式分叉到不同路径
                     </div>
                     {((selected.config.paths as BranchPath[]) || []).map((p, idx) => (
@@ -820,7 +820,7 @@ export function LogicCanvasPage() {
                         style={{
                           border: `1px solid ${p.color}40`,
                           borderLeft: `3px solid ${p.color}`,
-                          borderRadius: 6,
+                          borderRadius: 2,
                           padding: 10,
                           background: `${p.color}08`,
                         }}
@@ -899,7 +899,7 @@ export function LogicCanvasPage() {
                 {/* Handoff 配置：decision / artifacts / open_qs / handoff_to */}
                 {selected.kind === "handoff" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    <div style={{ fontSize: "0.72rem", color: "var(--aos-indigo-600)", background: "var(--aos-indigo-bg)", padding: "6px 8px", borderRadius: 6, border: "1px solid var(--aos-indigo-border)" }}>
+                    <div style={{ fontSize: "0.72rem", color: "var(--aos-indigo-600)", background: "var(--aos-indigo-bg)", padding: "6px 8px", borderRadius: 2, border: "1px solid var(--aos-indigo-border)" }}>
                       🔗 Handoff Block · 汇聚多路上下文，输出交接摘要
                     </div>
 
@@ -1049,7 +1049,7 @@ export function LogicCanvasPage() {
             <div style={{
               background: "var(--aos-card)",
               border: "1px solid var(--aos-border)",
-              borderRadius: 8,
+              borderRadius: 2,
               padding: 12,
               flex: 1,
               overflowY: "auto",
@@ -1067,7 +1067,7 @@ export function LogicCanvasPage() {
               {/* 预览模式增强：dryRun 试运行结果 + 统计 + 分支高亮 */}
               {execResults.length > 0 && (
                 <div style={{
-                  marginBottom: 8, padding: 10, borderRadius: 6,
+                  marginBottom: 8, padding: 10, borderRadius: 2,
                   background: dryRun ? "var(--aos-green-bg)" : "var(--aos-accent-light)",
                   border: `1px solid ${dryRun ? "var(--aos-green-border)" : "var(--aos-accent-border)"}`,
                 }}>
@@ -1153,7 +1153,7 @@ export function LogicCanvasPage() {
                   </summary>
                   <pre style={{
                     fontSize: "0.7rem", overflow: "auto", maxHeight: 200, marginTop: 6, padding: 8,
-                    background: "var(--aos-text)", color: "var(--aos-text-tertiary)", borderRadius: 6, lineHeight: 1.4,
+                    background: "var(--aos-text)", color: "var(--aos-text-tertiary)", borderRadius: 2, lineHeight: 1.4,
                   }}>
                     {output}
                   </pre>
@@ -1192,7 +1192,7 @@ export function LogicCanvasPage() {
             <div style={{
               background: "var(--aos-card)",
               border: "1px solid var(--aos-border)",
-              borderRadius: 8,
+              borderRadius: 2,
               padding: 12,
               flex: 1,
               overflowY: "auto",
@@ -1206,7 +1206,7 @@ export function LogicCanvasPage() {
                   <label key={t.kind} style={{
                     display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
                     border: `1px solid ${automationTriggers[t.kind] ? "var(--aos-blue)" : "var(--aos-border)"}`,
-                    borderRadius: 6, cursor: "pointer", fontSize: "0.78rem",
+                    borderRadius: 2, cursor: "pointer", fontSize: "0.78rem",
                     background: automationTriggers[t.kind] ? "var(--aos-blue)10" : "transparent",
                   }}>
                     <input
@@ -1222,7 +1222,7 @@ export function LogicCanvasPage() {
                   </label>
                 ))}
               </div>
-              <div style={{ marginTop: 12, padding: "8px 10px", background: "var(--aos-amber-bg)", borderRadius: 6, fontSize: "0.7rem", color: "var(--aos-amber-700)" }}>
+              <div style={{ marginTop: 12, padding: "8px 10px", background: "var(--aos-amber-bg)", borderRadius: 2, fontSize: "0.7rem", color: "var(--aos-amber-700)" }}>
                 💡 已启用 {Object.values(automationTriggers).filter(Boolean).length} 个触发器。变更将在下次执行时生效。
               </div>
             </div>

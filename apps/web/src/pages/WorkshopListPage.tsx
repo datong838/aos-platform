@@ -306,7 +306,7 @@ export function WorkshopListPage() {
                       flex: "0 0 200px",
                       maxWidth: 200,
                       border: "1px solid var(--aos-border)",
-                      borderRadius: 8,
+                      borderRadius: 2,
                       padding: 12,
                       background: "var(--aos-surface)",
                       cursor: "pointer",
@@ -428,7 +428,7 @@ export function WorkshopListPage() {
                     data-testid={`app-card-${m.id}`}
                     style={{
                       border: "1px solid var(--aos-border)",
-                      borderRadius: 8,
+                      borderRadius: 2,
                       padding: 14,
                       background: "var(--aos-surface)",
                       transition: "box-shadow 0.15s, border-color 0.15s",
@@ -445,7 +445,7 @@ export function WorkshopListPage() {
                         style={{
                           width: "100%",
                           height: 64,
-                          borderRadius: 6,
+                          borderRadius: 2,
                           background: `linear-gradient(135deg, ${catColor}20, ${catColor}05)`,
                           marginBottom: 10,
                           display: "flex",

@@ -200,7 +200,7 @@ export function OrderManagementPage() {
           {/* Main Panel */}
           <div style={{
             background: "#fff",
-            borderRadius: 8,
+            borderRadius: 2,
             border: "1px solid #E5E7EB",
             overflow: "hidden",
           }}>
@@ -248,7 +248,7 @@ export function OrderManagementPage() {
                   width: "100%",
                   padding: "6px 12px",
                   border: "1px solid #D1D5DB",
-                  borderRadius: 6,
+                  borderRadius: 2,
                   fontSize: 13,
                   outline: "none",
                 }}
@@ -330,7 +330,7 @@ export function OrderManagementPage() {
           {selectedOrder && (
             <div style={{
               background: "#fff",
-              borderRadius: 8,
+              borderRadius: 2,
               border: "1px solid #E5E7EB",
               padding: 16,
               display: "flex",
@@ -420,7 +420,7 @@ export function OrderManagementPage() {
         {/* Trend Chart */}
         <div style={{
           background: "#fff",
-          borderRadius: 8,
+          borderRadius: 2,
           border: "1px solid #E5E7EB",
           padding: 16,
         }}>
@@ -440,7 +440,7 @@ function StatCard({ title, value, sublabel, color }: { title: string; value: str
   return (
     <div style={{
       background: "#fff",
-      borderRadius: 8,
+      borderRadius: 2,
       border: "1px solid #E5E7EB",
       padding: 16,
       display: "flex",
@@ -532,7 +532,7 @@ function actionBtnStyle(bg: string): React.CSSProperties {
     fontSize: 13,
     fontWeight: 500,
     border: "none",
-    borderRadius: 6,
+    borderRadius: 2,
     background: bg,
     color: "#fff",
     cursor: "pointer",

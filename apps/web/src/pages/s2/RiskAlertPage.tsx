@@ -319,7 +319,7 @@ export function RiskAlertPage() {
               onClick={() => setSeverityFilter(sf.id)}
               style={{
                 padding: "6px 14px",
-                borderRadius: 6,
+                borderRadius: 2,
                 fontSize: 12,
                 fontWeight: 500,
                 cursor: "pointer",
@@ -349,7 +349,7 @@ export function RiskAlertPage() {
               padding: 48,
               color: "var(--aos-text-tertiary)",
               border: "1px solid var(--aos-border)",
-              borderRadius: 8,
+              borderRadius: 2,
               background: "var(--aos-surface)",
             }}
           >
@@ -359,7 +359,7 @@ export function RiskAlertPage() {
           <div
             style={{
               border: "1px solid var(--aos-border)",
-              borderRadius: 8,
+              borderRadius: 2,
               overflow: "hidden",
               background: "var(--aos-surface)",
             }}
@@ -554,7 +554,7 @@ function StatCard({
     <div
       style={{
         border: "1px solid var(--aos-border)",
-        borderRadius: 8,
+        borderRadius: 2,
         padding: 16,
         background: "var(--aos-surface)",
       }}
@@ -564,7 +564,7 @@ function StatCard({
           style={{
             width: 32,
             height: 32,
-            borderRadius: 6,
+            borderRadius: 2,
             background: bg,
             color,
             display: "flex",

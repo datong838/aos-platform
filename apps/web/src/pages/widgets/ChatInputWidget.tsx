@@ -12,7 +12,7 @@ const wrapStyle: CSSProperties = {
   alignItems: "center",
   gap: 8,
   padding: 8,
-  borderRadius: 8,
+  borderRadius: 2,
   border: "1px solid var(--aos-border)",
   background: "var(--aos-surface)",
 };
@@ -23,7 +23,7 @@ const inputStyle: CSSProperties = {
   color: "var(--aos-text-muted)",
   padding: "8px 10px",
   border: "1px dashed var(--aos-border)",
-  borderRadius: 6,
+  borderRadius: 2,
   background: "transparent",
   cursor: "not-allowed",
 };
@@ -34,7 +34,7 @@ const btnStyle: CSSProperties = {
   color: "#ffffff",
   background: ACCENT,
   border: "none",
-  borderRadius: 6,
+  borderRadius: 2,
   padding: "8px 14px",
   cursor: "not-allowed",
   opacity: 0.9,
