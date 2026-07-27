@@ -314,6 +314,9 @@ export function StatCardWidget({ config }: { config: Record<string, any> }) {
       <div style={{ fontSize: 26, fontWeight: 700, color }}>
         {loading ? "..." : value ?? "—"}
       </div>
+      {config.sublabel && (
+        <div style={{ fontSize: 11, color: "var(--aos-text-muted)" }}>{config.sublabel}</div>
+      )}
       {config.trend && (
         <div
           style={{

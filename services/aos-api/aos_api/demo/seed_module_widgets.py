@@ -65,6 +65,9 @@ def _build_widget_instances(module_id: str) -> list[dict]:
 
 def _build_canvas_config(module_id: str) -> dict:
     """Generate a canvas config for a module."""
+    if module_id == "dev-module-order":
+        return _build_order_canvas_config()
+
     instances = _build_widget_instances(module_id)
     children = [wi["id"] for wi in instances]
     return {
@@ -74,6 +77,99 @@ def _build_canvas_config(module_id: str) -> dict:
             "children": children,
         },
         "components": {wi["id"]: {"type": wi["type"], "config": wi["config"]} for wi in instances},
+    }
+
+
+def _build_order_canvas_config() -> dict:
+    """Order Management Dashboard — aligns with workshop-app-order.html visual."""
+    components = {
+        "root": {
+            "type": "page-layout",
+            "config": {"padding": 24, "gap": 16},
+            "children": ["grid-stats", "filter-order", "table-orders", "chart-trend"],
+        },
+        "grid-stats": {
+            "type": "horizontal-grid",
+            "config": {"cols": 4, "gap": 12},
+            "children": ["stat-total", "stat-pending", "stat-completed", "stat-revenue"],
+        },
+        "stat-total": {
+            "type": "stat-card",
+            "config": {
+                "title": "总订单",
+                "value": "1,847",
+                "sublabel": "本周新增 142",
+                "color": "blue",
+                "trend": "+12.3%",
+                "trendUp": True,
+            },
+        },
+        "stat-pending": {
+            "type": "stat-card",
+            "config": {
+                "title": "待处理",
+                "value": "23",
+                "sublabel": "需关注",
+                "color": "amber",
+            },
+        },
+        "stat-completed": {
+            "type": "stat-card",
+            "config": {
+                "title": "已完成",
+                "value": "1,782",
+                "sublabel": "完成率 96.5%",
+                "color": "green",
+            },
+        },
+        "stat-revenue": {
+            "type": "stat-card",
+            "config": {
+                "title": "总收入",
+                "value": "¥486K",
+                "sublabel": "本周 +12.3%",
+                "color": "indigo",
+                "trend": "+12.3%",
+                "trendUp": True,
+            },
+        },
+        "filter-order": {
+            "type": "filter-bar",
+            "config": {
+                "objectType": "Order",
+                "tabs": [
+                    {"key": "all", "label": "全部", "count": 1847},
+                    {"key": "pending", "label": "待处理", "count": 23},
+                    {"key": "shipped", "label": "已发货", "count": 42},
+                    {"key": "delivered", "label": "已签收", "count": 1782},
+                ],
+            },
+        },
+        "table-orders": {
+            "type": "object-table",
+            "config": {
+                "objectType": "Order",
+                "title": "订单列表",
+                "columns": [
+                    {"key": "order_no", "label": "订单号"},
+                    {"key": "customer_name", "label": "客户"},
+                    {"key": "order_date", "label": "日期"},
+                    {"key": "total_amount", "label": "金额"},
+                    {"key": "status", "label": "状态"},
+                ],
+            },
+        },
+        "chart-trend": {
+            "type": "trend-chart",
+            "config": {
+                "title": "近 7 天订单趋势",
+                "objectType": "Order",
+            },
+        },
+    }
+    return {
+        "layout": components["root"],
+        "components": components,
     }
 
 
