@@ -68,6 +68,7 @@ const WikiIndexPage = lazify(() => import("./WikiIndexPage"), "WikiIndexPage");
 const WidgetRegistryPage = lazify(() => import("./WidgetRegistryPage"), "WidgetRegistryPage");
 const VariablesPage = lazify(() => import("./VariablesPage"), "VariablesPage");
 const StylesPage = lazify(() => import("./StylesPage"), "StylesPage");
+const RiskAlertPage = lazify(() => import("./RiskAlertPage"), "RiskAlertPage");
 
 /** Paths promoted in T-UI S2 knife-1～3 ([43]/[45]/[49]). */
 export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
@@ -126,6 +127,7 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "workshop/variables", Component: VariablesPage },
   { path: "workshop/styles", Component: StylesPage },
   { path: "ontology/wiki-index", Component: WikiIndexPage },
+  { path: "workshop/risk-alerts", Component: RiskAlertPage },
 ];
 
 export const S2_LIVE_PATHS = new Set(S2_LIVE_ROUTES.map((r) => `/${r.path}`));
