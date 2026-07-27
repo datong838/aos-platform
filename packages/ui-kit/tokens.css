@@ -48,6 +48,79 @@ html[data-aos-theme="light"] {
   --aos-red: #E53E3E;
   --aos-red-bg: #FFF5F5;
   --aos-red-border: #FEB2B2;
+
+  /* === 品牌色统一别名层（语义化，指向 --aos-* 体系） ===
+     这些 --brand-* / --color-* / --bg-* / --text-* / --border-color
+     变量是对 --aos-* 的语义别名，用于替换 styles.css 中的硬编码颜色，
+     保证主题切换时通过单一变量源自动生效。 */
+  --brand-primary: var(--aos-accent);
+  --brand-primary-hover: var(--aos-accent-hover);
+  --brand-primary-light: var(--aos-accent-light);
+
+  --color-success: var(--aos-green);
+  --color-warning: var(--aos-amber);
+  --color-error: var(--aos-red);
+  --color-info: #0288D1;
+
+  --bg-primary: var(--aos-surface);
+  --bg-secondary: var(--aos-surface-hover);
+  --bg-tertiary: var(--aos-bg);
+  --text-primary: var(--aos-text);
+  --text-secondary: var(--aos-text-secondary);
+  --text-muted: var(--aos-text-tertiary);
+  --border-color: var(--aos-border);
+
+  /* 浅色主题专用别名 */
+  --bg-surface-alt: #F7FAFC;   /* 表头/次级背景 */
+  --bg-active-tint: #EBF3FB;   /* 选中行高亮背景 */
+  --text-on-brand: #FFFFFF;    /* 品牌色按钮上的文字 */
+  --text-faint: var(--aos-faint);
+
+  /* 阴影/遮罩（半透明黑） */
+  --shadow-color: rgba(0, 0, 0, 0.15);
+  --shadow-color-strong: rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.1);
+
+  /* === 扩展色板（Blue / Indigo / Purple / Gray 派生色阶） === */
+  /* Blue（与 --aos-accent 同色系，用于 info / 链接 / 蓝色徽章） */
+  --aos-blue: #3B82F6;
+  --aos-blue-600: #1D4ED8;
+  --aos-blue-bg: #E6F1FB;
+  --aos-blue-text: #185FA5;
+  --aos-blue-title: #0C447C;
+
+  /* Amber 色阶 */
+  --aos-amber-600: #D97706;
+  --aos-amber-700: #92400E;
+  --aos-amber-text: #854F0B;
+
+  /* Green 色阶 */
+  --aos-green-50: #ECFDF5;
+  --aos-green-600: #059669;
+  --aos-green-700: #047857;
+
+  /* Indigo */
+  --aos-indigo: #6366F1;
+  --aos-indigo-50: #EEF2FF;
+  --aos-indigo-600: #4F46E5;
+  --aos-indigo-bg: #EEF2FF;
+  --aos-indigo-border: #C7D2FE;
+
+  /* Purple */
+  --aos-purple-600: #7C3AED;
+
+  /* Gray */
+  --aos-gray-100: #F3F4F6;
+
+  /* 派生背景/边框（别名） */
+  --aos-bg-secondary: #F7FAFC;
+  --aos-border-light: #EDF2F7;
+
+  /* 画布网格线 / 遮罩 */
+  --grid-line: rgba(0, 0, 0, 0.04);
+  --overlay-scrim: rgba(0, 0, 0, 0.35);
 }
 
 /* === 深色主题 === */
@@ -97,4 +170,164 @@ html[data-aos-theme="dark"] {
   --aos-red: #E53E3E;
   --aos-red-bg: rgba(229, 62, 62, 0.1);
   --aos-red-border: rgba(229, 62, 62, 0.3);
+
+  /* === 暗色主题品牌色别名层（与浅色同名变量对应） === */
+  --brand-primary: var(--aos-accent);
+  --brand-primary-hover: var(--aos-accent-hover);
+  --brand-primary-light: var(--aos-accent-light);
+
+  --color-success: var(--aos-green);
+  --color-warning: var(--aos-amber);
+  --color-error: var(--aos-red);
+  --color-info: #4A9EFF;
+
+  --bg-primary: var(--aos-surface);
+  --bg-secondary: var(--aos-surface-hover);
+  --bg-tertiary: var(--aos-bg);
+  --text-primary: var(--aos-text);
+  --text-secondary: var(--aos-text-secondary);
+  --text-muted: var(--aos-text-tertiary);
+  --border-color: var(--aos-border);
+
+  --bg-surface-alt: rgba(255, 255, 255, 0.04);
+  --bg-active-tint: rgba(255, 255, 255, 0.06);
+  --text-on-brand: #FFFFFF;
+  --text-faint: var(--aos-faint);
+
+  /* 阴影/遮罩（暗色用半透明白） */
+  --shadow-color: rgba(255, 255, 255, 0.15);
+  --shadow-color-strong: rgba(255, 255, 255, 0.25);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+  /* === 扩展色板（暗色派生色阶） === */
+  --aos-blue: #60A5FA;
+  --aos-blue-600: #93C5FD;
+  --aos-blue-bg: rgba(59, 130, 246, 0.1);
+  --aos-blue-text: #93C5FD;
+  --aos-blue-title: #BFDBFE;
+
+  --aos-amber-600: #FBBF24;
+  --aos-amber-700: #FCD34D;
+  --aos-amber-text: #FBBF24;
+
+  --aos-green-50: rgba(16, 185, 129, 0.1);
+  --aos-green-600: #34D399;
+  --aos-green-700: #6EE7B7;
+
+  --aos-indigo: #818CF8;
+  --aos-indigo-50: rgba(99, 102, 241, 0.1);
+  --aos-indigo-600: #A5B4FC;
+  --aos-indigo-bg: rgba(99, 102, 241, 0.1);
+  --aos-indigo-border: rgba(99, 102, 241, 0.3);
+
+  --aos-purple-600: #A78BFA;
+
+  --aos-gray-100: rgba(255, 255, 255, 0.05);
+
+  --aos-bg-secondary: rgba(255, 255, 255, 0.04);
+  --aos-border-light: rgba(255, 255, 255, 0.06);
+
+  --grid-line: rgba(255, 255, 255, 0.04);
+  --overlay-scrim: rgba(0, 0, 0, 0.5);
+}
+
+/* === data-theme 兼容选择器 ===
+   现有体系使用 html[data-aos-theme="dark"]；此选择器让 [data-theme="dark"]
+   也能触发同一套暗色变量，保证 theme.ts 两种 API 都可用。 */
+[data-theme="dark"] {
+  /* 重新声明暗色 token（与 html[data-aos-theme="dark"] 一致） */
+  --aos-accent: #22d3ee;
+  --aos-accent-hover: #67e8f9;
+  --aos-accent-light: rgba(34, 211, 238, 0.1);
+  --aos-accent-border: rgba(34, 211, 238, 0.3);
+
+  --aos-bg: #020617;
+  --aos-aside: rgba(15, 23, 42, 0.92);
+  --aos-header: rgba(2, 6, 23, 0.92);
+  --aos-card: rgba(15, 23, 42, 0.72);
+  --aos-elevated: #0f172a;
+  --aos-surface: rgba(15, 23, 42, 0.72);
+  --aos-surface-hover: rgba(255, 255, 255, 0.04);
+  --aos-nav-dark: #1A1D29;
+  --aos-nav-dark-hover: #252A3A;
+
+  --aos-border: rgba(255, 255, 255, 0.08);
+  --aos-border-strong: rgba(255, 255, 255, 0.14);
+  --aos-divider: rgba(255, 255, 255, 0.06);
+
+  --aos-text: #f3f4f6;
+  --aos-muted: #9ca3af;
+  --aos-text-secondary: #9ca3af;
+  --aos-text-tertiary: #6b7280;
+  --aos-faint: #6b7280;
+
+  --aos-hover: rgba(255, 255, 255, 0.04);
+  --aos-active: rgba(255, 255, 255, 0.06);
+  --aos-input-bg: #0f172a;
+  --aos-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+
+  --aos-green: #38A169;
+  --aos-green-bg: rgba(56, 161, 105, 0.1);
+  --aos-green-border: rgba(56, 161, 105, 0.3);
+  --aos-amber: #D69E2E;
+  --aos-amber-bg: rgba(214, 158, 46, 0.1);
+  --aos-amber-border: rgba(214, 158, 46, 0.3);
+  --aos-red: #E53E3E;
+  --aos-red-bg: rgba(229, 62, 62, 0.1);
+  --aos-red-border: rgba(229, 62, 62, 0.3);
+
+  --brand-primary: var(--aos-accent);
+  --brand-primary-hover: var(--aos-accent-hover);
+  --brand-primary-light: var(--aos-accent-light);
+
+  --color-success: var(--aos-green);
+  --color-warning: var(--aos-amber);
+  --color-error: var(--aos-red);
+  --color-info: #4A9EFF;
+
+  --bg-primary: var(--aos-surface);
+  --bg-secondary: var(--aos-surface-hover);
+  --bg-tertiary: var(--aos-bg);
+  --text-primary: var(--aos-text);
+  --text-secondary: var(--aos-text-secondary);
+  --text-muted: var(--aos-text-tertiary);
+  --border-color: var(--aos-border);
+
+  --bg-surface-alt: rgba(255, 255, 255, 0.04);
+  --bg-active-tint: rgba(255, 255, 255, 0.06);
+  --text-on-brand: #FFFFFF;
+  --text-faint: var(--aos-faint);
+
+  --shadow-color: rgba(255, 255, 255, 0.15);
+  --shadow-color-strong: rgba(255, 255, 255, 0.25);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+  /* 扩展色板（与 html[data-aos-theme="dark"] 一致） */
+  --aos-blue: #60A5FA;
+  --aos-blue-600: #93C5FD;
+  --aos-blue-bg: rgba(59, 130, 246, 0.1);
+  --aos-blue-text: #93C5FD;
+  --aos-blue-title: #BFDBFE;
+  --aos-amber-600: #FBBF24;
+  --aos-amber-700: #FCD34D;
+  --aos-amber-text: #FBBF24;
+  --aos-green-50: rgba(16, 185, 129, 0.1);
+  --aos-green-600: #34D399;
+  --aos-green-700: #6EE7B7;
+  --aos-indigo: #818CF8;
+  --aos-indigo-50: rgba(99, 102, 241, 0.1);
+  --aos-indigo-600: #A5B4FC;
+  --aos-indigo-bg: rgba(99, 102, 241, 0.1);
+  --aos-indigo-border: rgba(99, 102, 241, 0.3);
+  --aos-purple-600: #A78BFA;
+  --aos-gray-100: rgba(255, 255, 255, 0.05);
+  --aos-bg-secondary: rgba(255, 255, 255, 0.04);
+  --aos-border-light: rgba(255, 255, 255, 0.06);
+
+  --grid-line: rgba(255, 255, 255, 0.04);
+  --overlay-scrim: rgba(0, 0, 0, 0.5);
 }
