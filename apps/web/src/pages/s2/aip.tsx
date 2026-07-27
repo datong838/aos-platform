@@ -12,6 +12,7 @@ import {
   BpToolbar,
   BpToolGrid,
 } from "./blueprintUi";
+import { BpArchitectureBar } from "../../components/bp/BpArchitectureBar";
 import { MODEL_CONFIG_NO_VAULT } from "../../lib/productCopy";
 
 const TOOL_CATS = [
@@ -1446,6 +1447,7 @@ export function ProvidersPage() {
       title="大模型接入(插件)"
       lede="每种供应商 = 一个插件（20 §3.1）。先安装插件，再填类型化配置；运行时经平台网关，不直连厂商。"
     >
+      <BpArchitectureBar activeLayer="L1" />
       <BpToolbar>
         <button
           type="button"
@@ -1963,6 +1965,7 @@ export function ModelRouterPage() {
       title="模型路由策略"
       lede="任务类型 · 出境 · 熔断降级。供应商安装与类型化配置见大模型接入(插件)。"
     >
+      <BpArchitectureBar activeLayer="L2" />
       <BpToolbar>
         <button
           type="button"

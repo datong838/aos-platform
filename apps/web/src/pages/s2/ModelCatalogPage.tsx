@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageChrome } from "../../components/PageChrome";
+import { BpArchitectureBar } from "../../components/bp/BpArchitectureBar";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -325,7 +326,6 @@ export function ModelCatalogPage() {
   });
   const [compareSet, setCompareSet] = useState<Set<string>>(new Set());
   const [showCompare, setShowCompare] = useState(false);
-  const [activeLayer, setActiveLayer] = useState<number | null>(null);
 
   const allProviders = useMemo(() => extractAllProviders(CATALOG_MODELS), []);
   const allCapabilities = useMemo(() => extractAllCapabilities(CATALOG_MODELS), []);
@@ -359,120 +359,28 @@ export function ModelCatalogPage() {
   return (
     <PageChrome title="模型目录" lede="管理 AIP 启用状态、模型家族和已注册模型">
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-        {/* 四层架构示意图（可交互，点击高亮） */}
-        <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 8, padding: 16, marginBottom: 16 }}>
-          <div style={{ fontSize: 11, color: "#6B7280", fontWeight: 600, textTransform: "uppercase", marginBottom: 8 }}>
-            模型管理四层架构 · 点击查看详情
-          </div>
-          <div style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
-            {[
-              {
-                idx: 0,
-                label: "L1",
-                name: "模型目录",
-                desc: "可发现模型清单",
-                href: null,
-                tone: "blue",
-                active: tab === "catalog",
-              },
-              {
-                idx: 1,
-                label: "L2",
-                name: "模型供应商",
-                desc: "凭据 · 连接",
-                href: "/aip/model-providers",
-                tone: "violet",
-              },
-              {
-                idx: 2,
-                label: "L3",
-                name: "模型路由",
-                desc: "策略 · Fallback · 熔断",
-                href: "/aip/model-router",
-                tone: "amber",
-              },
-              {
-                idx: 3,
-                label: "应用",
-                name: "AIP 智能体",
-                desc: "选模型 → 推理",
-                href: "/aip/agents",
-                tone: "green",
-              },
-            ].map((item, idx, arr) => {
-              const isActive = activeLayer === item.idx || (activeLayer === null && item.active);
-              const toneColor =
-                item.tone === "blue" ? "#2563EB" :
-                item.tone === "violet" ? "#7C3AED" :
-                item.tone === "amber" ? "#D97706" : "#059669";
-              const toneBg =
-                item.tone === "blue" ? "#EFF6FF" :
-                item.tone === "violet" ? "#F5F3FF" :
-                item.tone === "amber" ? "#FFFBEB" : "#F0FDF4";
-              return (
-                <div key={item.label} style={{ display: "flex", alignItems: "stretch", flex: 1 }}>
-                  <button
-                    type="button"
-                    onClick={() => setActiveLayer(activeLayer === item.idx ? null : item.idx)}
-                    style={{
-                      flex: 1,
-                      textAlign: "center",
-                      padding: 14,
-                      borderRadius: 8,
-                      margin: idx === 0 ? 0 : "0 0 0 4px",
-                      background: isActive ? toneBg : "#F9FAFB",
-                      border: isActive ? `2px solid ${toneColor}` : "1px solid #E5E7EB",
-                      cursor: "pointer",
-                      transition: "all 0.15s",
-                    }}
-                  >
-                    <div style={{
-                      fontSize: 10,
-                      color: isActive ? toneColor : "#9CA3AF",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      marginBottom: 4,
-                    }}>{item.label}</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: isActive ? toneColor : "#374151" }}>{item.name}</div>
-                    <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>{item.desc}</div>
-                    {item.href && (
-                      <Link
-                        to={item.href}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{ display: "inline-block", marginTop: 6, fontSize: 11, color: toneColor, textDecoration: "none" }}
-                      >
-                        进入 →
-                      </Link>
-                    )}
-                  </button>
-                  {idx < arr.length - 1 && (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" strokeWidth="2" style={{ flexShrink: 0, alignSelf: "center", margin: "0 2px" }}>
-                      <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+        {/* 四层架构定位条 */}
+        <div style={{ marginBottom: 16 }}>
+          <BpArchitectureBar activeLayer="L3" />
         </div>
 
         {/* 统计概览 */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
           {[
-            { label: "目录模型总数", value: catalogStats.total, color: "#2563EB" },
-            { label: "已注册", value: catalogStats.registered, color: "#059669" },
-            { label: "供应商数", value: catalogStats.providers, color: "#7C3AED" },
-            { label: "免费模型", value: catalogStats.free, color: "#D97706" },
+            { label: "目录模型总数", value: catalogStats.total, color: "var(--aos-accent)" },
+            { label: "已注册", value: catalogStats.registered, color: "var(--aos-green-600)" },
+            { label: "供应商数", value: catalogStats.providers, color: "var(--aos-purple-600)" },
+            { label: "免费模型", value: catalogStats.free, color: "var(--aos-amber-600)" },
           ].map((s) => (
-            <div key={s.label} style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 8, padding: 14 }}>
+            <div key={s.label} style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 14 }}>
               <div style={{ fontSize: 24, fontWeight: 700, color: s.color }}>{s.value}</div>
-              <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>{s.label}</div>
+              <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 2 }}>{s.label}</div>
             </div>
           ))}
         </div>
 
         {/* Tab 导航 */}
-        <div style={{ display: "flex", gap: 4, borderBottom: "1px solid #E5E7EB", marginBottom: 16 }}>
+        <div style={{ display: "flex", gap: 4, borderBottom: "1px solid var(--aos-border)", marginBottom: 16 }}>
           {([
             { id: "catalog", label: `目录浏览 (${catalogStats.total})` },
             { id: "settings", label: "AIP 设置" },
@@ -487,8 +395,8 @@ export function ModelCatalogPage() {
                 padding: "8px 16px",
                 fontSize: 13,
                 fontWeight: tab === t.id ? 500 : 400,
-                borderBottom: tab === t.id ? "2px solid #2563EB" : "2px solid transparent",
-                color: tab === t.id ? "#111827" : "#6B7280",
+                borderBottom: tab === t.id ? "2px solid var(--aos-accent)" : "2px solid transparent",
+                color: tab === t.id ? "var(--aos-text)" : "var(--aos-text-secondary)",
                 background: "none",
                 border: "none",
                 borderTop: "none",
@@ -506,9 +414,9 @@ export function ModelCatalogPage() {
         {tab === "catalog" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {/* 搜索 + 筛选条 */}
-            <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
               <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--aos-faint)" strokeWidth="2" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }}>
                   <circle cx="11" cy="11" r="7" /><path d="M20 20l-3-3" strokeLinecap="round" />
                 </svg>
                 <input
@@ -517,14 +425,14 @@ export function ModelCatalogPage() {
                   value={catalogFilter.query}
                   onChange={(e) => setCatalogFilter({ ...catalogFilter, query: e.target.value })}
                   aria-label="catalog-search"
-                  style={{ width: "100%", paddingLeft: 34, paddingRight: 12, padding: "8px 12px 8px 34px", fontSize: 13, border: "1px solid #E5E7EB", borderRadius: 6, outline: "none" }}
+                  style={{ width: "100%", paddingLeft: 34, paddingRight: 12, padding: "8px 12px 8px 34px", fontSize: 13, border: "1px solid var(--aos-border)", borderRadius: 6, outline: "none" }}
                 />
               </div>
               <select
                 value={catalogFilter.provider}
                 onChange={(e) => setCatalogFilter({ ...catalogFilter, provider: e.target.value })}
                 aria-label="filter-provider"
-                style={{ padding: "8px 12px", fontSize: 13, border: "1px solid #E5E7EB", borderRadius: 6, background: "#fff" }}
+                style={{ padding: "8px 12px", fontSize: 13, border: "1px solid var(--aos-border)", borderRadius: 6, background: "var(--aos-surface)" }}
               >
                 <option value="all">所有供应商</option>
                 {allProviders.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -533,7 +441,7 @@ export function ModelCatalogPage() {
                 value={catalogFilter.capability}
                 onChange={(e) => setCatalogFilter({ ...catalogFilter, capability: e.target.value })}
                 aria-label="filter-capability"
-                style={{ padding: "8px 12px", fontSize: 13, border: "1px solid #E5E7EB", borderRadius: 6, background: "#fff" }}
+                style={{ padding: "8px 12px", fontSize: 13, border: "1px solid var(--aos-border)", borderRadius: 6, background: "var(--aos-surface)" }}
               >
                 <option value="all">所有能力</option>
                 {allCapabilities.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -542,7 +450,7 @@ export function ModelCatalogPage() {
                 value={catalogFilter.priceTier}
                 onChange={(e) => setCatalogFilter({ ...catalogFilter, priceTier: e.target.value })}
                 aria-label="filter-price"
-                style={{ padding: "8px 12px", fontSize: 13, border: "1px solid #E5E7EB", borderRadius: 6, background: "#fff" }}
+                style={{ padding: "8px 12px", fontSize: 13, border: "1px solid var(--aos-border)", borderRadius: 6, background: "var(--aos-surface)" }}
               >
                 <option value="all">所有价位</option>
                 <option value="free">免费</option>
@@ -554,15 +462,15 @@ export function ModelCatalogPage() {
 
             {/* 对比操作条 */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 4px" }}>
-              <div style={{ fontSize: 13, color: "#6B7280" }}>
-                找到 <strong style={{ color: "#111827" }}>{filteredModels.length}</strong> 个模型
-                {compareSet.size > 0 && <> · 已选 <strong style={{ color: "#2563EB" }}>{compareSet.size}</strong>/3 用于对比</>}
+              <div style={{ fontSize: 13, color: "var(--aos-text-secondary)" }}>
+                找到 <strong style={{ color: "var(--aos-text)" }}>{filteredModels.length}</strong> 个模型
+                {compareSet.size > 0 && <> · 已选 <strong style={{ color: "var(--aos-accent)" }}>{compareSet.size}</strong>/3 用于对比</>}
               </div>
               {compareSet.size >= 2 && (
                 <button
                   type="button"
                   onClick={() => setShowCompare(true)}
-                  style={{ padding: "6px 14px", fontSize: 12, fontWeight: 500, border: "none", borderRadius: 6, background: "#2563EB", color: "#fff", cursor: "pointer" }}
+                  style={{ padding: "6px 14px", fontSize: 12, fontWeight: 500, border: "none", borderRadius: 6, background: "var(--aos-accent)", color: "var(--text-on-brand)", cursor: "pointer" }}
                 >
                   对比 ({compareSet.size})
                 </button>
@@ -571,8 +479,8 @@ export function ModelCatalogPage() {
 
             {/* 模型卡片网格 */}
             {filteredModels.length === 0 ? (
-              <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 8, padding: 40, textAlign: "center" }}>
-                <p style={{ fontSize: 14, color: "#6B7280", margin: 0 }}>无匹配模型，请调整筛选条件</p>
+              <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 40, textAlign: "center" }}>
+                <p style={{ fontSize: 14, color: "var(--aos-text-secondary)", margin: 0 }}>无匹配模型，请调整筛选条件</p>
               </div>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
@@ -592,8 +500,8 @@ export function ModelCatalogPage() {
                     <div
                       key={m.id}
                       style={{
-                        background: "#fff",
-                        border: isSelected ? "2px solid #2563EB" : "1px solid #E5E7EB",
+                        background: "var(--aos-surface)",
+                        border: isSelected ? "2px solid var(--aos-accent)" : "1px solid var(--aos-border)",
                         borderRadius: 8,
                         padding: 14,
                         display: "flex",
@@ -605,38 +513,38 @@ export function ModelCatalogPage() {
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           <div style={{
-                            width: 32, height: 32, borderRadius: 6, background: providerColor, color: "#fff",
+                            width: 32, height: 32, borderRadius: 6, background: providerColor, color: "var(--text-on-brand)",
                             display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14,
                           }}>
                             {providerInitial}
                           </div>
                           <div>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{m.name}</div>
-                            <div style={{ fontSize: 11, color: "#9CA3AF" }}>{m.provider}</div>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)" }}>{m.name}</div>
+                            <div style={{ fontSize: 11, color: "var(--aos-faint)" }}>{m.provider}</div>
                           </div>
                         </div>
                         {m.registered && (
-                          <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: "#D1FAE5", color: "#059669", fontWeight: 500 }}>已注册</span>
+                          <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: "var(--aos-green-bg)", color: "var(--aos-green-600)", fontWeight: 500 }}>已注册</span>
                         )}
                       </div>
 
                       {/* Specs */}
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 12 }}>
                         <div>
-                          <span style={{ color: "#9CA3AF" }}>参数量 </span>
-                          <span style={{ fontWeight: 500, color: "#374151" }}>{m.parameters}</span>
+                          <span style={{ color: "var(--aos-faint)" }}>参数量 </span>
+                          <span style={{ fontWeight: 500, color: "var(--aos-text)" }}>{m.parameters}</span>
                         </div>
                         <div>
-                          <span style={{ color: "#9CA3AF" }}>上下文 </span>
-                          <span style={{ fontWeight: 500, color: "#374151" }}>{m.contextWindow}</span>
+                          <span style={{ color: "var(--aos-faint)" }}>上下文 </span>
+                          <span style={{ fontWeight: 500, color: "var(--aos-text)" }}>{m.contextWindow}</span>
                         </div>
                         <div>
-                          <span style={{ color: "#9CA3AF" }}>输入 </span>
-                          <span style={{ fontWeight: 500, color: "#374151" }}>{m.inputPrice}</span>
+                          <span style={{ color: "var(--aos-faint)" }}>输入 </span>
+                          <span style={{ fontWeight: 500, color: "var(--aos-text)" }}>{m.inputPrice}</span>
                         </div>
                         <div>
-                          <span style={{ color: "#9CA3AF" }}>输出 </span>
-                          <span style={{ fontWeight: 500, color: "#374151" }}>{m.outputPrice}</span>
+                          <span style={{ color: "var(--aos-faint)" }}>输出 </span>
+                          <span style={{ fontWeight: 500, color: "var(--aos-text)" }}>{m.outputPrice}</span>
                         </div>
                       </div>
 
@@ -656,21 +564,21 @@ export function ModelCatalogPage() {
                       </div>
 
                       {/* Actions */}
-                      <div style={{ display: "flex", gap: 6, marginTop: "auto", paddingTop: 8, borderTop: "1px solid #F3F4F6" }}>
-                        <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#6B7280", cursor: "pointer" }}>
+                      <div style={{ display: "flex", gap: 6, marginTop: "auto", paddingTop: 8, borderTop: "1px solid var(--aos-divider)" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--aos-text-secondary)", cursor: "pointer" }}>
                           <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => toggleCompare(m.id)}
                             disabled={!isSelected && compareSet.size >= 3}
-                            style={{ accentColor: "#2563EB" }}
+                            style={{ accentColor: "var(--aos-accent)" }}
                           />
                           对比
                         </label>
                         {!m.registered ? (
                           <button style={{
                             marginLeft: "auto", padding: "4px 12px", fontSize: 12, fontWeight: 500,
-                            border: "none", borderRadius: 6, background: "#2563EB", color: "#fff", cursor: "pointer",
+                            border: "none", borderRadius: 6, background: "var(--aos-accent)", color: "var(--text-on-brand)", cursor: "pointer",
                           }}>
                             注册到供应商
                           </button>
@@ -679,7 +587,7 @@ export function ModelCatalogPage() {
                             to="/aip/model-router"
                             style={{
                               marginLeft: "auto", padding: "4px 12px", fontSize: 12, fontWeight: 500,
-                              border: "1px solid #E5E7EB", borderRadius: 6, background: "#fff", color: "#374151",
+                              border: "1px solid var(--aos-border)", borderRadius: 6, background: "var(--aos-surface)", color: "var(--aos-text)",
                               textDecoration: "none",
                             }}
                           >
@@ -697,25 +605,25 @@ export function ModelCatalogPage() {
             {showCompare && compareModels.length >= 2 && (
               <div style={{
                 position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-                background: "rgba(0,0,0,0.4)", zIndex: 50,
+                background: "var(--overlay-scrim)", zIndex: 50,
                 display: "flex", alignItems: "center", justifyContent: "center",
               }} onClick={() => setShowCompare(false)}>
                 <div
-                  style={{ background: "#fff", borderRadius: 12, padding: 24, maxWidth: 800, width: "90%", maxHeight: "80vh", overflowY: "auto" }}
+                  style={{ background: "var(--aos-surface)", borderRadius: 12, padding: 24, maxWidth: 800, width: "90%", maxHeight: "80vh", overflowY: "auto" }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                     <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>模型对比</h3>
-                    <button type="button" onClick={() => setShowCompare(false)} style={{ border: "none", background: "none", fontSize: 20, cursor: "pointer", color: "#6B7280" }}>×</button>
+                    <button type="button" onClick={() => setShowCompare(false)} style={{ border: "none", background: "none", fontSize: 20, cursor: "pointer", color: "var(--aos-text-secondary)" }}>×</button>
                   </div>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                     <thead>
                       <tr>
-                        <th style={{ textAlign: "left", padding: 8, borderBottom: "2px solid #E5E7EB", width: 100, color: "#6B7280", fontSize: 12 }}>属性</th>
+                        <th style={{ textAlign: "left", padding: 8, borderBottom: "2px solid var(--aos-border)", width: 100, color: "var(--aos-text-secondary)", fontSize: 12 }}>属性</th>
                         {compareModels.map((m) => (
-                          <th key={m.id} style={{ textAlign: "left", padding: 8, borderBottom: "2px solid #E5E7EB", color: "#111827" }}>
+                          <th key={m.id} style={{ textAlign: "left", padding: 8, borderBottom: "2px solid var(--aos-border)", color: "var(--aos-text)" }}>
                             {m.name}
-                            <div style={{ fontSize: 11, fontWeight: 400, color: "#9CA3AF" }}>{m.provider}</div>
+                            <div style={{ fontSize: 11, fontWeight: 400, color: "var(--aos-faint)" }}>{m.provider}</div>
                           </th>
                         ))}
                       </tr>
@@ -723,9 +631,9 @@ export function ModelCatalogPage() {
                     <tbody>
                       {buildComparisonRows(compareModels).map((row) => (
                         <tr key={row.field}>
-                          <td style={{ padding: 8, borderBottom: "1px solid #F3F4F6", color: "#6B7280", fontSize: 12, fontWeight: 500 }}>{row.field}</td>
+                          <td style={{ padding: 8, borderBottom: "1px solid var(--aos-divider)", color: "var(--aos-text-secondary)", fontSize: 12, fontWeight: 500 }}>{row.field}</td>
                           {row.values.map((v, i) => (
-                            <td key={i} style={{ padding: 8, borderBottom: "1px solid #F3F4F6", color: "#374151" }}>{v}</td>
+                            <td key={i} style={{ padding: 8, borderBottom: "1px solid var(--aos-divider)", color: "var(--aos-text)" }}>{v}</td>
                           ))}
                         </tr>
                       ))}
@@ -740,16 +648,16 @@ export function ModelCatalogPage() {
         {/* === Settings Tab === */}
         {tab === "settings" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "#fff", overflow: "hidden" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px", borderBottom: "1px solid #F3F4F6" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" strokeLinecap="round" /></svg>
-                <h2 style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: 0 }}>AIP 启用</h2>
+            <div style={{ borderRadius: 8, border: "1px solid var(--aos-border)", background: "var(--aos-surface)", overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px", borderBottom: "1px solid var(--aos-divider)" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--aos-purple-600)" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" strokeLinecap="round" /></svg>
+                <h2 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>AIP 启用</h2>
               </div>
               <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 20 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div style={{ flex: 1 }}>
-                    <h3 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: 0 }}>启用初始 AIP 功能</h3>
-                    <p style={{ fontSize: 12, color: "#6B7280", marginTop: 4, lineHeight: 1.6, margin: "4px 0 0" }}>
+                    <h3 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: 0 }}>启用初始 AIP 功能</h3>
+                    <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, lineHeight: 1.6, margin: "4px 0 0" }}>
                       Palantir AIP 将生成式 AI 与业务运营连接。这些功能和辅助服务利用托管在 Palantir Microsoft Azure 环境中的大语言模型。启用这些功能即表示您同意遵守 Palantir 的 AIP 补充协议。
                     </p>
                   </div>
@@ -758,8 +666,8 @@ export function ModelCatalogPage() {
 
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div style={{ flex: 1 }}>
-                    <h3 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: 0 }}>限制 AIP 到指定组织</h3>
-                    <p style={{ fontSize: 12, color: "#6B7280", marginTop: 4, lineHeight: 1.6, margin: "4px 0 0" }}>
+                    <h3 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: 0 }}>限制 AIP 到指定组织</h3>
+                    <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, lineHeight: 1.6, margin: "4px 0 0" }}>
                       将 AIP 启用限制到特定组织。如果启用此设置，则只有下方选中的组织才能使用 AIP，其他组织将无法使用。
                     </p>
                   </div>
@@ -767,9 +675,9 @@ export function ModelCatalogPage() {
                 </div>
 
                 {orgRestricted && (
-                  <div style={{ borderTop: "1px solid #F3F4F6", paddingTop: 16 }}>
+                  <div style={{ borderTop: "1px solid var(--aos-divider)", paddingTop: 16 }}>
                     <div style={{ position: "relative", marginBottom: 8 }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--aos-faint)" strokeWidth="2" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}>
                         <circle cx="11" cy="11" r="7" /><path d="M20 20l-3-3" strokeLinecap="round" />
                       </svg>
                       <input
@@ -777,17 +685,17 @@ export function ModelCatalogPage() {
                         placeholder="搜索组织..."
                         value={orgSearch}
                         onChange={(e) => setOrgSearch(e.target.value)}
-                        style={{ width: "100%", paddingLeft: 36, paddingRight: 16, padding: "8px 16px 8px 36px", fontSize: 13, border: "1px solid #E5E7EB", borderRadius: 8, outline: "none" }}
+                        style={{ width: "100%", paddingLeft: 36, paddingRight: 16, padding: "8px 16px 8px 36px", fontSize: 13, border: "1px solid var(--aos-border)", borderRadius: 8, outline: "none" }}
                       />
                     </div>
                     <div style={{ maxHeight: 160, overflowY: "auto" }}>
                       {filteredOrgs.map(([name, checked]) => (
-                        <label key={name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", cursor: "pointer", borderRadius: 6, fontSize: 13, color: "#374151" }}>
+                        <label key={name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", cursor: "pointer", borderRadius: 6, fontSize: 13, color: "var(--aos-text)" }}>
                           <input
                             type="checkbox"
                             checked={checked}
                             onChange={() => setOrgs((prev) => ({ ...prev, [name]: !prev[name] }))}
-                            style={{ accentColor: "#2563EB" }}
+                            style={{ accentColor: "var(--aos-accent)" }}
                           />
                           {name}
                         </label>
@@ -798,15 +706,15 @@ export function ModelCatalogPage() {
               </div>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 16, borderTop: "1px solid #F3F4F6" }}>
-              <button style={{ padding: "6px 16px", fontSize: 12, border: "1px solid #E5E7EB", borderRadius: 6, background: "#fff", color: "#374151", cursor: "pointer" }}>取消</button>
-              <button style={{ padding: "6px 16px", fontSize: 12, border: "none", borderRadius: 6, background: "#2563EB", color: "#fff", cursor: "pointer" }}>保存到分支</button>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 16, borderTop: "1px solid var(--aos-divider)" }}>
+              <button style={{ padding: "6px 16px", fontSize: 12, border: "1px solid var(--aos-border)", borderRadius: 6, background: "var(--aos-surface)", color: "var(--aos-text)", cursor: "pointer" }}>取消</button>
+              <button style={{ padding: "6px 16px", fontSize: 12, border: "none", borderRadius: 6, background: "var(--aos-accent)", color: "var(--text-on-brand)", cursor: "pointer" }}>保存到分支</button>
             </div>
 
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", fontSize: 12 }}>
-              <span style={{ color: "#6B7280", alignSelf: "center" }}>相关:</span>
-              <Link to="/aip/model-router" style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid #E5E7EB", color: "#111827", textDecoration: "none" }}>模型路由 →</Link>
-              <Link to="/aip/model-providers" style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid #E5E7EB", color: "#111827", textDecoration: "none" }}>模型供应商 →</Link>
+              <span style={{ color: "var(--aos-text-secondary)", alignSelf: "center" }}>相关:</span>
+              <Link to="/aip/model-router" style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid var(--aos-border)", color: "var(--aos-text)", textDecoration: "none" }}>模型路由 →</Link>
+              <Link to="/aip/model-providers" style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid var(--aos-border)", color: "var(--aos-text)", textDecoration: "none" }}>模型供应商 →</Link>
             </div>
           </div>
         )}
@@ -814,20 +722,20 @@ export function ModelCatalogPage() {
         {/* === Enablement Tab === */}
         {tab === "enablement" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: 8, padding: "12px 16px" }}>
-              <p style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.6, margin: 0 }}>
+            <div style={{ background: "var(--aos-surface-hover)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: "12px 16px" }}>
+              <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", lineHeight: 1.6, margin: 0 }}>
                 本页面反映的是从法律角度已启用的模型家族。实际可用的模型可能是这些模型的子集，具体取决于与 Palantir Hub 的连接情况以及地理限制对某些模型可用性的影响。
               </p>
             </div>
-            <div style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "#fff", overflow: "hidden" }}>
-              <div style={{ padding: "12px 16px", borderBottom: "1px solid #F3F4F6", fontSize: 14, fontWeight: 600, color: "#111827" }}>
+            <div style={{ borderRadius: 8, border: "1px solid var(--aos-border)", background: "var(--aos-surface)", overflow: "hidden" }}>
+              <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--aos-divider)", fontSize: 14, fontWeight: 600, color: "var(--aos-text)" }}>
                 模型家族 ({MODEL_FAMILIES.length})
               </div>
               {MODEL_FAMILIES.map((f) => (
-                <div key={f.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: "1px solid #F3F4F6", fontSize: 13 }}>
+                <div key={f.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: "1px solid var(--aos-divider)", fontSize: 13 }}>
                   <div>
-                    <div style={{ fontWeight: 500, color: "#111827" }}>{f.name}</div>
-                    <div style={{ fontSize: 12, color: "#6B7280" }}>{f.provider}</div>
+                    <div style={{ fontWeight: 500, color: "var(--aos-text)" }}>{f.name}</div>
+                    <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{f.provider}</div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <span style={{
@@ -835,12 +743,12 @@ export function ModelCatalogPage() {
                       borderRadius: 12,
                       fontSize: 11,
                       fontWeight: 500,
-                      background: f.status === "enabled" ? "#DBEAFE" : "#F3F4F6",
-                      color: f.status === "enabled" ? "#1E40AF" : "#6B7280",
+                      background: f.status === "enabled" ? "var(--aos-accent-light)" : "var(--aos-surface-hover)",
+                      color: f.status === "enabled" ? "var(--aos-blue-title)" : "var(--aos-text-secondary)",
                     }}>
                       {f.status === "enabled" ? "已启用" : "未启用"}
                     </span>
-                    <button style={{ fontSize: 12, color: "#2563EB", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>管理</button>
+                    <button style={{ fontSize: 12, color: "var(--aos-accent)", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>管理</button>
                   </div>
                 </div>
               ))}
@@ -851,27 +759,27 @@ export function ModelCatalogPage() {
         {/* === Registered Tab === */}
         {tab === "registered" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "#fff", overflow: "hidden" }}>
-              <div style={{ padding: "12px 16px", borderBottom: "1px solid #F3F4F6", fontSize: 14, fontWeight: 600, color: "#111827" }}>
+            <div style={{ borderRadius: 8, border: "1px solid var(--aos-border)", background: "var(--aos-surface)", overflow: "hidden" }}>
+              <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--aos-divider)", fontSize: 14, fontWeight: 600, color: "var(--aos-text)" }}>
                 已注册模型 ({MODEL_FAMILIES.filter((f) => f.status === "enabled").flatMap((f) => f.models).length})
               </div>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                 <thead>
                   <tr>
-                    <th style={{ textAlign: "left", padding: "10px 16px", background: "#F9FAFB", borderBottom: "1px solid #E5E7EB", fontWeight: 600, color: "#6B7280", fontSize: 11 }}>模型名称</th>
-                    <th style={{ textAlign: "left", padding: "10px 16px", background: "#F9FAFB", borderBottom: "1px solid #E5E7EB", fontWeight: 600, color: "#6B7280", fontSize: 11 }}>供应商</th>
-                    <th style={{ textAlign: "left", padding: "10px 16px", background: "#F9FAFB", borderBottom: "1px solid #E5E7EB", fontWeight: 600, color: "#6B7280", fontSize: 11 }}>配额状态</th>
+                    <th style={{ textAlign: "left", padding: "10px 16px", background: "var(--bg-surface-alt)", borderBottom: "1px solid var(--aos-border)", fontWeight: 600, color: "var(--aos-text-secondary)", fontSize: 11 }}>模型名称</th>
+                    <th style={{ textAlign: "left", padding: "10px 16px", background: "var(--bg-surface-alt)", borderBottom: "1px solid var(--aos-border)", fontWeight: 600, color: "var(--aos-text-secondary)", fontSize: 11 }}>供应商</th>
+                    <th style={{ textAlign: "left", padding: "10px 16px", background: "var(--bg-surface-alt)", borderBottom: "1px solid var(--aos-border)", fontWeight: 600, color: "var(--aos-text-secondary)", fontSize: 11 }}>配额状态</th>
                   </tr>
                 </thead>
                 <tbody>
                   {MODEL_FAMILIES.filter((f) => f.status === "enabled").flatMap((f) =>
                     f.models.map((m) => ({ model: m, provider: f.provider, family: f.name })),
                   ).map((row) => (
-                    <tr key={row.model} style={{ borderBottom: "1px solid #F3F4F6" }}>
-                      <td style={{ padding: "10px 16px", fontWeight: 500, color: "#111827" }}>{row.model}</td>
-                      <td style={{ padding: "10px 16px", color: "#6B7280", fontSize: 12 }}>{row.provider}</td>
+                    <tr key={row.model} style={{ borderBottom: "1px solid var(--aos-divider)" }}>
+                      <td style={{ padding: "10px 16px", fontWeight: 500, color: "var(--aos-text)" }}>{row.model}</td>
+                      <td style={{ padding: "10px 16px", color: "var(--aos-text-secondary)", fontSize: 12 }}>{row.provider}</td>
                       <td style={{ padding: "10px 16px" }}>
-                        <span style={{ padding: "2px 8px", borderRadius: 12, fontSize: 11, background: "#D1FAE5", color: "#059669" }}>已配额</span>
+                        <span style={{ padding: "2px 8px", borderRadius: 12, fontSize: 11, background: "var(--aos-green-bg)", color: "var(--aos-green-600)" }}>已配额</span>
                       </td>
                     </tr>
                   ))}
@@ -894,7 +802,7 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: b
         width: 48,
         height: 24,
         borderRadius: 12,
-        background: checked ? "#2563EB" : "#E5E7EB",
+        background: checked ? "var(--aos-accent)" : "var(--aos-border-strong)",
         position: "relative",
         border: "none",
         cursor: "pointer",
@@ -909,9 +817,9 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: b
         width: 20,
         height: 20,
         borderRadius: "50%",
-        background: "#fff",
+        background: "var(--aos-surface)",
         transition: "left 0.15s",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        boxShadow: "var(--shadow-sm)",
       }} />
     </button>
   );
