@@ -6,6 +6,7 @@ import { NavIcon } from "../shell/icons";
 import { BpBanner } from "./s2/blueprintUi";
 import { ActionFormWidget, GraphViewWidget, MetricCardWidget, resolveRenderKind } from "./canvasWidgets";
 import { ComponentRenderer, type ComponentTree } from "./ComponentRenderer";
+import { ComponentTreeEditor } from "./ComponentTreeEditor";
 import {
   DashboardTab,
   DataTab,
@@ -155,7 +156,7 @@ const KIND_ICON: Record<CanvasKind, string> = {
   "trend-chart": "📉",
 };
 
-export function normalizeLayout(widgets: unknown): CanvasNode[] {
+export function normalizeLayout(widgets: unknown, objectType?: string): CanvasNode[] {
   if (!Array.isArray(widgets) || widgets.length === 0) return structuredClone(DEFAULT_LAYOUT);
   if (typeof widgets[0] === "string") {
     return (widgets as string[]).map((w, i) => {
@@ -166,15 +167,18 @@ export function normalizeLayout(widgets: unknown): CanvasNode[] {
           ? "buddy"
           : lower.includes("action")
             ? "action"
-            : lower.includes("graph")
+            : lower.includes("graph") || lower.includes("chart") || lower.includes("trend")
               ? "graph"
-              : lower.includes("metric")
+              : lower.includes("metric") || lower.includes("stat") || lower.includes("kpi")
                 ? "metric"
-                : lower.includes("overlay") || (lower.includes("view") && !lower.includes("graph"))
+                : lower.includes("overlay") || lower.includes("detail") || lower.includes("drawer") || (lower.includes("view") && !lower.includes("graph"))
                   ? "overlay"
                   : lower.includes("stub")
                     ? "stub"
-                    : "table";
+                    : lower.includes("header") || lower.includes("page")
+                      ? "page-header"
+                      : "table";
+      const objType = objectType || "WorkOrder";
       return {
         id: `n-${i}-${kind}`,
         kind,
@@ -191,14 +195,16 @@ export function normalizeLayout(widgets: unknown): CanvasNode[] {
           kind === "filter"
             ? { site: "DC-East" }
             : kind === "table"
-              ? { objectType: "WorkOrder" }
+              ? { objectType: objType }
               : kind === "action"
                 ? { actionTypeId: "CloseWorkOrder" }
                 : kind === "graph"
-                  ? { objectType: "WorkOrder", objectId: "wo-1001" }
+                  ? { objectType: objType, objectId: "wo-1001" }
                   : kind === "metric"
-                    ? { objectType: "WorkOrder", groupBy: "status" }
-                    : undefined,
+                    ? { objectType: objType, groupBy: "status" }
+                    : kind === "overlay"
+                      ? { objectType: objType, objectId: "wo-1001" }
+                      : undefined,
       };
     });
   }
@@ -511,7 +517,6 @@ export function CanvasPage() {
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    console.log("[dnd-kit] dragStart", active.id);
     const item = palette.find((p) => p.kind === active.id);
     if (item) {
       setActiveItem(item);
@@ -520,17 +525,14 @@ export function CanvasPage() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    console.log("[dnd-kit] dragEnd", active.id, over?.id, JSON.stringify(over));
     setActiveItem(null);
 
     const activeKind = active.id as CanvasKind;
     if (KIND_SET.has(activeKind)) {
-      if (over?.id === "canvas-drop-zone") {
+      const isOverCanvas = over?.id === "canvas-drop-zone" || nodes.some((n) => n.id === over?.id);
+      if (isOverCanvas) {
         addNode(activeKind);
         setDirty(true);
-        console.log("[dnd-kit] node added:", activeKind);
-      } else {
-        console.log("[dnd-kit] over id mismatch:", over?.id, "expected: canvas-drop-zone");
       }
       return;
     }
@@ -599,10 +601,12 @@ export function CanvasPage() {
       res.items?.[0];
     if (prefer) {
       setModuleId(prefer.id);
-      const layout = normalizeLayout(prefer.widgets);
+      const layout = normalizeLayout(prefer.widgets, prefer.objectType);
       setNodes(layout);
       setSelected(layout[0]?.id || "");
-      setComponentTree(prefer.components && Object.keys(prefer.components).length > 0 ? prefer.components : null);
+      const tree = prefer.components && Object.keys(prefer.components).length > 0 ? prefer.components : null;
+      setComponentTree(tree);
+      setCanvasMode(tree ? "preview" : "widget");
       setDirty(false);
     }
   }, []);
@@ -664,12 +668,13 @@ export function CanvasPage() {
     setErr(null);
     try {
       const mod = await apiGet<ModuleRow>(`/v1/modules/${encodeURIComponent(id)}`);
-      const layout = normalizeLayout(mod.widgets);
+      const layout = normalizeLayout(mod.widgets, mod.objectType);
       setNodes(layout);
       setSelected(layout[0]?.id || "");
       const tree =
         mod.components && Object.keys(mod.components).length > 0 ? mod.components : null;
       setComponentTree(tree);
+      setCanvasMode(tree ? "preview" : "widget");
       setDirty(false);
       setMsg(
         tree
@@ -811,13 +816,19 @@ export function CanvasPage() {
     }
     setErr(null);
     try {
-      await apiPatch(`/v1/modules/${encodeURIComponent(moduleId)}`, { widgets: nodes });
+      if (componentTree) {
+        await apiPatch(`/v1/modules/${encodeURIComponent(moduleId)}`, { components: componentTree });
+      } else {
+        await apiPatch(`/v1/modules/${encodeURIComponent(moduleId)}`, { widgets: nodes });
+      }
       const rt = await apiGet<{ layout?: { widgets?: unknown } }>(
         `/v1/modules/${encodeURIComponent(moduleId)}/runtime`,
       );
       setDirty(false);
       setMsg(
-        `已保存 Layout · runtime widgets=${Array.isArray(rt.layout?.widgets) ? rt.layout!.widgets!.length : "?"} · 可打开模块接口页核对`,
+        componentTree
+          ? `已保存组件树 · ${Object.keys(componentTree).length} 个组件 · 可打开模块接口页核对`
+          : `已保存 Layout · runtime widgets=${Array.isArray(rt.layout?.widgets) ? rt.layout!.widgets!.length : "?"} · 可打开模块接口页核对`,
       );
     } catch (e) {
       setErr(String((e as Error).message || e));
@@ -1038,7 +1049,8 @@ export function CanvasPage() {
               </div>
             ) : (
             <div className="p-slate-body">
-          <aside className={`p-slate-tree${leftCollapsed ? " is-collapsed" : ""}`}>
+          {!componentTree && (
+            <aside className={`p-slate-tree${leftCollapsed ? " is-collapsed" : ""}`}>
             {leftCollapsed ? (
               <button
                 type="button"
@@ -1171,34 +1183,22 @@ export function CanvasPage() {
               </>
             )}
           </aside>
+          )}
 
-          <CanvasDropZone disabled={!!componentTree}>
-            {componentTree ? (
-              <div className="p-slate-live-app" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "6px 10px",
-                    borderRadius: 6,
-                    background: "rgba(79,70,229,0.08)",
-                    border: "1px solid #c7d2fe",
-                    fontSize: 11,
-                    color: "#4f46e5",
-                  }}
-                >
-                  <span>
-                    ● 应用预览（运行态）· {Object.keys(componentTree).length} 组件 ·
-                    root={componentTree.root?.type || "—"}
-                  </span>
-                  <span style={{ fontSize: 10, opacity: 0.7 }}>
-                    可编辑应用（运行态只读预览）
-                  </span>
-                </div>
-                <ComponentRenderer components={componentTree} />
-              </div>
-            ) : nodes.length === 0 ? (
+          {componentTree ? (
+            <ComponentTreeEditor
+              tree={componentTree}
+              onChange={(tree) => {
+                setComponentTree(tree);
+                setDirty(true);
+              }}
+              rightCollapsed={rightCollapsed}
+              onToggleRight={() => setRightCollapsed((v) => !v)}
+            />
+          ) : (
+          <>
+          <CanvasDropZone disabled={false}>
+            {nodes.length === 0 ? (
               <p className="muted" style={{ textAlign: "center", padding: "40px" }}>
                 从左侧调色板添加 Widget 开始构建
               </p>
@@ -1712,6 +1712,8 @@ export function CanvasPage() {
               </>
             )}
           </aside>
+          </>
+          )}
         </div>
             )}
           </div>
@@ -1880,6 +1882,7 @@ function DraggablePaletteItem({ item, onClick }: { item: PaletteItem; onClick: (
         gap: "4px",
         color: "var(--aos-text)",
         opacity: isDragging ? 0.5 : 1,
+        touchAction: "none",
       }}
     >
       <span style={{ fontSize: "12px" }}>{KIND_ICON[item.kind] || "📦"}</span>
