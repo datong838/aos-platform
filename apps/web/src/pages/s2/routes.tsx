@@ -71,6 +71,10 @@ const StylesPage = lazify(() => import("./StylesPage"), "StylesPage");
 const DataConnectionPage = lazify(() => import("./DataConnectionPage"), "DataConnectionPage");
 const DataSourceCreatePage = lazify(() => import("./DataSourceCreatePage"), "DataSourceCreatePage");
 const RiskAlertPage = lazify(() => import("./RiskAlertPage"), "RiskAlertPage");
+const PropertyEditorPage = lazify(() => import("./PropertyEditorPage"), "PropertyEditorPage");
+const FunctionEditorPage = lazify(() => import("./FunctionEditorPage"), "FunctionEditorPage");
+const WikiDetailPage = lazify(() => import("./WikiDetailPage"), "WikiDetailPage");
+const WikiDiffPage = lazify(() => import("./WikiDiffPage"), "WikiDiffPage");
 
 /** Paths promoted in T-UI S2 knife-1～3 ([43]/[45]/[49]). */
 export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
@@ -132,6 +136,10 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "workshop/styles", Component: StylesPage },
   { path: "ontology/wiki-index", Component: WikiIndexPage },
   { path: "workshop/risk-alerts", Component: RiskAlertPage },
+  { path: "ontology/properties/:typeId", Component: PropertyEditorPage },
+  { path: "ontology/functions", Component: FunctionEditorPage },
+  { path: "ontology/wiki/:wikiId", Component: WikiDetailPage },
+  { path: "ontology/wiki/:wikiId/diff", Component: WikiDiffPage },
 ];
 
 export const S2_LIVE_PATHS = new Set(S2_LIVE_ROUTES.map((r) => `/${r.path}`));
