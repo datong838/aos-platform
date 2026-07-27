@@ -255,7 +255,7 @@ export function MediaSetsPage() {
       <div
         className={`card${dragOver ? " bp-drag-over" : ""}`}
         style={{
-          border: dragOver ? "2px dashed #2563eb" : "2px dashed #cbd5e1",
+          border: dragOver ? "2px dashed var(--aos-accent)" : "2px dashed var(--aos-border-strong)",
           borderRadius: 8,
           padding: "1.5rem",
           textAlign: "center",
@@ -287,7 +287,7 @@ export function MediaSetsPage() {
 
       {/* Batch operations */}
       {selected.size > 0 && (
-        <div className="filter-bar" style={{ background: "#eff6ff", padding: "0.5rem 0.75rem", borderRadius: 6, marginBottom: "0.75rem" }}>
+        <div className="filter-bar" style={{ background: "var(--aos-accent-light)", padding: "0.5rem 0.75rem", borderRadius: 6, marginBottom: "0.75rem" }}>
           <span className="aos-text">已选 {selected.size} 项</span>
           <input
             type="text"
@@ -311,7 +311,7 @@ export function MediaSetsPage() {
               <option key={k} value={k}>{v}</option>
             ))}
           </select>
-          <button type="button" className="btn" style={{ color: "#dc2626" }} onClick={() => void handleBatchDelete()}>
+          <button type="button" className="btn" style={{ color: "var(--aos-red)" }} onClick={() => void handleBatchDelete()}>
             批量删除
           </button>
           <button type="button" className="btn" onClick={() => clearSelection()}>
@@ -337,7 +337,7 @@ export function MediaSetsPage() {
               className={`card${isSel ? " is-selected" : ""}`}
               style={{
                 padding: "0.5rem",
-                border: isSel ? "2px solid #2563eb" : "1px solid #e2e8f0",
+                border: isSel ? "2px solid var(--aos-accent)" : "1px solid var(--aos-border)",
                 borderRadius: 6,
                 cursor: "pointer",
               }}
@@ -349,9 +349,9 @@ export function MediaSetsPage() {
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: "1.5rem",
-                background: m.category === "image" ? "#dbeafe" :
-                  m.category === "video" ? "#fef3c7" :
-                  m.category === "audio" ? "#fce7f3" : "#f1f5f9",
+                background: m.category === "image" ? "var(--aos-accent-light)" :
+                  m.category === "video" ? "var(--aos-amber-bg)" :
+                  m.category === "audio" ? "var(--aos-red-bg)" : "var(--aos-surface-hover)",
                 borderRadius: 4,
                 marginBottom: 4,
               }}>

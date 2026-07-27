@@ -293,8 +293,8 @@ export function DataSourceCreatePage() {
                 borderRadius: 4,
                 fontSize: "0.75rem",
                 fontWeight: i === step ? 700 : 400,
-                background: i < step ? "#d1fae5" : i === step ? "#dbeafe" : "#f1f5f9",
-                color: i < step ? "#065f46" : i === step ? "#1e40af" : "#64748b",
+                background: i < step ? "var(--aos-green-bg)" : i === step ? "var(--aos-accent-light)" : "var(--aos-surface-hover)",
+                color: i < step ? "var(--aos-green)" : i === step ? "var(--aos-accent)" : "var(--aos-text-secondary)",
               }}
             >
               <span
@@ -305,8 +305,8 @@ export function DataSourceCreatePage() {
                   width: 20,
                   height: 20,
                   borderRadius: "50%",
-                  background: i < step ? "#10b981" : i === step ? "#3b82f6" : "#cbd5e1",
-                  color: "#fff",
+                  background: i < step ? "var(--aos-green)" : i === step ? "var(--aos-accent)" : "var(--aos-border-strong)",
+                  color: "var(--text-on-brand)",
                   fontSize: "0.65rem",
                 }}
               >
@@ -315,7 +315,7 @@ export function DataSourceCreatePage() {
               {s.short}
             </div>
             {i < WIZARD_STEPS.length - 1 && (
-              <div style={{ flex: 1, height: 2, background: i < step ? "#10b981" : "#e2e8f0", margin: "0 4px" }} />
+              <div style={{ flex: 1, height: 2, background: i < step ? "var(--aos-green)" : "var(--aos-border)", margin: "0 4px" }} />
             )}
           </div>
         ))}
@@ -353,10 +353,10 @@ export function DataSourceCreatePage() {
                 style={{
                   cursor: "pointer",
                   textAlign: "left",
-                  border: selectedType?.id === t.id ? "2px solid #2563eb" : "1px solid #e2e8f0",
+                  border: selectedType?.id === t.id ? "2px solid var(--aos-accent)" : "1px solid var(--aos-border)",
                   padding: "0.75rem",
                   borderRadius: 6,
-                  background: "#fff",
+                  background: "var(--aos-surface)",
                 }}
                 onClick={() => setSelectedType(t)}
               >
@@ -367,7 +367,7 @@ export function DataSourceCreatePage() {
                 <p className="bp-discover-meta">{t.description}</p>
                 <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 4 }}>
                   {t.capabilities.map((c) => (
-                    <span key={c} className="muted" style={{ fontSize: "0.65rem", background: "#f1f5f9", padding: "1px 4px", borderRadius: 3 }}>
+                    <span key={c} className="muted" style={{ fontSize: "0.65rem", background: "var(--aos-surface-hover)", padding: "1px 4px", borderRadius: 3 }}>
                       {c}
                     </span>
                   ))}

@@ -437,10 +437,10 @@ export function DataHealthPage() {
                       borderRadius: 2,
                       background:
                         scoreToTone(p.score) === "ok"
-                          ? "var(--p-ok, #3b9b6e)"
+                          ? "var(--aos-green)"
                           : scoreToTone(p.score) === "warn"
-                            ? "var(--p-warn, #d97706)"
-                            : "var(--p-bad, #dc2626)",
+                            ? "var(--aos-amber)"
+                            : "var(--aos-red)",
                     }}
                   />
                   <span className="muted" style={{ fontSize: "0.7rem" }}>

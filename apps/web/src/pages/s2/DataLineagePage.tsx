@@ -312,7 +312,7 @@ export function DataLineagePage() {
                     key={edge.id}
                     d={d}
                     fill="none"
-                    stroke="var(--p-border-strong, #94a3b8)"
+                    stroke="var(--aos-border-strong)"
                     strokeWidth={1.5}
                     markerEnd="url(#arrow)"
                   />
@@ -320,7 +320,7 @@ export function DataLineagePage() {
               })}
               <defs>
                 <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-                  <path d="M0,0 L7,3 L0,6 Z" fill="var(--p-border-strong, #94a3b8)" />
+                  <path d="M0,0 L7,3 L0,6 Z" fill="var(--aos-border-strong)" />
                 </marker>
               </defs>
               {filteredNodes.map((n) => {
@@ -339,14 +339,14 @@ export function DataLineagePage() {
                       width={w}
                       height={h}
                       rx={4}
-                      fill={isSelected ? "var(--p-accent-soft, rgba(37,99,235,0.1))" : "var(--p-surface, #fff)"}
-                      stroke={isSelected ? "var(--p-accent, #2563eb)" : "var(--p-border, #e5e7eb)"}
+                      fill={isSelected ? "var(--aos-accent-light)" : "var(--aos-surface)"}
+                      stroke={isSelected ? "var(--aos-accent)" : "var(--aos-border)"}
                       strokeWidth={isSelected ? 2 : 1}
                     />
-                    <text x={n.x + 6} y={n.y + 16} fontSize="11" fontWeight="600" fill="var(--p-text, #1f2937)">
+                    <text x={n.x + 6} y={n.y + 16} fontSize="11" fontWeight="600" fill="var(--aos-text)">
                       {n.name.length > 14 ? n.name.slice(0, 12) + "…" : n.name}
                     </text>
-                    <text x={n.x + 6} y={n.y + 32} fontSize="9" fill="var(--p-text-muted, #6b7280)">
+                    <text x={n.x + 6} y={n.y + 32} fontSize="9" fill="var(--aos-text-secondary)">
                       {NODE_TYPE_LABEL[n.type]}
                     </text>
                     <circle
@@ -355,12 +355,12 @@ export function DataLineagePage() {
                       r={4}
                       fill={
                         n.status === "healthy"
-                          ? "var(--p-ok, #3b9b6e)"
+                          ? "var(--aos-green)"
                           : n.status === "stale"
-                            ? "var(--p-warn, #d97706)"
+                            ? "var(--aos-amber)"
                             : n.status === "error"
-                              ? "var(--p-bad, #dc2626)"
-                              : "var(--p-text-muted, #6b7280)"
+                              ? "var(--aos-red)"
+                              : "var(--aos-text-secondary)"
                       }
                     />
                   </g>
