@@ -1106,6 +1106,11 @@ def create_app() -> FastAPI:
     application.include_router(phase7_releases_router)
     application.include_router(phase7_ferry_router)
 
+    # FastAPI 0.115+ merges lifespan_context for every include_router,
+    # creating deeply nested closures that exceed Python's recursion limit
+    # with 500+ routers. Reset to the app's own lifespan to avoid the chain.
+    application.router.lifespan_context = lifespan
+
     log.info("aos-api_app_created version=%s", application.version)
     return application
 

@@ -9,7 +9,7 @@ export function readAppearancePreference(
 ): AppearancePreference {
   const raw = storage.getItem(APPEARANCE_STORAGE_KEY);
   if (raw === "light" || raw === "dark" || raw === "system") return raw;
-  return "light";
+  return "dark";
 }
 
 export function resolveTheme(

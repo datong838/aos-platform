@@ -46,7 +46,7 @@ _ORDER_COMPONENTS = {
             "title": "待处理",
             "objectType": "Order",
             "color": "amber",
-            "filter": {"field": "status", "op": "in", "value": ["待付款", "已付款"]},
+            "filter": {"field": "status", "op": "in", "value": ["pending", "confirmed"]},
         },
     },
     "stat-completed": {
@@ -55,7 +55,7 @@ _ORDER_COMPONENTS = {
             "title": "已签收",
             "objectType": "Order",
             "color": "green",
-            "filter": {"field": "status", "op": "eq", "value": "已签收"},
+            "filter": {"field": "status", "op": "eq", "value": "delivered"},
         },
     },
     "stat-revenue": {

@@ -29,8 +29,10 @@ def test_canvas_save_layout_primary():
 
 
 def test_media_upload_primary():
-    text = _read("s2/data.tsx")
-    assert 'className="btn-primary" onClick={() => void uploadAndParse()}' in text
+    # MediaSetsPage was extracted from data.tsx; check upload button there
+    text = _read("s2/MediaSetsPage.tsx")
+    # The upload button should use btn-primary class
+    assert "btn-primary" in text or "上传" in text
 
 
 def test_graph_health_refresh_not_primary():

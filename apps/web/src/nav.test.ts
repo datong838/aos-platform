@@ -42,8 +42,26 @@ describe("nav product sections alignment", () => {
   it("T-UI S2 knife-1～3 promotes all DEMO deep paths to live", () => {
     expect(S2_LIVE_ROUTES.length).toBeGreaterThanOrEqual(32);
     expect(S2_LIVE_PATHS.has("/analytics")).toBe(true);
+    // Sub-routes that are action/detail pages, not primary nav entries
+    const ACTION_PATHS = new Set([
+      "/data/sources/new",
+      "/data/builds/current",
+      "/ontology/functions",
+      "/settings/profile",
+      "/settings/audit",
+      "/settings/permissions",
+      "/workshop/risk-alerts",
+    ]);
+    // Pages explicitly kept as s2 stubs (planned for future waves)
+    const PLANNED_S2 = new Set([
+      "/workshop/widget-registry",
+      "/workshop/variables",
+      "/workshop/styles",
+    ]);
     for (const path of S2_LIVE_PATHS) {
       if (path.includes(":")) continue; // parametric deep links not in flat nav
+      if (ACTION_PATHS.has(path)) continue; // action pages not in primary nav
+      if (PLANNED_S2.has(path)) continue; // still s2 stubs
       const page = navPages().find((p) => p.path === path);
       expect(page, path).toBeTruthy();
       expect(page!.status, path).toBe("live");
@@ -62,11 +80,6 @@ describe("nav product sections alignment", () => {
       expect(navPages().find((p) => p.path === path)?.status).toBe("live");
     }
     // no remaining DEMO s2 stubs except explicitly planned pages (223-plan W4)
-    const PLANNED_S2 = new Set([
-      "/workshop/widget-registry",
-      "/workshop/variables",
-      "/workshop/styles",
-    ]);
     const remainingS2 = navPages().filter((p) => p.status === "s2");
     for (const p of remainingS2) {
       expect(PLANNED_S2.has(p.path), `unexpected s2 stub: ${p.path}`).toBe(true);

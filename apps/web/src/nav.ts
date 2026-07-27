@@ -33,6 +33,7 @@ export type IconName =
   | "server"
   | "stairs"
   | "plug"
+  | "plus-circle"
   | "spark"
   | "film"
   | "wrench"
@@ -520,6 +521,22 @@ export const NAV_ITEMS: NavItem[] = [
     icon: "plug",
     status: "live",
     crumbs: ["数据源", "数据链接器"],
+  },
+  {
+    id: "data-connections",
+    path: "/data/connections",
+    label: "数据连接",
+    icon: "plug",
+    status: "live",
+    crumbs: ["数据源", "数据连接"],
+  },
+  {
+    id: "data-source-create",
+    path: "/data/sources/new",
+    label: "新建数据源",
+    icon: "plus-circle",
+    status: "live",
+    crumbs: ["数据源", "新建数据源"],
   },
   {
     id: "data-connection-agents",

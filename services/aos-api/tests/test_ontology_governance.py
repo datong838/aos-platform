@@ -12,13 +12,18 @@ from aos_api.ontology_governance import (
 )
 
 
+def _days_ago(n: int) -> str:
+    """Return date string for n days ago."""
+    return (date.today() - timedelta(days=n)).strftime("%Y-%m-%d")
+
+
 # ── #38 Usage Metrics ──
 def test_usage_record_and_aggregate():
     eng = UsageMetricsEngine(window_days=7)
-    eng.record("read", user_id="u1", source="api", day="2026-07-20")
-    eng.record("read", user_id="u2", source="workshop", day="2026-07-20")
-    eng.record("write", user_id="u1", source="api", day="2026-07-21")
-    eng.record("interaction", user_id="u3", source="quiver", day="2026-07-21")
+    eng.record("read", user_id="u1", source="api", day=_days_ago(1))
+    eng.record("read", user_id="u2", source="workshop", day=_days_ago(1))
+    eng.record("write", user_id="u1", source="api", day=_days_ago(0))
+    eng.record("interaction", user_id="u3", source="quiver", day=_days_ago(0))
 
     m = eng.get_global()
     assert m.reads == 2
@@ -32,10 +37,10 @@ def test_usage_record_and_aggregate():
 
 def test_usage_per_object_type():
     eng = UsageMetricsEngine(window_days=7)
-    eng.record("read", user_id="u1", object_type="Employee", day="2026-07-20")
-    eng.record("read", user_id="u1", object_type="Employee", day="2026-07-20")
-    eng.record("write", user_id="u2", object_type="Employee", day="2026-07-21")
-    eng.record("read", user_id="u1", object_type="Department", day="2026-07-20")
+    eng.record("read", user_id="u1", object_type="Employee", day=_days_ago(1))
+    eng.record("read", user_id="u1", object_type="Employee", day=_days_ago(1))
+    eng.record("write", user_id="u2", object_type="Employee", day=_days_ago(0))
+    eng.record("read", user_id="u1", object_type="Department", day=_days_ago(1))
 
     emp = eng.get_object_type("Employee")
     assert emp.reads == 2
@@ -53,8 +58,8 @@ def test_usage_per_object_type():
 
 def test_usage_per_link_type():
     eng = UsageMetricsEngine(window_days=7)
-    eng.record("read", user_id="u1", link_type="reports_to", day="2026-07-20")
-    eng.record("read", user_id="u2", link_type="member_of", day="2026-07-21")
+    eng.record("read", user_id="u1", link_type="reports_to", day=_days_ago(1))
+    eng.record("read", user_id="u2", link_type="member_of", day=_days_ago(0))
 
     reports = eng.get_link_type("reports_to")
     assert reports.reads == 1
@@ -93,7 +98,7 @@ def test_usage_prune_old():
 
 def test_usage_reset():
     eng = UsageMetricsEngine(window_days=7)
-    eng.record("read", day="2026-07-20")
+    eng.record("read", day=_days_ago(1))
     assert eng.get_global().reads == 1
     eng.reset()
     assert eng.get_global().reads == 0
@@ -108,11 +113,11 @@ def test_usage_metric_model():
 def test_usage_multiple_sources():
     eng = UsageMetricsEngine(window_days=7)
     for i in range(10):
-        eng.record("read", source="workshop", day="2026-07-20")
+        eng.record("read", source="workshop", day=_days_ago(1))
     for i in range(5):
-        eng.record("read", source="quiver", day="2026-07-20")
+        eng.record("read", source="quiver", day=_days_ago(1))
     for i in range(3):
-        eng.record("read", source="api", day="2026-07-20")
+        eng.record("read", source="api", day=_days_ago(1))
 
     m = eng.get_global()
     assert m.sources["workshop"] == 10
