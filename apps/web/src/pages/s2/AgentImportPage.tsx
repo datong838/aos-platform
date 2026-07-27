@@ -2,24 +2,171 @@ import { useState } from "react";
 import { PageChrome } from "../../components/PageChrome";
 import { apiPost } from "../../api/client";
 
-type SourceType = "github" | "local" | "market";
-type AdapterType = "http" | "process" | "mcp" | "docker" | "session";
+export type SourceType = "github" | "local" | "market";
+export type AdapterType = "http" | "process" | "mcp" | "docker" | "session";
 
 const STEPS = [
   { num: 1, label: "选择来源" },
   { num: 2, label: "仓库扫描" },
-  { num: 3, label: "配置 Manifest" },
+  { num: 3, label: "映射配置" },
   { num: 4, label: "安全与网络" },
   { num: 5, label: "连通测试与安全扫描" },
 ];
 
-const ADAPTER_TYPES = [
+export const ADAPTER_TYPES = [
   { key: "http", label: "HTTP API", desc: "外部服务 URL", tag: "REST/GraphQL", color: "blue" },
   { key: "process", label: "Process Wrapper", desc: "沙箱子进程", tag: "Python/Node 脚本", color: "green", recommended: true },
   { key: "mcp", label: "MCP Bridge", desc: "协议桥接", tag: "MCP Server", color: "purple" },
   { key: "docker", label: "Docker Container", desc: "K8s Pod", tag: "独立运行环境", color: "amber" },
   { key: "session", label: "Session Gateway", desc: "长连接", tag: "音视频/数字人", color: "pink" },
 ];
+
+/** Adapter 详细配置 schema（用于 Adapter 联动右侧面板展示） */
+export const ADAPTER_DETAILS: Record<
+  AdapterType,
+  {
+    schema: { field: string; type: string; required: boolean; desc: string }[];
+    example: string;
+    compatibility: { item: string; status: "pass" | "warn" | "fail" }[];
+    latency: string;
+    isolation: string;
+  }
+> = {
+  http: {
+    schema: [
+      { field: "endpoint", type: "string (URL)", required: true, desc: "外部服务基础 URL" },
+      { field: "method", type: "GET|POST|PUT", required: true, desc: "调用方法" },
+      { field: "headers", type: "object", required: false, desc: "自定义请求头" },
+      { field: "auth", type: "Bearer|Basic|APIKey", required: true, desc: "鉴权方式" },
+      { field: "timeout", type: "int (ms)", required: false, desc: "超时时间" },
+    ],
+    example: `POST https://api.example.com/v1/agent
+Authorization: Bearer \${VAULT_TOKEN}
+Content-Type: application/json
+
+{ "input": "${'${INPUT}'}" }`,
+    compatibility: [
+      { item: "REST/GraphQL 端点", status: "pass" },
+      { item: "无状态调用", status: "pass" },
+      { item: "需要长期持久进程", status: "fail" },
+    ],
+    latency: "毫秒级",
+    isolation: "网络隔离",
+  },
+  process: {
+    schema: [
+      { field: "entrypoint", type: "string", required: true, desc: "入口文件 (agent.py:main)" },
+      { field: "runtime", type: "python3.11|node20", required: true, desc: "运行时版本" },
+      { field: "args", type: "string[]", required: false, desc: "启动参数" },
+      { field: "env", type: "object", required: false, desc: "环境变量（vault 引用）" },
+      { field: "workdir", type: "string", required: false, desc: "工作目录" },
+    ],
+    example: `$ python3 agent.py --input '\${INPUT_JSON}'
+# stdin/stdout JSON-RPC 通信
+# 沙箱内 cgroups + seccomp 隔离`,
+    compatibility: [
+      { item: "Python/Node 脚本", status: "pass" },
+      { item: "main() 入口函数", status: "pass" },
+      { item: "Streamlit/Flask 单文件", status: "pass" },
+      { item: "需要 GPU 支持", status: "warn" },
+    ],
+    latency: "秒级",
+    isolation: "cgroups + seccomp",
+  },
+  mcp: {
+    schema: [
+      { field: "serverUrl", type: "string", required: true, desc: "MCP Server URL" },
+      { field: "protocolVersion", type: "string", required: true, desc: "MCP 协议版本" },
+      { field: "tools", type: "string[]", required: false, desc: "注册的工具列表" },
+      { field: "resources", type: "string[]", required: false, desc: "资源列表" },
+    ],
+    example: `MCP Server: ws://localhost:8080
+Protocol: 2025-06-18
+Tools: [search, fetch, compute]`,
+    compatibility: [
+      { item: "MCP 标准实现", status: "pass" },
+      { item: "工具自动注册", status: "pass" },
+      { item: "需要流式响应", status: "warn" },
+    ],
+    latency: "毫秒级",
+    isolation: "协议沙箱",
+  },
+  docker: {
+    schema: [
+      { field: "image", type: "string", required: true, desc: "Docker 镜像地址" },
+      { field: "command", type: "string", required: false, desc: "启动命令" },
+      { field: "ports", type: "object", required: false, desc: "端口映射" },
+      { field: "volumes", type: "object", required: false, desc: "卷挂载" },
+      { field: "gpu", type: "boolean", required: false, desc: "是否启用 GPU" },
+      { field: "memory", type: "string", required: false, desc: "内存限制" },
+    ],
+    example: `docker run -d \\
+  --gpus all \\
+  -p 8080:8080 \\
+  -v /data:/data \\
+  my-agent:latest`,
+    compatibility: [
+      { item: "已有 Dockerfile", status: "pass" },
+      { item: "需要特殊系统依赖", status: "pass" },
+      { item: "GPU 推理任务", status: "pass" },
+      { item: "启动速度要求高", status: "warn" },
+    ],
+    latency: "冷启动慢",
+    isolation: "容器隔离",
+  },
+  session: {
+    schema: [
+      { field: "gateway", type: "string", required: true, desc: "Session Gateway URL" },
+      { field: "protocol", type: "ws|wss", required: true, desc: "WebSocket 协议" },
+      { field: "avStream", type: "object", required: false, desc: "音视频流配置" },
+      { field: "heartbeat", type: "int (s)", required: false, desc: "心跳间隔" },
+    ],
+    example: `WebSocket: wss://gateway.aos/v2/session
+Events: [open, push, close, error]
+AV Stream: SFU → Janus`,
+    compatibility: [
+      { item: "实时音视频交互", status: "pass" },
+      { item: "WebSocket 长连接", status: "pass" },
+      { item: "数字人/虚拟形象", status: "pass" },
+      { item: "短时无状态调用", status: "fail" },
+    ],
+    latency: "长连接",
+    isolation: "会话网关",
+  },
+};
+
+/** 工具映射 — 源 Agent 工具 → 平台工具 ID */
+export const DEFAULT_TOOL_MAPPINGS = [
+  { sourceTool: "search_web", targetToolId: "web_search_v1", autoMapped: true, status: "pass" },
+  { sourceTool: "read_file", targetToolId: "filesystem_read", autoMapped: true, status: "pass" },
+  { sourceTool: "write_file", targetToolId: "filesystem_write", autoMapped: false, status: "warn" },
+  { sourceTool: "execute_sql", targetToolId: "", autoMapped: false, status: "fail" },
+  { sourceTool: "send_email", targetToolId: "notification_email", autoMapped: true, status: "pass" },
+];
+
+/** 权限映射 — 源 Agent 权限 → 平台权限 */
+export const DEFAULT_PERMISSION_MAPPINGS = [
+  { sourcePermission: "read:products", targetPermission: "object:read:Product", granted: true },
+  { sourcePermission: "write:orders", targetPermission: "object:write:Order", granted: false },
+  { sourcePermission: "call:llm", targetPermission: "model:invoke", granted: true },
+  { sourcePermission: "access:network", targetPermission: "net:egress", granted: false },
+];
+
+/** 计算映射统计（纯函数） */
+export function computeMappingStats(mappings: typeof DEFAULT_TOOL_MAPPINGS) {
+  return {
+    total: mappings.length,
+    autoMapped: mappings.filter((m) => m.autoMapped).length,
+    pass: mappings.filter((m) => m.status === "pass").length,
+    warn: mappings.filter((m) => m.status === "warn").length,
+    fail: mappings.filter((m) => m.status === "fail").length,
+  };
+}
+
+/** 获取 Adapter 详情（纯函数） */
+export function getAdapterDetail(adapterType: AdapterType) {
+  return ADAPTER_DETAILS[adapterType];
+}
 
 const SCAN_RESULTS = [
   { label: "框架检测", value: "Streamlit + LangChain", status: "pass", statusText: "已识别" },
@@ -78,6 +225,10 @@ export function AgentImportPage() {
     autoDraft: true,
   });
   const [showGuide, setShowGuide] = useState(true);
+
+  // 工具映射 + 权限映射（Step 3）
+  const [toolMappings, setToolMappings] = useState(DEFAULT_TOOL_MAPPINGS);
+  const [permissionMappings, setPermissionMappings] = useState(DEFAULT_PERMISSION_MAPPINGS);
 
   const goStep = (n: number) => {
     if (n < 1 || n > 5) return;
@@ -876,20 +1027,398 @@ spec:
                     ? "检测到 Streamlit 框架 + Python 单进程运行，适合 Process Wrapper（沙箱内 fork 子进程 + stdin/stdout JSON-RPC 通信）。"
                     : `已选择 ${adapterInfo?.label} — 请确认该 Adapter 类型适合您的 Agent 运行模式。`}
                 </div>
+
+                {/* Adapter 联动详情面板 */}
+                {(() => {
+                  const detail = getAdapterDetail(adapterType);
+                  const mappingStats = computeMappingStats(toolMappings);
+                  return (
+                    <div
+                      style={{
+                        marginTop: 12,
+                        borderRadius: 10,
+                        border: "1px solid #BFDBFE",
+                        background: "rgba(239, 246, 255, 0.5)",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          padding: "10px 14px",
+                          background: "rgba(219, 234, 254, 0.6)",
+                          borderBottom: "1px solid #BFDBFE",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: "#1D4ED8",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                        }}
+                      >
+                        <span>⚡</span>
+                        {adapterInfo?.label} · 配置预览
+                        <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 400, color: "#3B82F6" }}>
+                          延迟：{detail.latency} · 隔离：{detail.isolation}
+                        </span>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0 }}>
+                        {/* 左：配置 Schema */}
+                        <div style={{ padding: 12, borderRight: "1px solid #BFDBFE" }}>
+                          <div style={{ fontSize: 11, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
+                            配置 Schema
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                            {detail.schema.map((f, i) => (
+                              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 6, fontSize: 10 }}>
+                                <code
+                                  style={{
+                                    color: "#1D4ED8",
+                                    fontFamily: "Menlo, Monaco, monospace",
+                                    minWidth: 80,
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {f.field}
+                                  {f.required && <span style={{ color: "#DC2626" }}>*</span>}
+                                </code>
+                                <span style={{ color: "#6B7280" }}>{f.desc}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* 右：示例 + 兼容性 */}
+                        <div style={{ padding: 12 }}>
+                          <div style={{ fontSize: 11, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
+                            调用示例
+                          </div>
+                          <pre
+                            style={{
+                              background: "#1E293B",
+                              color: "#CBD5E1",
+                              padding: 8,
+                              borderRadius: 4,
+                              fontSize: 9,
+                              lineHeight: 1.6,
+                              fontFamily: "Menlo, Monaco, monospace",
+                              margin: 0,
+                              overflowX: "auto",
+                              whiteSpace: "pre-wrap",
+                            }}
+                          >
+                            {detail.example}
+                          </pre>
+                        </div>
+                      </div>
+
+                      {/* 兼容性报告 */}
+                      <div style={{ padding: "8px 12px", borderTop: "1px solid #BFDBFE" }}>
+                        <div style={{ fontSize: 10, fontWeight: 500, color: "#374151", marginBottom: 6 }}>
+                          兼容性检查
+                        </div>
+                        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                          {detail.compatibility.map((c, i) => (
+                            <span
+                              key={i}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 3,
+                                fontSize: 10,
+                                color:
+                                  c.status === "pass" ? "#16A34A" : c.status === "warn" ? "#D97706" : "#DC2626",
+                              }}
+                            >
+                              {c.status === "pass" ? "✓" : c.status === "warn" ? "⚡" : "✗"} {c.item}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 工具映射统计 */}
+                      <div
+                        style={{
+                          padding: "8px 12px",
+                          borderTop: "1px solid #BFDBFE",
+                          display: "flex",
+                          gap: 16,
+                          fontSize: 10,
+                          color: "#6B7280",
+                        }}
+                      >
+                        <span>
+                          工具映射：<strong style={{ color: "#16A34A" }}>{mappingStats.pass}</strong>/
+                          {mappingStats.total}
+                        </span>
+                        <span>
+                          自动匹配：<strong style={{ color: "#2563EB" }}>{mappingStats.autoMapped}</strong>
+                        </span>
+                        {mappingStats.fail > 0 && (
+                          <span style={{ color: "#DC2626" }}>⚠ {mappingStats.fail} 个未映射</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           )}
 
-          {/* Step 3: 配置 Manifest */}
+          {/* Step 3: 映射配置 */}
           {step === 3 && (
             <div>
               <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: "0 0 4px 0" }}>
-                配置 Capability Manifest
+                映射配置
               </h2>
               <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px 0" }}>
-                基于扫描结果预填的 Manifest，用户可修改
+                Agent 名称映射、工具映射（源工具 → 目标工具 ID）、权限映射
               </p>
 
+              {/* Agent 名称映射 */}
+              <div
+                style={{
+                  borderRadius: 8,
+                  border: "1px solid #E5E7EB",
+                  background: "#fff",
+                  padding: 14,
+                  marginBottom: 16,
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 10 }}>
+                  Agent 名称映射
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div>
+                    <label style={{ fontSize: 11, color: "#6B7280", marginBottom: 4, display: "block" }}>
+                      源 Agent 名称（仓库检测）
+                    </label>
+                    <input
+                      defaultValue="ai_fraud_investigation_agent"
+                      readOnly
+                      style={{
+                        width: "100%",
+                        padding: "6px 10px",
+                        border: "0.5px solid #E5E7EB",
+                        borderRadius: 4,
+                        fontSize: 12,
+                        background: "#F9FAFB",
+                        color: "#6B7280",
+                        fontFamily: "Menlo, Monaco, monospace",
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, color: "#6B7280", marginBottom: 4, display: "block" }}>
+                      目标 Agent 名称（平台注册）
+                    </label>
+                    <input
+                      value={capName}
+                      onChange={(e) => setCapName(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "6px 10px",
+                        border: "0.5px solid #B4B2A9",
+                        borderRadius: 4,
+                        fontSize: 12,
+                        background: "#fff",
+                        color: "#1A1A1A",
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 工具映射表 */}
+              <div
+                style={{
+                  borderRadius: 8,
+                  border: "1px solid #E5E7EB",
+                  background: "#fff",
+                  overflow: "hidden",
+                  marginBottom: 16,
+                }}
+              >
+                <div
+                  style={{
+                    padding: "8px 14px",
+                    borderBottom: "1px solid #E5E7EB",
+                    background: "#F9FAFB",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: "#374151",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <span>工具映射（源工具 → 目标工具 ID）</span>
+                  <span style={{ fontSize: 10, color: "#6B7280" }}>
+                    自动匹配 {computeMappingStats(toolMappings).autoMapped} / {computeMappingStats(toolMappings).total}
+                  </span>
+                </div>
+                <div>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr 80px 60px",
+                      padding: "6px 14px",
+                      background: "#FAFAFA",
+                      fontSize: 10,
+                      fontWeight: 500,
+                      color: "#6B7280",
+                      borderBottom: "0.5px solid #E5E7EB",
+                    }}
+                  >
+                    <span>源工具</span>
+                    <span>目标工具 ID</span>
+                    <span>匹配方式</span>
+                    <span style={{ textAlign: "right" }}>状态</span>
+                  </div>
+                  {toolMappings.map((m, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr 80px 60px",
+                        padding: "6px 14px",
+                        fontSize: 11,
+                        borderBottom: i < toolMappings.length - 1 ? "0.5px solid #F3F4F6" : "none",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <code style={{ color: "#374151", fontFamily: "Menlo, Monaco, monospace", fontSize: 10 }}>
+                        {m.sourceTool}
+                      </code>
+                      <input
+                        value={m.targetToolId}
+                        onChange={(e) => {
+                          const next = [...toolMappings];
+                          next[i] = { ...m, targetToolId: e.target.value };
+                          setToolMappings(next);
+                        }}
+                        placeholder="未映射"
+                        style={{
+                          padding: "3px 6px",
+                          border: "0.5px solid #E5E7EB",
+                          borderRadius: 3,
+                          fontSize: 10,
+                          fontFamily: "Menlo, Monaco, monospace",
+                          background: m.status === "fail" ? "#FEF2F2" : "#fff",
+                          color: "#1A1A1A",
+                          outline: "none",
+                          width: "100%",
+                          boxSizing: "border-box",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: 9,
+                          padding: "1px 6px",
+                          borderRadius: 3,
+                          background: m.autoMapped ? "#DBEAFE" : "#FEF3C7",
+                          color: m.autoMapped ? "#1D4ED8" : "#92400E",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {m.autoMapped ? "自动" : "手动"}
+                      </span>
+                      <span style={{ textAlign: "right", fontSize: 11 }}>
+                        {m.status === "pass" && <span style={{ color: "#16A34A" }}>✓</span>}
+                        {m.status === "warn" && <span style={{ color: "#D97706" }}>⚡</span>}
+                        {m.status === "fail" && <span style={{ color: "#DC2626" }}>✗</span>}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 权限映射表 */}
+              <div
+                style={{
+                  borderRadius: 8,
+                  border: "1px solid #E5E7EB",
+                  background: "#fff",
+                  overflow: "hidden",
+                  marginBottom: 16,
+                }}
+              >
+                <div
+                  style={{
+                    padding: "8px 14px",
+                    borderBottom: "1px solid #E5E7EB",
+                    background: "#F9FAFB",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: "#374151",
+                  }}
+                >
+                  权限映射
+                </div>
+                <div>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr 60px",
+                      padding: "6px 14px",
+                      background: "#FAFAFA",
+                      fontSize: 10,
+                      fontWeight: 500,
+                      color: "#6B7280",
+                      borderBottom: "0.5px solid #E5E7EB",
+                    }}
+                  >
+                    <span>源权限</span>
+                    <span>目标平台权限</span>
+                    <span style={{ textAlign: "right" }}>授权</span>
+                  </div>
+                  {permissionMappings.map((p, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr 60px",
+                        padding: "6px 14px",
+                        fontSize: 11,
+                        borderBottom: i < permissionMappings.length - 1 ? "0.5px solid #F3F4F6" : "none",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <code style={{ color: "#6B7280", fontFamily: "Menlo, Monaco, monospace", fontSize: 10 }}>
+                        {p.sourcePermission}
+                      </code>
+                      <code style={{ color: "#374151", fontFamily: "Menlo, Monaco, monospace", fontSize: 10 }}>
+                        {p.targetPermission}
+                      </code>
+                      <label style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4, cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={p.granted}
+                          onChange={(e) => {
+                            const next = [...permissionMappings];
+                            next[i] = { ...p, granted: e.target.checked };
+                            setPermissionMappings(next);
+                          }}
+                        />
+                        <span style={{ fontSize: 10, color: p.granted ? "#16A34A" : "#9CA3AF" }}>
+                          {p.granted ? "允许" : "拒绝"}
+                        </span>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Manifest 表单 + YAML 预览 */}
+              <div style={{ fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
+                Capability Manifest（基于映射生成）
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
                 {/* 左栏：表单 */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

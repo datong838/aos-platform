@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageChrome } from "../../components/PageChrome";
+import { apiPost } from "../../api/client";
 
-type CapType = "C0" | "C1" | "C2";
+export type CapType = "C0" | "C1" | "C2";
 
 const STEPS = [
   { num: 1, label: "能力类型" },
@@ -11,7 +12,7 @@ const STEPS = [
   { num: 4, label: "连通测试" },
 ];
 
-const CAP_TYPES: {
+export const CAP_TYPES: {
   id: CapType;
   subtype: string;
   name: string;
@@ -49,18 +50,106 @@ const CAP_TYPES: {
   },
 ];
 
-const SEC_LEVELS = [
+export const SEC_LEVELS = [
   { id: "low", label: "低风险", desc: "只读数据，不触发写操作", color: "#10B981" },
   { id: "medium", label: "中风险", desc: "可写受控对象，需 HITL 审批", color: "#F59E0B" },
   { id: "high", label: "高风险", desc: "可跨域调用，需安全审计", color: "#EF4444" },
 ];
 
-const TEST_ITEMS = [
-  { name: "端点连通性", status: "pass", detail: "200 OK · 32ms" },
-  { name: "鉴权 Token 验证", status: "pass", detail: "Bearer 令牌有效" },
-  { name: "Schema 校验", status: "pending", detail: "验证中…" },
-  { name: "速率限制测试", status: "pending", detail: "等待" },
+/** 知识库关联文档（references/） */
+export type KBDocument = {
+  id: string;
+  name: string;
+  size: string;
+  desc: string;
+  chunks: number;
+  status: "indexed" | "indexing" | "pending";
+  icon: "pdf" | "md" | "doc" | "txt";
+  iconColor: string;
+};
+
+export const MOCK_KB_DOCUMENTS: KBDocument[] = [
+  {
+    id: "kb-1",
+    name: "video-generation-api-spec.pdf",
+    size: "2.4MB",
+    desc: "API 接口规格书",
+    chunks: 18,
+    status: "indexed",
+    icon: "pdf",
+    iconColor: "#DC2626",
+  },
+  {
+    id: "kb-2",
+    name: "prompt-engineering-best-practices.md",
+    size: "86KB",
+    desc: "提示词工程参考",
+    chunks: 12,
+    status: "indexed",
+    icon: "md",
+    iconColor: "#2563EB",
+  },
+  {
+    id: "kb-3",
+    name: "brand-guidelines-2026.docx",
+    size: "340KB",
+    desc: "品牌设计规范",
+    chunks: 0,
+    status: "indexing",
+    icon: "doc",
+    iconColor: "#6B7280",
+  },
 ];
+
+/** 测试项目（详细版） */
+export const DETAILED_TEST_ITEMS = [
+  { name: "DNS 解析", status: "pass", detail: "cap.internal → 10.0.12.34 (12ms)", icon: "dns" },
+  { name: "TLS 握手", status: "pass", detail: "TLS 1.3 · 证书有效期至 2026-12-01", icon: "tls" },
+  { name: "鉴权验证", status: "pass", detail: "Vault secret ref 有效 · HMAC 验签通过", icon: "auth" },
+  { name: "健康检查端点", status: "pass", detail: "GET /health → 200 OK (45ms)", icon: "health" },
+  { name: "Schema 冒烟测试", status: "pending", detail: "发送测试请求 → 等待响应…", icon: "schema" },
+  { name: "速率限制测试", status: "pending", detail: "等待", icon: "rate" },
+];
+
+/** 环境变量模板 */
+export const DEFAULT_ENV_VARS = [
+  { key: "OPENAI_API_KEY", value: "vault://aip/models/openai", secret: true, bound: true },
+  { key: "CAP_TIMEOUT", value: "60", secret: false, bound: true },
+  { key: "MAX_RETRIES", value: "3", secret: false, bound: true },
+  { key: "WEBHOOK_URL", value: "", secret: false, bound: false },
+];
+
+/** 计算测试通过率（纯函数） */
+export function computeTestStats(tests: typeof DETAILED_TEST_ITEMS) {
+  return {
+    total: tests.length,
+    pass: tests.filter((t) => t.status === "pass").length,
+    pending: tests.filter((t) => t.status === "pending").length,
+    fail: tests.filter((t) => t.status === "fail").length,
+  };
+}
+
+/** 计算知识库索引状态（纯函数） */
+export function computeKBStats(docs: KBDocument[]) {
+  return {
+    total: docs.length,
+    indexed: docs.filter((d) => d.status === "indexed").length,
+    indexing: docs.filter((d) => d.status === "indexing").length,
+    pending: docs.filter((d) => d.status === "pending").length,
+    totalChunks: docs.reduce((sum, d) => sum + d.chunks, 0),
+  };
+}
+
+/** 文档图标组件 */
+function DocIcon({ color }: { type: "pdf" | "md" | "doc" | "txt"; color: string }) {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} style={{ flexShrink: 0 }}>
+      <path d="M6 2h9l5 5v15a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z" strokeLinejoin="round" />
+      <path d="M14 2v6h6" strokeLinejoin="round" />
+      <path d="M9 13h6M9 17h6" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 export function CapabilityImportPage() {
   const [step, setStep] = useState(1);
@@ -70,6 +159,17 @@ export function CapabilityImportPage() {
   const [testing, setTesting] = useState(false);
   const [testDone, setTestDone] = useState(false);
   const [imported, setImported] = useState(false);
+
+  // 新增 state
+  const [kbDocs, setKbDocs] = useState<KBDocument[]>(MOCK_KB_DOCUMENTS);
+  const [envVars, setEnvVars] = useState(DEFAULT_ENV_VARS);
+  const [secretRef, setSecretRef] = useState("vault://aip/capabilities/short-video#token");
+  const [webhookUrl, setWebhookUrl] = useState("https://aos-api/v1/aip/capabilities/cb/video");
+  const [rateLimitPerMin, setRateLimitPerMin] = useState("30");
+  const [concurrency, setConcurrency] = useState("4");
+  const [gpuConfig, setGpuConfig] = useState("1 × T4");
+  const [memoryLimit, setMemoryLimit] = useState("512Mi");
+  const [timeoutSec, setTimeoutSec] = useState("300");
 
   const manifestYaml = `# Capability Manifest
 name: "Live Script Engine"
@@ -99,14 +199,32 @@ permissions:
 
   function runTests() {
     setTesting(true);
-    setTimeout(() => {
-      setTesting(false);
-      setTestDone(true);
-    }, 1500);
+    // 尝试调 API，fallback 到 mock
+    apiPost("/v1/aip/capabilities/test", { endpoint: manifestUrl })
+      .catch(() => {
+        // API 未就绪，使用模拟结果
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setTesting(false);
+          setTestDone(true);
+        }, 1500);
+      });
   }
 
-  function handleImport() {
-    setImported(true);
+  async function handleImport() {
+    try {
+      await apiPost("/v1/aip/capabilities", {
+        type: capType,
+        manifest_url: manifestUrl,
+        rate_limit: rateLimitPerMin,
+        secret_ref: secretRef,
+      });
+      setImported(true);
+    } catch {
+      // API 未就绪，直接显示成功
+      setImported(true);
+    }
   }
 
   if (imported) {
@@ -405,6 +523,139 @@ permissions:
                 {manifestYaml}
               </pre>
 
+              {/* 知识库关联区（references/） */}
+              <div
+                style={{
+                  marginTop: 20,
+                  borderRadius: 8,
+                  border: "1px solid #BFDBFE",
+                  background: "rgba(239, 246, 255, 0.4)",
+                  padding: 16,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div>
+                    <h3 style={{ fontSize: 13, fontWeight: 500, color: "#111827", margin: 0 }}>
+                      知识库关联{" "}
+                      <span style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 400 }}>references/</span>
+                    </h3>
+                    <p style={{ fontSize: 11, color: "#6B7280", margin: "2px 0 0" }}>
+                      为该能力挂载参考文档，Agent 运行时可按需检索注入上下文
+                    </p>
+                  </div>
+                  <span style={{ fontSize: 10, color: "#9CA3AF" }}>
+                    已关联 {computeKBStats(kbDocs).total} 个文件 · {computeKBStats(kbDocs).totalChunks} 语义块
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {kbDocs.map((doc) => (
+                    <div
+                      key={doc.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "8px 12px",
+                        borderRadius: 6,
+                        background: "#fff",
+                        border: "1px solid #E5E7EB",
+                      }}
+                    >
+                      <DocIcon type={doc.icon} color={doc.iconColor} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 500, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {doc.name}
+                        </div>
+                        <div style={{ fontSize: 10, color: "#9CA3AF" }}>
+                          {doc.size} · {doc.desc}
+                          {doc.chunks > 0 && ` · ${doc.chunks} 个语义块`}
+                        </div>
+                      </div>
+                      {doc.status === "indexed" && (
+                        <span
+                          style={{
+                            padding: "2px 8px",
+                            borderRadius: 3,
+                            fontSize: 9,
+                            background: "#DCFCE7",
+                            color: "#15803D",
+                            fontWeight: 500,
+                          }}
+                        >
+                          已索引
+                        </span>
+                      )}
+                      {doc.status === "indexing" && (
+                        <span
+                          style={{
+                            padding: "2px 8px",
+                            borderRadius: 3,
+                            fontSize: 9,
+                            background: "#FEF3C7",
+                            color: "#92400E",
+                            fontWeight: 500,
+                          }}
+                        >
+                          索引中
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setKbDocs(kbDocs.filter((d) => d.id !== doc.id))}
+                        title="移除关联"
+                        style={{
+                          color: "#9CA3AF",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: 0,
+                          fontSize: 14,
+                          lineHeight: 1,
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                  <button
+                    type="button"
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: 6,
+                      border: "1px solid #93C5FD",
+                      background: "#fff",
+                      fontSize: 11,
+                      color: "#1D4ED8",
+                      cursor: "pointer",
+                      fontWeight: 500,
+                    }}
+                  >
+                    + 上传文档
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: 6,
+                      border: "1px solid #D1D5DB",
+                      background: "#fff",
+                      fontSize: 11,
+                      color: "#6B7280",
+                      cursor: "pointer",
+                    }}
+                  >
+                    从代码仓库引用
+                  </button>
+                  <span style={{ fontSize: 10, color: "#9CA3AF" }}>
+                    支持 PDF / MD / DOCX / TXT，自动语义分块 + 向量索引
+                  </span>
+                </div>
+              </div>
+
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 24 }}>
                 <button
                   type="button"
@@ -485,7 +736,7 @@ permissions:
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
+                  gridTemplateColumns: "1fr 1fr 1fr",
                   gap: 12,
                   marginBottom: 20,
                 }}
@@ -499,11 +750,38 @@ permissions:
                       marginBottom: 4,
                     }}
                   >
-                    每分钟请求数 (RPM)
+                    速率限制（次/分）
                   </label>
                   <input
                     type="number"
-                    defaultValue={60}
+                    value={rateLimitPerMin}
+                    onChange={(e) => setRateLimitPerMin(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "6px 10px",
+                      fontSize: 12,
+                      border: "1px solid #D1D5DB",
+                      borderRadius: 4,
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: 11,
+                      color: "#6B7280",
+                      marginBottom: 4,
+                    }}
+                  >
+                    并发配额
+                  </label>
+                  <input
+                    type="number"
+                    value={concurrency}
+                    onChange={(e) => setConcurrency(e.target.value)}
                     style={{
                       width: "100%",
                       padding: "6px 10px",
@@ -542,6 +820,243 @@ permissions:
                 </div>
               </div>
 
+              {/* 资源配额 */}
+              <div style={{ fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
+                资源配额
+              </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: 12,
+                  marginBottom: 20,
+                }}
+              >
+                <div>
+                  <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 4 }}>
+                    内存上限
+                  </label>
+                  <input
+                    value={memoryLimit}
+                    onChange={(e) => setMemoryLimit(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "6px 10px",
+                      fontSize: 12,
+                      border: "1px solid #D1D5DB",
+                      borderRadius: 4,
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 4 }}>
+                    GPU（C1/C2）
+                  </label>
+                  <input
+                    value={gpuConfig}
+                    onChange={(e) => setGpuConfig(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "6px 10px",
+                      fontSize: 12,
+                      border: "1px solid #D1D5DB",
+                      borderRadius: 4,
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 4 }}>
+                    超时（秒）
+                  </label>
+                  <input
+                    type="number"
+                    value={timeoutSec}
+                    onChange={(e) => setTimeoutSec(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "6px 10px",
+                      fontSize: 12,
+                      border: "1px solid #D1D5DB",
+                      borderRadius: 4,
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* 密钥/凭证绑定 */}
+              <div style={{ fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
+                密钥 / 凭证绑定
+              </div>
+              <div
+                style={{
+                  borderRadius: 8,
+                  border: "1px solid #E5E7EB",
+                  background: "#fff",
+                  padding: 14,
+                  marginBottom: 20,
+                }}
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 4 }}>
+                      Secret Ref（KMS 加密）
+                    </label>
+                    <input
+                      value={secretRef}
+                      onChange={(e) => setSecretRef(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "6px 10px",
+                        border: "1px solid #D1D5DB",
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontFamily: "Menlo, Monaco, monospace",
+                        background: "#F9FAFB",
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                    <p style={{ fontSize: 10, color: "#9CA3AF", margin: "4px 0 0" }}>
+                      存储于 KMS，运行时注入，不落地到配置文件
+                    </p>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 4 }}>
+                      回调 Webhook（验签）
+                    </label>
+                    <input
+                      value={webhookUrl}
+                      onChange={(e) => setWebhookUrl(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "6px 10px",
+                        border: "1px solid #D1D5DB",
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontFamily: "Menlo, Monaco, monospace",
+                        background: "#F9FAFB",
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    marginTop: 10,
+                    padding: "8px 12px",
+                    borderRadius: 6,
+                    background: "rgba(219, 234, 254, 0.5)",
+                    border: "1px solid #BFDBFE",
+                    fontSize: 10,
+                    color: "#374151",
+                  }}
+                >
+                  <strong style={{ color: "#1D4ED8" }}>Vault 配置：</strong>
+                  密钥将在运行时从 KMS 注入，不落地到配置文件。轮换周期 90 天。
+                </div>
+              </div>
+
+              {/* 环境变量配置 */}
+              <div style={{ fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
+                环境变量
+              </div>
+              <div
+                style={{
+                  borderRadius: 8,
+                  border: "1px solid #E5E7EB",
+                  background: "#fff",
+                  overflow: "hidden",
+                  marginBottom: 20,
+                }}
+              >
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1.5fr 60px 60px",
+                    padding: "6px 12px",
+                    background: "#F9FAFB",
+                    fontSize: 10,
+                    fontWeight: 500,
+                    color: "#6B7280",
+                    borderBottom: "1px solid #E5E7EB",
+                  }}
+                >
+                  <span>变量名</span>
+                  <span>值 / Vault 引用</span>
+                  <span>类型</span>
+                  <span style={{ textAlign: "right" }}>绑定</span>
+                </div>
+                {envVars.map((v, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1.5fr 60px 60px",
+                      padding: "6px 12px",
+                      fontSize: 11,
+                      borderBottom: i < envVars.length - 1 ? "0.5px solid #F3F4F6" : "none",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <code style={{ color: "#374151", fontFamily: "Menlo, Monaco, monospace", fontSize: 10 }}>
+                      {v.key}
+                    </code>
+                    <input
+                      value={v.value}
+                      onChange={(e) => {
+                        const next = [...envVars];
+                        next[i] = { ...v, value: e.target.value };
+                        setEnvVars(next);
+                      }}
+                      placeholder={v.secret ? "vault://…" : "value"}
+                      style={{
+                        padding: "3px 6px",
+                        border: "0.5px solid #E5E7EB",
+                        borderRadius: 3,
+                        fontSize: 10,
+                        fontFamily: "Menlo, Monaco, monospace",
+                        background: "#fff",
+                        color: "#1A1A1A",
+                        outline: "none",
+                        width: "100%",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: 9,
+                        padding: "1px 6px",
+                        borderRadius: 3,
+                        background: v.secret ? "#FEE2E2" : "#F3F4F6",
+                        color: v.secret ? "#DC2626" : "#6B7280",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {v.secret ? "secret" : "plain"}
+                    </span>
+                    <label style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", cursor: "pointer" }}>
+                      <input
+                        type="checkbox"
+                        checked={v.bound}
+                        onChange={(e) => {
+                          const next = [...envVars];
+                          next[i] = { ...v, bound: e.target.checked };
+                          setEnvVars(next);
+                        }}
+                      />
+                    </label>
+                  </div>
+                ))}
+              </div>
+
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <button
                   type="button"
@@ -578,17 +1093,17 @@ permissions:
             </div>
           )}
 
-          {/* Step 4: 连通测试 */}
+          {/* Step 4: 连通测试 + 确认导入 */}
           {step === 4 && (
             <div>
               <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: "0 0 4px" }}>
-                连通性测试
+                连通性测试与确认
               </h2>
               <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px" }}>
-                测试能力端点的连通性和契约一致性
+                点击「运行测试」验证端点可达、鉴权有效、Schema 匹配
               </p>
 
-              <div style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 12 }}>
                 <button
                   type="button"
                   onClick={runTests}
@@ -606,10 +1121,16 @@ permissions:
                 >
                   {testing ? "测试中…" : "▶ 运行连通测试"}
                 </button>
+                {testDone && (
+                  <span style={{ fontSize: 11, color: "#6B7280" }}>
+                    通过 <strong style={{ color: "#16A34A" }}>{computeTestStats(DETAILED_TEST_ITEMS).pass}</strong>/
+                    {computeTestStats(DETAILED_TEST_ITEMS).total} 项
+                  </span>
+                )}
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                {TEST_ITEMS.map((item, i) => {
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 16 }}>
+                {DETAILED_TEST_ITEMS.map((item, i) => {
                   const statusIndex = testDone ? 3 : testing ? Math.min(i + 1, 2) : 0;
                   const status = ["pending", "pending", "pending", "pass"][statusIndex] || item.status;
                   const isPass = status === "pass";
@@ -635,11 +1156,70 @@ permissions:
                       <span style={{ fontSize: 14 }}>
                         {isPass ? "✓" : isPending ? "○" : "✗"}
                       </span>
-                      <span style={{ flex: 1, fontWeight: 500 }}>{item.name}</span>
-                      <span style={{ fontSize: 11 }}>{testDone ? item.detail : isPending ? "测试中…" : "等待"}</span>
+                      <span style={{ fontWeight: 500 }}>{item.name}</span>
+                      <span style={{ fontSize: 11, marginLeft: "auto", color: "#6B7280" }}>
+                        {testDone ? item.detail : isPending ? "测试中…" : "等待"}
+                      </span>
                     </div>
                   );
                 })}
+              </div>
+
+              {/* 注册汇总 */}
+              <div
+                style={{
+                  borderRadius: 8,
+                  border: "1px solid #E5E7EB",
+                  background: "#F9FAFB",
+                  padding: 16,
+                  marginBottom: 12,
+                }}
+              >
+                <div style={{ fontSize: 13, fontWeight: 500, color: "#111827", marginBottom: 8 }}>注册汇总</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 24px", fontSize: 12, color: "#6B7280" }}>
+                  <div>
+                    能力名称：<span style={{ color: "#111827", fontWeight: 500 }}>short-video-generation</span>
+                  </div>
+                  <div>
+                    能力类型：<span style={{ color: "#2563EB", fontWeight: 500 }}>{capType}</span>
+                  </div>
+                  <div>
+                    安全等级：<span style={{ color: "#111827" }}>{secLevel}</span>
+                  </div>
+                  <div>
+                    并发配额：<span style={{ color: "#111827" }}>{concurrency}</span>
+                  </div>
+                  <div>
+                    速率限制：<span style={{ color: "#111827" }}>{rateLimitPerMin} 次/分</span>
+                  </div>
+                  <div>
+                    密钥管理：<span style={{ color: "#111827" }}>KMS Vault</span>
+                  </div>
+                  <div>
+                    资源配额：<span style={{ color: "#111827" }}>{memoryLimit} · {gpuConfig}</span>
+                  </div>
+                  <div>
+                    超时：<span style={{ color: "#111827" }}>{timeoutSec}s</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 注册后说明 */}
+              <div
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 8,
+                  background: "rgba(240, 253, 244, 0.7)",
+                  border: "1px solid #BBF7D0",
+                  fontSize: 11,
+                  color: "#374151",
+                }}
+              >
+                <strong style={{ color: "#059669" }}>注册后：</strong>
+                该能力将出现在「智能体插件」列表中，状态为「就绪」。可在「智能体工具面板」中将此 Capability 挂载为 Agent 的 Function Tool。
+                <Link to="/s2/aip/tools" style={{ color: "#2563EB", marginLeft: 4, textDecoration: "none" }}>
+                  去挂载 →
+                </Link>
               </div>
 
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 24 }}>
