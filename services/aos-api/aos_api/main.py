@@ -1038,6 +1038,23 @@ def create_app() -> FastAPI:
     application.include_router(phase2_model_providers_router)
     application.include_router(phase2_model_routes_router)
     application.include_router(phase2_model_capacity_router)
+
+    # ── Phase 3 · AIP Decision Engine (20+ API) ──
+    from aos_api.routers.phase3_aip_assist import router as phase3_aip_assist_router
+    from aos_api.routers.phase3_aip_agents import router as phase3_aip_agents_router
+    from aos_api.routers.phase3_aip_capabilities import router as phase3_aip_capabilities_router
+    from aos_api.routers.phase3_aip_logic import router as phase3_aip_logic_router
+    from aos_api.routers.phase3_aip_tools import router as phase3_aip_tools_router
+    from aos_api.routers.phase3_aip_drafts import router as phase3_aip_drafts_router
+    from aos_api.routers.phase3_aip_lineage import router as phase3_aip_lineage_router
+
+    application.include_router(phase3_aip_assist_router)
+    application.include_router(phase3_aip_agents_router)
+    application.include_router(phase3_aip_capabilities_router)
+    application.include_router(phase3_aip_logic_router)
+    application.include_router(phase3_aip_tools_router)
+    application.include_router(phase3_aip_drafts_router)
+    application.include_router(phase3_aip_lineage_router)
     log.info("aos-api_app_created version=%s", application.version)
     return application
 
