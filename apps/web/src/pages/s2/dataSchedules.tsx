@@ -17,6 +17,24 @@ const CRON_PRESETS: { label: string; cron: string; hint: string }[] = [
   { label: "自定义", cron: "", hint: "手动编辑 Cron" },
 ];
 
+// Phase 7: 近 14 次运行历史种子数据
+const RUN_HISTORY: { status: "success" | "failed" | "running" | "scheduled"; time: string; duration: string }[] = [
+  { status: "success", time: "2026-07-27 02:00", duration: "3m 24s" },
+  { status: "success", time: "2026-07-26 02:00", duration: "3m 12s" },
+  { status: "success", time: "2026-07-25 02:00", duration: "4m 01s" },
+  { status: "failed", time: "2026-07-24 02:00", duration: "1m 30s" },
+  { status: "success", time: "2026-07-23 02:00", duration: "3m 45s" },
+  { status: "success", time: "2026-07-22 02:00", duration: "3m 33s" },
+  { status: "success", time: "2026-07-21 02:00", duration: "3m 58s" },
+  { status: "running", time: "2026-07-20 02:00", duration: "2m 15s…" },
+  { status: "success", time: "2026-07-19 02:00", duration: "3m 09s" },
+  { status: "success", time: "2026-07-18 02:00", duration: "3m 27s" },
+  { status: "scheduled", time: "2026-07-17 02:00", duration: "—" },
+  { status: "success", time: "2026-07-16 02:00", duration: "3m 51s" },
+  { status: "success", time: "2026-07-15 02:00", duration: "3m 40s" },
+  { status: "success", time: "2026-07-14 02:00", duration: "3m 22s" },
+];
+
 function cronHint(cron: string): string {
   if (cron === "0 * * * *") return "每小时整点执行";
   if (cron === "0 2 * * *") return "每天 02:00 执行 · Asia/Shanghai";
@@ -246,6 +264,38 @@ export function SchedulesPage() {
           { to: "/data/pipelines", label: "管道构建" },
         ]}
       />
+
+      {/* Phase 7: 运行历史可视化条形图 */}
+      <div style={{ marginTop: "1rem", padding: "12px", background: "var(--aos-surface, #f7fafc)", borderRadius: 4, border: "1px solid var(--aos-border, #e2e8f0)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <h4 className="aos-text" style={{ fontSize: "0.8rem", margin: 0 }}>近 14 次运行历史</h4>
+          <span className="muted" style={{ fontSize: "0.7rem" }}>
+            <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: "#10B981", marginRight: 4 }} />成功
+            <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: "#EF4444", margin: "0 4px 0 8px" }} />失败
+            <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: "#3B82F6", margin: "0 4px 0 8px" }} />运行中
+            <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: "#D1D5DB", margin: "0 4px 0 8px" }} />计划中
+          </span>
+        </div>
+        <div style={{ display: "flex", gap: 2, alignItems: "flex-end", height: 28 }}>
+          {RUN_HISTORY.map((r, i) => (
+            <div
+              key={i}
+              className={`bp-sched-run-bar bp-sched-run-bar-${r.status}`}
+              style={{
+                width: 12,
+                height: r.status === "success" ? 28 : r.status === "failed" ? 20 : r.status === "running" ? 24 : 16,
+                borderRadius: 2,
+                background: r.status === "success" ? "#10B981" : r.status === "failed" ? "#EF4444" : r.status === "running" ? "#3B82F6" : "#D1D5DB",
+              }}
+              title={`${r.time} · ${r.status} · ${r.duration}`}
+            />
+          ))}
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: "0.65rem", color: "var(--aos-text-muted, #718096)" }}>
+          <span>14 天前</span>
+          <span>今天</span>
+        </div>
+      </div>
     </S2Chrome>
   );
 }

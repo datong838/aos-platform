@@ -82,15 +82,40 @@ export function PipelinesPage() {
   const sourceFilter = searchParams.get("sourceId")?.trim() || "";
   const { data, err, reload } = useJsonGet<{ items: PipelineRow[] }>("/v1/pipelines");
   const { data: dsData } = useJsonGet<{ items: DatasetRow[] }>("/v1/datasets");
+
+  // Phase 7: 搜索 + 状态过滤
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+
   const items = useMemo(() => {
     const all = data?.items || [];
-    if (!sourceFilter) return all;
-    return all.filter((p) => p.sourceId === sourceFilter);
-  }, [data?.items, sourceFilter]);
+    let filtered = all;
+    if (sourceFilter) filtered = filtered.filter((p) => p.sourceId === sourceFilter);
+    if (statusFilter) filtered = filtered.filter((p) => (p.lastBuild?.status || "unknown") === statusFilter);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter((p) =>
+        p.id.toLowerCase().includes(q) ||
+        pipelineDisplayTitle(p).toLowerCase().includes(q) ||
+        (p.sourceId || "").toLowerCase().includes(q)
+      );
+    }
+    return filtered;
+  }, [data?.items, sourceFilter, search, statusFilter]);
+
   const datasets = dsData?.items || [];
 
+  // Phase 7: 统计卡片
+  const stats = useMemo(() => {
+    const all = data?.items || [];
+    const success = all.filter((p) => p.lastBuild?.status === "success").length;
+    const failed = all.filter((p) => p.lastBuild?.status === "failed").length;
+    const running = all.filter((p) => p.lastBuild?.status === "running").length;
+    return { total: all.length, success, failed, running };
+  }, [data?.items]);
+
   return (
-    <S2Chrome title="Pipeline Builder" lede={`Ecom-Data-Project · ${items.length} 个管道`}>
+    <S2Chrome title="Pipeline Builder" lede={`Ecom-Data-Project · ${items.length} / ${stats.total} 个管道`}>
       <BpToolbar>
         <button type="button" className="btn" onClick={() => reload()}>
           刷新
@@ -108,8 +133,45 @@ export function PipelinesPage() {
             清除 Source 过滤 ×
           </Link>
         )}
+        {/* Phase 7: 搜索框 */}
+        <input
+          type="search"
+          placeholder="搜索管道…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ fontSize: "0.8rem", padding: "2px 8px", border: "1px solid var(--aos-border, #cbd5e0)", borderRadius: 3, minWidth: 150 }}
+        />
+        {/* Phase 7: 状态过滤 */}
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          style={{ fontSize: "0.8rem", padding: "2px 6px", border: "1px solid var(--aos-border, #cbd5e0)", borderRadius: 3 }}
+        >
+          <option value="">全部状态</option>
+          <option value="success">成功</option>
+          <option value="failed">失败</option>
+          <option value="running">运行中</option>
+          <option value="unknown">未知</option>
+        </select>
       </BpToolbar>
-      {sourceFilter && (
+
+      {/* Phase 7: 统计概览 */}
+      <div style={{ display: "flex", gap: 12, padding: "8px 0", marginBottom: 8 }}>
+        <div style={{ padding: "6px 12px", background: "var(--aos-surface, #f7fafc)", borderRadius: 4, border: "1px solid var(--aos-border, #e2e8f0)", fontSize: "0.75rem" }}>
+          <span className="muted">总计 </span><strong>{stats.total}</strong>
+        </div>
+        <div style={{ padding: "6px 12px", background: "#f0fff4", borderRadius: 4, border: "1px solid #c6f6d5", fontSize: "0.75rem" }}>
+          <span style={{ color: "#22543d" }}>成功 </span><strong style={{ color: "#22543d" }}>{stats.success}</strong>
+        </div>
+        <div style={{ padding: "6px 12px", background: "#fff5f5", borderRadius: 4, border: "1px solid #fed7d7", fontSize: "0.75rem" }}>
+          <span style={{ color: "#742a2a" }}>失败 </span><strong style={{ color: "#742a2a" }}>{stats.failed}</strong>
+        </div>
+        <div style={{ padding: "6px 12px", background: "#ebf8ff", borderRadius: 4, border: "1px solid #bee3f8", fontSize: "0.75rem" }}>
+          <span style={{ color: "#2a4365" }}>运行中 </span><strong style={{ color: "#2a4365" }}>{stats.running}</strong>
+        </div>
+      </div>
+
+      {sourceFilter && !search && !statusFilter && (
         <BpBanner tone="info">
           已按 Source <strong>{sourceFilter}</strong> 过滤
         </BpBanner>
