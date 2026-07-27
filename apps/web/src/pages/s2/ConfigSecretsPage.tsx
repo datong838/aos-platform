@@ -10,7 +10,7 @@ import {
 
 /* ──────────────── Types ──────────────── */
 
-interface ConfigOverride {
+export interface ConfigOverride {
   key: string;
   value: string;
   sensitive: boolean;
@@ -18,7 +18,7 @@ interface ConfigOverride {
   desc?: string;
 }
 
-interface MaintenanceWindow {
+export interface MaintenanceWindow {
   start: string;
   end: string;
   active: boolean;
@@ -27,7 +27,7 @@ interface MaintenanceWindow {
 
 /* ──────────────── MOCK fallback ──────────────── */
 
-const MOCK_CONFIG_OVERRIDES: ConfigOverride[] = [
+export const MOCK_CONFIG_OVERRIDES: ConfigOverride[] = [
   {
     key: "aip.model.default",
     value: "glm-4-flash",
@@ -51,7 +51,7 @@ const MOCK_CONFIG_OVERRIDES: ConfigOverride[] = [
   },
 ];
 
-const MOCK_MAINTENANCE_WINDOW: MaintenanceWindow = {
+export const MOCK_MAINTENANCE_WINDOW: MaintenanceWindow = {
   start: "2026-07-28 02:00",
   end: "2026-07-28 04:00",
   active: false,

@@ -13,7 +13,7 @@ import {
 
 /* ──────────────── Types ──────────────── */
 
-interface ApprovalStep {
+export interface ApprovalStep {
   step: string;
   title: string;
   reviewer: string;
@@ -21,7 +21,7 @@ interface ApprovalStep {
   decidedAt?: string;
 }
 
-interface ChangeOrder {
+export interface ChangeOrder {
   id: string;
   type: string;
   status: "pending" | "approved" | "rejected";
@@ -37,7 +37,7 @@ interface ChangeOrder {
 
 /* ──────────────── MOCK fallback ──────────────── */
 
-const MOCK_CHANGE_ORDERS: ChangeOrder[] = [
+export const MOCK_CHANGE_ORDERS: ChangeOrder[] = [
   {
     id: "CHG-2026-0412",
     type: "资产包升级",
@@ -148,7 +148,7 @@ const MOCK_CHANGE_ORDERS: ChangeOrder[] = [
 
 /* ──────────────── Page ──────────────── */
 
-const STATUS_TABS = [
+export const STATUS_TABS = [
   { id: "all", label: "全部" },
   { id: "pending", label: "待审批" },
   { id: "approved", label: "已通过" },

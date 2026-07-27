@@ -10,7 +10,7 @@ import {
 
 /* ──────────────── Types ──────────────── */
 
-interface AssetBundle {
+export interface AssetBundle {
   id: string;
   name: string;
   version: string;
@@ -23,7 +23,7 @@ interface AssetBundle {
 
 /* ──────────────── MOCK fallback ──────────────── */
 
-const MOCK_ASSET_BUNDLES: AssetBundle[] = [
+export const MOCK_ASSET_BUNDLES: AssetBundle[] = [
   {
     id: "asset-apollo-core-2.14.1",
     name: "apollo-core",
@@ -82,7 +82,7 @@ const MOCK_ASSET_BUNDLES: AssetBundle[] = [
 
 /* ──────────────── Page ──────────────── */
 
-const CHANNEL_TABS = [
+export const CHANNEL_TABS = [
   { id: "all", label: "全部" },
   { id: "stable", label: "Stable" },
   { id: "beta", label: "Beta" },

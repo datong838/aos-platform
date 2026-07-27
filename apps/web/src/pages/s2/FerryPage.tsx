@@ -12,7 +12,7 @@ import {
 
 /* ──────────────── Types ──────────────── */
 
-interface FerryBundle {
+export interface FerryBundle {
   id: string;
   name: string;
   size: string;
@@ -31,7 +31,7 @@ interface FerrySubmitProgress {
 
 /* ──────────────── MOCK fallback ──────────────── */
 
-const MOCK_FERRY_BUNDLES: FerryBundle[] = [
+export const MOCK_FERRY_BUNDLES: FerryBundle[] = [
   {
     id: "bundle-apollo-core-2.14.1",
     name: "apollo-core-2.14.1",

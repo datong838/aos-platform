@@ -2,9 +2,9 @@ import { Link } from "react-router-dom";
 import { S2Chrome, useJsonGet } from "./shared";
 import { BpBanner, BpLinkRow, BpToolbar } from "./blueprintUi";
 
-type ChannelStage = "rc" | "beta" | "stable";
+export type ChannelStage = "rc" | "beta" | "stable";
 
-type ReleaseEntry = {
+export type ReleaseEntry = {
   channel: ChannelStage;
   version: string;
   spokeCount: number;
@@ -13,27 +13,27 @@ type ReleaseEntry = {
   isCurrent?: boolean;
 };
 
-type HotfixEntry = {
+export type HotfixEntry = {
   patchVersion: string;
   cveNumber: string;
   description: string;
   baseVersion: string;
 };
 
-type RecallEntry = {
+export type RecallEntry = {
   fromVersion: string;
   toVersion: string;
   reason: string;
   appliedAt?: string;
 };
 
-type ReleasesData = {
+export type ReleasesData = {
   stages: ReleaseEntry[];
   hotfix: HotfixEntry[];
   recalls: RecallEntry[];
 };
 
-const MOCK_RELEASES: ReleasesData = {
+export const MOCK_RELEASES: ReleasesData = {
   stages: [
     {
       channel: "rc",
@@ -75,7 +75,7 @@ const MOCK_RELEASES: ReleasesData = {
   ],
 };
 
-function stageBadge(ch: ChannelStage) {
+export function stageBadge(ch: ChannelStage) {
   switch (ch) {
     case "rc":
       return { label: "rc", cls: "bp-discover-badge bp-discover-badge-warn" };

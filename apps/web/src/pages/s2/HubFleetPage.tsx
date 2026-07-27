@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 import { S2Chrome, useJsonGet, apiPost } from "./shared";
 import { BpLinkRow, BpToolbar } from "./blueprintUi";
 
-type Health = "online" | "degraded" | "offline";
-type Channel = "stable" | "beta" | "rc";
-type SpokeType = "full" | "lite";
+export type Health = "online" | "degraded" | "offline";
+export type Channel = "stable" | "beta" | "rc";
+export type SpokeType = "full" | "lite";
 
-type Spoke = {
+export type Spoke = {
   id: string;
   name: string;
   health: Health;
@@ -20,21 +20,21 @@ type Spoke = {
   region: string;
 };
 
-type HubData = {
+export type HubData = {
   hubRegion: string;
   onlineCount: number;
   totalCount: number;
   lastProbe: string;
 };
 
-const MOCK_HUB: HubData = {
+export const MOCK_HUB: HubData = {
   hubRegion: "cn-east-hub-01",
   onlineCount: 5,
   totalCount: 6,
   lastProbe: "12 秒前 · 全部通道同步",
 };
 
-const MOCK_SPOKES: Spoke[] = [
+export const MOCK_SPOKES: Spoke[] = [
   {
     id: "spoke-prod-sh",
     name: "spoke-prod-sh",
@@ -97,7 +97,7 @@ const MOCK_SPOKES: Spoke[] = [
   },
 ];
 
-function healthLabel(h: Health) {
+export function healthLabel(h: Health) {
   switch (h) {
     case "online":
       return "健康";
@@ -108,7 +108,7 @@ function healthLabel(h: Health) {
   }
 }
 
-function healthBadgeClass(h: Health) {
+export function healthBadgeClass(h: Health) {
   switch (h) {
     case "online":
       return "bp-discover-badge bp-discover-badge-ok";
@@ -153,7 +153,7 @@ function spokeCardBorder(h: Health) {
   }
 }
 
-function spokeTypeTag(st: SpokeType) {
+export function spokeTypeTag(st: SpokeType) {
   switch (st) {
     case "full":
       return "Full Spoke · 出站轮询开启";
