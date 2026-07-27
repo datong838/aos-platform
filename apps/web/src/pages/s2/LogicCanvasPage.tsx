@@ -114,16 +114,16 @@ const PALETTE: { kind: BlockKind; title: string; desc: string; icon: string }[] 
 
 /** Block 样式元数据（导出供测试） */
 export const KIND_META: Record<BlockKind, { label: string; color: string; bg: string; border: string }> = {
-  input:          { label: "输入",      color: "#6366f1", bg: "#EEF2FF", border: "#C7D2FE" },
-  create_variable:{ label: "创建变量",  color: "#14b8a6", bg: "#F0FDFA", border: "#99F6E4" },
-  get_property:   { label: "获取属性",  color: "#f59e0b", bg: "#FFFBEB", border: "#FDE68A" },
-  use_llm:        { label: "使用 LLM",  color: "#ec4899", bg: "#FDF2F8", border: "#FBCFE8" },
-  use_tool:       { label: "使用工具",  color: "#8b5cf6", bg: "#F5F3FF", border: "#DDD6FE" },
-  transform:      { label: "数据变换",  color: "#06b6d4", bg: "#ECFEFF", border: "#A5F3FC" },
-  apply_action:   { label: "应用动作",  color: "#f97316", bg: "#FFF7ED", border: "#FED7AA" },
-  execute:        { label: "执行",      color: "#22c55e", bg: "#F0FDF4", border: "#BBF7D0" },
-  branch:         { label: "分支",      color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
-  handoff:        { label: "汇聚",      color: "#4F46E5", bg: "#EEF2FF", border: "#A5B4FC" },
+  input:          { label: "输入",      color: "var(--aos-indigo)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
+  create_variable:{ label: "创建变量",  color: "var(--color-info)", bg: "var(--aos-accent-light)", border: "var(--aos-green-border)" },
+  get_property:   { label: "获取属性",  color: "var(--aos-amber)", bg: "var(--aos-amber-bg)", border: "var(--aos-amber-border)" },
+  use_llm:        { label: "使用 LLM",  color: "var(--aos-purple-600)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
+  use_tool:       { label: "使用工具",  color: "var(--aos-purple-600)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
+  transform:      { label: "数据变换",  color: "var(--color-info)", bg: "var(--aos-accent-light)", border: "var(--aos-accent-border)" },
+  apply_action:   { label: "应用动作",  color: "var(--aos-amber-600)", bg: "var(--aos-amber-bg)", border: "var(--aos-amber-border)" },
+  execute:        { label: "执行",      color: "var(--aos-green)", bg: "var(--aos-green-bg)", border: "var(--aos-green-border)" },
+  branch:         { label: "分支",      color: "var(--aos-red)", bg: "var(--aos-red-bg)", border: "var(--aos-red-border)" },
+  handoff:        { label: "汇聚",      color: "var(--aos-indigo-600)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
 };
 
 /** 向后兼容：部分渲染处仅需要颜色字符串 */
@@ -196,8 +196,8 @@ export function LogicCanvasPage() {
       kind === "branch"
         ? {
             paths: [
-              { id: "p1", label: "高风险", condition: "risk_level IN [high, critical]", color: "#DC2626" },
-              { id: "p2", label: "低风险", condition: "risk_level IN [low, medium]", color: "#16A34A" },
+              { id: "p1", label: "高风险", condition: "risk_level IN [high, critical]", color: "var(--aos-red)" },
+              { id: "p2", label: "低风险", condition: "risk_level IN [low, medium]", color: "var(--aos-green-600)" },
             ],
           }
         : kind === "handoff"
@@ -345,7 +345,7 @@ export function LogicCanvasPage() {
       </div>
 
       {err && (
-        <div style={{ background: "#fecaca", color: "#991b1b", padding: "8px 12px", borderRadius: 6, marginBottom: 12, fontSize: "0.85rem" }}>
+        <div style={{ background: "var(--aos-red-border)", color: "var(--aos-red)", padding: "8px 12px", borderRadius: 6, marginBottom: 12, fontSize: "0.85rem" }}>
           {err}
         </div>
       )}
@@ -539,7 +539,7 @@ export function LogicCanvasPage() {
                   {/* Branch Block 双路分叉视觉 */}
                   {b.kind === "branch" && (
                     <div style={{ width: "100%", marginTop: 2 }}>
-                      <div style={{ textAlign: "center", color: "#9CA3AF", fontSize: 10, padding: "2px 0" }}>↓ ↓</div>
+                      <div style={{ textAlign: "center", color: "var(--aos-text-tertiary)", fontSize: 10, padding: "2px 0" }}>↓ ↓</div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                         {((b.config.paths as BranchPath[]) || []).map((p, pi) => (
                           <div
@@ -554,15 +554,15 @@ export function LogicCanvasPage() {
                           >
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                               <span style={{ color: p.color, fontWeight: 600 }}>分支 · {p.label}</span>
-                              <span style={{ fontSize: 9, color: "#9CA3AF" }}>#{pi === 0 ? "4A" : "4B"}</span>
+                              <span style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>#{pi === 0 ? "4A" : "4B"}</span>
                             </div>
-                            <div style={{ fontFamily: "monospace", color: "#4B5563", marginTop: 2, fontSize: "0.62rem" }}>
+                            <div style={{ fontFamily: "monospace", color: "var(--aos-text-secondary)", marginTop: 2, fontSize: "0.62rem" }}>
                               {p.condition}
                             </div>
                           </div>
                         ))}
                       </div>
-                      <div style={{ textAlign: "center", color: "#9CA3AF", fontSize: 10, padding: "2px 0" }}>↓ ↓ 汇聚</div>
+                      <div style={{ textAlign: "center", color: "var(--aos-text-tertiary)", fontSize: 10, padding: "2px 0" }}>↓ ↓ 汇聚</div>
                     </div>
                   )}
 
@@ -571,30 +571,30 @@ export function LogicCanvasPage() {
                     <div
                       style={{
                         width: "100%", marginTop: 2,
-                        borderRadius: 6, border: "2px solid #A5B4FC", background: "#EEF2FF",
+                        borderRadius: 6, border: "2px solid var(--aos-indigo-border)", background: "var(--aos-indigo-bg)",
                         padding: 8, fontSize: "0.68rem",
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 6 }}>
                         <span style={{ fontSize: "0.75rem" }}>🔗</span>
-                        <span style={{ color: "#4338CA", fontWeight: 600 }}>汇聚 · Handoff 上下文</span>
+                        <span style={{ color: "var(--aos-indigo-600)", fontWeight: 600 }}>汇聚 · Handoff 上下文</span>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 4 }}>
-                        <div style={{ borderRadius: 4, background: "rgba(255,255,255,0.6)", border: "1px solid #C7D2FE", padding: "4px 6px" }}>
-                          <div style={{ fontSize: 9, color: "#9CA3AF" }}>decision</div>
-                          <div style={{ fontSize: 10, color: "#374151", fontWeight: 500, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div style={{ borderRadius: 4, background: "rgba(255,255,255,0.6)", border: "1px solid var(--aos-indigo-border)", padding: "4px 6px" }}>
+                          <div style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>decision</div>
+                          <div style={{ fontSize: 10, color: "var(--aos-text)", fontWeight: 500, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {String(b.config.decision || "—").slice(0, 12) || "—"}
                           </div>
                         </div>
-                        <div style={{ borderRadius: 4, background: "rgba(255,255,255,0.6)", border: "1px solid #C7D2FE", padding: "4px 6px" }}>
-                          <div style={{ fontSize: 9, color: "#9CA3AF" }}>artifacts</div>
-                          <div style={{ fontSize: 10, color: "#374151", fontWeight: 500, marginTop: 1 }}>
+                        <div style={{ borderRadius: 4, background: "rgba(255,255,255,0.6)", border: "1px solid var(--aos-indigo-border)", padding: "4px 6px" }}>
+                          <div style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>artifacts</div>
+                          <div style={{ fontSize: 10, color: "var(--aos-text)", fontWeight: 500, marginTop: 1 }}>
                             {((b.config.artifacts as string[]) || []).length} 个产物
                           </div>
                         </div>
-                        <div style={{ borderRadius: 4, background: "rgba(255,255,255,0.6)", border: "1px solid #C7D2FE", padding: "4px 6px" }}>
-                          <div style={{ fontSize: 9, color: "#9CA3AF" }}>open_qs</div>
-                          <div style={{ fontSize: 10, color: "#374151", fontWeight: 500, marginTop: 1 }}>
+                        <div style={{ borderRadius: 4, background: "rgba(255,255,255,0.6)", border: "1px solid var(--aos-indigo-border)", padding: "4px 6px" }}>
+                          <div style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>open_qs</div>
+                          <div style={{ fontSize: 10, color: "var(--aos-text)", fontWeight: 500, marginTop: 1 }}>
                             {((b.config.open_qs as string[]) || []).length} 个待确认
                           </div>
                         </div>
@@ -625,9 +625,9 @@ export function LogicCanvasPage() {
                   fontSize: "0.78rem",
                   fontWeight: rightTab === t.key ? 600 : 400,
                   border: "none",
-                  borderBottom: rightTab === t.key ? "2px solid #3B82F6" : "2px solid transparent",
+                  borderBottom: rightTab === t.key ? "2px solid var(--aos-blue)" : "2px solid transparent",
                   background: "none",
-                  color: rightTab === t.key ? "#3B82F6" : "var(--aos-muted)",
+                  color: rightTab === t.key ? "var(--aos-blue)" : "var(--aos-muted)",
                   cursor: "pointer",
                   marginBottom: "-2px",
                 }}
@@ -811,7 +811,7 @@ export function LogicCanvasPage() {
                 {/* Branch 配置：条件表达式 + 双路分叉 */}
                 {selected.kind === "branch" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    <div style={{ fontSize: "0.72rem", color: "var(--aos-muted)", background: "#FEF2F2", padding: "6px 8px", borderRadius: 6, border: "1px solid #FECACA" }}>
+                    <div style={{ fontSize: "0.72rem", color: "var(--aos-muted)", background: "var(--aos-red-bg)", padding: "6px 8px", borderRadius: 6, border: "1px solid var(--aos-red-border)" }}>
                       🔀 Branch Block · 根据 condition 表达式分叉到不同路径
                     </div>
                     {((selected.config.paths as BranchPath[]) || []).map((p, idx) => (
@@ -883,7 +883,7 @@ export function LogicCanvasPage() {
                       type="button"
                       onClick={() => {
                         const paths = [...((selected.config.paths as BranchPath[]) || [])];
-                        paths.push({ id: `p${paths.length + 1}`, label: "新路径", condition: "", color: "#6B7280" });
+                        paths.push({ id: `p${paths.length + 1}`, label: "新路径", condition: "", color: "var(--aos-text-secondary)" });
                         updateConfig("paths", paths);
                       }}
                       style={{
@@ -899,13 +899,13 @@ export function LogicCanvasPage() {
                 {/* Handoff 配置：decision / artifacts / open_qs / handoff_to */}
                 {selected.kind === "handoff" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    <div style={{ fontSize: "0.72rem", color: "#4338CA", background: "#EEF2FF", padding: "6px 8px", borderRadius: 6, border: "1px solid #A5B4FC" }}>
+                    <div style={{ fontSize: "0.72rem", color: "var(--aos-indigo-600)", background: "var(--aos-indigo-bg)", padding: "6px 8px", borderRadius: 6, border: "1px solid var(--aos-indigo-border)" }}>
                       🔗 Handoff Block · 汇聚多路上下文，输出交接摘要
                     </div>
 
                     {/* decision */}
                     <label style={{ display: "block", fontSize: "0.75rem", marginBottom: 0, color: "var(--aos-text)", fontWeight: 500 }}>
-                      <span style={{ color: "#4F46E5" }}>decision</span> · 决策摘要
+                      <span style={{ color: "var(--aos-indigo-600)" }}>decision</span> · 决策摘要
                       <textarea
                         value={String(selected.config.decision || "")}
                         onChange={(e) => updateConfig("decision", e.target.value)}
@@ -913,8 +913,8 @@ export function LogicCanvasPage() {
                         placeholder="风险分诊结论：中等风险，建议人工复核"
                         style={{
                           display: "block", width: "100%", marginTop: 4, fontSize: "0.78rem",
-                          border: "1px solid #A5B4FC", borderRadius: 4, padding: "6px 8px",
-                          background: "#F8FAFF", resize: "vertical",
+                          border: "1px solid var(--aos-indigo-border)", borderRadius: 4, padding: "6px 8px",
+                          background: "var(--aos-surface-hover)", resize: "vertical",
                         }}
                       />
                     </label>
@@ -922,7 +922,7 @@ export function LogicCanvasPage() {
                     {/* artifacts */}
                     <div>
                       <div style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--aos-text)", marginBottom: 4 }}>
-                        <span style={{ color: "#4F46E5" }}>artifacts</span> · 产物列表
+                        <span style={{ color: "var(--aos-indigo-600)" }}>artifacts</span> · 产物列表
                         <span style={{ marginLeft: 6, fontSize: "0.65rem", color: "var(--aos-muted)" }}>
                           ({((selected.config.artifacts as string[]) || []).length} 项)
                         </span>
@@ -930,7 +930,7 @@ export function LogicCanvasPage() {
                       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                         {((selected.config.artifacts as string[]) || []).map((name, i) => (
                           <div key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#60A5FA", flexShrink: 0 }} />
+                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--aos-blue)", flexShrink: 0 }} />
                             <input
                               value={name}
                               onChange={(e) => {
@@ -949,7 +949,7 @@ export function LogicCanvasPage() {
                                 const arr = ((selected.config.artifacts as string[]) || []).filter((_, j) => j !== i);
                                 updateConfig("artifacts", arr);
                               }}
-                              style={{ background: "none", border: "none", cursor: "pointer", color: "#EF4444", fontSize: "0.8rem" }}
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--aos-red)", fontSize: "0.8rem" }}
                             >
                               ×
                             </button>
@@ -971,7 +971,7 @@ export function LogicCanvasPage() {
                     {/* open_qs */}
                     <div>
                       <div style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--aos-text)", marginBottom: 4 }}>
-                        <span style={{ color: "#4F46E5" }}>open_qs</span> · 待确认项
+                        <span style={{ color: "var(--aos-indigo-600)" }}>open_qs</span> · 待确认项
                         <span style={{ marginLeft: 6, fontSize: "0.65rem", color: "var(--aos-muted)" }}>
                           ({((selected.config.open_qs as string[]) || []).length} 项)
                         </span>
@@ -979,7 +979,7 @@ export function LogicCanvasPage() {
                       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                         {((selected.config.open_qs as string[]) || []).map((q, i) => (
                           <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
-                            <span style={{ fontSize: "0.65rem", color: "#D97706", fontWeight: 600, marginTop: 3 }}>Q{i + 1}</span>
+                            <span style={{ fontSize: "0.65rem", color: "var(--aos-amber-600)", fontWeight: 600, marginTop: 3 }}>Q{i + 1}</span>
                             <input
                               value={q}
                               onChange={(e) => {
@@ -989,7 +989,7 @@ export function LogicCanvasPage() {
                               }}
                               style={{
                                 flex: 1, fontSize: "0.72rem",
-                                border: "1px solid #FDE68A", borderRadius: 4, padding: "3px 6px", background: "#FFFBEB",
+                                border: "1px solid var(--aos-amber-border)", borderRadius: 4, padding: "3px 6px", background: "var(--aos-amber-bg)",
                               }}
                             />
                             <button
@@ -998,7 +998,7 @@ export function LogicCanvasPage() {
                                 const arr = ((selected.config.open_qs as string[]) || []).filter((_, j) => j !== i);
                                 updateConfig("open_qs", arr);
                               }}
-                              style={{ background: "none", border: "none", cursor: "pointer", color: "#EF4444", fontSize: "0.8rem" }}
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--aos-red)", fontSize: "0.8rem" }}
                             >
                               ×
                             </button>
@@ -1019,7 +1019,7 @@ export function LogicCanvasPage() {
 
                     {/* handoff_to */}
                     <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 500, color: "var(--aos-text)" }}>
-                      <span style={{ color: "#4F46E5" }}>handoff_to</span> · 传递目标
+                      <span style={{ color: "var(--aos-indigo-600)" }}>handoff_to</span> · 传递目标
                       <select
                         value={String(selected.config.handoff_to || "draft_inbox")}
                         onChange={(e) => updateConfig("handoff_to", e.target.value)}
@@ -1068,23 +1068,23 @@ export function LogicCanvasPage() {
               {execResults.length > 0 && (
                 <div style={{
                   marginBottom: 8, padding: 10, borderRadius: 6,
-                  background: dryRun ? "#F0FDF4" : "#EFF6FF",
-                  border: `1px solid ${dryRun ? "#BBF7D0" : "#BFDBFE"}`,
+                  background: dryRun ? "var(--aos-green-bg)" : "var(--aos-accent-light)",
+                  border: `1px solid ${dryRun ? "var(--aos-green-border)" : "var(--aos-accent-border)"}`,
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                    <span style={{ fontSize: "0.7rem", fontWeight: 700, color: dryRun ? "#15803D" : "#1D4ED8" }}>
+                    <span style={{ fontSize: "0.7rem", fontWeight: 700, color: dryRun ? "var(--aos-green-700)" : "var(--aos-blue-600)" }}>
                       {dryRun ? "🧪 dryRun 试运行结果" : "🚀 生产执行结果"}
                     </span>
                   </div>
                   {/* 统计：耗时 + Tokens */}
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
-                    <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: 3, background: "rgba(255,255,255,0.7)", color: "#374151" }}>
+                    <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: 3, background: "rgba(255,255,255,0.7)", color: "var(--aos-text)" }}>
                       ⏱ 耗时 ~{(execResults.length * 0.3).toFixed(2)}s
                     </span>
-                    <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: 3, background: "rgba(255,255,255,0.7)", color: "#374151" }}>
+                    <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: 3, background: "rgba(255,255,255,0.7)", color: "var(--aos-text)" }}>
                       🎯 Tokens 入 {execResults.length * 284} / 出 {execResults.length * 47}
                     </span>
-                    <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: 3, background: "rgba(255,255,255,0.7)", color: "#374151" }}>
+                    <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: 3, background: "rgba(255,255,255,0.7)", color: "var(--aos-text)" }}>
                       📦 {execResults.length} 步
                     </span>
                   </div>
@@ -1101,7 +1101,7 @@ export function LogicCanvasPage() {
                             border: pi === activeIdx ? `2px solid ${p.color}` : `1px solid ${p.color}40`,
                             background: pi === activeIdx ? `${p.color}15` : "transparent",
                             fontWeight: pi === activeIdx ? 700 : 400,
-                            color: pi === activeIdx ? p.color : "#9CA3AF",
+                            color: pi === activeIdx ? p.color : "var(--aos-text-tertiary)",
                           }}>
                             {pi === activeIdx ? "▶ " : "  "}{p.label}
                           </div>
@@ -1126,16 +1126,16 @@ export function LogicCanvasPage() {
                       return (
                       <div key={r.block_id}
                         style={{
-                          borderLeft: `3px solid ${KIND_COLORS[blk?.kind || "input"] || "#666"}`,
+                          borderLeft: `3px solid ${KIND_COLORS[blk?.kind || "input"] || "var(--aos-text-secondary)"}`,
                           padding: "4px 8px",
                           marginBottom: 4,
                           fontSize: "0.72rem",
-                          background: isHandoff ? "#EEF2FF" : isBranch ? "#FEF2F2" : "var(--aos-card)",
+                          background: isHandoff ? "var(--aos-indigo-bg)" : isBranch ? "var(--aos-red-bg)" : "var(--aos-card)",
                           borderRadius: "0 4px 4px 0",
                         }}>
                         <strong>Step {i + 1}</strong>{" "}
-                        {isBranch && <span style={{ color: "#DC2626", fontSize: "0.62rem" }}>🔀 分支求值</span>}
-                        {isHandoff && <span style={{ color: "#4F46E5", fontSize: "0.62rem" }}>🔗 汇聚输出</span>}
+                        {isBranch && <span style={{ color: "var(--aos-red)", fontSize: "0.62rem" }}>🔀 分支求值</span>}
+                        {isHandoff && <span style={{ color: "var(--aos-indigo-600)", fontSize: "0.62rem" }}>🔗 汇聚输出</span>}
                         {r.cot.map((line, j) => (
                           <div key={j} style={{ color: "var(--aos-text)", marginTop: 2 }}>{line}</div>
                         ))}
@@ -1153,7 +1153,7 @@ export function LogicCanvasPage() {
                   </summary>
                   <pre style={{
                     fontSize: "0.7rem", overflow: "auto", maxHeight: 200, marginTop: 6, padding: 8,
-                    background: "#0d1117", color: "#c9d1d9", borderRadius: 6, lineHeight: 1.4,
+                    background: "var(--aos-text)", color: "var(--aos-text-tertiary)", borderRadius: 6, lineHeight: 1.4,
                   }}>
                     {output}
                   </pre>
@@ -1169,11 +1169,11 @@ export function LogicCanvasPage() {
                       display: "flex", alignItems: "center", gap: 6, padding: "4px 6px",
                       borderBottom: "1px solid var(--aos-border)", fontSize: "0.72rem",
                     }}>
-                      <span style={{ color: h.success ? "#10B981" : "#EF4444" }}>{h.success ? "✓" : "✗"}</span>
+                      <span style={{ color: h.success ? "var(--aos-green)" : "var(--aos-red)" }}>{h.success ? "✓" : "✗"}</span>
                       <span style={{ color: "var(--aos-muted)", fontFamily: "monospace" }}>{h.timestamp}</span>
                       <span style={{ color: "var(--aos-text)" }}>{h.blockCount} blocks</span>
                       <span style={{ fontSize: "0.65rem", padding: "1px 4px", borderRadius: 3,
-                        background: h.dryRun ? "#FEF3C7" : "#D1FAE5", color: h.dryRun ? "#92400E" : "#065F46" }}>
+                        background: h.dryRun ? "var(--aos-amber-bg)" : "var(--aos-green-bg)", color: h.dryRun ? "var(--aos-amber-700)" : "var(--aos-green-700)" }}>
                         {h.dryRun ? "dry" : "prod"}
                       </span>
                     </div>
@@ -1205,9 +1205,9 @@ export function LogicCanvasPage() {
                 {TRIGGER_TYPES.map((t) => (
                   <label key={t.kind} style={{
                     display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
-                    border: `1px solid ${automationTriggers[t.kind] ? "#3B82F6" : "var(--aos-border)"}`,
+                    border: `1px solid ${automationTriggers[t.kind] ? "var(--aos-blue)" : "var(--aos-border)"}`,
                     borderRadius: 6, cursor: "pointer", fontSize: "0.78rem",
-                    background: automationTriggers[t.kind] ? "#3B82F610" : "transparent",
+                    background: automationTriggers[t.kind] ? "var(--aos-blue)10" : "transparent",
                   }}>
                     <input
                       type="checkbox"
@@ -1222,7 +1222,7 @@ export function LogicCanvasPage() {
                   </label>
                 ))}
               </div>
-              <div style={{ marginTop: 12, padding: "8px 10px", background: "#FEF3C7", borderRadius: 6, fontSize: "0.7rem", color: "#92400E" }}>
+              <div style={{ marginTop: 12, padding: "8px 10px", background: "var(--aos-amber-bg)", borderRadius: 6, fontSize: "0.7rem", color: "var(--aos-amber-700)" }}>
                 💡 已启用 {Object.values(automationTriggers).filter(Boolean).length} 个触发器。变更将在下次执行时生效。
               </div>
             </div>

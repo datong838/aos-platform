@@ -146,7 +146,7 @@ function CreateAgentWizard({
         role="dialog"
         aria-label="新建智能体向导"
         style={{
-          background: "#fff",
+          background: "var(--aos-surface)",
           borderRadius: 16,
           boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
           width: "100%",
@@ -161,18 +161,18 @@ function CreateAgentWizard({
             position: "sticky",
             top: 0,
             zIndex: 1,
-            background: "#fff",
-            borderBottom: "1px solid #E5E7EB",
+            background: "var(--aos-surface)",
+            borderBottom: "1px solid var(--aos-border)",
             padding: "16px 24px",
             borderRadius: "16px 16px 0 0",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
-              <h2 style={{ fontSize: 16, fontWeight: 600, color: "#111827", margin: 0 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>
                 新建智能体
               </h2>
-              <p style={{ fontSize: 10, color: "#6B7280", margin: "2px 0 0 0" }}>
+              <p style={{ fontSize: 10, color: "var(--aos-text-secondary)", margin: "2px 0 0 0" }}>
                 通过四步配置创建一个新的 AI Agent
               </p>
             </div>
@@ -186,7 +186,7 @@ function CreateAgentWizard({
                 alignItems: "center",
                 justifyContent: "center",
                 borderRadius: 8,
-                color: "#9CA3AF",
+                color: "var(--aos-text-tertiary)",
                 background: "transparent",
                 border: "none",
                 cursor: "pointer",
@@ -213,8 +213,8 @@ function CreateAgentWizard({
                         justifyContent: "center",
                         fontSize: 10,
                         fontWeight: 500,
-                        background: isDone || isActive ? "#4F46E5" : "#E5E7EB",
-                        color: isDone || isActive ? "#fff" : "#6B7280",
+                        background: isDone || isActive ? "var(--aos-indigo-600)" : "var(--aos-border)",
+                        color: isDone || isActive ? "var(--aos-surface)" : "var(--aos-text-secondary)",
                       }}
                     >
                       {isDone ? "✓" : s}
@@ -223,14 +223,14 @@ function CreateAgentWizard({
                       style={{
                         fontSize: 10,
                         fontWeight: isActive ? 500 : 400,
-                        color: isActive || isDone ? "#4F46E5" : "#9CA3AF",
+                        color: isActive || isDone ? "var(--aos-indigo-600)" : "var(--aos-text-tertiary)",
                       }}
                     >
                       {WIZARD_STEP_LABELS[i]}
                     </span>
                   </div>
                   {i < 3 && (
-                    <div style={{ width: 48, height: 1, background: "#E5E7EB", margin: "0 8px" }} />
+                    <div style={{ width: 48, height: 1, background: "var(--aos-border)", margin: "0 8px" }} />
                   )}
                 </div>
               );
@@ -244,15 +244,15 @@ function CreateAgentWizard({
           {step === 1 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
-                <h3 style={{ fontSize: 12, fontWeight: 600, color: "#111827", margin: "0 0 4px 0" }}>
+                <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--aos-text)", margin: "0 0 4px 0" }}>
                   第一步：填写智能体基础信息
                 </h3>
-                <p style={{ fontSize: 10, color: "#6B7280", margin: 0 }}>
+                <p style={{ fontSize: 10, color: "var(--aos-text-secondary)", margin: 0 }}>
                   设定名称、图标、来源与用途描述。
                 </p>
               </div>
-              <label style={{ fontSize: 10, fontWeight: 500, color: "#374151", display: "flex", flexDirection: "column", gap: 4 }}>
-                智能体名称 <span style={{ color: "#EF4444" }}>*</span>
+              <label style={{ fontSize: 10, fontWeight: 500, color: "var(--aos-text)", display: "flex", flexDirection: "column", gap: 4 }}>
+                智能体名称 <span style={{ color: "var(--aos-red)" }}>*</span>
                 <input
                   value={draft.name}
                   onChange={(e) => setDraft({ ...draft, name: e.target.value })}
@@ -261,8 +261,8 @@ function CreateAgentWizard({
                 />
               </label>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 500, color: "#374151", marginBottom: 6 }}>
-                  图标 <span style={{ color: "#EF4444" }}>*</span>
+                <div style={{ fontSize: 10, fontWeight: 500, color: "var(--aos-text)", marginBottom: 6 }}>
+                  图标 <span style={{ color: "var(--aos-red)" }}>*</span>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 8 }}>
                   {WIZARD_ICONS.map((ic) => {
@@ -276,8 +276,8 @@ function CreateAgentWizard({
                           width: 36,
                           height: 36,
                           borderRadius: 8,
-                          background: sel ? "#EEF2FF" : "#F9FAFB",
-                          border: `2px solid ${sel ? "#6366F1" : "#E5E7EB"}`,
+                          background: sel ? "var(--aos-indigo-bg)" : "var(--aos-surface-hover)",
+                          border: `2px solid ${sel ? "var(--aos-indigo)" : "var(--aos-border)"}`,
                           cursor: "pointer",
                           fontSize: 16,
                           display: "flex",
@@ -292,7 +292,7 @@ function CreateAgentWizard({
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 500, color: "#374151", marginBottom: 6 }}>
+                <div style={{ fontSize: 10, fontWeight: 500, color: "var(--aos-text)", marginBottom: 6 }}>
                   来源
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
@@ -308,9 +308,9 @@ function CreateAgentWizard({
                           borderRadius: 999,
                           fontSize: 10,
                           fontWeight: sel ? 500 : 400,
-                          background: sel ? "#EEF2FF" : "#fff",
-                          color: sel ? "#4F46E5" : "#4B5563",
-                          border: `1px solid ${sel ? "#C7D2FE" : "#E5E7EB"}`,
+                          background: sel ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
+                          color: sel ? "var(--aos-indigo-600)" : "var(--aos-text-secondary)",
+                          border: `1px solid ${sel ? "var(--aos-indigo-border)" : "var(--aos-border)"}`,
                           cursor: "pointer",
                         }}
                       >
@@ -320,7 +320,7 @@ function CreateAgentWizard({
                   })}
                 </div>
               </div>
-              <label style={{ fontSize: 10, fontWeight: 500, color: "#374151", display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ fontSize: 10, fontWeight: 500, color: "var(--aos-text)", display: "flex", flexDirection: "column", gap: 4 }}>
                 用途描述
                 <textarea
                   value={draft.description}
@@ -337,10 +337,10 @@ function CreateAgentWizard({
           {step === 2 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
-                <h3 style={{ fontSize: 12, fontWeight: 600, color: "#111827", margin: "0 0 4px 0" }}>
+                <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--aos-text)", margin: "0 0 4px 0" }}>
                   第二步：选择 LLM 模型
                 </h3>
-                <p style={{ fontSize: 10, color: "#6B7280", margin: 0 }}>
+                <p style={{ fontSize: 10, color: "var(--aos-text-secondary)", margin: 0 }}>
                   从模型目录中选择 Agent 使用的语言模型。
                 </p>
               </div>
@@ -354,15 +354,15 @@ function CreateAgentWizard({
                       onClick={() => setDraft({ ...draft, modelId: m.id })}
                       style={{
                         borderRadius: 8,
-                        border: `2px solid ${sel ? "#6366F1" : "#E5E7EB"}`,
-                        background: sel ? "#EEF2FF" : "#fff",
+                        border: `2px solid ${sel ? "var(--aos-indigo)" : "var(--aos-border)"}`,
+                        background: sel ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
                         padding: "8px 10px",
                         cursor: "pointer",
                         textAlign: "left",
                       }}
                     >
-                      <div style={{ fontSize: 12, fontWeight: 500, color: "#111827" }}>{m.id}</div>
-                      <div style={{ fontSize: 9, color: "#6B7280", marginTop: 2 }}>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)" }}>{m.id}</div>
+                      <div style={{ fontSize: 9, color: "var(--aos-text-secondary)", marginTop: 2 }}>
                         {(m.kind ?? "text") === "text" ? "文本" : m.kind} · {m.provider || "默认供应商"}
                       </div>
                     </button>
@@ -376,15 +376,15 @@ function CreateAgentWizard({
           {step === 3 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
-                <h3 style={{ fontSize: 12, fontWeight: 600, color: "#111827", margin: "0 0 4px 0" }}>
+                <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--aos-text)", margin: "0 0 4px 0" }}>
                   第三步：编写系统提示词
                 </h3>
-                <p style={{ fontSize: 10, color: "#6B7280", margin: 0 }}>
+                <p style={{ fontSize: 10, color: "var(--aos-text-secondary)", margin: 0 }}>
                   支持变量插值 <code>{"${user.name}"}</code> / <code>{"${context.foo}"}</code>。
                 </p>
               </div>
-              <label style={{ fontSize: 10, fontWeight: 500, color: "#374151", display: "flex", flexDirection: "column", gap: 4 }}>
-                系统提示词 <span style={{ color: "#EF4444" }}>*</span>
+              <label style={{ fontSize: 10, fontWeight: 500, color: "var(--aos-text)", display: "flex", flexDirection: "column", gap: 4 }}>
+                系统提示词 <span style={{ color: "var(--aos-red)" }}>*</span>
                 <textarea
                   value={draft.prompt}
                   onChange={(e) => setDraft({ ...draft, prompt: e.target.value })}
@@ -399,12 +399,12 @@ function CreateAgentWizard({
               </label>
               {/* 变量预览 */}
               <div>
-                <div style={{ fontSize: 10, fontWeight: 500, color: "#374151", marginBottom: 6 }}>
+                <div style={{ fontSize: 10, fontWeight: 500, color: "var(--aos-text)", marginBottom: 6 }}>
                   变量预览
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {extractPromptVars(draft.prompt).length === 0 && (
-                    <span style={{ fontSize: 10, color: "#9CA3AF" }}>
+                    <span style={{ fontSize: 10, color: "var(--aos-text-tertiary)" }}>
                       暂无变量（示例：<code>{"${user.name}"}</code>）
                     </span>
                   )}
@@ -415,9 +415,9 @@ function CreateAgentWizard({
                         padding: "3px 8px",
                         borderRadius: 4,
                         fontSize: 9,
-                        background: v.scope === "user" ? "#DBEAFE" : "#F3E8FF",
-                        color: v.scope === "user" ? "#1D4ED8" : "#7C3AED",
-                        border: `1px solid ${v.scope === "user" ? "#BFDBFE" : "#DDD6FE"}`,
+                        background: v.scope === "user" ? "var(--aos-accent-light)" : "var(--aos-indigo-bg)",
+                        color: v.scope === "user" ? "var(--aos-blue-600)" : "var(--aos-purple-600)",
+                        border: `1px solid ${v.scope === "user" ? "var(--aos-accent-border)" : "var(--aos-indigo-border)"}`,
                       }}
                     >
                       {v.raw}
@@ -431,14 +431,14 @@ function CreateAgentWizard({
                   style={{
                     padding: 10,
                     borderRadius: 8,
-                    background: "#F9FAFB",
-                    border: "1px dashed #E5E7EB",
+                    background: "var(--aos-surface-hover)",
+                    border: "1px dashed var(--aos-border)",
                     fontSize: 10,
-                    color: "#6B7280",
+                    color: "var(--aos-text-secondary)",
                     fontFamily: "monospace",
                   }}
                 >
-                  <div style={{ fontWeight: 500, marginBottom: 4, color: "#374151" }}>
+                  <div style={{ fontWeight: 500, marginBottom: 4, color: "var(--aos-text)" }}>
                     渲染预览（示例变量）：
                   </div>
                   {renderPrompt(draft.prompt, {
@@ -454,10 +454,10 @@ function CreateAgentWizard({
           {step === 4 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
-                <h3 style={{ fontSize: 12, fontWeight: 600, color: "#111827", margin: "0 0 4px 0" }}>
+                <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--aos-text)", margin: "0 0 4px 0" }}>
                   第四步：选择初始工具集
                 </h3>
-                <p style={{ fontSize: 10, color: "#6B7280", margin: 0 }}>
+                <p style={{ fontSize: 10, color: "var(--aos-text-secondary)", margin: 0 }}>
                   勾选 Agent 创建后可调用的工具，后续可在「工具箱」Tab 调整。
                 </p>
               </div>
@@ -481,8 +481,8 @@ function CreateAgentWizard({
                         gap: 8,
                         padding: "8px 12px",
                         borderRadius: 8,
-                        border: `1px solid ${checked ? "#C7D2FE" : "#E5E7EB"}`,
-                        background: checked ? "#F5F3FF" : "#fff",
+                        border: `1px solid ${checked ? "var(--aos-indigo-border)" : "var(--aos-border)"}`,
+                        background: checked ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
                         cursor: "pointer",
                       }}
                     >
@@ -495,9 +495,9 @@ function CreateAgentWizard({
                           else next.delete(t.name);
                           setSelectedTools(next);
                         }}
-                        style={{ accentColor: "#6366F1" }}
+                        style={{ accentColor: "var(--aos-indigo)" }}
                       />
-                      <span style={{ fontSize: 11, fontWeight: 500, color: "#111827" }}>{t.name}</span>
+                      <span style={{ fontSize: 11, fontWeight: 500, color: "var(--aos-text)" }}>{t.name}</span>
                       <span
                         style={{
                           padding: "1px 6px",
@@ -509,7 +509,7 @@ function CreateAgentWizard({
                       >
                         {TOOL_KIND_LABEL[t.kind]}
                       </span>
-                      <span style={{ fontSize: 9, color: "#9CA3AF", marginLeft: "auto" }}>{t.desc}</span>
+                      <span style={{ fontSize: 9, color: "var(--aos-text-tertiary)", marginLeft: "auto" }}>{t.desc}</span>
                     </label>
                   );
                 })}
@@ -525,10 +525,10 @@ function CreateAgentWizard({
             alignItems: "center",
             justifyContent: "space-between",
             padding: "12px 24px",
-            borderTop: "1px solid #E5E7EB",
+            borderTop: "1px solid var(--aos-border)",
           }}
         >
-          <span style={{ fontSize: 10, color: "#9CA3AF" }}>第 {step} / 4 步</span>
+          <span style={{ fontSize: 10, color: "var(--aos-text-tertiary)" }}>第 {step} / 4 步</span>
           <div style={{ display: "flex", gap: 6 }}>
             <button onClick={onClose} style={btnGhost}>取消</button>
             <button
@@ -669,17 +669,17 @@ export function AgentsPage() {
             width: 256,
             flexShrink: 0,
             borderRight: "1px solid var(--aos-border)",
-            background: "#fff",
+            background: "var(--aos-surface)",
             overflow: "auto",
             display: "flex",
             flexDirection: "column",
           }}
         >
           {/* 搜索框 */}
-          <div style={{ padding: 12, borderBottom: "1px solid #F3F4F6" }}>
+          <div style={{ padding: 12, borderBottom: "1px solid var(--aos-gray-100)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>智能体列表</span>
-              <span style={{ fontSize: 9, color: "#9CA3AF" }}>{agents.length} 个</span>
+              <span style={{ fontSize: 13, fontWeight: 500, color: "var(--aos-text)" }}>智能体列表</span>
+              <span style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>{agents.length} 个</span>
             </div>
             <input
               value={keyword}
@@ -689,7 +689,7 @@ export function AgentsPage() {
                 width: "100%",
                 padding: "6px 10px",
                 borderRadius: 8,
-                border: "1px solid #E5E7EB",
+                border: "1px solid var(--aos-border)",
                 fontSize: 11,
                 outline: "none",
                 boxSizing: "border-box",
@@ -711,9 +711,9 @@ export function AgentsPage() {
                       padding: "4px 0",
                       fontSize: 10,
                       fontWeight: sel ? 500 : 400,
-                      color: sel ? "#4F46E5" : "#6B7280",
-                      background: sel ? "#EEF2FF" : "transparent",
-                      border: sel ? "1px solid #C7D2FE" : "1px solid transparent",
+                      color: sel ? "var(--aos-indigo-600)" : "var(--aos-text-secondary)",
+                      background: sel ? "var(--aos-indigo-bg)" : "transparent",
+                      border: sel ? "1px solid var(--aos-indigo-border)" : "1px solid transparent",
                       borderRadius: 6,
                       cursor: "pointer",
                     }}
@@ -735,8 +735,8 @@ export function AgentsPage() {
                 borderRadius: 8,
                 fontSize: 12,
                 fontWeight: 500,
-                color: "#fff",
-                background: "#4F46E5",
+                color: "var(--text-on-brand)",
+                background: "var(--aos-indigo-600)",
                 border: "none",
                 cursor: "pointer",
               }}
@@ -749,7 +749,7 @@ export function AgentsPage() {
           {/* Agent 卡片列表 */}
           <div style={{ flex: 1, overflow: "auto" }}>
             {filtered.length === 0 && (
-              <div style={{ padding: 24, textAlign: "center", fontSize: 11, color: "#9CA3AF" }}>
+              <div style={{ padding: 24, textAlign: "center", fontSize: 11, color: "var(--aos-text-tertiary)" }}>
                 未匹配到智能体
               </div>
             )}
@@ -763,13 +763,13 @@ export function AgentsPage() {
                   onClick={() => setSelectedId(a.id)}
                   style={{
                     padding: 12,
-                    borderBottom: "1px solid #F9FAFB",
+                    borderBottom: "1px solid var(--aos-surface-hover)",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "flex-start",
                     gap: 8,
-                    background: isSelected ? "#EEF2FF" : "transparent",
-                    borderLeft: isSelected ? "2px solid #6366F1" : "2px solid transparent",
+                    background: isSelected ? "var(--aos-indigo-bg)" : "transparent",
+                    borderLeft: isSelected ? "2px solid var(--aos-indigo)" : "2px solid transparent",
                   }}
                 >
                   <div
@@ -777,7 +777,7 @@ export function AgentsPage() {
                       width: 32,
                       height: 32,
                       borderRadius: 8,
-                      background: "#F3F4F6",
+                      background: "var(--aos-gray-100)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -792,7 +792,7 @@ export function AgentsPage() {
                       style={{
                         fontSize: 12,
                         fontWeight: 500,
-                        color: "#111827",
+                        color: "var(--aos-text)",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
@@ -827,7 +827,7 @@ export function AgentsPage() {
                       </span>
                     </div>
                     {/* 调用次数 */}
-                    <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 3 }}>
+                    <div style={{ fontSize: 9, color: "var(--aos-text-tertiary)", marginTop: 3 }}>
                       调用 {formatCalls(a.calls)} 次 · {a.tools.length} 工具
                     </div>
                   </div>
@@ -843,21 +843,21 @@ export function AgentsPage() {
             {/* 标题行 */}
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
               <div>
-                <h1 style={{ fontSize: 18, fontWeight: 600, color: "#111827", margin: 0 }}>
+                <h1 style={{ fontSize: 18, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>
                   {selected.icon} {selected.name}
                 </h1>
-                <p style={{ fontSize: 12, color: "#6B7280", margin: "4px 0 0 0" }}>
+                <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", margin: "4px 0 0 0" }}>
                   {selected.description}
                 </p>
-                <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>
-                  模型：<span style={{ color: "#374151", fontWeight: 500 }}>{resolveModelLabel(selected, models)}</span>
+                <div style={{ fontSize: 10, color: "var(--aos-text-tertiary)", marginTop: 4 }}>
+                  模型：<span style={{ color: "var(--aos-text)", fontWeight: 500 }}>{resolveModelLabel(selected, models)}</span>
                   {" · "}累计调用 {formatCalls(selected.calls)} 次
                 </div>
               </div>
             </div>
 
             {/* Tab 导航 */}
-            <div style={{ borderBottom: "1px solid #E5E7EB", display: "flex", gap: 24, marginBottom: 16 }}>
+            <div style={{ borderBottom: "1px solid var(--aos-border)", display: "flex", gap: 24, marginBottom: 16 }}>
               {([
                 { key: "prompt", label: "提示词", count: undefined },
                 { key: "tools", label: "工具箱", count: selected.tools.length },
@@ -871,16 +871,16 @@ export function AgentsPage() {
                     padding: "10px 0",
                     fontSize: 12,
                     fontWeight: activeTab === tab.key ? 500 : 400,
-                    color: activeTab === tab.key ? "#4F46E5" : "#6B7280",
+                    color: activeTab === tab.key ? "var(--aos-indigo-600)" : "var(--aos-text-secondary)",
                     borderBottom:
-                      activeTab === tab.key ? "2px solid #4F46E5" : "2px solid transparent",
+                      activeTab === tab.key ? "2px solid var(--aos-indigo-600)" : "2px solid transparent",
                     background: "transparent",
                     cursor: "pointer",
                   }}
                 >
                   {tab.label}
                   {tab.count != null && (
-                    <span style={{ marginLeft: 4, fontSize: 10, color: "#9CA3AF" }}>
+                    <span style={{ marginLeft: 4, fontSize: 10, color: "var(--aos-text-tertiary)" }}>
                       {tab.count}
                     </span>
                   )}
@@ -891,7 +891,7 @@ export function AgentsPage() {
             {/* ===== Tab 1: 提示词 ===== */}
             {activeTab === "prompt" && (
               <div style={cardStyle}>
-                <label style={{ fontSize: 11, color: "#6B7280" }}>系统提示词</label>
+                <label style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>系统提示词</label>
                 <textarea
                   readOnly
                   value={selected.prompt}
@@ -899,11 +899,11 @@ export function AgentsPage() {
                     width: "100%",
                     height: 128,
                     borderRadius: 8,
-                    background: "#F0F2F5",
-                    border: "1px solid #E5E7EB",
+                    background: "var(--aos-bg)",
+                    border: "1px solid var(--aos-border)",
                     padding: 12,
                     fontSize: 12,
-                    color: "#374151",
+                    color: "var(--aos-text)",
                     outline: "none",
                     resize: "none",
                     boxSizing: "border-box",
@@ -913,12 +913,12 @@ export function AgentsPage() {
                 />
                 {/* 变量预览 */}
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 500, color: "#374151", marginBottom: 6 }}>
+                  <div style={{ fontSize: 10, fontWeight: 500, color: "var(--aos-text)", marginBottom: 6 }}>
                     变量预览（$user / $context）
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                     {promptVars.length === 0 && (
-                      <span style={{ fontSize: 10, color: "#9CA3AF" }}>本提示词未引用变量</span>
+                      <span style={{ fontSize: 10, color: "var(--aos-text-tertiary)" }}>本提示词未引用变量</span>
                     )}
                     {promptVars.map((v) => (
                       <span
@@ -927,9 +927,9 @@ export function AgentsPage() {
                           padding: "4px 8px",
                           borderRadius: 4,
                           fontSize: 9,
-                          background: v.scope === "user" ? "#DBEAFE" : "#F3E8FF",
-                          color: v.scope === "user" ? "#1D4ED8" : "#7C3AED",
-                          border: `1px solid ${v.scope === "user" ? "#BFDBFE" : "#DDD6FE"}`,
+                          background: v.scope === "user" ? "var(--aos-accent-light)" : "var(--aos-indigo-bg)",
+                          color: v.scope === "user" ? "var(--aos-blue-600)" : "var(--aos-purple-600)",
+                          border: `1px solid ${v.scope === "user" ? "var(--aos-accent-border)" : "var(--aos-indigo-border)"}`,
                         }}
                       >
                         {v.raw}
@@ -943,14 +943,14 @@ export function AgentsPage() {
                     style={{
                       padding: 10,
                       borderRadius: 8,
-                      background: "#F9FAFB",
-                      border: "1px dashed #E5E7EB",
+                      background: "var(--aos-surface-hover)",
+                      border: "1px dashed var(--aos-border)",
                       fontSize: 10,
-                      color: "#6B7280",
+                      color: "var(--aos-text-secondary)",
                       fontFamily: "monospace",
                     }}
                   >
-                    <div style={{ fontWeight: 500, marginBottom: 4, color: "#374151" }}>
+                    <div style={{ fontWeight: 500, marginBottom: 4, color: "var(--aos-text)" }}>
                       渲染示例（user.name=张三, context.wiki=WikiDoc）：
                     </div>
                     {renderPrompt(selected.prompt, {
@@ -966,15 +966,15 @@ export function AgentsPage() {
             {activeTab === "tools" && (
               <div style={cardStyle}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 12, fontWeight: 500, color: "#111827" }}>已启用工具</span>
-                  <span style={{ fontSize: 10, color: "#6B7280" }}>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)" }}>已启用工具</span>
+                  <span style={{ fontSize: 10, color: "var(--aos-text-secondary)" }}>
                     已开 {toolCounts.on} · 推荐 {toolCounts.recommended} · 禁用 {toolCounts.disabled} ·
                     HITL 确认中 {toolCounts.hitl}
                   </span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {selected.tools.length === 0 && (
-                    <div style={{ padding: 16, textAlign: "center", fontSize: 11, color: "#9CA3AF" }}>
+                    <div style={{ padding: 16, textAlign: "center", fontSize: 11, color: "var(--aos-text-tertiary)" }}>
                       该智能体暂未配置工具
                     </div>
                   )}
@@ -989,8 +989,8 @@ export function AgentsPage() {
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "space-between",
-                          border: `1px solid ${hitl ? "#FCD34D" : "#E5E7EB"}`,
-                          background: hitl ? "#FFFBEB" : "#fff",
+                          border: `1px solid ${hitl ? "var(--aos-amber-border)" : "var(--aos-border)"}`,
+                          background: hitl ? "var(--aos-amber-bg)" : "var(--aos-surface)",
                           borderRadius: 8,
                           padding: "8px 12px",
                         }}
@@ -1002,7 +1002,7 @@ export function AgentsPage() {
                             onToggle={() => handleToggleTool(t.id)}
                           />
                           <div>
-                            <span style={{ fontSize: 12, color: "#111827", fontWeight: 500 }}>
+                            <span style={{ fontSize: 12, color: "var(--aos-text)", fontWeight: 500 }}>
                               {t.name}
                             </span>
                             <div style={{ display: "flex", gap: 4, marginTop: 2 }}>
@@ -1046,8 +1046,8 @@ export function AgentsPage() {
                                 borderRadius: 6,
                                 fontSize: 10,
                                 fontWeight: 500,
-                                color: "#fff",
-                                background: "#16A34A",
+                                color: "var(--text-on-brand)",
+                                background: "var(--aos-green-600)",
                                 border: "none",
                                 cursor: "pointer",
                               }}
@@ -1061,9 +1061,9 @@ export function AgentsPage() {
                                 borderRadius: 6,
                                 fontSize: 10,
                                 fontWeight: 500,
-                                color: "#DC2626",
-                                background: "#fff",
-                                border: "1px solid #FCA5A5",
+                                color: "var(--aos-red)",
+                                background: "var(--aos-surface)",
+                                border: "1px solid var(--aos-red-border)",
                                 cursor: "pointer",
                               }}
                             >
@@ -1084,10 +1084,10 @@ export function AgentsPage() {
                 <div
                   style={{
                     padding: "10px 14px",
-                    borderBottom: "1px solid #F3F4F6",
+                    borderBottom: "1px solid var(--aos-gray-100)",
                     fontSize: 12,
                     fontWeight: 500,
-                    color: "#111827",
+                    color: "var(--aos-text)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
@@ -1111,11 +1111,11 @@ export function AgentsPage() {
                     display: "flex",
                     flexDirection: "column",
                     gap: 10,
-                    background: "#FAFAFA",
+                    background: "var(--aos-surface-hover)",
                   }}
                 >
                   {trialMessages.length === 0 && (
-                    <div style={{ margin: "auto", textAlign: "center", color: "#9CA3AF", fontSize: 11 }}>
+                    <div style={{ margin: "auto", textAlign: "center", color: "var(--aos-text-tertiary)", fontSize: 11 }}>
                       发送一条消息开始测试 Agent
                     </div>
                   )}
@@ -1130,16 +1130,16 @@ export function AgentsPage() {
                         fontSize: 12,
                         lineHeight: 1.5,
                         background:
-                          m.role === "user" ? "#4F46E5" : "#fff",
-                        color: m.role === "user" ? "#fff" : "#111827",
+                          m.role === "user" ? "var(--aos-indigo-600)" : "var(--aos-surface)",
+                        color: m.role === "user" ? "var(--aos-surface)" : "var(--aos-text)",
                         border:
                           m.role === "assistant"
-                            ? "1px solid #E5E7EB"
+                            ? "1px solid var(--aos-border)"
                             : "none",
                       }}
                     >
                       {m.role === "assistant" && (
-                        <div style={{ fontSize: 9, color: "#6B7280", marginBottom: 2 }}>
+                        <div style={{ fontSize: 9, color: "var(--aos-text-secondary)", marginBottom: 2 }}>
                           {selected.name}
                         </div>
                       )}
@@ -1152,7 +1152,7 @@ export function AgentsPage() {
                     display: "flex",
                     gap: 8,
                     padding: "10px 14px",
-                    borderTop: "1px solid #F3F4F6",
+                    borderTop: "1px solid var(--aos-gray-100)",
                   }}
                 >
                   <input
@@ -1169,7 +1169,7 @@ export function AgentsPage() {
                       flex: 1,
                       padding: "8px 12px",
                       borderRadius: 8,
-                      border: "1px solid #E5E7EB",
+                      border: "1px solid var(--aos-border)",
                       fontSize: 12,
                       outline: "none",
                     }}
@@ -1184,19 +1184,19 @@ export function AgentsPage() {
             {/* ===== Tab 4: 发布 ===== */}
             {activeTab === "publish" && (
               <div style={cardStyle}>
-                <h2 style={{ fontSize: 13, fontWeight: 500, color: "#111827", margin: "0 0 12px 0" }}>
+                <h2 style={{ fontSize: 13, fontWeight: 500, color: "var(--aos-text)", margin: "0 0 12px 0" }}>
                   发布管理
                 </h2>
                 {/* 环境选择 */}
                 <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontSize: 10, fontWeight: 500, color: "#374151", marginBottom: 6 }}>
+                  <div style={{ fontSize: 10, fontWeight: 500, color: "var(--aos-text)", marginBottom: 6 }}>
                     目标环境
                   </div>
                   <div style={{ display: "flex", gap: 6 }}>
                     {[
-                      { env: "dev", label: "开发", color: "#9CA3AF" },
-                      { env: "staging", label: "预发", color: "#EA580C" },
-                      { env: "prod", label: "生产", color: "#DC2626" },
+                      { env: "dev", label: "开发", color: "var(--aos-text-tertiary)" },
+                      { env: "staging", label: "预发", color: "var(--aos-amber-600)" },
+                      { env: "prod", label: "生产", color: "var(--aos-red)" },
                     ].map((e) => (
                       <span
                         key={e.env}
@@ -1221,10 +1221,10 @@ export function AgentsPage() {
                     style={{
                       padding: 10,
                       borderRadius: 8,
-                      background: "#FEF3C7",
-                      border: "1px solid #FCD34D",
+                      background: "var(--aos-amber-bg)",
+                      border: "1px solid var(--aos-amber-border)",
                       fontSize: 10,
-                      color: "#92400E",
+                      color: "var(--aos-amber-700)",
                       marginBottom: 12,
                     }}
                   >
@@ -1233,7 +1233,7 @@ export function AgentsPage() {
                 )}
                 {/* 发布历史 */}
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 500, color: "#374151", marginBottom: 6 }}>
+                  <div style={{ fontSize: 10, fontWeight: 500, color: "var(--aos-text)", marginBottom: 6 }}>
                     发布历史
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -1246,27 +1246,27 @@ export function AgentsPage() {
                           justifyContent: "space-between",
                           padding: "8px 12px",
                           borderRadius: 8,
-                          border: "1px solid #E5E7EB",
+                          border: "1px solid var(--aos-border)",
                           fontSize: 11,
                         }}
                       >
                         <div>
-                          <span style={{ color: "#111827", fontWeight: 500 }}>{h.version}</span>
+                          <span style={{ color: "var(--aos-text)", fontWeight: 500 }}>{h.version}</span>
                           <span
                             style={{
                               marginLeft: 8,
                               padding: "1px 6px",
                               borderRadius: 3,
                               fontSize: 9,
-                              background: "#F3F4F6",
-                              color: "#6B7280",
+                              background: "var(--aos-gray-100)",
+                              color: "var(--aos-text-secondary)",
                             }}
                           >
                             {h.env}
                           </span>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 10, color: "#9CA3AF" }}>{h.time}</span>
+                          <span style={{ fontSize: 10, color: "var(--aos-text-tertiary)" }}>{h.time}</span>
                           <span
                             style={{
                               padding: "1px 6px",
@@ -1274,16 +1274,16 @@ export function AgentsPage() {
                               fontSize: 9,
                               background:
                                 h.status === "已发布"
-                                  ? "#DCFCE7"
+                                  ? "var(--aos-green-bg)"
                                   : h.status === "灰度中"
-                                    ? "#FFEDD5"
-                                    : "#DBEAFE",
+                                    ? "var(--aos-amber-bg)"
+                                    : "var(--aos-accent-light)",
                               color:
                                 h.status === "已发布"
-                                  ? "#15803D"
+                                  ? "var(--aos-green-700)"
                                   : h.status === "灰度中"
-                                    ? "#EA580C"
-                                    : "#1D4ED8",
+                                    ? "var(--aos-amber-600)"
+                                    : "var(--aos-blue-600)",
                             }}
                           >
                             {h.status}
@@ -1321,10 +1321,10 @@ function ToggleSwitch({
   onToggle: () => void;
 }) {
   const on = state === "on" || state === "recommended" || state === "hitl";
-  let bg = "#E5E7EB";
-  if (state === "on") bg = "#16A34A";
-  else if (state === "recommended") bg = "#EA580C";
-  else if (state === "hitl") bg = "#F59E0B";
+  let bg = "var(--aos-border)";
+  if (state === "on") bg = "var(--aos-green-600)";
+  else if (state === "recommended") bg = "var(--aos-amber-600)";
+  else if (state === "hitl") bg = "var(--aos-amber)";
   return (
     <button
       type="button"
@@ -1352,7 +1352,7 @@ function ToggleSwitch({
           width: 14,
           height: 14,
           borderRadius: "50%",
-          background: "#fff",
+          background: "var(--aos-surface)",
           boxShadow: "0 1px 2px rgba(0,0,0,0.2)",
           transition: "left 0.2s",
         }}
@@ -1367,17 +1367,17 @@ const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "6px 12px",
   borderRadius: 8,
-  border: "1px solid #D1D5DB",
+  border: "1px solid var(--aos-border-strong)",
   fontSize: 12,
   outline: "none",
   boxSizing: "border-box",
-  color: "#1F2937",
+  color: "var(--aos-text)",
 };
 
 const cardStyle: React.CSSProperties = {
   borderRadius: 12,
-  border: "1px solid #E5E7EB",
-  background: "#fff",
+  border: "1px solid var(--aos-border)",
+  background: "var(--aos-surface)",
   padding: 20,
   display: "flex",
   flexDirection: "column",
@@ -1390,23 +1390,23 @@ const btnPrimary: React.CSSProperties = {
   fontWeight: 500,
   borderRadius: 8,
   border: "none",
-  background: "#4F46E5",
-  color: "#fff",
+  background: "var(--aos-indigo-600)",
+  color: "var(--text-on-brand)",
   cursor: "pointer",
 };
 
 const btnSuccess: React.CSSProperties = {
   ...btnPrimary,
-  background: "#059669",
+  background: "var(--aos-green-600)",
 };
 
 const btnGhost: React.CSSProperties = {
   padding: "6px 20px",
   fontSize: 12,
   borderRadius: 8,
-  border: "1px solid #D1D5DB",
-  background: "#fff",
-  color: "#374151",
+  border: "1px solid var(--aos-border-strong)",
+  background: "var(--aos-surface)",
+  color: "var(--aos-text)",
   cursor: "pointer",
 };
 
@@ -1414,9 +1414,9 @@ const btnGhostSmall: React.CSSProperties = {
   padding: "3px 10px",
   fontSize: 10,
   borderRadius: 6,
-  border: "1px solid #E5E7EB",
-  background: "#fff",
-  color: "#6B7280",
+  border: "1px solid var(--aos-border)",
+  background: "var(--aos-surface)",
+  color: "var(--aos-text-secondary)",
   cursor: "pointer",
 };
 

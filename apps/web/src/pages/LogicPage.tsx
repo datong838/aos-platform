@@ -60,16 +60,16 @@ const BLOCK_TOOLBAR: { kind: BlockKind; label: string; tone?: "yellow" | "green"
 ];
 
 const KIND_META: Record<BlockKind, { label: string; color: string; bg: string; border: string }> = {
-  input: { label: "输入", color: "#1D4ED8", bg: "#EFF6FF", border: "#BFDBFE" },
-  create_variable: { label: "创建变量", color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
-  get_attribute: { label: "获取对象属性", color: "#7C3AED", bg: "#F5F3FF", border: "#DDD6FE" },
-  use_llm: { label: "使用 LLM", color: "#CA8A04", bg: "#FEFCE8", border: "#FDE047" },
-  transform: { label: "数据变换", color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
-  apply_action: { label: "应用动作", color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
-  write_back: { label: "写回", color: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0" },
-  execute: { label: "执行", color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
-  branch: { label: "分支", color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
-  handoff: { label: "汇聚 · Handoff 上下文", color: "#4F46E5", bg: "#EEF2FF", border: "#A5B4FC" },
+  input: { label: "输入", color: "var(--aos-blue-600)", bg: "var(--aos-accent-light)", border: "var(--aos-accent-border)" },
+  create_variable: { label: "创建变量", color: "var(--color-info)", bg: "var(--aos-accent-light)", border: "var(--aos-accent-border)" },
+  get_attribute: { label: "获取对象属性", color: "var(--aos-purple-600)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
+  use_llm: { label: "使用 LLM", color: "var(--aos-amber-600)", bg: "var(--aos-amber-bg)", border: "var(--aos-amber-border)" },
+  transform: { label: "数据变换", color: "var(--color-info)", bg: "var(--aos-accent-light)", border: "var(--aos-accent-border)" },
+  apply_action: { label: "应用动作", color: "var(--aos-red)", bg: "var(--aos-red-bg)", border: "var(--aos-red-border)" },
+  write_back: { label: "写回", color: "var(--aos-green-600)", bg: "var(--aos-green-bg)", border: "var(--aos-green-border)" },
+  execute: { label: "执行", color: "var(--aos-indigo-600)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
+  branch: { label: "分支", color: "var(--aos-red)", bg: "var(--aos-red-bg)", border: "var(--aos-red-border)" },
+  handoff: { label: "汇聚 · Handoff 上下文", color: "var(--aos-indigo-600)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
 };
 
 const DEFAULT_BLOCKS: BlockNode[] = [
@@ -111,9 +111,9 @@ const HISTORY_DATA: HistoryItem[] = [
 ];
 
 const ARTIFACTS = [
-  { name: "risk_assessment.json", type: "LLM 输出", color: "#A78BFA" },
-  { name: "order_snapshot.diff", type: "字段变更", color: "#60A5FA" },
-  { name: "escalation_ticket.log", type: "Action 产物", color: "#F87171" },
+  { name: "risk_assessment.json", type: "LLM 输出", color: "var(--aos-purple-600)" },
+  { name: "order_snapshot.diff", type: "字段变更", color: "var(--aos-blue)" },
+  { name: "escalation_ticket.log", type: "Action 产物", color: "var(--aos-red)" },
 ];
 
 export function LogicPage() {
@@ -200,8 +200,8 @@ export function LogicPage() {
         {/* Tab 导航 */}
         <div
           style={{
-            borderBottom: "1px solid #E5E7EB",
-            background: "#fff",
+            borderBottom: "1px solid var(--aos-border)",
+            background: "var(--aos-surface)",
             padding: "0 20px",
             display: "flex",
             alignItems: "center",
@@ -224,10 +224,10 @@ export function LogicPage() {
                   padding: "10px 16px",
                   fontSize: 13,
                   fontWeight: active ? 500 : 400,
-                  color: active ? "#4F46E5" : "#6B7280",
+                  color: active ? "var(--aos-indigo-600)" : "var(--aos-text-secondary)",
                   background: "none",
                   border: "none",
-                  borderBottom: active ? "2px solid #4F46E5" : "2px solid transparent",
+                  borderBottom: active ? "2px solid var(--aos-indigo-600)" : "2px solid transparent",
                   cursor: "pointer",
                 }}
               >
@@ -244,7 +244,7 @@ export function LogicPage() {
             <div
               style={{
                 padding: "8px 20px",
-                borderBottom: "1px solid #E5E7EB",
+                borderBottom: "1px solid var(--aos-border)",
                 display: "flex",
                 flexWrap: "wrap",
                 gap: 6,
@@ -252,7 +252,7 @@ export function LogicPage() {
                 flexShrink: 0,
               }}
             >
-              <span style={{ color: "#9CA3AF", alignSelf: "center", marginRight: 4 }}>块:</span>
+              <span style={{ color: "var(--aos-text-tertiary)", alignSelf: "center", marginRight: 4 }}>块:</span>
               {BLOCK_TOOLBAR.map((b) => {
                 const isYellow = b.tone === "yellow";
                 const isGreen = b.tone === "green";
@@ -265,9 +265,9 @@ export function LogicPage() {
                       padding: "2.5px 10px",
                       fontSize: 10,
                       borderRadius: 6,
-                      border: `1px solid ${isYellow ? "#FDE047" : isGreen ? "#BBF7D0" : "#E5E7EB"}`,
-                      background: isYellow ? "#FEFCE8" : isGreen ? "#F0FDF4" : "#fff",
-                      color: isYellow ? "#CA8A04" : isGreen ? "#16A34A" : "#4B5563",
+                      border: `1px solid ${isYellow ? "var(--aos-amber-border)" : isGreen ? "var(--aos-green-border)" : "var(--aos-border)"}`,
+                      background: isYellow ? "var(--aos-amber-bg)" : isGreen ? "var(--aos-green-bg)" : "var(--aos-surface)",
+                      color: isYellow ? "var(--aos-amber-600)" : isGreen ? "var(--aos-green-600)" : "var(--aos-text-secondary)",
                       cursor: "pointer",
                     }}
                   >
@@ -290,17 +290,17 @@ export function LogicPage() {
               {/* ① 编排区 */}
               <div
                 style={{
-                  borderRight: "1px solid #E5E7EB",
+                  borderRight: "1px solid var(--aos-border)",
                   overflowY: "auto",
                   padding: 16,
                   background:
-                    "radial-gradient(circle, #E5E7EB 1px, transparent 1px) 0 0 / 20px 20px, #FAFAFA",
+                    "radial-gradient(circle, var(--aos-border) 1px, transparent 1px) 0 0 / 20px 20px, var(--aos-surface-hover)",
                 }}
               >
                 <div
                   style={{
                     fontSize: 10,
-                    color: "#9CA3AF",
+                    color: "var(--aos-text-tertiary)",
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
                     marginBottom: 8,
@@ -335,10 +335,10 @@ export function LogicPage() {
                           }}
                         >
                           <span style={{ color: meta.color, fontWeight: 500 }}>{block.title}</span>
-                          <span style={{ fontSize: 9, color: "#9CA3AF" }}>块 #{idx + 1}</span>
+                          <span style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>块 #{idx + 1}</span>
                         </div>
                         {block.subtitle && (
-                          <div style={{ fontFamily: "monospace", color: "#4B5563", marginTop: 4, fontSize: 11 }}>
+                          <div style={{ fontFamily: "monospace", color: "var(--aos-text-secondary)", marginTop: 4, fontSize: 11 }}>
                             {block.subtitle}
                           </div>
                         )}
@@ -351,7 +351,7 @@ export function LogicPage() {
                                 gap: 8,
                                 marginTop: 6,
                                 fontSize: 10,
-                                color: "#6B7280",
+                                color: "var(--aos-text-secondary)",
                               }}
                             >
                               <span>模型: 私有-中</span>
@@ -361,13 +361,13 @@ export function LogicPage() {
                             <div
                               style={{
                                 marginTop: 8,
-                                color: "#4B5563",
+                                color: "var(--aos-text-secondary)",
                                 lineHeight: 1.6,
                                 fontSize: 11,
-                                background: "#F3F4F6",
+                                background: "var(--aos-gray-100)",
                                 borderRadius: 4,
                                 padding: 8,
-                                border: "1px solid #E5E7EB",
+                                border: "1px solid var(--aos-border)",
                               }}
                             >
                               {llmPrompt.split("\n")[0]}
@@ -379,9 +379,9 @@ export function LogicPage() {
                                 style={{
                                   padding: "2px 6px",
                                   borderRadius: 4,
-                                  background: "#F0FDF4",
-                                  border: "1px solid #BBF7D0",
-                                  color: "#16A34A",
+                                  background: "var(--aos-green-bg)",
+                                  border: "1px solid var(--aos-green-border)",
+                                  color: "var(--aos-green-600)",
                                   fontSize: 9,
                                 }}
                               >
@@ -391,9 +391,9 @@ export function LogicPage() {
                                 style={{
                                   padding: "2px 6px",
                                   borderRadius: 4,
-                                  background: "#F0FDF4",
-                                  border: "1px solid #BBF7D0",
-                                  color: "#16A34A",
+                                  background: "var(--aos-green-bg)",
+                                  border: "1px solid var(--aos-green-border)",
+                                  color: "var(--aos-green-600)",
                                   fontSize: 9,
                                 }}
                               >
@@ -404,7 +404,7 @@ export function LogicPage() {
                         )}
                       </div>
                       {idx < blocks.length - 1 && (
-                        <div style={{ textAlign: "center", color: "#9CA3AF", fontSize: 10, padding: "4px 0" }}>
+                        <div style={{ textAlign: "center", color: "var(--aos-text-tertiary)", fontSize: 10, padding: "4px 0" }}>
                           ↓
                         </div>
                       )}
@@ -415,7 +415,7 @@ export function LogicPage() {
                 {/* 分支双路 */}
                 {hasBranch && (
                   <>
-                    <div style={{ textAlign: "center", color: "#9CA3AF", fontSize: 10, padding: "4px 0" }}>↓ ↓</div>
+                    <div style={{ textAlign: "center", color: "var(--aos-text-tertiary)", fontSize: 10, padding: "4px 0" }}>↓ ↓</div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                       {BRANCH_PATHS.map((p, i) => (
                         <div
@@ -423,8 +423,8 @@ export function LogicPage() {
                           onClick={() => setSelectedId(`branch-${i}`)}
                           style={{
                             borderRadius: 8,
-                            border: `1px solid ${p.tone === "red" ? "#FECACA" : "#BBF7D0"}`,
-                            background: p.tone === "red" ? "#FEF2F2" : "#F0FDF4",
+                            border: `1px solid ${p.tone === "red" ? "var(--aos-red-border)" : "var(--aos-green-border)"}`,
+                            background: p.tone === "red" ? "var(--aos-red-bg)" : "var(--aos-green-bg)",
                             padding: 12,
                             fontSize: 12,
                             cursor: "pointer",
@@ -439,18 +439,18 @@ export function LogicPage() {
                           >
                             <span
                               style={{
-                                color: p.tone === "red" ? "#DC2626" : "#16A34A",
+                                color: p.tone === "red" ? "var(--aos-red)" : "var(--aos-green-600)",
                                 fontWeight: 500,
                               }}
                             >
                               分支 · {p.label}
                             </span>
-                            <span style={{ fontSize: 9, color: "#9CA3AF" }}>#{i === 0 ? "4A" : "4B"}</span>
+                            <span style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>#{i === 0 ? "4A" : "4B"}</span>
                           </div>
                           <div
                             style={{
                               fontFamily: "monospace",
-                              color: "#4B5563",
+                              color: "var(--aos-text-secondary)",
                               marginTop: 4,
                               fontSize: 11,
                             }}
@@ -461,7 +461,7 @@ export function LogicPage() {
                             style={{
                               marginTop: 8,
                               fontSize: 10,
-                              color: p.tone === "red" ? "#DC2626" : "#16A34A",
+                              color: p.tone === "red" ? "var(--aos-red)" : "var(--aos-green-600)",
                             }}
                           >
                             → {p.tone === "red" ? "Apply Action: escalate_to_supervisor" : "写回：update_status → shipped"}
@@ -469,7 +469,7 @@ export function LogicPage() {
                         </div>
                       ))}
                     </div>
-                    <div style={{ textAlign: "center", color: "#9CA3AF", fontSize: 10, padding: "4px 0" }}>
+                    <div style={{ textAlign: "center", color: "var(--aos-text-tertiary)", fontSize: 10, padding: "4px 0" }}>
                       ↓ ↓ 汇聚
                     </div>
                   </>
@@ -481,12 +481,12 @@ export function LogicPage() {
                     onClick={() => setSelectedId("handoff")}
                     style={{
                       borderRadius: 8,
-                      border: "2px solid #A5B4FC",
-                      background: "#EEF2FF",
+                      border: "2px solid var(--aos-indigo-border)",
+                      background: "var(--aos-indigo-bg)",
                       padding: 12,
                       fontSize: 12,
                       cursor: "pointer",
-                      boxShadow: selectedId === "handoff" ? "0 0 0 3px #818CF855" : "none",
+                      boxShadow: selectedId === "handoff" ? "0 0 0 3px var(--aos-indigo)55" : "none",
                     }}
                   >
                     <div
@@ -497,27 +497,27 @@ export function LogicPage() {
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" strokeWidth="2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--aos-indigo-600)" strokeWidth="2">
                           <path d="M8 7h8M8 12h8M8 17h8" strokeLinecap="round" />
                           <circle cx="5" cy="7" r="1.5" fill="currentColor" stroke="none" />
                           <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none" />
                           <circle cx="5" cy="17" r="1.5" fill="currentColor" stroke="none" />
                         </svg>
-                        <span style={{ color: "#4338CA", fontWeight: 500 }}>汇聚 · Handoff 上下文</span>
+                        <span style={{ color: "var(--aos-indigo-600)", fontWeight: 500 }}>汇聚 · Handoff 上下文</span>
                       </div>
-                      <span style={{ fontSize: 9, color: "#9CA3AF" }}>块 #5</span>
+                      <span style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>块 #5</span>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, marginTop: 8 }}>
                       <div
                         style={{
                           borderRadius: 4,
                           background: "rgba(255,255,255,0.6)",
-                          border: "1px solid #C7D2FE",
+                          border: "1px solid var(--aos-indigo-border)",
                           padding: "6px 8px",
                         }}
                       >
-                        <div style={{ fontSize: 9, color: "#9CA3AF" }}>decision</div>
-                        <div style={{ fontSize: 10, color: "#374151", fontWeight: 500, marginTop: 1 }}>
+                        <div style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>decision</div>
+                        <div style={{ fontSize: 10, color: "var(--aos-text)", fontWeight: 500, marginTop: 1 }}>
                           风险分诊结论
                         </div>
                       </div>
@@ -525,23 +525,23 @@ export function LogicPage() {
                         style={{
                           borderRadius: 4,
                           background: "rgba(255,255,255,0.6)",
-                          border: "1px solid #C7D2FE",
+                          border: "1px solid var(--aos-indigo-border)",
                           padding: "6px 8px",
                         }}
                       >
-                        <div style={{ fontSize: 9, color: "#9CA3AF" }}>artifacts</div>
-                        <div style={{ fontSize: 10, color: "#374151", fontWeight: 500, marginTop: 1 }}>3 个产物</div>
+                        <div style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>artifacts</div>
+                        <div style={{ fontSize: 10, color: "var(--aos-text)", fontWeight: 500, marginTop: 1 }}>3 个产物</div>
                       </div>
                       <div
                         style={{
                           borderRadius: 4,
                           background: "rgba(255,255,255,0.6)",
-                          border: "1px solid #C7D2FE",
+                          border: "1px solid var(--aos-indigo-border)",
                           padding: "6px 8px",
                         }}
                       >
-                        <div style={{ fontSize: 9, color: "#9CA3AF" }}>open_qs</div>
-                        <div style={{ fontSize: 10, color: "#374151", fontWeight: 500, marginTop: 1 }}>
+                        <div style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>open_qs</div>
+                        <div style={{ fontSize: 10, color: "var(--aos-text)", fontWeight: 500, marginTop: 1 }}>
                           1 个待确认
                         </div>
                       </div>
@@ -551,12 +551,12 @@ export function LogicPage() {
               </div>
 
               {/* ② 配置区 */}
-              <div style={{ borderRight: "1px solid #E5E7EB", overflowY: "auto", padding: 16 }}>
+              <div style={{ borderRight: "1px solid var(--aos-border)", overflowY: "auto", padding: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div
                     style={{
                       fontSize: 10,
-                      color: "#9CA3AF",
+                      color: "var(--aos-text-tertiary)",
                       textTransform: "uppercase",
                       letterSpacing: "0.05em",
                     }}
@@ -568,8 +568,8 @@ export function LogicPage() {
                       padding: "2px 8px",
                       borderRadius: 4,
                       fontSize: 9,
-                      background: "#EEF2FF",
-                      color: "#4F46E5",
+                      background: "var(--aos-indigo-bg)",
+                      color: "var(--aos-indigo-600)",
                       fontWeight: 500,
                     }}
                   >
@@ -584,34 +584,34 @@ export function LogicPage() {
                     <div
                       style={{
                         borderRadius: 6,
-                        border: "1px solid #E5E7EB",
-                        background: "#fff",
+                        border: "1px solid var(--aos-border)",
+                        background: "var(--aos-surface)",
                         padding: 12,
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="1.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--aos-text-secondary)" strokeWidth="1.5">
                           <path d="M9 12l2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
                           <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
-                        <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>
+                        <label style={{ fontSize: 11, color: "var(--aos-text-secondary)", fontWeight: 500 }}>
                           decision_summary · 决策摘要
                         </label>
-                        <span style={{ fontSize: 9, color: "#9CA3AF", marginLeft: "auto" }}>必填</span>
+                        <span style={{ fontSize: 9, color: "var(--aos-text-tertiary)", marginLeft: "auto" }}>必填</span>
                       </div>
                       <div
                         style={{
                           fontSize: 12,
-                          color: "#374151",
+                          color: "var(--aos-text)",
                           background: "rgba(255,255,255,0.6)",
                           borderRadius: 4,
                           padding: 8,
-                          border: "1px solid #E5E7EB",
+                          border: "1px solid var(--aos-border)",
                           lineHeight: 1.6,
                         }}
                       >
                         订单 <span style={{ fontFamily: "monospace" }}>ORD-0721-002</span> 风险等级判定为{" "}
-                        <span style={{ color: "#DC2626", fontWeight: 500 }}>高</span>
+                        <span style={{ color: "var(--aos-red)", fontWeight: 500 }}>高</span>
                         ，触发升级审批。主要风险因子：金额 $1,840 {" > "} 阈值 $500，跨境发货至东南亚，新客首单。
                       </div>
                     </div>
@@ -619,11 +619,11 @@ export function LogicPage() {
                     {/* 产物列表 */}
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="1.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--aos-text-secondary)" strokeWidth="1.5">
                           <path d="M6 2h9l5 5v15a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z" strokeLinejoin="round" />
                           <path d="M14 2v6h6" strokeLinejoin="round" />
                         </svg>
-                        <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>
+                        <label style={{ fontSize: 11, color: "var(--aos-text-secondary)", fontWeight: 500 }}>
                           artifacts · 产物列表
                         </label>
                         <span
@@ -631,8 +631,8 @@ export function LogicPage() {
                             padding: "0 6px",
                             borderRadius: 4,
                             fontSize: 9,
-                            background: "#F3F4F6",
-                            color: "#6B7280",
+                            background: "var(--aos-gray-100)",
+                            color: "var(--aos-text-secondary)",
                             marginLeft: "auto",
                           }}
                         >
@@ -648,8 +648,8 @@ export function LogicPage() {
                               alignItems: "center",
                               gap: 8,
                               borderRadius: 6,
-                              background: "#fff",
-                              border: "1px solid #E5E7EB",
+                              background: "var(--aos-surface)",
+                              border: "1px solid var(--aos-border)",
                               padding: "6px 10px",
                             }}
                           >
@@ -666,7 +666,7 @@ export function LogicPage() {
                               style={{
                                 fontFamily: "monospace",
                                 fontSize: 11,
-                                color: "#374151",
+                                color: "var(--aos-text)",
                                 flex: 1,
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
@@ -675,7 +675,7 @@ export function LogicPage() {
                             >
                               {a.name}
                             </span>
-                            <span style={{ fontSize: 9, color: "#9CA3AF" }}>{a.type}</span>
+                            <span style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>{a.type}</span>
                           </div>
                         ))}
                       </div>
@@ -684,7 +684,7 @@ export function LogicPage() {
                     {/* 开放问题 */}
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="1.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--aos-text-secondary)" strokeWidth="1.5">
                           <circle cx="12" cy="12" r="9" />
                           <path
                             d="M9.5 9a2.5 2.5 0 015 0c0 1.5-2.5 2-2.5 3.5"
@@ -692,7 +692,7 @@ export function LogicPage() {
                           />
                           <path d="M12 17v.5" strokeLinecap="round" />
                         </svg>
-                        <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>
+                        <label style={{ fontSize: 11, color: "var(--aos-text-secondary)", fontWeight: 500 }}>
                           open_questions · 待确认项
                         </label>
                         <span
@@ -700,8 +700,8 @@ export function LogicPage() {
                             padding: "0 6px",
                             borderRadius: 4,
                             fontSize: 9,
-                            background: "#FEF3C7",
-                            color: "#D97706",
+                            background: "var(--aos-amber-bg)",
+                            color: "var(--aos-amber-600)",
                             marginLeft: "auto",
                           }}
                         >
@@ -711,27 +711,27 @@ export function LogicPage() {
                       <div
                         style={{
                           borderRadius: 6,
-                          background: "#FFFBEB",
-                          border: "1px solid #FDE68A",
+                          background: "var(--aos-amber-bg)",
+                          border: "1px solid var(--aos-amber-border)",
                           padding: 10,
                         }}
                       >
                         <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                          <span style={{ fontSize: 10, color: "#D97706", fontWeight: 500, flexShrink: 0 }}>Q1</span>
-                          <div style={{ fontSize: 11, color: "#4B5563", lineHeight: 1.5 }}>
+                          <span style={{ fontSize: 10, color: "var(--aos-amber-600)", fontWeight: 500, flexShrink: 0 }}>Q1</span>
+                          <div style={{ fontSize: 11, color: "var(--aos-text-secondary)", lineHeight: 1.5 }}>
                             客户历史退款率 22% 是否需要人工复核？建议由风控主管确认后再执行 escalate。
                           </div>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
-                          <span style={{ fontSize: 9, color: "#9CA3AF" }}>下一步：</span>
-                          <span style={{ fontSize: 10, color: "#4F46E5" }}>→ 传递给风控审批 Agent</span>
+                          <span style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>下一步：</span>
+                          <span style={{ fontSize: 10, color: "var(--aos-indigo-600)" }}>→ 传递给风控审批 Agent</span>
                         </div>
                       </div>
                     </div>
 
                     {/* 传递目标 */}
-                    <div style={{ paddingTop: 8, borderTop: "1px solid #F3F4F6" }}>
-                      <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 8, fontWeight: 500 }}>
+                    <div style={{ paddingTop: 8, borderTop: "1px solid var(--aos-gray-100)" }}>
+                      <label style={{ display: "block", fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 8, fontWeight: 500 }}>
                         handoff_to · 传递目标
                       </label>
                       <select
@@ -740,9 +740,9 @@ export function LogicPage() {
                           padding: "6px 12px",
                           fontSize: 12,
                           borderRadius: 6,
-                          border: "1px solid #E5E7EB",
-                          background: "#fff",
-                          color: "#111827",
+                          border: "1px solid var(--aos-border)",
+                          background: "var(--aos-surface)",
+                          color: "var(--aos-text)",
                         }}
                       >
                         <option>风控审批 Agent（risk-approver）</option>
@@ -751,11 +751,11 @@ export function LogicPage() {
                       </select>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
                         <input type="checkbox" defaultChecked style={{ width: 14, height: 14 }} />
-                        <span style={{ fontSize: 10, color: "#6B7280" }}>包含完整运行 trace（Token 用量 / 延迟）</span>
+                        <span style={{ fontSize: 10, color: "var(--aos-text-secondary)" }}>包含完整运行 trace（Token 用量 / 延迟）</span>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
                         <input type="checkbox" defaultChecked style={{ width: 14, height: 14 }} />
-                        <span style={{ fontSize: 10, color: "#6B7280" }}>自动生成交接摘要（LLM 总结）</span>
+                        <span style={{ fontSize: 10, color: "var(--aos-text-secondary)" }}>自动生成交接摘要（LLM 总结）</span>
                       </div>
                     </div>
                   </div>
@@ -765,7 +765,7 @@ export function LogicPage() {
                 {selectedBlock?.kind === "use_llm" && (
                   <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 16 }}>
                     <div>
-                      <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 6, fontWeight: 500 }}>
+                      <label style={{ display: "block", fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 6, fontWeight: 500 }}>
                         模型
                       </label>
                       <select style={selectStyle}>
@@ -776,7 +776,7 @@ export function LogicPage() {
                       </select>
                     </div>
                     <div>
-                      <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 6, fontWeight: 500 }}>
+                      <label style={{ display: "block", fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 6, fontWeight: 500 }}>
                         System Prompt
                       </label>
                       <textarea
@@ -789,24 +789,24 @@ export function LogicPage() {
                           fontSize: 11,
                           fontFamily: "monospace",
                           borderRadius: 6,
-                          border: "1px solid #E5E7EB",
-                          background: "#fff",
+                          border: "1px solid var(--aos-border)",
+                          background: "var(--aos-surface)",
                           resize: "vertical",
                         }}
                       />
                     </div>
                     <div style={{ display: "flex", gap: 12 }}>
                       <div style={{ flex: 1 }}>
-                        <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 6, fontWeight: 500 }}>
+                        <label style={{ display: "block", fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 6, fontWeight: 500 }}>
                           Temperature
                         </label>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           <input type="range" min="0" max="1" step="0.1" defaultValue="0.3" style={{ flex: 1 }} />
-                          <span style={{ fontSize: 11, color: "#6B7280", minWidth: 24 }}>0.3</span>
+                          <span style={{ fontSize: 11, color: "var(--aos-text-secondary)", minWidth: 24 }}>0.3</span>
                         </div>
                       </div>
                       <div style={{ flex: 1 }}>
-                        <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 6, fontWeight: 500 }}>
+                        <label style={{ display: "block", fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 6, fontWeight: 500 }}>
                           Max Tokens
                         </label>
                         <input
@@ -817,14 +817,14 @@ export function LogicPage() {
                             padding: "6px 8px",
                             fontSize: 12,
                             borderRadius: 6,
-                            border: "1px solid #E5E7EB",
-                            background: "#fff",
+                            border: "1px solid var(--aos-border)",
+                            background: "var(--aos-surface)",
                           }}
                         />
                       </div>
                     </div>
                     <div>
-                      <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 6, fontWeight: 500 }}>
+                      <label style={{ display: "block", fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 6, fontWeight: 500 }}>
                         输出变量
                       </label>
                       <input
@@ -836,19 +836,19 @@ export function LogicPage() {
                           padding: "6px 10px",
                           fontSize: 12,
                           borderRadius: 6,
-                          border: "1px solid #E5E7EB",
-                          background: "#fff",
+                          border: "1px solid var(--aos-border)",
+                          background: "var(--aos-surface)",
                         }}
                       />
                     </div>
                     <div
                       style={{
                         padding: "6px 10px",
-                        background: "#EFF6FF",
-                        border: "1px solid #BFDBFE",
+                        background: "var(--aos-accent-light)",
+                        border: "1px solid var(--aos-accent-border)",
                         borderRadius: 6,
                         fontSize: 10,
-                        color: "#0369A1",
+                        color: "var(--aos-blue-600)",
                         fontFamily: "monospace",
                       }}
                     >
@@ -864,10 +864,10 @@ export function LogicPage() {
                       style={{
                         padding: 12,
                         borderRadius: 6,
-                        border: "1px solid #E5E7EB",
-                        background: "#fff",
+                        border: "1px solid var(--aos-border)",
+                        background: "var(--aos-surface)",
                         fontSize: 12,
-                        color: "#6B7280",
+                        color: "var(--aos-text-secondary)",
                       }}
                     >
                       选中「{KIND_META[selectedBlock.kind].label}」块的属性配置区。
@@ -883,7 +883,7 @@ export function LogicPage() {
                 <div
                   style={{
                     fontSize: 10,
-                    color: "#9CA3AF",
+                    color: "var(--aos-text-tertiary)",
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
                     marginBottom: 12,
@@ -895,13 +895,13 @@ export function LogicPage() {
                 {err && (
                   <div
                     style={{
-                      background: "#FEF2F2",
-                      border: "1px solid #FECACA",
+                      background: "var(--aos-red-bg)",
+                      border: "1px solid var(--aos-red-border)",
                       borderRadius: 8,
                       padding: 12,
                       marginBottom: 12,
                       fontSize: 12,
-                      color: "#991B1B",
+                      color: "var(--aos-red)",
                     }}
                   >
                     {err}
@@ -912,41 +912,41 @@ export function LogicPage() {
                   <div
                     style={{
                       borderRadius: 8,
-                      border: "1px solid #BBF7D0",
-                      background: "#F0FDF4",
+                      border: "1px solid var(--aos-green-border)",
+                      background: "var(--aos-green-bg)",
                       padding: 12,
                       fontSize: 12,
                     }}
                   >
-                    <div style={{ color: "#16A34A", fontWeight: 500, marginBottom: 8 }}>
+                    <div style={{ color: "var(--aos-green-600)", fontWeight: 500, marginBottom: 8 }}>
                       运行 {runResult.runId} · 16:42
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 11 }}>
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ color: "#6B7280" }}>输入：</span>
-                        <span style={{ fontFamily: "monospace", color: "#4B5563" }}>{runResult.input}</span>
+                        <span style={{ color: "var(--aos-text-secondary)" }}>输入：</span>
+                        <span style={{ fontFamily: "monospace", color: "var(--aos-text-secondary)" }}>{runResult.input}</span>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ color: "#6B7280" }}>状态：</span>
-                        <span style={{ color: "#4B5563" }}>
+                        <span style={{ color: "var(--aos-text-secondary)" }}>状态：</span>
+                        <span style={{ color: "var(--aos-text-secondary)" }}>
                           已完成 · {runResult.amount} · {runResult.currency}
                         </span>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ color: "#6B7280" }}>风险：</span>
-                        <span style={{ color: "#16A34A", fontWeight: 500 }}>{runResult.risk}</span>
+                        <span style={{ color: "var(--aos-text-secondary)" }}>风险：</span>
+                        <span style={{ color: "var(--aos-green-600)", fontWeight: 500 }}>{runResult.risk}</span>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ color: "#6B7280" }}>原因：</span>
-                        <span style={{ color: "#4B5563" }}>{runResult.reason}</span>
+                        <span style={{ color: "var(--aos-text-secondary)" }}>原因：</span>
+                        <span style={{ color: "var(--aos-text-secondary)" }}>{runResult.reason}</span>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ color: "#6B7280" }}>延迟：</span>
-                        <span style={{ color: "#4B5563" }}>{runResult.duration}</span>
+                        <span style={{ color: "var(--aos-text-secondary)" }}>延迟：</span>
+                        <span style={{ color: "var(--aos-text-secondary)" }}>{runResult.duration}</span>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ color: "#6B7280" }}>Token：</span>
-                        <span style={{ color: "#4B5563" }}>入 {runResult.tokensIn} · 出 {runResult.tokensOut}</span>
+                        <span style={{ color: "var(--aos-text-secondary)" }}>Token：</span>
+                        <span style={{ color: "var(--aos-text-secondary)" }}>入 {runResult.tokensIn} · 出 {runResult.tokensOut}</span>
                       </div>
                     </div>
                   </div>
@@ -962,35 +962,35 @@ export function LogicPage() {
                     padding: "8px 16px",
                     fontSize: 12,
                     borderRadius: 6,
-                    border: "1px solid #FDE047",
-                    background: "#FEFCE8",
-                    color: "#CA8A04",
+                    border: "1px solid var(--aos-amber-border)",
+                    background: "var(--aos-amber-bg)",
+                    color: "var(--aos-amber-600)",
                     cursor: running ? "wait" : "pointer",
                   }}
                 >
                   {running ? "运行中…" : "重新运行"}
                 </button>
 
-                <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid #F3F4F6" }}>
-                  <div style={{ fontSize: 11, color: "#6B7280", fontWeight: 500, marginBottom: 8 }}>
+                <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--aos-gray-100)" }}>
+                  <div style={{ fontSize: 11, color: "var(--aos-text-secondary)", fontWeight: 500, marginBottom: 8 }}>
                     跳转
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     <Link
                       to="/aip/drafts"
-                      style={{ fontSize: 12, color: "#4F46E5", textDecoration: "none" }}
+                      style={{ fontSize: 12, color: "var(--aos-indigo-600)", textDecoration: "none" }}
                     >
                       Draft 审批台 →
                     </Link>
                     <Link
                       to="/aip/observability"
-                      style={{ fontSize: 12, color: "#4F46E5", textDecoration: "none" }}
+                      style={{ fontSize: 12, color: "var(--aos-indigo-600)", textDecoration: "none" }}
                     >
                       可观测性 →
                     </Link>
                     <Link
                       to="/aip/tools"
-                      style={{ fontSize: 12, color: "#4F46E5", textDecoration: "none" }}
+                      style={{ fontSize: 12, color: "var(--aos-indigo-600)", textDecoration: "none" }}
                     >
                       工具面板 →
                     </Link>
@@ -1005,36 +1005,36 @@ export function LogicPage() {
         {tab === "auto" && (
           <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
             <div style={{ maxWidth: 768, margin: "0 auto" }}>
-              <h2 style={{ fontSize: 18, fontWeight: 600, color: "#111827", margin: "0 0 4px" }}>
+              <h2 style={{ fontSize: 18, fontWeight: 600, color: "var(--aos-text)", margin: "0 0 4px" }}>
                 自动化 Uses
               </h2>
-              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px" }}>
+              <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", margin: "0 0 16px" }}>
                 绑定调度或事件触发 · 创建 Automation 任务
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
                 <div
                   style={{
                     borderRadius: 8,
-                    border: "1px solid #E5E7EB",
-                    background: "#fff",
+                    border: "1px solid var(--aos-border)",
+                    background: "var(--aos-surface)",
                     padding: 16,
                   }}
                 >
-                  <div style={{ fontSize: 12, color: "#16A34A", fontWeight: 500 }}>每 15 分钟</div>
-                  <p style={{ fontSize: 11, color: "#4B5563", margin: "4px 0 0", lineHeight: 1.5 }}>
+                  <div style={{ fontSize: 12, color: "var(--aos-green-600)", fontWeight: 500 }}>每 15 分钟</div>
+                  <p style={{ fontSize: 11, color: "var(--aos-text-secondary)", margin: "4px 0 0", lineHeight: 1.5 }}>
                     对所有 pending 订单执行风险评估
                   </p>
                 </div>
                 <div
                   style={{
                     borderRadius: 8,
-                    border: "1px solid #E5E7EB",
-                    background: "#fff",
+                    border: "1px solid var(--aos-border)",
+                    background: "var(--aos-surface)",
                     padding: 16,
                   }}
                 >
-                  <div style={{ fontSize: 12, color: "#CA8A04", fontWeight: 500 }}>Order 创建事件</div>
-                  <p style={{ fontSize: 11, color: "#4B5563", margin: "4px 0 0", lineHeight: 1.5 }}>
+                  <div style={{ fontSize: 12, color: "var(--aos-amber-600)", fontWeight: 500 }}>Order 创建事件</div>
+                  <p style={{ fontSize: 11, color: "var(--aos-text-secondary)", margin: "4px 0 0", lineHeight: 1.5 }}>
                     新订单 webhook → 自动风险分诊
                   </p>
                 </div>
@@ -1047,50 +1047,50 @@ export function LogicPage() {
         {tab === "history" && (
           <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
             <div style={{ maxWidth: 768, margin: "0 auto" }}>
-              <h2 style={{ fontSize: 18, fontWeight: 600, color: "#111827", margin: "0 0 16px" }}>
+              <h2 style={{ fontSize: 18, fontWeight: 600, color: "var(--aos-text)", margin: "0 0 16px" }}>
                 运行历史
               </h2>
               <div
                 style={{
                   borderRadius: 8,
-                  border: "1px solid #E5E7EB",
-                  background: "#fff",
+                  border: "1px solid var(--aos-border)",
+                  background: "var(--aos-surface)",
                   overflow: "hidden",
                 }}
               >
                 <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ background: "#F9FAFB", textAlign: "left" }}>
-                      <th style={{ padding: "10px 16px", fontWeight: 500, color: "#6B7280", fontSize: 11 }}>运行</th>
-                      <th style={{ padding: "10px 16px", fontWeight: 500, color: "#6B7280", fontSize: 11 }}>状态</th>
-                      <th style={{ padding: "10px 16px", fontWeight: 500, color: "#6B7280", fontSize: 11 }}>耗时</th>
-                      <th style={{ padding: "10px 16px", fontWeight: 500, color: "#6B7280", fontSize: 11 }}>输入</th>
-                      <th style={{ padding: "10px 16px", fontWeight: 500, color: "#6B7280", fontSize: 11 }}>结果</th>
+                    <tr style={{ background: "var(--aos-surface-hover)", textAlign: "left" }}>
+                      <th style={{ padding: "10px 16px", fontWeight: 500, color: "var(--aos-text-secondary)", fontSize: 11 }}>运行</th>
+                      <th style={{ padding: "10px 16px", fontWeight: 500, color: "var(--aos-text-secondary)", fontSize: 11 }}>状态</th>
+                      <th style={{ padding: "10px 16px", fontWeight: 500, color: "var(--aos-text-secondary)", fontSize: 11 }}>耗时</th>
+                      <th style={{ padding: "10px 16px", fontWeight: 500, color: "var(--aos-text-secondary)", fontSize: 11 }}>输入</th>
+                      <th style={{ padding: "10px 16px", fontWeight: 500, color: "var(--aos-text-secondary)", fontSize: 11 }}>结果</th>
                     </tr>
                   </thead>
                   <tbody>
                     {HISTORY_DATA.map((h) => (
-                      <tr key={h.id} style={{ borderTop: "1px solid #F3F4F6" }}>
-                        <td style={{ padding: "10px 16px", fontFamily: "monospace", color: "#111827" }}>{h.id}</td>
+                      <tr key={h.id} style={{ borderTop: "1px solid var(--aos-gray-100)" }}>
+                        <td style={{ padding: "10px 16px", fontFamily: "monospace", color: "var(--aos-text)" }}>{h.id}</td>
                         <td style={{ padding: "10px 16px" }}>
                           <span
                             style={{
                               padding: "2px 8px",
                               borderRadius: 4,
                               fontSize: 11,
-                              background: h.status === "success" ? "#DCFCE7" : "#FEE2E2",
-                              color: h.status === "success" ? "#166534" : "#991B1B",
+                              background: h.status === "success" ? "var(--aos-green-bg)" : "var(--aos-red-bg)",
+                              color: h.status === "success" ? "var(--aos-green-700)" : "var(--aos-red)",
                             }}
                           >
                             {h.status === "success" ? "成功" : "失败"}
                           </span>
                         </td>
-                        <td style={{ padding: "10px 16px", color: "#374151" }}>{h.duration}</td>
-                        <td style={{ padding: "10px 16px", fontFamily: "monospace", color: "#374151" }}>
+                        <td style={{ padding: "10px 16px", color: "var(--aos-text)" }}>{h.duration}</td>
+                        <td style={{ padding: "10px 16px", fontFamily: "monospace", color: "var(--aos-text)" }}>
                           {h.input}
                         </td>
                         <td style={{ padding: "10px 16px" }}>
-                          <span style={{ color: h.resultTone === "green" ? "#16A34A" : "#DC2626" }}>
+                          <span style={{ color: h.resultTone === "green" ? "var(--aos-green-600)" : "var(--aos-red)" }}>
                             {h.result}
                           </span>
                         </td>
@@ -1112,7 +1112,7 @@ const selectStyle = {
   padding: "6px 10px",
   fontSize: 12,
   borderRadius: 6,
-  border: "1px solid #E5E7EB",
-  background: "#fff",
-  color: "#111827",
+  border: "1px solid var(--aos-border)",
+  background: "var(--aos-surface)",
+  color: "var(--aos-text)",
 } as const;

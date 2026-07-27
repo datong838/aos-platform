@@ -126,8 +126,8 @@ export const PLATFORM_CASES: PlatformCase[] = [
     id: "weishop",
     name: "微商城",
     icon: "🏪",
-    iconBg: "#FED7D7",
-    iconColor: "#C53030",
+    iconBg: "var(--aos-red-border)",
+    iconColor: "var(--aos-red)",
     protocol: "JDBC",
     auth: "自建库",
     stars: 1,
@@ -143,8 +143,8 @@ export const PLATFORM_CASES: PlatformCase[] = [
     id: "taobao",
     name: "淘宝/天猫",
     icon: "🛒",
-    iconBg: "#FEEBC8",
-    iconColor: "#C05621",
+    iconBg: "var(--aos-amber-bg)",
+    iconColor: "var(--aos-red)",
     protocol: "REST",
     auth: "HMAC-SHA256",
     stars: 2,
@@ -160,8 +160,8 @@ export const PLATFORM_CASES: PlatformCase[] = [
     id: "pdd",
     name: "拼多多",
     icon: "🟠",
-    iconBg: "#FED7D7",
-    iconColor: "#E53E3E",
+    iconBg: "var(--aos-red-border)",
+    iconColor: "var(--aos-red)",
     protocol: "REST",
     auth: "MD5",
     stars: 2,
@@ -176,8 +176,8 @@ export const PLATFORM_CASES: PlatformCase[] = [
     id: "jd",
     name: "京东",
     icon: "🔴",
-    iconBg: "#FED7D7",
-    iconColor: "#C53030",
+    iconBg: "var(--aos-red-border)",
+    iconColor: "var(--aos-red)",
     protocol: "REST",
     auth: "HMAC-SHA256",
     stars: 3,
@@ -192,8 +192,8 @@ export const PLATFORM_CASES: PlatformCase[] = [
     id: "douyin",
     name: "抖音电商",
     icon: "🎵",
-    iconBg: "#FED7D7",
-    iconColor: "#000000",
+    iconBg: "var(--aos-red-border)",
+    iconColor: "var(--aos-text)",
     protocol: "REST",
     auth: "Token",
     stars: 4,
@@ -208,8 +208,8 @@ export const PLATFORM_CASES: PlatformCase[] = [
     id: "shopify",
     name: "Shopify",
     icon: "🟢",
-    iconBg: "#C6F6D5",
-    iconColor: "#276749",
+    iconBg: "var(--aos-green-border)",
+    iconColor: "var(--aos-green-700)",
     protocol: "GraphQL",
     auth: "Webhook",
     stars: 3,
@@ -224,8 +224,8 @@ export const PLATFORM_CASES: PlatformCase[] = [
     id: "amazon",
     name: "Amazon",
     icon: "📦",
-    iconBg: "#FEEBC8",
-    iconColor: "#FF9900",
+    iconBg: "var(--aos-amber-bg)",
+    iconColor: "var(--aos-amber)",
     protocol: "SP-API",
     auth: "AWS4",
     stars: 5,
@@ -240,8 +240,8 @@ export const PLATFORM_CASES: PlatformCase[] = [
     id: "tmall",
     name: "天猫",
     icon: "🐈",
-    iconBg: "#FEEBC8",
-    iconColor: "#C05621",
+    iconBg: "var(--aos-amber-bg)",
+    iconColor: "var(--aos-red)",
     protocol: "→ 淘宝方案",
     auth: "共用",
     stars: 2,
@@ -257,8 +257,8 @@ export const PLATFORM_CASES: PlatformCase[] = [
     id: "shopify-cross",
     name: "跨境Shopify",
     icon: "🌍",
-    iconBg: "#C6F6D5",
-    iconColor: "#276749",
+    iconBg: "var(--aos-green-border)",
+    iconColor: "var(--aos-green-700)",
     protocol: "→ Shopify方案",
     auth: "多币种",
     stars: 3,
@@ -484,7 +484,7 @@ export function IntegrationCasesPage() {
               <span
                 style={{
                   fontSize: "0.7rem",
-                  color: s.trendUp ? "#16a34a" : "#dc2626",
+                  color: s.trendUp ? "var(--aos-green-600)" : "var(--aos-red)",
                   fontWeight: 600,
                 }}
               >
@@ -522,18 +522,18 @@ export function IntegrationCasesPage() {
                   minWidth: 130,
                   padding: "0.75rem",
                   borderRadius: 8,
-                  border: "1px solid #e2e8f0",
+                  border: "1px solid var(--aos-border)",
                   cursor: "pointer",
-                  background: expandedStep === step.id ? "#eff6ff" : "#fff",
+                  background: expandedStep === step.id ? "var(--aos-accent-light)" : "var(--aos-surface)",
                   transition: "background 0.15s",
                 }}
               >
                 <div style={{ fontSize: "1.5rem" }}>{step.icon}</div>
-                <div style={{ fontSize: "0.65rem", color: "#64748b", marginTop: 2 }}>
+                <div style={{ fontSize: "0.65rem", color: "var(--aos-text-secondary)", marginTop: 2 }}>
                   Step {step.step}
                 </div>
                 <div style={{ fontWeight: 600, fontSize: "0.8rem", margin: "2px 0" }}>{step.label}</div>
-                <div style={{ fontSize: "0.65rem", color: "#64748b" }}>{step.detail}</div>
+                <div style={{ fontSize: "0.65rem", color: "var(--aos-text-secondary)" }}>{step.detail}</div>
               </div>
               {i < E2E_STEPS.length - 1 && (
                 <div
@@ -541,7 +541,7 @@ export function IntegrationCasesPage() {
                     display: "flex",
                     alignItems: "center",
                     padding: "0 4px",
-                    color: "#94a3b8",
+                    color: "var(--aos-text-tertiary)",
                     fontWeight: 700,
                   }}
                 >
@@ -627,24 +627,24 @@ export function IntegrationCasesPage() {
                 <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
                   {pc.tables > 0 && (
                     <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: "0.65rem", color: "#94a3b8" }}>表数</div>
+                      <div style={{ fontSize: "0.65rem", color: "var(--aos-text-tertiary)" }}>表数</div>
                       <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>{pc.tables}</div>
                     </div>
                   )}
                   {pc.apis > 0 && (
                     <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: "0.65rem", color: "#94a3b8" }}>API</div>
+                      <div style={{ fontSize: "0.65rem", color: "var(--aos-text-tertiary)" }}>API</div>
                       <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>{pc.apis}</div>
                     </div>
                   )}
                   {pc.syncs > 0 && (
                     <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: "0.65rem", color: "#94a3b8" }}>同步</div>
+                      <div style={{ fontSize: "0.65rem", color: "var(--aos-text-tertiary)" }}>同步</div>
                       <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>{pc.syncs}</div>
                     </div>
                   )}
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: "0.65rem", color: "#94a3b8" }}>本体对象</div>
+                    <div style={{ fontSize: "0.65rem", color: "var(--aos-text-tertiary)" }}>本体对象</div>
                     <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>{pc.objects}</div>
                   </div>
                 </div>
@@ -654,7 +654,7 @@ export function IntegrationCasesPage() {
                     style={{
                       marginTop: "0.5rem",
                       padding: "0.5rem",
-                      background: "#f8fafc",
+                      background: "var(--aos-bg-secondary)",
                       borderRadius: 6,
                       fontSize: "0.7rem",
                     }}
@@ -706,9 +706,9 @@ export function IntegrationCasesPage() {
                 style={{
                   padding: "0.6rem 0.75rem",
                   borderRadius: 8,
-                  border: "1px solid #e2e8f0",
+                  border: "1px solid var(--aos-border)",
                   cursor: "pointer",
-                  background: isExpanded ? "#fffbeb" : "#fff",
+                  background: isExpanded ? "var(--aos-amber-bg)" : "var(--aos-surface)",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -722,7 +722,7 @@ export function IntegrationCasesPage() {
                     style={{
                       fontWeight: 700,
                       fontSize: "0.75rem",
-                      color: "#475569",
+                      color: "var(--aos-text-secondary)",
                       minWidth: 28,
                     }}
                   >
@@ -730,11 +730,11 @@ export function IntegrationCasesPage() {
                   </span>
                   <span style={{ fontWeight: 600, fontSize: "0.8rem", flex: 1 }}>{b.title}</span>
                 </div>
-                <div style={{ fontSize: "0.7rem", color: "#64748b", marginTop: 4 }}>
+                <div style={{ fontSize: "0.7rem", color: "var(--aos-text-secondary)", marginTop: 4 }}>
                   影响 {b.impact.length} 平台: {b.impact.join("、")}
                 </div>
                 {isExpanded && (
-                  <div style={{ marginTop: 6, fontSize: "0.7rem", color: "#475569" }}>
+                  <div style={{ marginTop: 6, fontSize: "0.7rem", color: "var(--aos-text-secondary)" }}>
                     <div>
                       <strong>解决方案:</strong> {b.solution}
                     </div>

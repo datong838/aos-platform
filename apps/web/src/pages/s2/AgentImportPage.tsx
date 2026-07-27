@@ -290,12 +290,12 @@ spec:
     return (
       <PageChrome title="智能体导入" lede="从外部来源导入智能体 · 支持 Adapter 桥接">
         <div style={{ textAlign: "center", padding: "64px 24px" }}>
-          <div style={{ fontSize: 56, marginBottom: 16, color: "#059669" }}>✓</div>
-          <div style={{ fontSize: 22, fontWeight: 600, color: "#1F2937", marginBottom: 8 }}>导入成功</div>
-          <p style={{ fontSize: 14, color: "#6B7280", marginBottom: 4 }}>
-            <strong style={{ color: "#374151" }}>{capDisplayName}</strong> 已成功导入并注册为 Capability
+          <div style={{ fontSize: 56, marginBottom: 16, color: "var(--aos-green-600)" }}>✓</div>
+          <div style={{ fontSize: 22, fontWeight: 600, color: "var(--aos-text)", marginBottom: 8 }}>导入成功</div>
+          <p style={{ fontSize: 14, color: "var(--aos-text-secondary)", marginBottom: 4 }}>
+            <strong style={{ color: "var(--aos-text)" }}>{capDisplayName}</strong> 已成功导入并注册为 Capability
           </p>
-          <p style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 20 }}>
+          <p style={{ fontSize: 12, color: "var(--aos-text-tertiary)", marginBottom: 20 }}>
             Adapter: {adapterInfo?.label} · 能力等级: {capLevel}
           </p>
           <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
@@ -308,9 +308,9 @@ spec:
                 padding: "8px 20px",
                 fontSize: 13,
                 borderRadius: 6,
-                border: "1px solid #D1D5DB",
-                background: "#fff",
-                color: "#374151",
+                border: "1px solid var(--aos-border-strong)",
+                background: "var(--aos-surface)",
+                color: "var(--aos-text)",
                 cursor: "pointer",
               }}
             >
@@ -323,8 +323,8 @@ spec:
                 fontWeight: 500,
                 borderRadius: 6,
                 border: "none",
-                background: "#B45309",
-                color: "#fff",
+                background: "var(--aos-amber-700)",
+                color: "var(--text-on-brand)",
                 cursor: "pointer",
               }}
             >
@@ -348,7 +348,7 @@ spec:
           marginBottom: "1.25rem",
         }}
       >
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#1D4ED8", marginBottom: 8 }}>Adapter 路径说明</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--aos-blue-600)", marginBottom: 8 }}>Adapter 路径说明</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
           {ADAPTER_TYPES.map((a) => (
             <div
@@ -358,28 +358,28 @@ spec:
                 padding: "10px 6px",
                 borderRadius: 6,
                 background: "rgba(255,255,255,0.7)",
-                border: adapterType === a.key ? "1px solid #B45309" : "1px solid transparent",
+                border: adapterType === a.key ? "1px solid var(--aos-amber-700)" : "1px solid transparent",
                 cursor: "pointer",
                 transition: "all 0.15s",
               }}
               onClick={() => setAdapterType(a.key as AdapterType)}
             >
-              <div style={{ fontWeight: 600, color: "#111827", fontSize: 12 }}>{a.label}</div>
-              <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>{a.desc}</div>
+              <div style={{ fontWeight: 600, color: "var(--aos-text)", fontSize: 12 }}>{a.label}</div>
+              <div style={{ fontSize: 9, color: "var(--aos-text-tertiary)", marginTop: 2 }}>{a.desc}</div>
               <div
                 style={{
                   fontSize: 9,
                   marginTop: 3,
                   color:
                     a.color === "blue"
-                      ? "#3B82F6"
+                      ? "var(--aos-blue)"
                       : a.color === "green"
-                        ? "#10B981"
+                        ? "var(--aos-green)"
                         : a.color === "purple"
-                          ? "#8B5CF6"
+                          ? "var(--aos-purple-600)"
                           : a.color === "amber"
-                            ? "#F59E0B"
-                            : "#EC4899",
+                            ? "var(--aos-amber)"
+                            : "var(--aos-purple-600)",
                 }}
               >
                 {a.tag}
@@ -408,10 +408,10 @@ spec:
                     borderRadius: 6,
                     cursor: "pointer",
                     fontSize: 13,
-                    color: isActive ? "#B45309" : isDone ? "#B45309" : "#5F5E5A",
+                    color: isActive ? "var(--aos-amber-700)" : isDone ? "var(--aos-amber-700)" : "var(--aos-text-secondary)",
                     fontWeight: isActive ? 500 : 400,
-                    background: isActive ? "#FEF3E8" : "transparent",
-                    border: isActive ? "0.5px solid #F59E0B" : "0.5px solid transparent",
+                    background: isActive ? "var(--aos-amber-bg)" : "transparent",
+                    border: isActive ? "0.5px solid var(--aos-amber)" : "0.5px solid transparent",
                     transition: "all 0.15s",
                   }}
                 >
@@ -425,8 +425,8 @@ spec:
                       justifyContent: "center",
                       fontSize: 11,
                       fontWeight: 500,
-                      background: isDone ? "#B45309" : isActive ? "#B45309" : "#D3D1C7",
-                      color: isDone || isActive ? "#fff" : "#5F5E5A",
+                      background: isDone ? "var(--aos-amber-700)" : isActive ? "var(--aos-amber-700)" : "var(--aos-faint)",
+                      color: isDone || isActive ? "var(--aos-surface)" : "var(--aos-text-secondary)",
                       flexShrink: 0,
                     }}
                   >
@@ -444,8 +444,8 @@ spec:
           {error && (
             <div
               style={{
-                background: "#FEE2E2",
-                color: "#991B1B",
+                background: "var(--aos-red-bg)",
+                color: "var(--aos-red)",
                 padding: "8px 12px",
                 borderRadius: 6,
                 marginBottom: 12,
@@ -459,8 +459,8 @@ spec:
           {/* Step 1: 选择来源 */}
           {step === 1 && (
             <div>
-              <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: "0 0 4px 0" }}>选择 Agent 来源</h2>
-              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px 0" }}>
+              <h2 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: "0 0 4px 0" }}>选择 Agent 来源</h2>
+              <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", margin: "0 0 16px 0" }}>
                 支持从 GitHub 仓库、本地代码库或市场导入
               </p>
 
@@ -474,19 +474,19 @@ spec:
                     key={src.key}
                     onClick={() => setSourceType(src.key as SourceType)}
                     style={{
-                      border: sourceType === src.key ? "1.5px solid #B45309" : "0.5px solid #B4B2A9",
+                      border: sourceType === src.key ? "1.5px solid var(--aos-amber-700)" : "0.5px solid var(--aos-faint)",
                       borderRadius: 8,
                       padding: 14,
                       cursor: "pointer",
                       transition: "all 0.15s",
-                      background: sourceType === src.key ? "#FEF3E8" : "#fff",
+                      background: sourceType === src.key ? "var(--aos-amber-bg)" : "var(--aos-surface)",
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                       <span style={{ fontSize: 18 }}>{src.icon}</span>
-                      <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>{src.label}</span>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: "var(--aos-text)" }}>{src.label}</span>
                     </div>
-                    <div style={{ fontSize: 11, color: "#6B7280", lineHeight: 1.5 }}>{src.desc}</div>
+                    <div style={{ fontSize: 11, color: "var(--aos-text-secondary)", lineHeight: 1.5 }}>{src.desc}</div>
                   </div>
                 ))}
               </div>
@@ -494,7 +494,7 @@ spec:
               {sourceType === "github" && (
                 <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 12 }}>
                   <div>
-                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>
+                    <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4, display: "block" }}>
                       仓库地址（GitHub URL）
                     </label>
                     <input
@@ -503,11 +503,11 @@ spec:
                       style={{
                         width: "100%",
                         padding: "6px 10px",
-                        border: "0.5px solid #B4B2A9",
+                        border: "0.5px solid var(--aos-faint)",
                         borderRadius: 4,
                         fontSize: 12,
-                        background: "#fff",
-                        color: "#1A1A1A",
+                        background: "var(--aos-surface)",
+                        color: "var(--aos-text)",
                         outline: "none",
                         boxSizing: "border-box",
                       }}
@@ -515,7 +515,7 @@ spec:
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     <div>
-                      <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>
+                      <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4, display: "block" }}>
                         Agent 路径（仓库内子目录）
                       </label>
                       <input
@@ -524,29 +524,29 @@ spec:
                         style={{
                           width: "100%",
                           padding: "6px 10px",
-                          border: "0.5px solid #B4B2A9",
+                          border: "0.5px solid var(--aos-faint)",
                           borderRadius: 4,
                           fontSize: 12,
-                          background: "#fff",
-                          color: "#1A1A1A",
+                          background: "var(--aos-surface)",
+                          color: "var(--aos-text)",
                           outline: "none",
                           boxSizing: "border-box",
                         }}
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>分支</label>
+                      <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4, display: "block" }}>分支</label>
                       <input
                         value={branch}
                         onChange={(e) => setBranch(e.target.value)}
                         style={{
                           width: "100%",
                           padding: "6px 10px",
-                          border: "0.5px solid #B4B2A9",
+                          border: "0.5px solid var(--aos-faint)",
                           borderRadius: 4,
                           fontSize: 12,
-                          background: "#fff",
-                          color: "#1A1A1A",
+                          background: "var(--aos-surface)",
+                          color: "var(--aos-text)",
                           outline: "none",
                           boxSizing: "border-box",
                         }}
@@ -558,15 +558,15 @@ spec:
                       padding: "10px 12px",
                       borderRadius: 8,
                       background: "rgba(240, 253, 244, 0.7)",
-                      border: "1px solid #BBF7D0",
+                      border: "1px solid var(--aos-green-border)",
                       fontSize: 11,
-                      color: "#374151",
+                      color: "var(--aos-text)",
                       display: "flex",
                       alignItems: "center",
                       gap: 8,
                     }}
                   >
-                    <span style={{ color: "#059669", fontSize: 14 }}>✓</span>
+                    <span style={{ color: "var(--aos-green-600)", fontSize: 14 }}>✓</span>
                     <span>仓库可达 · Apache-2.0 许可证 · 包含 requirements.txt + agent.py</span>
                   </div>
                 </div>
@@ -577,8 +577,8 @@ spec:
           {/* Step 2: 仓库扫描 */}
           {step === 2 && (
             <div>
-              <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: "0 0 4px 0" }}>仓库自动扫描</h2>
-              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px 0" }}>
+              <h2 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: "0 0 4px 0" }}>仓库自动扫描</h2>
+              <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", margin: "0 0 16px 0" }}>
                 平台分析 Agent 代码结构，自动推荐 Adapter 类型和运行模式
               </p>
 
@@ -586,8 +586,8 @@ spec:
               <div
                 style={{
                   borderRadius: 8,
-                  border: "1px solid #E5E7EB",
-                  background: "#fff",
+                  border: "1px solid var(--aos-border)",
+                  background: "var(--aos-surface)",
                   overflow: "hidden",
                   marginBottom: 16,
                 }}
@@ -595,17 +595,17 @@ spec:
                 <div
                   style={{
                     padding: "8px 14px",
-                    borderBottom: "1px solid #E5E7EB",
-                    background: "#F9FAFB",
+                    borderBottom: "1px solid var(--aos-border)",
+                    background: "var(--aos-surface-hover)",
                     fontSize: 12,
                     fontWeight: 500,
-                    color: "#111827",
+                    color: "var(--aos-text)",
                     display: "flex",
                     alignItems: "center",
                     gap: 8,
                   }}
                 >
-                  <span style={{ color: "#F59E0B" }}>⌕</span>
+                  <span style={{ color: "var(--aos-amber)" }}>⌕</span>
                   扫描结果
                 </div>
                 <div>
@@ -618,14 +618,14 @@ spec:
                         gap: 8,
                         padding: "6px 14px",
                         fontSize: 12,
-                        borderBottom: i < SCAN_RESULTS.length - 1 ? "0.5px solid #E5E5E2" : "none",
+                        borderBottom: i < SCAN_RESULTS.length - 1 ? "0.5px solid var(--aos-divider)" : "none",
                       }}
                     >
-                      <span style={{ width: 100, color: "#6B7280", flexShrink: 0 }}>{r.label}</span>
+                      <span style={{ width: 100, color: "var(--aos-text-secondary)", flexShrink: 0 }}>{r.label}</span>
                       <span
                         style={{
                           fontWeight: 500,
-                          color: "#111827",
+                          color: "var(--aos-text)",
                           fontFamily: r.mono ? "Menlo, Monaco, monospace" : "inherit",
                           fontSize: r.mono ? 11 : 12,
                         }}
@@ -640,16 +640,16 @@ spec:
                           fontSize: 10,
                           background:
                             r.status === "pass"
-                              ? "#DCFCE7"
+                              ? "var(--aos-green-bg)"
                               : r.status === "info"
-                                ? "#DBEAFE"
+                                ? "var(--aos-accent-light)"
                                 : "transparent",
                           color:
                             r.status === "pass"
-                              ? "#15803D"
+                              ? "var(--aos-green-700)"
                               : r.status === "info"
-                                ? "#1D4ED8"
-                                : "#9CA3AF",
+                                ? "var(--aos-blue-600)"
+                                : "var(--aos-text-tertiary)",
                         }}
                       >
                         {r.statusText}
@@ -661,7 +661,7 @@ spec:
 
               {/* Adapter 类型选择 */}
               <div>
-                <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 8, display: "block" }}>
+                <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 8, display: "block" }}>
                   推荐 Adapter 类型（可修改）
                 </label>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
@@ -672,23 +672,23 @@ spec:
                       style={{
                         border:
                           adapterType === a.key
-                            ? "1.5px solid #B45309"
+                            ? "1.5px solid var(--aos-amber-700)"
                             : a.recommended
-                              ? "1px solid #86EFAC"
-                              : "0.5px solid #B4B2A9",
+                              ? "1px solid var(--aos-green-border)"
+                              : "0.5px solid var(--aos-faint)",
                         borderRadius: 8,
                         padding: 10,
                         cursor: "pointer",
                         transition: "all 0.15s",
                         background:
                           adapterType === a.key
-                            ? "#FEF3E8"
+                            ? "var(--aos-amber-bg)"
                             : a.recommended
-                              ? "#F0FDF4"
-                              : "#fff",
+                              ? "var(--aos-green-bg)"
+                              : "var(--aos-surface)",
                       }}
                     >
-                      <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{a.label}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--aos-text)" }}>{a.label}</div>
                       {a.recommended && (
                         <span
                           style={{
@@ -696,8 +696,8 @@ spec:
                             padding: "1px 6px",
                             borderRadius: 3,
                             fontSize: 9,
-                            background: "#86EFAC",
-                            color: "#14532D",
+                            background: "var(--aos-green-border)",
+                            color: "var(--aos-green-700)",
                             fontWeight: 500,
                             marginTop: 4,
                           }}
@@ -705,7 +705,7 @@ spec:
                           推荐
                         </span>
                       )}
-                      <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 4 }}>{a.desc}</div>
+                      <div style={{ fontSize: 9, color: "var(--aos-text-tertiary)", marginTop: 4 }}>{a.desc}</div>
                       <div
                         style={{
                           fontSize: 9,
@@ -713,14 +713,14 @@ spec:
                           fontWeight: 500,
                           color:
                             a.color === "blue"
-                              ? "#2563EB"
+                              ? "var(--aos-blue-600)"
                               : a.color === "green"
-                                ? "#059669"
+                                ? "var(--aos-green-600)"
                                 : a.color === "purple"
-                                  ? "#7C3AED"
+                                  ? "var(--aos-purple-600)"
                                   : a.color === "amber"
-                                    ? "#D97706"
-                                    : "#DB2777",
+                                    ? "var(--aos-amber-600)"
+                                    : "var(--aos-red)",
                         }}
                       >
                         ⏱ {a.color === "blue" ? "毫秒级" : a.color === "amber" ? "冷启动慢" : a.color === "pink" ? "长连接" : "秒级"}
@@ -736,8 +736,8 @@ spec:
                   style={{
                     marginTop: 12,
                     borderRadius: 8,
-                    border: "1px solid #E5E7EB",
-                    background: "#fff",
+                    border: "1px solid var(--aos-border)",
+                    background: "var(--aos-surface)",
                     overflow: "hidden",
                   }}
                 >
@@ -746,7 +746,7 @@ spec:
                       padding: "10px 14px",
                       fontSize: 12,
                       fontWeight: 500,
-                      color: "#374151",
+                      color: "var(--aos-text)",
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
@@ -754,13 +754,13 @@ spec:
                       listStyle: "none",
                     }}
                   >
-                    <span style={{ color: "#3B82F6", fontSize: 14 }}>ⓘ</span>
+                    <span style={{ color: "var(--aos-blue)", fontSize: 14 }}>ⓘ</span>
                     如何选用 Adapter 类型？
-                    <span style={{ marginLeft: "auto", fontSize: 10, color: "#9CA3AF" }}>
+                    <span style={{ marginLeft: "auto", fontSize: 10, color: "var(--aos-text-tertiary)" }}>
                       {showGuide ? "点击收起" : "点击展开"}
                     </span>
                   </summary>
-                  <div style={{ borderTop: "1px solid #E5E7EB", padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ borderTop: "1px solid var(--aos-border)", padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
                     {/* HTTP API */}
                     <div
                       style={{
@@ -768,8 +768,8 @@ spec:
                         gap: 10,
                         padding: 8,
                         borderRadius: 6,
-                        background: adapterType === "http" ? "#FEF3E8" : "transparent",
-                        border: adapterType === "http" ? "1px solid #F59E0B" : "1px solid transparent",
+                        background: adapterType === "http" ? "var(--aos-amber-bg)" : "transparent",
+                        border: adapterType === "http" ? "1px solid var(--aos-amber)" : "1px solid transparent",
                       }}
                     >
                       <div
@@ -777,7 +777,7 @@ spec:
                           width: 32,
                           height: 32,
                           borderRadius: 6,
-                          background: "#DBEAFE",
+                          background: "var(--aos-accent-light)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -789,17 +789,17 @@ spec:
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <span style={{ fontWeight: 700, color: "#111827", fontSize: 12 }}>HTTP API</span>
-                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "#DBEAFE", color: "#1E40AF" }}>
+                          <span style={{ fontWeight: 700, color: "var(--aos-text)", fontSize: 12 }}>HTTP API</span>
+                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "var(--aos-accent-light)", color: "var(--aos-blue-600)" }}>
                             最轻量
                           </span>
                         </div>
-                        <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>
-                          <strong style={{ color: "#374151" }}>什么时候选：</strong>
+                        <div style={{ fontSize: 11, color: "var(--aos-text-secondary)", marginTop: 2 }}>
+                          <strong style={{ color: "var(--aos-text)" }}>什么时候选：</strong>
                           Agent 已经部署成 Web 服务，有现成的 REST/GraphQL 端点可以调用
                         </div>
-                        <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
-                          <strong style={{ color: "#6B7280" }}>典型场景：</strong>
+                        <div style={{ fontSize: 11, color: "var(--aos-text-tertiary)", marginTop: 2 }}>
+                          <strong style={{ color: "var(--aos-text-secondary)" }}>典型场景：</strong>
                           接入第三方 SaaS API、企业内部已有的微服务
                         </div>
                       </div>
@@ -812,8 +812,8 @@ spec:
                         gap: 10,
                         padding: 8,
                         borderRadius: 6,
-                        background: adapterType === "process" ? "#FEF3E8" : "rgba(240,253,244,0.5)",
-                        border: adapterType === "process" ? "1px solid #F59E0B" : "1px solid #BBF7D0",
+                        background: adapterType === "process" ? "var(--aos-amber-bg)" : "rgba(240,253,244,0.5)",
+                        border: adapterType === "process" ? "1px solid var(--aos-amber)" : "1px solid var(--aos-green-border)",
                       }}
                     >
                       <div
@@ -821,7 +821,7 @@ spec:
                           width: 32,
                           height: 32,
                           borderRadius: 6,
-                          background: "#DCFCE7",
+                          background: "var(--aos-green-bg)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -833,17 +833,17 @@ spec:
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <span style={{ fontWeight: 700, color: "#111827", fontSize: 12 }}>Process Wrapper</span>
-                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "#DCFCE7", color: "#166534" }}>
+                          <span style={{ fontWeight: 700, color: "var(--aos-text)", fontSize: 12 }}>Process Wrapper</span>
+                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "var(--aos-green-bg)", color: "var(--aos-green-700)" }}>
                             最常用
                           </span>
                         </div>
-                        <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>
-                          <strong style={{ color: "#374151" }}>什么时候选：</strong>
+                        <div style={{ fontSize: 11, color: "var(--aos-text-secondary)", marginTop: 2 }}>
+                          <strong style={{ color: "var(--aos-text)" }}>什么时候选：</strong>
                           Agent 是 Python/Node 脚本，有 main() 入口，可以在沙箱里 fork 子进程跑起来
                         </div>
-                        <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
-                          <strong style={{ color: "#6B7280" }}>典型场景：</strong>
+                        <div style={{ fontSize: 11, color: "var(--aos-text-tertiary)", marginTop: 2 }}>
+                          <strong style={{ color: "var(--aos-text-secondary)" }}>典型场景：</strong>
                           awesome-llm-apps 的 Streamlit/Flask 单文件 Agent、内部快速原型
                         </div>
                       </div>
@@ -856,8 +856,8 @@ spec:
                         gap: 10,
                         padding: 8,
                         borderRadius: 6,
-                        background: adapterType === "mcp" ? "#FEF3E8" : "transparent",
-                        border: adapterType === "mcp" ? "1px solid #F59E0B" : "1px solid transparent",
+                        background: adapterType === "mcp" ? "var(--aos-amber-bg)" : "transparent",
+                        border: adapterType === "mcp" ? "1px solid var(--aos-amber)" : "1px solid transparent",
                       }}
                     >
                       <div
@@ -865,7 +865,7 @@ spec:
                           width: 32,
                           height: 32,
                           borderRadius: 6,
-                          background: "#EDE9FE",
+                          background: "var(--aos-indigo-bg)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -877,17 +877,17 @@ spec:
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <span style={{ fontWeight: 700, color: "#111827", fontSize: 12 }}>MCP Bridge</span>
-                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "#EDE9FE", color: "#5B21B6" }}>
+                          <span style={{ fontWeight: 700, color: "var(--aos-text)", fontSize: 12 }}>MCP Bridge</span>
+                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "var(--aos-indigo-bg)", color: "var(--aos-purple-600)" }}>
                             标准化协议
                           </span>
                         </div>
-                        <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>
-                          <strong style={{ color: "#374151" }}>什么时候选：</strong>
+                        <div style={{ fontSize: 11, color: "var(--aos-text-secondary)", marginTop: 2 }}>
+                          <strong style={{ color: "var(--aos-text)" }}>什么时候选：</strong>
                           Agent 已经按 MCP（Model Context Protocol）标准实现了 Server
                         </div>
-                        <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
-                          <strong style={{ color: "#6B7280" }}>典型场景：</strong>
+                        <div style={{ fontSize: 11, color: "var(--aos-text-tertiary)", marginTop: 2 }}>
+                          <strong style={{ color: "var(--aos-text-secondary)" }}>典型场景：</strong>
                           awesome-llm-apps 的 MCP AI Agents 分支、标准化的工具服务
                         </div>
                       </div>
@@ -900,8 +900,8 @@ spec:
                         gap: 10,
                         padding: 8,
                         borderRadius: 6,
-                        background: adapterType === "docker" ? "#FEF3E8" : "transparent",
-                        border: adapterType === "docker" ? "1px solid #F59E0B" : "1px solid transparent",
+                        background: adapterType === "docker" ? "var(--aos-amber-bg)" : "transparent",
+                        border: adapterType === "docker" ? "1px solid var(--aos-amber)" : "1px solid transparent",
                       }}
                     >
                       <div
@@ -909,7 +909,7 @@ spec:
                           width: 32,
                           height: 32,
                           borderRadius: 6,
-                          background: "#FEF3C7",
+                          background: "var(--aos-amber-bg)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -921,17 +921,17 @@ spec:
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <span style={{ fontWeight: 700, color: "#111827", fontSize: 12 }}>Docker Container</span>
-                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "#FEF3C7", color: "#92400E" }}>
+                          <span style={{ fontWeight: 700, color: "var(--aos-text)", fontSize: 12 }}>Docker Container</span>
+                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "var(--aos-amber-bg)", color: "var(--aos-amber-700)" }}>
                             重量级
                           </span>
                         </div>
-                        <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>
-                          <strong style={{ color: "#374151" }}>什么时候选：</strong>
+                        <div style={{ fontSize: 11, color: "var(--aos-text-secondary)", marginTop: 2 }}>
+                          <strong style={{ color: "var(--aos-text)" }}>什么时候选：</strong>
                           Agent 需要特殊系统依赖（如 GPU 驱动、C++ 库），或者已经有 Dockerfile
                         </div>
-                        <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
-                          <strong style={{ color: "#6B7280" }}>典型场景：</strong>
+                        <div style={{ fontSize: 11, color: "var(--aos-text-tertiary)", marginTop: 2 }}>
+                          <strong style={{ color: "var(--aos-text-secondary)" }}>典型场景：</strong>
                           需 GPU 推理的 Agent、含复杂数据处理 pipeline 的 Agent
                         </div>
                       </div>
@@ -944,8 +944,8 @@ spec:
                         gap: 10,
                         padding: 8,
                         borderRadius: 6,
-                        background: adapterType === "session" ? "#FEF3E8" : "transparent",
-                        border: adapterType === "session" ? "1px solid #F59E0B" : "1px solid transparent",
+                        background: adapterType === "session" ? "var(--aos-amber-bg)" : "transparent",
+                        border: adapterType === "session" ? "1px solid var(--aos-amber)" : "1px solid transparent",
                       }}
                     >
                       <div
@@ -953,7 +953,7 @@ spec:
                           width: 32,
                           height: 32,
                           borderRadius: 6,
-                          background: "#FCE7F3",
+                          background: "var(--aos-indigo-bg)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -965,45 +965,45 @@ spec:
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <span style={{ fontWeight: 700, color: "#111827", fontSize: 12 }}>Session Gateway</span>
-                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "#FCE7F3", color: "#BE185D" }}>
+                          <span style={{ fontWeight: 700, color: "var(--aos-text)", fontSize: 12 }}>Session Gateway</span>
+                          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "var(--aos-indigo-bg)", color: "var(--aos-red)" }}>
                             实时会话
                           </span>
                         </div>
-                        <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>
-                          <strong style={{ color: "#374151" }}>什么时候选：</strong>
+                        <div style={{ fontSize: 11, color: "var(--aos-text-secondary)", marginTop: 2 }}>
+                          <strong style={{ color: "var(--aos-text)" }}>什么时候选：</strong>
                           Agent 涉及语音对话、视频通话、数字人/虚拟形象等实时流式交互
                         </div>
-                        <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
-                          <strong style={{ color: "#6B7280" }}>典型场景：</strong>
+                        <div style={{ fontSize: 11, color: "var(--aos-text-tertiary)", marginTop: 2 }}>
+                          <strong style={{ color: "var(--aos-text-secondary)" }}>典型场景：</strong>
                           Voice AI Agent、直播数字人、视频客服 Bot
                         </div>
                       </div>
                     </div>
 
                     {/* 快速决策路径 */}
-                    <div style={{ marginTop: 4, paddingTop: 10, borderTop: "1px solid #F3F4F6" }}>
-                      <div style={{ fontSize: 10, color: "#6B7280", fontWeight: 500, marginBottom: 6 }}>⚡ 快速决策路径：</div>
-                      <div style={{ fontSize: 10, color: "#9CA3AF", lineHeight: 1.8 }}>
+                    <div style={{ marginTop: 4, paddingTop: 10, borderTop: "1px solid var(--aos-gray-100)" }}>
+                      <div style={{ fontSize: 10, color: "var(--aos-text-secondary)", fontWeight: 500, marginBottom: 6 }}>⚡ 快速决策路径：</div>
+                      <div style={{ fontSize: 10, color: "var(--aos-text-tertiary)", lineHeight: 1.8 }}>
                         <div>
-                          <span style={{ color: "#4B5563" }}>①</span> Agent 已有 HTTP 接口？→{" "}
-                          <strong style={{ color: "#2563EB" }}>HTTP API</strong>
+                          <span style={{ color: "var(--aos-text-secondary)" }}>①</span> Agent 已有 HTTP 接口？→{" "}
+                          <strong style={{ color: "var(--aos-blue-600)" }}>HTTP API</strong>
                         </div>
                         <div>
-                          <span style={{ color: "#4B5563" }}>②</span> 是 Python/Node 脚本？→{" "}
-                          <strong style={{ color: "#059669" }}>Process Wrapper</strong>（默认推荐）
+                          <span style={{ color: "var(--aos-text-secondary)" }}>②</span> 是 Python/Node 脚本？→{" "}
+                          <strong style={{ color: "var(--aos-green-600)" }}>Process Wrapper</strong>（默认推荐）
                         </div>
                         <div>
-                          <span style={{ color: "#4B5563" }}>③</span> 实现了 MCP 协议？→{" "}
-                          <strong style={{ color: "#7C3AED" }}>MCP Bridge</strong>
+                          <span style={{ color: "var(--aos-text-secondary)" }}>③</span> 实现了 MCP 协议？→{" "}
+                          <strong style={{ color: "var(--aos-purple-600)" }}>MCP Bridge</strong>
                         </div>
                         <div>
-                          <span style={{ color: "#4B5563" }}>④</span> 需要 Docker 环境？→{" "}
-                          <strong style={{ color: "#D97706" }}>Docker Container</strong>
+                          <span style={{ color: "var(--aos-text-secondary)" }}>④</span> 需要 Docker 环境？→{" "}
+                          <strong style={{ color: "var(--aos-amber-600)" }}>Docker Container</strong>
                         </div>
                         <div>
-                          <span style={{ color: "#4B5563" }}>⑤</span> 有音视频流？→{" "}
-                          <strong style={{ color: "#DB2777" }}>Session Gateway</strong>
+                          <span style={{ color: "var(--aos-text-secondary)" }}>⑤</span> 有音视频流？→{" "}
+                          <strong style={{ color: "var(--aos-red)" }}>Session Gateway</strong>
                         </div>
                       </div>
                     </div>
@@ -1017,12 +1017,12 @@ spec:
                     padding: "10px 12px",
                     borderRadius: 8,
                     background: "rgba(255, 251, 235, 0.8)",
-                    border: "1px solid #FDE68A",
+                    border: "1px solid var(--aos-amber-border)",
                     fontSize: 11,
-                    color: "#374151",
+                    color: "var(--aos-text)",
                   }}
                 >
-                  <strong style={{ color: "#B45309" }}>推荐理由：</strong>
+                  <strong style={{ color: "var(--aos-amber-700)" }}>推荐理由：</strong>
                   {adapterType === "process"
                     ? "检测到 Streamlit 框架 + Python 单进程运行，适合 Process Wrapper（沙箱内 fork 子进程 + stdin/stdout JSON-RPC 通信）。"
                     : `已选择 ${adapterInfo?.label} — 请确认该 Adapter 类型适合您的 Agent 运行模式。`}
@@ -1037,7 +1037,7 @@ spec:
                       style={{
                         marginTop: 12,
                         borderRadius: 10,
-                        border: "1px solid #BFDBFE",
+                        border: "1px solid var(--aos-accent-border)",
                         background: "rgba(239, 246, 255, 0.5)",
                         overflow: "hidden",
                       }}
@@ -1046,10 +1046,10 @@ spec:
                         style={{
                           padding: "10px 14px",
                           background: "rgba(219, 234, 254, 0.6)",
-                          borderBottom: "1px solid #BFDBFE",
+                          borderBottom: "1px solid var(--aos-accent-border)",
                           fontSize: 12,
                           fontWeight: 600,
-                          color: "#1D4ED8",
+                          color: "var(--aos-blue-600)",
                           display: "flex",
                           alignItems: "center",
                           gap: 8,
@@ -1057,15 +1057,15 @@ spec:
                       >
                         <span>⚡</span>
                         {adapterInfo?.label} · 配置预览
-                        <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 400, color: "#3B82F6" }}>
+                        <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 400, color: "var(--aos-blue)" }}>
                           延迟：{detail.latency} · 隔离：{detail.isolation}
                         </span>
                       </div>
 
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0 }}>
                         {/* 左：配置 Schema */}
-                        <div style={{ padding: 12, borderRight: "1px solid #BFDBFE" }}>
-                          <div style={{ fontSize: 11, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
+                        <div style={{ padding: 12, borderRight: "1px solid var(--aos-accent-border)" }}>
+                          <div style={{ fontSize: 11, fontWeight: 500, color: "var(--aos-text)", marginBottom: 8 }}>
                             配置 Schema
                           </div>
                           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -1073,16 +1073,16 @@ spec:
                               <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 6, fontSize: 10 }}>
                                 <code
                                   style={{
-                                    color: "#1D4ED8",
+                                    color: "var(--aos-blue-600)",
                                     fontFamily: "Menlo, Monaco, monospace",
                                     minWidth: 80,
                                     flexShrink: 0,
                                   }}
                                 >
                                   {f.field}
-                                  {f.required && <span style={{ color: "#DC2626" }}>*</span>}
+                                  {f.required && <span style={{ color: "var(--aos-red)" }}>*</span>}
                                 </code>
-                                <span style={{ color: "#6B7280" }}>{f.desc}</span>
+                                <span style={{ color: "var(--aos-text-secondary)" }}>{f.desc}</span>
                               </div>
                             ))}
                           </div>
@@ -1090,13 +1090,13 @@ spec:
 
                         {/* 右：示例 + 兼容性 */}
                         <div style={{ padding: 12 }}>
-                          <div style={{ fontSize: 11, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
+                          <div style={{ fontSize: 11, fontWeight: 500, color: "var(--aos-text)", marginBottom: 8 }}>
                             调用示例
                           </div>
                           <pre
                             style={{
-                              background: "#1E293B",
-                              color: "#CBD5E1",
+                              background: "var(--aos-text)",
+                              color: "var(--aos-border-strong)",
                               padding: 8,
                               borderRadius: 4,
                               fontSize: 9,
@@ -1113,8 +1113,8 @@ spec:
                       </div>
 
                       {/* 兼容性报告 */}
-                      <div style={{ padding: "8px 12px", borderTop: "1px solid #BFDBFE" }}>
-                        <div style={{ fontSize: 10, fontWeight: 500, color: "#374151", marginBottom: 6 }}>
+                      <div style={{ padding: "8px 12px", borderTop: "1px solid var(--aos-accent-border)" }}>
+                        <div style={{ fontSize: 10, fontWeight: 500, color: "var(--aos-text)", marginBottom: 6 }}>
                           兼容性检查
                         </div>
                         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -1127,7 +1127,7 @@ spec:
                                 gap: 3,
                                 fontSize: 10,
                                 color:
-                                  c.status === "pass" ? "#16A34A" : c.status === "warn" ? "#D97706" : "#DC2626",
+                                  c.status === "pass" ? "var(--aos-green-600)" : c.status === "warn" ? "var(--aos-amber-600)" : "var(--aos-red)",
                               }}
                             >
                               {c.status === "pass" ? "✓" : c.status === "warn" ? "⚡" : "✗"} {c.item}
@@ -1140,22 +1140,22 @@ spec:
                       <div
                         style={{
                           padding: "8px 12px",
-                          borderTop: "1px solid #BFDBFE",
+                          borderTop: "1px solid var(--aos-accent-border)",
                           display: "flex",
                           gap: 16,
                           fontSize: 10,
-                          color: "#6B7280",
+                          color: "var(--aos-text-secondary)",
                         }}
                       >
                         <span>
-                          工具映射：<strong style={{ color: "#16A34A" }}>{mappingStats.pass}</strong>/
+                          工具映射：<strong style={{ color: "var(--aos-green-600)" }}>{mappingStats.pass}</strong>/
                           {mappingStats.total}
                         </span>
                         <span>
-                          自动匹配：<strong style={{ color: "#2563EB" }}>{mappingStats.autoMapped}</strong>
+                          自动匹配：<strong style={{ color: "var(--aos-blue-600)" }}>{mappingStats.autoMapped}</strong>
                         </span>
                         {mappingStats.fail > 0 && (
-                          <span style={{ color: "#DC2626" }}>⚠ {mappingStats.fail} 个未映射</span>
+                          <span style={{ color: "var(--aos-red)" }}>⚠ {mappingStats.fail} 个未映射</span>
                         )}
                       </div>
                     </div>
@@ -1168,10 +1168,10 @@ spec:
           {/* Step 3: 映射配置 */}
           {step === 3 && (
             <div>
-              <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: "0 0 4px 0" }}>
+              <h2 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: "0 0 4px 0" }}>
                 映射配置
               </h2>
-              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px 0" }}>
+              <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", margin: "0 0 16px 0" }}>
                 Agent 名称映射、工具映射（源工具 → 目标工具 ID）、权限映射
               </p>
 
@@ -1179,18 +1179,18 @@ spec:
               <div
                 style={{
                   borderRadius: 8,
-                  border: "1px solid #E5E7EB",
-                  background: "#fff",
+                  border: "1px solid var(--aos-border)",
+                  background: "var(--aos-surface)",
                   padding: 14,
                   marginBottom: 16,
                 }}
               >
-                <div style={{ fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 10 }}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)", marginBottom: 10 }}>
                   Agent 名称映射
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <div>
-                    <label style={{ fontSize: 11, color: "#6B7280", marginBottom: 4, display: "block" }}>
+                    <label style={{ fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 4, display: "block" }}>
                       源 Agent 名称（仓库检测）
                     </label>
                     <input
@@ -1199,11 +1199,11 @@ spec:
                       style={{
                         width: "100%",
                         padding: "6px 10px",
-                        border: "0.5px solid #E5E7EB",
+                        border: "0.5px solid var(--aos-border)",
                         borderRadius: 4,
                         fontSize: 12,
-                        background: "#F9FAFB",
-                        color: "#6B7280",
+                        background: "var(--aos-surface-hover)",
+                        color: "var(--aos-text-secondary)",
                         fontFamily: "Menlo, Monaco, monospace",
                         outline: "none",
                         boxSizing: "border-box",
@@ -1211,7 +1211,7 @@ spec:
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 11, color: "#6B7280", marginBottom: 4, display: "block" }}>
+                    <label style={{ fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 4, display: "block" }}>
                       目标 Agent 名称（平台注册）
                     </label>
                     <input
@@ -1220,11 +1220,11 @@ spec:
                       style={{
                         width: "100%",
                         padding: "6px 10px",
-                        border: "0.5px solid #B4B2A9",
+                        border: "0.5px solid var(--aos-faint)",
                         borderRadius: 4,
                         fontSize: 12,
-                        background: "#fff",
-                        color: "#1A1A1A",
+                        background: "var(--aos-surface)",
+                        color: "var(--aos-text)",
                         outline: "none",
                         boxSizing: "border-box",
                       }}
@@ -1237,8 +1237,8 @@ spec:
               <div
                 style={{
                   borderRadius: 8,
-                  border: "1px solid #E5E7EB",
-                  background: "#fff",
+                  border: "1px solid var(--aos-border)",
+                  background: "var(--aos-surface)",
                   overflow: "hidden",
                   marginBottom: 16,
                 }}
@@ -1246,18 +1246,18 @@ spec:
                 <div
                   style={{
                     padding: "8px 14px",
-                    borderBottom: "1px solid #E5E7EB",
-                    background: "#F9FAFB",
+                    borderBottom: "1px solid var(--aos-border)",
+                    background: "var(--aos-surface-hover)",
                     fontSize: 12,
                     fontWeight: 500,
-                    color: "#374151",
+                    color: "var(--aos-text)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
                   }}
                 >
                   <span>工具映射（源工具 → 目标工具 ID）</span>
-                  <span style={{ fontSize: 10, color: "#6B7280" }}>
+                  <span style={{ fontSize: 10, color: "var(--aos-text-secondary)" }}>
                     自动匹配 {computeMappingStats(toolMappings).autoMapped} / {computeMappingStats(toolMappings).total}
                   </span>
                 </div>
@@ -1267,11 +1267,11 @@ spec:
                       display: "grid",
                       gridTemplateColumns: "1fr 1fr 80px 60px",
                       padding: "6px 14px",
-                      background: "#FAFAFA",
+                      background: "var(--aos-surface-hover)",
                       fontSize: 10,
                       fontWeight: 500,
-                      color: "#6B7280",
-                      borderBottom: "0.5px solid #E5E7EB",
+                      color: "var(--aos-text-secondary)",
+                      borderBottom: "0.5px solid var(--aos-border)",
                     }}
                   >
                     <span>源工具</span>
@@ -1287,12 +1287,12 @@ spec:
                         gridTemplateColumns: "1fr 1fr 80px 60px",
                         padding: "6px 14px",
                         fontSize: 11,
-                        borderBottom: i < toolMappings.length - 1 ? "0.5px solid #F3F4F6" : "none",
+                        borderBottom: i < toolMappings.length - 1 ? "0.5px solid var(--aos-gray-100)" : "none",
                         alignItems: "center",
                         gap: 8,
                       }}
                     >
-                      <code style={{ color: "#374151", fontFamily: "Menlo, Monaco, monospace", fontSize: 10 }}>
+                      <code style={{ color: "var(--aos-text)", fontFamily: "Menlo, Monaco, monospace", fontSize: 10 }}>
                         {m.sourceTool}
                       </code>
                       <input
@@ -1305,12 +1305,12 @@ spec:
                         placeholder="未映射"
                         style={{
                           padding: "3px 6px",
-                          border: "0.5px solid #E5E7EB",
+                          border: "0.5px solid var(--aos-border)",
                           borderRadius: 3,
                           fontSize: 10,
                           fontFamily: "Menlo, Monaco, monospace",
-                          background: m.status === "fail" ? "#FEF2F2" : "#fff",
-                          color: "#1A1A1A",
+                          background: m.status === "fail" ? "var(--aos-red-bg)" : "var(--aos-surface)",
+                          color: "var(--aos-text)",
                           outline: "none",
                           width: "100%",
                           boxSizing: "border-box",
@@ -1321,17 +1321,17 @@ spec:
                           fontSize: 9,
                           padding: "1px 6px",
                           borderRadius: 3,
-                          background: m.autoMapped ? "#DBEAFE" : "#FEF3C7",
-                          color: m.autoMapped ? "#1D4ED8" : "#92400E",
+                          background: m.autoMapped ? "var(--aos-accent-light)" : "var(--aos-amber-bg)",
+                          color: m.autoMapped ? "var(--aos-blue-600)" : "var(--aos-amber-700)",
                           whiteSpace: "nowrap",
                         }}
                       >
                         {m.autoMapped ? "自动" : "手动"}
                       </span>
                       <span style={{ textAlign: "right", fontSize: 11 }}>
-                        {m.status === "pass" && <span style={{ color: "#16A34A" }}>✓</span>}
-                        {m.status === "warn" && <span style={{ color: "#D97706" }}>⚡</span>}
-                        {m.status === "fail" && <span style={{ color: "#DC2626" }}>✗</span>}
+                        {m.status === "pass" && <span style={{ color: "var(--aos-green-600)" }}>✓</span>}
+                        {m.status === "warn" && <span style={{ color: "var(--aos-amber-600)" }}>⚡</span>}
+                        {m.status === "fail" && <span style={{ color: "var(--aos-red)" }}>✗</span>}
                       </span>
                     </div>
                   ))}
@@ -1342,8 +1342,8 @@ spec:
               <div
                 style={{
                   borderRadius: 8,
-                  border: "1px solid #E5E7EB",
-                  background: "#fff",
+                  border: "1px solid var(--aos-border)",
+                  background: "var(--aos-surface)",
                   overflow: "hidden",
                   marginBottom: 16,
                 }}
@@ -1351,11 +1351,11 @@ spec:
                 <div
                   style={{
                     padding: "8px 14px",
-                    borderBottom: "1px solid #E5E7EB",
-                    background: "#F9FAFB",
+                    borderBottom: "1px solid var(--aos-border)",
+                    background: "var(--aos-surface-hover)",
                     fontSize: 12,
                     fontWeight: 500,
-                    color: "#374151",
+                    color: "var(--aos-text)",
                   }}
                 >
                   权限映射
@@ -1366,11 +1366,11 @@ spec:
                       display: "grid",
                       gridTemplateColumns: "1fr 1fr 60px",
                       padding: "6px 14px",
-                      background: "#FAFAFA",
+                      background: "var(--aos-surface-hover)",
                       fontSize: 10,
                       fontWeight: 500,
-                      color: "#6B7280",
-                      borderBottom: "0.5px solid #E5E7EB",
+                      color: "var(--aos-text-secondary)",
+                      borderBottom: "0.5px solid var(--aos-border)",
                     }}
                   >
                     <span>源权限</span>
@@ -1385,15 +1385,15 @@ spec:
                         gridTemplateColumns: "1fr 1fr 60px",
                         padding: "6px 14px",
                         fontSize: 11,
-                        borderBottom: i < permissionMappings.length - 1 ? "0.5px solid #F3F4F6" : "none",
+                        borderBottom: i < permissionMappings.length - 1 ? "0.5px solid var(--aos-gray-100)" : "none",
                         alignItems: "center",
                         gap: 8,
                       }}
                     >
-                      <code style={{ color: "#6B7280", fontFamily: "Menlo, Monaco, monospace", fontSize: 10 }}>
+                      <code style={{ color: "var(--aos-text-secondary)", fontFamily: "Menlo, Monaco, monospace", fontSize: 10 }}>
                         {p.sourcePermission}
                       </code>
-                      <code style={{ color: "#374151", fontFamily: "Menlo, Monaco, monospace", fontSize: 10 }}>
+                      <code style={{ color: "var(--aos-text)", fontFamily: "Menlo, Monaco, monospace", fontSize: 10 }}>
                         {p.targetPermission}
                       </code>
                       <label style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4, cursor: "pointer" }}>
@@ -1406,7 +1406,7 @@ spec:
                             setPermissionMappings(next);
                           }}
                         />
-                        <span style={{ fontSize: 10, color: p.granted ? "#16A34A" : "#9CA3AF" }}>
+                        <span style={{ fontSize: 10, color: p.granted ? "var(--aos-green-600)" : "var(--aos-text-tertiary)" }}>
                           {p.granted ? "允许" : "拒绝"}
                         </span>
                       </label>
@@ -1416,50 +1416,50 @@ spec:
               </div>
 
               {/* Manifest 表单 + YAML 预览 */}
-              <div style={{ fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)", marginBottom: 8 }}>
                 Capability Manifest（基于映射生成）
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
                 {/* 左栏：表单 */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   <div>
-                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>能力名称</label>
+                    <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4, display: "block" }}>能力名称</label>
                     <input
                       value={capName}
                       onChange={(e) => setCapName(e.target.value)}
                       style={{
                         width: "100%",
                         padding: "6px 10px",
-                        border: "0.5px solid #B4B2A9",
+                        border: "0.5px solid var(--aos-faint)",
                         borderRadius: 4,
                         fontSize: 12,
-                        background: "#fff",
-                        color: "#1A1A1A",
+                        background: "var(--aos-surface)",
+                        color: "var(--aos-text)",
                         outline: "none",
                         boxSizing: "border-box",
                       }}
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>显示名称</label>
+                    <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4, display: "block" }}>显示名称</label>
                     <input
                       value={capDisplayName}
                       onChange={(e) => setCapDisplayName(e.target.value)}
                       style={{
                         width: "100%",
                         padding: "6px 10px",
-                        border: "0.5px solid #B4B2A9",
+                        border: "0.5px solid var(--aos-faint)",
                         borderRadius: 4,
                         fontSize: 12,
-                        background: "#fff",
-                        color: "#1A1A1A",
+                        background: "var(--aos-surface)",
+                        color: "var(--aos-text)",
                         outline: "none",
                         boxSizing: "border-box",
                       }}
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>角色描述</label>
+                    <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4, display: "block" }}>角色描述</label>
                     <textarea
                       value={capDesc}
                       onChange={(e) => setCapDesc(e.target.value)}
@@ -1467,11 +1467,11 @@ spec:
                       style={{
                         width: "100%",
                         padding: "6px 10px",
-                        border: "0.5px solid #B4B2A9",
+                        border: "0.5px solid var(--aos-faint)",
                         borderRadius: 4,
                         fontSize: 12,
-                        background: "#fff",
-                        color: "#1A1A1A",
+                        background: "var(--aos-surface)",
+                        color: "var(--aos-text)",
                         outline: "none",
                         boxSizing: "border-box",
                         resize: "vertical",
@@ -1480,7 +1480,7 @@ spec:
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>能力标签</label>
+                    <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4, display: "block" }}>能力标签</label>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                       {["交易分析", "风险识别", "报告生成"].map((tag, i) => (
                         <span
@@ -1489,8 +1489,8 @@ spec:
                             padding: "2px 8px",
                             borderRadius: 3,
                             fontSize: 10,
-                            background: i === 0 ? "#DBEAFE" : i === 1 ? "#EDE9FE" : "#DCFCE7",
-                            color: i === 0 ? "#1D4ED8" : i === 1 ? "#6D28D9" : "#15803D",
+                            background: i === 0 ? "var(--aos-accent-light)" : i === 1 ? "var(--aos-indigo-bg)" : "var(--aos-green-bg)",
+                            color: i === 0 ? "var(--aos-blue-600)" : i === 1 ? "var(--aos-purple-600)" : "var(--aos-green-700)",
                           }}
                         >
                           {tag}
@@ -1499,7 +1499,7 @@ spec:
                     </div>
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>
+                    <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4, display: "block" }}>
                       Capability Level
                     </label>
                     <select
@@ -1508,11 +1508,11 @@ spec:
                       style={{
                         width: "100%",
                         padding: "6px 10px",
-                        border: "0.5px solid #B4B2A9",
+                        border: "0.5px solid var(--aos-faint)",
                         borderRadius: 4,
                         fontSize: 12,
-                        background: "#fff",
-                        color: "#1A1A1A",
+                        background: "var(--aos-surface)",
+                        color: "var(--aos-text)",
                         outline: "none",
                         boxSizing: "border-box",
                       }}
@@ -1523,7 +1523,7 @@ spec:
                     </select>
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>超时（秒）</label>
+                    <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4, display: "block" }}>超时（秒）</label>
                     <input
                       type="number"
                       value={timeout}
@@ -1531,29 +1531,29 @@ spec:
                       style={{
                         width: "100%",
                         padding: "6px 10px",
-                        border: "0.5px solid #B4B2A9",
+                        border: "0.5px solid var(--aos-faint)",
                         borderRadius: 4,
                         fontSize: 12,
-                        background: "#fff",
-                        color: "#1A1A1A",
+                        background: "var(--aos-surface)",
+                        color: "var(--aos-text)",
                         outline: "none",
                         boxSizing: "border-box",
                       }}
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>内存限制</label>
+                    <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4, display: "block" }}>内存限制</label>
                     <input
                       value={memory}
                       onChange={(e) => setMemory(e.target.value)}
                       style={{
                         width: "100%",
                         padding: "6px 10px",
-                        border: "0.5px solid #B4B2A9",
+                        border: "0.5px solid var(--aos-faint)",
                         borderRadius: 4,
                         fontSize: 12,
-                        background: "#fff",
-                        color: "#1A1A1A",
+                        background: "var(--aos-surface)",
+                        color: "var(--aos-text)",
                         outline: "none",
                         boxSizing: "border-box",
                       }}
@@ -1563,13 +1563,13 @@ spec:
 
                 {/* 右栏：YAML 预览 */}
                 <div>
-                  <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>
+                  <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4, display: "block" }}>
                     Manifest YAML 预览
                   </label>
                   <div
                     style={{
-                      background: "#1E293B",
-                      color: "#CBD5E1",
+                      background: "var(--aos-text)",
+                      color: "var(--aos-border-strong)",
                       padding: 16,
                       borderRadius: 6,
                       fontFamily: "Menlo, Monaco, monospace",
@@ -1583,7 +1583,7 @@ spec:
                     {yamlContent.split("\n").map((line, i) => {
                       if (line.startsWith("#")) {
                         return (
-                          <div key={i} style={{ color: "#64748B" }}>
+                          <div key={i} style={{ color: "var(--aos-text-secondary)" }}>
                             {line}
                           </div>
                         );
@@ -1592,19 +1592,19 @@ spec:
                       if (colonIdx > 0 && !line.trim().startsWith("-")) {
                         const key = line.slice(0, colonIdx);
                         const rest = line.slice(colonIdx);
-                        let restColor = "#CBD5E1";
+                        let restColor = "var(--aos-border-strong)";
                         if (rest.match(/: ["']/)) {
-                          restColor = "#FCD34D";
+                          restColor = "var(--aos-amber-border)";
                         }
                         return (
                           <div key={i}>
-                            <span style={{ color: "#93C5FD" }}>{key}</span>
+                            <span style={{ color: "var(--aos-accent-border)" }}>{key}</span>
                             <span style={{ color: restColor }}>{rest}</span>
                           </div>
                         );
                       }
                       return (
-                        <div key={i} style={{ color: "#CBD5E1" }}>
+                        <div key={i} style={{ color: "var(--aos-border-strong)" }}>
                           {line}
                         </div>
                       );
@@ -1618,16 +1618,16 @@ spec:
           {/* Step 4: 安全与网络 */}
           {step === 4 && (
             <div>
-              <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: "0 0 4px 0" }}>
+              <h2 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: "0 0 4px 0" }}>
                 安全等级与网络白名单
               </h2>
-              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px 0" }}>外部代码运行需配置安全护栏</p>
+              <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", margin: "0 0 16px 0" }}>外部代码运行需配置安全护栏</p>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
                 {/* 左栏 */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <div>
-                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 6, display: "block" }}>
+                    <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 6, display: "block" }}>
                       沙箱隔离级别
                     </label>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -1646,10 +1646,10 @@ spec:
                             checked={sandboxLevel === opt.key}
                             onChange={() => setSandboxLevel(opt.key)}
                           />
-                          <span style={{ color: "#374151", fontWeight: opt.key === "strict" ? 500 : 400 }}>
+                          <span style={{ color: "var(--aos-text)", fontWeight: opt.key === "strict" ? 500 : 400 }}>
                             {opt.label}
                           </span>
-                          <span style={{ fontSize: 10, color: opt.warn ? "#EF4444" : "#9CA3AF" }}>{opt.desc}</span>
+                          <span style={{ fontSize: 10, color: opt.warn ? "var(--aos-red)" : "var(--aos-text-tertiary)" }}>{opt.desc}</span>
                         </label>
                       ))}
                     </div>
@@ -1657,25 +1657,25 @@ spec:
 
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     <div>
-                      <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>CPU 上限</label>
+                      <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4, display: "block" }}>CPU 上限</label>
                       <input
                         value={cpuLimit}
                         onChange={(e) => setCpuLimit(e.target.value)}
                         style={{
                           width: "100%",
                           padding: "6px 10px",
-                          border: "0.5px solid #B4B2A9",
+                          border: "0.5px solid var(--aos-faint)",
                           borderRadius: 4,
                           fontSize: 12,
-                          background: "#fff",
-                          color: "#1A1A1A",
+                          background: "var(--aos-surface)",
+                          color: "var(--aos-text)",
                           outline: "none",
                           boxSizing: "border-box",
                         }}
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 4, display: "block" }}>
+                      <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4, display: "block" }}>
                         速率限制（次/分）
                       </label>
                       <input
@@ -1685,11 +1685,11 @@ spec:
                         style={{
                           width: "100%",
                           padding: "6px 10px",
-                          border: "0.5px solid #B4B2A9",
+                          border: "0.5px solid var(--aos-faint)",
                           borderRadius: 4,
                           fontSize: 12,
-                          background: "#fff",
-                          color: "#1A1A1A",
+                          background: "var(--aos-surface)",
+                          color: "var(--aos-text)",
                           outline: "none",
                           boxSizing: "border-box",
                         }}
@@ -1698,7 +1698,7 @@ spec:
                   </div>
 
                   <div>
-                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 6, display: "block" }}>护栏配置</label>
+                    <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 6, display: "block" }}>护栏配置</label>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       {[
                         { key: "noFsWrite", label: "禁止文件系统写入" },
@@ -1717,7 +1717,7 @@ spec:
                               setGuardrails({ ...guardrails, [opt.key]: e.target.checked })
                             }
                           />
-                          <span style={{ color: "#374151" }}>{opt.label}</span>
+                          <span style={{ color: "var(--aos-text)" }}>{opt.label}</span>
                         </label>
                       ))}
                     </div>
@@ -1727,27 +1727,27 @@ spec:
                 {/* 右栏 */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <div>
-                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 6, display: "block" }}>
+                    <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 6, display: "block" }}>
                       网络白名单
                     </label>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, cursor: "pointer" }}>
                         <input type="checkbox" defaultChecked />
-                        <span style={{ color: "#374151" }}>api.openai.com</span>
-                        <span style={{ fontSize: 10, color: "#9CA3AF" }}>LLM</span>
+                        <span style={{ color: "var(--aos-text)" }}>api.openai.com</span>
+                        <span style={{ fontSize: 10, color: "var(--aos-text-tertiary)" }}>LLM</span>
                       </label>
                       <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, cursor: "pointer" }}>
                         <input type="checkbox" />
-                        <span style={{ color: "#9CA3AF" }}>自定义域名…</span>
+                        <span style={{ color: "var(--aos-text-tertiary)" }}>自定义域名…</span>
                       </label>
                     </div>
-                    <p style={{ fontSize: 10, color: "#9CA3AF", marginTop: 6 }}>
+                    <p style={{ fontSize: 10, color: "var(--aos-text-tertiary)", marginTop: 6 }}>
                       默认仅允许 LLM API 域名。添加其他域名需 L2+ 审批。
                     </p>
                   </div>
 
                   <div>
-                    <label style={{ fontSize: 12, color: "#5F5E5A", marginBottom: 6, display: "block" }}>
+                    <label style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 6, display: "block" }}>
                       环境变量注入
                     </label>
                     <div
@@ -1759,14 +1759,14 @@ spec:
                         gap: 8,
                       }}
                     >
-                      <span style={{ color: "#6B7280" }}>OPENAI_API_KEY</span>
+                      <span style={{ color: "var(--aos-text-secondary)" }}>OPENAI_API_KEY</span>
                       <span
                         style={{
                           fontSize: 10,
                           padding: "2px 6px",
                           borderRadius: 3,
-                          background: "#DCFCE7",
-                          color: "#15803D",
+                          background: "var(--aos-green-bg)",
+                          color: "var(--aos-green-700)",
                         }}
                       >
                         → vault://aip/models/openai
@@ -1779,12 +1779,12 @@ spec:
                       padding: "10px 12px",
                       borderRadius: 8,
                       background: "rgba(254, 242, 242, 0.7)",
-                      border: "1px solid #FECACA",
+                      border: "1px solid var(--aos-red-border)",
                       fontSize: 11,
-                      color: "#374151",
+                      color: "var(--aos-text)",
                     }}
                   >
-                    <strong style={{ color: "#B91C1C" }}>安全提示：</strong>
+                    <strong style={{ color: "var(--aos-red)" }}>安全提示：</strong>
                     外部代码在沙箱内运行。平台已自动配置 cgroups（CPU/内存限制）+ seccomp（系统调用过滤），防止恶意操作。
                   </div>
                 </div>
@@ -1795,10 +1795,10 @@ spec:
           {/* Step 5: 连通测试与安全扫描 */}
           {step === 5 && (
             <div>
-              <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: "0 0 4px 0" }}>
+              <h2 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: "0 0 4px 0" }}>
                 连通测试与安全扫描
               </h2>
-              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px 0" }}>
+              <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", margin: "0 0 16px 0" }}>
                 验证沙箱启动、子进程通信、LLM 路由，并执行 6 类安全风险扫描
               </p>
 
@@ -1814,7 +1814,7 @@ spec:
                       padding: "8px 12px",
                       borderRadius: 4,
                       fontSize: 12,
-                      background: t.status === "pass" ? "#F0FDF4" : t.status === "pending" ? "#FFFBEB" : "#fff",
+                      background: t.status === "pass" ? "var(--aos-green-bg)" : t.status === "pending" ? "var(--aos-amber-bg)" : "var(--aos-surface)",
                     }}
                   >
                     <span
@@ -1822,16 +1822,16 @@ spec:
                         fontSize: 14,
                         color:
                           t.status === "pass"
-                            ? "#16A34A"
+                            ? "var(--aos-green-600)"
                             : t.status === "pending"
-                              ? "#D97706"
-                              : "#6B7280",
+                              ? "var(--aos-amber-600)"
+                              : "var(--aos-text-secondary)",
                       }}
                     >
                       {t.status === "pass" ? "✓" : t.status === "pending" ? "⏱" : "…"}
                     </span>
-                    <span style={{ fontWeight: 500, color: "#111827" }}>{t.label}</span>
-                    <span style={{ fontSize: 10, color: "#6B7280", marginLeft: "auto" }}>{t.detail}</span>
+                    <span style={{ fontWeight: 500, color: "var(--aos-text)" }}>{t.label}</span>
+                    <span style={{ fontSize: 10, color: "var(--aos-text-secondary)", marginLeft: "auto" }}>{t.detail}</span>
                   </div>
                 ))}
               </div>
@@ -1839,25 +1839,25 @@ spec:
               {/* 安全扫描 */}
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                  <h3 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: 0 }}>安全扫描</h3>
-                  <span style={{ fontSize: 10, color: "#9CA3AF" }}>基于 skill-security-auditor · 零依赖静态分析</span>
+                  <h3 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: 0 }}>安全扫描</h3>
+                  <span style={{ fontSize: 10, color: "var(--aos-text-tertiary)" }}>基于 skill-security-auditor · 零依赖静态分析</span>
                 </div>
-                <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 10px 0" }}>
+                <p style={{ fontSize: 11, color: "var(--aos-text-secondary)", margin: "0 0 10px 0" }}>
                   扫描已导入的 Agent 源码，检测 6 类安全风险。高风险项需管理员审批方可继续导入。
                 </p>
 
-                <div style={{ borderRadius: 8, border: "1px solid #E5E7EB", overflow: "hidden" }}>
+                <div style={{ borderRadius: 8, border: "1px solid var(--aos-border)", overflow: "hidden" }}>
                   {/* 表头 */}
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
                       padding: "8px 12px",
-                      background: "#F9FAFB",
-                      borderBottom: "1px solid #E5E7EB",
+                      background: "var(--aos-surface-hover)",
+                      borderBottom: "1px solid var(--aos-border)",
                       fontSize: 10,
                       fontWeight: 500,
-                      color: "#6B7280",
+                      color: "var(--aos-text-secondary)",
                     }}
                   >
                     <span style={{ width: 100 }}>风险类别</span>
@@ -1871,7 +1871,7 @@ spec:
                         display: "flex",
                         alignItems: "center",
                         padding: "10px 12px",
-                        borderBottom: i < SECURITY_SCANS.length - 1 ? "1px solid #F3F4F6" : "none",
+                        borderBottom: i < SECURITY_SCANS.length - 1 ? "1px solid var(--aos-gray-100)" : "none",
                         fontSize: 12,
                         background: s.highlight
                           ? s.result === "fail"
@@ -1880,19 +1880,19 @@ spec:
                           : "transparent",
                       }}
                     >
-                      <span style={{ width: 100, color: "#374151", fontWeight: 500, flexShrink: 0 }}>
+                      <span style={{ width: 100, color: "var(--aos-text)", fontWeight: 500, flexShrink: 0 }}>
                         {s.category}
                       </span>
-                      <span style={{ flex: 1, color: "#6B7280" }}>
+                      <span style={{ flex: 1, color: "var(--aos-text-secondary)" }}>
                         {s.result === "fail" && (
-                          <span style={{ color: "#DC2626", fontWeight: 500 }}>eval()</span>
+                          <span style={{ color: "var(--aos-red)", fontWeight: 500 }}>eval()</span>
                         )}
                         {s.result !== "fail" && s.content}
                         {s.result === "fail" && " · __import__() · compile()"}
                       </span>
                       <span style={{ width: 80, textAlign: "right" }}>
                         {s.result === "pass" && (
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "#16A34A" }}>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--aos-green-600)" }}>
                             <span>✓</span>通过
                           </span>
                         )}
@@ -1902,7 +1902,7 @@ spec:
                               display: "inline-flex",
                               alignItems: "center",
                               gap: 4,
-                              color: "#DC2626",
+                              color: "var(--aos-red)",
                               fontWeight: 500,
                             }}
                           >
@@ -1916,7 +1916,7 @@ spec:
                               display: "inline-flex",
                               alignItems: "center",
                               gap: 4,
-                              color: "#D97706",
+                              color: "var(--aos-amber-600)",
                               fontWeight: 500,
                             }}
                           >
@@ -1939,17 +1939,17 @@ spec:
                     padding: "8px 12px",
                     borderRadius: 8,
                     background: "rgba(254, 242, 242, 0.7)",
-                    border: "1px solid #FECACA",
+                    border: "1px solid var(--aos-red-border)",
                   }}
                 >
-                  <span style={{ color: "#EF4444", fontSize: 16, flexShrink: 0 }}>⚠</span>
-                  <div style={{ fontSize: 11, color: "#374151" }}>
-                    <strong style={{ color: "#B91C1C" }}>检测到 P1 风险：</strong>
+                  <span style={{ color: "var(--aos-red)", fontSize: 16, flexShrink: 0 }}>⚠</span>
+                  <div style={{ fontSize: 11, color: "var(--aos-text)" }}>
+                    <strong style={{ color: "var(--aos-red)" }}>检测到 P1 风险：</strong>
                     代码执行模块发现 2 处{" "}
                     <code
                       style={{
-                        color: "#DC2626",
-                        background: "#FEE2E2",
+                        color: "var(--aos-red)",
+                        background: "var(--aos-red-bg)",
                         padding: "1px 4px",
                         borderRadius: 3,
                         fontSize: 10,
@@ -1958,7 +1958,7 @@ spec:
                       eval()
                     </code>{" "}
                     调用（llm_eval.py:34, agent_chain.py:71）。
-                    <div style={{ marginTop: 2, color: "#6B7280" }}>
+                    <div style={{ marginTop: 2, color: "var(--aos-text-secondary)" }}>
                       建议：将 eval() 替换为 ast.literal_eval()，或在沙箱中限制执行权限。需管理员审批方可继续导入。
                     </div>
                   </div>
@@ -1974,7 +1974,7 @@ spec:
                     padding: "8px 12px",
                     borderRadius: 8,
                     background: "rgba(255, 251, 235, 0.8)",
-                    border: "1px solid #FCD34D",
+                    border: "1px solid var(--aos-amber-border)",
                   }}
                 >
                   <input
@@ -1982,10 +1982,10 @@ spec:
                     id="sec-approve"
                     checked={securityApproved}
                     onChange={(e) => setSecurityApproved(e.target.checked)}
-                    style={{ accentColor: "#D97706" }}
+                    style={{ accentColor: "var(--aos-amber-600)" }}
                   />
-                  <label htmlFor="sec-approve" style={{ fontSize: 11, color: "#374151", cursor: "pointer" }}>
-                    <strong style={{ color: "#B45309" }}>管理员确认接受风险</strong> — 勾选后允许跳过 P1 门控继续导入，风险记录将写入审计日志
+                  <label htmlFor="sec-approve" style={{ fontSize: 11, color: "var(--aos-text)", cursor: "pointer" }}>
+                    <strong style={{ color: "var(--aos-amber-700)" }}>管理员确认接受风险</strong> — 勾选后允许跳过 P1 门控继续导入，风险记录将写入审计日志
                   </label>
                 </div>
               </div>
@@ -1994,8 +1994,8 @@ spec:
               <div
                 style={{
                   borderRadius: 8,
-                  border: "1px solid #E5E7EB",
-                  background: "#F9FAFB",
+                  border: "1px solid var(--aos-border)",
+                  background: "var(--aos-surface-hover)",
                   padding: 16,
                   display: "flex",
                   flexDirection: "column",
@@ -2003,31 +2003,31 @@ spec:
                   fontSize: 12,
                 }}
               >
-                <div style={{ color: "#111827", fontWeight: 500, marginBottom: 4 }}>导入汇总</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 24px", color: "#6B7280" }}>
+                <div style={{ color: "var(--aos-text)", fontWeight: 500, marginBottom: 4 }}>导入汇总</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 24px", color: "var(--aos-text-secondary)" }}>
                   <div>
-                    Agent 名称：<span style={{ color: "#111827", fontWeight: 500 }}>{capDisplayName}</span>
+                    Agent 名称：<span style={{ color: "var(--aos-text)", fontWeight: 500 }}>{capDisplayName}</span>
                   </div>
                   <div>
-                    来源：<span style={{ color: "#111827" }}>awesome-llm-apps</span>
+                    来源：<span style={{ color: "var(--aos-text)" }}>awesome-llm-apps</span>
                   </div>
                   <div>
-                    Adapter：<span style={{ color: "#D97706", fontWeight: 500 }}>{adapterInfo?.label}</span>
+                    Adapter：<span style={{ color: "var(--aos-amber-600)", fontWeight: 500 }}>{adapterInfo?.label}</span>
                   </div>
                   <div>
-                    能力类型：<span style={{ color: "#2563EB", fontWeight: 500 }}>{capLevel}</span>
+                    能力类型：<span style={{ color: "var(--aos-blue-600)", fontWeight: 500 }}>{capLevel}</span>
                   </div>
                   <div>
-                    沙箱：<span style={{ color: "#111827" }}>严格隔离</span>
+                    沙箱：<span style={{ color: "var(--aos-text)" }}>严格隔离</span>
                   </div>
                   <div>
-                    速率限制：<span style={{ color: "#111827" }}>{rateLimit} 次/分</span>
+                    速率限制：<span style={{ color: "var(--aos-text)" }}>{rateLimit} 次/分</span>
                   </div>
                   <div>
-                    模型路由：<span style={{ color: "#111827" }}>gpt-5.2-prod</span>
+                    模型路由：<span style={{ color: "var(--aos-text)" }}>gpt-5.2-prod</span>
                   </div>
                   <div>
-                    许可证：<span style={{ color: "#111827" }}>Apache-2.0</span>
+                    许可证：<span style={{ color: "var(--aos-text)" }}>Apache-2.0</span>
                   </div>
                 </div>
               </div>
@@ -2039,14 +2039,14 @@ spec:
                   padding: "10px 12px",
                   borderRadius: 8,
                   background: "rgba(240, 253, 244, 0.7)",
-                  border: "1px solid #BBF7D0",
+                  border: "1px solid var(--aos-green-border)",
                   fontSize: 11,
-                  color: "#374151",
+                  color: "var(--aos-text)",
                 }}
               >
-                <strong style={{ color: "#059669" }}>导入后：</strong>
+                <strong style={{ color: "var(--aos-green-600)" }}>导入后：</strong>
                 该 Agent 将出现在「智能体目录」和「智能体插件」列表中。可在「智能体工具面板」挂载为 Function Tool，供平台内 Agent 调用。
-                <a style={{ color: "#2563EB", marginLeft: 4 }}>去挂载 →</a>
+                <a style={{ color: "var(--aos-blue-600)", marginLeft: 4 }}>去挂载 →</a>
               </div>
             </div>
           )}
@@ -2059,7 +2059,7 @@ spec:
               justifyContent: "space-between",
               marginTop: 24,
               paddingTop: 16,
-              borderTop: "1px solid #E5E7EB",
+              borderTop: "1px solid var(--aos-border)",
             }}
           >
             <button
@@ -2069,9 +2069,9 @@ spec:
                 padding: "8px 20px",
                 fontSize: 13,
                 borderRadius: 6,
-                border: step === 1 ? "1px solid #E5E7EB" : "0.5px solid #888780",
-                background: "#fff",
-                color: step === 1 ? "#9CA3AF" : "#444441",
+                border: step === 1 ? "1px solid var(--aos-border)" : "0.5px solid var(--aos-faint)",
+                background: "var(--aos-surface)",
+                color: step === 1 ? "var(--aos-text-tertiary)" : "var(--aos-text-secondary)",
                 cursor: step === 1 ? "default" : "pointer",
                 visibility: step === 1 ? "hidden" : "visible",
               }}
@@ -2088,9 +2088,9 @@ spec:
                   padding: "8px 20px",
                   fontSize: 13,
                   borderRadius: 6,
-                  border: "0.5px solid #888780",
-                  background: "#fff",
-                  color: "#444441",
+                  border: "0.5px solid var(--aos-faint)",
+                  background: "var(--aos-surface)",
+                  color: "var(--aos-text-secondary)",
                   cursor: "pointer",
                 }}
               >
@@ -2105,8 +2105,8 @@ spec:
                     fontWeight: 500,
                     borderRadius: 6,
                     border: "none",
-                    background: "#B45309",
-                    color: "#fff",
+                    background: "var(--aos-amber-700)",
+                    color: "var(--text-on-brand)",
                     cursor: "pointer",
                   }}
                 >
@@ -2124,7 +2124,7 @@ spec:
                     borderRadius: 6,
                     border: "none",
                     background: "var(--aos-accent)",
-                    color: "#fff",
+                    color: "var(--text-on-brand)",
                     cursor: importing ? "default" : "pointer",
                     opacity: importing ? 0.7 : 1,
                   }}

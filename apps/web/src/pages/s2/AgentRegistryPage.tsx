@@ -107,8 +107,8 @@ const MOCK_AGENTS: AgentCard[] = [
     ],
     toolCount: 5,
     callCount: 1280,
-    iconBg: "#FEF3C7",
-    iconColor: "#D97706",
+    iconBg: "var(--aos-amber-bg)",
+    iconColor: "var(--aos-amber-600)",
     iconType: "wrench",
     detailLink: "/aip/studio",
     detailLabel: "配置 →",
@@ -130,8 +130,8 @@ const MOCK_AGENTS: AgentCard[] = [
     ],
     toolCount: 4,
     callCount: 860,
-    iconBg: "#DBEAFE",
-    iconColor: "#2563EB",
+    iconBg: "var(--aos-accent-light)",
+    iconColor: "var(--aos-blue-600)",
     iconType: "video",
     detailLink: "/aip/studio",
     detailLabel: "配置 →",
@@ -153,8 +153,8 @@ const MOCK_AGENTS: AgentCard[] = [
     ],
     toolCount: 6,
     callCount: 420,
-    iconBg: "#FEE2E2",
-    iconColor: "#DC2626",
+    iconBg: "var(--aos-red-bg)",
+    iconColor: "var(--aos-red)",
     iconType: "alert",
     detailLink: "/aip/studio",
     detailLabel: "配置 →",
@@ -176,8 +176,8 @@ const MOCK_AGENTS: AgentCard[] = [
     ],
     toolCount: 3,
     callCount: 3200,
-    iconBg: "#DCFCE7",
-    iconColor: "#16A34A",
+    iconBg: "var(--aos-green-bg)",
+    iconColor: "var(--aos-green-600)",
     iconType: "chat",
     detailLink: "/aip/studio",
     detailLabel: "配置 →",
@@ -198,8 +198,8 @@ const MOCK_AGENTS: AgentCard[] = [
     ],
     toolCount: 2,
     callCount: 156,
-    iconBg: "#EDE9FE",
-    iconColor: "#7C3AED",
+    iconBg: "var(--aos-indigo-bg)",
+    iconColor: "var(--aos-purple-600)",
     iconType: "doc",
     detailLink: "/aip/studio",
     detailLabel: "配置 →",
@@ -220,8 +220,8 @@ const MOCK_AGENTS: AgentCard[] = [
     ],
     toolCount: 0,
     callCount: 640,
-    iconBg: "#FCE7F3",
-    iconColor: "#DB2777",
+    iconBg: "var(--aos-indigo-bg)",
+    iconColor: "var(--aos-red)",
     iconType: "play",
     detailLink: "/aip/capabilities",
     detailLabel: "管理 →",
@@ -243,8 +243,8 @@ const MOCK_AGENTS: AgentCard[] = [
     ],
     toolCount: 0,
     callCount: 320,
-    iconBg: "#CCFBF1",
-    iconColor: "#0D9488",
+    iconBg: "var(--aos-green-border)",
+    iconColor: "var(--color-info)",
     iconType: "monitor",
     detailLink: "/aip/capabilities",
     detailLabel: "管理 →",
@@ -266,8 +266,8 @@ const MOCK_AGENTS: AgentCard[] = [
     ],
     toolCount: 0,
     callCount: 85,
-    iconBg: "#E0E7FF",
-    iconColor: "#4F46E5",
+    iconBg: "var(--aos-indigo-bg)",
+    iconColor: "var(--aos-indigo-600)",
     iconType: "avatar",
     detailLink: "/aip/capabilities",
     detailLabel: "管理 →",
@@ -289,8 +289,8 @@ const MOCK_AGENTS: AgentCard[] = [
     ],
     toolCount: 0,
     callCount: 12,
-    iconBg: "#F3F4F6",
-    iconColor: "#6B7280",
+    iconBg: "var(--aos-gray-100)",
+    iconColor: "var(--aos-text-secondary)",
     iconType: "avatar",
     detailLink: "/aip/capabilities",
     detailLabel: "管理 →",
@@ -313,8 +313,8 @@ const MOCK_AGENTS: AgentCard[] = [
     ],
     toolCount: 0,
     callCount: 45,
-    iconBg: "#FFEDD5",
-    iconColor: "#EA580C",
+    iconBg: "var(--aos-amber-bg)",
+    iconColor: "var(--aos-amber-600)",
     iconType: "multi-agent",
     detailLink: "/aip/capabilities",
     detailLabel: "管理 →",
@@ -337,8 +337,8 @@ const MOCK_AGENTS: AgentCard[] = [
     ],
     toolCount: 0,
     callCount: 28,
-    iconBg: "#FFEDD5",
-    iconColor: "#EA580C",
+    iconBg: "var(--aos-amber-bg)",
+    iconColor: "var(--aos-amber-600)",
     iconType: "crew",
     detailLink: "/aip/capabilities",
     detailLabel: "管理 →",
@@ -348,18 +348,18 @@ const MOCK_AGENTS: AgentCard[] = [
 
 const SOURCE_TABS: { id: AgentSource | "all"; label: string; dotColor: string }[] = [
   { id: "all", label: "全部", dotColor: "" },
-  { id: "builtin", label: "平台内创建", dotColor: "#6366F1" },
-  { id: "plugin", label: "插件引入", dotColor: "#10B981" },
-  { id: "external", label: "外部接入", dotColor: "#F97316" },
+  { id: "builtin", label: "平台内创建", dotColor: "var(--aos-indigo)" },
+  { id: "plugin", label: "插件引入", dotColor: "var(--aos-green)" },
+  { id: "external", label: "外部接入", dotColor: "var(--aos-amber-600)" },
 ];
 
 export const STATUS_TABS: { id: AgentStatus | "all"; label: string; color: string }[] = [
-  { id: "all", label: "全部状态", color: "#6B7280" },
-  { id: "running", label: "运行中", color: "#16A34A" },
-  { id: "ready", label: "就绪", color: "#2563EB" },
-  { id: "session", label: "会话中", color: "#4F46E5" },
-  { id: "draft", label: "草稿", color: "#D97706" },
-  { id: "stopped", label: "已停用", color: "#9CA3AF" },
+  { id: "all", label: "全部状态", color: "var(--aos-text-secondary)" },
+  { id: "running", label: "运行中", color: "var(--aos-green-600)" },
+  { id: "ready", label: "就绪", color: "var(--aos-blue-600)" },
+  { id: "session", label: "会话中", color: "var(--aos-indigo-600)" },
+  { id: "draft", label: "草稿", color: "var(--aos-amber-600)" },
+  { id: "stopped", label: "已停用", color: "var(--aos-text-tertiary)" },
 ];
 
 const SORT_OPTIONS = [
@@ -372,32 +372,32 @@ function statusStyle(status: AgentStatus) {
   switch (status) {
     case "running":
     case "ready":
-      return { bg: "#DCFCE7", color: "#166534" };
+      return { bg: "var(--aos-green-bg)", color: "var(--aos-green-700)" };
     case "draft":
-      return { bg: "#FEF3C7", color: "#92400E" };
+      return { bg: "var(--aos-amber-bg)", color: "var(--aos-amber-700)" };
     case "stopped":
-      return { bg: "#F3F4F6", color: "#6B7280" };
+      return { bg: "var(--aos-gray-100)", color: "var(--aos-text-secondary)" };
     case "session":
-      return { bg: "#DBEAFE", color: "#1D4ED8" };
+      return { bg: "var(--aos-accent-light)", color: "var(--aos-blue-600)" };
   }
 }
 
 function tagStyle(tone: string) {
   switch (tone) {
     case "indigo":
-      return { bg: "#EEF2FF", color: "#4F46E5" };
+      return { bg: "var(--aos-indigo-bg)", color: "var(--aos-indigo-600)" };
     case "yellow":
-      return { bg: "#FEF9C3", color: "#A16207" };
+      return { bg: "var(--aos-amber-bg)", color: "var(--aos-amber-700)" };
     case "orange":
-      return { bg: "#FFEDD5", color: "#C2410C" };
+      return { bg: "var(--aos-amber-bg)", color: "var(--aos-amber-700)" };
     case "green":
-      return { bg: "#DCFCE7", color: "#15803D" };
+      return { bg: "var(--aos-green-bg)", color: "var(--aos-green-700)" };
     case "blue":
-      return { bg: "#DBEAFE", color: "#1D4ED8" };
+      return { bg: "var(--aos-accent-light)", color: "var(--aos-blue-600)" };
     case "purple":
-      return { bg: "#EDE9FE", color: "#7C3AED" };
+      return { bg: "var(--aos-indigo-bg)", color: "var(--aos-purple-600)" };
     default:
-      return { bg: "#F3F4F6", color: "#6B7280" };
+      return { bg: "var(--aos-gray-100)", color: "var(--aos-text-secondary)" };
   }
 }
 
@@ -550,12 +550,12 @@ export function AgentRegistryPage() {
   }, [agents]);
 
   const metricsCards = [
-    { label: "已注册 Agent", value: stats.total, color: "#4F46E5", bg: "#EEF2FF", icon: "agents" },
-    { label: "活跃 Agent", value: stats.active, color: "#16A34A", bg: "#DCFCE7", icon: "active" },
-    { label: "本月调用量", value: stats.totalCalls.toLocaleString(), color: "#2563EB", bg: "#DBEAFE", icon: "calls" },
-    { label: "工具总数", value: stats.totalTools, color: "#D97706", bg: "#FEF3C7", icon: "tools" },
-    { label: "平均调用", value: stats.avgCalls.toLocaleString(), color: "#7C3AED", bg: "#EDE9FE", icon: "avg" },
-    { label: "护栏覆盖率", value: `${stats.guardrailCoverage}%`, color: "#0891B2", bg: "#ECFEFF", icon: "guard" },
+    { label: "已注册 Agent", value: stats.total, color: "var(--aos-indigo-600)", bg: "var(--aos-indigo-bg)", icon: "agents" },
+    { label: "活跃 Agent", value: stats.active, color: "var(--aos-green-600)", bg: "var(--aos-green-bg)", icon: "active" },
+    { label: "本月调用量", value: stats.totalCalls.toLocaleString(), color: "var(--aos-blue-600)", bg: "var(--aos-accent-light)", icon: "calls" },
+    { label: "工具总数", value: stats.totalTools, color: "var(--aos-amber-600)", bg: "var(--aos-amber-bg)", icon: "tools" },
+    { label: "平均调用", value: stats.avgCalls.toLocaleString(), color: "var(--aos-purple-600)", bg: "var(--aos-indigo-bg)", icon: "avg" },
+    { label: "护栏覆盖率", value: `${stats.guardrailCoverage}%`, color: "var(--color-info)", bg: "var(--aos-accent-light)", icon: "guard" },
   ];
 
   return (
@@ -564,8 +564,8 @@ export function AgentRegistryPage() {
         {/* 标题 + 新建按钮 */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 600, color: "#111827", margin: 0 }}>智能体目录</h1>
-            <p style={{ fontSize: 13, color: "#6B7280", margin: "4px 0 0", lineHeight: 1.5 }}>
+            <h1 style={{ fontSize: 20, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>智能体目录</h1>
+            <p style={{ fontSize: 13, color: "var(--aos-text-secondary)", margin: "4px 0 0", lineHeight: 1.5 }}>
               平台全部智能体的浏览与发现。涵盖平台内创建、插件市场引入、外部 Adapter 接入三种来源。
             </p>
           </div>
@@ -577,8 +577,8 @@ export function AgentRegistryPage() {
                 fontSize: 13,
                 fontWeight: 500,
                 borderRadius: 8,
-                background: "#4F46E5",
-                color: "#fff",
+                background: "var(--aos-indigo-600)",
+                color: "var(--text-on-brand)",
                 textDecoration: "none",
                 display: "inline-flex",
                 alignItems: "center",
@@ -603,19 +603,19 @@ export function AgentRegistryPage() {
               key={i}
               style={{
                 borderRadius: 10,
-                border: "1px solid #E5E7EB",
-                background: "#fff",
+                border: "1px solid var(--aos-border)",
+                background: "var(--aos-surface)",
                 padding: 14,
                 display: "flex",
                 flexDirection: "column",
                 gap: 4,
               }}
             >
-              <div style={{ fontSize: 10, color: "#6B7280", fontWeight: 500 }}>{m.label}</div>
+              <div style={{ fontSize: 10, color: "var(--aos-text-secondary)", fontWeight: 500 }}>{m.label}</div>
               <div style={{ fontSize: 22, fontWeight: 700, color: m.color }}>{m.value}</div>
               <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: m.color, display: "inline-block" }} />
-                <span style={{ fontSize: 9, color: "#9CA3AF" }}>
+                <span style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>
                   {m.icon === "active" ? `${stats.total} 总计中` : m.icon === "guard" ? "HITL 覆盖" : ""}
                 </span>
               </div>
@@ -637,9 +637,9 @@ export function AgentRegistryPage() {
                   borderRadius: 8,
                   fontSize: 12,
                   fontWeight: 500,
-                  border: `1px solid ${active ? "#4F46E5" : "#E5E7EB"}`,
-                  background: active ? "#4F46E5" : "#fff",
-                  color: active ? "#fff" : "#374151",
+                  border: `1px solid ${active ? "var(--aos-indigo-600)" : "var(--aos-border)"}`,
+                  background: active ? "var(--aos-indigo-600)" : "var(--aos-surface)",
+                  color: active ? "var(--aos-surface)" : "var(--aos-text)",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
@@ -681,9 +681,9 @@ export function AgentRegistryPage() {
                   borderRadius: 6,
                   fontSize: 11,
                   fontWeight: 500,
-                  border: `1px solid ${active ? tab.color : "#E5E7EB"}`,
-                  background: active ? `${tab.color}15` : "#fff",
-                  color: active ? tab.color : "#6B7280",
+                  border: `1px solid ${active ? tab.color : "var(--aos-border)"}`,
+                  background: active ? `${tab.color}15` : "var(--aos-surface)",
+                  color: active ? tab.color : "var(--aos-text-secondary)",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
@@ -706,10 +706,10 @@ export function AgentRegistryPage() {
             style={{
               padding: "4px 10px",
               fontSize: 11,
-              border: "1px solid #E5E7EB",
+              border: "1px solid var(--aos-border)",
               borderRadius: 6,
-              background: "#fff",
-              color: "#374151",
+              background: "var(--aos-surface)",
+              color: "var(--aos-text)",
               outline: "none",
               cursor: "pointer",
             }}
@@ -730,7 +730,7 @@ export function AgentRegistryPage() {
             style={{
               padding: "6px 10px",
               fontSize: 12,
-              border: "1px solid #E5E7EB",
+              border: "1px solid var(--aos-border)",
               borderRadius: 8,
               width: 200,
               outline: "none",
@@ -743,10 +743,10 @@ export function AgentRegistryPage() {
             style={{
               padding: "6px 10px",
               fontSize: 12,
-              border: "1px solid #E5E7EB",
+              border: "1px solid var(--aos-border)",
               borderRadius: 8,
-              background: "#fff",
-              color: "#374151",
+              background: "var(--aos-surface)",
+              color: "var(--aos-text)",
               outline: "none",
               cursor: "pointer",
             }}
@@ -761,7 +761,7 @@ export function AgentRegistryPage() {
 
         {/* loading 提示 */}
         {loading && (
-          <div style={{ textAlign: "center", padding: "12px", color: "#9CA3AF", fontSize: 12 }}>
+          <div style={{ textAlign: "center", padding: "12px", color: "var(--aos-text-tertiary)", fontSize: 12 }}>
             加载中…
           </div>
         )}
@@ -782,8 +782,8 @@ export function AgentRegistryPage() {
                 key={agent.id}
                 style={{
                   borderRadius: 12,
-                  border: `1px solid ${isExternal ? "#FED7AA" : "#E5E7EB"}`,
-                  background: isExternal ? "#FFF7ED" : "#fff",
+                  border: `1px solid ${isExternal ? "var(--aos-amber-border)" : "var(--aos-border)"}`,
+                  background: isExternal ? "var(--aos-amber-bg)" : "var(--aos-surface)",
                   padding: 16,
                   display: "flex",
                   flexDirection: "column",
@@ -792,12 +792,12 @@ export function AgentRegistryPage() {
                   cursor: "pointer",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "#818CF8";
+                  e.currentTarget.style.borderColor = "var(--aos-indigo)";
                   e.currentTarget.style.boxShadow = "0 4px 12px rgba(79,70,229,0.1)";
                   e.currentTarget.style.transform = "translateY(-1px)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = isExternal ? "#FED7AA" : "#E5E7EB";
+                  e.currentTarget.style.borderColor = isExternal ? "var(--aos-amber-border)" : "var(--aos-border)";
                   e.currentTarget.style.boxShadow = "none";
                   e.currentTarget.style.transform = "translateY(0)";
                 }}
@@ -806,8 +806,8 @@ export function AgentRegistryPage() {
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <AgentIcon type={agent.iconType} bg={agent.iconBg} color={agent.iconColor} />
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{agent.name}</div>
-                      <div style={{ fontSize: 10, color: "#6B7280", marginTop: 2 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)" }}>{agent.name}</div>
+                      <div style={{ fontSize: 10, color: "var(--aos-text-secondary)", marginTop: 2 }}>
                         {agent.category} · {agent.sourceLabel}
                       </div>
                     </div>
@@ -827,7 +827,7 @@ export function AgentRegistryPage() {
                   </span>
                 </div>
 
-                <p style={{ fontSize: 12, color: "#4B5563", margin: 0, lineHeight: 1.6 }}>{agent.description}</p>
+                <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", margin: 0, lineHeight: 1.6 }}>{agent.description}</p>
 
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                   {agent.tags.map((tag, i) => {
@@ -856,10 +856,10 @@ export function AgentRegistryPage() {
                     alignItems: "center",
                     justifyContent: "space-between",
                     paddingTop: 8,
-                    borderTop: `1px solid ${isExternal ? "#FED7AA" : "#F3F4F6"}`,
+                    borderTop: `1px solid ${isExternal ? "var(--aos-amber-border)" : "var(--aos-gray-100)"}`,
                   }}
                 >
-                  <span style={{ fontSize: 10, color: "#9CA3AF" }}>
+                  <span style={{ fontSize: 10, color: "var(--aos-text-tertiary)" }}>
                     {agent.adapterInfo
                       ? `${agent.adapterInfo} · ${agent.callCount.toLocaleString()} 次调用`
                       : `${agent.toolCount} 工具 · ${agent.callCount.toLocaleString()} 次调用`}
@@ -868,25 +868,25 @@ export function AgentRegistryPage() {
                     <Link
                       to={agent.detailLink}
                       title="查看详情"
-                      style={{ fontSize: 11, color: "#4F46E5", fontWeight: 500, textDecoration: "none" }}
+                      style={{ fontSize: 11, color: "var(--aos-indigo-600)", fontWeight: 500, textDecoration: "none" }}
                     >
                       详情
                     </Link>
-                    <span style={{ color: "#E5E7EB" }}>|</span>
+                    <span style={{ color: "var(--aos-border)" }}>|</span>
                     <Link
                       to={agent.detailLink}
                       title="编辑配置"
-                      style={{ fontSize: 11, color: "#6B7280", textDecoration: "none" }}
+                      style={{ fontSize: 11, color: "var(--aos-text-secondary)", textDecoration: "none" }}
                     >
                       编辑
                     </Link>
-                    <span style={{ color: "#E5E7EB" }}>|</span>
+                    <span style={{ color: "var(--aos-border)" }}>|</span>
                     <button
                       type="button"
                       title={agent.status === "running" ? "暂停" : "启动"}
                       style={{
                         fontSize: 11,
-                        color: agent.status === "running" ? "#D97706" : "#16A34A",
+                        color: agent.status === "running" ? "var(--aos-amber-600)" : "var(--aos-green-600)",
                         background: "none",
                         border: "none",
                         cursor: "pointer",
@@ -908,7 +908,7 @@ export function AgentRegistryPage() {
             style={{
               textAlign: "center",
               padding: "48px 24px",
-              color: "#9CA3AF",
+              color: "var(--aos-text-tertiary)",
               fontSize: 13,
             }}
           >

@@ -401,7 +401,7 @@ function Toolbar(props: {
         alignItems: "center",
         justifyContent: "space-between",
         padding: "10px 4px",
-        borderBottom: "1px solid #F3F4F6",
+        borderBottom: "1px solid var(--aos-gray-100)",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -416,7 +416,7 @@ function Toolbar(props: {
               fontSize: 12,
               borderRadius: 6,
               border: props.range === r ? "1px solid var(--aos-indigo)" : "1px solid var(--aos-border)",
-              background: props.range === r ? "#EEF2FF" : "#fff",
+              background: props.range === r ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
               color: props.range === r ? "var(--aos-indigo)" : "var(--aos-muted)",
               cursor: "pointer",
               fontWeight: props.range === r ? 500 : 400,
@@ -479,7 +479,7 @@ function OverviewPanel(props: {
               key={k.key}
               data-testid={`kpi-${k.key}`}
               style={{
-                background: "#fff",
+                background: "var(--aos-surface)",
                 border: "1px solid var(--aos-border)",
                 borderRadius: 8,
                 padding: 14,
@@ -492,7 +492,7 @@ function OverviewPanel(props: {
                   style={{
                     fontSize: 11,
                     fontWeight: 500,
-                    color: tone === "up" ? "#16A34A" : tone === "down" ? "#DC2626" : "#9CA3AF",
+                    color: tone === "up" ? "var(--aos-green-600)" : tone === "down" ? "var(--aos-red)" : "var(--aos-text-tertiary)",
                   }}
                 >
                   {formatDelta(k.deltaPct)}
@@ -507,8 +507,8 @@ function OverviewPanel(props: {
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
         <Panel title="实时趋势 · 请求量 / 延迟">
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <Sparkline svg={props.requestsSpark} color="#6366F1" label="requests" />
-            <Sparkline svg={props.latencySpark} color="#0891B2" label="latency" />
+            <Sparkline svg={props.requestsSpark} color="var(--aos-indigo)" label="requests" />
+            <Sparkline svg={props.latencySpark} color="var(--color-info)" label="latency" />
           </div>
         </Panel>
         <Panel title="服务拓扑">
@@ -556,15 +556,15 @@ function ServiceTopology() {
             y1={a.y}
             x2={b.x}
             y2={b.y}
-            stroke="#D1D5DB"
+            stroke="var(--aos-border-strong)"
             strokeWidth={0.6}
           />
         );
       })}
       {nodes.map((n) => (
         <g key={n.id}>
-          <circle cx={n.x} cy={n.y} r={6} fill="#6366F1" />
-          <text x={n.x} y={n.y + 12} fontSize={5} fill="#6B7280" textAnchor="middle">
+          <circle cx={n.x} cy={n.y} r={6} fill="var(--aos-indigo)" />
+          <text x={n.x} y={n.y + 12} fontSize={5} fill="var(--aos-text-secondary)" textAnchor="middle">
             {n.label}
           </text>
         </g>
@@ -602,7 +602,7 @@ function TracesPanel(props: {
       />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         {/* 列表 */}
-        <div style={{ background: "#fff", border: "1px solid var(--aos-border)", borderRadius: 8, overflow: "hidden" }}>
+        <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, overflow: "hidden" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
               <tr>
@@ -619,7 +619,7 @@ function TracesPanel(props: {
                   data-testid={`trace-row-${t.traceId}`}
                   style={{
                     cursor: "pointer",
-                    background: props.selected?.traceId === t.traceId ? "#EEF2FF" : "#fff",
+                    background: props.selected?.traceId === t.traceId ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
                   }}
                 >
                   <td style={tdMonoStyle}>{t.traceId}</td>
@@ -638,14 +638,14 @@ function TracesPanel(props: {
         </div>
 
         {/* 瀑布图 */}
-        <div style={{ background: "#fff", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 12 }}>
+        <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 12 }}>
           <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8 }}>
             {props.selected ? `${props.selected.traceId} · ${formatDuration(props.selected.durationMs)}` : "选择一条 trace"}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {props.spans.map((s) => (
               <div key={s.id} style={{ display: "flex", alignItems: "center", paddingLeft: s.level * 12 }}>
-                <span style={{ width: 120, fontSize: 11, color: s.kind === "ai" ? "#0891B2" : "var(--aos-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <span style={{ width: 120, fontSize: 11, color: s.kind === "ai" ? "var(--color-info)" : "var(--aos-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {s.name}
                 </span>
                 <div style={{ flex: 1, height: 18, position: "relative" }}>
@@ -671,10 +671,10 @@ function TracesPanel(props: {
 
 function spanColor(kind: TraceSpan["kind"]): string {
   switch (kind) {
-    case "ai": return "linear-gradient(90deg, #06b6d4, #0891b2)";
-    case "db": return "#93c5fd";
-    case "parent": return "#E5E7EB";
-    default: return "#D1D5DB";
+    case "ai": return "linear-gradient(90deg, var(--color-info), var(--color-info))";
+    case "db": return "var(--aos-accent-border)";
+    case "parent": return "var(--aos-border)";
+    default: return "var(--aos-border-strong)";
   }
 }
 
@@ -698,7 +698,7 @@ function MetricsPanel(props: { series: MetricSeries[] }) {
               fontSize: 12,
               borderRadius: 6,
               border: selected === s.name ? "1px solid var(--aos-indigo)" : "1px solid var(--aos-border)",
-              background: selected === s.name ? "#EEF2FF" : "#fff",
+              background: selected === s.name ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
               color: selected === s.name ? "var(--aos-indigo)" : "var(--aos-muted)",
               cursor: "pointer",
             }}
@@ -731,7 +731,7 @@ function BarChart(props: { values: number[] }) {
           style={{
             flex: 1,
             height: `${(v / max) * 100}%`,
-            background: "linear-gradient(180deg, #818CF8, #6366F1)",
+            background: "linear-gradient(180deg, var(--aos-indigo), var(--aos-indigo))",
             borderRadius: 3,
           }}
         />
@@ -774,7 +774,7 @@ function AlertsPanel(props: {
               fontSize: 12,
               borderRadius: 6,
               border: props.filter === f ? "1px solid var(--aos-indigo)" : "1px solid var(--aos-border)",
-              background: props.filter === f ? "#EEF2FF" : "#fff",
+              background: props.filter === f ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
               color: props.filter === f ? "var(--aos-indigo)" : "var(--aos-muted)",
               cursor: "pointer",
             }}
@@ -795,7 +795,7 @@ function AlertsPanel(props: {
               alignItems: "center",
               justifyContent: "space-between",
               padding: "10px 12px",
-              background: "#fff",
+              background: "var(--aos-surface)",
               border: "1px solid var(--aos-border)",
               borderRadius: 8,
             }}
@@ -821,9 +821,9 @@ function AlertsPanel(props: {
 }
 
 function Stat(props: { label: string; value: number; tone: "danger" | "warning" | "default" }) {
-  const color = props.tone === "danger" ? "#DC2626" : props.tone === "warning" ? "#D97706" : "var(--aos-muted)";
+  const color = props.tone === "danger" ? "var(--aos-red)" : props.tone === "warning" ? "var(--aos-amber-600)" : "var(--aos-muted)";
   return (
-    <div style={{ flex: 1, background: "#fff", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 12 }}>
+    <div style={{ flex: 1, background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 12 }}>
       <div style={{ fontSize: 11, color: "var(--aos-muted)" }}>{props.label}</div>
       <div style={{ fontSize: 20, fontWeight: 600, color }}>{props.value}</div>
     </div>
@@ -868,7 +868,7 @@ function DashboardsPanel(props: { widgets: DashboardWidget[]; onAdd: () => void 
  * ------------------------------------------------------------------------- */
 function Panel(props: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "#fff", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 12 }}>
+    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 12 }}>
       <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8 }}>{props.title}</div>
       {props.children}
     </div>
@@ -879,7 +879,7 @@ const btnPrimary: React.CSSProperties = {
   padding: "6px 12px",
   fontSize: 12,
   fontWeight: 500,
-  color: "#fff",
+  color: "var(--text-on-brand)",
   background: "var(--aos-indigo)",
   border: "none",
   borderRadius: 6,
@@ -890,7 +890,7 @@ const btnSecondary: React.CSSProperties = {
   padding: "6px 12px",
   fontSize: 12,
   color: "var(--aos-text)",
-  background: "#fff",
+  background: "var(--aos-surface)",
   border: "1px solid var(--aos-border)",
   borderRadius: 6,
   cursor: "pointer",
@@ -900,7 +900,7 @@ const btnXS: React.CSSProperties = {
   padding: "3px 8px",
   fontSize: 11,
   color: "var(--aos-indigo)",
-  background: "#EEF2FF",
+  background: "var(--aos-indigo-bg)",
   border: "none",
   borderRadius: 4,
   cursor: "pointer",
@@ -909,7 +909,7 @@ const btnXS: React.CSSProperties = {
 const thStyle: React.CSSProperties = {
   textAlign: "left",
   padding: "8px 10px",
-  background: "#F9FAFB",
+  background: "var(--aos-surface-hover)",
   borderBottom: "1px solid var(--aos-border)",
   fontWeight: 500,
   color: "var(--aos-muted)",
@@ -918,7 +918,7 @@ const thStyle: React.CSSProperties = {
 
 const tdStyle: React.CSSProperties = {
   padding: "8px 10px",
-  borderBottom: "1px solid #F3F4F6",
+  borderBottom: "1px solid var(--aos-gray-100)",
   color: "var(--aos-text)",
   fontSize: 12,
 };

@@ -33,15 +33,15 @@ export interface RiskAlert {
  * ========================================================================== */
 
 export const SEVERITY_META: Record<Severity, { label: string; color: string; bg: string; icon: string }> = {
-  critical: { label: "严重", color: "#DC2626", bg: "#FEE2E2", icon: "🔴" },
-  warning: { label: "警告", color: "#D97706", bg: "#FEF3C7", icon: "🟡" },
-  info: { label: "提示", color: "#2563EB", bg: "#EFF6FF", icon: "🔵" },
+  critical: { label: "严重", color: "var(--aos-red)", bg: "var(--aos-red-bg)", icon: "🔴" },
+  warning: { label: "警告", color: "var(--aos-amber-600)", bg: "var(--aos-amber-bg)", icon: "🟡" },
+  info: { label: "提示", color: "var(--aos-blue-600)", bg: "var(--aos-accent-light)", icon: "🔵" },
 };
 
 export const STATUS_META: Record<AlertStatus, { label: string; color: string; bg: string }> = {
-  open: { label: "待处理", color: "#DC2626", bg: "#FEE2E2" },
-  processing: { label: "处理中", color: "#D97706", bg: "#FEF3C7" },
-  resolved: { label: "已解决", color: "#059669", bg: "#D1FAE5" },
+  open: { label: "待处理", color: "var(--aos-red)", bg: "var(--aos-red-bg)" },
+  processing: { label: "处理中", color: "var(--aos-amber-600)", bg: "var(--aos-amber-bg)" },
+  resolved: { label: "已解决", color: "var(--aos-green-600)", bg: "var(--aos-green-bg)" },
 };
 
 export const SEVERITY_FILTERS: { id: Severity | "all"; label: string }[] = [
@@ -262,8 +262,8 @@ export function RiskAlertPage() {
           <StatCard
             label="今日告警"
             value={stats.total}
-            color="#2563EB"
-            bg="#EFF6FF"
+            color="var(--aos-blue-600)"
+            bg="var(--aos-accent-light)"
             icon={
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5M10 20a2 2 0 002-2h-2a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round" />
@@ -273,8 +273,8 @@ export function RiskAlertPage() {
           <StatCard
             label="严重告警"
             value={stats.critical}
-            color="#DC2626"
-            bg="#FEE2E2"
+            color="var(--aos-red)"
+            bg="var(--aos-red-bg)"
             icon={
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" strokeLinecap="round" strokeLinejoin="round" />
@@ -284,8 +284,8 @@ export function RiskAlertPage() {
           <StatCard
             label="处理中"
             value={stats.processing}
-            color="#D97706"
-            bg="#FEF3C7"
+            color="var(--aos-amber-600)"
+            bg="var(--aos-amber-bg)"
             icon={
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <circle cx="12" cy="12" r="10" />
@@ -296,8 +296,8 @@ export function RiskAlertPage() {
           <StatCard
             label="已解决"
             value={stats.resolved}
-            color="#059669"
-            bg="#D1FAE5"
+            color="var(--aos-green-600)"
+            bg="var(--aos-green-bg)"
             icon={
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
@@ -323,9 +323,9 @@ export function RiskAlertPage() {
                 fontSize: 12,
                 fontWeight: 500,
                 cursor: "pointer",
-                border: severityFilter === sf.id ? "1.5px solid #2563EB" : "1px solid #E5E7EB",
-                background: severityFilter === sf.id ? "#EFF6FF" : "#fff",
-                color: severityFilter === sf.id ? "#2563EB" : "#6B7280",
+                border: severityFilter === sf.id ? "1.5px solid var(--aos-blue-600)" : "1px solid var(--aos-border)",
+                background: severityFilter === sf.id ? "var(--aos-accent-light)" : "var(--aos-surface)",
+                color: severityFilter === sf.id ? "var(--aos-blue-600)" : "var(--aos-text-secondary)",
                 transition: "all 0.15s",
               }}
             >
@@ -341,16 +341,16 @@ export function RiskAlertPage() {
 
         {/* 告警列表表格 */}
         {loading ? (
-          <div style={{ textAlign: "center", padding: 48, color: "#9CA3AF" }}>加载中...</div>
+          <div style={{ textAlign: "center", padding: 48, color: "var(--aos-text-tertiary)" }}>加载中...</div>
         ) : filteredAlerts.length === 0 ? (
           <div
             style={{
               textAlign: "center",
               padding: 48,
-              color: "#9CA3AF",
-              border: "1px solid #E5E7EB",
+              color: "var(--aos-text-tertiary)",
+              border: "1px solid var(--aos-border)",
               borderRadius: 8,
-              background: "#fff",
+              background: "var(--aos-surface)",
             }}
           >
             暂无告警记录
@@ -358,10 +358,10 @@ export function RiskAlertPage() {
         ) : (
           <div
             style={{
-              border: "1px solid #E5E7EB",
+              border: "1px solid var(--aos-border)",
               borderRadius: 8,
               overflow: "hidden",
-              background: "#fff",
+              background: "var(--aos-surface)",
             }}
             data-testid="alert-table"
           >
@@ -372,11 +372,11 @@ export function RiskAlertPage() {
                 gridTemplateColumns: "120px 100px 80px 120px 100px 1fr 40px",
                 gap: 0,
                 padding: "10px 16px",
-                background: "#F9FAFB",
-                borderBottom: "1px solid #E5E7EB",
+                background: "var(--aos-surface-hover)",
+                borderBottom: "1px solid var(--aos-border)",
                 fontSize: 11,
                 fontWeight: 600,
-                color: "#6B7280",
+                color: "var(--aos-text-secondary)",
                 textTransform: "uppercase",
                 letterSpacing: "0.03em",
               }}
@@ -404,17 +404,17 @@ export function RiskAlertPage() {
                         gridTemplateColumns: "120px 100px 80px 120px 100px 1fr 40px",
                         gap: 0,
                         padding: "12px 16px",
-                        borderBottom: expanded ? "none" : "1px solid #F3F4F6",
+                        borderBottom: expanded ? "none" : "1px solid var(--aos-gray-100)",
                         cursor: "pointer",
                         transition: "background 0.1s",
                         alignItems: "center",
                       }}
                       className="wl-alert-row"
                     >
-                      <div style={{ fontSize: 11, color: "#6B7280" }}>
+                      <div style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>
                         {formatAlertTime(alert.time)}
                       </div>
-                      <div style={{ fontSize: 12, color: "#374151" }}>{alert.type}</div>
+                      <div style={{ fontSize: 12, color: "var(--aos-text)" }}>{alert.type}</div>
                       <div>
                         <span
                           style={{
@@ -430,7 +430,7 @@ export function RiskAlertPage() {
                           {sevMeta.label}
                         </span>
                       </div>
-                      <div style={{ fontSize: 11, color: "#6B7280" }}>{alert.source}</div>
+                      <div style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>{alert.source}</div>
                       <div>
                         <span
                           style={{
@@ -450,7 +450,7 @@ export function RiskAlertPage() {
                         style={{
                           fontSize: 12,
                           fontWeight: 500,
-                          color: "#1F2937",
+                          color: "var(--aos-text)",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
@@ -458,7 +458,7 @@ export function RiskAlertPage() {
                       >
                         {alert.title}
                       </div>
-                      <div style={{ fontSize: 14, color: "#9CA3AF", textAlign: "center" }}>
+                      <div style={{ fontSize: 14, color: "var(--aos-text-tertiary)", textAlign: "center" }}>
                         {expanded ? "▴" : "▾"}
                       </div>
                     </div>
@@ -468,13 +468,13 @@ export function RiskAlertPage() {
                       <div
                         style={{
                           padding: "16px 20px",
-                          background: "#FAFAFA",
-                          borderBottom: "1px solid #F3F4F6",
+                          background: "var(--aos-surface-hover)",
+                          borderBottom: "1px solid var(--aos-gray-100)",
                           borderLeft: `3px solid ${sevMeta.color}`,
                         }}
                         data-testid={`alert-detail-${alert.id}`}
                       >
-                        <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.6, margin: "0 0 12px 0" }}>
+                        <p style={{ fontSize: 12, color: "var(--aos-text)", lineHeight: 1.6, margin: "0 0 12px 0" }}>
                           {alert.description}
                         </p>
                         {alert.detail && (
@@ -509,7 +509,7 @@ export function RiskAlertPage() {
                             gap: 12,
                             marginTop: 12,
                             fontSize: 11,
-                            color: "#9CA3AF",
+                            color: "var(--aos-text-tertiary)",
                           }}
                         >
                           <span>告警 ID：{alert.id}</span>
@@ -553,10 +553,10 @@ function StatCard({
   return (
     <div
       style={{
-        border: "1px solid #E5E7EB",
+        border: "1px solid var(--aos-border)",
         borderRadius: 8,
         padding: 16,
-        background: "#fff",
+        background: "var(--aos-surface)",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -574,7 +574,7 @@ function StatCard({
         >
           {icon}
         </div>
-        <span style={{ fontSize: 12, color: "#6B7280" }}>{label}</span>
+        <span style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{label}</span>
       </div>
       <div style={{ fontSize: 24, fontWeight: 700, color }} data-testid={`stat-value-${label}`}>
         {value}
@@ -586,8 +586,8 @@ function StatCard({
 function DetailItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 12, color: "#374151", fontWeight: 500 }}>{value}</div>
+      <div style={{ fontSize: 11, color: "var(--aos-text-tertiary)", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 12, color: "var(--aos-text)", fontWeight: 500 }}>{value}</div>
     </div>
   );
 }

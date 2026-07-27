@@ -132,7 +132,7 @@ export function linePath(values: number[], width = 200, height = 60): string {
 /**饼图：把数值序列转成 [{value, percent, color}]。*/
 export function toPieSlices(values: number[]): { value: number; percent: number; color: string }[] {
   const total = values.reduce((a, b) => a + b, 0) || 1;
-  const palette = ["#6366F1", "#06B6D4", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6"];
+  const palette = ["var(--aos-indigo)", "var(--color-info)", "var(--aos-amber)", "var(--aos-green)", "var(--aos-red)", "var(--aos-purple-600)"];
   return values.map((v, i) => ({
     value: v,
     percent: (v / total) * 100,
@@ -338,13 +338,13 @@ export function AipAnalystPage() {
               width: 220,
               flexShrink: 0,
               borderRight: "1px solid var(--aos-border)",
-              background: "#fff",
+              background: "var(--aos-surface)",
               overflow: "auto",
               display: "flex",
               flexDirection: "column",
             }}
           >
-            <div style={{ padding: 10, borderBottom: "1px solid #F3F4F6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ padding: 10, borderBottom: "1px solid var(--aos-gray-100)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: "var(--aos-text)" }}>查询</span>
               <button
                 type="button"
@@ -369,7 +369,7 @@ export function AipAnalystPage() {
                     fontSize: 11,
                     borderRadius: 4,
                     border: "none",
-                    background: activeCategory === c ? "#EEF2FF" : "transparent",
+                    background: activeCategory === c ? "var(--aos-indigo-bg)" : "transparent",
                     color: activeCategory === c ? "var(--aos-indigo)" : "var(--aos-muted)",
                     cursor: "pointer",
                   }}
@@ -393,7 +393,7 @@ export function AipAnalystPage() {
                     marginBottom: 2,
                     borderRadius: 6,
                     border: "none",
-                    background: activeQueryId === q.id ? "#F3F4F6" : "transparent",
+                    background: activeQueryId === q.id ? "var(--aos-gray-100)" : "transparent",
                     cursor: "pointer",
                   }}
                 >
@@ -409,10 +409,10 @@ export function AipAnalystPage() {
           {/* 中栏：SQL 编辑器 */}
           <div
             data-testid="middle-panel"
-            style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, background: "#FAFAFA" }}
+            style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, background: "var(--aos-surface-hover)" }}
           >
             {/* 编辑器工具栏 */}
-            <div style={{ padding: "6px 10px", borderBottom: "1px solid var(--aos-border)", background: "#fff", display: "flex", gap: 6, alignItems: "center" }}>
+            <div style={{ padding: "6px 10px", borderBottom: "1px solid var(--aos-border)", background: "var(--aos-surface)", display: "flex", gap: 6, alignItems: "center" }}>
               <button type="button" onClick={runQuery} data-testid="btn-run" style={btnPrimary}>▶ 运行</button>
               <button
                 type="button"
@@ -440,14 +440,14 @@ export function AipAnalystPage() {
                 fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
                 fontSize: 13,
                 lineHeight: 1.6,
-                background: "#0D1117",
-                color: "#C9D1D9",
+                background: "var(--aos-text)",
+                color: "var(--aos-text-tertiary)",
                 resize: "none",
                 minHeight: 0,
               }}
             />
             {/* 参数 + 执行计划 */}
-            <div style={{ padding: "8px 10px", borderTop: "1px solid var(--aos-border)", background: "#fff", display: "flex", gap: 12, fontSize: 11, color: "var(--aos-muted)" }}>
+            <div style={{ padding: "8px 10px", borderTop: "1px solid var(--aos-border)", background: "var(--aos-surface)", display: "flex", gap: 12, fontSize: 11, color: "var(--aos-muted)" }}>
               <div>
                 <strong>表：</strong>{extractTable(sql) || "—"}
               </div>
@@ -467,7 +467,7 @@ export function AipAnalystPage() {
               width: 380,
               flexShrink: 0,
               borderLeft: "1px solid var(--aos-border)",
-              background: "#fff",
+              background: "var(--aos-surface)",
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
@@ -607,7 +607,7 @@ function ResultTable(props: {
                   style={{
                     ...tdStyle,
                     fontFamily: c.type === "coords" ? "monospace" : undefined,
-                    color: c.type === "number" ? "#0891B2" : undefined,
+                    color: c.type === "number" ? "var(--color-info)" : undefined,
                   }}
                 >
                   {String(r[c.name] ?? "")}
@@ -646,7 +646,7 @@ function ChartView(props: {
               fontSize: 11,
               borderRadius: 4,
               border: props.type === t ? "1px solid var(--aos-indigo)" : "1px solid var(--aos-border)",
-              background: props.type === t ? "#EEF2FF" : "#fff",
+              background: props.type === t ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
               color: props.type === t ? "var(--aos-indigo)" : "var(--aos-muted)",
               cursor: "pointer",
             }}
@@ -664,14 +664,14 @@ function ChartView(props: {
             <div
               key={i}
               data-testid={`bar-${i}`}
-              style={{ flex: 1, height: `${h}%`, background: "linear-gradient(180deg, #818CF8, #6366F1)", borderRadius: 3 }}
+              style={{ flex: 1, height: `${h}%`, background: "linear-gradient(180deg, var(--aos-indigo), var(--aos-indigo))", borderRadius: 3 }}
             />
           ))}
         </div>
       )}
       {props.type === "line" && (
         <svg viewBox="0 0 200 60" width="100%" height={60} data-testid="line-svg">
-          <path d={linePath(values)} fill="none" stroke="#6366F1" strokeWidth={1.5} />
+          <path d={linePath(values)} fill="none" stroke="var(--aos-indigo)" strokeWidth={1.5} />
         </svg>
       )}
       {props.type === "pie" && (
@@ -729,7 +729,7 @@ function MapView(props: { markers: MapMarker[] }) {
       <div
         style={{
           height: 260,
-          background: "linear-gradient(135deg, #E0F2FE 0%, #F0FDF4 100%)",
+          background: "linear-gradient(135deg, var(--aos-accent-light) 0%, var(--aos-green-bg) 100%)",
           position: "relative",
           borderRadius: 8,
           overflow: "hidden",
@@ -740,15 +740,15 @@ function MapView(props: { markers: MapMarker[] }) {
             const p = projectToMap(m.lat, m.lng, UK_MID_BOUNDS);
             return (
               <g key={m.id} data-testid={`marker-${m.id}`}>
-                <circle cx={p.x} cy={p.y} r={Math.max(1, m.intensity)} fill="#F97316" fillOpacity={0.7} />
-                <text x={p.x} y={p.y - 2} fontSize={2} fill="#374151" textAnchor="middle">
+                <circle cx={p.x} cy={p.y} r={Math.max(1, m.intensity)} fill="var(--aos-amber-600)" fillOpacity={0.7} />
+                <text x={p.x} y={p.y - 2} fontSize={2} fill="var(--aos-text)" textAnchor="middle">
                   {m.name.slice(0, 8)}
                 </text>
               </g>
             );
           })}
         </svg>
-        <div style={{ position: "absolute", bottom: 4, left: 6, fontSize: 9, color: "#9CA3AF" }}>
+        <div style={{ position: "absolute", bottom: 4, left: 6, fontSize: 9, color: "var(--aos-text-tertiary)" }}>
           © Mapbox © OSM
         </div>
       </div>
@@ -769,8 +769,8 @@ function RawView(props: { result: QueryResult }) {
       style={{
         margin: 0,
         padding: 8,
-        background: "#0D1117",
-        color: "#C9D1D9",
+        background: "var(--aos-text)",
+        color: "var(--aos-text-tertiary)",
         borderRadius: 6,
         fontSize: 11,
         fontFamily: "ui-monospace, monospace",
@@ -792,7 +792,7 @@ function StatusBar(props: { result: QueryResult | null; total: number }) {
       data-testid="status-bar"
       style={{
         borderTop: "1px solid var(--aos-border)",
-        background: "#F9FAFB",
+        background: "var(--aos-surface-hover)",
         padding: "6px 12px",
         display: "flex",
         alignItems: "center",
@@ -838,7 +838,7 @@ const btnPrimary: React.CSSProperties = {
   padding: "5px 12px",
   fontSize: 12,
   fontWeight: 500,
-  color: "#fff",
+  color: "var(--text-on-brand)",
   background: "var(--aos-indigo)",
   border: "none",
   borderRadius: 6,
@@ -849,7 +849,7 @@ const btnSecondary: React.CSSProperties = {
   padding: "5px 12px",
   fontSize: 12,
   color: "var(--aos-text)",
-  background: "#fff",
+  background: "var(--aos-surface)",
   border: "1px solid var(--aos-border)",
   borderRadius: 6,
   cursor: "pointer",
@@ -859,7 +859,7 @@ const btnXS: React.CSSProperties = {
   padding: "3px 8px",
   fontSize: 11,
   color: "var(--aos-indigo)",
-  background: "#EEF2FF",
+  background: "var(--aos-indigo-bg)",
   border: "none",
   borderRadius: 4,
   cursor: "pointer",
@@ -873,7 +873,7 @@ const iconBtn: React.CSSProperties = {
   justifyContent: "center",
   fontSize: 14,
   color: "var(--aos-indigo)",
-  background: "#EEF2FF",
+  background: "var(--aos-indigo-bg)",
   border: "none",
   borderRadius: 4,
   cursor: "pointer",
@@ -882,7 +882,7 @@ const iconBtn: React.CSSProperties = {
 const thStyle: React.CSSProperties = {
   textAlign: "left",
   padding: "6px 8px",
-  background: "#F9FAFB",
+  background: "var(--aos-surface-hover)",
   borderBottom: "1px solid var(--aos-border)",
   fontWeight: 500,
   color: "var(--aos-muted)",
@@ -891,7 +891,7 @@ const thStyle: React.CSSProperties = {
 
 const tdStyle: React.CSSProperties = {
   padding: "6px 8px",
-  borderBottom: "1px solid #F3F4F6",
+  borderBottom: "1px solid var(--aos-gray-100)",
   color: "var(--aos-text)",
   fontSize: 12,
 };

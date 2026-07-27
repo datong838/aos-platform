@@ -25,8 +25,8 @@ const AGENTS: AgentItem[] = [
     levelLabel: "L2 HITL",
     status: "running",
     toolCount: 5,
-    iconBg: "#FEF3C7",
-    iconColor: "#D97706",
+    iconBg: "var(--aos-amber-bg)",
+    iconColor: "var(--aos-amber-600)",
     iconPath:
       "M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z",
   },
@@ -38,8 +38,8 @@ const AGENTS: AgentItem[] = [
     levelLabel: "L3 Capability",
     status: "running",
     toolCount: 4,
-    iconBg: "#DBEAFE",
-    iconColor: "#2563EB",
+    iconBg: "var(--aos-accent-light)",
+    iconColor: "var(--aos-blue-600)",
     iconPath: "",
   },
   {
@@ -50,8 +50,8 @@ const AGENTS: AgentItem[] = [
     levelLabel: "L1 Draft",
     status: "draft",
     toolCount: 6,
-    iconBg: "#FEE2E2",
-    iconColor: "#DC2626",
+    iconBg: "var(--aos-red-bg)",
+    iconColor: "var(--aos-red)",
     iconPath:
       "M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z",
   },
@@ -63,8 +63,8 @@ const AGENTS: AgentItem[] = [
     levelLabel: "L2 HITL",
     status: "running",
     toolCount: 3,
-    iconBg: "#DCFCE7",
-    iconColor: "#16A34A",
+    iconBg: "var(--aos-green-bg)",
+    iconColor: "var(--aos-green-600)",
     iconPath:
       "M21 11.5a8.5 8.5 0 01-8.5 8.5H5l-3 3V11.5A8.5 8.5 0 0110.5 3h2A8.5 8.5 0 0121 11.5z",
   },
@@ -76,8 +76,8 @@ const AGENTS: AgentItem[] = [
     levelLabel: "L0 只读",
     status: "stopped",
     toolCount: 2,
-    iconBg: "#EDE9FE",
-    iconColor: "#7C3AED",
+    iconBg: "var(--aos-indigo-bg)",
+    iconColor: "var(--aos-purple-600)",
     iconPath:
       "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8",
   },
@@ -99,9 +99,9 @@ const DEMO_TOOLS = [
 ];
 
 function statusBadge(status: AgentItem["status"]) {
-  if (status === "running") return { label: "运行中", bg: "#DCFCE7", color: "#166534" };
-  if (status === "draft") return { label: "Draft", bg: "#FEF3C7", color: "#92400E" };
-  return { label: "已停用", bg: "#F3F4F6", color: "#6B7280" };
+  if (status === "running") return { label: "运行中", bg: "var(--aos-green-bg)", color: "var(--aos-green-700)" };
+  if (status === "draft") return { label: "Draft", bg: "var(--aos-amber-bg)", color: "var(--aos-amber-700)" };
+  return { label: "已停用", bg: "var(--aos-gray-100)", color: "var(--aos-text-secondary)" };
 }
 
 export function StudioPage() {
@@ -163,18 +163,18 @@ export function StudioPage() {
           style={{
             width: 256,
             flexShrink: 0,
-            borderRight: "1px solid #E5E7EB",
-            background: "#fff",
+            borderRight: "1px solid var(--aos-border)",
+            background: "var(--aos-surface)",
             overflowY: "auto",
           }}
         >
           <div
             style={{
               padding: 12,
-              borderBottom: "1px solid #F3F4F6",
+              borderBottom: "1px solid var(--aos-gray-100)",
             }}
           >
-            <div style={{ fontSize: 14, fontWeight: 500, color: "#111827" }}>智能体列表</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)" }}>智能体列表</div>
             <button
               type="button"
               style={{
@@ -186,8 +186,8 @@ export function StudioPage() {
                 gap: 6,
                 padding: "8px 12px",
                 borderRadius: 8,
-                background: "#4F46E5",
-                color: "#fff",
+                background: "var(--aos-indigo-600)",
+                color: "var(--text-on-brand)",
                 border: "none",
                 fontSize: 13,
                 fontWeight: 500,
@@ -210,10 +210,10 @@ export function StudioPage() {
                 onClick={() => setActiveId(a.id)}
                 style={{
                   padding: 12,
-                  borderBottom: "1px solid #F9FAFB",
+                  borderBottom: "1px solid var(--aos-surface-hover)",
                   cursor: "pointer",
-                  background: active ? "#EEF2FF" : "#fff",
-                  borderLeft: active ? "2px solid #6366F1" : "2px solid transparent",
+                  background: active ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
+                  borderLeft: active ? "2px solid var(--aos-indigo)" : "2px solid transparent",
                   transition: "background 0.15s",
                 }}
               >
@@ -278,7 +278,7 @@ export function StudioPage() {
                       style={{
                         fontSize: 13,
                         fontWeight: 500,
-                        color: "#111827",
+                        color: "var(--aos-text)",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -286,7 +286,7 @@ export function StudioPage() {
                     >
                       {a.name}
                     </div>
-                    <div style={{ fontSize: 10, color: "#6B7280", marginTop: 2 }}>
+                    <div style={{ fontSize: 10, color: "var(--aos-text-secondary)", marginTop: 2 }}>
                       {a.category} · {a.levelLabel}
                     </div>
                     <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
@@ -307,8 +307,8 @@ export function StudioPage() {
                           padding: "1.5px 6px",
                           borderRadius: 4,
                           fontSize: 9,
-                          background: "#F3F4F6",
-                          color: "#6B7280",
+                          background: "var(--aos-gray-100)",
+                          color: "var(--aos-text-secondary)",
                         }}
                       >
                         {a.toolCount} 工具
@@ -327,10 +327,10 @@ export function StudioPage() {
             {/* Agent 标题 */}
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
               <div>
-                <h1 style={{ fontSize: 20, fontWeight: 600, color: "#111827", margin: 0 }}>
+                <h1 style={{ fontSize: 20, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>
                   {activeAgent.name}
                 </h1>
-                <p style={{ fontSize: 13, color: "#6B7280", margin: "4px 0 0", lineHeight: 1.5 }}>
+                <p style={{ fontSize: 13, color: "var(--aos-text-secondary)", margin: "4px 0 0", lineHeight: 1.5 }}>
                   配置壳：提示词 · 工具 · 本体/Wiki 上下文 · L4 须 Evals 绿 + Draft 默认
                 </p>
               </div>
@@ -340,8 +340,8 @@ export function StudioPage() {
                     padding: "2px 8px",
                     borderRadius: 4,
                     fontSize: 10,
-                    background: "#DCFCE7",
-                    color: "#166534",
+                    background: "var(--aos-green-bg)",
+                    color: "var(--aos-green-700)",
                     fontWeight: 500,
                   }}
                 >
@@ -352,8 +352,8 @@ export function StudioPage() {
                     padding: "2px 8px",
                     borderRadius: 4,
                     fontSize: 10,
-                    background: "#FEF3C7",
-                    color: "#92400E",
+                    background: "var(--aos-amber-bg)",
+                    color: "var(--aos-amber-700)",
                     fontWeight: 500,
                   }}
                 >
@@ -363,7 +363,7 @@ export function StudioPage() {
             </div>
 
             {/* Tab 导航 */}
-            <div style={{ borderBottom: "1px solid #E5E7EB", marginBottom: 16 }}>
+            <div style={{ borderBottom: "1px solid var(--aos-border)", marginBottom: 16 }}>
               <div style={{ display: "flex", gap: 24 }}>
                 {STUDIO_TABS.map((t) => {
                   const active = tab === t.id;
@@ -376,10 +376,10 @@ export function StudioPage() {
                         padding: "10px 0",
                         fontSize: 13,
                         fontWeight: active ? 500 : 400,
-                        color: active ? "#4F46E5" : "#6B7280",
+                        color: active ? "var(--aos-indigo-600)" : "var(--aos-text-secondary)",
                         background: "none",
                         border: "none",
-                        borderBottom: active ? "2px solid #4F46E5" : "2px solid transparent",
+                        borderBottom: active ? "2px solid var(--aos-indigo-600)" : "2px solid transparent",
                         cursor: "pointer",
                       }}
                     >
@@ -395,13 +395,13 @@ export function StudioPage() {
               <div
                 style={{
                   borderRadius: 12,
-                  border: "1px solid #E5E7EB",
-                  background: "#fff",
+                  border: "1px solid var(--aos-border)",
+                  background: "var(--aos-surface)",
                   padding: 20,
                 }}
               >
-                <label style={{ display: "block", fontSize: 12, color: "#6B7280", marginBottom: 8, fontWeight: 500 }}>
-                  系统提示词 (System Prompt) <span style={{ color: "#EF4444" }}>*</span>
+                <label style={{ display: "block", fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 8, fontWeight: 500 }}>
+                  系统提示词 (System Prompt) <span style={{ color: "var(--aos-red)" }}>*</span>
                 </label>
                 <textarea
                   value={systemPrompt}
@@ -412,9 +412,9 @@ export function StudioPage() {
                     padding: "10px 12px",
                     fontSize: 13,
                     borderRadius: 8,
-                    border: "1px solid #E5E7EB",
-                    background: "#F9FAFB",
-                    color: "#374151",
+                    border: "1px solid var(--aos-border)",
+                    background: "var(--aos-surface-hover)",
+                    color: "var(--aos-text)",
                     resize: "vertical",
                     lineHeight: 1.6,
                     fontFamily: "inherit",
@@ -426,8 +426,8 @@ export function StudioPage() {
                     style={{
                       padding: "3px 8px",
                       borderRadius: 4,
-                      border: "1px solid #C4B5FD",
-                      color: "#7C3AED",
+                      border: "1px solid var(--aos-purple-600)",
+                      color: "var(--aos-purple-600)",
                       fontSize: 10,
                     }}
                   >
@@ -437,8 +437,8 @@ export function StudioPage() {
                     style={{
                       padding: "3px 8px",
                       borderRadius: 4,
-                      border: "1px solid #FDBA74",
-                      color: "#EA580C",
+                      border: "1px solid var(--aos-amber-border)",
+                      color: "var(--aos-amber-600)",
                       fontSize: 10,
                     }}
                   >
@@ -448,8 +448,8 @@ export function StudioPage() {
                     style={{
                       padding: "3px 8px",
                       borderRadius: 4,
-                      border: "1px solid #FDE047",
-                      color: "#A16207",
+                      border: "1px solid var(--aos-amber-border)",
+                      color: "var(--aos-amber-700)",
                       fontSize: 10,
                     }}
                   >
@@ -464,14 +464,14 @@ export function StudioPage() {
               <div
                 style={{
                   borderRadius: 12,
-                  border: "1px solid #E5E7EB",
-                  background: "#fff",
+                  border: "1px solid var(--aos-border)",
+                  background: "var(--aos-surface)",
                   padding: 20,
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>已启用工具</div>
-                  <span style={{ fontSize: 12, color: "#6B7280" }}>共 {DEMO_TOOLS.length} 个工具</span>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: "var(--aos-text)" }}>已启用工具</div>
+                  <span style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>共 {DEMO_TOOLS.length} 个工具</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {DEMO_TOOLS.map((t) => {
@@ -486,13 +486,13 @@ export function StudioPage() {
                           justifyContent: "space-between",
                           padding: "10px 12px",
                           borderRadius: 8,
-                          border: `1px solid ${isWarn ? "#FDE047" : isWiki ? "#FDBA74" : "#E5E7EB"}`,
-                          background: isWarn ? "#FEFCE8" : isWiki ? "#FFF7ED" : "#fff",
+                          border: `1px solid ${isWarn ? "var(--aos-amber-border)" : isWiki ? "var(--aos-amber-border)" : "var(--aos-border)"}`,
+                          background: isWarn ? "var(--aos-amber-bg)" : isWiki ? "var(--aos-amber-bg)" : "var(--aos-surface)",
                         }}
                       >
                         <div>
-                          <span style={{ fontSize: 13, color: "#111827", fontWeight: 500 }}>{t.name}</span>
-                          <span style={{ marginLeft: 8, fontSize: 10, color: isWarn ? "#A16207" : "#6B7280" }}>
+                          <span style={{ fontSize: 13, color: "var(--aos-text)", fontWeight: 500 }}>{t.name}</span>
+                          <span style={{ marginLeft: 8, fontSize: 10, color: isWarn ? "var(--aos-amber-700)" : "var(--aos-text-secondary)" }}>
                             {t.code}
                           </span>
                         </div>
@@ -502,11 +502,11 @@ export function StudioPage() {
                             borderRadius: 4,
                             fontSize: 11,
                             background: isWarn
-                              ? "#FEF3C7"
+                              ? "var(--aos-amber-bg)"
                               : isWiki
-                                ? "#FFEDD5"
-                                : "#DCFCE7",
-                            color: isWarn ? "#92400E" : isWiki ? "#C2410C" : "#166534",
+                                ? "var(--aos-amber-bg)"
+                                : "var(--aos-green-bg)",
+                            color: isWarn ? "var(--aos-amber-700)" : isWiki ? "var(--aos-amber-700)" : "var(--aos-green-700)",
                             fontWeight: 500,
                           }}
                         >
@@ -516,7 +516,7 @@ export function StudioPage() {
                     );
                   })}
                 </div>
-                <div style={{ paddingTop: 12, marginTop: 12, borderTop: "1px solid #F3F4F6" }}>
+                <div style={{ paddingTop: 12, marginTop: 12, borderTop: "1px solid var(--aos-gray-100)" }}>
                   <Link
                     to="/aip/tools"
                     style={{
@@ -525,8 +525,8 @@ export function StudioPage() {
                       gap: 6,
                       padding: "6px 12px",
                       borderRadius: 8,
-                      background: "#EEF2FF",
-                      color: "#4F46E5",
+                      background: "var(--aos-indigo-bg)",
+                      color: "var(--aos-indigo-600)",
                       fontSize: 12,
                       fontWeight: 500,
                       textDecoration: "none",
@@ -542,7 +542,7 @@ export function StudioPage() {
                     打开完整工具面板
                   </Link>
                 </div>
-                {err && <p style={{ color: "#DC2626", fontSize: 12, marginTop: 12 }}>{err}</p>}
+                {err && <p style={{ color: "var(--aos-red)", fontSize: 12, marginTop: 12 }}>{err}</p>}
               </div>
             )}
 
@@ -551,31 +551,31 @@ export function StudioPage() {
               <div
                 style={{
                   borderRadius: 12,
-                  border: "1px solid #E5E7EB",
-                  background: "#fff",
+                  border: "1px solid var(--aos-border)",
+                  background: "var(--aos-surface)",
                   padding: 20,
                 }}
               >
                 <div
                   style={{
                     borderRadius: 8,
-                    background: "#F9FAFB",
-                    border: "1px solid #E5E7EB",
+                    background: "var(--aos-surface-hover)",
+                    border: "1px solid var(--aos-border)",
                     padding: 12,
                     fontSize: 13,
                     lineHeight: 1.6,
                   }}
                 >
-                  <div style={{ color: "#2563EB", fontSize: 11, fontWeight: 500, marginBottom: 4 }}>用户</div>
-                  <div style={{ color: "#374151" }}>{query}</div>
-                  <div style={{ color: "#CA8A04", fontSize: 11, fontWeight: 500, marginTop: 12, marginBottom: 4 }}>
+                  <div style={{ color: "var(--aos-blue-600)", fontSize: 11, fontWeight: 500, marginBottom: 4 }}>用户</div>
+                  <div style={{ color: "var(--aos-text)" }}>{query}</div>
+                  <div style={{ color: "var(--aos-amber-600)", fontSize: 11, fontWeight: 500, marginTop: 12, marginBottom: 4 }}>
                     Buddy
                   </div>
-                  <div style={{ color: "#111827" }}>
+                  <div style={{ color: "var(--aos-text)" }}>
                     {answer || "已读 Order + Wiki.sla。建议 Action「派单维修」→ 进入 Draft（示意）。"}
                   </div>
                   {lastRoute && (
-                    <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 8 }}>
+                    <div style={{ fontSize: 10, color: "var(--aos-text-tertiary)", marginTop: 8 }}>
                       路由：{lastRoute}
                     </div>
                   )}
@@ -592,8 +592,8 @@ export function StudioPage() {
                       padding: "8px 12px",
                       fontSize: 13,
                       borderRadius: 8,
-                      border: "1px solid #E5E7EB",
-                      background: "#fff",
+                      border: "1px solid var(--aos-border)",
+                      background: "var(--aos-surface)",
                     }}
                     placeholder="输入测试问题…"
                   />
@@ -602,8 +602,8 @@ export function StudioPage() {
                     style={{
                       padding: "8px 16px",
                       borderRadius: 8,
-                      background: "#4F46E5",
-                      color: "#fff",
+                      background: "var(--aos-indigo-600)",
+                      color: "var(--text-on-brand)",
                       border: "none",
                       fontSize: 13,
                       fontWeight: 500,
@@ -613,7 +613,7 @@ export function StudioPage() {
                     发送
                   </button>
                 </form>
-                {err && <p style={{ color: "#DC2626", fontSize: 12, marginTop: 8 }}>{err}</p>}
+                {err && <p style={{ color: "var(--aos-red)", fontSize: 12, marginTop: 8 }}>{err}</p>}
                 <Link
                   to="/aip/assist"
                   style={{
@@ -622,7 +622,7 @@ export function StudioPage() {
                     gap: 4,
                     marginTop: 12,
                     fontSize: 12,
-                    color: "#2563EB",
+                    color: "var(--aos-blue-600)",
                     textDecoration: "none",
                   }}
                 >
@@ -630,7 +630,7 @@ export function StudioPage() {
                 </Link>
                 {toolCalls.length > 0 && (
                   <div style={{ marginTop: 16 }}>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)", marginBottom: 8 }}>
                       工具调用
                     </div>
                     <table
@@ -640,21 +640,21 @@ export function StudioPage() {
                         borderCollapse: "collapse",
                         borderRadius: 6,
                         overflow: "hidden",
-                        border: "1px solid #E5E7EB",
+                        border: "1px solid var(--aos-border)",
                       }}
                     >
                       <thead>
-                        <tr style={{ background: "#F9FAFB", textAlign: "left" }}>
-                          <th style={{ padding: "6px 10px", fontWeight: 500, color: "#6B7280", fontSize: 10 }}>工具</th>
-                          <th style={{ padding: "6px 10px", fontWeight: 500, color: "#6B7280", fontSize: 10 }}>状态</th>
-                          <th style={{ padding: "6px 10px", fontWeight: 500, color: "#6B7280", fontSize: 10 }}>详情</th>
+                        <tr style={{ background: "var(--aos-surface-hover)", textAlign: "left" }}>
+                          <th style={{ padding: "6px 10px", fontWeight: 500, color: "var(--aos-text-secondary)", fontSize: 10 }}>工具</th>
+                          <th style={{ padding: "6px 10px", fontWeight: 500, color: "var(--aos-text-secondary)", fontSize: 10 }}>状态</th>
+                          <th style={{ padding: "6px 10px", fontWeight: 500, color: "var(--aos-text-secondary)", fontSize: 10 }}>详情</th>
                         </tr>
                       </thead>
                       <tbody>
                         {toolCalls.map((tc, i) => {
                           const t = tc as Record<string, unknown>;
                           return (
-                            <tr key={i} style={{ borderTop: "1px solid #F3F4F6" }}>
+                            <tr key={i} style={{ borderTop: "1px solid var(--aos-gray-100)" }}>
                               <td style={{ padding: "6px 10px", fontFamily: "monospace" }}>
                                 {String(t.id || t.tool || `#${i + 1}`)}
                               </td>
@@ -675,15 +675,15 @@ export function StudioPage() {
               <div
                 style={{
                   borderRadius: 12,
-                  border: "1px solid #FDE047",
-                  background: "#FEFCE8",
+                  border: "1px solid var(--aos-amber-border)",
+                  background: "var(--aos-amber-bg)",
                   padding: 20,
                 }}
               >
-                <h2 style={{ fontSize: 14, fontWeight: 600, color: "#92400E", margin: "0 0 8px" }}>
+                <h2 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-amber-700)", margin: "0 0 8px" }}>
                   L4 门控状态
                 </h2>
-                <p style={{ fontSize: 12, color: "#78350F", margin: "0 0 12px", lineHeight: 1.6 }}>
+                <p style={{ fontSize: 12, color: "var(--aos-amber-700)", margin: "0 0 12px", lineHeight: 1.6 }}>
                   须 Eval ≥ 92% 且 Draft 审批通过后方可申请 L4 上线。当前 Eval 通过率 87%，未达门槛。
                 </p>
                 <label
@@ -692,7 +692,7 @@ export function StudioPage() {
                     alignItems: "center",
                     gap: 8,
                     fontSize: 12,
-                    color: "#78350F",
+                    color: "var(--aos-amber-700)",
                     opacity: 0.6,
                     cursor: "not-allowed",
                   }}
@@ -706,9 +706,9 @@ export function StudioPage() {
                     style={{
                       padding: "6px 12px",
                       borderRadius: 6,
-                      background: "#fff",
-                      border: "1px solid #FDE047",
-                      color: "#92400E",
+                      background: "var(--aos-surface)",
+                      border: "1px solid var(--aos-amber-border)",
+                      color: "var(--aos-amber-700)",
                       fontSize: 12,
                       textDecoration: "none",
                       fontWeight: 500,
@@ -721,9 +721,9 @@ export function StudioPage() {
                     style={{
                       padding: "6px 12px",
                       borderRadius: 6,
-                      background: "#fff",
-                      border: "1px solid #FDE047",
-                      color: "#92400E",
+                      background: "var(--aos-surface)",
+                      border: "1px solid var(--aos-amber-border)",
+                      color: "var(--aos-amber-700)",
                       fontSize: 12,
                       textDecoration: "none",
                       fontWeight: 500,
@@ -736,9 +736,9 @@ export function StudioPage() {
                     style={{
                       padding: "6px 12px",
                       borderRadius: 6,
-                      background: "#fff",
-                      border: "1px solid #FDE047",
-                      color: "#92400E",
+                      background: "var(--aos-surface)",
+                      border: "1px solid var(--aos-amber-border)",
+                      color: "var(--aos-amber-700)",
                       fontSize: 12,
                       textDecoration: "none",
                       fontWeight: 500,

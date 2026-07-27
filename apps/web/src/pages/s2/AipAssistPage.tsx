@@ -91,10 +91,10 @@ const CONTEXT_SUGGESTIONS: Record<string, string[]> = {
 };
 
 const PERMISSION_META: Record<PermissionTag, { label: string; color: string; bg: string }> = {
-  read: { label: "只读", color: "#1E40AF", bg: "rgba(59, 130, 246, 0.15)" },
-  edit: { label: "需审批", color: "#92400E", bg: "rgba(245, 158, 11, 0.18)" },
-  delete: { label: "需审批", color: "#92400E", bg: "rgba(245, 158, 11, 0.18)" },
-  authorized: { label: "已授权", color: "#065F46", bg: "rgba(16, 185, 129, 0.18)" },
+  read: { label: "只读", color: "var(--aos-blue-600)", bg: "rgba(59, 130, 246, 0.15)" },
+  edit: { label: "需审批", color: "var(--aos-amber-700)", bg: "rgba(245, 158, 11, 0.18)" },
+  delete: { label: "需审批", color: "var(--aos-amber-700)", bg: "rgba(245, 158, 11, 0.18)" },
+  authorized: { label: "已授权", color: "var(--aos-green-700)", bg: "rgba(16, 185, 129, 0.18)" },
 };
 
 const INITIAL_AI_TEXT =
@@ -607,25 +607,25 @@ export function AipAssistPage() {
           style={{
             width: sidebarOpen ? 240 : 48,
             flexShrink: 0,
-            borderRight: "1px solid #E5E7EB",
+            borderRight: "1px solid var(--aos-border)",
             display: "flex",
             flexDirection: "column",
             transition: "width 0.2s",
             overflow: "hidden",
-            background: "#FAFAFA",
+            background: "var(--aos-surface-hover)",
           }}
         >
-          <div style={{ padding: 8, display: "flex", gap: 4, borderBottom: "1px solid #E5E7EB" }}>
+          <div style={{ padding: 8, display: "flex", gap: 4, borderBottom: "1px solid var(--aos-border)" }}>
             <button
               type="button"
               title={sidebarOpen ? "折叠侧栏" : "展开侧栏"}
               onClick={() => setSidebarOpen((v) => !v)}
               style={{
-                width: 32, height: 32, borderRadius: 6, border: "1px solid #E5E7EB", background: "#fff",
+                width: 32, height: 32, borderRadius: 6, border: "1px solid var(--aos-border)", background: "var(--aos-surface)",
                 cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="1.5">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--aos-text-secondary)" strokeWidth="1.5">
                 <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" />
               </svg>
             </button>
@@ -634,8 +634,8 @@ export function AipAssistPage() {
                 type="button"
                 onClick={handleNewConversation}
                 style={{
-                  flex: 1, height: 32, borderRadius: 6, border: "1px solid #6366F1",
-                  background: "#EEF2FF", color: "#4338CA", cursor: "pointer",
+                  flex: 1, height: 32, borderRadius: 6, border: "1px solid var(--aos-indigo)",
+                  background: "var(--aos-indigo-bg)", color: "var(--aos-indigo-600)", cursor: "pointer",
                   fontSize: 12, fontWeight: 500, display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
                 }}
               >
@@ -655,7 +655,7 @@ export function AipAssistPage() {
                     key={c.id}
                     style={{
                       display: "flex", alignItems: "center", gap: 4, marginBottom: 2,
-                      background: active ? "#EEF2FF" : "transparent",
+                      background: active ? "var(--aos-indigo-bg)" : "transparent",
                       borderRadius: 6, padding: "6px 8px",
                     }}
                   >
@@ -665,7 +665,7 @@ export function AipAssistPage() {
                       style={{
                         flex: 1, textAlign: "left", cursor: "pointer",
                         background: "none", border: "none", padding: 0,
-                        fontSize: 12, color: active ? "#3730A3" : "#374151",
+                        fontSize: 12, color: active ? "var(--aos-indigo-600)" : "var(--aos-text)",
                         fontWeight: active ? 500 : 400,
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                       }}
@@ -679,7 +679,7 @@ export function AipAssistPage() {
                       title="删除"
                       style={{
                         background: "none", border: "none", cursor: "pointer", padding: 2,
-                        color: "#9CA3AF", flexShrink: 0, display: "flex",
+                        color: "var(--aos-text-tertiary)", flexShrink: 0, display: "flex",
                       }}
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -702,7 +702,7 @@ export function AipAssistPage() {
         >
           {/* 顶部免责声明 */}
           <div style={{ textAlign: "center", marginBottom: 16 }}>
-            <p style={{ fontSize: 11, color: "#9CA3AF", fontStyle: "italic", maxWidth: 480, margin: "0 auto" }}>
+            <p style={{ fontSize: 11, color: "var(--aos-text-tertiary)", fontStyle: "italic", maxWidth: 480, margin: "0 auto" }}>
               AIP Assist 使用第三方大语言模型（LLM）处理查询，符合 Palantir 安全标准。请根据组织政策使用。
             </p>
           </div>
@@ -718,14 +718,14 @@ export function AipAssistPage() {
                   <div
                     key={m.id}
                     style={{
-                      background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 12,
-                      padding: 12, color: "#991B1B", fontSize: 13,
+                      background: "var(--aos-red-bg)", border: "1px solid var(--aos-red-border)", borderRadius: 12,
+                      padding: 12, color: "var(--aos-red)", fontSize: 13,
                     }}
                   >
                     <strong>⚠ {m.code}</strong> · {m.message}
                     {m.code === "EVAL_GATE" && (
                       <div style={{ marginTop: 8 }}>
-                        <Link to="/aip/evals" style={{ color: "#991B1B", textDecoration: "underline", fontSize: 12 }}>
+                        <Link to="/aip/evals" style={{ color: "var(--aos-red)", textDecoration: "underline", fontSize: 12 }}>
                           查看 Evals 门控 →
                         </Link>
                       </div>
@@ -736,7 +736,7 @@ export function AipAssistPage() {
                         onClick={retryLast}
                         style={{
                           fontSize: 12, padding: "4px 10px", borderRadius: 6,
-                          border: "1px solid #FCA5A5", background: "#fff", color: "#991B1B", cursor: "pointer",
+                          border: "1px solid var(--aos-red-border)", background: "var(--aos-surface)", color: "var(--aos-red)", cursor: "pointer",
                         }}
                       >
                         重试
@@ -760,11 +760,11 @@ export function AipAssistPage() {
                 <div key={m.id} style={{ display: "flex", justifyContent: "flex-end" }}>
                   <div
                     style={{
-                      background: "#F3F4F6", borderRadius: 12, padding: "10px 14px",
+                      background: "var(--aos-gray-100)", borderRadius: 12, padding: "10px 14px",
                       maxWidth: 480, marginLeft: 48,
                     }}
                   >
-                    <p style={{ fontSize: 13, color: "#374151", margin: 0, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                    <p style={{ fontSize: 13, color: "var(--aos-text)", margin: 0, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
                       {m.content}
                     </p>
                   </div>
@@ -775,7 +775,7 @@ export function AipAssistPage() {
             {/* 建议问题（仅初始状态） */}
             {showSuggestions && (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>以下是您可以问我的几个问题...</p>
+                <p style={{ fontSize: 13, color: "var(--aos-text-secondary)", margin: 0 }}>以下是您可以问我的几个问题...</p>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                   {suggestions.map((q) => (
                     <button
@@ -784,15 +784,15 @@ export function AipAssistPage() {
                       onClick={() => useSuggestion(q)}
                       style={suggestionBtnStyle}
                       onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.background = "#F9FAFB";
-                        (e.currentTarget as HTMLButtonElement).style.borderColor = "#D1D5DB";
+                        (e.currentTarget as HTMLButtonElement).style.background = "var(--aos-surface-hover)";
+                        (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--aos-border-strong)";
                       }}
                       onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.background = "#fff";
-                        (e.currentTarget as HTMLButtonElement).style.borderColor = "#E5E7EB";
+                        (e.currentTarget as HTMLButtonElement).style.background = "var(--aos-surface)";
+                        (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--aos-border)";
                       }}
                     >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" style={{ flexShrink: 0 }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--aos-text-tertiary)" strokeWidth="1.5" style={{ flexShrink: 0 }}>
                         <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       {q}
@@ -803,20 +803,20 @@ export function AipAssistPage() {
             )}
 
             {/* 权限感知标签（底部） */}
-            <div style={{ display: "flex", gap: 8, fontSize: 11, color: "#9CA3AF", marginTop: 8, flexWrap: "wrap" }}>
-              <span style={{ padding: "2px 8px", background: "#F3F4F6", borderRadius: 4 }}>当前应用：AIP Assist</span>
-              <span style={{ padding: "2px 8px", background: "#F3F4F6", borderRadius: 4 }}>权限感知：仅回答有权限的数据</span>
+            <div style={{ display: "flex", gap: 8, fontSize: 11, color: "var(--aos-text-tertiary)", marginTop: 8, flexWrap: "wrap" }}>
+              <span style={{ padding: "2px 8px", background: "var(--aos-gray-100)", borderRadius: 4 }}>当前应用：AIP Assist</span>
+              <span style={{ padding: "2px 8px", background: "var(--aos-gray-100)", borderRadius: 4 }}>权限感知：仅回答有权限的数据</span>
             </div>
           </div>
 
           {/* 底部输入区 */}
-          <div style={{ borderTop: "1px solid #E5E7EB", background: "#fff", padding: 16, marginTop: 8 }}>
+          <div style={{ borderTop: "1px solid var(--aos-border)", background: "var(--aos-surface)", padding: 16, marginTop: 8 }}>
             {/* 动态建议 + 随机 */}
-            <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 8, display: "flex", alignItems: "center", gap: 4 }}>
+            <div style={{ fontSize: 11, color: "var(--aos-text-tertiary)", marginBottom: 8, display: "flex", alignItems: "center", gap: 4 }}>
               <span>建议问题</span>
               <button
                 type="button"
-                style={{ background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", padding: 0 }}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--aos-text-tertiary)", padding: 0 }}
                 title="点击随机一条建议"
                 onClick={() => {
                   const random = suggestions[Math.floor(Math.random() * suggestions.length)];
@@ -838,7 +838,7 @@ export function AipAssistPage() {
                 disabled={loading}
                 className="aip-assist-input"
                 style={{
-                  flex: 1, border: "1px solid #E5E7EB", borderRadius: 12,
+                  flex: 1, border: "1px solid var(--aos-border)", borderRadius: 12,
                   padding: "12px 48px 12px 16px", fontSize: 14, outline: "none",
                   transition: "border-color 0.15s, box-shadow 0.15s",
                   opacity: loading ? 0.6 : 1,
@@ -851,7 +851,7 @@ export function AipAssistPage() {
                   onClick={handleStop}
                   style={{
                     position: "absolute", right: 8, bottom: 8, width: 32, height: 32, borderRadius: 8,
-                    background: "#EF4444", color: "#fff", border: "none", cursor: "pointer",
+                    background: "var(--aos-red)", color: "var(--text-on-brand)", border: "none", cursor: "pointer",
                     display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
                   }}
                   title="停止生成"
@@ -866,7 +866,7 @@ export function AipAssistPage() {
                   disabled={!input.trim()}
                   style={{
                     position: "absolute", right: 8, bottom: 8, width: 32, height: 32, borderRadius: 8,
-                    background: input.trim() ? "#4F46E5" : "#C7D2FE", color: "#fff", border: "none",
+                    background: input.trim() ? "var(--aos-indigo-600)" : "var(--aos-indigo-border)", color: "var(--text-on-brand)", border: "none",
                     cursor: input.trim() ? "pointer" : "not-allowed",
                     display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
                     transition: "background 0.15s",
@@ -889,8 +889,8 @@ export function AipAssistPage() {
 
 const suggestionBtnStyle: React.CSSProperties = {
   display: "flex", alignItems: "center", gap: 8, padding: "12px 16px", borderRadius: 8,
-  border: "1px solid #E5E7EB", background: "#fff", cursor: "pointer", textAlign: "left",
-  fontSize: 13, color: "#374151", transition: "all 0.15s",
+  border: "1px solid var(--aos-border)", background: "var(--aos-surface)", cursor: "pointer", textAlign: "left",
+  fontSize: 13, color: "var(--aos-text)", transition: "all 0.15s",
 };
 
 function AiBubble({
@@ -904,10 +904,10 @@ function AiBubble({
 }) {
   return (
     <div>
-      <div style={{ borderRadius: 12, padding: 16, background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)", color: "#fff" }}>
+      <div style={{ borderRadius: 12, padding: 16, background: "linear-gradient(135deg, var(--aos-indigo) 0%, var(--aos-purple-600) 100%)", color: "var(--text-on-brand)" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--aos-surface)" strokeWidth="1.5">
               <circle cx="12" cy="12" r="10" />
               <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z" />
             </svg>
@@ -998,7 +998,7 @@ function CodeSuggestionCard({
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 0, display: "flex" }}
+          style={{ background: "none", border: "none", color: "var(--text-on-brand)", cursor: "pointer", padding: 0, display: "flex" }}
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             {expanded ? <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" /> : <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />}
@@ -1012,7 +1012,7 @@ function CodeSuggestionCard({
         )}
         <div style={{ flex: 1 }} />
         {saved ? (
-          <span style={{ fontSize: 11, color: "#A7F3D0", display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ fontSize: 11, color: "var(--aos-green-border)", display: "flex", alignItems: "center", gap: 4 }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -1026,7 +1026,7 @@ function CodeSuggestionCard({
               disabled={saving}
               style={{
                 fontSize: 11, padding: "3px 8px", borderRadius: 4, border: "1px solid rgba(255,255,255,0.3)",
-                background: saving ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.2)", color: "#fff",
+                background: saving ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.2)", color: "var(--text-on-brand)",
                 cursor: saving ? "wait" : "pointer",
               }}
             >
@@ -1050,7 +1050,7 @@ function CodeSuggestionCard({
         <pre
           style={{
             margin: 0, padding: "8px 12px", fontSize: 12, lineHeight: 1.5,
-            background: "rgba(0,0,0,0.2)", color: "#E0E7FF", overflowX: "auto",
+            background: "rgba(0,0,0,0.2)", color: "var(--aos-indigo-bg)", overflowX: "auto",
             fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
             whiteSpace: "pre",
           }}

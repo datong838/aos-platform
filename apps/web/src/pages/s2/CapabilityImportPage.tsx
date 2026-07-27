@@ -27,8 +27,8 @@ export const CAP_TYPES: {
     name: "同步函数",
     desc: "超时 < 15s\n直接挂 Function Tool\n内存限制 512Mi",
     example: "例：直播稿引擎、文本摘要",
-    subColor: "#1D4ED8",
-    subBg: "#DBEAFE",
+    subColor: "var(--aos-blue-600)",
+    subBg: "var(--aos-accent-light)",
   },
   {
     id: "C1",
@@ -36,8 +36,8 @@ export const CAP_TYPES: {
     name: "异步任务",
     desc: "GPU / 长耗时\nsubmit → status → artifact\n产物写 MediaSet",
     example: "例：短视频生成、图片渲染",
-    subColor: "#7C3AED",
-    subBg: "#EDE9FE",
+    subColor: "var(--aos-purple-600)",
+    subBg: "var(--aos-indigo-bg)",
   },
   {
     id: "C2",
@@ -45,15 +45,15 @@ export const CAP_TYPES: {
     name: "实时会话",
     desc: "WebSocket 长连接\n实时双向交互\nAV 流外置",
     example: "例：数字人主播、语音助手",
-    subColor: "#EA580C",
-    subBg: "#FFEDD5",
+    subColor: "var(--aos-amber-600)",
+    subBg: "var(--aos-amber-bg)",
   },
 ];
 
 export const SEC_LEVELS = [
-  { id: "low", label: "低风险", desc: "只读数据，不触发写操作", color: "#10B981" },
-  { id: "medium", label: "中风险", desc: "可写受控对象，需 HITL 审批", color: "#F59E0B" },
-  { id: "high", label: "高风险", desc: "可跨域调用，需安全审计", color: "#EF4444" },
+  { id: "low", label: "低风险", desc: "只读数据，不触发写操作", color: "var(--aos-green)" },
+  { id: "medium", label: "中风险", desc: "可写受控对象，需 HITL 审批", color: "var(--aos-amber)" },
+  { id: "high", label: "高风险", desc: "可跨域调用，需安全审计", color: "var(--aos-red)" },
 ];
 
 /** 知识库关联文档（references/） */
@@ -77,7 +77,7 @@ export const MOCK_KB_DOCUMENTS: KBDocument[] = [
     chunks: 18,
     status: "indexed",
     icon: "pdf",
-    iconColor: "#DC2626",
+    iconColor: "var(--aos-red)",
   },
   {
     id: "kb-2",
@@ -87,7 +87,7 @@ export const MOCK_KB_DOCUMENTS: KBDocument[] = [
     chunks: 12,
     status: "indexed",
     icon: "md",
-    iconColor: "#2563EB",
+    iconColor: "var(--aos-blue-600)",
   },
   {
     id: "kb-3",
@@ -97,7 +97,7 @@ export const MOCK_KB_DOCUMENTS: KBDocument[] = [
     chunks: 0,
     status: "indexing",
     icon: "doc",
-    iconColor: "#6B7280",
+    iconColor: "var(--aos-text-secondary)",
   },
 ];
 
@@ -243,8 +243,8 @@ permissions:
               width: 64,
               height: 64,
               borderRadius: "50%",
-              background: "#D1FAE5",
-              color: "#059669",
+              background: "var(--aos-green-bg)",
+              color: "var(--aos-green-600)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -254,10 +254,10 @@ permissions:
           >
             ✓
           </div>
-          <h2 style={{ fontSize: 18, fontWeight: 600, color: "#111827", margin: "0 0 8px" }}>
+          <h2 style={{ fontSize: 18, fontWeight: 600, color: "var(--aos-text)", margin: "0 0 8px" }}>
             能力接入成功
           </h2>
-          <p style={{ fontSize: 13, color: "#6B7280", margin: "0 0 20px", lineHeight: 1.6 }}>
+          <p style={{ fontSize: 13, color: "var(--aos-text-secondary)", margin: "0 0 20px", lineHeight: 1.6 }}>
             Live Script Engine 已注册为 {capType} 类型能力，可在智能体工具面板中启用。
           </p>
           <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
@@ -269,7 +269,7 @@ permissions:
                 fontSize: 13,
                 fontWeight: 500,
                 background: "var(--aos-accent)",
-                color: "#fff",
+                color: "var(--text-on-brand)",
                 textDecoration: "none",
               }}
             >
@@ -285,9 +285,9 @@ permissions:
                 padding: "8px 20px",
                 borderRadius: 6,
                 fontSize: 13,
-                border: "1px solid #D1D5DB",
-                background: "#fff",
-                color: "#374151",
+                border: "1px solid var(--aos-border-strong)",
+                background: "var(--aos-surface)",
+                color: "var(--aos-text)",
                 cursor: "pointer",
               }}
             >
@@ -305,26 +305,26 @@ permissions:
       <div
         style={{
           borderRadius: 12,
-          border: "1px solid #FDE047",
-          background: "#FEFCE8",
+          border: "1px solid var(--aos-amber-border)",
+          background: "var(--aos-amber-bg)",
           padding: 16,
           marginBottom: 20,
         }}
       >
-        <div style={{ fontSize: 14, fontWeight: 500, color: "#92400E", marginBottom: 8 }}>
+        <div style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-amber-700)", marginBottom: 8 }}>
           C0 / C1 / C2 能力分层
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-          <div style={{ fontSize: 12, color: "#78350F" }}>
-            <span style={{ fontWeight: 500, color: "#92400E" }}>C0 sync</span> — 同步函数，
+          <div style={{ fontSize: 12, color: "var(--aos-amber-700)" }}>
+            <span style={{ fontWeight: 500, color: "var(--aos-amber-700)" }}>C0 sync</span> — 同步函数，
             &lt;15s，可直接挂 Function
           </div>
-          <div style={{ fontSize: 12, color: "#78350F" }}>
-            <span style={{ fontWeight: 500, color: "#92400E" }}>C1 Job</span> — 异步任务，
+          <div style={{ fontSize: 12, color: "var(--aos-amber-700)" }}>
+            <span style={{ fontWeight: 500, color: "var(--aos-amber-700)" }}>C1 Job</span> — 异步任务，
             GPU/长耗时，产物写 MediaSet
           </div>
-          <div style={{ fontSize: 12, color: "#78350F" }}>
-            <span style={{ fontWeight: 500, color: "#92400E" }}>C2 Session</span> — 实时会话，
+          <div style={{ fontSize: 12, color: "var(--aos-amber-700)" }}>
+            <span style={{ fontWeight: 500, color: "var(--aos-amber-700)" }}>C2 Session</span> — 实时会话，
             WebSocket 长连接，AV 流外置
           </div>
         </div>
@@ -348,9 +348,9 @@ permissions:
                     padding: "10px 14px",
                     borderRadius: 6,
                     fontSize: 13,
-                    color: isActive ? "#1D4ED8" : isDone ? "#1D4ED8" : "#6B7280",
-                    background: isActive ? "#EFF6FF" : "transparent",
-                    border: isActive ? "1px solid #93C5FD" : "1px solid transparent",
+                    color: isActive ? "var(--aos-blue-600)" : isDone ? "var(--aos-blue-600)" : "var(--aos-text-secondary)",
+                    background: isActive ? "var(--aos-accent-light)" : "transparent",
+                    border: isActive ? "1px solid var(--aos-accent-border)" : "1px solid transparent",
                     cursor: s.num < step ? "pointer" : "default",
                     transition: "all 0.15s",
                   }}
@@ -365,8 +365,8 @@ permissions:
                       justifyContent: "center",
                       fontSize: 11,
                       fontWeight: 500,
-                      background: isActive || isDone ? "#1D4ED8" : "#D1D5DB",
-                      color: "#fff",
+                      background: isActive || isDone ? "var(--aos-blue-600)" : "var(--aos-border-strong)",
+                      color: "var(--text-on-brand)",
                       flexShrink: 0,
                     }}
                   >
@@ -384,10 +384,10 @@ permissions:
           {/* Step 1: 能力类型 */}
           {step === 1 && (
             <div>
-              <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: "0 0 4px" }}>
+              <h2 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: "0 0 4px" }}>
                 选择能力类型
               </h2>
-              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px" }}>
+              <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", margin: "0 0 16px" }}>
                 不同能力类型对应不同的运行时和资源配额
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
@@ -398,16 +398,16 @@ permissions:
                       key={ct.id}
                       onClick={() => setCapType(ct.id)}
                       style={{
-                        border: selected ? "1.5px solid #1D4ED8" : "1px solid #D1D5DB",
+                        border: selected ? "1.5px solid var(--aos-blue-600)" : "1px solid var(--aos-border-strong)",
                         borderRadius: 8,
                         padding: 16,
                         cursor: "pointer",
-                        background: selected ? "#EFF6FF" : "#fff",
+                        background: selected ? "var(--aos-accent-light)" : "var(--aos-surface)",
                         transition: "all 0.15s",
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                        <span style={{ fontSize: 18, fontWeight: 600, color: "#111827" }}>{ct.id}</span>
+                        <span style={{ fontSize: 18, fontWeight: 600, color: "var(--aos-text)" }}>{ct.id}</span>
                         <span
                           style={{
                             padding: "2px 8px",
@@ -421,20 +421,20 @@ permissions:
                           {ct.subtype}
                         </span>
                       </div>
-                      <div style={{ fontSize: 12, fontWeight: 500, color: "#111827", marginBottom: 4 }}>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)", marginBottom: 4 }}>
                         {ct.name}
                       </div>
                       <div
                         style={{
                           fontSize: 11,
-                          color: "#6B7280",
+                          color: "var(--aos-text-secondary)",
                           lineHeight: 1.6,
                           whiteSpace: "pre-line",
                         }}
                       >
                         {ct.desc}
                       </div>
-                      <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 8 }}>{ct.example}</div>
+                      <div style={{ fontSize: 10, color: "var(--aos-text-tertiary)", marginTop: 8 }}>{ct.example}</div>
                     </div>
                   );
                 })}
@@ -449,8 +449,8 @@ permissions:
                     borderRadius: 6,
                     fontSize: 13,
                     fontWeight: 500,
-                    background: "#1D4ED8",
-                    color: "#fff",
+                    background: "var(--aos-blue-600)",
+                    color: "var(--text-on-brand)",
                     border: "none",
                     cursor: "pointer",
                   }}
@@ -464,10 +464,10 @@ permissions:
           {/* Step 2: Manifest 配置 */}
           {step === 2 && (
             <div>
-              <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: "0 0 4px" }}>
+              <h2 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: "0 0 4px" }}>
                 Manifest 配置
               </h2>
-              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px" }}>
+              <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", margin: "0 0 16px" }}>
                 输入能力插件的 Manifest 文件 URL，系统将自动解析并校验
               </p>
 
@@ -481,7 +481,7 @@ permissions:
                     flex: 1,
                     padding: "8px 12px",
                     fontSize: 12,
-                    border: "1px solid #D1D5DB",
+                    border: "1px solid var(--aos-border-strong)",
                     borderRadius: 4,
                     outline: "none",
                     fontFamily: "monospace",
@@ -493,10 +493,10 @@ permissions:
                     padding: "8px 16px",
                     fontSize: 12,
                     fontWeight: 500,
-                    border: "1px solid #D1D5DB",
+                    border: "1px solid var(--aos-border-strong)",
                     borderRadius: 4,
-                    background: "#F9FAFB",
-                    color: "#374151",
+                    background: "var(--aos-surface-hover)",
+                    color: "var(--aos-text)",
                     cursor: "pointer",
                   }}
                 >
@@ -504,13 +504,13 @@ permissions:
                 </button>
               </div>
 
-              <div style={{ fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)", marginBottom: 8 }}>
                 Manifest 预览
               </div>
               <pre
                 style={{
-                  background: "#1E293B",
-                  color: "#CBD5E1",
+                  background: "var(--aos-text)",
+                  color: "var(--aos-border-strong)",
                   padding: 16,
                   borderRadius: 6,
                   fontSize: 11,
@@ -528,22 +528,22 @@ permissions:
                 style={{
                   marginTop: 20,
                   borderRadius: 8,
-                  border: "1px solid #BFDBFE",
+                  border: "1px solid var(--aos-accent-border)",
                   background: "rgba(239, 246, 255, 0.4)",
                   padding: 16,
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                   <div>
-                    <h3 style={{ fontSize: 13, fontWeight: 500, color: "#111827", margin: 0 }}>
+                    <h3 style={{ fontSize: 13, fontWeight: 500, color: "var(--aos-text)", margin: 0 }}>
                       知识库关联{" "}
-                      <span style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 400 }}>references/</span>
+                      <span style={{ fontSize: 10, color: "var(--aos-text-tertiary)", fontWeight: 400 }}>references/</span>
                     </h3>
-                    <p style={{ fontSize: 11, color: "#6B7280", margin: "2px 0 0" }}>
+                    <p style={{ fontSize: 11, color: "var(--aos-text-secondary)", margin: "2px 0 0" }}>
                       为该能力挂载参考文档，Agent 运行时可按需检索注入上下文
                     </p>
                   </div>
-                  <span style={{ fontSize: 10, color: "#9CA3AF" }}>
+                  <span style={{ fontSize: 10, color: "var(--aos-text-tertiary)" }}>
                     已关联 {computeKBStats(kbDocs).total} 个文件 · {computeKBStats(kbDocs).totalChunks} 语义块
                   </span>
                 </div>
@@ -558,16 +558,16 @@ permissions:
                         gap: 10,
                         padding: "8px 12px",
                         borderRadius: 6,
-                        background: "#fff",
-                        border: "1px solid #E5E7EB",
+                        background: "var(--aos-surface)",
+                        border: "1px solid var(--aos-border)",
                       }}
                     >
                       <DocIcon type={doc.icon} color={doc.iconColor} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 12, fontWeight: 500, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {doc.name}
                         </div>
-                        <div style={{ fontSize: 10, color: "#9CA3AF" }}>
+                        <div style={{ fontSize: 10, color: "var(--aos-text-tertiary)" }}>
                           {doc.size} · {doc.desc}
                           {doc.chunks > 0 && ` · ${doc.chunks} 个语义块`}
                         </div>
@@ -578,8 +578,8 @@ permissions:
                             padding: "2px 8px",
                             borderRadius: 3,
                             fontSize: 9,
-                            background: "#DCFCE7",
-                            color: "#15803D",
+                            background: "var(--aos-green-bg)",
+                            color: "var(--aos-green-700)",
                             fontWeight: 500,
                           }}
                         >
@@ -592,8 +592,8 @@ permissions:
                             padding: "2px 8px",
                             borderRadius: 3,
                             fontSize: 9,
-                            background: "#FEF3C7",
-                            color: "#92400E",
+                            background: "var(--aos-amber-bg)",
+                            color: "var(--aos-amber-700)",
                             fontWeight: 500,
                           }}
                         >
@@ -605,7 +605,7 @@ permissions:
                         onClick={() => setKbDocs(kbDocs.filter((d) => d.id !== doc.id))}
                         title="移除关联"
                         style={{
-                          color: "#9CA3AF",
+                          color: "var(--aos-text-tertiary)",
                           background: "none",
                           border: "none",
                           cursor: "pointer",
@@ -626,10 +626,10 @@ permissions:
                     style={{
                       padding: "6px 12px",
                       borderRadius: 6,
-                      border: "1px solid #93C5FD",
-                      background: "#fff",
+                      border: "1px solid var(--aos-accent-border)",
+                      background: "var(--aos-surface)",
                       fontSize: 11,
-                      color: "#1D4ED8",
+                      color: "var(--aos-blue-600)",
                       cursor: "pointer",
                       fontWeight: 500,
                     }}
@@ -641,16 +641,16 @@ permissions:
                     style={{
                       padding: "6px 12px",
                       borderRadius: 6,
-                      border: "1px solid #D1D5DB",
-                      background: "#fff",
+                      border: "1px solid var(--aos-border-strong)",
+                      background: "var(--aos-surface)",
                       fontSize: 11,
-                      color: "#6B7280",
+                      color: "var(--aos-text-secondary)",
                       cursor: "pointer",
                     }}
                   >
                     从代码仓库引用
                   </button>
-                  <span style={{ fontSize: 10, color: "#9CA3AF" }}>
+                  <span style={{ fontSize: 10, color: "var(--aos-text-tertiary)" }}>
                     支持 PDF / MD / DOCX / TXT，自动语义分块 + 向量索引
                   </span>
                 </div>
@@ -664,9 +664,9 @@ permissions:
                     padding: "8px 24px",
                     borderRadius: 6,
                     fontSize: 13,
-                    border: "1px solid #D1D5DB",
-                    background: "#fff",
-                    color: "#374151",
+                    border: "1px solid var(--aos-border-strong)",
+                    background: "var(--aos-surface)",
+                    color: "var(--aos-text)",
                     cursor: "pointer",
                   }}
                 >
@@ -680,8 +680,8 @@ permissions:
                     borderRadius: 6,
                     fontSize: 13,
                     fontWeight: 500,
-                    background: "#1D4ED8",
-                    color: "#fff",
+                    background: "var(--aos-blue-600)",
+                    color: "var(--text-on-brand)",
                     border: "none",
                     cursor: "pointer",
                   }}
@@ -695,14 +695,14 @@ permissions:
           {/* Step 3: 安全与配额 */}
           {step === 3 && (
             <div>
-              <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: "0 0 4px" }}>
+              <h2 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: "0 0 4px" }}>
                 安全等级与配额
               </h2>
-              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px" }}>
+              <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", margin: "0 0 16px" }}>
                 设置能力的安全等级和调用配额限制
               </p>
 
-              <div style={{ fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)", marginBottom: 8 }}>
                 安全等级
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
@@ -713,24 +713,24 @@ permissions:
                       key={lvl.id}
                       onClick={() => setSecLevel(lvl.id)}
                       style={{
-                        border: selected ? `1.5px solid ${lvl.color}` : "1px solid #D1D5DB",
+                        border: selected ? `1.5px solid ${lvl.color}` : "1px solid var(--aos-border-strong)",
                         borderRadius: 6,
                         padding: "10px 14px",
                         cursor: "pointer",
-                        background: selected ? `${lvl.color}10` : "#fff",
+                        background: selected ? `${lvl.color}10` : "var(--aos-surface)",
                         transition: "all 0.15s",
                       }}
                     >
-                      <div style={{ fontSize: 12, fontWeight: 500, color: "#111827", marginBottom: 2 }}>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)", marginBottom: 2 }}>
                         {lvl.label}
                       </div>
-                      <div style={{ fontSize: 11, color: "#6B7280" }}>{lvl.desc}</div>
+                      <div style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>{lvl.desc}</div>
                     </div>
                   );
                 })}
               </div>
 
-              <div style={{ fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)", marginBottom: 8 }}>
                 调用配额
               </div>
               <div
@@ -746,7 +746,7 @@ permissions:
                     style={{
                       display: "block",
                       fontSize: 11,
-                      color: "#6B7280",
+                      color: "var(--aos-text-secondary)",
                       marginBottom: 4,
                     }}
                   >
@@ -760,7 +760,7 @@ permissions:
                       width: "100%",
                       padding: "6px 10px",
                       fontSize: 12,
-                      border: "1px solid #D1D5DB",
+                      border: "1px solid var(--aos-border-strong)",
                       borderRadius: 4,
                       outline: "none",
                       boxSizing: "border-box",
@@ -772,7 +772,7 @@ permissions:
                     style={{
                       display: "block",
                       fontSize: 11,
-                      color: "#6B7280",
+                      color: "var(--aos-text-secondary)",
                       marginBottom: 4,
                     }}
                   >
@@ -786,7 +786,7 @@ permissions:
                       width: "100%",
                       padding: "6px 10px",
                       fontSize: 12,
-                      border: "1px solid #D1D5DB",
+                      border: "1px solid var(--aos-border-strong)",
                       borderRadius: 4,
                       outline: "none",
                       boxSizing: "border-box",
@@ -798,7 +798,7 @@ permissions:
                     style={{
                       display: "block",
                       fontSize: 11,
-                      color: "#6B7280",
+                      color: "var(--aos-text-secondary)",
                       marginBottom: 4,
                     }}
                   >
@@ -811,7 +811,7 @@ permissions:
                       width: "100%",
                       padding: "6px 10px",
                       fontSize: 12,
-                      border: "1px solid #D1D5DB",
+                      border: "1px solid var(--aos-border-strong)",
                       borderRadius: 4,
                       outline: "none",
                       boxSizing: "border-box",
@@ -821,7 +821,7 @@ permissions:
               </div>
 
               {/* 资源配额 */}
-              <div style={{ fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)", marginBottom: 8 }}>
                 资源配额
               </div>
               <div
@@ -833,7 +833,7 @@ permissions:
                 }}
               >
                 <div>
-                  <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 4 }}>
+                  <label style={{ display: "block", fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 4 }}>
                     内存上限
                   </label>
                   <input
@@ -843,7 +843,7 @@ permissions:
                       width: "100%",
                       padding: "6px 10px",
                       fontSize: 12,
-                      border: "1px solid #D1D5DB",
+                      border: "1px solid var(--aos-border-strong)",
                       borderRadius: 4,
                       outline: "none",
                       boxSizing: "border-box",
@@ -851,7 +851,7 @@ permissions:
                   />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 4 }}>
+                  <label style={{ display: "block", fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 4 }}>
                     GPU（C1/C2）
                   </label>
                   <input
@@ -861,7 +861,7 @@ permissions:
                       width: "100%",
                       padding: "6px 10px",
                       fontSize: 12,
-                      border: "1px solid #D1D5DB",
+                      border: "1px solid var(--aos-border-strong)",
                       borderRadius: 4,
                       outline: "none",
                       boxSizing: "border-box",
@@ -869,7 +869,7 @@ permissions:
                   />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 4 }}>
+                  <label style={{ display: "block", fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 4 }}>
                     超时（秒）
                   </label>
                   <input
@@ -880,7 +880,7 @@ permissions:
                       width: "100%",
                       padding: "6px 10px",
                       fontSize: 12,
-                      border: "1px solid #D1D5DB",
+                      border: "1px solid var(--aos-border-strong)",
                       borderRadius: 4,
                       outline: "none",
                       boxSizing: "border-box",
@@ -890,21 +890,21 @@ permissions:
               </div>
 
               {/* 密钥/凭证绑定 */}
-              <div style={{ fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)", marginBottom: 8 }}>
                 密钥 / 凭证绑定
               </div>
               <div
                 style={{
                   borderRadius: 8,
-                  border: "1px solid #E5E7EB",
-                  background: "#fff",
+                  border: "1px solid var(--aos-border)",
+                  background: "var(--aos-surface)",
                   padding: 14,
                   marginBottom: 20,
                 }}
               >
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <div>
-                    <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 4 }}>
+                    <label style={{ display: "block", fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 4 }}>
                       Secret Ref（KMS 加密）
                     </label>
                     <input
@@ -913,21 +913,21 @@ permissions:
                       style={{
                         width: "100%",
                         padding: "6px 10px",
-                        border: "1px solid #D1D5DB",
+                        border: "1px solid var(--aos-border-strong)",
                         borderRadius: 4,
                         fontSize: 11,
                         fontFamily: "Menlo, Monaco, monospace",
-                        background: "#F9FAFB",
+                        background: "var(--aos-surface-hover)",
                         outline: "none",
                         boxSizing: "border-box",
                       }}
                     />
-                    <p style={{ fontSize: 10, color: "#9CA3AF", margin: "4px 0 0" }}>
+                    <p style={{ fontSize: 10, color: "var(--aos-text-tertiary)", margin: "4px 0 0" }}>
                       存储于 KMS，运行时注入，不落地到配置文件
                     </p>
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 4 }}>
+                    <label style={{ display: "block", fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 4 }}>
                       回调 Webhook（验签）
                     </label>
                     <input
@@ -936,11 +936,11 @@ permissions:
                       style={{
                         width: "100%",
                         padding: "6px 10px",
-                        border: "1px solid #D1D5DB",
+                        border: "1px solid var(--aos-border-strong)",
                         borderRadius: 4,
                         fontSize: 11,
                         fontFamily: "Menlo, Monaco, monospace",
-                        background: "#F9FAFB",
+                        background: "var(--aos-surface-hover)",
                         outline: "none",
                         boxSizing: "border-box",
                       }}
@@ -953,25 +953,25 @@ permissions:
                     padding: "8px 12px",
                     borderRadius: 6,
                     background: "rgba(219, 234, 254, 0.5)",
-                    border: "1px solid #BFDBFE",
+                    border: "1px solid var(--aos-accent-border)",
                     fontSize: 10,
-                    color: "#374151",
+                    color: "var(--aos-text)",
                   }}
                 >
-                  <strong style={{ color: "#1D4ED8" }}>Vault 配置：</strong>
+                  <strong style={{ color: "var(--aos-blue-600)" }}>Vault 配置：</strong>
                   密钥将在运行时从 KMS 注入，不落地到配置文件。轮换周期 90 天。
                 </div>
               </div>
 
               {/* 环境变量配置 */}
-              <div style={{ fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)", marginBottom: 8 }}>
                 环境变量
               </div>
               <div
                 style={{
                   borderRadius: 8,
-                  border: "1px solid #E5E7EB",
-                  background: "#fff",
+                  border: "1px solid var(--aos-border)",
+                  background: "var(--aos-surface)",
                   overflow: "hidden",
                   marginBottom: 20,
                 }}
@@ -981,11 +981,11 @@ permissions:
                     display: "grid",
                     gridTemplateColumns: "1fr 1.5fr 60px 60px",
                     padding: "6px 12px",
-                    background: "#F9FAFB",
+                    background: "var(--aos-surface-hover)",
                     fontSize: 10,
                     fontWeight: 500,
-                    color: "#6B7280",
-                    borderBottom: "1px solid #E5E7EB",
+                    color: "var(--aos-text-secondary)",
+                    borderBottom: "1px solid var(--aos-border)",
                   }}
                 >
                   <span>变量名</span>
@@ -1001,12 +1001,12 @@ permissions:
                       gridTemplateColumns: "1fr 1.5fr 60px 60px",
                       padding: "6px 12px",
                       fontSize: 11,
-                      borderBottom: i < envVars.length - 1 ? "0.5px solid #F3F4F6" : "none",
+                      borderBottom: i < envVars.length - 1 ? "0.5px solid var(--aos-gray-100)" : "none",
                       alignItems: "center",
                       gap: 8,
                     }}
                   >
-                    <code style={{ color: "#374151", fontFamily: "Menlo, Monaco, monospace", fontSize: 10 }}>
+                    <code style={{ color: "var(--aos-text)", fontFamily: "Menlo, Monaco, monospace", fontSize: 10 }}>
                       {v.key}
                     </code>
                     <input
@@ -1019,12 +1019,12 @@ permissions:
                       placeholder={v.secret ? "vault://…" : "value"}
                       style={{
                         padding: "3px 6px",
-                        border: "0.5px solid #E5E7EB",
+                        border: "0.5px solid var(--aos-border)",
                         borderRadius: 3,
                         fontSize: 10,
                         fontFamily: "Menlo, Monaco, monospace",
-                        background: "#fff",
-                        color: "#1A1A1A",
+                        background: "var(--aos-surface)",
+                        color: "var(--aos-text)",
                         outline: "none",
                         width: "100%",
                         boxSizing: "border-box",
@@ -1035,8 +1035,8 @@ permissions:
                         fontSize: 9,
                         padding: "1px 6px",
                         borderRadius: 3,
-                        background: v.secret ? "#FEE2E2" : "#F3F4F6",
-                        color: v.secret ? "#DC2626" : "#6B7280",
+                        background: v.secret ? "var(--aos-red-bg)" : "var(--aos-gray-100)",
+                        color: v.secret ? "var(--aos-red)" : "var(--aos-text-secondary)",
                         whiteSpace: "nowrap",
                       }}
                     >
@@ -1065,9 +1065,9 @@ permissions:
                     padding: "8px 24px",
                     borderRadius: 6,
                     fontSize: 13,
-                    border: "1px solid #D1D5DB",
-                    background: "#fff",
-                    color: "#374151",
+                    border: "1px solid var(--aos-border-strong)",
+                    background: "var(--aos-surface)",
+                    color: "var(--aos-text)",
                     cursor: "pointer",
                   }}
                 >
@@ -1081,8 +1081,8 @@ permissions:
                     borderRadius: 6,
                     fontSize: 13,
                     fontWeight: 500,
-                    background: "#1D4ED8",
-                    color: "#fff",
+                    background: "var(--aos-blue-600)",
+                    color: "var(--text-on-brand)",
                     border: "none",
                     cursor: "pointer",
                   }}
@@ -1096,10 +1096,10 @@ permissions:
           {/* Step 4: 连通测试 + 确认导入 */}
           {step === 4 && (
             <div>
-              <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: "0 0 4px" }}>
+              <h2 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: "0 0 4px" }}>
                 连通性测试与确认
               </h2>
-              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px" }}>
+              <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", margin: "0 0 16px" }}>
                 点击「运行测试」验证端点可达、鉴权有效、Schema 匹配
               </p>
 
@@ -1115,15 +1115,15 @@ permissions:
                     border: "none",
                     borderRadius: 6,
                     background: testing ? "var(--aos-faint)" : "var(--aos-accent)",
-                    color: "#fff",
+                    color: "var(--text-on-brand)",
                     cursor: testing ? "default" : "pointer",
                   }}
                 >
                   {testing ? "测试中…" : "▶ 运行连通测试"}
                 </button>
                 {testDone && (
-                  <span style={{ fontSize: 11, color: "#6B7280" }}>
-                    通过 <strong style={{ color: "#16A34A" }}>{computeTestStats(DETAILED_TEST_ITEMS).pass}</strong>/
+                  <span style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>
+                    通过 <strong style={{ color: "var(--aos-green-600)" }}>{computeTestStats(DETAILED_TEST_ITEMS).pass}</strong>/
                     {computeTestStats(DETAILED_TEST_ITEMS).total} 项
                   </span>
                 )}
@@ -1146,18 +1146,18 @@ permissions:
                         borderRadius: 4,
                         fontSize: 12,
                         background: isPass
-                          ? "#D1FAE5"
+                          ? "var(--aos-green-bg)"
                           : isPending
-                            ? "#FEF3C7"
-                            : "#FEE2E2",
-                        color: isPass ? "#065F46" : isPending ? "#92400E" : "#991B1B",
+                            ? "var(--aos-amber-bg)"
+                            : "var(--aos-red-bg)",
+                        color: isPass ? "var(--aos-green-700)" : isPending ? "var(--aos-amber-700)" : "var(--aos-red)",
                       }}
                     >
                       <span style={{ fontSize: 14 }}>
                         {isPass ? "✓" : isPending ? "○" : "✗"}
                       </span>
                       <span style={{ fontWeight: 500 }}>{item.name}</span>
-                      <span style={{ fontSize: 11, marginLeft: "auto", color: "#6B7280" }}>
+                      <span style={{ fontSize: 11, marginLeft: "auto", color: "var(--aos-text-secondary)" }}>
                         {testDone ? item.detail : isPending ? "测试中…" : "等待"}
                       </span>
                     </div>
@@ -1169,37 +1169,37 @@ permissions:
               <div
                 style={{
                   borderRadius: 8,
-                  border: "1px solid #E5E7EB",
-                  background: "#F9FAFB",
+                  border: "1px solid var(--aos-border)",
+                  background: "var(--aos-surface-hover)",
                   padding: 16,
                   marginBottom: 12,
                 }}
               >
-                <div style={{ fontSize: 13, fontWeight: 500, color: "#111827", marginBottom: 8 }}>注册汇总</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 24px", fontSize: 12, color: "#6B7280" }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: "var(--aos-text)", marginBottom: 8 }}>注册汇总</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 24px", fontSize: 12, color: "var(--aos-text-secondary)" }}>
                   <div>
-                    能力名称：<span style={{ color: "#111827", fontWeight: 500 }}>short-video-generation</span>
+                    能力名称：<span style={{ color: "var(--aos-text)", fontWeight: 500 }}>short-video-generation</span>
                   </div>
                   <div>
-                    能力类型：<span style={{ color: "#2563EB", fontWeight: 500 }}>{capType}</span>
+                    能力类型：<span style={{ color: "var(--aos-blue-600)", fontWeight: 500 }}>{capType}</span>
                   </div>
                   <div>
-                    安全等级：<span style={{ color: "#111827" }}>{secLevel}</span>
+                    安全等级：<span style={{ color: "var(--aos-text)" }}>{secLevel}</span>
                   </div>
                   <div>
-                    并发配额：<span style={{ color: "#111827" }}>{concurrency}</span>
+                    并发配额：<span style={{ color: "var(--aos-text)" }}>{concurrency}</span>
                   </div>
                   <div>
-                    速率限制：<span style={{ color: "#111827" }}>{rateLimitPerMin} 次/分</span>
+                    速率限制：<span style={{ color: "var(--aos-text)" }}>{rateLimitPerMin} 次/分</span>
                   </div>
                   <div>
-                    密钥管理：<span style={{ color: "#111827" }}>KMS Vault</span>
+                    密钥管理：<span style={{ color: "var(--aos-text)" }}>KMS Vault</span>
                   </div>
                   <div>
-                    资源配额：<span style={{ color: "#111827" }}>{memoryLimit} · {gpuConfig}</span>
+                    资源配额：<span style={{ color: "var(--aos-text)" }}>{memoryLimit} · {gpuConfig}</span>
                   </div>
                   <div>
-                    超时：<span style={{ color: "#111827" }}>{timeoutSec}s</span>
+                    超时：<span style={{ color: "var(--aos-text)" }}>{timeoutSec}s</span>
                   </div>
                 </div>
               </div>
@@ -1210,14 +1210,14 @@ permissions:
                   padding: "10px 12px",
                   borderRadius: 8,
                   background: "rgba(240, 253, 244, 0.7)",
-                  border: "1px solid #BBF7D0",
+                  border: "1px solid var(--aos-green-border)",
                   fontSize: 11,
-                  color: "#374151",
+                  color: "var(--aos-text)",
                 }}
               >
-                <strong style={{ color: "#059669" }}>注册后：</strong>
+                <strong style={{ color: "var(--aos-green-600)" }}>注册后：</strong>
                 该能力将出现在「智能体插件」列表中，状态为「就绪」。可在「智能体工具面板」中将此 Capability 挂载为 Agent 的 Function Tool。
-                <Link to="/s2/aip/tools" style={{ color: "#2563EB", marginLeft: 4, textDecoration: "none" }}>
+                <Link to="/s2/aip/tools" style={{ color: "var(--aos-blue-600)", marginLeft: 4, textDecoration: "none" }}>
                   去挂载 →
                 </Link>
               </div>
@@ -1230,9 +1230,9 @@ permissions:
                     padding: "8px 24px",
                     borderRadius: 6,
                     fontSize: 13,
-                    border: "1px solid #D1D5DB",
-                    background: "#fff",
-                    color: "#374151",
+                    border: "1px solid var(--aos-border-strong)",
+                    background: "var(--aos-surface)",
+                    color: "var(--aos-text)",
                     cursor: "pointer",
                   }}
                 >
