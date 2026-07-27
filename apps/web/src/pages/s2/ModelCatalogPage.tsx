@@ -1,6 +1,23 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageChrome } from "../../components/PageChrome";
+
+// ── Types ──────────────────────────────────────────────────────
+
+type Capability = "chat" | "code" | "vision" | "embedding" | "reasoning" | "function-calling";
+
+export type CatalogModel = {
+  id: string;
+  name: string;
+  provider: string;
+  providerSlug: string;
+  parameters: string;
+  contextWindow: string;
+  inputPrice: string;
+  outputPrice: string;
+  capabilities: Capability[];
+  registered: boolean;
+};
 
 type ModelFamily = {
   id: string;
@@ -10,6 +27,199 @@ type ModelFamily = {
   models: string[];
 };
 
+type TabId = "settings" | "enablement" | "registered" | "catalog";
+
+type CatalogFilter = {
+  query: string;
+  provider: string;
+  capability: string;
+  priceTier: string;
+};
+
+// ── Capability color map ──────────────────────────────────────
+
+export const CAPABILITY_COLORS: Record<Capability, { bg: string; fg: string }> = {
+  chat: { bg: "#DBEAFE", fg: "#1D4ED8" },
+  code: { bg: "#EDE9FE", fg: "#6D28D9" },
+  vision: { bg: "#FCE7F3", fg: "#BE185D" },
+  embedding: { bg: "#D1FAE5", fg: "#047857" },
+  reasoning: { bg: "#FEF3C7", fg: "#B45309" },
+  "function-calling": { bg: "#F1F5F9", fg: "#475569" },
+};
+
+// ── Mock catalog data ──────────────────────────────────────────
+
+const CATALOG_MODELS: CatalogModel[] = [
+  {
+    id: "gpt-5-4-pro",
+    name: "GPT-5.4 Pro",
+    provider: "OpenAI",
+    providerSlug: "openai",
+    parameters: "≈1.8T",
+    contextWindow: "256K",
+    inputPrice: "$10/1M",
+    outputPrice: "$30/1M",
+    capabilities: ["chat", "vision", "reasoning", "function-calling"],
+    registered: true,
+  },
+  {
+    id: "gpt-5-5",
+    name: "GPT-5.5",
+    provider: "OpenAI",
+    providerSlug: "openai",
+    parameters: "≈1.8T",
+    contextWindow: "256K",
+    inputPrice: "$5/1M",
+    outputPrice: "$15/1M",
+    capabilities: ["chat", "vision", "reasoning", "function-calling"],
+    registered: true,
+  },
+  {
+    id: "gpt-5-4-mini",
+    name: "GPT-5.4 mini",
+    provider: "OpenAI",
+    providerSlug: "openai",
+    parameters: "≈8B",
+    contextWindow: "128K",
+    inputPrice: "$0.15/1M",
+    outputPrice: "$0.60/1M",
+    capabilities: ["chat", "function-calling"],
+    registered: true,
+  },
+  {
+    id: "claude-opus-4-7",
+    name: "Claude Opus 4.7",
+    provider: "Anthropic",
+    providerSlug: "anthropic",
+    parameters: "≈2T",
+    contextWindow: "500K",
+    inputPrice: "$15/1M",
+    outputPrice: "$75/1M",
+    capabilities: ["chat", "vision", "reasoning", "code"],
+    registered: true,
+  },
+  {
+    id: "claude-sonnet-4-6",
+    name: "Claude Sonnet 4.6",
+    provider: "Anthropic",
+    providerSlug: "anthropic",
+    parameters: "≈400B",
+    contextWindow: "200K",
+    inputPrice: "$3/1M",
+    outputPrice: "$15/1M",
+    capabilities: ["chat", "vision", "code"],
+    registered: true,
+  },
+  {
+    id: "claude-haiku-4-5",
+    name: "Claude Haiku 4.5",
+    provider: "Anthropic",
+    providerSlug: "anthropic",
+    parameters: "≈20B",
+    contextWindow: "200K",
+    inputPrice: "$0.25/1M",
+    outputPrice: "$1.25/1M",
+    capabilities: ["chat", "vision"],
+    registered: true,
+  },
+  {
+    id: "gemini-2-5-ultra",
+    name: "Gemini 2.5 Ultra",
+    provider: "Google",
+    providerSlug: "google",
+    parameters: "≈1.5T",
+    contextWindow: "2M",
+    inputPrice: "$7/1M",
+    outputPrice: "$21/1M",
+    capabilities: ["chat", "vision", "reasoning", "code"],
+    registered: false,
+  },
+  {
+    id: "gemini-2-5-pro",
+    name: "Gemini 2.5 Pro",
+    provider: "Google",
+    providerSlug: "google",
+    parameters: "≈400B",
+    contextWindow: "2M",
+    inputPrice: "$2.50/1M",
+    outputPrice: "$10/1M",
+    capabilities: ["chat", "vision", "code"],
+    registered: false,
+  },
+  {
+    id: "grok-4-3",
+    name: "Grok 4.3",
+    provider: "xAI",
+    providerSlug: "xai",
+    parameters: "≈350B",
+    contextWindow: "256K",
+    inputPrice: "$5/1M",
+    outputPrice: "$15/1M",
+    capabilities: ["chat", "reasoning"],
+    registered: true,
+  },
+  {
+    id: "deepseek-v3-2",
+    name: "DeepSeek V3.2",
+    provider: "DeepSeek",
+    providerSlug: "deepseek",
+    parameters: "≈671B",
+    contextWindow: "128K",
+    inputPrice: "$0.27/1M",
+    outputPrice: "$1.10/1M",
+    capabilities: ["chat", "code", "reasoning"],
+    registered: false,
+  },
+  {
+    id: "llama-4-maverick-17b",
+    name: "Llama 4 Maverick 17B",
+    provider: "Meta",
+    providerSlug: "meta",
+    parameters: "17B",
+    contextWindow: "256K",
+    inputPrice: "免费",
+    outputPrice: "免费",
+    capabilities: ["chat", "code"],
+    registered: false,
+  },
+  {
+    id: "qwen-3-max",
+    name: "Qwen3 Max",
+    provider: "Alibaba",
+    providerSlug: "alibaba",
+    parameters: "≈480B",
+    contextWindow: "256K",
+    inputPrice: "¥4/1M",
+    outputPrice: "¥12/1M",
+    capabilities: ["chat", "code", "vision"],
+    registered: false,
+  },
+  {
+    id: "text-embedding-3-large",
+    name: "Text Embedding 3 Large",
+    provider: "OpenAI",
+    providerSlug: "openai",
+    parameters: "3072d",
+    contextWindow: "8K",
+    inputPrice: "$0.13/1M",
+    outputPrice: "—",
+    capabilities: ["embedding"],
+    registered: true,
+  },
+  {
+    id: "voyage-3",
+    name: "Voyage 3",
+    provider: "Voyage AI",
+    providerSlug: "voyage",
+    parameters: "1024d",
+    contextWindow: "32K",
+    inputPrice: "$0.12/1M",
+    outputPrice: "—",
+    capabilities: ["embedding"],
+    registered: false,
+  },
+];
+
 const MODEL_FAMILIES: ModelFamily[] = [
   { id: "openai", name: "OpenAI GPT", provider: "Azure", status: "enabled", models: ["GPT-5.4 Pro", "GPT-5.5", "GPT-5.4 mini"] },
   { id: "anthropic", name: "Anthropic Claude", provider: "AWS Bedrock", status: "enabled", models: ["Claude Opus 4.7", "Claude Sonnet 4.6", "Claude Haiku 4.5"] },
@@ -18,10 +228,82 @@ const MODEL_FAMILIES: ModelFamily[] = [
   { id: "embedding", name: "Embedding Models", provider: "Azure", status: "enabled", models: ["text-embedding-ada-002", "Text Embedding 3 Large"] },
 ];
 
-type TabId = "settings" | "enablement" | "registered";
+// ── Pure functions (extracted for testing) ────────────────────
+
+export function extractAllProviders(models: CatalogModel[]): string[] {
+  const set = new Set<string>();
+  for (const m of models) set.add(m.provider);
+  return Array.from(set).sort();
+}
+
+export function extractAllCapabilities(models: CatalogModel[]): Capability[] {
+  const set = new Set<Capability>();
+  for (const m of models) for (const c of m.capabilities) set.add(c);
+  return Array.from(set).sort();
+}
+
+/** Parse a price string like "$10/1M" or "¥4/1M" or "免费" into a numeric per-million value. */
+export function parsePricePerMillion(price: string): number {
+  if (!price || price === "—" || price === "免费") return 0;
+  const m = price.match(/([\d.]+)/);
+  return m ? parseFloat(m[1]) : 0;
+}
+
+/** Classify a price into tier: free / low / mid / high. */
+export function priceTierOf(price: string): "free" | "low" | "mid" | "high" {
+  const v = parsePricePerMillion(price);
+  if (v === 0) return "free";
+  if (v < 1) return "low";
+  if (v < 5) return "mid";
+  return "high";
+}
+
+export function filterCatalogModels(models: CatalogModel[], filter: CatalogFilter): CatalogModel[] {
+  const q = filter.query.trim().toLowerCase();
+  return models.filter((m) => {
+    if (q) {
+      const hay = `${m.name} ${m.provider} ${m.id}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (filter.provider !== "all" && m.provider !== filter.provider) return false;
+    if (filter.capability !== "all" && !m.capabilities.includes(filter.capability as Capability)) return false;
+    if (filter.priceTier !== "all") {
+      const tier = priceTierOf(m.inputPrice);
+      if (tier !== filter.priceTier) return false;
+    }
+    return true;
+  });
+}
+
+export function computeCatalogStats(models: CatalogModel[]) {
+  const total = models.length;
+  const registered = models.filter((m) => m.registered).length;
+  const providers = new Set(models.map((m) => m.provider)).size;
+  const free = models.filter((m) => priceTierOf(m.inputPrice) === "free").length;
+  return { total, registered, providers, free };
+}
+
+/** Compare 2-3 models side by side; returns rows of [field, ...values]. */
+export function buildComparisonRows(selected: CatalogModel[]) {
+  const rows: Array<{ field: string; values: string[] }> = [
+    { field: "供应商", values: selected.map((m) => m.provider) },
+    { field: "参数量", values: selected.map((m) => m.parameters) },
+    { field: "上下文窗口", values: selected.map((m) => m.contextWindow) },
+    { field: "输入价格", values: selected.map((m) => m.inputPrice) },
+    { field: "输出价格", values: selected.map((m) => m.outputPrice) },
+    {
+      field: "能力",
+      values: selected.map((m) => m.capabilities.join(", ")),
+    },
+    { field: "已注册", values: selected.map((m) => (m.registered ? "是" : "否")) },
+  ];
+  return rows;
+}
+
+// ── Component ──────────────────────────────────────────────────
 
 export function ModelCatalogPage() {
-  const [tab, setTab] = useState<TabId>("settings");
+  const [tab, setTab] = useState<TabId>("catalog");
   const [aipEnabled, setAipEnabled] = useState(true);
   const [orgRestricted, setOrgRestricted] = useState(true);
   const [orgs, setOrgs] = useState<Record<string, boolean>>({
@@ -34,83 +316,168 @@ export function ModelCatalogPage() {
   });
   const [orgSearch, setOrgSearch] = useState("");
 
+  // Catalog tab state
+  const [catalogFilter, setCatalogFilter] = useState<CatalogFilter>({
+    query: "",
+    provider: "all",
+    capability: "all",
+    priceTier: "all",
+  });
+  const [compareSet, setCompareSet] = useState<Set<string>>(new Set());
+  const [showCompare, setShowCompare] = useState(false);
+  const [activeLayer, setActiveLayer] = useState<number | null>(null);
+
+  const allProviders = useMemo(() => extractAllProviders(CATALOG_MODELS), []);
+  const allCapabilities = useMemo(() => extractAllCapabilities(CATALOG_MODELS), []);
+  const filteredModels = useMemo(
+    () => filterCatalogModels(CATALOG_MODELS, catalogFilter),
+    [catalogFilter],
+  );
+  const catalogStats = useMemo(() => computeCatalogStats(CATALOG_MODELS), []);
+  const compareModels = useMemo(
+    () => CATALOG_MODELS.filter((m) => compareSet.has(m.id)),
+    [compareSet],
+  );
+
   const filteredOrgs = Object.entries(orgs).filter(([name]) =>
     name.toLowerCase().includes(orgSearch.toLowerCase()),
   );
 
+  function toggleCompare(id: string) {
+    setCompareSet((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        if (next.size >= 3) return prev; // max 3
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
   return (
     <PageChrome title="模型目录" lede="管理 AIP 启用状态、模型家族和已注册模型">
-      <div style={{ maxWidth: "960px", margin: "0 auto" }}>
-        {/* 三层架构定位条 */}
-        <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 8, padding: 16, display: "flex", alignItems: "center", gap: 0, marginBottom: 16 }}>
-          {[
-            { label: "L1", name: "模型供应商", desc: "凭证管理", href: "/aip/model-providers", active: false },
-            { label: "L2", name: "模型路由", desc: "流量策略 · 熔断", href: "/aip/model-router", active: false },
-            { label: "L3 · 当前", name: "模型目录", desc: "可发现 → 注册", href: null, active: true },
-            { label: "AIP", name: "智能体调用", desc: "选模型 → 推理", href: null, active: false, green: true },
-          ].map((item, idx, arr) => (
-            <div key={item.label} style={{ display: "flex", alignItems: "center", flex: 1 }}>
-              <div style={{
-                flex: 1,
-                textAlign: "center",
-                padding: 12,
-                borderRadius: 6,
-                background: item.active ? "#EFF6FF" : item.green ? "#F0FDF4" : "#F9FAFB",
-                border: item.active ? "2px solid #2563EB" : item.green ? "1px solid #6EE7B7" : "none",
-              }}>
-                <div style={{
-                  fontSize: 11,
-                  color: item.active ? "#2563EB" : item.green ? "#059669" : "#6B7280",
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  marginBottom: 4,
-                }}>{item.label}</div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: item.active ? "#111827" : item.green ? "#065F46" : "#374151" }}>{item.name}</div>
-                <div style={{ fontSize: 11, color: item.active ? "#3B82F6" : item.green ? "#059669" : "#9CA3AF", marginTop: 2 }}>{item.desc}</div>
-                {item.href && (
-                  <Link to={item.href} style={{ display: "inline-block", marginTop: 6, fontSize: 11, color: "#2563EB", textDecoration: "none" }}>进入 →</Link>
-                )}
-              </div>
-              {idx < arr.length - 1 && (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" strokeWidth="1.5" style={{ flexShrink: 0 }}>
-                  <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </div>
-          ))}
+      <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+        {/* 四层架构示意图（可交互，点击高亮） */}
+        <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 8, padding: 16, marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: "#6B7280", fontWeight: 600, textTransform: "uppercase", marginBottom: 8 }}>
+            模型管理四层架构 · 点击查看详情
+          </div>
+          <div style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
+            {[
+              {
+                idx: 0,
+                label: "L1",
+                name: "模型目录",
+                desc: "可发现模型清单",
+                href: null,
+                tone: "blue",
+                active: tab === "catalog",
+              },
+              {
+                idx: 1,
+                label: "L2",
+                name: "模型供应商",
+                desc: "凭据 · 连接",
+                href: "/aip/model-providers",
+                tone: "violet",
+              },
+              {
+                idx: 2,
+                label: "L3",
+                name: "模型路由",
+                desc: "策略 · Fallback · 熔断",
+                href: "/aip/model-router",
+                tone: "amber",
+              },
+              {
+                idx: 3,
+                label: "应用",
+                name: "AIP 智能体",
+                desc: "选模型 → 推理",
+                href: "/aip/agents",
+                tone: "green",
+              },
+            ].map((item, idx, arr) => {
+              const isActive = activeLayer === item.idx || (activeLayer === null && item.active);
+              const toneColor =
+                item.tone === "blue" ? "#2563EB" :
+                item.tone === "violet" ? "#7C3AED" :
+                item.tone === "amber" ? "#D97706" : "#059669";
+              const toneBg =
+                item.tone === "blue" ? "#EFF6FF" :
+                item.tone === "violet" ? "#F5F3FF" :
+                item.tone === "amber" ? "#FFFBEB" : "#F0FDF4";
+              return (
+                <div key={item.label} style={{ display: "flex", alignItems: "stretch", flex: 1 }}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveLayer(activeLayer === item.idx ? null : item.idx)}
+                    style={{
+                      flex: 1,
+                      textAlign: "center",
+                      padding: 14,
+                      borderRadius: 8,
+                      margin: idx === 0 ? 0 : "0 0 0 4px",
+                      background: isActive ? toneBg : "#F9FAFB",
+                      border: isActive ? `2px solid ${toneColor}` : "1px solid #E5E7EB",
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <div style={{
+                      fontSize: 10,
+                      color: isActive ? toneColor : "#9CA3AF",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      marginBottom: 4,
+                    }}>{item.label}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: isActive ? toneColor : "#374151" }}>{item.name}</div>
+                    <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>{item.desc}</div>
+                    {item.href && (
+                      <Link
+                        to={item.href}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ display: "inline-block", marginTop: 6, fontSize: 11, color: toneColor, textDecoration: "none" }}
+                      >
+                        进入 →
+                      </Link>
+                    )}
+                  </button>
+                  {idx < arr.length - 1 && (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" strokeWidth="2" style={{ flexShrink: 0, alignSelf: "center", margin: "0 2px" }}>
+                      <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {/* 目录 vs 已注册 差异说明 */}
-        <div style={{ background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 8, padding: 16, marginBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.5" style={{ flexShrink: 0, marginTop: 2 }}>
-              <circle cx="12" cy="12" r="9" /><path d="M12 16v-4M12 8h.01" strokeLinecap="round" />
-            </svg>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#1E40AF", marginBottom: 8 }}>模型目录 vs 已注册模型</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, fontSize: 12 }}>
-                <div>
-                  <strong style={{ color: "#1E40AF" }}>📋 模型目录（Tab 2）</strong>
-                  <p style={{ color: "#374151", margin: "4px 0 0", lineHeight: 1.5 }}>所有<b>可发现的</b>模型清单，来自已接入的供应商。浏览规格、能力、价格，但尚未授权给 AIP 使用。</p>
-                </div>
-                <div>
-                  <strong style={{ color: "#059669" }}>✅ 已注册模型（Tab 3）</strong>
-                  <p style={{ color: "#374151", margin: "4px 0 0", lineHeight: 1.5 }}>已授权并<b>配置了用户配额</b>的模型，暴露给 AIP 智能体选择。从目录中选择模型 → 配置配额 → 注册。</p>
-                </div>
-              </div>
-              <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #BFDBFE", fontSize: 12, color: "#1E40AF" }}>
-                💡 流程：<strong>供应商配置(L1)</strong> → <strong>路由策略(L2)</strong> → <strong>目录浏览</strong> → <strong>注册模型(L3)</strong> → AIP 可选
-              </div>
+        {/* 统计概览 */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
+          {[
+            { label: "目录模型总数", value: catalogStats.total, color: "#2563EB" },
+            { label: "已注册", value: catalogStats.registered, color: "#059669" },
+            { label: "供应商数", value: catalogStats.providers, color: "#7C3AED" },
+            { label: "免费模型", value: catalogStats.free, color: "#D97706" },
+          ].map((s) => (
+            <div key={s.label} style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 8, padding: 14 }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: s.color }}>{s.value}</div>
+              <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>{s.label}</div>
             </div>
-          </div>
+          ))}
         </div>
 
         {/* Tab 导航 */}
         <div style={{ display: "flex", gap: 4, borderBottom: "1px solid #E5E7EB", marginBottom: 16 }}>
           {([
+            { id: "catalog", label: `目录浏览 (${catalogStats.total})` },
             { id: "settings", label: "AIP 设置" },
             { id: "enablement", label: "模型启用" },
-            { id: "registered", label: "已注册模型" },
+            { id: "registered", label: `已注册 (${catalogStats.registered})` },
           ] as const).map((t) => (
             <button
               key={t.id}
@@ -135,7 +502,242 @@ export function ModelCatalogPage() {
           ))}
         </div>
 
-        {/* Tab 内容 */}
+        {/* === Catalog Browse Tab === */}
+        {tab === "catalog" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* 搜索 + 筛选条 */}
+            <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }}>
+                  <circle cx="11" cy="11" r="7" /><path d="M20 20l-3-3" strokeLinecap="round" />
+                </svg>
+                <input
+                  type="search"
+                  placeholder="搜索模型名称、供应商..."
+                  value={catalogFilter.query}
+                  onChange={(e) => setCatalogFilter({ ...catalogFilter, query: e.target.value })}
+                  aria-label="catalog-search"
+                  style={{ width: "100%", paddingLeft: 34, paddingRight: 12, padding: "8px 12px 8px 34px", fontSize: 13, border: "1px solid #E5E7EB", borderRadius: 6, outline: "none" }}
+                />
+              </div>
+              <select
+                value={catalogFilter.provider}
+                onChange={(e) => setCatalogFilter({ ...catalogFilter, provider: e.target.value })}
+                aria-label="filter-provider"
+                style={{ padding: "8px 12px", fontSize: 13, border: "1px solid #E5E7EB", borderRadius: 6, background: "#fff" }}
+              >
+                <option value="all">所有供应商</option>
+                {allProviders.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+              <select
+                value={catalogFilter.capability}
+                onChange={(e) => setCatalogFilter({ ...catalogFilter, capability: e.target.value })}
+                aria-label="filter-capability"
+                style={{ padding: "8px 12px", fontSize: 13, border: "1px solid #E5E7EB", borderRadius: 6, background: "#fff" }}
+              >
+                <option value="all">所有能力</option>
+                {allCapabilities.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <select
+                value={catalogFilter.priceTier}
+                onChange={(e) => setCatalogFilter({ ...catalogFilter, priceTier: e.target.value })}
+                aria-label="filter-price"
+                style={{ padding: "8px 12px", fontSize: 13, border: "1px solid #E5E7EB", borderRadius: 6, background: "#fff" }}
+              >
+                <option value="all">所有价位</option>
+                <option value="free">免费</option>
+                <option value="low">低价 (&lt;$1/1M)</option>
+                <option value="mid">中价 ($1-$5/1M)</option>
+                <option value="high">高价 (&gt;$5/1M)</option>
+              </select>
+            </div>
+
+            {/* 对比操作条 */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 4px" }}>
+              <div style={{ fontSize: 13, color: "#6B7280" }}>
+                找到 <strong style={{ color: "#111827" }}>{filteredModels.length}</strong> 个模型
+                {compareSet.size > 0 && <> · 已选 <strong style={{ color: "#2563EB" }}>{compareSet.size}</strong>/3 用于对比</>}
+              </div>
+              {compareSet.size >= 2 && (
+                <button
+                  type="button"
+                  onClick={() => setShowCompare(true)}
+                  style={{ padding: "6px 14px", fontSize: 12, fontWeight: 500, border: "none", borderRadius: 6, background: "#2563EB", color: "#fff", cursor: "pointer" }}
+                >
+                  对比 ({compareSet.size})
+                </button>
+              )}
+            </div>
+
+            {/* 模型卡片网格 */}
+            {filteredModels.length === 0 ? (
+              <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 8, padding: 40, textAlign: "center" }}>
+                <p style={{ fontSize: 14, color: "#6B7280", margin: 0 }}>无匹配模型，请调整筛选条件</p>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+                {filteredModels.map((m) => {
+                  const isSelected = compareSet.has(m.id);
+                  const providerInitial = m.provider.charAt(0).toUpperCase();
+                  const providerColor =
+                    m.providerSlug === "openai" ? "#10A37F" :
+                    m.providerSlug === "anthropic" ? "#D97706" :
+                    m.providerSlug === "google" ? "#4285F4" :
+                    m.providerSlug === "xai" ? "#1D4ED8" :
+                    m.providerSlug === "deepseek" ? "#4D6BFE" :
+                    m.providerSlug === "meta" ? "#0668E1" :
+                    m.providerSlug === "alibaba" ? "#FF6A00" :
+                    m.providerSlug === "voyage" ? "#7C3AED" : "#6B7280";
+                  return (
+                    <div
+                      key={m.id}
+                      style={{
+                        background: "#fff",
+                        border: isSelected ? "2px solid #2563EB" : "1px solid #E5E7EB",
+                        borderRadius: 8,
+                        padding: 14,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 10,
+                      }}
+                    >
+                      {/* Header */}
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{
+                            width: 32, height: 32, borderRadius: 6, background: providerColor, color: "#fff",
+                            display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14,
+                          }}>
+                            {providerInitial}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{m.name}</div>
+                            <div style={{ fontSize: 11, color: "#9CA3AF" }}>{m.provider}</div>
+                          </div>
+                        </div>
+                        {m.registered && (
+                          <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: "#D1FAE5", color: "#059669", fontWeight: 500 }}>已注册</span>
+                        )}
+                      </div>
+
+                      {/* Specs */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 12 }}>
+                        <div>
+                          <span style={{ color: "#9CA3AF" }}>参数量 </span>
+                          <span style={{ fontWeight: 500, color: "#374151" }}>{m.parameters}</span>
+                        </div>
+                        <div>
+                          <span style={{ color: "#9CA3AF" }}>上下文 </span>
+                          <span style={{ fontWeight: 500, color: "#374151" }}>{m.contextWindow}</span>
+                        </div>
+                        <div>
+                          <span style={{ color: "#9CA3AF" }}>输入 </span>
+                          <span style={{ fontWeight: 500, color: "#374151" }}>{m.inputPrice}</span>
+                        </div>
+                        <div>
+                          <span style={{ color: "#9CA3AF" }}>输出 </span>
+                          <span style={{ fontWeight: 500, color: "#374151" }}>{m.outputPrice}</span>
+                        </div>
+                      </div>
+
+                      {/* Capability tags */}
+                      <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                        {m.capabilities.map((cap) => {
+                          const c = CAPABILITY_COLORS[cap];
+                          return (
+                            <span key={cap} style={{
+                              fontSize: 10, padding: "2px 8px", borderRadius: 10,
+                              background: c.bg, color: c.fg, fontWeight: 500,
+                            }}>
+                              {cap}
+                            </span>
+                          );
+                        })}
+                      </div>
+
+                      {/* Actions */}
+                      <div style={{ display: "flex", gap: 6, marginTop: "auto", paddingTop: 8, borderTop: "1px solid #F3F4F6" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#6B7280", cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleCompare(m.id)}
+                            disabled={!isSelected && compareSet.size >= 3}
+                            style={{ accentColor: "#2563EB" }}
+                          />
+                          对比
+                        </label>
+                        {!m.registered ? (
+                          <button style={{
+                            marginLeft: "auto", padding: "4px 12px", fontSize: 12, fontWeight: 500,
+                            border: "none", borderRadius: 6, background: "#2563EB", color: "#fff", cursor: "pointer",
+                          }}>
+                            注册到供应商
+                          </button>
+                        ) : (
+                          <Link
+                            to="/aip/model-router"
+                            style={{
+                              marginLeft: "auto", padding: "4px 12px", fontSize: 12, fontWeight: 500,
+                              border: "1px solid #E5E7EB", borderRadius: 6, background: "#fff", color: "#374151",
+                              textDecoration: "none",
+                            }}
+                          >
+                            路由配置 →
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* 对比弹层 */}
+            {showCompare && compareModels.length >= 2 && (
+              <div style={{
+                position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+                background: "rgba(0,0,0,0.4)", zIndex: 50,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }} onClick={() => setShowCompare(false)}>
+                <div
+                  style={{ background: "#fff", borderRadius: 12, padding: 24, maxWidth: 800, width: "90%", maxHeight: "80vh", overflowY: "auto" }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>模型对比</h3>
+                    <button type="button" onClick={() => setShowCompare(false)} style={{ border: "none", background: "none", fontSize: 20, cursor: "pointer", color: "#6B7280" }}>×</button>
+                  </div>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr>
+                        <th style={{ textAlign: "left", padding: 8, borderBottom: "2px solid #E5E7EB", width: 100, color: "#6B7280", fontSize: 12 }}>属性</th>
+                        {compareModels.map((m) => (
+                          <th key={m.id} style={{ textAlign: "left", padding: 8, borderBottom: "2px solid #E5E7EB", color: "#111827" }}>
+                            {m.name}
+                            <div style={{ fontSize: 11, fontWeight: 400, color: "#9CA3AF" }}>{m.provider}</div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {buildComparisonRows(compareModels).map((row) => (
+                        <tr key={row.field}>
+                          <td style={{ padding: 8, borderBottom: "1px solid #F3F4F6", color: "#6B7280", fontSize: 12, fontWeight: 500 }}>{row.field}</td>
+                          {row.values.map((v, i) => (
+                            <td key={i} style={{ padding: 8, borderBottom: "1px solid #F3F4F6", color: "#374151" }}>{v}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* === Settings Tab === */}
         {tab === "settings" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "#fff", overflow: "hidden" }}>
@@ -209,6 +811,7 @@ export function ModelCatalogPage() {
           </div>
         )}
 
+        {/* === Enablement Tab === */}
         {tab === "enablement" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: 8, padding: "12px 16px" }}>
@@ -245,6 +848,7 @@ export function ModelCatalogPage() {
           </div>
         )}
 
+        {/* === Registered Tab === */}
         {tab === "registered" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "#fff", overflow: "hidden" }}>
