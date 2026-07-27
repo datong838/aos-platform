@@ -21,7 +21,16 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { ComponentRenderer, type ComponentNode, type ComponentTree } from "./ComponentRenderer";
 import "./widgets";
-import { getWidgetsByCategory, getWidgetPlugin, CATEGORY_LABEL, type WidgetPlugin, type WidgetCategory } from "./widgets";
+import {
+  getWidgetsByCategory,
+  getWidgetPlugin,
+  CATEGORY_LABEL,
+  PROP_GROUP_LABEL,
+  PROP_GROUP_ORDER,
+  type WidgetPlugin,
+  type WidgetCategory,
+  type PropFieldDef,
+} from "./widgets";
 
 // ── Types & Consts ─────────────────────────────────────────────────────────
 
@@ -350,7 +359,70 @@ function PaletteItem({ item }: { item: WidgetPlugin }) {
   );
 }
 
-// ── Palette Content（按 category 分组）──────────────────────────────────────
+// ── Palette Content（按 category 分组 + 折叠）───────────────────────────────
+
+function useCollapsedState(key: string, defaultCollapsed = false) {
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    try {
+      const v = window.localStorage.getItem(`canvas.collapsed.${key}`);
+      return v === null ? defaultCollapsed : v === "1";
+    } catch {
+      return defaultCollapsed;
+    }
+  });
+  const toggle = useCallback(() => {
+    setCollapsed((v) => {
+      const next = !v;
+      try { window.localStorage.setItem(`canvas.collapsed.${key}`, next ? "1" : "0"); } catch {}
+      return next;
+    });
+  }, [key]);
+  return [collapsed, toggle] as const;
+}
+
+function CollapsibleSection({
+  title,
+  defaultCollapsed = false,
+  storageKey,
+  children,
+}: {
+  title: string;
+  defaultCollapsed?: boolean;
+  storageKey: string;
+  children: ReactNode;
+}) {
+  const [collapsed, toggle] = useCollapsedState(storageKey, defaultCollapsed);
+  return (
+    <div>
+      <div
+        onClick={toggle}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+          fontSize: 10,
+          fontWeight: 600,
+          color: "var(--aos-text-muted)",
+          marginTop: 4,
+          marginBottom: 2,
+          cursor: "pointer",
+          userSelect: "none",
+          padding: "2px 0",
+        }}
+      >
+        <span style={{ fontSize: 9, transition: "transform 0.15s", display: "inline-block", transform: collapsed ? "rotate(-90deg)" : "rotate(0deg)" }}>
+          ▼
+        </span>
+        {title}
+      </div>
+      {!collapsed && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function PaletteContent() {
   const grouped = getWidgetsByCategory();
@@ -359,13 +431,13 @@ function PaletteContent() {
   return (
     <div
       style={{
-        width: 200,
+        width: 220,
         height: "100%",
-        padding: 12,
+        padding: 10,
         overflowY: "auto",
         display: "flex",
         flexDirection: "column",
-        gap: 8,
+        gap: 4,
       }}
     >
       <div
@@ -384,24 +456,15 @@ function PaletteContent() {
         const items = grouped[cat];
         if (!items || items.length === 0) return null;
         return (
-          <div key={cat}>
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 600,
-                color: "var(--aos-text-muted)",
-                marginTop: 4,
-                marginBottom: 2,
-              }}
-            >
-              {CATEGORY_LABEL[cat]}
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              {items.map((item) => (
-                <PaletteItem key={item.type} item={item} />
-              ))}
-            </div>
-          </div>
+          <CollapsibleSection
+            key={cat}
+            title={CATEGORY_LABEL[cat]}
+            storageKey={`palette.${cat}`}
+          >
+            {items.map((item) => (
+              <PaletteItem key={item.type} item={item} />
+            ))}
+          </CollapsibleSection>
         );
       })}
       <a
@@ -423,6 +486,85 @@ function PaletteContent() {
       >
         + 浏览组件注册表
       </a>
+    </div>
+  );
+}
+
+// ── Left Tab Content（布局 / 变量 / 事件）────────────────────────────────────
+
+function LayoutTabContent({ tree }: { tree: ComponentTree }) {
+  const root = tree["root"];
+  const rootConfig = root?.config || {};
+  const containers = Object.entries(tree).filter(([, n]) => {
+    const plugin = getWidgetPlugin(n.type);
+    return plugin?.isContainer;
+  });
+  return (
+    <div style={{ width: 220, padding: 10, overflowY: "auto", fontSize: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+      <CollapsibleSection title="页面级配置" storageKey="layout.page" defaultCollapsed={false}>
+        <PropField label="内边距">
+          <input type="number" value={rootConfig.padding ?? 24} onChange={() => {}} style={inputStyle} readOnly />
+        </PropField>
+        <PropField label="间距">
+          <input type="number" value={rootConfig.gap ?? 16} onChange={() => {}} style={inputStyle} readOnly />
+        </PropField>
+      </CollapsibleSection>
+      <CollapsibleSection title={`容器节点 (${containers.length})`} storageKey="layout.containers" defaultCollapsed={false}>
+        {containers.map(([id, n]) => (
+          <div key={id} style={{ padding: "4px 8px", fontSize: 11, background: "var(--aos-surface)", borderRadius: 4, border: "1px solid var(--aos-border)" }}>
+            {n.type} · {id}
+          </div>
+        ))}
+      </CollapsibleSection>
+    </div>
+  );
+}
+
+function VariablesTabContent({ tree }: { tree: ComponentTree }) {
+  const objectTypes = new Set<string>();
+  for (const n of Object.values(tree)) {
+    if (n.config?.objectType) objectTypes.add(n.config.objectType as string);
+  }
+  const variables = Array.from(objectTypes).map((ot) => ({
+    name: `all_${ot.toLowerCase()}s`,
+    type: ot,
+    source: `${ot}[]`,
+  }));
+  return (
+    <div style={{ width: 220, padding: 10, overflowY: "auto", fontSize: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+      <CollapsibleSection title={`模块接口 (${variables.length})`} storageKey="var.interfaces" defaultCollapsed={false}>
+        {variables.length === 0 ? (
+          <div style={{ fontSize: 11, color: "var(--aos-text-muted)", padding: "4px 0" }}>暂无接口变量</div>
+        ) : (
+          variables.map((v) => (
+            <div key={v.name} style={{ padding: "6px 8px", background: "var(--aos-surface)", borderRadius: 4, border: "1px solid var(--aos-border)" }}>
+              <div style={{ fontWeight: 500, color: "var(--aos-text)" }}>{v.name}</div>
+              <div style={{ fontSize: 10, color: "var(--aos-text-muted)" }}>{v.type} · {v.source}</div>
+            </div>
+          ))
+        )}
+      </CollapsibleSection>
+      <CollapsibleSection title="参数" storageKey="var.params" defaultCollapsed={true}>
+        <div style={{ fontSize: 11, color: "var(--aos-text-muted)", padding: "4px 0" }}>暂无参数</div>
+      </CollapsibleSection>
+    </div>
+  );
+}
+
+function EventsTabContent({ tree }: { tree: ComponentTree }) {
+  const tables = Object.entries(tree).filter(([, n]) => n.type === "object-table");
+  return (
+    <div style={{ width: 220, padding: 10, overflowY: "auto", fontSize: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+      <CollapsibleSection title={`事件处理 (${tables.length})`} storageKey="events.handlers" defaultCollapsed={false}>
+        {tables.map(([id]) => (
+          <div key={id} style={{ padding: "4px 8px", fontSize: 11, background: "var(--aos-surface)", borderRadius: 4, border: "1px solid var(--aos-border)" }}>
+            onRowClick · {id}
+          </div>
+        ))}
+      </CollapsibleSection>
+      <CollapsibleSection title="函数" storageKey="events.functions" defaultCollapsed={true}>
+        <div style={{ fontSize: 11, color: "var(--aos-text-muted)", padding: "4px 0" }}>暂无函数</div>
+      </CollapsibleSection>
     </div>
   );
 }
@@ -449,6 +591,72 @@ function PropField({ label, children }: { label: string; children: ReactNode }) 
   );
 }
 
+function renderPropField(field: PropFieldDef, value: unknown, onUpdate: (patch: Record<string, any>) => void) {
+  if (field.type === "select") {
+    return (
+      <PropField key={field.key} label={field.label}>
+        <select
+          value={(value as string) ?? ""}
+          onChange={(e) => onUpdate({ [field.key]: e.target.value })}
+          style={inputStyle}
+        >
+          {field.options?.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      </PropField>
+    );
+  }
+  if (field.type === "textarea") {
+    return (
+      <PropField key={field.key} label={field.label}>
+        <textarea
+          value={(value as string) ?? ""}
+          onChange={(e) => onUpdate({ [field.key]: e.target.value })}
+          style={{ ...inputStyle, minHeight: 60, resize: "vertical" }}
+          placeholder={field.placeholder}
+        />
+      </PropField>
+    );
+  }
+  if (field.type === "number") {
+    return (
+      <PropField key={field.key} label={field.label}>
+        <input
+          type="number"
+          value={(value as number) ?? 0}
+          onChange={(e) => onUpdate({ [field.key]: Number(e.target.value) })}
+          style={inputStyle}
+          min={field.min}
+        />
+      </PropField>
+    );
+  }
+  if (field.type === "boolean") {
+    return (
+      <PropField key={field.key} label={field.label}>
+        <input
+          type="checkbox"
+          checked={(value as boolean) ?? false}
+          onChange={(e) => onUpdate({ [field.key]: e.target.checked })}
+          style={{ margin: 0, cursor: "pointer" }}
+        />
+      </PropField>
+    );
+  }
+  return (
+    <PropField key={field.key} label={field.label}>
+      <input
+        type="text"
+        value={(value as string) ?? ""}
+        onChange={(e) => onUpdate({ [field.key]: e.target.value })}
+        style={inputStyle}
+        placeholder={field.placeholder}
+      />
+    </PropField>
+  );
+}
+
 function PropertyPanel({
   nodeId,
   node,
@@ -468,8 +676,10 @@ function PropertyPanel({
     );
   }
 
+  const plugin = getWidgetPlugin(node.type);
+
   return (
-    <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
       <div
         style={{
           fontSize: 12,
@@ -477,13 +687,16 @@ function PropertyPanel({
           color: "var(--aos-text)",
           paddingBottom: 8,
           borderBottom: "1px solid var(--aos-border)",
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
         }}
       >
+        <span>{plugin?.icon || "🔹"}</span>
         {node.type} · {nodeId}
       </div>
 
       {(() => {
-        const plugin = getWidgetPlugin(node.type);
         if (!plugin || !plugin.propsSchema.length) {
           return (
             <div style={{ fontSize: 12, color: "var(--aos-text-muted)" }}>
@@ -491,47 +704,30 @@ function PropertyPanel({
             </div>
           );
         }
-        return plugin.propsSchema.map((field) => {
-          const value = node.config?.[field.key];
-          return (
-            <PropField key={field.key} label={field.label}>
-              {field.type === "select" ? (
-                <select
-                  value={value ?? ""}
-                  onChange={(e) => onUpdate({ [field.key]: e.target.value })}
-                  style={inputStyle}
-                >
-                  {field.options?.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              ) : field.type === "textarea" ? (
-                <textarea
-                  value={value ?? ""}
-                  onChange={(e) => onUpdate({ [field.key]: e.target.value })}
-                  style={{ ...inputStyle, minHeight: 60, resize: "vertical" }}
-                  placeholder={field.placeholder}
-                />
-              ) : field.type === "number" ? (
-                <input
-                  type="number"
-                  value={value ?? 0}
-                  onChange={(e) => onUpdate({ [field.key]: Number(e.target.value) })}
-                  style={inputStyle}
-                  min={field.min}
-                />
-              ) : (
-                <input
-                  type="text"
-                  value={value ?? ""}
-                  onChange={(e) => onUpdate({ [field.key]: e.target.value })}
-                  style={inputStyle}
-                  placeholder={field.placeholder}
-                />
-              )}
-            </PropField>
-          );
-        });
+
+        // 按 group 分组
+        const grouped: Record<string, PropFieldDef[]> = {};
+        for (const field of plugin.propsSchema) {
+          const g: string = field.group || "basic";
+          if (!grouped[g]) grouped[g] = [];
+          grouped[g].push(field);
+        }
+
+        return PROP_GROUP_ORDER
+          .filter((g) => grouped[g]?.length)
+          .map((g) => (
+            <CollapsibleSection
+              key={g}
+              title={PROP_GROUP_LABEL[g]}
+              storageKey={`prop.${node.type}.${g}`}
+              defaultCollapsed={g === "advanced"}
+            >
+              {grouped[g].map((field) => {
+                const value = node.config?.[field.key];
+                return renderPropField(field, value, onUpdate);
+              })}
+            </CollapsibleSection>
+          ));
       })()}
 
       {node.type !== "page-layout" && nodeId !== "root" && (
@@ -592,11 +788,17 @@ export function ComponentTreeEditor({
   const [leftCollapsed, setLeftCollapsed] = useState<boolean>(
     () => window.localStorage.getItem("canvas.editor.leftCollapsed") === "1",
   );
+  const [leftTab, setLeftTab] = useState<"widgets" | "layout" | "variables" | "events">(
+    () => (window.localStorage.getItem("canvas.editor.leftTab") as "widgets" | "layout" | "variables" | "events") || "widgets",
+  );
 
-  // persist leftCollapsed
+  // persist
   useEffect(() => {
     window.localStorage.setItem("canvas.editor.leftCollapsed", leftCollapsed ? "1" : "0");
   }, [leftCollapsed]);
+  useEffect(() => {
+    window.localStorage.setItem("canvas.editor.leftTab", leftTab);
+  }, [leftTab]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -711,10 +913,10 @@ export function ComponentTreeEditor({
           overflow: "hidden",
         }}
       >
-        {/* 左侧调色板 */}
+        {/* 左侧面板：4 Tab + 折叠 */}
         <div
           style={{
-            width: leftCollapsed ? 0 : 200,
+            width: leftCollapsed ? 0 : 240,
             flexShrink: 0,
             borderRight: "1px solid var(--aos-border)",
             background: "var(--aos-aside)",
@@ -736,13 +938,49 @@ export function ComponentTreeEditor({
               top: 16,
               zIndex: 30,
             }}
-            aria-label={leftCollapsed ? "展开组件库" : "收起组件库"}
+            aria-label={leftCollapsed ? "展开面板" : "收起面板"}
           >
             {leftCollapsed ? ">" : "<"}
           </button>
-          <div style={{ width: 200, height: "100%", overflow: "hidden" }}>
+          <div style={{ width: 240, height: "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             {!leftCollapsed && (
-              <PaletteContent />
+              <>
+                {/* Tab 切换栏 */}
+                <div style={{ display: "flex", borderBottom: "1px solid var(--aos-border)", flexShrink: 0 }}>
+                  {([
+                    { id: "widgets", label: "添加微件" },
+                    { id: "layout", label: "布局" },
+                    { id: "variables", label: "变量" },
+                    { id: "events", label: "事件" },
+                  ] as const).map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setLeftTab(tab.id)}
+                      style={{
+                        flex: 1,
+                        padding: "8px 4px",
+                        fontSize: 11,
+                        fontWeight: leftTab === tab.id ? 600 : 400,
+                        border: "none",
+                        background: leftTab === tab.id ? "var(--aos-surface)" : "transparent",
+                        color: leftTab === tab.id ? "var(--aos-accent, #4f46e5)" : "var(--aos-text-muted)",
+                        cursor: "pointer",
+                        borderBottom: leftTab === tab.id ? "2px solid var(--aos-accent, #4f46e5)" : "2px solid transparent",
+                      }}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+                {/* Tab 内容 */}
+                <div style={{ flex: 1, overflow: "hidden" }}>
+                  {leftTab === "widgets" && <PaletteContent />}
+                  {leftTab === "layout" && <LayoutTabContent tree={tree} />}
+                  {leftTab === "variables" && <VariablesTabContent tree={tree} />}
+                  {leftTab === "events" && <EventsTabContent tree={tree} />}
+                </div>
+              </>
             )}
           </div>
         </div>

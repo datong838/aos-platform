@@ -22,12 +22,15 @@ export type WidgetCategory =
   | "time"
   | "extra";
 
-export type PropFieldType = "text" | "number" | "select" | "color" | "textarea";
+export type PropFieldType = "text" | "number" | "select" | "color" | "textarea" | "boolean";
+
+export type PropFieldGroup = "basic" | "data" | "style" | "advanced";
 
 export interface PropFieldDef {
   key: string;
   label: string;
   type: PropFieldType;
+  group?: PropFieldGroup;
   options?: { label: string; value: string }[];
   placeholder?: string;
   min?: number;
@@ -96,6 +99,15 @@ export const CATEGORY_LABEL: Record<WidgetCategory, string> = {
   time: "时间 / 事件",
   extra: "扩展组件",
 };
+
+export const PROP_GROUP_LABEL: Record<PropFieldGroup, string> = {
+  basic: "基础",
+  data: "数据源",
+  style: "样式",
+  advanced: "高级",
+};
+
+export const PROP_GROUP_ORDER: PropFieldGroup[] = ["basic", "data", "style", "advanced"];
 
 // 占位组件类型（用于未注册 type 的兜底渲染）
 export type { ComponentType, ComponentTree };

@@ -34,8 +34,8 @@ registerWidget({
     </div>
   ),
   propsSchema: [
-    { key: "padding", label: "内边距", type: "number", min: 0 },
-    { key: "gap", label: "间距", type: "number", min: 0 },
+    { key: "padding", label: "内边距", type: "number", min: 0, group: "style" },
+    { key: "gap", label: "间距", type: "number", min: 0, group: "style" },
   ],
 });
 
@@ -60,8 +60,8 @@ registerWidget({
     </div>
   ),
   propsSchema: [
-    { key: "cols", label: "列数", type: "number", min: 1 },
-    { key: "gap", label: "间距", type: "number", min: 0 },
+    { key: "cols", label: "列数", type: "number", min: 1, group: "style" },
+    { key: "gap", label: "间距", type: "number", min: 0, group: "style" },
   ],
 });
 
@@ -75,8 +75,8 @@ registerWidget({
   defaultConfig: { title: "新页面", subtitle: "页面副标题" },
   render: (config) => <PageHeader config={config} />,
   propsSchema: [
-    { key: "title", label: "标题", type: "text" },
-    { key: "subtitle", label: "副标题", type: "text" },
+    { key: "title", label: "标题", type: "text", group: "basic" },
+    { key: "subtitle", label: "副标题", type: "text", group: "basic" },
   ],
 });
 
@@ -87,15 +87,18 @@ registerWidget({
   name: "统计卡片",
   icon: "🔢",
   category: "data",
-  defaultConfig: { title: "统计项", objectType: "", color: "blue", metric: "count" },
+  defaultConfig: { title: "统计项", value: "", sublabel: "", color: "blue", metric: "count" },
   render: (config) => <StatCardWidget config={config} />,
   propsSchema: [
-    { key: "title", label: "标题", type: "text" },
-    { key: "objectType", label: "对象类型", type: "text" },
+    { key: "title", label: "标题", type: "text", group: "basic" },
+    { key: "value", label: "数值", type: "text", group: "basic" },
+    { key: "sublabel", label: "副标题", type: "text", group: "basic" },
+    { key: "objectType", label: "对象类型", type: "text", group: "data" },
     {
       key: "color",
       label: "颜色",
       type: "select",
+      group: "style",
       options: [
         { label: "蓝色", value: "blue" },
         { label: "琥珀", value: "amber" },
@@ -108,12 +111,15 @@ registerWidget({
       key: "metric",
       label: "聚合",
       type: "select",
+      group: "data",
       options: [
         { label: "计数", value: "count" },
         { label: "求和", value: "sum" },
       ],
     },
-    { key: "field", label: "求和字段", type: "text" },
+    { key: "field", label: "求和字段", type: "text", group: "data" },
+    { key: "trend", label: "趋势值", type: "text", group: "advanced" },
+    { key: "trendUp", label: "趋势向上", type: "boolean", group: "advanced" },
   ],
 });
 
@@ -134,7 +140,7 @@ registerWidget({
   },
   render: (config) => <FilterBarWidget config={config} />,
   propsSchema: [
-    { key: "objectType", label: "对象类型", type: "text" },
+    { key: "objectType", label: "对象类型", type: "text", group: "data" },
   ],
 });
 
@@ -154,7 +160,8 @@ registerWidget({
   },
   render: (config) => <ObjectTableWidget config={config} />,
   propsSchema: [
-    { key: "objectType", label: "对象类型", type: "text" },
+    { key: "objectType", label: "对象类型", type: "text", group: "data" },
+    { key: "title", label: "表格标题", type: "text", group: "basic" },
   ],
 });
 
@@ -171,7 +178,8 @@ registerWidget({
   },
   render: (config) => <DetailDrawerWidget config={config} />,
   propsSchema: [
-    { key: "objectType", label: "对象类型", type: "text" },
+    { key: "objectType", label: "对象类型", type: "text", group: "data" },
+    { key: "title", label: "抽屉标题", type: "text", group: "basic" },
   ],
 });
 
@@ -185,7 +193,9 @@ registerWidget({
   defaultConfig: { objectType: "", title: "趋势图" },
   render: (config) => <TrendChartWidget config={config} />,
   propsSchema: [
-    { key: "title", label: "标题", type: "text" },
-    { key: "objectType", label: "对象类型", type: "text" },
+    { key: "title", label: "标题", type: "text", group: "basic" },
+    { key: "objectType", label: "对象类型", type: "text", group: "data" },
+    { key: "dateField", label: "日期字段", type: "text", group: "data" },
+    { key: "days", label: "天数", type: "number", min: 1, group: "data" },
   ],
 });

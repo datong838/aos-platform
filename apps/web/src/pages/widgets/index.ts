@@ -47,5 +47,5 @@ import "./KanbanWidget";
 import "./GanttWidget";
 import "./CalendarWidget";
 
-export { registerWidget, getWidgetPlugin, getAllWidgets, getWidgetsByCategory, CATEGORY_LABEL } from "./registry";
-export type { WidgetPlugin, WidgetCategory, PropFieldDef, PropFieldType } from "./registry";
+export { registerWidget, getWidgetPlugin, getAllWidgets, getWidgetsByCategory, CATEGORY_LABEL, PROP_GROUP_LABEL, PROP_GROUP_ORDER } from "./registry";
+export type { WidgetPlugin, WidgetCategory, PropFieldDef, PropFieldType, PropFieldGroup } from "./registry";

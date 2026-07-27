@@ -254,10 +254,9 @@ export function StatCardWidget({ config }: { config: Record<string, any> }) {
       try {
         const filters: any[] = [];
         if (config.filter) {
-          const op = config.filter.op || "eq";
           filters.push({
             field: config.filter.field,
-            op,
+            op: config.filter.op || "eq",
             value: config.filter.value,
           });
         }
@@ -840,7 +839,10 @@ export function TrendChartWidget({ config }: { config: Record<string, any> }) {
         const idx: Record<string, number> = {};
         buckets.forEach((b, i) => (idx[b.date] = i));
         for (const it of items) {
-          const raw = (it as Record<string, unknown>)[dateField];
+          let raw = (it as Record<string, unknown>)[dateField];
+          if (raw === undefined && (it as Record<string, unknown>).props) {
+            raw = ((it as Record<string, unknown>).props as Record<string, unknown>)[dateField];
+          }
           if (typeof raw === "string") {
             const day = raw.slice(5, 10);
             if (day in idx) buckets[idx[day]].count += 1;
@@ -859,9 +861,10 @@ export function TrendChartWidget({ config }: { config: Record<string, any> }) {
     };
   }, [objectType, dateField, days, config.endDate]);
 
+  const hasData = data.length > 0 && data.some((d) => d.count > 0);
   const max = Math.max(1, ...data.map((d) => d.count));
   const W = 520;
-  const H = 120;
+  const H = 140;
   const pad = 28;
   const stepX = data.length > 1 ? (W - pad * 2) / (data.length - 1) : 0;
   const points = data
@@ -895,13 +898,20 @@ export function TrendChartWidget({ config }: { config: Record<string, any> }) {
         <div style={{ padding: 16, textAlign: "center", color: "var(--aos-text-muted)", fontSize: 11 }}>
           暂无数据
         </div>
+      ) : !hasData ? (
+        <div style={{ padding: 16, textAlign: "center", color: "var(--aos-text-muted)", fontSize: 11 }}>
+          暂无趋势数据
+        </div>
       ) : (
         <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#4f46e5" stopOpacity="0" />
+              <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
             </linearGradient>
+            <filter id="trendShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#3B82F6" floodOpacity="0.25" />
+            </filter>
           </defs>
           {[0.25, 0.5, 0.75, 1].map((r) => (
             <line
@@ -915,17 +925,30 @@ export function TrendChartWidget({ config }: { config: Record<string, any> }) {
               strokeDasharray="2 3"
             />
           ))}
+          {/* 面积填充 */}
           {areaPath && <path d={areaPath} fill="url(#trendFill)" />}
+          {/* 折线 */}
+          {points && (
+            <polyline
+              points={points}
+              fill="none"
+              stroke="#3B82F6"
+              strokeWidth="2.5"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              filter="url(#trendShadow)"
+            />
+          )}
           {data.map((d, i) => {
             const x = pad + i * stepX;
             const y = H - pad - (d.count / max) * (H - pad * 2);
             return (
               <g key={i}>
-                <circle cx={x} cy={y} r="3" fill="#4f46e5" />
+                <circle cx={x} cy={y} r="4" fill="#3B82F6" stroke="#fff" strokeWidth="1.5" />
                 <text x={x} y={H - pad + 14} textAnchor="middle" fontSize="9" fill="var(--aos-text-muted)">
                   {d.date}
                 </text>
-                <text x={x} y={y - 8} textAnchor="middle" fontSize="9" fill="var(--aos-text)" fontWeight="600">
+                <text x={x} y={y - 10} textAnchor="middle" fontSize="9" fill="var(--aos-text)" fontWeight="600">
                   {d.count}
                 </text>
               </g>

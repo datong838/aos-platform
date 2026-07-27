@@ -594,11 +594,24 @@ export function CanvasPage() {
 
   const loadModules = useCallback(async () => {
     const res = await apiGet<{ items: ModuleRow[] }>("/v1/modules");
-    setModules(res.items || []);
+    const all = res.items || [];
+    const valid = all.filter((m) => {
+      if (!m.id || !m.name) return false;
+      const blacklist = ["to-publish", "pg-mod", "Idem Module", "pgmod"];
+      const lowerId = m.id.toLowerCase();
+      const lowerName = m.name.toLowerCase();
+      for (const b of blacklist) {
+        if (lowerId.includes(b.toLowerCase()) || lowerName.includes(b.toLowerCase())) {
+          return false;
+        }
+      }
+      return true;
+    });
+    setModules(valid);
     const prefer =
-      res.items?.find((m) => m.components && Object.keys(m.components).length > 0) ||
-      res.items?.find((m) => m.id.includes("canvas") || (m.widgets || []).length > 0) ||
-      res.items?.[0];
+      valid.find((m) => m.components && Object.keys(m.components).length > 0) ||
+      valid.find((m) => m.id.includes("canvas") || (m.widgets || []).length > 0) ||
+      valid[0];
     if (prefer) {
       setModuleId(prefer.id);
       const layout = normalizeLayout(prefer.widgets, prefer.objectType);
@@ -606,7 +619,7 @@ export function CanvasPage() {
       setSelected(layout[0]?.id || "");
       const tree = prefer.components && Object.keys(prefer.components).length > 0 ? prefer.components : null;
       setComponentTree(tree);
-      setCanvasMode(tree ? "preview" : "widget");
+      setCanvasMode("widget");
       setDirty(false);
     }
   }, []);
@@ -674,7 +687,7 @@ export function CanvasPage() {
       const tree =
         mod.components && Object.keys(mod.components).length > 0 ? mod.components : null;
       setComponentTree(tree);
-      setCanvasMode(tree ? "preview" : "widget");
+      setCanvasMode("widget");
       setDirty(false);
       setMsg(
         tree
@@ -835,6 +848,20 @@ export function CanvasPage() {
     }
   }
 
+  async function publishModule() {
+    if (!moduleId) {
+      setErr("请先选择 Module");
+      return;
+    }
+    setErr(null);
+    try {
+      await apiPatch(`/v1/modules/${encodeURIComponent(moduleId)}`, { status: "published" });
+      setMsg(`模块「${currentModule?.name || moduleId}」已发布`);
+    } catch (e) {
+      setErr(String((e as Error).message || e));
+    }
+  }
+
   const TOOLBAR_TABS = [
     { id: "dashboard", label: "Dashboard" },
     { id: "queries", label: "Queries" },
@@ -903,7 +930,6 @@ export function CanvasPage() {
             </select>
             <button
               type="button"
-              className="p-btn p-btn-secondary p-btn-sm"
               disabled={!dirty}
               onClick={() => void saveLayout()}
               style={{
@@ -918,6 +944,21 @@ export function CanvasPage() {
             >
               {dirty ? "保存 *" : "已保存"}
             </button>
+            <button
+              type="button"
+              onClick={() => void publishModule()}
+              style={{
+                fontSize: "12px",
+                padding: "5px 12px",
+                borderRadius: "4px",
+                border: "none",
+                background: "#10B981",
+                color: "#fff",
+                cursor: "pointer",
+              }}
+            >
+              发布
+            </button>
             <button type="button" className="p-slate-close" title="关闭">
               <NavIcon name="close" style={{ width: "14px", height: "14px" }} />
             </button>
@@ -925,32 +966,95 @@ export function CanvasPage() {
         </header>
 
         <div className="p-slate-toolbar">
-          <div className="p-slate-toolbar-left">
+          <div className="p-slate-toolbar-left" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                background: "var(--aos-aside)",
+                borderRadius: "4px",
+                border: "1px solid var(--aos-border)",
+                overflow: "hidden",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setCanvasMode("widget")}
+                style={{
+                  fontSize: "12px",
+                  padding: "4px 12px",
+                  border: "none",
+                  background: canvasMode === "widget" ? "var(--aos-accent)" : "transparent",
+                  color: canvasMode === "widget" ? "#fff" : "var(--aos-text)",
+                  cursor: "pointer",
+                  fontWeight: canvasMode === "widget" ? 500 : 400,
+                }}
+              >
+                模块
+              </button>
+              <button
+                type="button"
+                onClick={() => setCanvasMode("workflow")}
+                style={{
+                  fontSize: "12px",
+                  padding: "4px 12px",
+                  border: "none",
+                  background: canvasMode === "workflow" ? "var(--aos-accent)" : "transparent",
+                  color: canvasMode === "workflow" ? "#fff" : "var(--aos-text)",
+                  cursor: "pointer",
+                  fontWeight: canvasMode === "workflow" ? 500 : 400,
+                }}
+              >
+                工作流
+              </button>
+              <button
+                type="button"
+                onClick={() => setCanvasMode("preview")}
+                style={{
+                  fontSize: "12px",
+                  padding: "4px 12px",
+                  border: "none",
+                  background: canvasMode === "preview" ? "var(--aos-accent)" : "transparent",
+                  color: canvasMode === "preview" ? "#fff" : "var(--aos-text)",
+                  cursor: "pointer",
+                  fontWeight: canvasMode === "preview" ? 500 : 400,
+                }}
+              >
+                预览
+              </button>
+            </div>
+            <div style={{ width: "1px", height: "16px", background: "var(--aos-border)" }} />
             <button
               type="button"
-              className={`p-slate-mode${canvasMode === "widget" ? " is-active" : ""}`}
-              onClick={() => setCanvasMode("widget")}
+              onClick={() => setMsg("撤销功能开发中")}
+              title="撤销"
+              style={{
+                fontSize: "12px",
+                padding: "4px 8px",
+                borderRadius: "4px",
+                border: "1px solid var(--aos-border)",
+                background: "var(--aos-surface)",
+                color: "var(--aos-text)",
+                cursor: "pointer",
+              }}
             >
-              <NavIcon name="apps" style={{ width: "14px", height: "14px" }} />
-              Widget
+              ↶ 撤销
             </button>
             <button
               type="button"
-              className={`p-slate-mode${canvasMode === "workflow" ? " is-active" : ""}`}
-              onClick={() => setCanvasMode("workflow")}
+              onClick={() => setMsg("重做功能开发中")}
+              title="重做"
+              style={{
+                fontSize: "12px",
+                padding: "4px 8px",
+                borderRadius: "4px",
+                border: "1px solid var(--aos-border)",
+                background: "var(--aos-surface)",
+                color: "var(--aos-text)",
+                cursor: "pointer",
+              }}
             >
-              <NavIcon name="workflow" style={{ width: "14px", height: "14px" }} />
-              Workflow
-            </button>
-            <button
-              type="button"
-              className={`p-slate-mode${canvasMode === "preview" ? " is-active" : ""}`}
-              onClick={() => setCanvasMode("preview")}
-              title="预览应用（运行态只读）"
-              aria-label="切换到预览模式"
-            >
-              <NavIcon name="eye" style={{ width: "14px", height: "14px" }} />
-              Preview
+              ↷ 重做
             </button>
           </div>
           <div className="p-slate-toolbar-tabs">

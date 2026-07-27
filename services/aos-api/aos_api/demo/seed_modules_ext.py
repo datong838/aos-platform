@@ -21,7 +21,7 @@ _ORDER_COMPONENTS = {
     "root": {
         "type": "page-layout",
         "config": {"padding": 24, "gap": 16},
-        "children": ["page-header", "grid-stats", "filter-order", "table-orders", "chart-trend"],
+        "children": ["page-header", "grid-stats", "filter-bar", "table-orders", "bottom-row"],
     },
     "page-header": {
         "type": "page-header",
@@ -36,51 +36,50 @@ _ORDER_COMPONENTS = {
         "type": "stat-card",
         "config": {
             "title": "总订单",
-            "value": "1,847",
-            "sublabel": "本周新增 142",
+            "objectType": "Order",
             "color": "blue",
-            "trend": "+12.3%",
-            "trendUp": True,
         },
     },
     "stat-pending": {
         "type": "stat-card",
         "config": {
             "title": "待处理",
-            "value": "23",
-            "sublabel": "需关注",
+            "objectType": "Order",
             "color": "amber",
+            "filter": {"field": "status", "op": "in", "value": ["待付款", "已付款"]},
         },
     },
     "stat-completed": {
         "type": "stat-card",
         "config": {
-            "title": "已完成",
-            "value": "1,782",
-            "sublabel": "完成率 96.5%",
+            "title": "已签收",
+            "objectType": "Order",
             "color": "green",
+            "filter": {"field": "status", "op": "eq", "value": "已签收"},
         },
     },
     "stat-revenue": {
         "type": "stat-card",
         "config": {
             "title": "总收入",
-            "value": "¥486K",
-            "sublabel": "本周 +12.3%",
+            "objectType": "Order",
             "color": "indigo",
-            "trend": "+12.3%",
-            "trendUp": True,
+            "metric": "sum",
+            "field": "total_amount",
         },
     },
-    "filter-order": {
+    "filter-bar": {
         "type": "filter-bar",
         "config": {
             "objectType": "Order",
             "tabs": [
-                {"key": "all", "label": "全部", "count": 1847},
-                {"key": "pending", "label": "待处理", "count": 23},
-                {"key": "shipped", "label": "已发货", "count": 42},
-                {"key": "delivered", "label": "已签收", "count": 1782},
+                {"key": "all", "label": "全部"},
+                {"key": "pending", "label": "待付款"},
+                {"key": "paid", "label": "已付款"},
+                {"key": "shipped", "label": "已发货"},
+                {"key": "signed", "label": "已签收"},
+                {"key": "cancelled", "label": "已取消"},
+                {"key": "refunded", "label": "已退款"},
             ],
         },
     },
@@ -88,7 +87,7 @@ _ORDER_COMPONENTS = {
         "type": "object-table",
         "config": {
             "objectType": "Order",
-            "title": "订单列表",
+            "title": "订单列表 — all_orders",
             "columns": [
                 {"key": "order_no", "label": "订单号"},
                 {"key": "customer_name", "label": "客户"},
@@ -98,11 +97,36 @@ _ORDER_COMPONENTS = {
             ],
         },
     },
+    "bottom-row": {
+        "type": "horizontal-grid",
+        "config": {"cols": 2, "gap": 12},
+        "children": ["chart-trend", "detail-order"],
+    },
     "chart-trend": {
         "type": "trend-chart",
         "config": {
-            "title": "近 7 天订单趋势",
+            "title": "订单趋势图",
             "objectType": "Order",
+            "dateField": "order_date",
+        },
+    },
+    "detail-order": {
+        "type": "detail-drawer",
+        "config": {
+            "objectType": "Order",
+            "title": "订单详情 — selected_order",
+            "sections": [
+                {
+                    "title": "基本信息",
+                    "fields": [
+                        {"key": "order_no", "label": "订单号"},
+                        {"key": "customer_name", "label": "客户"},
+                        {"key": "total_amount", "label": "金额"},
+                        {"key": "status", "label": "状态"},
+                        {"key": "order_date", "label": "下单时间"},
+                    ],
+                },
+            ],
         },
     },
 }
