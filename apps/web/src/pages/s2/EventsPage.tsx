@@ -1,383 +1,721 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { PageChrome } from "../../components/PageChrome";
+import { BpToolbar } from "../../components/bp/BpToolbar";
+import { apiGet } from "../../api/client";
+
+/* ============================================================================
+ * 类型定义
+ * ========================================================================== */
+
+type EventStatus = "active" | "draft" | "paused";
 
 type EventItem = {
   id: string;
-  trigger: string;
-  action: string;
-  targetVar: string;
+  name: string;
+  description?: string;
+  triggerId: string;
+  actionId: string;
+  params: Record<string, string>;
+  status: EventStatus;
   idempotent: boolean;
   idempotencyKey?: string;
   isNew?: boolean;
 };
 
-const INITIAL_EVENTS: EventItem[] = [
-  { id: "e1", trigger: "表格行选中 onSelect", action: "写入变量", targetVar: "selectedWorkOrderId", idempotent: true },
-  { id: "e2", trigger: "按钮「派单」onClick", action: "调用 Action", targetVar: "assignWorkOrder", idempotent: true, idempotencyKey: "idempotencyKey" },
-  { id: "e3", trigger: "筛选器 onChange", action: "刷新数据集", targetVar: "inboxFilter", idempotent: false },
+type TriggerId =
+  | "pageLoad"
+  | "dataChange"
+  | "timer"
+  | "userAction"
+  | "apiCallback"
+  | "manual";
+
+type ActionId =
+  | "showMessage"
+  | "navigate"
+  | "callApi"
+  | "updateData"
+  | "sendNotification";
+
+/* ============================================================================
+ * 常量 & 纯函数（便于测试）
+ * ========================================================================== */
+
+/** 6 个触发器卡片（单选） */
+export const TRIGGERS: { id: TriggerId; name: string; icon: string; desc: string }[] = [
+  { id: "pageLoad", name: "页面加载", icon: "🕐", desc: "页面首次渲染完成时触发" },
+  { id: "dataChange", name: "数据变更", icon: "📊", desc: "绑定的数据集发生变化时触发" },
+  { id: "timer", name: "定时触发", icon: "⏰", desc: "按固定时间间隔自动触发" },
+  { id: "userAction", name: "用户操作", icon: "🖱", desc: "点击、输入、选择等用户行为" },
+  { id: "apiCallback", name: "API 回调", icon: "🔌", desc: "外部 API 请求完成时回调" },
+  { id: "manual", name: "手动触发", icon: "✋", desc: "用户主动点击按钮触发" },
 ];
 
-const TRIGGER_OPTIONS = [
-  { id: "onPageLoad", name: "onPageLoad", icon: "🕐", desc: "页面首次渲染时触发" },
-  { id: "onRowClick", name: "onRowClick", icon: "🖱", desc: "表格行点击时触发" },
-  { id: "onWidgetClick", name: "onWidgetClick", icon: "📊", desc: "Widget 点击时触发" },
-  { id: "onFilterChange", name: "onFilterChange", icon: "🔍", desc: "筛选器值变化时触发" },
-  { id: "onTimer", name: "onTimer", icon: "⏰", desc: "定时触发（间隔可配）" },
-  { id: "onCustom", name: "自定义事件", icon: "⚙", desc: "监听其他 Module 发出的事件" },
+/** 5 个动作卡片（单选） */
+export const ACTIONS: { id: ActionId; name: string; icon: string; desc: string; color: string }[] = [
+  { id: "showMessage", name: "显示消息", icon: "💬", desc: "Toast 提示 / Alert 弹窗", color: "blue" },
+  { id: "navigate", name: "跳转页面", icon: "🔀", desc: "导航到其他 Module / 外部链接", color: "purple" },
+  { id: "callApi", name: "调用 API", icon: "⚡", desc: "执行 Ontology Action 或接口", color: "green" },
+  { id: "updateData", name: "更新数据", icon: "📝", desc: "写入/修改变量或数据集", color: "yellow" },
+  { id: "sendNotification", name: "发送通知", icon: "📡", desc: "邮件 / 站内信 / Webhook", color: "red" },
 ];
 
-const ACTION_OPTIONS = [
-  { id: "write_variable", name: "写入变量", icon: "📝", desc: "将触发器数据写入指定变量", color: "blue" },
-  { id: "call_action", name: "调用 Action", icon: "⚡", desc: "触发 Ontology Action（如 assignWorkOrder）", color: "green" },
-  { id: "refresh_dataset", name: "刷新数据集", icon: "🔄", desc: "重新加载绑定的 ObjectSet 或数据查询", color: "yellow" },
-  { id: "navigate", name: "导航", icon: "🔀", desc: "跳转到其他 Module 或外部链接", color: "purple" },
-  { id: "open_modal", name: "打开模态框", icon: "🔲", desc: "弹出指定模态框组件", color: "red" },
-  { id: "emit_event", name: "发送事件", icon: "📡", desc: "向其他 Module 发出跨组件事件", color: "indigo" },
-];
-
-const WIDGET_OPTIONS = [
-  { value: "w_table_orders", label: "w_table_orders（订单表格）" },
-  { value: "w_chart_revenue", label: "w_chart_revenue（收入图表）" },
-  { value: "w_filter_country", label: "w_filter_country（国家筛选器）" },
-  { value: "w_button_assign", label: "w_button_assign（派单按钮）" },
-  { value: "global", label: "全局（不绑定特定 Widget）" },
-];
-
-const ACTION_LABELS: Record<string, string> = {
-  write_variable: "写入变量",
-  call_action: "调用 Action",
-  refresh_dataset: "刷新数据集",
-  navigate: "导航",
-  open_modal: "打开模态框",
-  emit_event: "发送事件",
+/** 触发器 ID → 中文标签 */
+export const TRIGGER_LABEL: Record<TriggerId, string> = {
+  pageLoad: "页面加载",
+  dataChange: "数据变更",
+  timer: "定时触发",
+  userAction: "用户操作",
+  apiCallback: "API 回调",
+  manual: "手动触发",
 };
 
+/** 动作 ID → 中文标签 */
+export const ACTION_LABEL: Record<ActionId, string> = {
+  showMessage: "显示消息",
+  navigate: "跳转页面",
+  callApi: "调用 API",
+  updateData: "更新数据",
+  sendNotification: "发送通知",
+};
+
+/** 状态 ID → 中文标签 + 颜色 */
+export const STATUS_META: Record<EventStatus, { label: string; bg: string; color: string }> = {
+  active: { label: "运行中", bg: "#D1FAE5", color: "#065F47" },
+  draft: { label: "草稿", bg: "#FEF3C7", color: "#92400E" },
+  paused: { label: "已暂停", bg: "#F3F4F6", color: "#6B7280" },
+};
+
+/** 根据触发器 + 动作组合，生成动态参数字段定义（纯函数，便于测试）*/
+export type ParamField = {
+  key: string;
+  label: string;
+  placeholder: string;
+  required: boolean;
+  type: "text" | "number" | "select";
+  options?: { value: string; label: string }[];
+};
+
+export function getParamFields(triggerId: TriggerId | null, actionId: ActionId | null): ParamField[] {
+  const fields: ParamField[] = [];
+
+  /* 触发器相关参数 */
+  if (triggerId === "timer") {
+    fields.push({ key: "interval", label: "触发间隔（秒）", placeholder: "60", required: true, type: "number" });
+  }
+  if (triggerId === "userAction") {
+    fields.push({
+      key: "eventType",
+      label: "用户事件类型",
+      placeholder: "",
+      required: true,
+      type: "select",
+      options: [
+        { value: "click", label: "click（点击）" },
+        { value: "change", label: "change（值变化）" },
+        { value: "submit", label: "submit（提交）" },
+      ],
+    });
+    fields.push({ key: "widgetId", label: "绑定 Widget", placeholder: "w_button_assign", required: true, type: "text" });
+  }
+  if (triggerId === "apiCallback") {
+    fields.push({ key: "apiEndpoint", label: "API 端点", placeholder: "/v1/orders/{id}/assign", required: true, type: "text" });
+  }
+
+  /* 动作相关参数 */
+  if (actionId === "showMessage") {
+    fields.push({
+      key: "messageType",
+      label: "消息类型",
+      placeholder: "",
+      required: true,
+      type: "select",
+      options: [
+        { value: "toast", label: "Toast 轻提示" },
+        { value: "alert", label: "Alert 弹窗" },
+        { value: "banner", label: "Banner 横幅" },
+      ],
+    });
+    fields.push({ key: "messageContent", label: "消息内容", placeholder: "订单已创建", required: true, type: "text" });
+  }
+  if (actionId === "navigate") {
+    fields.push({ key: "targetRoute", label: "目标路由", placeholder: "/orders/{row.id}", required: true, type: "text" });
+    fields.push({
+      key: "openIn",
+      label: "打开方式",
+      placeholder: "",
+      required: false,
+      type: "select",
+      options: [
+        { value: "self", label: "当前页" },
+        { value: "tab", label: "新标签页" },
+        { value: "modal", label: "模态框" },
+      ],
+    });
+  }
+  if (actionId === "callApi") {
+    fields.push({ key: "apiAction", label: "Action 标识", placeholder: "assignWorkOrder", required: true, type: "text" });
+    fields.push({ key: "payload", label: "请求参数（JSON）", placeholder: '{"orderId": "${row.id}"}', required: false, type: "text" });
+  }
+  if (actionId === "updateData") {
+    fields.push({ key: "targetVar", label: "目标变量", placeholder: "selectedWorkOrderId", required: true, type: "text" });
+    fields.push({ key: "valueExpr", label: "赋值表达式", placeholder: "${row.id} 或固定值", required: true, type: "text" });
+  }
+  if (actionId === "sendNotification") {
+    fields.push({
+      key: "channel",
+      label: "通知渠道",
+      placeholder: "",
+      required: true,
+      type: "select",
+      options: [
+        { value: "email", label: "邮件" },
+        { value: "inApp", label: "站内信" },
+        { value: "webhook", label: "Webhook" },
+      ],
+    });
+    fields.push({ key: "recipient", label: "接收方", placeholder: "ops-team 或 user@com", required: true, type: "text" });
+  }
+
+  return fields;
+}
+
+/** 根据参数生成幂等键（纯函数，便于测试 · 对齐 ACT-07）*/
+export function buildIdempotencyKey(
+  actionId: ActionId | null,
+  widgetId?: string,
+  params?: Record<string, string>,
+): string {
+  if (!actionId) return "";
+  const base = actionId;
+  const widget = widgetId || "global";
+  const paramHash = params
+    ? Object.values(params).join("_").slice(0, 16)
+    : "";
+  return `${base}:${widget}:${paramHash || "auto"}`;
+}
+
+/** 校验向导每一步是否可继续（纯函数，便于测试）*/
+export function canProceed(
+  step: number,
+  data: { name: string; triggerId: TriggerId | null; actionId: ActionId | null; params: Record<string, string> },
+): boolean {
+  if (step === 1) return data.name.trim().length > 0;
+  if (step === 2) return data.triggerId !== null;
+  if (step === 3) return data.actionId !== null;
+  if (step === 4) {
+    const fields = getParamFields(data.triggerId, data.actionId);
+    return fields.every((f) => !f.required || (data.params[f.key] || "").trim().length > 0);
+  }
+  return true;
+}
+
+export const MOCK_EVENTS: EventItem[] = [
+  {
+    id: "e1",
+    name: "选中订单写入变量",
+    description: "表格行选中时，将 orderId 写入全局变量",
+    triggerId: "userAction",
+    actionId: "updateData",
+    params: { eventType: "click", widgetId: "w_table_orders", targetVar: "selectedWorkOrderId", valueExpr: "${row.id}" },
+    status: "active",
+    idempotent: true,
+    idempotencyKey: "updateData:w_table_orders:click_${row.id}",
+  },
+  {
+    id: "e2",
+    name: "派单按钮调用 Action",
+    description: "点击派单按钮触发 assignWorkOrder",
+    triggerId: "userAction",
+    actionId: "callApi",
+    params: { eventType: "click", widgetId: "w_button_assign", apiAction: "assignWorkOrder", payload: '{"orderId":"${selectedWorkOrderId}"}' },
+    status: "active",
+    idempotent: true,
+    idempotencyKey: "callApi:w_button_assign:assignWorkOrder",
+  },
+  {
+    id: "e3",
+    name: "筛选器变更刷新数据",
+    description: "国家筛选器变化时刷新订单数据集",
+    triggerId: "dataChange",
+    actionId: "updateData",
+    params: { targetVar: "inboxFilter", valueExpr: "${filter.value}" },
+    status: "active",
+    idempotent: false,
+  },
+];
+
+/* ============================================================================
+ * Page Component
+ * ========================================================================== */
+
 export function EventsPage() {
-  const [events, setEvents] = useState<EventItem[]>(INITIAL_EVENTS);
-  const [showModal, setShowModal] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [selectedTrigger, setSelectedTrigger] = useState<string | null>(null);
-  const [selectedAction, setSelectedAction] = useState<string | null>(null);
-  const [selectedWidget, setSelectedWidget] = useState("");
-  const [actionParam, setActionParam] = useState("");
-  const [targetVar, setTargetVar] = useState("");
+  const [events, setEvents] = useState<EventItem[]>(MOCK_EVENTS);
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  /* 向导状态 */
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [step, setStep] = useState(1);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [triggerId, setTriggerId] = useState<TriggerId | null>(null);
+  const [actionId, setActionId] = useState<ActionId | null>(null);
+  const [params, setParams] = useState<Record<string, string>>({});
   const [enableIdempotency, setEnableIdempotency] = useState(true);
   const [idempotencyKey, setIdempotencyKey] = useState("");
 
-  function openModal() {
-    setShowModal(true);
-    setCurrentStep(1);
-    setSelectedTrigger(null);
-    setSelectedAction(null);
-    setSelectedWidget("");
-    setActionParam("");
-    setTargetVar("");
+  /* GET /v1/modules/:id/events —— 失败用 MOCK_EVENTS */
+  useEffect(() => {
+    let cancelled = false;
+    const moduleId = "order-mgmt";
+    (async () => {
+      try {
+        const res = await apiGet<{ items?: Array<Partial<EventItem>> }>(`/v1/modules/${moduleId}/events`);
+        if (cancelled) return;
+        if (res.items && res.items.length) {
+          const mapped: EventItem[] = res.items.map((it, idx) => ({
+            id: it.id || `e_${idx}`,
+            name: it.name || `事件 ${idx + 1}`,
+            description: it.description || "",
+            triggerId: (it.triggerId as TriggerId) || "pageLoad",
+            actionId: (it.actionId as ActionId) || "showMessage",
+            params: it.params || {},
+            status: (it.status as EventStatus) || "draft",
+            idempotent: it.idempotent ?? false,
+            idempotencyKey: it.idempotencyKey,
+          }));
+          setEvents(mapped);
+        }
+      } catch {
+        /* 降级到 MOCK_EVENTS（初始值）*/
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return events;
+    const q = query.toLowerCase();
+    return events.filter(
+      (e) => e.name.toLowerCase().includes(q) || (e.description || "").toLowerCase().includes(q),
+    );
+  }, [events, query]);
+
+  function openWizard() {
+    setWizardOpen(true);
+    setStep(1);
+    setName("");
+    setDescription("");
+    setTriggerId(null);
+    setActionId(null);
+    setParams({});
     setEnableIdempotency(true);
     setIdempotencyKey("");
   }
 
-  function closeModal() {
-    setShowModal(false);
+  function closeWizard() {
+    setWizardOpen(false);
   }
 
-  function canGoNext() {
-    if (currentStep === 1) return selectedTrigger !== null;
-    if (currentStep === 2) return selectedAction !== null;
-    return true;
+  function canNext() {
+    return canProceed(step, { name, triggerId, actionId, params });
   }
 
   function nextStep() {
-    if (!canGoNext()) return;
-    setCurrentStep((s) => Math.min(s + 1, 3));
+    if (!canNext()) return;
+    setStep((s) => Math.min(s + 1, 5));
   }
 
   function prevStep() {
-    setCurrentStep((s) => Math.max(s - 1, 1));
+    setStep((s) => Math.max(s - 1, 1));
   }
 
-  function confirmAdd() {
-    if (!selectedTrigger || !selectedAction) return;
+  function confirmCreate() {
+    const key = enableIdempotency
+      ? (idempotencyKey || buildIdempotencyKey(actionId, params.widgetId, params))
+      : undefined;
     const newEvent: EventItem = {
       id: `e_${Date.now()}`,
-      trigger: selectedTrigger,
-      action: ACTION_LABELS[selectedAction] || selectedAction,
-      targetVar: targetVar || "—",
+      name: name.trim(),
+      description: description.trim(),
+      triggerId: triggerId!,
+      actionId: actionId!,
+      params,
+      status: "draft",
       idempotent: enableIdempotency,
-      idempotencyKey: enableIdempotency ? (idempotencyKey || "idempotencyKey") : undefined,
+      idempotencyKey: key,
       isNew: true,
     };
     setEvents((prev) => [...prev, newEvent]);
-    closeModal();
+    closeWizard();
   }
 
-  const actionParamPlaceholders: Record<string, string> = {
-    write_variable: "变量名，如 selectedWorkOrderId",
-    call_action: "Action ID，如 assignWorkOrder",
-    refresh_dataset: "数据集标识，如 covid_cases_dataset",
-    navigate: "目标路由，如 /orders/{row.id}",
-    open_modal: "模态框 ID，如 orderDetailModal",
-    emit_event: "事件名，如 page:loaded",
-  };
+  function toggleStatus(id: string) {
+    setEvents((prev) =>
+      prev.map((e) =>
+        e.id === id ? { ...e, status: e.status === "active" ? "paused" : "active" } : e,
+      ),
+    );
+  }
+
+  function deleteEvent(id: string) {
+    setEvents((prev) => prev.filter((e) => e.id !== id));
+  }
+
+  /* 动态参数字段（step 4 用）*/
+  const paramFields = useMemo(() => getParamFields(triggerId, actionId), [triggerId, actionId]);
 
   return (
-    <PageChrome title="Events 配置面板" lede="Widget 事件绑定、变量写入与幂等键配置。">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">Events 配置面板</h1>
-          <p className="mt-1 text-sm text-gray-500">Widget 事件绑定、变量写入与幂等键配置。</p>
+    <PageChrome title="事件配置" lede="Widget 事件绑定、触发器与动作配置 · 5 步创建向导">
+      <div className="st-page">
+        <div className="vr-header">
+          <div>
+            <h1>事件配置</h1>
+            <p>Widget 事件绑定、触发器与动作配置 · 5 步创建向导</p>
+          </div>
         </div>
 
-        <div className="rounded-xl border border-blue-600/25 bg-white overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-900">已注册事件</span>
-            <button
-              type="button"
-              className="text-xs text-blue-600 hover:text-blue-700 cursor-pointer bg-transparent border-none"
-              onClick={openModal}
-            >
-              + 添加事件
+        <BpToolbar
+          search={{ value: query, onChange: setQuery, placeholder: "搜索事件…" }}
+          actions={
+            <button className="p-btn p-btn-primary p-btn-sm" onClick={openWizard}>
+              + 新建事件
             </button>
+          }
+          count={events.length}
+        />
+
+        {/* === 上半区：事件列表表格 === */}
+        <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #E5E7EB", marginTop: 16, overflow: "hidden" }}>
+          <div style={{ padding: "12px 16px", borderBottom: "1px solid #F3F4F6", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>已注册事件（{filtered.length}）</span>
+            {loading && <span style={{ fontSize: 11, color: "#9CA3AF" }}>加载中…</span>}
           </div>
-          <table className="w-full text-sm">
-            <thead className="text-xs text-gray-500 uppercase bg-[rgba(11,14,23,0.5)]">
-              <tr>
-                <th className="text-left px-4 py-2 font-medium">触发器</th>
-                <th className="text-left px-4 py-2 font-medium">动作</th>
-                <th className="text-left px-4 py-2 font-medium">目标变量</th>
-                <th className="text-left px-4 py-2 font-medium">幂等</th>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: "2px solid #E5E7EB", background: "#FAFAFA" }}>
+                <th style={{ textAlign: "left", padding: "10px 16px", fontSize: 11, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>事件名</th>
+                <th style={{ textAlign: "left", padding: "10px 16px", fontSize: 11, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>触发器</th>
+                <th style={{ textAlign: "left", padding: "10px 16px", fontSize: 11, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>动作</th>
+                <th style={{ textAlign: "left", padding: "10px 16px", fontSize: 11, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>状态</th>
+                <th style={{ textAlign: "right", padding: "10px 16px", fontSize: 11, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>操作</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {events.map((e) => (
-                <tr key={e.id} style={e.isNew ? { background: "#EFF6FF" } : undefined}>
-                  <td className="px-4 py-3 text-gray-900">
-                    {e.trigger}
-                    {e.isNew && (
-                      <span style={{ fontSize: 9, background: "#DBEAFE", color: "#1E40AF", padding: "1px 4px", borderRadius: 3, marginLeft: 6 }}>
-                        新增
+            <tbody>
+              {filtered.map((e) => {
+                const sm = STATUS_META[e.status];
+                return (
+                  <tr key={e.id} style={{ borderBottom: "1px solid #F3F4F6", background: e.isNew ? "#EFF6FF" : undefined }}>
+                    <td style={{ padding: "12px 16px" }}>
+                      <div style={{ fontWeight: 500, color: "#111827" }}>
+                        {e.name}
+                        {e.isNew && (
+                          <span style={{ fontSize: 9, background: "#DBEAFE", color: "#1E40AF", padding: "1px 4px", borderRadius: 2, marginLeft: 6 }}>新增</span>
+                        )}
+                      </div>
+                      {e.description && <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>{e.description}</div>}
+                    </td>
+                    <td style={{ padding: "12px 16px" }}>
+                      <span style={{ fontSize: 12, color: "#3B82F6" }}>{TRIGGER_LABEL[e.triggerId]}</span>
+                    </td>
+                    <td style={{ padding: "12px 16px" }}>
+                      <span style={{ fontSize: 12, color: "#10B981" }}>{ACTION_LABEL[e.actionId]}</span>
+                      {e.idempotent && (
+                        <span style={{ fontSize: 9, background: "#FEF3C7", color: "#92400E", padding: "1px 4px", borderRadius: 2, marginLeft: 4 }} title={e.idempotencyKey}>
+                          幂等
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ padding: "12px 16px" }}>
+                      <span style={{ background: sm.bg, color: sm.color, padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 500 }}>
+                        {sm.label}
                       </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-blue-600">{e.action}</td>
-                  <td className="px-4 py-3 font-mono text-xs">{e.targetVar}</td>
-                  <td className="px-4 py-3 text-xs">
-                    {e.idempotent ? (
-                      <span style={{ color: "#10B981" }}>
-                        ● {e.idempotencyKey || "已启用"}
-                      </span>
-                    ) : (
-                      <span style={{ color: "#9CA3AF" }}>—</span>
-                    )}
+                    </td>
+                    <td style={{ padding: "12px 16px", textAlign: "right" }}>
+                      <button
+                        onClick={() => toggleStatus(e.id)}
+                        style={{
+                          fontSize: 11,
+                          color: e.status === "active" ? "#9CA3AF" : "#10B981",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          marginRight: 8,
+                        }}
+                      >
+                        {e.status === "active" ? "暂停" : "启用"}
+                      </button>
+                      <button
+                        onClick={() => deleteEvent(e.id)}
+                        style={{
+                          fontSize: 11,
+                          color: "#EF4444",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                        }}
+                      >
+                        删除
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ padding: 32, textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
+                    {loading ? "加载事件列表中…" : "暂无事件，点击右上角「+ 新建事件」创建"}
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
 
-        <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-xs">
-          <span className="text-yellow-700 font-medium">幂等护栏：</span>
-          <span className="text-gray-500">写操作事件须配置 idempotencyKey，防止双击重复提交（对齐 ACT-07）。</span>
+        {/* 幂等护栏提示 */}
+        <div style={{ marginTop: 12, padding: 12, borderRadius: 8, background: "#FFFBEB", border: "1px solid #FDE68A", fontSize: 12 }}>
+          <strong style={{ color: "#92400E" }}>幂等护栏（ACT-07）：</strong>
+          <span style={{ color: "#78350F" }}>写操作事件（调用 API / 更新数据）须配置幂等键，防止双击或重试导致重复提交。</span>
         </div>
-      </div>
 
-      {showModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 100,
-            background: "rgba(0,0,0,0.3)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closeModal();
-          }}
-        >
+        {/* === 下半区：5 步创建向导 === */}
+        {wizardOpen && (
           <div
             style={{
+              marginTop: 16,
               background: "#fff",
-              borderRadius: 12,
-              width: 640,
-              maxWidth: "90vw",
-              maxHeight: "85vh",
-              display: "flex",
-              flexDirection: "column",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+              borderRadius: 8,
+              border: "1px solid #E5E7EB",
+              overflow: "hidden",
             }}
           >
-            <div style={{ padding: "16px 24px", borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            {/* 向导头部 */}
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>添加事件绑定</div>
-                <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>选择触发器 → 配置动作 → 绑定变量 → 设置幂等键</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>创建事件绑定 · 5 步向导</div>
+                <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>名称 → 触发器 → 动作 → 参数 → 确认</div>
               </div>
-              <button
-                onClick={closeModal}
-                style={{
-                  width: 28,
-                  height: 28,
-                  border: "none",
-                  background: "none",
-                  cursor: "pointer",
-                  color: "#6B7280",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 4,
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                  <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
+              <button onClick={closeWizard} style={{ background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", fontSize: 16 }}>✕</button>
             </div>
 
-            <div style={{ padding: "12px 24px", borderBottom: "1px solid #F3F4F6", display: "flex", alignItems: "center", gap: 6 }}>
-              {[1, 2, 3].map((step, idx) => {
-                const labels = ["触发器", "动作", "变量与幂等"];
-                const isActive = currentStep >= step;
+            {/* 步骤指示器 */}
+            <div style={{ padding: "12px 20px", borderBottom: "1px solid #F3F4F6", display: "flex", alignItems: "center", gap: 4 }}>
+              {[
+                { n: 1, label: "名称" },
+                { n: 2, label: "触发器" },
+                { n: 3, label: "动作" },
+                { n: 4, label: "参数" },
+                { n: 5, label: "确认" },
+              ].map((s, idx) => {
+                const isActive = step >= s.n;
                 return (
-                  <div key={step} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span
-                      style={{
-                        width: 20,
-                        height: 20,
-                        borderRadius: "50%",
-                        background: isActive ? "#3B82F6" : "#E5E7EB",
-                        color: isActive ? "#fff" : "#6B7280",
-                        fontSize: 10,
-                        fontWeight: 600,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {step}
+                  <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <span style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      background: isActive ? "#3B82F6" : "#E5E7EB",
+                      color: isActive ? "#fff" : "#9CA3AF",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}>
+                      {step > s.n ? "✓" : s.n}
                     </span>
-                    <span style={{ fontSize: 11, color: isActive ? "#3B82F6" : "#9CA3AF", fontWeight: isActive ? 500 : 400 }}>
-                      {labels[idx]}
+                    <span style={{
+                      fontSize: 11,
+                      color: isActive ? "#3B82F6" : "#9CA3AF",
+                      fontWeight: step === s.n ? 600 : 400,
+                      marginRight: 4,
+                    }}>
+                      {s.label}
                     </span>
-                    {step < 3 && <span style={{ color: "#D1D5DB", fontSize: 10 }}>─</span>}
+                    {idx < 4 && <span style={{ color: "#D1D5DB", fontSize: 10 }}>→</span>}
                   </div>
                 );
               })}
             </div>
 
-            <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
-              {currentStep === 1 && (
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 12 }}>选择触发器类型</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                    {TRIGGER_OPTIONS.map((t) => (
-                      <div
-                        key={t.id}
-                        onClick={() => setSelectedTrigger(t.id)}
-                        style={{
-                          padding: 12,
-                          borderRadius: 8,
-                          border: `1.5px solid ${selectedTrigger === t.id ? "#3B82F6" : "#E5E7EB"}`,
-                          cursor: "pointer",
-                          transition: "all 0.15s",
-                          background: selectedTrigger === t.id ? "#EFF6FF" : "#fff",
-                        }}
-                      >
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                          <span style={{ fontSize: 16 }}>{t.icon}</span>
-                          <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>{t.name}</span>
-                        </div>
-                        <div style={{ fontSize: 10, color: "#6B7280" }}>{t.desc}</div>
-                      </div>
-                    ))}
+            {/* 步骤内容 */}
+            <div style={{ padding: "20px", minHeight: 240 }}>
+              {/* Step 1：事件名称 + 描述 */}
+              {step === 1 && (
+                <div className="space-y-4">
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
+                      事件名称 <span style={{ color: "#EF4444" }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="如：选中订单写入变量"
+                      style={inputStyle(name.trim().length === 0)}
+                      autoFocus
+                    />
                   </div>
-
-                  {selectedTrigger && (
-                    <div style={{ marginTop: 16 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6 }}>绑定 Widget</div>
-                      <select
-                        value={selectedWidget}
-                        onChange={(e) => setSelectedWidget(e.target.value)}
-                        style={{
-                          width: "100%",
-                          padding: "8px 10px",
-                          border: "1px solid #D1D5DB",
-                          borderRadius: 6,
-                          fontSize: 12,
-                          color: "#374151",
-                          background: "#fff",
-                        }}
-                      >
-                        <option value="">选择 Widget...</option>
-                        {WIDGET_OPTIONS.map((w) => (
-                          <option key={w.value} value={w.value}>{w.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>描述（选填）</label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="说明这个事件的作用…"
+                      style={{ ...inputStyle(false), minHeight: 60, resize: "vertical" }}
+                    />
+                  </div>
                 </div>
               )}
 
-              {currentStep === 2 && (
+              {/* Step 2：选择触发器（6 卡片单选）*/}
+              {step === 2 && (
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 12 }}>选择动作类型</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {ACTION_OPTIONS.map((a) => (
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 12 }}>选择触发器（单选）</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                    {TRIGGERS.map((t) => (
+                      <div
+                        key={t.id}
+                        onClick={() => setTriggerId(t.id)}
+                        style={{
+                          padding: 14,
+                          borderRadius: 8,
+                          border: `1.5px solid ${triggerId === t.id ? "#3B82F6" : "#E5E7EB"}`,
+                          background: triggerId === t.id ? "#EFF6FF" : "#fff",
+                          cursor: "pointer",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                          <span style={{ fontSize: 18 }}>{t.icon}</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: triggerId === t.id ? "#3B82F6" : "#111827" }}>{t.name}</span>
+                          {triggerId === t.id && <span style={{ marginLeft: "auto", color: "#3B82F6", fontSize: 14 }}>●</span>}
+                        </div>
+                        <div style={{ fontSize: 11, color: "#6B7280" }}>{t.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3：选择动作（5 卡片单选）*/}
+              {step === 3 && (
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 12 }}>选择动作（单选）</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {ACTIONS.map((a) => (
                       <div
                         key={a.id}
-                        onClick={() => setSelectedAction(a.id)}
+                        onClick={() => setActionId(a.id)}
                         style={{
-                          padding: "10px 12px",
+                          padding: 12,
                           borderRadius: 8,
-                          border: `1.5px solid ${selectedAction === a.id ? "#10B981" : "#E5E7EB"}`,
+                          border: `1.5px solid ${actionId === a.id ? "#10B981" : "#E5E7EB"}`,
+                          background: actionId === a.id ? "#ECFDF5" : "#fff",
                           cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
                           gap: 10,
-                          background: selectedAction === a.id ? "#ECFDF5" : "#fff",
                         }}
                       >
-                        <span
-                          style={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: 6,
-                            background: a.color === "blue" ? "#EFF6FF" :
-                              a.color === "green" ? "#ECFDF5" :
-                              a.color === "yellow" ? "#FFFBEB" :
-                              a.color === "purple" ? "#F3E8FF" :
-                              a.color === "red" ? "#FEE2E2" : "#E0E7FF",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 14,
-                          }}
-                        >
+                        <span style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 6,
+                          background: actionBg(a.color),
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 16,
+                        }}>
                           {a.icon}
                         </span>
-                        <div>
-                          <div style={{ fontSize: 12, fontWeight: 500, color: "#374151" }}>{a.name}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: actionId === a.id ? "#10B981" : "#111827" }}>{a.name}</div>
                           <div style={{ fontSize: 10, color: "#6B7280" }}>{a.desc}</div>
                         </div>
+                        {actionId === a.id && <span style={{ color: "#10B981", fontSize: 14 }}>●</span>}
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
 
-                  {selectedAction && (
-                    <div style={{ marginTop: 16 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6 }}>动作参数</div>
+              {/* Step 4：动态参数表单 */}
+              {step === 4 && (
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 12 }}>
+                    动态参数配置
+                    <span style={{ marginLeft: 8, fontSize: 11, color: "#9CA3AF" }}>
+                      （基于「{TRIGGER_LABEL[triggerId!]}」+「{ACTION_LABEL[actionId!]}」生成）
+                    </span>
+                  </div>
+
+                  {paramFields.length === 0 ? (
+                    <div style={{ padding: 20, textAlign: "center", color: "#9CA3AF", fontSize: 12 }}>
+                      当前触发器 + 动作组合无需额外参数
+                    </div>
+                  ) : (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                      {paramFields.map((f) => (
+                        <div key={f.key}>
+                          <label style={{ fontSize: 12, fontWeight: 500, color: "#374151", display: "block", marginBottom: 4 }}>
+                            {f.label} {f.required && <span style={{ color: "#EF4444" }}>*</span>}
+                          </label>
+                          {f.type === "select" ? (
+                            <select
+                              value={params[f.key] || ""}
+                              onChange={(e) => setParams((p) => ({ ...p, [f.key]: e.target.value }))}
+                              style={inputStyle(false)}
+                            >
+                              <option value="">请选择…</option>
+                              {f.options!.map((o) => (
+                                <option key={o.value} value={o.value}>{o.label}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              type={f.type === "number" ? "number" : "text"}
+                              value={params[f.key] || ""}
+                              onChange={(e) => setParams((p) => ({ ...p, [f.key]: e.target.value }))}
+                              placeholder={f.placeholder}
+                              style={inputStyle(f.required && !(params[f.key] || "").trim())}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 幂等键配置（写操作必填）*/}
+                  {(actionId === "callApi" || actionId === "updateData") && (
+                    <div style={{ marginTop: 16, padding: 12, borderRadius: 8, background: "#FFFBEB", border: "1px solid #FDE68A" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                        <input
+                          type="checkbox"
+                          checked={enableIdempotency}
+                          onChange={(e) => setEnableIdempotency(e.target.checked)}
+                          style={{ accentColor: "#F59E0B", width: 14, height: 14 }}
+                        />
+                        <label style={{ fontSize: 12, fontWeight: 600, color: "#92400E", cursor: "pointer" }}>
+                          启用幂等键（写操作推荐）
+                        </label>
+                      </div>
                       <input
                         type="text"
-                        value={actionParam}
-                        onChange={(e) => setActionParam(e.target.value)}
-                        placeholder={actionParamPlaceholders[selectedAction] || ""}
+                        value={idempotencyKey}
+                        onChange={(e) => setIdempotencyKey(e.target.value)}
+                        placeholder={buildIdempotencyKey(actionId, params.widgetId, params)}
+                        disabled={!enableIdempotency}
                         style={{
-                          width: "100%",
-                          padding: "8px 10px",
-                          border: "1px solid #D1D5DB",
-                          borderRadius: 6,
-                          fontSize: 12,
+                          ...inputStyle(false),
                           fontFamily: "monospace",
+                          fontSize: 11,
+                          background: enableIdempotency ? "#FFFEF7" : "#F3F4F6",
+                          opacity: enableIdempotency ? 1 : 0.5,
                         }}
                       />
                     </div>
@@ -385,163 +723,127 @@ export function EventsPage() {
                 </div>
               )}
 
-              {currentStep === 3 && (
+              {/* Step 5：预览确认 */}
+              {step === 5 && (
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 12 }}>目标变量</div>
-                  <input
-                    type="text"
-                    value={targetVar}
-                    onChange={(e) => setTargetVar(e.target.value)}
-                    placeholder="如 selectedWorkOrderId / inboxFilter"
-                    style={{
-                      width: "100%",
-                      padding: "8px 10px",
-                      border: "1px solid #D1D5DB",
-                      borderRadius: 6,
-                      fontSize: 12,
-                      fontFamily: "monospace",
-                      marginBottom: 16,
-                    }}
-                  />
-
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6 }}>幂等键配置 (ACT-07)</div>
-                  <div style={{ padding: 10, borderRadius: 8, background: "#FFFBEB", border: "1px solid #FDE68A", marginBottom: 8 }}>
-                    <div style={{ fontSize: 10, color: "#92400E", lineHeight: 1.5 }}>
-                      <strong>幂等护栏：</strong>写操作事件必须配置幂等键，防止双击或重试导致重复提交。
-                      幂等键格式：<code style={{ background: "#FEF3C7", padding: "1px 4px", borderRadius: 2 }}>{`{action}:{widgetId}:{paramHash}`}</code>
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                    <input
-                      type="checkbox"
-                      checked={enableIdempotency}
-                      onChange={(e) => setEnableIdempotency(e.target.checked)}
-                      style={{ accentColor: "#F59E0B", width: 14, height: 14 }}
-                    />
-                    <label style={{ fontSize: 11, color: "#374151", cursor: "pointer" }}>启用幂等键（推荐：写操作必开）</label>
-                  </div>
-                  <input
-                    type="text"
-                    value={idempotencyKey}
-                    onChange={(e) => setIdempotencyKey(e.target.value)}
-                    placeholder="如 assignWorkOrder:{rowId}:{timestamp}"
-                    disabled={!enableIdempotency}
-                    style={{
-                      width: "100%",
-                      padding: "8px 10px",
-                      border: "1px solid #D1D5DB",
-                      borderRadius: 6,
-                      fontSize: 11,
-                      fontFamily: "monospace",
-                      background: enableIdempotency ? "#FAFBFC" : "#F3F4F6",
-                      opacity: enableIdempotency ? 1 : 0.5,
-                    }}
-                  />
-
-                  <div style={{ marginTop: 16 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6 }}>事件预览</div>
-                    <div
-                      style={{
-                        padding: 12,
-                        borderRadius: 8,
-                        background: "#F9FAFB",
-                        border: "1px solid #E5E7EB",
-                        fontSize: 11,
-                        fontFamily: "monospace",
-                        color: "#374151",
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      <div>触发器: <span style={{ color: "#3B82F6", fontWeight: 600 }}>{selectedTrigger || "(未选择)"}</span></div>
-                      <div>Widget: <span style={{ color: "#374151" }}>{selectedWidget || "(未绑定)"}</span></div>
-                      <div>动作: <span style={{ color: "#10B981", fontWeight: 600 }}>{ACTION_LABELS[selectedAction || ""] || "(未选择)"}</span></div>
-                      <div>参数: <span style={{ color: "#374151" }}>{actionParam || "(未配置)"}</span></div>
-                      <div>目标变量: <span style={{ color: "#374151" }}>{targetVar || "(未配置)"}</span></div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 12 }}>事件配置摘要</div>
+                  <div style={{
+                    padding: 16,
+                    borderRadius: 8,
+                    background: "#F9FAFB",
+                    border: "1px solid #E5E7EB",
+                    fontSize: 12,
+                    lineHeight: 1.8,
+                  }}>
+                    <div><strong style={{ color: "#374151", display: "inline-block", width: 100 }}>事件名称：</strong><span style={{ color: "#111827", fontWeight: 600 }}>{name}</span></div>
+                    {description && <div><strong style={{ color: "#374151", display: "inline-block", width: 100 }}>描述：</strong><span style={{ color: "#6B7280" }}>{description}</span></div>}
+                    <div><strong style={{ color: "#374151", display: "inline-block", width: 100 }}>触发器：</strong><span style={{ color: "#3B82F6", fontWeight: 600 }}>{TRIGGER_LABEL[triggerId!]}</span></div>
+                    <div><strong style={{ color: "#374151", display: "inline-block", width: 100 }}>动作：</strong><span style={{ color: "#10B981", fontWeight: 600 }}>{ACTION_LABEL[actionId!]}</span></div>
+                    {paramFields.length > 0 && (
+                      <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid #E5E7EB" }}>
+                        <strong style={{ color: "#374151" }}>参数：</strong>
+                        <div style={{ marginTop: 4, paddingLeft: 100, fontFamily: "monospace", fontSize: 11, color: "#6B7280" }}>
+                          {paramFields.map((f) => (
+                            <div key={f.key}>{f.label}: <span style={{ color: "#374151" }}>{params[f.key] || "(空)"}</span></div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {(actionId === "callApi" || actionId === "updateData") && (
                       <div>
-                        幂等:{" "}
+                        <strong style={{ color: "#374151", display: "inline-block", width: 100 }}>幂等键：</strong>
                         {enableIdempotency ? (
-                          <span style={{ color: "#F59E0B" }}>● 已启用 ({idempotencyKey || "自动生成"})</span>
+                          <span style={{ color: "#92400E", fontFamily: "monospace", fontSize: 11 }}>
+                            {idempotencyKey || buildIdempotencyKey(actionId, params.widgetId, params)}
+                          </span>
                         ) : (
-                          <span style={{ color: "#EF4444" }}>✕ 未启用（写操作不推荐）</span>
+                          <span style={{ color: "#EF4444" }}>未启用（写操作不推荐）</span>
                         )}
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               )}
             </div>
 
-            <div style={{ padding: "12px 24px", borderTop: "1px solid #E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", gap: 6 }}>
-                {currentStep > 1 && (
-                  <button
-                    onClick={prevStep}
-                    style={{
-                      padding: "6px 16px",
-                      fontSize: 12,
-                      border: "1px solid #D1D5DB",
-                      borderRadius: 6,
-                      background: "#fff",
-                      color: "#374151",
-                      cursor: "pointer",
-                    }}
-                  >
-                    上一步
+            {/* 向导底部按钮 */}
+            <div style={{ padding: "12px 20px", borderTop: "1px solid #E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                {step > 1 && (
+                  <button onClick={prevStep} style={btnSecondary}>
+                    ← 上一步
                   </button>
                 )}
               </div>
-              <div style={{ display: "flex", gap: 6 }}>
-                <button
-                  onClick={closeModal}
-                  style={{
-                    padding: "6px 16px",
-                    fontSize: 12,
-                    border: "1px solid #D1D5DB",
-                    borderRadius: 6,
-                    background: "#fff",
-                    color: "#6B7280",
-                    cursor: "pointer",
-                  }}
-                >
-                  取消
-                </button>
-                {currentStep < 3 ? (
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={closeWizard} style={btnSecondary}>取消</button>
+                {step < 5 ? (
                   <button
                     onClick={nextStep}
-                    disabled={!canGoNext()}
-                    style={{
-                      padding: "6px 16px",
-                      fontSize: 12,
-                      border: "none",
-                      borderRadius: 6,
-                      background: canGoNext() ? "#3B82F6" : "#E5E7EB",
-                      color: canGoNext() ? "#fff" : "#9CA3AF",
-                      cursor: canGoNext() ? "pointer" : "not-allowed",
-                    }}
+                    disabled={!canNext()}
+                    style={canNext() ? btnPrimary : { ...btnPrimary, background: "#E5E7EB", color: "#9CA3AF", cursor: "not-allowed" }}
                   >
-                    下一步
+                    下一步 →
                   </button>
                 ) : (
-                  <button
-                    onClick={confirmAdd}
-                    style={{
-                      padding: "6px 16px",
-                      fontSize: 12,
-                      border: "none",
-                      borderRadius: 6,
-                      background: "#3B82F6",
-                      color: "#fff",
-                      cursor: "pointer",
-                    }}
-                  >
-                    确认添加
+                  <button onClick={confirmCreate} style={btnPrimary}>
+                    ✓ 完成创建
                   </button>
                 )}
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </PageChrome>
   );
+}
+
+/* ============================================================================
+ * 样式常量 & 辅助函数
+ * ========================================================================== */
+
+const inputStyle = (invalid: boolean): React.CSSProperties => ({
+  width: "100%",
+  padding: "8px 10px",
+  border: `1px solid ${invalid ? "#EF4444" : "#D1D5DB"}`,
+  borderRadius: 6,
+  fontSize: 13,
+  color: "#374151",
+  fontFamily: "inherit",
+  boxSizing: "border-box" as const,
+  outline: "none",
+});
+
+const btnPrimary: React.CSSProperties = {
+  padding: "8px 18px",
+  fontSize: 12,
+  fontWeight: 600,
+  border: "none",
+  borderRadius: 6,
+  background: "#3B82F6",
+  color: "#fff",
+  cursor: "pointer",
+};
+
+const btnSecondary: React.CSSProperties = {
+  padding: "8px 18px",
+  fontSize: 12,
+  fontWeight: 500,
+  border: "1px solid #D1D5DB",
+  borderRadius: 6,
+  background: "#fff",
+  color: "#374151",
+  cursor: "pointer",
+};
+
+function actionBg(color: string): string {
+  const map: Record<string, string> = {
+    blue: "#EFF6FF",
+    green: "#ECFDF5",
+    yellow: "#FFFBEB",
+    purple: "#F3E8FF",
+    red: "#FEE2E2",
+  };
+  return map[color] || "#F3F4F6";
 }
