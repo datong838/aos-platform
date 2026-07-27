@@ -53,7 +53,7 @@ const ApolloChangePage = lazify(() => import("./ChangeOrdersPage"), "ChangeOrder
 const SyncConfigPage = lazify(() => import("./remainder"), "SyncConfigPage");
 const SyncRoutesPage = lazify(() => import("./remainder"), "SyncRoutesPage");
 const OkfOverviewPage = lazify(() => import("./remainder"), "OkfOverviewPage");
-const IntegrationCasesPage = lazify(() => import("./remainder"), "IntegrationCasesPage");
+const IntegrationCasesPage = lazify(() => import("./IntegrationCasesPage"), "IntegrationCasesPage");
 const AnalyticsPage = lazify(() => import("./analytics"), "AnalyticsPage");
 const OrderManagementPage = lazify(() => import("./OrderManagementPage"), "OrderManagementPage");
 const ObservabilityPage = lazify(() => import("./ObservabilityPage"), "ObservabilityPage");
