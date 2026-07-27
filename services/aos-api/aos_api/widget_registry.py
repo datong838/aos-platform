@@ -8,6 +8,7 @@ from aos_api import plugin_disk
 KEY = "widget_plugin_installs"
 SUBDIR = "widgets"
 DEFAULTS = (
+    # ── 原有 9 个内置 plugin ──
     "filter-list",
     "object-table",
     "buddy-chip",
@@ -17,6 +18,33 @@ DEFAULTS = (
     "filter-bar",
     "detail-drawer",
     "trend-chart",
+    # ── Layout 容器 ──
+    "page-layout",
+    "horizontal-grid",
+    # ── 图表类（视觉稿新增）──
+    "bar-chart",
+    "pie-chart",
+    "network-graph",
+    "geo-map",
+    # ── AI / 协作（Buddy 智能助手）──
+    "chat-aside",
+    "message-log",
+    "chat-input",
+    "context-chips",
+    "assist-popover",
+    # ── 数据展示 ──
+    "wiki-card",
+    "drill-panel",
+    "status-badge",
+    # ── 时间 / 事件 ──
+    "timeline",
+    "event-stream",
+    # ── 操作 ──
+    "button-group",
+    # ── 扩展组件（视觉稿未用到）──
+    "kanban",
+    "gantt",
+    "calendar",
 )
 
 

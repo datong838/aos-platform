@@ -14,6 +14,7 @@
  */
 import { useEffect, useState, type ReactNode } from "react";
 import { apiGet, apiPost } from "../api/client";
+import { getWidgetPlugin } from "./widgets";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -158,7 +159,17 @@ function RenderNode({
     case "trend-chart":
       return <TrendChartWidget config={node.config || {}} />;
 
-    default:
+    default: {
+      // 从 WidgetPluginRegistry 找插件渲染
+      const plugin = getWidgetPlugin(node.type);
+      if (plugin) {
+        const childElements = children.map((c, i) => (
+          <RenderNode key={i} node={c} components={components} depth={depth + 1} />
+        ));
+        return (
+          <>{plugin.render(node.config || {}, { components, depth }, childElements)}</>
+        );
+      }
       return (
         <div
           style={{
@@ -172,12 +183,13 @@ function RenderNode({
           未知组件类型: <code>{node.type}</code>
         </div>
       );
+    }
   }
 }
 
 // ── Sub-renderers ───────────────────────────────────────────────────────────
 
-function PageHeader({ config }: { config: Record<string, any> }) {
+export function PageHeader({ config }: { config: Record<string, any> }) {
   return (
     <header
       style={{
@@ -226,7 +238,7 @@ function PageHeader({ config }: { config: Record<string, any> }) {
   );
 }
 
-function StatCardWidget({ config }: { config: Record<string, any> }) {
+export function StatCardWidget({ config }: { config: Record<string, any> }) {
   const [value, setValue] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const objectType = config.objectType;
@@ -316,7 +328,7 @@ function StatCardWidget({ config }: { config: Record<string, any> }) {
   );
 }
 
-function FilterBarWidget({ config }: { config: Record<string, any> }) {
+export function FilterBarWidget({ config }: { config: Record<string, any> }) {
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
   const tabs: any[] = config.tabs || [];
@@ -380,7 +392,7 @@ function FilterBarWidget({ config }: { config: Record<string, any> }) {
   );
 }
 
-function ObjectTableWidget({
+export function ObjectTableWidget({
   config,
   externalSelected,
   onSelectRow,
@@ -591,7 +603,7 @@ function ObjectTableWidget({
   );
 }
 
-function DetailDrawerWidget({ config, external }: { config: Record<string, any>; external?: RuntimeObject | null }) {
+export function DetailDrawerWidget({ config, external }: { config: Record<string, any>; external?: RuntimeObject | null }) {
   const sections: any[] = config.sections || [];
   const [internalSelected, setInternalSelected] = useState<RuntimeObject | null>(null);
   const objectType = config.objectType;
@@ -799,7 +811,7 @@ function ItemsTable({ rows, columns }: { rows: any[]; columns: any[] }) {
   );
 }
 
-function TrendChartWidget({ config }: { config: Record<string, any> }) {
+export function TrendChartWidget({ config }: { config: Record<string, any> }) {
   const [data, setData] = useState<{ date: string; count: number }[]>([]);
   const [loading, setLoading] = useState(false);
   const objectType = config.objectType;

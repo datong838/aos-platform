@@ -20,46 +20,18 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ComponentRenderer, type ComponentNode, type ComponentTree } from "./ComponentRenderer";
+import "./widgets";
+import { getWidgetsByCategory, getWidgetPlugin, CATEGORY_LABEL, type WidgetPlugin, type WidgetCategory } from "./widgets";
 
 // ── Types & Consts ─────────────────────────────────────────────────────────
 
-const CONTAINER_TYPES = new Set<string>(["page-layout", "horizontal-grid"]);
-
 function isContainerNode(node: ComponentNode): boolean {
-  return CONTAINER_TYPES.has(node.type);
+  return !!getWidgetPlugin(node.type)?.isContainer;
 }
 
-type PaletteItem = {
-  type: string;
-  name: string;
-  icon: string;
-  defaultConfig: Record<string, any>;
-};
 
-const WIDGET_PALETTE: PaletteItem[] = [
-  // ── Layout 容器 ──
-  { type: "page-layout", name: "页面布局", icon: "📐", defaultConfig: { padding: 24, gap: 16 } },
-  { type: "horizontal-grid", name: "水平网格", icon: "⊞", defaultConfig: { cols: 4, gap: 16 } },
-  // ── 页面组件 ──
-  { type: "page-header", name: "页头", icon: "🏷", defaultConfig: { title: "新页面", subtitle: "页面副标题" } },
-  { type: "stat-card", name: "统计卡片", icon: "�", defaultConfig: { title: "统计项", objectType: "", color: "blue" } },
-  { type: "filter-bar", name: "筛选栏", icon: "�", defaultConfig: { objectType: "" } },
-  { type: "object-table", name: "对象表格", icon: "�", defaultConfig: { objectType: "" } },
-  { type: "detail-drawer", name: "详情抽屉", icon: "�", defaultConfig: { objectType: "" } },
-  { type: "trend-chart", name: "趋势图", icon: "📉", defaultConfig: { objectType: "" } },
-  // ── 原有 Canvas Widget ──
-  { type: "filter", name: "Filter List", icon: "�", defaultConfig: { site: "", objectType: "" } },
-  { type: "table", name: "Object Table", icon: "📊", defaultConfig: { objectType: "" } },
-  { type: "buddy", name: "Buddy Chip", icon: "💬", defaultConfig: {} },
-  { type: "overlay", name: "Object View · Wiki", icon: "🗺", defaultConfig: { objectType: "" } },
-  { type: "action", name: "Action 表单", icon: "📝", defaultConfig: { actionTypeId: "" } },
-  { type: "graph", name: "关系图", icon: "📈", defaultConfig: { objectType: "" } },
-  { type: "metric", name: "指标卡", icon: "📄", defaultConfig: { metric: "", title: "" } },
-  { type: "stub", name: "Stub 插件", icon: "🔘", defaultConfig: {} },
-];
 
 // ── Tree helpers ───────────────────────────────────────────────────────────
-
 function updateNodeConfig(
   tree: ComponentTree,
   nodeId: string,
@@ -339,7 +311,7 @@ function ContainerRenderer({
 
 // ── Palette Item ───────────────────────────────────────────────────────────
 
-function PaletteItem({ item }: { item: PaletteItem }) {
+function PaletteItem({ item }: { item: WidgetPlugin }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `palette:${item.type}`,
     data: { type: "palette", widgetType: item.type },
@@ -374,6 +346,83 @@ function PaletteItem({ item }: { item: PaletteItem }) {
     >
       <span style={{ fontSize: 16 }}>{item.icon}</span>
       <span>{item.name}</span>
+    </div>
+  );
+}
+
+// ── Palette Content（按 category 分组）──────────────────────────────────────
+
+function PaletteContent() {
+  const grouped = getWidgetsByCategory();
+  const order: WidgetCategory[] = ["layout", "data", "filter", "action", "chart", "ai", "time", "extra"];
+
+  return (
+    <div
+      style={{
+        width: 200,
+        height: "100%",
+        padding: 12,
+        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 11,
+          fontWeight: 600,
+          color: "var(--aos-text-muted)",
+          textTransform: "uppercase",
+          letterSpacing: 0.5,
+          marginBottom: 4,
+        }}
+      >
+        组件库
+      </div>
+      {order.map((cat) => {
+        const items = grouped[cat];
+        if (!items || items.length === 0) return null;
+        return (
+          <div key={cat}>
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                color: "var(--aos-text-muted)",
+                marginTop: 4,
+                marginBottom: 2,
+              }}
+            >
+              {CATEGORY_LABEL[cat]}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              {items.map((item) => (
+                <PaletteItem key={item.type} item={item} />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+      <a
+        href="/workshop/widget-registry"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "6px 10px",
+          marginTop: 6,
+          borderRadius: 6,
+          background: "rgba(79,70,229,0.06)",
+          color: "#4f46e5",
+          fontSize: 11,
+          fontWeight: 500,
+          textDecoration: "none",
+          border: "1px dashed #c7d2fe",
+        }}
+      >
+        + 浏览组件注册表
+      </a>
     </div>
   );
 }
@@ -433,168 +482,57 @@ function PropertyPanel({
         {node.type} · {nodeId}
       </div>
 
-      {node.type === "page-header" && (
-        <>
-          <PropField label="标题">
-            <input
-              type="text"
-              value={node.config?.title || ""}
-              onChange={(e) => onUpdate({ title: e.target.value })}
-              style={inputStyle}
-            />
-          </PropField>
-          <PropField label="副标题">
-            <input
-              type="text"
-              value={node.config?.subtitle || ""}
-              onChange={(e) => onUpdate({ subtitle: e.target.value })}
-              style={inputStyle}
-            />
-          </PropField>
-        </>
-      )}
-
-      {node.type === "stat-card" && (
-        <>
-          <PropField label="标题">
-            <input
-              type="text"
-              value={node.config?.title || ""}
-              onChange={(e) => onUpdate({ title: e.target.value })}
-              style={inputStyle}
-            />
-          </PropField>
-          <PropField label="对象类型">
-            <input
-              type="text"
-              value={node.config?.objectType || ""}
-              onChange={(e) => onUpdate({ objectType: e.target.value })}
-              style={inputStyle}
-            />
-          </PropField>
-          <PropField label="颜色">
-            <select
-              value={node.config?.color || "blue"}
-              onChange={(e) => onUpdate({ color: e.target.value })}
-              style={inputStyle}
-            >
-              <option value="blue">蓝色</option>
-              <option value="amber">琥珀</option>
-              <option value="green">绿色</option>
-              <option value="indigo">靛蓝</option>
-              <option value="violet">紫色</option>
-            </select>
-          </PropField>
-        </>
-      )}
-
-      {node.type === "horizontal-grid" && (
-        <>
-          <PropField label="列数">
-            <input
-              type="number"
-              value={node.config?.cols ?? 4}
-              onChange={(e) => onUpdate({ cols: Number(e.target.value) })}
-              style={inputStyle}
-              min={1}
-              max={12}
-            />
-          </PropField>
-          <PropField label="间距">
-            <input
-              type="number"
-              value={node.config?.gap ?? 16}
-              onChange={(e) => onUpdate({ gap: Number(e.target.value) })}
-              style={inputStyle}
-              min={0}
-            />
-          </PropField>
-        </>
-      )}
-
-      {node.type === "page-layout" && (
-        <>
-          <PropField label="内边距">
-            <input
-              type="number"
-              value={node.config?.padding ?? 24}
-              onChange={(e) => onUpdate({ padding: Number(e.target.value) })}
-              style={inputStyle}
-              min={0}
-            />
-          </PropField>
-          <PropField label="间距">
-            <input
-              type="number"
-              value={node.config?.gap ?? 16}
-              onChange={(e) => onUpdate({ gap: Number(e.target.value) })}
-              style={inputStyle}
-              min={0}
-            />
-          </PropField>
-        </>
-      )}
-
-      {(node.type === "filter-bar" ||
-        node.type === "object-table" ||
-        node.type === "detail-drawer" ||
-        node.type === "trend-chart" ||
-        node.type === "filter" ||
-        node.type === "table" ||
-        node.type === "overlay" ||
-        node.type === "graph") && (
-        <PropField label="对象类型">
-          <input
-            type="text"
-            value={node.config?.objectType || ""}
-            onChange={(e) => onUpdate({ objectType: e.target.value })}
-            style={inputStyle}
-          />
-        </PropField>
-      )}
-
-      {node.type === "filter" && (
-        <PropField label="站点">
-          <input
-            type="text"
-            value={node.config?.site || ""}
-            onChange={(e) => onUpdate({ site: e.target.value })}
-            style={inputStyle}
-          />
-        </PropField>
-      )}
-
-      {node.type === "action" && (
-        <PropField label="操作类型 ID">
-          <input
-            type="text"
-            value={node.config?.actionTypeId || ""}
-            onChange={(e) => onUpdate({ actionTypeId: e.target.value })}
-            style={inputStyle}
-          />
-        </PropField>
-      )}
-
-      {node.type === "metric" && (
-        <>
-          <PropField label="指标">
-            <input
-              type="text"
-              value={node.config?.metric || ""}
-              onChange={(e) => onUpdate({ metric: e.target.value })}
-              style={inputStyle}
-            />
-          </PropField>
-          <PropField label="标题">
-            <input
-              type="text"
-              value={node.config?.title || ""}
-              onChange={(e) => onUpdate({ title: e.target.value })}
-              style={inputStyle}
-            />
-          </PropField>
-        </>
-      )}
+      {(() => {
+        const plugin = getWidgetPlugin(node.type);
+        if (!plugin || !plugin.propsSchema.length) {
+          return (
+            <div style={{ fontSize: 12, color: "var(--aos-text-muted)" }}>
+              该组件无可配置属性
+            </div>
+          );
+        }
+        return plugin.propsSchema.map((field) => {
+          const value = node.config?.[field.key];
+          return (
+            <PropField key={field.key} label={field.label}>
+              {field.type === "select" ? (
+                <select
+                  value={value ?? ""}
+                  onChange={(e) => onUpdate({ [field.key]: e.target.value })}
+                  style={inputStyle}
+                >
+                  {field.options?.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              ) : field.type === "textarea" ? (
+                <textarea
+                  value={value ?? ""}
+                  onChange={(e) => onUpdate({ [field.key]: e.target.value })}
+                  style={{ ...inputStyle, minHeight: 60, resize: "vertical" }}
+                  placeholder={field.placeholder}
+                />
+              ) : field.type === "number" ? (
+                <input
+                  type="number"
+                  value={value ?? 0}
+                  onChange={(e) => onUpdate({ [field.key]: Number(e.target.value) })}
+                  style={inputStyle}
+                  min={field.min}
+                />
+              ) : (
+                <input
+                  type="text"
+                  value={value ?? ""}
+                  onChange={(e) => onUpdate({ [field.key]: e.target.value })}
+                  style={inputStyle}
+                  placeholder={field.placeholder}
+                />
+              )}
+            </PropField>
+          );
+        });
+      })()}
 
       {node.type !== "page-layout" && nodeId !== "root" && (
         <button
@@ -694,7 +632,7 @@ export function ComponentTreeEditor({
       // ── 从调色板拖入新组件 ──
       if (activeIdStr.startsWith("palette:")) {
         const widgetType = activeIdStr.slice("palette:".length);
-        const paletteItem = WIDGET_PALETTE.find((w) => w.type === widgetType);
+        const paletteItem = getWidgetPlugin(widgetType);
         if (!paletteItem) return;
 
         const newId = `${widgetType}-${Date.now().toString(36)}`;
@@ -804,92 +742,8 @@ export function ComponentTreeEditor({
           </button>
           <div style={{ width: 200, height: "100%", overflow: "hidden" }}>
             {!leftCollapsed && (
-            <div
-              style={{
-                width: 200,
-                height: "100%",
-                padding: 12,
-                overflowY: "auto",
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: "var(--aos-text-muted)",
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                  marginBottom: 4,
-                }}
-              >
-                组件库
-              </div>
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 600,
-                  color: "var(--aos-text-muted)",
-                  marginTop: 4,
-                  marginBottom: 2,
-                }}
-              >
-                Layout
-              </div>
-              {WIDGET_PALETTE.filter((w) => w.type === "page-layout" || w.type === "horizontal-grid").map((item) => (
-                <PaletteItem key={item.type} item={item} />
-              ))}
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 600,
-                  color: "var(--aos-text-muted)",
-                  marginTop: 4,
-                  marginBottom: 2,
-                }}
-              >
-                页面组件
-              </div>
-              {WIDGET_PALETTE.filter((w) => ["page-header","stat-card","filter-bar","object-table","detail-drawer","trend-chart"].includes(w.type)).map((item) => (
-                <PaletteItem key={item.type} item={item} />
-              ))}
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 600,
-                  color: "var(--aos-text-muted)",
-                  marginTop: 4,
-                  marginBottom: 2,
-                }}
-              >
-                Widget 组件
-              </div>
-              {WIDGET_PALETTE.filter((w) => ["filter","table","buddy","overlay","action","graph","metric","stub"].includes(w.type)).map((item) => (
-                <PaletteItem key={item.type} item={item} />
-              ))}
-              <a
-                href="/workshop/widget-registry"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "6px 10px",
-                  marginTop: 6,
-                  borderRadius: 6,
-                  background: "rgba(79,70,229,0.06)",
-                  color: "#4f46e5",
-                  fontSize: 11,
-                  fontWeight: 500,
-                  textDecoration: "none",
-                  border: "1px dashed #c7d2fe",
-                }}
-              >
-                + 浏览组件注册表
-              </a>
-            </div>
-          )}
+              <PaletteContent />
+            )}
           </div>
         </div>
 
@@ -966,7 +820,7 @@ export function ComponentTreeEditor({
           </div>
         ) : activePaletteType ? (
           (() => {
-            const item = WIDGET_PALETTE.find((w) => w.type === activePaletteType);
+            const item = getWidgetPlugin(activePaletteType);
             if (!item) return null;
             return (
               <div
