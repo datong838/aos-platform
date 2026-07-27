@@ -1097,6 +1097,15 @@ def create_app() -> FastAPI:
     application.include_router(phase6_media_sets_router)
     application.include_router(phase6_documents_router)
 
+    # Phase 7 · Ops Delivery
+    from aos_api.routers.phase7_hub_spokes import router as phase7_hub_spokes_router
+    from aos_api.routers.phase7_releases import router as phase7_releases_router
+    from aos_api.routers.phase7_ferry import router as phase7_ferry_router
+
+    application.include_router(phase7_hub_spokes_router)
+    application.include_router(phase7_releases_router)
+    application.include_router(phase7_ferry_router)
+
     log.info("aos-api_app_created version=%s", application.version)
     return application
 
