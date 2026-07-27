@@ -30,7 +30,6 @@ const PipelinesPage = lazify(() => import("./data"), "PipelinesPage");
 const BuildsPage = lazify(() => import("./data"), "BuildsPage");
 const DatasetsPage = lazify(() => import("./data"), "DatasetsPage");
 const SchedulesPage = lazify(() => import("./data"), "SchedulesPage");
-const DataHealthPage = lazify(() => import("./data"), "DataHealthPage");
 const EdgeAgentsPage = lazify(() => import("./data"), "EdgeAgentsPage");
 const PipelineCanvasPage = lazify(() => import("./pipelineCanvas"), "PipelineCanvasPage");
 const SourceDetailPage = lazify(() => import("./sourceDetailPage"), "SourceDetailPage");
@@ -45,8 +44,6 @@ const CopPage = lazify(() => import("./extras"), "CopPage");
 const ModuleInterfacePage = lazify(() => import("./extras"), "ModuleInterfacePage");
 const OkfFunnelPage = lazify(() => import("./remainder"), "OkfFunnelPage");
 const PipelineProposalsPage = lazify(() => import("./remainder"), "PipelineProposalsPage");
-const CodeReposPage = lazify(() => import("./remainder"), "CodeReposPage");
-const DataLineagePage = lazify(() => import("./remainder"), "DataLineagePage");
 const ApolloReleasePage = lazify(() => import("./remainder"), "ApolloReleasePage");
 const ApolloFerryPage = lazify(() => import("./FerryPage"), "FerryPage");
 const ApolloChangePage = lazify(() => import("./ChangeOrdersPage"), "ChangeOrdersPage");
@@ -71,6 +68,11 @@ const StylesPage = lazify(() => import("./StylesPage"), "StylesPage");
 const DataConnectionPage = lazify(() => import("./DataConnectionPage"), "DataConnectionPage");
 const DataSourceCreatePage = lazify(() => import("./DataSourceCreatePage"), "DataSourceCreatePage");
 const RiskAlertPage = lazify(() => import("./RiskAlertPage"), "RiskAlertPage");
+const DatasetPreviewPage = lazify(() => import("./DatasetPreviewPage"), "DatasetPreviewPage");
+const DataHealthPage = lazify(() => import("./DataHealthPage"), "DataHealthPage");
+const CodeRepositoriesPage = lazify(() => import("./CodeRepositoriesPage"), "CodeRepositoriesPage");
+const DataLineagePage = lazify(() => import("./DataLineagePage"), "DataLineagePage");
+const BuildModalPage = lazify(() => import("./BuildModalPage"), "BuildModalPage");
 
 /** Paths promoted in T-UI S2 knife-1～3 ([43]/[45]/[49]). */
 export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
@@ -103,9 +105,11 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "data/builds", Component: BuildsPage },
   { path: "data/datasets", Component: DatasetsPage },
   { path: "data/schedules", Component: SchedulesPage },
-  { path: "data/code-repos", Component: CodeReposPage },
+  { path: "data/code-repos", Component: CodeRepositoriesPage },
   { path: "data/lineage", Component: DataLineagePage },
   { path: "data/health", Component: DataHealthPage },
+  { path: "data/datasets/:datasetId", Component: DatasetPreviewPage },
+  { path: "data/builds/current", Component: BuildModalPage },
   { path: "data/agents", Component: EdgeAgentsPage },
   { path: "data/sync-config", Component: SyncConfigPage },
   { path: "data/sync-routes", Component: SyncRoutesPage },
