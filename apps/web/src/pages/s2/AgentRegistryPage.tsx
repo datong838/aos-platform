@@ -1,11 +1,17 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { PageChrome } from "../../components/PageChrome";
+import { apiGet } from "../../api/client";
 
-type AgentSource = "builtin" | "plugin" | "external";
-type AgentStatus = "running" | "draft" | "stopped" | "ready" | "session";
+export type AgentSource = "builtin" | "plugin" | "external";
+export type AgentStatus = "running" | "draft" | "stopped" | "ready" | "session";
 
-interface AgentCard {
+export type AgentTag = {
+  label: string;
+  tone: "indigo" | "yellow" | "orange" | "green" | "blue" | "purple";
+};
+
+export type AgentCard = {
   id: string;
   name: string;
   category: string;
@@ -14,7 +20,7 @@ interface AgentCard {
   status: AgentStatus;
   statusLabel: string;
   description: string;
-  tags: { label: string; tone: "indigo" | "yellow" | "orange" | "green" | "blue" | "purple" }[];
+  tags: AgentTag[];
   toolCount: number;
   callCount: number;
   iconBg: string;
@@ -23,9 +29,67 @@ interface AgentCard {
   detailLink: string;
   detailLabel: string;
   adapterInfo?: string;
+};
+
+/** 筛选器类型 */
+export type AgentFilter = {
+  source: AgentSource | "all";
+  status: AgentStatus | "all";
+  tag: string;
+};
+
+/** 计算指标卡统计数据（纯函数，便于测试） */
+export function computeRegistryStats(agents: AgentCard[]) {
+  const total = agents.length;
+  const active = agents.filter(
+    (a) => a.status === "running" || a.status === "ready" || a.status === "session",
+  ).length;
+  const draft = agents.filter((a) => a.status === "draft").length;
+  const stopped = agents.filter((a) => a.status === "stopped").length;
+  const totalCalls = agents.reduce((sum, a) => sum + a.callCount, 0);
+  const totalTools = agents.reduce((sum, a) => sum + a.toolCount, 0);
+  const avgCalls = total > 0 ? Math.round(totalCalls / total) : 0;
+  const guardrailCoverage =
+    total > 0
+      ? Math.round(
+          (agents.filter((a) => a.tags.some((t) => t.label.includes("HITL") || t.label.includes("L0") || t.label.includes("L1"))).length /
+            total) *
+            100,
+        )
+      : 0;
+  return {
+    total,
+    active,
+    draft,
+    stopped,
+    totalCalls,
+    totalTools,
+    avgCalls,
+    guardrailCoverage,
+  };
 }
 
-const AGENTS: AgentCard[] = [
+/** 提取所有可用标签（纯函数） */
+export function extractAllTags(agents: AgentCard[]): string[] {
+  const set = new Set<string>();
+  agents.forEach((a) => a.tags.forEach((t) => set.add(t.label)));
+  return Array.from(set).sort();
+}
+
+/** 按多条件筛选 Agent（纯函数，便于测试） */
+export function filterAgents(agents: AgentCard[], filter: AgentFilter, search: string): AgentCard[] {
+  const q = search.trim().toLowerCase();
+  return agents.filter((a) => {
+    if (filter.source !== "all" && a.source !== filter.source) return false;
+    if (filter.status !== "all" && a.status !== filter.status) return false;
+    if (filter.tag !== "all" && !a.tags.some((t) => t.label === filter.tag)) return false;
+    if (q && !a.name.toLowerCase().includes(q) && !a.description.toLowerCase().includes(q) && !a.category.toLowerCase().includes(q))
+      return false;
+    return true;
+  });
+}
+
+const MOCK_AGENTS: AgentCard[] = [
   {
     id: "repair-buddy",
     name: "维修派单 Buddy",
@@ -289,6 +353,15 @@ const SOURCE_TABS: { id: AgentSource | "all"; label: string; dotColor: string }[
   { id: "external", label: "外部接入", dotColor: "#F97316" },
 ];
 
+export const STATUS_TABS: { id: AgentStatus | "all"; label: string; color: string }[] = [
+  { id: "all", label: "全部状态", color: "#6B7280" },
+  { id: "running", label: "运行中", color: "#16A34A" },
+  { id: "ready", label: "就绪", color: "#2563EB" },
+  { id: "session", label: "会话中", color: "#4F46E5" },
+  { id: "draft", label: "草稿", color: "#D97706" },
+  { id: "stopped", label: "已停用", color: "#9CA3AF" },
+];
+
 const SORT_OPTIONS = [
   { value: "recent", label: "最近更新" },
   { value: "name", label: "名称" },
@@ -420,50 +493,75 @@ function AgentIcon({ type, bg, color }: { type: string; bg: string; color: strin
 }
 
 export function AgentRegistryPage() {
+  const [agents, setAgents] = useState<AgentCard[]>(MOCK_AGENTS);
   const [sourceTab, setSourceTab] = useState<AgentSource | "all">("all");
+  const [statusTab, setStatusTab] = useState<AgentStatus | "all">("all");
+  const [tagFilter, setTagFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState("recent");
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const stats = useMemo(() => {
-    const total = AGENTS.length;
-    const running = AGENTS.filter((a) => a.status === "running" || a.status === "ready" || a.status === "session").length;
-    const draft = AGENTS.filter((a) => a.status === "draft").length;
-    const stopped = AGENTS.filter((a) => a.status === "stopped").length;
-    return { total, running, draft, stopped };
+  // 尝试调 API，fallback 到 mock 数据
+  useEffect(() => {
+    setLoading(true);
+    apiGet<{ items: AgentCard[] }>("/v1/aip/agent-registry")
+      .then((data) => {
+        if (data?.items?.length) setAgents(data.items);
+      })
+      .catch(() => {
+        // API 未就绪，保留默认 mock 数据
+        setAgents(MOCK_AGENTS);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
+  const stats = useMemo(() => computeRegistryStats(agents), [agents]);
+
+  const allTags = useMemo(() => extractAllTags(agents), [agents]);
+
   const filteredAgents = useMemo(() => {
-    let result = [...AGENTS];
-    if (sourceTab !== "all") {
-      result = result.filter((a) => a.source === sourceTab);
-    }
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (a) => a.name.toLowerCase().includes(q) || a.description.toLowerCase().includes(q),
-      );
-    }
+    let result = filterAgents(agents, { source: sourceTab, status: statusTab, tag: tagFilter }, searchQuery);
     if (sortBy === "name") {
-      result.sort((a, b) => a.name.localeCompare(b.name));
+      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
     } else if (sortBy === "calls") {
-      result.sort((a, b) => b.callCount - a.callCount);
+      result = [...result].sort((a, b) => b.callCount - a.callCount);
     }
     return result;
-  }, [sourceTab, sortBy, searchQuery]);
+  }, [agents, sourceTab, statusTab, tagFilter, sortBy, searchQuery]);
 
   const sourceCounts = useMemo(() => {
     return {
-      all: AGENTS.length,
-      builtin: AGENTS.filter((a) => a.source === "builtin").length,
-      plugin: AGENTS.filter((a) => a.source === "plugin").length,
-      external: AGENTS.filter((a) => a.source === "external").length,
+      all: agents.length,
+      builtin: agents.filter((a) => a.source === "builtin").length,
+      plugin: agents.filter((a) => a.source === "plugin").length,
+      external: agents.filter((a) => a.source === "external").length,
     };
-  }, []);
+  }, [agents]);
+
+  const statusCounts = useMemo(() => {
+    return {
+      all: agents.length,
+      running: agents.filter((a) => a.status === "running").length,
+      ready: agents.filter((a) => a.status === "ready").length,
+      session: agents.filter((a) => a.status === "session").length,
+      draft: agents.filter((a) => a.status === "draft").length,
+      stopped: agents.filter((a) => a.status === "stopped").length,
+    };
+  }, [agents]);
+
+  const metricsCards = [
+    { label: "已注册 Agent", value: stats.total, color: "#4F46E5", bg: "#EEF2FF", icon: "agents" },
+    { label: "活跃 Agent", value: stats.active, color: "#16A34A", bg: "#DCFCE7", icon: "active" },
+    { label: "本月调用量", value: stats.totalCalls.toLocaleString(), color: "#2563EB", bg: "#DBEAFE", icon: "calls" },
+    { label: "工具总数", value: stats.totalTools, color: "#D97706", bg: "#FEF3C7", icon: "tools" },
+    { label: "平均调用", value: stats.avgCalls.toLocaleString(), color: "#7C3AED", bg: "#EDE9FE", icon: "avg" },
+    { label: "护栏覆盖率", value: `${stats.guardrailCoverage}%`, color: "#0891B2", bg: "#ECFEFF", icon: "guard" },
+  ];
 
   return (
     <PageChrome title="智能体目录" lede="平台全部智能体的浏览与发现。涵盖平台内创建、插件市场引入、外部 Adapter 接入三种来源。">
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* 标题 + 统计 */}
+        {/* 标题 + 新建按钮 */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 600, color: "#111827", margin: 0 }}>智能体目录</h1>
@@ -471,29 +569,62 @@ export function AgentRegistryPage() {
               平台全部智能体的浏览与发现。涵盖平台内创建、插件市场引入、外部 Adapter 接入三种来源。
             </p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 24, fontWeight: 700, color: "#4F46E5" }}>{stats.total}</div>
-              <div style={{ fontSize: 10, color: "#6B7280" }}>总计</div>
-            </div>
-            <div style={{ width: 1, height: 32, background: "#E5E7EB" }} />
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 18, fontWeight: 600, color: "#16A34A" }}>{stats.running}</div>
-              <div style={{ fontSize: 10, color: "#6B7280" }}>运行中</div>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 18, fontWeight: 600, color: "#D97706" }}>{stats.draft}</div>
-              <div style={{ fontSize: 10, color: "#6B7280" }}>草稿</div>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 18, fontWeight: 600, color: "#9CA3AF" }}>{stats.stopped}</div>
-              <div style={{ fontSize: 10, color: "#6B7280" }}>已停用</div>
-            </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Link
+              to="/s2/aip/agents/new"
+              style={{
+                padding: "8px 16px",
+                fontSize: 13,
+                fontWeight: 500,
+                borderRadius: 8,
+                background: "#4F46E5",
+                color: "#fff",
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> 新建智能体
+            </Link>
           </div>
         </div>
 
-        {/* 筛选栏 */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {/* 指标卡网格 */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(6, 1fr)",
+            gap: 12,
+          }}
+        >
+          {metricsCards.map((m, i) => (
+            <div
+              key={i}
+              style={{
+                borderRadius: 10,
+                border: "1px solid #E5E7EB",
+                background: "#fff",
+                padding: 14,
+                display: "flex",
+                flexDirection: "column",
+                gap: 4,
+              }}
+            >
+              <div style={{ fontSize: 10, color: "#6B7280", fontWeight: 500 }}>{m.label}</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: m.color }}>{m.value}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: m.color, display: "inline-block" }} />
+                <span style={{ fontSize: 9, color: "#9CA3AF" }}>
+                  {m.icon === "active" ? `${stats.total} 总计中` : m.icon === "guard" ? "HITL 覆盖" : ""}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 来源筛选 Tab */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           {SOURCE_TABS.map((tab) => {
             const active = sourceTab === tab.id;
             return (
@@ -534,44 +665,106 @@ export function AgentRegistryPage() {
               </button>
             );
           })}
-          <div style={{ flex: 1 }} />
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="搜索智能体…"
-              style={{
-                padding: "6px 10px",
-                fontSize: 12,
-                border: "1px solid #E5E7EB",
-                borderRadius: 8,
-                width: 200,
-                outline: "none",
-              }}
-            />
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              style={{
-                padding: "6px 10px",
-                fontSize: 12,
-                border: "1px solid #E5E7EB",
-                borderRadius: 8,
-                background: "#fff",
-                color: "#374151",
-                outline: "none",
-                cursor: "pointer",
-              }}
-            >
-              {SORT_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
+
+        {/* 状态筛选 Tab */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          {STATUS_TABS.map((tab) => {
+            const active = statusTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setStatusTab(tab.id)}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: 6,
+                  fontSize: 11,
+                  fontWeight: 500,
+                  border: `1px solid ${active ? tab.color : "#E5E7EB"}`,
+                  background: active ? `${tab.color}15` : "#fff",
+                  color: active ? tab.color : "#6B7280",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  transition: "all 0.15s",
+                }}
+              >
+                {tab.label}
+                <span style={{ fontSize: 9, opacity: 0.7 }}>
+                  ({statusCounts[tab.id as keyof typeof statusCounts]})
+                </span>
+              </button>
+            );
+          })}
+          <div style={{ flex: 1 }} />
+          {/* 标签筛选 */}
+          <select
+            value={tagFilter}
+            onChange={(e) => setTagFilter(e.target.value)}
+            style={{
+              padding: "4px 10px",
+              fontSize: 11,
+              border: "1px solid #E5E7EB",
+              borderRadius: 6,
+              background: "#fff",
+              color: "#374151",
+              outline: "none",
+              cursor: "pointer",
+            }}
+          >
+            <option value="all">全部标签</option>
+            {allTags.map((tag) => (
+              <option key={tag} value={tag}>
+                {tag}
+              </option>
+            ))}
+          </select>
+          {/* 搜索框 */}
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="搜索智能体…"
+            style={{
+              padding: "6px 10px",
+              fontSize: 12,
+              border: "1px solid #E5E7EB",
+              borderRadius: 8,
+              width: 200,
+              outline: "none",
+            }}
+          />
+          {/* 排序 */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            style={{
+              padding: "6px 10px",
+              fontSize: 12,
+              border: "1px solid #E5E7EB",
+              borderRadius: 8,
+              background: "#fff",
+              color: "#374151",
+              outline: "none",
+              cursor: "pointer",
+            }}
+          >
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* loading 提示 */}
+        {loading && (
+          <div style={{ textAlign: "center", padding: "12px", color: "#9CA3AF", fontSize: 12 }}>
+            加载中…
+          </div>
+        )}
 
         {/* 卡片网格 */}
         <div
@@ -671,12 +864,39 @@ export function AgentRegistryPage() {
                       ? `${agent.adapterInfo} · ${agent.callCount.toLocaleString()} 次调用`
                       : `${agent.toolCount} 工具 · ${agent.callCount.toLocaleString()} 次调用`}
                   </span>
-                  <Link
-                    to={agent.detailLink}
-                    style={{ fontSize: 11, color: "#4F46E5", fontWeight: 500, textDecoration: "none" }}
-                  >
-                    {agent.detailLabel}
-                  </Link>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <Link
+                      to={agent.detailLink}
+                      title="查看详情"
+                      style={{ fontSize: 11, color: "#4F46E5", fontWeight: 500, textDecoration: "none" }}
+                    >
+                      详情
+                    </Link>
+                    <span style={{ color: "#E5E7EB" }}>|</span>
+                    <Link
+                      to={agent.detailLink}
+                      title="编辑配置"
+                      style={{ fontSize: 11, color: "#6B7280", textDecoration: "none" }}
+                    >
+                      编辑
+                    </Link>
+                    <span style={{ color: "#E5E7EB" }}>|</span>
+                    <button
+                      type="button"
+                      title={agent.status === "running" ? "暂停" : "启动"}
+                      style={{
+                        fontSize: 11,
+                        color: agent.status === "running" ? "#D97706" : "#16A34A",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        padding: 0,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {agent.status === "running" ? "暂停" : "启动"}
+                    </button>
+                  </div>
                 </div>
               </div>
             );
