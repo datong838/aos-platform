@@ -354,7 +354,7 @@ function WidgetPreview({
               className="bp-tag"
               style={{
                 background: a?.variant === "primary" ? "var(--aos-accent)" : undefined,
-                color: a?.variant === "primary" ? "#fff" : undefined,
+                color: a?.variant === "primary" ? "var(--text-on-brand)" : undefined,
               }}
             >
               {a?.label || `按钮${i + 1}`}
@@ -388,7 +388,7 @@ function WidgetPreview({
       <div className="bp-canvas-widget">
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
           {tabs.slice(0, 5).map((t, i) => (
-            <span key={t.key || i} className="bp-tag" style={i === 0 ? { background: "var(--aos-accent)", color: "#fff" } : undefined}>
+            <span key={t.key || i} className="bp-tag" style={i === 0 ? { background: "var(--aos-accent)", color: "var(--text-on-brand)" } : undefined}>
               {t.label || t.key}
             </span>
           ))}
@@ -938,7 +938,7 @@ export function CanvasPage() {
                 borderRadius: "4px",
                 border: "1px solid var(--aos-border)",
                 background: dirty ? "var(--aos-accent)" : "var(--aos-aside)",
-                color: dirty ? "#fff" : "var(--aos-text-secondary)",
+                color: dirty ? "var(--text-on-brand)" : "var(--aos-text-secondary)",
                 cursor: dirty ? "pointer" : "default",
               }}
             >
@@ -952,8 +952,8 @@ export function CanvasPage() {
                 padding: "5px 12px",
                 borderRadius: "4px",
                 border: "none",
-                background: "#10B981",
-                color: "#fff",
+                background: "var(--aos-green)",
+                color: "var(--text-on-brand)",
                 cursor: "pointer",
               }}
             >
@@ -985,7 +985,7 @@ export function CanvasPage() {
                   padding: "4px 12px",
                   border: "none",
                   background: canvasMode === "widget" ? "var(--aos-accent)" : "transparent",
-                  color: canvasMode === "widget" ? "#fff" : "var(--aos-text)",
+                  color: canvasMode === "widget" ? "var(--text-on-brand)" : "var(--aos-text)",
                   cursor: "pointer",
                   fontWeight: canvasMode === "widget" ? 500 : 400,
                 }}
@@ -1000,7 +1000,7 @@ export function CanvasPage() {
                   padding: "4px 12px",
                   border: "none",
                   background: canvasMode === "workflow" ? "var(--aos-accent)" : "transparent",
-                  color: canvasMode === "workflow" ? "#fff" : "var(--aos-text)",
+                  color: canvasMode === "workflow" ? "var(--text-on-brand)" : "var(--aos-text)",
                   cursor: "pointer",
                   fontWeight: canvasMode === "workflow" ? 500 : 400,
                 }}
@@ -1015,7 +1015,7 @@ export function CanvasPage() {
                   padding: "4px 12px",
                   border: "none",
                   background: canvasMode === "preview" ? "var(--aos-accent)" : "transparent",
-                  color: canvasMode === "preview" ? "#fff" : "var(--aos-text)",
+                  color: canvasMode === "preview" ? "var(--text-on-brand)" : "var(--aos-text)",
                   cursor: "pointer",
                   fontWeight: canvasMode === "preview" ? 500 : 400,
                 }}
@@ -1086,10 +1086,10 @@ export function CanvasPage() {
                       alignItems: "center",
                       padding: "6px 10px",
                       borderRadius: 6,
-                      background: "rgba(79,70,229,0.08)",
-                      border: "1px solid #c7d2fe",
+                      background: "var(--aos-indigo-bg)",
+                      border: "1px solid var(--aos-indigo-border)",
                       fontSize: 11,
-                      color: "#4f46e5",
+                      color: "var(--aos-indigo-600)",
                       marginBottom: 12,
                     }}
                   >
@@ -1110,8 +1110,8 @@ export function CanvasPage() {
                           fontSize: 11,
                           padding: "3px 10px",
                           borderRadius: 4,
-                          background: "#4f46e5",
-                          color: "#fff",
+                          background: "var(--aos-indigo-600)",
+                          color: "var(--text-on-brand)",
                           border: "none",
                           cursor: "pointer",
                           fontWeight: 500,
@@ -1262,12 +1262,12 @@ export function CanvasPage() {
                 padding: "6px 10px",
                 marginTop: "6px",
                 borderRadius: "6px",
-                background: "rgba(79,70,229,0.06)",
-                color: "#4f46e5",
+                background: "var(--aos-indigo-bg)",
+                color: "var(--aos-indigo-600)",
                 fontSize: "11px",
                 fontWeight: 500,
                 textDecoration: "none",
-                border: "1px dashed #c7d2fe",
+                border: "1px dashed var(--aos-indigo-border)",
               }}
             >
               <span style={{ fontSize: "14px" }}>+</span>
@@ -1754,7 +1754,7 @@ export function CanvasPage() {
                     <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--aos-text-muted)", marginBottom: "8px" }}>布局</div>
                     <div style={{ display: "flex", gap: "4px", marginBottom: "8px" }}>
                       <button style={{ flex: 1, padding: "4px", fontSize: "10px", border: "1px solid var(--aos-border)", borderRadius: "4px", background: "var(--aos-surface)", cursor: "pointer", color: "var(--aos-text)" }}>横向</button>
-                      <button style={{ flex: 1, padding: "4px", fontSize: "10px", border: "1px solid #c7d2fe", borderRadius: "4px", background: "rgba(79,70,229,0.06)", color: "#4f46e5", cursor: "pointer" }}>纵向</button>
+                      <button style={{ flex: 1, padding: "4px", fontSize: "10px", border: "1px solid var(--aos-indigo-border)", borderRadius: "4px", background: "var(--aos-indigo-bg)", color: "var(--aos-indigo-600)", cursor: "pointer" }}>纵向</button>
                       <button style={{ flex: 1, padding: "4px", fontSize: "10px", border: "1px solid var(--aos-border)", borderRadius: "4px", background: "var(--aos-surface)", cursor: "pointer", color: "var(--aos-text)" }}>栅格</button>
                     </div>
                     <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--aos-text-muted)", marginBottom: "4px" }}>间距</div>
@@ -1782,7 +1782,7 @@ export function CanvasPage() {
                       <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--aos-text)" }}>onResize</div>
                       <div style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>→ setBreakpoint(width)</div>
                     </div>
-                    <Link to="/workshop/events" style={{ display: "block", fontSize: "11px", color: "#4f46e5", textAlign: "center", padding: "4px", border: "1px dashed #c7d2fe", borderRadius: "6px", textDecoration: "none", marginTop: "4px" }}>
+                    <Link to="/workshop/events" style={{ display: "block", fontSize: "11px", color: "var(--aos-indigo-600)", textAlign: "center", padding: "4px", border: "1px dashed var(--aos-indigo-border)", borderRadius: "6px", textDecoration: "none", marginTop: "4px" }}>
                       + 绑定新事件 →
                     </Link>
                   </div>
@@ -1800,7 +1800,7 @@ export function CanvasPage() {
                       <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--aos-text)" }}>变量: $selected_site</div>
                       <div style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>类型: String · 默认: "DC-East"</div>
                     </div>
-                    <Link to="/workshop/variables" style={{ display: "block", fontSize: "11px", color: "#4f46e5", textAlign: "center", padding: "4px", border: "1px dashed #c7d2fe", borderRadius: "6px", textDecoration: "none", marginTop: "4px" }}>
+                    <Link to="/workshop/variables" style={{ display: "block", fontSize: "11px", color: "var(--aos-indigo-600)", textAlign: "center", padding: "4px", border: "1px dashed var(--aos-indigo-border)", borderRadius: "6px", textDecoration: "none", marginTop: "4px" }}>
                       + 绑定变量或 ObjectSet
                     </Link>
                   </div>
@@ -1919,7 +1919,7 @@ export function CanvasPage() {
                 display: "flex",
                 alignItems: "center",
                 gap: "6px",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                boxShadow: "var(--shadow-lg)",
               }}
             >
               <span>{KIND_ICON[activeItem.kind] || "📦"}</span>
@@ -1953,7 +1953,7 @@ function CanvasDropZone({ children, disabled }: { children: React.ReactNode; dis
       className="p-slate-canvas"
       style={{
         border: isOver && !disabled ? "2px dashed var(--aos-accent)" : undefined,
-        background: isOver && !disabled ? "rgba(79,70,229,0.04)" : undefined,
+        background: isOver && !disabled ? "var(--aos-indigo-bg)" : undefined,
       }}
     >
       {children}

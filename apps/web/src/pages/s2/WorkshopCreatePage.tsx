@@ -221,13 +221,13 @@ export function WorkshopCreatePage() {
         {createdId && (
           <div
             style={{
-              background: "#D1FAE5",
-              color: "#065F46",
+              background: "var(--aos-green-bg)",
+              color: "var(--aos-green-700)",
               padding: "12px 16px",
               borderRadius: 8,
               marginBottom: 16,
               fontSize: 13,
-              border: "1px solid #6EE7B7",
+              border: "1px solid var(--aos-green-border)",
               display: "flex",
               alignItems: "center",
               gap: 8,
@@ -262,7 +262,7 @@ export function WorkshopCreatePage() {
               </FieldLabel>
               <input
                 className="aos-input"
-                style={{ height: 38, fontSize: 13, padding: "0 12px", background: "#F9FAFB" }}
+                style={{ height: 38, fontSize: 13, padding: "0 12px", background: "var(--aos-surface-hover)" }}
                 value={slug}
                 readOnly
                 placeholder="inventory-mgmt"
@@ -283,9 +283,9 @@ export function WorkshopCreatePage() {
                       fontSize: 12,
                       fontWeight: 500,
                       cursor: "pointer",
-                      border: category === cat.id ? `1.5px solid ${cat.color}` : "1px solid #E5E7EB",
-                      background: category === cat.id ? `${cat.color}15` : "#fff",
-                      color: category === cat.id ? cat.color : "#6B7280",
+                      border: category === cat.id ? `1.5px solid ${cat.color}` : "1px solid var(--aos-border)",
+                      background: category === cat.id ? `${cat.color}15` : "var(--aos-surface)",
+                      color: category === cat.id ? cat.color : "var(--aos-text-secondary)",
                       transition: "all 0.15s",
                     }}
                   >
@@ -342,15 +342,15 @@ export function WorkshopCreatePage() {
                       borderRadius: 8,
                       padding: 14,
                       cursor: "pointer",
-                      background: selected ? "#E1F5EE" : "#fff",
+                      background: selected ? "var(--aos-accent-light)" : "var(--aos-surface)",
                       transition: "all 0.15s",
                     }}
                   >
                     <TemplatePreview type={t.preview} blank={t.blank} />
-                    <div style={{ fontSize: 13, fontWeight: 500, color: "#1F2937", marginBottom: 4 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: "var(--aos-text)", marginBottom: 4 }}>
                       {t.name}
                     </div>
-                    <div style={{ fontSize: 11, color: "#6B7280", lineHeight: 1.5 }}>{t.desc}</div>
+                    <div style={{ fontSize: 11, color: "var(--aos-text-secondary)", lineHeight: 1.5 }}>{t.desc}</div>
                   </div>
                 );
               })}
@@ -367,7 +367,7 @@ export function WorkshopCreatePage() {
                   borderRadius: 8,
                   padding: 14,
                   cursor: "pointer",
-                  background: template === "copy" ? "#E1F5EE" : "#fff",
+                  background: template === "copy" ? "var(--aos-accent-light)" : "var(--aos-surface)",
                   transition: "all 0.15s",
                 }}
               >
@@ -376,22 +376,22 @@ export function WorkshopCreatePage() {
                     width: "100%",
                     height: 80,
                     borderRadius: 4,
-                    background: "#F3F4F6",
+                    background: "var(--aos-surface-hover)",
                     marginBottom: 10,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="1.5">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--aos-text-secondary)" strokeWidth="1.5">
                     <rect x="9" y="9" width="13" height="13" rx="2" />
                     <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 500, color: "#1F2937", marginBottom: 4 }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: "var(--aos-text)", marginBottom: 4 }}>
                   从已有模块复制
                 </div>
-                <div style={{ fontSize: 11, color: "#6B7280", lineHeight: 1.5 }}>
+                <div style={{ fontSize: 11, color: "var(--aos-text-secondary)", lineHeight: 1.5 }}>
                   选择一个现有模块，复制其全部 Widget 和配置。
                 </div>
               </div>
@@ -403,13 +403,13 @@ export function WorkshopCreatePage() {
                 style={{
                   marginTop: 16,
                   padding: 14,
-                  border: "1px solid #E5E7EB",
+                  border: "1px solid var(--aos-border)",
                   borderRadius: 8,
-                  background: "#FAFAFA",
+                  background: "var(--aos-surface-hover)",
                 }}
                 data-testid="create-copy-source"
               >
-                <div style={{ fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 8 }}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)", marginBottom: 8 }}>
                   选择要复制的源模块：
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -433,21 +433,21 @@ export function WorkshopCreatePage() {
                       }}
                     >
                       <div>
-                        <span style={{ fontSize: 13, fontWeight: 500, color: "#1F2937" }}>{m.name}</span>
+                        <span style={{ fontSize: 13, fontWeight: 500, color: "var(--aos-text)" }}>{m.name}</span>
                         <span
                           style={{
                             fontSize: 10,
                             padding: "1px 6px",
                             borderRadius: 3,
-                            background: "#EFF6FF",
-                            color: "#3B82F6",
+                            background: "var(--aos-accent-light)",
+                            color: "var(--aos-accent)",
                             marginLeft: 8,
                           }}
                         >
                           {CATEGORIES.find((c) => c.id === m.category)?.name || m.category}
                         </span>
                       </div>
-                      <span style={{ fontSize: 11, color: "#9CA3AF" }}>{m.updated_at.slice(0, 10)}</span>
+                      <span style={{ fontSize: 11, color: "var(--aos-faint)" }}>{m.updated_at.slice(0, 10)}</span>
                     </div>
                   ))}
                 </div>
@@ -461,14 +461,14 @@ export function WorkshopCreatePage() {
                   marginTop: 16,
                   padding: 12,
                   borderRadius: 6,
-                  background: "#E1F5EE",
-                  border: "1px solid #6EE7B7",
+                  background: "var(--aos-accent-light)",
+                  border: "1px solid var(--aos-green-border)",
                 }}
               >
-                <div style={{ fontSize: 12, fontWeight: 500, color: "#065F46", marginBottom: 4 }}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-green-700)", marginBottom: 4 }}>
                   选中模板将预填充：
                 </div>
-                <div style={{ fontSize: 11, color: "#065F46", lineHeight: 1.6 }}>
+                <div style={{ fontSize: 11, color: "var(--aos-green-700)", lineHeight: 1.6 }}>
                   {selectedTemplate.id === "dashboard" &&
                     "4 个统计卡片 Widget + 1 个趋势图 + 1 个饼图 · 3 个 Variables"}
                   {selectedTemplate.id === "form" &&
@@ -488,21 +488,21 @@ export function WorkshopCreatePage() {
           <BpCard title="Step 3 · 确认创建" subtitle="请检查以下信息，确认后将创建 Module 并进入画布编辑器。">
             <div
               style={{
-                border: "1px solid #E5E7EB",
+                border: "1px solid var(--aos-border)",
                 borderRadius: 8,
                 overflow: "hidden",
-                background: "#fff",
+                background: "var(--aos-surface)",
                 marginBottom: 16,
               }}
             >
               <div
                 style={{
                   padding: "10px 16px",
-                  background: "#F9FAFB",
-                  borderBottom: "1px solid #E5E7EB",
+                  background: "var(--aos-surface-hover)",
+                  borderBottom: "1px solid var(--aos-border)",
                   fontSize: 12,
                   fontWeight: 500,
-                  color: "#374151",
+                  color: "var(--aos-text)",
                 }}
               >
                 模块信息汇总
@@ -518,8 +518,8 @@ export function WorkshopCreatePage() {
                         <span
                           style={{
                             padding: "2px 8px",
-                            background: `${selectedCategory?.color || "#6B7280"}15`,
-                            color: selectedCategory?.color || "#6B7280",
+                            background: `${selectedCategory?.color || "var(--aos-text-secondary)"}15`,
+                            color: selectedCategory?.color || "var(--aos-text-secondary)",
                             borderRadius: 4,
                             fontSize: 11,
                             fontWeight: 500,
@@ -540,8 +540,8 @@ export function WorkshopCreatePage() {
                         <span
                           style={{
                             padding: "2px 8px",
-                            background: "#FEF3C7",
-                            color: "#92400E",
+                            background: "var(--aos-amber-bg)",
+                            color: "var(--aos-amber-700)",
                             borderRadius: 4,
                             fontSize: 11,
                           }}
@@ -559,14 +559,14 @@ export function WorkshopCreatePage() {
               style={{
                 padding: 12,
                 borderRadius: 6,
-                background: "#EFF6FF",
-                border: "1px solid #93C5FD",
+                background: "var(--aos-accent-light)",
+                border: "1px solid var(--aos-accent-border)",
               }}
             >
-              <div style={{ fontSize: 12, fontWeight: 500, color: "#1E40AF", marginBottom: 6 }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-blue-title)", marginBottom: 6 }}>
                 创建后将自动执行：
               </div>
-              <ul style={{ fontSize: 11, color: "#1D4ED8", lineHeight: 1.8, listStyle: "none", padding: 0, margin: 0 }}>
+              <ul style={{ fontSize: 11, color: "var(--aos-blue-600)", lineHeight: 1.8, listStyle: "none", padding: 0, margin: 0 }}>
                 <li>1. 创建 Module 资源（含 Layout + Widget）</li>
                 <li>2. 初始化 Variables 并绑定数据源</li>
                 <li>3. 创建 Event Handler（如有）</li>
@@ -600,53 +600,53 @@ function TemplatePreview({ type, blank }: { type?: string; blank?: boolean }) {
           width: "100%",
           height: 80,
           borderRadius: 4,
-          background: "#F9FAFB",
+          background: "var(--aos-surface-hover)",
           marginBottom: 10,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          border: "1px dashed #D1D5DB",
+          border: "1px dashed var(--aos-border-strong)",
         }}
       >
-        <span style={{ fontSize: 11, color: "#9CA3AF" }}>空白画布</span>
+        <span style={{ fontSize: 11, color: "var(--aos-faint)" }}>空白画布</span>
       </div>
     );
   }
   if (type === "table") {
     return (
       <div
-        style={{ width: "100%", height: 80, borderRadius: 4, background: "#F3F4F6", marginBottom: 10, position: "relative", overflow: "hidden" }}
+        style={{ width: "100%", height: 80, borderRadius: 4, background: "var(--aos-surface-hover)", marginBottom: 10, position: "relative", overflow: "hidden" }}
       >
-        <div style={{ position: "absolute", top: 6, left: 6, right: 6, height: 16, background: "#D1D5DB", borderRadius: 2 }} />
-        <div style={{ position: "absolute", top: 28, left: 6, right: 6, bottom: 6, background: "#D1D5DB", borderRadius: 2 }} />
+        <div style={{ position: "absolute", top: 6, left: 6, right: 6, height: 16, background: "var(--aos-border-strong)", borderRadius: 2 }} />
+        <div style={{ position: "absolute", top: 28, left: 6, right: 6, bottom: 6, background: "var(--aos-border-strong)", borderRadius: 2 }} />
       </div>
     );
   }
   if (type === "dashboard") {
     return (
       <div
-        style={{ width: "100%", height: 80, borderRadius: 4, background: "#F3F4F6", marginBottom: 10, position: "relative", overflow: "hidden" }}
+        style={{ width: "100%", height: 80, borderRadius: 4, background: "var(--aos-surface-hover)", marginBottom: 10, position: "relative", overflow: "hidden" }}
       >
-        <div style={{ position: "absolute", top: 6, left: 6, width: 28, height: 24, background: "#D1D5DB", borderRadius: 2 }} />
-        <div style={{ position: "absolute", top: 6, left: 40, width: 28, height: 24, background: "#D1D5DB", borderRadius: 2 }} />
-        <div style={{ position: "absolute", top: 6, left: 74, width: 28, height: 24, background: "#D1D5DB", borderRadius: 2 }} />
-        <div style={{ position: "absolute", top: 36, left: 6, right: 6, height: 32, background: "#D1D5DB", borderRadius: 2 }} />
+        <div style={{ position: "absolute", top: 6, left: 6, width: 28, height: 24, background: "var(--aos-border-strong)", borderRadius: 2 }} />
+        <div style={{ position: "absolute", top: 6, left: 40, width: 28, height: 24, background: "var(--aos-border-strong)", borderRadius: 2 }} />
+        <div style={{ position: "absolute", top: 6, left: 74, width: 28, height: 24, background: "var(--aos-border-strong)", borderRadius: 2 }} />
+        <div style={{ position: "absolute", top: 36, left: 6, right: 6, height: 32, background: "var(--aos-border-strong)", borderRadius: 2 }} />
       </div>
     );
   }
   if (type === "form") {
     return (
       <div
-        style={{ width: "100%", height: 80, borderRadius: 4, background: "#F3F4F6", marginBottom: 10, position: "relative", overflow: "hidden" }}
+        style={{ width: "100%", height: 80, borderRadius: 4, background: "var(--aos-surface-hover)", marginBottom: 10, position: "relative", overflow: "hidden" }}
       >
-        <div style={{ position: "absolute", top: 8, left: 8, right: 8, height: 12, background: "#D1D5DB", borderRadius: 2 }} />
-        <div style={{ position: "absolute", top: 26, left: 8, right: 8, height: 12, background: "#D1D5DB", borderRadius: 2 }} />
-        <div style={{ position: "absolute", top: 44, left: 8, right: 8, height: 12, background: "#D1D5DB", borderRadius: 2 }} />
-        <div style={{ position: "absolute", top: 62, left: 8, width: 40, height: 12, background: "#6B7280", borderRadius: 2 }} />
+        <div style={{ position: "absolute", top: 8, left: 8, right: 8, height: 12, background: "var(--aos-border-strong)", borderRadius: 2 }} />
+        <div style={{ position: "absolute", top: 26, left: 8, right: 8, height: 12, background: "var(--aos-border-strong)", borderRadius: 2 }} />
+        <div style={{ position: "absolute", top: 44, left: 8, right: 8, height: 12, background: "var(--aos-border-strong)", borderRadius: 2 }} />
+        <div style={{ position: "absolute", top: 62, left: 8, width: 40, height: 12, background: "var(--aos-text-secondary)", borderRadius: 2 }} />
       </div>
     );
   }
-  return <div style={{ width: "100%", height: 80, borderRadius: 4, background: "#F3F4F6", marginBottom: 10 }} />;
+  return <div style={{ width: "100%", height: 80, borderRadius: 4, background: "var(--aos-surface-hover)", marginBottom: 10 }} />;
 }
 
 function FormGrid({ children }: { children: React.ReactNode }) {
@@ -655,18 +655,18 @@ function FormGrid({ children }: { children: React.ReactNode }) {
 
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label style={{ fontSize: 12, color: "#374151", fontWeight: 500 }}>
+    <label style={{ fontSize: 12, color: "var(--aos-text)", fontWeight: 500 }}>
       {children}
-      {required ? <span style={{ color: "#DC2626", marginLeft: 2 }}>*</span> : null}
+      {required ? <span style={{ color: "var(--aos-red)", marginLeft: 2 }}>*</span> : null}
     </label>
   );
 }
 
 function SummaryRow({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) {
   return (
-    <tr style={{ borderBottom: "1px solid #F3F4F6" }}>
-      <td style={{ padding: "6px 0", color: "#9CA3AF", width: 100, verticalAlign: "top" }}>{label}</td>
-      <td style={{ padding: "6px 0", color: "#1F2937", fontWeight: 500, fontFamily: mono ? "monospace" : "inherit" }}>
+    <tr style={{ borderBottom: "1px solid var(--aos-divider)" }}>
+      <td style={{ padding: "6px 0", color: "var(--aos-faint)", width: 100, verticalAlign: "top" }}>{label}</td>
+      <td style={{ padding: "6px 0", color: "var(--aos-text)", fontWeight: 500, fontFamily: mono ? "monospace" : "inherit" }}>
         {value}
       </td>
     </tr>
@@ -696,7 +696,7 @@ function StepFooter({
         justifyContent: center ? "center" : "flex-end",
         marginTop: 20,
         paddingTop: 12,
-        borderTop: "1px solid #E5E7EB",
+        borderTop: "1px solid var(--aos-border)",
       }}
     >
       {onCancel && (

@@ -183,9 +183,9 @@ export function formatRelativeTime(iso: string | undefined): string {
 }
 
 export function getStatusMeta(status: string): { label: string; bg: string; color: string } {
-  if (status === "published") return { label: "已发布", bg: "#D1FAE5", color: "#059669" };
-  if (status === "draft") return { label: "草稿", bg: "#FEF3C7", color: "#D97706" };
-  return { label: "已禁用", bg: "#FEE2E2", color: "#DC2626" };
+  if (status === "published") return { label: "已发布", bg: "var(--aos-green-bg)", color: "var(--aos-green-600)" };
+  if (status === "draft") return { label: "草稿", bg: "var(--aos-amber-bg)", color: "var(--aos-amber-600)" };
+  return { label: "已禁用", bg: "var(--aos-red-bg)", color: "var(--aos-red)" };
 }
 
 export function getCategoryName(category: string | undefined): string {
@@ -195,7 +195,7 @@ export function getCategoryName(category: string | undefined): string {
 
 export function getCategoryColor(category: string | undefined): string {
   const found = CATEGORIES.find((c) => c.id === category);
-  return found?.color || "#6B7280";
+  return found?.color || "var(--aos-text-secondary)";
 }
 
 /* ============================================================================
@@ -254,18 +254,18 @@ export function WorkshopListPage() {
         {/* 顶部标题区 */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-[13px] font-medium text-gray-900 tracking-tight leading-snug">
+            <h1 className="text-[13px] font-medium tracking-tight leading-snug" style={{ color: "var(--aos-text)" }}>
               应用列表
             </h1>
-            <p className="mt-1.5 text-gray-600 text-[13px] leading-relaxed">
+            <p className="mt-1.5 text-[13px] leading-relaxed" style={{ color: "var(--aos-text-secondary)" }}>
               按业务场景打开模块。点击卡片进入画布编辑。
             </p>
           </div>
           <Link
             to="/workshop/create"
             data-testid="btn-new-module"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-medium text-white transition-colors"
-            style={{ background: "var(--aos-accent)" }}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-medium transition-colors"
+            style={{ background: "var(--aos-accent)", color: "var(--text-on-brand)" }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path d="M12 5v14M5 12h14" strokeLinecap="round" />
@@ -305,10 +305,10 @@ export function WorkshopListPage() {
                     style={{
                       flex: "0 0 200px",
                       maxWidth: 200,
-                      border: "1px solid #E5E7EB",
+                      border: "1px solid var(--aos-border)",
                       borderRadius: 8,
                       padding: 12,
-                      background: "#fff",
+                      background: "var(--aos-surface)",
                       cursor: "pointer",
                       transition: "box-shadow 0.15s, border-color 0.15s",
                       textDecoration: "none",
@@ -354,7 +354,7 @@ export function WorkshopListPage() {
                       style={{
                         fontSize: 13,
                         fontWeight: 600,
-                        color: "#1F2937",
+                        color: "var(--aos-text)",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
@@ -363,7 +363,7 @@ export function WorkshopListPage() {
                       {m.name}
                     </div>
                     {/* 最后打开时间 */}
-                    <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>
+                    <div style={{ fontSize: 10, color: "var(--aos-faint)", marginTop: 4 }}>
                       {formatRelativeTime(m.lastOpenedAt)}
                     </div>
                   </Link>
@@ -401,7 +401,7 @@ export function WorkshopListPage() {
                   {cat.name}
                 </button>
               ))}
-              <span className="text-[11px] text-gray-400 ml-2">
+              <span className="text-[11px] ml-2" style={{ color: "var(--aos-text-tertiary)" }}>
                 {filteredItems.length} / {items.length}
               </span>
             </div>
@@ -427,10 +427,10 @@ export function WorkshopListPage() {
                     key={m.id}
                     data-testid={`app-card-${m.id}`}
                     style={{
-                      border: "1px solid #E5E7EB",
+                      border: "1px solid var(--aos-border)",
                       borderRadius: 8,
                       padding: 14,
-                      background: "#fff",
+                      background: "var(--aos-surface)",
                       transition: "box-shadow 0.15s, border-color 0.15s",
                     }}
                     className="wl-app-card"
@@ -490,7 +490,7 @@ export function WorkshopListPage() {
                         style={{
                           fontSize: 13,
                           fontWeight: 600,
-                          color: "#1F2937",
+                          color: "var(--aos-text)",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
@@ -499,16 +499,16 @@ export function WorkshopListPage() {
                         {m.name}
                       </div>
                       {/* 描述 */}
-                      <p style={{ fontSize: 11, color: "#6B7280", marginTop: 4, lineHeight: 1.4 }}>
+                      <p style={{ fontSize: 11, color: "var(--aos-text-secondary)", marginTop: 4, lineHeight: 1.4 }}>
                         {m.description || "—"}
                       </p>
                       {/* 最后打开时间 */}
-                      <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 8 }}>
+                      <div style={{ fontSize: 10, color: "var(--aos-faint)", marginTop: 8 }}>
                         最后打开：{formatRelativeTime(m.lastOpenedAt)}
                       </div>
                     </Link>
                     {/* 编辑入口 */}
-                    <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid #F3F4F6" }}>
+                    <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--aos-divider)" }}>
                       <Link
                         to="/workshop/canvas"
                         className="text-[var(--aos-accent)] hover:underline"
@@ -522,7 +522,7 @@ export function WorkshopListPage() {
               })}
             </div>
           ) : loading ? (
-            <div style={{ textAlign: "center", padding: 24, color: "#9CA3AF" }}>加载中...</div>
+            <div style={{ textAlign: "center", padding: 24, color: "var(--aos-faint)" }}>加载中...</div>
           ) : (
             <BpEmpty
               title={items.length === 0 ? "暂无应用" : "无匹配结果"}
