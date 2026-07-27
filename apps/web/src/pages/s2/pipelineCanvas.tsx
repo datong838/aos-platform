@@ -139,6 +139,13 @@ export function PipelineCanvasPage() {
   // Phase E-03: 算子拖入画布
   const [extraNodes, setExtraNodes] = useState<{ id: string; label: string; kind: NodeType; x: number; y: number }[]>([]);
 
+  // Phase 7: 画布缩放 + 右键菜单 + 连接线管理
+  const [zoom, setZoom] = useState(1);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null);
+  const [connections, setConnections] = useState<{ from: string; to: string }[]>([]);
+  const [linkingFrom, setLinkingFrom] = useState<string | null>(null);
+  const [showStats, setShowStats] = useState(false);
+
   function handleNodeDragStart(e: React.DragEvent, nodeKey: string) {
     setDraggingNode(nodeKey);
     e.dataTransfer.effectAllowed = "move";
@@ -184,6 +191,49 @@ export function PipelineCanvasPage() {
 
   function removeExtraNode(id: string) {
     setExtraNodes((prev) => prev.filter((n) => n.id !== id));
+    setConnections((prev) => prev.filter((c) => c.from !== id && c.to !== id));
+  }
+
+  // Phase 7: 缩放控制
+  function handleZoomIn() { setZoom((z) => Math.min(z + 0.1, 2)); }
+  function handleZoomOut() { setZoom((z) => Math.max(z - 0.1, 0.5)); }
+  function handleZoomReset() { setZoom(1); }
+
+  // Phase 7: 右键菜单
+  function handleContextMenu(e: React.MouseEvent, nodeId: string) {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, nodeId });
+  }
+
+  function closeContextMenu() { setContextMenu(null); }
+
+  // Phase 7: 连接线管理
+  function startLink(nodeId: string) {
+    setLinkingFrom(nodeId);
+    setContextMenu(null);
+  }
+
+  function completeLink(targetNodeId: string) {
+    if (linkingFrom && linkingFrom !== targetNodeId) {
+      setConnections((prev) => {
+        const exists = prev.some((c) => c.from === linkingFrom && c.to === targetNodeId);
+        if (exists) return prev;
+        return [...prev, { from: linkingFrom, to: targetNodeId }];
+      });
+    }
+    setLinkingFrom(null);
+  }
+
+  function removeConnection(from: string, to: string) {
+    setConnections((prev) => prev.filter((c) => !(c.from === from && c.to === to)));
+    setContextMenu(null);
+  }
+
+  // Phase 7: 清空画布
+  function clearCanvas() {
+    setExtraNodes([]);
+    setConnections([]);
+    setContextMenu(null);
   }
 
   useEffect(() => {
@@ -294,6 +344,30 @@ export function PipelineCanvasPage() {
 
       {pipe && (
         <div className="bp-pipe-canvas-shell">
+          {/* Phase 7: 画布工具栏 - 缩放 + 统计 + 清空 */}
+          <div className="bp-pipe-canvas-toolbar" style={{ display: "flex", gap: 8, padding: "4px 12px", alignItems: "center", borderBottom: "1px solid var(--aos-border, #e2e8f0)", background: "var(--aos-surface, #f7fafc)" }}>
+            <button type="button" className="btn" onClick={handleZoomOut} style={{ fontSize: "0.75rem", padding: "2px 8px" }} title="缩小">−</button>
+            <span style={{ fontSize: "0.75rem", minWidth: 48, textAlign: "center" }}>{Math.round(zoom * 100)}%</span>
+            <button type="button" className="btn" onClick={handleZoomIn} style={{ fontSize: "0.75rem", padding: "2px 8px" }} title="放大">+</button>
+            <button type="button" className="btn" onClick={handleZoomReset} style={{ fontSize: "0.75rem", padding: "2px 8px" }} title="重置缩放">1:1</button>
+            <div style={{ width: 1, height: 18, background: "var(--aos-border, #e2e8f0)", margin: "0 4px" }} />
+            <button type="button" className="btn" onClick={() => setShowStats((v) => !v)} style={{ fontSize: "0.75rem", padding: "2px 8px" }}>
+              {showStats ? "隐藏统计" : "统计"}
+            </button>
+            {showStats && (
+              <span className="muted" style={{ fontSize: "0.7rem" }}>
+                节点 {3 + extraNodes.length} · 连接 {2 + connections.length} · 算子组 {OPERATORS.length}
+              </span>
+            )}
+            <div style={{ flex: 1 }} />
+            {linkingFrom && (
+              <span style={{ fontSize: "0.7rem", color: "var(--aos-accent, #3182ce)" }}>
+                连接模式 · 点击目标节点完成连接
+              </span>
+            )}
+            <button type="button" className="btn" onClick={clearCanvas} style={{ fontSize: "0.75rem", padding: "2px 8px" }} title="清空额外节点">清空</button>
+          </div>
+
           <div className="bp-pipe-canvas-main">
             <div
               className="grid-pattern bp-pipe-dag"
@@ -301,7 +375,8 @@ export function PipelineCanvasPage() {
               onDrop={handleCanvasDrop}
               onMouseMove={handleNodeMouseMove}
               onMouseUp={handleNodeDragEnd}
-              style={{ position: "relative", minHeight: 200 }}
+              onClick={closeContextMenu}
+              style={{ position: "relative", minHeight: 200, transform: `scale(${zoom})`, transformOrigin: "top left", transition: "transform 0.15s ease" }}
             >
               <svg className="bp-pipe-flow-svg" preserveAspectRatio="none" viewBox="0 0 720 200" aria-hidden>
                 <path className="flow-line flow-line-active" d={`M ${nodePositions.input.x + 100} ${nodePositions.input.y + 30} C ${nodePositions.input.x + 140} ${nodePositions.input.y + 30}, ${nodePositions.transform.x - 40} ${nodePositions.transform.y + 30}, ${nodePositions.transform.x} ${nodePositions.transform.y + 30}`} />
@@ -313,8 +388,12 @@ export function PipelineCanvasPage() {
                   draggable
                   onDragStart={(e) => handleNodeDragStart(e, "input")}
                   onDragEnd={handleNodeDragEnd}
-                  className={`pipeline-node bp-pipe-node bp-pipe-node-input${selected === "input" ? " is-selected" : ""}`}
-                  onClick={() => setSelected("input")}
+                  className={`pipeline-node bp-pipe-node bp-pipe-node-input${selected === "input" ? " is-selected" : ""}${linkingFrom === "input" ? " is-linking" : ""}`}
+                  onClick={() => {
+                    if (linkingFrom) { completeLink("input"); }
+                    else { setSelected("input"); }
+                  }}
+                  onContextMenu={(e) => handleContextMenu(e, "input")}
                   style={{ position: "absolute", left: nodePositions.input.x, top: nodePositions.input.y, cursor: "grab" }}
                 >
                   <div className="bp-pipe-node-head">
@@ -330,8 +409,12 @@ export function PipelineCanvasPage() {
                   draggable
                   onDragStart={(e) => handleNodeDragStart(e, "transform")}
                   onDragEnd={handleNodeDragEnd}
-                  className={`pipeline-node bp-pipe-node bp-pipe-node-xform${selected === "transform" ? " is-selected" : ""}`}
-                  onClick={() => setSelected("transform")}
+                  className={`pipeline-node bp-pipe-node bp-pipe-node-xform${selected === "transform" ? " is-selected" : ""}${linkingFrom === "transform" ? " is-linking" : ""}`}
+                  onClick={() => {
+                    if (linkingFrom) { completeLink("transform"); }
+                    else { setSelected("transform"); }
+                  }}
+                  onContextMenu={(e) => handleContextMenu(e, "transform")}
                   style={{ position: "absolute", left: nodePositions.transform.x, top: nodePositions.transform.y, cursor: "grab" }}
                 >
                   <div className="bp-pipe-node-head">
@@ -347,8 +430,12 @@ export function PipelineCanvasPage() {
                   draggable
                   onDragStart={(e) => handleNodeDragStart(e, "output")}
                   onDragEnd={handleNodeDragEnd}
-                  className={`pipeline-node bp-pipe-node bp-pipe-node-out${selected === "output" ? " is-selected" : ""}`}
-                  onClick={() => setSelected("output")}
+                  className={`pipeline-node bp-pipe-node bp-pipe-node-out${selected === "output" ? " is-selected" : ""}${linkingFrom === "output" ? " is-linking" : ""}`}
+                  onClick={() => {
+                    if (linkingFrom) { completeLink("output"); }
+                    else { setSelected("output"); }
+                  }}
+                  onContextMenu={(e) => handleContextMenu(e, "output")}
                   style={{ position: "absolute", left: nodePositions.output.x, top: nodePositions.output.y, cursor: "grab" }}
                 >
                   <div className="bp-pipe-node-head">
@@ -364,11 +451,14 @@ export function PipelineCanvasPage() {
                   <button
                     key={n.id}
                     type="button"
-                    className={`pipeline-node bp-pipe-node bp-pipe-node-${n.kind === "input" ? "input" : n.kind === "transform" ? "xform" : "out"}`}
-                    onClick={() => setSelected(n.kind)}
+                    className={`pipeline-node bp-pipe-node bp-pipe-node-${n.kind === "input" ? "input" : n.kind === "transform" ? "xform" : "out"}${linkingFrom === n.id ? " is-linking" : ""}`}
+                    onClick={() => {
+                      if (linkingFrom) { completeLink(n.id); }
+                    }}
+                    onContextMenu={(e) => handleContextMenu(e, n.id)}
                     onDoubleClick={() => removeExtraNode(n.id)}
                     style={{ position: "absolute", left: n.x, top: n.y, cursor: "pointer", opacity: 0.9 }}
-                    title="双击移除"
+                    title="双击移除 · 右键菜单"
                   >
                     <div className="bp-pipe-node-head">
                       <span className={`bp-pipe-node-icon bp-pipe-node-icon-${n.kind === "input" ? "amber" : n.kind === "transform" ? "cyan" : "emerald"}`} />
@@ -381,7 +471,84 @@ export function PipelineCanvasPage() {
                   </button>
                 ))}
               </div>
+              {/* Phase 7: 额外连接线渲染 */}
+              {connections.length > 0 && (
+                <svg className="bp-pipe-flow-svg" preserveAspectRatio="none" viewBox="0 0 720 200" aria-hidden style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0 }}>
+                  {connections.map((c, i) => {
+                    const nodePos = (id: string) => {
+                      if (id === "input") return nodePositions.input;
+                      if (id === "transform") return nodePositions.transform;
+                      if (id === "output") return nodePositions.output;
+                      const ex = extraNodes.find((n) => n.id === id);
+                      return ex ? { x: ex.x, y: ex.y } : { x: 0, y: 0 };
+                    };
+                    const from = nodePos(c.from);
+                    const to = nodePos(c.to);
+                    return (
+                      <path key={i} className="flow-line flow-line-dashed" d={`M ${from.x + 100} ${from.y + 30} C ${from.x + 140} ${from.y + 30}, ${to.x - 40} ${to.y + 30}, ${to.x} ${to.y + 30}`} strokeDasharray="4 3" opacity={0.5} />
+                    );
+                  })}
+                </svg>
+              )}
             </div>
+
+            {/* Phase 7: 右键菜单 */}
+            {contextMenu && (
+              <div
+                className="bp-context-menu"
+                style={{
+                  position: "fixed",
+                  left: contextMenu.x,
+                  top: contextMenu.y,
+                  zIndex: 1000,
+                  background: "var(--aos-surface, #fff)",
+                  border: "1px solid var(--aos-border, #e2e8f0)",
+                  borderRadius: 4,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  padding: "4px 0",
+                  minWidth: 140,
+                }}
+              >
+                <button
+                  type="button"
+                  className="bp-context-item"
+                  style={{ display: "block", width: "100%", padding: "6px 12px", textAlign: "left", background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem" }}
+                  onClick={() => startLink(contextMenu.nodeId)}
+                >
+                  从此节点建立连接…
+                </button>
+                {linkingFrom && linkingFrom !== contextMenu.nodeId && (
+                  <button
+                    type="button"
+                    className="bp-context-item"
+                    style={{ display: "block", width: "100%", padding: "6px 12px", textAlign: "left", background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem" }}
+                    onClick={() => completeLink(contextMenu.nodeId)}
+                  >
+                    连接到此节点
+                  </button>
+                )}
+                {connections.filter((c) => c.from === contextMenu.nodeId || c.to === contextMenu.nodeId).map((c, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className="bp-context-item"
+                    style={{ display: "block", width: "100%", padding: "6px 12px", textAlign: "left", background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem", color: "#e53e3e" }}
+                    onClick={() => removeConnection(c.from, c.to)}
+                  >
+                    移除连接 {c.from} → {c.to}
+                  </button>
+                ))}
+                <div style={{ height: 1, background: "var(--aos-border, #e2e8f0)", margin: "4px 0" }} />
+                <button
+                  type="button"
+                  className="bp-context-item"
+                  style={{ display: "block", width: "100%", padding: "6px 12px", textAlign: "left", background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem" }}
+                  onClick={() => { closeContextMenu(); }}
+                >
+                  关闭菜单
+                </button>
+              </div>
+            )}
 
             <div className="bp-pipe-preview">
               <div className="bp-pipe-preview-bar">
