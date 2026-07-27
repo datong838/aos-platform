@@ -78,6 +78,11 @@ const CodeRepositoriesPage = lazify(() => import("./CodeRepositoriesPage"), "Cod
 const DataLineagePage = lazify(() => import("./DataLineagePage"), "DataLineagePage");
 const BuildModalPage = lazify(() => import("./BuildModalPage"), "BuildModalPage");
 
+// Phase 7 · 系统管理 + 全局搜索
+const UserSettingsPage = lazify(() => import("./UserSettingsPage"), "UserSettingsPage");
+const AuditLogPage = lazify(() => import("./AuditLogPage"), "AuditLogPage");
+const PermissionManagerPage = lazify(() => import("./PermissionManagerPage"), "PermissionManagerPage");
+
 /** Paths promoted in T-UI S2 knife-1～3 ([43]/[45]/[49]). */
 export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "workshop/graph", Component: GraphExplorerPage },
@@ -144,6 +149,10 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "ontology/functions", Component: FunctionEditorPage },
   { path: "ontology/wiki/:wikiId", Component: WikiDetailPage },
   { path: "ontology/wiki/:wikiId/diff", Component: WikiDiffPage },
+  // Phase 7 · 系统管理
+  { path: "settings/profile", Component: UserSettingsPage },
+  { path: "settings/audit", Component: AuditLogPage },
+  { path: "settings/permissions", Component: PermissionManagerPage },
 ];
 
 export const S2_LIVE_PATHS = new Set(S2_LIVE_ROUTES.map((r) => `/${r.path}`));
