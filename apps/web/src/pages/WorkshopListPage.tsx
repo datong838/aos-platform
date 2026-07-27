@@ -265,7 +265,7 @@ export function WorkshopListPage() {
             to="/workshop/create"
             data-testid="btn-new-module"
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-medium text-white transition-colors"
-            style={{ background: "#0F6E56" }}
+            style={{ background: "var(--aos-accent)" }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path d="M12 5v14M5 12h14" strokeLinecap="round" />

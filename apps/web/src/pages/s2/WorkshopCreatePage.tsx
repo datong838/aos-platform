@@ -338,7 +338,7 @@ export function WorkshopCreatePage() {
                     tabIndex={0}
                     data-testid={`create-tpl-${t.id}`}
                     style={{
-                      border: selected ? "2px solid #0F6E56" : "1px solid #E5E7EB",
+                      border: selected ? "2px solid var(--aos-accent)" : "1px solid var(--aos-border)",
                       borderRadius: 8,
                       padding: 14,
                       cursor: "pointer",
@@ -363,7 +363,7 @@ export function WorkshopCreatePage() {
                 tabIndex={0}
                 data-testid="create-tpl-copy"
                 style={{
-                  border: template === "copy" ? "2px solid #0F6E56" : "1px solid #E5E7EB",
+                  border: template === "copy" ? "2px solid var(--aos-accent)" : "1px solid var(--aos-border)",
                   borderRadius: 8,
                   padding: 14,
                   cursor: "pointer",
@@ -427,8 +427,8 @@ export function WorkshopCreatePage() {
                         padding: "8px 12px",
                         borderRadius: 6,
                         cursor: "pointer",
-                        border: copyFromId === m.id ? "1.5px solid #0F6E56" : "1px solid #E5E7EB",
-                        background: copyFromId === m.id ? "#E1F5EE" : "#fff",
+                        border: copyFromId === m.id ? "1.5px solid var(--aos-accent)" : "1px solid var(--aos-border)",
+                        background: copyFromId === m.id ? "var(--aos-accent-light)" : "var(--aos-surface)",
                         transition: "all 0.1s",
                       }}
                     >

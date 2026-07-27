@@ -2123,7 +2123,7 @@ spec:
                     fontWeight: 500,
                     borderRadius: 6,
                     border: "none",
-                    background: "#0F6E56",
+                    background: "var(--aos-accent)",
                     color: "#fff",
                     cursor: importing ? "default" : "pointer",
                     opacity: importing ? 0.7 : 1,

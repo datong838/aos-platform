@@ -268,7 +268,7 @@ permissions:
                 borderRadius: 6,
                 fontSize: 13,
                 fontWeight: 500,
-                background: "#0F6E56",
+                background: "var(--aos-accent)",
                 color: "#fff",
                 textDecoration: "none",
               }}
@@ -1114,7 +1114,7 @@ permissions:
                     fontWeight: 500,
                     border: "none",
                     borderRadius: 6,
-                    background: testing ? "#9CA3AF" : "#0F6E56",
+                    background: testing ? "var(--aos-faint)" : "var(--aos-accent)",
                     color: "#fff",
                     cursor: testing ? "default" : "pointer",
                   }}
@@ -1247,8 +1247,8 @@ permissions:
                     borderRadius: 6,
                     fontSize: 13,
                     fontWeight: 500,
-                    background: testDone ? "#0F6E56" : "#D1D5DB",
-                    color: testDone ? "#fff" : "#9CA3AF",
+                    background: testDone ? "var(--aos-accent)" : "var(--aos-border-strong)",
+                    color: testDone ? "var(--text-on-brand)" : "var(--aos-faint)",
                     border: "none",
                     cursor: testDone ? "pointer" : "default",
                   }}
