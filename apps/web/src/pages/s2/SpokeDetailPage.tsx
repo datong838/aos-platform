@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { S2Chrome, useJsonGet } from "./shared";
 import { BpBanner, BpKvList, BpLinkRow, BpTabs, BpToolbar } from "./blueprintUi";
 
-type SpokeDetail = {
+export type SpokeDetail = {
   id: string;
   name: string;
   region: string;
@@ -19,35 +19,35 @@ type SpokeDetail = {
   probeLatencyMs: number;
 };
 
-type PlanEntry = {
+export type PlanEntry = {
   id: string;
   name: string;
   version: string;
   status: "applied" | "pending" | "failed";
 };
 
-type PlanDiffItem = {
+export type PlanDiffItem = {
   path: string;
   current: string;
   expected: string;
   diffType: "added" | "changed" | "removed";
 };
 
-type ConfigOverride = {
+export type ConfigOverride = {
   key: string;
   value: string;
   source: "spoke" | "hub" | "vault";
   description?: string;
 };
 
-type MaintenanceWindow = {
+export type MaintenanceWindow = {
   start: string;
   end: string;
   description: string;
   active: boolean;
 };
 
-type SpokeDetailData = {
+export type SpokeDetailData = {
   spoke: SpokeDetail;
   plans: PlanEntry[];
   planDiff: PlanDiffItem[];
@@ -55,7 +55,7 @@ type SpokeDetailData = {
   maintenanceWindow: MaintenanceWindow | null;
 };
 
-const MOCK_SPOKE_DETAIL: SpokeDetailData = {
+export const MOCK_SPOKE_DETAIL: SpokeDetailData = {
   spoke: {
     id: "spoke-prod-sh",
     name: "spoke-prod-sh",
@@ -96,7 +96,7 @@ const MOCK_SPOKE_DETAIL: SpokeDetailData = {
   },
 };
 
-const TABS = [
+export const TABS = [
   { id: "overview", label: "Overview" },
   { id: "plan", label: "Plan" },
   { id: "plan-diff", label: "Plan Diff" },
@@ -115,7 +115,7 @@ function healthColor(h: SpokeDetail["health"]) {
   }
 }
 
-function healthLabel(h: SpokeDetail["health"]) {
+export function healthLabel(h: SpokeDetail["health"]) {
   switch (h) {
     case "online":
       return "健康";
@@ -126,7 +126,7 @@ function healthLabel(h: SpokeDetail["health"]) {
   }
 }
 
-function planStatusBadge(s: PlanEntry["status"]) {
+export function planStatusBadge(s: PlanEntry["status"]) {
   switch (s) {
     case "applied":
       return { label: "已应用", cls: "bp-discover-badge bp-discover-badge-ok" };
