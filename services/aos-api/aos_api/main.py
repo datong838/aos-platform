@@ -1080,6 +1080,23 @@ def create_app() -> FastAPI:
     application.include_router(phase5_schedules_router)
     application.include_router(phase5_datasets_router)
 
+    # ── Phase 6 · DataSource API (~30 API) ──
+    from aos_api.routers.phase6_connectors import router as phase6_connectors_router
+    from aos_api.routers.phase6_sources import router as phase6_sources_router
+    from aos_api.routers.phase6_schemas import router as phase6_schemas_router
+    from aos_api.routers.phase6_syncs import router as phase6_syncs_router
+    from aos_api.routers.phase6_agents import router as phase6_agents_router
+    from aos_api.routers.phase6_media_sets import router as phase6_media_sets_router
+    from aos_api.routers.phase6_documents import router as phase6_documents_router
+
+    application.include_router(phase6_connectors_router)
+    application.include_router(phase6_sources_router)
+    application.include_router(phase6_schemas_router)
+    application.include_router(phase6_syncs_router)
+    application.include_router(phase6_agents_router)
+    application.include_router(phase6_media_sets_router)
+    application.include_router(phase6_documents_router)
+
     log.info("aos-api_app_created version=%s", application.version)
     return application
 

@@ -1,0 +1,635 @@
+"""Phase 6 · DataSource 核心引擎.
+
+Connectors + Sources + Schemas/Tables/Columns/ForeignKeys + Syncs/SyncRuns +
+Agents + MediaSets/MediaFiles + Documents/ExtractionTemplates/Projects.
+模式：Singleton + Pydantic + threading.Lock。
+"""
+from __future__ import annotations
+
+import threading
+import time
+import uuid
+from typing import Any
+
+from pydantic import BaseModel, Field
+
+_LOCK = threading.Lock()
+
+
+# ───────────────────────── Pydantic Models ─────────────────────────
+
+
+class Connector(BaseModel):
+    id: str = Field(default_factory=lambda: "conn-" + uuid.uuid4().hex[:8])
+    name: str
+    connector_type: str = "database"  # database|stream|file|api|warehouse|nosql
+    version: str = "1.0.0"
+    description: str = ""
+    capabilities: list[str] = Field(default_factory=list)  # read|write|stream|cdc|preview|schema
+    config_schema: dict[str, Any] = Field(default_factory=dict)
+    status: str = "active"  # active|deprecated|beta
+    created_at: float = Field(default_factory=lambda: time.time())
+    updated_at: float = Field(default_factory=lambda: time.time())
+
+
+class DataSource(BaseModel):
+    id: str = Field(default_factory=lambda: "src-" + uuid.uuid4().hex[:8])
+    name: str
+    connector_id: str = ""
+    source_type: str = "database"  # database|stream|file|api|warehouse|nosql
+    host: str = ""
+    port: int = 0
+    database: str = ""
+    username: str = ""
+    config: dict[str, Any] = Field(default_factory=dict)
+    status: str = "active"  # active|inactive|error|testing
+    tags: list[str] = Field(default_factory=list)
+    owner: str = "system"
+    created_at: float = Field(default_factory=lambda: time.time())
+    updated_at: float = Field(default_factory=lambda: time.time())
+
+
+class SchemaInfo(BaseModel):
+    id: str = Field(default_factory=lambda: "sch-" + uuid.uuid4().hex[:8])
+    source_id: str
+    name: str
+    description: str = ""
+    table_count: int = 0
+    created_at: float = Field(default_factory=lambda: time.time())
+
+
+class TableInfo(BaseModel):
+    id: str = Field(default_factory=lambda: "tbl-" + uuid.uuid4().hex[:8])
+    source_id: str
+    schema_name: str
+    name: str
+    row_count: int = 0
+    size_bytes: int = 0
+    description: str = ""
+    created_at: float = Field(default_factory=lambda: time.time())
+
+
+class ColumnInfo(BaseModel):
+    id: str = Field(default_factory=lambda: "col-" + uuid.uuid4().hex[:8])
+    source_id: str
+    schema_name: str
+    table_name: str
+    name: str
+    datatype: str = "string"
+    nullable: bool = True
+    primary_key: bool = False
+    default_value: str = ""
+    description: str = ""
+
+
+class ForeignKey(BaseModel):
+    id: str = Field(default_factory=lambda: "fk-" + uuid.uuid4().hex[:8])
+    source_id: str
+    schema_name: str
+    table_name: str
+    column_name: str
+    ref_schema: str
+    ref_table: str
+    ref_column: str
+
+
+class SyncTask(BaseModel):
+    id: str = Field(default_factory=lambda: "sync-" + uuid.uuid4().hex[:8])
+    name: str
+    source_id: str
+    target_dataset: str = ""
+    mode: str = "full"  # full|incremental|cdc
+    cron_expr: str = "0 * * * *"
+    status: str = "active"  # active|paused|error
+    owner: str = "system"
+    config: dict[str, Any] = Field(default_factory=dict)
+    created_at: float = Field(default_factory=lambda: time.time())
+    updated_at: float = Field(default_factory=lambda: time.time())
+
+
+class SyncRun(BaseModel):
+    id: str = Field(default_factory=lambda: "run-" + uuid.uuid4().hex[:8])
+    sync_id: str
+    status: str = "success"  # success|failed|running
+    started_at: float = Field(default_factory=lambda: time.time())
+    finished_at: float = 0.0
+    duration_ms: int = 0
+    rows_synced: int = 0
+    error: str = ""
+
+
+class EdgeAgent(BaseModel):
+    id: str = Field(default_factory=lambda: "agent-" + uuid.uuid4().hex[:8])
+    name: str
+    hostname: str = ""
+    ip_address: str = ""
+    region: str = ""
+    version: str = "2.0.0"
+    status: str = "online"  # online|offline|degraded
+    config: dict[str, Any] = Field(default_factory=dict)
+    last_heartbeat: float = Field(default_factory=lambda: time.time())
+    source_ids: list[str] = Field(default_factory=list)
+    created_at: float = Field(default_factory=lambda: time.time())
+    updated_at: float = Field(default_factory=lambda: time.time())
+
+
+class MediaSet(BaseModel):
+    id: str = Field(default_factory=lambda: "ms-" + uuid.uuid4().hex[:8])
+    name: str
+    description: str = ""
+    source_id: str = ""
+    file_count: int = 0
+    total_size_bytes: int = 0
+    tags: list[str] = Field(default_factory=list)
+    created_at: float = Field(default_factory=lambda: time.time())
+    updated_at: float = Field(default_factory=lambda: time.time())
+
+
+class MediaFile(BaseModel):
+    id: str = Field(default_factory=lambda: "mf-" + uuid.uuid4().hex[:8])
+    media_set_id: str
+    filename: str
+    file_type: str = ""  # image|video|audio|document|archive
+    mime_type: str = ""
+    size_bytes: int = 0
+    url: str = ""
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    created_at: float = Field(default_factory=lambda: time.time())
+
+
+class Document(BaseModel):
+    id: str = Field(default_factory=lambda: "doc-" + uuid.uuid4().hex[:8])
+    name: str
+    source_id: str = ""
+    template_id: str = ""
+    file_type: str = "pdf"  # pdf|docx|image|html
+    status: str = "pending"  # pending|extracted|failed
+    extracted_fields: dict[str, Any] = Field(default_factory=dict)
+    created_at: float = Field(default_factory=lambda: time.time())
+    updated_at: float = Field(default_factory=lambda: time.time())
+
+
+class ExtractionTemplate(BaseModel):
+    id: str = Field(default_factory=lambda: "tpl-" + uuid.uuid4().hex[:8])
+    name: str
+    description: str = ""
+    fields: list[dict[str, Any]] = Field(default_factory=list)
+    doc_type: str = "invoice"  # invoice|contract|receipt|form|custom
+    created_at: float = Field(default_factory=lambda: time.time())
+
+
+class DataProject(BaseModel):
+    id: str = Field(default_factory=lambda: "prj-" + uuid.uuid4().hex[:8])
+    name: str
+    description: str = ""
+    owner: str = "system"
+    status: str = "active"  # active|archived
+    source_ids: list[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
+    created_at: float = Field(default_factory=lambda: time.time())
+    updated_at: float = Field(default_factory=lambda: time.time())
+
+
+# ───────────────────────── Engine ─────────────────────────
+
+
+class DataSourceEngine:
+    """Phase 6 DataSource 核心引擎."""
+
+    _instance: "DataSourceEngine | None" = None
+    _lock = threading.Lock()
+
+    def __new__(cls) -> "DataSourceEngine":
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    inst = super().__new__(cls)
+                    inst._connectors: dict[str, Connector] = {}
+                    inst._sources: dict[str, DataSource] = {}
+                    inst._schemas: dict[str, SchemaInfo] = {}
+                    inst._tables: dict[str, TableInfo] = {}
+                    inst._columns: dict[str, ColumnInfo] = {}
+                    inst._foreign_keys: dict[str, ForeignKey] = {}
+                    inst._sync_tasks: dict[str, SyncTask] = {}
+                    inst._sync_runs: dict[str, SyncRun] = {}
+                    inst._agents: dict[str, EdgeAgent] = {}
+                    inst._media_sets: dict[str, MediaSet] = {}
+                    inst._media_files: dict[str, MediaFile] = {}
+                    inst._documents: dict[str, Document] = {}
+                    inst._templates: dict[str, ExtractionTemplate] = {}
+                    inst._projects: dict[str, DataProject] = {}
+                    cls._instance = inst
+        return cls._instance
+
+    # ── Connectors ──
+    def create_connector(self, name: str, **kwargs: Any) -> Connector:
+        with _LOCK:
+            c = Connector(name=name, **kwargs)
+            self._connectors[c.id] = c
+            return c
+
+    def get_connector(self, cid: str) -> Connector | None:
+        return self._connectors.get(cid)
+
+    def list_connectors(
+        self, connector_type: str | None = None, page: int = 1, page_size: int = 50,
+    ) -> tuple[list[Connector], int]:
+        items = list(self._connectors.values())
+        if connector_type:
+            items = [c for c in items if c.connector_type == connector_type]
+        total = len(items)
+        start = (page - 1) * page_size
+        return items[start : start + page_size], total
+
+    def update_connector(self, cid: str, **kwargs: Any) -> Connector:
+        with _LOCK:
+            c = self._connectors.get(cid)
+            if c is None:
+                raise KeyError(f"Connector {cid} not found")
+            for k, v in kwargs.items():
+                if hasattr(c, k) and k != "id":
+                    setattr(c, k, v)
+            c.updated_at = time.time()
+            return c
+
+    def get_connector_capabilities(self, cid: str) -> list[str]:
+        c = self._connectors.get(cid)
+        if c is None:
+            raise KeyError(f"Connector {cid} not found")
+        return c.capabilities
+
+    # ── Sources ──
+    def create_source(self, name: str, **kwargs: Any) -> DataSource:
+        with _LOCK:
+            s = DataSource(name=name, **kwargs)
+            self._sources[s.id] = s
+            return s
+
+    def get_source(self, sid: str) -> DataSource | None:
+        return self._sources.get(sid)
+
+    def list_sources(
+        self, search: str | None = None, source_type: str | None = None,
+        page: int = 1, page_size: int = 20,
+    ) -> tuple[list[DataSource], int]:
+        items = list(self._sources.values())
+        if source_type:
+            items = [s for s in items if s.source_type == source_type]
+        if search:
+            s = search.lower()
+            items = [src for src in items if s in src.name.lower()]
+        total = len(items)
+        start = (page - 1) * page_size
+        return items[start : start + page_size], total
+
+    def update_source(self, sid: str, **kwargs: Any) -> DataSource:
+        with _LOCK:
+            s = self._sources.get(sid)
+            if s is None:
+                raise KeyError(f"Source {sid} not found")
+            for k, v in kwargs.items():
+                if hasattr(s, k) and k != "id":
+                    setattr(s, k, v)
+            s.updated_at = time.time()
+            return s
+
+    def delete_source(self, sid: str) -> bool:
+        with _LOCK:
+            return self._sources.pop(sid, None) is not None
+
+    def test_connection(self, sid: str) -> dict[str, Any]:
+        s = self._sources.get(sid)
+        if s is None:
+            raise KeyError(f"Source {sid} not found")
+        return {
+            "source_id": sid,
+            "status": "ok",
+            "latency_ms": 45,
+            "tested_at": time.time(),
+            "details": {"host": s.host, "database": s.database},
+        }
+
+    def get_source_capabilities(self, sid: str) -> list[str]:
+        s = self._sources.get(sid)
+        if s is None:
+            raise KeyError(f"Source {sid} not found")
+        connector = self._connectors.get(s.connector_id)
+        if connector:
+            return connector.capabilities
+        return ["read", "write", "schema"]
+
+    # ── Schemas ──
+    def add_schema(self, source_id: str, name: str, **kwargs: Any) -> SchemaInfo:
+        with _LOCK:
+            sch = SchemaInfo(source_id=source_id, name=name, **kwargs)
+            self._schemas[sch.id] = sch
+            return sch
+
+    def list_schemas(self, source_id: str) -> list[SchemaInfo]:
+        return [s for s in self._schemas.values() if s.source_id == source_id]
+
+    def list_tables(self, source_id: str, schema_name: str) -> list[TableInfo]:
+        return [
+            t for t in self._tables.values()
+            if t.source_id == source_id and t.schema_name == schema_name
+        ]
+
+    def list_columns(self, source_id: str, schema_name: str, table_name: str) -> list[ColumnInfo]:
+        return [
+            c for c in self._columns.values()
+            if c.source_id == source_id and c.schema_name == schema_name and c.table_name == table_name
+        ]
+
+    def list_foreign_keys(self, source_id: str, schema_name: str, table_name: str) -> list[ForeignKey]:
+        return [
+            fk for fk in self._foreign_keys.values()
+            if fk.source_id == source_id and fk.schema_name == schema_name and fk.table_name == table_name
+        ]
+
+    def preview_data(self, source_id: str, schema_name: str = "", table_name: str = "", limit: int = 50) -> dict[str, Any]:
+        s = self._sources.get(source_id)
+        if s is None:
+            raise KeyError(f"Source {source_id} not found")
+        cols = [c.name for c in self._columns.values()
+                if c.source_id == source_id and c.schema_name == schema_name and c.table_name == table_name]
+        if not cols:
+            cols = ["id", "name", "value", "created_at"]
+        rows = []
+        for i in range(min(limit, 10)):
+            row = {}
+            for cname in cols:
+                if cname in ("id",):
+                    row[cname] = i + 1
+                elif cname in ("value", "amount", "price", "qty", "count"):
+                    row[cname] = i * 10.5
+                else:
+                    row[cname] = f"{cname}_{i}"
+            rows.append(row)
+        return {
+            "source_id": source_id,
+            "schema": schema_name,
+            "table": table_name,
+            "columns": cols,
+            "rows": rows,
+            "total": len(rows),
+            "returned": len(rows),
+        }
+
+    def add_table(self, source_id: str, schema_name: str, name: str, **kwargs: Any) -> TableInfo:
+        with _LOCK:
+            t = TableInfo(source_id=source_id, schema_name=schema_name, name=name, **kwargs)
+            self._tables[t.id] = t
+            return t
+
+    def add_column(self, source_id: str, schema_name: str, table_name: str, name: str, **kwargs: Any) -> ColumnInfo:
+        with _LOCK:
+            c = ColumnInfo(source_id=source_id, schema_name=schema_name, table_name=table_name, name=name, **kwargs)
+            self._columns[c.id] = c
+            return c
+
+    def add_foreign_key(self, source_id: str, schema_name: str, table_name: str, column_name: str,
+                        ref_schema: str, ref_table: str, ref_column: str) -> ForeignKey:
+        with _LOCK:
+            fk = ForeignKey(
+                source_id=source_id, schema_name=schema_name, table_name=table_name,
+                column_name=column_name, ref_schema=ref_schema, ref_table=ref_table, ref_column=ref_column,
+            )
+            self._foreign_keys[fk.id] = fk
+            return fk
+
+    # ── Sync Tasks ──
+    def create_sync_task(self, name: str, **kwargs: Any) -> SyncTask:
+        with _LOCK:
+            st = SyncTask(name=name, **kwargs)
+            self._sync_tasks[st.id] = st
+            return st
+
+    def get_sync_task(self, sid: str) -> SyncTask | None:
+        return self._sync_tasks.get(sid)
+
+    def list_sync_tasks(
+        self, search: str | None = None, status: str | None = None,
+        page: int = 1, page_size: int = 20,
+    ) -> tuple[list[SyncTask], int]:
+        items = list(self._sync_tasks.values())
+        if status:
+            items = [s for s in items if s.status == status]
+        if search:
+            s = search.lower()
+            items = [st for st in items if s in st.name.lower()]
+        total = len(items)
+        start = (page - 1) * page_size
+        return items[start : start + page_size], total
+
+    def update_sync_task(self, sid: str, **kwargs: Any) -> SyncTask:
+        with _LOCK:
+            st = self._sync_tasks.get(sid)
+            if st is None:
+                raise KeyError(f"SyncTask {sid} not found")
+            for k, v in kwargs.items():
+                if hasattr(st, k) and k != "id":
+                    setattr(st, k, v)
+            st.updated_at = time.time()
+            return st
+
+    def run_sync_task(self, sid: str) -> SyncRun:
+        with _LOCK:
+            st = self._sync_tasks.get(sid)
+            if st is None:
+                raise KeyError(f"SyncTask {sid} not found")
+            run = SyncRun(
+                sync_id=sid,
+                status="success",
+                started_at=time.time() - 30,
+                finished_at=time.time(),
+                duration_ms=30000,
+                rows_synced=5000,
+            )
+            self._sync_runs[run.id] = run
+            return run
+
+    def list_sync_runs(self, sid: str) -> list[SyncRun]:
+        return [r for r in self._sync_runs.values() if r.sync_id == sid]
+
+    # ── Edge Agents ──
+    def create_agent(self, name: str, **kwargs: Any) -> EdgeAgent:
+        with _LOCK:
+            a = EdgeAgent(name=name, **kwargs)
+            self._agents[a.id] = a
+            return a
+
+    def get_agent(self, aid: str) -> EdgeAgent | None:
+        return self._agents.get(aid)
+
+    def list_agents(
+        self, status: str | None = None, region: str | None = None,
+        page: int = 1, page_size: int = 20,
+    ) -> tuple[list[EdgeAgent], int]:
+        items = list(self._agents.values())
+        if status:
+            items = [a for a in items if a.status == status]
+        if region:
+            items = [a for a in items if a.region == region]
+        total = len(items)
+        start = (page - 1) * page_size
+        return items[start : start + page_size], total
+
+    def get_agent_metrics(self, aid: str) -> dict[str, Any]:
+        a = self._agents.get(aid)
+        if a is None:
+            raise KeyError(f"Agent {aid} not found")
+        return {
+            "agent_id": aid,
+            "cpu_usage": 35.5,
+            "memory_usage": 62.3,
+            "disk_usage": 45.0,
+            "network_in_mbps": 12.5,
+            "network_out_mbps": 8.3,
+            "active_connections": 15,
+            "uptime_seconds": 86400,
+            "collected_at": time.time(),
+        }
+
+    def get_agent_sources(self, aid: str) -> list[DataSource]:
+        a = self._agents.get(aid)
+        if a is None:
+            raise KeyError(f"Agent {aid} not found")
+        return [self._sources[sid] for sid in a.source_ids if sid in self._sources]
+
+    def get_agent_health(self, aid: str) -> dict[str, Any]:
+        a = self._agents.get(aid)
+        if a is None:
+            raise KeyError(f"Agent {aid} not found")
+        return {
+            "agent_id": aid,
+            "status": a.status,
+            "last_heartbeat": a.last_heartbeat,
+            "healthy": a.status == "online",
+            "checked_at": time.time(),
+        }
+
+    def update_agent_config(self, aid: str, config: dict[str, Any]) -> EdgeAgent:
+        with _LOCK:
+            a = self._agents.get(aid)
+            if a is None:
+                raise KeyError(f"Agent {aid} not found")
+            a.config = config
+            a.updated_at = time.time()
+            return a
+
+    # ── Media Sets ──
+    def create_media_set(self, name: str, **kwargs: Any) -> MediaSet:
+        with _LOCK:
+            ms = MediaSet(name=name, **kwargs)
+            self._media_sets[ms.id] = ms
+            return ms
+
+    def get_media_set(self, msid: str) -> MediaSet | None:
+        return self._media_sets.get(msid)
+
+    def list_media_set_files(self, msid: str) -> list[MediaFile]:
+        return [f for f in self._media_files.values() if f.media_set_id == msid]
+
+    def transform_media_files(self, msid: str, operation: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+        ms = self._media_sets.get(msid)
+        if ms is None:
+            raise KeyError(f"MediaSet {msid} not found")
+        files = self.list_media_set_files(msid)
+        return {
+            "media_set_id": msid,
+            "operation": operation,
+            "params": params or {},
+            "files_transformed": len(files),
+            "status": "completed",
+            "completed_at": time.time(),
+        }
+
+    def add_media_file(self, media_set_id: str, filename: str, **kwargs: Any) -> MediaFile:
+        with _LOCK:
+            f = MediaFile(media_set_id=media_set_id, filename=filename, **kwargs)
+            self._media_files[f.id] = f
+            return f
+
+    # ── Documents ──
+    def create_document(self, name: str, **kwargs: Any) -> Document:
+        with _LOCK:
+            d = Document(name=name, **kwargs)
+            self._documents[d.id] = d
+            return d
+
+    def get_document(self, did: str) -> Document | None:
+        return self._documents.get(did)
+
+    def list_documents(
+        self, search: str | None = None, status: str | None = None,
+        page: int = 1, page_size: int = 20,
+    ) -> tuple[list[Document], int]:
+        items = list(self._documents.values())
+        if status:
+            items = [d for d in items if d.status == status]
+        if search:
+            s = search.lower()
+            items = [d for d in items if s in d.name.lower()]
+        total = len(items)
+        start = (page - 1) * page_size
+        return items[start : start + page_size], total
+
+    def extract_document(self, did: str, fields: list[str] | None = None) -> Document:
+        with _LOCK:
+            d = self._documents.get(did)
+            if d is None:
+                raise KeyError(f"Document {did} not found")
+            extracted = {}
+            target_fields = fields or ["vendor", "amount", "date", "invoice_number"]
+            for f in target_fields:
+                extracted[f] = f"value_{f}"
+            d.extracted_fields = extracted
+            d.status = "extracted"
+            d.updated_at = time.time()
+            return d
+
+    def import_document(self, name: str, **kwargs: Any) -> Document:
+        with _LOCK:
+            d = Document(name=name, **kwargs)
+            self._documents[d.id] = d
+            return d
+
+    def create_template(self, name: str, **kwargs: Any) -> ExtractionTemplate:
+        with _LOCK:
+            t = ExtractionTemplate(name=name, **kwargs)
+            self._templates[t.id] = t
+            return t
+
+    def list_templates(self) -> list[ExtractionTemplate]:
+        return list(self._templates.values())
+
+    def create_project(self, name: str, **kwargs: Any) -> DataProject:
+        with _LOCK:
+            p = DataProject(name=name, **kwargs)
+            self._projects[p.id] = p
+            return p
+
+    def list_projects(self) -> list[DataProject]:
+        return list(self._projects.values())
+
+    # ── Util ──
+    def reset(self) -> None:
+        with _LOCK:
+            self._connectors.clear()
+            self._sources.clear()
+            self._schemas.clear()
+            self._tables.clear()
+            self._columns.clear()
+            self._foreign_keys.clear()
+            self._sync_tasks.clear()
+            self._sync_runs.clear()
+            self._agents.clear()
+            self._media_sets.clear()
+            self._media_files.clear()
+            self._documents.clear()
+            self._templates.clear()
+            self._projects.clear()
+
+
+def get_engine() -> DataSourceEngine:
+    return DataSourceEngine()
