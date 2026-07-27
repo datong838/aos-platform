@@ -37,6 +37,9 @@ const SourceDetailPage = lazify(() => import("./sourceDetailPage"), "SourceDetai
 const ApolloSpokePage = lazify(() => import("./apollo"), "ApolloSpokePage");
 const ApolloConfigPage = lazify(() => import("./apollo"), "ApolloConfigPage");
 const ApolloAssetsPage = lazify(() => import("./apollo"), "ApolloAssetsPage");
+const HubFleetPage = lazify(() => import("./HubFleetPage"), "HubFleetPage");
+const ReleasesPage = lazify(() => import("./ReleasesPage"), "ReleasesPage");
+const SpokeDetailPage = lazify(() => import("./SpokeDetailPage"), "SpokeDetailPage");
 const MaturityPage = lazify(() => import("./extras"), "MaturityPage");
 const CopPage = lazify(() => import("./extras"), "CopPage");
 const ModuleInterfacePage = lazify(() => import("./extras"), "ModuleInterfacePage");
@@ -103,8 +106,8 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "data/sync-routes", Component: SyncRoutesPage },
   { path: "ontology/okf-overview", Component: OkfOverviewPage },
   { path: "apollo/cases", Component: IntegrationCasesPage },
-  { path: "apollo/release", Component: ApolloReleasePage },
-  { path: "apollo/spoke", Component: ApolloSpokePage },
+  { path: "apollo/release", Component: ReleasesPage },
+  { path: "apollo/spoke", Component: SpokeDetailPage },
   { path: "apollo/ferry", Component: ApolloFerryPage },
   { path: "apollo/assets", Component: ApolloAssetsPage },
   { path: "apollo/change", Component: ApolloChangePage },
