@@ -3,7 +3,6 @@ import { Link, useSearchParams } from "react-router-dom";
 import { apiGet, apiPatch, apiPost } from "../../api/client";
 import {
   BpBanner,
-  BpDebugPanel,
   BpMetricGrid,
   BpPropGrid,
   BpSplit,
@@ -22,7 +21,6 @@ import {
   type PipelineMeta,
 } from "./pipelineMeta";
 
-type MediaRow = { rid: string; name?: string; bytes?: number; stored?: boolean; contentType?: string };
 type PipelineRow = PipelineMeta & { vectorCollection?: string };
 type BuildRow = { id?: string; status?: string; tasks?: { name: string; ok: boolean }[]; pipelineId?: string };
 type DatasetRow = {
@@ -75,65 +73,8 @@ function cellText(v: unknown): string {
   return s.length > 80 ? `${s.slice(0, 77)}…` : s;
 }
 
-/** 77 · 对齐 media-sets.html */
-export function MediaSetsPage() {
-  const { data, err, reload } = useJsonGet<{ items: MediaRow[] }>("/v1/media-sets");
-  const [parseOut, setParseOut] = useState<unknown>(null);
-  const [localErr, setLocalErr] = useState<string | null>(null);
-
-  async function uploadAndParse() {
-    setLocalErr(null);
-    try {
-      const text = "工单标题,状态\n机房巡检,open\n";
-      const b64 = btoa(unescape(encodeURIComponent(text)));
-      const media = await apiPost<{ rid: string }>("/v1/media-sets", {
-        name: "demo-parse.csv",
-        contentType: "text/csv",
-        bytesBase64: b64,
-      });
-      const extracted = await apiPost("/v1/parsers/extract", {
-        mediaRid: media.rid,
-        name: "demo-parse.csv",
-        contentType: "text/csv",
-      });
-      setParseOut({ mediaRid: media.rid, extract: extracted });
-      reload();
-    } catch (e) {
-      setLocalErr(String((e as Error).message || e));
-    }
-  }
-
-  return (
-    <S2Chrome title="媒体集" lede="对齐 media-sets · 上传 + 解析插件">
-      <BpToolbar>
-        <button type="button" className="btn-primary" onClick={() => void uploadAndParse()}>
-          上传 CSV 并解析
-        </button>
-        <button type="button" className="btn" onClick={() => reload()}>
-          刷新
-        </button>
-      </BpToolbar>
-      {(err || localErr) && <p className="error">{err || localErr}</p>}
-      <BpMetricGrid
-        items={[{ label: "媒体集", value: String(data?.items?.length ?? 0) }]}
-      />
-      <BpTable
-        columns={["名称", "RID", "类型", "大小", "已存储"]}
-        rows={(data?.items || []).map((m) => [
-          <strong>{m.name || m.rid}</strong>,
-          <span className="muted">{m.rid}</span>,
-          m.contentType || "—",
-          `${m.bytes ?? 0}B`,
-          String(m.stored ?? false),
-        ])}
-      />
-      {(data?.items?.length || 0) === 0 && (
-        <p className="muted">空 · 点上传或先到 <Link to="/data">数据连接</Link> 跑 Pipeline</p>
-      )}
-      {parseOut != null && <BpDebugPanel value={parseOut} title="解析结果 JSON" />}
-    </S2Chrome>
-  );
-}
+// MediaSetsPage 已迁移到独立文件 ./MediaSetsPage.tsx
+export { MediaSetsPage } from "./MediaSetsPage";
 
 /** 186w · 对齐 pipeline-list.html（图2）· 左项目树 + 右最近编辑大卡 → 画布 */
 export function PipelinesPage() {
