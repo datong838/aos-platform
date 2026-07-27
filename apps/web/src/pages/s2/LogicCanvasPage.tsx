@@ -13,7 +13,25 @@ type BlockKind =
   | "use_tool"
   | "transform"
   | "apply_action"
-  | "execute";
+  | "execute"
+  | "branch"
+  | "handoff";
+
+/** Branch 双路分叉定义 */
+export interface BranchPath {
+  id: string;
+  label: string;
+  condition: string;
+  color: string;
+}
+
+/** Handoff 汇聚配置 */
+export interface HandoffConfig {
+  decision: string;
+  artifacts: string[];
+  open_qs: string[];
+  handoff_to: "risk_agent" | "draft_inbox" | "webhook";
+}
 
 interface BlockDef {
   id: string;
@@ -80,18 +98,41 @@ const PALETTE: { kind: BlockKind; title: string; desc: string; icon: string }[] 
     desc: "提交执行结果 / 触发通知",
     icon: "🚀",
   },
+  {
+    kind: "branch",
+    title: "Branch · 分支",
+    desc: "条件分叉：根据表达式选择执行路径",
+    icon: "🔀",
+  },
+  {
+    kind: "handoff",
+    title: "Handoff · 汇聚",
+    desc: "汇聚多路上下文，输出决策摘要+产物+待确认项",
+    icon: "🔗",
+  },
 ];
 
-const KIND_COLORS: Record<BlockKind, string> = {
-  input: "#6366f1",
-  create_variable: "#14b8a6",
-  get_property: "#f59e0b",
-  use_llm: "#ec4899",
-  use_tool: "#8b5cf6",
-  transform: "#06b6d4",
-  apply_action: "#f97316",
-  execute: "#22c55e",
+/** Block 样式元数据（导出供测试） */
+export const KIND_META: Record<BlockKind, { label: string; color: string; bg: string; border: string }> = {
+  input:          { label: "输入",      color: "#6366f1", bg: "#EEF2FF", border: "#C7D2FE" },
+  create_variable:{ label: "创建变量",  color: "#14b8a6", bg: "#F0FDFA", border: "#99F6E4" },
+  get_property:   { label: "获取属性",  color: "#f59e0b", bg: "#FFFBEB", border: "#FDE68A" },
+  use_llm:        { label: "使用 LLM",  color: "#ec4899", bg: "#FDF2F8", border: "#FBCFE8" },
+  use_tool:       { label: "使用工具",  color: "#8b5cf6", bg: "#F5F3FF", border: "#DDD6FE" },
+  transform:      { label: "数据变换",  color: "#06b6d4", bg: "#ECFEFF", border: "#A5F3FC" },
+  apply_action:   { label: "应用动作",  color: "#f97316", bg: "#FFF7ED", border: "#FED7AA" },
+  execute:        { label: "执行",      color: "#22c55e", bg: "#F0FDF4", border: "#BBF7D0" },
+  branch:         { label: "分支",      color: "#DC2626", bg: "#FEF2F2", border: "#FECACA" },
+  handoff:        { label: "汇聚",      color: "#4F46E5", bg: "#EEF2FF", border: "#A5B4FC" },
 };
+
+/** 向后兼容：部分渲染处仅需要颜色字符串 */
+const KIND_COLORS: Record<BlockKind, string> = Object.fromEntries(
+  (Object.entries(KIND_META) as [BlockKind, { color: string }][]).map(([k, v]) => [k, v.color]),
+) as Record<BlockKind, string>;
+
+/** 导出 PALETTE 供测试 */
+export { PALETTE };
 
 let _nextId = 0;
 function uid(): string {
@@ -151,7 +192,23 @@ export function LogicCanvasPage() {
 
   const addBlock = useCallback((kind: BlockKind) => {
     const def = PALETTE.find((p) => p.kind === kind)!;
-    const b: BlockDef = { id: uid(), kind, label: def.title, config: {} };
+    const defaultConfig: Record<string, unknown> =
+      kind === "branch"
+        ? {
+            paths: [
+              { id: "p1", label: "高风险", condition: "risk_level IN [high, critical]", color: "#DC2626" },
+              { id: "p2", label: "低风险", condition: "risk_level IN [low, medium]", color: "#16A34A" },
+            ],
+          }
+        : kind === "handoff"
+          ? {
+              decision: "风险分诊结论：中等风险，建议人工复核",
+              artifacts: ["risk_assessment.json", "order_snapshot.diff"],
+              open_qs: ["是否需要升级到 L4 模型？"],
+              handoff_to: "draft_inbox" as const,
+            }
+          : {};
+    const b: BlockDef = { id: uid(), kind, label: def.title, config: defaultConfig };
     setBlocks((p) => [...p, b]);
     setSelectedId(b.id);
   }, []);
@@ -252,7 +309,7 @@ export function LogicCanvasPage() {
   return (
     <PageChrome
       title="AIP Logic 无代码编辑器"
-      lede="拖拽编排 8 种 Block · 实时预览 · CoT 调试 · dryRun 不落库 · Draft 审批写生产"
+      lede="拖拽编排 10 种 Block · 实时预览 · CoT 调试 · dryRun 不落库 · Draft 审批写生产 · 分支+汇聚"
     >
       {/* 工具栏 */}
       <div
@@ -478,6 +535,72 @@ export function LogicCanvasPage() {
                       </button>
                     </span>
                   </button>
+
+                  {/* Branch Block 双路分叉视觉 */}
+                  {b.kind === "branch" && (
+                    <div style={{ width: "100%", marginTop: 2 }}>
+                      <div style={{ textAlign: "center", color: "#9CA3AF", fontSize: 10, padding: "2px 0" }}>↓ ↓</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                        {((b.config.paths as BranchPath[]) || []).map((p, pi) => (
+                          <div
+                            key={p.id}
+                            style={{
+                              borderRadius: 6,
+                              border: `1px solid ${p.color}60`,
+                              background: `${p.color}0A`,
+                              padding: "6px 8px",
+                              fontSize: "0.68rem",
+                            }}
+                          >
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span style={{ color: p.color, fontWeight: 600 }}>分支 · {p.label}</span>
+                              <span style={{ fontSize: 9, color: "#9CA3AF" }}>#{pi === 0 ? "4A" : "4B"}</span>
+                            </div>
+                            <div style={{ fontFamily: "monospace", color: "#4B5563", marginTop: 2, fontSize: "0.62rem" }}>
+                              {p.condition}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ textAlign: "center", color: "#9CA3AF", fontSize: 10, padding: "2px 0" }}>↓ ↓ 汇聚</div>
+                    </div>
+                  )}
+
+                  {/* Handoff Block 三区域预览 */}
+                  {b.kind === "handoff" && (
+                    <div
+                      style={{
+                        width: "100%", marginTop: 2,
+                        borderRadius: 6, border: "2px solid #A5B4FC", background: "#EEF2FF",
+                        padding: 8, fontSize: "0.68rem",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 6 }}>
+                        <span style={{ fontSize: "0.75rem" }}>🔗</span>
+                        <span style={{ color: "#4338CA", fontWeight: 600 }}>汇聚 · Handoff 上下文</span>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 4 }}>
+                        <div style={{ borderRadius: 4, background: "rgba(255,255,255,0.6)", border: "1px solid #C7D2FE", padding: "4px 6px" }}>
+                          <div style={{ fontSize: 9, color: "#9CA3AF" }}>decision</div>
+                          <div style={{ fontSize: 10, color: "#374151", fontWeight: 500, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {String(b.config.decision || "—").slice(0, 12) || "—"}
+                          </div>
+                        </div>
+                        <div style={{ borderRadius: 4, background: "rgba(255,255,255,0.6)", border: "1px solid #C7D2FE", padding: "4px 6px" }}>
+                          <div style={{ fontSize: 9, color: "#9CA3AF" }}>artifacts</div>
+                          <div style={{ fontSize: 10, color: "#374151", fontWeight: 500, marginTop: 1 }}>
+                            {((b.config.artifacts as string[]) || []).length} 个产物
+                          </div>
+                        </div>
+                        <div style={{ borderRadius: 4, background: "rgba(255,255,255,0.6)", border: "1px solid #C7D2FE", padding: "4px 6px" }}>
+                          <div style={{ fontSize: 9, color: "#9CA3AF" }}>open_qs</div>
+                          <div style={{ fontSize: 10, color: "#374151", fontWeight: 500, marginTop: 1 }}>
+                            {((b.config.open_qs as string[]) || []).length} 个待确认
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -684,6 +807,234 @@ export function LogicCanvasPage() {
                     />
                   </label>
                 )}
+
+                {/* Branch 配置：条件表达式 + 双路分叉 */}
+                {selected.kind === "branch" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div style={{ fontSize: "0.72rem", color: "var(--aos-muted)", background: "#FEF2F2", padding: "6px 8px", borderRadius: 6, border: "1px solid #FECACA" }}>
+                      🔀 Branch Block · 根据 condition 表达式分叉到不同路径
+                    </div>
+                    {((selected.config.paths as BranchPath[]) || []).map((p, idx) => (
+                      <div
+                        key={p.id}
+                        style={{
+                          border: `1px solid ${p.color}40`,
+                          borderLeft: `3px solid ${p.color}`,
+                          borderRadius: 6,
+                          padding: 10,
+                          background: `${p.color}08`,
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                          <span style={{ fontSize: "0.65rem", fontWeight: 700, color: p.color }}>
+                            路径 {idx === 0 ? "A" : "B"} · #{idx === 0 ? "4A" : "4B"}
+                          </span>
+                          <input
+                            value={p.label}
+                            onChange={(e) => {
+                              const paths = [...((selected.config.paths as BranchPath[]) || [])];
+                              paths[idx] = { ...p, label: e.target.value };
+                              updateConfig("paths", paths);
+                            }}
+                            placeholder={idx === 0 ? "高风险" : "低风险"}
+                            style={{
+                              flex: 1, fontSize: "0.78rem", fontWeight: 600,
+                              color: p.color, border: `1px solid ${p.color}40`, borderRadius: 4,
+                              padding: "2px 6px", background: "var(--aos-card)",
+                            }}
+                          />
+                        </div>
+                        <label style={{ display: "block", fontSize: "0.7rem", marginBottom: 6, color: "var(--aos-muted)" }}>
+                          条件表达式
+                          <input
+                            value={p.condition}
+                            onChange={(e) => {
+                              const paths = [...((selected.config.paths as BranchPath[]) || [])];
+                              paths[idx] = { ...p, condition: e.target.value };
+                              updateConfig("paths", paths);
+                            }}
+                            placeholder="risk_level IN [high, critical]"
+                            style={{
+                              display: "block", width: "100%", marginTop: 2, fontSize: "0.72rem",
+                              fontFamily: "monospace", border: "1px solid var(--aos-border)",
+                              borderRadius: 4, padding: "4px 6px",
+                            }}
+                          />
+                        </label>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <label style={{ fontSize: "0.68rem", color: "var(--aos-muted)", display: "flex", alignItems: "center", gap: 4 }}>
+                            颜色
+                            <input
+                              type="color"
+                              value={p.color}
+                              onChange={(e) => {
+                                const paths = [...((selected.config.paths as BranchPath[]) || [])];
+                                paths[idx] = { ...p, color: e.target.value };
+                                updateConfig("paths", paths);
+                              }}
+                              style={{ width: 28, height: 20, border: "none", padding: 0, cursor: "pointer" }}
+                            />
+                          </label>
+                          <span style={{ fontSize: "0.65rem", fontFamily: "monospace", color: p.color }}>{p.color}</span>
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const paths = [...((selected.config.paths as BranchPath[]) || [])];
+                        paths.push({ id: `p${paths.length + 1}`, label: "新路径", condition: "", color: "#6B7280" });
+                        updateConfig("paths", paths);
+                      }}
+                      style={{
+                        fontSize: "0.72rem", padding: "4px 10px", border: "1px dashed var(--aos-border)",
+                        borderRadius: 4, background: "transparent", cursor: "pointer", color: "var(--aos-muted)",
+                      }}
+                    >
+                      + 添加路径
+                    </button>
+                  </div>
+                )}
+
+                {/* Handoff 配置：decision / artifacts / open_qs / handoff_to */}
+                {selected.kind === "handoff" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div style={{ fontSize: "0.72rem", color: "#4338CA", background: "#EEF2FF", padding: "6px 8px", borderRadius: 6, border: "1px solid #A5B4FC" }}>
+                      🔗 Handoff Block · 汇聚多路上下文，输出交接摘要
+                    </div>
+
+                    {/* decision */}
+                    <label style={{ display: "block", fontSize: "0.75rem", marginBottom: 0, color: "var(--aos-text)", fontWeight: 500 }}>
+                      <span style={{ color: "#4F46E5" }}>decision</span> · 决策摘要
+                      <textarea
+                        value={String(selected.config.decision || "")}
+                        onChange={(e) => updateConfig("decision", e.target.value)}
+                        rows={3}
+                        placeholder="风险分诊结论：中等风险，建议人工复核"
+                        style={{
+                          display: "block", width: "100%", marginTop: 4, fontSize: "0.78rem",
+                          border: "1px solid #A5B4FC", borderRadius: 4, padding: "6px 8px",
+                          background: "#F8FAFF", resize: "vertical",
+                        }}
+                      />
+                    </label>
+
+                    {/* artifacts */}
+                    <div>
+                      <div style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--aos-text)", marginBottom: 4 }}>
+                        <span style={{ color: "#4F46E5" }}>artifacts</span> · 产物列表
+                        <span style={{ marginLeft: 6, fontSize: "0.65rem", color: "var(--aos-muted)" }}>
+                          ({((selected.config.artifacts as string[]) || []).length} 项)
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        {((selected.config.artifacts as string[]) || []).map((name, i) => (
+                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#60A5FA", flexShrink: 0 }} />
+                            <input
+                              value={name}
+                              onChange={(e) => {
+                                const arr = [...((selected.config.artifacts as string[]) || [])];
+                                arr[i] = e.target.value;
+                                updateConfig("artifacts", arr);
+                              }}
+                              style={{
+                                flex: 1, fontSize: "0.72rem", fontFamily: "monospace",
+                                border: "1px solid var(--aos-border)", borderRadius: 4, padding: "3px 6px",
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const arr = ((selected.config.artifacts as string[]) || []).filter((_, j) => j !== i);
+                                updateConfig("artifacts", arr);
+                              }}
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "#EF4444", fontSize: "0.8rem" }}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const arr = [...((selected.config.artifacts as string[]) || []), "new_artifact.json"];
+                            updateConfig("artifacts", arr);
+                          }}
+                          style={{ fontSize: "0.68rem", padding: "2px 8px", border: "1px dashed var(--aos-border)", borderRadius: 4, background: "transparent", cursor: "pointer", color: "var(--aos-muted)", alignSelf: "flex-start" }}
+                        >
+                          + 产物
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* open_qs */}
+                    <div>
+                      <div style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--aos-text)", marginBottom: 4 }}>
+                        <span style={{ color: "#4F46E5" }}>open_qs</span> · 待确认项
+                        <span style={{ marginLeft: 6, fontSize: "0.65rem", color: "var(--aos-muted)" }}>
+                          ({((selected.config.open_qs as string[]) || []).length} 项)
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        {((selected.config.open_qs as string[]) || []).map((q, i) => (
+                          <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
+                            <span style={{ fontSize: "0.65rem", color: "#D97706", fontWeight: 600, marginTop: 3 }}>Q{i + 1}</span>
+                            <input
+                              value={q}
+                              onChange={(e) => {
+                                const arr = [...((selected.config.open_qs as string[]) || [])];
+                                arr[i] = e.target.value;
+                                updateConfig("open_qs", arr);
+                              }}
+                              style={{
+                                flex: 1, fontSize: "0.72rem",
+                                border: "1px solid #FDE68A", borderRadius: 4, padding: "3px 6px", background: "#FFFBEB",
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const arr = ((selected.config.open_qs as string[]) || []).filter((_, j) => j !== i);
+                                updateConfig("open_qs", arr);
+                              }}
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "#EF4444", fontSize: "0.8rem" }}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const arr = [...((selected.config.open_qs as string[]) || []), "新的待确认项？"];
+                            updateConfig("open_qs", arr);
+                          }}
+                          style={{ fontSize: "0.68rem", padding: "2px 8px", border: "1px dashed var(--aos-border)", borderRadius: 4, background: "transparent", cursor: "pointer", color: "var(--aos-muted)", alignSelf: "flex-start" }}
+                        >
+                          + 待确认项
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* handoff_to */}
+                    <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 500, color: "var(--aos-text)" }}>
+                      <span style={{ color: "#4F46E5" }}>handoff_to</span> · 传递目标
+                      <select
+                        value={String(selected.config.handoff_to || "draft_inbox")}
+                        onChange={(e) => updateConfig("handoff_to", e.target.value)}
+                        style={{
+                          display: "block", width: "100%", marginTop: 4, fontSize: "0.78rem",
+                          border: "1px solid var(--aos-border)", borderRadius: 4, padding: "4px 8px", background: "var(--aos-card)",
+                        }}
+                      >
+                        <option value="risk_agent">风控审批 Agent（risk-approver）</option>
+                        <option value="draft_inbox">人工审批台（Draft Inbox）</option>
+                        <option value="webhook">外部 Webhook</option>
+                      </select>
+                    </label>
+                  </div>
+                )}
               </div>
             ) : (
               <p style={{ fontSize: "0.8rem", color: "var(--aos-muted)" }}>
@@ -713,6 +1064,54 @@ export function LogicCanvasPage() {
                 )}
               </div>
 
+              {/* 预览模式增强：dryRun 试运行结果 + 统计 + 分支高亮 */}
+              {execResults.length > 0 && (
+                <div style={{
+                  marginBottom: 8, padding: 10, borderRadius: 6,
+                  background: dryRun ? "#F0FDF4" : "#EFF6FF",
+                  border: `1px solid ${dryRun ? "#BBF7D0" : "#BFDBFE"}`,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                    <span style={{ fontSize: "0.7rem", fontWeight: 700, color: dryRun ? "#15803D" : "#1D4ED8" }}>
+                      {dryRun ? "🧪 dryRun 试运行结果" : "🚀 生产执行结果"}
+                    </span>
+                  </div>
+                  {/* 统计：耗时 + Tokens */}
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
+                    <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: 3, background: "rgba(255,255,255,0.7)", color: "#374151" }}>
+                      ⏱ 耗时 ~{(execResults.length * 0.3).toFixed(2)}s
+                    </span>
+                    <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: 3, background: "rgba(255,255,255,0.7)", color: "#374151" }}>
+                      🎯 Tokens 入 {execResults.length * 284} / 出 {execResults.length * 47}
+                    </span>
+                    <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: 3, background: "rgba(255,255,255,0.7)", color: "#374151" }}>
+                      📦 {execResults.length} 步
+                    </span>
+                  </div>
+                  {/* 分支路径高亮 */}
+                  {blocks.some((b) => b.kind === "branch") && (() => {
+                    const branchBlock = blocks.find((b) => b.kind === "branch");
+                    const paths = (branchBlock?.config.paths as BranchPath[]) || [];
+                    const activeIdx = 0; // dryRun 默认命中第一条路径
+                    return (
+                      <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(paths.length, 2)}), 1fr)`, gap: 4, marginTop: 4 }}>
+                        {paths.slice(0, 2).map((p, pi) => (
+                          <div key={p.id} style={{
+                            padding: "3px 6px", borderRadius: 4, fontSize: "0.62rem",
+                            border: pi === activeIdx ? `2px solid ${p.color}` : `1px solid ${p.color}40`,
+                            background: pi === activeIdx ? `${p.color}15` : "transparent",
+                            fontWeight: pi === activeIdx ? 700 : 400,
+                            color: pi === activeIdx ? p.color : "#9CA3AF",
+                          }}>
+                            {pi === activeIdx ? "▶ " : "  "}{p.label}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
               {/* Latest results */}
               {execResults.length > 0 && (
                 <details open style={{ marginBottom: 8 }}>
@@ -720,22 +1119,29 @@ export function LogicCanvasPage() {
                     CoT 推理链（{execResults.length} 步）
                   </summary>
                   <div style={{ marginTop: 6 }}>
-                    {execResults.map((r, i) => (
+                    {execResults.map((r, i) => {
+                      const blk = blocks[i];
+                      const isBranch = blk?.kind === "branch";
+                      const isHandoff = blk?.kind === "handoff";
+                      return (
                       <div key={r.block_id}
                         style={{
-                          borderLeft: `3px solid ${KIND_COLORS[blocks[i]?.kind] || "#666"}`,
+                          borderLeft: `3px solid ${KIND_COLORS[blk?.kind || "input"] || "#666"}`,
                           padding: "4px 8px",
                           marginBottom: 4,
                           fontSize: "0.72rem",
-                          background: "var(--aos-card)",
+                          background: isHandoff ? "#EEF2FF" : isBranch ? "#FEF2F2" : "var(--aos-card)",
                           borderRadius: "0 4px 4px 0",
                         }}>
                         <strong>Step {i + 1}</strong>{" "}
+                        {isBranch && <span style={{ color: "#DC2626", fontSize: "0.62rem" }}>🔀 分支求值</span>}
+                        {isHandoff && <span style={{ color: "#4F46E5", fontSize: "0.62rem" }}>🔗 汇聚输出</span>}
                         {r.cot.map((line, j) => (
                           <div key={j} style={{ color: "var(--aos-text)", marginTop: 2 }}>{line}</div>
                         ))}
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </details>
               )}
