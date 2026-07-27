@@ -344,7 +344,7 @@ export function DataConnectionPage() {
                 <button
                   type="button"
                   className="btn"
-                  style={{ color: "#dc2626" }}
+                  style={{ color: "var(--aos-red)" }}
                   onClick={() => void handleDelete(c.id)}
                 >
                   删除

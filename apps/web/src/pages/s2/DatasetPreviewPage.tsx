@@ -310,8 +310,8 @@ export function DatasetPreviewPage() {
                   style={{
                     fontSize: "0.7rem",
                     padding: "2px 6px",
-                    border: "1px solid var(--p-border, #e5e7eb)",
-                    background: sort?.col === c.name ? "var(--p-accent-soft, rgba(37,99,235,0.1))" : "transparent",
+                    border: "1px solid var(--aos-border)",
+                    background: sort?.col === c.name ? "var(--aos-accent-light)" : "transparent",
                     cursor: "pointer",
                   }}
                 >
@@ -346,7 +346,7 @@ export function DatasetPreviewPage() {
               style={{ width: "100%", marginBottom: "0.5rem" }}
             />
             {filteredCols.map((c) => (
-              <div key={c.name} style={{ padding: "0.4rem 0", borderBottom: "1px solid var(--p-border, #e5e7eb)" }}>
+              <div key={c.name} style={{ padding: "0.4rem 0", borderBottom: "1px solid var(--aos-border)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <strong className="mono">{c.name}</strong>
                   <span className={`bp-discover-badge bp-discover-badge-${TYPE_TONE[c.type]}`}>

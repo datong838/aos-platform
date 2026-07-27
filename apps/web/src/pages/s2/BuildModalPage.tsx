@@ -488,10 +488,10 @@ export function BuildModalPage() {
                   padding: "2px 0",
                   color:
                     l.level === "error"
-                      ? "var(--p-bad, #dc2626)"
+                      ? "var(--aos-red)"
                       : l.level === "warn"
-                        ? "var(--p-warn, #d97706)"
-                        : "var(--p-text, #1f2937)",
+                        ? "var(--aos-amber)"
+                        : "var(--aos-text)",
                 }}
               >
                 <span className="muted">[{new Date(l.timestamp).toLocaleTimeString()}]</span>{" "}

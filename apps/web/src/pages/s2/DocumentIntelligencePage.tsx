@@ -315,10 +315,10 @@ const MOCK_EXTRACT_FIELDS: ExtractField[] = [
 
 function StatCard({ value, label, trend, trendUp }: { value: string; label: string; trend: string; trendUp?: boolean }) {
   return (
-    <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 8, padding: 16 }}>
-      <div style={{ fontSize: 24, fontWeight: 600, color: "#111827", lineHeight: 1.2 }}>{value}</div>
-      <div style={{ fontSize: 12, color: "#6B7280", marginTop: 4 }}>{label}</div>
-      <div style={{ fontSize: 11, marginTop: 6, color: trendUp ? "#16A34A" : "#6B7280" }}>
+    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 16 }}>
+      <div style={{ fontSize: 24, fontWeight: 600, color: "var(--aos-text)", lineHeight: 1.2 }}>{value}</div>
+      <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4 }}>{label}</div>
+      <div style={{ fontSize: 11, marginTop: 6, color: trendUp ? "var(--aos-green)" : "var(--aos-text-secondary)" }}>
         {trendUp ? "↑ " : ""}
         {trend}
       </div>
@@ -350,7 +350,7 @@ function StateStepper({ state, errorMessage }: { state: DocState; errorMessage?:
   ];
 
   return (
-    <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 8, padding: "16px 24px", marginBottom: 16 }}>
+    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: "16px 24px", marginBottom: 16 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
         {labels.map((label, i) => {
           const isDone = i < stepIdx;
@@ -358,14 +358,14 @@ function StateStepper({ state, errorMessage }: { state: DocState; errorMessage?:
           const isFailed = state === "failed" && i === stepIdx;
           const isCorrection = state === "needs_correction" && i === stepIdx;
           const color = isFailed
-            ? "#EF4444"
+            ? "var(--aos-red)"
             : isCorrection
-              ? "#F59E0B"
+              ? "var(--aos-amber)"
               : isDone
-                ? "#10B981"
+                ? "var(--aos-green)"
                 : isCurrent
                   ? STATE_META[state].color
-                  : "#D1D5DB";
+                  : "var(--aos-border-strong)";
           return (
             <div key={label.key} style={{ display: "flex", alignItems: "center", flex: i === labels.length - 1 ? "0 0 auto" : "1 1 auto" }}>
               {/* 圆形节点 */}
@@ -376,7 +376,7 @@ function StateStepper({ state, errorMessage }: { state: DocState; errorMessage?:
                     height: 28,
                     borderRadius: "50%",
                     background: color,
-                    color: "#fff",
+                    color: "var(--text-on-brand)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -386,7 +386,7 @@ function StateStepper({ state, errorMessage }: { state: DocState; errorMessage?:
                 >
                   {isDone ? "✓" : i + 1}
                 </div>
-                <span style={{ fontSize: 11, color: isCurrent || isDone ? "#111827" : "#9CA3AF", fontWeight: isCurrent ? 600 : 400 }}>
+                <span style={{ fontSize: 11, color: isCurrent || isDone ? "var(--aos-text)" : "var(--aos-text-tertiary)", fontWeight: isCurrent ? 600 : 400 }}>
                   {label.title}
                 </span>
               </div>
@@ -396,7 +396,7 @@ function StateStepper({ state, errorMessage }: { state: DocState; errorMessage?:
                   style={{
                     flex: 1,
                     height: 2,
-                    background: i < stepIdx ? "#10B981" : "#E5E7EB",
+                    background: i < stepIdx ? "var(--aos-green)" : "var(--aos-border)",
                     margin: "0 8px",
                     marginBottom: 18,
                   }}
@@ -407,12 +407,12 @@ function StateStepper({ state, errorMessage }: { state: DocState; errorMessage?:
         })}
       </div>
       {state === "failed" && errorMessage && (
-        <div style={{ marginTop: 8, padding: "6px 10px", background: "#FEE2E2", borderRadius: 4, fontSize: 12, color: "#991B1B" }}>
+        <div style={{ marginTop: 8, padding: "6px 10px", background: "var(--aos-red-bg)", borderRadius: 4, fontSize: 12, color: "var(--aos-red)" }}>
           ⚠ {errorMessage}
         </div>
       )}
       {state === "needs_correction" && (
-        <div style={{ marginTop: 8, padding: "6px 10px", background: "#FEF3C7", borderRadius: 4, fontSize: 12, color: "#92400E" }}>
+        <div style={{ marginTop: 8, padding: "6px 10px", background: "var(--aos-amber-bg)", borderRadius: 4, fontSize: 12, color: "var(--aos-amber)" }}>
           ⚠ 部分字段置信度低于阈值 ({CONFIDENCE_THRESHOLD})，需要人工修正
         </div>
       )}
@@ -456,22 +456,22 @@ function UploadDropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
       }}
       onClick={() => document.getElementById("doc-file-input")?.click()}
       style={{
-        border: dragOver ? "2px dashed #4F46E5" : "2px dashed #D1D5DB",
+        border: dragOver ? "2px dashed var(--aos-accent)" : "2px dashed var(--aos-border-strong)",
         borderRadius: 8,
         padding: "28px 20px",
         textAlign: "center",
         cursor: "pointer",
-        background: dragOver ? "#EEF2FF" : "#FAFAFA",
+        background: dragOver ? "var(--aos-accent-light)" : "var(--aos-surface-hover)",
         transition: "all 0.15s",
         marginBottom: 16,
       }}
     >
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" style={{ margin: "0 auto 8px" }}>
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--aos-text-tertiary)" strokeWidth="1.5" style={{ margin: "0 auto 8px" }}>
         <path d="M12 16V4M12 4l-4 4M12 4l4 4" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" strokeLinecap="round" />
       </svg>
-      <div style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>拖拽文件到此处，或点击选择文件</div>
-      <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 4 }}>
+      <div style={{ fontSize: 13, color: "var(--aos-text)", fontWeight: 500 }}>拖拽文件到此处，或点击选择文件</div>
+      <div style={{ fontSize: 11, color: "var(--aos-text-tertiary)", marginTop: 4 }}>
         支持 PDF / Word / Excel / 图片 / PPT，单个文件最大 {Math.round(MAX_FILE_SIZE / 1024 / 1024)}MB
       </div>
       <input
@@ -483,7 +483,7 @@ function UploadDropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
         onChange={(e) => handleFiles(e.target.files)}
       />
       {error && (
-        <div style={{ marginTop: 8, fontSize: 12, color: "#EF4444" }}>⚠ {error}</div>
+        <div style={{ marginTop: 8, fontSize: 12, color: "var(--aos-red)" }}>⚠ {error}</div>
       )}
     </div>
   );
@@ -495,9 +495,9 @@ function OcrPanel({ doc, onCorrectText }: { doc: DocItem; onCorrectText: (text: 
   const [text, setText] = useState(doc.ocrText ?? "");
 
   return (
-    <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 8, padding: 16 }}>
+    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>OCR 识别结果</h3>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)" }}>OCR 识别结果</h3>
         <button
           type="button"
           onClick={() => {
@@ -508,9 +508,9 @@ function OcrPanel({ doc, onCorrectText }: { doc: DocItem; onCorrectText: (text: 
             padding: "4px 10px",
             fontSize: 12,
             borderRadius: 4,
-            border: "1px solid #E5E7EB",
-            background: editing ? "#4F46E5" : "#fff",
-            color: editing ? "#fff" : "#374151",
+            border: "1px solid var(--aos-border)",
+            background: editing ? "var(--aos-accent)" : "var(--aos-surface)",
+            color: editing ? "var(--text-on-brand)" : "var(--aos-text)",
             cursor: "pointer",
           }}
         >
@@ -520,22 +520,22 @@ function OcrPanel({ doc, onCorrectText }: { doc: DocItem; onCorrectText: (text: 
 
       <div style={{ display: "flex", gap: 16 }}>
         {/* 左侧：文档原图模拟 */}
-        <div style={{ flex: "0 0 200px", height: 240, background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 4, position: "relative", overflow: "hidden" }}>
+        <div style={{ flex: "0 0 200px", height: 240, background: "var(--aos-surface-hover)", border: "1px solid var(--aos-border)", borderRadius: 4, position: "relative", overflow: "hidden" }}>
           <svg width="100%" height="100%" viewBox="0 0 200 240">
             {/* 模拟文档背景 */}
-            <rect x="10" y="10" width="180" height="220" fill="#fff" stroke="#E5E7EB" />
+            <rect x="10" y="10" width="180" height="220" fill="var(--aos-surface)" stroke="var(--aos-border)" />
             {/* 模拟 OCR 识别框 */}
-            <rect x="20" y="25" width="120" height="12" fill="none" stroke="#10B981" strokeWidth="1" strokeDasharray="3 2" />
-            <rect x="20" y="50" width="80" height="12" fill="none" stroke="#F59E0B" strokeWidth="1" strokeDasharray="3 2" />
-            <rect x="20" y="75" width="140" height="12" fill="none" stroke="#10B981" strokeWidth="1" strokeDasharray="3 2" />
-            <rect x="20" y="100" width="100" height="12" fill="none" stroke="#EF4444" strokeWidth="1" strokeDasharray="3 2" />
-            <rect x="20" y="125" width="110" height="12" fill="none" stroke="#10B981" strokeWidth="1" strokeDasharray="3 2" />
+            <rect x="20" y="25" width="120" height="12" fill="none" stroke="var(--aos-green)" strokeWidth="1" strokeDasharray="3 2" />
+            <rect x="20" y="50" width="80" height="12" fill="none" stroke="var(--aos-amber)" strokeWidth="1" strokeDasharray="3 2" />
+            <rect x="20" y="75" width="140" height="12" fill="none" stroke="var(--aos-green)" strokeWidth="1" strokeDasharray="3 2" />
+            <rect x="20" y="100" width="100" height="12" fill="none" stroke="var(--aos-red)" strokeWidth="1" strokeDasharray="3 2" />
+            <rect x="20" y="125" width="110" height="12" fill="none" stroke="var(--aos-green)" strokeWidth="1" strokeDasharray="3 2" />
             {/* 标注 */}
-            <text x="150" y="33" fontSize="7" fill="#10B981">98%</text>
-            <text x="110" y="58" fontSize="7" fill="#F59E0B">85%</text>
-            <text x="170" y="83" fontSize="7" fill="#10B981">92%</text>
-            <text x="130" y="108" fontSize="7" fill="#EF4444">65%</text>
-            <text x="140" y="133" fontSize="7" fill="#10B981">91%</text>
+            <text x="150" y="33" fontSize="7" fill="var(--aos-green)">98%</text>
+            <text x="110" y="58" fontSize="7" fill="var(--aos-amber)">85%</text>
+            <text x="170" y="83" fontSize="7" fill="var(--aos-green)">92%</text>
+            <text x="130" y="108" fontSize="7" fill="var(--aos-red)">65%</text>
+            <text x="140" y="133" fontSize="7" fill="var(--aos-green)">91%</text>
           </svg>
         </div>
 
@@ -543,12 +543,12 @@ function OcrPanel({ doc, onCorrectText }: { doc: DocItem; onCorrectText: (text: 
         <div style={{ flex: 1 }}>
           {doc.status === "processing_ocr" && doc.ocrProgress !== undefined && (
             <div style={{ marginBottom: 8 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6B7280", marginBottom: 4 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 4 }}>
                 <span>识别进度</span>
                 <span>{doc.ocrProgress}% · 预估剩余 {Math.ceil((100 - doc.ocrProgress) / 10)}s</span>
               </div>
-              <div style={{ height: 6, background: "#F3F4F6", borderRadius: 3, overflow: "hidden" }}>
-                <div style={{ width: `${doc.ocrProgress}%`, height: "100%", background: "#F59E0B", transition: "width 0.3s" }} />
+              <div style={{ height: 6, background: "var(--aos-bg-secondary)", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{ width: `${doc.ocrProgress}%`, height: "100%", background: "var(--aos-amber)", transition: "width 0.3s" }} />
               </div>
             </div>
           )}
@@ -556,17 +556,17 @@ function OcrPanel({ doc, onCorrectText }: { doc: DocItem; onCorrectText: (text: 
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              style={{ width: "100%", height: 180, padding: 8, fontSize: 12, border: "1px solid #E5E7EB", borderRadius: 4, fontFamily: "monospace", resize: "vertical" }}
+              style={{ width: "100%", height: 180, padding: 8, fontSize: 12, border: "1px solid var(--aos-border)", borderRadius: 4, fontFamily: "monospace", resize: "vertical" }}
             />
           ) : (
             <pre
               data-testid="ocr-text"
-              style={{ whiteSpace: "pre-wrap", fontSize: 12, color: "#374151", lineHeight: 1.6, fontFamily: "monospace", margin: 0 }}
+              style={{ whiteSpace: "pre-wrap", fontSize: 12, color: "var(--aos-text)", lineHeight: 1.6, fontFamily: "monospace", margin: 0 }}
             >
               {doc.ocrText || "（暂无识别文本）"}
             </pre>
           )}
-          <div style={{ marginTop: 8, fontSize: 11, color: "#9CA3AF" }}>
+          <div style={{ marginTop: 8, fontSize: 11, color: "var(--aos-text-tertiary)" }}>
             绿色框 = 高置信度 · 橙色框 = 中置信度 · 红色框 = 低置信度（需人工校正）
           </div>
         </div>
@@ -591,13 +591,13 @@ function ExtractionPanel({
   const [editValue, setEditValue] = useState("");
 
   return (
-    <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 8, padding: 16 }}>
+    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>LLM 结构化提取结果</h3>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)" }}>LLM 结构化提取结果</h3>
         <select
           value={selectedTemplate}
           onChange={(e) => onTemplateChange(e.target.value as TemplateId)}
-          style={{ padding: "4px 8px", fontSize: 12, borderRadius: 4, border: "1px solid #E5E7EB", background: "#fff", color: "#374151" }}
+          style={{ padding: "4px 8px", fontSize: 12, borderRadius: 4, border: "1px solid var(--aos-border)", background: "var(--aos-surface)", color: "var(--aos-text)" }}
         >
           {TEMPLATES.map((t) => (
             <option key={t.id} value={t.id}>
@@ -609,12 +609,12 @@ function ExtractionPanel({
 
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
         <thead>
-          <tr style={{ borderBottom: "2px solid #E5E7EB" }}>
-            <th style={{ textAlign: "left", padding: "6px 8px", color: "#6B7280", fontWeight: 500, width: "20%" }}>字段名</th>
-            <th style={{ textAlign: "left", padding: "6px 8px", color: "#6B7280", fontWeight: 500, width: "30%" }}>提取值</th>
-            <th style={{ textAlign: "center", padding: "6px 8px", color: "#6B7280", fontWeight: 500, width: "15%" }}>置信度</th>
-            <th style={{ textAlign: "left", padding: "6px 8px", color: "#6B7280", fontWeight: 500, width: "20%" }}>来源位置</th>
-            <th style={{ textAlign: "center", padding: "6px 8px", color: "#6B7280", fontWeight: 500, width: "15%" }}>操作</th>
+          <tr style={{ borderBottom: "2px solid var(--aos-border)" }}>
+            <th style={{ textAlign: "left", padding: "6px 8px", color: "var(--aos-text-secondary)", fontWeight: 500, width: "20%" }}>字段名</th>
+            <th style={{ textAlign: "left", padding: "6px 8px", color: "var(--aos-text-secondary)", fontWeight: 500, width: "30%" }}>提取值</th>
+            <th style={{ textAlign: "center", padding: "6px 8px", color: "var(--aos-text-secondary)", fontWeight: 500, width: "15%" }}>置信度</th>
+            <th style={{ textAlign: "left", padding: "6px 8px", color: "var(--aos-text-secondary)", fontWeight: 500, width: "20%" }}>来源位置</th>
+            <th style={{ textAlign: "center", padding: "6px 8px", color: "var(--aos-text-secondary)", fontWeight: 500, width: "15%" }}>操作</th>
           </tr>
         </thead>
         <tbody>
@@ -623,9 +623,9 @@ function ExtractionPanel({
             const isLow = getConfidenceLevel(field.confidence) === "low";
             const isEditing = editingId === field.id;
             return (
-              <tr key={field.id} style={{ borderBottom: "1px solid #F3F4F6" }}>
-                <td style={{ padding: "6px 8px", color: "#374151", fontWeight: 500 }}>{field.name}</td>
-                <td style={{ padding: "6px 8px", color: "#374151" }}>
+              <tr key={field.id} style={{ borderBottom: "1px solid var(--aos-bg-secondary)" }}>
+                <td style={{ padding: "6px 8px", color: "var(--aos-text)", fontWeight: 500 }}>{field.name}</td>
+                <td style={{ padding: "6px 8px", color: "var(--aos-text)" }}>
                   {isEditing ? (
                     <input
                       value={editValue}
@@ -636,11 +636,11 @@ function ExtractionPanel({
                           setEditingId(null);
                         }
                       }}
-                      style={{ width: "100%", padding: "2px 4px", fontSize: 12, border: "1px solid #4F46E5", borderRadius: 3 }}
+                      style={{ width: "100%", padding: "2px 4px", fontSize: 12, border: "1px solid var(--aos-accent)", borderRadius: 3 }}
                       autoFocus
                     />
                   ) : (
-                    <span style={{ background: isLow ? "#FEF3C7" : "transparent", padding: "1px 4px", borderRadius: 2 }}>
+                    <span style={{ background: isLow ? "var(--aos-amber-bg)" : "transparent", padding: "1px 4px", borderRadius: 2 }}>
                       {field.value}
                     </span>
                   )}
@@ -650,7 +650,7 @@ function ExtractionPanel({
                     {(field.confidence * 100).toFixed(0)}%
                   </span>
                 </td>
-                <td style={{ padding: "6px 8px", color: "#9CA3AF", fontSize: 11 }}>{field.source}</td>
+                <td style={{ padding: "6px 8px", color: "var(--aos-text-tertiary)", fontSize: 11 }}>{field.source}</td>
                 <td style={{ padding: "6px 8px", textAlign: "center" }}>
                   <button
                     type="button"
@@ -663,7 +663,7 @@ function ExtractionPanel({
                         setEditValue(field.value);
                       }
                     }}
-                    style={{ fontSize: 11, color: "#4F46E5", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
+                    style={{ fontSize: 11, color: "var(--aos-accent)", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
                   >
                     {isEditing ? "保存" : "修正"}
                   </button>
@@ -692,24 +692,24 @@ function ReviewPanel({
   const avgConf = fields.length > 0 ? fields.reduce((s, f) => s + f.confidence, 0) / fields.length : 0;
 
   return (
-    <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 8, padding: 16 }}>
-      <h3 style={{ fontSize: 14, fontWeight: 600, color: "#111827", marginBottom: 12 }}>审核台</h3>
+    <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 8, padding: 16 }}>
+      <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", marginBottom: 12 }}>审核台</h3>
 
       {/* 总览 */}
       <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
-        <div style={{ flex: 1, padding: 12, background: "#F9FAFB", borderRadius: 6 }}>
-          <div style={{ fontSize: 11, color: "#6B7280" }}>提取字段数</div>
-          <div style={{ fontSize: 20, fontWeight: 600, color: "#111827", marginTop: 2 }}>{fields.length}</div>
+        <div style={{ flex: 1, padding: 12, background: "var(--aos-surface-hover)", borderRadius: 6 }}>
+          <div style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>提取字段数</div>
+          <div style={{ fontSize: 20, fontWeight: 600, color: "var(--aos-text)", marginTop: 2 }}>{fields.length}</div>
         </div>
-        <div style={{ flex: 1, padding: 12, background: "#F9FAFB", borderRadius: 6 }}>
-          <div style={{ fontSize: 11, color: "#6B7280" }}>平均置信度</div>
+        <div style={{ flex: 1, padding: 12, background: "var(--aos-surface-hover)", borderRadius: 6 }}>
+          <div style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>平均置信度</div>
           <div style={{ fontSize: 20, fontWeight: 600, color: getConfidenceColor(avgConf), marginTop: 2 }}>
             {(avgConf * 100).toFixed(1)}%
           </div>
         </div>
-        <div style={{ flex: 1, padding: 12, background: "#F9FAFB", borderRadius: 6 }}>
-          <div style={{ fontSize: 11, color: "#6B7280" }}>低置信度字段</div>
-          <div style={{ fontSize: 20, fontWeight: 600, color: "#EF4444", marginTop: 2 }}>
+        <div style={{ flex: 1, padding: 12, background: "var(--aos-surface-hover)", borderRadius: 6 }}>
+          <div style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>低置信度字段</div>
+          <div style={{ fontSize: 20, fontWeight: 600, color: "var(--aos-red)", marginTop: 2 }}>
             {fields.filter((f) => getConfidenceLevel(f.confidence) === "low").length}
           </div>
         </div>
@@ -726,9 +726,9 @@ function ReviewPanel({
             fontSize: 13,
             fontWeight: 500,
             borderRadius: 6,
-            border: "1px solid #10B981",
-            background: "#10B981",
-            color: "#fff",
+            border: "1px solid var(--aos-green)",
+            background: "var(--aos-green)",
+            color: "var(--text-on-brand)",
             cursor: "pointer",
           }}
         >
@@ -743,9 +743,9 @@ function ReviewPanel({
             fontSize: 13,
             fontWeight: 500,
             borderRadius: 6,
-            border: "1px solid #E5E7EB",
-            background: "#fff",
-            color: "#EF4444",
+            border: "1px solid var(--aos-border)",
+            background: "var(--aos-surface)",
+            color: "var(--aos-red)",
             cursor: "pointer",
           }}
         >
@@ -756,11 +756,11 @@ function ReviewPanel({
       {/* 历史时间线 */}
       {doc.history && doc.history.length > 0 && (
         <div>
-          <h4 style={{ fontSize: 12, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+          <h4 style={{ fontSize: 12, fontWeight: 600, color: "var(--aos-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
             处理历史
           </h4>
           <div style={{ position: "relative", paddingLeft: 16 }}>
-            <div style={{ position: "absolute", left: 5, top: 4, bottom: 4, width: 2, background: "#E5E7EB" }} />
+            <div style={{ position: "absolute", left: 5, top: 4, bottom: 4, width: 2, background: "var(--aos-border)" }} />
             {doc.history.map((entry, idx) => (
               <div key={idx} style={{ position: "relative", marginBottom: 12 }}>
                 <div
@@ -772,12 +772,12 @@ function ReviewPanel({
                     height: 12,
                     borderRadius: "50%",
                     background: STATE_META[entry.state].color,
-                    border: "2px solid #fff",
-                    boxShadow: "0 0 0 1px #E5E7EB",
+                    border: "2px solid var(--aos-surface)",
+                    boxShadow: "0 0 0 1px var(--aos-border)",
                   }}
                 />
-                <div style={{ fontSize: 12, fontWeight: 500, color: "#111827" }}>{STATE_META[entry.state].label}</div>
-                <div style={{ fontSize: 11, color: "#9CA3AF" }}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)" }}>{STATE_META[entry.state].label}</div>
+                <div style={{ fontSize: 11, color: "var(--aos-text-tertiary)" }}>
                   {entry.timestamp} · {entry.note}
                 </div>
               </div>
@@ -893,10 +893,10 @@ export function DocumentIntelligencePage() {
 
       {/* 批量操作栏 */}
       {selectedIds.size > 0 && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 12, padding: "8px 12px", background: "#EEF2FF", borderRadius: 6, alignItems: "center" }}>
-          <span style={{ fontSize: 12, color: "#4F46E5" }}>已选择 {selectedIds.size} 个文件</span>
+        <div style={{ display: "flex", gap: 8, marginBottom: 12, padding: "8px 12px", background: "var(--aos-accent-light)", borderRadius: 6, alignItems: "center" }}>
+          <span style={{ fontSize: 12, color: "var(--aos-accent)" }}>已选择 {selectedIds.size} 个文件</span>
           <button type="button" onClick={handleBatchReprocess} style={batchBtnStyle}>重新处理</button>
-          <button type="button" onClick={handleBatchDelete} style={{ ...batchBtnStyle, color: "#EF4444", borderColor: "#FCA5A5" }}>删除</button>
+          <button type="button" onClick={handleBatchDelete} style={{ ...batchBtnStyle, color: "var(--aos-red)", borderColor: "var(--aos-red-border)" }}>删除</button>
         </div>
       )}
 
@@ -915,7 +915,7 @@ export function DocumentIntelligencePage() {
               onChange={toggleSelectAll}
               style={{ cursor: "pointer" }}
             />
-            <span style={{ fontSize: 12, color: "#6B7280" }}>全选 ({docs.length})</span>
+            <span style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>全选 ({docs.length})</span>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -932,11 +932,11 @@ export function DocumentIntelligencePage() {
                     alignItems: "center",
                     gap: 8,
                     padding: 10,
-                    border: isSelected ? "1px solid #4F46E5" : "1px solid #E5E7EB",
+                    border: isSelected ? "1px solid var(--aos-accent)" : "1px solid var(--aos-border)",
                     borderRadius: 6,
-                    background: isSelected ? "#F5F3FF" : "#fff",
+                    background: isSelected ? "var(--aos-accent-light)" : "var(--aos-surface)",
                     cursor: "pointer",
-                    boxShadow: isSelected ? "0 0 0 3px rgba(79, 70, 229, 0.1)" : "none",
+                    boxShadow: isSelected ? "0 0 0 3px var(--aos-indigo-50)" : "none",
                   }}
                   onClick={() => setSelectedId(doc.id)}
                 >
@@ -952,10 +952,10 @@ export function DocumentIntelligencePage() {
                   />
                   <DocIcon type={doc.type} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: "var(--aos-text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       {doc.title}
                     </div>
-                    <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2, display: "flex", gap: 8 }}>
+                    <div style={{ fontSize: 11, color: "var(--aos-text-tertiary)", marginTop: 2, display: "flex", gap: 8 }}>
                       <span>{formatFileSize(doc.size)}</span>
                       <span>{doc.uploadedAt}</span>
                     </div>
@@ -999,8 +999,8 @@ const batchBtnStyle: React.CSSProperties = {
   padding: "4px 10px",
   fontSize: 12,
   borderRadius: 4,
-  border: "1px solid #C7D2FE",
-  background: "#fff",
-  color: "#4F46E5",
+  border: "1px solid var(--aos-indigo-border)",
+  background: "var(--aos-surface)",
+  color: "var(--aos-accent)",
   cursor: "pointer",
 };

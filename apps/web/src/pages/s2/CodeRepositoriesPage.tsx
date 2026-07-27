@@ -362,8 +362,8 @@ export function CodeRepositoriesPage() {
                   textAlign: "left",
                   padding: "0.5rem",
                   border: "none",
-                  borderLeft: selected?.id === r.id ? "3px solid var(--p-accent, #2563eb)" : "3px solid transparent",
-                  background: selected?.id === r.id ? "var(--p-hover, rgba(0,0,0,0.04))" : "transparent",
+                  borderLeft: selected?.id === r.id ? "3px solid var(--aos-accent)" : "3px solid transparent",
+                  background: selected?.id === r.id ? "var(--aos-surface-hover)" : "transparent",
                   cursor: "pointer",
                   font: "inherit",
                 }}
