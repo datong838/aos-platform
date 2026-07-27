@@ -33,8 +33,8 @@ describe("theme.ts — 主题切换 API", () => {
       expect(getTheme()).toBe("dark");
     });
 
-    it("无属性时回退到 light（localStorage 默认）", () => {
-      expect(getTheme()).toBe("light");
+    it("无属性时回退到 dark（localStorage 默认）", () => {
+      expect(getTheme()).toBe("dark");
     });
 
     it("localStorage 设为 dark 时回退到 dark", () => {
@@ -97,12 +97,12 @@ describe("theme.ts — 主题切换 API", () => {
   });
 
   describe("initTheme", () => {
-    it("无偏好时默认应用 light", () => {
+    it("无偏好时默认应用 dark", () => {
       initTheme();
       expect(document.documentElement.getAttribute("data-aos-theme")).toBe(
-        "light",
+        "dark",
       );
-      expect(document.documentElement.getAttribute("data-theme")).toBe("light");
+      expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
     });
 
     it("localStorage 有 dark 偏好时应用 dark", () => {
@@ -126,7 +126,7 @@ describe("theme.ts — 主题切换 API", () => {
       initTheme();
       expect(
         document.documentElement.getAttribute("data-aos-appearance"),
-      ).toBe("light");
+      ).toBe("dark");
     });
   });
 
