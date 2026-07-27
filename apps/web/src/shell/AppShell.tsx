@@ -15,6 +15,7 @@ import {
   resolveTheme,
   type AppearancePreference,
 } from "../lib/appearance";
+import { getTheme, toggleTheme, type Theme } from "../theme";
 import { ApiStatusBar } from "../components/ApiStatusBar";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { WorkspaceSwitcher } from "../components/WorkspaceSwitcher";
@@ -317,6 +318,15 @@ export function AppShell() {
     persistAppearance(next);
   }, []);
 
+  // 顶栏快捷主题切换按钮：light/dark 二态切换（不影响 system 偏好）
+  const [topbarTheme, setTopbarTheme] = useState<Theme>(() => getTheme());
+  const onToggleTopbarTheme = useCallback(() => {
+    const next = toggleTheme();
+    setTopbarTheme(next);
+    // 同步 pref 状态（如果之前是 system，切换后变成明确的 light/dark）
+    setPref(next);
+  }, []);
+
   // 侧边栏导航渲染：跳过 hidden 页面，所有分组使用抽屉式折叠
   const navNodes = useMemo(() => {
     const nodes: ReactNode[] = [];
@@ -431,6 +441,15 @@ export function AppShell() {
             <input type="search" placeholder="搜索资源…" disabled />
           </div>
           <div className="topbar-actions">
+            <button
+              type="button"
+              className="topbar-theme-toggle"
+              title={topbarTheme === "dark" ? "切换到浅色主题" : "切换到深色主题"}
+              aria-label="切换主题"
+              onClick={onToggleTopbarTheme}
+            >
+              <NavIcon name={topbarTheme === "dark" ? "sun" : "moon"} />
+            </button>
             <EnvReadonlyBadge />
             <OrgSwitcher />
             <WorkspaceSwitcher />
