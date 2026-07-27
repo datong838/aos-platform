@@ -1055,6 +1055,22 @@ def create_app() -> FastAPI:
     application.include_router(phase3_aip_tools_router)
     application.include_router(phase3_aip_drafts_router)
     application.include_router(phase3_aip_lineage_router)
+
+    # ── Phase 4 · Ontology Digital Twin (20 API) ──
+    from aos_api.routers.phase4_ontology_types import router as phase4_ontology_types_router
+    from aos_api.routers.phase4_ontology_branches import router as phase4_ontology_branches_router
+    from aos_api.routers.phase4_ontology_wikis import router as phase4_ontology_wikis_router
+    from aos_api.routers.phase4_ontology_functions import router as phase4_ontology_functions_router
+    from aos_api.routers.phase4_ontology_actions import router as phase4_ontology_actions_router
+    from aos_api.routers.phase4_ontology_links import router as phase4_ontology_links_router
+
+    application.include_router(phase4_ontology_types_router)
+    application.include_router(phase4_ontology_branches_router)
+    application.include_router(phase4_ontology_wikis_router)
+    application.include_router(phase4_ontology_functions_router)
+    application.include_router(phase4_ontology_actions_router)
+    application.include_router(phase4_ontology_links_router)
+
     log.info("aos-api_app_created version=%s", application.version)
     return application
 
