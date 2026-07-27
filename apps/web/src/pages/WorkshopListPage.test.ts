@@ -159,19 +159,19 @@ describe("WorkshopListPage · getStatusMeta", () => {
   it("published → 已发布/绿色", () => {
     const meta = getStatusMeta("published");
     expect(meta.label).toBe("已发布");
-    expect(meta.color).toBe("#059669");
+    expect(meta.color).toBe("var(--aos-green-600)");
   });
 
   it("draft → 草稿/黄色", () => {
     const meta = getStatusMeta("draft");
     expect(meta.label).toBe("草稿");
-    expect(meta.color).toBe("#D97706");
+    expect(meta.color).toBe("var(--aos-amber-600)");
   });
 
   it("disabled → 已禁用/红色", () => {
     const meta = getStatusMeta("disabled");
     expect(meta.label).toBe("已禁用");
-    expect(meta.color).toBe("#DC2626");
+    expect(meta.color).toBe("var(--aos-red)");
   });
 });
 
@@ -199,6 +199,6 @@ describe("WorkshopListPage · getCategoryColor", () => {
   });
 
   it("undefined → 灰色默认", () => {
-    expect(getCategoryColor(undefined)).toBe("#6B7280");
+    expect(getCategoryColor(undefined)).toBe("var(--aos-text-secondary)");
   });
 });

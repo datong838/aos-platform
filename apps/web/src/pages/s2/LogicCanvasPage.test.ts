@@ -24,23 +24,24 @@ describe("LogicCanvasPage · PALETTE 包含 branch 和 handoff", () => {
 describe("LogicCanvasPage · KIND_META 颜色配置", () => {
   it("test KIND_META has correct colors for branch/handoff", () => {
     expect(KIND_META.branch).toBeTruthy();
-    expect(KIND_META.branch.color).toBe("#DC2626");
-    expect(KIND_META.branch.bg).toBe("#FEF2F2");
-    expect(KIND_META.branch.border).toBe("#FECACA");
+    expect(KIND_META.branch.color).toBe("var(--aos-red)");
+    expect(KIND_META.branch.bg).toBe("var(--aos-red-bg)");
+    expect(KIND_META.branch.border).toBe("var(--aos-red-border)");
 
     expect(KIND_META.handoff).toBeTruthy();
-    expect(KIND_META.handoff.color).toBe("#4F46E5");
-    expect(KIND_META.handoff.bg).toBe("#EEF2FF");
-    expect(KIND_META.handoff.border).toBe("#A5B4FC");
+    expect(KIND_META.handoff.color).toBe("var(--aos-indigo-600)");
+    expect(KIND_META.handoff.bg).toBe("var(--aos-indigo-bg)");
+    expect(KIND_META.handoff.border).toBe("var(--aos-indigo-border)");
   });
 
   it("每个 KIND_META 条目都包含 label/color/bg/border", () => {
     for (const key of Object.keys(KIND_META)) {
       const meta = KIND_META[key as keyof typeof KIND_META];
       expect(meta.label.length).toBeGreaterThan(0);
-      expect(meta.color).toMatch(/^#/);
-      expect(meta.bg).toMatch(/^#/);
-      expect(meta.border).toMatch(/^#/);
+      // 224 样式规整后颜色值为 CSS 变量 var(--xxx) 或 hex
+      expect(meta.color).toMatch(/^(var\(--|#[0-9A-Fa-f])/);
+      expect(meta.bg).toMatch(/^(var\(--|#[0-9A-Fa-f])/);
+      expect(meta.border).toMatch(/^(var\(--|#[0-9A-Fa-f])/);
     }
   });
 });
