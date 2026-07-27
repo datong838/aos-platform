@@ -504,6 +504,12 @@ from aos_api.zz_function_type_editor_router import router as zz_function_type_ed
 from aos_api.zz_multi_source_heterogeneous_router import router as zz_multi_source_heterogeneous_router
 from aos_api.zz_graph_health_router import router as zz_graph_health_router
 
+# ── Phase 2 · Model Management (10 API) ──
+from aos_api.routers.model_catalog import router as phase2_model_catalog_router
+from aos_api.routers.model_providers import router as phase2_model_providers_router
+from aos_api.routers.model_routes import router as phase2_model_routes_router
+from aos_api.routers.model_capacity import router as phase2_model_capacity_router
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -1027,6 +1033,11 @@ def create_app() -> FastAPI:
     application.include_router(aip_docintel_parse_router.router)
     application.include_router(aip_docintel_extract_router.router)
     application.include_router(aip_docintel_semantic_router.router)
+    # ── Phase 2 · Model Management (10 API) ──
+    application.include_router(phase2_model_catalog_router)
+    application.include_router(phase2_model_providers_router)
+    application.include_router(phase2_model_routes_router)
+    application.include_router(phase2_model_capacity_router)
     log.info("aos-api_app_created version=%s", application.version)
     return application
 
