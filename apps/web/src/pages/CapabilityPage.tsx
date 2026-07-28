@@ -21,9 +21,9 @@ const CAPABILITY_CARDS: CapabilityCard[] = [
 ];
 
 const STATUS_META: Record<CapabilityCard["status"], { label: string; border: string; color: string }> = {
-  ready: { label: "就绪", border: "#86EFAC", color: "#16A34A" },
-  session: { label: "会话中", border: "#93C5FD", color: "#2563EB" },
-  stopped: { label: "停用", border: "#E5E7EB", color: "#6B7280" },
+  ready: { label: "就绪", border: "var(--aos-green-border)", color: "var(--aos-green-700)" },
+  session: { label: "会话中", border: "var(--aos-blue-border)", color: "var(--aos-blue-600)" },
+  stopped: { label: "停用", border: "var(--aos-border)", color: "var(--aos-text-secondary)" },
 };
 
 type CfgType = "job" | "script" | "session" | "http";
@@ -123,8 +123,8 @@ export function CapabilityPage() {
       )}
       {mediaRid && (
         <div style={{ fontSize: 13, marginBottom: 16 }}>
-          产物 MediaSet：<code style={{ background: "#F3F4F6", padding: "2px 6px", borderRadius: 4 }}>{mediaRid}</code>{" "}
-          · <Link to="/data/media-sets" style={{ color: "#4F46E5" }}>媒体集 →</Link>
+          产物 MediaSet：<code style={{ background: "var(--aos-gray-100)", padding: "2px 6px", borderRadius: 4 }}>{mediaRid}</code>{" "}
+          · <Link to="/data/media-sets" style={{ color: "var(--aos-indigo-600)" }}>媒体集 →</Link>
         </div>
       )}
       {sessionId && (
@@ -543,9 +543,9 @@ export function CapabilityPage() {
           fontSize: 12,
         }}
       >
-        <Link to="/aip/tools" style={{ color: "#4F46E5" }}>工具面板 →</Link>
-        <Link to="/data/media-sets" style={{ color: "#4F46E5" }}>MediaSet →</Link>
-        <Link to="/aip/drafts" style={{ color: "#4F46E5" }}>Draft 审批 →</Link>
+        <Link to="/aip/tools" style={{ color: "var(--aos-indigo-600)" }}>工具面板 →</Link>
+        <Link to="/data/media-sets" style={{ color: "var(--aos-indigo-600)" }}>MediaSet →</Link>
+        <Link to="/aip/drafts" style={{ color: "var(--aos-indigo-600)" }}>Draft 审批 →</Link>
       </div>
 
       <p style={{ fontSize: 11, color: "#6B7280", margin: "12px 0 0" }}>

@@ -697,7 +697,7 @@ export function AipAssistPage() {
         <div
           style={{
             flex: 1, display: "flex", flexDirection: "column",
-            maxWidth: 760, margin: "0 auto", minWidth: 0,
+            maxWidth: 720, margin: "0 auto", minWidth: 0,
           }}
         >
           {/* 顶部免责声明 */}
