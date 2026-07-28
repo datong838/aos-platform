@@ -730,8 +730,8 @@ body,
 }
 
 .content-inner {
-  max-width: 72rem;
-  margin: 0 auto;
+  /* G1: 视觉稿内容区撑满 .p-content，去掉全局 max-width 限宽 */
+  /* 需要限宽的页面（如首页 900px）在各自组件内单独设置 */
 }
 
 .page-chrome { margin-bottom: 24px; }
@@ -954,6 +954,7 @@ button.nav-link.is-selected {
   border-radius: 4px;
   padding: 6px 14px;
   font-size: 13px;
+  line-height: 18px;
   font-weight: 500;
   cursor: pointer;
   text-decoration: none;
@@ -1023,6 +1024,7 @@ a.btn-nav-accent:hover {
   border-radius: 4px;
   padding: 6px 14px;
   font-size: 13px;
+  line-height: 18px;
   font-weight: 500;
   cursor: pointer;
   text-decoration: none;
@@ -1043,6 +1045,7 @@ a.btn-nav-accent:hover {
   border-radius: 4px;
   padding: 6px 14px;
   font-size: 13px;
+  line-height: 18px;
   cursor: pointer;
 }
 
@@ -1097,6 +1100,7 @@ button:not([class]) {
   border-radius: 4px;
   padding: 6px 10px;
   font-size: 13px;
+  line-height: 18px;
   cursor: pointer;
 }
 
@@ -1123,6 +1127,7 @@ button:not([class]):disabled {
   border-radius: 4px;
   padding: 6px 10px;
   font-size: 13px;
+  line-height: 18px;
   cursor: pointer;
 }
 
