@@ -182,7 +182,7 @@ export function PublishPage() {
               fontWeight: 500,
               border: "none",
               borderRadius: 2,
-              background: busy ? "#E5E7EB" : "#2563EB",
+              background: busy ? "#E5E7EB" : "var(--aos-accent)",
               color: busy ? "#9CA3AF" : "#fff",
               cursor: busy ? "not-allowed" : "pointer",
               marginBottom: 12,

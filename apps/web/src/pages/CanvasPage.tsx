@@ -863,15 +863,15 @@ export function CanvasPage() {
   }
 
   const TOOLBAR_TABS = [
-    { id: "dashboard", label: "Dashboard" },
-    { id: "queries", label: "Queries" },
-    { id: "functions", label: "Functions" },
-    { id: "objects", label: "Objects" },
-    { id: "events", label: "Events" },
-    { id: "data", label: "Data" },
-    { id: "dependencies", label: "Dependencies" },
-    { id: "styles", label: "Styles" },
-    { id: "variables", label: "Variables" },
+    { id: "dashboard", label: "仪表盘" },
+    { id: "queries", label: "查询" },
+    { id: "functions", label: "函数" },
+    { id: "objects", label: "对象" },
+    { id: "events", label: "事件" },
+    { id: "data", label: "数据" },
+    { id: "dependencies", label: "依赖" },
+    { id: "styles", label: "样式" },
+    { id: "variables", label: "变量" },
   ];
 
   const currentModule = modules.find((m) => m.id === moduleId);
@@ -879,7 +879,7 @@ export function CanvasPage() {
   return (
     <PageChrome
       title="画布编辑"
-      lede="90 · Layout 树 / Widget 调色板 / 配置面板 · 构建态非运行态"
+      lede="组件树 / 调色板 / 配置面板 · 构建态非运行态"
     >
       {msg && <p className="aos-text">{msg}</p>}
       {err && <p className="error">{err}</p>}
@@ -901,8 +901,8 @@ export function CanvasPage() {
             </h1>
           </div>
           <nav className="p-slate-tabs">
-            <button type="button" className="p-slate-tab">File</button>
-            <button type="button" className="p-slate-tab">Help</button>
+            <button type="button" className="p-slate-tab">文件</button>
+            <button type="button" className="p-slate-tab">帮助</button>
             <button type="button" className="p-slate-tab is-active">
               {currentModule?.name || "Module"} <span className="p-slate-version">v1</span>
             </button>
@@ -990,7 +990,7 @@ export function CanvasPage() {
                   fontWeight: canvasMode === "widget" ? 500 : 400,
                 }}
               >
-                模块
+                组件
               </button>
               <button
                 type="button"
@@ -1181,7 +1181,7 @@ export function CanvasPage() {
             </div>
             <div className="p-slate-tree-search">
               <NavIcon name="search" />
-              <input type="search" placeholder="Search widgets..." />
+              <input type="search" placeholder="搜索组件..." />
             </div>
 
             <div className="p-slate-tree-section-title">Layout</div>
@@ -1282,7 +1282,7 @@ export function CanvasPage() {
               style={{ opacity: node ? 1 : 0.5, cursor: node ? "pointer" : "not-allowed" }}
             >
               <NavIcon name="trash" style={{ width: "14px", height: "14px" }} />
-              Delete widget
+              删除组件
             </button>
               </>
             )}
