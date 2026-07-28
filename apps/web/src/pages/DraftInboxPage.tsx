@@ -150,13 +150,13 @@ export function countByTab(drafts: DraftItem[]): Record<DraftTab, number> {
 
 /** 状态 → 颜色映射 */
 export const STATUS_COLORS: Record<DraftStatus, string> = {
-  draft: "#6B7280",
-  submitted: "#F59E0B",
-  in_review: "#3B82F6",
-  approved: "#10B981",
-  rejected: "#EF4444",
-  withdrawn: "#6B7280",
-  changes_requested: "#8B5CF6",
+  draft: "var(--aos-text-secondary)",
+  submitted: "var(--aos-amber-600)",
+  in_review: "var(--aos-blue-600)",
+  approved: "var(--aos-green-600)",
+  rejected: "var(--aos-red)",
+  withdrawn: "var(--aos-text-secondary)",
+  changes_requested: "var(--aos-purple-600)",
 };
 
 /** 状态 → Badge variant 映射 */
@@ -198,14 +198,14 @@ export const ACTION_LABELS: Record<TimelineAction, string> = {
 
 /** Timeline 操作 → 颜色 */
 export const ACTION_COLORS: Record<TimelineAction, string> = {
-  create: "#8B5CF6",
-  submit: "#F59E0B",
-  in_review: "#3B82F6",
-  approve: "#10B981",
-  reject: "#EF4444",
-  withdraw: "#6B7280",
-  changes_requested: "#8B5CF6",
-  comment: "#9CA3AF",
+  create: "var(--aos-purple-600)",
+  submit: "var(--aos-amber-600)",
+  in_review: "var(--aos-blue-600)",
+  approve: "var(--aos-green-600)",
+  reject: "var(--aos-red)",
+  withdraw: "var(--aos-text-secondary)",
+  changes_requested: "var(--aos-purple-600)",
+  comment: "var(--aos-text-tertiary)",
 };
 
 /* =========================================================================
@@ -686,8 +686,8 @@ export function DraftInboxPage() {
                         <span
                           className="inline-block px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0"
                           style={{
-                            background: c.kind === "create" ? "#DCFCE7" : c.kind === "link" ? "#DBEAFE" : "#FEF3C7",
-                            color: c.kind === "create" ? "#166534" : c.kind === "link" ? "#1E40AF" : "#92400E",
+                            background: c.kind === "create" ? "var(--aos-green-bg)" : c.kind === "link" ? "var(--aos-blue-bg)" : "var(--aos-amber-bg)",
+                            color: c.kind === "create" ? "var(--aos-green-700)" : c.kind === "link" ? "var(--aos-blue-700)" : "var(--aos-amber-700)",
                           }}
                         >
                           {c.kind === "create" ? "新建" : c.kind === "link" ? "关联" : "更新"}
@@ -720,7 +720,7 @@ export function DraftInboxPage() {
                             }}
                           />
                           {idx < selected.timeline.length - 1 && (
-                            <div style={{ width: 2, flex: 1, background: "#E5E7EB", minHeight: 24 }} />
+                            <div style={{ width: 2, flex: 1, background: "var(--aos-border)", minHeight: 24 }} />
                           )}
                         </div>
                         {/* 内容 */}

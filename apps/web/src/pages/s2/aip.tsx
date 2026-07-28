@@ -2890,7 +2890,7 @@ export function DecisionLineagePage() {
       <div
         style={{
           borderRadius: 2,
-          border: "1px solid rgba(251, 191, 36, 0.25)",
+          border: "1px solid var(--aos-amber-border)",
           background: "var(--aos-amber-bg)",
           padding: "24px",
           marginTop: "1rem",
@@ -2913,20 +2913,20 @@ export function DecisionLineagePage() {
                 marginLeft: 8,
                 borderLeft: `2px solid ${
                   s.tone === "input"
-                    ? "#22c55e"
+                    ? "var(--aos-green-600)"
                     : s.tone === "output"
-                      ? "#6366f1"
+                      ? "var(--aos-blue-600)"
                       : s.tone === "fuse"
-                        ? "#f43f5e"
+                        ? "var(--aos-red)"
                         : s.tone === "gov"
-                          ? "#a855f7"
-                          : "#eab308"
+                          ? "var(--aos-purple-600)"
+                          : "var(--aos-amber)"
                 }`,
                 background:
                   s.tone === "fuse"
-                    ? "rgba(254, 242, 242, 0.6)"
+                    ? "var(--aos-red-bg)"
                     : s.tone === "gov"
-                      ? "rgba(250, 245, 255, 0.6)"
+                      ? "var(--aos-indigo-bg)"
                       : "transparent",
                 margin: s.tone === "fuse" || s.tone === "gov" ? "0 -8px" : 0,
                 paddingLeft: s.tone === "fuse" || s.tone === "gov" ? 24 : 16,
@@ -2941,9 +2941,9 @@ export function DecisionLineagePage() {
                   textTransform: "uppercase",
                   color:
                     s.tone === "fuse"
-                      ? "#dc2626"
+                      ? "var(--aos-red)"
                       : s.tone === "gov"
-                        ? "#9333ea"
+                        ? "var(--aos-purple-600)"
                         : "var(--aos-muted)",
                   paddingTop: 2,
                   letterSpacing: "0.05em",
@@ -2956,9 +2956,9 @@ export function DecisionLineagePage() {
                   style={{
                     color:
                       s.tone === "fuse"
-                        ? "#dc2626"
+                        ? "var(--aos-red)"
                         : s.tone === "gov"
-                          ? "#7c3aed"
+                          ? "var(--aos-purple-600)"
                           : "var(--aos-text)",
                     fontSize: 14,
                     fontWeight: s.tone === "fuse" ? 500 : 400,
@@ -2975,7 +2975,7 @@ export function DecisionLineagePage() {
                   <div
                     style={{
                       fontSize: 11,
-                      color: s.tone === "fuse" ? "#dc2626" : "#9333ea",
+                      color: s.tone === "fuse" ? "var(--aos-red)" : "var(--aos-purple-600)",
                       marginTop: 4,
                       opacity: 0.8,
                     }}
@@ -3025,8 +3025,8 @@ export function DecisionLineagePage() {
             padding: "6px 12px",
             fontSize: 12,
             borderRadius: 2,
-            border: "1px solid #c4b5fd",
-            color: "#7c3aed",
+            border: "1px solid var(--aos-purple-border)",
+            color: "var(--aos-purple-600)",
             textDecoration: "none",
           }}
         >
@@ -3051,8 +3051,8 @@ export function DecisionLineagePage() {
             padding: "6px 12px",
             fontSize: 12,
             borderRadius: 2,
-            border: "1px solid #fde68a",
-            color: "#ca8a04",
+            border: "1px solid var(--aos-amber-border)",
+            color: "var(--aos-amber-700)",
             textDecoration: "none",
           }}
         >

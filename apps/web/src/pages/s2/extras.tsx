@@ -39,8 +39,8 @@ export function MaturityPage() {
       <div
         style={{
           borderRadius: 2,
-          border: "1px solid rgba(251, 191, 36, 0.25)",
-          background: "rgba(254, 243, 199, 0.5)",
+          border: "1px solid var(--aos-amber-border)",
+          background: "var(--aos-amber-bg)",
           padding: "16px",
           marginBottom: "1rem",
           display: "flex",
@@ -57,13 +57,13 @@ export function MaturityPage() {
         </div>
         <div>
           <div style={{ fontSize: 12, color: "var(--aos-muted)", marginBottom: 2 }}>判定层</div>
-          <div style={{ color: "#ca8a04", fontWeight: 500 }}>◆ L{level} {levelLabel}</div>
+          <div style={{ color: "var(--aos-amber-700)", fontWeight: 500 }}>◆ L{level} {levelLabel}</div>
         </div>
         <div style={{ fontSize: 12, color: "var(--aos-muted)", lineHeight: 1.6 }}>
           <div>
-            Eval <span style={{ color: green ? "#16a34a" : "#ca8a04" }}>{green ? "● 绿" : "○ 未跑"}</span>
+            Eval <span style={{ color: green ? "var(--aos-green-700)" : "var(--aos-amber-700)" }}>{green ? "● 绿" : "○ 未跑"}</span>
             {" · "}
-            Draft <span style={{ color: "#16a34a" }}>● 默认暂存</span>
+            Draft <span style={{ color: "var(--aos-green-700)" }}>● 默认暂存</span>
           </div>
           <div>
             执行范围 <span style={{ color: "var(--aos-text)" }}>● 用户范围</span>
@@ -81,7 +81,7 @@ export function MaturityPage() {
             label: "L1",
             title: "临时分析",
             desc: "AIP Threads · 拖文档即问即答",
-            foot: <span style={{ fontSize: 11, color: "#4338ca" }}>沙箱 / 售前</span>,
+            foot: <span style={{ fontSize: 11, color: "var(--aos-indigo-600)" }}>沙箱 / 售前</span>,
           },
           {
             level: 2,
@@ -89,7 +89,7 @@ export function MaturityPage() {
             title: "任务专用 Agent",
             desc: "Chatbot Studio · Prompt · 工具 · Ontology/Wiki",
             foot: (
-              <Link to="/aip/tools" style={{ fontSize: 11, color: "#ca8a04", textDecoration: "none" }}>
+              <Link to="/aip/tools" style={{ fontSize: 11, color: "var(--aos-amber-700)", textDecoration: "none" }}>
                 打开工具面板 →
               </Link>
             ),
@@ -100,7 +100,7 @@ export function MaturityPage() {
             title: "Agentic 应用",
             desc: "工作台 / OSDK · Agent 组件 · 变量绑定",
             foot: (
-              <Link to="/workshop" style={{ fontSize: 11, color: "#0284c7", textDecoration: "none" }}>
+              <Link to="/workshop" style={{ fontSize: 11, color: "var(--aos-blue-600)", textDecoration: "none" }}>
                 打开工作台 →
               </Link>
             ),
@@ -115,11 +115,11 @@ export function MaturityPage() {
               <span
                 style={{
                   fontSize: 11,
-                  color: "#dc2626",
+                  color: "var(--aos-red)",
                   padding: "2px 6px",
                   borderRadius: 4,
-                  border: "1px solid #fecaca",
-                  background: "#fef2f2",
+                  border: "1px solid var(--aos-red-border)",
+                  background: "var(--aos-red-bg)",
                 }}
               >
                 私有模 · 预热中
@@ -157,8 +157,8 @@ export function MaturityPage() {
               fontWeight: 500,
               borderRadius: 2,
               border: "none",
-              background: "#fbbf24",
-              color: "#fff",
+              background: "var(--aos-amber)",
+              color: "var(--text-on-brand)",
               cursor: "pointer",
             }}
           >
@@ -171,9 +171,9 @@ export function MaturityPage() {
               padding: "6px 12px",
               fontSize: 12,
               borderRadius: 2,
-              border: "1px solid #fca5a5",
+              border: "1px solid var(--aos-red-border)",
               background: "transparent",
-              color: "#dc2626",
+              color: "var(--aos-red)",
               cursor: "pointer",
             }}
           >
@@ -202,20 +202,20 @@ export function MaturityPage() {
           style={{
             marginTop: 12,
             borderRadius: 2,
-            border: "1px solid rgba(244, 63, 94, 0.25)",
-            background: "#fef2f2",
+            border: "1px solid var(--aos-red-border)",
+            background: "var(--aos-red-bg)",
             padding: "16px",
           }}
         >
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 8 }}>
-            <span style={{ color: "#dc2626", fontWeight: 500, fontSize: 12 }}>L4 熔断护栏</span>
+            <span style={{ color: "var(--aos-red)", fontWeight: 500, fontSize: 12 }}>L4 熔断护栏</span>
             <span
               style={{
                 fontSize: 11,
                 padding: "2px 8px",
                 borderRadius: 4,
-                border: "1px solid #fecaca",
-                color: "#dc2626",
+                border: "1px solid var(--aos-red-border)",
+                color: "var(--aos-red)",
               }}
             >
               失败率&gt;5% 自动降 L3
@@ -225,8 +225,8 @@ export function MaturityPage() {
                 fontSize: 11,
                 padding: "2px 8px",
                 borderRadius: 4,
-                border: "1px solid #fde68a",
-                color: "#ca8a04",
+                border: "1px solid var(--aos-amber-border)",
+                color: "var(--aos-amber-700)",
               }}
             >
               私有模 · 预热中
@@ -243,7 +243,7 @@ export function MaturityPage() {
                 padding: "4px 8px",
                 borderRadius: 4,
                 border: "1px solid var(--aos-border)",
-                color: "#ca8a04",
+                color: "var(--aos-amber-700)",
                 textDecoration: "none",
               }}
             >
@@ -269,9 +269,9 @@ export function MaturityPage() {
                 fontSize: 11,
                 padding: "4px 8px",
                 borderRadius: 4,
-                border: "1px solid #fca5a5",
+                border: "1px solid var(--aos-red-border)",
                 background: "transparent",
-                color: "#dc2626",
+                color: "var(--aos-red)",
                 cursor: "pointer",
               }}
             >
