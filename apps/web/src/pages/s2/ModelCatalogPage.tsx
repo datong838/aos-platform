@@ -701,6 +701,7 @@ export function ModelCatalogPage() {
 
         {/* === Registered Tab === */}
         {tab === "registered" && (
+          <>
           <div className="mc-registered-col">
             <div className="mc-panel">
               <div className="mc-family-header">
@@ -730,6 +731,13 @@ export function ModelCatalogPage() {
               </table>
             </div>
           </div>
+
+          <div className="mc-notice" style={{ background: "var(--aos-accent-light)", borderColor: "var(--aos-accent-border)" }}>
+            <p style={{ color: "var(--aos-text)" }}>
+              <strong>自带模型 (BYOM)</strong> — 已注册模型（BYOM）会像 Palantir 提供的模型一样出现在 AIP 各应用的模型选择器中。您可以通过 REST API 源或计算模块来支撑已注册模型。
+            </p>
+          </div>
+          </>
         )}
       </div>
     </PageChrome>

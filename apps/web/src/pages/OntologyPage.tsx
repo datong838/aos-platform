@@ -564,6 +564,74 @@ export function OntologyPage() {
             </Link>
           </div>
         </div>
+
+        {/* ⑤ 收藏的群组 */}
+        <section className="ont-layer">
+          <h3 className="ont-section-title">🗂️ 收藏的群组</h3>
+          <div className="bp-discover-grid">
+            <div className="bp-discover-card ont-block" style={{ padding: "16px 18px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>交易域</span>
+                <span className="bp-badge bp-badge-gray" style={{ fontSize: 12 }}>14 Object</span>
+              </div>
+              <p style={{ margin: 0, fontSize: "12px", color: "var(--aos-muted)", lineHeight: 1.5 }}>
+                Order · OrderItem · Payment · Refund · Shipment…
+              </p>
+            </div>
+            <div className="bp-discover-card ont-block" style={{ padding: "16px 18px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>客户域</span>
+                <span className="bp-badge bp-badge-gray" style={{ fontSize: 12 }}>8 Object</span>
+              </div>
+              <p style={{ margin: 0, fontSize: "12px", color: "var(--aos-muted)", lineHeight: 1.5 }}>
+                Customer · Address · Tag · Segment · Point…
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ⑥ 本体治理入口 */}
+        <section className="ont-layer">
+          <h3 className="ont-section-title">🔐 本体治理入口</h3>
+          <div className="bp-discover-grid">
+            <Link to="/ontology/branches" className="bp-discover-card ont-block" style={{ padding: "16px 18px", textDecoration: "none" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>分支管理</span>
+                <span className="bp-badge bp-badge-blue" style={{ fontSize: 12 }}>Branch</span>
+              </div>
+              <p style={{ margin: 0, fontSize: "12px", color: "var(--aos-muted)", lineHeight: 1.5 }}>
+                管理本体分支、合并提案与版本快照。
+              </p>
+            </Link>
+            <Link to="/ontology/graph-health" className="bp-discover-card ont-block" style={{ padding: "16px 18px", textDecoration: "none" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>图谱健康度</span>
+                <span className="bp-badge bp-badge-green" style={{ fontSize: 12 }}>Health</span>
+              </div>
+              <p style={{ margin: 0, fontSize: "12px", color: "var(--aos-muted)", lineHeight: 1.5 }}>
+                监控本体图谱的一致性、连通性与告警。
+              </p>
+            </Link>
+            <Link to="/ontology/wiki" className="bp-discover-card ont-block" style={{ padding: "16px 18px", textDecoration: "none" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>活知识 Wiki</span>
+                <span className="bp-badge bp-badge-gray" style={{ fontSize: 12 }}>Wiki</span>
+              </div>
+              <p style={{ margin: 0, fontSize: "12px", color: "var(--aos-muted)", lineHeight: 1.5 }}>
+                沉淀本体的业务定义、示例与协作笔记。
+              </p>
+            </Link>
+            <Link to="/ontology/object-types" className="bp-discover-card ont-block" style={{ padding: "16px 18px", textDecoration: "none" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>对象探索</span>
+                <span className="bp-badge bp-badge-amber" style={{ fontSize: 12 }}>Explore</span>
+              </div>
+              <p style={{ margin: 0, fontSize: "12px", color: "var(--aos-muted)", lineHeight: 1.5 }}>
+                以对象为中心浏览实例、关系与时间线。
+              </p>
+            </Link>
+          </div>
+        </section>
       </div>
 
       {/* 内嵌七 Tab · 次要，仅「内嵌」时展开 */}

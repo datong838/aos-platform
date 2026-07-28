@@ -7634,8 +7634,7 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
    模型目录 (ModelCatalogPage) — 视觉对齐
    ========================================================================== */
 .mc-wrap {
-  max-width: 1100px;
-  margin: 0 auto;
+  width: 100%;
 }
 .mc-arch-bar {
   margin-bottom: 16px;
@@ -7749,6 +7748,7 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
   padding: 6px 14px;
   font-size: 12px;
   font-weight: 500;
+  line-height: 1.4;
   border: none;
   border-radius: 4px;
   background: var(--aos-accent);
@@ -7875,6 +7875,7 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
   padding: 4px 12px;
   font-size: 12px;
   font-weight: 500;
+  line-height: 1.4;
   border: none;
   border-radius: 4px;
   background: var(--aos-accent);
@@ -7886,6 +7887,7 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
   padding: 4px 12px;
   font-size: 12px;
   font-weight: 500;
+  line-height: 1.4;
   border: 1px solid var(--aos-border);
   border-radius: 4px;
   background: var(--aos-surface);
@@ -8070,6 +8072,7 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
 .mc-btn-default {
   padding: 6px 16px;
   font-size: 12px;
+  line-height: 1.4;
   border: 1px solid var(--aos-border);
   border-radius: 4px;
   background: var(--aos-surface);
@@ -8079,6 +8082,7 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
 .mc-btn-primary {
   padding: 6px 16px;
   font-size: 12px;
+  line-height: 1.4;
   border: none;
   border-radius: 4px;
   background: var(--aos-accent);
