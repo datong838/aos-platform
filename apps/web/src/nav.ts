@@ -104,6 +104,8 @@ export const NAV_ITEMS: NavItem[] = [
     icon: "inbox",
     status: "live",
     crumbs: ["工作台", "创建应用"],
+    // 入口已收敛到应用列表「新建」；侧栏不再展示（对齐视觉稿工作台菜单）
+    hidden: true,
   },
   {
     id: "workshop-module",
@@ -112,6 +114,8 @@ export const NAV_ITEMS: NavItem[] = [
     icon: "layers",
     status: "live",
     crumbs: ["工作台", "模块管理"],
+    // 与应用列表能力重复；侧栏不再展示（路由保留，避免深链失效）
+    hidden: true,
   },
   {
     id: "workshop-orders",

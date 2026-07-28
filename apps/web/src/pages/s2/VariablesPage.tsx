@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { PageChrome } from "../../components/PageChrome";
-import { BpToolbar } from "../../components/bp/BpToolbar";
 
 type VarType = "ObjectSet" | "Object" | "String" | "Number" | "Boolean" | "DateRange" | "Array";
 type VarScope = "page" | "app" | "global";
@@ -77,10 +77,10 @@ const SCOPE_LABELS: Record<VarScope, string> = {
 };
 
 const SCOPE_TABS = [
-  { id: "all", label: "全部", count: VARIABLES.length },
-  { id: "page", label: "页面级", count: VARIABLES.filter((v) => v.scope === "page").length },
-  { id: "app", label: "应用级", count: VARIABLES.filter((v) => v.scope === "app").length },
-  { id: "global", label: "全局", count: VARIABLES.filter((v) => v.scope === "global").length },
+  { id: "all", label: "全部" },
+  { id: "page", label: "页面级" },
+  { id: "app", label: "应用级" },
+  { id: "global", label: "全局" },
 ];
 
 function VarTypeIcon({ type }: { type: VarType }) {
@@ -116,9 +116,7 @@ function VarTypeIcon({ type }: { type: VarType }) {
         <path d="M12 2v20M2 12h20" strokeLinecap="round" />
       )}
       {type === "Boolean" && (
-        <>
-          <path d="M9 12l2 2 4-4M12 2a10 10 0 100 20 10 10 0 000-20z" strokeLinecap="round" strokeLinejoin="round" />
-        </>
+        <path d="M9 12l2 2 4-4M12 2a10 10 0 100 20 10 10 0 000-20z" strokeLinecap="round" strokeLinejoin="round" />
       )}
       {type === "DateRange" && (
         <>
@@ -135,33 +133,13 @@ function VarTypeIcon({ type }: { type: VarType }) {
 
 export function VariablesPage() {
   const [scope, setScope] = useState<string>("all");
-  const [query, setQuery] = useState("");
-  const [selectedId, setSelectedId] = useState<string | null>(VARIABLES[0]?.id ?? null);
-  const [typeGroup, setTypeGroup] = useState<VarTypeGroup | "all">("all");
 
   const filtered = useMemo(() => {
     return VARIABLES.filter((v) => {
       if (scope !== "all" && v.scope !== scope) return false;
-      if (typeGroup !== "all" && classifyVarType(v.type) !== typeGroup) return false;
-      if (!query.trim()) return true;
-      const q = query.toLowerCase();
-      return v.name.toLowerCase().includes(q) || v.initialValue.toLowerCase().includes(q);
+      return true;
     });
-  }, [scope, query, typeGroup]);
-
-  const selected = useMemo(
-    () => VARIABLES.find((v) => v.id === selectedId) ?? filtered[0] ?? null,
-    [selectedId, filtered],
-  );
-
-  /**5 类型分组的计数（用于左侧分组导航）*/
-  const groupCounts = useMemo(() => {
-    const counts: Record<VarTypeGroup, number> = { data: 0, scalar: 0, flag: 0, time: 0, list: 0 };
-    for (const v of VARIABLES) {
-      counts[classifyVarType(v.type)]++;
-    }
-    return counts;
-  }, []);
+  }, [scope]);
 
   const stats = {
     total: VARIABLES.length,
@@ -173,106 +151,102 @@ export function VariablesPage() {
   return (
     <PageChrome title="变量管理器" lede="订单管理 · 集中管理页面级、应用级和全局变量">
       <div className="vr-page">
-        <div className="vr-header">
-          <div>
-            <h1>变量管理器</h1>
-            <p>订单管理 · 集中管理页面级、应用级和全局变量</p>
-          </div>
-        </div>
-
-        <BpToolbar
-          search={{ value: query, onChange: setQuery, placeholder: "搜索变量名或初始值…" }}
-          count={filtered.length}
-        />
-
-        <div className="vr-scope-tabs">
-          {SCOPE_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              className={scope === tab.id ? "vr-scope-tab is-active" : "vr-scope-tab"}
-              onClick={() => setScope(tab.id)}
-            >
-              {tab.label}
-              <span style={{ marginLeft: 4, opacity: 0.6 }}>({tab.count})</span>
+        <div className="vr-toolbar">
+          <div className="vr-header-actions">
+            <Link to="/workshop/orders" className="vr-btn vr-btn-secondary">
+              返回编辑器
+            </Link>
+            <button type="button" className="vr-btn vr-btn-primary">
+              + 新建变量
             </button>
-          ))}
+          </div>
+          <div className="vr-scope-seg" role="tablist" aria-label="变量作用域">
+            {SCOPE_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={scope === tab.id}
+                className={scope === tab.id ? "vr-scope-tab is-active" : "vr-scope-tab"}
+                onClick={() => setScope(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-3 mb-5">
-          <div className="aos-panel p-3">
-            <div className="text-[10px] text-gray-500 mb-1">总变量数</div>
-            <div className="text-xl font-semibold text-gray-900">{stats.total}</div>
+        <div className="vr-stats">
+          <div className="vr-stat-card">
+            <div className="vr-stat-label">总变量数</div>
+            <div className="vr-stat-value">{stats.total}</div>
           </div>
-          <div className="aos-panel p-3">
-            <div className="text-[10px] text-gray-500 mb-1">页面级</div>
-            <div className="text-xl font-semibold" style={{ color: "#2563EB" }}>{stats.page}</div>
+          <div className="vr-stat-card">
+            <div className="vr-stat-label">页面级</div>
+            <div className="vr-stat-value is-page">{stats.page}</div>
           </div>
-          <div className="aos-panel p-3">
-            <div className="text-[10px] text-gray-500 mb-1">应用级</div>
-            <div className="text-xl font-semibold" style={{ color: "#059669" }}>{stats.app}</div>
+          <div className="vr-stat-card">
+            <div className="vr-stat-label">应用级</div>
+            <div className="vr-stat-value is-app">{stats.app}</div>
           </div>
-          <div className="aos-panel p-3">
-            <div className="text-[10px] text-gray-500 mb-1">全局</div>
-            <div className="text-xl font-semibold" style={{ color: "#D97706" }}>{stats.global}</div>
+          <div className="vr-stat-card">
+            <div className="vr-stat-label">全局</div>
+            <div className="vr-stat-value is-global">{stats.global}</div>
           </div>
         </div>
 
         <div className="vr-table-wrap">
-          <table className="w-full text-xs">
-            <thead className="bg-gray-50 text-gray-500 text-left">
+          <table className="vr-table">
+            <thead>
               <tr>
-                <th className="px-4 py-2.5 w-8"></th>
-                <th className="px-4 py-2.5">名称</th>
-                <th className="px-4 py-2.5">类型</th>
-                <th className="px-4 py-2.5">作用域</th>
-                <th className="px-4 py-2.5">初始值 / 数据源</th>
-                <th className="px-4 py-2.5">绑定微件</th>
-                <th className="px-4 py-2.5">操作</th>
+                <th className="vr-th-icon" aria-hidden="true" />
+                <th>名称</th>
+                <th>类型</th>
+                <th>作用域</th>
+                <th>初始值 / 数据源</th>
+                <th>绑定微件</th>
+                <th>操作</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody>
               {filtered.map((v) => (
-                <tr key={v.id} className="table-row-hover" style={{ borderLeft: `3px solid ${v.scope === "page" ? "#3B82F6" : v.scope === "app" ? "#10B981" : "#F59E0B"}` }}>
-                  <td className="px-4 py-3">
+                <tr
+                  key={v.id}
+                  style={{
+                    borderLeft: `3px solid ${
+                      v.scope === "page"
+                        ? "var(--aos-blue)"
+                        : v.scope === "app"
+                          ? "var(--aos-green)"
+                          : "var(--aos-amber)"
+                    }`,
+                  }}
+                >
+                  <td className="vr-td-icon">
                     <VarTypeIcon type={v.type} />
                   </td>
-                  <td className="px-4 py-3 font-mono text-gray-900 font-medium">{v.name}</td>
-                  <td className="px-4 py-3">
+                  <td className="vr-name">{v.name}</td>
+                  <td>
                     <span className={`vr-type-badge vr-type-${v.type}`}>{TYPE_LABELS[v.type]}</span>
                   </td>
-                  <td className="px-4 py-3">
-                    <span style={{
-                      color: v.scope === "page" ? "#2563EB" : v.scope === "app" ? "#059669" : "#D97706",
-                      fontSize: 10,
-                      fontWeight: 500,
-                    }}>
-                      {SCOPE_LABELS[v.scope]}
-                    </span>
+                  <td>
+                    <span className={`vr-scope-text is-${v.scope}`}>{SCOPE_LABELS[v.scope]}</span>
                   </td>
-                  <td className="px-4 py-3 text-gray-600" style={{ fontFamily: "monospace", fontSize: 11 }}>{v.initialValue}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
+                  <td className="vr-value">{v.initialValue}</td>
+                  <td>
+                    <div className="vr-bindings">
                       {v.bindings.map((b, i) => (
-                        <span key={i} style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 4,
-                          padding: "2px 8px",
-                          borderRadius: 4,
-                          fontSize: 10,
-                          background: "#F9FAFB",
-                          border: "0.5px solid #E5E7EB",
-                        }}>
+                        <span key={i} className="vr-binding">
                           {b}
                         </span>
                       ))}
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td>
                     {v.isSystem ? (
-                      <span style={{ color: "#9CA3AF", fontSize: 10 }}>系统变量</span>
+                      <span className="vr-system">系统变量</span>
                     ) : (
-                      <button style={{ color: "var(--aos-indigo-600)", fontSize: 11, textDecoration: "underline", background: "none", border: "none", cursor: "pointer" }}>
+                      <button type="button" className="vr-edit">
                         编辑
                       </button>
                     )}
@@ -283,26 +257,26 @@ export function VariablesPage() {
           </table>
         </div>
 
-        <div className="mt-5 aos-panel p-4">
-          <h3 className="text-sm font-medium text-gray-900 mb-3">数据流图</h3>
-          <div className="text-[11px] text-gray-600 leading-relaxed">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2 py-1 rounded bg-blue-50 text-blue-700 font-mono font-medium">all_orders</span>
-              <span className="text-gray-400">→ 行选中 →</span>
-              <span className="px-2 py-1 rounded bg-indigo-50 text-indigo-700 font-mono font-medium">selected_order</span>
-              <span className="text-gray-400">→ 读取 →</span>
-              <span className="px-2 py-0.5 rounded border border-gray-200 text-gray-600">📋 详情面板</span>
+        <div className="vr-flow">
+          <h3>数据流图</h3>
+          <div className="vr-flow-body">
+            <div className="vr-flow-row">
+              <span className="vr-flow-chip is-blue">all_orders</span>
+              <span className="vr-flow-arrow">→ 行选中 →</span>
+              <span className="vr-flow-chip is-indigo">selected_order</span>
+              <span className="vr-flow-arrow">→ 读取 →</span>
+              <span className="vr-flow-chip is-outline">📋 详情面板</span>
             </div>
-            <div className="flex items-center gap-2 flex-wrap mt-2">
-              <span className="px-2 py-1 rounded bg-green-50 text-green-700 font-mono font-medium">filter_status</span>
-              <span className="text-gray-400">+→</span>
-              <span className="px-2 py-1 rounded bg-purple-50 text-purple-700 font-mono font-medium">date_range</span>
-              <span className="text-gray-400">+→</span>
-              <span className="px-2 py-1 rounded bg-yellow-50 text-yellow-700 font-mono font-medium">search_keyword</span>
-              <span className="text-gray-400">→ 联合过滤 →</span>
-              <span className="px-2 py-1 rounded bg-blue-50 text-blue-700 font-mono font-medium">all_orders</span>
+            <div className="vr-flow-row">
+              <span className="vr-flow-chip is-green">filter_status</span>
+              <span className="vr-flow-arrow">+→</span>
+              <span className="vr-flow-chip is-purple">date_range</span>
+              <span className="vr-flow-arrow">+→</span>
+              <span className="vr-flow-chip is-amber">search_keyword</span>
+              <span className="vr-flow-arrow">→ 联合过滤 →</span>
+              <span className="vr-flow-chip is-blue">all_orders</span>
             </div>
-            <div className="mt-3 text-[10px] text-gray-400">
+            <div className="vr-flow-hint">
               💡 页面级变量仅当前页面可见；应用级变量跨页面共享；全局变量在所有应用中可用（如环境配置、API 地址）。
             </div>
           </div>

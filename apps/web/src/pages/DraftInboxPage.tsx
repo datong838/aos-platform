@@ -462,6 +462,7 @@ export function DraftInboxPage() {
       title="Draft 审批台"
       lede="Agent / Action 写入须经 HITL 批准后方可落生产 Ontology；含 Insight Backfill（知识回填）。"
     >
+      <div className="di-page">
       {/* 消息条 */}
       {msg && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm text-blue-800">
@@ -769,6 +770,7 @@ export function DraftInboxPage() {
       <div className="flex gap-4 py-3 mt-4 border-t border-gray-100 text-xs">
         <Link to="/aip/lineage" className="text-blue-600 hover:underline">决策谱系 →</Link>
         <Link to="/workshop/inbox" className="text-blue-600 hover:underline">运营 Inbox →</Link>
+      </div>
       </div>
     </PageChrome>
   );

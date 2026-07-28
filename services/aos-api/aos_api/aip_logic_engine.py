@@ -96,7 +96,19 @@ class LogicEngine:
 
     # ── Execute DAG ──
     def execute_flow(self, blocks: list[LogicBlock], context: dict[str, Any] | None = None) -> dict[str, Any]:
-        """执行 DAG，支持 branch 和 handoff。"""
+        """执行 DAG，支持 branch 和 handoff。
+
+        Harness 模式（AIP_HARNESS_MODE=1）走真实 TAOR 循环；
+        默认保留 mock 向后兼容。
+        """
+        import os
+
+        if os.environ.get("AIP_HARNESS_MODE") == "1":
+            return self._execute_harness(blocks, context)
+        return self._execute_mock(blocks, context)
+
+    def _execute_mock(self, blocks: list[LogicBlock], context: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Mock 执行（向后兼容）。"""
         ctx = dict(context or {})
         results: list[dict[str, Any]] = []
         total_tokens = 0
@@ -149,6 +161,74 @@ class LogicEngine:
             "total_tokens": total_tokens,
             "elapsed_ms": total_tokens * 3,
             "final_context_keys": list(ctx.keys()),
+        }
+
+    def _execute_harness(self, blocks: list[LogicBlock], context: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Harness 模式 — 走真实 TAOR 循环。
+
+        将 LogicBlock 转换为 Task + ExecutionPlan，调用 TAORLoopController。
+        """
+        from aos_api.aip_task_model import (
+            ActionRequest, ExecutionPlan, Task, TaskStep,
+        )
+        from aos_api.aip_taor_loop import get_controller
+
+        # 构建 Task + Plan
+        steps: list[TaskStep] = []
+        for blk in blocks:
+            action_type = "llm_call"
+            if blk.kind == "tool":
+                action_type = "tool_call"
+            elif blk.kind == "branch":
+                action_type = "llm_call"  # branch 用 LLM 判断
+            elif blk.kind == "task":
+                action_type = "tool_call"
+
+            step = TaskStep(
+                name=blk.name or blk.id,
+                action=ActionRequest(
+                    action_type=action_type,
+                    params=blk.config,
+                ),
+                action_config=blk.config,
+            )
+            steps.append(step)
+
+        plan = ExecutionPlan(steps=steps, status="approved")
+        task = Task(
+            type="logic_flow",
+            title="Harness execution",
+            plan=plan,
+            context=dict(context or {}),
+        )
+
+        controller = get_controller()
+        result = controller.run(task, context)
+
+        # 转换为与 mock 兼容的返回格式
+        results = []
+        for idx, step in enumerate(steps):
+            results.append({
+                "block_id": blocks[idx].id if idx < len(blocks) else f"step-{idx}",
+                "kind": blocks[idx].kind if idx < len(blocks) else "task",
+                "name": step.name,
+                "output": step.act_output,
+                "cot": [step.think_output[:200]] if step.think_output else [],
+                "tokens": step.tokens_used,
+                "verify_passed": step.verify_passed,
+                "verify_issues": step.verify_issues,
+            })
+
+        return {
+            "results": results,
+            "total_tokens": result.total_tokens,
+            "elapsed_ms": result.total_elapsed_ms,
+            "final_context_keys": list(task.context.keys()),
+            "task_id": task.id,
+            "task_status": result.status,
+            "steps_completed": result.steps_completed,
+            "steps_failed": result.steps_failed,
+            "mode": "harness",
         }
 
     def _eval_branch(self, condition: str, ctx: dict[str, Any], paths: list[str]) -> str:

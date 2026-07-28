@@ -277,7 +277,7 @@ function CreateAgentWizard({
                           height: 36,
                           borderRadius: 2,
                           background: sel ? "var(--aos-indigo-bg)" : "var(--aos-surface-hover)",
-                          border: `2px solid ${sel ? "var(--aos-indigo)" : "var(--aos-border)"}`,
+                          border: `2px solid ${sel ? "var(--aos-indigo-600)" : "var(--aos-border)"}`,
                           cursor: "pointer",
                           fontSize: 16,
                           display: "flex",
@@ -354,7 +354,7 @@ function CreateAgentWizard({
                       onClick={() => setDraft({ ...draft, modelId: m.id })}
                       style={{
                         borderRadius: 2,
-                        border: `2px solid ${sel ? "var(--aos-indigo)" : "var(--aos-border)"}`,
+                        border: `2px solid ${sel ? "var(--aos-indigo-600)" : "var(--aos-border)"}`,
                         background: sel ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
                         padding: "8px 10px",
                         cursor: "pointer",
@@ -495,7 +495,7 @@ function CreateAgentWizard({
                           else next.delete(t.name);
                           setSelectedTools(next);
                         }}
-                        style={{ accentColor: "var(--aos-indigo)" }}
+                        style={{ accentColor: "var(--aos-indigo-600)" }}
                       />
                       <span style={{ fontSize: 11, fontWeight: 500, color: "var(--aos-text)" }}>{t.name}</span>
                       <span
@@ -769,7 +769,7 @@ export function AgentsPage() {
                     alignItems: "flex-start",
                     gap: 8,
                     background: isSelected ? "var(--aos-indigo-bg)" : "transparent",
-                    borderLeft: isSelected ? "2px solid var(--aos-indigo)" : "2px solid transparent",
+                    borderLeft: isSelected ? "2px solid var(--aos-indigo-600)" : "2px solid transparent",
                   }}
                 >
                   <div

@@ -88,7 +88,7 @@ export function WikiIndexPage() {
                     fontSize: "0.75rem",
                     width: "100%",
                     textAlign: "left",
-                    background: selectedBranch === b.id ? "var(--aos-accent)" : undefined,
+                    background: selectedBranch === b.id ? "var(--aos-indigo-600)" : undefined,
                     color: selectedBranch === b.id ? "var(--text-on-brand)" : undefined,
                   }}
                   onClick={() => setSelectedBranch(b.id)}
@@ -200,7 +200,7 @@ export function WikiIndexPage() {
                         {card.summary}
                       </div>
                     )}
-                    <div style={{ fontSize: "0.7rem", marginTop: 8, color: "var(--aos-accent)" }}>
+                    <div style={{ fontSize: "0.7rem", marginTop: 8, color: "var(--aos-indigo-600)" }}>
                       查看知识卡片 →
                     </div>
                   </Link>

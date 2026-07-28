@@ -1,111 +1,59 @@
 import { describe, expect, it } from "vitest";
 import {
   STEPS,
-  CATEGORIES,
+  DOMAINS,
   TEMPLATES,
-  MOCK_EXISTING_MODULES,
+  OBJ_GROUPS,
   slugify,
-  canNextFromStep1,
-  canNextFromStep2,
+  canFinishCreate,
+  defaultBoundProps,
   buildCreatePayload,
 } from "./WorkshopCreatePage";
 
 describe("WorkshopCreatePage · STEPS 步骤定义", () => {
-  it("至少 3 步", () => {
-    expect(STEPS.length).toBeGreaterThanOrEqual(3);
+  it("恰好 4 步（对齐 workshop-create.html）", () => {
+    expect(STEPS.length).toBe(4);
   });
 
-  it("步骤含 basic/template/confirm", () => {
-    const keys = STEPS.map((s) => s.key);
-    expect(keys).toContain("basic");
-    expect(keys).toContain("template");
-    expect(keys).toContain("confirm");
+  it("步骤含 basic/binding/template/confirm", () => {
+    expect(STEPS.map((s) => s.key)).toEqual(["basic", "binding", "template", "confirm"]);
   });
 
-  it("每个步骤有 key/title/description", () => {
-    for (const step of STEPS) {
-      expect(step.key.length).toBeGreaterThan(0);
-      expect(step.title.length).toBeGreaterThan(0);
-      expect(step.description!.length).toBeGreaterThan(0);
-    }
+  it("标题对齐视觉稿", () => {
+    expect(STEPS.map((s) => s.title)).toEqual(["基本信息", "数据绑定", "模板选择", "确认创建"]);
   });
 });
 
-describe("WorkshopCreatePage · CATEGORIES 分类", () => {
-  it("包含 9 个分类", () => {
-    expect(CATEGORIES.length).toBe(9);
-  });
-
-  it("每个分类有 id/name/color", () => {
-    for (const cat of CATEGORIES) {
-      expect(cat.id.length).toBeGreaterThan(0);
-      expect(cat.name.length).toBeGreaterThan(0);
-      expect(cat.color.length).toBeGreaterThan(0);
-    }
-  });
-
-  it("ID 唯一", () => {
-    const ids = CATEGORIES.map((c) => c.id);
-    expect(new Set(ids).size).toBe(ids.length);
-  });
-
-  it("包含订单/风控/客户/资产/分析/工单/库存/财务/营销", () => {
-    const names = CATEGORIES.map((c) => c.name);
-    expect(names).toEqual(
-      expect.arrayContaining([
-        "订单",
-        "风控",
-        "客户",
-        "资产",
-        "分析",
-        "工单",
-        "库存",
-        "财务",
-        "营销",
-      ]),
-    );
+describe("WorkshopCreatePage · DOMAINS 业务域", () => {
+  it("包含视觉稿六域", () => {
+    expect(DOMAINS).toEqual(["运营", "分析", "风控", "供应链", "客服", "自定义"]);
   });
 });
 
 describe("WorkshopCreatePage · TEMPLATES 模板", () => {
-  it("包含 4 个模板（空白/仪表盘/表单/列表）", () => {
+  it("包含 4 个模板（空白/表格/仪表盘/对象探索）", () => {
     expect(TEMPLATES.length).toBe(4);
+    expect(TEMPLATES.map((t) => t.id)).toEqual(["blank", "table", "dashboard", "explorer"]);
   });
 
-  it("每个模板有 id/name/desc", () => {
-    for (const t of TEMPLATES) {
-      expect(t.id.length).toBeGreaterThan(0);
-      expect(t.name.length).toBeGreaterThan(0);
-      expect(t.desc.length).toBeGreaterThan(0);
-    }
-  });
-
-  it("包含 blank/dashboard/form/table", () => {
-    const ids = TEMPLATES.map((t) => t.id);
-    expect(ids).toContain("blank");
-    expect(ids).toContain("dashboard");
-    expect(ids).toContain("form");
-    expect(ids).toContain("table");
-  });
-
-  it("blank 模板标记为 blank=true", () => {
-    const blank = TEMPLATES.find((t) => t.id === "blank");
-    expect(blank?.blank).toBe(true);
+  it("默认推荐为表格列表模板（视觉稿 is-selected）", () => {
+    expect(TEMPLATES.find((t) => t.id === "table")?.name).toBe("表格列表模板");
   });
 });
 
-describe("WorkshopCreatePage · MOCK_EXISTING_MODULES", () => {
-  it("至少 5 个模块用于复制", () => {
-    expect(MOCK_EXISTING_MODULES.length).toBeGreaterThanOrEqual(5);
+describe("WorkshopCreatePage · 数据绑定对象", () => {
+  it("业务+用户两组", () => {
+    expect(OBJ_GROUPS.map((g) => g.title)).toEqual(["业务对象", "用户对象"]);
   });
 
-  it("每个模块有 id/name/category/updated_at", () => {
-    for (const m of MOCK_EXISTING_MODULES) {
-      expect(m.id.length).toBeGreaterThan(0);
-      expect(m.name.length).toBeGreaterThan(0);
-      expect(m.category.length).toBeGreaterThan(0);
-      expect(m.updated_at.length).toBeGreaterThan(0);
-    }
+  it("Order 默认绑定 5 个属性", () => {
+    expect(defaultBoundProps("Order")).toEqual([
+      "order_id",
+      "customer_name",
+      "total_amount",
+      "status",
+      "created_at",
+    ]);
   });
 });
 
@@ -128,33 +76,14 @@ describe("WorkshopCreatePage · slugify", () => {
   });
 });
 
-describe("WorkshopCreatePage · canNextFromStep1", () => {
-  it("名称和分类非空 → true", () => {
-    expect(canNextFromStep1("库存系统", "inventory")).toBe(true);
+describe("WorkshopCreatePage · canFinishCreate", () => {
+  it("名称非空 → true", () => {
+    expect(canFinishCreate("库存系统")).toBe(true);
   });
 
   it("名称为空 → false", () => {
-    expect(canNextFromStep1("", "inventory")).toBe(false);
-    expect(canNextFromStep1("   ", "inventory")).toBe(false);
-  });
-
-  it("分类为空 → false", () => {
-    expect(canNextFromStep1("库存系统", "")).toBe(false);
-  });
-});
-
-describe("WorkshopCreatePage · canNextFromStep2", () => {
-  it("非 copy 模板且 id 非空 → true", () => {
-    expect(canNextFromStep2("table", null)).toBe(true);
-    expect(canNextFromStep2("dashboard", null)).toBe(true);
-  });
-
-  it("copy 模板但未选源 → false", () => {
-    expect(canNextFromStep2("copy", null)).toBe(false);
-  });
-
-  it("copy 模板且选了源 → true", () => {
-    expect(canNextFromStep2("copy", "mod-001")).toBe(true);
+    expect(canFinishCreate("")).toBe(false);
+    expect(canFinishCreate("   ")).toBe(false);
   });
 });
 
@@ -162,47 +91,31 @@ describe("WorkshopCreatePage · buildCreatePayload", () => {
   it("生成完整 payload", () => {
     const payload = buildCreatePayload({
       name: "库存管理系统",
-      category: "inventory",
+      domain: "供应链",
+      icon: "box",
       description: "管理仓库库存",
+      objectType: "Order",
+      boundProps: ["order_id", "status"],
       template: "table",
-      copyFromId: null,
     });
     expect(payload.name).toBe("库存管理系统");
     expect(payload.slug).toBe("库存管理系统");
-    expect(payload.category).toBe("inventory");
+    expect(payload.domain).toBe("供应链");
+    expect(payload.icon).toBe("box");
+    expect(payload.object_type).toBe("Order");
+    expect(payload.bound_props).toEqual(["order_id", "status"]);
     expect(payload.template).toBe("table");
-    expect(payload.copy_from).toBeNull();
-  });
-
-  it("copy 模板时 copy_from 非空", () => {
-    const payload = buildCreatePayload({
-      name: "复制的模块",
-      category: "order",
-      description: "",
-      template: "copy",
-      copyFromId: "mod-001",
-    });
-    expect(payload.copy_from).toBe("mod-001");
-  });
-
-  it("非 copy 模板时 copy_from 始终为 null", () => {
-    const payload = buildCreatePayload({
-      name: "新模块",
-      category: "risk",
-      description: "test",
-      template: "dashboard",
-      copyFromId: "mod-002",
-    });
-    expect(payload.copy_from).toBeNull();
   });
 
   it("trim 名称和描述", () => {
     const payload = buildCreatePayload({
       name: "  库存系统  ",
-      category: "inventory",
+      domain: "运营",
+      icon: "chart",
       description: "  管理库存  ",
+      objectType: "Inventory",
+      boundProps: ["sku"],
       template: "blank",
-      copyFromId: null,
     });
     expect(payload.name).toBe("库存系统");
     expect(payload.description).toBe("管理库存");

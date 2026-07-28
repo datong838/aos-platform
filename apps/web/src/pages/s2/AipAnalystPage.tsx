@@ -132,7 +132,7 @@ export function linePath(values: number[], width = 200, height = 60): string {
 /**饼图：把数值序列转成 [{value, percent, color}]。*/
 export function toPieSlices(values: number[]): { value: number; percent: number; color: string }[] {
   const total = values.reduce((a, b) => a + b, 0) || 1;
-  const palette = ["var(--aos-indigo)", "var(--color-info)", "var(--aos-amber)", "var(--aos-green)", "var(--aos-red)", "var(--aos-purple-600)"];
+  const palette = ["var(--aos-indigo-600)", "var(--color-info)", "var(--aos-amber)", "var(--aos-green)", "var(--aos-red)", "var(--aos-purple-600)"];
   return values.map((v, i) => ({
     value: v,
     percent: (v / total) * 100,
@@ -370,7 +370,7 @@ export function AipAnalystPage() {
                     borderRadius: 4,
                     border: "none",
                     background: activeCategory === c ? "var(--aos-indigo-bg)" : "transparent",
-                    color: activeCategory === c ? "var(--aos-indigo)" : "var(--aos-muted)",
+                    color: activeCategory === c ? "var(--aos-indigo-600)" : "var(--aos-muted)",
                     cursor: "pointer",
                   }}
                 >
@@ -487,9 +487,9 @@ export function AipAnalystPage() {
                     fontSize: 12,
                     fontWeight: resultTab === t ? 500 : 400,
                     border: "none",
-                    borderBottom: resultTab === t ? "2px solid var(--aos-indigo)" : "2px solid transparent",
+                    borderBottom: resultTab === t ? "2px solid var(--aos-indigo-600)" : "2px solid transparent",
                     background: "none",
-                    color: resultTab === t ? "var(--aos-indigo)" : "var(--aos-muted)",
+                    color: resultTab === t ? "var(--aos-indigo-600)" : "var(--aos-muted)",
                     cursor: "pointer",
                     textTransform: "capitalize",
                   }}
@@ -645,9 +645,9 @@ function ChartView(props: {
               padding: "4px 10px",
               fontSize: 11,
               borderRadius: 4,
-              border: props.type === t ? "1px solid var(--aos-indigo)" : "1px solid var(--aos-border)",
+              border: props.type === t ? "1px solid var(--aos-indigo-600)" : "1px solid var(--aos-border)",
               background: props.type === t ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
-              color: props.type === t ? "var(--aos-indigo)" : "var(--aos-muted)",
+              color: props.type === t ? "var(--aos-indigo-600)" : "var(--aos-muted)",
               cursor: "pointer",
             }}
           >
@@ -664,14 +664,14 @@ function ChartView(props: {
             <div
               key={i}
               data-testid={`bar-${i}`}
-              style={{ flex: 1, height: `${h}%`, background: "linear-gradient(180deg, var(--aos-indigo), var(--aos-indigo))", borderRadius: 3 }}
+              style={{ flex: 1, height: `${h}%`, background: "linear-gradient(180deg, var(--aos-indigo-600), var(--aos-indigo-600))", borderRadius: 3 }}
             />
           ))}
         </div>
       )}
       {props.type === "line" && (
         <svg viewBox="0 0 200 60" width="100%" height={60} data-testid="line-svg">
-          <path d={linePath(values)} fill="none" stroke="var(--aos-indigo)" strokeWidth={1.5} />
+          <path d={linePath(values)} fill="none" stroke="var(--aos-indigo-600)" strokeWidth={1.5} />
         </svg>
       )}
       {props.type === "pie" && (
@@ -839,7 +839,7 @@ const btnPrimary: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 500,
   color: "var(--text-on-brand)",
-  background: "var(--aos-indigo)",
+  background: "var(--aos-indigo-600)",
   border: "none",
   borderRadius: 2,
   cursor: "pointer",
@@ -858,7 +858,7 @@ const btnSecondary: React.CSSProperties = {
 const btnXS: React.CSSProperties = {
   padding: "3px 8px",
   fontSize: 11,
-  color: "var(--aos-indigo)",
+  color: "var(--aos-indigo-600)",
   background: "var(--aos-indigo-bg)",
   border: "none",
   borderRadius: 4,
@@ -872,7 +872,7 @@ const iconBtn: React.CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   fontSize: 14,
-  color: "var(--aos-indigo)",
+  color: "var(--aos-indigo-600)",
   background: "var(--aos-indigo-bg)",
   border: "none",
   borderRadius: 4,

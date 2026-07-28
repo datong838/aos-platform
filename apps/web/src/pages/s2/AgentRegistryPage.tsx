@@ -562,13 +562,8 @@ export function AgentRegistryPage() {
     <PageChrome title="智能体目录" lede="平台全部智能体的浏览与发现。涵盖平台内创建、插件市场引入、外部 Adapter 接入三种来源。">
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* 标题 + 新建按钮 */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <h1 style={{ fontSize: 20, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>智能体目录</h1>
-            <p style={{ fontSize: 13, color: "var(--aos-text-secondary)", margin: "4px 0 0", lineHeight: 1.5 }}>
-              平台全部智能体的浏览与发现。涵盖平台内创建、插件市场引入、外部 Adapter 接入三种来源。
-            </p>
-          </div>
+        {/* 226：去掉与 PageChrome 重复的 h1，仅保留新建动作 */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Link
               to="/s2/aip/agents/new"

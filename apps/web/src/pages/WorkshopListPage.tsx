@@ -4,7 +4,6 @@ import { apiGet, apiPost } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
 import { BpCard } from "../components/bp/BpCard";
 import { BpEmpty } from "../components/bp/BpEmpty";
-import { BpToolbar } from "../components/bp/BpToolbar";
 
 /* ============================================================================
  * 常量与类型（导出用于测试）
@@ -206,7 +205,6 @@ export function WorkshopListPage() {
   const [items, setItems] = useState<ModuleItem[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [filter, setFilter] = useState<CategoryId>("all");
-  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -236,8 +234,8 @@ export function WorkshopListPage() {
   const recentItems = useMemo(() => sortedItems.slice(0, 5), [sortedItems]);
 
   const filteredItems = useMemo(
-    () => filterModules(sortedItems, filter, query),
-    [sortedItems, filter, query],
+    () => filterModules(sortedItems, filter, ""),
+    [sortedItems, filter],
   );
 
   const getEntryPath = (m: ModuleItem) => {
@@ -249,37 +247,17 @@ export function WorkshopListPage() {
   };
 
   return (
-    <PageChrome title="工作台 · 应用列表" lede="按业务场景打开模块">
-      {/* 226-S1: 去掉 max-width 限宽，撑满 .p-content */}
-      <div className="space-y-6 py-6">
-        {/* 顶部标题区 */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-[13px] font-medium tracking-tight leading-snug" style={{ color: "var(--aos-text)" }}>
-              应用列表
-            </h1>
-            <p className="mt-1.5 text-[13px] leading-relaxed" style={{ color: "var(--aos-text-secondary)" }}>
-              按业务场景打开模块。点击卡片进入画布编辑。
-            </p>
-          </div>
-          <Link
-            to="/workshop/create"
-            data-testid="btn-new-module"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-medium transition-colors"
-            style={{ background: "var(--aos-accent)", color: "var(--text-on-brand)" }}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+    <PageChrome title="工作台 · 应用列表" lede="按业务场景打开模块。点击卡片进入画布编辑。">
+      {/* 226 续修 G4：去掉双标题 + 失效 Tailwind 顶栏；卡片网格保持 inline */}
+      <div className="wl-page">
+        <div className="wl-toolbar">
+          <Link to="/workshop/create" data-testid="btn-new-module" className="wl-btn-new">
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 5v14M5 12h14" strokeLinecap="round" />
             </svg>
-            + 新建
+            新建
           </Link>
         </div>
-
-        {/* 搜索框 */}
-        <BpToolbar
-          search={{ value: query, onChange: setQuery, placeholder: "搜索应用名称或描述…" }}
-          count={filteredItems.length}
-        />
 
         {/* 最近使用区 — 横滑卡片 */}
         <BpCard title="最近使用" subtitle="最近打开的 5 个模块" padding="md">
@@ -380,7 +358,7 @@ export function WorkshopListPage() {
         <BpCard
           title="全部应用"
           actions={
-            <div className="flex gap-1 items-center flex-wrap" data-testid="category-filters">
+            <div className="wl-cat-row" data-testid="category-filters">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
@@ -402,7 +380,7 @@ export function WorkshopListPage() {
                   {cat.name}
                 </button>
               ))}
-              <span className="text-[11px] ml-2" style={{ color: "var(--aos-text-tertiary)" }}>
+              <span className="wl-cat-count">
                 {filteredItems.length} / {items.length}
               </span>
             </div>
@@ -512,8 +490,8 @@ export function WorkshopListPage() {
                     <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--aos-divider)" }}>
                       <Link
                         to="/workshop/canvas"
-                        className="text-[var(--aos-accent)] hover:underline"
-                        style={{ fontSize: 10 }}
+                        className="wl-card-link"
+                        style={{ color: "var(--aos-accent)", textDecoration: "none", fontSize: 10 }}
                       >
                         ✏ 编辑画布 →
                       </Link>
@@ -530,7 +508,7 @@ export function WorkshopListPage() {
               description={
                 items.length === 0
                   ? "点「+ 新建」开始创建第一个应用"
-                  : "尝试调整搜索关键词或筛选条件"
+                  : "尝试调整分类筛选条件"
               }
               action={
                 items.length === 0 ? (

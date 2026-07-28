@@ -389,7 +389,7 @@ export function WikiDiffPage() {
                 ))}
               </div>
             </div>
-            <div style={{ ...styles.diffPanel, boxShadow: "0 0 0 2px var(--aos-accent-border)" }}>
+            <div style={{ ...styles.diffPanel, boxShadow: "0 0 0 2px var(--aos-indigo-border)" }}>
               <div style={styles.diffPanelHeader}>
                 <span style={styles.versionBadgeRight}>{rightContent.label}</span>
                 <span style={styles.diffDate}>{rightContent.timestamp.slice(0, 10)}</span>
@@ -489,7 +489,7 @@ export function WikiDiffPage() {
                   {v.author} · {v.timestamp.slice(0, 10)}
                 </span>
                 {v.version === rightVersion && (
-                  <span style={{ ...styles.currentTag, color: "var(--aos-accent)" }}>
+                  <span style={{ ...styles.currentTag, color: "var(--aos-indigo-600)" }}>
                     查看
                   </span>
                 )}
@@ -558,7 +558,7 @@ const styles: Record<string, React.CSSProperties> = {
   versionSelect: { fontSize: "0.7rem", padding: "4px 8px", minWidth: 100 },
   viewModeSwitch: { display: "flex", borderRadius: "2px", overflow: "hidden", border: "1px solid var(--aos-border)" },
   viewModeBtn: { padding: "4px 12px", fontSize: "0.7rem", border: "none", background: "var(--aos-surface)", color: "var(--aos-text-secondary)", cursor: "pointer" },
-  viewModeActive: { padding: "4px 12px", fontSize: "0.7rem", border: "none", background: "var(--aos-accent)", color: "var(--text-on-brand)", fontWeight: 600, cursor: "pointer" },
+  viewModeActive: { padding: "4px 12px", fontSize: "0.7rem", border: "none", background: "var(--aos-indigo-600)", color: "var(--text-on-brand)", fontWeight: 600, cursor: "pointer" },
   summaryBar: {
     display: "flex",
     alignItems: "center",
@@ -575,7 +575,7 @@ const styles: Record<string, React.CSSProperties> = {
   diffPanel: { border: "1px solid var(--aos-border)", borderRadius: "2px", overflow: "hidden", background: "var(--aos-surface)" },
   diffPanelHeader: { display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.75rem", borderBottom: "1px solid var(--aos-border)", background: "var(--aos-surface-hover)" },
   versionBadgeLeft: { padding: "1px 6px", borderRadius: "3px", background: "var(--aos-gray-100)", color: "var(--aos-text-secondary)", fontSize: "0.6rem", fontWeight: 600 },
-  versionBadgeRight: { padding: "1px 6px", borderRadius: "3px", background: "var(--aos-accent-light)", color: "var(--aos-accent)", fontSize: "0.6rem", fontWeight: 600 },
+  versionBadgeRight: { padding: "1px 6px", borderRadius: "3px", background: "var(--aos-indigo-bg)", color: "var(--aos-indigo-600)", fontSize: "0.6rem", fontWeight: 600 },
   diffDate: { fontSize: "0.65rem", color: "var(--aos-text-tertiary)" },
   diffAuthor: { fontSize: "0.6rem", color: "var(--aos-text-tertiary)", marginLeft: "auto" },
   diffBlock: { fontFamily: "'Menlo','Monaco',monospace", fontSize: "0.7rem", lineHeight: 1.7, padding: "0.5rem" },
@@ -586,8 +586,8 @@ const styles: Record<string, React.CSSProperties> = {
   sectionTitle: { fontSize: "0.85rem", fontWeight: 600, color: "var(--aos-text)", marginBottom: "0.5rem" },
   versionTimeline: { border: "1px solid var(--aos-border)", borderRadius: "2px", background: "var(--aos-surface)" },
   versionTimelineRow: { display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.75rem", borderBottom: "1px solid var(--aos-border)", cursor: "pointer" },
-  versionTimelineActive: { background: "var(--aos-accent-light)" },
-  versionBadgeCurrent: { padding: "1px 6px", borderRadius: "3px", background: "var(--aos-accent-light)", color: "var(--aos-accent)", fontSize: "0.6rem", fontWeight: 600, width: 28, textAlign: "center" as const },
+  versionTimelineActive: { background: "var(--aos-indigo-bg)" },
+  versionBadgeCurrent: { padding: "1px 6px", borderRadius: "3px", background: "var(--aos-indigo-bg)", color: "var(--aos-indigo-600)", fontSize: "0.6rem", fontWeight: 600, width: 28, textAlign: "center" as const },
   versionBadgeOld: { padding: "1px 6px", borderRadius: "3px", background: "var(--aos-gray-100)", color: "var(--aos-text-secondary)", fontSize: "0.6rem", fontWeight: 600, width: 28, textAlign: "center" as const },
   versionMeta: { fontSize: "0.6rem", color: "var(--aos-text-tertiary)" },
   currentTag: { fontSize: "0.6rem", fontWeight: 600 },

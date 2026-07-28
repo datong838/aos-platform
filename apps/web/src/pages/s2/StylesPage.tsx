@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { PageChrome } from "../../components/PageChrome";
 import { BpToolbar } from "../../components/bp/BpToolbar";
 import { apiGet } from "../../api/client";
@@ -204,7 +205,6 @@ export function StylesPage() {
   const [tab, setTab] = useState<EditorTab>("colors");
   const [config, setConfig] = useState<ThemeConfig>({ ...LIGHT_CONFIG });
   const [dirty, setDirty] = useState(false);
-  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
   /* GET /v1/themes —— 拉取主题列表，失败则用 MOCK_THEMES */
@@ -236,11 +236,6 @@ export function StylesPage() {
   }, []);
 
   const activeTheme = themes.find((t) => t.id === activeThemeId) || themes[0];
-  const filteredThemes = useMemo(() => {
-    if (!query.trim()) return themes;
-    const q = query.toLowerCase();
-    return themes.filter((t) => t.name.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q));
-  }, [themes, query]);
 
   function selectTheme(t: ThemePreset) {
     setActiveThemeId(t.id);
@@ -292,28 +287,28 @@ export function StylesPage() {
   return (
     <PageChrome title="主题与样式" lede="订单管理 · 配置主题、颜色、字体和间距">
       <div className="st-page">
-        <div className="vr-header">
-          <div>
-            <h1>主题与样式</h1>
-            <p>订单管理 · 配置主题、颜色、字体和间距</p>
-          </div>
-        </div>
-
+        {/* 226 G4：无页内搜索（稿仅顶栏）；动作对齐「返回编辑器 / 保存」 */}
         <BpToolbar
-          search={{ value: query, onChange: setQuery, placeholder: "搜索主题…" }}
           actions={
-            <>
-              <button className="p-btn p-btn-secondary p-btn-sm" onClick={newTheme}>+ 新建主题</button>
+            <div className="st-toolbar-actions">
+              <Link to="/workshop/orders" className="p-btn p-btn-secondary p-btn-sm">
+                返回编辑器
+              </Link>
+              <button type="button" className="p-btn p-btn-secondary p-btn-sm" onClick={newTheme}>
+                + 新建主题
+              </button>
               <button
+                type="button"
                 className="p-btn p-btn-primary p-btn-sm"
                 onClick={saveTheme}
                 disabled={!dirty}
-                style={!dirty ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
               >
-                保存{dirty ? " *" : ""}
+                保存样式{dirty ? " *" : ""}
               </button>
-              <button className="p-btn p-btn-secondary p-btn-sm" onClick={resetTheme}>重置</button>
-            </>
+              <button type="button" className="p-btn p-btn-secondary p-btn-sm" onClick={resetTheme}>
+                重置
+              </button>
+            </div>
           }
           count={themes.length}
         />
@@ -324,10 +319,10 @@ export function StylesPage() {
           {/* === 左栏：主题列表 === */}
           <aside style={{ background: "var(--aos-surface)", borderRadius: 2, padding: 12, border: "1px solid var(--aos-border)" }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
-              主题列表 ({filteredThemes.length})
+              主题列表 ({themes.length})
             </div>
             {loading && <div style={{ fontSize: 12, color: "#9CA3AF", padding: 12 }}>加载中…</div>}
-            {!loading && filteredThemes.map((t) => (
+            {!loading && themes.map((t) => (
               <div
                 key={t.id}
                 onClick={() => selectTheme(t)}
@@ -406,7 +401,7 @@ export function StylesPage() {
 
               {/* === 颜色 Tab === */}
               {tab === "colors" && (
-                <div className="space-y-6">
+                <div className="st-stack">
                   {/* 主色 / 辅色：取色器 + 预设色板 */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
                     <ColorField
@@ -439,7 +434,7 @@ export function StylesPage() {
 
               {/* === 字体 Tab === */}
               {tab === "fonts" && (
-                <div className="space-y-6">
+                <div className="st-stack">
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 12 }}>字体族选择</div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
@@ -546,7 +541,7 @@ export function StylesPage() {
 
               {/* === 间距 Tab === */}
               {tab === "spacing" && (
-                <div className="space-y-6">
+                <div className="st-stack">
                   {/* 基础间距 */}
                   <SpacingSlider
                     label="基础间距（spacing-base）"

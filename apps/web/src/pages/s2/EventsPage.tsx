@@ -251,7 +251,6 @@ export const MOCK_EVENTS: EventItem[] = [
 
 export function EventsPage() {
   const [events, setEvents] = useState<EventItem[]>(MOCK_EVENTS);
-  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
   /* 向导状态 */
@@ -295,14 +294,6 @@ export function EventsPage() {
     })();
     return () => { cancelled = true; };
   }, []);
-
-  const filtered = useMemo(() => {
-    if (!query.trim()) return events;
-    const q = query.toLowerCase();
-    return events.filter(
-      (e) => e.name.toLowerCase().includes(q) || (e.description || "").toLowerCase().includes(q),
-    );
-  }, [events, query]);
 
   function openWizard() {
     setWizardOpen(true);
@@ -370,12 +361,12 @@ export function EventsPage() {
 
   return (
     <PageChrome title="事件配置" lede="Widget 事件绑定、变量写入与幂等键配置">
-      <div className="st-page">
+      <div className="ev-page">
+        {/* 226 G4：无页内搜索；表头侧放 + 添加事件（对齐稿） */}
         <BpToolbar
-          search={{ value: query, onChange: setQuery, placeholder: "搜索事件…" }}
           actions={
-            <button className="p-btn p-btn-primary p-btn-sm" onClick={openWizard}>
-              + 新建事件
+            <button type="button" className="p-btn p-btn-primary p-btn-sm" onClick={openWizard}>
+              + 添加事件
             </button>
           }
           count={events.length}
@@ -384,7 +375,7 @@ export function EventsPage() {
         {/* === 上半区：事件列表表格 === */}
         <div style={{ background: "var(--aos-surface)", borderRadius: 2, border: "1px solid var(--aos-border)", marginTop: 16, overflow: "hidden" }}>
           <div style={{ padding: "12px 16px", borderBottom: "1px solid #F3F4F6", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>已注册事件（{filtered.length}）</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>已注册事件（{events.length}）</span>
             {loading && <span style={{ fontSize: 11, color: "#9CA3AF" }}>加载中…</span>}
           </div>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
@@ -398,7 +389,7 @@ export function EventsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((e) => {
+              {events.map((e) => {
                 const sm = STATUS_META[e.status];
                 return (
                   <tr key={e.id} style={{ borderBottom: "1px solid #F3F4F6", background: e.isNew ? "#EFF6FF" : undefined }}>
@@ -457,7 +448,7 @@ export function EventsPage() {
                   </tr>
                 );
               })}
-              {filtered.length === 0 && (
+              {events.length === 0 && (
                 <tr>
                   <td colSpan={5} style={{ padding: 32, textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
                     {loading ? "加载事件列表中…" : "暂无事件，点击右上角「+ 新建事件」创建"}
@@ -538,7 +529,7 @@ export function EventsPage() {
             <div style={{ padding: "20px", minHeight: 240 }}>
               {/* Step 1：事件名称 + 描述 */}
               {step === 1 && (
-                <div className="space-y-4">
+                <div className="st-stack-sm">
                   <div>
                     <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
                       事件名称 <span style={{ color: "#EF4444" }}>*</span>

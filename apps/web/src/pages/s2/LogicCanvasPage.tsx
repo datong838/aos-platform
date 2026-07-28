@@ -114,7 +114,7 @@ const PALETTE: { kind: BlockKind; title: string; desc: string; icon: string }[] 
 
 /** Block 样式元数据（导出供测试） */
 export const KIND_META: Record<BlockKind, { label: string; color: string; bg: string; border: string }> = {
-  input:          { label: "输入",      color: "var(--aos-indigo)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
+  input:          { label: "输入",      color: "var(--aos-indigo-600)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
   create_variable:{ label: "创建变量",  color: "var(--color-info)", bg: "var(--aos-accent-light)", border: "var(--aos-green-border)" },
   get_property:   { label: "获取属性",  color: "var(--aos-amber)", bg: "var(--aos-amber-bg)", border: "var(--aos-amber-border)" },
   use_llm:        { label: "使用 LLM",  color: "var(--aos-purple-600)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
@@ -625,9 +625,9 @@ export function LogicCanvasPage() {
                   fontSize: "0.78rem",
                   fontWeight: rightTab === t.key ? 600 : 400,
                   border: "none",
-                  borderBottom: rightTab === t.key ? "2px solid var(--aos-blue)" : "2px solid transparent",
+                  borderBottom: rightTab === t.key ? "2px solid var(--aos-indigo-600)" : "2px solid transparent",
                   background: "none",
-                  color: rightTab === t.key ? "var(--aos-blue)" : "var(--aos-muted)",
+                  color: rightTab === t.key ? "var(--aos-indigo-600)" : "var(--aos-muted)",
                   cursor: "pointer",
                   marginBottom: "-2px",
                 }}

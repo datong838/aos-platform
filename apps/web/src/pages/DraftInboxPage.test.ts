@@ -316,24 +316,24 @@ describe("状态映射", () => {
     });
   });
 
-  it("in_review 颜色为蓝色 #3B82F6", () => {
-    expect(STATUS_COLORS.in_review).toBe("#3B82F6");
+  it("in_review 颜色为蓝色 token", () => {
+    expect(STATUS_COLORS.in_review).toBe("var(--aos-blue-600)");
   });
 
-  it("approved 颜色为绿色 #10B981", () => {
-    expect(STATUS_COLORS.approved).toBe("#10B981");
+  it("approved 颜色为绿色 token", () => {
+    expect(STATUS_COLORS.approved).toBe("var(--aos-green-600)");
   });
 
-  it("rejected 颜色为红色 #EF4444", () => {
-    expect(STATUS_COLORS.rejected).toBe("#EF4444");
+  it("rejected 颜色为红色 token", () => {
+    expect(STATUS_COLORS.rejected).toBe("var(--aos-red)");
   });
 
-  it("submitted 颜色为橙色 #F59E0B", () => {
-    expect(STATUS_COLORS.submitted).toBe("#F59E0B");
+  it("submitted 颜色为橙色 token", () => {
+    expect(STATUS_COLORS.submitted).toBe("var(--aos-amber-600)");
   });
 
-  it("changes_requested 颜色为紫色 #8B5CF6", () => {
-    expect(STATUS_COLORS.changes_requested).toBe("#8B5CF6");
+  it("changes_requested 颜色为紫色 token", () => {
+    expect(STATUS_COLORS.changes_requested).toBe("var(--aos-purple-600)");
   });
 });
 

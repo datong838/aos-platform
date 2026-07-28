@@ -1,51 +1,110 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { PageChrome } from "../../components/PageChrome";
-import { BpCard } from "../../components/bp/BpCard";
-import { BpStepper, type BpStep } from "../../components/bp/BpStepper";
 import { apiPost } from "../../api/client";
 
 /* ============================================================================
- * 常量与类型（导出用于测试）
+ * 常量（对齐 workshop-create.html 四步）
  * ========================================================================== */
 
-export const STEPS: BpStep[] = [
-  { key: "basic", title: "基础信息", description: "名称、分类、描述" },
-  { key: "template", title: "选择模板", description: "空白/仪表盘/表单/列表/复制" },
-  { key: "confirm", title: "确认创建", description: "核对信息并创建" },
+export type CreateStepKey = "basic" | "binding" | "template" | "confirm";
+
+export const STEPS: { key: CreateStepKey; title: string; description: string }[] = [
+  { key: "basic", title: "基本信息", description: "名称、图标、业务域" },
+  { key: "binding", title: "数据绑定", description: "对象类型与属性" },
+  { key: "template", title: "模板选择", description: "起始布局模板" },
+  { key: "confirm", title: "确认创建", description: "核对并进入画布" },
 ];
 
-export type CategoryId =
-  | "order"
-  | "risk"
-  | "customer"
-  | "asset"
-  | "analytics"
-  | "ticket"
-  | "inventory"
-  | "finance"
-  | "marketing";
+export type DomainId = "运营" | "分析" | "风控" | "供应链" | "客服" | "自定义";
 
-export const CATEGORIES: { id: CategoryId; name: string; color: string }[] = [
-  { id: "order", name: "订单", color: "#2563EB" },
-  { id: "risk", name: "风控", color: "#DC2626" },
-  { id: "customer", name: "客户", color: "#7C3AED" },
-  { id: "asset", name: "资产", color: "#0891B2" },
-  { id: "analytics", name: "分析", color: "#059669" },
-  { id: "ticket", name: "工单", color: "#D97706" },
-  { id: "inventory", name: "库存", color: "#4F46E5" },
-  { id: "finance", name: "财务", color: "#0D9488" },
-  { id: "marketing", name: "营销", color: "#DB2777" },
+export const DOMAINS: DomainId[] = ["运营", "分析", "风控", "供应链", "客服", "自定义"];
+
+export type IconId = "box" | "chart" | "alert" | "users" | "globe" | "truck";
+
+export const ICONS: { id: IconId; label: string }[] = [
+  { id: "box", label: "立方体" },
+  { id: "chart", label: "图表" },
+  { id: "alert", label: "告警" },
+  { id: "users", label: "用户" },
+  { id: "globe", label: "地球" },
+  { id: "truck", label: "物流" },
 ];
 
-export type TemplateId = "blank" | "dashboard" | "form" | "table" | "copy";
+export type ObjTypeId = "Order" | "Product" | "Inventory" | "RiskAlert" | "Customer" | "Supplier";
+
+export const OBJ_GROUPS: { title: string; items: { id: ObjTypeId; label: string }[] }[] = [
+  {
+    title: "业务对象",
+    items: [
+      { id: "Order", label: "Order（订单）" },
+      { id: "Product", label: "Product（商品）" },
+      { id: "Inventory", label: "Inventory（库存）" },
+      { id: "RiskAlert", label: "RiskAlert（风险告警）" },
+    ],
+  },
+  {
+    title: "用户对象",
+    items: [
+      { id: "Customer", label: "Customer（客户）" },
+      { id: "Supplier", label: "Supplier（供应商）" },
+    ],
+  },
+];
+
+export const OBJ_PROPS: Record<ObjTypeId, { name: string; boundDefault: boolean }[]> = {
+  Order: [
+    { name: "order_id", boundDefault: true },
+    { name: "customer_name", boundDefault: true },
+    { name: "total_amount", boundDefault: true },
+    { name: "status", boundDefault: true },
+    { name: "created_at", boundDefault: true },
+    { name: "shipping_address", boundDefault: false },
+    { name: "payment_method", boundDefault: false },
+    { name: "discount_code", boundDefault: false },
+    { name: "tax_amount", boundDefault: false },
+    { name: "remark", boundDefault: false },
+  ],
+  Product: [
+    { name: "product_id", boundDefault: true },
+    { name: "name", boundDefault: true },
+    { name: "sku", boundDefault: true },
+    { name: "price", boundDefault: true },
+    { name: "category", boundDefault: false },
+  ],
+  Inventory: [
+    { name: "sku", boundDefault: true },
+    { name: "warehouse", boundDefault: true },
+    { name: "qty", boundDefault: true },
+    { name: "updated_at", boundDefault: true },
+  ],
+  RiskAlert: [
+    { name: "alert_id", boundDefault: true },
+    { name: "level", boundDefault: true },
+    { name: "title", boundDefault: true },
+    { name: "status", boundDefault: true },
+  ],
+  Customer: [
+    { name: "customer_id", boundDefault: true },
+    { name: "name", boundDefault: true },
+    { name: "phone", boundDefault: false },
+    { name: "tier", boundDefault: true },
+  ],
+  Supplier: [
+    { name: "supplier_id", boundDefault: true },
+    { name: "name", boundDefault: true },
+    { name: "region", boundDefault: false },
+  ],
+};
+
+export type TemplateId = "blank" | "table" | "dashboard" | "explorer";
 
 export interface TemplateDef {
   id: TemplateId;
   name: string;
   desc: string;
-  blank?: boolean;
-  preview?: "dashboard" | "form" | "table";
+  fillHint: string;
+  preview: "blank" | "table" | "dashboard" | "explorer";
 }
 
 export const TEMPLATES: TemplateDef[] = [
@@ -53,45 +112,35 @@ export const TEMPLATES: TemplateDef[] = [
     id: "blank",
     name: "空白模板",
     desc: "零预填 Widget，完全从零搭建。适合高度自定义场景。",
-    blank: true,
+    fillHint: "无预填 Widget / Variables / Event。",
+    preview: "blank",
+  },
+  {
+    id: "table",
+    name: "表格列表模板",
+    desc: "筛选栏 + 数据表格 + 详情面板。适合 CRUD 管理场景，如订单管理。",
+    fillHint:
+      "1 个 Layout（首页） · 3 个 Widget（FilterBar + DataTable + DetailPanel）\n2 个 Variables（all_orders: ObjectSet, selected_order: Object）\n1 个 Event（onRowClick → selected_order.setValue）",
+    preview: "table",
   },
   {
     id: "dashboard",
     name: "仪表盘模板",
     desc: "统计卡片 x4 + 趋势图 + 饼图。适合数据监控和概览场景。",
+    fillHint: "1 个 Layout · 4 个统计卡片 + 趋势图 + 饼图 · 3 个 Variables",
     preview: "dashboard",
   },
   {
-    id: "form",
-    name: "表单模板",
-    desc: "表单输入 + 校验 + 提交按钮。适合数据录入和审批场景。",
-    preview: "form",
+    id: "explorer",
+    name: "对象探索模板",
+    desc: "对象列表 + 属性筛选 + 图表探索 + Actions。适合 Ontology 数据探索。",
+    fillHint: "1 个 Layout · 对象列表 + 属性筛选 + 图表 · Actions 区 · 2 个 Variables",
+    preview: "explorer",
   },
-  {
-    id: "table",
-    name: "列表模板",
-    desc: "筛选栏 + 数据表格 + 详情面板。适合 CRUD 管理场景。",
-    preview: "table",
-  },
-];
-
-export interface ExistingModule {
-  id: string;
-  name: string;
-  category: string;
-  updated_at: string;
-}
-
-export const MOCK_EXISTING_MODULES: ExistingModule[] = [
-  { id: "mod-001", name: "订单管理系统", category: "order", updated_at: "2026-07-20T10:00:00Z" },
-  { id: "mod-002", name: "风险告警管理", category: "risk", updated_at: "2026-07-19T14:30:00Z" },
-  { id: "mod-003", name: "客户档案中心", category: "customer", updated_at: "2026-07-18T09:15:00Z" },
-  { id: "mod-004", name: "库存盘点看板", category: "inventory", updated_at: "2026-07-17T16:45:00Z" },
-  { id: "mod-005", name: "财务对账系统", category: "finance", updated_at: "2026-07-16T11:20:00Z" },
 ];
 
 /* ============================================================================
- * 纯函数（导出用于测试）
+ * 纯函数
  * ========================================================================== */
 
 export function slugify(name: string): string {
@@ -102,488 +151,458 @@ export function slugify(name: string): string {
     .replace(/^-|-$/g, "");
 }
 
-export function canNextFromStep1(name: string, category: string): boolean {
-  return name.trim().length > 0 && category.trim().length > 0;
+/** 对齐视觉稿：下一步不强制校验；完成时要求名称非空 */
+export function canFinishCreate(name: string): boolean {
+  return name.trim().length > 0;
 }
 
-export function canNextFromStep2(templateId: TemplateId, copyFromId: string | null): boolean {
-  if (templateId === "copy") return !!copyFromId;
-  return !!templateId;
+export function defaultBoundProps(obj: ObjTypeId): string[] {
+  return OBJ_PROPS[obj].filter((p) => p.boundDefault).map((p) => p.name);
 }
 
 export interface CreateModulePayload {
   name: string;
   slug: string;
-  category: string;
+  domain: DomainId;
+  icon: IconId;
   description: string;
+  object_type: ObjTypeId;
+  bound_props: string[];
   template: TemplateId;
-  copy_from: string | null;
 }
 
 export function buildCreatePayload(input: {
   name: string;
-  category: string;
+  domain: DomainId;
+  icon: IconId;
   description: string;
+  objectType: ObjTypeId;
+  boundProps: string[];
   template: TemplateId;
-  copyFromId: string | null;
 }): CreateModulePayload {
   return {
     name: input.name.trim(),
     slug: slugify(input.name),
-    category: input.category,
+    domain: input.domain,
+    icon: input.icon,
     description: input.description.trim(),
+    object_type: input.objectType,
+    bound_props: [...input.boundProps],
     template: input.template,
-    copy_from: input.template === "copy" ? input.copyFromId : null,
   };
 }
 
 /* ============================================================================
- * 页面组件
+ * 页面
  * ========================================================================== */
 
 export function WorkshopCreatePage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [appName, setAppName] = useState("");
-  const [category, setCategory] = useState<CategoryId>("order");
+  const [icon, setIcon] = useState<IconId>("box");
+  const [domain, setDomain] = useState<DomainId>("供应链");
   const [description, setDescription] = useState("");
+  const [objectType, setObjectType] = useState<ObjTypeId>("Order");
+  const [boundProps, setBoundProps] = useState<string[]>(() => defaultBoundProps("Order"));
   const [template, setTemplate] = useState<TemplateId>("table");
-  const [copyFromId, setCopyFromId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [createdId, setCreatedId] = useState<string | null>(null);
 
   const slug = useMemo(() => slugify(appName), [appName]);
+  const selectedTemplate = TEMPLATES.find((t) => t.id === template)!;
+  const selectedIcon = ICONS.find((i) => i.id === icon)!;
+  const objLabel = OBJ_GROUPS.flatMap((g) => g.items).find((i) => i.id === objectType)?.label ?? objectType;
 
-  const canNext1 = canNextFromStep1(appName, category);
-  const canNext2 = canNextFromStep2(template, copyFromId);
+  function goStep(n: number) {
+    setStep(Math.min(4, Math.max(1, n)));
+  }
 
-  const selectedCategory = CATEGORIES.find((c) => c.id === category);
-  const selectedTemplate = TEMPLATES.find((t) => t.id === template);
-  const selectedCopyModule = MOCK_EXISTING_MODULES.find((m) => m.id === copyFromId);
+  function selectObject(id: ObjTypeId) {
+    setObjectType(id);
+    setBoundProps(defaultBoundProps(id));
+  }
+
+  function toggleProp(name: string) {
+    setBoundProps((prev) => (prev.includes(name) ? prev.filter((p) => p !== name) : [...prev, name]));
+  }
 
   async function handleCreate() {
+    if (!canFinishCreate(appName)) {
+      setError("请填写模块名称后再创建。");
+      goStep(1);
+      return;
+    }
     setError(null);
     setCreating(true);
     const payload = buildCreatePayload({
       name: appName,
-      category,
+      domain,
+      icon,
       description,
+      objectType,
+      boundProps,
       template,
-      copyFromId,
     });
     try {
       const result = await apiPost<{ module_id: string }>("/v1/modules", payload);
-      setCreatedId(result.module_id);
-      setCreating(false);
-      // 短暂延迟后跳转，让用户看到成功状态
-      setTimeout(() => {
-        navigate(`/workshop/canvas?module=${result.module_id}`);
-      }, 800);
-    } catch (e) {
-      // API 不存在时 fallback 为 mock 创建
+      setTimeout(() => navigate(`/workshop/canvas?module=${result.module_id}`), 600);
+    } catch {
       const mockId = `mod-mock-${Date.now()}`;
-      setCreatedId(mockId);
+      setTimeout(() => navigate(`/workshop/canvas?module=${mockId}`), 600);
+    } finally {
       setCreating(false);
-      setTimeout(() => {
-        navigate(`/workshop/canvas?module=${mockId}`);
-      }, 800);
     }
   }
 
   return (
-    <PageChrome title="创建模块" lede="3 步创建新的 Workshop 应用模块">
-      {/* 226-S1: 去掉 max-width 限宽 */}
-      <div style={{ padding: "24px 0" }}>
-        {/* 顶部步骤条 */}
-        <div style={{ marginBottom: 32 }}>
-          <BpStepper steps={STEPS} current={step - 1} />
-        </div>
-
-        {/* 错误提示 */}
-        {error && (
-          <div
-            role="alert"
-            style={{
-              background: "var(--aos-red-bg, #FEE2E2)",
-              color: "var(--aos-red, #DC2626)",
-              padding: "8px 12px",
-              borderRadius: 2,
-              marginBottom: 12,
-              fontSize: 13,
-              border: "1px solid var(--aos-red-border, #FCA5A5)",
-            }}
-          >
-            {error}
-          </div>
-        )}
-
-        {/* 成功提示 */}
-        {createdId && (
-          <div
-            style={{
-              background: "var(--aos-green-bg)",
-              color: "var(--aos-green-700)",
-              padding: "12px 16px",
-              borderRadius: 2,
-              marginBottom: 16,
-              fontSize: 13,
-              border: "1px solid var(--aos-green-border)",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            模块创建成功！ID: {createdId}，正在跳转到画布编辑器...
-          </div>
-        )}
-
-        {/* Step 1: 基础信息 */}
-        {step === 1 && (
-          <BpCard title="Step 1 · 基础信息" subtitle="设置模块名称、分类和描述，创建后仍可修改。">
-            <FormGrid>
-              <FieldLabel required>模块名称</FieldLabel>
-              <input
-                className="aos-input"
-                style={{ height: 38, fontSize: 13, padding: "0 12px" }}
-                value={appName}
-                onChange={(e) => setAppName(e.target.value)}
-                placeholder="如：库存管理系统"
-                data-testid="create-app-name"
-              />
-
-              <FieldLabel>
-                模块标识{" "}
-                <span style={{ fontSize: 11, color: "var(--aos-muted)", fontWeight: 400 }}>
-                  （自动生成，用于 API 引用）
-                </span>
-              </FieldLabel>
-              <input
-                className="aos-input"
-                style={{ height: 38, fontSize: 13, padding: "0 12px", background: "var(--aos-surface-hover)" }}
-                value={slug}
-                readOnly
-                placeholder="inventory-mgmt"
-                data-testid="create-slug"
-              />
-
-              <FieldLabel required>模块分类</FieldLabel>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }} data-testid="create-categories">
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setCategory(cat.id)}
-                    data-testid={`create-cat-${cat.id}`}
-                    style={{
-                      padding: "6px 14px",
-                      borderRadius: 2,
-                      fontSize: 12,
-                      fontWeight: 500,
-                      cursor: "pointer",
-                      border: category === cat.id ? `1.5px solid ${cat.color}` : "1px solid var(--aos-border)",
-                      background: category === cat.id ? `${cat.color}15` : "var(--aos-surface)",
-                      color: category === cat.id ? cat.color : "var(--aos-text-secondary)",
-                      transition: "all 0.15s",
-                    }}
-                  >
-                    {cat.name}
-                  </button>
-                ))}
-              </div>
-
-              <FieldLabel>
-                描述{" "}
-                <span style={{ fontSize: 11, color: "var(--aos-muted)", fontWeight: 400 }}>
-                  （一句话说明，选填）
-                </span>
-              </FieldLabel>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="如：管理仓库库存、入库/出库记录、库存预警..."
-                rows={3}
-                className="aos-input"
-                style={{ minHeight: 72, fontSize: 13, padding: "8px 12px", resize: "vertical" }}
-                data-testid="create-description"
-              />
-            </FormGrid>
-
-            <StepFooter
-              onCancel={() => navigate("/workshop")}
-              onNext={() => canNext1 && setStep(2)}
-              nextDisabled={!canNext1}
-            />
-          </BpCard>
-        )}
-
-        {/* Step 2: 选择模板 */}
-        {step === 2 && (
-          <BpCard title="Step 2 · 选择模板" subtitle="选择起始布局模板，或从已有模块复制。后续可自由增删修改。">
-            {/* 模板卡片网格 */}
-            <div
-              style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14 }}
-              data-testid="create-templates"
-            >
-              {TEMPLATES.map((t) => {
-                const selected = template === t.id;
+    <PageChrome title="新建 Module" lede="四步创建 Workshop 应用模块：基本信息 → 数据绑定 → 模板选择 → 确认创建">
+      <div className="ws-create-page">
+        <div className="ws-create-layout">
+          {/* 左侧步骤导航 */}
+          <aside className="ws-create-nav" aria-label="创建步骤">
+            <h2 className="ws-create-nav-title">创建步骤</h2>
+            <div className="ws-create-step-list" id="stepNav">
+              {STEPS.map((s, idx) => {
+                const n = idx + 1;
+                const cls =
+                  n === step
+                    ? "ws-create-step-nav-item is-active"
+                    : n < step
+                      ? "ws-create-step-nav-item is-done"
+                      : "ws-create-step-nav-item";
                 return (
-                  <div
-                    key={t.id}
-                    className={selected ? "ws-template-card is-selected" : "ws-template-card"}
-                    onClick={() => setTemplate(t.id)}
-                    role="button"
-                    tabIndex={0}
-                    data-testid={`create-tpl-${t.id}`}
-                    style={{
-                      border: selected ? "2px solid var(--aos-accent)" : "1px solid var(--aos-border)",
-                      borderRadius: 2,
-                      padding: 14,
-                      cursor: "pointer",
-                      background: selected ? "var(--aos-accent-light)" : "var(--aos-surface)",
-                      transition: "all 0.15s",
-                    }}
+                  <button
+                    key={s.key}
+                    type="button"
+                    className={cls}
+                    data-step={n}
+                    data-testid={`create-step-nav-${n}`}
+                    onClick={() => goStep(n)}
                   >
-                    <TemplatePreview type={t.preview} blank={t.blank} />
-                    <div style={{ fontSize: 13, fontWeight: 500, color: "var(--aos-text)", marginBottom: 4 }}>
-                      {t.name}
-                    </div>
-                    <div style={{ fontSize: 11, color: "var(--aos-text-secondary)", lineHeight: 1.5 }}>{t.desc}</div>
-                  </div>
+                    <span className="ws-step-num" aria-hidden>
+                      {n < step ? (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      ) : (
+                        n
+                      )}
+                    </span>
+                    <span>{s.title}</span>
+                  </button>
                 );
               })}
-
-              {/* 从已有模块复制 */}
-              <div
-                className={template === "copy" ? "ws-template-card is-selected" : "ws-template-card"}
-                onClick={() => setTemplate("copy")}
-                role="button"
-                tabIndex={0}
-                data-testid="create-tpl-copy"
-                style={{
-                  border: template === "copy" ? "2px solid var(--aos-accent)" : "1px solid var(--aos-border)",
-                  borderRadius: 2,
-                  padding: 14,
-                  cursor: "pointer",
-                  background: template === "copy" ? "var(--aos-accent-light)" : "var(--aos-surface)",
-                  transition: "all 0.15s",
-                }}
-              >
-                <div
-                  style={{
-                    width: "100%",
-                    height: 80,
-                    borderRadius: 4,
-                    background: "var(--aos-surface-hover)",
-                    marginBottom: 10,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--aos-text-secondary)" strokeWidth="1.5">
-                    <rect x="9" y="9" width="13" height="13" rx="2" />
-                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 500, color: "var(--aos-text)", marginBottom: 4 }}>
-                  从已有模块复制
-                </div>
-                <div style={{ fontSize: 11, color: "var(--aos-text-secondary)", lineHeight: 1.5 }}>
-                  选择一个现有模块，复制其全部 Widget 和配置。
-                </div>
-              </div>
             </div>
+            <div className="ws-create-tip">
+              <div className="ws-create-tip-title">提示</div>
+              <div className="ws-create-tip-body">左侧导航可随时跳转任意步骤修改，无需按顺序走完。</div>
+            </div>
+          </aside>
 
-            {/* 复制源选择器 */}
-            {template === "copy" && (
-              <div
-                style={{
-                  marginTop: 16,
-                  padding: 14,
-                  border: "1px solid var(--aos-border)",
-                  borderRadius: 2,
-                  background: "var(--aos-surface-hover)",
-                }}
-                data-testid="create-copy-source"
-              >
-                <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)", marginBottom: 8 }}>
-                  选择要复制的源模块：
+          {/* 右侧配置区 */}
+          <div className="ws-create-main">
+            {error && (
+              <div role="alert" className="ws-warning-box" style={{ marginBottom: 16 }}>
+                {error}
+              </div>
+            )}
+
+            {step === 1 && (
+              <section data-testid="create-panel-1">
+                <h3 className="ws-create-panel-title">基本信息</h3>
+                <p className="ws-create-panel-desc">设置模块名称、图标和业务域，创建后仍可修改。</p>
+
+                <div className="ws-create-field">
+                  <label className="ws-create-label">
+                    模块名称 <span className="ws-create-req">*</span>
+                  </label>
+                  <input
+                    className="ws-create-input"
+                    value={appName}
+                    onChange={(e) => setAppName(e.target.value)}
+                    placeholder="如：库存管理系统"
+                    data-testid="create-app-name"
+                  />
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {MOCK_EXISTING_MODULES.map((m) => (
-                    <div
-                      key={m.id}
-                      onClick={() => setCopyFromId(m.id)}
-                      role="button"
-                      tabIndex={0}
-                      data-testid={`create-copy-${m.id}`}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "8px 12px",
-                        borderRadius: 2,
-                        cursor: "pointer",
-                        border: copyFromId === m.id ? "1.5px solid var(--aos-accent)" : "1px solid var(--aos-border)",
-                        background: copyFromId === m.id ? "var(--aos-accent-light)" : "var(--aos-surface)",
-                        transition: "all 0.1s",
-                      }}
-                    >
-                      <div>
-                        <span style={{ fontSize: 13, fontWeight: 500, color: "var(--aos-text)" }}>{m.name}</span>
-                        <span
-                          style={{
-                            fontSize: 10,
-                            padding: "1px 6px",
-                            borderRadius: 3,
-                            background: "var(--aos-accent-light)",
-                            color: "var(--aos-accent)",
-                            marginLeft: 8,
-                          }}
-                        >
-                          {CATEGORIES.find((c) => c.id === m.category)?.name || m.category}
-                        </span>
-                      </div>
-                      <span style={{ fontSize: 11, color: "var(--aos-faint)" }}>{m.updated_at.slice(0, 10)}</span>
+
+                <div className="ws-create-field">
+                  <label className="ws-create-label">
+                    模块标识 <span className="ws-create-label-hint">（自动生成，用于 API 引用）</span>
+                  </label>
+                  <input
+                    className="ws-create-input is-readonly"
+                    value={slug}
+                    readOnly
+                    placeholder="inventory-mgmt"
+                    data-testid="create-slug"
+                  />
+                </div>
+
+                <div className="ws-create-field">
+                  <label className="ws-create-label">
+                    模块图标 <span className="ws-create-label-hint">（选择一个）</span>
+                  </label>
+                  <div className="ws-create-icon-row" data-testid="create-icons">
+                    {ICONS.map((ic) => (
+                      <button
+                        key={ic.id}
+                        type="button"
+                        className={icon === ic.id ? "ws-icon-pick is-selected" : "ws-icon-pick"}
+                        aria-label={ic.label}
+                        data-testid={`create-icon-${ic.id}`}
+                        onClick={() => setIcon(ic.id)}
+                      >
+                        <IconSvg id={ic.id} selected={icon === ic.id} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="ws-create-field">
+                  <label className="ws-create-label">
+                    业务域 <span className="ws-create-label-hint">（选择一个）</span>
+                  </label>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }} data-testid="create-domains">
+                    {DOMAINS.map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        className={domain === d ? "ws-domain-chip is-selected" : "ws-domain-chip"}
+                        data-testid={`create-domain-${d}`}
+                        onClick={() => setDomain(d)}
+                      >
+                        {d}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="ws-create-field">
+                  <label className="ws-create-label">
+                    用途描述 <span className="ws-create-label-hint">（一句话说明，选填）</span>
+                  </label>
+                  <textarea
+                    className="ws-create-textarea"
+                    rows={3}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="如：管理仓库库存、入库/出库记录、库存预警..."
+                    data-testid="create-description"
+                  />
+                </div>
+              </section>
+            )}
+
+            {step === 2 && (
+              <section data-testid="create-panel-2">
+                <h3 className="ws-create-panel-title">数据绑定</h3>
+                <p className="ws-create-panel-desc">
+                  选择本体中的对象类型作为数据源。Module 的 Widget 将通过 Object Set 引用这些数据。
+                </p>
+
+                <div className="ws-create-bind-row">
+                  <div className="ws-create-bind-panel is-half">
+                    <div className="ws-create-bind-head">本体对象类型</div>
+                    <div className="ws-create-bind-body" data-testid="create-objtypes">
+                      {OBJ_GROUPS.map((g) => (
+                        <div key={g.title}>
+                          <div className="ws-objtype-group-title">{g.title}</div>
+                          {g.items.map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              className={
+                                objectType === item.id ? "ws-objtype-node is-selected" : "ws-objtype-node"
+                              }
+                              style={{ width: "100%", border: "none", background: "transparent", textAlign: "left" }}
+                              data-testid={`create-obj-${item.id}`}
+                              onClick={() => selectObject(item.id)}
+                            >
+                              {item.label}
+                            </button>
+                          ))}
+                        </div>
+                      ))}
                     </div>
+                  </div>
+
+                  <div className="ws-create-bind-panel is-flex">
+                    <div className="ws-create-bind-head">{objectType} 属性列表</div>
+                    <div style={{ padding: 8 }}>
+                      <div style={{ fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 6 }}>
+                        勾选要展示的属性（自动绑定到 Widget）：
+                      </div>
+                      <div data-testid="create-props">
+                        {OBJ_PROPS[objectType].map((p) => (
+                          <button
+                            key={p.name}
+                            type="button"
+                            className={boundProps.includes(p.name) ? "ws-prop-chip is-bound" : "ws-prop-chip"}
+                            onClick={() => toggleProp(p.name)}
+                          >
+                            {p.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ padding: "8px 12px", borderTop: "0.5px solid var(--aos-border)" }}>
+                      <div style={{ fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 4 }}>
+                        初始过滤条件（选填）
+                      </div>
+                      <div className="ws-create-filter-box">status != &quot;cancelled&quot;</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ws-warning-box">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path
+                      d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span>
+                    当前用户对 {objectType} 对象有读取权限。写入操作需在创建后通过 Action 配置单独授权。
+                  </span>
+                </div>
+              </section>
+            )}
+
+            {step === 3 && (
+              <section data-testid="create-panel-3">
+                <h3 className="ws-create-panel-title">模板选择</h3>
+                <p className="ws-create-panel-desc">选择起始布局模板，系统将预填充 Widget 和变量。后续可自由增删修改。</p>
+
+                <div className="ws-create-template-grid" data-testid="create-templates">
+                  {TEMPLATES.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      className={template === t.id ? "ws-template-card is-selected" : "ws-template-card"}
+                      style={{ textAlign: "left", width: "100%" }}
+                      data-testid={`create-tpl-${t.id}`}
+                      onClick={() => setTemplate(t.id)}
+                    >
+                      <TemplatePreview type={t.preview} />
+                      <div className="ws-create-template-name">{t.name}</div>
+                      <div className="ws-create-template-desc">{t.desc}</div>
+                    </button>
                   ))}
                 </div>
-              </div>
+
+                <div className="ws-create-fill-box">
+                  <div className="ws-create-fill-title">选中模板将预填充：</div>
+                  <div className="ws-create-fill-body" style={{ whiteSpace: "pre-line" }}>
+                    {selectedTemplate.fillHint}
+                  </div>
+                </div>
+              </section>
             )}
 
-            {/* 选中模板预填充信息 */}
-            {template !== "copy" && selectedTemplate && !selectedTemplate.blank && (
-              <div
-                style={{
-                  marginTop: 16,
-                  padding: 12,
-                  borderRadius: 2,
-                  background: "var(--aos-accent-light)",
-                  border: "1px solid var(--aos-green-border)",
-                }}
-              >
-                <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-green-700)", marginBottom: 4 }}>
-                  选中模板将预填充：
+            {step === 4 && (
+              <section data-testid="create-panel-4">
+                <h3 className="ws-create-panel-title">确认创建</h3>
+                <p className="ws-create-panel-desc">请检查以下信息，确认后将创建 Module 并进入画布编辑器。</p>
+
+                <div className="ws-create-summary">
+                  <div className="ws-create-summary-head">Module 信息汇总</div>
+                  <div className="ws-create-summary-body">
+                    <table className="ws-create-summary-table" data-testid="create-summary">
+                      <tbody>
+                        <tr>
+                          <td>模块名称</td>
+                          <td style={{ fontWeight: 500 }}>{appName.trim() || "未填写"}</td>
+                        </tr>
+                        <tr>
+                          <td>模块标识</td>
+                          <td style={{ fontFamily: "monospace", color: "var(--aos-text-secondary)" }}>
+                            {slug || "—"}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>模块图标</td>
+                          <td>{selectedIcon.label}</td>
+                        </tr>
+                        <tr>
+                          <td>业务域</td>
+                          <td>
+                            <span className="ws-create-badge-domain">{domain}</span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>数据绑定</td>
+                          <td>
+                            {objLabel} · {boundProps.length} 个属性
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>选中模板</td>
+                          <td>{selectedTemplate.name}</td>
+                        </tr>
+                        <tr>
+                          <td>创建后状态</td>
+                          <td>
+                            <span className="ws-create-badge-draft">Draft</span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <div style={{ fontSize: 11, color: "var(--aos-green-700)", lineHeight: 1.6 }}>
-                  {selectedTemplate.id === "dashboard" &&
-                    "4 个统计卡片 Widget + 1 个趋势图 + 1 个饼图 · 3 个 Variables"}
-                  {selectedTemplate.id === "form" &&
-                    "1 个表单 Widget + 校验规则 + 提交按钮 · 2 个 Variables"}
-                  {selectedTemplate.id === "table" &&
-                    "1 个筛选栏 + 1 个数据表格 + 1 个详情面板 · 2 个 Variables · 1 个 Event"}
+
+                <div className="ws-blue-box">
+                  <div className="ws-blue-box-title">创建后将自动执行：</div>
+                  <ul style={{ listStyle: "none", padding: 0, margin: 0, lineHeight: 1.8 }}>
+                    <li>1. 创建 Module 资源（含 1 个 Layout + Widget）</li>
+                    <li>2. 创建 Variables 并绑定 ObjectSet / Object</li>
+                    <li>3. 创建 Event Handler（如模板需要）</li>
+                    <li>4. 跳转到画布编辑器（可立即编辑界面）</li>
+                  </ul>
                 </div>
-              </div>
+              </section>
             )}
 
-            <StepFooter onPrev={() => setStep(1)} onNext={() => canNext2 && setStep(3)} nextDisabled={!canNext2} />
-          </BpCard>
-        )}
-
-        {/* Step 3: 确认创建 */}
-        {step === 3 && (
-          <BpCard title="Step 3 · 确认创建" subtitle="请检查以下信息，确认后将创建 Module 并进入画布编辑器。">
-            <div
-              style={{
-                border: "1px solid var(--aos-border)",
-                borderRadius: 2,
-                overflow: "hidden",
-                background: "var(--aos-surface)",
-                marginBottom: 16,
-              }}
-            >
-              <div
-                style={{
-                  padding: "10px 16px",
-                  background: "var(--aos-surface-hover)",
-                  borderBottom: "1px solid var(--aos-border)",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  color: "var(--aos-text)",
-                }}
-              >
-                模块信息汇总
+            {/* 底部操作栏 — 对齐视觉稿：下一步始终可点 */}
+            <div className="ws-create-footer">
+              <div className="ws-create-step-indicator" data-testid="create-step-indicator">
+                步骤 {step} / 4
               </div>
-              <div style={{ padding: 16 }}>
-                <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }} data-testid="create-summary">
-                  <tbody>
-                    <SummaryRow label="模块名称" value={appName || "未设置"} />
-                    <SummaryRow label="模块标识" value={slug || "未生成"} mono />
-                    <SummaryRow
-                      label="分类"
-                      value={
-                        <span
-                          style={{
-                            padding: "2px 8px",
-                            background: `${selectedCategory?.color || "var(--aos-text-secondary)"}15`,
-                            color: selectedCategory?.color || "var(--aos-text-secondary)",
-                            borderRadius: 4,
-                            fontSize: 11,
-                            fontWeight: 500,
-                          }}
-                        >
-                          {selectedCategory?.name || "未选择"}
-                        </span>
-                      }
-                    />
-                    <SummaryRow label="描述" value={description || "未填写"} />
-                    <SummaryRow
-                      label="模板"
-                      value={template === "copy" ? `从「${selectedCopyModule?.name || "未选择"}」复制` : selectedTemplate?.name || "未选择"}
-                    />
-                    <SummaryRow
-                      label="创建后状态"
-                      value={
-                        <span
-                          style={{
-                            padding: "2px 8px",
-                            background: "var(--aos-amber-bg)",
-                            color: "var(--aos-amber-700)",
-                            borderRadius: 4,
-                            fontSize: 11,
-                          }}
-                        >
-                          Draft
-                        </span>
-                      }
-                    />
-                  </tbody>
-                </table>
+              <div className="ws-create-footer-actions">
+                {step === 1 ? (
+                  <Link to="/workshop" className="ws-back-btn" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+                    取消创建
+                  </Link>
+                ) : (
+                  <button type="button" className="ws-back-btn" data-testid="create-btn-back" onClick={() => goStep(step - 1)}>
+                    ← 上一步
+                  </button>
+                )}
+                {step < 4 ? (
+                  <button
+                    type="button"
+                    className="ws-next-btn"
+                    data-testid="create-btn-next"
+                    onClick={() => goStep(step + 1)}
+                  >
+                    下一步 →
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="ws-finish-btn"
+                    data-testid="create-btn-finish"
+                    disabled={creating}
+                    onClick={() => void handleCreate()}
+                  >
+                    {creating ? "创建中…" : "创建并进入编辑 →"}
+                  </button>
+                )}
               </div>
             </div>
-
-            <div
-              style={{
-                padding: 12,
-                borderRadius: 2,
-                background: "var(--aos-accent-light)",
-                border: "1px solid var(--aos-accent-border)",
-              }}
-            >
-              <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-blue-title)", marginBottom: 6 }}>
-                创建后将自动执行：
-              </div>
-              <ul style={{ fontSize: 11, color: "var(--aos-blue-600)", lineHeight: 1.8, listStyle: "none", padding: 0, margin: 0 }}>
-                <li>1. 创建 Module 资源（含 Layout + Widget）</li>
-                <li>2. 初始化 Variables 并绑定数据源</li>
-                <li>3. 创建 Event Handler（如有）</li>
-                <li>4. 跳转到画布编辑器（可立即编辑界面）</li>
-              </ul>
-            </div>
-
-            <StepFooter
-              onPrev={() => setStep(2)}
-              onNext={handleCreate}
-              nextDisabled={creating || !!createdId}
-              nextLabel={creating ? "创建中…" : createdId ? "已创建 ✓" : "创建并进入编辑 →"}
-              center
-            />
-          </BpCard>
-        )}
+          </div>
+        </div>
       </div>
     </PageChrome>
   );
@@ -593,132 +612,83 @@ export function WorkshopCreatePage() {
  * 子组件
  * ========================================================================== */
 
-function TemplatePreview({ type, blank }: { type?: string; blank?: boolean }) {
-  if (blank) {
+function IconSvg({ id, selected }: { id: IconId; selected: boolean }) {
+  const stroke = selected ? "#0F6E56" : "#444441";
+  const common = { width: 20, height: 20, viewBox: "0 0 24 24", fill: "none", stroke, strokeWidth: 1.5 } as const;
+  switch (id) {
+    case "box":
+      return (
+        <svg {...common}>
+          <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "chart":
+      return (
+        <svg {...common}>
+          <path d="M3 3v18h18M9 17V9M15 17V5M21 17v-4" strokeLinecap="round" />
+        </svg>
+      );
+    case "alert":
+      return (
+        <svg {...common}>
+          <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "users":
+      return (
+        <svg {...common}>
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "globe":
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="10" />
+          <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "truck":
+      return (
+        <svg {...common}>
+          <path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="5.5" cy="18.5" r="2.5" />
+          <circle cx="18.5" cy="18.5" r="2.5" />
+        </svg>
+      );
+  }
+}
+
+function TemplatePreview({ type }: { type: TemplateDef["preview"] }) {
+  if (type === "blank") {
     return (
-      <div
-        style={{
-          width: "100%",
-          height: 80,
-          borderRadius: 4,
-          background: "var(--aos-surface-hover)",
-          marginBottom: 10,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          border: "1px dashed var(--aos-border-strong)",
-        }}
-      >
-        <span style={{ fontSize: 11, color: "var(--aos-faint)" }}>空白画布</span>
+      <div className="ws-template-preview is-blank">
+        <span className="ws-template-preview-blank-text">空白画布</span>
       </div>
     );
   }
   if (type === "table") {
     return (
-      <div
-        style={{ width: "100%", height: 80, borderRadius: 4, background: "var(--aos-surface-hover)", marginBottom: 10, position: "relative", overflow: "hidden" }}
-      >
-        <div style={{ position: "absolute", top: 6, left: 6, right: 6, height: 16, background: "var(--aos-border-strong)", borderRadius: 2 }} />
-        <div style={{ position: "absolute", top: 28, left: 6, right: 6, bottom: 6, background: "var(--aos-border-strong)", borderRadius: 2 }} />
+      <div className="ws-template-preview">
+        <div style={{ position: "absolute", top: 6, left: 6, right: 6, height: 18, background: "var(--aos-border-strong)", borderRadius: 2 }} />
+        <div style={{ position: "absolute", top: 30, left: 6, right: 6, bottom: 6, background: "var(--aos-border-strong)", borderRadius: 2 }} />
       </div>
     );
   }
   if (type === "dashboard") {
     return (
-      <div
-        style={{ width: "100%", height: 80, borderRadius: 4, background: "var(--aos-surface-hover)", marginBottom: 10, position: "relative", overflow: "hidden" }}
-      >
-        <div style={{ position: "absolute", top: 6, left: 6, width: 28, height: 24, background: "var(--aos-border-strong)", borderRadius: 2 }} />
-        <div style={{ position: "absolute", top: 6, left: 40, width: 28, height: 24, background: "var(--aos-border-strong)", borderRadius: 2 }} />
-        <div style={{ position: "absolute", top: 6, left: 74, width: 28, height: 24, background: "var(--aos-border-strong)", borderRadius: 2 }} />
-        <div style={{ position: "absolute", top: 36, left: 6, right: 6, height: 32, background: "var(--aos-border-strong)", borderRadius: 2 }} />
+      <div className="ws-template-preview">
+        <div style={{ position: "absolute", top: 6, left: 6, width: 32, height: 28, background: "var(--aos-border-strong)", borderRadius: 2 }} />
+        <div style={{ position: "absolute", top: 6, left: 44, width: 32, height: 28, background: "var(--aos-border-strong)", borderRadius: 2 }} />
+        <div style={{ position: "absolute", top: 6, left: 82, width: 32, height: 28, background: "var(--aos-border-strong)", borderRadius: 2 }} />
+        <div style={{ position: "absolute", top: 40, left: 6, right: 6, height: 28, background: "var(--aos-border-strong)", borderRadius: 2 }} />
       </div>
     );
   }
-  if (type === "form") {
-    return (
-      <div
-        style={{ width: "100%", height: 80, borderRadius: 4, background: "var(--aos-surface-hover)", marginBottom: 10, position: "relative", overflow: "hidden" }}
-      >
-        <div style={{ position: "absolute", top: 8, left: 8, right: 8, height: 12, background: "var(--aos-border-strong)", borderRadius: 2 }} />
-        <div style={{ position: "absolute", top: 26, left: 8, right: 8, height: 12, background: "var(--aos-border-strong)", borderRadius: 2 }} />
-        <div style={{ position: "absolute", top: 44, left: 8, right: 8, height: 12, background: "var(--aos-border-strong)", borderRadius: 2 }} />
-        <div style={{ position: "absolute", top: 62, left: 8, width: 40, height: 12, background: "var(--aos-text-secondary)", borderRadius: 2 }} />
-      </div>
-    );
-  }
-  return <div style={{ width: "100%", height: 80, borderRadius: 4, background: "var(--aos-surface-hover)", marginBottom: 10 }} />;
-}
-
-function FormGrid({ children }: { children: React.ReactNode }) {
-  return <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>{children}</div>;
-}
-
-function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label style={{ fontSize: 12, color: "var(--aos-text)", fontWeight: 500 }}>
-      {children}
-      {required ? <span style={{ color: "var(--aos-red)", marginLeft: 2 }}>*</span> : null}
-    </label>
-  );
-}
-
-function SummaryRow({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) {
-  return (
-    <tr style={{ borderBottom: "1px solid var(--aos-divider)" }}>
-      <td style={{ padding: "6px 0", color: "var(--aos-faint)", width: 100, verticalAlign: "top" }}>{label}</td>
-      <td style={{ padding: "6px 0", color: "var(--aos-text)", fontWeight: 500, fontFamily: mono ? "monospace" : "inherit" }}>
-        {value}
-      </td>
-    </tr>
-  );
-}
-
-function StepFooter({
-  onPrev,
-  onNext,
-  onCancel,
-  nextLabel = "下一步 →",
-  nextDisabled,
-  center,
-}: {
-  onPrev?: () => void;
-  onNext: () => void;
-  onCancel?: () => void;
-  nextLabel?: string;
-  nextDisabled?: boolean;
-  center?: boolean;
-}) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        gap: 8,
-        justifyContent: center ? "center" : "flex-end",
-        marginTop: 20,
-        paddingTop: 12,
-        borderTop: "1px solid var(--aos-border)",
-      }}
-    >
-      {onCancel && (
-        <button type="button" className="btn" onClick={onCancel}>
-          取消
-        </button>
-      )}
-      {onPrev && (
-        <button type="button" className="btn" onClick={onPrev}>
-          ← 上一步
-        </button>
-      )}
-      <button
-        type="button"
-        className="btn btn-primary"
-        onClick={onNext}
-        disabled={nextDisabled}
-        style={{ opacity: nextDisabled ? 0.5 : 1 }}
-      >
-        {nextLabel}
-      </button>
+    <div className="ws-template-preview">
+      <div style={{ position: "absolute", top: 6, left: 6, width: 40, bottom: 6, background: "var(--aos-border-strong)", borderRadius: 2 }} />
+      <div style={{ position: "absolute", top: 6, left: 52, right: 6, height: 32, background: "var(--aos-border-strong)", borderRadius: 2 }} />
+      <div style={{ position: "absolute", top: 44, left: 52, right: 6, bottom: 6, background: "var(--aos-border-strong)", borderRadius: 2 }} />
     </div>
   );
 }

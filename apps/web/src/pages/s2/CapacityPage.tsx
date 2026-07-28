@@ -304,6 +304,12 @@ export function CapacityPage() {
                     </div>
                   </div>
                 </div>
+                <div style={{ marginTop: 16 }}>
+                  <a href="#" style={{ display: "inline-flex", alignItems: "center", fontSize: 13, fontWeight: 500, color: "var(--aos-indigo-600)", textDecoration: "none" }}>
+                    管理
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ marginLeft: 4 }}><path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </a>
+                </div>
               </div>
 
               <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 20 }}>
@@ -317,6 +323,12 @@ export function CapacityPage() {
                       <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0", lineHeight: 1.5 }}>管理所有用户范围的 LLM 使用限制，包括 AIP/IDE、AIP Analyst、Claude Code 等应用。</p>
                     </div>
                   </div>
+                </div>
+                <div style={{ marginTop: 16 }}>
+                  <a href="#" style={{ display: "inline-flex", alignItems: "center", fontSize: 13, fontWeight: 500, color: "var(--aos-indigo-600)", textDecoration: "none" }}>
+                    管理
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ marginLeft: 4 }}><path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </a>
                 </div>
               </div>
             </div>

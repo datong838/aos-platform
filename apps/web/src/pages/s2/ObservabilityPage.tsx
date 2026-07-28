@@ -336,9 +336,9 @@ export function ObservabilityPage() {
               fontSize: 13,
               fontWeight: tab === t.key ? 500 : 400,
               border: "none",
-              borderBottom: tab === t.key ? "2px solid var(--aos-indigo)" : "2px solid transparent",
+              borderBottom: tab === t.key ? "2px solid var(--aos-indigo-600)" : "2px solid transparent",
               background: "none",
-              color: tab === t.key ? "var(--aos-indigo)" : "var(--aos-muted)",
+              color: tab === t.key ? "var(--aos-indigo-600)" : "var(--aos-muted)",
               cursor: "pointer",
               marginBottom: "-1px",
             }}
@@ -415,9 +415,9 @@ function Toolbar(props: {
               padding: "4px 10px",
               fontSize: 12,
               borderRadius: 2,
-              border: props.range === r ? "1px solid var(--aos-indigo)" : "1px solid var(--aos-border)",
+              border: props.range === r ? "1px solid var(--aos-indigo-600)" : "1px solid var(--aos-border)",
               background: props.range === r ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
-              color: props.range === r ? "var(--aos-indigo)" : "var(--aos-muted)",
+              color: props.range === r ? "var(--aos-indigo-600)" : "var(--aos-muted)",
               cursor: "pointer",
               fontWeight: props.range === r ? 500 : 400,
             }}
@@ -507,7 +507,7 @@ function OverviewPanel(props: {
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
         <Panel title="实时趋势 · 请求量 / 延迟">
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <Sparkline svg={props.requestsSpark} color="var(--aos-indigo)" label="requests" />
+            <Sparkline svg={props.requestsSpark} color="var(--aos-indigo-600)" label="requests" />
             <Sparkline svg={props.latencySpark} color="var(--color-info)" label="latency" />
           </div>
         </Panel>
@@ -563,7 +563,7 @@ function ServiceTopology() {
       })}
       {nodes.map((n) => (
         <g key={n.id}>
-          <circle cx={n.x} cy={n.y} r={6} fill="var(--aos-indigo)" />
+          <circle cx={n.x} cy={n.y} r={6} fill="var(--aos-indigo-600)" />
           <text x={n.x} y={n.y + 12} fontSize={5} fill="var(--aos-text-secondary)" textAnchor="middle">
             {n.label}
           </text>
@@ -697,9 +697,9 @@ function MetricsPanel(props: { series: MetricSeries[] }) {
               padding: "6px 12px",
               fontSize: 12,
               borderRadius: 2,
-              border: selected === s.name ? "1px solid var(--aos-indigo)" : "1px solid var(--aos-border)",
+              border: selected === s.name ? "1px solid var(--aos-indigo-600)" : "1px solid var(--aos-border)",
               background: selected === s.name ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
-              color: selected === s.name ? "var(--aos-indigo)" : "var(--aos-muted)",
+              color: selected === s.name ? "var(--aos-indigo-600)" : "var(--aos-muted)",
               cursor: "pointer",
             }}
           >
@@ -731,7 +731,7 @@ function BarChart(props: { values: number[] }) {
           style={{
             flex: 1,
             height: `${(v / max) * 100}%`,
-            background: "linear-gradient(180deg, var(--aos-indigo), var(--aos-indigo))",
+            background: "linear-gradient(180deg, var(--aos-indigo-600), var(--aos-indigo-600))",
             borderRadius: 3,
           }}
         />
@@ -773,9 +773,9 @@ function AlertsPanel(props: {
               padding: "4px 10px",
               fontSize: 12,
               borderRadius: 2,
-              border: props.filter === f ? "1px solid var(--aos-indigo)" : "1px solid var(--aos-border)",
+              border: props.filter === f ? "1px solid var(--aos-indigo-600)" : "1px solid var(--aos-border)",
               background: props.filter === f ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
-              color: props.filter === f ? "var(--aos-indigo)" : "var(--aos-muted)",
+              color: props.filter === f ? "var(--aos-indigo-600)" : "var(--aos-muted)",
               cursor: "pointer",
             }}
           >
@@ -880,7 +880,7 @@ const btnPrimary: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 500,
   color: "var(--text-on-brand)",
-  background: "var(--aos-indigo)",
+  background: "var(--aos-indigo-600)",
   border: "none",
   borderRadius: 2,
   cursor: "pointer",
@@ -899,7 +899,7 @@ const btnSecondary: React.CSSProperties = {
 const btnXS: React.CSSProperties = {
   padding: "3px 8px",
   fontSize: 11,
-  color: "var(--aos-indigo)",
+  color: "var(--aos-indigo-600)",
   background: "var(--aos-indigo-bg)",
   border: "none",
   borderRadius: 4,
