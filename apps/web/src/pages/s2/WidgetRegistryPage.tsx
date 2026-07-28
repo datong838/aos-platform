@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { PageChrome } from "../../components/PageChrome";
-import { BpToolbar } from "../../components/bp/BpToolbar";
 import { apiGet } from "../../api/client";
 
 type WidgetItem = {
@@ -233,18 +233,8 @@ export function WidgetRegistryPage() {
   ];
 
   return (
-    <PageChrome title="组件注册表" lede="画布编辑器中所有可用 Widget 的统一目录">
+    <PageChrome title="组件注册表" lede="画布编辑器中所有可用 Widget 的统一目录。来源分三类：平台内置 / 市场安装 / 代码开发。安装新组件后画布编辑器自动发现并列出。">
       <div className="wr-page">
-        <div className="wr-header">
-          <h1>组件注册表</h1>
-          <p>画布编辑器中所有可用 Widget 的统一目录。来源分三类：平台内置 / 市场安装 / 代码开发。安装新组件后画布编辑器自动发现并列出。</p>
-        </div>
-
-        <BpToolbar
-          search={{ value: query, onChange: setQuery, placeholder: "搜索组件名称或描述…" }}
-          count={filtered.length}
-        />
-
         <div className="wr-tabs">
           {sourceTabs.map((tab) => (
             <button
@@ -277,7 +267,7 @@ export function WidgetRegistryPage() {
               }}
             >
               <div className="wr-card-top">
-                <div className="wr-icon">
+                <div className={`wr-icon wr-icon-${w.source}`}>
                   <WidgetIcon name={w.icon} />
                 </div>
                 <span className={`wr-source-tag ${w.source}`}>
@@ -299,6 +289,26 @@ export function WidgetRegistryPage() {
             </div>
           )}
         </div>
+
+        {/* 底部创建入口 — 对齐视觉稿 */}
+        <div className="wr-callout">
+          <div className="wr-callout-actions">
+            <Link to="/data/code-repos" className="wr-callout-primary">
+              + 从代码仓库创建自定义组件
+            </Link>
+            <span className="wr-callout-sep">或</span>
+            <button
+              type="button"
+              className="wr-callout-secondary"
+              onClick={() => undefined}
+            >
+              浏览组件市场
+            </button>
+          </div>
+          <p className="wr-callout-hint">
+            自定义组件使用 React + TypeScript + Workshop Widget SDK 开发，提交到代码仓库后自动注册到本页面
+          </p>
+        </div>
       </div>
 
       {selected && (
@@ -314,7 +324,7 @@ export function WidgetRegistryPage() {
           <div className="wr-modal">
             <div className="wr-modal-header">
               <div className="wr-modal-title-row">
-                <div className="wr-modal-icon">
+                <div className={`wr-modal-icon wr-icon-${selected.source}`}>
                   <WidgetIcon name={selected.icon} />
                 </div>
                 <div>

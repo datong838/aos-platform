@@ -738,7 +738,7 @@ body,
 
 .page-chrome h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--aos-text);
   letter-spacing: -0.01em;
@@ -6998,38 +6998,21 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
 /* ===== Widget Registry Page (wr-*) ===== */
 
 .wr-page {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px;
-}
-
-.wr-header {
-  margin-bottom: 20px;
-}
-.wr-header h1 {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--aos-text);
-  margin: 0 0 6px 0;
-}
-.wr-header p {
-  font-size: 13px;
-  color: var(--aos-text-secondary);
-  margin: 0;
-  line-height: 1.5;
+  padding: 0;
 }
 
 .wr-tabs {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 16px;
-  padding: 0 24px;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 12px 24px;
 }
 .wr-tab {
-  padding: 6px 12px;
+  padding: 4px 12px;
   border-radius: 8px;
   font-size: 12px;
+  line-height: 16px;
   font-weight: 400;
   border: 1px solid var(--aos-border-strong);
   background: var(--aos-card);
@@ -7041,8 +7024,8 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
   background: var(--aos-surface-hover);
 }
 .wr-tab.is-active {
-  background: var(--aos-accent);
-  border-color: var(--aos-accent);
+  background: var(--aos-indigo-600);
+  border-color: var(--aos-indigo-600);
   color: var(--text-on-brand);
   font-weight: 500;
 }
@@ -7092,6 +7075,19 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
   background: var(--aos-accent-light);
   color: var(--aos-accent);
 }
+/* 按来源分色 — 对齐视觉稿 indigo/amber/emerald */
+.wr-icon-builtin {
+  background: var(--aos-indigo-50);
+  color: var(--aos-indigo-600);
+}
+.wr-icon-market {
+  background: var(--aos-amber-bg);
+  color: var(--aos-amber-600);
+}
+.wr-icon-custom {
+  background: var(--aos-green-50);
+  color: var(--aos-green-600);
+}
 .wr-icon svg { width: 20px; height: 20px; }
 
 .wr-source-tag {
@@ -7131,6 +7127,64 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
   align-items: center;
   gap: 6px;
   font-size: 10px;
+  color: var(--aos-text-tertiary);
+}
+
+/* 底部创建入口 callout — 对齐视觉稿 */
+.wr-callout {
+  margin: 0 24px 24px;
+  border: 1px dashed var(--aos-border-strong);
+  border-radius: 12px;
+  background: var(--aos-surface-hover);
+  padding: 24px;
+  text-align: center;
+}
+.wr-callout-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.wr-callout-primary {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 16px;
+  border-radius: 8px;
+  background: var(--aos-indigo-600);
+  color: var(--text-on-brand);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.wr-callout-primary:hover {
+  opacity: 0.9;
+}
+.wr-callout-sep {
+  font-size: 13px;
+  color: var(--aos-text-tertiary);
+}
+.wr-callout-secondary {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--aos-border-strong);
+  background: var(--aos-card);
+  color: var(--aos-text-secondary);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.wr-callout-secondary:hover {
+  background: var(--aos-surface-hover);
+}
+.wr-callout-hint {
+  margin: 12px 0 0;
+  font-size: 12px;
   color: var(--aos-text-tertiary);
 }
 
@@ -7175,6 +7229,15 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
   display: flex;
   align-items: center;
   justify-content: center;
+}
+/* modal icon 也按 source 分色 */
+.wr-modal-icon.wr-icon-market {
+  background: var(--aos-amber-bg);
+  color: var(--aos-amber-600);
+}
+.wr-modal-icon.wr-icon-custom {
+  background: var(--aos-green-50);
+  color: var(--aos-green-600);
 }
 .wr-modal-icon svg { width: 20px; height: 20px; }
 .wr-modal-title {
