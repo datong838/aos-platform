@@ -250,7 +250,8 @@ export function WorkshopListPage() {
 
   return (
     <PageChrome title="工作台 · 应用列表" lede="按业务场景打开模块">
-      <div className="max-w-[1100px] mx-auto space-y-6 py-6">
+      {/* 226-S1: 去掉 max-width 限宽，撑满 .p-content */}
+      <div className="space-y-6 py-6">
         {/* 顶部标题区 */}
         <div className="flex items-center justify-between">
           <div>

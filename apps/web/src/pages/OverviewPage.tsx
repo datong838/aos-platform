@@ -29,22 +29,25 @@ export function OverviewPage() {
       titleTone="brand"
       lede="日常从工作台进入；建设路径：连接器 → 管道 → 数据集 → OKF / 本体 → AIP → 工作台。"
     >
-      <BpToolbar>
-        <button type="button" className="btn" onClick={reload} disabled={loading}>
-          {loading ? "刷新中…" : "刷新指标"}
-        </button>
-        <Link to="/data" className="btn-nav">
-          数据连接 →
-        </Link>
-      </BpToolbar>
+      {/* 226-S1: 首页按视觉稿限宽 900px 居中 */}
+      <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+        <BpToolbar>
+          <button type="button" className="btn" onClick={reload} disabled={loading}>
+            {loading ? "刷新中…" : "刷新指标"}
+          </button>
+          <Link to="/data" className="btn-nav">
+            数据连接 →
+          </Link>
+        </BpToolbar>
 
-      {m && m.workOrders === 0 && (
-        <BpBanner tone="warn">
-          暂无工单 · 请到 <Link to="/data">数据连接</Link> 新建数据源并完成同步后再使用收件箱 / 智能助手。
-        </BpBanner>
-      )}
+        {m && m.workOrders === 0 && (
+          <BpBanner tone="warn">
+            暂无工单 · 请到 <Link to="/data">数据连接</Link> 新建数据源并完成同步后再使用收件箱 / 智能助手。
+          </BpBanner>
+        )}
 
-      <OverviewDomainGrid metrics={m} />
+        <OverviewDomainGrid metrics={m} />
+      </div>
     </PageChrome>
   );
 }

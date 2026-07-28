@@ -193,7 +193,8 @@ export function WorkshopCreatePage() {
 
   return (
     <PageChrome title="创建模块" lede="3 步创建新的 Workshop 应用模块">
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "24px 0" }}>
+      {/* 226-S1: 去掉 max-width 限宽 */}
+      <div style={{ padding: "24px 0" }}>
         {/* 顶部步骤条 */}
         <div style={{ marginBottom: 32 }}>
           <BpStepper steps={STEPS} current={step - 1} />

@@ -248,7 +248,8 @@ export function RiskAlertPage() {
 
   return (
     <PageChrome title="风险告警" lede="实时监控业务风险 · 快速响应处置">
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 0" }}>
+      {/* 226-S1: 去掉 max-width 限宽 */}
+      <div style={{ padding: "24px 0" }}>
         {/* 顶部统计卡片 */}
         <div
           style={{
