@@ -369,15 +369,8 @@ export function EventsPage() {
   const paramFields = useMemo(() => getParamFields(triggerId, actionId), [triggerId, actionId]);
 
   return (
-    <PageChrome title="事件配置" lede="Widget 事件绑定、触发器与动作配置 · 5 步创建向导">
+    <PageChrome title="事件配置" lede="Widget 事件绑定、变量写入与幂等键配置">
       <div className="st-page">
-        <div className="vr-header">
-          <div>
-            <h1>事件配置</h1>
-            <p>Widget 事件绑定、触发器与动作配置 · 5 步创建向导</p>
-          </div>
-        </div>
-
         <BpToolbar
           search={{ value: query, onChange: setQuery, placeholder: "搜索事件…" }}
           actions={
@@ -419,7 +412,7 @@ export function EventsPage() {
                       {e.description && <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>{e.description}</div>}
                     </td>
                     <td style={{ padding: "12px 16px" }}>
-                      <span style={{ fontSize: 12, color: "#3B82F6" }}>{TRIGGER_LABEL[e.triggerId]}</span>
+                      <span style={{ fontSize: 12, color: "var(--aos-accent)" }}>{TRIGGER_LABEL[e.triggerId]}</span>
                     </td>
                     <td style={{ padding: "12px 16px" }}>
                       <span style={{ fontSize: 12, color: "#10B981" }}>{ACTION_LABEL[e.actionId]}</span>
@@ -517,7 +510,7 @@ export function EventsPage() {
                       width: 22,
                       height: 22,
                       borderRadius: "50%",
-                      background: isActive ? "#3B82F6" : "#E5E7EB",
+                      background: isActive ? "var(--aos-accent)" : "#E5E7EB",
                       color: isActive ? "#fff" : "#9CA3AF",
                       fontSize: 11,
                       fontWeight: 600,
@@ -529,7 +522,7 @@ export function EventsPage() {
                     </span>
                     <span style={{
                       fontSize: 11,
-                      color: isActive ? "#3B82F6" : "#9CA3AF",
+                      color: isActive ? "var(--aos-accent)" : "#9CA3AF",
                       fontWeight: step === s.n ? 600 : 400,
                       marginRight: 4,
                     }}>
@@ -583,7 +576,7 @@ export function EventsPage() {
                         style={{
                           padding: 14,
                           borderRadius: 2,
-                          border: `1.5px solid ${triggerId === t.id ? "#3B82F6" : "#E5E7EB"}`,
+                          border: `1.5px solid ${triggerId === t.id ? "var(--aos-accent)" : "#E5E7EB"}`,
                           background: triggerId === t.id ? "#EFF6FF" : "#fff",
                           cursor: "pointer",
                           transition: "all 0.15s",
@@ -591,8 +584,8 @@ export function EventsPage() {
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                           <span style={{ fontSize: 18 }}>{t.icon}</span>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: triggerId === t.id ? "#3B82F6" : "#111827" }}>{t.name}</span>
-                          {triggerId === t.id && <span style={{ marginLeft: "auto", color: "#3B82F6", fontSize: 14 }}>●</span>}
+                          <span style={{ fontSize: 13, fontWeight: 600, color: triggerId === t.id ? "var(--aos-accent)" : "#111827" }}>{t.name}</span>
+                          {triggerId === t.id && <span style={{ marginLeft: "auto", color: "var(--aos-accent)", fontSize: 14 }}>●</span>}
                         </div>
                         <div style={{ fontSize: 11, color: "#6B7280" }}>{t.desc}</div>
                       </div>
@@ -737,7 +730,7 @@ export function EventsPage() {
                   }}>
                     <div><strong style={{ color: "#374151", display: "inline-block", width: 100 }}>事件名称：</strong><span style={{ color: "#111827", fontWeight: 600 }}>{name}</span></div>
                     {description && <div><strong style={{ color: "#374151", display: "inline-block", width: 100 }}>描述：</strong><span style={{ color: "#6B7280" }}>{description}</span></div>}
-                    <div><strong style={{ color: "#374151", display: "inline-block", width: 100 }}>触发器：</strong><span style={{ color: "#3B82F6", fontWeight: 600 }}>{TRIGGER_LABEL[triggerId!]}</span></div>
+                    <div><strong style={{ color: "#374151", display: "inline-block", width: 100 }}>触发器：</strong><span style={{ color: "var(--aos-accent)", fontWeight: 600 }}>{TRIGGER_LABEL[triggerId!]}</span></div>
                     <div><strong style={{ color: "#374151", display: "inline-block", width: 100 }}>动作：</strong><span style={{ color: "#10B981", fontWeight: 600 }}>{ACTION_LABEL[actionId!]}</span></div>
                     {paramFields.length > 0 && (
                       <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid #E5E7EB" }}>
@@ -821,7 +814,7 @@ const btnPrimary: React.CSSProperties = {
   fontWeight: 600,
   border: "none",
   borderRadius: 2,
-  background: "#3B82F6",
+  background: "var(--aos-accent)",
   color: "#fff",
   cursor: "pointer",
 };

@@ -272,7 +272,7 @@ export function VariablesPage() {
                     {v.isSystem ? (
                       <span style={{ color: "#9CA3AF", fontSize: 10 }}>系统变量</span>
                     ) : (
-                      <button style={{ color: "#4F46E5", fontSize: 11, textDecoration: "underline", background: "none", border: "none", cursor: "pointer" }}>
+                      <button style={{ color: "var(--aos-indigo-600)", fontSize: 11, textDecoration: "underline", background: "none", border: "none", cursor: "pointer" }}>
                         编辑
                       </button>
                     )}
