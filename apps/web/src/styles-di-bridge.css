@@ -251,3 +251,50 @@
 .di-page .hover\:shadow-sm:hover { box-shadow: 0 1px 2px rgba(0,0,0,.05); }
 .di-page .focus\:border-blue-400:focus { border-color: #60A5FA; }
 .di-page button.border { background: transparent; }
+
+/* ===== W3-A3 · Draft 数据源角标 ===== */
+.di-page .di-source-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.di-page .di-source-banner--demo {
+  background: #FFFBEB;
+  border-color: #FDE68A;
+  color: #92400E;
+}
+.di-page .di-source-banner--live {
+  background: #ECFDF5;
+  border-color: #A7F3D0;
+  color: #065F46;
+}
+.di-page .di-source-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.di-page .di-source-badge--demo {
+  background: #F59E0B;
+  color: #fff;
+}
+.di-page .di-source-badge--live {
+  background: #059669;
+  color: #fff;
+}
+.di-page .di-source-banner__text {
+  opacity: 0.95;
+}
+.di-page button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

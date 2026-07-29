@@ -13,6 +13,10 @@ import {
   ACTION_COLORS,
   statusBadgeVariant,
   extractSubmitters,
+  mapApiStatus,
+  mapApiRowToDraftItem,
+  normalizeDraftType,
+  synthesizeTimeline,
   type DraftItem,
   type DraftStatus,
   type DraftFilter,
@@ -386,5 +390,98 @@ describe("Timeline 操作映射", () => {
 
   it("reject 操作标签为「拒绝」", () => {
     expect(ACTION_LABELS.reject).toBe("拒绝");
+  });
+});
+
+/* =========================================================================
+ * 测试 11: API → UI 映射（真审批链路）
+ * ========================================================================= */
+describe("mapApiStatus", () => {
+  it("proposed 映射为 in_review（Wave-3 待审）", () => {
+    expect(mapApiStatus("proposed")).toBe("in_review");
+  });
+
+  it("合法状态原样返回", () => {
+    expect(mapApiStatus("approved")).toBe("approved");
+    expect(mapApiStatus("in_review")).toBe("in_review");
+    expect(mapApiStatus("draft")).toBe("draft");
+  });
+
+  it("未知状态降级为 draft", () => {
+    expect(mapApiStatus("weird")).toBe("draft");
+    expect(mapApiStatus(undefined)).toBe("draft");
+  });
+});
+
+describe("normalizeDraftType", () => {
+  it("识别 4 种 DraftType", () => {
+    expect(normalizeDraftType("InsightBackfill")).toBe("InsightBackfill");
+    expect(normalizeDraftType("Tool")).toBe("Tool");
+    expect(normalizeDraftType("OntologyChange")).toBe("OntologyChange");
+    expect(normalizeDraftType("Action")).toBe("Action");
+  });
+
+  it("从 actionTypeId / draft_type 启发式归类", () => {
+    expect(normalizeDraftType("CloseWorkOrder")).toBe("Action");
+    expect(normalizeDraftType("config")).toBe("OntologyChange");
+    expect(normalizeDraftType("check_inventory_tool")).toBe("Tool");
+  });
+});
+
+describe("synthesizeTimeline", () => {
+  it("in_review 含 create/submit/in_review", () => {
+    const tl = synthesizeTimeline("in_review", "张三", "2026-07-21T10:00:00Z", "2026-07-21T11:00:00Z");
+    expect(tl.map((e) => e.action)).toEqual(["create", "submit", "in_review"]);
+  });
+
+  it("approved 以 approve 收尾", () => {
+    const tl = synthesizeTimeline("approved", "李四", "2026-07-21T10:00:00Z", "2026-07-21T16:00:00Z");
+    expect(tl[tl.length - 1].action).toBe("approve");
+  });
+});
+
+describe("mapApiRowToDraftItem", () => {
+  it("映射 Wave-3 proposed 行并合成 timeline/changes", () => {
+    const item = mapApiRowToDraftItem({
+      id: "dr-1",
+      title: "关闭工单",
+      status: "proposed",
+      createdBy: "alice",
+      objectType: "WorkOrder",
+      proposed: { status: "closed", reason: "done" },
+    });
+    expect(item.id).toBe("dr-1");
+    expect(item.status).toBe("in_review");
+    expect(item.submittedBy).toBe("alice");
+    expect(item.changes.length).toBe(2);
+    expect(item.timeline.length).toBeGreaterThan(0);
+    expect(statusToTab(item.status)).toBe("pending");
+  });
+
+  it("保留后端 timeline 与 camelCase 字段", () => {
+    const item = mapApiRowToDraftItem({
+      id: "aip-draft-1",
+      title: "SLA 周报",
+      status: "draft",
+      author: "data-bot",
+      createdAt: "2026-07-21T10:00:00Z",
+      updatedAt: "2026-07-21T10:00:00Z",
+      draftType: "report",
+      content: "本周 SLA 98%",
+      timeline: [
+        { id: "t1", action: "create", actor: "data-bot", timestamp: "2026-07-21T10:00:00Z" },
+      ],
+      changes: [{ kind: "update", objectLabel: "Report", detail: "刷新指标" }],
+    });
+    expect(item.summary).toContain("SLA");
+    expect(item.type).toBe("Action");
+    expect(item.timeline).toHaveLength(1);
+    expect(item.changes[0].objectLabel).toBe("Report");
+  });
+
+  it("批准后状态归入 approved Tab", () => {
+    const item = mapApiRowToDraftItem({ id: "x", title: "t", status: "approved", createdBy: "r" });
+    expect(statusToTab(item.status)).toBe("approved");
+    expect(isTerminal(item.status)).toBe(true);
   });
 });
