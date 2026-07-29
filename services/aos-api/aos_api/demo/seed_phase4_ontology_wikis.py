@@ -8,6 +8,27 @@ log = get_logger("aos-api.demo.seed_phase4_ontology_wikis")
 
 
 _WIKIS_SPEC: list[dict] = [
+    # W3-C1C5：固定 id，便于详情/差异联调 live 路径
+    {
+        "id": "wiki-covid-homepage",
+        "title": "COVID-19 Homepage Skeleton",
+        "content": (
+            "# 订单风险分诊规范\n\n"
+            "## 风险等级定义\n"
+            "- **low**：金额 < $100，无异常因子\n"
+            "- **medium**：金额 $100~$500，1 个风险因子\n"
+            "  或跨境发货 + 新客首单\n"
+            "- **high**：金额 > $500，2+ 风险因子\n"
+            "- **critical**：金额 > $2000 或疑似欺诈\n\n"
+            "## 风险因子清单\n"
+            "1. 金额超过阈值（$500）\n"
+            "2. 频繁退款的会员（>3次/月）\n"
+            "3. 跨境发货（东南亚/中东/非洲）\n"
+            "4. 新客首单（注册 < 7 天）\n"
+        ),
+        "tags": ["covid", "homepage", "risk"],
+        "author": "大同",
+    },
     {
         "title": "Customer Object Guide",
         "content": "# Customer\n\n客户对象包含基础信息、联系信息、分类信息。\n\n## 属性\n- customer_id: 唯一标识\n- tier: 客户等级\n- annual_revenue: 年收入",
@@ -102,7 +123,7 @@ _WIKIS_SPEC: list[dict] = [
 
 
 def seed_phase4_ontology_wikis() -> int:
-    """Seed 15 wikis + create 25 additional versions. Returns total count."""
+    """Seed 16 wikis（含固定 wiki-covid-homepage）+ 额外版本历史. Returns total count."""
     eng = get_wiki_engine()
     total = 0
     wiki_ids: list[str] = []

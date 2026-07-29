@@ -141,6 +141,8 @@ class WikiEngine:
             "title_changed": title_changed,
             "from_title": v_from.title,
             "to_title": v_to.title,
+            "from_content": v_from.content,
+            "to_content": v_to.content,
             "added_lines": added,
             "removed_lines": removed,
             "added_count": len(added),

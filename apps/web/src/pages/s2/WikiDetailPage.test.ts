@@ -13,6 +13,14 @@ import {
   WIDGET_KIND_LABELS,
   WORKFLOW_NODE_TYPES,
   MOCK_WIKI_PAGE,
+  MOCK_VERSIONS,
+  mapApiWikiToPage,
+  mapApiVersions,
+  extractMainContent,
+  applyMainContent,
+  buildWikiUpdateBody,
+  localSavePage,
+  tsToIso,
   type WikiWidget,
   type WikiPage,
 } from "./WikiDetailPage";
@@ -213,5 +221,57 @@ describe("WikiDetailPage · MOCK_WIKI_PAGE", () => {
   it("has widgets and variables", () => {
     expect(MOCK_WIKI_PAGE.widgets.length).toBeGreaterThan(0);
     expect(Object.keys(MOCK_WIKI_PAGE.variables).length).toBeGreaterThan(0);
+  });
+});
+
+describe("WikiDetailPage · W3-C1 API mapping", () => {
+  it("mapApiWikiToPage builds main content widget", () => {
+    const p = mapApiWikiToPage({
+      id: "wiki-x",
+      title: "T",
+      content: "hello body",
+      author: "alice",
+      version: 3,
+      updated_at: 1700000000,
+    });
+    expect(p.id).toBe("wiki-x");
+    expect(p.version).toBe(3);
+    expect(extractMainContent(p)).toBe("hello body");
+    expect(p.updatedBy).toBe("alice");
+  });
+
+  it("mapApiVersions sorts descending", () => {
+    const vs = mapApiVersions([
+      { version: 1, message: "a", author: "u", created_at: 1 },
+      { version: 3, message: "c", author: "u", created_at: 3 },
+      { version: 2, message: "b", author: "u", created_at: 2 },
+    ]);
+    expect(vs.map((v) => v.version)).toEqual([3, 2, 1]);
+  });
+
+  it("applyMainContent / extractMainContent roundtrip", () => {
+    const p = applyMainContent(MOCK_WIKI_PAGE, "new main");
+    expect(extractMainContent(p)).toBe("new main");
+  });
+
+  it("buildWikiUpdateBody uses title and main content", () => {
+    const body = buildWikiUpdateBody(applyMainContent(MOCK_WIKI_PAGE, "body-x"), "Title-X", "msg");
+    expect(body.title).toBe("Title-X");
+    expect(body.content).toBe("body-x");
+    expect(body.message).toBe("msg");
+  });
+
+  it("localSavePage bumps version and prepends timeline", () => {
+    const { page, versions } = localSavePage(MOCK_WIKI_PAGE, "T2", MOCK_VERSIONS);
+    expect(page.version).toBe(MOCK_WIKI_PAGE.version + 1);
+    expect(page.title).toBe("T2");
+    expect(versions[0].version).toBe(page.version);
+    expect(versions[0].message).toContain("本地保存");
+  });
+
+  it("tsToIso handles unix seconds", () => {
+    const iso = tsToIso(1700000000);
+    expect(iso).toContain("T");
+    expect(iso.endsWith("Z")).toBe(true);
   });
 });

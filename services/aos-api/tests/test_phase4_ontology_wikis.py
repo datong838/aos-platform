@@ -21,6 +21,13 @@ def test_create_and_get_wiki() -> None:
     assert fetched.version == 1  # 初始版本
 
 
+def test_create_wiki_fixed_id() -> None:
+    eng = get_wiki_engine()
+    w = eng.create_wiki(id="wiki-covid-homepage", title="COVID", content="body")
+    assert w.id == "wiki-covid-homepage"
+    assert eng.get_wiki("wiki-covid-homepage") is not None
+
+
 def test_list_wikis_search() -> None:
     eng = get_wiki_engine()
     eng.create_wiki(title="Alpha Guide", content="x")
@@ -58,6 +65,8 @@ def test_diff_versions() -> None:
     assert d["to_version"] == 2
     assert d["added_count"] >= 1
     assert "line3" in d["added_lines"]
+    assert d["from_content"] == "line1\nline2"
+    assert "line3" in d["to_content"]
 
 
 def test_delete_wiki() -> None:

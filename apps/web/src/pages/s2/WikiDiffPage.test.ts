@@ -8,6 +8,9 @@ import {
   filterDiffLines,
   inlineDiff,
   MOCK_VERSION_CONTENTS,
+  mapApiVersionsToContents,
+  pickVersionContent,
+  resolveDiffTexts,
   type DiffLine,
 } from "./WikiDiffPage";
 
@@ -162,5 +165,51 @@ describe("WikiDiffPage · MOCK_VERSION_CONTENTS", () => {
     for (let i = 0; i < MOCK_VERSION_CONTENTS.length - 1; i++) {
       expect(MOCK_VERSION_CONTENTS[i].version).toBeGreaterThan(MOCK_VERSION_CONTENTS[i + 1].version);
     }
+  });
+});
+
+describe("WikiDiffPage · W3-C5 API / local fallback helpers", () => {
+  it("mapApiVersionsToContents keeps content for local computeDiff", () => {
+    const list = mapApiVersionsToContents([
+      { version: 2, content: "b", author: "a", message: "m2", created_at: 2 },
+      { version: 1, content: "a", author: "a", message: "m1", created_at: 1 },
+    ]);
+    expect(list[0].version).toBe(2);
+    expect(list[0].content).toBe("b");
+    expect(list[0].commitMessage).toBe("m2");
+  });
+
+  it("pickVersionContent falls back to first", () => {
+    const v = pickVersionContent(MOCK_VERSION_CONTENTS, 999);
+    expect(v.version).toBe(MOCK_VERSION_CONTENTS[0].version);
+  });
+
+  it("resolveDiffTexts prefers API full text when present", () => {
+    const left = MOCK_VERSION_CONTENTS[1];
+    const right = MOCK_VERSION_CONTENTS[0];
+    const r = resolveDiffTexts(
+      { from_version: 8, to_version: 9, from_content: "API-OLD", to_content: "API-NEW" },
+      left,
+      right,
+    );
+    expect(r.fromApi).toBe(true);
+    expect(r.oldText).toBe("API-OLD");
+    expect(r.newText).toBe("API-NEW");
+  });
+
+  it("resolveDiffTexts falls back to local version contents", () => {
+    const left = MOCK_VERSION_CONTENTS[1];
+    const right = MOCK_VERSION_CONTENTS[0];
+    const r = resolveDiffTexts(null, left, right);
+    expect(r.fromApi).toBe(false);
+    expect(r.oldText).toBe(left.content);
+    expect(r.newText).toBe(right.content);
+  });
+
+  it("local computeDiff still works on MOCK pair", () => {
+    const left = MOCK_VERSION_CONTENTS.find((v) => v.version === 8)!;
+    const right = MOCK_VERSION_CONTENTS.find((v) => v.version === 9)!;
+    const diff = computeDiff(left.content, right.content);
+    expect(diff.some((l) => l.type !== "same")).toBe(true);
   });
 });

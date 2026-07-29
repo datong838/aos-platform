@@ -9204,3 +9204,55 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
 }
 .w2-b4-banner.is-ok { color: #059669; }
 .w2-b4-banner.is-err { color: #DC2626; }
+
+/* === W3-C1C5 === */
+.w3-c1c5-source-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.w3-c1c5-source-badge--demo {
+  background: #fef3c7;
+  color: #92400e;
+}
+.w3-c1c5-source-badge--live {
+  background: #d1fae5;
+  color: #065f46;
+}
+.w3-c1c5-demo-text {
+  color: var(--aos-text-secondary);
+  font-size: 12px;
+  margin: 0.35rem 0 0.75rem;
+  line-height: 1.4;
+}
+.w3-c1c5-main-block {
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--aos-border);
+  border-radius: 2px;
+  background: var(--aos-surface);
+}
+.w3-c1c5-main-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+.w3-c1c5-main-editor {
+  width: 100%;
+  min-height: 140px;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--aos-border);
+  border-radius: 2px;
+  font-family: ui-monospace, Menlo, Monaco, monospace;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  background: var(--aos-surface-hover);
+  color: var(--aos-text);
+  resize: vertical;
+  box-sizing: border-box;
+}

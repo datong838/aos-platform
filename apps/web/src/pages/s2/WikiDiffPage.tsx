@@ -1,8 +1,16 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { apiGet } from "../../api/client";
 import { S2Chrome } from "./shared";
 import { BpBanner, BpToolbar } from "./blueprintUi";
-import { MOCK_VERSIONS } from "./WikiDetailPage";
+import {
+  MOCK_VERSIONS,
+  mapApiVersions,
+  tsToIso,
+  type ApiWikiVersionRow,
+  type WikiDataSource,
+  type WikiVersion,
+} from "./WikiDetailPage";
 
 /* ────────────── Types ────────────── */
 
@@ -233,36 +241,143 @@ export function inlineDiff(lines: DiffLine[]): { type: DiffLineType; content: st
   return result;
 }
 
+/** 将 API 版本行映射为 diff 页内容条目 */
+export function mapApiVersionsToContents(items: ApiWikiVersionRow[]): WikiVersionContent[] {
+  return [...items]
+    .sort((a, b) => b.version - a.version)
+    .map((v) => ({
+      version: v.version,
+      label: `v${v.version}`,
+      author: v.author || "system",
+      timestamp: tsToIso(v.created_at),
+      content: v.content ?? "",
+      commitMessage: v.message || "",
+    }));
+}
+
+export function pickVersionContent(
+  list: WikiVersionContent[],
+  version: number,
+): WikiVersionContent {
+  return list.find((v) => v.version === version) ?? list[0] ?? MOCK_VERSION_CONTENTS[0];
+}
+
+export interface ApiWikiDiffRow {
+  from_version: number;
+  to_version: number;
+  from_content?: string;
+  to_content?: string;
+  added_count?: number;
+  removed_count?: number;
+  added_lines?: string[];
+  removed_lines?: string[];
+}
+
+/** 若 API diff 带全文，优先用于本地 computeDiff */
+export function resolveDiffTexts(
+  apiDiff: ApiWikiDiffRow | null,
+  left: WikiVersionContent,
+  right: WikiVersionContent,
+): { oldText: string; newText: string; fromApi: boolean } {
+  if (apiDiff?.from_content != null && apiDiff?.to_content != null) {
+    return { oldText: apiDiff.from_content, newText: apiDiff.to_content, fromApi: true };
+  }
+  return { oldText: left.content, newText: right.content, fromApi: false };
+}
+
 /* ────────────── Component ────────────── */
 
 export function WikiDiffPage() {
   const { wikiId = "wiki-covid-homepage" } = useParams();
+  const [contents, setContents] = useState<WikiVersionContent[]>(MOCK_VERSION_CONTENTS);
+  const [versionMeta, setVersionMeta] = useState<WikiVersion[]>(MOCK_VERSIONS);
   const [leftVersion, setLeftVersion] = useState(8);
   const [rightVersion, setRightVersion] = useState(9);
   const [viewMode, setViewMode] = useState<DiffViewMode>("side");
   const [showSame, setShowSame] = useState(true);
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [restoreMsg, setRestoreMsg] = useState("");
+  const [dataSource, setDataSource] = useState<WikiDataSource>("demo");
+  const [apiDiff, setApiDiff] = useState<ApiWikiDiffRow | null>(null);
+  const [loadMsg, setLoadMsg] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const ver = await apiGet<{ items: ApiWikiVersionRow[] }>(
+          `/v1/ontology/wikis/${encodeURIComponent(wikiId)}/versions`,
+        );
+        if (cancelled) return;
+        if (!ver.items?.length) throw new Error("empty versions");
+        const mapped = mapApiVersionsToContents(ver.items);
+        setContents(mapped);
+        setVersionMeta(mapApiVersions(ver.items));
+        setLeftVersion(mapped.length >= 2 ? mapped[1].version : mapped[0].version);
+        setRightVersion(mapped[0].version);
+        setDataSource("live");
+        setLoadMsg("");
+      } catch (e) {
+        if (cancelled) return;
+        setContents(MOCK_VERSION_CONTENTS);
+        setVersionMeta(MOCK_VERSIONS);
+        setLeftVersion(8);
+        setRightVersion(9);
+        setDataSource("demo");
+        setLoadMsg(`演示路径 · 版本 API 不可用（${String((e as Error).message || e)}），使用本地文本对比`);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [wikiId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (dataSource !== "live") {
+      setApiDiff(null);
+      return;
+    }
+    (async () => {
+      try {
+        const d = await apiGet<ApiWikiDiffRow>(
+          `/v1/ontology/wikis/${encodeURIComponent(wikiId)}/diff?from_version=${leftVersion}&to_version=${rightVersion}`,
+        );
+        if (!cancelled) setApiDiff(d);
+      } catch {
+        if (!cancelled) setApiDiff(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [wikiId, leftVersion, rightVersion, dataSource]);
 
   const leftContent = useMemo(
-    () => MOCK_VERSION_CONTENTS.find((v) => v.version === leftVersion) ?? MOCK_VERSION_CONTENTS[0],
-    [leftVersion],
+    () => pickVersionContent(contents, leftVersion),
+    [contents, leftVersion],
   );
   const rightContent = useMemo(
-    () => MOCK_VERSION_CONTENTS.find((v) => v.version === rightVersion) ?? MOCK_VERSION_CONTENTS[0],
-    [rightVersion],
+    () => pickVersionContent(contents, rightVersion),
+    [contents, rightVersion],
   );
 
-  const diffLines = useMemo(
-    () => computeDiff(leftContent.content, rightContent.content),
-    [leftContent, rightContent],
+  const { oldText, newText } = useMemo(
+    () => resolveDiffTexts(apiDiff, leftContent, rightContent),
+    [apiDiff, leftContent, rightContent],
   );
+
+  const diffLines = useMemo(() => computeDiff(oldText, newText), [oldText, newText]);
   const summary = useMemo(() => summarizeDiff(diffLines), [diffLines]);
   const filtered = useMemo(() => filterDiffLines(diffLines, showSame), [diffLines, showSame]);
 
   function confirmRestore() {
     setShowRestoreModal(false);
-    setRestoreMsg(`已恢复到 v${leftVersion}`);
+    setRestoreMsg(
+      dataSource === "live"
+        ? `演示路径 · 恢复 API 未接线，已本地标记恢复到 v${leftVersion}`
+        : `已恢复到 v${leftVersion} · 演示路径`,
+    );
   }
 
   const leftOnly = useMemo(
@@ -276,7 +391,7 @@ export function WikiDiffPage() {
 
   return (
     <S2Chrome title="版本对比" lede={`${wikiId} · main 分支`}>
-      <div className="ont-page">
+      <div className="ont-page w3-c1c5-wiki-diff">
         <BpToolbar>
           <Link to={`/ontology/wiki/${encodeURIComponent(wikiId)}`} className="btn-nav">
             ← 返回编辑
@@ -288,8 +403,23 @@ export function WikiDiffPage() {
           >
             恢复到 v{leftVersion}
           </button>
+          <span
+            className={
+              dataSource === "live"
+                ? "w3-c1c5-source-badge w3-c1c5-source-badge--live"
+                : "w3-c1c5-source-badge w3-c1c5-source-badge--demo"
+            }
+          >
+            {dataSource === "live" ? "真 API" : "演示路径"}
+          </span>
         </BpToolbar>
 
+        {dataSource === "demo" && (
+          <BpBanner tone="warn">
+            演示路径 · 版本/差异 API 不可用时仍可用本地文本对比展示两版 diff。
+          </BpBanner>
+        )}
+        {loadMsg && <p className="w3-c1c5-demo-text">{loadMsg}</p>}
         {restoreMsg && <p className="bp-prop-ok">{restoreMsg}</p>}
 
         {/* 版本选择器 + 视图切换 */}
@@ -301,7 +431,7 @@ export function WikiDiffPage() {
               value={leftVersion}
               onChange={(e) => setLeftVersion(Number(e.target.value))}
             >
-              {MOCK_VERSION_CONTENTS.map((v) => (
+              {contents.map((v) => (
                 <option key={v.version} value={v.version}>
                   {v.label}
                 </option>
@@ -314,7 +444,7 @@ export function WikiDiffPage() {
               value={rightVersion}
               onChange={(e) => setRightVersion(Number(e.target.value))}
             >
-              {MOCK_VERSION_CONTENTS.map((v) => (
+              {contents.map((v) => (
                 <option key={v.version} value={v.version}>
                   {v.label}
                 </option>
@@ -466,7 +596,7 @@ export function WikiDiffPage() {
         <div style={{ marginTop: "1rem" }}>
           <h3 style={styles.sectionTitle}>版本历史</h3>
           <div style={styles.versionTimeline}>
-            {MOCK_VERSIONS.map((v) => (
+            {versionMeta.map((v) => (
               <div
                 key={v.version}
                 style={{
