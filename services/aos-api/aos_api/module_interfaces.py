@@ -14,6 +14,7 @@ log = get_logger("aos-api.module_interfaces")
 
 _DEFAULT_ORG = "dev-org"
 _DEFAULT_PROJECT = "dev-project"
+_VALID_DIRECTIONS = frozenset({"input", "output"})
 
 
 def ensure_schema() -> None:
@@ -36,6 +37,47 @@ def ensure_schema() -> None:
         conn.commit()
 
 
+def normalize_param(raw: Any) -> dict[str, Any] | None:
+    """Normalize a single param dict; accept name/key and direction."""
+    if not isinstance(raw, dict):
+        return None
+    name = str(raw.get("name") or raw.get("key") or "").strip()
+    if not name:
+        return None
+    direction = str(raw.get("direction") or "input").strip().lower()
+    if direction not in _VALID_DIRECTIONS:
+        direction = "input"
+    typ = str(raw.get("type") or "string")
+    item: dict[str, Any] = {
+        "name": name,
+        "key": name,
+        "type": typ,
+        "direction": direction,
+    }
+    if "required" in raw:
+        item["required"] = bool(raw["required"])
+    return item
+
+
+def normalize_entry_params(
+    entry_params: Any = None,
+    output_params: Any = None,
+) -> list[dict[str, Any]]:
+    """Merge entryParams + optional outputParams into a normalized list."""
+    out: list[dict[str, Any]] = []
+    for raw in entry_params or []:
+        item = normalize_param(raw)
+        if item:
+            out.append(item)
+    for raw in output_params or []:
+        item = normalize_param(raw)
+        if not item:
+            continue
+        item["direction"] = "output"
+        out.append(item)
+    return out
+
+
 def get_interface(module_id: str) -> dict[str, Any] | None:
     ensure_schema()
     with connect() as conn:
@@ -55,7 +97,10 @@ def put_interface(
     ensure_schema()
     name = payload.get("name") or ""
     description = payload.get("description") or ""
-    entry_params = payload.get("entryParams") or payload.get("entry_params") or []
+    entry_params = normalize_entry_params(
+        payload.get("entryParams") or payload.get("entry_params") or [],
+        payload.get("outputParams") or payload.get("output_params") or [],
+    )
     expose = payload.get("expose") or {}
     version = payload.get("version") or "1.0.0"
     with connect() as conn:
@@ -95,11 +140,12 @@ def _row(r: dict[str, Any]) -> dict[str, Any]:
     ex = r.get("expose") or {}
     if isinstance(ex, str):
         ex = json.loads(ex) if ex else {}
+    normalized = normalize_entry_params(ep)
     return {
         "moduleId": r["module_id"],
         "name": r.get("name") or "",
         "description": r.get("description") or "",
-        "entryParams": ep,
+        "entryParams": normalized,
         "expose": ex,
         "version": r.get("version") or "1.0.0",
         "updatedAt": str(r.get("updated_at", "")),

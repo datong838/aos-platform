@@ -9047,3 +9047,17 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
   gap: 8px;
   margin-top: 8px;
 }
+/* === W2-A2 === */
+.mi-panel { display: flex; flex-direction: column; gap: 10px; }
+.mi-counts { font-weight: 400; font-size: 12px; }
+.mi-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 4px; }
+.mi-meta-field { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--aos-muted); min-width: 140px; flex: 1; }
+.mi-field-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.mi-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mi-table th, .mi-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--aos-divider, rgba(255,255,255,0.08)); vertical-align: middle; }
+.mi-table th { color: var(--aos-text-secondary); font-weight: 600; font-size: 11px; }
+.mi-input { width: 100%; min-width: 0; box-sizing: border-box; padding: 4px 8px; font-size: 12px; border: 1px solid var(--aos-border); background: var(--bg-surface-alt, transparent); color: var(--aos-text); border-radius: 2px; }
+.mi-label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
+.mi-label.is-input { color: #7dd3fc; }
+.mi-label.is-output { color: #6ee7b7; }
+.mi-btn-danger { padding: 2px 8px; font-size: 11px; }
