@@ -334,6 +334,159 @@ export function extractSubmitters(drafts: DraftItem[]): string[] {
   return Array.from(set).sort();
 }
 
+/** 数据源模式：live=真 API；demo=MOCK 演示路径 */
+export type DraftSourceMode = "live" | "demo" | "loading";
+
+const ALL_STATUSES: DraftStatus[] = [
+  "draft",
+  "submitted",
+  "in_review",
+  "approved",
+  "rejected",
+  "withdrawn",
+  "changes_requested",
+];
+
+/** Wave-3 `proposed` → UI `in_review`；其余合法态原样 */
+export function mapApiStatus(raw: unknown): DraftStatus {
+  const s = String(raw ?? "").trim();
+  if (s === "proposed") return "in_review";
+  if ((ALL_STATUSES as string[]).includes(s)) return s as DraftStatus;
+  return "draft";
+}
+
+export function normalizeDraftType(raw: unknown): DraftType {
+  const s = String(raw ?? "");
+  if (s === "InsightBackfill" || s === "Action" || s === "Tool" || s === "OntologyChange") return s;
+  if (/insight|backfill/i.test(s)) return "InsightBackfill";
+  if (/tool/i.test(s)) return "Tool";
+  if (/ontology|schema|config/i.test(s)) return "OntologyChange";
+  return "Action";
+}
+
+function tsToIso(raw: unknown): string {
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    return new Date(raw * (raw < 1e12 ? 1000 : 1)).toISOString();
+  }
+  if (typeof raw === "string" && raw) return raw;
+  return "";
+}
+
+/** 无 timeline 时按状态合成最小审批历史（便于详情区展示） */
+export function synthesizeTimeline(
+  status: DraftStatus,
+  actor: string,
+  createdAt: string,
+  updatedAt: string,
+): TimelineEntry[] {
+  const base = createdAt || new Date().toISOString();
+  const latest = updatedAt || base;
+  const entries: TimelineEntry[] = [
+    { id: "syn-create", action: "create", actor: actor || "未知", timestamp: base },
+  ];
+  if (status === "draft") return entries;
+  if (status === "submitted" || status === "in_review" || status === "approved" || status === "rejected" || status === "changes_requested" || status === "withdrawn") {
+    entries.push({ id: "syn-submit", action: "submit", actor: actor || "未知", timestamp: base });
+  }
+  if (status === "in_review" || status === "approved" || status === "rejected" || status === "changes_requested") {
+    entries.push({ id: "syn-review", action: "in_review", actor: "系统", timestamp: base });
+  }
+  if (status === "approved") {
+    entries.push({ id: "syn-approve", action: "approve", actor: "审批人", timestamp: latest });
+  } else if (status === "rejected") {
+    entries.push({ id: "syn-reject", action: "reject", actor: "审批人", timestamp: latest });
+  } else if (status === "withdrawn") {
+    entries.push({ id: "syn-withdraw", action: "withdraw", actor: actor || "未知", timestamp: latest });
+  } else if (status === "changes_requested") {
+    entries.push({ id: "syn-cr", action: "changes_requested", actor: "审批人", timestamp: latest });
+  }
+  return entries;
+}
+
+function parseTimeline(raw: unknown, fallback: TimelineEntry[]): TimelineEntry[] {
+  if (!Array.isArray(raw) || raw.length === 0) return fallback;
+  return raw.map((entry, i) => {
+    const e = (entry ?? {}) as Record<string, unknown>;
+    const actionRaw = String(e.action ?? "comment");
+    const action = (Object.keys(ACTION_LABELS) as TimelineAction[]).includes(actionRaw as TimelineAction)
+      ? (actionRaw as TimelineAction)
+      : "comment";
+    return {
+      id: String(e.id ?? `tl-${i}`),
+      action,
+      actor: String(e.actor ?? "未知"),
+      timestamp: tsToIso(e.timestamp) || new Date().toISOString(),
+      comment: e.comment != null ? String(e.comment) : undefined,
+    };
+  });
+}
+
+function parseChanges(row: Record<string, unknown>): DraftChange[] {
+  if (Array.isArray(row.changes) && row.changes.length > 0) {
+    return row.changes.map((c) => {
+      const item = (c ?? {}) as Record<string, unknown>;
+      const kindRaw = String(item.kind ?? "update");
+      const kind: DraftChange["kind"] =
+        kindRaw === "create" || kindRaw === "link" || kindRaw === "update" ? kindRaw : "update";
+      return {
+        kind,
+        objectLabel: String(item.objectLabel ?? item.object_label ?? item.field ?? "变更"),
+        field: item.field != null ? String(item.field) : undefined,
+        detail: String(item.detail ?? JSON.stringify(item)),
+      };
+    });
+  }
+  const proposed = row.proposed;
+  if (proposed && typeof proposed === "object" && !Array.isArray(proposed)) {
+    return Object.entries(proposed as Record<string, unknown>).map(([field, val]) => ({
+      kind: "update" as const,
+      objectLabel: String(row.objectType ?? row.object_type ?? "Object"),
+      field,
+      detail: `${field} → ${JSON.stringify(val)}`,
+    }));
+  }
+  return [];
+}
+
+/** 将 API / SDK DraftRow 归一为页面 DraftItem */
+export function mapApiRowToDraftItem(row: Record<string, unknown>): DraftItem {
+  const status = mapApiStatus(row.status);
+  const submittedBy = String(row.submittedBy ?? row.createdBy ?? row.author ?? "未知");
+  const createdAt = tsToIso(row.createdAt ?? row.created_at);
+  const updatedAt = tsToIso(row.updatedAt ?? row.updated_at) || createdAt;
+  const type = normalizeDraftType(row.type ?? row.draftType ?? row.draft_type ?? row.actionTypeId);
+  const summary = String(
+    row.summary ?? row.content ?? (row.title ? `${row.title}` : "") ?? "",
+  );
+  const timeline = parseTimeline(
+    row.timeline ?? row.activity,
+    synthesizeTimeline(status, submittedBy, createdAt, updatedAt),
+  );
+  return {
+    id: String(row.id ?? "unknown"),
+    title: String(row.title ?? row.id ?? "Untitled"),
+    status,
+    type,
+    submittedBy,
+    createdAt,
+    updatedAt,
+    confidence: typeof row.confidence === "number" ? row.confidence : undefined,
+    summary,
+    changes: parseChanges(row),
+    timeline,
+  };
+}
+
+function statusToTimelineAction(to: DraftStatus): TimelineAction {
+  if (to === "approved") return "approve";
+  if (to === "rejected") return "reject";
+  if (to === "withdrawn") return "withdraw";
+  if (to === "changes_requested") return "changes_requested";
+  if (to === "submitted") return "submit";
+  if (to === "in_review") return "in_review";
+  return "create";
+}
+
 /* =========================================================================
  * 4. 主组件
  * ========================================================================= */
@@ -359,12 +512,14 @@ export function DraftInboxPage() {
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [apiItems, setApiItems] = useState<DraftItem[]>([]);
+  const [sourceMode, setSourceMode] = useState<DraftSourceMode>("loading");
   const [apiError, setApiError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const allDrafts = useMemo(() => {
-    if (apiItems.length > 0) return apiItems;
+    if (sourceMode === "live") return apiItems;
     return drafts;
-  }, [drafts, apiItems]);
+  }, [drafts, apiItems, sourceMode]);
 
   const tabCounts = useMemo(() => countByTab(allDrafts), [allDrafts]);
   const submitters = useMemo(() => extractSubmitters(allDrafts), [allDrafts]);
@@ -379,26 +534,25 @@ export function DraftInboxPage() {
     [allDrafts, selectedId],
   );
 
-  /* --- API 同步（可选，失败不影响 Mock 演示） --- */
-  const reloadFromApi = useCallback(async () => {
+  /* --- API 同步：成功→live（可空列表）；失败→demo MOCK --- */
+  const reloadFromApi = useCallback(async (): Promise<boolean> => {
     try {
       const res = await getOntologyClient().listDrafts();
-      const items = (res.items || []).map((row): DraftItem => ({
-        id: row.id ?? "unknown",
-        title: row.title ?? row.id ?? "Untitled",
-        status: (row.status as DraftStatus) ?? "draft",
-        type: "Action",
-        submittedBy: (row.createdBy as string) ?? "未知",
-        createdAt: (row.createdAt as string) ?? "",
-        updatedAt: (row.updatedAt as string) ?? "",
-        summary: "",
-        changes: [],
-        timeline: [],
-      }));
+      const items = (res.items || []).map((row) =>
+        mapApiRowToDraftItem(row as Record<string, unknown>),
+      );
       setApiItems(items);
       setApiError(null);
+      setSourceMode("live");
+      setSelectedId((prev) => {
+        if (prev && items.some((d) => d.id === prev)) return prev;
+        return items[0]?.id ?? null;
+      });
+      return true;
     } catch (e) {
       setApiError(String((e as Error).message || e));
+      setSourceMode("demo");
+      return false;
     }
   }, []);
 
@@ -406,20 +560,32 @@ export function DraftInboxPage() {
     reloadFromApi().catch(() => {});
   }, [reloadFromApi]);
 
-  /* --- 状态转换（本地 Mock） --- */
+  /* --- 状态转换（本地 Mock / live 非写回辅助） --- */
+  const patchLocal = useCallback(
+    (updater: (prev: DraftItem[]) => DraftItem[]) => {
+      if (sourceMode === "live") {
+        setApiItems(updater);
+      } else {
+        setDrafts(updater);
+      }
+    },
+    [sourceMode],
+  );
+
   const transition = useCallback(
     (id: string, to: DraftStatus, comment?: string) => {
-      setDrafts((prev) =>
+      patchLocal((prev) =>
         prev.map((d) => {
           if (d.id !== id) return d;
           if (!canTransition(d.status, to)) {
             setErr(`非法状态转换：${d.status} → ${to}`);
             return d;
           }
+          setErr(null);
           setMsg(`${STATUS_LABELS[to]} · ${d.title}`);
           const newEntry: TimelineEntry = {
             id: `tl-${Date.now()}`,
-            action: to === "approved" ? "approve" : to === "rejected" ? "reject" : to === "withdrawn" ? "withdraw" : to === "changes_requested" ? "changes_requested" : to === "submitted" ? "submit" : to === "in_review" ? "in_review" : "create",
+            action: statusToTimelineAction(to),
             actor: "当前用户",
             timestamp: new Date().toISOString(),
             comment,
@@ -433,25 +599,83 @@ export function DraftInboxPage() {
         }),
       );
     },
-    [],
+    [patchLocal],
   );
 
-  /* --- 审批操作 --- */
-  const handleApprove = () => { if (selected) transition(selected.id, "approved"); };
-  const handleReject = () => { if (selected) transition(selected.id, "rejected"); };
+  /* --- 审批操作：live 走真 API，demo 走本地状态机 --- */
+  const handleApprove = async () => {
+    if (!selected) return;
+    if (sourceMode !== "live") {
+      transition(selected.id, "approved");
+      return;
+    }
+    if (!canTransition(selected.status, "approved")) {
+      setErr(`非法状态转换：${selected.status} → approved`);
+      return;
+    }
+    setBusy(true);
+    setErr(null);
+    try {
+      await getOntologyClient().approveDraft(selected.id);
+      setMsg(`已批准 · ${selected.title}`);
+      await reloadFromApi();
+    } catch (e) {
+      setErr(`批准失败：${String((e as Error).message || e)}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!selected) return;
+    if (sourceMode !== "live") {
+      transition(selected.id, "rejected");
+      return;
+    }
+    if (!canTransition(selected.status, "rejected")) {
+      setErr(`非法状态转换：${selected.status} → rejected`);
+      return;
+    }
+    const reason = window.prompt("驳回原因（可选）：") ?? "";
+    setBusy(true);
+    setErr(null);
+    try {
+      await getOntologyClient().rejectDraft(selected.id, { reason });
+      setMsg(`已拒绝 · ${selected.title}`);
+      await reloadFromApi();
+    } catch (e) {
+      setErr(`驳回失败：${String((e as Error).message || e)}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const handleChangeRequest = () => { if (selected) transition(selected.id, "changes_requested"); };
   const handleWithdraw = () => { if (selected) transition(selected.id, "withdrawn"); };
   const handleSubmit = () => { if (selected) transition(selected.id, "submitted"); };
   const handleStartReview = () => { if (selected) transition(selected.id, "in_review"); };
+  const handleReturnDraft = () => { if (selected) transition(selected.id, "draft"); };
 
   const handleAddComment = () => {
     if (!selected) return;
     const comment = window.prompt("输入评论：");
     if (!comment) return;
-    setDrafts((prev) =>
+    patchLocal((prev) =>
       prev.map((d) =>
         d.id === selected.id
-          ? { ...d, timeline: [...d.timeline, { id: `c-${Date.now()}`, action: "comment", actor: "当前用户", timestamp: new Date().toISOString(), comment }] }
+          ? {
+              ...d,
+              timeline: [
+                ...d.timeline,
+                {
+                  id: `c-${Date.now()}`,
+                  action: "comment" as const,
+                  actor: "当前用户",
+                  timestamp: new Date().toISOString(),
+                  comment,
+                },
+              ],
+            }
           : d,
       ),
     );
@@ -463,6 +687,24 @@ export function DraftInboxPage() {
       lede="Agent / Action 写入须经 HITL 批准后方可落生产 Ontology；含 Insight Backfill（知识回填）。"
     >
       <div className="di-page">
+      {/* 数据源角标 */}
+      {sourceMode === "demo" && (
+        <div className="di-source-banner di-source-banner--demo mb-4" role="status">
+          <span className="di-source-badge di-source-badge--demo">演示路径</span>
+          <span className="di-source-banner__text">
+            后端不可用{apiError ? `（${apiError}）` : ""} · 当前为 MOCK 数据，批准/驳回仅本地演示
+          </span>
+        </div>
+      )}
+      {sourceMode === "live" && (
+        <div className="di-source-banner di-source-banner--live mb-4" role="status">
+          <span className="di-source-badge di-source-badge--live">真实 API</span>
+          <span className="di-source-banner__text">
+            列表/批准/驳回写入后端状态 · 共 {apiItems.length} 条
+          </span>
+        </div>
+      )}
+
       {/* 消息条 */}
       {msg && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm text-blue-800">
@@ -472,11 +714,6 @@ export function DraftInboxPage() {
       {err && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-800">
           {err}
-        </div>
-      )}
-      {apiError && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4 text-xs text-gray-500">
-          API 离线（{apiError}）· 使用 Mock 数据演示
         </div>
       )}
 
@@ -748,12 +985,14 @@ export function DraftInboxPage() {
               <div className="p-3 border-t border-gray-100 bg-gray-50">
                 <ApprovalActions
                   status={selected.status}
-                  onApprove={handleApprove}
-                  onReject={handleReject}
+                  busy={busy}
+                  onApprove={() => { void handleApprove(); }}
+                  onReject={() => { void handleReject(); }}
                   onChangeRequest={handleChangeRequest}
                   onWithdraw={handleWithdraw}
                   onSubmit={handleSubmit}
                   onStartReview={handleStartReview}
+                  onReturnDraft={handleReturnDraft}
                   onAddComment={handleAddComment}
                 />
               </div>
@@ -782,39 +1021,44 @@ export function DraftInboxPage() {
 
 function ApprovalActions({
   status,
+  busy,
   onApprove,
   onReject,
   onChangeRequest,
   onWithdraw,
   onSubmit,
   onStartReview,
+  onReturnDraft,
   onAddComment,
 }: {
   status: DraftStatus;
+  busy?: boolean;
   onApprove: () => void;
   onReject: () => void;
   onChangeRequest: () => void;
   onWithdraw: () => void;
   onSubmit: () => void;
   onStartReview: () => void;
+  onReturnDraft: () => void;
   onAddComment: () => void;
 }) {
   const btnBase = "px-3 py-1.5 text-xs font-medium rounded-md border transition-colors cursor-pointer";
+  const disabled = Boolean(busy);
 
   // in_review：显示「批准」「拒绝」「退回修改」「添加评论」
   if (status === "in_review") {
     return (
       <div className="flex flex-wrap gap-2">
-        <button type="button" className={`${btnBase} bg-green-600 text-white border-green-600 hover:bg-green-700`} onClick={onApprove}>
-          批准
+        <button type="button" disabled={disabled} className={`${btnBase} bg-green-600 text-white border-green-600 hover:bg-green-700`} onClick={onApprove}>
+          {busy ? "处理中…" : "批准"}
         </button>
-        <button type="button" className={`${btnBase} bg-red-600 text-white border-red-600 hover:bg-red-700`} onClick={onReject}>
+        <button type="button" disabled={disabled} className={`${btnBase} bg-red-600 text-white border-red-600 hover:bg-red-700`} onClick={onReject}>
           拒绝
         </button>
-        <button type="button" className={`${btnBase} bg-white text-purple-700 border-purple-300 hover:bg-purple-50`} onClick={onChangeRequest}>
+        <button type="button" disabled={disabled} className={`${btnBase} bg-white text-purple-700 border-purple-300 hover:bg-purple-50`} onClick={onChangeRequest}>
           退回修改
         </button>
-        <button type="button" className={`${btnBase} bg-white text-gray-700 border-gray-300 hover:bg-gray-50`} onClick={onAddComment}>
+        <button type="button" disabled={disabled} className={`${btnBase} bg-white text-gray-700 border-gray-300 hover:bg-gray-50`} onClick={onAddComment}>
           添加评论
         </button>
       </div>
@@ -826,19 +1070,19 @@ function ApprovalActions({
     return (
       <div className="flex flex-wrap gap-2">
         {status === "draft" && (
-          <button type="button" className={`${btnBase} bg-blue-600 text-white border-blue-600 hover:bg-blue-700`} onClick={onSubmit}>
+          <button type="button" disabled={disabled} className={`${btnBase} bg-blue-600 text-white border-blue-600 hover:bg-blue-700`} onClick={onSubmit}>
             提交审批
           </button>
         )}
         {status === "submitted" && (
-          <button type="button" className={`${btnBase} bg-blue-600 text-white border-blue-600 hover:bg-blue-700`} onClick={onStartReview}>
+          <button type="button" disabled={disabled} className={`${btnBase} bg-blue-600 text-white border-blue-600 hover:bg-blue-700`} onClick={onStartReview}>
             进入审批
           </button>
         )}
-        <button type="button" className={`${btnBase} bg-white text-gray-700 border-gray-300 hover:bg-gray-50`}>
+        <button type="button" disabled={disabled} className={`${btnBase} bg-white text-gray-700 border-gray-300 hover:bg-gray-50`}>
           编辑
         </button>
-        <button type="button" className={`${btnBase} bg-white text-red-600 border-red-300 hover:bg-red-50`} onClick={onWithdraw}>
+        <button type="button" disabled={disabled} className={`${btnBase} bg-white text-red-600 border-red-300 hover:bg-red-50`} onClick={onWithdraw}>
           撤回
         </button>
       </div>
@@ -849,10 +1093,10 @@ function ApprovalActions({
   if (status === "changes_requested") {
     return (
       <div className="flex flex-wrap gap-2">
-        <button type="button" className={`${btnBase} bg-blue-600 text-white border-blue-600 hover:bg-blue-700`}>
+        <button type="button" disabled={disabled} className={`${btnBase} bg-blue-600 text-white border-blue-600 hover:bg-blue-700`} onClick={onReturnDraft}>
           返回草稿
         </button>
-        <button type="button" className={`${btnBase} bg-white text-gray-700 border-gray-300 hover:bg-gray-50`}>
+        <button type="button" disabled={disabled} className={`${btnBase} bg-white text-gray-700 border-gray-300 hover:bg-gray-50`}>
           编辑
         </button>
       </div>
