@@ -21,6 +21,13 @@ class UpdateRequest(BaseModel):
     status: str | None = None
 
 
+class RunRequest(BaseModel):
+    """W4-A8：运行一次结构化抽取。"""
+    template_id: str = "finance_report"
+    text: str = ""
+    name: str | None = None
+
+
 @router.get("")
 def list_items():
     return [item.model_dump() for item in _engine.list()]
@@ -32,6 +39,16 @@ def create_item(req: CreateRequest):
         return _engine.create(req.name, req.config).model_dump()
     except ValueError as exc:
         raise HTTPException(400, str(exc))
+
+
+@router.post("/run")
+def run_extract(req: RunRequest):
+    """W4-A8：文档智能抽取真路径（启发式字段，demo=false）。"""
+    return _engine.run_extract(
+        template_id=req.template_id,
+        text=req.text,
+        name=req.name,
+    )
 
 
 @router.get("/{item_id}")

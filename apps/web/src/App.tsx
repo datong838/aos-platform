@@ -266,6 +266,9 @@ export function App() {
               </Suspense>
             }
           />
+          {/* W4-E1：pipeline-doc-intel 并入文档智能，残留路径重定向 */}
+          <Route path="data/pipeline-doc-intel" element={<Navigate to="/aip/doc-intelligence" replace />} />
+          <Route path="pipelines/doc-intel" element={<Navigate to="/aip/doc-intelligence" replace />} />
           <Route
             path="ontology"
             element={

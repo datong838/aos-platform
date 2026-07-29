@@ -574,6 +574,7 @@ export const NAV_ITEMS: NavItem[] = [
     status: "live",
     crumbs: ["数据源", "媒体集"],
   },
+  // W4-E1：pipeline-doc-intel 并入「文档智能」，勿再新增 DocIntel 管道侧栏项
   {
     id: "aip-doc-intelligence",
     path: "/aip/doc-intelligence",
