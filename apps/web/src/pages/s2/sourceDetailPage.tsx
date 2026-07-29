@@ -1,10 +1,11 @@
 /**
  * 187w/188w · Source 详情（连接器页）· 对齐 source-detail.html
  * 统一壳：Tab · 探索三栏 · 右侧信息；探索区仅为采样预览，不冒充全量。
+ * W3-C7：Schema 树（schema→表→列）优先接 phase6 datasource API；失败标演示路径。
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { apiPost } from "../../api/client";
+import { apiGet, apiPost } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
 import { BpBanner, BpTabs, BpToolbar } from "./blueprintUi";
 import {
@@ -33,6 +34,26 @@ type PreviewResult = {
   total?: number;
   objectType?: string;
   pageSize?: number;
+  demo?: boolean;
+};
+
+export type SchemaColumn = {
+  name: string;
+  datatype?: string;
+  primary_key?: boolean;
+  nullable?: boolean;
+};
+
+export type SchemaTable = {
+  name: string;
+  row_count?: number;
+  columns?: SchemaColumn[];
+};
+
+export type SchemaNode = {
+  name: string;
+  description?: string;
+  tables: SchemaTable[];
 };
 
 /** 探索页只读采样窗口（非 ingest 上限） */
@@ -43,6 +64,127 @@ function cellText(v: unknown): string {
   if (v == null) return "—";
   const s = typeof v === "object" ? JSON.stringify(v) : String(v);
   return s.length > 48 ? `${s.slice(0, 45)}…` : s;
+}
+
+/** W3-C7 · 按连接器类型的本地演示 Schema（API 全失败时） */
+export function demoSchemaTree(connectorType?: string): SchemaNode[] {
+  const t = (connectorType || "jdbc").toLowerCase();
+  if (t.includes("kafka") || t.includes("stream")) {
+    return [
+      {
+        name: "topics",
+        description: "演示路径 · 流主题",
+        tables: [
+          {
+            name: "events",
+            row_count: 5000,
+            columns: [
+              { name: "event_id", datatype: "BIGINT", primary_key: true },
+              { name: "ts", datatype: "TIMESTAMP" },
+              { name: "payload", datatype: "JSON", nullable: true },
+            ],
+          },
+        ],
+      },
+    ];
+  }
+  if (t.includes("s3") || t.includes("file") || t.includes("blob")) {
+    return [
+      {
+        name: "bucket",
+        description: "演示路径 · 对象存储",
+        tables: [
+          {
+            name: "objects",
+            row_count: 200,
+            columns: [
+              { name: "key", datatype: "VARCHAR", primary_key: true },
+              { name: "size", datatype: "BIGINT" },
+              { name: "etag", datatype: "VARCHAR", nullable: true },
+            ],
+          },
+        ],
+      },
+    ];
+  }
+  return [
+    {
+      name: "public",
+      description: "演示路径 · 默认 schema",
+      tables: [
+        {
+          name: "orders",
+          row_count: 12847,
+          columns: [
+            { name: "order_id", datatype: "BIGINT", primary_key: true },
+            { name: "customer_id", datatype: "BIGINT" },
+            { name: "amount", datatype: "DECIMAL", nullable: true },
+            { name: "status", datatype: "VARCHAR", nullable: true },
+          ],
+        },
+        {
+          name: "customers",
+          row_count: 8102,
+          columns: [
+            { name: "customer_id", datatype: "BIGINT", primary_key: true },
+            { name: "name", datatype: "VARCHAR" },
+            { name: "email", datatype: "VARCHAR", nullable: true },
+          ],
+        },
+      ],
+    },
+    {
+      name: "analytics",
+      description: "演示路径 · analytics",
+      tables: [
+        {
+          name: "events",
+          row_count: 50000,
+          columns: [
+            { name: "event_id", datatype: "BIGINT", primary_key: true },
+            { name: "ts", datatype: "TIMESTAMP" },
+          ],
+        },
+      ],
+    },
+  ];
+}
+
+export function filterSchemaTree(tree: SchemaNode[], q: string): SchemaNode[] {
+  const needle = q.trim().toLowerCase();
+  if (!needle) return tree;
+  return tree
+    .map((sch) => ({
+      ...sch,
+      tables: sch.tables.filter(
+        (t) =>
+          t.name.toLowerCase().includes(needle) ||
+          sch.name.toLowerCase().includes(needle) ||
+          (t.columns || []).some((c) => c.name.toLowerCase().includes(needle)),
+      ),
+    }))
+    .filter((sch) => sch.tables.length > 0 || sch.name.toLowerCase().includes(needle));
+}
+
+export function flattenTables(tree: SchemaNode[]): { schema: string; table: string; row_count?: number }[] {
+  const out: { schema: string; table: string; row_count?: number }[] = [];
+  for (const sch of tree) {
+    for (const t of sch.tables) {
+      out.push({ schema: sch.name, table: t.name, row_count: t.row_count });
+    }
+  }
+  return out;
+}
+
+export function schemaPathLabel(demo: boolean): string {
+  return demo ? "演示路径" : "连接器 Schema";
+}
+
+export function formatColumnBadge(col: SchemaColumn): string {
+  const parts = [col.datatype || "—"];
+  if (col.primary_key) parts.push("PK");
+  if (col.nullable) parts.push("NULL");
+  return parts.join(" · ");
 }
 
 export function SourceDetailPage() {
@@ -79,6 +221,16 @@ export function SourceDetailPage() {
   const [previewErr, setPreviewErr] = useState<string | null>(null);
   const [previewBusy, setPreviewBusy] = useState(false);
   const [sampleTick, setSampleTick] = useState(0);
+  const [previewDemo, setPreviewDemo] = useState(false);
+
+  // W3-C7 schema tree
+  const [schemaTree, setSchemaTree] = useState<SchemaNode[]>([]);
+  const [schemaDemo, setSchemaDemo] = useState(false);
+  const [schemaBusy, setSchemaBusy] = useState(false);
+  const [tableSearch, setTableSearch] = useState("");
+  const [expandedSchemas, setExpandedSchemas] = useState<Record<string, boolean>>({});
+  const [activeSchemaTable, setActiveSchemaTable] = useState<{ schema: string; table: string } | null>(null);
+  const [activeColumns, setActiveColumns] = useState<SchemaColumn[]>([]);
 
   const tableEntries = useMemo(() => {
     return pipelines.map((p) => {
@@ -95,38 +247,157 @@ export function SourceDetailPage() {
   }, [pipelines]);
 
   const activeEntry = tableEntries.find((t) => t.id === activeTable) || tableEntries[0];
+  const filteredTree = useMemo(
+    () => filterSchemaTree(schemaTree, tableSearch),
+    [schemaTree, tableSearch],
+  );
 
   useEffect(() => {
     if (tableEntries[0]?.id) setActiveTable(tableEntries[0].id);
   }, [sourceId, tableEntries]);
 
-  const loadSample = useCallback(async () => {
-    if (!activeEntry?.datasetRid && !activeEntry?.ot) {
-      setPreview(null);
+  // W3-C7 · 加载 Schema 树
+  useEffect(() => {
+    if (!sourceId) return;
+    let cancelled = false;
+    (async () => {
+      setSchemaBusy(true);
+      try {
+        const schRes = await apiGet<{ items?: { name: string; description?: string }[]; demo?: boolean }>(
+          `/api/datasource/sources/${encodeURIComponent(sourceId)}/schemas`,
+        );
+        const schemas = schRes.items || [];
+        const demo = Boolean(schRes.demo);
+        const tree: SchemaNode[] = [];
+        for (const sch of schemas) {
+          const tblRes = await apiGet<{ items?: { name: string; row_count?: number }[] }>(
+            `/api/datasource/sources/${encodeURIComponent(sourceId)}/schemas/${encodeURIComponent(sch.name)}/tables`,
+          );
+          const tables: SchemaTable[] = [];
+          for (const tbl of tblRes.items || []) {
+            let columns: SchemaColumn[] = [];
+            try {
+              const colRes = await apiGet<{ items?: SchemaColumn[] }>(
+                `/api/datasource/sources/${encodeURIComponent(sourceId)}/schemas/${encodeURIComponent(sch.name)}/tables/${encodeURIComponent(tbl.name)}/columns`,
+              );
+              columns = (colRes.items || []).map((c) => ({
+                name: c.name,
+                datatype: c.datatype,
+                primary_key: c.primary_key,
+                nullable: c.nullable,
+              }));
+            } catch {
+              columns = [];
+            }
+            tables.push({ name: tbl.name, row_count: tbl.row_count, columns });
+          }
+          tree.push({ name: sch.name, description: sch.description, tables });
+        }
+        if (cancelled) return;
+        if (tree.length === 0) {
+          const fallback = demoSchemaTree(source?.type);
+          setSchemaTree(fallback);
+          setSchemaDemo(true);
+          setExpandedSchemas(Object.fromEntries(fallback.map((s) => [s.name, true])));
+        } else {
+          setSchemaTree(tree);
+          setSchemaDemo(demo);
+          setExpandedSchemas(Object.fromEntries(tree.map((s) => [s.name, true])));
+          const first = tree[0]?.tables[0];
+          if (first) setActiveSchemaTable({ schema: tree[0].name, table: first.name });
+        }
+      } catch {
+        if (cancelled) return;
+        const fallback = demoSchemaTree(source?.type);
+        setSchemaTree(fallback);
+        setSchemaDemo(true);
+        setExpandedSchemas(Object.fromEntries(fallback.map((s) => [s.name, true])));
+        const first = fallback[0]?.tables[0];
+        if (first) setActiveSchemaTable({ schema: fallback[0].name, table: first.name });
+      } finally {
+        if (!cancelled) setSchemaBusy(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [sourceId, source?.type]);
+
+  useEffect(() => {
+    if (!activeSchemaTable) {
+      setActiveColumns([]);
       return;
     }
+    const sch = schemaTree.find((s) => s.name === activeSchemaTable.schema);
+    const tbl = sch?.tables.find((t) => t.name === activeSchemaTable.table);
+    setActiveColumns(tbl?.columns || []);
+  }, [activeSchemaTable, schemaTree]);
+
+  const loadSample = useCallback(async () => {
     setPreviewBusy(true);
     setPreviewErr(null);
+    setPreviewDemo(false);
     try {
-      let result: PreviewResult;
-      if (activeEntry.datasetRid) {
-        result = await apiPost<PreviewResult>("/v1/analytics/datasets/preview", {
-          datasetRid: activeEntry.datasetRid,
-          limit: SAMPLE_ROW_LIMIT,
-        });
-      } else {
-        result = await apiPost<PreviewResult>("/v1/analytics/objects/list", {
-          objectType: activeEntry.ot,
-          limit: SAMPLE_ROW_LIMIT,
-        });
+      // 优先连接器 schema preview
+      if (activeSchemaTable) {
+        try {
+          const result = await apiPost<PreviewResult>(
+            `/api/datasource/sources/${encodeURIComponent(sourceId)}/preview`,
+            {
+              schema_name: activeSchemaTable.schema,
+              table_name: activeSchemaTable.table,
+              limit: SAMPLE_ROW_LIMIT,
+            },
+          );
+          setPreview(result);
+          setPreviewDemo(Boolean(result.demo));
+          return;
+        } catch {
+          /* fall through */
+        }
       }
-      setPreview(result);
+      if (activeEntry?.datasetRid || activeEntry?.ot) {
+        let result: PreviewResult;
+        if (activeEntry.datasetRid) {
+          result = await apiPost<PreviewResult>("/v1/analytics/datasets/preview", {
+            datasetRid: activeEntry.datasetRid,
+            limit: SAMPLE_ROW_LIMIT,
+          });
+        } else {
+          result = await apiPost<PreviewResult>("/v1/analytics/objects/list", {
+            objectType: activeEntry.ot,
+            limit: SAMPLE_ROW_LIMIT,
+          });
+        }
+        setPreview(result);
+        setPreviewDemo(false);
+        return;
+      }
+      // 最终演示行
+      const cols = activeColumns.length
+        ? activeColumns.map((c) => c.name)
+        : ["id", "name", "value"];
+      const demoRows = Array.from({ length: 5 }, (_, r) => {
+        const row: Record<string, unknown> = {};
+        for (const col of cols) {
+          row[col] = col.endsWith("_id") || col === "id" ? r + 1 : `${col}_${r}`;
+        }
+        return row;
+      });
+      setPreview({
+        columns: cols,
+        rows: demoRows,
+        total: 5,
+        demo: true,
+      });
+      setPreviewDemo(true);
     } catch (e) {
       setPreviewErr(e instanceof Error ? e.message : String(e));
+      setPreviewDemo(true);
     } finally {
       setPreviewBusy(false);
     }
-  }, [activeEntry?.datasetRid, activeEntry?.ot]);
+  }, [activeSchemaTable, activeEntry?.datasetRid, activeEntry?.ot, activeColumns, sourceId]);
 
   useEffect(() => {
     void loadSample();
@@ -144,6 +415,9 @@ export function SourceDetailPage() {
       ? `采样预览 · 显示 ${sampleShown} 行 / ${cols.length} 列（库内共 ${libraryTotal} 行）`
       : "采样预览";
 
+  const centerTitle = activeSchemaTable
+    ? `${activeSchemaTable.schema}.${activeSchemaTable.table}`
+    : activeEntry?.label || "—";
 
   return (
     <PageChrome title={sourceId || "数据源"} lede={source ? sourceSubtitle(source.type) : "Source 详情 · 连接器"}>
@@ -191,29 +465,106 @@ export function SourceDetailPage() {
           {tab === "explore" && (
             <div className="bp-src-detail-shell">
               <aside className="bp-src-detail-tree">
-                <input className="bp-src-detail-search" placeholder="搜索表…" aria-label="搜索表" />
-                <div className="bp-section-label">{sourceId}</div>
-                <nav className="bp-src-detail-nav">
-                  {tableEntries.length === 0 && <p className="muted">暂无关联管道/表</p>}
-                  {tableEntries.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      className={`bp-src-detail-tree-item${activeEntry?.id === t.id ? " is-active" : ""}`}
-                      onClick={() => setActiveTable(t.id)}
-                    >
-                      {t.label}
-                    </button>
+                <input
+                  className="bp-src-detail-search"
+                  placeholder="搜索表…"
+                  aria-label="搜索表"
+                  value={tableSearch}
+                  onChange={(e) => setTableSearch(e.target.value)}
+                />
+                <div className="bp-section-label" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span>{sourceId}</span>
+                  <span className={`w3-c6c7-path-badge ${schemaDemo ? "is-demo" : "is-live"}`}>
+                    {schemaPathLabel(schemaDemo)}
+                  </span>
+                </div>
+                <nav className="bp-src-detail-nav w3-c7-schema-nav">
+                  {schemaBusy && <p className="muted">加载 Schema…</p>}
+                  {!schemaBusy && filteredTree.length === 0 && <p className="muted">暂无 Schema</p>}
+                  {filteredTree.map((sch) => (
+                    <div key={sch.name} className="w3-c7-schema-group">
+                      <button
+                        type="button"
+                        className="w3-c7-schema-toggle"
+                        onClick={() =>
+                          setExpandedSchemas((prev) => ({ ...prev, [sch.name]: !prev[sch.name] }))
+                        }
+                      >
+                        {expandedSchemas[sch.name] !== false ? "▾" : "▸"} {sch.name}
+                        <span className="muted" style={{ marginLeft: 6, fontSize: "0.7rem" }}>
+                          {sch.tables.length} 表
+                        </span>
+                      </button>
+                      {expandedSchemas[sch.name] !== false &&
+                        sch.tables.map((tbl) => {
+                          const active =
+                            activeSchemaTable?.schema === sch.name &&
+                            activeSchemaTable?.table === tbl.name;
+                          return (
+                            <div key={`${sch.name}.${tbl.name}`}>
+                              <button
+                                type="button"
+                                className={`bp-src-detail-tree-item${active ? " is-active" : ""}`}
+                                onClick={() => setActiveSchemaTable({ schema: sch.name, table: tbl.name })}
+                              >
+                                {tbl.name}
+                                {tbl.row_count != null && (
+                                  <span className="muted" style={{ marginLeft: 6, fontSize: "0.65rem" }}>
+                                    {tbl.row_count}
+                                  </span>
+                                )}
+                              </button>
+                              {active && (tbl.columns || []).length > 0 && (
+                                <ul className="w3-c7-col-list">
+                                  {(tbl.columns || []).map((c) => (
+                                    <li key={c.name}>
+                                      <span className="mono">{c.name}</span>
+                                      <span className="muted">{formatColumnBadge(c)}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
                   ))}
+                  {tableEntries.length > 0 && (
+                    <>
+                      <div className="bp-section-label" style={{ marginTop: 12 }}>
+                        管道派生表
+                      </div>
+                      {tableEntries.map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          className={`bp-src-detail-tree-item${
+                            !activeSchemaTable && activeEntry?.id === t.id ? " is-active" : ""
+                          }`}
+                          onClick={() => {
+                            setActiveSchemaTable(null);
+                            setActiveTable(t.id);
+                          }}
+                        >
+                          {t.label}
+                        </button>
+                      ))}
+                    </>
+                  )}
                 </nav>
               </aside>
 
               <div className="bp-src-detail-center">
                 <div className="bp-src-detail-center-bar">
                   <div>
-                    <h2 className="bp-src-detail-table-title">{activeEntry?.label || "—"}</h2>
+                    <h2 className="bp-src-detail-table-title">{centerTitle}</h2>
                     <p className="muted" style={{ fontSize: "0.75rem", marginTop: 4 }}>
                       {sampleLede}
+                      {previewDemo && (
+                        <span className="w3-c6c7-path-badge is-demo" style={{ marginLeft: 8 }}>
+                          演示路径
+                        </span>
+                      )}
                     </p>
                   </div>
                   <button
@@ -231,9 +582,20 @@ export function SourceDetailPage() {
                     <table className="bp-pipe-preview-table">
                       <thead>
                         <tr>
-                          {cols.map((c) => (
-                            <th key={c}>{c}</th>
-                          ))}
+                          {cols.map((c) => {
+                            const meta = activeColumns.find((x) => x.name === c);
+                            return (
+                              <th key={c}>
+                                {c}
+                                {meta?.datatype && (
+                                  <span className="muted" style={{ marginLeft: 4, fontSize: "0.65rem" }}>
+                                    {meta.datatype}
+                                    {meta.primary_key ? " PK" : ""}
+                                  </span>
+                                )}
+                              </th>
+                            );
+                          })}
                         </tr>
                       </thead>
                       <tbody>
@@ -273,6 +635,21 @@ export function SourceDetailPage() {
                     <dd>{pipelines.length}</dd>
                   </div>
                 </dl>
+
+                {activeColumns.length > 0 && (
+                  <>
+                    <div className="bp-src-detail-divider" />
+                    <h3 className="bp-pipe-inspector-title">当前表列</h3>
+                    <ul className="w3-c7-col-list w3-c7-col-list-side">
+                      {activeColumns.map((c) => (
+                        <li key={c.name}>
+                          <span className="mono">{c.name}</span>
+                          <span className="muted">{formatColumnBadge(c)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
 
                 <div className="bp-src-detail-divider" />
                 <h3 className="bp-pipe-inspector-title">同步任务</h3>

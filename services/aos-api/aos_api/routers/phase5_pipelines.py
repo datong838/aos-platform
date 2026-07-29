@@ -106,11 +106,29 @@ async def update_pipeline(pl_id: str, req: UpdatePipelineRequest) -> dict[str, A
 
 @router.get("/{pl_id}/graph")
 async def get_graph(pl_id: str) -> dict[str, Any]:
+    """Return DAG graph; unknown wave_ext pipeline ids get a demo 3-node linear graph."""
     eng = get_engine()
     try:
         return eng.get_graph(pl_id)
     except KeyError:
-        raise HTTPException(404, f"Pipeline {pl_id} not found")
+        # W3-C6 · demo fallback for UI pipeline ids outside phase5 store
+        n_src = {"id": f"demo-src-{pl_id}", "pipeline_id": pl_id, "name": "source", "node_type": "source",
+                 "position_x": 60, "position_y": 60, "config": {}, "status": "idle"}
+        n_xf = {"id": f"demo-xf-{pl_id}", "pipeline_id": pl_id, "name": "transform", "node_type": "transform",
+                "position_x": 300, "position_y": 60, "config": {"expression": "row", "filter": ""}, "status": "idle"}
+        n_sink = {"id": f"demo-sink-{pl_id}", "pipeline_id": pl_id, "name": "sink", "node_type": "sink",
+                  "position_x": 540, "position_y": 60, "config": {}, "status": "idle"}
+        return {
+            "pipeline_id": pl_id,
+            "nodes": [n_src, n_xf, n_sink],
+            "edges": [
+                {"id": f"demo-e1-{pl_id}", "pipeline_id": pl_id, "source_node_id": n_src["id"], "target_node_id": n_xf["id"], "label": ""},
+                {"id": f"demo-e2-{pl_id}", "pipeline_id": pl_id, "source_node_id": n_xf["id"], "target_node_id": n_sink["id"], "label": ""},
+            ],
+            "node_count": 3,
+            "edge_count": 2,
+            "demo": True,
+        }
 
 
 # ─────────── Files ───────────
@@ -148,6 +166,14 @@ async def get_node_config(pl_id: str, node_id: str) -> dict[str, Any]:
     try:
         return eng.get_node_config(pl_id, node_id)
     except KeyError:
+        # W3-C6 · demo config for canvas transform panel
+        if node_id.startswith("demo-"):
+            return {
+                "pipeline_id": pl_id,
+                "node_id": node_id,
+                "config": {"expression": "row", "filter": ""},
+                "demo": True,
+            }
         raise HTTPException(404, f"Node {node_id} not found in pipeline {pl_id}")
 
 
@@ -158,6 +184,16 @@ async def update_node_config(pl_id: str, node_id: str, req: UpdateNodeConfigRequ
         node = eng.update_node_config(pl_id, node_id, req.config)
         return node.model_dump()
     except KeyError:
+        if node_id.startswith("demo-"):
+            return {
+                "id": node_id,
+                "pipeline_id": pl_id,
+                "name": "transform",
+                "node_type": "transform",
+                "config": req.config,
+                "status": "idle",
+                "demo": True,
+            }
         raise HTTPException(404, f"Node {node_id} not found in pipeline {pl_id}")
 
 
@@ -171,6 +207,21 @@ async def trial_run(pl_id: str, node_id: str, req: TrialRunRequest | None = None
         sample_input = req.sample_input if req else None
         return eng.trial_run(pl_id, node_id, sample_input)
     except KeyError:
+        if node_id.startswith("demo-"):
+            import time as _time
+            sample_input = req.sample_input if req else None
+            return {
+                "pipeline_id": pl_id,
+                "node_id": node_id,
+                "status": "ok",
+                "latency_ms": 42,
+                "output_rows": [
+                    {"id": 0, "input": sample_input or {}, "output": "demo_result_0", "confidence": 0.9},
+                    {"id": 1, "input": sample_input or {}, "output": "demo_result_1", "confidence": 0.8},
+                ],
+                "ran_at": _time.time(),
+                "demo": True,
+            }
         raise HTTPException(404, f"Node {node_id} not found in pipeline {pl_id}")
 
 
@@ -222,8 +273,20 @@ async def merge_proposal(pl_id: str, pp_id: str) -> dict[str, Any]:
 
 @router.get("/{pl_id}/history")
 async def list_history(pl_id: str) -> dict[str, Any]:
+    """Return run/edit history; unknown ids get demo entries (W3-C6)."""
+    import time as _time
+
     eng = get_engine()
     if eng.get_pipeline(pl_id) is None:
-        raise HTTPException(404, f"Pipeline {pl_id} not found")
+        now = _time.time()
+        items = [
+            {"id": f"ph-demo-1-{pl_id}", "pipeline_id": pl_id, "action": "created", "actor": "system",
+             "detail": "演示路径 · 管道创建（phase5 无此 id）", "created_at": now - 86400},
+            {"id": f"ph-demo-2-{pl_id}", "pipeline_id": pl_id, "action": "deployed", "actor": "system",
+             "detail": "演示路径 · 最近一次部署", "created_at": now - 3600},
+            {"id": f"ph-demo-3-{pl_id}", "pipeline_id": pl_id, "action": "run", "actor": "system",
+             "detail": "演示路径 · 试运行成功", "created_at": now - 600},
+        ]
+        return {"items": items, "count": len(items), "demo": True}
     items = eng.list_history(pl_id)
-    return {"items": [h.model_dump() for h in items], "count": len(items)}
+    return {"items": [h.model_dump() for h in items], "count": len(items), "demo": False}
