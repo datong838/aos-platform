@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, type ReactNode } from "react";
+import { useState, useCallback, useEffect, type ReactNode, type CSSProperties } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -31,6 +31,12 @@ import {
   type WidgetCategory,
   type PropFieldDef,
 } from "./widgets";
+import { apiGet } from "../api/client";
+import {
+  formatModuleVariableRef,
+  normalizeModuleVariablesPayload,
+  type ModuleVariableItem,
+} from "./canvasWidgets";
 
 // ── Types & Consts ─────────────────────────────────────────────────────────
 
@@ -492,16 +498,67 @@ function PaletteContent() {
 
 // ── Left Tab Content（布局 / 变量 / 事件）────────────────────────────────────
 
-function LayoutTabContent({ tree }: { tree: ComponentTree }) {
+function LayoutTabContent({
+  tree,
+  selectedId,
+  onSelect,
+}: {
+  tree: ComponentTree;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+}) {
   const root = tree["root"];
   const rootConfig = root?.config || {};
   const containers = Object.entries(tree).filter(([, n]) => {
     const plugin = getWidgetPlugin(n.type);
     return plugin?.isContainer;
   });
+
+  const renderTreeRow = (id: string, depth: number): ReactNode => {
+    const node = tree[id];
+    if (!node) return null;
+    const isSelected = selectedId === id;
+    return (
+      <div key={id}>
+        <button
+          type="button"
+          className={`w4-b1-tree-row${isSelected ? " is-selected" : ""}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(id);
+          }}
+          style={{
+            display: "flex",
+            width: "100%",
+            textAlign: "left",
+            padding: "4px 8px",
+            paddingLeft: 8 + depth * 12,
+            fontSize: 11,
+            background: isSelected ? "var(--aos-accent-light, rgba(79,70,229,0.12))" : "var(--aos-surface)",
+            color: isSelected ? "var(--aos-accent)" : "var(--aos-text)",
+            border: `1px solid ${isSelected ? "var(--aos-accent)" : "var(--aos-border)"}`,
+            borderRadius: 4,
+            cursor: "pointer",
+            marginBottom: 4,
+          }}
+        >
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {node.type} · {id}
+          </span>
+        </button>
+        {(node.children || []).map((cid) => renderTreeRow(cid, depth + 1))}
+      </div>
+    );
+  };
+
   return (
     <div style={{ width: 220, padding: 10, overflowY: "auto", fontSize: 12, display: "flex", flexDirection: "column", gap: 6 }}>
-      <CollapsibleSection title="页面级配置" storageKey="layout.page" defaultCollapsed={false}>
+      <CollapsibleSection title="组件树" storageKey="layout.tree" defaultCollapsed={false}>
+        {root ? renderTreeRow("root", 0) : (
+          <div style={{ fontSize: 11, color: "var(--aos-text-muted)", padding: "4px 0" }}>无 root 节点</div>
+        )}
+      </CollapsibleSection>
+      <CollapsibleSection title="页面级配置" storageKey="layout.page" defaultCollapsed={true}>
         <PropField label="内边距">
           <input type="number" value={rootConfig.padding ?? 24} onChange={() => {}} style={inputStyle} readOnly />
         </PropField>
@@ -509,43 +566,90 @@ function LayoutTabContent({ tree }: { tree: ComponentTree }) {
           <input type="number" value={rootConfig.gap ?? 16} onChange={() => {}} style={inputStyle} readOnly />
         </PropField>
       </CollapsibleSection>
-      <CollapsibleSection title={`容器节点 (${containers.length})`} storageKey="layout.containers" defaultCollapsed={false}>
+      <CollapsibleSection title={`容器节点 (${containers.length})`} storageKey="layout.containers" defaultCollapsed={true}>
         {containers.map(([id, n]) => (
-          <div key={id} style={{ padding: "4px 8px", fontSize: 11, background: "var(--aos-surface)", borderRadius: 4, border: "1px solid var(--aos-border)" }}>
+          <button
+            key={id}
+            type="button"
+            onClick={() => onSelect(id)}
+            style={{
+              padding: "4px 8px",
+              fontSize: 11,
+              background: selectedId === id ? "var(--aos-accent-light)" : "var(--aos-surface)",
+              borderRadius: 4,
+              border: `1px solid ${selectedId === id ? "var(--aos-accent)" : "var(--aos-border)"}`,
+              cursor: "pointer",
+              textAlign: "left",
+              color: "var(--aos-text)",
+            }}
+          >
             {n.type} · {id}
-          </div>
+          </button>
         ))}
       </CollapsibleSection>
     </div>
   );
 }
 
-function VariablesTabContent({ tree }: { tree: ComponentTree }) {
-  const objectTypes = new Set<string>();
-  for (const n of Object.values(tree)) {
-    if (n.config?.objectType) objectTypes.add(n.config.objectType as string);
-  }
-  const variables = Array.from(objectTypes).map((ot) => ({
-    name: `all_${ot.toLowerCase()}s`,
-    type: ot,
-    source: `${ot}[]`,
-  }));
+function VariablesTabContent({ moduleId }: { moduleId?: string }) {
+  const [items, setItems] = useState<ModuleVariableItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!moduleId) {
+      setItems([]);
+      setError("");
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    apiGet(`/v1/modules/${encodeURIComponent(moduleId)}/variables`)
+      .then((data) => {
+        if (!cancelled) {
+          setItems(normalizeModuleVariablesPayload(data));
+          setError("");
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) setError(String((e as Error).message || e));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [moduleId]);
+
   return (
     <div style={{ width: 220, padding: 10, overflowY: "auto", fontSize: 12, display: "flex", flexDirection: "column", gap: 6 }}>
-      <CollapsibleSection title={`模块接口 (${variables.length})`} storageKey="var.interfaces" defaultCollapsed={false}>
-        {variables.length === 0 ? (
-          <div style={{ fontSize: 11, color: "var(--aos-text-muted)", padding: "4px 0" }}>暂无接口变量</div>
-        ) : (
-          variables.map((v) => (
-            <div key={v.name} style={{ padding: "6px 8px", background: "var(--aos-surface)", borderRadius: 4, border: "1px solid var(--aos-border)" }}>
-              <div style={{ fontWeight: 500, color: "var(--aos-text)" }}>{v.name}</div>
-              <div style={{ fontSize: 10, color: "var(--aos-text-muted)" }}>{v.type} · {v.source}</div>
-            </div>
-          ))
+      <CollapsibleSection title={`模块变量 (${items.length})`} storageKey="var.module" defaultCollapsed={false}>
+        {!moduleId && (
+          <div style={{ fontSize: 11, color: "var(--aos-text-muted)", padding: "4px 0" }}>未选择模块</div>
         )}
+        {loading && <div style={{ fontSize: 11, color: "var(--aos-text-muted)" }}>加载中...</div>}
+        {error && <div style={{ fontSize: 11, color: "var(--aos-red, #b91c1c)" }}>加载失败：{error}</div>}
+        {!loading && !error && moduleId && items.length === 0 && (
+          <div style={{ fontSize: 11, color: "var(--aos-text-muted)", padding: "4px 0" }}>暂无变量</div>
+        )}
+        {items.map((v) => (
+          <div
+            key={v.id}
+            className="w4-b1-var-chip"
+            style={{ padding: "6px 8px", background: "var(--aos-surface)", borderRadius: 4, border: "1px solid var(--aos-border)" }}
+          >
+            <div style={{ fontWeight: 500, color: "var(--aos-text)" }}>{formatModuleVariableRef(v.name)}</div>
+            <div style={{ fontSize: 10, color: "var(--aos-text-muted)" }}>
+              {v.varType} · {v.group || "default"}
+            </div>
+          </div>
+        ))}
       </CollapsibleSection>
-      <CollapsibleSection title="参数" storageKey="var.params" defaultCollapsed={true}>
-        <div style={{ fontSize: 11, color: "var(--aos-text-muted)", padding: "4px 0" }}>暂无参数</div>
+      <CollapsibleSection title="说明" storageKey="var.hint" defaultCollapsed={true}>
+        <div style={{ fontSize: 11, color: "var(--aos-text-muted)", padding: "4px 0" }}>
+          只读列表 · 完整管理请到变量页（W1）
+        </div>
       </CollapsibleSection>
     </div>
   );
@@ -571,7 +675,7 @@ function EventsTabContent({ tree }: { tree: ComponentTree }) {
 
 // ── Property Panel ─────────────────────────────────────────────────────────
 
-const inputStyle: React.CSSProperties = {
+const inputStyle: CSSProperties = {
   width: "100%",
   padding: "5px 8px",
   fontSize: 12,
@@ -776,11 +880,14 @@ export function ComponentTreeEditor({
   onChange,
   rightCollapsed,
   onToggleRight,
+  moduleId,
 }: {
   tree: ComponentTree;
   onChange: (tree: ComponentTree) => void;
   rightCollapsed: boolean;
   onToggleRight: () => void;
+  /** W4-B1 · 用于只读拉取模块变量 */
+  moduleId?: string;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -976,8 +1083,10 @@ export function ComponentTreeEditor({
                 {/* Tab 内容 */}
                 <div style={{ flex: 1, overflow: "hidden" }}>
                   {leftTab === "widgets" && <PaletteContent />}
-                  {leftTab === "layout" && <LayoutTabContent tree={tree} />}
-                  {leftTab === "variables" && <VariablesTabContent tree={tree} />}
+                  {leftTab === "layout" && (
+                    <LayoutTabContent tree={tree} selectedId={selectedId} onSelect={handleSelect} />
+                  )}
+                  {leftTab === "variables" && <VariablesTabContent moduleId={moduleId} />}
                   {leftTab === "events" && <EventsTabContent tree={tree} />}
                 </div>
               </>

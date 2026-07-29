@@ -15,8 +15,79 @@ export type WidgetCanvasNode = {
     objectId?: string;
     actionTypeId?: string;
     groupBy?: string;
+    /** W4-B1 · 绑定的模块变量名 */
+    boundVariable?: string;
+    layoutDir?: "row" | "column" | "grid";
+    gapPx?: number;
+    bgColor?: string;
+    events?: Array<{ name: string; handler: string }>;
+    [key: string]: unknown;
   };
 };
+
+/** W4-B1 · 模块变量列表项（对齐 GET /v1/modules/:id/variables） */
+export type ModuleVariableItem = {
+  id: string;
+  name: string;
+  varType: string;
+  group?: string;
+  initialValue?: unknown;
+  currentValue?: unknown;
+  description?: string;
+};
+
+/** W4-B1 · 变量引用表达式 `$name` */
+export function formatModuleVariableRef(name: string): string {
+  const n = String(name || "").trim();
+  if (!n) return "";
+  return n.startsWith("$") ? n : `$${n}`;
+}
+
+/** W4-B1 · 解析变量 API 响应 */
+export function normalizeModuleVariablesPayload(data: unknown): ModuleVariableItem[] {
+  if (!data || typeof data !== "object") return [];
+  const raw = (data as { items?: unknown }).items;
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((v): v is Record<string, unknown> => !!v && typeof v === "object")
+    .map((v) => ({
+      id: String(v.id || ""),
+      name: String(v.name || ""),
+      varType: String(v.varType || v.var_type || "string"),
+      group: String(v.group || v.group_name || "default"),
+      initialValue: v.initialValue ?? v.initial_value,
+      currentValue: v.currentValue ?? v.current_value,
+      description: String(v.description || ""),
+    }))
+    .filter((v) => v.id && v.name);
+}
+
+/** W4-B1 · 将变量绑定写入 widget config（不改其它字段） */
+export function bindVariableToConfig(
+  config: Record<string, unknown> | undefined,
+  varName: string | null,
+): Record<string, unknown> {
+  const next = { ...(config || {}) };
+  if (!varName) {
+    delete next.boundVariable;
+    return next;
+  }
+  next.boundVariable = String(varName).replace(/^\$/, "");
+  return next;
+}
+
+/** W4-B1 · 组件树搜索（标题/kind/id） */
+export function filterCanvasNodesByQuery<T extends { id: string; title?: string; kind?: string }>(
+  nodes: T[],
+  query: string,
+): T[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return nodes;
+  return nodes.filter((n) => {
+    const hay = `${n.id} ${n.title || ""} ${n.kind || ""}`.toLowerCase();
+    return hay.includes(q);
+  });
+}
 
 /** 106/108 · 旧 stub Layout 按 pluginId 升真渲染 */
 export function resolveRenderKind(node: Pick<WidgetCanvasNode, "kind" | "pluginId">): string {
