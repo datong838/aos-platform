@@ -1,4 +1,11 @@
-import { useState, useMemo, useCallback } from "react";
+/**
+ * 文档智能 · OCR + LLM 抽取
+ *
+ * W4-A8：抽取优先 POST /api/aip/docintel-extract/run；失败标「演示路径」+ MOCK。
+ * W4-E1：pipeline-doc-intel 并入本页（不新建侧栏）；说明条 + 轻量管道试运行。
+ */
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { apiPost } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
 
 /* =========================================================================
@@ -240,6 +247,88 @@ export type ReviewAction = "approve" | "reject";
 export function getReviewTargetState(action: ReviewAction): DocState {
   return action === "approve" ? "review" : "needs_correction";
 }
+
+/* =========================================================================
+ *  W4-A8 / E1 纯函数
+ * ========================================================================= */
+
+/** live=真 API；demo=MOCK 演示路径；loading=请求中 */
+export type DocIntelDataMode = "live" | "demo" | "loading";
+
+/** 视觉稿 pipeline-doc-intel 模板（并入本页，不单独建菜单） */
+export const DOCINTEL_PIPELINE_TEMPLATES = [
+  { id: "classify", label: "分类" },
+  { id: "summarize", label: "总结" },
+  { id: "translate", label: "翻译" },
+  { id: "sentiment", label: "情感" },
+  { id: "entity", label: "实体提取" },
+  { id: "blank", label: "空模板" },
+] as const;
+
+export function pathLabel(mode: DocIntelDataMode): string {
+  if (mode === "live") return "真 API";
+  if (mode === "loading") return "加载中";
+  return "演示路径";
+}
+
+export function buildExtractPayload(
+  doc: Pick<DocItem, "title" | "ocrText">,
+  templateId: TemplateId,
+): { template_id: string; text: string; name: string } {
+  return {
+    template_id: templateId,
+    text: (doc.ocrText || "").trim() || doc.title,
+    name: doc.title,
+  };
+}
+
+export function normalizeExtractFields(raw: unknown): ExtractField[] {
+  if (!Array.isArray(raw)) return [];
+  const out: ExtractField[] = [];
+  raw.forEach((item, i) => {
+    if (!item || typeof item !== "object") return;
+    const o = item as Record<string, unknown>;
+    const name = String(o.name ?? o.field ?? `字段${i + 1}`);
+    const value = String(o.value ?? o.text ?? "");
+    const confidence = typeof o.confidence === "number" ? o.confidence : Number(o.confidence) || 0.8;
+    out.push({
+      id: String(o.id ?? `xf-${i + 1}`),
+      name,
+      type: String(o.type ?? "文本"),
+      value,
+      confidence: Math.min(1, Math.max(0, confidence)),
+      source: String(o.source ?? `API L${i + 1}`),
+    });
+  });
+  return out;
+}
+
+/** 按模板生成演示字段（API 失败回落） */
+export function demoExtractFields(templateId: TemplateId): ExtractField[] {
+  const tpl = TEMPLATES.find((t) => t.id === templateId) ?? TEMPLATES[0];
+  return tpl.fields.map((name, i) => ({
+    id: `demo-f${i + 1}`,
+    name,
+    type: "文本",
+    value: `演示·${name}`,
+    confidence: Math.max(0.55, 0.95 - i * 0.05),
+    source: `演示 P1 L${i + 1}`,
+  }));
+}
+
+export type ExtractRunResponse = {
+  ok?: boolean;
+  demo?: boolean;
+  fields?: unknown;
+  template_id?: string;
+};
+
+export type PipelineRunResponse = {
+  batchOk?: boolean;
+  parsed?: boolean;
+  ocr?: { text?: string; preview?: string };
+  parse?: { text?: string; preview?: string };
+};
 
 /* =========================================================================
  *  Mock 数据
@@ -581,30 +670,64 @@ function ExtractionPanel({
   onEditField,
   selectedTemplate,
   onTemplateChange,
+  dataMode,
+  running,
+  onRunExtract,
 }: {
   fields: ExtractField[];
   onEditField: (id: string, value: string) => void;
   selectedTemplate: TemplateId;
   onTemplateChange: (id: TemplateId) => void;
+  dataMode: DocIntelDataMode;
+  running: boolean;
+  onRunExtract: () => void;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
 
   return (
     <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)" }}>LLM 结构化提取结果</h3>
-        <select
-          value={selectedTemplate}
-          onChange={(e) => onTemplateChange(e.target.value as TemplateId)}
-          style={{ padding: "4px 8px", fontSize: 12, borderRadius: 4, border: "1px solid var(--aos-border)", background: "var(--aos-surface)", color: "var(--aos-text)" }}
-        >
-          {TEMPLATES.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.label}
-            </option>
-          ))}
-        </select>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>LLM 结构化提取结果</h3>
+          <span
+            className={`w4-e1-path-badge${dataMode === "demo" ? " is-demo" : dataMode === "live" ? " is-live" : ""}`}
+            data-testid="extract-path-badge"
+          >
+            {pathLabel(dataMode)}
+          </span>
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <select
+            value={selectedTemplate}
+            onChange={(e) => onTemplateChange(e.target.value as TemplateId)}
+            style={{ padding: "4px 8px", fontSize: 12, borderRadius: 4, border: "1px solid var(--aos-border)", background: "var(--aos-surface)", color: "var(--aos-text)" }}
+          >
+            {TEMPLATES.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            data-testid="run-extract-btn"
+            disabled={running}
+            onClick={onRunExtract}
+            style={{
+              padding: "4px 10px",
+              fontSize: 12,
+              borderRadius: 4,
+              border: "1px solid var(--aos-indigo-border)",
+              background: "var(--aos-accent)",
+              color: "var(--text-on-brand)",
+              cursor: running ? "wait" : "pointer",
+              opacity: running ? 0.7 : 1,
+            }}
+          >
+            {running ? "抽取中…" : "运行抽取"}
+          </button>
+        </div>
       </div>
 
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
@@ -799,8 +922,71 @@ export function DocumentIntelligencePage() {
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>("finance_report");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [extractFields, setExtractFields] = useState<ExtractField[]>(MOCK_EXTRACT_FIELDS);
+  const [dataMode, setDataMode] = useState<DocIntelDataMode>("demo");
+  const [extractRunning, setExtractRunning] = useState(false);
+  const [pipelineRunning, setPipelineRunning] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<string>("");
+  const [pipelineTpl, setPipelineTpl] = useState<string>("entity");
+  const autoTried = useRef(false);
 
   const selectedDoc = useMemo(() => docs.find((d) => d.id === selectedId) ?? docs[0], [docs, selectedId]);
+
+  const runExtract = useCallback(async () => {
+    const doc = docs.find((d) => d.id === selectedId) ?? docs[0];
+    if (!doc) return;
+    setExtractRunning(true);
+    setDataMode("loading");
+    setStatusMsg("");
+    try {
+      const payload = buildExtractPayload(doc, selectedTemplate);
+      const res = await apiPost<ExtractRunResponse>("/api/aip/docintel-extract/run", payload);
+      const fields = normalizeExtractFields(res.fields);
+      if (fields.length === 0) throw new Error("empty fields");
+      setExtractFields(fields);
+      setDataMode(res.demo === true ? "demo" : "live");
+      setStatusMsg(`抽取完成 · ${pathLabel(res.demo === true ? "demo" : "live")} · ${fields.length} 字段`);
+    } catch (e) {
+      setExtractFields(demoExtractFields(selectedTemplate));
+      setDataMode("demo");
+      setStatusMsg(`演示路径 · 抽取 API 不可用（${String((e as Error).message || e)}），已回落 MOCK`);
+    } finally {
+      setExtractRunning(false);
+    }
+  }, [docs, selectedId, selectedTemplate]);
+
+  const runPipelineTrial = useCallback(async () => {
+    const doc = docs.find((d) => d.id === selectedId) ?? docs[0];
+    if (!doc) return;
+    setPipelineRunning(true);
+    setStatusMsg("");
+    try {
+      const res = await apiPost<PipelineRunResponse>("/v1/docintel/pipeline", {
+        textHint: (doc.ocrText || "").trim() || doc.title,
+        name: doc.title,
+        template: pipelineTpl,
+      });
+      const ocrText =
+        res.ocr?.text ||
+        res.ocr?.preview ||
+        res.parse?.text ||
+        res.parse?.preview ||
+        doc.ocrText;
+      if (ocrText) {
+        setDocs((prev) => prev.map((d) => (d.id === doc.id ? { ...d, ocrText } : d)));
+      }
+      setStatusMsg(`管道试运行成功 · 真 API · 模板 ${pipelineTpl}`);
+    } catch (e) {
+      setStatusMsg(`演示路径 · 管道试运行失败（${String((e as Error).message || e)}）`);
+    } finally {
+      setPipelineRunning(false);
+    }
+  }, [docs, selectedId, pipelineTpl]);
+
+  useEffect(() => {
+    if (autoTried.current) return;
+    autoTried.current = true;
+    void runExtract();
+  }, [runExtract]);
 
   const handleFiles = useCallback((files: File[]) => {
     const newDocs: DocItem[] = files.map((f, i) => {
@@ -810,9 +996,9 @@ export function DocumentIntelligencePage() {
         title: f.name,
         type: inferFileType(f.name),
         size: f.size,
-        status: "uploaded",
+        status: "uploaded" as DocState,
         uploadedAt: now,
-        history: [{ state: "uploaded", timestamp: now, note: `文件上传成功 (${formatFileSize(f.size)})` }],
+        history: [{ state: "uploaded" as DocState, timestamp: now, note: `文件上传成功 (${formatFileSize(f.size)})` }],
       };
     });
     setDocs((prev) => [...newDocs, ...prev]);
@@ -880,6 +1066,50 @@ export function DocumentIntelligencePage() {
 
   return (
     <PageChrome title="文档智能" lede="导入文档、配置提取模板，自动识别并结构化关键字段">
+      {/* E1：DocIntel 管道并入说明 */}
+      <div className="w4-e1-notice" data-testid="docintel-merge-notice">
+        <strong>DocIntel 管道能力收敛于此页</strong>
+        <span>（原 pipeline-doc-intel 视觉稿，不单独建侧栏菜单；抽取与流水线试运行在本页完成）</span>
+      </div>
+
+      {/* E1：轻量管道能力条 */}
+      <div className="w4-e1-pipeline-strip" data-testid="docintel-pipeline-strip">
+        <div className="w4-e1-pipeline-nodes" aria-label="DocIntel 迷你管道">
+          <span className="w4-e1-node">输入</span>
+          <span className="w4-e1-arrow">→</span>
+          <span className="w4-e1-node is-llm">Use LLM</span>
+          <span className="w4-e1-arrow">→</span>
+          <span className="w4-e1-node">输出</span>
+        </div>
+        <div className="w4-e1-pipeline-templates">
+          {DOCINTEL_PIPELINE_TEMPLATES.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={`w4-e1-tpl-chip${pipelineTpl === t.id ? " is-active" : ""}`}
+              onClick={() => setPipelineTpl(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          data-testid="pipeline-trial-btn"
+          disabled={pipelineRunning}
+          onClick={() => void runPipelineTrial()}
+          className="w4-e1-trial-btn"
+        >
+          {pipelineRunning ? "试运行中…" : "管道试运行"}
+        </button>
+      </div>
+
+      {statusMsg ? (
+        <div className="w4-e1-status-msg" data-testid="docintel-status-msg">
+          {statusMsg}
+        </div>
+      ) : null}
+
       {/* 顶部统计卡片 */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
         <StatCard value="1,284" label="文档总数" trend="12.5% 本周" trendUp />
@@ -987,6 +1217,9 @@ export function DocumentIntelligencePage() {
             onEditField={handleEditField}
             selectedTemplate={selectedTemplate}
             onTemplateChange={setSelectedTemplate}
+            dataMode={dataMode}
+            running={extractRunning}
+            onRunExtract={() => void runExtract()}
           />
           <ReviewPanel fields={extractFields} doc={selectedDoc} onApprove={handleApprove} onReject={handleReject} />
         </div>

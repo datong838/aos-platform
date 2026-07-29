@@ -74,3 +74,24 @@ def test_singleton():
     e1 = get_engine()
     e2 = DocintelExtractEngine()
     assert e1 is e2
+
+
+def test_run_extract_finance_report():
+    engine = get_engine()
+    result = engine.run_extract(
+        template_id="finance_report",
+        text="公司名称: 某某科技\n总收入: ¥100\n净利润: ¥20",
+        name="demo.pdf",
+    )
+    assert result["ok"] is True
+    assert result["demo"] is False
+    assert result["template_id"] == "finance_report"
+    assert len(result["fields"]) == 7
+    assert any(f["name"] == "公司名称" for f in result["fields"])
+
+
+def test_run_extract_unknown_template_falls_back():
+    engine = get_engine()
+    result = engine.run_extract(template_id="unknown-x", text="")
+    assert result["template_id"] == "finance_report"
+    assert len(result["fields"]) >= 3
