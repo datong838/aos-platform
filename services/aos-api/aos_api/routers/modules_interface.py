@@ -18,6 +18,8 @@ class InterfaceBody(BaseModel):
     name: str = ""
     description: str = ""
     entryParams: list[dict[str, Any]] = []
+    # Optional outputs; merged into entryParams with direction=output on write.
+    outputParams: list[dict[str, Any]] = []
     expose: dict[str, Any] = {}
     version: str = "1.0.0"
 
