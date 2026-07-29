@@ -7,6 +7,7 @@
  * 纯函数集中在文件顶部（SQL 解析 / 图表数据转换 / 地图坐标映射），便于测试。
  */
 import { useMemo, useState } from "react";
+import { apiPost } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
 import { BpBadge } from "../../components/bp";
 
@@ -39,6 +40,17 @@ export type QueryResult = {
   rows: ResultRow[];
   durationMs: number;
   cacheHit: boolean;
+  /** W2-A4：live=真查询；fallback/demo=演示路径 */
+  source?: "live" | "fallback" | "demo";
+};
+
+export type AnalystQueryApiResponse = {
+  ok?: boolean;
+  columns?: Array<{ name?: string; type?: string }>;
+  rows?: ResultRow[];
+  durationMs?: number;
+  cacheHit?: boolean;
+  source?: "live" | "fallback";
 };
 
 export type MapMarker = {
@@ -255,6 +267,33 @@ export const MOCK_RESULT: QueryResult = {
   cacheHit: true,
 };
 
+/**将 API 响应映射为页面 QueryResult（纯函数，便于测试）。*/
+export function mapAnalystApiResult(data: AnalystQueryApiResponse): QueryResult {
+  const columns: ResultColumn[] = (data.columns ?? []).map((c) => {
+    const t = String(c.type ?? "string");
+    const type: ResultColumn["type"] =
+      t === "number" || t === "coords" ? t : "string";
+    return { name: String(c.name ?? ""), type };
+  }).filter((c) => c.name);
+  return {
+    columns: columns.length > 0 ? columns : MOCK_RESULT.columns,
+    rows: Array.isArray(data.rows) ? data.rows : [],
+    durationMs: typeof data.durationMs === "number" ? data.durationMs : 0,
+    cacheHit: Boolean(data.cacheHit),
+    source: data.source === "live" ? "live" : "fallback",
+  };
+}
+
+/**本地 MOCK 降级结果。*/
+export function demoMockResult(durationMs?: number): QueryResult {
+  return {
+    ...MOCK_RESULT,
+    durationMs: durationMs ?? Math.round(200 + Math.random() * 400),
+    cacheHit: false,
+    source: "demo",
+  };
+}
+
 // 英国中部 bounds（用于地图投影）
 export const UK_MID_BOUNDS = { latMin: 52.0, latMax: 52.4, lngMin: -1.2, lngMax: -0.6 };
 
@@ -273,6 +312,8 @@ export function AipAnalystPage() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [filter, setFilter] = useState("");
   const [page, setPage] = useState(1);
+  const [running, setRunning] = useState(false);
+  const [pathBanner, setPathBanner] = useState<"live" | "demo" | null>(null);
   const pageSize = 10;
 
   const filteredQueries = useMemo(
@@ -298,11 +339,22 @@ export function AipAnalystPage() {
     return rowsToMarkers(result.rows, "coords", "name");
   }, [result]);
 
-  function runQuery() {
-    if (!isSelectQuery(sql)) return;
-    // 模拟执行：直接使用 mock 结果
-    setResult({ ...MOCK_RESULT, durationMs: Math.round(200 + Math.random() * 400), cacheHit: Math.random() > 0.5 });
-    setPage(1);
+  async function runQuery() {
+    if (!isSelectQuery(sql) || running) return;
+    setRunning(true);
+    try {
+      const data = await apiPost<AnalystQueryApiResponse>("/v1/aip/analyst/query", { sql });
+      const mapped = mapAnalystApiResult(data);
+      setResult(mapped);
+      setPathBanner(mapped.source === "live" ? "live" : "demo");
+      setPage(1);
+    } catch {
+      setResult(demoMockResult());
+      setPathBanner("demo");
+      setPage(1);
+    } finally {
+      setRunning(false);
+    }
   }
 
   function selectQuery(q: SavedQuery) {
@@ -330,6 +382,16 @@ export function AipAnalystPage() {
           minHeight: 520,
         }}
       >
+        {pathBanner === "live" && (
+          <div className="w2-a4-banner w2-a4-banner--live" data-testid="analyst-path-live">
+            真查询路径 · POST /v1/aip/analyst/query
+          </div>
+        )}
+        {pathBanner === "demo" && (
+          <div className="w2-a4-banner w2-a4-banner--demo" data-testid="analyst-path-demo">
+            演示路径 · API 不可用或 fallback，已使用本地 MOCK
+          </div>
+        )}
         <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
           {/* 左栏：SQL 查询树 */}
           <aside
@@ -413,7 +475,15 @@ export function AipAnalystPage() {
           >
             {/* 编辑器工具栏 */}
             <div style={{ padding: "6px 10px", borderBottom: "1px solid var(--aos-border)", background: "var(--aos-surface)", display: "flex", gap: 6, alignItems: "center" }}>
-              <button type="button" onClick={runQuery} data-testid="btn-run" style={btnPrimary}>▶ 运行</button>
+              <button
+                type="button"
+                onClick={() => void runQuery()}
+                disabled={running}
+                data-testid="btn-run"
+                style={{ ...btnPrimary, opacity: running ? 0.7 : 1 }}
+              >
+                {running ? "运行中…" : "▶ 运行"}
+              </button>
               <button
                 type="button"
                 onClick={() => setSql((s) => formatSql(s))}

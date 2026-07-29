@@ -9089,3 +9089,18 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
 .w4-b1-props-data {
   color: var(--aos-text);
 }
+/* === W2-A4 === */
+.w2-a4-banner {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--aos-border);
+  flex-shrink: 0;
+}
+.w2-a4-banner--live {
+  background: color-mix(in srgb, var(--aos-green, #16a34a) 12%, transparent);
+  color: var(--aos-green, #15803d);
+}
+.w2-a4-banner--demo {
+  background: color-mix(in srgb, var(--aos-amber, #f59e0b) 18%, transparent);
+  color: var(--aos-amber-700, #b45309);
+}

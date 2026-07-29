@@ -1106,6 +1106,10 @@ def create_app() -> FastAPI:
     application.include_router(phase7_releases_router)
     application.include_router(phase7_ferry_router)
 
+    # W2-A4
+    from aos_api.routers.aip_analyst import router as aip_analyst_router
+    application.include_router(aip_analyst_router)
+
     # FastAPI 0.115+ merges lifespan_context for every include_router,
     # creating deeply nested closures that exceed Python's recursion limit
     # with 500+ routers. Reset to the app's own lifespan to avoid the chain.

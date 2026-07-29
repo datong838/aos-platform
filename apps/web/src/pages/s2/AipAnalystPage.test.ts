@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   columnToNumbers,
+  demoMockResult,
   extractColumns,
   extractTable,
   extractWhere,
@@ -9,6 +10,7 @@ import {
   hasLimit,
   isSelectQuery,
   linePath,
+  mapAnalystApiResult,
   normalizeBars,
   paginate,
   parseCoords,
@@ -392,5 +394,40 @@ describe("AipAnalystPage · 集成：filter + sort + paginate", () => {
     expect(filtered).toHaveLength(1);
     const sorted = sortRows(filtered, "rating", "asc");
     expect(sorted[0].rating).toBe(3);
+  });
+});
+
+/* ----------------------------------------------------------------------------
+ * W2-A4：API 映射与演示降级
+ * ------------------------------------------------------------------------- */
+describe("AipAnalystPage · mapAnalystApiResult / demoMockResult", () => {
+  it("映射 live 响应", () => {
+    const r = mapAnalystApiResult({
+      columns: [
+        { name: "name", type: "string" },
+        { name: "rating", type: "number" },
+      ],
+      rows: [{ name: "a", rating: 5 }],
+      durationMs: 12,
+      cacheHit: false,
+      source: "live",
+    });
+    expect(r.source).toBe("live");
+    expect(r.rows).toHaveLength(1);
+    expect(r.columns[1].type).toBe("number");
+    expect(r.durationMs).toBe(12);
+  });
+
+  it("缺列时回退 MOCK 列定义", () => {
+    const r = mapAnalystApiResult({ rows: [{ name: "x" }], source: "fallback" });
+    expect(r.source).toBe("fallback");
+    expect(r.columns.length).toBeGreaterThan(0);
+  });
+
+  it("demoMockResult 标记演示路径", () => {
+    const r = demoMockResult(100);
+    expect(r.source).toBe("demo");
+    expect(r.durationMs).toBe(100);
+    expect(r.rows.length).toBeGreaterThan(0);
   });
 });
