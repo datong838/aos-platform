@@ -38,14 +38,24 @@ export function ObjectTypeDetailPage() {
     let cancelled = false;
     (async () => {
       try {
-        const [types, list, funnel, br] = await Promise.all([
+        const [types, list, funnel, br, detailMeta] = await Promise.all([
           apiGet<{ items: ObjectTypeRow[] }>("/v1/ontology/object-types"),
           getOntologyClient().listObjects(typeId, { branch: branchId }),
           apiGet<{ stage?: string }>(`/v1/funnel/${encodeURIComponent(typeId)}/status`).catch(() => ({})),
           apiGet<{ items: Branch[] }>("/v1/ontology/branches").catch(() => ({ items: [] })),
+          apiGet<ObjectTypeRow>(`/v1/ontology/object-types/${encodeURIComponent(typeId)}`).catch(() => null),
         ]);
         if (cancelled) return;
-        const hit = types.items.find((t) => t.id === typeId) || null;
+        const hit =
+          detailMeta && detailMeta.id
+            ? {
+                id: detailMeta.id,
+                name: detailMeta.name || typeId,
+                description: detailMeta.description,
+                published: detailMeta.published,
+                properties: detailMeta.properties,
+              }
+            : types.items.find((t) => t.id === typeId) || null;
         setMeta(hit);
         setObjects((list.items || []) as Record<string, unknown>[]);
         setFunnelStage((funnel as { stage?: string }).stage);

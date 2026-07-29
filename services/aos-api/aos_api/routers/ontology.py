@@ -13,6 +13,7 @@ from aos_api.db import connect
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
 from aos_api.marking import apply_field_redaction, can_access_object, ensure_object_access
+from aos_api.ot_detail_meta import build_ot_detail_meta
 
 router = APIRouter(tags=["ontology"])
 log = get_logger("aos-api.ontology")
@@ -155,24 +156,38 @@ def get_object_type(
     type_id: str,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
+    """OT 详情 · W3-C2 补齐派生元数据（RID/PK/TitleKey/Backing 等）。"""
     _ = principal
     with connect() as conn:
-        row = conn.execute(
-            """
-            SELECT id, name, description, published, properties
-            FROM meta_object_type WHERE id=%s
-            """,
-            (type_id,),
-        ).fetchone()
+        try:
+            row = conn.execute(
+                """
+                SELECT id, name, description, published, properties,
+                       required_markings, created_at
+                FROM meta_object_type WHERE id=%s
+                """,
+                (type_id,),
+            ).fetchone()
+        except Exception:
+            row = conn.execute(
+                """
+                SELECT id, name, description, published, properties
+                FROM meta_object_type WHERE id=%s
+                """,
+                (type_id,),
+            ).fetchone()
     if not row:
         raise ApiError(code="NOT_FOUND", message="object type not found", status_code=404)
-    return {
-        "id": row["id"],
-        "name": row["name"],
-        "description": row["description"],
-        "published": row["published"],
-        "properties": row["properties"],
-    }
+    row_d = dict(row)
+    return build_ot_detail_meta(
+        type_id=row_d["id"],
+        name=row_d["name"],
+        description=row_d.get("description") or "",
+        published=bool(row_d.get("published")),
+        properties=row_d.get("properties"),
+        required_markings=row_d.get("required_markings") or [],
+        created_at=row_d.get("created_at"),
+    )
 
 
 class ObjectTypeUpdateIn(BaseModel):
