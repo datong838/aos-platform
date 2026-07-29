@@ -5,7 +5,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { apiGet, apiPost, apiPut, apiDelete } from "../../api/client";
+import { apiGet, apiPost, apiPut } from "../../api/client";
 import { S2Chrome } from "./shared";
 import { BpToolbar, BpTabs } from "./blueprintUi";
 
@@ -25,6 +25,8 @@ export type PropertyStatus = "active" | "experimental" | "deprecated";
 
 export type PropertyVisibility = "normal" | "hidden" | "visible";
 
+export type PropertySourceMode = "loading" | "live" | "demo";
+
 export interface PropertyField {
   id: string;
   name: string;
@@ -41,6 +43,32 @@ export interface PropertyField {
   defaultValue: string;
   minValue: string;
   maxValue: string;
+}
+
+/** API 列映射行 */
+export interface ColumnMappingRow {
+  id: string;
+  object_type_id: string;
+  source_column: string;
+  target_property: string;
+  confidence: number;
+  auto: boolean;
+  status: string;
+}
+
+/** API 属性原始行（宽松） */
+export interface ApiPropertyRow {
+  id?: string;
+  name?: string;
+  display_name?: string;
+  datatype?: string;
+  type?: string;
+  nullable?: boolean;
+  is_primary_key?: boolean;
+  is_display_name?: boolean;
+  description?: string;
+  column_mapping?: string;
+  columnMapping?: string;
 }
 
 // ==================== 常量 ====================
@@ -184,11 +212,189 @@ export function filterProperties(
   return result;
 }
 
+const DATATYPE_TO_UI: Record<string, PropertyType> = {
+  string: "STRING",
+  STRING: "STRING",
+  int: "INTEGER",
+  integer: "INTEGER",
+  INTEGER: "INTEGER",
+  double: "DECIMAL",
+  decimal: "DECIMAL",
+  DECIMAL: "DECIMAL",
+  float: "DECIMAL",
+  boolean: "BOOLEAN",
+  BOOLEAN: "BOOLEAN",
+  date: "DATE",
+  DATE: "DATE",
+  datetime: "TIMESTAMP",
+  timestamp: "TIMESTAMP",
+  TIMESTAMP: "TIMESTAMP",
+  json: "JSON",
+  JSON: "JSON",
+  geo: "GEOMETRY",
+  geometry: "GEOMETRY",
+  GEOMETRY: "GEOMETRY",
+};
+
+const UI_TO_DATATYPE: Record<PropertyType, string> = {
+  STRING: "string",
+  INTEGER: "int",
+  DECIMAL: "double",
+  BOOLEAN: "boolean",
+  DATE: "date",
+  TIMESTAMP: "datetime",
+  JSON: "json",
+  GEOMETRY: "geo",
+};
+
+/** API datatype → UI PropertyType */
+export function mapDatatypeToUiType(datatype: string | undefined): PropertyType {
+  if (!datatype) return "STRING";
+  return DATATYPE_TO_UI[datatype] || DATATYPE_TO_UI[datatype.toLowerCase()] || "STRING";
+}
+
+/** UI → AddPropertyRequest 字段 */
+export function mapFieldToAddRequest(p: PropertyField): Record<string, unknown> {
+  return {
+    name: p.name.trim(),
+    display_name: p.name.trim(),
+    datatype: UI_TO_DATATYPE[p.type] || "string",
+    nullable: !p.isRequired,
+    is_primary_key: p.isPrimaryKey,
+    is_display_name: p.isTitleKey,
+    description: p.description || "",
+  };
+}
+
+/** API 属性行 → PropertyField；可选叠加 columnMapping */
+export function mapApiPropertyToField(
+  row: ApiPropertyRow,
+  columnByProp?: Record<string, string>,
+): PropertyField {
+  const name = row.name || "";
+  const mapping =
+    row.columnMapping ||
+    row.column_mapping ||
+    (columnByProp && name ? columnByProp[name] : "") ||
+    "";
+  return {
+    id: row.id || `prop-${name || Date.now()}`,
+    name,
+    type: mapDatatypeToUiType(row.datatype || row.type),
+    description: row.description || "",
+    status: "active",
+    visibility: "normal",
+    isPrimaryKey: Boolean(row.is_primary_key),
+    isTitleKey: Boolean(row.is_display_name),
+    isRequired: row.nullable === false,
+    allowMultiple: false,
+    baseFormatter: "No formatting",
+    columnMapping: mapping,
+    defaultValue: "",
+    minValue: "",
+    maxValue: "",
+  };
+}
+
+/** 映射行列表 → 属性名→源列 */
+export function mappingTargetToSource(
+  rows: ColumnMappingRow[],
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const m of rows) {
+    if (m.target_property && m.source_column && m.status !== "skipped") {
+      out[m.target_property] = m.source_column;
+    }
+  }
+  return out;
+}
+
+/** 把映射写回属性列表的 columnMapping */
+export function applyMappingsToProperties(
+  props: PropertyField[],
+  rows: ColumnMappingRow[],
+): PropertyField[] {
+  const byTarget = mappingTargetToSource(rows);
+  return props.map((p) => ({
+    ...p,
+    columnMapping: byTarget[p.name] || p.columnMapping || "",
+  }));
+}
+
+/** 规范化 API 映射行 */
+export function normalizeMappingRow(
+  raw: Partial<ColumnMappingRow> & Record<string, unknown>,
+  otId: string,
+): ColumnMappingRow {
+  return {
+    id: String(raw.id || `cm-${raw.source_column || Date.now()}`),
+    object_type_id: String(raw.object_type_id || otId),
+    source_column: String(raw.source_column || ""),
+    target_property: String(raw.target_property || ""),
+    confidence: typeof raw.confidence === "number" ? raw.confidence : 0,
+    auto: Boolean(raw.auto),
+    status: String(raw.status || (raw.target_property ? "mapped" : "skipped")),
+  };
+}
+
+/** 映射保存 body */
+export function buildMappingSaveBody(rows: ColumnMappingRow[]): {
+  mappings: Array<{
+    source_column: string;
+    target_property: string;
+    confidence: number;
+    auto: boolean;
+    status: string;
+  }>;
+} {
+  return {
+    mappings: rows.map((r) => ({
+      source_column: r.source_column,
+      target_property: r.target_property,
+      confidence: r.confidence,
+      auto: r.auto,
+      status: r.target_property ? "mapped" : "skipped",
+    })),
+  };
+}
+
+/** 本地未映射属性 → 推导初始映射行（demo 回退） */
+export function deriveLocalMappingRows(
+  props: PropertyField[],
+  otId: string,
+): ColumnMappingRow[] {
+  return props
+    .filter((p) => p.name.trim())
+    .map((p, i) => ({
+      id: `cm-local-${i}-${p.id}`,
+      object_type_id: otId,
+      source_column: p.columnMapping || autoMapColumnName(p.name),
+      target_property: p.columnMapping ? p.name : "",
+      confidence: p.columnMapping ? 1 : 0,
+      auto: false,
+      status: p.columnMapping ? "mapped" : "skipped",
+    }));
+}
+
+export function isNewPropertyId(id: string): boolean {
+  return id.startsWith("new-") || /(?:^|-)new-/.test(id);
+}
+
+export function countMappedColumns(rows: ColumnMappingRow[]): {
+  mapped: number;
+  total: number;
+} {
+  const total = rows.length;
+  const mapped = rows.filter((r) => r.target_property && r.status !== "skipped").length;
+  return { mapped, total };
+}
+
 // ==================== 组件 ====================
 
 export function PropertyEditorPage() {
   const { typeId = "" } = useParams();
   const [properties, setProperties] = useState<PropertyField[]>([]);
+  const [mappings, setMappings] = useState<ColumnMappingRow[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showMappedOnly, setShowMappedOnly] = useState(false);
@@ -196,26 +402,48 @@ export function PropertyEditorPage() {
   const [detailTab, setDetailTab] = useState<string>("general");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sourceMode, setSourceMode] = useState<PropertySourceMode>("loading");
   const [err, setErr] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
+  const [mapBusy, setMapBusy] = useState(false);
 
-  // 加载属性列表
   useEffect(() => {
     if (!typeId) return;
     let cancelled = false;
     (async () => {
       try {
         setLoading(true);
-        const res = await apiGet<{ items: PropertyField[] }>(
+        setSourceMode("loading");
+        const propRes = await apiGet<{ items?: ApiPropertyRow[] }>(
           `/v1/ontology/object-types/${encodeURIComponent(typeId)}/properties`,
-        ).catch(() => ({ items: [] as PropertyField[] }));
+        );
         if (cancelled) return;
-        setProperties(res.items || []);
-        if (res.items && res.items.length > 0 && !selectedId) {
-          setSelectedId(res.items[0].id);
+
+        let mapRows: ColumnMappingRow[] = [];
+        try {
+          const mapRes = await apiGet<{ items?: Array<Partial<ColumnMappingRow>> }>(
+            `/v1/ontology/object-types/${encodeURIComponent(typeId)}/column-mapping`,
+          );
+          mapRows = (mapRes.items || []).map((r) => normalizeMappingRow(r, typeId));
+        } catch {
+          mapRows = [];
         }
+
+        const byTarget = mappingTargetToSource(mapRows);
+        const items = (propRes.items || []).map((r) => mapApiPropertyToField(r, byTarget));
+        setProperties(items);
+        setMappings(
+          mapRows.length > 0 ? mapRows : deriveLocalMappingRows(items, typeId),
+        );
+        setSourceMode("live");
+        if (items.length > 0) setSelectedId(items[0].id);
       } catch (e) {
-        if (!cancelled) setErr(String((e as Error).message || e));
+        if (cancelled) return;
+        // 演示路径：空属性 + 本地推导
+        setProperties([]);
+        setMappings([]);
+        setSourceMode("demo");
+        setErr(String((e as Error).message || e));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -223,7 +451,6 @@ export function PropertyEditorPage() {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [typeId]);
 
   const filtered = useMemo(
@@ -232,7 +459,7 @@ export function PropertyEditorPage() {
   );
 
   const summary = useMemo(() => summarizeProperties(properties), [properties]);
-
+  const mapStats = useMemo(() => countMappedColumns(mappings), [mappings]);
   const selected = properties.find((p) => p.id === selectedId) || null;
 
   function patchProperty(id: string, patch: Partial<PropertyField>) {
@@ -241,11 +468,25 @@ export function PropertyEditorPage() {
     );
   }
 
+  function patchMapping(id: string, patch: Partial<ColumnMappingRow>) {
+    setMappings((prev) =>
+      prev.map((m) => {
+        if (m.id !== id) return m;
+        const next = { ...m, ...patch };
+        if ("target_property" in patch) {
+          next.status = next.target_property ? "mapped" : "skipped";
+          next.confidence = next.target_property ? Math.max(next.confidence, 0.5) : 0;
+        }
+        return next;
+      }),
+    );
+  }
+
   function addProperty() {
     const np = emptyProperty();
     setProperties((prev) => [...prev, np]);
     setSelectedId(np.id);
-    setMsg(`已新增属性（待保存）`);
+    setMsg("已新增属性（待保存）");
   }
 
   async function saveProperty(p: PropertyField) {
@@ -256,24 +497,25 @@ export function PropertyEditorPage() {
       setErr(errors.join("；"));
       return;
     }
+    if (sourceMode === "demo") {
+      setMsg(`属性 ${p.name} 已本地保存（演示路径）`);
+      return;
+    }
     try {
-      const body = { ...p, objectTypeId: typeId };
-      if (p.columnMapping) {
-        await apiPut(
-          `/v1/ontology/object-types/${encodeURIComponent(typeId)}/properties/${encodeURIComponent(p.id)}`,
-          body,
-        );
-        setMsg(`属性 ${p.name} 已保存`);
-      } else {
-        const res = await apiPost<{ id: string }>(
+      if (isNewPropertyId(p.id)) {
+        const res = await apiPost<ApiPropertyRow>(
           `/v1/ontology/object-types/${encodeURIComponent(typeId)}/properties`,
-          body,
+          mapFieldToAddRequest(p),
         );
-        if (res.id) {
-          patchProperty(p.id, { id: res.id });
-          setSelectedId(res.id);
-        }
+        const mapped = mapApiPropertyToField(res, { [p.name]: p.columnMapping });
+        setProperties((prev) => prev.map((x) => (x.id === p.id ? { ...mapped, columnMapping: p.columnMapping } : x)));
+        setSelectedId(mapped.id);
         setMsg(`属性 ${p.name} 已创建`);
+      } else {
+        // 后端无 PUT property：本地保留，提示用映射 Tab 持久化列映射
+        setMsg(
+          `属性 ${p.name} 已本地更新（元数据无 PUT；列映射请用「列映射」Tab 保存）`,
+        );
       }
     } catch (e) {
       setErr(String((e as Error).message || e));
@@ -284,37 +526,104 @@ export function PropertyEditorPage() {
     if (!window.confirm(`删除属性 ${p.name}？`)) return;
     setErr(null);
     setMsg("");
+    setProperties((prev) => prev.filter((x) => x.id !== p.id));
+    if (selectedId === p.id) setSelectedId(null);
+    setMsg(`属性 ${p.name} 已从列表移除（演示/本地）`);
+  }
+
+  async function runAutomap() {
+    setErr(null);
+    setMsg("");
+    setMapBusy(true);
     try {
-      if (p.columnMapping) {
-        await apiDelete(
-          `/v1/ontology/object-types/${encodeURIComponent(typeId)}/properties/${encodeURIComponent(p.id)}`,
+      if (sourceMode === "live") {
+        const res = await apiPost<{ items?: Array<Partial<ColumnMappingRow>> }>(
+          `/v1/ontology/object-types/${encodeURIComponent(typeId)}/automap`,
+          {},
         );
+        const rows = (res.items || []).map((r) => normalizeMappingRow(r, typeId));
+        setMappings(rows);
+        setProperties((prev) => applyMappingsToProperties(prev, rows));
+        setMsg(`Automap 完成：${countMappedColumns(rows).mapped}/${rows.length} 列已映射`);
+      } else {
+        // 演示：本地 snake_case
+        setProperties((prev) => {
+          const next = prev.map((p) =>
+            p.columnMapping
+              ? p
+              : { ...p, columnMapping: autoMapColumnName(p.name) },
+          );
+          setMappings(deriveLocalMappingRows(next, typeId).map((m) => ({
+            ...m,
+            target_property: m.source_column ? next.find((p) => autoMapColumnName(p.name) === m.source_column || p.columnMapping === m.source_column)?.name || m.target_property : m.target_property,
+            status: "mapped",
+            confidence: 0.85,
+            auto: true,
+          })));
+          return next;
+        });
+        setMsg("已自动映射所有未映射列（演示路径）");
       }
-      setProperties((prev) => prev.filter((x) => x.id !== p.id));
-      if (selectedId === p.id) setSelectedId(null);
-      setMsg(`属性 ${p.name} 已删除`);
     } catch (e) {
-      setErr(String((e as Error).message || e));
+      // API 失败 → 本地回退并标演示
+      setSourceMode("demo");
+      setProperties((prev) =>
+        prev.map((p) =>
+          p.columnMapping ? p : { ...p, columnMapping: autoMapColumnName(p.name) },
+        ),
+      );
+      setMappings((prev) => {
+        const nextProps = properties.map((p) =>
+          p.columnMapping ? p : { ...p, columnMapping: autoMapColumnName(p.name) },
+        );
+        return deriveLocalMappingRows(nextProps, typeId).map((m) => ({
+          ...m,
+          target_property: nextProps.find((p) => p.columnMapping === m.source_column)?.name || "",
+          auto: true,
+          status: "mapped",
+          confidence: 0.8,
+        }));
+      });
+      setMsg(`Automap API 失败，已本地映射（演示路径）：${String((e as Error).message || e)}`);
+    } finally {
+      setMapBusy(false);
     }
   }
 
-  function autoMapAll() {
-    setProperties((prev) =>
-      prev.map((p) =>
-        p.columnMapping
-          ? p
-          : { ...p, columnMapping: autoMapColumnName(p.name) },
-      ),
-    );
-    setMsg("已自动映射所有未映射列");
+  async function saveMappings() {
+    setErr(null);
+    setMsg("");
+    setMapBusy(true);
+    try {
+      if (sourceMode === "live") {
+        const body = buildMappingSaveBody(mappings);
+        const res = await apiPut<{ items?: Array<Partial<ColumnMappingRow>> }>(
+          `/v1/ontology/object-types/${encodeURIComponent(typeId)}/column-mapping`,
+          body,
+        );
+        const rows = (res.items || []).map((r) => normalizeMappingRow(r, typeId));
+        setMappings(rows.length ? rows : mappings);
+        setProperties((prev) => applyMappingsToProperties(prev, rows.length ? rows : mappings));
+        setMsg(`列映射已保存：${countMappedColumns(rows.length ? rows : mappings).mapped} 条`);
+      } else {
+        setProperties((prev) => applyMappingsToProperties(prev, mappings));
+        setMsg("列映射已本地保存（演示路径）");
+      }
+    } catch (e) {
+      setSourceMode("demo");
+      setProperties((prev) => applyMappingsToProperties(prev, mappings));
+      setMsg(`保存 API 失败，已本地保留（演示路径）：${String((e as Error).message || e)}`);
+    } finally {
+      setMapBusy(false);
+    }
   }
 
   return (
     <S2Chrome
       title={typeId ? `${typeId} · 属性编辑器` : "属性编辑器"}
-      lede="属性列表表格 · CRUD · 类型选择器 · 高级设置折叠区"
+      lede="属性列表表格 · CRUD · 列映射 · Automap"
     >
-      <div className="ont-page">
+      <div className="ont-page w3-c3c4-page">
         <BpToolbar>
           <Link to={`/ontology/object-types/${encodeURIComponent(typeId)}`} className="btn-nav">
             ← Object Type
@@ -329,11 +638,39 @@ export function PropertyEditorPage() {
           <button
             type="button"
             className="btn-nav"
-            onClick={() => void autoMapAll()}
+            disabled={mapBusy}
+            onClick={() => void runAutomap()}
           >
-            自动映射全部
+            {mapBusy ? "处理中…" : "自动映射全部"}
           </button>
+          {activeTab === "mapping" && (
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={mapBusy}
+              onClick={() => void saveMappings()}
+            >
+              保存映射
+            </button>
+          )}
         </BpToolbar>
+
+        {sourceMode === "demo" && (
+          <div className="w3-c3c4-demo-banner" role="status">
+            <span className="w3-c3c4-demo-badge">演示路径</span>
+            <span className="w3-c3c4-demo-text">
+              属性/列映射 API 不可用，当前为本地演示数据。
+            </span>
+          </div>
+        )}
+        {sourceMode === "live" && (
+          <div className="w3-c3c4-live-banner" role="status">
+            <span className="w3-c3c4-live-badge">Live</span>
+            <span className="w3-c3c4-demo-text">
+              已接 `/v1/ontology/object-types/:id/properties` 与 column-mapping / automap
+            </span>
+          </div>
+        )}
 
         {msg && <p className="bp-prop-ok">{msg}</p>}
         {err && <p className="error">{err}</p>}
@@ -341,27 +678,22 @@ export function PropertyEditorPage() {
         <BpTabs
           tabs={[
             { id: "properties", label: `属性 (${summary.total})` },
-            { id: "mapping", label: "列映射" },
+            {
+              id: "mapping",
+              label: `列映射 (${mapStats.mapped}/${mapStats.total || summary.total})`,
+            },
           ]}
           active={activeTab}
           onChange={(id) => setActiveTab(id as "properties" | "mapping")}
         />
 
-        {/* 数据源控制条 */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: "8px 12px",
-            background: "var(--aos-surface)",
-            border: "1px solid var(--aos-border)",
-            borderRadius: 4,
-            marginBottom: 8,
-          }}
-        >
+        <div className="w3-c3c4-dataset-bar">
           <span className="muted" style={{ fontSize: "0.75rem" }}>
-            类型: <code>{typeId}</code> · 总属性 {summary.total} · 主键 {summary.pkCount} · 标题键 {summary.titleKeyCount}
+            类型: <code>{typeId}</code> · 总属性 {summary.total} · 主键 {summary.pkCount} · 标题键{" "}
+            {summary.titleKeyCount}
+            {mapStats.total > 0 && (
+              <> · 已映射 {mapStats.mapped}/{mapStats.total}</>
+            )}
           </span>
           <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.75rem" }}>
             <input
@@ -383,148 +715,211 @@ export function PropertyEditorPage() {
 
         {loading && <p className="muted">加载中…</p>}
 
-        {/* 主区域: 左属性表 + 右详情 */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 320px",
-            gap: 8,
-          }}
-        >
-          {/* 左: 属性表 */}
-          <div className="bp-table-wrap">
-            <table className="data-table bp-table">
+        {activeTab === "mapping" ? (
+          <div className="bp-table-wrap w3-c3c4-mapping-wrap">
+            <table className="data-table bp-table w3-c3c4-mapping-table">
               <thead>
                 <tr>
-                  <th style={{ width: 32 }}>
-                    <input type="checkbox" />
-                  </th>
-                  <th>属性名</th>
-                  <th style={{ width: 100 }}>类型</th>
+                  <th>源列</th>
+                  <th>目标属性</th>
+                  <th style={{ width: 90 }}>置信度</th>
                   <th style={{ width: 90 }}>状态</th>
-                  <th style={{ width: 90 }}>可见性</th>
-                  <th>列映射</th>
-                  <th style={{ width: 60 }}></th>
+                  <th style={{ width: 70 }}>来源</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((p) => (
-                  <tr
-                    key={p.id}
-                    className={selectedId === p.id ? "is-selected" : ""}
-                    onClick={() => setSelectedId(p.id)}
-                    style={{ cursor: "pointer" }}
-                  >
+                {mappings.map((m) => (
+                  <tr key={m.id}>
                     <td>
-                      <input type="checkbox" />
+                      <code style={{ fontSize: "0.75rem" }}>{m.source_column || "—"}</code>
                     </td>
                     <td>
-                      <span style={{ fontWeight: p.isPrimaryKey ? 700 : 400 }}>
-                        {typeIcon(p.type)} {p.name || "(unnamed)"}
-                      </span>
-                      {p.isPrimaryKey && (
-                        <span
-                          className="bp-tag bp-tag-warn"
-                          style={{ marginLeft: 4, fontSize: "0.65rem" }}
-                        >
-                          PK
-                        </span>
-                      )}
-                      {p.isTitleKey && (
-                        <span
-                          className="bp-tag bp-tag-info"
-                          style={{ marginLeft: 4, fontSize: "0.65rem" }}
-                        >
-                          Title
-                        </span>
-                      )}
+                      <select
+                        className="aos-input"
+                        value={m.target_property}
+                        onChange={(e) =>
+                          patchMapping(m.id, { target_property: e.target.value })
+                        }
+                        style={{ fontSize: "0.75rem", minWidth: 140 }}
+                      >
+                        <option value="">（未映射）</option>
+                        {properties
+                          .filter((p) => p.name.trim())
+                          .map((p) => (
+                            <option key={p.id} value={p.name}>
+                              {p.name}
+                            </option>
+                          ))}
+                      </select>
                     </td>
-                    <td>
-                      <span className="muted" style={{ fontSize: "0.75rem" }}>
-                        {typeLabel(p.type)}
-                      </span>
+                    <td className="muted" style={{ fontSize: "0.75rem" }}>
+                      {m.confidence > 0 ? `${Math.round(m.confidence * 100)}%` : "—"}
                     </td>
                     <td>
                       <span
-                        style={{
-                          fontSize: "0.7rem",
-                          padding: "2px 6px",
-                          borderRadius: 3,
-                          background: statusColor(p.status),
-                          color: "var(--text-on-brand)",
-                        }}
+                        className={
+                          m.target_property ? "w3-c3c4-map-ok" : "w3-c3c4-map-skip"
+                        }
                       >
-                        {statusLabel(p.status)}
+                        {m.target_property ? "mapped" : "skipped"}
                       </span>
                     </td>
-                    <td>
-                      <span className="muted" style={{ fontSize: "0.7rem" }}>
-                        {p.visibility}
-                      </span>
-                    </td>
-                    <td>
-                      {p.columnMapping ? (
-                        <code style={{ fontSize: "0.7rem" }}>{p.columnMapping}</code>
-                      ) : (
-                        <span className="muted" style={{ fontSize: "0.7rem" }}>—</span>
-                      )}
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="btn-nav"
-                        style={{ fontSize: "0.65rem", padding: "2px 6px" }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void deleteProperty(p);
-                        }}
-                      >
-                        ✕
-                      </button>
+                    <td className="muted" style={{ fontSize: "0.7rem" }}>
+                      {m.auto ? "auto" : "manual"}
                     </td>
                   </tr>
                 ))}
-                {filtered.length === 0 && !loading && (
+                {mappings.length === 0 && !loading && (
                   <tr>
-                    <td colSpan={7} className="muted" style={{ textAlign: "center", padding: 24 }}>
-                      暂无属性，点击「新建属性」添加
+                    <td colSpan={5} className="muted" style={{ textAlign: "center", padding: 24 }}>
+                      暂无列映射。点击「自动映射全部」或先在属性 Tab 添加属性。
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-
-          {/* 右: 属性详情面板 */}
-          <aside
+        ) : (
+          <div
             style={{
-              border: "1px solid var(--aos-border)",
-              borderRadius: 4,
-              background: "var(--aos-surface)",
-              padding: 12,
-              maxHeight: 500,
-              overflowY: "auto",
+              display: "grid",
+              gridTemplateColumns: "1fr 320px",
+              gap: 8,
             }}
           >
-            {!selected && (
-              <p className="muted" style={{ fontSize: "0.75rem" }}>
-                从左侧选择一个属性查看详情
-              </p>
-            )}
-            {selected && (
-              <PropertyDetailPanel
-                key={selected.id}
-                property={selected}
-                detailTab={detailTab}
-                setDetailTab={setDetailTab}
-                showAdvanced={showAdvanced}
-                setShowAdvanced={setShowAdvanced}
-                onPatch={(patch) => patchProperty(selected.id, patch)}
-                onSave={() => void saveProperty(selected)}
-              />
-            )}
-          </aside>
-        </div>
+            <div className="bp-table-wrap">
+              <table className="data-table bp-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: 32 }}>
+                      <input type="checkbox" />
+                    </th>
+                    <th>属性名</th>
+                    <th style={{ width: 100 }}>类型</th>
+                    <th style={{ width: 90 }}>状态</th>
+                    <th style={{ width: 90 }}>可见性</th>
+                    <th>列映射</th>
+                    <th style={{ width: 60 }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((p) => (
+                    <tr
+                      key={p.id}
+                      className={selectedId === p.id ? "is-selected" : ""}
+                      onClick={() => setSelectedId(p.id)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <td>
+                        <input type="checkbox" />
+                      </td>
+                      <td>
+                        <span style={{ fontWeight: p.isPrimaryKey ? 700 : 400 }}>
+                          {typeIcon(p.type)} {p.name || "(unnamed)"}
+                        </span>
+                        {p.isPrimaryKey && (
+                          <span
+                            className="bp-tag bp-tag-warn"
+                            style={{ marginLeft: 4, fontSize: "0.65rem" }}
+                          >
+                            PK
+                          </span>
+                        )}
+                        {p.isTitleKey && (
+                          <span
+                            className="bp-tag bp-tag-info"
+                            style={{ marginLeft: 4, fontSize: "0.65rem" }}
+                          >
+                            Title
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <span className="muted" style={{ fontSize: "0.75rem" }}>
+                          {typeLabel(p.type)}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          style={{
+                            fontSize: "0.7rem",
+                            padding: "2px 6px",
+                            borderRadius: 3,
+                            background: statusColor(p.status),
+                            color: "var(--text-on-brand)",
+                          }}
+                        >
+                          {statusLabel(p.status)}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="muted" style={{ fontSize: "0.7rem" }}>
+                          {p.visibility}
+                        </span>
+                      </td>
+                      <td>
+                        {p.columnMapping ? (
+                          <code style={{ fontSize: "0.7rem" }}>{p.columnMapping}</code>
+                        ) : (
+                          <span className="muted" style={{ fontSize: "0.7rem" }}>—</span>
+                        )}
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn-nav"
+                          style={{ fontSize: "0.65rem", padding: "2px 6px" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void deleteProperty(p);
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {filtered.length === 0 && !loading && (
+                    <tr>
+                      <td colSpan={7} className="muted" style={{ textAlign: "center", padding: 24 }}>
+                        暂无属性，点击「新建属性」添加
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <aside
+              style={{
+                border: "1px solid var(--aos-border)",
+                borderRadius: 4,
+                background: "var(--aos-surface)",
+                padding: 12,
+                maxHeight: 500,
+                overflowY: "auto",
+              }}
+            >
+              {!selected && (
+                <p className="muted" style={{ fontSize: "0.75rem" }}>
+                  从左侧选择一个属性查看详情
+                </p>
+              )}
+              {selected && (
+                <PropertyDetailPanel
+                  key={selected.id}
+                  property={selected}
+                  detailTab={detailTab}
+                  setDetailTab={setDetailTab}
+                  showAdvanced={showAdvanced}
+                  setShowAdvanced={setShowAdvanced}
+                  onPatch={(patch) => patchProperty(selected.id, patch)}
+                  onSave={() => void saveProperty(selected)}
+                />
+              )}
+            </aside>
+          </div>
+        )}
       </div>
     </S2Chrome>
   );
