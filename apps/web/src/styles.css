@@ -9144,4 +9144,51 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
 }
 .obs-source-banner__text {
   color: inherit;
+
+/* === W2-A6A7 === */
+.w2-a6a7-demo-banner,
+.w2-a6a7-live-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border-radius: 2px;
+  border: 1px solid var(--aos-border);
+  background: var(--aos-surface-hover);
+  font-size: 12px;
+}
+.w2-a6a7-live-banner {
+  border-color: var(--aos-accent-border, #bfdbfe);
+  background: var(--aos-accent-light, #eff6ff);
+}
+.w2-a6a7-demo-badge,
+.w2-a6a7-live-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.w2-a6a7-demo-badge {
+  background: #fef3c7;
+  color: #92400e;
+}
+.w2-a6a7-live-badge {
+  background: #d1fae5;
+  color: #065f46;
+}
+.w2-a6a7-demo-text {
+  color: var(--aos-text-secondary);
+  line-height: 1.4;
+}
+.w2-a6a7-msg {
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 2px;
+  border: 1px solid var(--aos-border);
+  background: var(--aos-surface);
+  color: var(--aos-text);
 }
