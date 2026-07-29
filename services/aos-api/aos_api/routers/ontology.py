@@ -62,8 +62,11 @@ _LINK_SCALE_LIMIT = 1_000_000
 
 
 def _row_to_link(r: dict[str, Any]) -> dict[str, Any]:
+    """Map DB row → API shape. joinMethod/symmetric/rid/status are derived (no new columns)."""
+    link_id = r["id"]
+    published = bool(r["published"])
     return {
-        "id": r["id"],
+        "id": link_id,
         "name": r["name"],
         "srcType": r["src_type"],
         "dstType": r["dst_type"],
@@ -71,8 +74,14 @@ def _row_to_link(r: dict[str, Any]) -> dict[str, Any]:
         "cardinality": r["cardinality"],
         "expectedEdges": int(r["expected_edges"]),
         "mdoApproved": bool(r["mdo_approved"]),
-        "published": bool(r["published"]),
+        "published": published,
         "description": r["description"] or "",
+        # W4-C8a：前端可视化契约字段（缺列时派生默认，失败可降级）
+        "joinMethod": r.get("join_method") or "foreign_key",
+        "symmetric": bool(r.get("symmetric") or False),
+        "constraints": r.get("constraints") or [],
+        "rid": f"ri.ontology.main.link-type.{link_id}",
+        "status": "Active" if published else "Experimental",
     }
 
 

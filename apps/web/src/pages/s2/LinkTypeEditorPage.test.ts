@@ -10,6 +10,9 @@ import {
   checkScaleWarning,
   estimateStorage,
   swapDirection,
+  normalizeLinkType,
+  truncateLabel,
+  buildLinkRelationLayout,
   CARDINALITIES,
   JOIN_METHODS,
   LINK_NAV_SECTIONS,
@@ -192,6 +195,77 @@ describe("LinkTypeEditorPage · swapDirection", () => {
     const swapped = swapDirection(f);
     expect(swapped.id).toBe("lt-x");
     expect(swapped.name).toBe("Test");
+  });
+});
+
+describe("LinkTypeEditorPage · normalizeLinkType (C8a)", () => {
+  it("fills joinMethod/symmetric defaults when API omits them", () => {
+    const n = normalizeLinkType({
+      id: "lt-aircraft-airline",
+      name: "Aircraft-Airline",
+      srcType: "Aircraft",
+      dstType: "Airline",
+      rel: "operated_by",
+      cardinality: "MANY_TO_ONE",
+      expectedEdges: 10,
+      mdoApproved: false,
+      published: true,
+      description: "demo",
+    });
+    expect(n.joinMethod).toBe("foreign_key");
+    expect(n.symmetric).toBe(false);
+    expect(n.constraints).toEqual([]);
+    expect(n.cardinality).toBe("MANY_TO_ONE");
+  });
+
+  it("keeps provided joinMethod", () => {
+    const n = normalizeLinkType({
+      ...emptyForm("lt-x"),
+      name: "X",
+      joinMethod: "junction_table",
+      symmetric: true,
+    });
+    expect(n.joinMethod).toBe("junction_table");
+    expect(n.symmetric).toBe(true);
+  });
+});
+
+describe("LinkTypeEditorPage · buildLinkRelationLayout (C8a)", () => {
+  it("builds src/dst nodes and cardinality edge label", () => {
+    const layout = buildLinkRelationLayout({
+      srcType: "Aircraft",
+      dstType: "Airline",
+      rel: "operated_by",
+      cardinality: "MANY_TO_ONE",
+      joinMethod: "foreign_key",
+      symmetric: false,
+    });
+    expect(layout.src.label).toBe("Aircraft");
+    expect(layout.dst.label).toBe("Airline");
+    expect(layout.edge.cardLabel).toBe("N:1");
+    expect(layout.edge.relLabel).toContain("operated");
+    expect(layout.summary.card).toBe("N:1");
+    expect(layout.summary.join).toBe("外键关联");
+    expect(layout.edge.x2).toBeGreaterThan(layout.edge.x1);
+  });
+
+  it("truncates long labels", () => {
+    expect(truncateLabel("ABCDEFGHIJKLMNOPQRSTUVWXYZ", 10).endsWith("…")).toBe(true);
+    expect(truncateLabel("")).toBe("—");
+  });
+
+  it("handles empty types with placeholder", () => {
+    const layout = buildLinkRelationLayout({
+      srcType: "",
+      dstType: "",
+      rel: "",
+      cardinality: "ONE_TO_ONE",
+      joinMethod: "computed",
+      symmetric: true,
+    });
+    expect(layout.src.label).toBe("—");
+    expect(layout.dst.label).toBe("—");
+    expect(layout.summary.symmetric).toBe(true);
   });
 });
 

@@ -129,6 +129,151 @@ export function swapDirection(form: LinkType): LinkType {
   };
 }
 
+/** API 缺字段时填默认，保证可视化与 CRUD 表单可降级。 */
+export function normalizeLinkType(row: Partial<LinkType> & { id?: string }): LinkType {
+  const base = emptyForm(row.id || "");
+  return {
+    ...base,
+    ...row,
+    id: row.id ?? base.id,
+    name: row.name ?? base.name,
+    srcType: (row.srcType && String(row.srcType).trim()) || base.srcType,
+    dstType: (row.dstType && String(row.dstType).trim()) || base.dstType,
+    rel: row.rel ?? base.rel,
+    cardinality: (row.cardinality as Cardinality) || base.cardinality,
+    joinMethod: (row.joinMethod as JoinMethod) || base.joinMethod,
+    expectedEdges: typeof row.expectedEdges === "number" ? row.expectedEdges : base.expectedEdges,
+    mdoApproved: Boolean(row.mdoApproved),
+    published: Boolean(row.published),
+    symmetric: Boolean(row.symmetric),
+    description: row.description ?? base.description,
+    constraints: Array.isArray(row.constraints) ? row.constraints : [],
+  };
+}
+
+export function truncateLabel(text: string, max = 18): string {
+  const t = (text || "").trim() || "—";
+  return t.length > max ? `${t.slice(0, max - 1)}…` : t;
+}
+
+export type LinkRelationLayout = {
+  width: number;
+  height: number;
+  src: { x: number; y: number; label: string };
+  dst: { x: number; y: number; label: string };
+  edge: { x1: number; y1: number; x2: number; y2: number; cardLabel: string; relLabel: string };
+  summary: { src: string; dst: string; card: string; join: string; symmetric: boolean; rel: string };
+};
+
+/** 双节点 + 边布局（向 ontology-link 视觉稿靠拢，不必 1:1）。 */
+export function buildLinkRelationLayout(form: Pick<LinkType, "srcType" | "dstType" | "rel" | "cardinality" | "joinMethod" | "symmetric">): LinkRelationLayout {
+  const width = 420;
+  const height = 120;
+  const y = height / 2;
+  const srcX = 70;
+  const dstX = 350;
+  const nodeHalf = 44;
+  return {
+    width,
+    height,
+    src: { x: srcX, y, label: truncateLabel(form.srcType) },
+    dst: { x: dstX, y, label: truncateLabel(form.dstType) },
+    edge: {
+      x1: srcX + nodeHalf,
+      y1: y,
+      x2: dstX - nodeHalf,
+      y2: y,
+      cardLabel: cardinalityLabel(form.cardinality),
+      relLabel: truncateLabel(form.rel || "link", 16),
+    },
+    summary: {
+      src: form.srcType || "—",
+      dst: form.dstType || "—",
+      card: cardinalityLabel(form.cardinality),
+      join: joinMethodLabel(form.joinMethod),
+      symmetric: Boolean(form.symmetric),
+      rel: form.rel || "link",
+    },
+  };
+}
+
+/* ────────────── Viz ────────────── */
+
+function LinkRelationViz({ form }: { form: LinkType }) {
+  let layout: LinkRelationLayout;
+  try {
+    layout = buildLinkRelationLayout(form);
+  } catch {
+    return (
+      <div className="w4-c8a-viz-fallback" aria-label="link relation fallback">
+        <code>{form.srcType || "—"}</code>
+        <span> → </span>
+        <code>{form.dstType || "—"}</code>
+        <span className="w4-c8a-badge">{cardinalityLabel(form.cardinality)}</span>
+      </div>
+    );
+  }
+  const midX = (layout.edge.x1 + layout.edge.x2) / 2;
+  const midY = layout.edge.y1;
+  return (
+    <div className="w4-c8a-viz" aria-label="link relation graph">
+      <svg
+        className="w4-c8a-svg"
+        viewBox={`0 0 ${layout.width} ${layout.height}`}
+        role="img"
+        aria-label={`${layout.summary.src} ${layout.summary.card} ${layout.summary.dst}`}
+      >
+        <defs>
+          <marker id="w4c8a-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" className="w4-c8a-arrow" />
+          </marker>
+        </defs>
+        <line
+          className="w4-c8a-edge"
+          x1={layout.edge.x1}
+          y1={layout.edge.y1}
+          x2={layout.edge.x2}
+          y2={layout.edge.y2}
+          markerEnd="url(#w4c8a-arrow)"
+        />
+        <rect
+          className="w4-c8a-card-pill"
+          x={midX - 22}
+          y={midY - 22}
+          width={44}
+          height={18}
+          rx={3}
+        />
+        <text className="w4-c8a-card-text" x={midX} y={midY - 10} textAnchor="middle" dominantBaseline="central">
+          {layout.edge.cardLabel}
+        </text>
+        <text className="w4-c8a-rel-text" x={midX} y={midY + 16} textAnchor="middle">
+          {layout.edge.relLabel}
+        </text>
+        <g transform={`translate(${layout.src.x}, ${layout.src.y})`}>
+          <rect className="w4-c8a-node is-src" x={-44} y={-16} width={88} height={32} rx={4} />
+          <text className="w4-c8a-node-label" textAnchor="middle" dominantBaseline="central">
+            {layout.src.label}
+          </text>
+        </g>
+        <g transform={`translate(${layout.dst.x}, ${layout.dst.y})`}>
+          <rect className="w4-c8a-node is-dst" x={-44} y={-16} width={88} height={32} rx={4} />
+          <text className="w4-c8a-node-label" textAnchor="middle" dominantBaseline="central">
+            {layout.dst.label}
+          </text>
+        </g>
+      </svg>
+      <div className="w4-c8a-summary">
+        <code>{layout.summary.src}</code>
+        <span className="w4-c8a-badge">{layout.summary.card}</span>
+        <code>{layout.summary.dst}</code>
+        <span className="w4-c8a-muted">· {layout.summary.join}</span>
+        {layout.summary.symmetric && <span className="w4-c8a-badge is-amber">对称</span>}
+      </div>
+    </div>
+  );
+}
+
 /* ────────────── Component ────────────── */
 
 export function LinkTypeEditorPage() {
@@ -154,7 +299,7 @@ export function LinkTypeEditorPage() {
     (async () => {
       try {
         const row = await apiGet<LinkType>(`/v1/ontology/link-types/${encodeURIComponent(linkId)}`);
-        if (!cancelled) setForm(row);
+        if (!cancelled) setForm(normalizeLinkType(row));
       } catch (e) {
         if (!cancelled) setErr(String((e as Error).message || e));
       }
@@ -285,6 +430,14 @@ export function LinkTypeEditorPage() {
                 </div>
               </div>
               <div style={linkStyles.infoRow}>
+                <div style={linkStyles.infoKey}>RID</div>
+                <div style={linkStyles.infoValue}>
+                  <code style={linkStyles.monoText}>
+                    {form.id ? `ri.ontology.main.link-type.${form.id}` : "（新建后生成）"}
+                  </code>
+                </div>
+              </div>
+              <div style={linkStyles.infoRow}>
                 <div style={linkStyles.infoKey}>预估存储</div>
                 <div style={linkStyles.infoValue}>{storageEst}</div>
               </div>
@@ -331,44 +484,44 @@ export function LinkTypeEditorPage() {
                   </label>
                 </div>
 
-                {/* Join method 可视化 */}
-                <div style={linkStyles.joinVizRow}>
-                  <div style={linkStyles.joinVizCol}>
-                    <label style={linkStyles.propLabel}>Join method</label>
-                    <select
-                      className="aos-input"
-                      style={{ marginTop: "2px" }}
-                      value={form.joinMethod}
-                      onChange={(e) => patch("joinMethod", e.target.value as JoinMethod)}
+                {/* Join method 卡片 */}
+                <div className="w4-c8a-join" style={{ marginTop: "0.75rem" }}>
+                  <label style={linkStyles.propLabel}>Join method</label>
+                  <div className="w4-c8a-join-cards" role="listbox" aria-label="join method">
+                    {JOIN_METHODS.map((j) => (
+                      <button
+                        key={j.value}
+                        type="button"
+                        role="option"
+                        aria-selected={form.joinMethod === j.value}
+                        className={
+                          form.joinMethod === j.value
+                            ? "w4-c8a-join-card is-selected"
+                            : "w4-c8a-join-card"
+                        }
+                        onClick={() => patch("joinMethod", j.value)}
+                      >
+                        <span className="w4-c8a-join-name">{j.label}</span>
+                        <span className="w4-c8a-join-desc">{j.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* SVG 关系可视化 */}
+                <div className="w4-c8a-viz-wrap">
+                  <div className="w4-c8a-viz-head">
+                    <span>关系图</span>
+                    <button
+                      type="button"
+                      className="w4-c8a-swap"
+                      onClick={() => setForm(swapDirection(form))}
+                      title="交换方向"
                     >
-                      {JOIN_METHODS.map((j) => (
-                        <option key={j.value} value={j.value}>
-                          {j.label}
-                        </option>
-                      ))}
-                    </select>
-                    <p style={linkStyles.joinDesc}>{joinMethodDescription(form.joinMethod)}</p>
+                      ⇄ 交换
+                    </button>
                   </div>
-                  {/* 可视化图示 */}
-                  <div style={linkStyles.joinVizDiagram}>
-                    <div style={linkStyles.typeBox}>{form.srcType}</div>
-                    <div style={linkStyles.arrowRow}>
-                      <span style={linkStyles.arrowIcon}>{cardinalityIcon(form.cardinality)}</span>
-                      <div style={linkStyles.arrowLine} />
-                      <span style={linkStyles.arrowIcon}>{joinMethodLabel(form.joinMethod)}</span>
-                      <div style={linkStyles.arrowLine} />
-                      <span style={linkStyles.arrowIcon}>{form.cardinality.startsWith("MANY") ? "◊" : "○"}</span>
-                    </div>
-                    <div style={linkStyles.typeBox}>{form.dstType}</div>
-                  </div>
-                  <button
-                    type="button"
-                    style={linkStyles.swapBtn}
-                    onClick={() => setForm(swapDirection(form))}
-                    title="交换方向"
-                  >
-                    ⇄ 交换
-                  </button>
+                  <LinkRelationViz form={form} />
                 </div>
 
                 {/* 类型A/B 选择器 */}
