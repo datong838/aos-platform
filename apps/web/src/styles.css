@@ -9370,3 +9370,107 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
 .w3-c3c4-code-editor {
   max-height: 420px;
 }
+/* === W3-C6C7 === */
+.w3-c6-view-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--aos-border, #2a3540);
+}
+.w3-c6-view-tabs .btn.is-active {
+  font-weight: 600;
+}
+.w3-c6c7-path-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.w3-c6c7-path-badge.is-demo {
+  background: #fef3c7;
+  color: #92400e;
+}
+.w3-c6c7-path-badge.is-live {
+  background: #d1fae5;
+  color: #065f46;
+}
+.w3-c6-history {
+  padding: 12px 16px;
+  max-width: 720px;
+}
+.w3-c6-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.w3-c6-history-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--aos-border, #2a3540);
+}
+.w3-c6-history-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.w3-c6-xform {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.w3-c6-xform-input {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  padding: 6px 8px;
+  border: 1px solid var(--aos-border, #2a3540);
+  background: var(--aos-surface, #0f1419);
+  color: var(--aos-text, #e2e8f0);
+  border-radius: 2px;
+  resize: vertical;
+}
+.w3-c6-xform-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.w3-c6-xform-msg {
+  font-size: 0.75rem;
+  margin: 0;
+}
+.w3-c7-schema-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.w3-c7-schema-toggle {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--aos-text, #e2e8f0);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+.w3-c7-col-list {
+  list-style: none;
+  margin: 0 0 4px 12px;
+  padding: 0;
+  font-size: 0.7rem;
+}
+.w3-c7-col-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+}
+.w3-c7-col-list-side {
+  margin-left: 0;
+  margin-bottom: 8px;
+}

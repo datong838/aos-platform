@@ -2,10 +2,11 @@
  * 186w · Pipeline 画布页 · 对齐 foundry/html/pipeline.html（图1）
  * 层次：顶栏操作 · 中网格 DAG · 底预览 · 右输出属性
  * Phase E-02~E-06：节点拖拽 + 算子工具栏 + 管道类型 + 输出配置 + 预览增强
+ * W3-C6：视图 Tab（编辑/历史）+ 变换节点配置/试运行 · 优先接 phase5 pipeline API
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { apiPost } from "../../api/client";
+import { apiGet, apiPost, apiPut } from "../../api/client";
 import { BpBanner, BpToolbar } from "./blueprintUi";
 import { S2Chrome, useJsonGet } from "./shared";
 import {
@@ -24,6 +25,115 @@ type PreviewResult = {
 };
 
 type NodeType = "input" | "transform" | "output";
+
+export type HistoryItem = {
+  id: string;
+  pipeline_id?: string;
+  action?: string;
+  actor?: string;
+  detail?: string;
+  created_at?: number;
+};
+
+export type GraphNode = {
+  id: string;
+  name?: string;
+  node_type?: string;
+  position_x?: number;
+  position_y?: number;
+  config?: Record<string, unknown>;
+};
+
+export type GraphPayload = {
+  pipeline_id?: string;
+  nodes?: GraphNode[];
+  edges?: { source_node_id?: string; target_node_id?: string }[];
+  demo?: boolean;
+};
+
+export type XformConfig = { expression: string; filter: string };
+
+/** W3-C6 · 合成演示历史（API 失败时） */
+export function buildDemoHistory(pipe: PipelineMeta | null, pipelineId: string): HistoryItem[] {
+  const now = Date.now() / 1000;
+  const build = pipe?.lastBuild;
+  return [
+    {
+      id: `demo-h1-${pipelineId}`,
+      pipeline_id: pipelineId,
+      action: "created",
+      actor: "system",
+      detail: "演示路径 · 管道创建",
+      created_at: now - 86400,
+    },
+    {
+      id: `demo-h2-${pipelineId}`,
+      pipeline_id: pipelineId,
+      action: build?.status ? "deployed" : "updated",
+      actor: "system",
+      detail: build?.id
+        ? `演示路径 · Build ${build.id} · ${build.status || "—"}`
+        : "演示路径 · 最近保存",
+      created_at: now - 3600,
+    },
+    {
+      id: `demo-h3-${pipelineId}`,
+      pipeline_id: pipelineId,
+      action: "run",
+      actor: "system",
+      detail: "演示路径 · 试运行",
+      created_at: now - 300,
+    },
+  ];
+}
+
+export function formatHistoryTime(ts?: number): string {
+  if (ts == null || !Number.isFinite(ts)) return "—";
+  try {
+    return new Date(ts * 1000).toLocaleString();
+  } catch {
+    return "—";
+  }
+}
+
+export function historyPathLabel(demo: boolean): string {
+  return demo ? "演示路径" : "API";
+}
+
+export function pickTransformNode(graph: GraphPayload | null): GraphNode | null {
+  const nodes = graph?.nodes || [];
+  return (
+    nodes.find((n) => (n.node_type || "").toLowerCase() === "transform") ||
+    nodes.find((n) => (n.name || "").toLowerCase().includes("transform")) ||
+    null
+  );
+}
+
+export function xformStorageKey(pipelineId: string): string {
+  return `aos.pipeline.xform.${pipelineId}`;
+}
+
+export function loadLocalXform(pipelineId: string): XformConfig | null {
+  try {
+    const raw = localStorage.getItem(xformStorageKey(pipelineId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as XformConfig;
+    if (typeof parsed?.expression !== "string") return null;
+    return { expression: parsed.expression, filter: String(parsed.filter || "") };
+  } catch {
+    return null;
+  }
+}
+
+export function saveLocalXform(pipelineId: string, cfg: XformConfig): void {
+  localStorage.setItem(xformStorageKey(pipelineId), JSON.stringify(cfg));
+}
+
+export function formatTrialMsg(ok: boolean, demo: boolean, detail?: string): string {
+  const path = demo ? "演示路径" : "API";
+  if (ok) return `试运行成功 · ${path}${detail ? ` · ${detail}` : ""}`;
+  return `试运行失败 · ${path}${detail ? ` · ${detail}` : ""}`;
+}
 
 /** 算子工具栏定义 · 15 个算子分 3 组 */
 const OPERATORS: { group: string; items: { id: string; label: string; kind: NodeType }[] }[] = [
@@ -146,6 +256,17 @@ export function PipelineCanvasPage() {
   const [linkingFrom, setLinkingFrom] = useState<string | null>(null);
   const [showStats, setShowStats] = useState(false);
 
+  // W3-C6: 视图 Tab + 历史 + 变换配置
+  const [viewTab, setViewTab] = useState<"edit" | "history">("edit");
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [historyDemo, setHistoryDemo] = useState(false);
+  const [historyBusy, setHistoryBusy] = useState(false);
+  const [graph, setGraph] = useState<GraphPayload | null>(null);
+  const [xform, setXform] = useState<XformConfig>({ expression: "row", filter: "" });
+  const [xformMsg, setXformMsg] = useState<string | null>(null);
+  const [xformBusy, setXformBusy] = useState(false);
+  const transformNode = useMemo(() => pickTransformNode(graph), [graph]);
+
   function handleNodeDragStart(e: React.DragEvent, nodeKey: string) {
     setDraggingNode(nodeKey);
     e.dataTransfer.effectAllowed = "move";
@@ -240,7 +361,110 @@ export function PipelineCanvasPage() {
     setSelected("output");
     setPreview(null);
     setPreviewErr(null);
+    setViewTab("edit");
+    setXformMsg(null);
+    const local = loadLocalXform(pipelineId);
+    if (local) setXform(local);
+    else setXform({ expression: "row", filter: "" });
   }, [pipelineId]);
+
+  // W3-C6 · 拉取 graph（变换节点 id）
+  useEffect(() => {
+    if (!pipelineId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const g = await apiGet<GraphPayload>(`/v1/pipelines/${encodeURIComponent(pipelineId)}/graph`);
+        if (cancelled) return;
+        setGraph(g);
+        const xf = pickTransformNode(g);
+        const cfg = xf?.config;
+        if (cfg && typeof cfg.expression === "string") {
+          setXform({
+            expression: String(cfg.expression),
+            filter: String(cfg.filter || ""),
+          });
+        }
+      } catch {
+        if (!cancelled) setGraph(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pipelineId]);
+
+  // W3-C6 · 拉取运行历史
+  useEffect(() => {
+    if (!pipelineId || viewTab !== "history") return;
+    let cancelled = false;
+    (async () => {
+      setHistoryBusy(true);
+      try {
+        const res = await apiGet<{ items?: HistoryItem[]; demo?: boolean }>(
+          `/v1/pipelines/${encodeURIComponent(pipelineId)}/history`,
+        );
+        if (cancelled) return;
+        const items = res.items || [];
+        if (items.length === 0) {
+          setHistoryItems(buildDemoHistory(pipe, pipelineId));
+          setHistoryDemo(true);
+        } else {
+          setHistoryItems(items);
+          setHistoryDemo(Boolean(res.demo));
+        }
+      } catch {
+        if (!cancelled) {
+          setHistoryItems(buildDemoHistory(pipe, pipelineId));
+          setHistoryDemo(true);
+        }
+      } finally {
+        if (!cancelled) setHistoryBusy(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pipelineId, viewTab, pipe]);
+
+  async function saveXformConfig() {
+    setXformBusy(true);
+    setXformMsg(null);
+    const nodeId = transformNode?.id || `demo-xf-${pipelineId}`;
+    try {
+      const res = await apiPut<{ demo?: boolean }>(
+        `/v1/pipelines/${encodeURIComponent(pipelineId)}/nodes/${encodeURIComponent(nodeId)}/config`,
+        { config: xform },
+      );
+      saveLocalXform(pipelineId, xform);
+      setXformMsg(`已保存配置 · ${historyPathLabel(Boolean(res.demo || graph?.demo))}`);
+    } catch (e) {
+      saveLocalXform(pipelineId, xform);
+      setXformMsg(`已保存 · 演示路径 · localStorage${e instanceof Error ? `（${e.message}）` : ""}`);
+    } finally {
+      setXformBusy(false);
+    }
+  }
+
+  async function runXformTrial() {
+    setXformBusy(true);
+    setXformMsg(null);
+    const nodeId = transformNode?.id || `demo-xf-${pipelineId}`;
+    try {
+      const res = await apiPost<{ status?: string; latency_ms?: number; demo?: boolean; output_rows?: unknown[] }>(
+        `/v1/pipelines/${encodeURIComponent(pipelineId)}/nodes/${encodeURIComponent(nodeId)}/trial-run`,
+        { sample_input: { expression: xform.expression, filter: xform.filter } },
+      );
+      const demo = Boolean(res.demo || graph?.demo);
+      setXformMsg(
+        formatTrialMsg(res.status === "ok" || !res.status, demo, `${res.latency_ms ?? "—"}ms · ${res.output_rows?.length ?? 0} 行`),
+      );
+    } catch (e) {
+      setXformMsg(formatTrialMsg(false, true, e instanceof Error ? e.message : String(e)));
+    } finally {
+      setXformBusy(false);
+    }
+  }
 
   useEffect(() => {
     if (!pipe?.datasetRid && !otHint) return;
@@ -343,6 +567,55 @@ export function PipelineCanvasPage() {
       {!err && !pipe && <BpBanner tone="warn">未找到管道 {pipelineId}</BpBanner>}
 
       {pipe && (
+        <>
+          {/* W3-C6 · 视图 Tab */}
+          <div className="w3-c6-view-tabs" role="tablist" aria-label="管道视图">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewTab === "edit"}
+              className={`btn${viewTab === "edit" ? " is-active" : ""}`}
+              onClick={() => setViewTab("edit")}
+            >
+              编辑
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewTab === "history"}
+              className={`btn${viewTab === "history" ? " is-active" : ""}`}
+              onClick={() => setViewTab("history")}
+            >
+              历史
+            </button>
+            {viewTab === "history" && (
+              <span className={`w3-c6c7-path-badge ${historyDemo ? "is-demo" : "is-live"}`}>
+                {historyPathLabel(historyDemo)}
+              </span>
+            )}
+          </div>
+
+          {viewTab === "history" && (
+            <div className="w3-c6-history">
+              {historyBusy && <p className="muted">加载历史…</p>}
+              {!historyBusy && historyItems.length === 0 && <p className="muted">暂无历史记录</p>}
+              <ul className="w3-c6-history-list">
+                {historyItems.map((h) => (
+                  <li key={h.id} className="w3-c6-history-item">
+                    <div className="w3-c6-history-head">
+                      <strong>{h.action || "event"}</strong>
+                      <span className="muted">{formatHistoryTime(h.created_at)}</span>
+                    </div>
+                    <div className="muted" style={{ fontSize: "0.75rem" }}>
+                      {h.actor || "system"} · {h.detail || "—"}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {viewTab === "edit" && (
         <div className="bp-pipe-canvas-shell">
           {/* Phase 7: 画布工具栏 - 缩放 + 统计 + 清空 */}
           <div className="bp-pipe-canvas-toolbar" style={{ display: "flex", gap: 8, padding: "4px 12px", alignItems: "center", borderBottom: "1px solid var(--aos-border, #e2e8f0)", background: "var(--aos-surface, #f7fafc)" }}>
@@ -600,10 +873,51 @@ export function PipelineCanvasPage() {
               </h3>
               <p className="muted bp-pipe-inspector-lede">
                 {selected === "input" && (pipe.sourceId || "—")}
-                {selected === "transform" && "Ingest · 当前管道为源表直写入对象（无自定义 Join 图）"}
+                {selected === "transform" && (
+                  transformNode
+                    ? `${transformNode.name || "transform"} · ${transformNode.id}`
+                    : "Ingest · 变换配置（演示节点）"
+                )}
                 {selected === "output" && `${outLabel}${otHint ? ` · ${otHint}` : ""}`}
               </p>
             </div>
+
+            {selected === "transform" && (
+              <div className="w3-c6-xform">
+                {graph?.demo && (
+                  <span className="w3-c6c7-path-badge is-demo">演示路径 · graph</span>
+                )}
+                <label className="bp-pipe-field">
+                  <span>表达式</span>
+                  <textarea
+                    className="w3-c6-xform-input"
+                    rows={3}
+                    value={xform.expression}
+                    onChange={(e) => setXform((c) => ({ ...c, expression: e.target.value }))}
+                    aria-label="变换表达式"
+                  />
+                </label>
+                <label className="bp-pipe-field">
+                  <span>过滤条件</span>
+                  <input
+                    className="w3-c6-xform-input"
+                    value={xform.filter}
+                    onChange={(e) => setXform((c) => ({ ...c, filter: e.target.value }))}
+                    placeholder="可选 · 如 status = 'ok'"
+                    aria-label="过滤条件"
+                  />
+                </label>
+                <div className="w3-c6-xform-actions">
+                  <button type="button" className="btn" disabled={xformBusy} onClick={() => void saveXformConfig()}>
+                    保存配置
+                  </button>
+                  <button type="button" className="btn-primary" disabled={xformBusy} onClick={() => void runXformTrial()}>
+                    试运行
+                  </button>
+                </div>
+                {xformMsg && <p className="w3-c6-xform-msg muted">{xformMsg}</p>}
+              </div>
+            )}
 
             {selected === "output" && (
               <>
@@ -683,6 +997,8 @@ export function PipelineCanvasPage() {
             )}
           </aside>
         </div>
+          )}
+        </>
       )}
     </S2Chrome>
   );
