@@ -2,6 +2,7 @@
 
 Agent 注册表 + 能力列表（含配置更新）。
 模式：Singleton + Pydantic + threading.Lock。
+W4-B5：插件默认种子、upsert、连通测试（进程内模拟）。
 """
 from __future__ import annotations
 
@@ -13,6 +14,77 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 _LOCK = threading.Lock()
+
+# 与 CapabilityPage 已接入卡 id 对齐（幂等种子）
+PLUGIN_DEFAULTS: list[dict[str, Any]] = [
+    {
+        "id": "video-job",
+        "name": "短视频生成",
+        "category": "ai",
+        "description": "C1 Job · GPU · → MediaSet",
+        "config": {
+            "kind": "job",
+            "endpoint": "https://cap.internal/video/v1",
+            "concurrency": 4,
+            "secretRef": "vault://aip/capabilities/short-video#token",
+            "webhook": "https://aos-api/v1/aip/capabilities/cb/video",
+        },
+    },
+    {
+        "id": "live-script",
+        "name": "直播稿引擎",
+        "category": "ai",
+        "description": "C0 sync / 可升 C1 · → LiveScript",
+        "config": {
+            "kind": "script",
+            "mode": "sync",
+            "timeoutSec": 15,
+            "outputObjectType": "LiveScript",
+            "endpoint": "https://cap.internal/script/v1",
+        },
+    },
+    {
+        "id": "avatar-commerce",
+        "name": "电商可交互数字人",
+        "category": "ai",
+        "description": "C2 Session · AV 外置 · AvatarSession",
+        "config": {
+            "kind": "session",
+            "gateway": "wss://avatar.internal/session",
+            "sessionObject": "AvatarSession",
+            "avExternal": True,
+            "draftGate": True,
+            "endpoint": "wss://avatar.internal/session",
+        },
+    },
+    {
+        "id": "avatar-edu",
+        "name": "教育可交互数字人",
+        "category": "ai",
+        "description": "C2 Session · 课纲 Wiki · CourseSession",
+        "enabled": False,
+        "config": {
+            "kind": "session",
+            "gateway": "wss://avatar.internal/edu",
+            "sessionObject": "CourseSession",
+            "avExternal": True,
+            "draftGate": True,
+            "endpoint": "wss://avatar.internal/edu",
+        },
+    },
+    {
+        "id": "http-adapter",
+        "name": "HTTP Adapter",
+        "category": "ai",
+        "description": "自定义重包契约",
+        "config": {
+            "kind": "http",
+            "baseUrl": "https://pkg.example/api",
+            "manifest": "capability://org/custom-pkg@1.0",
+            "endpoint": "https://pkg.example/api",
+        },
+    },
+]
 
 
 class Capability(BaseModel):
@@ -81,6 +153,73 @@ class CapabilitiesEngine:
                     setattr(cap, k, v)
             cap.updated_at = time.time()
             return cap
+
+    def ensure_plugin_defaults(self) -> int:
+        """幂等写入插件页固定 id；已存在则跳过。返回新写入条数。"""
+        created = 0
+        with _LOCK:
+            for row in PLUGIN_DEFAULTS:
+                cap_id = str(row["id"])
+                if cap_id in self._capabilities:
+                    continue
+                fields = {k: v for k, v in row.items() if k != "id"}
+                self._capabilities[cap_id] = Capability(id=cap_id, **fields)
+                created += 1
+        return created
+
+    def upsert_capability(self, cap_id: str, **kwargs: Any) -> Capability:
+        """存在则更新；否则以给定 id 创建。"""
+        allowed = set(Capability.model_fields.keys()) - {"id"}
+        clean = {k: v for k, v in kwargs.items() if k in allowed}
+        with _LOCK:
+            cap = self._capabilities.get(cap_id)
+            if cap is None:
+                cap = Capability(id=cap_id, **clean)
+                self._capabilities[cap_id] = cap
+                return cap
+            for k, v in clean.items():
+                setattr(cap, k, v)
+            cap.updated_at = time.time()
+            return cap
+
+    def test_connectivity(
+        self,
+        cap_id: str | None = None,
+        endpoint: str | None = None,
+    ) -> dict[str, Any]:
+        """进程内连通模拟：不外呼；有 endpoint / 已登记能力则 healthy。"""
+        self.ensure_plugin_defaults()
+        started = time.time()
+        cap: Capability | None = None
+        if cap_id:
+            cap = self.get_capability(cap_id)
+            if cap is None:
+                # 首次测连通：按 id upsert 占位，避免 UI 固定 id 404
+                cap = self.upsert_capability(
+                    cap_id,
+                    name=cap_id,
+                    category="ai",
+                    config={"endpoint": endpoint or f"mock://{cap_id}"},
+                )
+        resolved_endpoint = endpoint
+        if not resolved_endpoint and cap is not None:
+            cfg = cap.config or {}
+            resolved_endpoint = str(
+                cfg.get("endpoint") or cfg.get("baseUrl") or cfg.get("gateway") or ""
+            ) or None
+        if not resolved_endpoint:
+            resolved_endpoint = f"mock://local/{cap_id or 'anon'}"
+        latency_ms = max(1, int((time.time() - started) * 1000) + 12)
+        enabled = True if cap is None else bool(cap.enabled)
+        ok = enabled and bool(resolved_endpoint)
+        return {
+            "ok": ok,
+            "status": "healthy" if ok else "unhealthy",
+            "latencyMs": latency_ms,
+            "endpoint": resolved_endpoint,
+            "capabilityId": cap.id if cap else cap_id,
+            "message": "connectivity ok" if ok else "capability disabled or missing endpoint",
+        }
 
     def delete_capability(self, cap_id: str) -> bool:
         with _LOCK:

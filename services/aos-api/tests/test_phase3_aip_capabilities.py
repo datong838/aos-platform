@@ -37,6 +37,37 @@ def test_update_capability():
     assert updated.enabled is False
 
 
+def test_ensure_plugin_defaults_and_upsert():
+    eng = get_engine()
+    n = eng.ensure_plugin_defaults()
+    assert n >= 4
+    assert eng.get_capability("video-job") is not None
+    # 幂等
+    assert eng.ensure_plugin_defaults() == 0
+    up = eng.upsert_capability(
+        "video-job",
+        config={"kind": "job", "endpoint": "https://x/v2", "concurrency": 8},
+        enabled=True,
+        name="短视频生成",
+    )
+    assert up.config["endpoint"] == "https://x/v2"
+    assert up.config["concurrency"] == 8
+    fresh = eng.upsert_capability("custom-cap-x", name="Custom", category="ai", config={"endpoint": "https://y"})
+    assert fresh.id == "custom-cap-x"
+
+
+def test_connectivity():
+    eng = get_engine()
+    r = eng.test_connectivity(cap_id="video-job")
+    assert r["ok"] is True
+    assert r["status"] == "healthy"
+    assert r["capabilityId"] == "video-job"
+    assert r["endpoint"]
+    r2 = eng.test_connectivity(endpoint="https://probe.example/health")
+    assert r2["ok"] is True
+    assert "probe.example" in r2["endpoint"]
+
+
 def test_delete_capability():
     eng = get_engine()
     cap = eng.create_capability("ToDelete")
