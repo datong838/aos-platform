@@ -171,6 +171,16 @@ async def get_column_mapping(ot_id: str) -> dict[str, Any]:
     return {"items": [m.model_dump() for m in items], "count": len(items)}
 
 
+@router.put("/object-types/{ot_id}/column-mapping")
+async def put_column_mapping(ot_id: str, req: SetColumnMappingRequest) -> dict[str, Any]:
+    """W3-C3 · 保存列映射（引擎 set_column_mapping 已有，补路由）。"""
+    eng = get_engine()
+    if eng.get_object_type(ot_id) is None:
+        raise HTTPException(404, f"ObjectType {ot_id} not found")
+    items = eng.set_column_mapping(ot_id, req.mappings)
+    return {"items": [m.model_dump() for m in items], "count": len(items)}
+
+
 @router.post("/object-types/{ot_id}/automap")
 async def automap(ot_id: str, req: AutomapRequest | None = None) -> dict[str, Any]:
     eng = get_engine()

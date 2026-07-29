@@ -11,6 +11,11 @@ import {
   filterFunctions,
   defaultPayloadFromParams,
   MOCK_FUNCTIONS,
+  mapApiFunctionToDef,
+  mapDefToUpdateBody,
+  mapApiTestToResult,
+  mapApiStatusToUi,
+  inferFunctionMode,
   type FunctionDef,
 } from "./FunctionEditorPage";
 
@@ -106,7 +111,7 @@ describe("FunctionEditorPage · validateFunction", () => {
     expect(validateFunction(fn)).toContain("SQL 函数必须包含 SELECT 语句");
   });
 
-  it("catches Python function without def/class", () => {
+  it("catches Python function without def/class/return", () => {
     const fn: FunctionDef = {
       ...emptyFunction(),
       id: "fn-test",
@@ -115,7 +120,7 @@ describe("FunctionEditorPage · validateFunction", () => {
       code: "print('hello')",
       outputType: "X",
     };
-    expect(validateFunction(fn)).toContain("Python 函数必须包含 def 或 class 定义");
+    expect(validateFunction(fn)).toContain("Python 函数必须包含 def、class、return 或 @Function");
   });
 
   it("catches missing outputType", () => {
@@ -258,5 +263,83 @@ describe("FunctionEditorPage · MOCK_FUNCTIONS", () => {
       expect(fn.name).toBeTruthy();
       expect(fn.code).toBeTruthy();
     }
+  });
+});
+
+describe("FunctionEditorPage · C4 API mapping", () => {
+  it("mapApiFunctionToDef maps body/params/return_type", () => {
+    const def = mapApiFunctionToDef({
+      id: "fn-1",
+      name: "compute_discount",
+      description: "折扣",
+      body: "return amount * 0.1",
+      params: [
+        { name: "amount", datatype: "double", required: true, default: 0 },
+      ],
+      return_type: "double",
+      status: "active",
+      version: 2,
+    });
+    expect(def.id).toBe("fn-1");
+    expect(def.code).toContain("return");
+    expect(def.outputType).toBe("double");
+    expect(def.status).toBe("published");
+    expect(def.params).toHaveLength(1);
+    expect(def.params[0].type).toBe("double");
+    expect(def.params[0].defaultValue).toBe("0");
+  });
+
+  it("mapDefToUpdateBody uses API field names", () => {
+    const body = mapDefToUpdateBody({
+      ...emptyFunction(),
+      id: "fn-1",
+      name: "f",
+      code: "return 1",
+      outputType: "int",
+      status: "published",
+      params: [
+        {
+          id: "p1",
+          name: "x",
+          type: "int",
+          required: true,
+          defaultValue: "1",
+          description: "",
+        },
+      ],
+    });
+    expect(body.body).toBe("return 1");
+    expect(body.return_type).toBe("int");
+    expect(body.status).toBe("active");
+    expect((body.params as unknown[])[0]).toMatchObject({
+      name: "x",
+      datatype: "int",
+    });
+  });
+
+  it("mapApiTestToResult normalizes ok/output", () => {
+    const r = mapApiTestToResult({
+      ok: true,
+      output: { v: 1 },
+      duration: 3,
+    });
+    expect(r.ok).toBe(true);
+    expect(r.output).toContain('"v"');
+    expect(r.duration).toBe(3);
+  });
+
+  it("mapApiTestToResult treats status=passed as ok", () => {
+    const r = mapApiTestToResult({ status: "passed", output: "1" });
+    expect(r.ok).toBe(true);
+  });
+
+  it("mapApiStatusToUi covers active/draft", () => {
+    expect(mapApiStatusToUi("active")).toBe("published");
+    expect(mapApiStatusToUi("draft")).toBe("draft");
+  });
+
+  it("inferFunctionMode detects SQL", () => {
+    expect(inferFunctionMode("SELECT 1")).toBe("SQL");
+    expect(inferFunctionMode("return x")).toBe("PYTHON");
   });
 });

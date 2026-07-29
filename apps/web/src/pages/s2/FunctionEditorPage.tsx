@@ -5,7 +5,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { apiPost } from "../../api/client";
+import { apiGet, apiPost, apiPut } from "../../api/client";
 import { S2Chrome } from "./shared";
 import { BpToolbar, BpBanner, BpTabs } from "./blueprintUi";
 
@@ -13,6 +13,7 @@ import { BpToolbar, BpBanner, BpTabs } from "./blueprintUi";
 
 export type FunctionMode = "SQL" | "PYTHON";
 export type FunctionStatus = "draft" | "validated" | "published" | "error";
+export type FunctionSourceMode = "loading" | "live" | "demo";
 
 export interface FunctionParam {
   id: string;
@@ -44,6 +45,30 @@ export interface TestRunResult {
   output: string;
   duration: number;
   errorRows?: { param: string; message: string }[];
+}
+
+export interface ApiFunctionParam {
+  name?: string;
+  datatype?: string;
+  type?: string;
+  required?: boolean;
+  default?: unknown;
+  defaultValue?: string;
+  description?: string;
+}
+
+export interface ApiFunctionRow {
+  id?: string;
+  name?: string;
+  display_name?: string;
+  description?: string;
+  body?: string;
+  code?: string;
+  params?: ApiFunctionParam[];
+  return_type?: string;
+  status?: string;
+  category?: string;
+  version?: number | string;
 }
 
 // ==================== 常量 ====================
@@ -125,8 +150,8 @@ export function validateFunction(fn: FunctionDef): string[] {
   if (!fn.code || !fn.code.trim()) errors.push("代码不能为空");
   if (fn.mode === "SQL" && fn.code && !/select/i.test(fn.code))
     errors.push("SQL 函数必须包含 SELECT 语句");
-  if (fn.mode === "PYTHON" && fn.code && !/def\s+\w+/.test(fn.code) && !/class\s+\w+/.test(fn.code))
-    errors.push("Python 函数必须包含 def 或 class 定义");
+  if (fn.mode === "PYTHON" && fn.code && !/def\s+\w+/.test(fn.code) && !/class\s+\w+/.test(fn.code) && !/\breturn\b/.test(fn.code) && !/@Function/.test(fn.code))
+    errors.push("Python 函数必须包含 def、class、return 或 @Function");
   for (const p of fn.params) {
     if (!p.name || !p.name.trim()) {
       errors.push("参数名不能为空");
@@ -215,10 +240,127 @@ export function defaultPayloadFromParams(params: FunctionParam[]): string {
   return JSON.stringify(obj, null, 2);
 }
 
+/** API status → UI */
+export function mapApiStatusToUi(status: string | undefined): FunctionStatus {
+  switch ((status || "").toLowerCase()) {
+    case "active":
+    case "published":
+      return "published";
+    case "draft":
+      return "draft";
+    case "validated":
+      return "validated";
+    case "deprecated":
+    case "error":
+      return "error";
+    default:
+      return "draft";
+  }
+}
+
+/** UI status → API */
+export function mapUiStatusToApi(status: FunctionStatus): string {
+  switch (status) {
+    case "published":
+      return "active";
+    case "validated":
+      return "active";
+    case "error":
+      return "deprecated";
+    default:
+      return "draft";
+  }
+}
+
+/** 根据 body/code 猜测 mode */
+export function inferFunctionMode(code: string): FunctionMode {
+  if (/select\s+/i.test(code) && !/def\s+\w+/.test(code)) return "SQL";
+  return "PYTHON";
+}
+
+export function mapApiParamToUi(p: ApiFunctionParam, index: number): FunctionParam {
+  const def =
+    p.defaultValue != null
+      ? String(p.defaultValue)
+      : p.default != null
+        ? String(p.default)
+        : "";
+  return {
+    id: `p-${index}-${p.name || "x"}`,
+    name: p.name || "",
+    type: p.datatype || p.type || "string",
+    required: p.required !== false,
+    defaultValue: def,
+    description: p.description || "",
+  };
+}
+
+export function mapApiFunctionToDef(row: ApiFunctionRow): FunctionDef {
+  const code = row.body || row.code || "";
+  const name = row.name || "";
+  return {
+    id: row.id || `fn-${name || Date.now()}`,
+    name,
+    description: row.description || row.display_name || "",
+    mode: inferFunctionMode(code),
+    status: mapApiStatusToUi(row.status),
+    code,
+    params: (row.params || []).map(mapApiParamToUi),
+    outputType: row.return_type || "",
+    className: row.display_name || name,
+    repository: row.category || "ontology-functions",
+    filePath: `functions/${name || "unnamed"}.py`,
+    rid: row.id || "",
+    version: String(row.version ?? "1"),
+  };
+}
+
+export function mapDefToUpdateBody(fn: FunctionDef): Record<string, unknown> {
+  return {
+    display_name: fn.className || fn.name,
+    description: fn.description,
+    body: fn.code,
+    return_type: fn.outputType,
+    status: mapUiStatusToApi(fn.status),
+    params: fn.params.map((p) => ({
+      name: p.name,
+      datatype: p.type || "string",
+      required: p.required,
+      default: p.defaultValue || null,
+      description: p.description || "",
+    })),
+  };
+}
+
+/** 将 API 试跑响应归一为 TestRunResult */
+export function mapApiTestToResult(raw: Record<string, unknown>): TestRunResult {
+  const errorRows = Array.isArray(raw.errorRows)
+    ? (raw.errorRows as { param: string; message: string }[])
+    : raw.error
+      ? [{ param: "_", message: String(raw.error) }]
+      : undefined;
+  const status = String(raw.status || "");
+  const ok =
+    typeof raw.ok === "boolean"
+      ? raw.ok
+      : status === "passed" || status === "ok";
+  return {
+    ok,
+    output:
+      raw.output == null
+        ? ""
+        : typeof raw.output === "string"
+          ? raw.output
+          : JSON.stringify(raw.output, null, 2),
+    duration: typeof raw.duration === "number" ? raw.duration : 0,
+    errorRows,
+  };
+}
+
 // ==================== 组件 ====================
 
 export function FunctionEditorPage() {
-  const { functionId: _functionId = "" } = useParams();
+  const { functionId: routeFunctionId = "" } = useParams();
   const [functions, setFunctions] = useState<FunctionDef[]>(MOCK_FUNCTIONS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -227,8 +369,42 @@ export function FunctionEditorPage() {
   const [testPayload, setTestPayload] = useState("{}");
   const [testResult, setTestResult] = useState<TestRunResult | null>(null);
   const [testBusy, setTestBusy] = useState(false);
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [sourceMode, setSourceMode] = useState<FunctionSourceMode>("loading");
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        setSourceMode("loading");
+        const res = await apiGet<{ items?: ApiFunctionRow[] }>("/v1/ontology/functions");
+        if (cancelled) return;
+        const items = (res.items || []).map(mapApiFunctionToDef);
+        if (items.length > 0) {
+          setFunctions(items);
+          const prefer =
+            (routeFunctionId && items.find((f) => f.id === routeFunctionId || f.name === routeFunctionId)?.id) ||
+            items[0].id;
+          setSelectedId(prefer);
+        } else {
+          // 空列表仍为 live
+          setFunctions([]);
+          setSelectedId(null);
+        }
+        setSourceMode("live");
+      } catch {
+        if (cancelled) return;
+        setFunctions(MOCK_FUNCTIONS);
+        setSelectedId(MOCK_FUNCTIONS[0]?.id ?? null);
+        setSourceMode("demo");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [routeFunctionId]);
 
   const filtered = useMemo(
     () => filterFunctions(functions, searchQuery, modeFilter),
@@ -238,11 +414,12 @@ export function FunctionEditorPage() {
   const selected = functions.find((f) => f.id === selectedId) || filtered[0] || null;
 
   useEffect(() => {
-    if (selected && testPayload === "{}") {
+    if (selected) {
       setTestPayload(defaultPayloadFromParams(selected.params));
+      setTestResult(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId]);
+  }, [selected?.id]);
 
   function patchFunction(id: string, patch: Partial<FunctionDef>) {
     setFunctions((prev) =>
@@ -283,6 +460,37 @@ export function FunctionEditorPage() {
     );
   }
 
+  async function saveFunction(fn: FunctionDef) {
+    setErr("");
+    setMsg("");
+    const errors = validateFunction(fn);
+    if (errors.length > 0) {
+      setErr(errors.join("；"));
+      return;
+    }
+    if (sourceMode === "demo") {
+      setMsg(`函数 ${fn.name} 已本地保存（演示路径）`);
+      return;
+    }
+    setSaveBusy(true);
+    try {
+      const res = await apiPut<ApiFunctionRow>(
+        `/v1/ontology/functions/${encodeURIComponent(fn.id)}`,
+        mapDefToUpdateBody(fn),
+      );
+      const mapped = mapApiFunctionToDef(res);
+      setFunctions((prev) =>
+        prev.map((f) => (f.id === fn.id ? { ...mapped, mode: fn.mode } : f)),
+      );
+      setMsg(`函数 ${fn.name} 已保存`);
+    } catch (e) {
+      setSourceMode("demo");
+      setMsg(`保存失败，已保留本地编辑（演示路径）：${String((e as Error).message || e)}`);
+    } finally {
+      setSaveBusy(false);
+    }
+  }
+
   async function runTest(fn: FunctionDef) {
     setErr("");
     setMsg("");
@@ -295,20 +503,24 @@ export function FunctionEditorPage() {
       } catch {
         throw new Error("测试 payload JSON 无效");
       }
-      // 尝试调用后端；如果后端不可用，用模拟结果
-      try {
-        const res = await apiPost<TestRunResult>(
-          `/v1/ontology/functions/${encodeURIComponent(fn.id)}/test`,
-          { payload },
-        );
-        setTestResult(res);
-        setMsg(res.ok ? "测试通过" : "测试失败");
-      } catch {
-        // 后端不可用，使用模拟
-        const result = simulateTestRun(fn, payload);
-        setTestResult(result);
-        setMsg(result.ok ? "测试通过（模拟）" : "测试失败（模拟）");
+      if (sourceMode === "live") {
+        try {
+          const res = await apiPost<Record<string, unknown>>(
+            `/v1/ontology/functions/${encodeURIComponent(fn.id)}/test`,
+            { payload },
+          );
+          const result = mapApiTestToResult(res);
+          setTestResult(result);
+          setMsg(result.ok ? "测试通过" : "测试失败");
+          return;
+        } catch {
+          // fall through to simulate + demo
+          setSourceMode("demo");
+        }
       }
+      const result = simulateTestRun(fn, payload);
+      setTestResult(result);
+      setMsg(result.ok ? "测试通过（演示路径）" : "测试失败（演示路径）");
     } catch (e) {
       setErr(String((e as Error).message || e));
     } finally {
@@ -319,9 +531,9 @@ export function FunctionEditorPage() {
   return (
     <S2Chrome
       title="函数编辑器"
-      lede="函数列表 · 代码编辑器 · 参数表格 · 测试运行面板"
+      lede="函数列表 · 参数表格 · 测试运行面板 · 保存"
     >
-      <div className="ont-page">
+      <div className="ont-page w3-c3c4-page">
         <BpToolbar>
           <Link to="/ontology" className="btn-nav">
             ← 本体
@@ -329,11 +541,41 @@ export function FunctionEditorPage() {
           <Link to="/data/code-repos" className="btn-nav">
             在代码仓库中编辑 →
           </Link>
+          {selected && (
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={saveBusy}
+              onClick={() => void saveFunction(selected)}
+            >
+              {saveBusy ? "保存中…" : "保存函数"}
+            </button>
+          )}
         </BpToolbar>
 
+        {sourceMode === "demo" && (
+          <div className="w3-c3c4-demo-banner" role="status">
+            <span className="w3-c3c4-demo-badge">演示路径</span>
+            <span className="w3-c3c4-demo-text">
+              函数 API 不可用或试跑降级，当前使用本地 MOCK / simulate。
+            </span>
+          </div>
+        )}
+        {sourceMode === "live" && (
+          <div className="w3-c3c4-live-banner" role="status">
+            <span className="w3-c3c4-live-badge">Live</span>
+            <span className="w3-c3c4-demo-text">
+              已接 `/v1/ontology/functions` 列表 / 保存 / 试跑
+            </span>
+          </div>
+        )}
+
         <BpBanner tone="info">
-          本体管理器中的函数为只读视图。要修改函数代码，请在代码仓库应用中操作。
+          参数表与试跑面板可编辑。代码主体建议在代码仓库中维护；本页保存写入 ontology functions API。
         </BpBanner>
+
+        {msg && <p className="bp-prop-ok">{msg}</p>}
+        {err && sideTab !== "test" && <p className="error">{err}</p>}
 
         <div
           style={{
@@ -343,7 +585,6 @@ export function FunctionEditorPage() {
             marginTop: 12,
           }}
         >
-          {/* 左: 函数列表 */}
           <aside
             style={{
               border: "1px solid var(--aos-border)",
@@ -400,14 +641,12 @@ export function FunctionEditorPage() {
             </ul>
           </aside>
 
-          {/* 右: 主区 */}
           <main>
             {!selected && (
               <p className="muted">从左侧选择一个函数</p>
             )}
             {selected && (
               <div>
-                {/* 标题行 */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                   <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: "1rem" }}>
                     fx {selected.name}
@@ -428,7 +667,6 @@ export function FunctionEditorPage() {
                   </span>
                 </div>
 
-                {/* Tab */}
                 <BpTabs
                   tabs={[
                     { id: "overview", label: "概览" },
@@ -505,8 +743,7 @@ export function FunctionEditorPage() {
                         </label>
                       </div>
 
-                      {/* 参数表 */}
-                      <div style={{ marginTop: 12 }}>
+                      <div style={{ marginTop: 12 }} className="w3-c3c4-param-table">
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                           <strong style={{ fontSize: "0.8rem" }}>输入参数</strong>
                           <button type="button" className="btn-nav" style={{ fontSize: "0.7rem" }} onClick={() => addParam(selected.id)}>
@@ -603,26 +840,23 @@ export function FunctionEditorPage() {
                           {modeLabel(selected.mode)}
                         </span>
                       </div>
-                      <pre
-                        className="card"
+                      <textarea
+                        className="aos-input w3-c3c4-code-editor"
+                        value={selected.code}
+                        rows={16}
+                        onChange={(e) => patchFunction(selected.id, { code: e.target.value })}
                         style={{
-                          padding: 12,
                           fontFamily: "ui-monospace, monospace",
                           fontSize: "0.75rem",
-                          whiteSpace: "pre-wrap",
-                          overflowX: "auto",
-                          maxHeight: 400,
+                          width: "100%",
                         }}
-                      >
-                        {selected.code}
-                      </pre>
+                      />
                     </div>
                   )}
 
                   {sideTab === "test" && (
-                    <div>
+                    <div className="w3-c3c4-test-panel">
                       {err && <p className="error">{err}</p>}
-                      {msg && <p className="bp-prop-ok">{msg}</p>}
                       <label className="ont-form-field">
                         <span>测试 payload (JSON)</span>
                         <textarea

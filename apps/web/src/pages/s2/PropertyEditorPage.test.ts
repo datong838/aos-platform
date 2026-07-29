@@ -12,7 +12,15 @@ import {
   statusColor,
   PROPERTY_TYPES,
   PROPERTY_STATUSES,
+  mapDatatypeToUiType,
+  mapApiPropertyToField,
+  mapFieldToAddRequest,
+  buildMappingSaveBody,
+  applyMappingsToProperties,
+  countMappedColumns,
+  isNewPropertyId,
   type PropertyField,
+  type ColumnMappingRow,
 } from "./PropertyEditorPage";
 
 describe("PropertyEditorPage · emptyProperty", () => {
@@ -238,5 +246,119 @@ describe("PropertyEditorPage · constants", () => {
       expect(t.value).toBeTruthy();
       expect(t.label).toBeTruthy();
     }
+  });
+});
+
+describe("PropertyEditorPage · C3 mapping helpers", () => {
+  it("mapDatatypeToUiType covers common API types", () => {
+    expect(mapDatatypeToUiType("string")).toBe("STRING");
+    expect(mapDatatypeToUiType("int")).toBe("INTEGER");
+    expect(mapDatatypeToUiType("double")).toBe("DECIMAL");
+    expect(mapDatatypeToUiType("boolean")).toBe("BOOLEAN");
+  });
+
+  it("mapApiPropertyToField maps pk/title/required", () => {
+    const f = mapApiPropertyToField({
+      id: "prop-1",
+      name: "order_id",
+      datatype: "string",
+      is_primary_key: true,
+      is_display_name: false,
+      nullable: false,
+      description: "pk",
+    });
+    expect(f.isPrimaryKey).toBe(true);
+    expect(f.isRequired).toBe(true);
+    expect(f.type).toBe("STRING");
+  });
+
+  it("mapApiPropertyToField applies columnByProp", () => {
+    const f = mapApiPropertyToField(
+      { id: "p1", name: "amount", datatype: "double" },
+      { amount: "order_amount" },
+    );
+    expect(f.columnMapping).toBe("order_amount");
+  });
+
+  it("buildMappingSaveBody strips ids", () => {
+    const body = buildMappingSaveBody([
+      {
+        id: "cm-1",
+        object_type_id: "ot-1",
+        source_column: "col_a",
+        target_property: "a",
+        confidence: 0.9,
+        auto: true,
+        status: "mapped",
+      },
+    ]);
+    expect(body.mappings).toHaveLength(1);
+    expect(body.mappings[0].source_column).toBe("col_a");
+    expect(body.mappings[0].target_property).toBe("a");
+  });
+
+  it("applyMappingsToProperties writes columnMapping", () => {
+    const props = [
+      { ...emptyProperty(), name: "a", columnMapping: "" },
+      { ...emptyProperty(), name: "b", columnMapping: "" },
+    ];
+    const rows: ColumnMappingRow[] = [
+      {
+        id: "1",
+        object_type_id: "ot",
+        source_column: "col_a",
+        target_property: "a",
+        confidence: 1,
+        auto: true,
+        status: "mapped",
+      },
+    ];
+    const next = applyMappingsToProperties(props, rows);
+    expect(next[0].columnMapping).toBe("col_a");
+    expect(next[1].columnMapping).toBe("");
+  });
+
+  it("countMappedColumns counts non-skipped", () => {
+    const s = countMappedColumns([
+      {
+        id: "1",
+        object_type_id: "ot",
+        source_column: "a",
+        target_property: "A",
+        confidence: 1,
+        auto: false,
+        status: "mapped",
+      },
+      {
+        id: "2",
+        object_type_id: "ot",
+        source_column: "b",
+        target_property: "",
+        confidence: 0,
+        auto: false,
+        status: "skipped",
+      },
+    ]);
+    expect(s.mapped).toBe(1);
+    expect(s.total).toBe(2);
+  });
+
+  it("isNewPropertyId detects local ids", () => {
+    expect(isNewPropertyId("new-123")).toBe(true);
+    expect(isNewPropertyId("prop-abc")).toBe(false);
+  });
+
+  it("mapFieldToAddRequest uses API field names", () => {
+    const body = mapFieldToAddRequest({
+      ...emptyProperty(),
+      name: "sku",
+      type: "STRING",
+      isPrimaryKey: true,
+      isRequired: true,
+    });
+    expect(body.name).toBe("sku");
+    expect(body.datatype).toBe("string");
+    expect(body.is_primary_key).toBe(true);
+    expect(body.nullable).toBe(false);
   });
 });
