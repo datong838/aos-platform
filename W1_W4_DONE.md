@@ -2,8 +2,8 @@
 
 ## Commit
 
-分支 `feature/223-worker-1` · 信息：`w1(C8a): link type relation SVG viz + join cards`  
-（完整 hash 以 `git rev-parse HEAD` 为准，交付回复中给出。）
+分支 `feature/223-worker-1` · hash `f70b75105dae3a64f595f3f75438fb1dcc3362ef`  
+信息：`w1(C8a): link type relation SVG viz + join cards`
 
 ## 改了什么
 
