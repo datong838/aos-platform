@@ -9474,3 +9474,95 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
   margin-left: 0;
   margin-bottom: 8px;
 }
+
+/* === W4-B5 === */
+.w4-b5-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--aos-border, #e5e7eb);
+  border-radius: 2px;
+  background: var(--aos-surface, #fff);
+  font-size: 12px;
+}
+.w4-b5-banner.is-demo { border-color: #fde68a; background: #fffbeb; }
+.w4-b5-banner.is-live { border-color: #a7f3d0; background: #ecfdf5; }
+.w4-b5-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.w4-b5-badge.is-demo { background: #fef3c7; color: #92400e; }
+.w4-b5-badge.is-live { background: #d1fae5; color: #065f46; }
+.w4-b5-banner-text { color: #6b7280; }
+.w4-b5-msg {
+  border-radius: 2px;
+  padding: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.w4-b5-msg.is-ok {
+  background: var(--aos-accent-light, #eff6ff);
+  border: 1px solid var(--aos-accent-border, #bfdbfe);
+  color: var(--aos-blue-600, #2563eb);
+}
+.w4-b5-msg.is-err {
+  background: var(--aos-red-bg, #fef2f2);
+  border: 1px solid var(--aos-red-border, #fecaca);
+  color: var(--aos-red, #dc2626);
+}
+.w4-b5-cfg-panel {
+  border: 1px solid #e5e7eb;
+  border-radius: 2px;
+  background: #fff;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.w4-b5-cfg-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  margin-top: 16px;
+  border-top: 1px solid #f3f4f6;
+  flex-wrap: wrap;
+}
+.w4-b5-btn {
+  padding: 6px 12px;
+  border-radius: 2px;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.w4-b5-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.w4-b5-btn-test {
+  border: 1px solid #86efac;
+  background: #fff;
+  color: #16a34a;
+}
+.w4-b5-btn-save {
+  border: 1px solid #fde68a;
+  background: #fef3c7;
+  color: #92400e;
+}
+.w4-b5-btn-link {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #6b7280;
+}
+.w4-b5-chip-btn {
+  padding: 4px 10px;
+  border-radius: 2px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-size: 12px;
+  color: #374151;
+  cursor: pointer;
+}
+.w4-b5-chip-btn:disabled { opacity: 0.55; cursor: not-allowed; }
