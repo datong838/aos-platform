@@ -4,9 +4,12 @@
  * 5 Tabs: Overview / Traces / Metrics / Alerts / Dashboards
  * 顶部工具栏：时间范围（1h/6h/24h/7d）+ 刷新 + 自动刷新 + 导出
  *
+ * W2-A5：Overview/Traces 优先走 /v1/aip/observability/*；失败降级 MOCK + 演示路径。
+ *
  * 纯函数集中在文件顶部（formatXxx / filter / aggregate），便于测试。
  */
 import { useEffect, useMemo, useState } from "react";
+import { apiGet } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
 import { BpBadge } from "../../components/bp";
 
@@ -73,6 +76,21 @@ export type DashboardWidget = {
   title: string;
   type: "line" | "bar" | "kpi" | "table";
   data: number[];
+};
+
+/** live=真实/采样 API；demo=MOCK 演示路径 */
+export type ObsDataMode = "live" | "demo" | "loading";
+
+export type ObsSummaryResponse = {
+  source?: string;
+  range?: string;
+  kpis?: Array<Partial<KpiCard> & { key?: string; label?: string; value?: string }>;
+  trend?: Array<Partial<TrendPoint>>;
+};
+
+export type ObsTracesResponse = {
+  source?: string;
+  items?: Array<Partial<TraceRow>>;
 };
 
 /* ----------------------------------------------------------------------------
@@ -248,6 +266,53 @@ export const MOCK_WIDGETS: DashboardWidget[] = [
   { id: "w4", title: "Top 调用", type: "table", data: [5, 3, 2, 1] },
 ];
 
+/**将 summary API 的 kpis 映射为页面 KpiCard；缺省回落 MOCK。*/
+export function mapSummaryToKpis(res: ObsSummaryResponse | null | undefined): KpiCard[] {
+  const items = res?.kpis;
+  if (!items || items.length === 0) return MOCK_KPIS;
+  return items.map((k, i) => {
+    const fallback = MOCK_KPIS[i] ?? MOCK_KPIS[0];
+    return {
+      key: k.key || fallback.key,
+      label: k.label || fallback.label,
+      value: k.value ?? fallback.value,
+      deltaPct: typeof k.deltaPct === "number" ? k.deltaPct : 0,
+      unit: k.unit || fallback.unit,
+    };
+  });
+}
+
+/**将 summary API 的 trend 映射为 TrendPoint[]。*/
+export function mapSummaryToTrend(res: ObsSummaryResponse | null | undefined): TrendPoint[] {
+  const items = res?.trend;
+  if (!items || items.length === 0) return MOCK_TREND;
+  return items.map((p, i) => ({
+    t: p.t || `${i * 5}m`,
+    requests: typeof p.requests === "number" ? p.requests : 0,
+    latencyMs: typeof p.latencyMs === "number" ? p.latencyMs : 0,
+    errors: typeof p.errors === "number" ? p.errors : 0,
+  }));
+}
+
+/**将 traces API items 映射为 TraceRow[]。*/
+export function mapTraceItems(res: ObsTracesResponse | null | undefined): TraceRow[] {
+  const items = res?.items;
+  if (!items || items.length === 0) return MOCK_TRACES;
+  return items.map((r, i) => {
+    const fallback = MOCK_TRACES[i % MOCK_TRACES.length];
+    const status = r.status === "error" || r.status === "ok" ? r.status : fallback.status;
+    return {
+      traceId: r.traceId || `t_api_${i}`,
+      rootSpan: r.rootSpan || fallback.rootSpan,
+      service: r.service || fallback.service,
+      durationMs: typeof r.durationMs === "number" ? r.durationMs : fallback.durationMs,
+      status,
+      spans: typeof r.spans === "number" ? r.spans : fallback.spans,
+      startedAt: r.startedAt || fallback.startedAt,
+    };
+  });
+}
+
 /* ----------------------------------------------------------------------------
  * 组件
  * ------------------------------------------------------------------------- */
@@ -257,9 +322,14 @@ export function ObservabilityPage() {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
   const [traceQuery, setTraceQuery] = useState("");
+  const [kpis, setKpis] = useState<KpiCard[]>(MOCK_KPIS);
+  const [trend, setTrend] = useState<TrendPoint[]>(MOCK_TREND);
+  const [traces, setTraces] = useState<TraceRow[]>(MOCK_TRACES);
   const [selectedTrace, setSelectedTrace] = useState<TraceRow | null>(MOCK_TRACES[0]);
   const [alertFilter, setAlertFilter] = useState<AlertSeverity | "all">("all");
   const [widgets, setWidgets] = useState<DashboardWidget[]>(MOCK_WIDGETS);
+  const [dataMode, setDataMode] = useState<ObsDataMode>("loading");
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // 自动刷新：每 30s 触发一次 tick
   useEffect(() => {
@@ -267,6 +337,45 @@ export function ObservabilityPage() {
     const id = setInterval(() => setRefreshTick((t) => t + 1), 30000);
     return () => clearInterval(id);
   }, [autoRefresh]);
+
+  // W2-A5：拉取 summary + traces；失败降级 MOCK
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [summary, tracesRes] = await Promise.all([
+          apiGet<ObsSummaryResponse>(
+            `/v1/aip/observability/summary?range=${encodeURIComponent(range)}`,
+          ),
+          apiGet<ObsTracesResponse>("/v1/aip/observability/traces?limit=20"),
+        ]);
+        if (cancelled) return;
+        const nextKpis = mapSummaryToKpis(summary);
+        const nextTrend = mapSummaryToTrend(summary);
+        const nextTraces = mapTraceItems(tracesRes);
+        setKpis(nextKpis);
+        setTrend(nextTrend);
+        setTraces(nextTraces);
+        setSelectedTrace((prev) => {
+          if (!prev) return nextTraces[0] ?? null;
+          return nextTraces.find((t) => t.traceId === prev.traceId) ?? nextTraces[0] ?? null;
+        });
+        setDataMode("live");
+        setApiError(null);
+      } catch (e) {
+        if (cancelled) return;
+        setKpis(MOCK_KPIS);
+        setTrend(MOCK_TREND);
+        setTraces(MOCK_TRACES);
+        setSelectedTrace(MOCK_TRACES[0] ?? null);
+        setDataMode("demo");
+        setApiError(e instanceof Error ? e.message : "API 不可用");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [range, refreshTick]);
 
   const tabs: { key: ObsTab; label: string }[] = [
     { key: "overview", label: "Overview" },
@@ -276,22 +385,28 @@ export function ObservabilityPage() {
     { key: "dashboards", label: "Dashboards" },
   ];
 
-  const filteredTraces = useMemo(() => filterTraces(MOCK_TRACES, traceQuery), [traceQuery]);
+  const filteredTraces = useMemo(() => filterTraces(traces, traceQuery), [traces, traceQuery]);
   const filteredAlerts = useMemo(() => filterAlerts(MOCK_ALERTS, alertFilter), [alertFilter]);
   const alertCounts = useMemo(() => countAlertStatus(MOCK_ALERTS), []);
   const normalizedSpans = useMemo(
     () => normalizeSpans(selectedTrace ? MOCK_SPANS : []),
     [selectedTrace],
   );
-  const requestsSpark = useMemo(() => sparklinePath(MOCK_TREND.map((p) => p.requests)), []);
-  const latencySpark = useMemo(() => sparklinePath(MOCK_TREND.map((p) => p.latencyMs)), []);
+  const requestsSpark = useMemo(
+    () => sparklinePath(trend.map((p) => p.requests)),
+    [trend],
+  );
+  const latencySpark = useMemo(
+    () => sparklinePath(trend.map((p) => p.latencyMs)),
+    [trend],
+  );
 
   function handleRefresh() {
     setRefreshTick((t) => t + 1);
   }
 
   function handleExport() {
-    const blob = { tab, range, ts: new Date().toISOString(), tick: refreshTick };
+    const blob = { tab, range, ts: new Date().toISOString(), tick: refreshTick, dataMode };
     const url = URL.createObjectURL(
       new Blob([JSON.stringify(blob, null, 2)], { type: "application/json" }),
     );
@@ -312,6 +427,23 @@ export function ObservabilityPage() {
 
   return (
     <PageChrome title="AIP 可观测性" lede="Overview · Traces · Metrics · Alerts · Dashboards">
+      {dataMode === "demo" && (
+        <div className="obs-source-banner obs-source-banner--demo" role="status" data-testid="obs-source-demo">
+          <span className="obs-source-badge obs-source-badge--demo">演示路径</span>
+          <span className="obs-source-banner__text">
+            后端不可用{apiError ? `（${apiError}）` : ""} · Overview/Traces 当前为 MOCK 数据
+          </span>
+        </div>
+      )}
+      {dataMode === "live" && (
+        <div className="obs-source-banner obs-source-banner--live" role="status" data-testid="obs-source-live">
+          <span className="obs-source-badge obs-source-badge--live">真实 API</span>
+          <span className="obs-source-banner__text">
+            Overview/Traces · GET /v1/aip/observability/summary · /traces（metrics 采样）
+          </span>
+        </div>
+      )}
+
       {/* 顶部工具栏 */}
       <Toolbar
         range={range}
@@ -351,7 +483,7 @@ export function ObservabilityPage() {
       {/* Tab 内容 */}
       {tab === "overview" && (
         <OverviewPanel
-          kpis={MOCK_KPIS}
+          kpis={kpis}
           requestsSpark={requestsSpark}
           latencySpark={latencySpark}
         />

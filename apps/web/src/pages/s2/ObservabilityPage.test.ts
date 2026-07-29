@@ -10,6 +10,11 @@ import {
   formatDelta,
   formatDuration,
   latencyLevel,
+  mapSummaryToKpis,
+  mapSummaryToTrend,
+  mapTraceItems,
+  MOCK_KPIS,
+  MOCK_TRACES,
   normalizeSpans,
   pointsForRange,
   sparklinePath,
@@ -242,5 +247,52 @@ describe("ObservabilityPage · 时间范围", () => {
     expect(pointsForRange("6h")).toBe(24);
     expect(pointsForRange("24h")).toBe(48);
     expect(pointsForRange("7d")).toBe(56);
+  });
+});
+
+describe("ObservabilityPage · W2-A5 API 映射", () => {
+  it("mapSummaryToKpis 空响应回落 MOCK", () => {
+    expect(mapSummaryToKpis(null)).toEqual(MOCK_KPIS);
+    expect(mapSummaryToKpis({})).toEqual(MOCK_KPIS);
+  });
+
+  it("mapSummaryToKpis 映射 API kpi", () => {
+    const mapped = mapSummaryToKpis({
+      kpis: [{ key: "requests", label: "请求量", value: "42", deltaPct: 1.5, unit: "req" }],
+    });
+    expect(mapped).toHaveLength(1);
+    expect(mapped[0].value).toBe("42");
+    expect(mapped[0].deltaPct).toBe(1.5);
+  });
+
+  it("mapSummaryToTrend 映射 trend 点", () => {
+    const trend = mapSummaryToTrend({
+      trend: [{ t: "0m", requests: 10, latencyMs: 20, errors: 0 }],
+    });
+    expect(trend).toHaveLength(1);
+    expect(trend[0].requests).toBe(10);
+  });
+
+  it("mapTraceItems 映射 traces", () => {
+    const rows = mapTraceItems({
+      items: [
+        {
+          traceId: "samp_001",
+          rootSpan: "GET /v1/health",
+          service: "aos-api",
+          durationMs: 15,
+          status: "ok",
+          spans: 2,
+          startedAt: "12:00:00",
+        },
+      ],
+    });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].traceId).toBe("samp_001");
+    expect(rows[0].rootSpan).toBe("GET /v1/health");
+  });
+
+  it("mapTraceItems 空 items 回落 MOCK", () => {
+    expect(mapTraceItems({ items: [] })).toEqual(MOCK_TRACES);
   });
 });
