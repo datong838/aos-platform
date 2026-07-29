@@ -1,6 +1,9 @@
 """Module variables store — Phase 1 Workshop backend.
 
 Stores module-scoped variables (page state) with type grouping and usage tracking.
+
+W1-A1: group_name 约定存作用域 page|app|global（Variables 页 Tab 过滤）；
+默认值由 'default' 改为创建时归一化为 'page'。
 """
 from __future__ import annotations
 
@@ -87,7 +90,7 @@ def create_variable(module_id: str, payload: dict[str, Any]) -> dict[str, Any]:
                 module_id,
                 payload.get("name") or "新变量",
                 payload.get("varType") or payload.get("var_type") or "string",
-                payload.get("group") or payload.get("group_name") or "default",
+                payload.get("group") or payload.get("group_name") or "page",
                 json.dumps(init),
                 json.dumps(init),
                 payload.get("description") or "",

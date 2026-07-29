@@ -1,6 +1,7 @@
 """Seed module variables — Phase 1 Workshop backend.
 
-50 variables: 5 type groups (string/number/array/boolean/object) × 10 per group.
+W1-A1: group_name 存作用域 page/app/global，供 Variables 页 scope Tab 过滤。
+覆盖 string/number/array/boolean/object 类型；主模块全量 + 其余模块各 1 条。
 Idempotent: delete by org_id then insert.
 """
 from __future__ import annotations
@@ -28,35 +29,30 @@ _MODULE_IDS = [
     "dev-module-marketing",
 ]
 
-# 5 type groups
-_VAR_GROUPS = [
-    ("string", "字符串", [
-        ("selectedStatus", "all", "当前选中状态"),
-        ("searchKeyword", "", "搜索关键词"),
-        ("currentTab", "all", "当前 Tab"),
-    ]),
-    ("number", "数值", [
-        ("pageSize", 20, "每页条数"),
-        ("currentPage", 1, "当前页码"),
-        ("totalCount", 0, "总条数"),
-    ]),
-    ("array", "数组", [
-        ("selectedIds", [], "选中 ID 列表"),
-        ("tableData", [], "表格数据"),
-    ]),
-    ("boolean", "布尔", [
-        ("loading", False, "加载状态"),
-        ("showDetail", False, "显示详情"),
-    ]),
-    ("object", "对象", [
-        ("filterParams", {}, "筛选参数"),
-        ("detailData", {}, "详情数据"),
-    ]),
+# (var_type, scope/group, name, init, desc)
+_PRIMARY_VARS: list[tuple[str, str, str, object, str]] = [
+    ("string", "page", "selectedStatus", "all", "当前选中状态"),
+    ("string", "page", "searchKeyword", "", "搜索关键词"),
+    ("string", "page", "currentTab", "all", "当前 Tab"),
+    ("number", "page", "pageSize", 20, "每页条数"),
+    ("number", "page", "currentPage", 1, "当前页码"),
+    ("number", "page", "totalCount", 0, "总条数"),
+    ("array", "page", "selectedIds", [], "选中 ID 列表"),
+    ("array", "page", "tableData", [], "表格数据"),
+    ("boolean", "page", "loading", False, "加载状态"),
+    ("boolean", "page", "showDetail", False, "显示详情"),
+    ("object", "page", "filterParams", {}, "筛选参数"),
+    ("object", "page", "detailData", {}, "详情数据"),
+    ("string", "app", "appTheme", "light", "应用主题"),
+    ("number", "app", "notificationCount", 0, "通知数量"),
+    ("object", "app", "currentUser", {"id": "demo"}, "当前用户"),
+    ("string", "global", "ENV", "production", "运行环境"),
+    ("string", "global", "API_BASE_URL", "https://aos-api.internal/v1", "API 基址"),
 ]
 
 
 def seed_module_variables() -> int:
-    """Idempotently seed ~50 variables across 5 groups. Returns count."""
+    """Idempotently seed variables with page/app/global scopes. Returns count."""
     ensure_schema()
     count = 0
     with connect() as conn:
@@ -68,40 +64,38 @@ def seed_module_variables() -> int:
             (_DEFAULT_ORG,),
         )
 
-        # Seed first module with full set, distribute to others to reach ~50
         primary = _MODULE_IDS[0]
-        var_idx = 0
-        for var_type, group_label, vars_in_group in _VAR_GROUPS:
-            for name, init_val, desc in vars_in_group:
-                vid = f"var-{primary}-{var_idx+1}"
-                conn.execute(
-                    """
-                    INSERT INTO module_variable (
-                        id, module_id, name, var_type, group_name,
-                        initial_value, current_value, description, org_id, project_id
-                    ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s)
-                    ON CONFLICT (id) DO UPDATE SET
-                        name=EXCLUDED.name, var_type=EXCLUDED.var_type,
-                        initial_value=EXCLUDED.initial_value,
-                        current_value=EXCLUDED.current_value
-                    """,
-                    (
-                        vid,
-                        primary,
-                        name,
-                        var_type,
-                        group_label,
-                        json.dumps(init_val),
-                        json.dumps(init_val),
-                        desc,
-                        _DEFAULT_ORG,
-                        _DEFAULT_PROJECT,
-                    ),
-                )
-                count += 1
-                var_idx += 1
+        for idx, (var_type, scope, name, init_val, desc) in enumerate(_PRIMARY_VARS):
+            vid = f"var-{primary}-{idx + 1}"
+            conn.execute(
+                """
+                INSERT INTO module_variable (
+                    id, module_id, name, var_type, group_name,
+                    initial_value, current_value, description, org_id, project_id
+                ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s)
+                ON CONFLICT (id) DO UPDATE SET
+                    name=EXCLUDED.name, var_type=EXCLUDED.var_type,
+                    group_name=EXCLUDED.group_name,
+                    initial_value=EXCLUDED.initial_value,
+                    current_value=EXCLUDED.current_value,
+                    description=EXCLUDED.description
+                """,
+                (
+                    vid,
+                    primary,
+                    name,
+                    var_type,
+                    scope,
+                    json.dumps(init_val),
+                    json.dumps(init_val),
+                    desc,
+                    _DEFAULT_ORG,
+                    _DEFAULT_PROJECT,
+                ),
+            )
+            count += 1
 
-        # Add one string var to each remaining module (8 more)
+        # 其余模块各 1 条 page 作用域变量，保证切换 module 可见数据
         for module_id in _MODULE_IDS[1:]:
             vid = f"var-{module_id}-1"
             conn.execute(
@@ -111,7 +105,8 @@ def seed_module_variables() -> int:
                     initial_value, current_value, description, org_id, project_id
                 ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s)
                 ON CONFLICT (id) DO UPDATE SET
-                    name=EXCLUDED.name, initial_value=EXCLUDED.initial_value,
+                    name=EXCLUDED.name, group_name=EXCLUDED.group_name,
+                    initial_value=EXCLUDED.initial_value,
                     current_value=EXCLUDED.current_value
                 """,
                 (
@@ -119,7 +114,7 @@ def seed_module_variables() -> int:
                     module_id,
                     "selectedStatus",
                     "string",
-                    "字符串",
+                    "page",
                     json.dumps("all"),
                     json.dumps("all"),
                     "当前选中状态",

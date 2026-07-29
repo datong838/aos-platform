@@ -2,18 +2,19 @@
 
 GET/POST/PUT/DELETE /v1/modules/:id/variables — variable CRUD.
 GET /v1/modules/:id/variables/:vid/usage — variable usage locations.
+
+W1-A1: group 约定为作用域 page|app|global（Variables 页过滤）；兼容旧 default。
 """
 from __future__ import annotations
 
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from aos_api.module_variables import (
     create_variable,
     delete_variable,
-    get_variable,
     list_usage,
     list_variables,
     update_variable,
@@ -21,11 +22,26 @@ from aos_api.module_variables import (
 
 router = APIRouter(prefix="/v1/modules", tags=["modules-variables"])
 
+_ALLOWED_SCOPES = frozenset({"page", "app", "global", "default"})
+
+
+def _normalize_group(group: str | None) -> str:
+    raw = (group or "page").strip().lower()
+    if raw in ("application", "应用", "应用级"):
+        return "app"
+    if raw in ("全局",):
+        return "global"
+    if raw in ("页面", "页面级"):
+        return "page"
+    if raw in _ALLOWED_SCOPES:
+        return raw
+    return "page"
+
 
 class VariableCreate(BaseModel):
     name: str
     varType: str = "string"
-    group: str = "default"
+    group: str = Field(default="page", description="scope: page|app|global")
     initialValue: Any = None
     description: str = ""
 
@@ -49,7 +65,9 @@ def list_module_variables(module_id: str) -> dict[str, Any]:
 def create_module_variable(
     module_id: str, body: VariableCreate
 ) -> dict[str, Any]:
-    item = create_variable(module_id, body.model_dump())
+    payload = body.model_dump()
+    payload["group"] = _normalize_group(payload.get("group"))
+    item = create_variable(module_id, payload)
     return {"ok": True, "item": item}
 
 
@@ -57,7 +75,10 @@ def create_module_variable(
 def update_module_variable(
     module_id: str, variable_id: str, body: VariableUpdate
 ) -> dict[str, Any]:
-    item = update_variable(variable_id, body.model_dump(exclude_none=True))
+    patch = body.model_dump(exclude_none=True)
+    if "group" in patch:
+        patch["group"] = _normalize_group(patch.get("group"))
+    item = update_variable(variable_id, patch)
     if not item:
         raise HTTPException(status_code=404, detail="Variable not found")
     return {"ok": True, "item": item}
