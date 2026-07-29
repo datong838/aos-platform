@@ -140,6 +140,113 @@ export function summarizeParameters(parameters: ActionType["parameters"]): {
   return { total, required, optional: total - required };
 }
 
+/* ────────────── W4-C8b · overview helpers ────────────── */
+
+export type RuleKindBadge = "Create" | "Modify" | "Delete" | "Link" | "Action";
+
+export type OverviewInputItem = {
+  name: string;
+  type: string;
+  required: boolean;
+  desc: string;
+};
+
+export type OverviewRuleItem = {
+  id: string;
+  title: string;
+  kind: RuleKindBadge;
+  targetOt: string;
+  summary: string;
+  source: "remote" | "criteria";
+};
+
+export type RemoteActionRule = {
+  id?: string;
+  name?: string;
+  kind?: string;
+  target_otd_id?: string;
+  condition?: string;
+  enabled?: boolean;
+};
+
+export function deriveActionRid(id: string): string {
+  const safe = (id || "").trim() || "unknown";
+  return `ri.actions.main.action-type.${safe}`;
+}
+
+export function parseJsonArraySafe<T>(text: string, fallback: T[]): T[] {
+  try {
+    const parsed = JSON.parse(text) as unknown;
+    return Array.isArray(parsed) ? (parsed as T[]) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export function paramTypeBadge(type?: string): string {
+  const t = (type || "string").trim().toLowerCase();
+  if (!t) return "string";
+  return t;
+}
+
+export function ruleKindBadge(kind?: string): RuleKindBadge {
+  const k = (kind || "").trim().toLowerCase();
+  if (k === "create") return "Create";
+  if (k === "modify" || k === "update" || k === "set" || k === "required" || k === "eq" || k === "neq") {
+    return "Modify";
+  }
+  if (k === "delete" || k === "remove") return "Delete";
+  if (k === "link" || k === "unlink") return "Link";
+  return "Action";
+}
+
+export function buildOverviewInputs(
+  parameters: ActionType["parameters"] | null | undefined,
+): OverviewInputItem[] {
+  return (parameters || [])
+    .filter((p) => p && typeof p.name === "string" && p.name.trim())
+    .map((p) => ({
+      name: p.name.trim(),
+      type: paramTypeBadge(p.type),
+      required: Boolean(p.required),
+      desc: p.required ? "Required input" : "Optional input",
+    }));
+}
+
+export function buildOverviewRules(
+  criteria: ActionType["submissionCriteria"] | null | undefined,
+  objectType: string,
+  remoteRules?: RemoteActionRule[] | null,
+): OverviewRuleItem[] {
+  const ot = (objectType || "").trim() || "Object";
+  const remote = (remoteRules || [])
+    .filter((r) => r && (r.name || r.id))
+    .map((r, idx) => ({
+      id: r.id || `remote-${idx}`,
+      title: (r.name || r.id || `Rule ${idx + 1}`).trim(),
+      kind: ruleKindBadge(r.kind),
+      targetOt: (r.target_otd_id || ot).trim() || ot,
+      summary: (r.condition || "").trim() || (r.enabled === false ? "disabled" : "always"),
+      source: "remote" as const,
+    }));
+  if (remote.length > 0) return remote;
+
+  return (criteria || [])
+    .filter((c) => c && (c.field || c.op))
+    .map((c, idx) => {
+      const field = (c.field || "").trim() || `rule-${idx + 1}`;
+      const op = (c.op || "").trim() || "action";
+      return {
+        id: `crit-${idx}-${field}`,
+        title: `${op} · ${field}`,
+        kind: ruleKindBadge(op),
+        targetOt: ot,
+        summary: `submissionCriteria · ${op}${field ? ` on ${field}` : ""}`,
+        source: "criteria" as const,
+      };
+    });
+}
+
 /* ────────────── Component ────────────── */
 
 export function ActionTypeEditorPage() {
@@ -160,6 +267,8 @@ export function ActionTypeEditorPage() {
   const [validateMsg, setValidateMsg] = useState("");
   const [validateErr, setValidateErr] = useState("");
   const [activeSection, setActiveSection] = useState<string>("overview");
+  const [remoteRules, setRemoteRules] = useState<RemoteActionRule[]>([]);
+  const [rulesDegraded, setRulesDegraded] = useState(false);
 
   useEffect(() => {
     if (isNew) {
@@ -170,6 +279,8 @@ export function ActionTypeEditorPage() {
       setCriteriaJson(JSON.stringify(base.submissionCriteria, null, 2));
       setPayloadJson(defaultPayloadFromParams(base.parameters));
       setDescription(base.description);
+      setRemoteRules([]);
+      setRulesDegraded(false);
       return;
     }
     let cancelled = false;
@@ -185,6 +296,20 @@ export function ActionTypeEditorPage() {
         setDescription(row.description || "");
       } catch (e) {
         if (!cancelled) setErr(String((e as Error).message || e));
+      }
+      // W4-C8b：远程规则可选；失败静默降级到 submissionCriteria 派生
+      try {
+        const res = await apiGet<{ items?: RemoteActionRule[] }>(
+          `/v1/action-rules?action_type_id=${encodeURIComponent(actionId)}`,
+        );
+        if (cancelled) return;
+        setRemoteRules(Array.isArray(res.items) ? res.items : []);
+        setRulesDegraded(false);
+      } catch {
+        if (!cancelled) {
+          setRemoteRules([]);
+          setRulesDegraded(true);
+        }
       }
     })();
     return () => {
@@ -300,7 +425,15 @@ export function ActionTypeEditorPage() {
   const currentStep = getSubmissionStep(form.status);
   const currentStepIdx = stepIndex(currentStep);
   const editable = isEditable(form.status);
-  const paramSummary = summarizeParameters(form.parameters);
+  const liveParams = parseJsonArraySafe<ActionType["parameters"][number]>(paramJson, form.parameters || []);
+  const liveCriteria = parseJsonArraySafe<ActionType["submissionCriteria"][number]>(
+    criteriaJson,
+    form.submissionCriteria || [],
+  );
+  const paramSummary = summarizeParameters(liveParams);
+  const overviewInputs = buildOverviewInputs(liveParams);
+  const overviewRules = buildOverviewRules(liveCriteria, form.objectType, remoteRules);
+  const actionRid = deriveActionRid(form.id || actionId);
 
   return (
     <S2Chrome
@@ -452,6 +585,12 @@ export function ActionTypeEditorPage() {
                 <div style={actionStyles.infoValue}>{form.objectType || "—"}</div>
               </div>
               <div style={actionStyles.infoRow}>
+                <div style={actionStyles.infoKey}>RID</div>
+                <div style={actionStyles.infoValue}>
+                  <code className="at-rid">{actionRid}</code>
+                </div>
+              </div>
+              <div style={actionStyles.infoRow}>
                 <div style={actionStyles.infoKey}>参数统计</div>
                 <div style={actionStyles.infoValue}>
                   共 {paramSummary.total} 个 · 必需 {paramSummary.required} · 可选 {paramSummary.optional}
@@ -502,6 +641,69 @@ export function ActionTypeEditorPage() {
                     />
                   </label>
                 </div>
+
+                {/* W4-C8b：Input + Rules 双列可视化 */}
+                <div className="at-overview" data-testid="at-overview">
+                  <div className="at-overview-head">
+                    <span>Action overview</span>
+                    {rulesDegraded && (
+                      <span className="at-overview-degrade">规则 API 不可用 · 已用 criteria 派生</span>
+                    )}
+                  </div>
+                  <div className="at-overview-cols">
+                    <div className="at-overview-col">
+                      <div className="at-overview-col-head">Input</div>
+                      {overviewInputs.length === 0 ? (
+                        <p className="at-overview-empty">暂无参数 · 可在 Parameters 编辑 JSON</p>
+                      ) : (
+                        overviewInputs.map((item) => (
+                          <div key={item.name} className="at-overview-item">
+                            <div className="at-overview-item-icon" aria-hidden>
+                              I
+                            </div>
+                            <div className="at-overview-item-body">
+                              <div className="at-overview-item-title">
+                                {item.name}
+                                <span className={`at-kind-badge at-type-badge`}>{item.type}</span>
+                                {item.required && <span className="at-req-badge">required</span>}
+                              </div>
+                              <div className="at-overview-item-desc">{item.desc}</div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div className="at-overview-col">
+                      <div className="at-overview-col-head">Rules</div>
+                      {overviewRules.length === 0 ? (
+                        <p className="at-overview-empty">暂无规则 · 可在 Rules 编辑 criteria</p>
+                      ) : (
+                        <div className="at-rule-flow">
+                          {overviewRules.map((rule, idx) => (
+                            <div key={rule.id} className="at-rule-flow-step">
+                              {idx > 0 && <div className="at-rule-flow-arrow" aria-hidden />}
+                              <div className="at-overview-item">
+                                <div className="at-overview-item-icon" aria-hidden>
+                                  R
+                                </div>
+                                <div className="at-overview-item-body">
+                                  <div className="at-overview-item-title">
+                                    {rule.title}
+                                    <span className={`at-kind-badge at-kind-${rule.kind.toLowerCase()}`}>
+                                      {rule.kind}
+                                    </span>
+                                    <span className="at-ot-badge">{rule.targetOt}</span>
+                                  </div>
+                                  <div className="at-overview-item-desc">{rule.summary}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -511,6 +713,27 @@ export function ActionTypeEditorPage() {
                 <BpBanner tone="info">
                   试跑调用已保存的 submissionCriteria / markings（不是表单草稿）。改 criteria 后请先保存再试跑。
                 </BpBanner>
+                <div className="at-rule-flow at-rule-flow--panel" data-testid="at-rules-flow">
+                  {overviewRules.length === 0 ? (
+                    <p className="at-overview-empty">派生预览为空</p>
+                  ) : (
+                    overviewRules.map((rule, idx) => (
+                      <div key={rule.id} className="at-rule-flow-step">
+                        {idx > 0 && <div className="at-rule-flow-arrow" aria-hidden />}
+                        <div className="at-overview-item">
+                          <span className={`at-kind-badge at-kind-${rule.kind.toLowerCase()}`}>{rule.kind}</span>
+                          <div className="at-overview-item-body">
+                            <div className="at-overview-item-title">
+                              {rule.title}
+                              <span className="at-ot-badge">{rule.targetOt}</span>
+                            </div>
+                            <div className="at-overview-item-desc">{rule.summary}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
                 <textarea
                   className="aos-input"
                   rows={6}
@@ -525,13 +748,43 @@ export function ActionTypeEditorPage() {
             {activeSection === "parameters" && (
               <div style={actionStyles.sectionCard}>
                 <h3 style={actionStyles.sectionTitle}>Parameters</h3>
+                <div className="at-param-table-wrap" data-testid="at-param-table">
+                  <table className="at-param-table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {overviewInputs.length === 0 ? (
+                        <tr>
+                          <td colSpan={3} className="at-overview-empty">
+                            无参数 · 编辑下方 JSON
+                          </td>
+                        </tr>
+                      ) : (
+                        overviewInputs.map((p) => (
+                          <tr key={p.name}>
+                            <td>{p.name}</td>
+                            <td>
+                              <span className="at-kind-badge at-type-badge">{p.type}</span>
+                            </td>
+                            <td>{p.required ? "yes" : "no"}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
                 <textarea
                   className="aos-input"
                   rows={8}
                   value={paramJson}
                   onChange={(e) => setParamJson(e.target.value)}
                   disabled={!editable}
-                  style={{ fontFamily: "ui-monospace, monospace", fontSize: "0.8rem" }}
+                  style={{ fontFamily: "ui-monospace, monospace", fontSize: "0.8rem", marginTop: "0.5rem" }}
                 />
                 {!isNew && (
                   <>

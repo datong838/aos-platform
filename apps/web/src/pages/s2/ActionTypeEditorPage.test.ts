@@ -9,6 +9,12 @@ import {
   isEditable,
   parseMarkings,
   summarizeParameters,
+  deriveActionRid,
+  parseJsonArraySafe,
+  paramTypeBadge,
+  ruleKindBadge,
+  buildOverviewInputs,
+  buildOverviewRules,
   ACTION_STATUS_LABELS,
   ACTION_STATUS_COLORS,
   SUBMISSION_STEPS,
@@ -220,5 +226,60 @@ describe("ActionTypeEditorPage · constants", () => {
 
   it("ACTION_NAV_SECTIONS has 8 sections", () => {
     expect(ACTION_NAV_SECTIONS).toHaveLength(8);
+  });
+});
+
+describe("ActionTypeEditorPage · W4-C8b overview helpers", () => {
+  it("deriveActionRid builds Foundry-like rid", () => {
+    expect(deriveActionRid("EscalateCare")).toBe("ri.actions.main.action-type.EscalateCare");
+    expect(deriveActionRid("")).toBe("ri.actions.main.action-type.unknown");
+  });
+
+  it("parseJsonArraySafe falls back on invalid JSON", () => {
+    expect(parseJsonArraySafe("not-json", [{ name: "a" }])).toEqual([{ name: "a" }]);
+    expect(parseJsonArraySafe('{"a":1}', [{ name: "a" }])).toEqual([{ name: "a" }]);
+    expect(parseJsonArraySafe('[{"name":"x"}]', [])).toEqual([{ name: "x" }]);
+  });
+
+  it("paramTypeBadge defaults to string", () => {
+    expect(paramTypeBadge()).toBe("string");
+    expect(paramTypeBadge("Integer")).toBe("integer");
+  });
+
+  it("ruleKindBadge maps ops to Create/Modify/Delete/Link/Action", () => {
+    expect(ruleKindBadge("create")).toBe("Create");
+    expect(ruleKindBadge("required")).toBe("Modify");
+    expect(ruleKindBadge("delete")).toBe("Delete");
+    expect(ruleKindBadge("link")).toBe("Link");
+    expect(ruleKindBadge("weird")).toBe("Action");
+  });
+
+  it("buildOverviewInputs skips empty names and marks required", () => {
+    const items = buildOverviewInputs([
+      { name: "reason", type: "string", required: true },
+      { name: "  ", type: "string" },
+      { name: "note", required: false },
+    ]);
+    expect(items).toHaveLength(2);
+    expect(items[0]).toMatchObject({ name: "reason", type: "string", required: true });
+    expect(items[1].required).toBe(false);
+  });
+
+  it("buildOverviewRules prefers remote rules over criteria", () => {
+    const remote = buildOverviewRules([{ field: "a", op: "required" }], "Patient", [
+      { id: "r1", name: "Modify Patient", kind: "modify", target_otd_id: "Patient", condition: "status != closed" },
+    ]);
+    expect(remote).toHaveLength(1);
+    expect(remote[0].kind).toBe("Modify");
+    expect(remote[0].source).toBe("remote");
+    expect(remote[0].summary).toContain("status");
+  });
+
+  it("buildOverviewRules derives from criteria when remote empty", () => {
+    const derived = buildOverviewRules([{ field: "reason", op: "required" }], "WorkOrder", []);
+    expect(derived).toHaveLength(1);
+    expect(derived[0].source).toBe("criteria");
+    expect(derived[0].kind).toBe("Modify");
+    expect(derived[0].targetOt).toBe("WorkOrder");
   });
 });
