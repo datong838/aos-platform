@@ -9089,3 +9089,15 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
 .w4-b1-props-data {
   color: var(--aos-text);
 }
+
+/* === W2-B2B4 === */
+.w2-b2-save-btn:focus-visible,
+.w2-b4-env-card:focus-visible {
+  outline: 2px solid var(--aos-accent, #2563EB);
+  outline-offset: 1px;
+}
+.w2-b4-env-card.is-selected {
+  box-shadow: inset 0 0 0 1px #2563EB;
+}
+.w2-b4-banner.is-ok { color: #059669; }
+.w2-b4-banner.is-err { color: #DC2626; }
