@@ -4,7 +4,7 @@ import { apiGet, apiPatch, apiPost } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
 import { NavIcon } from "../shell/icons";
 import { BpBanner } from "./s2/blueprintUi";
-import { ActionFormWidget, GraphViewWidget, MetricCardWidget, resolveRenderKind } from "./canvasWidgets";
+import { ActionFormWidget, GraphViewWidget, MetricCardWidget, resolveRenderKind, filterCanvasNodesByQuery, formatModuleVariableRef, normalizeModuleVariablesPayload, type ModuleVariableItem } from "./canvasWidgets";
 import { ComponentRenderer, type ComponentTree } from "./ComponentRenderer";
 import { ComponentTreeEditor } from "./ComponentTreeEditor";
 import {
@@ -483,6 +483,11 @@ export function CanvasPage() {
   const [bottomPanelCollapsed, setBottomPanelCollapsed] = useState(true);
   const [bottomPanelHeight, setBottomPanelHeight] = useState<number>(280);
   const [componentTree, setComponentTree] = useState<ComponentTree | null>(null);
+  /** W4-B1 · 左栏组件树搜索 */
+  const [treeQuery, setTreeQuery] = useState("");
+  /** W4-B1 · 属性数据 Tab 变量列表 */
+  const [moduleVars, setModuleVars] = useState<ModuleVariableItem[]>([]);
+  const [moduleVarsErr, setModuleVarsErr] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(
     () => typeof document !== "undefined" && !!document.fullscreenElement,
   );
@@ -717,6 +722,60 @@ export function CanvasPage() {
     if (previewOn) void runPreview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [site, objectType, previewOn]);
+
+  /** W4-B1 · 拉模块变量（属性数据绑定 + 底部变量 Tab 同源） */
+  useEffect(() => {
+    if (!moduleId) {
+      setModuleVars([]);
+      setModuleVarsErr(null);
+      return;
+    }
+    let cancelled = false;
+    apiGet(`/v1/modules/${encodeURIComponent(moduleId)}/variables`)
+      .then((data) => {
+        if (!cancelled) {
+          setModuleVars(normalizeModuleVariablesPayload(data));
+          setModuleVarsErr(null);
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setModuleVars([]);
+          setModuleVarsErr(String((e as Error).message || e));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [moduleId]);
+
+  /** W4-B1 · Esc 退出预览；进入预览时同步数据预览开关 */
+  const switchCanvasMode = useCallback((mode: "widget" | "workflow" | "preview") => {
+    setCanvasMode(mode);
+    if (mode === "preview") {
+      setPreviewOn(true);
+      setMsg("已进入预览态（只读）· Esc 或点「编辑」返回");
+    } else if (mode === "widget") {
+      setMsg("已回到组件编辑态");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (canvasMode !== "preview") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        switchCanvasMode("widget");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [canvasMode, switchCanvasMode]);
+
+  const filteredTreeNodes = useMemo(
+    () => filterCanvasNodesByQuery(nodes, treeQuery),
+    [nodes, treeQuery],
+  );
 
   function updateNode(id: string, patch: Partial<CanvasNode>) {
     setNodes((prev) => prev.map((n) => (n.id === id ? { ...n, ...patch, config: { ...n.config, ...patch.config } } : n)));
@@ -979,7 +1038,7 @@ export function CanvasPage() {
             >
               <button
                 type="button"
-                onClick={() => setCanvasMode("widget")}
+                onClick={() => switchCanvasMode("widget")}
                 style={{
                   fontSize: "12px",
                   padding: "4px 12px",
@@ -994,7 +1053,7 @@ export function CanvasPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setCanvasMode("workflow")}
+                onClick={() => switchCanvasMode("workflow")}
                 style={{
                   fontSize: "12px",
                   padding: "4px 12px",
@@ -1009,7 +1068,7 @@ export function CanvasPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setCanvasMode("preview")}
+                onClick={() => switchCanvasMode("preview")}
                 style={{
                   fontSize: "12px",
                   padding: "4px 12px",
@@ -1099,13 +1158,14 @@ export function CanvasPage() {
                     </span>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontSize: 10, opacity: 0.7 }}>
-                        可编辑应用（运行态只读预览）
+                        只读预览 · Esc 返回编辑
                       </span>
                       <button
                         type="button"
-                        onClick={() => setCanvasMode("widget")}
+                        onClick={() => switchCanvasMode("widget")}
                         title="切回编辑态"
                         aria-label="切回编辑态"
+                        className="w4-b1-preview-exit"
                         style={{
                           fontSize: 11,
                           padding: "3px 10px",
@@ -1181,7 +1241,13 @@ export function CanvasPage() {
             </div>
             <div className="p-slate-tree-search">
               <NavIcon name="search" />
-              <input type="search" placeholder="搜索组件..." />
+              <input
+                type="search"
+                placeholder="搜索组件..."
+                value={treeQuery}
+                onChange={(e) => setTreeQuery(e.target.value)}
+                aria-label="搜索组件树"
+              />
             </div>
 
             <div className="p-slate-tree-section-title">Layout</div>
@@ -1208,7 +1274,7 @@ export function CanvasPage() {
               <NavIcon name="apps" style={{ width: "14px", height: "14px", color: "var(--aos-accent)" }} />
               <span>w_nav_bar · 点击添加</span>
             </button>
-            {nodes.map((n) => (
+            {filteredTreeNodes.map((n) => (
               <button
                 key={n.id}
                 type="button"
@@ -1220,9 +1286,14 @@ export function CanvasPage() {
                   name={n.kind === "table" ? "table" : n.kind === "graph" ? "graph" : "apps"}
                   style={{ width: "14px", height: "14px", color: "var(--aos-accent)" }}
                 />
-                <span style={{ fontSize: "11px" }}>{sectionLabel(n.kind)}</span>
+                <span style={{ fontSize: "11px" }}>{n.title || sectionLabel(n.kind)}</span>
               </button>
             ))}
+            {treeQuery.trim() && filteredTreeNodes.length === 0 && (
+              <div className="p-slate-tree-item is-child" style={{ opacity: 0.6, fontSize: "10px" }}>
+                无匹配组件
+              </div>
+            )}
 
             <div className="p-slate-tree-section-title" style={{ marginTop: "8px" }}>
               Widget 组件
@@ -1298,6 +1369,7 @@ export function CanvasPage() {
               }}
               rightCollapsed={rightCollapsed}
               onToggleRight={() => setRightCollapsed((v) => !v)}
+              moduleId={moduleId || undefined}
             />
           ) : (
           <>
@@ -1748,60 +1820,222 @@ export function CanvasPage() {
                   </>
                 )}
 
-                {/* 样式 Tab · 对齐视觉稿 */}
+                {/* 样式 Tab · W4-B1 写入 node.config */}
                 {propTab === "style" && (
-                  <div style={{ padding: "8px" }}>
+                  <div className="w4-b1-props-style" style={{ padding: "8px" }}>
                     <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--aos-text-muted)", marginBottom: "8px" }}>布局</div>
                     <div style={{ display: "flex", gap: "4px", marginBottom: "8px" }}>
-                      <button style={{ flex: 1, padding: "4px", fontSize: "10px", border: "1px solid var(--aos-border)", borderRadius: "4px", background: "var(--aos-surface)", cursor: "pointer", color: "var(--aos-text)" }}>横向</button>
-                      <button style={{ flex: 1, padding: "4px", fontSize: "10px", border: "1px solid var(--aos-indigo-border)", borderRadius: "4px", background: "var(--aos-indigo-bg)", color: "var(--aos-indigo-600)", cursor: "pointer" }}>纵向</button>
-                      <button style={{ flex: 1, padding: "4px", fontSize: "10px", border: "1px solid var(--aos-border)", borderRadius: "4px", background: "var(--aos-surface)", cursor: "pointer", color: "var(--aos-text)" }}>栅格</button>
+                      {([
+                        { id: "row" as const, label: "横向" },
+                        { id: "column" as const, label: "纵向" },
+                        { id: "grid" as const, label: "栅格" },
+                      ]).map((opt) => {
+                        const active = (node.config?.layoutDir as string) === opt.id || (!node.config?.layoutDir && opt.id === "column");
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => updateNode(node.id, { config: { ...node.config, layoutDir: opt.id } })}
+                            style={{
+                              flex: 1,
+                              padding: "4px",
+                              fontSize: "10px",
+                              border: `1px solid ${active ? "var(--aos-indigo-border)" : "var(--aos-border)"}`,
+                              borderRadius: "4px",
+                              background: active ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
+                              color: active ? "var(--aos-indigo-600)" : "var(--aos-text)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
                     </div>
                     <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--aos-text-muted)", marginBottom: "4px" }}>间距</div>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-                      <input type="range" min={0} max={40} defaultValue={16} style={{ flex: 1, colorScheme: "dark" }} />
-                      <span style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>16px</span>
+                      <input
+                        type="range"
+                        min={0}
+                        max={40}
+                        value={Number(node.config?.gapPx ?? 16)}
+                        onChange={(e) =>
+                          updateNode(node.id, { config: { ...node.config, gapPx: Number(e.target.value) } })
+                        }
+                        style={{ flex: 1, colorScheme: "dark" }}
+                      />
+                      <span style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>{Number(node.config?.gapPx ?? 16)}px</span>
                     </div>
                     <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--aos-text-muted)", marginBottom: "4px" }}>背景色</div>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      <div style={{ width: 20, height: 20, borderRadius: "4px", border: "1px solid var(--aos-border)", background: "var(--aos-surface)" }} />
-                      <span style={{ fontSize: "10px", color: "var(--aos-text-muted)", fontFamily: "monospace" }}>#FFFFFF</span>
+                      <input
+                        type="color"
+                        value={String(node.config?.bgColor || "#ffffff")}
+                        onChange={(e) =>
+                          updateNode(node.id, { config: { ...node.config, bgColor: e.target.value } })
+                        }
+                        style={{ width: 28, height: 28, border: "1px solid var(--aos-border)", borderRadius: 4, padding: 0, background: "transparent", cursor: "pointer" }}
+                      />
+                      <input
+                        value={String(node.config?.bgColor || "#FFFFFF")}
+                        onChange={(e) =>
+                          updateNode(node.id, { config: { ...node.config, bgColor: e.target.value } })
+                        }
+                        style={{
+                          flex: 1,
+                          fontSize: "10px",
+                          fontFamily: "monospace",
+                          padding: "4px 6px",
+                          border: "1px solid var(--aos-border)",
+                          borderRadius: 4,
+                          background: "var(--aos-aside)",
+                          color: "var(--aos-text)",
+                        }}
+                      />
                     </div>
                   </div>
                 )}
 
-                {/* 事件 Tab · 对齐视觉稿 */}
+                {/* 事件 Tab · W4-B1 可增删本地绑定 */}
                 {propTab === "events" && (
-                  <div style={{ padding: "8px" }}>
+                  <div className="w4-b1-props-events" style={{ padding: "8px" }}>
                     <div style={{ fontSize: "11px", color: "var(--aos-text-muted)", marginBottom: "6px" }}>绑定此组件的事件处理：</div>
-                    <div style={{ border: "1px solid var(--aos-border)", borderRadius: "2px", padding: "6px", marginBottom: "4px" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--aos-text)" }}>onPageLoad</div>
-                      <div style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>→ initDefaultFilter()</div>
-                    </div>
-                    <div style={{ border: "1px solid var(--aos-border)", borderRadius: "2px", padding: "6px", marginBottom: "4px" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--aos-text)" }}>onResize</div>
-                      <div style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>→ setBreakpoint(width)</div>
-                    </div>
-                    <Link to="/workshop/events" style={{ display: "block", fontSize: "11px", color: "var(--aos-indigo-600)", textAlign: "center", padding: "4px", border: "1px dashed var(--aos-indigo-border)", borderRadius: "2px", textDecoration: "none", marginTop: "4px" }}>
-                      + 绑定新事件 →
+                    {(Array.isArray(node.config?.events) ? (node.config!.events as Array<{ name: string; handler: string }>) : [
+                      { name: "onPageLoad", handler: "initDefaultFilter()" },
+                      { name: "onResize", handler: "setBreakpoint(width)" },
+                    ]).map((ev, idx) => (
+                      <div key={`${ev.name}-${idx}`} style={{ border: "1px solid var(--aos-border)", borderRadius: "2px", padding: "6px", marginBottom: "4px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: 4 }}>
+                          <input
+                            value={ev.name}
+                            onChange={(e) => {
+                              const list = [...(Array.isArray(node.config?.events) ? (node.config!.events as Array<{ name: string; handler: string }>) : [
+                                { name: "onPageLoad", handler: "initDefaultFilter()" },
+                                { name: "onResize", handler: "setBreakpoint(width)" },
+                              ])];
+                              list[idx] = { ...list[idx], name: e.target.value };
+                              updateNode(node.id, { config: { ...node.config, events: list } });
+                            }}
+                            style={{ flex: 1, fontSize: 11, fontWeight: 500, border: "1px solid var(--aos-border)", borderRadius: 2, padding: "2px 4px", background: "var(--aos-aside)", color: "var(--aos-text)" }}
+                          />
+                          <button
+                            type="button"
+                            title="删除"
+                            onClick={() => {
+                              const base = Array.isArray(node.config?.events)
+                                ? (node.config!.events as Array<{ name: string; handler: string }>)
+                                : [
+                                    { name: "onPageLoad", handler: "initDefaultFilter()" },
+                                    { name: "onResize", handler: "setBreakpoint(width)" },
+                                  ];
+                              const list = base.filter((_, i) => i !== idx);
+                              updateNode(node.id, { config: { ...node.config, events: list } });
+                            }}
+                            style={{ border: "none", background: "transparent", color: "var(--aos-text-muted)", cursor: "pointer", fontSize: 12 }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                        <input
+                          value={ev.handler}
+                          onChange={(e) => {
+                            const base = Array.isArray(node.config?.events)
+                              ? (node.config!.events as Array<{ name: string; handler: string }>)
+                              : [
+                                  { name: "onPageLoad", handler: "initDefaultFilter()" },
+                                  { name: "onResize", handler: "setBreakpoint(width)" },
+                                ];
+                            const list = [...base];
+                            list[idx] = { ...list[idx], handler: e.target.value };
+                            updateNode(node.id, { config: { ...node.config, events: list } });
+                          }}
+                          style={{ width: "100%", marginTop: 4, fontSize: 10, border: "1px solid var(--aos-border)", borderRadius: 2, padding: "2px 4px", background: "var(--aos-aside)", color: "var(--aos-text-muted)", boxSizing: "border-box" }}
+                        />
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="w4-b1-bind-btn"
+                      onClick={() => {
+                        const base = Array.isArray(node.config?.events)
+                          ? (node.config!.events as Array<{ name: string; handler: string }>)
+                          : [
+                              { name: "onPageLoad", handler: "initDefaultFilter()" },
+                              { name: "onResize", handler: "setBreakpoint(width)" },
+                            ];
+                        updateNode(node.id, {
+                          config: { ...node.config, events: [...base, { name: "onClick", handler: "handleClick()" }] },
+                        });
+                      }}
+                      style={{ display: "block", width: "100%", fontSize: "11px", color: "var(--aos-indigo-600)", textAlign: "center", padding: "4px", border: "1px dashed var(--aos-indigo-border)", borderRadius: "2px", background: "transparent", cursor: "pointer", marginTop: "4px" }}
+                    >
+                      + 添加事件绑定
+                    </button>
+                    <Link to="/workshop/events" style={{ display: "block", fontSize: "11px", color: "var(--aos-indigo-600)", textAlign: "center", padding: "4px", textDecoration: "none", marginTop: "4px" }}>
+                      打开事件配置页 →
                     </Link>
                   </div>
                 )}
 
-                {/* 数据 Tab · 对齐视觉稿 */}
+                {/* 数据 Tab · W4-B1 变量绑定 */}
                 {propTab === "data" && (
-                  <div style={{ padding: "8px" }}>
+                  <div className="w4-b1-props-data" style={{ padding: "8px" }}>
                     <div style={{ fontSize: "11px", color: "var(--aos-text-muted)", marginBottom: "6px" }}>绑定数据源：</div>
                     <div style={{ border: "1px solid var(--aos-border)", borderRadius: "2px", padding: "6px", marginBottom: "4px" }}>
                       <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--aos-text)" }}>ObjectSet: {node.config?.objectType || "WorkOrder"}</div>
                       <div style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>属性: id, title, site, status</div>
                     </div>
-                    <div style={{ border: "1px solid var(--aos-border)", borderRadius: "2px", padding: "6px", marginBottom: "4px" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--aos-text)" }}>变量: $selected_site</div>
-                      <div style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>类型: String · 默认: "DC-East"</div>
+                    <div style={{ border: "1px solid var(--aos-border)", borderRadius: "2px", padding: "6px", marginBottom: "8px" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--aos-text)" }}>
+                        变量: {node.config?.boundVariable ? formatModuleVariableRef(String(node.config.boundVariable)) : "（未绑定）"}
+                      </div>
+                      <div style={{ fontSize: "10px", color: "var(--aos-text-muted)" }}>
+                        {node.config?.boundVariable
+                          ? `已写入 config.boundVariable`
+                          : "从下方列表选择绑定"}
+                      </div>
                     </div>
-                    <Link to="/workshop/variables" style={{ display: "block", fontSize: "11px", color: "var(--aos-indigo-600)", textAlign: "center", padding: "4px", border: "1px dashed var(--aos-indigo-border)", borderRadius: "2px", textDecoration: "none", marginTop: "4px" }}>
-                      + 绑定变量或 ObjectSet
+                    {moduleVarsErr && (
+                      <p className="muted" style={{ fontSize: 10, color: "var(--aos-red, #b91c1c)" }}>变量加载失败：{moduleVarsErr}</p>
+                    )}
+                    <div style={{ maxHeight: 160, overflowY: "auto", display: "flex", flexDirection: "column", gap: 4 }}>
+                      {moduleVars.map((v) => {
+                        const active = String(node.config?.boundVariable || "") === v.name;
+                        return (
+                          <button
+                            key={v.id}
+                            type="button"
+                            className={`w4-b1-var-bind${active ? " is-active" : ""}`}
+                            onClick={() =>
+                              updateNode(node.id, {
+                                config: {
+                                  ...node.config,
+                                  boundVariable: active ? "" : v.name,
+                                },
+                              })
+                            }
+                            style={{
+                              textAlign: "left",
+                              padding: "6px 8px",
+                              fontSize: 11,
+                              borderRadius: 2,
+                              border: `1px solid ${active ? "var(--aos-accent)" : "var(--aos-border)"}`,
+                              background: active ? "var(--aos-accent-light)" : "var(--aos-surface)",
+                              color: active ? "var(--aos-accent)" : "var(--aos-text)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <div style={{ fontWeight: 500 }}>{formatModuleVariableRef(v.name)}</div>
+                            <div style={{ fontSize: 10, opacity: 0.7 }}>{v.varType} · {v.group || "default"}</div>
+                          </button>
+                        );
+                      })}
+                      {!moduleVarsErr && moduleVars.length === 0 && (
+                        <span className="muted" style={{ fontSize: 10 }}>暂无模块变量可绑定</span>
+                      )}
+                    </div>
+                    <Link to="/workshop/variables" style={{ display: "block", fontSize: "11px", color: "var(--aos-indigo-600)", textAlign: "center", padding: "4px", border: "1px dashed var(--aos-indigo-border)", borderRadius: "2px", textDecoration: "none", marginTop: "8px" }}>
+                      管理变量（变量页）→
                     </Link>
                   </div>
                 )}

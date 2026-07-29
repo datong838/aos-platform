@@ -5,8 +5,13 @@
  * Each panel connects to existing backend APIs.
  */
 import { useCallback, useEffect, useState } from "react";
-import { apiDelete, apiGet, apiPost, apiPut } from "../api/client";
+import { apiDelete, apiGet, apiPost } from "../api/client";
 import { NavIcon } from "../shell/icons";
+import {
+  formatModuleVariableRef,
+  normalizeModuleVariablesPayload,
+  type ModuleVariableItem,
+} from "./canvasWidgets";
 
 // ============================================================
 // Shared types
@@ -645,82 +650,88 @@ function CssVarInput({ label, value, onChange, type = "text" }: { label: string;
 }
 
 // ============================================================
-// Variables Tab
+// Variables Tab · W4-B1 只读 · GET /v1/modules/:id/variables
 // ============================================================
 
-const VAR_TYPES = ["object_set", "string", "numeric", "boolean", "date", "array", "struct"];
-const VAR_SCOPES = ["module", "session", "global"];
+export function formatVariableDisplayValue(v: ModuleVariableItem): string {
+  const raw = v.currentValue !== undefined && v.currentValue !== null ? v.currentValue : v.initialValue;
+  if (raw === undefined || raw === null) return "—";
+  if (typeof raw === "string") return raw || "—";
+  try {
+    return JSON.stringify(raw);
+  } catch {
+    return String(raw);
+  }
+}
+
+/** 供测试与绑定 UI 复用 */
+export function listModuleVariableRefs(items: ModuleVariableItem[]): string[] {
+  return items.map((v) => formatModuleVariableRef(v.name)).filter(Boolean);
+}
 
 export function VariablesTab({ moduleId }: { moduleId: string }) {
-  const { data, loading, error, refetch } = useJsonGet<{ items: WorkshopVariable[] }>(
-    `/workshop-compute-api/variables?module_id=${moduleId}`
-  );
-  const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState<WorkshopVariable | null>(null);
+  const { data, loading, error, refetch } = useJsonGet<{
+    items?: ModuleVariableItem[];
+    count?: number;
+  }>(`/v1/modules/${encodeURIComponent(moduleId)}/variables`);
 
-  const variables = data?.items || [];
+  const variables = normalizeModuleVariablesPayload(data);
+  const [copied, setCopied] = useState<string | null>(null);
 
-  const handleSave = async (varData: Partial<WorkshopVariable>) => {
-    if (editing) {
-      await apiPut(`/workshop-compute-api/variables/${editing.var_id}`, { ...varData, module_id: moduleId });
-    } else {
-      await apiPost("/workshop-compute-api/variables", { ...varData, module_id: moduleId });
+  const copyRef = (name: string) => {
+    const ref = formatModuleVariableRef(name);
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      void navigator.clipboard.writeText(ref).catch(() => undefined);
     }
-    setShowForm(false);
-    setEditing(null);
-    void refetch();
+    setCopied(ref);
+    window.setTimeout(() => setCopied(null), 1500);
   };
 
   return (
-    <div className="canvas-tab-panel">
+    <div className="canvas-tab-panel w4-b1-vars-panel">
       <h3 className="canvas-tab-title">变量 ({variables.length})</h3>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-        <p className="muted" style={{ fontSize: "12px" }}>变量管理器 — 7 种类型 · 3 种作用域</p>
-        <button
-          type="button"
-          className="btn btn-primary"
-          style={{ fontSize: "11px" }}
-          onClick={() => {
-            setEditing(null);
-            setShowForm(true);
-          }}
-        >
-          + 新建变量
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", gap: 8 }}>
+        <p className="muted" style={{ fontSize: "12px", margin: 0 }}>
+          只读 · GET /v1/modules/:id/variables · 绑定请用右侧「数据」Tab
+        </p>
+        <button type="button" className="btn" style={{ fontSize: "11px" }} onClick={() => void refetch()}>
+          刷新
         </button>
       </div>
       {loading && <TabLoading />}
       {error && <TabError msg={error} />}
       {!loading && !error && variables.length === 0 && (
-        <p className="muted" style={{ fontSize: "12px" }}>无变量。</p>
+        <p className="muted" style={{ fontSize: "12px" }}>该模块暂无变量。</p>
       )}
       {variables.length > 0 && (
-        <table style={{ width: "100%", fontSize: "11px", borderCollapse: "collapse" }}>
+        <table className="w4-b1-vars-table" style={{ width: "100%", fontSize: "11px", borderCollapse: "collapse" }}>
           <thead>
             <tr>
               <th style={thStyle}>名称</th>
               <th style={thStyle}>类型</th>
-              <th style={thStyle}>定义</th>
-              <th style={thStyle}>值/表达式</th>
-              <th style={thStyle}>操作</th>
+              <th style={thStyle}>分组</th>
+              <th style={thStyle}>当前值</th>
+              <th style={thStyle}>引用</th>
             </tr>
           </thead>
           <tbody>
             {variables.map((v) => (
-              <tr key={v.var_id}>
-                <td style={tdStyle}>{v.name}</td>
-                <td style={tdStyle}><span className="badge">{v.var_type}</span></td>
-                <td style={tdStyle}>{v.definition_type}</td>
-                <td style={tdStyle} className="muted">{v.value || v.expression || "—"}</td>
+              <tr key={v.id}>
+                <td style={tdStyle}>
+                  <div style={{ fontWeight: 500 }}>{v.name}</div>
+                  {v.description ? <div className="muted" style={{ fontSize: 10 }}>{v.description}</div> : null}
+                </td>
+                <td style={tdStyle}><span className="badge">{v.varType}</span></td>
+                <td style={tdStyle}>{v.group || "default"}</td>
+                <td style={tdStyle} className="muted">{formatVariableDisplayValue(v)}</td>
                 <td style={tdStyle}>
                   <button
                     type="button"
-                    onClick={() => {
-                      setEditing(v);
-                      setShowForm(true);
-                    }}
-                    style={{ background: "none", border: "none", color: "#3b82f6", cursor: "pointer", fontSize: "11px" }}
+                    className="w4-b1-var-ref-btn"
+                    onClick={() => copyRef(v.name)}
+                    title="复制引用表达式"
                   >
-                    编辑
+                    {copied === formatModuleVariableRef(v.name) ? "已复制" : formatModuleVariableRef(v.name)}
                   </button>
                 </td>
               </tr>
@@ -728,87 +739,6 @@ export function VariablesTab({ moduleId }: { moduleId: string }) {
           </tbody>
         </table>
       )}
-      {showForm && (
-        <VariableForm
-          variable={editing}
-          onSave={handleSave}
-          onCancel={() => {
-            setShowForm(false);
-            setEditing(null);
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
-function VariableForm({
-  variable,
-  onSave,
-  onCancel,
-}: {
-  variable: WorkshopVariable | null;
-  onSave: (data: Partial<WorkshopVariable>) => void;
-  onCancel: () => void;
-}) {
-  const [name, setName] = useState(variable?.name || "");
-  const [varType, setVarType] = useState(variable?.var_type || "string");
-  const [defType, setDefType] = useState(variable?.definition_type || "static");
-  const [value, setValue] = useState(variable?.value || "");
-  const [expression, setExpression] = useState(variable?.expression || "");
-  const [scope, setScope] = useState("module");
-
-  return (
-    <div className="canvas-wizard-overlay" style={overlayStyle}>
-      <div style={{ ...modalStyle, maxWidth: "400px" }}>
-        <div style={headerStyle}>
-          <h3 style={{ margin: 0, fontSize: "14px" }}>{variable ? "编辑变量" : "新建变量"}</h3>
-          <button type="button" onClick={onCancel} style={{ background: "none", border: "none", cursor: "pointer" }}>
-            <NavIcon name="close" style={{ width: "14px", height: "14px" }} />
-          </button>
-        </div>
-        <FormField label="名称">
-          <input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} />
-        </FormField>
-        <FormField label="类型">
-          <select value={varType} onChange={(e) => setVarType(e.target.value)} style={inputStyle}>
-            {VAR_TYPES.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </FormField>
-        <FormField label="作用域">
-          <select value={scope} onChange={(e) => setScope(e.target.value)} style={inputStyle}>
-            {VAR_SCOPES.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </FormField>
-        <FormField label="定义方式">
-          <select value={defType} onChange={(e) => setDefType(e.target.value)} style={inputStyle}>
-            <option value="static">静态值</option>
-            <option value="function">函数</option>
-            <option value="object_set_aggregation">聚合</option>
-            <option value="object_property">对象属性</option>
-            <option value="variable_transformation">变量变换</option>
-          </select>
-        </FormField>
-        {defType === "static" ? (
-          <FormField label="值">
-            <input value={value} onChange={(e) => setValue(e.target.value)} style={inputStyle} />
-          </FormField>
-        ) : (
-          <FormField label="表达式">
-            <textarea value={expression} onChange={(e) => setExpression(e.target.value)} rows={3} style={{ ...inputStyle, resize: "vertical" }} />
-          </FormField>
-        )}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "12px" }}>
-          <button type="button" className="btn" style={{ fontSize: "11px" }} onClick={onCancel}>取消</button>
-          <button type="button" className="btn btn-primary" style={{ fontSize: "11px" }} disabled={!name} onClick={() => onSave({ name, var_type: varType, definition_type: defType, value, expression })}>
-            保存
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
@@ -895,24 +825,6 @@ const headerStyle: React.CSSProperties = {
   paddingBottom: "8px",
   borderBottom: "1px solid var(--aos-border)",
 };
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "6px 8px",
-  fontSize: "12px",
-  border: "1px solid #e5e7eb",
-  borderRadius: "4px",
-  boxSizing: "border-box",
-};
-
-function FormField({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div style={{ marginBottom: "8px" }}>
-      <label style={{ display: "block", fontSize: "11px", marginBottom: "4px", fontWeight: 500 }}>{label}</label>
-      {children}
-    </div>
-  );
-}
 
 function StatCard({ label, value, icon, color }: { label: string; value: string | number; icon: string; color: string }) {
   return (
