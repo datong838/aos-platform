@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { apiGet, apiPost } from "../api/client";
+import { apiGet, apiPost, apiPut } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
 
 type AgentItem = {
@@ -15,6 +15,71 @@ type AgentItem = {
   iconColor: string;
   iconPath: string;
 };
+
+/** W2-B2 · 本地演示路径 key */
+export function studioPromptKey(agentId: string): string {
+  return `aos-studio-prompt:${agentId}`;
+}
+
+export function studioToolsKey(agentId: string): string {
+  return `aos-studio-tools:${agentId}`;
+}
+
+export function loadLocalPrompt(agentId: string, fallback = ""): string {
+  try {
+    const v = localStorage.getItem(studioPromptKey(agentId));
+    return v != null ? v : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export function saveLocalPrompt(agentId: string, prompt: string): void {
+  localStorage.setItem(studioPromptKey(agentId), prompt);
+}
+
+export function loadLocalTools(agentId: string, fallback: string[]): string[] {
+  try {
+    const raw = localStorage.getItem(studioToolsKey(agentId));
+    if (!raw) return [...fallback];
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? parsed.map(String) : [...fallback];
+  } catch {
+    return [...fallback];
+  }
+}
+
+export function saveLocalTools(agentId: string, enabledIds: string[]): void {
+  localStorage.setItem(studioToolsKey(agentId), JSON.stringify(enabledIds));
+}
+
+export function toggleToolId(enabledIds: string[], toolId: string): string[] {
+  return enabledIds.includes(toolId)
+    ? enabledIds.filter((id) => id !== toolId)
+    : [...enabledIds, toolId];
+}
+
+/** DEMO_TOOLS id → tools/config categories */
+export function toolsToCategories(
+  enabledIds: string[],
+  catalog: Array<{ id: string; category?: string }>,
+): string[] {
+  const cats = new Set<string>();
+  for (const t of catalog) {
+    if (enabledIds.includes(t.id) && t.category) cats.add(t.category);
+  }
+  return Array.from(cats);
+}
+
+export function formatStudioSaveMsg(
+  path: "api" | "local",
+  ok: boolean,
+  detail?: string,
+): string {
+  if (!ok) return `保存失败${detail ? ` · ${detail}` : ""}`;
+  if (path === "api") return `已保存 · API${detail ? ` · ${detail}` : ""}`;
+  return `已保存 · 演示路径 · localStorage${detail ? ` · ${detail}` : ""}`;
+}
 
 const AGENTS: AgentItem[] = [
   {
@@ -91,12 +156,17 @@ const STUDIO_TABS = [
 ];
 
 const DEMO_TOOLS = [
-  { id: "action.dispatch", name: "Action · 派单维修", code: "create_work_order", status: "HITL 确认", tone: "warn" },
-  { id: "query.device", name: "Object Query · 设备对象", code: "Device", status: "已开启", tone: "ok" },
-  { id: "function.health", name: "Function · health_score", code: "设备健康度计算", status: "已开启", tone: "ok" },
-  { id: "wiki.fields", name: "Wiki 字段 Tool", code: "结构化优先", status: "★ 推荐", tone: "wiki" },
-  { id: "clarify", name: "Request Clarification", code: "向用户澄清", status: "已开启", tone: "ok" },
+  { id: "action.dispatch", name: "Action · 派单维修", code: "create_work_order", status: "HITL 确认", tone: "warn", category: "action" },
+  { id: "query.device", name: "Object Query · 设备对象", code: "Device", status: "已开启", tone: "ok", category: "query" },
+  { id: "function.health", name: "Function · health_score", code: "设备健康度计算", status: "已开启", tone: "ok", category: "function" },
+  { id: "wiki.fields", name: "Wiki 字段 Tool", code: "结构化优先", status: "★ 推荐", tone: "wiki", category: "wiki" },
+  { id: "clarify", name: "Request Clarification", code: "向用户澄清", status: "已开启", tone: "ok", category: "clarify" },
 ];
+
+const DEFAULT_ENABLED_TOOLS = DEMO_TOOLS.filter((t) => t.tone !== "warn").map((t) => t.id);
+
+const DEFAULT_PROMPT =
+  "你是维修派单助手。优先读 Object 与 Wiki 结构化字段，禁止臆造字段。写回必须走 Action / Draft。";
 
 function statusBadge(status: AgentItem["status"]) {
   if (status === "running") return { label: "运行中", bg: "var(--aos-green-bg)", color: "var(--aos-green-700)" };
@@ -107,9 +177,11 @@ function statusBadge(status: AgentItem["status"]) {
 export function StudioPage() {
   const [tab, setTab] = useState("prompt");
   const [activeId, setActiveId] = useState("repair-buddy");
-  const selectedTools = ["query.objects"];
-  const [systemPrompt, setSystemPrompt] = useState(
-    "你是维修派单助手。优先读 Object 与 Wiki 结构化字段，禁止臆造字段。写回必须走 Action / Draft。",
+  const [systemPrompt, setSystemPrompt] = useState(() =>
+    loadLocalPrompt("repair-buddy", DEFAULT_PROMPT),
+  );
+  const [enabledTools, setEnabledTools] = useState<string[]>(() =>
+    loadLocalTools("repair-buddy", DEFAULT_ENABLED_TOOLS),
   );
   const [defaultModel, setDefaultModel] = useState("—");
   const [lastRoute, setLastRoute] = useState<string | null>(null);
@@ -117,14 +189,80 @@ export function StudioPage() {
   const [answer, setAnswer] = useState("");
   const [toolCalls, setToolCalls] = useState<unknown[]>([]);
   const [err, setErr] = useState<string | null>(null);
+  const [promptSaveMsg, setPromptSaveMsg] = useState<string | null>(null);
+  const [toolsSaveMsg, setToolsSaveMsg] = useState<string | null>(null);
+  const [promptSaving, setPromptSaving] = useState(false);
+  const [toolsSaving, setToolsSaving] = useState(false);
 
   const activeAgent = AGENTS.find((a) => a.id === activeId) || AGENTS[0];
+  const selectedTools = enabledTools.length > 0 ? enabledTools : ["query.objects"];
 
   useEffect(() => {
     apiGet<{ defaultTextModel?: string }>("/v1/aip/models")
       .then((r) => setDefaultModel(r.defaultTextModel || "—"))
       .catch(() => setDefaultModel("—"));
   }, []);
+
+  useEffect(() => {
+    const local = loadLocalPrompt(activeId, DEFAULT_PROMPT);
+    setSystemPrompt(local);
+    setEnabledTools(loadLocalTools(activeId, DEFAULT_ENABLED_TOOLS));
+    setPromptSaveMsg(null);
+    setToolsSaveMsg(null);
+    apiGet<{ prompt?: string }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/prompt`)
+      .then((r) => {
+        if (typeof r.prompt === "string" && r.prompt.length > 0) {
+          setSystemPrompt(r.prompt);
+        }
+      })
+      .catch(() => {
+        /* agents 引擎可能无预置 → 保留 local / 默认 */
+      });
+  }, [activeId]);
+
+  async function savePrompt() {
+    if (promptSaving) return;
+    setPromptSaving(true);
+    setPromptSaveMsg(null);
+    setErr(null);
+    try {
+      await apiPut(`/v1/aip/agents/${encodeURIComponent(activeId)}/prompt`, {
+        prompt: systemPrompt,
+      });
+      saveLocalPrompt(activeId, systemPrompt);
+      setPromptSaveMsg(formatStudioSaveMsg("api", true, "agents/prompt"));
+    } catch (ex) {
+      saveLocalPrompt(activeId, systemPrompt);
+      setPromptSaveMsg(
+        formatStudioSaveMsg("local", true, String((ex as Error).message || ex).slice(0, 80)),
+      );
+    } finally {
+      setPromptSaving(false);
+    }
+  }
+
+  async function saveTools() {
+    if (toolsSaving) return;
+    setToolsSaving(true);
+    setToolsSaveMsg(null);
+    setErr(null);
+    saveLocalTools(activeId, enabledTools);
+    const categories = toolsToCategories(enabledTools, DEMO_TOOLS);
+    try {
+      await apiPut("/v1/aip/tools/config", {
+        categories: categories.length > 0 ? categories : ["query"],
+        mode: "native",
+        hitl: "form",
+      });
+      setToolsSaveMsg(formatStudioSaveMsg("api", true, "tools/config"));
+    } catch (ex) {
+      setToolsSaveMsg(
+        formatStudioSaveMsg("local", true, String((ex as Error).message || ex).slice(0, 80)),
+      );
+    } finally {
+      setToolsSaving(false);
+    }
+  }
 
   async function onChat(e: FormEvent) {
     e.preventDefault();
@@ -407,6 +545,7 @@ export function StudioPage() {
                   value={systemPrompt}
                   onChange={(e) => setSystemPrompt(e.target.value)}
                   rows={7}
+                  aria-label="system-prompt"
                   style={{
                     width: "100%",
                     padding: "10px 12px",
@@ -456,6 +595,31 @@ export function StudioPage() {
                     模型路由 → {defaultModel}
                   </span>
                 </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
+                  <button
+                    type="button"
+                    className="w2-b2-save-btn"
+                    onClick={() => void savePrompt()}
+                    disabled={promptSaving}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: 2,
+                      background: promptSaving ? "var(--aos-gray-100)" : "var(--aos-indigo-600)",
+                      color: promptSaving ? "var(--aos-text-secondary)" : "var(--text-on-brand)",
+                      border: "none",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      cursor: promptSaving ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {promptSaving ? "保存中…" : "保存提示词"}
+                  </button>
+                  {promptSaveMsg && (
+                    <span className="w2-b2-save-msg" style={{ fontSize: 12, color: "var(--aos-green-700)" }}>
+                      {promptSaveMsg}
+                    </span>
+                  )}
+                </div>
               </div>
             )}
 
@@ -471,14 +635,17 @@ export function StudioPage() {
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                   <div style={{ fontSize: 13, fontWeight: 500, color: "var(--aos-text)" }}>已启用工具</div>
-                  <span style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>共 {DEMO_TOOLS.length} 个工具</span>
+                  <span style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>
+                    已选 {enabledTools.length} / {DEMO_TOOLS.length}
+                  </span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {DEMO_TOOLS.map((t) => {
                     const isWarn = t.tone === "warn";
                     const isWiki = t.tone === "wiki";
+                    const on = enabledTools.includes(t.id);
                     return (
-                      <div
+                      <label
                         key={t.id}
                         style={{
                           display: "flex",
@@ -488,33 +655,75 @@ export function StudioPage() {
                           borderRadius: 2,
                           border: `1px solid ${isWarn ? "var(--aos-amber-border)" : isWiki ? "var(--aos-amber-border)" : "var(--aos-border)"}`,
                           background: isWarn ? "var(--aos-amber-bg)" : isWiki ? "var(--aos-amber-bg)" : "var(--aos-surface)",
+                          cursor: "pointer",
                         }}
                       >
-                        <div>
-                          <span style={{ fontSize: 13, color: "var(--aos-text)", fontWeight: 500 }}>{t.name}</span>
-                          <span style={{ marginLeft: 8, fontSize: 10, color: isWarn ? "var(--aos-amber-700)" : "var(--aos-text-secondary)" }}>
-                            {t.code}
-                          </span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                          <input
+                            type="checkbox"
+                            checked={on}
+                            onChange={() => setEnabledTools((prev) => toggleToolId(prev, t.id))}
+                            aria-label={`tool-${t.id}`}
+                          />
+                          <div>
+                            <span style={{ fontSize: 13, color: "var(--aos-text)", fontWeight: 500 }}>{t.name}</span>
+                            <span style={{ marginLeft: 8, fontSize: 10, color: isWarn ? "var(--aos-amber-700)" : "var(--aos-text-secondary)" }}>
+                              {t.code}
+                            </span>
+                          </div>
                         </div>
                         <span
                           style={{
                             padding: "2px 8px",
                             borderRadius: 4,
                             fontSize: 11,
-                            background: isWarn
-                              ? "var(--aos-amber-bg)"
-                              : isWiki
+                            background: on
+                              ? isWarn
                                 ? "var(--aos-amber-bg)"
-                                : "var(--aos-green-bg)",
-                            color: isWarn ? "var(--aos-amber-700)" : isWiki ? "var(--aos-amber-700)" : "var(--aos-green-700)",
+                                : isWiki
+                                  ? "var(--aos-amber-bg)"
+                                  : "var(--aos-green-bg)"
+                              : "var(--aos-gray-100)",
+                            color: on
+                              ? isWarn
+                                ? "var(--aos-amber-700)"
+                                : isWiki
+                                  ? "var(--aos-amber-700)"
+                                  : "var(--aos-green-700)"
+                              : "var(--aos-text-secondary)",
                             fontWeight: 500,
                           }}
                         >
-                          {t.status}
+                          {on ? t.status : "已关闭"}
                         </span>
-                      </div>
+                      </label>
                     );
                   })}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
+                  <button
+                    type="button"
+                    className="w2-b2-save-btn"
+                    onClick={() => void saveTools()}
+                    disabled={toolsSaving}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: 2,
+                      background: toolsSaving ? "var(--aos-gray-100)" : "var(--aos-indigo-600)",
+                      color: toolsSaving ? "var(--aos-text-secondary)" : "var(--text-on-brand)",
+                      border: "none",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      cursor: toolsSaving ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {toolsSaving ? "保存中…" : "保存工具配置"}
+                  </button>
+                  {toolsSaveMsg && (
+                    <span className="w2-b2-save-msg" style={{ fontSize: 12, color: "var(--aos-green-700)" }}>
+                      {toolsSaveMsg}
+                    </span>
+                  )}
                 </div>
                 <div style={{ paddingTop: 12, marginTop: 12, borderTop: "1px solid var(--aos-gray-100)" }}>
                   <Link
