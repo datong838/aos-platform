@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { apiGet } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -19,7 +20,7 @@ export type UsageBucket = {
   totalCostUsd: number;
 };
 
-type QuotaUsage = {
+export type QuotaUsage = {
   model: string;
   provider: string;
   used: number;
@@ -36,7 +37,30 @@ export type UserLimit = {
   usedTodayUsd: number;
 };
 
+export type ProjectLimit = {
+  rpmLimit: number;
+  tpmLimit: number;
+  scopeKey?: string;
+};
+
+export type CapacitySourceMode = "loading" | "live" | "demo";
+
 type TabId = "usage" | "rate-limits" | "reserved";
+
+export type ApiUsageItem = {
+  day?: string;
+  totalRequests?: number;
+  totalTokens?: number;
+  cost?: number;
+  peakRpm?: number;
+};
+
+export type ApiLimitItem = {
+  scope?: string;
+  scopeKey?: string;
+  rpmLimit?: number;
+  tpmLimit?: number;
+};
 
 // ── Mock data ──────────────────────────────────────────────────
 
@@ -131,6 +155,92 @@ export function filterUserLimits(users: UserLimit[], teamFilter: string): UserLi
   return users.filter((u) => u.team === teamFilter);
 }
 
+function dayKey(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+function parseDay(s: string): Date | null {
+  if (!s) return null;
+  const d = new Date(`${s.slice(0, 10)}T00:00:00Z`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/** Aggregate daily usage items into today / week / month buckets. */
+export function mapUsageItemsToBuckets(items: ApiUsageItem[], now = new Date()): UsageBucket[] {
+  const todayStr = dayKey(now);
+  const weekStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 6));
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 29));
+
+  const acc = {
+    today: { requests: 0, tokens: 0, cost: 0 },
+    week: { requests: 0, tokens: 0, cost: 0 },
+    month: { requests: 0, tokens: 0, cost: 0 },
+  };
+
+  for (const it of items) {
+    const d = parseDay(String(it.day || ""));
+    if (!d) continue;
+    const key = dayKey(d);
+    const req = Number(it.totalRequests || 0);
+    const tok = Number(it.totalTokens || 0);
+    const cost = Number(it.cost || 0);
+    if (key === todayStr) {
+      acc.today.requests += req;
+      acc.today.tokens += tok;
+      acc.today.cost += cost;
+    }
+    if (d >= weekStart) {
+      acc.week.requests += req;
+      acc.week.tokens += tok;
+      acc.week.cost += cost;
+    }
+    if (d >= monthStart) {
+      acc.month.requests += req;
+      acc.month.tokens += tok;
+      acc.month.cost += cost;
+    }
+  }
+
+  return [
+    { period: "today", label: "今日", totalRequests: acc.today.requests, totalTokens: acc.today.tokens, totalCostUsd: Math.round(acc.today.cost * 100) / 100 },
+    { period: "week", label: "本周", totalRequests: acc.week.requests, totalTokens: acc.week.tokens, totalCostUsd: Math.round(acc.week.cost * 100) / 100 },
+    { period: "month", label: "本月", totalRequests: acc.month.requests, totalTokens: acc.month.tokens, totalCostUsd: Math.round(acc.month.cost * 100) / 100 },
+  ];
+}
+
+/** Map API user-limit rows to UI UserLimit. */
+export function mapApiLimitToUserLimit(row: ApiLimitItem): UserLimit {
+  return {
+    user: String(row.scopeKey || row.scope || "unknown"),
+    team: "—",
+    rpmLimit: Number(row.rpmLimit ?? 60),
+    tpmLimit: Number(row.tpmLimit ?? 60000),
+    dailyBudgetUsd: 0,
+    usedTodayUsd: 0,
+  };
+}
+
+/** Build a single project TPM quota bar for live mode. */
+export function projectQuotaFromLimit(
+  limit: ProjectLimit | null,
+  usedTokens: number,
+): QuotaUsage[] {
+  if (!limit) return [];
+  return [
+    {
+      model: "项目默认 TPM",
+      provider: "AIP",
+      used: usedTokens,
+      quota: Math.max(limit.tpmLimit, 1),
+      unit: "tpm",
+    },
+  ];
+}
+
+export function isCapacityLiveSuccess(usageOk: boolean): CapacitySourceMode {
+  return usageOk ? "live" : "demo";
+}
+
 // ── Component ──────────────────────────────────────────────────
 
 export function CapacityPage() {
@@ -138,31 +248,93 @@ export function CapacityPage() {
   const [usagePeriod, setUsagePeriod] = useState<"today" | "week" | "month">("today");
   const [providerFilter, setProviderFilter] = useState("all");
   const [teamFilter, setTeamFilter] = useState("all");
+  const [sourceMode, setSourceMode] = useState<CapacitySourceMode>("loading");
+  const [usageBuckets, setUsageBuckets] = useState<UsageBucket[]>(USAGE_BUCKETS);
+  const [quotaUsage, setQuotaUsage] = useState<QuotaUsage[]>(QUOTA_USAGE);
+  const [userLimits, setUserLimits] = useState<UserLimit[]>(USER_LIMITS);
+  const [projectLimit, setProjectLimit] = useState<ProjectLimit | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [usageRes, projectRes, usersRes] = await Promise.all([
+          apiGet<{ items?: ApiUsageItem[]; summary?: { totalTokens?: number } }>("/v1/aip/capacity/usage?limit=30"),
+          apiGet<ApiLimitItem>("/v1/aip/capacity/project-limits"),
+          apiGet<{ items?: ApiLimitItem[] } | ApiLimitItem>("/v1/aip/capacity/user-limits").catch(() => ({ items: [] as ApiLimitItem[] })),
+        ]);
+        if (cancelled) return;
+        const buckets = mapUsageItemsToBuckets(usageRes.items || []);
+        const pl: ProjectLimit = {
+          rpmLimit: Number(projectRes.rpmLimit ?? 60),
+          tpmLimit: Number(projectRes.tpmLimit ?? 60000),
+          scopeKey: projectRes.scopeKey,
+        };
+        const userItems = Array.isArray((usersRes as { items?: ApiLimitItem[] }).items)
+          ? (usersRes as { items: ApiLimitItem[] }).items
+          : [];
+        const todayTokens = buckets.find((b) => b.period === "today")?.totalTokens ?? 0;
+        setUsageBuckets(buckets);
+        setProjectLimit(pl);
+        setQuotaUsage(projectQuotaFromLimit(pl, Math.min(todayTokens, pl.tpmLimit)));
+        setUserLimits(userItems.map(mapApiLimitToUserLimit));
+        setSourceMode("live");
+        setLoadError(null);
+      } catch (e) {
+        if (cancelled) return;
+        setUsageBuckets(USAGE_BUCKETS);
+        setQuotaUsage(QUOTA_USAGE);
+        setUserLimits(USER_LIMITS);
+        setProjectLimit(null);
+        setSourceMode("demo");
+        setLoadError(String((e as Error).message || e));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const currentBucket = useMemo(
-    () => USAGE_BUCKETS.find((b) => b.period === usagePeriod) || USAGE_BUCKETS[0],
-    [usagePeriod],
+    () => usageBuckets.find((b) => b.period === usagePeriod) || usageBuckets[0],
+    [usagePeriod, usageBuckets],
   );
   const filteredLimits = useMemo(
     () => filterRateLimits(RATE_LIMITS, providerFilter),
     [providerFilter],
   );
   const filteredUsers = useMemo(
-    () => filterUserLimits(USER_LIMITS, teamFilter),
-    [teamFilter],
+    () => filterUserLimits(userLimits, teamFilter),
+    [teamFilter, userLimits],
   );
   const allProviders = useMemo(
     () => Array.from(new Set(RATE_LIMITS.map((r) => r.provider))).sort(),
     [],
   );
   const allTeams = useMemo(
-    () => Array.from(new Set(USER_LIMITS.map((u) => u.team))).sort(),
-    [],
+    () => Array.from(new Set(userLimits.map((u) => u.team))).sort(),
+    [userLimits],
   );
 
   return (
     <PageChrome title="容量管理" lede="管理 LLM 使用限制、速率限制和预留容量">
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+        {sourceMode === "demo" && (
+          <div className="w2-a6a7-demo-banner" role="status">
+            <span className="w2-a6a7-demo-badge">演示路径</span>
+            <span className="w2-a6a7-demo-text">
+              容量 API 不可用，当前为本地 MOCK{loadError ? ` · ${loadError}` : ""}
+            </span>
+          </div>
+        )}
+        {sourceMode === "live" && (
+          <div className="w2-a6a7-live-banner" role="status">
+            <span className="w2-a6a7-live-badge">Live</span>
+            <span className="w2-a6a7-demo-text">用量与限流已接 `/v1/aip/capacity/*`</span>
+          </div>
+        )}
+
         {/* Tab 导航 */}
         <div style={{ borderBottom: "1px solid var(--aos-border)", background: "var(--aos-surface)", marginBottom: 16 }}>
           <div style={{ display: "flex", gap: 8 }}>
@@ -203,6 +375,9 @@ export function CapacityPage() {
             </svg>
             <p style={{ fontSize: 13, color: "var(--aos-blue-title)", margin: 0, lineHeight: 1.6 }}>
               所有容量的 <span style={{ fontWeight: 600 }}>20%</span> 始终保留用于实时交互式 AIP 使用。如需额外容量，请联系 Palantir 支持。
+              {projectLimit && sourceMode === "live" && (
+                <> 当前项目限额：RPM {projectLimit.rpmLimit} · TPM {formatTokenCount(projectLimit.tpmLimit)}。</>
+              )}
             </p>
           </div>
         </div>
@@ -213,7 +388,7 @@ export function CapacityPage() {
             {/* Period selector */}
             <div style={{ display: "flex", gap: 6, background: "var(--aos-surface-hover)", padding: 4, borderRadius: 2, width: "fit-content" }}>
               {(["today", "week", "month"] as const).map((p) => {
-                const b = USAGE_BUCKETS.find((x) => x.period === p)!;
+                const b = usageBuckets.find((x) => x.period === p)!;
                 return (
                   <button
                     key={p}
@@ -225,7 +400,7 @@ export function CapacityPage() {
                       cursor: "pointer", boxShadow: usagePeriod === p ? "var(--shadow-sm)" : "none",
                     }}
                   >
-                    {b.label}
+                    {b?.label || p}
                   </button>
                 );
               })}
@@ -235,18 +410,18 @@ export function CapacityPage() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 20 }}>
                 <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4 }}>总请求数</div>
-                <div style={{ fontSize: 28, fontWeight: 700, color: "var(--aos-indigo-600)" }}>{currentBucket.totalRequests.toLocaleString()}</div>
-                <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>{currentBucket.label}累计</div>
+                <div style={{ fontSize: 28, fontWeight: 700, color: "var(--aos-indigo-600)" }}>{(currentBucket?.totalRequests ?? 0).toLocaleString()}</div>
+                <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>{currentBucket?.label}累计</div>
               </div>
               <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 20 }}>
                 <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4 }}>Token 消耗</div>
-                <div style={{ fontSize: 28, fontWeight: 700, color: "var(--aos-purple-600)" }}>{formatTokenCount(currentBucket.totalTokens)}</div>
-                <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>{currentBucket.totalTokens.toLocaleString()} tokens</div>
+                <div style={{ fontSize: 28, fontWeight: 700, color: "var(--aos-purple-600)" }}>{formatTokenCount(currentBucket?.totalTokens ?? 0)}</div>
+                <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>{(currentBucket?.totalTokens ?? 0).toLocaleString()} tokens</div>
               </div>
               <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 20 }}>
                 <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4 }}>成本汇总</div>
-                <div style={{ fontSize: 28, fontWeight: 700, color: "var(--aos-amber-600)" }}>{formatUsd(currentBucket.totalCostUsd)}</div>
-                <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>{currentBucket.label} USD</div>
+                <div style={{ fontSize: 28, fontWeight: 700, color: "var(--aos-amber-600)" }}>{formatUsd(currentBucket?.totalCostUsd ?? 0)}</div>
+                <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>{currentBucket?.label} USD</div>
               </div>
             </div>
 
@@ -254,10 +429,12 @@ export function CapacityPage() {
             <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, overflow: "hidden" }}>
               <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--aos-border)" }}>
                 <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>模型配额使用</h3>
-                <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0" }}>各模型当前分钟级 Token 用量 vs 配额</p>
+                <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0" }}>
+                  {sourceMode === "live" ? "项目 TPM 限额 vs 今日 Token 用量" : "各模型当前分钟级 Token 用量 vs 配额"}
+                </p>
               </div>
               <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
-                {QUOTA_USAGE.map((q) => {
+                {quotaUsage.map((q) => {
                   const pct = usagePercent(q.used, q.quota);
                   const tone = usageTone(pct);
                   const barColor = tone === "danger" ? "var(--aos-red)" : tone === "warn" ? "var(--aos-amber)" : "var(--aos-green)";
@@ -282,6 +459,9 @@ export function CapacityPage() {
                     </div>
                   );
                 })}
+                {quotaUsage.length === 0 && (
+                  <p style={{ fontSize: 12, color: "var(--aos-faint)", margin: 0 }}>暂无配额数据</p>
+                )}
               </div>
             </div>
           </div>
@@ -300,7 +480,11 @@ export function CapacityPage() {
                     </div>
                     <div>
                       <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>项目速率限制</h3>
-                      <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0", lineHeight: 1.5 }}>管理所有项目范围的 LLM 使用限制，包括 AIP Agents、AIP Logic、Pipeline Builder 等应用。</p>
+                      <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0", lineHeight: 1.5 }}>
+                        {projectLimit
+                          ? `RPM ${projectLimit.rpmLimit} · TPM ${formatTokenCount(projectLimit.tpmLimit)}`
+                          : "管理所有项目范围的 LLM 使用限制，包括 AIP Agents、AIP Logic、Pipeline Builder 等应用。"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -320,7 +504,11 @@ export function CapacityPage() {
                     </div>
                     <div>
                       <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>用户速率限制</h3>
-                      <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0", lineHeight: 1.5 }}>管理所有用户范围的 LLM 使用限制，包括 AIP/IDE、AIP Analyst、Claude Code 等应用。</p>
+                      <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0", lineHeight: 1.5 }}>
+                        {sourceMode === "live"
+                          ? `已加载 ${userLimits.length} 条用户限额`
+                          : "管理所有用户范围的 LLM 使用限制，包括 AIP/IDE、AIP Analyst、Claude Code 等应用。"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -338,7 +526,9 @@ export function CapacityPage() {
               <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--aos-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>登记限制</h3>
-                  <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0" }}>为组织中启用的每个模型设置默认速率限制</p>
+                  <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0" }}>
+                    {sourceMode === "live" ? "按模型默认速率（本地示意；API 无 per-model 限额）" : "为组织中启用的每个模型设置默认速率限制"}
+                  </p>
                 </div>
                 <select
                   value={providerFilter}
@@ -408,7 +598,13 @@ export function CapacityPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map((u) => {
+                    {filteredUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} style={{ padding: "16px 20px", color: "var(--aos-faint)", fontSize: 12 }}>
+                          {sourceMode === "live" ? "暂无用户限额（可在 API PUT /user-limits 写入）" : "无数据"}
+                        </td>
+                      </tr>
+                    ) : filteredUsers.map((u) => {
                       const budgetPct = usagePercent(u.usedTodayUsd, u.dailyBudgetUsd);
                       const tone = usageTone(budgetPct);
                       return (

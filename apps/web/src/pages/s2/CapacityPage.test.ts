@@ -4,6 +4,10 @@ import {
   filterUserLimits,
   formatTokenCount,
   formatUsd,
+  isCapacityLiveSuccess,
+  mapApiLimitToUserLimit,
+  mapUsageItemsToBuckets,
+  projectQuotaFromLimit,
   sumUsage,
   usagePercent,
   usageTone,
@@ -146,5 +150,62 @@ describe("CapacityPage · sumUsage", () => {
     const result = sumUsage([MOCK_BUCKETS[0]]);
     expect(result.requests).toBe(100);
     expect(result.cost).toBe(10);
+  });
+});
+
+describe("CapacityPage · mapUsageItemsToBuckets (W2-A6)", () => {
+  const now = new Date("2026-07-29T12:00:00Z");
+
+  it("聚合今日/近7天/近30天", () => {
+    const items = [
+      { day: "2026-07-29", totalRequests: 10, totalTokens: 100, cost: 1 },
+      { day: "2026-07-28", totalRequests: 20, totalTokens: 200, cost: 2 },
+      { day: "2026-07-01", totalRequests: 30, totalTokens: 300, cost: 3 },
+      { day: "2026-06-01", totalRequests: 999, totalTokens: 999, cost: 9 },
+    ];
+    const buckets = mapUsageItemsToBuckets(items, now);
+    const today = buckets.find((b) => b.period === "today")!;
+    const week = buckets.find((b) => b.period === "week")!;
+    const month = buckets.find((b) => b.period === "month")!;
+    expect(today.totalRequests).toBe(10);
+    expect(week.totalRequests).toBe(30); // 29+28
+    expect(month.totalRequests).toBe(60); // 29+28+01
+  });
+
+  it("空 items 返回 0 桶（非 mock）", () => {
+    const buckets = mapUsageItemsToBuckets([], now);
+    expect(buckets.every((b) => b.totalRequests === 0)).toBe(true);
+  });
+});
+
+describe("CapacityPage · mapApiLimitToUserLimit", () => {
+  it("映射 scopeKey 与限额", () => {
+    const u = mapApiLimitToUserLimit({ scopeKey: "alice", rpmLimit: 120, tpmLimit: 500000 });
+    expect(u.user).toBe("alice");
+    expect(u.rpmLimit).toBe(120);
+    expect(u.tpmLimit).toBe(500000);
+    expect(u.team).toBe("—");
+  });
+});
+
+describe("CapacityPage · projectQuotaFromLimit", () => {
+  it("null 返回空", () => {
+    expect(projectQuotaFromLimit(null, 100)).toEqual([]);
+  });
+
+  it("合成项目 TPM 条", () => {
+    const q = projectQuotaFromLimit({ rpmLimit: 60, tpmLimit: 1000 }, 400);
+    expect(q.length).toBe(1);
+    expect(q[0].used).toBe(400);
+    expect(q[0].quota).toBe(1000);
+  });
+});
+
+describe("CapacityPage · isCapacityLiveSuccess", () => {
+  it("usage 成功 → live", () => {
+    expect(isCapacityLiveSuccess(true)).toBe("live");
+  });
+  it("usage 失败 → demo", () => {
+    expect(isCapacityLiveSuccess(false)).toBe("demo");
   });
 });

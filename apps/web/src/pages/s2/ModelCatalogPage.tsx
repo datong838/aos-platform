@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { apiGet, apiPost } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
 import { BpArchitectureBar } from "../../components/bp/BpArchitectureBar";
 
@@ -35,6 +36,22 @@ type CatalogFilter = {
   provider: string;
   capability: string;
   priceTier: string;
+};
+
+export type CatalogSourceMode = "loading" | "live" | "demo";
+
+export type ApiCatalogRow = {
+  id?: string;
+  provider?: string;
+  model?: string;
+  displayName?: string;
+  capabilities?: string[];
+  contextWindow?: number | string;
+  inputPrice?: number | string;
+  outputPrice?: number | string;
+  registered?: boolean;
+  registration?: { alias?: string; status?: string } | null;
+  parameters?: string;
 };
 
 // ── Capability color map ──────────────────────────────────────
@@ -301,6 +318,72 @@ export function buildComparisonRows(selected: CatalogModel[]) {
   return rows;
 }
 
+const KNOWN_CAPS = new Set<Capability>([
+  "chat", "code", "vision", "embedding", "reasoning", "function-calling",
+]);
+
+/** Normalize API capability tokens to UI Capability union. */
+export function normalizeCapability(raw: string): Capability | null {
+  const s = String(raw || "").trim().toLowerCase().replace(/_/g, "-");
+  if (s === "text" || s === "chat") return "chat";
+  if (s === "function-calling" || s === "tools") return "function-calling";
+  if (KNOWN_CAPS.has(s as Capability)) return s as Capability;
+  return null;
+}
+
+export function formatContextWindow(n: number | string | undefined): string {
+  if (n === undefined || n === null || n === "") return "—";
+  if (typeof n === "string" && /[KkMmBb]/.test(n)) return n;
+  const v = Number(n);
+  if (!Number.isFinite(v) || v <= 0) return "—";
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(v % 1_000_000 === 0 ? 0 : 1)}M`;
+  if (v >= 1000) return `${Math.round(v / 1000)}K`;
+  return String(v);
+}
+
+/**
+ * Format API price for UI.
+ * Seed 存 $/1K token（如 0.005 → $5/1M）；>=0.1 视为已是 $/1M。
+ */
+export function formatApiPrice(price: number | string | undefined): string {
+  if (price === undefined || price === null || price === "" || price === "—") return "—";
+  if (typeof price === "string") {
+    if (price.includes("/") || price === "免费") return price;
+    const n = parseFloat(price);
+    if (!Number.isFinite(n)) return price;
+    return formatApiPrice(n);
+  }
+  if (price === 0) return "免费";
+  const perMillion = price < 0.1 ? price * 1000 : price;
+  const rounded = perMillion >= 1 ? perMillion.toFixed(2).replace(/\.00$/, "") : perMillion.toFixed(2);
+  return `$${rounded}/1M`;
+}
+
+export function mapApiCatalogRow(row: ApiCatalogRow): CatalogModel {
+  const provider = String(row.provider || "unknown");
+  const caps = (row.capabilities || [])
+    .map(normalizeCapability)
+    .filter((c): c is Capability => c != null);
+  return {
+    id: String(row.id || row.model || ""),
+    name: String(row.displayName || row.model || row.id || "unnamed"),
+    provider,
+    providerSlug: provider.toLowerCase().replace(/\s+/g, "-"),
+    parameters: row.parameters ? String(row.parameters) : "—",
+    contextWindow: formatContextWindow(row.contextWindow),
+    inputPrice: formatApiPrice(row.inputPrice),
+    outputPrice: formatApiPrice(row.outputPrice),
+    capabilities: caps.length ? caps : ["chat"],
+    registered: Boolean(row.registered ?? row.registration),
+  };
+}
+
+export function registeredRowsFromModels(models: CatalogModel[]): Array<{ model: string; provider: string; family: string }> {
+  return models
+    .filter((m) => m.registered)
+    .map((m) => ({ model: m.name, provider: m.provider, family: m.provider }));
+}
+
 // ── Component ──────────────────────────────────────────────────
 
 export function ModelCatalogPage() {
@@ -326,18 +409,60 @@ export function ModelCatalogPage() {
   });
   const [compareSet, setCompareSet] = useState<Set<string>>(new Set());
   const [showCompare, setShowCompare] = useState(false);
+  const [sourceMode, setSourceMode] = useState<CatalogSourceMode>("loading");
+  const [catalogModels, setCatalogModels] = useState<CatalogModel[]>(CATALOG_MODELS);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [registerBusy, setRegisterBusy] = useState<string | null>(null);
+  const [registerMsg, setRegisterMsg] = useState<string | null>(null);
 
-  const allProviders = useMemo(() => extractAllProviders(CATALOG_MODELS), []);
-  const allCapabilities = useMemo(() => extractAllCapabilities(CATALOG_MODELS), []);
+  const loadCatalog = useCallback(async () => {
+    try {
+      let items: ApiCatalogRow[] = [];
+      try {
+        const admin = await apiGet<{ items?: ApiCatalogRow[] }>("/v1/aip/model-admin/models");
+        items = admin.items || [];
+      } catch {
+        const [cat, reg] = await Promise.all([
+          apiGet<{ items?: ApiCatalogRow[] }>("/v1/aip/model-catalog"),
+          apiGet<{ items?: Array<{ modelId?: string }> }>("/v1/aip/registered-models").catch(() => ({ items: [] })),
+        ]);
+        const regSet = new Set((reg.items || []).map((r) => String(r.modelId || "")));
+        items = (cat.items || []).map((c) => ({
+          ...c,
+          registered: regSet.has(String(c.id || "")),
+        }));
+      }
+      setCatalogModels(items.map(mapApiCatalogRow).filter((m) => m.id));
+      setSourceMode("live");
+      setLoadError(null);
+    } catch (e) {
+      setCatalogModels(CATALOG_MODELS);
+      setSourceMode("demo");
+      setLoadError(String((e as Error).message || e));
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadCatalog();
+  }, [loadCatalog]);
+
+  const allProviders = useMemo(() => extractAllProviders(catalogModels), [catalogModels]);
+  const allCapabilities = useMemo(() => extractAllCapabilities(catalogModels), [catalogModels]);
   const filteredModels = useMemo(
-    () => filterCatalogModels(CATALOG_MODELS, catalogFilter),
-    [catalogFilter],
+    () => filterCatalogModels(catalogModels, catalogFilter),
+    [catalogFilter, catalogModels],
   );
-  const catalogStats = useMemo(() => computeCatalogStats(CATALOG_MODELS), []);
+  const catalogStats = useMemo(() => computeCatalogStats(catalogModels), [catalogModels]);
   const compareModels = useMemo(
-    () => CATALOG_MODELS.filter((m) => compareSet.has(m.id)),
-    [compareSet],
+    () => catalogModels.filter((m) => compareSet.has(m.id)),
+    [compareSet, catalogModels],
   );
+  const registeredRows = useMemo(() => {
+    if (sourceMode === "live") return registeredRowsFromModels(catalogModels);
+    return MODEL_FAMILIES.filter((f) => f.status === "enabled").flatMap((f) =>
+      f.models.map((m) => ({ model: m, provider: f.provider, family: f.name })),
+    );
+  }, [sourceMode, catalogModels]);
 
   const filteredOrgs = Object.entries(orgs).filter(([name]) =>
     name.toLowerCase().includes(orgSearch.toLowerCase()),
@@ -356,9 +481,48 @@ export function ModelCatalogPage() {
     });
   }
 
+  async function handleRegister(modelId: string) {
+    if (sourceMode !== "live") {
+      setCatalogModels((prev) =>
+        prev.map((m) => (m.id === modelId ? { ...m, registered: true } : m)),
+      );
+      setRegisterMsg("演示路径：已本地标记为已注册");
+      return;
+    }
+    setRegisterBusy(modelId);
+    setRegisterMsg(null);
+    try {
+      await apiPost(`/v1/aip/model-catalog/${encodeURIComponent(modelId)}/register`, {});
+      await loadCatalog();
+      setRegisterMsg("注册成功");
+    } catch (e) {
+      setRegisterMsg(`注册失败：${String((e as Error).message || e)}`);
+    } finally {
+      setRegisterBusy(null);
+    }
+  }
+
   return (
     <PageChrome title="模型目录" lede="管理 AIP 启用状态、模型家族和已注册模型">
       <div className="mc-wrap">
+        {sourceMode === "demo" && (
+          <div className="w2-a6a7-demo-banner" role="status">
+            <span className="w2-a6a7-demo-badge">演示路径</span>
+            <span className="w2-a6a7-demo-text">
+              模型目录 API 不可用，当前为本地 MOCK{loadError ? ` · ${loadError}` : ""}
+            </span>
+          </div>
+        )}
+        {sourceMode === "live" && (
+          <div className="w2-a6a7-live-banner" role="status">
+            <span className="w2-a6a7-live-badge">Live</span>
+            <span className="w2-a6a7-demo-text">目录/已注册已接 `/v1/aip/model-catalog`</span>
+          </div>
+        )}
+        {registerMsg && (
+          <div className="w2-a6a7-msg" role="status">{registerMsg}</div>
+        )}
+
         <div className="mc-arch-bar">
           <BpArchitectureBar activeLayer="L3" />
         </div>
@@ -470,14 +634,14 @@ export function ModelCatalogPage() {
                   const isSelected = compareSet.has(m.id);
                   const providerInitial = m.provider.charAt(0).toUpperCase();
                   const providerColor =
-                    m.providerSlug === "openai" ? "#10A37F" :
-                    m.providerSlug === "anthropic" ? "#D97706" :
-                    m.providerSlug === "google" ? "#4285F4" :
-                    m.providerSlug === "xai" ? "#1D4ED8" :
-                    m.providerSlug === "deepseek" ? "#4D6BFE" :
-                    m.providerSlug === "meta" ? "#0668E1" :
-                    m.providerSlug === "alibaba" ? "#FF6A00" :
-                    m.providerSlug === "voyage" ? "#7C3AED" : "#6B7280";
+                    m.providerSlug === "openai" || m.providerSlug.includes("openai") ? "#10A37F" :
+                    m.providerSlug.includes("anthropic") ? "#D97706" :
+                    m.providerSlug.includes("google") ? "#4285F4" :
+                    m.providerSlug.includes("xai") ? "#1D4ED8" :
+                    m.providerSlug.includes("deepseek") ? "#4D6BFE" :
+                    m.providerSlug.includes("meta") ? "#0668E1" :
+                    m.providerSlug.includes("alibaba") ? "#FF6A00" :
+                    m.providerSlug.includes("voyage") ? "#7C3AED" : "#6B7280";
                   return (
                     <div
                       key={m.id}
@@ -539,8 +703,13 @@ export function ModelCatalogPage() {
                           对比
                         </label>
                         {!m.registered ? (
-                          <button className="mc-primary-btn">
-                            注册到供应商
+                          <button
+                            type="button"
+                            className="mc-primary-btn"
+                            disabled={registerBusy === m.id}
+                            onClick={() => void handleRegister(m.id)}
+                          >
+                            {registerBusy === m.id ? "注册中…" : "注册到供应商"}
                           </button>
                         ) : (
                           <Link
@@ -705,7 +874,7 @@ export function ModelCatalogPage() {
           <div className="mc-registered-col">
             <div className="mc-panel">
               <div className="mc-family-header">
-                已注册模型 ({MODEL_FAMILIES.filter((f) => f.status === "enabled").flatMap((f) => f.models).length})
+                已注册模型 ({registeredRows.length})
               </div>
               <table className="mc-reg-table">
                 <thead>
@@ -716,10 +885,14 @@ export function ModelCatalogPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {MODEL_FAMILIES.filter((f) => f.status === "enabled").flatMap((f) =>
-                    f.models.map((m) => ({ model: m, provider: f.provider, family: f.name })),
-                  ).map((row) => (
-                    <tr key={row.model}>
+                  {registeredRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="secondary" style={{ padding: 16 }}>
+                        {sourceMode === "live" ? "暂无已注册模型" : "无数据"}
+                      </td>
+                    </tr>
+                  ) : registeredRows.map((row) => (
+                    <tr key={`${row.provider}-${row.model}`}>
                       <td className="mc-reg-name">{row.model}</td>
                       <td className="secondary">{row.provider}</td>
                       <td>

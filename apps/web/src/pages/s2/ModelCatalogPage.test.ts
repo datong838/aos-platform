@@ -5,8 +5,12 @@ import {
   extractAllCapabilities,
   extractAllProviders,
   filterCatalogModels,
+  formatApiPrice,
+  mapApiCatalogRow,
+  normalizeCapability,
   parsePricePerMillion,
   priceTierOf,
+  registeredRowsFromModels,
   type CatalogModel,
 } from "./ModelCatalogPage";
 
@@ -269,5 +273,45 @@ describe("ModelCatalogPage · buildComparisonRows", () => {
     const rows = buildComparisonRows([MOCK_MODELS[0], MOCK_MODELS[1]]);
     const providerRow = rows.find((r) => r.field === "供应商")!;
     expect(providerRow.values).toEqual(["OpenAI", "Anthropic"]);
+  });
+});
+
+describe("ModelCatalogPage · mapApiCatalogRow (W2-A7)", () => {
+  it("映射 displayName / 能力 / 价格 / registered", () => {
+    const m = mapApiCatalogRow({
+      id: "mc-gpt-4o",
+      provider: "azure-openai",
+      model: "gpt-4o",
+      displayName: "GPT-4o",
+      capabilities: ["text", "vision", "function_calling"],
+      contextWindow: 128000,
+      inputPrice: 0.005,
+      outputPrice: 0.015,
+      registered: true,
+    });
+    expect(m.id).toBe("mc-gpt-4o");
+    expect(m.name).toBe("GPT-4o");
+    expect(m.providerSlug).toContain("azure-openai");
+    expect(m.capabilities).toContain("chat");
+    expect(m.capabilities).toContain("function-calling");
+    expect(m.contextWindow).toBe("128K");
+    expect(m.inputPrice).toBe("$5/1M"); // 0.005 $/1K → $5/1M
+    expect(m.registered).toBe(true);
+  });
+
+  it("已是 $/1M 量级的价格不二次放大", () => {
+    expect(formatApiPrice(3)).toBe("$3/1M");
+  });
+
+  it("normalizeCapability 归一化", () => {
+    expect(normalizeCapability("text")).toBe("chat");
+    expect(normalizeCapability("function_calling")).toBe("function-calling");
+    expect(normalizeCapability("unknown-x")).toBeNull();
+  });
+
+  it("registeredRowsFromModels 仅已注册", () => {
+    const rows = registeredRowsFromModels(MOCK_MODELS);
+    expect(rows.length).toBe(2);
+    expect(rows.every((r) => MOCK_MODELS.find((m) => m.name === r.model)?.registered)).toBe(true);
   });
 });

@@ -15,6 +15,7 @@ from pydantic import BaseModel
 
 from aos_api.model_capacity import (
     get_or_default_limit,
+    list_limits,
     list_usage,
     upsert_limit,
     upsert_usage,
@@ -57,8 +58,12 @@ def put_project_limits_api(body: LimitPutRequest, projectId: str | None = Query(
 
 
 @router.get("/user-limits")
-def get_user_limits_api(userId: str = Query(...)) -> dict[str, Any]:
-    return get_or_default_limit(SCOPE_USER, userId)
+def get_user_limits_api(userId: str | None = Query(None)) -> dict[str, Any]:
+    """With userId → single limit (compat). Without → list all user-scope limits."""
+    if userId:
+        return get_or_default_limit(SCOPE_USER, userId)
+    items = list_limits(SCOPE_USER)
+    return {"items": items, "count": len(items)}
 
 
 @router.put("/user-limits")
