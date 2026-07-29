@@ -9089,3 +9089,45 @@ html[data-aos-theme="dark"] .dark\:border-gray-700 { border-color: var(--aos-bor
 .w4-b1-props-data {
   color: var(--aos-text);
 }
+
+/* === W2-A5 === */
+.obs-source-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin: 0 0 12px;
+  border: 1px solid var(--aos-border);
+  border-radius: 2px;
+  font-size: 12px;
+  background: var(--aos-surface);
+}
+.obs-source-banner--demo {
+  border-color: #d4a017;
+  background: #fffbeb;
+  color: #7a5b00;
+}
+.obs-source-banner--live {
+  border-color: var(--aos-green-600, #2f9e44);
+  background: #ebfbee;
+  color: #2b8a3e;
+}
+.obs-source-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.obs-source-badge--demo {
+  background: #ffe8a1;
+  color: #7a5b00;
+}
+.obs-source-badge--live {
+  background: #b2f2bb;
+  color: #2b8a3e;
+}
+.obs-source-banner__text {
+  color: inherit;
+}
