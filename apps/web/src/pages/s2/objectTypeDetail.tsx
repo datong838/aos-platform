@@ -16,6 +16,36 @@ type LinkRow = { id: string; name?: string; srcType?: string; dstType?: string; 
 type ActionRow = { id: string; name: string; objectType?: string };
 type ModuleRow = { id: string; name: string; objectType?: string };
 
+/** W3-C2 · 详情 API / 列表派生元数据 */
+export type OtDetailMeta = {
+  rid?: string;
+  apiName?: string;
+  primaryKey?: string;
+  titleKey?: string;
+  displayName?: string;
+  pluralName?: string;
+  backingDataset?: string;
+  syncStrategy?: string;
+  storageType?: string;
+  createdBy?: string;
+  visibility?: string;
+};
+
+export type OtMetaKvItem = { label: string; value: string; tone?: "ok" | "warn" | "muted" };
+
+export type LinkGraphNode = { id: string; label: string; role: "center" | "neighbor"; x: number; y: number };
+export type LinkGraphEdge = {
+  id: string;
+  from: string;
+  to: string;
+  label: string;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+};
+export type LinkGraphLayout = { width: number; height: number; nodes: LinkGraphNode[]; edges: LinkGraphEdge[] };
+
 const TABS = [
   { id: "overview", label: "Overview" },
   { id: "properties", label: "Properties" },
@@ -30,6 +60,190 @@ function branchAllowsOverlayWrite(branchId: string, branchReadonly?: boolean): b
   if (branchReadonly) return false;
   if (!branchId || branchId === "main" || branchId === "master") return false;
   return true;
+}
+
+function propNames(properties?: PropDef[]): string[] {
+  return (properties || []).map((p) => p.name.trim()).filter(Boolean);
+}
+
+/** 从列表字段派生元数据（详情 API 失败时降级） */
+export function deriveOtDetailMeta(
+  typeId: string,
+  typeName: string,
+  properties?: PropDef[],
+): OtDetailMeta {
+  const names = propNames(properties);
+  const primaryKey = names[0] || "id";
+  const titleHit = names.find((n) => /^(title|name|display_name|label)$/i.test(n));
+  const titleKey = titleHit || (names[1] || primaryKey);
+  const display = (typeName || typeId).trim() || typeId;
+  const plural = display.endsWith("s") ? display : `${display}s`;
+  return {
+    rid: `ri.ontology.main.object-type.${typeId.toLowerCase()}`,
+    apiName: typeId,
+    primaryKey,
+    titleKey,
+    displayName: display,
+    pluralName: plural,
+    backingDataset: `ds/${typeId.toLowerCase()}`,
+    syncStrategy: "incremental",
+    storageType: "object_storage",
+    createdBy: "system",
+    visibility: "org",
+  };
+}
+
+/** 向视觉稿 KV 靠拢（约 12 项，含分支） */
+export function buildOtMetaKvItems(input: {
+  typeId: string;
+  typeName: string;
+  branchId: string;
+  properties?: PropDef[];
+  funnelStage?: string;
+  meta?: OtDetailMeta | null;
+}): OtMetaKvItem[] {
+  const base = deriveOtDetailMeta(input.typeId, input.typeName, input.properties);
+  const m = { ...base, ...(input.meta || {}) };
+  const funnelTone = input.funnelStage && /live|index|done/i.test(input.funnelStage) ? "ok" : "warn";
+  return [
+    { label: "RID", value: m.rid || base.rid! },
+    { label: "API 名", value: m.apiName || input.typeId },
+    { label: "PK", value: m.primaryKey || "id" },
+    { label: "TitleKey", value: m.titleKey || "id" },
+    { label: "显示名", value: m.displayName || input.typeName },
+    { label: "Plural", value: m.pluralName || `${input.typeName}s` },
+    { label: "BackingDataset", value: m.backingDataset || `ds/${input.typeId.toLowerCase()}` },
+    { label: "Sync 策略", value: m.syncStrategy || "incremental" },
+    { label: "存储类型", value: m.storageType || "object_storage" },
+    { label: "创建人", value: m.createdBy || "system" },
+    { label: "分支", value: input.branchId },
+    {
+      label: "可见性",
+      value: m.visibility || "org",
+    },
+    {
+      label: "管道",
+      value: input.funnelStage || "未配置",
+      tone: funnelTone === "ok" ? "ok" : "warn",
+    },
+    { label: "Properties", value: String((input.properties || []).length) },
+  ];
+}
+
+/** 简单环形布局：中心 OT + 邻居节点/边 */
+export function buildLinkGraphLayout(
+  typeId: string,
+  links: LinkRow[],
+  opts?: { width?: number; height?: number },
+): LinkGraphLayout {
+  const width = opts?.width ?? 420;
+  const height = opts?.height ?? 220;
+  const cx = width / 2;
+  const cy = height / 2;
+  const nodes: LinkGraphNode[] = [{ id: typeId, label: typeId, role: "center", x: cx, y: cy }];
+  const edges: LinkGraphEdge[] = [];
+  if (links.length === 0) return { width, height, nodes, edges };
+
+  const neighborIds: string[] = [];
+  for (const l of links) {
+    const other = l.srcType === typeId ? l.dstType : l.srcType;
+    if (other && other !== typeId && !neighborIds.includes(other)) neighborIds.push(other);
+  }
+  const radius = Math.min(width, height) * 0.36;
+  neighborIds.forEach((nid, i) => {
+    const angle = (Math.PI * 2 * i) / Math.max(neighborIds.length, 1) - Math.PI / 2;
+    nodes.push({
+      id: nid,
+      label: nid,
+      role: "neighbor",
+      x: cx + radius * Math.cos(angle),
+      y: cy + radius * Math.sin(angle),
+    });
+  });
+  const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
+  for (const l of links) {
+    const from = l.srcType || typeId;
+    const to = l.dstType || typeId;
+    const a = byId[from];
+    const b = byId[to];
+    if (!a || !b) continue;
+    edges.push({
+      id: l.id,
+      from,
+      to,
+      label: l.rel || "link",
+      x1: a.x,
+      y1: a.y,
+      x2: b.x,
+      y2: b.y,
+    });
+  }
+  return { width, height, nodes, edges };
+}
+
+function LinkTypeGraphViz({
+  typeId,
+  links,
+}: {
+  typeId: string;
+  links: LinkRow[];
+}) {
+  const layout = useMemo(() => buildLinkGraphLayout(typeId, links), [typeId, links]);
+  if (links.length === 0) {
+    return <p className="muted w3-c2-link-empty">暂无 Link Type</p>;
+  }
+  return (
+    <div className="w3-c2-link-graph" aria-label="link type graph">
+      <svg
+        className="w3-c2-link-svg"
+        viewBox={`0 0 ${layout.width} ${layout.height}`}
+        role="img"
+        aria-label={`${typeId} link graph`}
+      >
+        {layout.edges.map((e) => {
+          const mx = (e.x1 + e.x2) / 2;
+          const my = (e.y1 + e.y2) / 2;
+          return (
+            <g key={e.id}>
+              <line className="w3-c2-link-edge" x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} markerEnd="url(#w3c2-arrow)" />
+              <text className="w3-c2-link-edge-label" x={mx} y={my - 6} textAnchor="middle">
+                {e.label}
+              </text>
+            </g>
+          );
+        })}
+        <defs>
+          <marker id="w3c2-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" className="w3-c2-link-arrow" />
+          </marker>
+        </defs>
+        {layout.nodes.map((n) => (
+          <g key={n.id} transform={`translate(${n.x}, ${n.y})`}>
+            <rect
+              className={n.role === "center" ? "w3-c2-link-node is-center" : "w3-c2-link-node"}
+              x={-44}
+              y={-14}
+              width={88}
+              height={28}
+              rx={4}
+            />
+            <text className="w3-c2-link-node-label" textAnchor="middle" dominantBaseline="central">
+              {n.label}
+            </text>
+          </g>
+        ))}
+      </svg>
+      <ul className="w3-c2-link-list">
+        {links.map((l) => (
+          <li key={l.id}>
+            <code>{l.srcType || "—"}</code>
+            <span className="w3-c2-link-rel">{l.rel || "link"}</span>
+            <code>{l.dstType || "—"}</code>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 export function ObjectTypeDetailPanel({
@@ -82,6 +296,7 @@ export function ObjectTypeDetailPanel({
   const [metaBusy, setMetaBusy] = useState(false);
   const [metaMsg, setMetaMsg] = useState("");
   const [metaErr, setMetaErr] = useState("");
+  const [otMeta, setOtMeta] = useState<OtDetailMeta | null>(null);
   const canEditBranch = branchAllowsOverlayWrite(branchId, branchReadonly);
 
   useEffect(() => {
@@ -193,25 +408,57 @@ export function ObjectTypeDetailPanel({
     };
   }, [typeId]);
 
+  /* W3-C2 · 详情元数据；失败降级为前端派生 */
+  useEffect(() => {
+    let cancelled = false;
+    setOtMeta(null);
+    (async () => {
+      try {
+        const d = await apiGet<OtDetailMeta & { id?: string }>(
+          `/v1/ontology/object-types/${encodeURIComponent(typeId)}`,
+        );
+        if (cancelled) return;
+        setOtMeta({
+          rid: d.rid,
+          apiName: d.apiName,
+          primaryKey: d.primaryKey,
+          titleKey: d.titleKey,
+          displayName: d.displayName,
+          pluralName: d.pluralName,
+          backingDataset: d.backingDataset,
+          syncStrategy: d.syncStrategy,
+          storageType: d.storageType,
+          createdBy: d.createdBy,
+          visibility: d.visibility,
+        });
+      } catch {
+        if (!cancelled) setOtMeta(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [typeId]);
+
   const props = draftProps;
+  const metaKvItems = useMemo(
+    () =>
+      buildOtMetaKvItems({
+        typeId,
+        typeName,
+        branchId,
+        properties: props,
+        funnelStage,
+        meta: otMeta,
+      }),
+    [typeId, typeName, branchId, props, funnelStage, otMeta],
+  );
   const detailProps =
     detail &&
     Object.entries(detail)
       .filter(([k]) => !k.startsWith("_"))
       .slice(0, 8)
       .map(([k, v]) => ({ label: k, value: String(v ?? "—") }));
-
-  const linkGraph = useMemo(() => {
-    if (links.length === 0) return `[${typeId}] · 暂无 Link Type`;
-    return links
-      .map((l) => {
-        if (l.srcType === typeId) {
-          return `[${typeId}] ── ${l.rel || "link"} ──► [${l.dstType}]`;
-        }
-        return `[${l.srcType}] ── ${l.rel || "link"} ──► [${typeId}]`;
-      })
-      .join("\n");
-  }, [links, typeId]);
 
   const funnelTone = funnelStage && /live|index|done/i.test(funnelStage) ? "ok" : "warn";
 
@@ -293,19 +540,7 @@ export function ObjectTypeDetailPanel({
             </div>
             {metaMsg && <p className="bp-prop-ok">{metaMsg}</p>}
             {metaErr && <p className="error">{metaErr}</p>}
-            <BpPropGrid
-              items={[
-                { label: "RID", value: `ri.ontology.main.object-type.${typeId.toLowerCase()}` },
-                { label: "API 名", value: typeId },
-                { label: "分支", value: branchId },
-                { label: "Properties", value: String(props.length) },
-                {
-                  label: "管道",
-                  value: funnelStage || "未配置",
-                  tone: funnelTone === "ok" ? "ok" : "warn",
-                },
-              ]}
-            />
+            <BpPropGrid items={metaKvItems} />
           </section>
 
           <div className="ont-overview-grid">
@@ -361,7 +596,7 @@ export function ObjectTypeDetailPanel({
                   {links[0] ? "打开编辑器 →" : "新建 Link →"}
                 </Link>
               </div>
-              <pre className="ont-ov-pre">{linkGraph}</pre>
+              <LinkTypeGraphViz typeId={typeId} links={links} />
             </div>
             <div className="ont-ov-card">
               <div className="ont-ov-card-head">
@@ -525,12 +760,7 @@ export function ObjectTypeDetailPanel({
               ＋ 新建 Link Type
             </Link>
           </div>
-          <pre
-            className="card"
-            style={{ fontSize: "0.75rem", textAlign: "center", whiteSpace: "pre-wrap", lineHeight: 1.8 }}
-          >
-            {linkGraph}
-          </pre>
+          <LinkTypeGraphViz typeId={typeId} links={links} />
           {links.length > 0 && (
             <BpTable
               columns={["id", "rel", "src", "dst", ""]}
