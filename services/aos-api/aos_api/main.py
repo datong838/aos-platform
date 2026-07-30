@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from aos_api.db import ensure_system_meta, init_schema
+from aos_api.migrations import run_migrations
 from aos_api.module_store import seed_modules_if_empty
 from aos_api.errors import register_exception_handlers
 from aos_api.logging_facade import configure_logging, get_logger
@@ -514,6 +515,7 @@ from aos_api.routers.model_capacity import router as phase2_model_capacity_route
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     try:
+        run_migrations()
         init_schema()
         ensure_system_meta()
         try:
