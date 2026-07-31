@@ -10,6 +10,8 @@
   "capabilities": [
     "rest",
     "http",
+    "read",
+    "pagination",
     "ingest"
   ],
   "configSchema": {
@@ -18,7 +20,11 @@
       "secretRef": {
         "type": "string",
         "description": "Vault 凭据引用"
-      }
+      },
+      "responsePath": { "type": "string" },
+      "paginationMode": { "type": "string", "enum": ["none", "page", "offset", "cursor"] },
+      "maxPages": { "type": "integer", "minimum": 1, "maximum": 1000 },
+      "maxItems": { "type": "integer", "minimum": 1, "maximum": 100000 }
     }
   }
 }
