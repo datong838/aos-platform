@@ -5,8 +5,6 @@ import {
   healthLabel,
   healthBadgeClass,
   spokeTypeTag,
-  type Health,
-  type SpokeType,
 } from "./HubFleetPage";
 
 describe("HubFleetPage · MOCK_HUB 数据", () => {

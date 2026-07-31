@@ -174,7 +174,7 @@ function WidgetIcon({ name }: { name: string }) {
 
 export function WidgetRegistryPage() {
   const [source, setSource] = useState<string>("all");
-  const [query, setQuery] = useState("");
+  const [query] = useState("");
   const [widgets, setWidgets] = useState<WidgetItem[]>(WIDGETS);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<WidgetItem | null>(null);

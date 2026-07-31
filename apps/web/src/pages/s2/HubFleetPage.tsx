@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import { S2Chrome, useJsonGet, apiPost } from "./shared";
+import { S2Chrome, useJsonGet } from "./shared";
 import { BpLinkRow, BpToolbar } from "./blueprintUi";
 
 export type Health = "online" | "degraded" | "offline";
@@ -145,11 +144,11 @@ function probeText(s: Spoke) {
 function spokeCardBorder(h: Health) {
   switch (h) {
     case "online":
-      return "border: 1px solid var(--border-green, #86efac)";
+      return { border: "1px solid var(--border-green, #86efac)" };
     case "degraded":
-      return "border: 1px solid var(--border-yellow, #fde047)";
+      return { border: "1px solid var(--border-yellow, #fde047)" };
     case "offline":
-      return "border: 1px solid var(--border-red, #fca5a5)";
+      return { border: "1px solid var(--border-red, #fca5a5)" };
   }
 }
 

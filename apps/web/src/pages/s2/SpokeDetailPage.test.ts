@@ -4,8 +4,6 @@ import {
   TABS,
   healthLabel,
   planStatusBadge,
-  type SpokeDetail,
-  type PlanEntry,
 } from "./SpokeDetailPage";
 
 describe("SpokeDetailPage · MOCK_SPOKE_DETAIL 数据", () => {

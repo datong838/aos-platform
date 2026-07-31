@@ -572,7 +572,7 @@ export function PropertyEditorPage() {
           p.columnMapping ? p : { ...p, columnMapping: autoMapColumnName(p.name) },
         ),
       );
-      setMappings((prev) => {
+      setMappings(() => {
         const nextProps = properties.map((p) =>
           p.columnMapping ? p : { ...p, columnMapping: autoMapColumnName(p.name) },
         );

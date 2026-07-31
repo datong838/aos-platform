@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MOCK_RELEASES, stageBadge, type ChannelStage } from "./ReleasesPage";
+import { MOCK_RELEASES, stageBadge } from "./ReleasesPage";
 
 describe("ReleasesPage · MOCK_RELEASES stages", () => {
   it("有 3 个发布通道（rc/beta/stable）", () => {

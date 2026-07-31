@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { S2Chrome, useJsonGet } from "./shared";
-import { BpBanner, BpLinkRow, BpToolbar } from "./blueprintUi";
+import { BpLinkRow, BpToolbar } from "./blueprintUi";
 
 export type ChannelStage = "rc" | "beta" | "stable";
 
@@ -86,7 +86,7 @@ export function stageBadge(ch: ChannelStage) {
   }
 }
 
-function stageCardStyle(ch: ChannelStage, isCurrent?: boolean) {
+function stageCardStyle(ch: ChannelStage) {
   const base: React.CSSProperties = {
     borderRadius: "0.5rem",
     padding: "1rem",
@@ -168,7 +168,7 @@ export function ReleasesPage() {
         >
           {releases.stages.map((s, i) => (
             <div key={s.channel} style={{ display: "flex", alignItems: "center", gap: 0 }}>
-              <div style={stageCardStyle(s.channel, s.isCurrent)}>
+              <div style={stageCardStyle(s.channel)}>
                 <div className="uppercase muted" style={{ fontSize: "0.625rem" }}>
                   {s.channel}
                   {s.isCurrent ? " · 当前" : ""}

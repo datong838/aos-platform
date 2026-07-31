@@ -13,8 +13,8 @@ type EventItem = {
   id: string;
   name: string;
   description?: string;
-  triggerId: string;
-  actionId: string;
+  triggerId: TriggerId;
+  actionId: ActionId;
   params: Record<string, string>;
   status: EventStatus;
   idempotent: boolean;

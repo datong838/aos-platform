@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { S2Chrome, useJsonGet } from "./shared";
 import { BpBanner, BpKvList, BpLinkRow, BpTabs, BpToolbar } from "./blueprintUi";
