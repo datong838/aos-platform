@@ -1,74 +1,134 @@
 #!/usr/bin/env bash
-# CI 入口脚本：串联 pytest + vitest + tsc --noEmit
-# 用法：bash scripts/ci.sh
-set -euo pipefail
+# AOS Platform unified CI entrypoint.
+# Usage: bash scripts/ci.sh quick|wave|full
+set -uo pipefail
 
-ROOT="$(cd "$(dirname "$0")" && pwd)"
-API_DIR="$ROOT/services/aos-api"
-WEB_DIR="$ROOT/apps/web"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CI_DIR="$ROOT/scripts/ci"
+
+usage() {
+  cat <<'EOF'
+Usage: bash scripts/ci.sh <quick|wave|full>
+
+  quick  CI shell syntax and entrypoint self-tests
+  wave   quick + backend + Web/Desktop/SDK tests and typechecks
+  full   wave + Web/Desktop production builds
+
+Required directories, commands, runners, and local dependencies must exist.
+This command never installs dependencies.
+EOF
+}
+
+if [ "$#" -ne 1 ]; then
+  usage >&2
+  exit 2
+fi
+
+MODE="$1"
+case "$MODE" in
+  quick|wave|full) ;;
+  -h|--help)
+    usage
+    exit 0
+    ;;
+  *)
+    echo "FAIL unknown CI mode: $MODE" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
+
+failures=0
+passes=0
+gate_index=0
+total_gates=0
+
+case "$MODE" in
+  quick) total_gates=1 ;;
+  wave) total_gates=7 ;;
+  full) total_gates=9 ;;
+esac
+
+run_gate() {
+  gate_index=$((gate_index + 1))
+  gate_name="$1"
+  shift
+
+  echo
+  echo "[$gate_index/$total_gates] $gate_name"
+  printf 'COMMAND:'
+  printf ' %q' "$@"
+  printf '\n'
+
+  if "$@"; then
+    echo "PASS $gate_name"
+    passes=$((passes + 1))
+  else
+    gate_code=$?
+    echo "FAIL $gate_name (exit=$gate_code)"
+    failures=$((failures + 1))
+  fi
+}
+
+require_runner() {
+  runner="$1"
+  if [ ! -f "$runner" ]; then
+    echo "FAIL required CI runner not found: $runner" >&2
+    return 1
+  fi
+  if [ ! -r "$runner" ]; then
+    echo "FAIL required CI runner is not readable: $runner" >&2
+    return 1
+  fi
+}
+
+run_required_gate() {
+  gate_name="$1"
+  runner="$2"
+  shift 2
+
+  if require_runner "$runner"; then
+    run_gate "$gate_name" bash "$runner" "$@"
+  else
+    gate_index=$((gate_index + 1))
+    echo
+    echo "[$gate_index/$total_gates] $gate_name"
+    echo "FAIL $gate_name (required runner unavailable)"
+    failures=$((failures + 1))
+  fi
+}
 
 echo "========================================="
 echo " AOS Platform CI"
+echo " MODE: $MODE"
+echo " ROOT: $ROOT"
 echo "========================================="
 
-failures=0
+run_required_gate "CI shell checks" "$CI_DIR/run-shell-checks.sh"
 
-# --- 1. 后端 pytest ---
-echo
-echo "[1/3] 后端 pytest..."
-if bash "$ROOT/scripts/ci/run-pytest.sh" "$@"; then
-  echo "✅ pytest passed"
-else
-  echo "❌ pytest failed"
-  failures=$((failures + 1))
+if [ "$MODE" = "wave" ] || [ "$MODE" = "full" ]; then
+  run_required_gate "Backend pytest" "$CI_DIR/run-pytest.sh"
+  run_required_gate "Web tests" "$CI_DIR/run-node-gate.sh" web test
+  run_required_gate "Web typecheck" "$CI_DIR/run-node-gate.sh" web typecheck
+  run_required_gate "Desktop tests" "$CI_DIR/run-node-gate.sh" desktop test
+  run_required_gate "Desktop typecheck" "$CI_DIR/run-node-gate.sh" desktop typecheck
+  run_required_gate "Ontology SDK tests" "$CI_DIR/run-node-gate.sh" sdk test
 fi
 
-# --- 2. 前端 vitest ---
-echo
-echo "[2/3] 前端 vitest..."
-if [ -d "$WEB_DIR" ]; then
-  cd "$WEB_DIR"
-  if command -v npx >/dev/null 2>&1; then
-    if npx vitest run 2>&1; then
-      echo "✅ vitest passed"
-    else
-      echo "❌ vitest failed"
-      failures=$((failures + 1))
-    fi
-  else
-    echo "⚠️  npx not available, skipping vitest"
-  fi
-else
-  echo "⚠️  web dir not found, skipping vitest"
-fi
-
-# --- 3. 前端 tsc --noEmit ---
-echo
-echo "[3/3] 前端 tsc --noEmit..."
-if [ -d "$WEB_DIR" ]; then
-  cd "$WEB_DIR"
-  if command -v npx >/dev/null 2>&1; then
-    if npx tsc --noEmit 2>&1; then
-      echo "✅ tsc passed"
-    else
-      echo "❌ tsc failed"
-      failures=$((failures + 1))
-    fi
-  else
-    echo "⚠️  npx not available, skipping tsc"
-  fi
-else
-  echo "⚠️  web dir not found, skipping tsc"
+if [ "$MODE" = "full" ]; then
+  run_required_gate "Web build" "$CI_DIR/run-node-gate.sh" web build
+  run_required_gate "Desktop build" "$CI_DIR/run-node-gate.sh" desktop build
 fi
 
 echo
 echo "========================================="
+echo " SUMMARY: mode=$MODE passed=$passes failed=$failures total=$total_gates"
 if [ "$failures" -eq 0 ]; then
-  echo " RESULT: ALL PASSED"
+  echo " RESULT: PASSED"
   echo "========================================="
   exit 0
-else
-  echo " RESULT: $failures FAILURE(S)"
-  echo "========================================="
-  exit 1
 fi
+
+echo " RESULT: FAILED"
+echo "========================================="
+exit 1
