@@ -13,7 +13,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@aos/ontology-sdk": "file:../../packages/ontology-sdk",
+    "@aos/ontology-sdk": "workspace:*",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-deep-link": "^2.4.9",
     "@tauri-apps/plugin-opener": "^2",

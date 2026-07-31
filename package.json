@@ -1,0 +1,14 @@
+{
+  "name": "aos-platform",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": "^20.20.2 || >=22.12.0"
+  },
+  "scripts": {
+    "build": "pnpm --filter @aos/web build && pnpm --filter @aos/desktop build",
+    "test": "pnpm --filter @aos/ontology-sdk test && pnpm --filter @aos/web test && pnpm --filter @aos/desktop test",
+    "typecheck": "pnpm --filter @aos/web exec tsc --noEmit -p tsconfig.json && pnpm --filter @aos/desktop typecheck"
+  }
+}
