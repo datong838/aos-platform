@@ -8,7 +8,7 @@ from __future__ import annotations
 import threading
 import time
 import uuid
-from typing import Any
+from typing import Any, Callable
 
 from pydantic import BaseModel, Field
 
@@ -48,6 +48,7 @@ class Pipeline(BaseModel):
     status: str = "draft"  # draft|active|scheduled|failed
     owner: str = "system"
     tags: list[str] = Field(default_factory=list)
+    executor_id: str = ""
     created_at: float = Field(default_factory=lambda: time.time())
     updated_at: float = Field(default_factory=lambda: time.time())
 
@@ -88,10 +89,21 @@ class Schedule(BaseModel):
 class ScheduleRun(BaseModel):
     id: str = Field(default_factory=lambda: "sr-" + uuid.uuid4().hex[:8])
     schedule_id: str
-    status: str = "success"  # success|failed|running
+    mode: str = "live"  # live|demo
+    status: str = "pending"  # pending|running|succeeded|failed|unsupported|cancelled
     started_at: float = Field(default_factory=lambda: time.time())
     finished_at: float = 0.0
     duration_ms: int = 0
+    executor_id: str = ""
+    input_ref: str = ""
+    output_ref: str = ""
+    rows_read: int = 0
+    rows_written: int = 0
+    lineage_ref: str = ""
+    quality_ref: str = ""
+    error_code: str = ""
+    error_message: str = ""
+    # Legacy read compatibility. New execution semantics use rows_read/rows_written.
     rows_processed: int = 0
     error: str = ""
 
@@ -131,6 +143,8 @@ class HealthCheck(BaseModel):
     null_rate: float = 0.0
     duplicate_rate: float = 0.0
     freshness_hours: float = 0.0
+    mode: str = "demo"
+    synthetic: bool = True
     checked_at: float = Field(default_factory=lambda: time.time())
 
 
@@ -166,6 +180,7 @@ class PipelineEngine:
                     inst._builds: dict[str, DatasetBuild] = {}
                     inst._health: dict[str, HealthCheck] = {}
                     inst._sync_configs: dict[str, SyncConfig] = {}
+                    inst._executors: dict[str, Callable[..., dict[str, Any]]] = {}
                     cls._instance = inst
         return cls._instance
 
@@ -340,6 +355,8 @@ class PipelineEngine:
             "columns": cols,
             "rows": rows,
             "total": 5,
+            "mode": "demo",
+            "synthetic": True,
         }
 
     # ── Node config (LLM) ──
@@ -363,18 +380,22 @@ class PipelineEngine:
         node = self._nodes.get(node_id)
         if node is None or node.pipeline_id != pl_id:
             raise KeyError(f"Node {node_id} not found in pipeline {pl_id}")
-        ts = time.time()
-        out_rows = [
-            {"id": i, "input": sample_input or {}, "output": f"result_{i}", "confidence": 0.9 - i * 0.1}
-            for i in range(3)
-        ]
+        pl = self._pipelines.get(pl_id)
+        if pl is None:
+            raise KeyError(f"Pipeline {pl_id} not found")
+        evidence, output_rows = self._execute(
+            pl,
+            node_id=node_id,
+            sample_input=sample_input or {},
+            execution_kind="trial",
+        )
         return {
             "pipeline_id": pl_id,
             "node_id": node_id,
-            "status": "ok",
-            "latency_ms": 120,
-            "output_rows": out_rows,
-            "ran_at": ts,
+            **evidence,
+            "latency_ms": evidence["duration_ms"],
+            "output_rows": output_rows,
+            "ran_at": evidence["finished_at"],
         }
 
     # ── Proposals ──
@@ -464,20 +485,28 @@ class PipelineEngine:
             return sc
 
     def run_schedule(self, sc_id: str) -> ScheduleRun:
+        sc = self._schedules.get(sc_id)
+        if sc is None:
+            raise KeyError(f"Schedule {sc_id} not found")
+        started = time.time()
+        if sc.status != "active":
+            evidence = self._unsupported_evidence(started, "SCHEDULE_NOT_ACTIVE")
+        else:
+            pl = self._pipelines.get(sc.pipeline_id)
+            if pl is None:
+                evidence = self._unsupported_evidence(started, "PIPELINE_NOT_FOUND")
+            else:
+                evidence, _ = self._execute(pl, execution_kind="schedule")
+        run = ScheduleRun(schedule_id=sc_id, **evidence)
         with _LOCK:
-            sc = self._schedules.get(sc_id)
-            if sc is None:
-                raise KeyError(f"Schedule {sc_id} not found")
-            run = ScheduleRun(
-                schedule_id=sc_id,
-                status="success",
-                started_at=time.time() - 30,
-                finished_at=time.time(),
-                duration_ms=30000,
-                rows_processed=1000,
-            )
             self._schedule_runs[run.id] = run
-            return run
+            if sc.pipeline_id:
+                self._add_history(
+                    sc.pipeline_id,
+                    "run",
+                    f"status={run.status} executor={run.executor_id or '-'} output={run.output_ref or '-'}",
+                )
+        return run
 
     def pause_schedule(self, sc_id: str) -> Schedule:
         with _LOCK:
@@ -538,6 +567,8 @@ class PipelineEngine:
             "rows": rows,
             "total": ds.row_count,
             "returned": len(rows),
+            "mode": "demo",
+            "synthetic": True,
         }
 
     # ── Dataset builds ──
@@ -564,6 +595,122 @@ class PipelineEngine:
             )
             self._health[hc.id] = hc
             return hc
+
+    # ── Honest execution ──
+    def register_executor(self, executor_id: str, executor: Callable[..., dict[str, Any]]) -> None:
+        if not executor_id.strip() or not callable(executor):
+            raise ValueError("executor_id and callable executor are required")
+        with _LOCK:
+            self._executors[executor_id] = executor
+
+    def unregister_executor(self, executor_id: str) -> None:
+        with _LOCK:
+            self._executors.pop(executor_id, None)
+
+    @staticmethod
+    def _unsupported_evidence(started_at: float, code: str) -> dict[str, Any]:
+        finished_at = time.time()
+        return {
+            "mode": "live",
+            "status": "unsupported",
+            "started_at": started_at,
+            "finished_at": finished_at,
+            "duration_ms": max(0, int((finished_at - started_at) * 1000)),
+            "executor_id": "",
+            "input_ref": "",
+            "output_ref": "",
+            "rows_read": 0,
+            "rows_written": 0,
+            "lineage_ref": "",
+            "quality_ref": "",
+            "error_code": code,
+            "error_message": "pipeline execution is unavailable",
+            "rows_processed": 0,
+            "error": "pipeline execution is unavailable",
+        }
+
+    @staticmethod
+    def _safe_error(_exc: Exception) -> str:
+        # Exception text can contain credentials or input data. Public contracts own
+        # recursive redaction; this boundary deliberately emits no exception text.
+        return "pipeline executor failed"
+
+    def _execute(
+        self,
+        pipeline: Pipeline,
+        *,
+        node_id: str | None = None,
+        sample_input: dict[str, Any] | None = None,
+        execution_kind: str,
+    ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+        started_at = time.time()
+        nodes = self.list_nodes(pipeline.id)
+        if any(n.node_type == "join" or n.config.get("sql") or n.config.get("custom_sql") for n in nodes):
+            return self._unsupported_evidence(started_at, "PIPELINE_NODE_UNSUPPORTED"), []
+        executor = self._executors.get(pipeline.executor_id)
+        if not pipeline.executor_id or executor is None:
+            return self._unsupported_evidence(started_at, "PIPELINE_EXECUTOR_MISSING"), []
+        try:
+            result = executor(
+                pipeline=pipeline,
+                nodes=nodes,
+                node_id=node_id,
+                sample_input=sample_input or {},
+                execution_kind=execution_kind,
+            )
+            if not isinstance(result, dict):
+                raise ValueError("executor result must be a mapping")
+            output_ref = str(result.get("output_ref") or "")
+            if not output_ref:
+                raise ValueError("executor success requires output_ref")
+            rows_read = int(result.get("rows_read", 0))
+            rows_written = int(result.get("rows_written", 0))
+            if rows_read < 0 or rows_written < 0:
+                raise ValueError("row counts must be non-negative")
+            finished_at = time.time()
+            evidence = {
+                "mode": "live",
+                "status": "succeeded",
+                "started_at": started_at,
+                "finished_at": finished_at,
+                "duration_ms": max(0, int((finished_at - started_at) * 1000)),
+                "executor_id": pipeline.executor_id,
+                "input_ref": str(result.get("input_ref") or ""),
+                "output_ref": output_ref,
+                "rows_read": rows_read,
+                "rows_written": rows_written,
+                "lineage_ref": str(result.get("lineage_ref") or ""),
+                "quality_ref": str(result.get("quality_ref") or ""),
+                "error_code": "",
+                "error_message": "",
+                "rows_processed": rows_written,
+                "error": "",
+            }
+            output_rows = result.get("output_rows") or []
+            if not isinstance(output_rows, list) or not all(isinstance(row, dict) for row in output_rows):
+                raise ValueError("output_rows must be a list of mappings")
+            return evidence, output_rows
+        except Exception as exc:
+            finished_at = time.time()
+            message = self._safe_error(exc)
+            return {
+                "mode": "live",
+                "status": "failed",
+                "started_at": started_at,
+                "finished_at": finished_at,
+                "duration_ms": max(0, int((finished_at - started_at) * 1000)),
+                "executor_id": pipeline.executor_id,
+                "input_ref": "",
+                "output_ref": "",
+                "rows_read": 0,
+                "rows_written": 0,
+                "lineage_ref": "",
+                "quality_ref": "",
+                "error_code": "PIPELINE_EXECUTOR_FAILED",
+                "error_message": message,
+                "rows_processed": 0,
+                "error": message,
+            }, []
 
     def get_latest_health(self, ds_id: str) -> HealthCheck | None:
         items = [h for h in self._health.values() if h.dataset_id == ds_id]
@@ -609,6 +756,7 @@ class PipelineEngine:
             self._builds.clear()
             self._health.clear()
             self._sync_configs.clear()
+            self._executors.clear()
 
 
 def get_engine() -> PipelineEngine:
