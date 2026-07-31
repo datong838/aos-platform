@@ -20,6 +20,7 @@ from aos_api.logging_facade import get_logger
 log = get_logger("aos-api.kms_crypto")
 
 _PREFIX = "enc:v1:"
+_STRICT_PREFIX = "enc:v2:"
 _VERSION = 1
 _NONCE_SIZE = 12  # GCM 推荐 96-bit nonce
 _KEY_SIZE = 32     # AES-256
@@ -147,3 +148,57 @@ def mask_key(api_key: str, visible_tail: int = 4) -> str:
     if len(api_key) <= visible_tail:
         return "*" * len(api_key)
     return f"...{api_key[-visible_tail:]}"
+
+
+class StrictCryptoError(RuntimeError):
+    """Strict credential encryption failure; callers must fail closed."""
+
+
+def _strict_master_key() -> bytes:
+    raw = (os.environ.get("AOS_KMS_MASTER_KEY") or "").strip()
+    if not raw:
+        raise StrictCryptoError("KMS_MASTER_KEY_REQUIRED")
+    try:
+        decoded = base64.b64decode(raw, validate=True)
+        if len(decoded) == _KEY_SIZE:
+            return decoded
+    except Exception:
+        pass
+    try:
+        decoded = bytes.fromhex(raw)
+        if len(decoded) == _KEY_SIZE:
+            return decoded
+    except ValueError:
+        pass
+    raise StrictCryptoError("KMS_MASTER_KEY_INVALID")
+
+
+def encrypt_strict(plaintext: str, *, aad: str) -> str:
+    if not plaintext or not aad:
+        raise StrictCryptoError("SECRET_AND_AAD_REQUIRED")
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+    nonce = secrets.token_bytes(_NONCE_SIZE)
+    ciphertext = AESGCM(_strict_master_key()).encrypt(
+        nonce, plaintext.encode("utf-8"), aad.encode("utf-8")
+    )
+    return _STRICT_PREFIX + base64.b64encode(nonce + ciphertext).decode("ascii")
+
+
+def decrypt_strict(token: str, *, aad: str) -> str:
+    if not token.startswith(_STRICT_PREFIX) or not aad:
+        raise StrictCryptoError("STRICT_CIPHERTEXT_REQUIRED")
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+    try:
+        raw = base64.b64decode(token[len(_STRICT_PREFIX):], validate=True)
+        if len(raw) < _NONCE_SIZE + 16:
+            raise ValueError("short payload")
+        plaintext = AESGCM(_strict_master_key()).decrypt(
+            raw[:_NONCE_SIZE], raw[_NONCE_SIZE:], aad.encode("utf-8")
+        )
+        return plaintext.decode("utf-8")
+    except StrictCryptoError:
+        raise
+    except Exception as exc:
+        raise StrictCryptoError("STRICT_DECRYPT_FAILED") from exc
