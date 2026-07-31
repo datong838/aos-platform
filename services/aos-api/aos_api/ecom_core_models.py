@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Any, Iterable
+from typing import Any, Iterable, Mapping
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -19,6 +20,7 @@ from aos_api.public_contracts import (
     ForwardEnumValue,
     Money,
     StableCursor,
+    ZonedInstant,
 )
 
 
@@ -121,6 +123,44 @@ class CoreObjectRecord(BaseModel):
     schema_version: int = Field(default=1, ge=1)
     properties: dict[str, Any] = Field(default_factory=dict)
 
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_public_property_contracts(cls, value: Any) -> Any:
+        if not isinstance(value, Mapping):
+            return value
+        data = dict(value)
+        properties = dict(data.get("properties") or {})
+        for field_name in _AMOUNT_PROPERTIES & properties.keys():
+            if "currency" not in properties:
+                continue
+            money_input: dict[str, Any] = {
+                "amount": properties[field_name],
+                "currency": properties.get("currency"),
+            }
+            if "currencyScale" in properties:
+                money_input["scale"] = properties["currencyScale"]
+            money = Money.model_validate(money_input)
+            properties[field_name] = money.model_dump(mode="json")["amount"]
+            properties["currency"] = money.currency
+            properties["currencyScale"] = money.scale
+        for field_name in tuple(properties):
+            if field_name.endswith("At") and not field_name.endswith("SourceTimezone"):
+                instant = ZonedInstant.parse(properties[field_name])
+                source_timezone_field = f"{field_name}SourceTimezone"
+                existing_source_timezone = properties.get(source_timezone_field)
+                properties[field_name] = instant.canonical_utc()
+                if (
+                    str(value.get("properties", {}).get(field_name, "")).strip()
+                    == instant.canonical_utc()
+                    and isinstance(existing_source_timezone, str)
+                    and re.fullmatch(r"Z|[+-]\d{4}", existing_source_timezone)
+                ):
+                    properties[source_timezone_field] = existing_source_timezone
+                else:
+                    properties[source_timezone_field] = instant.source_timezone
+        data["properties"] = properties
+        return data
+
     @field_validator("source_updated_at")
     @classmethod
     def validate_source_time(cls, value: datetime) -> datetime:
@@ -136,13 +176,6 @@ class CoreObjectRecord(BaseModel):
             missing = sorted(REQUIRED_PROPERTIES[self.object_type] - self.properties.keys())
             if missing:
                 raise ValueError(f"missing required properties for {self.object_type}: {missing}")
-        for field_name in _AMOUNT_PROPERTIES & self.properties.keys():
-            Money.model_validate(
-                {
-                    "amount": self.properties[field_name],
-                    "currency": self.properties.get("currency"),
-                }
-            )
         return self
 
     def payload_hash(self) -> str:
@@ -285,11 +318,31 @@ class BatchCommand(BaseModel):
 
     def request_hash(self) -> str:
         return deterministic_hash(
-            self.model_dump(mode="python", exclude={"idempotency_key"})
+            {
+                "scope": self.scope,
+                "expectedCheckpointVersion": self.expected_checkpoint_version,
+                "nextCheckpoint": self.next_checkpoint,
+                "objects": self.ordered_objects(),
+                "links": self.ordered_links(),
+            }
         )
 
     def ordered_objects(self) -> list[CoreObjectRecord]:
-        return sorted(self.objects, key=lambda record: record.cursor_key())
+        return sorted(
+            self.objects,
+            key=lambda record: (*record.cursor_key(), record.object_type),
+        )
+
+    def ordered_links(self) -> list[CoreLinkRecord]:
+        return sorted(
+            self.links,
+            key=lambda link: (
+                *link.cursor_key(),
+                link.link_type,
+                link.source.external_id,
+                link.target.external_id,
+            ),
+        )
 
 
 class BatchResult(BaseModel):

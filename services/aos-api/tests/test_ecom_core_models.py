@@ -95,6 +95,45 @@ def test_float_money_is_rejected_at_w1_boundary() -> None:
         record("ProductSku", "sku-1", properties=props)
 
 
+def test_money_is_normalized_and_half_even_quantized_before_hashing() -> None:
+    props = {
+        **VALID_PROPERTIES["ProductSku"],
+        "price": "12.345",
+        "currency": "cny",
+    }
+    item = record("ProductSku", "sku-1", properties=props)
+    assert item.properties["price"] == "12.34"
+    assert item.properties["currency"] == "CNY"
+    assert item.properties["currencyScale"] == 2
+
+
+def test_unknown_currency_requires_scale_and_business_time_preserves_source_zone() -> None:
+    without_scale = {
+        **VALID_PROPERTIES["ProductSku"],
+        "price": "1.2345",
+        "currency": "XYZ",
+    }
+    with pytest.raises(ValidationError, match="explicit scale"):
+        record("ProductSku", "sku-1", properties=without_scale)
+    item = record(
+        "ProductSku",
+        "sku-1",
+        properties={**without_scale, "currencyScale": 3},
+    )
+    assert item.properties["price"] == "1.234"
+    assert item.properties["updatedAt"] == "2026-07-31T10:00:00.000000Z"
+    assert item.properties["updatedAtSourceTimezone"] == "+0800"
+
+
+def test_naive_business_time_is_rejected() -> None:
+    props = {
+        **VALID_PROPERTIES["Order"],
+        "updatedAt": "2026-07-31T10:00:00",
+    }
+    with pytest.raises(ValidationError, match="time must include timezone"):
+        record("Order", "o-1", properties=props)
+
+
 def test_naive_source_time_is_rejected() -> None:
     with pytest.raises(ValidationError, match="timezone-aware"):
         record("Order", "o-1", source_updated_at=datetime(2026, 7, 31, 10, 0))
