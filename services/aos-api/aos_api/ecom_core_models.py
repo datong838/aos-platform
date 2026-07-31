@@ -172,6 +172,7 @@ class CoreLinkRecord(BaseModel):
     target_type: str
     target: ExternalIdentityKey
     source_updated_at: datetime
+    cursor_external_id: str = Field(min_length=1)
     is_deleted: bool = False
     properties: dict[str, Any] = Field(default_factory=dict)
 
@@ -179,6 +180,14 @@ class CoreLinkRecord(BaseModel):
     @classmethod
     def validate_source_time(cls, value: datetime) -> datetime:
         return _aware_utc(value)
+
+    @field_validator("cursor_external_id")
+    @classmethod
+    def validate_cursor_external_id(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("cursor_external_id must not be empty")
+        return cleaned
 
     @model_validator(mode="after")
     def validate_link(self) -> "CoreLinkRecord":
@@ -194,7 +203,12 @@ class CoreLinkRecord(BaseModel):
         return self
 
     def payload_hash(self) -> str:
-        return deterministic_hash(self)
+        return deterministic_hash(
+            self.model_dump(mode="python", exclude={"cursor_external_id"})
+        )
+
+    def cursor_key(self) -> tuple[datetime, str]:
+        return self.source_updated_at, self.cursor_external_id
 
 
 class SyncScope(BaseModel):
@@ -256,15 +270,18 @@ class BatchCommand(BaseModel):
             if _identity_scope(link.source) != expected or _identity_scope(link.target) != expected:
                 raise ValueError("link identity is outside the batch scope")
         batch_cursors = [record.cursor_key() for record in self.objects]
-        # Links do not own an upstream external-id cursor, but their source
-        # version must still be covered by the page checkpoint.  An empty
-        # tie-breaker makes the check conservative without inventing an ID.
-        batch_cursors.extend((link.source_updated_at, "") for link in self.links)
-        if batch_cursors:
-            max_cursor = max(batch_cursors)
-            if self.next_checkpoint.sort_key() < max_cursor:
-                raise ValueError("next checkpoint is behind the batch data")
+        batch_cursors.extend(link.cursor_key() for link in self.links)
+        if not batch_cursors:
+            raise ValueError("batch must contain at least one object or link")
+        if self.next_checkpoint.sort_key() < max(batch_cursors):
+            raise ValueError("next checkpoint is behind the batch data")
         return self
+
+    def max_data_cursor(self) -> tuple[datetime, str]:
+        return max(
+            [record.cursor_key() for record in self.objects]
+            + [link.cursor_key() for link in self.links]
+        )
 
     def request_hash(self) -> str:
         return deterministic_hash(

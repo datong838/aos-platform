@@ -93,18 +93,26 @@ def batch(
     *objects: CoreObjectRecord,
     key: str = "page-1",
     expected: int = 0,
-    at: datetime = NOW,
-    cursor_id: str = "z",
+    at: datetime | None = None,
+    cursor_id: str | None = None,
     batch_scope: SyncScope | None = None,
     links: list[CoreLinkRecord] | None = None,
 ) -> BatchCommand:
+    link_items = links or []
+    latest = max(
+        [record.cursor_key() for record in objects]
+        + [link.cursor_key() for link in link_items]
+    )
     return BatchCommand(
         scope=batch_scope or scope(),
         idempotency_key=key,
         expected_checkpoint_version=expected,
-        next_checkpoint=StableCursor(source_updated_at_utc=at, external_id=cursor_id),
+        next_checkpoint=StableCursor(
+            source_updated_at_utc=at or latest[0],
+            external_id=cursor_id or latest[1],
+        ),
         objects=list(objects),
-        links=links or [],
+        links=link_items,
     )
 
 
@@ -116,6 +124,7 @@ def shop_product_link(when: datetime = NOW, *, deleted: bool = False) -> CoreLin
         target_type="Product",
         target=ident("product-1"),
         source_updated_at=when,
+        cursor_external_id="shop-product-link",
         is_deleted=deleted,
     )
 
@@ -182,7 +191,7 @@ def test_older_source_version_is_ignored(store: EcomConsistencyStore) -> None:
     store.apply_batch(batch(obj("Product", "p-1"), key="new"))
     stale = obj("Product", "p-1", when=NOW - timedelta(minutes=1))
     result = store.apply_batch(
-        batch(stale, key="old", expected=1, at=NOW + timedelta(seconds=1))
+        batch(stale, key="old", expected=1, at=NOW, cursor_id="p-1")
     )
     assert result.objects_ignored == 1
     stored_time = store.get_object(ident("p-1"), "Product")["source_updated_at"]
@@ -223,6 +232,7 @@ def test_dangling_link_rolls_back_objects_checkpoint_and_receipt(store: EcomCons
         target_type="Product",
         target=ident("missing-product"),
         source_updated_at=NOW,
+        cursor_external_id="dangling-link",
     )
     command = batch(obj("Shop", "shop-object"), key="dangling", links=[dangling])
     with pytest.raises(EcomConsistencyError) as caught:
@@ -288,14 +298,65 @@ def test_checkpoint_cas_conflict_rolls_back_new_object(store: EcomConsistencySto
     assert store.get_object(ident("p-2"), "Product") is None
 
 
+def test_checkpoint_cannot_skip_past_last_stable_batch_cursor(
+    store: EcomConsistencyStore,
+) -> None:
+    command = batch(obj("Product", "p-1"), at=NOW, cursor_id="z")
+    with pytest.raises(EcomConsistencyError) as caught:
+        store.apply_batch(command)
+    assert caught.value.code == "CHECKPOINT_BOUNDARY_INVALID"
+    assert store.get_object(ident("p-1"), "Product") is None
+
+
+def test_cascade_tombstone_blocks_late_link_after_object_resurrection(
+    store: EcomConsistencyStore,
+) -> None:
+    store.apply_batch(
+        batch(
+            obj("Product", "product-1"),
+            obj("Shop", "shop-object"),
+            links=[shop_product_link()],
+        )
+    )
+    deleted_at = NOW + timedelta(minutes=10)
+    store.apply_batch(
+        batch(
+            obj("Product", "product-1", when=deleted_at, deleted=True),
+            key="delete-object",
+            expected=1,
+        )
+    )
+    resurrected_at = NOW + timedelta(minutes=20)
+    store.apply_batch(
+        batch(
+            obj("Product", "product-1", when=resurrected_at),
+            key="resurrect-object",
+            expected=2,
+        )
+    )
+    late_link = shop_product_link(NOW + timedelta(minutes=5))
+    result = store.apply_batch(
+        batch(
+            key="late-link",
+            expected=3,
+            at=resurrected_at,
+            cursor_id="product-1",
+            links=[late_link],
+        )
+    )
+    assert result.links_ignored == 1
+    assert store.list_links(org_id="org-a", workspace_id="workspace-a")[0]["deleted_at"] is not None
+
+
 def test_checkpoint_regression_is_rejected_without_writes(store: EcomConsistencyStore) -> None:
     first = batch(obj("Product", "p-1"), key="first")
     store.apply_batch(first)
     regression = batch(
+        obj("Product", "p-old", when=NOW - timedelta(seconds=1)),
         key="regress",
         expected=1,
         at=NOW - timedelta(seconds=1),
-        cursor_id="a",
+        cursor_id="p-old",
     )
     with pytest.raises(EcomConsistencyError) as caught:
         store.apply_batch(regression)
@@ -312,6 +373,7 @@ def test_batch_model_rejects_cross_tenant_link_before_transaction() -> None:
             target_type="OrderLine",
             target=ident("line-1", org="org-b"),
             source_updated_at=NOW,
+            cursor_external_id="cross-tenant-link",
         )
 
 

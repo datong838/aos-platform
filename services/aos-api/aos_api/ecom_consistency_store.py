@@ -381,6 +381,11 @@ class EcomConsistencyStore:
         }
         if existing:
             stored_time = _db_time(existing["source_updated_at"])
+            stored_deleted_at = existing["deleted_at"]
+            if stored_deleted_at is not None:
+                tombstone_time = _db_time(stored_deleted_at)
+                if link.source_updated_at <= tombstone_time:
+                    return "links_ignored"
             if link.source_updated_at < stored_time:
                 return "links_ignored"
             if link.source_updated_at == stored_time:
@@ -452,12 +457,18 @@ class EcomConsistencyStore:
         ).mappings().first()
         expected = command.expected_checkpoint_version
         next_cursor = command.next_checkpoint
+        data_cursor = command.max_data_cursor()
         now = _utcnow()
         if existing is None:
             if expected != 0:
                 raise EcomConsistencyError(
                     "CHECKPOINT_CAS_CONFLICT",
                     "checkpoint does not exist at the expected version",
+                )
+            if next_cursor.sort_key() != data_cursor:
+                raise EcomConsistencyError(
+                    "CHECKPOINT_BOUNDARY_INVALID",
+                    "initial checkpoint must equal the last stable batch cursor",
                 )
             conn.execute(
                 insert(ecom_sync_checkpoint).values(
@@ -489,6 +500,12 @@ class EcomConsistencyStore:
             raise EcomConsistencyError(
                 "CHECKPOINT_REGRESSION",
                 "checkpoint must not move backwards",
+            )
+        expected_cursor = max(current_cursor, data_cursor)
+        if next_cursor.sort_key() != expected_cursor:
+            raise EcomConsistencyError(
+                "CHECKPOINT_BOUNDARY_INVALID",
+                "checkpoint must equal the current or last stable batch cursor",
             )
         result = conn.execute(
             update(ecom_sync_checkpoint)

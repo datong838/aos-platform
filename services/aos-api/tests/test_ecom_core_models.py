@@ -115,6 +115,7 @@ def test_link_type_and_tenant_are_fail_closed() -> None:
             target_type="OrderLine",
             target=identity("line-1"),
             source_updated_at=NOW,
+            cursor_external_id="bad-shape-link",
         )
     with pytest.raises(ValidationError, match="cross-tenant"):
         CoreLinkRecord(
@@ -124,6 +125,7 @@ def test_link_type_and_tenant_are_fail_closed() -> None:
             target_type="OrderLine",
             target=identity("line-1", org_id="org-b"),
             source_updated_at=NOW,
+            cursor_external_id="cross-tenant-link",
         )
 
 
@@ -161,6 +163,7 @@ def test_batch_checkpoint_must_cover_link_source_version() -> None:
         target_type="Product",
         target=identity("product-1"),
         source_updated_at=NOW,
+        cursor_external_id="shop-product-link",
     )
     with pytest.raises(ValidationError, match="behind the batch data"):
         BatchCommand(
