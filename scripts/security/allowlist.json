@@ -1,0 +1,12 @@
+[
+  {
+    "rule": "PRIVATE_KEY",
+    "path": "scripts/security/scan_sensitive.py",
+    "reason": "The scanner source contains the literal detection pattern, never key material."
+  },
+  {
+    "rule": "CREDENTIAL_URL",
+    "path": "scripts/security/test_scan_sensitive.py",
+    "reason": "Synthetic invalid negative fixture used to prove credential URL detection."
+  }
+]
