@@ -20,6 +20,19 @@ describe("nav product sections alignment", () => {
     ]);
   });
 
+  it("keeps AIP subgroups in order", () => {
+    const subgroups = NAV_ITEMS.filter((i) => "subgroup" in i).map(
+      (i) => (i as { subgroup: string }).subgroup,
+    );
+    expect(subgroups).toEqual(["应用层", "逻辑编排层", "智能体", "评测与治理"]);
+  });
+
+  it("keeps page identities and paths unique", () => {
+    const pages = navPages();
+    expect(new Set(pages.map((page) => page.id)).size).toBe(pages.length);
+    expect(new Set(pages.map((page) => page.path)).size).toBe(pages.length);
+  });
+
   it("TWB.2 ops section collapses by default flag", () => {
     const ops = NAV_ITEMS.find(
       (i) => "section" in i && (i as { section: string }).section === "运维交付",
@@ -81,6 +94,11 @@ describe("nav product sections alignment", () => {
     }
     // no remaining DEMO s2 stubs except explicitly planned pages (223-plan W4)
     const remainingS2 = navPages().filter((p) => p.status === "s2");
+    expect(remainingS2.map((p) => p.path)).toEqual([
+      "/workshop/widget-registry",
+      "/workshop/variables",
+      "/workshop/styles",
+    ]);
     for (const p of remainingS2) {
       expect(PLANNED_S2.has(p.path), `unexpected s2 stub: ${p.path}`).toBe(true);
     }
