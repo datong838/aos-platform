@@ -381,11 +381,6 @@ class EcomConsistencyStore:
         }
         if existing:
             stored_time = _db_time(existing["source_updated_at"])
-            stored_deleted_at = existing["deleted_at"]
-            if stored_deleted_at is not None:
-                tombstone_time = _db_time(stored_deleted_at)
-                if link.source_updated_at <= tombstone_time:
-                    return "links_ignored"
             if link.source_updated_at < stored_time:
                 return "links_ignored"
             if link.source_updated_at == stored_time:
@@ -396,6 +391,11 @@ class EcomConsistencyStore:
                     "same link source version has a different payload",
                     details={"linkType": link.link_type},
                 )
+            stored_deleted_at = existing["deleted_at"]
+            if stored_deleted_at is not None:
+                tombstone_time = _db_time(stored_deleted_at)
+                if link.source_updated_at <= tombstone_time:
+                    return "links_ignored"
             conn.execute(update(ecom_link).where(clause).values(**values))
         else:
             conn.execute(
@@ -442,8 +442,11 @@ class EcomConsistencyStore:
                 and_(
                     ecom_link.c.org_id == identity.org_id,
                     ecom_link.c.workspace_id == identity.workspace_id,
-                    ecom_link.c.deleted_at.is_(None),
                     or_(source_match, target_match),
+                    or_(
+                        ecom_link.c.deleted_at.is_(None),
+                        ecom_link.c.deleted_at < deleted_at,
+                    ),
                 )
             )
             .values(deleted_at=deleted_at, updated_at=_utcnow())

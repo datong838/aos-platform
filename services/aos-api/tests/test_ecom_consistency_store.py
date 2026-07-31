@@ -348,6 +348,58 @@ def test_cascade_tombstone_blocks_late_link_after_object_resurrection(
     assert store.list_links(org_id="org-a", workspace_id="workspace-a")[0]["deleted_at"] is not None
 
 
+def test_object_tombstone_advances_an_older_explicit_link_tombstone(
+    store: EcomConsistencyStore,
+) -> None:
+    store.apply_batch(
+        batch(
+            obj("Product", "product-1"),
+            obj("Shop", "shop-object"),
+            links=[shop_product_link()],
+        )
+    )
+    link_deleted_at = NOW + timedelta(minutes=5)
+    store.apply_batch(
+        batch(
+            key="delete-link-first",
+            expected=1,
+            links=[shop_product_link(link_deleted_at, deleted=True)],
+        )
+    )
+    object_deleted_at = NOW + timedelta(minutes=10)
+    store.apply_batch(
+        batch(
+            obj("Product", "product-1", when=object_deleted_at, deleted=True),
+            key="delete-object-later",
+            expected=2,
+        )
+    )
+    stored_link = store.list_links(org_id="org-a", workspace_id="workspace-a")[0]
+    assert stored_link["deleted_at"].replace(
+        tzinfo=stored_link["deleted_at"].tzinfo or timezone.utc
+    ) == object_deleted_at
+
+    resurrected_at = NOW + timedelta(minutes=20)
+    store.apply_batch(
+        batch(
+            obj("Product", "product-1", when=resurrected_at),
+            key="resurrect-after-explicit-link-delete",
+            expected=3,
+        )
+    )
+    late_link = shop_product_link(NOW + timedelta(minutes=7))
+    result = store.apply_batch(
+        batch(
+            key="late-link-after-explicit-delete",
+            expected=4,
+            at=resurrected_at,
+            cursor_id="product-1",
+            links=[late_link],
+        )
+    )
+    assert result.links_ignored == 1
+
+
 def test_checkpoint_regression_is_rejected_without_writes(store: EcomConsistencyStore) -> None:
     first = batch(obj("Product", "p-1"), key="first")
     store.apply_batch(first)
