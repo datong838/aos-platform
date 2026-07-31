@@ -695,9 +695,13 @@ export function findNavPage(pathname: string): NavPage | undefined {
   const pages = navPages();
   const exact = pages.find((p) => p.path === pathname);
   if (exact) return exact;
-  // longest prefix match (e.g. nested)
+  // longest prefix match，且必须落在路径段边界（避免 /workshop 误匹配 /workshop/buddy）
   return pages
-    .filter((p) => p.path !== "/" && pathname.startsWith(p.path))
+    .filter(
+      (p) =>
+        p.path !== "/" &&
+        (pathname === p.path || pathname.startsWith(`${p.path}/`)),
+    )
     .sort((a, b) => b.path.length - a.path.length)[0];
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isNavPage, NAV_ITEMS, navPages } from "./nav";
+import { findNavPage, isNavPage, NAV_ITEMS, navPages } from "./nav";
 import { readAppearancePreference } from "./lib/appearance";
 import { S2_LIVE_PATHS, S2_LIVE_ROUTES } from "./pages/s2/routes";
 
@@ -91,5 +91,28 @@ describe("appearance default", () => {
   it("defaults to dark when unset", () => {
     const storage = { getItem: () => null };
     expect(readAppearancePreference(storage)).toBe("dark");
+  });
+});
+
+describe("findNavPage · 侧栏选中不误伤父路径", () => {
+  it("/workshop 只命中应用列表", () => {
+    expect(findNavPage("/workshop")?.id).toBe("workshop");
+  });
+
+  it("/workshop/buddy 命中 Buddy，不命中应用列表", () => {
+    const page = findNavPage("/workshop/buddy");
+    expect(page?.path).toBe("/workshop/buddy");
+    expect(page?.id).not.toBe("workshop");
+    expect(page?.label).toContain("Buddy");
+  });
+
+  it("/workshop/canvas 命中画布编辑，不命中应用列表", () => {
+    expect(findNavPage("/workshop/canvas")?.label).toBe("画布编辑");
+  });
+
+  it("嵌套详情走最长前缀（wiki）", () => {
+    const page = findNavPage("/ontology/wiki/abc/diff");
+    expect(page?.path.startsWith("/ontology/wiki")).toBe(true);
+    expect(page?.path).not.toBe("/");
   });
 });

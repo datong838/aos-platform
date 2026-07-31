@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { apiGet, apiPost } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
-import { BpArchitectureBar } from "../../components/bp/BpArchitectureBar";
+import {
+  BpArchitectureBar,
+  type BpArchLayerId,
+} from "../../components/bp/BpArchitectureBar";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -387,6 +390,7 @@ export function registeredRowsFromModels(models: CatalogModel[]): Array<{ model:
 // ── Component ──────────────────────────────────────────────────
 
 export function ModelCatalogPage() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState<TabId>("catalog");
   const [aipEnabled, setAipEnabled] = useState(true);
   const [orgRestricted, setOrgRestricted] = useState(true);
@@ -524,7 +528,14 @@ export function ModelCatalogPage() {
         )}
 
         <div className="mc-arch-bar">
-          <BpArchitectureBar activeLayer="L3" />
+          <BpArchitectureBar
+            activeLayer="L3"
+            onLayerClick={(id: BpArchLayerId) => {
+              if (id === "L1") navigate("/aip/model-providers");
+              else if (id === "L2") navigate("/aip/model-router");
+              else if (id === "AIP") navigate("/aip/studio");
+            }}
+          />
         </div>
 
         <div className="mc-stats-grid">

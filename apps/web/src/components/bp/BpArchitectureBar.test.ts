@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   getLayerStyle,
+  layerTagText,
   DEFAULT_ARCH_LAYERS,
   type BpArchLayerId,
 } from "./BpArchitectureBar";
@@ -15,6 +16,23 @@ describe("DEFAULT_ARCH_LAYERS", () => {
     for (const layer of DEFAULT_ARCH_LAYERS) {
       expect(layer.label.length).toBeGreaterThan(0);
     }
+  });
+
+  it("仅 L1/L2 带进入链接（对齐 catalog 视觉稿）", () => {
+    expect(DEFAULT_ARCH_LAYERS.find((l) => l.id === "L1")?.link).toBeTruthy();
+    expect(DEFAULT_ARCH_LAYERS.find((l) => l.id === "L2")?.link).toBeTruthy();
+    expect(DEFAULT_ARCH_LAYERS.find((l) => l.id === "L3")?.link).toBeFalsy();
+    expect(DEFAULT_ARCH_LAYERS.find((l) => l.id === "AIP")?.link).toBeFalsy();
+  });
+});
+
+describe("layerTagText", () => {
+  it("当前层追加 · 当前", () => {
+    expect(layerTagText("L3", "L3")).toBe("L3 · 当前");
+  });
+
+  it("非当前层仅返回 id", () => {
+    expect(layerTagText("L1", "L3")).toBe("L1");
   });
 });
 
@@ -46,9 +64,15 @@ describe("getLayerStyle", () => {
     expect(info.isActive).toBe(false);
   });
 
-  it("AIP 层也能正确高亮", () => {
+  it("AIP 层也能正确高亮，并带 is-aip", () => {
     const info = getLayerStyle("AIP", "AIP");
     expect(info.isActive).toBe(true);
+    expect(info.className).toContain("is-aip");
+  });
+
+  it("AIP 非活跃时仍带 is-aip", () => {
+    const info = getLayerStyle("AIP", "L3");
+    expect(info.className).toBe("bp-arch-layer is-aip");
   });
 
   it("返回的 id 与入参一致", () => {

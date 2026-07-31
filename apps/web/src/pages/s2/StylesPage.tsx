@@ -186,12 +186,25 @@ export function isValidHex(color: string): boolean {
   return /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(color.trim());
 }
 
+/**
+ * 归一化后端/前端 mode 字段。
+ * API 使用 `high-contrast`，前端 ThemeMode 使用 `contrast`。
+ */
+export function normalizeThemeMode(mode: string | undefined | null): ThemeMode {
+  if (mode === "dark") return "dark";
+  if (mode === "contrast" || mode === "high-contrast") return "contrast";
+  return "light";
+}
+
 /** 将 ThemeMode 映射为 UI 标签（纯函数，便于测试）*/
-export function modeLabel(mode: ThemeMode): string {
-  switch (mode) {
-    case "light": return "浅色";
-    case "dark": return "暗色";
-    case "contrast": return "高对比度";
+export function modeLabel(mode: ThemeMode | string | undefined | null): string {
+  switch (normalizeThemeMode(mode)) {
+    case "light":
+      return "浅色";
+    case "dark":
+      return "暗色";
+    case "contrast":
+      return "高对比度";
   }
 }
 
@@ -215,16 +228,22 @@ export function StylesPage() {
         const res = await apiGet<{ items?: Array<{ id: string; name?: string; mode?: ThemeMode; description?: string }> }>("/v1/themes");
         if (cancelled) return;
         if (res.items && res.items.length) {
-          const mapped: ThemePreset[] = res.items.map((it, idx) => ({
-            id: it.id,
-            name: it.name || `主题 ${idx + 1}`,
-            mode: it.mode || "light",
-            desc: it.description || "",
-            previewBg: configForMode(it.mode || "light").bg,
-            previewColor: configForMode(it.mode || "light").text,
-            isBuiltIn: false,
-          }));
+          const mapped: ThemePreset[] = res.items.map((it, idx) => {
+            const mode = normalizeThemeMode(it.mode);
+            const cfg = configForMode(mode);
+            return {
+              id: it.id,
+              name: it.name || `主题 ${idx + 1}`,
+              mode,
+              desc: it.description || "",
+              previewBg: cfg.bg,
+              previewColor: cfg.text,
+              isBuiltIn: Boolean((it as { isPreset?: boolean }).isPreset),
+            };
+          });
           setThemes(mapped);
+          setActiveThemeId(mapped[0].id);
+          setConfig(configForMode(mapped[0].mode));
         }
       } catch {
         /* 降级到 MOCK_THEMES（已为初始值）*/

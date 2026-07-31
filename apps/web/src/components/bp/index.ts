@@ -18,6 +18,7 @@ export {
   BpArchitectureBar,
   DEFAULT_ARCH_LAYERS,
   getLayerStyle,
+  layerTagText,
   type BpArchLayer,
   type BpArchLayerId,
   type LayerStyleInfo,

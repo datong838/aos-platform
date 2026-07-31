@@ -49,64 +49,74 @@ interface ExecutionResult {
 
 /* ── 节点调色板定义 ── */
 
-const PALETTE: { kind: BlockKind; title: string; desc: string; icon: string }[] = [
+const PALETTE: { kind: BlockKind; title: string; zh: string; desc: string; icon: string }[] = [
   {
     kind: "input",
-    title: "Input · 输入",
+    title: "Input",
+    zh: "输入",
     desc: "定义推理入口变量，如 objectId / objectType",
     icon: "📥",
   },
   {
     kind: "create_variable",
     title: "Create Variable",
+    zh: "创建变量",
     desc: "根据 DSL 表达式创建中间变量",
     icon: "📐",
   },
   {
     kind: "get_property",
     title: "Get Property",
+    zh: "获取属性",
     desc: "从 Ontology 对象读取属性值",
     icon: "🔗",
   },
   {
     kind: "use_llm",
     title: "Use LLM",
+    zh: "使用 LLM",
     desc: "调用大模型分析/生成/润色",
     icon: "🤖",
   },
   {
     kind: "use_tool",
     title: "Use Tool",
+    zh: "使用工具",
     desc: "调用注册的 Capability 工具",
     icon: "🔧",
   },
   {
     kind: "transform",
     title: "Transform",
+    zh: "数据变换",
     desc: "用 DSL 表达式变换数据",
     icon: "🔄",
   },
   {
     kind: "apply_action",
     title: "Apply Action",
+    zh: "应用动作",
     desc: "写回 Ontology（dryRun 不落库）",
     icon: "✏️",
   },
   {
     kind: "execute",
     title: "Execute",
+    zh: "执行",
     desc: "提交执行结果 / 触发通知",
     icon: "🚀",
   },
   {
     kind: "branch",
-    title: "Branch · 分支",
+    title: "Branch",
+    zh: "分支",
     desc: "条件分叉：根据表达式选择执行路径",
     icon: "🔀",
   },
   {
     kind: "handoff",
-    title: "Handoff · 汇聚",
+    title: "Handoff",
+    zh: "汇聚",
     desc: "汇聚多路上下文，输出决策摘要+产物+待确认项",
     icon: "🔗",
   },
@@ -208,7 +218,7 @@ export function LogicCanvasPage() {
               handoff_to: "draft_inbox" as const,
             }
           : {};
-    const b: BlockDef = { id: uid(), kind, label: def.title, config: defaultConfig };
+    const b: BlockDef = { id: uid(), kind, label: `${def.zh} (${def.title})`, config: defaultConfig };
     setBlocks((p) => [...p, b]);
     setSelectedId(b.id);
   }, []);
@@ -309,7 +319,7 @@ export function LogicCanvasPage() {
   return (
     <PageChrome
       title="AIP Logic 无代码编辑器"
-      lede="拖拽编排 10 种 Block · 实时预览 · CoT 调试 · dryRun 不落库 · Draft 审批写生产 · 分支+汇聚"
+      lede="10 种 Block 是构建智能体运行逻辑的「乐高积木」。每一个 Block 都代表一个原子操作，开发者通过拖拽、连接这些 Block，将零散的能力点拼装成一个自动化的工作流（Pipeline）"
     >
       {/* 工具栏 */}
       <div
@@ -354,7 +364,7 @@ export function LogicCanvasPage() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "220px 1fr 320px",
+          gridTemplateColumns: "140px 1fr 320px",
           gap: 12,
           minHeight: "calc(100vh - 200px)",
         }}
@@ -367,12 +377,13 @@ export function LogicCanvasPage() {
             borderRadius: 2,
             padding: 12,
             overflowY: "auto",
+            height: "fit-content",
           }}
         >
-          <h3 style={{ fontSize: "0.85rem", margin: "0 0 10px", color: "var(--aos-text)" }}>
-            Block 调色板
+          <h3 style={{ fontSize: "0.75rem", margin: "0 0 10px", color: "var(--aos-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            Block 组件库
           </h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {PALETTE.map((p) => (
               <button
                 key={p.kind}
@@ -380,24 +391,33 @@ export function LogicCanvasPage() {
                 draggable
                 onDragStart={() => onDragStart(p.kind, p.title)}
                 onClick={() => addBlock(p.kind)}
-                title={p.desc}
+                title={`${p.zh} (${p.title})\n作用：${p.desc}`}
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 8,
-                  padding: "8px 10px",
-                  border: `1px solid ${KIND_COLORS[p.kind]}30`,
-                  borderLeft: `3px solid ${KIND_COLORS[p.kind]}`,
-                  borderRadius: 2,
-                  background: "var(--aos-card)",
+                  gap: 4,
+                  padding: "4px 6px",
+                  border: "1px solid transparent",
+                  borderRadius: 4,
+                  background: "transparent",
                   cursor: "grab",
                   textAlign: "left",
-                  fontSize: "0.8rem",
-                  transition: "border-color 0.15s",
+                  fontSize: "0.7rem",
+                  transition: "all 0.15s",
+                  width: "100%",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "var(--aos-accent-light)";
+                  e.currentTarget.style.borderColor = "var(--aos-border)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.borderColor = "transparent";
                 }}
               >
-                <span style={{ fontSize: "1.1rem" }}>{p.icon}</span>
-                <span style={{ color: "var(--aos-text)", fontWeight: 500 }}>{p.title}</span>
+                <span style={{ fontSize: "0.75rem", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{p.icon}</span>
+                <span style={{ color: "var(--aos-text)", fontWeight: 500, flex: 1, textAlign: "left", whiteSpace: "nowrap", fontSize: "0.7rem" }}>{p.zh}</span>
+                <span style={{ color: "var(--aos-muted)", marginLeft: "auto", whiteSpace: "nowrap", fontSize: "0.65rem" }}>{p.title}</span>
               </button>
             ))}
           </div>

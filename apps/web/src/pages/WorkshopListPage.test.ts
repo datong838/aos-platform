@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   CATEGORIES,
+  CATALOG_APPS,
   MOCK_MODULES,
+  RECENT_DEFAULT_IDS,
   filterModules,
+  filterCatalog,
   sortByRecent,
   formatRelativeTime,
   getStatusMeta,
@@ -11,30 +14,14 @@ import {
 } from "./WorkshopListPage";
 
 describe("WorkshopListPage · CATEGORIES 分类定义", () => {
-  it("包含 10 个（全部 + 9 分类）", () => {
-    expect(CATEGORIES.length).toBe(10);
+  it("对齐视觉稿：全部 / 运营 / 分析 / AI 助手", () => {
+    expect(CATEGORIES.map((c) => c.id)).toEqual(["all", "ops", "analytics", "ai"]);
+    expect(CATEGORIES.map((c) => c.name)).toEqual(["全部", "运营", "分析", "AI 助手"]);
   });
 
   it("第一个是「全部」", () => {
     expect(CATEGORIES[0].id).toBe("all");
     expect(CATEGORIES[0].name).toBe("全部");
-  });
-
-  it("包含 9 个业务分类", () => {
-    const ids = CATEGORIES.map((c) => c.id);
-    expect(ids).toEqual(
-      expect.arrayContaining([
-        "order",
-        "risk",
-        "customer",
-        "asset",
-        "analytics",
-        "ticket",
-        "inventory",
-        "finance",
-        "marketing",
-      ]),
-    );
   });
 
   it("每个分类有 id/name/color", () => {
@@ -51,32 +38,45 @@ describe("WorkshopListPage · CATEGORIES 分类定义", () => {
   });
 });
 
-describe("WorkshopListPage · MOCK_MODULES", () => {
-  it("至少 9 个 mock 模块", () => {
-    expect(MOCK_MODULES.length).toBeGreaterThanOrEqual(9);
+describe("WorkshopListPage · CATALOG_APPS 视觉稿目录", () => {
+  it("包含视觉稿 9 张全部应用卡", () => {
+    expect(CATALOG_APPS).toHaveLength(9);
+    expect(CATALOG_APPS.map((a) => a.name)).toEqual([
+      "订单管理系统",
+      "风险告警管理",
+      "对象探索",
+      "Buddy · 智能助手",
+      "画布编辑",
+      "态势大屏",
+      "发布入口",
+      "模块接口",
+      "事件配置",
+    ]);
   });
 
-  it("覆盖全部 9 个分类", () => {
-    const cats = new Set(MOCK_MODULES.map((m) => m.category));
-    expect(cats.has("order")).toBe(true);
-    expect(cats.has("risk")).toBe(true);
-    expect(cats.has("customer")).toBe(true);
-    expect(cats.has("asset")).toBe(true);
-    expect(cats.has("analytics")).toBe(true);
-    expect(cats.has("ticket")).toBe(true);
-    expect(cats.has("inventory")).toBe(true);
-    expect(cats.has("finance")).toBe(true);
-    expect(cats.has("marketing")).toBe(true);
+  it("最近默认三卡对齐视觉稿", () => {
+    expect([...RECENT_DEFAULT_IDS]).toEqual(["app-orders", "app-inbox", "app-graph"]);
   });
 
-  it("每个模块有 id/name/status/category/lastOpenedAt", () => {
-    for (const m of MOCK_MODULES) {
-      expect(m.id.length).toBeGreaterThan(0);
-      expect(m.name.length).toBeGreaterThan(0);
-      expect(m.status.length).toBeGreaterThan(0);
-      expect(m.category!.length).toBeGreaterThan(0);
-      expect(m.lastOpenedAt!.length).toBeGreaterThan(0);
-    }
+  it("MOCK_MODULES 与目录等长", () => {
+    expect(MOCK_MODULES.length).toBe(CATALOG_APPS.length);
+  });
+});
+
+describe("WorkshopListPage · filterCatalog", () => {
+  it("all 返回全部", () => {
+    expect(filterCatalog(CATALOG_APPS, "all")).toHaveLength(9);
+  });
+
+  it("ai 仅 Buddy", () => {
+    const r = filterCatalog(CATALOG_APPS, "ai");
+    expect(r).toHaveLength(1);
+    expect(r[0].name).toBe("Buddy · 智能助手");
+  });
+
+  it("analytics 含对象探索", () => {
+    const r = filterCatalog(CATALOG_APPS, "analytics");
+    expect(r.some((a) => a.id === "app-graph")).toBe(true);
   });
 });
 
@@ -86,9 +86,9 @@ describe("WorkshopListPage · filterModules", () => {
     expect(result.length).toBe(MOCK_MODULES.length);
   });
 
-  it("category=order 只返回订单模块", () => {
-    const result = filterModules(MOCK_MODULES, "order", "");
-    expect(result.every((m) => m.category === "order")).toBe(true);
+  it("category=ops 只返回运营", () => {
+    const result = filterModules(MOCK_MODULES, "ops", "");
+    expect(result.every((m) => m.category === "ops")).toBe(true);
     expect(result.length).toBeGreaterThan(0);
   });
 
@@ -98,21 +98,9 @@ describe("WorkshopListPage · filterModules", () => {
     expect(result.every((m) => m.name.includes("订单") || m.description?.includes("订单"))).toBe(true);
   });
 
-  it("query + category 同时生效", () => {
-    const result = filterModules(MOCK_MODULES, "risk", "告警");
-    expect(result.length).toBeGreaterThan(0);
-    expect(result.every((m) => m.category === "risk")).toBe(true);
-  });
-
   it("无匹配返回空数组", () => {
     const result = filterModules(MOCK_MODULES, "all", "不存在的模块xyz");
     expect(result).toEqual([]);
-  });
-
-  it("query 大小写不敏感", () => {
-    const lower = filterModules(MOCK_MODULES, "all", "order");
-    const upper = filterModules(MOCK_MODULES, "all", "ORDER");
-    expect(lower.length).toBe(upper.length);
   });
 });
 
@@ -138,18 +126,6 @@ describe("WorkshopListPage · formatRelativeTime", () => {
     expect(formatRelativeTime(new Date(Date.now() - 30_000).toISOString())).toBe("刚刚");
   });
 
-  it("分钟级", () => {
-    expect(formatRelativeTime(new Date(Date.now() - 5 * 60_000).toISOString())).toContain("分钟前");
-  });
-
-  it("小时级", () => {
-    expect(formatRelativeTime(new Date(Date.now() - 3 * 3600_000).toISOString())).toContain("小时前");
-  });
-
-  it("天级", () => {
-    expect(formatRelativeTime(new Date(Date.now() - 3 * 86400_000).toISOString())).toContain("天前");
-  });
-
   it("undefined → —", () => {
     expect(formatRelativeTime(undefined)).toBe("—");
   });
@@ -161,44 +137,19 @@ describe("WorkshopListPage · getStatusMeta", () => {
     expect(meta.label).toBe("已发布");
     expect(meta.color).toBe("var(--aos-green-600)");
   });
-
-  it("draft → 草稿/黄色", () => {
-    const meta = getStatusMeta("draft");
-    expect(meta.label).toBe("草稿");
-    expect(meta.color).toBe("var(--aos-amber-600)");
-  });
-
-  it("disabled → 已禁用/红色", () => {
-    const meta = getStatusMeta("disabled");
-    expect(meta.label).toBe("已禁用");
-    expect(meta.color).toBe("var(--aos-red)");
-  });
 });
 
-describe("WorkshopListPage · getCategoryName", () => {
-  it("order → 订单", () => {
-    expect(getCategoryName("order")).toBe("订单");
+describe("WorkshopListPage · getCategoryName/Color", () => {
+  it("ops → 运营", () => {
+    expect(getCategoryName("ops")).toBe("运营");
   });
 
-  it("risk → 风控", () => {
-    expect(getCategoryName("risk")).toBe("风控");
+  it("ops → 蓝色系", () => {
+    expect(getCategoryColor("ops")).toBe("#2563EB");
   });
 
-  it("undefined → 未分类", () => {
+  it("undefined → 未分类 / 灰色", () => {
     expect(getCategoryName(undefined)).toBe("未分类");
-  });
-});
-
-describe("WorkshopListPage · getCategoryColor", () => {
-  it("order → 蓝色系", () => {
-    expect(getCategoryColor("order")).toBe("#2563EB");
-  });
-
-  it("risk → 红色系", () => {
-    expect(getCategoryColor("risk")).toBe("#DC2626");
-  });
-
-  it("undefined → 灰色默认", () => {
     expect(getCategoryColor(undefined)).toBe("var(--aos-text-secondary)");
   });
 });

@@ -104,7 +104,6 @@ export function displayFieldLabel(field: InterfaceField): string {
 export function ModuleInterfacePage() {
   const { data, err, reload } = useJsonGet<{ items: ModuleListItem[] }>("/v1/modules");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [runtimeSummary, setRuntimeSummary] = useState("");
   const [msg, setMsg] = useState("");
 
   const [ifaceName, setIfaceName] = useState("");
@@ -171,13 +170,6 @@ export function ModuleInterfacePage() {
     reload();
   }
 
-  async function openRuntime(id: string) {
-    const r = await apiGet<{ entryPath?: string; widgets?: string[] }>(
-      `/v1/modules/${encodeURIComponent(id)}/runtime`,
-    );
-    setRuntimeSummary(`runtime ${id} · entry=${r.entryPath} · widgets=${(r.widgets || []).join(",")}`);
-  }
-
   function updateField(id: string, patch: Partial<InterfaceField>) {
     setFields((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch } : f)));
     setDirty(true);
@@ -237,9 +229,28 @@ export function ModuleInterfacePage() {
   const inputCount = useMemo(() => fields.filter((f) => f.direction === "input").length, [fields]);
   const outputCount = useMemo(() => fields.filter((f) => f.direction === "output").length, [fields]);
 
+  const modules = data?.items || [];
+
   return (
     <S2Chrome title="Module 接口与嵌套 Loop" lede="定义子 Module 暴露的输入/输出接口，支持 Loop 嵌套渲染。">
       <BpToolbar>
+        <label className="mi-module-pick">
+          <span className="muted">编辑接口</span>
+          <select
+            className="mi-input"
+            data-testid="mi-module-select"
+            value={activeId || ""}
+            onChange={(e) => setSelectedId(e.target.value || null)}
+            disabled={!modules.length}
+          >
+            {!modules.length ? <option value="">暂无 Module</option> : null}
+            {modules.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+        </label>
         <button type="button" className="btn" onClick={() => void createMod().catch(console.error)}>
           创建 Module
         </button>
@@ -262,6 +273,9 @@ export function ModuleInterfacePage() {
         >
           {saving ? "保存中…" : dirty ? "保存接口 *" : "保存接口"}
         </button>
+        <Link to="/workshop" className="btn-nav">
+          应用列表 →
+        </Link>
         <Link to="/workshop/canvas" className="btn-nav">
           返回画布 →
         </Link>
@@ -450,34 +464,9 @@ export function ModuleInterfacePage() {
       />
 
       <BpBanner tone="info">
-        嵌套 Module 通过 Interface 契约解耦；Loop 内子 Module 可独立预览与测试。
+        嵌套 Module 通过 Interface 契约解耦；Loop 内子 Module 可独立预览与测试。打开业务应用请用{" "}
+        <Link to="/workshop">应用列表</Link>，本页只编辑接口契约。
       </BpBanner>
-
-      <div className="bp-ws-section-title" style={{ marginTop: "1rem" }}>
-        已注册 Module
-      </div>
-      <ul className="card-list">
-        {(data?.items || []).map((m) => (
-          <li key={m.id} className="card">
-            <button
-              type="button"
-              className={selected?.id === m.id ? "nav-link active" : "nav-link"}
-              onClick={() => setSelectedId(m.id)}
-            >
-              {m.name} <span className="muted">({m.id})</span>
-            </button>
-            <button
-              type="button"
-              className="btn"
-              style={{ marginLeft: 8 }}
-              onClick={() => void openRuntime(m.id)}
-            >
-              Runtime
-            </button>
-          </li>
-        ))}
-      </ul>
-      {runtimeSummary && <p className="aos-text">{runtimeSummary}</p>}
     </S2Chrome>
   );
 }

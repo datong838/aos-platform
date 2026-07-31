@@ -1,7 +1,17 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { apiGet, apiPost, apiPut } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
+import { CreateAgentWizard } from "./s2/CreateAgentWizard";
+import {
+  MATURITY_LEVEL_LABEL,
+  MOCK_MODELS,
+  parseModelsPayload,
+  type CatalogModel,
+  type MaturityLevel,
+} from "./s2/agentsCore";
+import { useJsonGet } from "./s2/shared";
+import type { AgentItem as WizardAgentItem } from "./s2/agentsCore";
 
 type AgentItem = {
   id: string;
@@ -174,9 +184,35 @@ function statusBadge(status: AgentItem["status"]) {
   return { label: "已停用", bg: "var(--aos-gray-100)", color: "var(--aos-text-secondary)" };
 }
 
+export function mapWizardAgentToStudio(agent: WizardAgentItem): AgentItem {
+  const level = (agent.level as MaturityLevel) || "L2";
+  const levelLabel = MATURITY_LEVEL_LABEL[level] ?? level;
+  return {
+    id: agent.id,
+    name: agent.name,
+    category:
+      agent.domain?.trim() ||
+      (agent.source === "plugin"
+        ? "插件市场"
+        : agent.source === "external"
+          ? "外部接入"
+          : "平台内创建"),
+    level,
+    levelLabel,
+    status: "draft",
+    toolCount: agent.tools?.length ?? 0,
+    iconBg: "var(--aos-indigo-bg)",
+    iconColor: "var(--aos-indigo-600)",
+    iconPath:
+      "M21 11.5a8.5 8.5 0 01-8.5 8.5H5l-3 3V11.5A8.5 8.5 0 0110.5 3h2A8.5 8.5 0 0121 11.5z",
+  };
+}
+
 export function StudioPage() {
   const [tab, setTab] = useState("prompt");
+  const [agents, setAgents] = useState<AgentItem[]>(AGENTS);
   const [activeId, setActiveId] = useState("repair-buddy");
+  const [showWizard, setShowWizard] = useState(false);
   const [systemPrompt, setSystemPrompt] = useState(() =>
     loadLocalPrompt("repair-buddy", DEFAULT_PROMPT),
   );
@@ -194,8 +230,31 @@ export function StudioPage() {
   const [promptSaving, setPromptSaving] = useState(false);
   const [toolsSaving, setToolsSaving] = useState(false);
 
-  const activeAgent = AGENTS.find((a) => a.id === activeId) || AGENTS[0];
+  const { data: modelsPayload } = useJsonGet<unknown>("/v1/aip/models");
+  const models: CatalogModel[] = useMemo(() => {
+    const parsed = parseModelsPayload(modelsPayload);
+    return parsed.length ? parsed : MOCK_MODELS;
+  }, [modelsPayload]);
+
+  const activeAgent = agents.find((a) => a.id === activeId) || agents[0];
   const selectedTools = enabledTools.length > 0 ? enabledTools : ["query.objects"];
+
+  function handleCreateAgent(agent: WizardAgentItem) {
+    const mapped = mapWizardAgentToStudio(agent);
+    setAgents((prev) => [mapped, ...prev]);
+    setActiveId(mapped.id);
+    setTab("prompt");
+    setShowWizard(false);
+    if (agent.prompt) {
+      saveLocalPrompt(mapped.id, agent.prompt);
+      setSystemPrompt(agent.prompt);
+    } else {
+      setSystemPrompt(DEFAULT_PROMPT);
+    }
+    setEnabledTools(DEFAULT_ENABLED_TOOLS);
+    setPromptSaveMsg(null);
+    setToolsSaveMsg(null);
+  }
 
   useEffect(() => {
     apiGet<{ defaultTextModel?: string }>("/v1/aip/models")
@@ -315,6 +374,8 @@ export function StudioPage() {
             <div style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)" }}>智能体列表</div>
             <button
               type="button"
+              data-testid="studio-btn-new-agent"
+              onClick={() => setShowWizard(true)}
               style={{
                 marginTop: 8,
                 width: "100%",
@@ -339,7 +400,7 @@ export function StudioPage() {
             </button>
           </div>
 
-          {AGENTS.map((a) => {
+          {agents.map((a) => {
             const active = a.id === activeId;
             const sb = statusBadge(a.status);
             return (
@@ -961,6 +1022,14 @@ export function StudioPage() {
           </div>
         </div>
       </div>
+
+      {showWizard ? (
+        <CreateAgentWizard
+          models={models}
+          onClose={() => setShowWizard(false)}
+          onCreate={handleCreateAgent}
+        />
+      ) : null}
     </PageChrome>
   );
 }

@@ -33,8 +33,8 @@ export type LayerStyleInfo = {
 export const DEFAULT_ARCH_LAYERS: BpArchLayer[] = [
   { id: "L1", label: "模型供应商", hint: "凭证管理", link: "进入 →" },
   { id: "L2", label: "模型路由", hint: "流量策略 · 熔断", link: "进入 →" },
-  { id: "L3", label: "模型目录", hint: "可发现 → 注册", link: "进入 →" },
-  { id: "AIP", label: "智能体调用", hint: "选模型 → 推理", link: "进入 →" },
+  { id: "L3", label: "模型目录", hint: "可发现 → 注册" },
+  { id: "AIP", label: "智能体调用", hint: "选模型 → 推理" },
 ];
 
 /**计算单个层的样式信息（纯函数，便于测试）*/
@@ -43,11 +43,25 @@ export function getLayerStyle(
   activeLayer?: BpArchLayerId | null,
 ): LayerStyleInfo {
   const isActive = activeLayer != null && activeLayer === layerId;
+  const classes = ["bp-arch-layer"];
+  if (isActive) classes.push("is-active");
+  if (layerId === "AIP") classes.push("is-aip");
   return {
     id: layerId,
     isActive,
-    className: isActive ? "bp-arch-layer is-active" : "bp-arch-layer",
+    className: classes.join(" "),
   };
+}
+
+/**层标签文案：当前层追加「· 当前」（对齐视觉稿）*/
+export function layerTagText(
+  layerId: BpArchLayerId,
+  activeLayer?: BpArchLayerId | null,
+): string {
+  if (activeLayer != null && activeLayer === layerId) {
+    return `${layerId} · 当前`;
+  }
+  return layerId;
 }
 
 /**箭头连接符（纯展示）*/
@@ -128,7 +142,9 @@ export function BpArchitectureBar({
                     : undefined
                 }
               >
-                <div className="bp-arch-layer-tag">{layer.id}</div>
+                <div className="bp-arch-layer-tag">
+                  {layerTagText(layer.id, activeLayer)}
+                </div>
                 <div className="bp-arch-layer-label">
                   {layer.icon ? (
                     <span className="bp-arch-layer-icon">{layer.icon}</span>

@@ -1,155 +1,169 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiGet, apiPost } from "../api/client";
+import { apiPost } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
-import { BpCard } from "../components/bp/BpCard";
-import { BpEmpty } from "../components/bp/BpEmpty";
 
 /* ============================================================================
- * 常量与类型（导出用于测试）
+ * 226 · 严格对齐 foundry/html/workshop.html
  * ========================================================================== */
 
-export type CategoryId =
-  | "all"
-  | "order"
-  | "risk"
-  | "customer"
-  | "asset"
-  | "analytics"
-  | "ticket"
-  | "inventory"
-  | "finance"
-  | "marketing";
+export type CategoryId = "all" | "ops" | "analytics" | "ai";
 
 export interface CategoryDef {
   id: CategoryId;
   name: string;
+  /** 兼容旧测试；筛选 UI 不再按色分色 */
   color: string;
 }
 
+/** 视觉稿筛选：全部 / 运营 / 分析 / AI 助手 */
 export const CATEGORIES: CategoryDef[] = [
   { id: "all", name: "全部", color: "#374151" },
-  { id: "order", name: "订单", color: "#2563EB" },
-  { id: "risk", name: "风控", color: "#DC2626" },
-  { id: "customer", name: "客户", color: "#7C3AED" },
-  { id: "asset", name: "资产", color: "#0891B2" },
+  { id: "ops", name: "运营", color: "#2563EB" },
   { id: "analytics", name: "分析", color: "#059669" },
-  { id: "ticket", name: "工单", color: "#D97706" },
-  { id: "inventory", name: "库存", color: "#4F46E5" },
-  { id: "finance", name: "财务", color: "#0D9488" },
-  { id: "marketing", name: "营销", color: "#DB2777" },
+  { id: "ai", name: "AI 助手", color: "#D97706" },
 ];
 
-export type ModuleStatus = "published" | "draft" | "disabled";
+export type AccentTone = "blue" | "purple" | "amber";
 
-export interface ModuleItem {
+export interface CatalogApp {
   id: string;
   name: string;
-  status: string;
-  description?: string;
-  entryPath?: string;
-  objectType?: string;
-  buddyBound?: boolean;
-  category?: string;
-  theme?: string;
-  lastOpenedAt?: string;
-  widgets?: string[];
+  eyebrow: string;
+  accent: AccentTone;
+  /** 最近区描述 */
+  recentDesc: string;
+  /** 全部区描述 */
+  allDesc: string;
+  category: Exclude<CategoryId, "all">;
+  entryPath: string;
+  canvasPath?: string;
+  /** 画布入口文案：编辑画布 / 进入编辑器 */
+  canvasLabel?: "edit" | "enter";
 }
 
-/** 当 API 不可用时的 fallback mock 数据 */
-export const MOCK_MODULES: ModuleItem[] = [
+/** 视觉稿「全部应用」9 卡（固定产品目录） */
+export const CATALOG_APPS: CatalogApp[] = [
   {
-    id: "mod-order-management",
+    id: "app-orders",
     name: "订单管理系统",
-    status: "published",
-    description: "统计卡片 · 订单列表 · 趋势图 · 详情面板",
-    category: "order",
-    lastOpenedAt: new Date(Date.now() - 2 * 3600_000).toISOString(),
+    eyebrow: "业务应用",
+    accent: "blue",
+    recentDesc: "统计卡片 · 订单列表 · 趋势图 · 详情面板",
+    allDesc: "Order Management Dashboard",
+    category: "ops",
     entryPath: "/workshop/orders",
   },
   {
-    id: "mod-risk-alert",
+    id: "app-inbox",
     name: "风险告警管理",
-    status: "published",
-    description: "筛选 · 风控告警表格 · 对象详情 · 活动日志",
-    category: "risk",
-    lastOpenedAt: new Date(Date.now() - 5 * 3600_000).toISOString(),
-    entryPath: "/workshop/module",
+    eyebrow: "风控 Inbox",
+    accent: "blue",
+    recentDesc: "筛选 · 风控告警表格 · 对象详情 · 活动日志",
+    allDesc: "Risk Alert Manager · 风控告警筛选 · 处置",
+    category: "ops",
+    entryPath: "/workshop/inbox",
   },
   {
-    id: "mod-customer-center",
-    name: "客户档案中心",
-    status: "published",
-    description: "客户列表 · 画像卡片 · 标签管理 · 跟进记录",
-    category: "customer",
-    lastOpenedAt: new Date(Date.now() - 26 * 3600_000).toISOString(),
-    entryPath: "/workshop/module",
-  },
-  {
-    id: "mod-asset-tracker",
-    name: "资产追踪看板",
-    status: "published",
-    description: "资产地图 · 实时位置 · 维护日历 · 折旧曲线",
-    category: "asset",
-    lastOpenedAt: new Date(Date.now() - 48 * 3600_000).toISOString(),
-    entryPath: "/workshop/module",
-  },
-  {
-    id: "mod-analytics-dashboard",
-    name: "经营分析仪表盘",
-    status: "published",
-    description: "KPI 卡片 · 趋势图 · 同环比 · 下钻分析",
+    id: "app-graph",
+    name: "对象探索",
+    eyebrow: "本体前端",
+    accent: "purple",
+    recentDesc: "对象实例 · 属性筛选 · 图表探索 · Actions",
+    allDesc: "Object Explorer · 对象实例 · 属性筛选",
     category: "analytics",
-    lastOpenedAt: new Date(Date.now() - 72 * 3600_000).toISOString(),
-    entryPath: "/workshop/module",
+    entryPath: "/workshop/graph",
   },
   {
-    id: "mod-ticket-system",
-    name: "工单处理系统",
-    status: "draft",
-    description: "工单列表 · SLA 计时 · 分派 · 处理流程",
-    category: "ticket",
-    lastOpenedAt: new Date(Date.now() - 96 * 3600_000).toISOString(),
-    entryPath: "/workshop/module",
+    id: "app-buddy",
+    name: "Buddy · 智能助手",
+    eyebrow: "智能嵌入",
+    accent: "amber",
+    recentDesc: "挂在任意模块侧栏 / 表旁",
+    allDesc: "挂在任意模块侧栏 / 表旁",
+    category: "ai",
+    entryPath: "/workshop/buddy",
   },
   {
-    id: "mod-inventory-check",
-    name: "库存盘点看板",
-    status: "published",
-    description: "仓库视图 · 盘点任务 · 差异处理 · 入出库记录",
-    category: "inventory",
-    lastOpenedAt: new Date(Date.now() - 120 * 3600_000).toISOString(),
-    entryPath: "/workshop/module",
+    id: "app-canvas",
+    name: "画布编辑",
+    eyebrow: "应用构建",
+    accent: "blue",
+    recentDesc: "Slate 画布 · 微件 · 布局",
+    allDesc: "Slate 画布 · 微件 · 布局",
+    category: "ops",
+    entryPath: "/workshop/canvas",
+    canvasPath: "/workshop/canvas",
+    canvasLabel: "enter",
   },
   {
-    id: "mod-finance-reconcile",
-    name: "财务对账系统",
-    status: "published",
-    description: "流水匹配 · 差异标记 · 凭证生成 · 月度报表",
-    category: "finance",
-    lastOpenedAt: new Date(Date.now() - 144 * 3600_000).toISOString(),
-    entryPath: "/workshop/module",
+    id: "app-cop",
+    name: "态势大屏",
+    eyebrow: "态势感知",
+    accent: "blue",
+    recentDesc: "COP 大屏 · 实时监控",
+    allDesc: "COP 大屏 · 实时监控",
+    category: "ops",
+    entryPath: "/workshop/cop",
   },
   {
-    id: "mod-marketing-campaign",
-    name: "营销活动管理",
-    status: "disabled",
-    description: "活动策划 · 渠道管理 · 效果分析 · A/B 测试",
-    category: "marketing",
-    lastOpenedAt: new Date(Date.now() - 168 * 3600_000).toISOString(),
-    entryPath: "/workshop/module",
+    id: "app-publish",
+    name: "发布入口",
+    eyebrow: "发布管理",
+    accent: "blue",
+    recentDesc: "版本 · 分支 · 审批",
+    allDesc: "版本 · 分支 · 审批",
+    category: "ops",
+    entryPath: "/workshop/publish",
+  },
+  {
+    id: "app-iface",
+    name: "模块接口",
+    eyebrow: "系统集成",
+    accent: "blue",
+    recentDesc: "API · 变量 · 事件",
+    allDesc: "API · 变量 · 事件",
+    category: "ops",
+    entryPath: "/workshop/module-interface",
+  },
+  {
+    id: "app-events",
+    name: "事件配置",
+    eyebrow: "自动化",
+    accent: "blue",
+    recentDesc: "触发器 · 动作 · 订阅",
+    allDesc: "触发器 · 动作 · 订阅",
+    category: "ops",
+    entryPath: "/workshop/events",
   },
 ];
 
+/** 视觉稿「最近使用」默认三卡 */
+export const RECENT_DEFAULT_IDS = ["app-orders", "app-inbox", "app-graph"] as const;
+
+/** 兼容旧测试命名 */
+export const MOCK_MODULES = CATALOG_APPS.map((a, i) => ({
+  id: a.id,
+  name: a.name,
+  status: "published" as const,
+  description: a.allDesc,
+  category: a.category,
+  lastOpenedAt: new Date(Date.now() - (i + 1) * 3600_000).toISOString(),
+  entryPath: a.entryPath,
+}));
+
+export type ModuleItem = (typeof MOCK_MODULES)[number];
+export type ModuleStatus = "published" | "draft" | "disabled";
+
 /* ============================================================================
- * 纯函数（导出用于测试）
+ * 纯函数
  * ========================================================================== */
 
 export function filterModules(
-  items: ModuleItem[],
+  items: { category?: string; name: string; description?: string }[],
   category: CategoryId,
   query: string,
-): ModuleItem[] {
+) {
   const q = query.trim().toLowerCase();
   return items.filter((m) => {
     if (category !== "all" && m.category !== category) return false;
@@ -160,7 +174,12 @@ export function filterModules(
   });
 }
 
-export function sortByRecent(items: ModuleItem[]): ModuleItem[] {
+export function filterCatalog(apps: CatalogApp[], category: CategoryId): CatalogApp[] {
+  if (category === "all") return apps;
+  return apps.filter((a) => a.category === category);
+}
+
+export function sortByRecent<T extends { lastOpenedAt?: string }>(items: T[]): T[] {
   return [...items].sort((a, b) => {
     const aTime = a.lastOpenedAt ? new Date(a.lastOpenedAt).getTime() : 0;
     const bTime = b.lastOpenedAt ? new Date(b.lastOpenedAt).getTime() : 0;
@@ -198,166 +217,80 @@ export function getCategoryColor(category: string | undefined): string {
 }
 
 /* ============================================================================
- * 页面组件
+ * Page
  * ========================================================================== */
 
 export function WorkshopListPage() {
-  const [items, setItems] = useState<ModuleItem[]>([]);
-  const [err, setErr] = useState<string | null>(null);
   const [filter, setFilter] = useState<CategoryId>("all");
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    apiGet<{ items: ModuleItem[] }>("/v1/modules")
-      .then((j) => {
-        setItems(j.items?.length ? j.items : MOCK_MODULES);
-        setLoading(false);
-      })
-      .catch(() => {
-        // API 不可用时使用 mock 数据
-        setItems(MOCK_MODULES);
-        setErr(null);
-        setLoading(false);
-      });
-  }, []);
+  const recentApps = useMemo(
+    () =>
+      RECENT_DEFAULT_IDS.map((id) => CATALOG_APPS.find((a) => a.id === id)!).filter(Boolean),
+    [],
+  );
 
-  async function handleTouch(moduleId: string) {
+  const filteredApps = useMemo(() => filterCatalog(CATALOG_APPS, filter), [filter]);
+
+  async function handleTouch(id: string) {
     try {
-      await apiPost(`/v1/modules/${moduleId}/touch`, {});
+      await apiPost(`/v1/modules/${id}/touch`, {});
     } catch {
-      // ignore
+      /* 目录卡可能无对应 meta_module · 忽略 */
     }
   }
 
-  const sortedItems = useMemo(() => sortByRecent(items), [items]);
-
-  const recentItems = useMemo(() => sortedItems.slice(0, 5), [sortedItems]);
-
-  const filteredItems = useMemo(
-    () => filterModules(sortedItems, filter, ""),
-    [sortedItems, filter],
-  );
-
-  const getEntryPath = (m: ModuleItem) => {
-    if (m.id === "mod-order-management") return "/workshop/orders";
-    if (m.id === "mod-ops-inbox") return "/workshop/inbox";
-    if (m.id === "mod-cop-dashboard") return "/workshop/cop";
-    if (m.id === "mod-buddy-assist") return "/workshop/buddy";
-    return m.entryPath || "/workshop/inbox";
-  };
-
   return (
-    <PageChrome title="工作台 · 应用列表" lede="按业务场景打开模块。点击卡片进入画布编辑。">
-      {/* 226 续修 G4：去掉双标题 + 失效 Tailwind 顶栏；卡片网格保持 inline */}
+    <PageChrome hideHeader>
       <div className="wl-page">
-        <div className="wl-toolbar">
+        <div className="wl-head">
+          <div className="wl-head-text">
+            <h1 className="wl-head-title">应用列表</h1>
+            <p className="wl-head-lede">
+              按业务场景打开模块。风险告警管理、对象探索、智能助手等都是从这里打开的模块，不是并列产品。
+            </p>
+          </div>
           <Link to="/workshop/create" data-testid="btn-new-module" className="wl-btn-new">
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 5v14M5 12h14" strokeLinecap="round" />
             </svg>
-            新建
+            新建 Module
           </Link>
         </div>
 
-        {/* 最近使用区 — 横滑卡片 */}
-        <BpCard title="最近使用" subtitle="最近打开的 5 个模块" padding="md">
-          {recentItems.length > 0 ? (
-            <div
-              style={{
-                display: "flex",
-                gap: 12,
-                overflowX: "auto",
-                paddingBottom: 4,
-              }}
-              data-testid="recent-scroll"
-            >
-              {recentItems.map((m) => {
-                const entryPath = getEntryPath(m);
-                const catColor = getCategoryColor(m.category);
-                const catName = getCategoryName(m.category);
-                return (
-                  <Link
-                    key={m.id}
-                    to={entryPath}
-                    onClick={() => void handleTouch(m.id)}
-                    data-testid={`recent-card-${m.id}`}
-                    style={{
-                      flex: "0 0 200px",
-                      maxWidth: 200,
-                      border: "1px solid var(--aos-border)",
-                      borderRadius: 2,
-                      padding: 12,
-                      background: "var(--aos-surface)",
-                      cursor: "pointer",
-                      transition: "box-shadow 0.15s, border-color 0.15s",
-                      textDecoration: "none",
-                      display: "block",
-                    }}
-                    className="wl-recent-card"
-                  >
-                    {/* 缩略图 */}
-                    <div
-                      style={{
-                        width: "100%",
-                        height: 60,
-                        borderRadius: 4,
-                        background: `linear-gradient(135deg, ${catColor}25, ${catColor}08)`,
-                        marginBottom: 8,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        border: `1px solid ${catColor}20`,
-                      }}
-                    >
-                      <span style={{ fontSize: 11, fontWeight: 600, color: catColor }}>
-                        {m.name.slice(0, 2)}
-                      </span>
-                    </div>
-                    {/* 分类标签 */}
-                    <div style={{ marginBottom: 4 }}>
-                      <span
-                        style={{
-                          fontSize: 10,
-                          padding: "1px 6px",
-                          borderRadius: 3,
-                          background: `${catColor}15`,
-                          color: catColor,
-                          fontWeight: 500,
-                        }}
-                      >
-                        {catName}
-                      </span>
-                    </div>
-                    {/* 名称 */}
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                        color: "var(--aos-text)",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {m.name}
-                    </div>
-                    {/* 最后打开时间 */}
-                    <div style={{ fontSize: 10, color: "var(--aos-faint)", marginTop: 4 }}>
-                      {formatRelativeTime(m.lastOpenedAt)}
-                    </div>
+        {/* 最近使用 */}
+        <section className="wl-panel" data-testid="recent-section">
+          <div className="wl-panel-head">
+            <h2 className="wl-panel-title">最近使用</h2>
+            <span className="wl-panel-meta">按打开时间排序</span>
+          </div>
+          <div className="wl-grid" data-testid="recent-scroll">
+            {recentApps.map((app) => (
+              <article key={app.id} className="wl-mod-card" data-testid={`recent-card-${app.id}`}>
+                <Link
+                  to={app.entryPath}
+                  className="wl-mod-main"
+                  onClick={() => void handleTouch(app.id)}
+                >
+                  <div className={`wl-mod-eyebrow is-${app.accent}`}>{app.eyebrow}</div>
+                  <div className={`wl-mod-title is-${app.accent}`}>{app.name}</div>
+                  <p className="wl-mod-desc">{app.recentDesc}</p>
+                </Link>
+                <div className="wl-mod-actions">
+                  <Link to={app.entryPath} onClick={() => void handleTouch(app.id)}>
+                    ▶ 打开运行态
                   </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <BpEmpty title="暂无最近使用的模块" description="打开任意模块后会出现在这里" />
-          )}
-        </BpCard>
+                  <span className="wl-mod-sep">·</span>
+                  <Link to={app.canvasPath || "/workshop/canvas"}>✏ 编辑画布 →</Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
 
-        {/* 全部应用区 */}
-        <BpCard
-          title="全部应用"
-          actions={
+        {/* 全部应用 */}
+        <section className="wl-panel" data-testid="all-section">
+          <div className="wl-panel-head">
+            <h2 className="wl-panel-title">全部应用</h2>
             <div className="wl-cat-row" data-testid="category-filters">
               {CATEGORIES.map((cat) => (
                 <button
@@ -367,161 +300,37 @@ export function WorkshopListPage() {
                   className={filter === cat.id ? "wl-cat-btn is-active" : "wl-cat-btn"}
                   onClick={() => setFilter(cat.id)}
                   aria-pressed={filter === cat.id}
-                  style={
-                    filter === cat.id
-                      ? {
-                          background: `${cat.color}15`,
-                          color: cat.color,
-                          borderColor: `${cat.color}40`,
-                        }
-                      : undefined
-                  }
                 >
                   {cat.name}
                 </button>
               ))}
-              <span className="wl-cat-count">
-                {filteredItems.length} / {items.length}
-              </span>
             </div>
-          }
-          padding="md"
-        >
-          {!loading && filteredItems.length > 0 ? (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-                gap: 12,
-              }}
-              data-testid="app-grid"
-            >
-              {filteredItems.map((m) => {
-                const entryPath = getEntryPath(m);
-                const catColor = getCategoryColor(m.category);
-                const catName = getCategoryName(m.category);
-                const statusMeta = getStatusMeta(m.status);
-                return (
-                  <div
-                    key={m.id}
-                    data-testid={`app-card-${m.id}`}
-                    style={{
-                      border: "1px solid var(--aos-border)",
-                      borderRadius: 2,
-                      padding: 14,
-                      background: "var(--aos-surface)",
-                      transition: "box-shadow 0.15s, border-color 0.15s",
-                    }}
-                    className="wl-app-card"
-                  >
-                    <Link
-                      to={entryPath}
-                      onClick={() => void handleTouch(m.id)}
-                      style={{ textDecoration: "none", display: "block" }}
-                    >
-                      {/* 缩略图 */}
-                      <div
-                        style={{
-                          width: "100%",
-                          height: 64,
-                          borderRadius: 2,
-                          background: `linear-gradient(135deg, ${catColor}20, ${catColor}05)`,
-                          marginBottom: 10,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          border: `1px solid ${catColor}15`,
-                        }}
-                      >
-                        <span style={{ fontSize: 13, fontWeight: 700, color: catColor }}>
-                          {m.name.slice(0, 2)}
-                        </span>
-                      </div>
-                      {/* 分类 + 状态 */}
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                        <span
-                          style={{
-                            fontSize: 10,
-                            padding: "1px 6px",
-                            borderRadius: 3,
-                            background: `${catColor}15`,
-                            color: catColor,
-                            fontWeight: 500,
-                          }}
-                        >
-                          {catName}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: 10,
-                            fontWeight: 500,
-                            padding: "1px 6px",
-                            borderRadius: 3,
-                            background: statusMeta.bg,
-                            color: statusMeta.color,
-                          }}
-                        >
-                          {statusMeta.label}
-                        </span>
-                      </div>
-                      {/* 名称 */}
-                      <div
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: "var(--aos-text)",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {m.name}
-                      </div>
-                      {/* 描述 */}
-                      <p style={{ fontSize: 11, color: "var(--aos-text-secondary)", marginTop: 4, lineHeight: 1.4 }}>
-                        {m.description || "—"}
-                      </p>
-                      {/* 最后打开时间 */}
-                      <div style={{ fontSize: 10, color: "var(--aos-faint)", marginTop: 8 }}>
-                        最后打开：{formatRelativeTime(m.lastOpenedAt)}
-                      </div>
+          </div>
+          <div className="wl-grid" data-testid="app-grid">
+            {filteredApps.map((app) => (
+              <article key={app.id} className="wl-mod-card" data-testid={`app-card-${app.id}`}>
+                <Link
+                  to={app.entryPath}
+                  className="wl-mod-main"
+                  onClick={() => void handleTouch(app.id)}
+                >
+                  <div className={`wl-mod-eyebrow is-${app.accent}`}>{app.eyebrow}</div>
+                  <div className={`wl-mod-title is-${app.accent}`}>{app.name}</div>
+                  <p className="wl-mod-desc">{app.allDesc}</p>
+                </Link>
+                <div className="wl-mod-actions">
+                  {app.canvasLabel === "enter" ? (
+                    <Link to={app.entryPath} className="wl-mod-enter">
+                      ▶ 进入编辑器
                     </Link>
-                    {/* 编辑入口 */}
-                    <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--aos-divider)" }}>
-                      <Link
-                        to="/workshop/canvas"
-                        className="wl-card-link"
-                        style={{ color: "var(--aos-accent)", textDecoration: "none", fontSize: 10 }}
-                      >
-                        ✏ 编辑画布 →
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : loading ? (
-            <div style={{ textAlign: "center", padding: 24, color: "var(--aos-faint)" }}>加载中...</div>
-          ) : (
-            <BpEmpty
-              title={items.length === 0 ? "暂无应用" : "无匹配结果"}
-              description={
-                items.length === 0
-                  ? "点「+ 新建」开始创建第一个应用"
-                  : "尝试调整分类筛选条件"
-              }
-              action={
-                items.length === 0 ? (
-                  <Link to="/workshop/create" className="btn">
-                    + 新建
-                  </Link>
-                ) : undefined
-              }
-            />
-          )}
-        </BpCard>
-
-        {err && <p className="error">{err}</p>}
+                  ) : (
+                    <Link to={app.canvasPath || "/workshop/canvas"}>✏ 编辑画布 →</Link>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
       </div>
     </PageChrome>
   );

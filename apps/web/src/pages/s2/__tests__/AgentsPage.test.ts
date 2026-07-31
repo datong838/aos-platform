@@ -25,6 +25,7 @@ import {
   // 向导校验
   validateStep1,
   validateStep2,
+  validateStep3,
   canCreateAgent,
   draftToAgent,
   // 格式化
@@ -400,10 +401,15 @@ describe("Phase 2 · renderPrompt", () => {
 const VALID_DRAFT: WizardDraft = {
   name: "测试助手",
   description: "测试",
-  icon: "💬",
+  icon: "chat",
+  domain: "设备运维",
   source: "platform",
   modelId: "glm-4-plus",
   prompt: "你是测试助手。",
+  ontology: ["Order", "Device"],
+  level: "L2",
+  guardNoInvent: true,
+  guardAutoDraft: true,
 };
 
 describe("Phase 2 · validateStep1", () => {
@@ -440,6 +446,12 @@ describe("Phase 2 · validateStep1", () => {
       validateStep1({ ...VALID_DRAFT, icon: "" }),
     ).toContain("请选择一个图标");
   });
+
+  it("未选业务域报错", () => {
+    expect(
+      validateStep1({ ...VALID_DRAFT, domain: "" }),
+    ).toContain("请选择业务域");
+  });
 });
 
 describe("Phase 2 · validateStep2", () => {
@@ -463,6 +475,18 @@ describe("Phase 2 · validateStep2", () => {
     expect(
       validateStep2({ ...VALID_DRAFT, prompt: "     " }),
     ).toContain("系统提示词至少 5 个字符");
+  });
+});
+
+describe("Phase 2 · validateStep3", () => {
+  it("合法 draft 无错误", () => {
+    expect(validateStep3(VALID_DRAFT)).toEqual([]);
+  });
+
+  it("未选成熟度报错", () => {
+    expect(
+      validateStep3({ ...VALID_DRAFT, level: "" as WizardDraft["level"] }),
+    ).toContain("请选择成熟度等级");
   });
 });
 
@@ -493,6 +517,8 @@ describe("Phase 2 · draftToAgent", () => {
     expect(a.calls).toBe(0);
     expect(a.tools).toEqual([]);
     expect(a.source).toBe("platform");
+    expect(a.domain).toBe("设备运维");
+    expect(a.level).toBe("L2");
   });
 
   it("description 被 trim", () => {

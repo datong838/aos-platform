@@ -11,6 +11,7 @@ import {
   buildCssVars,
   isValidHex,
   modeLabel,
+  normalizeThemeMode,
 } from "./StylesPage";
 
 describe("StylesPage · MOCK_THEMES 预设主题完整性", () => {
@@ -145,6 +146,25 @@ describe("StylesPage · modeLabel 标签映射", () => {
   });
   it("contrast → 高对比度", () => {
     expect(modeLabel("contrast")).toBe("高对比度");
+  });
+  it("API high-contrast → 高对比度（不抛 undefined）", () => {
+    expect(modeLabel("high-contrast")).toBe("高对比度");
+    expect(modeLabel("high-contrast").slice(0, 1)).toBe("高");
+  });
+  it("未知/空 mode 降级为浅色", () => {
+    expect(modeLabel(undefined)).toBe("浅色");
+    expect(modeLabel("weird")).toBe("浅色");
+  });
+});
+
+describe("StylesPage · normalizeThemeMode", () => {
+  it("映射 API high-contrast → contrast", () => {
+    expect(normalizeThemeMode("high-contrast")).toBe("contrast");
+  });
+  it("保留 light/dark/contrast", () => {
+    expect(normalizeThemeMode("light")).toBe("light");
+    expect(normalizeThemeMode("dark")).toBe("dark");
+    expect(normalizeThemeMode("contrast")).toBe("contrast");
   });
 });
 

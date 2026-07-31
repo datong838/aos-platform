@@ -367,10 +367,10 @@ export function AppShell() {
         to={item.path}
         data-nav-id={item.id}
         data-nav-status={item.status}
-        className={({ isActive }) =>
-          isActive ? "aos-nav-link is-active" : "aos-nav-link"
+        end
+        className={() =>
+          active?.id === item.id ? "aos-nav-link is-active" : "aos-nav-link"
         }
-        end={item.path === "/"}
       >
         <NavIcon name={item.icon} />
         <span className="aos-nav-label">{item.label}</span>
@@ -418,7 +418,7 @@ export function AppShell() {
     }
 
     return nodes;
-  }, [collapsedSections, toggleSection]);
+  }, [collapsedSections, toggleSection, active?.id]);
 
   return (
     <div className="p-app">

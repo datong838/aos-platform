@@ -281,14 +281,15 @@ export function BpIndexTile({
   to: string;
   eyebrow: string;
   title: string;
-  desc: string;
+  /** 可选；概览 AIP/本体等卡对齐视觉稿时可省略 */
+  desc?: string;
   accent?: "sky" | "amber" | "violet" | "cyan" | "emerald" | "indigo";
 }) {
   return (
     <Link to={to} className={`bp-index-tile bp-index-accent-${accent || "sky"}`}>
       <div className="bp-index-eyebrow">{eyebrow}</div>
       <div className="bp-index-title">{title}</div>
-      <p className="bp-index-desc">{desc}</p>
+      {desc ? <p className="bp-index-desc">{desc}</p> : null}
     </Link>
   );
 }

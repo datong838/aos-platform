@@ -9,7 +9,9 @@ import {
   toggleToolId,
   toolsToCategories,
   formatStudioSaveMsg,
+  mapWizardAgentToStudio,
 } from "./StudioPage";
+import type { AgentItem as WizardAgent } from "./s2/agentsCore";
 
 describe("StudioPage · W2-B2 keys", () => {
   it("prompt/tools key 含 agentId", () => {
@@ -78,5 +80,32 @@ describe("StudioPage · formatStudioSaveMsg", () => {
 
   it("失败", () => {
     expect(formatStudioSaveMsg("api", false, "404")).toContain("保存失败");
+  });
+});
+
+describe("StudioPage · mapWizardAgentToStudio", () => {
+  it("向导 Agent 映射为 Studio 列表项（Draft）", () => {
+    const wizard: WizardAgent = {
+      id: "ag-x",
+      name: "测试助手",
+      description: "desc",
+      source: "platform",
+      status: "draft",
+      calls: 0,
+      modelId: "m1",
+      prompt: "你是助手",
+      icon: "chat",
+      domain: "电商客服",
+      level: "L2",
+      tools: [{ id: "t1", name: "Object Query", kind: "API", state: "on" }],
+    };
+    const mapped = mapWizardAgentToStudio(wizard);
+    expect(mapped.id).toBe("ag-x");
+    expect(mapped.name).toBe("测试助手");
+    expect(mapped.status).toBe("draft");
+    expect(mapped.toolCount).toBe(1);
+    expect(mapped.category).toBe("电商客服");
+    expect(mapped.level).toBe("L2");
+    expect(mapped.levelLabel).toBe("L2 HITL");
   });
 });

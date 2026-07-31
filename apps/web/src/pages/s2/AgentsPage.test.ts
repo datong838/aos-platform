@@ -188,10 +188,15 @@ describe("AgentsPage · 向导校验", () => {
   const validDraft: WizardDraft = {
     name: "测试机器人",
     description: "",
-    icon: "📦",
+    icon: "chat",
+    domain: "设备运维",
     source: "platform",
     modelId: "glm-4-plus",
     prompt: "你是一个助手",
+    ontology: ["Order", "Device"],
+    level: "L2",
+    guardNoInvent: true,
+    guardAutoDraft: true,
   };
 
   it("validateStep1: 名称太短", () => {
@@ -202,6 +207,11 @@ describe("AgentsPage · 向导校验", () => {
   it("validateStep1: 有效名称通过", () => {
     const errs = validateStep1(validDraft);
     expect(errs).toHaveLength(0);
+  });
+
+  it("validateStep1: 缺少业务域", () => {
+    const errs = validateStep1({ ...validDraft, domain: "" });
+    expect(errs.length).toBeGreaterThan(0);
   });
 
   it("validateStep2: 缺少 modelId", () => {
@@ -218,6 +228,8 @@ describe("AgentsPage · 向导校验", () => {
     expect(agent.id).toBe("test-id");
     expect(agent.name).toBe("测试机器人");
     expect(agent.status).toBe("draft");
+    expect(agent.domain).toBe("设备运维");
+    expect(agent.level).toBe("L2");
   });
 });
 

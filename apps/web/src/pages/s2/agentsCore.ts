@@ -35,6 +35,10 @@ export interface AgentItem {
   prompt: string;
   icon: string;
   tools: AgentTool[];
+  /** 业务域（向导 Step1） */
+  domain?: string;
+  /** 成熟度 L0–L4（向导 Step3） */
+  level?: string;
 }
 
 /** 模型目录条目（对齐后端 /v1/aip/models） */
@@ -43,6 +47,10 @@ export interface CatalogModel {
   kind?: string;
   ready?: boolean;
   provider?: string;
+  /** 展示名（可选） */
+  label?: string;
+  /** 副标题（可选） */
+  blurb?: string;
 }
 
 // -------------------- MOCK 数据 --------------------
@@ -123,13 +131,96 @@ export const MOCK_AGENTS: AgentItem[] = [
   },
 ];
 
-/** 当 /v1/aip/models 未就绪时的兜底模型列表 */
+/** 当 /v1/aip/models 未就绪时的兜底模型列表（对齐 agents.html Step2） */
 export const MOCK_MODELS: CatalogModel[] = [
-  { id: "glm-4-plus", kind: "text", ready: true, provider: "智谱" },
-  { id: "glm-4-air", kind: "text", ready: true, provider: "智谱" },
-  { id: "deepseek-v3", kind: "text", ready: true, provider: "DeepSeek" },
+  { id: "glm-4-plus", kind: "text", ready: true, provider: "智谱", label: "GLM-4-Plus", blurb: "通用旗舰 · 128K 上下文" },
+  { id: "glm-4-air", kind: "text", ready: true, provider: "智谱", label: "GLM-4-Air", blurb: "轻量高速 · 低延迟" },
+  { id: "deepseek-v3", kind: "text", ready: true, provider: "DeepSeek", label: "DeepSeek-V3", blurb: "推理增强 · 开源" },
 ];
 
+/** 视觉稿业务域 chips */
+export const WIZARD_DOMAINS = [
+  "设备运维",
+  "电商客服",
+  "风控分析",
+  "内容创作",
+  "知识检索",
+  "财务报销",
+] as const;
+
+export type WizardIconKey = "chat" | "tool" | "alert" | "chart" | "doc" | "box";
+
+export const WIZARD_ICON_KEYS: { key: WizardIconKey; title: string }[] = [
+  { key: "chat", title: "对话" },
+  { key: "tool", title: "工具" },
+  { key: "alert", title: "告警" },
+  { key: "chart", title: "图表" },
+  { key: "doc", title: "文档" },
+  { key: "box", title: "包裹" },
+];
+
+export const WIZARD_ONTOLOGY_OPTIONS: { id: string; label: string; hint: string; defaultOn?: boolean }[] = [
+  { id: "Order", label: "Order（订单）", hint: "工单编号、状态、SLA、负责人", defaultOn: true },
+  { id: "Device", label: "Device（设备）", hint: "设备编号、位置、健康度、维保记录", defaultOn: true },
+  { id: "WorkOrder", label: "WorkOrder（工单）", hint: "工单类型、优先级、处理人" },
+  { id: "KnowledgeDoc", label: "KnowledgeDoc（知识文档）", hint: "Wiki 知识库关联文档" },
+];
+
+export const WIZARD_BUILTIN_TOOLS: { name: string; desc: string; defaultOn?: boolean }[] = [
+  { name: "Object Query · 对象查询", desc: "读取本体数据的基础能力", defaultOn: true },
+  { name: "Request Clarification · 澄清追问", desc: "向用户追问不明确的参数", defaultOn: true },
+  { name: "Action · 动作执行", desc: "写回操作（需 HITL 审批）" },
+  { name: "Function · 函数调用", desc: "调用 AIP Logic 注册的函数" },
+];
+
+export const WIZARD_EXTERNAL_TOOLS: {
+  name: string;
+  desc: string;
+  badge: string;
+  badgeTone: "ok" | "warn" | "bad";
+  disabled?: boolean;
+}[] = [
+  { name: "PDF 解析器", desc: "提取 PDF 文本/表格/图片 · C1 Job", badge: "已扫描", badgeTone: "ok" },
+  { name: "数据清洗引擎", desc: "去重/标准化/异常值检测 · C1 Job", badge: "已扫描", badgeTone: "ok" },
+  { name: "邮件发送服务", desc: "SMTP/API 发送通知邮件 · C0 Sync", badge: "已扫描", badgeTone: "ok" },
+  { name: "图表生成器", desc: "从数据集生成可视化图表 · C1 Job", badge: "已扫描", badgeTone: "ok" },
+  { name: "Web 搜索", desc: "需先完成安全扫描方可启用", badge: "待扫描", badgeTone: "warn", disabled: true },
+  { name: "代码沙箱执行", desc: "需管理员审批 · 检测到 eval() 调用", badge: "P1 风险", badgeTone: "bad", disabled: true },
+];
+
+export type MaturityLevel = "L0" | "L1" | "L2" | "L3" | "L4";
+
+export const WIZARD_MATURITY_LEVELS: {
+  id: MaturityLevel;
+  title: string;
+  desc: string;
+  recommended?: boolean;
+  risk?: boolean;
+}[] = [
+  { id: "L0", title: "只读问答", desc: "仅查询 Object/Wiki，不做任何写回。适合知识检索型 Agent。" },
+  { id: "L1", title: "Draft 暂存", desc: "写操作自动进入 Draft 审批台，人工审批后才生效。" },
+  {
+    id: "L2",
+    title: "HITL 人机协同",
+    desc: "写操作执行前弹出确认窗口，人工一键批准。适合大多数业务场景。",
+    recommended: true,
+  },
+  { id: "L3", title: "Capability 委托", desc: "通过 Capability 接入其他智能体执行写操作。需要被委托智能体已发布。" },
+  {
+    id: "L4",
+    title: "无人值守写回",
+    desc: "全自动执行写回，无需人工确认。须 Evals 门控全绿方可启用。",
+    risk: true,
+  },
+];
+
+export const MATURITY_LEVEL_LABEL: Record<MaturityLevel, string> = {
+  L0: "L0 只读",
+  L1: "L1 Draft",
+  L2: "L2 HITL",
+  L3: "L3 Capability",
+  L4: "L4 无人值守",
+};
 // -------------------- 来源筛选 --------------------
 
 export const SOURCE_FILTERS = ["all", "platform", "plugin", "external"] as const;
@@ -335,12 +426,33 @@ export interface WizardDraft {
   name: string;
   description: string;
   icon: string;
+  domain: string;
   source: AgentSource;
   modelId: string;
   prompt: string;
+  ontology: string[];
+  level: MaturityLevel;
+  guardNoInvent: boolean;
+  guardAutoDraft: boolean;
 }
 
-/** Step 1 基础信息校验：name 3-20 字符、icon 必选 */
+export function emptyWizardDraft(defaultModelId = ""): WizardDraft {
+  return {
+    name: "",
+    description: "",
+    icon: "chat",
+    domain: "设备运维",
+    source: "platform",
+    modelId: defaultModelId,
+    prompt: "",
+    ontology: WIZARD_ONTOLOGY_OPTIONS.filter((o) => o.defaultOn).map((o) => o.id),
+    level: "L2",
+    guardNoInvent: true,
+    guardAutoDraft: true,
+  };
+}
+
+/** Step 1 基础信息：name 3-20、icon、业务域 */
 export function validateStep1(draft: WizardDraft): string[] {
   const errs: string[] = [];
   const name = draft.name.trim();
@@ -348,10 +460,11 @@ export function validateStep1(draft: WizardDraft): string[] {
     errs.push("名称长度须为 3-20 个字符");
   }
   if (!draft.icon) errs.push("请选择一个图标");
+  if (!draft.domain.trim()) errs.push("请选择业务域");
   return errs;
 }
 
-/** Step 2 模型+提示词校验：modelId 必选、prompt 非空 */
+/** Step 2 能力配置：modelId、prompt */
 export function validateStep2(draft: WizardDraft): string[] {
   const errs: string[] = [];
   if (!draft.modelId) errs.push("请选择一个 LLM 模型");
@@ -361,11 +474,19 @@ export function validateStep2(draft: WizardDraft): string[] {
   return errs;
 }
 
+/** Step 3 安全等级 */
+export function validateStep3(draft: WizardDraft): string[] {
+  const errs: string[] = [];
+  if (!draft.level) errs.push("请选择成熟度等级");
+  return errs;
+}
+
 /** 整个 draft 是否可创建 */
 export function canCreateAgent(draft: WizardDraft): boolean {
   return [
     ...validateStep1(draft),
     ...validateStep2(draft),
+    ...validateStep3(draft),
   ].length === 0;
 }
 
@@ -385,7 +506,24 @@ export function draftToAgent(
     prompt: draft.prompt,
     icon: draft.icon,
     tools: [],
+    domain: draft.domain,
+    level: draft.level,
   };
+}
+
+export function modelDisplayName(m: CatalogModel): string {
+  return m.label || m.id;
+}
+
+export function modelDisplayBlurb(m: CatalogModel): string {
+  if (m.blurb) return m.blurb;
+  const kind = (m.kind ?? "text") === "text" ? "文本" : String(m.kind);
+  return `${kind} · ${m.provider || "默认供应商"}`;
+}
+
+export function levelSummaryLabel(level: MaturityLevel): string {
+  const row = WIZARD_MATURITY_LEVELS.find((l) => l.id === level);
+  return row ? `${level} · ${row.title}` : level;
 }
 
 // -------------------- 调用次数格式化 --------------------
