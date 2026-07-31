@@ -313,3 +313,15 @@ def test_batch_model_rejects_cross_tenant_link_before_transaction() -> None:
             target=ident("line-1", org="org-b"),
             source_updated_at=NOW,
         )
+
+
+def test_apply_revalidates_mutated_nested_batch_before_transaction(
+    store: EcomConsistencyStore,
+) -> None:
+    command = batch(obj("Product", "product-1"))
+    command.objects.append(
+        obj("Product", "outside", identity=ident("outside", org="org-b"))
+    )
+    with pytest.raises(ValidationError, match="outside the batch scope"):
+        store.apply_batch(command)
+    assert store.get_object(ident("product-1"), "Product") is None

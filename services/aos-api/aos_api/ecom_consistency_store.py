@@ -168,6 +168,11 @@ class EcomConsistencyStore:
         self._engine = engine
 
     def apply_batch(self, command: BatchCommand) -> BatchResult:
+        # Pydantic's frozen models are shallow: callers could otherwise mutate
+        # nested lists/dicts after construction and bypass the scope and shape
+        # validators.  Rebuild a detached, validated snapshot before hashing or
+        # opening the transaction.
+        command = BatchCommand.model_validate(command.model_dump(mode="python"))
         request_hash = command.request_hash()
         try:
             with self._engine.begin() as conn:
