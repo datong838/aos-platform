@@ -1,0 +1,26 @@
+replicaCount: 2
+image:
+  repository: registry.example.invalid/aos/spoke-agent
+  tag: "0.3.0"
+spoke:
+  id: spoke-production-reference
+  hub: https://hub.example.invalid
+  channel: stable
+existingSecret:
+  name: aos-spoke-runtime
+  hubTokenKey: hub-token
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: spoke.example.invalid
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: spoke-example-tls
+      hosts:
+        - spoke.example.invalid
+persistence:
+  enabled: true
+  size: 20Gi

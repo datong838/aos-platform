@@ -1,14 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "aos-spoke-full.name" . }}
+  name: {{ include "aos-spoke-full.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ include "aos-spoke-full.name" . }}
+    {{- include "aos-spoke-full.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   selector:
-    app.kubernetes.io/name: {{ include "aos-spoke-full.name" . }}
+    {{- include "aos-spoke-full.selectorLabels" . | nindent 4 }}
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.port }}
-      name: http
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
