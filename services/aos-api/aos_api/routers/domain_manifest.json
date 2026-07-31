@@ -1,0 +1,3035 @@
+{
+  "version": 1,
+  "routers": [
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.health",
+      "attribute": "router",
+      "order": 0
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.metrics",
+      "attribute": "router",
+      "order": 1
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.plugins",
+      "attribute": "router",
+      "order": 2
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.platform_integrations",
+      "attribute": "router",
+      "order": 3
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.runtime_write",
+      "attribute": "router",
+      "order": 4
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.analytics",
+      "attribute": "router",
+      "order": 5
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.ssl_health_snooze_marketplace",
+      "attribute": "router",
+      "order": 6
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.linter_foundry_rules",
+      "attribute": "router",
+      "order": 7
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.autoscale_telemetry_volume_cop",
+      "attribute": "router",
+      "order": 8
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.tracing_perf_geo_map",
+      "attribute": "router",
+      "order": 9
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.vertex_geo_ts_process_hyperauto",
+      "attribute": "router",
+      "order": 10
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.dicom_workshop_docintel",
+      "attribute": "router",
+      "order": 11
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.es_sap_stream",
+      "attribute": "router",
+      "order": 12
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.vs_module_interface_router",
+      "attribute": "router",
+      "order": 13
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.vs_events_router",
+      "attribute": "router",
+      "order": 14
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.vs_event_idempotent_router",
+      "attribute": "router",
+      "order": 15
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.es_auto_ontology_gen_router",
+      "attribute": "router",
+      "order": 16
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.vs_timeseries_set_router",
+      "attribute": "router",
+      "order": 17
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.es_sap_batch_import_router",
+      "attribute": "router",
+      "order": 18
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.es_derived_element_intel_router",
+      "attribute": "router",
+      "order": 19
+    },
+    {
+      "domain": "admin",
+      "module": "aos_api.routers.auth_oidc",
+      "attribute": "router",
+      "order": 20
+    },
+    {
+      "domain": "admin",
+      "module": "aos_api.routers.authz",
+      "attribute": "router",
+      "order": 21
+    },
+    {
+      "domain": "admin",
+      "module": "aos_api.routers.orgs",
+      "attribute": "router",
+      "order": 22
+    },
+    {
+      "domain": "admin",
+      "module": "aos_api.routers.ops_tenants",
+      "attribute": "router",
+      "order": 23
+    },
+    {
+      "domain": "admin",
+      "module": "aos_api.routers.ops_ttl",
+      "attribute": "router",
+      "order": 24
+    },
+    {
+      "domain": "admin",
+      "module": "aos_api.routers.workspaces",
+      "attribute": "router",
+      "order": 25
+    },
+    {
+      "domain": "admin",
+      "module": "aos_api.routers.cap_and_markings",
+      "attribute": "router",
+      "order": 26
+    },
+    {
+      "domain": "admin",
+      "module": "aos_api.au_policy_hot_reload_router",
+      "attribute": "router",
+      "order": 27
+    },
+    {
+      "domain": "system",
+      "module": "aos_api.routers.me",
+      "attribute": "router",
+      "order": 28
+    },
+    {
+      "domain": "system",
+      "module": "aos_api.routers.otp",
+      "attribute": "router",
+      "order": 29
+    },
+    {
+      "domain": "system",
+      "module": "aos_api.routers.ops_version_matrix",
+      "attribute": "router",
+      "order": 30
+    },
+    {
+      "domain": "system",
+      "module": "aos_api.routers.ops_local",
+      "attribute": "router",
+      "order": 31
+    },
+    {
+      "domain": "agent",
+      "module": "aos_api.routers.buddy",
+      "attribute": "router",
+      "order": 32
+    },
+    {
+      "domain": "agent",
+      "module": "aos_api.routers.agent_health_migration_webhook",
+      "attribute": "router",
+      "order": 33
+    },
+    {
+      "domain": "agent",
+      "module": "aos_api.routers.phase6_agents",
+      "attribute": "router",
+      "order": 34
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.modules",
+      "attribute": "router",
+      "order": 35
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.workshop_phase1",
+      "attribute": "router",
+      "order": 36
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.actions",
+      "attribute": "router",
+      "order": 37
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.drafts",
+      "attribute": "router",
+      "order": 38
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.gantt",
+      "attribute": "router",
+      "order": 39
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.action_enhancements",
+      "attribute": "router",
+      "order": 40
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.action_params",
+      "attribute": "router",
+      "order": 41
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.action_further",
+      "attribute": "router",
+      "order": 42
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.action_webhook",
+      "attribute": "router",
+      "order": 43
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.action_finale",
+      "attribute": "router",
+      "order": 44
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.compute_module",
+      "attribute": "router",
+      "order": 45
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.compute_module_extras",
+      "attribute": "router",
+      "order": 46
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.compute_module_publish",
+      "attribute": "router",
+      "order": 47
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.dev_tooling",
+      "attribute": "router",
+      "order": 48
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.media_references",
+      "attribute": "router",
+      "order": 49
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.media_set_browser_interaction",
+      "attribute": "router",
+      "order": 50
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.media_sets",
+      "attribute": "router",
+      "order": 51
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.action_rules",
+      "attribute": "router",
+      "order": 52
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.action_visual_editor",
+      "attribute": "router",
+      "order": 53
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.integration_maintenance",
+      "attribute": "router",
+      "order": 54
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.scheduling",
+      "attribute": "router",
+      "order": 55
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.scheduling_rules_lint",
+      "attribute": "router",
+      "order": 56
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.web_ide",
+      "attribute": "router",
+      "order": 57
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.workshop_compute_api",
+      "attribute": "router",
+      "order": 58
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.ds_context_menu",
+      "attribute": "router",
+      "order": 59
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.pp_toolbar_settings",
+      "attribute": "router",
+      "order": 60
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.ms_header_extractor",
+      "attribute": "router",
+      "order": 61
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.af_action_types_router",
+      "attribute": "router",
+      "order": 62
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.af_capabilities_router",
+      "attribute": "router",
+      "order": 63
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.af_edit_counter_router",
+      "attribute": "router",
+      "order": 64
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.af_edited_marker_router",
+      "attribute": "router",
+      "order": 65
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.af_oma_editor_router",
+      "attribute": "router",
+      "order": 66
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.af_param_help_router",
+      "attribute": "router",
+      "order": 67
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.at_action_apply_perm_router",
+      "attribute": "router",
+      "order": 68
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.at_edit_only_mode_router",
+      "attribute": "router",
+      "order": 69
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.at_marketplace_types_router",
+      "attribute": "router",
+      "order": 70
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.at_notification_link_router",
+      "attribute": "router",
+      "order": 71
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.at_notification_permission_router",
+      "attribute": "router",
+      "order": 72
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.at_side_effect_perm_router",
+      "attribute": "router",
+      "order": 73
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ds_backtick_search_router",
+      "attribute": "router",
+      "order": 74
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ds_inline_upload_router",
+      "attribute": "router",
+      "order": 75
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ms_create_pipeline_menu_router",
+      "attribute": "router",
+      "order": 76
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ms_file_add_router",
+      "attribute": "router",
+      "order": 77
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_chart_drag_select_router",
+      "attribute": "router",
+      "order": 78
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_chart_pan_router",
+      "attribute": "router",
+      "order": 79
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_cross_project_flow_router",
+      "attribute": "router",
+      "order": 80
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_mediasets_code_router",
+      "attribute": "router",
+      "order": 81
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_parse_paths_router",
+      "attribute": "router",
+      "order": 82
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_role_permission_router",
+      "attribute": "router",
+      "order": 83
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_toolbar_share_router",
+      "attribute": "router",
+      "order": 84
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.wk_conditional_section_router",
+      "attribute": "router",
+      "order": 85
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.wk_widget_permission_router",
+      "attribute": "router",
+      "order": 86
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ds_schedule_panel_router",
+      "attribute": "router",
+      "order": 87
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ds_share_move_rename_router",
+      "attribute": "router",
+      "order": 88
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ds_stream_preview_router",
+      "attribute": "router",
+      "order": 89
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ds_stream_tag_router",
+      "attribute": "router",
+      "order": 90
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ds_schema_infer_router",
+      "attribute": "router",
+      "order": 91
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ds_edit_schema_view_router",
+      "attribute": "router",
+      "order": 92
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ds_col_autocomplete_router",
+      "attribute": "router",
+      "order": 93
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ds_keyboard_shortcut_router",
+      "attribute": "router",
+      "order": 94
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ds_resize_panel_router",
+      "attribute": "router",
+      "order": 95
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ds_same_name_logic_router",
+      "attribute": "router",
+      "order": 96
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ds_sql_draft_router",
+      "attribute": "router",
+      "order": 97
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_incremental_perf_router",
+      "attribute": "router",
+      "order": 98
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_schema_infer_router",
+      "attribute": "router",
+      "order": 99
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_advanced_schedule_router",
+      "attribute": "router",
+      "order": 100
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_schedule_troubleshoot_router",
+      "attribute": "router",
+      "order": 101
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_schedule_best_practice_router",
+      "attribute": "router",
+      "order": 102
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_schedule_template_router",
+      "attribute": "router",
+      "order": 103
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_classify_tag_router",
+      "attribute": "router",
+      "order": 104
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_propagate_view_router",
+      "attribute": "router",
+      "order": 105
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_org_tag_router",
+      "attribute": "router",
+      "order": 106
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_tag_reapproval_router",
+      "attribute": "router",
+      "order": 107
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_io_classify_router",
+      "attribute": "router",
+      "order": 108
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_schedule_coloring_router",
+      "attribute": "router",
+      "order": 109
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_folder_convention_router",
+      "attribute": "router",
+      "order": 110
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_dev_best_practice_router",
+      "attribute": "router",
+      "order": 111
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_prod_pipeline_build_router",
+      "attribute": "router",
+      "order": 112
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.pp_connect_stream_router",
+      "attribute": "router",
+      "order": 113
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ms_small_file_shortcut_router",
+      "attribute": "router",
+      "order": 114
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ms_docintel_dlq_router",
+      "attribute": "router",
+      "order": 115
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ms_latency_policy_router",
+      "attribute": "router",
+      "order": 116
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ms_transcript_postproc_router",
+      "attribute": "router",
+      "order": 117
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ms_transcript_output_router",
+      "attribute": "router",
+      "order": 118
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ms_audio_import_path_router",
+      "attribute": "router",
+      "order": 119
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ms_primary_key_router",
+      "attribute": "router",
+      "order": 120
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.af_archetypes_toggle_router",
+      "attribute": "router",
+      "order": 121
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.at_param_desc_router",
+      "attribute": "router",
+      "order": 122
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.at_value_source_router",
+      "attribute": "router",
+      "order": 123
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.at_rule_order_conflict_router",
+      "attribute": "router",
+      "order": 124
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.at_oma_7tab_router",
+      "attribute": "router",
+      "order": 125
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.at_archetypes_toggle_router",
+      "attribute": "router",
+      "order": 126
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.at_edit_count_warn_router",
+      "attribute": "router",
+      "order": 127
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.at_edited_marker_router",
+      "attribute": "router",
+      "order": 128
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.at_func_op_types_router",
+      "attribute": "router",
+      "order": 129
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.at_func_onboarding_router",
+      "attribute": "router",
+      "order": 130
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ca_platform_facade_router",
+      "attribute": "router",
+      "order": 131
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ca_heavy_capability_router",
+      "attribute": "router",
+      "order": 132
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.sc_logic_change_trigger_router",
+      "attribute": "router",
+      "order": 133
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.sc_calendar_view_router",
+      "attribute": "router",
+      "order": 134
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.sc_readonly_dynamic_router",
+      "attribute": "router",
+      "order": 135
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.sc_dynamic_drag_drop_router",
+      "attribute": "router",
+      "order": 136
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.rl_rule_workflow_router",
+      "attribute": "router",
+      "order": 137
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.rl_transform_pipeline_rule_router",
+      "attribute": "router",
+      "order": 138
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.rl_workshop_integration_router",
+      "attribute": "router",
+      "order": 139
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.wk_overlay_router",
+      "attribute": "router",
+      "order": 140
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.wk_object_table_advanced_router",
+      "attribute": "router",
+      "order": 141
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ms_java_transform_integration_router",
+      "attribute": "router",
+      "order": 142
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ms_form_parser_router",
+      "attribute": "router",
+      "order": 143
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ms_multi_sheet_output_router",
+      "attribute": "router",
+      "order": 144
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ms_incremental_process_router",
+      "attribute": "router",
+      "order": 145
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ms_error_dataframe_router",
+      "attribute": "router",
+      "order": 146
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ms_spark_mem_config_router",
+      "attribute": "router",
+      "order": 147
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.ms_api_javadoc_router",
+      "attribute": "router",
+      "order": 148
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.wk_embedded_copilot_router",
+      "attribute": "router",
+      "order": 149
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.object_sets",
+      "attribute": "router",
+      "order": 150
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.object_storage_indexing",
+      "attribute": "router",
+      "order": 151
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.ontology",
+      "attribute": "router",
+      "order": 152
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.ontology_governance",
+      "attribute": "router",
+      "order": 153
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.ontology_management",
+      "attribute": "router",
+      "order": 154
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.ontology_data_layer",
+      "attribute": "router",
+      "order": 155
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.oe_enhancements",
+      "attribute": "router",
+      "order": 156
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.object_editing",
+      "attribute": "router",
+      "order": 157
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.oma_editor",
+      "attribute": "router",
+      "order": 158
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.type_system",
+      "attribute": "router",
+      "order": 159
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.funnel",
+      "attribute": "router",
+      "order": 160
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.funnel_mappings",
+      "attribute": "router",
+      "order": 161
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.ontology_roles",
+      "attribute": "router",
+      "order": 162
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.ontology_outputs",
+      "attribute": "router",
+      "order": 163
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.csv_ontology_export_action_metrics",
+      "attribute": "router",
+      "order": 164
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.multi_language",
+      "attribute": "router",
+      "order": 165
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.object_views",
+      "attribute": "router",
+      "order": 166
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.object_explorer",
+      "attribute": "router",
+      "order": 167
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.multi_source",
+      "attribute": "router",
+      "order": 168
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.materialized_access_control",
+      "attribute": "router",
+      "order": 169
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.incremental_sync",
+      "attribute": "router",
+      "order": 170
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.ob_index_debug",
+      "attribute": "router",
+      "order": 171
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.ob_agg_precision_router",
+      "attribute": "router",
+      "order": 172
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.ob_monitor_notify_router",
+      "attribute": "router",
+      "order": 173
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.ob_stream_permission_router",
+      "attribute": "router",
+      "order": 174
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oc_destructive_confirm_router",
+      "attribute": "router",
+      "order": 175
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oc_global_search_router",
+      "attribute": "router",
+      "order": 176
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oc_metric_toggle_router",
+      "attribute": "router",
+      "order": 177
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oc_org_level_toggle_router",
+      "attribute": "router",
+      "order": 178
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oc_permission_migration_router",
+      "attribute": "router",
+      "order": 179
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oc_sidebar_filter_router",
+      "attribute": "router",
+      "order": 180
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oe_admin_config_router",
+      "attribute": "router",
+      "order": 181
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oe_app_sidebar_router",
+      "attribute": "router",
+      "order": 182
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oe_column_config_router",
+      "attribute": "router",
+      "order": 183
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oe_pivot_linked_router",
+      "attribute": "router",
+      "order": 184
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oe_compare_objects_router",
+      "attribute": "router",
+      "order": 185
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oe_metadata_state_router",
+      "attribute": "router",
+      "order": 186
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oe_render_hint_router",
+      "attribute": "router",
+      "order": 187
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oe_gotham_integration_router",
+      "attribute": "router",
+      "order": 188
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oe_linked_view_router",
+      "attribute": "router",
+      "order": 189
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oe_version_mgmt_router",
+      "attribute": "router",
+      "order": 190
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oe_comment_system_router",
+      "attribute": "router",
+      "order": 191
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oc_model_aiml_router",
+      "attribute": "router",
+      "order": 192
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oc_audit_edit_dialog_router",
+      "attribute": "router",
+      "order": 193
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oc_task_model_router",
+      "attribute": "router",
+      "order": 194
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oc_review_view_router",
+      "attribute": "router",
+      "order": 195
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oc_compute_attribution_router",
+      "attribute": "router",
+      "order": 196
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oc_cross_ontology_migrate_router",
+      "attribute": "router",
+      "order": 197
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oc_ontology_switcher_router",
+      "attribute": "router",
+      "order": 198
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.ob_billion_throughput_router",
+      "attribute": "router",
+      "order": 199
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.ob_osv1_osv2_router",
+      "attribute": "router",
+      "order": 200
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.ob_batch_reindex_router",
+      "attribute": "router",
+      "order": 201
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.ob_index_monitor_router",
+      "attribute": "router",
+      "order": 202
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.ob_object_monitor_router",
+      "attribute": "router",
+      "order": 203
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.ob_realtime_eval_router",
+      "attribute": "router",
+      "order": 204
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.ob_monitor_to_action_router",
+      "attribute": "router",
+      "order": 205
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.ob_monitor_activity_router",
+      "attribute": "router",
+      "order": 206
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.ob_granular_policy_router",
+      "attribute": "router",
+      "order": 207
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.ob_edit_history_router",
+      "attribute": "router",
+      "order": 208
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.ob_inline_edit_router",
+      "attribute": "router",
+      "order": 209
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.if_interface_metadata_router",
+      "attribute": "router",
+      "order": 210
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.oc_shared_ontology_router",
+      "attribute": "router",
+      "order": 211
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.zz_property_editor_router",
+      "attribute": "router",
+      "order": 212
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.zz_function_type_editor_router",
+      "attribute": "router",
+      "order": 213
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.zz_multi_source_heterogeneous_router",
+      "attribute": "router",
+      "order": 214
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.zz_graph_health_router",
+      "attribute": "router",
+      "order": 215
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.phase4_ontology_types",
+      "attribute": "router",
+      "order": 216
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.phase4_ontology_branches",
+      "attribute": "router",
+      "order": 217
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.phase4_ontology_wikis",
+      "attribute": "router",
+      "order": 218
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.phase4_ontology_functions",
+      "attribute": "router",
+      "order": 219
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.phase4_ontology_actions",
+      "attribute": "router",
+      "order": 220
+    },
+    {
+      "domain": "ontology",
+      "module": "aos_api.routers.phase4_ontology_links",
+      "attribute": "router",
+      "order": 221
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.wave_ext",
+      "attribute": "router",
+      "order": 222
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.llm_routing",
+      "attribute": "router",
+      "order": 223
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.llm_node_agent_proxy",
+      "attribute": "router",
+      "order": 224
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.llm_extras",
+      "attribute": "router",
+      "order": 225
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.logic",
+      "attribute": "router",
+      "order": 226
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.evals",
+      "attribute": "router",
+      "order": 227
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.file_processing",
+      "attribute": "router",
+      "order": 228
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.tool_registry",
+      "attribute": "router",
+      "order": 229
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_nodes",
+      "attribute": "router",
+      "order": 230
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_extras",
+      "attribute": "router",
+      "order": 231
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_assist",
+      "attribute": "router",
+      "order": 232
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.logic_flows",
+      "attribute": "router",
+      "order": 233
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.l4_automation",
+      "attribute": "router",
+      "order": 234
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.decision_audit",
+      "attribute": "router",
+      "order": 235
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_langgraph_runtime_router",
+      "attribute": "router",
+      "order": 236
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_propose_edits_router",
+      "attribute": "router",
+      "order": 237
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_wiki_field_router",
+      "attribute": "router",
+      "order": 238
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_logic_state_router",
+      "attribute": "router",
+      "order": 239
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_logic_version_router",
+      "attribute": "router",
+      "order": 240
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_debug_cot_router",
+      "attribute": "router",
+      "order": 241
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_debug_tools_router",
+      "attribute": "router",
+      "order": 242
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_eval_crud_router",
+      "attribute": "router",
+      "order": 243
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_eval_gate_router",
+      "attribute": "router",
+      "order": 244
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_eval_cross_model_router",
+      "attribute": "router",
+      "order": 245
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_eval_dashboard_router",
+      "attribute": "router",
+      "order": 246
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_eval_rag_router",
+      "attribute": "router",
+      "order": 247
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_eval_gen_router",
+      "attribute": "router",
+      "order": 248
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_eval_tool_router",
+      "attribute": "router",
+      "order": 249
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_l4_gate_router",
+      "attribute": "router",
+      "order": 250
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_l4_circuit_router",
+      "attribute": "router",
+      "order": 251
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_app_state_router",
+      "attribute": "router",
+      "order": 252
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_rag_context_router",
+      "attribute": "router",
+      "order": 253
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_long_memory_router",
+      "attribute": "router",
+      "order": 254
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_trace_logic_router",
+      "attribute": "router",
+      "order": 255
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_metrics_router",
+      "attribute": "router",
+      "order": 256
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_obs_dashboard_router",
+      "attribute": "router",
+      "order": 257
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_alerts_router",
+      "attribute": "router",
+      "order": 258
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_model_catalog_router",
+      "attribute": "router",
+      "order": 259
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_model_capacity_router",
+      "attribute": "router",
+      "order": 260
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_model_lifecycle_router",
+      "attribute": "router",
+      "order": 261
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.model_provider_credential_router",
+      "attribute": "router",
+      "order": 262
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.provider_security_router",
+      "attribute": "router",
+      "order": 263
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.provider_call_log_router",
+      "attribute": "router",
+      "order": 264
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.model_router_config_router",
+      "attribute": "router",
+      "order": 265
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.module_events_router",
+      "attribute": "router",
+      "order": 266
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_assist_context_router",
+      "attribute": "router",
+      "order": 267
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_assist_perms_router",
+      "attribute": "router",
+      "order": 268
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_analyst_chart_router",
+      "attribute": "router",
+      "order": 269
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_analyst_explore_router",
+      "attribute": "router",
+      "order": 270
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_docintel_parse_router",
+      "attribute": "router",
+      "order": 271
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_docintel_extract_router",
+      "attribute": "router",
+      "order": 272
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.aip_docintel_semantic_router",
+      "attribute": "router",
+      "order": 273
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.phase3_aip_assist",
+      "attribute": "router",
+      "order": 274
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.phase3_aip_agents",
+      "attribute": "router",
+      "order": 275
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.phase3_aip_capabilities",
+      "attribute": "router",
+      "order": 276
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.phase3_aip_logic",
+      "attribute": "router",
+      "order": 277
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.phase3_aip_tools",
+      "attribute": "router",
+      "order": 278
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.phase3_aip_drafts",
+      "attribute": "router",
+      "order": 279
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.phase3_aip_lineage",
+      "attribute": "router",
+      "order": 280
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_analyst",
+      "attribute": "router",
+      "order": 281
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.builds",
+      "attribute": "router",
+      "order": 282
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.shell_core",
+      "attribute": "router",
+      "order": 283
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.sql_console",
+      "attribute": "router",
+      "order": 284
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.writeback",
+      "attribute": "router",
+      "order": 285
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.data_transaction",
+      "attribute": "router",
+      "order": 286
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.expectation",
+      "attribute": "router",
+      "order": 287
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.lineage",
+      "attribute": "router",
+      "order": 288
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.lineage_views",
+      "attribute": "router",
+      "order": 289
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.pipelines",
+      "attribute": "router",
+      "order": 290
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.transforms",
+      "attribute": "router",
+      "order": 291
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.python_functions",
+      "attribute": "router",
+      "order": 292
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.functions",
+      "attribute": "router",
+      "order": 293
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.function_types",
+      "attribute": "router",
+      "order": 294
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.functions_dev_tools",
+      "attribute": "router",
+      "order": 295
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.pipeline_outputs",
+      "attribute": "router",
+      "order": 296
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.pipeline_type_semantics",
+      "attribute": "router",
+      "order": 297
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.pipeline_builder_extra",
+      "attribute": "router",
+      "order": 298
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.pipeline_canvas_extras",
+      "attribute": "router",
+      "order": 299
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.pipeline_ui_components",
+      "attribute": "router",
+      "order": 300
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.triggers_and_link_output",
+      "attribute": "router",
+      "order": 301
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.code_collaboration",
+      "attribute": "router",
+      "order": 302
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.column_impact",
+      "attribute": "router",
+      "order": 303
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.connection_cdc_schedule",
+      "attribute": "router",
+      "order": 304
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.data_connection_admin",
+      "attribute": "router",
+      "order": 305
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.data_connection_extras",
+      "attribute": "router",
+      "order": 306
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.data_connection_export",
+      "attribute": "router",
+      "order": 307
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.data_connection_webhook",
+      "attribute": "router",
+      "order": 308
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.data_connection_security",
+      "attribute": "router",
+      "order": 309
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.lineage_visualization",
+      "attribute": "router",
+      "order": 310
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.data_health",
+      "attribute": "router",
+      "order": 311
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.data_health_plus",
+      "attribute": "router",
+      "order": 312
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.data_health_integration",
+      "attribute": "router",
+      "order": 313
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.dataset_preview_health",
+      "attribute": "router",
+      "order": 314
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.functions_runtime",
+      "attribute": "router",
+      "order": 315
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.timeseries_sap_functions",
+      "attribute": "router",
+      "order": 316
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.dc_completion_strategy",
+      "attribute": "router",
+      "order": 317
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.dc_stream_mgmt",
+      "attribute": "router",
+      "order": 318
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.dc_erp_crm",
+      "attribute": "router",
+      "order": 319
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.di_view_lineage",
+      "attribute": "router",
+      "order": 320
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.di_task_debug",
+      "attribute": "router",
+      "order": 321
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.dl_build_strategy",
+      "attribute": "router",
+      "order": 322
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.dl_build_preview",
+      "attribute": "router",
+      "order": 323
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.dl_dep_order",
+      "attribute": "router",
+      "order": 324
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.dl_stale_diagnosis",
+      "attribute": "router",
+      "order": 325
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.pb_build_vs_deploy",
+      "attribute": "router",
+      "order": 326
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.pb_build_profiles",
+      "attribute": "router",
+      "order": 327
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.pb_task_groups",
+      "attribute": "router",
+      "order": 328
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.pb_health_checks",
+      "attribute": "router",
+      "order": 329
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.cr_branch_menu",
+      "attribute": "router",
+      "order": 330
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.cr_pipeline_review",
+      "attribute": "router",
+      "order": 331
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.id_py_transform_preview",
+      "attribute": "router",
+      "order": 332
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.id_build_panel",
+      "attribute": "router",
+      "order": 333
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.id_build_status",
+      "attribute": "router",
+      "order": 334
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.bd_dep_task_abort_router",
+      "attribute": "router",
+      "order": 335
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.bd_force_build_router",
+      "attribute": "router",
+      "order": 336
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.bd_freshness_router",
+      "attribute": "router",
+      "order": 337
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_build_affected_router",
+      "attribute": "router",
+      "order": 338
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_default_branch_router",
+      "attribute": "router",
+      "order": 339
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_fallback_branch_router",
+      "attribute": "router",
+      "order": 340
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_impact_analysis_router",
+      "attribute": "router",
+      "order": 341
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dc_agent_yaml_router",
+      "attribute": "router",
+      "order": 342
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dc_app_state_router",
+      "attribute": "router",
+      "order": 343
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dc_curl_import_router",
+      "attribute": "router",
+      "order": 344
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dc_export_tasks_router",
+      "attribute": "router",
+      "order": 345
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dc_stream_preview_router",
+      "attribute": "router",
+      "order": 346
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dc_sync_troubleshoot_router",
+      "attribute": "router",
+      "order": 347
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dc_test_connection_router",
+      "attribute": "router",
+      "order": 348
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dc_webhook_source_router",
+      "attribute": "router",
+      "order": 349
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_auto_dedup_router",
+      "attribute": "router",
+      "order": 350
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_auto_register_router",
+      "attribute": "router",
+      "order": 351
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_compression_toggle_router",
+      "attribute": "router",
+      "order": 352
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_consistency_guarantee_router",
+      "attribute": "router",
+      "order": 353
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_data_consistency_router",
+      "attribute": "router",
+      "order": 354
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_dataset_branch_router",
+      "attribute": "router",
+      "order": 355
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_db_schema_table_router",
+      "attribute": "router",
+      "order": 356
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_export_config_router",
+      "attribute": "router",
+      "order": 357
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_external_access_router",
+      "attribute": "router",
+      "order": 358
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_external_transforms_router",
+      "attribute": "router",
+      "order": 359
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_force_build_router",
+      "attribute": "router",
+      "order": 360
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_freshness_detect_router",
+      "attribute": "router",
+      "order": 361
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_hot_cold_storage_router",
+      "attribute": "router",
+      "order": 362
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_key_by_router",
+      "attribute": "router",
+      "order": 363
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_latency_sampling_router",
+      "attribute": "router",
+      "order": 364
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_live_archive_router",
+      "attribute": "router",
+      "order": 365
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_logic_change_trigger_router",
+      "attribute": "router",
+      "order": 366
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_output_path_router",
+      "attribute": "router",
+      "order": 367
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_partition_control_router",
+      "attribute": "router",
+      "order": 368
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_permission_roles_router",
+      "attribute": "router",
+      "order": 369
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_primary_key_config_router",
+      "attribute": "router",
+      "order": 370
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_reset_stream_router",
+      "attribute": "router",
+      "order": 371
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_s3_api_router",
+      "attribute": "router",
+      "order": 372
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_source_based_transform_router",
+      "attribute": "router",
+      "order": 373
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_spark_engine_router",
+      "attribute": "router",
+      "order": 374
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_stream_schema_router",
+      "attribute": "router",
+      "order": 375
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_streaming_latency_router",
+      "attribute": "router",
+      "order": 376
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_text_extraction_router",
+      "attribute": "router",
+      "order": 377
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_third_party_access_router",
+      "attribute": "router",
+      "order": 378
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_transforms_external_router",
+      "attribute": "router",
+      "order": 379
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_view_creation_router",
+      "attribute": "router",
+      "order": 380
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_virtual_storage_router",
+      "attribute": "router",
+      "order": 381
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_virtual_table_router",
+      "attribute": "router",
+      "order": 382
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_branch_aware_router",
+      "attribute": "router",
+      "order": 383
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_chart_tools_router",
+      "attribute": "router",
+      "order": 384
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_dataset_preview_300_router",
+      "attribute": "router",
+      "order": 385
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_faq_troubleshoot_router",
+      "attribute": "router",
+      "order": 386
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_flow_animation_router",
+      "attribute": "router",
+      "order": 387
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_node_indicators_router",
+      "attribute": "router",
+      "order": 388
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_permission_coloring_router",
+      "attribute": "router",
+      "order": 389
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_permission_simulation_router",
+      "attribute": "router",
+      "order": 390
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_plan_management_router",
+      "attribute": "router",
+      "order": 391
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_property_histogram_router",
+      "attribute": "router",
+      "order": 392
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_related_artifacts_router",
+      "attribute": "router",
+      "order": 393
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_share_permission_router",
+      "attribute": "router",
+      "order": 394
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_stale_coloring_router",
+      "attribute": "router",
+      "order": 395
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_svg_export_router",
+      "attribute": "router",
+      "order": 396
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_user_permission_view_router",
+      "attribute": "router",
+      "order": 397
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.fn_pipeline_status_router",
+      "attribute": "router",
+      "order": 398
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.id_feature_matrix_router",
+      "attribute": "router",
+      "order": 399
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.id_osdk_react_router",
+      "attribute": "router",
+      "order": 400
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_add_data_modes_router",
+      "attribute": "router",
+      "order": 401
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_ai_functions_router",
+      "attribute": "router",
+      "order": 402
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_branch_activity_router",
+      "attribute": "router",
+      "order": 403
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_branch_version_router",
+      "attribute": "router",
+      "order": 404
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_color_groups_router",
+      "attribute": "router",
+      "order": 405
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_data_expectations_router",
+      "attribute": "router",
+      "order": 406
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_detail_sidebar_router",
+      "attribute": "router",
+      "order": 407
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_export_java_router",
+      "attribute": "router",
+      "order": 408
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_fp_growth_router",
+      "attribute": "router",
+      "order": 409
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_history_records_router",
+      "attribute": "router",
+      "order": 410
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_marketplace_pkg_router",
+      "attribute": "router",
+      "order": 411
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_override_dataset_router",
+      "attribute": "router",
+      "order": 412
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_param_system_router",
+      "attribute": "router",
+      "order": 413
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_show_hide_nodes_router",
+      "attribute": "router",
+      "order": 414
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_snapshot_incremental_router",
+      "attribute": "router",
+      "order": 415
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_structured_semi_router",
+      "attribute": "router",
+      "order": 416
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_transform_library_router",
+      "attribute": "router",
+      "order": 417
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_unit_test_router",
+      "attribute": "router",
+      "order": 418
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_view_switch_router",
+      "attribute": "router",
+      "order": 419
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_virtual_data_gen_router",
+      "attribute": "router",
+      "order": 420
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_stream_alert_router",
+      "attribute": "router",
+      "order": 421
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_monitor_rule_router",
+      "attribute": "router",
+      "order": 422
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_notif_sub_router",
+      "attribute": "router",
+      "order": 423
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_checkpoint_ft_router",
+      "attribute": "router",
+      "order": 424
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_backing_ds_router",
+      "attribute": "router",
+      "order": 425
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_live_log_router",
+      "attribute": "router",
+      "order": 426
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_schema_config_router",
+      "attribute": "router",
+      "order": 427
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_detail_subpanel_router",
+      "attribute": "router",
+      "order": 428
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dh_health_summary_router",
+      "attribute": "router",
+      "order": 429
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dh_troubleshoot_guide_router",
+      "attribute": "router",
+      "order": 430
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_ontology_browse_router",
+      "attribute": "router",
+      "order": 431
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_history_detail_router",
+      "attribute": "router",
+      "order": 432
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_save_open_chart_router",
+      "attribute": "router",
+      "order": 433
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dl_share_link_router",
+      "attribute": "router",
+      "order": 434
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_breaking_change_detect_router",
+      "attribute": "router",
+      "order": 435
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_model_dev_repo_router",
+      "attribute": "router",
+      "order": 436
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_doc_assist_router",
+      "attribute": "router",
+      "order": 437
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_pr_review_router",
+      "attribute": "router",
+      "order": 438
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_code_review_req_router",
+      "attribute": "router",
+      "order": 439
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_dataset_alias_router",
+      "attribute": "router",
+      "order": 440
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_multi_artifact_router",
+      "attribute": "router",
+      "order": 441
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_artifact_credential_router",
+      "attribute": "router",
+      "order": 442
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_artifact_registry_router",
+      "attribute": "router",
+      "order": 443
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_ai_error_enhance_router",
+      "attribute": "router",
+      "order": 444
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_aip_template_recommend_router",
+      "attribute": "router",
+      "order": 445
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.mt_code_reuse_router",
+      "attribute": "router",
+      "order": 446
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.id_shell_terminal_router",
+      "attribute": "router",
+      "order": 447
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.id_key_binding_router",
+      "attribute": "router",
+      "order": 448
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.id_vsix_install_router",
+      "attribute": "router",
+      "order": 449
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.id_command_palette_router",
+      "attribute": "router",
+      "order": 450
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.id_python_snippet_router",
+      "attribute": "router",
+      "order": 451
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.id_refresh_token_router",
+      "attribute": "router",
+      "order": 452
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.id_install_python_env_router",
+      "attribute": "router",
+      "order": 453
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.id_public_extension_router",
+      "attribute": "router",
+      "order": 454
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.di_virtual_table_create_router",
+      "attribute": "router",
+      "order": 455
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.dh_escalate_router",
+      "attribute": "router",
+      "order": 456
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.pb_expr_func_index_router",
+      "attribute": "router",
+      "order": 457
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_transform_repo_router",
+      "attribute": "router",
+      "order": 458
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_editor_context_menu_router",
+      "attribute": "router",
+      "order": 459
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_spark_profiles_router",
+      "attribute": "router",
+      "order": 460
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_docker_artifact_publish_router",
+      "attribute": "router",
+      "order": 461
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.cr_code_autocomplete_router",
+      "attribute": "router",
+      "order": 462
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.mt_python_transform_df_router",
+      "attribute": "router",
+      "order": 463
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.mt_java_transform_api_router",
+      "attribute": "router",
+      "order": 464
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.mt_r_transform_router",
+      "attribute": "router",
+      "order": 465
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.mt_spark_version_mgmt_router",
+      "attribute": "router",
+      "order": 466
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.mt_unit_test_router",
+      "attribute": "router",
+      "order": 467
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.mt_data_expectations_router",
+      "attribute": "router",
+      "order": 468
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.id_geospatial_framework_router",
+      "attribute": "router",
+      "order": 469
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.id_vertex_digital_twin_router",
+      "attribute": "router",
+      "order": 470
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.id_timeseries_router",
+      "attribute": "router",
+      "order": 471
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.phase5_pipelines",
+      "attribute": "router",
+      "order": 472
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.phase5_schedules",
+      "attribute": "router",
+      "order": 473
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.phase5_datasets",
+      "attribute": "router",
+      "order": 474
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.phase6_connectors",
+      "attribute": "router",
+      "order": 475
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.phase6_sources",
+      "attribute": "router",
+      "order": 476
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.phase6_schemas",
+      "attribute": "router",
+      "order": 477
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.phase6_syncs",
+      "attribute": "router",
+      "order": 478
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.phase6_media_sets",
+      "attribute": "router",
+      "order": 479
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.phase6_documents",
+      "attribute": "router",
+      "order": 480
+    },
+    {
+      "domain": "model",
+      "module": "aos_api.routers.gantt_ml_drag_pricing",
+      "attribute": "router",
+      "order": 481
+    },
+    {
+      "domain": "model",
+      "module": "aos_api.gs_ontology_geo_router",
+      "attribute": "router",
+      "order": 482
+    },
+    {
+      "domain": "model",
+      "module": "aos_api.gs_geospatial_framework_router",
+      "attribute": "router",
+      "order": 483
+    },
+    {
+      "domain": "model",
+      "module": "aos_api.gs_coord_projection_router",
+      "attribute": "router",
+      "order": 484
+    },
+    {
+      "domain": "model",
+      "module": "aos_api.gs_map_layer_overlay_router",
+      "attribute": "router",
+      "order": 485
+    },
+    {
+      "domain": "model",
+      "module": "aos_api.gs_map_template_router",
+      "attribute": "router",
+      "order": 486
+    },
+    {
+      "domain": "model",
+      "module": "aos_api.gs_digital_twin_engine_router",
+      "attribute": "router",
+      "order": 487
+    },
+    {
+      "domain": "model",
+      "module": "aos_api.gs_causal_analysis_router",
+      "attribute": "router",
+      "order": 488
+    },
+    {
+      "domain": "model",
+      "module": "aos_api.gs_realtime_situation_router",
+      "attribute": "router",
+      "order": 489
+    },
+    {
+      "domain": "model",
+      "module": "aos_api.gs_timeseries_object_type_router",
+      "attribute": "router",
+      "order": 490
+    },
+    {
+      "domain": "model",
+      "module": "aos_api.gs_sensor_data_model_router",
+      "attribute": "router",
+      "order": 491
+    },
+    {
+      "domain": "model",
+      "module": "aos_api.routers.model_catalog",
+      "attribute": "router",
+      "order": 492
+    },
+    {
+      "domain": "model",
+      "module": "aos_api.routers.model_providers",
+      "attribute": "router",
+      "order": 493
+    },
+    {
+      "domain": "model",
+      "module": "aos_api.routers.model_routes",
+      "attribute": "router",
+      "order": 494
+    },
+    {
+      "domain": "model",
+      "module": "aos_api.routers.model_capacity",
+      "attribute": "router",
+      "order": 495
+    },
+    {
+      "domain": "apollo",
+      "module": "aos_api.cp_multi_spoke_monitor_router",
+      "attribute": "router",
+      "order": 496
+    },
+    {
+      "domain": "apollo",
+      "module": "aos_api.hs_remote_dispatch_router",
+      "attribute": "router",
+      "order": 497
+    },
+    {
+      "domain": "apollo",
+      "module": "aos_api.hs_status_report_back_router",
+      "attribute": "router",
+      "order": 498
+    },
+    {
+      "domain": "apollo",
+      "module": "aos_api.fr2_incremental_package_router",
+      "attribute": "router",
+      "order": 499
+    },
+    {
+      "domain": "apollo",
+      "module": "aos_api.cp_realtime_situation_router",
+      "attribute": "router",
+      "order": 500
+    },
+    {
+      "domain": "apollo",
+      "module": "aos_api.cp_alert_router",
+      "attribute": "router",
+      "order": 501
+    },
+    {
+      "domain": "apollo",
+      "module": "aos_api.routers.phase7_hub_spokes",
+      "attribute": "router",
+      "order": 502
+    },
+    {
+      "domain": "apollo",
+      "module": "aos_api.routers.phase7_releases",
+      "attribute": "router",
+      "order": 503
+    },
+    {
+      "domain": "apollo",
+      "module": "aos_api.routers.phase7_ferry",
+      "attribute": "router",
+      "order": 504
+    }
+  ]
+}
