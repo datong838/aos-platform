@@ -12,7 +12,6 @@
     "http",
     "read",
     "pagination",
-    "oauth2",
     "ingest"
   ],
   "configSchema": {

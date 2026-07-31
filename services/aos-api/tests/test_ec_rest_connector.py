@@ -1,4 +1,6 @@
 import json
+import threading
+import time
 from datetime import datetime, timedelta, timezone
 from urllib.parse import parse_qs, urlsplit
 
@@ -111,3 +113,19 @@ def test_rate_limit_is_scoped_by_workspace_and_connection():
     assert fake.value == 1
     engine.fetch(spec, org_workspace="o/other", connection_id="c")
     assert fake.value == 1
+
+
+def test_rate_limit_state_is_serialized_for_concurrent_requests():
+    calls = []
+    gate = threading.Barrier(3)
+    engine = RestGetEngine(transport=lambda *_: calls.append(time.monotonic()) or response([]), policy=policy())
+    spec = RestRequest("https://api.example.test/data", qps=50)
+    def run():
+        gate.wait()
+        engine.fetch(spec, org_workspace="o/w", connection_id="c")
+    threads = [threading.Thread(target=run) for _ in range(2)]
+    [thread.start() for thread in threads]
+    gate.wait()
+    [thread.join() for thread in threads]
+    assert len(calls) == 2
+    assert abs(calls[1] - calls[0]) >= 0.015

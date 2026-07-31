@@ -6,6 +6,7 @@ import ipaddress
 import json
 import random
 import socket
+import threading
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -113,6 +114,7 @@ class RestGetEngine:
         self.policy, self.clock, self.sleep, self.jitter = policy or SafeUrlPolicy(), clock, sleep, jitter
         self.transport = transport or self._urllib_transport
         self._next_request: dict[tuple[str, str], float] = {}
+        self._limiter_lock = threading.Lock()
 
     def fetch(self, spec: RestRequest, *, org_workspace: str, connection_id: str,
               bearer_token: str = "") -> RestResult:
@@ -175,9 +177,11 @@ class RestGetEngine:
 
     def _limit(self, key, qps):
         if qps <= 0: return
-        now, due = self.clock(), self._next_request.get(key, self.clock())
-        if due > now: self.sleep(due - now)
-        self._next_request[key] = max(now, due) + 1 / qps
+        with self._limiter_lock:
+            now = self.clock()
+            due = self._next_request.get(key, now)
+            if due > now: self.sleep(due - now)
+            self._next_request[key] = max(now, due) + 1 / qps
 
     @staticmethod
     def _retry_after(response):

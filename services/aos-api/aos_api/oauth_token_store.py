@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import threading
+from copy import deepcopy
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Protocol
@@ -58,21 +59,23 @@ class InMemoryOAuthTokenStore:
 
     def get(self, scope: OAuthScope) -> OAuthTokenRecord | None:
         with self._lock:
-            return self._items.get(scope.key)
+            item = self._items.get(scope.key)
+            return deepcopy(item) if item else None
 
     def put(self, record: OAuthTokenRecord, *, expected_version: int | None = None) -> OAuthTokenRecord:
         with self._lock:
             current = self._items.get(record.scope.key)
             if expected_version is not None and (current is None or current.version != expected_version):
                 raise RuntimeError("OAUTH_TOKEN_VERSION_CONFLICT")
-            record.version = (current.version + 1) if current else 1
-            record.updated_at = datetime.now(timezone.utc)
-            self._items[record.scope.key] = record
-            return record
+            stored = deepcopy(record)
+            stored.version = (current.version + 1) if current else 1
+            stored.updated_at = datetime.now(timezone.utc)
+            self._items[record.scope.key] = stored
+            return deepcopy(stored)
 
     def list_due(self, before: datetime) -> list[OAuthTokenRecord]:
         with self._lock:
-            return [r for r in self._items.values() if r.status == "active" and r.expires_at and r.expires_at <= before]
+            return [deepcopy(r) for r in self._items.values() if r.status == "active" and r.expires_at and r.expires_at <= before]
 
     def delete(self, scope: OAuthScope) -> bool:
         with self._lock:
@@ -93,32 +96,35 @@ class PostgresOAuthTokenStore:
 
     def put(self, record: OAuthTokenRecord, *, expected_version: int | None = None) -> OAuthTokenRecord:
         from aos_api.db import connect
-        current = self.get(record.scope)
-        if expected_version is not None and (current is None or current.version != expected_version):
-            raise RuntimeError("OAUTH_TOKEN_VERSION_CONFLICT")
-        record.version = (current.version + 1) if current else 1
-        record.updated_at = datetime.now(timezone.utc)
-        payload = self._encode(record)
+        candidate = deepcopy(record)
+        candidate.version = (expected_version + 1) if expected_version is not None else 1
+        candidate.updated_at = datetime.now(timezone.utc)
+        payload = self._encode(candidate)
         with connect() as conn:
             if expected_version is not None:
                 cur = conn.execute(
                     """UPDATE oauth_token_store SET payload=%s::jsonb,version=%s,expires_at=%s,updated_at=NOW()
-                    WHERE org_id=%s AND workspace_id=%s AND platform=%s AND external_account_id=%s AND version=%s""",
-                    (payload, record.version, record.expires_at, *record.scope.key, expected_version),
+                    WHERE org_id=%s AND workspace_id=%s AND platform=%s AND external_account_id=%s AND version=%s
+                    RETURNING payload""",
+                    (payload, candidate.version, candidate.expires_at, *candidate.scope.key, expected_version),
                 )
-                if cur.rowcount != 1:
+                row = cur.fetchone()
+                if row is None:
                     conn.rollback()
                     raise RuntimeError("OAUTH_TOKEN_VERSION_CONFLICT")
             else:
-                conn.execute(
+                cur = conn.execute(
                     """INSERT INTO oauth_token_store(org_id,workspace_id,platform,external_account_id,payload,version,expires_at,updated_at)
                     VALUES(%s,%s,%s,%s,%s::jsonb,%s,%s,NOW())
                     ON CONFLICT(org_id,workspace_id,platform,external_account_id) DO UPDATE SET
-                      payload=EXCLUDED.payload,version=oauth_token_store.version+1,expires_at=EXCLUDED.expires_at,updated_at=NOW()""",
-                    (*record.scope.key, payload, record.version, record.expires_at),
+                      payload=jsonb_set(EXCLUDED.payload,'{version}',to_jsonb(oauth_token_store.version+1),false),
+                      version=oauth_token_store.version+1,expires_at=EXCLUDED.expires_at,updated_at=NOW()
+                    RETURNING payload""",
+                    (*candidate.scope.key, payload, candidate.version, candidate.expires_at),
                 )
+                row = cur.fetchone()
             conn.commit()
-        return record
+        return self._decode(row["payload"])
 
     def list_due(self, before: datetime) -> list[OAuthTokenRecord]:
         from aos_api.db import connect

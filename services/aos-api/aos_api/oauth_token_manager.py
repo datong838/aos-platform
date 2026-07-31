@@ -7,9 +7,11 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
+from urllib import parse
 
 from aos_api.kms_crypto import decrypt_strict, encrypt_strict
 from aos_api.oauth_token_store import OAuthScope, OAuthTokenRecord, OAuthTokenStore
+from aos_api.rest_connector import RestConnectorError, SafeUrlPolicy
 
 
 class OAuthError(RuntimeError):
@@ -23,6 +25,7 @@ class OAuthResponse:
     status: int
     data: dict[str, Any]
     headers: dict[str, str] | None = None
+    final_url: str = ""
 
 
 OAuthTransport = Callable[[str, dict[str, str], float], OAuthResponse]
@@ -31,9 +34,11 @@ AuditSink = Callable[[str, OAuthScope, dict[str, Any]], None]
 
 class OAuthTokenManager:
     def __init__(self, store: OAuthTokenStore, transport: OAuthTransport, *, audit: AuditSink | None = None,
-                 clock: Callable[[], datetime] | None = None, refresh_skew: timedelta = timedelta(minutes=5)) -> None:
+                 clock: Callable[[], datetime] | None = None, refresh_skew: timedelta = timedelta(minutes=5),
+                 url_policy: SafeUrlPolicy | None = None) -> None:
         self.store, self.transport, self.audit = store, transport, audit or (lambda *_: None)
         self.clock, self.refresh_skew = clock or (lambda: datetime.now(timezone.utc)), refresh_skew
+        self.url_policy = url_policy or SafeUrlPolicy()
         self._locks: dict[tuple[str, str, str, str], threading.Lock] = {}
         self._locks_guard = threading.Lock()
         self.sleep: Callable[[float], None] = time.sleep
@@ -76,7 +81,7 @@ class OAuthTokenManager:
         except (KeyError, TypeError, ValueError, OAuthError) as exc:
             self._emit("oauth.exchange.failure", scope, {"status": "failed", "errorCode": "OAUTH_RESPONSE_INVALID"}, started)
             raise OAuthError("OAUTH_RESPONSE_INVALID") from exc
-        self.store.put(record)
+        record = self.store.put(record)
         self._emit("oauth.exchange.success", scope, {"tokenId": record.token_id, "status": record.status}, started)
         return record
 
@@ -166,12 +171,14 @@ class OAuthTokenManager:
         return str(response.data.get("error") or f"http_{response.status}")
 
     def _call(self, endpoint: str, form: dict[str, str], timeout: float) -> OAuthResponse:
+        self._validate_endpoint(endpoint)
         retryable = {408, 429, 500, 502, 503, 504}
         for attempt in range(3):
             try:
                 response = self.transport(endpoint, form, timeout)
             except (TimeoutError, OSError):
                 response = OAuthResponse(504, {"error": "timeout"})
+            self._validate_endpoint(response.final_url or endpoint)
             if response.status not in retryable or attempt == 2:
                 return response
             raw = (response.headers or {}).get("Retry-After", "")
@@ -181,3 +188,19 @@ class OAuthTokenManager:
                 delay = float(2 ** attempt)
             self.sleep(delay)
         raise OAuthError("OAUTH_UPSTREAM_FAILED")
+
+    def _validate_endpoint(self, endpoint: str) -> None:
+        parts = parse.urlsplit(endpoint)
+
+        def looks_sensitive(key: str) -> bool:
+            normalized = key.lower().replace("-", "_")
+            return normalized in {"code", "api_key", "apikey"} or any(
+                marker in normalized for marker in ("token", "secret", "password", "credential")
+            )
+
+        if any(looks_sensitive(key) for key, value in parse.parse_qsl(parts.query, keep_blank_values=True) if value):
+            raise OAuthError("OAUTH_ENDPOINT_FORBIDDEN")
+        try:
+            self.url_policy.validate(endpoint)
+        except RestConnectorError as exc:
+            raise OAuthError("OAUTH_ENDPOINT_FORBIDDEN") from exc
