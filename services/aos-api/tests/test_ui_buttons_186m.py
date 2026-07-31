@@ -2,8 +2,26 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parents[3] / "apps" / "web" / "src"
+CSS_IMPORT = re.compile(r'@import\s+(?:url\()?\s*["\']([^"\']+)["\']')
+
+
+def _read_local_css_graph(path: Path, seen: set[Path] | None = None) -> str:
+    """Read a CSS facade and its local imports in declared order."""
+    resolved = path.resolve()
+    visited = seen if seen is not None else set()
+    if resolved in visited:
+        return ""
+    visited.add(resolved)
+    text = resolved.read_text(encoding="utf-8")
+    imported = []
+    for reference in CSS_IMPORT.findall(text):
+        if "://" in reference:
+            continue
+        imported.append(_read_local_css_graph(resolved.parent / reference, visited))
+    return "\n".join([text, *imported])
 
 
 def test_data_page_uses_bp_card_hit():
@@ -19,5 +37,5 @@ def test_graph_health_has_ttl_button():
 
 
 def test_styles_define_bp_card_hit():
-    css = (ROOT / "styles.css").read_text(encoding="utf-8")
+    css = _read_local_css_graph(ROOT / "styles.css")
     assert ".bp-card-hit" in css
