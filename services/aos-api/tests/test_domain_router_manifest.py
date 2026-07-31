@@ -158,7 +158,17 @@ critical_paths = {
     "/api/multi-spoke-monitors/",
     "/v1/apollo/ferry/status",
 }
-for route in app.routes:
+def iter_effective_routes(routes):
+    # Flatten both eager FastAPI routes and 0.141+ lazy included routers.
+    for route in routes:
+        effective_candidates = getattr(route, "effective_candidates", None)
+        if callable(effective_candidates):
+            yield from iter_effective_routes(effective_candidates())
+        else:
+            yield route
+
+
+for route in iter_effective_routes(app.routes):
     for method in sorted(getattr(route, "methods", set()) - {"HEAD", "OPTIONS"}):
         rows.append((
             route.path,
