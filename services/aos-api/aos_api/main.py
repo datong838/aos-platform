@@ -43,30 +43,42 @@ except Exception:  # pragma: no cover
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    try:
-        run_migrations()
-        init_schema()
-        ensure_system_meta()
+    # Migration mode owns its failure policy. Keep it outside the best-effort
+    # bootstrap boundary so managed-mode failures can stop application startup.
+    migration_mode = run_migrations()
+    mode_value = getattr(migration_mode, "value", migration_mode)
+    # ``None`` preserves compatibility with the pre-W1 implementation. Once W1
+    # is merged, only its explicit LEGACY_BOOTSTRAP mode may execute runtime DDL.
+    legacy_bootstrap = mode_value is None or mode_value in {
+        "legacy-bootstrap",
+        "legacy_bootstrap",
+    }
+    if legacy_bootstrap:
         try:
-            seed_modules_if_empty()
-        except Exception:
-            log.exception("startup_module_seed_failed_continue")
-        try:
-            from aos_api.tenant_catalog import boot_tenant_catalogs
+            init_schema()
+            ensure_system_meta()
+            try:
+                seed_modules_if_empty()
+            except Exception:
+                log.exception("startup_module_seed_failed_continue")
+            try:
+                from aos_api.tenant_catalog import boot_tenant_catalogs
 
-            boot_tenant_catalogs()
-        except Exception:
-            log.exception("startup_tenant_catalog_failed_continue")
-        try:
-            from aos_api import data_os_store
-            from aos_api.routers import wave_ext as wave_ext_mod
+                boot_tenant_catalogs()
+            except Exception:
+                log.exception("startup_tenant_catalog_failed_continue")
+            try:
+                from aos_api import data_os_store
+                from aos_api.routers import wave_ext as wave_ext_mod
 
-            data_os_store.boot_data_os(wave_ext_mod)
+                data_os_store.boot_data_os(wave_ext_mod)
+            except Exception:
+                log.exception("startup_data_os_failed_continue")
+            log.info("startup_meta_store_ok")
         except Exception:
-            log.exception("startup_data_os_failed_continue")
-        log.info("startup_meta_store_ok")
-    except Exception:
-        log.exception("startup_meta_store_failed_continue")
+            log.exception("startup_meta_store_failed_continue")
+    else:
+        log.info("startup_schema_bootstrap_skipped migration_mode=%s", mode_value)
     yield
 
 
