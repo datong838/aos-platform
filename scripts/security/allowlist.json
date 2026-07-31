@@ -8,5 +8,10 @@
     "rule": "CREDENTIAL_URL",
     "path": "scripts/security/test_scan_sensitive.py",
     "reason": "Synthetic invalid negative fixture used to prove credential URL detection."
+  },
+  {
+    "rule": "CREDENTIAL_URL",
+    "path": "services/aos-api/tests/test_migrations.py",
+    "reason": "Synthetic invalid DSN verifies migration failures never log credential text."
   }
 ]
