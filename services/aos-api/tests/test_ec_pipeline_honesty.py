@@ -10,7 +10,10 @@ from aos_api.phase5_pipeline_engine import get_engine
 
 @pytest.fixture(autouse=True)
 def reset_engine():
-    get_engine().reset()
+    eng = get_engine()
+    eng.reset()
+    for scheme in ("dataset", "artifact", "object", "lineage", "quality"):
+        eng.register_evidence_resolver(scheme, lambda _ref: True)
     yield
 
 
@@ -224,6 +227,55 @@ def test_untraceable_or_sensitive_output_ref_cannot_succeed(output_ref):
     assert run.status == "failed"
     assert run.error_code == "PIPELINE_EVIDENCE_INVALID"
     assert output_ref not in run.error_message
+
+
+@pytest.mark.parametrize(
+    "output_ref",
+    [
+        "dataset://output/Bearer top-secret-token",
+        "dataset://output/user@example.com",
+        "dataset://output/13800138000",
+        "lineage://run/not-an-output",
+    ],
+)
+def test_sensitive_or_wrong_scheme_ref_never_enters_history(output_ref):
+    eng = get_engine()
+    eng.register_executor(
+        "bad-ref",
+        lambda **_kwargs: {"output_ref": output_ref, "rows_read": 1, "rows_written": 1},
+    )
+    pl = eng.create_pipeline(name="p", executor_id="bad-ref", execution_mode="live")
+    sc = eng.create_schedule(name="s", pipeline_id=pl.id)
+
+    run = eng.run_schedule(sc.id)
+
+    assert run.status == "failed"
+    assert output_ref not in " ".join(h.detail for h in eng.list_history(pl.id))
+
+
+def test_unresolved_evidence_cannot_succeed():
+    eng = get_engine()
+    eng.register_evidence_resolver("dataset", lambda _ref: False)
+    eng.register_executor("live", _evidence_executor)
+    pl = eng.create_pipeline(name="p", executor_id="live", execution_mode="live")
+    sc = eng.create_schedule(name="s", pipeline_id=pl.id)
+
+    run = eng.run_schedule(sc.id)
+
+    assert run.status == "failed"
+    assert run.error_code == "PIPELINE_EVIDENCE_INVALID"
+
+
+def test_schedule_run_reads_are_detached():
+    eng = get_engine()
+    pl = eng.create_pipeline(name="p")
+    sc = eng.create_schedule(name="s", pipeline_id=pl.id)
+    original = eng.run_schedule(sc.id)
+
+    listed = eng.list_schedule_runs(sc.id)
+    listed[0].status = "forged"
+
+    assert eng.list_schedule_runs(sc.id)[0].status == original.status
 
 
 def test_preview_and_health_are_explicitly_synthetic():

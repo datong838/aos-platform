@@ -189,6 +189,7 @@ class PipelineEngine:
                     inst._health: dict[str, HealthCheck] = {}
                     inst._sync_configs: dict[str, SyncConfig] = {}
                     inst._executors: dict[str, Callable[..., dict[str, Any]]] = {}
+                    inst._evidence_resolvers: dict[str, Callable[[str], bool]] = {}
                     cls._instance = inst
         return cls._instance
 
@@ -550,7 +551,11 @@ class PipelineEngine:
                 self._add_history(
                     pipeline_id,
                     "run",
-                    f"status={run.status} executor={run.executor_id or '-'} output={run.output_ref or '-'}",
+                    "status={} executor={} output={}".format(
+                        run.status,
+                        run.executor_id or "-",
+                        str(redact_sensitive(run.output_ref)) if run.output_ref else "-",
+                    ),
                 )
             return run.model_copy(deep=True)
 
@@ -564,7 +569,12 @@ class PipelineEngine:
             return sc
 
     def list_schedule_runs(self, sc_id: str) -> list[ScheduleRun]:
-        return [r for r in self._schedule_runs.values() if r.schedule_id == sc_id]
+        with _LOCK:
+            return [
+                r.model_copy(deep=True)
+                for r in self._schedule_runs.values()
+                if r.schedule_id == sc_id
+            ]
 
     # ── Datasets ──
     def create_dataset(self, name: str, **kwargs: Any) -> Dataset:
@@ -653,6 +663,19 @@ class PipelineEngine:
         with _LOCK:
             self._executors.pop(executor_id, None)
 
+    def register_evidence_resolver(
+        self,
+        scheme: str,
+        resolver: Callable[[str], bool],
+    ) -> None:
+        normalized = scheme.strip().lower()
+        if normalized not in {"dataset", "artifact", "lineage", "quality", "object"}:
+            raise ValueError("unsupported evidence scheme")
+        if not callable(resolver):
+            raise ValueError("evidence resolver must be callable")
+        with _LOCK:
+            self._evidence_resolvers[normalized] = resolver
+
     @staticmethod
     def _unsupported_evidence(started_at: float, code: str) -> dict[str, Any]:
         finished_at = time.time()
@@ -694,21 +717,37 @@ class PipelineEngine:
             return any(PipelineEngine._contains_unsupported_config(child) for child in value)
         return False
 
-    @staticmethod
-    def _valid_ref(value: str, *, required: bool = False) -> bool:
+    def _valid_ref(
+        self,
+        value: str,
+        *,
+        allowed_schemes: set[str],
+        required: bool = False,
+    ) -> bool:
         if not value:
             return not required
-        if len(value) > 512:
+        if len(value) > 512 or any(char.isspace() for char in value):
+            return False
+        if str(redact_sensitive(value)) != value:
             return False
         parsed = urlsplit(value)
-        return (
-            parsed.scheme in {"dataset", "artifact", "lineage", "quality", "object"}
+        syntax_valid = (
+            parsed.scheme in allowed_schemes
             and bool(parsed.netloc)
             and not parsed.username
             and not parsed.password
             and not parsed.query
             and not parsed.fragment
         )
+        if not syntax_valid:
+            return False
+        resolver = self._evidence_resolvers.get(parsed.scheme)
+        if resolver is None:
+            return False
+        try:
+            return resolver(value) is True
+        except Exception:
+            return False
 
     def _preflight(self, pipeline: Pipeline, started_at: float) -> dict[str, Any] | None:
         nodes = [n for n in self._nodes.values() if n.pipeline_id == pipeline.id]
@@ -849,8 +888,19 @@ class PipelineEngine:
                 name: str(result.get(name) or "")
                 for name in ("input_ref", "output_ref", "lineage_ref", "quality_ref")
             }
-            if not self._valid_ref(refs["output_ref"], required=True) or any(
-                not self._valid_ref(value) for value in refs.values()
+            ref_schemes = {
+                "input_ref": {"dataset", "artifact", "object"},
+                "output_ref": {"dataset", "artifact", "object"},
+                "lineage_ref": {"lineage"},
+                "quality_ref": {"quality"},
+            }
+            if any(
+                not self._valid_ref(
+                    value,
+                    allowed_schemes=ref_schemes[name],
+                    required=name == "output_ref",
+                )
+                for name, value in refs.items()
             ):
                 raise ValueError("executor references are invalid")
             rows_read = int(result.get("rows_read", 0))
@@ -953,6 +1003,7 @@ class PipelineEngine:
             self._health.clear()
             self._sync_configs.clear()
             self._executors.clear()
+            self._evidence_resolvers.clear()
 
 
 def get_engine() -> PipelineEngine:
