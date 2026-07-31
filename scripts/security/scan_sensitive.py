@@ -180,22 +180,23 @@ def _git_tracked_files(root: Path) -> List[Path]:
 
 
 def collect_files(root: Path, paths: Sequence[str]) -> List[Path]:
-    candidates: Iterable[Path]
     if paths:
-        candidates = (
-            file_path
+        # An explicitly selected delivery root (often named ``dist`` or
+        # ``build``) must itself be scanned. _walk_explicit still prunes
+        # excluded children such as nested node_modules and caches.
+        unique = {
+            candidate.resolve()
             for raw_path in paths
-            for file_path in _walk_explicit(Path(raw_path).expanduser().resolve())
-        )
+            for candidate in _walk_explicit(Path(raw_path).expanduser().resolve())
+            if candidate.is_file()
+        }
     else:
-        candidates = _git_tracked_files(root)
-
-    unique = {
-        candidate.resolve()
-        for candidate in candidates
-        if candidate.is_file()
-        and not any(part in EXCLUDED_DIRS for part in candidate.parts)
-    }
+        unique = {
+            candidate.resolve()
+            for candidate in _git_tracked_files(root)
+            if candidate.is_file()
+            and not any(part in EXCLUDED_DIRS for part in candidate.parts)
+        }
     return sorted(unique, key=lambda item: item.as_posix())
 
 

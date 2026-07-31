@@ -130,6 +130,17 @@ class SensitiveScannerTests(unittest.TestCase):
         files = scan_sensitive.collect_files(self.root, [str(self.root / "中文目录")])
         self.assertEqual([safe.resolve()], files)
 
+    def test_explicit_delivery_root_named_dist_is_scanned(self) -> None:
+        artifact = self._write("dist/assets/app.js", "ordinary bundled content\n")
+        self._write(
+            "dist/node_modules/ignored.js",
+            "password=ShouldNotBeScanned123\n",
+        )
+
+        files = scan_sensitive.collect_files(self.root, [str(self.root / "dist")])
+
+        self.assertEqual([artifact.resolve()], files)
+
     def test_binary_file_is_skipped(self) -> None:
         target = self.root / "binary.dat"
         target.write_bytes(b"\0password=BinarySecret123")
