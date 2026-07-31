@@ -89,6 +89,8 @@ def test_node_preview_and_config() -> None:
     preview = eng.preview_node(pl.id, node.id, limit=5)
     assert preview["node_type"] == "llm"
     assert len(preview["rows"]) == 5
+    assert preview["mode"] == "demo"
+    assert preview["synthetic"] is True
     cfg = eng.get_node_config(pl.id, node.id)
     assert cfg["config"]["model"] == "gpt"
 
@@ -115,8 +117,9 @@ def test_trial_run() -> None:
     pl = eng.create_pipeline(name="PL")
     node = eng.add_node(pl.id, "transform", node_type="transform")
     result = eng.trial_run(pl.id, node.id, sample_input={"x": 1})
-    assert result["status"] == "ok"
-    assert len(result["output_rows"]) == 3
+    assert result["status"] == "unsupported"
+    assert result["error_code"] == "PIPELINE_EXECUTOR_MISSING"
+    assert result["output_rows"] == []
 
 
 def test_pipeline_history() -> None:
@@ -178,10 +181,11 @@ def test_update_schedule() -> None:
 
 def test_run_schedule() -> None:
     eng = get_engine()
-    sc = eng.create_schedule(name="SC")
+    pl = eng.create_pipeline(name="PL")
+    sc = eng.create_schedule(name="SC", pipeline_id=pl.id)
     run = eng.run_schedule(sc.id)
-    assert run.status == "success"
-    assert run.rows_processed > 0
+    assert run.status == "unsupported"
+    assert run.rows_processed == 0
     runs = eng.list_schedule_runs(sc.id)
     assert len(runs) == 1
 
@@ -250,6 +254,8 @@ def test_dataset_preview() -> None:
     assert result["total"] == 500
     assert len(result["rows"]) == 10
     assert result["rows"][0]["id"] == 0
+    assert result["mode"] == "demo"
+    assert result["synthetic"] is True
 
 
 def test_dataset_builds() -> None:
@@ -269,6 +275,8 @@ def test_dataset_health() -> None:
     latest = eng.get_latest_health(ds.id)
     assert latest is not None
     assert latest.id == hc.id
+    assert hc.mode == "demo"
+    assert hc.synthetic is True
 
 
 def test_sync_config_default() -> None:

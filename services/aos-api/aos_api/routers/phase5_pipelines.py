@@ -24,6 +24,7 @@ class CreatePipelineRequest(BaseModel):
     status: str = "draft"
     owner: str = "system"
     tags: list[str] = []
+    executor_id: str = ""
 
 
 class UpdatePipelineRequest(BaseModel):
@@ -33,6 +34,7 @@ class UpdatePipelineRequest(BaseModel):
     status: str | None = None
     owner: str | None = None
     tags: list[str] | None = None
+    executor_id: str | None = None
 
 
 class UpdateNodeConfigRequest(BaseModel):
@@ -209,17 +211,27 @@ async def trial_run(pl_id: str, node_id: str, req: TrialRunRequest | None = None
     except KeyError:
         if node_id.startswith("demo-"):
             import time as _time
-            sample_input = req.sample_input if req else None
+            now = _time.time()
             return {
                 "pipeline_id": pl_id,
                 "node_id": node_id,
-                "status": "ok",
-                "latency_ms": 42,
-                "output_rows": [
-                    {"id": 0, "input": sample_input or {}, "output": "demo_result_0", "confidence": 0.9},
-                    {"id": 1, "input": sample_input or {}, "output": "demo_result_1", "confidence": 0.8},
-                ],
-                "ran_at": _time.time(),
+                "mode": "demo",
+                "status": "unsupported",
+                "started_at": now,
+                "finished_at": now,
+                "duration_ms": 0,
+                "executor_id": "",
+                "input_ref": "",
+                "output_ref": "",
+                "rows_read": 0,
+                "rows_written": 0,
+                "lineage_ref": "",
+                "quality_ref": "",
+                "error_code": "DEMO_EXECUTION_UNSUPPORTED",
+                "error_message": "demo pipeline does not execute live data",
+                "latency_ms": 0,
+                "output_rows": [],
+                "ran_at": now,
                 "demo": True,
             }
         raise HTTPException(404, f"Node {node_id} not found in pipeline {pl_id}")
@@ -285,7 +297,7 @@ async def list_history(pl_id: str) -> dict[str, Any]:
             {"id": f"ph-demo-2-{pl_id}", "pipeline_id": pl_id, "action": "deployed", "actor": "system",
              "detail": "演示路径 · 最近一次部署", "created_at": now - 3600},
             {"id": f"ph-demo-3-{pl_id}", "pipeline_id": pl_id, "action": "run", "actor": "system",
-             "detail": "演示路径 · 试运行成功", "created_at": now - 600},
+             "detail": "演示路径 · 不执行真实数据", "created_at": now - 600},
         ]
         return {"items": items, "count": len(items), "demo": True}
     items = eng.list_history(pl_id)
