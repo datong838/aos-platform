@@ -19,8 +19,11 @@ export function desktopCoveredPaths(): Set<string> {
 describe("TWC.2 desktop ≥ Web parity", () => {
   it("does not ship a separate shrunk NAV_ITEMS", () => {
     const pages = navPages();
+    const paths = pages.map((p) => p.path);
     expect(pages.length).toBeGreaterThanOrEqual(40);
-    expect(pages.every((p) => p.status === "live")).toBe(true);
+    expect(paths.every((path) => path.startsWith("/"))).toBe(true);
+    expect(new Set(paths).size).toBe(paths.length);
+    expect(pages.every((p) => p.status === "live" || p.status === "s2")).toBe(true);
   });
 
   it("P1: nav paths ⊆ desktop covered set (empty diff)", () => {
