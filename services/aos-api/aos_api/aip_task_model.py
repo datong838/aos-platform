@@ -9,7 +9,9 @@ import time
 import uuid
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from aos_api.public_contracts import TaskStatus, normalize_task_status, transition_task_status
 
 
 def _uid(prefix: str) -> str:
@@ -100,7 +102,7 @@ class Task(BaseModel):
     type: str = "generic"  # generic | customer_onboarding | product_recommendation | ...
     title: str = ""
     description: str = ""
-    status: str = "created"  # created | planning | approved | executing | completed | failed
+    status: TaskStatus = TaskStatus.PENDING
     plan: ExecutionPlan | None = None
     context: dict[str, Any] = Field(default_factory=dict)
     artifacts: list[Artifact] = Field(default_factory=list)
@@ -111,8 +113,19 @@ class Task(BaseModel):
     created_at: float = Field(default_factory=_now)
     updated_at: float = Field(default_factory=_now)
 
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_status(cls, value):
+        return normalize_task_status(value)
+
     def touch(self) -> None:
         self.updated_at = _now()
+
+    def transition(self, target: str | TaskStatus) -> TaskStatus:
+        self.status = transition_task_status(self.status, target)
+        self.touch()
+        return self.status
+
 
 
 # ── TAOR 阶段结果 ──
