@@ -100,7 +100,7 @@ def test_refresh_retries_429_and_5xx():
 
 @pytest.mark.parametrize("endpoint", [
     "http://oauth.example.test/token",
-    "https://user:password@oauth.example.test/token",
+    "https://user:pwd@oauth.example.test/token",
     "https://oauth.example.test/token?access_token=leak",
 ])
 def test_oauth_endpoint_rejects_unsafe_urls_before_transport(endpoint):
