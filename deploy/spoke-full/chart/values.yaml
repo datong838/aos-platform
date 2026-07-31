@@ -1,18 +1,59 @@
-# Dev defaults — Full Spoke stub (158). Do not ship secrets in values for customer packs.
+# Static delivery defaults. Never put credentials or connection strings here.
 replicaCount: 1
+
 image:
   repository: aos/spoke-agent
   tag: "0.3.0-dev"
   pullPolicy: IfNotPresent
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+
 service:
   type: ClusterIP
   port: 8080
+
 spoke:
-  id: spoke-full-stub
-  hub: dev-hub
+  id: spoke-full-reference
+  hub: https://hub.example.invalid
   channel: staging
   mode: full
   outboundPoll: true
+
+# The Secret must already exist in the release namespace.
+existingSecret:
+  name: ""
+  hubTokenKey: hub-token
+
+probes:
+  liveness:
+    path: /v1/health
+    initialDelaySeconds: 20
+    periodSeconds: 20
+  readiness:
+    path: /v1/health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
 resources:
   limits:
     cpu: 500m
@@ -20,3 +61,28 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
+
+persistence:
+  enabled: false
+  existingClaim: ""
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+  mountPath: /var/lib/aos
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: spoke.example.invalid
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+terminationGracePeriodSeconds: 30
