@@ -1,6 +1,7 @@
 """Transactional, tenant, idempotency, tombstone and checkpoint tests."""
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -38,6 +39,15 @@ def store() -> EcomConsistencyStore:
     )
     metadata.create_all(engine)
     return EcomConsistencyStore(engine)
+
+
+def links_for_default_shop(store: EcomConsistencyStore) -> list[dict]:
+    return store.list_links(
+        org_id="org-a",
+        workspace_id="workspace-a",
+        platform="synthetic",
+        shop_or_marketplace_id="shop-a",
+    )
 
 
 def ident(
@@ -139,8 +149,10 @@ def test_object_link_checkpoint_and_receipt_commit_together(store: EcomConsisten
     assert result.objects_written == 2
     assert result.links_written == 1
     assert result.checkpoint_version == 1
-    assert store.get_object(ident("product-1"), "Product") is not None
-    assert len(store.list_links(org_id="org-a", workspace_id="workspace-a")) == 1
+    stored_product = store.get_object(ident("product-1"), "Product")
+    assert stored_product is not None
+    assert stored_product["properties"]["createdAtSourceTimezone"] == "+0800"
+    assert len(links_for_default_shop(store)) == 1
 
 
 def test_idempotent_replay_returns_saved_result_without_advancing(store: EcomConsistencyStore) -> None:
@@ -161,6 +173,28 @@ def test_same_idempotency_key_with_different_hash_conflicts(store: EcomConsisten
     with pytest.raises(EcomConsistencyError) as caught:
         store.apply_batch(changed)
     assert caught.value.code == "IDEMPOTENCY_CONFLICT"
+
+
+def test_request_hash_is_invariant_to_semantic_batch_order() -> None:
+    product = obj("Product", "product-1")
+    shop = obj("Shop", "shop-object")
+    first = batch(product, shop)
+    reordered = batch(shop, product)
+    assert first.request_hash() == reordered.request_hash()
+
+
+def test_concurrent_same_idempotency_key_replays_original_result(tmp_path) -> None:
+    engine = create_engine(
+        f"sqlite+pysqlite:///{tmp_path / 'ecom-concurrent.db'}",
+        connect_args={"check_same_thread": False, "timeout": 5},
+    )
+    metadata.create_all(engine)
+    concurrent_store = EcomConsistencyStore(engine)
+    command = batch(obj("Product", "product-1"), key="same-concurrent-page")
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(lambda _: concurrent_store.apply_batch(command), range(2)))
+    assert sorted(result.replayed for result in results) == [False, True]
+    assert {result.checkpoint_version for result in results} == {1}
 
 
 def test_same_source_version_with_different_payload_rolls_back_whole_batch(store: EcomConsistencyStore) -> None:
@@ -224,6 +258,55 @@ def test_same_external_id_is_isolated_by_org_workspace_and_shop(
     assert store.get_object(other_identity, "Order") is not None
 
 
+def test_link_listing_requires_full_shop_scope(store: EcomConsistencyStore) -> None:
+    store.apply_batch(
+        batch(
+            obj("Product", "product-1"),
+            obj("Shop", "shop-object"),
+            links=[shop_product_link()],
+        )
+    )
+    other_shop = "shop-b"
+    other_scope = scope(shop=other_shop)
+    other_product = obj(
+        "Product",
+        "product-1",
+        identity=ident("product-1", shop=other_shop),
+    )
+    other_shop_object = obj(
+        "Shop",
+        "shop-object",
+        identity=ident("shop-object", shop=other_shop),
+    )
+    other_link = CoreLinkRecord(
+        link_type="Shop.sellsProduct",
+        source_type="Shop",
+        source=ident("shop-object", shop=other_shop),
+        target_type="Product",
+        target=ident("product-1", shop=other_shop),
+        source_updated_at=NOW,
+        cursor_external_id="shop-product-link",
+    )
+    store.apply_batch(
+        batch(
+            other_product,
+            other_shop_object,
+            key="other-shop",
+            batch_scope=other_scope,
+            links=[other_link],
+        )
+    )
+    assert len(links_for_default_shop(store)) == 1
+    assert len(
+        store.list_links(
+            org_id="org-a",
+            workspace_id="workspace-a",
+            platform="synthetic",
+            shop_or_marketplace_id=other_shop,
+        )
+    ) == 1
+
+
 def test_dangling_link_rolls_back_objects_checkpoint_and_receipt(store: EcomConsistencyStore) -> None:
     dangling = CoreLinkRecord(
         link_type="Shop.sellsProduct",
@@ -259,7 +342,7 @@ def test_object_tombstone_also_tombstones_attached_links(store: EcomConsistencyS
     )
     assert result.objects_tombstoned == 1
     assert store.get_object(ident("product-1"), "Product")["deleted_at"] is not None
-    assert store.list_links(org_id="org-a", workspace_id="workspace-a")[0]["deleted_at"] is not None
+    assert links_for_default_shop(store)[0]["deleted_at"] is not None
 
 
 def test_explicit_link_tombstone_is_idempotent(store: EcomConsistencyStore) -> None:
@@ -345,7 +428,7 @@ def test_cascade_tombstone_blocks_late_link_after_object_resurrection(
         )
     )
     assert result.links_ignored == 1
-    assert store.list_links(org_id="org-a", workspace_id="workspace-a")[0]["deleted_at"] is not None
+    assert links_for_default_shop(store)[0]["deleted_at"] is not None
 
 
 def test_object_tombstone_advances_an_older_explicit_link_tombstone(
@@ -374,7 +457,7 @@ def test_object_tombstone_advances_an_older_explicit_link_tombstone(
             expected=2,
         )
     )
-    stored_link = store.list_links(org_id="org-a", workspace_id="workspace-a")[0]
+    stored_link = links_for_default_shop(store)[0]
     assert stored_link["deleted_at"].replace(
         tzinfo=stored_link["deleted_at"].tzinfo or timezone.utc
     ) == object_deleted_at

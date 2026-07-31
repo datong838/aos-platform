@@ -6,12 +6,15 @@ read or mutate legacy ``obj_instance`` / ``graph_edge`` state.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import hashlib
+from threading import RLock
 from typing import Any
 
 from sqlalchemy import (
     JSON,
     BigInteger,
     Column,
+    CheckConstraint,
     DateTime,
     Integer,
     MetaData,
@@ -23,6 +26,7 @@ from sqlalchemy import (
     or_,
     select,
     update,
+    text,
 )
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.exc import IntegrityError
@@ -82,6 +86,20 @@ ecom_link = Table(
     Column("deleted_at", DateTime(timezone=True), nullable=True),
     Column("created_at", DateTime(timezone=True), nullable=False),
     Column("updated_at", DateTime(timezone=True), nullable=False),
+    CheckConstraint(
+        "source_platform = target_platform AND "
+        "source_shop_or_marketplace_id = target_shop_or_marketplace_id",
+        name="ck_ecom_link_same_shop",
+    ),
+    CheckConstraint(
+        "(link_type = 'Order.lines' AND source_object_type = 'Order' AND target_object_type = 'OrderLine') OR "
+        "(link_type = 'OrderLine.ofSku' AND source_object_type = 'OrderLine' AND target_object_type = 'ProductSku') OR "
+        "(link_type = 'ProductSku.ofProduct' AND source_object_type = 'ProductSku' AND target_object_type = 'Product') OR "
+        "(link_type = 'Product.inCategory' AND source_object_type = 'Product' AND target_object_type = 'Category') OR "
+        "(link_type = 'Shop.sellsProduct' AND source_object_type = 'Shop' AND target_object_type = 'Product') OR "
+        "(link_type = 'Order.fulfilledBy' AND source_object_type = 'Order' AND target_object_type = 'Shipment')",
+        name="ck_ecom_link_endpoint_types",
+    ),
 )
 
 ecom_sync_checkpoint = Table(
@@ -166,6 +184,7 @@ class EcomConsistencyStore:
 
     def __init__(self, engine: Engine) -> None:
         self._engine = engine
+        self._idempotency_locks = tuple(RLock() for _ in range(64))
 
     def apply_batch(self, command: BatchCommand) -> BatchResult:
         # Pydantic's frozen models are shallow: callers could otherwise mutate
@@ -174,8 +193,11 @@ class EcomConsistencyStore:
         # opening the transaction.
         command = BatchCommand.model_validate(command.model_dump(mode="python"))
         request_hash = command.request_hash()
+        lock_key = self._idempotency_lock_key(command)
+        process_lock = self._idempotency_locks[lock_key % len(self._idempotency_locks)]
         try:
-            with self._engine.begin() as conn:
+            with process_lock, self._engine.begin() as conn:
+                self._lock_idempotency_key(conn, lock_key)
                 replay = self._get_receipt(conn, command)
                 if replay is not None:
                     if replay["request_hash"] != request_hash:
@@ -199,15 +221,7 @@ class EcomConsistencyStore:
                     outcome = self._upsert_object(conn, record)
                     counters[outcome] += 1
 
-                for link in sorted(
-                    command.links,
-                    key=lambda item: (
-                        item.source_updated_at,
-                        item.link_type,
-                        item.source.external_id,
-                        item.target.external_id,
-                    ),
-                ):
+                for link in command.ordered_links():
                     outcome = self._upsert_link(conn, link)
                     counters[outcome] += 1
 
@@ -251,17 +265,41 @@ class EcomConsistencyStore:
             ).mappings().first()
             return dict(row) if row else None
 
-    def list_links(self, *, org_id: str, workspace_id: str) -> list[dict[str, Any]]:
+    def list_links(
+        self,
+        *,
+        org_id: str,
+        workspace_id: str,
+        platform: str,
+        shop_or_marketplace_id: str,
+    ) -> list[dict[str, Any]]:
         with self._engine.connect() as conn:
             rows = conn.execute(
                 select(ecom_link).where(
                     and_(
                         ecom_link.c.org_id == org_id,
                         ecom_link.c.workspace_id == workspace_id,
+                        ecom_link.c.source_platform == platform,
+                        ecom_link.c.source_shop_or_marketplace_id
+                        == shop_or_marketplace_id,
                     )
                 )
             ).mappings()
             return [dict(row) for row in rows]
+
+    @staticmethod
+    def _idempotency_lock_key(command: BatchCommand) -> int:
+        material = "\x1f".join((*command.scope.key(), command.idempotency_key))
+        raw = hashlib.sha256(material.encode("utf-8")).digest()[:8]
+        return int.from_bytes(raw, byteorder="big", signed=True)
+
+    @staticmethod
+    def _lock_idempotency_key(conn: Connection, lock_key: int) -> None:
+        if conn.dialect.name == "postgresql":
+            conn.execute(
+                text("SELECT pg_advisory_xact_lock(:lock_key)"),
+                {"lock_key": lock_key},
+            )
 
     @staticmethod
     def _get_receipt(conn: Connection, command: BatchCommand):

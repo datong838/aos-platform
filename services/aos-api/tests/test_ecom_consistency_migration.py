@@ -34,6 +34,8 @@ def test_upgrade_creates_only_isolated_tenant_safe_tables(monkeypatch) -> None:
         assert f"CREATE TABLE {table}" in sql
     assert "org_id" in sql and "workspace_id" in sql
     assert "FOREIGN KEY" in sql
+    assert "ck_ecom_link_same_shop" in sql
+    assert "ck_ecom_link_endpoint_types" in sql
     assert "obj_instance" not in sql and "graph_edge" not in sql
 
 
