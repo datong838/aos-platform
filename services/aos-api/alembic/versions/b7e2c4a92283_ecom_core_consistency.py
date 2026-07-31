@@ -95,19 +95,7 @@ def upgrade() -> None:
           CHECK (link_type IN (
             'Order.lines','OrderLine.ofSku','ProductSku.ofProduct',
             'Product.inCategory','Shop.sellsProduct','Order.fulfilledBy'
-          )),
-          CONSTRAINT ck_ecom_link_same_shop CHECK (
-            source_platform = target_platform AND
-            source_shop_or_marketplace_id = target_shop_or_marketplace_id
-          ),
-          CONSTRAINT ck_ecom_link_endpoint_types CHECK (
-            (link_type = 'Order.lines' AND source_object_type = 'Order' AND target_object_type = 'OrderLine') OR
-            (link_type = 'OrderLine.ofSku' AND source_object_type = 'OrderLine' AND target_object_type = 'ProductSku') OR
-            (link_type = 'ProductSku.ofProduct' AND source_object_type = 'ProductSku' AND target_object_type = 'Product') OR
-            (link_type = 'Product.inCategory' AND source_object_type = 'Product' AND target_object_type = 'Category') OR
-            (link_type = 'Shop.sellsProduct' AND source_object_type = 'Shop' AND target_object_type = 'Product') OR
-            (link_type = 'Order.fulfilledBy' AND source_object_type = 'Order' AND target_object_type = 'Shipment')
-          )
+          ))
         )
         """,
         """
