@@ -37,6 +37,13 @@ echo "fake node gate: $1:$2"
 [ "${FAKE_FAIL_GATE:-}" != "$1:$2" ]
 EOF
 
+cat > "$FAKE_ROOT/scripts/ci/run-security-gate.sh" <<'EOF'
+#!/usr/bin/env bash
+set -eu
+echo "fake security gate: ${1:-source}"
+[ "${FAKE_FAIL_GATE:-}" != "security" ]
+EOF
+
 assert_contains() {
   file="$1"
   expected="$2"
@@ -72,7 +79,7 @@ for cwd in "$FAKE_ROOT" "$FAKE_ROOT/apps/web" "$TMP_ROOT"; do
     bash "$FAKE_ROOT/scripts/ci.sh" quick
   ) >"$quick_output"
   assert_contains "$quick_output" "ROOT: $FAKE_ROOT"
-  assert_contains "$quick_output" "passed=1 failed=0 total=1"
+  assert_contains "$quick_output" "passed=2 failed=0 total=2"
   tests=$((tests + 1))
 done
 
@@ -90,14 +97,15 @@ if [ "$wave_code" -eq 0 ]; then
 fi
 assert_contains "$wave_output" "FAIL Backend pytest"
 assert_contains "$wave_output" "fake node gate: sdk:test"
-assert_contains "$wave_output" "passed=6 failed=1 total=7"
+assert_contains "$wave_output" "passed=7 failed=1 total=8"
 tests=$((tests + 1))
 
 full_output="$TMP_ROOT/full.log"
 bash "$FAKE_ROOT/scripts/ci.sh" full >"$full_output"
 assert_contains "$full_output" "fake node gate: web:build"
 assert_contains "$full_output" "fake node gate: desktop:build"
-assert_contains "$full_output" "passed=9 failed=0 total=9"
+assert_contains "$full_output" "fake security gate: --artifacts"
+assert_contains "$full_output" "passed=10 failed=0 total=10"
 tests=$((tests + 1))
 
 missing_output="$TMP_ROOT/missing-runner.log"
@@ -111,7 +119,7 @@ if [ "$missing_code" -eq 0 ]; then
   exit 1
 fi
 assert_contains "$missing_output" "required runner unavailable"
-assert_contains "$missing_output" "passed=2 failed=5 total=7"
+assert_contains "$missing_output" "passed=3 failed=5 total=8"
 tests=$((tests + 1))
 
 RUNNER_ROOT="$TMP_ROOT/runner-repo"

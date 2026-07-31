@@ -44,9 +44,9 @@ gate_index=0
 total_gates=0
 
 case "$MODE" in
-  quick) total_gates=1 ;;
-  wave) total_gates=7 ;;
-  full) total_gates=9 ;;
+  quick) total_gates=2 ;;
+  wave) total_gates=8 ;;
+  full) total_gates=10 ;;
 esac
 
 run_gate() {
@@ -118,6 +118,9 @@ fi
 if [ "$MODE" = "full" ]; then
   run_required_gate "Web build" "$CI_DIR/run-node-gate.sh" web build
   run_required_gate "Desktop build" "$CI_DIR/run-node-gate.sh" desktop build
+  run_required_gate "Security source and artifact scan" "$CI_DIR/run-security-gate.sh" --artifacts
+else
+  run_required_gate "Security source scan" "$CI_DIR/run-security-gate.sh"
 fi
 
 echo
