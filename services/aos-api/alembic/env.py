@@ -13,10 +13,15 @@ from alembic import context
 
 config = context.config
 
-# Override sqlalchemy.url from env var (same as db.py)
-dsn = os.getenv("AOS_DATABASE_URL",
-                "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta")
-config.set_main_option("sqlalchemy.url", dsn)
+# Programmatic callers set sqlalchemy.url after validating migration mode and
+# database state.  The environment variable remains available to the Alembic
+# CLI, but must not overwrite the caller-supplied URL.
+dsn = os.getenv("AOS_DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+if dsn.startswith("postgresql://"):
+    dsn = "postgresql+psycopg://" + dsn.removeprefix("postgresql://")
+elif dsn.startswith("postgres://"):
+    dsn = "postgresql+psycopg://" + dsn.removeprefix("postgres://")
+config.set_main_option("sqlalchemy.url", dsn.replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
