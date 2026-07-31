@@ -22,6 +22,7 @@ from aos_api.aip_hooks import get_hooks
 from aos_api.aip_llm_adapter import get_llm_adapter
 from aos_api.aip_tool_executor import get_executor
 from aos_api.aip_verify_skills import get_verify_registry
+from aos_api.public_contracts import TaskStatus
 
 
 class TAORLoopController:
@@ -55,8 +56,7 @@ class TAORLoopController:
 
         ctx = dict(context or {})
         ctx.update(task.context)
-        task.status = "executing"
-        task.touch()
+        task.transition(TaskStatus.EXECUTING)
 
         steps_completed = 0
         steps_failed = 0
@@ -75,7 +75,7 @@ class TAORLoopController:
                 step.status = "failed"
                 steps_failed += 1
                 self._hooks.trigger("on_error", task=task, step=step, error=result.verify_issues[-1] if result.verify_issues else "fatal error")
-                task.status = "failed"
+                task.transition(TaskStatus.FAILED)
                 task.error = result.verify_issues[-1] if result.verify_issues else "fatal error"
                 break
             elif result.success:
@@ -107,8 +107,8 @@ class TAORLoopController:
             task.touch()
 
         # ── 完成 ──
-        if task.status != "failed":
-            task.status = "completed"
+        if task.status != TaskStatus.FAILED:
+            task.transition(TaskStatus.COMPLETED)
         task.artifacts.extend(all_artifacts)
         task.touch()
 

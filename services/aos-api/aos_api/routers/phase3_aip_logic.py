@@ -72,6 +72,7 @@ from aos_api.aip_task_model import (
     ActionRequest, ExecutionPlan, Task, TaskStep,
 )
 from aos_api.aip_llm_adapter import get_llm_adapter
+from aos_api.public_contracts import ContractViolation, TaskStatus
 
 # 内存存储（Phase 2 替换为 Redis）
 _tasks: dict[str, Task] = {}
@@ -123,7 +124,7 @@ async def create_task(req: CreateTaskRequest) -> dict[str, Any]:
         # Phase 1: 创建空计划，等待人工添加步骤
         task.plan = ExecutionPlan(steps=[], task_id=task.id, status="draft")
 
-    task.status = "planning"
+    task.transition(TaskStatus.PLANNING)
     _tasks[task.id] = task
     return {"ok": True, "task": task.model_dump()}
 
@@ -153,12 +154,16 @@ async def approve_plan(task_id: str, req: ApprovePlanRequest) -> dict[str, Any]:
     if not task.plan:
         raise HTTPException(400, "Task has no plan")
 
+    try:
+        if task.status == TaskStatus.PLANNING:
+            task.transition(TaskStatus.AWAITING_APPROVAL)
+        task.transition(TaskStatus.APPROVED)
+    except ContractViolation as exc:
+        raise HTTPException(409, {"code": exc.code, "message": exc.message}) from exc
     task.plan.status = "approved"
     task.plan.approved_by = req.approved_by
     from time import time as _time
     task.plan.approved_at = _time()
-    task.status = "approved"
-    task.touch()
     return {"ok": True, "plan": task.plan.model_dump()}
 
 
@@ -172,6 +177,9 @@ async def execute_task(task_id: str) -> dict[str, Any]:
     from aos_api.aip_taor_loop import get_controller
 
     controller = get_controller()
-    result = controller.run(task)
+    try:
+        result = controller.run(task)
+    except ContractViolation as exc:
+        raise HTTPException(409, {"code": exc.code, "message": exc.message}) from exc
     _tasks[task_id] = task  # 更新存储
     return {"ok": True, "result": result.model_dump(), "task": task.model_dump()}
