@@ -10,8 +10,10 @@ Tests:
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 # Ensure services dir is importable
 _services = Path(__file__).resolve().parents[1]
@@ -20,6 +22,128 @@ if str(_services) not in sys.path:
 
 import pytest
 from fastapi.testclient import TestClient
+
+
+# ── Import Boundary Tests ─────────────────────────────────────
+
+
+def test_import_main_does_not_connect_to_database():
+    """Router assembly must not initialize the credential persistence engine."""
+    probe = """
+import psycopg
+
+connect_calls = []
+
+def fail_if_called(*args, **kwargs):
+    connect_calls.append((args, kwargs))
+    raise AssertionError("psycopg.connect called during aos_api.main import")
+
+psycopg.connect = fail_if_called
+import aos_api.main
+assert not connect_calls
+"""
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(_services)
+    completed = subprocess.run(
+        [sys.executable, "-c", probe],
+        cwd=_services,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+
+
+def test_credential_handlers_resolve_engine_lazily(monkeypatch):
+    from aos_api import model_provider_credential_router as credential_router
+
+    calls: list[tuple[str, tuple, dict]] = []
+    credential = SimpleNamespace(
+        model_dump=lambda: {
+            "key_id": "cred_test",
+            "provider_id": "provider-test",
+            "label": "测试",
+            "encrypted_key": "must-not-be-returned",
+        }
+    )
+
+    class FakeEngine:
+        def list_credentials(self, provider_id):
+            calls.append(("list", (provider_id,), {}))
+            return [credential]
+
+        def create_credential(self, **kwargs):
+            calls.append(("create", (), kwargs))
+            return credential
+
+        def update_credential(self, **kwargs):
+            calls.append(("update", (), kwargs))
+            return credential
+
+        def delete_credential(self, provider_id, key_id):
+            calls.append(("delete", (provider_id, key_id), {}))
+            return True
+
+        def resolve_api_key(self, provider_id):
+            calls.append(("resolve", (provider_id,), {}))
+            return "synthetic-test-key"
+
+    engine = FakeEngine()
+    getter_calls = []
+
+    def get_engine():
+        getter_calls.append("called")
+        return engine
+
+    monkeypatch.setattr(credential_router, "get_credential_engine", get_engine)
+    monkeypatch.setattr(
+        credential_router.httpx,
+        "get",
+        lambda *_args, **_kwargs: SimpleNamespace(
+            status_code=200,
+            json=lambda: {"data": [{"id": "model-1"}]},
+        ),
+    )
+
+    assert credential_router.list_credentials("provider-test")[0]["key_id"] == "cred_test"
+    assert (
+        credential_router.create_credential(
+            "provider-test",
+            credential_router.CreateCredentialRequest(
+                api_key="synthetic-test-key",
+                label="测试",
+            ),
+        )["key_id"]
+        == "cred_test"
+    )
+    assert (
+        credential_router.update_credential(
+            "provider-test",
+            "cred_test",
+            credential_router.UpdateCredentialRequest(label="新标签"),
+        )["key_id"]
+        == "cred_test"
+    )
+    assert credential_router.delete_credential(
+        "provider-test", "cred_test"
+    ) == {"deleted": True, "key_id": "cred_test"}
+    connection = credential_router.test_connection(
+        "provider-test",
+        credential_router.TestConnectionRequest(base_url="https://provider.invalid/v1"),
+    )
+
+    assert connection["ok"] is True
+    assert connection["model_count"] == 1
+    assert len(getter_calls) == 5
+    assert [call[0] for call in calls] == [
+        "list",
+        "create",
+        "update",
+        "delete",
+        "resolve",
+    ]
+    assert "encrypted_key" not in credential_router.list_credentials("provider-test")[0]
 
 
 # ── KMS Crypto Tests ──────────────────────────────────────────

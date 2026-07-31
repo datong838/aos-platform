@@ -13,9 +13,6 @@ from aos_api.provider_security import get_security_engine
 
 router = APIRouter(prefix="/api/models/providers", tags=["model-provider-security"])
 
-_engine = get_security_engine()
-
-
 class UpdateSecurityRequest(BaseModel):
     content_filter: bool | None = None
     max_tokens: int | None = None
@@ -27,10 +24,12 @@ class UpdateSecurityRequest(BaseModel):
 
 @router.get("/{provider_id}/security")
 def get_security(provider_id: str) -> dict[str, Any]:
-    return _engine.get_security(provider_id).model_dump()
+    return get_security_engine().get_security(provider_id).model_dump()
 
 
 @router.put("/{provider_id}/security")
 def update_security(provider_id: str, req: UpdateSecurityRequest) -> dict[str, Any]:
-    sec = _engine.update_security(provider_id, **req.model_dump(exclude_none=True))
+    sec = get_security_engine().update_security(
+        provider_id, **req.model_dump(exclude_none=True)
+    )
     return sec.model_dump()

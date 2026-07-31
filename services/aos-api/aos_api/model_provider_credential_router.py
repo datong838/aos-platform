@@ -26,9 +26,6 @@ log = get_logger("aos-api.provider_credential_router")
 
 router = APIRouter(prefix="/api/models/providers", tags=["model-provider-credentials"])
 
-_engine = get_credential_engine()
-
-
 # ── Request Models ────────────────────────────────────────────
 
 
@@ -54,7 +51,7 @@ class TestConnectionRequest(BaseModel):
 @router.get("/{provider_id}/credentials")
 def list_credentials(provider_id: str) -> list[dict[str, Any]]:
     """List all credentials for a provider (masked, no raw key)."""
-    items = _engine.list_credentials(provider_id)
+    items = get_credential_engine().list_credentials(provider_id)
     return [_safe_dump(c) for c in items]
 
 
@@ -63,7 +60,7 @@ def create_credential(provider_id: str, req: CreateCredentialRequest) -> dict[st
     """Create a new credential for a provider."""
     if not req.api_key.strip():
         raise HTTPException(400, "api_key 不能为空")
-    cred = _engine.create_credential(
+    cred = get_credential_engine().create_credential(
         provider_id=provider_id,
         api_key=req.api_key.strip(),
         label=req.label,
@@ -77,7 +74,7 @@ def update_credential(
     provider_id: str, key_id: str, req: UpdateCredentialRequest
 ) -> dict[str, Any]:
     """Update a credential (key rotation, label, policy)."""
-    cred = _engine.update_credential(
+    cred = get_credential_engine().update_credential(
         provider_id=provider_id,
         key_id=key_id,
         api_key=req.api_key,
@@ -92,7 +89,7 @@ def update_credential(
 @router.delete("/{provider_id}/credentials/{key_id}")
 def delete_credential(provider_id: str, key_id: str) -> dict[str, Any]:
     """Delete a credential."""
-    if not _engine.delete_credential(provider_id, key_id):
+    if not get_credential_engine().delete_credential(provider_id, key_id):
         raise HTTPException(404, f"凭据不存在 {key_id}")
     return {"deleted": True, "key_id": key_id}
 
@@ -116,7 +113,7 @@ def test_connection(provider_id: str, req: TestConnectionRequest | None = None) 
     from aos_api.aip_kv_store import get_payload
 
     # 1. Resolve API key
-    api_key = _engine.resolve_api_key(provider_id)
+    api_key = get_credential_engine().resolve_api_key(provider_id)
     if not api_key:
         # Try legacy secrets
         stored = get_payload("llm_provider_secrets") or {}
