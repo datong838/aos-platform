@@ -5,12 +5,17 @@ Pipelines + Nodes + Edges + Proposals + Schedules + ScheduleRuns + Datasets + Da
 """
 from __future__ import annotations
 
+import copy
+import queue
 import threading
 import time
 import uuid
 from typing import Any, Callable
+from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field
+
+from aos_api.public_contracts import redact_sensitive
 
 _LOCK = threading.Lock()
 
@@ -49,6 +54,9 @@ class Pipeline(BaseModel):
     owner: str = "system"
     tags: list[str] = Field(default_factory=list)
     executor_id: str = ""
+    # Internal control plane only. Public create/update requests do not expose it.
+    execution_mode: str = "disabled"  # disabled|live|demo
+    execution_timeout_seconds: float = 30.0
     created_at: float = Field(default_factory=lambda: time.time())
     updated_at: float = Field(default_factory=lambda: time.time())
 
@@ -485,28 +493,66 @@ class PipelineEngine:
             return sc
 
     def run_schedule(self, sc_id: str) -> ScheduleRun:
-        sc = self._schedules.get(sc_id)
-        if sc is None:
-            raise KeyError(f"Schedule {sc_id} not found")
-        started = time.time()
-        if sc.status != "active":
-            evidence = self._unsupported_evidence(started, "SCHEDULE_NOT_ACTIVE")
-        else:
-            pl = self._pipelines.get(sc.pipeline_id)
-            if pl is None:
-                evidence = self._unsupported_evidence(started, "PIPELINE_NOT_FOUND")
-            else:
-                evidence, _ = self._execute(pl, execution_kind="schedule")
-        run = ScheduleRun(schedule_id=sc_id, **evidence)
+        started_at = time.time()
         with _LOCK:
+            sc = self._schedules.get(sc_id)
+            if sc is None:
+                raise KeyError(f"Schedule {sc_id} not found")
+            pipeline_id = sc.pipeline_id
+            if sc.status != "active":
+                run = ScheduleRun(
+                    schedule_id=sc_id,
+                    **self._unsupported_evidence(started_at, "SCHEDULE_NOT_ACTIVE"),
+                )
+                dispatch = None
+            else:
+                pipeline = self._pipelines.get(pipeline_id)
+                if pipeline is None:
+                    run = ScheduleRun(
+                        schedule_id=sc_id,
+                        **self._unsupported_evidence(started_at, "PIPELINE_NOT_FOUND"),
+                    )
+                    dispatch = None
+                else:
+                    preflight = self._preflight(pipeline, started_at)
+                    if preflight is not None:
+                        run = ScheduleRun(schedule_id=sc_id, **preflight)
+                        dispatch = None
+                    else:
+                        executor_id = pipeline.executor_id
+                        run = ScheduleRun(
+                            schedule_id=sc_id,
+                            mode="live",
+                            status="running",
+                            started_at=started_at,
+                            executor_id=executor_id,
+                        )
+                        # Store running before starting the external callback. Starting
+                        # under the same lock closes the pause/check dispatch race.
+                        self._schedule_runs[run.id] = run
+                        dispatch = self._start_dispatch(
+                            pipeline,
+                            node_id=None,
+                            sample_input={},
+                            execution_kind="schedule",
+                            started_at=started_at,
+                        )
             self._schedule_runs[run.id] = run
-            if sc.pipeline_id:
+
+        if dispatch is not None:
+            evidence, _ = self._collect_dispatch(dispatch)
+            with _LOCK:
+                for key, value in evidence.items():
+                    setattr(run, key, value)
+
+        with _LOCK:
+            if pipeline_id:
                 self._add_history(
-                    sc.pipeline_id,
+                    pipeline_id,
                     "run",
                     f"status={run.status} executor={run.executor_id or '-'} output={run.output_ref or '-'}",
                 )
-        return run
+            return run.model_copy(deep=True)
 
     def pause_schedule(self, sc_id: str) -> Schedule:
         with _LOCK:
@@ -631,9 +677,214 @@ class PipelineEngine:
 
     @staticmethod
     def _safe_error(_exc: Exception) -> str:
-        # Exception text can contain credentials or input data. Public contracts own
-        # recursive redaction; this boundary deliberately emits no exception text.
-        return "pipeline executor failed"
+        redacted = str(redact_sensitive(str(_exc)))
+        # Even redacted arbitrary exception text can contain business data. Only a
+        # bounded generic message crosses the execution boundary.
+        return "pipeline executor failed" if redacted else "pipeline executor failed"
+
+    @staticmethod
+    def _contains_unsupported_config(value: Any) -> bool:
+        if isinstance(value, dict):
+            for key, child in value.items():
+                if str(key).strip().lower() in {"sql", "custom_sql", "customsql", "query"}:
+                    return True
+                if PipelineEngine._contains_unsupported_config(child):
+                    return True
+        elif isinstance(value, (list, tuple)):
+            return any(PipelineEngine._contains_unsupported_config(child) for child in value)
+        return False
+
+    @staticmethod
+    def _valid_ref(value: str, *, required: bool = False) -> bool:
+        if not value:
+            return not required
+        if len(value) > 512:
+            return False
+        parsed = urlsplit(value)
+        return (
+            parsed.scheme in {"dataset", "artifact", "lineage", "quality", "object"}
+            and bool(parsed.netloc)
+            and not parsed.username
+            and not parsed.password
+            and not parsed.query
+            and not parsed.fragment
+        )
+
+    def _preflight(self, pipeline: Pipeline, started_at: float) -> dict[str, Any] | None:
+        nodes = [n for n in self._nodes.values() if n.pipeline_id == pipeline.id]
+        supported_node_types = {"source", "transform", "filter", "sink", "llm"}
+        if any(
+            n.node_type.strip().lower() not in supported_node_types
+            or self._contains_unsupported_config(n.config)
+            for n in nodes
+        ):
+            return self._unsupported_evidence(started_at, "PIPELINE_NODE_UNSUPPORTED")
+        if not pipeline.executor_id or pipeline.executor_id not in self._executors:
+            return self._unsupported_evidence(started_at, "PIPELINE_EXECUTOR_MISSING")
+        if pipeline.execution_mode != "live":
+            return self._unsupported_evidence(started_at, "PIPELINE_MODE_UNSUPPORTED")
+        if pipeline.execution_timeout_seconds <= 0 or pipeline.execution_timeout_seconds > 300:
+            return self._unsupported_evidence(started_at, "PIPELINE_TIMEOUT_INVALID")
+        return None
+
+    def _start_dispatch(
+        self,
+        pipeline: Pipeline,
+        *,
+        node_id: str | None,
+        sample_input: dict[str, Any],
+        execution_kind: str,
+        started_at: float,
+    ) -> tuple[threading.Thread, queue.Queue, threading.Event, float, str, float]:
+        executor_id = pipeline.executor_id
+        executor = self._executors[executor_id]
+        pipeline_snapshot = pipeline.model_copy(deep=True)
+        nodes_snapshot = [
+            copy.deepcopy(n) for n in self._nodes.values() if n.pipeline_id == pipeline.id
+        ]
+        result_queue: queue.Queue = queue.Queue(maxsize=1)
+        cancel_event = threading.Event()
+        deadline = time.monotonic() + pipeline.execution_timeout_seconds
+
+        def invoke() -> None:
+            try:
+                result_queue.put(
+                    (True, executor(
+                        pipeline=pipeline_snapshot,
+                        nodes=nodes_snapshot,
+                        node_id=node_id,
+                        sample_input=copy.deepcopy(sample_input),
+                        execution_kind=execution_kind,
+                        cancel_event=cancel_event,
+                        deadline=deadline,
+                    ))
+                )
+            except Exception as exc:
+                result_queue.put((False, exc))
+
+        thread = threading.Thread(
+            target=invoke,
+            name=f"pipeline-executor-{executor_id}",
+            daemon=True,
+        )
+        thread.start()
+        return thread, result_queue, cancel_event, deadline, executor_id, started_at
+
+    def _collect_dispatch(
+        self,
+        dispatch: tuple[threading.Thread, queue.Queue, threading.Event, float, str, float],
+    ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+        thread, result_queue, cancel_event, deadline, executor_id, started_at = dispatch
+        timeout = max(0.0, deadline - time.monotonic())
+        thread.join(timeout)
+        if thread.is_alive():
+            cancel_event.set()
+            finished_at = time.time()
+            return self._failed_evidence(
+                started_at,
+                finished_at,
+                executor_id,
+                "PIPELINE_EXECUTOR_TIMEOUT",
+                "pipeline executor timed out",
+            ), []
+        try:
+            ok, payload = result_queue.get_nowait()
+        except queue.Empty:
+            finished_at = time.time()
+            return self._failed_evidence(
+                started_at,
+                finished_at,
+                executor_id,
+                "PIPELINE_EXECUTOR_FAILED",
+                "pipeline executor failed",
+            ), []
+        if not ok:
+            finished_at = time.time()
+            return self._failed_evidence(
+                started_at,
+                finished_at,
+                executor_id,
+                "PIPELINE_EXECUTOR_FAILED",
+                self._safe_error(payload),
+            ), []
+        return self._evidence_from_result(payload, started_at, executor_id)
+
+    @staticmethod
+    def _failed_evidence(
+        started_at: float,
+        finished_at: float,
+        executor_id: str,
+        code: str,
+        message: str,
+    ) -> dict[str, Any]:
+        return {
+            "mode": "live",
+            "status": "failed",
+            "started_at": started_at,
+            "finished_at": finished_at,
+            "duration_ms": max(0, int((finished_at - started_at) * 1000)),
+            "executor_id": executor_id,
+            "input_ref": "",
+            "output_ref": "",
+            "rows_read": 0,
+            "rows_written": 0,
+            "lineage_ref": "",
+            "quality_ref": "",
+            "error_code": code,
+            "error_message": message,
+            "rows_processed": 0,
+            "error": message,
+        }
+
+    def _evidence_from_result(
+        self,
+        result: Any,
+        started_at: float,
+        executor_id: str,
+    ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+        try:
+            if not isinstance(result, dict):
+                raise ValueError("executor result must be a mapping")
+            refs = {
+                name: str(result.get(name) or "")
+                for name in ("input_ref", "output_ref", "lineage_ref", "quality_ref")
+            }
+            if not self._valid_ref(refs["output_ref"], required=True) or any(
+                not self._valid_ref(value) for value in refs.values()
+            ):
+                raise ValueError("executor references are invalid")
+            rows_read = int(result.get("rows_read", 0))
+            rows_written = int(result.get("rows_written", 0))
+            if rows_read < 0 or rows_written < 0:
+                raise ValueError("row counts must be non-negative")
+            output_rows = result.get("output_rows") or []
+            if not isinstance(output_rows, list) or not all(isinstance(row, dict) for row in output_rows):
+                raise ValueError("output_rows must be a list of mappings")
+            finished_at = time.time()
+            return {
+                "mode": "live",
+                "status": "succeeded",
+                "started_at": started_at,
+                "finished_at": finished_at,
+                "duration_ms": max(0, int((finished_at - started_at) * 1000)),
+                "executor_id": executor_id,
+                **refs,
+                "rows_read": rows_read,
+                "rows_written": rows_written,
+                "error_code": "",
+                "error_message": "",
+                "rows_processed": rows_written,
+                "error": "",
+            }, output_rows
+        except Exception as exc:
+            finished_at = time.time()
+            return self._failed_evidence(
+                started_at,
+                finished_at,
+                executor_id,
+                "PIPELINE_EVIDENCE_INVALID",
+                self._safe_error(exc),
+            ), []
 
     def _execute(
         self,
@@ -644,73 +895,18 @@ class PipelineEngine:
         execution_kind: str,
     ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         started_at = time.time()
-        nodes = self.list_nodes(pipeline.id)
-        if any(n.node_type == "join" or n.config.get("sql") or n.config.get("custom_sql") for n in nodes):
-            return self._unsupported_evidence(started_at, "PIPELINE_NODE_UNSUPPORTED"), []
-        executor = self._executors.get(pipeline.executor_id)
-        if not pipeline.executor_id or executor is None:
-            return self._unsupported_evidence(started_at, "PIPELINE_EXECUTOR_MISSING"), []
-        try:
-            result = executor(
-                pipeline=pipeline,
-                nodes=nodes,
+        with _LOCK:
+            preflight = self._preflight(pipeline, started_at)
+            if preflight is not None:
+                return preflight, []
+            dispatch = self._start_dispatch(
+                pipeline,
                 node_id=node_id,
                 sample_input=sample_input or {},
                 execution_kind=execution_kind,
+                started_at=started_at,
             )
-            if not isinstance(result, dict):
-                raise ValueError("executor result must be a mapping")
-            output_ref = str(result.get("output_ref") or "")
-            if not output_ref:
-                raise ValueError("executor success requires output_ref")
-            rows_read = int(result.get("rows_read", 0))
-            rows_written = int(result.get("rows_written", 0))
-            if rows_read < 0 or rows_written < 0:
-                raise ValueError("row counts must be non-negative")
-            finished_at = time.time()
-            evidence = {
-                "mode": "live",
-                "status": "succeeded",
-                "started_at": started_at,
-                "finished_at": finished_at,
-                "duration_ms": max(0, int((finished_at - started_at) * 1000)),
-                "executor_id": pipeline.executor_id,
-                "input_ref": str(result.get("input_ref") or ""),
-                "output_ref": output_ref,
-                "rows_read": rows_read,
-                "rows_written": rows_written,
-                "lineage_ref": str(result.get("lineage_ref") or ""),
-                "quality_ref": str(result.get("quality_ref") or ""),
-                "error_code": "",
-                "error_message": "",
-                "rows_processed": rows_written,
-                "error": "",
-            }
-            output_rows = result.get("output_rows") or []
-            if not isinstance(output_rows, list) or not all(isinstance(row, dict) for row in output_rows):
-                raise ValueError("output_rows must be a list of mappings")
-            return evidence, output_rows
-        except Exception as exc:
-            finished_at = time.time()
-            message = self._safe_error(exc)
-            return {
-                "mode": "live",
-                "status": "failed",
-                "started_at": started_at,
-                "finished_at": finished_at,
-                "duration_ms": max(0, int((finished_at - started_at) * 1000)),
-                "executor_id": pipeline.executor_id,
-                "input_ref": "",
-                "output_ref": "",
-                "rows_read": 0,
-                "rows_written": 0,
-                "lineage_ref": "",
-                "quality_ref": "",
-                "error_code": "PIPELINE_EXECUTOR_FAILED",
-                "error_message": message,
-                "rows_processed": 0,
-                "error": message,
-            }, []
+        return self._collect_dispatch(dispatch)
 
     def get_latest_health(self, ds_id: str) -> HealthCheck | None:
         items = [h for h in self._health.values() if h.dataset_id == ds_id]

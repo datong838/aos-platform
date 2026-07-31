@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import threading
+import time
+
 import pytest
 
 from aos_api.phase5_pipeline_engine import get_engine
@@ -40,7 +43,7 @@ def test_schedule_without_executor_never_succeeds():
 def test_registered_executor_produces_traceable_success():
     eng = get_engine()
     eng.register_executor("synthetic-test", _evidence_executor)
-    pl = eng.create_pipeline(name="p", executor_id="synthetic-test")
+    pl = eng.create_pipeline(name="p", executor_id="synthetic-test", execution_mode="live")
     sc = eng.create_schedule(name="s", pipeline_id=pl.id)
 
     run = eng.run_schedule(sc.id)
@@ -56,7 +59,7 @@ def test_registered_executor_produces_traceable_success():
 def test_trial_run_calls_executor_and_returns_actual_rows():
     eng = get_engine()
     eng.register_executor("synthetic-test", _evidence_executor)
-    pl = eng.create_pipeline(name="p", executor_id="synthetic-test")
+    pl = eng.create_pipeline(name="p", executor_id="synthetic-test", execution_mode="live")
     node = eng.add_node(pl.id, "transform", node_type="transform")
 
     result = eng.trial_run(pl.id, node.id, {"safe": True})
@@ -68,7 +71,14 @@ def test_trial_run_calls_executor_and_returns_actual_rows():
 
 @pytest.mark.parametrize(
     ("node_type", "config"),
-    [("join", {}), ("transform", {"sql": "select 1"}), ("transform", {"custom_sql": "select 1"})],
+    [
+        ("join", {}),
+        ("Join", {}),
+        ("sql", {}),
+        ("SQL", {}),
+        ("transform", {"sql": "select 1"}),
+        ("transform", {"nested": {"CustomSQL": "select 1"}}),
+    ],
 )
 def test_unsupported_nodes_are_not_dispatched(node_type, config):
     eng = get_engine()
@@ -80,7 +90,7 @@ def test_unsupported_nodes_are_not_dispatched(node_type, config):
         return _evidence_executor(**_kwargs)
 
     eng.register_executor("live", executor)
-    pl = eng.create_pipeline(name="p", executor_id="live")
+    pl = eng.create_pipeline(name="p", executor_id="live", execution_mode="live")
     eng.add_node(pl.id, "unsafe", node_type=node_type, config=config)
     sc = eng.create_schedule(name="s", pipeline_id=pl.id)
 
@@ -94,7 +104,7 @@ def test_unsupported_nodes_are_not_dispatched(node_type, config):
 def test_paused_schedule_is_not_dispatched():
     eng = get_engine()
     eng.register_executor("live", _evidence_executor)
-    pl = eng.create_pipeline(name="p", executor_id="live")
+    pl = eng.create_pipeline(name="p", executor_id="live", execution_mode="live")
     sc = eng.create_schedule(name="s", pipeline_id=pl.id, status="paused")
 
     run = eng.run_schedule(sc.id)
@@ -110,7 +120,7 @@ def test_executor_exception_is_failed_and_secret_is_not_exposed():
         raise RuntimeError("Authorization: Bearer top-secret-token")
 
     eng.register_executor("broken", failing)
-    pl = eng.create_pipeline(name="p", executor_id="broken")
+    pl = eng.create_pipeline(name="p", executor_id="broken", execution_mode="live")
     sc = eng.create_schedule(name="s", pipeline_id=pl.id)
 
     run = eng.run_schedule(sc.id)
@@ -124,13 +134,96 @@ def test_executor_exception_is_failed_and_secret_is_not_exposed():
 def test_missing_output_evidence_cannot_be_success():
     eng = get_engine()
     eng.register_executor("bad", lambda **_kwargs: {"rows_read": 1, "rows_written": 1})
-    pl = eng.create_pipeline(name="p", executor_id="bad")
+    pl = eng.create_pipeline(name="p", executor_id="bad", execution_mode="live")
     sc = eng.create_schedule(name="s", pipeline_id=pl.id)
 
     run = eng.run_schedule(sc.id)
 
     assert run.status == "failed"
-    assert run.error_code == "PIPELINE_EXECUTOR_FAILED"
+    assert run.error_code == "PIPELINE_EVIDENCE_INVALID"
+
+
+def test_stored_demo_pipeline_cannot_execute_live():
+    eng = get_engine()
+    eng.register_executor("live", _evidence_executor)
+    pl = eng.create_pipeline(name="demo", executor_id="live", execution_mode="demo", tags=["demo"])
+    sc = eng.create_schedule(name="s", pipeline_id=pl.id)
+
+    run = eng.run_schedule(sc.id)
+
+    assert run.status == "unsupported"
+    assert run.error_code == "PIPELINE_MODE_UNSUPPORTED"
+
+
+def test_executor_sees_running_record_and_only_mutates_snapshots():
+    eng = get_engine()
+    observed = {}
+
+    def executor(**kwargs):
+        observed["statuses"] = [r.status for r in eng.list_schedule_runs(observed["schedule_id"])]
+        kwargs["pipeline"].executor_id = "forged"
+        kwargs["nodes"][0].config["sql"] = "mutated"
+        return _evidence_executor(**kwargs)
+
+    eng.register_executor("real", executor)
+    pl = eng.create_pipeline(name="p", executor_id="real", execution_mode="live")
+    node = eng.add_node(pl.id, "n", node_type="transform")
+    sc = eng.create_schedule(name="s", pipeline_id=pl.id)
+    observed["schedule_id"] = sc.id
+
+    run = eng.run_schedule(sc.id)
+
+    assert "running" in observed["statuses"]
+    assert run.executor_id == "real"
+    assert eng.get_pipeline(pl.id).executor_id == "real"
+    assert eng.get_node(node.id).config == {}
+
+
+def test_executor_timeout_sets_cancel_signal_and_fails():
+    eng = get_engine()
+    cancelled = threading.Event()
+
+    def executor(**kwargs):
+        while not kwargs["cancel_event"].wait(0.001):
+            if time.monotonic() > kwargs["deadline"] + 1:
+                break
+        cancelled.set()
+        return _evidence_executor(**kwargs)
+
+    eng.register_executor("slow", executor)
+    pl = eng.create_pipeline(
+        name="p",
+        executor_id="slow",
+        execution_mode="live",
+        execution_timeout_seconds=0.01,
+    )
+    sc = eng.create_schedule(name="s", pipeline_id=pl.id)
+
+    run = eng.run_schedule(sc.id)
+
+    assert run.status == "failed"
+    assert run.error_code == "PIPELINE_EXECUTOR_TIMEOUT"
+    assert cancelled.wait(0.2)
+
+
+@pytest.mark.parametrize(
+    "output_ref",
+    ["ok", "https://example.test/result", "dataset://user:secret@output/v1", "dataset://output/v1?token=x"],
+)
+def test_untraceable_or_sensitive_output_ref_cannot_succeed(output_ref):
+    eng = get_engine()
+    eng.register_executor(
+        "bad-ref",
+        lambda **_kwargs: {"output_ref": output_ref, "rows_read": 1, "rows_written": 1},
+    )
+    pl = eng.create_pipeline(name="p", executor_id="bad-ref", execution_mode="live")
+    sc = eng.create_schedule(name="s", pipeline_id=pl.id)
+
+    run = eng.run_schedule(sc.id)
+
+    assert run.status == "failed"
+    assert run.error_code == "PIPELINE_EVIDENCE_INVALID"
+    assert output_ref not in run.error_message
 
 
 def test_preview_and_health_are_explicitly_synthetic():
