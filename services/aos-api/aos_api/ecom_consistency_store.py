@@ -44,6 +44,7 @@ from aos_api.ecom_core_models import (
 
 
 metadata = MetaData()
+_PROCESS_IDEMPOTENCY_LOCKS = tuple(RLock() for _ in range(64))
 
 ecom_object = Table(
     "ecom_object",
@@ -184,7 +185,6 @@ class EcomConsistencyStore:
 
     def __init__(self, engine: Engine) -> None:
         self._engine = engine
-        self._idempotency_locks = tuple(RLock() for _ in range(64))
 
     def apply_batch(self, command: BatchCommand) -> BatchResult:
         # Pydantic's frozen models are shallow: callers could otherwise mutate
@@ -194,7 +194,9 @@ class EcomConsistencyStore:
         command = BatchCommand.model_validate(command.model_dump(mode="python"))
         request_hash = command.request_hash()
         lock_key = self._idempotency_lock_key(command)
-        process_lock = self._idempotency_locks[lock_key % len(self._idempotency_locks)]
+        process_lock = _PROCESS_IDEMPOTENCY_LOCKS[
+            lock_key % len(_PROCESS_IDEMPOTENCY_LOCKS)
+        ]
         try:
             with process_lock, self._engine.begin() as conn:
                 self._lock_idempotency_key(conn, lock_key)

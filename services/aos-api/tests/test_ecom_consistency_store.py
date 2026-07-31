@@ -189,10 +189,15 @@ def test_concurrent_same_idempotency_key_replays_original_result(tmp_path) -> No
         connect_args={"check_same_thread": False, "timeout": 5},
     )
     metadata.create_all(engine)
-    concurrent_store = EcomConsistencyStore(engine)
+    concurrent_stores = (EcomConsistencyStore(engine), EcomConsistencyStore(engine))
     command = batch(obj("Product", "product-1"), key="same-concurrent-page")
     with ThreadPoolExecutor(max_workers=2) as pool:
-        results = list(pool.map(lambda _: concurrent_store.apply_batch(command), range(2)))
+        results = list(
+            pool.map(
+                lambda index: concurrent_stores[index].apply_batch(command),
+                range(2),
+            )
+        )
     assert sorted(result.replayed for result in results) == [False, True]
     assert {result.checkpoint_version for result in results} == {1}
 
