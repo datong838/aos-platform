@@ -13,7 +13,7 @@ bash "$ROOT/scripts/demo/run-demo-smoke.sh"
 
 echo
 echo "--- web unit tests ---"
-(cd "$ROOT/apps/web" && npm test -- --run)
+pnpm --dir "$ROOT/apps/web" test -- --run
 
 if [[ "$FULL" == "--full" ]]; then
   echo

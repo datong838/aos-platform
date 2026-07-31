@@ -44,7 +44,7 @@ bash scripts/ci.sh wave
 bash scripts/ci.sh full
 ```
 
-质量门不会自动安装依赖。`wave` 包含后端、Web、Desktop 与 SDK 测试和类型检查；`full` 额外包含生产构建与安全扫描。Helm 静态交付门见：
+质量门不会自动安装依赖。`wave` 包含 OpenAPI 确定性契约、后端、Web、Desktop、SDK、Helm 和源码安全门；`full` 额外包含生产构建与产物安全扫描。Helm 静态交付门也可单独执行：
 
 ```bash
 bash scripts/ci/helm-template-spoke-full.sh --require

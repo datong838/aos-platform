@@ -9,7 +9,7 @@ usage() {
   cat <<'EOF'
 Usage: bash scripts/ci/pack-desktop-mac.sh [--check|--bundle|--help]
 
-  --check   (default) toolchain + ontology-sdk/web/desktop tests + web npm run build + desktop vite build
+  --check   (default) toolchain + ontology-sdk/web/desktop tests + pnpm builds
   --bundle  also run tauri build (requires Rust / Xcode CLT)
   --help    this message
 
@@ -40,7 +40,7 @@ need() {
 }
 
 need node
-need npm
+need pnpm
 
 node_major="$(node -p "process.versions.node.split('.')[0]")"
 if [[ "${node_major}" -lt 18 ]]; then
@@ -49,14 +49,16 @@ if [[ "${node_major}" -lt 18 ]]; then
 fi
 
 echo "--- ontology-sdk test ---"
-(cd "${ROOT}/packages/ontology-sdk" && npm test)
+pnpm --dir "${ROOT}/packages/ontology-sdk" test
 
-echo "--- web test + npm run build ---"
+echo "--- web test + pnpm build ---"
 # Full gate: tsc + vite (see 155 · Web tsc 门禁清零)
-(cd "${ROOT}/apps/web" && npm test && npm run build)
+pnpm --dir "${ROOT}/apps/web" test
+pnpm --dir "${ROOT}/apps/web" build
 
 echo "--- desktop test + vite build ---"
-(cd "${ROOT}/apps/desktop" && npm test && npm run build)
+pnpm --dir "${ROOT}/apps/desktop" test
+pnpm --dir "${ROOT}/apps/desktop" build
 
 if [[ "${MODE}" == "bundle" ]]; then
   need cargo
@@ -67,7 +69,7 @@ if [[ "${MODE}" == "bundle" ]]; then
   fi
   echo "OK   xcode-select=$(xcode-select -p)"
   echo "--- tauri build ---"
-  (cd "${ROOT}/apps/desktop" && npm run tauri -- build)
+  pnpm --dir "${ROOT}/apps/desktop" run tauri -- build
   echo "bundle artifacts under apps/desktop/src-tauri/target/release/bundle/ (if any)"
 else
   echo "SKIP tauri bundle (pass --bundle when Rust/CLT ready)"

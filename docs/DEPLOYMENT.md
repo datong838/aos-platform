@@ -13,8 +13,8 @@
 
 ```bash
 bash scripts/ci.sh quick  # 入口与 shell 自检
-bash scripts/ci.sh wave   # 后端、Web、Desktop、SDK 测试/类型检查
-bash scripts/ci.sh full   # wave + 生产构建 + 源码/产物安全扫描
+bash scripts/ci.sh wave   # OpenAPI、后端、客户端、Helm、源码安全门
+bash scripts/ci.sh full   # wave + 生产构建 + 产物安全扫描
 ```
 
 修改公共契约、工作区、CSS/导航或部署模板时，先跑对应专项门；每个合并阶段再跑 `wave`，最终合并跑 `full`。

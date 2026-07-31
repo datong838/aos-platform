@@ -115,17 +115,18 @@ echo "aos-api ONLINE"
 
 if [ "$SKIP_WEB" = 0 ]; then
   step "web :5173"
-  command -v npm >/dev/null || { echo "npm not found"; exit 1; }
+  command -v pnpm >/dev/null || { echo "pnpm not found"; exit 1; }
   WEB_DIR="$ROOT/apps/web"
-  if [ "$SKIP_INSTALL" = 0 ] && [ ! -d "$WEB_DIR/node_modules" ]; then
-    (cd "$WEB_DIR" && npm install)
+  if [ ! -x "$WEB_DIR/node_modules/.bin/vite" ]; then
+    echo "web dependencies missing; run pnpm install --frozen-lockfile at $ROOT" >&2
+    exit 1
   fi
   if [ -f "$PID_DIR/aos-web.pid" ]; then
     old="$(cat "$PID_DIR/aos-web.pid" || true)"
     if [ -n "${old:-}" ]; then kill "$old" 2>/dev/null || true; fi
     rm -f "$PID_DIR/aos-web.pid"
   fi
-  nohup npm --prefix "$WEB_DIR" run dev -- --host 127.0.0.1 --port 5173 \
+  nohup pnpm --dir "$WEB_DIR" run dev -- --host 127.0.0.1 --port 5173 \
     >"$LOG_DIR/aos-web.out.log" 2>"$LOG_DIR/aos-web.err.log" &
   echo $! >"$PID_DIR/aos-web.pid"
   echo "web pid=$(cat "$PID_DIR/aos-web.pid") log=$LOG_DIR/aos-web.out.log"

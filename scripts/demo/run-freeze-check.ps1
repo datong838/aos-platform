@@ -15,13 +15,8 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host ""
 Write-Host "--- web unit tests ---"
-Push-Location (Join-Path $Root "apps\web")
-try {
-  npm test -- --run
-  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-} finally {
-  Pop-Location
-}
+pnpm --dir (Join-Path $Root "apps\web") test -- --run
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 if ($Full) {
   Write-Host ""

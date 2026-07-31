@@ -91,11 +91,15 @@ echo
 # --- Web ---
 step "web :5173"
 WEB_DIR="$ROOT/apps/web"
-[ -d "$WEB_DIR/node_modules" ] || (cd "$WEB_DIR" && npm install)
+command -v pnpm >/dev/null || { echo "pnpm not found"; exit 1; }
+[ -x "$WEB_DIR/node_modules/.bin/vite" ] || {
+  echo "web dependencies missing; run pnpm install --frozen-lockfile at $ROOT" >&2
+  exit 1
+}
 if [ -f "$PID_DIR/aos-web.pid" ]; then
   kill "$(cat "$PID_DIR/aos-web.pid")" 2>/dev/null || true
 fi
-nohup npm --prefix "$WEB_DIR" run dev -- --host 127.0.0.1 --port 5173 \
+nohup pnpm --dir "$WEB_DIR" run dev -- --host 127.0.0.1 --port 5173 \
   >"$LOG_DIR/aos-web.out.log" 2>"$LOG_DIR/aos-web.err.log" &
 echo $! >"$PID_DIR/aos-web.pid"
 for _ in $(seq 1 60); do

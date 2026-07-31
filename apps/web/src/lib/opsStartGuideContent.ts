@@ -32,7 +32,7 @@ export const OPS_GUIDE_TIERS: OpsGuideTier[] = [
       "Windows：powershell -File scripts\\demo\\start-local.ps1",
       "macOS/Linux：bash scripts/demo/start-local.sh",
       "Docker Hub 不可达：栈已绿可忽略；缺镜像时 mac/Linux → start-local-native.sh，Win → start-local.ps1/加速（72 §1.3.1）",
-      "桌面：先保证 API :8080 绿，再 cd apps/desktop && npm run tauri dev",
+      "桌面：先保证 API :8080 绿，再 pnpm --dir apps/desktop run tauri dev",
       "本机探活：探活 aos-api / PG·MinIO，并主动探活 Docker Hub",
     ],
     stop: [

@@ -23,7 +23,7 @@ function Stop-PidFile([string]$Name) {
   if ($id) {
     Write-Host "stop $Name pid=$id"
     Stop-Process -Id ([int]$id) -Force -ErrorAction SilentlyContinue
-    # also kill child trees loosely on Windows for npm
+    # also kill child trees loosely on Windows for the pnpm-launched dev server
     Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
       Where-Object { $_.ParentProcessId -eq [int]$id } |
       ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }

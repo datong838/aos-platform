@@ -9,7 +9,7 @@
 .PARAMETER InfraOnly
   只起 Docker 前置，不起 API/Web
 .PARAMETER SkipInstall
-  跳过 pip install -e . / npm install
+  跳过 pip install -e .；Node 依赖始终要求预先在仓根用 pnpm 安装
 .PARAMETER SkipWeb
   不起 Web
 .EXAMPLE
@@ -114,13 +114,9 @@ Write-Host "aos-api ONLINE"
 if (-not $SkipWeb) {
   Write-Step "web :5173"
   $webDir = Join-Path $Root "apps\web"
-  if (-not $SkipInstall) {
-    Push-Location $webDir
-    try {
-      if (-not (Test-Path "node_modules")) { npm install }
-    } finally {
-      Pop-Location
-    }
+  $viteCmd = Join-Path $webDir "node_modules\.bin\vite.cmd"
+  if (-not (Test-Path $viteCmd)) {
+    throw "web dependencies missing; run pnpm install --frozen-lockfile at $Root"
   }
   $webPidFile = Join-Path $PidDir "aos-web.pid"
   if (Test-Path $webPidFile) {
@@ -130,10 +126,10 @@ if (-not $SkipWeb) {
   }
   $webOut = Join-Path $LogDir "aos-web.out.log"
   $webErr = Join-Path $LogDir "aos-web.err.log"
-  $npmCmd = (Get-Command npm.cmd -ErrorAction SilentlyContinue)
-  if (-not $npmCmd) { $npmCmd = Get-Command npm }
-  $pWeb = Start-Process -FilePath $npmCmd.Source `
-    -ArgumentList @("run", "dev", "--", "--host", "127.0.0.1", "--port", "5173") `
+  $pnpmCmd = (Get-Command pnpm.cmd -ErrorAction SilentlyContinue)
+  if (-not $pnpmCmd) { $pnpmCmd = Get-Command pnpm }
+  $pWeb = Start-Process -FilePath $pnpmCmd.Source `
+    -ArgumentList @("--dir", $webDir, "run", "dev", "--", "--host", "127.0.0.1", "--port", "5173") `
     -WorkingDirectory $webDir `
     -RedirectStandardOutput $webOut `
     -RedirectStandardError $webErr `

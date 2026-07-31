@@ -7,11 +7,11 @@
 
 | 工具 | 验收 |
 | --- | --- |
-| Node ≥ 18 | `node -v` |
-| npm | `npm -v` |
+| Node ≥ 20 | `node -v` |
+| pnpm | `pnpm -v`（版本以根 `package.json` 为准） |
 | Rust + cargo（真包需要） | `cargo -V` · `rustc -V` |
 | Xcode CLT（真包需要） | `xcode-select -p` |
-| （可选）Tauri CLI | `npm run tauri -- --help`（在 `apps/desktop`） |
+| （可选）Tauri CLI | `pnpm --dir apps/desktop run tauri -- --help` |
 
 无 sudo 时工具链见 24 §4.2。
 
@@ -22,7 +22,7 @@ cd aos-platform
 bash scripts/ci/pack-desktop-mac.sh --check
 ```
 
-覆盖：Node · ontology-sdk/web/desktop `npm test` · web `npm run build`（含 tsc）· desktop `vite build`。
+覆盖：Node · ontology-sdk/web/desktop `pnpm test` · web/desktop `pnpm build`（含 tsc / vite）。
 
 ## 3. 生成桌面产物（可选 · 需 Rust）
 

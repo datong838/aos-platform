@@ -34,7 +34,7 @@ Web / Desktop
 
 ## 4. 关键验证入口
 
-- 统一质量门：`bash scripts/ci.sh quick|wave|full`
+- 统一质量门：`bash scripts/ci.sh quick|wave|full`（wave/full 均要求 OpenAPI 与 Helm 专项门）
 - 敏感信息扫描：`bash scripts/ci/run-security-gate.sh --artifacts`
 - Helm 静态门：`bash scripts/ci/helm-template-spoke-full.sh --require`
 - API 测试：`services/aos-api/tests`

@@ -46,92 +46,72 @@ if [ -z "$NODE_BIN" ] || [ ! -x "$NODE_BIN" ]; then
   exit 1
 fi
 
-if [ ! -d "$package_dir/node_modules" ] && [ ! -d "$ROOT/node_modules" ]; then
-  echo "FAIL local Node dependencies not found for $component; CI does not install dependencies" >&2
+echo "NODE: $("$NODE_BIN" --version 2>&1)"
+export PATH="$(dirname "$NODE_BIN"):$PATH"
+
+PNPM_BIN="${AOS_CI_PNPM:-$(command -v pnpm || true)}"
+if [ "${AOS_CI_PACKAGE_MANAGER:-pnpm}" != "pnpm" ]; then
+  echo "FAIL AOS_CI_PACKAGE_MANAGER only supports pnpm" >&2
+  exit 2
+fi
+if [ -z "$PNPM_BIN" ] || [ ! -x "$PNPM_BIN" ]; then
+  echo "FAIL required pnpm executable not found" >&2
+  exit 1
+fi
+if [ ! -f "$ROOT/pnpm-lock.yaml" ] || [ ! -f "$ROOT/pnpm-workspace.yaml" ]; then
+  echo "FAIL pnpm workspace metadata not found" >&2
   exit 1
 fi
 
-echo "NODE: $("$NODE_BIN" --version 2>&1)"
-
-package_manager="${AOS_CI_PACKAGE_MANAGER:-auto}"
-NPM_BIN="${AOS_CI_NPM:-$(command -v npm || true)}"
-PNPM_BIN="${AOS_CI_PNPM:-$(command -v pnpm || true)}"
-needs_package_manager=true
-if [ "$component:$action" = "web:typecheck" ]; then
-  needs_package_manager=false
+package_manager_spec="$(sed -n 's/^[[:space:]]*"packageManager"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$ROOT/package.json")"
+expected_pnpm_version="${package_manager_spec#pnpm@}"
+actual_pnpm_version="$("$PNPM_BIN" --version 2>&1)"
+if [ "$package_manager_spec" = "$expected_pnpm_version" ] || [ -z "$expected_pnpm_version" ]; then
+  echo "FAIL root packageManager must pin pnpm" >&2
+  exit 1
 fi
-
-if [ "$needs_package_manager" = true ]; then
-  case "$package_manager" in
-    auto)
-      if [ -n "$NPM_BIN" ] && [ -x "$NPM_BIN" ]; then
-        package_manager="npm"
-        package_manager_bin="$NPM_BIN"
-      elif [ -n "$PNPM_BIN" ] && [ -x "$PNPM_BIN" ]; then
-        package_manager="pnpm"
-        package_manager_bin="$PNPM_BIN"
-      else
-        echo "FAIL required npm or pnpm executable not found" >&2
-        exit 1
-      fi
-      ;;
-    npm)
-      if [ -z "$NPM_BIN" ] || [ ! -x "$NPM_BIN" ]; then
-        echo "FAIL requested npm executable not found" >&2
-        exit 1
-      fi
-      package_manager_bin="$NPM_BIN"
-      ;;
-    pnpm)
-      if [ -z "$PNPM_BIN" ] || [ ! -x "$PNPM_BIN" ]; then
-        echo "FAIL requested pnpm executable not found" >&2
-        exit 1
-      fi
-      package_manager_bin="$PNPM_BIN"
-      ;;
-    *)
-      echo "FAIL AOS_CI_PACKAGE_MANAGER must be auto, npm, or pnpm" >&2
-      exit 2
-      ;;
-  esac
-  echo "PACKAGE_MANAGER: $package_manager $("$package_manager_bin" --version 2>&1)"
+if [ "$actual_pnpm_version" != "$expected_pnpm_version" ]; then
+  echo "FAIL pnpm version mismatch: expected=$expected_pnpm_version actual=$actual_pnpm_version" >&2
+  exit 1
 fi
+echo "PACKAGE_MANAGER: pnpm $actual_pnpm_version"
 
-run_package_script() {
-  script_name="$1"
-  case "$package_manager" in
-    npm) "$package_manager_bin" --prefix "$package_dir" run "$script_name" ;;
-    pnpm) "$package_manager_bin" --dir "$package_dir" run "$script_name" ;;
-  esac
-}
+case "$action" in
+  test) required_bin="vitest" ;;
+  typecheck) required_bin="tsc" ;;
+  build) required_bin="vite" ;;
+esac
+required_bin_path="$package_dir/node_modules/.bin/$required_bin"
+if [ ! -x "$required_bin_path" ]; then
+  echo "FAIL local $required_bin dependency not resolvable for $component; run pnpm install --frozen-lockfile at repository root" >&2
+  exit 1
+fi
+if [ "$component:$action" = "web:build" ] && [ ! -x "$package_dir/node_modules/.bin/tsc" ]; then
+  echo "FAIL local tsc dependency not resolvable for web; run pnpm install --frozen-lockfile at repository root" >&2
+  exit 1
+fi
 
 case "$component:$action" in
   web:test)
-    run_package_script test
+    (cd "$package_dir" && "$required_bin_path" run)
     ;;
   web:typecheck)
-    if [ -x "$package_dir/node_modules/.bin/tsc" ]; then
-      "$package_dir/node_modules/.bin/tsc" --noEmit -p "$package_dir/tsconfig.json"
-    elif [ -x "$ROOT/node_modules/.bin/tsc" ]; then
-      "$ROOT/node_modules/.bin/tsc" --noEmit -p "$package_dir/tsconfig.json"
-    else
-      echo "FAIL local TypeScript compiler not found for web" >&2
-      exit 1
-    fi
+    "$required_bin_path" --noEmit -p "$package_dir/tsconfig.json"
     ;;
   web:build)
-    run_package_script build
+    "$package_dir/node_modules/.bin/tsc" -p "$package_dir/tsconfig.json"
+    (cd "$package_dir" && "$required_bin_path" build)
     ;;
   desktop:test)
-    run_package_script test
+    (cd "$package_dir" && "$required_bin_path" run)
     ;;
   desktop:typecheck)
-    run_package_script typecheck
+    "$required_bin_path" --noEmit -p "$package_dir/tsconfig.json"
     ;;
   desktop:build)
-    run_package_script build
+    (cd "$package_dir" && "$required_bin_path" build)
     ;;
   sdk:test)
-    run_package_script test
+    (cd "$package_dir" && "$required_bin_path" run)
     ;;
 esac

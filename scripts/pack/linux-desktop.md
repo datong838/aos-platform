@@ -7,8 +7,8 @@
 
 | 工具 | 验收 |
 | --- | --- |
-| Node ≥ 18 | `node -v` |
-| npm | `npm -v` |
+| Node ≥ 20 | `node -v` |
+| pnpm | `pnpm -v`（版本以根 `package.json` 为准） |
 | Rust + cargo（真包） | `cargo -V` |
 | 系统库（真包 · Debian/Ubuntu 示例） | `libwebkit2gtk-4.1-dev` · `libgtk-3-dev` · `librsvg2-dev` · `patchelf` · `libssl-dev` |
 
@@ -27,7 +27,7 @@ cd aos-platform
 bash scripts/ci/pack-desktop-linux.sh --check
 ```
 
-覆盖：Node · ontology-sdk/web/desktop `npm test` · web `npm run build`（含 tsc）· desktop `vite build`。
+覆盖：Node · ontology-sdk/web/desktop `pnpm test` · web/desktop `pnpm build`（含 tsc / vite）。
 
 ## 3. 生成桌面产物（可选 · 需 Rust + GTK/WebKit）
 

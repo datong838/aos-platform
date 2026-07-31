@@ -7,7 +7,7 @@
 
 | OS | 启动 | 说明 |
 | --- | --- | --- |
-| **Windows** | `*.ps1` | **既有真源**；打包/CI 仍用 `scripts/ci/*.ps1`，本 Mac 改动**不触及** |
+| **Windows** | `*.ps1` | 既有真源；Node 入口与其他平台统一使用 pnpm |
 | **macOS** | `*.sh` | 并列新增；Hub 不通用 `start-local-native.sh` |
 | **Linux** | `*.sh` | 与 mac 同族；打包清单另开，不改 Win |
 
@@ -16,7 +16,8 @@
 ## 前置
 
 - Docker Desktop 已开（或见 [24 §4.4](../../../docs/palantier/20_tech/24-AOS客户侧前置组件安装SOP.md) 原生降级）  
-- Python 3.11+ · Node 18+ · 本仓 `aos-platform/`
+- Python 3.11+ · Node 20+ · 根 `package.json` 固定版本的 pnpm · 本仓 `aos-platform/`
+- Node 依赖须预先在仓根执行 `pnpm install --frozen-lockfile`；启动脚本不会隐式联网安装
 
 ## Agnes / LLM（可选 · Dev）
 
@@ -72,7 +73,7 @@ bash scripts/demo/start-local-native.sh
 ```powershell
 powershell -File scripts\demo\ensure-seed.ps1
 powershell -File scripts\demo\run-demo-smoke.ps1    # 含 l1-chain（W36）
-powershell -File scripts\demo\run-freeze-check.ps1  # demo + npm test（W36）
+powershell -File scripts\demo\run-freeze-check.ps1  # demo + pnpm test（W36）
 ```
 
 **macOS / Linux：**
@@ -93,7 +94,7 @@ bash scripts/demo/run-agnes-smoke.sh
 UI **编码默认冻结** · 日常快检：
 
 ```bash
-bash scripts/demo/run-freeze-check.sh          # demo smoke + npm test（19）
+bash scripts/demo/run-freeze-check.sh          # demo smoke + pnpm test
 bash scripts/demo/run-freeze-check.sh --full   # + pytest + rehearsal
 ```
 
@@ -104,7 +105,7 @@ bash scripts/demo/run-freeze-check.sh --full   # + pytest + rehearsal
 ```bash
 bash scripts/demo/run-freeze-check.sh    # 快检 · 改 Web 后
 bash scripts/ci/run-pytest.sh            # aos-api · 180+ passed
-cd apps/web && npm test                  # 19 passed
+pnpm --dir apps/web test
 bash scripts/demo/run-rehearsal-smoke.sh # 彩排前 · 含 Agnes
 ```
 

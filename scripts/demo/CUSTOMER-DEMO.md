@@ -13,7 +13,7 @@
 ```bash
 cd aos-platform
 bash scripts/demo/start-local.sh
-bash scripts/demo/run-freeze-check.sh        # 快检（demo + npm 19）· 见 110
+bash scripts/demo/run-freeze-check.sh        # 快检（demo + pnpm test）· 见 110
 bash scripts/demo/run-rehearsal-smoke.sh     # 彩排：demo + Agnes（.env 已配时）
 ```
 

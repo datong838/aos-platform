@@ -11,8 +11,8 @@ usage() {
 Usage: bash scripts/ci.sh <quick|wave|full>
 
   quick  CI shell syntax and entrypoint self-tests
-  wave   quick + backend + Web/Desktop/SDK tests and typechecks
-  full   wave + Web/Desktop production builds
+  wave   quick + OpenAPI + backend + Web/Desktop/SDK + Helm + security
+  full   wave + Web/Desktop production builds and artifact security scan
 
 Required directories, commands, runners, and local dependencies must exist.
 This command never installs dependencies.
@@ -45,8 +45,8 @@ total_gates=0
 
 case "$MODE" in
   quick) total_gates=2 ;;
-  wave) total_gates=8 ;;
-  full) total_gates=10 ;;
+  wave) total_gates=10 ;;
+  full) total_gates=12 ;;
 esac
 
 run_gate() {
@@ -107,6 +107,7 @@ echo "========================================="
 run_required_gate "CI shell checks" "$CI_DIR/run-shell-checks.sh"
 
 if [ "$MODE" = "wave" ] || [ "$MODE" = "full" ]; then
+  run_required_gate "OpenAPI deterministic contract" "$CI_DIR/run-openapi-gate.sh"
   run_required_gate "Backend pytest" "$CI_DIR/run-pytest.sh"
   run_required_gate "Web tests" "$CI_DIR/run-node-gate.sh" web test
   run_required_gate "Web typecheck" "$CI_DIR/run-node-gate.sh" web typecheck
@@ -118,8 +119,12 @@ fi
 if [ "$MODE" = "full" ]; then
   run_required_gate "Web build" "$CI_DIR/run-node-gate.sh" web build
   run_required_gate "Desktop build" "$CI_DIR/run-node-gate.sh" desktop build
+  run_required_gate "Spoke Full Helm render" "$CI_DIR/helm-template-spoke-full.sh" --require
   run_required_gate "Security source and artifact scan" "$CI_DIR/run-security-gate.sh" --artifacts
 else
+  if [ "$MODE" = "wave" ]; then
+    run_required_gate "Spoke Full Helm render" "$CI_DIR/helm-template-spoke-full.sh" --require
+  fi
   run_required_gate "Security source scan" "$CI_DIR/run-security-gate.sh"
 fi
 

@@ -30,6 +30,13 @@ echo "fake backend tests"
 [ "${FAKE_FAIL_GATE:-}" != "backend" ]
 EOF
 
+cat > "$FAKE_ROOT/scripts/ci/run-openapi-gate.sh" <<'EOF'
+#!/usr/bin/env bash
+set -eu
+echo "fake openapi gate"
+[ "${FAKE_FAIL_GATE:-}" != "openapi" ]
+EOF
+
 cat > "$FAKE_ROOT/scripts/ci/run-node-gate.sh" <<'EOF'
 #!/usr/bin/env bash
 set -eu
@@ -42,6 +49,12 @@ cat > "$FAKE_ROOT/scripts/ci/run-security-gate.sh" <<'EOF'
 set -eu
 echo "fake security gate: ${1:-source}"
 [ "${FAKE_FAIL_GATE:-}" != "security" ]
+EOF
+cat > "$FAKE_ROOT/scripts/ci/helm-template-spoke-full.sh" <<'EOF'
+#!/usr/bin/env bash
+set -eu
+echo "fake helm gate: ${1:-}"
+[ "${FAKE_FAIL_GATE:-}" != "helm" ]
 EOF
 
 assert_contains() {
@@ -97,15 +110,17 @@ if [ "$wave_code" -eq 0 ]; then
 fi
 assert_contains "$wave_output" "FAIL Backend pytest"
 assert_contains "$wave_output" "fake node gate: sdk:test"
-assert_contains "$wave_output" "passed=7 failed=1 total=8"
+assert_contains "$wave_output" "passed=9 failed=1 total=10"
 tests=$((tests + 1))
 
 full_output="$TMP_ROOT/full.log"
 bash "$FAKE_ROOT/scripts/ci.sh" full >"$full_output"
 assert_contains "$full_output" "fake node gate: web:build"
 assert_contains "$full_output" "fake node gate: desktop:build"
+assert_contains "$full_output" "fake openapi gate"
+assert_contains "$full_output" "fake helm gate: --require"
 assert_contains "$full_output" "fake security gate: --artifacts"
-assert_contains "$full_output" "passed=10 failed=0 total=10"
+assert_contains "$full_output" "passed=12 failed=0 total=12"
 tests=$((tests + 1))
 
 missing_output="$TMP_ROOT/missing-runner.log"
@@ -119,7 +134,7 @@ if [ "$missing_code" -eq 0 ]; then
   exit 1
 fi
 assert_contains "$missing_output" "required runner unavailable"
-assert_contains "$missing_output" "passed=3 failed=5 total=8"
+assert_contains "$missing_output" "passed=5 failed=5 total=10"
 tests=$((tests + 1))
 
 RUNNER_ROOT="$TMP_ROOT/runner-repo"
@@ -141,9 +156,12 @@ tests=$((tests + 1))
 
 mkdir -p "$RUNNER_ROOT/apps/web"
 printf '{"scripts":{"test":"true"}}\n' > "$RUNNER_ROOT/apps/web/package.json"
+printf '{\n  "packageManager": "pnpm@11.9.0"\n}\n' > "$RUNNER_ROOT/package.json"
+printf 'packages:\n  - "apps/*"\n' > "$RUNNER_ROOT/pnpm-workspace.yaml"
+printf 'lockfileVersion: "9.0"\n' > "$RUNNER_ROOT/pnpm-lock.yaml"
 missing_node_output="$TMP_ROOT/missing-node.log"
 set +e
-AOS_CI_NODE="$TMP_ROOT/missing-node" AOS_CI_NPM="$TMP_ROOT/missing-npm" \
+AOS_CI_NODE="$TMP_ROOT/missing-node" \
   bash "$RUNNER_ROOT/scripts/ci/run-node-gate.sh" web test >"$missing_node_output" 2>&1
 missing_node_code=$?
 set -e
@@ -154,10 +172,10 @@ fi
 assert_contains "$missing_node_output" "required Node executable not found"
 tests=$((tests + 1))
 
-mkdir -p "$RUNNER_ROOT/apps/web/node_modules"
+mkdir -p "$RUNNER_ROOT/apps/web/node_modules/.bin"
 fake_node="$TMP_ROOT/fake-node"
 fake_pnpm="$TMP_ROOT/fake-pnpm"
-pnpm_args="$TMP_ROOT/pnpm-args.log"
+fake_vitest="$RUNNER_ROOT/apps/web/node_modules/.bin/vitest"
 cat > "$fake_node" <<'EOF'
 #!/usr/bin/env bash
 echo "v-test"
@@ -165,35 +183,53 @@ EOF
 cat > "$fake_pnpm" <<'EOF'
 #!/usr/bin/env bash
 if [ "${1:-}" = "--version" ]; then
-  echo "test-pnpm"
+  echo "11.9.0"
   exit 0
 fi
-printf '%s\n' "$*" > "$FAKE_PNPM_ARGS"
+exit 0
 EOF
-chmod +x "$fake_node" "$fake_pnpm"
+cat > "$fake_vitest" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" > "$FAKE_VITEST_ARGS"
+EOF
+chmod +x "$fake_node" "$fake_pnpm" "$fake_vitest"
 
-FAKE_PNPM_ARGS="$pnpm_args" \
+vitest_args="$TMP_ROOT/vitest-args.log"
+FAKE_VITEST_ARGS="$vitest_args" \
   AOS_CI_PACKAGE_MANAGER=pnpm \
   AOS_CI_NODE="$fake_node" \
   AOS_CI_PNPM="$fake_pnpm" \
   bash "$RUNNER_ROOT/scripts/ci/run-node-gate.sh" web test >/dev/null
-assert_contains "$pnpm_args" "--dir $RUNNER_ROOT/apps/web run test"
+assert_contains "$vitest_args" "run"
 tests=$((tests + 1))
 
-missing_manager_output="$TMP_ROOT/missing-manager.log"
+unsupported_manager_output="$TMP_ROOT/unsupported-manager.log"
 set +e
 AOS_CI_PACKAGE_MANAGER=auto \
   AOS_CI_NODE="$fake_node" \
-  AOS_CI_NPM="$TMP_ROOT/missing-npm" \
-  AOS_CI_PNPM="$TMP_ROOT/missing-pnpm" \
-  bash "$RUNNER_ROOT/scripts/ci/run-node-gate.sh" web test >"$missing_manager_output" 2>&1
-missing_manager_code=$?
+  AOS_CI_PNPM="$fake_pnpm" \
+  bash "$RUNNER_ROOT/scripts/ci/run-node-gate.sh" web test >"$unsupported_manager_output" 2>&1
+unsupported_manager_code=$?
 set -e
-if [ "$missing_manager_code" -eq 0 ]; then
-  echo "SELFTEST FAIL missing package manager returned success" >&2
+if [ "$unsupported_manager_code" -eq 0 ]; then
+  echo "SELFTEST FAIL unsupported package manager returned success" >&2
   exit 1
 fi
-assert_contains "$missing_manager_output" "required npm or pnpm executable not found"
+assert_contains "$unsupported_manager_output" "only supports pnpm"
+tests=$((tests + 1))
+
+rm "$fake_vitest"
+missing_dependency_output="$TMP_ROOT/missing-dependency.log"
+set +e
+AOS_CI_NODE="$fake_node" AOS_CI_PNPM="$fake_pnpm" \
+  bash "$RUNNER_ROOT/scripts/ci/run-node-gate.sh" web test >"$missing_dependency_output" 2>&1
+missing_dependency_code=$?
+set -e
+if [ "$missing_dependency_code" -eq 0 ]; then
+  echo "SELFTEST FAIL missing local dependency returned success" >&2
+  exit 1
+fi
+assert_contains "$missing_dependency_output" "local vitest dependency not resolvable"
 tests=$((tests + 1))
 
 missing_python_output="$TMP_ROOT/missing-python.log"
