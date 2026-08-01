@@ -40,7 +40,7 @@ DOMAIN_COUNTS = {
     "agent": 3,
     "workshop": 115,
     "ontology": 72,
-    "aip": 61,
+    "aip": 62,
     "data": 199,
     "model": 15,
     "apollo": 9,
@@ -153,6 +153,7 @@ critical_paths = {
     "/v1/modules",
     "/v1/ontology/object-types",
     "/v1/aip/agents",
+    "/v1/aip/logic/graphs/{graph_id}/dry-run",
     "/v1/pipeline-builder",
     "/api/ontology-geos/",
     "/api/multi-spoke-monitors/",
@@ -225,8 +226,8 @@ class RouterManifestStaticTests(unittest.TestCase):
         cls.routers = cls.generator.load_manifest(MANIFEST_PATH)
 
     def test_manifest_count_order_domains_and_unique_keys(self) -> None:
-        self.assertEqual(506, len(self.routers))
-        self.assertEqual(list(range(506)), [entry["order"] for entry in self.routers])
+        self.assertEqual(507, len(self.routers))
+        self.assertEqual(list(range(507)), [entry["order"] for entry in self.routers])
         self.assertEqual(
             DOMAIN_COUNTS,
             {
@@ -235,7 +236,7 @@ class RouterManifestStaticTests(unittest.TestCase):
             },
         )
         keys = {(entry["module"], entry["attribute"]) for entry in self.routers}
-        self.assertEqual(506, len(keys))
+        self.assertEqual(507, len(keys))
 
     def test_manifest_validation_rejects_order_gaps_and_duplicate_keys(self) -> None:
         samples = []
@@ -367,12 +368,12 @@ class RouterManifestRuntimeTests(unittest.TestCase):
 
         # Runtime inventory includes FastAPI's four framework routes; the
         # exported business-route inventory intentionally filters those out.
-        self.assertEqual(4015, result["count"])
+        self.assertEqual(4018, result["count"])
         self.assertEqual(
-            "57b58bd7139b63b137e8778e233feabecb871ee4e8505c9d6678baffbd9bfb4e",
+            "8fb780e2ff199bea56d28896910351dc9114f379e061ae66eeb456e55989731d",
             result["sha256"],
         )
-        self.assertEqual(2252, result["openapi_paths"])
+        self.assertEqual(2255, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual([], result["missing_critical"])
         self.assertTrue(result["managed_skipped_bootstrap"])
