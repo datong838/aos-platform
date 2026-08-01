@@ -66,12 +66,12 @@ def test_inventory_preserves_route_rows_and_known_duplicates() -> None:
     schema_bytes = OPENAPI_PATH.read_bytes()
     inventory = json.loads(INVENTORY_PATH.read_bytes())
     summary = inventory["summary"]
-    assert summary["routeRows"] == 4005
-    assert summary["uniqueOperationPairs"] == 3986
+    assert summary["routeRows"] == 4006
+    assert summary["uniqueOperationPairs"] == 3987
     assert summary["duplicatePairs"] == exporter.EXPECTED_DUPLICATES
     assert summary["openapiSha256"] == hashlib.sha256(schema_bytes).hexdigest()
-    assert len(inventory["routes"]) == 4005
-    assert [row["ordinal"] for row in inventory["routes"]] == list(range(4005))
+    assert len(inventory["routes"]) == 4006
+    assert [row["ordinal"] for row in inventory["routes"]] == list(range(4006))
     assert all(row["operationId"] for row in inventory["routes"])
     assert set(summary["domains"]) == set(exporter.DOMAIN_ORDER)
 

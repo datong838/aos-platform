@@ -161,6 +161,47 @@ def apply_allowlist(findings: Iterable[Finding], allowlist: list[dict[str, str]]
     ]
 
 
+def _check_explicit_app_binding(root: Path, entry: dict[str, object]) -> list[Finding]:
+    """Guard audited root routes whose component is bound directly in App.tsx."""
+    if entry.get("route") != "/apollo":
+        return []
+    app_path = root / "apps/web/src/App.tsx"
+    app_source = app_path.read_text(encoding="utf-8")
+    component = str(entry["component"])
+    source_file = str(entry["sourceFile"])
+    prefix = "apps/web/src/"
+    if not source_file.startswith(prefix) or not source_file.endswith(".tsx"):
+        return [Finding("IH020", str(app_path.relative_to(root)), 1, "invalid /apollo sourceFile")]
+    import_path = "./" + source_file[len(prefix) : -4]
+    lazy_binding = re.compile(
+        rf"const\s+{re.escape(component)}\s*=\s*lazy\([\s\S]*?"
+        rf"import\([\"']{re.escape(import_path)}[\"']\)[\s\S]*?default:\s*m\.{re.escape(component)}",
+    )
+    route_binding = re.compile(
+        rf"<Route[\s\S]*?path=[\"']apollo[\"'][\s\S]*?<{re.escape(component)}\s*/>",
+    )
+    findings: list[Finding] = []
+    if not lazy_binding.search(app_source):
+        findings.append(
+            Finding(
+                "IH020",
+                str(app_path.relative_to(root)),
+                1,
+                f"/apollo manifest expects {component} from {import_path}, but App.tsx binds another source",
+            )
+        )
+    if not route_binding.search(app_source):
+        findings.append(
+            Finding(
+                "IH020",
+                str(app_path.relative_to(root)),
+                1,
+                f"/apollo is not routed to manifest component {component}",
+            )
+        )
+    return findings
+
+
 def check(root: Path, manifest_path: Path, allowlist_path: Path) -> list[Finding]:
     findings: list[Finding] = []
     try:
@@ -207,6 +248,7 @@ def check(root: Path, manifest_path: Path, allowlist_path: Path) -> list[Finding
         for test_path in tests:
             if not (root / str(test_path)).is_file():
                 findings.append(Finding("IH018", str(test_path), 1, "registered acceptance test does not exist"))
+        findings.extend(_check_explicit_app_binding(root, entry))
 
     try:
         allowlist = load_allowlist(allowlist_path)

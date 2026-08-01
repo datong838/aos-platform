@@ -42,6 +42,7 @@ export type DatasetPreview = {
 export type DatasetPreviewApiResponse = {
   id?: string;
   dataset_id?: string;
+  datasetRid?: string;
   name?: string;
   path?: string;
   format?: string;
@@ -228,7 +229,7 @@ export function normalizeDatasetPreview(
       uniqueCount: new Set(nonNull.map(String)).size,
     };
   });
-  const id = raw.id || raw.dataset_id || requestedId;
+  const id = raw.id || raw.dataset_id || raw.datasetRid || requestedId;
   const synthetic = raw.synthetic === true || raw.mode === "demo";
   return {
     data: {
@@ -354,9 +355,13 @@ export function DatasetPreviewPage() {
     setLoading(true);
     setMsg("");
     try {
-      const raw = await apiGet<DatasetPreviewApiResponse>(
-        `/v1/datasets/${encodeURIComponent(requestedId)}/preview`,
-      );
+      const raw = requestedId.startsWith("ri.dataset.")
+        ? await apiGet<DatasetPreviewApiResponse>(
+          `/v1/analytics/datasets/preview?datasetRid=${encodeURIComponent(requestedId)}&limit=${PREVIEW_LIMIT}`,
+        )
+        : await apiGet<DatasetPreviewApiResponse>(
+          `/v1/datasets/${encodeURIComponent(requestedId)}/preview`,
+        );
       if (requestId !== requestRef.current) return;
       const normalized = normalizeDatasetPreview(raw, requestedId);
       setDs(normalized.data);

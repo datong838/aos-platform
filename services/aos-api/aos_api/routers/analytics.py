@@ -732,6 +732,23 @@ def analytics_datasets_preview(
     return out
 
 
+@router.get("/v1/analytics/datasets/preview")
+def analytics_datasets_preview_get(
+    datasetRid: str = Query(min_length=1),
+    limit: int = Query(default=100, ge=1, le=1000),
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """Browser-friendly read-only preview; POST remains for SDK compatibility."""
+    out = _dataset_preview_table(principal, datasetRid.strip(), limit=limit)
+    log.info(
+        "analytics_datasets_preview_get rid=%s total=%s source=%s",
+        datasetRid,
+        out.get("total"),
+        out.get("source"),
+    )
+    return out
+
+
 @router.post("/v1/analytics/sql/preview")
 def analytics_sql_preview(
     body: SqlPreviewIn,

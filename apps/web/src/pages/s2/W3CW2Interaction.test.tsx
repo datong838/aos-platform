@@ -150,9 +150,9 @@ describe("Wave 3C W2 · Dataset Preview 来源与回落", () => {
     vi.unstubAllEnvs();
   });
 
-  async function renderPage() {
+  async function renderPage(datasetId = "ds-orders") {
     await act(async () => root.render(
-      <MemoryRouter initialEntries={["/data/datasets/ds-orders"]}>
+      <MemoryRouter initialEntries={[`/data/datasets/${datasetId}`]}>
         <Routes>
           <Route path="/data/datasets/:datasetId" element={<DatasetPreviewPage />} />
         </Routes>
@@ -217,6 +217,28 @@ describe("Wave 3C W2 · Dataset Preview 来源与回落", () => {
     expect(host.textContent).toContain("来源：主预览 API");
     expect(host.textContent).not.toContain("主预览失败");
     expect(host.querySelector<HTMLButtonElement>("[data-testid='dataset-export']")?.disabled).toBe(false);
+  });
+
+  it("列表 canonical RID 使用同源 Analytics 只读预览，不进入空的 Phase-5 存储", async () => {
+    apiMocks.get.mockResolvedValue({
+      datasetRid: "ri.dataset.pipe-align-04",
+      name: "pipe-align-04",
+      columns: [],
+      rows: [],
+      total: 0,
+      mode: "ta4-read",
+      source: "dataset-meta",
+    });
+
+    await renderPage("ri.dataset.pipe-align-04");
+
+    expect(apiMocks.get).toHaveBeenCalledWith(
+      "/v1/analytics/datasets/preview?datasetRid=ri.dataset.pipe-align-04&limit=100",
+    );
+    expect(apiMocks.post).not.toHaveBeenCalled();
+    expect(host.textContent).toContain("来源：主预览 API");
+    expect(host.textContent).toContain("预览成功但暂无行");
+    expect(host.textContent).not.toContain("主预览失败");
   });
 });
 

@@ -74,6 +74,23 @@ def test_dataset_preview_no_hint_empty_ok(client, auth_headers):
     assert "objectTypeHint" in (body.get("detail") or "")
 
 
+def test_dataset_preview_get_is_read_only_browser_contract(client, auth_headers):
+    from aos_api.routers import wave_ext
+
+    rid = "ri.dataset.ta4-get"
+    wave_ext._datasets[rid] = {"rid": rid, "name": "get-preview", "status": "READY"}
+    r = client.get(
+        "/v1/analytics/datasets/preview",
+        headers=auth_headers,
+        params={"datasetRid": rid, "limit": 10},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["datasetRid"] == rid
+    assert body["kind"] == "dataset"
+    assert body["source"] == "dataset-meta"
+
+
 def test_sql_select_1(client, auth_headers):
     r = client.post(
         "/v1/analytics/sql/preview",

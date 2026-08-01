@@ -23,6 +23,12 @@ class InteractionHonestyScannerTest(unittest.TestCase):
         self.assertEqual(35, len({entry["route"] for entry in entries}))
         self.assertTrue(all(entry["tests"] for entry in entries))
 
+    def test_apollo_manifest_matches_the_actual_app_entrypoint(self) -> None:
+        root = SCRIPT.parents[2]
+        entries = MODULE.load_manifest(root / "apps/web/src/interactionHonestyManifest.ts")
+        apollo = next(entry for entry in entries if entry["route"] == "/apollo")
+        self.assertEqual([], MODULE._check_explicit_app_binding(root, apollo))
+
     def test_detects_high_confidence_fake_interactions(self) -> None:
         source = """
 const MOCK_ROWS = [{ id: 1 }];
