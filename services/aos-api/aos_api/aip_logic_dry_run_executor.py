@@ -316,24 +316,102 @@ class LogicDryRunExecutor:
             return self.execute(graph, inputs, run_id=run_id, started_at=started_at)
         except Exception:  # noqa: BLE001 - terminalize every unexpected runtime failure
             finished_at = self._now()
-            error = LogicRunError(
-                code="INTERNAL_EXECUTION_ERROR",
-                message="logic dry-run failed unexpectedly",
-            )
-            return LogicDryRun(
+            return self.terminal_failure_evidence(
+                graph,
                 run_id=run_id,
-                graph_id=graph.id,
-                status="failed",
-                evaluated_revision=graph.revision,
-                graph_hash=graph.graph_hash,
                 started_at=started_at,
                 finished_at=finished_at,
                 elapsed_ms=max(0, round((self._monotonic() - guarded_started) * 1000)),
-                total_tokens=None,
-                node_results=[],
-                proposed_edits=[],
-                error=error,
+                code="INTERNAL_EXECUTION_ERROR",
+                message="logic dry-run failed unexpectedly",
+                reason="unexpected_error",
             )
+
+    @classmethod
+    def terminal_failure_evidence(
+        cls,
+        graph: LogicGraphSnapshot,
+        *,
+        run_id: str,
+        started_at: datetime,
+        finished_at: datetime,
+        elapsed_ms: int,
+        code: str,
+        message: str,
+        reason: str,
+    ) -> LogicDryRun:
+        """Build a complete deterministic terminal projection without executing nodes."""
+        if not graph.nodes:
+            raise LogicDryRunPreflightError(
+                "LOGIC_GRAPH_EMPTY", "empty logic graph cannot produce run evidence"
+            )
+        node_order = {node.id: index for index, node in enumerate(graph.nodes)}
+        incoming = {node.id: [] for node in graph.nodes}
+        outgoing = {node.id: [] for node in graph.nodes}
+        for edge in graph.edges:
+            incoming[edge.target_node_id].append(edge)
+            outgoing[edge.source_node_id].append(edge)
+        for edges in outgoing.values():
+            edges.sort(key=lambda edge: (edge.order, edge.id))
+        topo = cls._topological_order(graph, node_order, incoming, outgoing)
+        entry_ids = set(graph.entry_node_ids)
+        failed_node_id = next(
+            (node_id for node_id in topo if node_id in entry_ids), topo[0]
+        )
+        reachable = set(entry_ids)
+        pending = list(entry_ids)
+        while pending:
+            source_id = pending.pop()
+            for edge in outgoing.get(source_id, []):
+                if edge.target_node_id not in reachable:
+                    reachable.add(edge.target_node_id)
+                    pending.append(edge.target_node_id)
+
+        top_error = LogicRunError(
+            code=code,
+            message=message,
+            node_id=failed_node_id,
+            reason=reason,
+        )
+        node_by_id = {node.id: node for node in graph.nodes}
+        node_results: list[LogicNodeResult] = []
+        for node_id in topo:
+            node = node_by_id[node_id]
+            if node_id == failed_node_id:
+                node_results.append(
+                    LogicNodeResult(
+                        node_id=node_id,
+                        kind=node.kind,
+                        status="failed",
+                        started_at=started_at,
+                        finished_at=finished_at,
+                        elapsed_ms=elapsed_ms,
+                        summary="节点执行异常终止",
+                        error=top_error,
+                    )
+                )
+            elif node_id in reachable:
+                node_results.append(
+                    cls._idle_result(node_id, node.kind, "canceled", "fail_fast")
+                )
+            else:
+                node_results.append(
+                    cls._idle_result(node_id, node.kind, "skipped", "not_reachable")
+                )
+        return LogicDryRun(
+            run_id=run_id,
+            graph_id=graph.id,
+            status="failed",
+            evaluated_revision=graph.revision,
+            graph_hash=graph.graph_hash,
+            started_at=started_at,
+            finished_at=finished_at,
+            elapsed_ms=elapsed_ms,
+            total_tokens=None,
+            node_results=node_results,
+            proposed_edits=[],
+            error=top_error,
+        )
 
     @staticmethod
     def _revalidate(graph: LogicGraphSnapshot) -> None:
@@ -364,6 +442,10 @@ class LogicDryRunExecutor:
         if graph.status == "archived":
             raise LogicDryRunPreflightError(
                 "LOGIC_GRAPH_ARCHIVED", "archived logic graph cannot be dry-run"
+            )
+        if not graph.nodes:
+            raise LogicDryRunPreflightError(
+                "LOGIC_GRAPH_EMPTY", "empty logic graph cannot be dry-run"
             )
         cls._revalidate(graph)
         indegree = {node.id: 0 for node in graph.nodes}

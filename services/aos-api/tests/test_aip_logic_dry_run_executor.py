@@ -5,8 +5,6 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
-from pydantic import ValidationError
-
 from aos_api.aip_logic_dry_run_executor import (
     LogicDryRunExecutor,
     LogicDryRunPreflightError,
@@ -24,6 +22,7 @@ from aos_api.aip_logic_runtime_adapters import (
     RuntimeAdapterRegistry,
     ToolAdapterResult,
 )
+from pydantic import ValidationError
 
 
 def _snapshot(nodes, edges, entries) -> LogicGraphSnapshot:
@@ -289,6 +288,55 @@ def test_preflight_rejects_archived_and_non_root_entry() -> None:
     with pytest.raises(LogicDryRunPreflightError) as entry_error:
         LogicDryRunExecutor.preflight(graph)
     assert entry_error.value.code == "ENTRY_NODE_HAS_INCOMING_EDGE"
+
+
+def test_preflight_rejects_empty_graph_before_a_run_can_be_created() -> None:
+    with pytest.raises(LogicDryRunPreflightError) as exc:
+        LogicDryRunExecutor.preflight(_snapshot([], [], []))
+    assert exc.value.code == "LOGIC_GRAPH_EMPTY"
+
+
+def test_guarded_unexpected_failure_has_complete_terminal_node_evidence(
+    monkeypatch,
+) -> None:
+    graph = _snapshot(
+        [
+            {"id": "first", "kind": "input", "label": "first"},
+            {
+                "id": "next",
+                "kind": "transform",
+                "label": "next",
+                "config": {"expression": "1"},
+            },
+            {"id": "orphan", "kind": "input", "label": "orphan"},
+        ],
+        [{"id": "first-next", "source_node_id": "first", "target_node_id": "next"}],
+        ["first"],
+    )
+
+    def explode(*_args, **_kwargs):
+        raise RuntimeError("unexpected")
+
+    executor = LogicDryRunExecutor()
+    monkeypatch.setattr(executor, "execute", explode)
+    result = executor.execute_guarded(
+        graph, {}, run_id="guarded", started_at=datetime.now(UTC)
+    )
+    assert [node.node_id for node in result.node_results] == [
+        "first",
+        "next",
+        "orphan",
+    ]
+    assert [node.status for node in result.node_results] == [
+        "failed",
+        "canceled",
+        "skipped",
+    ]
+    assert result.error.node_id == "first"
+    assert result.node_results[0].error.code == "INTERNAL_EXECUTION_ERROR"
+    assert result.node_results[0].error.node_id == "first"
+    assert result.node_results[1].error.reason == "fail_fast"
+    assert result.node_results[2].error.reason == "not_reachable"
 
 
 def test_published_snapshot_is_revalidated_without_rewriting_its_checksum() -> None:

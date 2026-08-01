@@ -7,9 +7,10 @@ import json
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
+from aos_api.aip_logic_dry_run_executor import LogicDryRunExecutor
 from aos_api.aip_logic_dry_run_models import (
     LogicDryRun,
     LogicDryRunRequest,
@@ -121,88 +122,7 @@ class LogicRunStore:
         self._scope(org_id, project_id)
         try:
             with self._connect_factory() as conn:
-                for index, node in enumerate(result.node_results):
-                    conn.execute(
-                        """
-                        INSERT INTO aip_logic_graph_run_nodes (
-                          org_id,project_id,graph_id,run_id,node_id,topo_index,kind,status,
-                          started_at,finished_at,elapsed_ms,summary,output_summary,usage,
-                          tool_call,selected_branch_path,proposed_edits,error,truncated
-                        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s)
-                        """,
-                        (
-                            org_id,
-                            project_id,
-                            result.graph_id,
-                            result.run_id,
-                            node.node_id,
-                            index,
-                            node.kind,
-                            node.status,
-                            node.started_at,
-                            node.finished_at,
-                            node.elapsed_ms,
-                            node.summary,
-                            self._json(node.output)
-                            if node.output is not None
-                            else None,
-                            self._json(node.usage.model_dump(mode="json"))
-                            if node.usage
-                            else None,
-                            self._json(node.tool_call.model_dump(mode="json"))
-                            if node.tool_call
-                            else None,
-                            node.selected_branch_path,
-                            self._json(
-                                [
-                                    edit.model_dump(mode="json")
-                                    for edit in node.proposed_edits
-                                ]
-                            ),
-                            self._json(node.error.model_dump(mode="json"))
-                            if node.error
-                            else None,
-                            node.truncated,
-                        ),
-                    )
-                row = conn.execute(
-                    """
-                    UPDATE aip_logic_graph_runs
-                    SET status=%s,finished_at=%s,elapsed_ms=%s,total_tokens=%s,
-                        output_summary=%s::jsonb,proposed_edits=%s::jsonb,error=%s::jsonb
-                    WHERE org_id=%s AND project_id=%s AND graph_id=%s AND run_id=%s
-                      AND status='running'
-                    RETURNING run_id
-                    """,
-                    (
-                        result.status,
-                        result.finished_at,
-                        result.elapsed_ms,
-                        result.total_tokens,
-                        self._json(
-                            {
-                                "status": result.status,
-                                "node_count": len(result.node_results),
-                                "proposed_edit_count": len(result.proposed_edits),
-                            }
-                        ),
-                        self._json(
-                            [
-                                edit.model_dump(mode="json")
-                                for edit in result.proposed_edits
-                            ]
-                        ),
-                        self._json(result.error.model_dump(mode="json"))
-                        if result.error
-                        else None,
-                        org_id,
-                        project_id,
-                        result.graph_id,
-                        result.run_id,
-                    ),
-                ).fetchone()
-                if row is None:
-                    raise LogicRunPersistenceError("logic run was not in running state")
+                self._write_terminal_with_conn(conn, org_id, project_id, result)
                 conn.commit()
         except LogicRunStoreError:
             raise
@@ -281,25 +201,142 @@ class LogicRunStore:
         self, org_id: str, project_id: str, *, stale_before: datetime
     ) -> int:
         self._scope(org_id, project_id)
-        cutoff = stale_before or datetime.now(UTC)
-        error = {
-            "code": "INTERRUPTED",
-            "message": "run interrupted before terminal persistence",
-            "node_id": None,
-            "reason": "process_restart",
-        }
         try:
             with self._connect_factory() as conn:
                 rows = conn.execute(
-                    "UPDATE aip_logic_graph_runs SET status='failed',finished_at=NOW(),elapsed_ms=GREATEST(0,EXTRACT(EPOCH FROM (NOW()-started_at))*1000)::bigint,error=%s::jsonb WHERE org_id=%s AND project_id=%s AND status='running' AND started_at < %s RETURNING run_id",
-                    (self._json(error), org_id, project_id, cutoff),
+                    """
+                    SELECT r.*, revision.snapshot, NOW() AS recovered_at
+                    FROM aip_logic_graph_runs r
+                    JOIN aip_logic_graph_revision revision
+                      ON revision.org_id=r.org_id
+                     AND revision.project_id=r.project_id
+                     AND revision.graph_id=r.graph_id
+                     AND revision.revision=r.evaluated_revision
+                    WHERE r.org_id=%s AND r.project_id=%s
+                      AND r.status='running' AND r.started_at < %s
+                    ORDER BY r.started_at ASC, r.run_id ASC
+                    FOR UPDATE OF r SKIP LOCKED
+                    """,
+                    (org_id, project_id, stale_before),
                 ).fetchall()
+                recovered = 0
+                for row in rows:
+                    graph = LogicGraphSnapshot.model_validate(
+                        dict(row["snapshot"] or {})
+                    )
+                    if (
+                        graph.id != str(row["graph_id"])
+                        or graph.revision != int(row["evaluated_revision"])
+                        or graph.graph_hash != str(row["graph_hash"])
+                    ):
+                        raise LogicRunPersistenceError(
+                            "interrupted run revision evidence is inconsistent"
+                        )
+                    if not graph.nodes:
+                        raise LogicRunPersistenceError(
+                            "empty interrupted graph requires manual audit"
+                        )
+                    finished_at = row["recovered_at"]
+                    elapsed_ms = max(
+                        0,
+                        round((finished_at - row["started_at"]).total_seconds() * 1000),
+                    )
+                    result = LogicDryRunExecutor.terminal_failure_evidence(
+                        graph,
+                        run_id=str(row["run_id"]),
+                        started_at=row["started_at"],
+                        finished_at=finished_at,
+                        elapsed_ms=elapsed_ms,
+                        code="INTERRUPTED",
+                        message="run interrupted before terminal persistence",
+                        reason="process_restart",
+                    )
+                    self._write_terminal_with_conn(conn, org_id, project_id, result)
+                    recovered += 1
                 conn.commit()
-                return len(rows)
+                return recovered
         except Exception as exc:
             raise LogicRunPersistenceError(
                 "failed to recover interrupted logic runs"
             ) from exc
+
+    def _write_terminal_with_conn(
+        self, conn: Any, org_id: str, project_id: str, result: LogicDryRun
+    ) -> None:
+        for index, node in enumerate(result.node_results):
+            conn.execute(
+                """
+                INSERT INTO aip_logic_graph_run_nodes (
+                  org_id,project_id,graph_id,run_id,node_id,topo_index,kind,status,
+                  started_at,finished_at,elapsed_ms,summary,output_summary,usage,
+                  tool_call,selected_branch_path,proposed_edits,error,truncated
+                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s)
+                """,
+                (
+                    org_id,
+                    project_id,
+                    result.graph_id,
+                    result.run_id,
+                    node.node_id,
+                    index,
+                    node.kind,
+                    node.status,
+                    node.started_at,
+                    node.finished_at,
+                    node.elapsed_ms,
+                    node.summary,
+                    self._json(node.output) if node.output is not None else None,
+                    self._json(node.usage.model_dump(mode="json"))
+                    if node.usage
+                    else None,
+                    self._json(node.tool_call.model_dump(mode="json"))
+                    if node.tool_call
+                    else None,
+                    node.selected_branch_path,
+                    self._json(
+                        [edit.model_dump(mode="json") for edit in node.proposed_edits]
+                    ),
+                    self._json(node.error.model_dump(mode="json"))
+                    if node.error
+                    else None,
+                    node.truncated,
+                ),
+            )
+        row = conn.execute(
+            """
+            UPDATE aip_logic_graph_runs
+            SET status=%s,finished_at=%s,elapsed_ms=%s,total_tokens=%s,
+                output_summary=%s::jsonb,proposed_edits=%s::jsonb,error=%s::jsonb
+            WHERE org_id=%s AND project_id=%s AND graph_id=%s AND run_id=%s
+              AND status='running'
+            RETURNING run_id
+            """,
+            (
+                result.status,
+                result.finished_at,
+                result.elapsed_ms,
+                result.total_tokens,
+                self._json(
+                    {
+                        "status": result.status,
+                        "node_count": len(result.node_results),
+                        "proposed_edit_count": len(result.proposed_edits),
+                    }
+                ),
+                self._json(
+                    [edit.model_dump(mode="json") for edit in result.proposed_edits]
+                ),
+                self._json(result.error.model_dump(mode="json"))
+                if result.error
+                else None,
+                org_id,
+                project_id,
+                result.graph_id,
+                result.run_id,
+            ),
+        ).fetchone()
+        if row is None:
+            raise LogicRunPersistenceError("logic run was not in running state")
 
     def _get_with_conn(self, conn, org_id, project_id, graph_id, run_id) -> LogicDryRun:
         row = conn.execute(

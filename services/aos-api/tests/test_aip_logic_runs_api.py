@@ -5,8 +5,11 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
-
-from aos_api.aip_logic_dry_run_models import LogicRunListResponse
+from aos_api.aip_logic_dry_run_models import (
+    LogicNodeCounts,
+    LogicRunListResponse,
+    LogicRunSummary,
+)
 from aos_api.aip_logic_graph_models import (
     LogicGraphSnapshot,
     ValidateLogicGraphRequest,
@@ -53,6 +56,25 @@ def _graph(*, config=None, status="draft") -> LogicGraphSnapshot:
     )
 
 
+def _empty_graph() -> LogicGraphSnapshot:
+    content = ValidateLogicGraphRequest(name="empty")
+    now = datetime.now(UTC)
+    return LogicGraphSnapshot(
+        id="empty",
+        name="empty",
+        description="",
+        status="draft",
+        schema_version=1,
+        revision=1,
+        graph_hash=compute_logic_graph_hash(content),
+        nodes=[],
+        edges=[],
+        entry_node_ids=[],
+        created_at=now,
+        updated_at=now,
+    )
+
+
 class _GraphStore:
     def __init__(self, graph):
         self.graph = graph
@@ -81,7 +103,26 @@ class _RunStore:
         return self.result
 
     def list_runs(self, *_args, **_kwargs):
-        return LogicRunListResponse(items=[], count=0, next_cursor=None)
+        if self.result is None:
+            return LogicRunListResponse(items=[], count=0, next_cursor=None)
+        counts = {
+            status: sum(node.status == status for node in self.result.node_results)
+            for status in ("executed", "skipped", "failed", "canceled")
+        }
+        summary = LogicRunSummary(
+            run_id=self.result.run_id,
+            graph_id=self.result.graph_id,
+            status=self.result.status,
+            evaluated_revision=self.result.evaluated_revision,
+            graph_hash=self.result.graph_hash,
+            started_at=self.result.started_at,
+            finished_at=self.result.finished_at,
+            elapsed_ms=self.result.elapsed_ms,
+            total_tokens=self.result.total_tokens,
+            node_counts=LogicNodeCounts(**counts),
+            error_code=self.result.error.code if self.result.error else None,
+        )
+        return LogicRunListResponse(items=[summary], count=1, next_cursor=None)
 
     def recover_interrupted(self, *_args, **_kwargs):
         return 0
@@ -156,6 +197,19 @@ def test_revision_conflict_and_invalid_config_are_preflight_without_run(
     assert run_store.start_count == 0
 
 
+def test_empty_graph_is_rejected_before_a_run_is_created(client, logic_api) -> None:
+    headers, graph_store, run_store = logic_api
+    graph_store.graph = _empty_graph()
+    response = client.post(
+        "/v1/aip/logic/graphs/empty/dry-run",
+        headers=headers,
+        json=_body(graph_store.graph),
+    )
+    assert response.status_code == 422
+    assert response.json()["code"] == "LOGIC_GRAPH_EMPTY"
+    assert run_store.start_count == 0
+
+
 def test_success_is_read_back_from_history_and_production_write_is_false(
     client, logic_api
 ) -> None:
@@ -213,8 +267,21 @@ def test_unexpected_executor_exception_becomes_persisted_failed_run(
     assert response.status_code == 200
     assert response.json()["status"] == "failed"
     assert response.json()["error"]["code"] == "INTERNAL_EXECUTION_ERROR"
+    assert response.json()["error"]["node_id"] == "input"
+    assert len(response.json()["node_results"]) == 1
+    assert response.json()["node_results"][0]["status"] == "failed"
+    assert response.json()["node_results"][0]["error"]["node_id"] == "input"
     assert "sensitive" not in str(response.json())
     assert run_store.result is not None
+    detail = client.get(
+        f"/v1/aip/logic/graphs/graph/runs/{response.json()['run_id']}",
+        headers=headers,
+    )
+    assert detail.status_code == 200
+    assert detail.json() == response.json()
+    listed = client.get("/v1/aip/logic/graphs/graph/runs", headers=headers)
+    assert listed.status_code == 200
+    assert listed.json()["items"][0]["node_counts"]["failed"] == 1
 
 
 def test_invalid_get_query_uses_history_query_error_code(client, logic_api) -> None:

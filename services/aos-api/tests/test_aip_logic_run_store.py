@@ -9,8 +9,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from psycopg import sql
-
 from aos_api.aip_logic_dry_run_executor import LogicDryRunExecutor
 from aos_api.aip_logic_dry_run_models import LogicDryRunRequest
 from aos_api.aip_logic_graph_models import (
@@ -25,6 +23,7 @@ from aos_api.aip_logic_run_store import (
     LogicRunStore,
 )
 from aos_api.db import connect
+from psycopg import sql
 
 
 @pytest.fixture()
@@ -91,6 +90,35 @@ def _create_graph(store: LogicGraphStore, org: str, project: str):
     )
 
 
+def _create_recovery_graph(store: LogicGraphStore, org: str, project: str):
+    return store.create(
+        org,
+        project,
+        "actor",
+        CreateLogicGraphRequest(
+            name="recovery",
+            nodes=[
+                {"id": "first", "kind": "input", "label": "first"},
+                {
+                    "id": "next",
+                    "kind": "transform",
+                    "label": "next",
+                    "config": {"expression": "1"},
+                },
+                {"id": "orphan", "kind": "input", "label": "orphan"},
+            ],
+            edges=[
+                {
+                    "id": "first-next",
+                    "source_node_id": "first",
+                    "target_node_id": "next",
+                }
+            ],
+            entry_node_ids=["first"],
+        ),
+    )
+
+
 def test_start_finalize_get_list_are_durable_and_tenant_scoped(run_scope) -> None:
     graph_store, store, _ = run_scope
     org, project = "org-a", "project-a"
@@ -144,7 +172,7 @@ def test_sensitive_inputs_are_redacted_and_idempotency_replays_terminal_run(
 
 def test_stale_running_run_is_recovered_as_failed_interrupted(run_scope) -> None:
     graph_store, store, _ = run_scope
-    graph = _create_graph(graph_store, "org", "project")
+    graph = _create_recovery_graph(graph_store, "org", "project")
     request = LogicDryRunRequest(
         expected_revision=1, dry_run=True, expected_graph_hash=graph.graph_hash
     )
@@ -161,6 +189,54 @@ def test_stale_running_run_is_recovered_as_failed_interrupted(run_scope) -> None
     loaded = store.get_run("org", "project", graph.id, "run-stale")
     assert loaded.status == "failed"
     assert loaded.error.code == "INTERRUPTED"
+    assert loaded.error.node_id == "first"
+    assert [node.node_id for node in loaded.node_results] == [
+        "first",
+        "next",
+        "orphan",
+    ]
+    assert [node.status for node in loaded.node_results] == [
+        "failed",
+        "canceled",
+        "skipped",
+    ]
+    assert loaded.node_results[0].error.node_id == "first"
+    summary = store.list_runs("org", "project", graph.id).items[0]
+    assert summary.status == "failed"
+    assert summary.error_code == "INTERRUPTED"
+    assert summary.node_counts.failed == 1
+    assert summary.node_counts.canceled == 1
+    assert summary.node_counts.skipped == 1
+    assert (
+        store.recover_interrupted("org", "project", stale_before=datetime.now(UTC)) == 0
+    )
+
+
+def test_empty_stale_run_recovery_fails_closed_without_deleting_audit_row(
+    run_scope,
+) -> None:
+    graph_store, store, scoped_connect = run_scope
+    graph = graph_store.create(
+        "org",
+        "project",
+        "actor",
+        CreateLogicGraphRequest(name="empty"),
+    )
+    request = LogicDryRunRequest(
+        expected_revision=1, dry_run=True, expected_graph_hash=graph.graph_hash
+    )
+    store.start_run("org", "project", "actor", graph, request, "empty-stale")
+    with pytest.raises(LogicRunPersistenceError, match="recover interrupted"):
+        store.recover_interrupted("org", "project", stale_before=datetime.now(UTC))
+    with scoped_connect() as conn:
+        row = conn.execute(
+            """SELECT status FROM aip_logic_graph_runs
+               WHERE org_id='org' AND project_id='project'
+                 AND graph_id=%s AND run_id='empty-stale'""",
+            (graph.id,),
+        ).fetchone()
+    assert row is not None
+    assert row["status"] == "running"
 
 
 def test_multiple_null_idempotency_keys_are_allowed_by_real_postgresql(
