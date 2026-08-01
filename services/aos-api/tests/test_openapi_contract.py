@@ -59,19 +59,19 @@ def test_committed_artifacts_are_canonical_and_structurally_valid() -> None:
     exporter.validate_openapi(schema)
     assert schema["openapi"] == "3.1.0"
     assert len(schema["paths"]) == 2249
-    assert len(schema.get("components", {}).get("schemas", {})) == 1408
+    assert len(schema.get("components", {}).get("schemas", {})) == 1409
 
 
 def test_inventory_preserves_route_rows_and_known_duplicates() -> None:
     schema_bytes = OPENAPI_PATH.read_bytes()
     inventory = json.loads(INVENTORY_PATH.read_bytes())
     summary = inventory["summary"]
-    assert summary["routeRows"] == 4004
-    assert summary["uniqueOperationPairs"] == 3985
+    assert summary["routeRows"] == 4005
+    assert summary["uniqueOperationPairs"] == 3986
     assert summary["duplicatePairs"] == exporter.EXPECTED_DUPLICATES
     assert summary["openapiSha256"] == hashlib.sha256(schema_bytes).hexdigest()
-    assert len(inventory["routes"]) == 4004
-    assert [row["ordinal"] for row in inventory["routes"]] == list(range(4004))
+    assert len(inventory["routes"]) == 4005
+    assert [row["ordinal"] for row in inventory["routes"]] == list(range(4005))
     assert all(row["operationId"] for row in inventory["routes"])
     assert set(summary["domains"]) == set(exporter.DOMAIN_ORDER)
 
