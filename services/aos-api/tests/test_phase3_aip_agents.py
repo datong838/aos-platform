@@ -1,7 +1,10 @@
 """Phase 3 · AIP Agents — 单元测试。"""
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 from aos_api.aip_agents_engine import get_engine, AgentsEngine, Agent, ToolRef, GuardrailRule
+from aos_api.routers.phase3_aip_agents import router
 
 
 @pytest.fixture(autouse=True)
@@ -61,6 +64,13 @@ def test_tools():
     assert tools[0].name == "Tool1"
 
 
+def test_set_tools_replays_from_engine():
+    eng = get_engine()
+    agent = eng.create("ToolAgent")
+    eng.set_tools(agent.id, [{"id": "t1", "name": "Tool1", "category": "data", "enabled": True}])
+    assert [tool.id for tool in eng.list_tools(agent.id)] == ["t1"]
+
+
 def test_guardrails():
     eng = get_engine()
     agent = eng.create("GRAgent")
@@ -99,3 +109,34 @@ def test_singleton():
     e1 = get_engine()
     e2 = AgentsEngine()
     assert e1 is e2
+
+
+def test_agent_http_create_prompt_and_tools_roundtrip():
+    app = FastAPI()
+    app.include_router(router)
+    with TestClient(app) as client:
+        created = client.post("/v1/aip/agents", json={"name": "HTTP Agent", "description": "desc", "status": "draft"})
+        assert created.status_code == 200
+        agent = created.json()
+        assert agent["name"] == "HTTP Agent"
+
+        prompt = client.put(f"/v1/aip/agents/{agent['id']}/prompt", json={"prompt": "hello"})
+        assert prompt.status_code == 200
+        assert prompt.json()["agent_id"] == agent["id"]
+
+        tools = client.put(
+            f"/v1/aip/agents/{agent['id']}/tools",
+            json={"items": [{"id": "t1", "name": "Tool 1", "category": "query", "enabled": True}]},
+        )
+        assert tools.status_code == 200
+        assert tools.json()["agent_id"] == agent["id"]
+        reread = client.get(f"/v1/aip/agents/{agent['id']}/tools")
+        assert reread.json()["items"][0]["id"] == "t1"
+
+
+def test_put_tools_missing_agent_is_404():
+    app = FastAPI()
+    app.include_router(router)
+    with TestClient(app) as client:
+        response = client.put("/v1/aip/agents/missing/tools", json={"items": []})
+        assert response.status_code == 404

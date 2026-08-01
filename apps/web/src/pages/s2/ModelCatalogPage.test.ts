@@ -11,6 +11,7 @@ import {
   parsePricePerMillion,
   priceTierOf,
   registeredRowsFromModels,
+  validateRegistrationResponse,
   type CatalogModel,
 } from "./ModelCatalogPage";
 
@@ -313,5 +314,14 @@ describe("ModelCatalogPage · mapApiCatalogRow (W2-A7)", () => {
     const rows = registeredRowsFromModels(MOCK_MODELS);
     expect(rows.length).toBe(2);
     expect(rows.every((r) => MOCK_MODELS.find((m) => m.name === r.model)?.registered)).toBe(true);
+  });
+});
+
+describe("ModelCatalogPage · 注册响应严格核验", () => {
+  it("ok 与 item.modelId 同时匹配才通过", () => {
+    expect(validateRegistrationResponse({ ok: true, item: { modelId: "mc-1" } }, "mc-1")).toBe(true);
+    expect(validateRegistrationResponse({ ok: false, item: { modelId: "mc-1" } }, "mc-1")).toBe(false);
+    expect(validateRegistrationResponse({ ok: true, item: { modelId: "other" } }, "mc-1")).toBe(false);
+    expect(validateRegistrationResponse({ ok: true }, "mc-1")).toBe(false);
   });
 });

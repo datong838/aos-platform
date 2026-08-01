@@ -9,7 +9,7 @@
  * 纯函数集中在文件顶部（formatXxx / filter / aggregate），便于测试。
  */
 import { useEffect, useMemo, useState } from "react";
-import { apiGet } from "../../api/client";
+import { apiGet, apiPut } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
 import { BpBadge } from "../../components/bp";
 
@@ -69,6 +69,13 @@ export type AlertRow = {
   status: AlertStatus;
   firedAt: string;
   value: string;
+};
+
+type AlertApiRow = {
+  id?: string;
+  name?: string;
+  status?: string;
+  config?: { severity?: string; firedAt?: string; value?: string };
 };
 
 export type DashboardWidget = {
@@ -266,26 +273,23 @@ export const MOCK_WIDGETS: DashboardWidget[] = [
   { id: "w4", title: "Top 调用", type: "table", data: [5, 3, 2, 1] },
 ];
 
-/**将 summary API 的 kpis 映射为页面 KpiCard；缺省回落 MOCK。*/
+/**将 summary API 的 kpis 映射为页面 KpiCard；空响应保持真实空态。*/
 export function mapSummaryToKpis(res: ObsSummaryResponse | null | undefined): KpiCard[] {
   const items = res?.kpis;
-  if (!items || items.length === 0) return MOCK_KPIS;
-  return items.map((k, i) => {
-    const fallback = MOCK_KPIS[i] ?? MOCK_KPIS[0];
-    return {
-      key: k.key || fallback.key,
-      label: k.label || fallback.label,
-      value: k.value ?? fallback.value,
+  if (!items || items.length === 0) return [];
+  return items.map((k, i) => ({
+      key: k.key || `kpi-${i}`,
+      label: k.label || "未命名指标",
+      value: k.value ?? "0",
       deltaPct: typeof k.deltaPct === "number" ? k.deltaPct : 0,
-      unit: k.unit || fallback.unit,
-    };
-  });
+      unit: k.unit || "",
+    }));
 }
 
 /**将 summary API 的 trend 映射为 TrendPoint[]。*/
 export function mapSummaryToTrend(res: ObsSummaryResponse | null | undefined): TrendPoint[] {
   const items = res?.trend;
-  if (!items || items.length === 0) return MOCK_TREND;
+  if (!items || items.length === 0) return [];
   return items.map((p, i) => ({
     t: p.t || `${i * 5}m`,
     requests: typeof p.requests === "number" ? p.requests : 0,
@@ -297,20 +301,46 @@ export function mapSummaryToTrend(res: ObsSummaryResponse | null | undefined): T
 /**将 traces API items 映射为 TraceRow[]。*/
 export function mapTraceItems(res: ObsTracesResponse | null | undefined): TraceRow[] {
   const items = res?.items;
-  if (!items || items.length === 0) return MOCK_TRACES;
+  if (!items || items.length === 0) return [];
   return items.map((r, i) => {
-    const fallback = MOCK_TRACES[i % MOCK_TRACES.length];
-    const status = r.status === "error" || r.status === "ok" ? r.status : fallback.status;
+    const status = r.status === "error" ? "error" : "ok";
     return {
       traceId: r.traceId || `t_api_${i}`,
-      rootSpan: r.rootSpan || fallback.rootSpan,
-      service: r.service || fallback.service,
-      durationMs: typeof r.durationMs === "number" ? r.durationMs : fallback.durationMs,
+      rootSpan: r.rootSpan || "未知路由",
+      service: r.service || "aos-api",
+      durationMs: typeof r.durationMs === "number" ? r.durationMs : 0,
       status,
-      spans: typeof r.spans === "number" ? r.spans : fallback.spans,
-      startedAt: r.startedAt || fallback.startedAt,
+      spans: typeof r.spans === "number" ? r.spans : 0,
+      startedAt: r.startedAt || "—",
     };
   });
+}
+
+export function mapAlertItems(items: AlertApiRow[] | null | undefined): AlertRow[] {
+  return (items || []).filter((item) => item.id).map((item) => ({
+    id: String(item.id),
+    name: String(item.name || "未命名告警"),
+    severity: item.config?.severity === "critical" || item.config?.severity === "info" ? item.config.severity : "warning",
+    status: item.status === "acknowledged" || item.status === "silenced" ? item.status : "firing",
+    firedAt: String(item.config?.firedAt || "—"),
+    value: String(item.config?.value || "—"),
+  }));
+}
+
+export function validateAlertMutation(
+  response: { id?: string; status?: string } | null | undefined,
+  targetId: string,
+  targetStatus: AlertStatus,
+): boolean {
+  return response?.id === targetId && response.status === targetStatus;
+}
+
+export function metricsFromTrend(trend: TrendPoint[]): MetricSeries[] {
+  return [
+    { name: "请求量", unit: "req", values: trend.map((p) => p.requests) },
+    { name: "延迟", unit: "ms", values: trend.map((p) => p.latencyMs) },
+    { name: "错误", unit: "count", values: trend.map((p) => p.errors) },
+  ];
 }
 
 /* ----------------------------------------------------------------------------
@@ -322,14 +352,17 @@ export function ObservabilityPage() {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
   const [traceQuery, setTraceQuery] = useState("");
-  const [kpis, setKpis] = useState<KpiCard[]>(MOCK_KPIS);
-  const [trend, setTrend] = useState<TrendPoint[]>(MOCK_TREND);
-  const [traces, setTraces] = useState<TraceRow[]>(MOCK_TRACES);
-  const [selectedTrace, setSelectedTrace] = useState<TraceRow | null>(MOCK_TRACES[0]);
+  const [kpis, setKpis] = useState<KpiCard[]>([]);
+  const [trend, setTrend] = useState<TrendPoint[]>([]);
+  const [traces, setTraces] = useState<TraceRow[]>([]);
+  const [selectedTrace, setSelectedTrace] = useState<TraceRow | null>(null);
+  const [alerts, setAlerts] = useState<AlertRow[]>([]);
   const [alertFilter, setAlertFilter] = useState<AlertSeverity | "all">("all");
-  const [widgets, setWidgets] = useState<DashboardWidget[]>(MOCK_WIDGETS);
-  const [dataMode, setDataMode] = useState<ObsDataMode>("loading");
-  const [apiError, setApiError] = useState<string | null>(null);
+  const [widgets] = useState<DashboardWidget[]>(MOCK_WIDGETS);
+  const [tabSources, setTabSources] = useState<Partial<Record<ObsTab, "loading" | "live" | "error" | "demo">>>({ overview: "loading", dashboards: "demo" });
+  const [tabErrors, setTabErrors] = useState<Partial<Record<ObsTab, string>>>({});
+  const [alertMutation, setAlertMutation] = useState<{ id: string; status: AlertStatus } | null>(null);
+  const [alertWriteMsg, setAlertWriteMsg] = useState<string | null>(null);
 
   // 自动刷新：每 30s 触发一次 tick
   useEffect(() => {
@@ -338,44 +371,48 @@ export function ObservabilityPage() {
     return () => clearInterval(id);
   }, [autoRefresh]);
 
-  // W2-A5：拉取 summary + traces；失败降级 MOCK
+  // 每个 Tab 独立加载；真实空数据不注入 MOCK，一个 Tab 失败不污染其他 Tab。
   useEffect(() => {
+    if (tab === "dashboards") return;
     let cancelled = false;
+    setTabSources((prev) => ({ ...prev, [tab]: "loading" }));
+    setTabErrors((prev) => ({ ...prev, [tab]: undefined }));
+    if (tab === "overview" || tab === "metrics") { setKpis([]); setTrend([]); }
+    if (tab === "traces") { setTraces([]); setSelectedTrace(null); }
+    if (tab === "alerts") setAlerts([]);
     (async () => {
       try {
-        const [summary, tracesRes] = await Promise.all([
-          apiGet<ObsSummaryResponse>(
-            `/v1/aip/observability/summary?range=${encodeURIComponent(range)}`,
-          ),
-          apiGet<ObsTracesResponse>("/v1/aip/observability/traces?limit=20"),
-        ]);
+        if (tab === "overview" || tab === "metrics") {
+          const summary = await apiGet<ObsSummaryResponse>(`/v1/aip/observability/summary?range=${encodeURIComponent(range)}`);
+          if (cancelled) return;
+          setKpis(mapSummaryToKpis(summary));
+          setTrend(mapSummaryToTrend(summary));
+        } else if (tab === "traces") {
+          const tracesRes = await apiGet<ObsTracesResponse>("/v1/aip/observability/traces?limit=20");
+          if (cancelled) return;
+          const nextTraces = mapTraceItems(tracesRes);
+          setTraces(nextTraces);
+          setSelectedTrace((prev) => nextTraces.find((t) => t.traceId === prev?.traceId) ?? nextTraces[0] ?? null);
+        } else if (tab === "alerts") {
+          const alertsRes = await apiGet<AlertApiRow[]>("/api/aip/alerts");
+          if (cancelled) return;
+          setAlerts(mapAlertItems(alertsRes));
+        }
         if (cancelled) return;
-        const nextKpis = mapSummaryToKpis(summary);
-        const nextTrend = mapSummaryToTrend(summary);
-        const nextTraces = mapTraceItems(tracesRes);
-        setKpis(nextKpis);
-        setTrend(nextTrend);
-        setTraces(nextTraces);
-        setSelectedTrace((prev) => {
-          if (!prev) return nextTraces[0] ?? null;
-          return nextTraces.find((t) => t.traceId === prev.traceId) ?? nextTraces[0] ?? null;
-        });
-        setDataMode("live");
-        setApiError(null);
+        setTabSources((prev) => ({ ...prev, [tab]: "live" }));
       } catch (e) {
         if (cancelled) return;
-        setKpis(MOCK_KPIS);
-        setTrend(MOCK_TREND);
-        setTraces(MOCK_TRACES);
-        setSelectedTrace(MOCK_TRACES[0] ?? null);
-        setDataMode("demo");
-        setApiError(e instanceof Error ? e.message : "API 不可用");
+        if (tab === "overview" || tab === "metrics") { setKpis([]); setTrend([]); }
+        if (tab === "traces") { setTraces([]); setSelectedTrace(null); }
+        if (tab === "alerts") setAlerts([]);
+        setTabSources((prev) => ({ ...prev, [tab]: "error" }));
+        setTabErrors((prev) => ({ ...prev, [tab]: e instanceof Error ? e.message : "API 不可用" }));
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [range, refreshTick]);
+  }, [tab, range, refreshTick]);
 
   const tabs: { key: ObsTab; label: string }[] = [
     { key: "overview", label: "Overview" },
@@ -386,12 +423,8 @@ export function ObservabilityPage() {
   ];
 
   const filteredTraces = useMemo(() => filterTraces(traces, traceQuery), [traces, traceQuery]);
-  const filteredAlerts = useMemo(() => filterAlerts(MOCK_ALERTS, alertFilter), [alertFilter]);
-  const alertCounts = useMemo(() => countAlertStatus(MOCK_ALERTS), []);
-  const normalizedSpans = useMemo(
-    () => normalizeSpans(selectedTrace ? MOCK_SPANS : []),
-    [selectedTrace],
-  );
+  const filteredAlerts = useMemo(() => filterAlerts(alerts, alertFilter), [alerts, alertFilter]);
+  const alertCounts = useMemo(() => countAlertStatus(alerts), [alerts]);
   const requestsSpark = useMemo(
     () => sparklinePath(trend.map((p) => p.requests)),
     [trend],
@@ -406,7 +439,12 @@ export function ObservabilityPage() {
   }
 
   function handleExport() {
-    const blob = { tab, range, ts: new Date().toISOString(), tick: refreshTick, dataMode };
+    const data = tab === "overview" ? { kpis, trend }
+      : tab === "traces" ? traces
+        : tab === "metrics" ? metricsFromTrend(trend)
+          : tab === "alerts" ? alerts
+            : widgets;
+    const blob = { tab, range, source: tabSources[tab] === "live" ? "live" : "demo", generatedAt: new Date().toISOString(), data };
     const url = URL.createObjectURL(
       new Blob([JSON.stringify(blob, null, 2)], { type: "application/json" }),
     );
@@ -417,32 +455,49 @@ export function ObservabilityPage() {
     URL.revokeObjectURL(url);
   }
 
-  function addWidget() {
-    const id = `w${widgets.length + 1}`;
-    setWidgets((prev) => [
-      ...prev,
-      { id, title: `Widget ${id}`, type: "line", data: [100, 200, 150] },
-    ]);
+  async function updateAlert(id: string, status: AlertStatus) {
+    if (alertMutation) return;
+    setAlertMutation({ id, status });
+    setAlertWriteMsg(null);
+    try {
+      const updated = await apiPut<AlertApiRow>(`/api/aip/alerts/${encodeURIComponent(id)}`, { status });
+      if (!validateAlertMutation(updated, id, status)) throw new Error("告警写回响应与目标不一致");
+      let reread: AlertApiRow[];
+      try {
+        reread = await apiGet<AlertApiRow[]>("/api/aip/alerts");
+      } catch (e) {
+        setAlertWriteMsg(`写入已提交但重读核验失败：${String((e as Error).message || e)}`);
+        return;
+      }
+      const next = mapAlertItems(reread);
+      if (!next.some((item) => item.id === id && item.status === status)) {
+        setAlertWriteMsg("写入已提交但重读核验失败：服务端状态不一致");
+        return;
+      }
+      setAlerts(next);
+      setAlertWriteMsg(status === "acknowledged" ? "告警已确认并完成重读核验" : "告警已静默并完成重读核验");
+    } catch (e) {
+      setAlertWriteMsg(`告警写入失败：${String((e as Error).message || e)}`);
+    } finally {
+      setAlertMutation(null);
+    }
   }
 
   return (
     <PageChrome title="AIP 可观测性" lede="Overview · Traces · Metrics · Alerts · Dashboards">
-      {dataMode === "demo" && (
-        <div className="obs-source-banner obs-source-banner--demo" role="status" data-testid="obs-source-demo">
-          <span className="obs-source-badge obs-source-badge--demo">演示路径</span>
-          <span className="obs-source-banner__text">
-            后端不可用{apiError ? `（${apiError}）` : ""} · Overview/Traces 当前为 MOCK 数据
-          </span>
+      {tabSources[tab] === "error" && (
+        <div className="obs-source-banner obs-source-banner--demo" role="alert" data-testid={`obs-source-error-${tab}`}>
+          <span className="obs-source-badge obs-source-badge--demo">加载失败</span>
+          <span className="obs-source-banner__text">{tab} 数据不可用：{tabErrors[tab]}</span>
         </div>
       )}
-      {dataMode === "live" && (
+      {tabSources[tab] === "live" && (
         <div className="obs-source-banner obs-source-banner--live" role="status" data-testid="obs-source-live">
           <span className="obs-source-badge obs-source-badge--live">真实 API</span>
-          <span className="obs-source-banner__text">
-            Overview/Traces · GET /v1/aip/observability/summary · /traces（metrics 采样）
-          </span>
+          <span className="obs-source-banner__text">{tab} · 进程采样数据；Trace 仅为采样路由统计，Token 为估算，趋势为采样推演</span>
         </div>
       )}
+      {tab === "dashboards" && <div role="status">演示目录 · Dashboard Widget 持久化契约规划中</div>}
 
       {/* 顶部工具栏 */}
       <Toolbar
@@ -495,20 +550,23 @@ export function ObservabilityPage() {
           onQuery={setTraceQuery}
           selected={selectedTrace}
           onSelect={setSelectedTrace}
-          spans={normalizedSpans}
+          spans={[]}
         />
       )}
-      {tab === "metrics" && <MetricsPanel series={MOCK_METRICS} />}
+      {tab === "metrics" && <MetricsPanel series={metricsFromTrend(trend)} />}
       {tab === "alerts" && (
         <AlertsPanel
           alerts={filteredAlerts}
           filter={alertFilter}
           onFilter={setAlertFilter}
           counts={alertCounts}
+          onUpdate={updateAlert}
+          mutation={alertMutation}
         />
       )}
+      {tab === "alerts" && alertWriteMsg && <p role="status">{alertWriteMsg}</p>}
       {tab === "dashboards" && (
-        <DashboardsPanel widgets={widgets} onAdd={addWidget} />
+        <DashboardsPanel widgets={widgets} />
       )}
     </PageChrome>
   );
@@ -602,6 +660,7 @@ function OverviewPanel(props: {
 }) {
   return (
     <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+      {props.kpis.length === 0 && <p data-testid="observability-empty">当前时间范围暂无概览数据</p>}
       {/* KPI 卡片 */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
         {props.kpis.map((k) => {
@@ -744,6 +803,7 @@ function TracesPanel(props: {
               </tr>
             </thead>
             <tbody>
+              {props.traces.length === 0 && <tr><td colSpan={5} style={tdStyle}>暂无采样路由统计</td></tr>}
               {props.traces.map((t) => (
                 <tr
                   key={t.traceId}
@@ -775,6 +835,7 @@ function TracesPanel(props: {
             {props.selected ? `${props.selected.traceId} · ${formatDuration(props.selected.durationMs)}` : "选择一条 trace"}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <p style={{ fontSize: 12, color: "var(--aos-muted)" }}>Span 明细 API 未提供，瀑布图不可用。</p>
             {props.spans.map((s) => (
               <div key={s.id} style={{ display: "flex", alignItems: "center", paddingLeft: s.level * 12 }}>
                 <span style={{ width: 120, fontSize: 11, color: s.kind === "ai" ? "var(--color-info)" : "var(--aos-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -839,7 +900,7 @@ function MetricsPanel(props: { series: MetricSeries[] }) {
           </button>
         ))}
       </div>
-      {active && (
+      {active && active.values.length > 0 ? (
         <Panel title={`${active.name} · ${active.unit}`}>
           <BarChart values={active.values} />
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 11, color: "var(--aos-muted)" }}>
@@ -848,7 +909,7 @@ function MetricsPanel(props: { series: MetricSeries[] }) {
             <span>avg: {Math.round(active.values.reduce((a, b) => a + b, 0) / active.values.length)}</span>
           </div>
         </Panel>
-      )}
+      ) : <p data-testid="metrics-empty">当前时间范围暂无采样指标</p>}
     </div>
   );
 }
@@ -880,6 +941,8 @@ function AlertsPanel(props: {
   filter: AlertSeverity | "all";
   onFilter: (s: AlertSeverity | "all") => void;
   counts: Record<AlertStatus, number>;
+  onUpdate: (id: string, status: AlertStatus) => void;
+  mutation: { id: string; status: AlertStatus } | null;
 }) {
   const filters: (AlertSeverity | "all")[] = ["all", "critical", "warning", "info"];
   const labelOf = (f: AlertSeverity | "all") => (f === "all" ? "全部" : f === "critical" ? "严重" : f === "warning" ? "警告" : "信息");
@@ -918,6 +981,7 @@ function AlertsPanel(props: {
 
       {/* 列表 */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {props.alerts.length === 0 && <p data-testid="alerts-empty">暂无告警</p>}
         {props.alerts.map((a) => (
           <div
             key={a.id}
@@ -942,8 +1006,8 @@ function AlertsPanel(props: {
               </div>
             </div>
             <div style={{ display: "flex", gap: 4 }}>
-              <button type="button" data-testid={`ack-${a.id}`} style={btnXS}>确认</button>
-              <button type="button" data-testid={`silence-${a.id}`} style={btnXS}>静默</button>
+              <button type="button" data-testid={`ack-${a.id}`} disabled={Boolean(props.mutation) || a.status === "acknowledged"} onClick={() => props.onUpdate(a.id, "acknowledged")} style={btnXS}>确认</button>
+              <button type="button" data-testid={`silence-${a.id}`} disabled={Boolean(props.mutation) || a.status === "silenced"} onClick={() => props.onUpdate(a.id, "silenced")} style={btnXS}>静默</button>
             </div>
           </div>
         ))}
@@ -965,13 +1029,13 @@ function Stat(props: { label: string; value: number; tone: "danger" | "warning" 
 /* ----------------------------------------------------------------------------
  * Dashboards Panel
  * ------------------------------------------------------------------------- */
-function DashboardsPanel(props: { widgets: DashboardWidget[]; onAdd: () => void }) {
+function DashboardsPanel(props: { widgets: DashboardWidget[] }) {
   return (
     <div style={{ padding: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>自定义仪表盘</h3>
-        <button type="button" onClick={props.onAdd} data-testid="btn-add-widget" style={btnPrimary}>
-          + 添加 Widget
+        <button type="button" disabled title="持久化契约规划中" data-testid="btn-add-widget" style={{ ...btnPrimary, cursor: "not-allowed", opacity: 0.55 }}>
+          + 添加 Widget（规划中）
         </button>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>

@@ -1,40 +1,28 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  studioPromptKey,
-  studioToolsKey,
-  loadLocalPrompt,
-  saveLocalPrompt,
-  loadLocalTools,
-  saveLocalTools,
-  toggleToolId,
-  toolsToCategories,
   formatStudioSaveMsg,
-  mapWizardAgentToStudio,
+  mapApiAgentToStudio,
+  sameToolIds,
+  toggleToolId,
+  validateAgentToolsResponse,
+  validatePromptResponse,
 } from "./StudioPage";
-import type { AgentItem as WizardAgent } from "./s2/agentsCore";
 
-describe("StudioPage · W2-B2 keys", () => {
-  it("prompt/tools key 含 agentId", () => {
-    expect(studioPromptKey("repair-buddy")).toContain("repair-buddy");
-    expect(studioToolsKey("video-agent")).toContain("video-agent");
-  });
-});
-
-describe("StudioPage · localStorage 演示路径", () => {
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
-  it("save/load prompt", () => {
-    saveLocalPrompt("a1", "hello prompt");
-    expect(loadLocalPrompt("a1", "fallback")).toBe("hello prompt");
-    expect(loadLocalPrompt("missing", "fallback")).toBe("fallback");
-  });
-
-  it("save/load tools", () => {
-    saveLocalTools("a1", ["t1", "t2"]);
-    expect(loadLocalTools("a1", ["x"])).toEqual(["t1", "t2"]);
-    expect(loadLocalTools("missing", ["x"])).toEqual(["x"]);
+describe("StudioPage · Agent API 映射", () => {
+  it("列表响应映射为 Studio 项且不注入硬编码 Agent", () => {
+    const mapped = mapApiAgentToStudio({
+      id: "ag-1",
+      name: "订单助手",
+      description: "处理订单",
+      source: "custom",
+      tags: ["电商", "L2"],
+      status: "draft",
+      calls: 3,
+    });
+    expect(mapped.id).toBe("ag-1");
+    expect(mapped.name).toBe("订单助手");
+    expect(mapped.category).toBe("电商");
+    expect(mapped.status).toBe("draft");
   });
 });
 
@@ -48,64 +36,26 @@ describe("StudioPage · toggleToolId", () => {
   });
 });
 
-describe("StudioPage · toolsToCategories", () => {
-  const catalog = [
-    { id: "action.dispatch", category: "action" },
-    { id: "query.device", category: "query" },
-    { id: "wiki.fields", category: "wiki" },
-  ];
-
-  it("仅映射已启用工具的 category", () => {
-    expect(toolsToCategories(["query.device", "wiki.fields"], catalog).sort()).toEqual([
-      "query",
-      "wiki",
-    ]);
+describe("StudioPage · 写后重读严格核验", () => {
+  it("Prompt 回包必须匹配 agent 与冻结 prompt", () => {
+    expect(validatePromptResponse({ ok: true, agent_id: "a1", prompt: "hello" }, "a1", "hello")).toBe(true);
+    expect(validatePromptResponse({ ok: true, agent_id: "other", prompt: "hello" }, "a1", "hello")).toBe(false);
+    expect(validatePromptResponse({ ok: true, agent_id: "a1", prompt: "stale" }, "a1", "hello")).toBe(false);
   });
 
-  it("空选择返回空", () => {
-    expect(toolsToCategories([], catalog)).toEqual([]);
+  it("Tools 回包必须匹配 agent 与完整 ID 集合", () => {
+    const response = { agent_id: "a1", items: [{ id: "t2" }, { id: "t1" }] };
+    expect(validateAgentToolsResponse(response, "a1", ["t1", "t2"])).toBe(true);
+    expect(validateAgentToolsResponse(response, "other", ["t1", "t2"])).toBe(false);
+    expect(validateAgentToolsResponse(response, "a1", ["t1"])).toBe(false);
+    expect(sameToolIds(["t2", "t1"], ["t1", "t2"])).toBe(true);
   });
 });
 
-describe("StudioPage · formatStudioSaveMsg", () => {
-  it("API 成功", () => {
-    expect(formatStudioSaveMsg("api", true, "agents/prompt")).toContain("API");
-  });
-
-  it("演示路径成功", () => {
-    const msg = formatStudioSaveMsg("local", true);
-    expect(msg).toContain("演示路径");
-    expect(msg).toContain("localStorage");
-  });
-
-  it("失败", () => {
-    expect(formatStudioSaveMsg("api", false, "404")).toContain("保存失败");
-  });
-});
-
-describe("StudioPage · mapWizardAgentToStudio", () => {
-  it("向导 Agent 映射为 Studio 列表项（Draft）", () => {
-    const wizard: WizardAgent = {
-      id: "ag-x",
-      name: "测试助手",
-      description: "desc",
-      source: "platform",
-      status: "draft",
-      calls: 0,
-      modelId: "m1",
-      prompt: "你是助手",
-      icon: "chat",
-      domain: "电商客服",
-      level: "L2",
-      tools: [{ id: "t1", name: "Object Query", kind: "API", state: "on" }],
-    };
-    const mapped = mapWizardAgentToStudio(wizard);
-    expect(mapped.id).toBe("ag-x");
-    expect(mapped.name).toBe("测试助手");
-    expect(mapped.status).toBe("draft");
-    expect(mapped.toolCount).toBe(1);
-    expect(mapped.category).toBe("电商客服");
-    expect(mapped.level).toBe("L2");
-    expect(mapped.levelLabel).toBe("L2 HITL");
+describe("StudioPage · 保存文案", () => {
+  it("仅 API 核验成功可报告已保存", () => {
+    expect(formatStudioSaveMsg(true, "agents/prompt")).toContain("已保存并完成重读核验");
+    expect(formatStudioSaveMsg(false, "重读不一致")).toContain("核验失败");
+    expect(formatStudioSaveMsg(true)).not.toContain("localStorage");
   });
 });

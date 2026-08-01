@@ -1,17 +1,7 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { apiGet, apiPost, apiPut } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
-import { CreateAgentWizard } from "./s2/CreateAgentWizard";
-import {
-  MATURITY_LEVEL_LABEL,
-  MOCK_MODELS,
-  parseModelsPayload,
-  type CatalogModel,
-  type MaturityLevel,
-} from "./s2/agentsCore";
-import { useJsonGet } from "./s2/shared";
-import type { AgentItem as WizardAgentItem } from "./s2/agentsCore";
 
 type AgentItem = {
   id: string;
@@ -26,137 +16,70 @@ type AgentItem = {
   iconPath: string;
 };
 
-/** W2-B2 · 本地演示路径 key */
-export function studioPromptKey(agentId: string): string {
-  return `aos-studio-prompt:${agentId}`;
-}
-
-export function studioToolsKey(agentId: string): string {
-  return `aos-studio-tools:${agentId}`;
-}
-
-export function loadLocalPrompt(agentId: string, fallback = ""): string {
-  try {
-    const v = localStorage.getItem(studioPromptKey(agentId));
-    return v != null ? v : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-export function saveLocalPrompt(agentId: string, prompt: string): void {
-  localStorage.setItem(studioPromptKey(agentId), prompt);
-}
-
-export function loadLocalTools(agentId: string, fallback: string[]): string[] {
-  try {
-    const raw = localStorage.getItem(studioToolsKey(agentId));
-    if (!raw) return [...fallback];
-    const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? parsed.map(String) : [...fallback];
-  } catch {
-    return [...fallback];
-  }
-}
-
-export function saveLocalTools(agentId: string, enabledIds: string[]): void {
-  localStorage.setItem(studioToolsKey(agentId), JSON.stringify(enabledIds));
-}
-
 export function toggleToolId(enabledIds: string[], toolId: string): string[] {
   return enabledIds.includes(toolId)
     ? enabledIds.filter((id) => id !== toolId)
     : [...enabledIds, toolId];
 }
 
-/** DEMO_TOOLS id → tools/config categories */
-export function toolsToCategories(
-  enabledIds: string[],
-  catalog: Array<{ id: string; category?: string }>,
-): string[] {
-  const cats = new Set<string>();
-  for (const t of catalog) {
-    if (enabledIds.includes(t.id) && t.category) cats.add(t.category);
-  }
-  return Array.from(cats);
+export function formatStudioSaveMsg(ok: boolean, detail?: string): string {
+  if (!ok) return `写入已提交但重读核验失败${detail ? ` · ${detail}` : ""}`;
+  return `已保存并完成重读核验${detail ? ` · ${detail}` : ""}`;
 }
 
-export function formatStudioSaveMsg(
-  path: "api" | "local",
-  ok: boolean,
-  detail?: string,
-): string {
-  if (!ok) return `保存失败${detail ? ` · ${detail}` : ""}`;
-  if (path === "api") return `已保存 · API${detail ? ` · ${detail}` : ""}`;
-  return `已保存 · 演示路径 · localStorage${detail ? ` · ${detail}` : ""}`;
-}
+type ApiAgent = {
+  id?: string;
+  name?: string;
+  description?: string;
+  source?: string;
+  tags?: string[];
+  status?: string;
+  calls?: number;
+};
 
-const AGENTS: AgentItem[] = [
-  {
-    id: "repair-buddy",
-    name: "维修派单 Buddy",
-    category: "设备运维",
-    level: "L2",
-    levelLabel: "L2 HITL",
-    status: "running",
-    toolCount: 5,
-    iconBg: "var(--aos-amber-bg)",
-    iconColor: "var(--aos-amber-600)",
-    iconPath:
-      "M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z",
-  },
-  {
-    id: "video-agent",
-    name: "短视频生产 Agent",
-    category: "内容创作",
-    level: "L3",
-    levelLabel: "L3 Capability",
-    status: "running",
-    toolCount: 4,
-    iconBg: "var(--aos-accent-light)",
-    iconColor: "var(--aos-blue-600)",
-    iconPath: "",
-  },
-  {
-    id: "risk-agent",
-    name: "风险告警分析 Agent",
-    category: "风控分析",
-    level: "L1",
-    levelLabel: "L1 Draft",
-    status: "draft",
-    toolCount: 6,
-    iconBg: "var(--aos-red-bg)",
-    iconColor: "var(--aos-red)",
-    iconPath:
-      "M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z",
-  },
-  {
-    id: "order-agent",
-    name: "订单客服 Agent",
-    category: "电商客服",
-    level: "L2",
-    levelLabel: "L2 HITL",
-    status: "running",
-    toolCount: 3,
-    iconBg: "var(--aos-green-bg)",
-    iconColor: "var(--aos-green-600)",
-    iconPath:
-      "M21 11.5a8.5 8.5 0 01-8.5 8.5H5l-3 3V11.5A8.5 8.5 0 0110.5 3h2A8.5 8.5 0 0121 11.5z",
-  },
-  {
-    id: "doc-agent",
-    name: "文档问答 Agent",
-    category: "知识检索",
-    level: "L0",
-    levelLabel: "L0 只读",
-    status: "stopped",
-    toolCount: 2,
+type StudioTool = {
+  id: string;
+  name: string;
+  category: string;
+  enabled: boolean;
+};
+
+export function mapApiAgentToStudio(agent: ApiAgent): AgentItem {
+  const status = agent.status === "draft" ? "draft" : agent.status === "archived" ? "stopped" : "running";
+  const level = agent.tags?.find((tag) => /^L[0-4]$/.test(tag)) || "L2";
+  return {
+    id: String(agent.id || ""),
+    name: String(agent.name || "未命名智能体"),
+    category: agent.tags?.find((tag) => !/^L[0-4]$/.test(tag)) || agent.source || "未分类",
+    level,
+    levelLabel: `${level} · API`,
+    status,
+    toolCount: 0,
     iconBg: "var(--aos-indigo-bg)",
-    iconColor: "var(--aos-purple-600)",
-    iconPath:
-      "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8",
-  },
-];
+    iconColor: "var(--aos-indigo-600)",
+    iconPath: "M21 11.5a8.5 8.5 0 01-8.5 8.5H5l-3 3V11.5A8.5 8.5 0 0110.5 3h2A8.5 8.5 0 0121 11.5z",
+  };
+}
+
+export function sameToolIds(left: string[], right: string[]): boolean {
+  return [...new Set(left)].sort().join("\u0000") === [...new Set(right)].sort().join("\u0000");
+}
+
+export function validatePromptResponse(
+  response: { ok?: boolean; agent_id?: string; prompt?: string } | null | undefined,
+  agentId: string,
+  prompt: string,
+): boolean {
+  return response?.ok === true && response.agent_id === agentId && response.prompt === prompt;
+}
+
+export function validateAgentToolsResponse(
+  response: { agent_id?: string; items?: Array<{ id?: string }> } | null | undefined,
+  agentId: string,
+  toolIds: string[],
+): boolean {
+  return response?.agent_id === agentId && sameToolIds((response.items || []).map((item) => String(item.id || "")), toolIds);
+}
 
 const STUDIO_TABS = [
   { id: "prompt", label: "提示词" },
@@ -165,18 +88,6 @@ const STUDIO_TABS = [
   { id: "publish", label: "发布" },
 ];
 
-const DEMO_TOOLS = [
-  { id: "action.dispatch", name: "Action · 派单维修", code: "create_work_order", status: "HITL 确认", tone: "warn", category: "action" },
-  { id: "query.device", name: "Object Query · 设备对象", code: "Device", status: "已开启", tone: "ok", category: "query" },
-  { id: "function.health", name: "Function · health_score", code: "设备健康度计算", status: "已开启", tone: "ok", category: "function" },
-  { id: "wiki.fields", name: "Wiki 字段 Tool", code: "结构化优先", status: "★ 推荐", tone: "wiki", category: "wiki" },
-  { id: "clarify", name: "Request Clarification", code: "向用户澄清", status: "已开启", tone: "ok", category: "clarify" },
-];
-
-const DEFAULT_ENABLED_TOOLS = DEMO_TOOLS.filter((t) => t.tone !== "warn").map((t) => t.id);
-
-const DEFAULT_PROMPT =
-  "你是维修派单助手。优先读 Object 与 Wiki 结构化字段，禁止臆造字段。写回必须走 Action / Draft。";
 
 function statusBadge(status: AgentItem["status"]) {
   if (status === "running") return { label: "运行中", bg: "var(--aos-green-bg)", color: "var(--aos-green-700)" };
@@ -184,41 +95,15 @@ function statusBadge(status: AgentItem["status"]) {
   return { label: "已停用", bg: "var(--aos-gray-100)", color: "var(--aos-text-secondary)" };
 }
 
-export function mapWizardAgentToStudio(agent: WizardAgentItem): AgentItem {
-  const level = (agent.level as MaturityLevel) || "L2";
-  const levelLabel = MATURITY_LEVEL_LABEL[level] ?? level;
-  return {
-    id: agent.id,
-    name: agent.name,
-    category:
-      agent.domain?.trim() ||
-      (agent.source === "plugin"
-        ? "插件市场"
-        : agent.source === "external"
-          ? "外部接入"
-          : "平台内创建"),
-    level,
-    levelLabel,
-    status: "draft",
-    toolCount: agent.tools?.length ?? 0,
-    iconBg: "var(--aos-indigo-bg)",
-    iconColor: "var(--aos-indigo-600)",
-    iconPath:
-      "M21 11.5a8.5 8.5 0 01-8.5 8.5H5l-3 3V11.5A8.5 8.5 0 0110.5 3h2A8.5 8.5 0 0121 11.5z",
-  };
-}
-
 export function StudioPage() {
   const [tab, setTab] = useState("prompt");
-  const [agents, setAgents] = useState<AgentItem[]>(AGENTS);
-  const [activeId, setActiveId] = useState("repair-buddy");
-  const [showWizard, setShowWizard] = useState(false);
-  const [systemPrompt, setSystemPrompt] = useState(() =>
-    loadLocalPrompt("repair-buddy", DEFAULT_PROMPT),
-  );
-  const [enabledTools, setEnabledTools] = useState<string[]>(() =>
-    loadLocalTools("repair-buddy", DEFAULT_ENABLED_TOOLS),
-  );
+  const [agents, setAgents] = useState<AgentItem[]>([]);
+  const [activeId, setActiveId] = useState("");
+  const [systemPrompt, setSystemPrompt] = useState("");
+  const [enabledTools, setEnabledTools] = useState<string[]>([]);
+  const [toolCatalog, setToolCatalog] = useState<StudioTool[]>([]);
+  const [loadState, setLoadState] = useState<"loading" | "live" | "error">("loading");
+  const [resourceError, setResourceError] = useState<string | null>(null);
   const [defaultModel, setDefaultModel] = useState("—");
   const [lastRoute, setLastRoute] = useState<string | null>(null);
   const [query, setQuery] = useState("ORD-8821 超时了，怎么派？");
@@ -229,95 +114,132 @@ export function StudioPage() {
   const [toolsSaveMsg, setToolsSaveMsg] = useState<string | null>(null);
   const [promptSaving, setPromptSaving] = useState(false);
   const [toolsSaving, setToolsSaving] = useState(false);
-
-  const { data: modelsPayload } = useJsonGet<unknown>("/v1/aip/models");
-  const models: CatalogModel[] = useMemo(() => {
-    const parsed = parseModelsPayload(modelsPayload);
-    return parsed.length ? parsed : MOCK_MODELS;
-  }, [modelsPayload]);
-
-  const activeAgent = agents.find((a) => a.id === activeId) || agents[0];
-  const selectedTools = enabledTools.length > 0 ? enabledTools : ["query.objects"];
-
-  function handleCreateAgent(agent: WizardAgentItem) {
-    const mapped = mapWizardAgentToStudio(agent);
-    setAgents((prev) => [mapped, ...prev]);
-    setActiveId(mapped.id);
-    setTab("prompt");
-    setShowWizard(false);
-    if (agent.prompt) {
-      saveLocalPrompt(mapped.id, agent.prompt);
-      setSystemPrompt(agent.prompt);
-    } else {
-      setSystemPrompt(DEFAULT_PROMPT);
-    }
-    setEnabledTools(DEFAULT_ENABLED_TOOLS);
-    setPromptSaveMsg(null);
-    setToolsSaveMsg(null);
-  }
+  const loadGeneration = useRef(0);
+  const activeAgent = agents.find((a) => a.id === activeId) || null;
+  const displayAgent: AgentItem = activeAgent || {
+    id: "", name: "未选择智能体", category: "—", level: "—", levelLabel: "—", status: "stopped", toolCount: 0,
+    iconBg: "var(--aos-gray-100)", iconColor: "var(--aos-text-secondary)", iconPath: "",
+  };
+  const selectedTools = enabledTools;
+  const selectedToolItems = useMemo(() => toolCatalog.filter((tool) => enabledTools.includes(tool.id)), [enabledTools, toolCatalog]);
 
   useEffect(() => {
+    let cancelled = false;
+    apiGet<{ items?: ApiAgent[] }>("/v1/aip/agents")
+      .then((response) => {
+        if (cancelled) return;
+        const next = (response.items || []).map(mapApiAgentToStudio).filter((agent) => agent.id);
+        setAgents(next);
+        setActiveId((current) => next.some((agent) => agent.id === current) ? current : next[0]?.id || "");
+        setLoadState("live");
+        setResourceError(null);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setAgents([]);
+        setActiveId("");
+        setLoadState("error");
+        setResourceError(String((error as Error).message || error));
+      });
     apiGet<{ defaultTextModel?: string }>("/v1/aip/models")
       .then((r) => setDefaultModel(r.defaultTextModel || "—"))
       .catch(() => setDefaultModel("—"));
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
-    const local = loadLocalPrompt(activeId, DEFAULT_PROMPT);
-    setSystemPrompt(local);
-    setEnabledTools(loadLocalTools(activeId, DEFAULT_ENABLED_TOOLS));
+    if (!activeId) { setSystemPrompt(""); setEnabledTools([]); return; }
+    const generation = ++loadGeneration.current;
+    setSystemPrompt("");
+    setEnabledTools([]);
     setPromptSaveMsg(null);
     setToolsSaveMsg(null);
-    apiGet<{ prompt?: string }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/prompt`)
-      .then((r) => {
-        if (typeof r.prompt === "string" && r.prompt.length > 0) {
-          setSystemPrompt(r.prompt);
-        }
-      })
-      .catch(() => {
-        /* agents 引擎可能无预置 → 保留 local / 默认 */
-      });
+    setResourceError(null);
+    Promise.all([
+      apiGet<{ agent_id?: string; prompt?: string }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/prompt`),
+      apiGet<{ agent_id?: string; items?: StudioTool[] }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/tools`),
+      apiGet<{ items?: Array<{ id?: string; name?: string; kind?: string }> }>("/v1/aip/tools"),
+    ]).then(([prompt, assigned, catalog]) => {
+      if (generation !== loadGeneration.current) return;
+      if (prompt.agent_id !== activeId || assigned.agent_id !== activeId) throw new Error("Agent 资源响应目标错配");
+      setSystemPrompt(String(prompt.prompt || ""));
+      const assignedItems = assigned.items || [];
+      setEnabledTools(assignedItems.map((tool) => tool.id));
+      const catalogItems = (catalog.items || []).filter((tool) => tool.id).map((tool) => ({
+        id: String(tool.id), name: String(tool.name || tool.id), category: String(tool.kind || "tool"), enabled: true,
+      }));
+      const catalogIds = new Set(catalogItems.map((tool) => tool.id));
+      setToolCatalog([
+        ...catalogItems,
+        ...assignedItems.filter((tool) => !catalogIds.has(tool.id)).map((tool) => ({
+          id: tool.id, name: tool.name || tool.id, category: tool.category || "tool", enabled: tool.enabled !== false,
+        })),
+      ]);
+      setAgents((prev) => prev.map((agent) => agent.id === activeId ? { ...agent, toolCount: assignedItems.length } : agent));
+    }).catch((error) => {
+      if (generation !== loadGeneration.current) return;
+      setResourceError(`Agent 配置加载失败：${String((error as Error).message || error)}`);
+    });
   }, [activeId]);
 
   async function savePrompt() {
-    if (promptSaving) return;
+    if (promptSaving || !activeId) return;
+    const targetId = activeId;
+    const snapshot = systemPrompt;
     setPromptSaving(true);
     setPromptSaveMsg(null);
     setErr(null);
     try {
-      await apiPut(`/v1/aip/agents/${encodeURIComponent(activeId)}/prompt`, {
-        prompt: systemPrompt,
+      const written = await apiPut<{ ok?: boolean; agent_id?: string; prompt?: string }>(`/v1/aip/agents/${encodeURIComponent(targetId)}/prompt`, {
+        prompt: snapshot,
       });
-      saveLocalPrompt(activeId, systemPrompt);
-      setPromptSaveMsg(formatStudioSaveMsg("api", true, "agents/prompt"));
+      if (!validatePromptResponse(written, targetId, snapshot)) throw new Error("Prompt 写回响应与目标不一致");
+      let reread: { agent_id?: string; prompt?: string };
+      try {
+        reread = await apiGet(`/v1/aip/agents/${encodeURIComponent(targetId)}/prompt`);
+      } catch (error) {
+        setPromptSaveMsg(formatStudioSaveMsg(false, String((error as Error).message || error)));
+        return;
+      }
+      if (reread.agent_id !== targetId || reread.prompt !== snapshot) {
+        setPromptSaveMsg(formatStudioSaveMsg(false, "服务端 Prompt 不一致"));
+        return;
+      }
+      if (activeId === targetId) setSystemPrompt(reread.prompt);
+      setPromptSaveMsg(formatStudioSaveMsg(true, "agents/prompt"));
     } catch (ex) {
-      saveLocalPrompt(activeId, systemPrompt);
-      setPromptSaveMsg(
-        formatStudioSaveMsg("local", true, String((ex as Error).message || ex).slice(0, 80)),
-      );
+      setPromptSaveMsg(`保存失败 · ${String((ex as Error).message || ex).slice(0, 120)}`);
     } finally {
       setPromptSaving(false);
     }
   }
 
   async function saveTools() {
-    if (toolsSaving) return;
+    if (toolsSaving || !activeId) return;
+    const targetId = activeId;
+    const snapshot = [...enabledTools];
     setToolsSaving(true);
     setToolsSaveMsg(null);
     setErr(null);
-    saveLocalTools(activeId, enabledTools);
-    const categories = toolsToCategories(enabledTools, DEMO_TOOLS);
     try {
-      await apiPut("/v1/aip/tools/config", {
-        categories: categories.length > 0 ? categories : ["query"],
-        mode: "native",
-        hitl: "form",
+      const written = await apiPut<{ agent_id?: string; items?: Array<{ id?: string }> }>(`/v1/aip/agents/${encodeURIComponent(targetId)}/tools`, {
+        items: selectedToolItems.map((tool) => ({ id: tool.id, name: tool.name, category: tool.category, enabled: true })),
       });
-      setToolsSaveMsg(formatStudioSaveMsg("api", true, "tools/config"));
+      if (!validateAgentToolsResponse(written, targetId, snapshot)) throw new Error("Tools 写回响应与目标不一致");
+      let reread: { agent_id?: string; items?: Array<{ id?: string }> };
+      try {
+        reread = await apiGet(`/v1/aip/agents/${encodeURIComponent(targetId)}/tools`);
+      } catch (error) {
+        setToolsSaveMsg(formatStudioSaveMsg(false, String((error as Error).message || error)));
+        return;
+      }
+      if (!validateAgentToolsResponse(reread, targetId, snapshot)) {
+        setToolsSaveMsg(formatStudioSaveMsg(false, "服务端 Tools 不一致"));
+        return;
+      }
+      setToolsSaveMsg(formatStudioSaveMsg(true, "agents/{id}/tools"));
     } catch (ex) {
-      setToolsSaveMsg(
-        formatStudioSaveMsg("local", true, String((ex as Error).message || ex).slice(0, 80)),
-      );
+      setToolsSaveMsg(`保存失败 · ${String((ex as Error).message || ex).slice(0, 120)}`);
     } finally {
       setToolsSaving(false);
     }
@@ -326,6 +248,9 @@ export function StudioPage() {
   async function onChat(e: FormEvent) {
     e.preventDefault();
     setErr(null);
+    setAnswer("");
+    setToolCalls([]);
+    setLastRoute(null);
     try {
       const res = await apiPost<{
         answer: string;
@@ -348,6 +273,7 @@ export function StudioPage() {
 
   return (
     <PageChrome title="对话机器人 Studio" lede="配置壳：提示词 · 工具 · 本体/Wiki 上下文 · L4 须 Evals 绿 + Draft 默认">
+      {resourceError && loadState === "live" && <p role="alert">{resourceError}</p>}
       <div
         style={{
           margin: "-20px -20px -24px",
@@ -375,7 +301,8 @@ export function StudioPage() {
             <button
               type="button"
               data-testid="studio-btn-new-agent"
-              onClick={() => setShowWizard(true)}
+              disabled
+              title="共享创建向导与 Agent API 工具 ID 契约尚未对齐"
               style={{
                 marginTop: 8,
                 width: "100%",
@@ -390,15 +317,19 @@ export function StudioPage() {
                 border: "none",
                 fontSize: 13,
                 fontWeight: 500,
-                cursor: "pointer",
+                cursor: "not-allowed",
+                opacity: 0.55,
               }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M12 5v14M5 12h14" strokeLinecap="round" />
               </svg>
-              新建智能体
+              新建智能体（契约协调中）
             </button>
           </div>
+
+          {loadState === "error" && <p role="alert" style={{ padding: 12 }}>Agent 列表加载失败：{resourceError}</p>}
+          {loadState === "live" && agents.length === 0 && <p data-testid="studio-agents-empty" style={{ padding: 12 }}>暂无智能体</p>}
 
           {agents.map((a) => {
             const active = a.id === activeId;
@@ -527,7 +458,7 @@ export function StudioPage() {
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
               <div>
                 <h1 style={{ fontSize: 20, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>
-                  {activeAgent.name}
+                  {displayAgent.name}
                 </h1>
                 <p style={{ fontSize: 13, color: "var(--aos-text-secondary)", margin: "4px 0 0", lineHeight: 1.5 }}>
                   配置壳：提示词 · 工具 · 本体/Wiki 上下文 · L4 须 Evals 绿 + Draft 默认
@@ -556,7 +487,7 @@ export function StudioPage() {
                     fontWeight: 500,
                   }}
                 >
-                  {activeAgent.levelLabel}
+                  {displayAgent.levelLabel}
                 </span>
               </div>
             </div>
@@ -661,7 +592,7 @@ export function StudioPage() {
                     type="button"
                     className="w2-b2-save-btn"
                     onClick={() => void savePrompt()}
-                    disabled={promptSaving}
+                    disabled={promptSaving || !activeAgent}
                     style={{
                       padding: "8px 16px",
                       borderRadius: 2,
@@ -697,13 +628,14 @@ export function StudioPage() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                   <div style={{ fontSize: 13, fontWeight: 500, color: "var(--aos-text)" }}>已启用工具</div>
                   <span style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>
-                    已选 {enabledTools.length} / {DEMO_TOOLS.length}
+                    已选 {enabledTools.length} / {toolCatalog.length}
                   </span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {DEMO_TOOLS.map((t) => {
-                    const isWarn = t.tone === "warn";
-                    const isWiki = t.tone === "wiki";
+                  {toolCatalog.length === 0 && <p data-testid="studio-tools-empty">暂无可用工具</p>}
+                  {toolCatalog.map((t) => {
+                    const isWarn = t.category === "action";
+                    const isWiki = t.category === "wiki";
                     const on = enabledTools.includes(t.id);
                     return (
                       <label
@@ -729,7 +661,7 @@ export function StudioPage() {
                           <div>
                             <span style={{ fontSize: 13, color: "var(--aos-text)", fontWeight: 500 }}>{t.name}</span>
                             <span style={{ marginLeft: 8, fontSize: 10, color: isWarn ? "var(--aos-amber-700)" : "var(--aos-text-secondary)" }}>
-                              {t.code}
+                              {t.category}
                             </span>
                           </div>
                         </div>
@@ -755,7 +687,7 @@ export function StudioPage() {
                             fontWeight: 500,
                           }}
                         >
-                          {on ? t.status : "已关闭"}
+                          {on ? "已分配" : "未分配"}
                         </span>
                       </label>
                     );
@@ -766,7 +698,7 @@ export function StudioPage() {
                     type="button"
                     className="w2-b2-save-btn"
                     onClick={() => void saveTools()}
-                    disabled={toolsSaving}
+                    disabled={toolsSaving || !activeAgent}
                     style={{
                       padding: "8px 16px",
                       borderRadius: 2,
@@ -842,7 +774,7 @@ export function StudioPage() {
                     Buddy
                   </div>
                   <div style={{ color: "var(--aos-text)" }}>
-                    {answer || "已读 Order + Wiki.sla。建议 Action「派单维修」→ 进入 Draft（示意）。"}
+                    {answer || "尚未运行；发送后仅展示真实 API 回包。"}
                   </div>
                   {lastRoute && (
                     <div style={{ fontSize: 10, color: "var(--aos-text-tertiary)", marginTop: 8 }}>
@@ -954,7 +886,7 @@ export function StudioPage() {
                   L4 门控状态
                 </h2>
                 <p style={{ fontSize: 12, color: "var(--aos-amber-700)", margin: "0 0 12px", lineHeight: 1.6 }}>
-                  须 Eval ≥ 92% 且 Draft 审批通过后方可申请 L4 上线。当前 Eval 通过率 87%，未达门槛。
+                  须 Eval ≥ 92% 且 Draft 审批通过后方可申请 L4 上线。87% 为产品示意数据，本页只读，不代表当前 Agent 的真实评测结果。
                 </p>
                 <label
                   style={{
@@ -1023,13 +955,6 @@ export function StudioPage() {
         </div>
       </div>
 
-      {showWizard ? (
-        <CreateAgentWizard
-          models={models}
-          onClose={() => setShowWizard(false)}
-          onCreate={handleCreateAgent}
-        />
-      ) : null}
     </PageChrome>
   );
 }

@@ -13,7 +13,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from aos_api.aip_agents_engine import get_engine
 
@@ -22,6 +22,19 @@ router = APIRouter(prefix="/v1/aip", tags=["aip-agents"])
 
 class PromptUpdate(BaseModel):
     prompt: str
+
+
+class AgentCreate(BaseModel):
+    name: str
+    description: str = ""
+    source: str = "custom"
+    tags: list[str] = Field(default_factory=list)
+    status: str = "draft"
+    system_prompt: str = ""
+
+
+class ToolsUpdate(BaseModel):
+    items: list[dict[str, Any]]
 
 
 class GuardrailsUpdate(BaseModel):
@@ -57,6 +70,12 @@ async def list_agents(
     }
 
 
+@router.post("/agents")
+async def create_agent(body: AgentCreate) -> dict[str, Any]:
+    agent = get_engine().create(**body.model_dump())
+    return agent.model_dump()
+
+
 @router.get("/agents/{agent_id}")
 async def get_agent(agent_id: str) -> dict[str, Any]:
     eng = get_engine()
@@ -82,7 +101,7 @@ async def update_prompt(agent_id: str, body: PromptUpdate) -> dict[str, Any]:
         agent = eng.set_prompt(agent_id, body.prompt)
     except KeyError:
         raise HTTPException(404, f"Agent {agent_id} not found")
-    return {"ok": True, "prompt": agent.system_prompt}
+    return {"ok": True, "agent_id": agent_id, "prompt": agent.system_prompt}
 
 
 @router.get("/agents/{agent_id}/tools")
@@ -92,6 +111,20 @@ async def get_tools(agent_id: str) -> dict[str, Any]:
     if not tools and eng.get(agent_id) is None:
         raise HTTPException(404, f"Agent {agent_id} not found")
     return {"agent_id": agent_id, "items": [t.model_dump() for t in tools], "count": len(tools)}
+
+
+@router.put("/agents/{agent_id}/tools")
+async def update_tools(agent_id: str, body: ToolsUpdate) -> dict[str, Any]:
+    eng = get_engine()
+    try:
+        agent = eng.set_tools(agent_id, body.items)
+    except KeyError:
+        raise HTTPException(404, f"Agent {agent_id} not found")
+    return {
+        "agent_id": agent_id,
+        "items": [tool.model_dump() for tool in agent.tools],
+        "count": len(agent.tools),
+    }
 
 
 @router.get("/agents/{agent_id}/guardrails")

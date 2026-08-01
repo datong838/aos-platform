@@ -13,12 +13,11 @@ import {
   mapSummaryToKpis,
   mapSummaryToTrend,
   mapTraceItems,
-  MOCK_KPIS,
-  MOCK_TRACES,
   normalizeSpans,
   pointsForRange,
   sparklinePath,
   TIME_RANGES,
+  validateAlertMutation,
   type AlertRow,
   type TraceRow,
   type TraceSpan,
@@ -251,9 +250,9 @@ describe("ObservabilityPage · 时间范围", () => {
 });
 
 describe("ObservabilityPage · W2-A5 API 映射", () => {
-  it("mapSummaryToKpis 空响应回落 MOCK", () => {
-    expect(mapSummaryToKpis(null)).toEqual(MOCK_KPIS);
-    expect(mapSummaryToKpis({})).toEqual(MOCK_KPIS);
+  it("mapSummaryToKpis 空响应保持真实空态", () => {
+    expect(mapSummaryToKpis(null)).toEqual([]);
+    expect(mapSummaryToKpis({})).toEqual([]);
   });
 
   it("mapSummaryToKpis 映射 API kpi", () => {
@@ -292,7 +291,15 @@ describe("ObservabilityPage · W2-A5 API 映射", () => {
     expect(rows[0].rootSpan).toBe("GET /v1/health");
   });
 
-  it("mapTraceItems 空 items 回落 MOCK", () => {
-    expect(mapTraceItems({ items: [] })).toEqual(MOCK_TRACES);
+  it("mapTraceItems 空 items 保持真实空态", () => {
+    expect(mapTraceItems({ items: [] })).toEqual([]);
+  });
+});
+
+describe("ObservabilityPage · 告警写回严格核验", () => {
+  it("仅目标 id 与状态同时一致才通过", () => {
+    expect(validateAlertMutation({ id: "a1", status: "acknowledged" }, "a1", "acknowledged")).toBe(true);
+    expect(validateAlertMutation({ id: "other", status: "acknowledged" }, "a1", "acknowledged")).toBe(false);
+    expect(validateAlertMutation({ id: "a1", status: "firing" }, "a1", "acknowledged")).toBe(false);
   });
 });

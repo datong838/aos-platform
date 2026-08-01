@@ -387,6 +387,13 @@ export function registeredRowsFromModels(models: CatalogModel[]): Array<{ model:
     .map((m) => ({ model: m.name, provider: m.provider, family: m.provider }));
 }
 
+export function validateRegistrationResponse(
+  response: { ok?: boolean; item?: { modelId?: string } } | null | undefined,
+  modelId: string,
+): boolean {
+  return response?.ok === true && response.item?.modelId === modelId;
+}
+
 // ── Component ──────────────────────────────────────────────────
 
 export function ModelCatalogPage() {
@@ -414,7 +421,7 @@ export function ModelCatalogPage() {
   const [compareSet, setCompareSet] = useState<Set<string>>(new Set());
   const [showCompare, setShowCompare] = useState(false);
   const [sourceMode, setSourceMode] = useState<CatalogSourceMode>("loading");
-  const [catalogModels, setCatalogModels] = useState<CatalogModel[]>(CATALOG_MODELS);
+  const [catalogModels, setCatalogModels] = useState<CatalogModel[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [registerBusy, setRegisterBusy] = useState<string | null>(null);
   const [registerMsg, setRegisterMsg] = useState<string | null>(null);
@@ -428,7 +435,7 @@ export function ModelCatalogPage() {
       } catch {
         const [cat, reg] = await Promise.all([
           apiGet<{ items?: ApiCatalogRow[] }>("/v1/aip/model-catalog"),
-          apiGet<{ items?: Array<{ modelId?: string }> }>("/v1/aip/registered-models").catch(() => ({ items: [] })),
+          apiGet<{ items?: Array<{ modelId?: string }> }>("/v1/aip/registered-models"),
         ]);
         const regSet = new Set((reg.items || []).map((r) => String(r.modelId || "")));
         items = (cat.items || []).map((c) => ({
@@ -486,19 +493,25 @@ export function ModelCatalogPage() {
   }
 
   async function handleRegister(modelId: string) {
-    if (sourceMode !== "live") {
-      setCatalogModels((prev) =>
-        prev.map((m) => (m.id === modelId ? { ...m, registered: true } : m)),
-      );
-      setRegisterMsg("演示路径：已本地标记为已注册");
-      return;
-    }
+    if (sourceMode !== "live") return;
     setRegisterBusy(modelId);
     setRegisterMsg(null);
     try {
-      await apiPost(`/v1/aip/model-catalog/${encodeURIComponent(modelId)}/register`, {});
-      await loadCatalog();
-      setRegisterMsg("注册成功");
+      const written = await apiPost<{ ok?: boolean; item?: { modelId?: string } }>(`/v1/aip/model-catalog/${encodeURIComponent(modelId)}/register`, {});
+      if (!validateRegistrationResponse(written, modelId)) throw new Error("注册响应 ok/modelId 与目标不一致");
+      let registered: { items?: Array<{ modelId?: string }> };
+      try {
+        registered = await apiGet<{ items?: Array<{ modelId?: string }> }>("/v1/aip/registered-models");
+      } catch (e) {
+        setRegisterMsg(`注册写入已提交但重读核验失败：${String((e as Error).message || e)}`);
+        return;
+      }
+      if (!(registered.items || []).some((item) => item.modelId === modelId)) {
+        setRegisterMsg("注册写入已提交但重读核验失败：已注册列表缺少目标模型");
+        return;
+      }
+      setCatalogModels((prev) => prev.map((model) => model.id === modelId ? { ...model, registered: true } : model));
+      setRegisterMsg("模型已注册并完成重读核验");
     } catch (e) {
       setRegisterMsg(`注册失败：${String((e as Error).message || e)}`);
     } finally {
@@ -717,7 +730,8 @@ export function ModelCatalogPage() {
                           <button
                             type="button"
                             className="mc-primary-btn"
-                            disabled={registerBusy === m.id}
+                            disabled={sourceMode !== "live" || registerBusy === m.id}
+                            title={sourceMode !== "live" ? "演示目录不可注册" : undefined}
                             onClick={() => void handleRegister(m.id)}
                           >
                             {registerBusy === m.id ? "注册中…" : "注册到供应商"}
@@ -792,7 +806,7 @@ export function ModelCatalogPage() {
                       Palantir AIP 将生成式 AI 与业务运营连接。这些功能和辅助服务利用托管在 Palantir Microsoft Azure 环境中的大语言模型。启用这些功能即表示您同意遵守 Palantir 的 AIP 补充协议。
                     </p>
                   </div>
-                  <ToggleSwitch checked={aipEnabled} onChange={setAipEnabled} />
+                  <ToggleSwitch checked={aipEnabled} onChange={setAipEnabled} disabled />
                 </div>
 
                 <div className="mc-setting-row">
@@ -802,7 +816,7 @@ export function ModelCatalogPage() {
                       将 AIP 启用限制到特定组织。如果启用此设置，则只有下方选中的组织才能使用 AIP，其他组织将无法使用。
                     </p>
                   </div>
-                  <ToggleSwitch checked={orgRestricted} onChange={setOrgRestricted} />
+                  <ToggleSwitch checked={orgRestricted} onChange={setOrgRestricted} disabled />
                 </div>
 
                 {orgRestricted && (
@@ -825,6 +839,7 @@ export function ModelCatalogPage() {
                           <input
                             type="checkbox"
                             checked={checked}
+                            disabled
                             onChange={() => setOrgs((prev) => ({ ...prev, [name]: !prev[name] }))}
                           />
                           {name}
@@ -837,8 +852,8 @@ export function ModelCatalogPage() {
             </div>
 
             <div className="mc-settings-actions">
-              <button className="mc-btn-default">取消</button>
-              <button className="mc-btn-primary">保存到分支</button>
+              <button type="button" className="mc-btn-default" disabled title="组织 enrollment 契约未提供">取消（只读）</button>
+              <button type="button" className="mc-btn-primary" disabled title="组织 enrollment 契约未提供">保存（契约未提供）</button>
             </div>
 
             <div className="mc-related-links">
@@ -871,7 +886,7 @@ export function ModelCatalogPage() {
                     <span className={`mc-status-badge ${f.status}`}>
                       {f.status === "enabled" ? "已启用" : "未启用"}
                     </span>
-                    <button className="mc-manage-btn">管理</button>
+                    <button type="button" className="mc-manage-btn" disabled title="法律启用契约未提供">管理（只读）</button>
                   </div>
                 </div>
               ))}
@@ -928,10 +943,12 @@ export function ModelCatalogPage() {
   );
 }
 
-function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+function ToggleSwitch({ checked, onChange, disabled = false }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
   return (
     <button
       type="button"
+      disabled={disabled}
+      title={disabled ? "组织 enrollment 契约未提供" : undefined}
       onClick={() => onChange(!checked)}
       style={{
         width: 48,
@@ -940,7 +957,8 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: b
         background: checked ? "var(--aos-accent)" : "var(--aos-border-strong)",
         position: "relative",
         border: "none",
-        cursor: "pointer",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.55 : 1,
         transition: "background 0.15s",
         flexShrink: 0,
       }}

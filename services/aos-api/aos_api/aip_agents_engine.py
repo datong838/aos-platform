@@ -108,6 +108,10 @@ class AgentsEngine:
         agent = self._agents.get(agent_id)
         return list(agent.tools) if agent else []
 
+    def set_tools(self, agent_id: str, tools: list[dict[str, Any]]) -> Agent:
+        refs = [ToolRef(**tool) for tool in tools]
+        return self.update(agent_id, tools=refs)
+
     # ── Guardrails ──
     def get_guardrails(self, agent_id: str) -> list[GuardrailRule]:
         agent = self._agents.get(agent_id)

@@ -11,6 +11,7 @@ import {
   sumUsage,
   usagePercent,
   usageTone,
+  validateLimitSnapshot,
   type RateLimit,
   type UsageBucket,
   type UserLimit,
@@ -205,7 +206,17 @@ describe("CapacityPage · isCapacityLiveSuccess", () => {
   it("usage 成功 → live", () => {
     expect(isCapacityLiveSuccess(true)).toBe("live");
   });
-  it("usage 失败 → demo", () => {
-    expect(isCapacityLiveSuccess(false)).toBe("demo");
+  it("usage 失败 → error", () => {
+    expect(isCapacityLiveSuccess(false)).toBe("error");
+  });
+});
+
+describe("CapacityPage · 限额写后重读严格核验", () => {
+  it("scope、scopeKey、RPM、TPM 全部一致才通过", () => {
+    const draft = { rpmLimit: 120, tpmLimit: 500000 };
+    expect(validateLimitSnapshot({ scope: "project", scopeKey: "default", ...draft }, "project", "default", draft)).toBe(true);
+    expect(validateLimitSnapshot({ scope: "user", scopeKey: "default", ...draft }, "project", "default", draft)).toBe(false);
+    expect(validateLimitSnapshot({ scope: "project", scopeKey: "other", ...draft }, "project", "default", draft)).toBe(false);
+    expect(validateLimitSnapshot({ scope: "project", scopeKey: "default", rpmLimit: 60, tpmLimit: 500000 }, "project", "default", draft)).toBe(false);
   });
 });

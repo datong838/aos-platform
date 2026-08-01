@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiGet } from "../../api/client";
+import { apiGet, apiPut } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -43,7 +43,7 @@ export type ProjectLimit = {
   scopeKey?: string;
 };
 
-export type CapacitySourceMode = "loading" | "live" | "demo";
+export type CapacitySourceMode = "loading" | "live" | "error";
 
 type TabId = "usage" | "rate-limits" | "reserved";
 
@@ -75,29 +75,6 @@ const RATE_LIMITS: RateLimit[] = [
   { model: "Llama 4 Maverick 17B", provider: "Meta", tokensPerMin: "300K", requestsPerMin: "450" },
   { model: "text-embedding-ada-002", provider: "OpenAI", tokensPerMin: "4.2M", requestsPerMin: "4.2K" },
   { model: "Text Embedding 3 Large", provider: "OpenAI", tokensPerMin: "2M", requestsPerMin: "4K" },
-];
-
-const USAGE_BUCKETS: UsageBucket[] = [
-  { period: "today", label: "今日", totalRequests: 12_480, totalTokens: 8_920_000, totalCostUsd: 142.55 },
-  { period: "week", label: "本周", totalRequests: 87_350, totalTokens: 62_400_000, totalCostUsd: 987.20 },
-  { period: "month", label: "本月", totalRequests: 342_900, totalTokens: 248_000_000, totalCostUsd: 3_920.75 },
-];
-
-const QUOTA_USAGE: QuotaUsage[] = [
-  { model: "GPT-5.4 Pro", provider: "OpenAI", used: 1_240_000, quota: 1_500_000, unit: "tpm" },
-  { model: "GPT-5.5", provider: "OpenAI", used: 4_200_000, quota: 7_000_000, unit: "tpm" },
-  { model: "Claude Opus 4.7", provider: "Anthropic", used: 7_600_000, quota: 8_000_000, unit: "tpm" },
-  { model: "Claude Sonnet 4.6", provider: "Anthropic", used: 2_100_000, quota: 7_000_000, unit: "tpm" },
-  { model: "Grok 4.3", provider: "xAI", used: 980_000, quota: 1_000_000, unit: "tpm" },
-  { model: "text-embedding-ada-002", provider: "OpenAI", used: 800_000, quota: 4_200_000, unit: "tpm" },
-];
-
-const USER_LIMITS: UserLimit[] = [
-  { user: "alice@corp", team: "数据平台", rpmLimit: 60, tpmLimit: 200_000, dailyBudgetUsd: 50, usedTodayUsd: 12.4 },
-  { user: "bob@corp", team: "数据平台", rpmLimit: 60, tpmLimit: 200_000, dailyBudgetUsd: 50, usedTodayUsd: 48.2 },
-  { user: "carol@corp", team: "风控", rpmLimit: 30, tpmLimit: 100_000, dailyBudgetUsd: 20, usedTodayUsd: 5.1 },
-  { user: "dave@corp", team: "风控", rpmLimit: 30, tpmLimit: 100_000, dailyBudgetUsd: 20, usedTodayUsd: 19.8 },
-  { user: "eve@corp", team: "运营", rpmLimit: 120, tpmLimit: 500_000, dailyBudgetUsd: 100, usedTodayUsd: 67.3 },
 ];
 
 // ── Pure functions (extracted for testing) ─────────────────────
@@ -238,7 +215,19 @@ export function projectQuotaFromLimit(
 }
 
 export function isCapacityLiveSuccess(usageOk: boolean): CapacitySourceMode {
-  return usageOk ? "live" : "demo";
+  return usageOk ? "live" : "error";
+}
+
+export function validateLimitSnapshot(
+  response: ApiLimitItem | null | undefined,
+  scope: "project" | "user",
+  scopeKey: string,
+  draft: { rpmLimit: number; tpmLimit: number },
+): boolean {
+  return response?.scope === scope
+    && response.scopeKey === scopeKey
+    && Number(response.rpmLimit) === draft.rpmLimit
+    && Number(response.tpmLimit) === draft.tpmLimit;
 }
 
 // ── Component ──────────────────────────────────────────────────
@@ -249,11 +238,16 @@ export function CapacityPage() {
   const [providerFilter, setProviderFilter] = useState("all");
   const [teamFilter, setTeamFilter] = useState("all");
   const [sourceMode, setSourceMode] = useState<CapacitySourceMode>("loading");
-  const [usageBuckets, setUsageBuckets] = useState<UsageBucket[]>(USAGE_BUCKETS);
-  const [quotaUsage, setQuotaUsage] = useState<QuotaUsage[]>(QUOTA_USAGE);
-  const [userLimits, setUserLimits] = useState<UserLimit[]>(USER_LIMITS);
+  const [usageBuckets, setUsageBuckets] = useState<UsageBucket[]>(() => mapUsageItemsToBuckets([]));
+  const [quotaUsage, setQuotaUsage] = useState<QuotaUsage[]>([]);
+  const [userLimits, setUserLimits] = useState<UserLimit[]>([]);
   const [projectLimit, setProjectLimit] = useState<ProjectLimit | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [editor, setEditor] = useState<"project" | "user" | null>(null);
+  const [projectDraft, setProjectDraft] = useState({ rpmLimit: 60, tpmLimit: 60000 });
+  const [userDraft, setUserDraft] = useState({ userId: "", rpmLimit: 60, tpmLimit: 60000 });
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -277,17 +271,19 @@ export function CapacityPage() {
         const todayTokens = buckets.find((b) => b.period === "today")?.totalTokens ?? 0;
         setUsageBuckets(buckets);
         setProjectLimit(pl);
+        setProjectDraft({ rpmLimit: pl.rpmLimit, tpmLimit: pl.tpmLimit });
         setQuotaUsage(projectQuotaFromLimit(pl, Math.min(todayTokens, pl.tpmLimit)));
         setUserLimits(userItems.map(mapApiLimitToUserLimit));
+        if (userItems[0]) setUserDraft({ userId: String(userItems[0].scopeKey || ""), rpmLimit: Number(userItems[0].rpmLimit ?? 60), tpmLimit: Number(userItems[0].tpmLimit ?? 60000) });
         setSourceMode("live");
         setLoadError(null);
       } catch (e) {
         if (cancelled) return;
-        setUsageBuckets(USAGE_BUCKETS);
-        setQuotaUsage(QUOTA_USAGE);
-        setUserLimits(USER_LIMITS);
+        setUsageBuckets(mapUsageItemsToBuckets([]));
+        setQuotaUsage([]);
+        setUserLimits([]);
         setProjectLimit(null);
-        setSourceMode("demo");
+        setSourceMode("error");
         setLoadError(String((e as Error).message || e));
       }
     })();
@@ -317,14 +313,65 @@ export function CapacityPage() {
     [userLimits],
   );
 
+  function cancelEditor() {
+    if (editor === "project" && projectLimit) setProjectDraft({ rpmLimit: projectLimit.rpmLimit, tpmLimit: projectLimit.tpmLimit });
+    if (editor === "user") {
+      const snapshot = userLimits.find((u) => u.user === userDraft.userId);
+      setUserDraft(snapshot ? { userId: snapshot.user, rpmLimit: snapshot.rpmLimit, tpmLimit: snapshot.tpmLimit } : { userId: "", rpmLimit: 60, tpmLimit: 60000 });
+    }
+    setEditor(null);
+    setSaveMsg(null);
+  }
+
+  async function saveLimit(scope: "project" | "user") {
+    if (saving) return;
+    const targetKey = scope === "project" ? String(projectLimit?.scopeKey || "default") : userDraft.userId.trim();
+    const draft = scope === "project" ? { ...projectDraft } : { rpmLimit: userDraft.rpmLimit, tpmLimit: userDraft.tpmLimit };
+    if (!targetKey) return;
+    const path = scope === "project"
+      ? "/v1/aip/capacity/project-limits"
+      : `/v1/aip/capacity/user-limits?userId=${encodeURIComponent(targetKey)}`;
+    setSaving(true);
+    setSaveMsg(null);
+    try {
+      const written = await apiPut<ApiLimitItem>(path, draft);
+      if (!validateLimitSnapshot(written, scope, targetKey, draft)) throw new Error("写回响应 scope/目标/限额错配");
+      let reread: ApiLimitItem;
+      try {
+        reread = await apiGet<ApiLimitItem>(path);
+      } catch (e) {
+        setSaveMsg(`写入已提交但重读核验失败：${String((e as Error).message || e)}`);
+        return;
+      }
+      if (!validateLimitSnapshot(reread, scope, targetKey, draft)) {
+        setSaveMsg("写入已提交但重读核验失败：服务端限额不一致");
+        return;
+      }
+      if (scope === "project") {
+        setProjectLimit({ ...draft, scopeKey: targetKey });
+      } else {
+        setUserLimits((prev) => {
+          const next = mapApiLimitToUserLimit(reread);
+          return prev.some((u) => u.user === targetKey) ? prev.map((u) => u.user === targetKey ? next : u) : [...prev, next];
+        });
+      }
+      setSaveMsg("限额已保存并完成重读核验");
+      setEditor(null);
+    } catch (e) {
+      setSaveMsg(`限额写入失败：${String((e as Error).message || e)}`);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <PageChrome title="容量管理" lede="管理 LLM 使用限制、速率限制和预留容量">
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-        {sourceMode === "demo" && (
-          <div className="w2-a6a7-demo-banner" role="status">
-            <span className="w2-a6a7-demo-badge">演示路径</span>
+        {sourceMode === "error" && (
+          <div className="w2-a6a7-demo-banner" role="alert">
+            <span className="w2-a6a7-demo-badge">加载失败</span>
             <span className="w2-a6a7-demo-text">
-              容量 API 不可用，当前为本地 MOCK{loadError ? ` · ${loadError}` : ""}
+              容量 API 不可用；未注入本地 MOCK{loadError ? ` · ${loadError}` : ""}
             </span>
           </div>
         )}
@@ -489,10 +536,10 @@ export function CapacityPage() {
                   </div>
                 </div>
                 <div style={{ marginTop: 16 }}>
-                  <a href="#" style={{ display: "inline-flex", alignItems: "center", fontSize: 13, fontWeight: 500, color: "var(--aos-indigo-600)", textDecoration: "none" }}>
+                  <button type="button" data-testid="manage-project-limit" disabled={sourceMode !== "live"} onClick={() => { setEditor("project"); setSaveMsg(null); }} style={{ display: "inline-flex", alignItems: "center", fontSize: 13, fontWeight: 500, color: "var(--aos-indigo-600)", border: 0, background: "transparent", cursor: sourceMode === "live" ? "pointer" : "not-allowed" }}>
                     管理
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ marginLeft: 4 }}><path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  </a>
+                  </button>
                 </div>
               </div>
 
@@ -513,13 +560,27 @@ export function CapacityPage() {
                   </div>
                 </div>
                 <div style={{ marginTop: 16 }}>
-                  <a href="#" style={{ display: "inline-flex", alignItems: "center", fontSize: 13, fontWeight: 500, color: "var(--aos-indigo-600)", textDecoration: "none" }}>
+                  <button type="button" data-testid="manage-user-limit" disabled={sourceMode !== "live"} onClick={() => { setEditor("user"); setSaveMsg(null); }} style={{ display: "inline-flex", alignItems: "center", fontSize: 13, fontWeight: 500, color: "var(--aos-indigo-600)", border: 0, background: "transparent", cursor: sourceMode === "live" ? "pointer" : "not-allowed" }}>
                     管理
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ marginLeft: 4 }}><path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
+
+            {editor && (
+              <div data-testid={`capacity-editor-${editor}`} style={{ border: "1px solid var(--aos-border)", background: "var(--aos-surface)", padding: 16, marginBottom: 20 }}>
+                <h3 style={{ marginTop: 0 }}>{editor === "project" ? "编辑项目速率限制" : "编辑用户速率限制"}</h3>
+                {editor === "user" && <label>用户 ID <input aria-label="capacity-user-id" value={userDraft.userId} onChange={(e) => setUserDraft((d) => ({ ...d, userId: e.target.value }))} /></label>}
+                <label style={{ marginLeft: editor === "user" ? 12 : 0 }}>RPM <input aria-label="capacity-rpm" type="number" min={1} value={editor === "project" ? projectDraft.rpmLimit : userDraft.rpmLimit} onChange={(e) => editor === "project" ? setProjectDraft((d) => ({ ...d, rpmLimit: Number(e.target.value) })) : setUserDraft((d) => ({ ...d, rpmLimit: Number(e.target.value) }))} /></label>
+                <label style={{ marginLeft: 12 }}>TPM <input aria-label="capacity-tpm" type="number" min={1} value={editor === "project" ? projectDraft.tpmLimit : userDraft.tpmLimit} onChange={(e) => editor === "project" ? setProjectDraft((d) => ({ ...d, tpmLimit: Number(e.target.value) })) : setUserDraft((d) => ({ ...d, tpmLimit: Number(e.target.value) }))} /></label>
+                <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                  <button type="button" onClick={cancelEditor} disabled={saving}>取消</button>
+                  <button type="button" data-testid="save-capacity-limit" onClick={() => void saveLimit(editor)} disabled={saving || (editor === "user" && !userDraft.userId.trim())}>{saving ? "保存中…" : "保存并重读"}</button>
+                </div>
+              </div>
+            )}
+            {saveMsg && <p role="status">{saveMsg}</p>}
 
             {/* 登记限制表 */}
             <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, overflow: "hidden", marginBottom: 24 }}>
@@ -527,7 +588,7 @@ export function CapacityPage() {
                 <div>
                   <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>登记限制</h3>
                   <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0" }}>
-                    {sourceMode === "live" ? "按模型默认速率（本地示意；API 无 per-model 限额）" : "为组织中启用的每个模型设置默认速率限制"}
+                    per-model 限额 API 未提供，本表只读示意
                   </p>
                 </div>
                 <select
@@ -573,7 +634,7 @@ export function CapacityPage() {
               <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--aos-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>用户限制</h3>
-                  <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0" }}>每用户/每团队的速率限制和预算配置</p>
+                  <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0" }}>仅用户 RPM/TPM 可写；团队与日预算 API 未提供，保持只读</p>
                 </div>
                 <select
                   value={teamFilter}
