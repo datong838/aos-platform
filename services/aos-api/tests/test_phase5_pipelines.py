@@ -72,6 +72,95 @@ def test_pipeline_graph() -> None:
     assert graph["edge_count"] == 1
 
 
+def test_replace_pipeline_graph_round_trip() -> None:
+    eng = get_engine()
+    pl = eng.create_pipeline(name="PL")
+    result = eng.replace_graph(
+        pl.id,
+        [
+            {"id": "n-source", "name": "source", "node_type": "source", "position_x": 12, "position_y": 34},
+            {"id": "n-sink", "name": "sink", "node_type": "sink", "position_x": 420, "position_y": 34},
+        ],
+        [{"id": "e-1", "source_node_id": "n-source", "target_node_id": "n-sink"}],
+        pipeline_type="Streaming",
+        write_mode="UPSERT",
+    )
+    assert result["node_count"] == 2
+    assert result["edge_count"] == 1
+    assert {n["id"] for n in result["nodes"]} == {"n-source", "n-sink"}
+    assert eng.get_pipeline(pl.id).pipeline_type == "Streaming"  # type: ignore[union-attr]
+    assert eng.get_pipeline(pl.id).write_mode == "UPSERT"  # type: ignore[union-attr]
+
+
+def test_replace_pipeline_graph_rejects_cycle_without_mutation() -> None:
+    eng = get_engine()
+    pl = eng.create_pipeline(name="PL")
+    original = eng.add_node(pl.id, "original", node_type="source")
+    with pytest.raises(ValueError, match="acyclic"):
+        eng.replace_graph(
+            pl.id,
+            [
+                {"id": "a", "name": "A", "node_type": "source"},
+                {"id": "b", "name": "B", "node_type": "sink"},
+            ],
+            [
+                {"source_node_id": "a", "target_node_id": "b"},
+                {"source_node_id": "b", "target_node_id": "a"},
+            ],
+        )
+    assert [node.id for node in eng.list_nodes(pl.id)] == [original.id]
+
+
+def test_replace_pipeline_graph_rejects_cross_pipeline_id_collision() -> None:
+    eng = get_engine()
+    first = eng.create_pipeline(name="First")
+    second = eng.create_pipeline(name="Second")
+    owned = eng.add_node(first.id, "owned", node_type="source")
+    with pytest.raises(ValueError, match="another pipeline"):
+        eng.replace_graph(
+            second.id,
+            [{"id": owned.id, "name": "collision", "node_type": "source"}],
+            [],
+        )
+    assert eng.get_node(owned.id).pipeline_id == first.id  # type: ignore[union-attr]
+
+
+def test_replace_graph_creates_owner_for_external_canvas_id() -> None:
+    eng = get_engine()
+    result = eng.replace_graph(
+        "pipe-align-04",
+        [{"id": "external-source", "name": "source", "node_type": "source"}],
+        [],
+        name="Alignment pipeline",
+    )
+    assert result["pipeline_id"] == "pipe-align-04"
+    assert eng.get_pipeline("pipe-align-04") is not None
+
+
+def test_replace_graph_api_persists_and_rejects_dangling_edge(client, auth_headers) -> None:
+    payload = {
+        "nodes": [
+            {"id": "api-source", "name": "source", "node_type": "source", "position_x": 30, "position_y": 40},
+            {"id": "api-output", "name": "output", "node_type": "sink", "position_x": 430, "position_y": 40},
+        ],
+        "edges": [{"id": "api-edge", "source_node_id": "api-source", "target_node_id": "api-output"}],
+        "pipeline_type": "Batch",
+        "write_mode": "SNAPSHOT",
+        "name": "API canvas",
+    }
+    saved = client.put("/v1/pipelines/api-canvas/graph", json=payload, headers=auth_headers)
+    assert saved.status_code == 200
+    assert saved.json()["persisted"] is True
+    assert saved.json()["demo"] is False
+
+    invalid = {**payload, "edges": [{"source_node_id": "api-source", "target_node_id": "missing"}]}
+    rejected = client.put("/v1/pipelines/api-canvas/graph", json=invalid, headers=auth_headers)
+    assert rejected.status_code == 422
+    current = client.get("/v1/pipelines/api-canvas/graph", headers=auth_headers)
+    assert current.status_code == 200
+    assert current.json()["edge_count"] == 1
+
+
 def test_pipeline_files() -> None:
     eng = get_engine()
     pl = eng.create_pipeline(name="My Pipeline")

@@ -663,7 +663,9 @@
 }
 
 .bp-pipe-canvas-shell {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 288px;
+  grid-template-rows: auto minmax(0, 1fr);
   min-height: 512px;
   border: 1px solid var(--aos-border);
   border-radius: 2px;
@@ -671,11 +673,45 @@
   background: var(--aos-surface);
 }
 
+.bp-pipe-canvas-shell.is-inspector-collapsed {
+  grid-template-columns: minmax(0, 1fr) 42px;
+}
+
+.bp-pipe-canvas-toolbar {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
 .bp-pipe-canvas-main {
-  flex: 1;
+  grid-column: 1;
+  grid-row: 2;
   min-width: 0;
   display: flex;
   flex-direction: column;
+}
+
+.bp-pipe-inspector {
+  grid-column: 2;
+  grid-row: 2;
+  position: relative;
+}
+
+.bp-pipe-inspector-collapse {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  min-width: 26px;
+  padding: 2px 6px;
+}
+
+.bp-pipe-canvas-shell.is-inspector-collapsed .bp-pipe-inspector > :not(.bp-pipe-inspector-collapse) {
+  display: none;
+}
+
+.bp-pipe-canvas-shell.is-inspector-collapsed .bp-pipe-inspector-collapse {
+  left: 7px;
+  right: auto;
 }
 
 .grid-pattern {
@@ -691,6 +727,10 @@
   flex: 1;
   min-height: 256px;
   overflow: auto;
+}
+
+.bp-pipe-dag.is-drop-target {
+  box-shadow: inset 0 0 0 2px var(--aos-accent);
 }
 
 .bp-pipe-flow-svg {
@@ -858,7 +898,9 @@
 
 /* 管道检查器侧栏 */
 .bp-pipe-inspector {
-  width: 288px;
+  width: auto;
+  min-width: 0;
+  box-sizing: border-box;
   flex-shrink: 0;
   border-left: 1px solid var(--aos-border);
   background: var(--aos-surface-hover);
@@ -953,6 +995,19 @@
     border-right: none;
     border-left: none;
     border-bottom: 1px solid var(--aos-border);
+  }
+  .bp-pipe-canvas-shell,
+  .bp-pipe-canvas-shell.is-inspector-collapsed {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(360px, 1fr) auto;
+  }
+  .bp-pipe-canvas-main {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .bp-pipe-inspector {
+    grid-column: 1;
+    grid-row: 3;
   }
 }
 
