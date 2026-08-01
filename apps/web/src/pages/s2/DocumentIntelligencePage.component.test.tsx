@@ -141,4 +141,49 @@ describe("DocumentIntelligencePage · real interaction", () => {
     expect(apiDelete).toHaveBeenCalledWith("/api/datasource/documents/doc-1");
     expect(host.querySelector("[data-testid='doc-item-doc-1']")).toBeNull();
   });
+
+  it("keeps a document selected when delete response is not confirmed", async () => {
+    vi.mocked(apiGet).mockImplementation(async (path: string) => {
+      if (path.includes("/documents/stats")) return { total: 1, processing: 0, average_confidence: 0.9, template_count: 3 };
+      if (path.includes("/ontology/object-types")) return { items: [] };
+      return { items: [rawDocument()], total: 1 };
+    });
+    vi.mocked(apiDelete).mockResolvedValue({ deleted: false });
+    await act(async () => root.render(<DocumentIntelligencePage />));
+    await flush();
+    const checkbox = host.querySelector<HTMLInputElement>("[data-testid='doc-item-doc-1'] input[type='checkbox']")!;
+    await act(async () => checkbox.click());
+    const deleteButton = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "删除") as HTMLButtonElement;
+
+    await act(async () => deleteButton.click());
+    await flush();
+
+    expect(host.querySelector("[data-testid='doc-item-doc-1']")).not.toBeNull();
+    expect(checkbox.checked).toBe(true);
+    expect(host.textContent).toContain("删除成功 0 个，失败 1 个");
+  });
+
+  it("reports successful extraction separately when stats refresh fails", async () => {
+    let statsCalls = 0;
+    vi.mocked(apiGet).mockImplementation(async (path: string) => {
+      if (path.includes("/documents/stats")) {
+        statsCalls += 1;
+        if (statsCalls > 1) throw new Error("stats unavailable");
+        return { total: 1, processing: 0, average_confidence: 0.9, template_count: 3 };
+      }
+      if (path.includes("/ontology/object-types")) return { items: [] };
+      return { items: [rawDocument()], total: 1 };
+    });
+    vi.mocked(apiPost).mockResolvedValue(rawDocument());
+    await act(async () => root.render(<DocumentIntelligencePage />));
+    await flush();
+    const runButton = host.querySelector<HTMLButtonElement>("[data-testid='run-extract-btn']")!;
+
+    await act(async () => runButton.click());
+    await flush();
+
+    expect(host.textContent).toContain("抽取完成 · 真 API");
+    expect(host.textContent).toContain("写入成功但统计刷新失败");
+    expect(host.textContent).not.toContain("抽取失败，未生成演示结果");
+  });
 });

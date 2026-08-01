@@ -19,6 +19,7 @@ import {
   ALLOWED_EXTENSIONS,
   pathLabel,
   normalizeExtractFields,
+  requireMatchingDocument,
   DOCINTEL_PIPELINE_TEMPLATES,
   type DocState,
   type ExtractField,
@@ -407,6 +408,12 @@ describe("DocumentIntelligencePage · W4 pathLabel / extract helpers", () => {
     expect(fields[0].confidence).toBe(1);
     expect(fields[1].name).toBe("别名");
     expect(fields[1].value).toBe("B");
+  });
+
+  it("requireMatchingDocument 对响应 id 错配 fail-closed", () => {
+    const document = { id: "doc-1", name: "a.pdf" };
+    expect(requireMatchingDocument(document, "doc-1", "测试")).toBe(document);
+    expect(() => requireMatchingDocument(document, "doc-2", "测试")).toThrow("响应文档错配");
   });
 
   it("DOCINTEL_PIPELINE_TEMPLATES 含 6 个视觉稿模板", () => {

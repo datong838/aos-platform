@@ -366,6 +366,17 @@ export function mapApiDocument(doc: ApiDocument): DocItem {
   };
 }
 
+export function requireMatchingDocument(
+  document: ApiDocument,
+  expectedId: string,
+  operation: string,
+): ApiDocument {
+  if (!document || document.id !== expectedId) {
+    throw new Error(`${operation}响应文档错配：期望 ${expectedId}，实际 ${document?.id || "缺失"}`);
+  }
+  return document;
+}
+
 export async function uploadDocumentFile(
   file: File,
   fetchImpl: typeof fetch = fetch,
@@ -956,6 +967,15 @@ export function DocumentIntelligencePage() {
     setStats(value);
   }, []);
 
+  const reportWriteSuccess = useCallback(async (message: string) => {
+    try {
+      await loadStats();
+      setStatusMsg(message);
+    } catch (error) {
+      setStatusMsg(`${message}；写入成功但统计刷新失败：${String((error as Error).message || error)}`);
+    }
+  }, [loadStats]);
+
   const replaceDocument = useCallback((raw: ApiDocument) => {
     const mapped = mapApiDocument(raw);
     setDocs((prev) => prev.map((item) => item.id === mapped.id ? mapped : item));
@@ -1006,17 +1026,16 @@ export function DocumentIntelligencePage() {
         `/api/datasource/documents/${encodeURIComponent(doc.id)}/extract`,
         { template_id: selectedTemplate },
       );
-      const mapped = replaceDocument(res);
+      const mapped = replaceDocument(requireMatchingDocument(res, doc.id, "抽取"));
       setDataMode("live");
-      setStatusMsg(`抽取完成 · 真 API · ${mapped.extractedFields?.length || 0} 字段`);
-      await loadStats();
+      await reportWriteSuccess(`抽取完成 · 真 API · ${mapped.extractedFields?.length || 0} 字段`);
     } catch (e) {
       setDataMode(doc.extractedFields?.length ? "live" : "idle");
       setStatusMsg(`抽取失败，未生成演示结果：${String((e as Error).message || e)}`);
     } finally {
       setExtractRunning(false);
     }
-  }, [docs, selectedId, selectedTemplate, replaceDocument, loadStats]);
+  }, [docs, selectedId, selectedTemplate, replaceDocument, reportWriteSuccess]);
 
   const runPipelineTrial = useCallback(async () => {
     const doc = docs.find((d) => d.id === selectedId) ?? docs[0];
@@ -1060,14 +1079,15 @@ export function DocumentIntelligencePage() {
         setDocs((prev) => [...uploaded, ...prev]);
         setSelectedId(uploaded[0].id);
       }
-      setStatusMsg(failed.length
+      const message = failed.length
         ? `上传完成 ${uploaded.length} 个，失败 ${failed.length} 个；失败文件未加入列表`
-        : `上传成功 · 服务端已接收 ${uploaded.length} 个文件的真实字节`);
-      await loadStats();
+        : `上传成功 · 服务端已接收 ${uploaded.length} 个文件的真实字节`;
+      if (uploaded.length) await reportWriteSuccess(message);
+      else setStatusMsg(message);
     } finally {
       setActionBusy(false);
     }
-  }, [loadStats]);
+  }, [reportWriteSuccess]);
 
   const handleEditField = useCallback(async (id: string, value: string) => {
     if (!selectedDoc) return;
@@ -1075,29 +1095,28 @@ export function DocumentIntelligencePage() {
     setActionBusy(true);
     try {
       const res = await apiPut<ApiDocument>(`/api/datasource/documents/${encodeURIComponent(selectedDoc.id)}`, { extracted_fields: next });
-      replaceDocument(res);
-      setStatusMsg("字段修正已保存 · 真 API");
-      await loadStats();
+      replaceDocument(requireMatchingDocument(res, selectedDoc.id, "字段保存"));
+      await reportWriteSuccess("字段修正已保存 · 真 API");
     } catch (error) {
       setStatusMsg(`字段保存失败，原值未改变：${String((error as Error).message || error)}`);
     } finally {
       setActionBusy(false);
     }
-  }, [selectedDoc, extractFields, replaceDocument, loadStats]);
+  }, [selectedDoc, extractFields, replaceDocument, reportWriteSuccess]);
 
   const handleCorrectOcr = useCallback(async (text: string) => {
     if (!selectedDoc) return;
     setActionBusy(true);
     try {
       const res = await apiPut<ApiDocument>(`/api/datasource/documents/${encodeURIComponent(selectedDoc.id)}`, { ocr_text: text });
-      replaceDocument(res);
-      setStatusMsg("OCR 校正已保存 · 真 API");
+      replaceDocument(requireMatchingDocument(res, selectedDoc.id, "OCR 保存"));
+      await reportWriteSuccess("OCR 校正已保存 · 真 API");
     } catch (error) {
       setStatusMsg(`OCR 保存失败，原文未改变：${String((error as Error).message || error)}`);
     } finally {
       setActionBusy(false);
     }
-  }, [selectedDoc, replaceDocument]);
+  }, [selectedDoc, replaceDocument, reportWriteSuccess]);
 
   const handleApprove = useCallback(async () => {
     if (!selectedDoc || !objectTypeId) return;
@@ -1107,28 +1126,28 @@ export function DocumentIntelligencePage() {
         `/api/datasource/documents/${encodeURIComponent(selectedDoc.id)}/ontology-write`,
         { object_type_id: objectTypeId },
       );
-      replaceDocument(res.document);
-      setStatusMsg(`本体写入成功 · Object ${res.object.id}`);
+      replaceDocument(requireMatchingDocument(res.document, selectedDoc.id, "本体写入"));
+      await reportWriteSuccess(`本体写入成功 · Object ${res.object.id}`);
     } catch (error) {
       setStatusMsg(`本体写入失败，文档状态未伪造：${String((error as Error).message || error)}`);
     } finally {
       setActionBusy(false);
     }
-  }, [selectedDoc, objectTypeId, replaceDocument]);
+  }, [selectedDoc, objectTypeId, replaceDocument, reportWriteSuccess]);
 
   const handleReject = useCallback(async () => {
     if (!selectedDoc) return;
     setActionBusy(true);
     try {
       const res = await apiPost<ApiDocument>(`/api/datasource/documents/${encodeURIComponent(selectedDoc.id)}/review`, { action: "reject" });
-      replaceDocument(res);
-      setStatusMsg("已退回修正 · 真 API");
+      replaceDocument(requireMatchingDocument(res, selectedDoc.id, "退回修正"));
+      await reportWriteSuccess("已退回修正 · 真 API");
     } catch (error) {
       setStatusMsg(`退回失败，状态未改变：${String((error as Error).message || error)}`);
     } finally {
       setActionBusy(false);
     }
-  }, [selectedDoc, replaceDocument]);
+  }, [selectedDoc, replaceDocument, reportWriteSuccess]);
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -1151,34 +1170,42 @@ export function DocumentIntelligencePage() {
     setActionBusy(true);
     try {
       const results = await Promise.allSettled(ids.map((id) => apiDelete<{ deleted: boolean }>(`/api/datasource/documents/${encodeURIComponent(id)}`)));
-      const deleted = new Set(ids.filter((_, index) => results[index].status === "fulfilled"));
+      const deleted = new Set(ids.filter((_, index) => {
+        const result = results[index];
+        return result.status === "fulfilled" && result.value.deleted === true;
+      }));
       setDocs((prev) => prev.filter((doc) => !deleted.has(doc.id)));
       setSelectedIds(new Set(ids.filter((id) => !deleted.has(id))));
-      setStatusMsg(`删除成功 ${deleted.size} 个，失败 ${ids.length - deleted.size} 个`);
-      await loadStats();
+      const message = `删除成功 ${deleted.size} 个，失败 ${ids.length - deleted.size} 个`;
+      if (deleted.size) await reportWriteSuccess(message);
+      else setStatusMsg(message);
     } finally {
       setActionBusy(false);
     }
-  }, [selectedIds, loadStats]);
+  }, [selectedIds, reportWriteSuccess]);
 
   const handleBatchReprocess = useCallback(async () => {
     const ids = [...selectedIds];
     setActionBusy(true);
     try {
-      const results = await Promise.allSettled(ids.map((id) => apiPost<ApiDocument>(
-        `/api/datasource/documents/${encodeURIComponent(id)}/reprocess`,
-        { template_id: selectedTemplate },
-      )));
+      const results = await Promise.allSettled(ids.map(async (id) => {
+        const response = await apiPost<ApiDocument>(
+          `/api/datasource/documents/${encodeURIComponent(id)}/reprocess`,
+          { template_id: selectedTemplate },
+        );
+        return requireMatchingDocument(response, id, "重新处理");
+      }));
       const succeeded = results
         .filter((result): result is PromiseFulfilledResult<ApiDocument> => result.status === "fulfilled")
         .map((result) => result.value);
       succeeded.forEach(replaceDocument);
-      setStatusMsg(`重新处理成功 ${succeeded.length} 个，失败 ${ids.length - succeeded.length} 个；失败项保持原状态`);
-      await loadStats();
+      const message = `重新处理成功 ${succeeded.length} 个，失败 ${ids.length - succeeded.length} 个；失败项保持原状态`;
+      if (succeeded.length) await reportWriteSuccess(message);
+      else setStatusMsg(message);
     } finally {
       setActionBusy(false);
     }
-  }, [selectedIds, selectedTemplate, replaceDocument, loadStats]);
+  }, [selectedIds, selectedTemplate, replaceDocument, reportWriteSuccess]);
 
   return (
     <PageChrome title="文档智能" lede="导入文档、配置提取模板，自动识别并结构化关键字段">

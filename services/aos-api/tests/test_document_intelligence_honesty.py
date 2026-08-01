@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import hashlib
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 
 import pytest
 from fastapi import FastAPI
@@ -52,6 +54,35 @@ def test_engine_reprocess_without_uploaded_bytes_fails_closed() -> None:
 
     assert document.status == "pending"
     assert document.extracted_fields == {}
+
+
+def test_ontology_write_is_atomic_under_concurrent_retries() -> None:
+    datasource = get_datasource_engine()
+    ontology = get_ontology_engine()
+    ontology.create_object_type(id="Invoice", name="Invoice")
+    document = datasource.upload_document("invoice.txt", b"amount: 10", "text/plain")
+    datasource.update_document(
+        document.id,
+        extracted_fields=[
+            {"id": "amount", "name": "amount", "value": "10", "confidence": 0.99},
+        ],
+    )
+    workers = 8
+    barrier = Barrier(workers)
+
+    def write_once() -> str:
+        barrier.wait()
+        _, obj = datasource.write_document_to_ontology(document.id, "Invoice")
+        return obj.id
+
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        object_ids = list(executor.map(lambda _: write_once(), range(workers)))
+
+    objects, total = ontology.list_objects(object_type_id="Invoice", page_size=100)
+    assert len(set(object_ids)) == 1
+    assert total == 1
+    assert [obj.id for obj in objects] == [object_ids[0]]
+    assert sum("已写入本体 Object" in item["note"] for item in document.history) == 1
 
 
 def test_document_api_real_upload_reprocess_ontology_write_and_delete(doc_client) -> None:

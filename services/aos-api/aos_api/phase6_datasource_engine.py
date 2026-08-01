@@ -702,41 +702,39 @@ class DataSourceEngine:
     def write_document_to_ontology(self, did: str, object_type_id: str) -> tuple[Document, Any]:
         from aos_api.ontology_engine import get_engine as get_ontology_engine
 
-        d = self._documents.get(did)
-        if d is None:
-            raise KeyError(f"Document {did} not found")
-        if not d.extracted_fields:
-            raise ValueError("没有可写入本体的提取字段")
-        ontology = get_ontology_engine()
-        if ontology.get_object_type(object_type_id) is None:
-            raise ValueError(f"Object Type {object_type_id} 不存在")
-        if d.ontology_object_id:
-            existing = ontology.get_object(d.ontology_object_id)
-            if existing is not None:
-                if existing.object_type_id != object_type_id:
-                    raise ValueError(
-                        f"文档已写入 Object Type {existing.object_type_id}，不能重复写入 {object_type_id}"
-                    )
-                return d, existing
-        properties = {
-            str(field.get("name") or key): field.get("value")
-            for key, field in d.extracted_fields.items()
-        }
-        properties.update({"document_id": d.id, "content_sha256": d.content_sha256})
-        obj = ontology.create_object(object_type_id, d.name, properties=properties)
+        # 查重、创建 Object、回写 document 必须处于同一临界区；否则并发审核会各自创建对象。
         with _LOCK:
-            current = self._documents.get(did)
-            if current is None:
+            document = self._documents.get(did)
+            if document is None:
                 raise KeyError(f"Document {did} not found")
-            current.ontology_object_id = obj.id
-            current.status = "review"
-            current.updated_at = time.time()
-            current.history.append({
+            if not document.extracted_fields:
+                raise ValueError("没有可写入本体的提取字段")
+            ontology = get_ontology_engine()
+            if ontology.get_object_type(object_type_id) is None:
+                raise ValueError(f"Object Type {object_type_id} 不存在")
+            if document.ontology_object_id:
+                existing = ontology.get_object(document.ontology_object_id)
+                if existing is not None:
+                    if existing.object_type_id != object_type_id:
+                        raise ValueError(
+                            f"文档已写入 Object Type {existing.object_type_id}，不能重复写入 {object_type_id}"
+                        )
+                    return document, existing
+            properties = {
+                str(field.get("name") or key): field.get("value")
+                for key, field in document.extracted_fields.items()
+            }
+            properties.update({"document_id": document.id, "content_sha256": document.content_sha256})
+            obj = ontology.create_object(object_type_id, document.name, properties=properties)
+            document.ontology_object_id = obj.id
+            document.status = "review"
+            document.updated_at = time.time()
+            document.history.append({
                 "state": "review",
-                "timestamp": current.updated_at,
+                "timestamp": document.updated_at,
                 "note": f"已写入本体 Object {obj.id}",
             })
-            return current, obj
+            return document, obj
 
     def delete_document(self, did: str) -> bool:
         with _LOCK:
