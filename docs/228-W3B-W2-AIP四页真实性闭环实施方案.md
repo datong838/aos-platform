@@ -1,7 +1,7 @@
 # 228 · Wave 3B W2 AIP 四页真实性闭环实施方案
 
-> 基线：`1663bba`  
-> 范围：Observability、Capacity、Model Catalog、Studio 及其专项测试；Studio 最小扩展 AIP agents router/engine  
+> 基线：`1663bba`
+> 范围：Observability、Capacity、Model Catalog、Studio 及其专项测试；Studio 最小扩展 AIP agents router/engine
 > 上游：`228-W3B-P1主流程交互真实性闭环方案.md`、`228-227页面交互真实性全量审计与修复方案.md`
 
 ## 1. 使用 Rules
