@@ -230,6 +230,52 @@ describe("PublishPage · 真实发布与部署阶段", () => {
     expect(apiMocks.post.mock.calls.some(([path]) => String(path).endsWith("/deploy"))).toBe(false);
   });
 
+  it.each([
+    [
+      "Module 不匹配",
+      { id: "another-module", status: "published", publish: { status: "ACCEPTED" } },
+      "发布响应 Module 不匹配",
+    ],
+    [
+      "发布状态错误",
+      { id: "mod-canvas", status: "published", publish: { status: "QUEUED" } },
+      "发布接口未返回 ACCEPTED 状态",
+    ],
+  ])("第二次幂等响应即使 replay=true 但%s时 fail-closed，且不调用部署", async (_case, pub2, error) => {
+    let publishCalls = 0;
+    apiMocks.post.mockImplementation(async (path: string) => {
+      if (path.endsWith("/publish")) {
+        publishCalls += 1;
+        if (publishCalls === 1) {
+          return {
+            id: "mod-canvas",
+            status: "published",
+            publish: { status: "ACCEPTED", channel: "dev" },
+          };
+        }
+        return { ...pub2, idempotentReplay: true };
+      }
+      if (path.endsWith("/deploy")) {
+        return {
+          ok: true,
+          item: { id: "dep-should-not-run", environment: "staging", status: "success" },
+        };
+      }
+      throw new Error(`unexpected POST ${path}`);
+    });
+    await renderPage();
+
+    const button = Array.from(host.querySelectorAll("button")).find((item) =>
+      item.textContent?.includes("发布到预发布"),
+    );
+    await act(async () => button?.click());
+    await flushEffects();
+
+    expect(host.textContent).toContain("发布已接受，但幂等校验失败");
+    expect(host.textContent).toContain(error);
+    expect(apiMocks.post.mock.calls.some(([path]) => String(path).endsWith("/deploy"))).toBe(false);
+  });
+
   it("部署历史加载失败时显式显示错误，而不是伪装成尚未部署", async () => {
     apiMocks.get.mockImplementation(async (path: string) => {
       if (path === "/v1/modules") {

@@ -227,6 +227,7 @@ export function PublishPage() {
       assertPublishAccepted(pub1, mid);
       publishAccepted = true;
       const pub2 = await apiPost<PublishApiResponse>(path, {}, headers);
+      assertPublishAccepted(pub2, mid);
       assertIdempotentReplay(pub2);
       idempotencyVerified = true;
       setPublishPhase("ok");
