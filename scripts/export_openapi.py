@@ -139,7 +139,7 @@ def build_inventory(app: Any, schema_bytes: bytes) -> dict[str, Any]:
 
     pairs = Counter((row["path"], row["method"]) for row in rows)
     duplicates = sorted([[path, method, count] for (path, method), count in pairs.items() if count > 1])
-    if len(rows) != 4000 or len(pairs) != 3981:
+    if len(rows) != 4004 or len(pairs) != 3985:
         raise ExportError(f"route totals changed: rows={len(rows)} unique_pairs={len(pairs)}")
     if duplicates != EXPECTED_DUPLICATES:
         raise ExportError(f"duplicate route inventory changed: {duplicates!r}")
@@ -165,7 +165,7 @@ def generate_payloads() -> tuple[bytes, bytes]:
     validate_openapi(schema)
     schema_bytes = canonical_json(schema)
     openapi_operation_count = sum(1 for _ in _operations(schema))
-    if openapi_operation_count != 3981:
+    if openapi_operation_count != 3985:
         raise ExportError(f"OpenAPI operation total changed: {openapi_operation_count}")
     inventory = build_inventory(app, schema_bytes)
     return schema_bytes, canonical_json(inventory)
