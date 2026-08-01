@@ -40,11 +40,10 @@ interface BlockDef {
   config: Record<string, unknown>;
 }
 
-interface ExecutionResult {
-  block_id: string;
-  output: unknown;
-  cot: string[];
-  proposed_edits: Record<string, unknown>[];
+interface SafeDryRunResponse {
+  dryRun: boolean;
+  proposedEdits: Record<string, unknown>[];
+  productionWritten: boolean;
 }
 
 /* ── 节点调色板定义 ── */
@@ -157,9 +156,7 @@ type RightPanelTab = "config" | "history" | "automation";
 interface RunHistoryEntry {
   timestamp: string;
   blockCount: number;
-  dryRun: boolean;
-  success: boolean;
-  output: string;
+  proposedEditCount: number;
 }
 
 const TRIGGER_TYPES = [
@@ -178,20 +175,11 @@ export function LogicCanvasPage() {
     { id: uid(), kind: "apply_action", label: "写回 note", config: { field: "note", valueFrom: "llm_output" } },
   ]);
   const [selectedId, setSelectedId] = useState<string>("");
-  const [execResults, setExecResults] = useState<ExecutionResult[]>([]);
   const [output, setOutput] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [dryRun, setDryRun] = useState(true);
   const [rightTab, setRightTab] = useState<RightPanelTab>("config");
   const [history, setHistory] = useState<RunHistoryEntry[]>([]);
-  const [automationTriggers, setAutomationTriggers] = useState<Record<string, boolean>>({
-    object_change: false,
-    schedule: false,
-    manual: true,
-    webhook: false,
-    threshold: false,
-  });
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragNode = useRef<{ kind: BlockKind; title: string } | null>(null);
@@ -250,6 +238,15 @@ export function LogicCanvasPage() {
     [selectedId],
   );
 
+  const updateLabel = useCallback(
+    (label: string) => {
+      setBlocks((previous) => previous.map((block) => (
+        block.id === selectedId ? { ...block, label } : block
+      )));
+    },
+    [selectedId],
+  );
+
   /* ── 拖拽 ── */
 
   const onDragStart = (kind: BlockKind, title: string) => {
@@ -270,42 +267,16 @@ export function LogicCanvasPage() {
     setErr(null);
     setOutput("");
     try {
-      const payload = {
-        blocks: blocks.map((b) => ({
-          id: b.id,
-          kind: b.kind,
-          name: b.label,
-          config: b.config,
-        })),
-        dry_run: dryRun,
-      };
-      const res = await apiPost<{
-        results?: ExecutionResult[];
-        output?: unknown;
-        cot?: string[];
-        proposed_edits?: Record<string, unknown>[];
-        production_written?: boolean;
-      }>("/v1/aip/logic/execute", payload);
-      setExecResults(res.results || []);
-      setOutput(
-        JSON.stringify(
-          {
-            output: res.output,
-            cot: res.cot,
-            proposed_edits: res.proposed_edits,
-            production_written: res.production_written,
-          },
-          null,
-          2,
-        ),
-      );
+      const res = await apiPost<SafeDryRunResponse>("/v1/aip/logic/run", { dryRun: true, edits: [] });
+      if (res.dryRun !== true || res.productionWritten !== false || !Array.isArray(res.proposedEdits)) {
+        throw new Error("安全校验失败：dry-run 回包未明确确认不写生产");
+      }
+      setOutput(JSON.stringify(res, null, 2));
       setRightTab("history");
       setHistory((prev) => [{
         timestamp: new Date().toISOString().slice(11, 19),
         blockCount: blocks.length,
-        dryRun,
-        success: true,
-        output: JSON.stringify(res.output, null, 2).slice(0, 200),
+        proposedEditCount: res.proposedEdits.length,
       }, ...prev].slice(0, 20));
     } catch (e: unknown) {
       setErr(String((e as Error).message || e));
@@ -319,7 +290,7 @@ export function LogicCanvasPage() {
   return (
     <PageChrome
       title="AIP Logic 无代码编辑器"
-      lede="10 种 Block 是构建智能体运行逻辑的「乐高积木」。每一个 Block 都代表一个原子操作，开发者通过拖拽、连接这些 Block，将零散的能力点拼装成一个自动化的工作流（Pipeline）"
+      lede="当前提供 10 种 Block 的会话内编排与属性编辑；尚未接入保存和可信逐块执行。安全 dry-run 仅验证 proposed edits 不写生产。"
     >
       {/* 工具栏 */}
       <div
@@ -332,12 +303,11 @@ export function LogicCanvasPage() {
         }}
       >
         <button type="button" className="btn btn-primary" disabled={busy} onClick={runLogic}>
-          {busy ? "⚙ 执行中…" : `▶ ${dryRun ? "dryRun 试跑" : "生产执行"}`}
+          {busy ? "⚙ 安全试跑中…" : "▶ 安全 dry-run"}
         </button>
-        <label style={{ fontSize: "0.8rem", display: "flex", alignItems: "center", gap: 4 }}>
-          <input type="checkbox" checked={dryRun} onChange={() => setDryRun((v) => !v)} />
-          dryRun（不落库）
-        </label>
+        <span style={{ fontSize: "0.75rem", color: "var(--aos-amber-700)" }}>
+          仅预览 proposed edits，不执行当前画布逻辑，不写生产
+        </span>
         {selected && (
           <button type="button" className="btn" onClick={removeBlock}>
             🗑 删除选中
@@ -352,6 +322,10 @@ export function LogicCanvasPage() {
         <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "var(--aos-muted)" }}>
           {blocks.length} blocks
         </span>
+      </div>
+
+      <div style={{ background: "var(--aos-amber-bg)", color: "var(--aos-amber-700)", padding: "8px 12px", borderRadius: 2, marginBottom: 12, fontSize: "0.78rem" }}>
+        当前为未保存模板：添加、排序和属性编辑仅保留在当前会话，刷新后恢复默认 4 个 Block。
       </div>
 
       {err && (
@@ -495,9 +469,9 @@ export function LogicCanvasPage() {
                       alignItems: "center",
                       gap: 8,
                       padding: "10px 14px",
-                      border: selectedId === b.id
-                        ? `2px solid ${KIND_COLORS[b.kind]}`
-                        : "1px solid var(--aos-border)",
+                      borderTop: selectedId === b.id ? `2px solid ${KIND_COLORS[b.kind]}` : "1px solid var(--aos-border)",
+                      borderRight: selectedId === b.id ? `2px solid ${KIND_COLORS[b.kind]}` : "1px solid var(--aos-border)",
+                      borderBottom: selectedId === b.id ? `2px solid ${KIND_COLORS[b.kind]}` : "1px solid var(--aos-border)",
                       borderLeft: `4px solid ${KIND_COLORS[b.kind]}`,
                       borderRadius: 2,
                       background: selectedId === b.id
@@ -527,34 +501,36 @@ export function LogicCanvasPage() {
                     <span style={{ flex: 1, fontSize: "0.82rem", color: "var(--aos-text)" }}>
                       {b.label}
                     </span>
-                    {/* Move up/down */}
-                    <span style={{ display: "flex", flexDirection: "column", gap: 1 }} onClick={(e) => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        onClick={() => moveBlock(b.id, -1)}
-                        disabled={i === 0}
-                        style={{
-                          background: "none", border: "none", cursor: i === 0 ? "default" : "pointer",
-                          fontSize: "0.6rem", color: i === 0 ? "var(--aos-border)" : "var(--aos-muted)",
-                          padding: "0 4px",
-                        }}
-                      >
-                        ▲
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => moveBlock(b.id, 1)}
-                        disabled={i === blocks.length - 1}
-                        style={{
-                          background: "none", border: "none", cursor: i === blocks.length - 1 ? "default" : "pointer",
-                          fontSize: "0.6rem", color: i === blocks.length - 1 ? "var(--aos-border)" : "var(--aos-muted)",
-                          padding: "0 4px",
-                        }}
-                      >
-                        ▼
-                      </button>
-                    </span>
                   </button>
+                  {/* Move up/down */}
+                  <span style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                    <button
+                      type="button"
+                      onClick={() => moveBlock(b.id, -1)}
+                      disabled={i === 0}
+                      aria-label={`上移 ${b.label}`}
+                      style={{
+                        background: "none", border: "none", cursor: i === 0 ? "default" : "pointer",
+                        fontSize: "0.6rem", color: i === 0 ? "var(--aos-border)" : "var(--aos-muted)",
+                        padding: "0 4px",
+                      }}
+                    >
+                      ▲
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveBlock(b.id, 1)}
+                      disabled={i === blocks.length - 1}
+                      aria-label={`下移 ${b.label}`}
+                      style={{
+                        background: "none", border: "none", cursor: i === blocks.length - 1 ? "default" : "pointer",
+                        fontSize: "0.6rem", color: i === blocks.length - 1 ? "var(--aos-border)" : "var(--aos-muted)",
+                        padding: "0 4px",
+                      }}
+                    >
+                      ▼
+                    </button>
+                  </span>
 
                   {/* Branch Block 双路分叉视觉 */}
                   {b.kind === "branch" && (
@@ -709,7 +685,7 @@ export function LogicCanvasPage() {
                   标签
                   <input
                     value={selected.label}
-                    onChange={(e) => updateConfig("label", e.target.value)}
+                    onChange={(e) => updateLabel(e.target.value)}
                     style={{ display: "block", width: "100%", marginTop: 2, fontSize: "0.8rem" }}
                   />
                 </label>
@@ -1075,101 +1051,19 @@ export function LogicCanvasPage() {
               overflowY: "auto",
             }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <h3 style={{ fontSize: "0.85rem", margin: 0, color: "var(--aos-text)" }}>执行历史</h3>
+                <h3 style={{ fontSize: "0.85rem", margin: 0, color: "var(--aos-text)" }}>安全预览历史</h3>
                 {history.length > 0 && (
-                  <button type="button" onClick={() => { setHistory([]); setExecResults([]); setOutput(""); }}
+                  <button type="button" onClick={() => { setHistory([]); setOutput(""); }}
                     style={{ fontSize: "0.7rem", background: "none", border: "none", color: "var(--aos-muted)", cursor: "pointer" }}>
                     清除
                   </button>
                 )}
               </div>
 
-              {/* 预览模式增强：dryRun 试运行结果 + 统计 + 分支高亮 */}
-              {execResults.length > 0 && (
-                <div style={{
-                  marginBottom: 8, padding: 10, borderRadius: 2,
-                  background: dryRun ? "var(--aos-green-bg)" : "var(--aos-accent-light)",
-                  border: `1px solid ${dryRun ? "var(--aos-green-border)" : "var(--aos-accent-border)"}`,
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                    <span style={{ fontSize: "0.7rem", fontWeight: 700, color: dryRun ? "var(--aos-green-700)" : "var(--aos-blue-600)" }}>
-                      {dryRun ? "🧪 dryRun 试运行结果" : "🚀 生产执行结果"}
-                    </span>
-                  </div>
-                  {/* 统计：耗时 + Tokens */}
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
-                    <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: 3, background: "rgba(255,255,255,0.7)", color: "var(--aos-text)" }}>
-                      ⏱ 耗时 ~{(execResults.length * 0.3).toFixed(2)}s
-                    </span>
-                    <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: 3, background: "rgba(255,255,255,0.7)", color: "var(--aos-text)" }}>
-                      🎯 Tokens 入 {execResults.length * 284} / 出 {execResults.length * 47}
-                    </span>
-                    <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: 3, background: "rgba(255,255,255,0.7)", color: "var(--aos-text)" }}>
-                      📦 {execResults.length} 步
-                    </span>
-                  </div>
-                  {/* 分支路径高亮 */}
-                  {blocks.some((b) => b.kind === "branch") && (() => {
-                    const branchBlock = blocks.find((b) => b.kind === "branch");
-                    const paths = (branchBlock?.config.paths as BranchPath[]) || [];
-                    const activeIdx = 0; // dryRun 默认命中第一条路径
-                    return (
-                      <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(paths.length, 2)}), 1fr)`, gap: 4, marginTop: 4 }}>
-                        {paths.slice(0, 2).map((p, pi) => (
-                          <div key={p.id} style={{
-                            padding: "3px 6px", borderRadius: 4, fontSize: "0.62rem",
-                            border: pi === activeIdx ? `2px solid ${p.color}` : `1px solid ${p.color}40`,
-                            background: pi === activeIdx ? `${p.color}15` : "transparent",
-                            fontWeight: pi === activeIdx ? 700 : 400,
-                            color: pi === activeIdx ? p.color : "var(--aos-text-tertiary)",
-                          }}>
-                            {pi === activeIdx ? "▶ " : "  "}{p.label}
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
-
-              {/* Latest results */}
-              {execResults.length > 0 && (
-                <details open style={{ marginBottom: 8 }}>
-                  <summary style={{ fontSize: "0.75rem", cursor: "pointer", color: "var(--aos-muted)" }}>
-                    CoT 推理链（{execResults.length} 步）
-                  </summary>
-                  <div style={{ marginTop: 6 }}>
-                    {execResults.map((r, i) => {
-                      const blk = blocks[i];
-                      const isBranch = blk?.kind === "branch";
-                      const isHandoff = blk?.kind === "handoff";
-                      return (
-                      <div key={r.block_id}
-                        style={{
-                          borderLeft: `3px solid ${KIND_COLORS[blk?.kind || "input"] || "var(--aos-text-secondary)"}`,
-                          padding: "4px 8px",
-                          marginBottom: 4,
-                          fontSize: "0.72rem",
-                          background: isHandoff ? "var(--aos-indigo-bg)" : isBranch ? "var(--aos-red-bg)" : "var(--aos-card)",
-                          borderRadius: "0 4px 4px 0",
-                        }}>
-                        <strong>Step {i + 1}</strong>{" "}
-                        {isBranch && <span style={{ color: "var(--aos-red)", fontSize: "0.62rem" }}>🔀 分支求值</span>}
-                        {isHandoff && <span style={{ color: "var(--aos-indigo-600)", fontSize: "0.62rem" }}>🔗 汇聚输出</span>}
-                        {r.cot.map((line, j) => (
-                          <div key={j} style={{ color: "var(--aos-text)", marginTop: 2 }}>{line}</div>
-                        ))}
-                      </div>
-                      );
-                    })}
-                  </div>
-                </details>
-              )}
-
               {output && (
                 <details open>
                   <summary style={{ fontSize: "0.75rem", cursor: "pointer", color: "var(--aos-muted)" }}>
-                    最新输出 JSON
+                    安全门卫回包 JSON
                   </summary>
                   <pre style={{
                     fontSize: "0.7rem", overflow: "auto", maxHeight: 200, marginTop: 6, padding: 8,
@@ -1183,25 +1077,27 @@ export function LogicCanvasPage() {
               {/* History list */}
               {history.length > 0 ? (
                 <div style={{ marginTop: 8 }}>
-                  <div style={{ fontSize: "0.72rem", color: "var(--aos-muted)", marginBottom: 4 }}>运行记录</div>
+                  <div style={{ fontSize: "0.72rem", color: "var(--aos-muted)", marginBottom: 4 }}>
+                    当前会话已确认的 dry-run 记录（刷新后清空）
+                  </div>
                   {history.map((h, i) => (
                     <div key={i} style={{
                       display: "flex", alignItems: "center", gap: 6, padding: "4px 6px",
                       borderBottom: "1px solid var(--aos-border)", fontSize: "0.72rem",
                     }}>
-                      <span style={{ color: h.success ? "var(--aos-green)" : "var(--aos-red)" }}>{h.success ? "✓" : "✗"}</span>
+                      <span style={{ color: "var(--aos-green)" }}>✓</span>
                       <span style={{ color: "var(--aos-muted)", fontFamily: "monospace" }}>{h.timestamp}</span>
                       <span style={{ color: "var(--aos-text)" }}>{h.blockCount} blocks</span>
                       <span style={{ fontSize: "0.65rem", padding: "1px 4px", borderRadius: 3,
-                        background: h.dryRun ? "var(--aos-amber-bg)" : "var(--aos-green-bg)", color: h.dryRun ? "var(--aos-amber-700)" : "var(--aos-green-700)" }}>
-                        {h.dryRun ? "dry" : "prod"}
+                        background: "var(--aos-amber-bg)", color: "var(--aos-amber-700)" }}>
+                        dry · {h.proposedEditCount} edits
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
                 <p style={{ fontSize: "0.78rem", color: "var(--aos-muted)", marginTop: 8 }}>
-                  点击 ▶ 执行按钮运行 Logic，历史记录将显示在此
+                  点击“安全 dry-run”后，仅将服务端确认不写生产的结果记录在当前会话
                 </p>
               )}
             </div>
@@ -1219,20 +1115,22 @@ export function LogicCanvasPage() {
             }}>
               <h3 style={{ fontSize: "0.85rem", margin: "0 0 10px", color: "var(--aos-text)" }}>自动化触发器</h3>
               <p style={{ fontSize: "0.72rem", color: "var(--aos-muted)", marginBottom: 10 }}>
-                配置 Logic 何时自动执行。可启用多种触发器组合。
+                自动化尚无服务端写契约，本阶段不可配置。完成发布版本、Evals 与 Draft 门控后再开放。
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {TRIGGER_TYPES.map((t) => (
                   <label key={t.kind} style={{
                     display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
-                    border: `1px solid ${automationTriggers[t.kind] ? "var(--aos-blue)" : "var(--aos-border)"}`,
-                    borderRadius: 2, cursor: "pointer", fontSize: "0.78rem",
-                    background: automationTriggers[t.kind] ? "var(--aos-blue)10" : "transparent",
+                    border: "1px solid var(--aos-border)",
+                    borderRadius: 2, cursor: "not-allowed", fontSize: "0.78rem",
+                    background: "transparent",
+                    opacity: 0.65,
                   }}>
                     <input
                       type="checkbox"
-                      checked={automationTriggers[t.kind] || false}
-                      onChange={() => setAutomationTriggers((prev) => ({ ...prev, [t.kind]: !prev[t.kind] }))}
+                      checked={false}
+                      disabled
+                      readOnly
                     />
                     <span style={{ fontSize: "1rem" }}>{t.icon}</span>
                     <div>
@@ -1243,7 +1141,7 @@ export function LogicCanvasPage() {
                 ))}
               </div>
               <div style={{ marginTop: 12, padding: "8px 10px", background: "var(--aos-amber-bg)", borderRadius: 2, fontSize: "0.7rem", color: "var(--aos-amber-700)" }}>
-                💡 已启用 {Object.values(automationTriggers).filter(Boolean).length} 个触发器。变更将在下次执行时生效。
+                🔒 未启用任何触发器；这里不会产生本地假保存或假生效状态。
               </div>
             </div>
           )}
