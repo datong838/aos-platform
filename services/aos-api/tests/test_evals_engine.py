@@ -2,7 +2,8 @@
 
 详见 docs/palantier/20_tech/220tech_evals-engine.md §6。
 
-LLM 评判测试通过 .env 的 AGNES_* 参数自动运行（未配置时用 mock chat_fn）。
+LLM 评判单元测试固定使用 mock chat_fn；Agnes 实连仅在显式设置
+``AOS_RUN_AGNES_INTEGRATION=1`` 且 AGNES_* 完整时运行。
 不写死任何模型名——模型由 llm_gateway 路由。
 """
 from __future__ import annotations
@@ -37,7 +38,8 @@ def _mock_chat_no(query: str, **kw) -> dict:
 
 def _agnes_configured() -> bool:
     return bool(
-        os.environ.get("AGNES_API_KEY")
+        os.environ.get("AOS_RUN_AGNES_INTEGRATION") == "1"
+        and os.environ.get("AGNES_API_KEY")
         and os.environ.get("AGNES_BASE_URL")
         and os.environ.get("AGNES_TEXT_MODEL")
     )
@@ -281,7 +283,10 @@ def test_api_report_not_found(client):
 # --------------------------------------------------------------------------- #
 # Agnes LLM 评判实连（读 .env，不写死模型）
 # --------------------------------------------------------------------------- #
-@pytest.mark.skipif(not _agnes_configured(), reason="AGNES_* 未配置（读 .env）")
+@pytest.mark.skipif(
+    not _agnes_configured(),
+    reason="未显式设置 AOS_RUN_AGNES_INTEGRATION=1 或 AGNES_* 不完整",
+)
 def test_eval_llm_judge_with_agnes():
     from aos_api.env_load import load_dotenv
     load_dotenv(force=True)
