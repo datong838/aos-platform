@@ -36,6 +36,15 @@ class AddPropertyRequest(BaseModel):
     description: str = ""
 
 
+class UpdatePropertyRequest(BaseModel):
+    display_name: str | None = None
+    datatype: str | None = None
+    nullable: bool | None = None
+    is_primary_key: bool | None = None
+    is_display_name: bool | None = None
+    description: str | None = None
+
+
 class AutomapRequest(BaseModel):
     columns: list[str] | None = None
 
@@ -157,6 +166,23 @@ async def add_property(ot_id: str, req: AddPropertyRequest) -> dict[str, Any]:
         return prop.model_dump()
     except KeyError:
         raise HTTPException(404, f"ObjectType {ot_id} not found")
+
+
+@router.put("/object-types/{ot_id}/properties/{prop_id}")
+async def update_property(ot_id: str, prop_id: str, req: UpdatePropertyRequest) -> dict[str, Any]:
+    try:
+        return get_engine().update_property(
+            ot_id, prop_id, **req.model_dump(exclude_none=True)
+        ).model_dump()
+    except KeyError:
+        raise HTTPException(404, f"Property {prop_id} not found")
+
+
+@router.delete("/object-types/{ot_id}/properties/{prop_id}")
+async def delete_property(ot_id: str, prop_id: str) -> dict[str, Any]:
+    if not get_engine().delete_property(ot_id, prop_id):
+        raise HTTPException(404, f"Property {prop_id} not found")
+    return {"ok": True, "id": prop_id}
 
 
 # ─────────── column-mapping / automap / preview ───────────

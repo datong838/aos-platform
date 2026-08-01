@@ -469,7 +469,7 @@ export function FunctionEditorPage() {
       return;
     }
     if (sourceMode === "demo") {
-      setMsg(`函数 ${fn.name} 已本地保存（演示路径）`);
+      setErr("函数 API 不可用，演示数据不可保存");
       return;
     }
     setSaveBusy(true);
@@ -478,14 +478,16 @@ export function FunctionEditorPage() {
         `/v1/ontology/functions/${encodeURIComponent(fn.id)}`,
         mapDefToUpdateBody(fn),
       );
-      const mapped = mapApiFunctionToDef(res);
+      if (res.id !== fn.id) throw new Error("保存回包与目标函数不一致");
+      const verified = await apiGet<ApiFunctionRow>(`/v1/ontology/functions/${encodeURIComponent(fn.id)}`);
+      if (verified.id !== fn.id) throw new Error("写入已提交但重读核验失败");
+      const mapped = mapApiFunctionToDef(verified);
       setFunctions((prev) =>
-        prev.map((f) => (f.id === fn.id ? { ...mapped, mode: fn.mode } : f)),
+        prev.map((f) => (f.id === fn.id ? mapped : f)),
       );
-      setMsg(`函数 ${fn.name} 已保存`);
+      setMsg(`函数 ${fn.name} 已保存并重读`);
     } catch (e) {
-      setSourceMode("demo");
-      setMsg(`保存失败，已保留本地编辑（演示路径）：${String((e as Error).message || e)}`);
+      setErr(`保存失败，已保留本地编辑：${String((e as Error).message || e)}`);
     } finally {
       setSaveBusy(false);
     }
@@ -513,9 +515,8 @@ export function FunctionEditorPage() {
           setTestResult(result);
           setMsg(result.ok ? "测试通过" : "测试失败");
           return;
-        } catch {
-          // fall through to simulate + demo
-          setSourceMode("demo");
+        } catch (e) {
+          throw new Error(`真实试跑失败：${String((e as Error).message || e)}`);
         }
       }
       const result = simulateTestRun(fn, payload);
@@ -709,7 +710,7 @@ export function FunctionEditorPage() {
                         <input
                           className="aos-input"
                           value={selected.name}
-                          onChange={(e) => patchFunction(selected.id, { name: e.target.value })}
+                          readOnly
                         />
                       </label>
                       <label className="ont-form-field">
@@ -727,7 +728,7 @@ export function FunctionEditorPage() {
                           <select
                             className="aos-input"
                             value={selected.mode}
-                            onChange={(e) => patchFunction(selected.id, { mode: e.target.value as FunctionMode })}
+                            disabled
                           >
                             <option value="SQL">SQL</option>
                             <option value="PYTHON">Python</option>

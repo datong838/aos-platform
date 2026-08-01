@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { apiGet, apiPut } from "../../api/client";
 import { S2Chrome } from "./shared";
 import { BpBanner, BpToolbar } from "./blueprintUi";
@@ -235,6 +235,8 @@ export interface ApiWikiRow {
   tags?: string[];
   author?: string;
   version: number;
+  widgets?: WikiWidget[];
+  variables?: Record<string, string>;
   created_at?: number;
   updated_at?: number;
 }
@@ -269,7 +271,7 @@ export function mapApiWikiToPage(row: ApiWikiRow, branch = "main"): WikiPage {
     branch,
     version: row.version ?? 1,
     status: "draft",
-    widgets: [
+    widgets: row.widgets?.length ? row.widgets : [
       {
         id: "w_main_content",
         kind: "text",
@@ -278,7 +280,7 @@ export function mapApiWikiToPage(row: ApiWikiRow, branch = "main"): WikiPage {
         content,
       },
     ],
-    variables: {
+    variables: row.variables || {
       "$page.version": `v${row.version ?? 1}`,
       "$user.name": row.author || "system",
     },
@@ -334,12 +336,15 @@ export function buildWikiUpdateBody(
   page: WikiPage,
   title: string,
   message = "",
-): { title: string; content: string; author: string; message: string } {
+): { title: string; content: string; author: string; message: string; widgets: WikiWidget[]; variables: Record<string, string>; expected_version: number } {
   return {
     title,
     content: extractMainContent(page),
     author: page.updatedBy || "大同",
     message: message || `Update v${page.version + 1}`,
+    widgets: page.widgets,
+    variables: page.variables,
+    expected_version: page.version,
   };
 }
 
@@ -371,7 +376,6 @@ export function localSavePage(
 
 export function WikiDetailPage() {
   const { wikiId = "wiki-covid-homepage" } = useParams();
-  const navigate = useNavigate();
   const [page, setPage] = useState<WikiPage>(() => MOCK_WIKI_PAGE);
   const [mode, setMode] = useState<WikiMode>("widget");
   const [selectedWidgetId, setSelectedWidgetId] = useState<string>("");
@@ -472,16 +476,7 @@ export function WikiDetailPage() {
     try {
       const errors = validateWikiPage({ ...page, title: titleDraft });
       if (wikiId === "new") {
-        // 后端无 POST /wikis：新建仅演示路径本地落盘
-        if (!page.id.trim()) throw new Error("id 不能为空");
-        if (errors.length > 0) throw new Error(errors.join("; "));
-        const local = localSavePage({ ...page, title: titleDraft }, titleDraft, versions);
-        setPage(local.page);
-        setVersions(local.versions);
-        setDataSource("demo");
-        setMsg(`已本地创建 ${page.id} · 演示路径`);
-        navigate(`/ontology/wiki/${encodeURIComponent(page.id)}`, { replace: true });
-        return;
+        throw new Error("新建 Wiki API 未提供，无法保存");
       }
       if (errors.filter((e) => !e.includes("widget")).length > 0 && !titleDraft.trim()) {
         throw new Error("title 不能为空");
@@ -493,20 +488,16 @@ export function WikiDetailPage() {
           `/v1/ontology/wikis/${encodeURIComponent(wikiId)}`,
           body,
         );
-        const mapped = mapApiWikiToPage(saved, page.branch);
-        // 保留本地微件树，仅同步主内容/元数据
-        setPage((p) => ({
-          ...applyMainContent(p, saved.content ?? extractMainContent(mapped)),
-          id: saved.id,
-          title: saved.title,
-          version: saved.version,
-          updatedAt: mapped.updatedAt,
-          updatedBy: mapped.updatedBy,
-          variables: { ...p.variables, "$page.version": `v${saved.version}` },
-        }));
-        setTitleDraft(saved.title);
+        if (saved.id !== wikiId || saved.version !== page.version + 1) throw new Error("写入回包与目标 Wiki 不一致");
+        const verified = await apiGet<ApiWikiRow>(`/v1/ontology/wikis/${encodeURIComponent(wikiId)}`);
+        const mapped = mapApiWikiToPage(verified, page.branch);
+        if (verified.id !== wikiId || JSON.stringify(verified.widgets || []) !== JSON.stringify(body.widgets) || JSON.stringify(verified.variables || {}) !== JSON.stringify(body.variables)) {
+          throw new Error("写入已提交但重读核验失败");
+        }
+        setPage(mapped);
+        setTitleDraft(mapped.title);
         setDataSource("live");
-        setMsg(`已保存 · v${saved.version}`);
+        setMsg(`已保存并重读 · v${verified.version}`);
         try {
           const ver = await apiGet<{ items: ApiWikiVersionRow[] }>(
             `/v1/ontology/wikis/${encodeURIComponent(wikiId)}/versions`,
@@ -516,13 +507,7 @@ export function WikiDetailPage() {
           /* 版本刷新失败不影响保存成功 */
         }
       } catch (apiErr) {
-        const local = localSavePage(page, titleDraft, versions);
-        setPage(local.page);
-        setVersions(local.versions);
-        setDataSource("demo");
-        setMsg(
-          `已本地保存 · 演示路径（${String((apiErr as Error).message || apiErr)}）`,
-        );
+        setErr(String((apiErr as Error).message || apiErr));
       }
     } catch (e) {
       setErr(String((e as Error).message || e));
@@ -547,7 +532,7 @@ export function WikiDetailPage() {
           <Link to={`/ontology/wiki/${encodeURIComponent(wikiId)}/diff`} className="btn-nav">
             版本对比 →
           </Link>
-          <button type="button" className="btn-primary" disabled={busy} onClick={() => void save()}>
+          <button type="button" className="btn-primary" disabled={busy || dataSource !== "live" || wikiId === "new"} onClick={() => void save()}>
             {busy ? "保存中…" : "保存"}
           </button>
           <span

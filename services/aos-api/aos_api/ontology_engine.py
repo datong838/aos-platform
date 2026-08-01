@@ -204,6 +204,20 @@ class OntologyEngine:
             ot.updated_at = time.time()
             return prop
 
+    def update_property(self, ot_id: str, prop_id: str, **kwargs: Any) -> Property:
+        with _LOCK:
+            ot = self._object_types.get(ot_id)
+            if ot is None:
+                raise KeyError(f"ObjectType {ot_id} not found")
+            prop = next((item for item in ot.properties if item.id == prop_id), None)
+            if prop is None:
+                raise KeyError(f"Property {prop_id} not found")
+            for key, value in kwargs.items():
+                if key != "name" and hasattr(prop, key):
+                    setattr(prop, key, value)
+            ot.updated_at = time.time()
+            return prop
+
     def delete_property(self, ot_id: str, prop_id: str) -> bool:
         with _LOCK:
             ot = self._object_types.get(ot_id)
@@ -211,7 +225,15 @@ class OntologyEngine:
                 return False
             before = len(ot.properties)
             ot.properties = [p for p in ot.properties if p.id != prop_id]
-            return len(ot.properties) < before
+            deleted = len(ot.properties) < before
+            if deleted:
+                prop_names = {p.name for p in ot.properties}
+                self._column_mappings[ot_id] = [
+                    mapping for mapping in self._column_mappings.get(ot_id, [])
+                    if mapping.target_property in prop_names
+                ]
+                ot.updated_at = time.time()
+            return deleted
 
     # ── Column Mapping ──
     def list_column_mapping(self, ot_id: str) -> list[ColumnMapping]:

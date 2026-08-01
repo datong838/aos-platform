@@ -5,7 +5,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { apiGet, apiPost, apiPut } from "../../api/client";
+import { apiDelete, apiGet, apiPost, apiPut } from "../../api/client";
 import { S2Chrome } from "./shared";
 import { BpToolbar, BpTabs } from "./blueprintUi";
 
@@ -498,25 +498,34 @@ export function PropertyEditorPage() {
       return;
     }
     if (sourceMode === "demo") {
-      setMsg(`属性 ${p.name} 已本地保存（演示路径）`);
+      setErr("属性 API 不可用，演示数据不可保存");
       return;
     }
     try {
+      let targetId = p.id;
       if (isNewPropertyId(p.id)) {
         const res = await apiPost<ApiPropertyRow>(
           `/v1/ontology/object-types/${encodeURIComponent(typeId)}/properties`,
           mapFieldToAddRequest(p),
         );
-        const mapped = mapApiPropertyToField(res, { [p.name]: p.columnMapping });
-        setProperties((prev) => prev.map((x) => (x.id === p.id ? { ...mapped, columnMapping: p.columnMapping } : x)));
-        setSelectedId(mapped.id);
-        setMsg(`属性 ${p.name} 已创建`);
+        if (!res.id || res.name !== p.name) throw new Error("创建回包与目标属性不一致");
+        targetId = res.id;
       } else {
-        // 后端无 PUT property：本地保留，提示用映射 Tab 持久化列映射
-        setMsg(
-          `属性 ${p.name} 已本地更新（元数据无 PUT；列映射请用「列映射」Tab 保存）`,
+        const body = mapFieldToAddRequest(p);
+        const { name: _stableName, ...updates } = body;
+        const res = await apiPut<ApiPropertyRow>(
+          `/v1/ontology/object-types/${encodeURIComponent(typeId)}/properties/${encodeURIComponent(p.id)}`,
+          updates,
         );
+        if (res.id !== p.id || res.name !== p.name) throw new Error("更新回包与目标属性不一致");
       }
+      const reread = await apiGet<{ items?: ApiPropertyRow[] }>(`/v1/ontology/object-types/${encodeURIComponent(typeId)}/properties`);
+      const verified = (reread.items || []).find((item) => item.id === targetId);
+      if (!verified || verified.name !== p.name || verified.datatype !== mapFieldToAddRequest(p).datatype) throw new Error("写入已提交但重读核验失败");
+      const mapped = mapApiPropertyToField(verified, { [p.name]: p.columnMapping });
+      setProperties((prev) => prev.map((x) => (x.id === p.id ? { ...mapped, columnMapping: p.columnMapping } : x)));
+      setSelectedId(mapped.id);
+      setMsg(`属性 ${p.name} 已保存并重读`);
     } catch (e) {
       setErr(String((e as Error).message || e));
     }
@@ -526,9 +535,21 @@ export function PropertyEditorPage() {
     if (!window.confirm(`删除属性 ${p.name}？`)) return;
     setErr(null);
     setMsg("");
-    setProperties((prev) => prev.filter((x) => x.id !== p.id));
-    if (selectedId === p.id) setSelectedId(null);
-    setMsg(`属性 ${p.name} 已从列表移除（演示/本地）`);
+    if (sourceMode !== "live" || isNewPropertyId(p.id)) {
+      setErr("属性 API 不可用，演示数据不可删除");
+      return;
+    }
+    try {
+      const res = await apiDelete<{ ok?: boolean; id?: string }>(`/v1/ontology/object-types/${encodeURIComponent(typeId)}/properties/${encodeURIComponent(p.id)}`);
+      if (res.ok !== true || res.id !== p.id) throw new Error("删除回包与目标属性不一致");
+      const reread = await apiGet<{ items?: ApiPropertyRow[] }>(`/v1/ontology/object-types/${encodeURIComponent(typeId)}/properties`);
+      if ((reread.items || []).some((item) => item.id === p.id)) throw new Error("删除已提交但重读核验失败");
+      setProperties((prev) => prev.filter((x) => x.id !== p.id));
+      if (selectedId === p.id) setSelectedId(null);
+      setMsg(`属性 ${p.name} 已删除并重读`);
+    } catch (e) {
+      setErr(String((e as Error).message || e));
+    }
   }
 
   async function runAutomap() {

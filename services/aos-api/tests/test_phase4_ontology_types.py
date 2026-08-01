@@ -86,6 +86,19 @@ def test_add_and_list_properties() -> None:
     assert props[0].id == prop.id
 
 
+def test_update_property_keeps_name_stable_and_delete_cleans_mapping() -> None:
+    eng = get_engine()
+    ot = eng.create_object_type(name="invoice")
+    prop = eng.add_property(ot.id, name="amount", datatype="double")
+    eng.set_column_mapping(ot.id, [{"source_column": "amount_col", "target_property": "amount"}])
+    updated = eng.update_property(ot.id, prop.id, name="renamed", description="Money")
+    assert updated.name == "amount"
+    assert updated.description == "Money"
+    assert eng.delete_property(ot.id, prop.id) is True
+    assert eng.list_properties(ot.id) == []
+    assert eng.list_column_mapping(ot.id) == []
+
+
 def test_automap() -> None:
     eng = get_engine()
     ot = eng.create_object_type(name="shipment")

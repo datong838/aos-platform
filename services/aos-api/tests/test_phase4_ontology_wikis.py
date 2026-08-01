@@ -56,6 +56,23 @@ def test_update_creates_new_version() -> None:
     assert versions[1].content == "c2"
 
 
+def test_update_persists_schema_snapshot_and_rejects_stale_version() -> None:
+    eng = get_wiki_engine()
+    wiki = eng.create_wiki(title="Schema", widgets=[{"id": "w1"}], variables={"x": "1"})
+    updated = eng.update_wiki(
+        wiki.id,
+        expected_version=1,
+        widgets=[{"id": "w2", "kind": "text"}],
+        variables={"x": "2"},
+    )
+    assert updated.version == 2
+    assert updated.widgets[0]["id"] == "w2"
+    assert eng.list_versions(wiki.id)[-1].variables == {"x": "2"}
+    with pytest.raises(ValueError):
+        eng.update_wiki(wiki.id, expected_version=1, title="stale")
+    assert eng.get_wiki(wiki.id).title == "Schema"
+
+
 def test_diff_versions() -> None:
     eng = get_wiki_engine()
     w = eng.create_wiki(title="T", content="line1\nline2")

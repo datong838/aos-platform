@@ -21,6 +21,8 @@ class WikiVersion(BaseModel):
     version: int
     content: str = ""
     title: str = ""
+    widgets: list[dict[str, Any]] = Field(default_factory=list)
+    variables: dict[str, Any] = Field(default_factory=dict)
     author: str = "system"
     message: str = ""
     created_at: float = Field(default_factory=lambda: time.time())
@@ -32,6 +34,8 @@ class Wiki(BaseModel):
     content: str = ""
     object_type_id: str = ""
     tags: list[str] = Field(default_factory=list)
+    widgets: list[dict[str, Any]] = Field(default_factory=list)
+    variables: dict[str, Any] = Field(default_factory=dict)
     author: str = "system"
     version: int = 1
     created_at: float = Field(default_factory=lambda: time.time())
@@ -65,6 +69,8 @@ class WikiEngine:
                 version=1,
                 content=wiki.content,
                 title=wiki.title,
+                widgets=wiki.widgets,
+                variables=wiki.variables,
                 author=wiki.author,
                 message="Initial version",
             )
@@ -83,11 +89,13 @@ class WikiEngine:
             items = [w for w in items if tag in w.tags]
         return items
 
-    def update_wiki(self, wiki_id: str, **kwargs: Any) -> Wiki:
+    def update_wiki(self, wiki_id: str, expected_version: int | None = None, **kwargs: Any) -> Wiki:
         with _LOCK:
             wiki = self._wikis.get(wiki_id)
             if wiki is None:
                 raise KeyError(f"Wiki {wiki_id} not found")
+            if expected_version is not None and wiki.version != expected_version:
+                raise ValueError(f"Wiki {wiki_id} version conflict")
             old_content = wiki.content
             old_title = wiki.title
             for k, v in kwargs.items():
@@ -101,6 +109,8 @@ class WikiEngine:
                 version=wiki.version,
                 content=wiki.content,
                 title=wiki.title,
+                widgets=wiki.widgets,
+                variables=wiki.variables,
                 author=wiki.author,
                 message=kwargs.get("message", f"Update v{wiki.version}"),
             )

@@ -16,6 +16,9 @@ class UpdateWikiRequest(BaseModel):
     content: str | None = None
     tags: list[str] | None = None
     author: str | None = None
+    widgets: list[dict[str, Any]] | None = None
+    variables: dict[str, Any] | None = None
+    expected_version: int | None = None
     message: str = ""
 
 
@@ -43,10 +46,13 @@ async def update_wiki(wiki_id: str, req: UpdateWikiRequest) -> dict[str, Any]:
     eng = get_wiki_engine()
     try:
         data = {k: v for k, v in req.model_dump().items() if v is not None}
-        w = eng.update_wiki(wiki_id, **data)
+        expected_version = data.pop("expected_version", None)
+        w = eng.update_wiki(wiki_id, expected_version=expected_version, **data)
         return w.model_dump()
     except KeyError:
         raise HTTPException(404, f"Wiki {wiki_id} not found")
+    except ValueError:
+        raise HTTPException(409, f"Wiki {wiki_id} version conflict")
 
 
 @router.get("/wikis/{wiki_id}/versions")

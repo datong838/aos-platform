@@ -399,9 +399,10 @@ export function WikiDiffPage() {
           <button
             type="button"
             className="btn-primary"
-            onClick={() => setShowRestoreModal(true)}
+            disabled
+            title="恢复缺少并发与审计 API，当前不可用"
           >
-            恢复到 v{leftVersion}
+            恢复到 v{leftVersion}（规划中）
           </button>
           <span
             className={
