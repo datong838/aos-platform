@@ -4,8 +4,18 @@
  * Phase E-02~E-06：节点拖拽 + 算子工具栏 + 管道类型 + 输出配置 + 预览增强
  * W3-C6：视图 Tab（编辑/历史）+ 变换节点配置/试运行 · 优先接 phase5 pipeline API
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
 import { apiGet, apiPost, apiPut } from "../../api/client";
 import { BpBanner, BpToolbar } from "./blueprintUi";
 import { S2Chrome, useJsonGet } from "./shared";
@@ -42,14 +52,76 @@ export type GraphNode = {
   position_x?: number;
   position_y?: number;
   config?: Record<string, unknown>;
+  status?: string;
 };
 
 export type GraphPayload = {
   pipeline_id?: string;
   nodes?: GraphNode[];
-  edges?: { source_node_id?: string; target_node_id?: string }[];
+  edges?: { id?: string; source_node_id?: string; target_node_id?: string; label?: string }[];
   demo?: boolean;
+  persisted?: boolean;
+  pipeline_type?: string;
+  write_mode?: string;
+  revision?: number;
 };
+
+export type GraphSaveSnapshot = {
+  pipelineId: string;
+  pipelineType: string;
+  writeMode: string;
+  nodes: Required<Pick<GraphNode, "id" | "name" | "node_type" | "position_x" | "position_y" | "config" | "status">>[];
+  edges: { id: string; source_node_id: string; target_node_id: string; label: string }[];
+};
+
+function stableValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stableValue);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, child]) => [key, stableValue(child)]),
+    );
+  }
+  return value;
+}
+
+function normalizedNodes(nodes: GraphNode[] | undefined) {
+  return (nodes || []).map((node) => ({
+    id: node.id,
+    name: node.name || "",
+    node_type: node.node_type || "transform",
+    position_x: node.position_x ?? 0,
+    position_y: node.position_y ?? 0,
+    config: stableValue(node.config || {}),
+    status: node.status || "idle",
+  })).sort((left, right) => left.id.localeCompare(right.id));
+}
+
+function normalizedEdges(edges: GraphPayload["edges"]) {
+  return (edges || []).map((edge) => ({
+    id: edge.id || "",
+    source_node_id: edge.source_node_id || "",
+    target_node_id: edge.target_node_id || "",
+    label: edge.label || "",
+  })).sort((left, right) => left.id.localeCompare(right.id));
+}
+
+export function assertSavedGraphMatches(saved: GraphPayload, expected: GraphSaveSnapshot): void {
+  if (!saved.persisted || saved.demo) throw new Error("服务端未确认持久化");
+  if (saved.pipeline_id !== expected.pipelineId) {
+    throw new Error(`保存响应管道不匹配：期望 ${expected.pipelineId}，实际 ${saved.pipeline_id || "—"}`);
+  }
+  if (saved.pipeline_type !== expected.pipelineType || saved.write_mode !== expected.writeMode) {
+    throw new Error("保存响应类型或写入模式与请求不一致");
+  }
+  if (JSON.stringify(normalizedNodes(saved.nodes)) !== JSON.stringify(normalizedNodes(expected.nodes))) {
+    throw new Error("保存响应节点与请求快照不一致");
+  }
+  if (JSON.stringify(normalizedEdges(saved.edges)) !== JSON.stringify(normalizedEdges(expected.edges))) {
+    throw new Error("保存响应连接与请求快照不一致");
+  }
+}
 
 export type XformConfig = { expression: string; filter: string };
 
@@ -136,7 +208,7 @@ export function formatTrialMsg(ok: boolean, demo: boolean, detail?: string): str
 }
 
 /** 算子工具栏定义 · 15 个算子分 3 组 */
-const OPERATORS: { group: string; items: { id: string; label: string; kind: NodeType }[] }[] = [
+export const OPERATORS: { group: string; items: { id: string; label: string; kind: NodeType }[] }[] = [
   {
     group: "输入",
     items: [
@@ -169,13 +241,13 @@ const OPERATORS: { group: string; items: { id: string; label: string; kind: Node
   },
 ];
 
-const PIPE_TYPES = [
+export const PIPE_TYPES = [
   { id: "batch", label: "批量" },
   { id: "incremental", label: "增量" },
   { id: "streaming", label: "流式" },
 ] as const;
 
-const WRITE_MODES = [
+export const WRITE_MODES = [
   { id: "SNAPSHOT", label: "快照" },
   { id: "APPEND", label: "追加" },
   { id: "MERGE", label: "合并" },
@@ -184,7 +256,7 @@ const WRITE_MODES = [
   { id: "UPSERT", label: "插入或更新" },
 ] as const;
 
-function cellText(v: unknown): string {
+export function cellText(v: unknown): string {
   if (v == null) return "—";
   if (typeof v === "object") {
     try {
@@ -198,7 +270,7 @@ function cellText(v: unknown): string {
 }
 
 /** 推断列类型 */
-function inferColumnType(rows: Record<string, unknown>[], col: string): string {
+export function inferColumnType(rows: Record<string, unknown>[], col: string): string {
   for (const row of rows) {
     const v = row[col];
     if (v == null) continue;
@@ -211,6 +283,159 @@ function inferColumnType(rows: Record<string, unknown>[], col: string): string {
     return "json";
   }
   return "—";
+}
+
+type Operator = (typeof OPERATORS)[number]["items"][number];
+type CanvasConnection = { id: string; from: string; to: string; label?: string };
+
+export function moveCanvasPosition(
+  current: { x: number; y: number },
+  delta: { x: number; y: number },
+  zoom: number,
+): { x: number; y: number } {
+  return {
+    x: Math.max(0, current.x + delta.x / zoom),
+    y: Math.max(0, current.y + delta.y / zoom),
+  };
+}
+
+function DraggableOperator({ op, onAdd, disabled }: { op: Operator; onAdd: (op: Operator) => void; disabled?: boolean }) {
+  const didDrag = useRef(false);
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `operator:${op.id}`,
+    data: { source: "palette", op },
+    disabled,
+  });
+  useEffect(() => {
+    if (isDragging) {
+      didDrag.current = true;
+      return;
+    }
+    if (didDrag.current) {
+      const timer = window.setTimeout(() => { didDrag.current = false; }, 0);
+      return () => window.clearTimeout(timer);
+    }
+  }, [isDragging]);
+  return (
+    <button
+      ref={setNodeRef}
+      type="button"
+      disabled={disabled}
+      className="btn-nav"
+      style={{ fontSize: "0.7rem", padding: "2px 8px", cursor: "grab", opacity: isDragging ? 0.5 : 1 }}
+      title={`拖拽到画布添加「${op.label}」`}
+      onClick={() => {
+        if (didDrag.current) {
+          didDrag.current = false;
+          return;
+        }
+        onAdd(op);
+      }}
+      {...listeners}
+      {...attributes}
+    >
+      {op.label}
+    </button>
+  );
+}
+
+function DraggableCanvasNode({
+  nodeId,
+  x,
+  y,
+  zoom,
+  className,
+  title,
+  onClick,
+  onContextMenu,
+  onDoubleClick,
+  children,
+}: {
+  nodeId: string;
+  x: number;
+  y: number;
+  zoom: number;
+  className: string;
+  title?: string;
+  onClick: () => void;
+  onContextMenu: (event: React.MouseEvent) => void;
+  onDoubleClick?: () => void;
+  children: React.ReactNode;
+}) {
+  const didDrag = useRef(false);
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `node:${nodeId}`,
+    data: { source: "canvas", nodeId },
+  });
+  useEffect(() => {
+    if (isDragging) {
+      didDrag.current = true;
+      return;
+    }
+    if (didDrag.current) {
+      const timer = window.setTimeout(() => { didDrag.current = false; }, 0);
+      return () => window.clearTimeout(timer);
+    }
+  }, [isDragging]);
+  return (
+    <button
+      ref={setNodeRef}
+      type="button"
+      className={className}
+      onClick={() => {
+        if (didDrag.current) {
+          didDrag.current = false;
+          return;
+        }
+        onClick();
+      }}
+      onContextMenu={onContextMenu}
+      onDoubleClick={onDoubleClick}
+      title={title}
+      style={{
+        position: "absolute",
+        left: x,
+        top: y,
+        cursor: isDragging ? "grabbing" : "grab",
+        opacity: isDragging ? 0.75 : 1,
+        zIndex: isDragging ? 3 : 1,
+        transform: transform ? `translate3d(${transform.x / zoom}px, ${transform.y / zoom}px, 0)` : undefined,
+      }}
+      {...listeners}
+      {...attributes}
+    >
+      {children}
+    </button>
+  );
+}
+
+function CanvasDropArea({
+  canvasRef,
+  className,
+  style,
+  onClick,
+  children,
+}: {
+  canvasRef: React.MutableRefObject<HTMLDivElement | null>;
+  className: string;
+  style: React.CSSProperties;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: "pipeline-canvas" });
+  return (
+    <div
+      ref={(node) => {
+        setNodeRef(node);
+        canvasRef.current = node;
+      }}
+      className={`${className}${isOver ? " is-drop-target" : ""}`}
+      style={style}
+      onClick={onClick}
+    >
+      {children}
+    </div>
+  );
 }
 
 export function PipelineCanvasPage() {
@@ -231,6 +456,20 @@ export function PipelineCanvasPage() {
   const [previewErr, setPreviewErr] = useState<string | null>(null);
   const [previewBusy, setPreviewBusy] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const canvasRef = useRef<HTMLDivElement | null>(null);
+  const editRevisionRef = useRef(0);
+  const loadGenerationRef = useRef(0);
+  const saveGenerationRef = useRef(0);
+  const activePipelineIdRef = useRef(pipelineId);
+  activePipelineIdRef.current = pipelineId;
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor),
+  );
 
   // Phase E-02: 节点拖拽位置
   const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number }>>({
@@ -238,7 +477,11 @@ export function PipelineCanvasPage() {
     transform: { x: 300, y: 60 },
     output: { x: 540, y: 60 },
   });
-  const [draggingNode, setDraggingNode] = useState<string | null>(null);
+  const [baseNodeIds, setBaseNodeIds] = useState<Record<NodeType, string>>({
+    input: "input",
+    transform: "transform",
+    output: "output",
+  });
 
   // Phase E-05: 管道类型
   const [pipeType, setPipeType] = useState<string>("batch");
@@ -252,7 +495,7 @@ export function PipelineCanvasPage() {
   // Phase 7: 画布缩放 + 右键菜单 + 连接线管理
   const [zoom, setZoom] = useState(1);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null);
-  const [connections, setConnections] = useState<{ from: string; to: string }[]>([]);
+  const [connections, setConnections] = useState<CanvasConnection[]>([]);
   const [linkingFrom, setLinkingFrom] = useState<string | null>(null);
   const [showStats, setShowStats] = useState(false);
 
@@ -262,57 +505,81 @@ export function PipelineCanvasPage() {
   const [historyDemo, setHistoryDemo] = useState(false);
   const [historyBusy, setHistoryBusy] = useState(false);
   const [graph, setGraph] = useState<GraphPayload | null>(null);
+  const [loadedPipelineId, setLoadedPipelineId] = useState("");
   const [xform, setXform] = useState<XformConfig>({ expression: "row", filter: "" });
   const [xformMsg, setXformMsg] = useState<string | null>(null);
   const [xformBusy, setXformBusy] = useState(false);
   const transformNode = useMemo(() => pickTransformNode(graph), [graph]);
+  const canvasReady = Boolean(graph && loadedPipelineId === pipelineId && graph.pipeline_id === pipelineId);
 
-  function handleNodeDragStart(e: React.DragEvent, nodeKey: string) {
-    setDraggingNode(nodeKey);
-    e.dataTransfer.effectAllowed = "move";
+  function markDirty() {
+    editRevisionRef.current += 1;
+    setDirty(true);
+    setSaveMsg(null);
   }
 
-  function handleNodeDragEnd() {
-    setDraggingNode(null);
+  function selectBaseNode(node: "input" | "transform" | "output") {
+    setSelected(node);
+    setInspectorCollapsed(false);
   }
 
-  function handleCanvasDragOver(e: React.DragEvent) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
+  function addOperator(op: Operator, position?: { x: number; y: number }) {
+    if (!canvasReady) return;
+    const suffix = `${Date.now()}-${Math.random().toString(16).slice(2, 7)}`;
+    setExtraNodes((prev) => [
+      ...prev,
+      {
+        id: `${op.id}-${suffix}`,
+        label: op.label,
+        kind: op.kind,
+        x: position?.x ?? 120 + (prev.length % 3) * 190,
+        y: position?.y ?? 170 + Math.floor(prev.length / 3) * 90,
+      },
+    ]);
+    markDirty();
   }
 
-  function handleCanvasDrop(e: React.DragEvent) {
-    e.preventDefault();
-    const opId = e.dataTransfer.getData("text/plain");
-    if (!opId) return;
-    // 查找算子定义
-    for (const group of OPERATORS) {
-      const op = group.items.find((i) => i.id === opId);
-      if (op) {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        setExtraNodes((prev) => [
+  function handleDragEnd(event: DragEndEvent) {
+    if (!canvasReady) return;
+    const data = event.active.data.current as
+      | { source?: "palette"; op?: Operator }
+      | { source?: "canvas"; nodeId?: string }
+      | undefined;
+    if (data?.source === "canvas" && data.nodeId) {
+      const dx = event.delta.x / zoom;
+      const dy = event.delta.y / zoom;
+      if (!dx && !dy) return;
+      if (data.nodeId === "input" || data.nodeId === "transform" || data.nodeId === "output") {
+        setNodePositions((prev) => ({
           ...prev,
-          { id: `${op.id}-${Date.now()}`, label: op.label, kind: op.kind, x, y },
-        ]);
-        return;
+          [data.nodeId!]: moveCanvasPosition(prev[data.nodeId!], event.delta, zoom),
+        }));
+      } else {
+        setExtraNodes((prev) => prev.map((node) => (
+          node.id === data.nodeId
+            ? { ...node, ...moveCanvasPosition(node, event.delta, zoom) }
+            : node
+        )));
       }
+      markDirty();
+      return;
     }
-  }
 
-  function handleNodeMouseMove(e: React.MouseEvent) {
-    if (!draggingNode) return;
-    const rect = (e.currentTarget as HTMLElement).closest(".bp-pipe-dag")?.getBoundingClientRect();
-    if (!rect) return;
-    const x = e.clientX - rect.left - 70;
-    const y = e.clientY - rect.top - 30;
-    setNodePositions((prev) => ({ ...prev, [draggingNode]: { x: Math.max(0, x), y: Math.max(0, y) } }));
+    if (data?.source !== "palette" || !data.op || event.over?.id !== "pipeline-canvas") return;
+    const canvas = canvasRef.current;
+    const translated = event.active.rect.current.translated;
+    if (!canvas || !translated) return;
+    const canvasRect = canvas.getBoundingClientRect();
+    const x = Math.max(0, (translated.left + translated.width / 2 - canvasRect.left + canvas.scrollLeft) / zoom - 80);
+    const y = Math.max(0, (translated.top + translated.height / 2 - canvasRect.top + canvas.scrollTop) / zoom - 30);
+    addOperator(data.op, { x, y });
   }
 
   function removeExtraNode(id: string) {
+    if (!canvasReady) return;
     setExtraNodes((prev) => prev.filter((n) => n.id !== id));
     setConnections((prev) => prev.filter((c) => c.from !== id && c.to !== id));
+    markDirty();
   }
 
   // Phase 7: 缩放控制
@@ -330,39 +597,67 @@ export function PipelineCanvasPage() {
 
   // Phase 7: 连接线管理
   function startLink(nodeId: string) {
+    if (!canvasReady) return;
     setLinkingFrom(nodeId);
     setContextMenu(null);
   }
 
   function completeLink(targetNodeId: string) {
+    if (!canvasReady) return;
     if (linkingFrom && linkingFrom !== targetNodeId) {
       setConnections((prev) => {
         const exists = prev.some((c) => c.from === linkingFrom && c.to === targetNodeId);
         if (exists) return prev;
-        return [...prev, { from: linkingFrom, to: targetNodeId }];
+        markDirty();
+        return [...prev, { id: `edge-${Date.now()}-${prev.length}`, from: linkingFrom, to: targetNodeId }];
       });
     }
     setLinkingFrom(null);
   }
 
   function removeConnection(from: string, to: string) {
+    if (!canvasReady) return;
     setConnections((prev) => prev.filter((c) => !(c.from === from && c.to === to)));
     setContextMenu(null);
+    markDirty();
   }
 
   // Phase 7: 清空画布
   function clearCanvas() {
+    if (!canvasReady) return;
     setExtraNodes([]);
     setConnections([]);
     setContextMenu(null);
+    markDirty();
   }
 
   useEffect(() => {
+    loadGenerationRef.current += 1;
+    saveGenerationRef.current += 1;
+    editRevisionRef.current = 0;
     setSelected("output");
     setPreview(null);
     setPreviewErr(null);
     setViewTab("edit");
     setXformMsg(null);
+    setSaveMsg(null);
+    setDirty(false);
+    setSaveBusy(false);
+    setLoadedPipelineId("");
+    setGraph(null);
+    setBaseNodeIds({
+      input: `canvas-input-${pipelineId}`,
+      transform: `canvas-transform-${pipelineId}`,
+      output: `canvas-output-${pipelineId}`,
+    });
+    setNodePositions({
+      input: { x: 60, y: 60 },
+      transform: { x: 300, y: 60 },
+      output: { x: 540, y: 60 },
+    });
+    setExtraNodes([]);
+    setConnections([]);
+    setLinkingFrom(null);
     const local = loadLocalXform(pipelineId);
     if (local) setXform(local);
     else setXform({ expression: "row", filter: "" });
@@ -371,12 +666,64 @@ export function PipelineCanvasPage() {
   // W3-C6 · 拉取 graph（变换节点 id）
   useEffect(() => {
     if (!pipelineId) return;
+    const generation = loadGenerationRef.current;
     let cancelled = false;
     (async () => {
       try {
         const g = await apiGet<GraphPayload>(`/v1/pipelines/${encodeURIComponent(pipelineId)}/graph`);
-        if (cancelled) return;
+        if (cancelled || generation !== loadGenerationRef.current) return;
+        if (g.pipeline_id !== pipelineId) {
+          throw new Error(`画布响应管道不匹配：期望 ${pipelineId}，实际 ${g.pipeline_id || "—"}`);
+        }
         setGraph(g);
+        setLoadedPipelineId(pipelineId);
+        const graphNodes = g.nodes || [];
+        const sourceNode = graphNodes.find((node) => ["source", "input"].includes((node.node_type || "").toLowerCase()));
+        const transformGraphNode = pickTransformNode(g);
+        const outputNode = graphNodes.find((node) => ["sink", "output"].includes((node.node_type || "").toLowerCase()));
+        const ids: Record<NodeType, string> = {
+          input: sourceNode?.id || `canvas-input-${pipelineId}`,
+          transform: transformGraphNode?.id || `canvas-transform-${pipelineId}`,
+          output: outputNode?.id || `canvas-output-${pipelineId}`,
+        };
+        setBaseNodeIds(ids);
+        setNodePositions({
+          input: { x: sourceNode?.position_x ?? 60, y: sourceNode?.position_y ?? 60 },
+          transform: { x: transformGraphNode?.position_x ?? 300, y: transformGraphNode?.position_y ?? 60 },
+          output: { x: outputNode?.position_x ?? 540, y: outputNode?.position_y ?? 60 },
+        });
+        const baseIds = new Set(Object.values(ids));
+        setExtraNodes(graphNodes.filter((node) => !baseIds.has(node.id)).map((node) => {
+          const nodeType = (node.node_type || "transform").toLowerCase();
+          const kind: NodeType = ["source", "input"].includes(nodeType)
+            ? "input"
+            : ["sink", "output"].includes(nodeType) ? "output" : "transform";
+          return {
+            id: node.id,
+            label: node.name || node.id,
+            kind,
+            x: node.position_x ?? 120,
+            y: node.position_y ?? 160,
+          };
+        }));
+        const keyByNodeId = new Map<string, string>([
+          [ids.input, "input"],
+          [ids.transform, "transform"],
+          [ids.output, "output"],
+        ]);
+        setConnections((g.edges || []).flatMap((edge, index) => {
+          if (!edge.source_node_id || !edge.target_node_id) return [];
+          return [{
+            id: edge.id || `edge-loaded-${index}`,
+            from: keyByNodeId.get(edge.source_node_id) || edge.source_node_id,
+            to: keyByNodeId.get(edge.target_node_id) || edge.target_node_id,
+            label: edge.label,
+          }];
+        }));
+        const type = (g.pipeline_type || "").toLowerCase();
+        setPipeType(type === "streaming" ? "streaming" : type === "etl" || type === "elt" ? "incremental" : "batch");
+        setWriteMode(g.write_mode || "SNAPSHOT");
+        setDirty(false);
         const xf = pickTransformNode(g);
         const cfg = xf?.config;
         if (cfg && typeof cfg.expression === "string") {
@@ -386,13 +733,111 @@ export function PipelineCanvasPage() {
           });
         }
       } catch {
-        if (!cancelled) setGraph(null);
+        if (!cancelled && generation === loadGenerationRef.current) {
+          setGraph(null);
+          setLoadedPipelineId("");
+          setSaveMsg("画布加载失败，当前内容不可保存；请刷新后重试");
+        }
       }
     })();
     return () => {
       cancelled = true;
     };
   }, [pipelineId]);
+
+  async function saveCanvas() {
+    if (!canvasReady) return;
+    const requestPipelineId = pipelineId;
+    const requestRevision = editRevisionRef.current;
+    const requestGeneration = saveGenerationRef.current + 1;
+    saveGenerationRef.current = requestGeneration;
+    const idForKey = (key: string) => baseNodeIds[key as NodeType] || key;
+    const originalById = new Map((graph?.nodes || []).map((node) => [node.id, node]));
+    const baseNodes: { key: NodeType; name: string; nodeType: string }[] = [
+      { key: "input", name: pipe?.sourceId || "source", nodeType: "source" },
+      { key: "transform", name: "Ingest", nodeType: "transform" },
+      { key: "output", name: String(outLabel || "output"), nodeType: "sink" },
+    ];
+    const nodes = [
+      ...baseNodes.map(({ key, name, nodeType }) => {
+        const id = baseNodeIds[key];
+        const original = originalById.get(id);
+        return {
+          id,
+          name: original?.name || name,
+          node_type: original?.node_type || nodeType,
+          position_x: nodePositions[key].x,
+          position_y: nodePositions[key].y,
+          config: original?.config || (key === "transform" ? xform : {}),
+          status: original?.status || "idle",
+        };
+      }),
+      ...extraNodes.map((node) => {
+        const original = originalById.get(node.id);
+        return {
+          id: node.id,
+          name: node.label,
+          node_type: original?.node_type || (node.kind === "input" ? "source" : node.kind === "output" ? "sink" : "transform"),
+          position_x: node.x,
+          position_y: node.y,
+          config: original?.config || {},
+          status: original?.status || "idle",
+        };
+      }),
+    ];
+    const edges = connections.map((connection) => ({
+      id: connection.id,
+      source_node_id: idForKey(connection.from),
+      target_node_id: idForKey(connection.to),
+      label: connection.label || "",
+    }));
+    const pipelineType = pipeType === "streaming" ? "Streaming" : pipeType === "incremental" ? "ETL" : "Batch";
+    const snapshot: GraphSaveSnapshot = {
+      pipelineId: requestPipelineId,
+      pipelineType,
+      writeMode,
+      nodes,
+      edges,
+    };
+
+    setSaveBusy(true);
+    setSaveMsg(null);
+    try {
+      const saved = await apiPut<GraphPayload>(`/v1/pipelines/${encodeURIComponent(requestPipelineId)}/graph`, {
+        nodes,
+        edges,
+        pipeline_type: pipelineType,
+        write_mode: writeMode,
+        name: title,
+      });
+      assertSavedGraphMatches(saved, snapshot);
+      if (
+        activePipelineIdRef.current !== requestPipelineId
+        || saveGenerationRef.current !== requestGeneration
+      ) return;
+      setGraph(saved);
+      if (editRevisionRef.current === requestRevision) {
+        setDirty(false);
+        setSaveMsg(`已保存 · ${saved.nodes?.length || 0} 个节点 · ${saved.edges?.length || 0} 条连接`);
+      } else {
+        setDirty(true);
+        setSaveMsg("此前版本已保存，仍有未保存更改");
+      }
+    } catch (e) {
+      if (
+        activePipelineIdRef.current === requestPipelineId
+        && saveGenerationRef.current === requestGeneration
+      ) {
+        setDirty(true);
+        setSaveMsg(`保存失败 · ${e instanceof Error ? e.message : String(e)}`);
+      }
+    } finally {
+      if (
+        activePipelineIdRef.current === requestPipelineId
+        && saveGenerationRef.current === requestGeneration
+      ) setSaveBusy(false);
+    }
+  }
 
   // W3-C6 · 拉取运行历史
   useEffect(() => {
@@ -436,11 +881,15 @@ export function PipelineCanvasPage() {
         `/v1/pipelines/${encodeURIComponent(pipelineId)}/nodes/${encodeURIComponent(nodeId)}/config`,
         { config: xform },
       );
+      if (res.demo) throw new Error("演示节点不支持持久化，请先保存画布");
       saveLocalXform(pipelineId, xform);
-      setXformMsg(`已保存配置 · ${historyPathLabel(Boolean(res.demo || graph?.demo))}`);
+      setGraph((current) => current ? {
+        ...current,
+        nodes: (current.nodes || []).map((node) => node.id === nodeId ? { ...node, config: xform } : node),
+      } : current);
+      setXformMsg("已保存配置 · API");
     } catch (e) {
-      saveLocalXform(pipelineId, xform);
-      setXformMsg(`已保存 · 演示路径 · localStorage${e instanceof Error ? `（${e.message}）` : ""}`);
+      setXformMsg(`保存失败 · ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setXformBusy(false);
     }
@@ -510,16 +959,18 @@ export function PipelineCanvasPage() {
               role="radio"
               aria-checked={pipeType === t.id}
               className={`btn${pipeType === t.id ? " is-active" : ""}`}
-              onClick={() => setPipeType(t.id)}
+              disabled={!canvasReady}
+              onClick={() => { setPipeType(t.id); markDirty(); }}
               style={{ fontSize: "0.75rem", padding: "2px 8px" }}
             >
               {t.label}
             </button>
           ))}
         </div>
-        <button type="button" className="btn">
-          保存
+        <button type="button" className="btn" disabled={saveBusy || !pipe || !canvasReady} onClick={() => void saveCanvas()}>
+          {saveBusy ? "保存中…" : dirty ? "保存 *" : "保存"}
         </button>
+        {saveMsg && <span className={saveMsg.startsWith("保存失败") ? "error" : "muted"}>{saveMsg}</span>}
         <Link to="/data/pipeline-proposals" className="btn-nav">
           提议
         </Link>
@@ -538,26 +989,14 @@ export function PipelineCanvasPage() {
         </button>
       </BpToolbar>
 
+      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       {/* Phase E-03: 算子工具栏 */}
       <div className="bp-pipe-operator-bar" style={{ display: "flex", gap: 12, padding: "6px 12px", overflowX: "auto", borderBottom: "1px solid var(--aos-border, #2a3540)" }}>
         {OPERATORS.map((group) => (
           <div key={group.group} style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
             <span className="muted" style={{ fontSize: "0.7rem", marginRight: 4 }}>{group.group}</span>
             {group.items.map((op) => (
-              <button
-                key={op.id}
-                type="button"
-                draggable
-                onDragStart={(e) => {
-                  e.dataTransfer.setData("text/plain", op.id);
-                  e.dataTransfer.effectAllowed = "copy";
-                }}
-                className="btn-nav"
-                style={{ fontSize: "0.7rem", padding: "2px 8px", cursor: "grab" }}
-                title={`拖拽到画布添加「${op.label}」`}
-              >
-                {op.label}
-              </button>
+              <DraggableOperator key={op.id} op={op} onAdd={addOperator} disabled={!canvasReady} />
             ))}
           </div>
         ))}
@@ -616,7 +1055,7 @@ export function PipelineCanvasPage() {
           )}
 
           {viewTab === "edit" && (
-        <div className="bp-pipe-canvas-shell">
+        <div className={`bp-pipe-canvas-shell${inspectorCollapsed ? " is-inspector-collapsed" : ""}`}>
           {/* Phase 7: 画布工具栏 - 缩放 + 统计 + 清空 */}
           <div className="bp-pipe-canvas-toolbar" style={{ display: "flex", gap: 8, padding: "4px 12px", alignItems: "center", borderBottom: "1px solid var(--aos-border, #e2e8f0)", background: "var(--aos-surface, #f7fafc)" }}>
             <button type="button" className="btn" onClick={handleZoomOut} style={{ fontSize: "0.75rem", padding: "2px 8px" }} title="缩小">−</button>
@@ -629,7 +1068,7 @@ export function PipelineCanvasPage() {
             </button>
             {showStats && (
               <span className="muted" style={{ fontSize: "0.7rem" }}>
-                节点 {3 + extraNodes.length} · 连接 {2 + connections.length} · 算子组 {OPERATORS.length}
+                节点 {3 + extraNodes.length} · 连接 {connections.length} · 算子组 {OPERATORS.length}
               </span>
             )}
             <div style={{ flex: 1 }} />
@@ -638,36 +1077,36 @@ export function PipelineCanvasPage() {
                 连接模式 · 点击目标节点完成连接
               </span>
             )}
-            <button type="button" className="btn" onClick={clearCanvas} style={{ fontSize: "0.75rem", padding: "2px 8px" }} title="清空额外节点">清空</button>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => setInspectorCollapsed((value) => !value)}
+              style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+            >
+              {inspectorCollapsed ? "展开属性" : "收起属性"}
+            </button>
+            <button type="button" className="btn" disabled={!canvasReady} onClick={clearCanvas} style={{ fontSize: "0.75rem", padding: "2px 8px" }} title="清空额外节点">清空</button>
           </div>
 
           <div className="bp-pipe-canvas-main">
-            <div
+            <CanvasDropArea
+              canvasRef={canvasRef}
               className="grid-pattern bp-pipe-dag"
-              onDragOver={handleCanvasDragOver}
-              onDrop={handleCanvasDrop}
-              onMouseMove={handleNodeMouseMove}
-              onMouseUp={handleNodeDragEnd}
               onClick={closeContextMenu}
               style={{ position: "relative", minHeight: 200, transform: `scale(${zoom})`, transformOrigin: "top left", transition: "transform 0.15s ease" }}
             >
-              <svg className="bp-pipe-flow-svg" preserveAspectRatio="none" viewBox="0 0 720 200" aria-hidden>
-                <path className="flow-line flow-line-active" d={`M ${nodePositions.input.x + 100} ${nodePositions.input.y + 30} C ${nodePositions.input.x + 140} ${nodePositions.input.y + 30}, ${nodePositions.transform.x - 40} ${nodePositions.transform.y + 30}, ${nodePositions.transform.x} ${nodePositions.transform.y + 30}`} />
-                <path className="flow-line flow-line-active" d={`M ${nodePositions.transform.x + 100} ${nodePositions.transform.y + 30} C ${nodePositions.transform.x + 140} ${nodePositions.transform.y + 30}, ${nodePositions.output.x - 40} ${nodePositions.output.y + 30}, ${nodePositions.output.x} ${nodePositions.output.y + 30}`} />
-              </svg>
               <div className="bp-pipe-nodes" style={{ position: "relative" }}>
-                <button
-                  type="button"
-                  draggable
-                  onDragStart={(e) => handleNodeDragStart(e, "input")}
-                  onDragEnd={handleNodeDragEnd}
+                <DraggableCanvasNode
+                  nodeId="input"
+                  x={nodePositions.input.x}
+                  y={nodePositions.input.y}
+                  zoom={zoom}
                   className={`pipeline-node bp-pipe-node bp-pipe-node-input${selected === "input" ? " is-selected" : ""}${linkingFrom === "input" ? " is-linking" : ""}`}
                   onClick={() => {
                     if (linkingFrom) { completeLink("input"); }
-                    else { setSelected("input"); }
+                    else { selectBaseNode("input"); }
                   }}
                   onContextMenu={(e) => handleContextMenu(e, "input")}
-                  style={{ position: "absolute", left: nodePositions.input.x, top: nodePositions.input.y, cursor: "grab" }}
                 >
                   <div className="bp-pipe-node-head">
                     <span className="bp-pipe-node-icon bp-pipe-node-icon-amber" />
@@ -675,20 +1114,19 @@ export function PipelineCanvasPage() {
                   </div>
                   <div className="bp-pipe-node-title">{pipe.sourceId || "source"}</div>
                   <div className="bp-pipe-node-sub">Source</div>
-                </button>
+                </DraggableCanvasNode>
 
-                <button
-                  type="button"
-                  draggable
-                  onDragStart={(e) => handleNodeDragStart(e, "transform")}
-                  onDragEnd={handleNodeDragEnd}
+                <DraggableCanvasNode
+                  nodeId="transform"
+                  x={nodePositions.transform.x}
+                  y={nodePositions.transform.y}
+                  zoom={zoom}
                   className={`pipeline-node bp-pipe-node bp-pipe-node-xform${selected === "transform" ? " is-selected" : ""}${linkingFrom === "transform" ? " is-linking" : ""}`}
                   onClick={() => {
                     if (linkingFrom) { completeLink("transform"); }
-                    else { setSelected("transform"); }
+                    else { selectBaseNode("transform"); }
                   }}
                   onContextMenu={(e) => handleContextMenu(e, "transform")}
-                  style={{ position: "absolute", left: nodePositions.transform.x, top: nodePositions.transform.y, cursor: "grab" }}
                 >
                   <div className="bp-pipe-node-head">
                     <span className="bp-pipe-node-icon bp-pipe-node-icon-cyan" />
@@ -696,20 +1134,19 @@ export function PipelineCanvasPage() {
                   </div>
                   <div className="bp-pipe-node-title">Ingest</div>
                   <div className="bp-pipe-node-sub">表 → 对象实例</div>
-                </button>
+                </DraggableCanvasNode>
 
-                <button
-                  type="button"
-                  draggable
-                  onDragStart={(e) => handleNodeDragStart(e, "output")}
-                  onDragEnd={handleNodeDragEnd}
+                <DraggableCanvasNode
+                  nodeId="output"
+                  x={nodePositions.output.x}
+                  y={nodePositions.output.y}
+                  zoom={zoom}
                   className={`pipeline-node bp-pipe-node bp-pipe-node-out${selected === "output" ? " is-selected" : ""}${linkingFrom === "output" ? " is-linking" : ""}`}
                   onClick={() => {
                     if (linkingFrom) { completeLink("output"); }
-                    else { setSelected("output"); }
+                    else { selectBaseNode("output"); }
                   }}
                   onContextMenu={(e) => handleContextMenu(e, "output")}
-                  style={{ position: "absolute", left: nodePositions.output.x, top: nodePositions.output.y, cursor: "grab" }}
                 >
                   <div className="bp-pipe-node-head">
                     <span className="bp-pipe-node-icon bp-pipe-node-icon-emerald" />
@@ -717,20 +1154,23 @@ export function PipelineCanvasPage() {
                   </div>
                   <div className="bp-pipe-node-title">{outLabel}</div>
                   <div className="bp-pipe-node-sub">{pipe.datasetRid || "dataset"}</div>
-                </button>
+                </DraggableCanvasNode>
 
                 {/* Phase E-03: 拖入的额外算子节点 */}
                 {extraNodes.map((n) => (
-                  <button
+                  <DraggableCanvasNode
                     key={n.id}
-                    type="button"
+                    nodeId={n.id}
+                    x={n.x}
+                    y={n.y}
+                    zoom={zoom}
                     className={`pipeline-node bp-pipe-node bp-pipe-node-${n.kind === "input" ? "input" : n.kind === "transform" ? "xform" : "out"}${linkingFrom === n.id ? " is-linking" : ""}`}
                     onClick={() => {
                       if (linkingFrom) { completeLink(n.id); }
+                      else { setInspectorCollapsed(false); }
                     }}
                     onContextMenu={(e) => handleContextMenu(e, n.id)}
                     onDoubleClick={() => removeExtraNode(n.id)}
-                    style={{ position: "absolute", left: n.x, top: n.y, cursor: "pointer", opacity: 0.9 }}
                     title="双击移除 · 右键菜单"
                   >
                     <div className="bp-pipe-node-head">
@@ -741,12 +1181,12 @@ export function PipelineCanvasPage() {
                     </div>
                     <div className="bp-pipe-node-title">{n.label}</div>
                     <div className="bp-pipe-node-sub">双击移除</div>
-                  </button>
+                  </DraggableCanvasNode>
                 ))}
               </div>
               {/* Phase 7: 额外连接线渲染 */}
               {connections.length > 0 && (
-                <svg className="bp-pipe-flow-svg" preserveAspectRatio="none" viewBox="0 0 720 200" aria-hidden style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0 }}>
+                <svg className="bp-pipe-flow-svg" width="100%" height="100%" aria-hidden style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0 }}>
                   {connections.map((c, i) => {
                     const nodePos = (id: string) => {
                       if (id === "input") return nodePositions.input;
@@ -758,12 +1198,12 @@ export function PipelineCanvasPage() {
                     const from = nodePos(c.from);
                     const to = nodePos(c.to);
                     return (
-                      <path key={i} className="flow-line flow-line-dashed" d={`M ${from.x + 100} ${from.y + 30} C ${from.x + 140} ${from.y + 30}, ${to.x - 40} ${to.y + 30}, ${to.x} ${to.y + 30}`} strokeDasharray="4 3" opacity={0.5} />
+                      <path key={c.id || i} className="flow-line flow-line-active" d={`M ${from.x + 100} ${from.y + 30} C ${from.x + 140} ${from.y + 30}, ${to.x - 40} ${to.y + 30}, ${to.x} ${to.y + 30}`} />
                     );
                   })}
                 </svg>
               )}
-            </div>
+            </CanvasDropArea>
 
             {/* Phase 7: 右键菜单 */}
             {contextMenu && (
@@ -865,6 +1305,15 @@ export function PipelineCanvasPage() {
           </div>
 
           <aside className="bp-pipe-inspector">
+            <button
+              type="button"
+              className="btn bp-pipe-inspector-collapse"
+              onClick={() => setInspectorCollapsed((value) => !value)}
+              aria-label={inspectorCollapsed ? "展开属性面板" : "折叠属性面板"}
+              title={inspectorCollapsed ? "展开属性面板" : "折叠属性面板"}
+            >
+              {inspectorCollapsed ? "‹" : "›"}
+            </button>
             <div className="bp-pipe-inspector-block">
               <h3 className="bp-pipe-inspector-title">
                 {selected === "input" && "输入源"}
@@ -938,7 +1387,8 @@ export function PipelineCanvasPage() {
                   <span>写入模式</span>
                   <select
                     value={writeMode}
-                    onChange={(e) => setWriteMode(e.target.value)}
+                    disabled={!canvasReady}
+                    onChange={(e) => { setWriteMode(e.target.value); markDirty(); }}
                   >
                     {WRITE_MODES.map((m) => (
                       <option key={m.id} value={m.id}>{m.id} · {m.label}</option>
@@ -1000,6 +1450,7 @@ export function PipelineCanvasPage() {
           )}
         </>
       )}
+      </DndContext>
     </S2Chrome>
   );
 }

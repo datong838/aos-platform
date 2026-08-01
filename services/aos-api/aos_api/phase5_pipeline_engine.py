@@ -6,6 +6,7 @@ Pipelines + Nodes + Edges + Proposals + Schedules + ScheduleRuns + Datasets + Da
 from __future__ import annotations
 
 import copy
+import math
 import queue
 import threading
 import time
@@ -17,7 +18,7 @@ from pydantic import BaseModel, Field
 
 from aos_api.public_contracts import redact_sensitive
 
-_LOCK = threading.Lock()
+_LOCK = threading.RLock()
 
 
 # ───────────────────────── Pydantic Models ─────────────────────────
@@ -54,6 +55,7 @@ class Pipeline(BaseModel):
     owner: str = "system"
     tags: list[str] = Field(default_factory=list)
     executor_id: str = ""
+    write_mode: str = "SNAPSHOT"  # SNAPSHOT|APPEND|MERGE|UPDATE|DELETE|UPSERT
     # Internal control plane only. Public create/update requests do not expose it.
     execution_mode: str = "disabled"  # disabled|live|demo
     execution_timeout_seconds: float = 30.0
@@ -190,6 +192,7 @@ class PipelineEngine:
                     inst._sync_configs: dict[str, SyncConfig] = {}
                     inst._executors: dict[str, Callable[..., dict[str, Any]]] = {}
                     inst._evidence_resolvers: dict[str, Callable[[str], bool]] = {}
+                    inst._persisted_graph_ids: set[str] = set()
                     cls._instance = inst
         return cls._instance
 
@@ -298,7 +301,7 @@ class PipelineEngine:
             return self._edges.pop(edge_id, None) is not None
 
     # ── Graph ──
-    def get_graph(self, pl_id: str) -> dict[str, Any]:
+    def _snapshot_graph_locked(self, pl_id: str) -> dict[str, Any]:
         if pl_id not in self._pipelines:
             raise KeyError(f"Pipeline {pl_id} not found")
         nodes = self.list_nodes(pl_id)
@@ -309,7 +312,210 @@ class PipelineEngine:
             "edges": [e.model_dump() for e in edges],
             "node_count": len(nodes),
             "edge_count": len(edges),
+            "pipeline_type": self._pipelines[pl_id].pipeline_type,
+            "write_mode": self._pipelines[pl_id].write_mode,
         }
+
+    def _hydrate_persisted_graph_locked(self, payload: dict[str, Any]) -> None:
+        pl_id = str(payload.get("pipeline_id") or "")
+        if not pl_id:
+            raise ValueError("persisted graph requires pipeline_id")
+        nodes = [PipelineNode.model_validate(node) for node in payload.get("nodes") or []]
+        edges = [PipelineEdge.model_validate(edge) for edge in payload.get("edges") or []]
+        for node in nodes:
+            current = self._nodes.get(node.id)
+            if current is not None and current.pipeline_id != pl_id:
+                raise ValueError(f"node id belongs to another pipeline: {node.id}")
+        for edge in edges:
+            current = self._edges.get(edge.id)
+            if current is not None and current.pipeline_id != pl_id:
+                raise ValueError(f"edge id belongs to another pipeline: {edge.id}")
+        pipeline = self._pipelines.get(pl_id)
+        if pipeline is None:
+            pipeline = Pipeline(id=pl_id, name=str(payload.get("name") or pl_id))
+            self._pipelines[pl_id] = pipeline
+        pipeline.pipeline_type = str(payload.get("pipeline_type") or pipeline.pipeline_type)
+        pipeline.write_mode = str(payload.get("write_mode") or pipeline.write_mode)
+        for node_id in [n.id for n in self._nodes.values() if n.pipeline_id == pl_id]:
+            self._nodes.pop(node_id, None)
+        for edge_id in [e.id for e in self._edges.values() if e.pipeline_id == pl_id]:
+            self._edges.pop(edge_id, None)
+        self._nodes.update({node.id: node for node in nodes})
+        self._edges.update({edge.id: edge for edge in edges})
+        self._persisted_graph_ids.add(pl_id)
+
+    def get_graph(self, pl_id: str) -> dict[str, Any]:
+        from aos_api.data_os_store import load_phase5_pipeline_graph
+
+        with _LOCK:
+            persisted = load_phase5_pipeline_graph(pl_id)
+            if persisted is not None:
+                self._hydrate_persisted_graph_locked(persisted)
+                return copy.deepcopy(persisted)
+            return copy.deepcopy(self._snapshot_graph_locked(pl_id))
+
+    def replace_graph(
+        self,
+        pl_id: str,
+        nodes: list[dict[str, Any]],
+        edges: list[dict[str, Any]],
+        *,
+        pipeline_type: str | None = None,
+        write_mode: str | None = None,
+        name: str | None = None,
+    ) -> dict[str, Any]:
+        with _LOCK:
+            return self._replace_graph_locked(
+                pl_id,
+                nodes,
+                edges,
+                pipeline_type=pipeline_type,
+                write_mode=write_mode,
+                name=name,
+            )
+
+    def _replace_graph_locked(
+        self,
+        pl_id: str,
+        nodes: list[dict[str, Any]],
+        edges: list[dict[str, Any]],
+        *,
+        pipeline_type: str | None = None,
+        write_mode: str | None = None,
+        name: str | None = None,
+    ) -> dict[str, Any]:
+        """Validate and atomically replace a pipeline graph.
+
+        Canvas pipeline ids may originate from the data-platform store rather than
+        the Phase-5 store.  The first real save creates the Phase-5 graph owner with
+        the same id; subsequent reads and writes therefore use one graph source.
+        """
+        node_ids: set[str] = set()
+        prepared_nodes: list[PipelineNode] = []
+        now = time.time()
+        for raw in nodes:
+            node_id = str(raw.get("id") or "").strip()
+            node_name = str(raw.get("name") or "").strip()
+            if not node_id or not node_name:
+                raise ValueError("graph nodes require non-empty id and name")
+            if node_id in node_ids:
+                raise ValueError(f"duplicate node id: {node_id}")
+            x = float(raw.get("position_x", 0.0))
+            y = float(raw.get("position_y", 0.0))
+            if not math.isfinite(x) or not math.isfinite(y):
+                raise ValueError(f"node {node_id} position must be finite")
+            node_ids.add(node_id)
+            prepared_nodes.append(
+                PipelineNode(
+                    id=node_id,
+                    pipeline_id=pl_id,
+                    name=node_name,
+                    node_type=str(raw.get("node_type") or "transform"),
+                    position_x=x,
+                    position_y=y,
+                    config=copy.deepcopy(raw.get("config") or {}),
+                    status=str(raw.get("status") or "idle"),
+                    created_at=float(raw.get("created_at") or now),
+                    updated_at=now,
+                )
+            )
+
+        prepared_edges: list[PipelineEdge] = []
+        edge_ids: set[str] = set()
+        pairs: set[tuple[str, str]] = set()
+        adjacency: dict[str, list[str]] = {node_id: [] for node_id in node_ids}
+        for raw in edges:
+            source = str(raw.get("source_node_id") or "").strip()
+            target = str(raw.get("target_node_id") or "").strip()
+            if source not in node_ids or target not in node_ids:
+                raise ValueError(f"edge endpoint not found: {source} -> {target}")
+            if source == target:
+                raise ValueError(f"self edge is not allowed: {source}")
+            if (source, target) in pairs:
+                raise ValueError(f"duplicate edge: {source} -> {target}")
+            edge_id = str(raw.get("id") or ("pe-" + uuid.uuid4().hex[:8])).strip()
+            if edge_id in edge_ids:
+                raise ValueError(f"duplicate edge id: {edge_id}")
+            pairs.add((source, target))
+            edge_ids.add(edge_id)
+            adjacency[source].append(target)
+            prepared_edges.append(
+                PipelineEdge(
+                    id=edge_id,
+                    pipeline_id=pl_id,
+                    source_node_id=source,
+                    target_node_id=target,
+                    label=str(raw.get("label") or ""),
+                )
+            )
+
+        visiting: set[str] = set()
+        visited: set[str] = set()
+
+        def visit(node_id: str) -> None:
+            if node_id in visiting:
+                raise ValueError("pipeline graph must be acyclic")
+            if node_id in visited:
+                return
+            visiting.add(node_id)
+            for target in adjacency[node_id]:
+                visit(target)
+            visiting.remove(node_id)
+            visited.add(node_id)
+
+        for node_id in node_ids:
+            visit(node_id)
+
+        allowed_modes = {"SNAPSHOT", "APPEND", "MERGE", "UPDATE", "DELETE", "UPSERT"}
+        if write_mode is not None and write_mode not in allowed_modes:
+            raise ValueError(f"unsupported write mode: {write_mode}")
+        allowed_types = {"ETL", "ELT", "Streaming", "Batch"}
+        if pipeline_type is not None and pipeline_type not in allowed_types:
+            raise ValueError(f"unsupported pipeline type: {pipeline_type}")
+
+        from aos_api.data_os_store import persist_phase5_pipeline_graph
+
+        with _LOCK:
+            for node in prepared_nodes:
+                current = self._nodes.get(node.id)
+                if current is not None and current.pipeline_id != pl_id:
+                    raise ValueError(f"node id belongs to another pipeline: {node.id}")
+            for edge in prepared_edges:
+                current = self._edges.get(edge.id)
+                if current is not None and current.pipeline_id != pl_id:
+                    raise ValueError(f"edge id belongs to another pipeline: {edge.id}")
+            pipeline = self._pipelines.get(pl_id)
+            target_name = (name or (pipeline.name if pipeline else pl_id)).strip() or pl_id
+            target_type = pipeline_type or (pipeline.pipeline_type if pipeline else "ETL")
+            target_write_mode = write_mode or (pipeline.write_mode if pipeline else "SNAPSHOT")
+            committed = persist_phase5_pipeline_graph(
+                {
+                    "pipeline_id": pl_id,
+                    "name": target_name,
+                    "nodes": [node.model_dump() for node in prepared_nodes],
+                    "edges": [edge.model_dump() for edge in prepared_edges],
+                    "node_count": len(prepared_nodes),
+                    "edge_count": len(prepared_edges),
+                    "pipeline_type": target_type,
+                    "write_mode": target_write_mode,
+                }
+            )
+            if pipeline is None:
+                pipeline = Pipeline(id=pl_id, name=target_name)
+                self._pipelines[pl_id] = pipeline
+            pipeline.pipeline_type = target_type
+            pipeline.write_mode = target_write_mode
+            pipeline.updated_at = now
+
+            for node_id in [n.id for n in self._nodes.values() if n.pipeline_id == pl_id]:
+                self._nodes.pop(node_id, None)
+            for edge_id in [e.id for e in self._edges.values() if e.pipeline_id == pl_id]:
+                self._edges.pop(edge_id, None)
+            self._nodes.update({node.id: node for node in prepared_nodes})
+            self._edges.update({edge.id: edge for edge in prepared_edges})
+            self._persisted_graph_ids.add(pl_id)
+            self._add_history(pl_id, "updated", "Canvas graph saved")
+            return copy.deepcopy(committed)
 
     # ── Files tree ──
     def get_files(self, pl_id: str) -> list[dict[str, Any]]:
@@ -989,8 +1195,9 @@ class PipelineEngine:
             return sc
 
     # ── Util ──
-    def reset(self) -> None:
+    def reset(self, *, purge_persisted: bool = False) -> None:
         with _LOCK:
+            persisted_graph_ids = list(self._persisted_graph_ids)
             self._pipelines.clear()
             self._nodes.clear()
             self._edges.clear()
@@ -1004,6 +1211,12 @@ class PipelineEngine:
             self._sync_configs.clear()
             self._executors.clear()
             self._evidence_resolvers.clear()
+            self._persisted_graph_ids.clear()
+            if purge_persisted:
+                from aos_api.data_os_store import delete_phase5_pipeline_graph
+
+                for pipeline_id in persisted_graph_ids:
+                    delete_phase5_pipeline_graph(pipeline_id)
 
 
 def get_engine() -> PipelineEngine:

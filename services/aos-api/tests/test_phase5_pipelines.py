@@ -4,6 +4,8 @@ Tests for phase5_pipeline_engine, phase5_pipelines, phase5_schedules, phase5_dat
 """
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+
 import pytest
 
 from aos_api.phase5_pipeline_engine import get_engine
@@ -11,8 +13,9 @@ from aos_api.phase5_pipeline_engine import get_engine
 
 @pytest.fixture(autouse=True)
 def reset_engine():
-    get_engine().reset()
+    get_engine().reset(purge_persisted=True)
     yield
+    get_engine().reset(purge_persisted=True)
 
 
 # ═══════════════════════════════════════════
@@ -70,6 +73,162 @@ def test_pipeline_graph() -> None:
     graph = eng.get_graph(pl.id)
     assert graph["node_count"] == 2
     assert graph["edge_count"] == 1
+
+
+def test_replace_pipeline_graph_round_trip() -> None:
+    eng = get_engine()
+    pl = eng.create_pipeline(name="PL")
+    result = eng.replace_graph(
+        pl.id,
+        [
+            {"id": "n-source", "name": "source", "node_type": "source", "position_x": 12, "position_y": 34},
+            {"id": "n-sink", "name": "sink", "node_type": "sink", "position_x": 420, "position_y": 34},
+        ],
+        [{"id": "e-1", "source_node_id": "n-source", "target_node_id": "n-sink"}],
+        pipeline_type="Streaming",
+        write_mode="UPSERT",
+    )
+    assert result["node_count"] == 2
+    assert result["edge_count"] == 1
+    assert {n["id"] for n in result["nodes"]} == {"n-source", "n-sink"}
+    assert eng.get_pipeline(pl.id).pipeline_type == "Streaming"  # type: ignore[union-attr]
+    assert eng.get_pipeline(pl.id).write_mode == "UPSERT"  # type: ignore[union-attr]
+
+
+def test_replace_pipeline_graph_rejects_cycle_without_mutation() -> None:
+    eng = get_engine()
+    pl = eng.create_pipeline(name="PL")
+    original = eng.add_node(pl.id, "original", node_type="source")
+    with pytest.raises(ValueError, match="acyclic"):
+        eng.replace_graph(
+            pl.id,
+            [
+                {"id": "a", "name": "A", "node_type": "source"},
+                {"id": "b", "name": "B", "node_type": "sink"},
+            ],
+            [
+                {"source_node_id": "a", "target_node_id": "b"},
+                {"source_node_id": "b", "target_node_id": "a"},
+            ],
+        )
+    assert [node.id for node in eng.list_nodes(pl.id)] == [original.id]
+
+
+def test_replace_pipeline_graph_rejects_cross_pipeline_id_collision() -> None:
+    eng = get_engine()
+    first = eng.create_pipeline(name="First")
+    second = eng.create_pipeline(name="Second")
+    owned = eng.add_node(first.id, "owned", node_type="source")
+    with pytest.raises(ValueError, match="another pipeline"):
+        eng.replace_graph(
+            second.id,
+            [{"id": owned.id, "name": "collision", "node_type": "source"}],
+            [],
+        )
+    assert eng.get_node(owned.id).pipeline_id == first.id  # type: ignore[union-attr]
+
+
+def test_replace_graph_creates_owner_for_external_canvas_id() -> None:
+    eng = get_engine()
+    pipeline_id = "test-external-canvas-pipeline"
+    result = eng.replace_graph(
+        pipeline_id,
+        [{"id": "external-source", "name": "source", "node_type": "source"}],
+        [],
+        name="Alignment pipeline",
+    )
+    assert result["pipeline_id"] == pipeline_id
+    assert eng.get_pipeline(pipeline_id) is not None
+
+
+def test_replace_graph_survives_engine_memory_restart() -> None:
+    eng = get_engine()
+    saved = eng.replace_graph(
+        "restart-pipeline",
+        [
+            {"id": "restart-source", "name": "source", "node_type": "source"},
+            {"id": "restart-output", "name": "output", "node_type": "sink"},
+        ],
+        [{"id": "restart-edge", "source_node_id": "restart-source", "target_node_id": "restart-output"}],
+        pipeline_type="Batch",
+        write_mode="SNAPSHOT",
+    )
+    assert saved["persisted"] is True
+    revision = saved["revision"]
+
+    eng.reset(purge_persisted=False)
+    reloaded = eng.get_graph("restart-pipeline")
+    assert reloaded["persisted"] is True
+    assert reloaded["revision"] == revision
+    assert {node["id"] for node in reloaded["nodes"]} == {"restart-source", "restart-output"}
+    assert reloaded["edges"][0]["id"] == "restart-edge"
+
+
+def test_replace_and_get_graph_return_only_complete_concurrent_snapshots() -> None:
+    eng = get_engine()
+    pipeline_id = "atomic-pipeline"
+
+    def payload(version: int) -> tuple[list[dict], list[dict]]:
+        nodes = [
+            {"id": f"atomic-source-{version}", "name": "source", "node_type": "source"},
+            {"id": f"atomic-output-{version}", "name": "output", "node_type": "sink"},
+        ]
+        edges = [{
+            "id": f"atomic-edge-{version}",
+            "source_node_id": f"atomic-source-{version}",
+            "target_node_id": f"atomic-output-{version}",
+        }]
+        return nodes, edges
+
+    first_nodes, first_edges = payload(0)
+    eng.replace_graph(pipeline_id, first_nodes, first_edges)
+
+    def write_versions() -> None:
+        for version in range(1, 8):
+            nodes, edges = payload(version)
+            eng.replace_graph(pipeline_id, nodes, edges)
+
+    def read_snapshots() -> list[dict]:
+        return [eng.get_graph(pipeline_id) for _ in range(20)]
+
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        writer = pool.submit(write_versions)
+        readers = [pool.submit(read_snapshots) for _ in range(2)]
+        writer.result()
+        snapshots = [snapshot for reader in readers for snapshot in reader.result()]
+
+    for snapshot in snapshots:
+        assert snapshot["node_count"] == 2
+        assert snapshot["edge_count"] == 1
+        node_ids = {node["id"] for node in snapshot["nodes"]}
+        edge = snapshot["edges"][0]
+        assert edge["source_node_id"] in node_ids
+        assert edge["target_node_id"] in node_ids
+
+
+def test_replace_graph_api_persists_and_rejects_dangling_edge(client, auth_headers) -> None:
+    payload = {
+        "nodes": [
+            {"id": "api-source", "name": "source", "node_type": "source", "position_x": 30, "position_y": 40},
+            {"id": "api-output", "name": "output", "node_type": "sink", "position_x": 430, "position_y": 40},
+        ],
+        "edges": [{"id": "api-edge", "source_node_id": "api-source", "target_node_id": "api-output"}],
+        "pipeline_type": "Batch",
+        "write_mode": "SNAPSHOT",
+        "name": "API canvas",
+    }
+    pipeline_id = "test-api-canvas-pipeline"
+    saved = client.put(f"/v1/pipelines/{pipeline_id}/graph", json=payload, headers=auth_headers)
+    assert saved.status_code == 200
+    assert saved.json()["persisted"] is True
+    assert saved.json()["demo"] is False
+
+    invalid = {**payload, "edges": [{"source_node_id": "api-source", "target_node_id": "missing"}]}
+    rejected = client.put(f"/v1/pipelines/{pipeline_id}/graph", json=invalid, headers=auth_headers)
+    assert rejected.status_code == 422
+    current = client.get(f"/v1/pipelines/{pipeline_id}/graph", headers=auth_headers)
+    assert current.status_code == 200
+    assert current.json()["edge_count"] == 1
 
 
 def test_pipeline_files() -> None:

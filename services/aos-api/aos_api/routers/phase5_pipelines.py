@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from aos_api.phase5_pipeline_engine import get_engine
 
@@ -35,6 +35,32 @@ class UpdatePipelineRequest(BaseModel):
     owner: str | None = None
     tags: list[str] | None = None
     executor_id: str | None = None
+    write_mode: str | None = None
+
+
+class GraphNodeRequest(BaseModel):
+    id: str = Field(min_length=1, max_length=160)
+    name: str = Field(min_length=1, max_length=240)
+    node_type: str = Field(default="transform", min_length=1, max_length=80)
+    position_x: float = 0.0
+    position_y: float = 0.0
+    config: dict[str, Any] = Field(default_factory=dict)
+    status: str = Field(default="idle", max_length=80)
+
+
+class GraphEdgeRequest(BaseModel):
+    id: str | None = Field(default=None, max_length=160)
+    source_node_id: str = Field(min_length=1, max_length=160)
+    target_node_id: str = Field(min_length=1, max_length=160)
+    label: str = Field(default="", max_length=240)
+
+
+class ReplaceGraphRequest(BaseModel):
+    nodes: list[GraphNodeRequest] = Field(default_factory=list, max_length=300)
+    edges: list[GraphEdgeRequest] = Field(default_factory=list, max_length=1200)
+    pipeline_type: str | None = Field(default=None, max_length=80)
+    write_mode: str | None = Field(default=None, max_length=40)
+    name: str | None = Field(default=None, max_length=240)
 
 
 class UpdateNodeConfigRequest(BaseModel):
@@ -129,8 +155,35 @@ async def get_graph(pl_id: str) -> dict[str, Any]:
             ],
             "node_count": 3,
             "edge_count": 2,
+            "pipeline_type": "Batch",
+            "write_mode": "SNAPSHOT",
             "demo": True,
         }
+
+
+@router.put("/{pl_id}/graph")
+async def replace_graph(pl_id: str, req: ReplaceGraphRequest) -> dict[str, Any]:
+    """Persist the complete canvas graph after validating it as a DAG."""
+    eng = get_engine()
+    try:
+        result = eng.replace_graph(
+            pl_id,
+            [node.model_dump() for node in req.nodes],
+            [edge.model_dump(exclude_none=True) for edge in req.edges],
+            pipeline_type=req.pipeline_type,
+            write_mode=req.write_mode,
+            name=req.name,
+        )
+        pipeline = eng.get_pipeline(pl_id)
+        return {
+            **result,
+            "pipeline_type": pipeline.pipeline_type if pipeline else req.pipeline_type,
+            "write_mode": pipeline.write_mode if pipeline else req.write_mode,
+            "demo": False,
+            "persisted": True,
+        }
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
 
 
 # ─────────── Files ───────────
@@ -187,15 +240,7 @@ async def update_node_config(pl_id: str, node_id: str, req: UpdateNodeConfigRequ
         return node.model_dump()
     except KeyError:
         if node_id.startswith("demo-"):
-            return {
-                "id": node_id,
-                "pipeline_id": pl_id,
-                "name": "transform",
-                "node_type": "transform",
-                "config": req.config,
-                "status": "idle",
-                "demo": True,
-            }
+            raise HTTPException(409, "Save the demo graph before updating node configuration")
         raise HTTPException(404, f"Node {node_id} not found in pipeline {pl_id}")
 
 
