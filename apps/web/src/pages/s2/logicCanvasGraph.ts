@@ -78,6 +78,12 @@ export type LogicEdgeMutationResult =
 
 const BLOCK_KIND_SET = new Set<string>(LOGIC_BLOCK_KINDS);
 const GRAPH_STATUS_SET = new Set<string>(["draft", "published", "archived"]);
+export const MAX_LOGIC_CANVAS_COORDINATE = 5_000;
+
+function boundedCanvasCoordinate(value: number, fallback = 0): number {
+  const safeValue = Number.isFinite(value) ? value : fallback;
+  return Math.min(MAX_LOGIC_CANVAS_COORDINATE, Math.max(0, safeValue));
+}
 
 function stableValue(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(stableValue);
@@ -313,9 +319,13 @@ export function moveLogicCanvasPosition(
   zoom: number,
 ): { x: number; y: number } {
   const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
+  const currentX = boundedCanvasCoordinate(current.x);
+  const currentY = boundedCanvasCoordinate(current.y);
+  const deltaX = Number.isFinite(delta.x) ? delta.x : 0;
+  const deltaY = Number.isFinite(delta.y) ? delta.y : 0;
   return {
-    x: Math.max(0, current.x + delta.x / safeZoom),
-    y: Math.max(0, current.y + delta.y / safeZoom),
+    x: boundedCanvasCoordinate(currentX + deltaX / safeZoom, currentX),
+    y: boundedCanvasCoordinate(currentY + deltaY / safeZoom, currentY),
   };
 }
 
@@ -329,17 +339,21 @@ export interface LogicCanvasDropArguments {
 
 export function logicCanvasDropPosition(args: LogicCanvasDropArguments): { x: number; y: number } {
   const safeZoom = Number.isFinite(args.zoom) && args.zoom > 0 ? args.zoom : 1;
+  const rawX = (
+    args.translatedRect.left
+    + args.translatedRect.width / 2
+    - args.canvasRect.left
+    + args.scroll.left
+  ) / safeZoom - args.nodeSize.width / 2;
+  const rawY = (
+    args.translatedRect.top
+    + args.translatedRect.height / 2
+    - args.canvasRect.top
+    + args.scroll.top
+  ) / safeZoom - args.nodeSize.height / 2;
   return {
-    x: Math.max(
-      0,
-      (args.translatedRect.left + args.translatedRect.width / 2 - args.canvasRect.left + args.scroll.left) / safeZoom
-        - args.nodeSize.width / 2,
-    ),
-    y: Math.max(
-      0,
-      (args.translatedRect.top + args.translatedRect.height / 2 - args.canvasRect.top + args.scroll.top) / safeZoom
-        - args.nodeSize.height / 2,
-    ),
+    x: boundedCanvasCoordinate(rawX),
+    y: boundedCanvasCoordinate(rawY),
   };
 }
 

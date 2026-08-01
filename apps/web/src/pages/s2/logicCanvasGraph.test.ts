@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  MAX_LOGIC_CANVAS_COORDINATE,
   LOGIC_BLOCK_KINDS,
   assertSavedLogicGraphMatches,
   logicCanvasDropPosition,
@@ -151,6 +152,24 @@ describe("logicCanvasGraph · edge safety and coordinates", () => {
       zoom: 2,
       nodeSize: { width: 160, height: 60 },
     })).toEqual({ x: 45, y: 50 });
+
+    expect(moveLogicCanvasPosition(
+      { x: 10, y: 20 },
+      { x: Number.POSITIVE_INFINITY, y: Number.NaN },
+      1,
+    )).toEqual({ x: 10, y: 20 });
+    expect(moveLogicCanvasPosition(
+      { x: 10, y: 20 },
+      { x: 100_000, y: 100_000 },
+      1,
+    )).toEqual({ x: MAX_LOGIC_CANVAS_COORDINATE, y: MAX_LOGIC_CANVAS_COORDINATE });
+    expect(logicCanvasDropPosition({
+      translatedRect: { left: 100_000, top: Number.POSITIVE_INFINITY, width: 40, height: 20 },
+      canvasRect: { left: 0, top: 0 },
+      scroll: { left: 0, top: 0 },
+      zoom: 1,
+      nodeSize: { width: 160, height: 60 },
+    })).toEqual({ x: MAX_LOGIC_CANVAS_COORDINATE, y: 0 });
   });
 
   it("rejects self loops, duplicate edges and cycles before mutation", () => {
