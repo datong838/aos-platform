@@ -907,20 +907,6 @@ export function CanvasPage() {
     }
   }
 
-  async function publishModule() {
-    if (!moduleId) {
-      setErr("请先选择 Module");
-      return;
-    }
-    setErr(null);
-    try {
-      await apiPatch(`/v1/modules/${encodeURIComponent(moduleId)}`, { status: "published" });
-      setMsg(`模块「${currentModule?.name || moduleId}」已发布`);
-    } catch (e) {
-      setErr(String((e as Error).message || e));
-    }
-  }
-
   const TOOLBAR_TABS = [
     { id: "dashboard", label: "仪表盘" },
     { id: "queries", label: "查询" },
@@ -1003,9 +989,15 @@ export function CanvasPage() {
             >
               {dirty ? "保存 *" : "已保存"}
             </button>
-            <button
-              type="button"
-              onClick={() => void publishModule()}
+            <Link
+              to={moduleId ? `/workshop/publish?moduleId=${encodeURIComponent(moduleId)}` : "/workshop/publish"}
+              aria-disabled={!moduleId}
+              onClick={(e) => {
+                if (!moduleId) {
+                  e.preventDefault();
+                  setErr("请先选择 Module");
+                }
+              }}
               style={{
                 fontSize: "12px",
                 padding: "5px 12px",
@@ -1013,11 +1005,13 @@ export function CanvasPage() {
                 border: "none",
                 background: "var(--aos-green)",
                 color: "var(--text-on-brand)",
-                cursor: "pointer",
+                cursor: moduleId ? "pointer" : "not-allowed",
+                opacity: moduleId ? 1 : 0.6,
+                textDecoration: "none",
               }}
             >
               发布
-            </button>
+            </Link>
             <button type="button" className="p-slate-close" title="关闭">
               <NavIcon name="close" style={{ width: "14px", height: "14px" }} />
             </button>
