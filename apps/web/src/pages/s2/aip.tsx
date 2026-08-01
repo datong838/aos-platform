@@ -2647,78 +2647,307 @@ function ModelRouterPanels(_props: { routeRows: RouteRule[]; modelOptions: strin
   );
 }
 
-/** 81 · 对齐 aip-evals.html · 门控指标 + API green/l4Allowed */
-export function EvalsPage() {
-  const { data, err, reload } = useJsonGet<{ green?: boolean; l4Allowed?: boolean }>(
-    "/v1/aip/evals",
-  );
-  const [msg, setMsg] = useState("");
+type EvalSuiteSummary = {
+  id: string;
+  name: string;
+  gate_threshold: number;
+  cases?: Array<{
+    inputs?: Record<string, unknown>;
+    expected?: unknown;
+    judge?: string;
+  }>;
+};
 
-  async function setGate(green: boolean) {
-    await apiPost("/v1/aip/evals", { green });
-    setMsg(green ? "门控已放行" : "门控已阻断");
-    reload();
+type EvalCaseResult = {
+  case_id: string;
+  passed: boolean;
+  actual?: unknown;
+  expected?: unknown;
+  judge?: string;
+  detail?: string;
+};
+
+type EvalReport = {
+  suite_id: string;
+  results: EvalCaseResult[];
+  pass_rate: number;
+  passed: number;
+  failed: number;
+  total: number;
+  gate_passed: boolean;
+  run_at: string;
+};
+
+type EvalGateResult = {
+  suite_id: string;
+  gate_passed: boolean;
+  pass_rate: number;
+  threshold: number;
+  passed: number;
+  failed: number;
+  total: number;
+  run_at: string;
+};
+
+export const QUICK_START_EVAL_SUITE = {
+  name: "快速开始：加一函数",
+  cases: [
+    {
+      name: "输入 1 返回 2",
+      inputs: { x: 1 },
+      expected: 2,
+      judge: "exact",
+    },
+  ],
+  gate_threshold: 1,
+};
+
+export function assertQuickStartSuite(suite: EvalSuiteSummary): void {
+  const quickCase = suite.cases?.find((item) => (
+    item.inputs?.x === 1 && item.expected === 2 && item.judge === "exact"
+  ));
+  if (
+    !suite.id
+    || suite.name !== QUICK_START_EVAL_SUITE.name
+    || suite.gate_threshold !== QUICK_START_EVAL_SUITE.gate_threshold
+    || !quickCase
+  ) {
+    throw new Error("基础套件回包核验失败");
+  }
+}
+
+export function formatEvalValue(value: unknown): string {
+  if (value == null) return "—";
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+export function assertEvalResultConsistency(
+  suiteId: string,
+  runReport: EvalReport,
+  latestReport: EvalReport,
+  gate: EvalGateResult,
+): void {
+  if (runReport.suite_id !== suiteId || latestReport.suite_id !== suiteId || gate.suite_id !== suiteId) {
+    throw new Error("评测结果 suite_id 不一致");
+  }
+  if (runReport.run_at !== latestReport.run_at) {
+    throw new Error("最新报告不是本次运行生成的报告");
+  }
+  const fields = ["pass_rate", "passed", "failed", "total"] as const;
+  for (const field of fields) {
+    if (runReport[field] !== latestReport[field]) throw new Error(`运行与报告字段不一致：${field}`);
+    if (latestReport[field] !== gate[field]) throw new Error(`报告与门控字段不一致：${field}`);
+  }
+  if (runReport.gate_passed !== latestReport.gate_passed) {
+    throw new Error("运行与报告门控结论不一致");
+  }
+  if (gate.run_at !== latestReport.run_at) throw new Error("报告与门控运行时间不一致");
+  if (latestReport.gate_passed !== gate.gate_passed) {
+    throw new Error("报告与门控结论不一致");
+  }
+}
+
+/** 81 · Evals 真实运行、报告与门控检查 */
+export function EvalsPage() {
+  const suitesApi = useJsonGet<{ items: EvalSuiteSummary[] }>("/v1/evals/suites");
+  const [suiteId, setSuiteId] = useState("");
+  const [targetExpr, setTargetExpr] = useState("");
+  const [report, setReport] = useState<EvalReport | null>(null);
+  const [gate, setGate] = useState<EvalGateResult | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [runErr, setRunErr] = useState("");
+
+  const suites = suitesApi.data?.items || [];
+  const selectedSuite = suites.find((suite) => suite.id === suiteId) || null;
+
+  useEffect(() => {
+    if (!suiteId && suites[0]?.id) setSuiteId(suites[0].id);
+  }, [suiteId, suites]);
+
+  async function createQuickStartSuite() {
+    setBusy(true);
+    setMsg("");
+    setRunErr("");
+    setReport(null);
+    setGate(null);
+    try {
+      const created = await apiPost<EvalSuiteSummary>("/v1/evals/suites", QUICK_START_EVAL_SUITE);
+      assertQuickStartSuite(created);
+      const reloaded = await apiGet<{ items: EvalSuiteSummary[] }>("/v1/evals/suites");
+      const selected = (reloaded.items || []).find((suite) => suite.id === created.id);
+      if (!selected) throw new Error("创建后重读未找到新套件");
+      assertQuickStartSuite(selected);
+      suitesApi.setData(reloaded);
+      setSuiteId(created.id);
+      setMsg(`已创建并选中真实套件“${created.name}”`);
+    } catch (e) {
+      setRunErr(`创建基础评测套件失败：${String((e as Error).message || e)}`);
+    } finally {
+      setBusy(false);
+    }
   }
 
-  const green = data?.green === true;
-  const l4Allowed = data?.l4Allowed === true;
+  async function runSuite() {
+    if (!suiteId || !targetExpr.trim()) return;
+    const payload = {
+      suite_id: suiteId,
+      target_type: "function",
+      target_expr: targetExpr.trim(),
+    };
+    setBusy(true);
+    setMsg("");
+    setRunErr("");
+    setReport(null);
+    setGate(null);
+    try {
+      const runReport = await apiPost<EvalReport>("/v1/evals/run", payload);
+      const latestReport = await apiGet<EvalReport>(`/v1/evals/${encodeURIComponent(suiteId)}/report`);
+      const gateResult = await apiPost<EvalGateResult>("/v1/evals/gate-check", {
+        suite_id: suiteId,
+        reuse_latest_report: true,
+      });
+      assertEvalResultConsistency(suiteId, runReport, latestReport, gateResult);
+      setGate(gateResult);
+      setReport(latestReport);
+      setMsg(
+        gateResult.gate_passed
+          ? `真实评测完成：门控通过（${gateResult.passed}/${gateResult.total}）`
+          : `真实评测完成：门控未通过（${gateResult.passed}/${gateResult.total}）`,
+      );
+    } catch (e) {
+      setRunErr(`评测运行失败：${String((e as Error).message || e)}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function refreshReport() {
+    if (!suiteId) return;
+    setRunErr("");
+    setMsg("");
+    setReport(null);
+    setGate(null);
+    try {
+      const latestReport = await apiGet<EvalReport>(`/v1/evals/${encodeURIComponent(suiteId)}/report`);
+      if (latestReport.suite_id !== suiteId) throw new Error("最新报告 suite_id 与当前套件不一致");
+      setReport(latestReport);
+      setGate({
+        suite_id: latestReport.suite_id,
+        gate_passed: latestReport.gate_passed,
+        pass_rate: latestReport.pass_rate,
+        threshold: selectedSuite?.gate_threshold ?? 0,
+        passed: latestReport.passed,
+        failed: latestReport.failed,
+        total: latestReport.total,
+        run_at: latestReport.run_at,
+      });
+      setMsg("已读取服务端最新评测报告");
+    } catch (e) {
+      setRunErr(`报告读取失败：${String((e as Error).message || e)}`);
+    }
+  }
 
   return (
     <S2Chrome title="Evals 门控" lede="L4 自动化上线前须通过 Eval；未达标禁止发布为 Function / Automate。">
       <BpToolbar>
-        <button type="button" className="btn-primary" onClick={() => void setGate(true)}>
-          运行 Eval 套件 / 放行
+        <select
+          aria-label="Eval 套件"
+          className="aos-input"
+          value={suiteId}
+          onChange={(event) => {
+            setSuiteId(event.target.value);
+            setReport(null);
+            setGate(null);
+            setMsg("");
+          }}
+        >
+          <option value="">选择 Eval 套件</option>
+          {suites.map((suite) => (
+            <option key={suite.id} value={suite.id}>{suite.name} · {suite.id}</option>
+          ))}
+        </select>
+        <input
+          aria-label="目标表达式"
+          className="aos-input"
+          value={targetExpr}
+          onChange={(event) => setTargetExpr(event.target.value)}
+          placeholder="目标表达式，例如 x + 1"
+        />
+        <button
+          type="button"
+          className="btn-primary"
+          disabled={busy || !suiteId || !targetExpr.trim()}
+          onClick={() => void runSuite()}
+        >
+          {busy ? "真实评测中…" : "运行套件并检查门控"}
         </button>
-        <button type="button" className="btn" onClick={() => void setGate(false)}>
-          阻断
+        <button type="button" className="btn" disabled={!suiteId || busy} onClick={() => void refreshReport()}>
+          读取最新报告
         </button>
-        <button type="button" className="btn" onClick={() => reload()}>
-          刷新
+        <button type="button" className="btn" disabled={busy} onClick={() => void createQuickStartSuite()}>
+          创建基础评测套件
         </button>
         <Link to="/aip/maturity" className="btn-nav">
           ← 成熟度
         </Link>
       </BpToolbar>
-      {msg && <p className="aos-text">{msg}</p>}
-      {err && <p className="error">{err}</p>}
+      {suitesApi.loading && <p className="aos-text">正在读取 Eval 套件…</p>}
+      {!suitesApi.loading && !suitesApi.err && suites.length === 0 && (
+        <p className="error">暂无 Eval 套件，可创建下方基础套件后运行真实评测。</p>
+      )}
+      {msg && <p className="aos-text" role="status">{msg}</p>}
+      {(suitesApi.err || runErr) && <p className="error" role="alert">{runErr || suitesApi.err}</p>}
+
+      <BpBanner tone="info">
+        <strong>快速开始样例</strong> · 套件“{QUICK_START_EVAL_SUITE.name}” · 用例：输入 x=1，期望 2（exact） · 门控阈值 100%。
+        创建动作会真实写入 `/v1/evals/suites`，不会生成评测报告；报告仅在运行后产生。
+      </BpBanner>
 
       <BpScoreGrid
         items={[
           {
-            value: green ? "≥92%" : "87%",
+            value: report ? `${(report.pass_rate * 100).toFixed(1)}%` : "—",
             label: "总体通过率",
-            hint: green ? "门控已绿" : "未达 L4 门槛",
-            tone: green ? "ok" : "warn",
+            hint: report ? `服务端报告 · ${report.run_at}` : "尚未运行真实评测",
+            tone: report?.gate_passed ? "ok" : "warn",
           },
           {
-            value: green ? "42" : "—",
-            label: "测试用例（登记）",
-            hint: "含回归黄金集",
-            tone: "warn",
+            value: report ? String(report.total) : selectedSuite?.cases ? String(selectedSuite.cases.length) : "—",
+            label: "测试用例",
+            hint: report ? `通过 ${report.passed} · 失败 ${report.failed}` : "来自所选套件",
+            tone: report?.failed === 0 && report.total > 0 ? "ok" : "warn",
           },
           {
-            value: l4Allowed ? "L4 可申请" : "L4 未达标",
-            label: "自动化门控",
-            hint: l4Allowed ? "Eval 绿且未熔断" : "须 Eval ≥92% + Draft",
-            tone: l4Allowed ? "ok" : "bad",
+            value: gate ? (gate.gate_passed ? "门控通过" : "门控阻断") : "未检查",
+            label: "Eval 门控检查",
+            hint: gate ? `阈值 ${(gate.threshold * 100).toFixed(1)}%` : "以 gate-check 回包为准",
+            tone: gate?.gate_passed ? "ok" : "bad",
           },
         ]}
       />
 
       <BpTable
-        columns={["分项", "结果", "状态"]}
-        rows={[
-          ["Eval 绿灯", green ? "通过" : "未通过", green ? "✅" : "❌"],
-          ["L4 允许", l4Allowed ? "是" : "否", l4Allowed ? "✅" : "❌"],
-          ["Draft HITL", "默认暂存", "✅"],
-          ["熔断", l4Allowed ? "关闭" : "可能开启", l4Allowed ? "✅" : "⚠"],
-        ]}
+        columns={["用例", "评判", "期望", "实际", "结果", "详情"]}
+        rows={(report?.results || []).map((result) => [
+          result.case_id,
+          result.judge || "—",
+          formatEvalValue(result.expected),
+          formatEvalValue(result.actual),
+          result.passed ? "✅ 通过" : "❌ 失败",
+          result.detail || "—",
+        ])}
       />
 
       <BpBanner tone="warn">
-        <strong>L4 门控状态</strong> · 须 Eval 绿且 Draft 审批通过后方可申请 L4 上线 ·{" "}
+        <strong>真实门控口径</strong> · 本页不提供手工绿灯。只有 gate-check 返回通过才显示 Eval 门控通过；L4 仍须 Draft 审批与其他发布护栏 ·{" "}
         <Link to="/aip/drafts">查看 Draft →</Link>
-        {green && (
+        {gate?.gate_passed && (
           <>
             {" · "}
             <Link to="/aip/studio">Chatbot Studio 测试 →</Link>

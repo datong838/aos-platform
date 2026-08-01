@@ -37,6 +37,13 @@ class EventUpdate(BaseModel):
     sortOrder: int | None = None
 
 
+def _get_module_event(module_id: str, event_id: str) -> dict:
+    item = get_event(event_id)
+    if not item or item.get("moduleId") != module_id:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return item
+
+
 @router.get("/{module_id}/events")
 def get_module_events(module_id: str) -> dict:
     """List all event bindings for a module."""
@@ -56,15 +63,14 @@ def post_module_event(module_id: str, body: EventCreate) -> dict:
 @router.get("/{module_id}/events/{event_id}")
 def get_single_event(module_id: str, event_id: str) -> dict:
     """Get a single event binding."""
-    item = get_event(event_id)
-    if not item:
-        raise HTTPException(status_code=404, detail="Event not found")
+    item = _get_module_event(module_id, event_id)
     return {"item": item}
 
 
 @router.put("/{module_id}/events/{event_id}")
 def put_module_event(module_id: str, event_id: str, body: EventUpdate) -> dict:
     """Update an event binding."""
+    _get_module_event(module_id, event_id)
     item = update_event(event_id, body.model_dump(exclude_none=True))
     if not item:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -74,6 +80,7 @@ def put_module_event(module_id: str, event_id: str, body: EventUpdate) -> dict:
 @router.delete("/{module_id}/events/{event_id}")
 def delete_module_event(module_id: str, event_id: str) -> dict:
     """Delete an event binding."""
+    _get_module_event(module_id, event_id)
     ok = delete_event(event_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Event not found")
