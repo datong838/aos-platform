@@ -248,9 +248,34 @@ describe("PublishPage · 真实发布与部署阶段", () => {
 });
 
 describe("PublishPage · 响应契约守卫", () => {
-  it("拒绝未确认的发布、幂等和部署响应", () => {
-    expect(() => assertPublishAccepted({ id: "m1", status: "draft" })).toThrow();
+  it("拒绝未确认或 Module 不匹配的发布响应", () => {
+    expect(() =>
+      assertPublishAccepted(
+        { id: "m1", status: "published", publish: { status: "QUEUED" } },
+        "m1",
+      ),
+    ).toThrow("发布接口未返回 ACCEPTED 状态");
+    expect(() =>
+      assertPublishAccepted(
+        { id: "m2", status: "published", publish: { status: "ACCEPTED" } },
+        "m1",
+      ),
+    ).toThrow("发布响应 Module 不匹配");
+  });
+
+  it("拒绝未确认的幂等响应", () => {
     expect(() => assertIdempotentReplay({ id: "m1", status: "published" })).toThrow();
-    expect(() => assertDeploySucceeded({ ok: true, item: { id: "d1", status: "failed" } })).toThrow();
+  });
+
+  it("拒绝失败或环境不匹配的部署响应", () => {
+    expect(() =>
+      assertDeploySucceeded({ ok: true, item: { id: "d1", status: "failed" } }, "staging"),
+    ).toThrow("部署接口未返回 success 记录");
+    expect(() =>
+      assertDeploySucceeded(
+        { ok: true, item: { id: "d1", environment: "prod", status: "success" } },
+        "staging",
+      ),
+    ).toThrow("部署响应环境不匹配");
   });
 });

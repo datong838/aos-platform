@@ -98,9 +98,12 @@ export function formatPublishResult(opts: {
   return parts.join(" · ");
 }
 
-export function assertPublishAccepted(payload: PublishApiResponse): void {
-  if (payload.status !== "published" || !payload.publish?.status) {
-    throw new Error("发布接口未返回已接受状态");
+export function assertPublishAccepted(payload: PublishApiResponse, expectedModuleId: string): void {
+  if (payload.id !== expectedModuleId) {
+    throw new Error(`发布响应 Module 不匹配：期望 ${expectedModuleId}，实际 ${payload.id || "—"}`);
+  }
+  if (payload.status !== "published" || payload.publish?.status !== "ACCEPTED") {
+    throw new Error("发布接口未返回 ACCEPTED 状态");
   }
 }
 
@@ -110,9 +113,17 @@ export function assertIdempotentReplay(payload: PublishApiResponse): void {
   }
 }
 
-export function assertDeploySucceeded(payload: DeployApiResponse): DeploymentItem {
+export function assertDeploySucceeded(
+  payload: DeployApiResponse,
+  expectedEnvironment: string,
+): DeploymentItem {
   if (payload.ok !== true || !payload.item?.id || payload.item.status !== "success") {
     throw new Error("部署接口未返回 success 记录");
+  }
+  if (payload.item.environment !== expectedEnvironment) {
+    throw new Error(
+      `部署响应环境不匹配：期望 ${expectedEnvironment}，实际 ${payload.item.environment || "—"}`,
+    );
   }
   return payload.item;
 }
@@ -213,7 +224,7 @@ export function PublishPage() {
       const mid = await ensureModuleId();
       const path = `/v1/modules/${encodeURIComponent(mid)}/publish`;
       const pub1 = await apiPost<PublishApiResponse>(path, {}, headers);
-      assertPublishAccepted(pub1);
+      assertPublishAccepted(pub1, mid);
       publishAccepted = true;
       const pub2 = await apiPost<PublishApiResponse>(path, {}, headers);
       assertIdempotentReplay(pub2);
@@ -229,7 +240,7 @@ export function PublishPage() {
           configSnapshot: { channel: env, via: "workshop-publish" },
         },
       );
-      const deployment = assertDeploySucceeded(deployResponse);
+      const deployment = assertDeploySucceeded(deployResponse, env);
       setDeployPhase("ok");
       await loadDeploymentHistory(mid).catch(() => {});
 
