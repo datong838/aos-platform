@@ -25,6 +25,23 @@ type GhIssue = {
   href?: string;
 };
 
+type TtlCandidate = {
+  id: string;
+  objectType?: string;
+  objectId?: string;
+  createdAt?: string;
+  status?: string;
+};
+
+type TtlRunResult = {
+  dryRun: boolean;
+  ttlDays: number;
+  candidateCount: number;
+  archivedCount: number;
+  archivedIds: string[];
+  candidates: TtlCandidate[];
+};
+
 /** 89/94 · 对齐 ontology-graph-health · issues 服务端真源 */
 export function GraphHealthPage() {
   const { data, err, reload } = useJsonGet<{
@@ -45,6 +62,7 @@ export function GraphHealthPage() {
   }>("/v1/ontology/graph-health");
   const [ttlMsg, setTtlMsg] = useState("");
   const [ttlBusy, setTtlBusy] = useState(false);
+  const [ttlPreview, setTtlPreview] = useState<TtlRunResult | null>(null);
 
   const m = data?.metrics;
   const issues = data?.issues || [];
@@ -52,17 +70,50 @@ export function GraphHealthPage() {
   const gh02 = m?.propConflicts ?? issues.filter((i) => i.code === "GH-02").length;
   const gh04 = issues.filter((i) => i.code === "GH-04").length;
 
-  async function runTtl() {
+  async function previewTtl() {
+    setTtlBusy(true);
+    setTtlMsg("");
+    setTtlPreview(null);
+    try {
+      const out = await apiPost<TtlRunResult>("/v1/ops/ttl/run", { dryRun: true });
+      if (!out.dryRun) throw new Error("TTL 预览回包未标记 dryRun，已停止");
+      if (out.candidateCount !== out.candidates.length) {
+        throw new Error("TTL 候选预览不完整，无法冻结影响范围");
+      }
+      setTtlPreview(out);
+      setTtlMsg(
+        out.candidateCount === 0
+          ? `TTL ${out.ttlDays} 天规则：无归档候选`
+          : `TTL ${out.ttlDays} 天规则：已冻结 ${out.candidateCount} 个软归档候选，等待确认`,
+      );
+    } catch (e) {
+      setTtlMsg(e instanceof Error ? e.message : String(e));
+    } finally {
+      setTtlBusy(false);
+    }
+  }
+
+  async function confirmTtl() {
+    if (!ttlPreview || ttlPreview.candidateCount === 0) return;
+    const snapshot = ttlPreview;
+    const snapshotIds = snapshot.candidates.map((candidate) => candidate.id);
     setTtlBusy(true);
     setTtlMsg("");
     try {
-      const out = await apiPost<{ archivedCount: number; candidateCount: number }>(
-        "/v1/ops/ttl/run",
-        { dryRun: false },
-      );
-      setTtlMsg(
-        `TTL 归档完成：候选 ${out.candidateCount} · 已归档 ${out.archivedCount}`,
-      );
+      const out = await apiPost<TtlRunResult>("/v1/ops/ttl/run", { dryRun: false });
+      const returnedIds = out.candidates.map((candidate) => candidate.id);
+      const archivedIds = [...out.archivedIds].sort();
+      if (
+        out.dryRun ||
+        out.candidateCount !== snapshot.candidateCount ||
+        JSON.stringify(returnedIds) !== JSON.stringify(snapshotIds) ||
+        out.archivedCount !== snapshot.candidateCount ||
+        JSON.stringify(archivedIds) !== JSON.stringify([...snapshotIds].sort())
+      ) {
+        throw new Error("TTL 执行回包与冻结快照不一致，未确认归档成功");
+      }
+      setTtlPreview(null);
+      setTtlMsg(`TTL 归档完成：已软归档 ${out.archivedCount} · 未物理删除核心对象`);
       reload();
     } catch (e) {
       setTtlMsg(e instanceof Error ? e.message : String(e));
@@ -85,9 +136,9 @@ export function GraphHealthPage() {
           type="button"
           className="btn"
           disabled={ttlBusy}
-          onClick={() => void runTtl()}
+          onClick={() => void previewTtl()}
         >
-          {ttlBusy ? "归档中…" : "运行 TTL 归档"}
+          {ttlBusy ? "处理中…" : "运行 TTL 归档"}
         </button>
         <Link to="/data/health" className="btn-nav">
           L1 数据健康 →
@@ -98,6 +149,52 @@ export function GraphHealthPage() {
       </BpToolbar>
       {err && <p className="error">{err}</p>}
       {ttlMsg ? <p className="muted">{ttlMsg}</p> : null}
+      {ttlPreview ? (
+        <section
+          role="dialog"
+          aria-label="TTL 归档确认"
+          data-testid="ttl-confirmation"
+          className="bp-banner"
+        >
+          <strong>确认 Insight TTL 软归档</strong>
+          <p className="muted" style={{ margin: "0.5rem 0" }}>
+            TTL {ttlPreview.ttlDays} 天 · 候选 {ttlPreview.candidateCount} 项。该操作只做可回放的软归档，
+            不会物理删除核心业务 Object。
+          </p>
+          {ttlPreview.candidates.length > 0 ? (
+            <ul className="muted" style={{ fontSize: "0.8rem" }}>
+              {ttlPreview.candidates.map((candidate) => (
+                <li key={candidate.id}>
+                  {candidate.id} · {candidate.objectId || "—"} · {candidate.createdAt || "—"}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">无候选，不能执行归档。</p>
+          )}
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={ttlBusy || ttlPreview.candidateCount === 0}
+              onClick={() => void confirmTtl()}
+            >
+              {ttlBusy ? "执行中…" : `确认归档 ${ttlPreview.candidateCount} 项`}
+            </button>
+            <button
+              type="button"
+              className="btn"
+              disabled={ttlBusy}
+              onClick={() => {
+                setTtlPreview(null);
+                setTtlMsg("已取消 TTL 归档，未执行写操作");
+              }}
+            >
+              取消
+            </button>
+          </div>
+        </section>
+      ) : null}
       <p className="muted" style={{ fontSize: "0.8rem" }}>
         当前 score={data?.score ?? "—"} · engine={m?.engine ?? "—"} · instances={m?.instances ?? "—"} ·
         dangling={m?.danglingEdges ?? "—"} · Insight TTL={m?.insightTtlDays ?? "—"} 天

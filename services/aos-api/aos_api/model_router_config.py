@@ -11,6 +11,7 @@ Also bridges to llm_routing.py's FailoverEngine for live circuit state.
 """
 from __future__ import annotations
 
+import json
 from typing import Any
 from datetime import datetime, timezone
 
@@ -21,7 +22,9 @@ from aos_api.aip_kv_store import (
     put_model_routes,
     DEFAULT_ROUTE_DEFS,
     EGRESS_DEFAULTS,
+    ensure_aip_kv_schema,
 )
+from aos_api.db import connect
 from aos_api.logging_facade import get_logger
 
 log = get_logger("aos-api.model_router_config")
@@ -45,6 +48,14 @@ DEFAULT_GLOBAL_CIRCUIT: dict[str, Any] = {
 }
 
 STRATEGIES = ["weighted", "failover", "lowest_latency", "lowest_cost"]
+
+
+class RouterConfigVersionConflict(ValueError):
+    """The caller evaluated a stale canonical router configuration."""
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _default_weights(primary: str, fallback: str) -> list[dict[str, Any]]:
@@ -95,18 +106,79 @@ def _migrate_route_row(row: dict[str, Any]) -> dict[str, Any]:
 # Public API
 # ---------------------------------------------------------------------------
 
-def get_route_rules_v2(model_ids: list[str] | None = None) -> list[dict[str, Any]]:
-    """Get all route rules with V2 fields. Falls back to V1 + migration."""
+def get_router_config_v2(model_ids: list[str] | None = None) -> dict[str, Any]:
+    """Get the versioned canonical route configuration."""
     stored = get_payload(KEY_ROUTER_V2)
-    if stored and isinstance(stored.get("items"), list) and stored["items"]:
-        return [_migrate_route_row(r) for r in stored["items"]]
+    if stored is not None and isinstance(stored.get("items"), list):
+        config = {
+            "items": [_migrate_route_row(r) for r in stored["items"]],
+            "version": max(1, int(stored.get("version") or 1)),
+            "updatedAt": str(stored.get("updatedAt") or _now_iso()),
+        }
+        if "version" not in stored or "updatedAt" not in stored:
+            put_payload(KEY_ROUTER_V2, config)
+        return config
     # Migrate from V1
     v1 = get_model_routes(model_ids)
     migrated = [_migrate_route_row(r) for r in v1]
-    # Persist migration
-    put_payload(KEY_ROUTER_V2, {"items": migrated})
+    config = {"items": migrated, "version": 1, "updatedAt": _now_iso()}
+    put_payload(KEY_ROUTER_V2, config)
     log.info("router_v2_migrated rows=%d", len(migrated))
-    return migrated
+    return config
+
+
+def get_route_rules_v2(model_ids: list[str] | None = None) -> list[dict[str, Any]]:
+    """Compatibility helper returning rows from the canonical config."""
+    return get_router_config_v2(model_ids)["items"]
+
+
+def _put_router_config_v2(items: list[dict[str, Any]], current_version: int) -> dict[str, Any]:
+    config = {
+        "items": items,
+        "version": current_version + 1,
+        "updatedAt": _now_iso(),
+    }
+    put_payload(KEY_ROUTER_V2, config)
+    return config
+
+
+def replace_router_config_v2(
+    items: list[dict[str, Any]], expected_version: int
+) -> dict[str, Any]:
+    """Atomically replace canonical rules using optimistic concurrency."""
+    migrated = [_migrate_route_row(dict(row)) for row in items]
+    ids = [row["id"] for row in migrated]
+    if len(ids) != len(set(ids)):
+        raise ValueError("route ids must be unique")
+
+    # Ensure legacy payloads have been migrated before entering the row lock.
+    get_router_config_v2()
+    ensure_aip_kv_schema()
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT payload FROM meta_aip_kv WHERE key = %s FOR UPDATE",
+            (KEY_ROUTER_V2,),
+        ).fetchone()
+        payload = row["payload"] if row else {}
+        if isinstance(payload, str):
+            payload = json.loads(payload)
+        current_version = max(1, int((payload or {}).get("version") or 1))
+        if expected_version != current_version:
+            raise RouterConfigVersionConflict(
+                f"router config version conflict: expected {expected_version}, current {current_version}"
+            )
+        saved = {
+            "items": migrated,
+            "version": current_version + 1,
+            "updatedAt": _now_iso(),
+        }
+        conn.execute(
+            "UPDATE meta_aip_kv SET payload = %s::jsonb, updated_at = NOW() WHERE key = %s",
+            (json.dumps(saved, ensure_ascii=False), KEY_ROUTER_V2),
+        )
+        conn.commit()
+    log.info("router_v2_replaced rows=%d version=%d", len(migrated), saved["version"])
+    return saved
 
 
 def get_route_rule_v2(route_id: str) -> dict[str, Any] | None:
@@ -116,7 +188,8 @@ def get_route_rule_v2(route_id: str) -> dict[str, Any] | None:
 
 def update_route_rule_v2(route_id: str, updates: dict[str, Any]) -> dict[str, Any]:
     """Update a single route rule. Returns the updated rule."""
-    rules = get_route_rules_v2()
+    config = get_router_config_v2()
+    rules = config["items"]
     found = None
     for r in rules:
         if r["id"] == route_id:
@@ -146,14 +219,15 @@ def update_route_rule_v2(route_id: str, updates: dict[str, Any]) -> dict[str, An
             break
     if not found:
         raise KeyError(f"Route rule not found: {route_id}")
-    put_payload(KEY_ROUTER_V2, {"items": rules})
+    _put_router_config_v2(rules, int(config["version"]))
     log.info("router_v2_updated id=%s", route_id)
     return found
 
 
 def create_route_rule_v2(data: dict[str, Any]) -> dict[str, Any]:
     """Create a new route rule."""
-    rules = get_route_rules_v2()
+    config = get_router_config_v2()
+    rules = config["items"]
     new_id = str(data.get("id") or f"route_{len(rules) + 1}")
     if any(r["id"] == new_id for r in rules):
         raise ValueError(f"Route rule already exists: {new_id}")
@@ -177,18 +251,19 @@ def create_route_rule_v2(data: dict[str, Any]) -> dict[str, Any]:
     if "enabled" in data:
         row["enabled"] = bool(data["enabled"])
     rules.append(row)
-    put_payload(KEY_ROUTER_V2, {"items": rules})
+    _put_router_config_v2(rules, int(config["version"]))
     log.info("router_v2_created id=%s", new_id)
     return row
 
 
 def delete_route_rule_v2(route_id: str) -> bool:
     """Delete a route rule by ID."""
-    rules = get_route_rules_v2()
+    config = get_router_config_v2()
+    rules = config["items"]
     filtered = [r for r in rules if r["id"] != route_id]
     if len(filtered) == len(rules):
         return False
-    put_payload(KEY_ROUTER_V2, {"items": filtered})
+    _put_router_config_v2(filtered, int(config["version"]))
     log.info("router_v2_deleted id=%s", route_id)
     return True
 
@@ -217,12 +292,23 @@ def update_global_circuit_config(updates: dict[str, Any]) -> dict[str, Any]:
 # Route test (simulation)
 # ---------------------------------------------------------------------------
 
-def test_route(route_id: str, prompt: str = "", context_length: int = 0) -> dict[str, Any]:
+def test_route(
+    route_id: str,
+    prompt: str = "",
+    context_length: int = 0,
+    config_version: int | None = None,
+) -> dict[str, Any]:
     """Simulate a routing decision for a given route rule + prompt.
 
     Returns which model(s) would be selected and simulated metrics.
     """
-    rule = get_route_rule_v2(route_id)
+    config = get_router_config_v2()
+    evaluated_version = int(config["version"])
+    if config_version is not None and config_version != evaluated_version:
+        raise RouterConfigVersionConflict(
+            f"router config version conflict: expected {config_version}, current {evaluated_version}"
+        )
+    rule = next((r for r in config["items"] if r["id"] == route_id), None)
     if not rule:
         raise KeyError(f"Route not found: {route_id}")
 
@@ -310,6 +396,7 @@ def test_route(route_id: str, prompt: str = "", context_length: int = 0) -> dict
         "estimated_output_tokens": 256,
         "circuit_state": circuit_state,
         "tested_at": datetime.now(timezone.utc).isoformat(),
+        "evaluatedVersion": evaluated_version,
     }
 
 

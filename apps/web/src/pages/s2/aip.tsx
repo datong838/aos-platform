@@ -1739,7 +1739,18 @@ type RouteTestResult = {
   estimated_output_tokens: number;
   circuit_state: string;
   tested_at: string;
+  evaluatedVersion: number;
 };
+
+type RouterConfig = {
+  items: V2RouteRule[];
+  version: number;
+  updatedAt: string;
+};
+
+function sameRouterItems(left: V2RouteRule[], right: V2RouteRule[]): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
 
 function egressTone(egress: string): "ok" | "warn" | "bad" | "muted" {
   if (egress.includes("禁公网")) return "ok";
@@ -1753,7 +1764,7 @@ export function ModelRouterPage() {
   const models = useJsonGet<{ items: ModelItem[]; sidecar?: string; defaultTextModel?: string }>(
     "/v1/aip/models",
   );
-  const routesApi = useJsonGet<{ items: RouteRule[] }>("/v1/aip/model-routes");
+  const routerApi = useJsonGet<RouterConfig>("/api/models/router");
   const warm = useJsonGet<{
     ready?: boolean;
     models?: { id: string; state?: string }[];
@@ -1766,7 +1777,8 @@ export function ModelRouterPage() {
   const [chatPayload, setChatPayload] = useState<unknown>(null);
   const [chatErr, setChatErr] = useState<string | null>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [routeRows, setRouteRows] = useState<RouteRule[]>([]);
+  const [routeRows, setRouteRows] = useState<V2RouteRule[]>([]);
+  const [confirmedVersion, setConfirmedVersion] = useState<number | null>(null);
   const [saveMsg, setSaveMsg] = useState("");
   const [drillMsg, setDrillMsg] = useState("");
   const [localErr, setLocalErr] = useState<string | null>(null);
@@ -1784,10 +1796,11 @@ export function ModelRouterPage() {
   }, [models.data?.defaultTextModel]);
 
   useEffect(() => {
-    if (routesApi.data?.items?.length) {
-      setRouteRows(routesApi.data.items);
+    if (routerApi.data?.items) {
+      setRouteRows(routerApi.data.items);
+      setConfirmedVersion(routerApi.data.version);
     }
-  }, [routesApi.data]);
+  }, [routerApi.data]);
 
   function patchRow(id: string, patch: Partial<RouteRule>) {
     setRouteRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -1795,14 +1808,26 @@ export function ModelRouterPage() {
   }
 
   async function saveRoutes() {
+    if (confirmedVersion == null) return;
     setSaving(true);
     setLocalErr(null);
     setSaveMsg("");
     try {
-      const r = await apiPut<{ items: RouteRule[] }>("/v1/aip/model-routes", { items: routeRows });
-      setRouteRows(r.items || routeRows);
-      setSaveMsg("路由策略已保存");
-      routesApi.reload();
+      const saved = await apiPut<RouterConfig>("/api/models/router", {
+        items: routeRows,
+        expectedVersion: confirmedVersion,
+      });
+      if (saved.version <= confirmedVersion) {
+        throw new Error("保存回包版本未递增，未确认成功");
+      }
+      const reread = await apiGet<RouterConfig>("/api/models/router");
+      if (reread.version !== saved.version || !sameRouterItems(reread.items, saved.items)) {
+        throw new Error("写入已提交，但配置重读与保存回包不一致");
+      }
+      setRouteRows(reread.items);
+      setConfirmedVersion(reread.version);
+      routerApi.setData(reread);
+      setSaveMsg(`路由策略已保存并重读确认 · v${reread.version}`);
     } catch (e) {
       setLocalErr(String((e as Error).message || e));
     } finally {
@@ -1813,11 +1838,20 @@ export function ModelRouterPage() {
   async function runCircuitDrill() {
     setDrillMsg("");
     setLocalErr(null);
+    const routeId = routeRows[0]?.id;
+    if (!routeId || confirmedVersion == null) return;
     try {
-      const r = await apiPost<{ message?: string }>("/v1/aip/model-routes/circuit-drill", {
-        items: routeRows,
+      const r = await apiPost<RouteTestResult>(`/api/models/router/${routeId}/test`, {
+        prompt: "circuit-drill",
+        context_length: 0,
+        configVersion: confirmedVersion,
       });
-      setDrillMsg(String(r.message || "演练完成"));
+      if (r.evaluatedVersion !== confirmedVersion) {
+        throw new Error(
+          `熔断演练版本不一致：页面 v${confirmedVersion}，服务端评估 v${r.evaluatedVersion}`,
+        );
+      }
+      setDrillMsg(`已按配置 v${r.evaluatedVersion} 完成熔断演练`);
     } catch (e) {
       setLocalErr(String((e as Error).message || e));
     }
@@ -1825,7 +1859,13 @@ export function ModelRouterPage() {
 
   function exportAuditSnapshot() {
     const blob = new Blob(
-      [JSON.stringify({ items: routeRows, exportedAt: new Date().toISOString() }, null, 2)],
+      [
+        JSON.stringify(
+          { items: routeRows, version: confirmedVersion, exportedAt: new Date().toISOString() },
+          null,
+          2,
+        ),
+      ],
       { type: "application/json" },
     );
     const url = URL.createObjectURL(blob);
@@ -1972,7 +2012,7 @@ export function ModelRouterPage() {
           className="btn"
           onClick={() => {
             models.reload();
-            routesApi.reload();
+            routerApi.reload();
             warm.reload();
           }}
         >
@@ -1988,11 +2028,11 @@ export function ModelRouterPage() {
           预热与试聊 →
         </button>
       </BpToolbar>
-      {(models.err || warm.err || routesApi.err || localErr) && (
+      {(models.err || warm.err || routerApi.err || localErr) && (
         <p className="error">
-          {routesApi.err === "Not Found"
-            ? "路由策略接口未就绪（/v1/aip/model-routes 404）· 请重启 aos-api 后点刷新"
-            : models.err || warm.err || routesApi.err || localErr}
+          {routerApi.err === "Not Found"
+            ? "路由配置接口未就绪（/api/models/router 404）· 请重启 aos-api 后点刷新"
+            : models.err || warm.err || routerApi.err || localErr}
         </p>
       )}
 
@@ -2003,7 +2043,9 @@ export function ModelRouterPage() {
       <div className="mr-rules-card">
         <div className="mr-rules-head">
           <h2 className="mr-rules-title">路由规则</h2>
-          <span className="mr-rules-meta">任务类型 / 回退 / 出境 · 可编辑</span>
+          <span className="mr-rules-meta">
+            任务类型 / 回退 / 出境 · 可编辑 · 配置版本 v{confirmedVersion ?? "—"}
+          </span>
         </div>
         <table className="mr-table">
           <thead>
@@ -2115,12 +2157,17 @@ export function ModelRouterPage() {
           <button
             type="button"
             className="btn-nav-accent"
-            disabled={saving || routeRows.length === 0}
+            disabled={saving || routeRows.length === 0 || confirmedVersion == null}
             onClick={() => void saveRoutes()}
           >
             {saving ? "保存中…" : "保存策略"}
           </button>
-          <button type="button" className="btn-nav" onClick={() => void runCircuitDrill()}>
+          <button
+            type="button"
+            className="btn-nav"
+            disabled={confirmedVersion == null || routeRows.length === 0}
+            onClick={() => void runCircuitDrill()}
+          >
             熔断演练
           </button>
           <button type="button" className="btn-nav" onClick={exportAuditSnapshot}>
@@ -2135,17 +2182,25 @@ export function ModelRouterPage() {
       </div>
 
       {/* === Phase B 新增面板 === */}
-      <ModelRouterPanels routeRows={routeRows} modelOptions={modelOptions} />
+      <ModelRouterPanels
+        routeRows={routeRows}
+        configVersion={confirmedVersion}
+      />
     </S2Chrome>
   );
 }
 
 /** Phase B · 权重分配 / 全局熔断配置 / Fallback 链 / 路由测试 */
-function ModelRouterPanels(_props: { routeRows: RouteRule[]; modelOptions: string[] }) {
+function ModelRouterPanels({
+  routeRows,
+  configVersion,
+}: {
+  routeRows: V2RouteRule[];
+  configVersion: number | null;
+}) {
   const [activePanel, setActivePanel] = useState<"weights" | "circuit" | "fallback" | "test">(
     "weights",
   );
-  const routerV2 = useJsonGet<{ items: V2RouteRule[] }>("/api/models/router");
   const circuitApi = useJsonGet<GlobalCircuitConfig>("/api/models/router/circuit-config");
   const [circuitDraft, setCircuitDraft] = useState<GlobalCircuitConfig | null>(null);
   const [circuitSaving, setCircuitSaving] = useState(false);
@@ -2156,7 +2211,7 @@ function ModelRouterPanels(_props: { routeRows: RouteRule[]; modelOptions: strin
   const [testLoading, setTestLoading] = useState(false);
   const [testErr, setTestErr] = useState<string | null>(null);
 
-  const v2Rules = routerV2.data?.items || [];
+  const v2Rules = routeRows;
   const circuitCfg = circuitDraft || circuitApi.data || {
     error_rate_threshold_pct: 10,
     latency_p99_ms: 3000,
@@ -2192,15 +2247,24 @@ function ModelRouterPanels(_props: { routeRows: RouteRule[]; modelOptions: strin
   }
 
   async function runRouteTest() {
-    if (!testRouteId) return;
+    if (!testRouteId || configVersion == null) return;
     setTestLoading(true);
     setTestErr(null);
     setTestResult(null);
     try {
       const r = await apiPost<RouteTestResult>(
         `/api/models/router/${testRouteId}/test`,
-        { prompt: testPrompt, context_length: testPrompt.length * 2 },
+        {
+          prompt: testPrompt,
+          context_length: testPrompt.length * 2,
+          configVersion,
+        },
       );
+      if (r.evaluatedVersion !== configVersion) {
+        throw new Error(
+          `路由测试版本不一致：页面 v${configVersion}，服务端评估 v${r.evaluatedVersion}`,
+        );
+      }
       setTestResult(r);
     } catch (e) {
       setTestErr(String((e as Error).message || e));
@@ -2558,7 +2622,7 @@ function ModelRouterPanels(_props: { routeRows: RouteRule[]; modelOptions: strin
             <button
               type="button"
               className="btn-primary"
-              disabled={testLoading || !testRouteId}
+              disabled={testLoading || !testRouteId || configVersion == null}
               onClick={() => void runRouteTest()}
             >
               {testLoading ? "测试中…" : "测试路由"}
@@ -2634,13 +2698,9 @@ function ModelRouterPanels(_props: { routeRows: RouteRule[]; modelOptions: strin
         </div>
       )}
 
-      {(routerV2.err || circuitApi.err) && (
+      {circuitApi.err && (
         <p className="error" style={{ margin: "0.5rem 1rem" }}>
-          {routerV2.err === "Not Found"
-            ? "路由配置 V2 API 未就绪 (/api/models/router 404)"
-            : circuitApi.err === "Not Found"
-              ? "熔断配置 API 未就绪"
-              : routerV2.err || circuitApi.err}
+          {circuitApi.err === "Not Found" ? "熔断配置 API 未就绪" : circuitApi.err}
         </p>
       )}
     </div>

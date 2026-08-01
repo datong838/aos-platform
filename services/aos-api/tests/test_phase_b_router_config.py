@@ -211,6 +211,31 @@ class TestRouterConfigAPI:
         data = resp.json()
         assert "items" in data
         assert isinstance(data["items"], list)
+        assert data["version"] >= 1
+        assert data["updatedAt"]
+
+    def test_bulk_replace_uses_optimistic_version_and_get_confirms(self, client):
+        current = client.get("/api/models/router").json()
+        changed = [{**row, "egress": "审批后"} for row in current["items"]]
+        saved = client.put(
+            "/api/models/router",
+            json={"items": changed, "expectedVersion": current["version"]},
+        )
+        assert saved.status_code == 200, saved.text
+        body = saved.json()
+        assert body["version"] == current["version"] + 1
+        assert body["items"] == client.get("/api/models/router").json()["items"]
+
+        stale = client.put(
+            "/api/models/router",
+            json={"items": changed, "expectedVersion": current["version"]},
+        )
+        assert stale.status_code == 409
+        restored = client.put(
+            "/api/models/router",
+            json={"items": current["items"], "expectedVersion": body["version"]},
+        )
+        assert restored.status_code == 200, restored.text
 
     def test_list_strategies(self, client):
         resp = client.get("/api/models/router/strategies")
@@ -255,6 +280,22 @@ class TestRouterConfigAPI:
         })
         assert resp.status_code == 200
         assert resp.json()["strategy"] == "weighted"
+
+    def test_route_test_returns_evaluated_version_and_rejects_stale_version(self, client):
+        config = client.get("/api/models/router").json()
+        route_id = config["items"][0]["id"]
+        tested = client.post(
+            f"/api/models/router/{route_id}/test",
+            json={"prompt": "hello", "configVersion": config["version"]},
+        )
+        assert tested.status_code == 200, tested.text
+        assert tested.json()["evaluatedVersion"] == config["version"]
+
+        stale = client.post(
+            f"/api/models/router/{route_id}/test",
+            json={"prompt": "hello", "configVersion": config["version"] + 1},
+        )
+        assert stale.status_code == 409
 
     def test_create_and_delete_route(self, client):
         resp = client.post("/api/models/router", json={
