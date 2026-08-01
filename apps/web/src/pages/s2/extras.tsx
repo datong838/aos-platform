@@ -5,16 +5,22 @@ import { BpMaturityStairs } from "./blueprintUi";
 
 export { ModuleInterfacePage } from "./ModuleInterfacePage";
 
+export function isBreakerTripConfirmed(value: { open?: boolean; mode?: string }): boolean {
+  return value.open === true && value.mode === "L3";
+}
+
 /** 81 · 对齐 aip-maturity.html · L1～L4 楼梯 */
 export function MaturityPage() {
   const evals = useJsonGet<{ green?: boolean; l4Allowed?: boolean }>("/v1/aip/evals/status");
+  const drafts = useJsonGet<{ count?: number; items?: unknown[] }>("/v1/aip/drafts");
   const [level, setLevel] = useState(2);
   const [toast, setToast] = useState("");
 
   async function simBreaker() {
     try {
-      await apiPost("/v1/aip/circuit/trip", { failureRate: 0.06 });
-      setToast("已模拟熔断 · 失败率>5% → 降级 L3");
+      const result = await apiPost<{ open?: boolean; mode?: string }>("/v1/aip/circuit/trip", { failureRate: 0.06 });
+      if (!isBreakerTripConfirmed(result)) throw new Error("服务端未确认熔断为 L3");
+      setToast("服务端已确认熔断 · 失败率>5% → 降级 L3");
       evals.reload();
     } catch (e) {
       setToast(String((e as Error).message || e));
@@ -58,7 +64,7 @@ export function MaturityPage() {
           <div>
             Eval <span style={{ color: green ? "var(--aos-green-700)" : "var(--aos-amber-700)" }}>{green ? "● 绿" : "○ 未跑"}</span>
             {" · "}
-            Draft <span style={{ color: "var(--aos-green-700)" }}>● 默认暂存</span>
+            Draft <span style={{ color: "var(--aos-green-700)" }}>审批台 {drafts.data?.count ?? drafts.data?.items?.length ?? "—"} 项</span>
           </div>
           <div>
             执行范围 <span style={{ color: "var(--aos-text)" }}>● 用户范围</span>
@@ -145,7 +151,7 @@ export function MaturityPage() {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: toast ? 8 : 0 }}>
           <button
             type="button"
-            onClick={() => { setLevel(3); setToast("已标记 L3（本地 UI）"); }}
+            onClick={() => { setLevel(3); setToast("仅切换本页 L3 阶段预览，不修改服务端成熟度"); }}
             style={{
               padding: "6px 12px",
               fontSize: 12,
@@ -157,11 +163,11 @@ export function MaturityPage() {
               cursor: "pointer",
             }}
           >
-            标记升级到 L3
+            预览 L3 阶段
           </button>
           <button
             type="button"
-            onClick={() => setToast("L4 评审须 Eval 绿 · 见 Evals 门控")}
+            onClick={() => setToast(`L4 条件：Eval ${green ? "已绿" : "未绿"} · Draft 审批台 ${drafts.data?.count ?? drafts.data?.items?.length ?? "未知"} 项 · 必须启用熔断护栏`)}
             style={{
               padding: "6px 12px",
               fontSize: 12,
@@ -172,7 +178,7 @@ export function MaturityPage() {
               cursor: "pointer",
             }}
           >
-            申请 L4 上线评审
+            查看 L4 申请条件
           </button>
           <Link
             to="/aip/logic"
@@ -276,7 +282,7 @@ export function MaturityPage() {
         </div>
       </div>
 
-      {evals.err && <p className="error">{evals.err}</p>}
+      {(evals.err || drafts.err) && <p className="error">{evals.err || drafts.err}</p>}
     </S2Chrome>
   );
 }

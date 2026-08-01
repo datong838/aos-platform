@@ -51,6 +51,14 @@ type MainTab = "sources" | "syncs" | "agents" | "exports";
 type SourceView = "list" | "new";
 type RuntimeMode = "direct" | "agent" | "worker";
 
+export function sourceCreatePayload(id: string, type: string, runtimeMode: RuntimeMode) {
+  return { id, type, runtimeMode };
+}
+
+export function verifyCreatedSource(items: SourceRow[], id: string, runtimeMode: RuntimeMode): boolean {
+  return items.some((item) => item.id === id && item.runtimeMode === runtimeMode);
+}
+
 function formatRelative(ts?: number): string {
   if (!ts || !Number.isFinite(ts)) return "—";
   const sec = Math.max(0, Math.round(Date.now() / 1000 - ts));
@@ -143,8 +151,6 @@ export function DataPage() {
   const [connectorType, setConnectorType] = useState("file-local");
   const [runtimeMode, setRuntimeMode] = useState<RuntimeMode>("agent");
   const [wizardStep, setWizardStep] = useState(1);
-  /** 前端记忆新建时的运行时（API 暂未持久化 runtimeMode） */
-  const [runtimeById, setRuntimeById] = useState<Record<string, RuntimeMode>>({});
   const [connectorPlugins, setConnectorPlugins] = useState<ConnectorPlugin[]>([]);
 
   async function refresh() {
@@ -170,12 +176,6 @@ export function DataPage() {
     setConnectorPlugins(cps.items || []);
   }
 
-  function enrichSource(s: SourceRow): SourceRow {
-    if (s.runtimeMode) return s;
-    const remembered = s.id ? runtimeById[s.id] : undefined;
-    return remembered ? { ...s, runtimeMode: remembered } : s;
-  }
-
   useEffect(() => {
     refresh().catch((e) => setErr(String(e.message || e)));
   }, []);
@@ -184,9 +184,15 @@ export function DataPage() {
     const id = newSourceId.trim() || `src-${Date.now().toString(36)}`;
     setErr(null);
     try {
-      await apiPost<SourceRow>("/v1/sources", { id, type: connectorType });
-      setRuntimeById((prev) => ({ ...prev, [id]: runtimeMode }));
-      setMsg(`已创建数据源 ${id}`);
+      const created = await apiPost<SourceRow>("/v1/sources", sourceCreatePayload(id, connectorType, runtimeMode));
+      if (created.id !== id || created.runtimeMode !== runtimeMode) {
+        throw new Error("创建响应与请求的数据源或运行时不一致");
+      }
+      const verified = await apiGet<{ items: SourceRow[] }>("/v1/sources");
+      if (!verifyCreatedSource(verified.items || [], id, runtimeMode)) {
+        throw new Error("服务端重读未找到运行时一致的数据源，已停止跳转");
+      }
+      setMsg(`已创建并验证数据源 ${id}`);
       setNewSourceId("");
       setWizardStep(1);
       await refresh();
@@ -271,8 +277,7 @@ export function DataPage() {
 
   function sourceRows(): ReactNode[][] {
     if (!sources.length) return [["—", "—", "—", "—", "—", "暂无数据源"]];
-    return sources.map((raw) => {
-      const s = enrichSource(raw);
+    return sources.map((s) => {
       const sid = s.id || "";
       const dsRid = primaryDatasetRid(sid, datasets);
       return [

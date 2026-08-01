@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { PageChrome } from "../../components/PageChrome";
 import { BpToolbar } from "../../components/bp/BpToolbar";
-import { apiGet } from "../../api/client";
+import { apiGet, apiPost, apiPut } from "../../api/client";
 
 /* ============================================================================
  * 类型定义
@@ -20,7 +20,7 @@ type ThemePreset = {
   isBuiltIn: boolean;
 };
 
-type ThemeConfig = {
+export type ThemeConfig = {
   primary: string;
   accent: string;
   bg: string;
@@ -41,6 +41,15 @@ type ThemeConfig = {
   radius: number;
   sidebarWidth: number;
   gridCols: number;
+};
+
+export type ThemeApiItem = {
+  id: string;
+  name: string;
+  mode?: string;
+  description?: string;
+  isPreset?: boolean;
+  tokens?: Record<string, unknown>;
 };
 
 type EditorTab = "colors" | "fonts" | "spacing";
@@ -196,6 +205,84 @@ export function normalizeThemeMode(mode: string | undefined | null): ThemeMode {
   return "light";
 }
 
+function tokenString(tokens: Record<string, unknown>, key: string, fallback: string): string {
+  const value = tokens[key];
+  return typeof value === "string" && value ? value : fallback;
+}
+
+function tokenNumber(tokens: Record<string, unknown>, key: string, fallback: number): number {
+  const value = tokens[key];
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+/** 服务端 theme 快照 → 编辑器配置；已有 token 优先，mode 默认值仅补缺失字段。 */
+export function configFromTheme(theme: ThemeApiItem): ThemeConfig {
+  const base = configForMode(normalizeThemeMode(theme.mode));
+  const tokens = theme.tokens || {};
+  return {
+    ...base,
+    primary: tokenString(tokens, "colorPrimary", base.primary),
+    accent: tokenString(tokens, "colorAccent", base.accent),
+    bg: tokenString(tokens, "colorBgBase", base.bg),
+    surface: tokenString(tokens, "colorSurface", base.surface),
+    text: tokenString(tokens, "colorTextBase", base.text),
+    textMuted: tokenString(tokens, "colorTextMuted", base.textMuted),
+    border: tokenString(tokens, "colorBorder", base.border),
+    fontId: tokenString(tokens, "fontId", base.fontId),
+    fontSize: tokenNumber(tokens, "fontSize", base.fontSize),
+    lineHeight: tokenNumber(tokens, "lineHeight", base.lineHeight),
+    spacingBase: tokenNumber(tokens, "spacingBase", base.spacingBase),
+    paddingSm: tokenNumber(tokens, "paddingSm", base.paddingSm),
+    paddingMd: tokenNumber(tokens, "paddingMd", base.paddingMd),
+    paddingLg: tokenNumber(tokens, "paddingLg", base.paddingLg),
+    marginSm: tokenNumber(tokens, "marginSm", base.marginSm),
+    marginMd: tokenNumber(tokens, "marginMd", base.marginMd),
+    marginLg: tokenNumber(tokens, "marginLg", base.marginLg),
+    radius: tokenNumber(tokens, "radius", base.radius),
+    sidebarWidth: tokenNumber(tokens, "sidebarWidth", base.sidebarWidth),
+    gridCols: tokenNumber(tokens, "gridCols", base.gridCols),
+  };
+}
+
+/** 编辑器配置 → 后端 tokens，确保 PUT 后可由 GET 完整还原。 */
+export function themeTokensFromConfig(c: ThemeConfig): Record<string, string | number> {
+  return {
+    colorPrimary: c.primary,
+    colorAccent: c.accent,
+    colorBgBase: c.bg,
+    colorSurface: c.surface,
+    colorTextBase: c.text,
+    colorTextMuted: c.textMuted,
+    colorBorder: c.border,
+    fontId: c.fontId,
+    fontSize: c.fontSize,
+    lineHeight: c.lineHeight,
+    spacingBase: c.spacingBase,
+    paddingSm: c.paddingSm,
+    paddingMd: c.paddingMd,
+    paddingLg: c.paddingLg,
+    marginSm: c.marginSm,
+    marginMd: c.marginMd,
+    marginLg: c.marginLg,
+    radius: c.radius,
+    sidebarWidth: c.sidebarWidth,
+    gridCols: c.gridCols,
+  };
+}
+
+function presetFromApi(item: ThemeApiItem, index = 0): ThemePreset {
+  const config = configFromTheme(item);
+  return {
+    id: item.id,
+    name: item.name || `主题 ${index + 1}`,
+    mode: normalizeThemeMode(item.mode),
+    desc: item.description || "",
+    previewBg: config.bg,
+    previewColor: config.text,
+    isBuiltIn: Boolean(item.isPreset),
+  };
+}
+
 /** 将 ThemeMode 映射为 UI 标签（纯函数，便于测试）*/
 export function modeLabel(mode: ThemeMode | string | undefined | null): string {
   switch (normalizeThemeMode(mode)) {
@@ -213,40 +300,40 @@ export function modeLabel(mode: ThemeMode | string | undefined | null): string {
  * ========================================================================== */
 
 export function StylesPage() {
-  const [themes, setThemes] = useState<ThemePreset[]>(MOCK_THEMES);
-  const [activeThemeId, setActiveThemeId] = useState<string>("light");
+  const [themes, setThemes] = useState<ThemePreset[]>([]);
+  const [activeThemeId, setActiveThemeId] = useState<string>("");
   const [tab, setTab] = useState<EditorTab>("colors");
   const [config, setConfig] = useState<ThemeConfig>({ ...LIGHT_CONFIG });
   const [dirty, setDirty] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [readOnlyDemo, setReadOnlyDemo] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [serverSnapshot, setServerSnapshot] = useState<ThemeConfig>({ ...LIGHT_CONFIG });
 
-  /* GET /v1/themes —— 拉取主题列表，失败则用 MOCK_THEMES */
+  /* GET /v1/themes：成功时以服务端为准；失败才展示明确标记的只读演示目录。 */
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await apiGet<{ items?: Array<{ id: string; name?: string; mode?: ThemeMode; description?: string }> }>("/v1/themes");
+        const res = await apiGet<{ items?: ThemeApiItem[] }>("/v1/themes");
         if (cancelled) return;
-        if (res.items && res.items.length) {
-          const mapped: ThemePreset[] = res.items.map((it, idx) => {
-            const mode = normalizeThemeMode(it.mode);
-            const cfg = configForMode(mode);
-            return {
-              id: it.id,
-              name: it.name || `主题 ${idx + 1}`,
-              mode,
-              desc: it.description || "",
-              previewBg: cfg.bg,
-              previewColor: cfg.text,
-              isBuiltIn: Boolean((it as { isPreset?: boolean }).isPreset),
-            };
-          });
-          setThemes(mapped);
+        const items = res.items || [];
+        const mapped = items.map(presetFromApi);
+        setThemes(mapped);
+        if (mapped.length) {
+          const first = items[0];
+          const firstConfig = configFromTheme(first);
           setActiveThemeId(mapped[0].id);
-          setConfig(configForMode(mapped[0].mode));
+          setConfig(firstConfig);
+          setServerSnapshot(firstConfig);
         }
       } catch {
-        /* 降级到 MOCK_THEMES（已为初始值）*/
+        if (cancelled) return;
+        setThemes(MOCK_THEMES);
+        setActiveThemeId(MOCK_THEMES[0].id);
+        setReadOnlyDemo(true);
+        setNotice("主题 API 不可用 · 当前为内置演示预览（只读）");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -256,10 +343,29 @@ export function StylesPage() {
 
   const activeTheme = themes.find((t) => t.id === activeThemeId) || themes[0];
 
-  function selectTheme(t: ThemePreset) {
-    setActiveThemeId(t.id);
-    setConfig(configForMode(t.mode));
-    setDirty(false);
+  async function selectTheme(t: ThemePreset) {
+    if (readOnlyDemo) {
+      const next = configForMode(t.mode);
+      setActiveThemeId(t.id);
+      setConfig(next);
+      setServerSnapshot(next);
+      setDirty(false);
+      return;
+    }
+    setBusy(true);
+    setNotice("");
+    try {
+      const item = await apiGet<ThemeApiItem>(`/v1/themes/${encodeURIComponent(t.id)}`);
+      const next = configFromTheme(item);
+      setActiveThemeId(item.id);
+      setConfig(next);
+      setServerSnapshot(next);
+      setDirty(false);
+    } catch (e) {
+      setNotice(`读取主题失败：${String((e as Error).message || e)}`);
+    } finally {
+      setBusy(false);
+    }
   }
 
   function patch(p: Partial<ThemeConfig>) {
@@ -267,37 +373,68 @@ export function StylesPage() {
     setDirty(true);
   }
 
-  function newTheme() {
-    const id = `theme_${Date.now()}`;
-    const next: ThemePreset = {
-      id,
-      name: `新主题 ${themes.length + 1}`,
-      mode: "light",
-      desc: "自定义主题",
-      previewBg: config.bg,
-      previewColor: config.text,
-      isBuiltIn: false,
-    };
-    setThemes((prev) => [...prev, next]);
-    setActiveThemeId(id);
-    setDirty(false);
+  async function newTheme() {
+    if (readOnlyDemo) return;
+    setBusy(true);
+    setNotice("");
+    try {
+      const created = await apiPost<{ ok?: boolean; item?: ThemeApiItem }>("/v1/themes", {
+        name: `新主题 ${themes.length + 1}`,
+        mode: "light",
+        description: "自定义主题",
+        tokens: themeTokensFromConfig(LIGHT_CONFIG),
+      });
+      if (!created.ok || !created.item?.id) throw new Error("创建响应缺少有效主题 ID");
+      const verified = await apiGet<ThemeApiItem>(`/v1/themes/${encodeURIComponent(created.item.id)}`);
+      const nextConfig = configFromTheme(verified);
+      setThemes((prev) => [...prev.filter((t) => t.id !== verified.id), presetFromApi(verified, prev.length)]);
+      setActiveThemeId(verified.id);
+      setConfig(nextConfig);
+      setServerSnapshot(nextConfig);
+      setDirty(false);
+      setNotice(`已创建并验证主题 ${verified.name}`);
+    } catch (e) {
+      setNotice(`创建主题失败：${String((e as Error).message || e)}`);
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function saveTheme() {
-    setThemes((prev) =>
-      prev.map((t) =>
-        t.id === activeThemeId
-          ? { ...t, previewBg: config.bg, previewColor: config.text }
-          : t,
-      ),
-    );
-    setDirty(false);
+  async function saveTheme() {
+    if (!activeTheme || readOnlyDemo) return;
+    setBusy(true);
+    setNotice("");
+    try {
+      const tokens = themeTokensFromConfig(config);
+      const updated = await apiPut<ThemeApiItem>(`/v1/themes/${encodeURIComponent(activeTheme.id)}`, {
+        mode: activeTheme.mode === "contrast" ? "high-contrast" : activeTheme.mode,
+        description: activeTheme.desc,
+        tokens,
+      });
+      if (updated.id !== activeTheme.id) throw new Error("更新响应主题 ID 不一致");
+      const verified = await apiGet<ThemeApiItem>(`/v1/themes/${encodeURIComponent(activeTheme.id)}`);
+      const verifiedConfig = configFromTheme(verified);
+      if (JSON.stringify(themeTokensFromConfig(verifiedConfig)) !== JSON.stringify(tokens)) {
+        throw new Error("服务端重读结果与保存内容不一致");
+      }
+      setThemes((prev) => prev.map((t) => (t.id === verified.id ? presetFromApi(verified) : t)));
+      setConfig(verifiedConfig);
+      setServerSnapshot(verifiedConfig);
+      setDirty(false);
+      setNotice(`已保存并验证主题 ${verified.name}`);
+    } catch (e) {
+      setNotice(`保存失败：${String((e as Error).message || e)}`);
+      setDirty(true);
+    } finally {
+      setBusy(false);
+    }
   }
 
   function resetTheme() {
     if (!activeTheme) return;
-    setConfig(configForMode(activeTheme.mode));
+    setConfig({ ...serverSnapshot });
     setDirty(false);
+    setNotice("已恢复为最近一次服务端快照");
   }
 
   const cssVars = useMemo(() => buildCssVars(config), [config]);
@@ -313,24 +450,25 @@ export function StylesPage() {
               <Link to="/workshop/orders" className="p-btn p-btn-secondary p-btn-sm">
                 返回编辑器
               </Link>
-              <button type="button" className="p-btn p-btn-secondary p-btn-sm" onClick={newTheme}>
+              <button type="button" className="p-btn p-btn-secondary p-btn-sm" onClick={() => void newTheme()} disabled={readOnlyDemo || busy}>
                 + 新建主题
               </button>
               <button
                 type="button"
                 className="p-btn p-btn-primary p-btn-sm"
-                onClick={saveTheme}
-                disabled={!dirty}
+                onClick={() => void saveTheme()}
+                disabled={!dirty || readOnlyDemo || busy}
               >
                 保存样式{dirty ? " *" : ""}
               </button>
-              <button type="button" className="p-btn p-btn-secondary p-btn-sm" onClick={resetTheme}>
+              <button type="button" className="p-btn p-btn-secondary p-btn-sm" onClick={resetTheme} disabled={!activeTheme || busy}>
                 重置
               </button>
             </div>
           }
           count={themes.length}
         />
+        {notice && <p className={notice.includes("失败") ? "error" : "muted"}>{notice}</p>}
 
         {/* === 两栏布局 === */}
         <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 16, marginTop: 16 }}>
@@ -344,7 +482,7 @@ export function StylesPage() {
             {!loading && themes.map((t) => (
               <div
                 key={t.id}
-                onClick={() => selectTheme(t)}
+                onClick={() => void selectTheme(t)}
                 style={{
                   padding: 10,
                   borderRadius: 2,

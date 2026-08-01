@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { PageChrome } from "../../components/PageChrome";
 import { apiGet } from "../../api/client";
 
-type WidgetItem = {
+export type WidgetItem = {
   id: string;
   name: string;
   description: string;
@@ -11,6 +11,8 @@ type WidgetItem = {
   version: string;
   usedBy: number;
   icon: string;
+  installed: boolean;
+  canvasKind?: string;
 };
 
 /** canvasKind → 已有 SVG 图标 key · 用于把 API 返回的 canvasKind 渲染为彩色图标 */
@@ -31,7 +33,7 @@ const KIND_TO_ICON_KEY: Record<string, string> = {
 };
 
 /** 后端 manifest item → 前端 WidgetItem · 名字以 nameZh 为准 */
-function apiItemToWidgetItem(it: {
+export function apiItemToWidgetItem(it: {
   id: string;
   name?: string;
   nameZh?: string;
@@ -40,6 +42,7 @@ function apiItemToWidgetItem(it: {
   runtime?: string;
   author?: string;
   canvasKind?: string;
+  installed?: boolean;
 }): WidgetItem {
   const runtime = it.runtime || "inproc";
   const author = it.author || "aos";
@@ -53,26 +56,35 @@ function apiItemToWidgetItem(it: {
     version: it.version || "0.1.0",
     usedBy: 0,
     icon: KIND_TO_ICON_KEY[it.canvasKind || ""] || "table",
+    installed: it.installed === true,
+    canvasKind: it.canvasKind,
   };
 }
 
+const CANVAS_KINDS = new Set(Object.keys(KIND_TO_ICON_KEY));
+
+export function canvasUsePath(item: WidgetItem): string | null {
+  if (!item.installed || !item.canvasKind || !CANVAS_KINDS.has(item.canvasKind)) return null;
+  return `/workshop/canvas?pluginId=${encodeURIComponent(item.id)}&canvasKind=${encodeURIComponent(item.canvasKind)}`;
+}
+
 const WIDGETS: WidgetItem[] = [
-  { id: "table", name: "数据表格", description: "展示 ObjectSet 的行数据，支持排序、筛选、分页、行内编辑", source: "builtin", version: "v3.2.1", usedBy: 8, icon: "table" },
-  { id: "chart", name: "趋势图", description: "折线/面积/柱状/组合图，绑定 ObjectType 数值字段和分组维度", source: "builtin", version: "v3.2.1", usedBy: 6, icon: "chart" },
-  { id: "form", name: "编辑表单", description: "基于 ObjectType 自动生成字段表单，支持 Action 提交", source: "builtin", version: "v3.1.0", usedBy: 5, icon: "form" },
-  { id: "objectset", name: "对象集视图", description: "ObjectSet 的多视图容器（表格/卡片/地图切换），核心交互组件", source: "builtin", version: "v3.2.1", usedBy: 12, icon: "objectset" },
-  { id: "navbar", name: "导航栏", description: "顶部/侧边导航，Tab 切换，绑定页面路由", source: "builtin", version: "v3.0.0", usedBy: 10, icon: "navbar" },
-  { id: "hero", name: "Hero 区", description: "大标题 + 描述 + 背景图，页面顶部视觉入口", source: "builtin", version: "v3.0.0", usedBy: 4, icon: "hero" },
-  { id: "container", name: "容器", description: "嵌套布局容器，支持栅格/堆叠/选项卡排列子组件", source: "builtin", version: "v3.2.1", usedBy: 14, icon: "container" },
-  { id: "map", name: "地图", description: "地理可视化，绑定 ObjectType 的经纬度字段，支持标记/热力图/路径", source: "builtin", version: "v2.8.0", usedBy: 3, icon: "map" },
-  { id: "timeline", name: "时间线", description: "按时间排序的事件列表，支持双向滚动、筛选节点", source: "builtin", version: "v2.5.0", usedBy: 2, icon: "timeline" },
-  { id: "button", name: "按钮", description: "触发 Action 或跳转，支持主/次/文字三种样式", source: "builtin", version: "v3.2.1", usedBy: 15, icon: "button" },
-  { id: "stat", name: "统计卡片", description: "KPI 数值展示，支持趋势小图、目标对比", source: "builtin", version: "v3.1.0", usedBy: 7, icon: "stat" },
-  { id: "filter", name: "筛选器", description: "多维度筛选面板，输出 ObjectSet Filter 变量", source: "builtin", version: "v3.0.0", usedBy: 9, icon: "filter" },
-  { id: "kanban", name: "看板", description: "按状态分列的卡片看板，支持拖拽排序", source: "market", version: "v1.2.0", usedBy: 2, icon: "kanban" },
-  { id: "gantt", name: "甘特图", description: "项目时间线可视化，绑定开始/结束时间字段", source: "market", version: "v1.0.0", usedBy: 1, icon: "gantt" },
-  { id: "calendar", name: "日历", description: "月/周/日视图，绑定日期字段和事件标题", source: "market", version: "v1.1.0", usedBy: 3, icon: "calendar" },
-  { id: "custom-chart", name: "自定义图表", description: "基于 ECharts 的完全自定义图表，支持 JSON 配置", source: "custom", version: "v0.9.0", usedBy: 1, icon: "custom" },
+  { id: "table", name: "数据表格", description: "展示 ObjectSet 的行数据，支持排序、筛选、分页、行内编辑", source: "builtin", version: "v3.2.1", usedBy: 8, icon: "table", installed: false },
+  { id: "chart", name: "趋势图", description: "折线/面积/柱状/组合图，绑定 ObjectType 数值字段和分组维度", source: "builtin", version: "v3.2.1", usedBy: 6, icon: "chart", installed: false },
+  { id: "form", name: "编辑表单", description: "基于 ObjectType 自动生成字段表单，支持 Action 提交", source: "builtin", version: "v3.1.0", usedBy: 5, icon: "form", installed: false },
+  { id: "objectset", name: "对象集视图", description: "ObjectSet 的多视图容器（表格/卡片/地图切换），核心交互组件", source: "builtin", version: "v3.2.1", usedBy: 12, icon: "objectset", installed: false },
+  { id: "navbar", name: "导航栏", description: "顶部/侧边导航，Tab 切换，绑定页面路由", source: "builtin", version: "v3.0.0", usedBy: 10, icon: "navbar", installed: false },
+  { id: "hero", name: "Hero 区", description: "大标题 + 描述 + 背景图，页面顶部视觉入口", source: "builtin", version: "v3.0.0", usedBy: 4, icon: "hero", installed: false },
+  { id: "container", name: "容器", description: "嵌套布局容器，支持栅格/堆叠/选项卡排列子组件", source: "builtin", version: "v3.2.1", usedBy: 14, icon: "container", installed: false },
+  { id: "map", name: "地图", description: "地理可视化，绑定 ObjectType 的经纬度字段，支持标记/热力图/路径", source: "builtin", version: "v2.8.0", usedBy: 3, icon: "map", installed: false },
+  { id: "timeline", name: "时间线", description: "按时间排序的事件列表，支持双向滚动、筛选节点", source: "builtin", version: "v2.5.0", usedBy: 2, icon: "timeline", installed: false },
+  { id: "button", name: "按钮", description: "触发 Action 或跳转，支持主/次/文字三种样式", source: "builtin", version: "v3.2.1", usedBy: 15, icon: "button", installed: false },
+  { id: "stat", name: "统计卡片", description: "KPI 数值展示，支持趋势小图、目标对比", source: "builtin", version: "v3.1.0", usedBy: 7, icon: "stat", installed: false },
+  { id: "filter", name: "筛选器", description: "多维度筛选面板，输出 ObjectSet Filter 变量", source: "builtin", version: "v3.0.0", usedBy: 9, icon: "filter", installed: false },
+  { id: "kanban", name: "看板", description: "按状态分列的卡片看板，支持拖拽排序", source: "market", version: "v1.2.0", usedBy: 2, icon: "kanban", installed: false },
+  { id: "gantt", name: "甘特图", description: "项目时间线可视化，绑定开始/结束时间字段", source: "market", version: "v1.0.0", usedBy: 1, icon: "gantt", installed: false },
+  { id: "calendar", name: "日历", description: "月/周/日视图，绑定日期字段和事件标题", source: "market", version: "v1.1.0", usedBy: 3, icon: "calendar", installed: false },
+  { id: "custom-chart", name: "自定义图表", description: "基于 ECharts 的完全自定义图表，支持 JSON 配置", source: "custom", version: "v0.9.0", usedBy: 1, icon: "custom", installed: false },
 ];
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -178,6 +190,7 @@ export function WidgetRegistryPage() {
   const [widgets, setWidgets] = useState<WidgetItem[]>(WIDGETS);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<WidgetItem | null>(null);
+  const [catalogNote, setCatalogNote] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -197,16 +210,14 @@ export function WidgetRegistryPage() {
           }>;
         }>("/v1/widget-plugins");
         if (cancelled) return;
-        const items = (res.items || [])
-          .filter((it) => it.installed)
-          .map(apiItemToWidgetItem);
-        if (items.length) {
-          setWidgets(items);
-        } else {
-          setWidgets(WIDGETS);
-        }
+        const items = (res.items || []).map(apiItemToWidgetItem);
+        setWidgets(items);
+        setCatalogNote(items.length ? "目录来自 widget-plugins 实时契约" : "组件目录为空");
       } catch {
-        if (!cancelled) setWidgets(WIDGETS);
+        if (!cancelled) {
+          setWidgets(WIDGETS);
+          setCatalogNote("Widget API 不可用 · 当前为内置演示目录（只读）");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -247,7 +258,7 @@ export function WidgetRegistryPage() {
             </button>
           ))}
           <span className="wr-tabs-right">
-            {loading ? "加载中…" : `已安装 ${widgets.length} 个组件`}
+            {loading ? "加载中…" : `已安装 ${widgets.filter((w) => w.installed).length} / 目录 ${widgets.length}`}
           </span>
         </div>
 
@@ -280,6 +291,8 @@ export function WidgetRegistryPage() {
                 <span>{w.version}</span>
                 <span>·</span>
                 <span>{w.usedBy > 0 ? `被 ${w.usedBy} 个应用使用` : "暂无应用使用"}</span>
+                <span>·</span>
+                <span>{w.installed ? "已安装" : "未安装"}</span>
               </div>
             </div>
           ))}
@@ -300,7 +313,10 @@ export function WidgetRegistryPage() {
             <button
               type="button"
               className="wr-callout-secondary"
-              onClick={() => undefined}
+              onClick={() => {
+                setSource("market");
+                setCatalogNote("已切换到市场来源目录；安装能力尚未开放");
+              }}
             >
               浏览组件市场
             </button>
@@ -308,6 +324,7 @@ export function WidgetRegistryPage() {
           <p className="wr-callout-hint">
             自定义组件使用 React + TypeScript + Workshop Widget SDK 开发，提交到代码仓库后自动注册到本页面
           </p>
+          {catalogNote && <p className="wr-callout-hint">{catalogNote}</p>}
         </div>
       </div>
 
@@ -379,9 +396,15 @@ export function WidgetRegistryPage() {
               <button className="wr-modal-btn wr-modal-btn-secondary" onClick={() => setSelected(null)}>
                 关闭
               </button>
-              <button className="wr-modal-btn wr-modal-btn-primary" onClick={() => setSelected(null)}>
-                在画布中使用
-              </button>
+              {canvasUsePath(selected) ? (
+                <Link className="wr-modal-btn wr-modal-btn-primary" to={canvasUsePath(selected)!} onClick={() => setSelected(null)}>
+                  在画布中使用
+                </Link>
+              ) : (
+                <button className="wr-modal-btn wr-modal-btn-primary" disabled title={selected.installed ? "插件未声明可用 canvasKind" : "插件尚未安装"}>
+                  {selected.installed ? "暂不可用于画布" : "未安装"}
+                </button>
+              )}
             </div>
           </div>
         </div>

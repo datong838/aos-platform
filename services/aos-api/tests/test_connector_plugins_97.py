@@ -59,3 +59,20 @@ def test_create_source_requires_installed_plugin(client, auth_headers):
     )
     assert bad.status_code == 400
     assert bad.json()["code"] == "PLUGIN_NOT_INSTALLED"
+
+
+def test_create_source_persists_runtime_mode(client, auth_headers):
+    from aos_api import data_os_store
+
+    created = client.post(
+        "/v1/sources",
+        headers=auth_headers,
+        json={"id": "src-97-runtime", "type": "file", "runtimeMode": "worker"},
+    )
+    assert created.status_code == 200
+    assert created.json()["runtimeMode"] == "worker"
+
+    listed = client.get("/v1/sources", headers=auth_headers)
+    item = next(i for i in listed.json()["items"] if i["id"] == "src-97-runtime")
+    assert item["runtimeMode"] == "worker"
+    data_os_store.delete_source("src-97-runtime")

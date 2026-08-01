@@ -53,8 +53,7 @@ export function runtimeLabel(s: SourceRow): string {
   if (mode === "agent") return "代理 · agent-local";
   if (mode === "worker") return "代理工作者";
   if (mode === "direct") return "直接连接";
-  if (s.type === "jdbc") return "代理 · agent-local";
-  return "直接连接";
+  return "历史数据 · 未设置";
 }
 
 export function statusZh(s?: string): string {

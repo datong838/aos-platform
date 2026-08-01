@@ -85,7 +85,7 @@ export type CanvasNode = {
   };
 };
 
-type PaletteItem = {
+export type PaletteItem = {
   kind: CanvasKind;
   label: string;
   tone?: "violet";
@@ -93,6 +93,14 @@ type PaletteItem = {
   runtime?: string;
   stub?: boolean;
 };
+
+export function resolveRequestedPaletteItem(palette: PaletteItem[], search: string): PaletteItem | null {
+  const params = new URLSearchParams(search);
+  const pluginId = params.get("pluginId");
+  const canvasKind = params.get("canvasKind");
+  if (!pluginId || !canvasKind) return null;
+  return palette.find((item) => item.pluginId === pluginId && item.kind === canvasKind) || null;
+}
 
 const DEFAULT_LAYOUT: CanvasNode[] = [
   { id: "n-filter", kind: "filter", title: "Filter · site", pluginId: "filter-list", config: { site: "DC-East" } },
@@ -478,6 +486,10 @@ export function CanvasPage() {
   const [propTab, setPropTab] = useState<"content" | "style" | "events" | "data">("content");
   const [palette, setPalette] = useState(FALLBACK_PALETTE);
   const [paletteNote, setPaletteNote] = useState<string | null>(null);
+  const [paletteReady, setPaletteReady] = useState(false);
+  const [paletteAuthoritative, setPaletteAuthoritative] = useState(false);
+  const [modulesReady, setModulesReady] = useState(false);
+  const requestedPluginHandledRef = useRef(false);
   const [activeTab, setActiveTab] = useState<string>("objects");
   const [canvasMode, setCanvasMode] = useState<"widget" | "workflow" | "preview">("widget");
   const [bottomPanelCollapsed, setBottomPanelCollapsed] = useState(true);
@@ -630,7 +642,9 @@ export function CanvasPage() {
   }, []);
 
   useEffect(() => {
-    loadModules().catch((e) => setErr(String(e.message || e)));
+    loadModules()
+      .catch((e) => setErr(String(e.message || e)))
+      .finally(() => setModulesReady(true));
   }, [loadModules]);
 
   useEffect(() => {
@@ -665,21 +679,44 @@ export function CanvasPage() {
         if (items.length) {
           setPalette(items);
           setPaletteNote(null);
+          setPaletteAuthoritative(true);
         } else {
           setPalette(FALLBACK_PALETTE);
           setPaletteNote("Widget 插件目录为空 · 暂用本地兜底调色板");
+          setPaletteAuthoritative(false);
         }
       } catch {
         if (!cancelled) {
           setPalette(FALLBACK_PALETTE);
           setPaletteNote("无法加载 widget-plugins · 暂用本地兜底调色板");
+          setPaletteAuthoritative(false);
         }
+      } finally {
+        if (!cancelled) setPaletteReady(true);
       }
     })();
     return () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!modulesReady || !paletteReady || requestedPluginHandledRef.current || typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const pluginId = params.get("pluginId");
+    const canvasKind = params.get("canvasKind");
+    if (!pluginId && !canvasKind) return;
+    requestedPluginHandledRef.current = true;
+    const requested = paletteAuthoritative
+      ? resolveRequestedPaletteItem(palette, window.location.search)
+      : null;
+    if (!requested) {
+      setErr(`无法加入组件：插件 ${pluginId || "—"} 未安装、已禁用或 canvasKind 不匹配`);
+      return;
+    }
+    addNode(requested);
+    setMsg(`已从组件注册表加入 ${requested.label.replace(/^\+\s*/, "")} · 请保存模块`);
+  }, [modulesReady, paletteReady, paletteAuthoritative, palette]);
 
   async function onSelectModule(id: string) {
     setModuleId(id);

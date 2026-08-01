@@ -16,7 +16,7 @@ import os
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeout
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
@@ -187,6 +187,7 @@ class MediaIn(BaseModel):
 class ConnectorIn(BaseModel):
     id: str
     type: str = "file"
+    runtimeMode: Literal["direct", "agent", "worker"] | None = None
 
 
 class PipelineIn(BaseModel):
@@ -1058,7 +1059,7 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
     except PermissionError as exc:
         raise ApiError(code="PLUGIN_NOT_INSTALLED", message=str(exc), status_code=400) from None
     item = {
-        **body.model_dump(),
+        **body.model_dump(exclude_none=True),
         "type": plugin_id,
         "status": "registered",
         "pluginId": plugin_id,
