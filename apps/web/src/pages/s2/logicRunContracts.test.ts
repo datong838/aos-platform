@@ -10,6 +10,16 @@ import {
 
 const graphHash = "a".repeat(64);
 
+function nestedJson(depth: number): Record<string, unknown> {
+  let value: unknown = true;
+  for (let level = 1; level < depth; level += 1) value = { next: value };
+  return value as Record<string, unknown>;
+}
+
+function runError(nodeId = "input-1", reason = "adapter_missing") {
+  return { code: "CAPABILITY_UNAVAILABLE", message: "adapter unavailable", node_id: nodeId, reason };
+}
+
 function request(overrides: Record<string, unknown> = {}): LogicDryRunRequest {
   return {
     expected_revision: 2,
@@ -99,8 +109,22 @@ describe("logicRunContracts · strict request", () => {
     const missingInputs = { ...request() } as Record<string, unknown>;
     delete missingInputs.inputs;
     expect(() => assertLogicDryRunRequest(missingInputs)).toThrow("inputs 必须是 JSON 对象");
-    expect(() => assertLogicDryRunRequest(request({ inputs: { value: "x".repeat(256 * 1024) } }))).toThrow("256 KiB");
+    expect(() => assertLogicDryRunRequest(request({
+      inputs: { values: Array.from({ length: 10 }, () => "x".repeat(30_000)) },
+    }))).toThrow("256 KiB");
     expect(() => assertLogicDryRunRequest(request({ idempotency_key: "x".repeat(161) }))).toThrow("160");
+  });
+
+  it("enforces exact JSON key, depth, collection and string budgets", () => {
+    expect(() => assertLogicDryRunRequest(request({ inputs: { ["k".repeat(256)]: true } }))).not.toThrow();
+    expect(() => assertLogicDryRunRequest(request({ inputs: nestedJson(16) }))).not.toThrow();
+    expect(() => assertLogicDryRunRequest(request({ inputs: { values: Array.from({ length: 2_000 }, () => 0) } }))).not.toThrow();
+    expect(() => assertLogicDryRunRequest(request({ inputs: { value: "x".repeat(32_768) } }))).not.toThrow();
+
+    expect(() => assertLogicDryRunRequest(request({ inputs: { ["k".repeat(257)]: true } }))).toThrow("长度超过 256 的键");
+    expect(() => assertLogicDryRunRequest(request({ inputs: nestedJson(17) }))).toThrow("深度超过 16");
+    expect(() => assertLogicDryRunRequest(request({ inputs: { values: Array.from({ length: 2_001 }, () => 0) } }))).toThrow("集合长度超过 2000");
+    expect(() => assertLogicDryRunRequest(request({ inputs: { value: "x".repeat(32_769) } }))).toThrow("字符串长度超过 32768");
   });
 });
 
@@ -165,7 +189,7 @@ describe("logicRunContracts · response honesty", () => {
   });
 
   it("accepts structured failed evidence and requires machine-readable skipped reasons", () => {
-    const failedError = { code: "CAPABILITY_UNAVAILABLE", message: "adapter unavailable", node_id: "input-1", reason: "adapter_missing" };
+    const failedError = runError();
     const failed = dryRun({
       status: "failed",
       node_results: [nodeResult({ status: "failed", error: failedError })],
@@ -178,6 +202,101 @@ describe("logicRunContracts · response honesty", () => {
     expect(() => normalizeLogicDryRun(dryRun({
       node_results: [nodeResult({ status: "skipped", started_at: null, finished_at: null, elapsed_ms: null })],
     }), expectation)).toThrow("机器可读 reason");
+  });
+
+  it("keeps top-level status consistent with every terminal node", () => {
+    const skipped = nodeResult({
+      status: "skipped",
+      started_at: null,
+      finished_at: null,
+      elapsed_ms: null,
+      error: runError("input-1", "branch_not_selected"),
+    });
+    expect(() => normalizeLogicDryRun(dryRun({ node_results: [skipped] }), expectation)).not.toThrow();
+
+    const canceled = nodeResult({
+      status: "canceled",
+      started_at: null,
+      finished_at: null,
+      elapsed_ms: null,
+      error: runError("input-1", "fail_fast"),
+    });
+    expect(() => normalizeLogicDryRun(dryRun({ node_results: [canceled] }), expectation)).toThrow("succeeded");
+    expect(() => normalizeLogicDryRun(dryRun({
+      status: "failed",
+      node_results: [canceled],
+      error: runError(),
+    }), expectation)).toThrow("至少包含一个 failed");
+  });
+
+  it("checks timestamp order without equating elapsed monotonic time to wall-clock delta", () => {
+    expect(() => normalizeLogicDryRun(dryRun({ elapsed_ms: 999_999 }), expectation)).not.toThrow();
+    expect(() => normalizeLogicDryRun(dryRun({
+      finished_at: "2026-07-31T23:59:59Z",
+    }), expectation)).toThrow("finished_at 不得早于 started_at");
+    expect(() => normalizeLogicDryRun(dryRun({
+      node_results: [nodeResult({ finished_at: "2026-07-31T23:59:59Z" })],
+    }), expectation)).toThrow("finished_at 不得早于 started_at");
+  });
+
+  it("requires total_tokens to equal all non-null node usage totals", () => {
+    const usageA = { model: "m1", input_tokens: 1, output_tokens: 2, total_tokens: 3 };
+    const usageB = { model: "m2", input_tokens: 2, output_tokens: 3, total_tokens: 5 };
+    const twoNodes = [nodeResult({ usage: usageA }), nodeResult({ node_id: "llm-2", kind: "use_llm", usage: usageB })];
+    const twoNodeExpectation = { ...expectation, nodeIds: ["input-1", "llm-2"] };
+    expect(() => normalizeLogicDryRun(dryRun({ total_tokens: 8, node_results: twoNodes }), twoNodeExpectation)).not.toThrow();
+    expect(() => normalizeLogicDryRun(dryRun({ total_tokens: 7, node_results: twoNodes }), twoNodeExpectation)).toThrow("usage 汇总不一致");
+    expect(() => normalizeLogicDryRun(dryRun({ total_tokens: 0 }), expectation)).toThrow("必须为 null");
+  });
+
+  it("requires exact node sets and validates every error/edit node reference", () => {
+    expect(() => normalizeLogicDryRun(dryRun(), { ...expectation, nodeIds: ["input-1", "missing"] })).toThrow("缺少当前图 node_id");
+    expect(() => normalizeLogicDryRun(dryRun(), { ...expectation, nodeIds: ["input-1", "input-1"] })).toThrow("expectedNodeIds 包含重复");
+    expect(() => normalizeLogicDryRun(dryRun({
+      status: "failed",
+      node_results: [nodeResult({ status: "failed", error: runError("other") })],
+      error: runError(),
+    }), expectation)).toThrow("error.node_id 必须等于所属");
+    expect(() => normalizeLogicDryRun(dryRun({
+      status: "failed",
+      node_results: [nodeResult({ status: "failed", error: runError() })],
+      error: runError("other"),
+    }), expectation)).toThrow("run.error.node_id");
+    expect(() => normalizeLogicDryRun(dryRun({
+      proposed_edits: [{ action: "suggest", object_id: "obj", field: "status", value: "review", source_node_id: "other", applied: false }],
+    }), expectation)).toThrow("source_node_id 不属于");
+    expect(() => normalizeLogicDryRun(dryRun({
+      node_results: [nodeResult({
+        proposed_edits: [{ action: "suggest", object_id: "obj", field: "status", value: "review", source_node_id: "other", applied: false }],
+      })],
+    }), expectation)).toThrow("source_node_id 不属于");
+  });
+
+  it("applies JSON safety limits to response output and total result evidence", () => {
+    expect(() => normalizeLogicDryRun(dryRun({
+      node_results: [nodeResult({ output: { ["k".repeat(257)]: true } })],
+    }), expectation)).toThrow("长度超过 256 的键");
+    expect(() => normalizeLogicDryRun(dryRun({
+      node_results: [nodeResult({ output: nestedJson(17) })],
+    }), expectation)).toThrow("深度超过 16");
+    expect(() => normalizeLogicDryRun(dryRun({
+      node_results: [nodeResult({ output: { values: Array.from({ length: 2_001 }, () => 0) } })],
+    }), expectation)).toThrow("集合长度超过 2000");
+    expect(() => normalizeLogicDryRun(dryRun({
+      node_results: [nodeResult({ output: { value: "x".repeat(32_769) } })],
+    }), expectation)).toThrow("字符串长度超过 32768");
+    expect(() => normalizeLogicDryRun(dryRun({
+      node_results: [nodeResult({ output: Array.from({ length: 5 }, () => "x".repeat(30_000)) })],
+    }), expectation)).toThrow("output 超过 128 KiB");
+
+    const largeNodes = Array.from({ length: 18 }, (_, index) => nodeResult({
+      node_id: `node-${index}`,
+      output: Array.from({ length: 4 }, () => "x".repeat(30_000)),
+    }));
+    expect(() => normalizeLogicDryRun(dryRun({ node_results: largeNodes }), {
+      ...expectation,
+      nodeIds: largeNodes.map((node) => node.node_id as string),
+    })).toThrow("超过 2 MiB");
   });
 
   it("accepts exact detail verification and rejects mismatched persisted evidence", () => {
@@ -202,5 +321,28 @@ describe("logicRunContracts · history list", () => {
     expect(() => normalizeLogicRunList({ items: [summary(), summary()], count: 2, next_cursor: null }, "logic-safe")).toThrow("重复 run_id");
     expect(() => normalizeLogicRunList({ items: [summary()], count: 2, next_cursor: null }, "logic-safe")).toThrow("count");
     expect(() => normalizeLogicRunList({ items: [summary({ reasoning: "private" })], count: 1, next_cursor: null }, "logic-safe")).toThrow("模型私有推理字段");
+  });
+
+  it("keeps summary status, node counts, error code and timestamps self-consistent", () => {
+    expect(() => normalizeLogicRunList({
+      items: [summary({ node_counts: { executed: 0, skipped: 0, failed: 1, canceled: 0 } })],
+      count: 1,
+      next_cursor: null,
+    }, "logic-safe")).toThrow("succeeded 运行摘要");
+    expect(() => normalizeLogicRunList({
+      items: [summary({ status: "failed", error_code: null })],
+      count: 1,
+      next_cursor: null,
+    }, "logic-safe")).toThrow("failed 运行摘要");
+    expect(() => normalizeLogicRunList({
+      items: [summary({ status: "failed", node_counts: { executed: 0, skipped: 0, failed: 1, canceled: 0 }, error_code: "NODE_FAILED" })],
+      count: 1,
+      next_cursor: null,
+    }, "logic-safe")).not.toThrow();
+    expect(() => normalizeLogicRunList({
+      items: [summary({ finished_at: "2026-07-31T23:59:59Z" })],
+      count: 1,
+      next_cursor: null,
+    }, "logic-safe")).toThrow("finished_at 不得早于 started_at");
   });
 });

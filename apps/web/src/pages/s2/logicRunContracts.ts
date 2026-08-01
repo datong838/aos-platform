@@ -108,6 +108,13 @@ export interface LogicRunExpectation {
 }
 
 const HASH_RE = /^[0-9a-f]{64}$/i;
+const MAX_JSON_KEY_LENGTH = 256;
+const MAX_JSON_DEPTH = 16;
+const MAX_JSON_COLLECTION_LENGTH = 2_000;
+const MAX_JSON_STRING_LENGTH = 32_768;
+const MAX_INPUT_BYTES = 256 * 1024;
+const MAX_NODE_OUTPUT_BYTES = 128 * 1024;
+const MAX_RUN_RESULT_BYTES = 2 * 1024 * 1024;
 const RUN_STATUSES = new Set<LogicRunStatus>(["succeeded", "failed"]);
 const NODE_STATUSES = new Set<LogicNodeRunStatus>(["executed", "skipped", "failed", "canceled"]);
 const BLOCK_KINDS = new Set<string>(LOGIC_BLOCK_KINDS);
@@ -181,6 +188,10 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 function objectValue(value: unknown, label: string): Record<string, unknown> {
   if (!isPlainObject(value)) throw new Error(`${label} 必须是 JSON 对象`);
+  const keys = Object.keys(value);
+  if (keys.length > MAX_JSON_COLLECTION_LENGTH) throw new Error(`${label} 集合长度超过 ${MAX_JSON_COLLECTION_LENGTH}`);
+  const oversizedKey = keys.find((key) => Array.from(key).length > MAX_JSON_KEY_LENGTH);
+  if (oversizedKey !== undefined) throw new Error(`${label} 包含长度超过 ${MAX_JSON_KEY_LENGTH} 的键`);
   return value;
 }
 
@@ -191,6 +202,17 @@ function exactKeys(value: Record<string, unknown>, allowed: ReadonlySet<string>,
 
 function nonEmptyString(value: unknown, label: string): string {
   if (typeof value !== "string" || !value.trim()) throw new Error(`${label} 必须是非空字符串`);
+  if (Array.from(value).length > MAX_JSON_STRING_LENGTH) {
+    throw new Error(`${label} 字符串长度超过 ${MAX_JSON_STRING_LENGTH}`);
+  }
+  return value;
+}
+
+function stringValue(value: unknown, label: string): string {
+  if (typeof value !== "string") throw new Error(`${label} 必须是字符串`);
+  if (Array.from(value).length > MAX_JSON_STRING_LENGTH) {
+    throw new Error(`${label} 字符串长度超过 ${MAX_JSON_STRING_LENGTH}`);
+  }
   return value;
 }
 
@@ -201,7 +223,7 @@ function timestamp(value: unknown, label: string): string {
 }
 
 function nonNegativeInteger(value: unknown, label: string): number {
-  if (!Number.isInteger(value) || (value as number) < 0) throw new Error(`${label} 必须是非负整数`);
+  if (!Number.isSafeInteger(value) || (value as number) < 0) throw new Error(`${label} 必须是非负安全整数`);
   return value as number;
 }
 
@@ -221,15 +243,21 @@ function hash(value: unknown, label: string): string {
 }
 
 function jsonValue(value: unknown, label: string): JsonValue {
-  const stack: Array<{ value: unknown; path: string }> = [{ value, path: label }];
+  const stack: Array<{ value: unknown; path: string; depth: number }> = [{ value, path: label, depth: 1 }];
   const seen = new WeakSet<object>();
   while (stack.length > 0) {
     const current = stack.pop()!;
+    if (current.depth > MAX_JSON_DEPTH) throw new Error(`${current.path} JSON 深度超过 ${MAX_JSON_DEPTH}`);
     if (
       current.value === null
-      || typeof current.value === "string"
       || typeof current.value === "boolean"
     ) continue;
+    if (typeof current.value === "string") {
+      if (Array.from(current.value).length > MAX_JSON_STRING_LENGTH) {
+        throw new Error(`${current.path} 字符串长度超过 ${MAX_JSON_STRING_LENGTH}`);
+      }
+      continue;
+    }
     if (typeof current.value === "number") {
       if (!Number.isFinite(current.value)) throw new Error(`${current.path} 包含非有限数字`);
       continue;
@@ -240,11 +268,27 @@ function jsonValue(value: unknown, label: string): JsonValue {
     if (seen.has(current.value)) throw new Error(`${current.path} 包含循环引用`);
     seen.add(current.value);
     if (Array.isArray(current.value)) {
-      current.value.forEach((item, index) => stack.push({ value: item, path: `${current.path}[${index}]` }));
+      if (current.value.length > MAX_JSON_COLLECTION_LENGTH) {
+        throw new Error(`${current.path} 集合长度超过 ${MAX_JSON_COLLECTION_LENGTH}`);
+      }
+      current.value.forEach((item, index) => stack.push({
+        value: item,
+        path: `${current.path}[${index}]`,
+        depth: current.depth + 1,
+      }));
       continue;
     }
     if (!isPlainObject(current.value)) throw new Error(`${current.path} 包含非 JSON 对象`);
-    Object.entries(current.value).forEach(([key, item]) => stack.push({ value: item, path: `${current.path}.${key}` }));
+    const entries = Object.entries(current.value);
+    if (entries.length > MAX_JSON_COLLECTION_LENGTH) {
+      throw new Error(`${current.path} 集合长度超过 ${MAX_JSON_COLLECTION_LENGTH}`);
+    }
+    entries.forEach(([key, item]) => {
+      if (Array.from(key).length > MAX_JSON_KEY_LENGTH) {
+        throw new Error(`${current.path} 包含长度超过 ${MAX_JSON_KEY_LENGTH} 的键`);
+      }
+      stack.push({ value: item, path: `${current.path}.${key}`, depth: current.depth + 1 });
+    });
   }
   return value as JsonValue;
 }
@@ -252,6 +296,24 @@ function jsonValue(value: unknown, label: string): JsonValue {
 function jsonObject(value: unknown, label: string): JsonObject {
   objectValue(value, label);
   return jsonValue(value, label) as JsonObject;
+}
+
+function arrayValue(value: unknown, label: string): unknown[] {
+  if (!Array.isArray(value)) throw new Error(`${label} 必须是数组`);
+  if (value.length > MAX_JSON_COLLECTION_LENGTH) throw new Error(`${label} 集合长度超过 ${MAX_JSON_COLLECTION_LENGTH}`);
+  return value;
+}
+
+function jsonByteLength(value: unknown, label: string): number {
+  try {
+    return new TextEncoder().encode(JSON.stringify(value)).byteLength;
+  } catch {
+    throw new Error(`${label} 必须可序列化为 JSON`);
+  }
+}
+
+function assertFinishedNotBeforeStarted(startedAt: string, finishedAt: string, label: string): void {
+  if (Date.parse(finishedAt) < Date.parse(startedAt)) throw new Error(`${label}.finished_at 不得早于 started_at`);
 }
 
 export function assertNoPrivateReasoning(value: unknown): void {
@@ -319,8 +381,7 @@ function normalizeToolCall(value: unknown, label: string): LogicToolCall | null 
 }
 
 function normalizeEdits(value: unknown, label: string): LogicProposedEdit[] {
-  if (!Array.isArray(value)) throw new Error(`${label} 必须是数组`);
-  return value.map((item, index) => {
+  return arrayValue(value, label).map((item, index) => {
     const itemLabel = `${label}[${index}]`;
     const raw = objectValue(item, itemLabel);
     exactKeys(raw, PROPOSED_EDIT_KEYS, itemLabel);
@@ -344,21 +405,30 @@ function normalizeNodeResult(value: unknown, index: number): LogicNodeResult {
   if (!BLOCK_KINDS.has(kind)) throw new Error(`${label}.kind 未知：${kind}`);
   const status = nonEmptyString(raw.status, `${label}.status`);
   if (!NODE_STATUSES.has(status as LogicNodeRunStatus)) throw new Error(`${label}.status 未知：${status}`);
+  const nodeId = nonEmptyString(raw.node_id, `${label}.node_id`);
   const error = normalizeError(raw.error, `${label}.error`);
+  if (error !== null && error.node_id !== nodeId) throw new Error(`${label}.error.node_id 必须等于所属 node_id`);
   if (status === "executed" && error !== null) throw new Error(`${label} executed 节点不得带 error`);
   if (status === "failed" && error === null) throw new Error(`${label} failed 节点必须带 error`);
   if ((status === "skipped" || status === "canceled") && !error?.reason) {
     throw new Error(`${label} ${status} 节点必须带机器可读 reason`);
   }
+  const startedAt = raw.started_at === null ? null : timestamp(raw.started_at, `${label}.started_at`);
+  const finishedAt = raw.finished_at === null ? null : timestamp(raw.finished_at, `${label}.finished_at`);
+  if (startedAt !== null && finishedAt !== null) assertFinishedNotBeforeStarted(startedAt, finishedAt, label);
+  const output = jsonValue(raw.output, `${label}.output`);
+  if (jsonByteLength(output, `${label}.output`) > MAX_NODE_OUTPUT_BYTES) {
+    throw new Error(`${label}.output 超过 128 KiB`);
+  }
   return {
-    node_id: nonEmptyString(raw.node_id, `${label}.node_id`),
+    node_id: nodeId,
     kind: kind as LogicBlockKind,
     status: status as LogicNodeRunStatus,
-    started_at: raw.started_at === null ? null : timestamp(raw.started_at, `${label}.started_at`),
-    finished_at: raw.finished_at === null ? null : timestamp(raw.finished_at, `${label}.finished_at`),
+    started_at: startedAt,
+    finished_at: finishedAt,
     elapsed_ms: nullableNonNegativeInteger(raw.elapsed_ms, `${label}.elapsed_ms`),
-    summary: typeof raw.summary === "string" ? raw.summary : (() => { throw new Error(`${label}.summary 必须是字符串`); })(),
-    output: jsonValue(raw.output, `${label}.output`),
+    summary: stringValue(raw.summary, `${label}.summary`),
+    output,
     usage: normalizeUsage(raw.usage, `${label}.usage`),
     tool_call: normalizeToolCall(raw.tool_call, `${label}.tool_call`),
     selected_branch_path: raw.selected_branch_path === null
@@ -381,6 +451,9 @@ function normalizeRunStatus(value: unknown, label: string): LogicRunStatus {
 function commonRunFields(raw: Record<string, unknown>, label: string): LogicRunCommon {
   if (raw.mode !== "dry_run") throw new Error(`${label}.mode 必须严格为 dry_run`);
   if (raw.production_written !== false) throw new Error(`${label}.production_written 必须严格为 false`);
+  const startedAt = timestamp(raw.started_at, `${label}.started_at`);
+  const finishedAt = timestamp(raw.finished_at, `${label}.finished_at`);
+  assertFinishedNotBeforeStarted(startedAt, finishedAt, label);
   return {
     run_id: nonEmptyString(raw.run_id, `${label}.run_id`),
     graph_id: nonEmptyString(raw.graph_id, `${label}.graph_id`),
@@ -389,8 +462,8 @@ function commonRunFields(raw: Record<string, unknown>, label: string): LogicRunC
     evaluated_revision: positiveInteger(raw.evaluated_revision, `${label}.evaluated_revision`),
     graph_hash: hash(raw.graph_hash, `${label}.graph_hash`),
     production_written: false,
-    started_at: timestamp(raw.started_at, `${label}.started_at`),
-    finished_at: timestamp(raw.finished_at, `${label}.finished_at`),
+    started_at: startedAt,
+    finished_at: finishedAt,
     elapsed_ms: nonNegativeInteger(raw.elapsed_ms, `${label}.elapsed_ms`),
     total_tokens: nullableNonNegativeInteger(raw.total_tokens, `${label}.total_tokens`),
   };
@@ -410,16 +483,10 @@ export function assertLogicDryRunRequest(value: unknown): asserts value is Logic
   if (raw.dry_run !== true) throw new Error("dry_run 必须显式且严格为 true");
   hash(raw.expected_graph_hash, "expected_graph_hash");
   jsonObject(raw.inputs, "inputs");
-  let serialized: string;
-  try {
-    serialized = JSON.stringify(raw.inputs);
-  } catch {
-    throw new Error("inputs 必须可序列化为 JSON");
-  }
-  if (new TextEncoder().encode(serialized).byteLength > 256 * 1024) throw new Error("inputs 超过 256 KiB");
+  if (jsonByteLength(raw.inputs, "inputs") > MAX_INPUT_BYTES) throw new Error("inputs 超过 256 KiB");
   if (raw.idempotency_key !== undefined) {
     const key = nonEmptyString(raw.idempotency_key, "idempotency_key");
-    if (key.length > 160) throw new Error("idempotency_key 最长 160 字符");
+    if (Array.from(key).length > 160) throw new Error("idempotency_key 最长 160 字符");
   }
 }
 
@@ -429,10 +496,12 @@ export function normalizeLogicDryRun(value: unknown, expectation?: LogicRunExpec
   exactKeys(raw, RUN_KEYS, "dry-run 响应");
   const common = commonRunFields(raw, "dry-run 响应");
   assertRunExpectation(common, expectation);
-  if (!Array.isArray(raw.node_results)) throw new Error("dry-run 响应.node_results 必须是数组");
-  const nodeResults = raw.node_results.map(normalizeNodeResult);
+  const nodeResults = arrayValue(raw.node_results, "dry-run 响应.node_results").map(normalizeNodeResult);
   const nodeIds = new Set<string>();
   const expectedNodeIds = expectation?.nodeIds ? new Set(expectation.nodeIds) : null;
+  if (expectation?.nodeIds && expectedNodeIds?.size !== expectation.nodeIds.length) {
+    throw new Error("当前图 expectedNodeIds 包含重复 node_id");
+  }
   nodeResults.forEach((result) => {
     if (nodeIds.has(result.node_id)) throw new Error(`运行结果包含重复 node_id：${result.node_id}`);
     nodeIds.add(result.node_id);
@@ -440,13 +509,44 @@ export function normalizeLogicDryRun(value: unknown, expectation?: LogicRunExpec
       throw new Error(`运行结果 node_id 不属于当前图：${result.node_id}`);
     }
   });
+  expectedNodeIds?.forEach((nodeId) => {
+    if (!nodeIds.has(nodeId)) throw new Error(`运行结果缺少当前图 node_id：${nodeId}`);
+  });
   const error = normalizeError(raw.error, "dry-run 响应.error");
   if (common.status === "succeeded" && error !== null) throw new Error("成功的 dry-run 响应不得带 error");
   if (common.status === "failed" && error === null) throw new Error("失败的 dry-run 响应必须带 error");
+  if (common.status === "succeeded" && nodeResults.some((node) => node.status !== "executed" && node.status !== "skipped")) {
+    throw new Error("succeeded 运行只能包含 executed/skipped 节点");
+  }
+  if (common.status === "failed" && !nodeResults.some((node) => node.status === "failed")) {
+    throw new Error("failed 运行必须至少包含一个 failed 节点");
+  }
+  const allowedNodeIds = expectedNodeIds ?? nodeIds;
+  if (error !== null && (error.node_id === null || !allowedNodeIds.has(error.node_id))) {
+    throw new Error("run.error.node_id 必须属于运行结果或当前图");
+  }
+  const proposedEdits = normalizeEdits(raw.proposed_edits, "dry-run 响应.proposed_edits");
+  [...proposedEdits, ...nodeResults.flatMap((node) => node.proposed_edits)].forEach((edit) => {
+    if (!allowedNodeIds.has(edit.source_node_id)) {
+      throw new Error(`proposed_edits.source_node_id 不属于运行结果或当前图：${edit.source_node_id}`);
+    }
+  });
+  const usages = nodeResults.flatMap((node) => node.usage === null ? [] : [node.usage]);
+  const tokenTotal = usages.reduce((sum, usage) => sum + usage.total_tokens, 0);
+  if (!Number.isSafeInteger(tokenTotal)) throw new Error("节点 usage 汇总超过安全整数范围");
+  if (usages.length === 0 && common.total_tokens !== null) {
+    throw new Error("节点均无可信 usage 时 total_tokens 必须为 null");
+  }
+  if (usages.length > 0 && common.total_tokens !== tokenTotal) {
+    throw new Error("total_tokens 与全部节点可信 usage 汇总不一致");
+  }
+  if (jsonByteLength({ node_results: nodeResults, proposed_edits: proposedEdits }, "dry-run 安全结果") > MAX_RUN_RESULT_BYTES) {
+    throw new Error("dry-run node_results + proposed_edits 超过 2 MiB");
+  }
   return {
     ...common,
     node_results: nodeResults,
-    proposed_edits: normalizeEdits(raw.proposed_edits, "dry-run 响应.proposed_edits"),
+    proposed_edits: proposedEdits,
     error,
   };
 }
@@ -467,6 +567,15 @@ export function normalizeLogicRunSummary(value: unknown, expectedGraphId?: strin
     },
     error_code: raw.error_code === null ? null : nonEmptyString(raw.error_code, "运行摘要.error_code"),
   };
+  if (
+    summary.status === "succeeded"
+    && (summary.node_counts.failed !== 0 || summary.node_counts.canceled !== 0 || summary.error_code !== null)
+  ) {
+    throw new Error("succeeded 运行摘要不得包含 failed/canceled 计数或 error_code");
+  }
+  if (summary.status === "failed" && (summary.node_counts.failed < 1 || summary.error_code === null)) {
+    throw new Error("failed 运行摘要必须包含 failed 节点计数和 error_code");
+  }
   if (expectedGraphId !== undefined && summary.graph_id !== expectedGraphId) {
     throw new Error("运行摘要 graph_id 与历史路径不一致");
   }
@@ -477,8 +586,7 @@ export function normalizeLogicRunList(value: unknown, expectedGraphId: string): 
   assertNoPrivateReasoning(value);
   const raw = objectValue(value, "运行历史响应");
   exactKeys(raw, LIST_KEYS, "运行历史响应");
-  if (!Array.isArray(raw.items)) throw new Error("运行历史响应.items 必须是数组");
-  const items = raw.items.map((item) => normalizeLogicRunSummary(item, expectedGraphId));
+  const items = arrayValue(raw.items, "运行历史响应.items").map((item) => normalizeLogicRunSummary(item, expectedGraphId));
   const count = nonNegativeInteger(raw.count, "运行历史响应.count");
   if (count !== items.length) throw new Error("运行历史响应.count 与 items 数量不一致");
   const runIds = new Set<string>();
