@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""High-confidence interaction-honesty checks for the 35 audited web pages."""
+"""High-confidence interaction-honesty checks for the 36 audited web pages."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Iterable
 
 
-EXPECTED_PAGE_COUNT = 35
+EXPECTED_PAGE_COUNT = 36
 ALLOWED_SOURCE_MODES = {"live", "mixed", "static"}
 ALLOWED_WRITE_MODES = {"server", "demo", "none"}
 

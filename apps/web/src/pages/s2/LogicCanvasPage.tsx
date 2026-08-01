@@ -332,10 +332,12 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           onNodesChange={(nodes) => setGraph((current) => {
             if (!current) return current;
             const nodeIds = new Set(nodes.map((node) => node.id));
+            const retainedEntries = current.entry_node_ids.filter((nodeId) => nodeIds.has(nodeId));
+            const fallbackEntry = nodes.find((node) => node.kind === "input")?.id ?? nodes[0]?.id;
             return {
               ...current,
               nodes,
-              entry_node_ids: current.entry_node_ids.filter((nodeId) => nodeIds.has(nodeId)),
+              entry_node_ids: retainedEntries.length > 0 || !fallbackEntry ? retainedEntries : [fallbackEntry],
             };
           })}
           onEdgesChange={(edges) => setGraph((current) => current ? { ...current, edges } : current)}

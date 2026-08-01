@@ -131,6 +131,7 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "workshop/orders", Component: OrderManagementPage },
   { path: "aip/observability", Component: ObservabilityPage },
   { path: "aip/logic", Component: LogicCanvasPage },
+  { path: "aip/logic/:flowId", Component: LogicCanvasPage },
   { path: "aip/agent-registry", Component: AgentRegistryPage },
   { path: "aip/agents", Component: AgentsPage },
   { path: "aip/agent-import", Component: AgentImportPage },

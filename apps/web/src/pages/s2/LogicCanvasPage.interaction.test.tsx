@@ -196,7 +196,7 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     expect(host.textContent).toContain("revision 5");
   });
 
-  it("删除入口节点同步清理 entry_node_ids，保存草稿不产生悬空入口", async () => {
+  it("删除唯一入口节点后选择剩余节点为入口，保存草稿不产生悬空或空入口", async () => {
     graphApi.getLogicGraph.mockResolvedValue(graphSnapshot("entry", 3));
     graphApi.replaceLogicGraph.mockImplementation(async (draft) => ({
       ...draft,
@@ -214,7 +214,7 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     expect(graphApi.replaceLogicGraph).toHaveBeenCalledWith(expect.objectContaining({
       nodes: [expect.objectContaining({ id: "entry-llm" })],
       edges: [],
-      entry_node_ids: [],
+      entry_node_ids: ["entry-llm"],
     }), 3);
   });
 

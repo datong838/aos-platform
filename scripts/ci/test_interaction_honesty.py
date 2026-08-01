@@ -16,11 +16,11 @@ SPEC.loader.exec_module(MODULE)
 
 
 class InteractionHonestyScannerTest(unittest.TestCase):
-    def test_repository_manifest_has_exactly_35_unique_pages(self) -> None:
+    def test_repository_manifest_has_exactly_36_unique_pages(self) -> None:
         root = SCRIPT.parents[2]
         entries = MODULE.load_manifest(root / "apps/web/src/interactionHonestyManifest.ts")
-        self.assertEqual(35, len(entries))
-        self.assertEqual(35, len({entry["route"] for entry in entries}))
+        self.assertEqual(36, len(entries))
+        self.assertEqual(36, len({entry["route"] for entry in entries}))
         self.assertTrue(all(entry["tests"] for entry in entries))
 
     def test_apollo_manifest_matches_the_actual_app_entrypoint(self) -> None:
