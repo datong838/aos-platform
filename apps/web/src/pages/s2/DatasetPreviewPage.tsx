@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { apiPost } from "../../api/client";
+import { apiGet } from "../../api/client";
 import {
   BpBanner,
   BpMetricGrid,
@@ -8,7 +8,7 @@ import {
   BpTabs,
   BpToolbar,
 } from "./blueprintUi";
-import { S2Chrome, useJsonGet } from "./shared";
+import { S2Chrome } from "./shared";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -38,6 +38,26 @@ export type DatasetPreview = {
   columns: ColumnInfo[];
   rows: DatasetRow[];
 };
+
+export type DatasetPreviewApiResponse = {
+  id?: string;
+  dataset_id?: string;
+  name?: string;
+  path?: string;
+  format?: string;
+  rowCount?: number;
+  total?: number;
+  sizeBytes?: number;
+  lastUpdatedAt?: string;
+  branch?: string;
+  transactionId?: string;
+  columns?: Array<ColumnInfo | string>;
+  rows?: DatasetRow[];
+  mode?: string;
+  synthetic?: boolean;
+};
+
+export type DatasetPreviewSource = "primary-live" | "primary-demo" | "fallback-demo";
 
 export type SortDir = "asc" | "desc";
 
@@ -175,6 +195,105 @@ export function nextSortDir(current: SortState, col: string): SortState {
   return null;
 }
 
+function inferColumnType(rows: DatasetRow[], name: string): ColumnType {
+  const value = rows.map((row) => row[name]).find((item) => item != null);
+  if (typeof value === "boolean") return "BOOLEAN";
+  if (typeof value === "number") return Number.isInteger(value) ? "INTEGER" : "DECIMAL";
+  return "STRING";
+}
+
+export function normalizeDatasetPreview(
+  raw: DatasetPreviewApiResponse,
+  requestedId: string,
+): { data: DatasetPreview; source: Exclude<DatasetPreviewSource, "fallback-demo"> } {
+  const rows = Array.isArray(raw.rows) ? raw.rows : [];
+  const rawColumns = Array.isArray(raw.columns) ? raw.columns : [];
+  const columns = rawColumns.map((column): ColumnInfo => {
+    if (typeof column !== "string") {
+      return {
+        name: column.name,
+        type: column.type || inferColumnType(rows, column.name),
+        nullable: Boolean(column.nullable),
+        nullRate: typeof column.nullRate === "number" ? column.nullRate : 0,
+        uniqueCount: typeof column.uniqueCount === "number" ? column.uniqueCount : 0,
+        stats: column.stats,
+      };
+    }
+    const nonNull = rows.map((row) => row[column]).filter((item) => item != null);
+    return {
+      name: column,
+      type: inferColumnType(rows, column),
+      nullable: nonNull.length < rows.length,
+      nullRate: rows.length > 0 ? (rows.length - nonNull.length) / rows.length : 0,
+      uniqueCount: new Set(nonNull.map(String)).size,
+    };
+  });
+  const id = raw.id || raw.dataset_id || requestedId;
+  const synthetic = raw.synthetic === true || raw.mode === "demo";
+  return {
+    data: {
+      id,
+      name: raw.name || id,
+      path: raw.path || "—",
+      format: raw.format || (synthetic ? "API demo" : "API preview"),
+      rowCount: typeof raw.rowCount === "number" ? raw.rowCount : (raw.total ?? rows.length),
+      sizeBytes: typeof raw.sizeBytes === "number" ? raw.sizeBytes : 0,
+      lastUpdatedAt: raw.lastUpdatedAt || "",
+      branch: raw.branch || "—",
+      transactionId: raw.transactionId || "—",
+      columns,
+      rows,
+    },
+    source: synthetic ? "primary-demo" : "primary-live",
+  };
+}
+
+export function emptyDatasetPreview(datasetId: string): DatasetPreview {
+  return {
+    id: datasetId,
+    name: datasetId,
+    path: "—",
+    format: "—",
+    rowCount: 0,
+    sizeBytes: 0,
+    lastUpdatedAt: "",
+    branch: "—",
+    transactionId: "—",
+    columns: [],
+    rows: [],
+  };
+}
+
+export function datasetPreviewDemoFallbackEnabled(
+  value: string | undefined = import.meta.env.VITE_AOS_DATASET_PREVIEW_DEMO_FALLBACK,
+): boolean {
+  return value?.trim().toLowerCase() === "true";
+}
+
+export function datasetPreviewEmptyMessage(source: DatasetPreviewSource | null): string {
+  if (source === "fallback-demo") return "回落来源暂无行";
+  if (source === "primary-demo") return "API 演示预览成功但暂无行";
+  if (source === "primary-live") return "预览成功但暂无行";
+  return "没有可确认的预览行";
+}
+
+export function buildDatasetCsvExport(
+  data: DatasetPreview,
+  source: DatasetPreviewSource | null,
+  generatedAt = new Date().toISOString(),
+): string {
+  if (source !== "primary-live" || data.rows.length === 0) {
+    throw new Error("仅可导出主预览 API 返回的非空真实数据");
+  }
+  const csv = toCsv(data.rows.slice(0, 100), data.columns);
+  return [
+    `# source=${source}`,
+    `# datasetId=${data.id}`,
+    `# generatedAt=${generatedAt}`,
+    csv,
+  ].join("\n");
+}
+
 // ── Mock data ──────────────────────────────────────────────────
 
 const DEMO_COLUMNS: ColumnInfo[] = [
@@ -218,15 +337,61 @@ const PREVIEW_LIMIT = 100;
 
 export function DatasetPreviewPage() {
   const { datasetId } = useParams<{ datasetId: string }>();
-  const path = datasetId ? `/v1/datasets/${encodeURIComponent(datasetId)}/preview` : null;
-  const { data, err, loading } = useJsonGet<DatasetPreview>(path);
-
-  const ds = data ?? DEMO_DATASET;
+  const requestedId = datasetId || "unknown";
+  const [ds, setDs] = useState<DatasetPreview>(() => emptyDatasetPreview(requestedId));
+  const [source, setSource] = useState<DatasetPreviewSource | null>(null);
+  const [primaryErr, setPrimaryErr] = useState("");
+  const [loading, setLoading] = useState(true);
+  const requestRef = useRef(0);
   const [tab, setTab] = useState("preview");
   const [sort, setSort] = useState<SortState>(null);
   const [rowQuery, setRowQuery] = useState("");
   const [colQuery, setColQuery] = useState("");
   const [msg, setMsg] = useState("");
+
+  const loadPreview = useCallback(async () => {
+    const requestId = ++requestRef.current;
+    setLoading(true);
+    setMsg("");
+    try {
+      const raw = await apiGet<DatasetPreviewApiResponse>(
+        `/v1/datasets/${encodeURIComponent(requestedId)}/preview`,
+      );
+      if (requestId !== requestRef.current) return;
+      const normalized = normalizeDatasetPreview(raw, requestedId);
+      setDs(normalized.data);
+      setSource(normalized.source);
+      setPrimaryErr("");
+    } catch (e) {
+      if (requestId !== requestRef.current) return;
+      const message = String((e as Error).message || e);
+      setPrimaryErr(message);
+      if (datasetPreviewDemoFallbackEnabled()) {
+        setDs({
+          ...DEMO_DATASET,
+          id: requestedId,
+          name: `${requestedId}（演示回落）`,
+          path: `内置演示数据 · ${DEMO_DATASET.path}`,
+        });
+        setSource("fallback-demo");
+      } else {
+        setDs(emptyDatasetPreview(requestedId));
+        setSource(null);
+      }
+    } finally {
+      if (requestId === requestRef.current) setLoading(false);
+    }
+  }, [requestedId]);
+
+  useEffect(() => {
+    setDs(emptyDatasetPreview(requestedId));
+    setSource(null);
+    setPrimaryErr("");
+    setRowQuery("");
+    setColQuery("");
+    setSort(null);
+    void loadPreview();
+  }, [loadPreview, requestedId]);
 
   const filteredRows = useMemo(() => {
     const filtered = filterRows(ds.rows, rowQuery);
@@ -244,9 +409,17 @@ export function DatasetPreviewPage() {
   async function handleExport() {
     setMsg("");
     try {
-      const csv = toCsv(ds.rows.slice(0, PREVIEW_LIMIT), ds.columns);
-      await apiPost(`/v1/datasets/${encodeURIComponent(ds.id)}/export`, { format: "csv", content: csv });
-      setMsg("CSV 导出已提交");
+      const csv = buildDatasetCsvExport(ds, source);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${ds.id.replace(/[^a-zA-Z0-9_-]/g, "_")}-preview.csv`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      setMsg("CSV 已生成（含 source/datasetId/generatedAt 元数据）");
     } catch (e) {
       setMsg(String((e as Error).message || e));
     }
@@ -256,15 +429,38 @@ export function DatasetPreviewPage() {
     <S2Chrome title={`数据集预览 · ${ds.name}`} lede={`路径 ${ds.path} · 格式 ${ds.format}`}>
       <BpToolbar>
         <Link to="/data/datasets" className="btn-nav">← 数据集列表</Link>
-        <button type="button" className="btn-primary" onClick={() => void handleExport()}>
+        <button
+          type="button"
+          className="btn-primary"
+          data-testid="dataset-export"
+          disabled={source !== "primary-live" || ds.rows.length === 0}
+          title={source === "primary-live" && ds.rows.length > 0 ? "导出当前真实预览行" : "只有主预览 API 的非空真实数据可导出"}
+          onClick={() => void handleExport()}
+        >
           导出 CSV
+        </button>
+        <button type="button" className="btn-nav" disabled={loading} onClick={() => void loadPreview()}>
+          {loading ? "刷新中…" : "刷新预览"}
         </button>
         <Link to="/data/queries/new" className="btn-nav">新建查询</Link>
         <span className="muted mono" style={{ marginLeft: "auto" }}>tx: {ds.transactionId}</span>
       </BpToolbar>
 
       {loading && <p className="muted">加载中…</p>}
-      {err && <p className="error">{err}</p>}
+      {primaryErr && source === "fallback-demo" && (
+        <BpBanner tone="warn">
+          主预览失败：{primaryErr}；当前来自内置演示数据（配置已显式允许，不代表服务端数据）。
+        </BpBanner>
+      )}
+      {primaryErr && source !== "fallback-demo" && (
+        <BpBanner tone="warn">
+          主预览失败：{primaryErr}；未启用演示回落，当前不展示替代数据。
+        </BpBanner>
+      )}
+      {!primaryErr && source === "primary-live" && <BpBanner tone="info">来源：主预览 API</BpBanner>}
+      {!primaryErr && source === "primary-demo" && (
+        <BpBanner tone="info">来源：主预览 API 返回的 synthetic 演示数据</BpBanner>
+      )}
       {msg && <p className="aos-text">{msg}</p>}
 
       <BpMetricGrid
@@ -289,6 +485,9 @@ export function DatasetPreviewPage() {
       {tab === "preview" && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: "0.75rem" }}>
           <div>
+            {!loading && ds.rows.length === 0 && (
+              <BpBanner tone={source ? "info" : "warn"}>{datasetPreviewEmptyMessage(source)}</BpBanner>
+            )}
             <BpToolbar>
               <input
                 type="search"

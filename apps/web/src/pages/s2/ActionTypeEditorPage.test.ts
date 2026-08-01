@@ -15,6 +15,8 @@ import {
   ruleKindBadge,
   buildOverviewInputs,
   buildOverviewRules,
+  normalizeActionType,
+  toActionTypePayload,
   ACTION_STATUS_LABELS,
   ACTION_STATUS_COLORS,
   SUBMISSION_STEPS,
@@ -281,5 +283,33 @@ describe("ActionTypeEditorPage · W4-C8b overview helpers", () => {
     expect(derived[0].source).toBe("criteria");
     expect(derived[0].kind).toBe("Modify");
     expect(derived[0].targetOt).toBe("WorkOrder");
+  });
+});
+
+describe("ActionTypeEditorPage · W3C DTO honesty", () => {
+  it("normalizes the real backend DTO without inventing writable fields", () => {
+    const normalized = normalizeActionType({
+      id: "CloseWorkOrder",
+      name: "Close",
+      objectType: "WorkOrder",
+      parameters: [],
+      requiredMarkings: [],
+      submissionCriteria: [],
+    });
+    expect(normalized.status).toBe("draft");
+    expect(normalized.description).toBe("");
+    expect(normalized.automations).toEqual([]);
+  });
+
+  it("builds a payload containing only fields supported by ActionTypeIn", () => {
+    const form = { ...emptyForm(), id: " CloseWorkOrder ", name: " Close ", description: "not writable" };
+    expect(toActionTypePayload(form, [], ["public"], [])).toEqual({
+      id: "CloseWorkOrder",
+      name: "Close",
+      objectType: "WorkOrder",
+      parameters: [],
+      requiredMarkings: ["public"],
+      submissionCriteria: [],
+    });
   });
 });

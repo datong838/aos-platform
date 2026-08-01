@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { apiDelete, apiGet, apiPost, apiPut } from "../../api/client";
 import { S2Chrome } from "./shared";
@@ -23,6 +23,19 @@ export type LinkType = {
   symmetric: boolean;
   description: string;
   constraints: { field: string; rule: string }[];
+};
+
+export type LinkUsageMetric = {
+  sources?: Record<string, number>;
+  window_days?: number;
+};
+
+export type LinkUsageDimension = "workshop" | "aip" | "pipeline";
+
+const LINK_USAGE_SOURCE_ALIASES: Record<LinkUsageDimension, string[]> = {
+  workshop: ["workshop", "workshop_app", "workshop_apps"],
+  aip: ["aip", "aip_logic", "aip_logic_node", "aip_logic_nodes"],
+  pipeline: ["pipeline", "pipelines", "pipeline_reference", "pipeline_references"],
 };
 
 /* ────────────── Constants ────────────── */
@@ -127,6 +140,27 @@ export function swapDirection(form: LinkType): LinkType {
     srcType: form.dstType,
     dstType: form.srcType,
   };
+}
+
+/** 只读取 API 明确提供的来源维度；缺失维度不是 0。 */
+export function getLinkUsageDimension(
+  usage: LinkUsageMetric | null,
+  dimension: LinkUsageDimension,
+): number | null {
+  const sources = usage?.sources;
+  if (!sources || typeof sources !== "object") return null;
+  const normalized = new Map(
+    Object.entries(sources).map(([key, value]) => [
+      key.trim().toLowerCase().replace(/[\s-]+/g, "_"),
+      value,
+    ]),
+  );
+  for (const alias of LINK_USAGE_SOURCE_ALIASES[dimension]) {
+    if (!normalized.has(alias)) continue;
+    const value = normalized.get(alias);
+    return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
+  }
+  return null;
 }
 
 /** API 缺字段时填默认，保证可视化与 CRUD 表单可降级。 */
@@ -286,6 +320,36 @@ export function LinkTypeEditorPage() {
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [activeSection, setActiveSection] = useState<string>("overview");
+  const [usage, setUsage] = useState<LinkUsageMetric | null>(null);
+  const [usageLoading, setUsageLoading] = useState(false);
+  const [usageErr, setUsageErr] = useState("");
+  const usageRequestRef = useRef(0);
+
+  const loadUsage = useCallback(async () => {
+    if (isNew) return;
+    const requestId = ++usageRequestRef.current;
+    setUsageLoading(true);
+    setUsageErr("");
+    try {
+      const next = await apiGet<LinkUsageMetric>(
+        `/v1/ontology/usage/link-types/${encodeURIComponent(linkId)}`,
+      );
+      if (requestId === usageRequestRef.current) setUsage(next);
+    } catch (e) {
+      if (requestId === usageRequestRef.current) {
+        setUsage(null);
+        setUsageErr(String((e as Error).message || e));
+      }
+    } finally {
+      if (requestId === usageRequestRef.current) setUsageLoading(false);
+    }
+  }, [isNew, linkId]);
+
+  useEffect(() => {
+    setUsage(null);
+    setUsageErr("");
+    if (activeSection === "usage" && !isNew) void loadUsage();
+  }, [activeSection, isNew, linkId, loadUsage]);
 
   useEffect(() => {
     if (isNew) {
@@ -617,18 +681,51 @@ export function LinkTypeEditorPage() {
                 <p style={linkStyles.mutedText}>
                   查看 Link Type 在 Workshop、AIP Logic 和管道中的使用情况。
                 </p>
+                <BpToolbar>
+                  <button
+                    type="button"
+                    className="btn-nav"
+                    disabled={isNew || usageLoading}
+                    onClick={() => void loadUsage()}
+                  >
+                    {usageLoading ? "刷新中…" : "刷新 Usage"}
+                  </button>
+                  <span className="muted">
+                    {isNew
+                      ? "创建后可读取真实 Usage"
+                      : usage
+                        ? `API 统计窗口 ${usage.window_days ?? "—"} 天`
+                        : "尚无可确认的 Usage 数据"}
+                  </span>
+                </BpToolbar>
+                {usageErr && <BpBanner tone="warn">Usage 读取失败：{usageErr}</BpBanner>}
                 <div style={linkStyles.usageRow}>
-                  <div style={linkStyles.usageBox}>
-                    <div style={linkStyles.usageNum}>0</div>
+                  <div style={linkStyles.usageBox} data-testid="link-usage-workshop">
+                    <div style={linkStyles.usageNum}>
+                      {getLinkUsageDimension(usage, "workshop") ?? "—"}
+                    </div>
                     <div style={linkStyles.usageLabel}>Workshop 应用</div>
+                    {getLinkUsageDimension(usage, "workshop") == null && (
+                      <div style={linkStyles.usageHint}>接口未提供</div>
+                    )}
                   </div>
-                  <div style={linkStyles.usageBox}>
-                    <div style={linkStyles.usageNum}>0</div>
+                  <div style={linkStyles.usageBox} data-testid="link-usage-aip">
+                    <div style={linkStyles.usageNum}>
+                      {getLinkUsageDimension(usage, "aip") ?? "—"}
+                    </div>
                     <div style={linkStyles.usageLabel}>AIP 逻辑节点</div>
+                    {getLinkUsageDimension(usage, "aip") == null && (
+                      <div style={linkStyles.usageHint}>接口未提供</div>
+                    )}
                   </div>
-                  <div style={linkStyles.usageBox}>
-                    <div style={linkStyles.usageNum}>0</div>
+                  <div style={linkStyles.usageBox} data-testid="link-usage-pipeline">
+                    <div style={linkStyles.usageNum}>
+                      {getLinkUsageDimension(usage, "pipeline") ?? "—"}
+                    </div>
                     <div style={linkStyles.usageLabel}>管道引用</div>
+                    {getLinkUsageDimension(usage, "pipeline") == null && (
+                      <div style={linkStyles.usageHint}>接口未提供</div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -680,4 +777,5 @@ const linkStyles: Record<string, React.CSSProperties> = {
   usageBox: { flex: 1, textAlign: "center" as const, padding: "1rem", border: "1px solid var(--aos-border)", borderRadius: "2px", background: "var(--aos-surface-hover)" },
   usageNum: { fontSize: "1.5rem", fontWeight: 700, color: "var(--aos-accent)" },
   usageLabel: { fontSize: "0.7rem", color: "var(--aos-text-secondary)", marginTop: "4px" },
+  usageHint: { fontSize: "0.65rem", color: "var(--aos-text-tertiary)", marginTop: "2px" },
 };

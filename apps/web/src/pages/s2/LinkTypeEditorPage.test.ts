@@ -13,6 +13,7 @@ import {
   normalizeLinkType,
   truncateLabel,
   buildLinkRelationLayout,
+  getLinkUsageDimension,
   CARDINALITIES,
   JOIN_METHODS,
   LINK_NAV_SECTIONS,
@@ -286,5 +287,20 @@ describe("LinkTypeEditorPage · constants", () => {
     for (const j of JOIN_METHODS) {
       expect(j.description).toBeTruthy();
     }
+  });
+});
+
+describe("LinkTypeEditorPage · W3C usage dimensions", () => {
+  it("keeps an explicitly provided zero as a real zero", () => {
+    expect(getLinkUsageDimension({ sources: { workshop: 0 } }, "workshop")).toBe(0);
+  });
+
+  it("returns unavailable for missing or invalid dimensions", () => {
+    expect(getLinkUsageDimension({ sources: { aip: 3 } }, "pipeline")).toBeNull();
+    expect(getLinkUsageDimension({ sources: { pipeline: -1 } }, "pipeline")).toBeNull();
+  });
+
+  it("normalizes documented source aliases", () => {
+    expect(getLinkUsageDimension({ sources: { "AIP Logic Nodes": 7 } }, "aip")).toBe(7);
   });
 });

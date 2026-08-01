@@ -21,6 +21,11 @@ export type ActionType = {
   automations: { id: string; trigger: string; enabled: boolean }[];
 };
 
+export type ActionTypePayload = Pick<
+  ActionType,
+  "id" | "name" | "objectType" | "parameters" | "requiredMarkings" | "submissionCriteria"
+>;
+
 /* ────────────── Constants ────────────── */
 
 export const ACTION_STATUS_LABELS: Record<ActionStatus, string> = {
@@ -128,6 +133,42 @@ export function parseMarkings(text: string): string[] {
     .split(/[,，\s]+/)
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+export function normalizeActionType(row: Partial<ActionType>): ActionType {
+  const base = emptyForm(typeof row.objectType === "string" ? row.objectType : "WorkOrder");
+  const status = row.status && Object.prototype.hasOwnProperty.call(ACTION_STATUS_LABELS, row.status)
+    ? row.status
+    : "draft";
+  return {
+    ...base,
+    ...row,
+    id: typeof row.id === "string" ? row.id : "",
+    name: typeof row.name === "string" ? row.name : "",
+    objectType: typeof row.objectType === "string" ? row.objectType : base.objectType,
+    description: typeof row.description === "string" ? row.description : "",
+    parameters: Array.isArray(row.parameters) ? row.parameters : [],
+    requiredMarkings: Array.isArray(row.requiredMarkings) ? row.requiredMarkings : [],
+    submissionCriteria: Array.isArray(row.submissionCriteria) ? row.submissionCriteria : [],
+    status,
+    automations: Array.isArray(row.automations) ? row.automations : [],
+  };
+}
+
+export function toActionTypePayload(
+  form: ActionType,
+  parameters: ActionType["parameters"],
+  requiredMarkings: string[],
+  submissionCriteria: ActionType["submissionCriteria"],
+): ActionTypePayload {
+  return {
+    id: form.id.trim(),
+    name: form.name.trim(),
+    objectType: form.objectType.trim() || "WorkOrder",
+    parameters,
+    requiredMarkings,
+    submissionCriteria,
+  };
 }
 
 export function summarizeParameters(parameters: ActionType["parameters"]): {
@@ -286,14 +327,15 @@ export function ActionTypeEditorPage() {
     let cancelled = false;
     (async () => {
       try {
-        const row = await apiGet<ActionType>(`/v1/actions/types/${encodeURIComponent(actionId)}`);
+        const row = await apiGet<Partial<ActionType>>(`/v1/actions/types/${encodeURIComponent(actionId)}`);
         if (cancelled) return;
-        setForm(row);
-        setParamJson(JSON.stringify(row.parameters || [], null, 2));
-        setMarkingsText((row.requiredMarkings || []).join(", "));
-        setCriteriaJson(JSON.stringify(row.submissionCriteria || [], null, 2));
-        setPayloadJson(defaultPayloadFromParams(row.parameters || []));
-        setDescription(row.description || "");
+        const normalized = normalizeActionType(row);
+        setForm(normalized);
+        setParamJson(JSON.stringify(normalized.parameters, null, 2));
+        setMarkingsText(normalized.requiredMarkings.join(", "));
+        setCriteriaJson(JSON.stringify(normalized.submissionCriteria, null, 2));
+        setPayloadJson(defaultPayloadFromParams(normalized.parameters));
+        setDescription(normalized.description);
       } catch (e) {
         if (!cancelled) setErr(String((e as Error).message || e));
       }
@@ -345,15 +387,7 @@ export function ActionTypeEditorPage() {
         throw new Error("submissionCriteria JSON 无效");
       }
       const requiredMarkings = parseMarkings(markingsText);
-      const body = {
-        ...mergedForm,
-        id,
-        name: form.name.trim(),
-        objectType: form.objectType.trim() || "WorkOrder",
-        parameters,
-        requiredMarkings,
-        submissionCriteria,
-      };
+      const body = toActionTypePayload(form, parameters, requiredMarkings, submissionCriteria);
       if (isNew) {
         await apiPost("/v1/actions/types", body);
         setMsg(`已创建 ${id}`);
@@ -398,27 +432,6 @@ export function ActionTypeEditorPage() {
       setValidateErr(`${errObj.message || String(e)}${detailText}`);
     } finally {
       setValidateBusy(false);
-    }
-  }
-
-  async function transitionStatus(target: ActionStatus) {
-    if (!canTransitionTo(form.status, target)) {
-      setErr(`不允许从 ${ACTION_STATUS_LABELS[form.status]} 转换到 ${ACTION_STATUS_LABELS[target]}`);
-      return;
-    }
-    setBusy(true);
-    setErr("");
-    try {
-      const updated = await apiPut<ActionType>(`/v1/actions/types/${encodeURIComponent(form.id)}`, {
-        ...form,
-        status: target,
-      });
-      setForm(updated);
-      setMsg(`状态已更新为 ${ACTION_STATUS_LABELS[target]}`);
-    } catch (e) {
-      setErr(String((e as Error).message || e));
-    } finally {
-      setBusy(false);
     }
   }
 
@@ -515,18 +528,18 @@ export function ActionTypeEditorPage() {
                 <button
                   type="button"
                   style={actionStyles.transitionBtn}
-                  disabled={busy}
-                  onClick={() => void transitionStatus("submitted")}
+                  disabled
+                  title="Action Type DTO 暂不支持工作流状态写入"
                 >
-                  提交审核 →
+                  提交审核（只读）
                 </button>
               )}
               {!isNew && canTransitionTo(form.status, "validated") && (
                 <button
                   type="button"
                   style={actionStyles.transitionBtn}
-                  disabled={busy}
-                  onClick={() => void transitionStatus("validated")}
+                  disabled
+                  title="Action Type DTO 暂不支持工作流状态写入"
                 >
                   验证 →
                 </button>
@@ -535,8 +548,8 @@ export function ActionTypeEditorPage() {
                 <button
                   type="button"
                   style={{ ...actionStyles.transitionBtn, borderColor: "var(--aos-green)", color: "var(--aos-green)" }}
-                  disabled={busy}
-                  onClick={() => void transitionStatus("enabled")}
+                  disabled
+                  title="Action Type DTO 暂不支持工作流状态写入"
                 >
                   启用 →
                 </button>
@@ -574,9 +587,10 @@ export function ActionTypeEditorPage() {
                     className="aos-input"
                     style={{ minHeight: 60, fontSize: "0.8rem" }}
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    disabled={!editable}
-                    placeholder="Action Type 描述信息"
+                    readOnly
+                    disabled
+                    aria-label="Action Type 描述（当前只读）"
+                    placeholder="后端 DTO 暂不提供描述字段"
                   />
                 </div>
               </div>
@@ -816,23 +830,53 @@ export function ActionTypeEditorPage() {
 
             {activeSection === "ui" && (
               <div style={actionStyles.sectionCard}>
-                <h3 style={actionStyles.sectionTitle}>User Interface</h3>
+                <h3 style={actionStyles.sectionTitle}>User Interface · 当前只读/规划中</h3>
+                <BpBanner tone="info">
+                  Action Type DTO 暂未提供表单 UI 配置字段；以下控件仅展示规划，不会写入服务端。
+                </BpBanner>
                 <p style={actionStyles.mutedText}>
-                  为此 Action 配置表单 UI（字段顺序、默认值、条件可见性）。当前版本使用 JSON parameters 管理字段定义。
+                  当前使用已保存的 parameters 展示输入字段；布局与确认步骤需等待正式契约。
                 </p>
+                <div style={actionStyles.formGrid}>
+                  <label className="ont-form-field">
+                    <span>表单布局（规划）</span>
+                    <select
+                      className="aos-input"
+                      value="automatic"
+                      disabled
+                      data-testid="action-ui-layout"
+                      aria-label="表单布局（当前只读）"
+                    >
+                      <option value="automatic">按 parameters 自动布局</option>
+                    </select>
+                  </label>
+                  <label style={actionStyles.capItem}>
+                    <input type="checkbox" checked={false} disabled readOnly />
+                    <span style={{ fontSize: "0.75rem" }}>提交前确认（规划）</span>
+                  </label>
+                </div>
               </div>
             )}
 
             {activeSection === "capabilities" && (
               <div style={actionStyles.sectionCard}>
-                <h3 style={actionStyles.sectionTitle}>Capabilities</h3>
+                <h3 style={actionStyles.sectionTitle}>Capabilities · 当前只读/规划中</h3>
+                <BpBanner tone="info">
+                  Action Type DTO 暂未提供 capabilities 字段；统一显示“未配置”，不会写入服务端。
+                </BpBanner>
                 <p style={actionStyles.mutedText}>
                   声明此 Action 可以执行的能力（读对象、写对象、调用函数、发送通知等）。
                 </p>
                 <div style={actionStyles.capGrid}>
                   {["readObjects", "writeObjects", "executeFunction", "sendNotification", "createDraft", "publishBranch"].map((cap) => (
                     <label key={cap} style={actionStyles.capItem}>
-                      <input type="checkbox" disabled={!editable} />
+                      <input
+                        type="checkbox"
+                        checked={false}
+                        disabled
+                        readOnly
+                        data-testid="action-capability"
+                      />
                       <span style={{ fontSize: "0.75rem" }}>{cap}</span>
                     </label>
                   ))}

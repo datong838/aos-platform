@@ -13,6 +13,10 @@ import {
   computeColumnStats,
   toCsv,
   nextSortDir,
+  normalizeDatasetPreview,
+  datasetPreviewDemoFallbackEnabled,
+  datasetPreviewEmptyMessage,
+  buildDatasetCsvExport,
   type ColumnInfo,
   type DatasetRow,
   type SortState,
@@ -218,5 +222,48 @@ describe("DatasetPreviewPage · TYPE_TONE", () => {
   });
   it("BOOLEAN → muted", () => {
     expect(TYPE_TONE.BOOLEAN).toBe("muted");
+  });
+});
+
+describe("DatasetPreviewPage · W3C source honesty", () => {
+  it("normalizes the actual phase5 preview response and infers column types", () => {
+    const normalized = normalizeDatasetPreview({
+      dataset_id: "ds-1",
+      columns: ["id", "amount"],
+      rows: [{ id: "x", amount: 1.5 }],
+      total: 1,
+      mode: "live",
+      synthetic: false,
+    }, "requested");
+    expect(normalized.source).toBe("primary-live");
+    expect(normalized.data.id).toBe("ds-1");
+    expect(normalized.data.columns.map((column) => column.type)).toEqual(["STRING", "DECIMAL"]);
+  });
+
+  it("requires an explicit true value before enabling demo fallback", () => {
+    expect(datasetPreviewDemoFallbackEnabled(undefined)).toBe(false);
+    expect(datasetPreviewDemoFallbackEnabled("false")).toBe(false);
+    expect(datasetPreviewDemoFallbackEnabled(" TRUE ")).toBe(true);
+  });
+
+  it("distinguishes live empty, API demo empty, and fallback empty", () => {
+    expect(datasetPreviewEmptyMessage("primary-live")).toBe("预览成功但暂无行");
+    expect(datasetPreviewEmptyMessage("primary-demo")).toContain("API 演示");
+    expect(datasetPreviewEmptyMessage("fallback-demo")).toBe("回落来源暂无行");
+  });
+
+  it("adds trace metadata only for non-empty primary live exports", () => {
+    const data = normalizeDatasetPreview({
+      dataset_id: "ds-1",
+      columns: ["id"],
+      rows: [{ id: "x" }],
+      total: 1,
+      synthetic: false,
+    }, "ds-1").data;
+    const csv = buildDatasetCsvExport(data, "primary-live", "2026-08-01T00:00:00.000Z");
+    expect(csv).toContain("# source=primary-live");
+    expect(csv).toContain("# datasetId=ds-1");
+    expect(csv).toContain("# generatedAt=2026-08-01T00:00:00.000Z");
+    expect(() => buildDatasetCsvExport(data, "fallback-demo")).toThrow("仅可导出");
   });
 });
