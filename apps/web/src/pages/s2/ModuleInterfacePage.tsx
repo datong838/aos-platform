@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiGet, apiPost, apiPut, S2Chrome, useJsonGet } from "./shared";
 import {
@@ -101,8 +101,41 @@ export function displayFieldLabel(field: InterfaceField): string {
   return `${prefix}.${field.name}`;
 }
 
+type InterfaceDraft = {
+  name: string;
+  description: string;
+  version: string;
+  entryParams: Array<Record<string, unknown>>;
+  expose: Record<string, unknown>;
+};
+
+function stableJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${JSON.stringify(k)}:${stableJson(v)}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+export function interfaceMatchesDraft(
+  moduleId: string,
+  payload: ModuleInterfacePayload,
+  draft: InterfaceDraft,
+): boolean {
+  return payload.moduleId === moduleId && stableJson({
+    name: payload.name || "",
+    description: payload.description || "",
+    version: payload.version || "1.0.0",
+    entryParams: fieldsToEntryParams(paramsToFields(payload.entryParams)),
+    expose: payload.expose && typeof payload.expose === "object" ? payload.expose : {},
+  }) === stableJson(draft);
+}
+
 export function ModuleInterfacePage() {
-  const { data, err, reload } = useJsonGet<{ items: ModuleListItem[] }>("/v1/modules");
+  const { data, err, setData } = useJsonGet<{ items: ModuleListItem[] }>("/v1/modules");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
 
@@ -113,15 +146,18 @@ export function ModuleInterfacePage() {
   const [fields, setFields] = useState<InterfaceField[]>([]);
   const [ifaceLoading, setIfaceLoading] = useState(false);
   const [ifaceErr, setIfaceErr] = useState<string | null>(null);
-  const [usingMock, setUsingMock] = useState(false);
+  const [readOnlyStale, setReadOnlyStale] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const requestGeneration = useRef(0);
 
   const selected = data?.items?.find((m) => m.id === selectedId) || data?.items?.[0];
   const activeId = selected?.id ?? null;
 
   const loadInterface = useCallback(
     async (moduleId: string, mod: ModuleListItem | undefined) => {
+      const generation = ++requestGeneration.current;
       setIfaceLoading(true);
       setIfaceErr(null);
       setDirty(false);
@@ -129,23 +165,20 @@ export function ModuleInterfacePage() {
         const r = await apiGet<ModuleInterfacePayload>(
           `/v1/modules/${encodeURIComponent(moduleId)}/interface`,
         );
+        if (generation !== requestGeneration.current) return;
         setIfaceName(r.name || mod?.name || "");
         setIfaceDesc(r.description || "");
         setIfaceVersion(r.version || "1.0.0");
         setExpose(r.expose && typeof r.expose === "object" ? r.expose : {});
         const parsed = paramsToFields(r.entryParams);
         setFields(parsed.length ? parsed : []);
-        setUsingMock(false);
+        setReadOnlyStale(false);
       } catch (e) {
+        if (generation !== requestGeneration.current) return;
         setIfaceErr(String((e as Error).message || e));
-        setIfaceName(mod?.name || "");
-        setIfaceDesc("");
-        setIfaceVersion("1.0.0");
-        setExpose({});
-        setFields(deriveMockFields(mod));
-        setUsingMock(true);
+        setReadOnlyStale(true);
       } finally {
-        setIfaceLoading(false);
+        if (generation === requestGeneration.current) setIfaceLoading(false);
       }
     },
     [],
@@ -158,16 +191,34 @@ export function ModuleInterfacePage() {
   }, [activeId, loadInterface]);
 
   async function createMod() {
-    await apiPost("/v1/modules", {
-      name: "接口台 Module",
-      description: "从模块接口页创建",
-      objectType: "WorkOrder",
-      entryPath: "/workshop/inbox",
-      widgets: ["table", "filters", "selection"],
-      buddyBound: true,
-    });
-    setMsg("已创建");
-    reload();
+    if (creating) return;
+    setCreating(true);
+    setMsg("");
+    try {
+      const created = await apiPost<ModuleListItem>("/v1/modules", {
+        name: "接口台 Module", description: "从模块接口页创建", objectType: "WorkOrder",
+        entryPath: "/workshop/inbox", widgets: ["table", "filters", "selection"], buddyBound: true,
+      });
+      if (!created.id || created.name !== "接口台 Module") throw new Error("创建回包与请求不一致");
+      let listed: { items: ModuleListItem[] };
+      try {
+        listed = await apiGet<{ items: ModuleListItem[] }>("/v1/modules");
+      } catch (e) {
+        setMsg(`创建已提交但重读核验失败：${String((e as Error).message || e)}`);
+        return;
+      }
+      if (!listed.items.some((item) => item.id === created.id)) {
+        setMsg("创建已提交但重读核验失败：列表未返回新 Module");
+        return;
+      }
+      setData(listed);
+      setSelectedId(created.id);
+      setMsg("Module 已创建并完成重读核验");
+    } catch (e) {
+      setMsg(`创建失败：${String((e as Error).message || e)}`);
+    } finally {
+      setCreating(false);
+    }
   }
 
   function updateField(id: string, patch: Partial<InterfaceField>) {
@@ -194,11 +245,13 @@ export function ModuleInterfacePage() {
   }
 
   async function saveInterface() {
-    if (!activeId) return;
+    if (!activeId || readOnlyStale) return;
+    const generation = requestGeneration.current;
+    const targetId = activeId;
     setSaving(true);
     setMsg("");
     try {
-      const body = {
+      const body: InterfaceDraft = {
         name: ifaceName || selected?.name || "",
         description: ifaceDesc,
         version: ifaceVersion || "1.0.0",
@@ -206,21 +259,35 @@ export function ModuleInterfacePage() {
         expose,
       };
       const r = await apiPut<ModuleInterfacePayload>(
-        `/v1/modules/${encodeURIComponent(activeId)}/interface`,
+        `/v1/modules/${encodeURIComponent(targetId)}/interface`,
         body,
       );
-      setFields(paramsToFields(r.entryParams));
-      setIfaceName(r.name || ifaceName);
-      setIfaceDesc(r.description || "");
-      setIfaceVersion(r.version || "1.0.0");
-      setExpose(r.expose && typeof r.expose === "object" ? r.expose : {});
-      setUsingMock(false);
+      if (generation !== requestGeneration.current) return;
+      if (r.moduleId !== targetId) throw new Error("保存回包目标 Module 不一致");
+      let verified: ModuleInterfacePayload;
+      try {
+        verified = await apiGet(`/v1/modules/${encodeURIComponent(targetId)}/interface`);
+      } catch (e) {
+        if (generation !== requestGeneration.current) return;
+        setMsg(`保存已提交但重读核验失败：${String((e as Error).message || e)}`);
+        return;
+      }
+      if (generation !== requestGeneration.current) return;
+      if (!interfaceMatchesDraft(targetId, verified, body)) {
+        setMsg("保存已提交但重读核验失败：服务端快照与提交内容不一致");
+        return;
+      }
+      setFields(paramsToFields(verified.entryParams));
+      setIfaceName(verified.name || "");
+      setIfaceDesc(verified.description || "");
+      setIfaceVersion(verified.version || "1.0.0");
+      setExpose(verified.expose && typeof verified.expose === "object" ? verified.expose : {});
+      setReadOnlyStale(false);
       setIfaceErr(null);
       setDirty(false);
-      setMsg("接口已保存");
+      setMsg("接口已保存并完成重读核验");
     } catch (e) {
-      setMsg(`保存失败：${String((e as Error).message || e)}（可继续本地编辑 · 演示路径）`);
-      setUsingMock(true);
+      setMsg(`保存失败：${String((e as Error).message || e)}（草稿已保留）`);
     } finally {
       setSaving(false);
     }
@@ -251,15 +318,18 @@ export function ModuleInterfacePage() {
             ))}
           </select>
         </label>
-        <button type="button" className="btn" onClick={() => void createMod().catch(console.error)}>
-          创建 Module
+        <button type="button" className="btn" disabled={creating} onClick={() => void createMod()}>
+          {creating ? "创建中…" : "创建 Module"}
         </button>
         <button
           type="button"
           className="btn"
           onClick={() => {
-            reload();
-            if (activeId) void loadInterface(activeId, selected);
+            void apiGet<{ items: ModuleListItem[] }>("/v1/modules").then((next) => {
+              setData(next);
+              const nextSelected = next.items.find((item) => item.id === activeId) || next.items[0];
+              if (nextSelected) void loadInterface(nextSelected.id, nextSelected);
+            }).catch((e) => setMsg(`刷新失败：${String((e as Error).message || e)}`));
           }}
         >
           刷新
@@ -267,9 +337,9 @@ export function ModuleInterfacePage() {
         <button
           type="button"
           className="btn"
-          disabled={!activeId || saving || (usingMock && !dirty)}
+          disabled={!activeId || saving || ifaceLoading || readOnlyStale || !dirty}
           onClick={() => void saveInterface()}
-          title={usingMock && !dirty ? "当前为 MOCK 降级，修改后再保存" : undefined}
+          title={readOnlyStale ? "接口读取失败，当前内容只读" : undefined}
         >
           {saving ? "保存中…" : dirty ? "保存接口 *" : "保存接口"}
         </button>
@@ -281,14 +351,14 @@ export function ModuleInterfacePage() {
         </Link>
       </BpToolbar>
 
-      {usingMock && (
+      {readOnlyStale && (
         <BpBanner tone="warn">
-          演示路径 · MOCK — 接口 API 不可用或保存失败，当前字段为本地演示数据，可编辑后重试保存。
+          接口读取失败 · 当前为空态或上次成功快照，仅供只读；重新读取成功前禁止保存。
         </BpBanner>
       )}
       {msg && <p className="aos-text">{msg}</p>}
       {err && <p className="error">{err}</p>}
-      {ifaceErr && !usingMock && <p className="error">{ifaceErr}</p>}
+      {ifaceErr && <p className="error">{ifaceErr}</p>}
 
       <BpSplit
         left={
@@ -311,7 +381,7 @@ export function ModuleInterfacePage() {
                     setIfaceName(e.target.value);
                     setDirty(true);
                   }}
-                  disabled={ifaceLoading}
+                  disabled={ifaceLoading || readOnlyStale}
                 />
               </label>
               <label className="mi-meta-field">
@@ -323,16 +393,16 @@ export function ModuleInterfacePage() {
                     setIfaceVersion(e.target.value);
                     setDirty(true);
                   }}
-                  disabled={ifaceLoading}
+                  disabled={ifaceLoading || readOnlyStale}
                 />
               </label>
             </div>
 
             <div className="mi-field-actions">
-              <button type="button" className="btn" onClick={() => addField("input")}>
+              <button type="button" className="btn" disabled={readOnlyStale} onClick={() => addField("input")}>
                 + 入参
               </button>
-              <button type="button" className="btn" onClick={() => addField("output")}>
+              <button type="button" className="btn" disabled={readOnlyStale} onClick={() => addField("output")}>
                 + 出参
               </button>
             </div>
@@ -380,6 +450,7 @@ export function ModuleInterfacePage() {
                           value={f.name}
                           aria-label="字段名"
                           onChange={(e) => updateField(f.id, { name: e.target.value })}
+                          disabled={readOnlyStale}
                         />
                       </td>
                       <td>
@@ -389,6 +460,7 @@ export function ModuleInterfacePage() {
                           value={f.type}
                           aria-label="字段类型"
                           onChange={(e) => updateField(f.id, { type: e.target.value })}
+                          disabled={readOnlyStale}
                         />
                       </td>
                       <td>
@@ -401,6 +473,7 @@ export function ModuleInterfacePage() {
                               direction: e.target.value === "output" ? "output" : "input",
                             })
                           }
+                          disabled={readOnlyStale}
                         >
                           <option value="input">入参</option>
                           <option value="output">出参</option>
@@ -412,6 +485,7 @@ export function ModuleInterfacePage() {
                           className="btn mi-btn-danger"
                           aria-label={`删除 ${f.name}`}
                           onClick={() => removeField(f.id)}
+                          disabled={readOnlyStale}
                         >
                           删
                         </button>
@@ -439,7 +513,7 @@ export function ModuleInterfacePage() {
         }
         right={
           <div className="bp-object-panel">
-            <div className="bp-ws-section-title">嵌套 Loop</div>
+            <div className="bp-ws-section-title">嵌套 Loop · 规划示意</div>
             <div className="muted" style={{ fontSize: "0.8rem" }}>
               <div>父 Module：{selected?.name || "风险告警管理"}</div>
               <div
@@ -464,7 +538,7 @@ export function ModuleInterfacePage() {
       />
 
       <BpBanner tone="info">
-        嵌套 Module 通过 Interface 契约解耦；Loop 内子 Module 可独立预览与测试。打开业务应用请用{" "}
+        嵌套 Module 通过 Interface 契约解耦；Loop 执行器尚未接入，本区仅展示规划示意。打开业务应用请用{" "}
         <Link to="/workshop">应用列表</Link>，本页只编辑接口契约。
       </BpBanner>
     </S2Chrome>

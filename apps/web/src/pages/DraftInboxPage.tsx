@@ -449,7 +449,7 @@ function parseChanges(row: Record<string, unknown>): DraftChange[] {
 }
 
 /** 将 API / SDK DraftRow 归一为页面 DraftItem */
-export function mapApiRowToDraftItem(row: Record<string, unknown>): DraftItem {
+export function mapApiRowToDraftItem(row: Record<string, unknown>, synthesize = true): DraftItem {
   const status = mapApiStatus(row.status);
   const submittedBy = String(row.submittedBy ?? row.createdBy ?? row.author ?? "未知");
   const createdAt = tsToIso(row.createdAt ?? row.created_at);
@@ -460,7 +460,7 @@ export function mapApiRowToDraftItem(row: Record<string, unknown>): DraftItem {
   );
   const timeline = parseTimeline(
     row.timeline ?? row.activity,
-    synthesizeTimeline(status, submittedBy, createdAt, updatedAt),
+    synthesize ? synthesizeTimeline(status, submittedBy, createdAt, updatedAt) : [],
   );
   return {
     id: String(row.id ?? "unknown"),
@@ -475,6 +475,20 @@ export function mapApiRowToDraftItem(row: Record<string, unknown>): DraftItem {
     changes: parseChanges(row),
     timeline,
   };
+}
+
+export function validateDraftWriteResponse(
+  draftId: string,
+  action: "approve" | "reject",
+  raw: Record<string, unknown>,
+): string | null {
+  if (raw.id !== draftId) return "回包 id 与目标 Draft 不一致";
+  const status = action === "approve" ? "approved" : "rejected";
+  if (raw.status !== status) return `回包 status 不是 ${status}`;
+  const written = action === "approve";
+  if (raw.productionWritten !== written) return `回包 productionWritten 不是 ${written}`;
+  if (action === "approve" && !String(raw.lineageId || "")) return "批准回包缺少 lineageId";
+  return null;
 }
 
 function statusToTimelineAction(to: DraftStatus): TimelineAction {
@@ -535,11 +549,11 @@ export function DraftInboxPage() {
   );
 
   /* --- API 同步：成功→live（可空列表）；失败→demo MOCK --- */
-  const reloadFromApi = useCallback(async (): Promise<boolean> => {
+  const reloadFromApi = useCallback(async (preserveLiveOnFailure = false): Promise<DraftItem[] | null> => {
     try {
       const res = await getOntologyClient().listDrafts();
       const items = (res.items || []).map((row) =>
-        mapApiRowToDraftItem(row as Record<string, unknown>),
+        mapApiRowToDraftItem(row as Record<string, unknown>, false),
       );
       setApiItems(items);
       setApiError(null);
@@ -548,11 +562,11 @@ export function DraftInboxPage() {
         if (prev && items.some((d) => d.id === prev)) return prev;
         return items[0]?.id ?? null;
       });
-      return true;
+      return items;
     } catch (e) {
       setApiError(String((e as Error).message || e));
-      setSourceMode("demo");
-      return false;
+      if (!preserveLiveOnFailure) setSourceMode("demo");
+      return null;
     }
   }, []);
 
@@ -616,9 +630,17 @@ export function DraftInboxPage() {
     setBusy(true);
     setErr(null);
     try {
-      await getOntologyClient().approveDraft(selected.id);
-      setMsg(`已批准 · ${selected.title}`);
-      await reloadFromApi();
+      const response = await getOntologyClient().approveDraft(selected.id, {
+        idempotencyKey: `draft-inbox-approve-${selected.id}`,
+      });
+      const invalid = validateDraftWriteResponse(selected.id, "approve", response);
+      if (invalid) throw new Error(invalid);
+      const items = await reloadFromApi(true);
+      if (!items || !items.some((item) => item.id === selected.id && item.status === "approved")) {
+        setErr("批准已提交但重读核验失败");
+        return;
+      }
+      setMsg(`已批准并完成重读核验 · ${selected.title}`);
     } catch (e) {
       setErr(`批准失败：${String((e as Error).message || e)}`);
     } finally {
@@ -636,13 +658,18 @@ export function DraftInboxPage() {
       setErr(`非法状态转换：${selected.status} → rejected`);
       return;
     }
-    const reason = window.prompt("驳回原因（可选）：") ?? "";
     setBusy(true);
     setErr(null);
     try {
-      await getOntologyClient().rejectDraft(selected.id, { reason });
-      setMsg(`已拒绝 · ${selected.title}`);
-      await reloadFromApi();
+      const response = await getOntologyClient().rejectDraft(selected.id);
+      const invalid = validateDraftWriteResponse(selected.id, "reject", response);
+      if (invalid) throw new Error(invalid);
+      const items = await reloadFromApi(true);
+      if (!items || !items.some((item) => item.id === selected.id && item.status === "rejected")) {
+        setErr("驳回已提交但重读核验失败");
+        return;
+      }
+      setMsg(`已拒绝并完成重读核验 · ${selected.title}`);
     } catch (e) {
       setErr(`驳回失败：${String((e as Error).message || e)}`);
     } finally {
@@ -943,6 +970,9 @@ export function DraftInboxPage() {
                 {/* Timeline 审批历史 */}
                 <div>
                   <h3 className="text-xs font-semibold text-gray-700 mb-3">审批历史</h3>
+                  {sourceMode === "live" && selected.timeline.length === 0 ? (
+                    <p className="text-xs text-gray-500">审批历史 API 未提供；本页不合成操作人或时间。</p>
+                  ) : null}
                   <div className="flex flex-col gap-0">
                     {selected.timeline.map((entry, idx) => (
                       <div key={entry.id} className="flex gap-3">
@@ -986,6 +1016,7 @@ export function DraftInboxPage() {
                 <ApprovalActions
                   status={selected.status}
                   busy={busy}
+                  live={sourceMode === "live"}
                   onApprove={() => { void handleApprove(); }}
                   onReject={() => { void handleReject(); }}
                   onChangeRequest={handleChangeRequest}
@@ -1022,6 +1053,7 @@ export function DraftInboxPage() {
 function ApprovalActions({
   status,
   busy,
+  live,
   onApprove,
   onReject,
   onChangeRequest,
@@ -1033,6 +1065,7 @@ function ApprovalActions({
 }: {
   status: DraftStatus;
   busy?: boolean;
+  live?: boolean;
   onApprove: () => void;
   onReject: () => void;
   onChangeRequest: () => void;
@@ -1044,6 +1077,8 @@ function ApprovalActions({
 }) {
   const btnBase = "px-3 py-1.5 text-xs font-medium rounded-md border transition-colors cursor-pointer";
   const disabled = Boolean(busy);
+  const unsupported = Boolean(live);
+  const unsupportedTitle = "当前 PG Draft 契约未支持此操作";
 
   // in_review：显示「批准」「拒绝」「退回修改」「添加评论」
   if (status === "in_review") {
@@ -1055,10 +1090,10 @@ function ApprovalActions({
         <button type="button" disabled={disabled} className={`${btnBase} bg-red-600 text-white border-red-600 hover:bg-red-700`} onClick={onReject}>
           拒绝
         </button>
-        <button type="button" disabled={disabled} className={`${btnBase} bg-white text-purple-700 border-purple-300 hover:bg-purple-50`} onClick={onChangeRequest}>
+        <button type="button" disabled={disabled || unsupported} title={unsupported ? unsupportedTitle : undefined} className={`${btnBase} bg-white text-purple-700 border-purple-300 hover:bg-purple-50`} onClick={onChangeRequest}>
           退回修改
         </button>
-        <button type="button" disabled={disabled} className={`${btnBase} bg-white text-gray-700 border-gray-300 hover:bg-gray-50`} onClick={onAddComment}>
+        <button type="button" disabled={disabled || unsupported} title={unsupported ? unsupportedTitle : undefined} className={`${btnBase} bg-white text-gray-700 border-gray-300 hover:bg-gray-50`} onClick={onAddComment}>
           添加评论
         </button>
       </div>
@@ -1070,19 +1105,19 @@ function ApprovalActions({
     return (
       <div className="flex flex-wrap gap-2">
         {status === "draft" && (
-          <button type="button" disabled={disabled} className={`${btnBase} bg-blue-600 text-white border-blue-600 hover:bg-blue-700`} onClick={onSubmit}>
+          <button type="button" disabled={disabled || unsupported} title={unsupported ? unsupportedTitle : undefined} className={`${btnBase} bg-blue-600 text-white border-blue-600 hover:bg-blue-700`} onClick={onSubmit}>
             提交审批
           </button>
         )}
         {status === "submitted" && (
-          <button type="button" disabled={disabled} className={`${btnBase} bg-blue-600 text-white border-blue-600 hover:bg-blue-700`} onClick={onStartReview}>
+          <button type="button" disabled={disabled || unsupported} title={unsupported ? unsupportedTitle : undefined} className={`${btnBase} bg-blue-600 text-white border-blue-600 hover:bg-blue-700`} onClick={onStartReview}>
             进入审批
           </button>
         )}
-        <button type="button" disabled={disabled} className={`${btnBase} bg-white text-gray-700 border-gray-300 hover:bg-gray-50`}>
+        <button type="button" disabled title={unsupportedTitle} className={`${btnBase} bg-white text-gray-700 border-gray-300 hover:bg-gray-50`}>
           编辑
         </button>
-        <button type="button" disabled={disabled} className={`${btnBase} bg-white text-red-600 border-red-300 hover:bg-red-50`} onClick={onWithdraw}>
+        <button type="button" disabled={disabled || unsupported} title={unsupported ? unsupportedTitle : undefined} className={`${btnBase} bg-white text-red-600 border-red-300 hover:bg-red-50`} onClick={onWithdraw}>
           撤回
         </button>
       </div>
@@ -1093,10 +1128,10 @@ function ApprovalActions({
   if (status === "changes_requested") {
     return (
       <div className="flex flex-wrap gap-2">
-        <button type="button" disabled={disabled} className={`${btnBase} bg-blue-600 text-white border-blue-600 hover:bg-blue-700`} onClick={onReturnDraft}>
+        <button type="button" disabled={disabled || unsupported} title={unsupported ? unsupportedTitle : undefined} className={`${btnBase} bg-blue-600 text-white border-blue-600 hover:bg-blue-700`} onClick={onReturnDraft}>
           返回草稿
         </button>
-        <button type="button" disabled={disabled} className={`${btnBase} bg-white text-gray-700 border-gray-300 hover:bg-gray-50`}>
+        <button type="button" disabled title={unsupportedTitle} className={`${btnBase} bg-white text-gray-700 border-gray-300 hover:bg-gray-50`}>
           编辑
         </button>
       </div>
@@ -1106,7 +1141,7 @@ function ApprovalActions({
   // 终态（approved/rejected/withdrawn）：显示「查看历史」
   return (
     <div className="flex gap-2">
-      <button type="button" className={`${btnBase} bg-white text-gray-700 border-gray-300 hover:bg-gray-50`}>
+      <button type="button" disabled title={unsupportedTitle} className={`${btnBase} bg-white text-gray-700 border-gray-300 hover:bg-gray-50`}>
         查看历史
       </button>
     </div>

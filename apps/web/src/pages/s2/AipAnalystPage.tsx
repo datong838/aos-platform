@@ -276,12 +276,51 @@ export function mapAnalystApiResult(data: AnalystQueryApiResponse): QueryResult 
     return { name: String(c.name ?? ""), type };
   }).filter((c) => c.name);
   return {
-    columns: columns.length > 0 ? columns : MOCK_RESULT.columns,
+    columns,
     rows: Array.isArray(data.rows) ? data.rows : [],
     durationMs: typeof data.durationMs === "number" ? data.durationMs : 0,
     cacheHit: Boolean(data.cacheHit),
     source: data.source === "live" ? "live" : "fallback",
   };
+}
+
+const LOCAL_QUERIES_KEY = "aos-aip-analyst-local-queries:v1";
+
+export function loadLocalQueries(): SavedQuery[] {
+  try {
+    const value = JSON.parse(localStorage.getItem(LOCAL_QUERIES_KEY) || "[]") as unknown;
+    return Array.isArray(value) ? value.filter((q): q is SavedQuery => Boolean(q && typeof q === "object" && "id" in q && "sql" in q)) : [];
+  } catch { return []; }
+}
+
+export function saveLocalQueries(queries: SavedQuery[]): boolean {
+  try {
+    localStorage.setItem(LOCAL_QUERIES_KEY, JSON.stringify(queries));
+    return JSON.stringify(loadLocalQueries()) === JSON.stringify(queries);
+  } catch { return false; }
+}
+
+function csvCell(value: unknown): string {
+  const text = String(value ?? "");
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+export function buildAnalystExport(
+  result: QueryResult,
+  sql: string,
+  format: "csv" | "json",
+  generatedAt = new Date().toISOString(),
+): { filename: string; mime: string; content: string } {
+  const source = result.source === "fallback" ? "server-sample-fallback" : "server-sample";
+  const stamp = generatedAt.replace(/[:.]/g, "-");
+  if (format === "json") return {
+    filename: `aip-analyst-sample-${stamp}.json`, mime: "application/json",
+    content: JSON.stringify({ source, sql, generatedAt, columns: result.columns, rows: result.rows }, null, 2),
+  };
+  const names = result.columns.map((c) => c.name);
+  const lines = [`# source=${source}`, `# sql=${sql.replace(/\s+/g, " ").trim()}`, `# generatedAt=${generatedAt}`, names.map(csvCell).join(",")];
+  for (const row of result.rows) lines.push(names.map((name) => csvCell(row[name])).join(","));
+  return { filename: `aip-analyst-sample-${stamp}.csv`, mime: "text/csv;charset=utf-8", content: lines.join("\n") };
 }
 
 /**本地 MOCK 降级结果。*/
@@ -302,10 +341,10 @@ export const UK_MID_BOUNDS = { latMin: 52.0, latMax: 52.4, lngMin: -1.2, lngMax:
  * ------------------------------------------------------------------------- */
 export function AipAnalystPage() {
   const [sql, setSql] = useState(DEFAULT_SQL);
-  const [queries] = useState<SavedQuery[]>(MOCK_QUERIES);
+  const [queries, setQueries] = useState<SavedQuery[]>(() => [...MOCK_QUERIES, ...loadLocalQueries()]);
   const [activeCategory, setActiveCategory] = useState<QueryCategory | "all">("all");
   const [activeQueryId, setActiveQueryId] = useState<string | null>("q1");
-  const [result, setResult] = useState<QueryResult | null>(MOCK_RESULT);
+  const [result, setResult] = useState<QueryResult | null>(null);
   const [resultTab, setResultTab] = useState<ResultTab>("table");
   const [chartType, setChartType] = useState<ChartType>("bar");
   const [sortCol, setSortCol] = useState<string | null>(null);
@@ -313,7 +352,10 @@ export function AipAnalystPage() {
   const [filter, setFilter] = useState("");
   const [page, setPage] = useState(1);
   const [running, setRunning] = useState(false);
-  const [pathBanner, setPathBanner] = useState<"live" | "demo" | null>(null);
+  const [pathBanner, setPathBanner] = useState<"sample" | "fallback" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
   const pageSize = 10;
 
   const filteredQueries = useMemo(
@@ -342,16 +384,16 @@ export function AipAnalystPage() {
   async function runQuery() {
     if (!isSelectQuery(sql) || running) return;
     setRunning(true);
+    setError(null);
     try {
       const data = await apiPost<AnalystQueryApiResponse>("/v1/aip/analyst/query", { sql });
       const mapped = mapAnalystApiResult(data);
       setResult(mapped);
-      setPathBanner(mapped.source === "live" ? "live" : "demo");
+      setPathBanner(mapped.source === "live" ? "sample" : "fallback");
+      setDirty(true);
       setPage(1);
-    } catch {
-      setResult(demoMockResult());
-      setPathBanner("demo");
-      setPage(1);
+    } catch (e) {
+      setError(`查询失败：${String((e as Error).message || e)}；已保留上次确认结果`);
     } finally {
       setRunning(false);
     }
@@ -360,6 +402,43 @@ export function AipAnalystPage() {
   function selectQuery(q: SavedQuery) {
     setSql(q.sql);
     setActiveQueryId(q.id);
+    setDirty(false);
+    setSaveMsg(null);
+  }
+
+  function newQuery() {
+    setSql("SELECT * FROM ");
+    setActiveQueryId(null);
+    setResult(null);
+    setPathBanner(null);
+    setDirty(true);
+    setSaveMsg("未保存的本地草稿");
+  }
+
+  function saveQuery() {
+    const locals = loadLocalQueries();
+    const existing = activeQueryId?.startsWith("local-") ? activeQueryId : null;
+    const item: SavedQuery = {
+      id: existing || `local-${Date.now().toString(36)}`,
+      name: existing ? (locals.find((q) => q.id === existing)?.name || "本机查询") : `本机查询 ${locals.length + 1}`,
+      sql, category: "recent", updatedAt: new Date().toLocaleString(),
+    };
+    const next = existing ? locals.map((q) => q.id === existing ? item : q) : [...locals, item];
+    if (!saveLocalQueries(next)) { setSaveMsg("保存失败：浏览器存储写后读回不一致"); return; }
+    setQueries([...MOCK_QUERIES, ...next]);
+    setActiveQueryId(item.id);
+    setDirty(false);
+    setSaveMsg("已保存到本机 · 仅此浏览器");
+  }
+
+  function exportResult(format: "csv" | "json") {
+    if (!result) return;
+    try {
+      const file = buildAnalystExport(result, sql, format);
+      const href = URL.createObjectURL(new Blob([file.content], { type: file.mime }));
+      const anchor = document.createElement("a");
+      anchor.href = href; anchor.download = file.filename; anchor.click(); URL.revokeObjectURL(href);
+    } catch (e) { setError(`导出失败：${String((e as Error).message || e)}`); }
   }
 
   function toggleSort(col: string) {
@@ -382,14 +461,14 @@ export function AipAnalystPage() {
           minHeight: 520,
         }}
       >
-        {pathBanner === "live" && (
+        {pathBanner === "sample" && (
           <div className="w2-a4-banner w2-a4-banner--live" data-testid="analyst-path-live">
-            真查询路径 · POST /v1/aip/analyst/query
+            服务端样例数据 · POST /v1/aip/analyst/query（非生产 Ontology 实时查询）
           </div>
         )}
-        {pathBanner === "demo" && (
+        {pathBanner === "fallback" && (
           <div className="w2-a4-banner w2-a4-banner--demo" data-testid="analyst-path-demo">
-            演示路径 · API 不可用或 fallback，已使用本地 MOCK
+            服务端回落样例 · 查询目标不受支持，结果不是生产数据
           </div>
         )}
         <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
@@ -407,11 +486,12 @@ export function AipAnalystPage() {
             }}
           >
             <div style={{ padding: 10, borderBottom: "1px solid var(--aos-gray-100)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--aos-text)" }}>查询</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--aos-text)" }}>查询 · 内置/本地样例</span>
               <button
                 type="button"
                 data-testid="btn-new-query"
                 title="新建查询"
+                onClick={newQuery}
                 style={iconBtn}
               >
                 +
@@ -492,14 +572,15 @@ export function AipAnalystPage() {
               >
                 格式化
               </button>
-              <button type="button" data-testid="btn-save" style={btnSecondary}>保存</button>
+              <button type="button" data-testid="btn-save" onClick={saveQuery} disabled={!dirty} style={btnSecondary}>保存到本机</button>
+              {saveMsg ? <span style={{ fontSize: 11, color: "var(--aos-muted)" }}>{saveMsg}</span> : null}
               <div style={{ flex: 1 }} />
               <BpBadge variant="info" size="sm">SQL</BpBadge>
             </div>
             {/* SQL 编辑区（textarea 模拟） */}
             <textarea
               value={sql}
-              onChange={(e) => setSql(e.target.value)}
+              onChange={(e) => { setSql(e.target.value); setDirty(true); }}
               data-testid="sql-editor"
               spellCheck={false}
               style={{
@@ -612,7 +693,8 @@ export function AipAnalystPage() {
         </div>
 
         {/* 底部状态栏 */}
-        <StatusBar result={result} total={processedRows.length} />
+        {error ? <div role="alert" style={{ color: "var(--aos-red)", fontSize: 12, padding: 6 }}>{error}</div> : null}
+        <StatusBar result={result} total={processedRows.length} onExport={exportResult} />
       </div>
     </PageChrome>
   );
@@ -856,7 +938,7 @@ function RawView(props: { result: QueryResult }) {
 /* ----------------------------------------------------------------------------
  * 子组件：底部状态栏
  * ------------------------------------------------------------------------- */
-function StatusBar(props: { result: QueryResult | null; total: number }) {
+function StatusBar(props: { result: QueryResult | null; total: number; onExport: (format: "csv" | "json") => void }) {
   return (
     <div
       data-testid="status-bar"
@@ -882,10 +964,10 @@ function StatusBar(props: { result: QueryResult | null; total: number }) {
             {props.result.cacheHit ? "缓存命中" : "未命中缓存"}
           </span>
           <div style={{ flex: 1 }} />
-          <button type="button" data-testid="btn-export-csv" style={btnXS}>
+          <button type="button" data-testid="btn-export-csv" onClick={() => props.onExport("csv")} style={btnXS}>
             导出 CSV
           </button>
-          <button type="button" data-testid="btn-export-json" style={btnXS}>
+          <button type="button" data-testid="btn-export-json" onClick={() => props.onExport("json")} style={btnXS}>
             导出 JSON
           </button>
         </>

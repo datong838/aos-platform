@@ -11,6 +11,9 @@ import {
   isSelectQuery,
   linePath,
   mapAnalystApiResult,
+  buildAnalystExport,
+  saveLocalQueries,
+  loadLocalQueries,
   normalizeBars,
   paginate,
   parseCoords,
@@ -418,10 +421,10 @@ describe("AipAnalystPage · mapAnalystApiResult / demoMockResult", () => {
     expect(r.durationMs).toBe(12);
   });
 
-  it("缺列时回退 MOCK 列定义", () => {
+  it("缺列时保持真实空列，不注入 MOCK", () => {
     const r = mapAnalystApiResult({ rows: [{ name: "x" }], source: "fallback" });
     expect(r.source).toBe("fallback");
-    expect(r.columns.length).toBeGreaterThan(0);
+    expect(r.columns).toEqual([]);
   });
 
   it("demoMockResult 标记演示路径", () => {
@@ -429,5 +432,23 @@ describe("AipAnalystPage · mapAnalystApiResult / demoMockResult", () => {
     expect(r.source).toBe("demo");
     expect(r.durationMs).toBe(100);
     expect(r.rows.length).toBeGreaterThan(0);
+  });
+});
+
+describe("AipAnalystPage · 本机保存与当前结果导出", () => {
+  it("localStorage 写后可读回", () => {
+    const rows = [{ id: "local-1", name: "本机查询", sql: "SELECT 1", category: "recent" as const, updatedAt: "now" }];
+    expect(saveLocalQueries(rows)).toBe(true);
+    expect(loadLocalQueries()).toEqual(rows);
+  });
+
+  it("JSON/CSV 导出都携带样例来源和 SQL", () => {
+    const result: QueryResult = { columns: [{ name: "name", type: "string" }], rows: [{ name: "a,b" }], durationMs: 1, cacheHit: false, source: "live" };
+    const json = buildAnalystExport(result, "SELECT name FROM shops", "json", "2026-08-01T00:00:00Z");
+    expect(json.content).toContain("server-sample");
+    expect(json.content).toContain("SELECT name FROM shops");
+    const csv = buildAnalystExport(result, "SELECT name FROM shops", "csv", "2026-08-01T00:00:00Z");
+    expect(csv.content).toContain('"a,b"');
+    expect(csv.content).toContain("# source=server-sample");
   });
 });

@@ -15,6 +15,7 @@ import {
   extractSubmitters,
   mapApiStatus,
   mapApiRowToDraftItem,
+  validateDraftWriteResponse,
   normalizeDraftType,
   synthesizeTimeline,
   type DraftItem,
@@ -125,6 +126,24 @@ describe("审批流状态机", () => {
 
   it("TRANSITIONS 有 7 个状态", () => {
     expect(Object.keys(TRANSITIONS)).toHaveLength(7);
+  });
+});
+
+describe("Draft Inbox · 生产写回校验", () => {
+  it("严格校验批准回包", () => {
+    expect(validateDraftWriteResponse("d1", "approve", { id: "d1", status: "approved", productionWritten: true, lineageId: "lin-d1" })).toBeNull();
+    expect(validateDraftWriteResponse("d1", "approve", { id: "d1", status: "approved", productionWritten: false })).toContain("productionWritten");
+  });
+
+  it("严格校验驳回回包", () => {
+    expect(validateDraftWriteResponse("d1", "reject", { id: "d1", status: "rejected", productionWritten: false })).toBeNull();
+    expect(validateDraftWriteResponse("d1", "reject", { id: "d2", status: "rejected", productionWritten: false })).toContain("id");
+  });
+
+  it("live 映射不伪造历史和时间", () => {
+    const item = mapApiRowToDraftItem({ id: "d1", status: "proposed", createdBy: "u" }, false);
+    expect(item.timeline).toEqual([]);
+    expect(item.createdAt).toBe("");
   });
 });
 

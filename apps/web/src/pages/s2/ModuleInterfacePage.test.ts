@@ -3,6 +3,7 @@ import {
   deriveMockFields,
   displayFieldLabel,
   fieldsToEntryParams,
+  interfaceMatchesDraft,
   paramsToFields,
   type InterfaceField,
 } from "./ModuleInterfacePage";
@@ -31,6 +32,22 @@ describe("ModuleInterfacePage · paramsToFields", () => {
   it("handles null/empty", () => {
     expect(paramsToFields(null)).toEqual([]);
     expect(paramsToFields([])).toEqual([]);
+  });
+});
+
+describe("ModuleInterfacePage · 写后重读核验", () => {
+  const draft = {
+    name: "OrderAPI",
+    description: "订单接口",
+    version: "1.2.0",
+    entryParams: [{ name: "orderId", key: "orderId", type: "string", direction: "input" }],
+    expose: { endpoint: "/orders" },
+  };
+
+  it("只有同一 module 且完整快照一致才通过", () => {
+    expect(interfaceMatchesDraft("m1", { moduleId: "m1", ...draft }, draft)).toBe(true);
+    expect(interfaceMatchesDraft("m1", { moduleId: "m2", ...draft }, draft)).toBe(false);
+    expect(interfaceMatchesDraft("m1", { moduleId: "m1", ...draft, version: "1.1.0" }, draft)).toBe(false);
   });
 });
 
