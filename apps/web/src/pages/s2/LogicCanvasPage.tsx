@@ -1,31 +1,31 @@
-import { useCallback, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { apiPost } from "../../api/client";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+
 import { PageChrome } from "../../components/PageChrome";
+import { DEFAULT_LOGIC_PALETTE, LogicGraphCanvas } from "./LogicGraphCanvas";
+import { LogicGraphInspector } from "./LogicGraphInspector";
+import {
+  type LogicBlockKind,
+  type LogicGraphEdge,
+  type LogicGraphNode,
+  type LogicGraphSnapshot,
+} from "./logicCanvasGraph";
+import {
+  createLogicGraph,
+  getLogicGraph,
+  replaceLogicGraph,
+  type LogicGraphDraft,
+} from "./logicGraphApi";
 
-/* ── 类型定义 ── */
-
-type BlockKind =
-  | "input"
-  | "create_variable"
-  | "get_property"
-  | "use_llm"
-  | "use_tool"
-  | "transform"
-  | "apply_action"
-  | "execute"
-  | "branch"
-  | "handoff";
-
-/** Branch 双路分叉定义 */
+/** 向后兼容：旧测试和外部引用仍使用这些导出。 */
 export interface BranchPath {
   id: string;
   label: string;
   condition: string;
   color: string;
+  default?: boolean;
 }
 
-/** Handoff 汇聚配置 */
 export interface HandoffConfig {
   decision: string;
   artifacts: string[];
@@ -33,1119 +33,354 @@ export interface HandoffConfig {
   handoff_to: "risk_agent" | "draft_inbox" | "webhook";
 }
 
-interface BlockDef {
-  id: string;
-  kind: BlockKind;
-  label: string;
-  config: Record<string, unknown>;
-}
+export const PALETTE = DEFAULT_LOGIC_PALETTE.map((item) => ({
+  kind: item.kind,
+  title: item.title,
+  zh: item.label,
+  desc: item.description,
+  icon: item.icon,
+}));
 
-interface SafeDryRunResponse {
-  dryRun: boolean;
-  proposedEdits: Record<string, unknown>[];
-  productionWritten: boolean;
-}
-
-/* ── 节点调色板定义 ── */
-
-const PALETTE: { kind: BlockKind; title: string; zh: string; desc: string; icon: string }[] = [
-  {
-    kind: "input",
-    title: "Input",
-    zh: "输入",
-    desc: "定义推理入口变量，如 objectId / objectType",
-    icon: "📥",
-  },
-  {
-    kind: "create_variable",
-    title: "Create Variable",
-    zh: "创建变量",
-    desc: "根据 DSL 表达式创建中间变量",
-    icon: "📐",
-  },
-  {
-    kind: "get_property",
-    title: "Get Property",
-    zh: "获取属性",
-    desc: "从 Ontology 对象读取属性值",
-    icon: "🔗",
-  },
-  {
-    kind: "use_llm",
-    title: "Use LLM",
-    zh: "使用 LLM",
-    desc: "调用大模型分析/生成/润色",
-    icon: "🤖",
-  },
-  {
-    kind: "use_tool",
-    title: "Use Tool",
-    zh: "使用工具",
-    desc: "调用注册的 Capability 工具",
-    icon: "🔧",
-  },
-  {
-    kind: "transform",
-    title: "Transform",
-    zh: "数据变换",
-    desc: "用 DSL 表达式变换数据",
-    icon: "🔄",
-  },
-  {
-    kind: "apply_action",
-    title: "Apply Action",
-    zh: "应用动作",
-    desc: "写回 Ontology（dryRun 不落库）",
-    icon: "✏️",
-  },
-  {
-    kind: "execute",
-    title: "Execute",
-    zh: "执行",
-    desc: "提交执行结果 / 触发通知",
-    icon: "🚀",
-  },
-  {
-    kind: "branch",
-    title: "Branch",
-    zh: "分支",
-    desc: "条件分叉：根据表达式选择执行路径",
-    icon: "🔀",
-  },
-  {
-    kind: "handoff",
-    title: "Handoff",
-    zh: "汇聚",
-    desc: "汇聚多路上下文，输出决策摘要+产物+待确认项",
-    icon: "🔗",
-  },
-];
-
-/** Block 样式元数据（导出供测试） */
-export const KIND_META: Record<BlockKind, { label: string; color: string; bg: string; border: string }> = {
-  input:          { label: "输入",      color: "var(--aos-indigo-600)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
-  create_variable:{ label: "创建变量",  color: "var(--color-info)", bg: "var(--aos-accent-light)", border: "var(--aos-green-border)" },
-  get_property:   { label: "获取属性",  color: "var(--aos-amber)", bg: "var(--aos-amber-bg)", border: "var(--aos-amber-border)" },
-  use_llm:        { label: "使用 LLM",  color: "var(--aos-purple-600)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
-  use_tool:       { label: "使用工具",  color: "var(--aos-purple-600)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
-  transform:      { label: "数据变换",  color: "var(--color-info)", bg: "var(--aos-accent-light)", border: "var(--aos-accent-border)" },
-  apply_action:   { label: "应用动作",  color: "var(--aos-amber-600)", bg: "var(--aos-amber-bg)", border: "var(--aos-amber-border)" },
-  execute:        { label: "执行",      color: "var(--aos-green)", bg: "var(--aos-green-bg)", border: "var(--aos-green-border)" },
-  branch:         { label: "分支",      color: "var(--aos-red)", bg: "var(--aos-red-bg)", border: "var(--aos-red-border)" },
-  handoff:        { label: "汇聚",      color: "var(--aos-indigo-600)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
+export const KIND_META: Record<LogicBlockKind, { label: string; color: string; bg: string; border: string }> = {
+  input: { label: "输入", color: "var(--aos-indigo-600)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
+  create_variable: { label: "创建变量", color: "var(--color-info)", bg: "var(--aos-accent-light)", border: "var(--aos-green-border)" },
+  get_property: { label: "获取属性", color: "var(--aos-amber)", bg: "var(--aos-amber-bg)", border: "var(--aos-amber-border)" },
+  use_llm: { label: "使用 LLM", color: "var(--aos-purple-600)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
+  use_tool: { label: "使用工具", color: "var(--aos-purple-600)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
+  transform: { label: "数据变换", color: "var(--color-info)", bg: "var(--aos-accent-light)", border: "var(--aos-accent-border)" },
+  apply_action: { label: "应用动作", color: "var(--aos-amber-600)", bg: "var(--aos-amber-bg)", border: "var(--aos-amber-border)" },
+  execute: { label: "执行", color: "var(--aos-green)", bg: "var(--aos-green-bg)", border: "var(--aos-green-border)" },
+  branch: { label: "分支", color: "var(--aos-red)", bg: "var(--aos-red-bg)", border: "var(--aos-red-border)" },
+  handoff: { label: "汇聚", color: "var(--aos-indigo-600)", bg: "var(--aos-indigo-bg)", border: "var(--aos-indigo-border)" },
 };
 
-/** 向后兼容：部分渲染处仅需要颜色字符串 */
-const KIND_COLORS: Record<BlockKind, string> = Object.fromEntries(
-  (Object.entries(KIND_META) as [BlockKind, { color: string }][]).map(([k, v]) => [k, v.color]),
-) as Record<BlockKind, string>;
-
-/** 导出 PALETTE 供测试 */
-export { PALETTE };
-
-let _nextId = 0;
-function uid(): string {
-  _nextId += 1;
-  return `b${_nextId}-${Date.now().toString(36)}`;
+export interface LogicCanvasPageProps {
+  flowId?: string;
 }
 
-/* ── 主组件 ── */
+let nextTemplateId = 0;
 
-type RightPanelTab = "config" | "history" | "automation";
-
-interface RunHistoryEntry {
-  timestamp: string;
-  blockCount: number;
-  proposedEditCount: number;
-}
-
-const TRIGGER_TYPES = [
-  { kind: "object_change", label: "对象变更", icon: "🔄", desc: "当 ObjectType 数据变化时触发" },
-  { kind: "schedule", label: "定时触发", icon: "⏰", desc: "按 cron 表达式定时执行" },
-  { kind: "manual", label: "人工触发", icon: "👤", desc: "用户手动点击执行" },
-  { kind: "webhook", label: "Webhook", icon: "🔗", desc: "外部系统通过 HTTP 调用触发" },
-  { kind: "threshold", label: "阈值告警", icon: "📊", desc: "当指标超过阈值时触发" },
-];
-
-export function LogicCanvasPage() {
-  const [blocks, setBlocks] = useState<BlockDef[]>(() => [
-    { id: uid(), kind: "input", label: "WorkOrder 输入", config: { objectType: "WorkOrder", objectId: "wo-1001" } },
-    { id: uid(), kind: "get_property", label: "获取状态", config: { property: "status" } },
-    { id: uid(), kind: "use_llm", label: "LLM 分析", config: { prompt: "分析工单状态并给出建议" } },
-    { id: uid(), kind: "apply_action", label: "写回 note", config: { field: "note", valueFrom: "llm_output" } },
-  ]);
-  const [selectedId, setSelectedId] = useState<string>("");
-  const [output, setOutput] = useState<string>("");
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const [rightTab, setRightTab] = useState<RightPanelTab>("config");
-  const [history, setHistory] = useState<RunHistoryEntry[]>([]);
-
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const dragNode = useRef<{ kind: BlockKind; title: string } | null>(null);
-
-  const selected = useMemo(() => blocks.find((b) => b.id === selectedId) ?? null, [blocks, selectedId]);
-
-  /* ── 节点操作 ── */
-
-  const addBlock = useCallback((kind: BlockKind) => {
-    const def = PALETTE.find((p) => p.kind === kind)!;
-    const defaultConfig: Record<string, unknown> =
-      kind === "branch"
-        ? {
-            paths: [
-              { id: "p1", label: "高风险", condition: "risk_level IN [high, critical]", color: "var(--aos-red)" },
-              { id: "p2", label: "低风险", condition: "risk_level IN [low, medium]", color: "var(--aos-green-600)" },
-            ],
-          }
-        : kind === "handoff"
-          ? {
-              decision: "风险分诊结论：中等风险，建议人工复核",
-              artifacts: ["risk_assessment.json", "order_snapshot.diff"],
-              open_qs: ["是否需要升级到 L4 模型？"],
-              handoff_to: "draft_inbox" as const,
-            }
-          : {};
-    const b: BlockDef = { id: uid(), kind, label: `${def.zh} (${def.title})`, config: defaultConfig };
-    setBlocks((p) => [...p, b]);
-    setSelectedId(b.id);
-  }, []);
-
-  const removeBlock = useCallback(() => {
-    if (!selectedId) return;
-    setBlocks((p) => p.filter((b) => b.id !== selectedId));
-    setSelectedId("");
-  }, [selectedId]);
-
-  const moveBlock = useCallback((id: string, dir: -1 | 1) => {
-    setBlocks((p) => {
-      const idx = p.findIndex((b) => b.id === id);
-      if (idx < 0) return p;
-      const newIdx = idx + dir;
-      if (newIdx < 0 || newIdx >= p.length) return p;
-      const arr = [...p];
-      [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
-      return arr;
-    });
-  }, []);
-
-  const updateConfig = useCallback(
-    (key: string, value: unknown) => {
-      setBlocks((p) =>
-        p.map((b) => (b.id === selectedId ? { ...b, config: { ...b.config, [key]: value } } : b)),
-      );
+function createTemplate(): LogicGraphSnapshot {
+  nextTemplateId += 1;
+  const id = `logic-${Date.now().toString(36)}-${nextTemplateId}`;
+  const nodes: LogicGraphNode[] = [
+    {
+      id: "template-input",
+      kind: "input",
+      label: "WorkOrder 输入",
+      position_x: 80,
+      position_y: 140,
+      config: { schema: { type: "object", properties: { objectId: { type: "string" } } } },
     },
-    [selectedId],
-  );
-
-  const updateLabel = useCallback(
-    (label: string) => {
-      setBlocks((previous) => previous.map((block) => (
-        block.id === selectedId ? { ...block, label } : block
-      )));
+    {
+      id: "template-property",
+      kind: "get_property",
+      label: "获取状态",
+      position_x: 340,
+      position_y: 140,
+      config: { property: "status" },
     },
-    [selectedId],
-  );
-
-  /* ── 拖拽 ── */
-
-  const onDragStart = (kind: BlockKind, title: string) => {
-    dragNode.current = { kind, title };
+    {
+      id: "template-llm",
+      kind: "use_llm",
+      label: "LLM 分析",
+      position_x: 600,
+      position_y: 140,
+      config: { prompt: "分析工单状态并给出建议", model: "k-LLM router" },
+    },
+    {
+      id: "template-action",
+      kind: "apply_action",
+      label: "提议更新 note",
+      position_x: 860,
+      position_y: 140,
+      config: { action: "WorkOrder.updateNote" },
+    },
+  ];
+  const edges: LogicGraphEdge[] = [
+    { id: "template-edge-1", source_node_id: nodes[0].id, source_port: "out", target_node_id: nodes[1].id, target_port: "in", branch_path: "", order: 0 },
+    { id: "template-edge-2", source_node_id: nodes[1].id, source_port: "out", target_node_id: nodes[2].id, target_port: "in", branch_path: "", order: 1 },
+    { id: "template-edge-3", source_node_id: nodes[2].id, source_port: "out", target_node_id: nodes[3].id, target_port: "in", branch_path: "", order: 2 },
+  ];
+  return {
+    id,
+    name: "未保存 Logic 模板",
+    description: "从 WorkOrder 输入生成受治理的 Action 提议",
+    status: "draft",
+    schema_version: 1,
+    revision: 0,
+    published_version: null,
+    graph_hash: "",
+    persisted: false,
+    demo: true,
+    nodes,
+    edges,
+    entry_node_ids: [nodes[0].id],
   };
+}
 
-  const onDrop = () => {
-    if (dragNode.current) {
-      addBlock(dragNode.current.kind);
-      dragNode.current = null;
+function cloneGraph(graph: LogicGraphSnapshot): LogicGraphSnapshot {
+  return structuredClone(graph);
+}
+
+function toDraft(graph: LogicGraphSnapshot): LogicGraphDraft {
+  return {
+    id: graph.id,
+    name: graph.name,
+    description: graph.description,
+    status: graph.status === "archived" ? "archived" : "draft",
+    schema_version: graph.schema_version,
+    nodes: graph.nodes,
+    edges: graph.edges,
+    entry_node_ids: graph.entry_node_ids,
+  };
+}
+
+function errorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  const status = (error as { status?: number } | null)?.status;
+  return status === 409 ? `版本冲突：${message}` : message;
+}
+
+export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
+  const params = useParams<{ flowId?: string }>();
+  const navigate = useNavigate();
+  const activeFlowId = flowId ?? params.flowId;
+  const templateRef = useRef<LogicGraphSnapshot | null>(null);
+  if (!templateRef.current) templateRef.current = createTemplate();
+
+  const [graph, setGraph] = useState<LogicGraphSnapshot | null>(() => cloneGraph(templateRef.current!));
+  const [dirty, setDirty] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [selectedNodeId, setSelectedNodeId] = useState("");
+  const [zoom, setZoom] = useState(1);
+  const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const requestGeneration = useRef(0);
+
+  const selectedNode = useMemo(
+    () => graph?.nodes.find((node) => node.id === selectedNodeId) ?? null,
+    [graph, selectedNodeId],
+  );
+
+  useEffect(() => {
+    const generation = ++requestGeneration.current;
+    setSelectedNodeId("");
+    setError("");
+    setMessage("");
+    setSaving(false);
+    if (!activeFlowId) {
+      setGraph(cloneGraph(templateRef.current!));
+      setDirty(true);
+      setLoading(false);
+      return;
     }
-  };
 
-  /* ── 执行 ── */
+    setGraph(null);
+    setDirty(false);
+    setLoading(true);
+    void getLogicGraph(activeFlowId)
+      .then((loaded) => {
+        if (requestGeneration.current !== generation) return;
+        setGraph(loaded);
+        setDirty(false);
+      })
+      .catch((loadError: unknown) => {
+        if (requestGeneration.current !== generation) return;
+        setError(`加载失败：${errorMessage(loadError)}`);
+      })
+      .finally(() => {
+        if (requestGeneration.current === generation) setLoading(false);
+      });
+  }, [activeFlowId]);
 
-  async function runLogic() {
-    setBusy(true);
-    setErr(null);
-    setOutput("");
+  function mutateGraph(mutator: (current: LogicGraphSnapshot) => LogicGraphSnapshot): void {
+    setGraph((current) => current ? mutator(current) : current);
+    setDirty(true);
+    setError("");
+    setMessage("");
+  }
+
+  async function saveGraph(): Promise<void> {
+    if (!graph || saving || !dirty) return;
+    const generation = ++requestGeneration.current;
+    const wasPersisted = graph.persisted;
+    const expectedRevision = graph.revision;
+    const draft = toDraft(graph);
+    setSaving(true);
+    setError("");
+    setMessage("");
     try {
-      const res = await apiPost<SafeDryRunResponse>("/v1/aip/logic/run", { dryRun: true, edits: [] });
-      if (res.dryRun !== true || res.productionWritten !== false || !Array.isArray(res.proposedEdits)) {
-        throw new Error("安全校验失败：dry-run 回包未明确确认不写生产");
-      }
-      setOutput(JSON.stringify(res, null, 2));
-      setRightTab("history");
-      setHistory((prev) => [{
-        timestamp: new Date().toISOString().slice(11, 19),
-        blockCount: blocks.length,
-        proposedEditCount: res.proposedEdits.length,
-      }, ...prev].slice(0, 20));
-    } catch (e: unknown) {
-      setErr(String((e as Error).message || e));
+      const saved = wasPersisted
+        ? await replaceLogicGraph(draft, expectedRevision)
+        : await createLogicGraph(draft);
+      if (requestGeneration.current !== generation) return;
+      setGraph(saved);
+      setDirty(false);
+      setMessage(`已保存并回读确认 · revision ${saved.revision}`);
+      if (!wasPersisted) navigate(`/aip/logic/${encodeURIComponent(saved.id)}`, { replace: true });
+    } catch (saveError: unknown) {
+      if (requestGeneration.current !== generation) return;
+      setError(`保存失败：${errorMessage(saveError)}`);
+      setDirty(true);
     } finally {
-      setBusy(false);
+      if (requestGeneration.current === generation) setSaving(false);
     }
   }
 
-  /* ── 渲染 ── */
+  async function refreshGraph(): Promise<void> {
+    if (!graph || loading || saving) return;
+    setError("");
+    setMessage("");
+    setSelectedNodeId("");
+    if (!graph.persisted) {
+      setGraph(cloneGraph(templateRef.current!));
+      setDirty(true);
+      setMessage("已丢弃本地改动并恢复未保存模板");
+      return;
+    }
+
+    const generation = ++requestGeneration.current;
+    const graphId = graph.id;
+    const wasDirty = dirty;
+    setLoading(true);
+    try {
+      const loaded = await getLogicGraph(graphId);
+      if (requestGeneration.current !== generation) return;
+      setGraph(loaded);
+      setDirty(false);
+      setMessage(`已从服务端刷新 · revision ${loaded.revision}`);
+    } catch (loadError: unknown) {
+      if (requestGeneration.current !== generation) return;
+      setError(`刷新失败：${errorMessage(loadError)}`);
+      setDirty(wasDirty);
+    } finally {
+      if (requestGeneration.current === generation) setLoading(false);
+    }
+  }
 
   return (
     <PageChrome
       title="AIP Logic 无代码编辑器"
-      lede="当前提供 10 种 Block 的会话内编排与属性编辑；尚未接入保存和可信逐块执行。安全 dry-run 仅验证 proposed edits 不写生产。"
+      lede="自由编排 canonical Logic Graph；保存仅在服务端提交与严格 GET 回读一致后确认。"
     >
-      {/* 工具栏 */}
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          alignItems: "center",
-          marginBottom: 12,
-          flexWrap: "wrap",
-        }}
-      >
-        <button type="button" className="btn btn-primary" disabled={busy} onClick={runLogic}>
-          {busy ? "⚙ 安全试跑中…" : "▶ 安全 dry-run"}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+        <button type="button" className="btn btn-primary" disabled={!graph || loading || saving || !dirty} onClick={() => void saveGraph()}>
+          {saving ? "保存并回读中…" : `保存${dirty ? " *" : ""}`}
         </button>
-        <span style={{ fontSize: "0.75rem", color: "var(--aos-amber-700)" }}>
-          仅预览 proposed edits，不执行当前画布逻辑，不写生产
-        </span>
-        {selected && (
-          <button type="button" className="btn" onClick={removeBlock}>
-            🗑 删除选中
+        <button type="button" className="btn" disabled={!graph || loading || saving} onClick={() => void refreshGraph()}>
+          {loading ? "读取中…" : "刷新"}
+        </button>
+        {graph?.persisted && !dirty && (
+          <button type="button" className="btn" disabled title="可信图执行将在 Stage B 接入">
+            canonical dry-run · Stage B 尚未开放
           </button>
         )}
-        <Link to="/aip/drafts" className="btn" style={{ textDecoration: "none" }}>
-          📋 Draft 审批台
-        </Link>
-        <Link to="/aip/evals" className="btn" style={{ textDecoration: "none" }}>
-          🛡 Evals 门控
-        </Link>
-        <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "var(--aos-muted)" }}>
-          {blocks.length} blocks
+        <Link to="/aip/drafts" className="btn" style={{ textDecoration: "none" }}>Draft 审批台</Link>
+        <Link to="/aip/evals" className="btn" style={{ textDecoration: "none" }}>Evals 门控</Link>
+        <span style={{ marginLeft: "auto", fontSize: "0.76rem", color: dirty ? "var(--aos-amber-700)" : "var(--aos-green-700)" }}>
+          {dirty ? "未保存更改" : graph ? `已确认 revision ${graph.revision}` : "未加载"}
         </span>
       </div>
 
-      <div style={{ background: "var(--aos-amber-bg)", color: "var(--aos-amber-700)", padding: "8px 12px", borderRadius: 2, marginBottom: 12, fontSize: "0.78rem" }}>
-        当前为未保存模板：添加、排序和属性编辑仅保留在当前会话，刷新后恢复默认 4 个 Block。
-      </div>
-
-      {err && (
-        <div style={{ background: "var(--aos-red-border)", color: "var(--aos-red)", padding: "8px 12px", borderRadius: 2, marginBottom: 12, fontSize: "0.85rem" }}>
-          {err}
+      {graph && (
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(220px, 1fr) minmax(220px, 1fr)", gap: 8, marginBottom: 10 }}>
+          <label style={{ fontSize: "0.75rem" }}>
+            Logic 名称
+            <input
+              aria-label="Logic 名称"
+              value={graph.name}
+              disabled={loading || saving}
+              onChange={(event) => mutateGraph((current) => ({ ...current, name: event.target.value }))}
+              style={{ display: "block", width: "100%", marginTop: 3 }}
+            />
+          </label>
+          <label style={{ fontSize: "0.75rem" }}>
+            描述
+            <input
+              aria-label="Logic 描述"
+              value={graph.description}
+              disabled={loading || saving}
+              onChange={(event) => mutateGraph((current) => ({ ...current, description: event.target.value }))}
+              style={{ display: "block", width: "100%", marginTop: 3 }}
+            />
+          </label>
         </div>
       )}
 
-      {/* 三栏布局 */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "140px 1fr 320px",
-          gap: 12,
-          minHeight: "calc(100vh - 200px)",
-        }}
-      >
-        {/* ── 左栏：节点调色板 ── */}
-        <div
-          style={{
-            background: "var(--aos-card)",
-            border: "1px solid var(--aos-border)",
-            borderRadius: 2,
-            padding: 12,
-            overflowY: "auto",
-            height: "fit-content",
-          }}
-        >
-          <h3 style={{ fontSize: "0.75rem", margin: "0 0 10px", color: "var(--aos-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-            Block 组件库
-          </h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {PALETTE.map((p) => (
-              <button
-                key={p.kind}
-                type="button"
-                draggable
-                onDragStart={() => onDragStart(p.kind, p.title)}
-                onClick={() => addBlock(p.kind)}
-                title={`${p.zh} (${p.title})\n作用：${p.desc}`}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                  padding: "4px 6px",
-                  border: "1px solid transparent",
-                  borderRadius: 4,
-                  background: "transparent",
-                  cursor: "grab",
-                  textAlign: "left",
-                  fontSize: "0.7rem",
-                  transition: "all 0.15s",
-                  width: "100%",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "var(--aos-accent-light)";
-                  e.currentTarget.style.borderColor = "var(--aos-border)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.borderColor = "transparent";
-                }}
-              >
-                <span style={{ fontSize: "0.75rem", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{p.icon}</span>
-                <span style={{ color: "var(--aos-text)", fontWeight: 500, flex: 1, textAlign: "left", whiteSpace: "nowrap", fontSize: "0.7rem" }}>{p.zh}</span>
-                <span style={{ color: "var(--aos-muted)", marginLeft: "auto", whiteSpace: "nowrap", fontSize: "0.65rem" }}>{p.title}</span>
-              </button>
-            ))}
-          </div>
+      {graph && !graph.persisted && (
+        <div style={{ background: "var(--aos-amber-bg)", color: "var(--aos-amber-700)", padding: "8px 12px", marginBottom: 10, borderRadius: 2, fontSize: "0.78rem" }}>
+          未保存模板：当前 4 节点、3 连接仅在本地；点击“保存”显式创建服务端 Logic Graph。
         </div>
+      )}
+      {error && <div role="alert" style={{ background: "var(--aos-red-bg)", color: "var(--aos-red)", padding: "8px 12px", marginBottom: 10 }}>{error}</div>}
+      {message && <div role="status" style={{ background: "var(--aos-green-bg)", color: "var(--aos-green-700)", padding: "8px 12px", marginBottom: 10 }}>{message}</div>}
 
-        {/* ── 中栏：编排画布 ── */}
-        <div
-          ref={canvasRef}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={onDrop}
-          style={{
-            background: "var(--aos-card)",
-            border: "1px solid var(--aos-border)",
-            borderRadius: 2,
-            padding: 16,
-            overflowY: "auto",
-            minHeight: 400,
+      {loading && !graph && <p>正在加载 canonical Logic Graph…</p>}
+      {!loading && !graph && !error && <p>Logic Graph 不可用</p>}
+
+      {graph && (
+        <LogicGraphCanvas
+          nodes={graph.nodes}
+          edges={graph.edges}
+          selectedNodeId={selectedNodeId}
+          zoom={zoom}
+          inspectorCollapsed={inspectorCollapsed}
+          disabled={loading || saving}
+          onNodesChange={(nodes) => setGraph((current) => {
+            if (!current) return current;
+            const nodeIds = new Set(nodes.map((node) => node.id));
+            return {
+              ...current,
+              nodes,
+              entry_node_ids: current.entry_node_ids.filter((nodeId) => nodeIds.has(nodeId)),
+            };
+          })}
+          onEdgesChange={(edges) => setGraph((current) => current ? { ...current, edges } : current)}
+          onSelectNode={setSelectedNodeId}
+          onDirty={() => {
+            setDirty(true);
+            setError("");
+            setMessage("");
           }}
-        >
-          <h3 style={{ fontSize: "0.85rem", margin: "0 0 12px", color: "var(--aos-text)" }}>
-            {blocks.length > 0 ? `编排画布 · ${blocks.length} 个 Block` : "编排画布 · 从左侧拖拽节点"}
-          </h3>
-          {blocks.length === 0 ? (
-            <div
-              style={{
-                height: 300,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                border: "2px dashed var(--aos-border)",
-                borderRadius: 2,
-                color: "var(--aos-muted)",
-                fontSize: "0.95rem",
+          onEdgeRejected={(reason) => setError(reason)}
+          onZoomChange={setZoom}
+          onInspectorCollapsedChange={setInspectorCollapsed}
+          inspector={(
+            <LogicGraphInspector
+              selectedNode={selectedNode}
+              entryNodeIds={graph.entry_node_ids}
+              disabled={loading || saving}
+              onNodeChange={(node) => setGraph((current) => current ? {
+                ...current,
+                nodes: current.nodes.map((candidate) => candidate.id === node.id ? node : candidate),
+              } : current)}
+              onEntryNodeIdsChange={(entryNodeIds) => setGraph((current) => current ? {
+                ...current,
+                entry_node_ids: entryNodeIds,
+              } : current)}
+              onDirty={() => {
+                setDirty(true);
+                setError("");
+                setMessage("");
               }}
-            >
-              从左侧拖拽 Block 到此处，或点击添加
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              {blocks.map((b, i) => (
-                <div key={b.id} style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
-                  {/* 连线指示 */}
-                  <div
-                    style={{
-                      width: 32,
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 2,
-                        height: 12,
-                        background: i > 0 ? `${KIND_COLORS[blocks[i - 1].kind]}60` : "transparent",
-                      }}
-                    />
-                    <div
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        background: i > 0 ? KIND_COLORS[blocks[i - 1].kind] : "transparent",
-                      }}
-                    />
-                  </div>
-                  {/* Block 卡片 */}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedId(b.id)}
-                    style={{
-                      flex: 1,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      padding: "10px 14px",
-                      borderTop: selectedId === b.id ? `2px solid ${KIND_COLORS[b.kind]}` : "1px solid var(--aos-border)",
-                      borderRight: selectedId === b.id ? `2px solid ${KIND_COLORS[b.kind]}` : "1px solid var(--aos-border)",
-                      borderBottom: selectedId === b.id ? `2px solid ${KIND_COLORS[b.kind]}` : "1px solid var(--aos-border)",
-                      borderLeft: `4px solid ${KIND_COLORS[b.kind]}`,
-                      borderRadius: 2,
-                      background: selectedId === b.id
-                        ? `${KIND_COLORS[b.kind]}10`
-                        : "var(--aos-card)",
-                      cursor: "pointer",
-                      textAlign: "left",
-                      transition: "all 0.15s",
-                    }}
-                  >
-                    <span style={{ fontSize: "0.85rem", fontWeight: 600, color: KIND_COLORS[b.kind], minWidth: 24 }}>
-                      {i + 1}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "0.7rem",
-                        padding: "2px 6px",
-                        borderRadius: 4,
-                        background: `${KIND_COLORS[b.kind]}20`,
-                        color: KIND_COLORS[b.kind],
-                        fontWeight: 600,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {PALETTE.find((p) => p.kind === b.kind)?.icon} {b.kind}
-                    </span>
-                    <span style={{ flex: 1, fontSize: "0.82rem", color: "var(--aos-text)" }}>
-                      {b.label}
-                    </span>
-                  </button>
-                  {/* Move up/down */}
-                  <span style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                    <button
-                      type="button"
-                      onClick={() => moveBlock(b.id, -1)}
-                      disabled={i === 0}
-                      aria-label={`上移 ${b.label}`}
-                      style={{
-                        background: "none", border: "none", cursor: i === 0 ? "default" : "pointer",
-                        fontSize: "0.6rem", color: i === 0 ? "var(--aos-border)" : "var(--aos-muted)",
-                        padding: "0 4px",
-                      }}
-                    >
-                      ▲
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveBlock(b.id, 1)}
-                      disabled={i === blocks.length - 1}
-                      aria-label={`下移 ${b.label}`}
-                      style={{
-                        background: "none", border: "none", cursor: i === blocks.length - 1 ? "default" : "pointer",
-                        fontSize: "0.6rem", color: i === blocks.length - 1 ? "var(--aos-border)" : "var(--aos-muted)",
-                        padding: "0 4px",
-                      }}
-                    >
-                      ▼
-                    </button>
-                  </span>
-
-                  {/* Branch Block 双路分叉视觉 */}
-                  {b.kind === "branch" && (
-                    <div style={{ width: "100%", marginTop: 2 }}>
-                      <div style={{ textAlign: "center", color: "var(--aos-text-tertiary)", fontSize: 10, padding: "2px 0" }}>↓ ↓</div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                        {((b.config.paths as BranchPath[]) || []).map((p, pi) => (
-                          <div
-                            key={p.id}
-                            style={{
-                              borderRadius: 2,
-                              border: `1px solid ${p.color}60`,
-                              background: `${p.color}0A`,
-                              padding: "6px 8px",
-                              fontSize: "0.68rem",
-                            }}
-                          >
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                              <span style={{ color: p.color, fontWeight: 600 }}>分支 · {p.label}</span>
-                              <span style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>#{pi === 0 ? "4A" : "4B"}</span>
-                            </div>
-                            <div style={{ fontFamily: "monospace", color: "var(--aos-text-secondary)", marginTop: 2, fontSize: "0.62rem" }}>
-                              {p.condition}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div style={{ textAlign: "center", color: "var(--aos-text-tertiary)", fontSize: 10, padding: "2px 0" }}>↓ ↓ 汇聚</div>
-                    </div>
-                  )}
-
-                  {/* Handoff Block 三区域预览 */}
-                  {b.kind === "handoff" && (
-                    <div
-                      style={{
-                        width: "100%", marginTop: 2,
-                        borderRadius: 2, border: "2px solid var(--aos-indigo-border)", background: "var(--aos-indigo-bg)",
-                        padding: 8, fontSize: "0.68rem",
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 6 }}>
-                        <span style={{ fontSize: "0.75rem" }}>🔗</span>
-                        <span style={{ color: "var(--aos-indigo-600)", fontWeight: 600 }}>汇聚 · Handoff 上下文</span>
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 4 }}>
-                        <div style={{ borderRadius: 4, background: "rgba(255,255,255,0.6)", border: "1px solid var(--aos-indigo-border)", padding: "4px 6px" }}>
-                          <div style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>decision</div>
-                          <div style={{ fontSize: 10, color: "var(--aos-text)", fontWeight: 500, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {String(b.config.decision || "—").slice(0, 12) || "—"}
-                          </div>
-                        </div>
-                        <div style={{ borderRadius: 4, background: "rgba(255,255,255,0.6)", border: "1px solid var(--aos-indigo-border)", padding: "4px 6px" }}>
-                          <div style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>artifacts</div>
-                          <div style={{ fontSize: 10, color: "var(--aos-text)", fontWeight: 500, marginTop: 1 }}>
-                            {((b.config.artifacts as string[]) || []).length} 个产物
-                          </div>
-                        </div>
-                        <div style={{ borderRadius: 4, background: "rgba(255,255,255,0.6)", border: "1px solid var(--aos-indigo-border)", padding: "4px 6px" }}>
-                          <div style={{ fontSize: 9, color: "var(--aos-text-tertiary)" }}>open_qs</div>
-                          <div style={{ fontSize: 10, color: "var(--aos-text)", fontWeight: 500, marginTop: 1 }}>
-                            {((b.config.open_qs as string[]) || []).length} 个待确认
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+              onValidationError={setError}
+            />
           )}
-        </div>
+        />
+      )}
 
-        {/* ── 右栏：属性面板 + 历史 + 自动化 ── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, overflowY: "auto" }}>
-          {/* Tab switcher */}
-          <div style={{ display: "flex", gap: 2, borderBottom: "2px solid var(--aos-border)" }}>
-            {([
-              { key: "config", label: "属性" },
-              { key: "history", label: `历史 (${history.length})` },
-              { key: "automation", label: "自动化" },
-            ] as { key: RightPanelTab; label: string }[]).map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => setRightTab(t.key)}
-                style={{
-                  padding: "6px 14px",
-                  fontSize: "0.78rem",
-                  fontWeight: rightTab === t.key ? 600 : 400,
-                  border: "none",
-                  borderBottom: rightTab === t.key ? "2px solid var(--aos-indigo-600)" : "2px solid transparent",
-                  background: "none",
-                  color: rightTab === t.key ? "var(--aos-indigo-600)" : "var(--aos-muted)",
-                  cursor: "pointer",
-                  marginBottom: "-2px",
-                }}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Config tab */}
-          {rightTab === "config" && (
-          <div
-            style={{
-              background: "var(--aos-card)",
-              border: "1px solid var(--aos-border)",
-              borderRadius: 2,
-              padding: 12,
-            }}
-          >
-            <h3 style={{ fontSize: "0.85rem", margin: "0 0 10px", color: "var(--aos-text)" }}>
-              Block 属性
-            </h3>
-            {selected ? (
-              <div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    marginBottom: 10,
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: "50%",
-                      background: KIND_COLORS[selected.kind],
-                    }}
-                  />
-                  <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--aos-text)" }}>
-                    {selected.label || selected.kind}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "0.65rem",
-                      padding: "1px 5px",
-                      borderRadius: 3,
-                      background: `${KIND_COLORS[selected.kind]}20`,
-                      color: KIND_COLORS[selected.kind],
-                    }}
-                  >
-                    {selected.kind}
-                  </span>
-                </div>
-
-                {/* 通用属性 */}
-                <label style={{ display: "block", fontSize: "0.75rem", marginBottom: 6 }}>
-                  标签
-                  <input
-                    value={selected.label}
-                    onChange={(e) => updateLabel(e.target.value)}
-                    style={{ display: "block", width: "100%", marginTop: 2, fontSize: "0.8rem" }}
-                  />
-                </label>
-
-                {/* 按 kind 渲染配置 */}
-                {selected.kind === "input" && (
-                  <>
-                    <label style={{ display: "block", fontSize: "0.75rem", marginBottom: 6 }}>
-                      Object Type
-                      <input
-                        value={String(selected.config.objectType || "WorkOrder")}
-                        onChange={(e) => updateConfig("objectType", e.target.value)}
-                        style={{ display: "block", width: "100%", marginTop: 2, fontSize: "0.8rem" }}
-                      />
-                    </label>
-                    <label style={{ display: "block", fontSize: "0.75rem", marginBottom: 6 }}>
-                      Object ID
-                      <input
-                        value={String(selected.config.objectId || "")}
-                        onChange={(e) => updateConfig("objectId", e.target.value)}
-                        style={{ display: "block", width: "100%", marginTop: 2, fontSize: "0.8rem" }}
-                      />
-                    </label>
-                  </>
-                )}
-                {selected.kind === "get_property" && (
-                  <label style={{ display: "block", fontSize: "0.75rem", marginBottom: 6 }}>
-                    Property 名称
-                    <input
-                      value={String(selected.config.property || "status")}
-                      onChange={(e) => updateConfig("property", e.target.value)}
-                      style={{ display: "block", width: "100%", marginTop: 2, fontSize: "0.8rem" }}
-                    />
-                  </label>
-                )}
-                {selected.kind === "create_variable" && (
-                  <>
-                    <label style={{ display: "block", fontSize: "0.75rem", marginBottom: 6 }}>
-                      变量名
-                      <input
-                        value={String(selected.config.name || "")}
-                        onChange={(e) => updateConfig("name", e.target.value)}
-                        style={{ display: "block", width: "100%", marginTop: 2, fontSize: "0.8rem" }}
-                      />
-                    </label>
-                    <label style={{ display: "block", fontSize: "0.75rem", marginBottom: 6 }}>
-                      DSL 表达式
-                      <input
-                        value={String(selected.config.expression || "")}
-                        onChange={(e) => updateConfig("expression", e.target.value)}
-                        style={{ display: "block", width: "100%", marginTop: 2, fontSize: "0.8rem" }}
-                      />
-                    </label>
-                  </>
-                )}
-                {selected.kind === "use_llm" && (
-                  <label style={{ display: "block", fontSize: "0.75rem", marginBottom: 6 }}>
-                    Prompt
-                    <textarea
-                      value={String(selected.config.prompt || "")}
-                      onChange={(e) => updateConfig("prompt", e.target.value)}
-                      rows={4}
-                      style={{ display: "block", width: "100%", marginTop: 2, fontSize: "0.8rem", resize: "vertical" }}
-                    />
-                  </label>
-                )}
-                {selected.kind === "use_tool" && (
-                  <label style={{ display: "block", fontSize: "0.75rem", marginBottom: 6 }}>
-                    Tool 名称
-                    <input
-                      value={String(selected.config.tool || "")}
-                      onChange={(e) => updateConfig("tool", e.target.value)}
-                      style={{ display: "block", width: "100%", marginTop: 2, fontSize: "0.8rem" }}
-                    />
-                  </label>
-                )}
-                {selected.kind === "transform" && (
-                  <label style={{ display: "block", fontSize: "0.75rem", marginBottom: 6 }}>
-                    DSL 表达式
-                    <input
-                      value={String(selected.config.expression || "")}
-                      onChange={(e) => updateConfig("expression", e.target.value)}
-                      style={{ display: "block", width: "100%", marginTop: 2, fontSize: "0.8rem" }}
-                    />
-                  </label>
-                )}
-                {selected.kind === "apply_action" && (
-                  <>
-                    <label style={{ display: "block", fontSize: "0.75rem", marginBottom: 6 }}>
-                      Action Type
-                      <input
-                        value={String(selected.config.actionType || "")}
-                        onChange={(e) => updateConfig("actionType", e.target.value)}
-                        style={{ display: "block", width: "100%", marginTop: 2, fontSize: "0.8rem" }}
-                      />
-                    </label>
-                    <label style={{ display: "block", fontSize: "0.75rem", marginBottom: 6 }}>
-                      字段
-                      <input
-                        value={String(selected.config.field || "note")}
-                        onChange={(e) => updateConfig("field", e.target.value)}
-                        style={{ display: "block", width: "100%", marginTop: 2, fontSize: "0.8rem" }}
-                      />
-                    </label>
-                  </>
-                )}
-                {selected.kind === "execute" && (
-                  <label style={{ display: "block", fontSize: "0.75rem", marginBottom: 6 }}>
-                    通知目标
-                    <input
-                      value={String(selected.config.notify || "")}
-                      onChange={(e) => updateConfig("notify", e.target.value)}
-                      style={{ display: "block", width: "100%", marginTop: 2, fontSize: "0.8rem" }}
-                      placeholder="email / webhook / channel"
-                    />
-                  </label>
-                )}
-
-                {/* Branch 配置：条件表达式 + 双路分叉 */}
-                {selected.kind === "branch" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    <div style={{ fontSize: "0.72rem", color: "var(--aos-muted)", background: "var(--aos-red-bg)", padding: "6px 8px", borderRadius: 2, border: "1px solid var(--aos-red-border)" }}>
-                      🔀 Branch Block · 根据 condition 表达式分叉到不同路径
-                    </div>
-                    {((selected.config.paths as BranchPath[]) || []).map((p, idx) => (
-                      <div
-                        key={p.id}
-                        style={{
-                          border: `1px solid ${p.color}40`,
-                          borderLeft: `3px solid ${p.color}`,
-                          borderRadius: 2,
-                          padding: 10,
-                          background: `${p.color}08`,
-                        }}
-                      >
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                          <span style={{ fontSize: "0.65rem", fontWeight: 700, color: p.color }}>
-                            路径 {idx === 0 ? "A" : "B"} · #{idx === 0 ? "4A" : "4B"}
-                          </span>
-                          <input
-                            value={p.label}
-                            onChange={(e) => {
-                              const paths = [...((selected.config.paths as BranchPath[]) || [])];
-                              paths[idx] = { ...p, label: e.target.value };
-                              updateConfig("paths", paths);
-                            }}
-                            placeholder={idx === 0 ? "高风险" : "低风险"}
-                            style={{
-                              flex: 1, fontSize: "0.78rem", fontWeight: 600,
-                              color: p.color, border: `1px solid ${p.color}40`, borderRadius: 4,
-                              padding: "2px 6px", background: "var(--aos-card)",
-                            }}
-                          />
-                        </div>
-                        <label style={{ display: "block", fontSize: "0.7rem", marginBottom: 6, color: "var(--aos-muted)" }}>
-                          条件表达式
-                          <input
-                            value={p.condition}
-                            onChange={(e) => {
-                              const paths = [...((selected.config.paths as BranchPath[]) || [])];
-                              paths[idx] = { ...p, condition: e.target.value };
-                              updateConfig("paths", paths);
-                            }}
-                            placeholder="risk_level IN [high, critical]"
-                            style={{
-                              display: "block", width: "100%", marginTop: 2, fontSize: "0.72rem",
-                              fontFamily: "monospace", border: "1px solid var(--aos-border)",
-                              borderRadius: 4, padding: "4px 6px",
-                            }}
-                          />
-                        </label>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <label style={{ fontSize: "0.68rem", color: "var(--aos-muted)", display: "flex", alignItems: "center", gap: 4 }}>
-                            颜色
-                            <input
-                              type="color"
-                              value={p.color}
-                              onChange={(e) => {
-                                const paths = [...((selected.config.paths as BranchPath[]) || [])];
-                                paths[idx] = { ...p, color: e.target.value };
-                                updateConfig("paths", paths);
-                              }}
-                              style={{ width: 28, height: 20, border: "none", padding: 0, cursor: "pointer" }}
-                            />
-                          </label>
-                          <span style={{ fontSize: "0.65rem", fontFamily: "monospace", color: p.color }}>{p.color}</span>
-                        </div>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const paths = [...((selected.config.paths as BranchPath[]) || [])];
-                        paths.push({ id: `p${paths.length + 1}`, label: "新路径", condition: "", color: "var(--aos-text-secondary)" });
-                        updateConfig("paths", paths);
-                      }}
-                      style={{
-                        fontSize: "0.72rem", padding: "4px 10px", border: "1px dashed var(--aos-border)",
-                        borderRadius: 4, background: "transparent", cursor: "pointer", color: "var(--aos-muted)",
-                      }}
-                    >
-                      + 添加路径
-                    </button>
-                  </div>
-                )}
-
-                {/* Handoff 配置：decision / artifacts / open_qs / handoff_to */}
-                {selected.kind === "handoff" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    <div style={{ fontSize: "0.72rem", color: "var(--aos-indigo-600)", background: "var(--aos-indigo-bg)", padding: "6px 8px", borderRadius: 2, border: "1px solid var(--aos-indigo-border)" }}>
-                      🔗 Handoff Block · 汇聚多路上下文，输出交接摘要
-                    </div>
-
-                    {/* decision */}
-                    <label style={{ display: "block", fontSize: "0.75rem", marginBottom: 0, color: "var(--aos-text)", fontWeight: 500 }}>
-                      <span style={{ color: "var(--aos-indigo-600)" }}>decision</span> · 决策摘要
-                      <textarea
-                        value={String(selected.config.decision || "")}
-                        onChange={(e) => updateConfig("decision", e.target.value)}
-                        rows={3}
-                        placeholder="风险分诊结论：中等风险，建议人工复核"
-                        style={{
-                          display: "block", width: "100%", marginTop: 4, fontSize: "0.78rem",
-                          border: "1px solid var(--aos-indigo-border)", borderRadius: 4, padding: "6px 8px",
-                          background: "var(--aos-surface-hover)", resize: "vertical",
-                        }}
-                      />
-                    </label>
-
-                    {/* artifacts */}
-                    <div>
-                      <div style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--aos-text)", marginBottom: 4 }}>
-                        <span style={{ color: "var(--aos-indigo-600)" }}>artifacts</span> · 产物列表
-                        <span style={{ marginLeft: 6, fontSize: "0.65rem", color: "var(--aos-muted)" }}>
-                          ({((selected.config.artifacts as string[]) || []).length} 项)
-                        </span>
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        {((selected.config.artifacts as string[]) || []).map((name, i) => (
-                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--aos-blue)", flexShrink: 0 }} />
-                            <input
-                              value={name}
-                              onChange={(e) => {
-                                const arr = [...((selected.config.artifacts as string[]) || [])];
-                                arr[i] = e.target.value;
-                                updateConfig("artifacts", arr);
-                              }}
-                              style={{
-                                flex: 1, fontSize: "0.72rem", fontFamily: "monospace",
-                                border: "1px solid var(--aos-border)", borderRadius: 4, padding: "3px 6px",
-                              }}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const arr = ((selected.config.artifacts as string[]) || []).filter((_, j) => j !== i);
-                                updateConfig("artifacts", arr);
-                              }}
-                              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--aos-red)", fontSize: "0.8rem" }}
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const arr = [...((selected.config.artifacts as string[]) || []), "new_artifact.json"];
-                            updateConfig("artifacts", arr);
-                          }}
-                          style={{ fontSize: "0.68rem", padding: "2px 8px", border: "1px dashed var(--aos-border)", borderRadius: 4, background: "transparent", cursor: "pointer", color: "var(--aos-muted)", alignSelf: "flex-start" }}
-                        >
-                          + 产物
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* open_qs */}
-                    <div>
-                      <div style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--aos-text)", marginBottom: 4 }}>
-                        <span style={{ color: "var(--aos-indigo-600)" }}>open_qs</span> · 待确认项
-                        <span style={{ marginLeft: 6, fontSize: "0.65rem", color: "var(--aos-muted)" }}>
-                          ({((selected.config.open_qs as string[]) || []).length} 项)
-                        </span>
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        {((selected.config.open_qs as string[]) || []).map((q, i) => (
-                          <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
-                            <span style={{ fontSize: "0.65rem", color: "var(--aos-amber-600)", fontWeight: 600, marginTop: 3 }}>Q{i + 1}</span>
-                            <input
-                              value={q}
-                              onChange={(e) => {
-                                const arr = [...((selected.config.open_qs as string[]) || [])];
-                                arr[i] = e.target.value;
-                                updateConfig("open_qs", arr);
-                              }}
-                              style={{
-                                flex: 1, fontSize: "0.72rem",
-                                border: "1px solid var(--aos-amber-border)", borderRadius: 4, padding: "3px 6px", background: "var(--aos-amber-bg)",
-                              }}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const arr = ((selected.config.open_qs as string[]) || []).filter((_, j) => j !== i);
-                                updateConfig("open_qs", arr);
-                              }}
-                              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--aos-red)", fontSize: "0.8rem" }}
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const arr = [...((selected.config.open_qs as string[]) || []), "新的待确认项？"];
-                            updateConfig("open_qs", arr);
-                          }}
-                          style={{ fontSize: "0.68rem", padding: "2px 8px", border: "1px dashed var(--aos-border)", borderRadius: 4, background: "transparent", cursor: "pointer", color: "var(--aos-muted)", alignSelf: "flex-start" }}
-                        >
-                          + 待确认项
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* handoff_to */}
-                    <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 500, color: "var(--aos-text)" }}>
-                      <span style={{ color: "var(--aos-indigo-600)" }}>handoff_to</span> · 传递目标
-                      <select
-                        value={String(selected.config.handoff_to || "draft_inbox")}
-                        onChange={(e) => updateConfig("handoff_to", e.target.value)}
-                        style={{
-                          display: "block", width: "100%", marginTop: 4, fontSize: "0.78rem",
-                          border: "1px solid var(--aos-border)", borderRadius: 4, padding: "4px 8px", background: "var(--aos-card)",
-                        }}
-                      >
-                        <option value="risk_agent">风控审批 Agent（risk-approver）</option>
-                        <option value="draft_inbox">人工审批台（Draft Inbox）</option>
-                        <option value="webhook">外部 Webhook</option>
-                      </select>
-                    </label>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p style={{ fontSize: "0.8rem", color: "var(--aos-muted)" }}>
-                选择一个 Block 查看属性
-              </p>
-            )}
-          </div>
-          )}
-
-          {/* History tab */}
-          {rightTab === "history" && (
-            <div style={{
-              background: "var(--aos-card)",
-              border: "1px solid var(--aos-border)",
-              borderRadius: 2,
-              padding: 12,
-              flex: 1,
-              overflowY: "auto",
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <h3 style={{ fontSize: "0.85rem", margin: 0, color: "var(--aos-text)" }}>安全预览历史</h3>
-                {history.length > 0 && (
-                  <button type="button" onClick={() => { setHistory([]); setOutput(""); }}
-                    style={{ fontSize: "0.7rem", background: "none", border: "none", color: "var(--aos-muted)", cursor: "pointer" }}>
-                    清除
-                  </button>
-                )}
-              </div>
-
-              {output && (
-                <details open>
-                  <summary style={{ fontSize: "0.75rem", cursor: "pointer", color: "var(--aos-muted)" }}>
-                    安全门卫回包 JSON
-                  </summary>
-                  <pre style={{
-                    fontSize: "0.7rem", overflow: "auto", maxHeight: 200, marginTop: 6, padding: 8,
-                    background: "var(--aos-text)", color: "var(--aos-text-tertiary)", borderRadius: 2, lineHeight: 1.4,
-                  }}>
-                    {output}
-                  </pre>
-                </details>
-              )}
-
-              {/* History list */}
-              {history.length > 0 ? (
-                <div style={{ marginTop: 8 }}>
-                  <div style={{ fontSize: "0.72rem", color: "var(--aos-muted)", marginBottom: 4 }}>
-                    当前会话已确认的 dry-run 记录（刷新后清空）
-                  </div>
-                  {history.map((h, i) => (
-                    <div key={i} style={{
-                      display: "flex", alignItems: "center", gap: 6, padding: "4px 6px",
-                      borderBottom: "1px solid var(--aos-border)", fontSize: "0.72rem",
-                    }}>
-                      <span style={{ color: "var(--aos-green)" }}>✓</span>
-                      <span style={{ color: "var(--aos-muted)", fontFamily: "monospace" }}>{h.timestamp}</span>
-                      <span style={{ color: "var(--aos-text)" }}>{h.blockCount} blocks</span>
-                      <span style={{ fontSize: "0.65rem", padding: "1px 4px", borderRadius: 3,
-                        background: "var(--aos-amber-bg)", color: "var(--aos-amber-700)" }}>
-                        dry · {h.proposedEditCount} edits
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p style={{ fontSize: "0.78rem", color: "var(--aos-muted)", marginTop: 8 }}>
-                  点击“安全 dry-run”后，仅将服务端确认不写生产的结果记录在当前会话
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Automation tab */}
-          {rightTab === "automation" && (
-            <div style={{
-              background: "var(--aos-card)",
-              border: "1px solid var(--aos-border)",
-              borderRadius: 2,
-              padding: 12,
-              flex: 1,
-              overflowY: "auto",
-            }}>
-              <h3 style={{ fontSize: "0.85rem", margin: "0 0 10px", color: "var(--aos-text)" }}>自动化触发器</h3>
-              <p style={{ fontSize: "0.72rem", color: "var(--aos-muted)", marginBottom: 10 }}>
-                自动化尚无服务端写契约，本阶段不可配置。完成发布版本、Evals 与 Draft 门控后再开放。
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {TRIGGER_TYPES.map((t) => (
-                  <label key={t.kind} style={{
-                    display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
-                    border: "1px solid var(--aos-border)",
-                    borderRadius: 2, cursor: "not-allowed", fontSize: "0.78rem",
-                    background: "transparent",
-                    opacity: 0.65,
-                  }}>
-                    <input
-                      type="checkbox"
-                      checked={false}
-                      disabled
-                      readOnly
-                    />
-                    <span style={{ fontSize: "1rem" }}>{t.icon}</span>
-                    <div>
-                      <div style={{ fontWeight: 500, color: "var(--aos-text)" }}>{t.label}</div>
-                      <div style={{ fontSize: "0.68rem", color: "var(--aos-muted)" }}>{t.desc}</div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-              <div style={{ marginTop: 12, padding: "8px 10px", background: "var(--aos-amber-bg)", borderRadius: 2, fontSize: "0.7rem", color: "var(--aos-amber-700)" }}>
-                🔒 未启用任何触发器；这里不会产生本地假保存或假生效状态。
-              </div>
-            </div>
-          )}
-        </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(240px, 1fr))", gap: 10, marginTop: 12 }}>
+        <section style={{ border: "1px solid var(--aos-border)", padding: 12, borderRadius: 2 }}>
+          <h3 style={{ margin: "0 0 6px", fontSize: "0.84rem" }}>运行历史</h3>
+          <p style={{ margin: 0, color: "var(--aos-muted)", fontSize: "0.75rem" }}>运行历史尚未接入 canonical API；Stage B 前不展示会话内伪历史。</p>
+        </section>
+        <section style={{ border: "1px solid var(--aos-border)", padding: 12, borderRadius: 2 }}>
+          <h3 style={{ margin: "0 0 6px", fontSize: "0.84rem" }}>自动化</h3>
+          <p style={{ margin: 0, color: "var(--aos-muted)", fontSize: "0.75rem" }}>自动化尚未接入发布版本契约；完成 Evals 与 Draft 门控前保持禁用。</p>
+        </section>
       </div>
     </PageChrome>
   );
