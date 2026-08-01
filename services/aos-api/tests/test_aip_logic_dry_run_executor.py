@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+import threading
+import time
 from datetime import UTC, datetime
 
 import pytest
@@ -47,7 +50,11 @@ def _snapshot(nodes, edges, entries) -> LogicGraphSnapshot:
 
 
 def test_request_requires_strict_explicit_true_and_rejects_legacy_alias() -> None:
-    base = {"expected_revision": 1, "expected_graph_hash": "a" * 64}
+    base = {
+        "expected_revision": 1,
+        "expected_graph_hash": "a" * 64,
+        "inputs": {},
+    }
     for body in (
         {**base, "dry_run": False},
         {**base, "dry_run": 1},
@@ -57,6 +64,9 @@ def test_request_requires_strict_explicit_true_and_rejects_legacy_alias() -> Non
         with pytest.raises(ValidationError):
             LogicDryRunRequest.model_validate(body)
     assert LogicDryRunRequest.model_validate({**base, "dry_run": True}).dry_run is True
+    missing_inputs = {key: value for key, value in base.items() if key != "inputs"}
+    with pytest.raises(ValidationError):
+        LogicDryRunRequest.model_validate({**missing_inputs, "dry_run": True})
 
 
 def test_json_depth_counts_root_as_one() -> None:
@@ -161,6 +171,8 @@ def test_llm_usage_is_real_and_raw_answer_is_not_returned() -> None:
             ),
         ),
         adapter_name="fake-safe",
+        read_only=True,
+        dry_run_safe=True,
     )
     graph = _snapshot(
         [
@@ -242,7 +254,13 @@ def test_adapter_timeout_is_cooperative_and_machine_readable() -> None:
         clock[0] = 11.0
         context.checkpoint()
 
-    adapters.register_llm("approved", timed_out, adapter_name="cooperative")
+    adapters.register_llm(
+        "approved",
+        timed_out,
+        adapter_name="cooperative",
+        read_only=True,
+        dry_run_safe=True,
+    )
     graph = _snapshot(
         [
             {
@@ -260,14 +278,80 @@ def test_adapter_timeout_is_cooperative_and_machine_readable() -> None:
     assert result.error.code == "ADAPTER_TIMEOUT"
 
 
-def test_total_result_budget_fails_instead_of_truncating_success(monkeypatch) -> None:
+def test_total_result_budget_is_revalidated_after_failure_replacement(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        "aos_api.aip_logic_dry_run_executor.MAX_TOTAL_RESULT_BYTES", 1_500
+    )
+    graph = _snapshot([{"id": "n", "kind": "input", "label": "n"}], [], ["n"])
+    result = LogicDryRunExecutor().execute(graph, {"value": "x" * 1_000})
+    assert result.status == "failed"
+    assert result.error.code == "TOTAL_RESULT_LIMIT"
+    encoded = json.dumps(result.model_dump(mode="json"), separators=(",", ":")).encode()
+    assert len(encoded) <= 1_500
+
+
+def test_preflight_rejects_budget_smaller_than_complete_error_evidence(
+    monkeypatch,
+) -> None:
     monkeypatch.setattr(
         "aos_api.aip_logic_dry_run_executor.MAX_TOTAL_RESULT_BYTES", 200
     )
     graph = _snapshot([{"id": "n", "kind": "input", "label": "n"}], [], ["n"])
-    result = LogicDryRunExecutor().execute(graph, {"value": "x" * 100})
+    with pytest.raises(LogicDryRunPreflightError) as exc:
+        LogicDryRunExecutor.preflight(graph)
+    assert exc.value.code == "TOTAL_RESULT_BUDGET_TOO_SMALL"
+
+
+def test_non_cooperative_blocking_adapter_times_out_without_hanging_api_thread(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr("aos_api.aip_logic_dry_run_executor.MAX_NODE_SECONDS", 0.05)
+    release = threading.Event()
+    adapters = RuntimeAdapterRegistry(max_concurrency=1)
+    calls = 0
+
+    def blocked(_prompt, _context):
+        nonlocal calls
+        calls += 1
+        release.wait(5)
+        return LLMAdapterResult(
+            output="late",
+            usage=LogicTokenUsage(
+                model="approved", input_tokens=1, output_tokens=1, total_tokens=2
+            ),
+        )
+
+    adapters.register_llm(
+        "approved",
+        blocked,
+        adapter_name="blocking-read-only",
+        read_only=True,
+        dry_run_safe=True,
+    )
+    graph = _snapshot(
+        [
+            {
+                "id": "llm",
+                "kind": "use_llm",
+                "label": "llm",
+                "config": {"prompt": "hello", "model": "approved"},
+            }
+        ],
+        [],
+        ["llm"],
+    )
+    started = time.monotonic()
+    result = LogicDryRunExecutor(adapters).execute(graph, {})
+    second = LogicDryRunExecutor(adapters).execute(graph, {})
+    elapsed = time.monotonic() - started
+    release.set()
+    assert elapsed < 0.5
     assert result.status == "failed"
-    assert result.error.code == "TOTAL_RESULT_LIMIT"
+    assert result.error.code == "ADAPTER_TIMEOUT"
+    assert second.error.code == "ADAPTER_TIMEOUT"
+    assert calls == 1
 
 
 def test_preflight_rejects_archived_and_non_root_entry() -> None:
@@ -400,6 +484,8 @@ def test_all_ten_canonical_kinds_have_explicit_success_behavior() -> None:
             ),
         ),
         adapter_name="llm-safe",
+        read_only=True,
+        dry_run_safe=True,
     )
     adapters.register_tool(
         "t",
@@ -412,6 +498,8 @@ def test_all_ten_canonical_kinds_have_explicit_success_behavior() -> None:
         "sandbox",
         lambda _request, _ctx: ExecuteAdapterResult(preview={"ready": True}),
         adapter_name="sandbox-safe",
+        read_only=True,
+        dry_run_safe=True,
     )
     cases = [
         ("input", {}, {"x": 1}),

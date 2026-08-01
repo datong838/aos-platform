@@ -5,6 +5,8 @@ from __future__ import annotations
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from queue import Empty, Queue
+from threading import BoundedSemaphore, Thread
 from typing import Any
 
 from aos_api.aip_logic_dry_run_models import LogicTokenUsage, validate_json_value
@@ -56,24 +58,30 @@ class _ToolRegistration:
     dry_run_safe: bool
 
 
+@dataclass(frozen=True)
+class _AdapterRegistration:
+    adapter_name: str
+    invoke: Callable[..., Any]
+    read_only: bool
+    dry_run_safe: bool
+
+
 class RuntimeAdapterRegistry:
     """No implicit global adapters: every external capability must be injected."""
 
-    def __init__(self, *, monotonic: Callable[[], float] = time.monotonic) -> None:
+    def __init__(
+        self,
+        *,
+        monotonic: Callable[[], float] = time.monotonic,
+        max_concurrency: int = 8,
+    ) -> None:
+        if max_concurrency < 1:
+            raise ValueError("max_concurrency must be positive")
         self._monotonic = monotonic
-        self._llms: dict[
-            str, tuple[str, Callable[[str, AdapterExecutionContext], LLMAdapterResult]]
-        ] = {}
+        self._slots = BoundedSemaphore(max_concurrency)
+        self._llms: dict[str, _AdapterRegistration] = {}
         self._tools: dict[str, _ToolRegistration] = {}
-        self._execute: dict[
-            str,
-            tuple[
-                str,
-                Callable[
-                    [dict[str, Any], AdapterExecutionContext], ExecuteAdapterResult
-                ],
-            ],
-        ] = {}
+        self._execute: dict[str, _AdapterRegistration] = {}
 
     def register_llm(
         self,
@@ -81,8 +89,12 @@ class RuntimeAdapterRegistry:
         invoke: Callable[[str, AdapterExecutionContext], LLMAdapterResult],
         *,
         adapter_name: str,
+        read_only: bool,
+        dry_run_safe: bool,
     ) -> None:
-        self._llms[model] = (adapter_name, invoke)
+        self._llms[model] = _AdapterRegistration(
+            adapter_name, invoke, read_only, dry_run_safe
+        )
 
     def invoke_llm(
         self, model: str, prompt: str, *, timeout_seconds: float
@@ -92,13 +104,19 @@ class RuntimeAdapterRegistry:
             raise LogicAdapterError(
                 "LLM_ADAPTER_UNAVAILABLE", "approved dry-run LLM adapter unavailable"
             )
-        adapter_name, invoke = registration
+        if not registration.read_only or not registration.dry_run_safe:
+            raise LogicAdapterError(
+                "LLM_NOT_DRY_RUN_SAFE",
+                "LLM adapter is not read-only and dry-run safe",
+            )
         context = AdapterExecutionContext(
             self._monotonic() + timeout_seconds, self._monotonic
         )
         try:
             context.checkpoint()
-            result = invoke(prompt, context)
+            result = self._invoke_isolated(
+                registration.invoke, prompt, context, timeout_seconds=timeout_seconds
+            )
             context.checkpoint()
         except LogicAdapterError:
             raise
@@ -110,7 +128,7 @@ class RuntimeAdapterRegistry:
             raise LogicAdapterError(
                 "LLM_USAGE_INVALID", "dry-run LLM adapter returned invalid usage"
             )
-        return adapter_name, result
+        return registration.adapter_name, result
 
     def register_tool(
         self,
@@ -143,7 +161,12 @@ class RuntimeAdapterRegistry:
         )
         try:
             context.checkpoint()
-            result = registration.invoke(arguments, context)
+            result = self._invoke_isolated(
+                registration.invoke,
+                arguments,
+                context,
+                timeout_seconds=timeout_seconds,
+            )
             context.checkpoint()
         except LogicAdapterError:
             raise
@@ -166,8 +189,12 @@ class RuntimeAdapterRegistry:
         ],
         *,
         adapter_name: str,
+        read_only: bool,
+        dry_run_safe: bool,
     ) -> None:
-        self._execute[target] = (adapter_name, invoke)
+        self._execute[target] = _AdapterRegistration(
+            adapter_name, invoke, read_only, dry_run_safe
+        )
 
     def preview_execute(
         self, target: str, request: dict[str, Any], *, timeout_seconds: float
@@ -178,14 +205,23 @@ class RuntimeAdapterRegistry:
                 "EXECUTE_ADAPTER_UNAVAILABLE",
                 "approved sandbox execute adapter unavailable",
             )
-        adapter_name, invoke = registration
+        if not registration.read_only or not registration.dry_run_safe:
+            raise LogicAdapterError(
+                "EXECUTE_NOT_DRY_RUN_SAFE",
+                "execute adapter is not read-only and dry-run safe",
+            )
         validate_json_value(request)
         context = AdapterExecutionContext(
             self._monotonic() + timeout_seconds, self._monotonic
         )
         try:
             context.checkpoint()
-            result = invoke(request, context)
+            result = self._invoke_isolated(
+                registration.invoke,
+                request,
+                context,
+                timeout_seconds=timeout_seconds,
+            )
             context.checkpoint()
         except LogicAdapterError:
             raise
@@ -199,4 +235,48 @@ class RuntimeAdapterRegistry:
                 "sandbox execute adapter returned an invalid preview",
             )
         validate_json_value(result.preview)
-        return adapter_name, result
+        return registration.adapter_name, result
+
+    def _invoke_isolated(
+        self,
+        invoke: Callable[..., Any],
+        argument: Any,
+        context: AdapterExecutionContext,
+        *,
+        timeout_seconds: float,
+    ) -> Any:
+        """Bound untrusted response time while abandoning only daemon workers."""
+        if timeout_seconds <= 0:
+            raise LogicAdapterError(
+                "ADAPTER_TIMEOUT", "dry-run adapter time budget exceeded"
+            )
+        real_deadline = time.monotonic() + timeout_seconds
+        if not self._slots.acquire(timeout=timeout_seconds):
+            raise LogicAdapterError(
+                "ADAPTER_TIMEOUT", "dry-run adapter time budget exceeded"
+            )
+        outcome: Queue[tuple[bool, Any]] = Queue(maxsize=1)
+
+        def run() -> None:
+            try:
+                outcome.put((True, invoke(argument, context)))
+            except Exception as exc:  # noqa: BLE001 - re-raised in request thread
+                outcome.put((False, exc))
+            finally:
+                self._slots.release()
+
+        Thread(
+            target=run,
+            name="aip-logic-dry-run-adapter",
+            daemon=True,
+        ).start()
+        remaining = max(0.0, real_deadline - time.monotonic())
+        try:
+            succeeded, value = outcome.get(timeout=remaining)
+        except Empty as exc:
+            raise LogicAdapterError(
+                "ADAPTER_TIMEOUT", "dry-run adapter time budget exceeded"
+            ) from exc
+        if succeeded:
+            return value
+        raise value

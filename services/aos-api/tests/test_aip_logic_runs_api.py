@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import threading
+import time
 from datetime import UTC, datetime
 
 import pytest
@@ -9,6 +11,7 @@ from aos_api.aip_logic_dry_run_models import (
     LogicNodeCounts,
     LogicRunListResponse,
     LogicRunSummary,
+    LogicTokenUsage,
 )
 from aos_api.aip_logic_graph_models import (
     LogicGraphSnapshot,
@@ -21,7 +24,10 @@ from aos_api.aip_logic_run_store import (
     LogicRunPersistenceError,
     LogicRunStart,
 )
-from aos_api.aip_logic_runtime_adapters import RuntimeAdapterRegistry
+from aos_api.aip_logic_runtime_adapters import (
+    LLMAdapterResult,
+    RuntimeAdapterRegistry,
+)
 from aos_api.routers.aip_logic_runs import (
     get_logic_run_graph_store,
     get_logic_run_store,
@@ -30,13 +36,11 @@ from aos_api.routers.aip_logic_runs import (
 )
 
 
-def _graph(*, config=None, status="draft") -> LogicGraphSnapshot:
+def _graph(*, config=None, status="draft", kind="input") -> LogicGraphSnapshot:
     content = ValidateLogicGraphRequest(
         name="api",
         status="archived" if status == "archived" else "draft",
-        nodes=[
-            {"id": "input", "kind": "input", "label": "input", "config": config or {}}
-        ],
+        nodes=[{"id": "input", "kind": kind, "label": "input", "config": config or {}}],
         entry_node_ids=["input"],
     )
     now = datetime.now(UTC)
@@ -176,6 +180,18 @@ def test_non_literal_dry_run_is_422_and_does_not_create_run(
     assert run_store.start_count == 0
 
 
+def test_missing_inputs_is_422_and_does_not_create_run(client, logic_api) -> None:
+    headers, graph_store, run_store = logic_api
+    body = _body(graph_store.graph)
+    body.pop("inputs")
+    response = client.post(
+        "/v1/aip/logic/graphs/graph/dry-run", headers=headers, json=body
+    )
+    assert response.status_code == 422
+    assert response.json()["code"] == "LOGIC_DRY_RUN_REQUEST_INVALID"
+    assert run_store.start_count == 0
+
+
 def test_revision_conflict_and_invalid_config_are_preflight_without_run(
     client, logic_api
 ) -> None:
@@ -284,6 +300,48 @@ def test_unexpected_executor_exception_becomes_persisted_failed_run(
     assert listed.json()["items"][0]["node_counts"]["failed"] == 1
 
 
+def test_blocking_adapter_returns_timeout_without_hanging_api(
+    client, logic_api, monkeypatch
+) -> None:
+    headers, graph_store, _run_store = logic_api
+    graph_store.graph = _graph(
+        kind="use_llm", config={"prompt": "hello", "model": "blocking"}
+    )
+    release = threading.Event()
+    adapters = RuntimeAdapterRegistry(max_concurrency=1)
+
+    def blocked(_prompt, _context):
+        release.wait(5)
+        return LLMAdapterResult(
+            output="late",
+            usage=LogicTokenUsage(
+                model="blocking", input_tokens=1, output_tokens=1, total_tokens=2
+            ),
+        )
+
+    adapters.register_llm(
+        "blocking",
+        blocked,
+        adapter_name="blocking-read-only",
+        read_only=True,
+        dry_run_safe=True,
+    )
+    client.app.dependency_overrides[get_logic_runtime_adapters] = lambda: adapters
+    monkeypatch.setattr("aos_api.aip_logic_dry_run_executor.MAX_NODE_SECONDS", 0.05)
+    started = time.monotonic()
+    response = client.post(
+        "/v1/aip/logic/graphs/graph/dry-run",
+        headers=headers,
+        json=_body(graph_store.graph),
+    )
+    elapsed = time.monotonic() - started
+    release.set()
+    assert elapsed < 2.0
+    assert response.status_code == 200
+    assert response.json()["status"] == "failed"
+    assert response.json()["error"]["code"] == "ADAPTER_TIMEOUT"
+
+
 def test_invalid_get_query_uses_history_query_error_code(client, logic_api) -> None:
     headers, _graph_store, run_store = logic_api
     response = client.get("/v1/aip/logic/graphs/graph/runs?limit=101", headers=headers)
@@ -309,3 +367,23 @@ def test_finalize_failure_returns_503_without_false_success(
     assert response.status_code == 503
     assert response.json()["code"] == "LOGIC_RUN_PERSISTENCE_FAILED"
     assert "sensitive" not in str(response.json())
+
+
+def test_contradictory_persisted_detail_and_summary_fail_closed_as_503(
+    client, logic_api, monkeypatch
+) -> None:
+    headers, _graph_store, run_store = logic_api
+
+    def contradictory(*_args, **_kwargs):
+        raise LogicRunPersistenceError("contradictory immutable evidence")
+
+    monkeypatch.setattr(run_store, "get_run", contradictory)
+    detail = client.get("/v1/aip/logic/graphs/graph/runs/bad-audit", headers=headers)
+    assert detail.status_code == 503
+    assert detail.json()["code"] == "LOGIC_RUN_PERSISTENCE_FAILED"
+    assert "contradictory" not in str(detail.json())
+
+    monkeypatch.setattr(run_store, "list_runs", contradictory)
+    listed = client.get("/v1/aip/logic/graphs/graph/runs", headers=headers)
+    assert listed.status_code == 503
+    assert listed.json()["code"] == "LOGIC_RUN_PERSISTENCE_FAILED"

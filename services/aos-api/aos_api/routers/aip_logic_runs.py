@@ -114,11 +114,14 @@ def _history_unavailable(exc: Exception) -> ApiError:
     )
 
 
-def _recover_stale_runs(run_store: LogicRunStore, principal: Principal) -> None:
+def _recover_stale_runs(
+    run_store: LogicRunStore, principal: Principal, graph_id: str
+) -> None:
     try:
         run_store.recover_interrupted(
             principal.org_id,
             principal.project_id,
+            graph_id,
             stale_before=datetime.now(UTC) - timedelta(seconds=_STALE_RUN_SECONDS),
         )
     except LogicRunPersistenceError as exc:
@@ -169,7 +172,7 @@ def dry_run_logic_graph(
             status_code=422,
             details={"node_id": exc.node_id} if exc.node_id else None,
         ) from exc
-    _recover_stale_runs(run_store, principal)
+    _recover_stale_runs(run_store, principal, graph_id)
     run_id = f"logic-run-{uuid.uuid4().hex}"
     try:
         started = run_store.start_run(
@@ -209,7 +212,7 @@ def list_logic_runs(
     run_store: LogicRunStore = Depends(get_logic_run_store),
 ) -> LogicRunListResponse:
     _graph_or_404(graph_store, principal, graph_id)
-    _recover_stale_runs(run_store, principal)
+    _recover_stale_runs(run_store, principal, graph_id)
     try:
         return run_store.list_runs(
             principal.org_id, principal.project_id, graph_id, limit=limit, before=before
@@ -231,7 +234,7 @@ def get_logic_run(
     run_store: LogicRunStore = Depends(get_logic_run_store),
 ) -> LogicDryRun:
     _graph_or_404(graph_store, principal, graph_id)
-    _recover_stale_runs(run_store, principal)
+    _recover_stale_runs(run_store, principal, graph_id)
     try:
         return run_store.get_run(
             principal.org_id, principal.project_id, graph_id, run_id

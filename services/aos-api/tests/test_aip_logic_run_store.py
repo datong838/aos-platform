@@ -174,17 +174,26 @@ def test_stale_running_run_is_recovered_as_failed_interrupted(run_scope) -> None
     graph_store, store, _ = run_scope
     graph = _create_recovery_graph(graph_store, "org", "project")
     request = LogicDryRunRequest(
-        expected_revision=1, dry_run=True, expected_graph_hash=graph.graph_hash
+        expected_revision=1,
+        dry_run=True,
+        expected_graph_hash=graph.graph_hash,
+        inputs={},
     )
     store.start_run("org", "project", "actor", graph, request, "run-stale")
     assert (
         store.recover_interrupted(
-            "org", "project", stale_before=datetime.now(UTC).replace(year=2020)
+            "org",
+            "project",
+            graph.id,
+            stale_before=datetime.now(UTC).replace(year=2020),
         )
         == 0
     )
     assert (
-        store.recover_interrupted("org", "project", stale_before=datetime.now(UTC)) == 1
+        store.recover_interrupted(
+            "org", "project", graph.id, stale_before=datetime.now(UTC)
+        )
+        == 1
     )
     loaded = store.get_run("org", "project", graph.id, "run-stale")
     assert loaded.status == "failed"
@@ -208,7 +217,10 @@ def test_stale_running_run_is_recovered_as_failed_interrupted(run_scope) -> None
     assert summary.node_counts.canceled == 1
     assert summary.node_counts.skipped == 1
     assert (
-        store.recover_interrupted("org", "project", stale_before=datetime.now(UTC)) == 0
+        store.recover_interrupted(
+            "org", "project", graph.id, stale_before=datetime.now(UTC)
+        )
+        == 0
     )
 
 
@@ -223,11 +235,18 @@ def test_empty_stale_run_recovery_fails_closed_without_deleting_audit_row(
         CreateLogicGraphRequest(name="empty"),
     )
     request = LogicDryRunRequest(
-        expected_revision=1, dry_run=True, expected_graph_hash=graph.graph_hash
+        expected_revision=1,
+        dry_run=True,
+        expected_graph_hash=graph.graph_hash,
+        inputs={},
     )
     store.start_run("org", "project", "actor", graph, request, "empty-stale")
-    with pytest.raises(LogicRunPersistenceError, match="recover interrupted"):
-        store.recover_interrupted("org", "project", stale_before=datetime.now(UTC))
+    assert (
+        store.recover_interrupted(
+            "org", "project", graph.id, stale_before=datetime.now(UTC)
+        )
+        == 0
+    )
     with scoped_connect() as conn:
         row = conn.execute(
             """SELECT status FROM aip_logic_graph_runs
@@ -239,13 +258,120 @@ def test_empty_stale_run_recovery_fails_closed_without_deleting_audit_row(
     assert row["status"] == "running"
 
 
+def test_recovery_is_graph_scoped_and_bad_row_does_not_block_healthy_rows(
+    run_scope,
+) -> None:
+    graph_store, store, scoped_connect = run_scope
+    graph = _create_graph(graph_store, "org", "project")
+    other = _create_graph(graph_store, "org", "other-project")
+    request = LogicDryRunRequest(
+        expected_revision=1,
+        dry_run=True,
+        expected_graph_hash=graph.graph_hash,
+        inputs={},
+    )
+    other_request = request.model_copy(update={"expected_graph_hash": other.graph_hash})
+    for run_id in ("bad-stale", "good-stale"):
+        store.start_run("org", "project", "actor", graph, request, run_id)
+    store.start_run(
+        "org", "other-project", "actor", other, other_request, "other-stale"
+    )
+    with scoped_connect() as conn:
+        conn.execute(
+            """UPDATE aip_logic_graph_runs SET graph_hash=%s
+               WHERE org_id='org' AND project_id='project'
+                 AND graph_id=%s AND run_id='bad-stale'""",
+            ("f" * 64, graph.id),
+        )
+        conn.commit()
+
+    assert (
+        store.recover_interrupted(
+            "org", "project", graph.id, stale_before=datetime.now(UTC)
+        )
+        == 1
+    )
+    assert store.get_run("org", "project", graph.id, "good-stale").status == "failed"
+    with scoped_connect() as conn:
+        rows = conn.execute(
+            """SELECT project_id,run_id,status FROM aip_logic_graph_runs
+               WHERE run_id IN ('bad-stale','other-stale') ORDER BY run_id"""
+        ).fetchall()
+    assert [(row["run_id"], row["status"]) for row in rows] == [
+        ("bad-stale", "running"),
+        ("other-stale", "running"),
+    ]
+
+    fresh = store.start_run(
+        "org", "project", "actor", graph, request, "fresh-after-bad"
+    )
+    result = LogicDryRunExecutor().execute(
+        graph, {}, run_id=fresh.run_id, started_at=fresh.started_at
+    )
+    store.finalize_run("org", "project", result)
+    assert store.get_run("org", "project", graph.id, result.run_id) == result
+    assert store.list_runs("org", "project", graph.id).count == 2
+    assert (
+        store.recover_interrupted(
+            "org", "project", graph.id, stale_before=datetime.now(UTC)
+        )
+        == 0
+    )
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "UPDATE aip_logic_graph_run_nodes SET kind='transform' WHERE run_id='audit'",
+        "DELETE FROM aip_logic_graph_run_nodes WHERE run_id='audit'",
+        """UPDATE aip_logic_graph_revision
+           SET snapshot=jsonb_set(snapshot,'{name}','\"tampered\"'::jsonb)
+           WHERE graph_id='graph-integrity' AND revision=1""",
+    ],
+)
+def test_get_fails_closed_on_node_or_revision_evidence_contradiction(
+    run_scope, mutation
+) -> None:
+    graph_store, store, scoped_connect = run_scope
+    graph = graph_store.create(
+        "org",
+        "project",
+        "actor",
+        CreateLogicGraphRequest(
+            id="graph-integrity",
+            name="integrity",
+            nodes=[{"id": "input", "kind": "input", "label": "input"}],
+            entry_node_ids=["input"],
+        ),
+    )
+    request = LogicDryRunRequest(
+        expected_revision=1,
+        dry_run=True,
+        expected_graph_hash=graph.graph_hash,
+        inputs={},
+    )
+    started = store.start_run("org", "project", "actor", graph, request, "audit")
+    result = LogicDryRunExecutor().execute(
+        graph, {}, run_id="audit", started_at=started.started_at
+    )
+    store.finalize_run("org", "project", result)
+    with scoped_connect() as conn:
+        conn.execute(mutation)
+        conn.commit()
+    with pytest.raises(LogicRunPersistenceError, match="read logic run history"):
+        store.get_run("org", "project", graph.id, "audit")
+
+
 def test_multiple_null_idempotency_keys_are_allowed_by_real_postgresql(
     run_scope,
 ) -> None:
     graph_store, store, _ = run_scope
     graph = _create_graph(graph_store, "org", "project")
     request = LogicDryRunRequest(
-        expected_revision=1, dry_run=True, expected_graph_hash=graph.graph_hash
+        expected_revision=1,
+        dry_run=True,
+        expected_graph_hash=graph.graph_hash,
+        inputs={},
     )
     for index in range(2):
         run_id = f"null-key-{index}"
@@ -266,6 +392,7 @@ def test_history_paginates_and_keeps_evaluated_revision_after_graph_update(
         expected_revision=1,
         dry_run=True,
         expected_graph_hash=graph.graph_hash,
+        inputs={},
     )
     for index in range(3):
         run_id = f"page-{index}"
@@ -308,7 +435,10 @@ def test_finalize_is_terminal_once_and_never_overwrites_history(run_scope) -> No
     graph_store, store, _ = run_scope
     graph = _create_graph(graph_store, "org", "project")
     request = LogicDryRunRequest(
-        expected_revision=1, dry_run=True, expected_graph_hash=graph.graph_hash
+        expected_revision=1,
+        dry_run=True,
+        expected_graph_hash=graph.graph_hash,
+        inputs={},
     )
     started = store.start_run("org", "project", "actor", graph, request, "once")
     result = LogicDryRunExecutor().execute(

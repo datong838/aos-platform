@@ -4,11 +4,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
+from collections import OrderedDict
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import datetime
+from threading import Lock
 from typing import Any
+
+from pydantic import ValidationError
 
 from aos_api.aip_logic_dry_run_executor import LogicDryRunExecutor
 from aos_api.aip_logic_dry_run_models import (
@@ -20,10 +25,16 @@ from aos_api.aip_logic_dry_run_models import (
     LogicRunSummary,
     sanitize_runtime_value,
 )
-from aos_api.aip_logic_graph_models import LogicGraphSnapshot
+from aos_api.aip_logic_graph_models import (
+    LogicGraphSnapshot,
+    compute_logic_graph_payload_hash,
+)
 from aos_api.db import connect as db_connect
 
 ConnectFactory = Callable[[], AbstractContextManager[Any]]
+RECOVERY_BATCH_LIMIT = 100
+MAX_RECOVERY_QUARANTINE = 1_024
+log = logging.getLogger("aos-api.aip-logic-runs")
 
 
 class LogicRunStoreError(RuntimeError):
@@ -42,6 +53,10 @@ class LogicRunIdempotencyConflict(LogicRunStoreError):
     code = "LOGIC_RUN_IDEMPOTENCY_CONFLICT"
 
 
+class _LogicRunAuditError(LogicRunPersistenceError):
+    """A single immutable audit row is contradictory and must be quarantined."""
+
+
 @dataclass(frozen=True)
 class LogicRunStart:
     run_id: str
@@ -52,6 +67,10 @@ class LogicRunStart:
 class LogicRunStore:
     def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
         self._connect_factory = connect_factory or db_connect
+        self._recovery_quarantine: OrderedDict[tuple[str, str, str, str], None] = (
+            OrderedDict()
+        )
+        self._recovery_quarantine_lock = Lock()
 
     def start_run(
         self,
@@ -198,67 +217,124 @@ class LogicRunStore:
             raise LogicRunPersistenceError("failed to list logic run history") from exc
 
     def recover_interrupted(
-        self, org_id: str, project_id: str, *, stale_before: datetime
+        self,
+        org_id: str,
+        project_id: str,
+        graph_id: str,
+        *,
+        stale_before: datetime,
     ) -> int:
         self._scope(org_id, project_id)
         try:
+            excluded = self._quarantined_run_ids(org_id, project_id, graph_id)
             with self._connect_factory() as conn:
                 rows = conn.execute(
                     """
-                    SELECT r.*, revision.snapshot, NOW() AS recovered_at
+                    SELECT r.run_id
                     FROM aip_logic_graph_runs r
-                    JOIN aip_logic_graph_revision revision
-                      ON revision.org_id=r.org_id
-                     AND revision.project_id=r.project_id
-                     AND revision.graph_id=r.graph_id
-                     AND revision.revision=r.evaluated_revision
-                    WHERE r.org_id=%s AND r.project_id=%s
+                    WHERE r.org_id=%s AND r.project_id=%s AND r.graph_id=%s
                       AND r.status='running' AND r.started_at < %s
+                      AND NOT (r.run_id = ANY(%s::text[]))
                     ORDER BY r.started_at ASC, r.run_id ASC
-                    FOR UPDATE OF r SKIP LOCKED
+                    LIMIT %s
                     """,
-                    (org_id, project_id, stale_before),
+                    (
+                        org_id,
+                        project_id,
+                        graph_id,
+                        stale_before,
+                        excluded,
+                        RECOVERY_BATCH_LIMIT,
+                    ),
                 ).fetchall()
-                recovered = 0
-                for row in rows:
-                    graph = LogicGraphSnapshot.model_validate(
-                        dict(row["snapshot"] or {})
-                    )
-                    if (
-                        graph.id != str(row["graph_id"])
-                        or graph.revision != int(row["evaluated_revision"])
-                        or graph.graph_hash != str(row["graph_hash"])
+            recovered = 0
+            skipped = 0
+            for row in rows:
+                run_id = str(row["run_id"])
+                try:
+                    if self._recover_one_interrupted(
+                        org_id,
+                        project_id,
+                        graph_id,
+                        run_id,
+                        stale_before=stale_before,
                     ):
-                        raise LogicRunPersistenceError(
-                            "interrupted run revision evidence is inconsistent"
-                        )
-                    if not graph.nodes:
-                        raise LogicRunPersistenceError(
-                            "empty interrupted graph requires manual audit"
-                        )
-                    finished_at = row["recovered_at"]
-                    elapsed_ms = max(
-                        0,
-                        round((finished_at - row["started_at"]).total_seconds() * 1000),
+                        recovered += 1
+                except _LogicRunAuditError as exc:
+                    skipped += 1
+                    self._quarantine_recovery(org_id, project_id, graph_id, run_id)
+                    log.warning(
+                        "logic_run_recovery_skipped graph_id=%s run_id=%s error=%s",
+                        graph_id,
+                        run_id,
+                        type(exc).__name__,
                     )
-                    result = LogicDryRunExecutor.terminal_failure_evidence(
-                        graph,
-                        run_id=str(row["run_id"]),
-                        started_at=row["started_at"],
-                        finished_at=finished_at,
-                        elapsed_ms=elapsed_ms,
-                        code="INTERRUPTED",
-                        message="run interrupted before terminal persistence",
-                        reason="process_restart",
-                    )
-                    self._write_terminal_with_conn(conn, org_id, project_id, result)
-                    recovered += 1
-                conn.commit()
-                return recovered
+            if skipped:
+                log.warning(
+                    "logic_run_recovery_completed graph_id=%s recovered=%s skipped=%s",
+                    graph_id,
+                    recovered,
+                    skipped,
+                )
+            return recovered
         except Exception as exc:
             raise LogicRunPersistenceError(
                 "failed to recover interrupted logic runs"
             ) from exc
+
+    def _recover_one_interrupted(
+        self,
+        org_id: str,
+        project_id: str,
+        graph_id: str,
+        run_id: str,
+        *,
+        stale_before: datetime,
+    ) -> bool:
+        with self._connect_factory() as conn:
+            row = conn.execute(
+                """
+                SELECT r.*,
+                       revision.graph_hash AS revision_graph_hash,
+                       revision.snapshot AS revision_snapshot,
+                       NOW() AS recovered_at
+                FROM aip_logic_graph_runs r
+                LEFT JOIN aip_logic_graph_revision revision
+                  ON revision.org_id=r.org_id
+                 AND revision.project_id=r.project_id
+                 AND revision.graph_id=r.graph_id
+                 AND revision.revision=r.evaluated_revision
+                WHERE r.org_id=%s AND r.project_id=%s AND r.graph_id=%s
+                  AND r.run_id=%s AND r.status='running' AND r.started_at < %s
+                FOR UPDATE OF r SKIP LOCKED
+                """,
+                (org_id, project_id, graph_id, run_id, stale_before),
+            ).fetchone()
+            if row is None:
+                return False
+            graph = self._validated_revision_graph(row)
+            if not graph.nodes:
+                raise _LogicRunAuditError(
+                    "empty interrupted graph requires manual audit"
+                )
+            finished_at = row["recovered_at"]
+            elapsed_ms = max(
+                0,
+                round((finished_at - row["started_at"]).total_seconds() * 1000),
+            )
+            result = LogicDryRunExecutor.terminal_failure_evidence(
+                graph,
+                run_id=run_id,
+                started_at=row["started_at"],
+                finished_at=finished_at,
+                elapsed_ms=elapsed_ms,
+                code="INTERRUPTED",
+                message="run interrupted before terminal persistence",
+                reason="process_restart",
+            )
+            self._write_terminal_with_conn(conn, org_id, project_id, result)
+            conn.commit()
+            return True
 
     def _write_terminal_with_conn(
         self, conn: Any, org_id: str, project_id: str, result: LogicDryRun
@@ -340,7 +416,17 @@ class LogicRunStore:
 
     def _get_with_conn(self, conn, org_id, project_id, graph_id, run_id) -> LogicDryRun:
         row = conn.execute(
-            "SELECT * FROM aip_logic_graph_runs WHERE org_id=%s AND project_id=%s AND graph_id=%s AND run_id=%s AND status <> 'running'",
+            """SELECT r.*,
+                      revision.graph_hash AS revision_graph_hash,
+                      revision.snapshot AS revision_snapshot
+               FROM aip_logic_graph_runs r
+               LEFT JOIN aip_logic_graph_revision revision
+                 ON revision.org_id=r.org_id
+                AND revision.project_id=r.project_id
+                AND revision.graph_id=r.graph_id
+                AND revision.revision=r.evaluated_revision
+               WHERE r.org_id=%s AND r.project_id=%s AND r.graph_id=%s
+                 AND r.run_id=%s AND r.status <> 'running'""",
             (org_id, project_id, graph_id, run_id),
         ).fetchone()
         if row is None:
@@ -349,6 +435,13 @@ class LogicRunStore:
             "SELECT * FROM aip_logic_graph_run_nodes WHERE org_id=%s AND project_id=%s AND graph_id=%s AND run_id=%s ORDER BY topo_index",
             (org_id, project_id, graph_id, run_id),
         ).fetchall()
+        graph = self._validated_revision_graph(row)
+        expected_nodes = {node.id: node.kind for node in graph.nodes}
+        observed_nodes = {str(node["node_id"]): node["kind"] for node in nodes}
+        if len(nodes) != len(expected_nodes) or observed_nodes != expected_nodes:
+            raise LogicRunPersistenceError(
+                "logic run node evidence contradicts immutable revision"
+            )
         return LogicDryRun(
             run_id=str(row["run_id"]),
             graph_id=str(row["graph_id"]),
@@ -385,6 +478,59 @@ class LogicRunStore:
             proposed_edits=row["proposed_edits"] or [],
             error=row["error"],
         )
+
+    @staticmethod
+    def _validated_revision_graph(row: Any) -> LogicGraphSnapshot:
+        if row["revision_snapshot"] is None or row["revision_graph_hash"] is None:
+            raise _LogicRunAuditError("logic run immutable revision is missing")
+        try:
+            graph = LogicGraphSnapshot.model_validate(
+                dict(row["revision_snapshot"] or {})
+            )
+        except (ValidationError, TypeError, ValueError) as exc:
+            raise _LogicRunAuditError(
+                "logic run immutable revision is invalid"
+            ) from exc
+        content = {
+            "name": graph.name,
+            "description": graph.description,
+            "status": graph.status,
+            "schema_version": graph.schema_version,
+            "nodes": [node.model_dump(mode="json") for node in graph.nodes],
+            "edges": [edge.model_dump(mode="json") for edge in graph.edges],
+            "entry_node_ids": list(graph.entry_node_ids),
+        }
+        actual_hash = compute_logic_graph_payload_hash(content)
+        expected_hash = str(row["revision_graph_hash"])
+        if (
+            actual_hash != expected_hash
+            or graph.graph_hash != expected_hash
+            or str(row["graph_hash"]) != expected_hash
+            or graph.id != str(row["graph_id"])
+            or graph.revision != int(row["evaluated_revision"])
+        ):
+            raise _LogicRunAuditError("logic run revision evidence is inconsistent")
+        return graph
+
+    def _quarantined_run_ids(
+        self, org_id: str, project_id: str, graph_id: str
+    ) -> list[str]:
+        with self._recovery_quarantine_lock:
+            return [
+                run_id
+                for (org, project, graph, run_id) in self._recovery_quarantine
+                if (org, project, graph) == (org_id, project_id, graph_id)
+            ]
+
+    def _quarantine_recovery(
+        self, org_id: str, project_id: str, graph_id: str, run_id: str
+    ) -> None:
+        key = (org_id, project_id, graph_id, run_id)
+        with self._recovery_quarantine_lock:
+            self._recovery_quarantine[key] = None
+            self._recovery_quarantine.move_to_end(key)
+            while len(self._recovery_quarantine) > MAX_RECOVERY_QUARANTINE:
+                self._recovery_quarantine.popitem(last=False)
 
     @staticmethod
     def _summary(row) -> LogicRunSummary:

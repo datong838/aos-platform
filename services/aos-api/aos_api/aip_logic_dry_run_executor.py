@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import time
 import uuid
 from collections.abc import Callable
@@ -287,20 +288,36 @@ class LogicDryRunExecutor:
 
         finished_at = self._now()
         elapsed_ms = max(0, round((self._monotonic() - run_started) * 1000))
-        return LogicDryRun(
-            run_id=run_id or f"logic-run-{uuid.uuid4().hex}",
-            graph_id=graph.id,
-            status="failed" if failed else "succeeded",
-            evaluated_revision=graph.revision,
-            graph_hash=graph.graph_hash,
-            started_at=started_at,
-            finished_at=finished_at,
-            elapsed_ms=elapsed_ms,
-            total_tokens=total_tokens if usage_seen else None,
-            node_results=[results[node_id] for node_id in topo],
-            proposed_edits=all_edits,
-            error=run_error,
-        )
+        result_fields = {
+            "run_id": run_id or f"logic-run-{uuid.uuid4().hex}",
+            "graph_id": graph.id,
+            "status": "failed" if failed else "succeeded",
+            "evaluated_revision": graph.revision,
+            "graph_hash": graph.graph_hash,
+            "started_at": started_at,
+            "finished_at": finished_at,
+            "elapsed_ms": elapsed_ms,
+            "total_tokens": total_tokens if usage_seen else None,
+            "node_results": [results[node_id] for node_id in topo],
+            "proposed_edits": all_edits,
+            "error": run_error,
+        }
+        if self._encoded_result_size(result_fields) > MAX_TOTAL_RESULT_BYTES:
+            limited = self.terminal_failure_evidence(
+                graph,
+                run_id=result_fields["run_id"],
+                started_at=started_at,
+                finished_at=finished_at,
+                elapsed_ms=elapsed_ms,
+                code="TOTAL_RESULT_LIMIT",
+                message="dry-run total result byte limit exceeded",
+                reason="result_limit",
+            )
+            self._require_result_within_budget(limited)
+            return limited
+        result = LogicDryRun(**result_fields)
+        self._require_result_within_budget(result)
+        return result
 
     def execute_guarded(
         self,
@@ -398,7 +415,7 @@ class LogicDryRunExecutor:
                 node_results.append(
                     cls._idle_result(node_id, node.kind, "skipped", "not_reachable")
                 )
-        return LogicDryRun(
+        result = LogicDryRun(
             run_id=run_id,
             graph_id=graph.id,
             status="failed",
@@ -412,6 +429,8 @@ class LogicDryRunExecutor:
             proposed_edits=[],
             error=top_error,
         )
+        cls._require_result_within_budget(result)
+        return result
 
     @staticmethod
     def _revalidate(graph: LogicGraphSnapshot) -> None:
@@ -469,6 +488,61 @@ class LogicDryRunExecutor:
                     "node config does not match the canonical contract",
                     node.id,
                 ) from exc
+        cls._require_minimum_result_budget(graph)
+
+    @classmethod
+    def _require_minimum_result_budget(cls, graph: LogicGraphSnapshot) -> None:
+        instant = datetime(2000, 1, 1, tzinfo=UTC)
+        cls.terminal_failure_evidence(
+            graph,
+            run_id="logic-run-" + ("f" * 32),
+            started_at=instant,
+            finished_at=instant,
+            elapsed_ms=9_999_999_999_999,
+            code="INTERNAL_EXECUTION_ERROR",
+            message="run interrupted before terminal persistence",
+            reason="unexpected_error",
+        )
+
+    @staticmethod
+    def _encoded_result_size(result: LogicDryRun | dict[str, Any]) -> int:
+        payload = (
+            result.model_dump(mode="json")
+            if isinstance(result, LogicDryRun)
+            else {
+                key: (
+                    value.model_dump(mode="json")
+                    if hasattr(value, "model_dump")
+                    else [
+                        item.model_dump(mode="json")
+                        if hasattr(item, "model_dump")
+                        else item
+                        for item in value
+                    ]
+                    if isinstance(value, list)
+                    else value.isoformat()
+                    if isinstance(value, datetime)
+                    else value
+                )
+                for key, value in result.items()
+            }
+        )
+        return len(
+            json.dumps(
+                payload,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        )
+
+    @classmethod
+    def _require_result_within_budget(cls, result: LogicDryRun) -> None:
+        if cls._encoded_result_size(result) > MAX_TOTAL_RESULT_BYTES:
+            raise LogicDryRunPreflightError(
+                "TOTAL_RESULT_BUDGET_TOO_SMALL",
+                "result budget cannot contain complete terminal evidence",
+            )
 
     @staticmethod
     def _topological_order(graph, node_order, incoming, outgoing) -> list[str]:

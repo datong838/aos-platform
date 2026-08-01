@@ -21,6 +21,7 @@ MAX_KEY_LENGTH = 256
 MAX_SAFE_OUTPUT_BYTES = 128 * 1024
 MAX_TOTAL_CONTEXT_BYTES = 1024 * 1024
 MAX_TOTAL_RESULT_BYTES = 2 * 1024 * 1024
+MAX_SAFE_INTEGER = (1 << 53) - 1
 REDACTED = "[REDACTED]"
 _FORBIDDEN_RESULT_KEYS = re.compile(
     r"^(?:cot|reasoning|chain_of_thought)$", re.IGNORECASE
@@ -88,10 +89,10 @@ def sanitize_runtime_value(
 
 
 class LogicDryRunRequest(_StrictModel):
-    expected_revision: int = Field(ge=1)
+    expected_revision: int = Field(ge=1, le=MAX_SAFE_INTEGER)
     dry_run: Literal[True]
     expected_graph_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
-    inputs: dict[str, Any] = Field(default_factory=dict)
+    inputs: dict[str, Any]
     idempotency_key: str | None = Field(default=None, min_length=1, max_length=160)
 
     @field_validator("dry_run", mode="before")
@@ -127,9 +128,9 @@ class LogicRunError(_StrictModel):
 
 class LogicTokenUsage(_StrictModel):
     model: str = Field(min_length=1, max_length=240)
-    input_tokens: int = Field(ge=0)
-    output_tokens: int = Field(ge=0)
-    total_tokens: int = Field(ge=0)
+    input_tokens: int = Field(ge=0, le=MAX_SAFE_INTEGER)
+    output_tokens: int = Field(ge=0, le=MAX_SAFE_INTEGER)
+    total_tokens: int = Field(ge=0, le=MAX_SAFE_INTEGER)
 
     @model_validator(mode="after")
     def _consistent_total(self) -> LogicTokenUsage:
@@ -160,12 +161,12 @@ class LogicProposedEdit(_StrictModel):
 
 
 class LogicNodeResult(_StrictModel):
-    node_id: str
+    node_id: str = Field(min_length=1, max_length=160)
     kind: LogicBlockKind
     status: Literal["executed", "skipped", "failed", "canceled"]
     started_at: datetime | None = None
     finished_at: datetime | None = None
-    elapsed_ms: int | None = Field(default=None, ge=0)
+    elapsed_ms: int | None = Field(default=None, ge=0, le=MAX_SAFE_INTEGER)
     summary: str = Field(max_length=500)
     output: Any | None = None
     usage: LogicTokenUsage | None = None
@@ -180,45 +181,131 @@ class LogicNodeResult(_StrictModel):
     def _safe_output(cls, value: Any | None) -> Any | None:
         return validate_json_value(value) if value is not None else None
 
+    @model_validator(mode="after")
+    def _cross_field_truth(self) -> LogicNodeResult:
+        if self.error is not None and self.error.node_id != self.node_id:
+            raise ValueError("node error must belong to its node result")
+        if self.status == "executed" and self.error is not None:
+            raise ValueError("executed node must not contain an error")
+        if self.status == "failed" and self.error is None:
+            raise ValueError("failed node must contain an error")
+        if self.status in {"skipped", "canceled"} and not (
+            self.error and self.error.reason
+        ):
+            raise ValueError("idle node must contain a machine-readable reason")
+        if (
+            self.started_at is not None
+            and self.finished_at is not None
+            and self.finished_at < self.started_at
+        ):
+            raise ValueError("node finished_at must not precede started_at")
+        if any(edit.source_node_id != self.node_id for edit in self.proposed_edits):
+            raise ValueError("node proposed edit must belong to its source node")
+        return self
+
 
 class LogicDryRun(_StrictModel):
-    run_id: str
-    graph_id: str
+    run_id: str = Field(min_length=1, max_length=160)
+    graph_id: str = Field(min_length=1, max_length=160)
     mode: Literal["dry_run"] = "dry_run"
     status: Literal["succeeded", "failed"]
-    evaluated_revision: int = Field(ge=1)
+    evaluated_revision: int = Field(ge=1, le=MAX_SAFE_INTEGER)
     graph_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     production_written: Literal[False] = False
     started_at: datetime
     finished_at: datetime
-    elapsed_ms: int = Field(ge=0)
-    total_tokens: int | None = Field(default=None, ge=0)
+    elapsed_ms: int = Field(ge=0, le=MAX_SAFE_INTEGER)
+    total_tokens: int | None = Field(default=None, ge=0, le=MAX_SAFE_INTEGER)
     node_results: list[LogicNodeResult] = Field(default_factory=list)
     proposed_edits: list[LogicProposedEdit] = Field(default_factory=list)
     error: LogicRunError | None = None
 
+    @model_validator(mode="after")
+    def _cross_field_truth(self) -> LogicDryRun:
+        if self.finished_at < self.started_at:
+            raise ValueError("run finished_at must not precede started_at")
+        node_ids = [node.node_id for node in self.node_results]
+        if len(node_ids) != len(set(node_ids)):
+            raise ValueError("run node results must have unique node ids")
+        failed_ids = {
+            node.node_id for node in self.node_results if node.status == "failed"
+        }
+        if self.status == "succeeded":
+            if self.error is not None:
+                raise ValueError("succeeded run must not contain an error")
+            if any(
+                node.status not in {"executed", "skipped"} for node in self.node_results
+            ):
+                raise ValueError("succeeded run contains a failed or canceled node")
+        else:
+            if self.error is None:
+                raise ValueError("failed run must contain an error")
+            if not failed_ids:
+                raise ValueError("failed run must contain at least one failed node")
+            if self.error.node_id not in failed_ids:
+                raise ValueError("run error must identify a failed node")
+        usage_totals = [
+            node.usage.total_tokens
+            for node in self.node_results
+            if node.usage is not None
+        ]
+        expected_tokens = sum(usage_totals) if usage_totals else None
+        if self.total_tokens != expected_tokens:
+            raise ValueError("run total_tokens must equal node usage totals")
+        allowed_nodes = set(node_ids)
+        edits = [
+            *self.proposed_edits,
+            *[edit for node in self.node_results for edit in node.proposed_edits],
+        ]
+        if any(edit.source_node_id not in allowed_nodes for edit in edits):
+            raise ValueError("run proposed edit source must belong to a result node")
+        encoded = json.dumps(
+            self.model_dump(mode="json"),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        if len(encoded) > MAX_TOTAL_RESULT_BYTES:
+            raise ValueError("dry-run result byte limit exceeded")
+        return self
+
 
 class LogicNodeCounts(_StrictModel):
-    executed: int = Field(default=0, ge=0)
-    skipped: int = Field(default=0, ge=0)
-    failed: int = Field(default=0, ge=0)
-    canceled: int = Field(default=0, ge=0)
+    executed: int = Field(default=0, ge=0, le=MAX_SAFE_INTEGER)
+    skipped: int = Field(default=0, ge=0, le=MAX_SAFE_INTEGER)
+    failed: int = Field(default=0, ge=0, le=MAX_SAFE_INTEGER)
+    canceled: int = Field(default=0, ge=0, le=MAX_SAFE_INTEGER)
 
 
 class LogicRunSummary(_StrictModel):
-    run_id: str
-    graph_id: str
+    run_id: str = Field(min_length=1, max_length=160)
+    graph_id: str = Field(min_length=1, max_length=160)
     mode: Literal["dry_run"] = "dry_run"
     status: Literal["succeeded", "failed"]
-    evaluated_revision: int
-    graph_hash: str
+    evaluated_revision: int = Field(ge=1, le=MAX_SAFE_INTEGER)
+    graph_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     production_written: Literal[False] = False
     started_at: datetime
     finished_at: datetime
-    elapsed_ms: int
-    total_tokens: int | None = None
+    elapsed_ms: int = Field(ge=0, le=MAX_SAFE_INTEGER)
+    total_tokens: int | None = Field(default=None, ge=0, le=MAX_SAFE_INTEGER)
     node_counts: LogicNodeCounts
-    error_code: str | None = None
+    error_code: str | None = Field(default=None, min_length=1, max_length=120)
+
+    @model_validator(mode="after")
+    def _cross_field_truth(self) -> LogicRunSummary:
+        if self.finished_at < self.started_at:
+            raise ValueError("summary finished_at must not precede started_at")
+        if self.status == "succeeded":
+            if (
+                self.node_counts.failed != 0
+                or self.node_counts.canceled != 0
+                or self.error_code is not None
+            ):
+                raise ValueError("succeeded summary contains failure evidence")
+        elif self.node_counts.failed < 1 or self.error_code is None:
+            raise ValueError("failed summary lacks failed node evidence")
+        return self
 
 
 class LogicRunListResponse(_StrictModel):
