@@ -25,6 +25,7 @@ import {
 import type {
   JsonObject,
   LogicDryRun,
+  LogicNodeRunStatus,
   LogicRunSummary,
 } from "./logicRunContracts";
 
@@ -194,6 +195,23 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
     () => graph?.nodes.find((node) => node.id === selectedNodeId) ?? null,
     [graph, selectedNodeId],
   );
+
+  const nodeRunStates = useMemo<ReadonlyMap<string, LogicNodeRunStatus>>(() => {
+    const states = new Map<string, LogicNodeRunStatus>();
+    if (
+      !activeFlowId
+      || !graph
+      || graph.id !== activeFlowId
+      || runState !== "ready"
+      || !run
+      || run.graph_id !== graph.id
+    ) return states;
+    const currentNodeIds = new Set(graph.nodes.map((node) => node.id));
+    run.node_results.forEach((result) => {
+      if (currentNodeIds.has(result.node_id)) states.set(result.node_id, result.status);
+    });
+    return states;
+  }, [activeFlowId, graph, run, runState]);
 
   useEffect(() => {
     const generation = ++requestGeneration.current;
@@ -588,6 +606,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           nodes={graph.nodes}
           edges={graph.edges}
           selectedNodeId={selectedNodeId}
+          nodeRunStates={nodeRunStates}
           zoom={zoom}
           inspectorCollapsed={inspectorCollapsed}
           disabled={loading || saving || running}

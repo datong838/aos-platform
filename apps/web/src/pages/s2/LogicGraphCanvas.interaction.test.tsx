@@ -31,6 +31,7 @@ import {
   DEFAULT_LOGIC_PALETTE,
   LogicGraphCanvas,
   type LogicCanvasDirtyReason,
+  type LogicCanvasNodeRunState,
 } from "./LogicGraphCanvas";
 
 const initialNodes: LogicGraphNode[] = [
@@ -59,7 +60,10 @@ type HarnessState = {
   rejected: string[];
   zoom: number;
   collapsed: boolean;
+  selectedNodeId: string;
+  nodeRunStates: ReadonlyMap<string, LogicCanvasNodeRunState>;
   setZoom: (value: number) => void;
+  setNodeRunStates: React.Dispatch<React.SetStateAction<ReadonlyMap<string, LogicCanvasNodeRunState>>>;
 };
 
 let latest: HarnessState;
@@ -71,16 +75,38 @@ function Harness() {
   const [rejected, setRejected] = useState<string[]>([]);
   const [zoom, setZoom] = useState(1);
   const [collapsed, setCollapsed] = useState(false);
-  latest = { nodes, edges, reasons, rejected, zoom, collapsed, setZoom };
+  const [selectedNodeId, setSelectedNodeId] = useState("");
+  const [nodeRunStates, setNodeRunStates] = useState<ReadonlyMap<string, LogicCanvasNodeRunState>>(() => new Map([
+    ["input-1", "executed"],
+    ["llm-1", "skipped"],
+    ["execute-1", "failed"],
+    ["branch-1", "canceled"],
+    ["ghost-node", "failed"],
+  ]));
+  latest = {
+    nodes,
+    edges,
+    reasons,
+    rejected,
+    zoom,
+    collapsed,
+    selectedNodeId,
+    nodeRunStates,
+    setZoom,
+    setNodeRunStates,
+  };
   return (
     <LogicGraphCanvas
       nodes={nodes}
       edges={edges}
       palette={DEFAULT_LOGIC_PALETTE}
       zoom={zoom}
+      selectedNodeId={selectedNodeId}
+      nodeRunStates={nodeRunStates}
       inspectorCollapsed={collapsed}
       onNodesChange={setNodes}
       onEdgesChange={setEdges}
+      onSelectNode={setSelectedNodeId}
       onDirty={(reason) => setReasons((previous) => [...previous, reason])}
       onEdgeRejected={(message) => setRejected((previous) => [...previous, message])}
       onZoomChange={setZoom}
@@ -141,6 +167,40 @@ describe("LogicGraphCanvas interactions", () => {
     }));
     expect(latest.nodes.find((node) => node.id === "input-1")).toMatchObject({ position_x: 100, position_y: 60 });
     expect(latest.reasons).toContain("node_move");
+    expect(host.querySelector('[data-node-id="input-1"]')?.getAttribute("data-run-state")).toBe("executed");
+  });
+
+  it("renders all four read-only run states with clear badges and aria without masking selection", async () => {
+    const expectations: Array<[string, LogicCanvasNodeRunState, string]> = [
+      ["input-1", "executed", "已执行"],
+      ["llm-1", "skipped", "已跳过"],
+      ["execute-1", "failed", "失败"],
+      ["branch-1", "canceled", "已取消"],
+    ];
+    expectations.forEach(([nodeId, state, label]) => {
+      const node = host.querySelector<HTMLElement>(`[data-node-id="${nodeId}"]`)!;
+      expect(node.dataset.runState).toBe(state);
+      expect(node.classList.contains(`is-run-${state}`)).toBe(true);
+      expect(node.getAttribute("aria-label")).toContain(`运行状态：${label}`);
+      expect(node.querySelector(`[aria-label="运行状态：${label}"]`)?.textContent).toBe(label);
+    });
+    expect(host.querySelector('[data-node-id="ghost-node"]')).toBeNull();
+
+    await act(async () => button(host, "拖动 execute-1").click());
+    const selectedFailed = host.querySelector<HTMLElement>('[data-node-id="execute-1"]')!;
+    expect(selectedFailed.classList.contains("is-selected")).toBe(true);
+    expect(selectedFailed.classList.contains("is-run-failed")).toBe(true);
+    expect(latest.reasons).toHaveLength(0);
+  });
+
+  it("clears read-only run states without mutating graph or dirty reasons", async () => {
+    const nodesBefore = structuredClone(latest.nodes);
+    const edgesBefore = structuredClone(latest.edges);
+    await act(async () => latest.setNodeRunStates(new Map()));
+    expect(host.querySelectorAll("[data-run-state]")).toHaveLength(0);
+    expect(latest.nodes).toEqual(nodesBefore);
+    expect(latest.edges).toEqual(edgesBefore);
+    expect(latest.reasons).toHaveLength(0);
   });
 
   it("connects ports, exposes branch path ports and deletes an edge", async () => {

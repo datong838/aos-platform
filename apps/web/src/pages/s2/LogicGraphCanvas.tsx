@@ -19,6 +19,7 @@ import {
   type LogicGraphEdge,
   type LogicGraphNode,
 } from "./logicCanvasGraph";
+import type { LogicNodeRunStatus } from "./logicRunContracts";
 
 const DROP_AREA_ID = "logic-graph-canvas";
 const NODE_WIDTH = 180;
@@ -74,6 +75,15 @@ export type LogicCanvasDirtyReason =
   | "edge_add"
   | "edge_delete";
 
+export type LogicCanvasNodeRunState = LogicNodeRunStatus;
+
+const NODE_RUN_STATE_LABELS: Record<LogicCanvasNodeRunState, string> = {
+  executed: "已执行",
+  skipped: "已跳过",
+  failed: "失败",
+  canceled: "已取消",
+};
+
 export interface LogicGraphCanvasProps {
   nodes: LogicGraphNode[];
   edges: LogicGraphEdge[];
@@ -83,6 +93,7 @@ export interface LogicGraphCanvasProps {
   inspectorCollapsed?: boolean;
   inspector?: React.ReactNode;
   disabled?: boolean;
+  nodeRunStates?: ReadonlyMap<string, LogicCanvasNodeRunState>;
   onNodesChange: (nodes: LogicGraphNode[]) => void;
   onEdgesChange: (edges: LogicGraphEdge[]) => void;
   onSelectNode?: (nodeId: string) => void;
@@ -159,6 +170,7 @@ function DraggableLogicNode({
   zoom,
   selected,
   linking,
+  runState,
   disabled,
   onSelect,
   onStartLink,
@@ -169,6 +181,7 @@ function DraggableLogicNode({
   zoom: number;
   selected: boolean;
   linking: boolean;
+  runState?: LogicCanvasNodeRunState;
   disabled: boolean;
   onSelect: () => void;
   onStartLink: (sourcePort: string, branchPath: string) => void;
@@ -176,6 +189,7 @@ function DraggableLogicNode({
   onDelete: () => void;
 }) {
   const ports = useMemo(() => getLogicSourcePorts(node), [node]);
+  const runStateLabel = runState ? NODE_RUN_STATE_LABELS[runState] : "";
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `logic-node:${node.id}`,
     data: { source: "canvas", nodeId: node.id },
@@ -184,7 +198,7 @@ function DraggableLogicNode({
   return (
     <div
       ref={setNodeRef}
-      className={`bp-logic-canvas-node${selected ? " is-selected" : ""}${linking ? " is-linking" : ""}`}
+      className={`bp-logic-canvas-node${selected ? " is-selected" : ""}${linking ? " is-linking" : ""}${runState ? ` has-run-state is-run-${runState}` : ""}`}
       style={{
         left: node.position_x,
         top: node.position_y,
@@ -193,6 +207,9 @@ function DraggableLogicNode({
         opacity: isDragging ? 0.72 : 1,
       }}
       data-node-id={node.id}
+      data-run-state={runState}
+      role="group"
+      aria-label={runState ? `节点 ${node.id}，运行状态：${runStateLabel}` : `节点 ${node.id}`}
       onClick={onSelect}
     >
       <button
@@ -206,6 +223,14 @@ function DraggableLogicNode({
         <span className="bp-logic-canvas-node-kind">{node.kind}</span>
         <strong>{node.label}</strong>
       </button>
+      {runState && (
+        <span
+          className={`bp-logic-canvas-run-state is-${runState}`}
+          aria-label={`运行状态：${runStateLabel}`}
+        >
+          {runStateLabel}
+        </span>
+      )}
       <button
         type="button"
         className="bp-logic-canvas-port bp-logic-canvas-port-in"
@@ -279,6 +304,7 @@ export function LogicGraphCanvas({
   inspectorCollapsed = false,
   inspector,
   disabled = false,
+  nodeRunStates,
   onNodesChange,
   onEdgesChange,
   onSelectNode,
@@ -500,6 +526,7 @@ export function LogicGraphCanvas({
                   zoom={safeZoom}
                   selected={selectedNodeId === node.id}
                   linking={linkOrigin?.nodeId === node.id}
+                  runState={nodeRunStates?.get(node.id)}
                   disabled={disabled}
                   onSelect={() => onSelectNode?.(node.id)}
                   onStartLink={(sourcePort, branchPath) => {

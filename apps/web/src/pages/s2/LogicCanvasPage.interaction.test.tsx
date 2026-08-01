@@ -102,6 +102,46 @@ function dryRunResult(graph: LogicGraphSnapshot, runId = `run-${graph.id}`, fail
   };
 }
 
+function runWithNodeStates(
+  graph: LogicGraphSnapshot,
+  runId: string,
+  statuses: LogicDryRun["node_results"][number]["status"][],
+): LogicDryRun {
+  const failedIndex = statuses.indexOf("failed");
+  const failedNode = failedIndex >= 0 ? graph.nodes[failedIndex] : null;
+  return {
+    ...dryRunResult(graph, runId, failedIndex >= 0),
+    status: failedNode ? "failed" : "succeeded",
+    node_results: graph.nodes.map((node, index) => {
+      const status = statuses[index] ?? "executed";
+      const error = status === "failed"
+        ? { code: "NODE_FAILED", message: "节点失败", node_id: node.id, reason: null }
+        : status === "skipped" || status === "canceled"
+          ? { code: `NODE_${status.toUpperCase()}`, message: `节点${status}`, node_id: node.id, reason: `${status}_reason` }
+          : null;
+      return {
+        node_id: node.id,
+        kind: node.kind,
+        status,
+        started_at: status === "skipped" || status === "canceled" ? null : "2026-08-02T08:00:00Z",
+        finished_at: status === "skipped" || status === "canceled" ? null : "2026-08-02T08:00:01Z",
+        elapsed_ms: status === "skipped" || status === "canceled" ? null : 10,
+        summary: `节点状态 ${status}`,
+        output: { state: status },
+        usage: null,
+        tool_call: null,
+        selected_branch_path: null,
+        proposed_edits: [],
+        error,
+        truncated: false,
+      };
+    }),
+    error: failedNode
+      ? { code: "NODE_FAILED", message: "节点失败", node_id: failedNode.id, reason: null }
+      : null,
+  };
+}
+
 function historySummary(run: LogicDryRun): LogicRunSummary {
   return {
     run_id: run.run_id,
@@ -511,6 +551,69 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     await flush();
     expect(runApi.listLogicRuns).toHaveBeenLastCalledWith("history", { limit: 20, before: "cursor-1" });
     expect(host.textContent).toContain("run-history-older");
+    expect(host.textContent).not.toContain("未保存更改");
+  });
+
+  it("历史详情只读映射四种节点状态，切换历史和新 run loading 时清空，flow 切换不残留", async () => {
+    const loaded = graphSnapshot("states", 9);
+    loaded.nodes.push(
+      { id: "states-transform", kind: "transform", label: "Transform", position_x: 600, position_y: 120, config: {} },
+      { id: "states-execute", kind: "execute", label: "Execute", position_x: 860, position_y: 120, config: {} },
+    );
+    const mixed = runWithNodeStates(loaded, "run-states-mixed", ["executed", "skipped", "failed", "canceled"]);
+    mixed.node_results.push({
+      ...mixed.node_results[0],
+      node_id: "historical-removed-node",
+      summary: "历史中存在但当前图已删除",
+    });
+    const allExecuted = runWithNodeStates(loaded, "run-states-executed", ["executed", "executed", "executed", "executed"]);
+    const secondDetail = deferred<LogicDryRun>();
+    const nextRun = deferred<LogicDryRun>();
+    graphApi.getLogicGraph
+      .mockResolvedValueOnce(loaded)
+      .mockResolvedValueOnce(graphSnapshot("states-next", 1));
+    runApi.listLogicRuns.mockImplementation(async (graphId: string) => graphId === loaded.id
+      ? { items: [historySummary(mixed), historySummary(allExecuted)], count: 2, next_cursor: null }
+      : { items: [], count: 0, next_cursor: null });
+    runApi.getLogicRun
+      .mockResolvedValueOnce(mixed)
+      .mockReturnValueOnce(secondDetail.promise);
+    runApi.dryRunLogicGraph.mockReturnValueOnce(nextRun.promise);
+    await renderPage("states");
+
+    await act(async () => button("run-states-mixed").click());
+    await flush();
+    const expectedStates = new Map([
+      ["states-input", "executed"],
+      ["states-llm", "skipped"],
+      ["states-transform", "failed"],
+      ["states-execute", "canceled"],
+    ]);
+    expectedStates.forEach((state, nodeId) => {
+      expect(host.querySelector<HTMLElement>(`[data-node-id="${nodeId}"]`)?.dataset.runState).toBe(state);
+    });
+    expect(host.querySelector('.bp-logic-canvas-node[data-node-id="historical-removed-node"]')).toBeNull();
+    expect(host.querySelectorAll("[data-run-state]")).toHaveLength(4);
+    expect(host.textContent).not.toContain("未保存更改");
+
+    await act(async () => button("run-states-executed").click());
+    expect(host.querySelectorAll("[data-run-state]")).toHaveLength(0);
+    secondDetail.resolve(allExecuted);
+    await flush();
+    expect(host.querySelectorAll('[data-run-state="executed"]')).toHaveLength(4);
+    expect(host.textContent).not.toContain("未保存更改");
+
+    await act(async () => button("应用 Inputs").click());
+    await act(async () => button("安全试跑").click());
+    expect(host.querySelectorAll("[data-run-state]")).toHaveLength(0);
+    nextRun.resolve({ ...allExecuted, run_id: "run-states-new" });
+    await flush();
+    expect(host.querySelectorAll('[data-run-state="executed"]')).toHaveLength(4);
+
+    await act(async () => root.render(<MemoryRouter><LogicCanvasPage flowId="states-next" /></MemoryRouter>));
+    await flush();
+    expect(host.textContent).toContain("states-next 输入");
+    expect(host.querySelectorAll("[data-run-state]")).toHaveLength(0);
     expect(host.textContent).not.toContain("未保存更改");
   });
 
