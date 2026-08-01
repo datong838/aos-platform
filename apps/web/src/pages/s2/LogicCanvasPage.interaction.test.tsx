@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { LogicGraphSnapshot } from "./logicCanvasGraph";
 import { LogicCanvasPage } from "./LogicCanvasPage";
+import type { LogicDryRun, LogicRunSummary } from "./logicRunContracts";
 
 const graphApi = vi.hoisted(() => ({
   getLogicGraph: vi.fn(),
@@ -13,6 +14,14 @@ const graphApi = vi.hoisted(() => ({
 }));
 
 vi.mock("./logicGraphApi", () => graphApi);
+
+const runApi = vi.hoisted(() => ({
+  dryRunLogicGraph: vi.fn(),
+  getLogicRun: vi.fn(),
+  listLogicRuns: vi.fn(),
+}));
+
+vi.mock("./logicRunApi", () => runApi);
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -35,7 +44,7 @@ function graphSnapshot(id: string, revision = 1, label = `${id} 输入`): LogicG
     schema_version: 1,
     revision,
     published_version: null,
-    graph_hash: `hash-${id}-${revision}`,
+    graph_hash: ((id.length + revision) % 16).toString(16).repeat(64),
     persisted: true,
     nodes: [
       { id: `${id}-input`, kind: "input", label, position_x: 80, position_y: 120, config: {} },
@@ -51,6 +60,68 @@ function graphSnapshot(id: string, revision = 1, label = `${id} 输入`): LogicG
       order: 0,
     }],
     entry_node_ids: [`${id}-input`],
+  };
+}
+
+function dryRunResult(graph: LogicGraphSnapshot, runId = `run-${graph.id}`, failed = false): LogicDryRun {
+  const second = graph.nodes[1];
+  return {
+    run_id: runId,
+    graph_id: graph.id,
+    mode: "dry_run",
+    status: failed ? "failed" : "succeeded",
+    evaluated_revision: graph.revision,
+    graph_hash: graph.graph_hash,
+    production_written: false,
+    started_at: "2026-08-02T08:00:00Z",
+    finished_at: "2026-08-02T08:00:01Z",
+    elapsed_ms: 1000,
+    total_tokens: null,
+    node_results: graph.nodes.map((node, index) => ({
+      node_id: node.id,
+      kind: node.kind,
+      status: failed && index === 1 ? "failed" : "executed",
+      started_at: "2026-08-02T08:00:00Z",
+      finished_at: "2026-08-02T08:00:01Z",
+      elapsed_ms: 10,
+      summary: failed && index === 1 ? "安全执行失败" : "安全执行完成",
+      output: { node: node.id },
+      usage: null,
+      tool_call: null,
+      selected_branch_path: null,
+      proposed_edits: [],
+      error: failed && index === 1
+        ? { code: "SAFE_TOOL_FAILED", message: "只读适配器失败", node_id: node.id, reason: null }
+        : null,
+      truncated: false,
+    })),
+    proposed_edits: [],
+    error: failed
+      ? { code: "SAFE_TOOL_FAILED", message: "只读适配器失败", node_id: second.id, reason: null }
+      : null,
+  };
+}
+
+function historySummary(run: LogicDryRun): LogicRunSummary {
+  return {
+    run_id: run.run_id,
+    graph_id: run.graph_id,
+    mode: "dry_run",
+    status: run.status,
+    evaluated_revision: run.evaluated_revision,
+    graph_hash: run.graph_hash,
+    production_written: false,
+    started_at: run.started_at,
+    finished_at: run.finished_at,
+    elapsed_ms: run.elapsed_ms,
+    total_tokens: run.total_tokens,
+    node_counts: {
+      executed: run.node_results.filter((node) => node.status === "executed").length,
+      skipped: run.node_results.filter((node) => node.status === "skipped").length,
+      failed: run.node_results.filter((node) => node.status === "failed").length,
+      canceled: run.node_results.filter((node) => node.status === "canceled").length,
+    },
+    error_code: run.error?.code ?? null,
   };
 }
 
@@ -78,6 +149,8 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     root = createRoot(host);
     currentPath = "";
     Object.values(graphApi).forEach((mock) => mock.mockReset());
+    Object.values(runApi).forEach((mock) => mock.mockReset());
+    runApi.listLogicRuns.mockResolvedValue({ items: [], count: 0, next_cursor: null });
   });
 
   afterEach(() => {
@@ -105,6 +178,12 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
 
   function setNativeInput(input: HTMLInputElement, value: string) {
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, value);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function setNativeTextarea(input: HTMLTextAreaElement, value: string) {
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set?.call(input, value);
     input.dispatchEvent(new Event("input", { bubbles: true }));
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }
@@ -268,14 +347,195 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     expect(host.textContent).not.toContain("未保存更改");
   });
 
-  it("可信 dry-run、历史和自动化在 Stage B 前保持禁用且不调用旧安全门卫", async () => {
-    graphApi.getLogicGraph.mockResolvedValue(graphSnapshot("gated"));
-    await renderPage("gated");
+  it("安全试跑按钮始终可见，并按未保存、loading、dirty、saving、Inputs 与 running 严格门禁", async () => {
+    await renderPage();
+    expect(button("安全试跑").disabled).toBe(true);
+    expect(host.textContent).toContain("请先保存 Logic Graph");
 
-    const dryRun = button("canonical dry-run");
-    expect(dryRun.disabled).toBe(true);
-    expect(host.textContent).toContain("Stage B 尚未开放");
-    expect(host.textContent).toContain("运行历史尚未接入 canonical API");
-    expect(host.textContent).toContain("自动化尚未接入发布版本契约");
+    const loadingGraph = deferred<LogicGraphSnapshot>();
+    graphApi.getLogicGraph.mockReturnValueOnce(loadingGraph.promise);
+    await act(async () => root.render(<MemoryRouter><LogicCanvasPage flowId="gates" /></MemoryRouter>));
+    expect(button("安全试跑").disabled).toBe(true);
+    expect(host.textContent).toContain("Logic Graph 正在加载");
+    const cleanGraph = graphSnapshot("gates", 3);
+    loadingGraph.resolve(cleanGraph);
+    await flush();
+    expect(button("安全试跑").disabled).toBe(true);
+    expect(host.textContent).toContain("请先显式应用 Dry-Run Inputs");
+
+    await act(async () => button("应用 Inputs").click());
+    expect(button("安全试跑").disabled).toBe(false);
+    expect(host.textContent).toContain("已满足可信试跑门禁");
+
+    await act(async () => button("添加 汇聚").click());
+    expect(button("安全试跑").disabled).toBe(true);
+    expect(host.textContent).toContain("存在未保存更改");
+
+    const save = deferred<LogicGraphSnapshot>();
+    graphApi.replaceLogicGraph.mockReturnValueOnce(save.promise);
+    await act(async () => button("保存").click());
+    expect(host.textContent).toContain("请等待保存与回读完成");
+    save.resolve({ ...cleanGraph, revision: 4, graph_hash: "f".repeat(64), nodes: [...cleanGraph.nodes, {
+      id: "saved-handoff",
+      kind: "handoff",
+      label: "汇聚",
+      position_x: 600,
+      position_y: 180,
+      config: {},
+    }] });
+    await flush();
+    expect(button("安全试跑").disabled).toBe(false);
+    await act(async () => button("拖动 saved-handoff").click());
+
+    const runningRequest = deferred<LogicDryRun>();
+    runApi.dryRunLogicGraph.mockReturnValueOnce(runningRequest.promise);
+    await act(async () => {
+      const dryRun = button("安全试跑");
+      dryRun.click();
+      dryRun.click();
+    });
+    expect(button("安全试跑中").disabled).toBe(true);
+    expect(host.textContent).toContain("安全试跑正在运行");
+    expect(button("保存").disabled).toBe(true);
+    expect(button("刷新").disabled).toBe(true);
+    expect(button("应用 Inputs").disabled).toBe(true);
+    expect(button("添加 汇聚").disabled).toBe(true);
+    expect(host.querySelector<HTMLInputElement>('input[aria-label="Logic 名称"]')?.disabled).toBe(true);
+    expect(host.querySelector<HTMLInputElement>('input[aria-label="Logic 描述"]')?.disabled).toBe(true);
+    expect(host.querySelector<HTMLTextAreaElement>('textarea[aria-label="Dry-Run Inputs JSON"]')?.disabled).toBe(true);
+    expect(host.querySelector<HTMLInputElement>('input[aria-label="Block 标签"]')?.disabled).toBe(true);
+    expect(host.textContent).not.toContain("Dry-Run Inputs 已显式应用；未写入 Logic Graph");
+    expect(runApi.dryRunLogicGraph).toHaveBeenCalledTimes(1);
+    runningRequest.resolve(dryRunResult({ ...cleanGraph, revision: 4, graph_hash: "f".repeat(64), nodes: [...cleanGraph.nodes, {
+      id: "saved-handoff",
+      kind: "handoff",
+      label: "汇聚",
+      position_x: 600,
+      position_y: 180,
+      config: {},
+    }] }));
+    await flush();
+  });
+
+  it("Inputs 只接受显式应用的 JSON 对象，不修改画布 dirty；成功试跑绑定 revision/hash 并回读历史", async () => {
+    const loaded = graphSnapshot("trusted", 7);
+    const result = dryRunResult(loaded);
+    runApi.listLogicRuns
+      .mockResolvedValueOnce({ items: [], count: 0, next_cursor: null })
+      .mockResolvedValueOnce({ items: [historySummary(result)], count: 1, next_cursor: null });
+    graphApi.getLogicGraph.mockResolvedValue(loaded);
+    runApi.dryRunLogicGraph.mockResolvedValue(result);
+    await renderPage("trusted");
+
+    const editor = host.querySelector<HTMLTextAreaElement>('textarea[aria-label="Dry-Run Inputs JSON"]')!;
+    await act(async () => setNativeTextarea(editor, "[]"));
+    await act(async () => button("应用 Inputs").click());
+    expect(host.textContent).toContain("Inputs 必须是 JSON 对象");
+    expect(button("安全试跑").disabled).toBe(true);
+
+    await act(async () => setNativeTextarea(editor, '{"objectId":"wo-7"}'));
+    await act(async () => button("应用 Inputs").click());
+    expect(host.textContent).not.toContain("未保存更改");
+    expect(button("安全试跑").disabled).toBe(false);
+    await act(async () => button("安全试跑").click());
+    await flush();
+
+    expect(runApi.dryRunLogicGraph).toHaveBeenCalledWith("trusted", {
+      expected_revision: 7,
+      dry_run: true,
+      expected_graph_hash: loaded.graph_hash,
+      inputs: { objectId: "wo-7" },
+    }, ["trusted-input", "trusted-llm"]);
+    expect(host.textContent).toContain("服务端运行证据");
+    expect(host.textContent).toContain("revision 7");
+    expect(host.textContent).toContain(loaded.graph_hash);
+    expect(host.textContent).toContain("不写生产");
+    expect(host.textContent).toContain("run-trusted");
+    expect(runApi.listLogicRuns).toHaveBeenCalledTimes(2);
+    expect(host.textContent).not.toContain("Stage B 尚未开放");
+  });
+
+  it("409、普通失败与 POST 后历史回读失败均保留当前图和 clean 状态，不伪造结果", async () => {
+    const loaded = graphSnapshot("failure", 5, "仍在画布");
+    graphApi.getLogicGraph.mockResolvedValue(loaded);
+    await renderPage("failure");
+    await act(async () => button("应用 Inputs").click());
+
+    runApi.dryRunLogicGraph.mockRejectedValueOnce(Object.assign(new Error("revision 已变化"), { status: 409 }));
+    await act(async () => button("安全试跑").click());
+    await flush();
+    expect(host.textContent).toContain("版本冲突：revision 已变化");
+    expect(host.textContent).toContain("仍在画布");
+    expect(host.textContent).not.toContain("未保存更改");
+
+    runApi.dryRunLogicGraph.mockRejectedValueOnce(new Error("只读执行器不可用"));
+    await act(async () => button("安全试跑").click());
+    await flush();
+    expect(host.textContent).toContain("只读执行器不可用");
+    expect(host.textContent).toContain("仍在画布");
+
+    runApi.dryRunLogicGraph.mockRejectedValueOnce(new Error("响应已收到，但历史持久化核验失败：detail 不一致"));
+    await act(async () => button("安全试跑").click());
+    await flush();
+    expect(host.textContent).toContain("历史持久化核验失败");
+    expect(host.textContent).not.toContain("服务端运行证据");
+    expect(runApi.dryRunLogicGraph).toHaveBeenCalledTimes(3);
+  });
+
+  it("服务端历史支持选择详情、分页、失败重试；历史下钻和错误定位不改变 dirty", async () => {
+    const loaded = graphSnapshot("history", 8);
+    const failed = dryRunResult(loaded, "run-history-failed", true);
+    const older = dryRunResult({ ...loaded, revision: 7 }, "run-history-older");
+    runApi.listLogicRuns
+      .mockRejectedValueOnce(new Error("历史暂时不可用"))
+      .mockResolvedValueOnce({ items: [historySummary(failed)], count: 1, next_cursor: "cursor-1" })
+      .mockResolvedValueOnce({ items: [historySummary(older)], count: 1, next_cursor: null });
+    graphApi.getLogicGraph.mockResolvedValue(loaded);
+    runApi.getLogicRun.mockResolvedValue(failed);
+    await renderPage("history");
+
+    expect(host.textContent).toContain("历史暂时不可用");
+    await act(async () => button("重试").click());
+    await flush();
+
+    await act(async () => button("run-history-failed").click());
+    await flush();
+    expect(runApi.getLogicRun).toHaveBeenCalledWith("history", "run-history-failed");
+    expect(host.textContent).toContain("SAFE_TOOL_FAILED");
+    expect(host.textContent).not.toContain("未保存更改");
+    await act(async () => button("定位节点 history-llm").click());
+    expect(host.textContent).toContain("Block 属性use_llm");
+    expect(host.textContent).not.toContain("未保存更改");
+
+    await act(async () => button("加载更多运行记录").click());
+    await flush();
+    expect(runApi.listLogicRuns).toHaveBeenLastCalledWith("history", { limit: 20, before: "cursor-1" });
+    expect(host.textContent).toContain("run-history-older");
+    expect(host.textContent).not.toContain("未保存更改");
+  });
+
+  it("flowId 切换隔离迟到的运行详情与历史响应", async () => {
+    const oldGraph = graphSnapshot("old-run", 2);
+    const newGraph = graphSnapshot("new-run", 3);
+    const oldDetail = deferred<LogicDryRun>();
+    const oldHistory = historySummary(dryRunResult(oldGraph, "run-old-late"));
+    graphApi.getLogicGraph.mockImplementation(async (id: string) => id === "old-run" ? oldGraph : newGraph);
+    runApi.listLogicRuns.mockImplementation(async (id: string) => ({
+      items: id === "old-run" ? [oldHistory] : [],
+      count: id === "old-run" ? 1 : 0,
+      next_cursor: null,
+    }));
+    runApi.getLogicRun.mockReturnValueOnce(oldDetail.promise);
+
+    await act(async () => root.render(<MemoryRouter><LogicCanvasPage flowId="old-run" /></MemoryRouter>));
+    await flush();
+    await act(async () => button("run-old-late").click());
+    await act(async () => root.render(<MemoryRouter><LogicCanvasPage flowId="new-run" /></MemoryRouter>));
+    await flush();
+    oldDetail.resolve(dryRunResult(oldGraph, "run-old-late"));
+    await flush();
+
+    expect(host.textContent).toContain("new-run 输入");
+    expect(host.textContent).not.toContain("run-old-late");
   });
 });

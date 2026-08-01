@@ -16,6 +16,17 @@ import {
   replaceLogicGraph,
   type LogicGraphDraft,
 } from "./logicGraphApi";
+import { LogicRunPanel, type LogicRunLoadState } from "./LogicRunPanel";
+import {
+  dryRunLogicGraph,
+  getLogicRun,
+  listLogicRuns,
+} from "./logicRunApi";
+import type {
+  JsonObject,
+  LogicDryRun,
+  LogicRunSummary,
+} from "./logicRunContracts";
 
 /** 向后兼容：旧测试和外部引用仍使用这些导出。 */
 export interface BranchPath {
@@ -142,6 +153,9 @@ function errorMessage(error: unknown): string {
   return status === 409 ? `版本冲突：${message}` : message;
 }
 
+const GRAPH_HASH_RE = /^[0-9a-f]{64}$/i;
+const HISTORY_PAGE_SIZE = 20;
+
 export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
   const params = useParams<{ flowId?: string }>();
   const navigate = useNavigate();
@@ -158,7 +172,23 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [inputsDraft, setInputsDraft] = useState("{}");
+  const [appliedInputs, setAppliedInputs] = useState<JsonObject | null>(null);
+  const [inputsError, setInputsError] = useState("");
+  const [running, setRunning] = useState(false);
+  const [run, setRun] = useState<LogicDryRun | null>(null);
+  const [runState, setRunState] = useState<LogicRunLoadState>("idle");
+  const [runError, setRunError] = useState("");
+  const [history, setHistory] = useState<LogicRunSummary[]>([]);
+  const [historyState, setHistoryState] = useState<LogicRunLoadState>("idle");
+  const [historyError, setHistoryError] = useState("");
+  const [historyCursor, setHistoryCursor] = useState<string | null>(null);
+  const [loadingMoreHistory, setLoadingMoreHistory] = useState(false);
+  const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const requestGeneration = useRef(0);
+  const runRequestGeneration = useRef(0);
+  const detailRequestGeneration = useRef(0);
+  const runningRef = useRef(false);
 
   const selectedNode = useMemo(
     () => graph?.nodes.find((node) => node.id === selectedNodeId) ?? null,
@@ -167,10 +197,26 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
 
   useEffect(() => {
     const generation = ++requestGeneration.current;
+    runRequestGeneration.current += 1;
+    detailRequestGeneration.current += 1;
     setSelectedNodeId("");
     setError("");
     setMessage("");
     setSaving(false);
+    setInputsDraft("{}");
+    setAppliedInputs(null);
+    setInputsError("");
+    setRunning(false);
+    runningRef.current = false;
+    setRun(null);
+    setRunState("idle");
+    setRunError("");
+    setHistory([]);
+    setHistoryState(activeFlowId ? "loading" : "idle");
+    setHistoryError("");
+    setHistoryCursor(null);
+    setLoadingMoreHistory(false);
+    setSelectedRunId(null);
     if (!activeFlowId) {
       setGraph(cloneGraph(templateRef.current!));
       setDirty(true);
@@ -186,15 +232,49 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
         if (requestGeneration.current !== generation) return;
         setGraph(loaded);
         setDirty(false);
+        void listLogicRuns(loaded.id, { limit: HISTORY_PAGE_SIZE })
+          .then((response) => {
+            if (requestGeneration.current !== generation) return;
+            setHistory(response.items);
+            setHistoryCursor(response.next_cursor);
+            setHistoryState("ready");
+          })
+          .catch((historyLoadError: unknown) => {
+            if (requestGeneration.current !== generation) return;
+            setHistoryState("error");
+            setHistoryError(errorMessage(historyLoadError));
+          });
       })
       .catch((loadError: unknown) => {
         if (requestGeneration.current !== generation) return;
         setError(`加载失败：${errorMessage(loadError)}`);
+        setHistoryState("error");
+        setHistoryError("Logic Graph 加载失败，未读取运行历史");
       })
       .finally(() => {
         if (requestGeneration.current === generation) setLoading(false);
       });
   }, [activeFlowId]);
+
+  const dryRunDisabledReason = loading
+    ? "Logic Graph 正在加载"
+    : !graph
+      ? "Logic Graph 尚未加载"
+      : saving
+        ? "请等待保存与回读完成"
+        : running
+          ? "安全试跑正在运行，请勿重复提交"
+          : !graph.persisted
+            ? "请先保存 Logic Graph"
+            : dirty
+              ? "存在未保存更改，请先保存并完成回读"
+              : graph.revision < 1
+                ? "服务端 revision 无效"
+                : !GRAPH_HASH_RE.test(graph.graph_hash)
+                  ? "服务端 graph hash 无效"
+                  : appliedInputs === null
+                    ? "请先显式应用 Dry-Run Inputs"
+                    : "";
 
   function mutateGraph(mutator: (current: LogicGraphSnapshot) => LogicGraphSnapshot): void {
     setGraph((current) => current ? mutator(current) : current);
@@ -204,12 +284,17 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
   }
 
   async function saveGraph(): Promise<void> {
-    if (!graph || saving || !dirty) return;
+    if (!graph || saving || running || !dirty) return;
     const generation = ++requestGeneration.current;
+    detailRequestGeneration.current += 1;
     const wasPersisted = graph.persisted;
     const expectedRevision = graph.revision;
     const draft = toDraft(graph);
     setSaving(true);
+    setRun(null);
+    setRunState("idle");
+    setRunError("");
+    setSelectedRunId(null);
     setError("");
     setMessage("");
     try {
@@ -221,6 +306,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
       setDirty(false);
       setMessage(`已保存并回读确认 · revision ${saved.revision}`);
       if (!wasPersisted) navigate(`/aip/logic/${encodeURIComponent(saved.id)}`, { replace: true });
+      else void refreshHistory();
     } catch (saveError: unknown) {
       if (requestGeneration.current !== generation) return;
       setError(`保存失败：${errorMessage(saveError)}`);
@@ -231,7 +317,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
   }
 
   async function refreshGraph(): Promise<void> {
-    if (!graph || loading || saving) return;
+    if (!graph || loading || saving || running) return;
     setError("");
     setMessage("");
     setSelectedNodeId("");
@@ -243,15 +329,21 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
     }
 
     const generation = ++requestGeneration.current;
+    detailRequestGeneration.current += 1;
     const graphId = graph.id;
     const wasDirty = dirty;
     setLoading(true);
+    setRun(null);
+    setRunState("idle");
+    setRunError("");
+    setSelectedRunId(null);
     try {
       const loaded = await getLogicGraph(graphId);
       if (requestGeneration.current !== generation) return;
       setGraph(loaded);
       setDirty(false);
       setMessage(`已从服务端刷新 · revision ${loaded.revision}`);
+      void refreshHistory();
     } catch (loadError: unknown) {
       if (requestGeneration.current !== generation) return;
       setError(`刷新失败：${errorMessage(loadError)}`);
@@ -261,23 +353,163 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
     }
   }
 
+  function applyDryRunInputs(): void {
+    try {
+      const parsed: unknown = JSON.parse(inputsDraft);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error("Inputs 必须是 JSON 对象");
+      }
+      setAppliedInputs(parsed as JsonObject);
+      setInputsError("");
+      setMessage("Dry-Run Inputs 已显式应用；未写入 Logic Graph");
+    } catch (inputError: unknown) {
+      setAppliedInputs(null);
+      setInputsError(errorMessage(inputError));
+      setMessage("");
+    }
+  }
+
+  async function refreshHistory(): Promise<void> {
+    if (!graph?.persisted) return;
+    const generation = requestGeneration.current;
+    const graphId = graph.id;
+    setHistoryState("loading");
+    setHistoryError("");
+    try {
+      const response = await listLogicRuns(graphId, { limit: HISTORY_PAGE_SIZE });
+      if (requestGeneration.current !== generation) return;
+      setHistory(response.items);
+      setHistoryCursor(response.next_cursor);
+      setHistoryState("ready");
+    } catch (historyLoadError: unknown) {
+      if (requestGeneration.current !== generation) return;
+      setHistoryState("error");
+      setHistoryError(errorMessage(historyLoadError));
+    }
+  }
+
+  async function loadRunDetail(runId: string): Promise<void> {
+    if (!graph?.persisted) return;
+    const generation = requestGeneration.current;
+    const detailGeneration = ++detailRequestGeneration.current;
+    const graphId = graph.id;
+    setSelectedRunId(runId);
+    setRun(null);
+    setRunState("loading");
+    setRunError("");
+    try {
+      const detail = await getLogicRun(graphId, runId);
+      if (requestGeneration.current !== generation || detailRequestGeneration.current !== detailGeneration) return;
+      setRun(detail);
+      setRunState("ready");
+    } catch (detailError: unknown) {
+      if (requestGeneration.current !== generation || detailRequestGeneration.current !== detailGeneration) return;
+      setRunState("error");
+      setRunError(errorMessage(detailError));
+    }
+  }
+
+  async function runDryRun(): Promise<void> {
+    if (!graph || dryRunDisabledReason || appliedInputs === null || runningRef.current) return;
+    const generation = requestGeneration.current;
+    const runGeneration = ++runRequestGeneration.current;
+    const graphId = graph.id;
+    const revision = graph.revision;
+    const graphHash = graph.graph_hash;
+    const expectedNodeIds = graph.nodes.map((node) => node.id);
+    const inputs = structuredClone(appliedInputs);
+    detailRequestGeneration.current += 1;
+    runningRef.current = true;
+    setRunning(true);
+    setRun(null);
+    setSelectedRunId(null);
+    setRunState("loading");
+    setRunError("");
+    setError("");
+    setMessage("");
+    try {
+      const result = await dryRunLogicGraph(graphId, {
+        expected_revision: revision,
+        dry_run: true,
+        expected_graph_hash: graphHash,
+        inputs,
+      }, expectedNodeIds);
+      if (requestGeneration.current !== generation || runRequestGeneration.current !== runGeneration) return;
+      setRun(result);
+      setSelectedRunId(result.run_id);
+      setRunState("ready");
+      setMessage(`安全试跑已完成 · revision ${result.evaluated_revision} · 不写生产`);
+      void refreshHistory();
+    } catch (runFailure: unknown) {
+      if (requestGeneration.current !== generation || runRequestGeneration.current !== runGeneration) return;
+      setRunState("error");
+      setRunError(errorMessage(runFailure));
+    } finally {
+      if (requestGeneration.current === generation && runRequestGeneration.current === runGeneration) {
+        runningRef.current = false;
+        setRunning(false);
+      }
+    }
+  }
+
+  async function loadMoreHistory(): Promise<void> {
+    if (!graph?.persisted || !historyCursor || loadingMoreHistory) return;
+    const generation = requestGeneration.current;
+    const graphId = graph.id;
+    const cursor = historyCursor;
+    setLoadingMoreHistory(true);
+    setHistoryError("");
+    try {
+      const response = await listLogicRuns(graphId, { limit: HISTORY_PAGE_SIZE, before: cursor });
+      if (requestGeneration.current !== generation) return;
+      setHistory((current) => {
+        const known = new Set(current.map((item) => item.run_id));
+        return [...current, ...response.items.filter((item) => !known.has(item.run_id))];
+      });
+      setHistoryCursor(response.next_cursor);
+      setHistoryState("ready");
+    } catch (historyLoadError: unknown) {
+      if (requestGeneration.current !== generation) return;
+      setHistoryState("error");
+      setHistoryError(errorMessage(historyLoadError));
+    } finally {
+      if (requestGeneration.current === generation) setLoadingMoreHistory(false);
+    }
+  }
+
+  function locateRunNode(nodeId: string): void {
+    if (!graph?.nodes.some((node) => node.id === nodeId)) {
+      setError(`历史运行节点 ${nodeId} 不在当前 revision，未修改画布。`);
+      return;
+    }
+    setSelectedNodeId(nodeId);
+    setInspectorCollapsed(false);
+  }
+
   return (
     <PageChrome
       title="AIP Logic 无代码编辑器"
       lede="自由编排 canonical Logic Graph；保存仅在服务端提交与严格 GET 回读一致后确认。"
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
-        <button type="button" className="btn btn-primary" disabled={!graph || loading || saving || !dirty} onClick={() => void saveGraph()}>
+        <button type="button" className="btn btn-primary" disabled={!graph || loading || saving || running || !dirty} onClick={() => void saveGraph()}>
           {saving ? "保存并回读中…" : `保存${dirty ? " *" : ""}`}
         </button>
-        <button type="button" className="btn" disabled={!graph || loading || saving} onClick={() => void refreshGraph()}>
+        <button type="button" className="btn" disabled={!graph || loading || saving || running} onClick={() => void refreshGraph()}>
           {loading ? "读取中…" : "刷新"}
         </button>
-        {graph?.persisted && !dirty && (
-          <button type="button" className="btn" disabled title="可信图执行将在 Stage B 接入">
-            canonical dry-run · Stage B 尚未开放
-          </button>
-        )}
+        <button
+          type="button"
+          className="btn"
+          disabled={Boolean(dryRunDisabledReason)}
+          title={dryRunDisabledReason || "使用已确认 revision/hash 进行只读安全试跑"}
+          onClick={() => void runDryRun()}
+        >
+          {running ? "安全试跑中…" : "安全试跑"}
+        </button>
+        <span data-testid="dry-run-gate-reason" style={{ color: dryRunDisabledReason ? "var(--aos-muted)" : "var(--aos-green-700)", fontSize: "0.72rem" }}>
+          {dryRunDisabledReason || "已满足可信试跑门禁"}
+        </span>
         <Link to="/aip/drafts" className="btn" style={{ textDecoration: "none" }}>Draft 审批台</Link>
         <Link to="/aip/evals" className="btn" style={{ textDecoration: "none" }}>Evals 门控</Link>
         <span style={{ marginLeft: "auto", fontSize: "0.76rem", color: dirty ? "var(--aos-amber-700)" : "var(--aos-green-700)" }}>
@@ -292,7 +524,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
             <input
               aria-label="Logic 名称"
               value={graph.name}
-              disabled={loading || saving}
+              disabled={loading || saving || running}
               onChange={(event) => mutateGraph((current) => ({ ...current, name: event.target.value }))}
               style={{ display: "block", width: "100%", marginTop: 3 }}
             />
@@ -302,7 +534,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
             <input
               aria-label="Logic 描述"
               value={graph.description}
-              disabled={loading || saving}
+              disabled={loading || saving || running}
               onChange={(event) => mutateGraph((current) => ({ ...current, description: event.target.value }))}
               style={{ display: "block", width: "100%", marginTop: 3 }}
             />
@@ -318,6 +550,36 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
       {error && <div role="alert" style={{ background: "var(--aos-red-bg)", color: "var(--aos-red)", padding: "8px 12px", marginBottom: 10 }}>{error}</div>}
       {message && <div role="status" style={{ background: "var(--aos-green-bg)", color: "var(--aos-green-700)", padding: "8px 12px", marginBottom: 10 }}>{message}</div>}
 
+      {graph && (
+        <section style={{ border: "1px solid var(--aos-border)", padding: 12, borderRadius: 2, marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: "0.84rem" }}>Dry-Run Inputs</h3>
+              <p style={{ margin: "3px 0 0", color: "var(--aos-muted)", fontSize: "0.72rem" }}>独立 JSON 对象；仅显式应用后用于安全试跑，不写入画布或生产数据。</p>
+            </div>
+            <button type="button" className="btn" disabled={loading || saving || running} onClick={applyDryRunInputs}>应用 Inputs</button>
+          </div>
+          <textarea
+            aria-label="Dry-Run Inputs JSON"
+            value={inputsDraft}
+            disabled={loading || saving || running}
+            rows={4}
+            spellCheck={false}
+            onChange={(event) => {
+              setInputsDraft(event.target.value);
+              setAppliedInputs(null);
+              setInputsError("");
+              setMessage("");
+            }}
+            style={{ display: "block", width: "100%", resize: "vertical", fontFamily: "monospace" }}
+          />
+          {inputsError && <div role="alert" style={{ marginTop: 6, color: "var(--aos-red)", fontSize: "0.74rem" }}>{inputsError}</div>}
+          <div role="status" style={{ marginTop: 6, color: appliedInputs === null ? "var(--aos-muted)" : "var(--aos-green-700)", fontSize: "0.72rem" }}>
+            {appliedInputs === null ? "Inputs 尚未应用" : "Inputs 已显式应用"}
+          </div>
+        </section>
+      )}
+
       {loading && !graph && <p>正在加载 canonical Logic Graph…</p>}
       {!loading && !graph && !error && <p>Logic Graph 不可用</p>}
 
@@ -328,7 +590,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           selectedNodeId={selectedNodeId}
           zoom={zoom}
           inspectorCollapsed={inspectorCollapsed}
-          disabled={loading || saving}
+          disabled={loading || saving || running}
           onNodesChange={(nodes) => setGraph((current) => {
             if (!current) return current;
             const nodeIds = new Set(nodes.map((node) => node.id));
@@ -354,7 +616,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
             <LogicGraphInspector
               selectedNode={selectedNode}
               entryNodeIds={graph.entry_node_ids}
-              disabled={loading || saving}
+              disabled={loading || saving || running}
               onNodeChange={(node) => setGraph((current) => current ? {
                 ...current,
                 nodes: current.nodes.map((candidate) => candidate.id === node.id ? node : candidate),
@@ -374,11 +636,30 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
         />
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(240px, 1fr))", gap: 10, marginTop: 12 }}>
-        <section style={{ border: "1px solid var(--aos-border)", padding: 12, borderRadius: 2 }}>
-          <h3 style={{ margin: "0 0 6px", fontSize: "0.84rem" }}>运行历史</h3>
-          <p style={{ margin: 0, color: "var(--aos-muted)", fontSize: "0.75rem" }}>运行历史尚未接入 canonical API；Stage B 前不展示会话内伪历史。</p>
-        </section>
+      <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+        {graph?.persisted ? (
+          <LogicRunPanel
+            run={run}
+            runState={runState}
+            runError={runError}
+            history={history}
+            historyState={historyState}
+            historyError={historyError}
+            selectedRunId={selectedRunId}
+            hasMoreHistory={Boolean(historyCursor)}
+            loadingMoreHistory={loadingMoreHistory}
+            onSelectRun={(runId) => void loadRunDetail(runId)}
+            onLocateNode={locateRunNode}
+            onRetryRun={selectedRunId ? () => void loadRunDetail(selectedRunId) : undefined}
+            onRetryHistory={() => void refreshHistory()}
+            onLoadMoreHistory={() => void loadMoreHistory()}
+          />
+        ) : (
+          <section style={{ border: "1px solid var(--aos-border)", padding: 12, borderRadius: 2 }}>
+            <h3 style={{ margin: "0 0 6px", fontSize: "0.84rem" }}>运行历史</h3>
+            <p style={{ margin: 0, color: "var(--aos-muted)", fontSize: "0.75rem" }}>保存并回读确认后，才从服务端读取不可变运行历史。</p>
+          </section>
+        )}
         <section style={{ border: "1px solid var(--aos-border)", padding: 12, borderRadius: 2 }}>
           <h3 style={{ margin: "0 0 6px", fontSize: "0.84rem" }}>自动化</h3>
           <p style={{ margin: 0, color: "var(--aos-muted)", fontSize: "0.75rem" }}>自动化尚未接入发布版本契约；完成 Evals 与 Draft 门控前保持禁用。</p>

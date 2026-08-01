@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   LogicRunPanel,
+  type LogicRunNodeView,
   type LogicRunPanelProps,
   type LogicRunSummaryView,
   type LogicRunView,
@@ -12,6 +13,26 @@ import {
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const HASH = "a".repeat(64);
+
+function nodeView(overrides: Partial<LogicRunNodeView> = {}): LogicRunNodeView {
+  return {
+    node_id: "input-1",
+    kind: "input",
+    status: "executed",
+    started_at: "2026-08-01T08:00:00Z",
+    finished_at: "2026-08-01T08:00:00.003Z",
+    elapsed_ms: 3,
+    summary: "输入校验通过",
+    output: { accepted: true },
+    usage: null,
+    tool_call: null,
+    selected_branch_path: null,
+    proposed_edits: [],
+    error: null,
+    truncated: false,
+    ...overrides,
+  };
+}
 
 function runView(overrides: Partial<LogicRunView> = {}): LogicRunView {
   return {
@@ -26,58 +47,64 @@ function runView(overrides: Partial<LogicRunView> = {}): LogicRunView {
     finished_at: "2026-08-01T08:00:01Z",
     elapsed_ms: 812,
     total_tokens: null,
-    proposed_edits: [{ objectType: "WorkOrder", objectId: "wo-1" }],
+    proposed_edits: [{
+      action: "WorkOrder.updateNote",
+      object_id: "wo-1",
+      field: "note",
+      value: "建议人工复核",
+      source_node_id: "tool-1",
+      applied: false,
+    }],
     error: { code: "TOOL_UNAVAILABLE", message: "安全工具适配器不可用", node_id: "tool-1", reason: null },
     node_results: [
-      {
-        node_id: "input-1",
-        kind: "input",
-        status: "executed",
-        summary: "输入校验通过",
-        elapsed_ms: 3,
-        truncated: false,
-        usage: null,
-      },
-      {
+      nodeView(),
+      nodeView({
         node_id: "branch-1",
         kind: "branch",
-        status: "executed",
         summary: "选择高风险路径",
         elapsed_ms: 4,
-        truncated: false,
-        usage: null,
         selected_branch_path: "high-risk",
-      },
-      {
+        output: { selected: "high-risk" },
+      }),
+      nodeView({
         node_id: "low-1",
         kind: "transform",
         status: "skipped",
         summary: "分支未选中",
+        started_at: null,
+        finished_at: null,
         elapsed_ms: null,
-        truncated: false,
-        usage: null,
         error: { code: "NODE_SKIPPED", message: "分支未选中", node_id: "low-1", reason: "branch_not_selected" },
-      },
-      {
+      }),
+      nodeView({
         node_id: "tool-1",
         kind: "use_tool",
         status: "failed",
         summary: "工具调用失败",
         elapsed_ms: 16,
         truncated: true,
-        usage: null,
+        output: { records: ["wo-1"], safe: true },
+        tool_call: { tool: "work-order-reader", adapter: "readonly-v1", read_only: true, dry_run_safe: true },
+        proposed_edits: [{
+          action: "WorkOrder.updateNote",
+          object_id: "wo-1",
+          field: "note",
+          value: { recommendation: "人工复核" },
+          source_node_id: "tool-1",
+          applied: false,
+        }],
         error: { code: "TOOL_UNAVAILABLE", message: "安全工具适配器不可用", node_id: "tool-1", reason: null },
-      },
-      {
+      }),
+      nodeView({
         node_id: "action-1",
         kind: "apply_action",
         status: "canceled",
         summary: "因前序失败取消",
+        started_at: null,
+        finished_at: null,
         elapsed_ms: null,
-        truncated: false,
-        usage: null,
         error: { code: "NODE_CANCELED", message: "因前序失败取消", node_id: "action-1", reason: "fail_fast" },
-      },
+      }),
     ],
     ...overrides,
   };
@@ -164,6 +191,14 @@ describe("LogicRunPanel", () => {
     expect(host.textContent).toContain("branch_not_selected");
     expect(host.textContent).toContain("fail_fast");
     expect(host.textContent).toContain("TOOL_UNAVAILABLE");
+    expect(host.textContent).toContain("安全工具调用");
+    expect(host.textContent).toContain("work-order-reader");
+    expect(host.textContent).toContain("read_only=true");
+    expect(host.textContent).toContain("安全输出（已截断）");
+    expect(host.textContent).toContain("服务端已按安全上限截断输出");
+    expect(host.textContent).toContain("节点提议编辑（1）");
+    expect(host.textContent).toContain("运行级提议编辑（1）");
+    expect(host.textContent).toContain("applied=false");
 
     await act(async () => findButton(host, "定位节点 tool-1").click());
     expect(onLocateNode).toHaveBeenCalledWith("tool-1");
@@ -234,9 +269,11 @@ describe("LogicRunPanel", () => {
   });
 
   it("production_written 不为 false 时拒绝把结果展示为安全试跑", async () => {
-    await render(props({ run: runView({ production_written: true }) }));
+    const unsafeRun = { ...runView(), production_written: true } as unknown as LogicRunView;
+    await render(props({ run: unsafeRun }));
     expect(host.textContent).toContain("拒绝展示为安全试跑");
     expect(host.textContent).toContain("production_written 不是 false");
     expect(host.textContent).not.toContain("不写生产 ·");
+    expect(host.textContent).not.toContain("逐节点结果");
   });
 });

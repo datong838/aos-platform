@@ -76,6 +76,11 @@
   outline: none;
 }
 
+.logic-run-panel__history-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
 .logic-run-panel__history-item.is-selected {
   box-shadow: inset 3px 0 0 var(--aos-indigo-600, #4f46e5);
 }
@@ -233,6 +238,45 @@
 .logic-run-panel__summary {
   font-size: 0.76rem;
   line-height: 1.45;
+}
+
+.logic-run-panel__drilldown {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--aos-border);
+  border-radius: 3px;
+  background: var(--aos-surface-muted, #f8fafc);
+  font-size: 0.74rem;
+}
+
+.logic-run-panel__drilldown > summary {
+  color: var(--aos-indigo-600, #4f46e5);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.logic-run-panel__drilldown > ol {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.logic-run-panel__json {
+  max-height: 220px;
+  margin: 8px 0 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--aos-text);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.logic-run-panel__truncated {
+  margin-top: 8px !important;
+  color: var(--aos-amber-700, #92400e);
+  font-size: 0.72rem;
 }
 
 .logic-run-panel__error,

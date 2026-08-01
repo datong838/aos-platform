@@ -1,73 +1,22 @@
 import type { ReactNode } from "react";
 
+import type {
+  JsonValue,
+  LogicDryRun,
+  LogicNodeResult,
+  LogicNodeRunStatus,
+  LogicProposedEdit,
+  LogicRunStatus as CanonicalLogicRunStatus,
+  LogicRunSummary,
+} from "./logicRunContracts";
 import "./LogicRunPanel.css";
 
-export type LogicRunStatus = "succeeded" | "failed";
-export type LogicRunNodeStatus = "executed" | "skipped" | "failed" | "canceled";
+export type LogicRunStatus = CanonicalLogicRunStatus;
+export type LogicRunNodeStatus = LogicNodeRunStatus;
 export type LogicRunLoadState = "idle" | "loading" | "ready" | "error";
-
-export interface LogicRunErrorView {
-  code: string;
-  message: string;
-  node_id?: string | null;
-  reason: string | null;
-}
-
-export interface LogicRunUsageView {
-  model: string | null;
-  input_tokens?: number | null;
-  output_tokens?: number | null;
-  total_tokens: number | null;
-}
-
-export interface LogicRunNodeView {
-  node_id: string;
-  kind: string;
-  status: LogicRunNodeStatus;
-  summary: string;
-  started_at?: string | null;
-  finished_at?: string | null;
-  elapsed_ms: number | null;
-  truncated: boolean;
-  usage?: LogicRunUsageView | null;
-  selected_branch_path?: string | null;
-  proposed_edits?: readonly unknown[];
-  output?: unknown;
-  error?: LogicRunErrorView | null;
-}
-
-export interface LogicRunView {
-  run_id: string;
-  graph_id: string;
-  mode: "dry_run";
-  status: LogicRunStatus;
-  evaluated_revision: number;
-  graph_hash: string;
-  production_written: boolean;
-  started_at: string;
-  finished_at: string;
-  elapsed_ms: number;
-  total_tokens: number | null;
-  node_results: readonly LogicRunNodeView[];
-  proposed_edits: readonly unknown[];
-  error?: LogicRunErrorView | null;
-}
-
-export interface LogicRunSummaryView {
-  run_id: string;
-  graph_id: string;
-  mode: "dry_run";
-  status: LogicRunStatus;
-  evaluated_revision: number;
-  graph_hash: string;
-  production_written: boolean;
-  started_at: string;
-  finished_at: string;
-  elapsed_ms: number;
-  total_tokens: number | null;
-  node_counts: Partial<Record<LogicRunNodeStatus, number>>;
-  error_code: string | null;
-}
+export type LogicRunNodeView = LogicNodeResult;
+export type LogicRunView = LogicDryRun;
+export type LogicRunSummaryView = LogicRunSummary;
 
 export interface LogicRunPanelProps {
   run: LogicRunView | null;
@@ -106,6 +55,33 @@ function StatusBadge({ status }: { status: LogicRunStatus | LogicRunNodeStatus }
   return <span className={`logic-run-panel__status is-${status}`}>{label}</span>;
 }
 
+function JsonPreview({ value }: { value: JsonValue }) {
+  return <pre className="logic-run-panel__json">{JSON.stringify(value, null, 2)}</pre>;
+}
+
+function ProposedEdits({ edits, title }: { edits: readonly LogicProposedEdit[]; title: string }) {
+  if (edits.length === 0) return null;
+  return (
+    <details className="logic-run-panel__drilldown">
+      <summary>{title}（{edits.length}）</summary>
+      <ol>
+        {edits.map((edit, index) => (
+          <li key={`${edit.source_node_id}-${edit.object_id}-${edit.field}-${index}`}>
+            <dl className="logic-run-panel__facts is-compact">
+              <div><dt>动作</dt><dd>{edit.action}</dd></div>
+              <div><dt>对象</dt><dd>{edit.object_id}</dd></div>
+              <div><dt>字段</dt><dd>{edit.field}</dd></div>
+              <div><dt>来源节点</dt><dd>{edit.source_node_id}</dd></div>
+              <div><dt>应用状态</dt><dd><code>applied=false</code></dd></div>
+            </dl>
+            <JsonPreview value={edit.value} />
+          </li>
+        ))}
+      </ol>
+    </details>
+  );
+}
+
 function ErrorState({
   title,
   message,
@@ -128,11 +104,11 @@ function NodeResult({
   node,
   onLocateNode,
 }: {
-  node: LogicRunNodeView;
+  node: LogicNodeResult;
   onLocateNode?: (nodeId: string) => void;
 }) {
   const canLocate = Boolean(onLocateNode && (node.status === "failed" || node.error));
-  const proposedCount = node.proposed_edits?.length ?? 0;
+  const proposedCount = node.proposed_edits.length;
   return (
     <li className={`logic-run-panel__node is-${node.status}`} data-node-id={node.node_id}>
       <div className="logic-run-panel__node-heading">
@@ -168,6 +144,23 @@ function NodeResult({
           <span>{node.error.message}</span>
         </div>
       )}
+      {node.tool_call && (
+        <details className="logic-run-panel__drilldown">
+          <summary>安全工具调用</summary>
+          <dl className="logic-run-panel__facts is-compact">
+            <div><dt>工具</dt><dd>{node.tool_call.tool}</dd></div>
+            <div><dt>适配器</dt><dd>{node.tool_call.adapter}</dd></div>
+            <div><dt>只读</dt><dd><code>read_only=true</code></dd></div>
+            <div><dt>Dry-Run 安全</dt><dd><code>dry_run_safe=true</code></dd></div>
+          </dl>
+        </details>
+      )}
+      <details className="logic-run-panel__drilldown">
+        <summary>安全输出{node.truncated ? "（已截断）" : ""}</summary>
+        {node.truncated && <p className="logic-run-panel__truncated" role="status">服务端已按安全上限截断输出。</p>}
+        <JsonPreview value={node.output} />
+      </details>
+      <ProposedEdits edits={node.proposed_edits} title="节点提议编辑" />
     </li>
   );
 }
@@ -180,6 +173,20 @@ function RunDetail({
   onLocateNode?: (nodeId: string) => void;
 }) {
   const writeContractBroken = run.production_written !== false;
+  if (writeContractBroken) {
+    return (
+      <section className="logic-run-panel__detail" aria-label="运行详情">
+        <div className="logic-run-panel__detail-heading">
+          <div>
+            <span className="logic-run-panel__eyebrow">服务端运行证据</span>
+            <h3>{run.run_id}</h3>
+          </div>
+          <StatusBadge status={run.status} />
+        </div>
+        <ErrorState title="拒绝展示为安全试跑" message="服务端返回的 production_written 不是 false。" />
+      </section>
+    );
+  }
   return (
     <section className="logic-run-panel__detail" aria-label="运行详情">
       <div className="logic-run-panel__detail-heading">
@@ -190,13 +197,9 @@ function RunDetail({
         <StatusBadge status={run.status} />
       </div>
 
-      {writeContractBroken ? (
-        <ErrorState title="拒绝展示为安全试跑" message="服务端返回的 production_written 不是 false。" />
-      ) : (
-        <div className="logic-run-panel__safety" role="status">
-          不写生产 · <code>production_written=false</code>
-        </div>
-      )}
+      <div className="logic-run-panel__safety" role="status">
+        不写生产 · <code>production_written=false</code>
+      </div>
 
       <dl className="logic-run-panel__facts">
         <div><dt>模式</dt><dd><code>{run.mode}</code></dd></div>
@@ -224,6 +227,8 @@ function RunDetail({
           ) : undefined}
         />
       )}
+
+      <ProposedEdits edits={run.proposed_edits} title="运行级提议编辑" />
 
       <div className="logic-run-panel__nodes-heading">
         <h4>逐节点结果</h4>
@@ -287,7 +292,7 @@ function HistoryList({
         <p className="logic-run-panel__empty">暂无服务端运行记录。</p>
       )}
 
-      {history.length > 0 && (
+      {historyState !== "error" && history.length > 0 && (
         <ul className="logic-run-panel__history-list">
           {history.map((item) => {
             const selected = item.run_id === selectedRunId;
@@ -301,7 +306,10 @@ function HistoryList({
                   type="button"
                   className={`logic-run-panel__history-item${selected ? " is-selected" : ""}`}
                   aria-pressed={selected}
-                  onClick={() => onSelectRun(item.run_id)}
+                  disabled={item.production_written !== false}
+                  onClick={() => {
+                    if (item.production_written === false) onSelectRun(item.run_id);
+                  }}
                 >
                   <span className="logic-run-panel__history-title">
                     <strong>{item.run_id}</strong>
@@ -322,7 +330,7 @@ function HistoryList({
         </ul>
       )}
 
-      {hasMoreHistory && (
+      {historyState !== "error" && hasMoreHistory && (
         <button
           type="button"
           className="logic-run-panel__load-more"
@@ -351,7 +359,7 @@ export function LogicRunPanel(props: LogicRunPanelProps) {
   } else if (runState === "error") {
     detail = (
       <ErrorState
-        title="运行详情读取失败"
+        title="安全试跑或运行详情读取失败"
         message={runError || "服务端未提供错误详情。"}
         action={onRetryRun ? (
           <button type="button" className="logic-run-panel__link-button" onClick={onRetryRun}>重试</button>
