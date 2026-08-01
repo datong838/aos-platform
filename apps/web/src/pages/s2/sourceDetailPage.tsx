@@ -3,7 +3,7 @@
  * 统一壳：Tab · 探索三栏 · 右侧信息；探索区仅为采样预览，不冒充全量。
  * W3-C7：Schema 树（schema→表→列）优先接 phase6 datasource API；失败标演示路径。
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { apiGet, apiPost } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
@@ -55,6 +55,36 @@ export type SchemaNode = {
   description?: string;
   tables: SchemaTable[];
 };
+
+export type SchemaTreeSource = {
+  mode: "live" | "api_demo" | "fallback";
+  primaryError?: string;
+};
+
+export type AppliedSchemaTree = {
+  schemaTree: SchemaNode[];
+  expandedSchemas: Record<string, boolean>;
+  activeSchemaTable: { schema: string; table: string } | null;
+  activeColumns: SchemaColumn[];
+  source: SchemaTreeSource;
+  clearPreview: boolean;
+};
+
+/** 所有 Schema 来源都经此处同步树、首表、列和清空语义。 */
+export function applySchemaTree(tree: SchemaNode[], source: SchemaTreeSource): AppliedSchemaTree {
+  const firstSchema = tree.find((schema) => schema.tables.length > 0);
+  const firstTable = firstSchema?.tables[0];
+  return {
+    schemaTree: tree,
+    expandedSchemas: Object.fromEntries(tree.map((schema) => [schema.name, true])),
+    activeSchemaTable: firstSchema && firstTable
+      ? { schema: firstSchema.name, table: firstTable.name }
+      : null,
+    activeColumns: firstTable?.columns || [],
+    source,
+    clearPreview: !firstTable,
+  };
+}
 
 /** 探索页只读采样窗口（非 ingest 上限） */
 const SAMPLE_ROW_LIMIT = 50;
@@ -180,6 +210,12 @@ export function schemaPathLabel(demo: boolean): string {
   return demo ? "演示路径" : "连接器 Schema";
 }
 
+export function schemaSourceLabel(source: SchemaTreeSource): string {
+  if (source.mode === "fallback") return "演示回落";
+  if (source.mode === "api_demo") return "API 演示数据";
+  return "连接器 Schema";
+}
+
 export function formatColumnBadge(col: SchemaColumn): string {
   const parts = [col.datatype || "—"];
   if (col.primary_key) parts.push("PK");
@@ -189,11 +225,11 @@ export function formatColumnBadge(col: SchemaColumn): string {
 
 export function SourceDetailPage() {
   const { sourceId = "" } = useParams();
-  const { data: srcData, err: srcErr, reload } = useJsonGet<{ items: SourceRow[] }>("/v1/sources");
-  const { data: pipeData } = useJsonGet<{ items: PipelineRow[] }>("/v1/pipelines");
-  const { data: dsData } = useJsonGet<{ items: DatasetRow[] }>("/v1/datasets");
-  const { data: syncData } = useJsonGet<{ items: SyncRow[] }>("/v1/syncs");
-  const { data: pluginData } = useJsonGet<{ items: { id: string; nameZh?: string; name?: string }[] }>(
+  const { data: srcData, err: srcErr, reload: reloadSources } = useJsonGet<{ items: SourceRow[] }>("/v1/sources");
+  const { data: pipeData, reload: reloadPipelines } = useJsonGet<{ items: PipelineRow[] }>("/v1/pipelines");
+  const { data: dsData, reload: reloadDatasets } = useJsonGet<{ items: DatasetRow[] }>("/v1/datasets");
+  const { data: syncData, reload: reloadSyncs } = useJsonGet<{ items: SyncRow[] }>("/v1/syncs");
+  const { data: pluginData, reload: reloadPlugins } = useJsonGet<{ items: { id: string; nameZh?: string; name?: string }[] }>(
     "/v1/connector-plugins",
   );
 
@@ -222,15 +258,23 @@ export function SourceDetailPage() {
   const [previewBusy, setPreviewBusy] = useState(false);
   const [sampleTick, setSampleTick] = useState(0);
   const [previewDemo, setPreviewDemo] = useState(false);
+  const [previewSource, setPreviewSource] = useState<"live" | "dataset" | "object" | "demo">("live");
+  const [previewPrimaryErr, setPreviewPrimaryErr] = useState<string | null>(null);
 
   // W3-C7 schema tree
   const [schemaTree, setSchemaTree] = useState<SchemaNode[]>([]);
   const [schemaDemo, setSchemaDemo] = useState(false);
+  const [schemaErr, setSchemaErr] = useState<string | null>(null);
+  const [schemaSource, setSchemaSource] = useState<SchemaTreeSource>({ mode: "live" });
   const [schemaBusy, setSchemaBusy] = useState(false);
+  const [schemaTick, setSchemaTick] = useState(0);
   const [tableSearch, setTableSearch] = useState("");
   const [expandedSchemas, setExpandedSchemas] = useState<Record<string, boolean>>({});
   const [activeSchemaTable, setActiveSchemaTable] = useState<{ schema: string; table: string } | null>(null);
   const [activeColumns, setActiveColumns] = useState<SchemaColumn[]>([]);
+  const routeGenerationRef = useRef(0);
+  const schemaRequestRef = useRef(0);
+  const previewRequestRef = useRef(0);
 
   const tableEntries = useMemo(() => {
     return pipelines.map((p) => {
@@ -252,14 +296,60 @@ export function SourceDetailPage() {
     [schemaTree, tableSearch],
   );
 
+  const applySchemaSnapshot = useCallback((tree: SchemaNode[], treeSource: SchemaTreeSource) => {
+    const applied = applySchemaTree(tree, treeSource);
+    setSchemaTree(applied.schemaTree);
+    setExpandedSchemas(applied.expandedSchemas);
+    setActiveSchemaTable(applied.activeSchemaTable);
+    setActiveColumns(applied.activeColumns);
+    setSchemaSource(applied.source);
+    setSchemaDemo(applied.source.mode !== "live");
+    setSchemaErr(applied.source.primaryError || null);
+    if (applied.clearPreview) {
+      previewRequestRef.current += 1;
+      setPreview(null);
+      setPreviewErr(null);
+      setPreviewPrimaryErr(null);
+      setPreviewDemo(false);
+      setPreviewSource("live");
+      setPreviewBusy(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    routeGenerationRef.current += 1;
+    schemaRequestRef.current += 1;
+    previewRequestRef.current += 1;
+    setActiveTable("");
+    setSchemaTree([]);
+    setExpandedSchemas({});
+    setActiveSchemaTable(null);
+    setActiveColumns([]);
+    setSchemaErr(null);
+    setSchemaSource({ mode: "live" });
+    setSchemaDemo(false);
+    setPreview(null);
+    setPreviewErr(null);
+    setPreviewPrimaryErr(null);
+    setPreviewDemo(false);
+    setPreviewSource("live");
+    setTableSearch("");
+  }, [sourceId]);
+
   useEffect(() => {
     if (tableEntries[0]?.id) setActiveTable(tableEntries[0].id);
   }, [sourceId, tableEntries]);
 
-  // W3-C7 · 加载 Schema 树
+  // W3-C7 / W3C-W1 · 加载 Schema 树，隔离路由与同路由旧请求。
   useEffect(() => {
     if (!sourceId) return;
+    const routeGeneration = routeGenerationRef.current;
+    const requestId = ++schemaRequestRef.current;
     let cancelled = false;
+    const isCurrent = () =>
+      !cancelled &&
+      routeGenerationRef.current === routeGeneration &&
+      schemaRequestRef.current === requestId;
     (async () => {
       setSchemaBusy(true);
       try {
@@ -269,6 +359,7 @@ export function SourceDetailPage() {
         const schemas = schRes.items || [];
         const demo = Boolean(schRes.demo);
         const tree: SchemaNode[] = [];
+        const columnErrors: string[] = [];
         for (const sch of schemas) {
           const tblRes = await apiGet<{ items?: { name: string; row_count?: number }[] }>(
             `/api/datasource/sources/${encodeURIComponent(sourceId)}/schemas/${encodeURIComponent(sch.name)}/tables`,
@@ -286,42 +377,36 @@ export function SourceDetailPage() {
                 primary_key: c.primary_key,
                 nullable: c.nullable,
               }));
-            } catch {
-              columns = [];
+            } catch (error) {
+              columnErrors.push(`${sch.name}.${tbl.name}: ${String((error as Error).message || error)}`);
             }
             tables.push({ name: tbl.name, row_count: tbl.row_count, columns });
           }
           tree.push({ name: sch.name, description: sch.description, tables });
         }
-        if (cancelled) return;
-        if (tree.length === 0) {
-          const fallback = demoSchemaTree(source?.type);
-          setSchemaTree(fallback);
-          setSchemaDemo(true);
-          setExpandedSchemas(Object.fromEntries(fallback.map((s) => [s.name, true])));
+        if (!isCurrent()) return;
+        if (tree.length === 0 && demo) {
+          applySchemaSnapshot(demoSchemaTree(source?.type), { mode: "api_demo" });
         } else {
-          setSchemaTree(tree);
-          setSchemaDemo(demo);
-          setExpandedSchemas(Object.fromEntries(tree.map((s) => [s.name, true])));
-          const first = tree[0]?.tables[0];
-          if (first) setActiveSchemaTable({ schema: tree[0].name, table: first.name });
+          applySchemaSnapshot(tree, {
+            mode: demo ? "api_demo" : "live",
+            ...(columnErrors.length ? { primaryError: `部分列读取失败：${columnErrors.join("；")}` } : {}),
+          });
         }
-      } catch {
-        if (cancelled) return;
-        const fallback = demoSchemaTree(source?.type);
-        setSchemaTree(fallback);
-        setSchemaDemo(true);
-        setExpandedSchemas(Object.fromEntries(fallback.map((s) => [s.name, true])));
-        const first = fallback[0]?.tables[0];
-        if (first) setActiveSchemaTable({ schema: fallback[0].name, table: first.name });
+      } catch (error) {
+        if (!isCurrent()) return;
+        applySchemaSnapshot(demoSchemaTree(source?.type), {
+          mode: "fallback",
+          primaryError: String((error as Error).message || error),
+        });
       } finally {
-        if (!cancelled) setSchemaBusy(false);
+        if (isCurrent()) setSchemaBusy(false);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [sourceId, source?.type]);
+  }, [applySchemaSnapshot, schemaTick, sourceId, source?.type]);
 
   useEffect(() => {
     if (!activeSchemaTable) {
@@ -334,9 +419,16 @@ export function SourceDetailPage() {
   }, [activeSchemaTable, schemaTree]);
 
   const loadSample = useCallback(async () => {
+    const routeGeneration = routeGenerationRef.current;
+    const requestId = ++previewRequestRef.current;
+    const isCurrent = () =>
+      routeGenerationRef.current === routeGeneration &&
+      previewRequestRef.current === requestId;
     setPreviewBusy(true);
     setPreviewErr(null);
     setPreviewDemo(false);
+    setPreviewPrimaryErr(null);
+    let primaryError: string | null = null;
     try {
       // 优先连接器 schema preview
       if (activeSchemaTable) {
@@ -349,11 +441,13 @@ export function SourceDetailPage() {
               limit: SAMPLE_ROW_LIMIT,
             },
           );
+          if (!isCurrent()) return;
           setPreview(result);
           setPreviewDemo(Boolean(result.demo));
+          setPreviewSource(result.demo ? "demo" : "live");
           return;
-        } catch {
-          /* fall through */
+        } catch (error) {
+          primaryError = String((error as Error).message || error);
         }
       }
       if (activeEntry?.datasetRid || activeEntry?.ot) {
@@ -369,8 +463,18 @@ export function SourceDetailPage() {
             limit: SAMPLE_ROW_LIMIT,
           });
         }
+        if (!isCurrent()) return;
         setPreview(result);
         setPreviewDemo(false);
+        setPreviewSource(activeEntry.datasetRid ? "dataset" : "object");
+        setPreviewPrimaryErr(primaryError);
+        return;
+      }
+      if (schemaSource.mode === "live") {
+        if (!isCurrent()) return;
+        setPreview(null);
+        setPreviewSource("live");
+        setPreviewPrimaryErr(primaryError);
         return;
       }
       // 最终演示行
@@ -391,13 +495,18 @@ export function SourceDetailPage() {
         demo: true,
       });
       setPreviewDemo(true);
+      setPreviewSource("demo");
+      setPreviewPrimaryErr(primaryError);
     } catch (e) {
+      if (!isCurrent()) return;
+      setPreview(null);
       setPreviewErr(e instanceof Error ? e.message : String(e));
-      setPreviewDemo(true);
+      setPreviewDemo(false);
+      setPreviewPrimaryErr(primaryError);
     } finally {
-      setPreviewBusy(false);
+      if (isCurrent()) setPreviewBusy(false);
     }
-  }, [activeSchemaTable, activeEntry?.datasetRid, activeEntry?.ot, activeColumns, sourceId]);
+  }, [activeSchemaTable, activeEntry?.datasetRid, activeEntry?.ot, activeColumns, schemaSource.mode, sourceId]);
 
   useEffect(() => {
     void loadSample();
@@ -419,6 +528,20 @@ export function SourceDetailPage() {
     ? `${activeSchemaTable.schema}.${activeSchemaTable.table}`
     : activeEntry?.label || "—";
 
+  function refreshAll() {
+    previewRequestRef.current += 1;
+    setPreview(null);
+    setPreviewErr(null);
+    setPreviewPrimaryErr(null);
+    setPreviewSource("live");
+    reloadSources();
+    reloadPipelines();
+    reloadDatasets();
+    reloadSyncs();
+    reloadPlugins();
+    setSchemaTick((tick) => tick + 1);
+  }
+
   return (
     <PageChrome title={sourceId || "数据源"} lede={source ? sourceSubtitle(source.type) : "Source 详情 · 连接器"}>
       <BpToolbar>
@@ -434,7 +557,7 @@ export function SourceDetailPage() {
         <Link to={`/data/pipelines?sourceId=${encodeURIComponent(sourceId)}`} className="btn-nav">
           管道 →
         </Link>
-        <button type="button" className="btn" onClick={() => reload()}>
+        <button type="button" className="btn" onClick={refreshAll}>
           刷新
         </button>
       </BpToolbar>
@@ -475,9 +598,14 @@ export function SourceDetailPage() {
                 <div className="bp-section-label" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span>{sourceId}</span>
                   <span className={`w3-c6c7-path-badge ${schemaDemo ? "is-demo" : "is-live"}`}>
-                    {schemaPathLabel(schemaDemo)}
+                    {schemaSourceLabel(schemaSource)}
                   </span>
                 </div>
+                {schemaErr && (
+                  <p className="error" role="alert">
+                    Schema 主路径失败：{schemaErr}；当前来源：{schemaSourceLabel(schemaSource)}
+                  </p>
+                )}
                 <nav className="bp-src-detail-nav w3-c7-schema-nav">
                   {schemaBusy && <p className="muted">加载 Schema…</p>}
                   {!schemaBusy && filteredTree.length === 0 && <p className="muted">暂无 Schema</p>}
@@ -565,6 +693,11 @@ export function SourceDetailPage() {
                           演示路径
                         </span>
                       )}
+                      {!previewDemo && previewSource !== "live" && (
+                        <span className="w3-c6c7-path-badge is-live" style={{ marginLeft: 8 }}>
+                          {previewSource === "dataset" ? "Dataset 回落" : "对象实例回落"}
+                        </span>
+                      )}
                     </p>
                   </div>
                   <button
@@ -577,6 +710,18 @@ export function SourceDetailPage() {
                   </button>
                 </div>
                 <div className="bp-src-detail-preview">
+                  {previewPrimaryErr && (
+                    <p className="error" role="alert">
+                      连接器采样失败：{previewPrimaryErr}；当前来源：
+                      {previewSource === "dataset"
+                        ? "Dataset"
+                        : previewSource === "object"
+                          ? "对象实例"
+                          : previewSource === "demo"
+                            ? "演示路径"
+                            : "无可用回落"}
+                    </p>
+                  )}
                   {previewErr && <p className="error">{previewErr}</p>}
                   {!previewErr && cols.length > 0 && (
                     <table className="bp-pipe-preview-table">

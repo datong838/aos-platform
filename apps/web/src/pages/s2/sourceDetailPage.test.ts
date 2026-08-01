@@ -4,6 +4,7 @@
 import { describe, it, expect } from "vitest";
 import {
   demoSchemaTree,
+  applySchemaTree,
   filterSchemaTree,
   flattenTables,
   schemaPathLabel,
@@ -74,5 +75,32 @@ describe("W3-C7 flattenTables / badges", () => {
   it("schemaPathLabel", () => {
     expect(schemaPathLabel(true)).toBe("演示路径");
     expect(schemaPathLabel(false)).toBe("连接器 Schema");
+  });
+});
+
+describe("Wave 3C W1 · applySchemaTree", () => {
+  it("统一同步首表、列、展开状态与来源", () => {
+    const tree: SchemaNode[] = [{
+      name: "fresh",
+      tables: [{ name: "orders", columns: [{ name: "id", datatype: "BIGINT" }] }],
+    }];
+    const applied = applySchemaTree(tree, { mode: "live" });
+    expect(applied.schemaTree).toBe(tree);
+    expect(applied.expandedSchemas).toEqual({ fresh: true });
+    expect(applied.activeSchemaTable).toEqual({ schema: "fresh", table: "orders" });
+    expect(applied.activeColumns).toEqual([{ name: "id", datatype: "BIGINT" }]);
+    expect(applied.source).toEqual({ mode: "live" });
+    expect(applied.clearPreview).toBe(false);
+  });
+
+  it("空树清除旧选择、列与 preview", () => {
+    const source = { mode: "fallback" as const, primaryError: "schema failed" };
+    const applied = applySchemaTree([], source);
+    expect(applied.schemaTree).toEqual([]);
+    expect(applied.expandedSchemas).toEqual({});
+    expect(applied.activeSchemaTable).toBeNull();
+    expect(applied.activeColumns).toEqual([]);
+    expect(applied.source).toEqual(source);
+    expect(applied.clearPreview).toBe(true);
   });
 });

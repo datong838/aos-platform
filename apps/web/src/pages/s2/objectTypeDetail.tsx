@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiGet, apiPut } from "../../api/client";
 import { getOntologyClient } from "../../api/ontologyClient";
@@ -29,6 +29,14 @@ export type OtDetailMeta = {
   storageType?: string;
   createdBy?: string;
   visibility?: string;
+};
+
+type OtDetailResponse = OtDetailMeta & {
+  id?: string;
+  name?: string;
+  description?: string;
+  published?: boolean;
+  properties?: PropDef[];
 };
 
 export type OtMetaKvItem = { label: string; value: string; tone?: "ok" | "warn" | "muted" };
@@ -297,7 +305,29 @@ export function ObjectTypeDetailPanel({
   const [metaMsg, setMetaMsg] = useState("");
   const [metaErr, setMetaErr] = useState("");
   const [otMeta, setOtMeta] = useState<OtDetailMeta | null>(null);
+  const requestScopeRef = useRef("");
+  requestScopeRef.current = `${typeId}\u0000${branchId}`;
   const canEditBranch = branchAllowsOverlayWrite(branchId, branchReadonly);
+
+  function applyDetailSnapshot(snapshot: OtDetailResponse) {
+    setMetaName(snapshot.name || typeId);
+    setMetaDesc(snapshot.description || "");
+    setMetaPublish(Boolean(snapshot.published));
+    setDraftProps(snapshot.properties || []);
+    setOtMeta({
+      rid: snapshot.rid,
+      apiName: snapshot.apiName,
+      primaryKey: snapshot.primaryKey,
+      titleKey: snapshot.titleKey,
+      displayName: snapshot.displayName,
+      pluralName: snapshot.pluralName,
+      backingDataset: snapshot.backingDataset,
+      syncStrategy: snapshot.syncStrategy,
+      storageType: snapshot.storageType,
+      createdBy: snapshot.createdBy,
+      visibility: snapshot.visibility,
+    });
+  }
 
   useEffect(() => {
     setTab("overview");
@@ -310,6 +340,7 @@ export function ObjectTypeDetailPanel({
     setDraftProps(properties || []);
     setMetaMsg("");
     setMetaErr("");
+    setMetaBusy(false);
   }, [typeId, typeName, description, published, properties]);
 
   useEffect(() => {
@@ -318,42 +349,79 @@ export function ObjectTypeDetailPanel({
       setEditStatus("");
       setEditMsg("");
       setEditErr("");
+      setEditBusy(false);
       return;
     }
     setEditTitle(String(detail.title ?? ""));
     setEditStatus(String(detail.status ?? ""));
     setEditMsg("");
     setEditErr("");
+    setEditBusy(false);
   }, [detail]);
 
   async function saveMeta() {
+    const requestScope = requestScopeRef.current;
     setMetaBusy(true);
     setMetaMsg("");
     setMetaErr("");
+    let writeCommitted = false;
     try {
       const cleaned = draftProps
         .map((p) => ({ name: p.name.trim(), type: (p.type || "string").trim() || "string" }))
         .filter((p) => p.name);
-      await apiPut(`/v1/ontology/object-types/${encodeURIComponent(typeId)}`, {
+      const expected = {
         name: metaName.trim() || typeId,
         description: metaDesc,
         properties: cleaned,
         publish: metaPublish,
-      });
-      setMetaMsg("已保存 Object Type 元数据");
+      };
+      const written = await apiPut<OtDetailResponse & { publish?: boolean }>(
+        `/v1/ontology/object-types/${encodeURIComponent(typeId)}`,
+        expected,
+      );
+      writeCommitted = true;
+      if (
+        written.id !== typeId ||
+        written.name !== expected.name ||
+        (written.description || "") !== expected.description ||
+        Boolean(written.published ?? written.publish) !== expected.publish ||
+        JSON.stringify(written.properties || []) !== JSON.stringify(expected.properties)
+      ) {
+        throw new Error("写入回包与提交内容不一致");
+      }
+      if (requestScopeRef.current !== requestScope) return;
+      const verified = await apiGet<OtDetailResponse>(
+        `/v1/ontology/object-types/${encodeURIComponent(typeId)}`,
+      );
+      if (
+        verified.id !== typeId ||
+        verified.name !== expected.name ||
+        (verified.description || "") !== expected.description ||
+        Boolean(verified.published) !== expected.publish ||
+        JSON.stringify(verified.properties || []) !== JSON.stringify(expected.properties)
+      ) {
+        throw new Error("详情重读结果与提交内容不一致");
+      }
+      if (requestScopeRef.current !== requestScope) return;
+      applyDetailSnapshot(verified);
+      setMetaMsg("已保存并重读 Object Type 详情");
       onMetaSaved?.();
     } catch (e) {
-      setMetaErr(String((e as Error).message || e));
+      if (requestScopeRef.current !== requestScope) return;
+      const detail = String((e as Error).message || e);
+      setMetaErr(writeCommitted ? `写入已提交但详情重读失败（verify_failed）：${detail}` : detail);
     } finally {
-      setMetaBusy(false);
+      if (requestScopeRef.current === requestScope) setMetaBusy(false);
     }
   }
 
   async function saveBranchOverlay() {
     if (!detail?.id || !canEditBranch) return;
+    const requestScope = requestScopeRef.current;
     setEditBusy(true);
     setEditMsg("");
     setEditErr("");
+    let writeCommitted = false;
     try {
       const props: Record<string, unknown> = { ...detail };
       delete props.id;
@@ -361,18 +429,36 @@ export function ObjectTypeDetailPanel({
       delete props.branch;
       props.title = editTitle;
       props.status = editStatus;
-      await getOntologyClient().putObject(
+      const written = await getOntologyClient().putObject(
         typeId,
         String(detail.id),
         { props, op: "upsert" },
         { branch: branchId },
       );
-      setEditMsg(`已写入分支 overlay · ${branchId}`);
+      writeCommitted = true;
+      if (
+        written.ok !== true ||
+        written.objectType !== typeId ||
+        written.objectId !== String(detail.id) ||
+        written.branch !== branchId
+      ) {
+        throw new Error("写入回包与目标对象或分支不一致");
+      }
+      if (requestScopeRef.current !== requestScope) return;
+      const verified = await apiGet<OtDetailResponse>(
+        `/v1/ontology/object-types/${encodeURIComponent(typeId)}`,
+      );
+      if (verified.id !== typeId) throw new Error("详情重读目标不一致");
+      if (requestScopeRef.current !== requestScope) return;
+      applyDetailSnapshot(verified);
+      setEditMsg(`已写入分支 overlay 并重读 Object Type 详情 · ${branchId}`);
       onBranchSaved?.();
     } catch (e) {
-      setEditErr(String((e as Error).message || e));
+      if (requestScopeRef.current !== requestScope) return;
+      const detailMessage = String((e as Error).message || e);
+      setEditErr(writeCommitted ? `写入已提交但详情重读失败（verify_failed）：${detailMessage}` : detailMessage);
     } finally {
-      setEditBusy(false);
+      if (requestScopeRef.current === requestScope) setEditBusy(false);
     }
   }
 
@@ -414,7 +500,7 @@ export function ObjectTypeDetailPanel({
     setOtMeta(null);
     (async () => {
       try {
-        const d = await apiGet<OtDetailMeta & { id?: string }>(
+        const d = await apiGet<OtDetailResponse>(
           `/v1/ontology/object-types/${encodeURIComponent(typeId)}`,
         );
         if (cancelled) return;

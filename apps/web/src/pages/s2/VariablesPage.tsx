@@ -302,6 +302,7 @@ export function VariablesPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
   const [editor, setEditor] = useState<EditorState | null>(null);
 
   const loadVariables = useCallback(async (mid: string) => {
@@ -312,6 +313,7 @@ export function VariablesPage() {
     }
     setLoading(true);
     setError(null);
+    setFeedback(null);
     try {
       const res = await apiGet<{ items?: ApiVariable[] }>(
         `/v1/modules/${encodeURIComponent(mid)}/variables`,
@@ -409,6 +411,7 @@ export function VariablesPage() {
           description: payload.description,
         };
         setVariables((prev) => [...prev, next]);
+        setFeedback("已在仅当前演示中新建变量，不写服务端");
       } else if (editor.id) {
         setVariables((prev) =>
           prev.map((v) =>
@@ -424,6 +427,7 @@ export function VariablesPage() {
               : v,
           ),
         );
+        setFeedback("已在仅当前演示中编辑变量，不写服务端");
       }
       setEditor(null);
       return;
@@ -431,6 +435,7 @@ export function VariablesPage() {
 
     setBusy(true);
     setError(null);
+    setFeedback(null);
     try {
       if (editor.mode === "create") {
         await apiPost(`/v1/modules/${encodeURIComponent(moduleId)}/variables`, payload);
@@ -455,11 +460,13 @@ export function VariablesPage() {
 
     if (dataMode !== "api" || !moduleId) {
       setVariables((prev) => prev.filter((x) => x.id !== v.id));
+      setFeedback("已在仅当前演示中删除变量，不写服务端");
       return;
     }
 
     setBusy(true);
     setError(null);
+    setFeedback(null);
     try {
       await apiDelete(
         `/v1/modules/${encodeURIComponent(moduleId)}/variables/${encodeURIComponent(v.id)}`,
@@ -495,6 +502,11 @@ export function VariablesPage() {
         {error && dataMode === "api" && (
           <div className="vr-error-banner" role="alert">
             {error}
+          </div>
+        )}
+        {feedback && (
+          <div className="vr-demo-banner" role="status">
+            {feedback}
           </div>
         )}
 
@@ -615,6 +627,9 @@ export function VariablesPage() {
                         v.bindings.map((b, i) => (
                           <span key={i} className="vr-binding">
                             {b}
+                            {dataMode === "mock" && (
+                              <span data-testid="demo-binding-source"> · 仅当前演示</span>
+                            )}
                           </span>
                         ))
                       )}
