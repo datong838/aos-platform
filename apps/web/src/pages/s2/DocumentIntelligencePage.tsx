@@ -1170,11 +1170,19 @@ export function DocumentIntelligencePage() {
     setActionBusy(true);
     try {
       const results = await Promise.allSettled(ids.map((id) => apiDelete<{ deleted: boolean }>(`/api/datasource/documents/${encodeURIComponent(id)}`)));
-      const deleted = new Set(ids.filter((_, index) => {
+      const deletedByResponse = new Set(ids.filter((_, index) => {
         const result = results[index];
         return result.status === "fulfilled" && result.value.deleted === true;
       }));
-      setDocs((prev) => prev.filter((doc) => !deleted.has(doc.id)));
+      let deleted = deletedByResponse;
+      try {
+        const current = await apiGet<{ items: ApiDocument[]; total: number }>("/api/datasource/documents?page=1&page_size=100");
+        const currentIds = new Set(current.items.map((doc) => doc.id));
+        deleted = new Set(ids.filter((id) => deletedByResponse.has(id) || !currentIds.has(id)));
+        setDocs(current.items.filter((doc) => !deleted.has(doc.id)).map(mapApiDocument));
+      } catch {
+        setDocs((prev) => prev.filter((doc) => !deletedByResponse.has(doc.id)));
+      }
       setSelectedIds(new Set(ids.filter((id) => !deleted.has(id))));
       const message = `删除成功 ${deleted.size} 个，失败 ${ids.length - deleted.size} 个`;
       if (deleted.size) await reportWriteSuccess(message);

@@ -163,6 +163,28 @@ describe("DocumentIntelligencePage · real interaction", () => {
     expect(host.textContent).toContain("删除成功 0 个，失败 1 个");
   });
 
+  it("confirms deletion by rereading the list when the DELETE response is lost", async () => {
+    let documentReads = 0;
+    vi.mocked(apiGet).mockImplementation(async (path: string) => {
+      if (path.includes("/documents/stats")) return { total: 0, processing: 0, average_confidence: null, template_count: 3 };
+      if (path.includes("/ontology/object-types")) return { items: [] };
+      documentReads += 1;
+      return documentReads === 1 ? { items: [rawDocument()], total: 1 } : { items: [], total: 0 };
+    });
+    vi.mocked(apiDelete).mockRejectedValue(new Error("Load failed after server commit"));
+    await act(async () => root.render(<DocumentIntelligencePage />));
+    await flush();
+    const checkbox = host.querySelector<HTMLInputElement>("[data-testid='doc-item-doc-1'] input[type='checkbox']")!;
+    await act(async () => checkbox.click());
+    const deleteButton = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "删除") as HTMLButtonElement;
+
+    await act(async () => deleteButton.click());
+    await flush();
+
+    expect(host.querySelector("[data-testid='doc-item-doc-1']")).toBeNull();
+    expect(host.textContent).toContain("删除成功 1 个，失败 0 个");
+  });
+
   it("reports successful extraction separately when stats refresh fails", async () => {
     let statsCalls = 0;
     vi.mocked(apiGet).mockImplementation(async (path: string) => {
