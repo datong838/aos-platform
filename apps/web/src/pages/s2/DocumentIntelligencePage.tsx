@@ -1,11 +1,13 @@
 /**
  * 文档智能 · OCR + LLM 抽取
  *
- * W4-A8：抽取优先 POST /api/aip/docintel-extract/run；失败标「演示路径」+ MOCK。
+ * Wave 3A：文件、抽取、修正、入库、删除、重处理全部以后端响应为准；失败不生成 MOCK。
  * W4-E1：pipeline-doc-intel 并入本页（不新建侧栏）；说明条 + 轻量管道试运行。
  */
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { apiPost } from "../../api/client";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { apiDelete, apiGet, apiPost, apiPut } from "../../api/client";
+import { getApiBase } from "../../api/apiBase";
+import { tenantAuthHeaders } from "../../api/tenant";
 import { PageChrome } from "../../components/PageChrome";
 
 /* =========================================================================
@@ -39,6 +41,9 @@ export type DocItem = {
   ocrText?: string;
   errorMessage?: string;
   history?: HistoryEntry[];
+  extractedFields?: ExtractField[];
+  ontologyObjectId?: string;
+  contentSha256?: string;
 };
 
 /** 提取字段 */
@@ -253,7 +258,7 @@ export function getReviewTargetState(action: ReviewAction): DocState {
  * ========================================================================= */
 
 /** live=真 API；demo=MOCK 演示路径；loading=请求中 */
-export type DocIntelDataMode = "live" | "demo" | "loading";
+export type DocIntelDataMode = "live" | "demo" | "loading" | "idle";
 
 /** 视觉稿 pipeline-doc-intel 模板（并入本页，不单独建菜单） */
 export const DOCINTEL_PIPELINE_TEMPLATES = [
@@ -268,18 +273,8 @@ export const DOCINTEL_PIPELINE_TEMPLATES = [
 export function pathLabel(mode: DocIntelDataMode): string {
   if (mode === "live") return "真 API";
   if (mode === "loading") return "加载中";
+  if (mode === "idle") return "未运行";
   return "演示路径";
-}
-
-export function buildExtractPayload(
-  doc: Pick<DocItem, "title" | "ocrText">,
-  templateId: TemplateId,
-): { template_id: string; text: string; name: string } {
-  return {
-    template_id: templateId,
-    text: (doc.ocrText || "").trim() || doc.title,
-    name: doc.title,
-  };
 }
 
 export function normalizeExtractFields(raw: unknown): ExtractField[] {
@@ -303,26 +298,6 @@ export function normalizeExtractFields(raw: unknown): ExtractField[] {
   return out;
 }
 
-/** 按模板生成演示字段（API 失败回落） */
-export function demoExtractFields(templateId: TemplateId): ExtractField[] {
-  const tpl = TEMPLATES.find((t) => t.id === templateId) ?? TEMPLATES[0];
-  return tpl.fields.map((name, i) => ({
-    id: `demo-f${i + 1}`,
-    name,
-    type: "文本",
-    value: `演示·${name}`,
-    confidence: Math.max(0.55, 0.95 - i * 0.05),
-    source: `演示 P1 L${i + 1}`,
-  }));
-}
-
-export type ExtractRunResponse = {
-  ok?: boolean;
-  demo?: boolean;
-  fields?: unknown;
-  template_id?: string;
-};
-
 export type PipelineRunResponse = {
   batchOk?: boolean;
   parsed?: boolean;
@@ -330,73 +305,86 @@ export type PipelineRunResponse = {
   parse?: { text?: string; preview?: string };
 };
 
-/* =========================================================================
- *  Mock 数据
- * ========================================================================= */
+export type ApiDocument = {
+  id: string;
+  name: string;
+  file_type?: string;
+  status?: string;
+  size_bytes?: number;
+  content_sha256?: string;
+  ocr_text?: string;
+  error_message?: string;
+  ontology_object_id?: string;
+  extracted_fields?: Record<string, unknown>;
+  history?: Array<{ state?: string; timestamp?: number | string; note?: string }>;
+  created_at?: number;
+};
 
-const INITIAL_DOCS: DocItem[] = [
-  {
-    id: "d1",
-    title: "2024年度财务报告.pdf",
-    type: "pdf",
-    size: 2_411_724,
-    status: "review",
-    uploadedAt: "2024-07-20 14:32",
-    ocrText: "某某科技有限公司 2024 年度财务报告\n总收入：¥128,450,000\n净利润：¥45,230,000",
-    history: [
-      { state: "uploaded", timestamp: "2024-07-20 14:32", note: "文件上传成功" },
-      { state: "processing_ocr", timestamp: "2024-07-20 14:33", note: "OCR 识别完成，置信度 96.8%" },
-      { state: "extracting", timestamp: "2024-07-20 14:34", note: "LLM 结构化提取完成" },
-      { state: "review", timestamp: "2024-07-20 14:35", note: "进入人工审核" },
-    ],
-  },
-  {
-    id: "d2",
-    title: "合同模板-采购协议.docx",
-    type: "word",
-    size: 876_544,
-    status: "review",
-    uploadedAt: "2024-07-19 10:15",
-  },
-  {
-    id: "d3",
-    title: "供应商清单-2024Q3.xlsx",
-    type: "excel",
-    size: 1_258_291,
-    status: "processing_ocr",
-    uploadedAt: "2024-07-26 09:20",
-    ocrProgress: 65,
-  },
-  {
-    id: "d4",
-    title: "发票扫描件-0821.jpg",
-    type: "image",
-    size: 3_984_576,
-    status: "needs_correction",
-    uploadedAt: "2024-07-22 16:48",
-    errorMessage: "部分字段置信度低于阈值",
-  },
-  {
-    id: "d5",
-    title: "合同-甲方公司.pdf",
-    type: "pdf",
-    size: 1_887_436,
-    status: "failed",
-    uploadedAt: "2024-07-17 14:22",
-    errorMessage: "OCR 识别失败：文件已加密",
-  },
-];
+export type DocumentStats = {
+  total: number;
+  processing: number;
+  average_confidence: number | null;
+  template_count: number;
+};
 
-const MOCK_EXTRACT_FIELDS: ExtractField[] = [
-  { id: "f1", name: "报告期间", type: "日期", value: "2024-01-01 ~ 2024-12-31", confidence: 0.98, source: "P1 L1" },
-  { id: "f2", name: "公司名称", type: "文本", value: "某某科技有限公司", confidence: 0.95, source: "P1 L3" },
-  { id: "f3", name: "总收入", type: "数字", value: "¥ 128,450,000", confidence: 0.92, source: "P3 L12" },
-  { id: "f4", name: "净利润", type: "数字", value: "¥ 45,230,000", confidence: 0.89, source: "P3 L15" },
-  { id: "f5", name: "总资产", type: "数字", value: "¥ 580,120,000", confidence: 0.86, source: "P4 L8" },
-  { id: "f6", name: "负债率", type: "百分比", value: "42.3%", confidence: 0.65, source: "P4 L20" },
-  { id: "f7", name: "审计意见", type: "分类", value: "无保留意见", confidence: 0.91, source: "P5 L3" },
-  { id: "f8", name: "审计师", type: "文本", value: "普华永道", confidence: 0.94, source: "P5 L5" },
-];
+function normalizeDocState(status?: string): DocState {
+  if (status === "processing_ocr" || status === "extracting" || status === "failed" || status === "needs_correction") return status;
+  if (status === "review" || status === "extracted" || status === "approved") return "review";
+  return "uploaded";
+}
+
+function formatTimestamp(raw: number | string | undefined): string {
+  if (typeof raw === "number") return new Date(raw * 1000).toISOString().replace("T", " ").slice(0, 16);
+  if (typeof raw === "string" && raw) return raw.replace("T", " ").slice(0, 16);
+  return "—";
+}
+
+export function apiDocumentFields(doc: ApiDocument): ExtractField[] {
+  const raw = doc.extracted_fields ? Object.values(doc.extracted_fields) : [];
+  return normalizeExtractFields(raw);
+}
+
+export function mapApiDocument(doc: ApiDocument): DocItem {
+  const fields = apiDocumentFields(doc);
+  return {
+    id: doc.id,
+    title: doc.name,
+    type: inferFileType(doc.name),
+    size: Number(doc.size_bytes || 0),
+    status: normalizeDocState(doc.status),
+    uploadedAt: formatTimestamp(doc.created_at),
+    ocrText: doc.ocr_text || "",
+    errorMessage: doc.error_message || undefined,
+    ontologyObjectId: doc.ontology_object_id || undefined,
+    contentSha256: doc.content_sha256 || undefined,
+    extractedFields: fields,
+    history: (doc.history || []).map((entry) => ({
+      state: normalizeDocState(entry.state),
+      timestamp: formatTimestamp(entry.timestamp),
+      note: String(entry.note || ""),
+    })),
+  };
+}
+
+export async function uploadDocumentFile(
+  file: File,
+  fetchImpl: typeof fetch = fetch,
+): Promise<ApiDocument> {
+  const path = `/api/datasource/documents/upload?name=${encodeURIComponent(file.name)}`;
+  const response = await fetchImpl(`${getApiBase()}${path}`, {
+    method: "POST",
+    headers: {
+      ...tenantAuthHeaders(),
+      "Content-Type": file.type || "application/octet-stream",
+    },
+    body: file,
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({})) as { detail?: string; message?: string };
+    throw new Error(body.detail || body.message || `上传失败 HTTP ${response.status}`);
+  }
+  return response.json() as Promise<ApiDocument>;
+}
 
 /* =========================================================================
  *  子组件
@@ -582,6 +570,11 @@ function UploadDropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
 function OcrPanel({ doc, onCorrectText }: { doc: DocItem; onCorrectText: (text: string) => void }) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(doc.ocrText ?? "");
+
+  useEffect(() => {
+    setText(doc.ocrText ?? "");
+    setEditing(false);
+  }, [doc.id, doc.ocrText]);
 
   return (
     <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 16 }}>
@@ -806,11 +799,19 @@ function ReviewPanel({
   doc,
   onApprove,
   onReject,
+  objectTypes,
+  objectTypeId,
+  onObjectTypeChange,
+  busy,
 }: {
   fields: ExtractField[];
   doc: DocItem;
   onApprove: () => void;
   onReject: () => void;
+  objectTypes: Array<{ id: string; name: string }>;
+  objectTypeId: string;
+  onObjectTypeChange: (id: string) => void;
+  busy: boolean;
 }) {
   const avgConf = fields.length > 0 ? fields.reduce((s, f) => s + f.confidence, 0) / fields.length : 0;
 
@@ -839,10 +840,24 @@ function ReviewPanel({
       </div>
 
       {/* 操作按钮 */}
+      <label style={{ display: "block", marginBottom: 8, fontSize: 12, color: "var(--aos-text-secondary)" }}>
+        写入目标 Object Type
+        <select
+          data-testid="ontology-type-select"
+          value={objectTypeId}
+          onChange={(event) => onObjectTypeChange(event.target.value)}
+          style={{ display: "block", width: "100%", marginTop: 4, padding: "6px 8px" }}
+        >
+          <option value="">请选择后端已有 Object Type</option>
+          {objectTypes.map((item) => <option key={item.id} value={item.id}>{item.name}（{item.id}）</option>)}
+        </select>
+      </label>
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         <button
           type="button"
           onClick={onApprove}
+          disabled={busy || !objectTypeId || fields.length === 0}
+          data-testid="ontology-write-btn"
           style={{
             flex: 1,
             padding: "8px 12px",
@@ -852,7 +867,8 @@ function ReviewPanel({
             border: "1px solid var(--aos-green)",
             background: "var(--aos-green)",
             color: "var(--text-on-brand)",
-            cursor: "pointer",
+            cursor: busy || !objectTypeId || fields.length === 0 ? "not-allowed" : "pointer",
+            opacity: busy || !objectTypeId || fields.length === 0 ? 0.6 : 1,
           }}
         >
           ✓ 确认入库（写入本体 Objects）
@@ -860,6 +876,7 @@ function ReviewPanel({
         <button
           type="button"
           onClick={onReject}
+          disabled={busy}
           style={{
             flex: 1,
             padding: "8px 12px",
@@ -917,42 +934,89 @@ function ReviewPanel({
  * ========================================================================= */
 
 export function DocumentIntelligencePage() {
-  const [docs, setDocs] = useState<DocItem[]>(INITIAL_DOCS);
-  const [selectedId, setSelectedId] = useState<string>("d1");
+  const [docs, setDocs] = useState<DocItem[]>([]);
+  const [selectedId, setSelectedId] = useState<string>("");
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>("finance_report");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [extractFields, setExtractFields] = useState<ExtractField[]>(MOCK_EXTRACT_FIELDS);
-  const [dataMode, setDataMode] = useState<DocIntelDataMode>("demo");
+  const [extractFields, setExtractFields] = useState<ExtractField[]>([]);
+  const [dataMode, setDataMode] = useState<DocIntelDataMode>("idle");
   const [extractRunning, setExtractRunning] = useState(false);
   const [pipelineRunning, setPipelineRunning] = useState(false);
+  const [actionBusy, setActionBusy] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string>("");
   const [pipelineTpl, setPipelineTpl] = useState<string>("entity");
-  const autoTried = useRef(false);
+  const [stats, setStats] = useState<DocumentStats>({ total: 0, processing: 0, average_confidence: null, template_count: 0 });
+  const [objectTypes, setObjectTypes] = useState<Array<{ id: string; name: string }>>([]);
+  const [objectTypeId, setObjectTypeId] = useState("");
 
   const selectedDoc = useMemo(() => docs.find((d) => d.id === selectedId) ?? docs[0], [docs, selectedId]);
 
+  const loadStats = useCallback(async () => {
+    const value = await apiGet<DocumentStats>("/api/datasource/documents/stats");
+    setStats(value);
+  }, []);
+
+  const replaceDocument = useCallback((raw: ApiDocument) => {
+    const mapped = mapApiDocument(raw);
+    setDocs((prev) => prev.map((item) => item.id === mapped.id ? mapped : item));
+    if (mapped.id === selectedId) setExtractFields(mapped.extractedFields || []);
+    return mapped;
+  }, [selectedId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      setStatusMsg("");
+      try {
+        const [documents, currentStats] = await Promise.all([
+          apiGet<{ items: ApiDocument[]; total: number }>("/api/datasource/documents?page=1&page_size=100"),
+          apiGet<DocumentStats>("/api/datasource/documents/stats"),
+        ]);
+        if (cancelled) return;
+        const mapped = documents.items.map(mapApiDocument);
+        setDocs(mapped);
+        setStats(currentStats);
+        if (mapped[0]) setSelectedId(mapped[0].id);
+        try {
+          const types = await apiGet<{ items: Array<{ id: string; name?: string; display_name?: string }> }>("/v1/ontology/object-types?page=1&page_size=100");
+          if (!cancelled) setObjectTypes(types.items.map((item) => ({ id: item.id, name: item.display_name || item.name || item.id })));
+        } catch (error) {
+          if (!cancelled) setStatusMsg(`文档已加载；本体类型加载失败，入库功能已禁用：${String((error as Error).message || error)}`);
+        }
+      } catch (error) {
+        if (!cancelled) setStatusMsg(`加载失败，未使用演示数据：${String((error as Error).message || error)}`);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    setExtractFields(selectedDoc?.extractedFields || []);
+    setDataMode(selectedDoc?.extractedFields?.length ? "live" : "idle");
+  }, [selectedDoc?.id]);
+
   const runExtract = useCallback(async () => {
-    const doc = docs.find((d) => d.id === selectedId) ?? docs[0];
+    const doc = docs.find((d) => d.id === selectedId);
     if (!doc) return;
     setExtractRunning(true);
     setDataMode("loading");
     setStatusMsg("");
     try {
-      const payload = buildExtractPayload(doc, selectedTemplate);
-      const res = await apiPost<ExtractRunResponse>("/api/aip/docintel-extract/run", payload);
-      const fields = normalizeExtractFields(res.fields);
-      if (fields.length === 0) throw new Error("empty fields");
-      setExtractFields(fields);
-      setDataMode(res.demo === true ? "demo" : "live");
-      setStatusMsg(`抽取完成 · ${pathLabel(res.demo === true ? "demo" : "live")} · ${fields.length} 字段`);
+      const res = await apiPost<ApiDocument>(
+        `/api/datasource/documents/${encodeURIComponent(doc.id)}/extract`,
+        { template_id: selectedTemplate },
+      );
+      const mapped = replaceDocument(res);
+      setDataMode("live");
+      setStatusMsg(`抽取完成 · 真 API · ${mapped.extractedFields?.length || 0} 字段`);
+      await loadStats();
     } catch (e) {
-      setExtractFields(demoExtractFields(selectedTemplate));
-      setDataMode("demo");
-      setStatusMsg(`演示路径 · 抽取 API 不可用（${String((e as Error).message || e)}），已回落 MOCK`);
+      setDataMode(doc.extractedFields?.length ? "live" : "idle");
+      setStatusMsg(`抽取失败，未生成演示结果：${String((e as Error).message || e)}`);
     } finally {
       setExtractRunning(false);
     }
-  }, [docs, selectedId, selectedTemplate]);
+  }, [docs, selectedId, selectedTemplate, replaceDocument, loadStats]);
 
   const runPipelineTrial = useCallback(async () => {
     const doc = docs.find((d) => d.id === selectedId) ?? docs[0];
@@ -974,64 +1038,97 @@ export function DocumentIntelligencePage() {
       if (ocrText) {
         setDocs((prev) => prev.map((d) => (d.id === doc.id ? { ...d, ocrText } : d)));
       }
+      if (!res.batchOk && !res.parsed && !ocrText) throw new Error("后端未返回成功证据");
       setStatusMsg(`管道试运行成功 · 真 API · 模板 ${pipelineTpl}`);
     } catch (e) {
-      setStatusMsg(`演示路径 · 管道试运行失败（${String((e as Error).message || e)}）`);
+      setStatusMsg(`管道试运行失败，未生成演示结果：${String((e as Error).message || e)}`);
     } finally {
       setPipelineRunning(false);
     }
   }, [docs, selectedId, pipelineTpl]);
 
-  useEffect(() => {
-    if (autoTried.current) return;
-    autoTried.current = true;
-    void runExtract();
-  }, [runExtract]);
+  const handleFiles = useCallback(async (files: File[]) => {
+    setActionBusy(true);
+    setStatusMsg("");
+    try {
+      const results = await Promise.allSettled(files.map((file) => uploadDocumentFile(file)));
+      const uploaded = results
+        .filter((result): result is PromiseFulfilledResult<ApiDocument> => result.status === "fulfilled")
+        .map((result) => mapApiDocument(result.value));
+      const failed = results.filter((result) => result.status === "rejected");
+      if (uploaded.length) {
+        setDocs((prev) => [...uploaded, ...prev]);
+        setSelectedId(uploaded[0].id);
+      }
+      setStatusMsg(failed.length
+        ? `上传完成 ${uploaded.length} 个，失败 ${failed.length} 个；失败文件未加入列表`
+        : `上传成功 · 服务端已接收 ${uploaded.length} 个文件的真实字节`);
+      await loadStats();
+    } finally {
+      setActionBusy(false);
+    }
+  }, [loadStats]);
 
-  const handleFiles = useCallback((files: File[]) => {
-    const newDocs: DocItem[] = files.map((f, i) => {
-      const now = new Date().toISOString().replace("T", " ").slice(0, 16);
-      return {
-        id: `upload-${Date.now()}-${i}`,
-        title: f.name,
-        type: inferFileType(f.name),
-        size: f.size,
-        status: "uploaded" as DocState,
-        uploadedAt: now,
-        history: [{ state: "uploaded" as DocState, timestamp: now, note: `文件上传成功 (${formatFileSize(f.size)})` }],
-      };
-    });
-    setDocs((prev) => [...newDocs, ...prev]);
-    if (newDocs.length > 0) setSelectedId(newDocs[0].id);
-  }, []);
+  const handleEditField = useCallback(async (id: string, value: string) => {
+    if (!selectedDoc) return;
+    const next = extractFields.map((field) => field.id === id ? { ...field, value, confidence: Math.max(field.confidence, 0.95) } : field);
+    setActionBusy(true);
+    try {
+      const res = await apiPut<ApiDocument>(`/api/datasource/documents/${encodeURIComponent(selectedDoc.id)}`, { extracted_fields: next });
+      replaceDocument(res);
+      setStatusMsg("字段修正已保存 · 真 API");
+      await loadStats();
+    } catch (error) {
+      setStatusMsg(`字段保存失败，原值未改变：${String((error as Error).message || error)}`);
+    } finally {
+      setActionBusy(false);
+    }
+  }, [selectedDoc, extractFields, replaceDocument, loadStats]);
 
-  const handleEditField = useCallback((id: string, value: string) => {
-    setExtractFields((prev) => prev.map((f) => (f.id === id ? { ...f, value, confidence: Math.max(f.confidence, 0.95) } : f)));
-  }, []);
+  const handleCorrectOcr = useCallback(async (text: string) => {
+    if (!selectedDoc) return;
+    setActionBusy(true);
+    try {
+      const res = await apiPut<ApiDocument>(`/api/datasource/documents/${encodeURIComponent(selectedDoc.id)}`, { ocr_text: text });
+      replaceDocument(res);
+      setStatusMsg("OCR 校正已保存 · 真 API");
+    } catch (error) {
+      setStatusMsg(`OCR 保存失败，原文未改变：${String((error as Error).message || error)}`);
+    } finally {
+      setActionBusy(false);
+    }
+  }, [selectedDoc, replaceDocument]);
 
-  const handleCorrectOcr = useCallback((text: string) => {
-    setDocs((prev) => prev.map((d) => (d.id === selectedId ? { ...d, ocrText: text } : d)));
-  }, [selectedId]);
+  const handleApprove = useCallback(async () => {
+    if (!selectedDoc || !objectTypeId) return;
+    setActionBusy(true);
+    try {
+      const res = await apiPost<{ document: ApiDocument; object: { id: string } }>(
+        `/api/datasource/documents/${encodeURIComponent(selectedDoc.id)}/ontology-write`,
+        { object_type_id: objectTypeId },
+      );
+      replaceDocument(res.document);
+      setStatusMsg(`本体写入成功 · Object ${res.object.id}`);
+    } catch (error) {
+      setStatusMsg(`本体写入失败，文档状态未伪造：${String((error as Error).message || error)}`);
+    } finally {
+      setActionBusy(false);
+    }
+  }, [selectedDoc, objectTypeId, replaceDocument]);
 
-  const handleApprove = useCallback(() => {
-    setDocs((prev) =>
-      prev.map((d) =>
-        d.id === selectedId
-          ? { ...d, status: "review", history: [...(d.history ?? []), { state: "review", timestamp: new Date().toISOString().replace("T", " ").slice(0, 16), note: "审核通过，已写入本体 Objects" }] }
-          : d,
-      ),
-    );
-  }, [selectedId]);
-
-  const handleReject = useCallback(() => {
-    setDocs((prev) =>
-      prev.map((d) =>
-        d.id === selectedId
-          ? { ...d, status: "needs_correction", history: [...(d.history ?? []), { state: "needs_correction", timestamp: new Date().toISOString().replace("T", " ").slice(0, 16), note: "审核退回，需人工修正" }] }
-          : d,
-      ),
-    );
-  }, [selectedId]);
+  const handleReject = useCallback(async () => {
+    if (!selectedDoc) return;
+    setActionBusy(true);
+    try {
+      const res = await apiPost<ApiDocument>(`/api/datasource/documents/${encodeURIComponent(selectedDoc.id)}/review`, { action: "reject" });
+      replaceDocument(res);
+      setStatusMsg("已退回修正 · 真 API");
+    } catch (error) {
+      setStatusMsg(`退回失败，状态未改变：${String((error as Error).message || error)}`);
+    } finally {
+      setActionBusy(false);
+    }
+  }, [selectedDoc, replaceDocument]);
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -1049,20 +1146,39 @@ export function DocumentIntelligencePage() {
     });
   }, [docs]);
 
-  const handleBatchDelete = useCallback(() => {
-    setDocs((prev) => prev.filter((d) => !selectedIds.has(d.id)));
-    setSelectedIds(new Set());
-  }, [selectedIds]);
+  const handleBatchDelete = useCallback(async () => {
+    const ids = [...selectedIds];
+    setActionBusy(true);
+    try {
+      const results = await Promise.allSettled(ids.map((id) => apiDelete<{ deleted: boolean }>(`/api/datasource/documents/${encodeURIComponent(id)}`)));
+      const deleted = new Set(ids.filter((_, index) => results[index].status === "fulfilled"));
+      setDocs((prev) => prev.filter((doc) => !deleted.has(doc.id)));
+      setSelectedIds(new Set(ids.filter((id) => !deleted.has(id))));
+      setStatusMsg(`删除成功 ${deleted.size} 个，失败 ${ids.length - deleted.size} 个`);
+      await loadStats();
+    } finally {
+      setActionBusy(false);
+    }
+  }, [selectedIds, loadStats]);
 
-  const handleBatchReprocess = useCallback(() => {
-    setDocs((prev) =>
-      prev.map((d) =>
-        selectedIds.has(d.id)
-          ? { ...d, status: "uploaded", ocrProgress: 0, errorMessage: undefined }
-          : d,
-      ),
-    );
-  }, [selectedIds]);
+  const handleBatchReprocess = useCallback(async () => {
+    const ids = [...selectedIds];
+    setActionBusy(true);
+    try {
+      const results = await Promise.allSettled(ids.map((id) => apiPost<ApiDocument>(
+        `/api/datasource/documents/${encodeURIComponent(id)}/reprocess`,
+        { template_id: selectedTemplate },
+      )));
+      const succeeded = results
+        .filter((result): result is PromiseFulfilledResult<ApiDocument> => result.status === "fulfilled")
+        .map((result) => result.value);
+      succeeded.forEach(replaceDocument);
+      setStatusMsg(`重新处理成功 ${succeeded.length} 个，失败 ${ids.length - succeeded.length} 个；失败项保持原状态`);
+      await loadStats();
+    } finally {
+      setActionBusy(false);
+    }
+  }, [selectedIds, selectedTemplate, replaceDocument, loadStats]);
 
   return (
     <PageChrome title="文档智能" lede="导入文档、配置提取模板，自动识别并结构化关键字段">
@@ -1112,10 +1228,10 @@ export function DocumentIntelligencePage() {
 
       {/* 顶部统计卡片 */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
-        <StatCard value="1,284" label="文档总数" trend="12.5% 本周" trendUp />
-        <StatCard value="98.2%" label="提取准确率" trend="2.1% 本月" trendUp />
-        <StatCard value="24" label="处理中" trend="平均耗时 45s" />
-        <StatCard value="156" label="提取模板" trend="12 个内置" />
+        <StatCard value={String(stats.total)} label="文档总数" trend="来自文档 API" />
+        <StatCard value={stats.average_confidence == null ? "—" : `${(stats.average_confidence * 100).toFixed(1)}%`} label="平均提取置信度" trend="按后端提取字段计算" />
+        <StatCard value={String(stats.processing)} label="处理中" trend="按后端状态计算" />
+        <StatCard value={String(stats.template_count)} label="提取模板" trend="来自模板 API" />
       </div>
 
       {/* 拖拽上传区 */}
@@ -1125,13 +1241,13 @@ export function DocumentIntelligencePage() {
       {selectedIds.size > 0 && (
         <div style={{ display: "flex", gap: 8, marginBottom: 12, padding: "8px 12px", background: "var(--aos-accent-light)", borderRadius: 2, alignItems: "center" }}>
           <span style={{ fontSize: 12, color: "var(--aos-accent)" }}>已选择 {selectedIds.size} 个文件</span>
-          <button type="button" onClick={handleBatchReprocess} style={batchBtnStyle}>重新处理</button>
-          <button type="button" onClick={handleBatchDelete} style={{ ...batchBtnStyle, color: "var(--aos-red)", borderColor: "var(--aos-red-border)" }}>删除</button>
+          <button type="button" disabled={actionBusy} onClick={() => void handleBatchReprocess()} style={batchBtnStyle}>重新处理</button>
+          <button type="button" disabled={actionBusy} onClick={() => void handleBatchDelete()} style={{ ...batchBtnStyle, color: "var(--aos-red)", borderColor: "var(--aos-red-border)" }}>删除</button>
         </div>
       )}
 
       {/* 状态步骤条 */}
-      <StateStepper state={selectedDoc.status} errorMessage={selectedDoc.errorMessage} />
+      {selectedDoc ? <StateStepper state={selectedDoc.status} errorMessage={selectedDoc.errorMessage} /> : null}
 
       {/* 主体：左文件列表 + 右提取面板 */}
       <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
@@ -1211,7 +1327,9 @@ export function DocumentIntelligencePage() {
 
         {/* 右侧：OCR + 提取 + 审核 */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
-          <OcrPanel doc={selectedDoc} onCorrectText={handleCorrectOcr} />
+          {!selectedDoc ? <div data-testid="documents-empty">暂无文档。上传成功后才会加入列表。</div> : null}
+          {selectedDoc ? <OcrPanel doc={selectedDoc} onCorrectText={(text) => void handleCorrectOcr(text)} /> : null}
+          {selectedDoc ? (
           <ExtractionPanel
             fields={extractFields}
             onEditField={handleEditField}
@@ -1221,7 +1339,19 @@ export function DocumentIntelligencePage() {
             running={extractRunning}
             onRunExtract={() => void runExtract()}
           />
-          <ReviewPanel fields={extractFields} doc={selectedDoc} onApprove={handleApprove} onReject={handleReject} />
+          ) : null}
+          {selectedDoc ? (
+            <ReviewPanel
+              fields={extractFields}
+              doc={selectedDoc}
+              onApprove={() => void handleApprove()}
+              onReject={() => void handleReject()}
+              objectTypes={objectTypes}
+              objectTypeId={objectTypeId}
+              onObjectTypeChange={setObjectTypeId}
+              busy={actionBusy}
+            />
+          ) : null}
         </div>
       </div>
     </PageChrome>

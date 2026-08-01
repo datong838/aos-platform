@@ -9,6 +9,7 @@ from __future__ import annotations
 import threading
 import time
 import uuid
+import hashlib
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -165,6 +166,14 @@ class Document(BaseModel):
     file_type: str = "pdf"  # pdf|docx|image|html
     status: str = "pending"  # pending|extracted|failed
     extracted_fields: dict[str, Any] = Field(default_factory=dict)
+    size_bytes: int = 0
+    content_type: str = "application/octet-stream"
+    content_sha256: str = ""
+    ocr_text: str = ""
+    parser: str = ""
+    error_message: str = ""
+    ontology_object_id: str = ""
+    history: list[dict[str, Any]] = Field(default_factory=list)
     created_at: float = Field(default_factory=lambda: time.time())
     updated_at: float = Field(default_factory=lambda: time.time())
 
@@ -216,6 +225,7 @@ class DataSourceEngine:
                     inst._media_sets: dict[str, MediaSet] = {}
                     inst._media_files: dict[str, MediaFile] = {}
                     inst._documents: dict[str, Document] = {}
+                    inst._document_bytes: dict[str, bytes] = {}
                     inst._templates: dict[str, ExtractionTemplate] = {}
                     inst._projects: dict[str, DataProject] = {}
                     cls._instance = inst
@@ -557,6 +567,27 @@ class DataSourceEngine:
             self._documents[d.id] = d
             return d
 
+    def upload_document(self, name: str, data: bytes, content_type: str) -> Document:
+        """保存调用方实际提交的文件字节；空内容必须拒绝。"""
+        if not data:
+            raise ValueError("文件内容为空")
+        if len(data) > 50 * 1024 * 1024:
+            raise ValueError("文件大小超过限制（最大 50MB）")
+        with _LOCK:
+            now = time.time()
+            d = Document(
+                name=name,
+                file_type=(name.rsplit(".", 1)[-1].lower() if "." in name else "bin"),
+                status="uploaded",
+                size_bytes=len(data),
+                content_type=content_type or "application/octet-stream",
+                content_sha256=hashlib.sha256(data).hexdigest(),
+                history=[{"state": "uploaded", "timestamp": now, "note": "服务端已接收文件字节"}],
+            )
+            self._documents[d.id] = d
+            self._document_bytes[d.id] = bytes(data)
+            return d
+
     def get_document(self, did: str) -> Document | None:
         return self._documents.get(did)
 
@@ -587,6 +618,146 @@ class DataSourceEngine:
             d.status = "extracted"
             d.updated_at = time.time()
             return d
+
+    def process_document(self, did: str, template_id: str) -> Document:
+        """从服务端保存的原始字节重新解析并执行现有 DocIntel 抽取。"""
+        from aos_api.aip_docintel_extract import get_engine as get_extract_engine
+        from aos_api.file_parsers import extract
+
+        d = self._documents.get(did)
+        if d is None:
+            raise KeyError(f"Document {did} not found")
+        data = self._document_bytes.get(did)
+        if not data:
+            raise ValueError("文档没有可重处理的服务端文件字节")
+        parsed = extract(data=data, name=d.name, content_type=d.content_type)
+        if not parsed.get("ok"):
+            raise ValueError(str(parsed.get("hint") or "文档解析失败"))
+        text = str(parsed.get("text") or "")
+        if not text.strip():
+            raise ValueError("文档解析结果为空")
+        result = get_extract_engine().run_extract(template_id=template_id, text=text, name=d.name)
+        raw_fields = result.get("fields") or []
+        extracted_fields = {
+            str(field.get("id") or field.get("name") or index): dict(field)
+            for index, field in enumerate(raw_fields)
+            if isinstance(field, dict)
+        }
+        with _LOCK:
+            current = self._documents.get(did)
+            if current is None:
+                raise KeyError(f"Document {did} not found")
+            current.template_id = str(result.get("template_id") or template_id)
+            current.ocr_text = text
+            current.parser = str(parsed.get("parser") or "")
+            current.extracted_fields = extracted_fields
+            confidences = [
+                float(field.get("confidence", 0))
+                for field in extracted_fields.values()
+                if isinstance(field.get("confidence"), (int, float))
+            ]
+            current.status = "needs_correction" if confidences and min(confidences) < 0.7 else "review"
+            current.error_message = ""
+            current.updated_at = time.time()
+            current.history.append({
+                "state": current.status,
+                "timestamp": current.updated_at,
+                "note": f"服务端解析并抽取 {len(extracted_fields)} 个字段",
+            })
+            return current
+
+    def update_document(
+        self,
+        did: str,
+        *,
+        ocr_text: str | None = None,
+        extracted_fields: list[dict[str, Any]] | None = None,
+    ) -> Document:
+        with _LOCK:
+            d = self._documents.get(did)
+            if d is None:
+                raise KeyError(f"Document {did} not found")
+            if ocr_text is not None:
+                d.ocr_text = ocr_text
+            if extracted_fields is not None:
+                d.extracted_fields = {
+                    str(field.get("id") or field.get("name") or index): dict(field)
+                    for index, field in enumerate(extracted_fields)
+                }
+            d.updated_at = time.time()
+            return d
+
+    def review_document(self, did: str, action: str) -> Document:
+        if action != "reject":
+            raise ValueError("仅支持 reject；入库请调用 ontology-write")
+        with _LOCK:
+            d = self._documents.get(did)
+            if d is None:
+                raise KeyError(f"Document {did} not found")
+            d.status = "needs_correction"
+            d.updated_at = time.time()
+            d.history.append({"state": d.status, "timestamp": d.updated_at, "note": "审核退回修正"})
+            return d
+
+    def write_document_to_ontology(self, did: str, object_type_id: str) -> tuple[Document, Any]:
+        from aos_api.ontology_engine import get_engine as get_ontology_engine
+
+        d = self._documents.get(did)
+        if d is None:
+            raise KeyError(f"Document {did} not found")
+        if not d.extracted_fields:
+            raise ValueError("没有可写入本体的提取字段")
+        ontology = get_ontology_engine()
+        if ontology.get_object_type(object_type_id) is None:
+            raise ValueError(f"Object Type {object_type_id} 不存在")
+        if d.ontology_object_id:
+            existing = ontology.get_object(d.ontology_object_id)
+            if existing is not None:
+                if existing.object_type_id != object_type_id:
+                    raise ValueError(
+                        f"文档已写入 Object Type {existing.object_type_id}，不能重复写入 {object_type_id}"
+                    )
+                return d, existing
+        properties = {
+            str(field.get("name") or key): field.get("value")
+            for key, field in d.extracted_fields.items()
+        }
+        properties.update({"document_id": d.id, "content_sha256": d.content_sha256})
+        obj = ontology.create_object(object_type_id, d.name, properties=properties)
+        with _LOCK:
+            current = self._documents.get(did)
+            if current is None:
+                raise KeyError(f"Document {did} not found")
+            current.ontology_object_id = obj.id
+            current.status = "review"
+            current.updated_at = time.time()
+            current.history.append({
+                "state": "review",
+                "timestamp": current.updated_at,
+                "note": f"已写入本体 Object {obj.id}",
+            })
+            return current, obj
+
+    def delete_document(self, did: str) -> bool:
+        with _LOCK:
+            deleted = self._documents.pop(did, None)
+            self._document_bytes.pop(did, None)
+            return deleted is not None
+
+    def document_stats(self) -> dict[str, Any]:
+        items = list(self._documents.values())
+        confidences: list[float] = []
+        for d in items:
+            for field in d.extracted_fields.values():
+                value = field.get("confidence") if isinstance(field, dict) else None
+                if isinstance(value, (int, float)):
+                    confidences.append(float(value))
+        return {
+            "total": len(items),
+            "processing": sum(1 for d in items if d.status in {"processing_ocr", "extracting"}),
+            "average_confidence": (sum(confidences) / len(confidences)) if confidences else None,
+            "template_count": len(self._templates),
+        }
 
     def import_document(self, name: str, **kwargs: Any) -> Document:
         with _LOCK:
@@ -627,6 +798,7 @@ class DataSourceEngine:
             self._media_sets.clear()
             self._media_files.clear()
             self._documents.clear()
+            self._document_bytes.clear()
             self._templates.clear()
             self._projects.clear()
 
