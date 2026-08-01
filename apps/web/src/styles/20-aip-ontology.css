@@ -2053,6 +2053,15 @@ button.bp-discover-violet:hover {
   stroke-width: 2;
 }
 
+.bp-logic-canvas-edge-arrow {
+  fill: var(--aos-accent);
+}
+
+.bp-logic-canvas-edge-preview {
+  stroke-dasharray: 7 5;
+  opacity: 0.78;
+}
+
 .bp-logic-canvas-edge-delete {
   position: absolute;
   z-index: 2;
@@ -2141,6 +2150,11 @@ button.bp-discover-violet:hover {
   background: var(--aos-accent);
   box-shadow: 0 0 0 1px var(--aos-accent-border);
   cursor: crosshair;
+}
+
+.bp-logic-canvas-shell.is-link-dragging .bp-logic-canvas-port-in,
+.bp-logic-canvas-port-in:hover {
+  box-shadow: 0 0 0 4px var(--aos-accent-light), 0 0 0 1px var(--aos-accent-border);
 }
 
 .bp-logic-canvas-port-in {

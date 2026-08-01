@@ -123,6 +123,12 @@ function button(host: HTMLElement, label: string): HTMLButtonElement {
   return found;
 }
 
+function pointerEvent(type: string, clientX: number, clientY: number): Event {
+  const event = new MouseEvent(type, { bubbles: true, button: 0, clientX, clientY });
+  Object.defineProperty(event, "pointerId", { configurable: true, value: 1 });
+  return event;
+}
+
 describe("LogicGraphCanvas interactions", () => {
   let host: HTMLDivElement;
   let root: Root;
@@ -216,6 +222,88 @@ describe("LogicGraphCanvas interactions", () => {
     await act(async () => button(host, `删除连接 ${created.id}`).click());
     expect(latest.edges.some((edge) => edge.id === created.id)).toBe(false);
     expect(latest.reasons).toContain("edge_delete");
+  });
+
+  it("drags an output port onto an input port with a live preview and directional arrows", async () => {
+    const source = button(host, "从 branch-1 的 high 端口建立连接");
+    const target = button(host, "连接到 execute-1 的 in 端口");
+    const stage = host.querySelector<HTMLElement>(".bp-logic-canvas-stage")!;
+    const originalElementFromPoint = document.elementFromPoint;
+    Object.defineProperty(document, "elementFromPoint", {
+      configurable: true,
+      value: vi.fn(() => target),
+    });
+    const edgeCount = latest.edges.length;
+
+    await act(async () => {
+      source.dispatchEvent(pointerEvent("pointerdown", 440, 214));
+      stage.dispatchEvent(pointerEvent("pointermove", 500, 120));
+    });
+    const preview = host.querySelector<SVGPathElement>(".bp-logic-canvas-edge-preview");
+    expect(preview).not.toBeNull();
+    expect(preview?.getAttribute("marker-end")).toMatch(/^url\(#logic-arrow-/);
+    expect(host.textContent).toContain("拖线模式");
+
+    await act(async () => {
+      target.dispatchEvent(pointerEvent("pointerup", 500, 62));
+      source.click();
+    });
+    expect(latest.edges).toHaveLength(edgeCount + 1);
+    expect(latest.edges).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        source_node_id: "branch-1",
+        source_port: "high",
+        target_node_id: "execute-1",
+        branch_path: "high",
+      }),
+    ]));
+    expect(latest.reasons.at(-1)).toBe("edge_add");
+    expect(host.querySelector(".bp-logic-canvas-edge-preview")).toBeNull();
+    expect(host.textContent).not.toContain("连接模式 · 请选择目标端口");
+    host.querySelectorAll<SVGPathElement>(".bp-logic-canvas-edge:not(.bp-logic-canvas-edge-preview)")
+      .forEach((path) => expect(path.getAttribute("marker-end")).toMatch(/^url\(#logic-arrow-/));
+
+    Object.defineProperty(document, "elementFromPoint", {
+      configurable: true,
+      value: originalElementFromPoint,
+    });
+  });
+
+  it("cancels empty pointer drops and reuses duplicate-edge validation without mutating the graph", async () => {
+    const source = button(host, "从 input-1 的 out 端口建立连接");
+    const duplicateTarget = button(host, "连接到 llm-1 的 in 端口");
+    const originalElementFromPoint = document.elementFromPoint;
+    const edgeCount = latest.edges.length;
+
+    Object.defineProperty(document, "elementFromPoint", {
+      configurable: true,
+      value: vi.fn(() => null),
+    });
+    await act(async () => {
+      source.dispatchEvent(pointerEvent("pointerdown", 200, 54));
+      source.dispatchEvent(pointerEvent("pointermove", 360, 160));
+      source.dispatchEvent(pointerEvent("pointerup", 360, 160));
+    });
+    expect(latest.edges).toHaveLength(edgeCount);
+    expect(host.textContent).toContain("连接已取消");
+    expect(host.querySelector(".bp-logic-canvas-edge-preview")).toBeNull();
+
+    Object.defineProperty(document, "elementFromPoint", {
+      configurable: true,
+      value: vi.fn(() => duplicateTarget),
+    });
+    await act(async () => {
+      source.dispatchEvent(pointerEvent("pointerdown", 200, 54));
+      source.dispatchEvent(pointerEvent("pointermove", 260, 62));
+      source.dispatchEvent(pointerEvent("pointerup", 260, 62));
+    });
+    expect(latest.edges).toHaveLength(edgeCount);
+    expect(latest.rejected.at(-1)).toContain("重复");
+
+    Object.defineProperty(document, "elementFromPoint", {
+      configurable: true,
+      value: originalElementFromPoint,
+    });
   });
 
   it("keeps click-to-add accessibility and removes a node with its incident edges", async () => {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   DndContext,
   KeyboardSensor,
@@ -13,6 +13,7 @@ import {
 import {
   getLogicSourcePorts,
   logicCanvasDropPosition,
+  MAX_LOGIC_CANVAS_COORDINATE,
   moveLogicCanvasPosition,
   tryAddLogicEdge,
   type LogicBlockKind,
@@ -106,6 +107,14 @@ export interface LogicGraphCanvasProps {
 }
 
 type LinkOrigin = { nodeId: string; sourcePort: string; branchPath: string };
+type LinkPreview = LinkOrigin & {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  currentX: number;
+  currentY: number;
+  moved: boolean;
+};
 
 function defaultNodeId(kind: LogicBlockKind): string {
   return `${kind}-${Date.now()}-${Math.random().toString(16).slice(2, 7)}`;
@@ -174,6 +183,7 @@ function DraggableLogicNode({
   disabled,
   onSelect,
   onStartLink,
+  onPointerLinkStart,
   onCompleteLink,
   onDelete,
 }: {
@@ -185,6 +195,12 @@ function DraggableLogicNode({
   disabled: boolean;
   onSelect: () => void;
   onStartLink: (sourcePort: string, branchPath: string) => void;
+  onPointerLinkStart: (
+    sourcePort: string,
+    branchPath: string,
+    portIndex: number,
+    event: React.PointerEvent<HTMLButtonElement>,
+  ) => void;
   onCompleteLink: () => void;
   onDelete: () => void;
 }) {
@@ -235,6 +251,7 @@ function DraggableLogicNode({
         type="button"
         className="bp-logic-canvas-port bp-logic-canvas-port-in"
         aria-label={`连接到 ${node.id} 的 in 端口`}
+        data-logic-input-node-id={node.id}
         disabled={disabled}
         onClick={(event) => {
           event.stopPropagation();
@@ -242,7 +259,7 @@ function DraggableLogicNode({
         }}
       />
       <div className="bp-logic-canvas-output-ports">
-        {ports.map((port) => (
+        {ports.map((port, portIndex) => (
           <button
             key={port.id}
             type="button"
@@ -250,6 +267,10 @@ function DraggableLogicNode({
             aria-label={`从 ${node.id} 的 ${port.id} 端口建立连接`}
             title={port.label}
             disabled={disabled}
+            onPointerDown={(event) => {
+              event.stopPropagation();
+              onPointerLinkStart(port.id, port.branchPath, portIndex, event);
+            }}
             onClick={(event) => {
               event.stopPropagation();
               onStartLink(port.id, port.branchPath);
@@ -317,7 +338,11 @@ export function LogicGraphCanvas({
 }: LogicGraphCanvasProps) {
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const [linkOrigin, setLinkOrigin] = useState<LinkOrigin | null>(null);
+  const [linkPreview, setLinkPreview] = useState<LinkPreview | null>(null);
+  const linkDragRef = useRef<LinkPreview | null>(null);
+  const suppressLinkClickRef = useRef(false);
   const [interactionMessage, setInteractionMessage] = useState("");
+  const arrowMarkerId = `logic-arrow-${useId().replace(/:/g, "")}`;
   const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -330,6 +355,97 @@ export function LogicGraphCanvas({
   function markDirty(reason: LogicCanvasDirtyReason): void {
     setInteractionMessage("");
     onDirty?.(reason);
+  }
+
+  function pointerCanvasPosition(clientX: number, clientY: number): { x: number; y: number } | null {
+    const canvas = canvasRef.current;
+    if (!canvas || !Number.isFinite(clientX) || !Number.isFinite(clientY)) return null;
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: Math.min(MAX_LOGIC_CANVAS_COORDINATE, Math.max(0, (clientX - rect.left + canvas.scrollLeft) / safeZoom)),
+      y: Math.min(MAX_LOGIC_CANVAS_COORDINATE, Math.max(0, (clientY - rect.top + canvas.scrollTop) / safeZoom)),
+    };
+  }
+
+  function startPointerLink(
+    node: LogicGraphNode,
+    sourcePort: string,
+    branchPath: string,
+    portIndex: number,
+    event: React.PointerEvent<HTMLButtonElement>,
+  ): void {
+    if (disabled || event.button !== 0) return;
+    const pointerId = Number.isInteger(event.pointerId) ? event.pointerId : 1;
+    const pointer = pointerCanvasPosition(event.clientX, event.clientY);
+    const startX = node.position_x + NODE_WIDTH;
+    const startY = node.position_y + 34 + portIndex * 16;
+    const preview: LinkPreview = {
+      nodeId: node.id,
+      sourcePort,
+      branchPath,
+      pointerId,
+      startX,
+      startY,
+      currentX: pointer?.x ?? startX,
+      currentY: pointer?.y ?? startY,
+      moved: false,
+    };
+    linkDragRef.current = preview;
+    setLinkPreview(preview);
+    event.currentTarget.setPointerCapture?.(pointerId);
+  }
+
+  function movePointerLink(event: React.PointerEvent<HTMLElement>): void {
+    const active = linkDragRef.current;
+    const pointerId = Number.isInteger(event.pointerId) ? event.pointerId : 1;
+    if (!active || active.pointerId !== pointerId) return;
+    const pointer = pointerCanvasPosition(event.clientX, event.clientY);
+    if (!pointer) return;
+    const moved = active.moved || Math.hypot(pointer.x - active.startX, pointer.y - active.startY) >= 4;
+    const next = { ...active, currentX: pointer.x, currentY: pointer.y, moved };
+    linkDragRef.current = next;
+    setLinkPreview(next);
+  }
+
+  function clearPointerLink(event: React.PointerEvent<HTMLElement>): LinkPreview | null {
+    const active = linkDragRef.current;
+    const pointerId = Number.isInteger(event.pointerId) ? event.pointerId : 1;
+    if (!active || active.pointerId !== pointerId) return null;
+    if (event.currentTarget.hasPointerCapture?.(pointerId)) {
+      event.currentTarget.releasePointerCapture(pointerId);
+    }
+    linkDragRef.current = null;
+    setLinkPreview(null);
+    return active;
+  }
+
+  function endPointerLink(event: React.PointerEvent<HTMLElement>): void {
+    const active = clearPointerLink(event);
+    if (!active?.moved) return;
+    suppressLinkClickRef.current = true;
+    window.setTimeout(() => { suppressLinkClickRef.current = false; }, 0);
+    const target = document.elementFromPoint(event.clientX, event.clientY)
+      ?.closest<HTMLElement>("[data-logic-input-node-id]");
+    const targetNodeId = target?.dataset.logicInputNodeId;
+    if (!targetNodeId) {
+      setInteractionMessage("连接已取消：请拖到目标输入端口");
+      return;
+    }
+    completeLink(targetNodeId, active);
+  }
+
+  function cancelPointerLink(event: React.PointerEvent<HTMLElement>): void {
+    const active = clearPointerLink(event);
+    if (active?.moved) setInteractionMessage("连接已取消");
+  }
+
+  function clickSourcePort(sourcePort: string, branchPath: string, nodeId: string): void {
+    if (suppressLinkClickRef.current) {
+      suppressLinkClickRef.current = false;
+      return;
+    }
+    setLinkOrigin({ nodeId, sourcePort, branchPath });
+    setInteractionMessage("");
   }
 
   function addNode(item: LogicPaletteItem, position?: { x: number; y: number }): void {
@@ -396,15 +512,16 @@ export function LogicGraphCanvas({
     onEdgeRejected?.(message);
   }
 
-  function completeLink(targetNodeId: string): void {
-    if (!linkOrigin || disabled) return;
+  function completeLink(targetNodeId: string, pointerOrigin?: LinkOrigin): void {
+    const activeOrigin = pointerOrigin ?? linkOrigin;
+    if (!activeOrigin || disabled) return;
     const candidate: LogicGraphEdge = {
       id: createEdgeId(),
-      source_node_id: linkOrigin.nodeId,
-      source_port: linkOrigin.sourcePort,
+      source_node_id: activeOrigin.nodeId,
+      source_port: activeOrigin.sourcePort,
       target_node_id: targetNodeId,
       target_port: "in",
-      branch_path: linkOrigin.branchPath,
+      branch_path: activeOrigin.branchPath,
       order: edges.length,
     };
     const result = tryAddLogicEdge(nodes, edges, candidate);
@@ -437,7 +554,7 @@ export function LogicGraphCanvas({
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <section
-        className={`bp-logic-canvas-shell${inspectorCollapsed ? " is-inspector-collapsed" : ""}${inspector ? "" : " without-inspector"}`}
+        className={`bp-logic-canvas-shell${inspectorCollapsed ? " is-inspector-collapsed" : ""}${inspector ? "" : " without-inspector"}${linkPreview?.moved ? " is-link-dragging" : ""}`}
       >
         <div className="bp-logic-canvas-toolbar">
           <button type="button" className="btn" aria-label="缩小画布" onClick={() => onZoomChange?.(Math.max(0.5, Number((safeZoom - 0.1).toFixed(1))))}>−</button>
@@ -445,7 +562,11 @@ export function LogicGraphCanvas({
           <button type="button" className="btn" aria-label="放大画布" onClick={() => onZoomChange?.(Math.min(2, Number((safeZoom + 0.1).toFixed(1))))}>+</button>
           <button type="button" className="btn" aria-label="重置画布缩放" onClick={() => onZoomChange?.(1)}>1:1</button>
           <span className="bp-logic-canvas-stats">节点 {nodes.length} · 连接 {edges.length}</span>
-          {linkOrigin && <span className="bp-logic-canvas-linking">连接模式 · 请选择目标端口</span>}
+          {(linkOrigin || linkPreview?.moved) && (
+            <span className="bp-logic-canvas-linking">
+              {linkPreview?.moved ? "拖线模式 · 松开到目标输入端口" : "连接模式 · 请选择目标端口"}
+            </span>
+          )}
           {interactionMessage && <span className="bp-logic-canvas-error" role="alert">{interactionMessage}</span>}
           <span className="bp-logic-canvas-toolbar-spacer" />
           <button
@@ -473,8 +594,31 @@ export function LogicGraphCanvas({
             <div
               className="bp-logic-canvas-stage"
               style={{ width: stageWidth, height: stageHeight, transform: `scale(${safeZoom})` }}
+              onPointerMove={movePointerLink}
+              onPointerUp={endPointerLink}
+              onPointerCancel={cancelPointerLink}
             >
               <svg className="bp-logic-canvas-edges" width={stageWidth} height={stageHeight} aria-hidden>
+                <defs>
+                  <marker
+                    id={arrowMarkerId}
+                    markerWidth="8"
+                    markerHeight="8"
+                    refX="7"
+                    refY="4"
+                    orient="auto"
+                    markerUnits="strokeWidth"
+                  >
+                    <path d="M 0 0 L 8 4 L 0 8 z" className="bp-logic-canvas-edge-arrow" />
+                  </marker>
+                </defs>
+                {linkPreview?.moved && (
+                  <path
+                    className="bp-logic-canvas-edge bp-logic-canvas-edge-preview"
+                    markerEnd={`url(#${arrowMarkerId})`}
+                    d={`M ${linkPreview.startX} ${linkPreview.startY} C ${linkPreview.startX + 60} ${linkPreview.startY}, ${linkPreview.currentX - 60} ${linkPreview.currentY}, ${linkPreview.currentX} ${linkPreview.currentY}`}
+                  />
+                )}
                 {edges.map((edge) => {
                   const source = nodeById.get(edge.source_node_id);
                   const target = nodeById.get(edge.target_node_id);
@@ -490,6 +634,7 @@ export function LogicGraphCanvas({
                     <path
                       key={edge.id}
                       className="bp-logic-canvas-edge"
+                      markerEnd={`url(#${arrowMarkerId})`}
                       d={`M ${startX} ${startY} C ${startX + bend} ${startY}, ${endX - bend} ${endY}, ${endX} ${endY}`}
                     />
                   );
@@ -525,14 +670,14 @@ export function LogicGraphCanvas({
                   node={node}
                   zoom={safeZoom}
                   selected={selectedNodeId === node.id}
-                  linking={linkOrigin?.nodeId === node.id}
+                  linking={linkOrigin?.nodeId === node.id || linkPreview?.nodeId === node.id}
                   runState={nodeRunStates?.get(node.id)}
                   disabled={disabled}
                   onSelect={() => onSelectNode?.(node.id)}
-                  onStartLink={(sourcePort, branchPath) => {
-                    setLinkOrigin({ nodeId: node.id, sourcePort, branchPath });
-                    setInteractionMessage("");
-                  }}
+                  onStartLink={(sourcePort, branchPath) => clickSourcePort(sourcePort, branchPath, node.id)}
+                  onPointerLinkStart={(sourcePort, branchPath, portIndex, event) => (
+                    startPointerLink(node, sourcePort, branchPath, portIndex, event)
+                  )}
                   onCompleteLink={() => completeLink(node.id)}
                   onDelete={() => deleteNode(node.id)}
                 />
