@@ -187,7 +187,7 @@ def test_eval_history_trend():
 @pytest.fixture()
 def client(monkeypatch):
     fresh = EvalsEngine(chat_fn=_mock_chat_yes)
-    monkeypatch.setattr("aos_api.routers.evals.EvalsEngine", lambda: fresh)
+    monkeypatch.setattr("aos_api.routers.evals.get_engine", lambda: fresh)
     return TestClient(create_app())
 
 
@@ -221,6 +221,11 @@ def test_api_run_eval(client):
     assert resp.status_code == 200
     assert resp.json()["pass_rate"] == 1.0
 
+    report = client.get(f"/v1/evals/{suite_id}/report", headers=_H)
+    assert report.status_code == 200
+    assert report.json()["suite_id"] == suite_id
+    assert report.json()["gate_passed"] is True
+
 
 def test_api_gate_check(client):
     create = client.post("/v1/evals/suites", json={
@@ -239,6 +244,33 @@ def test_api_gate_check(client):
     }, headers=_H)
     assert resp.status_code == 200
     assert resp.json()["gate_passed"] is True
+
+
+def test_api_gate_check_can_reuse_latest_report_without_second_run(client):
+    create = client.post("/v1/evals/suites", json={
+        "name": "reuse-report",
+        "cases": [{"id": "c1", "inputs": {"x": 1}, "expected": 2, "judge": "exact"}],
+        "gate_threshold": 1.0,
+    }, headers=_H)
+    suite_id = create.json()["id"]
+
+    run = client.post("/v1/evals/run", json={
+        "suite_id": suite_id,
+        "target_expr": "x + 1",
+    }, headers=_H)
+    assert run.status_code == 200
+
+    gate = client.post("/v1/evals/gate-check", json={
+        "suite_id": suite_id,
+        "reuse_latest_report": True,
+    }, headers=_H)
+    assert gate.status_code == 200
+    assert gate.json()["gate_passed"] is True
+    assert gate.json()["total"] == run.json()["total"]
+
+    history = client.get(f"/v1/evals/{suite_id}/history", headers=_H)
+    assert history.status_code == 200
+    assert len(history.json()["items"]) == 1
 
 
 def test_api_report_not_found(client):

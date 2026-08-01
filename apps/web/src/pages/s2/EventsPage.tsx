@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { PageChrome } from "../../components/PageChrome";
 import { BpToolbar } from "../../components/bp/BpToolbar";
-import { apiGet } from "../../api/client";
+import { apiDelete, apiGet, apiPost, apiPut } from "../../api/client";
 
 /* ============================================================================
  * 类型定义
@@ -22,6 +22,22 @@ type EventItem = {
   isNew?: boolean;
 };
 
+type ModuleEventApiItem = {
+  id: string;
+  moduleId?: string;
+  name?: string;
+  trigger?: { type?: string; params?: Record<string, string>; [key: string]: unknown };
+  action?: {
+    type?: string;
+    params?: Record<string, string>;
+    description?: string;
+    idempotent?: boolean;
+    idempotencyKey?: string;
+    [key: string]: unknown;
+  };
+  enabled?: boolean;
+};
+
 type TriggerId =
   | "pageLoad"
   | "dataChange"
@@ -35,7 +51,11 @@ type ActionId =
   | "navigate"
   | "callApi"
   | "updateData"
-  | "sendNotification";
+  | "sendNotification"
+  | "openOverlay"
+  | "exportData";
+
+const EVENTS_MODULE_ID = "order-mgmt";
 
 /* ============================================================================
  * 常量 & 纯函数（便于测试）
@@ -58,6 +78,8 @@ export const ACTIONS: { id: ActionId; name: string; icon: string; desc: string; 
   { id: "callApi", name: "调用 API", icon: "⚡", desc: "执行 Ontology Action 或接口", color: "green" },
   { id: "updateData", name: "更新数据", icon: "📝", desc: "写入/修改变量或数据集", color: "yellow" },
   { id: "sendNotification", name: "发送通知", icon: "📡", desc: "邮件 / 站内信 / Webhook", color: "red" },
+  { id: "openOverlay", name: "打开浮层", icon: "▣", desc: "打开 Overlay / Modal", color: "purple" },
+  { id: "exportData", name: "导出数据", icon: "⇩", desc: "导出当前数据集", color: "blue" },
 ];
 
 /** 触发器 ID → 中文标签 */
@@ -77,6 +99,8 @@ export const ACTION_LABEL: Record<ActionId, string> = {
   callApi: "调用 API",
   updateData: "更新数据",
   sendNotification: "发送通知",
+  openOverlay: "打开浮层",
+  exportData: "导出数据",
 };
 
 /** 状态 ID → 中文标签 + 颜色 */
@@ -120,6 +144,9 @@ export function getParamFields(triggerId: TriggerId | null, actionId: ActionId |
   }
   if (triggerId === "apiCallback") {
     fields.push({ key: "apiEndpoint", label: "API 端点", placeholder: "/v1/orders/{id}/assign", required: true, type: "text" });
+  }
+  if (triggerId === "dataChange") {
+    fields.push({ key: "variableId", label: "变更变量", placeholder: "orders", required: true, type: "text" });
   }
 
   /* 动作相关参数 */
@@ -176,6 +203,12 @@ export function getParamFields(triggerId: TriggerId | null, actionId: ActionId |
     });
     fields.push({ key: "recipient", label: "接收方", placeholder: "ops-team 或 user@com", required: true, type: "text" });
   }
+  if (actionId === "openOverlay") {
+    fields.push({ key: "overlayId", label: "浮层标识", placeholder: "order-detail", required: true, type: "text" });
+  }
+  if (actionId === "exportData") {
+    fields.push({ key: "datasetId", label: "数据集标识", placeholder: "orders", required: true, type: "text" });
+  }
 
   return fields;
 }
@@ -208,6 +241,142 @@ export function canProceed(
     return fields.every((f) => !f.required || (data.params[f.key] || "").trim().length > 0);
   }
   return true;
+}
+
+const TRIGGER_API_TO_UI: Record<string, TriggerId> = {
+  on_load: "pageLoad",
+  on_change: "dataChange",
+  interval: "timer",
+  on_click: "userAction",
+  on_select: "userAction",
+  custom: "manual",
+};
+
+const ACTION_API_TO_UI: Record<string, ActionId> = {
+  show_message: "showMessage",
+  show_notification: "showMessage",
+  navigate: "navigate",
+  call_function: "callApi",
+  query: "callApi",
+  set_variable: "updateData",
+  open_overlay: "openOverlay",
+  export_data: "exportData",
+};
+
+export function apiEventToEventItem(item: ModuleEventApiItem): EventItem {
+  const triggerType = String(item.trigger?.type || "pageLoad");
+  const actionType = String(item.action?.type || "showMessage");
+  const triggerId = TRIGGERS.some((entry) => entry.id === triggerType)
+    ? triggerType as TriggerId
+    : TRIGGER_API_TO_UI[triggerType];
+  const savedUiAction = String(item.action?.uiType || "");
+  const actionId = ACTIONS.some((entry) => entry.id === savedUiAction)
+    ? savedUiAction as ActionId
+    : ACTIONS.some((entry) => entry.id === actionType)
+      ? actionType as ActionId
+      : ACTION_API_TO_UI[actionType];
+  if (!triggerId) throw new Error(`不支持的事件触发器类型：${triggerType}`);
+  if (!actionId) throw new Error(`不支持的事件动作类型：${actionType}`);
+  const triggerParams: Record<string, string> = { ...(item.trigger?.params || {}) };
+  if (!item.trigger?.params) {
+    for (const [key, value] of Object.entries(item.trigger || {})) {
+      if (key !== "type" && typeof value === "string") triggerParams[key] = value;
+    }
+  }
+  const actionParams: Record<string, string> = { ...(item.action?.params || {}) };
+  for (const [key, value] of Object.entries(item.action || {})) {
+    if (!["type", "params", "description", "idempotent", "idempotencyKey", "uiType"].includes(key) && typeof value === "string") {
+      actionParams[key] = value;
+    }
+  }
+  return {
+    id: item.id,
+    name: item.name || item.id,
+    description: String(item.action?.description || ""),
+    triggerId,
+    actionId,
+    params: { ...triggerParams, ...actionParams },
+    status: item.enabled === false ? "paused" : "active",
+    idempotent: item.action?.idempotent === true,
+    idempotencyKey: item.action?.idempotencyKey,
+  };
+}
+
+export function eventCreatePayload(input: {
+  name: string;
+  description: string;
+  triggerId: TriggerId;
+  actionId: ActionId;
+  params: Record<string, string>;
+  idempotent: boolean;
+  idempotencyKey?: string;
+}) {
+  const triggerType = input.triggerId === "pageLoad"
+    ? "on_load"
+    : input.triggerId === "dataChange"
+      ? "on_change"
+      : input.triggerId === "timer"
+        ? "interval"
+        : input.triggerId === "userAction"
+          ? input.params.eventType === "change" ? "on_change" : "on_click"
+          : "custom";
+  const actionType: Record<ActionId, string> = {
+    showMessage: "show_notification",
+    navigate: "navigate",
+    callApi: "call_function",
+    updateData: "set_variable",
+    sendNotification: "show_notification",
+    openOverlay: "open_overlay",
+    exportData: "export_data",
+  };
+  const target = input.actionId === "navigate"
+    ? input.params.targetRoute
+    : input.actionId === "callApi"
+      ? input.params.apiAction
+      : input.actionId === "updateData"
+        ? input.params.targetVar
+        : input.actionId === "openOverlay"
+          ? input.params.overlayId
+          : input.actionId === "exportData"
+            ? input.params.datasetId
+            : undefined;
+  const triggerRequired = triggerType === "on_click"
+    ? input.params.widgetId
+    : triggerType === "on_change"
+      ? input.params.variableId || input.params.widgetId
+      : triggerType === "interval"
+        ? input.params.interval
+        : triggerType === "custom"
+          ? input.params.apiEndpoint || input.params.eventType || "manual"
+          : "ok";
+  if (!String(triggerRequired || "").trim()) throw new Error(`触发器 ${triggerType} 缺少 catalog 必填字段`);
+  if (triggerType === "interval" && !Number.isFinite(Number(input.params.interval))) {
+    throw new Error("触发器 interval 的 value 必须是数值");
+  }
+  if (["navigate", "call_function", "set_variable", "open_overlay"].includes(actionType[input.actionId]) && !target?.trim()) {
+    throw new Error(`动作 ${actionType[input.actionId]} 缺少 catalog 必填 target`);
+  }
+  return {
+    name: input.name,
+    trigger: {
+      type: triggerType,
+      params: input.params,
+      ...(triggerType === "on_click" ? { widgetId: input.params.widgetId || "" } : {}),
+      ...(triggerType === "on_change" ? { variableId: input.params.variableId || input.params.widgetId || "" } : {}),
+      ...(triggerType === "interval" ? { value: Number(input.params.interval), unit: "seconds" } : {}),
+      ...(triggerType === "custom" ? { expression: input.params.apiEndpoint || input.params.eventType || "manual" } : {}),
+    },
+    action: {
+      type: actionType[input.actionId],
+      uiType: input.actionId,
+      params: input.params,
+      ...(target ? { target } : {}),
+      description: input.description,
+      idempotent: input.idempotent,
+      idempotencyKey: input.idempotencyKey,
+    },
+    enabled: false,
+  };
 }
 
 export const MOCK_EVENTS: EventItem[] = [
@@ -250,8 +419,12 @@ export const MOCK_EVENTS: EventItem[] = [
  * ========================================================================== */
 
 export function EventsPage() {
-  const [events, setEvents] = useState<EventItem[]>(MOCK_EVENTS);
+  const moduleId = EVENTS_MODULE_ID;
+  const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [err, setErr] = useState("");
+  const [msg, setMsg] = useState("");
 
   /* 向导状态 */
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -264,36 +437,25 @@ export function EventsPage() {
   const [enableIdempotency, setEnableIdempotency] = useState(true);
   const [idempotencyKey, setIdempotencyKey] = useState("");
 
-  /* GET /v1/modules/:id/events —— 失败用 MOCK_EVENTS */
+  const reloadEvents = useCallback(async () => {
+    setLoading(true);
+    setErr("");
+    try {
+      const res = await apiGet<{ items?: ModuleEventApiItem[] }>(`/v1/modules/${moduleId}/events`);
+      const mapped = (res.items || []).map(apiEventToEventItem);
+      setEvents(mapped);
+      return mapped;
+    } catch (e) {
+      setErr(`事件列表加载失败：${String((e as Error).message || e)}`);
+      throw e;
+    } finally {
+      setLoading(false);
+    }
+  }, [moduleId]);
+
   useEffect(() => {
-    let cancelled = false;
-    const moduleId = "order-mgmt";
-    (async () => {
-      try {
-        const res = await apiGet<{ items?: Array<Partial<EventItem>> }>(`/v1/modules/${moduleId}/events`);
-        if (cancelled) return;
-        if (res.items && res.items.length) {
-          const mapped: EventItem[] = res.items.map((it, idx) => ({
-            id: it.id || `e_${idx}`,
-            name: it.name || `事件 ${idx + 1}`,
-            description: it.description || "",
-            triggerId: (it.triggerId as TriggerId) || "pageLoad",
-            actionId: (it.actionId as ActionId) || "showMessage",
-            params: it.params || {},
-            status: (it.status as EventStatus) || "draft",
-            idempotent: it.idempotent ?? false,
-            idempotencyKey: it.idempotencyKey,
-          }));
-          setEvents(mapped);
-        }
-      } catch {
-        /* 降级到 MOCK_EVENTS（初始值）*/
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
+    void reloadEvents().catch(() => undefined);
+  }, [reloadEvents]);
 
   function openWizard() {
     setWizardOpen(true);
@@ -324,36 +486,80 @@ export function EventsPage() {
     setStep((s) => Math.max(s - 1, 1));
   }
 
-  function confirmCreate() {
+  async function confirmCreate() {
     const key = enableIdempotency
       ? (idempotencyKey || buildIdempotencyKey(actionId, params.widgetId, params))
       : undefined;
-    const newEvent: EventItem = {
-      id: `e_${Date.now()}`,
-      name: name.trim(),
-      description: description.trim(),
-      triggerId: triggerId!,
-      actionId: actionId!,
-      params,
-      status: "draft",
-      idempotent: enableIdempotency,
-      idempotencyKey: key,
-      isNew: true,
-    };
-    setEvents((prev) => [...prev, newEvent]);
-    closeWizard();
+    setBusyId("create");
+    setErr("");
+    setMsg("");
+    try {
+      const created = await apiPost<{ ok?: boolean; item?: ModuleEventApiItem }>(`/v1/modules/${moduleId}/events`, eventCreatePayload({
+        name: name.trim(),
+        description: description.trim(),
+        triggerId: triggerId!,
+        actionId: actionId!,
+        params,
+        idempotent: enableIdempotency,
+        idempotencyKey: key,
+      }));
+      if (created.ok !== true || !created.item?.id || (created.item.moduleId && created.item.moduleId !== moduleId)) {
+        throw new Error("创建 API 未返回可信 ok/item");
+      }
+      const fresh = await reloadEvents();
+      if (!fresh.some((event) => event.id === created.item!.id)) {
+        throw new Error("创建后重读未找到新事件");
+      }
+      setMsg(`事件“${name.trim()}”已创建并从服务端重读`);
+      closeWizard();
+    } catch (e) {
+      setErr(`创建事件失败：${String((e as Error).message || e)}`);
+    } finally {
+      setBusyId(null);
+    }
   }
 
-  function toggleStatus(id: string) {
-    setEvents((prev) =>
-      prev.map((e) =>
-        e.id === id ? { ...e, status: e.status === "active" ? "paused" : "active" } : e,
-      ),
-    );
+  async function toggleStatus(event: EventItem) {
+    const enabled = event.status !== "active";
+    setBusyId(event.id);
+    setErr("");
+    setMsg("");
+    try {
+      const updated = await apiPut<{ ok?: boolean; item?: ModuleEventApiItem }>(
+        `/v1/modules/${moduleId}/events/${encodeURIComponent(event.id)}`,
+        { enabled },
+      );
+      if (updated.ok !== true || updated.item?.id !== event.id || updated.item.enabled !== enabled) {
+        throw new Error("更新 API 回包与目标状态不一致");
+      }
+      const fresh = await reloadEvents();
+      const reloaded = fresh.find((item) => item.id === event.id);
+      if (!reloaded || (reloaded.status === "active") !== enabled) {
+        throw new Error("更新后重读状态不一致");
+      }
+      setMsg(`事件“${event.name}”已${enabled ? "启用" : "暂停"}`);
+    } catch (e) {
+      setErr(`${enabled ? "启用" : "暂停"}事件失败：${String((e as Error).message || e)}`);
+    } finally {
+      setBusyId(null);
+    }
   }
 
-  function deleteEvent(id: string) {
-    setEvents((prev) => prev.filter((e) => e.id !== id));
+  async function deleteEvent(event: EventItem) {
+    setBusyId(event.id);
+    setErr("");
+    setMsg("");
+    try {
+      const deleted = await apiDelete<{ ok?: boolean }>(`/v1/modules/${moduleId}/events/${encodeURIComponent(event.id)}`);
+      if (deleted.ok !== true) throw new Error("删除 API 未返回 ok=true");
+      const fresh = await reloadEvents();
+      if (fresh.some((item) => item.id === event.id)) throw new Error("删除后重读仍存在该事件");
+      setMsg(`事件“${event.name}”已删除`);
+    } catch (e) {
+      setErr(`删除事件失败：${String((e as Error).message || e)}`);
+    } finally {
+      setBusyId(null);
+    }
   }
 
   /* 动态参数字段（step 4 用）*/
@@ -371,6 +577,9 @@ export function EventsPage() {
           }
           count={events.length}
         />
+
+        {msg && <p className="bp-prop-ok" role="status">{msg}</p>}
+        {err && <p className="error" role="alert">{err}</p>}
 
         {/* === 上半区：事件列表表格 === */}
         <div style={{ background: "var(--aos-surface)", borderRadius: 2, border: "1px solid var(--aos-border)", marginTop: 16, overflow: "hidden" }}>
@@ -420,7 +629,8 @@ export function EventsPage() {
                     </td>
                     <td style={{ padding: "12px 16px", textAlign: "right" }}>
                       <button
-                        onClick={() => toggleStatus(e.id)}
+                        disabled={busyId === e.id}
+                        onClick={() => void toggleStatus(e)}
                         style={{
                           fontSize: 11,
                           color: e.status === "active" ? "#9CA3AF" : "#10B981",
@@ -433,7 +643,8 @@ export function EventsPage() {
                         {e.status === "active" ? "暂停" : "启用"}
                       </button>
                       <button
-                        onClick={() => deleteEvent(e.id)}
+                        disabled={busyId === e.id}
+                        onClick={() => void deleteEvent(e)}
                         style={{
                           fontSize: 11,
                           color: "#EF4444",
@@ -770,8 +981,8 @@ export function EventsPage() {
                     下一步 →
                   </button>
                 ) : (
-                  <button onClick={confirmCreate} style={btnPrimary}>
-                    ✓ 完成创建
+                  <button disabled={busyId === "create"} onClick={() => void confirmCreate()} style={btnPrimary}>
+                    {busyId === "create" ? "创建中…" : "✓ 完成创建"}
                   </button>
                 )}
               </div>

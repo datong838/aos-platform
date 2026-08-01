@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { act, createElement } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  EventsPage,
   TRIGGERS,
   ACTIONS,
   TRIGGER_LABEL,
@@ -9,7 +13,20 @@ import {
   getParamFields,
   buildIdempotencyKey,
   canProceed,
+  apiEventToEventItem,
+  eventCreatePayload,
 } from "./EventsPage";
+
+const apiMocks = vi.hoisted(() => ({
+  apiGet: vi.fn(),
+  apiPost: vi.fn(),
+  apiPut: vi.fn(),
+  apiDelete: vi.fn(),
+}));
+
+vi.mock("../../api/client", () => apiMocks);
+
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 describe("EventsPage · TRIGGERS 触发器定义", () => {
   it("包含 6 个触发器", () => {
@@ -32,8 +49,8 @@ describe("EventsPage · TRIGGERS 触发器定义", () => {
 });
 
 describe("EventsPage · ACTIONS 动作定义", () => {
-  it("包含 5 个动作", () => {
-    expect(ACTIONS).toHaveLength(5);
+  it("包含后端 catalog 可表达的 7 个动作", () => {
+    expect(ACTIONS).toHaveLength(7);
   });
 
   it("每个动作有 id/name/icon/desc/color", () => {
@@ -272,5 +289,221 @@ describe("EventsPage · MOCK_EVENTS 初始数据", () => {
         }
       }
     }
+  });
+});
+
+describe("EventsPage · API DTO", () => {
+  it("把后端 trigger/action/enabled 映射为页面事件", () => {
+    expect(apiEventToEventItem({
+      id: "evt-1",
+      name: "选择联动",
+      trigger: { type: "on_select", widgetId: "orders" },
+      action: { type: "set_variable", params: { targetVar: "selected" } },
+      enabled: false,
+    })).toMatchObject({
+      id: "evt-1",
+      triggerId: "userAction",
+      actionId: "updateData",
+      status: "paused",
+      params: { widgetId: "orders", targetVar: "selected" },
+    });
+  });
+
+  it("创建 payload 保留事件语义且默认禁用", () => {
+    expect(eventCreatePayload({
+      name: "新事件",
+      description: "说明",
+      triggerId: "manual",
+      actionId: "showMessage",
+      params: { messageContent: "完成" },
+      idempotent: false,
+    })).toMatchObject({
+      name: "新事件",
+      trigger: { type: "custom" },
+      action: { type: "show_notification", uiType: "showMessage", description: "说明" },
+      enabled: false,
+    });
+  });
+
+  it("创建 payload 满足 trigger/action catalog 必填字段", () => {
+    const timer = eventCreatePayload({
+      name: "定时",
+      description: "",
+      triggerId: "timer",
+      actionId: "callApi",
+      params: { interval: "30", apiAction: "refreshOrders" },
+      idempotent: true,
+      idempotencyKey: "refresh",
+    });
+    expect(timer).toMatchObject({
+      trigger: { type: "interval", value: 30, unit: "seconds" },
+      action: { type: "call_function", target: "refreshOrders" },
+    });
+
+    const changed = eventCreatePayload({
+      name: "变量变更",
+      description: "",
+      triggerId: "dataChange",
+      actionId: "updateData",
+      params: { variableId: "orders", targetVar: "filteredOrders" },
+      idempotent: true,
+    });
+    expect(changed).toMatchObject({
+      trigger: { type: "on_change", variableId: "orders" },
+      action: { type: "set_variable", target: "filteredOrders" },
+    });
+  });
+
+  it("覆盖后端扩展动作，未知类型显式失败", () => {
+    expect(apiEventToEventItem({ id: "f", action: { type: "call_function" }, trigger: { type: "on_load" } }).actionId).toBe("callApi");
+    expect(apiEventToEventItem({ id: "n", action: { type: "show_notification" }, trigger: { type: "on_load" } }).actionId).toBe("showMessage");
+    expect(apiEventToEventItem({ id: "o", action: { type: "open_overlay" }, trigger: { type: "on_load" } }).actionId).toBe("openOverlay");
+    expect(apiEventToEventItem({ id: "e", action: { type: "export_data" }, trigger: { type: "on_load" } }).actionId).toBe("exportData");
+    expect(() => apiEventToEventItem({ id: "bad", action: { type: "unknown" }, trigger: { type: "on_load" } })).toThrow("不支持的事件动作类型");
+    expect(() => apiEventToEventItem({ id: "bad", action: { type: "query" }, trigger: { type: "unknown" } })).toThrow("不支持的事件触发器类型");
+  });
+});
+
+describe("EventsPage · 真实 CRUD 交互", () => {
+  let host: HTMLDivElement;
+  let root: Root;
+
+  const serverEvent = {
+    id: "evt-1",
+    name: "真实事件",
+    trigger: { type: "manual", params: {} },
+    action: { type: "showMessage", params: { messageType: "toast", messageContent: "完成" } },
+    enabled: true,
+  };
+
+  async function flush() {
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+  }
+
+  function button(label: string): HTMLButtonElement {
+    const found = Array.from(host.querySelectorAll("button")).find((node) => node.textContent?.includes(label));
+    if (!found) throw new Error(`button not found: ${label}`);
+    return found;
+  }
+
+  function setValue(element: HTMLInputElement | HTMLTextAreaElement, value: string) {
+    const prototype = element instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+    Object.getOwnPropertyDescriptor(prototype, "value")?.set?.call(element, value);
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+    element.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function clickText(label: string) {
+    const found = Array.from(host.querySelectorAll("*")).find((node) => node.textContent === label);
+    if (!found) throw new Error(`text not found: ${label}`);
+    found.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  }
+
+  beforeEach(() => {
+    host = document.createElement("div");
+    document.body.appendChild(host);
+    root = createRoot(host);
+    apiMocks.apiGet.mockReset();
+    apiMocks.apiPost.mockReset();
+    apiMocks.apiPut.mockReset();
+    apiMocks.apiDelete.mockReset();
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    host.remove();
+  });
+
+  it("启停和删除成功后调用真实 API 并重读", async () => {
+    apiMocks.apiGet
+      .mockResolvedValueOnce({ items: [serverEvent] })
+      .mockResolvedValueOnce({ items: [{ ...serverEvent, enabled: false }] })
+      .mockResolvedValueOnce({ items: [] });
+    apiMocks.apiPut.mockResolvedValue({ ok: true, item: { ...serverEvent, enabled: false } });
+    apiMocks.apiDelete.mockResolvedValue({ ok: true });
+
+    await act(async () => {
+      root.render(createElement(MemoryRouter, null, createElement(EventsPage)));
+    });
+    await flush();
+
+    await act(async () => button("暂停").click());
+    await flush();
+    expect(apiMocks.apiPut).toHaveBeenCalledWith("/v1/modules/order-mgmt/events/evt-1", { enabled: false });
+    expect(host.textContent).toContain("已暂停");
+
+    await act(async () => button("删除").click());
+    await flush();
+    expect(apiMocks.apiDelete).toHaveBeenCalledWith("/v1/modules/order-mgmt/events/evt-1");
+    expect(host.textContent).toContain("暂无事件");
+  });
+
+  it("写 API 回包不可信时保留服务端列表并显示错误", async () => {
+    apiMocks.apiGet.mockResolvedValue({ items: [serverEvent] });
+    apiMocks.apiPut.mockResolvedValue({ ok: true, item: { ...serverEvent, enabled: true } });
+
+    await act(async () => {
+      root.render(createElement(MemoryRouter, null, createElement(EventsPage)));
+    });
+    await flush();
+    await act(async () => button("暂停").click());
+    await flush();
+
+    expect(host.textContent).toContain("更新 API 回包与目标状态不一致");
+    expect(host.textContent).toContain("运行中");
+    expect(apiMocks.apiGet).toHaveBeenCalledTimes(1);
+  });
+
+  it("完成向导后 POST 创建并以服务端重读结果展示", async () => {
+    const created = {
+      ...serverEvent,
+      id: "evt-created",
+      name: "导航事件",
+      trigger: { type: "manual", params: { targetRoute: "/orders" } },
+      action: { type: "navigate", params: { targetRoute: "/orders" } },
+      enabled: false,
+    };
+    apiMocks.apiGet
+      .mockResolvedValueOnce({ items: [] })
+      .mockResolvedValueOnce({ items: [created] });
+    apiMocks.apiPost.mockResolvedValue({ ok: true, item: created });
+
+    await act(async () => {
+      root.render(createElement(MemoryRouter, null, createElement(EventsPage)));
+    });
+    await flush();
+    await act(async () => button("添加事件").click());
+    const nameInput = host.querySelector('input[placeholder="如：选中订单写入变量"]') as HTMLInputElement;
+    await act(async () => setValue(nameInput, "导航事件"));
+    expect(button("下一步").disabled).toBe(false);
+    await act(async () => button("下一步").click());
+    await flush();
+    await act(async () => clickText("手动触发"));
+    await act(async () => button("下一步").click());
+    await flush();
+    await act(async () => clickText("跳转页面"));
+    await act(async () => button("下一步").click());
+    await flush();
+    const routeInput = host.querySelector('input[placeholder="/orders/{row.id}"]') as HTMLInputElement;
+    await act(async () => setValue(routeInput, "/orders"));
+    await act(async () => button("下一步").click());
+    await flush();
+    await act(async () => button("完成创建").click());
+    await flush();
+
+    expect(apiMocks.apiPost).toHaveBeenCalledWith(
+      "/v1/modules/order-mgmt/events",
+      expect.objectContaining({
+        name: "导航事件",
+        trigger: expect.objectContaining({ type: "custom" }),
+        action: expect.objectContaining({ type: "navigate" }),
+        enabled: false,
+      }),
+    );
+    expect(host.textContent).toContain("已创建并从服务端重读");
+    expect(host.textContent).toContain("已暂停");
   });
 });

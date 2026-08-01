@@ -126,6 +126,24 @@ class TestModuleEventsCRUD:
         get_resp = client.get(f"/v1/modules/mod-canvas-draft/events/{eid}")
         assert get_resp.status_code == 404
 
+    def test_event_id_cannot_cross_module_boundary(self, client):
+        create = client.post(
+            "/v1/modules/mod-canvas-draft/events",
+            json={"name": "隔离事件", "trigger": {}, "action": {}},
+        )
+        eid = create.json()["item"]["id"]
+
+        assert client.get(f"/v1/modules/another-module/events/{eid}").status_code == 404
+        assert client.put(
+            f"/v1/modules/another-module/events/{eid}",
+            json={"enabled": False},
+        ).status_code == 404
+        assert client.delete(f"/v1/modules/another-module/events/{eid}").status_code == 404
+
+        original = client.get(f"/v1/modules/mod-canvas-draft/events/{eid}")
+        assert original.status_code == 200
+        assert original.json()["item"]["enabled"] is True
+
     def test_triggers_catalog(self, client):
         """Get the catalog of available trigger types."""
         resp = client.get("/v1/modules/mod-canvas-draft/events/triggers/catalog")

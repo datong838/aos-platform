@@ -155,6 +155,7 @@ class EvalsEngine:
             "passed": report.passed,
             "failed": report.failed,
             "total": report.total,
+            "run_at": report.run_at,
         }
 
     def get_report(self, suite_id: str) -> EvalReport | None:
