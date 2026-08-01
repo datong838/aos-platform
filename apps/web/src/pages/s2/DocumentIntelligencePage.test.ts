@@ -18,9 +18,8 @@ import {
   CONFIDENCE_THRESHOLD,
   ALLOWED_EXTENSIONS,
   pathLabel,
-  buildExtractPayload,
   normalizeExtractFields,
-  demoExtractFields,
+  requireMatchingDocument,
   DOCINTEL_PIPELINE_TEMPLATES,
   type DocState,
   type ExtractField,
@@ -392,19 +391,11 @@ describe("DocumentIntelligencePage · TYPE_META", () => {
  *  13. W4-A8 / E1 纯函数
  * ================================================================ */
 describe("DocumentIntelligencePage · W4 pathLabel / extract helpers", () => {
-  it("pathLabel 映射 live/demo/loading", () => {
+  it("pathLabel 映射 live/demo/loading/idle", () => {
     expect(pathLabel("live")).toBe("真 API");
     expect(pathLabel("demo")).toBe("演示路径");
     expect(pathLabel("loading")).toBe("加载中");
-  });
-
-  it("buildExtractPayload 优先 ocrText，否则 title", () => {
-    expect(buildExtractPayload({ title: "a.pdf", ocrText: "正文" }, "invoice")).toEqual({
-      template_id: "invoice",
-      text: "正文",
-      name: "a.pdf",
-    });
-    expect(buildExtractPayload({ title: "b.pdf", ocrText: "  " }, "contract").text).toBe("b.pdf");
+    expect(pathLabel("idle")).toBe("未运行");
   });
 
   it("normalizeExtractFields 过滤非法项并钳制置信度", () => {
@@ -419,11 +410,10 @@ describe("DocumentIntelligencePage · W4 pathLabel / extract helpers", () => {
     expect(fields[1].value).toBe("B");
   });
 
-  it("demoExtractFields 按模板生成演示字段", () => {
-    const fields = demoExtractFields("invoice");
-    expect(fields.length).toBe(TEMPLATES.find((t) => t.id === "invoice")!.fields.length);
-    expect(fields[0].value.startsWith("演示·")).toBe(true);
-    expect(fields[0].source.startsWith("演示")).toBe(true);
+  it("requireMatchingDocument 对响应 id 错配 fail-closed", () => {
+    const document = { id: "doc-1", name: "a.pdf" };
+    expect(requireMatchingDocument(document, "doc-1", "测试")).toBe(document);
+    expect(() => requireMatchingDocument(document, "doc-2", "测试")).toThrow("响应文档错配");
   });
 
   it("DOCINTEL_PIPELINE_TEMPLATES 含 6 个视觉稿模板", () => {
