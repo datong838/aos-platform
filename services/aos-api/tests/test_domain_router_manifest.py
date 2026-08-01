@@ -365,12 +365,12 @@ class RouterManifestRuntimeTests(unittest.TestCase):
                 )
             result = json.loads(output.read_text())
 
-        self.assertEqual(3996, result["count"])
+        self.assertEqual(4004, result["count"])
         self.assertEqual(
-            "9c78fbdf0b8fc4a7dfc5f1204b9e05d602ab7bffbffd8dafe64c57ad1bf2777a",
+            "dee78759a53c3123beeab00582d6eec6534a728a144c51afcda8ced2a78ce730",
             result["sha256"],
         )
-        self.assertEqual(2242, result["openapi_paths"])
+        self.assertEqual(2248, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual([], result["missing_critical"])
         self.assertTrue(result["managed_skipped_bootstrap"])
