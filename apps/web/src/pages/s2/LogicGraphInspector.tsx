@@ -20,6 +20,7 @@ const STRING_CONFIG_KEYS = [
   "name",
   "expression",
   "property",
+  "source",
   "prompt",
   "model",
   "tool",
@@ -30,6 +31,7 @@ const STRING_CONFIG_KEYS = [
 
 const HANDOFF_TARGETS = new Set(["risk_agent", "draft_inbox", "webhook"]);
 const BRANCH_PATH_KEYS = new Set(["id", "label", "condition", "color", "default"]);
+const ACTION_EDIT_KEYS = new Set(["object_id", "field", "value"]);
 
 function prettyJson(value: unknown, fallback: unknown): string {
   try {
@@ -45,6 +47,9 @@ function draftsFor(node: LogicGraphNode | null): Drafts {
     label: node.label,
     schema: prettyJson(node.config.schema, {}),
     paths: prettyJson(node.config.paths, []),
+    arguments: prettyJson(node.config.arguments, {}),
+    edits: prettyJson(node.config.edits, []),
+    request: prettyJson(node.config.request, {}),
   };
   STRING_CONFIG_KEYS.forEach((key) => {
     drafts[key] = typeof node.config[key] === "string" ? node.config[key] as string : "";
@@ -67,6 +72,47 @@ function parseSchema(text: string): Record<string, unknown> {
     throw new Error("Input Schema 必须是 JSON 对象");
   }
   return value as Record<string, unknown>;
+}
+
+function parseJsonObject(text: string, label: string): Record<string, unknown> {
+  const value = parseJson(text, label);
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${label} 必须是 JSON 对象`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function parseActionEdits(text: string): Record<string, unknown>[] {
+  const value = parseJson(text, "Action Edits");
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new Error("Action Edits 必须是非空 JSON 数组");
+  }
+  return value.map((candidate, index) => {
+    const label = `Action edit #${index + 1}`;
+    if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) {
+      throw new Error(`${label} 必须是对象`);
+    }
+    const edit = candidate as Record<string, unknown>;
+    const unknownKeys = Object.keys(edit).filter((key) => !ACTION_EDIT_KEYS.has(key));
+    if (unknownKeys.length > 0) {
+      throw new Error(`${label} 包含未知字段：${unknownKeys.join(", ")}`);
+    }
+    if (typeof edit.object_id !== "string") {
+      throw new Error(`${label} 的 object_id 必须是字符串`);
+    }
+    if (typeof edit.field !== "string") {
+      throw new Error(`${label} 的 field 必须是字符串`);
+    }
+    const objectId = edit.object_id.trim();
+    const field = edit.field.trim();
+    if (!objectId || !field) {
+      throw new Error(`${label} 的 object_id、field 均不能为空`);
+    }
+    if (!Object.prototype.hasOwnProperty.call(edit, "value")) {
+      throw new Error(`${label} 必须包含 value`);
+    }
+    return { object_id: objectId, field, value: edit.value };
+  });
 }
 
 function parseBranchPaths(text: string): Record<string, unknown>[] {
@@ -155,6 +201,43 @@ function TextEditor({
   );
 }
 
+function JsonEditor({
+  label,
+  applyLabel,
+  draft,
+  disabled,
+  rows,
+  onDraftChange,
+  onApply,
+}: {
+  label: string;
+  applyLabel: string;
+  draft: string;
+  disabled: boolean;
+  rows: number;
+  onDraftChange: (value: string) => void;
+  onApply: () => void;
+}) {
+  return (
+    <div className="bp-logic-canvas-inspector-field is-stacked">
+      <label>
+        <span>{label}</span>
+        <textarea
+          aria-label={label}
+          value={draft}
+          rows={rows}
+          disabled={disabled}
+          spellCheck={false}
+          onChange={(event) => onDraftChange(event.target.value)}
+        />
+      </label>
+      <button type="button" className="btn" aria-label={`应用 ${applyLabel}`} disabled={disabled} onClick={onApply}>
+        应用 {applyLabel}
+      </button>
+    </div>
+  );
+}
+
 export function LogicGraphInspector({
   selectedNode,
   entryNodeIds,
@@ -214,6 +297,28 @@ export function LogicGraphInspector({
       ...selectedNode,
       config: { ...selectedNode.config, [key]: value },
     }, "node_config");
+  }
+
+  function commitOptionalStringConfig(key: string): void {
+    if (!selectedNode) return;
+    const value = (drafts[key] || "").trim();
+    const config = { ...selectedNode.config };
+    if (value) config[key] = value;
+    else delete config[key];
+    commitNode({ ...selectedNode, config }, "node_config");
+  }
+
+  function commitJsonConfig(
+    key: string,
+    parser: (text: string) => Record<string, unknown> | Record<string, unknown>[],
+  ): void {
+    if (!selectedNode) return;
+    try {
+      const value = parser(drafts[key] || "");
+      commitNode({ ...selectedNode, config: { ...selectedNode.config, [key]: value } }, "node_config");
+    } catch (error) {
+      failValidation(error instanceof Error ? error.message : String(error));
+    }
   }
 
   function commitSchema(): void {
@@ -339,17 +444,67 @@ export function LogicGraphInspector({
           {textEditor("变量表达式", "expression", true)}
         </>
       )}
-      {selectedNode.kind === "get_property" && textEditor("Property", "property")}
+      {selectedNode.kind === "get_property" && (
+        <>
+          {textEditor("Property", "property")}
+          <TextEditor
+            label="Source"
+            draft={drafts.source || ""}
+            disabled={disabled}
+            onDraftChange={(value) => updateDraft("source", value)}
+            onApply={() => commitOptionalStringConfig("source")}
+          />
+        </>
+      )}
       {selectedNode.kind === "use_llm" && (
         <>
           {textEditor("Prompt", "prompt", true)}
           {textEditor("Model", "model")}
         </>
       )}
-      {selectedNode.kind === "use_tool" && textEditor("Tool", "tool")}
+      {selectedNode.kind === "use_tool" && (
+        <>
+          {textEditor("Tool", "tool")}
+          <JsonEditor
+            label="Tool Arguments JSON"
+            applyLabel="Tool Arguments"
+            draft={drafts.arguments || ""}
+            disabled={disabled}
+            rows={6}
+            onDraftChange={(value) => updateDraft("arguments", value)}
+            onApply={() => commitJsonConfig("arguments", (text) => parseJsonObject(text, "Tool Arguments"))}
+          />
+        </>
+      )}
       {selectedNode.kind === "transform" && textEditor("Expression", "expression", true)}
-      {selectedNode.kind === "apply_action" && textEditor("Action", "action")}
-      {selectedNode.kind === "execute" && textEditor("Target", "target")}
+      {selectedNode.kind === "apply_action" && (
+        <>
+          {textEditor("Action", "action")}
+          <JsonEditor
+            label="Action Edits JSON"
+            applyLabel="Action Edits"
+            draft={drafts.edits || ""}
+            disabled={disabled}
+            rows={8}
+            onDraftChange={(value) => updateDraft("edits", value)}
+            onApply={() => commitJsonConfig("edits", parseActionEdits)}
+          />
+        </>
+      )}
+      {selectedNode.kind === "execute" && (
+        <>
+          {textEditor("Target", "target")}
+          <JsonEditor
+            label="Execute Request JSON"
+            applyLabel="Execute Request"
+            draft={drafts.request || ""}
+            disabled={disabled}
+            rows={6}
+            onDraftChange={(value) => updateDraft("request", value)}
+            onApply={() => commitJsonConfig("request", (text) => parseJsonObject(text, "Execute Request"))}
+          />
+        </>
+      )}
 
       {selectedNode.kind === "branch" && (
         <div className="bp-logic-canvas-inspector-field is-stacked">

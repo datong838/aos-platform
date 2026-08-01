@@ -28,7 +28,15 @@ function node(kind: LogicBlockKind, config: Record<string, unknown> = {}): Logic
   };
 }
 
-function Harness({ initialNode, initialEntries = [] }: { initialNode: LogicGraphNode; initialEntries?: string[] }) {
+function Harness({
+  initialNode,
+  initialEntries = [],
+  disabled = false,
+}: {
+  initialNode: LogicGraphNode;
+  initialEntries?: string[];
+  disabled?: boolean;
+}) {
   const [selectedNode, setSelectedNode] = useState(initialNode);
   const [entryNodeIds, setEntryNodeIds] = useState(initialEntries);
   const [dirtyReasons, setDirtyReasons] = useState<LogicInspectorDirtyReason[]>([]);
@@ -38,6 +46,7 @@ function Harness({ initialNode, initialEntries = [] }: { initialNode: LogicGraph
     <LogicGraphInspector
       selectedNode={selectedNode}
       entryNodeIds={entryNodeIds}
+      disabled={disabled}
       onNodeChange={setSelectedNode}
       onEntryNodeIdsChange={setEntryNodeIds}
       onDirty={(reason) => setDirtyReasons((previous) => [...previous, reason])}
@@ -200,5 +209,104 @@ describe("LogicGraphInspector", () => {
     await enter(host, "Handoff To", "webhook");
     expect(latest.node.config.handoff_to).toBe("webhook");
     expect(latest.dirtyReasons).toEqual(["node_config", "node_config"]);
+  });
+
+  it("applies and explicitly removes optional get_property source without treating blank as required", async () => {
+    await act(async () => root.render(<Harness initialNode={node("get_property", {
+      property: "status",
+      source: "upstream",
+    })} />));
+
+    expect(field(host, "Source")).toHaveProperty("value", "upstream");
+    await act(async () => button(host, "应用Source").click());
+    expect(latest.node.config.source).toBe("upstream");
+    expect(latest.dirtyReasons).toEqual([]);
+
+    await enter(host, "Source", "  input  ");
+    expect(latest.node.config.source).toBe("upstream");
+    expect(latest.dirtyReasons).toEqual([]);
+    await act(async () => button(host, "应用Source").click());
+    expect(latest.node.config.source).toBe("input");
+    expect(latest.dirtyReasons).toEqual(["node_config"]);
+
+    await enter(host, "Source", "   ");
+    await act(async () => button(host, "应用Source").click());
+    expect(latest.node.config).not.toHaveProperty("source");
+    expect(latest.dirtyReasons).toEqual(["node_config", "node_config"]);
+    expect(latest.validationErrors).toEqual([]);
+  });
+
+  it.each([
+    ["use_tool", "Tool Arguments JSON", "应用 Tool Arguments", "arguments", { previous: true }, { limit: 10 }],
+    ["execute", "Execute Request JSON", "应用 Execute Request", "request", { previous: true }, { object_id: "wo-1" }],
+  ] as const)("keeps %s JSON as a draft, rejects non-objects, and applies objects explicitly", async (
+    kind,
+    label,
+    applyLabel,
+    key,
+    initialValue,
+    validValue,
+  ) => {
+    await act(async () => root.render(<Harness initialNode={node(kind, { [key]: initialValue })} />));
+
+    await enter(host, label, "[]");
+    await act(async () => button(host, applyLabel).click());
+    expect(host.querySelector('[role="alert"]')?.textContent).toContain("JSON 对象");
+    expect(latest.node.config[key]).toEqual(initialValue);
+    expect(latest.dirtyReasons).toEqual([]);
+
+    await enter(host, label, JSON.stringify(validValue));
+    expect(latest.node.config[key]).toEqual(initialValue);
+    await act(async () => button(host, applyLabel).click());
+    expect(latest.node.config[key]).toEqual(validValue);
+    expect(latest.dirtyReasons).toEqual(["node_config"]);
+  });
+
+  it("strictly rejects invalid action edits without mutating the node, then applies a normalized non-empty array", async () => {
+    const original = [{ object_id: "wo-old", field: "status", value: "open" }];
+    await act(async () => root.render(<Harness initialNode={node("apply_action", {
+      action: "WorkOrder.update",
+      edits: original,
+    })} />));
+
+    const invalidDrafts = [
+      "[]",
+      JSON.stringify({ object_id: "wo-1", field: "status", value: "closed" }),
+      JSON.stringify([{ object_id: 1, field: "status", value: "closed" }]),
+      JSON.stringify([{ object_id: "wo-1", field: " ", value: "closed" }]),
+      JSON.stringify([{ object_id: "wo-1", field: "status" }]),
+      JSON.stringify([{ object_id: "wo-1", field: "status", value: "closed", unexpected: true }]),
+    ];
+    for (const draft of invalidDrafts) {
+      await enter(host, "Action Edits JSON", draft);
+      await act(async () => button(host, "应用 Action Edits").click());
+      expect(latest.node.config.edits).toEqual(original);
+      expect(latest.dirtyReasons).toEqual([]);
+    }
+    expect(latest.validationErrors.some((message) => message.includes("非空 JSON 数组"))).toBe(true);
+    expect(latest.validationErrors.some((message) => message.includes("必须是字符串"))).toBe(true);
+    expect(latest.validationErrors.some((message) => message.includes("不能为空"))).toBe(true);
+    expect(latest.validationErrors.some((message) => message.includes("必须包含 value"))).toBe(true);
+    expect(latest.validationErrors.some((message) => message.includes("未知字段"))).toBe(true);
+
+    await enter(host, "Action Edits JSON", JSON.stringify([
+      { object_id: "  wo-1 ", field: " priority ", value: null },
+    ]));
+    await act(async () => button(host, "应用 Action Edits").click());
+    expect(latest.node.config.edits).toEqual([
+      { object_id: "wo-1", field: "priority", value: null },
+    ]);
+    expect(latest.dirtyReasons).toEqual(["node_config"]);
+  });
+
+  it.each([
+    ["get_property", "Source", "应用Source"],
+    ["use_tool", "Tool Arguments JSON", "应用 Tool Arguments"],
+    ["apply_action", "Action Edits JSON", "应用 Action Edits"],
+    ["execute", "Execute Request JSON", "应用 Execute Request"],
+  ] as const)("disables the new %s editor and its explicit apply action", async (kind, label, applyLabel) => {
+    await act(async () => root.render(<Harness initialNode={node(kind)} disabled />));
+    expect(field(host, label).disabled).toBe(true);
+    expect(button(host, applyLabel).disabled).toBe(true);
   });
 });
