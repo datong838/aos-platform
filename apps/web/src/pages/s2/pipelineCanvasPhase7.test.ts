@@ -3,7 +3,15 @@
  * 测试 OPERATORS/PIPE_TYPES/WRITE_MODES 数据结构和推断函数
  */
 import { describe, it, expect } from "vitest";
-import { OPERATORS, PIPE_TYPES, WRITE_MODES, inferColumnType, cellText } from "./pipelineCanvas";
+import {
+  OPERATORS,
+  PIPE_TYPES,
+  WRITE_MODES,
+  assertSavedGraphMatches,
+  inferColumnType,
+  cellText,
+  type GraphSaveSnapshot,
+} from "./pipelineCanvas";
 
 describe("Phase 7 Pipeline Canvas - Operators", () => {
   it("has 3 operator groups", () => {
@@ -114,5 +122,58 @@ describe("Phase 7 Pipeline Canvas - cellText", () => {
 
   it("preserves short strings", () => {
     expect(cellText("hello")).toBe("hello");
+  });
+});
+
+describe("Phase 7 Pipeline Canvas - save response contract", () => {
+  const snapshot: GraphSaveSnapshot = {
+    pipelineId: "pipeline-1",
+    pipelineType: "Batch",
+    writeMode: "SNAPSHOT",
+    nodes: [
+      {
+        id: "node-1",
+        name: "source",
+        node_type: "source",
+        position_x: 60,
+        position_y: 40,
+        config: { nested: { b: 2, a: 1 } },
+        status: "idle",
+      },
+    ],
+    edges: [],
+  };
+  const saved = {
+    pipeline_id: "pipeline-1",
+    pipeline_type: "Batch",
+    write_mode: "SNAPSHOT",
+    nodes: snapshot.nodes,
+    edges: snapshot.edges,
+    persisted: true,
+    demo: false,
+  };
+
+  it("accepts only the matching committed snapshot", () => {
+    expect(() => assertSavedGraphMatches(saved, snapshot)).not.toThrow();
+  });
+
+  it("rejects mismatched type and write mode", () => {
+    expect(() => assertSavedGraphMatches({ ...saved, pipeline_type: "Streaming" }, snapshot)).toThrow(
+      "保存响应类型或写入模式与请求不一致",
+    );
+    expect(() => assertSavedGraphMatches({ ...saved, write_mode: "UPSERT" }, snapshot)).toThrow(
+      "保存响应类型或写入模式与请求不一致",
+    );
+  });
+
+  it("rejects mismatched nodes and edges", () => {
+    expect(() => assertSavedGraphMatches({
+      ...saved,
+      nodes: [{ ...snapshot.nodes[0], position_x: 61 }],
+    }, snapshot)).toThrow("保存响应节点与请求快照不一致");
+    expect(() => assertSavedGraphMatches({
+      ...saved,
+      edges: [{ id: "edge-1", source_node_id: "node-1", target_node_id: "missing", label: "" }],
+    }, snapshot)).toThrow("保存响应连接与请求快照不一致");
   });
 });

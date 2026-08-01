@@ -160,6 +160,16 @@ def ensure_data_os_schema() -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS phase5_pipeline_graph (
+              pipeline_id TEXT PRIMARY KEY,
+              payload JSONB NOT NULL,
+              revision BIGINT NOT NULL DEFAULT 1,
+              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+            """
+        )
         conn.commit()
     _schema_ready = True
     log.info("data_os_schema_ready")
@@ -236,6 +246,82 @@ def persist_pipeline(item: dict[str, Any]) -> None:
                 json.dumps(props, ensure_ascii=False, default=str),
             ),
         )
+        conn.commit()
+
+
+def persist_phase5_pipeline_graph(payload: dict[str, Any]) -> dict[str, Any]:
+    """Atomically persist one complete Phase5 graph and return the committed snapshot."""
+    ensure_data_os_schema()
+    pipeline_id = str(payload.get("pipeline_id") or "").strip()
+    if not pipeline_id:
+        raise ValueError("pipeline graph requires pipeline_id")
+    node_ids = {str(node.get("id") or "") for node in payload.get("nodes") or []}
+    edge_ids = {str(edge.get("id") or "") for edge in payload.get("edges") or []}
+    encoded = json.dumps(payload, ensure_ascii=False, default=str)
+    with connect() as conn:
+        # Serialize graph writers across processes so nested node/edge ids keep one owner.
+        conn.execute("SELECT pg_advisory_xact_lock(%s)", (228301,))
+        rows = conn.execute(
+            "SELECT pipeline_id, payload FROM phase5_pipeline_graph WHERE pipeline_id<>%s FOR UPDATE",
+            (pipeline_id,),
+        ).fetchall()
+        for row in rows:
+            other_id = str(row["pipeline_id"])
+            other = dict(row.get("payload") or {})
+            other_nodes = {str(node.get("id") or "") for node in other.get("nodes") or []}
+            other_edges = {str(edge.get("id") or "") for edge in other.get("edges") or []}
+            duplicate_nodes = sorted(node_ids & other_nodes)
+            if duplicate_nodes:
+                raise ValueError(
+                    f"node id belongs to another pipeline: {duplicate_nodes[0]} ({other_id})"
+                )
+            duplicate_edges = sorted(edge_ids & other_edges)
+            if duplicate_edges:
+                raise ValueError(
+                    f"edge id belongs to another pipeline: {duplicate_edges[0]} ({other_id})"
+                )
+        row = conn.execute(
+            """
+            INSERT INTO phase5_pipeline_graph (pipeline_id, payload, revision, updated_at)
+            VALUES (%s,%s::jsonb,1,NOW())
+            ON CONFLICT (pipeline_id) DO UPDATE SET
+              payload=EXCLUDED.payload,
+              revision=phase5_pipeline_graph.revision+1,
+              updated_at=NOW()
+            RETURNING payload, revision
+            """,
+            (pipeline_id, encoded),
+        ).fetchone()
+        conn.commit()
+    committed = dict(row["payload"] or {})
+    committed["revision"] = int(row["revision"])
+    committed["persisted"] = True
+    committed["demo"] = False
+    return committed
+
+
+def load_phase5_pipeline_graph(pipeline_id: str) -> dict[str, Any] | None:
+    """Load one committed graph snapshot from the shared metadata store."""
+    ensure_data_os_schema()
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT payload, revision FROM phase5_pipeline_graph WHERE pipeline_id=%s",
+            (pipeline_id,),
+        ).fetchone()
+    if row is None:
+        return None
+    payload = dict(row["payload"] or {})
+    payload["revision"] = int(row["revision"])
+    payload["persisted"] = True
+    payload["demo"] = False
+    return payload
+
+
+def delete_phase5_pipeline_graph(pipeline_id: str) -> None:
+    """Delete one explicitly identified graph; never truncate shared graph data."""
+    ensure_data_os_schema()
+    with connect() as conn:
+        conn.execute("DELETE FROM phase5_pipeline_graph WHERE pipeline_id=%s", (pipeline_id,))
         conn.commit()
 
 

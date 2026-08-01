@@ -63,7 +63,65 @@ export type GraphPayload = {
   persisted?: boolean;
   pipeline_type?: string;
   write_mode?: string;
+  revision?: number;
 };
+
+export type GraphSaveSnapshot = {
+  pipelineId: string;
+  pipelineType: string;
+  writeMode: string;
+  nodes: Required<Pick<GraphNode, "id" | "name" | "node_type" | "position_x" | "position_y" | "config" | "status">>[];
+  edges: { id: string; source_node_id: string; target_node_id: string; label: string }[];
+};
+
+function stableValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stableValue);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, child]) => [key, stableValue(child)]),
+    );
+  }
+  return value;
+}
+
+function normalizedNodes(nodes: GraphNode[] | undefined) {
+  return (nodes || []).map((node) => ({
+    id: node.id,
+    name: node.name || "",
+    node_type: node.node_type || "transform",
+    position_x: node.position_x ?? 0,
+    position_y: node.position_y ?? 0,
+    config: stableValue(node.config || {}),
+    status: node.status || "idle",
+  })).sort((left, right) => left.id.localeCompare(right.id));
+}
+
+function normalizedEdges(edges: GraphPayload["edges"]) {
+  return (edges || []).map((edge) => ({
+    id: edge.id || "",
+    source_node_id: edge.source_node_id || "",
+    target_node_id: edge.target_node_id || "",
+    label: edge.label || "",
+  })).sort((left, right) => left.id.localeCompare(right.id));
+}
+
+export function assertSavedGraphMatches(saved: GraphPayload, expected: GraphSaveSnapshot): void {
+  if (!saved.persisted || saved.demo) throw new Error("服务端未确认持久化");
+  if (saved.pipeline_id !== expected.pipelineId) {
+    throw new Error(`保存响应管道不匹配：期望 ${expected.pipelineId}，实际 ${saved.pipeline_id || "—"}`);
+  }
+  if (saved.pipeline_type !== expected.pipelineType || saved.write_mode !== expected.writeMode) {
+    throw new Error("保存响应类型或写入模式与请求不一致");
+  }
+  if (JSON.stringify(normalizedNodes(saved.nodes)) !== JSON.stringify(normalizedNodes(expected.nodes))) {
+    throw new Error("保存响应节点与请求快照不一致");
+  }
+  if (JSON.stringify(normalizedEdges(saved.edges)) !== JSON.stringify(normalizedEdges(expected.edges))) {
+    throw new Error("保存响应连接与请求快照不一致");
+  }
+}
 
 export type XformConfig = { expression: string; filter: string };
 
@@ -230,11 +288,23 @@ export function inferColumnType(rows: Record<string, unknown>[], col: string): s
 type Operator = (typeof OPERATORS)[number]["items"][number];
 type CanvasConnection = { id: string; from: string; to: string; label?: string };
 
-function DraggableOperator({ op, onAdd }: { op: Operator; onAdd: (op: Operator) => void }) {
+export function moveCanvasPosition(
+  current: { x: number; y: number },
+  delta: { x: number; y: number },
+  zoom: number,
+): { x: number; y: number } {
+  return {
+    x: Math.max(0, current.x + delta.x / zoom),
+    y: Math.max(0, current.y + delta.y / zoom),
+  };
+}
+
+function DraggableOperator({ op, onAdd, disabled }: { op: Operator; onAdd: (op: Operator) => void; disabled?: boolean }) {
   const didDrag = useRef(false);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `operator:${op.id}`,
     data: { source: "palette", op },
+    disabled,
   });
   useEffect(() => {
     if (isDragging) {
@@ -250,6 +320,7 @@ function DraggableOperator({ op, onAdd }: { op: Operator; onAdd: (op: Operator) 
     <button
       ref={setNodeRef}
       type="button"
+      disabled={disabled}
       className="btn-nav"
       style={{ fontSize: "0.7rem", padding: "2px 8px", cursor: "grab", opacity: isDragging ? 0.5 : 1 }}
       title={`拖拽到画布添加「${op.label}」`}
@@ -390,6 +461,11 @@ export function PipelineCanvasPage() {
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const canvasRef = useRef<HTMLDivElement | null>(null);
+  const editRevisionRef = useRef(0);
+  const loadGenerationRef = useRef(0);
+  const saveGenerationRef = useRef(0);
+  const activePipelineIdRef = useRef(pipelineId);
+  activePipelineIdRef.current = pipelineId;
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor),
@@ -429,17 +505,26 @@ export function PipelineCanvasPage() {
   const [historyDemo, setHistoryDemo] = useState(false);
   const [historyBusy, setHistoryBusy] = useState(false);
   const [graph, setGraph] = useState<GraphPayload | null>(null);
+  const [loadedPipelineId, setLoadedPipelineId] = useState("");
   const [xform, setXform] = useState<XformConfig>({ expression: "row", filter: "" });
   const [xformMsg, setXformMsg] = useState<string | null>(null);
   const [xformBusy, setXformBusy] = useState(false);
   const transformNode = useMemo(() => pickTransformNode(graph), [graph]);
+  const canvasReady = Boolean(graph && loadedPipelineId === pipelineId && graph.pipeline_id === pipelineId);
 
   function markDirty() {
+    editRevisionRef.current += 1;
     setDirty(true);
     setSaveMsg(null);
   }
 
+  function selectBaseNode(node: "input" | "transform" | "output") {
+    setSelected(node);
+    setInspectorCollapsed(false);
+  }
+
   function addOperator(op: Operator, position?: { x: number; y: number }) {
+    if (!canvasReady) return;
     const suffix = `${Date.now()}-${Math.random().toString(16).slice(2, 7)}`;
     setExtraNodes((prev) => [
       ...prev,
@@ -455,6 +540,7 @@ export function PipelineCanvasPage() {
   }
 
   function handleDragEnd(event: DragEndEvent) {
+    if (!canvasReady) return;
     const data = event.active.data.current as
       | { source?: "palette"; op?: Operator }
       | { source?: "canvas"; nodeId?: string }
@@ -466,15 +552,12 @@ export function PipelineCanvasPage() {
       if (data.nodeId === "input" || data.nodeId === "transform" || data.nodeId === "output") {
         setNodePositions((prev) => ({
           ...prev,
-          [data.nodeId!]: {
-            x: Math.max(0, prev[data.nodeId!].x + dx),
-            y: Math.max(0, prev[data.nodeId!].y + dy),
-          },
+          [data.nodeId!]: moveCanvasPosition(prev[data.nodeId!], event.delta, zoom),
         }));
       } else {
         setExtraNodes((prev) => prev.map((node) => (
           node.id === data.nodeId
-            ? { ...node, x: Math.max(0, node.x + dx), y: Math.max(0, node.y + dy) }
+            ? { ...node, ...moveCanvasPosition(node, event.delta, zoom) }
             : node
         )));
       }
@@ -493,6 +576,7 @@ export function PipelineCanvasPage() {
   }
 
   function removeExtraNode(id: string) {
+    if (!canvasReady) return;
     setExtraNodes((prev) => prev.filter((n) => n.id !== id));
     setConnections((prev) => prev.filter((c) => c.from !== id && c.to !== id));
     markDirty();
@@ -513,11 +597,13 @@ export function PipelineCanvasPage() {
 
   // Phase 7: 连接线管理
   function startLink(nodeId: string) {
+    if (!canvasReady) return;
     setLinkingFrom(nodeId);
     setContextMenu(null);
   }
 
   function completeLink(targetNodeId: string) {
+    if (!canvasReady) return;
     if (linkingFrom && linkingFrom !== targetNodeId) {
       setConnections((prev) => {
         const exists = prev.some((c) => c.from === linkingFrom && c.to === targetNodeId);
@@ -530,6 +616,7 @@ export function PipelineCanvasPage() {
   }
 
   function removeConnection(from: string, to: string) {
+    if (!canvasReady) return;
     setConnections((prev) => prev.filter((c) => !(c.from === from && c.to === to)));
     setContextMenu(null);
     markDirty();
@@ -537,6 +624,7 @@ export function PipelineCanvasPage() {
 
   // Phase 7: 清空画布
   function clearCanvas() {
+    if (!canvasReady) return;
     setExtraNodes([]);
     setConnections([]);
     setContextMenu(null);
@@ -544,6 +632,9 @@ export function PipelineCanvasPage() {
   }
 
   useEffect(() => {
+    loadGenerationRef.current += 1;
+    saveGenerationRef.current += 1;
+    editRevisionRef.current = 0;
     setSelected("output");
     setPreview(null);
     setPreviewErr(null);
@@ -551,6 +642,22 @@ export function PipelineCanvasPage() {
     setXformMsg(null);
     setSaveMsg(null);
     setDirty(false);
+    setSaveBusy(false);
+    setLoadedPipelineId("");
+    setGraph(null);
+    setBaseNodeIds({
+      input: `canvas-input-${pipelineId}`,
+      transform: `canvas-transform-${pipelineId}`,
+      output: `canvas-output-${pipelineId}`,
+    });
+    setNodePositions({
+      input: { x: 60, y: 60 },
+      transform: { x: 300, y: 60 },
+      output: { x: 540, y: 60 },
+    });
+    setExtraNodes([]);
+    setConnections([]);
+    setLinkingFrom(null);
     const local = loadLocalXform(pipelineId);
     if (local) setXform(local);
     else setXform({ expression: "row", filter: "" });
@@ -559,12 +666,17 @@ export function PipelineCanvasPage() {
   // W3-C6 · 拉取 graph（变换节点 id）
   useEffect(() => {
     if (!pipelineId) return;
+    const generation = loadGenerationRef.current;
     let cancelled = false;
     (async () => {
       try {
         const g = await apiGet<GraphPayload>(`/v1/pipelines/${encodeURIComponent(pipelineId)}/graph`);
-        if (cancelled) return;
+        if (cancelled || generation !== loadGenerationRef.current) return;
+        if (g.pipeline_id !== pipelineId) {
+          throw new Error(`画布响应管道不匹配：期望 ${pipelineId}，实际 ${g.pipeline_id || "—"}`);
+        }
         setGraph(g);
+        setLoadedPipelineId(pipelineId);
         const graphNodes = g.nodes || [];
         const sourceNode = graphNodes.find((node) => ["source", "input"].includes((node.node_type || "").toLowerCase()));
         const transformGraphNode = pickTransformNode(g);
@@ -621,8 +733,9 @@ export function PipelineCanvasPage() {
           });
         }
       } catch {
-        if (!cancelled) {
+        if (!cancelled && generation === loadGenerationRef.current) {
           setGraph(null);
+          setLoadedPipelineId("");
           setSaveMsg("画布加载失败，当前内容不可保存；请刷新后重试");
         }
       }
@@ -633,6 +746,11 @@ export function PipelineCanvasPage() {
   }, [pipelineId]);
 
   async function saveCanvas() {
+    if (!canvasReady) return;
+    const requestPipelineId = pipelineId;
+    const requestRevision = editRevisionRef.current;
+    const requestGeneration = saveGenerationRef.current + 1;
+    saveGenerationRef.current = requestGeneration;
     const idForKey = (key: string) => baseNodeIds[key as NodeType] || key;
     const originalById = new Map((graph?.nodes || []).map((node) => [node.id, node]));
     const baseNodes: { key: NodeType; name: string; nodeType: string }[] = [
@@ -673,25 +791,51 @@ export function PipelineCanvasPage() {
       target_node_id: idForKey(connection.to),
       label: connection.label || "",
     }));
+    const pipelineType = pipeType === "streaming" ? "Streaming" : pipeType === "incremental" ? "ETL" : "Batch";
+    const snapshot: GraphSaveSnapshot = {
+      pipelineId: requestPipelineId,
+      pipelineType,
+      writeMode,
+      nodes,
+      edges,
+    };
 
     setSaveBusy(true);
     setSaveMsg(null);
     try {
-      const saved = await apiPut<GraphPayload>(`/v1/pipelines/${encodeURIComponent(pipelineId)}/graph`, {
+      const saved = await apiPut<GraphPayload>(`/v1/pipelines/${encodeURIComponent(requestPipelineId)}/graph`, {
         nodes,
         edges,
-        pipeline_type: pipeType === "streaming" ? "Streaming" : pipeType === "incremental" ? "ETL" : "Batch",
+        pipeline_type: pipelineType,
         write_mode: writeMode,
         name: title,
       });
-      if (!saved.persisted || saved.demo) throw new Error("服务端未确认持久化");
+      assertSavedGraphMatches(saved, snapshot);
+      if (
+        activePipelineIdRef.current !== requestPipelineId
+        || saveGenerationRef.current !== requestGeneration
+      ) return;
       setGraph(saved);
-      setDirty(false);
-      setSaveMsg(`已保存 · ${saved.nodes?.length || 0} 个节点 · ${saved.edges?.length || 0} 条连接`);
+      if (editRevisionRef.current === requestRevision) {
+        setDirty(false);
+        setSaveMsg(`已保存 · ${saved.nodes?.length || 0} 个节点 · ${saved.edges?.length || 0} 条连接`);
+      } else {
+        setDirty(true);
+        setSaveMsg("此前版本已保存，仍有未保存更改");
+      }
     } catch (e) {
-      setSaveMsg(`保存失败 · ${e instanceof Error ? e.message : String(e)}`);
+      if (
+        activePipelineIdRef.current === requestPipelineId
+        && saveGenerationRef.current === requestGeneration
+      ) {
+        setDirty(true);
+        setSaveMsg(`保存失败 · ${e instanceof Error ? e.message : String(e)}`);
+      }
     } finally {
-      setSaveBusy(false);
+      if (
+        activePipelineIdRef.current === requestPipelineId
+        && saveGenerationRef.current === requestGeneration
+      ) setSaveBusy(false);
     }
   }
 
@@ -815,6 +959,7 @@ export function PipelineCanvasPage() {
               role="radio"
               aria-checked={pipeType === t.id}
               className={`btn${pipeType === t.id ? " is-active" : ""}`}
+              disabled={!canvasReady}
               onClick={() => { setPipeType(t.id); markDirty(); }}
               style={{ fontSize: "0.75rem", padding: "2px 8px" }}
             >
@@ -822,7 +967,7 @@ export function PipelineCanvasPage() {
             </button>
           ))}
         </div>
-        <button type="button" className="btn" disabled={saveBusy || !pipe || !graph} onClick={() => void saveCanvas()}>
+        <button type="button" className="btn" disabled={saveBusy || !pipe || !canvasReady} onClick={() => void saveCanvas()}>
           {saveBusy ? "保存中…" : dirty ? "保存 *" : "保存"}
         </button>
         {saveMsg && <span className={saveMsg.startsWith("保存失败") ? "error" : "muted"}>{saveMsg}</span>}
@@ -851,7 +996,7 @@ export function PipelineCanvasPage() {
           <div key={group.group} style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
             <span className="muted" style={{ fontSize: "0.7rem", marginRight: 4 }}>{group.group}</span>
             {group.items.map((op) => (
-              <DraggableOperator key={op.id} op={op} onAdd={addOperator} />
+              <DraggableOperator key={op.id} op={op} onAdd={addOperator} disabled={!canvasReady} />
             ))}
           </div>
         ))}
@@ -940,7 +1085,7 @@ export function PipelineCanvasPage() {
             >
               {inspectorCollapsed ? "展开属性" : "收起属性"}
             </button>
-            <button type="button" className="btn" onClick={clearCanvas} style={{ fontSize: "0.75rem", padding: "2px 8px" }} title="清空额外节点">清空</button>
+            <button type="button" className="btn" disabled={!canvasReady} onClick={clearCanvas} style={{ fontSize: "0.75rem", padding: "2px 8px" }} title="清空额外节点">清空</button>
           </div>
 
           <div className="bp-pipe-canvas-main">
@@ -959,7 +1104,7 @@ export function PipelineCanvasPage() {
                   className={`pipeline-node bp-pipe-node bp-pipe-node-input${selected === "input" ? " is-selected" : ""}${linkingFrom === "input" ? " is-linking" : ""}`}
                   onClick={() => {
                     if (linkingFrom) { completeLink("input"); }
-                    else { setSelected("input"); }
+                    else { selectBaseNode("input"); }
                   }}
                   onContextMenu={(e) => handleContextMenu(e, "input")}
                 >
@@ -979,7 +1124,7 @@ export function PipelineCanvasPage() {
                   className={`pipeline-node bp-pipe-node bp-pipe-node-xform${selected === "transform" ? " is-selected" : ""}${linkingFrom === "transform" ? " is-linking" : ""}`}
                   onClick={() => {
                     if (linkingFrom) { completeLink("transform"); }
-                    else { setSelected("transform"); }
+                    else { selectBaseNode("transform"); }
                   }}
                   onContextMenu={(e) => handleContextMenu(e, "transform")}
                 >
@@ -999,7 +1144,7 @@ export function PipelineCanvasPage() {
                   className={`pipeline-node bp-pipe-node bp-pipe-node-out${selected === "output" ? " is-selected" : ""}${linkingFrom === "output" ? " is-linking" : ""}`}
                   onClick={() => {
                     if (linkingFrom) { completeLink("output"); }
-                    else { setSelected("output"); }
+                    else { selectBaseNode("output"); }
                   }}
                   onContextMenu={(e) => handleContextMenu(e, "output")}
                 >
@@ -1022,6 +1167,7 @@ export function PipelineCanvasPage() {
                     className={`pipeline-node bp-pipe-node bp-pipe-node-${n.kind === "input" ? "input" : n.kind === "transform" ? "xform" : "out"}${linkingFrom === n.id ? " is-linking" : ""}`}
                     onClick={() => {
                       if (linkingFrom) { completeLink(n.id); }
+                      else { setInspectorCollapsed(false); }
                     }}
                     onContextMenu={(e) => handleContextMenu(e, n.id)}
                     onDoubleClick={() => removeExtraNode(n.id)}
@@ -1241,6 +1387,7 @@ export function PipelineCanvasPage() {
                   <span>写入模式</span>
                   <select
                     value={writeMode}
+                    disabled={!canvasReady}
                     onChange={(e) => { setWriteMode(e.target.value); markDirty(); }}
                   >
                     {WRITE_MODES.map((m) => (
