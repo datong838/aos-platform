@@ -346,9 +346,11 @@ export function CapabilityPage() {
       const ok = r.ok !== false && r.status !== "unhealthy";
       setMsg(formatTestMsg(false, ok, r.latencyMs));
     } catch (e) {
-      const sim = simulateConnectivity(capId, endpoint);
       setListSource("demo");
-      setMsg(formatTestMsg(true, sim.ok, sim.latencyMs) + `（${String((e as Error).message || e)}）`);
+      setMsg(
+        formatTestMsg(true, false) +
+          `（真实连通接口失败：${String((e as Error).message || e)}；未用本地模拟结果冒充成功）`,
+      );
     } finally {
       setBusy(false);
     }

@@ -846,14 +846,14 @@ export function StylesPage() {
                 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: config.marginMd }}>
                     <h3 style={{ fontSize: config.fontSize + 2, fontWeight: 600, color: config.text, margin: 0 }}>订单管理</h3>
-                    <button style={{
+                    <button type="button" disabled title="主题预览示例，不执行新建订单" style={{
                       background: config.primary,
                       color: "#fff",
                       border: "none",
                       padding: `${config.paddingSm}px ${config.paddingMd}px`,
                       borderRadius: config.radius,
                       fontSize: config.fontSize - 1,
-                      cursor: "pointer",
+                      cursor: "not-allowed",
                     }}>
                       + 新建订单
                     </button>

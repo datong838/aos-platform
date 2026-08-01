@@ -1,0 +1,56 @@
+export type InteractionSourceMode = "live" | "mixed" | "static";
+export type InteractionWriteMode = "server" | "demo" | "none";
+
+export type InteractionHonestyEntry = {
+  route: string;
+  component: string;
+  sourceFile: string;
+  sourceMode: InteractionSourceMode;
+  writes: InteractionWriteMode;
+  fallbackPolicy: string;
+  tests: readonly string[];
+};
+
+/**
+ * 228 interaction-honesty audit inventory.
+ *
+ * Keep the array body strict JSON: scripts/ci/check-interaction-honesty.py reads
+ * this same source, so CI and the web application cannot drift onto two lists.
+ */
+export const INTERACTION_HONESTY_MANIFEST = [
+  {"route":"/workshop/variables","component":"VariablesPage","sourceFile":"apps/web/src/pages/s2/VariablesPage.tsx","sourceMode":"mixed","writes":"server","fallbackPolicy":"demo writes are labelled per action and never presented as server persistence","tests":["apps/web/src/pages/s2/VariablesPage.test.ts"]},
+  {"route":"/workshop/module-interface","component":"ModuleInterfacePage","sourceFile":"apps/web/src/pages/s2/ModuleInterfacePage.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"read or write failure remains visible; no success before reread","tests":["apps/web/src/pages/s2/ModuleInterfacePage.test.ts"]},
+  {"route":"/workshop/canvas","component":"CanvasPage","sourceFile":"apps/web/src/pages/CanvasPage.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"unsupported widgets are explicit; publish uses the controlled publish route","tests":["apps/web/src/pages/canvasWidgets.b1.test.ts","apps/web/src/pages/CanvasPage.publish.test.ts"]},
+  {"route":"/aip/drafts","component":"DraftInboxPage","sourceFile":"apps/web/src/pages/DraftInboxPage.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"unavailable transitions are disabled rather than simulated","tests":["apps/web/src/pages/DraftInboxPage.test.ts"]},
+  {"route":"/aip/analyst","component":"AipAnalystPage","sourceFile":"apps/web/src/pages/s2/AipAnalystPage.tsx","sourceMode":"mixed","writes":"server","fallbackPolicy":"demo query output is labelled and exports retain source metadata","tests":["apps/web/src/pages/s2/AipAnalystPage.test.ts"]},
+  {"route":"/aip/observability","component":"ObservabilityPage","sourceFile":"apps/web/src/pages/s2/ObservabilityPage.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"API errors and true empty states remain distinct","tests":["apps/web/src/pages/s2/ObservabilityPage.test.ts"]},
+  {"route":"/aip/capacity","component":"CapacityPage","sourceFile":"apps/web/src/pages/s2/CapacityPage.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"quota edits succeed only after server reread","tests":["apps/web/src/pages/s2/CapacityPage.test.ts"]},
+  {"route":"/aip/model-catalog","component":"ModelCatalogPage","sourceFile":"apps/web/src/pages/s2/ModelCatalogPage.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"registration and deletion are verified against the server list","tests":["apps/web/src/pages/s2/ModelCatalogPage.test.ts"]},
+  {"route":"/aip/studio","component":"StudioPage","sourceFile":"apps/web/src/pages/StudioPage.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"missing contracts disable create or publish actions","tests":["apps/web/src/pages/StudioPage.test.ts"]},
+  {"route":"/workshop/publish","component":"PublishPage","sourceFile":"apps/web/src/pages/PublishPage.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"publish and deploy failures are separate and fail closed","tests":["apps/web/src/pages/PublishPage.test.ts"]},
+  {"route":"/ontology/wiki/:wikiId","component":"WikiDetailPage","sourceFile":"apps/web/src/pages/s2/WikiDetailPage.tsx","sourceMode":"mixed","writes":"server","fallbackPolicy":"demo content and unavailable writes are visibly labelled","tests":["apps/web/src/pages/s2/WikiDetailPage.test.ts"]},
+  {"route":"/ontology/wiki/:wikiId/diff","component":"WikiDiffPage","sourceFile":"apps/web/src/pages/s2/WikiDiffPage.tsx","sourceMode":"mixed","writes":"none","fallbackPolicy":"demo diff is labelled and restore stays disabled without a contract","tests":["apps/web/src/pages/s2/WikiDiffPage.test.ts"]},
+  {"route":"/ontology/object-types/:typeId","component":"ObjectTypeDetailPage","sourceFile":"apps/web/src/pages/s2/ObjectTypeDetailPage.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"save completion requires detail reread for the active type and branch","tests":["apps/web/src/pages/s2/objectTypeDetail.test.ts"]},
+  {"route":"/ontology/properties/:typeId","component":"PropertyEditorPage","sourceFile":"apps/web/src/pages/s2/PropertyEditorPage.tsx","sourceMode":"mixed","writes":"server","fallbackPolicy":"demo mode cannot claim persistence","tests":["apps/web/src/pages/s2/PropertyEditorPage.test.ts"]},
+  {"route":"/ontology/functions","component":"FunctionEditorPage","sourceFile":"apps/web/src/pages/s2/FunctionEditorPage.tsx","sourceMode":"mixed","writes":"server","fallbackPolicy":"unavailable execution and writes fail closed","tests":["apps/web/src/pages/s2/FunctionEditorPage.test.ts"]},
+  {"route":"/data/pipelines/:pipelineId","component":"PipelineCanvasPage","sourceFile":"apps/web/src/pages/s2/pipelineCanvas.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"graph save is verified by reread; no local-only success","tests":["apps/web/src/pages/s2/pipelineCanvasInteraction.test.tsx"]},
+  {"route":"/data/sources/:sourceId","component":"SourceDetailPage","sourceFile":"apps/web/src/pages/s2/sourceDetailPage.tsx","sourceMode":"mixed","writes":"none","fallbackPolicy":"schema and preview fallback keep the primary error and explicit source","tests":["apps/web/src/pages/s2/sourceDetailPage.test.ts"]},
+  {"route":"/ontology/link-types/:linkId","component":"LinkTypeEditorPage","sourceFile":"apps/web/src/pages/s2/LinkTypeEditorPage.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"usage failures show unavailable values rather than synthetic zeroes","tests":["apps/web/src/pages/s2/LinkTypeEditorPage.test.ts"]},
+  {"route":"/ontology/action-types/:actionId","component":"ActionTypeEditorPage","sourceFile":"apps/web/src/pages/s2/ActionTypeEditorPage.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"unsupported UI and capability fields are explicitly read-only","tests":["apps/web/src/pages/s2/ActionTypeEditorPage.test.ts"]},
+  {"route":"/aip/capabilities","component":"CapabilityPage","sourceFile":"apps/web/src/pages/CapabilityPage.tsx","sourceMode":"mixed","writes":"server","fallbackPolicy":"simulation is labelled and server failures never show an unqualified success","tests":["apps/web/src/pages/CapabilityPage.test.ts","apps/web/src/pages/W3CPassPageInteractions.test.tsx"]},
+  {"route":"/aip/doc-intelligence","component":"DocumentIntelligencePage","sourceFile":"apps/web/src/pages/s2/DocumentIntelligencePage.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"upload and ingestion require server receipts; failures remain visible","tests":["apps/web/src/pages/s2/DocumentIntelligencePage.component.test.tsx"]},
+  {"route":"/aip/maturity","component":"MaturityPage","sourceFile":"apps/web/src/pages/s2/extras.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"breaker mode changes require server confirmation","tests":["apps/web/src/pages/s2/Wave3bW4Interactions.test.tsx"]},
+  {"route":"/aip/evals","component":"EvalsPage","sourceFile":"apps/web/src/pages/s2/aip.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"run reports and release gates come only from eval APIs","tests":["apps/web/src/pages/s2/EvalsPage.test.tsx"]},
+  {"route":"/aip/model-providers","component":"ProvidersPage","sourceFile":"apps/web/src/pages/s2/aip.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"provider errors differ from real empty and secrets are never echoed","tests":["apps/web/src/pages/W3CPassPageInteractions.test.tsx"]},
+  {"route":"/aip/model-router","component":"ModelRouterPage","sourceFile":"apps/web/src/pages/s2/aip.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"edit and test use one versioned canonical configuration","tests":["apps/web/src/pages/s2/systemPages.test.ts"]},
+  {"route":"/ontology","component":"OntologyPage","sourceFile":"apps/web/src/pages/OntologyPage.tsx","sourceMode":"live","writes":"none","fallbackPolicy":"API failures never inject sample discovery results","tests":["apps/web/src/pages/W3CPassPageInteractions.test.tsx"]},
+  {"route":"/ontology/graph-health","component":"GraphHealthPage","sourceFile":"apps/web/src/pages/s2/ontology.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"TTL archive requires a server dry run and explicit confirmation","tests":["apps/web/src/pages/s2/systemPages.test.ts"]},
+  {"route":"/workshop/widget-registry","component":"WidgetRegistryPage","sourceFile":"apps/web/src/pages/s2/WidgetRegistryPage.tsx","sourceMode":"live","writes":"none","fallbackPolicy":"catalog entries navigate to a real canvas insertion path","tests":["apps/web/src/pages/s2/WidgetRegistryPage.test.ts"]},
+  {"route":"/workshop/styles","component":"StylesPage","sourceFile":"apps/web/src/pages/s2/StylesPage.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"theme save succeeds only after server reread","tests":["apps/web/src/pages/s2/StylesPage.test.ts"]},
+  {"route":"/workshop/events","component":"EventsPage","sourceFile":"apps/web/src/pages/s2/EventsPage.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"subscriptions and replay require API receipts","tests":["apps/web/src/pages/s2/EventsPage.test.ts"]},
+  {"route":"/data/datasets/:datasetId","component":"DatasetPreviewPage","sourceFile":"apps/web/src/pages/s2/DatasetPreviewPage.tsx","sourceMode":"mixed","writes":"none","fallbackPolicy":"fallback rows retain primary error and source metadata","tests":["apps/web/src/pages/s2/DatasetPreviewPage.test.ts"]},
+  {"route":"/data","component":"DataPage","sourceFile":"apps/web/src/pages/DataPage.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"connector creation validates runtime mode and server reread","tests":["apps/web/src/pages/W3BPageInteraction.test.tsx"]},
+  {"route":"/settings/local-platform","component":"LocalPlatformPage","sourceFile":"apps/web/src/pages/LocalPlatformPage.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"probe and ensure errors remain visible; no synthetic healthy state","tests":["apps/web/src/pages/LocalPlatformPage.test.ts"]},
+  {"route":"/settings/ops-start-guide","component":"OpsStartGuidePage","sourceFile":"apps/web/src/pages/OpsStartGuidePage.tsx","sourceMode":"static","writes":"none","fallbackPolicy":"all actions are real navigation or explicit operational instructions","tests":["apps/web/src/pages/W3CPassPageInteractions.test.tsx"]},
+  {"route":"/apollo","component":"ApolloPage","sourceFile":"apps/web/src/pages/ApolloPage.tsx","sourceMode":"live","writes":"server","fallbackPolicy":"promote and bundle failures never emit success messages","tests":["apps/web/src/pages/W3CPassPageInteractions.test.tsx"]}
+] as const satisfies readonly InteractionHonestyEntry[];

@@ -707,8 +707,8 @@ export function WikiDetailPage() {
                   </select>
                   <label style={styles.propLabel}>内容（HTML / Markdown）</label>
                   <div style={styles.contentToggle}>
-                    <button type="button" style={styles.contentToggleActive}>Markdown</button>
-                    <button type="button" style={styles.contentToggleBtn}>HTML</button>
+                    <button type="button" style={styles.contentToggleActive} disabled title="当前仅支持 Markdown 编辑">Markdown</button>
+                    <button type="button" style={styles.contentToggleBtn} disabled title="HTML 模式规划中">HTML</button>
                   </div>
                   <textarea
                     style={styles.codeBlock}

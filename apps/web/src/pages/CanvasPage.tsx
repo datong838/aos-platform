@@ -983,9 +983,9 @@ export function CanvasPage() {
             </h1>
           </div>
           <nav className="p-slate-tabs">
-            <button type="button" className="p-slate-tab">文件</button>
-            <button type="button" className="p-slate-tab">帮助</button>
-            <button type="button" className="p-slate-tab is-active">
+            <button type="button" className="p-slate-tab" disabled title="文件菜单规划中">文件</button>
+            <button type="button" className="p-slate-tab" disabled title="帮助菜单规划中">帮助</button>
+            <button type="button" className="p-slate-tab is-active" disabled title="当前模块只读标识">
               {currentModule?.name || "Module"} <span className="p-slate-version">v1</span>
             </button>
           </nav>
@@ -1049,7 +1049,7 @@ export function CanvasPage() {
             >
               发布
             </Link>
-            <button type="button" className="p-slate-close" title="关闭">
+            <button type="button" className="p-slate-close" disabled title="关闭入口规划中">
               <NavIcon name="close" style={{ width: "14px", height: "14px" }} />
             </button>
           </div>
@@ -1569,8 +1569,8 @@ export function CanvasPage() {
                     <div className="p-slate-props-section">
                       <div className="p-slate-props-label">CONTENT</div>
                       <div className="p-slate-props-toggle">
-                        <button type="button">Markdown</button>
-                        <button type="button" className="is-active">HTML</button>
+                        <button type="button" disabled title="内容模式切换规划中">Markdown</button>
+                        <button type="button" className="is-active" disabled title="当前只展示 HTML 预览">HTML</button>
                       </div>
                       <div className="p-slate-props-code">
                         {`// ${node.kind} · ${node.id}\n// plugin: ${node.pluginId || "built-in"}`}

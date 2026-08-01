@@ -1628,8 +1628,8 @@ export function ProvidersPage() {
               </div>
             </div>
           ))}
-          {!loading && (data?.items?.length || 0) === 0 && installedPlugins.length === 0 && (
-            <p className="muted">暂无已安装插件 · 从下方目录安装（DeepSeek 等）</p>
+          {!loading && !err && !pluginsApi.err && (data?.items?.length || 0) === 0 && installedPlugins.length === 0 && (
+            <p className="muted">服务端已确认暂无已安装插件 · 从下方目录安装（DeepSeek 等）</p>
           )}
         </div>
       </section>

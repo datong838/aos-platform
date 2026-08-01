@@ -534,7 +534,7 @@ export function CopPage() {
           )}
 
           <div className="p-cop-sidebar-actions">
-            <button type="button" className="p-cop-action-btn">
+            <button type="button" className="p-cop-action-btn" disabled title="调拨动作契约规划中">
               🟡 调拨 · 华南紧急补货
             </button>
             <Link to="/workshop/inbox" className="p-cop-action-btn is-secondary">

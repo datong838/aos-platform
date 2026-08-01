@@ -20,3 +20,5 @@ checked=$((checked + 1))
 
 echo "SHELL_SYNTAX_CHECKED: $checked"
 bash "$CI_DIR/run-ci-selftest.sh"
+python3 -m unittest "$CI_DIR/test_interaction_honesty.py"
+python3 "$CI_DIR/check-interaction-honesty.py" --root "$ROOT"
