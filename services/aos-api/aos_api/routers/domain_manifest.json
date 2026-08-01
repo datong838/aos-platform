@@ -3030,6 +3030,12 @@
       "module": "aos_api.routers.phase7_ferry",
       "attribute": "router",
       "order": 504
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_logic_graphs",
+      "attribute": "router",
+      "order": 505
     }
   ]
 }
