@@ -1,0 +1,287 @@
+.logic-run-panel {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.36fr) minmax(0, 1fr);
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid var(--aos-border);
+  border-radius: 4px;
+  background: var(--aos-surface, #fff);
+  color: var(--aos-text);
+}
+
+.logic-run-panel h3,
+.logic-run-panel h4,
+.logic-run-panel p {
+  margin: 0;
+}
+
+.logic-run-panel__history {
+  padding: 14px;
+  border-right: 1px solid var(--aos-border);
+  background: var(--aos-surface-muted, #f8fafc);
+}
+
+.logic-run-panel__history-heading,
+.logic-run-panel__detail-heading,
+.logic-run-panel__node-heading,
+.logic-run-panel__nodes-heading,
+.logic-run-panel__history-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.logic-run-panel__eyebrow {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--aos-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.logic-run-panel__history-list,
+.logic-run-panel__nodes {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.logic-run-panel__history-list {
+  display: grid;
+  gap: 7px;
+}
+
+.logic-run-panel__history-item {
+  display: grid;
+  width: 100%;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid var(--aos-border);
+  border-radius: 3px;
+  background: var(--aos-surface, #fff);
+  color: inherit;
+  font: inherit;
+  font-size: 0.72rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.logic-run-panel__history-item:hover,
+.logic-run-panel__history-item:focus-visible,
+.logic-run-panel__history-item.is-selected {
+  border-color: var(--aos-indigo-600, #4f46e5);
+  outline: none;
+}
+
+.logic-run-panel__history-item.is-selected {
+  box-shadow: inset 3px 0 0 var(--aos-indigo-600, #4f46e5);
+}
+
+.logic-run-panel__history-item .is-safe,
+.logic-run-panel__safety {
+  color: var(--aos-green-700, #166534);
+}
+
+.logic-run-panel__history-item .is-unsafe {
+  color: var(--aos-red, #b42318);
+  font-weight: 700;
+}
+
+.logic-run-panel__load-more {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  border: 1px solid var(--aos-border);
+  border-radius: 3px;
+  background: var(--aos-surface, #fff);
+  color: inherit;
+  cursor: pointer;
+}
+
+.logic-run-panel__detail-shell {
+  min-width: 0;
+  padding: 16px;
+}
+
+.logic-run-panel__detail {
+  display: grid;
+  gap: 14px;
+}
+
+.logic-run-panel__detail-heading h3 {
+  overflow-wrap: anywhere;
+  font-size: 1rem;
+}
+
+.logic-run-panel__status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-right: 7px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--aos-surface-muted, #f1f5f9);
+  color: var(--aos-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.logic-run-panel__status.is-succeeded,
+.logic-run-panel__status.is-executed {
+  background: var(--aos-green-bg, #ecfdf3);
+  color: var(--aos-green-700, #166534);
+}
+
+.logic-run-panel__status.is-failed {
+  background: var(--aos-red-bg, #fef3f2);
+  color: var(--aos-red, #b42318);
+}
+
+.logic-run-panel__status.is-skipped,
+.logic-run-panel__status.is-canceled {
+  background: var(--aos-amber-bg, #fffaeb);
+  color: var(--aos-amber-700, #92400e);
+}
+
+.logic-run-panel__safety {
+  padding: 9px 11px;
+  border: 1px solid var(--aos-green-border, #abefc6);
+  border-radius: 3px;
+  background: var(--aos-green-bg, #ecfdf3);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.logic-run-panel__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.logic-run-panel__facts > div {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--aos-border);
+  border-radius: 3px;
+}
+
+.logic-run-panel__facts > .is-wide {
+  grid-column: 1 / -1;
+}
+
+.logic-run-panel__facts dt {
+  margin-bottom: 3px;
+  color: var(--aos-muted);
+  font-size: 0.68rem;
+}
+
+.logic-run-panel__facts dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.76rem;
+}
+
+.logic-run-panel__facts.is-compact {
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 6px;
+}
+
+.logic-run-panel__facts.is-compact > div {
+  padding: 6px 8px;
+}
+
+.logic-run-panel__nodes-heading {
+  padding-top: 2px;
+}
+
+.logic-run-panel__nodes-heading span {
+  color: var(--aos-muted);
+  font-size: 0.72rem;
+}
+
+.logic-run-panel__nodes {
+  display: grid;
+  gap: 9px;
+  margin-top: 0;
+}
+
+.logic-run-panel__node {
+  display: grid;
+  gap: 8px;
+  padding: 11px;
+  border: 1px solid var(--aos-border);
+  border-left-width: 4px;
+  border-radius: 3px;
+  background: var(--aos-surface, #fff);
+}
+
+.logic-run-panel__node.is-executed { border-left-color: var(--aos-green-700, #166534); }
+.logic-run-panel__node.is-failed { border-left-color: var(--aos-red, #b42318); }
+.logic-run-panel__node.is-skipped,
+.logic-run-panel__node.is-canceled { border-left-color: var(--aos-amber-700, #92400e); }
+
+.logic-run-panel__kind {
+  color: var(--aos-muted);
+  font-size: 0.7rem;
+}
+
+.logic-run-panel__summary {
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.logic-run-panel__error,
+.logic-run-panel__node-error {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 9px 10px;
+  border: 1px solid var(--aos-red-border, #fecdca);
+  border-radius: 3px;
+  background: var(--aos-red-bg, #fef3f2);
+  color: var(--aos-red, #b42318);
+  font-size: 0.75rem;
+}
+
+.logic-run-panel__link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--aos-indigo-600, #4f46e5);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.logic-run-panel__empty {
+  padding: 22px 12px;
+  color: var(--aos-muted);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+@media (max-width: 840px) {
+  .logic-run-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .logic-run-panel__history {
+    border-right: 0;
+    border-bottom: 1px solid var(--aos-border);
+  }
+
+  .logic-run-panel__facts {
+    grid-template-columns: 1fr;
+  }
+
+  .logic-run-panel__facts > .is-wide {
+    grid-column: auto;
+  }
+}
