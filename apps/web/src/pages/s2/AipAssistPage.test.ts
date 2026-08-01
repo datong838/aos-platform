@@ -4,9 +4,35 @@ import {
   extractCodeSuggestions,
   tokenizeForStream,
   generateOfflineResponse,
+  normalizeSuggestionItems,
 } from "./AipAssistPage";
 
 describe("Phase 1 · AIP Assist 纯函数", () => {
+  describe("normalizeSuggestionItems", () => {
+    it("兼容服务端对象 DTO 与历史字符串 DTO", () => {
+      expect(normalizeSuggestionItems([
+        { id: "sg-1", category: "data", text: "查看数据健康" },
+        "查看构建日志",
+      ])).toEqual(["查看数据健康", "查看构建日志"]);
+    });
+
+    it("过滤非法项、空文本并按文本去重", () => {
+      expect(normalizeSuggestionItems([
+        { id: "sg-1", text: "  同一建议  " },
+        { id: "sg-2", text: "同一建议" },
+        { id: "sg-3", text: "   " },
+        { id: "sg-4", category: "data" },
+        null,
+        42,
+      ])).toEqual(["同一建议"]);
+    });
+
+    it("非数组响应安全返回空列表", () => {
+      expect(normalizeSuggestionItems({ items: [] })).toEqual([]);
+      expect(normalizeSuggestionItems(undefined)).toEqual([]);
+    });
+  });
+
   describe("detectPermissions", () => {
     it("API permissions 优先", () => {
       expect(detectPermissions("任意文本", ["read"])).toEqual(["read"]);

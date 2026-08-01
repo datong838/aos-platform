@@ -82,6 +82,33 @@ const DEFAULT_SUGGESTIONS = [
   "如何配置 AIP Agent 的工具面板？",
 ];
 
+type SuggestionDto = {
+  id?: unknown;
+  category?: unknown;
+  text?: unknown;
+};
+
+/**
+ * 将服务端对象 DTO 与历史字符串 DTO 收敛为页面可安全渲染的文本。
+ * 非法项与重复文本会被过滤，避免单个坏数据拖垮整个 Assist 页面。
+ */
+export function normalizeSuggestionItems(items: unknown): string[] {
+  if (!Array.isArray(items)) return [];
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+  for (const item of items) {
+    const text = typeof item === "string"
+      ? item.trim()
+      : item !== null && typeof item === "object" && typeof (item as SuggestionDto).text === "string"
+        ? ((item as SuggestionDto).text as string).trim()
+        : "";
+    if (!text || seen.has(text)) continue;
+    seen.add(text);
+    normalized.push(text);
+  }
+  return normalized;
+}
+
 /** API 不存在时的建议兜底（上下文相关） */
 const CONTEXT_SUGGESTIONS: Record<string, string[]> = {
   分享: ["如何批量管理笔记本权限？", "如何查看笔记本的访问审计？"],
@@ -380,9 +407,10 @@ export function AipAssistPage() {
   /* ---------- 建议问题（API + 兜底） ---------- */
   const fetchSuggestions = useCallback(async () => {
     try {
-      const r = await apiGet<{ items?: string[] }>(`${API_ENDPOINTS.suggestions}?convId=${activeConvId || ""}`);
-      if (r.items && r.items.length > 0) {
-        setSuggestions(r.items);
+      const r = await apiGet<{ items?: unknown }>(`${API_ENDPOINTS.suggestions}?convId=${activeConvId || ""}`);
+      const normalized = normalizeSuggestionItems(r.items);
+      if (normalized.length > 0) {
+        setSuggestions(normalized);
         return;
       }
     } catch {
