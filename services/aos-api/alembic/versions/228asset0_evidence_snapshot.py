@@ -12,8 +12,9 @@ import json
 from collections.abc import Sequence
 from typing import Any
 
-from alembic import op
 from sqlalchemy import text
+
+from alembic import op
 
 revision: str = "228assetevidence"
 down_revision: str | Sequence[str] | None = "228assetinvariants"

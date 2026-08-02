@@ -17,6 +17,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from alembic.config import Config
 from alembic.script import ScriptDirectory
+from psycopg import errors, sql
+from psycopg.types.json import Jsonb
+
 from aos_api.asset_registry.canonical_json import canonical_json, canonical_sha256
 from aos_api.asset_registry.contracts import (
     BundleVersionStatus,
@@ -30,8 +33,6 @@ from aos_api.asset_registry.errors import (
 )
 from aos_api.asset_registry.registry_store import PostgresRegistryStore
 from aos_api.db import connect
-from psycopg import errors, sql
-from psycopg.types.json import Jsonb
 
 API_ROOT = Path(__file__).resolve().parents[2]
 MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_registry.py"
