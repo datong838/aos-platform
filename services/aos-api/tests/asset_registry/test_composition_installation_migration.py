@@ -320,6 +320,7 @@ def _advance(
     *,
     decision_id: uuid.UUID | None = None,
     active_revision: int | None = None,
+    previous_active_revision: int | None = None,
 ) -> None:
     _insert_revision(
         conn,
@@ -335,7 +336,7 @@ def _advance(
         UPDATE bundle_installation
            SET current_revision = %s,
                active_revision = %s,
-               previous_active_revision = NULL,
+               previous_active_revision = %s,
                etag_version = %s,
                updated_at = updated_at + INTERVAL '1 second'
          WHERE org_id = %s AND project_id = %s
@@ -344,6 +345,7 @@ def _advance(
         (
             revision,
             active_revision,
+            previous_active_revision,
             revision,
             ORG,
             PROJECT,
@@ -687,6 +689,165 @@ def test_valid_immutable_installation_lifecycle_and_decision_lineage() -> None:
             "rolled_back",
         ]
         assert all(item["decision_id"] == DECISION_ID for item in revisions[2:])
+
+
+def test_active_pointer_history_and_rollback_are_database_enforced() -> None:
+    with _isolated_m2_schema() as scoped_connect, scoped_connect() as conn:
+        lock_hash, diff_hash = _insert_draft(conn)
+        conn.commit()
+
+        _advance(conn, 2, "draft", "submitted", lock_hash, diff_hash)
+        conn.commit()
+        conn.execute(
+            """
+            INSERT INTO bundle_installation_decision (
+              org_id, project_id, decision_id, installation_pk,
+              submitted_revision, decision, actor, lock_hash,
+              permission_diff_hash, migration_plan_hash,
+              contribution_diff_hash
+            ) VALUES (%s, %s, %s, %s, 2, 'approved', 'approver:test',
+                      %s, %s, %s, %s)
+            """,
+            (
+                ORG,
+                PROJECT,
+                DECISION_ID,
+                INSTALLATION_PK,
+                lock_hash,
+                diff_hash,
+                diff_hash,
+                diff_hash,
+            ),
+        )
+        _advance(
+            conn,
+            3,
+            "submitted",
+            "approved",
+            lock_hash,
+            diff_hash,
+            decision_id=DECISION_ID,
+        )
+        conn.commit()
+        _advance(
+            conn,
+            4,
+            "approved",
+            "applied",
+            lock_hash,
+            diff_hash,
+            decision_id=DECISION_ID,
+        )
+        conn.commit()
+        active_savepoint = sql.Identifier(f"bad_active_{uuid.uuid4().hex}")
+        conn.execute(sql.SQL("SAVEPOINT {}").format(active_savepoint))
+        with pytest.raises(errors.CheckViolation):
+            _advance(
+                conn,
+                5,
+                "applied",
+                "active",
+                lock_hash,
+                diff_hash,
+                decision_id=DECISION_ID,
+                active_revision=5,
+                previous_active_revision=5,
+            )
+            conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        conn.execute(sql.SQL("ROLLBACK TO SAVEPOINT {}").format(active_savepoint))
+        conn.execute(sql.SQL("RELEASE SAVEPOINT {}").format(active_savepoint))
+        conn.execute("SET CONSTRAINTS ALL DEFERRED")
+
+        _advance(
+            conn,
+            5,
+            "applied",
+            "active",
+            lock_hash,
+            diff_hash,
+            decision_id=DECISION_ID,
+            active_revision=5,
+        )
+        conn.commit()
+
+        # M2 intentionally has no upgrade action, so seed a second active
+        # revision solely to exercise the pointer invariant against a
+        # future-compatible, non-null previous active history. The production
+        # transition guard is restored before consistency checks are forced.
+        conn.execute(
+            """
+            ALTER TABLE bundle_installation_revision
+            DISABLE TRIGGER trg_bundle_installation_revision_insert_guard
+            """
+        )
+        try:
+            _advance(
+                conn,
+                6,
+                "active",
+                "active",
+                lock_hash,
+                diff_hash,
+                decision_id=DECISION_ID,
+                active_revision=6,
+                previous_active_revision=5,
+            )
+            conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        finally:
+            conn.execute(
+                """
+                ALTER TABLE bundle_installation_revision
+                ENABLE TRIGGER trg_bundle_installation_revision_insert_guard
+                """
+            )
+        conn.execute("SET CONSTRAINTS ALL DEFERRED")
+        conn.commit()
+
+        rollback_savepoint = sql.Identifier(f"bad_rollback_{uuid.uuid4().hex}")
+        conn.execute(sql.SQL("SAVEPOINT {}").format(rollback_savepoint))
+        with pytest.raises(errors.CheckViolation):
+            _advance(
+                conn,
+                7,
+                "active",
+                "rolled_back",
+                lock_hash,
+                diff_hash,
+                decision_id=DECISION_ID,
+                active_revision=7,
+                previous_active_revision=7,
+            )
+            conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        conn.execute(sql.SQL("ROLLBACK TO SAVEPOINT {}").format(rollback_savepoint))
+        conn.execute(sql.SQL("RELEASE SAVEPOINT {}").format(rollback_savepoint))
+        conn.execute("SET CONSTRAINTS ALL DEFERRED")
+
+        _advance(
+            conn,
+            7,
+            "active",
+            "rolled_back",
+            lock_hash,
+            diff_hash,
+            decision_id=DECISION_ID,
+            active_revision=5,
+            previous_active_revision=5,
+        )
+        conn.commit()
+
+        row = conn.execute(
+            """
+            SELECT current_revision, active_revision,
+                   previous_active_revision, etag_version
+              FROM bundle_installation
+            """
+        ).fetchone()
+        assert row == {
+            "current_revision": 7,
+            "active_revision": 5,
+            "previous_active_revision": 5,
+            "etag_version": 7,
+        }
 
 
 def test_revision_decision_event_and_pointer_bypasses_fail_closed() -> None:

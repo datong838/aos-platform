@@ -905,16 +905,25 @@ def _create_event_and_pointer_guards() -> None:
 
           IF current_state = 'active' THEN
             IF installation_row.active_revision IS DISTINCT FROM
-                 installation_row.current_revision THEN
+                 installation_row.current_revision
+               OR (
+                 installation_row.previous_active_revision IS NOT NULL
+                 AND installation_row.previous_active_revision >=
+                     installation_row.current_revision
+               ) THEN
               RAISE EXCEPTION
-                'active installation must point at its current revision'
+                'active installation pointers do not describe valid history'
                 USING ERRCODE = '23514';
             END IF;
           ELSIF current_state = 'rolled_back' THEN
             IF installation_row.active_revision IS DISTINCT FROM
-                 installation_row.previous_active_revision THEN
+                 installation_row.previous_active_revision
+               OR installation_row.active_revision IS NOT DISTINCT FROM
+                    installation_row.current_revision
+               OR installation_row.previous_active_revision IS NOT DISTINCT FROM
+                    installation_row.current_revision THEN
               RAISE EXCEPTION
-                'rolled back installation must restore previous active revision'
+                'rolled back installation pointers do not restore valid history'
                 USING ERRCODE = '23514';
             END IF;
           ELSIF installation_row.active_revision IS NOT NULL
