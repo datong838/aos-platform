@@ -749,6 +749,10 @@
 
 .flow-line-active { stroke: var(--aos-accent); }
 
+.bp-pipe-flow-arrow {
+  fill: var(--aos-accent);
+}
+
 .bp-pipe-nodes {
   position: relative;
   display: flex;

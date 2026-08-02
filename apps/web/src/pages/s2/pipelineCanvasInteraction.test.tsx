@@ -124,6 +124,16 @@ describe("PipelineCanvasPage real interactions", () => {
     expect([...host.querySelectorAll("button")].some((button) => button.textContent === "保存 *")).toBe(true);
   });
 
+  it("renders every pipeline connection with a source-to-target direction arrow", () => {
+    const marker = host.querySelector<SVGMarkerElement>('marker[id^="pipeline-arrow-"]');
+    const paths = [...host.querySelectorAll<SVGPathElement>("path.flow-line")];
+    expect(marker?.querySelector(".bp-pipe-flow-arrow")).toBeTruthy();
+    expect(paths).toHaveLength(2);
+    paths.forEach((path) => {
+      expect(path.getAttribute("marker-end")).toBe(`url(#${marker?.id})`);
+    });
+  });
+
   it("marks edits dirty and persists the complete graph", async () => {
     const incremental = [...host.querySelectorAll("button")].find((button) => button.textContent === "增量")!;
     await act(async () => incremental.click());

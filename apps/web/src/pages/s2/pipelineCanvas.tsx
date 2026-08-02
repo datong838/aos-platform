@@ -4,7 +4,7 @@
  * Phase E-02~E-06：节点拖拽 + 算子工具栏 + 管道类型 + 输出配置 + 预览增强
  * W3-C6：视图 Tab（编辑/历史）+ 变换节点配置/试运行 · 优先接 phase5 pipeline API
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   DndContext,
@@ -440,6 +440,7 @@ function CanvasDropArea({
 
 export function PipelineCanvasPage() {
   const { pipelineId = "" } = useParams();
+  const flowArrowMarkerId = `pipeline-arrow-${useId().replace(/:/g, "")}`;
   const { data, err, reload } = useJsonGet<{ items: PipelineMeta[] }>("/v1/pipelines");
   const pipe = useMemo(
     () => (data?.items || []).find((p) => p.id === pipelineId) || null,
@@ -1187,6 +1188,19 @@ export function PipelineCanvasPage() {
               {/* Phase 7: 额外连接线渲染 */}
               {connections.length > 0 && (
                 <svg className="bp-pipe-flow-svg" width="100%" height="100%" aria-hidden style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0 }}>
+                  <defs>
+                    <marker
+                      id={flowArrowMarkerId}
+                      markerWidth="10"
+                      markerHeight="10"
+                      refX="9"
+                      refY="5"
+                      orient="auto"
+                      markerUnits="userSpaceOnUse"
+                    >
+                      <path d="M 0 0 L 10 5 L 0 10 z" className="bp-pipe-flow-arrow" />
+                    </marker>
+                  </defs>
                   {connections.map((c, i) => {
                     const nodePos = (id: string) => {
                       if (id === "input") return nodePositions.input;
@@ -1198,7 +1212,12 @@ export function PipelineCanvasPage() {
                     const from = nodePos(c.from);
                     const to = nodePos(c.to);
                     return (
-                      <path key={c.id || i} className="flow-line flow-line-active" d={`M ${from.x + 100} ${from.y + 30} C ${from.x + 140} ${from.y + 30}, ${to.x - 40} ${to.y + 30}, ${to.x} ${to.y + 30}`} />
+                      <path
+                        key={c.id || i}
+                        className="flow-line flow-line-active"
+                        markerEnd={`url(#${flowArrowMarkerId})`}
+                        d={`M ${from.x + 100} ${from.y + 30} C ${from.x + 140} ${from.y + 30}, ${to.x - 40} ${to.y + 30}, ${to.x} ${to.y + 30}`}
+                      />
                     );
                   })}
                 </svg>
