@@ -537,6 +537,15 @@ def test_error_codes_and_http_statuses_match_the_frozen_contract() -> None:
         "PREFLIGHT_FAILED": 422,
         "VERIFICATION_FAILED": 422,
         "ROLLBACK_BLOCKED": 409,
+        "REGISTRY_SNAPSHOT_STALE": 409,
+        "CURRENT_INSTALLATION_STALE": 409,
+        "RESOLUTION_LIMIT_EXCEEDED": 422,
+        "INSTALLATION_STATE_CONFLICT": 409,
+        "LOCK_INTEGRITY_INVALID": 409,
+        "LOCK_INTEGRITY_CORRUPT": 500,
+        "IDEMPOTENCY_KEY_REQUIRED": 400,
+        "PRECONDITION_REQUIRED": 428,
+        "PRECONDITION_INVALID": 400,
         "NOT_FOUND": 404,
     }
     assert {

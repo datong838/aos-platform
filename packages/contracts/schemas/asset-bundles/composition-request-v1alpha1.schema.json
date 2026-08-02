@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aos.dev/schemas/asset-bundles/composition-request-v1alpha1.schema.json",
+  "title": "AOS Composition Request v1alpha1",
+  "description": "Strict public request contract for deterministic bundle composition resolution.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "requested",
+    "platformApiVersion",
+    "platformRelease",
+    "environment"
+  ],
+  "properties": {
+    "requested": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "$comment": "Standard JSON Schema uniqueItems rejects exact duplicates only. The strict CompositionRequest DTO and resolver MUST also require unique (publisher,id) coordinates and canonical (publisher,id,version) order.",
+      "items": {
+        "$ref": "#/$defs/requestedBundle"
+      }
+    },
+    "platformApiVersion": {
+      "$ref": "#/$defs/strictSemver"
+    },
+    "platformRelease": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^(?!.*\\u0000)(?!\\s)(?![\\s\\S]*\\s$)[\\s\\S]+$"
+    },
+    "environment": {
+      "type": "string",
+      "enum": ["dev", "staging", "prod"]
+    },
+    "registrySnapshotHash": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/sha256"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "currentInstallationRef": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/currentInstallationRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "bundleId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    },
+    "publisher": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "canonicalUuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "strictSemver": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "npmSemverRange": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^(?!.*\\u0000)(?!\\s)(?![\\s\\S]*\\s$)[\\s\\S]+$",
+      "format": "npm-semver-range"
+    },
+    "normalizedRevision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^(?!.*\\u0000)(?!\\s)(?![\\s\\S]*\\s$)[\\s\\S]+$"
+    },
+    "requestedBundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["publisher", "id", "version"],
+      "properties": {
+        "publisher": {
+          "$ref": "#/$defs/publisher"
+        },
+        "id": {
+          "$ref": "#/$defs/bundleId"
+        },
+        "version": {
+          "$ref": "#/$defs/npmSemverRange"
+        }
+      }
+    },
+    "currentInstallationRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "installationId",
+        "revision",
+        "lockHash",
+        "overlayRevision"
+      ],
+      "properties": {
+        "installationId": {
+          "$ref": "#/$defs/canonicalUuid"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "lockHash": {
+          "$ref": "#/$defs/sha256"
+        },
+        "overlayRevision": {
+          "$ref": "#/$defs/normalizedRevision"
+        }
+      }
+    }
+  }
+}
