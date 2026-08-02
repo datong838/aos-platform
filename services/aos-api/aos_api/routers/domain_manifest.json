@@ -3048,6 +3048,12 @@
       "module": "aos_api.routers.aip_logic_publications",
       "attribute": "router",
       "order": 507
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.asset_bundles",
+      "attribute": "router",
+      "order": 508
     }
   ]
 }

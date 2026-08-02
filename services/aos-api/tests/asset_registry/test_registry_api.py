@@ -6,14 +6,13 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-
 from aos_api.asset_registry.contracts import BundleKind
 from aos_api.asset_registry.errors import AssetRegistryError, AssetRegistryErrorCode
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import register_exception_handlers
 from aos_api.routers import asset_bundles
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 _PRINCIPAL = Principal(
     subject="user:registry-editor",

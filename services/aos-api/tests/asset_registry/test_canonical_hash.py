@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 
 import pytest
-
 from aos_api.asset_registry.canonical_json import (
     CanonicalJsonError,
     canonical_json,

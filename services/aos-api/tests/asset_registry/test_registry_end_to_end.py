@@ -14,10 +14,6 @@ from unittest.mock import patch
 
 import pytest
 import yaml
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from psycopg import errors, sql
-
 from aos_api.asset_registry.canonical_json import canonical_json
 from aos_api.asset_registry.errors import (
     RevisionConflictError,
@@ -33,6 +29,9 @@ from aos_api.asset_registry.registry_service import RegistryService
 from aos_api.asset_registry.registry_store import PostgresRegistryStore
 from aos_api.asset_registry.signature import TrustRoot
 from aos_api.db import connect
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from psycopg import errors, sql
 
 API_ROOT = Path(__file__).resolve().parents[2]
 MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_registry.py"

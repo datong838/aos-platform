@@ -32,6 +32,7 @@ ROUTER_SPECS: dict[str, tuple[tuple[str, str], ...]] = {
         ('aos_api.vs_timeseries_set_router', 'router'),
         ('aos_api.es_sap_batch_import_router', 'router'),
         ('aos_api.es_derived_element_intel_router', 'router'),
+        ('aos_api.routers.asset_bundles', 'router'),
     ),
     "admin": (
         ('aos_api.routers.auth_oidc', 'router'),

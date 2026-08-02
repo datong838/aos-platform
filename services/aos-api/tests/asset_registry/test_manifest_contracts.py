@@ -7,8 +7,6 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
-
 from aos_api.asset_registry import (
     ERROR_HTTP_STATUS,
     AssetNotFoundError,
@@ -24,6 +22,7 @@ from aos_api.asset_registry import (
     LoadedBundle,
     ManifestInvalidError,
 )
+from pydantic import ValidationError
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SCHEMA_PATH = (

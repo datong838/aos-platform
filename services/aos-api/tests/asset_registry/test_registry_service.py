@@ -7,7 +7,6 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
-
 from aos_api.asset_registry.contracts import (
     BundleEvidenceStatus,
     BundleEvidenceType,

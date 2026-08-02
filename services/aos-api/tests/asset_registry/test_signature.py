@@ -5,10 +5,9 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from aos_api.asset_registry.signature import TrustRoot, verify_ed25519
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-
-from aos_api.asset_registry.signature import TrustRoot, verify_ed25519
 
 NOW = datetime(2026, 8, 3, 12, tzinfo=UTC)
 PAYLOAD = b'{"metadata":{"id":"solution.example","version":"1.0.0"}}'

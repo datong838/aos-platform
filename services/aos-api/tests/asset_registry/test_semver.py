@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import pytest
-from semantic_version import Version
-
 from aos_api.asset_registry.semver import (
     SemVerError,
     parse_range,
@@ -10,6 +8,7 @@ from aos_api.asset_registry.semver import (
     satisfies,
     select_highest,
 )
+from semantic_version import Version
 
 
 def test_parse_version_is_strict_and_uses_semantic_version_type() -> None:

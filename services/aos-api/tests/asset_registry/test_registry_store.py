@@ -11,8 +11,6 @@ from types import ModuleType
 from unittest.mock import patch
 
 import pytest
-from psycopg import errors, sql
-
 from aos_api.asset_registry.contracts import (
     BundleVersionStatus,
     LoadedBundle,
@@ -25,6 +23,7 @@ from aos_api.asset_registry.errors import (
 )
 from aos_api.asset_registry.registry_store import PostgresRegistryStore
 from aos_api.db import connect
+from psycopg import errors, sql
 
 API_ROOT = Path(__file__).resolve().parents[2]
 MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_registry.py"
