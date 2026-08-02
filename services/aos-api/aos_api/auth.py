@@ -1,7 +1,9 @@
 """Auth — T0.5 Dev Bearer + TX.3 OIDC JWT + TWA.1 tenant header harden (R-ISO-01)."""
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
+from typing import Any
 
 from fastapi import Header, Request
 
@@ -13,6 +15,9 @@ log = get_logger("aos-api.auth")
 
 DEV_TOKEN = "dev"
 DEV_BEARER = f"Bearer {DEV_TOKEN}"
+_ASSET_PUBLISHER_PATTERN = re.compile(r"^[a-z0-9]+(?:[.-][a-z0-9]+)*$")
+_MAX_ASSET_PUBLISHERS = 500
+_MAX_ASSET_PUBLISHER_LENGTH = 120
 
 
 @dataclass
@@ -23,6 +28,7 @@ class Principal:
     roles: list[str] = field(default_factory=list)
     markings: list[str] = field(default_factory=list)
     token_kind: str = "dev"
+    asset_publishers: frozenset[str] = field(default_factory=frozenset)
 
 
 def parse_bearer(authorization: str | None) -> str:
@@ -68,6 +74,36 @@ def roles_from_claims(claims: dict) -> list[str]:
 def markings_from_claims(claims: dict) -> list[str]:
     markings = _as_str_list(claims.get("markings"))
     return markings if markings else ["public"]
+
+
+def _asset_publishers_from_verified_claims(
+    claims: dict[str, Any],
+) -> frozenset[str]:
+    """Parse publisher scope only after the JWT signature has been verified."""
+
+    if "asset_publishers" not in claims:
+        return frozenset()
+    raw = claims["asset_publishers"]
+    if not isinstance(raw, list):
+        raise TypeError("asset_publishers claim must be an array")
+    if len(raw) > _MAX_ASSET_PUBLISHERS:
+        raise ValueError("asset_publishers claim exceeds the scope limit")
+
+    checked: list[str] = []
+    for value in raw:
+        if (
+            not isinstance(value, str)
+            or not value
+            or value != value.strip()
+            or "\x00" in value
+            or len(value) > _MAX_ASSET_PUBLISHER_LENGTH
+            or (value != "*" and _ASSET_PUBLISHER_PATTERN.fullmatch(value) is None)
+        ):
+            raise ValueError("asset_publishers claim contains an invalid publisher")
+        checked.append(value)
+    if len(checked) != len(set(checked)):
+        raise ValueError("asset_publishers claim contains duplicate publishers")
+    return frozenset(checked)
 
 
 def claim_org_raw(claims: dict) -> str | None:
@@ -174,7 +210,8 @@ def resolve_principal(
     if looks_like_jwt(token):
         try:
             claims = verify_access_token(token)
-        except Exception as exc:  # noqa: BLE001
+            asset_publishers = _asset_publishers_from_verified_claims(claims)
+        except Exception as exc:
             raise ApiError(
                 code="AUTH_INVALID",
                 message=f"invalid JWT: {exc}",
@@ -194,6 +231,7 @@ def resolve_principal(
             roles=roles_from_claims(claims),
             markings=markings_from_claims(claims),
             token_kind="oidc",
+            asset_publishers=asset_publishers,
         )
 
     if token == DEV_TOKEN:
@@ -217,6 +255,7 @@ def resolve_principal(
             roles=["developer", "admin"],
             markings=["public", "restricted"],
             token_kind="dev",
+            asset_publishers=frozenset({"aos"}),
         )
 
     raise ApiError(
@@ -259,7 +298,7 @@ async def require_principal(
             org_id=principal.org_id,
             project_id=principal.project_id,
         )
-    except Exception:  # noqa: BLE001
+    except Exception:  # noqa: BLE001, S110
         pass
     log.info(
         "principal_resolved kind=%s subject=%s org=%s project=%s",

@@ -96,8 +96,8 @@ def _ensure_rsa() -> None:
         if _rsa_private_pem and _rsa_public_jwk:
             return
         try:
-            from cryptography.hazmat.primitives.asymmetric import rsa
             from cryptography.hazmat.primitives import serialization
+            from cryptography.hazmat.primitives.asymmetric import rsa
         except ImportError as exc:  # pragma: no cover
             raise RuntimeError("cryptography required for RS256/JWKS") from exc
 
@@ -176,7 +176,7 @@ def issue_password_token(
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
             raw = json.loads(resp.read().decode("utf-8"))
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         log.warning("oidc_password_grant_fail err=%s", type(exc).__name__)
         raise ValueError(f"IdP token failed: {exc}") from exc
     access = raw.get("access_token")
@@ -200,6 +200,7 @@ def issue_dev_token(
     project_id: str = "dev-project",
     roles: list[str] | None = None,
     markings: list[str] | None = None,
+    asset_publishers: list[str] | None = None,
     ttl_sec: int = 3600,
     alg: str | None = None,
 ) -> dict[str, Any]:
@@ -218,6 +219,8 @@ def issue_dev_token(
         "markings": markings or ["public", "restricted"],
         "token_use": "access",
     }
+    if asset_publishers is not None:
+        payload["asset_publishers"] = asset_publishers
     use_alg = (alg or ("RS256" if prefer_rs256() else "HS256")).upper()
     if use_alg == "RS256":
         _ensure_rsa()
