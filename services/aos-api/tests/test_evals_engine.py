@@ -8,17 +8,25 @@ LLM 评判单元测试固定使用 mock chat_fn；Agnes 实连仅在显式设置
 """
 from __future__ import annotations
 
+import importlib.util
 import os
+import uuid
+from contextlib import contextmanager
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from psycopg import sql
 
+from aos_api.aip_eval_store import EvalEvidenceStore
+from aos_api.db import connect
 from aos_api.evals_engine import (
     EvalsEngine,
     EvalSuite,
     TestCase,
 )
 from aos_api.main import create_app
+from aos_api.routers.evals import get_eval_store
 
 _H = {
     "Authorization": "Bearer dev",
@@ -26,6 +34,17 @@ _H = {
     "X-Project-Id": "dev-project",
     "X-Trace-Id": "test-trace-1",
 }
+_TARGET_HASH = "a" * 64
+
+
+def _target(**overrides) -> dict:
+    return {
+        "target_type": "logic_graph",
+        "target_id": "logic-eval-test",
+        "target_revision": 1,
+        "target_hash": _TARGET_HASH,
+        **overrides,
+    }
 
 
 def _mock_chat_yes(query: str, **kw) -> dict:
@@ -190,7 +209,75 @@ def test_eval_history_trend():
 def client(monkeypatch):
     fresh = EvalsEngine(chat_fn=_mock_chat_yes)
     monkeypatch.setattr("aos_api.routers.evals.get_engine", lambda: fresh)
-    return TestClient(create_app())
+    suffix = uuid.uuid4().hex
+    schema = f"eval_api_test_{suffix}"
+    try:
+        with connect() as conn:
+            conn.execute(sql.SQL("CREATE SCHEMA {}").format(sql.Identifier(schema)))
+            conn.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(schema)))
+            conn.execute(
+                """CREATE TABLE aip_logic_graph (
+                org_id TEXT NOT NULL, project_id TEXT NOT NULL, graph_id TEXT NOT NULL,
+                PRIMARY KEY (org_id, project_id, graph_id))"""
+            )
+            conn.execute(
+                """CREATE TABLE aip_logic_graph_revision (
+                org_id TEXT NOT NULL, project_id TEXT NOT NULL, graph_id TEXT NOT NULL,
+                revision BIGINT NOT NULL, graph_hash TEXT NOT NULL, snapshot JSONB NOT NULL,
+                actor TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                PRIMARY KEY (org_id, project_id, graph_id, revision),
+                FOREIGN KEY (org_id, project_id, graph_id)
+                  REFERENCES aip_logic_graph (org_id, project_id, graph_id))"""
+            )
+            path = (
+                Path(__file__).resolve().parents[1]
+                / "alembic/versions/228logiceval_aip_eval_evidence.py"
+            )
+            spec = importlib.util.spec_from_file_location("eval_api_migration", path)
+            migration = importlib.util.module_from_spec(spec)
+            assert spec and spec.loader
+            spec.loader.exec_module(migration)
+            statements: list[str] = []
+            monkeypatch.setattr(migration.op, "execute", statements.append)
+            migration.upgrade()
+            for statement in statements:
+                conn.execute(statement)
+            conn.execute(
+                """INSERT INTO aip_logic_graph
+                (org_id,project_id,graph_id) VALUES (%s,%s,%s)""",
+                (_H["X-Org-Id"], _H["X-Project-Id"], "logic-eval-test"),
+            )
+            conn.execute(
+                """INSERT INTO aip_logic_graph_revision
+                (org_id,project_id,graph_id,revision,graph_hash,snapshot,actor)
+                VALUES (%s,%s,%s,1,%s,'{}'::jsonb,'tester')""",
+                (
+                    _H["X-Org-Id"],
+                    _H["X-Project-Id"],
+                    "logic-eval-test",
+                    _TARGET_HASH,
+                ),
+            )
+            conn.commit()
+    except Exception as exc:  # noqa: BLE001
+        pytest.skip(f"PG unavailable: {exc}")
+
+    @contextmanager
+    def scoped_connect():
+        with connect() as conn:
+            conn.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(schema)))
+            yield conn
+
+    app = create_app()
+    app.dependency_overrides[get_eval_store] = lambda: EvalEvidenceStore(
+        connect_factory=scoped_connect
+    )
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.pop(get_eval_store, None)
+    with connect() as conn:
+        conn.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
+        conn.commit()
 
 
 def test_api_create_and_list_suite(client):
@@ -217,11 +304,13 @@ def test_api_run_eval(client):
 
     resp = client.post("/v1/evals/run", json={
         "suite_id": suite_id,
-        "target_type": "function",
+        **_target(),
         "target_expr": "x + 1",
     }, headers=_H)
     assert resp.status_code == 200
     assert resp.json()["pass_rate"] == 1.0
+    assert resp.json()["report_id"].startswith("eval-report-")
+    assert resp.json()["target_id"] == "logic-eval-test"
 
     report = client.get(f"/v1/evals/{suite_id}/report", headers=_H)
     assert report.status_code == 200
@@ -242,6 +331,7 @@ def test_api_gate_check(client):
 
     resp = client.post("/v1/evals/gate-check", json={
         "suite_id": suite_id,
+        **_target(),
         "target_expr": "x + 1",
     }, headers=_H)
     assert resp.status_code == 200
@@ -258,12 +348,14 @@ def test_api_gate_check_can_reuse_latest_report_without_second_run(client):
 
     run = client.post("/v1/evals/run", json={
         "suite_id": suite_id,
+        **_target(),
         "target_expr": "x + 1",
     }, headers=_H)
     assert run.status_code == 200
 
     gate = client.post("/v1/evals/gate-check", json={
         "suite_id": suite_id,
+        **_target(),
         "reuse_latest_report": True,
     }, headers=_H)
     assert gate.status_code == 200
@@ -273,6 +365,72 @@ def test_api_gate_check_can_reuse_latest_report_without_second_run(client):
     history = client.get(f"/v1/evals/{suite_id}/history", headers=_H)
     assert history.status_code == 200
     assert len(history.json()["items"]) == 1
+
+
+def test_api_empty_or_missing_target_fails_closed_without_report(client):
+    create = client.post(
+        "/v1/evals/suites",
+        json={
+            "name": "fail-closed",
+            "cases": [
+                {
+                    "id": "c1",
+                    "inputs": {"expected": "forged"},
+                    "expected": "forged",
+                    "judge": "exact",
+                }
+            ],
+            "gate_threshold": 1.0,
+        },
+        headers=_H,
+    )
+    suite_id = create.json()["id"]
+    missing_target = client.post(
+        "/v1/evals/run",
+        json={"suite_id": suite_id, "target_expr": "expected"},
+        headers=_H,
+    )
+    assert missing_target.status_code == 400
+    blank_expression = client.post(
+        "/v1/evals/run",
+        json={"suite_id": suite_id, **_target(), "target_expr": "   "},
+        headers=_H,
+    )
+    assert blank_expression.status_code == 422
+    assert blank_expression.json()["code"] == "EVAL_TARGET_REQUIRED"
+    report = client.get(f"/v1/evals/{suite_id}/report", headers=_H)
+    assert report.status_code == 404
+
+
+def test_api_target_hash_mismatch_and_cross_tenant_reads_are_blocked(client):
+    create = client.post(
+        "/v1/evals/suites",
+        json={
+            "name": "target-check",
+            "cases": [{"id": "c1", "inputs": {"x": 1}, "expected": 2}],
+            "gate_threshold": 1.0,
+        },
+        headers=_H,
+    )
+    suite_id = create.json()["id"]
+    mismatch = client.post(
+        "/v1/evals/run",
+        json={
+            "suite_id": suite_id,
+            **_target(target_hash="b" * 64),
+            "target_expr": "x + 1",
+        },
+        headers=_H,
+    )
+    assert mismatch.status_code == 409
+    assert mismatch.json()["code"] == "EVAL_TARGET_VERSION_CONFLICT"
+    other_headers = {
+        **_H,
+        "X-Org-Id": "other-org",
+        "X-Project-Id": "other-project",
+    }
+    hidden = client.get(f"/v1/evals/suites/{suite_id}", headers=other_headers)
+    assert hidden.status_code == 404
 
 
 def test_api_report_not_found(client):
@@ -290,7 +448,12 @@ def test_api_report_not_found(client):
 def test_eval_llm_judge_with_agnes():
     from aos_api.env_load import load_dotenv
     load_dotenv(force=True)
-    from aos_api.llm_gateway import _openai_chat, agnes_api_key, agnes_base_url, agnes_text_model
+    from aos_api.llm_gateway import (
+        _openai_chat,
+        agnes_api_key,
+        agnes_base_url,
+        agnes_text_model,
+    )
 
     def _force_agnes_chat(query: str, **kw) -> dict:
         out = _openai_chat(

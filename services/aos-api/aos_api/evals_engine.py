@@ -8,8 +8,9 @@ LLM 评判通过 chat_fn 调用（默认 llm_gateway.chat），不写死模型�
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
-from typing import Any, Callable
+from collections.abc import Callable
+from datetime import UTC, datetime
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -29,7 +30,7 @@ class EvalSuite(BaseModel):
     id: str = Field(default_factory=lambda: "es-" + uuid.uuid4().hex[:8])
     name: str
     cases: list[TestCase] = Field(default_factory=list)
-    gate_threshold: float = 0.8
+    gate_threshold: float = Field(default=0.8, ge=0.0, le=1.0)
 
 
 class CaseResult(BaseModel):
@@ -49,7 +50,7 @@ class EvalReport(BaseModel):
     failed: int = 0
     total: int = 0
     gate_passed: bool = False
-    run_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    run_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 class EvalsError(Exception):
@@ -87,6 +88,19 @@ class EvalsEngine:
         suite = self._suites.get(suite_id)
         if suite is None:
             raise EvalsError("NOT_FOUND", f"评测集 {suite_id} 不存在")
+        report = self.evaluate_suite(suite, target_fn, debug=debug)
+        self._reports.setdefault(suite_id, []).append(report)
+        return report
+
+    def evaluate_suite(
+        self, suite: EvalSuite, target_fn: TargetFn, debug: bool = False
+    ) -> EvalReport:
+        """Evaluate an explicit suite without consulting process-local storage.
+
+        Persisted API paths use this pure evaluator so suites belonging to
+        different tenants never share the singleton dictionaries.
+        """
+        _ = debug
         results: list[CaseResult] = []
         for case in suite.cases:
             actual = target_fn(case.inputs)
@@ -103,7 +117,7 @@ class EvalsEngine:
         total = len(results)
         pass_rate = passed_count / total if total > 0 else 0.0
         report = EvalReport(
-            suite_id=suite_id,
+            suite_id=suite.id,
             results=results,
             pass_rate=round(pass_rate, 4),
             passed=passed_count,
@@ -111,7 +125,6 @@ class EvalsEngine:
             total=total,
             gate_passed=pass_rate >= suite.gate_threshold,
         )
-        self._reports.setdefault(suite_id, []).append(report)
         return report
 
     def _judge(self, case: TestCase, actual: Any) -> tuple[bool, str]:
@@ -141,7 +154,7 @@ class EvalsEngine:
                 answer_text = resp.get("answer", "") if isinstance(resp, dict) else str(resp)
                 ok = "yes" in answer_text.lower().strip()[:10]
                 return ok, f"LLM 评判：{answer_text[:80]}"
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 - judge failures are a failed case
                 return False, f"LLM 评判失败：{exc}"
         return False, f"未知评判标准：{case.judge}"
 
