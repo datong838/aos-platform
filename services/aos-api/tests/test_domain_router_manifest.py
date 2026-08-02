@@ -32,7 +32,7 @@ DOMAIN_ORDER = (
     "apollo",
 )
 DOMAIN_COUNTS = {
-    "infra": 20,
+    "infra": 21,
     "admin": 8,
     "system": 4,
     "agent": 3,
@@ -224,8 +224,8 @@ class RouterManifestStaticTests(unittest.TestCase):
         cls.routers = cls.generator.load_manifest(MANIFEST_PATH)
 
     def test_manifest_count_order_domains_and_unique_keys(self) -> None:
-        self.assertEqual(508, len(self.routers))
-        self.assertEqual(list(range(508)), [entry["order"] for entry in self.routers])
+        self.assertEqual(509, len(self.routers))
+        self.assertEqual(list(range(509)), [entry["order"] for entry in self.routers])
         self.assertEqual(
             DOMAIN_COUNTS,
             {
@@ -234,7 +234,7 @@ class RouterManifestStaticTests(unittest.TestCase):
             },
         )
         keys = {(entry["module"], entry["attribute"]) for entry in self.routers}
-        self.assertEqual(508, len(keys))
+        self.assertEqual(509, len(keys))
 
     def test_manifest_validation_rejects_order_gaps_and_duplicate_keys(self) -> None:
         samples = []
@@ -370,12 +370,12 @@ class RouterManifestRuntimeTests(unittest.TestCase):
 
         # Runtime inventory includes FastAPI's four framework routes; the
         # exported business-route inventory intentionally filters those out.
-        self.assertEqual(4022, result["count"])
+        self.assertEqual(4031, result["count"])
         self.assertEqual(
-            "1306f53d9c4f8c079f53e5781b7648c0c58bc8e55f71875d88fa37381e803900",
+            "bf2e8f4644c8fc68d5ad8a10e5a06131c03dee9a50ba4b93cdff824444115042",
             result["sha256"],
         )
-        self.assertEqual(2259, result["openapi_paths"])
+        self.assertEqual(2267, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual([], result["missing_critical"])
         self.assertTrue(result["managed_skipped_bootstrap"])
