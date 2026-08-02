@@ -1,4 +1,5 @@
 """M1 end-to-end Registry evidence through loader, service, store, and PostgreSQL."""
+
 from __future__ import annotations
 
 import base64
@@ -11,10 +12,14 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import ModuleType
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from psycopg import errors, sql
+
 from aos_api.asset_registry.canonical_json import canonical_json
 from aos_api.asset_registry.errors import (
     DutySeparationRequiredError,
@@ -31,14 +36,12 @@ from aos_api.asset_registry.registry_service import RegistryService
 from aos_api.asset_registry.registry_store import PostgresRegistryStore
 from aos_api.asset_registry.signature import TrustRoot
 from aos_api.db import connect
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from psycopg import errors, sql
 
 API_ROOT = Path(__file__).resolve().parents[2]
 MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_registry.py"
 SECURITY_MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_security.py"
 INVARIANTS_MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_invariants.py"
+EVIDENCE_MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_evidence_snapshot.py"
 CREATE_ROLES = {"developer"}
 PUBLISH_ROLES = {"asset-publisher"}
 
@@ -68,9 +71,15 @@ def _upgrade_statements() -> list[str]:
         (MIGRATION_PATH, "registry_e2e_migration"),
         (SECURITY_MIGRATION_PATH, "registry_e2e_security_migration"),
         (INVARIANTS_MIGRATION_PATH, "registry_e2e_invariants_migration"),
+        (EVIDENCE_MIGRATION_PATH, "registry_e2e_evidence_migration"),
     ):
         module = _load_migration(path, name)
-        with patch.object(module.op, "execute", statements.append):
+        connection = MagicMock()
+        connection.execute.return_value.mappings.return_value = []
+        with (
+            patch.object(module.op, "execute", statements.append),
+            patch.object(module.op, "get_bind", return_value=connection),
+        ):
             module.upgrade()
     return statements
 
@@ -241,9 +250,7 @@ def _sign_bundle(
         "signature": base64.b64encode(private_key.sign(payload)).decode("ascii"),
         "signedAt": now.isoformat(),
     }
-    (bundle / SIGNATURE_FILENAME).write_text(
-        json.dumps(envelope), encoding="utf-8"
-    )
+    (bundle / SIGNATURE_FILENAME).write_text(json.dumps(envelope), encoding="utf-8")
     trust_root = TrustRoot(
         publisher=publisher,
         key_id=key_id,
@@ -333,9 +340,7 @@ def test_signed_bundle_publishes_and_survives_store_restart(registry_runtime) ->
     signature_evidence = next(
         item for item in draft["evidence"] if item["type"] == "signature_verification"
     )
-    assert signature_evidence["metadata"]["trustRootRevision"] == (
-        trust_root.revision
-    )
+    assert signature_evidence["metadata"]["trustRootRevision"] == (trust_root.revision)
     assert signature_evidence["expiresAt"] == trust_root.not_after.isoformat()
     assert draft["lifecycleEvents"] == []
 
@@ -387,11 +392,18 @@ def test_signed_bundle_publishes_and_survives_store_restart(registry_runtime) ->
     restarted_service = RegistryService(
         store=PostgresRegistryStore(scoped_connect), loader=loader
     )
-    assert (
-        restarted_service.get_version(
-            bundle_id="plugin.generic", version="1.0.0", publisher="aos"
-        )
-        == published
+    public_version = restarted_service.get_version(
+        bundle_id="plugin.generic", version="1.0.0", publisher="aos"
+    )
+    assert public_version["status"] == published["status"]
+    assert public_version["contentHash"] == published["contentHash"]
+    assert all(
+        "artifactRef" not in item and "metadata" not in item
+        for item in public_version["evidence"]
+    )
+    assert all(
+        "actor" not in item and "reason" not in item and "evidenceSnapshot" not in item
+        for item in public_version["lifecycleEvents"]
     )
 
     with scoped_connect() as conn:
@@ -480,9 +492,12 @@ def test_invalid_signature_and_dual_publishers_fail_closed(registry_runtime) -> 
             roles=CREATE_ROLES,
             publisher_scopes={"aos"},
         )
-    assert service.get_version(
-        bundle_id="plugin.bad-signature", version="1.0.0", publisher="aos"
-    )["status"] == "draft"
+    assert (
+        service.get_version(
+            bundle_id="plugin.bad-signature", version="1.0.0", publisher="aos"
+        )["status"]
+        == "draft"
+    )
 
     for publisher, directory in (("aos", "shared-aos"), ("partner", "shared-partner")):
         _create_bundle_and_version(
@@ -504,9 +519,12 @@ def test_invalid_signature_and_dual_publishers_fail_closed(registry_runtime) -> 
     )
     assert validated["publisher"] == "partner"
     assert validated["status"] == "validated"
-    assert service.get_version(
-        bundle_id="plugin.shared", version="1.0.0", publisher="aos"
-    )["status"] == "draft"
+    assert (
+        service.get_version(
+            bundle_id="plugin.shared", version="1.0.0", publisher="aos"
+        )["status"]
+        == "draft"
+    )
 
     trust_roots.add(
         replace(
@@ -523,9 +541,12 @@ def test_invalid_signature_and_dual_publishers_fail_closed(registry_runtime) -> 
             roles=PUBLISH_ROLES,
             publisher_scopes={"partner"},
         )
-    assert service.get_version(
-        bundle_id="plugin.shared", version="1.0.0", publisher="partner"
-    )["status"] == "validated"
+    assert (
+        service.get_version(
+            bundle_id="plugin.shared", version="1.0.0", publisher="partner"
+        )["status"]
+        == "validated"
+    )
 
 
 def test_service_projection_failure_rolls_back_every_version_table(

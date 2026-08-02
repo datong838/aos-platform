@@ -1,4 +1,5 @@
 """Filesystem security and evidence tests for the allowlisted manifest loader."""
+
 from __future__ import annotations
 
 import base64
@@ -10,7 +11,10 @@ from pathlib import Path
 
 import pytest
 import yaml
-from aos_api.asset_registry.canonical_json import canonical_json
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+from aos_api.asset_registry.canonical_json import canonical_json, canonical_sha256
 from aos_api.asset_registry.contracts import BundleEvidenceStatus
 from aos_api.asset_registry.errors import (
     AssetRegistryErrorCode,
@@ -23,8 +27,6 @@ from aos_api.asset_registry.manifest_loader import (
     ManifestLoader,
 )
 from aos_api.asset_registry.signature import TrustRoot
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 
 def _manifest() -> dict:
@@ -62,7 +64,9 @@ def _manifest() -> dict:
     }
 
 
-def _make_bundle(root: Path, *, name: str = "example", manifest: dict | None = None) -> Path:
+def _make_bundle(
+    root: Path, *, name: str = "example", manifest: dict | None = None
+) -> Path:
     bundle = root / name
     (bundle / "content").mkdir(parents=True)
     (bundle / "bundle.yaml").write_text(
@@ -154,7 +158,9 @@ def _sign_bundle(bundle: Path, unsigned, *, wrong_payload: bool = False):
 
 
 def _signature_evidence(loaded):
-    return next(item for item in loaded.evidence if item.type == "signature_verification")
+    return next(
+        item for item in loaded.evidence if item.type == "signature_verification"
+    )
 
 
 def test_load_builds_sorted_server_derived_artifact_index_and_evidence(
@@ -180,7 +186,9 @@ def test_load_builds_sorted_server_derived_artifact_index_and_evidence(
         ("manifest_validation", "valid"),
         ("content_hash", "valid"),
     }
-    content_evidence = next(item for item in loaded.evidence if item.type == "content_hash")
+    content_evidence = next(
+        item for item in loaded.evidence if item.type == "content_hash"
+    )
     assert content_evidence.artifact_hash == loaded.content_hash
 
 
@@ -203,6 +211,12 @@ def test_content_hash_is_deterministic_and_excludes_signature_envelope(
     assert signature_evidence.metadata["trustRootRevision"] == (
         trust_roots.root.revision
     )
+    assert signature_evidence.metadata["signatureHashProfile"] == (
+        "canonical-envelope-v1"
+    )
+    assert signature_evidence.artifact_hash == canonical_sha256(
+        second.signature.model_dump(mode="json", by_alias=True, exclude_none=False)
+    )
     assert signature_evidence.expires_at == trust_roots.root.not_after
     assert _loader(root, trust_roots).trust_roots is trust_roots
 
@@ -224,12 +238,14 @@ def test_standard_sbom_and_bundle_evals_generate_hash_bound_valid_evidence(
 
     assert evidence_by_type["sbom"].status == BundleEvidenceStatus.VALID
     assert evidence_by_type["bundle_evals"].status == BundleEvidenceStatus.VALID
-    assert evidence_by_type["sbom"].artifact_hash == artifact_by_path[
-        SBOM_RELATIVE_PATH
-    ].digest
-    assert evidence_by_type["bundle_evals"].artifact_hash == artifact_by_path[
-        BUNDLE_EVALS_RELATIVE_PATH
-    ].digest
+    assert (
+        evidence_by_type["sbom"].artifact_hash
+        == artifact_by_path[SBOM_RELATIVE_PATH].digest
+    )
+    assert (
+        evidence_by_type["bundle_evals"].artifact_hash
+        == artifact_by_path[BUNDLE_EVALS_RELATIVE_PATH].digest
+    )
 
 
 @pytest.mark.parametrize(
@@ -271,7 +287,9 @@ def test_malformed_or_failed_standard_evidence_is_never_marked_valid(
         "bundle://unknown/example",
     ],
 )
-def test_source_reference_and_alias_fail_closed(tmp_path: Path, source_ref: str) -> None:
+def test_source_reference_and_alias_fail_closed(
+    tmp_path: Path, source_ref: str
+) -> None:
     root = tmp_path / "allowed"
     _make_bundle(root)
     with pytest.raises(ManifestInvalidError) as caught:
@@ -352,7 +370,9 @@ def test_file_count_limit_includes_control_files(tmp_path: Path) -> None:
         loader.load("bundle://fixtures/example")
 
 
-def test_manifest_references_must_exist_after_realpath_resolution(tmp_path: Path) -> None:
+def test_manifest_references_must_exist_after_realpath_resolution(
+    tmp_path: Path,
+) -> None:
     root = tmp_path / "allowed"
     payload = _manifest()
     payload["spec"]["exports"] = {"schemas": ["missing/schema.json"]}
@@ -387,7 +407,9 @@ def test_hidden_sensitive_files_and_values_are_rejected(
     target = bundle / relative_path
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content, encoding="utf-8")
-    with pytest.raises(ManifestInvalidError, match="sensitive|private key|database URL"):
+    with pytest.raises(
+        ManifestInvalidError, match="sensitive|private key|database URL"
+    ):
         _loader(root).load("bundle://fixtures/example")
 
 

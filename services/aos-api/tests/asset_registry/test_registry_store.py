@@ -12,13 +12,15 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from threading import Barrier, Event
 from types import ModuleType
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 from psycopg import errors, sql
+from psycopg.types.json import Jsonb
 
+from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.asset_registry.contracts import (
     BundleVersionStatus,
     LoadedBundle,
@@ -36,6 +38,7 @@ API_ROOT = Path(__file__).resolve().parents[2]
 MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_registry.py"
 SECURITY_MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_security.py"
 INVARIANTS_MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_invariants.py"
+EVIDENCE_MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_evidence_snapshot.py"
 
 
 def _load_migration(path: Path, name: str) -> ModuleType:
@@ -52,9 +55,15 @@ def _upgrade_statements() -> list[str]:
         (MIGRATION_PATH, "registry_store_migration"),
         (SECURITY_MIGRATION_PATH, "registry_store_security_migration"),
         (INVARIANTS_MIGRATION_PATH, "registry_store_invariants_migration"),
+        (EVIDENCE_MIGRATION_PATH, "registry_store_evidence_migration"),
     ):
         module = _load_migration(path, name)
-        with patch.object(module.op, "execute", statements.append):
+        connection = MagicMock()
+        connection.execute.return_value.mappings.return_value = []
+        with (
+            patch.object(module.op, "execute", statements.append),
+            patch.object(module.op, "get_bind", return_value=connection),
+        ):
             module.upgrade()
     return statements
 
@@ -66,7 +75,12 @@ def _migration_statements(
 ) -> list[str]:
     statements: list[str] = []
     module = _load_migration(path, name)
-    with patch.object(module.op, "execute", statements.append):
+    connection = MagicMock()
+    connection.execute.return_value.mappings.return_value = []
+    with (
+        patch.object(module.op, "execute", statements.append),
+        patch.object(module.op, "get_bind", return_value=connection),
+    ):
         getattr(module, operation)()
     return statements
 
@@ -530,13 +544,19 @@ def test_security_migrations_form_the_single_head_chain() -> None:
         INVARIANTS_MIGRATION_PATH,
         "registry_invariants_revision_contract",
     )
+    evidence = _load_migration(
+        EVIDENCE_MIGRATION_PATH,
+        "registry_evidence_revision_contract",
+    )
     script = ScriptDirectory.from_config(Config(str(API_ROOT / "alembic.ini")))
 
     assert security.revision == "228assetsecurity"
     assert security.down_revision == "a93c7e1b4f20"
     assert invariants.revision == "228assetinvariants"
     assert invariants.down_revision == "228assetsecurity"
-    assert script.get_heads() == ["228assetinvariants"]
+    assert evidence.revision == "228assetevidence"
+    assert evidence.down_revision == "228assetinvariants"
+    assert script.get_heads() == ["228assetevidence"]
 
 
 def test_invariants_upgrade_is_reachable_from_already_applied_security_revision() -> (
@@ -586,6 +606,174 @@ def test_invariants_upgrade_is_reachable_from_already_applied_security_revision(
         assert "trg_asset_bundle_status_event_required" in triggers
         assert "trg_00_asset_bundle_evidence_statement_lock" in triggers
         assert "trg_00_asset_bundle_evidence_parent_lock" in triggers
+
+
+def test_evidence_upgrade_preserves_old_events_as_explicit_unknown_snapshots() -> None:
+    old_upgrade = [
+        *_migration_statements(
+            MIGRATION_PATH,
+            "registry_evidence_incremental_base",
+            "upgrade",
+        ),
+        *_migration_statements(
+            SECURITY_MIGRATION_PATH,
+            "registry_evidence_incremental_security",
+            "upgrade",
+        ),
+        *_migration_statements(
+            INVARIANTS_MIGRATION_PATH,
+            "registry_evidence_incremental_invariants",
+            "upgrade",
+        ),
+    ]
+    with _isolated_schema(old_upgrade) as scoped_connect:
+        store = PostgresRegistryStore(scoped_connect)
+        _create_bundle(store, bundle_id="solution.incremental-evidence")
+        loaded = _loaded_bundle(bundle_id="solution.incremental-evidence")
+        with scoped_connect() as conn:
+            bundle_pk = conn.execute("SELECT bundle_pk FROM asset_bundle").fetchone()[
+                "bundle_pk"
+            ]
+            version_pk = uuid.uuid4()
+            conn.execute(
+                """
+                INSERT INTO asset_bundle_version (
+                  version_pk, bundle_pk, version, manifest_json,
+                  content_hash, signature, created_by
+                ) VALUES (%s, %s, %s, %s, %s, %s, 'publisher:test')
+                """,
+                (
+                    version_pk,
+                    bundle_pk,
+                    loaded.manifest.metadata.version,
+                    Jsonb(
+                        loaded.manifest.model_dump(
+                            mode="json", by_alias=True, exclude_none=False
+                        )
+                    ),
+                    loaded.content_hash,
+                    Jsonb(
+                        loaded.signature.model_dump(
+                            mode="json", by_alias=True, exclude_none=False
+                        )
+                    ),
+                ),
+            )
+            evidence = loaded.evidence[0]
+            conn.execute(
+                """
+                INSERT INTO asset_bundle_evidence (
+                  version_pk, evidence_type, artifact_ref, artifact_hash,
+                  status, observed_at, expires_at, revoked_at, metadata,
+                  updated_by
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,
+                          'publisher:test')
+                """,
+                (
+                    version_pk,
+                    evidence.type.value,
+                    evidence.artifact_ref,
+                    evidence.artifact_hash,
+                    evidence.status.value,
+                    evidence.observed_at,
+                    evidence.expires_at,
+                    evidence.revoked_at,
+                    Jsonb(evidence.metadata),
+                ),
+            )
+            conn.execute(
+                "UPDATE asset_bundle_version SET status = 'validated' "
+                "WHERE version_pk = %s",
+                (version_pk,),
+            )
+            conn.execute(
+                """
+                INSERT INTO asset_bundle_version_event (
+                  event_pk, version_pk, sequence, from_status, to_status,
+                  actor, reason, evidence_revision
+                ) VALUES (%s, %s, 1, 'draft', 'validated',
+                          'validator:old-binary', 'pre-snapshot event', %s)
+                """,
+                (uuid.uuid4(), version_pk, "sha256:" + "e" * 64),
+            )
+            conn.commit()
+            for statement in _migration_statements(
+                EVIDENCE_MIGRATION_PATH,
+                "registry_evidence_incremental_upgrade",
+                "upgrade",
+            ):
+                conn.execute(statement)
+            conn.commit()
+            row = conn.execute(
+                "SELECT evidence_snapshot FROM asset_bundle_version_event"
+            ).fetchone()
+            assert row["evidence_snapshot"] is None
+            savepoint = sql.Identifier("legacy_evidence_downgrade")
+            conn.execute(sql.SQL("SAVEPOINT {}").format(savepoint))
+            for statement in _migration_statements(
+                EVIDENCE_MIGRATION_PATH,
+                "registry_evidence_legacy_only_downgrade",
+                "downgrade",
+            ):
+                conn.execute(statement)
+            assert (
+                conn.execute(
+                    """
+                    SELECT 1
+                      FROM information_schema.columns
+                     WHERE table_schema = current_schema()
+                       AND table_name = 'asset_bundle_version_event'
+                       AND column_name = 'evidence_snapshot'
+                    """
+                ).fetchone()
+                is None
+            )
+            conn.execute(sql.SQL("ROLLBACK TO SAVEPOINT {}").format(savepoint))
+            conn.execute(sql.SQL("RELEASE SAVEPOINT {}").format(savepoint))
+
+        transitioned = store.transition_version(
+            "solution.incremental-evidence",
+            "1.0.0",
+            {"validated"},
+            "rejected",
+            "reviewer:new-binary",
+        )
+        assert transitioned["lifecycleEvents"][0]["evidenceSnapshot"] is None
+        assert transitioned["lifecycleEvents"][1]["evidenceSnapshot"]
+        assert (
+            canonical_sha256(transitioned["lifecycleEvents"][1]["evidenceSnapshot"])
+            == transitioned["lifecycleEvents"][1]["evidenceRevision"]
+        )
+
+
+def test_evidence_migration_normalizes_mutable_signature_envelope_hash() -> None:
+    module = _load_migration(
+        EVIDENCE_MIGRATION_PATH,
+        "registry_signature_hash_normalization",
+    )
+    signature = {
+        "algorithm": "Ed25519",
+        "keyId": "release-1",
+        "signature": "base64-signature",
+        "signedAt": "2026-08-03T12:00:00+00:00",
+    }
+    select_result = MagicMock()
+    select_result.mappings.return_value = [
+        {
+            "version_pk": uuid.uuid4(),
+            "signature": signature,
+            "artifact_hash": "sha256:" + "f" * 64,
+        }
+    ]
+    connection = MagicMock()
+    connection.execute.side_effect = [select_result, MagicMock()]
+
+    with patch.object(module.op, "get_bind", return_value=connection):
+        module._normalize_mutable_signature_evidence()
+
+    params = connection.execute.call_args_list[1].args[1]
+    assert params["artifact_hash"] == canonical_sha256(signature)
+    assert params["hash_profile"] == "canonical-envelope-v1"
 
 
 def test_security_upgrade_backfills_validated_published_and_terminal_chains() -> None:
@@ -899,6 +1087,12 @@ def test_security_downgrade_blocks_nonempty_log_and_allows_empty_log(
         empty_scoped_connect() as conn,
     ):
         for statement in _migration_statements(
+            EVIDENCE_MIGRATION_PATH,
+            "registry_evidence_downgrade_empty",
+            "downgrade",
+        ):
+            conn.execute(statement)
+        for statement in _migration_statements(
             INVARIANTS_MIGRATION_PATH,
             "registry_invariants_downgrade_empty",
             "downgrade",
@@ -964,15 +1158,21 @@ def test_status_transition_requires_matching_event_at_commit(registry_scope) -> 
             "WHERE version_pk = %s",
             (version_pk,),
         )
+        snapshot = store._load_evidence_snapshot(conn, version_pk)
         conn.execute(
             """
             INSERT INTO asset_bundle_version_event (
               event_pk, version_pk, sequence, from_status, to_status,
-              actor, reason, evidence_revision
+              actor, reason, evidence_revision, evidence_snapshot
             ) VALUES (%s, %s, 1, 'draft', 'validated',
-                      'validator:sql', 'atomic transition', %s)
+                      'validator:sql', 'atomic transition', %s, %s)
             """,
-            (uuid.uuid4(), version_pk, "sha256:" + "e" * 64),
+            (
+                uuid.uuid4(),
+                version_pk,
+                canonical_sha256(snapshot),
+                Jsonb(snapshot),
+            ),
         )
         conn.commit()
 
@@ -983,6 +1183,75 @@ def test_status_transition_requires_matching_event_at_commit(registry_scope) -> 
         (event["sequence"], event["fromStatus"], event["toStatus"])
         for event in record["lifecycleEvents"]
     ] == [(1, "draft", "validated")]
+
+
+def test_transition_precondition_cannot_mutate_persisted_evidence_snapshot(
+    registry_scope,
+) -> None:
+    store, _ = registry_scope
+    _create_bundle(store, bundle_id="solution.precondition-isolated")
+    created = store.create_version(
+        _loaded_bundle(bundle_id="solution.precondition-isolated"),
+        "publisher:test",
+    )
+
+    def mutate_callback(record: dict) -> None:
+        record["evidence"][0]["metadata"] = {"attacker": True}
+
+    transitioned = store.transition_version(
+        "solution.precondition-isolated",
+        "1.0.0",
+        {"draft"},
+        "validated",
+        "validator:test",
+        precondition=mutate_callback,
+    )
+
+    snapshot = transitioned["lifecycleEvents"][0]["evidenceSnapshot"]
+    assert snapshot == created["evidence"]
+    assert snapshot[0]["metadata"] == {"validator": "registry-test"}
+    assert (
+        canonical_sha256(snapshot)
+        == transitioned["lifecycleEvents"][0]["evidenceRevision"]
+    )
+
+
+def test_evidence_snapshot_downgrade_blocks_every_new_event(registry_scope) -> None:
+    store, scoped_connect = registry_scope
+    _create_bundle(store, bundle_id="solution.evidence-downgrade")
+    store.create_version(
+        _loaded_bundle(bundle_id="solution.evidence-downgrade"),
+        "publisher:test",
+    )
+    store.transition_version(
+        "solution.evidence-downgrade",
+        "1.0.0",
+        {"draft"},
+        "validated",
+        "validator:test",
+    )
+
+    with scoped_connect() as conn:
+        with pytest.raises(errors.CheckViolation, match="snapshots exist"):
+            for statement in _migration_statements(
+                EVIDENCE_MIGRATION_PATH,
+                "registry_evidence_snapshot_downgrade_blocked",
+                "downgrade",
+            ):
+                conn.execute(statement)
+        conn.rollback()
+        assert (
+            conn.execute(
+                """
+                SELECT 1
+                  FROM information_schema.columns
+                 WHERE table_schema = current_schema()
+                   AND table_name = 'asset_bundle_version_event'
+                   AND column_name = 'evidence_snapshot'
+                """
+            ).fetchone()
+            is not None
+        )
 
 
 def _insert_phantom_projection(conn, table: str, version_pk: uuid.UUID) -> None:
@@ -1244,9 +1513,7 @@ def test_evidence_update_and_publish_follow_advisory_lock_order(
     restarted = PostgresRegistryStore(scoped_connect)
     record = restarted.get_version(bundle_id, "1.0.0", "aos")
     assert record["evidence"][0]["status"] == updated_status
-    assert record["evidence"][0]["metadata"] == {
-        "revision": "concurrent-update"
-    }
+    assert record["evidence"][0]["metadata"] == {"revision": "concurrent-update"}
     if expected_outcome == "published":
         assert published is not None
         assert (http_status, error_code) == (200, None)

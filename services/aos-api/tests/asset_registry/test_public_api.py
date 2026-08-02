@@ -85,6 +85,7 @@ EXPECTED_PUBLIC_API = [
     "SignatureInvalidError",
     "TrustRoot",
     "TrustRootProvider",
+    "TrustRootUnavailableError",
     "VerificationFailedError",
     "VersionInvalidError",
     "canonical_json",

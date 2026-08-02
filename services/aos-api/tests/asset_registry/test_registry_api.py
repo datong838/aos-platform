@@ -1,4 +1,5 @@
 """Contract tests for the M1 canonical Asset Registry API."""
+
 from __future__ import annotations
 
 from collections.abc import Iterator
@@ -6,13 +7,14 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
 from aos_api.asset_registry.contracts import BundleKind
 from aos_api.asset_registry.errors import AssetRegistryError, AssetRegistryErrorCode
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import register_exception_handlers
 from aos_api.routers import asset_bundles
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
 
 _PRINCIPAL = Principal(
     subject="user:registry-editor",
@@ -149,8 +151,8 @@ def _make_app(
     app = FastAPI()
     register_exception_handlers(app)
     app.include_router(asset_bundles.router)
-    app.dependency_overrides[asset_bundles.get_asset_registry_service] = (
-        lambda: fake_service
+    app.dependency_overrides[asset_bundles.get_asset_registry_service] = lambda: (
+        fake_service
     )
     if authenticated:
         app.dependency_overrides[require_principal] = lambda: principal
@@ -490,6 +492,7 @@ def test_every_route_maps_registry_errors_to_the_stable_envelope(
         (AssetRegistryErrorCode.MANIFEST_INVALID, 400),
         (AssetRegistryErrorCode.VERSION_INVALID, 400),
         (AssetRegistryErrorCode.SIGNATURE_INVALID, 400),
+        (AssetRegistryErrorCode.TRUST_ROOT_UNAVAILABLE, 503),
         (AssetRegistryErrorCode.BUNDLE_VERSION_IMMUTABLE, 409),
         (AssetRegistryErrorCode.DEPENDENCY_CONFLICT, 409),
         (AssetRegistryErrorCode.DEPENDENCY_CYCLE, 409),

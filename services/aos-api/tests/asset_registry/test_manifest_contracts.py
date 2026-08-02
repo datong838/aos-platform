@@ -1,4 +1,5 @@
 """Pure contract tests for the domain-neutral bundle manifest."""
+
 from __future__ import annotations
 
 import json
@@ -7,6 +8,8 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
+
 from aos_api.asset_registry import (
     ERROR_HTTP_STATUS,
     AssetNotFoundError,
@@ -22,7 +25,6 @@ from aos_api.asset_registry import (
     LoadedBundle,
     ManifestInvalidError,
 )
-from pydantic import ValidationError
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SCHEMA_PATH = (
@@ -44,9 +46,7 @@ def _manifest(*, kind: str = "SolutionPack") -> dict:
         },
         "spec": {
             "platformApi": ">=1.7.0 <2.0.0",
-            "dependencies": [
-                {"id": "domain.foundation", "version": "^1.0.0"}
-            ],
+            "dependencies": [{"id": "domain.foundation", "version": "^1.0.0"}],
             "optionalDependencies": [
                 {
                     "id": "plugin.search",
@@ -86,9 +86,12 @@ def test_all_five_bundle_kinds_round_trip_with_manifest_aliases(kind: str) -> No
     payload = _manifest(kind=kind)
     manifest = BundleManifest.model_validate(payload)
     assert manifest.kind.value == kind
-    assert manifest.model_dump(
-        mode="json", by_alias=True, exclude_none=True, exclude_unset=True
-    ) == payload
+    assert (
+        manifest.model_dump(
+            mode="json", by_alias=True, exclude_none=True, exclude_unset=True
+        )
+        == payload
+    )
 
 
 @pytest.mark.parametrize(
@@ -200,11 +203,15 @@ def test_dependencies_are_unique_disjoint_and_not_self_referential() -> None:
     self_reference["spec"]["dependencies"] = [
         {"id": "solution.example", "version": "^1.0.0"}
     ]
-    with pytest.raises(ValidationError, match="cannot depend on or conflict with itself"):
+    with pytest.raises(
+        ValidationError, match="cannot depend on or conflict with itself"
+    ):
         BundleManifest.model_validate(self_reference)
 
 
-def test_capabilities_permissions_and_export_paths_are_not_silently_normalized() -> None:
+def test_capabilities_permissions_and_export_paths_are_not_silently_normalized() -> (
+    None
+):
     payload = _manifest()
     payload["spec"]["capabilities"]["provides"].append("solution.example.v1")
     with pytest.raises(ValidationError, match="must be unique"):
@@ -347,6 +354,7 @@ def test_error_codes_and_http_statuses_match_the_frozen_contract() -> None:
         "MANIFEST_INVALID": 400,
         "VERSION_INVALID": 400,
         "SIGNATURE_INVALID": 400,
+        "TRUST_ROOT_UNAVAILABLE": 503,
         "BUNDLE_VERSION_IMMUTABLE": 409,
         "DEPENDENCY_CONFLICT": 409,
         "DEPENDENCY_CYCLE": 409,
@@ -359,8 +367,12 @@ def test_error_codes_and_http_statuses_match_the_frozen_contract() -> None:
         "ROLLBACK_BLOCKED": 409,
         "NOT_FOUND": 404,
     }
-    assert {code.value: status for code, status in ERROR_HTTP_STATUS.items()} == expected
-    error = ManifestInvalidError("manifest failed validation", details={"field": "kind"})
+    assert {
+        code.value: status for code, status in ERROR_HTTP_STATUS.items()
+    } == expected
+    error = ManifestInvalidError(
+        "manifest failed validation", details={"field": "kind"}
+    )
     assert error.code == AssetRegistryErrorCode.MANIFEST_INVALID
     assert error.http_status == 400
     assert error.details == {"field": "kind"}

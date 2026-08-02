@@ -9,12 +9,16 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
 from aos_api.asset_registry.canonical_json import canonical_json, canonical_sha256
 from aos_api.asset_registry.contracts import (
     BundleEvidenceStatus,
     BundleEvidenceType,
     BundleKind,
     BundleManifest,
+    BundleSignature,
     BundleVersionStatus,
     LoadedBundle,
 )
@@ -26,8 +30,6 @@ from aos_api.asset_registry.errors import (
 )
 from aos_api.asset_registry.registry_service import RegistryService
 from aos_api.asset_registry.signature import TrustRoot
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 NOW = datetime(2026, 8, 3, 12, tzinfo=UTC)
 SOURCE_REF = "bundle://fixtures/solution-example"
@@ -42,8 +44,11 @@ ROOT_NOT_AFTER = NOW + timedelta(days=1)
 class MutableTrustRoots:
     def __init__(self, root: TrustRoot) -> None:
         self.root = root
+        self.failure: Exception | None = None
 
     def get_trust_root(self, *, publisher: str, key_id: str) -> TrustRoot | None:
+        if self.failure is not None:
+            raise self.failure
         if self.root.publisher == publisher and self.root.key_id == key_id:
             return self.root
         return None
@@ -76,8 +81,7 @@ class RuntimeSigner:
                 exclude_none=False,
             ),
             "artifacts": [
-                item.model_dump(mode="json", by_alias=True)
-                for item in loaded.artifacts
+                item.model_dump(mode="json", by_alias=True) for item in loaded.artifacts
             ],
         }
         content_hash = canonical_sha256(descriptor)
@@ -101,6 +105,16 @@ class RuntimeSigner:
                 ).decode("ascii"),
                 "signedAt": NOW,
             }
+            signature_hash = canonical_sha256(
+                BundleSignature.model_validate(payload["signature"]).model_dump(
+                    mode="json", by_alias=True, exclude_none=False
+                )
+            )
+            next(
+                item
+                for item in evidence
+                if item["type"] == BundleEvidenceType.SIGNATURE_VERIFICATION.value
+            )["artifactHash"] = signature_hash
         return LoadedBundle.model_validate(payload)
 
 
@@ -159,7 +173,9 @@ class FakeStore:
             "versions": [],
         }
         self.bundles[key] = record
-        return deepcopy({key: value for key, value in record.items() if key != "versions"})
+        return deepcopy(
+            {key: value for key, value in record.items() if key != "versions"}
+        )
 
     def get_bundle(
         self,
@@ -240,8 +256,11 @@ class FakeStore:
     ) -> dict[str, Any]:
         matches = [
             value
-            for (candidate_publisher, candidate_id, candidate_version), value
-            in self.versions.items()
+            for (
+                candidate_publisher,
+                candidate_id,
+                candidate_version,
+            ), value in self.versions.items()
             if candidate_id == bundle_id
             and candidate_version == version
             and (publisher is None or candidate_publisher == publisher)
@@ -285,6 +304,10 @@ class FakeStore:
                 "fromStatus": record["status"],
                 "toStatus": target,
                 "actor": actor,
+                "reason": reason,
+                "evidenceRevision": canonical_sha256(record["evidence"]),
+                "evidenceSnapshot": deepcopy(record["evidence"]),
+                "createdAt": NOW.isoformat(),
             }
         )
         self.transitions.append(
@@ -314,15 +337,11 @@ def _manifest(**updates: object) -> dict[str, Any]:
         },
         "spec": {
             "platformApi": ">=1.7.0 <2.0.0",
-            "dependencies": [
-                {"id": "domain.foundation", "version": "^1.0.0"}
-            ],
+            "dependencies": [{"id": "domain.foundation", "version": "^1.0.0"}],
             "optionalDependencies": [
                 {"id": "plugin.search", "version": ">=2.0.0 <3.0.0"}
             ],
-            "conflicts": [
-                {"id": "solution.legacy", "version": "<1.5.0"}
-            ],
+            "conflicts": [{"id": "solution.legacy", "version": "<1.5.0"}],
             "exports": {},
             "capabilities": {"provides": [], "requires": []},
             "permissions": {
@@ -400,6 +419,16 @@ def _loaded_bundle(
     evidence: list[dict[str, Any]] | None = None,
     signed: bool = True,
 ) -> LoadedBundle:
+    signature_payload = (
+        {
+            "algorithm": "Ed25519",
+            "keyId": KEY_ID,
+            "signature": base64.b64encode(b"0" * 64).decode("ascii"),
+            "signedAt": NOW,
+        }
+        if signed
+        else None
+    )
     evidence_payload = evidence
     if evidence_payload is None:
         evidence_payload = [
@@ -412,6 +441,17 @@ def _loaded_bundle(
                 BundleEvidenceType.BUNDLE_EVALS,
             )
         ]
+        if signature_payload is not None:
+            signature_hash = canonical_sha256(
+                BundleSignature.model_validate(signature_payload).model_dump(
+                    mode="json", by_alias=True, exclude_none=False
+                )
+            )
+            next(
+                item
+                for item in evidence_payload
+                if item["type"] == BundleEvidenceType.SIGNATURE_VERIFICATION.value
+            )["artifactHash"] = signature_hash
     return LoadedBundle.model_validate(
         {
             "sourceRef": SOURCE_REF,
@@ -419,16 +459,7 @@ def _loaded_bundle(
             "artifacts": [],
             "evidence": evidence_payload,
             "contentHash": HASH,
-            "signature": (
-                {
-                    "algorithm": "Ed25519",
-                    "keyId": KEY_ID,
-                    "signature": base64.b64encode(b"0" * 64).decode("ascii"),
-                    "signedAt": NOW,
-                }
-                if signed
-                else None
-            ),
+            "signature": signature_payload,
             "loadedAt": NOW,
         }
     )
@@ -489,9 +520,10 @@ def test_catalog_create_list_and_get_use_the_fixed_store_contract() -> None:
 
     assert created["bundleId"] == "solution.example"
     assert service.list_bundles() == [created]
-    assert service.get_bundle(bundle_id="solution.example", publisher="aos")[
-        "publisher"
-    ] == "aos"
+    assert (
+        service.get_bundle(bundle_id="solution.example", publisher="aos")["publisher"]
+        == "aos"
+    )
 
 
 @pytest.mark.parametrize("role", ["developer", "admin", "asset-publisher"])
@@ -683,9 +715,7 @@ def test_actions_use_publisher_to_disambiguate_same_bundle_id_and_version() -> N
         roles=CREATE_ROLES,
         publisher_scopes={"other"},
     )
-    loader.loaded = _loaded_bundle(
-        manifest=_manifest(metadata_publisher="other")
-    )
+    loader.loaded = _loaded_bundle(manifest=_manifest(metadata_publisher="other"))
     service.create_version(
         bundle_id="solution.example",
         source_ref=SOURCE_REF,
@@ -1073,7 +1103,9 @@ def test_every_write_rejects_cross_publisher_scope(operation: str) -> None:
     assert caught.value.http_status == 403
 
 
-def test_admin_wildcard_does_not_expand_scope_but_registry_admin_wildcard_does() -> None:
+def test_admin_wildcard_does_not_expand_scope_but_registry_admin_wildcard_does() -> (
+    None
+):
     service, _, _, _ = _service()
 
     with pytest.raises(AssetRegistryError) as caught:
@@ -1169,6 +1201,10 @@ def test_publish_enforces_creator_validator_separation_and_lifecycle_history() -
             "fromStatus": "draft",
             "toStatus": "validated",
             "actor": "validator-1",
+            "reason": None,
+            "evidenceRevision": canonical_sha256(validated["evidence"]),
+            "evidenceSnapshot": validated["evidence"],
+            "createdAt": NOW.isoformat(),
         }
     ]
 
@@ -1240,6 +1276,73 @@ def test_publish_rechecks_the_current_trust_root_after_validation(
     assert store.get_version("solution.example", "1.0.0", "aos")["status"] == (
         "validated"
     )
+
+
+def test_trust_root_provider_outage_returns_retryable_503_without_state_change() -> (
+    None
+):
+    service, store, loader, _ = _service()
+    _create_bundle_and_version(service)
+    service.validate(
+        bundle_id="solution.example",
+        version="1.0.0",
+        actor="validator-1",
+        roles=CREATE_ROLES,
+        publisher="aos",
+        publisher_scopes=PUBLISHER_SCOPES,
+    )
+    before = store.get_version("solution.example", "1.0.0", "aos")
+    loader.trust_roots.failure = RuntimeError(
+        "trust roots at /secret/path contain token=do-not-leak"
+    )
+
+    with pytest.raises(AssetRegistryError) as caught:
+        service.publish(
+            bundle_id="solution.example",
+            version="1.0.0",
+            actor="publisher-2",
+            roles=PUBLISH_ROLES,
+            publisher="aos",
+            publisher_scopes=PUBLISHER_SCOPES,
+        )
+
+    assert caught.value.code == AssetRegistryErrorCode.TRUST_ROOT_UNAVAILABLE
+    assert caught.value.http_status == 503
+    assert caught.value.details == {"retryable": True}
+    assert "/secret/path" not in str(caught.value)
+    assert store.get_version("solution.example", "1.0.0", "aos") == before
+
+
+def test_public_version_projection_redacts_audit_details_without_mutating_store() -> (
+    None
+):
+    service, store, _, _ = _service()
+    _create_bundle_and_version(service)
+    service.validate(
+        bundle_id="solution.example",
+        version="1.0.0",
+        actor="validator-1",
+        roles=CREATE_ROLES,
+        publisher="aos",
+        publisher_scopes=PUBLISHER_SCOPES,
+    )
+    raw = store.get_version("solution.example", "1.0.0", "aos")
+
+    public = service.get_version(
+        bundle_id="solution.example",
+        version="1.0.0",
+        publisher="aos",
+    )
+
+    assert all(
+        "artifactRef" not in item and "metadata" not in item
+        for item in public["evidence"]
+    )
+    assert all(
+        "actor" not in item and "reason" not in item and "evidenceSnapshot" not in item
+        for item in public["lifecycleEvents"]
+    )
+    assert store.get_version("solution.example", "1.0.0", "aos") == raw
 
 
 def test_get_version_rejects_invalid_semver_before_store_lookup() -> None:
