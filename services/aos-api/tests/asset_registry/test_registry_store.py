@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
@@ -1118,3 +1119,141 @@ def test_canonical_registry_tables_cannot_be_truncated(
     _store, scoped_connect = registry_scope
     with scoped_connect() as conn:
         _assert_check_violation(conn, f"TRUNCATE {table} CASCADE")
+
+
+@pytest.mark.parametrize(
+    ("updated_status", "expected_outcome"),
+    [("valid", "published"), ("invalid", "rejected")],
+)
+def test_evidence_update_and_publish_follow_advisory_lock_order(
+    registry_scope,
+    updated_status: str,
+    expected_outcome: str,
+) -> None:
+    store, scoped_connect = registry_scope
+    bundle_id = f"solution.evidence-race-{updated_status}"
+    _create_bundle(store, bundle_id=bundle_id)
+    store.create_version(
+        _loaded_bundle(bundle_id=bundle_id),
+        "publisher:test",
+    )
+    store.transition_version(
+        bundle_id,
+        "1.0.0",
+        {"draft"},
+        "validated",
+        "validator:test",
+    )
+    with scoped_connect() as conn:
+        version_pk = conn.execute(
+            "SELECT version_pk FROM asset_bundle_version"
+        ).fetchone()["version_pk"]
+
+    evidence_updated = Event()
+    allow_evidence_commit = Event()
+    publish_connected = Event()
+    gate_observed_update = Event()
+    publish_pid: dict[str, int] = {}
+
+    def update_evidence() -> str:
+        with scoped_connect() as conn:
+            conn.execute(
+                """
+                UPDATE asset_bundle_evidence
+                   SET status = %s,
+                       metadata = '{"revision":"concurrent-update"}'::JSONB,
+                       updated_at = clock_timestamp(),
+                       updated_by = 'evidence:worker',
+                       status_reason = 'concurrent evidence refresh'
+                 WHERE version_pk = %s
+                """,
+                (updated_status, version_pk),
+            )
+            evidence_updated.set()
+            assert allow_evidence_commit.wait(timeout=5)
+            conn.commit()
+        return updated_status
+
+    @contextmanager
+    def publish_connect():
+        with scoped_connect() as conn:
+            publish_pid["value"] = conn.execute(
+                "SELECT pg_backend_pid() AS pid"
+            ).fetchone()["pid"]
+            publish_connected.set()
+            yield conn
+
+    def evidence_gate(record: dict) -> None:
+        evidence = record["evidence"]
+        assert len(evidence) == 1
+        assert evidence[0]["metadata"] == {"revision": "concurrent-update"}
+        gate_observed_update.set()
+        if evidence[0]["status"] != "valid":
+            raise VersionInvalidError("updated evidence failed the publish gate")
+
+    def publish() -> tuple[str, dict | None, int, str | None]:
+        publish_store = PostgresRegistryStore(publish_connect)
+        try:
+            record = publish_store.transition_version(
+                bundle_id,
+                "1.0.0",
+                {"validated"},
+                "published",
+                "publisher:test",
+                precondition=evidence_gate,
+            )
+        except VersionInvalidError as exc:
+            return "rejected", None, exc.http_status, exc.code.value
+        return "published", record, 200, None
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        update_future = executor.submit(update_evidence)
+        assert evidence_updated.wait(timeout=5)
+        publish_future = executor.submit(publish)
+        try:
+            assert publish_connected.wait(timeout=5)
+            deadline = time.monotonic() + 5
+            while True:
+                with connect() as conn:
+                    waiting = conn.execute(
+                        """
+                        SELECT EXISTS (
+                          SELECT 1
+                            FROM pg_locks
+                           WHERE pid = %s
+                             AND locktype = 'advisory'
+                             AND NOT granted
+                        ) AS waiting
+                        """,
+                        (publish_pid["value"],),
+                    ).fetchone()["waiting"]
+                if waiting:
+                    break
+                if time.monotonic() >= deadline:
+                    pytest.fail("publish did not wait for the evidence writer lock")
+                time.sleep(0.01)
+        finally:
+            allow_evidence_commit.set()
+
+        assert update_future.result(timeout=5) == updated_status
+        outcome, published, http_status, error_code = publish_future.result(timeout=5)
+
+    assert gate_observed_update.is_set()
+    assert outcome == expected_outcome
+    assert http_status != 500
+    restarted = PostgresRegistryStore(scoped_connect)
+    record = restarted.get_version(bundle_id, "1.0.0", "aos")
+    assert record["evidence"][0]["status"] == updated_status
+    assert record["evidence"][0]["metadata"] == {
+        "revision": "concurrent-update"
+    }
+    if expected_outcome == "published":
+        assert published is not None
+        assert (http_status, error_code) == (200, None)
+        assert record["status"] == "published"
+        assert [event["sequence"] for event in record["lifecycleEvents"]] == [1, 2]
+    else:
+        assert published is None
+        assert (http_status, error_code) == (400, "VERSION_INVALID")
+        assert record["status"] == "validated"
+        assert [event["sequence"] for event in record["lifecycleEvents"]] == [1]
