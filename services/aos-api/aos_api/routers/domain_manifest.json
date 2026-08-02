@@ -3042,6 +3042,12 @@
       "module": "aos_api.routers.aip_logic_runs",
       "attribute": "router",
       "order": 506
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_logic_publications",
+      "attribute": "router",
+      "order": 507
     }
   ]
 }

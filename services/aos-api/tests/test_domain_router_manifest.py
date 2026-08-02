@@ -2,17 +2,15 @@
 from __future__ import annotations
 
 import ast
-import hashlib
 import importlib.util
 import json
 import os
-from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import textwrap
 import unittest
-
+from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 API_ROOT = REPO_ROOT / "services" / "aos-api"
@@ -40,7 +38,7 @@ DOMAIN_COUNTS = {
     "agent": 3,
     "workshop": 115,
     "ontology": 72,
-    "aip": 62,
+    "aip": 63,
     "data": 199,
     "model": 15,
     "apollo": 9,
@@ -226,8 +224,8 @@ class RouterManifestStaticTests(unittest.TestCase):
         cls.routers = cls.generator.load_manifest(MANIFEST_PATH)
 
     def test_manifest_count_order_domains_and_unique_keys(self) -> None:
-        self.assertEqual(507, len(self.routers))
-        self.assertEqual(list(range(507)), [entry["order"] for entry in self.routers])
+        self.assertEqual(508, len(self.routers))
+        self.assertEqual(list(range(508)), [entry["order"] for entry in self.routers])
         self.assertEqual(
             DOMAIN_COUNTS,
             {
@@ -236,7 +234,7 @@ class RouterManifestStaticTests(unittest.TestCase):
             },
         )
         keys = {(entry["module"], entry["attribute"]) for entry in self.routers}
-        self.assertEqual(507, len(keys))
+        self.assertEqual(508, len(keys))
 
     def test_manifest_validation_rejects_order_gaps_and_duplicate_keys(self) -> None:
         samples = []
@@ -292,11 +290,15 @@ class RouterManifestStaticTests(unittest.TestCase):
             if node.func.attr != "include_router" or not node.args:
                 continue
             child = node.args[0]
-            if isinstance(child, ast.Call) and isinstance(child.func, ast.Name):
-                if child.func.id.startswith("create_") and child.func.id.endswith("_router"):
-                    factories.append(
-                        child.func.id.removeprefix("create_").removesuffix("_router")
-                    )
+            if (
+                isinstance(child, ast.Call)
+                and isinstance(child.func, ast.Name)
+                and child.func.id.startswith("create_")
+                and child.func.id.endswith("_router")
+            ):
+                factories.append(
+                    child.func.id.removeprefix("create_").removesuffix("_router")
+                )
         self.assertEqual(list(DOMAIN_ORDER), factories)
 
     def test_migration_runs_outside_best_effort_startup_boundary(self) -> None:
@@ -368,12 +370,12 @@ class RouterManifestRuntimeTests(unittest.TestCase):
 
         # Runtime inventory includes FastAPI's four framework routes; the
         # exported business-route inventory intentionally filters those out.
-        self.assertEqual(4018, result["count"])
+        self.assertEqual(4022, result["count"])
         self.assertEqual(
-            "8fb780e2ff199bea56d28896910351dc9114f379e061ae66eeb456e55989731d",
+            "1306f53d9c4f8c079f53e5781b7648c0c58bc8e55f71875d88fa37381e803900",
             result["sha256"],
         )
-        self.assertEqual(2255, result["openapi_paths"])
+        self.assertEqual(2259, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual([], result["missing_critical"])
         self.assertTrue(result["managed_skipped_bootstrap"])

@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { PageChrome } from "../../components/PageChrome";
+import { apiGet } from "../../api/client";
 import { DEFAULT_LOGIC_PALETTE, LogicGraphCanvas } from "./LogicGraphCanvas";
 import { LogicGraphInspector } from "./LogicGraphInspector";
+import { LogicPublicationPanel, type LogicPublicationLoadState } from "./LogicPublicationPanel";
 import {
   type LogicBlockKind,
   type LogicGraphEdge,
@@ -16,6 +18,15 @@ import {
   replaceLogicGraph,
   type LogicGraphDraft,
 } from "./logicGraphApi";
+import {
+  getLogicPublication,
+  listLogicPublications,
+  publishLogicGraph,
+} from "./logicPublicationApi";
+import type {
+  LogicPublication,
+  LogicPublicationEvalGate,
+} from "./logicPublicationContracts";
 import { LogicRunPanel, type LogicRunLoadState } from "./LogicRunPanel";
 import {
   dryRunLogicGraph,
@@ -157,6 +168,27 @@ function errorMessage(error: unknown): string {
 const GRAPH_HASH_RE = /^[0-9a-f]{64}$/i;
 const HISTORY_PAGE_SIZE = 20;
 
+interface EvalSuiteOption {
+  id: string;
+  name: string;
+  gate_threshold: number;
+}
+
+interface LogicEvalReport {
+  report_id: string;
+  suite_id: string;
+  target_type: "logic_graph";
+  target_id: string;
+  target_revision: number;
+  target_hash: string;
+  gate_passed: boolean;
+  pass_rate: number;
+  passed: number;
+  failed: number;
+  total: number;
+  run_at: string;
+}
+
 export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
   const params = useParams<{ flowId?: string }>();
   const navigate = useNavigate();
@@ -186,6 +218,19 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
   const [historyCursor, setHistoryCursor] = useState<string | null>(null);
   const [loadingMoreHistory, setLoadingMoreHistory] = useState(false);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
+  const [evalSuites, setEvalSuites] = useState<EvalSuiteOption[]>([]);
+  const [selectedEvalSuiteId, setSelectedEvalSuiteId] = useState("");
+  const [evalReport, setEvalReport] = useState<LogicEvalReport | null>(null);
+  const [evalEvidenceState, setEvalEvidenceState] = useState<LogicPublicationLoadState>("idle");
+  const [evalEvidenceError, setEvalEvidenceError] = useState("");
+  const [publications, setPublications] = useState<LogicPublication[]>([]);
+  const [publicationsState, setPublicationsState] = useState<LogicPublicationLoadState>("idle");
+  const [publicationsError, setPublicationsError] = useState("");
+  const [publication, setPublication] = useState<LogicPublication | null>(null);
+  const [publicationState, setPublicationState] = useState<LogicPublicationLoadState>("idle");
+  const [publicationError, setPublicationError] = useState("");
+  const [selectedPublicationId, setSelectedPublicationId] = useState<string | null>(null);
+  const [publishing, setPublishing] = useState(false);
   const requestGeneration = useRef(0);
   const runRequestGeneration = useRef(0);
   const detailRequestGeneration = useRef(0);
@@ -235,6 +280,19 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
     setHistoryCursor(null);
     setLoadingMoreHistory(false);
     setSelectedRunId(null);
+    setEvalSuites([]);
+    setSelectedEvalSuiteId("");
+    setEvalReport(null);
+    setEvalEvidenceState(activeFlowId ? "loading" : "idle");
+    setEvalEvidenceError("");
+    setPublications([]);
+    setPublicationsState(activeFlowId ? "loading" : "idle");
+    setPublicationsError("");
+    setPublication(null);
+    setPublicationState("idle");
+    setPublicationError("");
+    setSelectedPublicationId(null);
+    setPublishing(false);
     if (!activeFlowId) {
       setGraph(cloneGraph(templateRef.current!));
       setDirty(true);
@@ -250,6 +308,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
         if (requestGeneration.current !== generation) return;
         setGraph(loaded);
         setDirty(false);
+        void loadPublicationPrerequisites(loaded, generation);
         void listLogicRuns(loaded.id, { limit: HISTORY_PAGE_SIZE })
           .then((response) => {
             if (requestGeneration.current !== generation) return;
@@ -273,6 +332,37 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
         if (requestGeneration.current === generation) setLoading(false);
       });
   }, [activeFlowId]);
+
+  async function loadPublicationPrerequisites(
+    targetGraph: LogicGraphSnapshot,
+    generation = requestGeneration.current,
+  ): Promise<void> {
+    setEvalEvidenceState("loading");
+    setEvalEvidenceError("");
+    setPublicationsState("loading");
+    setPublicationsError("");
+    const [suiteResult, publicationResult] = await Promise.allSettled([
+      apiGet<{ items: EvalSuiteOption[] }>("/v1/evals/suites"),
+      listLogicPublications(targetGraph.id),
+    ]);
+    if (requestGeneration.current !== generation) return;
+    if (suiteResult.status === "fulfilled") {
+      const items = Array.isArray(suiteResult.value.items) ? suiteResult.value.items : [];
+      setEvalSuites(items);
+      setSelectedEvalSuiteId((current) => current || items[0]?.id || "");
+      setEvalEvidenceState("ready");
+    } else {
+      setEvalEvidenceState("error");
+      setEvalEvidenceError(errorMessage(suiteResult.reason));
+    }
+    if (publicationResult.status === "fulfilled") {
+      setPublications(publicationResult.value.items);
+      setPublicationsState("ready");
+    } else {
+      setPublicationsState("error");
+      setPublicationsError(errorMessage(publicationResult.reason));
+    }
+  }
 
   const dryRunDisabledReason = loading
     ? "Logic Graph 正在加载"
@@ -504,6 +594,142 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
     setInspectorCollapsed(false);
   }
 
+  async function loadEvalEvidence(): Promise<void> {
+    if (!graph?.persisted || !selectedEvalSuiteId) return;
+    const generation = requestGeneration.current;
+    const graphId = graph.id;
+    const revision = graph.revision;
+    const graphHash = graph.graph_hash;
+    setEvalReport(null);
+    setEvalEvidenceState("loading");
+    setEvalEvidenceError("");
+    try {
+      const report = await apiGet<LogicEvalReport>(`/v1/evals/${encodeURIComponent(selectedEvalSuiteId)}/report`);
+      const suite = evalSuites.find((item) => item.id === selectedEvalSuiteId);
+      if (!suite) throw new Error("所选 Eval suite 不在服务端列表中");
+      if (
+        report.suite_id !== selectedEvalSuiteId
+        || report.target_type !== "logic_graph"
+        || report.target_id !== graphId
+        || report.target_revision !== revision
+        || report.target_hash !== graphHash
+      ) throw new Error("Eval report 未绑定当前 Logic revision/hash");
+      if (!report.report_id || report.total < 1 || report.passed + report.failed !== report.total) {
+        throw new Error("Eval report 证据不完整");
+      }
+      if (!report.gate_passed || report.pass_rate < suite.gate_threshold) {
+        throw new Error("Eval 门控未通过，禁止发布");
+      }
+      if (requestGeneration.current !== generation) return;
+      setEvalReport(report);
+      setEvalEvidenceState("ready");
+    } catch (loadError: unknown) {
+      if (requestGeneration.current !== generation) return;
+      setEvalEvidenceState("error");
+      setEvalEvidenceError(errorMessage(loadError));
+    }
+  }
+
+  async function loadPublication(publicationId: string): Promise<void> {
+    if (!graph?.persisted) return;
+    const generation = requestGeneration.current;
+    setSelectedPublicationId(publicationId);
+    setPublication(null);
+    setPublicationState("loading");
+    setPublicationError("");
+    try {
+      const detail = await getLogicPublication(graph.id, publicationId);
+      if (requestGeneration.current !== generation) return;
+      setPublication(detail);
+      setPublicationState("ready");
+    } catch (loadError: unknown) {
+      if (requestGeneration.current !== generation) return;
+      setPublicationState("error");
+      setPublicationError(errorMessage(loadError));
+    }
+  }
+
+  async function refreshPublications(): Promise<void> {
+    if (!graph?.persisted) return;
+    const generation = requestGeneration.current;
+    setPublicationsState("loading");
+    setPublicationsError("");
+    try {
+      const response = await listLogicPublications(graph.id);
+      if (requestGeneration.current !== generation) return;
+      setPublications(response.items);
+      setPublicationsState("ready");
+    } catch (loadError: unknown) {
+      if (requestGeneration.current !== generation) return;
+      setPublicationsState("error");
+      setPublicationsError(errorMessage(loadError));
+    }
+  }
+
+  const publicationDisabledReason = loading
+    ? "Logic Graph 正在加载"
+    : !graph?.persisted
+      ? "请先保存 Logic Graph"
+      : saving || running
+        ? "请等待保存或安全试跑完成"
+        : dirty
+          ? "存在未保存更改，请先保存并完成回读"
+          : publishing
+            ? "发布请求正在处理"
+            : !evalReport
+              ? evalEvidenceError || "请读取与当前 revision/hash 绑定且通过的 Eval report"
+              : "";
+
+  const publicationEvalGate: LogicPublicationEvalGate | null = evalReport ? {
+    gate_passed: true,
+    pass_rate: evalReport.pass_rate,
+    threshold: evalSuites.find((item) => item.id === evalReport.suite_id)?.gate_threshold ?? 1,
+    passed: evalReport.passed,
+    failed: evalReport.failed,
+    total: evalReport.total,
+    run_at: evalReport.run_at,
+  } : null;
+
+  async function publishCurrentRevision(): Promise<void> {
+    if (!graph?.persisted || !evalReport || publicationDisabledReason || publishing) return;
+    const generation = requestGeneration.current;
+    const graphId = graph.id;
+    const revision = graph.revision;
+    const graphHash = graph.graph_hash;
+    setPublishing(true);
+    setPublicationError("");
+    setPublicationState("loading");
+    setMessage("");
+    try {
+      const detail = await publishLogicGraph(graphId, {
+        expected_revision: revision,
+        expected_graph_hash: graphHash,
+        eval_suite_id: evalReport.suite_id,
+        eval_report_id: evalReport.report_id,
+        idempotency_key: `logic-publish-${revision}-${graphHash.slice(0, 12)}-${evalReport.report_id}`.slice(0, 160),
+      });
+      const rereadGraph = await getLogicGraph(graphId);
+      if (rereadGraph.revision !== revision || rereadGraph.graph_hash !== graphHash || rereadGraph.published_version !== revision) {
+        throw new Error("发布后 Graph 回读未确认 published_version");
+      }
+      if (requestGeneration.current !== generation) return;
+      setGraph(rereadGraph);
+      setDirty(false);
+      setPublication(detail);
+      setPublicationState("ready");
+      setSelectedPublicationId(detail.publication_id);
+      setPublications((items) => [detail, ...items.filter((item) => item.publication_id !== detail.publication_id)]);
+      setPublicationsState("ready");
+      setMessage(`已发布并回读确认 · revision ${revision} · ${detail.publication_id}`);
+    } catch (publishError: unknown) {
+      if (requestGeneration.current !== generation) return;
+      setPublicationState("error");
+      setPublicationError(errorMessage(publishError));
+    } finally {
+      if (requestGeneration.current === generation) setPublishing(false);
+    }
+  }
+
   return (
     <PageChrome
       title="AIP Logic 无代码编辑器"
@@ -679,10 +905,54 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
             <p style={{ margin: 0, color: "var(--aos-muted)", fontSize: "0.75rem" }}>保存并回读确认后，才从服务端读取不可变运行历史。</p>
           </section>
         )}
-        <section style={{ border: "1px solid var(--aos-border)", padding: 12, borderRadius: 2 }}>
-          <h3 style={{ margin: "0 0 6px", fontSize: "0.84rem" }}>自动化</h3>
-          <p style={{ margin: 0, color: "var(--aos-muted)", fontSize: "0.75rem" }}>自动化尚未接入发布版本契约；完成 Evals 与 Draft 门控前保持禁用。</p>
-        </section>
+        {graph?.persisted && (
+          <section style={{ border: "1px solid var(--aos-border)", padding: 12, borderRadius: 2 }}>
+            <div style={{ display: "flex", alignItems: "end", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+              <label style={{ display: "grid", gap: 3, fontSize: "0.72rem" }}>
+                发布 Eval suite
+                <select
+                  aria-label="发布 Eval suite"
+                  value={selectedEvalSuiteId}
+                  disabled={publishing || evalEvidenceState === "loading"}
+                  onChange={(event) => {
+                    setSelectedEvalSuiteId(event.target.value);
+                    setEvalReport(null);
+                    setEvalEvidenceError("");
+                    setEvalEvidenceState("ready");
+                  }}
+                >
+                  <option value="">选择 Eval suite</option>
+                  {evalSuites.map((suite) => <option key={suite.id} value={suite.id}>{suite.name} · {suite.id}</option>)}
+                </select>
+              </label>
+              <button type="button" className="btn" disabled={!selectedEvalSuiteId || publishing || evalEvidenceState === "loading"} onClick={() => void loadEvalEvidence()}>
+                {evalEvidenceState === "loading" ? "读取证据中…" : "读取当前版本 Eval 证据"}
+              </button>
+              {evalEvidenceError && <span role="alert" style={{ color: "var(--aos-red)", fontSize: "0.72rem" }}>{evalEvidenceError}</span>}
+            </div>
+            <LogicPublicationPanel
+              graphId={graph.id}
+              graphRevision={graph.revision}
+              graphHash={graph.graph_hash}
+              evalSuiteId={evalReport?.suite_id || selectedEvalSuiteId || null}
+              evalReportId={evalReport?.report_id || null}
+              evalGate={publicationEvalGate}
+              publishDisabledReason={publicationDisabledReason}
+              publishing={publishing}
+              publication={publication}
+              publicationState={publicationState}
+              publicationError={publicationError}
+              publications={publications}
+              publicationsState={publicationsState}
+              publicationsError={publicationsError}
+              selectedPublicationId={selectedPublicationId}
+              onPublish={() => void publishCurrentRevision()}
+              onSelectPublication={(publicationId) => void loadPublication(publicationId)}
+              onRetryPublication={selectedPublicationId ? () => void loadPublication(selectedPublicationId) : undefined}
+              onRetryPublications={() => void refreshPublications()}
+            />
+          </section>
+        )}
       </div>
     </PageChrome>
   );

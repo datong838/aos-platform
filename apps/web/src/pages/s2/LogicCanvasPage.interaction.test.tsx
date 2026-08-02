@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { LogicGraphSnapshot } from "./logicCanvasGraph";
 import { LogicCanvasPage } from "./LogicCanvasPage";
 import type { LogicDryRun, LogicRunSummary } from "./logicRunContracts";
+import type { LogicPublication } from "./logicPublicationContracts";
 
 const graphApi = vi.hoisted(() => ({
   getLogicGraph: vi.fn(),
@@ -22,6 +23,18 @@ const runApi = vi.hoisted(() => ({
 }));
 
 vi.mock("./logicRunApi", () => runApi);
+
+const publicationApi = vi.hoisted(() => ({
+  getLogicPublication: vi.fn(),
+  listLogicPublications: vi.fn(),
+  publishLogicGraph: vi.fn(),
+}));
+
+vi.mock("./logicPublicationApi", () => publicationApi);
+
+const clientApi = vi.hoisted(() => ({ apiGet: vi.fn() }));
+
+vi.mock("../../api/client", () => clientApi);
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -190,7 +203,11 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     currentPath = "";
     Object.values(graphApi).forEach((mock) => mock.mockReset());
     Object.values(runApi).forEach((mock) => mock.mockReset());
+    Object.values(publicationApi).forEach((mock) => mock.mockReset());
+    clientApi.apiGet.mockReset();
     runApi.listLogicRuns.mockResolvedValue({ items: [], count: 0, next_cursor: null });
+    publicationApi.listLogicPublications.mockResolvedValue({ items: [], count: 0 });
+    clientApi.apiGet.mockResolvedValue({ items: [] });
   });
 
   afterEach(() => {
@@ -640,5 +657,77 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
 
     expect(host.textContent).toContain("new-run 输入");
     expect(host.textContent).not.toContain("run-old-late");
+  });
+
+  it("同 revision 的真实 Eval 证据通过后才发布，并以 POST、publication GET 与 Graph GET 回读确认", async () => {
+    const loaded = {
+      ...graphSnapshot("publishable", 3),
+      created_at: "2026-08-02T08:00:00Z",
+      updated_at: "2026-08-02T08:00:00Z",
+    };
+    const reread = { ...loaded, published_version: 3, updated_at: "2026-08-02T08:10:00Z" };
+    const report = {
+      report_id: "eval-report-publishable",
+      suite_id: "suite-publishable",
+      target_type: "logic_graph",
+      target_id: loaded.id,
+      target_revision: loaded.revision,
+      target_hash: loaded.graph_hash,
+      gate_passed: true,
+      pass_rate: 1,
+      passed: 1,
+      failed: 0,
+      total: 1,
+      run_at: "2026-08-02T08:05:00Z",
+    };
+    const publication: LogicPublication = {
+      publication_id: "logic-pub-publishable",
+      graph_id: loaded.id,
+      graph_revision: loaded.revision,
+      graph_hash: loaded.graph_hash,
+      graph_snapshot: loaded,
+      dry_run_id: "run-publishable",
+      eval_suite_id: report.suite_id,
+      eval_report_id: report.report_id,
+      eval_gate: {
+        gate_passed: true,
+        pass_rate: 1,
+        threshold: 1,
+        passed: 1,
+        failed: 0,
+        total: 1,
+        run_at: report.run_at,
+      },
+      actor: "dev-user",
+      created_at: "2026-08-02T08:06:00Z",
+    };
+    graphApi.getLogicGraph.mockResolvedValueOnce(loaded).mockResolvedValueOnce(reread);
+    clientApi.apiGet.mockImplementation((path: string) => Promise.resolve(
+      path === "/v1/evals/suites"
+        ? { items: [{ id: report.suite_id, name: "发布门", gate_threshold: 1 }] }
+        : report,
+    ));
+    publicationApi.publishLogicGraph.mockResolvedValue(publication);
+
+    await renderPage(loaded.id);
+    expect(button("发布当前 revision").disabled).toBe(true);
+    await act(async () => button("读取当前版本 Eval 证据").click());
+    await flush();
+    expect(button("发布当前 revision").disabled).toBe(false);
+
+    await act(async () => button("发布当前 revision").click());
+    await flush();
+
+    expect(publicationApi.publishLogicGraph).toHaveBeenCalledWith(loaded.id, expect.objectContaining({
+      expected_revision: loaded.revision,
+      expected_graph_hash: loaded.graph_hash,
+      eval_suite_id: report.suite_id,
+      eval_report_id: report.report_id,
+      idempotency_key: expect.stringContaining("logic-publish-3-"),
+    }));
+    expect(graphApi.getLogicGraph).toHaveBeenCalledTimes(2);
+    expect(host.textContent).toContain("已发布并回读确认");
+    expect(host.textContent).toContain(publication.publication_id);
+    expect(button("绑定自动化（禁用）").disabled).toBe(true);
   });
 });

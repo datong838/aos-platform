@@ -19,8 +19,22 @@ describe("EvalsPage · 真实运行与门控", () => {
   let host: HTMLDivElement;
   let root: Root;
 
+  const graph = {
+    id: "logic-1",
+    name: "真实 Logic",
+    revision: 3,
+    graph_hash: "a".repeat(64),
+    persisted: true,
+  };
+  const graphList = { items: [graph], count: 1 };
+
   const report = {
+    report_id: "eval-report-1",
     suite_id: "suite-1",
+    target_type: "logic_graph" as const,
+    target_id: graph.id,
+    target_revision: graph.revision,
+    target_hash: graph.graph_hash,
     results: [{
       case_id: "case-1",
       passed: false,
@@ -43,11 +57,6 @@ describe("EvalsPage · 真实运行与门控", () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-  }
-
-  function setInputValue(element: HTMLInputElement, value: string) {
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(element, value);
-    element.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
   function runButton(): HTMLButtonElement {
@@ -73,7 +82,12 @@ describe("EvalsPage · 真实运行与门控", () => {
 
   it("严格拒绝 run/report 不同次或计数不一致", () => {
     const gate = {
+      report_id: report.report_id,
       suite_id: "suite-1",
+      target_type: report.target_type,
+      target_id: report.target_id,
+      target_revision: report.target_revision,
+      target_hash: report.target_hash,
       gate_passed: false,
       pass_rate: 0,
       threshold: 0.8,
@@ -103,6 +117,7 @@ describe("EvalsPage · 真实运行与门控", () => {
     };
     apiMocks.apiGet
       .mockResolvedValueOnce({ items: [] })
+      .mockResolvedValueOnce(graphList)
       .mockResolvedValueOnce({ items: [created] });
     apiMocks.apiPost.mockResolvedValueOnce(created);
 
@@ -120,7 +135,7 @@ describe("EvalsPage · 真实运行与门控", () => {
     await flush();
 
     expect(apiMocks.apiPost).toHaveBeenCalledWith("/v1/evals/suites", QUICK_START_EVAL_SUITE);
-    expect(apiMocks.apiGet).toHaveBeenNthCalledWith(2, "/v1/evals/suites");
+    expect(apiMocks.apiGet).toHaveBeenNthCalledWith(3, "/v1/evals/suites");
     expect((host.querySelector('select[aria-label="Eval 套件"]') as HTMLSelectElement).value)
       .toBe("suite-quick-start");
     expect(host.textContent).toContain("已创建并选中真实套件");
@@ -135,6 +150,7 @@ describe("EvalsPage · 真实运行与门控", () => {
     };
     apiMocks.apiGet
       .mockResolvedValueOnce({ items: [] })
+      .mockResolvedValueOnce(graphList)
       .mockResolvedValueOnce({
         items: [{ ...created, gate_threshold: 0.5 }],
       });
@@ -161,6 +177,7 @@ describe("EvalsPage · 真实运行与门控", () => {
       .mockResolvedValueOnce({
         items: [{ id: "suite-1", name: "真实回归", gate_threshold: 0.8, cases: [{}] }],
       })
+      .mockResolvedValueOnce(graphList)
       .mockResolvedValueOnce({ ...report, suite_id: "suite-other" });
 
     await act(async () => {
@@ -183,11 +200,17 @@ describe("EvalsPage · 真实运行与门控", () => {
       .mockResolvedValueOnce({
         items: [{ id: "suite-1", name: "真实回归", gate_threshold: 0.8, cases: [{}] }],
       })
+      .mockResolvedValueOnce(graphList)
       .mockResolvedValueOnce(report);
     apiMocks.apiPost
       .mockResolvedValueOnce(report)
       .mockResolvedValueOnce({
+        report_id: report.report_id,
         suite_id: "suite-1",
+        target_type: report.target_type,
+        target_id: report.target_id,
+        target_revision: report.target_revision,
+        target_hash: report.target_hash,
         gate_passed: false,
         pass_rate: 0,
         threshold: 0.8,
@@ -201,19 +224,23 @@ describe("EvalsPage · 真实运行与门控", () => {
       root.render(createElement(MemoryRouter, null, createElement(EvalsPage)));
     });
     await flush();
-    const target = host.querySelector('input[aria-label="目标表达式"]') as HTMLInputElement;
-    await act(async () => setInputValue(target, "x + 1"));
     await act(async () => runButton().click());
     await flush();
 
     expect(apiMocks.apiPost).toHaveBeenNthCalledWith(1, "/v1/evals/run", {
       suite_id: "suite-1",
-      target_type: "function",
-      target_expr: "x + 1",
+      target_type: "logic_graph",
+      target_id: graph.id,
+      target_revision: graph.revision,
+      target_hash: graph.graph_hash,
     });
-    expect(apiMocks.apiGet).toHaveBeenNthCalledWith(2, "/v1/evals/suite-1/report");
+    expect(apiMocks.apiGet).toHaveBeenNthCalledWith(3, "/v1/evals/suite-1/report");
     expect(apiMocks.apiPost).toHaveBeenNthCalledWith(2, "/v1/evals/gate-check", {
       suite_id: "suite-1",
+      target_type: "logic_graph",
+      target_id: graph.id,
+      target_revision: graph.revision,
+      target_hash: graph.graph_hash,
       reuse_latest_report: true,
     });
     expect(apiMocks.apiPost.mock.calls.some(([path]) => path === "/v1/aip/evals")).toBe(false);
@@ -225,17 +252,17 @@ describe("EvalsPage · 真实运行与门控", () => {
   });
 
   it("真实 API 失败时 fail-closed，不显示门控通过", async () => {
-    apiMocks.apiGet.mockResolvedValue({
-      items: [{ id: "suite-1", name: "真实回归", gate_threshold: 0.8, cases: [{}] }],
-    });
+    apiMocks.apiGet.mockImplementation((path: string) => Promise.resolve(
+      path === "/v1/aip/logic/graphs"
+        ? graphList
+        : { items: [{ id: "suite-1", name: "真实回归", gate_threshold: 0.8, cases: [{}] }] },
+    ));
     apiMocks.apiPost.mockRejectedValueOnce(new Error("executor unavailable"));
 
     await act(async () => {
       root.render(createElement(MemoryRouter, null, createElement(EvalsPage)));
     });
     await flush();
-    const target = host.querySelector('input[aria-label="目标表达式"]') as HTMLInputElement;
-    await act(async () => setInputValue(target, "x + 1"));
     await act(async () => runButton().click());
     await flush();
 
@@ -249,11 +276,17 @@ describe("EvalsPage · 真实运行与门控", () => {
       .mockResolvedValueOnce({
         items: [{ id: "suite-1", name: "真实回归", gate_threshold: 0.8, cases: [{}] }],
       })
+      .mockResolvedValueOnce(graphList)
       .mockResolvedValueOnce(report);
     apiMocks.apiPost
       .mockResolvedValueOnce(report)
       .mockResolvedValueOnce({
+        report_id: report.report_id,
         suite_id: "suite-1",
+        target_type: report.target_type,
+        target_id: report.target_id,
+        target_revision: report.target_revision,
+        target_hash: report.target_hash,
         gate_passed: true,
         pass_rate: 1,
         threshold: 0.8,
@@ -267,8 +300,6 @@ describe("EvalsPage · 真实运行与门控", () => {
       root.render(createElement(MemoryRouter, null, createElement(EvalsPage)));
     });
     await flush();
-    const target = host.querySelector('input[aria-label="目标表达式"]') as HTMLInputElement;
-    await act(async () => setInputValue(target, "x + 1"));
     await act(async () => runButton().click());
     await flush();
 

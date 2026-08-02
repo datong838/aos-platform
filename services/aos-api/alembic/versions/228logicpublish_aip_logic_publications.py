@@ -1,7 +1,7 @@
 """Add immutable tenant-scoped AIP Logic publications.
 
 Revision ID: 228logicpublish
-Revises: 228logicrun
+Revises: 228logiceval
 Create Date: 2026-08-02
 """
 from __future__ import annotations
@@ -11,7 +11,7 @@ from collections.abc import Sequence
 from alembic import op
 
 revision: str = "228logicpublish"
-down_revision: str | Sequence[str] | None = "228logicrun"
+down_revision: str | Sequence[str] | None = "228logiceval"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -43,7 +43,10 @@ def upgrade() -> None:
               (org_id, project_id, graph_id, revision),
           FOREIGN KEY (org_id, project_id, graph_id, dry_run_id)
             REFERENCES aip_logic_graph_runs
-              (org_id, project_id, graph_id, run_id)
+              (org_id, project_id, graph_id, run_id),
+          FOREIGN KEY (org_id, project_id, eval_report_id)
+            REFERENCES aip_eval_report
+              (org_id, project_id, report_id)
         )
         """
     )

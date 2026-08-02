@@ -1,0 +1,181 @@
+"""HTTP contract tests for governed AIP Logic publications."""
+from __future__ import annotations
+
+from datetime import UTC, datetime
+
+import pytest
+
+from aos_api.aip_logic_graph_models import LogicGraphSnapshot
+from aos_api.aip_logic_publication_models import (
+    LogicPublication,
+    LogicPublicationGateSummary,
+    LogicPublicationListResponse,
+)
+from aos_api.aip_logic_publication_store import (
+    LogicPublicationDryRunRequired,
+    LogicPublicationNotFound,
+    LogicPublicationVersionConflict,
+)
+from aos_api.routers.aip_logic_publications import (
+    get_logic_eval_evidence_reader,
+    get_logic_publication_store,
+    router,
+)
+
+
+@pytest.fixture()
+def publication_api(client):
+    client.app.include_router(router)
+    graph_hash = "a" * 64
+    snapshot = LogicGraphSnapshot(
+        id="logic-api",
+        name="Logic API",
+        description="",
+        status="draft",
+        schema_version=1,
+        revision=1,
+        published_version=None,
+        graph_hash=graph_hash,
+        nodes=[{"id": "input", "kind": "input", "label": "Input"}],
+        edges=[],
+        entry_node_ids=["input"],
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+        persisted=True,
+    )
+    publication = LogicPublication(
+        publication_id="logic-pub-api",
+        graph_id=snapshot.id,
+        graph_revision=1,
+        graph_hash=graph_hash,
+        graph_snapshot=snapshot,
+        dry_run_id="run-api",
+        eval_suite_id="suite-api",
+        eval_report_id="report-api",
+        eval_gate=LogicPublicationGateSummary(
+            pass_rate=1,
+            threshold=0.8,
+            passed=1,
+            failed=0,
+            total=1,
+            run_at=datetime.now(UTC),
+        ),
+        actor="dev-user",
+        created_at=datetime.now(UTC),
+    )
+
+    class FakeStore:
+        error: Exception | None = None
+        publish_args: tuple | None = None
+
+        def publish(self, *args):
+            self.publish_args = args
+            if self.error:
+                raise self.error
+            return publication
+
+        def list(self, *_args):
+            if self.error:
+                raise self.error
+            return LogicPublicationListResponse(items=[publication], count=1)
+
+        def get(self, *_args):
+            if self.error:
+                raise self.error
+            return publication
+
+    store = FakeStore()
+    reader = object()
+    client.app.dependency_overrides[get_logic_publication_store] = lambda: store
+    client.app.dependency_overrides[get_logic_eval_evidence_reader] = lambda: reader
+    headers = {
+        "Authorization": "Bearer dev",
+        "X-Org-Id": "org-api",
+        "X-Project-Id": "project-api",
+    }
+    yield client, store, reader, headers, publication
+    client.app.dependency_overrides.pop(get_logic_publication_store, None)
+    client.app.dependency_overrides.pop(get_logic_eval_evidence_reader, None)
+
+
+def _request() -> dict:
+    return {
+        "expected_revision": 1,
+        "expected_graph_hash": "a" * 64,
+        "eval_suite_id": "suite-api",
+        "eval_report_id": "report-api",
+        "idempotency_key": "publish-api-once",
+    }
+
+
+def test_publish_list_and_get_use_tenant_scope(publication_api) -> None:
+    client, store, reader, headers, publication = publication_api
+    published = client.post(
+        "/v1/aip/logic/graphs/logic-api/publish",
+        headers=headers,
+        json=_request(),
+    )
+    assert published.status_code == 201
+    assert published.json()["publication_id"] == publication.publication_id
+    assert store.publish_args[:5] == (
+        "org-api",
+        "project-api",
+        "user:dev",
+        "logic-api",
+        store.publish_args[4],
+    )
+    assert store.publish_args[-1] is reader
+
+    listed = client.get(
+        "/v1/aip/logic/graphs/logic-api/publications", headers=headers
+    )
+    assert listed.status_code == 200
+    assert listed.json()["count"] == 1
+    loaded = client.get(
+        "/v1/aip/logic/graphs/logic-api/publications/logic-pub-api",
+        headers=headers,
+    )
+    assert loaded.status_code == 200
+    assert loaded.json()["dry_run_id"] == "run-api"
+
+
+@pytest.mark.parametrize(
+    ("error", "status_code", "code"),
+    [
+        (LogicPublicationNotFound("missing"), 404, "LOGIC_PUBLICATION_NOT_FOUND"),
+        (
+            LogicPublicationVersionConflict(
+                expected_revision=1,
+                expected_graph_hash="a" * 64,
+                current_revision=2,
+                current_graph_hash="b" * 64,
+            ),
+            409,
+            "LOGIC_GRAPH_VERSION_CONFLICT",
+        ),
+        (
+            LogicPublicationDryRunRequired("dry-run required"),
+            422,
+            "LOGIC_PUBLICATION_DRY_RUN_REQUIRED",
+        ),
+    ],
+)
+def test_publish_errors_are_fail_closed(publication_api, error, status_code, code) -> None:
+    client, store, _reader, headers, _publication = publication_api
+    store.error = error
+    response = client.post(
+        "/v1/aip/logic/graphs/logic-api/publish",
+        headers=headers,
+        json=_request(),
+    )
+    assert response.status_code == status_code
+    assert response.json()["code"] == code
+
+
+def test_publish_requires_authentication(publication_api) -> None:
+    client, _store, _reader, _headers, _publication = publication_api
+    response = client.post(
+        "/v1/aip/logic/graphs/logic-api/publish",
+        json=_request(),
+    )
+    assert response.status_code in {401, 403}

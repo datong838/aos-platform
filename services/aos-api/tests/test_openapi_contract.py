@@ -4,10 +4,9 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
-from pathlib import Path
 import subprocess
 import sys
-
+from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 OPENAPI_PATH = REPO_ROOT / "packages" / "contracts" / "openapi" / "v1.generated.json"
@@ -58,20 +57,20 @@ def test_committed_artifacts_are_canonical_and_structurally_valid() -> None:
     assert INVENTORY_PATH.read_bytes() == exporter.canonical_json(inventory)
     exporter.validate_openapi(schema)
     assert schema["openapi"] == "3.1.0"
-    assert len(schema["paths"]) == 2255
-    assert len(schema.get("components", {}).get("schemas", {})) == 1428
+    assert len(schema["paths"]) == 2259
+    assert len(schema.get("components", {}).get("schemas", {})) == 1436
 
 
 def test_inventory_preserves_route_rows_and_known_duplicates() -> None:
     schema_bytes = OPENAPI_PATH.read_bytes()
     inventory = json.loads(INVENTORY_PATH.read_bytes())
     summary = inventory["summary"]
-    assert summary["routeRows"] == 4014
-    assert summary["uniqueOperationPairs"] == 3995
+    assert summary["routeRows"] == 4018
+    assert summary["uniqueOperationPairs"] == 3999
     assert summary["duplicatePairs"] == exporter.EXPECTED_DUPLICATES
     assert summary["openapiSha256"] == hashlib.sha256(schema_bytes).hexdigest()
-    assert len(inventory["routes"]) == 4014
-    assert [row["ordinal"] for row in inventory["routes"]] == list(range(4014))
+    assert len(inventory["routes"]) == 4018
+    assert [row["ordinal"] for row in inventory["routes"]] == list(range(4018))
     assert all(row["operationId"] for row in inventory["routes"])
     assert set(summary["domains"]) == set(exporter.DOMAIN_ORDER)
 

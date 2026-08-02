@@ -5,10 +5,11 @@
 
 from __future__ import annotations
 
-from typing import Literal
+import logging
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from aos_api.aip_eval_models import (
     EvalGateEvidence,
@@ -26,16 +27,34 @@ from aos_api.aip_eval_store import (
     EvalTargetConflict,
     EvalTargetNotFound,
 )
+from aos_api.aip_logic_dry_run_executor import LogicDryRunExecutor
+from aos_api.aip_logic_graph_store import (
+    LogicGraphIntegrityError,
+    LogicGraphNotFound,
+    LogicGraphStore,
+)
+from aos_api.aip_logic_runtime_adapters import RuntimeAdapterRegistry
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 from aos_api.evals_engine import EvalSuite, TestCase, get_engine
 
 router = APIRouter(tags=["evals"])
+logger = logging.getLogger("aos-api.evals")
 _STORE = EvalEvidenceStore()
+_GRAPH_STORE = LogicGraphStore()
+_ADAPTERS = RuntimeAdapterRegistry()
 
 
 def get_eval_store() -> EvalEvidenceStore:
     return _STORE
+
+
+def get_eval_graph_store() -> LogicGraphStore:
+    return _GRAPH_STORE
+
+
+def get_eval_runtime_adapters() -> RuntimeAdapterRegistry:
+    return _ADAPTERS
 
 
 def _map_store_error(err: EvalStoreError) -> ApiError:
@@ -68,17 +87,18 @@ def _map_store_error(err: EvalStoreError) -> ApiError:
 
 class CreateSuiteRequest(BaseModel):
     name: str = Field(min_length=1, max_length=240)
-    cases: list[TestCase] = Field(default_factory=list)
+    cases: list[TestCase] = Field(min_length=1)
     gate_threshold: float = Field(default=0.8, ge=0.0, le=1.0)
 
 
 class RunRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     suite_id: str = Field(min_length=1, max_length=160)
     target_type: Literal["logic_graph"]
     target_id: str = Field(min_length=1, max_length=160)
     target_revision: int = Field(ge=1)
     target_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
-    target_expr: str = Field(default="", max_length=32_768)
     reuse_latest_report: bool = False
 
     @field_validator("suite_id", "target_id")
@@ -104,14 +124,9 @@ def _run_and_persist(
     *,
     principal: Principal,
     store: EvalEvidenceStore,
+    graph_store: LogicGraphStore,
+    adapters: RuntimeAdapterRegistry,
 ) -> tuple[EvalSuite, EvalReportEvidence]:
-    expression = req.target_expr.strip()
-    if not expression:
-        raise ApiError(
-            code="EVAL_TARGET_REQUIRED",
-            message="target_expr is required; expected-output fallback is disabled",
-            status_code=422,
-        )
     target = _target(req)
     try:
         suite = store.get_suite(principal.org_id, principal.project_id, req.suite_id)
@@ -121,16 +136,71 @@ def _run_and_persist(
     except EvalStoreError as err:
         raise _map_store_error(err) from err
 
-    from aos_api.function_engine import evaluate, parse
-
     try:
-        parsed = parse(expression)
+        revisions = graph_store.list_revisions(
+            principal.org_id, principal.project_id, target.target_id
+        )
+        graph = next(
+            (
+                item
+                for item in revisions
+                if item.revision == target.target_revision
+                and item.graph_hash == target.target_hash
+            ),
+            None,
+        )
+        if graph is None:
+            raise ApiError(
+                code="EVAL_TARGET_VERSION_CONFLICT",
+                message="logic graph revision or hash changed",
+                status_code=409,
+            )
+        executor = LogicDryRunExecutor(adapters)
 
-        def target_fn(inputs: dict) -> object:
-            return evaluate(parsed, inputs)
+        def target_fn(inputs: dict[str, Any]) -> object:
+            run = executor.execute(graph, inputs)
+            if run.status != "succeeded":
+                raise ValueError("canonical logic execution failed")
+            executed = {
+                result.node_id: result
+                for result in run.node_results
+                if result.status == "executed"
+            }
+            executed_successors = {
+                edge.source_node_id
+                for edge in graph.edges
+                if edge.source_node_id in executed and edge.target_node_id in executed
+            }
+            terminals = [
+                result
+                for node_id, result in executed.items()
+                if node_id not in executed_successors
+            ]
+            if len(terminals) != 1:
+                raise ValueError("canonical logic output is ambiguous")
+            return terminals[0].output
 
         evaluated = get_engine().evaluate_suite(suite, target_fn)
+    except ApiError:
+        raise
+    except LogicGraphNotFound as exc:
+        raise ApiError(
+            code="EVAL_TARGET_NOT_FOUND",
+            message="logic graph target not found",
+            status_code=404,
+        ) from exc
+    except LogicGraphIntegrityError as exc:
+        raise ApiError(
+            code="EVAL_TARGET_INTEGRITY_FAILED",
+            message="logic graph target failed integrity verification",
+            status_code=500,
+        ) from exc
     except Exception as exc:
+        logger.exception(
+            "canonical_logic_eval_failed target_id=%s revision=%s",
+            target.target_id,
+            target.target_revision,
+        )
         raise ApiError(
             code="EVAL_TARGET_EXECUTION_FAILED",
             message="eval target execution failed",
@@ -205,8 +275,16 @@ def run_eval(
     req: RunRequest,
     principal: Principal = Depends(require_principal),
     store: EvalEvidenceStore = Depends(get_eval_store),
+    graph_store: LogicGraphStore = Depends(get_eval_graph_store),
+    adapters: RuntimeAdapterRegistry = Depends(get_eval_runtime_adapters),
 ) -> EvalReportEvidence:
-    _, report = _run_and_persist(req, principal=principal, store=store)
+    _, report = _run_and_persist(
+        req,
+        principal=principal,
+        store=store,
+        graph_store=graph_store,
+        adapters=adapters,
+    )
     return report
 
 
@@ -239,6 +317,8 @@ def gate_check(
     req: RunRequest,
     principal: Principal = Depends(require_principal),
     store: EvalEvidenceStore = Depends(get_eval_store),
+    graph_store: LogicGraphStore = Depends(get_eval_graph_store),
+    adapters: RuntimeAdapterRegistry = Depends(get_eval_runtime_adapters),
 ) -> EvalGateEvidence:
     try:
         if req.reuse_latest_report:
@@ -253,7 +333,11 @@ def gate_check(
             )
         else:
             suite, report = _run_and_persist(
-                req, principal=principal, store=store
+                req,
+                principal=principal,
+                store=store,
+                graph_store=graph_store,
+                adapters=adapters,
             )
     except EvalStoreError as err:
         raise _map_store_error(err) from err

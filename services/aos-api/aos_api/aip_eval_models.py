@@ -42,7 +42,7 @@ class EvalReportEvidence(LogicGraphEvalTarget):
     pass_rate: float = Field(ge=0.0, le=1.0)
     passed: int = Field(ge=0)
     failed: int = Field(ge=0)
-    total: int = Field(ge=0)
+    total: int = Field(ge=1)
     gate_passed: bool
     run_at: str = Field(min_length=1, max_length=80)
 
@@ -55,7 +55,7 @@ class EvalReportEvidence(LogicGraphEvalTarget):
         actual_passed = sum(1 for result in self.results if result.passed)
         if self.passed != actual_passed or self.failed != self.total - actual_passed:
             raise ValueError("passed/failed counts contradict results")
-        expected_rate = round(actual_passed / self.total, 4) if self.total else 0.0
+        expected_rate = round(actual_passed / self.total, 4)
         if self.pass_rate != expected_rate:
             raise ValueError("pass_rate contradicts results")
         return self
@@ -69,7 +69,7 @@ class EvalGateEvidence(LogicGraphEvalTarget):
     threshold: float = Field(ge=0.0, le=1.0)
     passed: int = Field(ge=0)
     failed: int = Field(ge=0)
-    total: int = Field(ge=0)
+    total: int = Field(ge=1)
     run_at: str = Field(min_length=1, max_length=80)
 
 
@@ -83,7 +83,7 @@ class LogicEvalEvidence(LogicGraphEvalTarget):
     threshold: float = Field(ge=0.0, le=1.0)
     passed: int = Field(ge=0)
     failed: int = Field(ge=0)
-    total: int = Field(ge=0)
+    total: int = Field(ge=1)
     run_at: datetime
     expires_at: datetime | None = None
 

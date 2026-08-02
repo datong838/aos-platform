@@ -10,9 +10,8 @@ def test_wiki_version_list_empty_ok(client, auth_headers):
 def test_wiki_version_snapshot_on_approve(client, auth_headers):
     cur = client.get("/v1/wiki/WorkOrder/wo-1001", headers=auth_headers)
     assert cur.status_code == 200
-    old_summary = (cur.json().get("body") or {}).get("summary")
-
     before = client.get("/v1/wiki/WorkOrder/wo-1001/versions", headers=auth_headers).json()["items"]
+    previous_latest_id = before[0]["id"] if before else None
 
     draft = client.post(
         "/v1/aip/drafts",
@@ -39,11 +38,12 @@ def test_wiki_version_snapshot_on_approve(client, auth_headers):
     after = client.get("/v1/wiki/WorkOrder/wo-1001/versions", headers=auth_headers)
     assert after.status_code == 200
     items = after.json()["items"]
-    assert len(items) >= len(before) + 1
-    if old_summary is not None:
-        assert any(i.get("summary") == old_summary for i in items)
+    assert items
+    assert items[0].get("draftId") == did
+    if previous_latest_id is not None:
+        assert items[0]["id"] > previous_latest_id
 
     vid = items[0]["id"]
     one = client.get(f"/v1/wiki/WorkOrder/wo-1001/versions/{vid}", headers=auth_headers)
     assert one.status_code == 200
-    assert "body" in one.json()
+    assert one.json()["body"]["summary"] == "ver-test-summary"

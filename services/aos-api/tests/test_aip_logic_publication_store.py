@@ -84,6 +84,7 @@ def publication_scope():
             )
             for filename in (
                 "228logicrun_aip_logic_runs.py",
+                "228logiceval_aip_eval_evidence.py",
                 "228logicpublish_aip_logic_publications.py",
             ):
                 for statement in _migration_statements(filename):
@@ -156,8 +157,45 @@ class FakeEvidenceReader:
         self.evidence = evidence
         self.connections: list[object] = []
 
-    def get_evidence(self, conn, **_kwargs):
+    def get_evidence(self, conn, **kwargs):
         self.connections.append(conn)
+        if self.evidence is not None:
+            conn.execute(
+                """INSERT INTO aip_eval_suite
+                   (org_id,project_id,suite_id,name,cases,gate_threshold,actor)
+                   VALUES (%s,%s,%s,'publication fixture','[]'::jsonb,%s,'test')
+                   ON CONFLICT DO NOTHING""",
+                (
+                    kwargs["org_id"],
+                    kwargs["project_id"],
+                    self.evidence.suite_id,
+                    self.evidence.threshold,
+                ),
+            )
+            conn.execute(
+                """INSERT INTO aip_eval_report
+                   (org_id,project_id,report_id,suite_id,target_type,target_id,
+                    target_revision,target_hash,results,pass_rate,passed,failed,
+                    total,gate_passed,run_at,actor)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,'[]'::jsonb,%s,%s,%s,%s,%s,%s,'test')
+                   ON CONFLICT DO NOTHING""",
+                (
+                    kwargs["org_id"],
+                    kwargs["project_id"],
+                    self.evidence.report_id,
+                    self.evidence.suite_id,
+                    self.evidence.target_type,
+                    self.evidence.target_id,
+                    self.evidence.target_revision,
+                    self.evidence.target_hash,
+                    self.evidence.pass_rate,
+                    self.evidence.passed,
+                    self.evidence.failed,
+                    self.evidence.total,
+                    self.evidence.gate_passed,
+                    self.evidence.run_at,
+                ),
+            )
         return self.evidence
 
 
@@ -417,11 +455,11 @@ def test_corrupt_stored_snapshot_is_detected(publication_scope) -> None:
         )
 
 
-def test_migration_metadata_forms_expected_temporary_head() -> None:
+def test_migration_metadata_forms_single_stage_c_head() -> None:
     path = API_ROOT / "alembic/versions/228logicpublish_aip_logic_publications.py"
     spec = importlib.util.spec_from_file_location("publication_migration_meta", path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     assert module.revision == "228logicpublish"
-    assert module.down_revision == "228logicrun"
+    assert module.down_revision == "228logiceval"

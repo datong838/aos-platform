@@ -2728,7 +2728,12 @@ type EvalCaseResult = {
 };
 
 type EvalReport = {
+  report_id: string;
   suite_id: string;
+  target_type: "logic_graph";
+  target_id: string;
+  target_revision: number;
+  target_hash: string;
   results: EvalCaseResult[];
   pass_rate: number;
   passed: number;
@@ -2739,7 +2744,12 @@ type EvalReport = {
 };
 
 type EvalGateResult = {
+  report_id: string;
   suite_id: string;
+  target_type: "logic_graph";
+  target_id: string;
+  target_revision: number;
+  target_hash: string;
   gate_passed: boolean;
   pass_rate: number;
   threshold: number;
@@ -2798,6 +2808,11 @@ export function assertEvalResultConsistency(
   if (runReport.run_at !== latestReport.run_at) {
     throw new Error("最新报告不是本次运行生成的报告");
   }
+  const evidenceFields = ["report_id", "target_type", "target_id", "target_revision", "target_hash"] as const;
+  for (const field of evidenceFields) {
+    if (runReport[field] !== latestReport[field]) throw new Error(`运行与报告证据不一致：${field}`);
+    if (latestReport[field] !== gate[field]) throw new Error(`报告与门控证据不一致：${field}`);
+  }
   const fields = ["pass_rate", "passed", "failed", "total"] as const;
   for (const field of fields) {
     if (runReport[field] !== latestReport[field]) throw new Error(`运行与报告字段不一致：${field}`);
@@ -2815,8 +2830,9 @@ export function assertEvalResultConsistency(
 /** 81 · Evals 真实运行、报告与门控检查 */
 export function EvalsPage() {
   const suitesApi = useJsonGet<{ items: EvalSuiteSummary[] }>("/v1/evals/suites");
+  const graphsApi = useJsonGet<{ items: Array<{ id: string; name: string; revision: number; graph_hash: string; persisted: boolean }> }>("/v1/aip/logic/graphs");
   const [suiteId, setSuiteId] = useState("");
-  const [targetExpr, setTargetExpr] = useState("");
+  const [targetId, setTargetId] = useState("");
   const [report, setReport] = useState<EvalReport | null>(null);
   const [gate, setGate] = useState<EvalGateResult | null>(null);
   const [busy, setBusy] = useState(false);
@@ -2824,11 +2840,16 @@ export function EvalsPage() {
   const [runErr, setRunErr] = useState("");
 
   const suites = suitesApi.data?.items || [];
+  const graphs = graphsApi.data?.items || [];
   const selectedSuite = suites.find((suite) => suite.id === suiteId) || null;
+  const selectedGraph = graphs.find((graph) => graph.id === targetId) || null;
 
   useEffect(() => {
     if (!suiteId && suites[0]?.id) setSuiteId(suites[0].id);
   }, [suiteId, suites]);
+  useEffect(() => {
+    if (!targetId && graphs[0]?.id) setTargetId(graphs[0].id);
+  }, [graphs, targetId]);
 
   async function createQuickStartSuite() {
     setBusy(true);
@@ -2854,11 +2875,13 @@ export function EvalsPage() {
   }
 
   async function runSuite() {
-    if (!suiteId || !targetExpr.trim()) return;
+    if (!suiteId || !selectedGraph) return;
     const payload = {
       suite_id: suiteId,
-      target_type: "function",
-      target_expr: targetExpr.trim(),
+      target_type: "logic_graph",
+      target_id: selectedGraph.id,
+      target_revision: selectedGraph.revision,
+      target_hash: selectedGraph.graph_hash,
     };
     setBusy(true);
     setMsg("");
@@ -2870,6 +2893,10 @@ export function EvalsPage() {
       const latestReport = await apiGet<EvalReport>(`/v1/evals/${encodeURIComponent(suiteId)}/report`);
       const gateResult = await apiPost<EvalGateResult>("/v1/evals/gate-check", {
         suite_id: suiteId,
+        target_type: "logic_graph",
+        target_id: selectedGraph.id,
+        target_revision: selectedGraph.revision,
+        target_hash: selectedGraph.graph_hash,
         reuse_latest_report: true,
       });
       assertEvalResultConsistency(suiteId, runReport, latestReport, gateResult);
@@ -2888,7 +2915,7 @@ export function EvalsPage() {
   }
 
   async function refreshReport() {
-    if (!suiteId) return;
+    if (!suiteId || !selectedGraph) return;
     setRunErr("");
     setMsg("");
     setReport(null);
@@ -2896,9 +2923,20 @@ export function EvalsPage() {
     try {
       const latestReport = await apiGet<EvalReport>(`/v1/evals/${encodeURIComponent(suiteId)}/report`);
       if (latestReport.suite_id !== suiteId) throw new Error("最新报告 suite_id 与当前套件不一致");
+      if (
+        latestReport.target_type !== "logic_graph"
+        || latestReport.target_id !== selectedGraph.id
+        || latestReport.target_revision !== selectedGraph.revision
+        || latestReport.target_hash !== selectedGraph.graph_hash
+      ) throw new Error("最新报告未绑定当前 Logic revision/hash");
       setReport(latestReport);
       setGate({
+        report_id: latestReport.report_id,
         suite_id: latestReport.suite_id,
+        target_type: latestReport.target_type,
+        target_id: latestReport.target_id,
+        target_revision: latestReport.target_revision,
+        target_hash: latestReport.target_hash,
         gate_passed: latestReport.gate_passed,
         pass_rate: latestReport.pass_rate,
         threshold: selectedSuite?.gate_threshold ?? 0,
@@ -2932,22 +2970,32 @@ export function EvalsPage() {
             <option key={suite.id} value={suite.id}>{suite.name} · {suite.id}</option>
           ))}
         </select>
-        <input
-          aria-label="目标表达式"
+        <select
+          aria-label="Eval Logic 目标"
           className="aos-input"
-          value={targetExpr}
-          onChange={(event) => setTargetExpr(event.target.value)}
-          placeholder="目标表达式，例如 x + 1"
-        />
+          value={targetId}
+          onChange={(event) => {
+            setTargetId(event.target.value);
+            setReport(null);
+            setGate(null);
+            setMsg("");
+          }}
+        >
+          <option value="">选择已保存 Logic Graph</option>
+          {graphs.map((graph) => (
+            <option key={graph.id} value={graph.id}>{graph.name} · revision {graph.revision}</option>
+          ))}
+        </select>
+        <span className="aos-text">实际执行已保存 Logic revision/hash，不接受独立目标表达式</span>
         <button
           type="button"
           className="btn-primary"
-          disabled={busy || !suiteId || !targetExpr.trim()}
+          disabled={busy || !suiteId || !selectedGraph}
           onClick={() => void runSuite()}
         >
           {busy ? "真实评测中…" : "运行套件并检查门控"}
         </button>
-        <button type="button" className="btn" disabled={!suiteId || busy} onClick={() => void refreshReport()}>
+        <button type="button" className="btn" disabled={!suiteId || !selectedGraph || busy} onClick={() => void refreshReport()}>
           读取最新报告
         </button>
         <button type="button" className="btn" disabled={busy} onClick={() => void createQuickStartSuite()}>
@@ -2962,11 +3010,11 @@ export function EvalsPage() {
         <p className="error">暂无 Eval 套件，可创建下方基础套件后运行真实评测。</p>
       )}
       {msg && <p className="aos-text" role="status">{msg}</p>}
-      {(suitesApi.err || runErr) && <p className="error" role="alert">{runErr || suitesApi.err}</p>}
+      {(suitesApi.err || graphsApi.err || runErr) && <p className="error" role="alert">{runErr || suitesApi.err || graphsApi.err}</p>}
 
       <BpBanner tone="info">
         <strong>快速开始样例</strong> · 套件“{QUICK_START_EVAL_SUITE.name}” · 用例：输入 x=1，期望 2（exact） · 门控阈值 100%。
-        创建动作会真实写入 `/v1/evals/suites`，不会生成评测报告；报告仅在运行后产生。
+        创建动作会真实写入 `/v1/evals/suites`，不会生成评测报告；运行时必须绑定已保存 Logic 的精确 revision/hash。
       </BpBanner>
 
       <BpScoreGrid

@@ -9,9 +9,11 @@ LLM 评判单元测试固定使用 mock chat_fn；Agnes 实连仅在显式设置
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 import uuid
 from contextlib import contextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -19,6 +21,12 @@ from fastapi.testclient import TestClient
 from psycopg import sql
 
 from aos_api.aip_eval_store import EvalEvidenceStore
+from aos_api.aip_logic_graph_models import (
+    LogicGraphSnapshot,
+    ValidateLogicGraphRequest,
+    compute_logic_graph_hash,
+)
+from aos_api.aip_logic_graph_store import LogicGraphStore
 from aos_api.db import connect
 from aos_api.evals_engine import (
     EvalsEngine,
@@ -26,7 +34,7 @@ from aos_api.evals_engine import (
     TestCase,
 )
 from aos_api.main import create_app
-from aos_api.routers.evals import get_eval_store
+from aos_api.routers.evals import get_eval_graph_store, get_eval_store
 
 _H = {
     "Authorization": "Bearer dev",
@@ -34,7 +42,45 @@ _H = {
     "X-Project-Id": "dev-project",
     "X-Trace-Id": "test-trace-1",
 }
-_TARGET_HASH = "a" * 64
+_GRAPH_CONTENT = ValidateLogicGraphRequest(
+    name="eval target",
+    nodes=[
+        {"id": "input", "kind": "input", "label": "Input"},
+        {
+            "id": "transform",
+            "kind": "transform",
+            "label": "Add one",
+            "config": {"expression": "x + 1"},
+        },
+    ],
+    edges=[
+        {
+            "id": "input-transform",
+            "source_node_id": "input",
+            "target_node_id": "transform",
+        }
+    ],
+    entry_node_ids=["input"],
+)
+_TARGET_HASH = compute_logic_graph_hash(_GRAPH_CONTENT)
+
+
+def _graph_snapshot() -> LogicGraphSnapshot:
+    now = datetime.now(UTC)
+    return LogicGraphSnapshot(
+        id="logic-eval-test",
+        name=_GRAPH_CONTENT.name,
+        description="",
+        status="draft",
+        schema_version=1,
+        revision=1,
+        graph_hash=_TARGET_HASH,
+        nodes=_GRAPH_CONTENT.nodes,
+        edges=_GRAPH_CONTENT.edges,
+        entry_node_ids=_GRAPH_CONTENT.entry_node_ids,
+        created_at=now,
+        updated_at=now,
+    )
 
 
 def _target(**overrides) -> dict:
@@ -218,6 +264,8 @@ def client(monkeypatch):
             conn.execute(
                 """CREATE TABLE aip_logic_graph (
                 org_id TEXT NOT NULL, project_id TEXT NOT NULL, graph_id TEXT NOT NULL,
+                revision BIGINT NOT NULL,
+                deleted_at TIMESTAMPTZ,
                 PRIMARY KEY (org_id, project_id, graph_id))"""
             )
             conn.execute(
@@ -244,18 +292,20 @@ def client(monkeypatch):
                 conn.execute(statement)
             conn.execute(
                 """INSERT INTO aip_logic_graph
-                (org_id,project_id,graph_id) VALUES (%s,%s,%s)""",
+                (org_id,project_id,graph_id,revision) VALUES (%s,%s,%s,1)""",
                 (_H["X-Org-Id"], _H["X-Project-Id"], "logic-eval-test"),
             )
+            snapshot = _graph_snapshot()
             conn.execute(
                 """INSERT INTO aip_logic_graph_revision
                 (org_id,project_id,graph_id,revision,graph_hash,snapshot,actor)
-                VALUES (%s,%s,%s,1,%s,'{}'::jsonb,'tester')""",
+                VALUES (%s,%s,%s,1,%s,%s::jsonb,'tester')""",
                 (
                     _H["X-Org-Id"],
                     _H["X-Project-Id"],
                     "logic-eval-test",
                     _TARGET_HASH,
+                    json.dumps(snapshot.model_dump(mode="json")),
                 ),
             )
             conn.commit()
@@ -272,9 +322,13 @@ def client(monkeypatch):
     app.dependency_overrides[get_eval_store] = lambda: EvalEvidenceStore(
         connect_factory=scoped_connect
     )
+    app.dependency_overrides[get_eval_graph_store] = lambda: LogicGraphStore(
+        connect_factory=scoped_connect
+    )
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.pop(get_eval_store, None)
+    app.dependency_overrides.pop(get_eval_graph_store, None)
     with connect() as conn:
         conn.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
         conn.commit()
@@ -305,7 +359,6 @@ def test_api_run_eval(client):
     resp = client.post("/v1/evals/run", json={
         "suite_id": suite_id,
         **_target(),
-        "target_expr": "x + 1",
     }, headers=_H)
     assert resp.status_code == 200
     assert resp.json()["pass_rate"] == 1.0
@@ -332,7 +385,6 @@ def test_api_gate_check(client):
     resp = client.post("/v1/evals/gate-check", json={
         "suite_id": suite_id,
         **_target(),
-        "target_expr": "x + 1",
     }, headers=_H)
     assert resp.status_code == 200
     assert resp.json()["gate_passed"] is True
@@ -349,7 +401,6 @@ def test_api_gate_check_can_reuse_latest_report_without_second_run(client):
     run = client.post("/v1/evals/run", json={
         "suite_id": suite_id,
         **_target(),
-        "target_expr": "x + 1",
     }, headers=_H)
     assert run.status_code == 200
 
@@ -367,7 +418,7 @@ def test_api_gate_check_can_reuse_latest_report_without_second_run(client):
     assert len(history.json()["items"]) == 1
 
 
-def test_api_empty_or_missing_target_fails_closed_without_report(client):
+def test_api_missing_or_forged_expression_target_fails_closed_without_report(client):
     create = client.post(
         "/v1/evals/suites",
         json={
@@ -391,13 +442,12 @@ def test_api_empty_or_missing_target_fails_closed_without_report(client):
         headers=_H,
     )
     assert missing_target.status_code == 400
-    blank_expression = client.post(
+    forged_expression = client.post(
         "/v1/evals/run",
-        json={"suite_id": suite_id, **_target(), "target_expr": "   "},
+        json={"suite_id": suite_id, **_target(), "target_expr": "expected"},
         headers=_H,
     )
-    assert blank_expression.status_code == 422
-    assert blank_expression.json()["code"] == "EVAL_TARGET_REQUIRED"
+    assert forged_expression.status_code in {400, 422}
     report = client.get(f"/v1/evals/{suite_id}/report", headers=_H)
     assert report.status_code == 404
 
@@ -418,7 +468,6 @@ def test_api_target_hash_mismatch_and_cross_tenant_reads_are_blocked(client):
         json={
             "suite_id": suite_id,
             **_target(target_hash="b" * 64),
-            "target_expr": "x + 1",
         },
         headers=_H,
     )
