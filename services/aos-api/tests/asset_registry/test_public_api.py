@@ -10,11 +10,16 @@ import aos_api.asset_registry as public_api
 from aos_api import db
 from aos_api.asset_registry import (
     BundleLoader,
+    CompositionLockPayload,
+    CompositionRequest,
     ManifestLoader,
     PostgresRegistryStore,
     RegistryService,
+    RegistrySnapshot,
     RegistryStore,
+    ResolvedBundle,
     SemVerError,
+    StoredCompositionLock,
     TrustRoot,
     TrustRootProvider,
     canonical_json,
@@ -67,6 +72,8 @@ EXPECTED_PUBLIC_API = [
     "BundleSpec",
     "BundleVersionImmutableError",
     "BundleVersionStatus",
+    "CompositionLockPayload",
+    "CompositionRequest",
     "DependencyConflictError",
     "DependencyCycleError",
     "DowngradePolicy",
@@ -78,11 +85,14 @@ EXPECTED_PUBLIC_API = [
     "PostgresRegistryStore",
     "PreflightFailedError",
     "RegistryService",
+    "RegistrySnapshot",
     "RegistryStore",
+    "ResolvedBundle",
     "RevisionConflictError",
     "RollbackBlockedError",
     "SemVerError",
     "SignatureInvalidError",
+    "StoredCompositionLock",
     "TrustRoot",
     "TrustRootProvider",
     "TrustRootUnavailableError",
@@ -106,6 +116,14 @@ def test_public_api_is_explicit_complete_and_has_no_duplicates() -> None:
 
 def test_new_public_symbols_resolve_to_their_owned_implementations() -> None:
     assert BundleLoader is ServiceBundleLoader
+    for composition_contract in (
+        CompositionRequest,
+        RegistrySnapshot,
+        ResolvedBundle,
+        CompositionLockPayload,
+        StoredCompositionLock,
+    ):
+        assert composition_contract.__module__.endswith(".composition_contracts")
     assert RegistryService is ServiceRegistryService
     assert RegistryStore is StoreRegistryStore
     assert PostgresRegistryStore is StorePostgresRegistryStore
@@ -129,7 +147,11 @@ def test_internal_helpers_and_non_contract_constants_are_not_exported() -> None:
         "ED25519_ALGORITHM",
         "JsonRecord",
         "MAX_SEMVER_INPUT_LENGTH",
+        "LOCK_SCHEMA_VERSION",
         "REQUIRED_RELEASE_EVIDENCE",
+        "InstallationRecord",
+        "RegistrySnapshotCandidate",
+        "RequestedBundle",
         "contracts",
         "errors",
         "manifest_loader",

@@ -1,6 +1,13 @@
 """Stable public API for the domain-neutral asset registry."""
 
 from aos_api.asset_registry.canonical_json import canonical_json, canonical_sha256
+from aos_api.asset_registry.composition_contracts import (
+    CompositionLockPayload,
+    CompositionRequest,
+    RegistrySnapshot,
+    ResolvedBundle,
+    StoredCompositionLock,
+)
 from aos_api.asset_registry.contracts import (
     BUNDLE_API_VERSION,
     BUNDLE_ID_PATTERN,
@@ -92,6 +99,8 @@ __all__ = [
     "BundleSpec",
     "BundleVersionImmutableError",
     "BundleVersionStatus",
+    "CompositionLockPayload",
+    "CompositionRequest",
     "DependencyConflictError",
     "DependencyCycleError",
     "DowngradePolicy",
@@ -103,11 +112,14 @@ __all__ = [
     "PostgresRegistryStore",
     "PreflightFailedError",
     "RegistryService",
+    "RegistrySnapshot",
     "RegistryStore",
+    "ResolvedBundle",
     "RevisionConflictError",
     "RollbackBlockedError",
     "SemVerError",
     "SignatureInvalidError",
+    "StoredCompositionLock",
     "TrustRoot",
     "TrustRootProvider",
     "TrustRootUnavailableError",
