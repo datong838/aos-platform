@@ -88,7 +88,10 @@ export async function dryRunLogicGraph(
   } catch (error) {
     if (error instanceof Error && error.message.startsWith("响应已收到，但历史持久化核验失败")) throw error;
     const detailMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`响应已收到，但历史持久化核验失败：${detailMessage}`, { cause: error });
+    throw Object.assign(
+      new Error(`响应已收到，但历史持久化核验失败：${detailMessage}`),
+      { cause: error },
+    );
   }
   return detail;
 }
