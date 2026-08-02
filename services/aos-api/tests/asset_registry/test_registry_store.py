@@ -5,13 +5,17 @@ from __future__ import annotations
 import importlib.util
 import json
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from threading import Barrier
 from types import ModuleType
 from unittest.mock import patch
 
 import pytest
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 from psycopg import errors, sql
 
 from aos_api.asset_registry.contracts import (
@@ -52,6 +56,48 @@ def _upgrade_statements() -> list[str]:
     return statements
 
 
+def _migration_statements(
+    path: Path,
+    name: str,
+    operation: str,
+) -> list[str]:
+    statements: list[str] = []
+    module = _load_migration(path, name)
+    with patch.object(module.op, "execute", statements.append):
+        getattr(module, operation)()
+    return statements
+
+
+@contextmanager
+def _isolated_schema(statements: list[str]):
+    schema = f"asset_registry_security_{uuid.uuid4().hex}"
+    with connect() as conn:
+        conn.execute(sql.SQL("CREATE SCHEMA {}").format(sql.Identifier(schema)))
+        conn.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(schema)))
+        for statement in statements:
+            conn.execute(statement)
+        conn.commit()
+
+    @contextmanager
+    def scoped_connect():
+        with connect() as conn:
+            conn.execute(
+                sql.SQL("SET search_path TO {}").format(sql.Identifier(schema))
+            )
+            yield conn
+
+    try:
+        yield scoped_connect
+    finally:
+        with connect() as conn:
+            conn.execute(
+                sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(
+                    sql.Identifier(schema)
+                )
+            )
+            conn.commit()
+
+
 @pytest.fixture()
 def registry_scope():
     schema = f"asset_registry_store_{uuid.uuid4().hex}"
@@ -79,13 +125,16 @@ def registry_scope():
             )
             yield conn
 
-    yield PostgresRegistryStore(scoped_connect), scoped_connect
-
-    with connect() as conn:
-        conn.execute(
-            sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(sql.Identifier(schema))
-        )
-        conn.commit()
+    try:
+        yield PostgresRegistryStore(scoped_connect), scoped_connect
+    finally:
+        with connect() as conn:
+            conn.execute(
+                sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(
+                    sql.Identifier(schema)
+                )
+            )
+            conn.commit()
 
 
 def _manifest(
@@ -467,3 +516,336 @@ def test_transition_uses_expected_status_and_database_immutability_guard(
             "DELETE FROM asset_bundle_version WHERE version = '1.0.0'",
         )
         conn.rollback()
+
+
+def test_security_migration_is_the_single_head_with_expected_parent() -> None:
+    migration = _load_migration(
+        SECURITY_MIGRATION_PATH,
+        "registry_security_revision_contract",
+    )
+    script = ScriptDirectory.from_config(Config(str(API_ROOT / "alembic.ini")))
+
+    assert migration.revision == "228assetsecurity"
+    assert migration.down_revision == "a93c7e1b4f20"
+    assert script.get_heads() == ["228assetsecurity"]
+
+
+def test_security_upgrade_backfills_validated_published_and_terminal_chains() -> None:
+    base_statements = _migration_statements(
+        MIGRATION_PATH,
+        "registry_security_base_upgrade",
+        "upgrade",
+    )
+    security_statements = _migration_statements(
+        SECURITY_MIGRATION_PATH,
+        "registry_security_upgrade",
+        "upgrade",
+    )
+    expected_chains = {
+        "draft": [],
+        "validated": [("draft", "validated")],
+        "published": [("draft", "validated"), ("validated", "published")],
+        "deprecated": [
+            ("draft", "validated"),
+            ("validated", "published"),
+            ("published", "deprecated"),
+        ],
+        "revoked": [
+            ("draft", "validated"),
+            ("validated", "published"),
+            ("published", "revoked"),
+        ],
+        "rejected": [("draft", "rejected")],
+    }
+    transition_paths = {
+        "draft": [],
+        "validated": ["validated"],
+        "published": ["validated", "published"],
+        "deprecated": ["validated", "published", "deprecated"],
+        "revoked": ["validated", "published", "revoked"],
+        "rejected": ["rejected"],
+    }
+
+    with _isolated_schema(base_statements) as scoped_connect:
+        version_keys: dict[str, uuid.UUID] = {}
+        with scoped_connect() as conn:
+            bundle_pk = uuid.uuid4()
+            conn.execute(
+                """
+                INSERT INTO asset_bundle (
+                  bundle_pk, publisher, bundle_id, kind, display_name
+                ) VALUES (%s, 'aos', 'solution.legacy', 'SolutionPack', 'Legacy')
+                """,
+                (bundle_pk,),
+            )
+            for ordinal, (status, path) in enumerate(transition_paths.items()):
+                version_pk = uuid.uuid4()
+                version_keys[status] = version_pk
+                conn.execute(
+                    """
+                    INSERT INTO asset_bundle_version (
+                      version_pk, bundle_pk, version, manifest_json,
+                      content_hash, signature, created_by
+                    ) VALUES (%s, %s, %s, '{}'::JSONB, %s, '{}'::JSONB, 'legacy')
+                    """,
+                    (
+                        version_pk,
+                        bundle_pk,
+                        f"1.0.{ordinal}",
+                        "sha256:" + f"{ordinal:x}" * 64,
+                    ),
+                )
+                for next_status in path:
+                    conn.execute(
+                        """
+                        UPDATE asset_bundle_version
+                           SET status = %s, updated_at = NOW()
+                         WHERE version_pk = %s
+                        """,
+                        (next_status, version_pk),
+                    )
+            for statement in security_statements:
+                conn.execute(statement)
+            conn.commit()
+
+        with scoped_connect() as conn:
+            for status, version_pk in version_keys.items():
+                rows = conn.execute(
+                    """
+                    SELECT sequence, from_status, to_status, actor,
+                           reason, evidence_revision
+                      FROM asset_bundle_version_event
+                     WHERE version_pk = %s
+                     ORDER BY sequence
+                    """,
+                    (version_pk,),
+                ).fetchall()
+                assert [
+                    (row["from_status"], row["to_status"]) for row in rows
+                ] == expected_chains[status]
+                assert [row["sequence"] for row in rows] == list(
+                    range(1, len(rows) + 1)
+                )
+                assert all(row["actor"] == "system:migration" for row in rows)
+                assert all(
+                    row["reason"]
+                    == (
+                        "backfilled by 228assetsecurity; "
+                        "historical evidence unavailable"
+                    )
+                    for row in rows
+                )
+                assert all(
+                    row["evidence_revision"] == "sha256:" + "0" * 64
+                    for row in rows
+                )
+
+
+def test_security_event_log_rejects_all_direct_tampering(registry_scope) -> None:
+    store, scoped_connect = registry_scope
+    _create_bundle(store, bundle_id="solution.audit-guard")
+    store.create_version(
+        _loaded_bundle(bundle_id="solution.audit-guard"),
+        "publisher:test",
+    )
+    store.transition_version(
+        "solution.audit-guard",
+        "1.0.0",
+        {"draft"},
+        "validated",
+        "validator:test",
+    )
+
+    with scoped_connect() as conn:
+        version_pk = conn.execute(
+            "SELECT version_pk FROM asset_bundle_version"
+        ).fetchone()["version_pk"]
+        _assert_check_violation(
+            conn,
+            "UPDATE asset_bundle_version_event SET actor = 'attacker'",
+        )
+        _assert_check_violation(conn, "DELETE FROM asset_bundle_version_event")
+        _assert_check_violation(conn, "TRUNCATE asset_bundle_version_event")
+
+        forged_events = (
+            (3, "validated", "rejected"),
+            (2, "draft", "validated"),
+            (2, "validated", "rejected"),
+        )
+        for sequence, from_status, to_status in forged_events:
+            savepoint = f"forged_event_{sequence}_{to_status}"
+            conn.execute(sql.SQL("SAVEPOINT {}").format(sql.Identifier(savepoint)))
+            with pytest.raises(errors.CheckViolation):
+                conn.execute(
+                    """
+                    INSERT INTO asset_bundle_version_event (
+                      event_pk, version_pk, sequence, from_status, to_status,
+                      actor, evidence_revision
+                    ) VALUES (%s, %s, %s, %s, %s, 'attacker', %s)
+                    """,
+                    (
+                        uuid.uuid4(),
+                        version_pk,
+                        sequence,
+                        from_status,
+                        to_status,
+                        "sha256:" + "f" * 64,
+                    ),
+                )
+            conn.execute(
+                sql.SQL("ROLLBACK TO SAVEPOINT {}").format(
+                    sql.Identifier(savepoint)
+                )
+            )
+            conn.execute(
+                sql.SQL("RELEASE SAVEPOINT {}").format(sql.Identifier(savepoint))
+            )
+
+        assert (
+            conn.execute(
+                "SELECT count(*) AS count FROM asset_bundle_version_event"
+            ).fetchone()["count"]
+            == 1
+        )
+
+
+def test_store_transition_events_are_continuous_and_restart_durable(
+    registry_scope,
+) -> None:
+    store, scoped_connect = registry_scope
+    _create_bundle(store, bundle_id="solution.audit-durable")
+    store.create_version(
+        _loaded_bundle(bundle_id="solution.audit-durable"),
+        "publisher:test",
+    )
+
+    validated = store.transition_version(
+        "solution.audit-durable",
+        "1.0.0",
+        {"draft"},
+        "validated",
+        "validator:test",
+        "validation passed",
+    )
+    assert [event["sequence"] for event in validated["lifecycleEvents"]] == [1]
+    published = store.transition_version(
+        "solution.audit-durable",
+        "1.0.0",
+        {"validated"},
+        "published",
+        "publisher:test",
+        "release approved",
+    )
+
+    events = published["lifecycleEvents"]
+    assert [event["sequence"] for event in events] == [1, 2]
+    assert [
+        (event["fromStatus"], event["toStatus"]) for event in events
+    ] == [("draft", "validated"), ("validated", "published")]
+    assert [event["actor"] for event in events] == [
+        "validator:test",
+        "publisher:test",
+    ]
+    assert all(
+        event["evidenceRevision"].startswith("sha256:")
+        and event["evidenceRevision"] != "sha256:" + "0" * 64
+        for event in events
+    )
+
+    restarted = PostgresRegistryStore(scoped_connect)
+    assert restarted.get_version(
+        "solution.audit-durable", "1.0.0", "aos"
+    )["lifecycleEvents"] == events
+
+
+def test_concurrent_publish_allows_exactly_one_transition(registry_scope) -> None:
+    store, scoped_connect = registry_scope
+    _create_bundle(store, bundle_id="solution.concurrent")
+    store.create_version(
+        _loaded_bundle(bundle_id="solution.concurrent"),
+        "publisher:test",
+    )
+    store.transition_version(
+        "solution.concurrent",
+        "1.0.0",
+        {"draft"},
+        "validated",
+        "validator:test",
+    )
+    barrier = Barrier(2)
+
+    def publish_once(worker: int) -> str:
+        barrier.wait()
+        try:
+            store.transition_version(
+                "solution.concurrent",
+                "1.0.0",
+                {"validated"},
+                "published",
+                f"publisher:worker-{worker}",
+            )
+        except RevisionConflictError:
+            return "conflict"
+        return "published"
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        outcomes = list(executor.map(publish_once, range(2)))
+
+    assert sorted(outcomes) == ["conflict", "published"]
+    restarted = PostgresRegistryStore(scoped_connect)
+    record = restarted.get_version("solution.concurrent", "1.0.0", "aos")
+    assert record["status"] == "published"
+    assert [event["sequence"] for event in record["lifecycleEvents"]] == [1, 2]
+    assert [event["toStatus"] for event in record["lifecycleEvents"]] == [
+        "validated",
+        "published",
+    ]
+
+
+def test_security_downgrade_blocks_nonempty_log_and_allows_empty_log(
+    registry_scope,
+) -> None:
+    store, scoped_connect = registry_scope
+    downgrade_statements = _migration_statements(
+        SECURITY_MIGRATION_PATH,
+        "registry_security_downgrade_nonempty",
+        "downgrade",
+    )
+    _create_bundle(store, bundle_id="solution.downgrade-blocked")
+    store.create_version(
+        _loaded_bundle(bundle_id="solution.downgrade-blocked"),
+        "publisher:test",
+    )
+    store.transition_version(
+        "solution.downgrade-blocked",
+        "1.0.0",
+        {"draft"},
+        "validated",
+        "validator:test",
+    )
+    with scoped_connect() as conn:
+        with pytest.raises(errors.CheckViolation):
+            for statement in downgrade_statements:
+                conn.execute(statement)
+        conn.rollback()
+        assert conn.execute(
+            "SELECT to_regclass('asset_bundle_version_event') AS relation"
+        ).fetchone()["relation"] == "asset_bundle_version_event"
+
+    with (
+        _isolated_schema(_upgrade_statements()) as empty_scoped_connect,
+        empty_scoped_connect() as conn,
+    ):
+        for statement in _migration_statements(
+            SECURITY_MIGRATION_PATH,
+            "registry_security_downgrade_empty",
+            "downgrade",
+        ):
+            conn.execute(statement)
+        conn.commit()
+        assert conn.execute(
+            "SELECT to_regclass('asset_bundle_version_event') AS relation"
+        ).fetchone()["relation"] is None
+        assert conn.execute(
+            "SELECT to_regclass('asset_bundle_version') AS relation"
+        ).fetchone()["relation"] == "asset_bundle_version"
