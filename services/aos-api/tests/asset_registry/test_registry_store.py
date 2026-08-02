@@ -39,6 +39,9 @@ MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_registry.py"
 SECURITY_MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_security.py"
 INVARIANTS_MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_invariants.py"
 EVIDENCE_MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_evidence_snapshot.py"
+INSTALLATION_MIGRATION_PATH = (
+    API_ROOT / "alembic/versions/228asset1_composition_installation.py"
+)
 
 
 def _load_migration(path: Path, name: str) -> ModuleType:
@@ -548,6 +551,10 @@ def test_security_migrations_form_the_single_head_chain() -> None:
         EVIDENCE_MIGRATION_PATH,
         "registry_evidence_revision_contract",
     )
+    installation = _load_migration(
+        INSTALLATION_MIGRATION_PATH,
+        "registry_installation_revision_contract",
+    )
     script = ScriptDirectory.from_config(Config(str(API_ROOT / "alembic.ini")))
 
     assert security.revision == "228assetsecurity"
@@ -556,7 +563,9 @@ def test_security_migrations_form_the_single_head_chain() -> None:
     assert invariants.down_revision == "228assetsecurity"
     assert evidence.revision == "228assetevidence"
     assert evidence.down_revision == "228assetinvariants"
-    assert script.get_heads() == ["228assetevidence"]
+    assert installation.revision == "228assetinstall"
+    assert installation.down_revision == "228assetevidence"
+    assert script.get_heads() == ["228assetinstall"]
 
 
 def test_invariants_upgrade_is_reachable_from_already_applied_security_revision() -> (
