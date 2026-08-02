@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from threading import Barrier
+from threading import Barrier, Event
 from types import ModuleType
 from unittest.mock import patch
 
@@ -849,3 +849,195 @@ def test_security_downgrade_blocks_nonempty_log_and_allows_empty_log(
         assert conn.execute(
             "SELECT to_regclass('asset_bundle_version') AS relation"
         ).fetchone()["relation"] == "asset_bundle_version"
+
+
+def test_status_transition_requires_matching_event_at_commit(registry_scope) -> None:
+    store, scoped_connect = registry_scope
+    _create_bundle(store, bundle_id="solution.deferred-audit")
+    store.create_version(
+        _loaded_bundle(bundle_id="solution.deferred-audit"),
+        "publisher:test",
+    )
+
+    with scoped_connect() as conn:
+        version_pk = conn.execute(
+            "SELECT version_pk FROM asset_bundle_version"
+        ).fetchone()["version_pk"]
+        conn.execute(
+            "UPDATE asset_bundle_version SET status = 'validated' "
+            "WHERE version_pk = %s",
+            (version_pk,),
+        )
+        with pytest.raises(errors.CheckViolation, match="requires a lifecycle event"):
+            conn.commit()
+        conn.rollback()
+
+    with scoped_connect() as conn:
+        row = conn.execute(
+            "SELECT status FROM asset_bundle_version WHERE version_pk = %s",
+            (version_pk,),
+        ).fetchone()
+        assert row["status"] == "draft"
+        assert conn.execute(
+            "SELECT count(*) AS count FROM asset_bundle_version_event"
+        ).fetchone()["count"] == 0
+
+        conn.execute(
+            "UPDATE asset_bundle_version SET status = 'validated' "
+            "WHERE version_pk = %s",
+            (version_pk,),
+        )
+        conn.execute(
+            """
+            INSERT INTO asset_bundle_version_event (
+              event_pk, version_pk, sequence, from_status, to_status,
+              actor, reason, evidence_revision
+            ) VALUES (%s, %s, 1, 'draft', 'validated',
+                      'validator:sql', 'atomic transition', %s)
+            """,
+            (uuid.uuid4(), version_pk, "sha256:" + "e" * 64),
+        )
+        conn.commit()
+
+    restarted = PostgresRegistryStore(scoped_connect)
+    record = restarted.get_version("solution.deferred-audit", "1.0.0", "aos")
+    assert record["status"] == "validated"
+    assert [
+        (event["sequence"], event["fromStatus"], event["toStatus"])
+        for event in record["lifecycleEvents"]
+    ] == [(1, "draft", "validated")]
+
+
+def _insert_phantom_projection(conn, table: str, version_pk: uuid.UUID) -> None:
+    if table == "asset_bundle_dependency":
+        conn.execute(
+            """
+            INSERT INTO asset_bundle_dependency (
+              version_pk, dependency_publisher, dependency_id,
+              version_range, optional, ordinal
+            ) VALUES (%s, 'attacker', 'domain.phantom', '>=2.0.0', FALSE, 99)
+            """,
+            (version_pk,),
+        )
+        return
+    if table == "asset_bundle_artifact":
+        conn.execute(
+            """
+            INSERT INTO asset_bundle_artifact (
+              version_pk, relative_path, artifact_ref, digest, size, media_type
+            ) VALUES (%s, 'phantom.json', 'bundle://attacker/phantom.json',
+                      %s, 1, 'application/json')
+            """,
+            (version_pk, "sha256:" + "f" * 64),
+        )
+        return
+    assert table == "asset_bundle_evidence"
+    conn.execute(
+        """
+        INSERT INTO asset_bundle_evidence (
+          version_pk, evidence_type, artifact_ref, artifact_hash, status,
+          observed_at, metadata, updated_by
+        ) VALUES (%s, 'phantom', 'bundle://attacker/evidence.json', %s,
+                  'valid', NOW(), '{}'::JSONB, 'attacker')
+        """,
+        (version_pk, "sha256:" + "d" * 64),
+    )
+
+
+@pytest.mark.parametrize(
+    "table",
+    [
+        "asset_bundle_dependency",
+        "asset_bundle_artifact",
+        "asset_bundle_evidence",
+    ],
+)
+def test_projection_insert_cannot_land_after_concurrent_publish(
+    registry_scope,
+    table: str,
+) -> None:
+    store, scoped_connect = registry_scope
+    bundle_id = f"solution.concurrent-{table.removeprefix('asset_bundle_')}"
+    _create_bundle(store, bundle_id=bundle_id)
+    store.create_version(
+        _loaded_bundle(bundle_id=bundle_id),
+        "publisher:test",
+    )
+    store.transition_version(
+        bundle_id,
+        "1.0.0",
+        {"draft"},
+        "validated",
+        "validator:test",
+    )
+    with scoped_connect() as conn:
+        version_pk = conn.execute(
+            "SELECT version_pk FROM asset_bundle_version"
+        ).fetchone()["version_pk"]
+        count_before = conn.execute(
+            sql.SQL("SELECT count(*) AS count FROM {}").format(
+                sql.Identifier(table)
+            )
+        ).fetchone()["count"]
+
+    publish_has_lock = Event()
+    allow_publish = Event()
+    insert_started = Event()
+
+    def hold_publish(_record: dict) -> None:
+        publish_has_lock.set()
+        assert allow_publish.wait(timeout=5)
+
+    def publish() -> dict:
+        return store.transition_version(
+            bundle_id,
+            "1.0.0",
+            {"validated"},
+            "published",
+            "publisher:test",
+            precondition=hold_publish,
+        )
+
+    def insert_projection() -> None:
+        with scoped_connect() as conn:
+            insert_started.set()
+            _insert_phantom_projection(conn, table, version_pk)
+            conn.commit()
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        publish_future = executor.submit(publish)
+        assert publish_has_lock.wait(timeout=5)
+        insert_future = executor.submit(insert_projection)
+        assert insert_started.wait(timeout=5)
+        allow_publish.set()
+        published = publish_future.result(timeout=5)
+        with pytest.raises(errors.CheckViolation, match="published asset bundle"):
+            insert_future.result(timeout=5)
+
+    assert published["status"] == "published"
+    assert [event["sequence"] for event in published["lifecycleEvents"]] == [1, 2]
+    with scoped_connect() as conn:
+        assert conn.execute(
+            sql.SQL("SELECT count(*) AS count FROM {}").format(
+                sql.Identifier(table)
+            )
+        ).fetchone()["count"] == count_before
+
+
+@pytest.mark.parametrize(
+    "table",
+    [
+        "asset_bundle",
+        "asset_bundle_version",
+        "asset_bundle_dependency",
+        "asset_bundle_artifact",
+        "asset_bundle_evidence",
+    ],
+)
+def test_canonical_registry_tables_cannot_be_truncated(
+    registry_scope,
+    table: str,
+) -> None:
+    _store, scoped_connect = registry_scope
+    with scoped_connect() as conn:
+        _assert_check_violation(conn, f"TRUNCATE {table} CASCADE")
