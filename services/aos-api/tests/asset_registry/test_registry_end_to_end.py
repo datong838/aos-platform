@@ -7,6 +7,7 @@ import json
 import tempfile
 import uuid
 from contextlib import contextmanager
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import ModuleType
@@ -16,6 +17,7 @@ import pytest
 import yaml
 from aos_api.asset_registry.canonical_json import canonical_json
 from aos_api.asset_registry.errors import (
+    DutySeparationRequiredError,
     RevisionConflictError,
     SignatureInvalidError,
 )
@@ -35,6 +37,8 @@ from psycopg import errors, sql
 
 API_ROOT = Path(__file__).resolve().parents[2]
 MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_registry.py"
+SECURITY_MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_security.py"
+INVARIANTS_MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_invariants.py"
 CREATE_ROLES = {"developer"}
 PUBLISH_ROLES = {"asset-publisher"}
 
@@ -50,8 +54,8 @@ class RuntimeTrustRoots:
         return self._roots.get((publisher, key_id))
 
 
-def _load_migration() -> ModuleType:
-    spec = importlib.util.spec_from_file_location("registry_e2e_migration", MIGRATION_PATH)
+def _load_migration(path: Path, name: str) -> ModuleType:
+    spec = importlib.util.spec_from_file_location(name, path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -59,10 +63,15 @@ def _load_migration() -> ModuleType:
 
 
 def _upgrade_statements() -> list[str]:
-    module = _load_migration()
     statements: list[str] = []
-    with patch.object(module.op, "execute", statements.append):
-        module.upgrade()
+    for path, name in (
+        (MIGRATION_PATH, "registry_e2e_migration"),
+        (SECURITY_MIGRATION_PATH, "registry_e2e_security_migration"),
+        (INVARIANTS_MIGRATION_PATH, "registry_e2e_invariants_migration"),
+    ):
+        module = _load_migration(path, name)
+        with patch.object(module.op, "execute", statements.append):
+            module.upgrade()
     return statements
 
 
@@ -214,7 +223,7 @@ def _sign_bundle(
     publisher: str,
     trust_roots: RuntimeTrustRoots,
     invalid: bool = False,
-) -> None:
+) -> TrustRoot:
     unsigned = loader.load(source_ref)
     private_key = Ed25519PrivateKey.generate()
     public_key = private_key.public_key().public_bytes(
@@ -235,16 +244,16 @@ def _sign_bundle(
     (bundle / SIGNATURE_FILENAME).write_text(
         json.dumps(envelope), encoding="utf-8"
     )
-    trust_roots.add(
-        TrustRoot(
-            publisher=publisher,
-            key_id=key_id,
-            public_key=public_key,
-            revision="sha256:" + "a" * 64,
-            not_before=now - timedelta(minutes=1),
-            not_after=now + timedelta(minutes=10),
-        )
+    trust_root = TrustRoot(
+        publisher=publisher,
+        key_id=key_id,
+        public_key=public_key,
+        revision="sha256:" + "a" * 64,
+        not_before=now - timedelta(minutes=1),
+        not_after=now + timedelta(minutes=10),
     )
+    trust_roots.add(trust_root)
+    return trust_root
 
 
 def _create_bundle_and_version(
@@ -262,6 +271,7 @@ def _create_bundle_and_version(
         display_name=display_name,
         actor=f"author:{publisher}",
         roles=CREATE_ROLES,
+        publisher_scopes={publisher},
     )
     return service.create_version(
         publisher=publisher,
@@ -269,6 +279,7 @@ def _create_bundle_and_version(
         source_ref=source_ref,
         actor=f"author:{publisher}",
         roles=CREATE_ROLES,
+        publisher_scopes={publisher},
     )
 
 
@@ -292,7 +303,7 @@ def test_signed_bundle_publishes_and_survives_store_restart(registry_runtime) ->
     )
     unsigned_loader = ManifestLoader({"fixtures": root})
     source_ref = "bundle://fixtures/generic-good"
-    _sign_bundle(
+    trust_root = _sign_bundle(
         loader=unsigned_loader,
         source_ref=source_ref,
         bundle=bundle,
@@ -319,6 +330,14 @@ def test_signed_bundle_publishes_and_survives_store_restart(registry_runtime) ->
         "bundle_evals",
     }
     assert all(item["status"] == "valid" for item in draft["evidence"])
+    signature_evidence = next(
+        item for item in draft["evidence"] if item["type"] == "signature_verification"
+    )
+    assert signature_evidence["metadata"]["trustRootRevision"] == (
+        trust_root.revision
+    )
+    assert signature_evidence["expiresAt"] == trust_root.not_after.isoformat()
+    assert draft["lifecycleEvents"] == []
 
     validated = service.validate(
         bundle_id="plugin.generic",
@@ -326,16 +345,44 @@ def test_signed_bundle_publishes_and_survives_store_restart(registry_runtime) ->
         publisher="aos",
         actor="validator:aos",
         roles=CREATE_ROLES,
+        publisher_scopes={"aos"},
     )
     assert validated["status"] == "validated"
+    assert [event["sequence"] for event in validated["lifecycleEvents"]] == [1]
+    assert validated["lifecycleEvents"][0]["actor"] == "validator:aos"
+
+    for actor in ("author:aos", "validator:aos"):
+        with pytest.raises(DutySeparationRequiredError):
+            service.publish(
+                bundle_id="plugin.generic",
+                version="1.0.0",
+                publisher="aos",
+                actor=actor,
+                roles=PUBLISH_ROLES,
+                publisher_scopes={"aos"},
+            )
     published = service.publish(
         bundle_id="plugin.generic",
         version="1.0.0",
         publisher="aos",
         actor="publisher:aos",
         roles=PUBLISH_ROLES,
+        publisher_scopes={"aos"},
     )
     assert published["status"] == "published"
+    assert [event["sequence"] for event in published["lifecycleEvents"]] == [1, 2]
+    assert [event["actor"] for event in published["lifecycleEvents"]] == [
+        "validator:aos",
+        "publisher:aos",
+    ]
+    assert [
+        (event["fromStatus"], event["toStatus"])
+        for event in published["lifecycleEvents"]
+    ] == [("draft", "validated"), ("validated", "published")]
+    assert all(
+        event["evidenceRevision"].startswith("sha256:")
+        for event in published["lifecycleEvents"]
+    )
 
     restarted_service = RegistryService(
         store=PostgresRegistryStore(scoped_connect), loader=loader
@@ -398,6 +445,7 @@ def test_invalid_signature_and_dual_publishers_fail_closed(registry_runtime) -> 
         trust_roots=trust_roots,
         invalid=True,
     )
+    shared_roots: dict[str, TrustRoot] = {}
     for publisher, directory in (("aos", "shared-aos"), ("partner", "shared-partner")):
         bundle = _write_bundle(
             root,
@@ -405,7 +453,7 @@ def test_invalid_signature_and_dual_publishers_fail_closed(registry_runtime) -> 
             publisher=publisher,
             bundle_id="plugin.shared",
         )
-        _sign_bundle(
+        shared_roots[publisher] = _sign_bundle(
             loader=unsigned_loader,
             source_ref=f"bundle://fixtures/{directory}",
             bundle=bundle,
@@ -430,6 +478,7 @@ def test_invalid_signature_and_dual_publishers_fail_closed(registry_runtime) -> 
             publisher="aos",
             actor="validator:aos",
             roles=CREATE_ROLES,
+            publisher_scopes={"aos"},
         )
     assert service.get_version(
         bundle_id="plugin.bad-signature", version="1.0.0", publisher="aos"
@@ -451,12 +500,32 @@ def test_invalid_signature_and_dual_publishers_fail_closed(registry_runtime) -> 
         publisher="partner",
         actor="validator:partner",
         roles=CREATE_ROLES,
+        publisher_scopes={"partner"},
     )
     assert validated["publisher"] == "partner"
     assert validated["status"] == "validated"
     assert service.get_version(
         bundle_id="plugin.shared", version="1.0.0", publisher="aos"
     )["status"] == "draft"
+
+    trust_roots.add(
+        replace(
+            shared_roots["partner"],
+            revision="sha256:" + "b" * 64,
+        )
+    )
+    with pytest.raises(SignatureInvalidError, match="stale"):
+        service.publish(
+            bundle_id="plugin.shared",
+            version="1.0.0",
+            publisher="partner",
+            actor="publisher:partner",
+            roles=PUBLISH_ROLES,
+            publisher_scopes={"partner"},
+        )
+    assert service.get_version(
+        bundle_id="plugin.shared", version="1.0.0", publisher="partner"
+    )["status"] == "validated"
 
 
 def test_service_projection_failure_rolls_back_every_version_table(
@@ -489,6 +558,7 @@ def test_service_projection_failure_rolls_back_every_version_table(
         display_name="Generic Utilities",
         actor="author:aos",
         roles=CREATE_ROLES,
+        publisher_scopes={"aos"},
     )
 
     class FailOnEvidence:
@@ -518,6 +588,7 @@ def test_service_projection_failure_rolls_back_every_version_table(
             publisher="aos",
             actor="author:aos",
             roles=CREATE_ROLES,
+            publisher_scopes={"aos"},
         )
 
     with scoped_connect() as conn:
