@@ -287,6 +287,15 @@ export function inferColumnType(rows: Record<string, unknown>[], col: string): s
 
 type Operator = (typeof OPERATORS)[number]["items"][number];
 type CanvasConnection = { id: string; from: string; to: string; label?: string };
+type PipelineLinkPreview = {
+  nodeId: string;
+  pointerId: number;
+  startX: number;
+  startY: number;
+  currentX: number;
+  currentY: number;
+  moved: boolean;
+};
 
 export function moveCanvasPosition(
   current: { x: number; y: number },
@@ -349,6 +358,9 @@ function DraggableCanvasNode({
   onClick,
   onContextMenu,
   onDoubleClick,
+  onStartLink,
+  onCompleteLink,
+  onPointerLinkStart,
   children,
 }: {
   nodeId: string;
@@ -360,6 +372,9 @@ function DraggableCanvasNode({
   onClick: () => void;
   onContextMenu: (event: React.MouseEvent) => void;
   onDoubleClick?: () => void;
+  onStartLink: () => void;
+  onCompleteLink: () => void;
+  onPointerLinkStart: (event: React.PointerEvent<HTMLButtonElement>) => void;
   children: React.ReactNode;
 }) {
   const didDrag = useRef(false);
@@ -378,34 +393,67 @@ function DraggableCanvasNode({
     }
   }, [isDragging]);
   return (
-    <button
+    <div
       ref={setNodeRef}
-      type="button"
       className={className}
-      onClick={() => {
-        if (didDrag.current) {
-          didDrag.current = false;
-          return;
-        }
-        onClick();
-      }}
       onContextMenu={onContextMenu}
       onDoubleClick={onDoubleClick}
-      title={title}
+      role="group"
+      aria-label={`管道节点 ${nodeId}`}
+      data-pipeline-node-id={nodeId}
       style={{
         position: "absolute",
         left: x,
         top: y,
-        cursor: isDragging ? "grabbing" : "grab",
         opacity: isDragging ? 0.75 : 1,
         zIndex: isDragging ? 3 : 1,
         transform: transform ? `translate3d(${transform.x / zoom}px, ${transform.y / zoom}px, 0)` : undefined,
       }}
-      {...listeners}
-      {...attributes}
     >
-      {children}
-    </button>
+      <button
+        type="button"
+        className="bp-pipe-node-drag"
+        title={title}
+        aria-label={`拖动 ${nodeId}`}
+        onClick={() => {
+          if (didDrag.current) {
+            didDrag.current = false;
+            return;
+          }
+          onClick();
+        }}
+        style={{ cursor: isDragging ? "grabbing" : "grab" }}
+        {...listeners}
+        {...attributes}
+      >
+        {children}
+      </button>
+      <button
+        type="button"
+        className="bp-pipe-port bp-pipe-port-in"
+        aria-label={`连接到 ${nodeId} 的输入端口`}
+        data-pipeline-input-node-id={nodeId}
+        onClick={(event) => {
+          event.stopPropagation();
+          onCompleteLink();
+        }}
+        onDoubleClick={(event) => event.stopPropagation()}
+      />
+      <button
+        type="button"
+        className="bp-pipe-port bp-pipe-port-out"
+        aria-label={`从 ${nodeId} 的输出端口建立连接`}
+        onClick={(event) => {
+          event.stopPropagation();
+          onStartLink();
+        }}
+        onPointerDown={(event) => {
+          event.stopPropagation();
+          onPointerLinkStart(event);
+        }}
+        onDoubleClick={(event) => event.stopPropagation()}
+      />
+    </div>
   );
 }
 
@@ -414,12 +462,18 @@ function CanvasDropArea({
   className,
   style,
   onClick,
+  onPointerMove,
+  onPointerUp,
+  onPointerCancel,
   children,
 }: {
   canvasRef: React.MutableRefObject<HTMLDivElement | null>;
   className: string;
   style: React.CSSProperties;
   onClick: () => void;
+  onPointerMove: (event: React.PointerEvent<HTMLDivElement>) => void;
+  onPointerUp: (event: React.PointerEvent<HTMLDivElement>) => void;
+  onPointerCancel: (event: React.PointerEvent<HTMLDivElement>) => void;
   children: React.ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: "pipeline-canvas" });
@@ -432,6 +486,9 @@ function CanvasDropArea({
       className={`${className}${isOver ? " is-drop-target" : ""}`}
       style={style}
       onClick={onClick}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
     >
       {children}
     </div>
@@ -498,6 +555,10 @@ export function PipelineCanvasPage() {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null);
   const [connections, setConnections] = useState<CanvasConnection[]>([]);
   const [linkingFrom, setLinkingFrom] = useState<string | null>(null);
+  const [linkPreview, setLinkPreview] = useState<PipelineLinkPreview | null>(null);
+  const linkDragRef = useRef<PipelineLinkPreview | null>(null);
+  const suppressLinkClickRef = useRef(false);
+  const [linkMessage, setLinkMessage] = useState("");
   const [showStats, setShowStats] = useState(false);
 
   // W3-C6: 视图 Tab + 历史 + 变换配置
@@ -597,20 +658,106 @@ export function PipelineCanvasPage() {
   function closeContextMenu() { setContextMenu(null); }
 
   // Phase 7: 连接线管理
+  function pointerCanvasPosition(clientX: number, clientY: number): { x: number; y: number } | null {
+    const canvas = canvasRef.current;
+    if (!canvas || !Number.isFinite(clientX) || !Number.isFinite(clientY)) return null;
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: Math.max(0, (clientX - rect.left + canvas.scrollLeft) / zoom),
+      y: Math.max(0, (clientY - rect.top + canvas.scrollTop) / zoom),
+    };
+  }
+
+  function startPointerLink(nodeId: string, event: React.PointerEvent<HTMLButtonElement>) {
+    if (!canvasReady || event.button !== 0) return;
+    const pointer = pointerCanvasPosition(event.clientX, event.clientY);
+    if (!pointer) return;
+    const pointerId = Number.isInteger(event.pointerId) ? event.pointerId : 1;
+    const next: PipelineLinkPreview = {
+      nodeId,
+      pointerId,
+      startX: pointer.x,
+      startY: pointer.y,
+      currentX: pointer.x,
+      currentY: pointer.y,
+      moved: false,
+    };
+    linkDragRef.current = next;
+    setLinkPreview(next);
+    setLinkMessage("");
+    event.currentTarget.setPointerCapture?.(pointerId);
+  }
+
+  function movePointerLink(event: React.PointerEvent<HTMLElement>) {
+    const active = linkDragRef.current;
+    const pointerId = Number.isInteger(event.pointerId) ? event.pointerId : 1;
+    if (!active || active.pointerId !== pointerId) return;
+    const pointer = pointerCanvasPosition(event.clientX, event.clientY);
+    if (!pointer) return;
+    const moved = active.moved || Math.hypot(pointer.x - active.startX, pointer.y - active.startY) >= 4;
+    const next = { ...active, currentX: pointer.x, currentY: pointer.y, moved };
+    linkDragRef.current = next;
+    setLinkPreview(next);
+  }
+
+  function clearPointerLink(event: React.PointerEvent<HTMLElement>): PipelineLinkPreview | null {
+    const active = linkDragRef.current;
+    const pointerId = Number.isInteger(event.pointerId) ? event.pointerId : 1;
+    if (!active || active.pointerId !== pointerId) return null;
+    if (event.currentTarget.hasPointerCapture?.(pointerId)) {
+      event.currentTarget.releasePointerCapture(pointerId);
+    }
+    linkDragRef.current = null;
+    setLinkPreview(null);
+    return active;
+  }
+
+  function endPointerLink(event: React.PointerEvent<HTMLElement>) {
+    const active = clearPointerLink(event);
+    if (!active?.moved) return;
+    suppressLinkClickRef.current = true;
+    window.setTimeout(() => { suppressLinkClickRef.current = false; }, 0);
+    const target = document.elementFromPoint(event.clientX, event.clientY)
+      ?.closest<HTMLElement>("[data-pipeline-input-node-id]");
+    const targetNodeId = target?.dataset.pipelineInputNodeId;
+    if (!targetNodeId) {
+      setLinkMessage("连接已取消：请拖到目标输入端口");
+      return;
+    }
+    completeLink(targetNodeId, active.nodeId);
+  }
+
+  function cancelPointerLink(event: React.PointerEvent<HTMLElement>) {
+    const active = clearPointerLink(event);
+    if (active?.moved) setLinkMessage("连接已取消");
+  }
+
   function startLink(nodeId: string) {
     if (!canvasReady) return;
+    if (suppressLinkClickRef.current) {
+      suppressLinkClickRef.current = false;
+      return;
+    }
     setLinkingFrom(nodeId);
+    setLinkMessage("");
     setContextMenu(null);
   }
 
-  function completeLink(targetNodeId: string) {
+  function completeLink(targetNodeId: string, sourceNodeId = linkingFrom) {
     if (!canvasReady) return;
-    if (linkingFrom && linkingFrom !== targetNodeId) {
+    if (!sourceNodeId) return;
+    if (sourceNodeId === targetNodeId) {
+      setLinkMessage("连接被拒绝：节点不能连接到自身");
+    } else {
       setConnections((prev) => {
-        const exists = prev.some((c) => c.from === linkingFrom && c.to === targetNodeId);
-        if (exists) return prev;
+        const exists = prev.some((c) => c.from === sourceNodeId && c.to === targetNodeId);
+        if (exists) {
+          setLinkMessage("连接被拒绝：重复连接");
+          return prev;
+        }
         markDirty();
-        return [...prev, { id: `edge-${Date.now()}-${prev.length}`, from: linkingFrom, to: targetNodeId }];
+        setLinkMessage("");
+        return [...prev, { id: `edge-${Date.now()}-${prev.length}`, from: sourceNodeId, to: targetNodeId }];
       });
     }
     setLinkingFrom(null);
@@ -643,6 +790,10 @@ export function PipelineCanvasPage() {
     setXformMsg(null);
     setSaveMsg(null);
     setDirty(false);
+    setLinkingFrom(null);
+    linkDragRef.current = null;
+    setLinkPreview(null);
+    setLinkMessage("");
     setSaveBusy(false);
     setLoadedPipelineId("");
     setGraph(null);
@@ -1056,7 +1207,7 @@ export function PipelineCanvasPage() {
           )}
 
           {viewTab === "edit" && (
-        <div className={`bp-pipe-canvas-shell${inspectorCollapsed ? " is-inspector-collapsed" : ""}`}>
+        <div className={`bp-pipe-canvas-shell${inspectorCollapsed ? " is-inspector-collapsed" : ""}${linkPreview?.moved ? " is-link-dragging" : ""}`}>
           {/* Phase 7: 画布工具栏 - 缩放 + 统计 + 清空 */}
           <div className="bp-pipe-canvas-toolbar" style={{ display: "flex", gap: 8, padding: "4px 12px", alignItems: "center", borderBottom: "1px solid var(--aos-border, #e2e8f0)", background: "var(--aos-surface, #f7fafc)" }}>
             <button type="button" className="btn" onClick={handleZoomOut} style={{ fontSize: "0.75rem", padding: "2px 8px" }} title="缩小">−</button>
@@ -1073,11 +1224,12 @@ export function PipelineCanvasPage() {
               </span>
             )}
             <div style={{ flex: 1 }} />
-            {linkingFrom && (
+            {(linkingFrom || linkPreview?.moved) && (
               <span style={{ fontSize: "0.7rem", color: "var(--aos-accent, #3182ce)" }}>
-                连接模式 · 点击目标节点完成连接
+                {linkPreview?.moved ? "拖线模式 · 松开到目标输入端口" : "连接模式 · 点击目标输入端口"}
               </span>
             )}
+            {linkMessage && <span className="bp-pipe-link-message" role="alert">{linkMessage}</span>}
             <button
               type="button"
               className="btn"
@@ -1094,6 +1246,9 @@ export function PipelineCanvasPage() {
               canvasRef={canvasRef}
               className="grid-pattern bp-pipe-dag"
               onClick={closeContextMenu}
+              onPointerMove={movePointerLink}
+              onPointerUp={endPointerLink}
+              onPointerCancel={cancelPointerLink}
               style={{ position: "relative", minHeight: 200, transform: `scale(${zoom})`, transformOrigin: "top left", transition: "transform 0.15s ease" }}
             >
               <div className="bp-pipe-nodes" style={{ position: "relative" }}>
@@ -1108,6 +1263,9 @@ export function PipelineCanvasPage() {
                     else { selectBaseNode("input"); }
                   }}
                   onContextMenu={(e) => handleContextMenu(e, "input")}
+                  onStartLink={() => startLink("input")}
+                  onCompleteLink={() => completeLink("input")}
+                  onPointerLinkStart={(event) => startPointerLink("input", event)}
                 >
                   <div className="bp-pipe-node-head">
                     <span className="bp-pipe-node-icon bp-pipe-node-icon-amber" />
@@ -1128,6 +1286,9 @@ export function PipelineCanvasPage() {
                     else { selectBaseNode("transform"); }
                   }}
                   onContextMenu={(e) => handleContextMenu(e, "transform")}
+                  onStartLink={() => startLink("transform")}
+                  onCompleteLink={() => completeLink("transform")}
+                  onPointerLinkStart={(event) => startPointerLink("transform", event)}
                 >
                   <div className="bp-pipe-node-head">
                     <span className="bp-pipe-node-icon bp-pipe-node-icon-cyan" />
@@ -1148,6 +1309,9 @@ export function PipelineCanvasPage() {
                     else { selectBaseNode("output"); }
                   }}
                   onContextMenu={(e) => handleContextMenu(e, "output")}
+                  onStartLink={() => startLink("output")}
+                  onCompleteLink={() => completeLink("output")}
+                  onPointerLinkStart={(event) => startPointerLink("output", event)}
                 >
                   <div className="bp-pipe-node-head">
                     <span className="bp-pipe-node-icon bp-pipe-node-icon-emerald" />
@@ -1172,6 +1336,9 @@ export function PipelineCanvasPage() {
                     }}
                     onContextMenu={(e) => handleContextMenu(e, n.id)}
                     onDoubleClick={() => removeExtraNode(n.id)}
+                    onStartLink={() => startLink(n.id)}
+                    onCompleteLink={() => completeLink(n.id)}
+                    onPointerLinkStart={(event) => startPointerLink(n.id, event)}
                     title="双击移除 · 右键菜单"
                   >
                     <div className="bp-pipe-node-head">
@@ -1186,7 +1353,7 @@ export function PipelineCanvasPage() {
                 ))}
               </div>
               {/* Phase 7: 额外连接线渲染 */}
-              {connections.length > 0 && (
+              {(connections.length > 0 || linkPreview?.moved) && (
                 <svg className="bp-pipe-flow-svg" width="100%" height="100%" aria-hidden style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0 }}>
                   <defs>
                     <marker
@@ -1201,6 +1368,13 @@ export function PipelineCanvasPage() {
                       <path d="M 0 0 L 10 5 L 0 10 z" className="bp-pipe-flow-arrow" />
                     </marker>
                   </defs>
+                  {linkPreview?.moved && (
+                    <path
+                      className="flow-line flow-line-active bp-pipe-flow-preview"
+                      markerEnd={`url(#${flowArrowMarkerId})`}
+                      d={`M ${linkPreview.startX} ${linkPreview.startY} C ${linkPreview.startX + 60} ${linkPreview.startY}, ${linkPreview.currentX - 60} ${linkPreview.currentY}, ${linkPreview.currentX} ${linkPreview.currentY}`}
+                    />
+                  )}
                   {connections.map((c, i) => {
                     const nodePos = (id: string) => {
                       if (id === "input") return nodePositions.input;

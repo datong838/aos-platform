@@ -753,6 +753,11 @@
   fill: var(--aos-accent);
 }
 
+.bp-pipe-flow-preview {
+  stroke-dasharray: 7 5;
+  opacity: 0.78;
+}
+
 .bp-pipe-nodes {
   position: relative;
   display: flex;
@@ -776,14 +781,56 @@
 .bp-pipe-node {
   min-width: 160px;
   text-align: left;
-  padding: 10px 14px;
+  padding: 0;
   border-radius: 2px;
   border: 1px solid var(--aos-border);
   background: var(--aos-surface);
   color: inherit;
-  cursor: pointer;
+  cursor: default;
+  overflow: visible;
   box-shadow: var(--shadow-sm);
   transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.bp-pipe-node-drag {
+  display: block;
+  width: 100%;
+  min-width: 160px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.bp-pipe-port {
+  position: absolute;
+  top: 50%;
+  z-index: 4;
+  width: 16px;
+  min-width: 0;
+  height: 16px;
+  padding: 0;
+  border: 2px solid var(--aos-surface);
+  border-radius: 999px;
+  background: var(--aos-accent);
+  box-shadow: 0 0 0 2px var(--aos-accent-border);
+  cursor: crosshair;
+  transform: translateY(-50%);
+}
+
+.bp-pipe-port-in { left: -9px; }
+.bp-pipe-port-out { right: -9px; }
+
+.bp-pipe-canvas-shell.is-link-dragging .bp-pipe-port-in,
+.bp-pipe-port-in:hover {
+  box-shadow: 0 0 0 5px var(--aos-accent-light), 0 0 0 2px var(--aos-accent-border);
+}
+
+.bp-pipe-link-message {
+  font-size: 11px;
+  color: var(--aos-red, #b91c1c);
 }
 
 .bp-pipe-node:hover {

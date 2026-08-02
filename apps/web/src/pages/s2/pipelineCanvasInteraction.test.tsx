@@ -77,6 +77,12 @@ function deferred<T>() {
   return { promise, resolve, reject };
 }
 
+function pointerEvent(type: string, clientX: number, clientY: number): Event {
+  const event = new MouseEvent(type, { bubbles: true, button: 0, clientX, clientY });
+  Object.defineProperty(event, "pointerId", { configurable: true, value: 1 });
+  return event;
+}
+
 describe("PipelineCanvasPage real interactions", () => {
   let host: HTMLDivElement;
   let root: Root;
@@ -132,6 +138,96 @@ describe("PipelineCanvasPage real interactions", () => {
     paths.forEach((path) => {
       expect(path.getAttribute("marker-end")).toBe(`url(#${marker?.id})`);
     });
+  });
+
+  it("drags an output port onto an input port with a live directional preview", async () => {
+    const source = host.querySelector<HTMLButtonElement>('[aria-label="从 input 的输出端口建立连接"]')!;
+    const target = host.querySelector<HTMLButtonElement>('[aria-label="连接到 output 的输入端口"]')!;
+    const canvas = host.querySelector<HTMLElement>(".bp-pipe-dag")!;
+    const originalElementFromPoint = document.elementFromPoint;
+    Object.defineProperty(document, "elementFromPoint", {
+      configurable: true,
+      value: vi.fn(() => target),
+    });
+
+    try {
+      await act(async () => {
+        source.dispatchEvent(pointerEvent("pointerdown", 160, 90));
+        canvas.dispatchEvent(pointerEvent("pointermove", 480, 90));
+      });
+      const preview = host.querySelector<SVGPathElement>(".bp-pipe-flow-preview");
+      expect(preview?.getAttribute("marker-end")).toMatch(/^url\(#pipeline-arrow-/);
+      expect(host.textContent).toContain("拖线模式");
+
+      await act(async () => {
+        target.dispatchEvent(pointerEvent("pointerup", 540, 90));
+        source.click();
+      });
+      expect(host.querySelector(".bp-pipe-flow-preview")).toBeNull();
+      expect(host.querySelectorAll("path.flow-line")).toHaveLength(3);
+      expect([...host.querySelectorAll("button")].some((button) => button.textContent === "保存 *")).toBe(true);
+    } finally {
+      Object.defineProperty(document, "elementFromPoint", {
+        configurable: true,
+        value: originalElementFromPoint,
+      });
+    }
+  });
+
+  it("cancels invalid pointer drops and rejects duplicate connections", async () => {
+    const source = host.querySelector<HTMLButtonElement>('[aria-label="从 input 的输出端口建立连接"]')!;
+    const selfTarget = host.querySelector<HTMLButtonElement>('[aria-label="连接到 input 的输入端口"]')!;
+    const duplicateTarget = host.querySelector<HTMLButtonElement>('[aria-label="连接到 transform 的输入端口"]')!;
+    const canvas = host.querySelector<HTMLElement>(".bp-pipe-dag")!;
+    const originalElementFromPoint = document.elementFromPoint;
+    const edgeCount = host.querySelectorAll("path.flow-line").length;
+
+    try {
+      Object.defineProperty(document, "elementFromPoint", { configurable: true, value: vi.fn(() => null) });
+      await act(async () => {
+        source.dispatchEvent(pointerEvent("pointerdown", 160, 90));
+        canvas.dispatchEvent(pointerEvent("pointermove", 300, 180));
+        canvas.dispatchEvent(pointerEvent("pointerup", 300, 180));
+      });
+      expect(host.querySelectorAll("path.flow-line")).toHaveLength(edgeCount);
+      expect(host.textContent).toContain("连接已取消");
+
+      Object.defineProperty(document, "elementFromPoint", { configurable: true, value: vi.fn(() => duplicateTarget) });
+      await act(async () => {
+        source.dispatchEvent(pointerEvent("pointerdown", 160, 90));
+        canvas.dispatchEvent(pointerEvent("pointermove", 300, 90));
+        duplicateTarget.dispatchEvent(pointerEvent("pointerup", 300, 90));
+      });
+      expect(host.querySelectorAll("path.flow-line")).toHaveLength(edgeCount);
+      expect(host.textContent).toContain("重复连接");
+
+      Object.defineProperty(document, "elementFromPoint", { configurable: true, value: vi.fn(() => selfTarget) });
+      await act(async () => {
+        source.dispatchEvent(pointerEvent("pointerdown", 160, 90));
+        canvas.dispatchEvent(pointerEvent("pointermove", 240, 120));
+        selfTarget.dispatchEvent(pointerEvent("pointerup", 240, 120));
+      });
+      expect(host.querySelectorAll("path.flow-line")).toHaveLength(edgeCount);
+      expect(host.textContent).toContain("节点不能连接到自身");
+    } finally {
+      Object.defineProperty(document, "elementFromPoint", {
+        configurable: true,
+        value: originalElementFromPoint,
+      });
+    }
+  });
+
+  it("keeps click-port and context-menu connection fallbacks", async () => {
+    const source = host.querySelector<HTMLButtonElement>('[aria-label="从 input 的输出端口建立连接"]')!;
+    const target = host.querySelector<HTMLButtonElement>('[aria-label="连接到 output 的输入端口"]')!;
+    await act(async () => source.click());
+    expect(host.textContent).toContain("连接模式");
+    await act(async () => target.click());
+    expect(host.querySelectorAll("path.flow-line")).toHaveLength(3);
+
+    const transformNode = host.querySelector<HTMLElement>('[data-pipeline-node-id="transform"]')!;
+    await act(async () => transformNode.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true })));
+    expect(host.textContent).toContain("从此节点建立连接");
   });
 
   it("marks edits dirty and persists the complete graph", async () => {
