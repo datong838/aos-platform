@@ -1,11 +1,12 @@
 """Domain-neutral contracts for versioned AOS asset bundles."""
+
 from __future__ import annotations
 
 import re
 from datetime import datetime
 from enum import StrEnum
 from pathlib import PurePosixPath
-from typing import Literal
+from typing import Annotated, Literal, TypeAlias
 
 from pydantic import (
     BaseModel,
@@ -21,8 +22,15 @@ BUNDLE_ID_PATTERN = r"^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
 CAPABILITY_PATTERN = r"^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
 SHA256_PATTERN = r"^sha256:[0-9a-f]{64}$"
 MAX_BUNDLE_ID_LENGTH = 160
+MAX_PUBLISHER_ID_LENGTH = 120
 MAX_REFERENCE_LENGTH = 1024
 MAX_ARTIFACT_SIZE = 8 * 1024 * 1024 * 1024
+MAX_CONTRIBUTIONS_PER_MANIFEST = 10_000
+
+_API_METHODS = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"})
+_API_PARAMETER = re.compile(r"^\{[A-Za-z][A-Za-z0-9_]*\}$")
+_NAVIGATION_PARAMETER = re.compile(r"^:[A-Za-z][A-Za-z0-9_]*$")
+_OPERATION_ID = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
 
 _WINDOWS_DRIVE = re.compile(r"^[A-Za-z]:")
 
@@ -136,12 +144,8 @@ class BundleMetadata(StrictContract):
         min_length=1, max_length=MAX_BUNDLE_ID_LENGTH, pattern=BUNDLE_ID_PATTERN
     )
     version: str = Field(min_length=1, max_length=120)
-    display_name: str = Field(
-        alias="displayName", min_length=1, max_length=240
-    )
-    publisher: str = Field(
-        min_length=1, max_length=120, pattern=BUNDLE_ID_PATTERN
-    )
+    display_name: str = Field(alias="displayName", min_length=1, max_length=240)
+    publisher: str = Field(min_length=1, max_length=120, pattern=BUNDLE_ID_PATTERN)
     license: str = Field(min_length=1, max_length=120)
 
     @field_validator("version", "display_name", "license")
@@ -211,6 +215,148 @@ class BundleExports(StrictContract):
         return checked
 
 
+def _normalized_route_segments(value: str, *, label: str) -> list[str]:
+    value = _require_exact_text(value, label=label)
+    if not value.startswith("/"):
+        raise ValueError(f"{label} must start with /")
+    if "\\" in value or "%" in value or "?" in value or "#" in value or "//" in value:
+        raise ValueError(f"{label} contains a forbidden route form")
+    if value == "/":
+        return []
+    segments = value.removesuffix("/").removeprefix("/").split("/")
+    if any(segment in {"", ".", ".."} for segment in segments):
+        raise ValueError(f"{label} contains an invalid path segment")
+    return segments
+
+
+def normalize_api_path(value: str) -> str:
+    """Return the frozen API contribution collision path."""
+
+    segments = _normalized_route_segments(value, label="API contribution path")
+    normalized: list[str] = []
+    for segment in segments:
+        if "{" in segment or "}" in segment:
+            if not _API_PARAMETER.fullmatch(segment):
+                raise ValueError("API path contains an invalid template parameter")
+            normalized.append("{}")
+        else:
+            normalized.append(segment)
+    return "/" + "/".join(normalized) if normalized else "/"
+
+
+def normalize_navigation_route(value: str) -> str:
+    """Return the frozen navigation contribution collision route."""
+
+    segments = _normalized_route_segments(value, label="navigation route")
+    normalized: list[str] = []
+    for segment in segments:
+        if segment.startswith(":"):
+            if not _NAVIGATION_PARAMETER.fullmatch(segment):
+                raise ValueError(
+                    "navigation route contains an invalid parameter segment"
+                )
+            normalized.append(":")
+        else:
+            normalized.append(segment.lower())
+    return "/" + "/".join(normalized) if normalized else "/"
+
+
+class ApiContributionClaim(StrictContract):
+    kind: Literal["api"]
+    method: str = Field(min_length=1, max_length=16)
+    path: str = Field(min_length=1, max_length=1024)
+    operation_id: str = Field(alias="operationId", min_length=1, max_length=160)
+    mode: Literal["exclusive"]
+
+    @field_validator("method")
+    @classmethod
+    def _supported_method(cls, value: str) -> str:
+        value = _require_exact_text(value, label="API method").upper()
+        if value not in _API_METHODS:
+            raise ValueError("API method is not supported")
+        return value
+
+    @field_validator("path")
+    @classmethod
+    def _valid_path(cls, value: str) -> str:
+        normalize_api_path(value)
+        return value.removesuffix("/") or "/"
+
+    @field_validator("operation_id")
+    @classmethod
+    def _valid_operation_id(cls, value: str) -> str:
+        value = _require_exact_text(value, label="operationId")
+        if not _OPERATION_ID.fullmatch(value):
+            raise ValueError("operationId is invalid")
+        return value
+
+
+class NavigationContributionClaim(StrictContract):
+    kind: Literal["navigation"]
+    route: str = Field(min_length=1, max_length=1024)
+    mode: Literal["exclusive", "shared"]
+
+    @field_validator("route")
+    @classmethod
+    def _valid_route(cls, value: str) -> str:
+        normalize_navigation_route(value)
+        return value.removesuffix("/") or "/"
+
+
+class UiContributionClaim(StrictContract):
+    kind: Literal["ui"]
+    slot: str = Field(
+        min_length=1,
+        max_length=160,
+        pattern=BUNDLE_ID_PATTERN,
+    )
+    id: str = Field(
+        min_length=1,
+        max_length=160,
+        pattern=BUNDLE_ID_PATTERN,
+    )
+    mode: Literal["exclusive", "shared"]
+
+
+ContributionClaim: TypeAlias = Annotated[
+    ApiContributionClaim | NavigationContributionClaim | UiContributionClaim,
+    Field(discriminator="kind"),
+]
+ContributionConflictKey: TypeAlias = tuple[str, ...]
+
+
+def contribution_conflict_keys(
+    claim: ApiContributionClaim | NavigationContributionClaim | UiContributionClaim,
+) -> tuple[ContributionConflictKey, ...]:
+    """Return every collision key claimed by one signed contribution."""
+
+    if isinstance(claim, ApiContributionClaim):
+        return (
+            ("api", claim.method, normalize_api_path(claim.path)),
+            ("api-operation", claim.operation_id),
+        )
+    if isinstance(claim, NavigationContributionClaim):
+        return (("navigation", normalize_navigation_route(claim.route)),)
+    return (("ui", claim.slot, claim.id),)
+
+
+def contribution_conflict_key(
+    claim: ApiContributionClaim | NavigationContributionClaim | UiContributionClaim,
+) -> ContributionConflictKey:
+    """Return the primary path/route/slot collision key for one claim."""
+
+    return contribution_conflict_keys(claim)[0]
+
+
+def contribution_sort_key(
+    claim: ApiContributionClaim | NavigationContributionClaim | UiContributionClaim,
+) -> tuple[str, ...]:
+    """Return the deterministic ordering key for normalized contributions."""
+
+    keys = contribution_conflict_keys(claim)
+    return (claim.kind, *keys[0], *(keys[1] if len(keys) > 1 else ()))
+
+
 class BundleCapabilities(StrictContract):
     provides: list[str] = Field(max_length=500)
     requires: list[str] = Field(max_length=500)
@@ -236,12 +382,8 @@ class BundleCapabilities(StrictContract):
 class BundlePermissions(StrictContract):
     roles: list[str] = Field(max_length=500)
     markings: list[str] = Field(max_length=500)
-    data_scopes: list[str] = Field(
-        alias="dataScopes", max_length=500
-    )
-    action_types: list[str] = Field(
-        alias="actionTypes", max_length=500
-    )
+    data_scopes: list[str] = Field(alias="dataScopes", max_length=500)
+    action_types: list[str] = Field(alias="actionTypes", max_length=500)
 
     @field_validator("roles", "markings", "data_scopes", "action_types")
     @classmethod
@@ -255,9 +397,7 @@ class BundlePermissions(StrictContract):
 
 class BundleMigrations(StrictContract):
     plan: str | None = Field(max_length=MAX_REFERENCE_LENGTH)
-    downgrade_policy: DowngradePolicy = Field(
-        alias="downgradePolicy", strict=False
-    )
+    downgrade_policy: DowngradePolicy = Field(alias="downgradePolicy", strict=False)
 
     @field_validator("plan")
     @classmethod
@@ -281,6 +421,11 @@ class BundleSpec(StrictContract):
     preflight: str | None = Field(max_length=MAX_REFERENCE_LENGTH)
     regression: str | None = Field(max_length=MAX_REFERENCE_LENGTH)
     rollback: str | None = Field(max_length=MAX_REFERENCE_LENGTH)
+    contributions: list[ContributionClaim] = Field(
+        default_factory=list,
+        max_length=MAX_CONTRIBUTIONS_PER_MANIFEST,
+        exclude_if=lambda value: not value,
+    )
 
     @field_validator("platform_api")
     @classmethod
@@ -307,6 +452,23 @@ class BundleSpec(StrictContract):
         conflicts = [(item.publisher, item.id) for item in self.conflicts]
         if len(conflicts) != len(set(conflicts)):
             raise ValueError("conflicts must be unique")
+
+        contribution_keys = [
+            key
+            for claim in self.contributions
+            for key in contribution_conflict_keys(claim)
+        ]
+        if len(contribution_keys) != len(set(contribution_keys)):
+            raise ValueError("contribution conflict keys must be unique")
+
+        if self.exports.backend and not any(
+            claim.kind == "api" for claim in self.contributions
+        ):
+            raise ValueError("backend exports require an API contribution claim")
+        if self.exports.ui and not any(
+            claim.kind in {"navigation", "ui"} for claim in self.contributions
+        ):
+            raise ValueError("UI exports require a navigation or UI contribution claim")
         return self
 
 
@@ -443,8 +605,7 @@ class LoadedBundle(StrictContract):
         if len(paths) != len(set(paths)):
             raise ValueError("artifact paths must be unique")
         evidence_keys = [
-            (item.type, item.artifact_ref, item.artifact_hash)
-            for item in self.evidence
+            (item.type, item.artifact_ref, item.artifact_hash) for item in self.evidence
         ]
         if len(evidence_keys) != len(set(evidence_keys)):
             raise ValueError("evidence entries must be unique")

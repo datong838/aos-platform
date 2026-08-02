@@ -25,6 +25,13 @@ from aos_api.asset_registry import (
     LoadedBundle,
     ManifestInvalidError,
 )
+from aos_api.asset_registry.contracts import (
+    ApiContributionClaim,
+    NavigationContributionClaim,
+    contribution_conflict_keys,
+    normalize_api_path,
+    normalize_navigation_route,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SCHEMA_PATH = (
@@ -217,6 +224,121 @@ def test_capabilities_permissions_and_export_paths_are_not_silently_normalized()
     with pytest.raises(ValidationError, match="must be unique"):
         BundleManifest.model_validate(payload)
 
+
+def test_contributions_are_backward_compatible_and_strictly_discriminated() -> None:
+    manifest = BundleManifest.model_validate(_manifest())
+    assert manifest.spec.contributions == []
+    assert (
+        "contributions"
+        not in manifest.model_dump(mode="json", by_alias=True, exclude_none=False)[
+            "spec"
+        ]
+    )
+
+    payload = _manifest()
+    payload["spec"]["contributions"] = [
+        {
+            "kind": "api",
+            "method": "post",
+            "path": "/v1/orders/{orderId}/",
+            "operationId": "retryOrder",
+            "mode": "exclusive",
+        },
+        {
+            "kind": "navigation",
+            "route": "/Orders/:orderId/",
+            "mode": "shared",
+        },
+        {
+            "kind": "ui",
+            "slot": "order.detail.actions",
+            "id": "retry-order",
+            "mode": "shared",
+        },
+    ]
+    claims = BundleManifest.model_validate(payload).spec.contributions
+    assert isinstance(claims[0], ApiContributionClaim)
+    assert claims[0].method == "POST"
+    assert claims[0].path == "/v1/orders/{orderId}"
+    assert isinstance(claims[1], NavigationContributionClaim)
+    assert claims[1].route == "/Orders/:orderId"
+    assert (
+        "contributions"
+        in BundleManifest.model_validate(payload).model_dump(
+            mode="json", by_alias=True, exclude_none=False
+        )["spec"]
+    )
+
+    cross_kind = deepcopy(payload)
+    cross_kind["spec"]["contributions"][0]["slot"] = "forbidden.cross-kind"
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        BundleManifest.model_validate(cross_kind)
+
+    snake_alias = deepcopy(payload)
+    snake_alias["spec"]["contributions"][0]["operation_id"] = snake_alias["spec"][
+        "contributions"
+    ][0].pop("operationId")
+    with pytest.raises(ValidationError):
+        BundleManifest.model_validate(snake_alias)
+
+
+def test_contribution_normalization_cannot_bypass_collision_keys() -> None:
+    assert normalize_api_path("/v1/orders/{id}/") == "/v1/orders/{}"
+    assert normalize_api_path("/v1/orders/{orderId}") == "/v1/orders/{}"
+    assert normalize_navigation_route("/Orders/:id/") == "/orders/:"
+    assert normalize_navigation_route("/orders/:orderId") == "/orders/:"
+
+    first = ApiContributionClaim.model_validate(
+        {
+            "kind": "api",
+            "method": "post",
+            "path": "/v1/orders/{id}",
+            "operationId": "retryOrder",
+            "mode": "exclusive",
+        }
+    )
+    second = ApiContributionClaim.model_validate(
+        {
+            "kind": "api",
+            "method": "POST",
+            "path": "/v1/orders/{orderId}/",
+            "operationId": "retryOrderAgain",
+            "mode": "exclusive",
+        }
+    )
+    assert contribution_conflict_keys(first)[0] == contribution_conflict_keys(second)[0]
+
+    payload = _manifest()
+    payload["spec"]["contributions"] = [
+        first.model_dump(mode="json", by_alias=True),
+        second.model_dump(mode="json", by_alias=True),
+    ]
+    with pytest.raises(ValidationError, match="conflict keys must be unique"):
+        BundleManifest.model_validate(payload)
+
+    for invalid in (
+        "/v1/orders/%7Bid%7D",
+        "/v1//orders",
+        "/v1/orders/{}",
+        "/v1/orders/{bad-name}",
+        "/v1/orders?state=open",
+        "/v1/../orders",
+    ):
+        with pytest.raises(ValueError):
+            normalize_api_path(invalid)
+
+
+def test_exported_runtime_surfaces_require_signed_contribution_claims() -> None:
+    backend = _manifest()
+    backend["spec"]["exports"]["backend"] = ["backend/app.py"]
+    with pytest.raises(ValidationError, match="require an API contribution"):
+        BundleManifest.model_validate(backend)
+
+    ui = _manifest()
+    ui["spec"]["exports"]["ui"] = ["ui/index.js"]
+    with pytest.raises(ValidationError, match="require a navigation or UI"):
+        BundleManifest.model_validate(ui)
+
     payload = _manifest()
     payload["spec"]["permissions"]["roles"] = [" role.with.spaces "]
     with pytest.raises(ValidationError, match="already normalized"):
@@ -408,6 +530,16 @@ def test_shared_json_schema_has_the_same_closed_top_level_contract() -> None:
         "regression",
         "rollback",
     ]
+    assert "contributions" not in schema["$defs"]["spec"]["required"]
+    assert schema["$defs"]["contributions"]["default"] == []
+    assert len(schema["$defs"]["contributions"]["items"]["oneOf"]) == 3
+    for name in (
+        "apiContribution",
+        "navigationContribution",
+        "uiContribution",
+    ):
+        assert schema["$defs"][name]["additionalProperties"] is False
+    assert "contributions" in schema["$defs"]["spec"]["properties"]
     generated = BundleManifest.model_json_schema(by_alias=True)
     assert set(generated["properties"]) == set(schema["properties"])
 

@@ -237,6 +237,90 @@
         }
       }
     },
+    "apiContribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "method", "path", "operationId", "mode"],
+      "properties": {
+        "kind": {
+          "const": "api"
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "operationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+        },
+        "mode": {
+          "const": "exclusive"
+        }
+      }
+    },
+    "navigationContribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "route", "mode"],
+      "properties": {
+        "kind": {
+          "const": "navigation"
+        },
+        "route": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "mode": {
+          "enum": ["exclusive", "shared"]
+        }
+      }
+    },
+    "uiContribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "slot", "id", "mode"],
+      "properties": {
+        "kind": {
+          "const": "ui"
+        },
+        "slot": {
+          "$ref": "#/$defs/bundleId"
+        },
+        "id": {
+          "$ref": "#/$defs/bundleId"
+        },
+        "mode": {
+          "enum": ["exclusive", "shared"]
+        }
+      }
+    },
+    "contributions": {
+      "type": "array",
+      "maxItems": 10000,
+      "default": [],
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/apiContribution"
+          },
+          {
+            "$ref": "#/$defs/navigationContribution"
+          },
+          {
+            "$ref": "#/$defs/uiContribution"
+          }
+        ]
+      }
+    },
     "spec": {
       "type": "object",
       "additionalProperties": false,
@@ -294,6 +378,9 @@
         },
         "migrations": {
           "$ref": "#/$defs/migrations"
+        },
+        "contributions": {
+          "$ref": "#/$defs/contributions"
         },
         "preflight": {
           "oneOf": [
