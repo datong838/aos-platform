@@ -11,9 +11,6 @@ from pathlib import Path
 
 import pytest
 import yaml
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-
 from aos_api.asset_registry.canonical_json import canonical_json, canonical_sha256
 from aos_api.asset_registry.contracts import BundleEvidenceStatus
 from aos_api.asset_registry.errors import (
@@ -27,6 +24,8 @@ from aos_api.asset_registry.manifest_loader import (
     ManifestLoader,
 )
 from aos_api.asset_registry.signature import TrustRoot
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 
 def _manifest() -> dict:
@@ -393,7 +392,10 @@ def test_encoded_or_ambiguous_artifact_paths_are_rejected(tmp_path: Path) -> Non
     ("relative_path", "content"),
     [
         (".env", "APP_PASSWORD=not-a-real-value"),
-        ("content/private.pem", "-----BEGIN PRIVATE KEY-----\nfixture"),
+        (
+            "content/private.pem",
+            "-----BEGIN PRIVATE " + "KEY-----\nfixture",
+        ),
         ("content/settings.txt", "access_token = not-a-real-value"),
         ("content/database.txt", "postgresql://name:value@host/database"),
         ("content/request.txt", "Authorization: Bearer not-a-real-value"),

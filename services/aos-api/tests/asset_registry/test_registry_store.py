@@ -17,10 +17,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from alembic.config import Config
 from alembic.script import ScriptDirectory
-from psycopg import errors, sql
-from psycopg.types.json import Jsonb
-
-from aos_api.asset_registry.canonical_json import canonical_sha256
+from aos_api.asset_registry.canonical_json import canonical_json, canonical_sha256
 from aos_api.asset_registry.contracts import (
     BundleVersionStatus,
     LoadedBundle,
@@ -33,6 +30,8 @@ from aos_api.asset_registry.errors import (
 )
 from aos_api.asset_registry.registry_store import PostgresRegistryStore
 from aos_api.db import connect
+from psycopg import errors, sql
+from psycopg.types.json import Jsonb
 
 API_ROOT = Path(__file__).resolve().parents[2]
 MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_registry.py"
@@ -776,6 +775,47 @@ def test_evidence_migration_normalizes_mutable_signature_envelope_hash() -> None
     assert params["hash_profile"] == "canonical-envelope-v1"
 
 
+def test_database_canonical_evidence_hash_matches_python(registry_scope) -> None:
+    _, scoped_connect = registry_scope
+    samples = [
+        {},
+        [],
+        {
+            "中文": "栖月汇",
+            "ascii": "line one\nline two",
+            "nested": {
+                "false": False,
+                "null": None,
+                "numbers": [0, -7, 1.0, 0.000001, 1e20],
+            },
+            "ordered": [{"z": 1, "a": 2}, "尾部"],
+        },
+    ]
+
+    with scoped_connect() as conn:
+        for sample in samples:
+            row = conn.execute(
+                """
+                SELECT %s::JSONB AS roundtripped,
+                       canonical_asset_registry_jsonb(%s::JSONB) AS canonical,
+                       'sha256:' || encode(
+                         public.digest(
+                           convert_to(
+                             canonical_asset_registry_jsonb(%s::JSONB),
+                             'UTF8'
+                           ),
+                           'sha256'
+                         ),
+                         'hex'
+                       ) AS revision
+                """,
+                (Jsonb(sample), Jsonb(sample), Jsonb(sample)),
+            ).fetchone()
+            roundtripped = row["roundtripped"]
+            assert row["canonical"].encode("utf-8") == canonical_json(roundtripped)
+            assert row["revision"] == canonical_sha256(roundtripped)
+
+
 def test_security_upgrade_backfills_validated_published_and_terminal_chains() -> None:
     base_statements = _migration_statements(
         MIGRATION_PATH,
@@ -1092,6 +1132,19 @@ def test_security_downgrade_blocks_nonempty_log_and_allows_empty_log(
             "downgrade",
         ):
             conn.execute(statement)
+        assert (
+            conn.execute(
+                "SELECT to_regprocedure("
+                "'canonical_asset_registry_jsonb(jsonb)') AS function"
+            ).fetchone()["function"]
+            is None
+        )
+        assert (
+            conn.execute(
+                "SELECT extname FROM pg_extension WHERE extname = 'pgcrypto'"
+            ).fetchone()["extname"]
+            == "pgcrypto"
+        )
         for statement in _migration_statements(
             INVARIANTS_MIGRATION_PATH,
             "registry_invariants_downgrade_empty",
@@ -1152,6 +1205,32 @@ def test_status_transition_requires_matching_event_at_commit(registry_scope) -> 
             ).fetchone()["count"]
             == 0
         )
+
+        conn.execute("SAVEPOINT forged_evidence_revision")
+        conn.execute(
+            "UPDATE asset_bundle_version SET status = 'validated' "
+            "WHERE version_pk = %s",
+            (version_pk,),
+        )
+        snapshot = store._load_evidence_snapshot(conn, version_pk)
+        with pytest.raises(errors.CheckViolation, match="revision is invalid"):
+            conn.execute(
+                """
+                INSERT INTO asset_bundle_version_event (
+                  event_pk, version_pk, sequence, from_status, to_status,
+                  actor, reason, evidence_revision, evidence_snapshot
+                ) VALUES (%s, %s, 1, 'draft', 'validated',
+                          'validator:sql', 'forged revision', %s, %s)
+                """,
+                (
+                    uuid.uuid4(),
+                    version_pk,
+                    "sha256:" + "f" * 64,
+                    Jsonb(snapshot),
+                ),
+            )
+        conn.execute("ROLLBACK TO SAVEPOINT forged_evidence_revision")
+        conn.execute("RELEASE SAVEPOINT forged_evidence_revision")
 
         conn.execute(
             "UPDATE asset_bundle_version SET status = 'validated' "

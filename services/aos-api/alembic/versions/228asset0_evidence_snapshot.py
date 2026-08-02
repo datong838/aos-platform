@@ -12,9 +12,8 @@ import json
 from collections.abc import Sequence
 from typing import Any
 
-from sqlalchemy import text
-
 from alembic import op
+from sqlalchemy import text
 
 revision: str = "228assetevidence"
 down_revision: str | Sequence[str] | None = "228assetinvariants"
@@ -59,7 +58,7 @@ def _normalize_mutable_signature_evidence() -> None:
                 UPDATE asset_bundle_evidence
                    SET artifact_hash = :artifact_hash,
                        metadata = metadata || jsonb_build_object(
-                         'signatureHashProfile', :hash_profile
+                         'signatureHashProfile', CAST(:hash_profile AS TEXT)
                        ),
                        updated_at = NOW(),
                        updated_by = 'system:migration',
@@ -77,6 +76,7 @@ def _normalize_mutable_signature_evidence() -> None:
 
 
 def upgrade() -> None:
+    op.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public")
     op.execute(
         """
         ALTER TABLE asset_bundle_version_event
@@ -90,6 +90,62 @@ def upgrade() -> None:
     _normalize_mutable_signature_evidence()
     op.execute(
         """
+        CREATE OR REPLACE FUNCTION canonical_asset_registry_jsonb(input_value JSONB)
+        RETURNS TEXT
+        LANGUAGE plpgsql
+        IMMUTABLE
+        STRICT
+        PARALLEL SAFE
+        AS $$
+        DECLARE
+          value_type TEXT;
+          rendered TEXT;
+        BEGIN
+          value_type := jsonb_typeof(input_value);
+          CASE value_type
+            WHEN 'object' THEN
+              SELECT '{' || COALESCE(
+                       string_agg(
+                         to_jsonb(item.key)::TEXT || ':' ||
+                           canonical_asset_registry_jsonb(item.value),
+                         ',' ORDER BY item.key COLLATE "C"
+                       ),
+                       ''
+                     ) || '}'
+                INTO rendered
+                FROM jsonb_each(input_value) AS item;
+              RETURN rendered;
+            WHEN 'array' THEN
+              SELECT '[' || COALESCE(
+                       string_agg(
+                         canonical_asset_registry_jsonb(item.value),
+                         ',' ORDER BY item.ordinality
+                       ),
+                       ''
+                     ) || ']'
+                INTO rendered
+                FROM jsonb_array_elements(input_value)
+                     WITH ORDINALITY AS item(value, ordinality);
+              RETURN rendered;
+            WHEN 'number' THEN
+              rendered := input_value::TEXT;
+              IF POSITION('.' IN rendered) > 0 THEN
+                rendered := (rendered::DOUBLE PRECISION)::TEXT;
+                IF POSITION('.' IN rendered) = 0
+                   AND POSITION('e' IN rendered) = 0 THEN
+                  rendered := rendered || '.0';
+                END IF;
+              END IF;
+              RETURN rendered;
+            ELSE
+              RETURN input_value::TEXT;
+          END CASE;
+        END;
+        $$
+        """
+    )
+    op.execute(
+        """
         CREATE OR REPLACE FUNCTION guard_asset_bundle_version_event_mutation()
         RETURNS trigger
         LANGUAGE plpgsql
@@ -99,6 +155,7 @@ def upgrade() -> None:
           expected_sequence BIGINT;
           current_version_status TEXT;
           current_evidence_snapshot JSONB;
+          expected_evidence_revision TEXT;
         BEGIN
           IF TG_OP IN ('UPDATE', 'DELETE', 'TRUNCATE') THEN
             RAISE EXCEPTION
@@ -153,6 +210,21 @@ def upgrade() -> None:
              OR NEW.evidence_snapshot IS DISTINCT FROM current_evidence_snapshot THEN
             RAISE EXCEPTION
               'asset bundle lifecycle event evidence snapshot is invalid'
+              USING ERRCODE = '23514';
+          END IF;
+          expected_evidence_revision := 'sha256:' || encode(
+            public.digest(
+              convert_to(
+                canonical_asset_registry_jsonb(NEW.evidence_snapshot),
+                'UTF8'
+              ),
+              'sha256'
+            ),
+            'hex'
+          );
+          IF NEW.evidence_revision IS DISTINCT FROM expected_evidence_revision THEN
+            RAISE EXCEPTION
+              'asset bundle lifecycle event evidence revision is invalid'
               USING ERRCODE = '23514';
           END IF;
           RETURN NEW;
@@ -238,3 +310,4 @@ def downgrade() -> None:
         """
     )
     op.execute("ALTER TABLE asset_bundle_version_event DROP COLUMN evidence_snapshot")
+    op.execute("DROP FUNCTION IF EXISTS canonical_asset_registry_jsonb(JSONB)")
