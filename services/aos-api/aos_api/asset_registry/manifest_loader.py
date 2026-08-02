@@ -1,4 +1,5 @@
 """Fail-closed loader for allowlisted, non-executable asset bundle directories."""
+
 from __future__ import annotations
 
 import hashlib
@@ -6,7 +7,9 @@ import json
 import os
 import re
 import stat
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
@@ -24,7 +27,11 @@ from aos_api.asset_registry.contracts import (
     LoadedBundle,
 )
 from aos_api.asset_registry.errors import ManifestInvalidError
-from aos_api.asset_registry.signature import TrustRootProvider, verify_ed25519
+from aos_api.asset_registry.signature import (
+    TrustRoot,
+    TrustRootProvider,
+    verify_ed25519,
+)
 
 MANIFEST_FILENAME: Final = "bundle.yaml"
 SIGNATURE_FILENAME: Final = "bundle.signature.json"
@@ -61,6 +68,26 @@ _SECRET_ASSIGNMENT = re.compile(
     r"[\"']?\s*[:=]\s*(?!null\b|~\s*(?:[,;}\n]|$)|[\"']{2})\S+",
 )
 _BEARER_ASSIGNMENT = re.compile(r"(?i)authorization\s*[:=]\s*bearer\s+\S+")
+
+
+@dataclass(frozen=True)
+class _BundleFile:
+    relative_path: str
+    size: int
+    device: int
+    inode: int
+    modified_ns: int
+    changed_ns: int
+
+
+class _PinnedTrustRootProvider:
+    def __init__(self, root: TrustRoot) -> None:
+        self._root = root
+
+    def get_trust_root(self, *, publisher: str, key_id: str) -> TrustRoot | None:
+        if (publisher, key_id) == (self._root.publisher, self._root.key_id):
+            return self._root
+        return None
 
 
 class _UniqueKeySafeLoader(yaml.SafeLoader):
@@ -111,6 +138,7 @@ class ManifestLoader:
         trust_roots: TrustRootProvider | None = None,
     ) -> None:
         roots: dict[str, Path] = {}
+        root_identities: dict[str, tuple[int, int]] = {}
         for alias, configured_root in allowlist_roots.items():
             if (
                 not isinstance(alias, str)
@@ -126,9 +154,18 @@ class ManifestLoader:
                 raise ValueError("allowlist root does not exist") from exc
             if not root.is_dir():
                 raise ValueError("allowlist root must be a directory")
+            root_stat = root.stat(follow_symlinks=False)
             roots[alias] = root
+            root_identities[alias] = (root_stat.st_dev, root_stat.st_ino)
         self._allowlist_roots = roots
+        self._allowlist_root_identities = root_identities
         self._trust_roots = trust_roots
+
+    @property
+    def trust_roots(self) -> TrustRootProvider | None:
+        """Expose the same read-only provider used for load-time verification."""
+
+        return self._trust_roots
 
     def load(self, source_ref: str) -> LoadedBundle:
         """Return server-derived manifest, content index, digest and trust evidence."""
@@ -138,70 +175,80 @@ class ManifestLoader:
             root = self._allowlist_roots.get(alias)
             if root is None:
                 raise ManifestInvalidError("bundle source alias is not allowlisted")
-            bundle_root = self._resolve_bundle_root(root, relative_parts)
-            files = self._enumerate_files(bundle_root)
-            by_relative = {relative: path for relative, path, _size in files}
-            manifest_path = by_relative.get(MANIFEST_FILENAME)
-            if manifest_path is None:
-                raise ManifestInvalidError("bundle.yaml is required")
+            root_identity = self._allowlist_root_identities[alias]
+            with self._open_bundle_directory(
+                root, root_identity, relative_parts
+            ) as bundle_descriptor:
+                files, available_paths = self._enumerate_files(bundle_descriptor)
+                by_relative = {item.relative_path: item for item in files}
+                manifest_file = by_relative.get(MANIFEST_FILENAME)
+                if manifest_file is None:
+                    raise ManifestInvalidError("bundle.yaml is required")
 
-            manifest_bytes = self._read_regular_file(
-                manifest_path,
-                relative_path=MANIFEST_FILENAME,
-                limit=self.MAX_MANIFEST_BYTES,
-            )
-            self._scan_sensitive_content(MANIFEST_FILENAME, manifest_bytes)
-            manifest = self._parse_manifest(manifest_bytes)
-            self._validate_manifest_references(bundle_root, manifest)
+                manifest_bytes = self._read_regular_file(
+                    bundle_descriptor,
+                    manifest_file,
+                    limit=self.MAX_MANIFEST_BYTES,
+                )
+                self._scan_sensitive_content(MANIFEST_FILENAME, manifest_bytes)
+                manifest = self._parse_manifest(manifest_bytes)
+                self._validate_manifest_references(available_paths, manifest)
 
-            artifacts: list[BundleArtifact] = []
-            signature_bytes: bytes | None = None
-            evidence_documents: dict[str, bytes] = {}
-            for relative_path, path, expected_size in files:
-                content = self._read_regular_file(
-                    path,
-                    relative_path=relative_path,
-                    limit=(
-                        self.MAX_MANIFEST_BYTES
-                        if relative_path == MANIFEST_FILENAME
-                        else (
-                            self.MAX_SIGNATURE_BYTES
-                            if relative_path == SIGNATURE_FILENAME
+                artifacts: list[BundleArtifact] = []
+                signature_bytes: bytes | None = None
+                evidence_documents: dict[str, bytes] = {}
+                for item in files:
+                    relative_path = item.relative_path
+                    content = self._read_regular_file(
+                        bundle_descriptor,
+                        item,
+                        limit=(
+                            self.MAX_MANIFEST_BYTES
+                            if relative_path == MANIFEST_FILENAME
                             else (
-                                self.MAX_EVIDENCE_BYTES
-                                if relative_path
-                                in {SBOM_RELATIVE_PATH, BUNDLE_EVALS_RELATIVE_PATH}
-                                else self.MAX_FILE_BYTES
+                                self.MAX_SIGNATURE_BYTES
+                                if relative_path == SIGNATURE_FILENAME
+                                else (
+                                    self.MAX_EVIDENCE_BYTES
+                                    if relative_path
+                                    in {
+                                        SBOM_RELATIVE_PATH,
+                                        BUNDLE_EVALS_RELATIVE_PATH,
+                                    }
+                                    else self.MAX_FILE_BYTES
+                                )
                             )
-                        )
-                    ),
-                )
-                if len(content) != expected_size:
-                    raise ManifestInvalidError("bundle file changed while loading")
-                self._scan_sensitive_content(relative_path, content)
-                if relative_path == MANIFEST_FILENAME:
-                    if content != manifest_bytes:
-                        raise ManifestInvalidError("bundle.yaml changed while loading")
-                    continue
-                if relative_path == SIGNATURE_FILENAME:
-                    signature_bytes = content
-                    continue
-                artifacts.append(
-                    BundleArtifact.model_validate(
-                        {
-                            "relativePath": relative_path,
-                            "artifactRef": f"{source_ref}/{relative_path}",
-                            "digest": self._sha256_bytes(content),
-                            "size": len(content),
-                            "mediaType": self._media_type(relative_path),
-                        }
+                        ),
                     )
-                )
-                if relative_path in {
-                    SBOM_RELATIVE_PATH,
-                    BUNDLE_EVALS_RELATIVE_PATH,
-                }:
-                    evidence_documents[relative_path] = content
+                    self._scan_sensitive_content(relative_path, content)
+                    if relative_path == MANIFEST_FILENAME:
+                        if content != manifest_bytes:
+                            raise ManifestInvalidError(
+                                "bundle.yaml changed while loading"
+                            )
+                        continue
+                    if relative_path == SIGNATURE_FILENAME:
+                        signature_bytes = content
+                        continue
+                    artifacts.append(
+                        BundleArtifact.model_validate(
+                            {
+                                "relativePath": relative_path,
+                                "artifactRef": f"{source_ref}/{relative_path}",
+                                "digest": self._sha256_bytes(content),
+                                "size": len(content),
+                                "mediaType": self._media_type(relative_path),
+                            }
+                        )
+                    )
+                    if relative_path in {
+                        SBOM_RELATIVE_PATH,
+                        BUNDLE_EVALS_RELATIVE_PATH,
+                    }:
+                        evidence_documents[relative_path] = content
+                final_files, final_paths = self._enumerate_files(bundle_descriptor)
+                if final_files != files or final_paths != available_paths:
+                    raise ManifestInvalidError("bundle content changed while loading")
 
             artifacts.sort(key=lambda item: item.relative_path)
             manifest_payload = manifest.model_dump(
@@ -250,9 +297,7 @@ class ManifestLoader:
             evals_bytes = evidence_documents.get(BUNDLE_EVALS_RELATIVE_PATH)
             if evals_bytes is not None:
                 evidence.append(
-                    self._bundle_evals_evidence(
-                        source_ref, evals_bytes, observed_at
-                    )
+                    self._bundle_evals_evidence(source_ref, evals_bytes, observed_at)
                 )
             signature, signature_evidence = self._verify_signature(
                 source_ref=source_ref,
@@ -290,7 +335,9 @@ class ManifestLoader:
             raise ManifestInvalidError("bundle source reference is invalid")
         remainder = source_ref.removeprefix("bundle://")
         if "/" not in remainder:
-            raise ManifestInvalidError("bundle source reference requires alias and path")
+            raise ManifestInvalidError(
+                "bundle source reference requires alias and path"
+            )
         alias, relative = remainder.split("/", 1)
         if not alias or not relative or not re.fullmatch(BUNDLE_ID_PATTERN, alias):
             raise ManifestInvalidError("bundle source reference is invalid")
@@ -300,90 +347,132 @@ class ManifestLoader:
         return alias, parts
 
     @staticmethod
-    def _resolve_bundle_root(root: Path, relative_parts: tuple[str, ...]) -> Path:
-        cursor = root
+    @contextmanager
+    def _open_bundle_directory(
+        root: Path,
+        root_identity: tuple[int, int],
+        relative_parts: tuple[str, ...],
+    ) -> Iterator[int]:
+        flags = (
+            os.O_RDONLY
+            | getattr(os, "O_CLOEXEC", 0)
+            | getattr(os, "O_DIRECTORY", 0)
+            | getattr(os, "O_NOFOLLOW", 0)
+        )
+        descriptor: int | None = None
         try:
+            descriptor = os.open(root, flags)
+            root_stat = os.fstat(descriptor)
+            if (
+                not stat.S_ISDIR(root_stat.st_mode)
+                or (
+                    root_stat.st_dev,
+                    root_stat.st_ino,
+                )
+                != root_identity
+            ):
+                raise ManifestInvalidError("allowlist root changed while loading")
             for part in relative_parts:
-                cursor = cursor / part
-                if cursor.is_symlink():
-                    raise ManifestInvalidError("symbolic links are forbidden")
-            resolved = cursor.resolve(strict=True)
+                child = os.open(part, flags, dir_fd=descriptor)
+                os.close(descriptor)
+                descriptor = child
+                child_stat = os.fstat(descriptor)
+                if not stat.S_ISDIR(child_stat.st_mode):
+                    raise ManifestInvalidError(
+                        "bundle source must remain inside its allowlist"
+                    )
+            yield descriptor
         except ManifestInvalidError:
             raise
         except OSError as exc:
-            raise ManifestInvalidError("bundle source was not found") from exc
-        if not resolved.is_relative_to(root) or not resolved.is_dir():
-            raise ManifestInvalidError("bundle source must remain inside its allowlist")
-        return resolved
+            raise ManifestInvalidError(
+                "symbolic links are forbidden or bundle source was not found"
+            ) from exc
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
 
-    def _enumerate_files(self, bundle_root: Path) -> list[tuple[str, Path, int]]:
-        files: list[tuple[str, Path, int]] = []
+    def _enumerate_files(
+        self, bundle_descriptor: int
+    ) -> tuple[list[_BundleFile], frozenset[str]]:
+        files: list[_BundleFile] = []
+        available_paths: set[str] = set()
         total_size = 0
 
-        def raise_walk_error(error: OSError) -> None:
-            raise error
-
         try:
-            for directory, directory_names, filenames in os.walk(
-                bundle_root,
-                topdown=True,
-                onerror=raise_walk_error,
-                followlinks=False,
-            ):
-                directory_path = Path(directory)
-                directory_names.sort()
-                filenames.sort()
-                for name in directory_names:
-                    child = directory_path / name
-                    relative_path = child.relative_to(bundle_root).as_posix()
+            directory_flags = (
+                os.O_RDONLY
+                | getattr(os, "O_CLOEXEC", 0)
+                | getattr(os, "O_DIRECTORY", 0)
+                | getattr(os, "O_NOFOLLOW", 0)
+            )
+
+            def walk(directory_descriptor: int, prefix: str) -> None:
+                nonlocal total_size
+                for name in sorted(os.listdir(directory_descriptor)):
+                    relative_path = f"{prefix}/{name}" if prefix else name
                     self._validate_relative_file_path(relative_path)
-                    child_stat = child.lstat()
-                    if child.is_symlink():
+                    child_stat = os.stat(
+                        name,
+                        dir_fd=directory_descriptor,
+                        follow_symlinks=False,
+                    )
+                    if stat.S_ISLNK(child_stat.st_mode):
                         raise ManifestInvalidError("symbolic links are forbidden")
-                    if not stat.S_ISDIR(child_stat.st_mode):
-                        raise ManifestInvalidError(
-                            "bundle contains a non-directory path"
+                    if stat.S_ISDIR(child_stat.st_mode):
+                        child_descriptor = os.open(
+                            name,
+                            directory_flags,
+                            dir_fd=directory_descriptor,
                         )
-                    if not child.resolve(strict=True).is_relative_to(bundle_root):
-                        raise ManifestInvalidError(
-                            "bundle content escaped its allowlisted root"
+                        try:
+                            opened_stat = os.fstat(child_descriptor)
+                            if not stat.S_ISDIR(opened_stat.st_mode) or (
+                                opened_stat.st_dev,
+                                opened_stat.st_ino,
+                            ) != (child_stat.st_dev, child_stat.st_ino):
+                                raise ManifestInvalidError(
+                                    "bundle directory changed while loading"
+                                )
+                            available_paths.add(relative_path)
+                            walk(child_descriptor, relative_path)
+                        finally:
+                            os.close(child_descriptor)
+                        continue
+                    if not stat.S_ISREG(child_stat.st_mode):
+                        raise ManifestInvalidError("bundle contains a non-regular file")
+                    if child_stat.st_size > self.MAX_FILE_BYTES:
+                        raise ManifestInvalidError("bundle file exceeds the size limit")
+                    files.append(
+                        _BundleFile(
+                            relative_path=relative_path,
+                            size=child_stat.st_size,
+                            device=child_stat.st_dev,
+                            inode=child_stat.st_ino,
+                            modified_ns=child_stat.st_mtime_ns,
+                            changed_ns=child_stat.st_ctime_ns,
                         )
-                for name in filenames:
-                    path = directory_path / name
-                    relative_path = path.relative_to(bundle_root).as_posix()
-                    self._validate_relative_file_path(relative_path)
-                    if path.is_symlink():
-                        raise ManifestInvalidError("symbolic links are forbidden")
-                    resolved = path.resolve(strict=True)
-                    if not resolved.is_relative_to(bundle_root):
-                        raise ManifestInvalidError(
-                            "bundle content escaped its allowlisted root"
-                        )
-                    file_stat = path.stat(follow_symlinks=False)
-                    if not stat.S_ISREG(file_stat.st_mode):
-                        raise ManifestInvalidError(
-                            "bundle contains a non-regular file"
-                        )
-                    if file_stat.st_size > self.MAX_FILE_BYTES:
-                        raise ManifestInvalidError(
-                            "bundle file exceeds the size limit"
-                        )
-                    files.append((relative_path, path, file_stat.st_size))
+                    )
+                    available_paths.add(relative_path)
                     if len(files) > self.MAX_BUNDLE_FILES:
                         raise ManifestInvalidError(
                             "bundle exceeds the file-count limit"
                         )
-                    total_size += file_stat.st_size
+                    total_size += child_stat.st_size
                     if total_size > self.MAX_TOTAL_BYTES:
                         raise ManifestInvalidError(
                             "bundle exceeds the total-size limit"
                         )
+
+            walk(bundle_descriptor, "")
         except ManifestInvalidError:
             raise
         except OSError as exc:
-            raise ManifestInvalidError("bundle content could not be enumerated") from exc
-        files.sort(key=lambda item: item[0])
-        return files
+            raise ManifestInvalidError(
+                "bundle content could not be enumerated"
+            ) from exc
+        files.sort(key=lambda item: item.relative_path)
+        return files, frozenset(available_paths)
 
     @staticmethod
     def _validate_relative_file_path(relative_path: str) -> None:
@@ -391,10 +480,14 @@ class ManifestLoader:
             raise ManifestInvalidError("bundle contains an unsafe file path")
         if any(part in {"", ".", ".."} for part in relative_path.split("/")):
             raise ManifestInvalidError("bundle contains an unsafe file path")
+        try:
+            relative_path.encode("utf-8")
+        except UnicodeEncodeError as exc:
+            raise ManifestInvalidError("bundle contains an unsafe file path") from exc
 
     @staticmethod
     def _validate_manifest_references(
-        bundle_root: Path, manifest: BundleManifest
+        available_paths: frozenset[str], manifest: BundleManifest
     ) -> None:
         export_paths = [
             path
@@ -411,46 +504,81 @@ class ManifestLoader:
         for reference in references:
             if reference is None:
                 continue
-            parts = reference.removesuffix("/").split("/")
-            cursor = bundle_root
-            try:
-                for part in parts:
-                    cursor = cursor / part
-                    if cursor.is_symlink():
-                        raise ManifestInvalidError("symbolic links are forbidden")
-                resolved = cursor.resolve(strict=True)
-            except ManifestInvalidError:
-                raise
-            except OSError as exc:
-                raise ManifestInvalidError(
-                    "manifest references missing bundle content"
-                ) from exc
-            if not resolved.is_relative_to(bundle_root):
-                raise ManifestInvalidError(
-                    "manifest reference escaped its allowlisted bundle"
-                )
+            if reference.removesuffix("/") not in available_paths:
+                raise ManifestInvalidError("manifest references missing bundle content")
 
     @staticmethod
-    def _read_regular_file(path: Path, *, relative_path: str, limit: int) -> bytes:
-        flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+    def _read_regular_file(
+        bundle_descriptor: int,
+        item: _BundleFile,
+        *,
+        limit: int,
+    ) -> bytes:
+        directory_flags = (
+            os.O_RDONLY
+            | getattr(os, "O_CLOEXEC", 0)
+            | getattr(os, "O_DIRECTORY", 0)
+            | getattr(os, "O_NOFOLLOW", 0)
+        )
+        file_flags = (
+            os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+        )
+        parent_descriptor: int | None = None
+        file_descriptor: int | None = None
         try:
-            descriptor = os.open(path, flags)
-            with os.fdopen(descriptor, "rb") as handle:
+            parent_descriptor = os.dup(bundle_descriptor)
+            parts = item.relative_path.split("/")
+            for part in parts[:-1]:
+                child_descriptor = os.open(
+                    part,
+                    directory_flags,
+                    dir_fd=parent_descriptor,
+                )
+                os.close(parent_descriptor)
+                parent_descriptor = child_descriptor
+            file_descriptor = os.open(
+                parts[-1],
+                file_flags,
+                dir_fd=parent_descriptor,
+            )
+            with os.fdopen(file_descriptor, "rb") as handle:
+                file_descriptor = None
                 file_stat = os.fstat(handle.fileno())
                 if not stat.S_ISREG(file_stat.st_mode):
                     raise ManifestInvalidError("bundle contains a non-regular file")
+                if not ManifestLoader._matches_file_snapshot(file_stat, item):
+                    raise ManifestInvalidError("bundle file changed while loading")
                 if file_stat.st_size > limit:
                     raise ManifestInvalidError(
-                        f"{relative_path} exceeds the size limit"
+                        f"{item.relative_path} exceeds the size limit"
                     )
                 content = handle.read(limit + 1)
+                final_stat = os.fstat(handle.fileno())
+                if not ManifestLoader._matches_file_snapshot(final_stat, item):
+                    raise ManifestInvalidError("bundle file changed while loading")
         except ManifestInvalidError:
             raise
         except OSError as exc:
             raise ManifestInvalidError("bundle file could not be read safely") from exc
+        finally:
+            if file_descriptor is not None:
+                os.close(file_descriptor)
+            if parent_descriptor is not None:
+                os.close(parent_descriptor)
         if len(content) > limit:
-            raise ManifestInvalidError(f"{relative_path} exceeds the size limit")
+            raise ManifestInvalidError(f"{item.relative_path} exceeds the size limit")
         return content
+
+    @staticmethod
+    def _matches_file_snapshot(file_stat: os.stat_result, item: _BundleFile) -> bool:
+        return (
+            stat.S_ISREG(file_stat.st_mode)
+            and file_stat.st_dev == item.device
+            and file_stat.st_ino == item.inode
+            and file_stat.st_size == item.size
+            and file_stat.st_mtime_ns == item.modified_ns
+            and file_stat.st_ctime_ns == item.changed_ns
+        )
 
     @staticmethod
     def _parse_manifest(manifest_bytes: bytes) -> BundleManifest:
@@ -496,15 +624,29 @@ class ManifestLoader:
                 observed_at=observed_at,
                 metadata={"reason": "malformed_signature_envelope"},
             )
-        if self._trust_roots is None:
+        trust_root: TrustRoot | None = None
+        trust_root_unavailable = False
+        if self._trust_roots is not None:
+            try:
+                trust_root = self._trust_roots.get_trust_root(
+                    publisher=manifest.metadata.publisher,
+                    key_id=signature.key_id,
+                )
+            except Exception:  # noqa: BLE001 - provider outages fail closed
+                trust_root_unavailable = True
+
+        if self._trust_roots is None or trust_root_unavailable:
             status = "invalid"
             reason = "trust_roots_unavailable"
+        elif trust_root is None:
+            status = "invalid"
+            reason = "verification_failed"
         elif verify_ed25519(
             payload=signed_payload,
             signature_b64=signature.signature,
             publisher=manifest.metadata.publisher,
             key_id=signature.key_id,
-            trust_roots=self._trust_roots,
+            trust_roots=_PinnedTrustRootProvider(trust_root),
             algorithm=signature.algorithm,
             verified_at=observed_at,
         ):
@@ -513,6 +655,17 @@ class ManifestLoader:
         else:
             status = "invalid"
             reason = "verification_failed"
+        metadata = {"keyId": signature.key_id, "reason": reason}
+        if trust_root is not None:
+            metadata["trustRootRevision"] = trust_root.revision
+        evidence_expiry = None
+        if (
+            trust_root is not None
+            and trust_root.not_after is not None
+            and trust_root.not_after.utcoffset() is not None
+            and trust_root.not_after > observed_at
+        ):
+            evidence_expiry = trust_root.not_after
         return signature, self._evidence(
             source_ref=source_ref,
             evidence_type="signature_verification",
@@ -520,7 +673,8 @@ class ManifestLoader:
             artifact_hash=artifact_hash,
             status=status,
             observed_at=observed_at,
-            metadata={"keyId": signature.key_id, "reason": reason},
+            expires_at=evidence_expiry,
+            metadata=metadata,
         )
 
     @staticmethod
@@ -604,18 +758,23 @@ class ManifestLoader:
             for raw_key, item in value.items():
                 key = str(raw_key)
                 normalized_key = re.sub(r"[^a-z0-9]", "", key.lower())
-                if normalized_key in {
-                    "password",
-                    "passwd",
-                    "token",
-                    "accesstoken",
-                    "refreshtoken",
-                    "apikey",
-                    "privatekey",
-                    "databaseurl",
-                    "dburl",
-                    "secretref",
-                } and item is not None and item != "":
+                if (
+                    normalized_key
+                    in {
+                        "password",
+                        "passwd",
+                        "token",
+                        "accesstoken",
+                        "refreshtoken",
+                        "apikey",
+                        "privatekey",
+                        "databaseurl",
+                        "dburl",
+                        "secretref",
+                    }
+                    and item is not None
+                    and item != ""
+                ):
                     raise ManifestInvalidError(
                         "bundle manifest contains a forbidden sensitive value",
                         details={"path": f"{path}.{key}"},
@@ -663,6 +822,7 @@ class ManifestLoader:
         status: str,
         observed_at: datetime,
         metadata: dict[str, str | int],
+        expires_at: datetime | None = None,
     ) -> BundleEvidence:
         return BundleEvidence.model_validate(
             {
@@ -671,7 +831,7 @@ class ManifestLoader:
                 "artifactHash": artifact_hash,
                 "status": status,
                 "observedAt": observed_at,
-                "expiresAt": None,
+                "expiresAt": expires_at,
                 "revokedAt": None,
                 "metadata": metadata,
             }

@@ -240,6 +240,7 @@ def _sign_bundle(
             publisher=publisher,
             key_id=key_id,
             public_key=public_key,
+            revision="sha256:" + "a" * 64,
             not_before=now - timedelta(minutes=1),
             not_after=now + timedelta(minutes=10),
         )

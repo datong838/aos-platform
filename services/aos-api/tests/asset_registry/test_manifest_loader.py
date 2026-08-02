@@ -4,6 +4,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -145,6 +146,7 @@ def _sign_bundle(bundle: Path, unsigned, *, wrong_payload: bool = False):
             publisher="aos",
             key_id="fixture-key",
             public_key=public_key,
+            revision="sha256:" + "a" * 64,
             not_before=now - timedelta(minutes=1),
             not_after=now + timedelta(minutes=1),
         )
@@ -196,7 +198,13 @@ def test_content_hash_is_deterministic_and_excludes_signature_envelope(
     assert first.artifacts == second.artifacts == third.artifacts
     assert SIGNATURE_FILENAME not in {item.relative_path for item in second.artifacts}
     assert second.signature is not None
-    assert _signature_evidence(second).status == BundleEvidenceStatus.VALID
+    signature_evidence = _signature_evidence(second)
+    assert signature_evidence.status == BundleEvidenceStatus.VALID
+    assert signature_evidence.metadata["trustRootRevision"] == (
+        trust_roots.root.revision
+    )
+    assert signature_evidence.expires_at == trust_roots.root.not_after
+    assert _loader(root, trust_roots).trust_roots is trust_roots
 
 
 def test_standard_sbom_and_bundle_evals_generate_hash_bound_valid_evidence(
@@ -283,6 +291,36 @@ def test_bundle_root_and_nested_content_symlinks_are_rejected(tmp_path: Path) ->
     os.symlink(outside, real_bundle / "content" / "linked.txt")
     with pytest.raises(ManifestInvalidError, match="symbolic links"):
         _loader(root).load("bundle://fixtures/real")
+
+
+def test_intermediate_directory_swap_to_symlink_cannot_escape_allowlist(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = tmp_path / "allowed"
+    bundle = _make_bundle(root)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "schema.json").write_text(
+        json.dumps({"outside": True}), encoding="utf-8"
+    )
+    loader = _loader(root)
+    original_read = loader._read_regular_file
+    swapped = False
+
+    def swap_before_nested_read(bundle_descriptor, item, *, limit):
+        nonlocal swapped
+        if item.relative_path == "content/schema.json" and not swapped:
+            swapped = True
+            (bundle / "content").rename(bundle / "content-original")
+            (bundle / "content").symlink_to(outside, target_is_directory=True)
+        return original_read(bundle_descriptor, item, limit=limit)
+
+    monkeypatch.setattr(loader, "_read_regular_file", swap_before_nested_read)
+
+    with pytest.raises(ManifestInvalidError, match="read safely"):
+        loader.load("bundle://fixtures/example")
+    assert swapped
 
 
 def test_manifest_and_bundle_size_limits_are_enforced(tmp_path: Path) -> None:
@@ -428,6 +466,25 @@ def test_present_signature_without_trust_roots_is_never_marked_valid(
     loaded = _loader(root).load("bundle://fixtures/example")
     assert _signature_evidence(loaded).status == BundleEvidenceStatus.INVALID
     assert _signature_evidence(loaded).metadata["reason"] == "trust_roots_unavailable"
+
+
+def test_expired_trust_root_produces_invalid_signature_evidence(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "allowed"
+    bundle = _make_bundle(root)
+    unsigned = _loader(root).load("bundle://fixtures/example")
+    trust_roots = _sign_bundle(bundle, unsigned)
+    expired_roots = StaticTrustRoots(
+        replace(trust_roots.root, not_after=datetime.now(UTC) - timedelta(seconds=1))
+    )
+
+    loaded = _loader(root, expired_roots).load("bundle://fixtures/example")
+    evidence = _signature_evidence(loaded)
+
+    assert evidence.status == BundleEvidenceStatus.INVALID
+    assert evidence.expires_at is None
+    assert evidence.metadata["trustRootRevision"] == expired_roots.root.revision
 
 
 def test_loader_never_executes_bundle_files(tmp_path: Path) -> None:
