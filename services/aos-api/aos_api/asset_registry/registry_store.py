@@ -187,6 +187,10 @@ class PostgresRegistryStore:
         version_pk = uuid.uuid4()
         try:
             with self._connect_factory() as conn:
+                # Child projection statements take the same transaction lock
+                # before acquiring tuple locks.  This keeps direct SQL writers
+                # and publish on one lock order and prevents deadlocks/phantoms.
+                conn.execute("SELECT pg_advisory_xact_lock(228, 1)")
                 bundle = self._resolve_bundle(
                     conn, metadata.id, metadata.publisher, for_update=True
                 )
@@ -282,6 +286,7 @@ class PostgresRegistryStore:
 
         try:
             with self._connect_factory() as conn:
+                conn.execute("SELECT pg_advisory_xact_lock(228, 1)")
                 bundle = self._resolve_bundle(
                     conn, bundle_id, publisher, for_update=True
                 )
@@ -381,6 +386,11 @@ class PostgresRegistryStore:
             VersionInvalidError,
         ):
             raise
+        except (errors.DeadlockDetected, errors.SerializationFailure) as exc:
+            raise RevisionConflictError(
+                "asset bundle transition conflicted with a concurrent writer",
+                details={"retryable": True},
+            ) from exc
         except errors.CheckViolation as exc:
             message = str(exc.diag.message_primary or "")
             if "immutable" in message or "cannot be" in message:

@@ -34,6 +34,7 @@ from aos_api.db import connect
 API_ROOT = Path(__file__).resolve().parents[2]
 MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_registry.py"
 SECURITY_MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_security.py"
+INVARIANTS_MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_invariants.py"
 
 
 def _load_migration(path: Path, name: str) -> ModuleType:
@@ -49,6 +50,7 @@ def _upgrade_statements() -> list[str]:
     for path, name in (
         (MIGRATION_PATH, "registry_store_migration"),
         (SECURITY_MIGRATION_PATH, "registry_store_security_migration"),
+        (INVARIANTS_MIGRATION_PATH, "registry_store_invariants_migration"),
     ):
         module = _load_migration(path, name)
         with patch.object(module.op, "execute", statements.append):
@@ -518,16 +520,71 @@ def test_transition_uses_expected_status_and_database_immutability_guard(
         conn.rollback()
 
 
-def test_security_migration_is_the_single_head_with_expected_parent() -> None:
-    migration = _load_migration(
+def test_security_migrations_form_the_single_head_chain() -> None:
+    security = _load_migration(
         SECURITY_MIGRATION_PATH,
         "registry_security_revision_contract",
     )
+    invariants = _load_migration(
+        INVARIANTS_MIGRATION_PATH,
+        "registry_invariants_revision_contract",
+    )
     script = ScriptDirectory.from_config(Config(str(API_ROOT / "alembic.ini")))
 
-    assert migration.revision == "228assetsecurity"
-    assert migration.down_revision == "a93c7e1b4f20"
-    assert script.get_heads() == ["228assetsecurity"]
+    assert security.revision == "228assetsecurity"
+    assert security.down_revision == "a93c7e1b4f20"
+    assert invariants.revision == "228assetinvariants"
+    assert invariants.down_revision == "228assetsecurity"
+    assert script.get_heads() == ["228assetinvariants"]
+
+
+def test_invariants_upgrade_is_reachable_from_already_applied_security_revision() -> (
+    None
+):
+    old_upgrade = [
+        *_migration_statements(
+            MIGRATION_PATH,
+            "registry_incremental_base_upgrade",
+            "upgrade",
+        ),
+        *_migration_statements(
+            SECURITY_MIGRATION_PATH,
+            "registry_incremental_security_upgrade",
+            "upgrade",
+        ),
+    ]
+    with _isolated_schema(old_upgrade) as scoped_connect, scoped_connect() as conn:
+        assert (
+            conn.execute(
+                "SELECT to_regprocedure("
+                "'lock_asset_registry_projection_statement()') AS function"
+            ).fetchone()["function"]
+            is None
+        )
+        for statement in _migration_statements(
+            INVARIANTS_MIGRATION_PATH,
+            "registry_incremental_invariants_upgrade",
+            "upgrade",
+        ):
+            conn.execute(statement)
+        conn.commit()
+        triggers = {
+            row["tgname"]
+            for row in conn.execute(
+                """
+                    SELECT tgname
+                      FROM pg_trigger
+                     WHERE NOT tgisinternal
+                       AND tgrelid IN (
+                         'asset_bundle_version'::regclass,
+                         'asset_bundle_evidence'::regclass
+                       )
+                    """
+            ).fetchall()
+        }
+        assert "trg_asset_bundle_status_event_required" in triggers
+        assert "trg_00_asset_bundle_evidence_statement_lock" in triggers
+        assert "trg_00_asset_bundle_evidence_parent_lock" in triggers
 
 
 def test_security_upgrade_backfills_validated_published_and_terminal_chains() -> None:
@@ -636,8 +693,7 @@ def test_security_upgrade_backfills_validated_published_and_terminal_chains() ->
                     for row in rows
                 )
                 assert all(
-                    row["evidence_revision"] == "sha256:" + "0" * 64
-                    for row in rows
+                    row["evidence_revision"] == "sha256:" + "0" * 64 for row in rows
                 )
 
 
@@ -693,9 +749,7 @@ def test_security_event_log_rejects_all_direct_tampering(registry_scope) -> None
                     ),
                 )
             conn.execute(
-                sql.SQL("ROLLBACK TO SAVEPOINT {}").format(
-                    sql.Identifier(savepoint)
-                )
+                sql.SQL("ROLLBACK TO SAVEPOINT {}").format(sql.Identifier(savepoint))
             )
             conn.execute(
                 sql.SQL("RELEASE SAVEPOINT {}").format(sql.Identifier(savepoint))
@@ -739,9 +793,10 @@ def test_store_transition_events_are_continuous_and_restart_durable(
 
     events = published["lifecycleEvents"]
     assert [event["sequence"] for event in events] == [1, 2]
-    assert [
-        (event["fromStatus"], event["toStatus"]) for event in events
-    ] == [("draft", "validated"), ("validated", "published")]
+    assert [(event["fromStatus"], event["toStatus"]) for event in events] == [
+        ("draft", "validated"),
+        ("validated", "published"),
+    ]
     assert [event["actor"] for event in events] == [
         "validator:test",
         "publisher:test",
@@ -753,9 +808,12 @@ def test_store_transition_events_are_continuous_and_restart_durable(
     )
 
     restarted = PostgresRegistryStore(scoped_connect)
-    assert restarted.get_version(
-        "solution.audit-durable", "1.0.0", "aos"
-    )["lifecycleEvents"] == events
+    assert (
+        restarted.get_version("solution.audit-durable", "1.0.0", "aos")[
+            "lifecycleEvents"
+        ]
+        == events
+    )
 
 
 def test_concurrent_publish_allows_exactly_one_transition(registry_scope) -> None:
@@ -828,14 +886,23 @@ def test_security_downgrade_blocks_nonempty_log_and_allows_empty_log(
             for statement in downgrade_statements:
                 conn.execute(statement)
         conn.rollback()
-        assert conn.execute(
-            "SELECT to_regclass('asset_bundle_version_event') AS relation"
-        ).fetchone()["relation"] == "asset_bundle_version_event"
+        assert (
+            conn.execute(
+                "SELECT to_regclass('asset_bundle_version_event') AS relation"
+            ).fetchone()["relation"]
+            == "asset_bundle_version_event"
+        )
 
     with (
         _isolated_schema(_upgrade_statements()) as empty_scoped_connect,
         empty_scoped_connect() as conn,
     ):
+        for statement in _migration_statements(
+            INVARIANTS_MIGRATION_PATH,
+            "registry_invariants_downgrade_empty",
+            "downgrade",
+        ):
+            conn.execute(statement)
         for statement in _migration_statements(
             SECURITY_MIGRATION_PATH,
             "registry_security_downgrade_empty",
@@ -843,12 +910,18 @@ def test_security_downgrade_blocks_nonempty_log_and_allows_empty_log(
         ):
             conn.execute(statement)
         conn.commit()
-        assert conn.execute(
-            "SELECT to_regclass('asset_bundle_version_event') AS relation"
-        ).fetchone()["relation"] is None
-        assert conn.execute(
-            "SELECT to_regclass('asset_bundle_version') AS relation"
-        ).fetchone()["relation"] == "asset_bundle_version"
+        assert (
+            conn.execute(
+                "SELECT to_regclass('asset_bundle_version_event') AS relation"
+            ).fetchone()["relation"]
+            is None
+        )
+        assert (
+            conn.execute(
+                "SELECT to_regclass('asset_bundle_version') AS relation"
+            ).fetchone()["relation"]
+            == "asset_bundle_version"
+        )
 
 
 def test_status_transition_requires_matching_event_at_commit(registry_scope) -> None:
@@ -878,9 +951,12 @@ def test_status_transition_requires_matching_event_at_commit(registry_scope) -> 
             (version_pk,),
         ).fetchone()
         assert row["status"] == "draft"
-        assert conn.execute(
-            "SELECT count(*) AS count FROM asset_bundle_version_event"
-        ).fetchone()["count"] == 0
+        assert (
+            conn.execute(
+                "SELECT count(*) AS count FROM asset_bundle_version_event"
+            ).fetchone()["count"]
+            == 0
+        )
 
         conn.execute(
             "UPDATE asset_bundle_version SET status = 'validated' "
@@ -975,9 +1051,7 @@ def test_projection_insert_cannot_land_after_concurrent_publish(
             "SELECT version_pk FROM asset_bundle_version"
         ).fetchone()["version_pk"]
         count_before = conn.execute(
-            sql.SQL("SELECT count(*) AS count FROM {}").format(
-                sql.Identifier(table)
-            )
+            sql.SQL("SELECT count(*) AS count FROM {}").format(sql.Identifier(table))
         ).fetchone()["count"]
 
     publish_has_lock = Event()
@@ -1017,11 +1091,14 @@ def test_projection_insert_cannot_land_after_concurrent_publish(
     assert published["status"] == "published"
     assert [event["sequence"] for event in published["lifecycleEvents"]] == [1, 2]
     with scoped_connect() as conn:
-        assert conn.execute(
-            sql.SQL("SELECT count(*) AS count FROM {}").format(
-                sql.Identifier(table)
-            )
-        ).fetchone()["count"] == count_before
+        assert (
+            conn.execute(
+                sql.SQL("SELECT count(*) AS count FROM {}").format(
+                    sql.Identifier(table)
+                )
+            ).fetchone()["count"]
+            == count_before
+        )
 
 
 @pytest.mark.parametrize(
