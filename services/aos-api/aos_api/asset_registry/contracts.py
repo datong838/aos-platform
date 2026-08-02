@@ -494,6 +494,24 @@ class BundleManifest(StrictContract):
             ]
         ):
             raise ValueError("bundle cannot depend on or conflict with itself")
+
+        required = [dependency_key(item) for item in self.spec.dependencies]
+        optional = [dependency_key(item) for item in self.spec.optional_dependencies]
+        conflicts = [dependency_key(item) for item in self.spec.conflicts]
+        if len(required) != len(set(required)):
+            raise ValueError(
+                "required dependencies must be unique after publisher inheritance"
+            )
+        if len(optional) != len(set(optional)):
+            raise ValueError(
+                "optional dependencies must be unique after publisher inheritance"
+            )
+        if set(required).intersection(optional):
+            raise ValueError(
+                "a dependency cannot be both required and optional after publisher inheritance"
+            )
+        if len(conflicts) != len(set(conflicts)):
+            raise ValueError("conflicts must be unique after publisher inheritance")
         return self
 
 

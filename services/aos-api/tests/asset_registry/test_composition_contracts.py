@@ -136,12 +136,12 @@ def _resolved_bundle_payload() -> dict:
     }
 
 
-def _manifest(*, version: str) -> dict:
+def _manifest(*, version: str, bundle_id: str = "solution.example") -> dict:
     return {
         "apiVersion": "aos.dev/v1alpha1",
         "kind": "SolutionPack",
         "metadata": {
-            "id": "solution.example",
+            "id": bundle_id,
             "version": version,
             "displayName": "Example",
             "publisher": "aos",
@@ -163,18 +163,34 @@ def _manifest(*, version: str) -> dict:
     }
 
 
-def _candidate(version: str) -> RegistrySnapshotCandidate:
-    return RegistrySnapshotCandidate.model_validate(_candidate_payload(version))
+def _candidate(
+    version: str,
+    *,
+    bundle_id: str = "solution.example",
+    content_hash: str = SHA_A,
+) -> RegistrySnapshotCandidate:
+    return RegistrySnapshotCandidate.model_validate(
+        _candidate_payload(
+            version,
+            bundle_id=bundle_id,
+            content_hash=content_hash,
+        )
+    )
 
 
-def _candidate_payload(version: str) -> dict:
+def _candidate_payload(
+    version: str,
+    *,
+    bundle_id: str = "solution.example",
+    content_hash: str = SHA_A,
+) -> dict:
     return {
         "publisher": "aos",
-        "id": "solution.example",
+        "id": bundle_id,
         "version": version,
         "kind": "SolutionPack",
-        "manifest": _manifest(version=version),
-        "contentHash": SHA_A,
+        "manifest": _manifest(version=version, bundle_id=bundle_id),
+        "contentHash": content_hash,
         "signatureFingerprint": SHA_B,
         "releaseEvidenceRevision": SHA_C,
         "dependencies": [],
@@ -185,6 +201,14 @@ def _candidate_payload(version: str) -> dict:
         "migration": {"planRef": None, "downgradePolicy": "retain-canonical"},
         "contributions": [],
     }
+
+
+@pytest.fixture(scope="module")
+def unique_snapshot_candidates() -> list[RegistrySnapshotCandidate]:
+    return [
+        _candidate("1.0.0", bundle_id=f"solution.example-{index}")
+        for index in range(MAX_SNAPSHOT_CANDIDATES + 1)
+    ]
 
 
 def test_composition_request_is_strict_alias_only_and_requires_publisher() -> None:
@@ -310,24 +334,45 @@ def test_registry_snapshot_sorts_semver_and_has_exact_hash_payload_dump() -> Non
     "size",
     [MAX_SNAPSHOT_CANDIDATES - 1, MAX_SNAPSHOT_CANDIDATES],
 )
-def test_snapshot_candidate_max_minus_one_and_max_are_accepted(size: int) -> None:
-    candidate = _candidate("1.0.0")
+def test_snapshot_candidate_max_minus_one_and_max_are_accepted(
+    size: int,
+    unique_snapshot_candidates: list[RegistrySnapshotCandidate],
+) -> None:
     snapshot = RegistrySnapshot.build(
-        candidates=[candidate] * size,
+        candidates=unique_snapshot_candidates[:size],
         checked_at=datetime.now(UTC),
     )
     assert len(snapshot.candidates) == size
 
 
-def test_snapshot_candidate_max_plus_one_is_rejected() -> None:
-    candidate = _candidate("1.0.0")
+def test_snapshot_candidate_max_plus_one_is_rejected(
+    unique_snapshot_candidates: list[RegistrySnapshotCandidate],
+) -> None:
     with pytest.raises(ValidationError):
         RegistrySnapshot.model_validate(
             {
-                "candidates": [candidate] * (MAX_SNAPSHOT_CANDIDATES + 1),
+                "candidates": unique_snapshot_candidates,
                 "snapshotHash": SHA_D,
                 "checkedAt": datetime.now(UTC),
             }
+        )
+
+
+def test_snapshot_rejects_duplicate_coordinate_version_even_if_content_differs() -> (
+    None
+):
+    candidate = _candidate("1.0.0")
+    with pytest.raises(ValidationError, match="candidate coordinates must be unique"):
+        RegistrySnapshot.build(
+            candidates=[candidate, candidate],
+            checked_at=datetime.now(UTC),
+        )
+
+    changed_content = _candidate("1.0.0", content_hash=SHA_D)
+    with pytest.raises(ValidationError, match="candidate coordinates must be unique"):
+        RegistrySnapshot.build(
+            candidates=[candidate, changed_content],
+            checked_at=datetime.now(UTC),
         )
 
 
@@ -405,6 +450,12 @@ def test_snapshot_candidate_indexes_cannot_diverge_from_signed_manifest() -> Non
         forged[field] = forged_value
         with pytest.raises(ValidationError, match="derived from signed manifest"):
             RegistrySnapshotCandidate.model_validate(forged)
+
+    for field in ("dependencies", "optionalDependencies", "conflicts"):
+        duplicate = deepcopy(payload)
+        duplicate[field].append(deepcopy(duplicate[field][0]))
+        with pytest.raises(ValidationError, match="candidate .* must be unique"):
+            RegistrySnapshotCandidate.model_validate(duplicate)
 
 
 def test_permission_sets_sort_and_diff_semantics_fail_closed() -> None:

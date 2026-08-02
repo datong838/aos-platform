@@ -216,6 +216,56 @@ def test_dependencies_are_unique_disjoint_and_not_self_referential() -> None:
         BundleManifest.model_validate(self_reference)
 
 
+def test_publisher_inheritance_cannot_bypass_dependency_uniqueness() -> None:
+    required = _manifest()
+    required["spec"]["dependencies"].append(
+        {
+            "publisher": "aos",
+            "id": "domain.foundation",
+            "version": "^2.0.0",
+        }
+    )
+    with pytest.raises(
+        ValidationError,
+        match="required dependencies must be unique after publisher inheritance",
+    ):
+        BundleManifest.model_validate(required)
+
+    optional = _manifest()
+    optional["spec"]["optionalDependencies"].append(
+        {"id": "plugin.search", "version": "^2.1.0"}
+    )
+    with pytest.raises(
+        ValidationError,
+        match="optional dependencies must be unique after publisher inheritance",
+    ):
+        BundleManifest.model_validate(optional)
+
+    conflicts = _manifest()
+    conflicts["spec"]["conflicts"].append(
+        {"publisher": "aos", "id": "solution.legacy", "version": "<2.0.0"}
+    )
+    with pytest.raises(
+        ValidationError,
+        match="conflicts must be unique after publisher inheritance",
+    ):
+        BundleManifest.model_validate(conflicts)
+
+    overlap = _manifest()
+    overlap["spec"]["optionalDependencies"] = [
+        {
+            "publisher": "aos",
+            "id": "domain.foundation",
+            "version": "^1.0.0",
+        }
+    ]
+    with pytest.raises(
+        ValidationError,
+        match="both required and optional after publisher inheritance",
+    ):
+        BundleManifest.model_validate(overlap)
+
+
 def test_capabilities_permissions_and_export_paths_are_not_silently_normalized() -> (
     None
 ):

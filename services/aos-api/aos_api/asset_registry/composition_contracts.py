@@ -401,6 +401,21 @@ class RegistrySnapshotCandidate(StrictContract):
             "contributions",
             sorted(self.contributions, key=contribution_sort_key),
         )
+        _require_unique(
+            self.dependencies,
+            keys=[(item.publisher, item.id) for item in self.dependencies],
+            label="candidate dependencies",
+        )
+        _require_unique(
+            self.optional_dependencies,
+            keys=[(item.publisher, item.id) for item in self.optional_dependencies],
+            label="candidate optional dependencies",
+        )
+        _require_unique(
+            self.conflicts,
+            keys=[(item.publisher, item.id) for item in self.conflicts],
+            label="candidate conflicts",
+        )
 
         spec = self.manifest.spec
         expected_dependencies = sorted(
@@ -508,6 +523,11 @@ class RegistrySnapshot(StrictContract):
             self,
             "candidates",
             sorted(self.candidates, key=registry_candidate_sort_key),
+        )
+        _require_unique(
+            self.candidates,
+            keys=[(item.publisher, item.id, item.version) for item in self.candidates],
+            label="registry snapshot candidate coordinates",
         )
         if self.snapshot_hash != canonical_sha256(self.hash_payload_dump()):
             raise ValueError("snapshotHash does not match canonical snapshot payload")
