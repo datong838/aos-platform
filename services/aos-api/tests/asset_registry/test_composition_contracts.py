@@ -24,13 +24,16 @@ from aos_api.asset_registry.composition_contracts import (
     ApproveInstallationRequest,
     CompositionLockPayload,
     CompositionRequest,
+    ContributionDiff,
     CurrentInstallationRef,
     DependencyConflictDetails,
     EmptyInstallationActionRequest,
     InstallationEvent,
+    InstallationListItem,
     InstallationListResponse,
     InstallationRecord,
     InstallationRevision,
+    MigrationPlanDiff,
     PermissionDiff,
     PermissionSet,
     RegistrySnapshot,
@@ -102,7 +105,7 @@ def _lock_payload() -> CompositionLockPayload:
             "resolverVersion": RESOLVER_VERSION,
             "request": request.lock_request(),
             "registrySnapshotHash": SHA_A,
-            "resolved": [],
+            "resolved": [_resolved_bundle_payload()],
             "edges": [],
             "capabilityProviders": [],
             "permissionDiff": _empty_permission_diff_payload(),
@@ -111,6 +114,26 @@ def _lock_payload() -> CompositionLockPayload:
             "currentInstallationRef": None,
         }
     )
+
+
+def _resolved_bundle_payload() -> dict:
+    return {
+        "publisher": "aos",
+        "id": "solution.example",
+        "version": "1.0.0",
+        "kind": "SolutionPack",
+        "contentHash": SHA_A,
+        "signatureFingerprint": SHA_B,
+        "releaseEvidenceRevision": SHA_C,
+        "dependencies": [],
+        "optionalDependencies": [],
+        "conflicts": [],
+        "capabilities": {"provides": [], "requires": []},
+        "permissions": _empty_permission_payload(),
+        "migration": {"planRef": None, "downgradePolicy": "retain-canonical"},
+        "contributions": [],
+        "selectionReason": "requested",
+    }
 
 
 def _manifest(*, version: str) -> dict:
@@ -406,6 +429,107 @@ def test_permission_sets_sort_and_diff_semantics_fail_closed() -> None:
         PermissionDiff.model_validate(invalid)
 
 
+def _migration_step(bundle_id: str, version: str, plan_ref: str) -> dict:
+    return {
+        "publisher": "aos",
+        "id": bundle_id,
+        "version": version,
+        "planRef": plan_ref,
+        "downgradePolicy": "retain-canonical",
+    }
+
+
+def test_migration_diff_is_exactly_derived_by_bundle_coordinate() -> None:
+    removed = _migration_step("pack.removed", "1.0.0", "migrations/old.json")
+    before = _migration_step("pack.changed", "1.0.0", "migrations/v1.json")
+    after = _migration_step("pack.changed", "2.0.0", "migrations/v2.json")
+    added = _migration_step("pack.added", "1.0.0", "migrations/new.json")
+    payload = {
+        "baseline": [before, removed],
+        "target": [added, after],
+        "added": [added],
+        "removed": [removed],
+        "changed": [
+            {
+                "publisher": "aos",
+                "id": "pack.changed",
+                "before": before,
+                "after": after,
+            }
+        ],
+    }
+    diff = MigrationPlanDiff.model_validate(payload)
+    assert [item.id for item in diff.added] == ["pack.added"]
+    assert [item.id for item in diff.removed] == ["pack.removed"]
+    assert [item.id for item in diff.changed] == ["pack.changed"]
+
+    for field in ("added", "removed", "changed"):
+        forged = deepcopy(payload)
+        forged[field] = []
+        with pytest.raises(
+            ValidationError, match=f"migration {field} set is inconsistent"
+        ):
+            MigrationPlanDiff.model_validate(forged)
+
+    duplicate_coordinate = deepcopy(payload)
+    duplicate_coordinate["baseline"].append(
+        _migration_step("pack.changed", "1.1.0", "migrations/v1-1.json")
+    )
+    with pytest.raises(ValidationError, match="migration baseline must be unique"):
+        MigrationPlanDiff.model_validate(duplicate_coordinate)
+
+
+def _contribution_binding(binding_id: str, claim_id: str) -> dict:
+    return {
+        "publisher": "aos",
+        "id": binding_id,
+        "version": "1.0.0",
+        "claim": {
+            "kind": "ui",
+            "slot": "order.detail.actions",
+            "id": claim_id,
+            "mode": "shared",
+        },
+    }
+
+
+def test_contribution_diff_is_exact_canonical_binding_set_math() -> None:
+    removed = _contribution_binding("pack.removed", "remove-action")
+    unchanged = _contribution_binding("pack.common", "common-action")
+    added = _contribution_binding("pack.added", "add-action")
+    payload = {
+        "baseline": [unchanged, removed],
+        "target": [added, unchanged],
+        "added": [added],
+        "removed": [removed],
+        "unchanged": [unchanged],
+    }
+    diff = ContributionDiff.model_validate(payload)
+    assert [item.id for item in diff.added] == ["pack.added"]
+    assert [item.id for item in diff.removed] == ["pack.removed"]
+    assert [item.id for item in diff.unchanged] == ["pack.common"]
+
+    for field in ("added", "removed", "unchanged"):
+        forged = deepcopy(payload)
+        forged[field] = []
+        with pytest.raises(
+            ValidationError,
+            match=f"contribution {field} set is inconsistent",
+        ):
+            ContributionDiff.model_validate(forged)
+
+    mode_changed = deepcopy(payload)
+    changed_binding = deepcopy(unchanged)
+    changed_binding["claim"]["mode"] = "exclusive"
+    mode_changed["target"] = [added, changed_binding]
+    mode_changed["added"] = [added, changed_binding]
+    mode_changed["removed"] = [removed, unchanged]
+    with pytest.raises(
+        ValidationError, match="contribution unchanged set is inconsistent"
+    ):
+        ContributionDiff.model_validate(mode_changed)
+
+
 def test_lock_payload_preserves_null_and_excludes_client_preconditions() -> None:
     payload = _lock_payload()
     dumped = payload.hash_payload_dump()
@@ -425,8 +549,30 @@ def test_lock_payload_preserves_null_and_excludes_client_preconditions() -> None
     assert dumped["currentInstallationRef"] is None
     assert "registrySnapshotHash" not in dumped["request"]
     assert "currentInstallationRef" not in dumped["request"]
-    assert dumped["resolved"] == []
+    assert len(dumped["resolved"]) == 1
     assert dumped["permissionDiff"] == _empty_permission_diff_payload()
+
+
+def test_lock_requires_resolved_bundle_but_does_not_cap_capability_count_at_512() -> (
+    None
+):
+    empty = _lock_payload().model_dump(mode="python", by_alias=True)
+    empty["resolved"] = []
+    with pytest.raises(ValidationError):
+        CompositionLockPayload.model_validate(empty)
+
+    many_capabilities = _lock_payload().model_dump(mode="python", by_alias=True)
+    many_capabilities["capabilityProviders"] = [
+        {
+            "capability": f"capability.{index}",
+            "publisher": "aos",
+            "id": "solution.example",
+            "version": "1.0.0",
+        }
+        for index in range(MAX_RESOLVED_NODES + 1)
+    ]
+    payload = CompositionLockPayload.model_validate(many_capabilities)
+    assert len(payload.capability_providers) == MAX_RESOLVED_NODES + 1
 
 
 def test_stored_lock_recomputes_lock_and_all_three_diff_hashes() -> None:
@@ -514,6 +660,102 @@ def test_installation_action_and_revision_contracts_are_strict() -> None:
         )
 
 
+def _list_item_payload(
+    *,
+    state: str,
+    current_revision: int,
+    active_revision: int | None,
+    previous_active_revision: int | None,
+    etag_version: int | None = None,
+) -> dict:
+    created = datetime(2026, 8, 3, 1, tzinfo=UTC)
+    return {
+        "installationId": INSTALLATION_ID,
+        "displayName": "Example",
+        "state": state,
+        "currentRevision": current_revision,
+        "activeRevision": active_revision,
+        "previousActiveRevision": previous_active_revision,
+        "etagVersion": etag_version or current_revision,
+        "createdAt": created,
+        "updatedAt": created,
+    }
+
+
+def test_installation_list_item_etag_and_state_pointers_fail_closed() -> None:
+    active = InstallationListItem.model_validate(
+        _list_item_payload(
+            state="active",
+            current_revision=6,
+            active_revision=6,
+            previous_active_revision=3,
+        )
+    )
+    assert active.etag_version == active.current_revision
+
+    rolled_back = InstallationListItem.model_validate(
+        _list_item_payload(
+            state="rolled_back",
+            current_revision=7,
+            active_revision=3,
+            previous_active_revision=3,
+        )
+    )
+    assert rolled_back.active_revision == 3
+    rolled_back_to_empty = InstallationListItem.model_validate(
+        _list_item_payload(
+            state="rolled_back",
+            current_revision=7,
+            active_revision=None,
+            previous_active_revision=None,
+        )
+    )
+    assert rolled_back_to_empty.active_revision is None
+
+    invalid_payloads = [
+        _list_item_payload(
+            state="submitted",
+            current_revision=2,
+            active_revision=None,
+            previous_active_revision=None,
+            etag_version=3,
+        ),
+        _list_item_payload(
+            state="applied",
+            current_revision=5,
+            active_revision=4,
+            previous_active_revision=None,
+        ),
+        _list_item_payload(
+            state="active",
+            current_revision=6,
+            active_revision=5,
+            previous_active_revision=None,
+        ),
+        _list_item_payload(
+            state="active",
+            current_revision=6,
+            active_revision=6,
+            previous_active_revision=6,
+        ),
+        _list_item_payload(
+            state="rolled_back",
+            current_revision=7,
+            active_revision=7,
+            previous_active_revision=None,
+        ),
+        _list_item_payload(
+            state="rolled_back",
+            current_revision=7,
+            active_revision=3,
+            previous_active_revision=None,
+        ),
+    ]
+    for payload in invalid_payloads:
+        with pytest.raises(ValidationError):
+            InstallationListItem.model_validate(payload)
+
+
 def test_installation_record_sorts_events_and_list_uses_frozen_order() -> None:
     created = datetime(2026, 8, 3, 1, tzinfo=UTC)
     revision_payload = _revision(state="submitted", revision=2, decision_id=None)
@@ -567,6 +809,179 @@ def test_installation_record_sorts_events_and_list_uses_frozen_order() -> None:
         {"items": [record], "total": 1, "limit": 50, "offset": 0}
     )
     assert listed.items[0].installation_id == INSTALLATION_ID
+
+    sequence_gap = record.model_dump(mode="python", by_alias=True)
+    sequence_gap["events"][1]["sequence"] = 3
+    with pytest.raises(ValidationError, match="start at 1 and be continuous"):
+        InstallationRecord.model_validate(sequence_gap)
+
+    stale_tail = record.model_dump(mode="python", by_alias=True)
+    stale_tail["events"][1]["toRevision"] = 1
+    with pytest.raises(ValidationError, match="history is not continuous"):
+        InstallationRecord.model_validate(stale_tail)
+
+    incomplete = record.model_dump(mode="python", by_alias=True)
+    incomplete["events"] = incomplete["events"][:1]
+    with pytest.raises(ValidationError, match="event count must equal"):
+        InstallationRecord.model_validate(incomplete)
+
+
+def _approved_record_payload() -> dict:
+    created = datetime(2026, 8, 3, 1, tzinfo=UTC)
+    current = _revision(state="approved", revision=3, decision_id=DECISION_ID)
+    current["createdAt"] = created
+    decision = {
+        "decisionId": DECISION_ID,
+        "installationId": INSTALLATION_ID,
+        "submittedRevision": 2,
+        "decision": "approved",
+        "actor": "reviewer",
+        "lockHash": SHA_A,
+        "permissionDiffHash": SHA_B,
+        "migrationPlanHash": SHA_C,
+        "contributionDiffHash": SHA_D,
+        "reason": None,
+        "createdAt": created,
+    }
+    events = [
+        {
+            "sequence": 1,
+            "fromRevision": None,
+            "toRevision": 1,
+            "fromState": None,
+            "toState": "draft",
+            "actor": "requester",
+            "reason": None,
+            "evidence": None,
+            "createdAt": created,
+        },
+        {
+            "sequence": 2,
+            "fromRevision": 1,
+            "toRevision": 2,
+            "fromState": "draft",
+            "toState": "submitted",
+            "actor": "requester",
+            "reason": None,
+            "evidence": None,
+            "createdAt": created,
+        },
+        {
+            "sequence": 3,
+            "fromRevision": 2,
+            "toRevision": 3,
+            "fromState": "submitted",
+            "toState": "approved",
+            "actor": "reviewer",
+            "reason": None,
+            "evidence": None,
+            "createdAt": created,
+        },
+    ]
+    return {
+        **_list_item_payload(
+            state="approved",
+            current_revision=3,
+            active_revision=None,
+            previous_active_revision=None,
+        ),
+        "current": current,
+        "decision": decision,
+        "events": events,
+    }
+
+
+def _append_installation_state(payload: dict, state: str) -> dict:
+    updated = deepcopy(payload)
+    previous_revision = updated["currentRevision"]
+    previous_state = updated["state"]
+    revision = previous_revision + 1
+    updated["state"] = state
+    updated["currentRevision"] = revision
+    updated["etagVersion"] = revision
+    updated["current"]["revision"] = revision
+    updated["current"]["parentRevision"] = previous_revision
+    updated["current"]["state"] = state
+    if state == "active":
+        updated["activeRevision"] = revision
+        updated["previousActiveRevision"] = None
+    elif state == "rolled_back":
+        updated["activeRevision"] = updated["previousActiveRevision"]
+    updated["events"].append(
+        {
+            "sequence": revision,
+            "fromRevision": previous_revision,
+            "toRevision": revision,
+            "fromState": previous_state,
+            "toState": state,
+            "actor": "operator",
+            "reason": None,
+            "evidence": None,
+            "createdAt": updated["createdAt"],
+        }
+    )
+    return updated
+
+
+def test_installation_record_decision_identity_hash_state_and_event_tail() -> None:
+    payload = _approved_record_payload()
+    record = InstallationRecord.model_validate(payload)
+    assert record.decision is not None
+    assert record.decision.decision == "approved"
+    assert record.events[-1].to_revision == record.current_revision
+
+    applied = _append_installation_state(payload, "applied")
+    active = _append_installation_state(applied, "active")
+    rolled_back = _append_installation_state(active, "rolled_back")
+    assert InstallationRecord.model_validate(applied).state == "applied"
+    assert InstallationRecord.model_validate(active).state == "active"
+    assert InstallationRecord.model_validate(rolled_back).state == "rolled_back"
+
+    rejected_record = deepcopy(payload)
+    rejected_record["state"] = "rejected"
+    rejected_record["current"]["state"] = "rejected"
+    rejected_record["decision"]["decision"] = "rejected"
+    rejected_record["decision"]["reason"] = "not approved"
+    rejected_record["events"][-1]["toState"] = "rejected"
+    assert InstallationRecord.model_validate(rejected_record).state == "rejected"
+
+    mutations = [
+        ("installationId", "44444444-4444-4444-8444-44444444abcd"),
+        ("decisionId", "55555555-5555-4555-8555-55555555abcd"),
+        ("lockHash", SHA_D),
+        ("permissionDiffHash", SHA_D),
+        ("migrationPlanHash", SHA_D),
+        ("contributionDiffHash", SHA_A),
+        ("actor", "requester"),
+    ]
+    for field, value in mutations:
+        forged = deepcopy(payload)
+        forged["decision"][field] = value
+        with pytest.raises(ValidationError):
+            InstallationRecord.model_validate(forged)
+
+    rejected = deepcopy(payload)
+    rejected["decision"]["decision"] = "rejected"
+    rejected["decision"]["reason"] = "not approved"
+    with pytest.raises(ValidationError, match="inconsistent with current state"):
+        InstallationRecord.model_validate(rejected)
+
+    missing_submitted_event = deepcopy(payload)
+    missing_submitted_event["decision"]["submittedRevision"] = 1
+    with pytest.raises(ValidationError, match="submitted event"):
+        InstallationRecord.model_validate(missing_submitted_event)
+
+    stale_tail = deepcopy(payload)
+    stale_tail["events"][-1]["toState"] = "rejected"
+    with pytest.raises(ValidationError, match="event tail must match"):
+        InstallationRecord.model_validate(stale_tail)
+
+    state_jump = deepcopy(payload)
+    state_jump["state"] = "applied"
+    state_jump["current"]["state"] = "applied"
+    state_jump["events"][-1]["toState"] = "applied"
+    with pytest.raises(ValidationError, match="invalid state transition"):
+        InstallationRecord.model_validate(state_jump)
 
 
 def test_all_frozen_resource_limit_constants_are_exact() -> None:

@@ -967,6 +967,10 @@ def migration_step_sort_key(step: MigrationStep) -> tuple[str, ...]:
     return (step.publisher, step.id, step.version, step.plan_ref)
 
 
+def _migration_coordinate(step: MigrationStep) -> tuple[str, str]:
+    return (step.publisher, step.id)
+
+
 class MigrationChange(StrictContract):
     publisher: str = Field(
         max_length=MAX_PUBLISHER_ID_LENGTH, pattern=BUNDLE_ID_PATTERN
@@ -996,12 +1000,12 @@ class MigrationPlanDiff(StrictContract):
     changed: list[MigrationChange]
 
     @model_validator(mode="after")
-    def _lists_are_sorted(self) -> MigrationPlanDiff:
+    def _diff_is_derived_and_sorted(self) -> MigrationPlanDiff:
         for field_name in ("baseline", "target", "added", "removed"):
             values = getattr(self, field_name)
             _require_unique(
                 values,
-                keys=[migration_step_sort_key(item) for item in values],
+                keys=[_migration_coordinate(item) for item in values],
                 label=f"migration {field_name}",
             )
             object.__setattr__(
@@ -1019,6 +1023,38 @@ class MigrationPlanDiff(StrictContract):
             "changed",
             sorted(self.changed, key=lambda item: (item.publisher, item.id)),
         )
+
+        baseline = {_migration_coordinate(item): item for item in self.baseline}
+        target = {_migration_coordinate(item): item for item in self.target}
+        expected_added = {
+            coordinate: target[coordinate]
+            for coordinate in target.keys() - baseline.keys()
+        }
+        expected_removed = {
+            coordinate: baseline[coordinate]
+            for coordinate in baseline.keys() - target.keys()
+        }
+        expected_changed = {
+            coordinate: MigrationChange.model_validate(
+                {
+                    "publisher": coordinate[0],
+                    "id": coordinate[1],
+                    "before": baseline[coordinate],
+                    "after": target[coordinate],
+                }
+            )
+            for coordinate in baseline.keys() & target.keys()
+            if baseline[coordinate] != target[coordinate]
+        }
+        actual_added = {_migration_coordinate(item): item for item in self.added}
+        actual_removed = {_migration_coordinate(item): item for item in self.removed}
+        actual_changed = {(item.publisher, item.id): item for item in self.changed}
+        if actual_added != expected_added:
+            raise ValueError("migration added set is inconsistent")
+        if actual_removed != expected_removed:
+            raise ValueError("migration removed set is inconsistent")
+        if actual_changed != expected_changed:
+            raise ValueError("migration changed set is inconsistent")
         return self
 
 
@@ -1051,6 +1087,10 @@ def contribution_binding_sort_key(
     )
 
 
+def _contribution_binding_identity(binding: ContributionBinding) -> bytes:
+    return canonical_json(_model_payload(binding))
+
+
 class ContributionDiff(StrictContract):
     baseline: list[ContributionBinding]
     target: list[ContributionBinding]
@@ -1059,18 +1099,10 @@ class ContributionDiff(StrictContract):
     unchanged: list[ContributionBinding]
 
     @model_validator(mode="after")
-    def _lists_are_sorted(self) -> ContributionDiff:
+    def _diff_is_derived_and_sorted(self) -> ContributionDiff:
         for field_name in ("baseline", "target", "added", "removed", "unchanged"):
             values = getattr(self, field_name)
-            keys = [
-                (
-                    item.publisher,
-                    item.id,
-                    item.version,
-                    contribution_conflict_keys(item.claim),
-                )
-                for item in values
-            ]
+            keys = [_contribution_binding_identity(item) for item in values]
             _require_unique(
                 values,
                 keys=keys,
@@ -1081,6 +1113,25 @@ class ContributionDiff(StrictContract):
                 field_name,
                 sorted(values, key=contribution_binding_sort_key),
             )
+        baseline = {
+            _contribution_binding_identity(item): item for item in self.baseline
+        }
+        target = {_contribution_binding_identity(item): item for item in self.target}
+        expected_added = target.keys() - baseline.keys()
+        expected_removed = baseline.keys() - target.keys()
+        expected_unchanged = baseline.keys() & target.keys()
+        if {
+            _contribution_binding_identity(item) for item in self.added
+        } != expected_added:
+            raise ValueError("contribution added set is inconsistent")
+        if {
+            _contribution_binding_identity(item) for item in self.removed
+        } != expected_removed:
+            raise ValueError("contribution removed set is inconsistent")
+        if {
+            _contribution_binding_identity(item) for item in self.unchanged
+        } != expected_unchanged:
+            raise ValueError("contribution unchanged set is inconsistent")
         return self
 
 
@@ -1098,11 +1149,13 @@ class CompositionLockPayload(StrictContract):
         alias="registrySnapshotHash",
         pattern=SHA256_PATTERN,
     )
-    resolved: list[ResolvedBundle] = Field(max_length=MAX_RESOLVED_NODES)
+    resolved: list[ResolvedBundle] = Field(
+        min_length=1,
+        max_length=MAX_RESOLVED_NODES,
+    )
     edges: list[ResolvedEdge] = Field(max_length=MAX_DEPENDENCY_EDGES)
     capability_providers: list[CapabilityProvider] = Field(
         alias="capabilityProviders",
-        max_length=MAX_RESOLVED_NODES,
     )
     permission_diff: PermissionDiff = Field(alias="permissionDiff")
     migration_plan: MigrationPlanDiff = Field(alias="migrationPlan")
@@ -1235,6 +1288,16 @@ InstallationState = Literal[
     "active",
     "rolled_back",
 ]
+INSTALLATION_STATE_TRANSITIONS = frozenset(
+    {
+        ("draft", "submitted"),
+        ("submitted", "approved"),
+        ("submitted", "rejected"),
+        ("approved", "applied"),
+        ("applied", "active"),
+        ("active", "rolled_back"),
+    }
+)
 
 
 class CreateInstallationRequest(StrictContract):
@@ -1526,9 +1589,42 @@ class InstallationListItem(StrictContract):
         return _aware_datetime(value, label="installation timestamp")
 
     @model_validator(mode="after")
-    def _timestamps_are_ordered(self) -> InstallationListItem:
+    def _pointers_and_timestamps_are_consistent(self) -> InstallationListItem:
         if self.updated_at < self.created_at:
             raise ValueError("updatedAt must not precede createdAt")
+        if self.etag_version != self.current_revision:
+            raise ValueError("etagVersion must equal currentRevision")
+        for pointer_name in ("active_revision", "previous_active_revision"):
+            pointer = getattr(self, pointer_name)
+            if pointer is not None and pointer > self.current_revision:
+                raise ValueError(
+                    "installation revision pointer exceeds currentRevision"
+                )
+        pre_active_states = {
+            "draft",
+            "submitted",
+            "approved",
+            "rejected",
+            "applied",
+        }
+        if self.state in pre_active_states and (
+            self.active_revision is not None
+            or self.previous_active_revision is not None
+        ):
+            raise ValueError("pre-active installation cannot expose active pointers")
+        if self.state == "active" and self.active_revision != self.current_revision:
+            raise ValueError("active installation must point at currentRevision")
+        if (
+            self.state == "active"
+            and self.previous_active_revision is not None
+            and self.previous_active_revision >= self.current_revision
+        ):
+            raise ValueError("active previousRevision must precede currentRevision")
+        if self.state == "rolled_back":
+            if self.active_revision == self.current_revision:
+                raise ValueError("rolled-back installation cannot keep current active")
+            if self.active_revision != self.previous_active_revision:
+                raise ValueError("rollback must restore previousActiveRevision")
         return self
 
 
@@ -1555,12 +1651,88 @@ class InstallationRecord(InstallationListItem):
             or self.decision.decision_id != self.current.decision_id
         ):
             raise ValueError("record decision must match current decisionId")
+
+        if self.decision is not None:
+            decision = self.decision
+            if decision.installation_id != self.installation_id:
+                raise ValueError("record decision belongs to another installation")
+            if decision.submitted_revision >= self.current_revision:
+                raise ValueError(
+                    "decision must reference an earlier submitted revision"
+                )
+            current_hashes = (
+                self.current.lock_hash,
+                self.current.permission_diff_hash,
+                self.current.migration_plan_hash,
+                self.current.contribution_diff_hash,
+            )
+            decision_hashes = (
+                decision.lock_hash,
+                decision.permission_diff_hash,
+                decision.migration_plan_hash,
+                decision.contribution_diff_hash,
+            )
+            if decision_hashes != current_hashes:
+                raise ValueError("record decision hashes must match current revision")
+            if decision.actor == self.current.requested_by:
+                raise ValueError("record decision violates duty separation")
+            expected_decision = (
+                "rejected" if self.current.state == "rejected" else "approved"
+            )
+            if decision.decision != expected_decision:
+                raise ValueError("record decision is inconsistent with current state")
+
         object.__setattr__(
             self, "events", sorted(self.events, key=lambda item: item.sequence)
         )
         sequences = [item.sequence for item in self.events]
-        if len(sequences) != len(set(sequences)):
-            raise ValueError("installation event sequences must be unique")
+        if sequences != list(range(1, len(self.events) + 1)):
+            raise ValueError(
+                "installation event sequences must start at 1 and be continuous"
+            )
+        if not self.events:
+            raise ValueError("installation record requires complete events")
+        if len(self.events) != self.current_revision:
+            raise ValueError("complete event count must equal currentRevision")
+        first = self.events[0]
+        if (
+            first.from_revision is not None
+            or first.from_state is not None
+            or first.to_revision != 1
+            or first.to_state != "draft"
+        ):
+            raise ValueError(
+                "installation event history must begin with draft revision 1"
+            )
+        for previous, current in zip(self.events, self.events[1:]):
+            if (
+                current.from_revision != previous.to_revision
+                or current.from_state != previous.to_state
+                or current.to_revision != previous.to_revision + 1
+            ):
+                raise ValueError("installation event history is not continuous")
+            if (
+                previous.to_state,
+                current.to_state,
+            ) not in INSTALLATION_STATE_TRANSITIONS:
+                raise ValueError(
+                    "installation event contains an invalid state transition"
+                )
+        tail = self.events[-1]
+        if (
+            tail.to_revision != self.current_revision
+            or tail.to_state != self.current.state
+        ):
+            raise ValueError("installation event tail must match current revision")
+        if self.decision is not None:
+            submitted_events = [
+                item
+                for item in self.events
+                if item.to_revision == self.decision.submitted_revision
+                and item.to_state == "submitted"
+            ]
+            if len(submitted_events) != 1:
+                raise ValueError("decision must reference the submitted event")
         return self
 
 
