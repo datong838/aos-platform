@@ -97,8 +97,7 @@ class CreateVersionRequest(StrictRequest):
         min_length=1,
         max_length=1024,
     )
-    publisher: str | None = Field(
-        default=None,
+    publisher: str = Field(
         min_length=1,
         max_length=120,
         pattern=BUNDLE_ID_PATTERN,
@@ -127,8 +126,7 @@ class CreateVersionRequest(StrictRequest):
 
 
 class VersionActionRequest(StrictRequest):
-    publisher: str | None = Field(
-        default=None,
+    publisher: str = Field(
         min_length=1,
         max_length=120,
         pattern=BUNDLE_ID_PATTERN,
@@ -300,12 +298,12 @@ def validate_asset_bundle_version(
     version: VersionPath,
     principal: PrincipalDependency,
     service: RegistryServiceDependency,
-    request: Annotated[VersionActionRequest | None, Body()] = None,
+    request: Annotated[VersionActionRequest, Body()],
     publisher: PublisherQuery = None,
 ) -> dict[str, Any]:
     resolved_publisher = _resolve_publisher(
         query_publisher=publisher,
-        body_publisher=request.publisher if request is not None else None,
+        body_publisher=request.publisher,
     )
     return _invoke(
         lambda: service.validate(
@@ -325,12 +323,12 @@ def publish_asset_bundle_version(
     version: VersionPath,
     principal: PrincipalDependency,
     service: RegistryServiceDependency,
-    request: Annotated[VersionActionRequest | None, Body()] = None,
+    request: Annotated[VersionActionRequest, Body()],
     publisher: PublisherQuery = None,
 ) -> dict[str, Any]:
     resolved_publisher = _resolve_publisher(
         query_publisher=publisher,
-        body_publisher=request.publisher if request is not None else None,
+        body_publisher=request.publisher,
     )
     return _invoke(
         lambda: service.publish(
