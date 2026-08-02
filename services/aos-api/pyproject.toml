@@ -13,6 +13,7 @@ dependencies = [
   "PyJWT>=2.8.0",
   "qrcode>=7.4",
   "cryptography>=42.0",
+  "PyYAML>=6.0,<7.0",
   "semantic-version>=2.10,<3.0",
   "SQLAlchemy>=2.0.36,<3.0",
 ]
