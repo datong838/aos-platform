@@ -1,0 +1,331 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aos.dev/schemas/asset-bundles/bundle-manifest-v1alpha1.schema.json",
+  "title": "AOS Bundle Manifest v1alpha1",
+  "description": "Domain-neutral manifest for an immutable AOS asset bundle.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {
+      "const": "aos.dev/v1alpha1"
+    },
+    "kind": {
+      "$ref": "#/$defs/bundleKind"
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "spec": {
+      "$ref": "#/$defs/spec"
+    }
+  },
+  "$defs": {
+    "bundleKind": {
+      "type": "string",
+      "enum": [
+        "DomainPack",
+        "SolutionPack",
+        "VerticalPack",
+        "PlatformAdapterPack",
+        "PluginPack"
+      ]
+    },
+    "bundleId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    },
+    "publisher": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    },
+    "bundlePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!~)(?!.*\\\\)(?!.*://)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "displayName", "publisher", "license"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/bundleId"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "publisher": {
+          "$ref": "#/$defs/publisher"
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        }
+      }
+    },
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/bundleId"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "publisher": {
+          "$ref": "#/$defs/publisher"
+        }
+      }
+    },
+    "conflict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/bundleId"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "publisher": {
+          "$ref": "#/$defs/publisher"
+        }
+      }
+    },
+    "pathList": {
+      "type": "array",
+      "maxItems": 500,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/bundlePath"
+      }
+    },
+    "exports": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ontology": {
+          "$ref": "#/$defs/pathList"
+        },
+        "links": {
+          "$ref": "#/$defs/pathList"
+        },
+        "metrics": {
+          "$ref": "#/$defs/pathList"
+        },
+        "agents": {
+          "$ref": "#/$defs/pathList"
+        },
+        "logic": {
+          "$ref": "#/$defs/pathList"
+        },
+        "workshops": {
+          "$ref": "#/$defs/pathList"
+        },
+        "evals": {
+          "$ref": "#/$defs/pathList"
+        },
+        "policies": {
+          "$ref": "#/$defs/pathList"
+        },
+        "connectors": {
+          "$ref": "#/$defs/pathList"
+        },
+        "schemas": {
+          "$ref": "#/$defs/pathList"
+        },
+        "mappings": {
+          "$ref": "#/$defs/pathList"
+        },
+        "backend": {
+          "$ref": "#/$defs/pathList"
+        },
+        "ui": {
+          "$ref": "#/$defs/pathList"
+        }
+      }
+    },
+    "capabilityList": {
+      "type": "array",
+      "maxItems": 500,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provides", "requires"],
+      "properties": {
+        "provides": {
+          "$ref": "#/$defs/capabilityList"
+        },
+        "requires": {
+          "$ref": "#/$defs/capabilityList"
+        }
+      }
+    },
+    "permissionList": {
+      "type": "array",
+      "maxItems": 500,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 240
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["roles", "markings", "dataScopes", "actionTypes"],
+      "properties": {
+        "roles": {
+          "$ref": "#/$defs/permissionList"
+        },
+        "markings": {
+          "$ref": "#/$defs/permissionList"
+        },
+        "dataScopes": {
+          "$ref": "#/$defs/permissionList"
+        },
+        "actionTypes": {
+          "$ref": "#/$defs/permissionList"
+        }
+      }
+    },
+    "migrations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plan", "downgradePolicy"],
+      "properties": {
+        "plan": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/bundlePath"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "downgradePolicy": {
+          "const": "retain-canonical"
+        }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platformApi",
+        "dependencies",
+        "optionalDependencies",
+        "conflicts",
+        "exports",
+        "capabilities",
+        "permissions",
+        "migrations",
+        "preflight",
+        "regression",
+        "rollback"
+      ],
+      "properties": {
+        "platformApi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "dependencies": {
+          "type": "array",
+          "maxItems": 500,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/dependency"
+          }
+        },
+        "optionalDependencies": {
+          "type": "array",
+          "maxItems": 500,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/dependency"
+          }
+        },
+        "conflicts": {
+          "type": "array",
+          "maxItems": 500,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/conflict"
+          }
+        },
+        "exports": {
+          "$ref": "#/$defs/exports"
+        },
+        "capabilities": {
+          "$ref": "#/$defs/capabilities"
+        },
+        "permissions": {
+          "$ref": "#/$defs/permissions"
+        },
+        "migrations": {
+          "$ref": "#/$defs/migrations"
+        },
+        "preflight": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/bundlePath"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "regression": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/bundlePath"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rollback": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/bundlePath"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
