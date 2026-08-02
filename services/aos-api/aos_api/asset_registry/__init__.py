@@ -1,5 +1,6 @@
-"""Public contracts and errors for the domain-neutral asset registry."""
+"""Stable public API for the domain-neutral asset registry."""
 
+from aos_api.asset_registry.canonical_json import canonical_json, canonical_sha256
 from aos_api.asset_registry.contracts import (
     BUNDLE_API_VERSION,
     BUNDLE_ID_PATTERN,
@@ -43,6 +44,24 @@ from aos_api.asset_registry.errors import (
     VerificationFailedError,
     VersionInvalidError,
 )
+from aos_api.asset_registry.manifest_loader import ManifestLoader
+from aos_api.asset_registry.registry_service import BundleLoader, RegistryService
+from aos_api.asset_registry.registry_store import (
+    PostgresRegistryStore,
+    RegistryStore,
+)
+from aos_api.asset_registry.semver import (
+    SemVerError,
+    parse_range,
+    parse_version,
+    satisfies,
+    select_highest,
+)
+from aos_api.asset_registry.signature import (
+    TrustRoot,
+    TrustRootProvider,
+    verify_ed25519,
+)
 
 __all__ = [
     "BUNDLE_API_VERSION",
@@ -63,6 +82,7 @@ __all__ = [
     "BundleEvidenceType",
     "BundleExports",
     "BundleKind",
+    "BundleLoader",
     "BundleManifest",
     "BundleMetadata",
     "BundleMigrations",
@@ -78,10 +98,24 @@ __all__ = [
     "IdempotencyConflictError",
     "LoadedBundle",
     "ManifestInvalidError",
+    "ManifestLoader",
+    "PostgresRegistryStore",
     "PreflightFailedError",
+    "RegistryService",
+    "RegistryStore",
     "RevisionConflictError",
     "RollbackBlockedError",
+    "SemVerError",
     "SignatureInvalidError",
+    "TrustRoot",
+    "TrustRootProvider",
     "VerificationFailedError",
     "VersionInvalidError",
+    "canonical_json",
+    "canonical_sha256",
+    "parse_range",
+    "parse_version",
+    "satisfies",
+    "select_highest",
+    "verify_ed25519",
 ]
