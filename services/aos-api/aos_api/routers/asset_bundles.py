@@ -26,6 +26,9 @@ from aos_api.asset_registry.registry_store import PostgresRegistryStore
 from aos_api.asset_registry.signature import (
     TRUST_ROOTS_ENV,
     FileTrustRootProvider,
+    TrustRoot,
+    TrustRootConfigurationError,
+    TrustRootProvider,
 )
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
@@ -51,6 +54,18 @@ PublisherQuery = Annotated[
     str | None,
     Query(min_length=1, max_length=120, pattern=BUNDLE_ID_PATTERN),
 ]
+
+
+class _UnavailableTrustRootProvider:
+    """Deferred fail-closed provider that keeps read-only Registry APIs alive."""
+
+    def __init__(self, error: Exception) -> None:
+        self._error = error
+
+    def get_trust_root(self, *, publisher: str, key_id: str) -> TrustRoot | None:
+        raise TrustRootConfigurationError(
+            "trust-root configuration is unavailable"
+        ) from self._error
 
 
 class StrictRequest(BaseModel):
@@ -160,9 +175,12 @@ def get_asset_registry_service() -> RegistryService:
     if configured_root:
         allowlist_roots["server"] = Path(configured_root)
 
-    trust_roots = (
-        FileTrustRootProvider.from_environment() if os.getenv(TRUST_ROOTS_ENV) else None
-    )
+    trust_roots: TrustRootProvider | None = None
+    if os.getenv(TRUST_ROOTS_ENV):
+        try:
+            trust_roots = FileTrustRootProvider.from_environment()
+        except (TrustRootConfigurationError, TypeError, ValueError) as exc:
+            trust_roots = _UnavailableTrustRootProvider(exc)
     loader = ManifestLoader(allowlist_roots, trust_roots=trust_roots)
 
     return RegistryService(

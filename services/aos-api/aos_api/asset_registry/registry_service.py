@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Callable, Collection
+from copy import deepcopy
 from datetime import UTC, datetime
 from typing import Any, Protocol
 
@@ -28,6 +29,7 @@ from aos_api.asset_registry.errors import (
     DutySeparationRequiredError,
     ManifestInvalidError,
     SignatureInvalidError,
+    TrustRootUnavailableError,
     VerificationFailedError,
     VersionInvalidError,
 )
@@ -49,6 +51,7 @@ REQUIRED_RELEASE_EVIDENCE = (
     BundleEvidenceType.SBOM,
     BundleEvidenceType.BUNDLE_EVALS,
 )
+LEGACY_EVIDENCE_REVISION = "sha256:" + "0" * 64
 
 
 class BundleLoader(Protocol):
@@ -195,6 +198,7 @@ class RegistryService:
         )
         target = self._store.get_bundle(checked_bundle_id, checked_publisher)
         loaded = self._loader.load(source_ref)
+        _raise_for_trust_root_provider_outage(loaded)
         _assert_loaded_bundle_matches_target(loaded, target)
         _validate_manifest_versions(loaded.manifest)
         return self._store.create_version(loaded, actor)
@@ -213,10 +217,12 @@ class RegistryService:
             if publisher is not None
             else None
         )
-        return self._store.get_version(
-            checked_bundle_id,
-            checked_version,
-            checked_publisher,
+        return _public_version_projection(
+            self._store.get_version(
+                checked_bundle_id,
+                checked_version,
+                checked_publisher,
+            )
         )
 
     def validate(
@@ -410,6 +416,10 @@ class RegistryService:
             record = _VersionRecord.from_store(raw)
             _require_status(record.status, expected, action=action)
             checked_at = _checked_now(self._clock)
+            _probe_trust_root_provider(
+                record,
+                trust_roots=self._trust_roots,
+            )
             _assert_release_gate(record, checked_at=checked_at)
             _assert_current_signature(
                 record,
@@ -519,6 +529,46 @@ class _VersionRecord:
         return record
 
 
+def _public_version_projection(raw: dict[str, Any]) -> dict[str, Any]:
+    """Return globally readable Registry metadata without internal audit details."""
+
+    projected = deepcopy(raw)
+    evidence_rows = raw.get("evidence", [])
+    projected["evidence"] = [
+        {
+            key: item[key]
+            for key in (
+                "type",
+                "artifactHash",
+                "status",
+                "observedAt",
+                "expiresAt",
+                "revokedAt",
+            )
+            if key in item
+        }
+        for item in evidence_rows
+        if isinstance(item, dict)
+    ]
+    event_rows = raw.get("lifecycleEvents", [])
+    projected["lifecycleEvents"] = [
+        {
+            key: item[key]
+            for key in (
+                "sequence",
+                "fromStatus",
+                "toStatus",
+                "evidenceRevision",
+                "createdAt",
+            )
+            if key in item
+        }
+        for item in event_rows
+        if isinstance(item, dict)
+    ]
+    return projected
+
+
 def _parse_signature(raw: object) -> BundleSignature | None:
     if raw is None:
         return None
@@ -585,10 +635,33 @@ def _parse_lifecycle_events(raw: object) -> list[dict[str, Any]]:
             from_status = BundleVersionStatus(item["fromStatus"])
             to_status = BundleVersionStatus(item["toStatus"])
             actor = _require_exact_text(item["actor"], label="lifecycle actor")
+            evidence_revision = item["evidenceRevision"]
+            evidence_snapshot = item["evidenceSnapshot"]
         except (KeyError, TypeError, ValueError) as exc:
             raise ManifestInvalidError("stored lifecycle event is invalid") from exc
         if type(sequence) is not int or sequence != previous + 1:
             raise ManifestInvalidError("stored lifecycle event sequence is invalid")
+        if (
+            not isinstance(evidence_revision, str)
+            or re.fullmatch(SHA256_PATTERN, evidence_revision) is None
+            or (
+                evidence_snapshot is not None
+                and not isinstance(evidence_snapshot, list)
+            )
+        ):
+            raise ManifestInvalidError("stored lifecycle evidence snapshot is invalid")
+        if evidence_snapshot is not None:
+            try:
+                _parse_evidence(evidence_snapshot)
+                snapshot_revision = canonical_sha256(evidence_snapshot)
+            except (TypeError, ValueError, ValidationError) as exc:
+                raise ManifestInvalidError(
+                    "stored lifecycle evidence snapshot is invalid"
+                ) from exc
+            if snapshot_revision != evidence_revision:
+                raise ManifestInvalidError(
+                    "stored lifecycle evidence snapshot revision is invalid"
+                )
         previous = sequence
         parsed.append(
             {
@@ -596,9 +669,23 @@ def _parse_lifecycle_events(raw: object) -> list[dict[str, Any]]:
                 "fromStatus": from_status,
                 "toStatus": to_status,
                 "actor": actor,
+                "evidenceRevision": evidence_revision,
+                "evidenceSnapshot": deepcopy(evidence_snapshot),
             }
         )
     return parsed
+
+
+def _raise_for_trust_root_provider_outage(loaded: LoadedBundle) -> None:
+    for evidence in loaded.evidence:
+        if (
+            evidence.type == BundleEvidenceType.SIGNATURE_VERIFICATION
+            and evidence.metadata.get("reason") == "trust_root_provider_unavailable"
+        ):
+            raise TrustRootUnavailableError(
+                "publisher trust-root service is unavailable",
+                details={"retryable": True},
+            )
 
 
 def _assert_loaded_bundle_matches_target(
@@ -699,6 +786,25 @@ class _SingleTrustRootProvider:
         return None
 
 
+def _probe_trust_root_provider(
+    record: _VersionRecord,
+    *,
+    trust_roots: TrustRootProvider | None,
+) -> None:
+    if record.signature is None or trust_roots is None:
+        return
+    try:
+        trust_roots.get_trust_root(
+            publisher=record.publisher,
+            key_id=record.signature.key_id,
+        )
+    except Exception as exc:
+        raise TrustRootUnavailableError(
+            "publisher trust-root service is unavailable",
+            details={"retryable": True},
+        ) from exc
+
+
 def _assert_current_signature(
     record: _VersionRecord,
     *,
@@ -713,7 +819,10 @@ def _assert_current_signature(
             key_id=record.signature.key_id,
         )
     except Exception as exc:
-        raise SignatureInvalidError("publisher trust roots are unavailable") from exc
+        raise TrustRootUnavailableError(
+            "publisher trust-root service is unavailable",
+            details={"retryable": True},
+        ) from exc
     if trust_root is None:
         raise SignatureInvalidError("publisher trust root is unavailable")
     trust_root_revision = getattr(trust_root, "revision", None)
@@ -752,6 +861,11 @@ def _assert_current_signature(
     if len(signature_evidence) != 1:
         raise SignatureInvalidError("bundle signature evidence must be unique")
     evidence = signature_evidence[0]
+    signature_envelope_hash = canonical_sha256(
+        record.signature.model_dump(mode="json", by_alias=True, exclude_none=False)
+    )
+    if evidence.artifact_hash != signature_envelope_hash:
+        raise SignatureInvalidError("bundle signature evidence does not match envelope")
     if evidence.metadata.get("trustRootRevision") != trust_root_revision:
         raise SignatureInvalidError("bundle signature evidence trust root is stale")
     if evidence.expires_at != trust_root.not_after:

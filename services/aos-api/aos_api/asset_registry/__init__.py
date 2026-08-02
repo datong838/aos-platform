@@ -41,6 +41,7 @@ from aos_api.asset_registry.errors import (
     RevisionConflictError,
     RollbackBlockedError,
     SignatureInvalidError,
+    TrustRootUnavailableError,
     VerificationFailedError,
     VersionInvalidError,
 )
@@ -109,6 +110,7 @@ __all__ = [
     "SignatureInvalidError",
     "TrustRoot",
     "TrustRootProvider",
+    "TrustRootUnavailableError",
     "VerificationFailedError",
     "VersionInvalidError",
     "canonical_json",

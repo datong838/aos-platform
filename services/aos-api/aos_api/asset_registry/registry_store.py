@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import json
 import re
 import uuid
 from collections.abc import Callable, Collection
 from contextlib import AbstractContextManager
+from copy import deepcopy
 from datetime import datetime
 from typing import Any, ClassVar, Protocol
 
@@ -16,6 +18,7 @@ from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.asset_registry.contracts import (
     BUNDLE_ID_PATTERN,
     MAX_BUNDLE_ID_LENGTH,
+    BundleEvidence,
     BundleKind,
     BundleVersionStatus,
     LoadedBundle,
@@ -32,6 +35,7 @@ from aos_api.db import connect
 JsonRecord = dict[str, Any]
 ConnectFactory = Callable[[], AbstractContextManager[Any]]
 TransitionPrecondition = Callable[[JsonRecord], None]
+LEGACY_EVIDENCE_REVISION = "sha256:" + "0" * 64
 
 
 class RegistryStore(Protocol):
@@ -333,8 +337,9 @@ class PostgresRegistryStore:
                     ).fetchall()
                 locked_record = self._load_version(conn, bundle, version)
                 if precondition is not None:
-                    precondition(locked_record)
-                evidence_revision = canonical_sha256(locked_record["evidence"])
+                    precondition(deepcopy(locked_record))
+                evidence_snapshot = self._load_evidence_snapshot(conn, version_pk)
+                evidence_revision = canonical_sha256(evidence_snapshot)
                 updated = conn.execute(
                     """
                     UPDATE asset_bundle_version
@@ -363,8 +368,8 @@ class PostgresRegistryStore:
                     """
                     INSERT INTO asset_bundle_version_event (
                       event_pk, version_pk, sequence, from_status, to_status,
-                      actor, reason, evidence_revision
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                      actor, reason, evidence_revision, evidence_snapshot
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """,
                     (
                         uuid.uuid4(),
@@ -375,6 +380,7 @@ class PostgresRegistryStore:
                         actor,
                         reason,
                         evidence_revision,
+                        Jsonb(evidence_snapshot),
                     ),
                 )
                 record = self._load_version(conn, bundle, version)
@@ -524,7 +530,7 @@ class PostgresRegistryStore:
         events = conn.execute(
             """
             SELECT sequence, from_status, to_status, actor, reason,
-                   evidence_revision, created_at
+                   evidence_revision, evidence_snapshot, created_at
               FROM asset_bundle_version_event
              WHERE version_pk = %s
              ORDER BY sequence ASC
@@ -577,19 +583,74 @@ class PostgresRegistryStore:
                 }
                 for item in evidence
             ],
-            "lifecycleEvents": [
-                {
-                    "sequence": int(item["sequence"]),
-                    "fromStatus": str(item["from_status"]),
-                    "toStatus": str(item["to_status"]),
-                    "actor": str(item["actor"]),
-                    "reason": item["reason"],
-                    "evidenceRevision": str(item["evidence_revision"]),
-                    "createdAt": self._timestamp(item["created_at"]),
-                }
-                for item in events
-            ],
+            "lifecycleEvents": [self._event_record(item) for item in events],
         }
+
+    @classmethod
+    def _event_record(cls, row: Any) -> JsonRecord:
+        actor = str(row["actor"])
+        evidence_revision = str(row["evidence_revision"])
+        raw_snapshot = row["evidence_snapshot"]
+        snapshot = list(raw_snapshot) if raw_snapshot is not None else None
+        if snapshot is not None:
+            try:
+                normalized = [
+                    BundleEvidence.model_validate_json(json.dumps(item)).model_dump(
+                        mode="json", by_alias=True, exclude_none=False
+                    )
+                    for item in snapshot
+                ]
+            except (TypeError, ValueError) as exc:
+                raise ManifestInvalidError(
+                    "asset lifecycle evidence snapshot is invalid"
+                ) from exc
+            identity = [(item["type"], item["artifactRef"]) for item in normalized]
+            if (
+                identity != sorted(identity)
+                or len(identity) != len(set(identity))
+                or canonical_sha256(snapshot) != evidence_revision
+            ):
+                raise ManifestInvalidError(
+                    "asset lifecycle evidence snapshot failed integrity validation"
+                )
+        return {
+            "sequence": int(row["sequence"]),
+            "fromStatus": str(row["from_status"]),
+            "toStatus": str(row["to_status"]),
+            "actor": actor,
+            "reason": row["reason"],
+            "evidenceRevision": evidence_revision,
+            "evidenceSnapshot": snapshot,
+            "createdAt": cls._timestamp(row["created_at"]),
+        }
+
+    @staticmethod
+    def _load_evidence_snapshot(conn: Any, version_pk: uuid.UUID) -> list[JsonRecord]:
+        row = conn.execute(
+            """
+            SELECT COALESCE(
+                     jsonb_agg(
+                       jsonb_build_object(
+                         'type', evidence_type,
+                         'artifactRef', artifact_ref,
+                         'artifactHash', artifact_hash,
+                         'status', status,
+                         'observedAt', observed_at,
+                         'expiresAt', expires_at,
+                         'revokedAt', revoked_at,
+                         'metadata', metadata
+                       )
+                       ORDER BY evidence_type, artifact_ref
+                     ),
+                     '[]'::JSONB
+                   ) AS evidence_snapshot
+              FROM asset_bundle_evidence
+             WHERE version_pk = %s
+            """,
+            (version_pk,),
+        ).fetchone()
+        assert row is not None
+        return list(row["evidence_snapshot"])
 
     @staticmethod
     def _resolve_bundle(

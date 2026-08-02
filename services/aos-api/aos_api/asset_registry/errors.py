@@ -1,4 +1,5 @@
 """Stable, transport-neutral errors for the asset registry."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -9,6 +10,7 @@ class AssetRegistryErrorCode(StrEnum):
     MANIFEST_INVALID = "MANIFEST_INVALID"
     VERSION_INVALID = "VERSION_INVALID"
     SIGNATURE_INVALID = "SIGNATURE_INVALID"
+    TRUST_ROOT_UNAVAILABLE = "TRUST_ROOT_UNAVAILABLE"
     BUNDLE_VERSION_IMMUTABLE = "BUNDLE_VERSION_IMMUTABLE"
     DEPENDENCY_CONFLICT = "DEPENDENCY_CONFLICT"
     DEPENDENCY_CYCLE = "DEPENDENCY_CYCLE"
@@ -26,6 +28,7 @@ ERROR_HTTP_STATUS: dict[AssetRegistryErrorCode, int] = {
     AssetRegistryErrorCode.MANIFEST_INVALID: 400,
     AssetRegistryErrorCode.VERSION_INVALID: 400,
     AssetRegistryErrorCode.SIGNATURE_INVALID: 400,
+    AssetRegistryErrorCode.TRUST_ROOT_UNAVAILABLE: 503,
     AssetRegistryErrorCode.BUNDLE_VERSION_IMMUTABLE: 409,
     AssetRegistryErrorCode.DEPENDENCY_CONFLICT: 409,
     AssetRegistryErrorCode.DEPENDENCY_CYCLE: 409,
@@ -67,13 +70,24 @@ class ManifestInvalidError(AssetRegistryError):
 
 class VersionInvalidError(AssetRegistryError):
     def __init__(self, message: str, *, details: dict[str, Any] | None = None) -> None:
-        super().__init__(AssetRegistryErrorCode.VERSION_INVALID, message, details=details)
+        super().__init__(
+            AssetRegistryErrorCode.VERSION_INVALID, message, details=details
+        )
 
 
 class SignatureInvalidError(AssetRegistryError):
     def __init__(self, message: str, *, details: dict[str, Any] | None = None) -> None:
         super().__init__(
             AssetRegistryErrorCode.SIGNATURE_INVALID, message, details=details
+        )
+
+
+class TrustRootUnavailableError(AssetRegistryError):
+    def __init__(self, message: str, *, details: dict[str, Any] | None = None) -> None:
+        super().__init__(
+            AssetRegistryErrorCode.TRUST_ROOT_UNAVAILABLE,
+            message,
+            details=details,
         )
 
 
@@ -116,7 +130,9 @@ class IdempotencyConflictError(AssetRegistryError):
 
 class ApprovalStaleError(AssetRegistryError):
     def __init__(self, message: str, *, details: dict[str, Any] | None = None) -> None:
-        super().__init__(AssetRegistryErrorCode.APPROVAL_STALE, message, details=details)
+        super().__init__(
+            AssetRegistryErrorCode.APPROVAL_STALE, message, details=details
+        )
 
 
 class DutySeparationRequiredError(AssetRegistryError):

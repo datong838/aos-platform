@@ -624,6 +624,9 @@ class ManifestLoader:
                 observed_at=observed_at,
                 metadata={"reason": "malformed_signature_envelope"},
             )
+        artifact_hash = canonical_sha256(
+            signature.model_dump(mode="json", by_alias=True, exclude_none=False)
+        )
         trust_root: TrustRoot | None = None
         trust_root_unavailable = False
         if self._trust_roots is not None:
@@ -635,7 +638,10 @@ class ManifestLoader:
             except Exception:  # noqa: BLE001 - provider outages fail closed
                 trust_root_unavailable = True
 
-        if self._trust_roots is None or trust_root_unavailable:
+        if trust_root_unavailable:
+            status = "invalid"
+            reason = "trust_root_provider_unavailable"
+        elif self._trust_roots is None:
             status = "invalid"
             reason = "trust_roots_unavailable"
         elif trust_root is None:
@@ -655,7 +661,11 @@ class ManifestLoader:
         else:
             status = "invalid"
             reason = "verification_failed"
-        metadata = {"keyId": signature.key_id, "reason": reason}
+        metadata = {
+            "keyId": signature.key_id,
+            "reason": reason,
+            "signatureHashProfile": "canonical-envelope-v1",
+        }
         if trust_root is not None:
             metadata["trustRootRevision"] = trust_root.revision
         evidence_expiry = None
