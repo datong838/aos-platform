@@ -1,16 +1,20 @@
 from __future__ import annotations
 
+import base64
 import inspect
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 from copy import deepcopy
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
+from aos_api.asset_registry.canonical_json import canonical_json, canonical_sha256
 from aos_api.asset_registry.contracts import (
     BundleEvidenceStatus,
     BundleEvidenceType,
     BundleKind,
+    BundleManifest,
     BundleVersionStatus,
     LoadedBundle,
 )
@@ -21,18 +25,102 @@ from aos_api.asset_registry.errors import (
     BundleVersionImmutableError,
 )
 from aos_api.asset_registry.registry_service import RegistryService
+from aos_api.asset_registry.signature import TrustRoot
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 NOW = datetime(2026, 8, 3, 12, tzinfo=UTC)
 SOURCE_REF = "bundle://fixtures/solution-example"
 CREATE_ROLES = {"developer"}
 PUBLISH_ROLES = {"asset-publisher"}
-HASH = "sha256:" + "a" * 64
+PUBLISHER_SCOPES = {"aos"}
+KEY_ID = "release-2026-01"
+ROOT_REVISION = "sha256:" + "1" * 64
+ROOT_NOT_AFTER = NOW + timedelta(days=1)
+
+
+class MutableTrustRoots:
+    def __init__(self, root: TrustRoot) -> None:
+        self.root = root
+
+    def get_trust_root(self, *, publisher: str, key_id: str) -> TrustRoot | None:
+        if self.root.publisher == publisher and self.root.key_id == key_id:
+            return self.root
+        return None
+
+
+class RuntimeSigner:
+    def __init__(self) -> None:
+        self.private_key = Ed25519PrivateKey.generate()
+        public_key = self.private_key.public_key().public_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PublicFormat.Raw,
+        )
+        self.trust_roots = MutableTrustRoots(
+            TrustRoot(
+                publisher="aos",
+                key_id=KEY_ID,
+                public_key=public_key,
+                revision=ROOT_REVISION,
+                not_before=NOW - timedelta(days=1),
+                not_after=ROOT_NOT_AFTER,
+            )
+        )
+
+    def prepare(self, loaded: LoadedBundle) -> LoadedBundle:
+        payload = loaded.model_dump(mode="python", by_alias=True)
+        descriptor = {
+            "manifest": loaded.manifest.model_dump(
+                mode="json",
+                by_alias=True,
+                exclude_none=False,
+            ),
+            "artifacts": [
+                item.model_dump(mode="json", by_alias=True)
+                for item in loaded.artifacts
+            ],
+        }
+        content_hash = canonical_sha256(descriptor)
+        evidence = payload["evidence"]
+        for item in evidence:
+            if item["type"] == BundleEvidenceType.CONTENT_HASH.value:
+                item["artifactHash"] = content_hash
+            if item["type"] == BundleEvidenceType.SIGNATURE_VERIFICATION.value:
+                item["expiresAt"] = ROOT_NOT_AFTER
+                item["metadata"] = {
+                    **item.get("metadata", {}),
+                    "trustRootRevision": ROOT_REVISION,
+                }
+        payload["contentHash"] = content_hash
+        if loaded.signature is not None:
+            payload["signature"] = {
+                "algorithm": "Ed25519",
+                "keyId": KEY_ID,
+                "signature": base64.b64encode(
+                    self.private_key.sign(canonical_json(descriptor))
+                ).decode("ascii"),
+                "signedAt": NOW,
+            }
+        return LoadedBundle.model_validate(payload)
 
 
 class FakeLoader:
-    def __init__(self, loaded: LoadedBundle) -> None:
-        self.loaded = loaded
+    def __init__(self, loaded: LoadedBundle, signer: RuntimeSigner) -> None:
+        self._signer = signer
+        self._loaded = signer.prepare(loaded)
         self.calls: list[str] = []
+
+    @property
+    def trust_roots(self) -> MutableTrustRoots:
+        return self._signer.trust_roots
+
+    @property
+    def loaded(self) -> LoadedBundle:
+        return self._loaded
+
+    @loaded.setter
+    def loaded(self, value: LoadedBundle) -> None:
+        self._loaded = self._signer.prepare(value)
 
     def load(self, source_ref: str) -> LoadedBundle:
         self.calls.append(source_ref)
@@ -125,6 +213,7 @@ class FakeStore:
                 item.model_dump(mode="json", by_alias=True)
                 for item in loaded_bundle.evidence
             ],
+            "lifecycleEvents": [],
         }
         self.versions[key] = record
         self.bundles[(key[0], key[1])]["versions"].append(
@@ -171,6 +260,7 @@ class FakeStore:
         reason: str | None = None,
         *,
         publisher: str | None = None,
+        precondition: Callable[[dict[str, Any]], None] | None = None,
     ) -> dict[str, Any]:
         record = self.get_version(bundle_id, version, publisher)
         expected = tuple(
@@ -184,9 +274,19 @@ class FakeStore:
         )
         if record["status"] not in expected:
             raise BundleVersionImmutableError("fake store rejected transition")
+        if precondition is not None:
+            precondition(record)
         key = (record["publisher"], bundle_id, version)
         self.versions[key]["status"] = target
         self.versions[key]["updatedAt"] = NOW.isoformat()
+        self.versions[key]["lifecycleEvents"].append(
+            {
+                "sequence": len(record["lifecycleEvents"]) + 1,
+                "fromStatus": record["status"],
+                "toStatus": target,
+                "actor": actor,
+            }
+        )
         self.transitions.append(
             (bundle_id, version, expected, target, actor, reason, record["publisher"])
         )
@@ -250,6 +350,18 @@ def _manifest(**updates: object) -> dict[str, Any]:
     return payload
 
 
+HASH = canonical_sha256(
+    {
+        "manifest": BundleManifest.model_validate(_manifest()).model_dump(
+            mode="json",
+            by_alias=True,
+            exclude_none=False,
+        ),
+        "artifacts": [],
+    }
+)
+
+
 def _evidence(
     evidence_type: BundleEvidenceType,
     *,
@@ -271,7 +383,14 @@ def _evidence(
         "observedAt": observed_at,
         "expiresAt": expires_at,
         "revokedAt": revoked_at,
-        "metadata": {"serverDerived": True},
+        "metadata": {
+            "serverDerived": True,
+            **(
+                {"trustRootRevision": ROOT_REVISION}
+                if evidence_type == BundleEvidenceType.SIGNATURE_VERIFICATION
+                else {}
+            ),
+        },
     }
 
 
@@ -303,8 +422,8 @@ def _loaded_bundle(
             "signature": (
                 {
                     "algorithm": "Ed25519",
-                    "keyId": "release-2026-01",
-                    "signature": "server-verified-signature",
+                    "keyId": KEY_ID,
+                    "signature": base64.b64encode(b"0" * 64).decode("ascii"),
                     "signedAt": NOW,
                 }
                 if signed
@@ -319,9 +438,15 @@ def _service(
     loaded: LoadedBundle | None = None,
 ) -> tuple[RegistryService, FakeStore, FakeLoader, MutableClock]:
     store = FakeStore()
-    loader = FakeLoader(loaded or _loaded_bundle())
+    signer = RuntimeSigner()
+    loader = FakeLoader(loaded or _loaded_bundle(), signer)
     clock = MutableClock()
-    service = RegistryService(store=store, loader=loader, clock=clock)
+    service = RegistryService(
+        store=store,
+        loader=loader,
+        clock=clock,
+        trust_roots=loader.trust_roots,
+    )
     return service, store, loader, clock
 
 
@@ -337,6 +462,7 @@ def _create_bundle_and_version(
         display_name="Example",
         actor="author-1",
         roles=roles,
+        publisher_scopes=PUBLISHER_SCOPES,
     )
     return service.create_version(
         bundle_id="solution.example",
@@ -344,6 +470,7 @@ def _create_bundle_and_version(
         actor="author-1",
         roles=roles,
         publisher="aos",
+        publisher_scopes=PUBLISHER_SCOPES,
     )
 
 
@@ -357,6 +484,7 @@ def test_catalog_create_list_and_get_use_the_fixed_store_contract() -> None:
         display_name="Example",
         actor="author-1",
         roles={"developer"},
+        publisher_scopes=PUBLISHER_SCOPES,
     )
 
     assert created["bundleId"] == "solution.example"
@@ -377,6 +505,7 @@ def test_all_frozen_draft_create_roles_are_allowed(role: str) -> None:
         display_name="Example",
         actor="author-1",
         roles={role},
+        publisher_scopes=PUBLISHER_SCOPES,
     )
 
     assert created["bundleId"] == "solution.example"
@@ -394,6 +523,7 @@ def test_create_requires_an_explicit_allowed_role(role: str) -> None:
             display_name="Example",
             actor="author-1",
             roles={role},
+            publisher_scopes=PUBLISHER_SCOPES,
         )
 
     assert caught.value.code == AssetRegistryErrorCode.DUTY_SEPARATION_REQUIRED
@@ -424,6 +554,8 @@ def test_unsigned_loader_result_can_only_be_created_as_draft() -> None:
             version="1.0.0",
             actor="author-1",
             roles=CREATE_ROLES,
+            publisher="aos",
+            publisher_scopes=PUBLISHER_SCOPES,
         )
     assert caught.value.code == AssetRegistryErrorCode.SIGNATURE_INVALID
 
@@ -450,6 +582,7 @@ def test_create_version_rejects_manifest_target_mismatch(
         display_name="Example",
         actor="author-1",
         roles=CREATE_ROLES,
+        publisher_scopes=PUBLISHER_SCOPES,
     )
 
     with pytest.raises(AssetRegistryError) as caught:
@@ -458,6 +591,8 @@ def test_create_version_rejects_manifest_target_mismatch(
             source_ref=SOURCE_REF,
             actor="author-1",
             roles=CREATE_ROLES,
+            publisher="aos",
+            publisher_scopes=PUBLISHER_SCOPES,
         )
 
     assert caught.value.code == AssetRegistryErrorCode.MANIFEST_INVALID
@@ -500,6 +635,7 @@ def test_create_version_rejects_invalid_semver_and_ranges(
         display_name="Example",
         actor="author-1",
         roles=CREATE_ROLES,
+        publisher_scopes=PUBLISHER_SCOPES,
     )
 
     with pytest.raises(AssetRegistryError) as caught:
@@ -508,6 +644,8 @@ def test_create_version_rejects_invalid_semver_and_ranges(
             source_ref=SOURCE_REF,
             actor="author-1",
             roles=CREATE_ROLES,
+            publisher="aos",
+            publisher_scopes=PUBLISHER_SCOPES,
         )
 
     assert caught.value.code == AssetRegistryErrorCode.VERSION_INVALID
@@ -523,6 +661,8 @@ def test_validate_uses_persisted_server_snapshot_without_reloading() -> None:
         version="1.0.0",
         actor="author-1",
         roles=CREATE_ROLES,
+        publisher="aos",
+        publisher_scopes=PUBLISHER_SCOPES,
     )
 
     assert validated["status"] == "validated"
@@ -541,6 +681,7 @@ def test_actions_use_publisher_to_disambiguate_same_bundle_id_and_version() -> N
         display_name="Example",
         actor="other-author",
         roles=CREATE_ROLES,
+        publisher_scopes={"other"},
     )
     loader.loaded = _loaded_bundle(
         manifest=_manifest(metadata_publisher="other")
@@ -551,15 +692,17 @@ def test_actions_use_publisher_to_disambiguate_same_bundle_id_and_version() -> N
         actor="other-author",
         roles=CREATE_ROLES,
         publisher="other",
+        publisher_scopes={"other"},
     )
 
-    with pytest.raises(AssetNotFoundError):
+    with pytest.raises(AssetRegistryError) as caught:
         service.validate(
             bundle_id="solution.example",
             version="1.0.0",
             actor="author-1",
             roles=CREATE_ROLES,
         )
+    assert caught.value.code == AssetRegistryErrorCode.MANIFEST_INVALID
 
     validated = service.validate(
         bundle_id="solution.example",
@@ -567,6 +710,7 @@ def test_actions_use_publisher_to_disambiguate_same_bundle_id_and_version() -> N
         publisher="aos",
         actor="author-1",
         roles=CREATE_ROLES,
+        publisher_scopes=PUBLISHER_SCOPES,
     )
 
     assert validated["publisher"] == "aos"
@@ -643,6 +787,8 @@ def test_validate_fails_closed_for_missing_invalid_or_stale_evidence(
             version="1.0.0",
             actor="author-1",
             roles=CREATE_ROLES,
+            publisher="aos",
+            publisher_scopes=PUBLISHER_SCOPES,
         )
 
     assert caught.value.code == expected_code
@@ -662,6 +808,7 @@ def test_validate_rejects_a_tampered_persisted_snapshot() -> None:
             actor="author-1",
             roles=CREATE_ROLES,
             publisher="aos",
+            publisher_scopes=PUBLISHER_SCOPES,
         )
 
     assert caught.value.code == AssetRegistryErrorCode.MANIFEST_INVALID
@@ -681,6 +828,7 @@ def test_validate_binds_content_hash_to_its_server_evidence() -> None:
             actor="author-1",
             roles=CREATE_ROLES,
             publisher="aos",
+            publisher_scopes=PUBLISHER_SCOPES,
         )
 
     assert caught.value.code == AssetRegistryErrorCode.MANIFEST_INVALID
@@ -712,6 +860,7 @@ def test_validate_maps_corrupt_security_records_to_stable_errors(
             actor="author-1",
             roles=CREATE_ROLES,
             publisher="aos",
+            publisher_scopes=PUBLISHER_SCOPES,
         )
 
     assert caught.value.code == expected_code
@@ -727,6 +876,8 @@ def test_both_frozen_publish_roles_are_allowed(role: str) -> None:
         version="1.0.0",
         actor="author-1",
         roles=CREATE_ROLES,
+        publisher="aos",
+        publisher_scopes=PUBLISHER_SCOPES,
     )
 
     published = service.publish(
@@ -734,6 +885,8 @@ def test_both_frozen_publish_roles_are_allowed(role: str) -> None:
         version="1.0.0",
         actor="publisher-1",
         roles={role},
+        publisher="aos",
+        publisher_scopes=PUBLISHER_SCOPES,
     )
 
     assert published["status"] == "published"
@@ -747,6 +900,8 @@ def test_publish_rechecks_role_and_evidence_expiry() -> None:
         version="1.0.0",
         actor="author-1",
         roles=CREATE_ROLES,
+        publisher="aos",
+        publisher_scopes=PUBLISHER_SCOPES,
     )
 
     with pytest.raises(AssetRegistryError) as caught:
@@ -755,6 +910,8 @@ def test_publish_rechecks_role_and_evidence_expiry() -> None:
             version="1.0.0",
             actor="author-1",
             roles={"developer"},
+            publisher="aos",
+            publisher_scopes=PUBLISHER_SCOPES,
         )
     assert caught.value.code == AssetRegistryErrorCode.DUTY_SEPARATION_REQUIRED
 
@@ -765,6 +922,8 @@ def test_publish_rechecks_role_and_evidence_expiry() -> None:
             version="1.0.0",
             actor="publisher-1",
             roles=PUBLISH_ROLES,
+            publisher="aos",
+            publisher_scopes=PUBLISHER_SCOPES,
         )
     assert caught.value.code == AssetRegistryErrorCode.MANIFEST_INVALID
     assert store.get_version("solution.example", "1.0.0")["status"] == "validated"
@@ -778,12 +937,16 @@ def test_publish_deprecate_and_revoke_follow_the_frozen_state_machine() -> None:
         version="1.0.0",
         actor="author-1",
         roles=CREATE_ROLES,
+        publisher="aos",
+        publisher_scopes=PUBLISHER_SCOPES,
     )
     published = service.publish(
         bundle_id="solution.example",
         version="1.0.0",
         actor="publisher-1",
         roles=PUBLISH_ROLES,
+        publisher="aos",
+        publisher_scopes=PUBLISHER_SCOPES,
     )
     assert published["status"] == "published"
 
@@ -793,6 +956,8 @@ def test_publish_deprecate_and_revoke_follow_the_frozen_state_machine() -> None:
         actor="publisher-1",
         roles=PUBLISH_ROLES,
         reason="superseded by 2.0.0",
+        publisher="aos",
+        publisher_scopes=PUBLISHER_SCOPES,
     )
     assert deprecated["status"] == "deprecated"
     assert store.transitions[-1][-2] == "superseded by 2.0.0"
@@ -804,18 +969,24 @@ def test_publish_deprecate_and_revoke_follow_the_frozen_state_machine() -> None:
         source_ref=SOURCE_REF,
         actor="author-1",
         roles=CREATE_ROLES,
+        publisher="aos",
+        publisher_scopes=PUBLISHER_SCOPES,
     )
     service.validate(
         bundle_id="solution.example",
         version="2.0.0",
         actor="author-1",
         roles=CREATE_ROLES,
+        publisher="aos",
+        publisher_scopes=PUBLISHER_SCOPES,
     )
     service.publish(
         bundle_id="solution.example",
         version="2.0.0",
         actor="publisher-1",
         roles=PUBLISH_ROLES,
+        publisher="aos",
+        publisher_scopes=PUBLISHER_SCOPES,
     )
     revoked = service.revoke(
         bundle_id="solution.example",
@@ -823,6 +994,8 @@ def test_publish_deprecate_and_revoke_follow_the_frozen_state_machine() -> None:
         actor="publisher-1",
         roles=PUBLISH_ROLES,
         reason="publisher trust root revoked",
+        publisher="aos",
+        publisher_scopes=PUBLISHER_SCOPES,
     )
     assert revoked["status"] == "revoked"
 
@@ -831,15 +1004,242 @@ def test_illegal_state_transitions_fail_closed_with_stable_error() -> None:
     service, _, _, _ = _service()
     _create_bundle_and_version(service)
 
-    for action in (service.publish, service.deprecate, service.revoke):
+    with pytest.raises(AssetRegistryError) as caught:
+        service.publish(
+            bundle_id="solution.example",
+            version="1.0.0",
+            actor="publisher-1",
+            roles=PUBLISH_ROLES,
+            publisher="aos",
+            publisher_scopes=PUBLISHER_SCOPES,
+        )
+    assert caught.value.code == AssetRegistryErrorCode.BUNDLE_VERSION_IMMUTABLE
+
+    for action in (service.deprecate, service.revoke):
         with pytest.raises(AssetRegistryError) as caught:
             action(
                 bundle_id="solution.example",
                 version="1.0.0",
                 actor="publisher-1",
                 roles=PUBLISH_ROLES,
+                reason="terminal transition requested",
+                publisher="aos",
+                publisher_scopes=PUBLISHER_SCOPES,
             )
         assert caught.value.code == AssetRegistryErrorCode.BUNDLE_VERSION_IMMUTABLE
+
+
+@pytest.mark.parametrize(
+    "operation",
+    ("create_bundle", "create_version", "validate", "publish", "deprecate", "revoke"),
+)
+def test_every_write_rejects_cross_publisher_scope(operation: str) -> None:
+    service, _, _, _ = _service()
+    common = {
+        "bundle_id": "solution.example",
+        "actor": "actor-1",
+        "roles": {"asset-publisher", "developer"},
+        "publisher_scopes": PUBLISHER_SCOPES,
+    }
+
+    with pytest.raises(AssetRegistryError) as caught:
+        if operation == "create_bundle":
+            service.create_bundle(
+                **common,
+                publisher="other",
+                kind="SolutionPack",
+                display_name="Example",
+            )
+        elif operation == "create_version":
+            service.create_version(
+                **common,
+                publisher="other",
+                source_ref=SOURCE_REF,
+            )
+        else:
+            action = getattr(service, operation)
+            action(
+                **common,
+                publisher="other",
+                version="1.0.0",
+                **(
+                    {"reason": "security transition"}
+                    if operation in {"deprecate", "revoke"}
+                    else {}
+                ),
+            )
+
+    assert caught.value.code == AssetRegistryErrorCode.DUTY_SEPARATION_REQUIRED
+    assert caught.value.http_status == 403
+
+
+def test_admin_wildcard_does_not_expand_scope_but_registry_admin_wildcard_does() -> None:
+    service, _, _, _ = _service()
+
+    with pytest.raises(AssetRegistryError) as caught:
+        service.create_bundle(
+            publisher="aos",
+            bundle_id="solution.example",
+            kind="SolutionPack",
+            display_name="Example",
+            actor="admin-1",
+            roles={"admin"},
+            publisher_scopes={"*"},
+        )
+    assert caught.value.code == AssetRegistryErrorCode.DUTY_SEPARATION_REQUIRED
+
+    created = service.create_bundle(
+        publisher="aos",
+        bundle_id="solution.example",
+        kind="SolutionPack",
+        display_name="Example",
+        actor="registry-admin-1",
+        roles={"asset-registry-admin"},
+        publisher_scopes={"*"},
+    )
+    assert created["publisher"] == "aos"
+
+
+@pytest.mark.parametrize(
+    "operation",
+    ("create_version", "validate", "publish", "deprecate", "revoke"),
+)
+def test_version_writes_require_an_explicit_publisher(operation: str) -> None:
+    service, _, _, _ = _service()
+    common = {
+        "bundle_id": "solution.example",
+        "actor": "actor-1",
+        "roles": {"asset-publisher", "developer"},
+        "publisher_scopes": PUBLISHER_SCOPES,
+    }
+
+    with pytest.raises(AssetRegistryError) as caught:
+        if operation == "create_version":
+            service.create_version(**common, source_ref=SOURCE_REF)
+        else:
+            getattr(service, operation)(
+                **common,
+                version="1.0.0",
+                **(
+                    {"reason": "security transition"}
+                    if operation in {"deprecate", "revoke"}
+                    else {}
+                ),
+            )
+
+    assert caught.value.code == AssetRegistryErrorCode.MANIFEST_INVALID
+
+
+@pytest.mark.parametrize("operation", ("deprecate", "revoke"))
+@pytest.mark.parametrize("reason", (None, "", "  "))
+def test_terminal_writes_require_a_normalized_reason(
+    operation: str,
+    reason: str | None,
+) -> None:
+    service, _, _, _ = _service()
+
+    with pytest.raises(AssetRegistryError) as caught:
+        getattr(service, operation)(
+            bundle_id="solution.example",
+            version="1.0.0",
+            actor="publisher-1",
+            roles=PUBLISH_ROLES,
+            reason=reason,
+            publisher="aos",
+            publisher_scopes=PUBLISHER_SCOPES,
+        )
+
+    assert caught.value.code == AssetRegistryErrorCode.MANIFEST_INVALID
+
+
+def test_publish_enforces_creator_validator_separation_and_lifecycle_history() -> None:
+    service, store, _, _ = _service()
+    _create_bundle_and_version(service)
+    validated = service.validate(
+        bundle_id="solution.example",
+        version="1.0.0",
+        actor="validator-1",
+        roles=CREATE_ROLES,
+        publisher="aos",
+        publisher_scopes=PUBLISHER_SCOPES,
+    )
+    assert validated["lifecycleEvents"] == [
+        {
+            "sequence": 1,
+            "fromStatus": "draft",
+            "toStatus": "validated",
+            "actor": "validator-1",
+        }
+    ]
+
+    for actor in ("author-1", "validator-1"):
+        with pytest.raises(AssetRegistryError) as caught:
+            service.publish(
+                bundle_id="solution.example",
+                version="1.0.0",
+                actor=actor,
+                roles=PUBLISH_ROLES,
+                publisher="aos",
+                publisher_scopes=PUBLISHER_SCOPES,
+            )
+        assert caught.value.code == AssetRegistryErrorCode.DUTY_SEPARATION_REQUIRED
+        assert store.get_version("solution.example", "1.0.0", "aos")["status"] == (
+            "validated"
+        )
+
+    published = service.publish(
+        bundle_id="solution.example",
+        version="1.0.0",
+        actor="publisher-2",
+        roles=PUBLISH_ROLES,
+        publisher="aos",
+        publisher_scopes=PUBLISHER_SCOPES,
+    )
+    assert published["status"] == "published"
+    assert [item["actor"] for item in published["lifecycleEvents"]] == [
+        "validator-1",
+        "publisher-2",
+    ]
+
+
+@pytest.mark.parametrize("trust_change", ("revoke", "revision"))
+def test_publish_rechecks_the_current_trust_root_after_validation(
+    trust_change: str,
+) -> None:
+    service, store, loader, _ = _service()
+    _create_bundle_and_version(service)
+    service.validate(
+        bundle_id="solution.example",
+        version="1.0.0",
+        actor="validator-1",
+        roles=CREATE_ROLES,
+        publisher="aos",
+        publisher_scopes=PUBLISHER_SCOPES,
+    )
+    root = loader.trust_roots.root
+    loader.trust_roots.root = replace(
+        root,
+        **(
+            {"revoked_at": NOW}
+            if trust_change == "revoke"
+            else {"revision": "sha256:" + "2" * 64}
+        ),
+    )
+
+    with pytest.raises(AssetRegistryError) as caught:
+        service.publish(
+            bundle_id="solution.example",
+            version="1.0.0",
+            actor="publisher-2",
+            roles=PUBLISH_ROLES,
+            publisher="aos",
+            publisher_scopes=PUBLISHER_SCOPES,
+        )
+
+    assert caught.value.code == AssetRegistryErrorCode.SIGNATURE_INVALID
+    assert store.get_version("solution.example", "1.0.0", "aos")["status"] == (
+        "validated"
+    )
 
 
 def test_get_version_rejects_invalid_semver_before_store_lookup() -> None:

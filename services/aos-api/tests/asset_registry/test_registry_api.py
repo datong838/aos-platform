@@ -21,6 +21,7 @@ _PRINCIPAL = Principal(
     roles=["developer", "asset-publisher"],
     markings=["public"],
     token_kind="test",
+    asset_publishers=frozenset({"pub.one", "pub.body", "pub.query"}),
 )
 
 _ROUTES: tuple[tuple[str, str, dict[str, Any] | None, str], ...] = (
@@ -66,7 +67,7 @@ _ROUTES: tuple[tuple[str, str, dict[str, Any] | None, str], ...] = (
     (
         "POST",
         "/v1/asset-bundles/domain.example/versions/1.2.3/publish?publisher=pub.query",
-        {},
+        {"publisher": "pub.query"},
         "publish",
     ),
     (
@@ -78,7 +79,7 @@ _ROUTES: tuple[tuple[str, str, dict[str, Any] | None, str], ...] = (
     (
         "POST",
         "/v1/asset-bundles/domain.example/versions/1.2.3/revoke",
-        {"reason": "security incident"},
+        {"publisher": "pub.one", "reason": "security incident"},
         "revoke",
     ),
 )
@@ -126,7 +127,25 @@ class FakeRegistryService:
         return self._call("revoke", **kwargs)
 
 
-def _make_app(fake_service: FakeRegistryService, *, authenticated: bool) -> FastAPI:
+class ScopeCheckingRegistryService(FakeRegistryService):
+    def _call(self, operation: str, **kwargs: Any) -> Any:
+        self.calls.append((operation, kwargs))
+        target = kwargs.get("publisher")
+        scopes = kwargs.get("publisher_scopes")
+        if target not in scopes:
+            raise AssetRegistryError(
+                AssetRegistryErrorCode.DUTY_SEPARATION_REQUIRED,
+                "actor is not authorized for the target publisher",
+            )
+        return {"operation": operation}
+
+
+def _make_app(
+    fake_service: FakeRegistryService,
+    *,
+    authenticated: bool,
+    principal: Principal = _PRINCIPAL,
+) -> FastAPI:
     app = FastAPI()
     register_exception_handlers(app)
     app.include_router(asset_bundles.router)
@@ -134,7 +153,7 @@ def _make_app(fake_service: FakeRegistryService, *, authenticated: bool) -> Fast
         lambda: fake_service
     )
     if authenticated:
-        app.dependency_overrides[require_principal] = lambda: _PRINCIPAL
+        app.dependency_overrides[require_principal] = lambda: principal
     return app
 
 
@@ -211,6 +230,7 @@ def test_all_nine_routes_delegate_with_principal_and_publisher(
         "display_name": "Example Domain",
         "actor": _PRINCIPAL.subject,
         "roles": _PRINCIPAL.roles,
+        "publisher_scopes": _PRINCIPAL.asset_publishers,
     }
     assert calls["get_bundle"] == {
         "bundle_id": "domain.example",
@@ -222,6 +242,7 @@ def test_all_nine_routes_delegate_with_principal_and_publisher(
         "actor": _PRINCIPAL.subject,
         "roles": _PRINCIPAL.roles,
         "publisher": "pub.one",
+        "publisher_scopes": _PRINCIPAL.asset_publishers,
     }
     assert calls["get_version"] == {
         "bundle_id": "domain.example",
@@ -235,6 +256,7 @@ def test_all_nine_routes_delegate_with_principal_and_publisher(
     for operation in ("validate", "publish", "deprecate", "revoke"):
         assert calls[operation]["actor"] == _PRINCIPAL.subject
         assert calls[operation]["roles"] == _PRINCIPAL.roles
+        assert calls[operation]["publisher_scopes"] == _PRINCIPAL.asset_publishers
 
 
 @pytest.mark.parametrize(
@@ -268,6 +290,14 @@ def test_all_nine_routes_delegate_with_principal_and_publisher(
         (
             "/v1/asset-bundles/domain.example/versions/1.2.3/validate",
             {"validated": True},
+        ),
+        (
+            "/v1/asset-bundles/domain.example/versions/1.2.3/validate",
+            {"publisher": "pub.one", "asset_publishers": ["*"]},
+        ),
+        (
+            "/v1/asset-bundles/domain.example/versions/1.2.3/publish",
+            {"publisher": "pub.one", "publisherScopes": ["*"]},
         ),
         (
             "/v1/asset-bundles/domain.example/versions/1.2.3/publish",
@@ -315,6 +345,119 @@ def test_query_and_body_publisher_must_not_disagree(
     assert response.status_code == 400
     assert response.json()["code"] == "MANIFEST_INVALID"
     assert fake_service.calls == []
+
+
+@pytest.mark.parametrize(
+    ("path", "body"),
+    (
+        (
+            "/v1/asset-bundles/domain.example/versions",
+            {"bundleSourceRef": "bundle://catalog/domain.example"},
+        ),
+        (
+            "/v1/asset-bundles/domain.example/versions/1.2.3/validate",
+            None,
+        ),
+        (
+            "/v1/asset-bundles/domain.example/versions/1.2.3/validate",
+            {},
+        ),
+        (
+            "/v1/asset-bundles/domain.example/versions/1.2.3/publish",
+            None,
+        ),
+        (
+            "/v1/asset-bundles/domain.example/versions/1.2.3/publish",
+            {},
+        ),
+        (
+            "/v1/asset-bundles/domain.example/versions/1.2.3/deprecate",
+            {"reason": "superseded"},
+        ),
+        (
+            "/v1/asset-bundles/domain.example/versions/1.2.3/revoke",
+            {"reason": "security incident"},
+        ),
+    ),
+)
+def test_write_body_and_publisher_are_required_at_the_transport_boundary(
+    client: TestClient,
+    fake_service: FakeRegistryService,
+    path: str,
+    body: dict[str, Any] | None,
+) -> None:
+    response = client.post(path) if body is None else client.post(path, json=body)
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "VALIDATION"
+    assert fake_service.calls == []
+
+
+@pytest.mark.parametrize(
+    ("path", "body"),
+    (
+        (
+            "/v1/asset-bundles",
+            {
+                "publisher": "pub.other",
+                "bundleId": "domain.example",
+                "kind": "DomainPack",
+                "displayName": "Example",
+            },
+        ),
+        (
+            "/v1/asset-bundles/domain.example/versions",
+            {
+                "bundleSourceRef": "bundle://catalog/domain.example",
+                "publisher": "pub.other",
+            },
+        ),
+        (
+            "/v1/asset-bundles/domain.example/versions/1.2.3/validate",
+            {"publisher": "pub.other"},
+        ),
+        (
+            "/v1/asset-bundles/domain.example/versions/1.2.3/publish",
+            {"publisher": "pub.other"},
+        ),
+        (
+            "/v1/asset-bundles/domain.example/versions/1.2.3/deprecate",
+            {"publisher": "pub.other", "reason": "superseded"},
+        ),
+        (
+            "/v1/asset-bundles/domain.example/versions/1.2.3/revoke",
+            {"publisher": "pub.other", "reason": "security incident"},
+        ),
+        (
+            (
+                "/v1/asset-bundles/domain.example/versions/1.2.3/publish"
+                "?publisher=pub.other"
+            ),
+            {"publisher": "pub.other"},
+        ),
+    ),
+)
+def test_body_or_query_publisher_cannot_expand_verified_claim_scope(
+    path: str,
+    body: dict[str, Any],
+) -> None:
+    principal = Principal(
+        subject="user:narrow-publisher",
+        org_id="org-a",
+        project_id="project-a",
+        roles=["developer", "asset-publisher"],
+        asset_publishers=frozenset({"pub.one"}),
+    )
+    service = ScopeCheckingRegistryService()
+    with TestClient(
+        _make_app(service, authenticated=True, principal=principal),
+        raise_server_exceptions=False,
+    ) as scoped_client:
+        response = scoped_client.post(path, json=body)
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "DUTY_SEPARATION_REQUIRED"
+    assert service.calls[-1][1]["publisher_scopes"] == frozenset({"pub.one"})
 
 
 @pytest.mark.parametrize(("method", "path", "body", "operation"), _ROUTES)
