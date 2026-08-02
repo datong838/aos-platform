@@ -1,4 +1,5 @@
 """PostgreSQL evidence tests for the canonical Registry store."""
+
 from __future__ import annotations
 
 import importlib.util
@@ -11,6 +12,8 @@ from types import ModuleType
 from unittest.mock import patch
 
 import pytest
+from psycopg import errors, sql
+
 from aos_api.asset_registry.contracts import (
     BundleVersionStatus,
     LoadedBundle,
@@ -23,14 +26,14 @@ from aos_api.asset_registry.errors import (
 )
 from aos_api.asset_registry.registry_store import PostgresRegistryStore
 from aos_api.db import connect
-from psycopg import errors, sql
 
 API_ROOT = Path(__file__).resolve().parents[2]
 MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_registry.py"
+SECURITY_MIGRATION_PATH = API_ROOT / "alembic/versions/228asset0_security.py"
 
 
-def _load_migration() -> ModuleType:
-    spec = importlib.util.spec_from_file_location("registry_store_migration", MIGRATION_PATH)
+def _load_migration(path: Path, name: str) -> ModuleType:
+    spec = importlib.util.spec_from_file_location(name, path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -38,10 +41,14 @@ def _load_migration() -> ModuleType:
 
 
 def _upgrade_statements() -> list[str]:
-    module = _load_migration()
     statements: list[str] = []
-    with patch.object(module.op, "execute", statements.append):
-        module.upgrade()
+    for path, name in (
+        (MIGRATION_PATH, "registry_store_migration"),
+        (SECURITY_MIGRATION_PATH, "registry_store_security_migration"),
+    ):
+        module = _load_migration(path, name)
+        with patch.object(module.op, "execute", statements.append):
+            module.upgrade()
     return statements
 
 
@@ -82,7 +89,10 @@ def registry_scope():
 
 
 def _manifest(
-    *, publisher: str = "aos", bundle_id: str = "solution.example", version: str = "1.0.0"
+    *,
+    publisher: str = "aos",
+    bundle_id: str = "solution.example",
+    version: str = "1.0.0",
 ) -> dict:
     return {
         "apiVersion": "aos.dev/v1alpha1",
@@ -96,9 +106,7 @@ def _manifest(
         },
         "spec": {
             "platformApi": ">=1.7.0 <2.0.0",
-            "dependencies": [
-                {"id": "domain.orders", "version": ">=1.0.0 <2.0.0"}
-            ],
+            "dependencies": [{"id": "domain.orders", "version": ">=1.0.0 <2.0.0"}],
             "optionalDependencies": [
                 {
                     "id": "plugin.insights",
@@ -138,7 +146,10 @@ def _manifest(
 
 
 def _loaded_bundle(
-    *, publisher: str = "aos", bundle_id: str = "solution.example", version: str = "1.0.0"
+    *,
+    publisher: str = "aos",
+    bundle_id: str = "solution.example",
+    version: str = "1.0.0",
 ) -> LoadedBundle:
     now = datetime.now(UTC)
     return LoadedBundle.model_validate(
@@ -241,11 +252,17 @@ def test_bundle_lookup_is_deterministic_and_ambiguous_ids_fail_closed(
         ("aos", "solution.shared"),
         ("partner", "solution.shared"),
     ]
-    assert restarted.get_bundle("solution.inject-safe", "aos")["displayName"] == injected_name
+    assert (
+        restarted.get_bundle("solution.inject-safe", "aos")["displayName"]
+        == injected_name
+    )
     with scoped_connect() as conn:
-        assert conn.execute("SELECT count(*) AS count FROM asset_bundle").fetchone()[
-            "count"
-        ] == 3
+        assert (
+            conn.execute("SELECT count(*) AS count FROM asset_bundle").fetchone()[
+                "count"
+            ]
+            == 3
+        )
 
     _create_bundle(store, publisher="solo", bundle_id="solution.transition")
     _create_bundle(store, publisher="other", bundle_id="solution.transition")
@@ -297,7 +314,9 @@ def test_version_projection_is_atomic_json_friendly_and_restart_durable(
         "dependencies",
         "artifacts",
         "evidence",
+        "lifecycleEvents",
     }
+    assert created["lifecycleEvents"] == []
     assert created["status"] == "draft"
     assert created["manifest"]["metadata"]["displayName"] == "Example Solution"
     assert [item["optional"] for item in created["dependencies"]] == [False, True]
@@ -322,9 +341,7 @@ def test_version_projection_is_atomic_json_friendly_and_restart_durable(
         }
     ]
     with scoped_connect() as conn:
-        row = conn.execute(
-            "SELECT updated_by FROM asset_bundle_evidence"
-        ).fetchone()
+        row = conn.execute("SELECT updated_by FROM asset_bundle_evidence").fetchone()
         assert row["updated_by"] == "publisher:test"
 
     with pytest.raises(RevisionConflictError, match="already exists"):

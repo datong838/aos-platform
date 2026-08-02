@@ -1,4 +1,5 @@
 """Canonical asset bundle Registry API — M0/M1 frozen contract §9.1."""
+
 from __future__ import annotations
 
 import os
@@ -22,6 +23,10 @@ from aos_api.asset_registry.errors import AssetRegistryError
 from aos_api.asset_registry.manifest_loader import ManifestLoader
 from aos_api.asset_registry.registry_service import RegistryService
 from aos_api.asset_registry.registry_store import PostgresRegistryStore
+from aos_api.asset_registry.signature import (
+    TRUST_ROOTS_ENV,
+    FileTrustRootProvider,
+)
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 
@@ -131,12 +136,12 @@ class VersionActionRequest(StrictRequest):
 
 
 class TerminalActionRequest(VersionActionRequest):
-    reason: str | None = Field(default=None, min_length=1, max_length=2000)
+    reason: str = Field(min_length=1, max_length=2000)
 
     @field_validator("reason")
     @classmethod
-    def _normalized_reason(cls, value: str | None) -> str | None:
-        if value is not None and (value != value.strip() or "\x00" in value):
+    def _normalized_reason(cls, value: str) -> str:
+        if value != value.strip() or "\x00" in value:
             raise PydanticCustomError(
                 "normalized_text",
                 "reason must be normalized",
@@ -157,11 +162,17 @@ def get_asset_registry_service() -> RegistryService:
     if configured_root:
         allowlist_roots["server"] = Path(configured_root)
 
+    trust_roots = (
+        FileTrustRootProvider.from_environment() if os.getenv(TRUST_ROOTS_ENV) else None
+    )
+    loader = ManifestLoader(allowlist_roots, trust_roots=trust_roots)
+
     return RegistryService(
         store=PostgresRegistryStore(),
-        # No default trust root: an unsigned or untrusted bundle cannot be
-        # promoted merely because it is readable from an allowlisted folder.
-        loader=ManifestLoader(allowlist_roots),
+        # Missing or unsafe production trust configuration is deliberately
+        # represented by a fail-closed validate/publish gate.
+        loader=loader,
+        trust_roots=trust_roots,
     )
 
 
@@ -227,6 +238,7 @@ def create_asset_bundle(
             display_name=request.display_name,
             actor=principal.subject,
             roles=principal.roles,
+            publisher_scopes=principal.asset_publishers,
         )
     )
 
@@ -238,9 +250,7 @@ def get_asset_bundle(
     service: RegistryServiceDependency,
     publisher: PublisherQuery = None,
 ) -> dict[str, Any]:
-    return _invoke(
-        lambda: service.get_bundle(bundle_id=bundle_id, publisher=publisher)
-    )
+    return _invoke(lambda: service.get_bundle(bundle_id=bundle_id, publisher=publisher))
 
 
 @router.post("/{bundle_id}/versions", status_code=status.HTTP_201_CREATED)
@@ -262,6 +272,7 @@ def create_asset_bundle_version(
             actor=principal.subject,
             roles=principal.roles,
             publisher=resolved_publisher,
+            publisher_scopes=principal.asset_publishers,
         )
     )
 
@@ -303,6 +314,7 @@ def validate_asset_bundle_version(
             actor=principal.subject,
             roles=principal.roles,
             publisher=resolved_publisher,
+            publisher_scopes=principal.asset_publishers,
         )
     )
 
@@ -327,6 +339,7 @@ def publish_asset_bundle_version(
             actor=principal.subject,
             roles=principal.roles,
             publisher=resolved_publisher,
+            publisher_scopes=principal.asset_publishers,
         )
     )
 
@@ -337,7 +350,7 @@ def deprecate_asset_bundle_version(
     version: VersionPath,
     principal: PrincipalDependency,
     service: RegistryServiceDependency,
-    request: Annotated[TerminalActionRequest | None, Body()] = None,
+    request: Annotated[TerminalActionRequest, Body()],
     publisher: PublisherQuery = None,
 ) -> dict[str, Any]:
     resolved_publisher = _resolve_publisher(
@@ -350,8 +363,9 @@ def deprecate_asset_bundle_version(
             version=version,
             actor=principal.subject,
             roles=principal.roles,
-            reason=request.reason if request is not None else None,
+            reason=request.reason,
             publisher=resolved_publisher,
+            publisher_scopes=principal.asset_publishers,
         )
     )
 
@@ -362,7 +376,7 @@ def revoke_asset_bundle_version(
     version: VersionPath,
     principal: PrincipalDependency,
     service: RegistryServiceDependency,
-    request: Annotated[TerminalActionRequest | None, Body()] = None,
+    request: Annotated[TerminalActionRequest, Body()],
     publisher: PublisherQuery = None,
 ) -> dict[str, Any]:
     resolved_publisher = _resolve_publisher(
@@ -375,7 +389,8 @@ def revoke_asset_bundle_version(
             version=version,
             actor=principal.subject,
             roles=principal.roles,
-            reason=request.reason if request is not None else None,
+            reason=request.reason,
             publisher=resolved_publisher,
+            publisher_scopes=principal.asset_publishers,
         )
     )

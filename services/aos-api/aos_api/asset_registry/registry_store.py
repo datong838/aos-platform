@@ -1,4 +1,5 @@
 """Atomic PostgreSQL persistence for the canonical asset bundle registry."""
+
 from __future__ import annotations
 
 import re
@@ -11,6 +12,7 @@ from typing import Any, ClassVar, Protocol
 from psycopg import errors
 from psycopg.types.json import Jsonb
 
+from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.asset_registry.contracts import (
     BUNDLE_ID_PATTERN,
     MAX_BUNDLE_ID_LENGTH,
@@ -29,6 +31,7 @@ from aos_api.db import connect
 
 JsonRecord = dict[str, Any]
 ConnectFactory = Callable[[], AbstractContextManager[Any]]
+TransitionPrecondition = Callable[[JsonRecord], None]
 
 
 class RegistryStore(Protocol):
@@ -70,6 +73,7 @@ class RegistryStore(Protocol):
         reason: str | None = None,
         *,
         publisher: str | None = None,
+        precondition: TransitionPrecondition | None = None,
     ) -> JsonRecord: ...
 
 
@@ -124,9 +128,7 @@ class PostgresRegistryStore:
         display_name = self._require_text(display_name, "display_name")
         self._require_text(created_by, "created_by")
         self._require_bundle_id(publisher, "publisher", max_length=120)
-        self._require_bundle_id(
-            bundle_id, "bundle_id", max_length=MAX_BUNDLE_ID_LENGTH
-        )
+        self._require_bundle_id(bundle_id, "bundle_id", max_length=MAX_BUNDLE_ID_LENGTH)
         if len(display_name) > 240:
             raise ManifestInvalidError("display_name exceeds the contract limit")
         try:
@@ -157,9 +159,7 @@ class PostgresRegistryStore:
         assert row is not None
         return self._bundle_record(row)
 
-    def get_bundle(
-        self, bundle_id: str, publisher: str | None = None
-    ) -> JsonRecord:
+    def get_bundle(self, bundle_id: str, publisher: str | None = None) -> JsonRecord:
         bundle_id = self._require_text(bundle_id, "bundle_id")
         publisher = self._optional_text(publisher, "publisher")
         with self._connect_factory() as conn:
@@ -213,15 +213,11 @@ class PostgresRegistryStore:
                         version_pk,
                         bundle["bundle_pk"],
                         metadata.version,
-                        Jsonb(
-                            loaded.manifest.model_dump(mode="json", by_alias=True)
-                        ),
+                        Jsonb(loaded.manifest.model_dump(mode="json", by_alias=True)),
                         loaded.content_hash,
                         (
                             Jsonb(
-                                loaded.signature.model_dump(
-                                    mode="json", by_alias=True
-                                )
+                                loaded.signature.model_dump(mode="json", by_alias=True)
                             )
                             if loaded.signature is not None
                             else None
@@ -274,6 +270,7 @@ class PostgresRegistryStore:
         reason: str | None = None,
         *,
         publisher: str | None = None,
+        precondition: TransitionPrecondition | None = None,
     ) -> JsonRecord:
         bundle_id = self._require_text(bundle_id, "bundle_id")
         version = self._require_text(version, "version")
@@ -290,7 +287,7 @@ class PostgresRegistryStore:
                 )
                 current = conn.execute(
                     """
-                    SELECT status
+                    SELECT version_pk, status
                       FROM asset_bundle_version
                      WHERE bundle_pk = %s AND version = %s
                      FOR UPDATE
@@ -316,6 +313,23 @@ class PostgresRegistryStore:
                             "targetStatus": target,
                         },
                     )
+                version_pk = current["version_pk"]
+                # Lock every release-gate projection before evaluating the
+                # precondition.  The callback and state update therefore see
+                # one indivisible database snapshot.
+                for table in (
+                    "asset_bundle_dependency",
+                    "asset_bundle_artifact",
+                    "asset_bundle_evidence",
+                ):
+                    conn.execute(
+                        f"SELECT 1 FROM {table} WHERE version_pk = %s FOR UPDATE",
+                        (version_pk,),
+                    ).fetchall()
+                locked_record = self._load_version(conn, bundle, version)
+                if precondition is not None:
+                    precondition(locked_record)
+                evidence_revision = canonical_sha256(locked_record["evidence"])
                 updated = conn.execute(
                     """
                     UPDATE asset_bundle_version
@@ -331,6 +345,33 @@ class PostgresRegistryStore:
                         "asset bundle version status changed",
                         details={"expectedStatuses": sorted(expected)},
                     )
+                sequence_row = conn.execute(
+                    """
+                    SELECT COALESCE(MAX(sequence), 0) + 1 AS next_sequence
+                      FROM asset_bundle_version_event
+                     WHERE version_pk = %s
+                    """,
+                    (version_pk,),
+                ).fetchone()
+                assert sequence_row is not None
+                conn.execute(
+                    """
+                    INSERT INTO asset_bundle_version_event (
+                      event_pk, version_pk, sequence, from_status, to_status,
+                      actor, reason, evidence_revision
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        uuid.uuid4(),
+                        version_pk,
+                        int(sequence_row["next_sequence"]),
+                        current_status,
+                        target,
+                        actor,
+                        reason,
+                        evidence_revision,
+                    ),
+                )
                 record = self._load_version(conn, bundle, version)
                 conn.commit()
                 return record
@@ -428,9 +469,7 @@ class PostgresRegistryStore:
                 ),
             )
 
-    def _load_version(
-        self, conn: Any, bundle: Any, version: str
-    ) -> JsonRecord:
+    def _load_version(self, conn: Any, bundle: Any, version: str) -> JsonRecord:
         row = conn.execute(
             """
             SELECT version_pk, version, manifest_json, content_hash, signature,
@@ -469,6 +508,16 @@ class PostgresRegistryStore:
               FROM asset_bundle_evidence
              WHERE version_pk = %s
              ORDER BY evidence_type ASC, artifact_ref ASC
+            """,
+            (version_pk,),
+        ).fetchall()
+        events = conn.execute(
+            """
+            SELECT sequence, from_status, to_status, actor, reason,
+                   evidence_revision, created_at
+              FROM asset_bundle_version_event
+             WHERE version_pk = %s
+             ORDER BY sequence ASC
             """,
             (version_pk,),
         ).fetchall()
@@ -517,6 +566,18 @@ class PostgresRegistryStore:
                     "metadata": dict(item["metadata"] or {}),
                 }
                 for item in evidence
+            ],
+            "lifecycleEvents": [
+                {
+                    "sequence": int(item["sequence"]),
+                    "fromStatus": str(item["from_status"]),
+                    "toStatus": str(item["to_status"]),
+                    "actor": str(item["actor"]),
+                    "reason": item["reason"],
+                    "evidenceRevision": str(item["evidence_revision"]),
+                    "createdAt": self._timestamp(item["created_at"]),
+                }
+                for item in events
             ],
         }
 
