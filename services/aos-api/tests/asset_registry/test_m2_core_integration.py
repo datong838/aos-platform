@@ -362,6 +362,151 @@ def _snapshot_reader(scoped_connect, trust_roots: object) -> RegistrySnapshotRea
     )
 
 
+def _make_published_evidence_ineligible(
+    scoped_connect,
+    *,
+    bundle_id: str,
+    lifecycle: str,
+) -> None:
+    with scoped_connect() as connection:
+        if lifecycle == "missing":
+            connection.execute(
+                "ALTER TABLE asset_bundle_evidence "
+                "DISABLE TRIGGER trg_asset_bundle_evidence_guard"
+            )
+            connection.execute(
+                """
+                DELETE FROM asset_bundle_evidence AS e
+                 USING asset_bundle_version AS v, asset_bundle AS b
+                 WHERE e.version_pk = v.version_pk
+                   AND v.bundle_pk = b.bundle_pk
+                   AND b.bundle_id = %s
+                   AND e.evidence_type = 'sbom'
+                """,
+                (bundle_id,),
+            )
+            connection.execute(
+                "ALTER TABLE asset_bundle_evidence "
+                "ENABLE TRIGGER trg_asset_bundle_evidence_guard"
+            )
+        else:
+            connection.execute(
+                """
+                UPDATE asset_bundle_evidence AS e
+                   SET status = %s,
+                       revoked_at = CASE
+                         WHEN %s = 'revoked' THEN transaction_timestamp()
+                         ELSE revoked_at
+                       END,
+                       updated_at = clock_timestamp() + INTERVAL '1 second',
+                       updated_by = 'w4-monitor',
+                       status_reason = 'W4 lifecycle exclusion precedence'
+                  FROM asset_bundle_version AS v
+                  JOIN asset_bundle AS b ON b.bundle_pk = v.bundle_pk
+                 WHERE e.version_pk = v.version_pk
+                   AND b.bundle_id = %s
+                   AND e.evidence_type = 'sbom'
+                """,
+                (
+                    "expired" if lifecycle == "stale" else lifecycle,
+                    lifecycle,
+                    bundle_id,
+                ),
+            )
+        connection.commit()
+
+
+def _damage_published_candidate_integrity(
+    scoped_connect,
+    *,
+    bundle_id: str,
+    damage: str,
+) -> None:
+    with scoped_connect() as connection:
+        connection.execute(
+            "ALTER TABLE asset_bundle_version "
+            "DISABLE TRIGGER trg_asset_bundle_version_guard"
+        )
+        if damage == "manifest":
+            connection.execute(
+                """
+                UPDATE asset_bundle_version AS v
+                   SET manifest_json = jsonb_set(
+                         manifest_json,
+                         '{metadata,displayName}',
+                         '"W4 tampered manifest"'::JSONB
+                       )
+                  FROM asset_bundle AS b
+                 WHERE b.bundle_pk = v.bundle_pk
+                   AND b.bundle_id = %s
+                """,
+                (bundle_id,),
+            )
+        elif damage == "content-hash":
+            connection.execute(
+                """
+                UPDATE asset_bundle_version AS v
+                   SET content_hash = %s
+                  FROM asset_bundle AS b
+                 WHERE b.bundle_pk = v.bundle_pk
+                   AND b.bundle_id = %s
+                """,
+                ("sha256:" + "f" * 64, bundle_id),
+            )
+        else:
+            invalid_signature = base64.b64encode(bytes(64)).decode("ascii")
+            connection.execute(
+                """
+                UPDATE asset_bundle_version AS v
+                   SET signature = jsonb_set(
+                         signature,
+                         '{signature}',
+                         to_jsonb(%s::TEXT)
+                       )
+                  FROM asset_bundle AS b
+                 WHERE b.bundle_pk = v.bundle_pk
+                   AND b.bundle_id = %s
+                """,
+                (invalid_signature, bundle_id),
+            )
+            row = connection.execute(
+                """
+                SELECT v.signature
+                  FROM asset_bundle_version AS v
+                  JOIN asset_bundle AS b ON b.bundle_pk = v.bundle_pk
+                 WHERE b.bundle_id = %s
+                """,
+                (bundle_id,),
+            ).fetchone()
+            assert row is not None
+            signature_hash = canonical_sha256(row["signature"])
+            connection.execute(
+                "ALTER TABLE asset_bundle_evidence "
+                "DISABLE TRIGGER trg_asset_bundle_evidence_guard"
+            )
+            connection.execute(
+                """
+                UPDATE asset_bundle_evidence AS e
+                   SET artifact_hash = %s
+                  FROM asset_bundle_version AS v
+                  JOIN asset_bundle AS b ON b.bundle_pk = v.bundle_pk
+                 WHERE e.version_pk = v.version_pk
+                   AND b.bundle_id = %s
+                   AND e.evidence_type = 'signature_verification'
+                """,
+                (signature_hash, bundle_id),
+            )
+            connection.execute(
+                "ALTER TABLE asset_bundle_evidence "
+                "ENABLE TRIGGER trg_asset_bundle_evidence_guard"
+            )
+        connection.execute(
+            "ALTER TABLE asset_bundle_version "
+            "ENABLE TRIGGER trg_asset_bundle_version_guard"
+        )
+        connection.commit()
+
+
 def _composition_input() -> tuple[
     CompositionRequest,
     RegistrySnapshot,
@@ -456,6 +601,112 @@ def test_snapshot_expiry_does_not_dos_other_candidates(core_database) -> None:
     snapshot = _snapshot_reader(scoped_connect, trust_roots).read()
 
     assert [item.id for item in snapshot.candidates] == ["solution.healthy"]
+
+
+@pytest.mark.parametrize("lifecycle", ["stale", "missing", "revoked"])
+@pytest.mark.parametrize(
+    ("damage", "expected_code"),
+    [
+        ("manifest", AssetRegistryErrorCode.MANIFEST_INVALID),
+        ("content-hash", AssetRegistryErrorCode.MANIFEST_INVALID),
+        ("crypto", AssetRegistryErrorCode.SIGNATURE_INVALID),
+    ],
+)
+def test_snapshot_ineligible_evidence_cannot_hide_integrity_damage(
+    core_database,
+    lifecycle: str,
+    damage: str,
+    expected_code: AssetRegistryErrorCode,
+) -> None:
+    scoped_connect = core_database
+    registry = PostgresRegistryStore(scoped_connect)
+    trust_roots = TrustRoots()
+    _publish_bundle(registry, trust_roots, bundle_id="solution.damaged")
+    _publish_bundle(registry, trust_roots, bundle_id="solution.healthy")
+    _make_published_evidence_ineligible(
+        scoped_connect,
+        bundle_id="solution.damaged",
+        lifecycle=lifecycle,
+    )
+    _damage_published_candidate_integrity(
+        scoped_connect,
+        bundle_id="solution.damaged",
+        damage=damage,
+    )
+
+    with pytest.raises(AssetRegistryError) as caught:
+        _snapshot_reader(scoped_connect, trust_roots).read()
+
+    assert caught.value.code == expected_code
+    if damage == "crypto":
+        assert str(caught.value) == "bundle signature is not valid under current trust"
+
+
+def test_snapshot_candidate_limit_counts_only_eligible_candidates(
+    core_database,
+    monkeypatch,
+) -> None:
+    scoped_connect = core_database
+    registry = PostgresRegistryStore(scoped_connect)
+    trust_roots = TrustRoots()
+    for publisher, bundle_id in (
+        ("aaa", "solution.invalid-a"),
+        ("aab", "solution.invalid-b"),
+        ("zzz", "solution.healthy"),
+    ):
+        _publish_bundle(
+            registry,
+            trust_roots,
+            publisher=publisher,
+            bundle_id=bundle_id,
+        )
+    trust_roots.roots.pop(("aaa", "aaa-w4-key"))
+    trust_roots.roots.pop(("aab", "aab-w4-key"))
+    monkeypatch.setattr(
+        "aos_api.asset_registry.registry_snapshot.MAX_SNAPSHOT_CANDIDATES",
+        1,
+    )
+
+    snapshot = _snapshot_reader(scoped_connect, trust_roots).read()
+
+    assert [(item.publisher, item.id) for item in snapshot.candidates] == [
+        ("zzz", "solution.healthy")
+    ]
+
+
+def test_snapshot_candidate_limit_fails_at_first_max_plus_one_eligible(
+    core_database,
+    monkeypatch,
+) -> None:
+    scoped_connect = core_database
+    registry = PostgresRegistryStore(scoped_connect)
+    trust_roots = TrustRoots()
+    _publish_bundle(
+        registry,
+        trust_roots,
+        publisher="aaa",
+        bundle_id="solution.eligible-a",
+    )
+    _publish_bundle(
+        registry,
+        trust_roots,
+        publisher="aab",
+        bundle_id="solution.eligible-b",
+    )
+    monkeypatch.setattr(
+        "aos_api.asset_registry.registry_snapshot.MAX_SNAPSHOT_CANDIDATES",
+        1,
+    )
+
+    with pytest.raises(AssetRegistryError) as caught:
+        _snapshot_reader(scoped_connect, trust_roots).read()
+
+    assert caught.value.code == AssetRegistryErrorCode.RESOLUTION_LIMIT_EXCEEDED
+    assert caught.value.details == {
+        "resource": "snapshot_candidates",
+        "limit": 1,
+        "observed": 2,
+    }
 
 
 def test_snapshot_uses_one_trust_view_and_excludes_only_the_revoked_candidate(
