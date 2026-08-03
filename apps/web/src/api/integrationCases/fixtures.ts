@@ -3,6 +3,7 @@ import type {
   IntegrationCaseListResponse,
   IntegrationCaseTimelineResponse,
   IntegrationEvidenceSnapshotResponse,
+  IntegrationStageGate,
   ReferenceIntegrationCaseDetail,
 } from "./types";
 
@@ -15,6 +16,29 @@ export const BLOCKER_ID = "00000000-0000-4000-8000-000000000106";
 export const HASH_A = `sha256:${"a".repeat(64)}`;
 export const HASH_B = `sha256:${"b".repeat(64)}`;
 const CUTOFF = "2026-08-03T09:00:00+00:00";
+const OWNER_REF = "subject:case-owner-001";
+
+const CURRENT_STAGE_GATES = [
+  { stage: "planned", status: "satisfied", evidenceRefs: [HASH_A], reasonRefs: [] },
+  { stage: "connection_verified", status: "satisfied", evidenceRefs: [HASH_B], reasonRefs: [] },
+  { stage: "data_verified", status: "blocked", evidenceRefs: [], reasonRefs: ["missing:pipeline_run"] },
+  { stage: "ontology_verified", status: "not_evaluated", evidenceRefs: [], reasonRefs: [] },
+  { stage: "logic_verified", status: "not_evaluated", evidenceRefs: [], reasonRefs: [] },
+  { stage: "workshop_verified", status: "not_evaluated", evidenceRefs: [], reasonRefs: [] },
+  { stage: "production_ready", status: "not_evaluated", evidenceRefs: [], reasonRefs: [] },
+  { stage: "production_active", status: "not_evaluated", evidenceRefs: [], reasonRefs: [] },
+] satisfies IntegrationStageGate[];
+
+const REFERENCE_STAGE_GATES = [
+  { stage: "planned", status: "satisfied", evidenceRefs: [HASH_A], reasonRefs: [] },
+  { stage: "connection_verified", status: "satisfied", evidenceRefs: [HASH_B], reasonRefs: [] },
+  { stage: "data_verified", status: "satisfied", evidenceRefs: [HASH_A], reasonRefs: [] },
+  { stage: "ontology_verified", status: "satisfied", evidenceRefs: [HASH_B], reasonRefs: [] },
+  { stage: "logic_verified", status: "satisfied", evidenceRefs: [HASH_A], reasonRefs: [] },
+  { stage: "workshop_verified", status: "satisfied", evidenceRefs: [HASH_B], reasonRefs: [] },
+  { stage: "production_ready", status: "not_evaluated", evidenceRefs: [], reasonRefs: [] },
+  { stage: "production_active", status: "not_evaluated", evidenceRefs: [], reasonRefs: [] },
+] satisfies IntegrationStageGate[];
 
 const countMetric = (value: number, eligibleCaseCount = 1) => ({
   value,
@@ -39,7 +63,7 @@ export const CURRENT_CASE_LIST_FIXTURE: IntegrationCaseListResponse = {
     caseId: CASE_ID,
     scope: "current",
     displayName: "Current commerce case",
-    owner: "owner@example.test",
+    owner: OWNER_REF,
     installationId: INSTALLATION_ID,
     overlayRevision: "overlay-7",
     computedStage: "connection_verified",
@@ -85,11 +109,7 @@ export const CURRENT_CASE_DETAIL_FIXTURE: CurrentIntegrationCaseDetail = {
   compositionId: COMPOSITION_ID,
   lockRevision: 2,
   lockHash: HASH_A,
-  stageGates: [
-    { stage: "planned", status: "satisfied", evidenceRefs: [HASH_A], reasonRefs: [] },
-    { stage: "connection_verified", status: "satisfied", evidenceRefs: [HASH_B], reasonRefs: [] },
-    { stage: "data_verified", status: "blocked", evidenceRefs: [], reasonRefs: ["missing:pipeline_run"] },
-  ],
+  stageGates: [...CURRENT_STAGE_GATES],
   latestEvidence: [{
     evidenceId: EVIDENCE_ID,
     revision: 2,
@@ -111,7 +131,7 @@ export const CURRENT_CASE_DETAIL_FIXTURE: CurrentIntegrationCaseDetail = {
     gate: "data_verified",
     reasonRefs: ["missing:pipeline_run"],
     evidenceRefs: [],
-    owner: "owner@example.test",
+    owner: OWNER_REF,
     firstObservedAt: "2026-08-03T08:57:00+00:00",
     updatedAt: CUTOFF,
   }],
@@ -125,7 +145,7 @@ export const REFERENCE_CASE_DETAIL_FIXTURE: ReferenceIntegrationCaseDetail = {
   compositionId: null,
   lockRevision: null,
   lockHash: null,
-  stageGates: [{ stage: "planned", status: "satisfied", evidenceRefs: [HASH_A], reasonRefs: [] }],
+  stageGates: [...REFERENCE_STAGE_GATES],
   latestEvidence: [],
   blockers: [],
   nextProjectionAt: null,
@@ -137,25 +157,38 @@ export const TIMELINE_FIXTURE: IntegrationCaseTimelineResponse = {
   scope: "current",
   items: [{
     sequence: 1,
+    snapshotRevision: 1,
+    oldStage: null,
+    newStage: "planned",
+    cause: "created",
+    reasonRefs: [HASH_A],
+    createdAt: "2026-08-03T08:00:00+00:00",
+  }, {
+    sequence: 2,
     snapshotRevision: 2,
     oldStage: "planned",
     newStage: "connection_verified",
-    cause: "evidence_recorded",
+    cause: "evidence_added",
     reasonRefs: [HASH_B],
     createdAt: CUTOFF,
   }],
-  total: 1,
+  total: 2,
   limit: 50,
   offset: 0,
 };
 
 export const SNAPSHOT_FIXTURE: IntegrationEvidenceSnapshotResponse = {
   caseId: CASE_ID,
+  instanceRevision: 5,
   snapshotRevision: 2,
   snapshotHash: HASH_A,
+  stagePolicyVersion: "aos.integration-stage/v1",
   computedStage: "connection_verified",
+  stageGates: [...CURRENT_STAGE_GATES],
+  blockerRefs: [BLOCKER_ID],
   cutoffAt: CUTOFF,
   nextProjectionAt: "2026-08-03T10:00:00+00:00",
   evidenceCount: 2,
+  etagVersion: 3,
   createdAt: CUTOFF,
 };

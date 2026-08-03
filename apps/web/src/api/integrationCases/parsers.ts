@@ -28,8 +28,8 @@ const EVIDENCE_TYPES = new Set<IntegrationEvidenceType>(INTEGRATION_EVIDENCE_TYP
 const SEVERITIES = new Set<BlockerSeverity>(["critical", "high", "medium", "low"]);
 const BLOCKER_STATUSES = new Set<BlockerStatus>(["open", "resolved"]);
 const CAUSES = new Set<TimelineCause>([
-  "evidence_recorded", "evidence_invalidated", "evidence_expired",
-  "evidence_revoked", "evidence_renewed", "projection_rebuilt",
+  "created", "evidence_added", "negative_observed", "evidence_expired",
+  "evidence_revoked", "projection_rebuilt",
 ]);
 const AGGREGATIONS = new Set<MetricAggregation>(["count", "distinct_count", "sum", "max"]);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -101,6 +101,12 @@ function stringArray(value: unknown, label: string): asserts value is string[] {
   if (new Set(value).size !== value.length) throw new Error(`${label} must not contain duplicates`);
 }
 
+function uuidArray(value: unknown, label: string): asserts value is string[] {
+  if (!Array.isArray(value)) throw new Error(`${label} must be an array`);
+  value.forEach((entry, index) => uuid(entry, `${label}[${index}]`));
+  if (new Set(value).size !== value.length) throw new Error(`${label} must not contain duplicates`);
+}
+
 const METRIC_KEYS = ["value", "aggregation", "measuredCaseCount", "eligibleCaseCount", "cutoffAt"] as const;
 function metric(value: unknown, label: string): void {
   const item = record(value, label);
@@ -160,6 +166,19 @@ function stageGate(value: unknown, label: string): void {
   if (!GATE_STATUSES.has(item.status as StageGateStatus)) throw new Error(`${label}.status is invalid`);
   stringArray(item.evidenceRefs, `${label}.evidenceRefs`);
   stringArray(item.reasonRefs, `${label}.reasonRefs`);
+}
+
+function stageGates(value: unknown, label: string): void {
+  if (!Array.isArray(value)) throw new Error(`${label} must be an array`);
+  if (value.length !== INTEGRATION_CASE_STAGES.length) {
+    throw new Error(`${label} must contain all eight canonical stages`);
+  }
+  value.forEach((entry, index) => {
+    stageGate(entry, `${label}[${index}]`);
+    if ((entry as { stage: unknown }).stage !== INTEGRATION_CASE_STAGES[index]) {
+      throw new Error(`${label} must follow canonical stage order`);
+    }
+  });
 }
 
 function evidence(value: unknown, label: string): void {
@@ -227,10 +246,7 @@ export function parseIntegrationCaseDetail(value: unknown): IntegrationCaseDetai
   } else if (item.installationRevision !== null || item.compositionId !== null || item.lockRevision !== null || item.lockHash !== null) {
     throw new Error("Integration case detail reference binding fields must be null");
   }
-  if (!Array.isArray(item.stageGates)) throw new Error("Integration case detail.stageGates must be an array");
-  item.stageGates.forEach((entry, index) => stageGate(entry, `Integration case detail.stageGates[${index}]`));
-  const gateStages = item.stageGates.map((entry) => (entry as { stage: string }).stage);
-  if (new Set(gateStages).size !== gateStages.length) throw new Error("Integration case detail.stageGates contains duplicate stages");
+  stageGates(item.stageGates, "Integration case detail.stageGates");
   if (!Array.isArray(item.latestEvidence)) throw new Error("Integration case detail.latestEvidence must be an array");
   item.latestEvidence.forEach((entry, index) => evidence(entry, `Integration case detail.latestEvidence[${index}]`));
   if (!Array.isArray(item.blockers)) throw new Error("Integration case detail.blockers must be an array");
@@ -254,10 +270,15 @@ export function parseIntegrationCaseTimeline(value: unknown): IntegrationCaseTim
     exactKeys(item, ["sequence", "snapshotRevision", "oldStage", "newStage", "cause", "reasonRefs", "createdAt"], `Integration case timeline.items[${index}]`);
     positiveInteger(item.sequence, `Timeline event[${index}].sequence`);
     positiveInteger(item.snapshotRevision, `Timeline event[${index}].snapshotRevision`);
-    stage(item.oldStage, `Timeline event[${index}].oldStage`);
+    if (item.oldStage !== null) stage(item.oldStage, `Timeline event[${index}].oldStage`);
     stage(item.newStage, `Timeline event[${index}].newStage`);
     if (item.oldStage === item.newStage) throw new Error(`Timeline event[${index}] must change stage`);
     if (!CAUSES.has(item.cause as TimelineCause)) throw new Error(`Timeline event[${index}].cause is invalid`);
+    if (item.cause === "created") {
+      if (item.oldStage !== null || item.newStage !== "planned") throw new Error(`Timeline event[${index}] created event must initialize planned stage`);
+    } else if (item.oldStage === null) {
+      throw new Error(`Timeline event[${index}] oldStage may be null only for created event`);
+    }
     stringArray(item.reasonRefs, `Timeline event[${index}].reasonRefs`);
     timestamp(item.createdAt, `Timeline event[${index}].createdAt`);
     if (item.sequence <= previousSequence) throw new Error("Integration case timeline sequence must increase");
@@ -272,14 +293,19 @@ export function parseIntegrationCaseTimeline(value: unknown): IntegrationCaseTim
 
 export function parseIntegrationEvidenceSnapshot(value: unknown): IntegrationEvidenceSnapshotResponse {
   const item = record(value, "Integration evidence snapshot");
-  exactKeys(item, ["caseId", "snapshotRevision", "snapshotHash", "computedStage", "cutoffAt", "nextProjectionAt", "evidenceCount", "createdAt"], "Integration evidence snapshot");
+  exactKeys(item, ["caseId", "instanceRevision", "snapshotRevision", "snapshotHash", "stagePolicyVersion", "computedStage", "stageGates", "blockerRefs", "cutoffAt", "nextProjectionAt", "evidenceCount", "etagVersion", "createdAt"], "Integration evidence snapshot");
   uuid(item.caseId, "Integration evidence snapshot.caseId");
+  positiveInteger(item.instanceRevision, "Integration evidence snapshot.instanceRevision");
   positiveInteger(item.snapshotRevision, "Integration evidence snapshot.snapshotRevision");
   sha256(item.snapshotHash, "Integration evidence snapshot.snapshotHash");
+  if (item.stagePolicyVersion !== "aos.integration-stage/v1") throw new Error("Integration evidence snapshot.stagePolicyVersion is invalid");
   stage(item.computedStage, "Integration evidence snapshot.computedStage");
+  stageGates(item.stageGates, "Integration evidence snapshot.stageGates");
+  uuidArray(item.blockerRefs, "Integration evidence snapshot.blockerRefs");
   timestamp(item.cutoffAt, "Integration evidence snapshot.cutoffAt");
   nullableTimestamp(item.nextProjectionAt, "Integration evidence snapshot.nextProjectionAt");
   nonNegativeInteger(item.evidenceCount, "Integration evidence snapshot.evidenceCount");
+  positiveInteger(item.etagVersion, "Integration evidence snapshot.etagVersion");
   timestamp(item.createdAt, "Integration evidence snapshot.createdAt");
   return value as IntegrationEvidenceSnapshotResponse;
 }

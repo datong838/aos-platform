@@ -32,6 +32,7 @@ describe("M4-0 integration case strict response contracts", () => {
   it("accepts anonymized references only with null tenant bindings and no statistics", () => {
     expect(parseIntegrationCaseList(REFERENCE_CASE_LIST_FIXTURE)).toBe(REFERENCE_CASE_LIST_FIXTURE);
     expect(parseIntegrationCaseDetail(REFERENCE_CASE_DETAIL_FIXTURE)).toBe(REFERENCE_CASE_DETAIL_FIXTURE);
+    expect(JSON.stringify([CURRENT_CASE_LIST_FIXTURE, CURRENT_CASE_DETAIL_FIXTURE])).not.toContain("@");
   });
 
   it("freezes all eight server-owned stages", () => {
@@ -42,8 +43,13 @@ describe("M4-0 integration case strict response contracts", () => {
   });
 
   it("accepts immutable snapshot and timeline responses", () => {
-    expect(parseIntegrationEvidenceSnapshot(SNAPSHOT_FIXTURE)).toBe(SNAPSHOT_FIXTURE);
-    expect(parseIntegrationCaseTimeline(TIMELINE_FIXTURE)).toBe(TIMELINE_FIXTURE);
+    const snapshot = parseIntegrationEvidenceSnapshot(SNAPSHOT_FIXTURE);
+    expect(snapshot).toBe(SNAPSHOT_FIXTURE);
+    expect(snapshot.stagePolicyVersion).toBe("aos.integration-stage/v1");
+    expect(snapshot.stageGates).toHaveLength(8);
+    const timeline = parseIntegrationCaseTimeline(TIMELINE_FIXTURE);
+    expect(timeline).toBe(TIMELINE_FIXTURE);
+    expect(timeline.items[0]).toMatchObject({ oldStage: null, cause: "created" });
   });
 
   it("rejects unknown, missing, extra and snake_case response fields", () => {
@@ -127,13 +133,45 @@ describe("M4-0 integration case strict response contracts", () => {
 
   it("rejects non-changing or non-monotonic timeline events", () => {
     const unchanged = clone(TIMELINE_FIXTURE) as { items: Array<Record<string, unknown>> };
-    unchanged.items[0].newStage = "planned";
+    unchanged.items[1].newStage = "planned";
     expect(() => parseIntegrationCaseTimeline(unchanged)).toThrow(/must change stage/);
 
     const duplicate = clone(TIMELINE_FIXTURE) as { items: Array<Record<string, unknown>>; total: number };
     duplicate.items.push({ ...duplicate.items[0] });
     duplicate.total = 2;
     expect(() => parseIntegrationCaseTimeline(duplicate)).toThrow(/sequence must increase/);
+
+    const unknownCause = clone(TIMELINE_FIXTURE) as { items: Array<Record<string, unknown>> };
+    unknownCause.items[1].cause = "evidence_renewed";
+    expect(() => parseIntegrationCaseTimeline(unknownCause)).toThrow(/cause is invalid/);
+
+    const nullOldStage = clone(TIMELINE_FIXTURE) as { items: Array<Record<string, unknown>> };
+    nullOldStage.items[1].oldStage = null;
+    expect(() => parseIntegrationCaseTimeline(nullOldStage)).toThrow(/only for created event/);
+  });
+
+  it("requires eight stage gates in canonical order for detail and snapshot", () => {
+    const missingGate = clone(CURRENT_CASE_DETAIL_FIXTURE) as { stageGates: unknown[] };
+    missingGate.stageGates.pop();
+    expect(() => parseIntegrationCaseDetail(missingGate)).toThrow(/all eight canonical stages/);
+
+    const reordered = clone(SNAPSHOT_FIXTURE) as { stageGates: unknown[] };
+    [reordered.stageGates[0], reordered.stageGates[1]] = [reordered.stageGates[1], reordered.stageGates[0]];
+    expect(() => parseIntegrationEvidenceSnapshot(reordered)).toThrow(/canonical stage order/);
+  });
+
+  it("rejects snapshot policy drift and missing canonical projection fields", () => {
+    const policyDrift = clone(SNAPSHOT_FIXTURE);
+    policyDrift.stagePolicyVersion = "aos.integration-stage/v2";
+    expect(() => parseIntegrationEvidenceSnapshot(policyDrift)).toThrow(/stagePolicyVersion is invalid/);
+
+    const missingEtag = clone(SNAPSHOT_FIXTURE);
+    delete missingEtag.etagVersion;
+    expect(() => parseIntegrationEvidenceSnapshot(missingEtag)).toThrow(/missing=etagVersion/);
+
+    const badBlockerRefs = clone(SNAPSHOT_FIXTURE);
+    badBlockerRefs.blockerRefs = [SNAPSHOT_FIXTURE.blockerRefs[0], SNAPSHOT_FIXTURE.blockerRefs[0]];
+    expect(() => parseIntegrationEvidenceSnapshot(badBlockerRefs)).toThrow(/must not contain duplicates/);
   });
 });
 

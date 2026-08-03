@@ -35,11 +35,11 @@ export type IntegrationEvidenceType = (typeof INTEGRATION_EVIDENCE_TYPES)[number
 export type BlockerSeverity = "critical" | "high" | "medium" | "low";
 export type BlockerStatus = "open" | "resolved";
 export type TimelineCause =
-  | "evidence_recorded"
-  | "evidence_invalidated"
+  | "created"
+  | "evidence_added"
+  | "negative_observed"
   | "evidence_expired"
   | "evidence_revoked"
-  | "evidence_renewed"
   | "projection_rebuilt";
 export type MetricAggregation = "count" | "distinct_count" | "sum" | "max";
 
@@ -172,7 +172,7 @@ export type IntegrationCaseDetail =
 export interface IntegrationStageEvent {
   sequence: number;
   snapshotRevision: number;
-  oldStage: IntegrationCaseStage;
+  oldStage: IntegrationCaseStage | null;
   newStage: IntegrationCaseStage;
   cause: TimelineCause;
   reasonRefs: string[];
@@ -190,12 +190,17 @@ export interface IntegrationCaseTimelineResponse {
 
 export interface IntegrationEvidenceSnapshotResponse {
   caseId: string;
+  instanceRevision: number;
   snapshotRevision: number;
   snapshotHash: string;
+  stagePolicyVersion: "aos.integration-stage/v1";
   computedStage: IntegrationCaseStage;
+  stageGates: IntegrationStageGate[];
+  blockerRefs: string[];
   cutoffAt: string;
   nextProjectionAt: string | null;
   evidenceCount: number;
+  etagVersion: number;
   createdAt: string;
 }
 
