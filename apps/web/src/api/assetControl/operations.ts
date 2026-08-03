@@ -7,6 +7,7 @@ export type AssetControlErrorStatus =
   | 404
   | 409
   | 412
+  | 422
   | 428
   | 500;
 
@@ -33,9 +34,9 @@ export type AssetControlOperationSpec = Readonly<{
   errorStatuses: readonly AssetControlErrorStatus[];
 }>;
 
-const BASE_ERRORS = [400, 401, 403, 404, 500] as const;
-const COMMAND_ERRORS = [400, 401, 403, 404, 409, 500] as const;
-const ACTION_ERRORS = [400, 401, 403, 404, 409, 412, 428, 500] as const;
+const BASE_ERRORS = [400, 401, 403, 404, 422, 500] as const;
+const COMMAND_ERRORS = [400, 401, 403, 404, 409, 422, 500] as const;
+const ACTION_ERRORS = [400, 401, 403, 404, 409, 412, 422, 428, 500] as const;
 
 /**
  * Frozen M2-B HTTP surface consumed by M3.
@@ -168,6 +169,7 @@ export const ASSET_CONTROL_ERROR_STATUS_MEANINGS = {
   404: "not_visible_or_missing",
   409: "state_or_idempotency_conflict",
   412: "etag_precondition_failed",
+  422: "validation_or_resolution_limit",
   428: "if_match_required",
   500: "server_error",
 } as const satisfies Record<AssetControlErrorStatus, string>;

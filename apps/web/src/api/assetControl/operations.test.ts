@@ -67,6 +67,7 @@ describe("asset-control M2-B operation contract", () => {
       404: "not_visible_or_missing",
       409: "state_or_idempotency_conflict",
       412: "etag_precondition_failed",
+      422: "validation_or_resolution_limit",
       428: "if_match_required",
       500: "server_error",
     });

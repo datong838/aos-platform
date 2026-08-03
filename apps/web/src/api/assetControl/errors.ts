@@ -109,6 +109,16 @@ const STATUS_POLICIES: Record<AssetControlErrorStatus, FailurePolicy> = {
     retryable: false,
     outcomeUnknown: false,
   },
+  422: {
+    kind: "invalid_request",
+    message: "请求未通过服务端校验或解析资源上限，请调整输入后重新发起命令。",
+    recovery: "fix_request",
+    isConflict: false,
+    requiresRefresh: false,
+    notVisibleOrMissing: false,
+    retryable: false,
+    outcomeUnknown: false,
+  },
   428: {
     kind: "precondition_required",
     message: "操作缺少强版本前置条件，已停止执行。",

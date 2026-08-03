@@ -30,6 +30,7 @@ describe("M3-1 asset-control error normalization", () => {
     [404, "not_visible_or_missing", "none"],
     [409, "conflict", "refresh_then_retry"],
     [412, "precondition_failed", "refresh_then_retry"],
+    [422, "invalid_request", "fix_request"],
     [428, "precondition_required", "failure_closed"],
     [500, "server_error", "retry_same_command"],
   ] as const)("normalizes HTTP %i", (status, kind, recovery) => {
@@ -142,6 +143,24 @@ describe("M3-1 asset-control error normalization", () => {
       requiresRefresh: false,
       retryable: false,
       recovery: "failure_closed",
+      failureClosed: true,
+    });
+  });
+
+  it("keeps resolver resource limits failure closed without claiming success", () => {
+    const normalized = normalizeAssetControlError(
+      apiError(422, "RESOLUTION_LIMIT_EXCEEDED", {
+        resource: "backtrackingStates",
+      }),
+    );
+
+    expect(normalized).toMatchObject({
+      status: 422,
+      kind: "invalid_request",
+      recovery: "fix_request",
+      retryable: false,
+      requiresRefresh: false,
+      outcomeUnknown: false,
       failureClosed: true,
     });
   });
