@@ -1,6 +1,8 @@
+import { isOffline } from "../../lib/offlineStore";
 import { getApiBase } from "../apiBase";
 import { getDesktopClientVersion } from "../desktopClient";
 import { tenantAuthHeaders } from "../tenant";
+import type { IdempotencyKey } from "./idempotency";
 import {
   ASSET_CONTROL_HEADER_CONTRACT,
   ASSET_CONTROL_OPERATIONS,
@@ -40,7 +42,7 @@ export interface AssetControlClientOptions {
 }
 
 export interface IdempotentCommandOptions {
-  idempotencyKey: string;
+  idempotencyKey: IdempotencyKey;
 }
 
 export interface InstallationActionOptions extends IdempotentCommandOptions {
@@ -104,7 +106,7 @@ function fillPath(
   });
 }
 
-function idempotencyKey(value: string): string {
+function idempotencyKey(value: IdempotencyKey): IdempotencyKey {
   const contract = ASSET_CONTROL_HEADER_CONTRACT.idempotencyKey;
   if (
     typeof value !== "string" ||
@@ -116,6 +118,21 @@ function idempotencyKey(value: string): string {
     throw new TypeError("idempotencyKey violates the canonical header contract");
   }
   return value;
+}
+
+function offlineMutationDisabled(operationId: string): never {
+  const message = "asset control mutations are disabled while offline";
+  const body: ApiErrorBody = {
+    code: "OFFLINE_MUTATION_DISABLED",
+    message,
+    details: null,
+    traceId: "",
+  };
+  throw new AssetControlClientError(message, {
+    status: 0,
+    body,
+    operationId,
+  });
 }
 
 function strongIfMatch(etagVersion: number): string {
@@ -260,6 +277,9 @@ export class AssetControlClient {
     options: IdempotentCommandOptions,
     etagVersion?: number,
   ): Promise<T> {
+    // Asset-control commands are never queued or replayed by the generic
+    // offline writer. A user must explicitly retry the same command identity.
+    if (isOffline()) offlineMutationDisabled(operation.operationId);
     const key = idempotencyKey(options.idempotencyKey);
     const ifMatch =
       etagVersion === undefined ? undefined : strongIfMatch(etagVersion);
