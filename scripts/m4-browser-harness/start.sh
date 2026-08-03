@@ -9,8 +9,11 @@ PG_PORT="${AOS_M4_PG_PORT:-55432}"
 API_PORT="${AOS_M4_API_PORT:-18080}"
 PROXY_PORT="${AOS_M4_PROXY_PORT:-18081}"
 WEB_PORT="${AOS_M4_WEB_PORT:-1420}"
+PG_USER="aos_m4"
 PG_PASSWORD="aos_m4_browser_only"
-DSN="postgresql://aos_m4:${PG_PASSWORD}@127.0.0.1:${PG_PORT}/aos_m4"
+PG_DATABASE="aos_m4"
+DSN="$(printf 'postgresql://%s:%s@127.0.0.1:%s/%s' \
+  "$PG_USER" "$PG_PASSWORD" "$PG_PORT" "$PG_DATABASE")"
 
 mkdir -p "$STATE_DIR"
 chmod 700 "$STATE_DIR"
@@ -72,15 +75,15 @@ cleanup_on_error() {
 trap cleanup_on_error EXIT
 
 docker run --rm -d --name "$CONTAINER" \
-  -e POSTGRES_USER=aos_m4 \
+  -e POSTGRES_USER="$PG_USER" \
   -e POSTGRES_PASSWORD="$PG_PASSWORD" \
-  -e POSTGRES_DB=aos_m4 \
+  -e POSTGRES_DB="$PG_DATABASE" \
   -p "127.0.0.1:${PG_PORT}:5432" \
   postgres:16-alpine >"$STATE_DIR/postgres.container"
 
 ready=0
 for _ in $(seq 1 60); do
-  if docker exec "$CONTAINER" pg_isready -U aos_m4 -d aos_m4 >/dev/null 2>&1; then
+  if docker exec "$CONTAINER" pg_isready -U "$PG_USER" -d "$PG_DATABASE" >/dev/null 2>&1; then
     ready=1
     break
   fi
