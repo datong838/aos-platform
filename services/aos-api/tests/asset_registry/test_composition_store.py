@@ -494,7 +494,7 @@ def test_every_lock_hash_is_reverified_after_direct_tamper(
 def test_psycopg_failure_is_redacted() -> None:
     def unavailable():
         raise psycopg.OperationalError(
-            "postgresql://private-user:private-password@internal/database"
+            "postgresql://placeholder-user:placeholder-password@placeholder-host/database"
         )
 
     store = PostgresCompositionStore(unavailable)
@@ -505,4 +505,4 @@ def test_psycopg_failure_is_redacted() -> None:
             composition_id="11111111-1111-4111-8111-111111111111",
         )
     assert str(captured.value) == "composition persistence failed"
-    assert "private" not in str(captured.value)
+    assert "placeholder" not in str(captured.value)

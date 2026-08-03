@@ -574,7 +574,7 @@ def test_draft_creation_can_share_idempotency_transaction_and_cas_lock(
 def test_psycopg_failure_is_redacted() -> None:
     def unavailable():
         raise psycopg.OperationalError(
-            "postgresql://private-user:private-password@internal/database"
+            "postgresql://placeholder-user:placeholder-password@placeholder-host/database"
         )
 
     store = PostgresInstallationStore(unavailable)
@@ -585,4 +585,4 @@ def test_psycopg_failure_is_redacted() -> None:
             installation_id="22222222-2222-4222-8222-222222222222",
         )
     assert str(captured.value) == "installation persistence failed"
-    assert "private" not in str(captured.value)
+    assert "placeholder" not in str(captured.value)
