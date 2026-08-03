@@ -99,8 +99,7 @@ class RegistrySnapshotReader:
                         },
                     )
                 candidates = [
-                    self._candidate_from_row(row, checked_at=checked_at)
-                    for row in rows
+                    self._candidate_from_row(row, checked_at=checked_at) for row in rows
                 ]
                 try:
                     return RegistrySnapshot.build(
@@ -227,9 +226,7 @@ class RegistrySnapshotReader:
 
 
 def _transaction_timestamp(conn: Any) -> datetime:
-    row = conn.execute(
-        "SELECT transaction_timestamp() AS checked_at"
-    ).fetchone()
+    row = conn.execute("SELECT transaction_timestamp() AS checked_at").fetchone()
     if row is None:
         raise VerificationFailedError("registry snapshot transaction clock is missing")
     return row["checked_at"]

@@ -141,9 +141,7 @@ def _manifest(*, publisher: str, bundle_id: str, version: str) -> BundleManifest
             },
             "spec": {
                 "platformApi": ">=1.7.0 <2.0.0",
-                "dependencies": [
-                    {"id": "domain.foundation", "version": "^1.0.0"}
-                ],
+                "dependencies": [{"id": "domain.foundation", "version": "^1.0.0"}],
                 "optionalDependencies": [],
                 "conflicts": [],
                 "exports": {},
@@ -177,9 +175,7 @@ def _signed_loaded(
     version: str,
 ) -> LoadedBundle:
     key_id = f"{publisher}-release-key"
-    private_key = roots.private_keys.setdefault(
-        publisher, Ed25519PrivateKey.generate()
-    )
+    private_key = roots.private_keys.setdefault(publisher, Ed25519PrivateKey.generate())
     root_revision = canonical_sha256(
         {"publisher": publisher, "keyId": key_id, "revision": 1}
     )
@@ -195,9 +191,7 @@ def _signed_loaded(
         not_after=NOW + timedelta(days=7),
     )
     roots.add(root)
-    manifest = _manifest(
-        publisher=publisher, bundle_id=bundle_id, version=version
-    )
+    manifest = _manifest(publisher=publisher, bundle_id=bundle_id, version=version)
     source_ref = f"bundle://fixtures/{publisher}/{bundle_id}/{version}"
     artifacts = [
         {
@@ -209,9 +203,7 @@ def _signed_loaded(
         }
     ]
     descriptor = {
-        "manifest": manifest.model_dump(
-            mode="json", by_alias=True, exclude_none=False
-        ),
+        "manifest": manifest.model_dump(mode="json", by_alias=True, exclude_none=False),
         "artifacts": [
             {
                 "relativePath": item["relativePath"],
@@ -257,15 +249,13 @@ def _signed_loaded(
                 "observedAt": NOW - timedelta(minutes=5),
                 "expiresAt": (
                     root.not_after
-                    if evidence_type
-                    == BundleEvidenceType.SIGNATURE_VERIFICATION
+                    if evidence_type == BundleEvidenceType.SIGNATURE_VERIFICATION
                     else NOW + timedelta(days=8)
                 ),
                 "revokedAt": None,
                 "metadata": (
                     {"trustRootRevision": root_revision}
-                    if evidence_type
-                    == BundleEvidenceType.SIGNATURE_VERIFICATION
+                    if evidence_type == BundleEvidenceType.SIGNATURE_VERIFICATION
                     else {}
                 ),
             }
@@ -410,17 +400,17 @@ def test_snapshot_enforces_real_repeatable_read_read_only_transaction(
     roots = Roots()
 
     def checked_clock(conn):
-        isolation = conn.execute(
-            "SHOW transaction_isolation"
-        ).fetchone()["transaction_isolation"]
-        read_only = conn.execute(
-            "SHOW transaction_read_only"
-        ).fetchone()["transaction_read_only"]
+        isolation = conn.execute("SHOW transaction_isolation").fetchone()[
+            "transaction_isolation"
+        ]
+        read_only = conn.execute("SHOW transaction_read_only").fetchone()[
+            "transaction_read_only"
+        ]
         assert isolation == "repeatable read"
         assert read_only == "on"
-        return conn.execute(
-            "SELECT transaction_timestamp() AS checked_at"
-        ).fetchone()["checked_at"]
+        return conn.execute("SELECT transaction_timestamp() AS checked_at").fetchone()[
+            "checked_at"
+        ]
 
     assert _reader(scoped_connect, roots, clock=checked_clock).read().candidates == []
 
@@ -458,7 +448,9 @@ def test_snapshot_concurrent_evidence_change_never_mixes_transaction_views(
         return checked_at
 
     with ThreadPoolExecutor(max_workers=1) as executor:
-        future = executor.submit(_reader(scoped_connect, roots, clock=blocking_clock).read)
+        future = executor.submit(
+            _reader(scoped_connect, roots, clock=blocking_clock).read
+        )
         assert snapshot_started.wait(timeout=10)
         try:
             with scoped_connect() as conn:

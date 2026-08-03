@@ -105,9 +105,7 @@ def _record() -> tuple[Record, Roots]:
     )
     manifest = _manifest()
     descriptor = {
-        "manifest": manifest.model_dump(
-            mode="json", by_alias=True, exclude_none=False
-        ),
+        "manifest": manifest.model_dump(mode="json", by_alias=True, exclude_none=False),
         "artifacts": [],
     }
     content_hash = canonical_sha256(descriptor)
@@ -143,15 +141,13 @@ def _record() -> tuple[Record, Roots]:
                     "observedAt": NOW - timedelta(hours=1),
                     "expiresAt": (
                         root.not_after
-                        if evidence_type
-                        == BundleEvidenceType.SIGNATURE_VERIFICATION
+                        if evidence_type == BundleEvidenceType.SIGNATURE_VERIFICATION
                         else NOW + timedelta(days=2)
                     ),
                     "revokedAt": None,
                     "metadata": (
                         {"trustRootRevision": ROOT_REVISION}
-                        if evidence_type
-                        == BundleEvidenceType.SIGNATURE_VERIFICATION
+                        if evidence_type == BundleEvidenceType.SIGNATURE_VERIFICATION
                         else {}
                     ),
                 }
@@ -186,9 +182,7 @@ def test_release_policy_returns_stable_signature_and_evidence_revision() -> None
     sbom["artifactRef"] = "bundle://fixture/renamed-sbom.json"
     sbom["metadata"] = {"ignoredByMinimalRevision": True}
     changed_evidence[sbom_index] = BundleEvidence.model_validate(sbom)
-    second = policy.evaluate(
-        replace(record, evidence=changed_evidence), checked_at=NOW
-    )
+    second = policy.evaluate(replace(record, evidence=changed_evidence), checked_at=NOW)
 
     signature_evidence = next(
         item

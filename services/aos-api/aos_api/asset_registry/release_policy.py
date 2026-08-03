@@ -200,9 +200,7 @@ class ReleasePolicy:
             raise SignatureInvalidError("bundle signature evidence must be unique")
         evidence = signature_evidence[0]
         signature_envelope_hash = canonical_sha256(
-            record.signature.model_dump(
-                mode="json", by_alias=True, exclude_none=False
-            )
+            record.signature.model_dump(mode="json", by_alias=True, exclude_none=False)
         )
         if evidence.artifact_hash != signature_envelope_hash:
             raise SignatureInvalidError(
@@ -255,9 +253,7 @@ def _release_evidence_revision(
             item.type.value,
             item.artifact_hash,
             item.observed_at,
-            (0, "")
-            if item.expires_at is None
-            else (1, item.expires_at.isoformat()),
+            (0, "") if item.expires_at is None else (1, item.expires_at.isoformat()),
         )
     )
     payload = [
