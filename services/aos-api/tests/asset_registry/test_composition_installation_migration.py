@@ -366,7 +366,7 @@ def test_migration_shape_and_single_head() -> None:
 
     assert module.revision == "228assetinstall"
     assert module.down_revision == "228assetevidence"
-    assert script.get_heads() == ["228assetinstall"]
+    assert script.get_heads() == ["228assetintegration"]
     for table in M2_TABLES:
         assert f"CREATE TABLE {table}" in upgrade_sql
     assert "COALESCE(current_installation_ref_hash, '')" in upgrade_sql
