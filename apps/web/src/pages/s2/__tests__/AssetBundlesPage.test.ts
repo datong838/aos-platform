@@ -3,8 +3,10 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { INSTALLATION_DETAIL_FIXTURE, INSTALLATION_LIST_FIXTURE } from "../../../api/assetControl/installationFixtures";
-import { REGISTRY_BUNDLE_LIST_FIXTURE } from "../../../api/assetControl/registryFixtures";
+import { assetControlClient } from "../../../api/assetControl/client";
+import { STORED_COMPOSITION_LOCK_FIXTURE } from "../../../api/assetControl/compositionFixtures";
+import { INSTALLATION_DETAIL_FIXTURE, INSTALLATION_DRAFT_FIXTURE, INSTALLATION_LIST_FIXTURE } from "../../../api/assetControl/installationFixtures";
+import { REGISTRY_BUNDLE_DETAIL_FIXTURE, REGISTRY_BUNDLE_LIST_FIXTURE, REGISTRY_VERSION_DETAIL_FIXTURE } from "../../../api/assetControl/registryFixtures";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -23,17 +25,17 @@ vi.mock("../assetBundles/readHooks", () => ({
     stale: false,
     reload,
   }),
-  useRegistryBundle: () => ({
-    data: null,
-    status: "idle",
+  useRegistryBundle: (selection: unknown) => ({
+    data: selection ? REGISTRY_BUNDLE_DETAIL_FIXTURE : null,
+    status: selection ? "ready" : "idle",
     error: null,
     refreshing: false,
     stale: false,
     reload,
   }),
-  useRegistryVersion: () => ({
-    data: null,
-    status: "idle",
+  useRegistryVersion: (selection: unknown) => ({
+    data: selection ? REGISTRY_VERSION_DETAIL_FIXTURE : null,
+    status: selection ? "ready" : "idle",
     error: null,
     refreshing: false,
     stale: false,
@@ -57,7 +59,7 @@ vi.mock("../assetBundles/readHooks", () => ({
   }),
 }));
 
-describe("M3-2 AssetBundlesPage integration", () => {
+describe("M3-3 AssetBundlesPage integration", () => {
   let host: HTMLDivElement;
   let root: Root;
 
@@ -65,6 +67,15 @@ describe("M3-2 AssetBundlesPage integration", () => {
     host = document.createElement("div");
     document.body.appendChild(host);
     root = createRoot(host);
+    vi.spyOn(assetControlClient, "resolveComposition").mockResolvedValue(
+      STORED_COMPOSITION_LOCK_FIXTURE,
+    );
+    vi.spyOn(assetControlClient, "getCompositionLock").mockResolvedValue(
+      STORED_COMPOSITION_LOCK_FIXTURE,
+    );
+    vi.spyOn(assetControlClient, "createInstallation").mockResolvedValue(
+      INSTALLATION_DRAFT_FIXTURE,
+    );
   });
 
   afterEach(() => {
@@ -109,5 +120,56 @@ describe("M3-2 AssetBundlesPage integration", () => {
     expect(text).toContain(INSTALLATION_DETAIL_FIXTURE.installationId);
     expect(text).toContain("不提供历史 revision 完整快照");
     expect(text).not.toContain("批准安装");
+  });
+
+  it("resolves, reconciles and creates only a draft from the selected published version", async () => {
+    await renderPage();
+    const buttons = () => Array.from(host.querySelectorAll("button"));
+    const openBundle = buttons().find((node) => node.textContent === "查看详情") as HTMLButtonElement;
+    await act(async () => openBundle.click());
+    const openVersion = buttons().find((node) => node.textContent === "查看版本事实") as HTMLButtonElement;
+    await act(async () => openVersion.click());
+    const compositionTab = Array.from(host.querySelectorAll('[role="tab"]')).find(
+      (node) => node.textContent === "组合预检与创建",
+    ) as HTMLButtonElement;
+    await act(async () => compositionTab.click());
+
+    const resolve = buttons().find(
+      (node) => node.textContent === "解析并生成不可变 Lock",
+    ) as HTMLButtonElement;
+    await act(async () => resolve.click());
+
+    expect(assetControlClient.resolveComposition).toHaveBeenCalledTimes(1);
+    expect(assetControlClient.getCompositionLock).toHaveBeenCalledWith(
+      STORED_COMPOSITION_LOCK_FIXTURE.compositionId,
+      STORED_COMPOSITION_LOCK_FIXTURE.revision,
+    );
+    expect(host.textContent).toContain("服务端 Diff（只读）");
+
+    const displayName = host.querySelector(
+      'input[aria-label="Installation display name"]',
+    ) as HTMLInputElement;
+    await act(async () => {
+      const setValue = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      setValue?.call(displayName, "Commerce draft");
+      displayName.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    const create = buttons().find((node) => node.textContent === "创建 Draft") as HTMLButtonElement;
+    await act(async () => create.click());
+
+    expect(assetControlClient.createInstallation).toHaveBeenCalledWith(
+      {
+        compositionId: STORED_COMPOSITION_LOCK_FIXTURE.compositionId,
+        lockRevision: STORED_COMPOSITION_LOCK_FIXTURE.revision,
+        overlayRevision: "overlay-1",
+        displayName: "Commerce draft",
+      },
+      expect.objectContaining({ idempotencyKey: expect.any(String) }),
+    );
+    expect(host.textContent).not.toContain("批准安装");
+    expect(host.textContent).not.toContain("Apply Installation");
   });
 });
