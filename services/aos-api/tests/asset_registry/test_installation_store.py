@@ -18,6 +18,7 @@ from psycopg import sql
 
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.asset_registry.composition_contracts import (
+    ApproveInstallationRequest,
     CompositionLockPayload,
     CompositionRequest,
     CreateInstallationRequest,
@@ -30,6 +31,9 @@ from aos_api.asset_registry.errors import (
     IdempotencyConflictError,
     RevisionConflictError,
 )
+from aos_api.asset_registry.installation_evidence import build_event_evidence
+from aos_api.asset_registry.installation_revalidation import RevalidationResult
+from aos_api.asset_registry.installation_service import InstallationService
 from aos_api.asset_registry.installation_store import (
     CommandResult,
     InstallationPersistenceError,
@@ -569,6 +573,217 @@ def test_draft_creation_can_share_idempotency_transaction_and_cas_lock(
                 expected_etag_version=1,
             )
         conn.rollback()
+
+
+def test_full_transition_history_and_active_pointer_are_atomic(
+    installation_scope,
+) -> None:
+    composition_store, store, scoped_connect = installation_scope
+    lock = _seed_composition(composition_store)
+    draft = store.create_draft(
+        org_id=ORG,
+        project_id=PROJECT,
+        request=_create_request(lock.composition_id),
+        requested_by="requester:test",
+    )
+
+    def locked(conn, record):
+        return store.lock_for_transition_in_transaction(
+            conn,
+            org_id=ORG,
+            project_id=PROJECT,
+            installation_id=record.installation_id,
+            expected_etag_version=record.etag_version,
+        )
+
+    with scoped_connect() as conn:
+        submitted = store.append_submit_in_transaction(
+            conn, locked=locked(conn, draft), actor="requester:test"
+        )
+        conn.commit()
+    with scoped_connect() as conn:
+        approved = store.append_approval_in_transaction(
+            conn,
+            locked=locked(conn, submitted),
+            actor="approver:test",
+            request=ApproveInstallationRequest.model_validate(
+                {
+                    "lockHash": lock.lock_hash,
+                    "permissionDiffHash": lock.permission_diff_hash,
+                    "migrationPlanHash": lock.migration_plan_hash,
+                    "contributionDiffHash": lock.contribution_diff_hash,
+                }
+            ),
+        )
+        assert approved.decision is not None
+        conn.commit()
+
+    def evidence(conn, kind, record):
+        checked_at = store.read_control_clock_in_transaction(conn)
+        return build_event_evidence(
+            evidence_type=kind,
+            installation_id=record.installation_id,
+            from_revision=record.current_revision,
+            to_revision=record.current_revision + 1,
+            lock_hash=record.current.lock_hash,
+            permission_diff_hash=record.current.permission_diff_hash,
+            migration_plan_hash=record.current.migration_plan_hash,
+            contribution_diff_hash=record.current.contribution_diff_hash,
+            decision_id=record.decision.decision_id,
+            observed_at=checked_at,
+        )
+
+    with scoped_connect() as conn:
+        applied = store.append_apply_in_transaction(
+            conn,
+            locked=locked(conn, approved),
+            actor="installer:test",
+            evidence=evidence(conn, "dry_apply", approved),
+        )
+        conn.commit()
+    with scoped_connect() as conn:
+        active = store.append_verify_in_transaction(
+            conn,
+            locked=locked(conn, applied),
+            actor="installer:test",
+            evidence=evidence(conn, "verification", applied),
+        )
+        conn.commit()
+    with scoped_connect() as conn:
+        rolled_back = store.append_rollback_in_transaction(
+            conn,
+            locked=locked(conn, active),
+            actor="installer:test",
+            reason="verification regression",
+            evidence=evidence(conn, "rollback", active),
+        )
+        conn.commit()
+
+    assert rolled_back.state == "rolled_back"
+    assert rolled_back.current_revision == rolled_back.etag_version == 6
+    assert rolled_back.active_revision is None
+    assert rolled_back.previous_active_revision is None
+    assert [event.to_state for event in rolled_back.events] == [
+        "draft",
+        "submitted",
+        "approved",
+        "applied",
+        "active",
+        "rolled_back",
+    ]
+    assert [event.evidence.type for event in rolled_back.events if event.evidence] == [
+        "dry_apply",
+        "verification",
+        "rollback",
+    ]
+
+
+def test_installation_service_executes_and_replays_the_full_control_flow(
+    installation_scope,
+) -> None:
+    composition_store, store, _ = installation_scope
+    lock = _seed_composition(composition_store)
+
+    class Revalidator:
+        calls = 0
+
+        def revalidate_in_transaction(self, conn, *, lock):
+            self.calls += 1
+            checked_at = conn.execute(
+                "SELECT clock_timestamp() AS checked_at"
+            ).fetchone()["checked_at"]
+            return RevalidationResult(checked_at=checked_at)
+
+    revalidator = Revalidator()
+    service = InstallationService(
+        store=store,
+        composition_store=composition_store,
+        revalidator=revalidator,
+    )
+    common = {
+        "org_id": ORG,
+        "project_id": PROJECT,
+        "markings": [],
+    }
+    create = service.create(
+        request=_create_request(lock.composition_id),
+        actor="requester:test",
+        roles=["asset-installer"],
+        idempotency_key="create-service",
+        **common,
+    )
+    replay = service.create(
+        request=_create_request(lock.composition_id),
+        actor="requester:test",
+        roles=["asset-installer"],
+        idempotency_key="create-service",
+        **common,
+    )
+    installation_id = create.response_json["installationId"]
+    assert replay.replayed is True
+
+    submitted = service.submit(
+        installation_id=installation_id,
+        request={},
+        actor="requester:test",
+        roles=["asset-installer"],
+        idempotency_key="submit-service",
+        if_match='"1"',
+        **common,
+    )
+    approved = service.approve(
+        installation_id=installation_id,
+        request={
+            "lockHash": lock.lock_hash,
+            "permissionDiffHash": lock.permission_diff_hash,
+            "migrationPlanHash": lock.migration_plan_hash,
+            "contributionDiffHash": lock.contribution_diff_hash,
+        },
+        actor="approver:test",
+        roles=["asset-install-approver"],
+        idempotency_key="approve-service",
+        if_match=submitted.response_etag,
+        **common,
+    )
+    applied = service.apply(
+        installation_id=installation_id,
+        request={},
+        actor="installer:test",
+        roles=["asset-installer"],
+        idempotency_key="apply-service",
+        if_match=approved.response_etag,
+        **common,
+    )
+    active = service.verify(
+        installation_id=installation_id,
+        request={},
+        actor="installer:test",
+        roles=["asset-installer"],
+        idempotency_key="verify-service",
+        if_match=applied.response_etag,
+        **common,
+    )
+    rolled_back = service.rollback(
+        installation_id=installation_id,
+        request={"reason": "verification regression"},
+        actor="installer:test",
+        roles=["asset-installer"],
+        idempotency_key="rollback-service",
+        if_match=active.response_etag,
+        **common,
+    )
+
+    assert rolled_back.response_json["state"] == "rolled_back"
+    assert rolled_back.response_etag == '"6"'
+    assert revalidator.calls == 4
+    detail = service.get(
+        installation_id=installation_id,
+        roles=["developer"],
+        **common,
+    )
+    listed = service.list(query=InstallationListQuery(), roles=["developer"], **common)
+    assert detail.state == "rolled_back"
+    assert listed.total == 1
 
 
 def test_psycopg_failure_is_redacted() -> None:

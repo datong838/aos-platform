@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from contextlib import AbstractContextManager
 from copy import deepcopy
 from dataclasses import dataclass
@@ -18,19 +18,28 @@ from pydantic import ValidationError
 
 from aos_api.asset_registry.canonical_json import canonical_json, canonical_sha256
 from aos_api.asset_registry.composition_contracts import (
+    ApproveInstallationRequest,
     CreateInstallationRequest,
+    CurrentInstallationRef,
+    InstallationEventEvidence,
     InstallationListQuery,
     InstallationListResponse,
     InstallationRecord,
 )
 from aos_api.asset_registry.composition_store import load_stored_lock
+from aos_api.asset_registry.control_protocols import ActiveInstallationBaseline
 from aos_api.asset_registry.errors import (
+    ApprovalStaleError,
     AssetNotFoundError,
     AssetRegistryError,
+    CurrentInstallationStaleError,
+    DutySeparationRequiredError,
     IdempotencyConflictError,
+    InstallationStateConflictError,
     LockIntegrityCorruptError,
     RevisionConflictError,
 )
+from aos_api.asset_registry.installation_evidence import verify_event_evidence
 from aos_api.db import connect
 
 JsonObject = dict[str, Any]
@@ -57,6 +66,14 @@ class CommandResult:
 @dataclass(frozen=True, slots=True)
 class CommandReceipt(CommandResult):
     replayed: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class LockedInstallation:
+    org_id: str
+    project_id: str
+    installation_pk: uuid.UUID
+    record: InstallationRecord
 
 
 class PostgresInstallationStore:
@@ -289,6 +306,107 @@ class PostgresInstallationStore:
         except psycopg.Error as exc:
             raise InstallationPersistenceError() from exc
 
+    def list_visible_installations(
+        self,
+        *,
+        org_id: str,
+        project_id: str,
+        query: InstallationListQuery,
+        allowed_markings: Collection[str],
+    ) -> InstallationListResponse:
+        org_id = _normalized_text(org_id, "org_id")
+        project_id = _normalized_text(project_id, "project_id")
+        query = InstallationListQuery.model_validate(query)
+        markings = sorted(
+            {_normalized_text(item, "marking") for item in allowed_markings}
+        )
+        state_clause = " AND r.state = %s" if query.state is not None else ""
+        state_params: tuple[object, ...] = (query.state,) if query.state else ()
+        try:
+            with self._connect_factory() as conn:
+                corrupt = conn.execute(
+                    """
+                    SELECT EXISTS (
+                      SELECT 1
+                        FROM bundle_installation i
+                        JOIN bundle_installation_revision r
+                          ON r.org_id=i.org_id AND r.project_id=i.project_id
+                         AND r.installation_pk=i.installation_pk
+                         AND r.revision=i.current_revision
+                        JOIN bundle_composition_lock l
+                          ON l.org_id=r.org_id AND l.project_id=r.project_id
+                         AND l.composition_pk=r.composition_pk
+                         AND l.revision=r.lock_revision
+                       WHERE i.org_id=%s AND i.project_id=%s
+                         AND (jsonb_typeof(l.permission_diff_json->'target'->'markings') <> 'array'
+                              OR canonical_bundle_control_sha256(l.permission_diff_json) <> l.permission_diff_hash)
+                    ) AS corrupt
+                    """,
+                    (org_id, project_id),
+                ).fetchone()
+                if corrupt is None or corrupt["corrupt"]:
+                    raise LockIntegrityCorruptError()
+                rows = conn.execute(
+                    """
+                    WITH visible AS MATERIALIZED (
+                      SELECT i.installation_id, i.display_name, r.state,
+                             i.current_revision, i.active_revision,
+                             i.previous_active_revision, i.etag_version,
+                             i.created_at, i.updated_at
+                        FROM bundle_installation i
+                        JOIN bundle_installation_revision r
+                          ON r.org_id=i.org_id AND r.project_id=i.project_id
+                         AND r.installation_pk=i.installation_pk
+                         AND r.revision=i.current_revision
+                        JOIN bundle_composition_lock l
+                          ON l.org_id=r.org_id AND l.project_id=r.project_id
+                         AND l.composition_pk=r.composition_pk
+                         AND l.revision=r.lock_revision
+                       WHERE i.org_id=%s AND i.project_id=%s
+                         AND (l.permission_diff_json->'target'->'markings') <@ %s::jsonb
+                    """
+                    + state_clause
+                    + """
+                    ), page AS (
+                      SELECT * FROM visible
+                       ORDER BY created_at DESC, installation_id ASC
+                       LIMIT %s OFFSET %s
+                    )
+                    SELECT page.*, totals.total
+                      FROM (SELECT COUNT(*) AS total FROM visible) totals
+                      LEFT JOIN page ON TRUE
+                      ORDER BY page.created_at DESC NULLS LAST,
+                               page.installation_id ASC NULLS LAST
+                    """,
+                    (
+                        org_id,
+                        project_id,
+                        Jsonb(markings),
+                        *state_params,
+                        query.limit,
+                        query.offset,
+                    ),
+                ).fetchall()
+                assert rows
+                return InstallationListResponse.model_validate(
+                    {
+                        "items": [
+                            _list_item_json(row)
+                            for row in rows
+                            if row["installation_id"] is not None
+                        ],
+                        "total": rows[0]["total"],
+                        "limit": query.limit,
+                        "offset": query.offset,
+                    }
+                )
+        except LockIntegrityCorruptError:
+            raise
+        except (ValidationError, ValueError, TypeError, KeyError) as exc:
+            raise LockIntegrityCorruptError() from exc
+        except psycopg.Error as exc:
+            raise InstallationPersistenceError() from exc
+
     def execute_idempotent(
         self,
         *,
@@ -410,6 +528,418 @@ class PostgresInstallationStore:
             installation_pk=row["installation_pk"],
         )
 
+    def lock_for_transition_in_transaction(
+        self,
+        conn: Any,
+        *,
+        org_id: str,
+        project_id: str,
+        installation_id: str,
+        expected_etag_version: int,
+    ) -> LockedInstallation:
+        record = self.lock_for_cas(
+            conn,
+            org_id=org_id,
+            project_id=project_id,
+            installation_id=installation_id,
+            expected_etag_version=expected_etag_version,
+        )
+        row = conn.execute(
+            """
+            SELECT installation_pk
+              FROM bundle_installation
+             WHERE org_id = %s AND project_id = %s
+               AND installation_id = %s
+             FOR UPDATE
+            """,
+            (org_id, project_id, _resource_uuid(installation_id)),
+        ).fetchone()
+        if row is None:
+            raise AssetNotFoundError("bundle installation not found")
+        return LockedInstallation(
+            org_id=org_id,
+            project_id=project_id,
+            installation_pk=uuid.UUID(str(row["installation_pk"])),
+            record=record,
+        )
+
+    def load_active_baseline_in_transaction(
+        self,
+        conn: Any,
+        *,
+        org_id: str,
+        project_id: str,
+        requested_ref: CurrentInstallationRef,
+    ) -> ActiveInstallationBaseline:
+        requested_ref = CurrentInstallationRef.model_validate(requested_ref)
+        row = conn.execute(
+            """
+            SELECT installation_pk, active_revision
+              FROM bundle_installation
+             WHERE org_id = %s AND project_id = %s
+               AND installation_id = %s
+             FOR SHARE
+            """,
+            (
+                org_id,
+                project_id,
+                _resource_uuid(requested_ref.installation_id),
+            ),
+        ).fetchone()
+        if row is None:
+            raise AssetNotFoundError("bundle installation not found")
+        if row["active_revision"] is None:
+            raise CurrentInstallationStaleError(
+                "current installation has no active baseline"
+            )
+        revision = conn.execute(
+            """
+            SELECT c.composition_id, r.lock_revision, r.lock_hash,
+                   r.permission_diff_hash, r.migration_plan_hash,
+                   r.contribution_diff_hash, r.overlay_revision
+              FROM bundle_installation_revision r
+              JOIN bundle_composition c
+                ON c.org_id = r.org_id AND c.project_id = r.project_id
+               AND c.composition_pk = r.composition_pk
+             WHERE r.org_id = %s AND r.project_id = %s
+               AND r.installation_pk = %s AND r.revision = %s
+            """,
+            (org_id, project_id, row["installation_pk"], row["active_revision"]),
+        ).fetchone()
+        if revision is None:
+            raise LockIntegrityCorruptError()
+        try:
+            _, lock = load_stored_lock(
+                conn,
+                org_id=org_id,
+                project_id=project_id,
+                composition_id=str(revision["composition_id"]),
+                revision=revision["lock_revision"],
+            )
+            server_ref = CurrentInstallationRef.model_validate(
+                {
+                    "installationId": requested_ref.installation_id,
+                    "revision": row["active_revision"],
+                    "lockHash": revision["lock_hash"],
+                    "overlayRevision": revision["overlay_revision"],
+                }
+            )
+        except (AssetRegistryError, ValidationError, TypeError, ValueError) as exc:
+            raise LockIntegrityCorruptError() from exc
+        persisted_hashes = (
+            revision["lock_hash"],
+            revision["permission_diff_hash"],
+            revision["migration_plan_hash"],
+            revision["contribution_diff_hash"],
+        )
+        lock_hashes = (
+            lock.lock_hash,
+            lock.permission_diff_hash,
+            lock.migration_plan_hash,
+            lock.contribution_diff_hash,
+        )
+        if persisted_hashes != lock_hashes:
+            raise LockIntegrityCorruptError()
+        if server_ref != requested_ref:
+            raise CurrentInstallationStaleError(
+                "current installation baseline is stale"
+            )
+        return ActiveInstallationBaseline(server_ref=server_ref, lock=lock)
+
+    def read_control_clock_in_transaction(self, conn: Any) -> datetime:
+        row = conn.execute("SELECT clock_timestamp() AS checked_at").fetchone()
+        if row is None or not isinstance(row["checked_at"], datetime):
+            raise InstallationPersistenceError()
+        return row["checked_at"]
+
+    def append_submit_in_transaction(
+        self, conn: Any, *, locked: LockedInstallation, actor: str
+    ) -> InstallationRecord:
+        return self._append_transition(
+            conn, locked=locked, actor=actor, to_state="submitted"
+        )
+
+    def append_approval_in_transaction(
+        self,
+        conn: Any,
+        *,
+        locked: LockedInstallation,
+        actor: str,
+        request: ApproveInstallationRequest,
+    ) -> InstallationRecord:
+        request = ApproveInstallationRequest.model_validate(request)
+        current = locked.record.current
+        if actor == current.requested_by:
+            raise DutySeparationRequiredError(
+                "installation requester cannot approve the same plan"
+            )
+        expected = (
+            current.lock_hash,
+            current.permission_diff_hash,
+            current.migration_plan_hash,
+            current.contribution_diff_hash,
+        )
+        supplied = (
+            request.lock_hash,
+            request.permission_diff_hash,
+            request.migration_plan_hash,
+            request.contribution_diff_hash,
+        )
+        if supplied != expected:
+            raise ApprovalStaleError("installation approval hashes are stale")
+        return self._append_transition(
+            conn,
+            locked=locked,
+            actor=actor,
+            to_state="approved",
+            decision="approved",
+        )
+
+    def append_rejection_in_transaction(
+        self,
+        conn: Any,
+        *,
+        locked: LockedInstallation,
+        actor: str,
+        reason: str,
+    ) -> InstallationRecord:
+        if actor == locked.record.current.requested_by:
+            raise DutySeparationRequiredError(
+                "installation requester cannot reject the same plan"
+            )
+        return self._append_transition(
+            conn,
+            locked=locked,
+            actor=actor,
+            to_state="rejected",
+            decision="rejected",
+            reason=_normalized_text(reason, "reason"),
+        )
+
+    def append_apply_in_transaction(
+        self,
+        conn: Any,
+        *,
+        locked: LockedInstallation,
+        actor: str,
+        evidence: InstallationEventEvidence,
+    ) -> InstallationRecord:
+        return self._append_transition(
+            conn, locked=locked, actor=actor, to_state="applied", evidence=evidence
+        )
+
+    def append_verify_in_transaction(
+        self,
+        conn: Any,
+        *,
+        locked: LockedInstallation,
+        actor: str,
+        evidence: InstallationEventEvidence,
+    ) -> InstallationRecord:
+        return self._append_transition(
+            conn, locked=locked, actor=actor, to_state="active", evidence=evidence
+        )
+
+    def append_rollback_in_transaction(
+        self,
+        conn: Any,
+        *,
+        locked: LockedInstallation,
+        actor: str,
+        reason: str,
+        evidence: InstallationEventEvidence,
+    ) -> InstallationRecord:
+        return self._append_transition(
+            conn,
+            locked=locked,
+            actor=actor,
+            to_state="rolled_back",
+            reason=_normalized_text(reason, "reason"),
+            evidence=evidence,
+        )
+
+    def _append_transition(
+        self,
+        conn: Any,
+        *,
+        locked: LockedInstallation,
+        actor: str,
+        to_state: str,
+        decision: str | None = None,
+        reason: str | None = None,
+        evidence: InstallationEventEvidence | None = None,
+    ) -> InstallationRecord:
+        actor = _normalized_text(actor, "actor")
+        current = locked.record.current
+        allowed = {
+            "submitted": ("draft", None),
+            "approved": ("submitted", None),
+            "rejected": ("submitted", None),
+            "applied": ("approved", "dry_apply"),
+            "active": ("applied", "verification"),
+            "rolled_back": ("active", "rollback"),
+        }
+        expected_from, evidence_type = allowed[to_state]
+        if current.state != expected_from:
+            raise InstallationStateConflictError(
+                "installation state transition is not allowed"
+            )
+        if (evidence is None) != (evidence_type is None):
+            raise InstallationStateConflictError(
+                "installation transition evidence is inconsistent"
+            )
+        if evidence is not None and evidence.type != evidence_type:
+            raise InstallationStateConflictError(
+                "installation transition evidence type is inconsistent"
+            )
+        if to_state in {"rejected", "rolled_back"}:
+            if reason is None:
+                raise InstallationStateConflictError(
+                    "installation transition requires a reason"
+                )
+        elif reason is not None:
+            raise InstallationStateConflictError(
+                "installation transition does not accept a reason"
+            )
+
+        timestamp = (
+            evidence.observed_at
+            if evidence is not None
+            else self.read_control_clock_in_transaction(conn)
+        )
+        next_revision = current.revision + 1
+        decision_id = current.decision_id
+        if decision is not None:
+            decision_uuid = self._uuid_factory()
+            decision_id = str(decision_uuid)
+            conn.execute(
+                """
+                INSERT INTO bundle_installation_decision (
+                  org_id, project_id, decision_id, installation_pk,
+                  submitted_revision, decision, actor, lock_hash,
+                  permission_diff_hash, migration_plan_hash,
+                  contribution_diff_hash, reason, created_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    locked.org_id,
+                    locked.project_id,
+                    decision_uuid,
+                    locked.installation_pk,
+                    current.revision,
+                    decision,
+                    actor,
+                    current.lock_hash,
+                    current.permission_diff_hash,
+                    current.migration_plan_hash,
+                    current.contribution_diff_hash,
+                    reason,
+                    timestamp,
+                ),
+            )
+        if to_state in {"applied", "active", "rolled_back"} and decision_id is None:
+            raise LockIntegrityCorruptError()
+
+        composition_pk, _ = load_stored_lock(
+            conn,
+            org_id=locked.org_id,
+            project_id=locked.project_id,
+            composition_id=current.composition_id,
+            revision=current.lock_revision,
+        )
+        conn.execute(
+            """
+            INSERT INTO bundle_installation_revision (
+              org_id, project_id, installation_pk, revision, parent_revision,
+              state, composition_pk, lock_revision, lock_hash,
+              permission_diff_hash, migration_plan_hash, contribution_diff_hash,
+              overlay_revision, requested_by, decision_id, created_at
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                locked.org_id,
+                locked.project_id,
+                locked.installation_pk,
+                next_revision,
+                current.revision,
+                to_state,
+                composition_pk,
+                current.lock_revision,
+                current.lock_hash,
+                current.permission_diff_hash,
+                current.migration_plan_hash,
+                current.contribution_diff_hash,
+                current.overlay_revision,
+                current.requested_by,
+                uuid.UUID(decision_id) if decision_id is not None else None,
+                timestamp,
+            ),
+        )
+        evidence_json = (
+            evidence.model_dump(mode="json", by_alias=True, exclude_none=False)
+            if evidence is not None
+            else None
+        )
+        conn.execute(
+            """
+            INSERT INTO bundle_installation_event (
+              org_id, project_id, installation_pk, sequence,
+              from_revision, to_revision, from_state, to_state,
+              actor, reason, evidence_json, evidence_hash, created_at
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                locked.org_id,
+                locked.project_id,
+                locked.installation_pk,
+                next_revision,
+                current.revision,
+                next_revision,
+                current.state,
+                to_state,
+                actor,
+                reason,
+                Jsonb(evidence_json) if evidence_json is not None else None,
+                canonical_sha256(evidence_json) if evidence_json is not None else None,
+                timestamp,
+            ),
+        )
+        if to_state == "active":
+            pointer_sql = (
+                ", previous_active_revision = active_revision, active_revision = %s"
+            )
+            pointer_params: tuple[object, ...] = (next_revision,)
+        elif to_state == "rolled_back":
+            pointer_sql = ", active_revision = previous_active_revision"
+            pointer_params = ()
+        else:
+            pointer_sql = ""
+            pointer_params = ()
+        conn.execute(
+            """
+            UPDATE bundle_installation
+               SET current_revision = %s, etag_version = %s, updated_at = %s
+            """
+            + pointer_sql
+            + " WHERE org_id = %s AND project_id = %s AND installation_pk = %s",
+            (
+                next_revision,
+                next_revision,
+                timestamp,
+                *pointer_params,
+                locked.org_id,
+                locked.project_id,
+                locked.installation_pk,
+            ),
+        )
+        conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        return _load_record_by_pk(
+            conn,
+            org_id=locked.org_id,
+            project_id=locked.project_id,
+            installation_pk=locked.installation_pk,
+        )
+
 
 def _validated_create_inputs(
     *,
@@ -528,7 +1058,7 @@ def _load_record_by_pk(
                 "reason": row["decision_reason"],
                 "createdAt": row["decision_created_at"],
             }
-        return InstallationRecord.model_validate(
+        record = InstallationRecord.model_validate(
             {
                 **_list_item_json(row),
                 "current": {
@@ -555,6 +1085,24 @@ def _load_record_by_pk(
                 "events": event_json,
             }
         )
+        for event in record.events:
+            if event.evidence is None:
+                continue
+            if record.decision is None:
+                raise ValueError("evidence event requires an approved decision")
+            verify_event_evidence(
+                event.evidence,
+                installation_id=record.installation_id,
+                from_revision=event.from_revision,
+                to_revision=event.to_revision,
+                lock_hash=record.current.lock_hash,
+                permission_diff_hash=record.current.permission_diff_hash,
+                migration_plan_hash=record.current.migration_plan_hash,
+                contribution_diff_hash=record.current.contribution_diff_hash,
+                decision_id=record.decision.decision_id,
+                observed_at=event.evidence.observed_at,
+            )
+        return record
     except (ValidationError, ValueError, TypeError, KeyError) as exc:
         raise LockIntegrityCorruptError() from exc
 
