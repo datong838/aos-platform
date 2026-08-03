@@ -8,6 +8,7 @@ import {
 } from "./client";
 import { normalizeAssetControlError } from "./errors";
 import { createIdempotentCommand, idempotencyKeyFor } from "./idempotency";
+import { INSTALLATION_DETAIL_FIXTURE } from "./installationFixtures";
 import { REGISTRY_BUNDLE_LIST_FIXTURE } from "./registryFixtures";
 import type { CompositionRequest, CreateInstallationRequest } from "./types";
 
@@ -114,9 +115,9 @@ describe("M3-1 asset-control SDK adapter", () => {
   });
 
   it("requires a matching strong ETag for create, get and action responses", async () => {
-    const installation = { etagVersion: 2 };
+    const installation = INSTALLATION_DETAIL_FIXTURE;
     const fetch = vi.fn<typeof globalThis.fetch>(async () =>
-      jsonResponse(installation, 200, { ETag: '"2"' }),
+      jsonResponse(installation, 200, { ETag: '"5"' }),
     );
     const client = makeClient(fetch);
     const createBody: CreateInstallationRequest = {
@@ -138,7 +139,7 @@ describe("M3-1 asset-control SDK adapter", () => {
     expect(actionHeaders.get("If-Match")).toBe('"1"');
     expect(JSON.parse(String(fetch.mock.calls[2][1]?.body))).toEqual({});
 
-    fetch.mockResolvedValueOnce(jsonResponse(installation, 200, { ETag: '"3"' }));
+    fetch.mockResolvedValueOnce(jsonResponse(installation, 200, { ETag: '"6"' }));
     await expect(client.getInstallation(INSTALLATION_ID)).rejects.toThrow(
       "installation ETag does not match etagVersion",
     );
