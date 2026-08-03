@@ -1,0 +1,47 @@
+{
+  "apiVersion": "aos.dev/v1alpha1",
+  "kind": "InstanceOverlay",
+  "metadata": {
+    "id": "synthetic.instance-overlay",
+    "revision": "synthetic-overlay-v1"
+  },
+  "orgRef": "synthetic-ref:scope/organization",
+  "projectRef": "synthetic-ref:scope/project",
+  "compositionLockRef": {
+    "compositionId": "00000000-0000-4000-8000-000000000001",
+    "revision": 1,
+    "lockHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "sourceRefs": [
+    {
+      "id": "catalog-source",
+      "ref": "synthetic-ref:source/catalog"
+    }
+  ],
+  "secretRefs": [
+    {
+      "id": "catalog-binding",
+      "ref": "synthetic-ref:binding/catalog"
+    }
+  ],
+  "datasetNamespace": "synthetic.m5",
+  "selectedDomains": [
+    "synthetic.catalog"
+  ],
+  "schedules": [
+    {
+      "id": "synthetic-refresh",
+      "cron": "0 * * * *",
+      "enabled": false
+    }
+  ],
+  "featureFlags": [
+    {
+      "id": "synthetic-writeback",
+      "enabled": false
+    }
+  ],
+  "approvals": {
+    "overlayRevisionRef": "synthetic-overlay-v1"
+  }
+}

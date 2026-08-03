@@ -1,0 +1,234 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aos.dev/schemas/asset-bundles/instance-overlay-v1alpha1.schema.json",
+  "title": "AOS Synthetic Instance Overlay v1alpha1",
+  "description": "Strict file-only contract for a synthetic M5 InstanceOverlay. It grants no capability and is not a production InstanceOverlay API contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "orgRef",
+    "projectRef",
+    "compositionLockRef",
+    "sourceRefs",
+    "secretRefs",
+    "datasetNamespace",
+    "selectedDomains",
+    "schedules",
+    "featureFlags",
+    "approvals"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "aos.dev/v1alpha1"
+    },
+    "kind": {
+      "const": "InstanceOverlay"
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "orgRef": {
+      "$ref": "#/$defs/opaqueSyntheticRef"
+    },
+    "projectRef": {
+      "$ref": "#/$defs/opaqueSyntheticRef"
+    },
+    "compositionLockRef": {
+      "$ref": "#/$defs/compositionLockRef"
+    },
+    "sourceRefs": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/namedOpaqueRef"
+      }
+    },
+    "secretRefs": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "$comment": "Values are opaque synthetic binding references only. Credential material is never permitted.",
+      "items": {
+        "$ref": "#/$defs/namedOpaqueRef"
+      }
+    },
+    "datasetNamespace": {
+      "$ref": "#/$defs/syntheticNamespace"
+    },
+    "selectedDomains": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/syntheticNamespace"
+      }
+    },
+    "schedules": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/disabledSchedule"
+      }
+    },
+    "featureFlags": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/disabledFeatureFlag"
+      }
+    },
+    "approvals": {
+      "$ref": "#/$defs/approvalReference"
+    }
+  },
+  "$defs": {
+    "syntheticId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^synthetic\\.[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    },
+    "normalizedId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    },
+    "normalizedRevision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^(?!.*\\u0000)(?!\\s)(?![\\s\\S]*\\s$)[\\s\\S]+$"
+    },
+    "opaqueSyntheticRef": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240,
+      "pattern": "^synthetic-ref:[a-z0-9]+(?:[./-][a-z0-9]+)*$"
+    },
+    "syntheticNamespace": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^synthetic\\.[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    },
+    "canonicalUuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "revision"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/syntheticId"
+        },
+        "revision": {
+          "$ref": "#/$defs/normalizedRevision"
+        }
+      }
+    },
+    "compositionLockRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "compositionId",
+        "revision",
+        "lockHash"
+      ],
+      "properties": {
+        "compositionId": {
+          "$ref": "#/$defs/canonicalUuid"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "lockHash": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "namedOpaqueRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "ref"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/normalizedId"
+        },
+        "ref": {
+          "$ref": "#/$defs/opaqueSyntheticRef"
+        }
+      }
+    },
+    "disabledSchedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "cron",
+        "enabled"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/normalizedId"
+        },
+        "cron": {
+          "type": "string",
+          "minLength": 9,
+          "maxLength": 120,
+          "pattern": "^(?:[0-9*,-/]+\\s+){4}[0-9*,-/]+$"
+        },
+        "enabled": {
+          "const": false
+        }
+      }
+    },
+    "disabledFeatureFlag": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "enabled"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/normalizedId"
+        },
+        "enabled": {
+          "const": false
+        }
+      }
+    },
+    "approvalReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "overlayRevisionRef"
+      ],
+      "properties": {
+        "overlayRevisionRef": {
+          "$ref": "#/$defs/normalizedRevision"
+        }
+      }
+    }
+  }
+}
