@@ -5,6 +5,7 @@ export type AssetControlFailureStatus = 0 | AssetControlErrorStatus | null;
 
 export type AssetControlFailureKind =
   | "network"
+  | "offline_mutation_disabled"
   | "invalid_request"
   | "unauthenticated"
   | "forbidden"
@@ -141,6 +142,17 @@ const NETWORK_POLICY: FailurePolicy = {
   outcomeUnknown: true,
 };
 
+const OFFLINE_MUTATION_DISABLED_POLICY: FailurePolicy = {
+  kind: "offline_mutation_disabled",
+  message: "当前处于离线状态，资产控制写操作已在发送前停止。",
+  recovery: "failure_closed",
+  isConflict: false,
+  requiresRefresh: false,
+  notVisibleOrMissing: false,
+  retryable: false,
+  outcomeUnknown: false,
+};
+
 const UNKNOWN_POLICY: FailurePolicy = {
   kind: "unknown",
   message: "收到无法识别的资产控制错误，已停止执行。",
@@ -224,6 +236,10 @@ function isNetworkFailure(status: number | null, body: Partial<ApiErrorBody> | n
   return status === 0 || body?.code === "NETWORK" || body?.code === "OFFLINE_NO_CACHE";
 }
 
+function isOfflineMutationDisabled(body: Partial<ApiErrorBody> | null): boolean {
+  return body?.code === "OFFLINE_MUTATION_DISABLED";
+}
+
 function failureFromPolicy(
   status: AssetControlFailureStatus,
   policy: FailurePolicy,
@@ -250,6 +266,20 @@ export function normalizeAssetControlError(error: unknown): AssetControlError {
 
   const status = errorStatus(error);
   const body = errorBody(error);
+  // The SDK raises this before fetch. It is therefore a known non-execution,
+  // not a network failure with an unknown mutation outcome.
+  if (isOfflineMutationDisabled(body)) {
+    return new AssetControlError(
+      failureFromPolicy(
+        0,
+        OFFLINE_MUTATION_DISABLED_POLICY,
+        "OFFLINE_MUTATION_DISABLED",
+        safeTraceId(body),
+        null,
+      ),
+      { cause: error },
+    );
+  }
   if (isNetworkFailure(status, body)) {
     return new AssetControlError(
       failureFromPolicy(

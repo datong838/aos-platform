@@ -90,6 +90,32 @@ describe("M3-1 asset-control error normalization", () => {
     expect(normalized.message).toMatch(/复用原幂等键/);
   });
 
+  it("keeps a proactively disabled offline mutation separate from NETWORK", () => {
+    const disabled = Object.assign(new Error("mutation disabled while offline"), {
+      status: 0,
+      body: {
+        code: "OFFLINE_MUTATION_DISABLED",
+        message: "asset control mutations are disabled while offline",
+        details: null,
+        traceId: "",
+      },
+    });
+    const normalized = normalizeAssetControlError(disabled);
+
+    expect(normalized).toMatchObject({
+      status: 0,
+      kind: "offline_mutation_disabled",
+      code: "OFFLINE_MUTATION_DISABLED",
+      traceId: null,
+      outcomeUnknown: false,
+      retryable: false,
+      requiresRefresh: false,
+      failureClosed: true,
+    });
+    expect(normalized.kind).not.toBe("network");
+    expect(normalized.message).toMatch(/发送前停止/);
+  });
+
   it("treats HTTP 500 as an unknown outcome that requires a refresh", () => {
     const normalized = normalizeAssetControlError(
       apiError(500, "INTERNAL_ERROR", null),
