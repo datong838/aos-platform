@@ -11,12 +11,11 @@ from typing import Any, Protocol
 
 from pydantic import ValidationError
 
-from aos_api.asset_registry.canonical_json import canonical_json, canonical_sha256
+from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.asset_registry.contracts import (
     BUNDLE_ID_PATTERN,
     SHA256_PATTERN,
     BundleEvidence,
-    BundleEvidenceStatus,
     BundleEvidenceType,
     BundleKind,
     BundleManifest,
@@ -33,24 +32,14 @@ from aos_api.asset_registry.errors import (
     VerificationFailedError,
     VersionInvalidError,
 )
+from aos_api.asset_registry.release_policy import ReleasePolicy
 from aos_api.asset_registry.semver import SemVerError, parse_range, parse_version
-from aos_api.asset_registry.signature import (
-    TrustRoot,
-    TrustRootProvider,
-    verify_ed25519,
-)
+from aos_api.asset_registry.signature import TrustRootProvider
 
 CREATE_ROLES = frozenset(
     {"admin", "asset-publisher", "asset-registry-admin", "developer"}
 )
 PUBLISH_ROLES = frozenset({"admin", "asset-publisher", "asset-registry-admin"})
-REQUIRED_RELEASE_EVIDENCE = (
-    BundleEvidenceType.MANIFEST_VALIDATION,
-    BundleEvidenceType.CONTENT_HASH,
-    BundleEvidenceType.SIGNATURE_VERIFICATION,
-    BundleEvidenceType.SBOM,
-    BundleEvidenceType.BUNDLE_EVALS,
-)
 LEGACY_EVIDENCE_REVISION = "sha256:" + "0" * 64
 
 
@@ -121,6 +110,7 @@ class RegistryService:
         self._loader = loader
         self._clock = clock or (lambda: datetime.now(UTC))
         self._trust_roots = trust_roots or getattr(loader, "trust_roots", None)
+        self._release_policy = ReleasePolicy(trust_roots=self._trust_roots)
 
     def list_bundles(self) -> list[dict[str, Any]]:
         return self._store.list_bundles()
@@ -416,15 +406,10 @@ class RegistryService:
             record = _VersionRecord.from_store(raw)
             _require_status(record.status, expected, action=action)
             checked_at = _checked_now(self._clock)
-            _probe_trust_root_provider(
-                record,
-                trust_roots=self._trust_roots,
-            )
-            _assert_release_gate(record, checked_at=checked_at)
-            _assert_current_signature(
+            self._release_policy.evaluate(
                 record,
                 checked_at=checked_at,
-                trust_roots=self._trust_roots,
+                require_published=False,
             )
             if require_separation:
                 _assert_publish_duty_separation(record, actor=actor)
@@ -752,126 +737,6 @@ def _validate_manifest_versions(manifest: BundleManifest) -> None:
         ) from exc
 
 
-def _assert_release_gate(record: _VersionRecord, *, checked_at: datetime) -> None:
-    if record.signature is None:
-        raise SignatureInvalidError("bundle signature is missing")
-
-    by_type: dict[BundleEvidenceType, list[BundleEvidence]] = {}
-    for evidence in record.evidence:
-        by_type.setdefault(evidence.type, []).append(evidence)
-
-    for evidence_type in REQUIRED_RELEASE_EVIDENCE:
-        entries = by_type.get(evidence_type, [])
-        is_valid = bool(entries) and all(
-            _evidence_is_current(item, checked_at=checked_at) for item in entries
-        )
-        if evidence_type == BundleEvidenceType.CONTENT_HASH:
-            is_valid = is_valid and all(
-                item.artifact_hash == record.content_hash for item in entries
-            )
-        if not is_valid:
-            _raise_evidence_gate_error(evidence_type)
-
-
-class _SingleTrustRootProvider:
-    def __init__(self, trust_root: TrustRoot) -> None:
-        self._trust_root = trust_root
-
-    def get_trust_root(self, *, publisher: str, key_id: str) -> TrustRoot | None:
-        if (
-            self._trust_root.publisher == publisher
-            and self._trust_root.key_id == key_id
-        ):
-            return self._trust_root
-        return None
-
-
-def _probe_trust_root_provider(
-    record: _VersionRecord,
-    *,
-    trust_roots: TrustRootProvider | None,
-) -> None:
-    if record.signature is None or trust_roots is None:
-        return
-    try:
-        trust_roots.get_trust_root(
-            publisher=record.publisher,
-            key_id=record.signature.key_id,
-        )
-    except Exception as exc:
-        raise TrustRootUnavailableError(
-            "publisher trust-root service is unavailable",
-            details={"retryable": True},
-        ) from exc
-
-
-def _assert_current_signature(
-    record: _VersionRecord,
-    *,
-    checked_at: datetime,
-    trust_roots: TrustRootProvider | None,
-) -> None:
-    if record.signature is None or trust_roots is None:
-        raise SignatureInvalidError("publisher trust roots are unavailable")
-    try:
-        trust_root = trust_roots.get_trust_root(
-            publisher=record.publisher,
-            key_id=record.signature.key_id,
-        )
-    except Exception as exc:
-        raise TrustRootUnavailableError(
-            "publisher trust-root service is unavailable",
-            details={"retryable": True},
-        ) from exc
-    if trust_root is None:
-        raise SignatureInvalidError("publisher trust root is unavailable")
-    trust_root_revision = getattr(trust_root, "revision", None)
-    if (
-        not isinstance(trust_root_revision, str)
-        or not trust_root_revision
-        or trust_root_revision != trust_root_revision.strip()
-    ):
-        raise SignatureInvalidError("publisher trust root revision is invalid")
-
-    descriptor = {
-        "manifest": record.manifest.model_dump(
-            mode="json", by_alias=True, exclude_none=False
-        ),
-        "artifacts": record.artifacts,
-    }
-    if canonical_sha256(descriptor) != record.content_hash:
-        raise ManifestInvalidError("stored bundle content descriptor changed")
-    verified = verify_ed25519(
-        payload=canonical_json(descriptor),
-        signature_b64=record.signature.signature,
-        publisher=record.publisher,
-        key_id=record.signature.key_id,
-        trust_roots=_SingleTrustRootProvider(trust_root),
-        algorithm=record.signature.algorithm,
-        verified_at=checked_at,
-    )
-    if not verified:
-        raise SignatureInvalidError("bundle signature is not valid under current trust")
-
-    signature_evidence = [
-        item
-        for item in record.evidence
-        if item.type == BundleEvidenceType.SIGNATURE_VERIFICATION
-    ]
-    if len(signature_evidence) != 1:
-        raise SignatureInvalidError("bundle signature evidence must be unique")
-    evidence = signature_evidence[0]
-    signature_envelope_hash = canonical_sha256(
-        record.signature.model_dump(mode="json", by_alias=True, exclude_none=False)
-    )
-    if evidence.artifact_hash != signature_envelope_hash:
-        raise SignatureInvalidError("bundle signature evidence does not match envelope")
-    if evidence.metadata.get("trustRootRevision") != trust_root_revision:
-        raise SignatureInvalidError("bundle signature evidence trust root is stale")
-    if evidence.expires_at != trust_root.not_after:
-        raise SignatureInvalidError("bundle signature evidence expiry is inconsistent")
-
-
 def _assert_publish_duty_separation(
     record: _VersionRecord,
     *,
@@ -891,40 +756,6 @@ def _assert_publish_duty_separation(
             "bundle publisher must differ from creator and validator",
             details={"actor": actor},
         )
-
-
-def _evidence_is_current(
-    evidence: BundleEvidence,
-    *,
-    checked_at: datetime,
-) -> bool:
-    return (
-        evidence.status == BundleEvidenceStatus.VALID
-        and evidence.observed_at <= checked_at
-        and (evidence.expires_at is None or evidence.expires_at > checked_at)
-        and evidence.revoked_at is None
-    )
-
-
-def _raise_evidence_gate_error(evidence_type: BundleEvidenceType) -> None:
-    details = {"evidenceType": evidence_type.value}
-    if evidence_type == BundleEvidenceType.SIGNATURE_VERIFICATION:
-        raise SignatureInvalidError(
-            "bundle signature evidence is not valid and current",
-            details=details,
-        )
-    if evidence_type in {
-        BundleEvidenceType.MANIFEST_VALIDATION,
-        BundleEvidenceType.CONTENT_HASH,
-    }:
-        raise ManifestInvalidError(
-            "bundle manifest or content hash evidence is not valid and current",
-            details=details,
-        )
-    raise VerificationFailedError(
-        "bundle release evidence is not valid and current",
-        details=details,
-    )
 
 
 def _require_status(
