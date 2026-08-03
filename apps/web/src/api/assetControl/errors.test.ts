@@ -90,6 +90,24 @@ describe("M3-1 asset-control error normalization", () => {
     expect(normalized.message).toMatch(/复用原幂等键/);
   });
 
+  it("treats HTTP 500 as an unknown outcome that requires a refresh", () => {
+    const normalized = normalizeAssetControlError(
+      apiError(500, "INTERNAL_ERROR", null),
+    );
+
+    expect(normalized).toMatchObject({
+      status: 500,
+      kind: "server_error",
+      recovery: "retry_same_command",
+      retryable: true,
+      requiresRefresh: true,
+      outcomeUnknown: true,
+      failureClosed: true,
+    });
+    expect(normalized.message).toMatch(/先刷新状态/);
+    expect(normalized.message).toMatch(/复用原幂等键/);
+  });
+
   it("keeps 428 failure closed because a refresh cannot supply a missing header", () => {
     const normalized = normalizeAssetControlError(
       apiError(428, "PRECONDITION_REQUIRED"),

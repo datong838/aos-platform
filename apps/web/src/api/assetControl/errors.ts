@@ -120,13 +120,13 @@ const STATUS_POLICIES: Record<AssetControlErrorStatus, FailurePolicy> = {
   },
   500: {
     kind: "server_error",
-    message: "资产控制服务暂时异常，本次操作未确认成功。",
+    message: "资产控制服务暂时异常，本次操作结果未知；请先刷新状态，重试时复用原幂等键。",
     recovery: "retry_same_command",
     isConflict: false,
-    requiresRefresh: false,
+    requiresRefresh: true,
     notVisibleOrMissing: false,
     retryable: true,
-    outcomeUnknown: false,
+    outcomeUnknown: true,
   },
 };
 
