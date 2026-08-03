@@ -12,6 +12,7 @@ from aos_api.asset_registry.composition_contracts import (
     CompositionRequest,
     CreateInstallationRequest,
 )
+from tests.asset_registry.m5_bundle_support import M5_BUNDLE_FIXTURES
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 BUNDLE_ROOT = REPO_ROOT / "bundles"
@@ -39,6 +40,22 @@ MANIFEST_PATHS = (
 
 def _load_manifest(path: Path) -> dict[str, object]:
     return yaml.safe_load(path.read_text(encoding="utf-8"))
+
+
+def test_runtime_signing_fixtures_match_the_frozen_repository_manifests() -> None:
+    fixtures_by_path = {
+        fixture.relative_path: fixture for fixture in M5_BUNDLE_FIXTURES
+    }
+    manifest_paths_by_relative = {
+        path.parent.relative_to(BUNDLE_ROOT).as_posix(): path for path in MANIFEST_PATHS
+    }
+
+    assert set(fixtures_by_path) == set(manifest_paths_by_relative)
+    assert len({fixture.source_ref for fixture in M5_BUNDLE_FIXTURES}) == 4
+    for relative_path, fixture in fixtures_by_path.items():
+        manifest = _load_manifest(manifest_paths_by_relative[relative_path])
+        assert fixture.bundle_id == manifest["metadata"]["id"]
+        assert fixture.source_ref == f"bundle://m5-fixtures/{relative_path}"
 
 
 def test_three_leaf_request_matches_the_four_bundle_dependency_graph() -> None:
