@@ -29,6 +29,49 @@ export const INSTALLATION_LIST_FIXTURE: InstallationListResponse = {
   offset: 0,
 };
 
+/** Canonical first response from create: one draft revision and no decision/pointers. */
+export const INSTALLATION_DRAFT_FIXTURE: InstallationResponse = {
+  installationId: INSTALLATION_ID,
+  displayName: "Commerce draft",
+  state: "draft",
+  currentRevision: 1,
+  activeRevision: null,
+  previousActiveRevision: null,
+  etagVersion: 1,
+  createdAt: "2026-08-03T08:00:00+00:00",
+  updatedAt: "2026-08-03T08:00:00+00:00",
+  current: {
+    installationId: INSTALLATION_ID,
+    revision: 1,
+    parentRevision: null,
+    state: "draft",
+    compositionId: COMPOSITION_ID,
+    lockRevision: 1,
+    lockHash: HASH,
+    permissionDiffHash: HASH,
+    migrationPlanHash: HASH,
+    contributionDiffHash: HASH,
+    overlayRevision: "overlay-1",
+    requestedBy: "maker@example.test",
+    decisionId: null,
+    createdAt: "2026-08-03T08:00:00+00:00",
+  },
+  decision: null,
+  events: [
+    {
+      sequence: 1,
+      fromRevision: null,
+      toRevision: 1,
+      fromState: null,
+      toState: "draft",
+      actor: "maker@example.test",
+      reason: null,
+      evidence: null,
+      createdAt: "2026-08-03T08:00:00+00:00",
+    },
+  ],
+};
+
 /**
  * Current revision plus canonical events; the API does not expose a synthetic
  * array of historical revision snapshots.

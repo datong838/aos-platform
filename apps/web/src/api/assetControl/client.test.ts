@@ -2,13 +2,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { setConnectivity } from "../../lib/offlineStore";
 import {
+  COMPOSITION_REQUEST_FIXTURE,
+  STORED_COMPOSITION_LOCK_FIXTURE,
+} from "./compositionFixtures";
+import {
   AssetControlClient,
   AssetControlClientError,
   type InstallationActionOptions,
 } from "./client";
 import { normalizeAssetControlError } from "./errors";
 import { createIdempotentCommand, idempotencyKeyFor } from "./idempotency";
-import { INSTALLATION_DETAIL_FIXTURE } from "./installationFixtures";
+import {
+  INSTALLATION_DETAIL_FIXTURE,
+  INSTALLATION_DRAFT_FIXTURE,
+} from "./installationFixtures";
 import { REGISTRY_BUNDLE_LIST_FIXTURE } from "./registryFixtures";
 import type { CompositionRequest, CreateInstallationRequest } from "./types";
 
@@ -73,15 +80,10 @@ describe("M3-1 asset-control SDK adapter", () => {
 
   it("encodes composition paths and sends resolve with one command key", async () => {
     const fetch = vi.fn<typeof globalThis.fetch>(async () =>
-      jsonResponse({ compositionId: "c-1" }, 201),
+      jsonResponse(STORED_COMPOSITION_LOCK_FIXTURE, 201),
     );
     const client = makeClient(fetch);
-    const request: CompositionRequest = {
-      requested: [],
-      platformApiVersion: "1.0.0",
-      platformRelease: "2026.08",
-      environment: "dev",
-    };
+    const request: CompositionRequest = COMPOSITION_REQUEST_FIXTURE;
     const idempotencyKey = idempotencyKeyFor(createIdempotentCommand());
 
     await client.resolveComposition(request, { idempotencyKey });
@@ -93,11 +95,16 @@ describe("M3-1 asset-control SDK adapter", () => {
     expect(headers.get("Idempotency-Key")).toBe(idempotencyKey);
     expect(headers.has("If-Match")).toBe(false);
 
-    fetch.mockResolvedValueOnce(jsonResponse({ compositionId: "c-1" }));
-    await client.getCompositionLock("a/b", 3);
+    fetch.mockResolvedValueOnce(jsonResponse(STORED_COMPOSITION_LOCK_FIXTURE));
+    await client.getCompositionLock(STORED_COMPOSITION_LOCK_FIXTURE.compositionId, 3);
     expect(fetch.mock.calls[1][0]).toBe(
-      `${BASE_URL}/v1/bundle-compositions/a%2Fb/locks/3`,
+      `${BASE_URL}/v1/bundle-compositions/${STORED_COMPOSITION_LOCK_FIXTURE.compositionId}/locks/3`,
     );
+
+    expect(() => client.getCompositionLock("a/b", 3)).toThrow(
+      "compositionId must be a canonical lowercase UUID",
+    );
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 
   it("builds installation list query and rejects invalid paging before fetch", async () => {
@@ -117,7 +124,7 @@ describe("M3-1 asset-control SDK adapter", () => {
   it("requires a matching strong ETag for create, get and action responses", async () => {
     const installation = INSTALLATION_DETAIL_FIXTURE;
     const fetch = vi.fn<typeof globalThis.fetch>(async () =>
-      jsonResponse(installation, 200, { ETag: '"5"' }),
+      jsonResponse(INSTALLATION_DRAFT_FIXTURE, 201, { ETag: '"1"' }),
     );
     const client = makeClient(fetch);
     const createBody: CreateInstallationRequest = {
@@ -129,7 +136,9 @@ describe("M3-1 asset-control SDK adapter", () => {
     const createKey = idempotencyKeyFor(createIdempotentCommand());
 
     await client.createInstallation(createBody, { idempotencyKey: createKey });
+    fetch.mockResolvedValueOnce(jsonResponse(installation, 200, { ETag: '"5"' }));
     await client.getInstallation(INSTALLATION_ID);
+    fetch.mockResolvedValueOnce(jsonResponse(installation, 200, { ETag: '"5"' }));
     await client.submitInstallation(INSTALLATION_ID, commandOptions());
 
     const createHeaders = new Headers(fetch.mock.calls[0][1]?.headers);

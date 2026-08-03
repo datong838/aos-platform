@@ -3,6 +3,11 @@ import { getApiBase } from "../apiBase";
 import { getDesktopClientVersion } from "../desktopClient";
 import { tenantAuthHeaders } from "../tenant";
 import type { IdempotencyKey } from "./idempotency";
+import {
+  parseStoredCompositionLock,
+  serializeCompositionRequest,
+  serializeCreateInstallationRequest,
+} from "./compositions";
 import { parseInstallationDetail, parseInstallationList } from "./installations";
 import {
   ASSET_CONTROL_HEADER_CONTRACT,
@@ -77,6 +82,7 @@ const REGISTRY_PATH = "/v1/asset-bundles";
 const MAX_INSTALLATION_LIST_LIMIT = 100;
 const MAX_INSTALLATION_LIST_OFFSET = 10_000;
 const EMPTY_ACTION_BODY: EmptyInstallationActionRequest = {};
+const CANONICAL_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 function pathSegment(value: string, label: string): string {
   if (!value || value !== value.trim()) {
@@ -88,6 +94,13 @@ function pathSegment(value: string, label: string): string {
 function positiveInteger(value: number, label: string): number {
   if (!Number.isSafeInteger(value) || value < 1) {
     throw new TypeError(`${label} must be a positive safe integer`);
+  }
+  return value;
+}
+
+function canonicalUuid(value: string, label: string): string {
+  if (!CANONICAL_UUID.test(value)) {
+    throw new TypeError(`${label} must be a canonical lowercase UUID`);
   }
   return value;
 }
@@ -356,7 +369,12 @@ export class AssetControlClient {
     options: IdempotentCommandOptions,
   ): Promise<StoredCompositionLock> {
     const operation = ASSET_CONTROL_OPERATIONS.resolveComposition;
-    return this.post(operation, operation.pathTemplate, body, options);
+    return this.post<unknown>(
+      operation,
+      operation.pathTemplate,
+      serializeCompositionRequest(body),
+      options,
+    ).then(parseStoredCompositionLock);
   }
 
   getCompositionLock(
@@ -365,10 +383,12 @@ export class AssetControlClient {
   ): Promise<StoredCompositionLock> {
     const operation = ASSET_CONTROL_OPERATIONS.getCompositionLock;
     const path = fillPath(operation, {
-      composition_id: compositionId,
+      composition_id: canonicalUuid(compositionId, "compositionId"),
       revision: positiveInteger(revision, "revision"),
     });
-    return this.get(operation.operationId, path);
+    return this.get<unknown>(operation.operationId, path).then(
+      parseStoredCompositionLock,
+    );
   }
 
   createInstallation(
@@ -376,7 +396,12 @@ export class AssetControlClient {
     options: IdempotentCommandOptions,
   ): Promise<InstallationResponse> {
     const operation = ASSET_CONTROL_OPERATIONS.createInstallation;
-    return this.post(operation, operation.pathTemplate, body, options);
+    return this.post<unknown>(
+      operation,
+      operation.pathTemplate,
+      serializeCreateInstallationRequest(body),
+      options,
+    ).then(parseInstallationDetail);
   }
 
   listInstallations(
