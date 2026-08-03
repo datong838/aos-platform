@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.asset_registry.composition_contracts import (
     CompositionRequest,
