@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import importlib.util
+import json
 import uuid
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
@@ -16,6 +17,7 @@ import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from psycopg import sql
+from psycopg.types.json import Jsonb
 
 from aos_api.asset_registry.canonical_json import canonical_json, canonical_sha256
 from aos_api.asset_registry.contracts import (
@@ -511,6 +513,175 @@ def test_snapshot_concurrent_evidence_change_never_mixes_transaction_views(
     after_change = _reader(scoped_connect, roots).read()
     assert len(before_change.candidates) == 2
     assert [item.id for item in after_change.candidates] == ["solution.stable"]
+
+
+def test_snapshot_manifest_damage_precedes_stale_evidence_in_real_postgres(
+    registry_database,
+) -> None:
+    store, scoped_connect = registry_database
+    roots = Roots()
+    _publish(
+        store,
+        roots,
+        publisher="aos",
+        bundle_id="solution.damaged-stale",
+        version="1.0.0",
+    )
+    with scoped_connect() as conn:
+        conn.execute(
+            "ALTER TABLE asset_bundle_version "
+            "DISABLE TRIGGER trg_asset_bundle_version_guard"
+        )
+        conn.execute(
+            """
+            UPDATE asset_bundle_version
+               SET manifest_json = jsonb_set(
+                     manifest_json,
+                     '{metadata,displayName}',
+                     '"Tampered"'::JSONB
+                   )
+            """
+        )
+        conn.execute(
+            "ALTER TABLE asset_bundle_version "
+            "ENABLE TRIGGER trg_asset_bundle_version_guard"
+        )
+        conn.execute(
+            """
+            UPDATE asset_bundle_evidence
+               SET status = 'expired',
+                   updated_at = clock_timestamp() + INTERVAL '1 second',
+                   updated_by = 'w1-adversary',
+                   status_reason = 'stale evidence with damaged manifest'
+             WHERE evidence_type = 'sbom'
+            """
+        )
+        conn.commit()
+
+    with pytest.raises(AssetRegistryError) as caught:
+        _reader(scoped_connect, roots).read()
+
+    assert caught.value.code == AssetRegistryErrorCode.MANIFEST_INVALID
+
+
+def test_snapshot_crypto_damage_precedes_revoked_evidence_in_real_postgres(
+    registry_database,
+) -> None:
+    store, scoped_connect = registry_database
+    roots = Roots()
+    _publish(
+        store,
+        roots,
+        publisher="aos",
+        bundle_id="solution.crypto-revoked",
+        version="1.0.0",
+    )
+    with scoped_connect() as conn:
+        row = conn.execute("SELECT signature FROM asset_bundle_version").fetchone()
+        assert row is not None
+        signature_json = dict(row["signature"])
+        signature_json["signature"] = base64.b64encode(b"x" * 64).decode("ascii")
+        signature = BundleSignature.model_validate_json(json.dumps(signature_json))
+        signature_json = signature.model_dump(
+            mode="json",
+            by_alias=True,
+            exclude_none=False,
+        )
+        signature_hash = canonical_sha256(signature_json)
+
+        conn.execute(
+            "ALTER TABLE asset_bundle_version "
+            "DISABLE TRIGGER trg_asset_bundle_version_guard"
+        )
+        conn.execute(
+            "ALTER TABLE asset_bundle_evidence "
+            "DISABLE TRIGGER trg_asset_bundle_evidence_guard"
+        )
+        conn.execute(
+            "UPDATE asset_bundle_version SET signature = %s",
+            (Jsonb(signature_json),),
+        )
+        conn.execute(
+            """
+            UPDATE asset_bundle_evidence
+               SET artifact_hash = %s,
+                   updated_at = clock_timestamp() + INTERVAL '1 second',
+                   updated_by = 'w1-adversary',
+                   status_reason = 'tampered signature envelope'
+             WHERE evidence_type = 'signature_verification'
+            """,
+            (signature_hash,),
+        )
+        conn.execute(
+            """
+            UPDATE asset_bundle_evidence
+               SET status = 'revoked',
+                   revoked_at = clock_timestamp(),
+                   updated_at = clock_timestamp() + INTERVAL '1 second',
+                   updated_by = 'w1-adversary',
+                   status_reason = 'revoked evidence with invalid signature'
+             WHERE evidence_type = 'sbom'
+            """
+        )
+        conn.execute(
+            "ALTER TABLE asset_bundle_evidence "
+            "ENABLE TRIGGER trg_asset_bundle_evidence_guard"
+        )
+        conn.execute(
+            "ALTER TABLE asset_bundle_version "
+            "ENABLE TRIGGER trg_asset_bundle_version_guard"
+        )
+        conn.commit()
+
+    with pytest.raises(AssetRegistryError) as caught:
+        _reader(scoped_connect, roots).read()
+
+    assert caught.value.code == AssetRegistryErrorCode.SIGNATURE_INVALID
+
+
+def test_snapshot_candidate_limit_ignores_ineligible_rows_before_valid_candidate(
+    registry_database,
+    monkeypatch,
+) -> None:
+    store, scoped_connect = registry_database
+    roots = Roots()
+    invalid_ids = (
+        "solution.aaa-invalid",
+        "solution.aab-invalid",
+        "solution.aac-invalid",
+    )
+    for bundle_id in (*invalid_ids, "solution.zzz-valid"):
+        _publish(
+            store,
+            roots,
+            publisher="aos",
+            bundle_id=bundle_id,
+            version="1.0.0",
+        )
+    with scoped_connect() as conn:
+        conn.execute(
+            """
+            UPDATE asset_bundle_evidence AS e
+               SET status = 'expired',
+                   updated_at = clock_timestamp() + INTERVAL '1 second',
+                   updated_by = 'w1-monitor',
+                   status_reason = 'ineligible candidate must not consume budget'
+              FROM asset_bundle_version AS v
+              JOIN asset_bundle AS b ON b.bundle_pk = v.bundle_pk
+             WHERE e.version_pk = v.version_pk
+               AND b.bundle_id = ANY(%s)
+               AND e.evidence_type = 'sbom'
+            """,
+            (list(invalid_ids),),
+        )
+        conn.commit()
+    monkeypatch.setattr(
+        "aos_api.asset_registry.registry_snapshot.MAX_SNAPSHOT_CANDIDATES", 1
+    )
+
+    snapshot = _reader(scoped_connect, roots).read()
+
+    assert [item.id for item in snapshot.candidates] == ["solution.zzz-valid"]
 
 
 def test_snapshot_candidate_limit_fails_closed_in_real_postgres(

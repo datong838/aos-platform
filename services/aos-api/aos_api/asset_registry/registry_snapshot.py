@@ -31,10 +31,7 @@ from aos_api.asset_registry.errors import (
     SignatureInvalidError,
     VerificationFailedError,
 )
-from aos_api.asset_registry.release_policy import (
-    REQUIRED_RELEASE_EVIDENCE,
-    ReleasePolicy,
-)
+from aos_api.asset_registry.release_policy import ReleasePolicy
 from aos_api.db import connect
 
 ConnectFactory = Callable[[], AbstractContextManager[Any]]
@@ -83,24 +80,8 @@ class RegistrySnapshotReader:
                     raise VerificationFailedError(
                         "registry snapshot transaction clock is invalid"
                     )
-                rows = conn.execute(
-                    _SNAPSHOT_QUERY,
-                    (
-                        [item.value for item in REQUIRED_RELEASE_EVIDENCE],
-                        MAX_SNAPSHOT_CANDIDATES + 1,
-                    ),
-                ).fetchall()
-                if len(rows) > MAX_SNAPSHOT_CANDIDATES:
-                    raise ResolutionLimitExceededError(
-                        "registry snapshot candidate limit exceeded",
-                        details={
-                            "resource": "snapshot_candidates",
-                            "limit": MAX_SNAPSHOT_CANDIDATES,
-                            "observed": len(rows),
-                        },
-                    )
                 candidates = []
-                for row in rows:
+                for row in conn.execute(_SNAPSHOT_QUERY):
                     candidate = self._candidate_from_row(
                         row,
                         checked_at=checked_at,
@@ -108,6 +89,15 @@ class RegistrySnapshotReader:
                     )
                     if candidate is not None:
                         candidates.append(candidate)
+                        if len(candidates) > MAX_SNAPSHOT_CANDIDATES:
+                            raise ResolutionLimitExceededError(
+                                "registry snapshot candidate limit exceeded",
+                                details={
+                                    "resource": "snapshot_candidates",
+                                    "limit": MAX_SNAPSHOT_CANDIDATES,
+                                    "observed": MAX_SNAPSHOT_CANDIDATES + 1,
+                                },
+                            )
                 try:
                     return RegistrySnapshot.build(
                         candidates=candidates,
@@ -305,41 +295,5 @@ SELECT v.version_pk,
      WHERE e.version_pk = v.version_pk
  ) AS evidence ON TRUE
  WHERE v.status = 'published'
-   AND NOT EXISTS (
-     SELECT 1
-       FROM unnest(%s::TEXT[]) AS required(evidence_type)
-      WHERE NOT EXISTS (
-              SELECT 1
-                FROM asset_bundle_evidence AS present
-               WHERE present.version_pk = v.version_pk
-                 AND present.evidence_type = required.evidence_type
-            )
-         OR EXISTS (
-              SELECT 1
-                FROM asset_bundle_evidence AS non_current
-               WHERE non_current.version_pk = v.version_pk
-                 AND non_current.evidence_type = required.evidence_type
-                 AND (
-                   non_current.status <> 'valid'
-                   OR non_current.observed_at > transaction_timestamp()
-                   OR (
-                     non_current.expires_at IS NOT NULL
-                     AND non_current.expires_at <= transaction_timestamp()
-                   )
-                   OR non_current.revoked_at IS NOT NULL
-                 )
-                 AND (
-                   required.evidence_type <> 'signature_verification'
-                   OR (
-                     SELECT COUNT(*)
-                       FROM asset_bundle_evidence AS signature_entries
-                      WHERE signature_entries.version_pk = v.version_pk
-                        AND signature_entries.evidence_type =
-                            'signature_verification'
-                   ) = 1
-                 )
-            )
-   )
  ORDER BY b.publisher, b.bundle_id, v.version, v.content_hash
- LIMIT %s
 """
