@@ -3,6 +3,7 @@ import { getApiBase } from "../apiBase";
 import { getDesktopClientVersion } from "../desktopClient";
 import { tenantAuthHeaders } from "../tenant";
 import type { IdempotencyKey } from "./idempotency";
+import { parseInstallationDetail, parseInstallationList } from "./installations";
 import {
   ASSET_CONTROL_HEADER_CONTRACT,
   ASSET_CONTROL_OPERATIONS,
@@ -401,15 +402,23 @@ export class AssetControlClient {
       params.set("offset", String(query.offset));
     }
     const suffix = params.size ? `?${params.toString()}` : "";
-    return this.get(operation.operationId, `${operation.pathTemplate}${suffix}`);
+    return this.get<unknown>(
+      operation.operationId,
+      `${operation.pathTemplate}${suffix}`,
+    ).then(parseInstallationList);
   }
 
-  getInstallation(installationId: string): Promise<InstallationResponse> {
+  async getInstallation(installationId: string): Promise<InstallationResponse> {
     const operation = ASSET_CONTROL_OPERATIONS.getInstallation;
     const path = fillPath(operation, {
       installation_id: installationId,
     });
-    return this.get(operation.operationId, path, operation.returnsEtag);
+    const payload = await this.get<unknown>(
+      operation.operationId,
+      path,
+      operation.returnsEtag,
+    );
+    return parseInstallationDetail(payload);
   }
 
   private installationAction<TBody>(
