@@ -13,6 +13,8 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from psycopg import sql
+
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.asset_registry.errors import DutySeparationRequiredError
 from aos_api.asset_registry.registry_service import RegistryService
@@ -24,7 +26,6 @@ from aos_api.asset_registry.release_policy import (
 )
 from aos_api.asset_registry.signature import TrustRoot
 from aos_api.db import connect
-from psycopg import sql
 from tests.asset_registry.m5_bundle_support import (
     M5_BUNDLE_FIXTURES,
     RuntimeSignedM5Bundle,
