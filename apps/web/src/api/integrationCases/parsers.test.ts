@@ -100,7 +100,11 @@ describe("M4-0 integration case strict response contracts", () => {
 
     const naiveTime = clone(TIMELINE_FIXTURE) as { items: Array<Record<string, unknown>> };
     naiveTime.items[0].createdAt = "2026-08-03T09:00:00";
-    expect(() => parseIntegrationCaseTimeline(naiveTime)).toThrow(/timestamp with timezone/);
+    expect(() => parseIntegrationCaseTimeline(naiveTime)).toThrow(/ISO UTC timestamp/);
+
+    const nonUtcTime = clone(TIMELINE_FIXTURE) as { items: Array<Record<string, unknown>> };
+    nonUtcTime.items[0].createdAt = "2026-08-03T17:00:00+08:00";
+    expect(() => parseIntegrationCaseTimeline(nonUtcTime)).toThrow(/ISO UTC timestamp/);
   });
 
   it("rejects null-to-zero ambiguity and impossible metric coverage", () => {

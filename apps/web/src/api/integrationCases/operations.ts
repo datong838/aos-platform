@@ -1,5 +1,5 @@
 export type IntegrationCaseHttpMethod = "GET" | "POST";
-export type IntegrationCaseErrorStatus = 400 | 401 | 403 | 404 | 409 | 412 | 422 | 428 | 500;
+export type IntegrationCaseErrorStatus = 400 | 401 | 403 | 404 | 409 | 422 | 428 | 500;
 export type IntegrationCaseOperationId =
   | "list_integration_cases"
   | "create_integration_case"
@@ -19,7 +19,7 @@ export type IntegrationCaseOperationSpec = Readonly<{
 
 const READ_ERRORS = [400, 401, 403, 404, 422, 500] as const;
 const CREATE_ERRORS = [400, 401, 403, 404, 409, 422, 500] as const;
-const SNAPSHOT_ERRORS = [400, 401, 403, 404, 409, 412, 422, 428, 500] as const;
+const SNAPSHOT_ERRORS = [400, 401, 403, 404, 409, 422, 428, 500] as const;
 
 /** Frozen M4 five-endpoint inventory. This module performs no HTTP requests. */
 export const INTEGRATION_CASE_OPERATIONS = {

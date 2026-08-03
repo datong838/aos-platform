@@ -548,6 +548,8 @@ def test_error_codes_and_http_statuses_match_the_frozen_contract() -> None:
         "PRECONDITION_INVALID": 400,
         "MARKING_ACCESS_DENIED": 403,
         "REGISTRY_INTEGRITY_CORRUPT": 500,
+        "EVIDENCE_REFERENCE_INVALID": 422,
+        "EVIDENCE_INTEGRITY_CORRUPT": 500,
         "NOT_FOUND": 404,
     }
     assert {

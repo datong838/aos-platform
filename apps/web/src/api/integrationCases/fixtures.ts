@@ -57,6 +57,13 @@ export const CURRENT_STATS = {
   latencyMs: { value: null, aggregation: "max" as const, measuredCaseCount: 0, eligibleCaseCount: 1, cutoffAt: CUTOFF },
 };
 
+const CURRENT_METRICS = {
+  connectorCount: CURRENT_STATS.connectorCount,
+  pipelineCount: CURRENT_STATS.pipelineCount,
+  datasetRowCount: CURRENT_STATS.datasetRowCount,
+  latencyMs: CURRENT_STATS.latencyMs,
+};
+
 export const CURRENT_CASE_LIST_FIXTURE: IntegrationCaseListResponse = {
   scope: "current",
   items: [{
@@ -136,7 +143,7 @@ export const CURRENT_CASE_DETAIL_FIXTURE: CurrentIntegrationCaseDetail = {
     updatedAt: CUTOFF,
   }],
   nextProjectionAt: "2026-08-03T10:00:00+00:00",
-  metrics: CURRENT_STATS,
+  metrics: CURRENT_METRICS,
 };
 
 export const REFERENCE_CASE_DETAIL_FIXTURE: ReferenceIntegrationCaseDetail = {

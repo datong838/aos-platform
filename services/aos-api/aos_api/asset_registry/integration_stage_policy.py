@@ -13,19 +13,18 @@ from datetime import datetime
 from enum import StrEnum
 from typing import TypeAlias
 
-STAGE_POLICY_VERSION = "integration-stage-policy/v1"
-
-
-class IntegrationStage(StrEnum):
-    PLANNED = "planned"
-    CONNECTION_VERIFIED = "connection_verified"
-    DATA_VERIFIED = "data_verified"
-    ONTOLOGY_VERIFIED = "ontology_verified"
-    LOGIC_VERIFIED = "logic_verified"
-    WORKSHOP_VERIFIED = "workshop_verified"
-    PRODUCTION_READY = "production_ready"
-    PRODUCTION_ACTIVE = "production_active"
-
+from aos_api.asset_registry import integration_contracts as contracts
+from aos_api.asset_registry.integration_contracts import (
+    STAGE_POLICY_VERSION,
+    IntegrationEvidenceEnvelope,
+    IntegrationStage,
+)
+from aos_api.asset_registry.integration_contracts import (
+    EvidenceOutcome as IntegrationEvidenceOutcome,
+)
+from aos_api.asset_registry.integration_contracts import (
+    EvidenceType as IntegrationEvidenceType,
+)
 
 STAGE_ORDER = (
     IntegrationStage.PLANNED,
@@ -37,29 +36,6 @@ STAGE_ORDER = (
     IntegrationStage.PRODUCTION_READY,
     IntegrationStage.PRODUCTION_ACTIVE,
 )
-
-
-class IntegrationEvidenceType(StrEnum):
-    SOURCE_CONNECTION = "source_connection"
-    TENANT_ISOLATION = "tenant_isolation"
-    PIPELINE_RUN = "pipeline_run"
-    DATASET_REVISION = "dataset_revision"
-    DATA_QUALITY = "data_quality"
-    ONTOLOGY_REVISION = "ontology_revision"
-    MAPPING_VALIDATION = "mapping_validation"
-    LOGIC_PUBLICATION = "logic_publication"
-    LOGIC_EVAL = "logic_eval"
-    WORKSHOP_VALIDATION = "workshop_validation"
-    ACTION_SAFETY = "action_safety"
-    OPERATIONS_READINESS = "operations_readiness"
-    SECURITY_VALIDATION = "security_validation"
-    RUNTIME_HEALTH = "runtime_health"
-
-
-class IntegrationEvidenceOutcome(StrEnum):
-    VALID = "valid"
-    INVALID = "invalid"
-    REVOKED = "revoked"
 
 
 class StageBlockerCode(StrEnum):
@@ -484,6 +460,95 @@ def evaluate_stage_policy(
         gates=tuple(gates),
         blockers=unresolved,
     )
+
+
+def evaluate_contract_stage_policy(
+    *,
+    planned_basis: PlannedBasis,
+    evidence: tuple[IntegrationEvidenceEnvelope, ...]
+    | list[IntegrationEvidenceEnvelope],
+    cutoff_at: datetime,
+    open_blockers: tuple[str, ...] | list[str] = (),
+) -> StagePolicyResult:
+    """Evaluate validated canonical Evidence without a second public contract."""
+
+    normalized = [_contract_stage_evidence(item) for item in evidence]
+    return evaluate_stage_policy(
+        planned_basis=planned_basis,
+        evidence=normalized,
+        cutoff_at=cutoff_at,
+        open_blockers=open_blockers,
+    )
+
+
+def _contract_stage_evidence(item: IntegrationEvidenceEnvelope) -> StageEvidence:
+    if not isinstance(item, contracts.IntegrationEvidenceBase):
+        raise StagePolicyIntegrityError(
+            "evidence must be a validated IntegrationEvidenceEnvelope"
+        )
+    return StageEvidence(
+        evidence_id=item.evidence_id,
+        revision=item.revision,
+        evidence_type=IntegrationEvidenceType(item.evidence_type),
+        producer=item.producer,
+        series_key=item.series_key,
+        outcome=IntegrationEvidenceOutcome(item.outcome),
+        observed_at=item.observed_at,
+        expires_at=item.expires_at,
+        revoked_at=item.revoked_at,
+        claims=_contract_claims(item),
+    )
+
+
+def _contract_claims(
+    item: contracts.IntegrationEvidenceBase,
+) -> IntegrationStageClaims:
+    claims = item.claims
+    if isinstance(item, contracts.SourceConnectionEvidence):
+        return SourceConnectionClaims(claims.read_probe, claims.tenant_binding)
+    if isinstance(item, contracts.TenantIsolationEvidence):
+        return TenantIsolationClaims(True, True, claims.cross_tenant_denied)
+    if isinstance(item, contracts.PipelineRunEvidence):
+        return PipelineRunClaims(claims.result == "succeeded", True, True)
+    if isinstance(item, contracts.DatasetRevisionEvidence):
+        return DatasetRevisionClaims(True, True, claims.row_count)
+    if isinstance(item, contracts.DataQualityEvidence):
+        return DataQualityClaims(claims.required_passed)
+    if isinstance(item, contracts.OntologyRevisionEvidence):
+        return OntologyRevisionClaims(True, True)
+    if isinstance(item, contracts.MappingValidationEvidence):
+        return MappingValidationClaims(
+            claims.coverage == 1.0,
+            claims.link_validation_passed,
+        )
+    if isinstance(item, contracts.LogicPublicationEvidence):
+        return LogicPublicationClaims(True, True)
+    if isinstance(item, contracts.LogicEvalEvidence):
+        return LogicEvalClaims(claims.required_passed)
+    if isinstance(item, contracts.WorkshopValidationEvidence):
+        return WorkshopValidationClaims(
+            claims.real_source,
+            claims.empty_state_passed,
+            claims.permission_passed,
+            claims.main_flow_passed,
+        )
+    if isinstance(item, contracts.ActionSafetyEvidence):
+        return ActionSafetyClaims(
+            claims.approval_control_passed,
+            claims.rollback_control_passed,
+            claims.idempotency_control_passed,
+            claims.installation_apply_verified,
+            claims.installation_verify_verified,
+        )
+    if isinstance(item, contracts.OperationsReadinessEvidence):
+        return OperationsReadinessClaims(
+            True, True, True, claims.required_checks_passed
+        )
+    if isinstance(item, contracts.SecurityValidationEvidence):
+        return SecurityValidationClaims(claims.required_checks_passed)
+    if isinstance(item, contracts.RuntimeHealthEvidence):
+        return RuntimeHealthClaims(claims.healthy, claims.latency_ms)
+    raise StagePolicyIntegrityError("unsupported canonical Evidence type")
 
 
 def _latest_series_heads(

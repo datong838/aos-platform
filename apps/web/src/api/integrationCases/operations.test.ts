@@ -21,7 +21,7 @@ describe("M4-0 integration case operation contract", () => {
   });
 
   it("includes evidence integrity and validation status surfaces without inventing endpoints", () => {
-    expect(INTEGRATION_CASE_OPERATIONS.createSnapshot.errorStatuses).toEqual([400, 401, 403, 404, 409, 412, 422, 428, 500]);
+    expect(INTEGRATION_CASE_OPERATIONS.createSnapshot.errorStatuses).toEqual([400, 401, 403, 404, 409, 422, 428, 500]);
     expect(Object.values(INTEGRATION_CASE_OPERATIONS).every(({ pathTemplate }) => pathTemplate.startsWith("/v1/integration-cases"))).toBe(true);
   });
 });

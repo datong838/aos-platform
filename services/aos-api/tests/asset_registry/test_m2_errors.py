@@ -9,6 +9,8 @@ from aos_api.asset_registry.errors import (
     AssetRegistryError,
     AssetRegistryErrorCode,
     CurrentInstallationStaleError,
+    EvidenceIntegrityCorruptError,
+    EvidenceReferenceInvalidError,
     IdempotencyKeyRequiredError,
     InstallationStateConflictError,
     LockIntegrityCorruptError,
@@ -94,4 +96,22 @@ def test_persisted_lock_corruption_error_cannot_leak_raw_content() -> None:
         LockIntegrityCorruptError(  # type: ignore[call-arg]
             "raw lock payload",
             details={"lockPayload": {"resolved": ["secret"]}},
+        )
+
+
+def test_m4_evidence_errors_are_stable_and_do_not_leak_persisted_content() -> None:
+    invalid = EvidenceReferenceInvalidError()
+    assert invalid.code is AssetRegistryErrorCode.EVIDENCE_REFERENCE_INVALID
+    assert invalid.http_status == 422
+    assert invalid.details is None
+
+    corrupt = EvidenceIntegrityCorruptError()
+    assert corrupt.code is AssetRegistryErrorCode.EVIDENCE_INTEGRITY_CORRUPT
+    assert corrupt.http_status == 500
+    assert corrupt.details is None
+    assert str(corrupt) == "stored Integration Evidence failed integrity verification"
+
+    with pytest.raises(TypeError):
+        EvidenceIntegrityCorruptError(  # type: ignore[call-arg]
+            "raw Evidence",
         )

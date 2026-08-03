@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
+from pydantic import ValidationError
+
 from aos_api.asset_registry.integration_contracts import (
     INTEGRATION_CASE_DETAIL_ADAPTER,
     INTEGRATION_EVIDENCE_ADAPTER,
@@ -17,13 +19,12 @@ from aos_api.asset_registry.integration_contracts import (
     IntegrationEvidenceSnapshotResponse,
     IntegrationStage,
 )
-from pydantic import ValidationError
 
 UUID_1 = "00000000-0000-4000-8000-000000000001"
 UUID_2 = "00000000-0000-4000-8000-000000000002"
 HASH_A = "sha256:" + "a" * 64
 HASH_B = "sha256:" + "b" * 64
-UTC = datetime(2026, 8, 3, 12, 0, tzinfo=timezone.utc)
+UTC = datetime(2026, 8, 3, 12, 0, tzinfo=UTC)
 
 
 CLAIMS = {
@@ -277,19 +278,23 @@ def test_wire_contract_rejects_snake_case_aliases() -> None:
 
 def test_case_list_detail_snapshot_and_timeline_contracts() -> None:
     item = list_item()
-    assert IntegrationCaseListResponse.model_validate(
-        {
-            "items": [item],
-            "scope": "current",
-            "total": 1,
-            "limit": 20,
-            "offset": 0,
-            "stats": statistics(),
-        }
-    ).total == 1
+    assert (
+        IntegrationCaseListResponse.model_validate(
+            {
+                "items": [item],
+                "scope": "current",
+                "total": 1,
+                "limit": 20,
+                "offset": 0,
+                "stats": statistics(),
+            }
+        ).total
+        == 1
+    )
 
     detail = {
         **item,
+        "blockerCount": 1,
         "installationRevision": 1,
         "compositionId": UUID_2,
         "lockRevision": 1,
@@ -297,7 +302,9 @@ def test_case_list_detail_snapshot_and_timeline_contracts() -> None:
         "stageGates": [
             {
                 "stage": stage.value,
-                "status": "satisfied" if stage == IntegrationStage.PLANNED else "not_evaluated",
+                "status": "satisfied"
+                if stage == IntegrationStage.PLANNED
+                else "not_evaluated",
                 "evidenceRefs": [],
                 "reasonRefs": [],
             }
@@ -318,7 +325,20 @@ def test_case_list_detail_snapshot_and_timeline_contracts() -> None:
                 "recordedAt": UTC,
             }
         ],
-        "blockers": [],
+        "blockers": [
+            {
+                "blockerId": UUID_2,
+                "code": "MISSING_PIPELINE_RUN",
+                "severity": "high",
+                "status": "open",
+                "gate": "data_verified",
+                "reasonRefs": ["missing:pipeline_run"],
+                "evidenceRefs": [],
+                "owner": "owner:operations",
+                "firstObservedAt": UTC,
+                "updatedAt": UTC,
+            }
+        ],
         "nextProjectionAt": None,
         "metrics": detail_metrics(),
     }
@@ -333,20 +353,27 @@ def test_case_list_detail_snapshot_and_timeline_contracts() -> None:
         "stagePolicyVersion": STAGE_POLICY_VERSION,
         "snapshotHash": HASH_A,
     }
-    assert IntegrationEvidenceSnapshot.model_validate(
-        {**snapshot, "evidence": [evidence_payload()]}
-    ).evidence[0].claims.read_probe
-    assert IntegrationEvidenceSnapshotResponse.model_validate(
-        {
+    assert (
+        IntegrationEvidenceSnapshot.model_validate(
+            {**snapshot, "evidence": [evidence_payload()]}
+        )
+        .evidence[0]
+        .claims.read_probe
+    )
+    assert (
+        IntegrationEvidenceSnapshotResponse.model_validate(
+            {
                 **snapshot,
                 "nextProjectionAt": None,
                 "evidenceCount": 1,
-            "stageGates": detail["stageGates"],
-            "blockerRefs": [],
-            "etagVersion": 1,
-            "createdAt": UTC,
-        }
-    ).evidence_count == 1
+                "stageGates": detail["stageGates"],
+                "blockerRefs": [],
+                "etagVersion": 1,
+                "createdAt": UTC,
+            }
+        ).evidence_count
+        == 1
+    )
 
     event = {
         "sequence": 1,
@@ -357,16 +384,21 @@ def test_case_list_detail_snapshot_and_timeline_contracts() -> None:
         "reasonRefs": ["instance:valid"],
         "createdAt": UTC,
     }
-    assert IntegrationCaseTimelineResponse.model_validate(
-        {
-            "caseId": UUID_1,
-            "scope": "current",
-            "items": [event],
-            "total": 1,
-            "limit": 20,
-            "offset": 0,
-        }
-    ).items[0].sequence == 1
+    assert (
+        IntegrationCaseTimelineResponse.model_validate(
+            {
+                "caseId": UUID_1,
+                "scope": "current",
+                "items": [event],
+                "total": 1,
+                "limit": 20,
+                "offset": 0,
+            }
+        )
+        .items[0]
+        .sequence
+        == 1
+    )
 
 
 def test_current_and_reference_case_shapes_are_isolated() -> None:
@@ -449,7 +481,10 @@ def test_current_and_reference_case_shapes_are_isolated() -> None:
         "nextProjectionAt": None,
         "metrics": None,
     }
-    assert INTEGRATION_CASE_DETAIL_ADAPTER.validate_python(reference_detail).metrics is None
+    assert (
+        INTEGRATION_CASE_DETAIL_ADAPTER.validate_python(reference_detail).metrics
+        is None
+    )
 
 
 @pytest.mark.parametrize("aggregation", ["count_distinct", "sum_deduplicated"])
@@ -539,5 +574,19 @@ def test_budgets_and_metric_truth_semantics_are_enforced() -> None:
                     **statistics(),
                     "connectorCount": invalid_metric,
                 },
+            }
+        )
+
+    unmeasured = metric()
+    unmeasured["value"] = None
+    with pytest.raises(ValidationError):
+        IntegrationCaseListResponse.model_validate(
+            {
+                "items": [],
+                "scope": "current",
+                "total": 0,
+                "limit": 20,
+                "offset": 0,
+                "stats": {**statistics(), "latencyMs": unmeasured},
             }
         )

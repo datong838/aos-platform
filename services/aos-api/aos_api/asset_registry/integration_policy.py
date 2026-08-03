@@ -47,9 +47,7 @@ INTEGRATION_CASE_OPERATION_ROLES = {
 IntegrationCaseScope = Literal["current", "reference"]
 
 
-def require_integration_case_role(
-    *, roles: Collection[str], operation: str
-) -> None:
+def require_integration_case_role(*, roles: Collection[str], operation: str) -> None:
     """Require the dedicated frozen role for an M4 operation."""
 
     allowed = INTEGRATION_CASE_OPERATION_ROLES.get(operation)

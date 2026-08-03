@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from aos_api.asset_registry.integration_contracts import INTEGRATION_EVIDENCE_ADAPTER
 from aos_api.asset_registry.integration_stage_policy import (
     STAGE_ORDER,
     STAGE_POLICY_VERSION,
@@ -29,6 +30,7 @@ from aos_api.asset_registry.integration_stage_policy import (
     StagePolicyIntegrityError,
     TenantIsolationClaims,
     WorkshopValidationClaims,
+    evaluate_contract_stage_policy,
     evaluate_stage_policy,
     optional_measurement,
 )
@@ -101,7 +103,7 @@ def _gate(result, stage: IntegrationStage):
 
 
 def test_policy_v1_has_eight_ordered_continuous_stages() -> None:
-    assert STAGE_POLICY_VERSION == "integration-stage-policy/v1"
+    assert STAGE_POLICY_VERSION == "aos.integration-stage/v1"
     assert STAGE_ORDER == (
         IntegrationStage.PLANNED,
         IntegrationStage.CONNECTION_VERIFIED,
@@ -137,6 +139,127 @@ def test_full_valid_evidence_reaches_active_and_uses_earliest_expiry() -> None:
     assert result.blockers == ()
     assert all(gate.gate_satisfied for gate in result.gates)
     assert all(gate.continuous_satisfied for gate in result.gates)
+
+
+def test_canonical_contract_evidence_is_the_executable_policy_input() -> None:
+    hash_value = "sha256:" + "a" * 64
+    claims_by_type = {
+        "source_connection": {
+            "connectionRef": "connection:primary",
+            "authMode": "oauth",
+            "readProbe": True,
+            "tenantBinding": True,
+        },
+        "tenant_isolation": {
+            "positiveTenant": "tenant:positive",
+            "negativeTenant": "tenant:negative",
+            "crossTenantDenied": True,
+        },
+        "pipeline_run": {
+            "pipelineRef": "pipeline:orders",
+            "runId": "run:1",
+            "result": "succeeded",
+            "inputRevision": "input:1",
+            "outputRevision": "output:1",
+        },
+        "dataset_revision": {
+            "datasetRef": "dataset:orders",
+            "revision": "revision:1",
+            "schemaHash": hash_value,
+            "rowCount": 0,
+        },
+        "data_quality": {
+            "datasetRef": "dataset:orders",
+            "checkSetHash": hash_value,
+            "requiredPassed": True,
+            "failedChecks": [],
+        },
+        "ontology_revision": {
+            "ontologyRef": "ontology:commerce",
+            "revision": "revision:1",
+            "schemaHash": hash_value,
+        },
+        "mapping_validation": {
+            "mappingRef": "mapping:orders",
+            "coverage": 1.0,
+            "linkValidationPassed": True,
+        },
+        "logic_publication": {
+            "logicRef": "logic:pricing",
+            "immutableRevision": "revision:1",
+            "publicationHash": hash_value,
+        },
+        "logic_eval": {
+            "logicRef": "logic:pricing",
+            "evalSuiteHash": hash_value,
+            "requiredPassed": True,
+        },
+        "workshop_validation": {
+            "workshopRef": "workshop:operations",
+            "realSource": True,
+            "emptyStatePassed": True,
+            "permissionPassed": True,
+            "mainFlowPassed": True,
+        },
+        "action_safety": {
+            "actionRef": "action:approve",
+            "approvalControlPassed": True,
+            "rollbackControlPassed": True,
+            "idempotencyControlPassed": True,
+            "installationApplyVerified": True,
+            "installationVerifyVerified": True,
+        },
+        "operations_readiness": {
+            "runbookRef": "runbook:primary",
+            "alertRef": "alert:primary",
+            "ownerRef": "owner:operations",
+            "requiredChecksPassed": True,
+        },
+        "security_validation": {
+            "policySetHash": hash_value,
+            "requiredChecksPassed": True,
+        },
+        "runtime_health": {
+            "deploymentRef": "deployment:primary",
+            "runId": "run:health:1",
+            "healthy": True,
+            "latencyMs": 0,
+        },
+    }
+    canonical = []
+    for index, (evidence_type, claims) in enumerate(claims_by_type.items(), start=1):
+        canonical.append(
+            INTEGRATION_EVIDENCE_ADAPTER.validate_python(
+                {
+                    "evidenceId": f"00000000-0000-4000-8000-{index:012d}",
+                    "revision": 1,
+                    "evidenceType": evidence_type,
+                    "seriesKey": f"series:{evidence_type}",
+                    "subjectRef": "case:subject",
+                    "artifactRef": f"artifact:{evidence_type}",
+                    "artifactHash": hash_value,
+                    "outcome": "valid",
+                    "observedAt": NOW - timedelta(hours=1),
+                    "expiresAt": NOW + timedelta(hours=1),
+                    "revokedAt": None,
+                    "requiredMarkings": ["marking:internal"],
+                    "producer": "producer:trusted",
+                    "claims": claims,
+                    "evidenceHash": hash_value,
+                    "recordedAt": NOW,
+                }
+            )
+        )
+
+    result = evaluate_contract_stage_policy(
+        planned_basis=COMPLETE_BASIS,
+        evidence=canonical,
+        cutoff_at=NOW,
+    )
+
+    assert result.stage is IntegrationStage.PRODUCTION_ACTIVE
+    assert result.policy_version == STAGE_POLICY_VERSION
+    assert result.next_projection_at == NOW + timedelta(hours=1)
 
 
 def test_incomplete_planned_basis_returns_no_claimed_stage() -> None:

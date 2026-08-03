@@ -12,6 +12,7 @@ import {
   type IntegrationCaseScope,
   type IntegrationCaseStage,
   type IntegrationCaseStats,
+  type IntegrationCaseMetrics,
   type IntegrationEvidenceSnapshotResponse,
   type IntegrationEvidenceType,
   type IntegrationCaseTimelineResponse,
@@ -32,9 +33,9 @@ const CAUSES = new Set<TimelineCause>([
   "evidence_revoked", "projection_rebuilt",
 ]);
 const AGGREGATIONS = new Set<MetricAggregation>(["count", "distinct_count", "sum", "max"]);
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
-const TIMEZONE_SUFFIX = /(?:Z|[+-][0-9]{2}:[0-9]{2})$/;
+const UTC_SUFFIX = /(?:Z|\+00:00)$/;
 
 function record(value: unknown, label: string): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -70,8 +71,8 @@ function sha256(value: unknown, label: string): asserts value is string {
 
 function timestamp(value: unknown, label: string): asserts value is string {
   normalizedString(value, label);
-  if (!value.includes("T") || !TIMEZONE_SUFFIX.test(value) || Number.isNaN(Date.parse(value))) {
-    throw new Error(`${label} must be an ISO timestamp with timezone`);
+  if (!value.includes("T") || !UTC_SUFFIX.test(value) || Number.isNaN(Date.parse(value))) {
+    throw new Error(`${label} must be an ISO UTC timestamp`);
   }
 }
 
@@ -99,6 +100,9 @@ function stringArray(value: unknown, label: string): asserts value is string[] {
   if (!Array.isArray(value)) throw new Error(`${label} must be an array`);
   value.forEach((entry, index) => normalizedString(entry, `${label}[${index}]`));
   if (new Set(value).size !== value.length) throw new Error(`${label} must not contain duplicates`);
+  if (value.some((entry, index) => index > 0 && value[index - 1] > entry)) {
+    throw new Error(`${label} must use canonical lexical order`);
+  }
 }
 
 function uuidArray(value: unknown, label: string): asserts value is string[] {
@@ -127,6 +131,13 @@ function stats(value: unknown, label: string): asserts value is IntegrationCaseS
   const item = record(value, label);
   exactKeys(item, STATS_KEYS, label);
   STATS_KEYS.forEach((key) => metric(item[key], `${label}.${key}`));
+}
+
+const METRICS_KEYS = ["connectorCount", "pipelineCount", "datasetRowCount", "latencyMs"] as const;
+function metrics(value: unknown, label: string): asserts value is IntegrationCaseMetrics {
+  const item = record(value, label);
+  exactKeys(item, METRICS_KEYS, label);
+  METRICS_KEYS.forEach((key) => metric(item[key], `${label}.${key}`));
 }
 
 const LIST_ITEM_KEYS = [
@@ -196,6 +207,8 @@ function evidence(value: unknown, label: string): void {
   sha256(item.evidenceHash, `${label}.evidenceHash`);
   timestamp(item.recordedAt, `${label}.recordedAt`);
   if ((item.outcome === "revoked") !== (item.revokedAt !== null)) throw new Error(`${label}.revokedAt is inconsistent with outcome`);
+  if (Date.parse(item.recordedAt) < Date.parse(item.observedAt)) throw new Error(`${label}.recordedAt precedes observedAt`);
+  if (typeof item.expiresAt === "string" && Date.parse(item.expiresAt) <= Date.parse(item.observedAt)) throw new Error(`${label}.expiresAt must follow observedAt`);
 }
 
 function blocker(value: unknown, label: string): void {
@@ -253,7 +266,7 @@ export function parseIntegrationCaseDetail(value: unknown): IntegrationCaseDetai
   item.blockers.forEach((entry, index) => blocker(entry, `Integration case detail.blockers[${index}]`));
   if (item.blockers.filter((entry) => (entry as { status: string }).status === "open").length !== item.blockerCount) throw new Error("Integration case detail.blockerCount does not match open blockers");
   nullableTimestamp(item.nextProjectionAt, "Integration case detail.nextProjectionAt");
-  if (item.scope === "current") stats(item.metrics, "Integration case detail.metrics");
+  if (item.scope === "current") metrics(item.metrics, "Integration case detail.metrics");
   else if (item.metrics !== null) throw new Error("Reference case metrics must be null");
   return value as IntegrationCaseDetail;
 }

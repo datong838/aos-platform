@@ -32,6 +32,8 @@ class AssetRegistryErrorCode(StrEnum):
     PRECONDITION_INVALID = "PRECONDITION_INVALID"
     MARKING_ACCESS_DENIED = "MARKING_ACCESS_DENIED"
     REGISTRY_INTEGRITY_CORRUPT = "REGISTRY_INTEGRITY_CORRUPT"
+    EVIDENCE_REFERENCE_INVALID = "EVIDENCE_REFERENCE_INVALID"
+    EVIDENCE_INTEGRITY_CORRUPT = "EVIDENCE_INTEGRITY_CORRUPT"
     NOT_FOUND = "NOT_FOUND"
 
 
@@ -61,6 +63,8 @@ ERROR_HTTP_STATUS: dict[AssetRegistryErrorCode, int] = {
     AssetRegistryErrorCode.PRECONDITION_INVALID: 400,
     AssetRegistryErrorCode.MARKING_ACCESS_DENIED: 403,
     AssetRegistryErrorCode.REGISTRY_INTEGRITY_CORRUPT: 500,
+    AssetRegistryErrorCode.EVIDENCE_REFERENCE_INVALID: 422,
+    AssetRegistryErrorCode.EVIDENCE_INTEGRITY_CORRUPT: 500,
     AssetRegistryErrorCode.NOT_FOUND: 404,
 }
 
@@ -284,6 +288,25 @@ class RegistryIntegrityCorruptError(AssetRegistryError):
         super().__init__(
             AssetRegistryErrorCode.REGISTRY_INTEGRITY_CORRUPT,
             "stored Registry data failed integrity verification",
+        )
+
+
+class EvidenceReferenceInvalidError(AssetRegistryError):
+    """Safe failure for an untrusted or wrongly bound Evidence reference."""
+
+    def __init__(
+        self, message: str = "integration Evidence reference is invalid"
+    ) -> None:
+        super().__init__(AssetRegistryErrorCode.EVIDENCE_REFERENCE_INVALID, message)
+
+
+class EvidenceIntegrityCorruptError(AssetRegistryError):
+    """Safe failure for malformed persisted Evidence or Case history."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            AssetRegistryErrorCode.EVIDENCE_INTEGRITY_CORRUPT,
+            "stored Integration Evidence failed integrity verification",
         )
 
 

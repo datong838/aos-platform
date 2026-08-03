@@ -60,6 +60,11 @@ export interface IntegrationCaseStats {
   latencyMs: IntegrationMetric;
 }
 
+export type IntegrationCaseMetrics = Pick<
+  IntegrationCaseStats,
+  "connectorCount" | "pipelineCount" | "datasetRowCount" | "latencyMs"
+>;
+
 interface IntegrationCaseListItemBase {
   caseId: string;
   displayName: string;
@@ -140,7 +145,7 @@ interface IntegrationCaseDetailBase extends IntegrationCaseListItemBase {
   latestEvidence: IntegrationEvidenceSummary[];
   blockers: IntegrationBlocker[];
   nextProjectionAt: string | null;
-  metrics: IntegrationCaseStats | null;
+  metrics: IntegrationCaseMetrics | null;
 }
 
 export interface CurrentIntegrationCaseDetail extends IntegrationCaseDetailBase {

@@ -10,6 +10,7 @@ import json
 import re
 from datetime import datetime
 from enum import StrEnum
+from math import isfinite
 from typing import Annotated, Literal, TypeAlias
 from uuid import UUID
 
@@ -137,7 +138,9 @@ class _Claims(StrictContract):
 
 class SourceConnectionClaims(_Claims):
     connection_ref: str = Field(alias="connectionRef", max_length=MAX_REFERENCE_LENGTH)
-    auth_mode: Literal["oauth", "service_account", "api_key", "database", "other"] = Field(alias="authMode")
+    auth_mode: Literal["oauth", "service_account", "api_key", "database", "other"] = (
+        Field(alias="authMode")
+    )
     read_probe: bool = Field(alias="readProbe")
     tenant_binding: bool = Field(alias="tenantBinding")
 
@@ -147,8 +150,12 @@ class SourceConnectionClaims(_Claims):
 
 
 class TenantIsolationClaims(_Claims):
-    positive_tenant: str = Field(alias="positiveTenant", max_length=MAX_REFERENCE_LENGTH)
-    negative_tenant: str = Field(alias="negativeTenant", max_length=MAX_REFERENCE_LENGTH)
+    positive_tenant: str = Field(
+        alias="positiveTenant", max_length=MAX_REFERENCE_LENGTH
+    )
+    negative_tenant: str = Field(
+        alias="negativeTenant", max_length=MAX_REFERENCE_LENGTH
+    )
     cross_tenant_denied: bool = Field(alias="crossTenantDenied")
 
     @field_validator("positive_tenant", "negative_tenant")
@@ -168,7 +175,9 @@ class PipelineRunClaims(_Claims):
     run_id: str = Field(alias="runId", max_length=MAX_REFERENCE_LENGTH)
     result: Literal["succeeded", "failed"]
     input_revision: str = Field(alias="inputRevision", max_length=MAX_REFERENCE_LENGTH)
-    output_revision: str = Field(alias="outputRevision", max_length=MAX_REFERENCE_LENGTH)
+    output_revision: str = Field(
+        alias="outputRevision", max_length=MAX_REFERENCE_LENGTH
+    )
 
     @field_validator("pipeline_ref", "run_id", "input_revision", "output_revision")
     @classmethod
@@ -236,7 +245,9 @@ class MappingValidationClaims(_Claims):
 
 class LogicPublicationClaims(_Claims):
     logic_ref: str = Field(alias="logicRef", max_length=MAX_REFERENCE_LENGTH)
-    immutable_revision: str = Field(alias="immutableRevision", max_length=MAX_REFERENCE_LENGTH)
+    immutable_revision: str = Field(
+        alias="immutableRevision", max_length=MAX_REFERENCE_LENGTH
+    )
     publication_hash: str = Field(alias="publicationHash", pattern=SHA256_PATTERN)
 
     @field_validator("logic_ref", "immutable_revision")
@@ -312,7 +323,7 @@ class RuntimeHealthClaims(_Claims):
         return _safe_reference(value, label="runtime reference")
 
 
-class _EvidenceEnvelope(StrictContract):
+class IntegrationEvidenceBase(StrictContract):
     evidence_id: str = Field(alias="evidenceId")
     revision: int = Field(ge=1)
     evidence_type: EvidenceType = Field(alias="evidenceType")
@@ -324,7 +335,9 @@ class _EvidenceEnvelope(StrictContract):
     observed_at: datetime = Field(alias="observedAt")
     expires_at: datetime | None = Field(default=None, alias="expiresAt")
     revoked_at: datetime | None = Field(default=None, alias="revokedAt")
-    required_markings: list[str] = Field(alias="requiredMarkings", max_length=MAX_MARKINGS)
+    required_markings: list[str] = Field(
+        alias="requiredMarkings", max_length=MAX_MARKINGS
+    )
     producer: str = Field(max_length=MAX_REFERENCE_LENGTH)
     evidence_hash: str = Field(alias="evidenceHash", pattern=SHA256_PATTERN)
     recorded_at: datetime = Field(alias="recordedAt")
@@ -355,7 +368,7 @@ class _EvidenceEnvelope(StrictContract):
         return _unique_normalized(values, label="requiredMarkings")
 
     @model_validator(mode="after")
-    def _lifecycle(self) -> _EvidenceEnvelope:
+    def _lifecycle(self) -> IntegrationEvidenceBase:
         if self.recorded_at < self.observed_at:
             raise ValueError("recordedAt must not precede observedAt")
         if self.expires_at is not None and self.expires_at <= self.observed_at:
@@ -379,72 +392,80 @@ class _EvidenceEnvelope(StrictContract):
         return self
 
 
-class SourceConnectionEvidence(_EvidenceEnvelope):
+class SourceConnectionEvidence(IntegrationEvidenceBase):
     evidence_type: Literal[EvidenceType.SOURCE_CONNECTION] = Field(alias="evidenceType")
     claims: SourceConnectionClaims
 
 
-class TenantIsolationEvidence(_EvidenceEnvelope):
+class TenantIsolationEvidence(IntegrationEvidenceBase):
     evidence_type: Literal[EvidenceType.TENANT_ISOLATION] = Field(alias="evidenceType")
     claims: TenantIsolationClaims
 
 
-class PipelineRunEvidence(_EvidenceEnvelope):
+class PipelineRunEvidence(IntegrationEvidenceBase):
     evidence_type: Literal[EvidenceType.PIPELINE_RUN] = Field(alias="evidenceType")
     claims: PipelineRunClaims
 
 
-class DatasetRevisionEvidence(_EvidenceEnvelope):
+class DatasetRevisionEvidence(IntegrationEvidenceBase):
     evidence_type: Literal[EvidenceType.DATASET_REVISION] = Field(alias="evidenceType")
     claims: DatasetRevisionClaims
 
 
-class DataQualityEvidence(_EvidenceEnvelope):
+class DataQualityEvidence(IntegrationEvidenceBase):
     evidence_type: Literal[EvidenceType.DATA_QUALITY] = Field(alias="evidenceType")
     claims: DataQualityClaims
 
 
-class OntologyRevisionEvidence(_EvidenceEnvelope):
+class OntologyRevisionEvidence(IntegrationEvidenceBase):
     evidence_type: Literal[EvidenceType.ONTOLOGY_REVISION] = Field(alias="evidenceType")
     claims: OntologyRevisionClaims
 
 
-class MappingValidationEvidence(_EvidenceEnvelope):
-    evidence_type: Literal[EvidenceType.MAPPING_VALIDATION] = Field(alias="evidenceType")
+class MappingValidationEvidence(IntegrationEvidenceBase):
+    evidence_type: Literal[EvidenceType.MAPPING_VALIDATION] = Field(
+        alias="evidenceType"
+    )
     claims: MappingValidationClaims
 
 
-class LogicPublicationEvidence(_EvidenceEnvelope):
+class LogicPublicationEvidence(IntegrationEvidenceBase):
     evidence_type: Literal[EvidenceType.LOGIC_PUBLICATION] = Field(alias="evidenceType")
     claims: LogicPublicationClaims
 
 
-class LogicEvalEvidence(_EvidenceEnvelope):
+class LogicEvalEvidence(IntegrationEvidenceBase):
     evidence_type: Literal[EvidenceType.LOGIC_EVAL] = Field(alias="evidenceType")
     claims: LogicEvalClaims
 
 
-class WorkshopValidationEvidence(_EvidenceEnvelope):
-    evidence_type: Literal[EvidenceType.WORKSHOP_VALIDATION] = Field(alias="evidenceType")
+class WorkshopValidationEvidence(IntegrationEvidenceBase):
+    evidence_type: Literal[EvidenceType.WORKSHOP_VALIDATION] = Field(
+        alias="evidenceType"
+    )
     claims: WorkshopValidationClaims
 
 
-class ActionSafetyEvidence(_EvidenceEnvelope):
+class ActionSafetyEvidence(IntegrationEvidenceBase):
     evidence_type: Literal[EvidenceType.ACTION_SAFETY] = Field(alias="evidenceType")
     claims: ActionSafetyClaims
 
 
-class OperationsReadinessEvidence(_EvidenceEnvelope):
-    evidence_type: Literal[EvidenceType.OPERATIONS_READINESS] = Field(alias="evidenceType")
+class OperationsReadinessEvidence(IntegrationEvidenceBase):
+    evidence_type: Literal[EvidenceType.OPERATIONS_READINESS] = Field(
+        alias="evidenceType"
+    )
     claims: OperationsReadinessClaims
 
 
-class SecurityValidationEvidence(_EvidenceEnvelope):
-    evidence_type: Literal[EvidenceType.SECURITY_VALIDATION] = Field(alias="evidenceType")
+class SecurityValidationEvidence(IntegrationEvidenceBase):
+    evidence_type: Literal[EvidenceType.SECURITY_VALIDATION] = Field(
+        alias="evidenceType"
+    )
     claims: SecurityValidationClaims
 
 
-class RuntimeHealthEvidence(_EvidenceEnvelope):
+class RuntimeHealthEvidence(IntegrationEvidenceBase):
     evidence_type: Literal[EvidenceType.RUNTIME_HEALTH] = Field(alias="evidenceType")
     claims: RuntimeHealthClaims
 
@@ -519,6 +540,16 @@ class _IntegrationCaseListItemBase(StrictContract):
     @classmethod
     def _times(cls, value: datetime | None) -> datetime | None:
         return None if value is None else _utc_datetime(value, label="case time")
+
+    @model_validator(mode="after")
+    def _snapshot_and_times(self) -> _IntegrationCaseListItemBase:
+        if (self.snapshot_revision is None) != (self.cutoff_at is None):
+            raise ValueError(
+                "snapshotRevision and cutoffAt must be jointly null or present"
+            )
+        if self.updated_at < self.created_at:
+            raise ValueError("updatedAt must not precede createdAt")
+        return self
 
 
 class CurrentIntegrationCaseListItem(_IntegrationCaseListItemBase):
@@ -612,7 +643,21 @@ class LatestEvidenceSummary(StrictContract):
     @field_validator("observed_at", "expires_at", "revoked_at", "recorded_at")
     @classmethod
     def _times(cls, value: datetime | None) -> datetime | None:
-        return None if value is None else _utc_datetime(value, label="evidence summary time")
+        return (
+            None
+            if value is None
+            else _utc_datetime(value, label="evidence summary time")
+        )
+
+    @model_validator(mode="after")
+    def _lifecycle(self) -> LatestEvidenceSummary:
+        if self.recorded_at < self.observed_at:
+            raise ValueError("recordedAt must not precede observedAt")
+        if self.expires_at is not None and self.expires_at <= self.observed_at:
+            raise ValueError("expiresAt must be after observedAt")
+        if (self.outcome == EvidenceOutcome.REVOKED) != (self.revoked_at is not None):
+            raise ValueError("revokedAt must match revoked outcome")
+        return self
 
 
 class IntegrationMetric(StrictContract):
@@ -627,6 +672,8 @@ class IntegrationMetric(StrictContract):
     def _number(cls, value: object) -> object:
         if value is not None and type(value) not in {int, float}:
             raise ValueError("metric value must be a number or null")
+        if value is not None and (not isfinite(value) or value < 0):
+            raise ValueError("metric value must be finite and non-negative")
         return value
 
     @field_validator("cutoff_at")
@@ -638,6 +685,8 @@ class IntegrationMetric(StrictContract):
     def _counts(self) -> IntegrationMetric:
         if self.measured_case_count > self.eligible_case_count:
             raise ValueError("measuredCaseCount must not exceed eligibleCaseCount")
+        if self.value is None and self.measured_case_count != 0:
+            raise ValueError("null metric value requires zero measured cases")
         return self
 
 
@@ -653,23 +702,77 @@ class IntegrationCaseStats(IntegrationCaseMetrics):
     production_active_count: IntegrationMetric = Field(alias="productionActiveCount")
 
 
+class IntegrationBlocker(StrictContract):
+    blocker_id: str = Field(alias="blockerId")
+    code: str = Field(max_length=160)
+    severity: Literal["critical", "high", "medium", "low"]
+    status: Literal["open", "resolved"]
+    gate: IntegrationStage
+    reason_refs: list[str] = Field(alias="reasonRefs", max_length=MAX_REASON_REFS)
+    evidence_refs: list[str] = Field(alias="evidenceRefs", max_length=MAX_REASON_REFS)
+    owner: str | None = Field(default=None, max_length=MAX_REFERENCE_LENGTH)
+    first_observed_at: datetime = Field(alias="firstObservedAt")
+    updated_at: datetime = Field(alias="updatedAt")
+
+    @field_validator("blocker_id")
+    @classmethod
+    def _id(cls, value: str) -> str:
+        return _canonical_uuid(value, label="blockerId")
+
+    @field_validator("code")
+    @classmethod
+    def _code(cls, value: str) -> str:
+        return _normalized_text(value, label="blocker code")
+
+    @field_validator("gate", mode="before")
+    @classmethod
+    def _gate(cls, value: object) -> IntegrationStage:
+        return _strict_enum(value, IntegrationStage, label="blocker gate")  # type: ignore[return-value]
+
+    @field_validator("reason_refs", "evidence_refs")
+    @classmethod
+    def _refs(cls, values: list[str]) -> list[str]:
+        return _unique_normalized(values, label="blocker refs")
+
+    @field_validator("owner")
+    @classmethod
+    def _owner(cls, value: str | None) -> str | None:
+        return None if value is None else _safe_reference(value, label="blocker owner")
+
+    @field_validator("first_observed_at", "updated_at")
+    @classmethod
+    def _times(cls, value: datetime) -> datetime:
+        return _utc_datetime(value, label="blocker time")
+
+    @model_validator(mode="after")
+    def _time_order(self) -> IntegrationBlocker:
+        if self.updated_at < self.first_observed_at:
+            raise ValueError("blocker updatedAt must not precede firstObservedAt")
+        return self
+
+
 class _IntegrationCaseDetailBase(_IntegrationCaseListItemBase):
-    stage_gates: list[IntegrationStageGate] = Field(alias="stageGates", max_length=MAX_STAGE_GATES)
-    latest_evidence: list[LatestEvidenceSummary] = Field(alias="latestEvidence", max_length=MAX_LATEST_EVIDENCE)
-    blockers: list[str] = Field(max_length=MAX_BLOCKERS)
+    stage_gates: list[IntegrationStageGate] = Field(
+        alias="stageGates", max_length=MAX_STAGE_GATES
+    )
+    latest_evidence: list[LatestEvidenceSummary] = Field(
+        alias="latestEvidence", max_length=MAX_LATEST_EVIDENCE
+    )
+    blockers: list[IntegrationBlocker] = Field(max_length=MAX_BLOCKERS)
     next_projection_at: datetime | None = Field(alias="nextProjectionAt")
 
     _complete_gates = field_validator("stage_gates")(_require_complete_stage_gates)
-
-    @field_validator("blockers")
-    @classmethod
-    def _blockers(cls, values: list[str]) -> list[str]:
-        return _unique_normalized(values, label="blockers")
 
     @field_validator("next_projection_at")
     @classmethod
     def _projection_time(cls, value: datetime | None) -> datetime | None:
         return None if value is None else _utc_datetime(value, label="nextProjectionAt")
+
+    @model_validator(mode="after")
+    def _blocker_count_matches(self) -> _IntegrationCaseDetailBase:
+        if sum(item.status == "open" for item in self.blockers) != self.blocker_count:
+            raise ValueError("blockerCount must match open blockers")
+        return self
 
 
 class CurrentIntegrationCaseDetail(_IntegrationCaseDetailBase):
@@ -731,7 +834,11 @@ class IntegrationCaseListResponse(StrictContract):
         if any(item.scope != self.scope for item in self.items):
             raise ValueError("response items must match response scope")
         if (self.scope == IntegrationCaseScope.CURRENT) != (self.stats is not None):
-            raise ValueError("current stats are required and reference stats must be null")
+            raise ValueError(
+                "current stats are required and reference stats must be null"
+            )
+        if len(self.items) > self.limit or self.total < len(self.items):
+            raise ValueError("case list pagination is inconsistent")
         return self
 
 
@@ -742,10 +849,14 @@ class IntegrationEvidenceSnapshot(StrictContract):
     snapshot_revision: int = Field(alias="snapshotRevision", ge=1)
     instance_revision: int = Field(alias="instanceRevision", ge=1)
     cutoff_at: datetime = Field(alias="cutoffAt")
-    evidence: list[IntegrationEvidenceEnvelope] = Field(max_length=MAX_EVIDENCE_PER_SNAPSHOT)
+    evidence: list[IntegrationEvidenceEnvelope] = Field(
+        max_length=MAX_EVIDENCE_PER_SNAPSHOT
+    )
     snapshot_hash: str = Field(alias="snapshotHash", pattern=SHA256_PATTERN)
     computed_stage: IntegrationStage = Field(alias="computedStage")
-    stage_policy_version: Literal[STAGE_POLICY_VERSION] = Field(alias="stagePolicyVersion")
+    stage_policy_version: Literal[STAGE_POLICY_VERSION] = Field(
+        alias="stagePolicyVersion"
+    )
 
     @field_validator("case_id")
     @classmethod
@@ -766,9 +877,13 @@ class IntegrationEvidenceSnapshot(StrictContract):
     def _unique_evidence(self) -> IntegrationEvidenceSnapshot:
         keys = [(item.producer, item.series_key) for item in self.evidence]
         if len(keys) != len(set(keys)):
-            raise ValueError("snapshot must contain only the latest producer/series revision")
+            raise ValueError(
+                "snapshot must contain only the latest producer/series revision"
+            )
         if keys != sorted(keys):
-            raise ValueError("snapshot evidence must use canonical producer/series order")
+            raise ValueError(
+                "snapshot evidence must use canonical producer/series order"
+            )
         return self
 
 
@@ -778,11 +893,17 @@ class IntegrationEvidenceSnapshotResponse(StrictContract):
     instance_revision: int = Field(alias="instanceRevision", ge=1)
     cutoff_at: datetime = Field(alias="cutoffAt")
     computed_stage: IntegrationStage = Field(alias="computedStage")
-    stage_policy_version: Literal[STAGE_POLICY_VERSION] = Field(alias="stagePolicyVersion")
+    stage_policy_version: Literal[STAGE_POLICY_VERSION] = Field(
+        alias="stagePolicyVersion"
+    )
     snapshot_hash: str = Field(alias="snapshotHash", pattern=SHA256_PATTERN)
     next_projection_at: datetime | None = Field(alias="nextProjectionAt")
-    evidence_count: int = Field(alias="evidenceCount", ge=0, le=MAX_EVIDENCE_PER_SNAPSHOT)
-    stage_gates: list[IntegrationStageGate] = Field(alias="stageGates", max_length=MAX_STAGE_GATES)
+    evidence_count: int = Field(
+        alias="evidenceCount", ge=0, le=MAX_EVIDENCE_PER_SNAPSHOT
+    )
+    stage_gates: list[IntegrationStageGate] = Field(
+        alias="stageGates", max_length=MAX_STAGE_GATES
+    )
     blocker_refs: list[str] = Field(alias="blockerRefs", max_length=MAX_BLOCKERS)
     etag_version: int = Field(alias="etagVersion", ge=1)
     created_at: datetime = Field(alias="createdAt")
@@ -807,7 +928,11 @@ class IntegrationEvidenceSnapshotResponse(StrictContract):
     @field_validator("cutoff_at", "next_projection_at", "created_at")
     @classmethod
     def _times(cls, value: datetime | None) -> datetime | None:
-        return None if value is None else _utc_datetime(value, label="snapshot response time")
+        return (
+            None
+            if value is None
+            else _utc_datetime(value, label="snapshot response time")
+        )
 
 
 class IntegrationStageEvent(StrictContract):
@@ -843,6 +968,17 @@ class IntegrationStageEvent(StrictContract):
     def _time(cls, value: datetime) -> datetime:
         return _utc_datetime(value, label="timeline createdAt")
 
+    @model_validator(mode="after")
+    def _transition(self) -> IntegrationStageEvent:
+        if self.cause == "created":
+            if self.old_stage is not None or self.new_stage != IntegrationStage.PLANNED:
+                raise ValueError("created event must enter planned from no prior stage")
+        elif self.old_stage is None:
+            raise ValueError("non-created event requires oldStage")
+        if self.old_stage is not None and self.old_stage == self.new_stage:
+            raise ValueError("stage event must change stage")
+        return self
+
 
 class IntegrationCaseTimelineResponse(StrictContract):
     case_id: str = Field(alias="caseId")
@@ -861,3 +997,12 @@ class IntegrationCaseTimelineResponse(StrictContract):
     @classmethod
     def _scope(cls, value: object) -> IntegrationCaseScope:
         return _strict_enum(value, IntegrationCaseScope, label="scope")  # type: ignore[return-value]
+
+    @model_validator(mode="after")
+    def _sequence_and_pagination(self) -> IntegrationCaseTimelineResponse:
+        sequences = [item.sequence for item in self.items]
+        if sequences != sorted(sequences) or len(sequences) != len(set(sequences)):
+            raise ValueError("timeline sequence must be strictly increasing")
+        if len(self.items) > self.limit or self.total < len(self.items):
+            raise ValueError("timeline pagination is inconsistent")
+        return self
