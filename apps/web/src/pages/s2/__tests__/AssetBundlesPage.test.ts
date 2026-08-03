@@ -4,14 +4,22 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { assetControlClient } from "../../../api/assetControl/client";
+import { setTenant } from "../../../api/tenant";
 import { STORED_COMPOSITION_LOCK_FIXTURE } from "../../../api/assetControl/compositionFixtures";
+import {
+  INSTALLATION_APPROVED_FIXTURE,
+  INSTALLATION_ROLLED_BACK_FIXTURE,
+  INSTALLATION_SUBMITTED_FIXTURE,
+} from "../../../api/assetControl/installationActionFixtures";
 import { INSTALLATION_DETAIL_FIXTURE, INSTALLATION_DRAFT_FIXTURE, INSTALLATION_LIST_FIXTURE } from "../../../api/assetControl/installationFixtures";
 import { REGISTRY_BUNDLE_DETAIL_FIXTURE, REGISTRY_BUNDLE_LIST_FIXTURE, REGISTRY_VERSION_DETAIL_FIXTURE } from "../../../api/assetControl/registryFixtures";
+import { setConnectivity } from "../../../lib/offlineStore";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const hooks = vi.hoisted(() => ({
   registryStatus: "ready" as const,
+  installationData: null as unknown,
 }));
 
 const reload = vi.fn();
@@ -50,7 +58,9 @@ vi.mock("../assetBundles/readHooks", () => ({
     reload,
   }),
   useInstallation: (installationId: string | null) => ({
-    data: installationId ? INSTALLATION_DETAIL_FIXTURE : null,
+    data: installationId
+      ? (hooks.installationData ?? INSTALLATION_DETAIL_FIXTURE)
+      : null,
     status: installationId ? "ready" : "idle",
     error: null,
     refreshing: false,
@@ -59,7 +69,7 @@ vi.mock("../assetBundles/readHooks", () => ({
   }),
 }));
 
-describe("M3-3 AssetBundlesPage integration", () => {
+describe("M3-4 AssetBundlesPage integration", () => {
   let host: HTMLDivElement;
   let root: Root;
 
@@ -67,6 +77,15 @@ describe("M3-3 AssetBundlesPage integration", () => {
     host = document.createElement("div");
     document.body.appendChild(host);
     root = createRoot(host);
+    hooks.installationData = null;
+    setTenant({
+      orgId: "dev-org",
+      projectId: "dev-project",
+      workspaceName: "测试工作区",
+      subject: "installer@example.test",
+      roles: ["asset-installer"],
+    });
+    setConnectivity("online", "asset-bundles-page-test");
     vi.spyOn(assetControlClient, "resolveComposition").mockResolvedValue(
       STORED_COMPOSITION_LOCK_FIXTURE,
     );
@@ -75,6 +94,15 @@ describe("M3-3 AssetBundlesPage integration", () => {
     );
     vi.spyOn(assetControlClient, "createInstallation").mockResolvedValue(
       INSTALLATION_DRAFT_FIXTURE,
+    );
+    vi.spyOn(assetControlClient, "getInstallation").mockResolvedValue(
+      INSTALLATION_DETAIL_FIXTURE,
+    );
+    vi.spyOn(assetControlClient, "rollbackInstallation").mockResolvedValue(
+      INSTALLATION_ROLLED_BACK_FIXTURE,
+    );
+    vi.spyOn(assetControlClient, "approveInstallation").mockResolvedValue(
+      INSTALLATION_APPROVED_FIXTURE,
     );
   });
 
@@ -105,7 +133,7 @@ describe("M3-3 AssetBundlesPage integration", () => {
   it("switches to server-paged installations and opens the event timeline", async () => {
     await renderPage();
     const installationTab = Array.from(host.querySelectorAll('[role="tab"]')).find(
-      (node) => node.textContent === "安装管理（只读）",
+      (node) => node.textContent === "安装管理",
     ) as HTMLButtonElement;
     await act(async () => installationTab.click());
 
@@ -120,6 +148,112 @@ describe("M3-3 AssetBundlesPage integration", () => {
     expect(text).toContain(INSTALLATION_DETAIL_FIXTURE.installationId);
     expect(text).toContain("不提供历史 revision 完整快照");
     expect(text).not.toContain("批准安装");
+  });
+
+  it("executes rollback through the single action controller and rereads facts", async () => {
+    const getInstallation = vi.mocked(assetControlClient.getInstallation);
+    getInstallation
+      .mockReset()
+      .mockResolvedValueOnce(INSTALLATION_DETAIL_FIXTURE)
+      .mockResolvedValueOnce(INSTALLATION_ROLLED_BACK_FIXTURE);
+
+    await renderPage();
+    const installationTab = Array.from(host.querySelectorAll('[role="tab"]')).find(
+      (node) => node.textContent === "安装管理",
+    ) as HTMLButtonElement;
+    await act(async () => installationTab.click());
+    const open = Array.from(host.querySelectorAll("button")).find(
+      (node) => node.textContent === "查看事件",
+    ) as HTMLButtonElement;
+    await act(async () => open.click());
+
+    const rollback = Array.from(host.querySelectorAll("button")).find(
+      (node) => node.textContent === "回滚",
+    ) as HTMLButtonElement;
+    expect(rollback.disabled).toBe(false);
+    await act(async () => rollback.click());
+
+    const reason = host.querySelector(
+      'textarea[aria-label="回滚原因"]',
+    ) as HTMLTextAreaElement;
+    await act(async () => {
+      const setValue = Object.getOwnPropertyDescriptor(
+        HTMLTextAreaElement.prototype,
+        "value",
+      )?.set;
+      setValue?.call(reason, "operator rollback");
+      reason.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    const confirm = Array.from(host.querySelectorAll("button")).find(
+      (node) => node.textContent === "确认回滚",
+    ) as HTMLButtonElement;
+    await act(async () => confirm.click());
+
+    expect(assetControlClient.rollbackInstallation).toHaveBeenCalledWith(
+      INSTALLATION_DETAIL_FIXTURE.installationId,
+      { reason: "operator rollback" },
+      expect.objectContaining({
+        idempotencyKey: expect.any(String),
+        etagVersion: INSTALLATION_DETAIL_FIXTURE.etagVersion,
+      }),
+    );
+    expect(getInstallation).toHaveBeenCalledTimes(2);
+    expect(host.textContent).toContain("安装动作已完成，并已回读服务端最新状态");
+  });
+
+  it("builds approve only from the reread installation and canonical lock", async () => {
+    hooks.installationData = INSTALLATION_SUBMITTED_FIXTURE;
+    setTenant({
+      subject: "approver@example.test",
+      roles: ["asset-install-approver"],
+    });
+    const getInstallation = vi.mocked(assetControlClient.getInstallation);
+    getInstallation
+      .mockReset()
+      .mockResolvedValueOnce(INSTALLATION_SUBMITTED_FIXTURE)
+      .mockResolvedValueOnce(INSTALLATION_APPROVED_FIXTURE);
+
+    await renderPage();
+    const installationTab = Array.from(host.querySelectorAll('[role="tab"]')).find(
+      (node) => node.textContent === "安装管理",
+    ) as HTMLButtonElement;
+    await act(async () => installationTab.click());
+    const open = Array.from(host.querySelectorAll("button")).find(
+      (node) => node.textContent === "查看事件",
+    ) as HTMLButtonElement;
+    await act(async () => open.click());
+    const approve = Array.from(host.querySelectorAll("button")).find(
+      (node) => node.textContent === "批准",
+    ) as HTMLButtonElement;
+    await act(async () => approve.click());
+
+    const hashConfirmation = host.querySelector(
+      'input[type="checkbox"]',
+    ) as HTMLInputElement;
+    expect(host.querySelectorAll('input[type="text"]')).toHaveLength(0);
+    await act(async () => hashConfirmation.click());
+    const confirm = Array.from(host.querySelectorAll("button")).find(
+      (node) => node.textContent === "确认批准",
+    ) as HTMLButtonElement;
+    await act(async () => confirm.click());
+
+    expect(assetControlClient.getCompositionLock).toHaveBeenCalledWith(
+      INSTALLATION_SUBMITTED_FIXTURE.current.compositionId,
+      INSTALLATION_SUBMITTED_FIXTURE.current.lockRevision,
+    );
+    expect(assetControlClient.approveInstallation).toHaveBeenCalledWith(
+      INSTALLATION_SUBMITTED_FIXTURE.installationId,
+      {
+        lockHash: STORED_COMPOSITION_LOCK_FIXTURE.lockHash,
+        permissionDiffHash: STORED_COMPOSITION_LOCK_FIXTURE.permissionDiffHash,
+        migrationPlanHash: STORED_COMPOSITION_LOCK_FIXTURE.migrationPlanHash,
+        contributionDiffHash: STORED_COMPOSITION_LOCK_FIXTURE.contributionDiffHash,
+      },
+      expect.objectContaining({
+        idempotencyKey: expect.any(String),
+        etagVersion: INSTALLATION_SUBMITTED_FIXTURE.etagVersion,
+      }),
+    );
   });
 
   it("resolves, reconciles and creates only a draft from the selected published version", async () => {

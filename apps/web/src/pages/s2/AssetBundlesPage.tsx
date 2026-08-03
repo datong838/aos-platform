@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { getTenant } from "../../api/tenant";
 import type {
   CompositionRequest,
   InstallationState,
   StoredCompositionLock,
 } from "../../api/assetControl/types";
+import { isOffline } from "../../lib/offlineStore";
 import { S2Chrome } from "./shared";
 import { BpBanner, BpTabs, BpToolbar } from "./blueprintUi";
 import { InstallationDetail } from "./assetBundles/InstallationDetail";
+import { InstallationActionPanel } from "./assetBundles/InstallationActionPanel";
 import { InstallationPanel } from "./assetBundles/InstallationPanel";
 import { RegistryPanel } from "./assetBundles/RegistryPanel";
 import { CompositionDependencyPanel } from "./assetBundles/CompositionDependencyPanel";
@@ -25,6 +28,11 @@ import {
   useResolveCreateCommands,
   type CreateInstallationDraft,
 } from "./assetBundles/resolveCreateHooks";
+import { useInstallationActionCommands } from "./assetBundles/installationActionHooks";
+import type {
+  InstallationAction,
+  InstallationActionCommand,
+} from "./assetBundles/installationActions";
 import type {
   AssetReadState,
   InstallationPageRequest,
@@ -35,7 +43,7 @@ import type {
 export const ASSET_VIEW_TABS = [
   { id: "registry", label: "资产 Registry" },
   { id: "composition", label: "组合预检与创建" },
-  { id: "installations", label: "安装管理（只读）" },
+  { id: "installations", label: "安装管理" },
 ] as const;
 
 type AssetView = (typeof ASSET_VIEW_TABS)[number]["id"];
@@ -56,6 +64,39 @@ const DEFAULT_CREATE_DRAFT: CreateInstallationDraft = {
   overlayRevision: "overlay-1",
   displayName: "",
 };
+
+interface ActionRuntimeContext {
+  readonly subject?: string;
+  readonly roles?: readonly string[];
+  readonly offline: boolean;
+}
+
+function readActionRuntimeContext(): ActionRuntimeContext {
+  const tenant = getTenant();
+  return {
+    subject: tenant.subject,
+    roles: tenant.roles ? [...tenant.roles] : undefined,
+    offline: isOffline(),
+  };
+}
+
+function useActionRuntimeContext(): ActionRuntimeContext {
+  const [context, setContext] = useState<ActionRuntimeContext>(
+    readActionRuntimeContext,
+  );
+
+  useEffect(() => {
+    const refresh = () => setContext(readActionRuntimeContext());
+    window.addEventListener("aos-tenant-updated", refresh);
+    window.addEventListener("aos-offline-changed", refresh);
+    return () => {
+      window.removeEventListener("aos-tenant-updated", refresh);
+      window.removeEventListener("aos-offline-changed", refresh);
+    };
+  }, []);
+
+  return context;
+}
 
 function resolveReadState(
   state: ReturnType<typeof useResolveCreateCommands>["resolveState"],
@@ -93,6 +134,9 @@ export function AssetBundlesPage() {
     useState<CompositionRequest>(DEFAULT_COMPOSITION_REQUEST);
   const [createDraft, setCreateDraft] =
     useState<CreateInstallationDraft>(DEFAULT_CREATE_DRAFT);
+  const [selectedAction, setSelectedAction] =
+    useState<InstallationAction | null>(null);
+  const actionRuntime = useActionRuntimeContext();
 
   const registryState = useRegistryBundles();
   const bundleDetailState = useRegistryBundle(bundleSelection);
@@ -106,6 +150,34 @@ export function AssetBundlesPage() {
       setActiveView("installations");
     },
   });
+  const actionInstallation =
+    installationDetailState.status === "ready" &&
+    !installationDetailState.stale &&
+    !installationDetailState.refreshing
+      ? installationDetailState.data
+      : null;
+  const actionCommands = useInstallationActionCommands({
+    installation: actionInstallation,
+    principal: {
+      subject: actionRuntime.subject ?? null,
+      roles: actionRuntime.roles ?? null,
+    },
+    onSuccess: () => {
+      setSelectedAction(null);
+      installationDetailState.reload();
+      installationsState.reload();
+    },
+    onReconciled: () => {
+      setSelectedAction(null);
+      installationDetailState.reload();
+      installationsState.reload();
+    },
+  });
+  const actionPending =
+    actionCommands.state.phase === "running" ||
+    actionCommands.state.phase === "reconciling" ||
+    actionCommands.state.phase === "unknown_outcome";
+  const pendingAction = actionPending ? actionCommands.state.action : null;
 
   const lockReadState = resolveReadState(commands.resolveState, () => {
     void (commands.resolveState.canRetrySameCommand
@@ -121,8 +193,26 @@ export function AssetBundlesPage() {
   }
 
   function changeInstallationState(state: InstallationState | undefined) {
+    if (actionPending) return;
     setInstallationRequest((current) => ({ ...current, state, offset: 0 }));
     setInstallationId(null);
+    setSelectedAction(null);
+  }
+
+  function selectInstallation(nextInstallationId: string) {
+    if (actionPending) return;
+    setInstallationId(nextInstallationId);
+    setSelectedAction(null);
+  }
+
+  async function confirmInstallationAction(
+    command: InstallationActionCommand,
+  ): Promise<void> {
+    const succeeded = await actionCommands.execute(
+      command.action,
+      "reason" in command ? { reason: command.reason } : undefined,
+    );
+    if (succeeded) setSelectedAction(null);
   }
 
   function selectVersion(selection: RegistryVersionSelection) {
@@ -159,10 +249,10 @@ export function AssetBundlesPage() {
   return (
     <S2Chrome
       title="FDE 资产包"
-      lede="读取 Canonical Registry，执行服务端组合预检，并创建 draft Installation"
+      lede="读取 Canonical Registry，执行组合预检，并受控管理 Installation 生命周期"
     >
       <BpBanner tone="info">
-        当前页面不使用 Mock 兜底。Resolve、Lock/Diff 与 draft 创建使用现有 Canonical API；审批和安装动作仍不可达。
+        当前页面不使用 Mock 兜底。Resolve、Lock/Diff、draft 创建和安装状态动作均映射现有 Canonical API；服务端仍做最终授权和状态裁决。
       </BpBanner>
 
       <div style={{ marginTop: "1rem" }}>
@@ -221,11 +311,45 @@ export function AssetBundlesPage() {
             selectedInstallationId={installationId}
             onStateChange={changeInstallationState}
             onPageChange={(offset) =>
-              setInstallationRequest((current) => ({ ...current, offset }))
+              !actionPending && setInstallationRequest((current) => ({ ...current, offset }))
             }
-            onSelect={setInstallationId}
+            onSelect={selectInstallation}
           />
           <InstallationDetail state={installationDetailState} />
+          <InstallationActionPanel
+            installation={installationDetailState.data}
+            ready={
+              installationDetailState.status === "ready" &&
+              !actionCommands.state.requiresRefresh
+            }
+            stale={installationDetailState.stale}
+            refreshing={installationDetailState.refreshing}
+            offline={actionRuntime.offline}
+            subject={actionRuntime.subject}
+            roles={actionRuntime.roles}
+            selectedAction={selectedAction}
+            pendingAction={pendingAction}
+            onSelectedActionChange={setSelectedAction}
+            onConfirm={(command) => { void confirmInstallationAction(command); }}
+          />
+          {actionCommands.state.error && (
+            <p role="alert">{actionCommands.state.error.message}</p>
+          )}
+          {actionCommands.state.phase === "conflict" && (
+            <p role="status">安装状态已经变化，已回读最新服务端详情；请重新审阅后发起新命令。</p>
+          )}
+          {actionCommands.state.phase === "succeeded" && (
+            <p role="status">安装动作已完成，并已回读服务端最新状态。</p>
+          )}
+          {actionCommands.state.canRecoverUnknown && (
+            <button
+              type="button"
+              className="btn"
+              onClick={() => { void actionCommands.recoverUnknown(); }}
+            >
+              先回读并使用原幂等命令恢复
+            </button>
+          )}
         </div>
       )}
     </S2Chrome>

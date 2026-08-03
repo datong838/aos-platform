@@ -68,7 +68,6 @@ describe("M3-4 installation action controller", () => {
     for (const mock of [
       getInstallation,
       getCompositionLock,
-      buildApproveRequest,
       submitInstallation,
       approveInstallation,
       rejectInstallation,
@@ -78,8 +77,9 @@ describe("M3-4 installation action controller", () => {
       onSuccess,
       onReconciled,
     ]) {
-      mock.mockClear();
+      mock.mockReset();
     }
+    buildApproveRequest.mockReset().mockImplementation(buildApproveFromLock);
     dependencies = {
       createCommand: () => ({
         idempotencyKey: `key-${++keySequence}` as IdempotencyKey,
@@ -213,6 +213,25 @@ describe("M3-4 installation action controller", () => {
     expect(onSuccess).toHaveBeenCalledWith(approved);
   });
 
+  it("requires a new confirmation when the preflight GET changes revision or hashes", async () => {
+    displayed = record("submitted", 4, 6);
+    const refreshed = record("submitted", 5, 7);
+    getInstallation.mockResolvedValueOnce(refreshed);
+    await render();
+
+    await act(async () => expect(await latest.execute("approve")).toBe(false));
+
+    expect(getCompositionLock).not.toHaveBeenCalled();
+    expect(approveInstallation).not.toHaveBeenCalled();
+    expect(latest.state).toMatchObject({
+      phase: "conflict",
+      reconciliation: "diverged",
+      data: refreshed,
+      attempt: null,
+    });
+    expect(onReconciled).toHaveBeenCalledWith(refreshed);
+  });
+
   it.each([409, 412])(
     "reads after %s, clears the old key, and uses a new key for a new command",
     async (status) => {
@@ -240,6 +259,8 @@ describe("M3-4 installation action controller", () => {
     expect(onReconciled).toHaveBeenCalledWith(refreshed);
     expect(await latest.recoverUnknown()).toBe(false);
 
+    displayed = refreshed;
+    await act(async () => root.render(<Probe />));
     await act(async () => expect(await latest.execute("approve")).toBe(true));
     expect(approveInstallation.mock.calls.map((call) => call[2].idempotencyKey)).toEqual([
       "key-1",

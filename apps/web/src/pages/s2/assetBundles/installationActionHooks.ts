@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { assetControlClient } from "../../../api/assetControl/client";
 import { normalizeAssetControlError, type AssetControlError } from "../../../api/assetControl/errors";
+import { buildApproveInstallationRequest } from "../../../api/assetControl/installationActions";
 import {
   createIdempotentCommand,
   idempotencyKeyFor,
@@ -106,12 +107,7 @@ const defaultDependencies: InstallationActionDependencies = {
     assetControlClient.getInstallation(installationId),
   getCompositionLock: (compositionId, revision) =>
     assetControlClient.getCompositionLock(compositionId, revision),
-  // The canonical builder is owned by api/assetControl/installationActions.ts
-  // (W1). This branch deliberately fails closed until that dependency is wired
-  // after integration, avoiding a second production implementation.
-  buildApproveRequest: () => {
-    throw new Error("canonical approve request builder is not wired");
-  },
+  buildApproveRequest: buildApproveInstallationRequest,
   submitInstallation: (installationId, options) =>
     assetControlClient.submitInstallation(installationId, options),
   approveInstallation: (installationId, body, options) =>
@@ -388,6 +384,22 @@ export function useInstallationActionCommands(
         const current = await dependenciesRef.current.getInstallation(
           displayed.installationId,
         );
+        if (!sameConfirmedInstallationFacts(displayed, current)) {
+          commit({
+            phase: "conflict",
+            action,
+            data: current,
+            error: null,
+            reconcileError: null,
+            attempt: null,
+            reconciliation: "diverged",
+            requiresRefresh: false,
+            canRecoverUnknown: false,
+            mutationConfirmed: false,
+          });
+          notifyReconciled(current);
+          return false;
+        }
         if (!installationActionEligibility(current, principal, action).allowed) {
           commit({
             ...initialInstallationActionState(),
@@ -611,6 +623,32 @@ function installationIsUnchanged(
     installation.currentRevision === attempt.source.currentRevision &&
     installation.etagVersion === attempt.source.etagVersion
   );
+}
+
+/** The user must confirm the exact server facts that will feed the action. */
+function sameConfirmedInstallationFacts(
+  displayed: InstallationResponse,
+  current: InstallationResponse,
+): boolean {
+  if (
+    displayed.installationId !== current.installationId ||
+    displayed.state !== current.state ||
+    displayed.currentRevision !== current.currentRevision ||
+    displayed.etagVersion !== current.etagVersion ||
+    displayed.activeRevision !== current.activeRevision ||
+    displayed.previousActiveRevision !== current.previousActiveRevision ||
+    displayed.current.compositionId !== current.current.compositionId ||
+    displayed.current.lockRevision !== current.current.lockRevision ||
+    displayed.current.requestedBy !== current.current.requestedBy
+  ) {
+    return false;
+  }
+  return ([
+    "lockHash",
+    "permissionDiffHash",
+    "migrationPlanHash",
+    "contributionDiffHash",
+  ] as const).every((field) => displayed.current[field] === current.current[field]);
 }
 
 function commitUnknownAfterRecoveryFailure(
