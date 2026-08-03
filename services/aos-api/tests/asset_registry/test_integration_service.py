@@ -7,8 +7,6 @@ from datetime import UTC, datetime
 from typing import Any
 
 import pytest
-from pydantic import ValidationError
-
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.asset_registry.errors import (
     AssetNotFoundError,
@@ -18,6 +16,7 @@ from aos_api.asset_registry.errors import (
     RevisionConflictError,
 )
 from aos_api.asset_registry.integration_contracts import (
+    MAX_CASE_LIST_LIMIT,
     CreateIntegrationCaseRequest,
     CreateIntegrationEvidenceSnapshotRequest,
     CurrentIntegrationCaseDetail,
@@ -41,6 +40,7 @@ from aos_api.asset_registry.integration_store import (
     ProjectionSnapshot,
     StoredIntegrationCase,
 )
+from pydantic import ValidationError
 
 NOW = datetime(2026, 8, 4, 9, 0, tzinfo=UTC)
 CASE_ID = "64000000-0000-4000-8000-000000000001"
@@ -343,10 +343,22 @@ class FakeMarkingResolver:
 class FakeExpiryProjector:
     def __init__(self) -> None:
         self.calls: list[str] = []
+        self.batch_calls: list[tuple[str, str, int]] = []
 
     def refresh_case_if_due(self, **kwargs: Any) -> bool:
         self.calls.append(kwargs["case_id"])
         return False
+
+    def project_expired_batch(self, **kwargs: Any):
+        self.batch_calls.append(
+            (kwargs["org_id"], kwargs["project_id"], kwargs["batch_size"])
+        )
+
+        class Result:
+            selected_count = 0
+            failures: tuple[object, ...] = ()
+
+        return Result()
 
 
 def _context(*, roles: tuple[str, ...], markings: tuple[str, ...] = ("internal",)):
@@ -398,6 +410,7 @@ def test_five_use_cases_roles_markings_and_expiry_refresh() -> None:
         context=reader_context, scope="current", limit=20, offset=0
     )
     assert listed.total == 1 and reader.list_markings == ("internal",)
+    assert expiry.batch_calls == [("org", "project", MAX_CASE_LIST_LIMIT)]
     assert service.get_case(context=reader_context, case_id=CASE_ID).case_id == CASE_ID
     timeline = service.list_timeline(
         context=reader_context, case_id=CASE_ID, limit=10, offset=0

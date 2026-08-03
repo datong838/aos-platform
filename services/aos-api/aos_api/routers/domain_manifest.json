@@ -3066,6 +3066,12 @@
       "module": "aos_api.routers.bundle_installations",
       "attribute": "router",
       "order": 510
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.integration_cases",
+      "attribute": "router",
+      "order": 511
     }
   ]
 }

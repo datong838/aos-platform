@@ -99,6 +99,27 @@ def build_installation_service() -> InstallationControl:
     )
 
 
+def build_integration_case_service():
+    """Assemble the M4 Integration Case service from PostgreSQL truth sources."""
+
+    from aos_api.asset_registry.integration_projection import (
+        IntegrationExpiryProjector,
+    )
+    from aos_api.asset_registry.integration_reader import (
+        PostgresIntegrationCaseReader,
+        PrincipalMarkingResolver,
+    )
+    from aos_api.asset_registry.integration_service import IntegrationCaseService
+    from aos_api.asset_registry.integration_store import PostgresIntegrationStore
+
+    return IntegrationCaseService(
+        store=PostgresIntegrationStore(),
+        reader=PostgresIntegrationCaseReader(),
+        marking_resolver=PrincipalMarkingResolver(),
+        expiry_projector=IntegrationExpiryProjector(),
+    )
+
+
 def _allowlist_roots(*, repository_root: Path) -> dict[str, Path]:
     roots: dict[str, Path] = {}
     catalog_root = repository_root / "bundles"

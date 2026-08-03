@@ -150,6 +150,8 @@ class IntegrationExpiryProjector:
     def project_expired_batch(
         self,
         *,
+        org_id: str | None = None,
+        project_id: str | None = None,
         batch_size: int = 100,
     ) -> ExpiryProjectionBatchResult:
         """Project one bounded due batch using ``SKIP LOCKED``.
@@ -165,6 +167,11 @@ class IntegrationExpiryProjector:
             or not 1 <= batch_size <= _MAX_BATCH_SIZE
         ):
             raise ValueError("batch_size must be an integer between 1 and 1000")
+        if (org_id is None) != (project_id is None):
+            raise ValueError("org_id and project_id must be supplied together")
+        if org_id is not None:
+            org_id = _normalized_text(org_id, "org_id")
+            project_id = _normalized_text(project_id, "project_id")
         try:
             with self._connect_factory() as conn:
                 cutoff_at = _database_cutoff(conn)
@@ -196,6 +203,8 @@ class IntegrationExpiryProjector:
                             ON p.org_id=c.org_id AND p.project_id=c.project_id
                            AND p.case_pk=c.case_pk
                          WHERE c.scope='current'
+                           AND (%s::TEXT IS NULL OR c.org_id=%s)
+                           AND (%s::TEXT IS NULL OR c.project_id=%s)
                            AND p.next_projection_at IS NOT NULL
                            AND p.next_projection_at<=%s
                            AND NOT (c.case_pk=ANY(%s::UUID[]))
@@ -203,7 +212,14 @@ class IntegrationExpiryProjector:
                          LIMIT 1
                          FOR UPDATE OF c,i,p SKIP LOCKED
                         """,
-                        (cutoff_at, attempted_pks),
+                        (
+                            org_id,
+                            org_id,
+                            project_id,
+                            project_id,
+                            cutoff_at,
+                            attempted_pks,
+                        ),
                     ).fetchone()
                     if case is None:
                         conn.commit()

@@ -135,6 +135,14 @@ class IntegrationExpiryProjector(Protocol):
         self, *, org_id: str, project_id: str, case_id: str
     ) -> object: ...
 
+    def project_expired_batch(
+        self,
+        *,
+        org_id: str | None = None,
+        project_id: str | None = None,
+        batch_size: int = 100,
+    ) -> object: ...
+
 
 class EvidenceWriter(Protocol):
     def write(
@@ -172,6 +180,8 @@ class IntegrationCaseService:
         )
         normalized_scope = validate_integration_case_scope(scope)
         limit, offset = _paging(limit, offset, maximum=MAX_CASE_LIST_LIMIT)
+        if normalized_scope == "current":
+            _refresh_current_scope(self._expiry_projector, context=context)
         return self._reader.list_cases(
             org_id=context.org_id,
             project_id=context.project_id,
@@ -312,7 +322,7 @@ class IntegrationCaseService:
                 raise EvidenceIntegrityCorruptError()
             return IntegrationCommandResult(
                 case_pk=locked["case_pk"],
-                status_code=200,
+                status_code=201,
                 response_json=response.model_dump(
                     mode="json", by_alias=True, exclude_none=False
                 ),
@@ -495,6 +505,28 @@ def _context(value: IntegrationRequestContext) -> IntegrationRequestContext:
     _normalized_tuple(value.roles, "roles")
     _normalized_tuple(value.markings, "markings")
     return value
+
+
+def _refresh_current_scope(
+    projector: IntegrationExpiryProjector,
+    *,
+    context: IntegrationRequestContext,
+) -> None:
+    batch_size = MAX_CASE_LIST_LIMIT
+    for _ in range(100):
+        result = projector.project_expired_batch(
+            org_id=context.org_id,
+            project_id=context.project_id,
+            batch_size=batch_size,
+        )
+        if tuple(getattr(result, "failures", ())):
+            raise EvidenceIntegrityCorruptError()
+        selected = getattr(result, "selected_count", None)
+        if not isinstance(selected, int) or isinstance(selected, bool) or selected < 0:
+            raise EvidenceIntegrityCorruptError()
+        if selected < batch_size:
+            return
+    raise EvidenceIntegrityCorruptError()
 
 
 def _producer_context(value: TrustedProducerContext) -> TrustedProducerContext:
