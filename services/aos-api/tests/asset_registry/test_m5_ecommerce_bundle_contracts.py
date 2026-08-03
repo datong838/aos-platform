@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+
 from aos_api.asset_registry.contracts import BundleManifest
 from aos_api.asset_registry.manifest_loader import ManifestLoader
 from aos_api.asset_registry.semver import satisfies
