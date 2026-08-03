@@ -7,6 +7,11 @@ import {
   type InstallationActionContext,
   validateInstallationReason,
 } from "./installationActions";
+import {
+  INSTALLATION_ACTIONS,
+  installationActionEligibility,
+} from "./installationActionModel";
+import { INSTALLATION_DRAFT_FIXTURE } from "../../../api/assetControl/installationFixtures";
 
 const EXPECTED: Readonly<Record<InstallationState, readonly InstallationAction[]>> = {
   draft: ["submit"],
@@ -34,6 +39,60 @@ function context(overrides: Partial<InstallationActionContext> = {}): Installati
 }
 
 describe("installation action policy", () => {
+  it("与 controller 的七状态、角色和 maker-checker 资格矩阵保持一致", () => {
+    const roleSets = [
+      ["admin"],
+      ["developer"],
+      ["asset-installer"],
+      ["asset-install-approver"],
+      ["viewer"],
+      ["  Asset-Installer  "],
+    ] as const;
+    for (const state of Object.keys(EXPECTED) as InstallationState[]) {
+      const installation = {
+        ...INSTALLATION_DRAFT_FIXTURE,
+        state,
+        current: { ...INSTALLATION_DRAFT_FIXTURE.current, state },
+      };
+      for (const roles of roleSets) {
+        const ui = installationActionAvailability(context({ state, roles }));
+        for (const action of INSTALLATION_ACTIONS) {
+          const uiAllowed = ui.find((item) => item.action === action)?.enabled ?? false;
+          const controllerAllowed = installationActionEligibility(
+            installation,
+            { subject: "operator@example.test", roles },
+            action,
+          ).allowed;
+          expect(uiAllowed, `${state}/${roles.join(",")}/${action}`).toBe(
+            controllerAllowed,
+          );
+        }
+      }
+    }
+
+    const submitted = {
+      ...INSTALLATION_DRAFT_FIXTURE,
+      state: "submitted" as const,
+      current: {
+        ...INSTALLATION_DRAFT_FIXTURE.current,
+        state: "submitted" as const,
+      },
+    };
+    const uiMaker = installationActionAvailability(context({
+      state: "submitted",
+      subject: submitted.current.requestedBy,
+      roles: ["admin"],
+    }));
+    for (const action of ["approve", "reject"] as const) {
+      expect(uiMaker.find((item) => item.action === action)?.enabled).toBe(false);
+      expect(installationActionEligibility(
+        submitted,
+        { subject: submitted.current.requestedBy, roles: ["admin"] },
+        action,
+      ).allowed).toBe(false);
+    }
+  });
+
   it("严格映射七种服务端状态，终态没有动作", () => {
     for (const [state, actions] of Object.entries(EXPECTED) as Array<[
       InstallationState,
