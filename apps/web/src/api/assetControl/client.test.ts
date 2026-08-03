@@ -13,6 +13,14 @@ import {
 import { normalizeAssetControlError } from "./errors";
 import { createIdempotentCommand, idempotencyKeyFor } from "./idempotency";
 import {
+  INSTALLATION_ACTIVE_FIXTURE,
+  INSTALLATION_APPLIED_FIXTURE,
+  INSTALLATION_APPROVED_FIXTURE,
+  INSTALLATION_REJECTED_FIXTURE,
+  INSTALLATION_ROLLED_BACK_FIXTURE,
+  INSTALLATION_SUBMITTED_FIXTURE,
+} from "./installationActionFixtures";
+import {
   INSTALLATION_DETAIL_FIXTURE,
   INSTALLATION_DRAFT_FIXTURE,
 } from "./installationFixtures";
@@ -138,7 +146,7 @@ describe("M3-1 asset-control SDK adapter", () => {
     await client.createInstallation(createBody, { idempotencyKey: createKey });
     fetch.mockResolvedValueOnce(jsonResponse(installation, 200, { ETag: '"5"' }));
     await client.getInstallation(INSTALLATION_ID);
-    fetch.mockResolvedValueOnce(jsonResponse(installation, 200, { ETag: '"5"' }));
+    fetch.mockResolvedValueOnce(jsonResponse(INSTALLATION_SUBMITTED_FIXTURE, 200, { ETag: '"2"' }));
     await client.submitInstallation(INSTALLATION_ID, commandOptions());
 
     const createHeaders = new Headers(fetch.mock.calls[0][1]?.headers);
@@ -154,25 +162,39 @@ describe("M3-1 asset-control SDK adapter", () => {
     );
   });
 
-  it("sends the six action bodies and canonical headers without changing the key", async () => {
-    const fetch = vi.fn<typeof globalThis.fetch>(async () =>
-      jsonResponse({ etagVersion: 2 }, 200, { ETag: '"2"' }),
-    );
+  it("sends six exact action bodies with a unique key per new command", async () => {
+    const responses = [
+      INSTALLATION_SUBMITTED_FIXTURE,
+      INSTALLATION_APPROVED_FIXTURE,
+      INSTALLATION_REJECTED_FIXTURE,
+      INSTALLATION_APPLIED_FIXTURE,
+      INSTALLATION_ACTIVE_FIXTURE,
+      INSTALLATION_ROLLED_BACK_FIXTURE,
+    ];
+    let responseIndex = 0;
+    const fetch = vi.fn<typeof globalThis.fetch>(async () => {
+      const response = responses[responseIndex++];
+      return jsonResponse(response, 200, { ETag: `"${response.etagVersion}"` });
+    });
     const client = makeClient(fetch);
-    const options = commandOptions();
     const approve = {
-      lockHash: "sha256:lock" as const,
-      permissionDiffHash: "sha256:permission" as const,
-      migrationPlanHash: "sha256:migration" as const,
-      contributionDiffHash: "sha256:contribution" as const,
+      lockHash: INSTALLATION_SUBMITTED_FIXTURE.current.lockHash,
+      permissionDiffHash: INSTALLATION_SUBMITTED_FIXTURE.current.permissionDiffHash,
+      migrationPlanHash: INSTALLATION_SUBMITTED_FIXTURE.current.migrationPlanHash,
+      contributionDiffHash: INSTALLATION_SUBMITTED_FIXTURE.current.contributionDiffHash,
     };
+    const etagVersions = [1, 2, 2, 3, 4, 5];
+    const options = etagVersions.map((etagVersion) => ({
+      idempotencyKey: idempotencyKeyFor(createIdempotentCommand()),
+      etagVersion,
+    }));
 
-    await client.submitInstallation(INSTALLATION_ID, options);
-    await client.approveInstallation(INSTALLATION_ID, approve, options);
-    await client.rejectInstallation(INSTALLATION_ID, { reason: "reject" }, options);
-    await client.applyInstallation(INSTALLATION_ID, options);
-    await client.verifyInstallation(INSTALLATION_ID, options);
-    await client.rollbackInstallation(INSTALLATION_ID, { reason: "rollback" }, options);
+    await client.submitInstallation(INSTALLATION_ID, options[0]);
+    await client.approveInstallation(INSTALLATION_ID, approve, options[1]);
+    await client.rejectInstallation(INSTALLATION_ID, { reason: "reject" }, options[2]);
+    await client.applyInstallation(INSTALLATION_ID, options[3]);
+    await client.verifyInstallation(INSTALLATION_ID, options[4]);
+    await client.rollbackInstallation(INSTALLATION_ID, { reason: "rollback" }, options[5]);
 
     expect(fetch.mock.calls.map(([url]) => String(url).split("/").at(-1))).toEqual([
       "submit",
@@ -190,11 +212,49 @@ describe("M3-1 asset-control SDK adapter", () => {
       {},
       { reason: "rollback" },
     ]);
-    for (const [, init] of fetch.mock.calls) {
+    expect(new Set(options.map((option) => option.idempotencyKey)).size).toBe(6);
+    fetch.mock.calls.forEach(([, init], index) => {
       const headers = new Headers(init?.headers);
-      expect(headers.get("Idempotency-Key")).toBe(options.idempotencyKey);
-      expect(headers.get("If-Match")).toBe('"1"');
-    }
+      expect(headers.get("Idempotency-Key")).toBe(options[index].idempotencyKey);
+      expect(headers.get("If-Match")).toBe(`"${etagVersions[index]}"`);
+    });
+  });
+
+  it("reuses the same command envelope only when retrying that command", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async () =>
+      jsonResponse(INSTALLATION_SUBMITTED_FIXTURE, 200, { ETag: '"2"' }),
+    );
+    const client = makeClient(fetch);
+    const options = commandOptions();
+
+    await client.submitInstallation(INSTALLATION_ID, options);
+    await client.submitInstallation(INSTALLATION_ID, options);
+
+    const envelopes = fetch.mock.calls.map(([, init]) => ({
+      body: init?.body,
+      idempotencyKey: new Headers(init?.headers).get("Idempotency-Key"),
+      ifMatch: new Headers(init?.headers).get("If-Match"),
+    }));
+    expect(envelopes[1]).toEqual(envelopes[0]);
+  });
+
+  it("rejects illegal action UUID, body and ETag before fetch", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    const client = makeClient(fetch);
+    const options = commandOptions();
+    const approve = {
+      lockHash: INSTALLATION_SUBMITTED_FIXTURE.current.lockHash,
+      permissionDiffHash: INSTALLATION_SUBMITTED_FIXTURE.current.permissionDiffHash,
+      migrationPlanHash: INSTALLATION_SUBMITTED_FIXTURE.current.migrationPlanHash,
+      contributionDiffHash: INSTALLATION_SUBMITTED_FIXTURE.current.contributionDiffHash,
+    };
+
+    expect(() => client.submitInstallation("NOT-A-UUID", options)).toThrow(/canonical lowercase UUID/);
+    expect(() => client.approveInstallation(INSTALLATION_ID, { ...approve, actor: "reviewer" } as never, options)).toThrow(/exactly/);
+    expect(() => client.rejectInstallation(INSTALLATION_ID, { reason: " padded " }, options)).toThrow(/normalized/);
+    expect(() => client.rollbackInstallation(INSTALLATION_ID, { reason: "" }, options)).toThrow(/normalized/);
+    await expect(client.applyInstallation(INSTALLATION_ID, { ...options, etagVersion: 0 })).rejects.toThrow(/positive/);
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("stops offline mutations before fetch and preserves known non-execution", async () => {
@@ -232,6 +292,23 @@ describe("M3-1 asset-control SDK adapter", () => {
       isConflict: true,
       requiresRefresh: true,
     });
+
+    for (const status of [409, 503]) {
+      const fetch = vi.fn<typeof globalThis.fetch>(async () =>
+        jsonResponse(
+          { code: status === 503 ? "TRUST_ROOT_UNAVAILABLE" : "REVISION_CONFLICT", message: "closed", details: null, traceId: `t-${status}` },
+          status,
+        ),
+      );
+      const caught = await makeClient(fetch)
+        .submitInstallation(INSTALLATION_ID, commandOptions())
+        .catch((error: unknown) => error);
+      expect(normalizeAssetControlError(caught)).toMatchObject(
+        status === 409
+          ? { status: 409, isConflict: true, requiresRefresh: true }
+          : { status: 503, kind: "service_unavailable", retryable: false, outcomeUnknown: false },
+      );
+    }
 
     const networkClient = makeClient(
       vi.fn<typeof globalThis.fetch>(async () => {

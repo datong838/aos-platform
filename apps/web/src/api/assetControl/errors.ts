@@ -13,6 +13,7 @@ export type AssetControlFailureKind =
   | "conflict"
   | "precondition_failed"
   | "precondition_required"
+  | "service_unavailable"
   | "server_error"
   | "unknown";
 
@@ -138,6 +139,16 @@ const STATUS_POLICIES: Record<AssetControlErrorStatus, FailurePolicy> = {
     notVisibleOrMissing: false,
     retryable: true,
     outcomeUnknown: true,
+  },
+  503: {
+    kind: "service_unavailable",
+    message: "信任根暂时不可用，服务端已确认失败关闭；请稍后重新发起新命令。",
+    recovery: "none",
+    isConflict: false,
+    requiresRefresh: false,
+    notVisibleOrMissing: false,
+    retryable: false,
+    outcomeUnknown: false,
   },
 };
 
