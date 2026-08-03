@@ -1,0 +1,34 @@
+apiVersion: aos.dev/v1alpha1
+kind: DomainPack
+metadata:
+  id: domain.ecommerce.core
+  version: 1.0.0
+  displayName: Ecommerce Core Fixture
+  publisher: aos
+  license: internal
+spec:
+  platformApi: ">=1.7.0 <2.0.0"
+  dependencies: []
+  optionalDependencies: []
+  conflicts: []
+  exports:
+    ontology:
+      - content/ontology/
+    schemas:
+      - content/schemas/
+    policies:
+      - content/policies/
+  capabilities:
+    provides: []
+    requires: []
+  permissions:
+    roles: []
+    markings: []
+    dataScopes: []
+    actionTypes: []
+  migrations:
+    plan: null
+    downgradePolicy: retain-canonical
+  preflight: null
+  regression: null
+  rollback: null
