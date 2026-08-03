@@ -1,12 +1,14 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { AssetControlClient } from "../../../api/assetControl/client";
 import type { IdempotencyKey } from "../../../api/assetControl/idempotency";
 import type {
   InstallationResponse,
   InstallationState,
   StoredCompositionLock,
 } from "../../../api/assetControl/types";
+import { setConnectivity } from "../../../lib/offlineStore";
 import {
   useInstallationActionCommands,
   type InstallationActionCommands,
@@ -58,6 +60,7 @@ describe("M3-4 installation action controller", () => {
   }
 
   beforeEach(() => {
+    setConnectivity("online", "installation-action-cumulative-test");
     host = document.createElement("div");
     document.body.appendChild(host);
     root = createRoot(host);
@@ -99,6 +102,7 @@ describe("M3-4 installation action controller", () => {
   afterEach(() => {
     act(() => root.unmount());
     host.remove();
+    setConnectivity("unknown", "installation-action-cumulative-test-cleanup");
   });
 
   async function render() {
@@ -169,6 +173,89 @@ describe("M3-4 installation action controller", () => {
     },
   );
 
+  it("advances the full lifecycle with a fresh command key and the latest ETag at every step", async () => {
+    const draft = record("draft", 1, 1);
+    const submitted = record("submitted", 2, 2);
+    const approved = record("approved", 3, 3);
+    const applied = record("applied", 4, 4);
+    const active = record("active", 5, 5);
+    const rolledBack = record("rolled_back", 6, 6);
+    displayed = draft;
+    subject = "requester";
+    roles = ["asset-installer"];
+    getCompositionLock.mockResolvedValue(lock());
+    await render();
+
+    getInstallation.mockResolvedValueOnce(draft).mockResolvedValueOnce(submitted);
+    submitInstallation.mockResolvedValueOnce(submitted);
+    await act(async () => expect(await latest.execute("submit")).toBe(true));
+
+    displayed = submitted;
+    subject = "approver";
+    roles = ["asset-install-approver"];
+    await act(async () => root.render(<Probe />));
+    getInstallation.mockResolvedValueOnce(submitted).mockResolvedValueOnce(approved);
+    approveInstallation.mockResolvedValueOnce(approved);
+    await act(async () => expect(await latest.execute("approve")).toBe(true));
+
+    displayed = approved;
+    subject = "installer";
+    roles = ["asset-installer"];
+    await act(async () => root.render(<Probe />));
+    getInstallation.mockResolvedValueOnce(approved).mockResolvedValueOnce(applied);
+    applyInstallation.mockResolvedValueOnce(applied);
+    await act(async () => expect(await latest.execute("apply")).toBe(true));
+
+    displayed = applied;
+    await act(async () => root.render(<Probe />));
+    getInstallation.mockResolvedValueOnce(applied).mockResolvedValueOnce(active);
+    verifyInstallation.mockResolvedValueOnce(active);
+    await act(async () => expect(await latest.execute("verify")).toBe(true));
+
+    displayed = active;
+    await act(async () => root.render(<Probe />));
+    getInstallation.mockResolvedValueOnce(active).mockResolvedValueOnce(rolledBack);
+    rollbackInstallation.mockResolvedValueOnce(rolledBack);
+    await act(async () =>
+      expect(await latest.execute("rollback", { reason: "unsafe" })).toBe(true),
+    );
+
+    expect(submitInstallation.mock.calls[0][1]).toEqual({
+      idempotencyKey: "key-1",
+      etagVersion: 1,
+    });
+    expect(approveInstallation.mock.calls[0][2]).toEqual({
+      idempotencyKey: "key-2",
+      etagVersion: 2,
+    });
+    expect(applyInstallation.mock.calls[0][1]).toEqual({
+      idempotencyKey: "key-3",
+      etagVersion: 3,
+    });
+    expect(verifyInstallation.mock.calls[0][1]).toEqual({
+      idempotencyKey: "key-4",
+      etagVersion: 4,
+    });
+    expect(rollbackInstallation.mock.calls[0][2]).toEqual({
+      idempotencyKey: "key-5",
+      etagVersion: 5,
+    });
+    expect(getInstallation).toHaveBeenCalledTimes(10);
+    expect(onSuccess.mock.calls.map(([value]) => value.state)).toEqual([
+      "submitted",
+      "approved",
+      "applied",
+      "active",
+      "rolled_back",
+    ]);
+    expect(latest.state).toMatchObject({
+      phase: "succeeded",
+      data: rolledBack,
+      mutationConfirmed: true,
+      attempt: null,
+    });
+  });
+
   it("uses one controller to block cross-actions and builds approve from GET current plus GET lock", async () => {
     const preflight = deferred<InstallationResponse>();
     const current = record("submitted", 4, 6);
@@ -232,9 +319,12 @@ describe("M3-4 installation action controller", () => {
     expect(onReconciled).toHaveBeenCalledWith(refreshed);
   });
 
-  it.each([409, 412])(
-    "reads after %s, clears the old key, and uses a new key for a new command",
-    async (status) => {
+  it.each([
+    [409, "actual backend stale-CAS response"],
+    [412, "compatibility-only simulated response"],
+  ] as const)(
+    "reads after %s (%s), clears the old key, and uses a new key for a new command",
+    async (status, _responseContract) => {
     const source = record("submitted", 4, 6);
     const refreshed = record("submitted", 4, 7);
     const approved = record("approved", 5, 8);
@@ -245,7 +335,9 @@ describe("M3-4 installation action controller", () => {
       .mockResolvedValueOnce(approved);
     getCompositionLock.mockResolvedValue(lock());
     approveInstallation
-      .mockRejectedValueOnce(apiError(status, status === 409 ? "STATE_CONFLICT" : "ETAG_MISMATCH"))
+      .mockRejectedValueOnce(
+        apiError(status, status === 409 ? "REVISION_CONFLICT" : "ETAG_MISMATCH"),
+      )
       .mockResolvedValueOnce(approved);
     await render();
 
@@ -347,6 +439,72 @@ describe("M3-4 installation action controller", () => {
     expect(onSuccess).toHaveBeenCalledWith(successor);
   });
 
+  it("recovers an unknown step with the same envelope, then continues with a new key and ETag", async () => {
+    const applied = record("applied", 4, 4);
+    const active = record("active", 5, 5, {
+      fromRevision: 4,
+      toRevision: 5,
+      fromState: "applied",
+      toState: "active",
+      actor: "installer",
+      reason: null,
+      evidenceType: "verification",
+    });
+    const rolledBack = record("rolled_back", 6, 6, {
+      fromRevision: 5,
+      toRevision: 6,
+      fromState: "active",
+      toState: "rolled_back",
+      actor: "installer",
+      reason: "unsafe",
+      evidenceType: "rollback",
+    });
+    displayed = applied;
+    subject = "installer";
+    roles = ["asset-installer"];
+    getInstallation
+      .mockResolvedValueOnce(applied)
+      .mockResolvedValueOnce(applied)
+      .mockResolvedValueOnce(active)
+      .mockResolvedValueOnce(active)
+      .mockResolvedValueOnce(rolledBack);
+    verifyInstallation
+      .mockRejectedValueOnce(networkError())
+      .mockResolvedValueOnce(active);
+    rollbackInstallation.mockResolvedValueOnce(rolledBack);
+    await render();
+
+    await act(async () => expect(await latest.execute("verify")).toBe(false));
+    expect(latest.state).toMatchObject({
+      phase: "unknown_outcome",
+      canRecoverUnknown: true,
+    });
+    await act(async () => expect(await latest.recoverUnknown()).toBe(true));
+
+    displayed = active;
+    await act(async () => root.render(<Probe />));
+    await act(async () =>
+      expect(await latest.execute("rollback", { reason: "unsafe" })).toBe(true),
+    );
+
+    expect(verifyInstallation.mock.calls.map((call) => call[1])).toEqual([
+      { idempotencyKey: "key-1", etagVersion: 4 },
+      { idempotencyKey: "key-1", etagVersion: 4 },
+    ]);
+    expect(rollbackInstallation).toHaveBeenCalledWith(
+      active.installationId,
+      { reason: "unsafe" },
+      { idempotencyKey: "key-2", etagVersion: 5 },
+    );
+    expect(getInstallation).toHaveBeenCalledTimes(5);
+    expect(latest.state).toMatchObject({
+      phase: "succeeded",
+      data: rolledBack,
+      attempt: null,
+      mutationConfirmed: true,
+    });
+  });
+
   it("turns a diverged unknown recovery into conflict without replaying", async () => {
     displayed = record("active", 5, 8);
     subject = "installer";
@@ -402,6 +560,48 @@ describe("M3-4 installation action controller", () => {
     });
     expect(latest.state.attempt).toBe(originalAttempt);
     expect(rollbackInstallation).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps wrong-role, self-approval, and offline commands at zero transport POSTs", async () => {
+    const transport = vi.fn();
+    const offlineClient = new AssetControlClient({
+      fetch: transport,
+      getBaseUrl: () => "http://asset-control.test",
+      getAuthHeaders: () => ({}),
+    });
+
+    roles = ["developer"];
+    await render();
+    await act(async () => expect(await latest.execute("approve")).toBe(false));
+
+    subject = "requester";
+    roles = ["asset-install-approver"];
+    await act(async () => root.render(<Probe />));
+    await act(async () => expect(await latest.execute("approve")).toBe(false));
+    expect(getInstallation).not.toHaveBeenCalled();
+    expect(approveInstallation).not.toHaveBeenCalled();
+
+    displayed = record("draft", 1, 1);
+    roles = ["developer"];
+    dependencies = {
+      ...dependencies,
+      submitInstallation: (installationId, options) =>
+        offlineClient.submitInstallation(installationId, options),
+    };
+    getInstallation.mockResolvedValueOnce(displayed);
+    setConnectivity("offline", "installation-action-cumulative-test");
+    await act(async () => root.render(<Probe />));
+    await act(async () => expect(await latest.execute("submit")).toBe(false));
+
+    expect(getInstallation).toHaveBeenCalledTimes(1);
+    expect(transport).not.toHaveBeenCalled();
+    expect(submitInstallation).not.toHaveBeenCalled();
+    expect(latest.state).toMatchObject({
+      phase: "error",
+      error: { kind: "offline_mutation_disabled" },
+      attempt: null,
+      mutationConfirmed: false,
+    });
   });
 });
 
