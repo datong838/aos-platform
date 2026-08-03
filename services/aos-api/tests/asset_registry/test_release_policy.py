@@ -319,3 +319,133 @@ def test_release_policy_preserves_trust_root_outage_priority() -> None:
 
     assert caught.value.code == AssetRegistryErrorCode.TRUST_ROOT_UNAVAILABLE
     assert "internal provider failure" not in str(caught.value)
+
+
+@pytest.mark.parametrize(
+    "root_state",
+    ["missing", "not-yet-valid", "expired", "revoked", "rotated"],
+)
+def test_snapshot_policy_excludes_candidate_for_current_root_eligibility(
+    root_state: str,
+) -> None:
+    record, roots = _record()
+    root = roots.root
+    if root_state == "missing":
+        roots.root = replace(root, key_id="replacement-key")
+    elif root_state == "not-yet-valid":
+        roots.root = replace(root, not_before=NOW + timedelta(seconds=1))
+    elif root_state == "expired":
+        roots.root = replace(root, not_after=NOW)
+    elif root_state == "revoked":
+        roots.root = replace(root, revoked_at=NOW)
+    else:
+        roots.root = replace(root, revision="sha256:" + "2" * 64)
+
+    result = ReleasePolicy(trust_roots=roots).evaluate_snapshot_candidate(
+        record,
+        checked_at=NOW,
+    )
+
+    assert result is None
+
+
+@pytest.mark.parametrize("evidence_state", ["missing", "expired", "revoked"])
+def test_snapshot_policy_excludes_candidate_for_invalid_release_evidence(
+    evidence_state: str,
+) -> None:
+    record, roots = _record()
+    index = next(
+        index
+        for index, item in enumerate(record.evidence)
+        if item.type == BundleEvidenceType.SBOM
+    )
+    if evidence_state == "missing":
+        record.evidence.pop(index)
+    else:
+        payload = record.evidence[index].model_dump(mode="python", by_alias=True)
+        if evidence_state == "expired":
+            payload["expiresAt"] = NOW
+        else:
+            payload["status"] = BundleEvidenceStatus.REVOKED
+            payload["revokedAt"] = NOW
+        record.evidence[index] = BundleEvidence.model_validate(payload)
+
+    result = ReleasePolicy(trust_roots=roots).evaluate_snapshot_candidate(
+        record,
+        checked_at=NOW,
+    )
+
+    assert result is None
+
+
+def test_snapshot_policy_duplicate_signature_evidence_fails_closed() -> None:
+    record, roots = _record()
+    signature_evidence = next(
+        item
+        for item in record.evidence
+        if item.type == BundleEvidenceType.SIGNATURE_VERIFICATION
+    )
+    record.evidence.append(signature_evidence)
+
+    with pytest.raises(AssetRegistryError) as caught:
+        ReleasePolicy(trust_roots=roots).evaluate_snapshot_candidate(
+            record,
+            checked_at=NOW,
+        )
+
+    assert caught.value.code == AssetRegistryErrorCode.SIGNATURE_INVALID
+
+
+def test_snapshot_policy_same_revision_crypto_failure_fails_closed() -> None:
+    record, roots = _record()
+    assert record.signature is not None
+    sbom_index = next(
+        index
+        for index, item in enumerate(record.evidence)
+        if item.type == BundleEvidenceType.SBOM
+    )
+    sbom = record.evidence[sbom_index].model_dump(mode="python", by_alias=True)
+    sbom["expiresAt"] = NOW
+    record.evidence[sbom_index] = BundleEvidence.model_validate(sbom)
+    payload = record.signature.model_dump(mode="python", by_alias=True)
+    payload["signature"] = base64.b64encode(b"x" * 64).decode("ascii")
+    record.signature = BundleSignature.model_validate(payload)
+
+    with pytest.raises(AssetRegistryError) as caught:
+        ReleasePolicy(trust_roots=roots).evaluate_snapshot_candidate(
+            record,
+            checked_at=NOW,
+        )
+
+    assert caught.value.code == AssetRegistryErrorCode.SIGNATURE_INVALID
+
+
+@pytest.mark.parametrize("damage", ["manifest", "artifact", "content-hash"])
+def test_snapshot_policy_descriptor_damage_precedes_candidate_expiry(
+    damage: str,
+) -> None:
+    record, roots = _record()
+    sbom_index = next(
+        index
+        for index, item in enumerate(record.evidence)
+        if item.type == BundleEvidenceType.SBOM
+    )
+    sbom = record.evidence[sbom_index].model_dump(mode="python", by_alias=True)
+    sbom["expiresAt"] = NOW
+    record.evidence[sbom_index] = BundleEvidence.model_validate(sbom)
+    if damage == "manifest":
+        manifest = record.manifest.model_dump(mode="python", by_alias=True)
+        manifest["metadata"]["displayName"] = "Tampered"
+        record.manifest = BundleManifest.model_validate(manifest)
+    elif damage == "artifact":
+        record.artifacts = [{"relativePath": "tampered.json"}]
+    else:
+        record.content_hash = "sha256:" + "f" * 64
+
+    with pytest.raises(AssetRegistryError) as caught:
+        ReleasePolicy(trust_roots=roots).evaluate_snapshot_candidate(
+            record,
+            checked_at=NOW,
+        )
+
+    assert caught.value.code == AssetRegistryErrorCode.MANIFEST_INVALID

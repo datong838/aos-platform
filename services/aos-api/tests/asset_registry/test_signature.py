@@ -196,6 +196,47 @@ def test_file_provider_reloads_revocation_without_process_cache(
     assert not _verify_with_provider(provider, root, signature)
 
 
+def test_file_provider_snapshot_is_frozen_after_one_safe_read(
+    tmp_path: Path,
+    signed_bundle: tuple[TrustRoot, str],
+) -> None:
+    root, signature = signed_bundle
+    config = tmp_path / "trust-roots.json"
+    _write_config(config, [_root_entry(root)])
+    provider = FileTrustRootProvider(config)
+
+    frozen = provider.snapshot()
+    revoked = replace(
+        root,
+        revision="sha256:" + "c" * 64,
+        revoked_at=NOW,
+    )
+    _write_config(config, [_root_entry(revoked)])
+
+    assert (
+        frozen.get_trust_root(
+            publisher=root.publisher,
+            key_id=root.key_id,
+        )
+        == root
+    )
+    assert verify_ed25519(
+        payload=PAYLOAD,
+        signature_b64=signature,
+        publisher=root.publisher,
+        key_id=root.key_id,
+        trust_roots=frozen,
+        verified_at=NOW,
+    )
+    assert (
+        provider.get_trust_root(
+            publisher=root.publisher,
+            key_id=root.key_id,
+        )
+        == revoked
+    )
+
+
 def test_file_provider_rejects_duplicate_json_keys_and_symlinks(
     tmp_path: Path,
     signed_bundle: tuple[TrustRoot, str],

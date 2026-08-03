@@ -12,6 +12,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from types import MappingProxyType
 from typing import Protocol
 
 from cryptography.exceptions import InvalidSignature
@@ -58,8 +59,29 @@ class TrustRootProvider(Protocol):
     def get_trust_root(self, *, publisher: str, key_id: str) -> TrustRoot | None: ...
 
 
+class SnapshottingTrustRootProvider(TrustRootProvider, Protocol):
+    """Returns one immutable trust-root view for a multi-record operation."""
+
+    def snapshot(self) -> TrustRootProvider: ...
+
+
 class TrustRootConfigurationError(ValueError):
     """Raised when the server-controlled trust-root snapshot is unsafe."""
+
+
+class FrozenTrustRootProvider:
+    """In-memory trust roots copied from one validated configuration read."""
+
+    def __init__(self, roots: Mapping[tuple[str, str], TrustRoot]) -> None:
+        self._roots = MappingProxyType(dict(roots))
+
+    def get_trust_root(self, *, publisher: str, key_id: str) -> TrustRoot | None:
+        if not _is_exact_identifier(publisher) or not _is_exact_identifier(key_id):
+            return None
+        return self._roots.get((publisher, key_id))
+
+    def snapshot(self) -> TrustRootProvider:
+        return self
 
 
 class FileTrustRootProvider:
@@ -104,6 +126,11 @@ class FileTrustRootProvider:
             return None
         roots = self._read_roots()
         return roots.get((publisher, key_id))
+
+    def snapshot(self) -> TrustRootProvider:
+        """Read and validate the file once, then freeze that complete view."""
+
+        return FrozenTrustRootProvider(self._read_roots())
 
     def _read_roots(self) -> dict[tuple[str, str], TrustRoot]:
         flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
@@ -185,7 +212,7 @@ def verify_ed25519(
             publisher=publisher,
             key_id=key_id,
         )
-        if trust_root is None or not _is_usable_trust_root(
+        if trust_root is None or not is_trust_root_current(
             trust_root,
             publisher=publisher,
             key_id=key_id,
@@ -208,23 +235,32 @@ def verify_ed25519(
         return False
 
 
-def _is_usable_trust_root(
+def is_trust_root_current(
     trust_root: TrustRoot,
     *,
     publisher: str,
     key_id: str,
     checked_at: datetime,
 ) -> bool:
+    """Validate one root entry and report whether it is current at ``checked_at``.
+
+    Structural defects indicate an unsafe provider snapshot and raise a
+    configuration error.  Well-formed roots outside their validity window are
+    simply not current.
+    """
+
+    if not _is_aware(checked_at):
+        raise TrustRootConfigurationError("trust-root verification clock is invalid")
     if trust_root.publisher != publisher or trust_root.key_id != key_id:
-        return False
+        raise TrustRootConfigurationError("trust-root snapshot identity is invalid")
     if not isinstance(trust_root.revision, str) or not _REVISION_PATTERN.fullmatch(
         trust_root.revision
     ):
-        return False
+        raise TrustRootConfigurationError("trust-root snapshot revision is invalid")
     if not isinstance(trust_root.public_key, bytes):
-        return False
+        raise TrustRootConfigurationError("trust-root snapshot public key is invalid")
     if len(trust_root.public_key) != ED25519_PUBLIC_KEY_LENGTH:
-        return False
+        raise TrustRootConfigurationError("trust-root snapshot public key is invalid")
 
     boundaries = (
         trust_root.not_before,
@@ -232,7 +268,13 @@ def _is_usable_trust_root(
         trust_root.revoked_at,
     )
     if any(value is not None and not _is_aware(value) for value in boundaries):
-        return False
+        raise TrustRootConfigurationError("trust-root snapshot time is invalid")
+    if (
+        trust_root.not_before is not None
+        and trust_root.not_after is not None
+        and trust_root.not_before >= trust_root.not_after
+    ):
+        raise TrustRootConfigurationError("trust-root snapshot window is invalid")
     if trust_root.not_before is not None and checked_at < trust_root.not_before:
         return False
     if trust_root.not_after is not None and checked_at >= trust_root.not_after:

@@ -70,6 +70,7 @@ class RegistrySnapshotReader:
         """Return all currently eligible published candidates or fail atomically."""
 
         try:
+            release_policy = self._release_policy.snapshot()
             with self._connect_factory() as conn:
                 conn.execute(
                     "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
@@ -98,9 +99,15 @@ class RegistrySnapshotReader:
                             "observed": len(rows),
                         },
                     )
-                candidates = [
-                    self._candidate_from_row(row, checked_at=checked_at) for row in rows
-                ]
+                candidates = []
+                for row in rows:
+                    candidate = self._candidate_from_row(
+                        row,
+                        checked_at=checked_at,
+                        release_policy=release_policy,
+                    )
+                    if candidate is not None:
+                        candidates.append(candidate)
                 try:
                     return RegistrySnapshot.build(
                         candidates=candidates,
@@ -122,7 +129,8 @@ class RegistrySnapshotReader:
         row: Any,
         *,
         checked_at: datetime,
-    ) -> RegistrySnapshotCandidate:
+        release_policy: ReleasePolicy,
+    ) -> RegistrySnapshotCandidate | None:
         try:
             manifest = BundleManifest.model_validate(row["manifest_json"])
             artifacts = _parse_artifacts(row["artifacts"])
@@ -165,11 +173,12 @@ class RegistrySnapshotReader:
             evidence=evidence,
             artifacts=artifacts,
         )
-        release = self._release_policy.evaluate(
+        release = release_policy.evaluate_snapshot_candidate(
             record,
             checked_at=checked_at,
-            require_published=True,
         )
+        if release is None:
+            return None
         spec = manifest.spec
         try:
             return RegistrySnapshotCandidate.model_validate(
@@ -318,6 +327,16 @@ SELECT v.version_pk,
                      AND non_current.expires_at <= transaction_timestamp()
                    )
                    OR non_current.revoked_at IS NOT NULL
+                 )
+                 AND (
+                   required.evidence_type <> 'signature_verification'
+                   OR (
+                     SELECT COUNT(*)
+                       FROM asset_bundle_evidence AS signature_entries
+                      WHERE signature_entries.version_pk = v.version_pk
+                        AND signature_entries.evidence_type =
+                            'signature_verification'
+                   ) = 1
                  )
             )
    )

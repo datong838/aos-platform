@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import importlib.util
 import uuid
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
@@ -31,7 +32,7 @@ from aos_api.asset_registry.release_policy import (
     REQUIRED_RELEASE_EVIDENCE,
     ReleasePolicy,
 )
-from aos_api.asset_registry.signature import TrustRoot
+from aos_api.asset_registry.signature import FrozenTrustRootProvider, TrustRoot
 from aos_api.db import connect
 
 API_ROOT = Path(__file__).resolve().parents[2]
@@ -48,12 +49,19 @@ class Roots:
     def __init__(self) -> None:
         self.items: dict[tuple[str, str], TrustRoot] = {}
         self.private_keys: dict[str, Ed25519PrivateKey] = {}
+        self.snapshot_hook: Callable[[], None] | None = None
 
     def add(self, root: TrustRoot) -> None:
         self.items[(root.publisher, root.key_id)] = root
 
     def get_trust_root(self, *, publisher: str, key_id: str) -> TrustRoot | None:
         return self.items.get((publisher, key_id))
+
+    def snapshot(self) -> FrozenTrustRootProvider:
+        frozen = FrozenTrustRootProvider(self.items)
+        if self.snapshot_hook is not None:
+            self.snapshot_hook()
+        return frozen
 
 
 class StaticLoader:
@@ -538,3 +546,153 @@ def test_snapshot_candidate_limit_fails_closed_in_real_postgres(
         "limit": 1,
         "observed": 2,
     }
+
+
+def test_snapshot_uses_one_frozen_view_across_two_publishers_and_next_read_excludes_rotated_roots(
+    registry_database,
+) -> None:
+    store, scoped_connect = registry_database
+    roots = Roots()
+    _publish(
+        store,
+        roots,
+        publisher="aos",
+        bundle_id="solution.aos",
+        version="1.0.0",
+    )
+    _publish(
+        store,
+        roots,
+        publisher="partner",
+        bundle_id="solution.partner",
+        version="1.0.0",
+    )
+    aos_identity = ("aos", "aos-release-key")
+    partner_identity = ("partner", "partner-release-key")
+    aos_root = roots.items[aos_identity]
+    partner_root = roots.items[partner_identity]
+
+    def rotate_after_freeze() -> None:
+        roots.items[aos_identity] = TrustRoot(
+            publisher=aos_root.publisher,
+            key_id=aos_root.key_id,
+            public_key=aos_root.public_key,
+            revision=canonical_sha256({"publisher": "aos", "revision": 2}),
+            not_before=aos_root.not_before,
+            not_after=aos_root.not_after,
+        )
+        roots.items[partner_identity] = TrustRoot(
+            publisher=partner_root.publisher,
+            key_id=partner_root.key_id,
+            public_key=partner_root.public_key,
+            revision=partner_root.revision,
+            not_before=partner_root.not_before,
+            not_after=partner_root.not_after,
+            revoked_at=NOW,
+        )
+        roots.snapshot_hook = None
+
+    roots.snapshot_hook = rotate_after_freeze
+
+    before_rotation = _reader(scoped_connect, roots).read()
+    after_rotation = _reader(scoped_connect, roots).read()
+
+    assert [(item.publisher, item.id) for item in before_rotation.candidates] == [
+        ("aos", "solution.aos"),
+        ("partner", "solution.partner"),
+    ]
+    assert after_rotation.candidates == []
+
+
+def test_snapshot_duplicate_signature_evidence_is_global_even_when_one_is_expired(
+    registry_database,
+) -> None:
+    store, scoped_connect = registry_database
+    roots = Roots()
+    _publish(
+        store,
+        roots,
+        publisher="aos",
+        bundle_id="solution.duplicate-signature",
+        version="1.0.0",
+    )
+    with scoped_connect() as conn:
+        conn.execute(
+            "ALTER TABLE asset_bundle_evidence "
+            "DISABLE TRIGGER trg_asset_bundle_evidence_guard"
+        )
+        conn.execute(
+            """
+            INSERT INTO asset_bundle_evidence (
+              version_pk,
+              evidence_type,
+              artifact_ref,
+              artifact_hash,
+              status,
+              observed_at,
+              expires_at,
+              revoked_at,
+              metadata,
+              updated_at,
+              updated_by,
+              status_reason
+            )
+            SELECT version_pk,
+                   evidence_type,
+                   artifact_ref || '.duplicate',
+                   artifact_hash,
+                   'expired',
+                   observed_at,
+                   %s,
+                   NULL,
+                   metadata,
+                   clock_timestamp(),
+                   'w1-adversary',
+                   'duplicate signature evidence'
+              FROM asset_bundle_evidence
+             WHERE evidence_type = 'signature_verification'
+            """,
+            (NOW,),
+        )
+        conn.execute(
+            "ALTER TABLE asset_bundle_evidence "
+            "ENABLE TRIGGER trg_asset_bundle_evidence_guard"
+        )
+        conn.commit()
+
+    with pytest.raises(AssetRegistryError) as caught:
+        _reader(scoped_connect, roots).read()
+
+    assert caught.value.code == AssetRegistryErrorCode.SIGNATURE_INVALID
+
+
+@pytest.mark.parametrize("failure", ["unsupported", "outage"])
+def test_snapshot_fails_closed_when_provider_cannot_freeze_one_view(
+    registry_database,
+    failure: str,
+) -> None:
+    _, scoped_connect = registry_database
+
+    class DynamicProvider:
+        def get_trust_root(
+            self,
+            *,
+            publisher: str,
+            key_id: str,
+        ) -> TrustRoot | None:
+            return None
+
+    class OutageProvider(DynamicProvider):
+        def snapshot(self):
+            raise RuntimeError("private provider outage")
+
+    provider = OutageProvider() if failure == "outage" else DynamicProvider()
+
+    with pytest.raises(AssetRegistryError) as caught:
+        RegistrySnapshotReader(
+            connect_factory=scoped_connect,
+            release_policy=ReleasePolicy(trust_roots=provider),
+        ).read()
+
+    assert caught.value.code == AssetRegistryErrorCode.TRUST_ROOT_UNAVAILABLE
+    assert "private provider outage" not in str(caught.value)
