@@ -42,6 +42,10 @@ from aos_api.asset_registry.semver import parse_range, parse_version
 
 Coordinate = tuple[str, str]
 Via = Literal["requested", "dependency", "optional"]
+CompleteValidator = Callable[
+    [tuple[ResolvedBundle, ...], tuple[ResolvedEdge, ...]],
+    None,
+]
 
 RESOURCE_LIMITS: dict[str, int] = {
     "requested": MAX_REQUESTED_BUNDLES,
@@ -68,6 +72,12 @@ class _SearchBudget:
     backtracking_states: int = 0
 
     def record_candidate_attempt(self) -> None:
+        self._record_step()
+
+    def record_branch_backtrack(self) -> None:
+        self._record_step()
+
+    def _record_step(self) -> None:
         self.backtracking_states += 1
         enforce_resolution_limit(
             "backtracking_states",
@@ -94,7 +104,7 @@ def resolve_dependency_graph(
     request: CompositionRequest,
     snapshot: RegistrySnapshot,
     *,
-    validate_complete: Callable[[tuple[ResolvedBundle, ...]], None] | None = None,
+    validate_complete: CompleteValidator | None = None,
 ) -> DependencyGraph:
     """Resolve a request against exactly one immutable snapshot."""
 
@@ -157,7 +167,7 @@ def _search(
     root_constraints: tuple[ConstraintRecord, ...],
     selected: dict[Coordinate, RegistrySnapshotCandidate],
     budget: _SearchBudget,
-    validate_complete: Callable[[tuple[ResolvedBundle, ...]], None] | None,
+    validate_complete: CompleteValidator | None,
 ) -> dict[Coordinate, RegistrySnapshotCandidate]:
     constraints, active = _derive_constraints(
         root_constraints=root_constraints,
@@ -178,7 +188,10 @@ def _search(
         edges = _build_edges(selected, top_level)
         _raise_for_cycle_or_depth(selected, edges, top_level)
         if validate_complete is not None:
-            validate_complete(_resolved_bundles(selected, top_level))
+            validate_complete(
+                _resolved_bundles(selected, top_level),
+                tuple(edges),
+            )
         return selected
 
     coordinate = unresolved[0]
@@ -214,6 +227,7 @@ def _search(
                 validate_complete=validate_complete,
             )
         except (DependencyConflictError, DependencyCycleError) as exc:
+            budget.record_branch_backtrack()
             if first_failure is None:
                 first_failure = exc
     if first_failure is not None:
@@ -303,7 +317,8 @@ def _candidate_options(
     constraints: list[ConstraintRecord],
     candidates: list[RegistrySnapshotCandidate],
 ) -> tuple[list[RegistrySnapshotCandidate], list[CandidateRejection]]:
-    accepted: list[RegistrySnapshotCandidate] = []
+    stable: list[RegistrySnapshotCandidate] = []
+    prerelease: list[RegistrySnapshotCandidate] = []
     rejected: list[CandidateRejection] = []
     for candidate in candidates:
         reason = _candidate_rejection_reason(
@@ -312,7 +327,10 @@ def _candidate_options(
             constraints=constraints,
         )
         if reason is None:
-            accepted.append(candidate)
+            if parse_version(candidate.version).prerelease:
+                prerelease.append(candidate)
+            else:
+                stable.append(candidate)
         else:
             rejected.append(
                 CandidateRejection.model_validate(
@@ -324,7 +342,7 @@ def _candidate_options(
                     }
                 )
             )
-    return accepted, rejected
+    return (stable if stable else prerelease), rejected
 
 
 def _candidate_rejection_reason(

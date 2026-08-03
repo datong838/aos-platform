@@ -18,6 +18,7 @@ from aos_api.asset_registry.errors import (
     CurrentInstallationStaleError,
     DependencyConflictError,
     RegistrySnapshotStaleError,
+    ResolutionLimitExceededError,
 )
 from aos_api.asset_registry.resolver import resolve
 
@@ -297,6 +298,14 @@ def test_explicit_bundle_conflict_has_sorted_owner_resource() -> None:
         "pack.a",
         "pack.b",
     ]
+    assert raised.value.details["path"] == [
+        {
+            "publisher": "aos",
+            "id": "pack.a",
+            "version": "1.0.0",
+            "via": "requested",
+        }
+    ]
 
 
 def test_highest_explicit_conflict_backtracks_to_lower_valid_version() -> None:
@@ -335,6 +344,7 @@ def test_capability_requires_exactly_one_selected_provider() -> None:
             None,
         )
     assert missing.value.details["subtype"] == "capability_missing"
+    assert [item["id"] for item in missing.value.details["path"]] == ["pack.requester"]
 
     with pytest.raises(DependencyConflictError) as multiple:
         resolve(
@@ -350,6 +360,9 @@ def test_capability_requires_exactly_one_selected_provider() -> None:
     assert [item["id"] for item in multiple.value.details["resource"]["owners"]] == [
         "pack.provider-a",
         "pack.provider-b",
+    ]
+    assert [item["id"] for item in multiple.value.details["path"]] == [
+        "pack.provider-a"
     ]
 
 
@@ -402,6 +415,7 @@ def test_contribution_collision_uses_normalized_key_and_shared_claims_can_coexis
         )
     assert raised.value.details["subtype"] == "contribution_collision"
     assert raised.value.details["resource"]["key"] == '["/orders/:"]'
+    assert [item["id"] for item in raised.value.details["path"]] == ["pack.first"]
 
     shared_first = _candidate(
         "pack.shared-a",
@@ -525,6 +539,74 @@ def test_highest_contribution_collision_backtracks_to_lower_valid_version() -> N
     assert next(item for item in payload.resolved if item.id == "pack.a").version == (
         "1.0.0"
     )
+
+
+def test_resource_conflict_path_uses_directed_edges_and_lexical_shortest_tie() -> None:
+    snapshot = _snapshot(
+        [
+            _candidate(
+                "pack.root-a",
+                "1.0.0",
+                dependencies=[(None, "pack.owner-y", "1.0.0")],
+            ),
+            _candidate(
+                "pack.root-z",
+                "1.0.0",
+                dependencies=[(None, "pack.owner-x", "1.0.0")],
+            ),
+            _candidate(
+                "pack.owner-x",
+                "1.0.0",
+                conflicts=[(None, "pack.owner-y", None)],
+            ),
+            _candidate("pack.owner-y", "1.0.0"),
+        ]
+    )
+
+    with pytest.raises(DependencyConflictError) as raised:
+        resolve(
+            _request(
+                ("aos", "pack.root-z", "1.0.0"),
+                ("aos", "pack.root-a", "1.0.0"),
+            ),
+            snapshot,
+            None,
+        )
+
+    assert raised.value.details["subtype"] == "explicit_conflict"
+    assert [item["id"] for item in raised.value.details["path"]] == [
+        "pack.root-a",
+        "pack.owner-y",
+    ]
+    assert [item["via"] for item in raised.value.details["path"]] == [
+        "requested",
+        "dependency",
+    ]
+
+
+def test_real_two_coordinate_search_counts_attempts_and_failed_backtracks() -> None:
+    candidates = [
+        _candidate(
+            "pack.a",
+            f"1.0.{index}",
+            conflicts=[(None, "pack.b", None)],
+        )
+        for index in range(72)
+    ]
+    candidates.extend(_candidate("pack.b", f"1.0.{index}") for index in range(72))
+
+    with pytest.raises(ResolutionLimitExceededError) as raised:
+        resolve(
+            _request(("aos", "pack.a", "*"), ("aos", "pack.b", "*")),
+            _snapshot(candidates),
+            None,
+        )
+
+    assert raised.value.details == {
+        "resource": "backtracking_states",
+        "limit": 10_000,
+        "observed": 10_001,
+    }
 
 
 def test_verified_baseline_drives_lock_diffs_and_current_ref() -> None:

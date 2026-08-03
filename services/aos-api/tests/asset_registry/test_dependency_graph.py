@@ -180,6 +180,26 @@ def test_prerelease_requires_an_explicit_prerelease_constraint() -> None:
     assert prerelease.resolved[0].version == "2.0.0-alpha.2"
 
 
+def test_union_range_keeps_matching_stable_ahead_of_higher_prerelease() -> None:
+    snapshot = _snapshot(
+        _candidate("pack.root", "1.9.0"),
+        _candidate("pack.root", "2.0.0-alpha.2"),
+    )
+
+    graph = resolve_dependency_graph(
+        _request(
+            (
+                "aos",
+                "pack.root",
+                "1.9.0 || >=2.0.0-alpha.1 <2.0.0",
+            )
+        ),
+        snapshot,
+    )
+
+    assert graph.resolved[0].version == "1.9.0"
+
+
 def test_same_id_from_different_publishers_never_uses_an_implicit_default() -> None:
     snapshot = _snapshot(
         _candidate("pack.root", "1.0.0", publisher="zeta"),
@@ -360,6 +380,48 @@ def test_cycle_is_rotated_to_the_smallest_coordinate_without_reversing_edges() -
     assert [item["id"] for item in raised.value.details["cycle"]] == [
         "pack.a",
         "pack.b",
+    ]
+
+
+def test_complex_cycle_rotation_preserves_the_resolved_edge_direction() -> None:
+    snapshot = _snapshot(
+        _candidate(
+            "pack.root",
+            "1.0.0",
+            dependencies=[(None, "pack.c", "1.0.0")],
+        ),
+        _candidate(
+            "pack.c",
+            "1.0.0",
+            dependencies=[(None, "pack.a", "1.0.0")],
+        ),
+        _candidate(
+            "pack.a",
+            "1.0.0",
+            dependencies=[(None, "pack.b", "1.0.0")],
+        ),
+        _candidate(
+            "pack.b",
+            "1.0.0",
+            dependencies=[(None, "pack.c", "1.0.0")],
+        ),
+    )
+
+    with pytest.raises(DependencyCycleError) as raised:
+        resolve_dependency_graph(
+            _request(("aos", "pack.root", "1.0.0")),
+            snapshot,
+        )
+
+    assert [item["id"] for item in raised.value.details["cycle"]] == [
+        "pack.a",
+        "pack.b",
+        "pack.c",
+    ]
+    assert [item["via"] for item in raised.value.details["cycle"]] == [
+        "dependency",
+        "dependency",
+        "dependency",
     ]
 
 
