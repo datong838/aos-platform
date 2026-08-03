@@ -200,7 +200,10 @@ export class AssetControlError extends Error implements AssetControlFailure {
   readonly failureClosed = true as const;
 
   constructor(failure: AssetControlFailure, options?: { cause?: unknown }) {
-    super(failure.message, options);
+    super(failure.message);
+    if (options && Object.prototype.hasOwnProperty.call(options, "cause")) {
+      (this as Error & { cause?: unknown }).cause = options.cause;
+    }
     this.name = "AssetControlError";
     this.status = failure.status;
     this.kind = failure.kind;
@@ -250,7 +253,9 @@ function safeDetails(
 }
 
 function isSupportedStatus(status: number | null): status is AssetControlErrorStatus {
-  return status !== null && Object.hasOwn(STATUS_POLICIES, status);
+  return (
+    status !== null && Object.prototype.hasOwnProperty.call(STATUS_POLICIES, status)
+  );
 }
 
 function isNetworkFailure(status: number | null, body: Partial<ApiErrorBody> | null): boolean {

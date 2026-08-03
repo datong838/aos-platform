@@ -176,7 +176,7 @@ export function serializeCompositionRequest(value: unknown): CompositionRequest 
     platformRelease: item.platformRelease,
     environment: item.environment as CompositionRequest["environment"],
   };
-  if (Object.hasOwn(item, "registrySnapshotHash")) {
+  if (Object.prototype.hasOwnProperty.call(item, "registrySnapshotHash")) {
     if (item.registrySnapshotHash !== null) {
       sha256(item.registrySnapshotHash, "Composition request.registrySnapshotHash");
     }
@@ -184,7 +184,7 @@ export function serializeCompositionRequest(value: unknown): CompositionRequest 
       | `sha256:${string}`
       | null;
   }
-  if (Object.hasOwn(item, "currentInstallationRef")) {
+  if (Object.prototype.hasOwnProperty.call(item, "currentInstallationRef")) {
     result.currentInstallationRef =
       item.currentInstallationRef === null
         ? null

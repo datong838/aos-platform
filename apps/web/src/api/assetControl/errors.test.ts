@@ -203,4 +203,11 @@ describe("M3-1 asset-control error normalization", () => {
     const normalized = normalizeAssetControlError(apiError(409));
     expect(normalizeAssetControlError(normalized)).toBe(normalized);
   });
+
+  it("preserves the original cause without requiring ErrorOptions support", () => {
+    const original = apiError(409);
+    const normalized = normalizeAssetControlError(original);
+
+    expect((normalized as Error & { cause?: unknown }).cause).toBe(original);
+  });
 });
