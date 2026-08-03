@@ -245,6 +245,33 @@ def test_create_and_get_recompute_all_persisted_hashes(composition_scope) -> Non
     assert counts == {"compositions": 1, "locks": 1}
 
 
+def test_caller_owned_transaction_can_roll_back_composition(composition_scope) -> None:
+    store, scoped_connect = composition_scope
+    request, snapshot, payload = _inputs()
+
+    with scoped_connect() as conn:
+        store.create_or_get_in_transaction(
+            conn,
+            org_id=ORG,
+            project_id=PROJECT,
+            request=request,
+            snapshot=snapshot,
+            payload=payload,
+            created_by="resolver:test",
+        )
+        conn.rollback()
+
+    with scoped_connect() as conn:
+        counts = conn.execute(
+            """
+            SELECT
+              (SELECT COUNT(*) FROM bundle_composition) AS compositions,
+              (SELECT COUNT(*) FROM bundle_composition_lock) AS locks
+            """
+        ).fetchone()
+    assert counts == {"compositions": 0, "locks": 0}
+
+
 def test_equivalent_input_sequentially_replays_only_the_same_payload(
     composition_scope,
 ) -> None:

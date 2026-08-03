@@ -65,6 +65,18 @@ class CompositionStore(Protocol):
         revision: int = 1,
     ) -> StoredCompositionLock: ...
 
+    def create_or_get_in_transaction(
+        self,
+        conn: Any,
+        *,
+        org_id: str,
+        project_id: str,
+        request: CompositionRequest,
+        snapshot: RegistrySnapshot,
+        payload: CompositionLockPayload,
+        created_by: str,
+    ) -> StoredCompositionLock: ...
+
 
 class PostgresCompositionStore:
     """Persist composition identity and revision-one lock in one transaction."""
@@ -88,6 +100,41 @@ class PostgresCompositionStore:
         payload: CompositionLockPayload,
         created_by: str,
     ) -> StoredCompositionLock:
+        try:
+            with self._connect_factory() as conn:
+                result = self.create_or_get_in_transaction(
+                    conn,
+                    org_id=org_id,
+                    project_id=project_id,
+                    request=request,
+                    snapshot=snapshot,
+                    payload=payload,
+                    created_by=created_by,
+                )
+                conn.commit()
+                return result
+        except (RevisionConflictError, LockIntegrityCorruptError):
+            raise
+        except (errors.CheckViolation, errors.ForeignKeyViolation) as exc:
+            raise LockIntegrityInvalidError(
+                "composition lock violates persistence constraints"
+            ) from exc
+        except psycopg.Error as exc:
+            raise CompositionPersistenceError() from exc
+
+    def create_or_get_in_transaction(
+        self,
+        conn: Any,
+        *,
+        org_id: str,
+        project_id: str,
+        request: CompositionRequest,
+        snapshot: RegistrySnapshot,
+        payload: CompositionLockPayload,
+        created_by: str,
+    ) -> StoredCompositionLock:
+        """Create or reuse one immutable lock without committing the caller transaction."""
+
         org_id = _normalized_text(org_id, "org_id")
         project_id = _normalized_text(project_id, "project_id")
         created_by = _normalized_text(created_by, "created_by")
@@ -124,132 +171,116 @@ class PostgresCompositionStore:
             canonical_sha256(contribution_json),
         )
 
-        try:
-            with self._connect_factory() as conn:
-                existing = _select_equivalent(
-                    conn,
-                    org_id=org_id,
-                    project_id=project_id,
-                    request_hash=request_hash,
-                    snapshot_hash=snapshot.snapshot_hash,
-                    resolver_version=payload.resolver_version,
-                    current_ref_hash=current_ref_hash,
-                )
-                if existing is not None:
-                    result = _stored_lock_from_row(existing)
-                    _require_same_equivalent_lock(
-                        existing=result,
-                        incoming=payload,
-                        incoming_hashes=incoming_hashes,
-                    )
-                    conn.commit()
-                    return result
+        existing = _select_equivalent(
+            conn,
+            org_id=org_id,
+            project_id=project_id,
+            request_hash=request_hash,
+            snapshot_hash=snapshot.snapshot_hash,
+            resolver_version=payload.resolver_version,
+            current_ref_hash=current_ref_hash,
+        )
+        if existing is not None:
+            result = _stored_lock_from_row(existing)
+            _require_same_equivalent_lock(
+                existing=result,
+                incoming=payload,
+                incoming_hashes=incoming_hashes,
+            )
+            return result
 
-                composition_pk = self._uuid_factory()
-                composition_id = self._uuid_factory()
-                inserted = conn.execute(
-                    """
-                    INSERT INTO bundle_composition (
-                      org_id, project_id, composition_pk, composition_id,
-                      request_json, request_hash,
-                      registry_snapshot_json, registry_snapshot_hash,
-                      current_installation_ref_json,
-                      current_installation_ref_hash,
-                      resolver_version, created_by
-                    ) VALUES (
-                      %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-                    )
-                    ON CONFLICT DO NOTHING
-                    RETURNING composition_pk
-                    """,
-                    (
-                        org_id,
-                        project_id,
-                        composition_pk,
-                        composition_id,
-                        Jsonb(request_json),
-                        request_hash,
-                        Jsonb(snapshot_json),
-                        snapshot.snapshot_hash,
-                        Jsonb(current_ref_json)
-                        if current_ref_json is not None
-                        else None,
-                        current_ref_hash,
-                        payload.resolver_version,
-                        created_by,
-                    ),
-                ).fetchone()
-                if inserted is None:
-                    existing = _select_equivalent(
-                        conn,
-                        org_id=org_id,
-                        project_id=project_id,
-                        request_hash=request_hash,
-                        snapshot_hash=snapshot.snapshot_hash,
-                        resolver_version=payload.resolver_version,
-                        current_ref_hash=current_ref_hash,
-                    )
-                    if existing is None:
-                        raise RevisionConflictError(
-                            "composition identity conflicts with persisted data"
-                        )
-                    result = _stored_lock_from_row(existing)
-                    _require_same_equivalent_lock(
-                        existing=result,
-                        incoming=payload,
-                        incoming_hashes=incoming_hashes,
-                    )
-                    conn.commit()
-                    return result
+        composition_pk = self._uuid_factory()
+        composition_id = self._uuid_factory()
+        inserted = conn.execute(
+            """
+            INSERT INTO bundle_composition (
+              org_id, project_id, composition_pk, composition_id,
+              request_json, request_hash,
+              registry_snapshot_json, registry_snapshot_hash,
+              current_installation_ref_json,
+              current_installation_ref_hash,
+              resolver_version, created_by
+            ) VALUES (
+              %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            ON CONFLICT DO NOTHING
+            RETURNING composition_pk
+            """,
+            (
+                org_id,
+                project_id,
+                composition_pk,
+                composition_id,
+                Jsonb(request_json),
+                request_hash,
+                Jsonb(snapshot_json),
+                snapshot.snapshot_hash,
+                Jsonb(current_ref_json) if current_ref_json is not None else None,
+                current_ref_hash,
+                payload.resolver_version,
+                created_by,
+            ),
+        ).fetchone()
+        if inserted is None:
+            existing = _select_equivalent(
+                conn,
+                org_id=org_id,
+                project_id=project_id,
+                request_hash=request_hash,
+                snapshot_hash=snapshot.snapshot_hash,
+                resolver_version=payload.resolver_version,
+                current_ref_hash=current_ref_hash,
+            )
+            if existing is None:
+                raise RevisionConflictError(
+                    "composition identity conflicts with persisted data"
+                )
+            result = _stored_lock_from_row(existing)
+            _require_same_equivalent_lock(
+                existing=result,
+                incoming=payload,
+                incoming_hashes=incoming_hashes,
+            )
+            return result
 
-                conn.execute(
-                    """
-                    INSERT INTO bundle_composition_lock (
-                      org_id, project_id, composition_pk, revision,
-                      lock_payload, lock_hash,
-                      permission_diff_json, permission_diff_hash,
-                      migration_plan_json, migration_plan_hash,
-                      contribution_diff_json, contribution_diff_hash,
-                      created_by
-                    ) VALUES (
-                      %s, %s, %s, 1, %s, %s, %s, %s, %s, %s, %s, %s, %s
-                    )
-                    """,
-                    (
-                        org_id,
-                        project_id,
-                        composition_pk,
-                        Jsonb(lock_json),
-                        incoming_hashes[0],
-                        Jsonb(permission_json),
-                        incoming_hashes[1],
-                        Jsonb(migration_json),
-                        incoming_hashes[2],
-                        Jsonb(contribution_json),
-                        incoming_hashes[3],
-                        created_by,
-                    ),
-                )
-                row = _select_by_pk(
-                    conn,
-                    org_id=org_id,
-                    project_id=project_id,
-                    composition_pk=composition_pk,
-                    revision=1,
-                )
-                if row is None:
-                    raise LockIntegrityCorruptError()
-                result = _stored_lock_from_row(row)
-                conn.commit()
-                return result
-        except (RevisionConflictError, LockIntegrityCorruptError):
-            raise
-        except (errors.CheckViolation, errors.ForeignKeyViolation) as exc:
-            raise LockIntegrityInvalidError(
-                "composition lock violates persistence constraints"
-            ) from exc
-        except psycopg.Error as exc:
-            raise CompositionPersistenceError() from exc
+        conn.execute(
+            """
+            INSERT INTO bundle_composition_lock (
+              org_id, project_id, composition_pk, revision,
+              lock_payload, lock_hash,
+              permission_diff_json, permission_diff_hash,
+              migration_plan_json, migration_plan_hash,
+              contribution_diff_json, contribution_diff_hash,
+              created_by
+            ) VALUES (
+              %s, %s, %s, 1, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            """,
+            (
+                org_id,
+                project_id,
+                composition_pk,
+                Jsonb(lock_json),
+                incoming_hashes[0],
+                Jsonb(permission_json),
+                incoming_hashes[1],
+                Jsonb(migration_json),
+                incoming_hashes[2],
+                Jsonb(contribution_json),
+                incoming_hashes[3],
+                created_by,
+            ),
+        )
+        row = _select_by_pk(
+            conn,
+            org_id=org_id,
+            project_id=project_id,
+            composition_pk=composition_pk,
+            revision=1,
+        )
+        if row is None:
+            raise LockIntegrityCorruptError()
+        return _stored_lock_from_row(row)
 
     def get_lock(
         self,
