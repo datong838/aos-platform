@@ -63,7 +63,7 @@ export function InstallationPanel({
   return (
     <section aria-label="安装列表" style={panelStyle}>
       <header>
-        <h3 style={{ margin: 0 }}>安装管理（只读）</h3>
+        <h3 style={{ margin: 0 }}>安装列表（只读）</h3>
         <p style={{ color: "var(--aos-muted)", fontSize: "0.75rem" }}>列表数量与翻页均采用服务端 total、limit、offset。</p>
       </header>
 
