@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.asset_registry.contracts import BundleEvidenceStatus
 from aos_api.asset_registry.manifest_loader import SIGNATURE_FILENAME

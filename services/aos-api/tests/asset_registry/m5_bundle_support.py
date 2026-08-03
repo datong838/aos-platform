@@ -9,12 +9,13 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
 from aos_api.asset_registry.canonical_json import canonical_json, canonical_sha256
 from aos_api.asset_registry.contracts import LoadedBundle
 from aos_api.asset_registry.manifest_loader import SIGNATURE_FILENAME, ManifestLoader
 from aos_api.asset_registry.signature import FrozenTrustRootProvider, TrustRoot
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 M5_SOURCE_ROOT = REPO_ROOT / "bundles"
