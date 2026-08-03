@@ -200,7 +200,7 @@ def test_real_loader_accepts_unsigned_skeleton_with_only_minimal_evidence(
         ]
     )
     assert all(
-        item.size == 1 if item.relative_path.endswith(".gitkeep") else item.size > 0
+        item.size == 0 if item.relative_path.endswith(".gitkeep") else item.size > 0
         for item in first.artifacts
     )
     assert {(item.type.value, item.status.value) for item in first.evidence} == {
