@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Deterministically export the runtime OpenAPI document and route inventory."""
+
 from __future__ import annotations
 
 import argparse
@@ -22,8 +23,16 @@ INVENTORY_PATH = CONTRACT_ROOT / "v1.inventory.json"
 HTTP_METHODS = {"get", "put", "post", "delete", "options", "head", "patch", "trace"}
 FRAMEWORK_PATHS = {"/openapi.json", "/docs", "/docs/oauth2-redirect", "/redoc"}
 DOMAIN_ORDER = (
-    "infra", "admin", "system", "agent", "workshop",
-    "ontology", "aip", "data", "model", "apollo",
+    "infra",
+    "admin",
+    "system",
+    "agent",
+    "workshop",
+    "ontology",
+    "aip",
+    "data",
+    "model",
+    "apollo",
 )
 EXPECTED_DUPLICATES = [
     ["/v1/aip/capabilities", "GET", 2],
@@ -53,7 +62,10 @@ class ExportError(RuntimeError):
 
 
 def canonical_json(value: Any) -> bytes:
-    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
+    return (
+        json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        + "\n"
+    ).encode("utf-8")
 
 
 def iter_effective_routes(routes: Iterable[Any]) -> Iterable[Any]:
@@ -96,7 +108,9 @@ def validate_openapi(schema: dict[str, Any]) -> None:
         operation_ids.append(operation_id)
         if not operation.get("responses"):
             raise ExportError(f"missing responses: {method.upper()} {path}")
-    duplicates = sorted(key for key, count in Counter(operation_ids).items() if count > 1)
+    duplicates = sorted(
+        key for key, count in Counter(operation_ids).items() if count > 1
+    )
     if duplicates:
         raise ExportError(f"duplicate operationId values: {duplicates}")
 
@@ -125,22 +139,31 @@ def build_inventory(app: Any, schema_bytes: bytes) -> dict[str, Any]:
         domain = str(tags[0]).lower() if tags else "unassigned"
         if domain not in DOMAIN_ORDER:
             raise ExportError(f"route has no manifest domain tag: {path} tags={tags!r}")
-        for method in sorted(set(getattr(route, "methods", set())) - {"HEAD", "OPTIONS"}):
-            rows.append({
-                "domain": domain,
-                "method": method,
-                "name": getattr(route, "name", ""),
-                "operationId": getattr(route, "operation_id", None) or getattr(route, "unique_id", None),
-                "ordinal": len(rows),
-                "path": path,
-                "tags": tags,
-            })
+        for method in sorted(
+            set(getattr(route, "methods", set())) - {"HEAD", "OPTIONS"}
+        ):
+            rows.append(
+                {
+                    "domain": domain,
+                    "method": method,
+                    "name": getattr(route, "name", ""),
+                    "operationId": getattr(route, "operation_id", None)
+                    or getattr(route, "unique_id", None),
+                    "ordinal": len(rows),
+                    "path": path,
+                    "tags": tags,
+                }
+            )
             domain_counts[domain] += 1
 
     pairs = Counter((row["path"], row["method"]) for row in rows)
-    duplicates = sorted([[path, method, count] for (path, method), count in pairs.items() if count > 1])
-    if len(rows) != 4027 or len(pairs) != 4008:
-        raise ExportError(f"route totals changed: rows={len(rows)} unique_pairs={len(pairs)}")
+    duplicates = sorted(
+        [[path, method, count] for (path, method), count in pairs.items() if count > 1]
+    )
+    if len(rows) != 4038 or len(pairs) != 4019:
+        raise ExportError(
+            f"route totals changed: rows={len(rows)} unique_pairs={len(pairs)}"
+        )
     if duplicates != EXPECTED_DUPLICATES:
         raise ExportError(f"duplicate route inventory changed: {duplicates!r}")
     return {
@@ -165,7 +188,7 @@ def generate_payloads() -> tuple[bytes, bytes]:
     validate_openapi(schema)
     schema_bytes = canonical_json(schema)
     openapi_operation_count = sum(1 for _ in _operations(schema))
-    if openapi_operation_count != 4008:
+    if openapi_operation_count != 4019:
         raise ExportError(f"OpenAPI operation total changed: {openapi_operation_count}")
     inventory = build_inventory(app, schema_bytes)
     return schema_bytes, canonical_json(inventory)
@@ -195,9 +218,13 @@ def _clean_process() -> tuple[bytes, bytes]:
             check=False,
         )
         if result.returncode != 0:
-            raise ExportError(f"clean export process failed\nstdout={result.stdout}\nstderr={result.stderr}")
+            raise ExportError(
+                f"clean export process failed\nstdout={result.stdout}\nstderr={result.stderr}"
+            )
         directory = Path(temp_dir)
-        return (directory / "openapi.json").read_bytes(), (directory / "inventory.json").read_bytes()
+        return (directory / "openapi.json").read_bytes(), (
+            directory / "inventory.json"
+        ).read_bytes()
 
 
 def _atomic_write(path: Path, data: bytes) -> None:
@@ -220,7 +247,11 @@ def export(check: bool) -> int:
         return 2
     outputs = ((OPENAPI_PATH, first[0]), (INVENTORY_PATH, first[1]))
     if check:
-        drift = [str(path.relative_to(ROOT)) for path, data in outputs if not path.exists() or path.read_bytes() != data]
+        drift = [
+            str(path.relative_to(ROOT))
+            for path, data in outputs
+            if not path.exists() or path.read_bytes() != data
+        ]
         if drift:
             print("DRIFT " + ", ".join(drift), file=sys.stderr)
             return 1
@@ -234,7 +265,11 @@ def export(check: bool) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true", help="verify committed artifacts without writing")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="verify committed artifacts without writing",
+    )
     parser.add_argument("--_worker", type=Path, help=argparse.SUPPRESS)
     args = parser.parse_args()
     if args._worker is not None:

@@ -1,4 +1,5 @@
 """228-W1-W1 deterministic OpenAPI and compatibility contract gates."""
+
 from __future__ import annotations
 
 import hashlib
@@ -38,13 +39,38 @@ def _document(schema: dict) -> dict:
 def _operation() -> dict:
     return {
         "operationId": "createItem",
-        "parameters": [{"name": "view", "in": "query", "required": False, "schema": {"type": "string"}}],
+        "parameters": [
+            {
+                "name": "view",
+                "in": "query",
+                "required": False,
+                "schema": {"type": "string"},
+            }
+        ],
         "requestBody": {
             "required": False,
-            "content": {"application/json": {"schema": {"type": "object", "properties": {"name": {"type": "string", "enum": ["a", "b"]}}}}},
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {"name": {"type": "string", "enum": ["a", "b"]}},
+                    }
+                }
+            },
         },
         "responses": {
-            "200": {"description": "ok", "content": {"application/json": {"schema": {"type": "object", "required": ["id"], "properties": {"id": {"type": "string"}}}}}}
+            "200": {
+                "description": "ok",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "required": ["id"],
+                            "properties": {"id": {"type": "string"}},
+                        }
+                    }
+                },
+            }
         },
     }
 
@@ -57,20 +83,20 @@ def test_committed_artifacts_are_canonical_and_structurally_valid() -> None:
     assert INVENTORY_PATH.read_bytes() == exporter.canonical_json(inventory)
     exporter.validate_openapi(schema)
     assert schema["openapi"] == "3.1.0"
-    assert len(schema["paths"]) == 2267
-    assert len(schema.get("components", {}).get("schemas", {})) == 1441
+    assert len(schema["paths"]) == 2277
+    assert len(schema.get("components", {}).get("schemas", {})) == 1478
 
 
 def test_inventory_preserves_route_rows_and_known_duplicates() -> None:
     schema_bytes = OPENAPI_PATH.read_bytes()
     inventory = json.loads(INVENTORY_PATH.read_bytes())
     summary = inventory["summary"]
-    assert summary["routeRows"] == 4027
-    assert summary["uniqueOperationPairs"] == 4008
+    assert summary["routeRows"] == 4038
+    assert summary["uniqueOperationPairs"] == 4019
     assert summary["duplicatePairs"] == exporter.EXPECTED_DUPLICATES
     assert summary["openapiSha256"] == hashlib.sha256(schema_bytes).hexdigest()
-    assert len(inventory["routes"]) == 4027
-    assert [row["ordinal"] for row in inventory["routes"]] == list(range(4027))
+    assert len(inventory["routes"]) == 4038
+    assert [row["ordinal"] for row in inventory["routes"]] == list(range(4038))
     assert all(row["operationId"] for row in inventory["routes"])
     assert set(summary["domains"]) == set(exporter.DOMAIN_ORDER)
 
@@ -92,27 +118,105 @@ def test_core_cross_layer_operation_shapes_are_frozen() -> None:
     expected = {
         ("/v1/aip/chat", "post"): ("aip_chat_v1_aip_chat_post", True),
         ("/v1/modules", "get"): ("list_modules_v1_modules_get", False),
-        ("/v1/ontology/object-types", "get"): ("list_object_types_v1_ontology_object_types_get", False),
+        ("/v1/ontology/object-types", "get"): (
+            "list_object_types_v1_ontology_object_types_get",
+            False,
+        ),
         ("/v1/datasets", "get"): ("list_datasets_v1_datasets_get", False),
-        ("/v1/wiki/{object_type}/{object_id}", "get"): ("get_wiki_v1_wiki__object_type___object_id__get", False),
-        ("/v1/apollo/ferry/status", "get"): ("ferry_status_v1_apollo_ferry_status_get", False),
+        ("/v1/wiki/{object_type}/{object_id}", "get"): (
+            "get_wiki_v1_wiki__object_type___object_id__get",
+            False,
+        ),
+        ("/v1/apollo/ferry/status", "get"): (
+            "ferry_status_v1_apollo_ferry_status_get",
+            False,
+        ),
     }
     for (path, method), (operation_id, required_body) in expected.items():
         operation = schema["paths"][path][method]
         assert operation["operationId"] == operation_id
         assert "200" in operation["responses"]
         assert bool(operation.get("requestBody", {}).get("required")) is required_body
-    wiki_parameters = schema["paths"]["/v1/wiki/{object_type}/{object_id}"]["get"]["parameters"]
-    assert {(item["name"], item["in"], item["required"]) for item in wiki_parameters[:2]} == {
-        ("object_type", "path", True), ("object_id", "path", True)
+    wiki_parameters = schema["paths"]["/v1/wiki/{object_type}/{object_id}"]["get"][
+        "parameters"
+    ]
+    assert {
+        (item["name"], item["in"], item["required"]) for item in wiki_parameters[:2]
+    } == {("object_type", "path", True), ("object_id", "path", True)}
+
+
+def test_m2_control_plane_openapi_is_explicit_and_complete() -> None:
+    schema = json.loads(OPENAPI_PATH.read_bytes())
+    expected = {
+        ("/v1/bundle-compositions:resolve", "post"): "resolve_bundle_composition",
+        (
+            "/v1/bundle-compositions/{composition_id}/locks/{revision}",
+            "get",
+        ): "get_bundle_composition_lock",
+        ("/v1/bundle-installations", "post"): "create_bundle_installation",
+        ("/v1/bundle-installations", "get"): "list_bundle_installations",
+        (
+            "/v1/bundle-installations/{installation_id}",
+            "get",
+        ): "get_bundle_installation",
     }
+    for action in ("submit", "approve", "reject", "apply", "verify", "rollback"):
+        expected[(f"/v1/bundle-installations/{{installation_id}}/{action}", "post")] = (
+            f"{action}_bundle_installation"
+        )
+
+    operations = {key: schema["paths"][key[0]][key[1]] for key in expected}
+    assert {item["operationId"] for item in operations.values()} == set(
+        expected.values()
+    )
+    assert len({path for path, _method in expected}) == 10
+    assert all(item["security"] == [{"HTTPBearer": []}] for item in operations.values())
+
+    for (path, method), operation in operations.items():
+        headers = {
+            item["name"]: item
+            for item in operation.get("parameters", [])
+            if item["in"] == "header"
+        }
+        if method == "post":
+            assert headers["Idempotency-Key"]["required"] is True
+        if path.rsplit("/", 1)[-1] in {
+            "submit",
+            "approve",
+            "reject",
+            "apply",
+            "verify",
+            "rollback",
+        }:
+            assert headers["If-Match"]["required"] is True
+            assert "ETag" in operation["responses"]["200"]["headers"]
+
+    assert (
+        "ETag"
+        in operations[("/v1/bundle-installations", "post")]["responses"]["201"][
+            "headers"
+        ]
+    )
+    assert (
+        "ETag"
+        in operations[("/v1/bundle-installations/{installation_id}", "get")][
+            "responses"
+        ]["200"]["headers"]
+    )
+    assert "ETag" not in operations[("/v1/bundle-installations", "get")]["responses"][
+        "200"
+    ].get("headers", {})
 
 
 def test_compatibility_allows_additions() -> None:
     old = _document(_operation())
     new = json.loads(json.dumps(old))
-    new["paths"]["/other"] = {"get": {"operationId": "other", "responses": {"200": {"description": "ok"}}}}
-    new["paths"]["/items"]["post"]["parameters"].append({"name": "hint", "in": "query", "required": False, "schema": {"type": "string"}})
+    new["paths"]["/other"] = {
+        "get": {"operationId": "other", "responses": {"200": {"description": "ok"}}}
+    }
+    new["paths"]["/items"]["post"]["parameters"].append(
+        {"name": "hint", "in": "query", "required": False, "schema": {"type": "string"}}
+    )
     assert compat.compare(old, new)["verdict"] == "compatible"
 
 
@@ -121,18 +225,28 @@ def test_compatibility_blocks_breaking_request_and_response_changes() -> None:
     new = json.loads(json.dumps(old))
     operation = new["paths"]["/items"]["post"]
     operation["operationId"] = "renamed"
-    operation["requestBody"]["content"]["application/json"]["schema"]["required"] = ["name"]
-    del operation["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["id"]
+    operation["requestBody"]["content"]["application/json"]["schema"]["required"] = [
+        "name"
+    ]
+    del operation["responses"]["200"]["content"]["application/json"]["schema"][
+        "properties"
+    ]["id"]
     result = compat.compare(old, new)
     assert result["verdict"] == "breaking"
     reasons = {item["reason"] for item in result["breaking"]}
-    assert {"operationId changed", "request property became required", "response property removed"}.issubset(reasons)
+    assert {
+        "operationId changed",
+        "request property became required",
+        "response property removed",
+    }.issubset(reasons)
 
 
 def test_compatibility_marks_enum_growth_for_manual_review() -> None:
     old = _document(_operation())
     new = json.loads(json.dumps(old))
-    enum = new["paths"]["/items"]["post"]["requestBody"]["content"]["application/json"]["schema"]["properties"]["name"]["enum"]
+    enum = new["paths"]["/items"]["post"]["requestBody"]["content"]["application/json"][
+        "schema"
+    ]["properties"]["name"]["enum"]
     enum.append("c")
     result = compat.compare(old, new)
     assert result["verdict"] == "manual_review"
@@ -146,10 +260,14 @@ def test_compatibility_blocks_removed_request_body_and_media_type() -> None:
     assert compat.compare(old, without_body)["verdict"] == "breaking"
 
     without_response_media = json.loads(json.dumps(old))
-    without_response_media["paths"]["/items"]["post"]["responses"]["200"]["content"] = {}
+    without_response_media["paths"]["/items"]["post"]["responses"]["200"][
+        "content"
+    ] = {}
     result = compat.compare(old, without_response_media)
     assert result["verdict"] == "breaking"
-    assert any(item["reason"] == "response media type removed" for item in result["breaking"])
+    assert any(
+        item["reason"] == "response media type removed" for item in result["breaking"]
+    )
 
 
 def test_compatibility_blocks_removals_narrowing_and_security_tightening() -> None:
@@ -165,29 +283,43 @@ def test_compatibility_blocks_removals_narrowing_and_security_tightening() -> No
     candidates.append(removed_parameter)
 
     removed_enum = json.loads(json.dumps(old))
-    removed_enum["paths"]["/items"]["post"]["requestBody"]["content"]["application/json"]["schema"]["properties"]["name"]["enum"] = ["a"]
+    removed_enum["paths"]["/items"]["post"]["requestBody"]["content"][
+        "application/json"
+    ]["schema"]["properties"]["name"]["enum"] = ["a"]
     candidates.append(removed_enum)
 
     changed_type = json.loads(json.dumps(old))
-    changed_type["paths"]["/items"]["post"]["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["id"]["type"] = "integer"
+    changed_type["paths"]["/items"]["post"]["responses"]["200"]["content"][
+        "application/json"
+    ]["schema"]["properties"]["id"]["type"] = "integer"
     candidates.append(changed_type)
 
     removed_success = json.loads(json.dumps(old))
-    removed_success["paths"]["/items"]["post"]["responses"] = {"400": {"description": "bad"}}
+    removed_success["paths"]["/items"]["post"]["responses"] = {
+        "400": {"description": "bad"}
+    }
     candidates.append(removed_success)
 
     secured = json.loads(json.dumps(old))
     secured["paths"]["/items"]["post"]["security"] = [{"bearerAuth": []}]
     candidates.append(secured)
 
-    assert all(compat.compare(old, candidate)["verdict"] == "breaking" for candidate in candidates)
+    assert all(
+        compat.compare(old, candidate)["verdict"] == "breaking"
+        for candidate in candidates
+    )
 
 
 def test_compatibility_marks_complex_schema_changes_for_manual_review() -> None:
     old = _document(_operation())
     new = json.loads(json.dumps(old))
-    schema = new["paths"]["/items"]["post"]["responses"]["200"]["content"]["application/json"]["schema"]
+    schema = new["paths"]["/items"]["post"]["responses"]["200"]["content"][
+        "application/json"
+    ]["schema"]
     schema["oneOf"] = [{"type": "object"}, {"type": "string"}]
     result = compat.compare(old, new)
     assert result["verdict"] == "manual_review"
-    assert any(item["reason"] == "complex schema composition changed" for item in result["manualReview"])
+    assert any(
+        item["reason"] == "complex schema composition changed"
+        for item in result["manualReview"]
+    )

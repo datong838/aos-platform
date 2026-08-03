@@ -1,4 +1,5 @@
 """228-W0-W2: deterministic router manifest and runtime equivalence gates."""
+
 from __future__ import annotations
 
 import ast
@@ -32,7 +33,7 @@ DOMAIN_ORDER = (
     "apollo",
 )
 DOMAIN_COUNTS = {
-    "infra": 21,
+    "infra": 23,
     "admin": 8,
     "system": 4,
     "agent": 3,
@@ -224,8 +225,8 @@ class RouterManifestStaticTests(unittest.TestCase):
         cls.routers = cls.generator.load_manifest(MANIFEST_PATH)
 
     def test_manifest_count_order_domains_and_unique_keys(self) -> None:
-        self.assertEqual(509, len(self.routers))
-        self.assertEqual(list(range(509)), [entry["order"] for entry in self.routers])
+        self.assertEqual(511, len(self.routers))
+        self.assertEqual(list(range(511)), [entry["order"] for entry in self.routers])
         self.assertEqual(
             DOMAIN_COUNTS,
             {
@@ -234,7 +235,22 @@ class RouterManifestStaticTests(unittest.TestCase):
             },
         )
         keys = {(entry["module"], entry["attribute"]) for entry in self.routers}
-        self.assertEqual(509, len(keys))
+        self.assertEqual(511, len(keys))
+
+    def test_main_exposes_control_plane_etag_to_browser_clients(self) -> None:
+        tree = ast.parse(MAIN_PATH.read_text(encoding="utf-8"))
+        lists = [
+            node.value
+            for node in ast.walk(tree)
+            if isinstance(node, ast.keyword)
+            and node.arg == "expose_headers"
+            and isinstance(node.value, ast.List)
+        ]
+        self.assertEqual(1, len(lists))
+        self.assertEqual(
+            ["X-Trace-Id", "ETag"],
+            [item.value for item in lists[0].elts if isinstance(item, ast.Constant)],
+        )
 
     def test_manifest_validation_rejects_order_gaps_and_duplicate_keys(self) -> None:
         samples = []
@@ -247,7 +263,10 @@ class RouterManifestStaticTests(unittest.TestCase):
         samples.append(duplicate)
 
         for routers in samples:
-            with self.subTest(routers=routers), tempfile.TemporaryDirectory() as temp_dir:
+            with (
+                self.subTest(routers=routers),
+                tempfile.TemporaryDirectory() as temp_dir,
+            ):
                 path = Path(temp_dir) / "manifest.json"
                 path.write_text(json.dumps({"version": 1, "routers": routers}))
                 with self.assertRaises(ValueError):
@@ -255,9 +274,9 @@ class RouterManifestStaticTests(unittest.TestCase):
 
     def test_every_manifest_module_and_attribute_exists_statically(self) -> None:
         for entry in self.routers:
-            module_path = (
-                API_ROOT / Path(*entry["module"].split("."))
-            ).with_suffix(".py")
+            module_path = (API_ROOT / Path(*entry["module"].split("."))).with_suffix(
+                ".py"
+            )
             self.assertTrue(module_path.is_file(), entry["module"])
             tree = ast.parse(module_path.read_text(encoding="utf-8-sig"))
             self.assertIn(entry["attribute"], _assigned_names(tree), entry["module"])
@@ -285,7 +304,9 @@ class RouterManifestStaticTests(unittest.TestCase):
         )
         factories = []
         for node in ast.walk(create_app):
-            if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+            if not isinstance(node, ast.Call) or not isinstance(
+                node.func, ast.Attribute
+            ):
                 continue
             if node.func.attr != "include_router" or not node.args:
                 continue
@@ -370,12 +391,12 @@ class RouterManifestRuntimeTests(unittest.TestCase):
 
         # Runtime inventory includes FastAPI's four framework routes; the
         # exported business-route inventory intentionally filters those out.
-        self.assertEqual(4031, result["count"])
+        self.assertEqual(4042, result["count"])
         self.assertEqual(
-            "bf2e8f4644c8fc68d5ad8a10e5a06131c03dee9a50ba4b93cdff824444115042",
+            "ed69591c744c1cf022b8ce48d7e614371b1823bb53025f5bdb08ba5b4aff20e7",
             result["sha256"],
         )
-        self.assertEqual(2267, result["openapi_paths"])
+        self.assertEqual(2277, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual([], result["missing_critical"])
         self.assertTrue(result["managed_skipped_bootstrap"])

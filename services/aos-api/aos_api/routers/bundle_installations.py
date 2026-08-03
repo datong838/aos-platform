@@ -39,15 +39,18 @@ router = APIRouter(
     tags=["asset-control"],
     dependencies=[Security(_bearer)],
 )
-_ERRORS = {
+_BASE_ERRORS = {
     400: {"model": ErrorBody},
     401: {"model": ErrorBody},
     403: {"model": ErrorBody},
     404: {"model": ErrorBody},
-    409: {"model": ErrorBody},
+    500: {"model": ErrorBody},
+}
+_COMMAND_ERRORS = {**_BASE_ERRORS, 409: {"model": ErrorBody}}
+_ACTION_ERRORS = {
+    **_COMMAND_ERRORS,
     412: {"model": ErrorBody},
     428: {"model": ErrorBody},
-    500: {"model": ErrorBody},
 }
 _IDEMPOTENCY_PARAMETER = {
     "name": "Idempotency-Key",
@@ -112,7 +115,7 @@ def _receipt_response(receipt: Any, response: Response) -> InstallationResponse:
     response_model=InstallationResponse,
     status_code=status.HTTP_201_CREATED,
     operation_id="create_bundle_installation",
-    responses={201: {"headers": _ETAG_HEADER}, **_ERRORS},
+    responses={201: {"headers": _ETAG_HEADER}, **_COMMAND_ERRORS},
     openapi_extra={"parameters": [_IDEMPOTENCY_PARAMETER]},
 )
 def create_bundle_installation(
@@ -141,7 +144,7 @@ def create_bundle_installation(
     "",
     response_model=InstallationListResponse,
     operation_id="list_bundle_installations",
-    responses=_ERRORS,
+    responses=_BASE_ERRORS,
 )
 def list_bundle_installations(
     principal: PrincipalDependency,
@@ -168,7 +171,7 @@ def list_bundle_installations(
     "/{installation_id}",
     response_model=InstallationResponse,
     operation_id="get_bundle_installation",
-    responses={200: {"headers": _ETAG_HEADER}, **_ERRORS},
+    responses={200: {"headers": _ETAG_HEADER}, **_BASE_ERRORS},
 )
 def get_bundle_installation(
     installation_id: CanonicalUuidPath,
@@ -243,7 +246,7 @@ def _action_route(operation: str, request_type: type, operation_id: str):
         f"/{{installation_id}}/{operation}",
         response_model=InstallationResponse,
         operation_id=operation_id,
-        responses={200: {"headers": _ETAG_HEADER}, **_ERRORS},
+        responses={200: {"headers": _ETAG_HEADER}, **_ACTION_ERRORS},
         openapi_extra={"parameters": [_IDEMPOTENCY_PARAMETER, _IF_MATCH_PARAMETER]},
     )(endpoint)
 

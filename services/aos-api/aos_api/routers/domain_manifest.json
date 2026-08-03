@@ -3054,6 +3054,18 @@
       "module": "aos_api.routers.asset_bundles",
       "attribute": "router",
       "order": 508
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.bundle_compositions",
+      "attribute": "router",
+      "order": 509
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.bundle_installations",
+      "attribute": "router",
+      "order": 510
     }
   ]
 }

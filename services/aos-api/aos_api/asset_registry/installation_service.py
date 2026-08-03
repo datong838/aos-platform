@@ -157,7 +157,19 @@ class InstallationService:
         )
         return response
 
-    def submit(self, **kwargs: Any) -> CommandReceipt:
+    def submit(
+        self,
+        *,
+        installation_id: str,
+        request: EmptyInstallationActionRequest,
+        org_id: str,
+        project_id: str,
+        actor: str,
+        roles: Collection[str],
+        markings: Collection[str],
+        idempotency_key: str | None,
+        if_match: str | None,
+    ) -> CommandReceipt:
         return self._transition(
             operation=SUBMIT_INSTALLATION_OPERATION,
             request_type=EmptyInstallationActionRequest,
@@ -167,10 +179,30 @@ class InstallationService:
                 )
             ),
             revalidate=True,
-            **kwargs,
+            installation_id=installation_id,
+            request=request,
+            org_id=org_id,
+            project_id=project_id,
+            actor=actor,
+            roles=roles,
+            markings=markings,
+            idempotency_key=idempotency_key,
+            if_match=if_match,
         )
 
-    def approve(self, **kwargs: Any) -> CommandReceipt:
+    def approve(
+        self,
+        *,
+        installation_id: str,
+        request: ApproveInstallationRequest,
+        org_id: str,
+        project_id: str,
+        actor: str,
+        roles: Collection[str],
+        markings: Collection[str],
+        idempotency_key: str | None,
+        if_match: str | None,
+    ) -> CommandReceipt:
         return self._transition(
             operation=APPROVE_INSTALLATION_OPERATION,
             request_type=ApproveInstallationRequest,
@@ -180,10 +212,30 @@ class InstallationService:
                 )
             ),
             revalidate=True,
-            **kwargs,
+            installation_id=installation_id,
+            request=request,
+            org_id=org_id,
+            project_id=project_id,
+            actor=actor,
+            roles=roles,
+            markings=markings,
+            idempotency_key=idempotency_key,
+            if_match=if_match,
         )
 
-    def reject(self, **kwargs: Any) -> CommandReceipt:
+    def reject(
+        self,
+        *,
+        installation_id: str,
+        request: RejectInstallationRequest,
+        org_id: str,
+        project_id: str,
+        actor: str,
+        roles: Collection[str],
+        markings: Collection[str],
+        idempotency_key: str | None,
+        if_match: str | None,
+    ) -> CommandReceipt:
         return self._transition(
             operation=REJECT_INSTALLATION_OPERATION,
             request_type=RejectInstallationRequest,
@@ -193,34 +245,102 @@ class InstallationService:
                 )
             ),
             revalidate=False,
-            **kwargs,
+            installation_id=installation_id,
+            request=request,
+            org_id=org_id,
+            project_id=project_id,
+            actor=actor,
+            roles=roles,
+            markings=markings,
+            idempotency_key=idempotency_key,
+            if_match=if_match,
         )
 
-    def apply(self, **kwargs: Any) -> CommandReceipt:
+    def apply(
+        self,
+        *,
+        installation_id: str,
+        request: EmptyInstallationActionRequest,
+        org_id: str,
+        project_id: str,
+        actor: str,
+        roles: Collection[str],
+        markings: Collection[str],
+        idempotency_key: str | None,
+        if_match: str | None,
+    ) -> CommandReceipt:
         return self._transition(
             operation=APPLY_INSTALLATION_OPERATION,
             request_type=EmptyInstallationActionRequest,
             mutate=self._append_apply,
             revalidate=False,
-            **kwargs,
+            installation_id=installation_id,
+            request=request,
+            org_id=org_id,
+            project_id=project_id,
+            actor=actor,
+            roles=roles,
+            markings=markings,
+            idempotency_key=idempotency_key,
+            if_match=if_match,
         )
 
-    def verify(self, **kwargs: Any) -> CommandReceipt:
+    def verify(
+        self,
+        *,
+        installation_id: str,
+        request: EmptyInstallationActionRequest,
+        org_id: str,
+        project_id: str,
+        actor: str,
+        roles: Collection[str],
+        markings: Collection[str],
+        idempotency_key: str | None,
+        if_match: str | None,
+    ) -> CommandReceipt:
         return self._transition(
             operation=VERIFY_INSTALLATION_OPERATION,
             request_type=EmptyInstallationActionRequest,
             mutate=self._append_verify,
             revalidate=False,
-            **kwargs,
+            installation_id=installation_id,
+            request=request,
+            org_id=org_id,
+            project_id=project_id,
+            actor=actor,
+            roles=roles,
+            markings=markings,
+            idempotency_key=idempotency_key,
+            if_match=if_match,
         )
 
-    def rollback(self, **kwargs: Any) -> CommandReceipt:
+    def rollback(
+        self,
+        *,
+        installation_id: str,
+        request: RollbackInstallationRequest,
+        org_id: str,
+        project_id: str,
+        actor: str,
+        roles: Collection[str],
+        markings: Collection[str],
+        idempotency_key: str | None,
+        if_match: str | None,
+    ) -> CommandReceipt:
         return self._transition(
             operation=ROLLBACK_INSTALLATION_OPERATION,
             request_type=RollbackInstallationRequest,
             mutate=self._append_rollback,
             revalidate=False,
-            **kwargs,
+            installation_id=installation_id,
+            request=request,
+            org_id=org_id,
+            project_id=project_id,
+            actor=actor,
+            roles=roles,
+            markings=markings,
+            idempotency_key=idempotency_key,
+            if_match=if_match,
         )
 
     def _transition(
