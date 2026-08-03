@@ -1021,7 +1021,9 @@ def _load_case_by_pk(
 
 def _verify_case_integrity(conn: Any, case: StoredIntegrationCase) -> None:
     rows = conn.execute(
-        """SELECT snapshot_revision,snapshot_json,snapshot_hash,computed_stage
+        """SELECT snapshot_revision,instance_revision,snapshot_json,snapshot_hash,
+                  cutoff_at,next_projection_at,computed_stage,stage_policy_version,
+                  evidence_count,stage_gates_json,blocker_refs_json,etag_version
              FROM integration_evidence_snapshot
             WHERE org_id=%s AND project_id=%s AND case_pk=%s
             ORDER BY snapshot_revision""",
@@ -1036,8 +1038,79 @@ def _verify_case_integrity(conn: Any, case: StoredIntegrationCase) -> None:
         actual = payload.pop("snapshotHash", None)
         if actual != row["snapshot_hash"] or actual != canonical_sha256(payload):
             raise EvidenceIntegrityCorruptError()
-        if payload.get("computedStage") != row["computed_stage"]:
+        expected_mirrors = {
+            "caseId": case.case_id,
+            "snapshotRevision": row["snapshot_revision"],
+            "instanceRevision": row["instance_revision"],
+            "cutoffAt": _json_timestamp(row["cutoff_at"]),
+            "nextProjectionAt": _json_timestamp(row["next_projection_at"]),
+            "computedStage": row["computed_stage"],
+            "stagePolicyVersion": row["stage_policy_version"],
+            "stageGates": row["stage_gates_json"],
+            "blockerRefs": row["blocker_refs_json"],
+        }
+        if any(payload.get(key) != value for key, value in expected_mirrors.items()):
             raise EvidenceIntegrityCorruptError()
+        evidence = payload.get("evidence")
+        if not isinstance(evidence, list) or len(evidence) != row["evidence_count"]:
+            raise EvidenceIntegrityCorruptError()
+    latest = rows[-1]
+    projection = conn.execute(
+        """SELECT instance_pk,instance_revision,snapshot_revision,computed_stage,
+                  stage_policy_version,cutoff_at,next_projection_at,
+                  stage_gates_json,etag_version,connector_count,pipeline_count,
+                  dataset_row_count,latency_ms
+             FROM integration_case_projection
+            WHERE org_id=%s AND project_id=%s AND case_pk=%s""",
+        (case.org_id, case.project_id, case.case_pk),
+    ).fetchone()
+    current_revision = conn.execute(
+        """SELECT required_markings
+             FROM integration_instance_revision
+            WHERE org_id=%s AND project_id=%s AND instance_pk=%s AND revision=%s""",
+        (case.org_id, case.project_id, case.instance_pk, case.current_revision),
+    ).fetchone()
+    if projection is None or current_revision is None:
+        raise EvidenceIntegrityCorruptError()
+    projection_mirrors = (
+        projection["instance_pk"] == case.instance_pk,
+        projection["instance_revision"] == case.current_revision,
+        projection["snapshot_revision"] == case.snapshot_revision,
+        projection["computed_stage"] == case.computed_stage.value,
+        projection["stage_policy_version"] == latest["stage_policy_version"],
+        projection["cutoff_at"] == latest["cutoff_at"],
+        projection["next_projection_at"] == latest["next_projection_at"],
+        projection["stage_gates_json"] == latest["stage_gates_json"],
+        projection["etag_version"] == case.etag_version,
+        latest["instance_revision"] == case.current_revision,
+        latest["snapshot_revision"] == case.snapshot_revision,
+        latest["computed_stage"] == case.computed_stage.value,
+        latest["etag_version"] == case.etag_version,
+        tuple(current_revision["required_markings"]) == case.required_markings,
+    )
+    if not all(projection_mirrors):
+        raise EvidenceIntegrityCorruptError()
+    if case.scope == "reference" and (
+        any(
+            value is not None
+            for value in (
+                case.owner,
+                case.installation_pk,
+                case.installation_id,
+                case.installation_revision,
+                case.composition_pk,
+                case.composition_id,
+                case.lock_revision,
+                case.lock_hash,
+                case.overlay_revision,
+                projection["connector_count"],
+                projection["pipeline_count"],
+                projection["dataset_row_count"],
+                projection["latency_ms"],
+            )
+        )
+    ):
+        raise EvidenceIntegrityCorruptError()
     events = conn.execute(
         """SELECT sequence,old_stage,new_stage,snapshot_revision
              FROM integration_stage_event
@@ -1063,6 +1136,10 @@ def _verify_case_integrity(conn: Any, case: StoredIntegrationCase) -> None:
         case.case_pk,
         datetime.max.replace(tzinfo=UTC),
     )
+
+
+def _json_timestamp(value: datetime | None) -> str | None:
+    return value.astimezone(UTC).isoformat().replace("+00:00", "Z") if value else None
 
 
 def _policy_documents(
