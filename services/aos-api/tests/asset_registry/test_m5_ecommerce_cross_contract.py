@@ -13,6 +13,11 @@ from aos_api.asset_registry.composition_contracts import (
     CreateInstallationRequest,
 )
 from tests.asset_registry.m5_bundle_support import M5_BUNDLE_FIXTURES
+from tests.asset_registry.m5_control_support import (
+    M5_CONTROL_MIGRATIONS,
+    M5_ORG_ID,
+    M5_PROJECT_ID,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 BUNDLE_ROOT = REPO_ROOT / "bundles"
@@ -56,6 +61,18 @@ def test_runtime_signing_fixtures_match_the_frozen_repository_manifests() -> Non
         manifest = _load_manifest(manifest_paths_by_relative[relative_path])
         assert fixture.bundle_id == manifest["metadata"]["id"]
         assert fixture.source_ref == f"bundle://m5-fixtures/{relative_path}"
+
+
+def test_control_runtime_stays_synthetic_and_stops_before_integration_cases() -> None:
+    assert M5_ORG_ID == "org-m5-synthetic"
+    assert M5_PROJECT_ID == "project-m5-synthetic"
+    assert [path.name for path in M5_CONTROL_MIGRATIONS] == [
+        "228asset0_registry.py",
+        "228asset0_security.py",
+        "228asset0_invariants.py",
+        "228asset0_evidence_snapshot.py",
+        "228asset1_composition_installation.py",
+    ]
 
 
 def test_three_leaf_request_matches_the_four_bundle_dependency_graph() -> None:
