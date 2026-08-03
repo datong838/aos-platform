@@ -1,0 +1,37 @@
+apiVersion: aos.dev/v1alpha1
+kind: PlatformAdapterPack
+metadata:
+  id: platform.ecommerce.niushop
+  version: 1.0.0
+  displayName: Ecommerce Platform Adapter Fixture
+  publisher: aos
+  license: internal
+spec:
+  platformApi: ">=1.7.0 <2.0.0"
+  dependencies:
+    - publisher: aos
+      id: domain.ecommerce.core
+      version: ">=1.0.0 <2.0.0"
+  optionalDependencies: []
+  conflicts: []
+  exports:
+    connectors:
+      - content/connectors/
+    schemas:
+      - content/schemas/
+    mappings:
+      - content/mappings/
+  capabilities:
+    provides: []
+    requires: []
+  permissions:
+    roles: []
+    markings: []
+    dataScopes: []
+    actionTypes: []
+  migrations:
+    plan: null
+    downgradePolicy: retain-canonical
+  preflight: null
+  regression: null
+  rollback: null
