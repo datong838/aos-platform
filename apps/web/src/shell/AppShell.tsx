@@ -452,6 +452,7 @@ export function AppShell() {
           </div>
           <div className="topbar-right">
             <div className="topbar-actions">
+              <OrgSwitcher />
               <WorkspaceSwitcher />
               <button
                 type="button"
