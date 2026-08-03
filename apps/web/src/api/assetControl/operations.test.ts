@@ -70,7 +70,9 @@ describe("asset-control M2-B operation contract", () => {
       422: "validation_or_resolution_limit",
       428: "if_match_required",
       500: "server_error",
+      503: "trust_root_unavailable",
     });
+    expect(ASSET_CONTROL_OPERATIONS.submitInstallation.errorStatuses).not.toContain(503);
   });
 
   it("does not advertise ETag on composition or list responses", () => {

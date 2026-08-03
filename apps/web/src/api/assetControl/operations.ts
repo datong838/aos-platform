@@ -9,7 +9,8 @@ export type AssetControlErrorStatus =
   | 412
   | 422
   | 428
-  | 500;
+  | 500
+  | 503;
 
 export type AssetControlOperationId =
   | "resolve_bundle_composition"
@@ -172,4 +173,5 @@ export const ASSET_CONTROL_ERROR_STATUS_MEANINGS = {
   422: "validation_or_resolution_limit",
   428: "if_match_required",
   500: "server_error",
+  503: "trust_root_unavailable",
 } as const satisfies Record<AssetControlErrorStatus, string>;

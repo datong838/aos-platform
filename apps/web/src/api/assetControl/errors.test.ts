@@ -33,6 +33,7 @@ describe("M3-1 asset-control error normalization", () => {
     [422, "invalid_request", "fix_request"],
     [428, "precondition_required", "failure_closed"],
     [500, "server_error", "retry_same_command"],
+    [503, "service_unavailable", "none"],
   ] as const)("normalizes HTTP %i", (status, kind, recovery) => {
     const normalized = normalizeAssetControlError(apiError(status));
     expect(normalized).toBeInstanceOf(AssetControlError);
@@ -133,6 +134,21 @@ describe("M3-1 asset-control error normalization", () => {
     });
     expect(normalized.message).toMatch(/先刷新状态/);
     expect(normalized.message).toMatch(/复用原幂等键/);
+  });
+
+  it("treats TRUST_ROOT_UNAVAILABLE as known failure-closed non-execution", () => {
+    const normalized = normalizeAssetControlError(
+      apiError(503, "TRUST_ROOT_UNAVAILABLE", null),
+    );
+    expect(normalized).toMatchObject({
+      status: 503,
+      kind: "service_unavailable",
+      recovery: "none",
+      retryable: false,
+      requiresRefresh: false,
+      outcomeUnknown: false,
+      failureClosed: true,
+    });
   });
 
   it("keeps 428 failure closed because a refresh cannot supply a missing header", () => {

@@ -10,6 +10,12 @@ import {
 } from "./compositions";
 import { parseInstallationDetail, parseInstallationList } from "./installations";
 import {
+  serializeApproveInstallationRequest,
+  serializeEmptyInstallationAction,
+  serializeRejectInstallationRequest,
+  serializeRollbackInstallationRequest,
+} from "./installationActions";
+import {
   ASSET_CONTROL_HEADER_CONTRACT,
   ASSET_CONTROL_OPERATIONS,
   type AssetControlOperationSpec,
@@ -27,7 +33,6 @@ import type {
   ApproveInstallationRequest,
   CompositionRequest,
   CreateInstallationRequest,
-  EmptyInstallationActionRequest,
   InstallationListResponse,
   InstallationResponse,
   InstallationState,
@@ -81,7 +86,6 @@ export class AssetControlClientError extends Error {
 const REGISTRY_PATH = "/v1/asset-bundles";
 const MAX_INSTALLATION_LIST_LIMIT = 100;
 const MAX_INSTALLATION_LIST_OFFSET = 10_000;
-const EMPTY_ACTION_BODY: EmptyInstallationActionRequest = {};
 const CANONICAL_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 function pathSegment(value: string, label: string): string {
@@ -453,9 +457,10 @@ export class AssetControlClient {
     options: InstallationActionOptions,
   ): Promise<InstallationResponse> {
     const path = fillPath(operation, {
-      installation_id: installationId,
+      installation_id: canonicalUuid(installationId, "installation_id"),
     });
-    return this.post(operation, path, body, options, options.etagVersion);
+    return this.post<unknown>(operation, path, body, options, options.etagVersion)
+      .then(parseInstallationDetail);
   }
 
   submitInstallation(
@@ -465,7 +470,7 @@ export class AssetControlClient {
     return this.installationAction(
       ASSET_CONTROL_OPERATIONS.submitInstallation,
       installationId,
-      EMPTY_ACTION_BODY,
+      serializeEmptyInstallationAction(),
       options,
     );
   }
@@ -478,7 +483,7 @@ export class AssetControlClient {
     return this.installationAction(
       ASSET_CONTROL_OPERATIONS.approveInstallation,
       installationId,
-      body,
+      serializeApproveInstallationRequest(body),
       options,
     );
   }
@@ -491,7 +496,7 @@ export class AssetControlClient {
     return this.installationAction(
       ASSET_CONTROL_OPERATIONS.rejectInstallation,
       installationId,
-      body,
+      serializeRejectInstallationRequest(body),
       options,
     );
   }
@@ -503,7 +508,7 @@ export class AssetControlClient {
     return this.installationAction(
       ASSET_CONTROL_OPERATIONS.applyInstallation,
       installationId,
-      EMPTY_ACTION_BODY,
+      serializeEmptyInstallationAction(),
       options,
     );
   }
@@ -515,7 +520,7 @@ export class AssetControlClient {
     return this.installationAction(
       ASSET_CONTROL_OPERATIONS.verifyInstallation,
       installationId,
-      EMPTY_ACTION_BODY,
+      serializeEmptyInstallationAction(),
       options,
     );
   }
@@ -528,7 +533,7 @@ export class AssetControlClient {
     return this.installationAction(
       ASSET_CONTROL_OPERATIONS.rollbackInstallation,
       installationId,
-      body,
+      serializeRollbackInstallationRequest(body),
       options,
     );
   }
