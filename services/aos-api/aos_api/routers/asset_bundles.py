@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import re
 from collections.abc import Callable
 from functools import lru_cache
@@ -19,17 +18,11 @@ from aos_api.asset_registry.contracts import (
     MAX_BUNDLE_ID_LENGTH,
     BundleKind,
 )
+from aos_api.asset_registry.control_wiring import build_asset_registry_service
 from aos_api.asset_registry.errors import AssetRegistryError
 from aos_api.asset_registry.manifest_loader import ManifestLoader
 from aos_api.asset_registry.registry_service import RegistryService
 from aos_api.asset_registry.registry_store import PostgresRegistryStore
-from aos_api.asset_registry.signature import (
-    TRUST_ROOTS_ENV,
-    FileTrustRootProvider,
-    TrustRoot,
-    TrustRootConfigurationError,
-    TrustRootProvider,
-)
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 
@@ -54,18 +47,6 @@ PublisherQuery = Annotated[
     str | None,
     Query(min_length=1, max_length=120, pattern=BUNDLE_ID_PATTERN),
 ]
-
-
-class _UnavailableTrustRootProvider:
-    """Deferred fail-closed provider that keeps read-only Registry APIs alive."""
-
-    def __init__(self, error: Exception) -> None:
-        self._error = error
-
-    def get_trust_root(self, *, publisher: str, key_id: str) -> TrustRoot | None:
-        raise TrustRootConfigurationError(
-            "trust-root configuration is unavailable"
-        ) from self._error
 
 
 class StrictRequest(BaseModel):
@@ -165,30 +146,10 @@ class TerminalActionRequest(VersionActionRequest):
 @lru_cache(maxsize=1)
 def get_asset_registry_service() -> RegistryService:
     """Build the production service from server-controlled allowlist roots only."""
-
-    allowlist_roots: dict[str, Path] = {}
-    catalog_root = _REPOSITORY_ROOT / "bundles"
-    if catalog_root.is_dir():
-        allowlist_roots["catalog"] = catalog_root
-
-    configured_root = os.getenv("AOS_BUNDLE_ROOT")
-    if configured_root:
-        allowlist_roots["server"] = Path(configured_root)
-
-    trust_roots: TrustRootProvider | None = None
-    if os.getenv(TRUST_ROOTS_ENV):
-        try:
-            trust_roots = FileTrustRootProvider.from_environment()
-        except (TrustRootConfigurationError, TypeError, ValueError) as exc:
-            trust_roots = _UnavailableTrustRootProvider(exc)
-    loader = ManifestLoader(allowlist_roots, trust_roots=trust_roots)
-
-    return RegistryService(
-        store=PostgresRegistryStore(),
-        # Missing or unsafe production trust configuration is deliberately
-        # represented by a fail-closed validate/publish gate.
-        loader=loader,
-        trust_roots=trust_roots,
+    return build_asset_registry_service(
+        repository_root=_REPOSITORY_ROOT,
+        registry_store_factory=PostgresRegistryStore,
+        manifest_loader_factory=ManifestLoader,
     )
 
 

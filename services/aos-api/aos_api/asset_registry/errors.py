@@ -30,6 +30,8 @@ class AssetRegistryErrorCode(StrEnum):
     IDEMPOTENCY_KEY_REQUIRED = "IDEMPOTENCY_KEY_REQUIRED"
     PRECONDITION_REQUIRED = "PRECONDITION_REQUIRED"
     PRECONDITION_INVALID = "PRECONDITION_INVALID"
+    MARKING_ACCESS_DENIED = "MARKING_ACCESS_DENIED"
+    REGISTRY_INTEGRITY_CORRUPT = "REGISTRY_INTEGRITY_CORRUPT"
     NOT_FOUND = "NOT_FOUND"
 
 
@@ -57,6 +59,8 @@ ERROR_HTTP_STATUS: dict[AssetRegistryErrorCode, int] = {
     AssetRegistryErrorCode.IDEMPOTENCY_KEY_REQUIRED: 400,
     AssetRegistryErrorCode.PRECONDITION_REQUIRED: 428,
     AssetRegistryErrorCode.PRECONDITION_INVALID: 400,
+    AssetRegistryErrorCode.MARKING_ACCESS_DENIED: 403,
+    AssetRegistryErrorCode.REGISTRY_INTEGRITY_CORRUPT: 500,
     AssetRegistryErrorCode.NOT_FOUND: 404,
 }
 
@@ -260,6 +264,26 @@ class PreconditionInvalidError(AssetRegistryError):
             AssetRegistryErrorCode.PRECONDITION_INVALID,
             message,
             details=details,
+        )
+
+
+class MarkingAccessDeniedError(AssetRegistryError):
+    """Fail a control-plane write without disclosing missing markings."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            AssetRegistryErrorCode.MARKING_ACCESS_DENIED,
+            "asset marking access denied",
+        )
+
+
+class RegistryIntegrityCorruptError(AssetRegistryError):
+    """Safe failure for malformed persisted Registry projections."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            AssetRegistryErrorCode.REGISTRY_INTEGRITY_CORRUPT,
+            "stored Registry data failed integrity verification",
         )
 
 

@@ -546,6 +546,8 @@ def test_error_codes_and_http_statuses_match_the_frozen_contract() -> None:
         "IDEMPOTENCY_KEY_REQUIRED": 400,
         "PRECONDITION_REQUIRED": 428,
         "PRECONDITION_INVALID": 400,
+        "MARKING_ACCESS_DENIED": 403,
+        "REGISTRY_INTEGRITY_CORRUPT": 500,
         "NOT_FOUND": 404,
     }
     assert {
