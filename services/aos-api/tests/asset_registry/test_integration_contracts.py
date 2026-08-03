@@ -5,12 +5,12 @@ from datetime import datetime, timezone
 
 import pytest
 from aos_api.asset_registry.integration_contracts import (
+    INTEGRATION_CASE_DETAIL_ADAPTER,
     INTEGRATION_EVIDENCE_ADAPTER,
     STAGE_POLICY_VERSION,
     CreateIntegrationCaseRequest,
     CreateIntegrationEvidenceSnapshotRequest,
     EvidenceType,
-    IntegrationCaseDetail,
     IntegrationCaseListResponse,
     IntegrationCaseTimelineResponse,
     IntegrationEvidenceSnapshot,
@@ -89,6 +89,8 @@ CLAIMS = {
         "approvalControlPassed": True,
         "rollbackControlPassed": True,
         "idempotencyControlPassed": True,
+        "installationApplyVerified": True,
+        "installationVerifyVerified": True,
     },
     "operations_readiness": {
         "runbookRef": "runbook:primary",
@@ -137,11 +139,10 @@ def list_item() -> dict[str, object]:
         "displayName": "Primary integration",
         "owner": "owner:operations",
         "installationId": UUID_2,
-        "installationRevision": 1,
         "overlayRevision": "overlay:1",
         "computedStage": "planned",
         "snapshotRevision": None,
-        "evidenceCutoffAt": None,
+        "cutoffAt": None,
         "blockerCount": 0,
         "etagVersion": 1,
         "createdAt": UTC,
@@ -149,7 +150,7 @@ def list_item() -> dict[str, object]:
     }
 
 
-def metric(aggregation: str = "count_distinct") -> dict[str, object]:
+def metric(aggregation: str = "count") -> dict[str, object]:
     return {
         "value": 1,
         "aggregation": aggregation,
@@ -161,11 +162,20 @@ def metric(aggregation: str = "count_distinct") -> dict[str, object]:
 
 def statistics() -> dict[str, object]:
     return {
+        "caseCount": metric(),
+        "productionActiveCount": metric(),
         "connectorCount": metric(),
-        "pipelineCount": metric(),
-        "datasetRowCount": metric("sum_deduplicated"),
+        "pipelineCount": metric("distinct_count"),
+        "datasetRowCount": metric("sum"),
         "latencyMs": metric("max"),
     }
+
+
+def detail_metrics() -> dict[str, object]:
+    result = statistics()
+    result.pop("caseCount")
+    result.pop("productionActiveCount")
+    return result
 
 
 @pytest.mark.parametrize("evidence_type", list(CLAIMS))
@@ -207,6 +217,11 @@ def test_claims_are_closed_and_cannot_carry_metadata_or_secrets() -> None:
         payload["claims"][forbidden] = "forbidden"  # type: ignore[index]
         with pytest.raises(ValidationError):
             INTEGRATION_EVIDENCE_ADAPTER.validate_python(payload)
+
+    action = evidence_payload("action_safety")
+    del action["claims"]["installationApplyVerified"]  # type: ignore[index]
+    with pytest.raises(ValidationError):
+        INTEGRATION_EVIDENCE_ADAPTER.validate_python(action)
 
 
 def test_envelope_lifecycle_is_fail_closed() -> None:
@@ -265,28 +280,49 @@ def test_case_list_detail_snapshot_and_timeline_contracts() -> None:
     assert IntegrationCaseListResponse.model_validate(
         {
             "items": [item],
+            "scope": "current",
             "total": 1,
             "limit": 20,
             "offset": 0,
-            "statistics": statistics(),
+            "stats": statistics(),
         }
     ).total == 1
 
     detail = {
         **item,
+        "installationRevision": 1,
         "compositionId": UUID_2,
-        "compositionRevision": 1,
+        "lockRevision": 1,
         "lockHash": HASH_A,
         "stageGates": [
-            {"stage": stage.value, "passed": stage == IntegrationStage.PLANNED, "reasonRefs": []}
+            {
+                "stage": stage.value,
+                "status": "satisfied" if stage == IntegrationStage.PLANNED else "not_evaluated",
+                "evidenceRefs": [],
+                "reasonRefs": [],
+            }
             for stage in IntegrationStage
         ],
-        "latestEvidence": [],
+        "latestEvidence": [
+            {
+                "evidenceId": UUID_1,
+                "revision": 1,
+                "evidenceType": "source_connection",
+                "subjectRef": "case:subject",
+                "outcome": "valid",
+                "observedAt": UTC,
+                "expiresAt": None,
+                "revokedAt": None,
+                "artifactHash": HASH_A,
+                "evidenceHash": HASH_B,
+                "recordedAt": UTC,
+            }
+        ],
+        "blockers": [],
         "nextProjectionAt": None,
-        "statisticsAvailable": True,
-        "statistics": statistics(),
+        "metrics": detail_metrics(),
     }
-    assert IntegrationCaseDetail.model_validate(detail).statistics_available
+    assert INTEGRATION_CASE_DETAIL_ADAPTER.validate_python(detail).metrics is not None
 
     snapshot = {
         "caseId": UUID_1,
@@ -295,17 +331,19 @@ def test_case_list_detail_snapshot_and_timeline_contracts() -> None:
         "cutoffAt": UTC,
         "computedStage": "planned",
         "stagePolicyVersion": STAGE_POLICY_VERSION,
-        "evidenceHash": HASH_A,
+        "snapshotHash": HASH_A,
     }
     assert IntegrationEvidenceSnapshot.model_validate(
         {**snapshot, "evidence": [evidence_payload()]}
     ).evidence[0].claims.read_probe
     assert IntegrationEvidenceSnapshotResponse.model_validate(
         {
-            **snapshot,
-            "evidenceCount": 1,
+                **snapshot,
+                "nextProjectionAt": None,
+                "evidenceCount": 1,
             "stageGates": detail["stageGates"],
             "blockerRefs": [],
+            "etagVersion": 1,
             "createdAt": UTC,
         }
     ).evidence_count == 1
@@ -320,8 +358,114 @@ def test_case_list_detail_snapshot_and_timeline_contracts() -> None:
         "createdAt": UTC,
     }
     assert IntegrationCaseTimelineResponse.model_validate(
-        {"items": [event], "total": 1, "limit": 20, "offset": 0}
+        {
+            "caseId": UUID_1,
+            "scope": "current",
+            "items": [event],
+            "total": 1,
+            "limit": 20,
+            "offset": 0,
+        }
     ).items[0].sequence == 1
+
+
+def test_current_and_reference_case_shapes_are_isolated() -> None:
+    current = list_item()
+    reference = {
+        **current,
+        "scope": "reference",
+        "owner": None,
+        "installationId": None,
+        "overlayRevision": None,
+    }
+    response = IntegrationCaseListResponse.model_validate(
+        {
+            "items": [reference],
+            "scope": "reference",
+            "total": 1,
+            "limit": 20,
+            "offset": 0,
+            "stats": None,
+        }
+    )
+    assert response.items[0].owner is None
+
+    forged_reference = {**reference, "owner": "owner:leaked"}
+    with pytest.raises(ValidationError):
+        IntegrationCaseListResponse.model_validate(
+            {
+                "items": [forged_reference],
+                "scope": "reference",
+                "total": 1,
+                "limit": 20,
+                "offset": 0,
+                "stats": None,
+            }
+        )
+
+    forged_current = {**current, "installationId": None}
+    with pytest.raises(ValidationError):
+        IntegrationCaseListResponse.model_validate(
+            {
+                "items": [forged_current],
+                "scope": "current",
+                "total": 1,
+                "limit": 20,
+                "offset": 0,
+                "stats": statistics(),
+            }
+        )
+
+    with pytest.raises(ValidationError):
+        IntegrationCaseListResponse.model_validate(
+            {
+                "items": [{**current, "installationRevision": 1}],
+                "scope": "current",
+                "total": 1,
+                "limit": 20,
+                "offset": 0,
+                "stats": statistics(),
+            }
+        )
+
+    gates = [
+        {
+            "stage": stage.value,
+            "status": "not_evaluated",
+            "evidenceRefs": [],
+            "reasonRefs": [],
+        }
+        for stage in IntegrationStage
+    ]
+    reference_detail = {
+        **reference,
+        "installationRevision": None,
+        "compositionId": None,
+        "lockRevision": None,
+        "lockHash": None,
+        "stageGates": gates,
+        "latestEvidence": [],
+        "blockers": [],
+        "nextProjectionAt": None,
+        "metrics": None,
+    }
+    assert INTEGRATION_CASE_DETAIL_ADAPTER.validate_python(reference_detail).metrics is None
+
+
+@pytest.mark.parametrize("aggregation", ["count_distinct", "sum_deduplicated"])
+def test_legacy_metric_aggregations_are_rejected(aggregation: str) -> None:
+    invalid = metric(aggregation)
+    with pytest.raises(ValidationError):
+        IntegrationCaseListResponse.model_validate(
+            {
+                "items": [],
+                "scope": "current",
+                "total": 0,
+                "limit": 20,
+                "offset": 0,
+                "stats": {**statistics(), "caseCount": invalid},
+            }
+        )
 
 
 def test_public_snapshot_and_timeline_reject_raw_or_private_fields() -> None:
@@ -332,10 +476,20 @@ def test_public_snapshot_and_timeline_reject_raw_or_private_fields() -> None:
         "cutoffAt": UTC,
         "computedStage": "planned",
         "stagePolicyVersion": STAGE_POLICY_VERSION,
-        "evidenceHash": HASH_A,
+        "snapshotHash": HASH_A,
+        "nextProjectionAt": None,
         "evidenceCount": 0,
-        "stageGates": [],
+        "stageGates": [
+            {
+                "stage": stage.value,
+                "status": "not_evaluated",
+                "evidenceRefs": [],
+                "reasonRefs": [],
+            }
+            for stage in IntegrationStage
+        ],
         "blockerRefs": [],
+        "etagVersion": 1,
         "createdAt": UTC,
         "claims": {},
     }
@@ -354,7 +508,14 @@ def test_public_snapshot_and_timeline_reject_raw_or_private_fields() -> None:
     }
     with pytest.raises(ValidationError):
         IntegrationCaseTimelineResponse.model_validate(
-            {"items": [event], "total": 1, "limit": 20, "offset": 0}
+            {
+                "caseId": UUID_1,
+                "scope": "current",
+                "items": [event],
+                "total": 1,
+                "limit": 20,
+                "offset": 0,
+            }
         )
 
 
@@ -370,10 +531,11 @@ def test_budgets_and_metric_truth_semantics_are_enforced() -> None:
         IntegrationCaseListResponse.model_validate(
             {
                 "items": [],
+                "scope": "current",
                 "total": 0,
                 "limit": 20,
                 "offset": 0,
-                "statistics": {
+                "stats": {
                     **statistics(),
                     "connectorCount": invalid_metric,
                 },

@@ -274,6 +274,8 @@ class ActionSafetyClaims(_Claims):
     approval_control_passed: bool = Field(alias="approvalControlPassed")
     rollback_control_passed: bool = Field(alias="rollbackControlPassed")
     idempotency_control_passed: bool = Field(alias="idempotencyControlPassed")
+    installation_apply_verified: bool = Field(alias="installationApplyVerified")
+    installation_verify_verified: bool = Field(alias="installationVerifyVerified")
 
     @field_validator("action_ref")
     @classmethod
@@ -487,51 +489,72 @@ class CreateIntegrationEvidenceSnapshotRequest(StrictContract):
     """The public snapshot command has an intentionally empty JSON body."""
 
 
-class IntegrationCaseListItem(StrictContract):
+class _IntegrationCaseListItemBase(StrictContract):
     case_id: str = Field(alias="caseId")
-    scope: IntegrationCaseScope
     display_name: str = Field(alias="displayName", max_length=MAX_DISPLAY_NAME_LENGTH)
-    owner: str = Field(max_length=MAX_REFERENCE_LENGTH)
-    installation_id: str = Field(alias="installationId")
-    installation_revision: int = Field(alias="installationRevision", ge=1)
-    overlay_revision: str = Field(alias="overlayRevision", max_length=160)
     computed_stage: IntegrationStage = Field(alias="computedStage")
-    snapshot_revision: int | None = Field(default=None, alias="snapshotRevision", ge=1)
-    evidence_cutoff_at: datetime | None = Field(default=None, alias="evidenceCutoffAt")
+    snapshot_revision: int | None = Field(alias="snapshotRevision", ge=1)
+    cutoff_at: datetime | None = Field(alias="cutoffAt")
     blocker_count: int = Field(alias="blockerCount", ge=0)
     etag_version: int = Field(alias="etagVersion", ge=1)
     created_at: datetime = Field(alias="createdAt")
     updated_at: datetime = Field(alias="updatedAt")
 
-    @field_validator("case_id", "installation_id")
+    @field_validator("case_id")
     @classmethod
-    def _ids(cls, value: str) -> str:
-        return _canonical_uuid(value, label="case identifier")
-
-    @field_validator("scope", mode="before")
-    @classmethod
-    def _scope(cls, value: object) -> IntegrationCaseScope:
-        return _strict_enum(value, IntegrationCaseScope, label="scope")  # type: ignore[return-value]
+    def _id(cls, value: str) -> str:
+        return _canonical_uuid(value, label="caseId")
 
     @field_validator("computed_stage", mode="before")
     @classmethod
     def _stage(cls, value: object) -> IntegrationStage:
         return _strict_enum(value, IntegrationStage, label="computedStage")  # type: ignore[return-value]
 
-    @field_validator("display_name", "owner", "overlay_revision")
+    @field_validator("display_name")
     @classmethod
     def _text(cls, value: str) -> str:
         return _safe_reference(value, label="case value")
 
-    @field_validator("evidence_cutoff_at", "created_at", "updated_at")
+    @field_validator("cutoff_at", "created_at", "updated_at")
     @classmethod
     def _times(cls, value: datetime | None) -> datetime | None:
         return None if value is None else _utc_datetime(value, label="case time")
 
 
+class CurrentIntegrationCaseListItem(_IntegrationCaseListItemBase):
+    scope: Literal["current"]
+    owner: str = Field(max_length=MAX_REFERENCE_LENGTH)
+    installation_id: str = Field(alias="installationId")
+    overlay_revision: str = Field(alias="overlayRevision", max_length=160)
+
+    @field_validator("installation_id")
+    @classmethod
+    def _installation_id(cls, value: str) -> str:
+        return _canonical_uuid(value, label="installationId")
+
+    @field_validator("owner", "overlay_revision")
+    @classmethod
+    def _current_text(cls, value: str) -> str:
+        return _safe_reference(value, label="current case value")
+
+
+class ReferenceIntegrationCaseListItem(_IntegrationCaseListItemBase):
+    scope: Literal["reference"]
+    owner: None
+    installation_id: None = Field(alias="installationId")
+    overlay_revision: None = Field(alias="overlayRevision")
+
+
+IntegrationCaseListItem: TypeAlias = Annotated[
+    CurrentIntegrationCaseListItem | ReferenceIntegrationCaseListItem,
+    Field(discriminator="scope"),
+]
+
+
 class IntegrationStageGate(StrictContract):
     stage: IntegrationStage
-    passed: bool
+    status: Literal["satisfied", "blocked", "not_evaluated"]
+    evidence_refs: list[str] = Field(alias="evidenceRefs", max_length=MAX_REASON_REFS)
     reason_refs: list[str] = Field(alias="reasonRefs", max_length=MAX_REASON_REFS)
 
     @field_validator("stage", mode="before")
@@ -539,10 +562,10 @@ class IntegrationStageGate(StrictContract):
     def _stage(cls, value: object) -> IntegrationStage:
         return _strict_enum(value, IntegrationStage, label="stage")  # type: ignore[return-value]
 
-    @field_validator("reason_refs")
+    @field_validator("evidence_refs", "reason_refs")
     @classmethod
-    def _reasons(cls, values: list[str]) -> list[str]:
-        return _unique_normalized(values, label="reasonRefs")
+    def _refs(cls, values: list[str]) -> list[str]:
+        return _unique_normalized(values, label="stage gate refs")
 
 
 def _require_complete_stage_gates(
@@ -562,7 +585,9 @@ class LatestEvidenceSummary(StrictContract):
     observed_at: datetime = Field(alias="observedAt")
     expires_at: datetime | None = Field(default=None, alias="expiresAt")
     revoked_at: datetime | None = Field(default=None, alias="revokedAt")
+    artifact_hash: str = Field(alias="artifactHash", pattern=SHA256_PATTERN)
     evidence_hash: str = Field(alias="evidenceHash", pattern=SHA256_PATTERN)
+    recorded_at: datetime = Field(alias="recordedAt")
 
     @field_validator("evidence_id")
     @classmethod
@@ -584,7 +609,7 @@ class LatestEvidenceSummary(StrictContract):
     def _ref(cls, value: str) -> str:
         return _safe_reference(value, label="subjectRef")
 
-    @field_validator("observed_at", "expires_at", "revoked_at")
+    @field_validator("observed_at", "expires_at", "revoked_at", "recorded_at")
     @classmethod
     def _times(cls, value: datetime | None) -> datetime | None:
         return None if value is None else _utc_datetime(value, label="evidence summary time")
@@ -592,7 +617,7 @@ class LatestEvidenceSummary(StrictContract):
 
 class IntegrationMetric(StrictContract):
     value: int | float | None
-    aggregation: Literal["count_distinct", "sum_deduplicated", "max"]
+    aggregation: Literal["count", "distinct_count", "sum", "max"]
     measured_case_count: int = Field(alias="measuredCaseCount", ge=0)
     eligible_case_count: int = Field(alias="eligibleCaseCount", ge=0)
     cutoff_at: datetime = Field(alias="cutoffAt")
@@ -616,48 +641,98 @@ class IntegrationMetric(StrictContract):
         return self
 
 
-class IntegrationCaseStatistics(StrictContract):
+class IntegrationCaseMetrics(StrictContract):
     connector_count: IntegrationMetric = Field(alias="connectorCount")
     pipeline_count: IntegrationMetric = Field(alias="pipelineCount")
     dataset_row_count: IntegrationMetric = Field(alias="datasetRowCount")
     latency_ms: IntegrationMetric = Field(alias="latencyMs")
 
 
-class IntegrationCaseDetail(IntegrationCaseListItem):
-    composition_id: str = Field(alias="compositionId")
-    composition_revision: int = Field(alias="compositionRevision", ge=1)
-    lock_hash: str = Field(alias="lockHash", pattern=SHA256_PATTERN)
+class IntegrationCaseStats(IntegrationCaseMetrics):
+    case_count: IntegrationMetric = Field(alias="caseCount")
+    production_active_count: IntegrationMetric = Field(alias="productionActiveCount")
+
+
+class _IntegrationCaseDetailBase(_IntegrationCaseListItemBase):
     stage_gates: list[IntegrationStageGate] = Field(alias="stageGates", max_length=MAX_STAGE_GATES)
     latest_evidence: list[LatestEvidenceSummary] = Field(alias="latestEvidence", max_length=MAX_LATEST_EVIDENCE)
-    next_projection_at: datetime | None = Field(default=None, alias="nextProjectionAt")
-    statistics_available: bool = Field(alias="statisticsAvailable")
-    statistics: IntegrationCaseStatistics | None = None
+    blockers: list[str] = Field(max_length=MAX_BLOCKERS)
+    next_projection_at: datetime | None = Field(alias="nextProjectionAt")
 
     _complete_gates = field_validator("stage_gates")(_require_complete_stage_gates)
 
-    @field_validator("composition_id")
+    @field_validator("blockers")
     @classmethod
-    def _composition_id(cls, value: str) -> str:
-        return _canonical_uuid(value, label="compositionId")
+    def _blockers(cls, values: list[str]) -> list[str]:
+        return _unique_normalized(values, label="blockers")
 
     @field_validator("next_projection_at")
     @classmethod
     def _projection_time(cls, value: datetime | None) -> datetime | None:
         return None if value is None else _utc_datetime(value, label="nextProjectionAt")
 
-    @model_validator(mode="after")
-    def _statistics_consistent(self) -> IntegrationCaseDetail:
-        if self.statistics_available != (self.statistics is not None):
-            raise ValueError("statisticsAvailable must match statistics presence")
-        return self
+
+class CurrentIntegrationCaseDetail(_IntegrationCaseDetailBase):
+    scope: Literal["current"]
+    owner: str = Field(max_length=MAX_REFERENCE_LENGTH)
+    installation_id: str = Field(alias="installationId")
+    overlay_revision: str = Field(alias="overlayRevision", max_length=160)
+    installation_revision: int = Field(alias="installationRevision", ge=1)
+    composition_id: str = Field(alias="compositionId")
+    lock_revision: int = Field(alias="lockRevision", ge=1)
+    lock_hash: str = Field(alias="lockHash", pattern=SHA256_PATTERN)
+    metrics: IntegrationCaseMetrics
+
+    @field_validator("installation_id", "composition_id")
+    @classmethod
+    def _ids(cls, value: str) -> str:
+        return _canonical_uuid(value, label="current detail identifier")
+
+    @field_validator("owner", "overlay_revision")
+    @classmethod
+    def _current_text(cls, value: str) -> str:
+        return _safe_reference(value, label="current case value")
+
+
+class ReferenceIntegrationCaseDetail(_IntegrationCaseDetailBase):
+    scope: Literal["reference"]
+    owner: None
+    installation_id: None = Field(alias="installationId")
+    overlay_revision: None = Field(alias="overlayRevision")
+    installation_revision: None = Field(alias="installationRevision")
+    composition_id: None = Field(alias="compositionId")
+    lock_revision: None = Field(alias="lockRevision")
+    lock_hash: None = Field(alias="lockHash")
+    metrics: None
+
+
+IntegrationCaseDetail: TypeAlias = Annotated[
+    CurrentIntegrationCaseDetail | ReferenceIntegrationCaseDetail,
+    Field(discriminator="scope"),
+]
+INTEGRATION_CASE_DETAIL_ADAPTER = TypeAdapter(IntegrationCaseDetail)
 
 
 class IntegrationCaseListResponse(StrictContract):
     items: list[IntegrationCaseListItem] = Field(max_length=MAX_CASE_LIST_LIMIT)
+    scope: IntegrationCaseScope
     total: int = Field(ge=0)
     limit: int = Field(ge=1, le=MAX_CASE_LIST_LIMIT)
     offset: int = Field(ge=0, le=MAX_CASE_LIST_OFFSET)
-    statistics: IntegrationCaseStatistics
+    stats: IntegrationCaseStats | None
+
+    @field_validator("scope", mode="before")
+    @classmethod
+    def _scope(cls, value: object) -> IntegrationCaseScope:
+        return _strict_enum(value, IntegrationCaseScope, label="scope")  # type: ignore[return-value]
+
+    @model_validator(mode="after")
+    def _scope_consistency(self) -> IntegrationCaseListResponse:
+        if any(item.scope != self.scope for item in self.items):
+            raise ValueError("response items must match response scope")
+        if (self.scope == IntegrationCaseScope.CURRENT) != (self.stats is not None):
+            raise ValueError("current stats are required and reference stats must be null")
+        return self
 
 
 class IntegrationEvidenceSnapshot(StrictContract):
@@ -668,7 +743,7 @@ class IntegrationEvidenceSnapshot(StrictContract):
     instance_revision: int = Field(alias="instanceRevision", ge=1)
     cutoff_at: datetime = Field(alias="cutoffAt")
     evidence: list[IntegrationEvidenceEnvelope] = Field(max_length=MAX_EVIDENCE_PER_SNAPSHOT)
-    evidence_hash: str = Field(alias="evidenceHash", pattern=SHA256_PATTERN)
+    snapshot_hash: str = Field(alias="snapshotHash", pattern=SHA256_PATTERN)
     computed_stage: IntegrationStage = Field(alias="computedStage")
     stage_policy_version: Literal[STAGE_POLICY_VERSION] = Field(alias="stagePolicyVersion")
 
@@ -704,10 +779,12 @@ class IntegrationEvidenceSnapshotResponse(StrictContract):
     cutoff_at: datetime = Field(alias="cutoffAt")
     computed_stage: IntegrationStage = Field(alias="computedStage")
     stage_policy_version: Literal[STAGE_POLICY_VERSION] = Field(alias="stagePolicyVersion")
-    evidence_hash: str = Field(alias="evidenceHash", pattern=SHA256_PATTERN)
+    snapshot_hash: str = Field(alias="snapshotHash", pattern=SHA256_PATTERN)
+    next_projection_at: datetime | None = Field(alias="nextProjectionAt")
     evidence_count: int = Field(alias="evidenceCount", ge=0, le=MAX_EVIDENCE_PER_SNAPSHOT)
     stage_gates: list[IntegrationStageGate] = Field(alias="stageGates", max_length=MAX_STAGE_GATES)
     blocker_refs: list[str] = Field(alias="blockerRefs", max_length=MAX_BLOCKERS)
+    etag_version: int = Field(alias="etagVersion", ge=1)
     created_at: datetime = Field(alias="createdAt")
 
     _complete_gates = field_validator("stage_gates")(_require_complete_stage_gates)
@@ -727,10 +804,10 @@ class IntegrationEvidenceSnapshotResponse(StrictContract):
     def _blockers(cls, values: list[str]) -> list[str]:
         return _unique_normalized(values, label="blockerRefs")
 
-    @field_validator("cutoff_at", "created_at")
+    @field_validator("cutoff_at", "next_projection_at", "created_at")
     @classmethod
-    def _times(cls, value: datetime) -> datetime:
-        return _utc_datetime(value, label="snapshot response time")
+    def _times(cls, value: datetime | None) -> datetime | None:
+        return None if value is None else _utc_datetime(value, label="snapshot response time")
 
 
 class IntegrationStageEvent(StrictContract):
@@ -741,10 +818,10 @@ class IntegrationStageEvent(StrictContract):
     cause: Literal[
         "created",
         "evidence_added",
-        "evidence_invalid",
-        "evidence_revoked",
+        "negative_observed",
         "evidence_expired",
-        "reprojected",
+        "evidence_revoked",
+        "projection_rebuilt",
     ]
     reason_refs: list[str] = Field(alias="reasonRefs", max_length=MAX_REASON_REFS)
     created_at: datetime = Field(alias="createdAt")
@@ -768,7 +845,19 @@ class IntegrationStageEvent(StrictContract):
 
 
 class IntegrationCaseTimelineResponse(StrictContract):
+    case_id: str = Field(alias="caseId")
+    scope: IntegrationCaseScope
     items: list[IntegrationStageEvent] = Field(max_length=MAX_TIMELINE_ITEMS)
     total: int = Field(ge=0)
     limit: int = Field(ge=1, le=MAX_TIMELINE_ITEMS)
     offset: int = Field(ge=0, le=MAX_CASE_LIST_OFFSET)
+
+    @field_validator("case_id")
+    @classmethod
+    def _id(cls, value: str) -> str:
+        return _canonical_uuid(value, label="caseId")
+
+    @field_validator("scope", mode="before")
+    @classmethod
+    def _scope(cls, value: object) -> IntegrationCaseScope:
+        return _strict_enum(value, IntegrationCaseScope, label="scope")  # type: ignore[return-value]
