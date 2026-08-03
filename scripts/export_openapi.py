@@ -4,16 +4,16 @@
 from __future__ import annotations
 
 import argparse
-from collections import Counter
 import hashlib
 import json
 import os
-from pathlib import Path
 import subprocess
 import sys
 import tempfile
-from typing import Any, Iterable
-
+from collections import Counter
+from collections.abc import Iterable
+from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 API_ROOT = ROOT / "services" / "aos-api"
@@ -160,7 +160,7 @@ def build_inventory(app: Any, schema_bytes: bytes) -> dict[str, Any]:
     duplicates = sorted(
         [[path, method, count] for (path, method), count in pairs.items() if count > 1]
     )
-    if len(rows) != 4038 or len(pairs) != 4019:
+    if len(rows) != 4043 or len(pairs) != 4024:
         raise ExportError(
             f"route totals changed: rows={len(rows)} unique_pairs={len(pairs)}"
         )
@@ -188,7 +188,7 @@ def generate_payloads() -> tuple[bytes, bytes]:
     validate_openapi(schema)
     schema_bytes = canonical_json(schema)
     openapi_operation_count = sum(1 for _ in _operations(schema))
-    if openapi_operation_count != 4019:
+    if openapi_operation_count != 4024:
         raise ExportError(f"OpenAPI operation total changed: {openapi_operation_count}")
     inventory = build_inventory(app, schema_bytes)
     return schema_bytes, canonical_json(inventory)
@@ -200,7 +200,7 @@ def _worker(output_dir: Path) -> int:
         (output_dir / "openapi.json").write_bytes(openapi_bytes)
         (output_dir / "inventory.json").write_bytes(inventory_bytes)
         return 0
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - worker must report every export failure.
         print(f"ERROR OpenAPI export failed: {exc}", file=sys.stderr)
         return 2
 

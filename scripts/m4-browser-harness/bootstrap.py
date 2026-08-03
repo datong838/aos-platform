@@ -24,29 +24,29 @@ ROOT = Path(__file__).resolve().parents[2]
 API_ROOT = ROOT / "services/aos-api"
 sys.path.insert(0, str(API_ROOT))
 
-from aos_api.asset_registry.canonical_json import canonical_sha256  # noqa: E402
-from aos_api.asset_registry.integration_contracts import (  # noqa: E402
+from aos_api.asset_registry.canonical_json import canonical_sha256
+from aos_api.asset_registry.integration_contracts import (
     INTEGRATION_EVIDENCE_ADAPTER,
     CreateIntegrationCaseRequest,
     EvidenceType,
 )
-from aos_api.asset_registry.integration_projection import (  # noqa: E402
+from aos_api.asset_registry.integration_projection import (
     IntegrationExpiryProjector,
 )
-from aos_api.asset_registry.integration_reader import (  # noqa: E402
+from aos_api.asset_registry.integration_reader import (
     PostgresIntegrationCaseReader,
     PrincipalMarkingResolver,
 )
-from aos_api.asset_registry.integration_service import (  # noqa: E402
+from aos_api.asset_registry.integration_service import (
     IntegrationCaseService,
     IntegrationRequestContext,
     TrustedEvidenceWriter,
     TrustedProducerContext,
 )
-from aos_api.asset_registry.integration_store import (  # noqa: E402
+from aos_api.asset_registry.integration_store import (
     PostgresIntegrationStore,
 )
-from aos_api.db import connect, init_schema  # noqa: E402
+from aos_api.db import connect, init_schema
 
 ORG = "dev-org"
 PROJECT = "dev-project"
@@ -268,9 +268,7 @@ def _evidence(
         **payload,
         "observedAt": now.isoformat().replace("+00:00", "Z"),
         "expiresAt": (
-            expires_at.isoformat().replace("+00:00", "Z")
-            if expires_at
-            else None
+            expires_at.isoformat().replace("+00:00", "Z") if expires_at else None
         ),
         "recordedAt": now.isoformat().replace("+00:00", "Z"),
     }
@@ -352,9 +350,7 @@ def _seed_cases() -> dict[str, object]:
                     evidence_type=evidence_type,
                     now=now,
                     expires_at=(
-                        source_expiry
-                        if evidence_type == "source_connection"
-                        else None
+                        source_expiry if evidence_type == "source_connection" else None
                     ),
                 ),
             )

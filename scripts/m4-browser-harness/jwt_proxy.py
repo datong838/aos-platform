@@ -51,7 +51,9 @@ def main() -> None:
                 if key.lower() not in HOP_HEADERS | {"host", "authorization"}
             }
             headers["Authorization"] = f"Bearer {token}"
-            connection = http.client.HTTPConnection("127.0.0.1", args.api_port, timeout=30)
+            connection = http.client.HTTPConnection(
+                "127.0.0.1", args.api_port, timeout=30
+            )
             try:
                 connection.request(self.command, self.path, body=body, headers=headers)
                 response = connection.getresponse()
