@@ -15,13 +15,11 @@ from unittest.mock import MagicMock, patch
 
 import psycopg
 import pytest
-from psycopg import sql
-from psycopg.types.json import Jsonb
-
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.asset_registry.errors import (
     AssetNotFoundError,
     EvidenceIntegrityCorruptError,
+    EvidenceReferenceInvalidError,
     IdempotencyConflictError,
     RevisionConflictError,
 )
@@ -34,6 +32,8 @@ from aos_api.asset_registry.integration_store import (
     PostgresIntegrationStore,
 )
 from aos_api.db import connect
+from psycopg import sql
+from psycopg.types.json import Jsonb
 
 API_ROOT = Path(__file__).resolve().parents[2]
 BASE_MIGRATIONS = (
@@ -514,6 +514,111 @@ def test_snapshot_hash_and_event_sequence_corruption_fail_closed(damage: str) ->
                 )
             )
             conn.execute(statement, params)
+            conn.execute(
+                sql.SQL("ALTER TABLE {} ENABLE TRIGGER USER").format(
+                    sql.Identifier(table)
+                )
+            )
+            conn.commit()
+        with pytest.raises(EvidenceIntegrityCorruptError):
+            PostgresIntegrationStore(connect_factory).get_case(
+                org_id=ORG, project_id=PROJECT, case_id=created.case_id
+            )
+
+
+def test_invalid_command_receipt_rolls_back_handler_business_writes() -> None:
+    with _schema() as connect_factory:
+        _seed_active_installation(connect_factory)
+        store = PostgresIntegrationStore(connect_factory, clock=_Clock())
+        request = CreateIntegrationCaseRequest.model_validate(
+            {
+                "installationId": str(INSTALLATION_ID),
+                "overlayRevision": "overlay-v1",
+                "displayName": "必须整体回滚",
+            }
+        )
+
+        def handler(conn: object) -> IntegrationCommandResult:
+            created = store.create_current_case_in_transaction(
+                conn,
+                org_id=ORG,
+                project_id=PROJECT,
+                request=request,
+                owner="owner:rollback",
+                required_markings=["internal"],
+            )
+            return IntegrationCommandResult(
+                case_pk=created.case_pk,
+                status_code=200,
+                response_json={"caseId": created.case_id, "etagVersion": 1},
+                response_etag="W/\"1\"",
+            )
+
+        with pytest.raises(EvidenceReferenceInvalidError):
+            store.execute_idempotent(
+                org_id=ORG,
+                project_id=PROJECT,
+                operation="integration_cases.create",
+                idempotency_key="rollback-invalid-receipt",
+                subject="owner:rollback",
+                request_json=request.model_dump(mode="json", by_alias=True),
+                if_match_etag=None,
+                handler=handler,
+            )
+        with connect_factory() as conn:
+            assert conn.execute("SELECT COUNT(*) AS n FROM integration_case").fetchone()[
+                "n"
+            ] == 0
+            assert conn.execute(
+                "SELECT COUNT(*) AS n FROM integration_case_command"
+            ).fetchone()["n"] == 0
+
+
+@pytest.mark.parametrize(
+    ("table", "statement", "reference"),
+    [
+        (
+            "integration_case_projection",
+            "UPDATE integration_case_projection SET etag_version=etag_version+1",
+            False,
+        ),
+        (
+            "integration_evidence_snapshot",
+            "UPDATE integration_evidence_snapshot SET etag_version=etag_version+1",
+            False,
+        ),
+        (
+            "integration_instance_revision",
+            "UPDATE integration_instance_revision SET required_markings='[\"secret\"]'::JSONB",
+            False,
+        ),
+        (
+            "integration_case_projection",
+            "UPDATE integration_case_projection SET connector_count=1",
+            True,
+        ),
+    ],
+)
+def test_restart_detects_projection_snapshot_marking_and_reference_corruption(
+    table: str, statement: str, reference: bool
+) -> None:
+    with _schema() as connect_factory:
+        _seed_active_installation(connect_factory)
+        store = PostgresIntegrationStore(connect_factory, clock=_Clock())
+        created = (
+            store.create_reference_case(
+                org_id=ORG, project_id=PROJECT, display_name="脱敏参考"
+            )
+            if reference
+            else _create(store)
+        )
+        with connect_factory() as conn:
+            conn.execute(
+                sql.SQL("ALTER TABLE {} DISABLE TRIGGER USER").format(
+                    sql.Identifier(table)
+                )
+            )
+            conn.execute(statement)
             conn.execute(
                 sql.SQL("ALTER TABLE {} ENABLE TRIGGER USER").format(
                     sql.Identifier(table)
