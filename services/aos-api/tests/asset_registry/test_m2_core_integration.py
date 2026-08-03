@@ -6,6 +6,7 @@ import base64
 import importlib.util
 import uuid
 from contextlib import contextmanager
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import ModuleType
@@ -47,7 +48,7 @@ from aos_api.asset_registry.release_policy import (
     ReleasePolicy,
 )
 from aos_api.asset_registry.resolver import resolve
-from aos_api.asset_registry.signature import TrustRoot
+from aos_api.asset_registry.signature import FrozenTrustRootProvider, TrustRoot
 from aos_api.db import connect, get_dsn
 
 API_ROOT = Path(__file__).resolve().parents[2]
@@ -123,6 +124,11 @@ class TrustRoots:
             raise self.failure
         return self.roots.get((publisher, key_id))
 
+    def snapshot(self) -> FrozenTrustRootProvider:
+        if self.failure is not None:
+            raise self.failure
+        return FrozenTrustRootProvider(self.roots)
+
     def signing_material(self, publisher: str) -> tuple[Ed25519PrivateKey, TrustRoot]:
         private_key = self.private_keys.get(publisher)
         if private_key is None:
@@ -142,6 +148,38 @@ class TrustRoots:
         )
         self.roots[(publisher, key_id)] = root
         return private_key, root
+
+
+class RotatingTrustRoots:
+    """Expose a mixed live view while offering one safe frozen snapshot."""
+
+    def __init__(
+        self,
+        *,
+        old_roots: dict[tuple[str, str], TrustRoot],
+        new_roots: dict[tuple[str, str], TrustRoot],
+    ) -> None:
+        self._old_roots = old_roots
+        self._new_roots = new_roots
+        self.snapshot_calls = 0
+        self.live_lookup_calls = 0
+
+    def snapshot(self) -> FrozenTrustRootProvider:
+        self.snapshot_calls += 1
+        return FrozenTrustRootProvider(self._old_roots)
+
+    def get_trust_root(self, *, publisher: str, key_id: str) -> TrustRoot | None:
+        self.live_lookup_calls += 1
+        roots = self._old_roots if self.live_lookup_calls == 1 else self._new_roots
+        return roots.get((publisher, key_id))
+
+
+class DynamicTrustRootsWithoutSnapshot:
+    def __init__(self, roots: dict[tuple[str, str], TrustRoot]) -> None:
+        self._roots = roots
+
+    def get_trust_root(self, *, publisher: str, key_id: str) -> TrustRoot | None:
+        return self._roots.get((publisher, key_id))
 
 
 class FixedLoader:
@@ -317,7 +355,7 @@ def _publish_bundle(
     )
 
 
-def _snapshot_reader(scoped_connect, trust_roots: TrustRoots) -> RegistrySnapshotReader:
+def _snapshot_reader(scoped_connect, trust_roots: object) -> RegistrySnapshotReader:
     return RegistrySnapshotReader(
         connect_factory=scoped_connect,
         release_policy=ReleasePolicy(trust_roots=trust_roots),
@@ -418,6 +456,66 @@ def test_snapshot_expiry_does_not_dos_other_candidates(core_database) -> None:
     snapshot = _snapshot_reader(scoped_connect, trust_roots).read()
 
     assert [item.id for item in snapshot.candidates] == ["solution.healthy"]
+
+
+def test_snapshot_uses_one_trust_view_and_excludes_only_the_revoked_candidate(
+    core_database,
+) -> None:
+    scoped_connect = core_database
+    registry = PostgresRegistryStore(scoped_connect)
+    signing_roots = TrustRoots()
+    _publish_bundle(
+        registry,
+        signing_roots,
+        publisher="alpha",
+        bundle_id="solution.alpha",
+    )
+    _publish_bundle(
+        registry,
+        signing_roots,
+        publisher="beta",
+        bundle_id="solution.beta",
+    )
+
+    alpha_identity = ("alpha", "alpha-w4-key")
+    beta_identity = ("beta", "beta-w4-key")
+    alpha_root = signing_roots.roots[alpha_identity]
+    beta_root = signing_roots.roots[beta_identity]
+    old_roots = {
+        alpha_identity: alpha_root,
+        beta_identity: replace(beta_root, revoked_at=NOW),
+    }
+    new_roots = {
+        alpha_identity: replace(alpha_root, revoked_at=NOW),
+        beta_identity: beta_root,
+    }
+    rotating_roots = RotatingTrustRoots(
+        old_roots=old_roots,
+        new_roots=new_roots,
+    )
+
+    snapshot = _snapshot_reader(scoped_connect, rotating_roots).read()
+
+    assert rotating_roots.snapshot_calls == 1
+    assert rotating_roots.live_lookup_calls == 0
+    assert [(item.publisher, item.id) for item in snapshot.candidates] == [
+        ("alpha", "solution.alpha")
+    ]
+
+
+def test_snapshot_rejects_dynamic_trust_provider_without_snapshot(
+    core_database,
+) -> None:
+    scoped_connect = core_database
+    registry = PostgresRegistryStore(scoped_connect)
+    signing_roots = TrustRoots()
+    _publish_bundle(registry, signing_roots, bundle_id="solution.dynamic")
+    dynamic_roots = DynamicTrustRootsWithoutSnapshot(signing_roots.roots)
+
+    with pytest.raises(AssetRegistryError) as caught:
+        _snapshot_reader(scoped_connect, dynamic_roots).read()
+
+    assert caught.value.code == AssetRegistryErrorCode.TRUST_ROOT_UNAVAILABLE
 
 
 def test_snapshot_trust_outage_and_manifest_corruption_fail_closed(

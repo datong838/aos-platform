@@ -205,6 +205,30 @@ def test_publisher_is_exact_and_prerelease_requires_an_explicit_constraint() -> 
     ]
 
 
+def test_stable_candidate_wins_over_a_higher_matching_prerelease() -> None:
+    snapshot = _snapshot(
+        _candidate(("aos", "solution.stable-first", "1.9.0")),
+        _candidate(("aos", "solution.stable-first", "2.0.0-alpha.2")),
+    )
+
+    lock = resolve(
+        _request(
+            (
+                "aos",
+                "solution.stable-first",
+                "1.9.0 || >=2.0.0-alpha.1 <2.0.0",
+            ),
+            snapshot=snapshot,
+        ),
+        snapshot,
+        None,
+    )
+
+    assert [(item.id, item.version) for item in lock.resolved] == [
+        ("solution.stable-first", "1.9.0")
+    ]
+
+
 def test_optional_dependency_activates_only_when_top_level_requested() -> None:
     root = _candidate(
         ("aos", "solution.root", "1.0.0"),
@@ -306,6 +330,52 @@ def test_cycle_and_explicit_conflict_return_structured_errors() -> None:
     assert conflict.value.details["subtype"] == "explicit_conflict"
 
 
+def test_complex_cycle_is_rotated_without_reversing_real_edges() -> None:
+    snapshot = _snapshot(
+        _candidate(
+            ("aos", "aaa.root", "1.0.0"),
+            required=((None, "cycle.c", "1.0.0"),),
+        ),
+        _candidate(
+            ("aos", "cycle.c", "1.0.0"),
+            required=((None, "cycle.a", "1.0.0"),),
+        ),
+        _candidate(
+            ("aos", "cycle.a", "1.0.0"),
+            required=((None, "cycle.b", "1.0.0"),),
+        ),
+        _candidate(
+            ("aos", "cycle.b", "1.0.0"),
+            required=((None, "cycle.c", "1.0.0"),),
+        ),
+    )
+
+    with pytest.raises(AssetRegistryError) as caught:
+        resolve(
+            _request(("aos", "aaa.root", "1.0.0"), snapshot=snapshot),
+            snapshot,
+            None,
+        )
+
+    assert caught.value.code == AssetRegistryErrorCode.DEPENDENCY_CYCLE
+    assert caught.value.details is not None
+    cycle = caught.value.details["cycle"]
+    assert [(item["publisher"], item["id"]) for item in cycle] == [
+        ("aos", "cycle.a"),
+        ("aos", "cycle.b"),
+        ("aos", "cycle.c"),
+    ]
+    real_edges = {
+        ("cycle.a", "cycle.b"),
+        ("cycle.b", "cycle.c"),
+        ("cycle.c", "cycle.a"),
+    }
+    assert {
+        (cycle[index]["id"], cycle[(index + 1) % len(cycle)]["id"])
+        for index in range(len(cycle))
+    } == real_edges
+
+
 @pytest.mark.parametrize("provider_count", [0, 2])
 def test_capability_requires_exactly_one_selected_provider(provider_count: int) -> None:
     candidates = [
@@ -379,6 +449,159 @@ def test_normalized_api_contribution_collision_is_not_bypassed_by_parameter_name
     assert caught.value.details is not None
     assert caught.value.details["subtype"] == "contribution_collision"
     assert caught.value.details["resource"]["kind"] == "api"
+
+
+@pytest.mark.parametrize(
+    "conflict_kind",
+    [
+        "explicit",
+        "capability_missing",
+        "capability_multiple",
+        "contribution",
+    ],
+)
+def test_resource_conflict_has_stable_shortest_path_to_an_owner(
+    conflict_kind: str,
+) -> None:
+    root_dependencies: tuple[tuple[str | None, str, str], ...]
+    candidates: list[RegistrySnapshotCandidate]
+    expected_subtype: str
+    expected_owner: str
+
+    if conflict_kind == "explicit":
+        root_dependencies = (
+            (None, "plugin.alpha", "1.0.0"),
+            (None, "plugin.beta", "1.0.0"),
+        )
+        candidates = [
+            _candidate(
+                ("aos", "plugin.alpha", "1.0.0"),
+                conflicts=((None, "plugin.beta", None),),
+            ),
+            _candidate(("aos", "plugin.beta", "1.0.0")),
+        ]
+        expected_subtype = "explicit_conflict"
+        expected_owner = "plugin.alpha"
+    elif conflict_kind == "capability_missing":
+        root_dependencies = ((None, "plugin.consumer", "1.0.0"),)
+        candidates = [
+            _candidate(
+                ("aos", "plugin.consumer", "1.0.0"),
+                requires=("cap.orders",),
+            )
+        ]
+        expected_subtype = "capability_missing"
+        expected_owner = "plugin.consumer"
+    elif conflict_kind == "capability_multiple":
+        root_dependencies = (
+            (None, "plugin.consumer", "1.0.0"),
+            (None, "plugin.provider-a", "1.0.0"),
+            (None, "plugin.provider-b", "1.0.0"),
+        )
+        candidates = [
+            _candidate(
+                ("aos", "plugin.consumer", "1.0.0"),
+                requires=("cap.orders",),
+            ),
+            _candidate(
+                ("aos", "plugin.provider-a", "1.0.0"),
+                provides=("cap.orders",),
+            ),
+            _candidate(
+                ("aos", "plugin.provider-b", "1.0.0"),
+                provides=("cap.orders",),
+            ),
+        ]
+        expected_subtype = "capability_multiple"
+        expected_owner = "plugin.provider-a"
+    else:
+        shared_claim = {
+            "kind": "navigation",
+            "route": "/Orders/:orderId",
+            "mode": "exclusive",
+        }
+        root_dependencies = (
+            (None, "plugin.left", "1.0.0"),
+            (None, "plugin.right", "1.0.0"),
+        )
+        candidates = [
+            _candidate(
+                ("aos", "plugin.left", "1.0.0"),
+                contributions=(shared_claim,),
+            ),
+            _candidate(
+                ("aos", "plugin.right", "1.0.0"),
+                contributions=(shared_claim,),
+            ),
+        ]
+        expected_subtype = "contribution_collision"
+        expected_owner = "plugin.left"
+
+    snapshot = _snapshot(
+        _candidate(
+            ("aos", "solution.root", "1.0.0"),
+            required=root_dependencies,
+        ),
+        *candidates,
+    )
+    with pytest.raises(AssetRegistryError) as caught:
+        resolve(
+            _request(("aos", "solution.root", "1.0.0"), snapshot=snapshot),
+            snapshot,
+            None,
+        )
+
+    assert caught.value.code == AssetRegistryErrorCode.DEPENDENCY_CONFLICT
+    assert caught.value.details is not None
+    assert caught.value.details["subtype"] == expected_subtype
+    assert caught.value.details["path"] == [
+        {
+            "publisher": "aos",
+            "id": "solution.root",
+            "version": "1.0.0",
+            "via": "requested",
+        },
+        {
+            "publisher": "aos",
+            "id": expected_owner,
+            "version": "1.0.0",
+            "via": "dependency",
+        },
+    ]
+
+
+def test_real_candidate_attempt_and_backtrack_budget_stops_at_10001() -> None:
+    candidates: list[RegistrySnapshotCandidate] = []
+    for patch in range(72):
+        version = f"1.0.{patch}"
+        candidates.extend(
+            [
+                _candidate(
+                    ("aos", "bundle.a", version),
+                    conflicts=((None, "bundle.b", None),),
+                ),
+                _candidate(("aos", "bundle.b", version)),
+            ]
+        )
+    snapshot = _snapshot(*candidates)
+
+    with pytest.raises(AssetRegistryError) as caught:
+        resolve(
+            _request(
+                ("aos", "bundle.a", "*"),
+                ("aos", "bundle.b", "*"),
+                snapshot=snapshot,
+            ),
+            snapshot,
+            None,
+        )
+
+    assert caught.value.code == AssetRegistryErrorCode.RESOLUTION_LIMIT_EXCEEDED
+    assert caught.value.details == {
+        "resource": "backtracking_states",
+        "limit": 10_000,
+        "observed": 10_001,
+    }
 
 
 def test_real_resolved_node_count_fails_at_max_plus_one() -> None:
