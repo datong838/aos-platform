@@ -576,9 +576,9 @@ class PostgresRegistryStore:
                     "artifactRef": str(item["artifact_ref"]),
                     "artifactHash": str(item["artifact_hash"]),
                     "status": str(item["status"]),
-                    "observedAt": self._timestamp(item["observed_at"]),
-                    "expiresAt": self._optional_timestamp(item["expires_at"]),
-                    "revokedAt": self._optional_timestamp(item["revoked_at"]),
+                    "observedAt": self._evidence_timestamp(item["observed_at"]),
+                    "expiresAt": self._optional_evidence_timestamp(item["expires_at"]),
+                    "revokedAt": self._optional_evidence_timestamp(item["revoked_at"]),
                     "metadata": dict(item["metadata"] or {}),
                 }
                 for item in evidence
@@ -740,6 +740,20 @@ class PostgresRegistryStore:
     @classmethod
     def _optional_timestamp(cls, value: datetime | None) -> str | None:
         return cls._timestamp(value) if value is not None else None
+
+    @staticmethod
+    def _evidence_timestamp(value: datetime) -> str:
+        """Match PostgreSQL JSON timestamptz fractional-second rendering."""
+        if value.microsecond == 0:
+            return value.isoformat(timespec="seconds")
+        fraction = f"{value.microsecond:06d}"
+        marker = f".{fraction}"
+        prefix, suffix = value.isoformat(timespec="microseconds").split(marker, 1)
+        return f"{prefix}.{fraction.rstrip('0')}{suffix}"
+
+    @classmethod
+    def _optional_evidence_timestamp(cls, value: datetime | None) -> str | None:
+        return cls._evidence_timestamp(value) if value is not None else None
 
     @classmethod
     def _bundle_record(cls, row: Any) -> JsonRecord:

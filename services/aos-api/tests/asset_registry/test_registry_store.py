@@ -264,6 +264,29 @@ def _loaded_bundle(
     )
 
 
+def _loaded_bundle_with_fixed_evidence_time(
+    *,
+    bundle_id: str,
+    microsecond: int,
+) -> LoadedBundle:
+    loaded = _loaded_bundle(bundle_id=bundle_id)
+    payload = loaded.model_dump(mode="python", by_alias=True)
+    observed_at = datetime(2026, 8, 3, 12, 34, 56, microsecond, tzinfo=UTC)
+    payload["evidence"][0].update(
+        {
+            "status": "revoked",
+            "observedAt": observed_at,
+            "expiresAt": observed_at + timedelta(hours=1),
+            "revokedAt": observed_at + timedelta(minutes=30),
+            "metadata": {
+                "validator": "registry-test",
+                "microsecond": microsecond,
+            },
+        }
+    )
+    return LoadedBundle.model_validate(payload)
+
+
 def _create_bundle(
     store: PostgresRegistryStore,
     *,
@@ -1053,6 +1076,98 @@ def test_store_transition_events_are_continuous_and_restart_durable(
         ]
         == events
     )
+
+
+@pytest.mark.parametrize(
+    ("microsecond", "observed_at", "expires_at", "revoked_at"),
+    [
+        (
+            123450,
+            "2026-08-03T12:34:56.12345+00:00",
+            "2026-08-03T13:34:56.12345+00:00",
+            "2026-08-03T13:04:56.12345+00:00",
+        ),
+        (
+            123456,
+            "2026-08-03T12:34:56.123456+00:00",
+            "2026-08-03T13:34:56.123456+00:00",
+            "2026-08-03T13:04:56.123456+00:00",
+        ),
+        (
+            0,
+            "2026-08-03T12:34:56+00:00",
+            "2026-08-03T13:34:56+00:00",
+            "2026-08-03T13:04:56+00:00",
+        ),
+    ],
+)
+def test_evidence_timestamps_match_postgresql_json_snapshot_and_restart(
+    registry_scope,
+    microsecond: int,
+    observed_at: str,
+    expires_at: str,
+    revoked_at: str,
+) -> None:
+    store, scoped_connect = registry_scope
+    bundle_id = f"solution.evidence-time-{microsecond}"
+    loaded = _loaded_bundle_with_fixed_evidence_time(
+        bundle_id=bundle_id,
+        microsecond=microsecond,
+    )
+    _create_bundle(store, bundle_id=bundle_id)
+    created = store.create_version(loaded, "publisher:test")
+
+    transitioned = store.transition_version(
+        bundle_id,
+        "1.0.0",
+        {"draft"},
+        "validated",
+        "validator:test",
+        "evidence timestamp rendering verified",
+    )
+
+    event = transitioned["lifecycleEvents"][0]
+    snapshot = event["evidenceSnapshot"]
+    assert created["evidence"] == transitioned["evidence"] == snapshot
+    assert canonical_sha256(created["evidence"]) == event["evidenceRevision"]
+    assert transitioned["evidence"][0] == {
+        "type": "manifest_validation",
+        "artifactRef": f"bundle://fixtures/aos/{bundle_id}/evidence.json",
+        "artifactHash": "sha256:" + "b" * 64,
+        "status": "revoked",
+        "observedAt": observed_at,
+        "expiresAt": expires_at,
+        "revokedAt": revoked_at,
+        "metadata": {
+            "validator": "registry-test",
+            "microsecond": microsecond,
+        },
+    }
+
+    with scoped_connect() as conn:
+        persisted = conn.execute(
+            """
+            SELECT evidence_snapshot
+              FROM asset_bundle_version_event
+             WHERE version_pk = (
+                       SELECT version_pk
+                         FROM asset_bundle_version
+                        WHERE bundle_pk = (
+                                  SELECT bundle_pk
+                                    FROM asset_bundle
+                                   WHERE publisher = 'aos' AND bundle_id = %s
+                              )
+                          AND version = '1.0.0'
+                   )
+               AND sequence = 1
+            """,
+            (bundle_id,),
+        ).fetchone()
+    assert persisted is not None
+    assert persisted["evidence_snapshot"] == snapshot
+
+    restarted = PostgresRegistryStore(scoped_connect)
+    assert restarted.get_version(bundle_id, "1.0.0", "aos") == transitioned
 
 
 def test_concurrent_publish_allows_exactly_one_transition(registry_scope) -> None:
