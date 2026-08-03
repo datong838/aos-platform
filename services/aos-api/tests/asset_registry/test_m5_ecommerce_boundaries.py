@@ -192,19 +192,15 @@ def test_synthetic_overlay_references_cannot_hide_real_instance_ids() -> None:
     if not OVERLAY_FIXTURE.is_file():
         return
     payload = json.loads(_read_text(OVERLAY_FIXTURE))
-    for field in (
-        "orgRef",
-        "projectRef",
-        "compositionLockRef",
-        "sourceRefs",
-        "secretRefs",
-        "datasetNamespace",
-    ):
+    for field in ("orgRef", "projectRef", "datasetNamespace"):
         _assert_synthetic_reference(payload[field], location=field)
-    _assert_synthetic_reference(
-        payload["approvals"]["overlayRevisionRef"],
-        location="approvals.overlayRevisionRef",
-    )
+    for index, domain in enumerate(payload["selectedDomains"]):
+        _assert_synthetic_reference(domain, location=f"selectedDomains[{index}]")
+    for field in ("sourceRefs", "secretRefs"):
+        for index, reference in enumerate(payload[field]):
+            _assert_synthetic_reference(
+                reference["ref"], location=f"{field}[{index}].ref"
+            )
 
 
 def test_bundle_content_directories_are_empty_declarations_only() -> None:
