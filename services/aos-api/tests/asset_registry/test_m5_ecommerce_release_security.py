@@ -8,6 +8,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 import pytest
+
 from aos_api.asset_registry.contracts import (
     BundleEvidence,
     BundleEvidenceStatus,
