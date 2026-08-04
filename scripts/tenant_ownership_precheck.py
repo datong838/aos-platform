@@ -13,9 +13,9 @@ API_ROOT = REPOSITORY_ROOT / "services" / "aos-api"
 sys.path.insert(0, str(API_ROOT))
 
 from aos_api.db import connect, get_dsn
-from aos_api.tenant_dual_write import stable_key_hash
 from aos_api.tenant_e3_rebaseline import (
     build_e1_reconciliation,
+    environment_fingerprint,
     read_e3_source_snapshot,
 )
 from aos_api.tenant_precheck import read_postgres_precheck
@@ -37,7 +37,7 @@ def main() -> int:
     parser.add_argument("--target-project", default="dev-project")
     args = parser.parse_args()
 
-    environment_fingerprint = stable_key_hash(get_dsn())
+    database_fingerprint = environment_fingerprint(get_dsn())
     with connect() as conn:
         conn.execute("SET TRANSACTION READ ONLY")
         postgres = read_postgres_precheck(
@@ -50,7 +50,7 @@ def main() -> int:
         source_snapshot = read_e3_source_snapshot(
             conn,
             postgres_precheck=postgres,
-            environment_fingerprint=environment_fingerprint,
+            environment_fingerprint=database_fingerprint,
             target_org_id=args.target_org,
             target_project_id=args.target_project,
         )

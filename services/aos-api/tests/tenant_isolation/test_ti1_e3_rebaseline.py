@@ -5,6 +5,7 @@ from aos_api.tenant_e3_rebaseline import (
     RESOURCE_SPECS,
     build_e1_reconciliation,
     build_resource_snapshot,
+    environment_fingerprint,
 )
 
 
@@ -117,3 +118,13 @@ def test_incomplete_source_snapshot_blocks_gate() -> None:
     )
     assert result["gate"] == "BLOCKED"
     assert result["blockers"] == ["SOURCE_SNAPSHOT_INCOMPLETE"]
+
+
+def test_environment_fingerprint_excludes_credentials() -> None:
+    first = environment_fingerprint(
+        "postgresql://user:secret-a@127.0.0.1:5433/aos_meta"
+    )
+    second = environment_fingerprint(
+        "postgresql://other:secret-b@127.0.0.1:5433/aos_meta"
+    )
+    assert first == second

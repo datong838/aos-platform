@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from psycopg import sql
+from psycopg.conninfo import conninfo_to_dict
 
 from aos_api.tenant_dual_write import stable_key_hash
 
@@ -62,6 +63,16 @@ RESOURCE_SPECS = (
         parent_target_columns=("org_id", "project_id"),
     ),
 )
+
+
+def environment_fingerprint(dsn: str) -> str:
+    """Identify the database without including credentials in hash input."""
+    values = conninfo_to_dict(dsn)
+    return stable_key_hash(
+        str(values.get("host") or ""),
+        str(values.get("port") or ""),
+        str(values.get("dbname") or ""),
+    )
 
 
 def read_e3_source_snapshot(
