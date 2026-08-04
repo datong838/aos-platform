@@ -140,7 +140,7 @@ def client():
         seed_modules_if_empty(TenantScope("dev-org", "dev-project"))
         from aos_api.db import connect as _connect
 
-        with _connect() as _c:
+        with _connect(TenantScope("dev-org", "dev-project")) as _c:
             for row in _c.execute(
                 "SELECT id FROM meta_module "
                 "WHERE org_id='dev-org' AND project_id='dev-project' "
@@ -173,6 +173,8 @@ def client():
                     "AND child.project_id=parent.project_id "
                     "AND child.module_id=parent.id"
                 )
+            _c.commit()
+        with _connect() as _c:
             _c.execute("DELETE FROM obj_instance WHERE props->>'source' IS NOT NULL")
             _c.execute("DELETE FROM meta_aip_kv WHERE key='apollo_ops_assets'")
             _c.execute("DELETE FROM meta_object_type WHERE id NOT IN ('WorkOrder','Site','Order','OrderItem')")

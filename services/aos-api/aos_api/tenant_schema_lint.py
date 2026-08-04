@@ -9,6 +9,7 @@ TI1_E3_REVISION = "228ti1e3ledger"
 TI1_E3_EXEC_REVISION = "228ti1e3exec"
 TI2_E1_REVISION = "228ti2e1expand"
 TI2_E4_REVISION = "228ti2e4validate"
+TI2_E6_REVISION = "228ti2e6rls"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {
@@ -75,7 +76,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         issues.append("TI1_FOREIGN_KEYS_MISSING")
     if prematurely_validated:
         issues.append("TI1_FOREIGN_KEYS_PREMATURELY_VALIDATED")
-    if rls_table_count:
+    if rls_table_count and revision != TI2_E6_REVISION:
         issues.append("RLS_ENABLED_BEFORE_E6")
     if revision not in {
         TI1_E1_REVISION,
@@ -84,6 +85,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI1_E3_EXEC_REVISION,
         TI2_E1_REVISION,
         TI2_E4_REVISION,
+        TI2_E6_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     return {
@@ -189,6 +191,7 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
         TI1_E3_EXEC_REVISION,
         TI2_E1_REVISION,
         TI2_E4_REVISION,
+        TI2_E6_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -299,7 +302,11 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] not in {TI2_E1_REVISION, TI2_E4_REVISION}:
+    if report["alembicRevision"] not in {
+        TI2_E1_REVISION,
+        TI2_E4_REVISION,
+        TI2_E6_REVISION,
+    }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     missing_columns: dict[str, list[str]] = {}
@@ -407,7 +414,7 @@ def build_ti2_e4_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] != TI2_E4_REVISION:
+    if report["alembicRevision"] not in {TI2_E4_REVISION, TI2_E6_REVISION}:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     rows = conn.execute(
         "SELECT conname, convalidated FROM pg_constraint "
@@ -427,4 +434,102 @@ def build_ti2_e4_schema_report(conn: Any) -> dict[str, Any]:
         "issues": issues,
         "ti2NotValidatedForeignKeys": not_validated,
         "ti2ValidatedForeignKeyCount": sum(validated.values()),
+    }
+
+
+TI2_E6_SCOPED_TABLES = {
+    "meta_module",
+    "module_canvas_config",
+    "module_deployment",
+    "module_events",
+    "module_interface",
+    "module_query",
+    "module_variable",
+    "module_widget_instance",
+    "module_instance_overlay",
+    "module_user_view_preference",
+}
+TI2_E6_ORG_TABLES = {"module_organization_profile"}
+TI2_E6_TABLES = TI2_E6_SCOPED_TABLES | TI2_E6_ORG_TABLES
+
+
+def build_ti2_e6_schema_report(conn: Any) -> dict[str, Any]:
+    report = build_ti2_e4_schema_report(conn)
+    issues = [
+        issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
+    ]
+    if report["alembicRevision"] != TI2_E6_REVISION:
+        issues.append("ALEMBIC_REVISION_MISMATCH")
+
+    role = conn.execute(
+        "SELECT rolcanlogin, rolsuper, rolbypassrls FROM pg_roles "
+        "WHERE rolname='aos_runtime'"
+    ).fetchone()
+    role_safe = bool(role) and not any(
+        bool(role[name]) for name in ("rolcanlogin", "rolsuper", "rolbypassrls")
+    )
+    if not role_safe:
+        issues.append("TI2_RUNTIME_ROLE_UNSAFE_OR_MISSING")
+
+    rows = conn.execute(
+        "SELECT c.relname AS table_name, c.relrowsecurity, c.relforcerowsecurity, "
+        "pg_get_userbyid(c.relowner) AS table_owner "
+        "FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace "
+        "WHERE n.nspname='public' AND c.relname = ANY(%s)",
+        (sorted(TI2_E6_TABLES),),
+    ).fetchall()
+    tables = {str(row["table_name"]): row for row in rows}
+    missing_tables = sorted(TI2_E6_TABLES - set(tables))
+    unprotected = sorted(
+        table
+        for table, row in tables.items()
+        if not bool(row["relrowsecurity"]) or not bool(row["relforcerowsecurity"])
+    )
+    runtime_owned = sorted(
+        table for table, row in tables.items() if row["table_owner"] == "aos_runtime"
+    )
+    if missing_tables:
+        issues.append("TI2_RLS_TABLES_MISSING")
+    if unprotected:
+        issues.append("TI2_RLS_NOT_ENABLED_AND_FORCED")
+    if runtime_owned:
+        issues.append("TI2_RUNTIME_ROLE_OWNS_TABLE")
+
+    policy_rows = conn.execute(
+        "SELECT tablename, policyname, roles, qual, with_check FROM pg_policies "
+        "WHERE schemaname='public' AND tablename = ANY(%s)",
+        (sorted(TI2_E6_TABLES),),
+    ).fetchall()
+    policies = {str(row["tablename"]): row for row in policy_rows}
+    invalid_policies: list[str] = []
+    for table in sorted(TI2_E6_TABLES):
+        row = policies.get(table)
+        expressions = f"{(row or {}).get('qual', '')} {(row or {}).get('with_check', '')}"
+        roles = list((row or {}).get("roles") or [])
+        valid = (
+            row is not None
+            and row["policyname"] == f"tenant_scope_{table}_ti2"
+            and "aos_runtime" in roles
+            and expressions.count("aos.org_id") == 2
+        )
+        if table in TI2_E6_SCOPED_TABLES:
+            valid = valid and expressions.count("aos.project_id") == 2
+        else:
+            valid = valid and "aos.project_id" not in expressions
+        if not valid:
+            invalid_policies.append(table)
+    if invalid_policies:
+        issues.append("TI2_RLS_POLICY_INVALID")
+
+    return {
+        **report,
+        "stage": "TI-2-E6",
+        "ok": not issues,
+        "issues": issues,
+        "ti2RuntimeRoleSafe": role_safe,
+        "ti2RlsTableCount": len(tables),
+        "ti2RlsMissingTables": missing_tables,
+        "ti2RlsUnprotectedTables": unprotected,
+        "ti2RuntimeOwnedTables": runtime_owned,
+        "ti2RlsInvalidPolicies": invalid_policies,
     }

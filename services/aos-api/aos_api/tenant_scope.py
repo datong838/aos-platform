@@ -12,6 +12,7 @@ from typing import Any
 MAX_SCOPE_PART_LENGTH = 160
 ORG_GUC = "aos.org_id"
 PROJECT_GUC = "aos.project_id"
+RUNTIME_DB_ROLE = "aos_runtime"
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,6 +61,7 @@ def bind_tenant_scope(scope: TenantScope) -> Iterator[TenantScope]:
 
 def apply_transaction_scope(conn: Any, scope: TenantScope) -> None:
     """Set transaction-local GUCs; values disappear at transaction end."""
+    conn.execute(f"SET LOCAL ROLE {RUNTIME_DB_ROLE}")
     conn.execute(
         """
         SELECT set_config('aos.org_id', %s, true),

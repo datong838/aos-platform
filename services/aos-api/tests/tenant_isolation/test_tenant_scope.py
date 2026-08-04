@@ -12,9 +12,11 @@ from aos_api.tenant_scope import (
 
 class FakeConnection:
     def __init__(self) -> None:
-        self.calls: list[tuple[str, tuple[str, str]]] = []
+        self.calls: list[tuple[str, tuple[str, str] | None]] = []
 
-    def execute(self, query: str, values: tuple[str, str]) -> None:
+    def execute(
+        self, query: str, values: tuple[str, str] | None = None
+    ) -> None:
         self.calls.append((query, values))
 
 
@@ -54,6 +56,7 @@ def test_apply_scope_uses_transaction_local_set_config() -> None:
     apply_transaction_scope(conn, scope)
 
     assert conn.calls == [
+        ("SET LOCAL ROLE aos_runtime", None),
         (
             """
         SELECT set_config('aos.org_id', %s, true),
@@ -62,4 +65,4 @@ def test_apply_scope_uses_transaction_local_set_config() -> None:
             scope.key,
         )
     ]
-    assert "true" in conn.calls[0][0]
+    assert "true" in conn.calls[1][0]
