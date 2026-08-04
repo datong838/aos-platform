@@ -22,6 +22,7 @@ TI4_D4_REVISION = "228ti4d4validate"
 TI4_D6_REVISION = "228ti4d6rls"
 TI4_D7_REVISION = "228ti4d7contract"
 TI4_C3_REVISION = "228ti4c3contract"
+TI4_A1_REVISION = "228ti4a1apollo"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {
@@ -99,6 +100,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D6_REVISION,
         TI4_D7_REVISION,
         TI4_C3_REVISION,
+        TI4_A1_REVISION,
     }:
         issues.append("RLS_ENABLED_BEFORE_E6")
     if revision not in {
@@ -120,6 +122,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D6_REVISION,
         TI4_D7_REVISION,
         TI4_C3_REVISION,
+        TI4_A1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     return {
@@ -282,6 +285,7 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D6_REVISION,
         TI4_D7_REVISION,
         TI4_C3_REVISION,
+        TI4_A1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -410,6 +414,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D6_REVISION,
         TI4_D7_REVISION,
         TI4_C3_REVISION,
+        TI4_A1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -501,6 +506,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D6_REVISION,
         TI4_D7_REVISION,
         TI4_C3_REVISION,
+        TI4_A1_REVISION,
     }:
         issues.append("TI2_EXPAND_COLUMNS_NOT_NULLABLE")
     if missing_tables:
@@ -532,6 +538,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
                 TI4_D6_REVISION,
                 TI4_D7_REVISION,
                 TI4_C3_REVISION,
+                TI4_A1_REVISION,
             }
             else non_nullable_columns
         ),
@@ -561,6 +568,7 @@ def build_ti2_e4_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D6_REVISION,
         TI4_D7_REVISION,
         TI4_C3_REVISION,
+        TI4_A1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     rows = conn.execute(
@@ -617,6 +625,7 @@ def build_ti2_e6_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D6_REVISION,
         TI4_D7_REVISION,
         TI4_C3_REVISION,
+        TI4_A1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -725,6 +734,7 @@ def build_ti2_e7_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D6_REVISION,
         TI4_D7_REVISION,
         TI4_C3_REVISION,
+        TI4_A1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -833,6 +843,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D6_REVISION,
         TI4_D7_REVISION,
         TI4_C3_REVISION,
+        TI4_A1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -870,6 +881,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D6_REVISION,
         TI4_D7_REVISION,
         TI4_C3_REVISION,
+        TI4_A1_REVISION,
     }:
         issues.append("TI3_EXPAND_COLUMNS_NOT_NULLABLE")
     if templates_with_scope:
@@ -909,6 +921,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
                 TI4_D6_REVISION,
                 TI4_D7_REVISION,
                 TI4_C3_REVISION,
+                TI4_A1_REVISION,
             }
             else expand_not_nullable
         ),
@@ -932,6 +945,7 @@ def build_ti3_e6_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D6_REVISION,
         TI4_D7_REVISION,
         TI4_C3_REVISION,
+        TI4_A1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1039,6 +1053,7 @@ def build_ti3_e7_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D6_REVISION,
         TI4_D7_REVISION,
         TI4_C3_REVISION,
+        TI4_A1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1177,6 +1192,7 @@ def build_ti4_c1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D6_REVISION,
         TI4_D7_REVISION,
         TI4_C3_REVISION,
+        TI4_A1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1218,7 +1234,7 @@ def build_ti4_c1_schema_report(conn: Any) -> dict[str, Any]:
         "FOREIGN KEY (org_id, workspace_id) "
         "REFERENCES twa_workspace(org_id, project_id)"
     )
-    if revision != TI4_C3_REVISION:
+    if revision not in {TI4_C3_REVISION, TI4_A1_REVISION}:
         expected_fk += " NOT VALID"
     invalid_foreign_keys = sorted(
         table
@@ -1229,7 +1245,7 @@ def build_ti4_c1_schema_report(conn: Any) -> dict[str, Any]:
         sorted(
             table for table, row in foreign_keys.items() if bool(row["convalidated"])
         )
-        if revision != TI4_C3_REVISION
+        if revision not in {TI4_C3_REVISION, TI4_A1_REVISION}
         else []
     )
     if invalid_foreign_keys:
@@ -1272,6 +1288,7 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D6_REVISION,
         TI4_D7_REVISION,
         TI4_C3_REVISION,
+        TI4_A1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1302,6 +1319,7 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
     if non_nullable_expand_columns and revision not in {
         TI4_D7_REVISION,
         TI4_C3_REVISION,
+        TI4_A1_REVISION,
     }:
         issues.append("TI4_DATA_OS_EXPAND_COLUMNS_NOT_NULLABLE")
 
@@ -1350,7 +1368,7 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
         "ti4DataOsMissingScopeColumns": missing_columns,
         "ti4DataOsNonNullableExpandColumns": (
             []
-            if revision in {TI4_D7_REVISION, TI4_C3_REVISION}
+            if revision in {TI4_D7_REVISION, TI4_C3_REVISION, TI4_A1_REVISION}
             else non_nullable_expand_columns
         ),
         "ti4DataOsInvalidWorkspaceForeignKeys": invalid_foreign_keys,
@@ -1423,7 +1441,11 @@ def build_ti4_d7_schema_report(conn: Any) -> dict[str, Any]:
         for issue in report["issues"]
         if issue not in {"ALEMBIC_REVISION_MISMATCH"}
     ]
-    if report["alembicRevision"] not in {TI4_D7_REVISION, TI4_C3_REVISION}:
+    if report["alembicRevision"] not in {
+        TI4_D7_REVISION,
+        TI4_C3_REVISION,
+        TI4_A1_REVISION,
+    }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     pk_rows = conn.execute(
@@ -1532,7 +1554,7 @@ def build_ti4_c3_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] != TI4_C3_REVISION:
+    if report["alembicRevision"] not in {TI4_C3_REVISION, TI4_A1_REVISION}:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     fk_rows = conn.execute(
@@ -1618,4 +1640,85 @@ def build_ti4_c3_schema_report(conn: Any) -> dict[str, Any]:
         "ti4EcomRlsUnprotectedTables": unprotected_tables,
         "ti4EcomRuntimeOwnedTables": runtime_owned_tables,
         "ti4EcomRlsInvalidPolicies": invalid_policies,
+    }
+
+
+def build_ti4_a1_schema_report(conn: Any) -> dict[str, Any]:
+    """Verify Apollo Spoke as a scoped instance beneath global Channels."""
+    report = build_ti4_c3_schema_report(conn)
+    issues = [
+        issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
+    ]
+    if report["alembicRevision"] != TI4_A1_REVISION:
+        issues.append("ALEMBIC_REVISION_MISMATCH")
+
+    primary_key = conn.execute(
+        "SELECT pg_get_constraintdef(oid) AS definition FROM pg_constraint "
+        "WHERE conrelid='apollo_spoke'::regclass AND contype='p'"
+    ).fetchone()
+    primary_key_valid = bool(primary_key) and primary_key["definition"] == (
+        "PRIMARY KEY (org_id, project_id, id)"
+    )
+    if not primary_key_valid:
+        issues.append("TI4_APOLLO_SPOKE_PRIMARY_KEY_INVALID")
+
+    fk = conn.execute(
+        "SELECT convalidated,pg_get_constraintdef(oid) AS definition "
+        "FROM pg_constraint WHERE conname='fk_apollo_spoke_workspace_ti4a1'"
+    ).fetchone()
+    foreign_key_valid = bool(fk) and bool(fk["convalidated"]) and fk["definition"] == (
+        "FOREIGN KEY (org_id, project_id) "
+        "REFERENCES twa_workspace(org_id, project_id)"
+    )
+    if not foreign_key_valid:
+        issues.append("TI4_APOLLO_SPOKE_WORKSPACE_FK_INVALID")
+
+    table = conn.execute(
+        "SELECT relrowsecurity,relforcerowsecurity,"
+        "pg_get_userbyid(relowner) AS table_owner FROM pg_class "
+        "WHERE oid='apollo_spoke'::regclass"
+    ).fetchone()
+    rls_valid = bool(table) and bool(table["relrowsecurity"]) and bool(
+        table["relforcerowsecurity"]
+    )
+    if not rls_valid:
+        issues.append("TI4_APOLLO_SPOKE_RLS_INVALID")
+    if table and table["table_owner"] == "aos_runtime":
+        issues.append("TI4_APOLLO_SPOKE_RUNTIME_OWNS_TABLE")
+
+    policy = conn.execute(
+        "SELECT roles,qual,with_check FROM pg_policies "
+        "WHERE schemaname='public' AND tablename='apollo_spoke' "
+        "AND policyname='tenant_scope_apollo_spoke_ti4a1'"
+    ).fetchone()
+    expressions = f"{(policy or {}).get('qual', '')} {(policy or {}).get('with_check', '')}"
+    policy_valid = (
+        policy is not None
+        and "public" in list(policy["roles"] or [])
+        and expressions.count("aos.org_id") == 2
+        and expressions.count("aos.project_id") == 2
+    )
+    if not policy_valid:
+        issues.append("TI4_APOLLO_SPOKE_POLICY_INVALID")
+
+    orphan_count = int(
+        conn.execute(
+            "SELECT COUNT(*) AS count FROM apollo_spoke child "
+            "LEFT JOIN twa_workspace parent ON parent.org_id=child.org_id "
+            "AND parent.project_id=child.project_id WHERE parent.org_id IS NULL"
+        ).fetchone()["count"]
+    )
+    if orphan_count:
+        issues.append("TI4_APOLLO_SPOKE_WORKSPACE_ORPHAN")
+
+    return {
+        **report,
+        "stage": "TI-4-A1",
+        "ok": not issues,
+        "issues": issues,
+        "ti4ApolloSpokePrimaryKeyValid": primary_key_valid,
+        "ti4ApolloSpokeWorkspaceForeignKeyValid": foreign_key_valid,
+        "ti4ApolloSpokeRlsValid": rls_valid,
+        "ti4ApolloSpokePolicyValid": policy_valid,
+        "ti4ApolloSpokeWorkspaceOrphanCount": orphan_count,
     }

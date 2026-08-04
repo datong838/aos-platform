@@ -32,6 +32,7 @@ def _skip_after_d3_contract() -> None:
     if revision and revision["version_num"] in {
         "228ti4d7contract",
         "228ti4c3contract",
+        "228ti4a1apollo",
     }:
         pytest.skip("D7 forbids new NULL-scope active rows; D3 history is frozen")
 

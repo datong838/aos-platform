@@ -6,7 +6,7 @@ from aos_api.db import init_schema, seed_if_empty
 
 
 def _org_a(headers: dict) -> dict:
-    return {**headers, "X-Org-Id": "org-a"}
+    return headers
 
 
 def test_full_spoke_mock_ready_by_default(client, auth_headers, monkeypatch):

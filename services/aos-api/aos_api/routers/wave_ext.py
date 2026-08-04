@@ -1835,27 +1835,27 @@ def apollo_channel_get(
 def apollo_channel_promote(
     channel_id: str, principal: Principal = Depends(require_principal)
 ):
-    _ = principal
     from aos_api.apollo_catalog import promote_channel
 
-    return promote_channel(channel_id)
+    return promote_channel(TenantScope(principal.org_id, principal.project_id), channel_id)
 
 
 @router.post("/v1/apollo/channels/{channel_id}/recall")
 def apollo_channel_recall(
     channel_id: str, principal: Principal = Depends(require_principal)
 ):
-    _ = principal
     from aos_api.apollo_catalog import recall_channel
 
-    return recall_channel(channel_id)
+    return recall_channel(TenantScope(principal.org_id, principal.project_id), channel_id)
 
 
 @router.get("/v1/apollo/spokes")
 def apollo_spokes_list(principal: Principal = Depends(require_principal)):
     from aos_api.apollo_catalog import list_spokes
 
-    return {"items": list_spokes(org_id=principal.org_id)}
+    return {
+        "items": list_spokes(TenantScope(principal.org_id, principal.project_id))
+    }
 
 
 @router.get("/v1/apollo/spokes/local")
@@ -1863,7 +1863,9 @@ def spoke_probe(principal: Principal = Depends(require_principal)):
     """Compat · Lite local spoke (scheme 66 reads catalog)."""
     from aos_api.apollo_catalog import get_spoke
 
-    return get_spoke("spoke-local-dev", org_id=principal.org_id)
+    return get_spoke(
+        TenantScope(principal.org_id, principal.project_id), "spoke-local-dev"
+    )
 
 
 @router.get("/v1/apollo/spokes/{spoke_id}")
@@ -1871,7 +1873,7 @@ def spoke_by_id(spoke_id: str, principal: Principal = Depends(require_principal)
     """T-API · Spoke detail (PG catalog · scheme 66) · TWA.9 按 Org。"""
     from aos_api.apollo_catalog import get_spoke
 
-    return get_spoke(spoke_id, org_id=principal.org_id)
+    return get_spoke(TenantScope(principal.org_id, principal.project_id), spoke_id)
 
 
 @router.post("/v1/apollo/spokes/{spoke_id}/heartbeat")
@@ -1885,7 +1887,9 @@ def spoke_heartbeat(
 
     payload = body or {}
     ok = bool(payload.get("ok", True))
-    return record_spoke_heartbeat(spoke_id, org_id=principal.org_id, ok=ok)
+    return record_spoke_heartbeat(
+        TenantScope(principal.org_id, principal.project_id), spoke_id, ok=ok
+    )
 
 
 @router.post("/v1/apollo/spokes/{spoke_id}/apply-plan")
@@ -1899,8 +1903,8 @@ def spoke_apply_plan(
 
     payload = body or {}
     return apply_full_spoke_plan(
+        TenantScope(principal.org_id, principal.project_id),
         spoke_id,
-        org_id=principal.org_id,
         plan_id=payload.get("planId"),
     )
 
@@ -1919,7 +1923,7 @@ def apollo_fleet(principal: Principal = Depends(require_principal)):
     """T-API · Hub fleet (Channel/Spoke catalog) · Spoke 按 Org。"""
     from aos_api.apollo_catalog import fleet_payload
 
-    return fleet_payload(org_id=principal.org_id)
+    return fleet_payload(TenantScope(principal.org_id, principal.project_id))
 
 
 @router.post("/v1/apollo/assets")

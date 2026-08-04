@@ -85,7 +85,11 @@ def test_d7_schema_report_and_quarantine_guards_are_green() -> None:
         conn.execute("SET TRANSACTION READ ONLY")
         report = build_ti4_d7_schema_report(conn)
     assert report["ok"] is True, report
-    assert report["alembicRevision"] in {"228ti4d7contract", "228ti4c3contract"}
+    assert report["alembicRevision"] in {
+        "228ti4d7contract",
+        "228ti4c3contract",
+        "228ti4a1apollo",
+    }
     assert report["ti4DataOsContractInvalidPrimaryKeys"] == []
     assert report["ti4DataOsContractNullableScope"] == []
     assert report["ti4DataOsContractInvalidParentForeignKeys"] == []

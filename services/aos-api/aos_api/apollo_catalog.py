@@ -9,6 +9,7 @@ from typing import Any
 from aos_api.db import connect
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope, apply_transaction_scope
 
 log = get_logger("aos-api.apollo_catalog")
 
@@ -45,21 +46,8 @@ CREATE TABLE IF NOT EXISTS apollo_spoke (
 
 
 def ensure_schema(conn=None) -> None:
-    def _run(c):
-        c.execute(SCHEMA_SQL)
-        c.execute(
-            """
-            ALTER TABLE apollo_spoke
-            ADD COLUMN IF NOT EXISTS org_id TEXT NOT NULL DEFAULT 'dev-org'
-            """
-        )
-
-    if conn is None:
-        with connect() as c:
-            _run(c)
-            c.commit()
-    else:
-        _run(conn)
+    """Compatibility hook; Apollo DDL is owned by Alembic after TI-4 A1."""
+    _ = conn
 
 
 def ensure_seed(conn=None) -> None:
@@ -93,6 +81,7 @@ def ensure_seed(conn=None) -> None:
                 True,
                 "compose",
                 "dev-org",
+                "dev-project",
             ),
             (
                 "spoke-full-stub",
@@ -103,21 +92,25 @@ def ensure_seed(conn=None) -> None:
                 "planned",
                 False,
                 "deferred",
-                "org-a",
+                "dev-org",
+                "dev-project",
             ),
         ]
+        apply_transaction_scope(c, TenantScope("dev-org", "dev-project"))
         for row in spokes:
             c.execute(
                 """
                 INSERT INTO apollo_spoke
-                  (id, name, kind, channel_id, version, status, heartbeat_ok, runtime, org_id)
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                ON CONFLICT (id) DO UPDATE SET org_id = EXCLUDED.org_id
+                  (id, name, kind, channel_id, version, status, heartbeat_ok,
+                   runtime, org_id, project_id)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                ON CONFLICT (org_id,project_id,id) DO NOTHING
                 """,
                 row,
             )
         log.info("apollo_catalog_seed_ensured channels=%s spokes=%s", len(channels), len(spokes))
         _apply_full_spoke_mode(c)
+        c.execute("RESET ROLE")
 
     if conn is None:
         with connect() as c:
@@ -211,6 +204,10 @@ def _spoke_row(r: Any) -> dict[str, Any]:
         org_id = r["org_id"]
     except Exception:  # noqa: BLE001
         org_id = "dev-org"
+    try:
+        project_id = r["project_id"]
+    except Exception:  # noqa: BLE001
+        project_id = "dev-project"
     return {
         "id": r["id"],
         "name": r["name"],
@@ -224,6 +221,7 @@ def _spoke_row(r: Any) -> dict[str, Any]:
         "hub": r["hub"],
         "runtime": r["runtime"],
         "orgId": org_id or "dev-org",
+        "projectId": project_id or "dev-project",
         "meta": r["meta"] if isinstance(r["meta"], dict) else (r["meta"] or {}),
     }
 
@@ -268,7 +266,7 @@ def _prev_channel(cid: str) -> str | None:
     return CHANNEL_ORDER[i - 1]
 
 
-def promote_channel(channel_id: str) -> dict[str, Any]:
+def promote_channel(scope: TenantScope, channel_id: str) -> dict[str, Any]:
     """Promote channel pointer with health + asset gates (scheme 160).
 
     Minimal semantics: the named channel is the *source*; promote creates/updates
@@ -295,7 +293,7 @@ def promote_channel(channel_id: str) -> dict[str, Any]:
     assert_promote_assets_ok(nxt)
 
     now = datetime.now(timezone.utc)
-    with connect() as conn:
+    with connect(scope) as conn:
         src = conn.execute(
             "SELECT * FROM apollo_channel WHERE id=%s", (channel_id,)
         ).fetchone()
@@ -360,7 +358,7 @@ def promote_channel(channel_id: str) -> dict[str, Any]:
     }
 
 
-def recall_channel(channel_id: str) -> dict[str, Any]:
+def recall_channel(scope: TenantScope, channel_id: str) -> dict[str, Any]:
     ensure_seed()
     prev = _prev_channel(channel_id)
     if not prev:
@@ -370,7 +368,7 @@ def recall_channel(channel_id: str) -> dict[str, Any]:
             status_code=400,
         )
     now = datetime.now(timezone.utc)
-    with connect() as conn:
+    with connect(scope) as conn:
         src = conn.execute(
             "SELECT * FROM apollo_channel WHERE id=%s", (channel_id,)
         ).fetchone()
@@ -411,26 +409,28 @@ def recall_channel(channel_id: str) -> dict[str, Any]:
     }
 
 
-def filter_spokes_by_org(
-    items: list[dict[str, Any]], org_id: str
+def filter_spokes_by_scope(
+    items: list[dict[str, Any]], scope: TenantScope
 ) -> list[dict[str, Any]]:
-    """TWA.9 — data-plane spokes must not cross org."""
-    return [s for s in items if s.get("orgId") == org_id]
+    """Data-plane spokes must not cross organization or workspace."""
+    return [
+        item
+        for item in items
+        if (item.get("orgId"), item.get("projectId")) == scope.key
+    ]
 
 
-def list_spokes(org_id: str | None = None) -> list[dict[str, Any]]:
+def list_spokes(scope: TenantScope) -> list[dict[str, Any]]:
     ensure_seed()
-    with connect() as conn:
+    with connect(scope) as conn:
         rows = conn.execute(
             "SELECT * FROM apollo_spoke ORDER BY id"
         ).fetchall()
     items = [_spoke_row(r) for r in rows]
-    if org_id:
-        items = filter_spokes_by_org(items, org_id)
-    return items
+    return filter_spokes_by_scope(items, scope)
 
 
-def get_spoke(spoke_id: str, org_id: str | None = None) -> dict[str, Any]:
+def get_spoke(scope: TenantScope, spoke_id: str) -> dict[str, Any]:
     ensure_seed()
     aliases = {
         "local": "spoke-local-dev",
@@ -439,58 +439,57 @@ def get_spoke(spoke_id: str, org_id: str | None = None) -> dict[str, Any]:
         "full": FULL_SPOKE_ID,
     }
     sid = aliases.get(spoke_id, spoke_id)
-    with connect() as conn:
+    with connect(scope) as conn:
         row = conn.execute(
             "SELECT * FROM apollo_spoke WHERE id=%s", (sid,)
         ).fetchone()
     if not row:
         raise ApiError(code="NOT_FOUND", message="spoke missing", status_code=404)
     out = _spoke_row(row)
-    if org_id and out.get("orgId") != org_id:
-        raise ApiError(code="NOT_FOUND", message="spoke missing", status_code=404)
     if spoke_id != sid:
         out["requestedId"] = spoke_id
     return out
 
 
 def record_spoke_heartbeat(
+    scope: TenantScope,
     spoke_id: str,
     *,
-    org_id: str | None = None,
     ok: bool = True,
 ) -> dict[str, Any]:
     """158 · Spoke heartbeat (Lite or Full). Org-scoped."""
     ensure_seed()
-    spoke = get_spoke(spoke_id, org_id=org_id)
+    spoke = get_spoke(scope, spoke_id)
     now = datetime.now(timezone.utc)
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             UPDATE apollo_spoke
             SET heartbeat_ok=%s, status=%s,
                 meta = COALESCE(meta, '{}'::jsonb) || %s::jsonb
-            WHERE id=%s
+            WHERE org_id=%s AND project_id=%s AND id=%s
             """,
             (
                 bool(ok),
                 "online" if ok else "degraded",
                 json.dumps({"lastHeartbeatAt": now.isoformat()}),
+                *scope.key,
                 spoke["id"],
             ),
         )
         conn.commit()
-    return get_spoke(spoke["id"], org_id=org_id)
+    return get_spoke(scope, spoke["id"])
 
 
 def apply_full_spoke_plan(
+    scope: TenantScope,
     spoke_id: str,
     *,
-    org_id: str | None = None,
     plan_id: str | None = None,
 ) -> dict[str, Any]:
     """158 · Mock Helm apply — records Reported State; no cluster mutate."""
     ensure_seed()
-    spoke = get_spoke(spoke_id, org_id=org_id)
+    spoke = get_spoke(scope, spoke_id)
     if spoke.get("kind") != "full":
         raise ApiError(
             code="SPOKE_NOT_FULL",
@@ -513,19 +512,19 @@ def apply_full_spoke_plan(
         "reportedState": "Applied(mock)",
         "scheme": "158",
     }
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             UPDATE apollo_spoke
             SET status='online', heartbeat_ok=TRUE,
                 runtime=CASE WHEN runtime='deferred' THEN 'helm-mock' ELSE runtime END,
                 meta = COALESCE(meta, '{}'::jsonb) || %s::jsonb
-            WHERE id=%s
+            WHERE org_id=%s AND project_id=%s AND id=%s
             """,
-            (json.dumps(reported), spoke["id"]),
+            (json.dumps(reported), *scope.key, spoke["id"]),
         )
         conn.commit()
-    out = get_spoke(spoke["id"], org_id=org_id)
+    out = get_spoke(scope, spoke["id"])
     return {"ok": True, "planId": pid, "spoke": out, "reported": reported}
 
 
@@ -544,9 +543,9 @@ def full_spoke_plan_artifact() -> dict[str, Any]:
     }
 
 
-def fleet_payload(org_id: str | None = None) -> dict[str, Any]:
+def fleet_payload(scope: TenantScope) -> dict[str, Any]:
     ensure_seed()
-    spokes = list_spokes(org_id=None)
+    spokes = list_spokes(scope)
     channels = list_channels()
     mock_ready = full_spoke_mock_ready()
     from aos_api.apollo_ops import ops_hub_flags

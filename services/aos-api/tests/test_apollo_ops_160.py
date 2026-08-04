@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from aos_api.aip_kv_store import put_payload
 from aos_api.db import connect, init_schema, seed_if_empty
+from aos_api.tenant_scope import TenantScope
 
 
 def setup_function():
@@ -43,7 +44,7 @@ def test_changes_api_roundtrip(client, auth_headers):
 def test_promote_unhealthy_blocked(client, auth_headers):
     init_schema()
     seed_if_empty()
-    with connect() as conn:
+    with connect(TenantScope("dev-org", "dev-project")) as conn:
         conn.execute(
             "UPDATE apollo_spoke SET channel_id='dev', heartbeat_ok=FALSE WHERE kind='lite'"
         )
@@ -52,7 +53,7 @@ def test_promote_unhealthy_blocked(client, auth_headers):
     assert r.status_code == 400
     assert r.json()["code"] == "CHANNEL_PROMOTE_UNHEALTHY"
     # restore
-    with connect() as conn:
+    with connect(TenantScope("dev-org", "dev-project")) as conn:
         conn.execute(
             "UPDATE apollo_spoke SET heartbeat_ok=TRUE WHERE kind='lite'"
         )
@@ -62,7 +63,7 @@ def test_promote_unhealthy_blocked(client, auth_headers):
 def test_promote_asset_incompatible(client, auth_headers):
     init_schema()
     seed_if_empty()
-    with connect() as conn:
+    with connect(TenantScope("dev-org", "dev-project")) as conn:
         conn.execute(
             "UPDATE apollo_spoke SET channel_id='dev', heartbeat_ok=TRUE WHERE kind='lite'"
         )

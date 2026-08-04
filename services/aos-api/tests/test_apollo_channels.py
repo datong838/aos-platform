@@ -17,8 +17,9 @@ def test_promote_and_recall(client, auth_headers):
     seed_if_empty()
     # reset lite spoke to dev for deterministic test
     from aos_api.db import connect
+    from aos_api.tenant_scope import TenantScope
 
-    with connect() as conn:
+    with connect(TenantScope("dev-org", "dev-project")) as conn:
         conn.execute(
             "UPDATE apollo_spoke SET channel_id='dev' WHERE kind='lite'"
         )
@@ -74,8 +75,7 @@ def test_full_spoke_runtime_deferred(client, auth_headers, monkeypatch):
 
         ensure_seed(conn)
         conn.commit()
-    headers = {**auth_headers, "X-Org-Id": "org-a"}
-    r = client.get("/v1/apollo/spokes/spoke-full-stub", headers=headers)
+    r = client.get("/v1/apollo/spokes/spoke-full-stub", headers=auth_headers)
     assert r.status_code == 200
     assert r.json()["kind"] == "full"
     assert r.json()["runtime"] == "deferred"

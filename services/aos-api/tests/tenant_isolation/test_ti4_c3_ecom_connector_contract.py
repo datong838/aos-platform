@@ -73,7 +73,7 @@ def test_c3_schema_report_is_green() -> None:
         report = build_ti4_c3_schema_report(conn)
 
     assert report["ok"] is True, report
-    assert report["alembicRevision"] == "228ti4c3contract"
+    assert report["alembicRevision"] in {"228ti4c3contract", "228ti4a1apollo"}
     assert report["ti4EcomUnvalidatedWorkspaceForeignKeys"] == []
     assert report["ti4EcomRuntimeRoleSafe"] is True
     assert report["ti4EcomRlsTableCount"] == 5
