@@ -48,14 +48,17 @@ def ensure_schema() -> None:
 def list_queries(scope: TenantScope, module_id: str) -> list[dict[str, Any]]:
     ensure_schema()
     with connect(scope) as conn:
-        rows = conn.execute(
-            """
-            SELECT * FROM module_query
-             WHERE module_id=%s AND org_id=%s AND project_id=%s
-             ORDER BY created_at
-            """,
-            (module_id, *scope.key),
-        ).fetchall()
+        module_pk = resolve_module_pk(conn, scope, module_id)
+        rows = (
+            conn.execute(
+                "SELECT * FROM module_query "
+                "WHERE module_pk=%s AND org_id=%s AND project_id=%s "
+                "ORDER BY created_at",
+                (module_pk, *scope.key),
+            ).fetchall()
+            if module_pk is not None
+            else []
+        )
     return [_row(r) for r in rows]
 
 
@@ -64,11 +67,16 @@ def get_query(
 ) -> dict[str, Any] | None:
     ensure_schema()
     with connect(scope) as conn:
-        row = conn.execute(
-            "SELECT * FROM module_query "
-            "WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s",
-            (query_id, module_id, *scope.key),
-        ).fetchone()
+        module_pk = resolve_module_pk(conn, scope, module_id)
+        row = (
+            conn.execute(
+                "SELECT * FROM module_query "
+                "WHERE id=%s AND module_pk=%s AND org_id=%s AND project_id=%s",
+                (query_id, module_pk, *scope.key),
+            ).fetchone()
+            if module_pk is not None
+            else None
+        )
     return _row(row) if row else None
 
 
@@ -107,10 +115,13 @@ def create_query(
 def delete_query(scope: TenantScope, module_id: str, query_id: str) -> bool:
     ensure_schema()
     with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
+        if module_pk is None:
+            return False
         result = conn.execute(
             "DELETE FROM module_query "
-            "WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s",
-            (query_id, module_id, *scope.key),
+            "WHERE id=%s AND module_pk=%s AND org_id=%s AND project_id=%s",
+            (query_id, module_pk, *scope.key),
         )
         conn.commit()
         return result.rowcount > 0

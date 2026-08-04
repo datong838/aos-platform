@@ -9,7 +9,7 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
-from aos_api.module_identity import stable_module_pk
+from aos_api.module_identity import resolve_module_pk, stable_module_pk
 from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.module_store")
@@ -490,13 +490,17 @@ def get_module(
 ) -> dict[str, Any] | None:
     ensure_module_schema()
     with connect(scope) as conn:
-        row = conn.execute(
-            """
-            SELECT * FROM meta_module
-             WHERE id=%s AND org_id=%s AND project_id=%s
-            """,
-            (module_id, *scope.key),
-        ).fetchone()
+        module_pk = resolve_module_pk(conn, scope, module_id)
+        if module_pk is None:
+            row = None
+        else:
+            row = conn.execute(
+                """
+                SELECT * FROM meta_module
+                 WHERE module_pk=%s AND org_id=%s AND project_id=%s
+                """,
+                (module_pk, *scope.key),
+            ).fetchone()
     if not row:
         log.warning(
             "module_miss id=%s org=%s project=%s",
@@ -591,6 +595,9 @@ def update_module(
         if k in mapping and v is not None:
             cur[mapping[k]] = v
     with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
+        if module_pk is None:
+            return None
         conn.execute(
             """
             UPDATE meta_module SET
@@ -598,7 +605,7 @@ def update_module(
               markings=%s::jsonb, entry_path=%s, widgets=%s::jsonb,
               components=%s::jsonb, buddy_bound=%s,
               category=%s, theme=%s
-            WHERE id=%s AND org_id=%s AND project_id=%s
+            WHERE module_pk=%s AND org_id=%s AND project_id=%s
             """,
             (
                 cur["name"],
@@ -612,7 +619,7 @@ def update_module(
                 cur["buddyBound"],
                 cur.get("category") or "运营",
                 cur.get("theme") or "light",
-                module_id,
+                module_pk,
                 *scope.key,
             ),
         )
@@ -624,13 +631,16 @@ def touch_module(
     scope: TenantScope, module_id: str
 ) -> bool:
     with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
+        if module_pk is None:
+            return False
         rows = conn.execute(
             """
             UPDATE meta_module
                SET last_opened_at = NOW()
-             WHERE id=%s AND org_id=%s AND project_id=%s
+             WHERE module_pk=%s AND org_id=%s AND project_id=%s
             """,
-            (module_id, *scope.key),
+            (module_pk, *scope.key),
         ).rowcount
     if rows == 0:
         log.warning("module_touch_not_found id=%s", module_id)

@@ -8,6 +8,7 @@ from aos_api.module_deployments import deploy, get_deployment, rollback
 from aos_api.module_events import create_event, delete_event, get_event, update_event
 from aos_api.module_interfaces import get_interface, put_interface
 from aos_api.module_queries import create_query, delete_query, get_query
+from aos_api.module_store import create_module
 from aos_api.module_variables import (
     create_variable,
     delete_variable,
@@ -33,9 +34,15 @@ def _scopes() -> tuple[TenantScope, TenantScope]:
     )
 
 
+def _create_module(scope: TenantScope, module_id: str) -> None:
+    created = create_module(scope, {"id": module_id, "name": module_id})
+    assert created["id"] == module_id
+
+
 def test_canvas_fails_closed_on_same_legacy_id_across_tenants() -> None:
     scope_a, scope_b = _scopes()
     module_id = f"module-{uuid.uuid4().hex}"
+    _create_module(scope_a, module_id)
     created = put_config(scope_a, module_id, {"type": "page"}, {})
 
     assert created["moduleId"] == module_id
@@ -48,6 +55,7 @@ def test_canvas_fails_closed_on_same_legacy_id_across_tenants() -> None:
 def test_widget_get_update_delete_are_tenant_and_module_scoped() -> None:
     scope_a, scope_b = _scopes()
     module_id = f"module-{uuid.uuid4().hex}"
+    _create_module(scope_a, module_id)
     item = create_instance(scope_a, module_id, {"title": "A"})
 
     assert get_instance(scope_b, module_id, item["id"]) is None
@@ -60,6 +68,7 @@ def test_widget_get_update_delete_are_tenant_and_module_scoped() -> None:
 def test_variable_get_update_delete_are_tenant_and_module_scoped() -> None:
     scope_a, scope_b = _scopes()
     module_id = f"module-{uuid.uuid4().hex}"
+    _create_module(scope_a, module_id)
     item = create_variable(scope_a, module_id, {"name": "selected"})
 
     assert get_variable(scope_b, module_id, item["id"]) is None
@@ -72,6 +81,7 @@ def test_variable_get_update_delete_are_tenant_and_module_scoped() -> None:
 def test_query_get_delete_are_tenant_and_module_scoped() -> None:
     scope_a, scope_b = _scopes()
     module_id = f"module-{uuid.uuid4().hex}"
+    _create_module(scope_a, module_id)
     item = create_query(scope_a, module_id, {"name": "orders"})
 
     assert get_query(scope_b, module_id, item["id"]) is None
@@ -83,6 +93,7 @@ def test_query_get_delete_are_tenant_and_module_scoped() -> None:
 def test_interface_fails_closed_on_same_legacy_id_across_tenants() -> None:
     scope_a, scope_b = _scopes()
     module_id = f"module-{uuid.uuid4().hex}"
+    _create_module(scope_a, module_id)
     put_interface(scope_a, module_id, {"name": "A"})
 
     assert get_interface(scope_b, module_id) is None
@@ -94,6 +105,7 @@ def test_interface_fails_closed_on_same_legacy_id_across_tenants() -> None:
 def test_event_get_update_delete_are_tenant_and_module_scoped() -> None:
     scope_a, scope_b = _scopes()
     module_id = f"module-{uuid.uuid4().hex}"
+    _create_module(scope_a, module_id)
     item = create_event(
         scope_a,
         module_id,
@@ -110,6 +122,7 @@ def test_event_get_update_delete_are_tenant_and_module_scoped() -> None:
 def test_deployment_and_rollback_are_tenant_and_module_scoped() -> None:
     scope_a, scope_b = _scopes()
     module_id = f"module-{uuid.uuid4().hex}"
+    _create_module(scope_a, module_id)
     item = deploy(scope_a, module_id, "dev")
 
     assert get_deployment(scope_b, module_id, item["id"]) is None

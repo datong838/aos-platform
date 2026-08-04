@@ -109,10 +109,14 @@ def test_plan_apply_verify_and_rollback_are_lossless(client) -> None:
 
 def test_plan_quarantines_orphan_and_blocks_conflicting_identity(client) -> None:
     label = f"negative-{uuid.uuid4().hex}"
+    scope = TenantScope(f"org-{label}", f"project-{label}")
+    module_id = f"module-{uuid.uuid4().hex}"
+    create_module(scope, {"id": module_id, "name": "identity-conflict"})
     with connect() as conn:
         parent = conn.execute(
             "SELECT id, org_id, project_id FROM meta_module "
-            "ORDER BY id LIMIT 1"
+            "WHERE id=%s AND org_id=%s AND project_id=%s",
+            (module_id, *scope.key),
         ).fetchone()
         assert parent is not None
         conn.execute(

@@ -4,22 +4,22 @@ import uuid
 # Unit tests default to in-memory TWA (181m PG via AOS_TWA_STORE=pg / auto outside tests).
 os.environ.setdefault("AOS_TWA_STORE", "memory")
 
-import pytest
 import psycopg
+import pytest
 from alembic import command
 from alembic.config import Config
-from psycopg import sql
-from psycopg.conninfo import conninfo_to_dict, make_conninfo
-from sqlalchemy.engine import URL
-
+from aos_api import mock_data
 from aos_api.db import init_schema, seed_if_empty
 from aos_api.idempotency import idempotency_store
 from aos_api.main import create_app
 from aos_api.metrics import reset_metrics
+from aos_api.module_identity import stable_module_pk
 from aos_api.module_store import seed_modules_if_empty
 from aos_api.tenant_scope import TenantScope
-from aos_api import mock_data
 from fastapi.testclient import TestClient
+from psycopg import sql
+from psycopg.conninfo import conninfo_to_dict, make_conninfo
+from sqlalchemy.engine import URL
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -141,6 +141,38 @@ def client():
         from aos_api.db import connect as _connect
 
         with _connect() as _c:
+            for row in _c.execute(
+                "SELECT id FROM meta_module "
+                "WHERE org_id='dev-org' AND project_id='dev-project' "
+                "AND module_pk IS NULL"
+            ).fetchall():
+                module_id = str(row["id"])
+                _c.execute(
+                    "UPDATE meta_module SET module_pk=%s, module_id=%s "
+                    "WHERE id=%s AND org_id='dev-org' AND project_id='dev-project'",
+                    (
+                        stable_module_pk("dev-org", "dev-project", module_id),
+                        module_id,
+                        module_id,
+                    ),
+                )
+            for table in (
+                "module_canvas_config",
+                "module_deployment",
+                "module_events",
+                "module_interface",
+                "module_query",
+                "module_variable",
+                "module_widget_instance",
+            ):
+                _c.execute(
+                    f"UPDATE {table} child SET module_pk=parent.module_pk "
+                    "FROM meta_module parent "
+                    "WHERE child.module_pk IS NULL "
+                    "AND child.org_id=parent.org_id "
+                    "AND child.project_id=parent.project_id "
+                    "AND child.module_id=parent.id"
+                )
             _c.execute("DELETE FROM obj_instance WHERE props->>'source' IS NOT NULL")
             _c.execute("DELETE FROM meta_aip_kv WHERE key='apollo_ops_assets'")
             _c.execute("DELETE FROM meta_object_type WHERE id NOT IN ('WorkOrder','Site','Order','OrderItem')")

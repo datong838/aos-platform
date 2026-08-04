@@ -81,13 +81,16 @@ def normalize_entry_params(
 def get_interface(scope: TenantScope, module_id: str) -> dict[str, Any] | None:
     ensure_schema()
     with connect(scope) as conn:
-        row = conn.execute(
-            """
-            SELECT * FROM module_interface
-             WHERE module_id=%s AND org_id=%s AND project_id=%s
-            """,
-            (module_id, *scope.key),
-        ).fetchone()
+        module_pk = resolve_module_pk(conn, scope, module_id)
+        row = (
+            conn.execute(
+                "SELECT * FROM module_interface "
+                "WHERE module_pk=%s AND org_id=%s AND project_id=%s",
+                (module_pk, *scope.key),
+            ).fetchone()
+            if module_pk is not None
+            else None
+        )
     return _row(row) if row else None
 
 

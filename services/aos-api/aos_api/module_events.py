@@ -68,12 +68,14 @@ def seed_events_if_empty(scope: TenantScope, module_id: str) -> None:
     ensure_events_schema()
     with connect(scope) as conn:
         module_pk = resolve_module_pk(conn, scope, module_id)
+        if module_pk is None:
+            return
         existing = conn.execute(
             """
             SELECT COUNT(*) as cnt FROM module_events
-             WHERE module_id = %s AND org_id = %s AND project_id = %s
+             WHERE module_pk = %s AND org_id = %s AND project_id = %s
             """,
-            (module_id, *scope.key),
+            (module_pk, *scope.key),
         ).fetchone()
         if existing and existing["cnt"] > 0:
             return
@@ -107,14 +109,17 @@ def list_events(scope: TenantScope, module_id: str) -> list[dict[str, Any]]:
     """List all events for a module."""
     ensure_events_schema()
     with connect(scope) as conn:
-        rows = conn.execute(
-            """
-            SELECT * FROM module_events
-             WHERE module_id = %s AND org_id = %s AND project_id = %s
-             ORDER BY sort_order, created_at
-            """,
-            (module_id, *scope.key),
-        ).fetchall()
+        module_pk = resolve_module_pk(conn, scope, module_id)
+        rows = (
+            conn.execute(
+                "SELECT * FROM module_events "
+                "WHERE module_pk=%s AND org_id=%s AND project_id=%s "
+                "ORDER BY sort_order, created_at",
+                (module_pk, *scope.key),
+            ).fetchall()
+            if module_pk is not None
+            else []
+        )
     return [_row_to_event(r) for r in rows]
 
 
@@ -123,13 +128,16 @@ def get_event(
 ) -> dict[str, Any] | None:
     ensure_events_schema()
     with connect(scope) as conn:
-        row = conn.execute(
-            """
-            SELECT * FROM module_events
-             WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s
-            """,
-            (event_id, module_id, *scope.key),
-        ).fetchone()
+        module_pk = resolve_module_pk(conn, scope, module_id)
+        row = (
+            conn.execute(
+                "SELECT * FROM module_events "
+                "WHERE id=%s AND module_pk=%s AND org_id=%s AND project_id=%s",
+                (event_id, module_pk, *scope.key),
+            ).fetchone()
+            if module_pk is not None
+            else None
+        )
     return _row_to_event(row) if row else None
 
 
@@ -188,6 +196,9 @@ def update_event(
     sort_order = patch.get("sortOrder", cur.get("sortOrder", 0))
 
     with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
+        if module_pk is None:
+            return None
         conn.execute(
             """
             UPDATE module_events SET
@@ -197,7 +208,7 @@ def update_event(
                 enabled = %s,
                 sort_order = %s,
                 updated_at = NOW()
-            WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s
+            WHERE id=%s AND module_pk=%s AND org_id=%s AND project_id=%s
             """,
             (
                 name,
@@ -206,7 +217,7 @@ def update_event(
                 enabled,
                 sort_order,
                 event_id,
-                module_id,
+                module_pk,
                 *scope.key,
             ),
         )
@@ -218,10 +229,13 @@ def delete_event(scope: TenantScope, module_id: str, event_id: str) -> bool:
     """Delete an event binding. Returns True if deleted."""
     ensure_events_schema()
     with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
+        if module_pk is None:
+            return False
         result = conn.execute(
             "DELETE FROM module_events "
-            "WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s",
-            (event_id, module_id, *scope.key),
+            "WHERE id=%s AND module_pk=%s AND org_id=%s AND project_id=%s",
+            (event_id, module_pk, *scope.key),
         )
         conn.commit()
         deleted = result.rowcount > 0

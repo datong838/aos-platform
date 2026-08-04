@@ -50,14 +50,17 @@ def ensure_schema() -> None:
 def list_variables(scope: TenantScope, module_id: str) -> list[dict[str, Any]]:
     ensure_schema()
     with connect(scope) as conn:
-        rows = conn.execute(
-            """
-            SELECT * FROM module_variable
-             WHERE module_id=%s AND org_id=%s AND project_id=%s
-             ORDER BY group_name, created_at
-            """,
-            (module_id, *scope.key),
-        ).fetchall()
+        module_pk = resolve_module_pk(conn, scope, module_id)
+        rows = (
+            conn.execute(
+                "SELECT * FROM module_variable "
+                "WHERE module_pk=%s AND org_id=%s AND project_id=%s "
+                "ORDER BY group_name, created_at",
+                (module_pk, *scope.key),
+            ).fetchall()
+            if module_pk is not None
+            else []
+        )
     return [_row(r) for r in rows]
 
 
@@ -66,11 +69,16 @@ def get_variable(
 ) -> dict[str, Any] | None:
     ensure_schema()
     with connect(scope) as conn:
-        row = conn.execute(
-            "SELECT * FROM module_variable "
-            "WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s",
-            (variable_id, module_id, *scope.key),
-        ).fetchone()
+        module_pk = resolve_module_pk(conn, scope, module_id)
+        row = (
+            conn.execute(
+                "SELECT * FROM module_variable "
+                "WHERE id=%s AND module_pk=%s AND org_id=%s AND project_id=%s",
+                (variable_id, module_pk, *scope.key),
+            ).fetchone()
+            if module_pk is not None
+            else None
+        )
     return _row(row) if row else None
 
 
@@ -119,13 +127,16 @@ def update_variable(
     current_value = patch.get("currentValue", cur.get("currentValue"))
     description = patch.get("description", cur.get("description"))
     with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
+        if module_pk is None:
+            return None
         conn.execute(
             """
             UPDATE module_variable SET
                 name=%s, var_type=%s, group_name=%s,
                 initial_value=%s::jsonb, current_value=%s::jsonb,
                 description=%s, updated_at=NOW()
-            WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s
+            WHERE id=%s AND module_pk=%s AND org_id=%s AND project_id=%s
             """,
             (
                 name,
@@ -135,7 +146,7 @@ def update_variable(
                 json.dumps(current_value),
                 description,
                 variable_id,
-                module_id,
+                module_pk,
                 *scope.key,
             ),
         )
@@ -146,10 +157,13 @@ def update_variable(
 def delete_variable(scope: TenantScope, module_id: str, variable_id: str) -> bool:
     ensure_schema()
     with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
+        if module_pk is None:
+            return False
         result = conn.execute(
             "DELETE FROM module_variable "
-            "WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s",
-            (variable_id, module_id, *scope.key),
+            "WHERE id=%s AND module_pk=%s AND org_id=%s AND project_id=%s",
+            (variable_id, module_pk, *scope.key),
         )
         conn.commit()
         return result.rowcount > 0
