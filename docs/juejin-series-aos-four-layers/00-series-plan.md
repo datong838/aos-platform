@@ -41,25 +41,25 @@ AIP 决策层
 - 技术重点：插件化 Connector、同步状态、Pipeline DAG、Dataset/MediaSet 路由、Lineage、DLQ。
 - 关键失败路径：Schema 漂移、半批成功、结果未知、原件与结构化结果失联。
 
-### 03 本体为什么是数字孪生的核心：Object、Link、Action 与版本治理
+### 03 Agent 为什么需要业务本体：Object、Link、Action 与数字孪生
 
 - 核心问题：数据库表为什么不足以直接成为 Agent 的业务世界。
 - 技术重点：ObjectType、LinkType、ActionType、Function、Funnel、Wiki、分支和图谱健康。
 - 关键失败路径：多源冲突、悬空关系、直接写库、草稿污染生产对象。
 
-### 04 AIP 如何把模型接入业务决策：Logic、Tool、Draft 与 Evals
+### 04 Agent 决策层如何连接模型与业务：Logic、Tool、Draft 与 Evals
 
 - 核心问题：AIP 为什么不是一个更大的聊天机器人。
 - 技术重点：模型网关、Logic Runtime、Tool Registry、Agent、Draft、Trace、Evals 和熔断。
 - 关键失败路径：工具越权、证据过期、模型路由不可用、评测未通过却扩大自治。
 
-### 05 Workshop 工作台的运行时设计：Module、Variable、Selection 与受控 Action
+### 05 Agent 工作台如何组织业务操作：Module、Variable、Selection 与 Event
 
 - 核心问题：业务工作台为什么不应退化成静态看板或任意脚本低代码工具。
 - 技术重点：Module、Layout、Widget、Variable、Selection、Event、Marking 和分页。
 - 关键失败路径：选择集失控、组件越权、大表拉全量、连点动作重复执行。
 
-### 06 一条业务决策如何穿过 AOS 四层：查询、推理、审批与写回
+### 06 一条 Agent 决策如何穿过四层运行时：查询、推理、审批与写回
 
 - 核心问题：四层怎样通过稳定引用形成一条可以回放的决策链。
 - 技术重点：Snapshot、ObjectSet、Decision Draft、Selection、Action Proposal、Result Reconciliation。
