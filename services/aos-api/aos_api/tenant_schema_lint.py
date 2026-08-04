@@ -6,6 +6,7 @@ from typing import Any
 TI1_E1_REVISION = "228ti1e1expand"
 TI1_E2_REVISION = "228ti1e2dual"
 TI1_E3_REVISION = "228ti1e3ledger"
+TI1_E3_EXEC_REVISION = "228ti1e3exec"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {
@@ -74,7 +75,12 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         issues.append("TI1_FOREIGN_KEYS_PREMATURELY_VALIDATED")
     if rls_table_count:
         issues.append("RLS_ENABLED_BEFORE_E6")
-    if revision not in {TI1_E1_REVISION, TI1_E2_REVISION, TI1_E3_REVISION}:
+    if revision not in {
+        TI1_E1_REVISION,
+        TI1_E2_REVISION,
+        TI1_E3_REVISION,
+        TI1_E3_EXEC_REVISION,
+    }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     return {
         "stage": "TI-1-E1",
@@ -149,13 +155,18 @@ E3_REQUIRED_COLUMNS = {
     },
     "tenant_backfill_batch_event": {
         "org_id", "project_id", "event_id", "batch_id", "status",
-        "evidence_hash", "actor_role", "created_at",
+        "evidence_hash", "actor_role", "actor_hash", "created_at",
     },
     "tenant_ownership_decision": {
         "org_id", "project_id", "decision_id", "batch_id", "resource",
         "key_hash", "decision", "evidence_grade", "evidence_hash",
         "candidate_count", "target_org_id", "target_project_id",
         "before_hash", "after_hash", "reason_code", "created_at",
+    },
+    "tenant_ownership_decision_event": {
+        "org_id", "project_id", "event_id", "batch_id", "resource",
+        "key_hash", "event_type", "before_hash", "after_hash",
+        "evidence_hash", "actor_role", "actor_hash", "created_at",
     },
     "tenant_quarantine_record": {
         "org_id", "project_id", "quarantine_id", "batch_id", "resource",
@@ -170,7 +181,7 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] != TI1_E3_REVISION:
+    if report["alembicRevision"] != TI1_E3_EXEC_REVISION:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     missing_by_table: dict[str, list[str]] = {}
@@ -205,7 +216,8 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
          WHERE n.nspname='public' AND NOT t.tgisinternal
            AND c.relname IN (
              'tenant_backfill_batch', 'tenant_backfill_batch_event',
-             'tenant_ownership_decision', 'tenant_quarantine_record'
+             'tenant_ownership_decision', 'tenant_ownership_decision_event',
+             'tenant_quarantine_record'
            )
          ORDER BY c.relname, t.tgname
         """

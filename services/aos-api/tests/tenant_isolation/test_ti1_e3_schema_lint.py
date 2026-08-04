@@ -64,7 +64,7 @@ class FakeConnection:
             return Result(rows=rows[1:] if self.omit_trigger else rows)
         if "pg_class" in query:
             return Result(row={"count": 0})
-        return Result(row={"version_num": "228ti1e3ledger"})
+        return Result(row={"version_num": "228ti1e3exec"})
 
 
 def test_e3_schema_lint_accepts_strong_append_only_ledgers() -> None:

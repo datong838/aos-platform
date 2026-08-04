@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from aos_api.asset_registry.canonical_json import canonical_sha256
+from aos_api.tenant_dual_write import stable_key_hash
 
 
 def deterministic_batch_id(
@@ -26,10 +27,14 @@ def persist_dry_run_batch(
     environment_hash: str,
     code_commit: str,
     dry_run: Mapping[str, Any],
+    planner_actor_hash: str | None = None,
 ) -> dict[str, Any]:
     if dry_run.get("gate") != "GREEN":
         raise RuntimeError("cannot persist a blocked E3 dry-run")
     source_snapshot_hash = str(dry_run["sourceSnapshotHash"])
+    effective_planner_hash = planner_actor_hash or stable_key_hash(
+        "TI-1-E3", "PLANNER", code_commit
+    )
     batch_id = deterministic_batch_id(
         owner_org_id=owner_org_id,
         owner_project_id=owner_project_id,
@@ -77,10 +82,17 @@ def persist_dry_run_batch(
     conn.execute(
         """
         INSERT INTO tenant_backfill_batch_event (
-          org_id, project_id, batch_id, status, evidence_hash, actor_role
-        ) VALUES (%s,%s,%s,'PLANNED',%s,'PLANNER')
+          org_id, project_id, batch_id, status, evidence_hash, actor_role,
+          actor_hash
+        ) VALUES (%s,%s,%s,'PLANNED',%s,'PLANNER',%s)
         """,
-        (owner_org_id, owner_project_id, batch_id, summary_hash),
+        (
+            owner_org_id,
+            owner_project_id,
+            batch_id,
+            summary_hash,
+            effective_planner_hash,
+        ),
     )
     for item in dry_run.get("decisions") or []:
         conn.execute(

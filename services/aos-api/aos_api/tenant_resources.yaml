@@ -23,7 +23,7 @@ executionPlan:
       wave: TI-1
       worker: W1
       dependsOn: [ti1-tenant-scope]
-      resources: [authz_tuple, tenant_dual_write_ledger, tenant_backfill_batch, tenant_backfill_batch_event, tenant_ownership_decision, tenant_quarantine_record]
+      resources: [authz_tuple, tenant_dual_write_ledger, tenant_backfill_batch, tenant_backfill_batch_event, tenant_ownership_decision, tenant_ownership_decision_event, tenant_quarantine_record]
 
     - id: ti2-asset-templates
       wave: TI-2
@@ -139,6 +139,7 @@ resources:
   - {<<: *owned, name: tenant_backfill_batch, baselineScope: CONTROL_PLANE, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, batch_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-1}
   - {<<: *owned, name: tenant_backfill_batch_event, baselineScope: CONTROL_PLANE, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, event_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-1}
   - {<<: *owned, name: tenant_ownership_decision, baselineScope: CONTROL_PLANE, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, decision_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-1}
+  - {<<: *owned, name: tenant_ownership_decision_event, baselineScope: CONTROL_PLANE, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, event_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-1}
   - {<<: *owned, name: tenant_quarantine_record, baselineScope: CONTROL_PLANE, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, quarantine_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-1}
   - {<<: *owned, name: bundle_composition, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, composition_pk], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-2}
   - {<<: *owned, name: bundle_composition_lock, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, composition_pk, revision], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-2}
