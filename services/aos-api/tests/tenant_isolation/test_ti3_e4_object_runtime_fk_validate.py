@@ -70,6 +70,7 @@ def test_workspace_fk_precheck_has_no_non_null_orphans() -> None:
 
 def test_validate_downgrade_upgrade_preserves_rows_and_null_quarantine() -> None:
     cfg = _config()
+    command.downgrade(cfg, "228ti3e1expand")
     with connect() as conn:
         before = _counts(conn)
     command.upgrade(cfg, "228ti3e4validate")
@@ -90,6 +91,5 @@ def test_validate_downgrade_upgrade_preserves_rows_and_null_quarantine() -> None
             f"fk_{table}_workspace_ti3": True for table in TABLES
         }
         assert _counts(conn) == before
-    # Keep the shared pytest database at the suite's E1 baseline; the real
-    # non-production database is upgraded separately by the execution runbook.
-    command.downgrade(cfg, "228ti3e1expand")
+    # Restore the session database to the latest contract for subsequent gates.
+    command.upgrade(cfg, "head")
