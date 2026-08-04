@@ -993,7 +993,7 @@ def analytics_lineage(
     from aos_api.db import connect
     from aos_api.routers.runtime_write import ensure_lineage_schema
 
-    _ = principal
+    scope = TenantScope(principal.org_id, principal.project_id)
     ensure_lineage_schema()
     ot = objectType.strip()
     oid = objectId.strip()
@@ -1003,16 +1003,17 @@ def analytics_lineage(
             message="objectType and objectId required",
             status_code=400,
         )
-    with connect() as conn:
+    with connect(scope) as conn:
         rows = conn.execute(
             """
             SELECT id, draft_id, action_type_id, object_type, object_id, steps
             FROM decision_lineage
             WHERE object_type=%s AND object_id=%s
+              AND org_id=%s AND project_id=%s
             ORDER BY created_at DESC, id DESC
             LIMIT %s
             """,
-            (ot, oid, limit),
+            (ot, oid, *scope.key, limit),
         ).fetchall()
     items: list[dict[str, Any]] = []
     for r in rows:
@@ -1115,25 +1116,26 @@ def analytics_quiver_series(
     from aos_api.db import connect
     from aos_api.routers.runtime_write import ensure_lineage_schema
 
-    _ = principal
+    scope = TenantScope(principal.org_id, principal.project_id)
     ot = (objectType or "WorkOrder").strip()
     if not ot:
         raise ApiError(
             code="VALIDATION", message="objectType required", status_code=400
         )
     ensure_lineage_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         rows = conn.execute(
             """
             SELECT to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS day,
                    COUNT(*)::int AS n
             FROM decision_lineage
             WHERE object_type=%s
+              AND org_id=%s AND project_id=%s
               AND created_at >= NOW() - (INTERVAL '1 day' * %s)
             GROUP BY 1
             ORDER BY 1
             """,
-            (ot, int(limitDays)),
+            (ot, *scope.key, int(limitDays)),
         ).fetchall()
     raw_points = [{"t": r["day"], "v": int(r["n"] or 0)} for r in rows]
     points = (

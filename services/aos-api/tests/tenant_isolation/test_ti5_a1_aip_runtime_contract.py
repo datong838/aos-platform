@@ -59,7 +59,11 @@ def test_a1_schema_report_is_green() -> None:
         report = build_ti5_a1_schema_report(conn)
 
     assert report["ok"] is True, report
-    assert report["alembicRevision"] in {"228ti5a1aip", "228ti5a2kv"}
+    assert report["alembicRevision"] in {
+        "228ti5a1aip",
+        "228ti5a2kv",
+        "228ti5a3lineage",
+    }
     assert report["ti5AipWorkspaceForeignKeysInvalid"] == []
     assert report["ti5AipRlsUnprotectedTables"] == []
     assert report["ti5AipInvalidPolicies"] == []

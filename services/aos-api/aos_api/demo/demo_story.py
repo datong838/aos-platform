@@ -13,6 +13,7 @@ from typing import Any
 from aos_api.auth import Principal
 from aos_api.demo.scope import TEST_SCOPE
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.demo.demo_story")
 
@@ -28,7 +29,7 @@ def ensure_demo_seed(*, repair: bool = True) -> dict[str, Any]:
     from aos_api.routers.actions import ensure_action_schema
     from aos_api.routers.drafts import ensure_draft_schema
 
-    ensure_action_schema()
+    ensure_action_schema(TEST_SCOPE)
     ensure_draft_schema()
     if repair:
         try:
@@ -76,7 +77,7 @@ def ensure_demo_seed_full(*, repair: bool = True) -> dict[str, Any]:
 def story_snapshot() -> dict[str, Any]:
     from aos_api.db import connect
 
-    with connect() as conn:
+    with connect(TEST_SCOPE) as conn:
         ot = conn.execute(
             "SELECT id, name, published FROM meta_object_type WHERE id=%s",
             ("WorkOrder",),
@@ -138,14 +139,15 @@ def run_writeback_story(principal: Principal) -> dict[str, Any]:
     from aos_api.routers.runtime_write import apply_draft_approval
 
     ensure_demo_seed(repair=False)
-    ensure_action_schema()
+    ensure_action_schema(TenantScope(principal.org_id, principal.project_id))
     ensure_draft_schema()
 
     object_type = "WorkOrder"
     object_id = "wo-1001"
     from aos_api.db import connect
 
-    with connect() as conn:
+    scope = TenantScope(principal.org_id, principal.project_id)
+    with connect(scope) as conn:
         row = conn.execute(
             "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s "
             "AND org_id=%s AND project_id=%s",
@@ -226,10 +228,13 @@ def run_analytics_story(principal: Principal) -> dict[str, Any]:
         analytics_lineage,
     )
     from aos_api.routers.drafts import ensure_draft_schema
-    from aos_api.routers.runtime_write import _create_draft_from_execute, apply_draft_approval
+    from aos_api.routers.runtime_write import (
+        _create_draft_from_execute,
+        apply_draft_approval,
+    )
 
     ensure_demo_seed(repair=False)
-    ensure_action_schema()
+    ensure_action_schema(TenantScope(principal.org_id, principal.project_id))
     ensure_draft_schema()
 
     object_type = "WorkOrder"
@@ -355,7 +360,8 @@ def governance_probe(principal: Principal) -> dict[str, Any]:
     object_id = "wo-1001"
     from aos_api.db import connect
 
-    with connect() as conn:
+    scope = TenantScope(principal.org_id, principal.project_id)
+    with connect(scope) as conn:
         ot = conn.execute(
             "SELECT properties FROM meta_object_type WHERE id=%s",
             (object_type,),
@@ -371,10 +377,11 @@ def governance_probe(principal: Principal) -> dict[str, Any]:
                 SELECT id, draft_id, action_type_id, object_type, object_id, steps
                 FROM decision_lineage
                 WHERE object_type=%s AND object_id=%s
+                  AND org_id=%s AND project_id=%s
                 ORDER BY id DESC
                 LIMIT 1
                 """,
-                (object_type, object_id),
+                (object_type, object_id, *scope.key),
             ).fetchone()
         except Exception:
             lin = None

@@ -48,6 +48,32 @@ CREATE TABLE IF NOT EXISTS meta_object_type (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS meta_action_type (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  object_type TEXT NOT NULL,
+  parameters JSONB NOT NULL DEFAULT '[]'::jsonb,
+  required_markings JSONB NOT NULL DEFAULT '[]'::jsonb,
+  submission_criteria JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS draft_dataset (
+  id TEXT PRIMARY KEY,
+  action_type_id TEXT NOT NULL,
+  object_type TEXT NOT NULL,
+  object_id TEXT,
+  title TEXT NOT NULL DEFAULT '',
+  proposed JSONB NOT NULL DEFAULT '{}'::jsonb,
+  status TEXT NOT NULL DEFAULT 'proposed',
+  created_by TEXT NOT NULL,
+  org_id TEXT NOT NULL,
+  project_id TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT draft_status_chk CHECK (status IN ('proposed','approved','rejected'))
+);
+
 CREATE TABLE IF NOT EXISTS obj_instance (
   object_type TEXT NOT NULL REFERENCES meta_object_type(id),
   object_id TEXT NOT NULL,
@@ -142,6 +168,12 @@ def init_schema() -> None:
             """
             ALTER TABLE meta_object_type
             ADD COLUMN IF NOT EXISTS required_markings JSONB NOT NULL DEFAULT '[]'::jsonb
+            """
+        )
+        conn.execute(
+            """
+            ALTER TABLE meta_action_type
+            ADD COLUMN IF NOT EXISTS submission_criteria JSONB NOT NULL DEFAULT '[]'::jsonb
             """
         )
         from aos_api.apollo_catalog import ensure_schema as ensure_apollo_schema

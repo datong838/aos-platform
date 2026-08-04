@@ -3,7 +3,6 @@ from __future__ import annotations
 import uuid
 
 import pytest
-
 from aos_api.canvas_config import put_config
 from aos_api.db import connect
 from aos_api.module_deployments import deploy
@@ -28,10 +27,11 @@ from aos_api.widget_instances import create_instance
 
 def _e7_contract_is_active() -> bool:
     with connect() as conn:
-        row = conn.execute("SELECT version_num FROM alembic_version").fetchone()
-    return bool(
-        row and row["version_num"] in {"228ti2e7contract", "228ti3e1expand"}
-    )
+        row = conn.execute(
+            "SELECT is_nullable FROM information_schema.columns "
+            "WHERE table_name='module_events' AND column_name='module_pk'"
+        ).fetchone()
+    return bool(row and row["is_nullable"] == "NO")
 
 
 def test_stable_module_pk_is_deterministic_and_scope_sensitive() -> None:

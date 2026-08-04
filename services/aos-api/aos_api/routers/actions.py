@@ -12,6 +12,7 @@ from aos_api.db import connect
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
 from aos_api.submission import evaluate_criteria
+from aos_api.tenant_scope import TenantScope, bind_tenant_scope, require_tenant_scope
 
 router = APIRouter(tags=["actions"])
 log = get_logger("aos-api.actions")
@@ -31,33 +32,13 @@ class ValidateActionIn(BaseModel):
     payload: dict[str, Any] = Field(default_factory=dict)
 
 
-def ensure_action_schema() -> None:
-    with connect() as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS meta_action_type (
-              id TEXT PRIMARY KEY,
-              name TEXT NOT NULL,
-              object_type TEXT NOT NULL,
-              parameters JSONB NOT NULL DEFAULT '[]'::jsonb,
-              required_markings JSONB NOT NULL DEFAULT '[]'::jsonb,
-              submission_criteria JSONB NOT NULL DEFAULT '[]'::jsonb,
-              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-            """
-        )
-        # migrate older installs
-        conn.execute(
-            """
-            ALTER TABLE meta_action_type
-            ADD COLUMN IF NOT EXISTS submission_criteria JSONB NOT NULL DEFAULT '[]'::jsonb
-            """
-        )
-        conn.commit()
-    # 99 · 种子来自 plugins/actions，不再硬编码 INSERT
+def ensure_action_schema(scope: TenantScope | None = None) -> None:
+    effective_scope = scope or require_tenant_scope()
+    # Bootstrap DDL belongs to db.init_schema(); request paths only seed data.
     from aos_api.action_template_registry import seed_installed_action_types
 
-    seed_installed_action_types()
+    with bind_tenant_scope(effective_scope):
+        seed_installed_action_types()
     log.info("action_schema_ready")
 
 
@@ -74,8 +55,8 @@ def _row_to_item(r: dict[str, Any]) -> dict[str, Any]:
 
 @router.get("/v1/actions/types")
 def list_action_types(principal: Principal = Depends(require_principal)) -> dict[str, Any]:
-    _ = principal
-    ensure_action_schema()
+    scope = TenantScope(principal.org_id, principal.project_id)
+    ensure_action_schema(scope)
     with connect() as conn:
         rows = conn.execute(
             """
@@ -91,8 +72,8 @@ def create_action_type(
     body: ActionTypeIn,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    _ = principal
-    ensure_action_schema()
+    scope = TenantScope(principal.org_id, principal.project_id)
+    ensure_action_schema(scope)
     with connect() as conn:
         exists = conn.execute(
             "SELECT 1 FROM meta_action_type WHERE id=%s", (body.id,)
@@ -124,8 +105,8 @@ def get_action_type(
     action_id: str,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    _ = principal
-    ensure_action_schema()
+    scope = TenantScope(principal.org_id, principal.project_id)
+    ensure_action_schema(scope)
     with connect() as conn:
         row = conn.execute(
             """
@@ -146,10 +127,10 @@ def update_action_type(
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """95 · 更新 Action Type 元数据。"""
-    _ = principal
+    scope = TenantScope(principal.org_id, principal.project_id)
     if body.id != action_id:
         raise ApiError(code="VALIDATION", message="id mismatch", status_code=400)
-    ensure_action_schema()
+    ensure_action_schema(scope)
     with connect() as conn:
         exists = conn.execute(
             "SELECT 1 FROM meta_action_type WHERE id=%s", (action_id,)
@@ -185,7 +166,7 @@ def validate_action(
     """T3.2 — reject when submission criteria fail · TX.4 markings."""
     from aos_api.marking import ensure_field_writes, ensure_markings
 
-    ensure_action_schema()
+    ensure_action_schema(TenantScope(principal.org_id, principal.project_id))
     with connect() as conn:
         row = conn.execute(
             """

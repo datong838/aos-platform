@@ -127,7 +127,7 @@ def test_demo_clear_keeps_other_workspace_objects_and_templates() -> None:
         conn.commit()
 
     result = clear_test_org()
-    assert result["lineage"] == "deferred:no-tenant-scope"
+    assert isinstance(result["lineage"], int)
     with connect() as conn:
         test_row = conn.execute(
             "SELECT 1 FROM obj_instance WHERE object_id=%s AND org_id=%s AND project_id=%s",

@@ -16,6 +16,7 @@ from aos_api.idempotency import idempotency_store
 from aos_api.logging_facade import get_logger
 from aos_api.routers.actions import ensure_action_schema
 from aos_api.submission import evaluate_criteria
+from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(tags=["drafts"])
 log = get_logger("aos-api.drafts")
@@ -30,27 +31,7 @@ class DraftIn(BaseModel):
 
 
 def ensure_draft_schema() -> None:
-    with connect() as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS draft_dataset (
-              id TEXT PRIMARY KEY,
-              action_type_id TEXT NOT NULL,
-              object_type TEXT NOT NULL,
-              object_id TEXT,
-              title TEXT NOT NULL DEFAULT '',
-              proposed JSONB NOT NULL DEFAULT '{}'::jsonb,
-              status TEXT NOT NULL DEFAULT 'proposed',
-              created_by TEXT NOT NULL,
-              org_id TEXT NOT NULL,
-              project_id TEXT NOT NULL,
-              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-              CONSTRAINT draft_status_chk CHECK (status IN ('proposed','approved','rejected'))
-            )
-            """
-        )
-        conn.commit()
+    """Compatibility hook; bootstrap schema is owned by db.init_schema()."""
     log.info("draft_schema_ready")
 
 
@@ -93,7 +74,7 @@ def create_draft(
     from aos_api.marking import ensure_field_writes
 
     ensure_draft_schema()
-    ensure_action_schema()
+    ensure_action_schema(TenantScope(principal.org_id, principal.project_id))
     if idempotency_key:
         cached = idempotency_store.get(
             principal.org_id, principal.project_id, idempotency_key

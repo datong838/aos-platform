@@ -112,12 +112,21 @@ def test_draft_approval_creates_same_wiki_key_in_its_own_scope() -> None:
         (*scope_b.key, "b"),
     }
     assert draft["status"] == "approved"
-    with connect() as conn:
-        conn.execute("DELETE FROM decision_lineage WHERE id=%s", (f"lin-{draft_id}",))
+    with connect(scope_b) as conn:
+        conn.execute(
+            "DELETE FROM decision_lineage WHERE id=%s AND org_id=%s AND project_id=%s",
+            (f"lin-{draft_id}", *scope_b.key),
+        )
         conn.execute(
             "DELETE FROM draft_dataset WHERE id=%s AND org_id=%s AND project_id=%s",
             (draft_id, *scope_b.key),
         )
+        conn.execute(
+            "DELETE FROM wiki_page WHERE object_type=%s AND object_id=%s",
+            (object_type, object_id),
+        )
+        conn.commit()
+    with connect(scope_a) as conn:
         conn.execute(
             "DELETE FROM wiki_page WHERE object_type=%s AND object_id=%s",
             (object_type, object_id),
@@ -169,8 +178,11 @@ def test_draft_approval_creates_same_object_key_in_its_own_scope() -> None:
         (*scope_a.key, "a"),
         (*scope_b.key, "b"),
     }
-    with connect() as conn:
-        conn.execute("DELETE FROM decision_lineage WHERE id=%s", (f"lin-{draft_id}",))
+    with connect(scope_b) as conn:
+        conn.execute(
+            "DELETE FROM decision_lineage WHERE id=%s AND org_id=%s AND project_id=%s",
+            (f"lin-{draft_id}", *scope_b.key),
+        )
         conn.execute(
             "DELETE FROM draft_dataset WHERE id=%s AND org_id=%s AND project_id=%s",
             (draft_id, *scope_b.key),
@@ -179,6 +191,14 @@ def test_draft_approval_creates_same_object_key_in_its_own_scope() -> None:
             "DELETE FROM obj_instance WHERE object_type=%s AND object_id=%s",
             (object_type, object_id),
         )
+        conn.commit()
+    with connect(scope_a) as conn:
+        conn.execute(
+            "DELETE FROM obj_instance WHERE object_type=%s AND object_id=%s",
+            (object_type, object_id),
+        )
+        conn.commit()
+    with connect() as conn:
         conn.execute("DELETE FROM meta_object_type WHERE id=%s", (object_type,))
         conn.commit()
 

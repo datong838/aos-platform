@@ -20,6 +20,7 @@ from aos_api.marking import ensure_markings
 from aos_api.routers.actions import ensure_action_schema
 from aos_api.routers.drafts import ensure_draft_schema
 from aos_api.submission import evaluate_criteria
+from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(tags=["action-runtime"])
 log = get_logger("aos-api.action_runtime")
@@ -37,21 +38,7 @@ class ExecuteIn(BaseModel):
 
 
 def ensure_lineage_schema() -> None:
-    with connect() as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS decision_lineage (
-              id TEXT PRIMARY KEY,
-              draft_id TEXT,
-              action_type_id TEXT,
-              object_type TEXT,
-              object_id TEXT,
-              steps JSONB NOT NULL DEFAULT '[]'::jsonb,
-              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-            """
-        )
-        conn.commit()
+    """Compatibility hook; decision_lineage schema is Alembic-owned."""
 
 
 def apply_draft_approval(
@@ -65,7 +52,8 @@ def apply_draft_approval(
 
     ensure_draft_schema()
     ensure_lineage_schema()
-    with connect() as conn:
+    scope = TenantScope(principal.org_id, principal.project_id)
+    with connect(scope) as conn:
         draft = conn.execute(
             """
             SELECT id, action_type_id, object_type, object_id, proposed, status
@@ -236,9 +224,11 @@ def apply_draft_approval(
         ]
         conn.execute(
             """
-            INSERT INTO decision_lineage (id, draft_id, action_type_id, object_type, object_id, steps)
-            VALUES (%s,%s,%s,%s,%s,%s::jsonb)
-            ON CONFLICT (id) DO NOTHING
+            INSERT INTO decision_lineage
+              (id, draft_id, action_type_id, object_type, object_id, steps,
+               org_id, project_id)
+            VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s)
+            ON CONFLICT (org_id, project_id, id) DO NOTHING
             """,
             (
                 lineage_id,
@@ -247,6 +237,7 @@ def apply_draft_approval(
                 object_type,
                 object_id,
                 json.dumps(steps),
+                *scope.key,
             ),
         )
         conn.commit()
@@ -281,9 +272,10 @@ def _create_draft_from_execute(
     object_id: str | None,
     proposed: dict[str, Any],
 ) -> dict[str, Any]:
-    ensure_action_schema()
+    scope = TenantScope(principal.org_id, principal.project_id)
+    ensure_action_schema(scope)
     ensure_draft_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         action = conn.execute(
             """
             SELECT id, object_type, submission_criteria
@@ -399,8 +391,9 @@ def execute_action(
     if body.actionTypeId:
         # TX.4 — enforce Action Type requiredMarkings before draft path
         try:
-            ensure_action_schema()
-            with connect() as conn:
+            scope = TenantScope(principal.org_id, principal.project_id)
+            ensure_action_schema(scope)
+            with connect(scope) as conn:
                 row = conn.execute(
                     "SELECT required_markings, object_type FROM meta_action_type WHERE id=%s",
                     (body.actionTypeId,),
@@ -478,12 +471,13 @@ def get_lineage(
     lineage_id: str,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    _ = principal
+    scope = TenantScope(principal.org_id, principal.project_id)
     ensure_lineage_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         row = conn.execute(
-            "SELECT id, draft_id, action_type_id, object_type, object_id, steps FROM decision_lineage WHERE id=%s",
-            (lineage_id,),
+            "SELECT id, draft_id, action_type_id, object_type, object_id, steps "
+            "FROM decision_lineage WHERE id=%s AND org_id=%s AND project_id=%s",
+            (lineage_id, *scope.key),
         ).fetchone()
     if not row:
         raise ApiError(code="NOT_FOUND", message="lineage not found", status_code=404)

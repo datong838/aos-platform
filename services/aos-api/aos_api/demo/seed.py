@@ -39,7 +39,10 @@ def seed_test_org(*, repair: bool = True) -> dict[str, str | int]:
     wo_count = seed_workorders(repair=repair)
     order_count = seed_orders()
     module_count = seed_modules()
-    action_count = seed_action_types()
+    from aos_api.tenant_scope import bind_tenant_scope
+
+    with bind_tenant_scope(TEST_SCOPE):
+        action_count = seed_action_types()
 
     result: dict[str, str | int] = {
         "ok": True,
@@ -73,7 +76,7 @@ def clear_test_org() -> dict[str, str | int]:
     log.warning("clear_test_org_start (destructive)")
 
     removed: dict[str, str | int] = {"ok": True, "mode": "clear_test_org"}
-    with connect() as conn:
+    with connect(TEST_SCOPE) as conn:
         for object_type in ("WorkOrder", "Order", "OrderItem", "Site"):
             cur = conn.execute(
                 "DELETE FROM obj_instance WHERE object_type = %s "
@@ -112,9 +115,14 @@ def clear_test_org() -> dict[str, str | int]:
             removed["drafts"] = int(cur.rowcount or 0)
         except Exception as exc:  # noqa: BLE001
             removed["drafts"] = f"skip:{exc}"
-        # decision_lineage has no TenantScope columns before TI-5. Deleting it
-        # by object type could erase another organization, so fail closed.
-        removed["lineage"] = "deferred:no-tenant-scope"
+        try:
+            cur = conn.execute(
+                "DELETE FROM decision_lineage WHERE org_id=%s AND project_id=%s",
+                TEST_SCOPE.key,
+            )
+            removed["lineage"] = int(cur.rowcount or 0)
+        except Exception as exc:  # noqa: BLE001
+            removed["lineage"] = f"skip:{exc}"
         try:
             cur = conn.execute(
                 """

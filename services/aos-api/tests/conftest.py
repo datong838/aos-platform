@@ -139,10 +139,22 @@ def client():
         pass
     # ensure schema for ontology tests
     try:
+        from aos_api.db import connect as _connect
+
+        with _connect() as _c:
+            _c.execute(
+                "INSERT INTO twa_org (id,name) VALUES ('dev-org','测试组织') "
+                "ON CONFLICT (id) DO NOTHING"
+            )
+            _c.execute(
+                "INSERT INTO twa_workspace (org_id,project_id,name) "
+                "VALUES ('dev-org','dev-project','测试工作区') "
+                "ON CONFLICT (org_id,project_id) DO NOTHING"
+            )
+            _c.commit()
         init_schema()
         seed_if_empty()
         seed_modules_if_empty(TenantScope("dev-org", "dev-project"))
-        from aos_api.db import connect as _connect
 
         with _connect(TenantScope("dev-org", "dev-project")) as _c:
             for row in _c.execute(

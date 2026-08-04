@@ -322,6 +322,11 @@ _SEED = [
 
 
 def ensure_module_schema() -> None:
+    from aos_api.tenant_scope import current_tenant_scope
+
+    if current_tenant_scope() is not None:
+        # Startup/migrations own DDL; request-scoped runtime roles cannot create.
+        return
     with connect() as conn:
         conn.execute(
             """

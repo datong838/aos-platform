@@ -77,6 +77,7 @@ def test_c1_schema_report_is_green_and_fks_remain_not_valid() -> None:
         "228ti4a1apollo",
         "228ti5a1aip",
         "228ti5a2kv",
+        "228ti5a3lineage",
     }
     assert report["ti4EcomInvalidPrimaryKeys"] == []
     assert report["ti4EcomNullableScopeColumns"] == []
