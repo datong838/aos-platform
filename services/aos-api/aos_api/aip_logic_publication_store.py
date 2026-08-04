@@ -1,4 +1,5 @@
 """Atomic PostgreSQL store for immutable, governed AIP Logic publications."""
+
 from __future__ import annotations
 
 import hashlib
@@ -23,6 +24,7 @@ from aos_api.aip_logic_publication_models import (
     PublishLogicGraphRequest,
 )
 from aos_api.db import connect as db_connect
+from aos_api.tenant_scope import TenantScope
 
 ConnectFactory = Callable[[], AbstractContextManager[Any]]
 
@@ -123,7 +125,7 @@ class LogicPublicationStore:
             raise ValueError("actor and graph_id are required")
         request_hash = self._request_hash(request)
         try:
-            with self._connect_factory() as conn:
+            with self._connect(org_id, project_id) as conn:
                 replay = self._find_by_idempotency_key(
                     conn, org_id, project_id, graph_id, request.idempotency_key
                 )
@@ -145,9 +147,7 @@ class LogicPublicationStore:
                     (org_id, project_id, graph_id),
                 ).fetchone()
                 if current is None:
-                    raise LogicPublicationNotFound(
-                        f"logic graph {graph_id} not found"
-                    )
+                    raise LogicPublicationNotFound(f"logic graph {graph_id} not found")
                 current_revision = int(current["revision"])
                 current_hash = str(current["graph_hash"])
                 if (
@@ -312,7 +312,7 @@ class LogicPublicationStore:
     ) -> LogicPublication:
         self._require_scope(org_id, project_id)
         try:
-            with self._connect_factory() as conn:
+            with self._connect(org_id, project_id) as conn:
                 row = conn.execute(
                     """
                     SELECT publication_id,graph_id,graph_revision,graph_hash,
@@ -339,7 +339,7 @@ class LogicPublicationStore:
     ) -> LogicPublicationListResponse:
         self._require_scope(org_id, project_id)
         try:
-            with self._connect_factory() as conn:
+            with self._connect(org_id, project_id) as conn:
                 graph = conn.execute(
                     """SELECT 1 FROM aip_logic_graph
                        WHERE org_id=%s AND project_id=%s AND graph_id=%s
@@ -347,9 +347,7 @@ class LogicPublicationStore:
                     (org_id, project_id, graph_id),
                 ).fetchone()
                 if graph is None:
-                    raise LogicPublicationNotFound(
-                        f"logic graph {graph_id} not found"
-                    )
+                    raise LogicPublicationNotFound(f"logic graph {graph_id} not found")
                 rows = conn.execute(
                     """
                     SELECT publication_id,graph_id,graph_revision,graph_hash,
@@ -531,3 +529,8 @@ class LogicPublicationStore:
     def _require_scope(org_id: str, project_id: str) -> None:
         if not org_id or not project_id:
             raise ValueError("org_id and project_id are required")
+
+    def _connect(self, org_id: str, project_id: str) -> AbstractContextManager[Any]:
+        if self._connect_factory is db_connect:
+            return db_connect(TenantScope(org_id, project_id))
+        return self._connect_factory()

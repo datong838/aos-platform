@@ -30,6 +30,7 @@ from aos_api.aip_logic_graph_models import (
     compute_logic_graph_payload_hash,
 )
 from aos_api.db import connect as db_connect
+from aos_api.tenant_scope import TenantScope
 
 ConnectFactory = Callable[[], AbstractContextManager[Any]]
 RECOVERY_BATCH_LIMIT = 100
@@ -85,7 +86,7 @@ class LogicRunStore:
         safe_inputs, _ = sanitize_runtime_value(request.inputs, max_bytes=256 * 1024)
         request_hash = self._request_hash(request)
         try:
-            with self._connect_factory() as conn:
+            with self._connect(org_id, project_id) as conn:
                 row = conn.execute(
                     """
                     INSERT INTO aip_logic_graph_runs (
@@ -140,7 +141,7 @@ class LogicRunStore:
     def finalize_run(self, org_id: str, project_id: str, result: LogicDryRun) -> None:
         self._scope(org_id, project_id)
         try:
-            with self._connect_factory() as conn:
+            with self._connect(org_id, project_id) as conn:
                 self._write_terminal_with_conn(conn, org_id, project_id, result)
                 conn.commit()
         except LogicRunStoreError:
@@ -155,7 +156,7 @@ class LogicRunStore:
     ) -> LogicDryRun:
         self._scope(org_id, project_id)
         try:
-            with self._connect_factory() as conn:
+            with self._connect(org_id, project_id) as conn:
                 return self._get_with_conn(conn, org_id, project_id, graph_id, run_id)
         except LogicRunNotFound:
             raise
@@ -175,7 +176,7 @@ class LogicRunStore:
         if not 1 <= limit <= 100:
             raise ValueError("limit must be between 1 and 100")
         try:
-            with self._connect_factory() as conn:
+            with self._connect(org_id, project_id) as conn:
                 params: list[Any] = [org_id, project_id, graph_id]
                 cursor_sql = ""
                 if before:
@@ -227,7 +228,7 @@ class LogicRunStore:
         self._scope(org_id, project_id)
         try:
             excluded = self._quarantined_run_ids(org_id, project_id, graph_id)
-            with self._connect_factory() as conn:
+            with self._connect(org_id, project_id) as conn:
                 rows = conn.execute(
                     """
                     SELECT r.run_id
@@ -291,7 +292,7 @@ class LogicRunStore:
         *,
         stale_before: datetime,
     ) -> bool:
-        with self._connect_factory() as conn:
+        with self._connect(org_id, project_id) as conn:
             row = conn.execute(
                 """
                 SELECT r.*,
@@ -571,3 +572,8 @@ class LogicRunStore:
     def _scope(org_id: str, project_id: str) -> None:
         if not org_id or not project_id:
             raise ValueError("org_id and project_id are required")
+
+    def _connect(self, org_id: str, project_id: str) -> AbstractContextManager[Any]:
+        if self._connect_factory is db_connect:
+            return db_connect(TenantScope(org_id, project_id))
+        return self._connect_factory()

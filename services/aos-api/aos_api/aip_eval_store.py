@@ -14,6 +14,7 @@ from aos_api.aip_eval_models import (
 )
 from aos_api.db import connect as db_connect
 from aos_api.evals_engine import EvalSuite, TestCase
+from aos_api.tenant_scope import TenantScope
 
 ConnectFactory = Callable[[], AbstractContextManager[Any]]
 
@@ -118,7 +119,7 @@ class EvalEvidenceStore:
     ) -> EvalSuite:
         self._require_scope(org_id, project_id)
         try:
-            with self._connect_factory() as conn:
+            with self._connect(org_id, project_id) as conn:
                 row = conn.execute(
                     """
                     INSERT INTO aip_eval_suite (
@@ -154,7 +155,7 @@ class EvalEvidenceStore:
     def list_suites(self, org_id: str, project_id: str) -> list[EvalSuite]:
         self._require_scope(org_id, project_id)
         try:
-            with self._connect_factory() as conn:
+            with self._connect(org_id, project_id) as conn:
                 rows = conn.execute(
                     """
                     SELECT suite_id, name, cases, gate_threshold
@@ -171,7 +172,7 @@ class EvalEvidenceStore:
     def get_suite(self, org_id: str, project_id: str, suite_id: str) -> EvalSuite:
         self._require_scope(org_id, project_id)
         try:
-            with self._connect_factory() as conn:
+            with self._connect(org_id, project_id) as conn:
                 row = conn.execute(
                     """
                     SELECT suite_id, name, cases, gate_threshold
@@ -191,7 +192,7 @@ class EvalEvidenceStore:
     ) -> None:
         self._require_scope(org_id, project_id)
         try:
-            with self._connect_factory() as conn:
+            with self._connect(org_id, project_id) as conn:
                 self._require_logic_target_with_conn(conn, org_id, project_id, target)
         except EvalStoreError:
             raise
@@ -208,7 +209,7 @@ class EvalEvidenceStore:
             )
         )
         try:
-            with self._connect_factory() as conn:
+            with self._connect(org_id, project_id) as conn:
                 suite_row = conn.execute(
                     """
                     SELECT suite_id, name, cases, gate_threshold
@@ -221,9 +222,7 @@ class EvalEvidenceStore:
                     raise EvalNotFound(f"eval suite {report.suite_id} not found")
                 suite = self._suite_from_row(suite_row)
                 self._validate_report(report, suite)
-                self._require_logic_target_with_conn(
-                    conn, org_id, project_id, target
-                )
+                self._require_logic_target_with_conn(conn, org_id, project_id, target)
                 row = conn.execute(
                     """
                     INSERT INTO aip_eval_report (
@@ -251,7 +250,10 @@ class EvalEvidenceStore:
                         report.target_revision,
                         report.target_hash,
                         json.dumps(
-                            [result.model_dump(mode="json") for result in report.results],
+                            [
+                                result.model_dump(mode="json")
+                                for result in report.results
+                            ],
                             ensure_ascii=False,
                         ),
                         report.pass_rate,
@@ -326,7 +328,7 @@ class EvalEvidenceStore:
     ) -> list[EvalReportEvidence]:
         self._require_scope(org_id, project_id)
         try:
-            with self._connect_factory() as conn:
+            with self._connect(org_id, project_id) as conn:
                 rows = conn.execute(
                     f"""
                     {self._REPORT_SELECT}
@@ -356,7 +358,7 @@ class EvalEvidenceStore:
         order: str = "",
     ) -> Any | None:
         try:
-            with self._connect_factory() as conn:
+            with self._connect(org_id, project_id) as conn:
                 return conn.execute(
                     f"""
                     {self._REPORT_SELECT}
@@ -393,7 +395,9 @@ class EvalEvidenceStore:
     def _validate_report(report: EvalReportEvidence, suite: EvalSuite) -> None:
         threshold_passed = report.pass_rate >= suite.gate_threshold
         if report.gate_passed != threshold_passed:
-            raise EvalIntegrityError("gate result contradicts persisted suite threshold")
+            raise EvalIntegrityError(
+                "gate result contradicts persisted suite threshold"
+            )
         suite_case_ids = [case.id for case in suite.cases]
         result_case_ids = [result.case_id for result in report.results]
         if result_case_ids != suite_case_ids:
@@ -411,7 +415,9 @@ class EvalEvidenceStore:
     @staticmethod
     def _report_from_row(row: Any) -> EvalReportEvidence:
         run_at = row["run_at"]
-        run_at_text = run_at.isoformat() if hasattr(run_at, "isoformat") else str(run_at)
+        run_at_text = (
+            run_at.isoformat() if hasattr(run_at, "isoformat") else str(run_at)
+        )
         return EvalReportEvidence(
             report_id=str(row["report_id"]),
             suite_id=str(row["suite_id"]),
@@ -432,3 +438,8 @@ class EvalEvidenceStore:
     def _require_scope(org_id: str, project_id: str) -> None:
         if not org_id or not project_id:
             raise ValueError("org_id and project_id are required")
+
+    def _connect(self, org_id: str, project_id: str) -> AbstractContextManager[Any]:
+        if self._connect_factory is db_connect:
+            return db_connect(TenantScope(org_id, project_id))
+        return self._connect_factory()

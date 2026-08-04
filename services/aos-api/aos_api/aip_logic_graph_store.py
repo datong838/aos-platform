@@ -1,9 +1,12 @@
 """PostgreSQL current-snapshot and immutable-revision store for AIP Logic graphs."""
+
 from __future__ import annotations
 
 import json
-from typing import Any, Callable, ContextManager
 import uuid
+from collections.abc import Callable
+from contextlib import AbstractContextManager
+from typing import Any
 
 from aos_api.aip_logic_graph_models import (
     CreateLogicGraphRequest,
@@ -14,9 +17,9 @@ from aos_api.aip_logic_graph_models import (
     require_valid_logic_graph,
 )
 from aos_api.db import connect as db_connect
+from aos_api.tenant_scope import TenantScope
 
-
-ConnectFactory = Callable[[], ContextManager[Any]]
+ConnectFactory = Callable[[], AbstractContextManager[Any]]
 
 
 class LogicGraphStoreError(RuntimeError):
@@ -59,7 +62,7 @@ class LogicGraphStore:
         graph_hash = require_valid_logic_graph(request)
         graph_id = (request.id or f"lg-{uuid.uuid4().hex[:16]}").strip()
         payload = logic_graph_content_payload(request)
-        with self._connect_factory() as conn:
+        with self._connect(org_id, project_id) as conn:
             row = conn.execute(
                 """
                 INSERT INTO aip_logic_graph (
@@ -95,7 +98,7 @@ class LogicGraphStore:
 
     def list(self, org_id: str, project_id: str) -> list[LogicGraphSnapshot]:
         self._require_scope(org_id, project_id)
-        with self._connect_factory() as conn:
+        with self._connect(org_id, project_id) as conn:
             rows = conn.execute(
                 """
                 SELECT graph_id, name, description, status, schema_version,
@@ -111,7 +114,7 @@ class LogicGraphStore:
 
     def get(self, org_id: str, project_id: str, graph_id: str) -> LogicGraphSnapshot:
         self._require_scope(org_id, project_id)
-        with self._connect_factory() as conn:
+        with self._connect(org_id, project_id) as conn:
             row = conn.execute(
                 """
                 SELECT graph_id, name, description, status, schema_version,
@@ -138,7 +141,7 @@ class LogicGraphStore:
         self._require_scope(org_id, project_id)
         graph_hash = require_valid_logic_graph(request)
         payload = logic_graph_content_payload(request)
-        with self._connect_factory() as conn:
+        with self._connect(org_id, project_id) as conn:
             row = conn.execute(
                 """
                 UPDATE aip_logic_graph
@@ -183,7 +186,7 @@ class LogicGraphStore:
         self, org_id: str, project_id: str, graph_id: str
     ) -> list[LogicGraphSnapshot]:
         self._require_scope(org_id, project_id)
-        with self._connect_factory() as conn:
+        with self._connect(org_id, project_id) as conn:
             exists = self._current_revision(conn, org_id, project_id, graph_id)
             if exists is None:
                 raise LogicGraphNotFound(f"logic graph {graph_id} not found")
@@ -298,3 +301,8 @@ class LogicGraphStore:
     def _require_scope(org_id: str, project_id: str) -> None:
         if not org_id or not project_id:
             raise ValueError("org_id and project_id are required")
+
+    def _connect(self, org_id: str, project_id: str) -> AbstractContextManager[Any]:
+        if self._connect_factory is db_connect:
+            return db_connect(TenantScope(org_id, project_id))
+        return self._connect_factory()
