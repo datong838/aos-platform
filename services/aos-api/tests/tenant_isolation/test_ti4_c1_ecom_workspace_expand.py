@@ -67,7 +67,11 @@ def test_c1_schema_report_is_green_and_fks_remain_not_valid() -> None:
         report = build_ti4_c1_schema_report(conn)
 
     assert report["ok"] is True, report
-    assert report["alembicRevision"] in {"228ti4c1expand", "228ti4d1expand"}
+    assert report["alembicRevision"] in {
+        "228ti4c1expand",
+        "228ti4d1expand",
+        "228ti4d4validate",
+    }
     assert report["ti4EcomInvalidPrimaryKeys"] == []
     assert report["ti4EcomNullableScopeColumns"] == []
     assert report["ti4EcomInvalidWorkspaceForeignKeys"] == []

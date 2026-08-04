@@ -17,6 +17,7 @@ TI3_E6_REVISION = "228ti3e6rls"
 TI3_E7_REVISION = "228ti3e7contract"
 TI4_C1_REVISION = "228ti4c1expand"
 TI4_D1_REVISION = "228ti4d1expand"
+TI4_D4_REVISION = "228ti4d4validate"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {
@@ -92,6 +93,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E7_REVISION,
         TI4_C1_REVISION,
         TI4_D1_REVISION,
+        TI4_D4_REVISION,
     }:
         issues.append("RLS_ENABLED_BEFORE_E6")
     if revision not in {
@@ -109,6 +111,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E7_REVISION,
         TI4_C1_REVISION,
         TI4_D1_REVISION,
+        TI4_D4_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     return {
@@ -222,6 +225,7 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E7_REVISION,
         TI4_C1_REVISION,
         TI4_D1_REVISION,
+        TI4_D4_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -343,6 +347,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E7_REVISION,
         TI4_C1_REVISION,
         TI4_D1_REVISION,
+        TI4_D4_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -432,6 +437,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E7_REVISION,
         TI4_C1_REVISION,
         TI4_D1_REVISION,
+        TI4_D4_REVISION,
     }:
         issues.append("TI2_EXPAND_COLUMNS_NOT_NULLABLE")
     if missing_tables:
@@ -459,6 +465,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
                 TI3_E7_REVISION,
                 TI4_C1_REVISION,
                 TI4_D1_REVISION,
+                TI4_D4_REVISION,
             }
             else non_nullable_columns
         ),
@@ -484,6 +491,7 @@ def build_ti2_e4_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E7_REVISION,
         TI4_C1_REVISION,
         TI4_D1_REVISION,
+        TI4_D4_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     rows = conn.execute(
@@ -537,6 +545,7 @@ def build_ti2_e6_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E7_REVISION,
         TI4_C1_REVISION,
         TI4_D1_REVISION,
+        TI4_D4_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -639,6 +648,7 @@ def build_ti2_e7_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E7_REVISION,
         TI4_C1_REVISION,
         TI4_D1_REVISION,
+        TI4_D4_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -745,6 +755,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E7_REVISION,
         TI4_C1_REVISION,
         TI4_D1_REVISION,
+        TI4_D4_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -778,6 +789,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E7_REVISION,
         TI4_C1_REVISION,
         TI4_D1_REVISION,
+        TI4_D4_REVISION,
     }:
         issues.append("TI3_EXPAND_COLUMNS_NOT_NULLABLE")
     if templates_with_scope:
@@ -814,7 +826,12 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         "ti3ExpandColumnsNotNullable": (
             []
             if report["alembicRevision"]
-            in {TI3_E7_REVISION, TI4_C1_REVISION, TI4_D1_REVISION}
+            in {
+                TI3_E7_REVISION,
+                TI4_C1_REVISION,
+                TI4_D1_REVISION,
+                TI4_D4_REVISION,
+            }
             else expand_not_nullable
         ),
         "ti3TemplatesWithTenantScope": templates_with_scope,
@@ -833,6 +850,7 @@ def build_ti3_e6_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E7_REVISION,
         TI4_C1_REVISION,
         TI4_D1_REVISION,
+        TI4_D4_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -934,6 +952,7 @@ def build_ti3_e7_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E7_REVISION,
         TI4_C1_REVISION,
         TI4_D1_REVISION,
+        TI4_D4_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1066,7 +1085,11 @@ def build_ti4_c1_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] not in {TI4_C1_REVISION, TI4_D1_REVISION}:
+    if report["alembicRevision"] not in {
+        TI4_C1_REVISION,
+        TI4_D1_REVISION,
+        TI4_D4_REVISION,
+    }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     pk_rows = conn.execute(
@@ -1153,7 +1176,8 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] != TI4_D1_REVISION:
+    revision = report["alembicRevision"]
+    if revision not in {TI4_D1_REVISION, TI4_D4_REVISION}:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     column_rows = conn.execute(
@@ -1193,18 +1217,19 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
         (expected_names,),
     ).fetchall()
     foreign_keys = {str(row["table_name"]): row for row in fk_rows}
-    expected_fk = (
-        "FOREIGN KEY (org_id, project_id) "
-        "REFERENCES twa_workspace(org_id, project_id) NOT VALID"
-    )
+    expected_fk = "FOREIGN KEY (org_id, project_id) REFERENCES twa_workspace(org_id, project_id)"
+    if revision == TI4_D1_REVISION:
+        expected_fk += " NOT VALID"
     invalid_foreign_keys = sorted(
         table
         for table in TI4_D1_TENANT_TABLES
         if table not in foreign_keys
         or str(foreign_keys[table]["definition"]) != expected_fk
     )
-    prematurely_validated = sorted(
-        table for table, row in foreign_keys.items() if bool(row["convalidated"])
+    prematurely_validated = (
+        sorted(table for table, row in foreign_keys.items() if bool(row["convalidated"]))
+        if revision == TI4_D1_REVISION
+        else []
     )
     if invalid_foreign_keys:
         issues.append("TI4_DATA_OS_WORKSPACE_FOREIGN_KEY_INVALID")
