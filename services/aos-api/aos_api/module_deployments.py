@@ -10,12 +10,9 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.module_deployments")
-
-_DEFAULT_ORG = "dev-org"
-_DEFAULT_PROJECT = "dev-project"
-
 
 def ensure_schema() -> None:
     with connect() as conn:
@@ -45,21 +42,22 @@ def ensure_schema() -> None:
         conn.commit()
 
 
-def list_deployments(module_id: str) -> list[dict[str, Any]]:
+def list_deployments(scope: TenantScope, module_id: str) -> list[dict[str, Any]]:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         rows = conn.execute(
             """
             SELECT * FROM module_deployment
              WHERE module_id=%s AND org_id=%s AND project_id=%s
              ORDER BY created_at DESC
             """,
-            (module_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (module_id, *scope.key),
         ).fetchall()
     return [_row(r) for r in rows]
 
 
 def deploy(
+    scope: TenantScope,
     module_id: str,
     environment: str,
     *,
@@ -69,7 +67,7 @@ def deploy(
 ) -> dict[str, Any]:
     ensure_schema()
     did = f"dep-{module_id}-{environment}-{uuid.uuid4().hex[:6]}"
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             INSERT INTO module_deployment (
@@ -85,34 +83,40 @@ def deploy(
                 "success",
                 json.dumps(config_snapshot or {}),
                 deployed_by,
-                _DEFAULT_ORG,
-                _DEFAULT_PROJECT,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_deployment(did)  # type: ignore[return-value]
+    return get_deployment(scope, module_id, did)  # type: ignore[return-value]
 
 
-def get_deployment(deployment_id: str) -> dict[str, Any] | None:
+def get_deployment(
+    scope: TenantScope, module_id: str, deployment_id: str
+) -> dict[str, Any] | None:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         row = conn.execute(
-            "SELECT * FROM module_deployment WHERE id=%s",
-            (deployment_id,),
+            "SELECT * FROM module_deployment "
+            "WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s",
+            (deployment_id, module_id, *scope.key),
         ).fetchone()
     return _row(row) if row else None
 
 
 def rollback(
-    module_id: str, target_deployment_id: str
+    scope: TenantScope,
+    module_id: str,
+    target_deployment_id: str,
+    *,
+    deployed_by: str = "user:dev",
 ) -> dict[str, Any] | None:
     """Rollback to a previous deployment by creating a new deployment record."""
-    target = get_deployment(target_deployment_id)
+    target = get_deployment(scope, module_id, target_deployment_id)
     if not target:
         return None
     ensure_schema()
     new_id = f"dep-{module_id}-{target['environment']}-rb-{uuid.uuid4().hex[:6]}"
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             INSERT INTO module_deployment (
@@ -127,14 +131,13 @@ def rollback(
                 target["version"],
                 "rollback",
                 json.dumps(target.get("configSnapshot") or {}),
-                "user:dev",
+                deployed_by,
                 target_deployment_id,
-                _DEFAULT_ORG,
-                _DEFAULT_PROJECT,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_deployment(new_id)
+    return get_deployment(scope, module_id, new_id)
 
 
 def _row(r: dict[str, Any]) -> dict[str, Any]:

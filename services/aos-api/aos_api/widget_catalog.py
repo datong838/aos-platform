@@ -11,12 +11,9 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.widget_catalog")
-
-_DEFAULT_ORG = "dev-org"
-_DEFAULT_PROJECT = "dev-project"
-
 
 def ensure_schema() -> None:
     with connect() as conn:
@@ -44,9 +41,11 @@ def ensure_schema() -> None:
         conn.commit()
 
 
-def list_widgets(source: str | None = None) -> list[dict[str, Any]]:
+def list_widgets(
+    scope: TenantScope, source: str | None = None
+) -> list[dict[str, Any]]:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         if source:
             rows = conn.execute(
                 """
@@ -54,7 +53,7 @@ def list_widgets(source: str | None = None) -> list[dict[str, Any]]:
                  WHERE source=%s AND org_id=%s AND project_id=%s
                  ORDER BY created_at
                 """,
-                (source, _DEFAULT_ORG, _DEFAULT_PROJECT),
+                (source, *scope.key),
             ).fetchall()
         else:
             rows = conn.execute(
@@ -63,31 +62,33 @@ def list_widgets(source: str | None = None) -> list[dict[str, Any]]:
                  WHERE org_id=%s AND project_id=%s
                  ORDER BY source, created_at
                 """,
-                (_DEFAULT_ORG, _DEFAULT_PROJECT),
+                scope.key,
             ).fetchall()
     return [_row(r) for r in rows]
 
 
-def get_widget(widget_id: str) -> dict[str, Any] | None:
+def get_widget(scope: TenantScope, widget_id: str) -> dict[str, Any] | None:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         row = conn.execute(
-            "SELECT * FROM widget_catalog WHERE id=%s",
-            (widget_id,),
+            "SELECT * FROM widget_catalog "
+            "WHERE id=%s AND org_id=%s AND project_id=%s",
+            (widget_id, *scope.key),
         ).fetchone()
     return _row(row) if row else None
 
 
-def create_widget(payload: dict[str, Any]) -> dict[str, Any]:
+def create_widget(scope: TenantScope, payload: dict[str, Any]) -> dict[str, Any]:
     ensure_schema()
     wid = payload.get("id") or f"w-{uuid.uuid4().hex[:10]}"
-    with connect() as conn:
-        conn.execute(
+    with connect(scope) as conn:
+        result = conn.execute(
             """
             INSERT INTO widget_catalog (
                 id, name, name_zh, type, source, category, icon, description,
                 config_schema, version, installed, org_id, project_id
             ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s)
+            ON CONFLICT (id) DO NOTHING
             """,
             (
                 wid,
@@ -101,12 +102,13 @@ def create_widget(payload: dict[str, Any]) -> dict[str, Any]:
                 json.dumps(payload.get("configSchema") or payload.get("config_schema") or {}),
                 payload.get("version") or "1.0.0",
                 bool(payload.get("installed", True)),
-                _DEFAULT_ORG,
-                _DEFAULT_PROJECT,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_widget(wid)  # type: ignore[return-value]
+    if result.rowcount == 0:
+        raise PermissionError("widget belongs to another tenant or already exists")
+    return get_widget(scope, wid)  # type: ignore[return-value]
 
 
 def _row(r: dict[str, Any]) -> dict[str, Any]:

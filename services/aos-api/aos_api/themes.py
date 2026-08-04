@@ -10,12 +10,9 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.themes")
-
-_DEFAULT_ORG = "dev-org"
-_DEFAULT_PROJECT = "dev-project"
-
 
 def ensure_schema() -> None:
     with connect() as conn:
@@ -38,38 +35,38 @@ def ensure_schema() -> None:
         conn.commit()
 
 
-def list_themes() -> list[dict[str, Any]]:
+def list_themes(scope: TenantScope) -> list[dict[str, Any]]:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         rows = conn.execute(
             """
             SELECT * FROM theme
              WHERE org_id=%s AND project_id=%s
              ORDER BY is_preset DESC, created_at
             """,
-            (_DEFAULT_ORG, _DEFAULT_PROJECT),
+            scope.key,
         ).fetchall()
     return [_row(r) for r in rows]
 
 
-def get_theme(theme_id: str) -> dict[str, Any] | None:
+def get_theme(scope: TenantScope, theme_id: str) -> dict[str, Any] | None:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         row = conn.execute(
             """
             SELECT * FROM theme
              WHERE id=%s AND org_id=%s AND project_id=%s
             """,
-            (theme_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (theme_id, *scope.key),
         ).fetchone()
     return _row(row) if row else None
 
 
-def create_theme(payload: dict[str, Any]) -> dict[str, Any]:
+def create_theme(scope: TenantScope, payload: dict[str, Any]) -> dict[str, Any]:
     ensure_schema()
     tid = payload.get("id") or f"theme-{uuid.uuid4().hex[:8]}"
-    with connect() as conn:
-        conn.execute(
+    with connect(scope) as conn:
+        result = conn.execute(
             """
             INSERT INTO theme (
                 id, name, mode, is_preset, tokens, description, org_id, project_id
@@ -78,6 +75,8 @@ def create_theme(payload: dict[str, Any]) -> dict[str, Any]:
                 name=EXCLUDED.name, mode=EXCLUDED.mode,
                 tokens=EXCLUDED.tokens, description=EXCLUDED.description,
                 updated_at=NOW()
+            WHERE theme.org_id=EXCLUDED.org_id
+              AND theme.project_id=EXCLUDED.project_id
             """,
             (
                 tid,
@@ -86,23 +85,26 @@ def create_theme(payload: dict[str, Any]) -> dict[str, Any]:
                 bool(payload.get("isPreset") or payload.get("is_preset") or False),
                 json.dumps(payload.get("tokens") or {}),
                 payload.get("description") or "",
-                _DEFAULT_ORG,
-                _DEFAULT_PROJECT,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_theme(tid)  # type: ignore[return-value]
+    if result.rowcount == 0:
+        raise PermissionError("theme belongs to another tenant")
+    return get_theme(scope, tid)  # type: ignore[return-value]
 
 
-def update_theme(theme_id: str, patch: dict[str, Any]) -> dict[str, Any] | None:
-    cur = get_theme(theme_id)
+def update_theme(
+    scope: TenantScope, theme_id: str, patch: dict[str, Any]
+) -> dict[str, Any] | None:
+    cur = get_theme(scope, theme_id)
     if not cur:
         return None
     name = patch.get("name", cur["name"])
     mode = patch.get("mode", cur["mode"])
     tokens = patch.get("tokens", cur["tokens"])
     description = patch.get("description", cur.get("description", ""))
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             UPDATE theme SET
@@ -115,23 +117,22 @@ def update_theme(theme_id: str, patch: dict[str, Any]) -> dict[str, Any] | None:
                 json.dumps(tokens),
                 description,
                 theme_id,
-                _DEFAULT_ORG,
-                _DEFAULT_PROJECT,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_theme(theme_id)
+    return get_theme(scope, theme_id)
 
 
-def delete_theme(theme_id: str) -> bool:
+def delete_theme(scope: TenantScope, theme_id: str) -> bool:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         result = conn.execute(
             """
             DELETE FROM theme
              WHERE id=%s AND org_id=%s AND project_id=%s AND is_preset=FALSE
             """,
-            (theme_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (theme_id, *scope.key),
         )
         conn.commit()
         return result.rowcount > 0

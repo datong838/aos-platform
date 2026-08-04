@@ -125,9 +125,10 @@ class TestSeedDataConsistency:
 
     def test_seed_widget_catalog_loaded(self) -> None:
         """种子 widget 目录数据存在。"""
+        from aos_api.tenant_scope import TenantScope
         from aos_api.widget_catalog import list_widgets
 
-        items = list_widgets()
+        items = list_widgets(TenantScope("dev-org", "dev-project"))
         assert len(items) > 0
         for w in items:
             assert "id" in w
@@ -146,9 +147,10 @@ class TestSeedDataConsistency:
 
     def test_seed_themes_loaded(self) -> None:
         """种子主题数据存在。"""
+        from aos_api.tenant_scope import TenantScope
         from aos_api.themes import list_themes
 
-        items = list_themes()
+        items = list_themes(TenantScope("dev-org", "dev-project"))
         assert len(items) > 0
         for t in items:
             assert "id" in t
@@ -341,9 +343,11 @@ class TestCRUDIntegrity:
 
     def test_widget_create_and_query(self) -> None:
         """Widget CRUD：创建 → 查列表 → 查详情。"""
-        from aos_api.widget_catalog import create_widget, list_widgets, get_widget
+        from aos_api.tenant_scope import TenantScope
+        from aos_api.widget_catalog import create_widget, get_widget, list_widgets
 
-        w = create_widget({
+        scope = TenantScope("dev-org", "dev-project")
+        w = create_widget(scope, {
             "name": "regression_test_widget",
             "nameZh": "回归测试组件",
             "type": "stat-card",
@@ -352,29 +356,31 @@ class TestCRUDIntegrity:
         })
         wid = w["id"]
 
-        items = list_widgets(source="custom")
+        items = list_widgets(scope, source="custom")
         assert any(item["id"] == wid for item in items)
 
-        detail = get_widget(wid)
+        detail = get_widget(scope, wid)
         assert detail is not None
         assert detail["name"] == "regression_test_widget"
 
     def test_theme_crud_lifecycle(self) -> None:
         """Theme CRUD：创建 → 更新 → 删除。"""
-        from aos_api.themes import create_theme, get_theme, update_theme, delete_theme
+        from aos_api.tenant_scope import TenantScope
+        from aos_api.themes import create_theme, delete_theme, get_theme, update_theme
 
-        t = create_theme({
+        scope = TenantScope("dev-org", "dev-project")
+        t = create_theme(scope, {
             "name": "reg_test_theme",
             "mode": "dark",
             "tokens": {"color": "#333"},
         })
         tid = t["id"]
 
-        updated = update_theme(tid, {"name": "updated_theme"})
+        updated = update_theme(scope, tid, {"name": "updated_theme"})
         assert updated["name"] == "updated_theme"
 
-        assert delete_theme(tid) is True
-        assert get_theme(tid) is None
+        assert delete_theme(scope, tid) is True
+        assert get_theme(scope, tid) is None
 
     def test_capacity_limits_crud(self) -> None:
         """Capacity limits：读取默认 → 设置 → 读取更新值。"""
