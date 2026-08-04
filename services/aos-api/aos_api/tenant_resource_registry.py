@@ -15,6 +15,7 @@ CLASSIFICATIONS = frozenset(
     {"SYSTEM_GLOBAL", "PLATFORM_TEMPLATE", "TENANT_OWNED"}
 )
 CURRENT_STATES = frozenset({"STRONG_PK", "WEAK_PK", "NO_TENANT", "N/A"})
+BASELINE_SCOPES = frozenset({"BUSINESS_DATA", "CONTROL_PLANE", "GLOBAL"})
 RESOURCE_KINDS = frozenset(
     {
         POSTGRES_KIND,
@@ -75,6 +76,9 @@ def validate_registry(registry: dict[str, Any] | None = None) -> list[str]:
         kind = _text(entry.get("kind"))
         classification = _text(entry.get("classification"))
         current_state = _text(entry.get("currentState")) or "N/A"
+        baseline_scope = _text(entry.get("baselineScope")) or (
+            "BUSINESS_DATA" if classification == "TENANT_OWNED" else "GLOBAL"
+        )
         if not name:
             issues.append(f"{label}.name is required")
         if kind not in RESOURCE_KINDS:
@@ -83,6 +87,8 @@ def validate_registry(registry: dict[str, Any] | None = None) -> list[str]:
             issues.append(f"{label}.classification is invalid: {classification!r}")
         if current_state not in CURRENT_STATES:
             issues.append(f"{label}.currentState is invalid: {current_state!r}")
+        if baseline_scope not in BASELINE_SCOPES:
+            issues.append(f"{label}.baselineScope is invalid: {baseline_scope!r}")
         if not _text(entry.get("owner")):
             issues.append(f"{label}.owner is required")
         if not _text(entry.get("migrationWave")):
