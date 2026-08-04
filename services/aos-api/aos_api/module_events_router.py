@@ -4,9 +4,10 @@ Endpoints for Workshop module event bindings.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from aos_api.auth import require_principal
 from aos_api.module_events import (
     create_event,
     delete_event,
@@ -18,7 +19,11 @@ from aos_api.module_events import (
     update_event,
 )
 
-router = APIRouter(prefix="/v1/modules", tags=["module-events"])
+router = APIRouter(
+    prefix="/v1/modules",
+    tags=["module-events"],
+    dependencies=[Depends(require_principal)],
+)
 
 
 class EventCreate(BaseModel):

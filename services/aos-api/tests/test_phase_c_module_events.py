@@ -11,15 +11,16 @@ Tests:
 from __future__ import annotations
 
 import pytest
-from fastapi.testclient import TestClient
-
 from aos_api.main import create_app
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture
 def client():
     app = create_app()
-    return TestClient(app)
+    test_client = TestClient(app)
+    test_client.headers.update({"Authorization": "Bearer dev"})
+    return test_client
 
 
 class TestModuleEventsCRUD:

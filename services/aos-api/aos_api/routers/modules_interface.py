@@ -6,12 +6,17 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
+from aos_api.auth import require_principal
 from aos_api.module_interfaces import get_interface, put_interface
 
-router = APIRouter(prefix="/v1/modules", tags=["modules-interface"])
+router = APIRouter(
+    prefix="/v1/modules",
+    tags=["modules-interface"],
+    dependencies=[Depends(require_principal)],
+)
 
 
 class InterfaceBody(BaseModel):

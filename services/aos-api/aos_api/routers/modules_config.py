@@ -6,12 +6,17 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
+from aos_api.auth import require_principal
 from aos_api.canvas_config import get_config, put_config
 
-router = APIRouter(prefix="/v1/modules", tags=["modules-config"])
+router = APIRouter(
+    prefix="/v1/modules",
+    tags=["modules-config"],
+    dependencies=[Depends(require_principal)],
+)
 
 
 class ConfigBody(BaseModel):

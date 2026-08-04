@@ -5,12 +5,11 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
 
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-
 from aos_api.ontology_engine import get_engine as get_ontology_engine
 from aos_api.phase6_datasource_engine import get_engine as get_datasource_engine
 from aos_api.routers.phase6_documents import router as documents_router
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture(autouse=True)
@@ -29,6 +28,7 @@ def doc_client():
     app = FastAPI()
     app.include_router(documents_router)
     with TestClient(app) as test_client:
+        test_client.headers.update({"Authorization": "Bearer dev"})
         yield test_client
 
 
@@ -112,7 +112,8 @@ def test_document_api_real_upload_reprocess_ontology_write_and_delete(doc_client
     )
     assert updated.status_code == 200
     assert updated.json()["ocr_text"] == "人工 OCR"
-    assert list(updated.json()["extracted_fields"].values())[0]["value"] == "人工修正值"
+    first_updated_field = next(iter(updated.json()["extracted_fields"].values()))
+    assert first_updated_field["value"] == "人工修正值"
 
     missing_type = doc_client.post(
         f"/api/datasource/documents/{document['id']}/ontology-write",

@@ -5,8 +5,6 @@ Seed data is populated via the workshop seed orchestrator (in setup_module).
 """
 from __future__ import annotations
 
-import pytest
-
 _SEEDED = False
 
 
@@ -130,7 +128,9 @@ class TestModuleWidgets:
 
 class TestModuleEvents:
     def test_list_events_seeded(self, client, auth_headers):
-        r = client.get("/v1/modules/dev-module-order/events")
+        r = client.get(
+            "/v1/modules/dev-module-order/events", headers=auth_headers
+        )
         assert r.status_code == 200
         body = r.json()
         assert body["moduleId"] == "dev-module-order"
@@ -139,13 +139,17 @@ class TestModuleEvents:
     def test_create_event(self, client, auth_headers):
         r = client.post(
             "/v1/modules/dev-module-order/events",
+            headers=auth_headers,
             json={"name": "测试事件", "trigger": {"type": "on_click"}, "action": {"type": "query"}},
         )
         assert r.status_code == 200
         assert r.json()["item"]["name"] == "测试事件"
 
     def test_triggers_catalog(self, client, auth_headers):
-        r = client.get("/v1/modules/dev-module-order/events/triggers/catalog")
+        r = client.get(
+            "/v1/modules/dev-module-order/events/triggers/catalog",
+            headers=auth_headers,
+        )
         assert r.status_code == 200
         assert len(r.json()["items"]) >= 6
 

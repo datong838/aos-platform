@@ -3,13 +3,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
+from aos_api.auth import require_principal
 from aos_api.errors import ApiError
 from aos_api.pipeline_builder import PipelineEditorError, get_store
 
-router = APIRouter(tags=["pipelines"])
+router = APIRouter(tags=["pipelines"], dependencies=[Depends(require_principal)])
 
 
 class CreatePipelineRequest(BaseModel):

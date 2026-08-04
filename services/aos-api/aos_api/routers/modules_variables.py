@@ -9,9 +9,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
+from aos_api.auth import require_principal
 from aos_api.module_variables import (
     create_variable,
     delete_variable,
@@ -20,7 +21,11 @@ from aos_api.module_variables import (
     update_variable,
 )
 
-router = APIRouter(prefix="/v1/modules", tags=["modules-variables"])
+router = APIRouter(
+    prefix="/v1/modules",
+    tags=["modules-variables"],
+    dependencies=[Depends(require_principal)],
+)
 
 _ALLOWED_SCOPES = frozenset({"page", "app", "global", "default"})
 

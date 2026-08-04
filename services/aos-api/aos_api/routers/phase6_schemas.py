@@ -3,12 +3,17 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from aos_api.auth import require_principal
 from aos_api.phase6_datasource_engine import get_engine
 
-router = APIRouter(prefix="/api/datasource", tags=["phase6-schemas"])
+router = APIRouter(
+    prefix="/api/datasource",
+    tags=["phase6-schemas"],
+    dependencies=[Depends(require_principal)],
+)
 
 
 class PreviewRequest(BaseModel):

@@ -8,12 +8,17 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from aos_api.auth import require_principal
 from aos_api.module_deployments import deploy, list_deployments, rollback
 
-router = APIRouter(prefix="/v1/modules", tags=["modules-deployments"])
+router = APIRouter(
+    prefix="/v1/modules",
+    tags=["modules-deployments"],
+    dependencies=[Depends(require_principal)],
+)
 
 
 class DeployBody(BaseModel):

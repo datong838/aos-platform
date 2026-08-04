@@ -6,18 +6,22 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from aos_api.auth import require_principal
 from aos_api.widget_instances import (
     create_instance,
     delete_instance,
-    get_instance,
     list_instances,
     update_instance,
 )
 
-router = APIRouter(prefix="/v1/modules", tags=["modules-widgets"])
+router = APIRouter(
+    prefix="/v1/modules",
+    tags=["modules-widgets"],
+    dependencies=[Depends(require_principal)],
+)
 
 
 class WidgetCreate(BaseModel):

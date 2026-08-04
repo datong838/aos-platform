@@ -6,12 +6,17 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from aos_api.auth import require_principal
 from aos_api.phase5_pipeline_engine import get_engine
 
-router = APIRouter(prefix="/v1/pipelines", tags=["phase5-pipelines"])
+router = APIRouter(
+    prefix="/v1/pipelines",
+    tags=["phase5-pipelines"],
+    dependencies=[Depends(require_principal)],
+)
 
 
 # ─────────── Request models ───────────
