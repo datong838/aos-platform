@@ -28,6 +28,9 @@ RESOURCE_KINDS = frozenset(
         "process_memory",
     }
 )
+EXECUTION_WAVES = frozenset({"TI-1", "TI-2", "TI-3", "TI-4", "TI-5"})
+EXECUTION_WORKERS = frozenset({"W1", "W2", "W3", "W4"})
+PLAN_AUTHORIZATION = "PLAN_ONLY"
 
 
 @dataclass(frozen=True)
@@ -123,6 +126,95 @@ def validate_registry(registry: dict[str, Any] | None = None) -> list[str]:
     for key, count in sorted(names.items()):
         if count > 1:
             issues.append(f"duplicate resource {key[0]}:{key[1]}")
+    issues.extend(_validate_execution_plan(data, entries))
+    return issues
+
+
+def _validate_execution_plan(
+    registry: dict[str, Any], entries: list[dict[str, Any]]
+) -> list[str]:
+    issues: list[str] = []
+    plan = registry.get("executionPlan")
+    if not isinstance(plan, dict):
+        return ["executionPlan must be an object"]
+    if plan.get("planVersion") != 1:
+        issues.append("executionPlan.planVersion must be 1")
+    if plan.get("authorization") != PLAN_AUTHORIZATION:
+        issues.append(
+            f"executionPlan.authorization must be {PLAN_AUTHORIZATION}"
+        )
+    groups = plan.get("groups")
+    if not isinstance(groups, list) or not groups:
+        return [*issues, "executionPlan.groups must be a non-empty list"]
+
+    known_resources = {
+        str(entry.get("name"))
+        for entry in entries
+        if isinstance(entry, dict) and _text(entry.get("name"))
+    }
+    group_ids: list[str] = []
+    planned_resources: list[str] = []
+    dependencies: dict[str, list[str]] = {}
+    for index, group in enumerate(groups):
+        label = f"executionPlan.groups[{index}]"
+        if not isinstance(group, dict):
+            issues.append(f"{label} must be an object")
+            continue
+        group_id = _text(group.get("id"))
+        wave = _text(group.get("wave"))
+        worker = _text(group.get("worker"))
+        if not group_id:
+            issues.append(f"{label}.id is required")
+        if wave not in EXECUTION_WAVES:
+            issues.append(f"{label}.wave is invalid: {wave!r}")
+        if worker not in EXECUTION_WORKERS:
+            issues.append(f"{label}.worker is invalid: {worker!r}")
+        resources_in_group = _string_list(group.get("resources"), label, issues)
+        if not resources_in_group:
+            issues.append(f"{label}.resources must be non-empty")
+        group_ids.append(group_id)
+        planned_resources.extend(resources_in_group)
+        dependencies[group_id] = _string_list(
+            group.get("dependsOn"), label, issues
+        )
+
+    duplicate_group_ids = sorted(
+        group_id for group_id, count in Counter(group_ids).items() if count > 1
+    )
+    if duplicate_group_ids:
+        issues.append(f"duplicate execution group ids: {duplicate_group_ids}")
+    duplicate_resources = sorted(
+        name for name, count in Counter(planned_resources).items() if count > 1
+    )
+    if duplicate_resources:
+        issues.append(f"resources assigned to multiple groups: {duplicate_resources}")
+    missing = sorted(known_resources - set(planned_resources))
+    unknown = sorted(set(planned_resources) - known_resources)
+    if missing:
+        issues.append(f"resources missing from execution plan: {missing}")
+    if unknown:
+        issues.append(f"unknown resources in execution plan: {unknown}")
+
+    seen: set[str] = set()
+    all_group_ids = set(group_ids)
+    for group_id in group_ids:
+        unknown_dependencies = sorted(
+            set(dependencies.get(group_id, [])) - all_group_ids
+        )
+        if unknown_dependencies:
+            issues.append(
+                f"execution group {group_id} has unknown dependencies: "
+                f"{unknown_dependencies}"
+            )
+        forward_dependencies = sorted(
+            set(dependencies.get(group_id, [])) - seen
+        )
+        if forward_dependencies:
+            issues.append(
+                f"execution group {group_id} depends on groups not ordered before it: "
+                f"{forward_dependencies}"
+            )
+        seen.add(group_id)
     return issues
 
 

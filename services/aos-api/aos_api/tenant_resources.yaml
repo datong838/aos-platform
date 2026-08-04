@@ -1,7 +1,98 @@
 schemaVersion: aos.dev/tenant-resources/v1alpha1
-registryVersion: 1
+registryVersion: 2
 description: TI-0B current-state inventory and target tenant-isolation classification.
 canonicalTenantColumns: [org_id, project_id]
+
+# TI-0E is the only executable wave/Worker mapping. Per-resource migrationWave below
+# remains the TI-0D historical discovery hint and must not drive implementation.
+executionPlan:
+  planVersion: 1
+  authorization: PLAN_ONLY
+  groups:
+    - id: ti1-authority-directory
+      wave: TI-1
+      worker: W1
+      dependsOn: []
+      resources: [alembic_version, meta_org, twa_org, twa_otp, twa_person_profile]
+    - id: ti1-tenant-scope
+      wave: TI-1
+      worker: W1
+      dependsOn: [ti1-authority-directory]
+      resources: [meta_membership, meta_workspace, twa_audit, twa_invite, twa_join_request, twa_workspace, twa_ws_member]
+    - id: ti1-authorization
+      wave: TI-1
+      worker: W1
+      dependsOn: [ti1-tenant-scope]
+      resources: [authz_tuple]
+
+    - id: ti2-asset-templates
+      wave: TI-2
+      worker: W2
+      dependsOn: [ti1-authorization]
+      resources: [asset_bundle, asset_bundle_artifact, asset_bundle_dependency, asset_bundle_evidence, asset_bundle_version, asset_bundle_version_event]
+    - id: ti2-installations
+      wave: TI-2
+      worker: W2
+      dependsOn: [ti2-asset-templates]
+      resources: [bundle_composition, bundle_composition_lock, bundle_installation, bundle_installation_command, bundle_installation_decision, bundle_installation_event, bundle_installation_revision]
+    - id: ti2-integration-instances
+      wave: TI-2
+      worker: W2
+      dependsOn: [ti2-installations]
+      resources: [integration_case, integration_case_command, integration_case_projection, integration_evidence, integration_evidence_snapshot, integration_instance, integration_instance_revision, integration_stage_event]
+    - id: ti2-module-instances
+      wave: TI-2
+      worker: W2
+      dependsOn: [ti1-authorization, ti2-asset-templates]
+      resources: [meta_module, module_canvas_config, module_deployment, module_events, module_interface, module_query, module_variable, module_widget_instance, theme, widget_catalog]
+
+    - id: ti3-ontology-templates
+      wave: TI-3
+      worker: W3
+      dependsOn: [ti1-authorization]
+      resources: [meta_action_type, meta_link_type, meta_object_type]
+    - id: ti3-object-graph
+      wave: TI-3
+      worker: W3
+      dependsOn: [ti3-ontology-templates]
+      resources: [funnel_status, graph_edge, meta_branch, obj_branch_overlay, obj_instance, object_lifecycle]
+    - id: ti3-draft-wiki
+      wave: TI-3
+      worker: W3
+      dependsOn: [ti3-object-graph]
+      resources: [draft_dataset, wiki_page, wiki_page_version]
+
+    - id: ti4-connectors
+      wave: TI-4
+      worker: W4
+      dependsOn: [ti1-authorization]
+      resources: [ecom_ingest_receipt, ecom_link, ecom_object, ecom_sync_checkpoint, oauth_token_store]
+    - id: ti4-data-os
+      wave: TI-4
+      worker: W4
+      dependsOn: [ti4-connectors]
+      resources: [meta_source, meta_pipeline, meta_dataset, meta_dataset_history, meta_sync, meta_schedule, phase5_pipeline_graph]
+    - id: ti4-async-runtime
+      wave: TI-4
+      worker: W4
+      dependsOn: [ti1-tenant-scope]
+      resources: [apollo_channel, apollo_spoke, tenant-scheduler-jobs]
+
+    - id: ti5-aip
+      wave: TI-5
+      worker: W4
+      dependsOn: [ti3-object-graph, ti4-data-os]
+      resources: [aip_eval_report, aip_eval_suite, aip_logic_graph, aip_logic_graph_revision, aip_logic_graph_run_nodes, aip_logic_graph_runs, aip_logic_publication, meta_aip_kv]
+    - id: ti5-analytics-models
+      wave: TI-5
+      worker: W4
+      dependsOn: [ti5-aip]
+      resources: [capacity_limits, capacity_usage, decision_lineage, model_catalog, model_provider, model_route, provider_health, registered_models]
+    - id: ti5-non-postgres
+      wave: TI-5
+      worker: W4
+      dependsOn: [ti5-analytics-models]
+      resources: [tenant-object-prefixes, tenant-vector-records, tenant-cache-namespaces, tenant-offline-storage, tenant-message-queues, tenant-process-memory]
 
 x-owned: &owned
   kind: postgres_table

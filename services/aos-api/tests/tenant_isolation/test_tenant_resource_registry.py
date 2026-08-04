@@ -63,6 +63,13 @@ def test_registry_separates_templates_globals_and_tenant_instances() -> None:
         "process_memory",
     }
 
+    execution_groups = registry["executionPlan"]["groups"]
+    planned_resources = [
+        name for group in execution_groups for name in group["resources"]
+    ]
+    assert registry["executionPlan"]["authorization"] == "PLAN_ONLY"
+    assert len(planned_resources) == len(set(planned_resources)) == 93
+
 
 def test_coverage_report_accepts_exact_inventory_without_claiming_rls_green() -> None:
     report = build_postgres_coverage_report(
