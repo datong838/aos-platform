@@ -29,9 +29,9 @@ def test_registry_is_valid_and_covers_current_postgres_inventory() -> None:
     entries = postgres_registry_entries(registry)
 
     assert validate_registry(registry) == []
-    assert len(entries) == 92
+    assert len(entries) == 95
     assert Counter(entry["currentState"] for entry in entries.values()) == {
-        "STRONG_PK": 37,
+        "STRONG_PK": 40,
         "WEAK_PK": 28,
         "NO_TENANT": 27,
     }
@@ -68,7 +68,7 @@ def test_registry_separates_templates_globals_and_tenant_instances() -> None:
         name for group in execution_groups for name in group["resources"]
     ]
     assert registry["executionPlan"]["authorization"] == "PLAN_ONLY"
-    assert len(planned_resources) == len(set(planned_resources)) == 99
+    assert len(planned_resources) == len(set(planned_resources)) == 102
 
 
 def test_coverage_report_accepts_exact_inventory_without_claiming_rls_green() -> None:
@@ -77,7 +77,7 @@ def test_coverage_report_accepts_exact_inventory_without_claiming_rls_green() ->
     )
 
     assert report["ok"] is True
-    assert report["database"]["tableCount"] == 92
+    assert report["database"]["tableCount"] == 95
     assert report["database"]["coveragePercent"] == 100.0
     assert report["database"]["rls"]["enabledTableCount"] == 0
     assert report["database"]["rls"]["policyCount"] == 0

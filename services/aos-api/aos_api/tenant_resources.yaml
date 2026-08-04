@@ -44,7 +44,7 @@ executionPlan:
       wave: TI-2
       worker: W2
       dependsOn: [ti1-authorization, ti2-asset-templates]
-      resources: [meta_module, module_canvas_config, module_deployment, module_events, module_interface, module_query, module_variable, module_widget_instance, theme, widget_catalog]
+      resources: [meta_module, module_canvas_config, module_deployment, module_events, module_interface, module_query, module_variable, module_widget_instance, module_organization_profile, module_instance_overlay, module_user_view_preference, theme, widget_catalog]
 
     - id: ti3-ontology-templates
       wave: TI-3
@@ -201,6 +201,9 @@ resources:
   - {<<: *owned, name: module_query, tenantColumns: [org_id, project_id], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
   - {<<: *owned, name: module_variable, tenantColumns: [org_id, project_id], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
   - {<<: *owned, name: module_widget_instance, tenantColumns: [org_id, project_id], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
+  - {<<: *owned, name: module_organization_profile, tenantColumns: [org_id], primaryKey: [org_id, profile_revision], targetTenantColumns: [org_id], currentState: STRONG_PK, migrationWave: TI-2}
+  - {<<: *owned, name: module_instance_overlay, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, module_pk, overlay_revision], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-2}
+  - {<<: *owned, name: module_user_view_preference, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, module_pk, subject, preference_key, revision], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-2}
 
   # OAuth, branches, objects and pipeline runtime
   - {<<: *owned, name: oauth_token_store, owner: ecom-connector, tenantColumns: [org_id, workspace_id], primaryKey: [org_id, workspace_id, platform, external_account_id], targetTenantColumns: [org_id, workspace_id], canonicalProjectAlias: workspace_id, currentState: STRONG_PK, migrationWave: TI-1}

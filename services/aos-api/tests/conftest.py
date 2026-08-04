@@ -65,6 +65,23 @@ def _isolated_postgres_database():
         command.upgrade(config, "228assetintegration")
         init_schema()
         ensure_tenant_catalog_schema()
+        from aos_api.canvas_config import ensure_schema as ensure_canvas_schema
+        from aos_api.module_deployments import ensure_schema as ensure_deployment_schema
+        from aos_api.module_events import ensure_events_schema
+        from aos_api.module_interfaces import ensure_schema as ensure_interface_schema
+        from aos_api.module_queries import ensure_schema as ensure_query_schema
+        from aos_api.module_store import ensure_module_schema
+        from aos_api.module_variables import ensure_schema as ensure_variable_schema
+        from aos_api.widget_instances import ensure_schema as ensure_widget_schema
+
+        ensure_module_schema()
+        ensure_canvas_schema()
+        ensure_deployment_schema()
+        ensure_events_schema()
+        ensure_interface_schema()
+        ensure_query_schema()
+        ensure_variable_schema()
+        ensure_widget_schema()
         command.upgrade(config, "head")
         os.environ["AOS_TWA_STORE"] = previous_twa_store or "memory"
         twa_pg.clear_mode_cache()

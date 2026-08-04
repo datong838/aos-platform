@@ -7,6 +7,7 @@ TI1_E1_REVISION = "228ti1e1expand"
 TI1_E2_REVISION = "228ti1e2dual"
 TI1_E3_REVISION = "228ti1e3ledger"
 TI1_E3_EXEC_REVISION = "228ti1e3exec"
+TI2_E1_REVISION = "228ti2e1expand"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {
@@ -80,6 +81,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI1_E2_REVISION,
         TI1_E3_REVISION,
         TI1_E3_EXEC_REVISION,
+        TI2_E1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     return {
@@ -181,7 +183,7 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] != TI1_E3_EXEC_REVISION:
+    if report["alembicRevision"] not in {TI1_E3_EXEC_REVISION, TI2_E1_REVISION}:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     missing_by_table: dict[str, list[str]] = {}
@@ -247,4 +249,142 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
         "e3MissingColumnsByTable": missing_by_table,
         "e3NullableScopeByTable": nullable_scope_by_table,
         "e3MissingAppendOnlyTriggers": missing_triggers,
+    }
+
+
+TI2_MODULE_COLUMNS = {
+    "meta_module": {
+        "module_pk", "module_id", "template_id", "template_version",
+        "installation_id", "active_overlay_revision",
+        "effective_config_hash", "deleted_at",
+    },
+    "module_canvas_config": {"module_pk"},
+    "module_deployment": {"module_pk"},
+    "module_events": {"module_pk"},
+    "module_interface": {"module_pk"},
+    "module_query": {"module_pk"},
+    "module_variable": {"module_pk"},
+    "module_widget_instance": {"module_pk"},
+}
+
+TI2_HISTORY_TABLES = {
+    "module_organization_profile",
+    "module_instance_overlay",
+    "module_user_view_preference",
+}
+
+TI2_NOT_VALID_FOREIGN_KEYS = {
+    "fk_meta_module_installation_ti2",
+    "fk_meta_module_active_overlay_ti2",
+    "fk_module_canvas_config_module_ti2",
+    "fk_module_deployment_module_ti2",
+    "fk_module_events_module_ti2",
+    "fk_module_interface_module_ti2",
+    "fk_module_query_module_ti2",
+    "fk_module_variable_module_ti2",
+    "fk_module_widget_instance_module_ti2",
+    "fk_module_instance_overlay_module_ti2",
+    "fk_module_user_view_preference_module_ti2",
+}
+
+
+def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
+    report = build_ti1_e3_schema_report(conn)
+    issues = [
+        issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
+    ]
+    if report["alembicRevision"] != TI2_E1_REVISION:
+        issues.append("ALEMBIC_REVISION_MISMATCH")
+
+    missing_columns: dict[str, list[str]] = {}
+    non_nullable_columns: dict[str, list[str]] = {}
+    for table, expected in TI2_MODULE_COLUMNS.items():
+        rows = conn.execute(
+            """
+            SELECT column_name, is_nullable
+              FROM information_schema.columns
+             WHERE table_schema='public' AND table_name=%s
+            """,
+            (table,),
+        ).fetchall()
+        columns = {
+            str(row["column_name"]): str(row["is_nullable"]) for row in rows
+        }
+        missing = sorted(expected - set(columns))
+        if missing:
+            missing_columns[table] = missing
+        non_nullable = sorted(name for name in expected if columns.get(name) == "NO")
+        if non_nullable:
+            non_nullable_columns[table] = non_nullable
+
+    table_rows = conn.execute(
+        """
+        SELECT table_name
+          FROM information_schema.tables
+         WHERE table_schema='public' AND table_name = ANY(%s)
+        """,
+        (sorted(TI2_HISTORY_TABLES),),
+    ).fetchall()
+    present_tables = {str(row["table_name"]) for row in table_rows}
+    missing_tables = sorted(TI2_HISTORY_TABLES - present_tables)
+
+    fk_rows = conn.execute(
+        """
+        SELECT conname, convalidated
+          FROM pg_constraint
+         WHERE contype='f' AND conname LIKE '%_ti2'
+        """
+    ).fetchall()
+    foreign_keys = {str(row["conname"]): bool(row["convalidated"]) for row in fk_rows}
+    missing_foreign_keys = sorted(TI2_NOT_VALID_FOREIGN_KEYS - set(foreign_keys))
+    prematurely_validated = sorted(
+        name for name in TI2_NOT_VALID_FOREIGN_KEYS if foreign_keys.get(name) is True
+    )
+
+    trigger_rows = conn.execute(
+        """
+        SELECT c.relname AS table_name, t.tgname AS trigger_name
+          FROM pg_trigger t
+          JOIN pg_class c ON c.oid=t.tgrelid
+          JOIN pg_namespace n ON n.oid=c.relnamespace
+         WHERE n.nspname='public' AND NOT t.tgisinternal
+           AND c.relname = ANY(%s)
+        """,
+        (sorted(TI2_HISTORY_TABLES),),
+    ).fetchall()
+    triggers = {
+        (str(row["table_name"]), str(row["trigger_name"])) for row in trigger_rows
+    }
+    expected_triggers = {
+        (table, f"trg_{table}_{suffix}")
+        for table in TI2_HISTORY_TABLES
+        for suffix in ("immutable", "truncate_guard")
+    }
+    missing_triggers = sorted(
+        f"{table}.{trigger}" for table, trigger in expected_triggers - triggers
+    )
+
+    if missing_columns:
+        issues.append("TI2_MODULE_COLUMNS_MISSING")
+    if non_nullable_columns:
+        issues.append("TI2_EXPAND_COLUMNS_NOT_NULLABLE")
+    if missing_tables:
+        issues.append("TI2_HISTORY_TABLES_MISSING")
+    if missing_foreign_keys:
+        issues.append("TI2_FOREIGN_KEYS_MISSING")
+    if prematurely_validated:
+        issues.append("TI2_FOREIGN_KEYS_PREMATURELY_VALIDATED")
+    if missing_triggers:
+        issues.append("TI2_APPEND_ONLY_TRIGGERS_MISSING")
+    return {
+        **report,
+        "stage": "TI-2-E1",
+        "ok": not issues,
+        "issues": issues,
+        "ti2MissingColumns": missing_columns,
+        "ti2NonNullableExpandColumns": non_nullable_columns,
+        "ti2MissingHistoryTables": missing_tables,
+        "ti2MissingForeignKeys": missing_foreign_keys,
+        "ti2PrematurelyValidatedForeignKeys": prematurely_validated,
+        "ti2MissingAppendOnlyTriggers": missing_triggers,
     }
