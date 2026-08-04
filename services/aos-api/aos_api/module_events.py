@@ -11,11 +11,9 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.module_events")
-
-_DEFAULT_ORG = "dev-org"
-_DEFAULT_PROJECT = "dev-project"
 
 _DEFAULT_EVENTS: list[dict[str, Any]] = [
     {
@@ -65,16 +63,16 @@ def ensure_events_schema() -> None:
     log.info("module_events_schema_ensured")
 
 
-def seed_events_if_empty(module_id: str) -> None:
+def seed_events_if_empty(scope: TenantScope, module_id: str) -> None:
     """Seed default events for a module if none exist."""
     ensure_events_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         existing = conn.execute(
             """
             SELECT COUNT(*) as cnt FROM module_events
              WHERE module_id = %s AND org_id = %s AND project_id = %s
             """,
-            (module_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (module_id, *scope.key),
         ).fetchone()
         if existing and existing["cnt"] > 0:
             return
@@ -96,43 +94,45 @@ def seed_events_if_empty(module_id: str) -> None:
                     json.dumps(evt["action"]),
                     evt["enabled"],
                     i,
-                    _DEFAULT_ORG,
-                    _DEFAULT_PROJECT,
+                    *scope.key,
                 ),
             )
         conn.commit()
     log.info("module_events_seeded module=%s count=%s", module_id, len(_DEFAULT_EVENTS))
 
 
-def list_events(module_id: str) -> list[dict[str, Any]]:
+def list_events(scope: TenantScope, module_id: str) -> list[dict[str, Any]]:
     """List all events for a module."""
     ensure_events_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         rows = conn.execute(
             """
             SELECT * FROM module_events
              WHERE module_id = %s AND org_id = %s AND project_id = %s
              ORDER BY sort_order, created_at
             """,
-            (module_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (module_id, *scope.key),
         ).fetchall()
     return [_row_to_event(r) for r in rows]
 
 
-def get_event(event_id: str) -> dict[str, Any] | None:
+def get_event(
+    scope: TenantScope, module_id: str, event_id: str
+) -> dict[str, Any] | None:
     ensure_events_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         row = conn.execute(
             """
-            SELECT * FROM module_events WHERE id = %s
+            SELECT * FROM module_events
+             WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s
             """,
-            (event_id,),
+            (event_id, module_id, *scope.key),
         ).fetchone()
     return _row_to_event(row) if row else None
 
 
 def create_event(
-    module_id: str, payload: dict[str, Any]
+    scope: TenantScope, module_id: str, payload: dict[str, Any]
 ) -> dict[str, Any]:
     """Create a new event binding."""
     ensure_events_schema()
@@ -145,7 +145,7 @@ def create_event(
     enabled = bool(payload.get("enabled", True))
     sort_order = int(payload.get("sortOrder") or payload.get("sort_order") or 0)
 
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             INSERT INTO module_events (
@@ -161,20 +161,19 @@ def create_event(
                 json.dumps(action),
                 enabled,
                 sort_order,
-                _DEFAULT_ORG,
-                _DEFAULT_PROJECT,
+                *scope.key,
             ),
         )
         conn.commit()
     log.info("module_event_created id=%s module=%s", eid, module_id)
-    return get_event(eid)  # type: ignore[return-value]
+    return get_event(scope, module_id, eid)  # type: ignore[return-value]
 
 
 def update_event(
-    event_id: str, patch: dict[str, Any]
+    scope: TenantScope, module_id: str, event_id: str, patch: dict[str, Any]
 ) -> dict[str, Any] | None:
     """Update an existing event binding."""
-    cur = get_event(event_id)
+    cur = get_event(scope, module_id, event_id)
     if not cur:
         return None
 
@@ -184,7 +183,7 @@ def update_event(
     enabled = patch.get("enabled", cur["enabled"])
     sort_order = patch.get("sortOrder", cur.get("sortOrder", 0))
 
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             UPDATE module_events SET
@@ -194,7 +193,7 @@ def update_event(
                 enabled = %s,
                 sort_order = %s,
                 updated_at = NOW()
-            WHERE id = %s
+            WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s
             """,
             (
                 name,
@@ -203,18 +202,22 @@ def update_event(
                 enabled,
                 sort_order,
                 event_id,
+                module_id,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_event(event_id)
+    return get_event(scope, module_id, event_id)
 
 
-def delete_event(event_id: str) -> bool:
+def delete_event(scope: TenantScope, module_id: str, event_id: str) -> bool:
     """Delete an event binding. Returns True if deleted."""
     ensure_events_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         result = conn.execute(
-            "DELETE FROM module_events WHERE id = %s", (event_id,)
+            "DELETE FROM module_events "
+            "WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s",
+            (event_id, module_id, *scope.key),
         )
         conn.commit()
         deleted = result.rowcount > 0

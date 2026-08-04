@@ -9,11 +9,10 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.module_interfaces")
 
-_DEFAULT_ORG = "dev-org"
-_DEFAULT_PROJECT = "dev-project"
 _VALID_DIRECTIONS = frozenset({"input", "output"})
 
 
@@ -78,21 +77,21 @@ def normalize_entry_params(
     return out
 
 
-def get_interface(module_id: str) -> dict[str, Any] | None:
+def get_interface(scope: TenantScope, module_id: str) -> dict[str, Any] | None:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         row = conn.execute(
             """
             SELECT * FROM module_interface
              WHERE module_id=%s AND org_id=%s AND project_id=%s
             """,
-            (module_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (module_id, *scope.key),
         ).fetchone()
     return _row(row) if row else None
 
 
 def put_interface(
-    module_id: str, payload: dict[str, Any]
+    scope: TenantScope, module_id: str, payload: dict[str, Any]
 ) -> dict[str, Any]:
     ensure_schema()
     name = payload.get("name") or ""
@@ -103,8 +102,8 @@ def put_interface(
     )
     expose = payload.get("expose") or {}
     version = payload.get("version") or "1.0.0"
-    with connect() as conn:
-        conn.execute(
+    with connect(scope) as conn:
+        result = conn.execute(
             """
             INSERT INTO module_interface (
                 module_id, name, description, entry_params, expose,
@@ -117,6 +116,8 @@ def put_interface(
                 expose = EXCLUDED.expose,
                 version = EXCLUDED.version,
                 updated_at = NOW()
+            WHERE module_interface.org_id=EXCLUDED.org_id
+              AND module_interface.project_id=EXCLUDED.project_id
             """,
             (
                 module_id,
@@ -125,12 +126,13 @@ def put_interface(
                 json.dumps(entry_params),
                 json.dumps(expose),
                 version,
-                _DEFAULT_ORG,
-                _DEFAULT_PROJECT,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_interface(module_id)  # type: ignore[return-value]
+    if result.rowcount == 0:
+        raise PermissionError("module interface belongs to another tenant")
+    return get_interface(scope, module_id)  # type: ignore[return-value]
 
 
 def _row(r: dict[str, Any]) -> dict[str, Any]:

@@ -11,6 +11,9 @@ from aos_api.module_variables import (
     get_variable,
     update_variable,
 )
+from aos_api.module_interfaces import get_interface, put_interface
+from aos_api.module_events import create_event, delete_event, get_event, update_event
+from aos_api.module_queries import create_query, delete_query, get_query
 from aos_api.tenant_scope import TenantScope
 from aos_api.widget_instances import (
     create_instance,
@@ -62,3 +65,41 @@ def test_variable_get_update_delete_are_tenant_and_module_scoped() -> None:
     assert update_variable(scope_b, module_id, item["id"], {"name": "leak"}) is None
     assert delete_variable(scope_b, module_id, item["id"]) is False
     assert get_variable(scope_a, module_id, item["id"])["name"] == "selected"
+
+
+def test_query_get_delete_are_tenant_and_module_scoped() -> None:
+    scope_a, scope_b = _scopes()
+    module_id = f"module-{uuid.uuid4().hex}"
+    item = create_query(scope_a, module_id, {"name": "orders"})
+
+    assert get_query(scope_b, module_id, item["id"]) is None
+    assert get_query(scope_a, "other-module", item["id"]) is None
+    assert delete_query(scope_b, module_id, item["id"]) is False
+    assert get_query(scope_a, module_id, item["id"])["name"] == "orders"
+
+
+def test_interface_fails_closed_on_same_legacy_id_across_tenants() -> None:
+    scope_a, scope_b = _scopes()
+    module_id = f"module-{uuid.uuid4().hex}"
+    put_interface(scope_a, module_id, {"name": "A"})
+
+    assert get_interface(scope_b, module_id) is None
+    with pytest.raises(PermissionError):
+        put_interface(scope_b, module_id, {"name": "B"})
+    assert get_interface(scope_a, module_id)["name"] == "A"
+
+
+def test_event_get_update_delete_are_tenant_and_module_scoped() -> None:
+    scope_a, scope_b = _scopes()
+    module_id = f"module-{uuid.uuid4().hex}"
+    item = create_event(
+        scope_a,
+        module_id,
+        {"name": "refresh", "trigger": {}, "action": {}},
+    )
+
+    assert get_event(scope_b, module_id, item["id"]) is None
+    assert get_event(scope_a, "other-module", item["id"]) is None
+    assert update_event(scope_b, module_id, item["id"], {"name": "leak"}) is None
+    assert delete_event(scope_b, module_id, item["id"]) is False
+    assert get_event(scope_a, module_id, item["id"])["name"] == "refresh"

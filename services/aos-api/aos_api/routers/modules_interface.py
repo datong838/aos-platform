@@ -6,11 +6,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from aos_api.auth import require_principal
+from aos_api.auth import Principal, require_principal
 from aos_api.module_interfaces import get_interface, put_interface
+from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(
     prefix="/v1/modules",
@@ -30,8 +31,11 @@ class InterfaceBody(BaseModel):
 
 
 @router.get("/{module_id}/interface")
-def get_module_interface(module_id: str) -> dict[str, Any]:
-    iface = get_interface(module_id)
+def get_module_interface(
+    module_id: str, principal: Principal = Depends(require_principal)
+) -> dict[str, Any]:
+    scope = TenantScope(principal.org_id, principal.project_id)
+    iface = get_interface(scope, module_id)
     if not iface:
         return {
             "moduleId": module_id,
@@ -46,6 +50,12 @@ def get_module_interface(module_id: str) -> dict[str, Any]:
 
 @router.put("/{module_id}/interface")
 def put_module_interface(
-    module_id: str, body: InterfaceBody
+    module_id: str,
+    body: InterfaceBody,
+    principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    return put_interface(module_id, body.model_dump())
+    scope = TenantScope(principal.org_id, principal.project_id)
+    try:
+        return put_interface(scope, module_id, body.model_dump())
+    except PermissionError as exc:
+        raise HTTPException(status_code=404, detail="Module not found") from exc

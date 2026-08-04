@@ -14,10 +14,6 @@ from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.module_queries")
 
-_DEFAULT_ORG = "dev-org"
-_DEFAULT_PROJECT = "dev-project"
-
-
 def ensure_schema() -> None:
     with connect() as conn:
         conn.execute(
@@ -62,20 +58,25 @@ def list_queries(scope: TenantScope, module_id: str) -> list[dict[str, Any]]:
     return [_row(r) for r in rows]
 
 
-def get_query(query_id: str) -> dict[str, Any] | None:
+def get_query(
+    scope: TenantScope, module_id: str, query_id: str
+) -> dict[str, Any] | None:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         row = conn.execute(
-            "SELECT * FROM module_query WHERE id=%s",
-            (query_id,),
+            "SELECT * FROM module_query "
+            "WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s",
+            (query_id, module_id, *scope.key),
         ).fetchone()
     return _row(row) if row else None
 
 
-def create_query(module_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+def create_query(
+    scope: TenantScope, module_id: str, payload: dict[str, Any]
+) -> dict[str, Any]:
     ensure_schema()
     qid = payload.get("id") or f"q-{uuid.uuid4().hex[:10]}"
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             INSERT INTO module_query (
@@ -93,19 +94,20 @@ def create_query(module_id: str, payload: dict[str, Any]) -> dict[str, Any]:
                 payload.get("statement") or "",
                 json.dumps(payload.get("params") or []),
                 bool(payload.get("enabled", True)),
-                _DEFAULT_ORG,
-                _DEFAULT_PROJECT,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_query(qid)  # type: ignore[return-value]
+    return get_query(scope, module_id, qid)  # type: ignore[return-value]
 
 
-def delete_query(query_id: str) -> bool:
+def delete_query(scope: TenantScope, module_id: str, query_id: str) -> bool:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         result = conn.execute(
-            "DELETE FROM module_query WHERE id=%s", (query_id,)
+            "DELETE FROM module_query "
+            "WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s",
+            (query_id, module_id, *scope.key),
         )
         conn.commit()
         return result.rowcount > 0
