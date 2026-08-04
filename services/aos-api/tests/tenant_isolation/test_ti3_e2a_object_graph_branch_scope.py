@@ -3,7 +3,6 @@ from __future__ import annotations
 import uuid
 
 import pytest
-
 from aos_api.auth import Principal
 from aos_api.db import connect
 from aos_api.errors import ApiError
