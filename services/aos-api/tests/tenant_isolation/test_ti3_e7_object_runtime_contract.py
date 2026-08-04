@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 from alembic import command
 from alembic.config import Config
-
 from aos_api.db import connect, get_dsn
 from aos_api.tenant_schema_lint import build_ti3_e7_schema_report
 from aos_api.tenant_scope import TenantScope
@@ -86,6 +85,7 @@ def test_e7_schema_report_is_green() -> None:
         "228ti4c1expand",
         "228ti4d1expand",
         "228ti4d4validate",
+        "228ti4d6rls",
     }
     assert report["ti3ContractInvalidPrimaryKeys"] == []
     assert report["ti3ContractNullableScopeColumns"] == []

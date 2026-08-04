@@ -18,6 +18,7 @@ TI3_E7_REVISION = "228ti3e7contract"
 TI4_C1_REVISION = "228ti4c1expand"
 TI4_D1_REVISION = "228ti4d1expand"
 TI4_D4_REVISION = "228ti4d4validate"
+TI4_D6_REVISION = "228ti4d6rls"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {
@@ -94,6 +95,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C1_REVISION,
         TI4_D1_REVISION,
         TI4_D4_REVISION,
+        TI4_D6_REVISION,
     }:
         issues.append("RLS_ENABLED_BEFORE_E6")
     if revision not in {
@@ -112,6 +114,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C1_REVISION,
         TI4_D1_REVISION,
         TI4_D4_REVISION,
+        TI4_D6_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     return {
@@ -226,6 +229,7 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C1_REVISION,
         TI4_D1_REVISION,
         TI4_D4_REVISION,
+        TI4_D6_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -348,6 +352,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C1_REVISION,
         TI4_D1_REVISION,
         TI4_D4_REVISION,
+        TI4_D6_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -438,6 +443,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C1_REVISION,
         TI4_D1_REVISION,
         TI4_D4_REVISION,
+        TI4_D6_REVISION,
     }:
         issues.append("TI2_EXPAND_COLUMNS_NOT_NULLABLE")
     if missing_tables:
@@ -466,6 +472,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
                 TI4_C1_REVISION,
                 TI4_D1_REVISION,
                 TI4_D4_REVISION,
+                TI4_D6_REVISION,
             }
             else non_nullable_columns
         ),
@@ -492,6 +499,7 @@ def build_ti2_e4_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C1_REVISION,
         TI4_D1_REVISION,
         TI4_D4_REVISION,
+        TI4_D6_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     rows = conn.execute(
@@ -546,6 +554,7 @@ def build_ti2_e6_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C1_REVISION,
         TI4_D1_REVISION,
         TI4_D4_REVISION,
+        TI4_D6_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -649,6 +658,7 @@ def build_ti2_e7_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C1_REVISION,
         TI4_D1_REVISION,
         TI4_D4_REVISION,
+        TI4_D6_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -756,6 +766,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C1_REVISION,
         TI4_D1_REVISION,
         TI4_D4_REVISION,
+        TI4_D6_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -790,6 +801,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C1_REVISION,
         TI4_D1_REVISION,
         TI4_D4_REVISION,
+        TI4_D6_REVISION,
     }:
         issues.append("TI3_EXPAND_COLUMNS_NOT_NULLABLE")
     if templates_with_scope:
@@ -831,6 +843,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
                 TI4_C1_REVISION,
                 TI4_D1_REVISION,
                 TI4_D4_REVISION,
+                TI4_D6_REVISION,
             }
             else expand_not_nullable
         ),
@@ -851,6 +864,7 @@ def build_ti3_e6_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C1_REVISION,
         TI4_D1_REVISION,
         TI4_D4_REVISION,
+        TI4_D6_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -953,6 +967,7 @@ def build_ti3_e7_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C1_REVISION,
         TI4_D1_REVISION,
         TI4_D4_REVISION,
+        TI4_D6_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1089,6 +1104,7 @@ def build_ti4_c1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C1_REVISION,
         TI4_D1_REVISION,
         TI4_D4_REVISION,
+        TI4_D6_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1177,7 +1193,7 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
     revision = report["alembicRevision"]
-    if revision not in {TI4_D1_REVISION, TI4_D4_REVISION}:
+    if revision not in {TI4_D1_REVISION, TI4_D4_REVISION, TI4_D6_REVISION}:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     column_rows = conn.execute(

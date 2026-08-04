@@ -8,11 +8,10 @@ from pathlib import Path
 import pytest
 from alembic import command
 from alembic.config import Config
-from psycopg.errors import InsufficientPrivilege
-
 from aos_api.db import connect, get_dsn
 from aos_api.tenant_schema_lint import build_ti3_e6_schema_report
 from aos_api.tenant_scope import TenantScope
+from psycopg.errors import InsufficientPrivilege
 
 ROOT = Path(__file__).resolve().parents[2]
 MIGRATION = ROOT / "alembic" / "versions" / "228ti3e6_object_runtime_rls.py"
@@ -101,6 +100,7 @@ def test_schema_lint_confirms_nine_policies_and_safe_role() -> None:
         "228ti4c1expand",
         "228ti4d1expand",
         "228ti4d4validate",
+        "228ti4d6rls",
     }
     assert report["ti3RuntimeRoleSafe"] is True
     assert report["ti3RlsTableCount"] == 9

@@ -22,6 +22,7 @@ def test_ti2_e1_real_schema_lint_is_green() -> None:
         "228ti4c1expand",
         "228ti4d1expand",
         "228ti4d4validate",
+        "228ti4d6rls",
     }
     assert report["ti2MissingColumns"] == {}
     assert report["ti2NonNullableExpandColumns"] == {}

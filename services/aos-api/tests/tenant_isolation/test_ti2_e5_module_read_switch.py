@@ -4,7 +4,6 @@ import uuid
 from pathlib import Path
 
 import pytest
-
 from aos_api.db import connect
 from aos_api.module_events import list_events
 from aos_api.module_identity import (
@@ -88,6 +87,7 @@ def test_orphan_event_is_hidden_without_parent_module() -> None:
             "228ti4c1expand",
             "228ti4d1expand",
             "228ti4d4validate",
+            "228ti4d6rls",
         }:
         pytest.skip("E7 rejects new orphan rows; quarantine is covered by E7 tests")
     suffix = uuid.uuid4().hex
