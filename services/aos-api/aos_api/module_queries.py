@@ -10,6 +10,7 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.module_queries")
 
@@ -47,16 +48,16 @@ def ensure_schema() -> None:
         conn.commit()
 
 
-def list_queries(module_id: str) -> list[dict[str, Any]]:
+def list_queries(scope: TenantScope, module_id: str) -> list[dict[str, Any]]:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         rows = conn.execute(
             """
             SELECT * FROM module_query
              WHERE module_id=%s AND org_id=%s AND project_id=%s
              ORDER BY created_at
             """,
-            (module_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (module_id, *scope.key),
         ).fetchall()
     return [_row(r) for r in rows]
 

@@ -13,12 +13,9 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.module_variables")
-
-_DEFAULT_ORG = "dev-org"
-_DEFAULT_PROJECT = "dev-project"
-
 
 def ensure_schema() -> None:
     with connect() as conn:
@@ -49,35 +46,40 @@ def ensure_schema() -> None:
         conn.commit()
 
 
-def list_variables(module_id: str) -> list[dict[str, Any]]:
+def list_variables(scope: TenantScope, module_id: str) -> list[dict[str, Any]]:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         rows = conn.execute(
             """
             SELECT * FROM module_variable
              WHERE module_id=%s AND org_id=%s AND project_id=%s
              ORDER BY group_name, created_at
             """,
-            (module_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (module_id, *scope.key),
         ).fetchall()
     return [_row(r) for r in rows]
 
 
-def get_variable(variable_id: str) -> dict[str, Any] | None:
+def get_variable(
+    scope: TenantScope, module_id: str, variable_id: str
+) -> dict[str, Any] | None:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         row = conn.execute(
-            "SELECT * FROM module_variable WHERE id=%s",
-            (variable_id,),
+            "SELECT * FROM module_variable "
+            "WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s",
+            (variable_id, module_id, *scope.key),
         ).fetchone()
     return _row(row) if row else None
 
 
-def create_variable(module_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+def create_variable(
+    scope: TenantScope, module_id: str, payload: dict[str, Any]
+) -> dict[str, Any]:
     ensure_schema()
     vid = payload.get("id") or f"var-{uuid.uuid4().hex[:10]}"
     init = payload.get("initialValue", payload.get("initial_value"))
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             INSERT INTO module_variable (
@@ -94,18 +96,17 @@ def create_variable(module_id: str, payload: dict[str, Any]) -> dict[str, Any]:
                 json.dumps(init),
                 json.dumps(init),
                 payload.get("description") or "",
-                _DEFAULT_ORG,
-                _DEFAULT_PROJECT,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_variable(vid)  # type: ignore[return-value]
+    return get_variable(scope, module_id, vid)  # type: ignore[return-value]
 
 
 def update_variable(
-    variable_id: str, patch: dict[str, Any]
+    scope: TenantScope, module_id: str, variable_id: str, patch: dict[str, Any]
 ) -> dict[str, Any] | None:
-    cur = get_variable(variable_id)
+    cur = get_variable(scope, module_id, variable_id)
     if not cur:
         return None
     name = patch.get("name", cur["name"])
@@ -114,14 +115,14 @@ def update_variable(
     initial_value = patch.get("initialValue", cur.get("initialValue"))
     current_value = patch.get("currentValue", cur.get("currentValue"))
     description = patch.get("description", cur.get("description"))
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             UPDATE module_variable SET
                 name=%s, var_type=%s, group_name=%s,
                 initial_value=%s::jsonb, current_value=%s::jsonb,
                 description=%s, updated_at=NOW()
-            WHERE id=%s
+            WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s
             """,
             (
                 name,
@@ -131,23 +132,29 @@ def update_variable(
                 json.dumps(current_value),
                 description,
                 variable_id,
+                module_id,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_variable(variable_id)
+    return get_variable(scope, module_id, variable_id)
 
 
-def delete_variable(variable_id: str) -> bool:
+def delete_variable(scope: TenantScope, module_id: str, variable_id: str) -> bool:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         result = conn.execute(
-            "DELETE FROM module_variable WHERE id=%s", (variable_id,)
+            "DELETE FROM module_variable "
+            "WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s",
+            (variable_id, module_id, *scope.key),
         )
         conn.commit()
         return result.rowcount > 0
 
 
-def list_usage(module_id: str, variable_id: str) -> list[dict[str, Any]]:
+def list_usage(
+    scope: TenantScope, module_id: str, variable_id: str
+) -> list[dict[str, Any]]:
     """Return simulated usage locations for a variable within a module.
 
     Scans widget instances and queries that reference the variable name.
@@ -155,12 +162,12 @@ def list_usage(module_id: str, variable_id: str) -> list[dict[str, Any]]:
     from aos_api.widget_instances import list_instances
     from aos_api.module_queries import list_queries
 
-    var = get_variable(variable_id)
+    var = get_variable(scope, module_id, variable_id)
     if not var:
         return []
     name = var["name"]
     usages: list[dict[str, Any]] = []
-    for wi in list_instances(module_id):
+    for wi in list_instances(scope, module_id):
         cfg_json = json.dumps(wi.get("config") or {})
         if name in cfg_json:
             usages.append(
@@ -171,7 +178,7 @@ def list_usage(module_id: str, variable_id: str) -> list[dict[str, Any]]:
                     "field": "config",
                 }
             )
-    for q in list_queries(module_id):
+    for q in list_queries(scope, module_id):
         stmt = q.get("statement") or ""
         if name in stmt:
             usages.append(

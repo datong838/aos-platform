@@ -12,7 +12,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from aos_api.auth import require_principal
+from aos_api.auth import Principal, require_principal
 from aos_api.module_variables import (
     create_variable,
     delete_variable,
@@ -20,6 +20,7 @@ from aos_api.module_variables import (
     list_variables,
     update_variable,
 )
+from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(
     prefix="/v1/modules",
@@ -61,29 +62,39 @@ class VariableUpdate(BaseModel):
 
 
 @router.get("/{module_id}/variables")
-def list_module_variables(module_id: str) -> dict[str, Any]:
-    items = list_variables(module_id)
+def list_module_variables(
+    module_id: str, principal: Principal = Depends(require_principal)
+) -> dict[str, Any]:
+    scope = TenantScope(principal.org_id, principal.project_id)
+    items = list_variables(scope, module_id)
     return {"moduleId": module_id, "items": items, "count": len(items)}
 
 
 @router.post("/{module_id}/variables")
 def create_module_variable(
-    module_id: str, body: VariableCreate
+    module_id: str,
+    body: VariableCreate,
+    principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     payload = body.model_dump()
     payload["group"] = _normalize_group(payload.get("group"))
-    item = create_variable(module_id, payload)
+    scope = TenantScope(principal.org_id, principal.project_id)
+    item = create_variable(scope, module_id, payload)
     return {"ok": True, "item": item}
 
 
 @router.put("/{module_id}/variables/{variable_id}")
 def update_module_variable(
-    module_id: str, variable_id: str, body: VariableUpdate
+    module_id: str,
+    variable_id: str,
+    body: VariableUpdate,
+    principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     patch = body.model_dump(exclude_none=True)
     if "group" in patch:
         patch["group"] = _normalize_group(patch.get("group"))
-    item = update_variable(variable_id, patch)
+    scope = TenantScope(principal.org_id, principal.project_id)
+    item = update_variable(scope, module_id, variable_id, patch)
     if not item:
         raise HTTPException(status_code=404, detail="Variable not found")
     return {"ok": True, "item": item}
@@ -91,9 +102,12 @@ def update_module_variable(
 
 @router.delete("/{module_id}/variables/{variable_id}")
 def delete_module_variable(
-    module_id: str, variable_id: str
+    module_id: str,
+    variable_id: str,
+    principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    ok = delete_variable(variable_id)
+    scope = TenantScope(principal.org_id, principal.project_id)
+    ok = delete_variable(scope, module_id, variable_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Variable not found")
     return {"ok": True}
@@ -101,7 +115,10 @@ def delete_module_variable(
 
 @router.get("/{module_id}/variables/{variable_id}/usage")
 def get_variable_usage(
-    module_id: str, variable_id: str
+    module_id: str,
+    variable_id: str,
+    principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    usages = list_usage(module_id, variable_id)
+    scope = TenantScope(principal.org_id, principal.project_id)
+    usages = list_usage(scope, module_id, variable_id)
     return {"moduleId": module_id, "variableId": variable_id, "usages": usages}

@@ -9,12 +9,9 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.canvas_config")
-
-_DEFAULT_ORG = "dev-org"
-_DEFAULT_PROJECT = "dev-project"
-
 
 def ensure_schema() -> None:
     with connect() as conn:
@@ -34,15 +31,15 @@ def ensure_schema() -> None:
         conn.commit()
 
 
-def get_config(module_id: str) -> dict[str, Any] | None:
+def get_config(scope: TenantScope, module_id: str) -> dict[str, Any] | None:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         row = conn.execute(
             """
             SELECT * FROM module_canvas_config
              WHERE module_id=%s AND org_id=%s AND project_id=%s
             """,
-            (module_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (module_id, *scope.key),
         ).fetchone()
     if not row:
         return None
@@ -50,11 +47,11 @@ def get_config(module_id: str) -> dict[str, Any] | None:
 
 
 def put_config(
-    module_id: str, layout: dict, components: dict
+    scope: TenantScope, module_id: str, layout: dict, components: dict
 ) -> dict[str, Any]:
     ensure_schema()
-    with connect() as conn:
-        conn.execute(
+    with connect(scope) as conn:
+        result = conn.execute(
             """
             INSERT INTO module_canvas_config (
                 module_id, layout, components, version, org_id, project_id
@@ -64,17 +61,20 @@ def put_config(
                 components = EXCLUDED.components,
                 version = module_canvas_config.version + 1,
                 updated_at = NOW()
+            WHERE module_canvas_config.org_id=EXCLUDED.org_id
+              AND module_canvas_config.project_id=EXCLUDED.project_id
             """,
             (
                 module_id,
                 json.dumps(layout),
                 json.dumps(components),
-                _DEFAULT_ORG,
-                _DEFAULT_PROJECT,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_config(module_id)  # type: ignore[return-value]
+    if result.rowcount == 0:
+        raise PermissionError("module canvas belongs to another tenant")
+    return get_config(scope, module_id)  # type: ignore[return-value]
 
 
 def _row(r: dict[str, Any]) -> dict[str, Any]:

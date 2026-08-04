@@ -10,12 +10,9 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.widget_instances")
-
-_DEFAULT_ORG = "dev-org"
-_DEFAULT_PROJECT = "dev-project"
-
 
 def ensure_schema() -> None:
     with connect() as conn:
@@ -46,34 +43,39 @@ def ensure_schema() -> None:
         conn.commit()
 
 
-def list_instances(module_id: str) -> list[dict[str, Any]]:
+def list_instances(scope: TenantScope, module_id: str) -> list[dict[str, Any]]:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         rows = conn.execute(
             """
             SELECT * FROM module_widget_instance
              WHERE module_id=%s AND org_id=%s AND project_id=%s
              ORDER BY sort_order, created_at
             """,
-            (module_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (module_id, *scope.key),
         ).fetchall()
     return [_row(r) for r in rows]
 
 
-def get_instance(instance_id: str) -> dict[str, Any] | None:
+def get_instance(
+    scope: TenantScope, module_id: str, instance_id: str
+) -> dict[str, Any] | None:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         row = conn.execute(
-            "SELECT * FROM module_widget_instance WHERE id=%s",
-            (instance_id,),
+            "SELECT * FROM module_widget_instance "
+            "WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s",
+            (instance_id, module_id, *scope.key),
         ).fetchone()
     return _row(row) if row else None
 
 
-def create_instance(module_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+def create_instance(
+    scope: TenantScope, module_id: str, payload: dict[str, Any]
+) -> dict[str, Any]:
     ensure_schema()
     iid = payload.get("id") or f"wi-{uuid.uuid4().hex[:10]}"
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             INSERT INTO module_widget_instance (
@@ -90,18 +92,17 @@ def create_instance(module_id: str, payload: dict[str, Any]) -> dict[str, Any]:
                 json.dumps(payload.get("config") or {}),
                 json.dumps(payload.get("layout") or {}),
                 int(payload.get("sortOrder") or payload.get("sort_order") or 0),
-                _DEFAULT_ORG,
-                _DEFAULT_PROJECT,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_instance(iid)  # type: ignore[return-value]
+    return get_instance(scope, module_id, iid)  # type: ignore[return-value]
 
 
 def update_instance(
-    instance_id: str, patch: dict[str, Any]
+    scope: TenantScope, module_id: str, instance_id: str, patch: dict[str, Any]
 ) -> dict[str, Any] | None:
-    cur = get_instance(instance_id)
+    cur = get_instance(scope, module_id, instance_id)
     if not cur:
         return None
     title = patch.get("title", cur["title"])
@@ -110,13 +111,13 @@ def update_instance(
     sort_order = patch.get("sortOrder", cur.get("sortOrder", 0))
     widget_id = patch.get("widgetId", cur.get("widgetId", ""))
     type_ = patch.get("type", cur.get("type", "unknown"))
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             UPDATE module_widget_instance SET
                 title=%s, config=%s::jsonb, layout=%s::jsonb,
                 sort_order=%s, widget_id=%s, type=%s, updated_at=NOW()
-            WHERE id=%s
+            WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s
             """,
             (
                 title,
@@ -126,18 +127,21 @@ def update_instance(
                 widget_id,
                 type_,
                 instance_id,
+                module_id,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_instance(instance_id)
+    return get_instance(scope, module_id, instance_id)
 
 
-def delete_instance(instance_id: str) -> bool:
+def delete_instance(scope: TenantScope, module_id: str, instance_id: str) -> bool:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         result = conn.execute(
-            "DELETE FROM module_widget_instance WHERE id=%s",
-            (instance_id,),
+            "DELETE FROM module_widget_instance "
+            "WHERE id=%s AND module_id=%s AND org_id=%s AND project_id=%s",
+            (instance_id, module_id, *scope.key),
         )
         conn.commit()
         return result.rowcount > 0
