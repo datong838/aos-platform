@@ -8,6 +8,7 @@ TI1_E2_REVISION = "228ti1e2dual"
 TI1_E3_REVISION = "228ti1e3ledger"
 TI1_E3_EXEC_REVISION = "228ti1e3exec"
 TI2_E1_REVISION = "228ti2e1expand"
+TI2_E4_REVISION = "228ti2e4validate"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {
@@ -82,6 +83,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI1_E3_REVISION,
         TI1_E3_EXEC_REVISION,
         TI2_E1_REVISION,
+        TI2_E4_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     return {
@@ -183,7 +185,11 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] not in {TI1_E3_EXEC_REVISION, TI2_E1_REVISION}:
+    if report["alembicRevision"] not in {
+        TI1_E3_EXEC_REVISION,
+        TI2_E1_REVISION,
+        TI2_E4_REVISION,
+    }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     missing_by_table: dict[str, list[str]] = {}
@@ -293,7 +299,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] != TI2_E1_REVISION:
+    if report["alembicRevision"] not in {TI2_E1_REVISION, TI2_E4_REVISION}:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     missing_columns: dict[str, list[str]] = {}
@@ -337,8 +343,14 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
     ).fetchall()
     foreign_keys = {str(row["conname"]): bool(row["convalidated"]) for row in fk_rows}
     missing_foreign_keys = sorted(TI2_NOT_VALID_FOREIGN_KEYS - set(foreign_keys))
-    prematurely_validated = sorted(
-        name for name in TI2_NOT_VALID_FOREIGN_KEYS if foreign_keys.get(name) is True
+    prematurely_validated = (
+        sorted(
+            name
+            for name in TI2_NOT_VALID_FOREIGN_KEYS
+            if foreign_keys.get(name) is True
+        )
+        if report["alembicRevision"] == TI2_E1_REVISION
+        else []
     )
 
     trigger_rows = conn.execute(
@@ -387,4 +399,32 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         "ti2MissingForeignKeys": missing_foreign_keys,
         "ti2PrematurelyValidatedForeignKeys": prematurely_validated,
         "ti2MissingAppendOnlyTriggers": missing_triggers,
+    }
+
+
+def build_ti2_e4_schema_report(conn: Any) -> dict[str, Any]:
+    report = build_ti2_e1_schema_report(conn)
+    issues = [
+        issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
+    ]
+    if report["alembicRevision"] != TI2_E4_REVISION:
+        issues.append("ALEMBIC_REVISION_MISMATCH")
+    rows = conn.execute(
+        "SELECT conname, convalidated FROM pg_constraint "
+        "WHERE conname = ANY(%s)",
+        (sorted(TI2_NOT_VALID_FOREIGN_KEYS),),
+    ).fetchall()
+    validated = {str(row["conname"]): bool(row["convalidated"]) for row in rows}
+    not_validated = sorted(
+        name for name in TI2_NOT_VALID_FOREIGN_KEYS if not validated.get(name, False)
+    )
+    if not_validated:
+        issues.append("TI2_FOREIGN_KEYS_NOT_VALIDATED")
+    return {
+        **report,
+        "stage": "TI-2-E4",
+        "ok": not issues,
+        "issues": issues,
+        "ti2NotValidatedForeignKeys": not_validated,
+        "ti2ValidatedForeignKeyCount": sum(validated.values()),
     }

@@ -10,7 +10,7 @@ def test_ti2_e1_real_schema_lint_is_green() -> None:
 
     assert report["ok"] is True, report
     assert report["stage"] == "TI-2-E1"
-    assert report["alembicRevision"] == "228ti2e1expand"
+    assert report["alembicRevision"] in {"228ti2e1expand", "228ti2e4validate"}
     assert report["ti2MissingColumns"] == {}
     assert report["ti2NonNullableExpandColumns"] == {}
     assert report["ti2MissingHistoryTables"] == []
