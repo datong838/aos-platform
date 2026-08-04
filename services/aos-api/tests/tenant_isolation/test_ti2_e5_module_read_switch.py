@@ -79,7 +79,10 @@ def test_child_business_predicates_use_module_pk() -> None:
 def test_orphan_event_is_hidden_without_parent_module() -> None:
     with connect() as conn:
         revision = conn.execute("SELECT version_num FROM alembic_version").fetchone()
-    if revision and revision["version_num"] == "228ti2e7contract":
+    if revision and revision["version_num"] in {
+        "228ti2e7contract",
+        "228ti3e1expand",
+    }:
         pytest.skip("E7 rejects new orphan rows; quarantine is covered by E7 tests")
     suffix = uuid.uuid4().hex
     scope = TenantScope(f"org-orphan-{suffix}", f"project-orphan-{suffix}")

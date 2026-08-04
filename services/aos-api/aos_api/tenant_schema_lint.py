@@ -11,6 +11,7 @@ TI2_E1_REVISION = "228ti2e1expand"
 TI2_E4_REVISION = "228ti2e4validate"
 TI2_E6_REVISION = "228ti2e6rls"
 TI2_E7_REVISION = "228ti2e7contract"
+TI3_E1_REVISION = "228ti3e1expand"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {
@@ -77,7 +78,11 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         issues.append("TI1_FOREIGN_KEYS_MISSING")
     if prematurely_validated:
         issues.append("TI1_FOREIGN_KEYS_PREMATURELY_VALIDATED")
-    if rls_table_count and revision not in {TI2_E6_REVISION, TI2_E7_REVISION}:
+    if rls_table_count and revision not in {
+        TI2_E6_REVISION,
+        TI2_E7_REVISION,
+        TI3_E1_REVISION,
+    }:
         issues.append("RLS_ENABLED_BEFORE_E6")
     if revision not in {
         TI1_E1_REVISION,
@@ -88,6 +93,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI2_E4_REVISION,
         TI2_E6_REVISION,
         TI2_E7_REVISION,
+        TI3_E1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     return {
@@ -195,6 +201,7 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
         TI2_E4_REVISION,
         TI2_E6_REVISION,
         TI2_E7_REVISION,
+        TI3_E1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -310,6 +317,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI2_E4_REVISION,
         TI2_E6_REVISION,
         TI2_E7_REVISION,
+        TI3_E1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -391,7 +399,10 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         issues.append("TI2_MODULE_COLUMNS_MISSING")
     # E1 is an expand-only gate. E7 intentionally freezes the canonical
     # identities as NOT NULL, so the earlier warning is no longer an issue.
-    if non_nullable_columns and report["alembicRevision"] != TI2_E7_REVISION:
+    if non_nullable_columns and report["alembicRevision"] not in {
+        TI2_E7_REVISION,
+        TI3_E1_REVISION,
+    }:
         issues.append("TI2_EXPAND_COLUMNS_NOT_NULLABLE")
     if missing_tables:
         issues.append("TI2_HISTORY_TABLES_MISSING")
@@ -408,7 +419,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         "issues": issues,
         "ti2MissingColumns": missing_columns,
         "ti2NonNullableExpandColumns": (
-            {} if report["alembicRevision"] == TI2_E7_REVISION
+            {} if report["alembicRevision"] in {TI2_E7_REVISION, TI3_E1_REVISION}
             else non_nullable_columns
         ),
         "ti2MissingHistoryTables": missing_tables,
@@ -427,6 +438,7 @@ def build_ti2_e4_schema_report(conn: Any) -> dict[str, Any]:
         TI2_E4_REVISION,
         TI2_E6_REVISION,
         TI2_E7_REVISION,
+        TI3_E1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     rows = conn.execute(
@@ -471,7 +483,11 @@ def build_ti2_e6_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] not in {TI2_E6_REVISION, TI2_E7_REVISION}:
+    if report["alembicRevision"] not in {
+        TI2_E6_REVISION,
+        TI2_E7_REVISION,
+        TI3_E1_REVISION,
+    }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     role = conn.execute(
@@ -565,7 +581,7 @@ def build_ti2_e7_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] != TI2_E7_REVISION:
+    if report["alembicRevision"] not in {TI2_E7_REVISION, TI3_E1_REVISION}:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     pk_rows = conn.execute(
@@ -640,4 +656,92 @@ def build_ti2_e7_schema_report(conn: Any) -> dict[str, Any]:
         "ti2OrphanQuarantineCount": quarantine_count,
         "ti2ActiveNullModulePkEventCount": active_null_count,
         "ti2RuntimeQuarantineAccess": runtime_quarantine_access,
+    }
+
+
+TI3_E1_EXPAND_TABLES = {
+    "funnel_status",
+    "graph_edge",
+    "meta_branch",
+    "obj_branch_overlay",
+    "obj_instance",
+}
+TI3_E1_SCOPED_TABLES = TI3_E1_EXPAND_TABLES | {
+    "object_lifecycle",
+    "draft_dataset",
+    "wiki_page",
+    "wiki_page_version",
+}
+TI3_E1_TEMPLATE_TABLES = {"meta_action_type", "meta_link_type", "meta_object_type"}
+
+
+def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
+    report = build_ti2_e7_schema_report(conn)
+    issues = [
+        issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
+    ]
+    if report["alembicRevision"] != TI3_E1_REVISION:
+        issues.append("ALEMBIC_REVISION_MISMATCH")
+
+    rows = conn.execute(
+        "SELECT table_name, column_name, is_nullable "
+        "FROM information_schema.columns WHERE table_schema='public' "
+        "AND table_name = ANY(%s) AND column_name IN ('org_id','project_id')",
+        (sorted(TI3_E1_SCOPED_TABLES | TI3_E1_TEMPLATE_TABLES),),
+    ).fetchall()
+    columns: dict[str, dict[str, str]] = {}
+    for row in rows:
+        columns.setdefault(str(row["table_name"]), {})[
+            str(row["column_name"])
+        ] = str(row["is_nullable"])
+    missing_columns = sorted(
+        table
+        for table in TI3_E1_SCOPED_TABLES
+        if set(columns.get(table, {})) != {"org_id", "project_id"}
+    )
+    expand_not_nullable = sorted(
+        table
+        for table in TI3_E1_EXPAND_TABLES
+        if any(value != "YES" for value in columns.get(table, {}).values())
+    )
+    templates_with_scope = sorted(
+        table for table in TI3_E1_TEMPLATE_TABLES if columns.get(table)
+    )
+    if missing_columns:
+        issues.append("TI3_TENANT_COLUMNS_MISSING")
+    if expand_not_nullable:
+        issues.append("TI3_EXPAND_COLUMNS_NOT_NULLABLE")
+    if templates_with_scope:
+        issues.append("TI3_TEMPLATE_SCOPE_DRIFT")
+
+    fk_rows = conn.execute(
+        "SELECT conname, convalidated FROM pg_constraint "
+        "WHERE conname = ANY(%s)",
+        ([f"fk_{table}_workspace_ti3" for table in sorted(TI3_E1_SCOPED_TABLES)],),
+    ).fetchall()
+    foreign_keys = {
+        str(row["conname"]): bool(row["convalidated"]) for row in fk_rows
+    }
+    expected_fks = {
+        f"fk_{table}_workspace_ti3" for table in TI3_E1_SCOPED_TABLES
+    }
+    missing_fks = sorted(expected_fks - set(foreign_keys))
+    prematurely_validated = sorted(
+        name for name, validated in foreign_keys.items() if validated
+    )
+    if missing_fks:
+        issues.append("TI3_FOREIGN_KEYS_MISSING")
+    if prematurely_validated:
+        issues.append("TI3_FOREIGN_KEYS_PREMATURELY_VALIDATED")
+
+    return {
+        **report,
+        "stage": "TI-3-E1",
+        "ok": not issues,
+        "issues": issues,
+        "ti3MissingTenantColumns": missing_columns,
+        "ti3ExpandColumnsNotNullable": expand_not_nullable,
+        "ti3TemplatesWithTenantScope": templates_with_scope,
+        "ti3MissingForeignKeys": missing_fks,
+        "ti3PrematurelyValidatedForeignKeys": prematurely_validated,
     }

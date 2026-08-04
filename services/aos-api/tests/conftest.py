@@ -6,8 +6,13 @@ os.environ.setdefault("AOS_TWA_STORE", "memory")
 
 import psycopg
 import pytest
-from alembic import command
 from alembic.config import Config
+from fastapi.testclient import TestClient
+from psycopg import sql
+from psycopg.conninfo import conninfo_to_dict, make_conninfo
+from sqlalchemy.engine import URL
+
+from alembic import command
 from aos_api import mock_data
 from aos_api.db import init_schema, seed_if_empty
 from aos_api.idempotency import idempotency_store
@@ -16,10 +21,6 @@ from aos_api.metrics import reset_metrics
 from aos_api.module_identity import stable_module_pk
 from aos_api.module_store import seed_modules_if_empty
 from aos_api.tenant_scope import TenantScope
-from fastapi.testclient import TestClient
-from psycopg import sql
-from psycopg.conninfo import conninfo_to_dict, make_conninfo
-from sqlalchemy.engine import URL
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -73,6 +74,7 @@ def _isolated_postgres_database():
         from aos_api.module_queries import ensure_schema as ensure_query_schema
         from aos_api.module_store import ensure_module_schema
         from aos_api.module_variables import ensure_schema as ensure_variable_schema
+        from aos_api.routers.drafts import ensure_draft_schema
         from aos_api.widget_instances import ensure_schema as ensure_widget_schema
 
         ensure_module_schema()
@@ -83,6 +85,7 @@ def _isolated_postgres_database():
         ensure_query_schema()
         ensure_variable_schema()
         ensure_widget_schema()
+        ensure_draft_schema()
         command.upgrade(config, "head")
         os.environ["AOS_TWA_STORE"] = previous_twa_store or "memory"
         twa_pg.clear_mode_cache()

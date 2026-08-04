@@ -48,7 +48,11 @@ def test_schema_lint_confirms_runtime_role_and_eleven_policies() -> None:
         report = build_ti2_e6_schema_report(conn)
 
     assert report["ok"] is True
-    assert report["alembicRevision"] in {"228ti2e6rls", "228ti2e7contract"}
+    assert report["alembicRevision"] in {
+        "228ti2e6rls",
+        "228ti2e7contract",
+        "228ti3e1expand",
+    }
     assert report["ti2RuntimeRoleSafe"] is True
     assert report["ti2RlsTableCount"] == 11
     assert report["ti2RlsMissingTables"] == []

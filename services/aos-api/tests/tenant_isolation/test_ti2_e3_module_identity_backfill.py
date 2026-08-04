@@ -29,7 +29,9 @@ from aos_api.widget_instances import create_instance
 def _e7_contract_is_active() -> bool:
     with connect() as conn:
         row = conn.execute("SELECT version_num FROM alembic_version").fetchone()
-    return bool(row and row["version_num"] == "228ti2e7contract")
+    return bool(
+        row and row["version_num"] in {"228ti2e7contract", "228ti3e1expand"}
+    )
 
 
 def test_stable_module_pk_is_deterministic_and_scope_sensitive() -> None:

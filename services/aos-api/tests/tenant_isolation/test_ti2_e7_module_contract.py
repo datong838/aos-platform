@@ -48,7 +48,7 @@ def test_e7_schema_report_is_green() -> None:
         report = build_ti2_e7_schema_report(conn)
 
     assert report["ok"] is True, report
-    assert report["alembicRevision"] == "228ti2e7contract"
+    assert report["alembicRevision"] in {"228ti2e7contract", "228ti3e1expand"}
     assert report["ti2ContractInvalidPrimaryKeys"] == []
     assert report["ti2ContractNullableModulePkTables"] == []
     assert report["ti2OrphanQuarantineExists"] is True
