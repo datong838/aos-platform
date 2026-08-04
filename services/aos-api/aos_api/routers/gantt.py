@@ -4,12 +4,17 @@
 """
 from __future__ import annotations
 
-from fastapi import APIRouter
+from typing import Annotated
 
+from fastapi import APIRouter, Depends
+
+from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
-from aos_api.gantt import GanttEngine, GanttError, get_engine, list_allocation_behaviors
+from aos_api.gantt import GanttError, get_engine, list_allocation_behaviors
+from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(tags=["gantt"])
+PrincipalDep = Annotated[Principal, Depends(require_principal)]
 
 
 def _map_error(err: GanttError) -> ApiError:
@@ -18,6 +23,7 @@ def _map_error(err: GanttError) -> ApiError:
 
 @router.get("/v1/scheduling/gantt")
 def get_gantt_view(
+    principal: PrincipalDep,
     scope: str = "project",
     horizon_hours: int = 168,
     duration_minutes: int = 60,
@@ -25,6 +31,7 @@ def get_gantt_view(
 ):
     try:
         view = get_engine().build_view(
+            TenantScope(principal.org_id, principal.project_id),
             scope=scope,
             horizon_hours=horizon_hours,
             duration_minutes=duration_minutes,
@@ -38,12 +45,16 @@ def get_gantt_view(
 @router.get("/v1/scheduling/schedules/{sched_id}/gantt")
 def get_schedule_gantt(
     sched_id: str,
+    principal: PrincipalDep,
     horizon_hours: int = 168,
     duration_minutes: int = 60,
 ):
     try:
         view = get_engine().build_for_schedule(
-            sched_id, horizon_hours=horizon_hours, duration_minutes=duration_minutes
+            TenantScope(principal.org_id, principal.project_id),
+            sched_id,
+            horizon_hours=horizon_hours,
+            duration_minutes=duration_minutes,
         )
     except GanttError as err:
         raise _map_error(err) from err
@@ -51,5 +62,5 @@ def get_schedule_gantt(
 
 
 @router.get("/v1/scheduling/allocation-behaviors")
-def list_behaviors():
+def list_behaviors(_principal: PrincipalDep):
     return {"items": list_allocation_behaviors()}

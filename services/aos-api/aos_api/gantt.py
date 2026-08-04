@@ -13,8 +13,15 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from .scheduling_engine import Schedule, SchedulingEngine, get_engine, next_run_time
-
+from .scheduling_engine import (
+    Schedule,
+    SchedulingEngine,
+    next_run_time,
+)
+from .scheduling_engine import (
+    get_engine as get_scheduling_engine,
+)
+from .tenant_scope import TenantScope
 
 BarKind = Literal["planned", "historical"]
 ViolationType = Literal["resource_overlap", "overtime", "disabled"]
@@ -197,10 +204,11 @@ class GanttEngine:
     """甘特图视图引擎：只读组装，派生违规。"""
 
     def __init__(self, engine: SchedulingEngine | None = None) -> None:
-        self._engine = engine or get_engine()
+        self._engine = engine or get_scheduling_engine()
 
     def build_view(
         self,
+        tenant_scope: TenantScope,
         scope: str = "project",
         horizon_hours: int = 168,
         duration_minutes: int = _DEFAULT_DURATION_MINUTES,
@@ -210,18 +218,18 @@ class GanttEngine:
             raise GanttError("INVALID_HORIZON", f"horizon_hours 须在 1-{_MAX_HORIZON_HOURS} 之间")
         now = _now_utc()
         horizon_end = now + timedelta(hours=horizon_hours)
-        schedules = self._engine.list_schedules(enabled_only=False)
+        schedules = self._engine.list_schedules(tenant_scope, enabled_only=False)
         scoped = [s for s in schedules if scope == "all" or s.scope == scope]
         all_bars: list[GanttBar] = []
         resource_index: dict[tuple[str, str], list[GanttBar]] = {}
-        executions = self._engine.history()
+        executions = self._engine.history(tenant_scope)
         enabled_map: dict[str, bool] = {}
 
         for sched in scoped:
             enabled_map[sched.id] = sched.enabled
             planned = _project_future_runs(sched, horizon_end, duration_minutes, include_disabled=include_disabled)
             historical = _historical_bars(sched, executions)
-            resources = self._engine.get_resources(sched.id)
+            resources = self._engine.get_resources(tenant_scope, sched.id)
             bars = _attach_resources(planned + historical, resources)
             if not include_disabled and not sched.enabled:
                 bars = [b for b in bars if b.kind == "historical"]
@@ -247,17 +255,18 @@ class GanttEngine:
 
     def build_for_schedule(
         self,
+        tenant_scope: TenantScope,
         sched_id: str,
         horizon_hours: int = 168,
         duration_minutes: int = _DEFAULT_DURATION_MINUTES,
     ) -> GanttView:
-        sched = self._engine.get_schedule(sched_id)
+        sched = self._engine.get_schedule(tenant_scope, sched_id)
         if sched is None:
             raise GanttError("NOT_FOUND", f"调度 {sched_id!r} 不存在")
         now = _now_utc()
         horizon_end = now + timedelta(hours=horizon_hours)
-        executions = self._engine.history(sched_id)
-        resources = self._engine.get_resources(sched_id)
+        executions = self._engine.history(tenant_scope, sched_id)
+        resources = self._engine.get_resources(tenant_scope, sched_id)
         planned = _project_future_runs(sched, horizon_end, duration_minutes)
         historical = _historical_bars(sched, executions)
         bars = _attach_resources(planned + historical, resources)
