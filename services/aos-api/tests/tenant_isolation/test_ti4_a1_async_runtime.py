@@ -46,7 +46,11 @@ def test_a1_schema_report_is_green() -> None:
         report = build_ti4_a1_schema_report(conn)
 
     assert report["ok"] is True, report
-    assert report["alembicRevision"] in {"228ti4a1apollo", "228ti5a1aip"}
+    assert report["alembicRevision"] in {
+        "228ti4a1apollo",
+        "228ti5a1aip",
+        "228ti5a2kv",
+    }
     assert report["ti4ApolloSpokePrimaryKeyValid"] is True
     assert report["ti4ApolloSpokeWorkspaceForeignKeyValid"] is True
     assert report["ti4ApolloSpokeRlsValid"] is True

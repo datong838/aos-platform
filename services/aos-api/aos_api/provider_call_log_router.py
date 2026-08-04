@@ -6,11 +6,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
+from aos_api.auth import require_principal
 from aos_api.provider_call_log import get_call_log_engine
 
-router = APIRouter(prefix="/api/models/providers", tags=["model-provider-call-logs"])
+router = APIRouter(
+    prefix="/api/models/providers",
+    tags=["model-provider-call-logs"],
+    dependencies=[Depends(require_principal)],
+)
 
 @router.get("/{provider_id}/logs")
 def list_logs(

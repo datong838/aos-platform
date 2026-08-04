@@ -15,9 +15,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
+from aos_api.auth import require_principal
 from aos_api.logging_facade import get_logger
 from aos_api.model_router_config import (
     get_router_config_v2,
@@ -36,7 +37,11 @@ from aos_api.model_router_config import (
 
 log = get_logger("aos-api.router_config")
 
-router = APIRouter(prefix="/api/models/router", tags=["model-router"])
+router = APIRouter(
+    prefix="/api/models/router",
+    tags=["model-router"],
+    dependencies=[Depends(require_principal)],
+)
 
 
 # ---------------------------------------------------------------------------

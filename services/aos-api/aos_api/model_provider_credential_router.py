@@ -13,9 +13,10 @@ import time
 from typing import Any
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from aos_api.auth import require_principal
 from aos_api.logging_facade import get_logger
 from aos_api.model_provider_credential import (
     ProviderCredential,
@@ -24,7 +25,11 @@ from aos_api.model_provider_credential import (
 
 log = get_logger("aos-api.provider_credential_router")
 
-router = APIRouter(prefix="/api/models/providers", tags=["model-provider-credentials"])
+router = APIRouter(
+    prefix="/api/models/providers",
+    tags=["model-provider-credentials"],
+    dependencies=[Depends(require_principal)],
+)
 
 # ── Request Models ────────────────────────────────────────────
 

@@ -8,8 +8,20 @@ from aos_api.tenant_scope import TenantScope
 
 
 def setup_function():
-    put_payload("apollo_ops_changes", {"items": []})
-    put_payload("apollo_ops_assets", {"items": []})
+    scope = TenantScope("dev-org", "dev-project")
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO twa_org (id,name) VALUES ('dev-org','测试组织') "
+            "ON CONFLICT (id) DO NOTHING"
+        )
+        conn.execute(
+            "INSERT INTO twa_workspace (org_id,project_id,name) "
+            "VALUES ('dev-org','dev-project','测试工作区') "
+            "ON CONFLICT (org_id,project_id) DO NOTHING"
+        )
+        conn.commit()
+    put_payload("apollo_ops_changes", {"items": []}, scope)
+    put_payload("apollo_ops_assets", {"items": []}, scope)
 
 
 def test_changes_api_roundtrip(client, auth_headers):

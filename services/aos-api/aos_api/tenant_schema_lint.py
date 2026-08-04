@@ -24,6 +24,7 @@ TI4_D7_REVISION = "228ti4d7contract"
 TI4_C3_REVISION = "228ti4c3contract"
 TI4_A1_REVISION = "228ti4a1apollo"
 TI5_A1_REVISION = "228ti5a1aip"
+TI5_A2_REVISION = "228ti5a2kv"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {
@@ -103,6 +104,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C3_REVISION,
         TI4_A1_REVISION,
         TI5_A1_REVISION,
+        TI5_A2_REVISION,
     }:
         issues.append("RLS_ENABLED_BEFORE_E6")
     if revision not in {
@@ -126,6 +128,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C3_REVISION,
         TI4_A1_REVISION,
         TI5_A1_REVISION,
+        TI5_A2_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     return {
@@ -290,6 +293,7 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C3_REVISION,
         TI4_A1_REVISION,
         TI5_A1_REVISION,
+        TI5_A2_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -420,6 +424,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C3_REVISION,
         TI4_A1_REVISION,
         TI5_A1_REVISION,
+        TI5_A2_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -513,6 +518,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C3_REVISION,
         TI4_A1_REVISION,
         TI5_A1_REVISION,
+        TI5_A2_REVISION,
     }:
         issues.append("TI2_EXPAND_COLUMNS_NOT_NULLABLE")
     if missing_tables:
@@ -546,6 +552,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
                 TI4_C3_REVISION,
                 TI4_A1_REVISION,
                 TI5_A1_REVISION,
+                TI5_A2_REVISION,
             }
             else non_nullable_columns
         ),
@@ -577,6 +584,7 @@ def build_ti2_e4_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C3_REVISION,
         TI4_A1_REVISION,
         TI5_A1_REVISION,
+        TI5_A2_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     rows = conn.execute(
@@ -635,6 +643,7 @@ def build_ti2_e6_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C3_REVISION,
         TI4_A1_REVISION,
         TI5_A1_REVISION,
+        TI5_A2_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -745,6 +754,7 @@ def build_ti2_e7_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C3_REVISION,
         TI4_A1_REVISION,
         TI5_A1_REVISION,
+        TI5_A2_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -855,6 +865,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C3_REVISION,
         TI4_A1_REVISION,
         TI5_A1_REVISION,
+        TI5_A2_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -894,6 +905,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C3_REVISION,
         TI4_A1_REVISION,
         TI5_A1_REVISION,
+        TI5_A2_REVISION,
     }:
         issues.append("TI3_EXPAND_COLUMNS_NOT_NULLABLE")
     if templates_with_scope:
@@ -935,6 +947,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
                 TI4_C3_REVISION,
                 TI4_A1_REVISION,
                 TI5_A1_REVISION,
+                TI5_A2_REVISION,
             }
             else expand_not_nullable
         ),
@@ -960,6 +973,7 @@ def build_ti3_e6_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C3_REVISION,
         TI4_A1_REVISION,
         TI5_A1_REVISION,
+        TI5_A2_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1069,6 +1083,7 @@ def build_ti3_e7_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C3_REVISION,
         TI4_A1_REVISION,
         TI5_A1_REVISION,
+        TI5_A2_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1209,6 +1224,7 @@ def build_ti4_c1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C3_REVISION,
         TI4_A1_REVISION,
         TI5_A1_REVISION,
+        TI5_A2_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1250,7 +1266,12 @@ def build_ti4_c1_schema_report(conn: Any) -> dict[str, Any]:
         "FOREIGN KEY (org_id, workspace_id) "
         "REFERENCES twa_workspace(org_id, project_id)"
     )
-    if revision not in {TI4_C3_REVISION, TI4_A1_REVISION, TI5_A1_REVISION}:
+    if revision not in {
+        TI4_C3_REVISION,
+        TI4_A1_REVISION,
+        TI5_A1_REVISION,
+        TI5_A2_REVISION,
+    }:
         expected_fk += " NOT VALID"
     invalid_foreign_keys = sorted(
         table
@@ -1261,7 +1282,13 @@ def build_ti4_c1_schema_report(conn: Any) -> dict[str, Any]:
         sorted(
             table for table, row in foreign_keys.items() if bool(row["convalidated"])
         )
-        if revision not in {TI4_C3_REVISION, TI4_A1_REVISION, TI5_A1_REVISION}
+        if revision
+        not in {
+            TI4_C3_REVISION,
+            TI4_A1_REVISION,
+            TI5_A1_REVISION,
+            TI5_A2_REVISION,
+        }
         else []
     )
     if invalid_foreign_keys:
@@ -1306,6 +1333,7 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C3_REVISION,
         TI4_A1_REVISION,
         TI5_A1_REVISION,
+        TI5_A2_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1338,6 +1366,7 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C3_REVISION,
         TI4_A1_REVISION,
         TI5_A1_REVISION,
+        TI5_A2_REVISION,
     }:
         issues.append("TI4_DATA_OS_EXPAND_COLUMNS_NOT_NULLABLE")
 
@@ -1387,7 +1416,13 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
         "ti4DataOsNonNullableExpandColumns": (
             []
             if revision
-            in {TI4_D7_REVISION, TI4_C3_REVISION, TI4_A1_REVISION, TI5_A1_REVISION}
+            in {
+                TI4_D7_REVISION,
+                TI4_C3_REVISION,
+                TI4_A1_REVISION,
+                TI5_A1_REVISION,
+                TI5_A2_REVISION,
+            }
             else non_nullable_expand_columns
         ),
         "ti4DataOsInvalidWorkspaceForeignKeys": invalid_foreign_keys,
@@ -1465,6 +1500,7 @@ def build_ti4_d7_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C3_REVISION,
         TI4_A1_REVISION,
         TI5_A1_REVISION,
+        TI5_A2_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1578,6 +1614,7 @@ def build_ti4_c3_schema_report(conn: Any) -> dict[str, Any]:
         TI4_C3_REVISION,
         TI4_A1_REVISION,
         TI5_A1_REVISION,
+        TI5_A2_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1673,7 +1710,11 @@ def build_ti4_a1_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] not in {TI4_A1_REVISION, TI5_A1_REVISION}:
+    if report["alembicRevision"] not in {
+        TI4_A1_REVISION,
+        TI5_A1_REVISION,
+        TI5_A2_REVISION,
+    }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     primary_key = conn.execute(
@@ -1776,7 +1817,7 @@ def build_ti5_a1_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] != TI5_A1_REVISION:
+    if report["alembicRevision"] not in {TI5_A1_REVISION, TI5_A2_REVISION}:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     fk_rows = conn.execute(
@@ -1859,4 +1900,118 @@ def build_ti5_a1_schema_report(conn: Any) -> dict[str, Any]:
         "ti5AipRuntimeOwnedTables": runtime_owned_tables,
         "ti5AipInvalidPolicies": invalid_policies,
         "ti5AipWorkspaceOrphanCount": orphan_count,
+    }
+
+
+def build_ti5_a2_schema_report(conn: Any) -> dict[str, Any]:
+    """Verify tenant-scoped AIP KV ownership and runtime boundary."""
+    report = build_ti5_a1_schema_report(conn)
+    issues = [
+        issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
+    ]
+    if report["alembicRevision"] != TI5_A2_REVISION:
+        issues.append("ALEMBIC_REVISION_MISMATCH")
+
+    columns = {
+        str(row["column_name"]): row
+        for row in conn.execute(
+            "SELECT column_name,is_nullable FROM information_schema.columns "
+            "WHERE table_schema='public' AND table_name='meta_aip_kv'"
+        ).fetchall()
+    }
+    scope_valid = all(
+        columns.get(name) and columns[name]["is_nullable"] == "NO"
+        for name in ("org_id", "project_id")
+    )
+    if not scope_valid:
+        issues.append("TI5_AIP_KV_SCOPE_INVALID")
+
+    primary_key = conn.execute(
+        "SELECT pg_get_constraintdef(oid) AS definition FROM pg_constraint "
+        "WHERE conrelid='meta_aip_kv'::regclass AND contype='p'"
+    ).fetchone()
+    primary_key_valid = bool(primary_key) and primary_key["definition"] == (
+        "PRIMARY KEY (org_id, project_id, key)"
+    )
+    if not primary_key_valid:
+        issues.append("TI5_AIP_KV_PRIMARY_KEY_INVALID")
+
+    fk = conn.execute(
+        "SELECT convalidated FROM pg_constraint "
+        "WHERE conname='fk_meta_aip_kv_workspace_ti5a2'"
+    ).fetchone()
+    foreign_key_valid = bool(fk) and bool(fk["convalidated"])
+    if not foreign_key_valid:
+        issues.append("TI5_AIP_KV_WORKSPACE_FK_INVALID")
+
+    table = conn.execute(
+        "SELECT relrowsecurity,relforcerowsecurity FROM pg_class "
+        "WHERE oid='meta_aip_kv'::regclass"
+    ).fetchone()
+    rls_valid = (
+        bool(table)
+        and bool(table["relrowsecurity"])
+        and bool(table["relforcerowsecurity"])
+    )
+    if not rls_valid:
+        issues.append("TI5_AIP_KV_RLS_INVALID")
+
+    policy = conn.execute(
+        "SELECT roles,qual,with_check FROM pg_policies "
+        "WHERE schemaname='public' AND tablename='meta_aip_kv' "
+        "AND policyname='tenant_scope_meta_aip_kv_ti5a2'"
+    ).fetchone()
+    expressions = (
+        f"{(policy or {}).get('qual', '')} {(policy or {}).get('with_check', '')}"
+    )
+    policy_valid = (
+        policy is not None
+        and "public" in list(policy["roles"] or [])
+        and expressions.count("aos.org_id") == 2
+        and expressions.count("aos.project_id") == 2
+    )
+    if not policy_valid:
+        issues.append("TI5_AIP_KV_POLICY_INVALID")
+
+    row_count = int(
+        conn.execute("SELECT COUNT(*) AS count FROM meta_aip_kv").fetchone()["count"]
+    )
+    ledger_count = int(
+        conn.execute(
+            "SELECT COUNT(*) AS count FROM aip_kv_ownership_ledger"
+        ).fetchone()["count"]
+    )
+    ledger_orphan_count = int(
+        conn.execute(
+            "SELECT COUNT(*) AS count FROM aip_kv_ownership_ledger ledger "
+            "LEFT JOIN meta_aip_kv kv ON md5(kv.key)=ledger.key_hash "
+            "AND kv.org_id=ledger.org_id AND kv.project_id=ledger.project_id "
+            "WHERE ledger.decision='ASSIGN_TEST_ORG' AND kv.key IS NULL"
+        ).fetchone()["count"]
+    )
+    null_scope_count = int(
+        conn.execute(
+            "SELECT COUNT(*) AS count FROM meta_aip_kv "
+            "WHERE org_id IS NULL OR project_id IS NULL"
+        ).fetchone()["count"]
+    )
+    if ledger_orphan_count:
+        issues.append("TI5_AIP_KV_LEDGER_ORPHAN")
+    if null_scope_count:
+        issues.append("TI5_AIP_KV_NULL_SCOPE")
+
+    return {
+        **report,
+        "stage": "TI-5-A2",
+        "ok": not issues,
+        "issues": issues,
+        "ti5AipKvScopeValid": scope_valid,
+        "ti5AipKvPrimaryKeyValid": primary_key_valid,
+        "ti5AipKvWorkspaceForeignKeyValid": foreign_key_valid,
+        "ti5AipKvRlsValid": rls_valid,
+        "ti5AipKvPolicyValid": policy_valid,
+        "ti5AipKvRowCount": row_count,
+        "ti5AipKvLedgerCount": ledger_count,
+        "ti5AipKvLedgerOrphanCount": ledger_orphan_count,
+        "ti5AipKvNullScopeCount": null_scope_count,
     }

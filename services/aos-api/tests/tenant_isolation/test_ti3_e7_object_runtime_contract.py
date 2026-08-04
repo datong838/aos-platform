@@ -90,6 +90,7 @@ def test_e7_schema_report_is_green() -> None:
         "228ti4c3contract",
         "228ti4a1apollo",
         "228ti5a1aip",
+        "228ti5a2kv",
     }
     assert report["ti3ContractInvalidPrimaryKeys"] == []
     assert report["ti3ContractNullableScopeColumns"] == []

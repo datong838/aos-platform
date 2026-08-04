@@ -14,6 +14,26 @@ import pytest
 from unittest.mock import patch
 from fastapi.testclient import TestClient
 
+from aos_api.tenant_scope import TenantScope, bind_tenant_scope
+from aos_api.db import connect
+
+
+@pytest.fixture(autouse=True)
+def _tenant_scope():
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO twa_org (id,name) VALUES ('dev-org','测试组织') "
+            "ON CONFLICT (id) DO NOTHING"
+        )
+        conn.execute(
+            "INSERT INTO twa_workspace (org_id,project_id,name) "
+            "VALUES ('dev-org','dev-project','测试工作区') "
+            "ON CONFLICT (org_id,project_id) DO NOTHING"
+        )
+        conn.commit()
+    with bind_tenant_scope(TenantScope("dev-org", "dev-project")):
+        yield
+
 
 class TestRouterConfigV2Migration:
     """Test V1 → V2 migration."""
@@ -203,7 +223,14 @@ class TestRouterConfigAPI:
     @pytest.fixture
     def client(self):
         from aos_api.main import create_app
-        return TestClient(create_app())
+        return TestClient(
+            create_app(),
+            headers={
+                "Authorization": "Bearer dev",
+                "X-Org-Id": "dev-org",
+                "X-Project-Id": "dev-project",
+            },
+        )
 
     def test_list_routes(self, client):
         resp = client.get("/api/models/router")

@@ -1,7 +1,9 @@
 """Auth — T0.5 Dev Bearer + TX.3 OIDC JWT + TWA.1 tenant header harden (R-ISO-01)."""
+
 from __future__ import annotations
 
 import re
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -10,6 +12,7 @@ from fastapi import Header, Request
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
 from aos_api.oidc import allow_dev, looks_like_jwt, verify_access_token
+from aos_api.tenant_scope import TenantScope, bind_tenant_scope
 
 log = get_logger("aos-api.auth")
 
@@ -273,7 +276,7 @@ async def require_principal(
     x_aos_desktop_version: str | None = Header(
         default=None, alias="X-AOS-Desktop-Version"
     ),
-) -> Principal:
+) -> AsyncIterator[Principal]:
     token = parse_bearer(authorization)
     # TWA.1: only *explicit* X-Org-Id / X-Project-Id count for mismatch.
     # Middleware may default request.state to dev-org — must NOT treat that as a client header.
@@ -307,4 +310,5 @@ async def require_principal(
         principal.org_id,
         principal.project_id,
     )
-    return principal
+    with bind_tenant_scope(TenantScope(principal.org_id, principal.project_id)):
+        yield principal

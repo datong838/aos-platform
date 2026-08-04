@@ -420,6 +420,13 @@ def filter_spokes_by_scope(
     ]
 
 
+def filter_spokes_by_org(
+    items: list[dict[str, Any]], org_id: str
+) -> list[dict[str, Any]]:
+    """Compatibility-only list helper; persistence still requires full scope."""
+    return [item for item in items if item.get("orgId") == org_id]
+
+
 def list_spokes(scope: TenantScope) -> list[dict[str, Any]]:
     ensure_seed()
     with connect(scope) as conn:

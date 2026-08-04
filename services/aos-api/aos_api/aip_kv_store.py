@@ -1,4 +1,5 @@
 """AIP KV settings (model routes, tools panel config) — scheme 81."""
+
 from __future__ import annotations
 
 import json
@@ -6,6 +7,7 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope, require_tenant_scope
 
 log = get_logger("aos-api.aip_kv")
 
@@ -32,22 +34,13 @@ EGRESS_DEFAULTS = {
 
 
 def ensure_aip_kv_schema() -> None:
-    with connect() as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS meta_aip_kv (
-              key TEXT PRIMARY KEY,
-              payload JSONB NOT NULL DEFAULT '{}'::jsonb,
-              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-            """
-        )
-        conn.commit()
+    """Compatibility hook; AIP KV DDL is owned by Alembic after TI-5 A2."""
 
 
-def get_payload(key: str) -> dict[str, Any] | None:
+def get_payload(key: str, scope: TenantScope | None = None) -> dict[str, Any] | None:
     ensure_aip_kv_schema()
-    with connect() as conn:
+    effective_scope = scope or require_tenant_scope()
+    with connect(effective_scope) as conn:
         row = conn.execute(
             "SELECT payload FROM meta_aip_kv WHERE key = %s",
             (key,),
@@ -60,18 +53,21 @@ def get_payload(key: str) -> dict[str, Any] | None:
     return dict(payload or {})
 
 
-def put_payload(key: str, payload: dict[str, Any]) -> dict[str, Any]:
+def put_payload(
+    key: str, payload: dict[str, Any], scope: TenantScope | None = None
+) -> dict[str, Any]:
     ensure_aip_kv_schema()
-    with connect() as conn:
+    effective_scope = scope or require_tenant_scope()
+    with connect(effective_scope) as conn:
         conn.execute(
             """
-            INSERT INTO meta_aip_kv (key, payload, updated_at)
-            VALUES (%s, %s::jsonb, NOW())
-            ON CONFLICT (key) DO UPDATE
+            INSERT INTO meta_aip_kv (org_id,project_id,key,payload,updated_at)
+            VALUES (%s,%s,%s,%s::jsonb,NOW())
+            ON CONFLICT (org_id,project_id,key) DO UPDATE
               SET payload = EXCLUDED.payload,
                   updated_at = NOW()
             """,
-            (key, json.dumps(payload, ensure_ascii=False)),
+            (*effective_scope.key, key, json.dumps(payload, ensure_ascii=False)),
         )
         conn.commit()
     log.info("aip_kv_put key=%s", key)
@@ -194,7 +190,9 @@ def put_tools_config(body: dict[str, Any]) -> dict[str, Any]:
 
 def circuit_drill(items: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     rules = items if items is not None else get_model_routes()
-    down = next((r for r in rules if r.get("id") == "provider_down" or r.get("span")), None)
+    down = next(
+        (r for r in rules if r.get("id") == "provider_down" or r.get("span")), None
+    )
     target = (down or {}).get("primary") or "—"
     return {
         "ok": True,

@@ -23,6 +23,26 @@ if str(_services) not in sys.path:
 import pytest
 from fastapi.testclient import TestClient
 
+from aos_api.db import connect
+from aos_api.tenant_scope import TenantScope, bind_tenant_scope
+
+
+@pytest.fixture(autouse=True)
+def _tenant_scope():
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO twa_org (id,name) VALUES ('dev-org','测试组织') "
+            "ON CONFLICT (id) DO NOTHING"
+        )
+        conn.execute(
+            "INSERT INTO twa_workspace (org_id,project_id,name) "
+            "VALUES ('dev-org','dev-project','测试工作区') "
+            "ON CONFLICT (org_id,project_id) DO NOTHING"
+        )
+        conn.commit()
+    with bind_tenant_scope(TenantScope("dev-org", "dev-project")):
+        yield
+
 
 # ── Import Boundary Tests ─────────────────────────────────────
 
@@ -282,7 +302,14 @@ class TestCredentialAPI:
         from aos_api.main import create_app
 
         app = create_app()
-        return TestClient(app)
+        return TestClient(
+            app,
+            headers={
+                "Authorization": "Bearer dev",
+                "X-Org-Id": "dev-org",
+                "X-Project-Id": "dev-project",
+            },
+        )
 
     def test_api_create_credential(self, client):
         resp = client.post(

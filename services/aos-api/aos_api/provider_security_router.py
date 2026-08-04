@@ -6,12 +6,17 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
+from aos_api.auth import require_principal
 from aos_api.provider_security import get_security_engine
 
-router = APIRouter(prefix="/api/models/providers", tags=["model-provider-security"])
+router = APIRouter(
+    prefix="/api/models/providers",
+    tags=["model-provider-security"],
+    dependencies=[Depends(require_principal)],
+)
 
 class UpdateSecurityRequest(BaseModel):
     content_filter: bool | None = None

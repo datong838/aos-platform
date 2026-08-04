@@ -180,8 +180,10 @@ def client():
             _c.commit()
         with _connect() as _c:
             _c.execute("DELETE FROM obj_instance WHERE props->>'source' IS NOT NULL")
-            _c.execute("DELETE FROM meta_aip_kv WHERE key='apollo_ops_assets'")
             _c.execute("DELETE FROM meta_object_type WHERE id NOT IN ('WorkOrder','Site','Order','OrderItem')")
+            _c.commit()
+        with _connect(TenantScope("dev-org", "dev-project")) as _c:
+            _c.execute("DELETE FROM meta_aip_kv WHERE key='apollo_ops_assets'")
             _c.commit()
     except Exception as exc:  # pragma: no cover
         pytest.skip(f"PG unavailable: {exc}")
