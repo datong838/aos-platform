@@ -81,7 +81,11 @@ def test_e7_schema_report_is_green() -> None:
         report = build_ti3_e7_schema_report(conn)
 
     assert report["ok"] is True, report
-    assert report["alembicRevision"] in {"228ti3e7contract", "228ti4c1expand"}
+    assert report["alembicRevision"] in {
+        "228ti3e7contract",
+        "228ti4c1expand",
+        "228ti4d1expand",
+    }
     assert report["ti3ContractInvalidPrimaryKeys"] == []
     assert report["ti3ContractNullableScopeColumns"] == []
     assert report["ti3ScopedBranchForeignKeyValid"] is True

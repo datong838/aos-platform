@@ -6,13 +6,8 @@ os.environ.setdefault("AOS_TWA_STORE", "memory")
 
 import psycopg
 import pytest
-from alembic.config import Config
-from fastapi.testclient import TestClient
-from psycopg import sql
-from psycopg.conninfo import conninfo_to_dict, make_conninfo
-from sqlalchemy.engine import URL
-
 from alembic import command
+from alembic.config import Config
 from aos_api import mock_data
 from aos_api.db import init_schema, seed_if_empty
 from aos_api.idempotency import idempotency_store
@@ -21,6 +16,10 @@ from aos_api.metrics import reset_metrics
 from aos_api.module_identity import stable_module_pk
 from aos_api.module_store import seed_modules_if_empty
 from aos_api.tenant_scope import TenantScope
+from fastapi.testclient import TestClient
+from psycopg import sql
+from psycopg.conninfo import conninfo_to_dict, make_conninfo
+from sqlalchemy.engine import URL
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -60,12 +59,14 @@ def _isolated_postgres_database():
     try:
         os.environ["AOS_TWA_STORE"] = "pg"
         from aos_api import twa_pg
+        from aos_api.data_os_store import ensure_data_os_schema
         from aos_api.db import init_schema
         from aos_api.tenant_catalog import ensure_tenant_catalog_schema
 
         twa_pg.clear_mode_cache()
         command.upgrade(config, "228assetintegration")
         init_schema()
+        ensure_data_os_schema()
         ensure_tenant_catalog_schema()
         from aos_api.canvas_config import ensure_schema as ensure_canvas_schema
         from aos_api.module_deployments import ensure_schema as ensure_deployment_schema

@@ -55,6 +55,7 @@ def test_e7_schema_report_is_green() -> None:
         "228ti3e6rls",
         "228ti3e7contract",
         "228ti4c1expand",
+        "228ti4d1expand",
     }
     assert report["ti2ContractInvalidPrimaryKeys"] == []
     assert report["ti2ContractNullableModulePkTables"] == []
