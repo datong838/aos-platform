@@ -43,7 +43,7 @@ def test_d2b_graph_and_delete_require_tenant_scope(mutation, args) -> None:
     assert missing.value.code == "TENANT_SCOPE_REQUIRED"
 
 
-def test_d2b_graph_scope_conflict_and_nested_ids_are_tenant_local() -> None:
+def test_d2b_graph_ids_and_nested_ids_are_tenant_local() -> None:
     suffix = uuid.uuid4().hex
     scope_a = TenantScope(f"org-ga-{suffix}", f"project-ga-{suffix}")
     scope_b = TenantScope(f"org-gb-{suffix}", f"project-gb-{suffix}")
@@ -53,13 +53,22 @@ def test_d2b_graph_scope_conflict_and_nested_ids_are_tenant_local() -> None:
     shared_nested = f"node-{suffix}"
     graph_a = f"graph-a-{suffix}"
     graph_b = f"graph-b-{suffix}"
+    source_id = f"source-{suffix}"
+    for scope in (scope_a, scope_b):
+        dos.persist_source(scope, {"id": source_id, "type": "file"})
+        dos.persist_pipeline(
+            scope, {"id": graph_a, "sourceId": source_id, "target": "dataset"}
+        )
+    dos.persist_pipeline(
+        scope_b, {"id": graph_b, "sourceId": source_id, "target": "dataset"}
+    )
     payload_a = {
         "pipeline_id": graph_a,
         "nodes": [{"id": shared_nested, "name": "A"}],
         "edges": [],
     }
     payload_b = {
-        "pipeline_id": graph_b,
+        "pipeline_id": graph_a,
         "nodes": [{"id": shared_nested, "name": "B"}],
         "edges": [],
     }
@@ -67,22 +76,26 @@ def test_d2b_graph_scope_conflict_and_nested_ids_are_tenant_local() -> None:
     dos.persist_phase5_pipeline_graph(scope_b, payload_b)
 
     assert dos.load_phase5_pipeline_graph(scope_a, graph_a) is not None
-    assert dos.load_phase5_pipeline_graph(scope_b, graph_a) is None
-    with pytest.raises(ApiError) as conflict:
+    assert dos.load_phase5_pipeline_graph(scope_b, graph_a) is not None
+    with pytest.raises(ValueError, match="node id belongs to another pipeline"):
         dos.persist_phase5_pipeline_graph(
             scope_b,
             {
-                "pipeline_id": graph_a,
-                "nodes": [{"id": f"conflict-{suffix}", "name": "conflict"}],
+                "pipeline_id": graph_b,
+                "nodes": [{"id": shared_nested, "name": "conflict"}],
                 "edges": [],
             },
         )
-    assert conflict.value.code == "TENANT_SCOPE_CONFLICT"
 
     dos.delete_phase5_pipeline_graph(scope_b, graph_a)
     assert dos.load_phase5_pipeline_graph(scope_a, graph_a) is not None
     dos.delete_phase5_pipeline_graph(scope_a, graph_a)
     dos.delete_phase5_pipeline_graph(scope_b, graph_b)
+    dos.delete_pipeline(scope_b, graph_b)
+    dos.delete_pipeline(scope_a, graph_a)
+    dos.delete_pipeline(scope_b, graph_a)
+    dos.delete_source(scope_a, source_id)
+    dos.delete_source(scope_b, source_id)
 
 
 def test_d2b_scoped_delete_cannot_remove_other_tenant_rows() -> None:
@@ -135,11 +148,11 @@ def test_d2b_scoped_delete_cannot_remove_other_tenant_rows() -> None:
                 (value,),
             ).fetchone()["n"] == 1
 
-    dos.delete_source(scope_a, ids["source"])
-    dos.delete_pipeline(scope_a, ids["pipeline"])
-    dos.delete_dataset(scope_a, ids["dataset"])
-    dos.delete_sync(scope_a, ids["sync"])
     dos.delete_schedule(scope_a, ids["schedule"])
+    dos.delete_sync(scope_a, ids["sync"])
+    dos.delete_dataset(scope_a, ids["dataset"])
+    dos.delete_pipeline(scope_a, ids["pipeline"])
+    dos.delete_source(scope_a, ids["source"])
 
 
 def test_d2b_boot_never_physically_deletes_demo_rows_without_scope() -> None:

@@ -66,14 +66,14 @@ def _seed(scope: TenantScope, suffix: str) -> dict[str, str]:
 
 
 def _cleanup(scope: TenantScope, ids: dict[str, str]) -> None:
-    dos.delete_source(scope, ids["source"])
-    dos.delete_pipeline(scope, ids["pipeline"])
-    dos.delete_dataset(scope, ids["dataset"])
-    dos.delete_sync(scope, ids["sync"])
     dos.delete_schedule(scope, ids["schedule"])
+    dos.delete_sync(scope, ids["sync"])
+    dos.delete_dataset(scope, ids["dataset"])
+    dos.delete_pipeline(scope, ids["pipeline"])
+    dos.delete_source(scope, ids["source"])
 
 
-def test_d5_load_all_requires_scope_and_excludes_other_and_null_rows() -> None:
+def test_d5_load_all_requires_scope_and_excludes_other_scope() -> None:
     suffix = uuid.uuid4().hex
     scope_a = TenantScope(f"org-{suffix}", f"project-a-{suffix}")
     scope_b = TenantScope(f"org-{suffix}", f"project-b-{suffix}")
@@ -81,14 +81,6 @@ def test_d5_load_all_requires_scope_and_excludes_other_and_null_rows() -> None:
     _ensure_scope(scope_b)
     ids_a = _seed(scope_a, f"a-{suffix}")
     ids_b = _seed(scope_b, f"b-{suffix}")
-    legacy_id = f"legacy-{suffix}"
-    with connect() as conn:
-        conn.execute(
-            "INSERT INTO meta_sync (id,source_id,org_id,project_id) "
-            "VALUES (%s,'legacy',NULL,NULL)",
-            (legacy_id,),
-        )
-        conn.commit()
     try:
         with pytest.raises(ApiError) as missing:
             dos.load_all(None)
@@ -97,15 +89,10 @@ def test_d5_load_all_requires_scope_and_excludes_other_and_null_rows() -> None:
         loaded_b = dos.load_all(scope_b)
         assert set(loaded_a["connectors"]) == {ids_a["source"]}
         assert set(loaded_b["connectors"]) == {ids_b["source"]}
-        assert legacy_id not in loaded_a["syncs"]
-        assert legacy_id not in loaded_b["syncs"]
         assert loaded_a["dataset_history"][ids_a["dataset"]] == [{"version": 1}]
     finally:
         _cleanup(scope_a, ids_a)
         _cleanup(scope_b, ids_b)
-        with connect() as conn:
-            conn.execute("DELETE FROM meta_sync WHERE id=%s", (legacy_id,))
-            conn.commit()
 
 
 def test_d5_boot_is_empty_then_router_lazy_loads_strict_workspace_scope() -> None:

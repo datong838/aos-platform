@@ -75,104 +75,48 @@ def ensure_data_os_schema() -> None:
     global _schema_ready
     if _schema_ready:
         return
+    expected_primary_keys = {
+        "meta_source": ["org_id", "project_id", "id"],
+        "meta_pipeline": ["org_id", "project_id", "id"],
+        "meta_dataset": ["org_id", "project_id", "rid"],
+        "meta_dataset_history": ["org_id", "project_id", "id"],
+        "meta_sync": ["org_id", "project_id", "id"],
+        "meta_schedule": ["org_id", "project_id", "id"],
+        "phase5_pipeline_graph": ["org_id", "project_id", "pipeline_id"],
+    }
     with connect() as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS meta_source (
-              id TEXT PRIMARY KEY,
-              type TEXT NOT NULL DEFAULT 'file',
-              status TEXT NOT NULL DEFAULT 'registered',
-              plugin_id TEXT,
-              org_id TEXT NOT NULL DEFAULT 'dev-org',
-              project_id TEXT NOT NULL DEFAULT 'dev-project',
-              props JSONB NOT NULL DEFAULT '{}'::jsonb,
-              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-            """
+        rows = conn.execute(
+            "SELECT table_name, array_agg(column_name::text ORDER BY ordinal_position) "
+            "FILTER (WHERE column_name IN ('org_id','project_id')) AS scope_columns "
+            "FROM information_schema.columns WHERE table_schema='public' "
+            "AND table_name=ANY(%s) GROUP BY table_name",
+            (list(expected_primary_keys),),
+        ).fetchall()
+        present = {str(row["table_name"]): list(row["scope_columns"] or []) for row in rows}
+        pk_rows = conn.execute(
+            "SELECT c.relname AS table_name, "
+            "array_agg(a.attname::text ORDER BY k.ordinality) AS columns "
+            "FROM pg_constraint p JOIN pg_class c ON c.oid=p.conrelid "
+            "JOIN unnest(p.conkey) WITH ORDINALITY k(attnum, ordinality) ON TRUE "
+            "JOIN pg_attribute a ON a.attrelid=c.oid AND a.attnum=k.attnum "
+            "WHERE p.contype='p' AND c.relnamespace='public'::regnamespace "
+            "AND c.relname=ANY(%s) GROUP BY c.relname",
+            (list(expected_primary_keys),),
+        ).fetchall()
+        primary_keys = {
+            str(row["table_name"]): list(row["columns"] or []) for row in pk_rows
+        }
+    invalid = sorted(
+        table
+        for table, expected in expected_primary_keys.items()
+        if present.get(table) != ["org_id", "project_id"]
+        or primary_keys.get(table) != expected
+    )
+    if invalid:
+        raise RuntimeError(
+            "Data OS schema is not at TI-4 D7 contract; run Alembic upgrade: "
+            + ", ".join(invalid)
         )
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS meta_pipeline (
-              id TEXT PRIMARY KEY,
-              source_id TEXT NOT NULL,
-              target TEXT NOT NULL DEFAULT 'dataset',
-              dataset_rid TEXT,
-              name TEXT,
-              object_type_hint TEXT,
-              last_build JSONB NOT NULL DEFAULT '{}'::jsonb,
-              props JSONB NOT NULL DEFAULT '{}'::jsonb,
-              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-            """
-        )
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS meta_dataset (
-              rid TEXT PRIMARY KEY,
-              name TEXT NOT NULL,
-              display_name TEXT,
-              pipeline_id TEXT,
-              source_id TEXT,
-              status TEXT NOT NULL DEFAULT 'READY',
-              object_type_hint TEXT,
-              created_at DOUBLE PRECISION,
-              updated_at DOUBLE PRECISION,
-              props JSONB NOT NULL DEFAULT '{}'::jsonb
-            )
-            """
-        )
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS meta_sync (
-              id TEXT PRIMARY KEY,
-              source_id TEXT NOT NULL,
-              status TEXT NOT NULL DEFAULT 'SUCCEEDED',
-              rows_synced INTEGER NOT NULL DEFAULT 0,
-              started_at DOUBLE PRECISION,
-              finished_at DOUBLE PRECISION,
-              props JSONB NOT NULL DEFAULT '{}'::jsonb,
-              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-            """
-        )
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS meta_schedule (
-              id TEXT PRIMARY KEY,
-              cron TEXT NOT NULL DEFAULT '0 * * * *',
-              pipeline_id TEXT,
-              enabled BOOLEAN NOT NULL DEFAULT TRUE,
-              name TEXT,
-              ingest JSONB,
-              last_run JSONB,
-              org_id TEXT,
-              project_id TEXT,
-              props JSONB NOT NULL DEFAULT '{}'::jsonb,
-              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-            """
-        )
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS meta_dataset_history (
-              id BIGSERIAL PRIMARY KEY,
-              dataset_rid TEXT NOT NULL,
-              payload JSONB NOT NULL DEFAULT '{}'::jsonb,
-              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-            """
-        )
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS phase5_pipeline_graph (
-              pipeline_id TEXT PRIMARY KEY,
-              payload JSONB NOT NULL,
-              revision BIGINT NOT NULL DEFAULT 1,
-              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-            """
-        )
-        conn.commit()
     _schema_ready = True
     log.info("data_os_schema_ready")
 
@@ -206,7 +150,7 @@ def persist_source(scope: TenantScope, item: dict[str, Any]) -> None:
             """
             INSERT INTO meta_source (id, type, status, plugin_id, org_id, project_id, props, updated_at)
             VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb,NOW())
-            ON CONFLICT (id) DO UPDATE SET
+            ON CONFLICT (org_id, project_id, id) DO UPDATE SET
               type=EXCLUDED.type, status=EXCLUDED.status, plugin_id=EXCLUDED.plugin_id,
               props=EXCLUDED.props,
               updated_at=NOW()
@@ -255,7 +199,7 @@ def persist_pipeline(scope: TenantScope, item: dict[str, Any]) -> None:
               (id, source_id, target, dataset_rid, name, object_type_hint,
                last_build, props, org_id, project_id, updated_at)
             VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,NOW())
-            ON CONFLICT (id) DO UPDATE SET
+            ON CONFLICT (org_id, project_id, id) DO UPDATE SET
               source_id=EXCLUDED.source_id, target=EXCLUDED.target, dataset_rid=EXCLUDED.dataset_rid,
               name=EXCLUDED.name, object_type_hint=EXCLUDED.object_type_hint,
               last_build=EXCLUDED.last_build, props=EXCLUDED.props, updated_at=NOW()
@@ -319,7 +263,7 @@ def persist_phase5_pipeline_graph(
             INSERT INTO phase5_pipeline_graph
               (pipeline_id, payload, revision, org_id, project_id, updated_at)
             VALUES (%s,%s::jsonb,1,%s,%s,NOW())
-            ON CONFLICT (pipeline_id) DO UPDATE SET
+            ON CONFLICT (org_id, project_id, pipeline_id) DO UPDATE SET
               payload=EXCLUDED.payload,
               revision=phase5_pipeline_graph.revision+1,
               updated_at=NOW()
@@ -400,7 +344,7 @@ def persist_dataset(scope: TenantScope, item: dict[str, Any]) -> None:
               (rid, name, display_name, pipeline_id, source_id, status, object_type_hint,
                created_at, updated_at, props, org_id, project_id)
             VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s)
-            ON CONFLICT (rid) DO UPDATE SET
+            ON CONFLICT (org_id, project_id, rid) DO UPDATE SET
               name=EXCLUDED.name, display_name=EXCLUDED.display_name,
               pipeline_id=EXCLUDED.pipeline_id, source_id=EXCLUDED.source_id,
               status=EXCLUDED.status, object_type_hint=EXCLUDED.object_type_hint,
@@ -437,7 +381,7 @@ def persist_sync(scope: TenantScope, item: dict[str, Any]) -> None:
               (id, source_id, status, rows_synced, started_at, finished_at,
                props, org_id, project_id, updated_at)
             VALUES (%s,%s,%s,%s,%s,%s,'{}'::jsonb,%s,%s,NOW())
-            ON CONFLICT (id) DO UPDATE SET
+            ON CONFLICT (org_id, project_id, id) DO UPDATE SET
               source_id=EXCLUDED.source_id, status=EXCLUDED.status,
               rows_synced=EXCLUDED.rows_synced, started_at=EXCLUDED.started_at,
               finished_at=EXCLUDED.finished_at, updated_at=NOW()
@@ -468,7 +412,7 @@ def persist_schedule(scope: TenantScope, item: dict[str, Any]) -> None:
             INSERT INTO meta_schedule
               (id, cron, pipeline_id, enabled, name, ingest, last_run, org_id, project_id, props, updated_at)
             VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,'{}'::jsonb,NOW())
-            ON CONFLICT (id) DO UPDATE SET
+            ON CONFLICT (org_id, project_id, id) DO UPDATE SET
               cron=EXCLUDED.cron, pipeline_id=EXCLUDED.pipeline_id, enabled=EXCLUDED.enabled,
               name=EXCLUDED.name, ingest=EXCLUDED.ingest, last_run=EXCLUDED.last_run,
               updated_at=NOW()

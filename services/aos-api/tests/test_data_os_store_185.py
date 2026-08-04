@@ -107,9 +107,9 @@ def test_source_pipeline_persist_roundtrip(api_client):
     assert "demo-file-wo" not in wave_ext._connectors
 
     # cleanup probe rows
-    dos.delete_source(scope, sid)
-    dos.delete_pipeline(scope, pid)
     dos.delete_dataset(scope, ds_rid)
+    dos.delete_pipeline(scope, pid)
+    dos.delete_source(scope, sid)
 
 
 def _auth_org(org: str, project: str = "dev-project"):

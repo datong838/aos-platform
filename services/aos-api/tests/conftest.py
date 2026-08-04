@@ -66,7 +66,6 @@ def _isolated_postgres_database():
         twa_pg.clear_mode_cache()
         command.upgrade(config, "228assetintegration")
         init_schema()
-        ensure_data_os_schema()
         ensure_tenant_catalog_schema()
         from aos_api.canvas_config import ensure_schema as ensure_canvas_schema
         from aos_api.module_deployments import ensure_schema as ensure_deployment_schema
@@ -88,6 +87,7 @@ def _isolated_postgres_database():
         ensure_widget_schema()
         ensure_draft_schema()
         command.upgrade(config, "head")
+        ensure_data_os_schema()
         os.environ["AOS_TWA_STORE"] = previous_twa_store or "memory"
         twa_pg.clear_mode_cache()
         yield

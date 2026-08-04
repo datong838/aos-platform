@@ -95,9 +95,14 @@ def test_d2a_six_persist_paths_write_explicit_scope() -> None:
             assert {(row["org_id"], row["project_id"]) for row in rows} == {
                 scope.key
             }
+    dos.delete_schedule(scope, schedule_id)
+    dos.delete_sync(scope, sync_id)
+    dos.delete_dataset(scope, dataset_rid)
+    dos.delete_pipeline(scope, pipeline_id)
+    dos.delete_source(scope, source_id)
 
 
-def test_d2a_global_id_conflict_fails_without_overwriting_owner() -> None:
+def test_d2a_same_source_id_coexists_without_overwriting_other_scope() -> None:
     suffix = uuid.uuid4().hex
     scope_a = TenantScope(f"org-a-{suffix}", f"project-a-{suffix}")
     scope_b = TenantScope(f"org-b-{suffix}", f"project-b-{suffix}")
@@ -106,19 +111,18 @@ def test_d2a_global_id_conflict_fails_without_overwriting_owner() -> None:
     source_id = f"shared-source-{suffix}"
     dos.persist_source(scope_a, {"id": source_id, "type": "file", "status": "A"})
 
-    with pytest.raises(ApiError) as conflict:
-        dos.persist_source(scope_b, {"id": source_id, "type": "file", "status": "B"})
-    assert conflict.value.code == "TENANT_SCOPE_CONFLICT"
+    dos.persist_source(scope_b, {"id": source_id, "type": "file", "status": "B"})
 
     with connect() as conn:
-        row = conn.execute(
+        rows = conn.execute(
             "SELECT org_id,project_id,status FROM meta_source WHERE id=%s",
             (source_id,),
-        ).fetchone()
-    assert (row["org_id"], row["project_id"], row["status"]) == (
-        *scope_a.key,
-        "A",
-    )
+        ).fetchall()
+    assert {
+        (row["org_id"], row["project_id"], row["status"]) for row in rows
+    } == {(*scope_a.key, "A"), (*scope_b.key, "B")}
+    dos.delete_source(scope_a, source_id)
+    dos.delete_source(scope_b, source_id)
 
 
 def test_d2a_history_replace_keeps_other_scope_rows() -> None:
@@ -128,6 +132,8 @@ def test_d2a_history_replace_keeps_other_scope_rows() -> None:
     _ensure_scope(scope_a)
     _ensure_scope(scope_b)
     rid = f"history-{suffix}"
+    dos.persist_dataset(scope_a, {"rid": rid, "name": "A"})
+    dos.persist_dataset(scope_b, {"rid": rid, "name": "B"})
     dos.persist_dataset_history(scope_a, rid, [{"version": 1}])
     dos.persist_dataset_history(scope_b, rid, [{"version": 9}])
     dos.persist_dataset_history(scope_a, rid, [{"version": 2}])
@@ -142,3 +148,5 @@ def test_d2a_history_replace_keeps_other_scope_rows() -> None:
         (row["org_id"], row["project_id"], int(row["payload"]["version"]))
         for row in rows
     } == {(*scope_a.key, 2), (*scope_b.key, 9)}
+    dos.delete_dataset(scope_a, rid)
+    dos.delete_dataset(scope_b, rid)

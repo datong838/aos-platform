@@ -19,6 +19,7 @@ TI4_C1_REVISION = "228ti4c1expand"
 TI4_D1_REVISION = "228ti4d1expand"
 TI4_D4_REVISION = "228ti4d4validate"
 TI4_D6_REVISION = "228ti4d6rls"
+TI4_D7_REVISION = "228ti4d7contract"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {
@@ -96,6 +97,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D1_REVISION,
         TI4_D4_REVISION,
         TI4_D6_REVISION,
+        TI4_D7_REVISION,
     }:
         issues.append("RLS_ENABLED_BEFORE_E6")
     if revision not in {
@@ -115,6 +117,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D1_REVISION,
         TI4_D4_REVISION,
         TI4_D6_REVISION,
+        TI4_D7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     return {
@@ -230,6 +233,7 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D1_REVISION,
         TI4_D4_REVISION,
         TI4_D6_REVISION,
+        TI4_D7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -353,6 +357,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D1_REVISION,
         TI4_D4_REVISION,
         TI4_D6_REVISION,
+        TI4_D7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -444,6 +449,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D1_REVISION,
         TI4_D4_REVISION,
         TI4_D6_REVISION,
+        TI4_D7_REVISION,
     }:
         issues.append("TI2_EXPAND_COLUMNS_NOT_NULLABLE")
     if missing_tables:
@@ -473,6 +479,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
                 TI4_D1_REVISION,
                 TI4_D4_REVISION,
                 TI4_D6_REVISION,
+                TI4_D7_REVISION,
             }
             else non_nullable_columns
         ),
@@ -500,6 +507,7 @@ def build_ti2_e4_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D1_REVISION,
         TI4_D4_REVISION,
         TI4_D6_REVISION,
+        TI4_D7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     rows = conn.execute(
@@ -555,6 +563,7 @@ def build_ti2_e6_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D1_REVISION,
         TI4_D4_REVISION,
         TI4_D6_REVISION,
+        TI4_D7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -659,6 +668,7 @@ def build_ti2_e7_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D1_REVISION,
         TI4_D4_REVISION,
         TI4_D6_REVISION,
+        TI4_D7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -767,6 +777,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D1_REVISION,
         TI4_D4_REVISION,
         TI4_D6_REVISION,
+        TI4_D7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -802,6 +813,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D1_REVISION,
         TI4_D4_REVISION,
         TI4_D6_REVISION,
+        TI4_D7_REVISION,
     }:
         issues.append("TI3_EXPAND_COLUMNS_NOT_NULLABLE")
     if templates_with_scope:
@@ -844,6 +856,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
                 TI4_D1_REVISION,
                 TI4_D4_REVISION,
                 TI4_D6_REVISION,
+                TI4_D7_REVISION,
             }
             else expand_not_nullable
         ),
@@ -865,6 +878,7 @@ def build_ti3_e6_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D1_REVISION,
         TI4_D4_REVISION,
         TI4_D6_REVISION,
+        TI4_D7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -968,6 +982,7 @@ def build_ti3_e7_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D1_REVISION,
         TI4_D4_REVISION,
         TI4_D6_REVISION,
+        TI4_D7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1105,6 +1120,7 @@ def build_ti4_c1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D1_REVISION,
         TI4_D4_REVISION,
         TI4_D6_REVISION,
+        TI4_D7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1193,7 +1209,12 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
     revision = report["alembicRevision"]
-    if revision not in {TI4_D1_REVISION, TI4_D4_REVISION, TI4_D6_REVISION}:
+    if revision not in {
+        TI4_D1_REVISION,
+        TI4_D4_REVISION,
+        TI4_D6_REVISION,
+        TI4_D7_REVISION,
+    }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     column_rows = conn.execute(
@@ -1220,7 +1241,7 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
     )
     if missing_columns:
         issues.append("TI4_DATA_OS_SCOPE_COLUMNS_MISSING")
-    if non_nullable_expand_columns:
+    if non_nullable_expand_columns and revision != TI4_D7_REVISION:
         issues.append("TI4_DATA_OS_EXPAND_COLUMNS_NOT_NULLABLE")
 
     expected_names = [
@@ -1262,10 +1283,162 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
         "ok": not issues,
         "issues": issues,
         "ti4DataOsMissingScopeColumns": missing_columns,
-        "ti4DataOsNonNullableExpandColumns": non_nullable_expand_columns,
+        "ti4DataOsNonNullableExpandColumns": (
+            [] if revision == TI4_D7_REVISION else non_nullable_expand_columns
+        ),
         "ti4DataOsInvalidWorkspaceForeignKeys": invalid_foreign_keys,
         "ti4DataOsPrematurelyValidatedForeignKeys": prematurely_validated,
         "ti4DataOsWorkspaceForeignKeyCount": len(foreign_keys),
         "ti4DataOsRowCounts": row_counts,
         "ti4DataOsTotalRows": sum(row_counts.values()),
+    }
+
+
+TI4_D7_PRIMARY_KEYS = {
+    "meta_source": ["org_id", "project_id", "id"],
+    "meta_pipeline": ["org_id", "project_id", "id"],
+    "meta_dataset": ["org_id", "project_id", "rid"],
+    "meta_dataset_history": ["org_id", "project_id", "id"],
+    "meta_sync": ["org_id", "project_id", "id"],
+    "meta_schedule": ["org_id", "project_id", "id"],
+    "phase5_pipeline_graph": ["org_id", "project_id", "pipeline_id"],
+}
+TI4_D7_PARENT_FOREIGN_KEYS = {
+    "fk_meta_pipeline_source_ti4d7": (
+        "meta_pipeline",
+        ("FOREIGN KEY (org_id, project_id, source_id) "
+         "REFERENCES meta_source(org_id, project_id, id)"),
+    ),
+    "fk_meta_dataset_source_ti4d7": (
+        "meta_dataset",
+        ("FOREIGN KEY (org_id, project_id, source_id) "
+         "REFERENCES meta_source(org_id, project_id, id)"),
+    ),
+    "fk_meta_dataset_pipeline_ti4d7": (
+        "meta_dataset",
+        ("FOREIGN KEY (org_id, project_id, pipeline_id) "
+         "REFERENCES meta_pipeline(org_id, project_id, id)"),
+    ),
+    "fk_meta_dataset_history_dataset_ti4d7": (
+        "meta_dataset_history",
+        ("FOREIGN KEY (org_id, project_id, dataset_rid) "
+         "REFERENCES meta_dataset(org_id, project_id, rid)"),
+    ),
+    "fk_meta_sync_source_ti4d7": (
+        "meta_sync",
+        ("FOREIGN KEY (org_id, project_id, source_id) "
+         "REFERENCES meta_source(org_id, project_id, id)"),
+    ),
+    "fk_meta_schedule_pipeline_ti4d7": (
+        "meta_schedule",
+        ("FOREIGN KEY (org_id, project_id, pipeline_id) "
+         "REFERENCES meta_pipeline(org_id, project_id, id)"),
+    ),
+}
+
+
+def build_ti4_d7_schema_report(conn: Any) -> dict[str, Any]:
+    report = build_ti4_d1_schema_report(conn)
+    issues = [
+        issue
+        for issue in report["issues"]
+        if issue not in {"ALEMBIC_REVISION_MISMATCH"}
+    ]
+    if report["alembicRevision"] != TI4_D7_REVISION:
+        issues.append("ALEMBIC_REVISION_MISMATCH")
+
+    pk_rows = conn.execute(
+        "SELECT c.relname AS table_name, "
+        "array_agg(a.attname::text ORDER BY k.ordinality) AS columns "
+        "FROM pg_constraint p JOIN pg_class c ON c.oid=p.conrelid "
+        "JOIN unnest(p.conkey) WITH ORDINALITY k(attnum, ordinality) ON TRUE "
+        "JOIN pg_attribute a ON a.attrelid=c.oid AND a.attnum=k.attnum "
+        "WHERE p.contype='p' AND c.relnamespace='public'::regnamespace "
+        "AND c.relname=ANY(%s) GROUP BY c.relname",
+        (list(TI4_D7_PRIMARY_KEYS),),
+    ).fetchall()
+    primary_keys = {
+        str(row["table_name"]): list(row["columns"] or []) for row in pk_rows
+    }
+    invalid_primary_keys = sorted(
+        table
+        for table, expected in TI4_D7_PRIMARY_KEYS.items()
+        if primary_keys.get(table) != expected
+    )
+    if invalid_primary_keys:
+        issues.append("TI4_DATA_OS_PRIMARY_KEY_INVALID")
+
+    nullable_rows = conn.execute(
+        "SELECT table_name,column_name FROM information_schema.columns "
+        "WHERE table_schema='public' AND table_name=ANY(%s) "
+        "AND column_name IN ('org_id','project_id') AND is_nullable='YES'",
+        (list(TI4_D7_PRIMARY_KEYS),),
+    ).fetchall()
+    nullable_scope = sorted(
+        f"{row['table_name']}.{row['column_name']}" for row in nullable_rows
+    )
+    if nullable_scope:
+        issues.append("TI4_DATA_OS_SCOPE_NULLABLE")
+
+    fk_rows = conn.execute(
+        "SELECT conname,conrelid::regclass::text AS table_name,convalidated,"
+        "pg_get_constraintdef(oid) AS definition FROM pg_constraint "
+        "WHERE conname=ANY(%s)",
+        (list(TI4_D7_PARENT_FOREIGN_KEYS),),
+    ).fetchall()
+    foreign_keys = {str(row["conname"]): row for row in fk_rows}
+    invalid_parent_foreign_keys = sorted(
+        name
+        for name, (table, definition) in TI4_D7_PARENT_FOREIGN_KEYS.items()
+        if name not in foreign_keys
+        or foreign_keys[name]["table_name"] != table
+        or foreign_keys[name]["definition"] != definition
+        or not bool(foreign_keys[name]["convalidated"])
+    )
+    if invalid_parent_foreign_keys:
+        issues.append("TI4_DATA_OS_PARENT_FOREIGN_KEY_INVALID")
+
+    quarantine = conn.execute(
+        "SELECT to_regclass('public.data_os_orphan_quarantine') IS NOT NULL AS exists, "
+        "COALESCE(has_table_privilege('aos_runtime', "
+        "'public.data_os_orphan_quarantine', 'SELECT'), false) AS runtime_select"
+    ).fetchone()
+    guard_count = int(
+        conn.execute(
+            "SELECT COUNT(*) AS count FROM pg_trigger "
+            "WHERE tgrelid=to_regclass('public.data_os_orphan_quarantine') "
+            "AND NOT tgisinternal"
+        ).fetchone()["count"]
+    )
+    if not bool(quarantine["exists"]):
+        issues.append("TI4_DATA_OS_QUARANTINE_MISSING")
+    if bool(quarantine["runtime_select"]):
+        issues.append("TI4_DATA_OS_QUARANTINE_RUNTIME_VISIBLE")
+    if guard_count != 2:
+        issues.append("TI4_DATA_OS_QUARANTINE_GUARD_INVALID")
+
+    active_null_count = sum(
+        int(
+            conn.execute(
+                f"SELECT COUNT(*) AS count FROM {table} "
+                "WHERE org_id IS NULL OR project_id IS NULL"
+            ).fetchone()["count"]
+        )
+        for table in TI4_D7_PRIMARY_KEYS
+    )
+    if active_null_count:
+        issues.append("TI4_DATA_OS_ACTIVE_NULL_SCOPE")
+
+    return {
+        **report,
+        "stage": "TI-4-D7",
+        "ok": not issues,
+        "issues": issues,
+        "ti4DataOsContractInvalidPrimaryKeys": invalid_primary_keys,
+        "ti4DataOsContractNullableScope": nullable_scope,
+        "ti4DataOsContractInvalidParentForeignKeys": invalid_parent_foreign_keys,
+        "ti4DataOsQuarantineExists": bool(quarantine["exists"]),
+        "ti4DataOsRuntimeQuarantineAccess": bool(quarantine["runtime_select"]),
+        "ti4DataOsQuarantineGuardCount": guard_count,
+        "ti4DataOsActiveNullScopeCount": active_null_count,
     }
