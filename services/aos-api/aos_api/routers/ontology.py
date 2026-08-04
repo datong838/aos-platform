@@ -105,7 +105,9 @@ def _check_link_scale(*, expected_edges: int, mdo_approved: bool) -> None:
 
 
 @router.get("/v1/ontology/object-types")
-def list_object_types(principal: Principal = Depends(require_principal)) -> dict[str, Any]:
+def list_object_types(
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
     _ = principal
     with connect() as conn:
         rows = conn.execute(
@@ -150,7 +152,9 @@ def create_object_type(
             "SELECT 1 FROM meta_object_type WHERE id=%s", (body.id,)
         ).fetchone()
         if exists:
-            raise ApiError(code="VALIDATION", message="object type exists", status_code=400)
+            raise ApiError(
+                code="VALIDATION", message="object type exists", status_code=400
+            )
         conn.execute(
             """
             INSERT INTO meta_object_type (id, name, description, published, properties)
@@ -195,7 +199,9 @@ def get_object_type(
                 (type_id,),
             ).fetchone()
     if not row:
-        raise ApiError(code="NOT_FOUND", message="object type not found", status_code=404)
+        raise ApiError(
+            code="NOT_FOUND", message="object type not found", status_code=404
+        )
     row_d = dict(row)
     return build_ot_detail_meta(
         type_id=row_d["id"],
@@ -242,7 +248,9 @@ def update_object_type(
             "SELECT 1 FROM meta_object_type WHERE id=%s", (type_id,)
         ).fetchone()
         if not exists:
-            raise ApiError(code="NOT_FOUND", message="object type not found", status_code=404)
+            raise ApiError(
+                code="NOT_FOUND", message="object type not found", status_code=404
+            )
         conn.execute(
             """
             UPDATE meta_object_type
@@ -258,7 +266,12 @@ def update_object_type(
             ),
         )
         conn.commit()
-    log.info("update_object_type id=%s published=%s props=%s", type_id, body.publish, len(body.properties))
+    log.info(
+        "update_object_type id=%s published=%s props=%s",
+        type_id,
+        body.publish,
+        len(body.properties),
+    )
     return {
         "id": type_id,
         "name": body.name,
@@ -271,7 +284,9 @@ def update_object_type(
 
 
 @router.get("/v1/ontology/link-types")
-def list_link_types(principal: Principal = Depends(require_principal)) -> dict[str, Any]:
+def list_link_types(
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
     _ = principal
     with connect() as conn:
         rows = conn.execute(
@@ -298,7 +313,9 @@ def create_link_type(
             "SELECT 1 FROM meta_link_type WHERE id=%s", (body.id,)
         ).fetchone()
         if exists:
-            raise ApiError(code="VALIDATION", message="link type exists", status_code=400)
+            raise ApiError(
+                code="VALIDATION", message="link type exists", status_code=400
+            )
         conn.execute(
             """
             INSERT INTO meta_link_type (
@@ -405,7 +422,9 @@ def update_link_type(
             "SELECT 1 FROM meta_link_type WHERE id=%s", (link_id,)
         ).fetchone()
         if not row:
-            raise ApiError(code="NOT_FOUND", message="link type not found", status_code=404)
+            raise ApiError(
+                code="NOT_FOUND", message="link type not found", status_code=404
+            )
         conn.execute(
             """
             UPDATE meta_link_type SET
@@ -442,7 +461,9 @@ def delete_link_type(
             "SELECT 1 FROM meta_link_type WHERE id=%s", (link_id,)
         ).fetchone()
         if not row:
-            raise ApiError(code="NOT_FOUND", message="link type not found", status_code=404)
+            raise ApiError(
+                code="NOT_FOUND", message="link type not found", status_code=404
+            )
         conn.execute("DELETE FROM meta_link_type WHERE id=%s", (link_id,))
         conn.commit()
     log.info("delete_link_type id=%s", link_id)
@@ -457,11 +478,9 @@ def list_objects(
 ) -> dict[str, Any]:
     """List instances. ``branch`` selects effective view (89 v2 overlay)."""
     with connect() as conn:
-        from aos_api.branch_store import effective_objects, ensure_overlay_table
-
-        ensure_overlay_table(conn)
+        from aos_api.branch_store import effective_objects
         prop_defs = _object_type_properties(conn, object_type)
-        rows = effective_objects(conn, object_type, branch)
+        rows = effective_objects(conn, _scope(principal), object_type, branch)
         items = []
         for r in rows:
             if not can_access_object(principal, conn, object_type, r["object_id"]):
@@ -482,14 +501,14 @@ def get_object(
     branch: str | None = None,
 ) -> dict[str, Any]:
     with connect() as conn:
-        from aos_api.branch_store import effective_object, ensure_overlay_table
-
-        ensure_overlay_table(conn)
+        from aos_api.branch_store import effective_object
         ensure_object_access(principal, conn, object_type, object_id)
         prop_defs = _object_type_properties(conn, object_type)
-        hit = effective_object(conn, object_type, object_id, branch)
+        hit = effective_object(conn, _scope(principal), object_type, object_id, branch)
         if not hit:
-            raise ApiError(code="NOT_FOUND", message="object not found", status_code=404)
+            raise ApiError(
+                code="NOT_FOUND", message="object not found", status_code=404
+            )
         raw = {"id": object_id, "type": object_type, **(hit["props"] or {})}
         out = apply_field_redaction(principal, raw, prop_defs, conn=conn)
     if branch:
@@ -519,14 +538,14 @@ def put_object(
             status_code=400,
         )
     with connect() as conn:
-        from aos_api.branch_store import ensure_overlay_table, upsert_overlay
-
-        ensure_overlay_table(conn)
+        from aos_api.branch_store import upsert_overlay
         ot = conn.execute(
             "SELECT 1 FROM meta_object_type WHERE id=%s", (object_type,)
         ).fetchone()
         if not ot:
-            raise ApiError(code="NOT_FOUND", message="object type not found", status_code=404)
+            raise ApiError(
+                code="NOT_FOUND", message="object type not found", status_code=404
+            )
         upsert_overlay(
             conn,
             _scope(principal),
@@ -537,8 +556,20 @@ def put_object(
             op=body.op or "upsert",
         )
         conn.commit()
-    log.info("object_overlay_put type=%s id=%s branch=%s op=%s", object_type, object_id, branch, body.op)
-    return {"ok": True, "objectType": object_type, "objectId": object_id, "branch": branch, "op": body.op}
+    log.info(
+        "object_overlay_put type=%s id=%s branch=%s op=%s",
+        object_type,
+        object_id,
+        branch,
+        body.op,
+    )
+    return {
+        "ok": True,
+        "objectType": object_type,
+        "objectId": object_id,
+        "branch": branch,
+        "op": body.op,
+    }
 
 
 @router.get("/v1/objects/{object_type}/{object_id}/neighbors")
@@ -553,13 +584,17 @@ def neighbors(
             """
             SELECT rel, dst_type, dst_id FROM graph_edge
             WHERE src_type=%s AND src_id=%s
+              AND org_id=%s AND project_id=%s
             """,
-            (object_type, object_id),
+            (object_type, object_id, *_scope(principal).key),
         ).fetchall()
-    items = [
-        {"rel": r["rel"], "type": r["dst_type"], "id": r["dst_id"]} for r in rows
-    ]
-    log.info("graph_neighbors src=%s/%s count=%s engine=adjacency", object_type, object_id, len(items))
+    items = [{"rel": r["rel"], "type": r["dst_type"], "id": r["dst_id"]} for r in rows]
+    log.info(
+        "graph_neighbors src=%s/%s count=%s engine=adjacency",
+        object_type,
+        object_id,
+        len(items),
+    )
     return {"items": items, "engine": "adjacency_table"}
 
 
@@ -590,7 +625,9 @@ def list_wiki_versions(
         items.append(
             {
                 "id": int(r["id"]),
-                "createdAt": created.isoformat() if hasattr(created, "isoformat") else str(created),
+                "createdAt": created.isoformat()
+                if hasattr(created, "isoformat")
+                else str(created),
                 "summary": summary,
                 "draftId": r["draft_id"],
             }
@@ -622,7 +659,9 @@ def get_wiki_version(
             ),
         ).fetchone()
     if not row:
-        raise ApiError(code="NOT_FOUND", message="wiki version not found", status_code=404)
+        raise ApiError(
+            code="NOT_FOUND", message="wiki version not found", status_code=404
+        )
     created = row["created_at"]
     return {
         "id": int(row["id"]),
@@ -630,7 +669,9 @@ def get_wiki_version(
         "objectId": object_id,
         "body": row["body"],
         "draftId": row["draft_id"],
-        "createdAt": created.isoformat() if hasattr(created, "isoformat") else str(created),
+        "createdAt": created.isoformat()
+        if hasattr(created, "isoformat")
+        else str(created),
     }
 
 
@@ -668,14 +709,16 @@ def funnel_status(
     object_type: str,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    _ = principal
     with connect() as conn:
         row = conn.execute(
-            "SELECT stage, detail FROM funnel_status WHERE object_type=%s",
-            (object_type,),
+            "SELECT stage, detail FROM funnel_status WHERE object_type=%s "
+            "AND org_id=%s AND project_id=%s",
+            (object_type, *_scope(principal).key),
         ).fetchone()
     if not row:
-        raise ApiError(code="NOT_FOUND", message="funnel status missing", status_code=404)
+        raise ApiError(
+            code="NOT_FOUND", message="funnel status missing", status_code=404
+        )
     return {
         "objectType": object_type,
         "stage": row["stage"],
@@ -695,33 +738,46 @@ def constitution_lint(
 @router.get("/v1/ontology/graph-health")
 def graph_health(principal: Principal = Depends(require_principal)) -> dict[str, Any]:
     """T2.10 + 94 · GH metrics + issues（真悬空边 / 属性键冲突）。"""
-    _ = principal
-    with connect() as conn:
+    scope = _scope(principal)
+    with connect(scope) as conn:
         types = conn.execute("SELECT COUNT(*) AS c FROM meta_object_type").fetchone()
-        objs = conn.execute("SELECT COUNT(*) AS c FROM obj_instance").fetchone()
-        edges = conn.execute("SELECT COUNT(*) AS c FROM graph_edge").fetchone()
+        objs = conn.execute(
+            "SELECT COUNT(*) AS c FROM obj_instance WHERE org_id=%s AND project_id=%s",
+            scope.key,
+        ).fetchone()
+        edges = conn.execute(
+            "SELECT COUNT(*) AS c FROM graph_edge WHERE org_id=%s AND project_id=%s",
+            scope.key,
+        ).fetchone()
         orphans = conn.execute(
             """
             SELECT COUNT(*) AS c FROM obj_instance o
-            WHERE NOT EXISTS (
+            WHERE o.org_id=%s AND o.project_id=%s
+            AND NOT EXISTS (
               SELECT 1 FROM graph_edge e
-              WHERE (e.src_type=o.object_type AND e.src_id=o.object_id)
-                 OR (e.dst_type=o.object_type AND e.dst_id=o.object_id)
+              WHERE e.org_id=%s AND e.project_id=%s
+                AND ((e.src_type=o.object_type AND e.src_id=o.object_id)
+                  OR (e.dst_type=o.object_type AND e.dst_id=o.object_id))
             )
-            """
+            """,
+            (*scope.key, *scope.key),
         ).fetchone()
         dangling = conn.execute(
             """
             SELECT COUNT(*) AS c FROM graph_edge e
-            WHERE NOT EXISTS (
+            WHERE e.org_id=%s AND e.project_id=%s
+            AND (NOT EXISTS (
               SELECT 1 FROM obj_instance s
               WHERE s.object_type=e.src_type AND s.object_id=e.src_id
+                AND s.org_id=%s AND s.project_id=%s
             )
             OR NOT EXISTS (
               SELECT 1 FROM obj_instance d
               WHERE d.object_type=e.dst_type AND d.object_id=e.dst_id
-            )
-            """
+                AND d.org_id=%s AND d.project_id=%s
+            ))
+            """,
+            (*scope.key, *scope.key, *scope.key),
         ).fetchone()
         # property key conflicts: instance keys not declared on OT (cap 2000 rows)
         prop_rows = conn.execute(
@@ -729,23 +785,31 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
             SELECT o.object_type, o.object_id, o.props, t.properties
             FROM obj_instance o
             JOIN meta_object_type t ON t.id = o.object_type
+            WHERE o.org_id=%s AND o.project_id=%s
             ORDER BY o.object_type, o.object_id
             LIMIT 2000
-            """
+            """,
+            scope.key,
         ).fetchall()
     dangling_n = int(dangling["c"])
     conflict_n = 0
     conflict_samples: list[str] = []
     for r in prop_rows:
         declared = r["properties"] if isinstance(r["properties"], list) else []
-        allowed = {str(p.get("name")) for p in declared if isinstance(p, dict) and p.get("name")}
+        allowed = {
+            str(p.get("name"))
+            for p in declared
+            if isinstance(p, dict) and p.get("name")
+        }
         allowed |= {"_requiredMarkings"}  # system key
         props = r["props"] if isinstance(r["props"], dict) else {}
         extra = [k for k in props.keys() if k not in allowed]
         if extra:
             conflict_n += 1
             if len(conflict_samples) < 5:
-                conflict_samples.append(f"{r['object_type']}/{r['object_id']}:{','.join(extra[:3])}")
+                conflict_samples.append(
+                    f"{r['object_type']}/{r['object_id']}:{','.join(extra[:3])}"
+                )
 
     orphan_n = int(orphans["c"])
     from aos_api import ttl_job
@@ -855,13 +919,13 @@ class BranchIn(BaseModel):
 
 @router.get("/v1/ontology/branches")
 def list_branches(principal: Principal = Depends(require_principal)) -> dict[str, Any]:
-    _ = principal
-    with connect() as conn:
-        from aos_api.branch_store import change_count, ensure_overlay_table
-
-        ensure_overlay_table(conn)
+    scope = _scope(principal)
+    with connect(scope) as conn:
+        from aos_api.branch_store import change_count
         rows = conn.execute(
-            "SELECT id, name, base_ref, readonly FROM meta_branch ORDER BY id"
+            "SELECT id, name, base_ref, readonly FROM meta_branch "
+            "WHERE org_id=%s AND project_id=%s ORDER BY id",
+            scope.key,
         ).fetchall()
         items = []
         for r in rows:
@@ -871,7 +935,7 @@ def list_branches(principal: Principal = Depends(require_principal)) -> dict[str
                     "name": r["name"],
                     "baseRef": r["base_ref"],
                     "readonly": r["readonly"],
-                    "changeCount": change_count(conn, r["id"]),
+                    "changeCount": change_count(conn, scope, r["id"]),
                 }
             )
     return {"items": items}
@@ -886,14 +950,11 @@ def create_branch(
     _ = principal
     bid = body.id.strip()
     if not bid or not bid.replace("-", "").replace("_", "").isalnum():
-        raise ApiError(code="VALIDATION", message="id must be alphanumeric/_/-", status_code=400)
-    with connect() as conn:
-        from aos_api.branch_store import ensure_overlay_table
-
-        ensure_overlay_table(conn)
-        exists = conn.execute("SELECT 1 FROM meta_branch WHERE id=%s", (bid,)).fetchone()
-        if exists:
-            raise ApiError(code="VALIDATION", message=f"branch exists: {bid}", status_code=400)
+        raise ApiError(
+            code="VALIDATION", message="id must be alphanumeric/_/-", status_code=400
+        )
+    scope = _scope(principal)
+    with connect(scope) as conn:
         base = body.baseRef.strip() or "main"
         if base not in {"main", "master"}:
             base_row = conn.execute(
@@ -901,18 +962,36 @@ def create_branch(
                 (base, *_scope(principal).key),
             ).fetchone()
             if not base_row:
-                raise ApiError(code="VALIDATION", message=f"baseRef not found: {base}", status_code=400)
-        conn.execute(
+                raise ApiError(
+                    code="VALIDATION",
+                    message=f"baseRef not found: {base}",
+                    status_code=400,
+                )
+        result = conn.execute(
             """
             INSERT INTO meta_branch (
               id, name, base_ref, readonly, org_id, project_id
             ) VALUES (%s,%s,%s,FALSE,%s,%s)
+            ON CONFLICT (id) DO NOTHING
+            RETURNING id
             """,
             (bid, body.name.strip(), base, *_scope(principal).key),
         )
+        if result.fetchone() is None:
+            raise ApiError(
+                code="TENANT_KEY_CONFLICT",
+                message=f"branch key already exists in a tenant or legacy scope: {bid}",
+                status_code=409,
+            )
         conn.commit()
     log.info("branch_created id=%s base=%s", bid, body.baseRef)
-    return {"id": bid, "name": body.name.strip(), "baseRef": base, "readonly": False, "changeCount": 0}
+    return {
+        "id": bid,
+        "name": body.name.strip(),
+        "baseRef": base,
+        "readonly": False,
+        "changeCount": 0,
+    }
 
 
 class CheckoutIn(BaseModel):
@@ -926,11 +1005,11 @@ def branch_diff(
     branch_id: str,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    with connect() as conn:
-        from aos_api.branch_store import diff_branch, ensure_overlay_table
+    scope = _scope(principal)
+    with connect(scope) as conn:
+        from aos_api.branch_store import diff_branch
 
-        ensure_overlay_table(conn)
-        return diff_branch(conn, branch_id)
+        return diff_branch(conn, scope, branch_id)
 
 
 @router.post("/v1/ontology/branches/{branch_id}/merge")
@@ -938,12 +1017,11 @@ def branch_merge(
     branch_id: str,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    _ = principal
-    with connect() as conn:
-        from aos_api.branch_store import ensure_overlay_table, merge_branch
+    scope = _scope(principal)
+    with connect(scope) as conn:
+        from aos_api.branch_store import merge_branch
 
-        ensure_overlay_table(conn)
-        out = merge_branch(conn, _scope(principal), branch_id)
+        out = merge_branch(conn, scope, branch_id)
         conn.commit()
     log.info("branch_merged id=%s merged=%s", branch_id, out.get("merged"))
     return out
@@ -956,13 +1034,13 @@ def branch_checkout(
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """Copy base object into branch overlay (optional patch) for demo/edit."""
-    with connect() as conn:
-        from aos_api.branch_store import checkout_object, ensure_overlay_table
+    scope = _scope(principal)
+    with connect(scope) as conn:
+        from aos_api.branch_store import checkout_object
 
-        ensure_overlay_table(conn)
         out = checkout_object(
             conn,
-            _scope(principal),
+            scope,
             branch_id,
             body.objectType,
             body.objectId,
@@ -1026,7 +1104,9 @@ def get_okf_mapping(
         return stored
     default = _OKF_DEFAULTS.get(industry)
     if not default:
-        raise ApiError(code="NOT_FOUND", message=f"unknown industry: {industry}", status_code=404)
+        raise ApiError(
+            code="NOT_FOUND", message=f"unknown industry: {industry}", status_code=404
+        )
     return dict(default)
 
 
@@ -1043,11 +1123,21 @@ def put_okf_mapping(
         raise ApiError(code="VALIDATION", message="invalid industry", status_code=400)
     columns = body.get("columns")
     if not isinstance(columns, list):
-        raise ApiError(code="VALIDATION", message="columns must be a list", status_code=400)
+        raise ApiError(
+            code="VALIDATION", message="columns must be a list", status_code=400
+        )
     payload = {
         "industry": industry,
-        "objectType": str(body.get("objectType") or _OKF_DEFAULTS.get(industry, {}).get("objectType") or "WorkOrder"),
-        "label": str(body.get("label") or _OKF_DEFAULTS.get(industry, {}).get("label") or industry),
+        "objectType": str(
+            body.get("objectType")
+            or _OKF_DEFAULTS.get(industry, {}).get("objectType")
+            or "WorkOrder"
+        ),
+        "label": str(
+            body.get("label")
+            or _OKF_DEFAULTS.get(industry, {}).get("label")
+            or industry
+        ),
         "columns": [
             {
                 "src": str(c.get("src") or ""),
@@ -1077,7 +1167,9 @@ def funnel_rerun(
     _ = principal
     mode = (body.mode if body else "live") or "live"
     if mode not in {"live", "replacement"}:
-        raise ApiError(code="VALIDATION", message="mode must be live|replacement", status_code=400)
+        raise ApiError(
+            code="VALIDATION", message="mode must be live|replacement", status_code=400
+        )
     if mode == "live":
         stage = "hydration"
         worker = [
@@ -1120,4 +1212,10 @@ def funnel_rerun(
             )
         conn.commit()
     log.info("funnel_rerun type=%s mode=%s stage=%s", object_type, mode, stage)
-    return {"objectType": object_type, "stage": stage, "mode": mode, "detail": detail, "stages": worker}
+    return {
+        "objectType": object_type,
+        "stage": stage,
+        "mode": mode,
+        "detail": detail,
+        "stages": worker,
+    }

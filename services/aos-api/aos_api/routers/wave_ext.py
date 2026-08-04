@@ -11,11 +11,11 @@ TODO(持久化改造): 以下接口使用模块级全局变量（``_connectors``
 """
 from __future__ import annotations
 
-import json
 import os
 import time
 import uuid
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeout
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FuturesTimeout
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends
@@ -328,10 +328,11 @@ def invoke_tool_endpoint(
     body: dict[str, Any] | None = None,
     principal: Principal = Depends(require_principal),
 ):
-    _ = principal
     from aos_api.tool_runtime import invoke_tool
 
-    return invoke_tool(tool_id, body or {})
+    return invoke_tool(
+        TenantScope(principal.org_id, principal.project_id), tool_id, body or {}
+    )
 
 
 # —— T3.8 统一插件目录 ——
@@ -639,7 +640,13 @@ def aip_chat(
             executed = []
             for tid in tools_used:
                 try:
-                    executed.append(invoke_tool(str(tid), body.get("toolPayload") or {}))
+                    executed.append(
+                        invoke_tool(
+                            TenantScope(principal.org_id, principal.project_id),
+                            str(tid),
+                            body.get("toolPayload") or {},
+                        )
+                    )
                 except ApiError as ae:
                     executed.append({"toolId": tid, "ok": False, "error": ae.message})
             result["toolCalls"] = executed
@@ -1672,13 +1679,12 @@ def retry_dlq(dlq_id: str, principal: Principal = Depends(require_principal)):
 @router.get("/v1/funnel/{object_type}/worker")
 def funnel_worker(object_type: str, principal: Principal = Depends(require_principal)):
     """Prefer persisted funnel_status.detail.worker after rerun; else default snapshot."""
-    _ = principal
-    from aos_api.db import connect
-
-    with connect() as conn:
+    scope = TenantScope(principal.org_id, principal.project_id)
+    with connect(scope) as conn:
         row = conn.execute(
-            "SELECT detail FROM funnel_status WHERE object_type=%s",
-            (object_type,),
+            "SELECT detail FROM funnel_status WHERE object_type=%s "
+            "AND org_id=%s AND project_id=%s",
+            (object_type, *scope.key),
         ).fetchone()
     detail = row["detail"] if row else None
     if isinstance(detail, dict) and isinstance(detail.get("worker"), list) and detail["worker"]:

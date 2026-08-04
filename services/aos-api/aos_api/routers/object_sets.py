@@ -10,6 +10,7 @@ from aos_api.db import connect
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
 from aos_api.marking import apply_field_redaction, can_access_object
+from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(tags=["object-sets"])
 log = get_logger("aos-api.object_sets")
@@ -39,15 +40,17 @@ class ObjectSetQuery(BaseModel):
 
 def _query_pg(
     *,
+    scope: TenantScope,
     object_type: str,
     filters: list[dict[str, Any]],
     page: int,
     page_size: int,
 ) -> dict[str, Any]:
-    with connect() as conn:
+    with connect(scope) as conn:
         rows = conn.execute(
-            "SELECT object_id, props FROM obj_instance WHERE object_type=%s ORDER BY object_id",
-            (object_type,),
+            "SELECT object_id, props FROM obj_instance WHERE object_type=%s "
+            "AND org_id=%s AND project_id=%s ORDER BY object_id",
+            (object_type, *scope.key),
         ).fetchall()
     items: list[dict[str, Any]] = [
         {"id": r["object_id"], "type": object_type, **(r["props"] or {})} for r in rows
@@ -93,6 +96,7 @@ def object_sets_query(
             details={"maxFilters": 10, "got": len(body.filters)},
         )
     result = _query_pg(
+        scope=TenantScope(principal.org_id, principal.project_id),
         object_type=body.objectType,
         filters=body.filters,
         page=body.page,
@@ -110,7 +114,9 @@ def object_sets_query(
             kept: list[dict[str, Any]] = []
             for it in result["items"]:
                 oid = str(it.get("id") or "")
-                if not oid or not can_access_object(principal, conn, body.objectType, oid):
+                if not oid or not can_access_object(
+                    principal, conn, body.objectType, oid
+                ):
                     continue
                 if prop_defs:
                     kept.append(

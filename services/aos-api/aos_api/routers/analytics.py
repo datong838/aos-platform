@@ -1,9 +1,10 @@
-﻿"""TA.0–TA.8 Analytics / Notebooks Facade — schemes 109–117 · OpenAPI · 73.
+"""TA.0–TA.8 Analytics / Notebooks Facade — schemes 109–117 · OpenAPI · 73.
 
 TA.4: read. TA.5: Draft propose. TA.6: export/lineage.
 TA.8: Contour/Quiver/Vertex subset (not full BI/ML platforms).
 Web never holds sidecar admin.
 """
+
 from __future__ import annotations
 
 import json
@@ -25,6 +26,7 @@ from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 from aos_api.idempotency import idempotency_store
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(tags=["analytics"])
 log = get_logger("aos-api.analytics")
@@ -54,6 +56,8 @@ def _fill_quiver_day_gaps(
         out.append({"t": key, "v": int(by_day.get(key, 0))})
         cur += timedelta(days=1)
     return out
+
+
 _SQL_DENY = re.compile(
     r"\b(insert|update|delete|drop|alter|create|attach|copy|pragma|call|execute)\b",
     re.I,
@@ -162,7 +166,9 @@ def _rewrite_ui_url(ui_url: str) -> str:
     try:
         parts = urlparse.urlsplit(ui_url)
         pub = urlparse.urlsplit(public)
-        return urlparse.urlunsplit((pub.scheme, pub.netloc, parts.path, parts.query, parts.fragment))
+        return urlparse.urlunsplit(
+            (pub.scheme, pub.netloc, parts.path, parts.query, parts.fragment)
+        )
     except ValueError:
         return ui_url
 
@@ -285,7 +291,9 @@ def analytics_health() -> dict[str, Any]:
 
 
 @router.get("/v1/notebooks/sessions")
-def list_notebook_sessions(principal: Principal = Depends(require_principal)) -> dict[str, Any]:
+def list_notebook_sessions(
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
     _ = principal
     items = [_public_session_view(s) for s in _load_sessions()]
     return {"items": items}
@@ -332,7 +340,10 @@ def create_notebook_session(
             code="ANALYTICS_SESSION_TICKET_UNAVAILABLE",
             message="sidecar refused session ticket",
             status_code=503,
-            details={"sidecarStatus": code, "body": {k: remote.get(k) for k in ("detail", "message", "status")}},
+            details={
+                "sidecarStatus": code,
+                "body": {k: remote.get(k) for k in ("detail", "message", "status")},
+            },
         )
     ui = _rewrite_ui_url(str(remote.get("uiUrl") or ""))
     row = {
@@ -353,7 +364,9 @@ def create_notebook_session(
     items = _load_sessions()
     items.append(row)
     _save_sessions(items)
-    log.info("notebook_session_created id=%s principal=%s", row["id"], principal.subject)
+    log.info(
+        "notebook_session_created id=%s principal=%s", row["id"], principal.subject
+    )
     return _public_session_view(row)
 
 
@@ -365,7 +378,9 @@ def get_notebook_session(
     _ = principal
     hit = next((s for s in _load_sessions() if s.get("id") == session_id), None)
     if not hit:
-        raise ApiError(code="NOT_FOUND", message="notebook session not found", status_code=404)
+        raise ApiError(
+            code="NOT_FOUND", message="notebook session not found", status_code=404
+        )
     return _public_session_view(hit)
 
 
@@ -378,7 +393,9 @@ def stop_notebook_session(
     items = _load_sessions()
     hit = next((s for s in items if s.get("id") == session_id), None)
     if not hit:
-        raise ApiError(code="NOT_FOUND", message="notebook session not found", status_code=404)
+        raise ApiError(
+            code="NOT_FOUND", message="notebook session not found", status_code=404
+        )
     if sidecar_configured():
         try:
             _sidecar_json("DELETE", f"/v1/sessions/{session_id}")
@@ -420,7 +437,9 @@ def _snippet_dataset(rid: str, name: str | None = None) -> str:
     )
 
 
-def _rows_to_table(rows: list[dict[str, Any]]) -> tuple[list[str], list[dict[str, Any]]]:
+def _rows_to_table(
+    rows: list[dict[str, Any]],
+) -> tuple[list[str], list[dict[str, Any]]]:
     cols: list[str] = []
     seen: set[str] = set()
     for row in rows:
@@ -467,6 +486,7 @@ def _list_objects_table(
     from aos_api.routers.object_sets import _prop_defs, _query_pg
 
     result = _query_pg(
+        scope=TenantScope(principal.org_id, principal.project_id),
         object_type=object_type,
         filters=list(filters or []),
         page=1,
@@ -474,13 +494,15 @@ def _list_objects_table(
     )
     prop_defs = _prop_defs(object_type)
     kept: list[dict[str, Any]] = []
-    with connect() as conn:
+    with connect(TenantScope(principal.org_id, principal.project_id)) as conn:
         for it in result.get("items") or []:
             oid = str(it.get("id") or "")
             if not oid or not can_access_object(principal, conn, object_type, oid):
                 continue
             if prop_defs:
-                kept.append(apply_field_redaction(principal, dict(it), prop_defs, conn=conn))
+                kept.append(
+                    apply_field_redaction(principal, dict(it), prop_defs, conn=conn)
+                )
             else:
                 kept.append(dict(it))
     columns, rows = _rows_to_table(kept)
@@ -504,18 +526,25 @@ def _get_object_table(
     object_type: str,
     object_id: str,
 ) -> dict[str, Any]:
-    from aos_api.branch_store import effective_object, ensure_overlay_table
+    from aos_api.branch_store import effective_object
     from aos_api.db import connect
     from aos_api.marking import apply_field_redaction, ensure_object_access
     from aos_api.routers.object_sets import _prop_defs
 
     prop_defs = _prop_defs(object_type)
     with connect() as conn:
-        ensure_overlay_table(conn)
         ensure_object_access(principal, conn, object_type, object_id)
-        hit = effective_object(conn, object_type, object_id, None)
+        hit = effective_object(
+            conn,
+            TenantScope(principal.org_id, principal.project_id),
+            object_type,
+            object_id,
+            None,
+        )
         if not hit:
-            raise ApiError(code="NOT_FOUND", message="object not found", status_code=404)
+            raise ApiError(
+                code="NOT_FOUND", message="object not found", status_code=404
+            )
         raw = {"id": object_id, "type": object_type, **(hit.get("props") or {})}
         if prop_defs:
             raw = apply_field_redaction(principal, raw, prop_defs, conn=conn)
@@ -586,14 +615,14 @@ def analytics_ontology_rail(
     datasetLimit: int = Query(default=20, ge=0, le=50),
 ) -> dict[str, Any]:
     """TA.3 · left-rail catalog with insertable code snippets (read-only explore)."""
-    from aos_api.branch_store import effective_objects, ensure_overlay_table
+    from aos_api.branch_store import effective_objects
     from aos_api.db import connect
     from aos_api.marking import can_access_object
 
     object_types: list[dict[str, Any]] = []
     try:
-        with connect() as conn:
-            ensure_overlay_table(conn)
+        scope = TenantScope(principal.org_id, principal.project_id)
+        with connect(scope) as conn:
             rows = conn.execute(
                 "SELECT id, name, description, published FROM meta_object_type ORDER BY id"
             ).fetchall()
@@ -602,9 +631,11 @@ def analytics_ontology_rail(
                 instances: list[dict[str, Any]] = []
                 if instanceLimit > 0:
                     try:
-                        obj_rows = effective_objects(conn, tid, None)
+                        obj_rows = effective_objects(conn, scope, tid, None)
                     except Exception as exc:  # pragma: no cover — table missing edge
-                        log.warning("ontology_rail_instances_skip type=%s err=%s", tid, exc)
+                        log.warning(
+                            "ontology_rail_instances_skip type=%s err=%s", tid, exc
+                        )
                         obj_rows = []
                     for o in obj_rows[:instanceLimit]:
                         oid = str(o.get("object_id") or "")
@@ -681,7 +712,9 @@ def analytics_objects_list(
 ) -> dict[str, Any]:
     """TA.4 · aos.objects.list — read-only ObjectSet sample."""
     if not (body.objectType or "").strip():
-        raise ApiError(code="VALIDATION", message="objectType required", status_code=400)
+        raise ApiError(
+            code="VALIDATION", message="objectType required", status_code=400
+        )
     if len(body.filters) > 10:
         raise ApiError(
             code="VALIDATION",
@@ -721,7 +754,9 @@ def analytics_datasets_preview(
 ) -> dict[str, Any]:
     """TA.4 · aos.datasets.preview — read-only; Dev via objectTypeHint."""
     if not (body.datasetRid or "").strip():
-        raise ApiError(code="VALIDATION", message="datasetRid required", status_code=400)
+        raise ApiError(
+            code="VALIDATION", message="datasetRid required", status_code=400
+        )
     out = _dataset_preview_table(principal, body.datasetRid.strip(), limit=body.limit)
     log.info(
         "analytics_datasets_preview rid=%s total=%s source=%s",
@@ -841,7 +876,9 @@ def analytics_writeback_propose(
     note = (body.analysisNote or "").strip()
     proposed.pop("analysisNote", None)
     if not str(proposed.get("reason") or "").strip():
-        proposed["reason"] = note or f"analytics-writeback:{body.objectType}/{body.objectId}"
+        proposed["reason"] = (
+            note or f"analytics-writeback:{body.objectType}/{body.objectId}"
+        )
 
     ot = body.objectType.strip()
     oid = body.objectId.strip()
@@ -1018,7 +1055,9 @@ def analytics_contour_explore(
     ot = (objectType or "WorkOrder").strip()
     field = (groupBy or "status").strip() or "status"
     if not ot:
-        raise ApiError(code="VALIDATION", message="objectType required", status_code=400)
+        raise ApiError(
+            code="VALIDATION", message="objectType required", status_code=400
+        )
     table = _list_objects_table(principal, ot, limit=limit)
     rows = list(table.get("rows") or [])
     cols_raw = table.get("columns")
@@ -1079,7 +1118,9 @@ def analytics_quiver_series(
     _ = principal
     ot = (objectType or "WorkOrder").strip()
     if not ot:
-        raise ApiError(code="VALIDATION", message="objectType required", status_code=400)
+        raise ApiError(
+            code="VALIDATION", message="objectType required", status_code=400
+        )
     ensure_lineage_schema()
     with connect() as conn:
         rows = conn.execute(
@@ -1095,9 +1136,13 @@ def analytics_quiver_series(
             (ot, int(limitDays)),
         ).fetchall()
     raw_points = [{"t": r["day"], "v": int(r["n"] or 0)} for r in rows]
-    points = _fill_quiver_day_gaps(raw_points, int(limitDays)) if fillGaps else raw_points
+    points = (
+        _fill_quiver_day_gaps(raw_points, int(limitDays)) if fillGaps else raw_points
+    )
     max_v = max((int(p.get("v") or 0) for p in points), default=0)
-    log.info("analytics_quiver type=%s points=%s fillGaps=%s", ot, len(points), fillGaps)
+    log.info(
+        "analytics_quiver type=%s points=%s fillGaps=%s", ot, len(points), fillGaps
+    )
     return {
         "mode": "ta8-quiver-subset",
         "scheme": "159",

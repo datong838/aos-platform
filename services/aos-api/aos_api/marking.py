@@ -1,4 +1,5 @@
 """TX.4 — Marking engine: object/field + inheritance (scheme 52/55)."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,6 +7,7 @@ from typing import Any
 from aos_api.auth import Principal
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.marking")
 
@@ -197,14 +199,16 @@ def instance_required_markings(props: dict[str, Any] | None) -> list[str]:
 
 def effective_markings(
     conn: Any,
+    scope: TenantScope,
     object_type: str,
     object_id: str,
 ) -> list[str]:
     """Type ∪ instance ∪ 1-hop parent (inherits_markings_from) markings."""
     out: set[str] = set(type_required_markings(conn, object_type))
     row = conn.execute(
-        "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s",
-        (object_type, object_id),
+        "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s "
+        "AND org_id=%s AND project_id=%s",
+        (object_type, object_id, *scope.key),
     ).fetchone()
     props = (row["props"] if row else None) or {}
     if not isinstance(props, dict):
@@ -215,14 +219,16 @@ def effective_markings(
         """
         SELECT dst_type, dst_id FROM graph_edge
         WHERE src_type=%s AND src_id=%s AND rel=%s
+          AND org_id=%s AND project_id=%s
         """,
-        (object_type, object_id, INHERIT_REL),
+        (object_type, object_id, INHERIT_REL, *scope.key),
     ).fetchall()
     for p in parents:
         out |= set(type_required_markings(conn, p["dst_type"]))
         prow = conn.execute(
-            "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s",
-            (p["dst_type"], p["dst_id"]),
+            "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s "
+            "AND org_id=%s AND project_id=%s",
+            (p["dst_type"], p["dst_id"], *scope.key),
         ).fetchone()
         pprops = (prow["props"] if prow else None) or {}
         if isinstance(pprops, dict):
@@ -255,7 +261,12 @@ def ensure_object_access(
     """Object-level Marking (JWT ∪ FGA bearer) AND OpenFGA viewer (when tuples)."""
     ensure_markings(
         principal,
-        effective_markings(conn, object_type, object_id),
+        effective_markings(
+            conn,
+            TenantScope(principal.org_id, principal.project_id),
+            object_type,
+            object_id,
+        ),
         conn=conn,
     )
     from aos_api.openfga import ensure_object_viewer
