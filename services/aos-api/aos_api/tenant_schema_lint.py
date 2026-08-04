@@ -5,6 +5,7 @@ from typing import Any
 
 TI1_E1_REVISION = "228ti1e1expand"
 TI1_E2_REVISION = "228ti1e2dual"
+TI1_E3_REVISION = "228ti1e3ledger"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {
@@ -73,7 +74,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         issues.append("TI1_FOREIGN_KEYS_PREMATURELY_VALIDATED")
     if rls_table_count:
         issues.append("RLS_ENABLED_BEFORE_E6")
-    if revision not in {TI1_E1_REVISION, TI1_E2_REVISION}:
+    if revision not in {TI1_E1_REVISION, TI1_E2_REVISION, TI1_E3_REVISION}:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     return {
         "stage": "TI-1-E1",
@@ -137,4 +138,101 @@ def build_ti1_e2_schema_report(conn: Any) -> dict[str, Any]:
         "dualWriteLedgerColumns": sorted(columns),
         "dualWriteLedgerMissingColumns": missing,
         "dualWriteLedgerUnexpectedlyNullableColumns": unexpectedly_nullable,
+    }
+
+
+E3_REQUIRED_COLUMNS = {
+    "tenant_backfill_batch": {
+        "org_id", "project_id", "batch_id", "environment_hash",
+        "source_snapshot_hash", "code_commit", "mode", "status",
+        "created_at", "approved_at", "completed_at",
+    },
+    "tenant_backfill_batch_event": {
+        "org_id", "project_id", "event_id", "batch_id", "status",
+        "evidence_hash", "actor_role", "created_at",
+    },
+    "tenant_ownership_decision": {
+        "org_id", "project_id", "decision_id", "batch_id", "resource",
+        "key_hash", "decision", "evidence_grade", "evidence_hash",
+        "candidate_count", "target_org_id", "target_project_id",
+        "before_hash", "after_hash", "reason_code", "created_at",
+    },
+    "tenant_quarantine_record": {
+        "org_id", "project_id", "quarantine_id", "batch_id", "resource",
+        "key_hash", "reason_code", "candidate_scope_hashes",
+        "source_snapshot_hash", "review_status", "created_at",
+    },
+}
+
+
+def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
+    report = build_ti1_e2_schema_report(conn)
+    issues = [
+        issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
+    ]
+    if report["alembicRevision"] != TI1_E3_REVISION:
+        issues.append("ALEMBIC_REVISION_MISMATCH")
+
+    missing_by_table: dict[str, list[str]] = {}
+    nullable_scope_by_table: dict[str, list[str]] = {}
+    for table, required in E3_REQUIRED_COLUMNS.items():
+        rows = conn.execute(
+            f"""
+            SELECT column_name, is_nullable
+              FROM information_schema.columns
+             WHERE table_schema='public' AND table_name='{table}'
+             ORDER BY ordinal_position
+            """
+        ).fetchall()
+        columns = {
+            str(row["column_name"]): str(row["is_nullable"]) for row in rows
+        }
+        missing = sorted(required - set(columns))
+        if missing:
+            missing_by_table[table] = missing
+        nullable_scope = sorted(
+            name for name in ("org_id", "project_id") if columns.get(name) == "YES"
+        )
+        if nullable_scope:
+            nullable_scope_by_table[table] = nullable_scope
+
+    trigger_rows = conn.execute(
+        """
+        SELECT c.relname AS table_name, t.tgname AS trigger_name
+          FROM pg_trigger t
+          JOIN pg_class c ON c.oid=t.tgrelid
+          JOIN pg_namespace n ON n.oid=c.relnamespace
+         WHERE n.nspname='public' AND NOT t.tgisinternal
+           AND c.relname IN (
+             'tenant_backfill_batch', 'tenant_backfill_batch_event',
+             'tenant_ownership_decision', 'tenant_quarantine_record'
+           )
+         ORDER BY c.relname, t.tgname
+        """
+    ).fetchall()
+    triggers = {
+        (str(row["table_name"]), str(row["trigger_name"])) for row in trigger_rows
+    }
+    expected_triggers = {
+        (table, f"trg_{table}_{suffix}")
+        for table in E3_REQUIRED_COLUMNS
+        for suffix in ("immutable", "truncate_guard")
+    }
+    missing_triggers = sorted(
+        f"{table}.{trigger}" for table, trigger in expected_triggers - triggers
+    )
+    if missing_by_table:
+        issues.append("E3_LEDGER_COLUMNS_MISSING")
+    if nullable_scope_by_table:
+        issues.append("E3_LEDGER_SCOPE_NULLABLE")
+    if missing_triggers:
+        issues.append("E3_APPEND_ONLY_TRIGGERS_MISSING")
+    return {
+        **report,
+        "stage": "TI-1-E3-1",
+        "ok": not issues,
+        "issues": issues,
+        "e3MissingColumnsByTable": missing_by_table,
+        "e3NullableScopeByTable": nullable_scope_by_table,
+        "e3MissingAppendOnlyTriggers": missing_triggers,
     }

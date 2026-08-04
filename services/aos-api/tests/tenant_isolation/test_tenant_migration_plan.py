@@ -48,8 +48,8 @@ def test_ti0e_plan_covers_every_registry_resource_once() -> None:
     ]
 
     assert order["mode"] == "PLAN_ONLY"
-    assert order["resourceCount"] == 94
-    assert len(names) == len(set(names)) == 94
+    assert order["resourceCount"] == 98
+    assert len(names) == len(set(names)) == 98
     assert set(names) == {entry["name"] for entry in registry["resources"]}
 
 
