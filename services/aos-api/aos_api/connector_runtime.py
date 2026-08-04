@@ -3,15 +3,34 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from aos_api.connector_registry import assert_type_installed, list_connector_plugins
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.connector_runtime")
 
 Handler = Callable[..., dict[str, Any]]
+
+
+def _ingest_scope(org_id: str | None, project_id: str | None) -> TenantScope:
+    if org_id is None or project_id is None:
+        raise ApiError(
+            code="TENANT_SCOPE_REQUIRED",
+            message="connector ingest requires org_id and project_id",
+            status_code=400,
+        )
+    try:
+        return TenantScope(org_id=org_id, project_id=project_id)
+    except (TypeError, ValueError) as exc:
+        raise ApiError(
+            code="TENANT_SCOPE_REQUIRED",
+            message=str(exc),
+            status_code=400,
+        ) from None
 
 
 def _rest_url() -> str:
@@ -54,11 +73,15 @@ def _rest_http_get() -> dict[str, Any]:
         )
     try:
         import socket
+        from urllib import request as legacy_urlrequest
         from urllib.parse import urlsplit
 
-        from urllib import request as legacy_urlrequest
-
-        from aos_api.rest_connector import HttpResponse, RestGetEngine, RestRequest, SafeUrlPolicy
+        from aos_api.rest_connector import (
+            HttpResponse,
+            RestGetEngine,
+            RestRequest,
+            SafeUrlPolicy,
+        )
 
         host = urlsplit(url).hostname or ""
         def legacy_resolver(name: str, *args: Any) -> Any:
@@ -141,6 +164,8 @@ def _rest_ingest(
     object_type: str = "WorkOrder",
     limit: int = 100,
     mapping: dict[str, Any] | None = None,
+    org_id: str | None = None,
+    project_id: str | None = None,
     **_: Any,
 ) -> dict[str, Any]:
     """217m — REST sample → upsert obj_instance."""
@@ -148,6 +173,7 @@ def _rest_ingest(
 
     from aos_api.db import connect
 
+    scope = _ingest_scope(org_id, project_id)
     if not rest_configured():
         raise ApiError(
             code="CONNECTOR_STUB",
@@ -167,7 +193,7 @@ def _rest_ingest(
 
     written = 0
     ids: list[str] = []
-    with connect() as conn:
+    with connect(scope) as conn:
         for row in rows:
             oid = str(row.get("id") or row.get("object_id") or f"rest-{uuid.uuid4().hex[:8]}")
             props = {k: v for k, v in row.items() if k not in {"id", "object_id"}}
@@ -175,12 +201,13 @@ def _rest_ingest(
                 props = {mapping.get(k, k): v for k, v in props.items()}
             conn.execute(
                 """
-                INSERT INTO obj_instance (object_type, object_id, props)
-                VALUES (%s,%s,%s::jsonb)
-                ON CONFLICT (object_type, object_id)
+                INSERT INTO obj_instance
+                  (object_type, object_id, props, org_id, project_id)
+                VALUES (%s,%s,%s::jsonb,%s,%s)
+                ON CONFLICT (org_id, project_id, object_type, object_id)
                 DO UPDATE SET props = EXCLUDED.props
                 """,
-                (object_type, oid, json.dumps(props, ensure_ascii=False)),
+                (object_type, oid, json.dumps(props, ensure_ascii=False), *scope.key),
             )
             written += 1
             ids.append(oid)
@@ -193,6 +220,8 @@ def _rest_ingest(
         "objectType": object_type,
         "objectIds": ids,
         "pluginId": "rest-generic",
+        "orgId": scope.org_id,
+        "projectId": scope.project_id,
         "source": {"url": probed.get("url")},
     }
 
@@ -256,8 +285,7 @@ def _mysql_ingest(
         include_all=include_all,
         id_field=id_field,
         auto_create_object_type=auto_create_object_type,
-        org_id=org_id,
-        project_id=project_id,
+        scope=_ingest_scope(org_id, project_id),
     )
 
 
@@ -361,6 +389,8 @@ def _file_local_ingest(
     object_type: str = "WorkOrder",
     limit: int = 100,
     mapping: dict[str, Any] | None = None,
+    org_id: str | None = None,
+    project_id: str | None = None,
     **_: Any,
 ) -> dict[str, Any]:
     """217m — file names → upsert obj_instance."""
@@ -368,6 +398,7 @@ def _file_local_ingest(
 
     from aos_api.db import connect
 
+    scope = _ingest_scope(org_id, project_id)
     if not file_local_configured():
         raise ApiError(
             code="CONNECTOR_STUB",
@@ -383,18 +414,19 @@ def _file_local_ingest(
 
     written = 0
     ids: list[str] = []
-    with connect() as conn:
+    with connect(scope) as conn:
         for name in names:
             oid = f"file-{name}".replace("/", "_")[:64]
             props = {"title": name, "filename": name, "source": "file-local", "status": "open"}
             conn.execute(
                 """
-                INSERT INTO obj_instance (object_type, object_id, props)
-                VALUES (%s,%s,%s::jsonb)
-                ON CONFLICT (object_type, object_id)
+                INSERT INTO obj_instance
+                  (object_type, object_id, props, org_id, project_id)
+                VALUES (%s,%s,%s::jsonb,%s,%s)
+                ON CONFLICT (org_id, project_id, object_type, object_id)
                 DO UPDATE SET props = EXCLUDED.props
                 """,
-                (object_type, oid, json.dumps(props, ensure_ascii=False)),
+                (object_type, oid, json.dumps(props, ensure_ascii=False), *scope.key),
             )
             written += 1
             ids.append(oid)
@@ -407,6 +439,8 @@ def _file_local_ingest(
         "objectType": object_type,
         "objectIds": ids,
         "pluginId": "file-local",
+        "orgId": scope.org_id,
+        "projectId": scope.project_id,
         "source": {"root": probed.get("root")},
     }
 
@@ -493,10 +527,13 @@ def _pg_ingest(
     object_type: str = "WorkOrder",
     limit: int = 100,
     mapping: dict[str, Any] | None = None,
+    org_id: str | None = None,
+    project_id: str | None = None,
     **_: Any,
 ) -> dict[str, Any]:
     from aos_api import pg_connector as pg
 
+    scope = _ingest_scope(org_id, project_id)
     if not pg.configured():
         raise ApiError(
             code="CONNECTOR_STUB",
@@ -504,7 +541,12 @@ def _pg_ingest(
             status_code=501,
             details={"pluginId": "jdbc-postgres", "op": "ingest"},
         )
-    return pg.ingest(object_type=object_type, limit=limit, mapping=mapping)
+    return pg.ingest(
+        object_type=object_type,
+        limit=limit,
+        mapping=mapping,
+        scope=scope,
+    )
 
 
 def _mssql_health(**_: Any) -> dict[str, Any]:
@@ -538,10 +580,13 @@ def _mssql_ingest(
     object_type: str = "WorkOrder",
     limit: int = 100,
     mapping: dict[str, Any] | None = None,
+    org_id: str | None = None,
+    project_id: str | None = None,
     **_: Any,
 ) -> dict[str, Any]:
     from aos_api import mssql_connector as ms
 
+    scope = _ingest_scope(org_id, project_id)
     if not ms.configured():
         raise ApiError(
             code="CONNECTOR_STUB",
@@ -549,7 +594,12 @@ def _mssql_ingest(
             status_code=501,
             details={"pluginId": "jdbc-sqlserver", "op": "ingest"},
         )
-    return ms.ingest(object_type=object_type, limit=limit, mapping=mapping)
+    return ms.ingest(
+        object_type=object_type,
+        limit=limit,
+        mapping=mapping,
+        scope=scope,
+    )
 
 
 # pluginId → op → handler（新增 live 连接器只加表项，不改 Host 路由）

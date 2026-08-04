@@ -24,12 +24,7 @@ TARGET_TABLES = (
     "wiki_page_version",
     "object_lifecycle",
 )
-DEFERRED_TI4_WRITERS = {
-    "connector_runtime.py",
-    "mssql_connector.py",
-    "mysql_connector.py",
-    "pg_connector.py",
-}
+DEFERRED_TI4_WRITERS: set[str] = set()
 
 
 def _ensure_workspace(scope: TenantScope) -> None:

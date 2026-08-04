@@ -8,7 +8,9 @@ from typing import Any
 from urllib.parse import urlparse
 
 from aos_api.env_load import load_dotenv
+from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.pg-connector")
 load_dotenv()
@@ -79,16 +81,15 @@ def probe(*, limit: int = 5, object_type: str = "WorkOrder") -> dict[str, Any]:
                 connect_timeout=5,
             )
         rows: list[dict[str, Any]] = []
-        with conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT 1 AS ok")
-                cur.fetchone()
-                table = (s.get("table") or "").strip()
-                if table and table.replace("_", "").isalnum():
-                    cur.execute(f'SELECT * FROM "{table}" LIMIT %s', (max(1, int(limit)),))
-                    cols = [d.name for d in cur.description] if cur.description else []
-                    for r in cur.fetchall():
-                        rows.append(dict(zip(cols, r, strict=False)))
+        with conn, conn.cursor() as cur:
+            cur.execute("SELECT 1 AS ok")
+            cur.fetchone()
+            table = (s.get("table") or "").strip()
+            if table and table.replace("_", "").isalnum():
+                cur.execute(f'SELECT * FROM "{table}" LIMIT %s', (max(1, int(limit)),))
+                cols = [d.name for d in cur.description] if cur.description else []
+                for r in cur.fetchall():
+                    rows.append(dict(zip(cols, r, strict=False)))
         host_disp = s.get("host") or urlparse(s.get("dsn") or "").hostname or "dsn"
         log.info("pg_probe ok host=%s rows=%s", host_disp, len(rows))
         return {
@@ -158,9 +159,16 @@ def ingest(
     object_type: str = "WorkOrder",
     limit: int = 100,
     mapping: dict[str, str] | None = None,
+    scope: TenantScope | None = None,
 ) -> dict[str, Any]:
     """213m — pull PG rows (or mock) → upsert obj_instance."""
     from aos_api.db import connect
+    if not isinstance(scope, TenantScope):
+        raise ApiError(
+            code="TENANT_SCOPE_REQUIRED",
+            message="postgres ingest requires TenantScope",
+            status_code=400,
+        )
 
     if not configured():
         return {
@@ -174,15 +182,16 @@ def ingest(
     if mock_mode():
         oid = f"mock-pg-{uuid.uuid4().hex[:8]}"
         props = {"title": "PG mock ingest", "status": "open", "source": "jdbc-postgres-mock"}
-        with connect() as conn:
+        with connect(scope) as conn:
             conn.execute(
                 """
-                INSERT INTO obj_instance (object_type, object_id, props)
-                VALUES (%s,%s,%s::jsonb)
-                ON CONFLICT (object_type, object_id)
+                INSERT INTO obj_instance
+                  (object_type, object_id, props, org_id, project_id)
+                VALUES (%s,%s,%s::jsonb,%s,%s)
+                ON CONFLICT (org_id, project_id, object_type, object_id)
                 DO UPDATE SET props = EXCLUDED.props
                 """,
-                (object_type, oid, json.dumps(props, ensure_ascii=False)),
+                (object_type, oid, json.dumps(props, ensure_ascii=False), *scope.key),
             )
             conn.commit()
         log.info("pg_ingest mock written=1 objectType=%s", object_type)
@@ -195,6 +204,8 @@ def ingest(
             "mapping": mapping or DEFAULT_MAPPING,
             "passwordRef": "env:AOS_PG_CONNECTOR_PASSWORD",
             "pluginId": "jdbc-postgres",
+            "orgId": scope.org_id,
+            "projectId": scope.project_id,
             "source": {"mode": "mock"},
         }
 
@@ -204,19 +215,20 @@ def ingest(
 
     written = 0
     ids: list[str] = []
-    with connect() as conn:
+    with connect(scope) as conn:
         for row in probed.get("sample") or []:
             if not isinstance(row, dict):
                 continue
             oid, props = map_row(row, mapping)
             conn.execute(
                 """
-                INSERT INTO obj_instance (object_type, object_id, props)
-                VALUES (%s,%s,%s::jsonb)
-                ON CONFLICT (object_type, object_id)
+                INSERT INTO obj_instance
+                  (object_type, object_id, props, org_id, project_id)
+                VALUES (%s,%s,%s::jsonb,%s,%s)
+                ON CONFLICT (org_id, project_id, object_type, object_id)
                 DO UPDATE SET props = EXCLUDED.props
                 """,
-                (object_type, oid, json.dumps(props, ensure_ascii=False)),
+                (object_type, oid, json.dumps(props, ensure_ascii=False), *scope.key),
             )
             written += 1
             ids.append(oid)
@@ -231,5 +243,7 @@ def ingest(
         "mapping": mapping or DEFAULT_MAPPING,
         "passwordRef": "env:AOS_PG_CONNECTOR_PASSWORD",
         "pluginId": "jdbc-postgres",
+        "orgId": scope.org_id,
+        "projectId": scope.project_id,
         "source": {"host": probed.get("host"), "mode": "live"},
     }

@@ -4,9 +4,8 @@ from __future__ import annotations
 import os
 
 import pytest
-from fastapi.testclient import TestClient
-
 from aos_api import mock_data
+from aos_api.db import connect
 from aos_api.idempotency import idempotency_store
 from aos_api.main import create_app
 from aos_api.membership import reset_membership_store, seed_dev_defaults
@@ -17,10 +16,25 @@ from aos_api.orgs import reset_org_store, seed_dev_orgs
 from aos_api.person_identity import reset_person_store, seed_dev_persons
 from aos_api.provisioning import reset_provisioning_store
 from aos_api.workspaces_catalog import reset_workspace_catalog, seed_dev_workspaces
+from fastapi.testclient import TestClient
+
+
+def _ensure_connector_scope() -> None:
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO twa_org (id,name) VALUES ('dev-org','测试组织') "
+            "ON CONFLICT DO NOTHING"
+        )
+        conn.execute(
+            "INSERT INTO twa_workspace (org_id,project_id,name) "
+            "VALUES ('dev-org','dev-project','测试工作区') ON CONFLICT DO NOTHING"
+        )
+        conn.commit()
 
 
 @pytest.fixture()
 def client():
+    _ensure_connector_scope()
     idempotency_store.clear()
     mock_data.reset_mock_state()
     reset_metrics()

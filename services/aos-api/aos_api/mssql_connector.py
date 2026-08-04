@@ -5,7 +5,9 @@ import os
 from typing import Any
 
 from aos_api.env_load import load_dotenv
+from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.mssql-connector")
 load_dotenv()
@@ -137,12 +139,19 @@ def ingest(
     object_type: str = "WorkOrder",
     limit: int = 100,
     mapping: dict[str, str] | None = None,
+    scope: TenantScope | None = None,
 ) -> dict[str, Any]:
     """216m — mock or live sample → upsert obj_instance."""
     import json
     import uuid
 
     from aos_api.db import connect
+    if not isinstance(scope, TenantScope):
+        raise ApiError(
+            code="TENANT_SCOPE_REQUIRED",
+            message="sqlserver ingest requires TenantScope",
+            status_code=400,
+        )
 
     if not configured():
         return {
@@ -156,15 +165,16 @@ def ingest(
     if mock_mode():
         oid = f"mock-mssql-{uuid.uuid4().hex[:8]}"
         props = {"title": "MSSQL mock ingest", "status": "open", "source": "jdbc-sqlserver-mock"}
-        with connect() as conn:
+        with connect(scope) as conn:
             conn.execute(
                 """
-                INSERT INTO obj_instance (object_type, object_id, props)
-                VALUES (%s,%s,%s::jsonb)
-                ON CONFLICT (object_type, object_id)
+                INSERT INTO obj_instance
+                  (object_type, object_id, props, org_id, project_id)
+                VALUES (%s,%s,%s::jsonb,%s,%s)
+                ON CONFLICT (org_id, project_id, object_type, object_id)
                 DO UPDATE SET props = EXCLUDED.props
                 """,
-                (object_type, oid, json.dumps(props, ensure_ascii=False)),
+                (object_type, oid, json.dumps(props, ensure_ascii=False), *scope.key),
             )
             conn.commit()
         log.info("mssql_ingest mock written=1 objectType=%s", object_type)
@@ -177,6 +187,8 @@ def ingest(
             "mapping": mapping or DEFAULT_MAPPING,
             "passwordRef": "env:AOS_MSSQL_CONNECTOR_PASSWORD",
             "pluginId": "jdbc-sqlserver",
+            "orgId": scope.org_id,
+            "projectId": scope.project_id,
             "source": {"mode": "mock"},
         }
 
@@ -186,19 +198,20 @@ def ingest(
 
     written = 0
     ids: list[str] = []
-    with connect() as conn:
+    with connect(scope) as conn:
         for row in probed.get("sample") or []:
             if not isinstance(row, dict):
                 continue
             oid, props = map_row(row, mapping)
             conn.execute(
                 """
-                INSERT INTO obj_instance (object_type, object_id, props)
-                VALUES (%s,%s,%s::jsonb)
-                ON CONFLICT (object_type, object_id)
+                INSERT INTO obj_instance
+                  (object_type, object_id, props, org_id, project_id)
+                VALUES (%s,%s,%s::jsonb,%s,%s)
+                ON CONFLICT (org_id, project_id, object_type, object_id)
                 DO UPDATE SET props = EXCLUDED.props
                 """,
-                (object_type, oid, json.dumps(props, ensure_ascii=False)),
+                (object_type, oid, json.dumps(props, ensure_ascii=False), *scope.key),
             )
             written += 1
             ids.append(oid)
@@ -213,5 +226,7 @@ def ingest(
         "mapping": mapping or DEFAULT_MAPPING,
         "passwordRef": "env:AOS_MSSQL_CONNECTOR_PASSWORD",
         "pluginId": "jdbc-sqlserver",
+        "orgId": scope.org_id,
+        "projectId": scope.project_id,
         "source": {"host": probed.get("host"), "mode": "live"},
     }

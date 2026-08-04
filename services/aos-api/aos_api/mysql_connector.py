@@ -7,7 +7,9 @@ import subprocess
 from typing import Any
 
 from aos_api.env_load import load_dotenv
+from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.mysql")
 
@@ -290,11 +292,16 @@ def ingest(
     include_all: bool = False,
     id_field: str | None = None,
     auto_create_object_type: bool = False,
-    org_id: str | None = None,
-    project_id: str | None = None,
+    scope: TenantScope | None = None,
 ) -> dict[str, Any]:
     """T4.6 + T4.7: pull MySQL rows → upsert obj_instance."""
     from aos_api.db import connect
+    if not isinstance(scope, TenantScope):
+        raise ApiError(
+            code="TENANT_SCOPE_REQUIRED",
+            message="mysql ingest requires TenantScope",
+            status_code=400,
+        )
 
     if disabled():
         return {"ok": False, "mode": "disabled", "written": 0}
@@ -322,21 +329,25 @@ def ingest(
 
     written = 0
     ids: list[str] = []
-    with connect() as conn:
+    with connect(scope) as conn:
         for row in probed.get("sample") or []:
             oid, props = map_row(row, mapping, include_all=include_all, id_field=id_field)
-            if org_id:
-                props["_aosOrgId"] = org_id
-            if project_id:
-                props["_aosProjectId"] = project_id
+            props["_aosOrgId"] = scope.org_id
+            props["_aosProjectId"] = scope.project_id
             conn.execute(
                 """
-                INSERT INTO obj_instance (object_type, object_id, props)
-                VALUES (%s,%s,%s::jsonb)
-                ON CONFLICT (object_type, object_id)
+                INSERT INTO obj_instance
+                  (object_type, object_id, props, org_id, project_id)
+                VALUES (%s,%s,%s::jsonb,%s,%s)
+                ON CONFLICT (org_id, project_id, object_type, object_id)
                 DO UPDATE SET props = EXCLUDED.props
                 """,
-                (object_type, oid, json.dumps(props, ensure_ascii=False, default=str)),
+                (
+                    object_type,
+                    oid,
+                    json.dumps(props, ensure_ascii=False, default=str),
+                    *scope.key,
+                ),
             )
             written += 1
             ids.append(oid)
@@ -355,8 +366,8 @@ def ingest(
         "idField": id_field,
         "autoCreateObjectType": auto_create_object_type,
         "objectTypeCreated": ot_created,
-        "orgId": org_id,
-        "projectId": project_id,
+        "orgId": scope.org_id,
+        "projectId": scope.project_id,
         "passwordRef": "env:AOS_MYSQL_PASSWORD",
         "source": {
             "host": probed.get("host"),
