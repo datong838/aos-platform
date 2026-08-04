@@ -25,6 +25,7 @@ from aos_api.auth import Principal, require_principal
 from aos_api.db import connect
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(tags=["wave3-plus"])
 log = get_logger("aos-api.wave3_plus")
@@ -1967,7 +1968,9 @@ def insight_backfill(body: dict[str, Any], principal: Principal = Depends(requir
     if body.get("createdAt"):
         insight["createdAt"] = str(body["createdAt"])
         insight["lastRefAt"] = str(body.get("lastRefAt") or body["createdAt"])
-    stored = ttl_job.upsert_insight(insight)
+    stored = ttl_job.upsert_insight(
+        TenantScope(principal.org_id, principal.project_id), insight
+    )
     log.info("insight_backfill id=%s", stored["id"])
     return stored
 
@@ -1980,7 +1983,9 @@ def list_insights(
     _ = principal
     from aos_api import ttl_job
 
-    items = ttl_job.list_insights(status=status)
+    items = ttl_job.list_insights(
+        TenantScope(principal.org_id, principal.project_id), status=status
+    )
     return {"items": items}
 
 

@@ -750,7 +750,7 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
     orphan_n = int(orphans["c"])
     from aos_api import ttl_job
 
-    ttl_snap = ttl_job.status_snapshot()
+    ttl_snap = ttl_job.status_snapshot(_scope(principal))
     metrics = {
         "objectTypes": int(types["c"]),
         "instances": int(objs["c"]),

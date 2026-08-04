@@ -1,12 +1,14 @@
 """184m — TTL / forget archive jobs (lifecycle soft-archive)."""
+
 from __future__ import annotations
 
 import json
 import os
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.retention")
 
@@ -87,7 +89,7 @@ def _props_dict(props: Any) -> dict[str, Any]:
     return {}
 
 
-def list_candidates(*, limit: int = 200) -> list[dict[str, Any]]:
+def list_candidates(scope: TenantScope, *, limit: int = 200) -> list[dict[str, Any]]:
     """Objects eligible for archive by TTL / Insight heuristic."""
     from aos_api.db import connect
 
@@ -95,20 +97,26 @@ def list_candidates(*, limit: int = 200) -> list[dict[str, Any]]:
     ttl = ttl_days_default()
     cutoff = datetime.now(timezone.utc) - timedelta(days=ttl)
     out: list[dict[str, Any]] = []
-    with connect() as conn:
+    with connect(scope) as conn:
         rows = conn.execute(
             """
             SELECT o.object_type, o.object_id, o.props, t.created_at AS type_created
             FROM obj_instance o
             LEFT JOIN meta_object_type t ON t.id = o.object_type
+            WHERE o.org_id=%s AND o.project_id=%s
             ORDER BY o.object_type, o.object_id
             LIMIT 5000
-            """
+            """,
+            scope.key,
         ).fetchall()
         existing = {
             (r["object_type"], r["object_id"]): r["status"]
             for r in conn.execute(
-                "SELECT object_type, object_id, status FROM object_lifecycle"
+                """
+                SELECT object_type, object_id, status FROM object_lifecycle
+                WHERE org_id=%s AND project_id=%s
+                """,
+                scope.key,
             ).fetchall()
         }
     for r in rows:
@@ -117,7 +125,9 @@ def list_candidates(*, limit: int = 200) -> list[dict[str, Any]]:
         if st in {"archived", "forgotten"}:
             continue
         props = _props_dict(r["props"])
-        life = props.get("lifecycle") if isinstance(props.get("lifecycle"), dict) else {}
+        life = (
+            props.get("lifecycle") if isinstance(props.get("lifecycle"), dict) else {}
+        )
         obj_ttl = life.get("ttlDays")
         try:
             use_ttl = int(obj_ttl) if obj_ttl is not None else ttl
@@ -160,6 +170,7 @@ def list_candidates(*, limit: int = 200) -> list[dict[str, Any]]:
 def archive_one(
     conn,
     *,
+    scope: TenantScope,
     object_type: str,
     object_id: str,
     reason: str,
@@ -169,17 +180,21 @@ def archive_one(
     if status == "forgotten" and object_type in FORGET_DENY:
         raise ValueError(f"forgotten forbidden for core type {object_type}")
     now = datetime.now(timezone.utc)
-    conn.execute(
+    result = conn.execute(
         """
         INSERT INTO object_lifecycle (
-          object_type, object_id, status, reason, archived_at, ttl_days, meta
-        ) VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb)
+          object_type, object_id, status, reason, archived_at, ttl_days,
+          org_id, project_id, meta
+        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb)
         ON CONFLICT (object_type, object_id) DO UPDATE SET
           status=EXCLUDED.status,
           reason=EXCLUDED.reason,
           archived_at=EXCLUDED.archived_at,
           ttl_days=EXCLUDED.ttl_days,
           meta=EXCLUDED.meta
+        WHERE object_lifecycle.org_id=EXCLUDED.org_id
+          AND object_lifecycle.project_id=EXCLUDED.project_id
+        RETURNING object_type
         """,
         (
             object_type,
@@ -188,17 +203,23 @@ def archive_one(
             reason,
             now,
             ttl,
+            scope.org_id,
+            scope.project_id,
             json.dumps({"source": "184m"}),
         ),
     )
+    if result.fetchone() is None:
+        raise RuntimeError("lifecycle key belongs to another tenant scope")
 
 
-def run_retention(*, force_dry: bool | None = None) -> dict[str, Any]:
+def run_retention(
+    scope: TenantScope, *, force_dry: bool | None = None
+) -> dict[str, Any]:
     from aos_api.db import connect
 
     ensure_lifecycle_schema()
     is_dry = dry_run() if force_dry is None else force_dry
-    cands = list_candidates()
+    cands = list_candidates(scope)
     archived = 0
     skipped = 0
     errors: list[str] = []
@@ -210,11 +231,12 @@ def run_retention(*, force_dry: bool | None = None) -> dict[str, Any]:
             "archived": 0,
             "items": cands[:50],
         }
-    with connect() as conn:
+    with connect(scope) as conn:
         for c in cands:
             try:
                 archive_one(
                     conn,
+                    scope=scope,
                     object_type=c["objectType"],
                     object_id=c["objectId"],
                     reason=c["reason"],
@@ -226,7 +248,9 @@ def run_retention(*, force_dry: bool | None = None) -> dict[str, Any]:
                 skipped += 1
                 errors.append(f"{c['objectType']}/{c['objectId']}:{exc}")
         conn.commit()
-    log.info("retention_run archived=%s candidates=%s dry=%s", archived, len(cands), is_dry)
+    log.info(
+        "retention_run archived=%s candidates=%s dry=%s", archived, len(cands), is_dry
+    )
     return {
         "ok": True,
         "dryRun": False,
@@ -237,14 +261,18 @@ def run_retention(*, force_dry: bool | None = None) -> dict[str, Any]:
     }
 
 
-def count_archived() -> int:
+def count_archived(scope: TenantScope) -> int:
     from aos_api.db import connect
 
     try:
         ensure_lifecycle_schema()
-        with connect() as conn:
+        with connect(scope) as conn:
             row = conn.execute(
-                "SELECT COUNT(*) AS c FROM object_lifecycle WHERE status='archived'"
+                """
+                SELECT COUNT(*) AS c FROM object_lifecycle
+                WHERE status='archived' AND org_id=%s AND project_id=%s
+                """,
+                scope.key,
             ).fetchone()
             return int(row["c"] if row else 0)
     except Exception as exc:
@@ -252,9 +280,9 @@ def count_archived() -> int:
         return 0
 
 
-def count_active_candidates() -> int:
+def count_active_candidates(scope: TenantScope) -> int:
     try:
-        return len(list_candidates(limit=500))
+        return len(list_candidates(scope, limit=500))
     except Exception as exc:
         log.warning("retention_candidates_skip err=%s", exc)
         return 0

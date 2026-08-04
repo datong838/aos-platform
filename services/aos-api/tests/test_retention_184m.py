@@ -1,19 +1,19 @@
 """184m — Insight TTL archive + retention job."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
-from fastapi.testclient import TestClient
-
+from aos_api import mock_data, ttl_job
 from aos_api.db import connect, init_schema
 from aos_api.idempotency import idempotency_store
 from aos_api.main import create_app
 from aos_api.metrics import reset_metrics
 from aos_api.oidc import issue_dev_token
-from aos_api import mock_data
-from aos_api import ttl_job
 from aos_api.retention_jobs import FORGET_DENY, archive_one, ensure_lifecycle_schema
+from aos_api.tenant_scope import TenantScope
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture()
@@ -75,6 +75,7 @@ def test_forget_denied_for_core_types():
         with pytest.raises(ValueError):
             archive_one(
                 conn,
+                scope=TenantScope("dev-org", "dev-project"),
                 object_type="WorkOrder",
                 object_id="wo-x",
                 reason="test",

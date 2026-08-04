@@ -115,14 +115,15 @@ def apply_draft_approval(
                         principal.project_id,
                     ),
                 )
-            conn.execute(
+            wiki_result = conn.execute(
                 """
                 INSERT INTO wiki_page (object_type, object_id, body, org_id, project_id)
                 VALUES (%s,%s,%s::jsonb,%s,%s)
                 ON CONFLICT (object_type, object_id)
-                DO UPDATE SET body = EXCLUDED.body,
-                  org_id = EXCLUDED.org_id,
-                  project_id = EXCLUDED.project_id
+                DO UPDATE SET body = EXCLUDED.body
+                WHERE wiki_page.org_id = EXCLUDED.org_id
+                  AND wiki_page.project_id = EXCLUDED.project_id
+                RETURNING object_type
                 """,
                 (
                     object_type,
@@ -132,6 +133,12 @@ def apply_draft_approval(
                     principal.project_id,
                 ),
             )
+            if wiki_result.fetchone() is None:
+                raise ApiError(
+                    code="TENANT_KEY_CONFLICT",
+                    message="wiki key belongs to another tenant scope",
+                    status_code=409,
+                )
             wiki_written = True
         elif action_type_id == "UpdateWikiCard":
             raise ApiError(
@@ -149,8 +156,12 @@ def apply_draft_approval(
             ensure_field_writes(principal, proposed, props, conn=conn)
 
         existing = conn.execute(
-            "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s",
-            (object_type, object_id),
+            """
+            SELECT props FROM obj_instance
+            WHERE object_type=%s AND object_id=%s
+              AND org_id=%s AND project_id=%s
+            """,
+            (object_type, object_id, principal.org_id, principal.project_id),
         ).fetchone()
         base = dict(existing["props"]) if existing else {}
         conflicts = [
@@ -171,23 +182,45 @@ def apply_draft_approval(
                         """
                         UPDATE obj_instance SET props=%s::jsonb
                         WHERE object_type=%s AND object_id=%s
+                          AND org_id=%s AND project_id=%s
                         """,
-                        (json.dumps(merged), object_type, object_id),
+                        (
+                            json.dumps(merged),
+                            object_type,
+                            object_id,
+                            principal.org_id,
+                            principal.project_id,
+                        ),
                     )
             else:
-                conn.execute(
+                object_result = conn.execute(
                     """
-                    INSERT INTO obj_instance (object_type, object_id, props)
-                    VALUES (%s,%s,%s::jsonb)
+                    INSERT INTO obj_instance
+                      (object_type, object_id, props, org_id, project_id)
+                    VALUES (%s,%s,%s::jsonb,%s,%s)
+                    ON CONFLICT (object_type, object_id) DO NOTHING
+                    RETURNING object_type
                     """,
-                    (object_type, object_id, json.dumps(merged)),
+                    (
+                        object_type,
+                        object_id,
+                        json.dumps(merged),
+                        principal.org_id,
+                        principal.project_id,
+                    ),
                 )
+                if object_result.fetchone() is None:
+                    raise ApiError(
+                        code="TENANT_KEY_CONFLICT",
+                        message="object key belongs to another tenant scope",
+                        status_code=409,
+                    )
         conn.execute(
             """
             UPDATE draft_dataset SET status='approved', updated_at=NOW()
-            WHERE id=%s
+            WHERE id=%s AND org_id=%s AND project_id=%s
             """,
-            (draft_id,),
+            (draft_id, principal.org_id, principal.project_id),
         )
         lineage_id = f"lin-{draft_id}"
         steps = [
