@@ -29,6 +29,9 @@ build-backend = "setuptools.build_meta"
 where = ["."]
 include = ["aos_api*"]
 
+[tool.setuptools.package-data]
+aos_api = ["*.json", "*.yaml"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
