@@ -55,6 +55,7 @@ def test_schema_lint_confirms_runtime_role_and_eleven_policies() -> None:
         "228ti3e4validate",
         "228ti3e6rls",
         "228ti3e7contract",
+        "228ti4c1expand",
     }
     assert report["ti2RuntimeRoleSafe"] is True
     assert report["ti2RlsTableCount"] == 11

@@ -15,6 +15,7 @@ TI3_E1_REVISION = "228ti3e1expand"
 TI3_E4_REVISION = "228ti3e4validate"
 TI3_E6_REVISION = "228ti3e6rls"
 TI3_E7_REVISION = "228ti3e7contract"
+TI4_C1_REVISION = "228ti4c1expand"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {
@@ -88,6 +89,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E4_REVISION,
         TI3_E6_REVISION,
         TI3_E7_REVISION,
+        TI4_C1_REVISION,
     }:
         issues.append("RLS_ENABLED_BEFORE_E6")
     if revision not in {
@@ -103,6 +105,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E4_REVISION,
         TI3_E6_REVISION,
         TI3_E7_REVISION,
+        TI4_C1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     return {
@@ -214,6 +217,7 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E4_REVISION,
         TI3_E6_REVISION,
         TI3_E7_REVISION,
+        TI4_C1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -333,6 +337,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E4_REVISION,
         TI3_E6_REVISION,
         TI3_E7_REVISION,
+        TI4_C1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -420,6 +425,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E4_REVISION,
         TI3_E6_REVISION,
         TI3_E7_REVISION,
+        TI4_C1_REVISION,
     }:
         issues.append("TI2_EXPAND_COLUMNS_NOT_NULLABLE")
     if missing_tables:
@@ -445,6 +451,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
                 TI3_E4_REVISION,
                 TI3_E6_REVISION,
                 TI3_E7_REVISION,
+                TI4_C1_REVISION,
             }
             else non_nullable_columns
         ),
@@ -468,6 +475,7 @@ def build_ti2_e4_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E4_REVISION,
         TI3_E6_REVISION,
         TI3_E7_REVISION,
+        TI4_C1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     rows = conn.execute(
@@ -519,6 +527,7 @@ def build_ti2_e6_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E4_REVISION,
         TI3_E6_REVISION,
         TI3_E7_REVISION,
+        TI4_C1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -619,6 +628,7 @@ def build_ti2_e7_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E4_REVISION,
         TI3_E6_REVISION,
         TI3_E7_REVISION,
+        TI4_C1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -723,6 +733,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E4_REVISION,
         TI3_E6_REVISION,
         TI3_E7_REVISION,
+        TI4_C1_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -752,7 +763,10 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
     )
     if missing_columns:
         issues.append("TI3_TENANT_COLUMNS_MISSING")
-    if expand_not_nullable and report["alembicRevision"] != TI3_E7_REVISION:
+    if expand_not_nullable and report["alembicRevision"] not in {
+        TI3_E7_REVISION,
+        TI4_C1_REVISION,
+    }:
         issues.append("TI3_EXPAND_COLUMNS_NOT_NULLABLE")
     if templates_with_scope:
         issues.append("TI3_TEMPLATE_SCOPE_DRIFT")
@@ -787,7 +801,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         "ti3MissingTenantColumns": missing_columns,
         "ti3ExpandColumnsNotNullable": (
             []
-            if report["alembicRevision"] == TI3_E7_REVISION
+            if report["alembicRevision"] in {TI3_E7_REVISION, TI4_C1_REVISION}
             else expand_not_nullable
         ),
         "ti3TemplatesWithTenantScope": templates_with_scope,
@@ -801,7 +815,11 @@ def build_ti3_e6_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] not in {TI3_E6_REVISION, TI3_E7_REVISION}:
+    if report["alembicRevision"] not in {
+        TI3_E6_REVISION,
+        TI3_E7_REVISION,
+        TI4_C1_REVISION,
+    }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     role = conn.execute(
@@ -898,7 +916,7 @@ def build_ti3_e7_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] != TI3_E7_REVISION:
+    if report["alembicRevision"] not in {TI3_E7_REVISION, TI4_C1_REVISION}:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     pk_rows = conn.execute(
@@ -998,4 +1016,105 @@ def build_ti3_e7_schema_report(conn: Any) -> dict[str, Any]:
         "ti3ActiveNullScopeCount": active_null_count,
         "ti3RuntimeQuarantineAccess": runtime_quarantine_access,
         "ti3QuarantineGuardTriggerCount": quarantine_trigger_count,
+    }
+
+
+TI4_C1_PRIMARY_KEYS = {
+    "ecom_ingest_receipt": (
+        "PRIMARY KEY (org_id, workspace_id, platform, shop_or_marketplace_id, "
+        "stream, idempotency_key)"
+    ),
+    "ecom_link": (
+        "PRIMARY KEY (org_id, workspace_id, link_type, source_platform, "
+        "source_shop_or_marketplace_id, source_object_type, source_external_id, "
+        "target_platform, target_shop_or_marketplace_id, target_object_type, "
+        "target_external_id)"
+    ),
+    "ecom_object": (
+        "PRIMARY KEY (org_id, workspace_id, platform, shop_or_marketplace_id, "
+        "object_type, external_id)"
+    ),
+    "ecom_sync_checkpoint": (
+        "PRIMARY KEY (org_id, workspace_id, platform, shop_or_marketplace_id, stream)"
+    ),
+    "oauth_token_store": (
+        "PRIMARY KEY (org_id, workspace_id, platform, external_account_id)"
+    ),
+}
+
+
+def build_ti4_c1_schema_report(conn: Any) -> dict[str, Any]:
+    report = build_ti3_e7_schema_report(conn)
+    issues = [
+        issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
+    ]
+    if report["alembicRevision"] != TI4_C1_REVISION:
+        issues.append("ALEMBIC_REVISION_MISMATCH")
+
+    pk_rows = conn.execute(
+        "SELECT conrelid::regclass::text AS table_name, "
+        "pg_get_constraintdef(oid) AS definition FROM pg_constraint "
+        "WHERE contype='p' AND conrelid::regclass::text = ANY(%s)",
+        (sorted(TI4_C1_PRIMARY_KEYS),),
+    ).fetchall()
+    primary_keys = {
+        str(row["table_name"]): str(row["definition"]) for row in pk_rows
+    }
+    invalid_primary_keys = sorted(
+        table
+        for table, expected in TI4_C1_PRIMARY_KEYS.items()
+        if primary_keys.get(table) != expected
+    )
+    if invalid_primary_keys:
+        issues.append("TI4_ECOM_PRIMARY_KEY_INVALID")
+
+    nullable_rows = conn.execute(
+        "SELECT table_name, column_name FROM information_schema.columns "
+        "WHERE table_schema='public' AND table_name = ANY(%s) "
+        "AND column_name IN ('org_id','workspace_id') AND is_nullable='YES'",
+        (sorted(TI4_C1_PRIMARY_KEYS),),
+    ).fetchall()
+    nullable_scope = sorted(
+        f"{row['table_name']}.{row['column_name']}" for row in nullable_rows
+    )
+    if nullable_scope:
+        issues.append("TI4_ECOM_SCOPE_NULLABLE")
+
+    fk_rows = conn.execute(
+        "SELECT conrelid::regclass::text AS table_name, conname, convalidated, "
+        "pg_get_constraintdef(oid) AS definition FROM pg_constraint "
+        "WHERE conname = ANY(%s)",
+        ([f"fk_{table}_workspace_ti4" for table in sorted(TI4_C1_PRIMARY_KEYS)],),
+    ).fetchall()
+    foreign_keys = {str(row["table_name"]): row for row in fk_rows}
+    expected_fk = (
+        "FOREIGN KEY (org_id, workspace_id) "
+        "REFERENCES twa_workspace(org_id, project_id) NOT VALID"
+    )
+    invalid_foreign_keys = sorted(
+        table
+        for table in TI4_C1_PRIMARY_KEYS
+        if table not in foreign_keys
+        or foreign_keys[table]["definition"] != expected_fk
+    )
+    prematurely_validated = sorted(
+        table
+        for table, row in foreign_keys.items()
+        if bool(row["convalidated"])
+    )
+    if invalid_foreign_keys:
+        issues.append("TI4_ECOM_WORKSPACE_FOREIGN_KEY_INVALID")
+    if prematurely_validated:
+        issues.append("TI4_ECOM_WORKSPACE_FOREIGN_KEY_PREMATURELY_VALIDATED")
+
+    return {
+        **report,
+        "stage": "TI-4-C1",
+        "ok": not issues,
+        "issues": issues,
+        "ti4EcomInvalidPrimaryKeys": invalid_primary_keys,
+        "ti4EcomNullableScopeColumns": nullable_scope,
+        "ti4EcomInvalidWorkspaceForeignKeys": invalid_foreign_keys,
+        "ti4EcomPrematurelyValidatedForeignKeys": prematurely_validated,
+        "ti4EcomWorkspaceForeignKeyCount": len(foreign_keys),
     }

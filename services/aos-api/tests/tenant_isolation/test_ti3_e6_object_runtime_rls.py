@@ -95,7 +95,11 @@ def test_schema_lint_confirms_nine_policies_and_safe_role() -> None:
         report = build_ti3_e6_schema_report(conn)
 
     assert report["ok"] is True, report
-    assert report["alembicRevision"] in {"228ti3e6rls", "228ti3e7contract"}
+    assert report["alembicRevision"] in {
+        "228ti3e6rls",
+        "228ti3e7contract",
+        "228ti4c1expand",
+    }
     assert report["ti3RuntimeRoleSafe"] is True
     assert report["ti3RlsTableCount"] == 9
     assert report["ti3RlsMissingTables"] == []
