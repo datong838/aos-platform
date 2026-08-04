@@ -3,6 +3,7 @@ from __future__ import annotations
 from aos_api.tenant_schema_lint import (
     EXPECTED_FOREIGN_KEYS,
     build_ti1_e1_schema_report,
+    build_ti1_e2_schema_report,
 )
 
 
@@ -19,11 +20,41 @@ class Result:
 
 
 class FakeConnection:
-    def __init__(self, *, validated: bool = False, rls_count: int = 0) -> None:
+    def __init__(
+        self,
+        *,
+        validated: bool = False,
+        rls_count: int = 0,
+        revision: str = "228ti1e1expand",
+    ) -> None:
         self.validated = validated
         self.rls_count = rls_count
+        self.revision = revision
 
     def execute(self, query: str):
+        if "tenant_dual_write_ledger" in query:
+            nullable = {"observed_org_id", "observed_project_id"}
+            names = {
+                "org_id",
+                "project_id",
+                "ledger_id",
+                "resource",
+                "operation",
+                "key_hash",
+                "observed_org_id",
+                "observed_project_id",
+                "status",
+                "created_at",
+            }
+            return Result(
+                rows=[
+                    {
+                        "column_name": name,
+                        "is_nullable": "YES" if name in nullable else "NO",
+                    }
+                    for name in sorted(names)
+                ]
+            )
         if "information_schema.columns" in query:
             return Result(
                 rows=[
@@ -40,7 +71,7 @@ class FakeConnection:
             )
         if "pg_class" in query:
             return Result(row={"count": self.rls_count})
-        return Result(row={"version_num": "228ti1e1expand"})
+        return Result(row={"version_num": self.revision})
 
 
 def test_ti1_e1_schema_lint_accepts_expand_without_rls() -> None:
@@ -60,3 +91,14 @@ def test_ti1_e1_schema_lint_fails_on_early_validate_or_rls() -> None:
     assert report["ok"] is False
     assert "TI1_FOREIGN_KEYS_PREMATURELY_VALIDATED" in report["issues"]
     assert "RLS_ENABLED_BEFORE_E6" in report["issues"]
+
+
+def test_ti1_e2_schema_lint_accepts_redacted_ledger() -> None:
+    report = build_ti1_e2_schema_report(
+        FakeConnection(revision="228ti1e2dual")
+    )
+
+    assert report["ok"] is True
+    assert report["stage"] == "TI-1-E2"
+    assert report["dualWriteLedgerMissingColumns"] == []
+    assert report["dualWriteLedgerUnexpectedlyNullableColumns"] == []

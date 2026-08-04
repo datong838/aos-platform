@@ -290,16 +290,74 @@ def check(conn: Any, user: str, relation: str, obj: str) -> bool:
     return check_local(conn, user, relation, obj)
 
 
-def write_tuple(conn: Any, user: str, relation: str, obj: str) -> None:
+def write_tuple(
+    conn: Any,
+    user: str,
+    relation: str,
+    obj: str,
+    *,
+    scope=None,
+    dual_write_mode=None,
+) -> None:
     validate_relation(relation)
-    conn.execute(
-        """
-        INSERT INTO authz_tuple (user_key, relation, object_key)
-        VALUES (%s, %s, %s)
-        ON CONFLICT DO NOTHING
-        """,
-        (user, relation, obj),
+    from aos_api.tenant_dual_write import (
+        DualWriteMode,
+        authz_dual_write_mode,
+        record_dual_write_evidence,
+        stable_key_hash,
     )
+
+    mode = authz_dual_write_mode(dual_write_mode)
+    if mode is DualWriteMode.OFF or scope is None:
+        conn.execute(
+            """
+            INSERT INTO authz_tuple (user_key, relation, object_key)
+            VALUES (%s, %s, %s)
+            ON CONFLICT DO NOTHING
+            """,
+            (user, relation, obj),
+        )
+    else:
+        conn.execute(
+            """
+            INSERT INTO authz_tuple (
+              user_key, relation, object_key, org_id, project_id
+            ) VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT DO NOTHING
+            """,
+            (user, relation, obj, scope.org_id, scope.project_id),
+        )
+        row = conn.execute(
+            """
+            SELECT org_id, project_id
+              FROM authz_tuple
+             WHERE user_key=%s AND relation=%s AND object_key=%s
+            """,
+            (user, relation, obj),
+        ).fetchone()
+        observed_scope = None
+        if row and row.get("org_id") is not None and row.get("project_id") is not None:
+            from aos_api.tenant_scope import TenantScope
+
+            observed_scope = TenantScope(
+                org_id=str(row["org_id"]), project_id=str(row["project_id"])
+            )
+        status = "MATCH" if observed_scope == scope else "MISMATCH"
+        record_dual_write_evidence(
+            conn,
+            scope=scope,
+            resource="authz_tuple",
+            operation="INSERT",
+            key_hash=stable_key_hash(user, relation, obj),
+            status=status,
+            observed_scope=observed_scope,
+        )
+        if status == "MISMATCH" and mode is DualWriteMode.ENFORCE:
+            raise ApiError(
+                code="TENANT_DUAL_WRITE_CONFLICT",
+                message="tenant dual-write conflict",
+                status_code=409,
+            )
     if openfga_api_url():
         ok = write_tuple_remote(user, relation, obj)
         if not ok and openfga_strict():

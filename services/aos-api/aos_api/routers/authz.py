@@ -6,10 +6,11 @@ from typing import Any
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
+from aos_api import openfga as fga
 from aos_api.auth import Principal, require_principal
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
-from aos_api import openfga as fga
+from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(tags=["authz"])
 log = get_logger("aos-api.authz")
@@ -71,8 +72,9 @@ def authz_write_tuple(
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     user = body.user or fga.user_key(principal.subject)
-    with connect() as conn:
-        fga.write_tuple(conn, user, body.relation, body.object)
+    scope = TenantScope(org_id=principal.org_id, project_id=principal.project_id)
+    with connect(scope) as conn:
+        fga.write_tuple(conn, user, body.relation, body.object, scope=scope)
         conn.commit()
     log.info(
         "authz_tuple_written by=%s user=%s rel=%s obj=%s",

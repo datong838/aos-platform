@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 from aos_api.db import connect
-from aos_api.tenant_schema_lint import build_ti1_e1_schema_report
+from aos_api.tenant_schema_lint import build_ti1_e2_schema_report
 
 
 def main() -> int:
@@ -15,7 +15,7 @@ def main() -> int:
     args = parser.parse_args()
     with connect() as conn:
         conn.execute("SET TRANSACTION READ ONLY")
-        report = build_ti1_e1_schema_report(conn)
+        report = build_ti1_e2_schema_report(conn)
     encoded = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
