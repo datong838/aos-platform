@@ -41,6 +41,16 @@ def test_plan_apply_verify_and_rollback_are_lossless(client) -> None:
             "VALUES ('dev-org', 'dev-project', '默认工作区') "
             "ON CONFLICT (org_id, project_id) DO NOTHING"
         )
+        parent = conn.execute(
+            "SELECT id, org_id, project_id FROM meta_module ORDER BY id LIMIT 1"
+        ).fetchone()
+        assert parent is not None
+        child_id = f"e3-child-{uuid.uuid4().hex}"
+        conn.execute(
+            "INSERT INTO module_events (id, module_id, name, org_id, project_id) "
+            "VALUES (%s,%s,'linked',%s,%s)",
+            (child_id, parent["id"], parent["org_id"], parent["project_id"]),
+        )
         before_counts = _identity_counts(conn)
         plan = build_plan(conn, code_commit="472728e", batch_label=label)
         replay = build_plan(conn, code_commit="472728e", batch_label=label)

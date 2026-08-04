@@ -401,9 +401,10 @@ def rollback_plan(conn: Any, *, batch_id: str, executor_actor_hash: str) -> dict
     events = conn.execute(
         """
         SELECT resource, key_hash, before_hash, after_hash
-          FROM tenant_ownership_decision_event
+         FROM tenant_ownership_decision_event
          WHERE org_id=%s AND project_id=%s AND batch_id=%s AND event_type='APPLIED'
-         ORDER BY resource, key_hash
+         ORDER BY CASE WHEN resource='meta_module' THEN 1 ELSE 0 END,
+                  resource, key_hash
         """,
         (owner_org, owner_project, batch_id),
     ).fetchall()
