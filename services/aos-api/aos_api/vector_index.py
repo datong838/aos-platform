@@ -10,6 +10,7 @@ from typing import Any
 from aos_api.aip_kv_store import get_payload, put_payload
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.vector_index")
 
@@ -162,7 +163,7 @@ def _normalize_documents(raw: Any) -> list[dict[str, Any]]:
     return out
 
 
-def _sample_workorder_docs(limit: int = 8) -> list[dict[str, Any]]:
+def _sample_workorder_docs(scope: TenantScope, limit: int = 8) -> list[dict[str, Any]]:
     """Best-effort sample from PG ObjectSet; fallback mock."""
     items: list[dict[str, Any]] = []
     try:
@@ -172,9 +173,10 @@ def _sample_workorder_docs(limit: int = 8) -> list[dict[str, Any]]:
             rows = conn.execute(
                 """
                 SELECT object_id, props FROM obj_instance
-                WHERE object_type=%s ORDER BY object_id LIMIT %s
+                WHERE object_type=%s AND org_id=%s AND project_id=%s
+                ORDER BY object_id LIMIT %s
                 """,
-                ("WorkOrder", limit),
+                ("WorkOrder", *scope.key, limit),
             ).fetchall()
         for r in rows:
             props = r["props"] if isinstance(r["props"], dict) else {}
@@ -209,12 +211,19 @@ def upsert(
     replace: bool = False,
     pipeline_id: str | None = None,
     auto_sample: bool = False,
+    scope: TenantScope | None = None,
 ) -> dict[str, Any]:
     from aos_api.embedding_runtime import dispatch_embed
 
     docs = list(documents or [])
     if not docs and auto_sample:
-        docs = _sample_workorder_docs()
+        if scope is None:
+            raise ApiError(
+                code="TENANT_SCOPE_REQUIRED",
+                message="Tenant scope required for ObjectSet autoSample",
+                status_code=400,
+            )
+        docs = _sample_workorder_docs(scope)
     if not docs:
         raise ApiError(
             code="VALIDATION",
@@ -365,6 +374,7 @@ def embed_pipeline(
     payload: dict[str, Any] | None,
     *,
     pipelines: dict[str, dict[str, Any]],
+    scope: TenantScope,
 ) -> dict[str, Any]:
     pid = (pipeline_id or "").strip()
     if pid not in pipelines:
@@ -382,6 +392,7 @@ def embed_pipeline(
         replace=replace,
         pipeline_id=pid,
         auto_sample=auto and not docs,
+        scope=scope,
     )
     pipe = pipelines[pid]
     last = dict(pipe.get("lastBuild") or {})

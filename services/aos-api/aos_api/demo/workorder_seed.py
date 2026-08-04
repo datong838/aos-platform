@@ -9,6 +9,7 @@ ObjectType 缺失导致前端 500），但**样例工单数据**只在 ``seed_te
 """
 from __future__ import annotations
 
+from aos_api.demo.scope import TEST_SCOPE
 from aos_api.logging_facade import get_logger
 
 log = get_logger("aos-api.demo.workorder_seed")
@@ -83,14 +84,19 @@ def _ensure_site_object_type(conn) -> None:
     )
     conn.execute(
         """
-        INSERT INTO obj_instance (object_type, object_id, props)
+        INSERT INTO obj_instance
+          (object_type, object_id, props, org_id, project_id)
         VALUES (
           'Site', 'site-east',
-          '{"name":"DC-East","_requiredMarkings":["restricted"]}'::jsonb
+          '{"name":"DC-East","_requiredMarkings":["restricted"]}'::jsonb,
+          %s, %s
         )
         ON CONFLICT (object_type, object_id)
         DO UPDATE SET props = EXCLUDED.props
-        """
+        WHERE obj_instance.org_id=EXCLUDED.org_id
+          AND obj_instance.project_id=EXCLUDED.project_id
+        """,
+        TEST_SCOPE.key,
     )
 
 
@@ -100,22 +106,26 @@ def _ensure_sample_workorders(conn, *, repair: bool) -> int:
         for t, i, p in _WORKORDER_SAMPLES:
             conn.execute(
                 """
-                INSERT INTO obj_instance (object_type, object_id, props)
-                VALUES (%s,%s,%s::jsonb)
+                INSERT INTO obj_instance
+                  (object_type, object_id, props, org_id, project_id)
+                VALUES (%s,%s,%s::jsonb,%s,%s)
                 ON CONFLICT (object_type, object_id)
                 DO UPDATE SET props = EXCLUDED.props
+                WHERE obj_instance.org_id=EXCLUDED.org_id
+                  AND obj_instance.project_id=EXCLUDED.project_id
                 """,
-                (t, i, p),
+                (t, i, p, *TEST_SCOPE.key),
             )
     else:
         for t, i, p in _WORKORDER_SAMPLES:
             conn.execute(
                 """
-                INSERT INTO obj_instance (object_type, object_id, props)
-                VALUES (%s,%s,%s::jsonb)
+                INSERT INTO obj_instance
+                  (object_type, object_id, props, org_id, project_id)
+                VALUES (%s,%s,%s::jsonb,%s,%s)
                 ON CONFLICT DO NOTHING
                 """,
-                (t, i, p),
+                (t, i, p, *TEST_SCOPE.key),
             )
     return len(_WORKORDER_SAMPLES)
 
@@ -124,17 +134,21 @@ def _ensure_graph_edges(conn) -> None:
     """WorkOrder 之间关联 + wo-1003 继承 site-east 标记。"""
     conn.execute(
         """
-        INSERT INTO graph_edge (src_type, src_id, rel, dst_type, dst_id)
-        VALUES ('WorkOrder','wo-1001','related_to','WorkOrder','wo-1003')
+        INSERT INTO graph_edge
+          (src_type, src_id, rel, dst_type, dst_id, org_id, project_id)
+        VALUES ('WorkOrder','wo-1001','related_to','WorkOrder','wo-1003',%s,%s)
         ON CONFLICT DO NOTHING
-        """
+        """,
+        TEST_SCOPE.key,
     )
     conn.execute(
         """
-        INSERT INTO graph_edge (src_type, src_id, rel, dst_type, dst_id)
-        VALUES ('WorkOrder','wo-1003','inherits_markings_from','Site','site-east')
+        INSERT INTO graph_edge
+          (src_type, src_id, rel, dst_type, dst_id, org_id, project_id)
+        VALUES ('WorkOrder','wo-1003','inherits_markings_from','Site','site-east',%s,%s)
         ON CONFLICT DO NOTHING
-        """
+        """,
+        TEST_SCOPE.key,
     )
 
 
@@ -142,26 +156,31 @@ def _ensure_fga_demo(conn) -> None:
     """OpenFGA demo tuples + wo-fga-demo 样例。"""
     conn.execute(
         """
-        INSERT INTO obj_instance (object_type, object_id, props)
+        INSERT INTO obj_instance
+          (object_type, object_id, props, org_id, project_id)
         VALUES (
           'WorkOrder', 'wo-fga-demo',
-          '{"title":"OpenFGA demo","status":"open","site":"DC-East","priority":"P2"}'::jsonb
+          '{"title":"OpenFGA demo","status":"open","site":"DC-East","priority":"P2"}'::jsonb,
+          %s, %s
         )
         ON CONFLICT (object_type, object_id) DO NOTHING
-        """
+        """,
+        TEST_SCOPE.key,
     )
     conn.execute(
         """
-        INSERT INTO authz_tuple (user_key, relation, object_key)
+        INSERT INTO authz_tuple
+          (user_key, relation, object_key, org_id, project_id)
         VALUES
-          ('user:secret-user', 'viewer', 'object:WorkOrder:wo-fga-demo'),
-          ('user:secret-user', 'member', 'organization:dev-org'),
-          ('organization:dev-org', 'parent', 'project:dev-project'),
-          ('user:secret-user', 'bearer', 'marking:restricted'),
-          ('user:bearer-only', 'bearer', 'marking:restricted'),
-          ('user:field-bearer', 'bearer', 'marking:secret')
+          ('user:secret-user', 'viewer', 'object:WorkOrder:wo-fga-demo', %s, %s),
+          ('user:secret-user', 'member', 'organization:dev-org', %s, %s),
+          ('organization:dev-org', 'parent', 'project:dev-project', %s, %s),
+          ('user:secret-user', 'bearer', 'marking:restricted', %s, %s),
+          ('user:bearer-only', 'bearer', 'marking:restricted', %s, %s),
+          ('user:field-bearer', 'bearer', 'marking:secret', %s, %s)
         ON CONFLICT DO NOTHING
-        """
+        """,
+        TEST_SCOPE.key * 6,
     )
 
 
@@ -180,10 +199,12 @@ def _ensure_wiki_and_funnel(conn) -> None:
     )
     conn.execute(
         """
-        INSERT INTO funnel_status (object_type, stage, detail)
-        VALUES ('WorkOrder','enrich','{"stages":["ingest","normalize","enrich","publish"]}'::jsonb)
+        INSERT INTO funnel_status
+          (object_type, stage, detail, org_id, project_id)
+        VALUES ('WorkOrder','enrich','{"stages":["ingest","normalize","enrich","publish"]}'::jsonb,%s,%s)
         ON CONFLICT (object_type) DO NOTHING
-        """
+        """,
+        TEST_SCOPE.key,
     )
 
 

@@ -1488,7 +1488,12 @@ def pipeline_embed(
     payload["collection"] = scoped_collection_name(
         principal.org_id, principal.project_id, raw_collection
     )
-    return embed_pipeline(pipeline_id, payload, pipelines=_pipelines)
+    return embed_pipeline(
+        pipeline_id,
+        payload,
+        pipelines=_pipelines,
+        scope=TenantScope(principal.org_id, principal.project_id),
+    )
 
 
 @router.post("/v1/aip/vector-index/upsert")
@@ -1510,6 +1515,7 @@ def vector_index_upsert(body: dict[str, Any] | None = None, principal: Principal
         plugin_id=str(payload.get("pluginId") or "embed-openai-compatible"),
         replace=bool(payload.get("replace", False)),
         auto_sample=bool(payload.get("autoSample", False)),
+        scope=TenantScope(principal.org_id, principal.project_id),
     )
 
 

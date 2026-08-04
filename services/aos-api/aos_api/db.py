@@ -210,6 +210,8 @@ def init_schema() -> None:
 
 def repair_demo_workorders(conn=None) -> None:
     """Keep demo WorkOrders stable for Inbox filters / conflict tests."""
+    from aos_api.demo.scope import TEST_SCOPE
+
     samples = [
         (
             "WorkOrder",
@@ -243,12 +245,15 @@ def repair_demo_workorders(conn=None) -> None:
         for t, i, p in samples:
             c.execute(
                 """
-                INSERT INTO obj_instance (object_type, object_id, props)
-                VALUES (%s,%s,%s::jsonb)
+                INSERT INTO obj_instance
+                  (object_type, object_id, props, org_id, project_id)
+                VALUES (%s,%s,%s::jsonb,%s,%s)
                 ON CONFLICT (object_type, object_id)
                 DO UPDATE SET props = EXCLUDED.props
+                WHERE obj_instance.org_id=EXCLUDED.org_id
+                  AND obj_instance.project_id=EXCLUDED.project_id
                 """,
-                (t, i, p),
+                (t, i, p, *TEST_SCOPE.key),
             )
 
     if conn is None:
@@ -329,7 +334,6 @@ def ensure_system_meta() -> None:
       - field marking seed（WorkOrder ObjectType schema 定义）
       - inherit_openfga seed（Site ObjectType schema 定义）
       - apollo catalog seed
-      - main/sandbox 分支
       - lt-related-to 默认 link type
 
     **不**包含：dev-org / dev-project / 工单样例 / 订单 / 模块等测试数据。
@@ -341,15 +345,6 @@ def ensure_system_meta() -> None:
         from aos_api.apollo_catalog import ensure_seed as ensure_apollo_catalog_seed
 
         ensure_apollo_catalog_seed(conn)
-        conn.execute(
-            """
-            INSERT INTO meta_branch (id, name, base_ref, readonly)
-            VALUES
-              ('main', 'main', 'main', TRUE),
-              ('sandbox', 'sandbox', 'main', TRUE)
-            ON CONFLICT DO NOTHING
-            """
-        )
         conn.execute(
             """
             INSERT INTO meta_link_type (

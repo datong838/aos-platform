@@ -11,6 +11,7 @@ import uuid
 from typing import Any
 
 from aos_api.auth import Principal
+from aos_api.demo.scope import TEST_SCOPE
 from aos_api.logging_facade import get_logger
 
 log = get_logger("aos-api.demo.demo_story")
@@ -84,23 +85,28 @@ def story_snapshot() -> dict[str, Any]:
             """
             SELECT object_id, props
             FROM obj_instance
-            WHERE object_type=%s
+            WHERE object_type=%s AND org_id=%s AND project_id=%s
             ORDER BY object_id
             LIMIT 20
             """,
-            ("WorkOrder",),
+            ("WorkOrder", *TEST_SCOPE.key),
         ).fetchall()
         try:
             drafts = conn.execute(
                 """
                 SELECT COUNT(*) AS c FROM draft_dataset
-                WHERE status = 'proposed'
-                """
+                WHERE status = 'proposed' AND org_id=%s AND project_id=%s
+                """,
+                TEST_SCOPE.key,
             ).fetchone()
         except Exception:
             drafts = {"c": 0}
         try:
-            modules = conn.execute("SELECT COUNT(*) AS c FROM meta_module").fetchone()
+            modules = conn.execute(
+                "SELECT COUNT(*) AS c FROM meta_module "
+                "WHERE org_id=%s AND project_id=%s",
+                TEST_SCOPE.key,
+            ).fetchone()
         except Exception:
             modules = {"c": 0}
     items = []
@@ -141,8 +147,9 @@ def run_writeback_story(principal: Principal) -> dict[str, Any]:
 
     with connect() as conn:
         row = conn.execute(
-            "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s",
-            (object_type, object_id),
+            "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s "
+            "AND org_id=%s AND project_id=%s",
+            (object_type, object_id, principal.org_id, principal.project_id),
         ).fetchone()
     before = dict(row["props"]) if row and isinstance(row["props"], dict) else {}
     cur_status = str(before.get("status") or "open")
@@ -183,8 +190,9 @@ def run_writeback_story(principal: Principal) -> dict[str, Any]:
     )
     with connect() as conn:
         row2 = conn.execute(
-            "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s",
-            (object_type, object_id),
+            "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s "
+            "AND org_id=%s AND project_id=%s",
+            (object_type, object_id, principal.org_id, principal.project_id),
         ).fetchone()
     after = dict(row2["props"]) if row2 and isinstance(row2["props"], dict) else {}
     return {
@@ -238,8 +246,9 @@ def run_analytics_story(principal: Principal) -> dict[str, Any]:
 
     with connect() as conn:
         row = conn.execute(
-            "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s",
-            (object_type, object_id),
+            "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s "
+            "AND org_id=%s AND project_id=%s",
+            (object_type, object_id, principal.org_id, principal.project_id),
         ).fetchone()
     before = dict(row["props"]) if row and isinstance(row["props"], dict) else {}
     cur_status = str(before.get("status") or "open")
@@ -265,8 +274,9 @@ def run_analytics_story(principal: Principal) -> dict[str, Any]:
 
     with connect() as conn:
         row2 = conn.execute(
-            "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s",
-            (object_type, object_id),
+            "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s "
+            "AND org_id=%s AND project_id=%s",
+            (object_type, object_id, principal.org_id, principal.project_id),
         ).fetchone()
     after = dict(row2["props"]) if row2 and isinstance(row2["props"], dict) else {}
 
@@ -351,8 +361,9 @@ def governance_probe(principal: Principal) -> dict[str, Any]:
             (object_type,),
         ).fetchone()
         row = conn.execute(
-            "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s",
-            (object_type, object_id),
+            "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s "
+            "AND org_id=%s AND project_id=%s",
+            (object_type, object_id, principal.org_id, principal.project_id),
         ).fetchone()
         try:
             lin = conn.execute(

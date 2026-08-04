@@ -12,6 +12,7 @@
 """
 from __future__ import annotations
 
+from aos_api.demo.scope import TEST_SCOPE
 from aos_api.logging_facade import get_logger
 
 log = get_logger("aos-api.demo.seed")
@@ -75,65 +76,55 @@ def clear_test_org() -> dict[str, str | int]:
     with connect() as conn:
         for object_type in ("WorkOrder", "Order", "OrderItem", "Site"):
             cur = conn.execute(
-                "DELETE FROM obj_instance WHERE object_type = %s",
-                (object_type,),
+                "DELETE FROM obj_instance WHERE object_type = %s "
+                "AND org_id=%s AND project_id=%s",
+                (object_type, *TEST_SCOPE.key),
             )
             removed[f"obj_{object_type}"] = int(cur.rowcount or 0)
 
         conn.execute(
             """
             DELETE FROM graph_edge
-             WHERE src_type IN ('WorkOrder','Order','OrderItem','Site')
-                OR dst_type IN ('WorkOrder','Order','OrderItem','Site')
-            """
+             WHERE (src_type IN ('WorkOrder','Order','OrderItem','Site')
+                OR dst_type IN ('WorkOrder','Order','OrderItem','Site'))
+               AND org_id=%s AND project_id=%s
+            """,
+            TEST_SCOPE.key,
         )
 
-        conn.execute("DELETE FROM wiki_page WHERE org_id = 'dev-org'")
         conn.execute(
-            """
-            DELETE FROM meta_module WHERE org_id = 'dev-org'
-            """
+            "DELETE FROM wiki_page WHERE org_id=%s AND project_id=%s",
+            TEST_SCOPE.key,
         )
         conn.execute(
             """
-            DELETE FROM meta_object_type
-             WHERE id IN ('WorkOrder','Order','OrderItem','Site')
-            """
+            DELETE FROM meta_module WHERE org_id=%s AND project_id=%s
+            """,
+            TEST_SCOPE.key,
         )
-        conn.execute(
-            """
-            DELETE FROM meta_link_type
-             WHERE id IN ('lt-related-to','lt-order-item')
-            """
-        )
-
         try:
             cur = conn.execute(
                 """
-                DELETE FROM draft_dataset WHERE org_id = 'dev-org'
-                """
+                DELETE FROM draft_dataset WHERE org_id=%s AND project_id=%s
+                """,
+                TEST_SCOPE.key,
             )
             removed["drafts"] = int(cur.rowcount or 0)
         except Exception as exc:  # noqa: BLE001
             removed["drafts"] = f"skip:{exc}"
-        try:
-            cur = conn.execute(
-                """
-                DELETE FROM decision_lineage
-                 WHERE object_type IN ('WorkOrder','Order','OrderItem','Site')
-                """
-            )
-            removed["lineage"] = int(cur.rowcount or 0)
-        except Exception as exc:  # noqa: BLE001
-            removed["lineage"] = f"skip:{exc}"
+        # decision_lineage has no TenantScope columns before TI-5. Deleting it
+        # by object type could erase another organization, so fail closed.
+        removed["lineage"] = "deferred:no-tenant-scope"
         try:
             cur = conn.execute(
                 """
                 DELETE FROM authz_tuple
-                 WHERE object_key LIKE 'organization:dev-org%'
+                 WHERE org_id=%s AND project_id=%s
+                   AND (object_key LIKE 'organization:dev-org%'
                     OR object_key LIKE 'project:dev-project%'
-                    OR object_key LIKE 'object:WorkOrder:%'
-                """
+                    OR object_key LIKE 'object:WorkOrder:%')
+                """,
+                TEST_SCOPE.key,
             )
             removed["authzTuples"] = int(cur.rowcount or 0)
         except Exception as exc:  # noqa: BLE001

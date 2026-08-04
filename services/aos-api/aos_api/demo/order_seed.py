@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 
+from aos_api.demo.scope import TEST_SCOPE
 from aos_api.logging_facade import get_logger
 
 log = get_logger("aos-api.demo.order_seed")
@@ -165,7 +166,9 @@ def seed_orders() -> int:
         )
 
         count_row = conn.execute(
-            "SELECT COUNT(*) AS c FROM obj_instance WHERE object_type = 'Order'"
+            "SELECT COUNT(*) AS c FROM obj_instance WHERE object_type = 'Order' "
+            "AND org_id=%s AND project_id=%s",
+            TEST_SCOPE.key,
         ).fetchone()
         if count_row and int(count_row["c"]) == 0:
             for record in _SAMPLE_ORDERS:
@@ -173,10 +176,12 @@ def seed_orders() -> int:
                 props = _build_order_props(record)
                 conn.execute(
                     """
-                    INSERT INTO obj_instance (object_type, object_id, props)
-                    VALUES ('Order', %s, %s::jsonb)
+                    INSERT INTO obj_instance
+                      (object_type, object_id, props, org_id, project_id)
+                    VALUES ('Order', %s, %s::jsonb, %s, %s)
+                    ON CONFLICT (object_type, object_id) DO NOTHING
                     """,
-                    (oid, props),
+                    (oid, props, *TEST_SCOPE.key),
                 )
             log.info("order_seed: inserted %d sample orders", len(_SAMPLE_ORDERS))
 
