@@ -119,7 +119,7 @@ def apply_draft_approval(
                 """
                 INSERT INTO wiki_page (object_type, object_id, body, org_id, project_id)
                 VALUES (%s,%s,%s::jsonb,%s,%s)
-                ON CONFLICT (object_type, object_id)
+                ON CONFLICT (org_id, project_id, object_type, object_id)
                 DO UPDATE SET body = EXCLUDED.body
                 WHERE wiki_page.org_id = EXCLUDED.org_id
                   AND wiki_page.project_id = EXCLUDED.project_id
@@ -198,7 +198,7 @@ def apply_draft_approval(
                     INSERT INTO obj_instance
                       (object_type, object_id, props, org_id, project_id)
                     VALUES (%s,%s,%s::jsonb,%s,%s)
-                    ON CONFLICT (object_type, object_id) DO NOTHING
+                    ON CONFLICT (org_id, project_id, object_type, object_id) DO NOTHING
                     RETURNING object_type
                     """,
                     (

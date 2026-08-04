@@ -43,7 +43,7 @@ def _ensure_workspace(org_id: str, project_id: str) -> None:
         conn.commit()
 
 
-def test_graph_and_funnel_new_writes_are_scoped_and_global_conflicts_fail() -> None:
+def test_graph_and_funnel_same_ids_coexist_across_scopes() -> None:
     suffix = uuid.uuid4().hex
     scope_a = (f"org-a-{suffix}", f"project-{suffix}")
     scope_b = (f"org-b-{suffix}", f"project-{suffix}")
@@ -58,19 +58,15 @@ def test_graph_and_funnel_new_writes_are_scoped_and_global_conflicts_fail() -> N
     )
     body = GraphEdgeBatchIn(edges=[edge])
     assert upsert_graph_edges(body, _principal(*scope_a))["ok"] is True
-    with pytest.raises(ApiError) as conflict:
-        upsert_graph_edges(body, _principal(*scope_b))
-    assert conflict.value.status_code == 409
+    assert upsert_graph_edges(body, _principal(*scope_b))["ok"] is True
 
     object_type = f"funnel-{suffix}"
     assert funnel_rerun(
         object_type, FunnelRerunIn(mode="live"), _principal(*scope_a)
     )["stage"] == "hydration"
-    with pytest.raises(ApiError) as funnel_conflict:
-        funnel_rerun(
-            object_type, FunnelRerunIn(mode="live"), _principal(*scope_b)
-        )
-    assert funnel_conflict.value.status_code == 409
+    assert funnel_rerun(
+        object_type, FunnelRerunIn(mode="live"), _principal(*scope_b)
+    )["stage"] == "hydration"
 
     edge_values = (
         edge.srcType,
@@ -81,17 +77,32 @@ def test_graph_and_funnel_new_writes_are_scoped_and_global_conflicts_fail() -> N
     )
 
     with connect() as conn:
-        graph_scope = conn.execute(
+        graph_scopes = conn.execute(
             "SELECT org_id,project_id FROM graph_edge "
-            "WHERE src_type=%s AND src_id=%s AND rel=%s AND dst_type=%s AND dst_id=%s",
+            "WHERE src_type=%s AND src_id=%s AND rel=%s AND dst_type=%s AND dst_id=%s "
+            "ORDER BY org_id",
             edge_values,
-        ).fetchone()
-        funnel_scope = conn.execute(
-            "SELECT org_id,project_id FROM funnel_status WHERE object_type=%s",
+        ).fetchall()
+        funnel_scopes = conn.execute(
+            "SELECT org_id,project_id FROM funnel_status WHERE object_type=%s "
+            "ORDER BY org_id",
             (object_type,),
-        ).fetchone()
-    assert tuple(graph_scope.values()) == scope_a
-    assert tuple(funnel_scope.values()) == scope_a
+        ).fetchall()
+        conn.execute(
+            "DELETE FROM graph_edge WHERE src_type=%s AND src_id=%s AND rel=%s "
+            "AND dst_type=%s AND dst_id=%s",
+            edge_values,
+        )
+        conn.execute("DELETE FROM funnel_status WHERE object_type=%s", (object_type,))
+        conn.commit()
+    assert {(row["org_id"], row["project_id"]) for row in graph_scopes} == {
+        scope_a,
+        scope_b,
+    }
+    assert {(row["org_id"], row["project_id"]) for row in funnel_scopes} == {
+        scope_a,
+        scope_b,
+    }
 
 
 def test_branch_and_overlay_new_writes_inherit_principal_scope() -> None:

@@ -42,7 +42,13 @@ def _rows(conn: Any, table: str, keys: tuple[str, ...]) -> list[Mapping[str, Any
 
 
 def _key_hash(table: str, keys: tuple[str, ...], row: Mapping[str, Any]) -> str:
-    return stable_key_hash("TI-3-E3", table, *(str(row[key]) for key in keys))
+    return stable_key_hash(
+        "TI-3-E3",
+        table,
+        str(row["org_id"]),
+        str(row["project_id"]),
+        *(str(row[key]) for key in keys),
+    )
 
 
 def _row_hash(table: str, row: Mapping[str, Any]) -> str:

@@ -13,13 +13,17 @@ def ensure_overlay_table(conn) -> None:
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS obj_branch_overlay (
-          branch_id TEXT NOT NULL REFERENCES meta_branch(id) ON DELETE CASCADE,
+          branch_id TEXT NOT NULL,
           object_type TEXT NOT NULL,
           object_id TEXT NOT NULL,
           props JSONB NOT NULL DEFAULT '{}'::jsonb,
           op TEXT NOT NULL DEFAULT 'upsert',
           updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-          PRIMARY KEY (branch_id, object_type, object_id)
+          org_id TEXT NOT NULL,
+          project_id TEXT NOT NULL,
+          PRIMARY KEY (org_id, project_id, branch_id, object_type, object_id),
+          FOREIGN KEY (org_id, project_id, branch_id)
+            REFERENCES meta_branch(org_id, project_id, id) ON DELETE CASCADE
         )
         """
     )
@@ -192,7 +196,7 @@ def upsert_overlay(
           branch_id, object_type, object_id, props, op, updated_at,
           org_id, project_id
         ) VALUES (%s,%s,%s,%s::jsonb,%s,NOW(),%s,%s)
-        ON CONFLICT (branch_id, object_type, object_id) DO UPDATE
+        ON CONFLICT (org_id, project_id, branch_id, object_type, object_id) DO UPDATE
           SET props=EXCLUDED.props, op=EXCLUDED.op, updated_at=NOW()
         WHERE obj_branch_overlay.org_id=EXCLUDED.org_id
           AND obj_branch_overlay.project_id=EXCLUDED.project_id
@@ -340,7 +344,8 @@ def merge_branch(conn, scope: TenantScope, branch_id: str) -> dict[str, Any]:
             INSERT INTO obj_instance (
               object_type, object_id, props, org_id, project_id
             ) VALUES (%s,%s,%s::jsonb,%s,%s)
-            ON CONFLICT (object_type, object_id) DO UPDATE SET props=EXCLUDED.props
+            ON CONFLICT (org_id, project_id, object_type, object_id)
+            DO UPDATE SET props=EXCLUDED.props
             WHERE obj_instance.org_id=EXCLUDED.org_id
               AND obj_instance.project_id=EXCLUDED.project_id
             """,

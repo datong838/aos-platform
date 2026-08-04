@@ -14,6 +14,7 @@ TI2_E7_REVISION = "228ti2e7contract"
 TI3_E1_REVISION = "228ti3e1expand"
 TI3_E4_REVISION = "228ti3e4validate"
 TI3_E6_REVISION = "228ti3e6rls"
+TI3_E7_REVISION = "228ti3e7contract"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {
@@ -86,6 +87,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E1_REVISION,
         TI3_E4_REVISION,
         TI3_E6_REVISION,
+        TI3_E7_REVISION,
     }:
         issues.append("RLS_ENABLED_BEFORE_E6")
     if revision not in {
@@ -100,6 +102,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E1_REVISION,
         TI3_E4_REVISION,
         TI3_E6_REVISION,
+        TI3_E7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     return {
@@ -210,6 +213,7 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E1_REVISION,
         TI3_E4_REVISION,
         TI3_E6_REVISION,
+        TI3_E7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -328,6 +332,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E1_REVISION,
         TI3_E4_REVISION,
         TI3_E6_REVISION,
+        TI3_E7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -414,6 +419,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E1_REVISION,
         TI3_E4_REVISION,
         TI3_E6_REVISION,
+        TI3_E7_REVISION,
     }:
         issues.append("TI2_EXPAND_COLUMNS_NOT_NULLABLE")
     if missing_tables:
@@ -438,6 +444,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
                 TI3_E1_REVISION,
                 TI3_E4_REVISION,
                 TI3_E6_REVISION,
+                TI3_E7_REVISION,
             }
             else non_nullable_columns
         ),
@@ -460,6 +467,7 @@ def build_ti2_e4_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E1_REVISION,
         TI3_E4_REVISION,
         TI3_E6_REVISION,
+        TI3_E7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     rows = conn.execute(
@@ -510,6 +518,7 @@ def build_ti2_e6_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E1_REVISION,
         TI3_E4_REVISION,
         TI3_E6_REVISION,
+        TI3_E7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -609,6 +618,7 @@ def build_ti2_e7_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E1_REVISION,
         TI3_E4_REVISION,
         TI3_E6_REVISION,
+        TI3_E7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -712,6 +722,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI3_E1_REVISION,
         TI3_E4_REVISION,
         TI3_E6_REVISION,
+        TI3_E7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -741,7 +752,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
     )
     if missing_columns:
         issues.append("TI3_TENANT_COLUMNS_MISSING")
-    if expand_not_nullable:
+    if expand_not_nullable and report["alembicRevision"] != TI3_E7_REVISION:
         issues.append("TI3_EXPAND_COLUMNS_NOT_NULLABLE")
     if templates_with_scope:
         issues.append("TI3_TEMPLATE_SCOPE_DRIFT")
@@ -774,7 +785,11 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         "ok": not issues,
         "issues": issues,
         "ti3MissingTenantColumns": missing_columns,
-        "ti3ExpandColumnsNotNullable": expand_not_nullable,
+        "ti3ExpandColumnsNotNullable": (
+            []
+            if report["alembicRevision"] == TI3_E7_REVISION
+            else expand_not_nullable
+        ),
         "ti3TemplatesWithTenantScope": templates_with_scope,
         "ti3MissingForeignKeys": missing_fks,
         "ti3PrematurelyValidatedForeignKeys": prematurely_validated,
@@ -786,7 +801,7 @@ def build_ti3_e6_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] != TI3_E6_REVISION:
+    if report["alembicRevision"] not in {TI3_E6_REVISION, TI3_E7_REVISION}:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     role = conn.execute(
@@ -858,4 +873,129 @@ def build_ti3_e6_schema_report(conn: Any) -> dict[str, Any]:
         "ti3RlsUnprotectedTables": unprotected,
         "ti3RuntimeOwnedTables": runtime_owned,
         "ti3RlsInvalidPolicies": invalid_policies,
+    }
+
+
+TI3_E7_PRIMARY_KEYS = {
+    "funnel_status": "PRIMARY KEY (org_id, project_id, object_type)",
+    "graph_edge": (
+        "PRIMARY KEY (org_id, project_id, src_type, src_id, rel, dst_type, dst_id)"
+    ),
+    "meta_branch": "PRIMARY KEY (org_id, project_id, id)",
+    "obj_branch_overlay": (
+        "PRIMARY KEY (org_id, project_id, branch_id, object_type, object_id)"
+    ),
+    "obj_instance": "PRIMARY KEY (org_id, project_id, object_type, object_id)",
+    "object_lifecycle": "PRIMARY KEY (org_id, project_id, object_type, object_id)",
+    "draft_dataset": "PRIMARY KEY (org_id, project_id, id)",
+    "wiki_page": "PRIMARY KEY (org_id, project_id, object_type, object_id)",
+    "wiki_page_version": "PRIMARY KEY (org_id, project_id, id)",
+}
+
+
+def build_ti3_e7_schema_report(conn: Any) -> dict[str, Any]:
+    report = build_ti3_e6_schema_report(conn)
+    issues = [
+        issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
+    ]
+    if report["alembicRevision"] != TI3_E7_REVISION:
+        issues.append("ALEMBIC_REVISION_MISMATCH")
+
+    pk_rows = conn.execute(
+        "SELECT conrelid::regclass::text AS table_name, "
+        "pg_get_constraintdef(oid) AS definition FROM pg_constraint "
+        "WHERE contype='p' AND conrelid::regclass::text = ANY(%s)",
+        (sorted(TI3_E7_PRIMARY_KEYS),),
+    ).fetchall()
+    primary_keys = {
+        str(row["table_name"]): str(row["definition"]) for row in pk_rows
+    }
+    invalid_primary_keys = sorted(
+        table
+        for table, expected in TI3_E7_PRIMARY_KEYS.items()
+        if primary_keys.get(table) != expected
+    )
+    if invalid_primary_keys:
+        issues.append("TI3_CONTRACT_PRIMARY_KEY_INVALID")
+
+    nullable_rows = conn.execute(
+        "SELECT table_name, column_name FROM information_schema.columns "
+        "WHERE table_schema='public' AND table_name = ANY(%s) "
+        "AND column_name IN ('org_id','project_id') AND is_nullable='YES'",
+        (sorted(TI3_E7_PRIMARY_KEYS),),
+    ).fetchall()
+    nullable_scope = sorted(
+        f"{row['table_name']}.{row['column_name']}" for row in nullable_rows
+    )
+    if nullable_scope:
+        issues.append("TI3_CONTRACT_SCOPE_NULLABLE")
+
+    branch_fk = conn.execute(
+        "SELECT pg_get_constraintdef(oid) AS definition FROM pg_constraint "
+        "WHERE conrelid='obj_branch_overlay'::regclass "
+        "AND conname='fk_obj_branch_overlay_branch_ti3' "
+        "/* schema lint for org_id/project_id contract */"
+    ).fetchone()
+    expected_branch_fk = (
+        "FOREIGN KEY (org_id, project_id, branch_id) "
+        "REFERENCES meta_branch(org_id, project_id, id) ON DELETE CASCADE"
+    )
+    branch_fk_valid = bool(branch_fk) and branch_fk["definition"] == expected_branch_fk
+    if not branch_fk_valid:
+        issues.append("TI3_SCOPED_BRANCH_FOREIGN_KEY_INVALID")
+
+    quarantine = conn.execute(
+        "SELECT to_regclass('public.object_runtime_orphan_quarantine')::text AS name"
+    ).fetchone()
+    quarantine_exists = bool(quarantine and quarantine["name"])
+    quarantine_count = 0
+    runtime_quarantine_access = False
+    quarantine_trigger_count = 0
+    if quarantine_exists:
+        quarantine_count = int(
+            conn.execute(
+                "SELECT COUNT(*) AS count FROM object_runtime_orphan_quarantine"
+            ).fetchone()["count"]
+        )
+        runtime_quarantine_access = bool(
+            conn.execute(
+                "SELECT has_table_privilege('aos_runtime', "
+                "'object_runtime_orphan_quarantine', "
+                "'SELECT,INSERT,UPDATE,DELETE') AS allowed"
+            ).fetchone()["allowed"]
+        )
+        quarantine_trigger_count = int(
+            conn.execute(
+                "SELECT COUNT(*) AS count FROM pg_trigger "
+                "WHERE tgrelid='object_runtime_orphan_quarantine'::regclass "
+                "AND NOT tgisinternal AND tgname IN ("
+                "'trg_object_runtime_orphan_quarantine_immutable',"
+                "'trg_object_runtime_orphan_quarantine_truncate_guard')"
+            ).fetchone()["count"]
+        )
+    active_null_count = 0
+    for table in TI3_E7_PRIMARY_KEYS:
+        row = conn.execute(
+            f"SELECT COUNT(*) AS count FROM {table} "
+            "WHERE org_id IS NULL OR project_id IS NULL"
+        ).fetchone()
+        active_null_count += int(row["count"])
+    if not quarantine_exists or active_null_count or quarantine_trigger_count != 2:
+        issues.append("TI3_ORPHAN_QUARANTINE_INVALID")
+    if runtime_quarantine_access:
+        issues.append("TI3_RUNTIME_CAN_ACCESS_ORPHAN_QUARANTINE")
+
+    return {
+        **report,
+        "stage": "TI-3-E7",
+        "ok": not issues,
+        "issues": issues,
+        "ti3ContractInvalidPrimaryKeys": invalid_primary_keys,
+        "ti3ContractNullableScopeColumns": nullable_scope,
+        "ti3ScopedBranchForeignKeyValid": branch_fk_valid,
+        "ti3OrphanQuarantineExists": quarantine_exists,
+        "ti3OrphanQuarantineCount": quarantine_count,
+        "ti3ActiveNullScopeCount": active_null_count,
+        "ti3RuntimeQuarantineAccess": runtime_quarantine_access,
+        "ti3QuarantineGuardTriggerCount": quarantine_trigger_count,
     }

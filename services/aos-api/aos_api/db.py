@@ -248,7 +248,7 @@ def repair_demo_workorders(conn=None) -> None:
                 INSERT INTO obj_instance
                   (object_type, object_id, props, org_id, project_id)
                 VALUES (%s,%s,%s::jsonb,%s,%s)
-                ON CONFLICT (object_type, object_id)
+                ON CONFLICT (org_id, project_id, object_type, object_id)
                 DO UPDATE SET props = EXCLUDED.props
                 WHERE obj_instance.org_id=EXCLUDED.org_id
                   AND obj_instance.project_id=EXCLUDED.project_id

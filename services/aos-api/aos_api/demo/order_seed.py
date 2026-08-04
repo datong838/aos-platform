@@ -179,7 +179,7 @@ def seed_orders() -> int:
                     INSERT INTO obj_instance
                       (object_type, object_id, props, org_id, project_id)
                     VALUES ('Order', %s, %s::jsonb, %s, %s)
-                    ON CONFLICT (object_type, object_id) DO NOTHING
+                    ON CONFLICT (org_id, project_id, object_type, object_id) DO NOTHING
                     """,
                     (oid, props, *TEST_SCOPE.key),
                 )

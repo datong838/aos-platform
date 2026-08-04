@@ -369,7 +369,9 @@ def upsert_graph_edges(
                 INSERT INTO graph_edge (
                   src_type, src_id, rel, dst_type, dst_id, org_id, project_id
                 ) VALUES (%s,%s,%s,%s,%s,%s,%s)
-                ON CONFLICT (src_type, src_id, rel, dst_type, dst_id) DO UPDATE
+                ON CONFLICT (
+                  org_id, project_id, src_type, src_id, rel, dst_type, dst_id
+                ) DO UPDATE
                   SET org_id=graph_edge.org_id
                 WHERE graph_edge.org_id=EXCLUDED.org_id
                   AND graph_edge.project_id=EXCLUDED.project_id
@@ -972,7 +974,7 @@ def create_branch(
             INSERT INTO meta_branch (
               id, name, base_ref, readonly, org_id, project_id
             ) VALUES (%s,%s,%s,FALSE,%s,%s)
-            ON CONFLICT (id) DO NOTHING
+            ON CONFLICT (org_id, project_id, id) DO NOTHING
             RETURNING id
             """,
             (bid, body.name.strip(), base, *_scope(principal).key),
@@ -1197,7 +1199,7 @@ def funnel_rerun(
             INSERT INTO funnel_status (
               object_type, stage, detail, org_id, project_id
             ) VALUES (%s,%s,%s::jsonb,%s,%s)
-            ON CONFLICT (object_type) DO UPDATE
+            ON CONFLICT (org_id, project_id, object_type) DO UPDATE
               SET stage = EXCLUDED.stage, detail = EXCLUDED.detail
             WHERE funnel_status.org_id=EXCLUDED.org_id
               AND funnel_status.project_id=EXCLUDED.project_id

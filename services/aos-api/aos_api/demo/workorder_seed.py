@@ -91,7 +91,7 @@ def _ensure_site_object_type(conn) -> None:
           '{"name":"DC-East","_requiredMarkings":["restricted"]}'::jsonb,
           %s, %s
         )
-        ON CONFLICT (object_type, object_id)
+        ON CONFLICT (org_id, project_id, object_type, object_id)
         DO UPDATE SET props = EXCLUDED.props
         WHERE obj_instance.org_id=EXCLUDED.org_id
           AND obj_instance.project_id=EXCLUDED.project_id
@@ -109,7 +109,7 @@ def _ensure_sample_workorders(conn, *, repair: bool) -> int:
                 INSERT INTO obj_instance
                   (object_type, object_id, props, org_id, project_id)
                 VALUES (%s,%s,%s::jsonb,%s,%s)
-                ON CONFLICT (object_type, object_id)
+                ON CONFLICT (org_id, project_id, object_type, object_id)
                 DO UPDATE SET props = EXCLUDED.props
                 WHERE obj_instance.org_id=EXCLUDED.org_id
                   AND obj_instance.project_id=EXCLUDED.project_id
@@ -163,7 +163,7 @@ def _ensure_fga_demo(conn) -> None:
           '{"title":"OpenFGA demo","status":"open","site":"DC-East","priority":"P2"}'::jsonb,
           %s, %s
         )
-        ON CONFLICT (object_type, object_id) DO NOTHING
+        ON CONFLICT (org_id, project_id, object_type, object_id) DO NOTHING
         """,
         TEST_SCOPE.key,
     )
@@ -202,7 +202,7 @@ def _ensure_wiki_and_funnel(conn) -> None:
         INSERT INTO funnel_status
           (object_type, stage, detail, org_id, project_id)
         VALUES ('WorkOrder','enrich','{"stages":["ingest","normalize","enrich","publish"]}'::jsonb,%s,%s)
-        ON CONFLICT (object_type) DO NOTHING
+        ON CONFLICT (org_id, project_id, object_type) DO NOTHING
         """,
         TEST_SCOPE.key,
     )

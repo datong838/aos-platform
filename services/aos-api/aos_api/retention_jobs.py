@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS object_lifecycle (
   org_id TEXT NOT NULL DEFAULT 'dev-org',
   project_id TEXT NOT NULL DEFAULT 'dev-project',
   meta JSONB NOT NULL DEFAULT '{}'::jsonb,
-  PRIMARY KEY (object_type, object_id)
+  PRIMARY KEY (org_id, project_id, object_type, object_id)
 );
 """
 
@@ -186,7 +186,7 @@ def archive_one(
           object_type, object_id, status, reason, archived_at, ttl_days,
           org_id, project_id, meta
         ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb)
-        ON CONFLICT (object_type, object_id) DO UPDATE SET
+        ON CONFLICT (org_id, project_id, object_type, object_id) DO UPDATE SET
           status=EXCLUDED.status,
           reason=EXCLUDED.reason,
           archived_at=EXCLUDED.archived_at,

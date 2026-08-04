@@ -4,11 +4,9 @@ import json
 import uuid
 from datetime import datetime, timedelta, timezone
 
-import pytest
 from aos_api import ttl_job
 from aos_api.auth import Principal
 from aos_api.db import connect
-from aos_api.errors import ApiError
 from aos_api.retention_jobs import archive_one, list_candidates
 from aos_api.routers.drafts import ensure_draft_schema
 from aos_api.routers.runtime_write import apply_draft_approval
@@ -71,7 +69,7 @@ def _insert_draft(
         conn.commit()
 
 
-def test_draft_approval_cannot_take_over_cross_tenant_wiki_key() -> None:
+def test_draft_approval_creates_same_wiki_key_in_its_own_scope() -> None:
     suffix = uuid.uuid4().hex
     scope_a = TenantScope(f"org-a-{suffix}", f"project-a-{suffix}")
     scope_b = TenantScope(f"org-b-{suffix}", f"project-b-{suffix}")
@@ -95,26 +93,39 @@ def test_draft_approval_cannot_take_over_cross_tenant_wiki_key() -> None:
         proposed={"wikiBody": {"owner": "b"}},
     )
 
-    with pytest.raises(ApiError) as conflict:
-        apply_draft_approval(
-            draft_id=draft_id, principal=_principal(scope_b), allow_conflicts=False
-        )
-    assert conflict.value.status_code == 409
+    applied = apply_draft_approval(
+        draft_id=draft_id, principal=_principal(scope_b), allow_conflicts=False
+    )
+    assert applied["status"] == "approved"
     with connect() as conn:
-        wiki = conn.execute(
+        wikis = conn.execute(
             "SELECT body,org_id,project_id FROM wiki_page "
-            "WHERE object_type=%s AND object_id=%s",
+            "WHERE object_type=%s AND object_id=%s ORDER BY org_id",
             (object_type, object_id),
-        ).fetchone()
+        ).fetchall()
         draft = conn.execute(
-            "SELECT status FROM draft_dataset WHERE id=%s", (draft_id,)
+            "SELECT status FROM draft_dataset WHERE id=%s AND org_id=%s AND project_id=%s",
+            (draft_id, *scope_b.key),
         ).fetchone()
-    assert wiki["body"]["owner"] == "a"
-    assert (wiki["org_id"], wiki["project_id"]) == scope_a.key
-    assert draft["status"] == "proposed"
+    assert {(row["org_id"], row["project_id"], row["body"]["owner"]) for row in wikis} == {
+        (*scope_a.key, "a"),
+        (*scope_b.key, "b"),
+    }
+    assert draft["status"] == "approved"
+    with connect() as conn:
+        conn.execute("DELETE FROM decision_lineage WHERE id=%s", (f"lin-{draft_id}",))
+        conn.execute(
+            "DELETE FROM draft_dataset WHERE id=%s AND org_id=%s AND project_id=%s",
+            (draft_id, *scope_b.key),
+        )
+        conn.execute(
+            "DELETE FROM wiki_page WHERE object_type=%s AND object_id=%s",
+            (object_type, object_id),
+        )
+        conn.commit()
 
 
-def test_draft_approval_cannot_take_over_cross_tenant_object_key() -> None:
+def test_draft_approval_creates_same_object_key_in_its_own_scope() -> None:
     suffix = uuid.uuid4().hex
     scope_a = TenantScope(f"org-a-{suffix}", f"project-a-{suffix}")
     scope_b = TenantScope(f"org-b-{suffix}", f"project-b-{suffix}")
@@ -144,19 +155,32 @@ def test_draft_approval_cannot_take_over_cross_tenant_object_key() -> None:
         action_type_id="UpdateObject",
     )
 
-    with pytest.raises(ApiError) as conflict:
-        apply_draft_approval(
-            draft_id=draft_id, principal=_principal(scope_b), allow_conflicts=False
-        )
-    assert conflict.value.status_code == 409
+    applied = apply_draft_approval(
+        draft_id=draft_id, principal=_principal(scope_b), allow_conflicts=False
+    )
+    assert applied["status"] == "approved"
     with connect() as conn:
-        obj = conn.execute(
+        objects = conn.execute(
             "SELECT props,org_id,project_id FROM obj_instance "
-            "WHERE object_type=%s AND object_id=%s",
+            "WHERE object_type=%s AND object_id=%s ORDER BY org_id",
             (object_type, object_id),
-        ).fetchone()
-    assert obj["props"]["owner"] == "a"
-    assert (obj["org_id"], obj["project_id"]) == scope_a.key
+        ).fetchall()
+    assert {(row["org_id"], row["project_id"], row["props"]["owner"]) for row in objects} == {
+        (*scope_a.key, "a"),
+        (*scope_b.key, "b"),
+    }
+    with connect() as conn:
+        conn.execute("DELETE FROM decision_lineage WHERE id=%s", (f"lin-{draft_id}",))
+        conn.execute(
+            "DELETE FROM draft_dataset WHERE id=%s AND org_id=%s AND project_id=%s",
+            (draft_id, *scope_b.key),
+        )
+        conn.execute(
+            "DELETE FROM obj_instance WHERE object_type=%s AND object_id=%s",
+            (object_type, object_id),
+        )
+        conn.execute("DELETE FROM meta_object_type WHERE id=%s", (object_type,))
+        conn.commit()
 
 
 def test_retention_and_in_memory_ttl_are_scoped() -> None:

@@ -95,7 +95,7 @@ def test_schema_lint_confirms_nine_policies_and_safe_role() -> None:
         report = build_ti3_e6_schema_report(conn)
 
     assert report["ok"] is True, report
-    assert report["alembicRevision"] == "228ti3e6rls"
+    assert report["alembicRevision"] in {"228ti3e6rls", "228ti3e7contract"}
     assert report["ti3RuntimeRoleSafe"] is True
     assert report["ti3RlsTableCount"] == 9
     assert report["ti3RlsMissingTables"] == []
@@ -146,6 +146,13 @@ def test_runtime_scope_and_with_check_fail_closed() -> None:
                 (object_type, f"blocked-{suffix}", *scope_b.key),
             )
         conn.rollback()
+    with connect() as conn:
+        conn.execute(
+            "DELETE FROM obj_instance WHERE object_type=%s AND object_id=%s",
+            (object_type, object_id),
+        )
+        conn.execute("DELETE FROM meta_object_type WHERE id=%s", (object_type,))
+        conn.commit()
 
 
 def test_runtime_role_without_guc_hides_quarantine_and_context_does_not_leak() -> None:
@@ -153,12 +160,21 @@ def test_runtime_role_without_guc_hides_quarantine_and_context_does_not_leak() -
     object_type = f"QuarantineType-{suffix}"
     with connect() as conn:
         conn.execute(
+            "INSERT INTO twa_org (id,name) VALUES ('dev-org','测试组织') "
+            "ON CONFLICT DO NOTHING"
+        )
+        conn.execute(
+            "INSERT INTO twa_workspace (org_id,project_id,name) "
+            "VALUES ('dev-org','dev-project','测试工作区') ON CONFLICT DO NOTHING"
+        )
+        conn.execute(
             "INSERT INTO meta_object_type (id,name) VALUES (%s,%s)",
             (object_type, object_type),
         )
         conn.execute(
-            "INSERT INTO obj_instance (object_type,object_id,props) "
-            "VALUES (%s,%s,'{}'::jsonb)",
+            "INSERT INTO obj_instance "
+            "(object_type,object_id,props,org_id,project_id) "
+            "VALUES (%s,%s,'{}'::jsonb,'dev-org','dev-project')",
             (object_type, f"quarantine-{suffix}"),
         )
         conn.commit()
@@ -184,18 +200,27 @@ def test_runtime_role_without_guc_hides_quarantine_and_context_does_not_leak() -
     assert row["role"] != "aos_runtime"
     assert row["org_id"] in (None, "")
     assert row["project_id"] in (None, "")
+    with connect() as conn:
+        conn.execute("DELETE FROM obj_instance WHERE object_type=%s", (object_type,))
+        conn.execute("DELETE FROM meta_object_type WHERE id=%s", (object_type,))
+        conn.commit()
 
 
 def test_z_downgrade_upgrade_is_policy_only_and_preserves_rows() -> None:
     cfg = _config()
     with connect() as conn:
         before = _counts(conn)
+        quarantine = conn.execute(
+            "SELECT COUNT(*) AS n FROM object_runtime_orphan_quarantine"
+        ).fetchone()["n"]
         assert _policy_count(conn) == 9
     command.downgrade(cfg, "228ti3e4validate")
     with connect() as conn:
         assert _policy_count(conn) == 0
-        assert _counts(conn) == before
-    command.upgrade(cfg, "228ti3e6rls")
+        after = _counts(conn)
+        assert after[0] == before[0] + quarantine
+        assert after[1] == before[1] + quarantine
+    command.upgrade(cfg, "head")
     with connect() as conn:
         assert _policy_count(conn) == 9
         assert _counts(conn) == before
