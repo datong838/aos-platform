@@ -35,6 +35,9 @@ def test_classifier_quarantines_unknown_and_orphan_records() -> None:
         "ORPHAN_PARENT_UNVERIFIED",
     }
     assert all(item["targetScopeHash"] is None for item in result["decisions"])
+    assert len(result["sourceSnapshotHash"]) == 64
+    assert len(result["decisionSummaryHash"]) == 64
+    assert all(len(item["evidenceHash"]) == 64 for item in result["decisions"])
 
 
 def test_classifier_is_deterministic_and_contains_no_raw_keys() -> None:
@@ -62,4 +65,3 @@ def test_orphan_reason_wins_when_same_record_is_also_unassigned() -> None:
         item for item in result["decisions"] if item["keyHash"] == "2" * 64
     )
     assert decision["reasonCode"] == "ORPHAN_PARENT_UNVERIFIED"
-

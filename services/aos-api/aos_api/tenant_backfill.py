@@ -128,5 +128,5 @@ def persist_dry_run_batch(
         "batchId": str(batch_id),
         "replayed": False,
         "decisionCount": int(dry_run["totalDiscovered"]),
-        "persistedEvidenceHash": canonical_sha256(dry_run),
+        "persistedEvidenceHash": canonical_sha256(dry_run).removeprefix("sha256:"),
     }

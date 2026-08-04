@@ -8,8 +8,12 @@ from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.tenant_dual_write import stable_key_hash
 
 
+def _canonical_hex(value: object) -> str:
+    return canonical_sha256(value).removeprefix("sha256:")
+
+
 def classify_source_snapshot(source_snapshot: Mapping[str, Any]) -> dict[str, Any]:
-    source_snapshot_hash = canonical_sha256(source_snapshot)
+    source_snapshot_hash = _canonical_hex(source_snapshot)
     decisions: list[dict[str, Any]] = []
     resources = source_snapshot.get("resources") or {}
     for resource in sorted(resources):
@@ -69,6 +73,5 @@ def classify_source_snapshot(source_snapshot: Mapping[str, Any]) -> dict[str, An
         "rawKeysReturned": False,
         "rawPayloadReturned": False,
     }
-    result["decisionSummaryHash"] = canonical_sha256(result)
+    result["decisionSummaryHash"] = _canonical_hex(result)
     return result
-
