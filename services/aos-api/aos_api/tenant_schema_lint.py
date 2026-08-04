@@ -1,4 +1,5 @@
 """Read-only TI-1 E1 schema lint."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -20,6 +21,7 @@ TI4_D1_REVISION = "228ti4d1expand"
 TI4_D4_REVISION = "228ti4d4validate"
 TI4_D6_REVISION = "228ti4d6rls"
 TI4_D7_REVISION = "228ti4d7contract"
+TI4_C3_REVISION = "228ti4c3contract"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {
@@ -61,9 +63,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
            AND (c.relrowsecurity OR c.relforcerowsecurity)
         """
     ).fetchone()
-    revision_row = conn.execute(
-        "SELECT version_num FROM alembic_version"
-    ).fetchone()
+    revision_row = conn.execute("SELECT version_num FROM alembic_version").fetchone()
 
     columns = {str(row["column_name"]): row for row in column_rows}
     constraints = {str(row["conname"]): row for row in constraint_rows}
@@ -98,6 +98,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D4_REVISION,
         TI4_D6_REVISION,
         TI4_D7_REVISION,
+        TI4_C3_REVISION,
     }:
         issues.append("RLS_ENABLED_BEFORE_E6")
     if revision not in {
@@ -118,6 +119,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D4_REVISION,
         TI4_D6_REVISION,
         TI4_D7_REVISION,
+        TI4_C3_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     return {
@@ -187,29 +189,74 @@ def build_ti1_e2_schema_report(conn: Any) -> dict[str, Any]:
 
 E3_REQUIRED_COLUMNS = {
     "tenant_backfill_batch": {
-        "org_id", "project_id", "batch_id", "environment_hash",
-        "source_snapshot_hash", "code_commit", "mode", "status",
-        "created_at", "approved_at", "completed_at",
+        "org_id",
+        "project_id",
+        "batch_id",
+        "environment_hash",
+        "source_snapshot_hash",
+        "code_commit",
+        "mode",
+        "status",
+        "created_at",
+        "approved_at",
+        "completed_at",
     },
     "tenant_backfill_batch_event": {
-        "org_id", "project_id", "event_id", "batch_id", "status",
-        "evidence_hash", "actor_role", "actor_hash", "created_at",
+        "org_id",
+        "project_id",
+        "event_id",
+        "batch_id",
+        "status",
+        "evidence_hash",
+        "actor_role",
+        "actor_hash",
+        "created_at",
     },
     "tenant_ownership_decision": {
-        "org_id", "project_id", "decision_id", "batch_id", "resource",
-        "key_hash", "decision", "evidence_grade", "evidence_hash",
-        "candidate_count", "target_org_id", "target_project_id",
-        "before_hash", "after_hash", "reason_code", "created_at",
+        "org_id",
+        "project_id",
+        "decision_id",
+        "batch_id",
+        "resource",
+        "key_hash",
+        "decision",
+        "evidence_grade",
+        "evidence_hash",
+        "candidate_count",
+        "target_org_id",
+        "target_project_id",
+        "before_hash",
+        "after_hash",
+        "reason_code",
+        "created_at",
     },
     "tenant_ownership_decision_event": {
-        "org_id", "project_id", "event_id", "batch_id", "resource",
-        "key_hash", "event_type", "before_hash", "after_hash",
-        "evidence_hash", "actor_role", "actor_hash", "created_at",
+        "org_id",
+        "project_id",
+        "event_id",
+        "batch_id",
+        "resource",
+        "key_hash",
+        "event_type",
+        "before_hash",
+        "after_hash",
+        "evidence_hash",
+        "actor_role",
+        "actor_hash",
+        "created_at",
     },
     "tenant_quarantine_record": {
-        "org_id", "project_id", "quarantine_id", "batch_id", "resource",
-        "key_hash", "reason_code", "candidate_scope_hashes",
-        "source_snapshot_hash", "review_status", "created_at",
+        "org_id",
+        "project_id",
+        "quarantine_id",
+        "batch_id",
+        "resource",
+        "key_hash",
+        "reason_code",
+        "candidate_scope_hashes",
+        "source_snapshot_hash",
+        "review_status",
+        "created_at",
     },
 }
 
@@ -234,6 +281,7 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D4_REVISION,
         TI4_D6_REVISION,
         TI4_D7_REVISION,
+        TI4_C3_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -248,9 +296,7 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
              ORDER BY ordinal_position
             """
         ).fetchall()
-        columns = {
-            str(row["column_name"]): str(row["is_nullable"]) for row in rows
-        }
+        columns = {str(row["column_name"]): str(row["is_nullable"]) for row in rows}
         missing = sorted(required - set(columns))
         if missing:
             missing_by_table[table] = missing
@@ -305,9 +351,14 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
 
 TI2_MODULE_COLUMNS = {
     "meta_module": {
-        "module_pk", "module_id", "template_id", "template_version",
-        "installation_id", "active_overlay_revision",
-        "effective_config_hash", "deleted_at",
+        "module_pk",
+        "module_id",
+        "template_id",
+        "template_version",
+        "installation_id",
+        "active_overlay_revision",
+        "effective_config_hash",
+        "deleted_at",
     },
     "module_canvas_config": {"module_pk"},
     "module_deployment": {"module_pk"},
@@ -358,6 +409,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D4_REVISION,
         TI4_D6_REVISION,
         TI4_D7_REVISION,
+        TI4_C3_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -372,9 +424,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
             """,
             (table,),
         ).fetchall()
-        columns = {
-            str(row["column_name"]): str(row["is_nullable"]) for row in rows
-        }
+        columns = {str(row["column_name"]): str(row["is_nullable"]) for row in rows}
         missing = sorted(expected - set(columns))
         if missing:
             missing_columns[table] = missing
@@ -450,6 +500,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D4_REVISION,
         TI4_D6_REVISION,
         TI4_D7_REVISION,
+        TI4_C3_REVISION,
     }:
         issues.append("TI2_EXPAND_COLUMNS_NOT_NULLABLE")
     if missing_tables:
@@ -480,6 +531,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
                 TI4_D4_REVISION,
                 TI4_D6_REVISION,
                 TI4_D7_REVISION,
+                TI4_C3_REVISION,
             }
             else non_nullable_columns
         ),
@@ -508,11 +560,11 @@ def build_ti2_e4_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D4_REVISION,
         TI4_D6_REVISION,
         TI4_D7_REVISION,
+        TI4_C3_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     rows = conn.execute(
-        "SELECT conname, convalidated FROM pg_constraint "
-        "WHERE conname = ANY(%s)",
+        "SELECT conname, convalidated FROM pg_constraint WHERE conname = ANY(%s)",
         (sorted(TI2_NOT_VALID_FOREIGN_KEYS),),
     ).fetchall()
     validated = {str(row["conname"]): bool(row["convalidated"]) for row in rows}
@@ -564,6 +616,7 @@ def build_ti2_e6_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D4_REVISION,
         TI4_D6_REVISION,
         TI4_D7_REVISION,
+        TI4_C3_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -610,7 +663,9 @@ def build_ti2_e6_schema_report(conn: Any) -> dict[str, Any]:
     invalid_policies: list[str] = []
     for table in sorted(TI2_E6_TABLES):
         row = policies.get(table)
-        expressions = f"{(row or {}).get('qual', '')} {(row or {}).get('with_check', '')}"
+        expressions = (
+            f"{(row or {}).get('qual', '')} {(row or {}).get('with_check', '')}"
+        )
         roles = list((row or {}).get("roles") or [])
         valid = (
             row is not None
@@ -669,6 +724,7 @@ def build_ti2_e7_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D4_REVISION,
         TI4_D6_REVISION,
         TI4_D7_REVISION,
+        TI4_C3_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -678,9 +734,7 @@ def build_ti2_e7_schema_report(conn: Any) -> dict[str, Any]:
         "WHERE contype='p' AND conrelid::regclass::text = ANY(%s)",
         (sorted(TI2_E7_PRIMARY_KEYS),),
     ).fetchall()
-    primary_keys = {
-        str(row["table_name"]): str(row["definition"]) for row in pk_rows
-    }
+    primary_keys = {str(row["table_name"]): str(row["definition"]) for row in pk_rows}
     invalid_primary_keys = sorted(
         table
         for table, expected in TI2_E7_PRIMARY_KEYS.items()
@@ -778,6 +832,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D4_REVISION,
         TI4_D6_REVISION,
         TI4_D7_REVISION,
+        TI4_C3_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -789,9 +844,9 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
     ).fetchall()
     columns: dict[str, dict[str, str]] = {}
     for row in rows:
-        columns.setdefault(str(row["table_name"]), {})[
-            str(row["column_name"])
-        ] = str(row["is_nullable"])
+        columns.setdefault(str(row["table_name"]), {})[str(row["column_name"])] = str(
+            row["is_nullable"]
+        )
     missing_columns = sorted(
         table
         for table in TI3_E1_SCOPED_TABLES
@@ -814,22 +869,18 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D4_REVISION,
         TI4_D6_REVISION,
         TI4_D7_REVISION,
+        TI4_C3_REVISION,
     }:
         issues.append("TI3_EXPAND_COLUMNS_NOT_NULLABLE")
     if templates_with_scope:
         issues.append("TI3_TEMPLATE_SCOPE_DRIFT")
 
     fk_rows = conn.execute(
-        "SELECT conname, convalidated FROM pg_constraint "
-        "WHERE conname = ANY(%s)",
+        "SELECT conname, convalidated FROM pg_constraint WHERE conname = ANY(%s)",
         ([f"fk_{table}_workspace_ti3" for table in sorted(TI3_E1_SCOPED_TABLES)],),
     ).fetchall()
-    foreign_keys = {
-        str(row["conname"]): bool(row["convalidated"]) for row in fk_rows
-    }
-    expected_fks = {
-        f"fk_{table}_workspace_ti3" for table in TI3_E1_SCOPED_TABLES
-    }
+    foreign_keys = {str(row["conname"]): bool(row["convalidated"]) for row in fk_rows}
+    expected_fks = {f"fk_{table}_workspace_ti3" for table in TI3_E1_SCOPED_TABLES}
     missing_fks = sorted(expected_fks - set(foreign_keys))
     prematurely_validated = (
         sorted(name for name, validated in foreign_keys.items() if validated)
@@ -857,6 +908,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
                 TI4_D4_REVISION,
                 TI4_D6_REVISION,
                 TI4_D7_REVISION,
+                TI4_C3_REVISION,
             }
             else expand_not_nullable
         ),
@@ -879,6 +931,7 @@ def build_ti3_e6_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D4_REVISION,
         TI4_D6_REVISION,
         TI4_D7_REVISION,
+        TI4_C3_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -926,7 +979,9 @@ def build_ti3_e6_schema_report(conn: Any) -> dict[str, Any]:
     invalid_policies: list[str] = []
     for table in sorted(TI3_E1_SCOPED_TABLES):
         row = policies.get(table)
-        expressions = f"{(row or {}).get('qual', '')} {(row or {}).get('with_check', '')}"
+        expressions = (
+            f"{(row or {}).get('qual', '')} {(row or {}).get('with_check', '')}"
+        )
         roles = list((row or {}).get("roles") or [])
         valid = (
             row is not None
@@ -983,6 +1038,7 @@ def build_ti3_e7_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D4_REVISION,
         TI4_D6_REVISION,
         TI4_D7_REVISION,
+        TI4_C3_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -992,9 +1048,7 @@ def build_ti3_e7_schema_report(conn: Any) -> dict[str, Any]:
         "WHERE contype='p' AND conrelid::regclass::text = ANY(%s)",
         (sorted(TI3_E7_PRIMARY_KEYS),),
     ).fetchall()
-    primary_keys = {
-        str(row["table_name"]): str(row["definition"]) for row in pk_rows
-    }
+    primary_keys = {str(row["table_name"]): str(row["definition"]) for row in pk_rows}
     invalid_primary_keys = sorted(
         table
         for table, expected in TI3_E7_PRIMARY_KEYS.items()
@@ -1112,6 +1166,7 @@ TI4_C1_PRIMARY_KEYS = {
 
 def build_ti4_c1_schema_report(conn: Any) -> dict[str, Any]:
     report = build_ti3_e7_schema_report(conn)
+    revision = report["alembicRevision"]
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
@@ -1121,6 +1176,7 @@ def build_ti4_c1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D4_REVISION,
         TI4_D6_REVISION,
         TI4_D7_REVISION,
+        TI4_C3_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1130,9 +1186,7 @@ def build_ti4_c1_schema_report(conn: Any) -> dict[str, Any]:
         "WHERE contype='p' AND conrelid::regclass::text = ANY(%s)",
         (sorted(TI4_C1_PRIMARY_KEYS),),
     ).fetchall()
-    primary_keys = {
-        str(row["table_name"]): str(row["definition"]) for row in pk_rows
-    }
+    primary_keys = {str(row["table_name"]): str(row["definition"]) for row in pk_rows}
     invalid_primary_keys = sorted(
         table
         for table, expected in TI4_C1_PRIMARY_KEYS.items()
@@ -1162,18 +1216,21 @@ def build_ti4_c1_schema_report(conn: Any) -> dict[str, Any]:
     foreign_keys = {str(row["table_name"]): row for row in fk_rows}
     expected_fk = (
         "FOREIGN KEY (org_id, workspace_id) "
-        "REFERENCES twa_workspace(org_id, project_id) NOT VALID"
+        "REFERENCES twa_workspace(org_id, project_id)"
     )
+    if revision != TI4_C3_REVISION:
+        expected_fk += " NOT VALID"
     invalid_foreign_keys = sorted(
         table
         for table in TI4_C1_PRIMARY_KEYS
-        if table not in foreign_keys
-        or foreign_keys[table]["definition"] != expected_fk
+        if table not in foreign_keys or foreign_keys[table]["definition"] != expected_fk
     )
-    prematurely_validated = sorted(
-        table
-        for table, row in foreign_keys.items()
-        if bool(row["convalidated"])
+    prematurely_validated = (
+        sorted(
+            table for table, row in foreign_keys.items() if bool(row["convalidated"])
+        )
+        if revision != TI4_C3_REVISION
+        else []
     )
     if invalid_foreign_keys:
         issues.append("TI4_ECOM_WORKSPACE_FOREIGN_KEY_INVALID")
@@ -1214,6 +1271,7 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
         TI4_D4_REVISION,
         TI4_D6_REVISION,
         TI4_D7_REVISION,
+        TI4_C3_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1241,12 +1299,13 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
     )
     if missing_columns:
         issues.append("TI4_DATA_OS_SCOPE_COLUMNS_MISSING")
-    if non_nullable_expand_columns and revision != TI4_D7_REVISION:
+    if non_nullable_expand_columns and revision not in {
+        TI4_D7_REVISION,
+        TI4_C3_REVISION,
+    }:
         issues.append("TI4_DATA_OS_EXPAND_COLUMNS_NOT_NULLABLE")
 
-    expected_names = [
-        f"fk_{table}_workspace_ti4d1" for table in TI4_D1_TENANT_TABLES
-    ]
+    expected_names = [f"fk_{table}_workspace_ti4d1" for table in TI4_D1_TENANT_TABLES]
     fk_rows = conn.execute(
         "SELECT conrelid::regclass::text AS table_name,conname,convalidated,"
         "pg_get_constraintdef(oid) AS definition FROM pg_constraint "
@@ -1254,7 +1313,9 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
         (expected_names,),
     ).fetchall()
     foreign_keys = {str(row["table_name"]): row for row in fk_rows}
-    expected_fk = "FOREIGN KEY (org_id, project_id) REFERENCES twa_workspace(org_id, project_id)"
+    expected_fk = (
+        "FOREIGN KEY (org_id, project_id) REFERENCES twa_workspace(org_id, project_id)"
+    )
     if revision == TI4_D1_REVISION:
         expected_fk += " NOT VALID"
     invalid_foreign_keys = sorted(
@@ -1264,7 +1325,9 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
         or str(foreign_keys[table]["definition"]) != expected_fk
     )
     prematurely_validated = (
-        sorted(table for table, row in foreign_keys.items() if bool(row["convalidated"]))
+        sorted(
+            table for table, row in foreign_keys.items() if bool(row["convalidated"])
+        )
         if revision == TI4_D1_REVISION
         else []
     )
@@ -1274,7 +1337,9 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
         issues.append("TI4_DATA_OS_WORKSPACE_FOREIGN_KEY_PREMATURELY_VALIDATED")
 
     row_counts = {
-        table: int(conn.execute(f"SELECT COUNT(*) AS count FROM {table}").fetchone()["count"])
+        table: int(
+            conn.execute(f"SELECT COUNT(*) AS count FROM {table}").fetchone()["count"]
+        )
         for table in TI4_D1_TENANT_TABLES
     }
     return {
@@ -1284,7 +1349,9 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
         "issues": issues,
         "ti4DataOsMissingScopeColumns": missing_columns,
         "ti4DataOsNonNullableExpandColumns": (
-            [] if revision == TI4_D7_REVISION else non_nullable_expand_columns
+            []
+            if revision in {TI4_D7_REVISION, TI4_C3_REVISION}
+            else non_nullable_expand_columns
         ),
         "ti4DataOsInvalidWorkspaceForeignKeys": invalid_foreign_keys,
         "ti4DataOsPrematurelyValidatedForeignKeys": prematurely_validated,
@@ -1306,33 +1373,45 @@ TI4_D7_PRIMARY_KEYS = {
 TI4_D7_PARENT_FOREIGN_KEYS = {
     "fk_meta_pipeline_source_ti4d7": (
         "meta_pipeline",
-        ("FOREIGN KEY (org_id, project_id, source_id) "
-         "REFERENCES meta_source(org_id, project_id, id)"),
+        (
+            "FOREIGN KEY (org_id, project_id, source_id) "
+            "REFERENCES meta_source(org_id, project_id, id)"
+        ),
     ),
     "fk_meta_dataset_source_ti4d7": (
         "meta_dataset",
-        ("FOREIGN KEY (org_id, project_id, source_id) "
-         "REFERENCES meta_source(org_id, project_id, id)"),
+        (
+            "FOREIGN KEY (org_id, project_id, source_id) "
+            "REFERENCES meta_source(org_id, project_id, id)"
+        ),
     ),
     "fk_meta_dataset_pipeline_ti4d7": (
         "meta_dataset",
-        ("FOREIGN KEY (org_id, project_id, pipeline_id) "
-         "REFERENCES meta_pipeline(org_id, project_id, id)"),
+        (
+            "FOREIGN KEY (org_id, project_id, pipeline_id) "
+            "REFERENCES meta_pipeline(org_id, project_id, id)"
+        ),
     ),
     "fk_meta_dataset_history_dataset_ti4d7": (
         "meta_dataset_history",
-        ("FOREIGN KEY (org_id, project_id, dataset_rid) "
-         "REFERENCES meta_dataset(org_id, project_id, rid)"),
+        (
+            "FOREIGN KEY (org_id, project_id, dataset_rid) "
+            "REFERENCES meta_dataset(org_id, project_id, rid)"
+        ),
     ),
     "fk_meta_sync_source_ti4d7": (
         "meta_sync",
-        ("FOREIGN KEY (org_id, project_id, source_id) "
-         "REFERENCES meta_source(org_id, project_id, id)"),
+        (
+            "FOREIGN KEY (org_id, project_id, source_id) "
+            "REFERENCES meta_source(org_id, project_id, id)"
+        ),
     ),
     "fk_meta_schedule_pipeline_ti4d7": (
         "meta_schedule",
-        ("FOREIGN KEY (org_id, project_id, pipeline_id) "
-         "REFERENCES meta_pipeline(org_id, project_id, id)"),
+        (
+            "FOREIGN KEY (org_id, project_id, pipeline_id) "
+            "REFERENCES meta_pipeline(org_id, project_id, id)"
+        ),
     ),
 }
 
@@ -1344,7 +1423,7 @@ def build_ti4_d7_schema_report(conn: Any) -> dict[str, Any]:
         for issue in report["issues"]
         if issue not in {"ALEMBIC_REVISION_MISMATCH"}
     ]
-    if report["alembicRevision"] != TI4_D7_REVISION:
+    if report["alembicRevision"] not in {TI4_D7_REVISION, TI4_C3_REVISION}:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     pk_rows = conn.execute(
@@ -1441,4 +1520,102 @@ def build_ti4_d7_schema_report(conn: Any) -> dict[str, Any]:
         "ti4DataOsRuntimeQuarantineAccess": bool(quarantine["runtime_select"]),
         "ti4DataOsQuarantineGuardCount": guard_count,
         "ti4DataOsActiveNullScopeCount": active_null_count,
+    }
+
+
+TI4_C3_SCOPED_TABLES = frozenset(TI4_C1_PRIMARY_KEYS)
+
+
+def build_ti4_c3_schema_report(conn: Any) -> dict[str, Any]:
+    """Verify the contracted e-commerce Connector tenant boundary."""
+    report = build_ti4_d7_schema_report(conn)
+    issues = [
+        issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
+    ]
+    if report["alembicRevision"] != TI4_C3_REVISION:
+        issues.append("ALEMBIC_REVISION_MISMATCH")
+
+    fk_rows = conn.execute(
+        "SELECT conrelid::regclass::text AS table_name,convalidated "
+        "FROM pg_constraint WHERE conname = ANY(%s)",
+        ([f"fk_{table}_workspace_ti4" for table in sorted(TI4_C3_SCOPED_TABLES)],),
+    ).fetchall()
+    validated_tables = {
+        str(row["table_name"]) for row in fk_rows if bool(row["convalidated"])
+    }
+    unvalidated_foreign_keys = sorted(TI4_C3_SCOPED_TABLES - validated_tables)
+    if unvalidated_foreign_keys:
+        issues.append("TI4_ECOM_WORKSPACE_FOREIGN_KEY_NOT_VALIDATED")
+
+    role = conn.execute(
+        "SELECT rolcanlogin,rolsuper,rolbypassrls FROM pg_roles "
+        "WHERE rolname='aos_runtime'"
+    ).fetchone()
+    role_safe = bool(role) and not any(
+        bool(role[name]) for name in ("rolcanlogin", "rolsuper", "rolbypassrls")
+    )
+    if not role_safe:
+        issues.append("TI4_ECOM_RUNTIME_ROLE_UNSAFE_OR_MISSING")
+
+    table_rows = conn.execute(
+        "SELECT c.relname AS table_name,c.relrowsecurity,c.relforcerowsecurity,"
+        "pg_get_userbyid(c.relowner) AS table_owner FROM pg_class c "
+        "JOIN pg_namespace n ON n.oid=c.relnamespace "
+        "WHERE n.nspname='public' AND c.relname = ANY(%s)",
+        (sorted(TI4_C3_SCOPED_TABLES),),
+    ).fetchall()
+    tables = {str(row["table_name"]): row for row in table_rows}
+    missing_tables = sorted(TI4_C3_SCOPED_TABLES - set(tables))
+    unprotected_tables = sorted(
+        table
+        for table, row in tables.items()
+        if not bool(row["relrowsecurity"]) or not bool(row["relforcerowsecurity"])
+    )
+    runtime_owned_tables = sorted(
+        table for table, row in tables.items() if row["table_owner"] == "aos_runtime"
+    )
+    if missing_tables:
+        issues.append("TI4_ECOM_RLS_TABLES_MISSING")
+    if unprotected_tables:
+        issues.append("TI4_ECOM_RLS_NOT_ENABLED_AND_FORCED")
+    if runtime_owned_tables:
+        issues.append("TI4_ECOM_RUNTIME_ROLE_OWNS_TABLE")
+
+    policy_rows = conn.execute(
+        "SELECT tablename,policyname,roles,qual,with_check FROM pg_policies "
+        "WHERE schemaname='public' AND tablename = ANY(%s) "
+        "AND policyname LIKE 'tenant_scope_%%_ti4c3'",
+        (sorted(TI4_C3_SCOPED_TABLES),),
+    ).fetchall()
+    policies = {str(row["tablename"]): row for row in policy_rows}
+    invalid_policies: list[str] = []
+    for table in sorted(TI4_C3_SCOPED_TABLES):
+        row = policies.get(table)
+        expressions = (
+            f"{(row or {}).get('qual', '')} {(row or {}).get('with_check', '')}"
+        )
+        roles = list((row or {}).get("roles") or [])
+        if not (
+            row is not None
+            and row["policyname"] == f"tenant_scope_{table}_ti4c3"
+            and "aos_runtime" in roles
+            and expressions.count("aos.org_id") == 2
+            and expressions.count("aos.project_id") == 2
+        ):
+            invalid_policies.append(table)
+    if invalid_policies:
+        issues.append("TI4_ECOM_RLS_POLICY_INVALID")
+
+    return {
+        **report,
+        "stage": "TI-4-C3",
+        "ok": not issues,
+        "issues": issues,
+        "ti4EcomUnvalidatedWorkspaceForeignKeys": unvalidated_foreign_keys,
+        "ti4EcomRuntimeRoleSafe": role_safe,
+        "ti4EcomRlsTableCount": len(tables),
+        "ti4EcomRlsMissingTables": missing_tables,
+        "ti4EcomRlsUnprotectedTables": unprotected_tables,
+        "ti4EcomRuntimeOwnedTables": runtime_owned_tables,
+        "ti4EcomRlsInvalidPolicies": invalid_policies,
     }

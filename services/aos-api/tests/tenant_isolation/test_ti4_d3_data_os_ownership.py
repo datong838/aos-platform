@@ -29,7 +29,10 @@ def _ensure_owner_scope(conn) -> None:
 def _skip_after_d3_contract() -> None:
     with connect() as conn:
         revision = conn.execute("SELECT version_num FROM alembic_version").fetchone()
-    if revision and revision["version_num"] == "228ti4d7contract":
+    if revision and revision["version_num"] in {
+        "228ti4d7contract",
+        "228ti4c3contract",
+    }:
         pytest.skip("D7 forbids new NULL-scope active rows; D3 history is frozen")
 
 

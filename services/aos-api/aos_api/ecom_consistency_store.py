@@ -3,18 +3,19 @@
 The store owns only the new ``ecom_*`` tables.  It intentionally does not
 read or mutate legacy ``obj_instance`` / ``graph_edge`` state.
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import hashlib
+from datetime import datetime, timezone
 from threading import RLock
 from typing import Any
 
 from sqlalchemy import (
     JSON,
     BigInteger,
-    Column,
     CheckConstraint,
+    Column,
     DateTime,
     Integer,
     MetaData,
@@ -25,8 +26,8 @@ from sqlalchemy import (
     insert,
     or_,
     select,
-    update,
     text,
+    update,
 )
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.exc import IntegrityError
@@ -34,14 +35,12 @@ from sqlalchemy.exc import IntegrityError
 from aos_api.ecom_core_models import (
     BatchCommand,
     BatchResult,
-    CheckpointPosition,
     CoreLinkRecord,
     CoreObjectRecord,
     EcomConsistencyError,
     StorageIdentity,
     _jsonable,
 )
-
 
 metadata = MetaData()
 _PROCESS_IDEMPOTENCY_LOCKS = tuple(RLock() for _ in range(64))
@@ -142,6 +141,22 @@ def _db_time(value: datetime) -> datetime:
     return value.astimezone(timezone.utc)
 
 
+def _apply_transaction_scope(
+    conn: Connection, *, org_id: str, workspace_id: str
+) -> None:
+    """Bind a SQLAlchemy transaction to the canonical runtime role and GUCs."""
+    if conn.dialect.name != "postgresql":
+        return
+    conn.execute(text("SET LOCAL ROLE aos_runtime"))
+    conn.execute(
+        text(
+            "SELECT set_config('aos.org_id', :org_id, true), "
+            "set_config('aos.project_id', :workspace_id, true)"
+        ),
+        {"org_id": org_id, "workspace_id": workspace_id},
+    )
+
+
 def _scope_clause(table: Table, command: BatchCommand):
     scope = command.scope
     return and_(
@@ -199,6 +214,11 @@ class EcomConsistencyStore:
         ]
         try:
             with process_lock, self._engine.begin() as conn:
+                _apply_transaction_scope(
+                    conn,
+                    org_id=command.scope.org_id,
+                    workspace_id=command.scope.workspace_id,
+                )
                 self._lock_idempotency_key(conn, lock_key)
                 replay = self._get_receipt(conn, command)
                 if replay is not None:
@@ -257,14 +277,34 @@ class EcomConsistencyStore:
         self, identity: StorageIdentity, object_type: str
     ) -> dict[str, Any] | None:
         with self._engine.connect() as conn:
-            row = conn.execute(select(ecom_object).where(_object_clause(identity, object_type))).mappings().first()
+            _apply_transaction_scope(
+                conn, org_id=identity.org_id, workspace_id=identity.workspace_id
+            )
+            row = (
+                conn.execute(
+                    select(ecom_object).where(_object_clause(identity, object_type))
+                )
+                .mappings()
+                .first()
+            )
             return dict(row) if row else None
 
     def get_checkpoint(self, command: BatchCommand) -> dict[str, Any] | None:
         with self._engine.connect() as conn:
-            row = conn.execute(
-                select(ecom_sync_checkpoint).where(_scope_clause(ecom_sync_checkpoint, command))
-            ).mappings().first()
+            _apply_transaction_scope(
+                conn,
+                org_id=command.scope.org_id,
+                workspace_id=command.scope.workspace_id,
+            )
+            row = (
+                conn.execute(
+                    select(ecom_sync_checkpoint).where(
+                        _scope_clause(ecom_sync_checkpoint, command)
+                    )
+                )
+                .mappings()
+                .first()
+            )
             return dict(row) if row else None
 
     def list_links(
@@ -276,6 +316,7 @@ class EcomConsistencyStore:
         shop_or_marketplace_id: str,
     ) -> list[dict[str, Any]]:
         with self._engine.connect() as conn:
+            _apply_transaction_scope(conn, org_id=org_id, workspace_id=workspace_id)
             rows = conn.execute(
                 select(ecom_link).where(
                     and_(
@@ -305,20 +346,29 @@ class EcomConsistencyStore:
 
     @staticmethod
     def _get_receipt(conn: Connection, command: BatchCommand):
-        return conn.execute(
-            select(ecom_ingest_receipt).where(
-                and_(
-                    _scope_clause(ecom_ingest_receipt, command),
-                    ecom_ingest_receipt.c.idempotency_key == command.idempotency_key,
+        return (
+            conn.execute(
+                select(ecom_ingest_receipt)
+                .where(
+                    and_(
+                        _scope_clause(ecom_ingest_receipt, command),
+                        ecom_ingest_receipt.c.idempotency_key
+                        == command.idempotency_key,
+                    )
                 )
-            ).with_for_update()
-        ).mappings().first()
+                .with_for_update()
+            )
+            .mappings()
+            .first()
+        )
 
     def _upsert_object(self, conn: Connection, record: CoreObjectRecord) -> str:
         clause = _object_clause(record.identity, record.object_type)
-        existing = conn.execute(
-            select(ecom_object).where(clause).with_for_update()
-        ).mappings().first()
+        existing = (
+            conn.execute(select(ecom_object).where(clause).with_for_update())
+            .mappings()
+            .first()
+        )
         payload_hash = record.payload_hash()
         incoming_time = record.source_updated_at
         now = _utcnow()
@@ -338,7 +388,9 @@ class EcomConsistencyStore:
             conn.execute(
                 update(ecom_object)
                 .where(clause)
-                .values(**self._object_values(record, payload_hash, now, created_at=None))
+                .values(
+                    **self._object_values(record, payload_hash, now, created_at=None)
+                )
             )
         else:
             conn.execute(
@@ -354,7 +406,9 @@ class EcomConsistencyStore:
             )
 
         if record.is_deleted:
-            self._tombstone_attached_links(conn, record.identity, record.object_type, incoming_time)
+            self._tombstone_attached_links(
+                conn, record.identity, record.object_type, incoming_time
+            )
             return "objects_tombstoned"
         return "objects_written"
 
@@ -389,7 +443,9 @@ class EcomConsistencyStore:
         *,
         allow_tombstone: bool,
     ) -> bool:
-        query = select(ecom_object.c.external_id).where(_object_clause(identity, object_type))
+        query = select(ecom_object.c.external_id).where(
+            _object_clause(identity, object_type)
+        )
         if not allow_tombstone:
             query = query.where(ecom_object.c.deleted_at.is_(None))
         return conn.execute(query).first() is not None
@@ -407,9 +463,11 @@ class EcomConsistencyStore:
             )
 
         clause = _link_clause(link)
-        existing = conn.execute(
-            select(ecom_link).where(clause).with_for_update()
-        ).mappings().first()
+        existing = (
+            conn.execute(select(ecom_link).where(clause).with_for_update())
+            .mappings()
+            .first()
+        )
         payload_hash = link.payload_hash()
         now = _utcnow()
         values = {
@@ -466,13 +524,15 @@ class EcomConsistencyStore:
     ) -> None:
         source_match = and_(
             ecom_link.c.source_platform == identity.platform,
-            ecom_link.c.source_shop_or_marketplace_id == identity.shop_or_marketplace_id,
+            ecom_link.c.source_shop_or_marketplace_id
+            == identity.shop_or_marketplace_id,
             ecom_link.c.source_object_type == object_type,
             ecom_link.c.source_external_id == identity.external_id,
         )
         target_match = and_(
             ecom_link.c.target_platform == identity.platform,
-            ecom_link.c.target_shop_or_marketplace_id == identity.shop_or_marketplace_id,
+            ecom_link.c.target_shop_or_marketplace_id
+            == identity.shop_or_marketplace_id,
             ecom_link.c.target_object_type == object_type,
             ecom_link.c.target_external_id == identity.external_id,
         )
@@ -495,9 +555,11 @@ class EcomConsistencyStore:
     @staticmethod
     def _advance_checkpoint(conn: Connection, command: BatchCommand) -> int:
         clause = _scope_clause(ecom_sync_checkpoint, command)
-        existing = conn.execute(
-            select(ecom_sync_checkpoint).where(clause).with_for_update()
-        ).mappings().first()
+        existing = (
+            conn.execute(select(ecom_sync_checkpoint).where(clause).with_for_update())
+            .mappings()
+            .first()
+        )
         expected = command.expected_checkpoint_version
         next_cursor = command.next_checkpoint
         data_cursor = command.max_data_cursor()

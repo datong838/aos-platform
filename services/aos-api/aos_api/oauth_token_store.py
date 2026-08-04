@@ -1,4 +1,5 @@
 """Tenant-scoped OAuth token persistence contracts and PostgreSQL adapter."""
+
 from __future__ import annotations
 
 import json
@@ -7,6 +8,8 @@ from copy import deepcopy
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Protocol
+
+from aos_api.tenant_scope import TenantScope
 
 
 @dataclass(frozen=True)
@@ -17,7 +20,12 @@ class OAuthScope:
     external_account_id: str
 
     def __post_init__(self) -> None:
-        values = (self.org_id, self.workspace_id, self.platform, self.external_account_id)
+        values = (
+            self.org_id,
+            self.workspace_id,
+            self.platform,
+            self.external_account_id,
+        )
         if any(not value.strip() for value in values):
             raise ValueError("OAuth scope fields must not be empty")
         object.__setattr__(self, "platform", self.platform.strip().lower())
@@ -47,8 +55,12 @@ class OAuthTokenRecord:
 
 class OAuthTokenStore(Protocol):
     def get(self, scope: OAuthScope) -> OAuthTokenRecord | None: ...
-    def put(self, record: OAuthTokenRecord, *, expected_version: int | None = None) -> OAuthTokenRecord: ...
-    def list_due(self, before: datetime) -> list[OAuthTokenRecord]: ...
+    def put(
+        self, record: OAuthTokenRecord, *, expected_version: int | None = None
+    ) -> OAuthTokenRecord: ...
+    def list_due(
+        self, tenant_scope: TenantScope, before: datetime
+    ) -> list[OAuthTokenRecord]: ...
     def delete(self, scope: OAuthScope) -> bool: ...
 
 
@@ -62,10 +74,14 @@ class InMemoryOAuthTokenStore:
             item = self._items.get(scope.key)
             return deepcopy(item) if item else None
 
-    def put(self, record: OAuthTokenRecord, *, expected_version: int | None = None) -> OAuthTokenRecord:
+    def put(
+        self, record: OAuthTokenRecord, *, expected_version: int | None = None
+    ) -> OAuthTokenRecord:
         with self._lock:
             current = self._items.get(record.scope.key)
-            if expected_version is not None and (current is None or current.version != expected_version):
+            if expected_version is not None and (
+                current is None or current.version != expected_version
+            ):
                 raise RuntimeError("OAUTH_TOKEN_VERSION_CONFLICT")
             stored = deepcopy(record)
             stored.version = (current.version + 1) if current else 1
@@ -73,9 +89,19 @@ class InMemoryOAuthTokenStore:
             self._items[record.scope.key] = stored
             return deepcopy(stored)
 
-    def list_due(self, before: datetime) -> list[OAuthTokenRecord]:
+    def list_due(
+        self, tenant_scope: TenantScope, before: datetime
+    ) -> list[OAuthTokenRecord]:
         with self._lock:
-            return [deepcopy(r) for r in self._items.values() if r.status == "active" and r.expires_at and r.expires_at <= before]
+            return [
+                deepcopy(record)
+                for record in self._items.values()
+                if record.scope.org_id == tenant_scope.org_id
+                and record.scope.workspace_id == tenant_scope.project_id
+                and record.status == "active"
+                and record.expires_at
+                and record.expires_at <= before
+            ]
 
     def delete(self, scope: OAuthScope) -> bool:
         with self._lock:
@@ -87,26 +113,47 @@ class PostgresOAuthTokenStore:
 
     def get(self, scope: OAuthScope) -> OAuthTokenRecord | None:
         from aos_api.db import connect
-        with connect() as conn:
+
+        with connect(
+            TenantScope.from_workspace(
+                org_id=scope.org_id, workspace_id=scope.workspace_id
+            )
+        ) as conn:
             row = conn.execute(
                 "SELECT payload FROM oauth_token_store WHERE org_id=%s AND workspace_id=%s AND platform=%s AND external_account_id=%s",
                 scope.key,
             ).fetchone()
         return self._decode(row["payload"] if row else None)
 
-    def put(self, record: OAuthTokenRecord, *, expected_version: int | None = None) -> OAuthTokenRecord:
+    def put(
+        self, record: OAuthTokenRecord, *, expected_version: int | None = None
+    ) -> OAuthTokenRecord:
         from aos_api.db import connect
+
         candidate = deepcopy(record)
-        candidate.version = (expected_version + 1) if expected_version is not None else 1
+        candidate.version = (
+            (expected_version + 1) if expected_version is not None else 1
+        )
         candidate.updated_at = datetime.now(timezone.utc)
         payload = self._encode(candidate)
-        with connect() as conn:
+        with connect(
+            TenantScope.from_workspace(
+                org_id=record.scope.org_id,
+                workspace_id=record.scope.workspace_id,
+            )
+        ) as conn:
             if expected_version is not None:
                 cur = conn.execute(
                     """UPDATE oauth_token_store SET payload=%s::jsonb,version=%s,expires_at=%s,updated_at=NOW()
                     WHERE org_id=%s AND workspace_id=%s AND platform=%s AND external_account_id=%s AND version=%s
                     RETURNING payload""",
-                    (payload, candidate.version, candidate.expires_at, *candidate.scope.key, expected_version),
+                    (
+                        payload,
+                        candidate.version,
+                        candidate.expires_at,
+                        *candidate.scope.key,
+                        expected_version,
+                    ),
                 )
                 row = cur.fetchone()
                 if row is None:
@@ -120,22 +167,45 @@ class PostgresOAuthTokenStore:
                       payload=jsonb_set(EXCLUDED.payload,'{version}',to_jsonb(oauth_token_store.version+1),false),
                       version=oauth_token_store.version+1,expires_at=EXCLUDED.expires_at,updated_at=NOW()
                     RETURNING payload""",
-                    (*candidate.scope.key, payload, candidate.version, candidate.expires_at),
+                    (
+                        *candidate.scope.key,
+                        payload,
+                        candidate.version,
+                        candidate.expires_at,
+                    ),
                 )
                 row = cur.fetchone()
             conn.commit()
         return self._decode(row["payload"])
 
-    def list_due(self, before: datetime) -> list[OAuthTokenRecord]:
+    def list_due(
+        self, tenant_scope: TenantScope, before: datetime
+    ) -> list[OAuthTokenRecord]:
         from aos_api.db import connect
-        with connect() as conn:
-            rows = conn.execute("SELECT payload FROM oauth_token_store WHERE expires_at IS NOT NULL AND expires_at <= %s", (before,)).fetchall()
-        return [item for row in rows if (item := self._decode(row["payload"])) and item.status == "active"]
+
+        with connect(tenant_scope) as conn:
+            rows = conn.execute(
+                "SELECT payload FROM oauth_token_store WHERE expires_at IS NOT NULL AND expires_at <= %s",
+                (before,),
+            ).fetchall()
+        return [
+            item
+            for row in rows
+            if (item := self._decode(row["payload"])) and item.status == "active"
+        ]
 
     def delete(self, scope: OAuthScope) -> bool:
         from aos_api.db import connect
-        with connect() as conn:
-            cur = conn.execute("DELETE FROM oauth_token_store WHERE org_id=%s AND workspace_id=%s AND platform=%s AND external_account_id=%s", scope.key)
+
+        with connect(
+            TenantScope.from_workspace(
+                org_id=scope.org_id, workspace_id=scope.workspace_id
+            )
+        ) as conn:
+            cur = conn.execute(
+                "DELETE FROM oauth_token_store WHERE org_id=%s AND workspace_id=%s AND platform=%s AND external_account_id=%s",
+                scope.key,
+            )
             conn.commit()
             return bool(cur.rowcount)
 
@@ -155,5 +225,7 @@ class PostgresOAuthTokenStore:
         data["scope"] = OAuthScope(**data["scope"])
         data["scopes"] = tuple(data.get("scopes") or ())
         for field in ("expires_at", "refresh_expires_at", "updated_at"):
-            data[field] = datetime.fromisoformat(data[field]) if data.get(field) else None
+            data[field] = (
+                datetime.fromisoformat(data[field]) if data.get(field) else None
+            )
         return OAuthTokenRecord(**data)
