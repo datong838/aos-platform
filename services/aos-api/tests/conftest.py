@@ -67,6 +67,22 @@ def _isolated_postgres_database():
         command.upgrade(config, "228assetintegration")
         init_schema()
         ensure_tenant_catalog_schema()
+        # Contract migrations validate workspace parents before request/demo
+        # fixtures run, so the disposable database needs its canonical test
+        # workspace at bootstrap time.
+        from aos_api.db import connect as bootstrap_connect
+
+        with bootstrap_connect() as conn:
+            conn.execute(
+                "INSERT INTO twa_org (id,name) VALUES ('dev-org','测试组织') "
+                "ON CONFLICT (id) DO NOTHING"
+            )
+            conn.execute(
+                "INSERT INTO twa_workspace (org_id,project_id,name) "
+                "VALUES ('dev-org','dev-project','测试工作区') "
+                "ON CONFLICT (org_id,project_id) DO NOTHING"
+            )
+            conn.commit()
         from aos_api.canvas_config import ensure_schema as ensure_canvas_schema
         from aos_api.module_deployments import ensure_schema as ensure_deployment_schema
         from aos_api.module_events import ensure_events_schema

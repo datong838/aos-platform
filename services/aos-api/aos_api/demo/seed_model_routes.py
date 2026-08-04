@@ -2,16 +2,17 @@
 
 Routes: default / code-gen / vision / fallback.
 """
+
 from __future__ import annotations
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
 from aos_api.model_routes import ensure_schema
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.demo.seed_model_routes")
 
-_DEFAULT_ORG = "dev-org"
-_DEFAULT_PROJECT = "dev-project"
+_DEMO_SCOPE = TenantScope("dev-org", "dev-project")
 
 _ROUTES = [
     {
@@ -53,13 +54,13 @@ _ROUTES = [
 ]
 
 
-def seed_model_routes() -> int:
+def seed_model_routes(scope: TenantScope = _DEMO_SCOPE) -> int:
     """Idempotently seed 4 routing rules. Returns count."""
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             "DELETE FROM model_route WHERE org_id=%s AND project_id=%s",
-            (_DEFAULT_ORG, _DEFAULT_PROJECT),
+            scope.key,
         )
         for r in _ROUTES:
             conn.execute(
@@ -68,7 +69,7 @@ def seed_model_routes() -> int:
                     id, task_type, primary_model, fallback_model, outbound_policy,
                     priority, enabled, org_id, project_id
                 ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                ON CONFLICT (id) DO UPDATE SET
+                ON CONFLICT (org_id,project_id,id) DO UPDATE SET
                     task_type=EXCLUDED.task_type, primary_model=EXCLUDED.primary_model,
                     fallback_model=EXCLUDED.fallback_model,
                     outbound_policy=EXCLUDED.outbound_policy,
@@ -82,8 +83,7 @@ def seed_model_routes() -> int:
                     r["outboundPolicy"],
                     r["priority"],
                     r["enabled"],
-                    _DEFAULT_ORG,
-                    _DEFAULT_PROJECT,
+                    *scope.key,
                 ),
             )
         conn.commit()

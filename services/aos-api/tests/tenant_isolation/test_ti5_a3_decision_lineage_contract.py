@@ -67,7 +67,7 @@ def test_a3_schema_report_is_green() -> None:
         report = build_ti5_a3_schema_report(conn)
 
     assert report["ok"] is True, report
-    assert report["alembicRevision"] == "228ti5a3lineage"
+    assert report["alembicRevision"] in {"228ti5a3lineage", "228ti5b1models"}
     assert report["ti5DecisionLineageScopeValid"] is True
     assert report["ti5DecisionLineagePrimaryKeyValid"] is True
     assert report["ti5DecisionLineageForeignKeysValid"] is True

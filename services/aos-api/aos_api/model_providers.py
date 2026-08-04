@@ -3,68 +3,33 @@
 Stores provider connection info (base_url, masked api_key) and rolling
 health metrics (p50 latency, availability %).
 """
+
 from __future__ import annotations
 
-import json
 import uuid
 from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.model_providers")
 
-_DEFAULT_ORG = "dev-org"
-_DEFAULT_PROJECT = "dev-project"
-
 
 def ensure_schema() -> None:
-    with connect() as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS model_provider (
-              id TEXT PRIMARY KEY,
-              name TEXT NOT NULL,
-              base_url TEXT NOT NULL DEFAULT '',
-              api_key_masked TEXT NOT NULL DEFAULT '',
-              status TEXT NOT NULL DEFAULT 'normal',
-              org_id TEXT NOT NULL DEFAULT 'dev-org',
-              project_id TEXT NOT NULL DEFAULT 'dev-project',
-              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-            """
-        )
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS provider_health (
-              id TEXT PRIMARY KEY,
-              provider_id TEXT NOT NULL,
-              p50_latency_ms INTEGER NOT NULL DEFAULT 0,
-              availability_pct NUMERIC(6,3) NOT NULL DEFAULT 100.000,
-              checked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-              org_id TEXT NOT NULL DEFAULT 'dev-org',
-              project_id TEXT NOT NULL DEFAULT 'dev-project'
-            )
-            """
-        )
-        conn.execute(
-            """
-            CREATE INDEX IF NOT EXISTS idx_provider_health_provider
-            ON provider_health (provider_id, checked_at DESC)
-            """
-        )
-        conn.commit()
+    """Compatibility hook; schema ownership moved to Alembic in TI-5 B1."""
 
 
-def list_providers(*, status: str | None = None) -> list[dict[str, Any]]:
+def list_providers(
+    scope: TenantScope, *, status: str | None = None
+) -> list[dict[str, Any]]:
     ensure_schema()
     clauses = ["org_id=%s", "project_id=%s"]
-    params: list[Any] = [_DEFAULT_ORG, _DEFAULT_PROJECT]
+    params: list[Any] = list(scope.key)
     if status:
         clauses.append("status=%s")
         params.append(status)
-    with connect() as conn:
+    with connect(scope) as conn:
         rows = conn.execute(
             "SELECT * FROM model_provider WHERE "
             + " AND ".join(clauses)
@@ -81,7 +46,7 @@ def list_providers(*, status: str | None = None) -> list[dict[str, Any]]:
                  WHERE provider_id=%s AND org_id=%s AND project_id=%s
                  ORDER BY checked_at DESC LIMIT 1
                 """,
-                (r["id"], _DEFAULT_ORG, _DEFAULT_PROJECT),
+                (r["id"], *scope.key),
             ).fetchone()
             if health:
                 d["p50LatencyMs"] = int(health.get("p50_latency_ms") or 0)
@@ -93,12 +58,12 @@ def list_providers(*, status: str | None = None) -> list[dict[str, Any]]:
     return result
 
 
-def get_provider(provider_id: str) -> dict[str, Any] | None:
+def get_provider(scope: TenantScope, provider_id: str) -> dict[str, Any] | None:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         row = conn.execute(
             "SELECT * FROM model_provider WHERE id=%s AND org_id=%s AND project_id=%s",
-            (provider_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (provider_id, *scope.key),
         ).fetchone()
         if not row:
             return None
@@ -109,7 +74,7 @@ def get_provider(provider_id: str) -> dict[str, Any] | None:
              WHERE provider_id=%s AND org_id=%s AND project_id=%s
              ORDER BY checked_at DESC LIMIT 1
             """,
-            (provider_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (provider_id, *scope.key),
         ).fetchone()
         if health:
             d["p50LatencyMs"] = int(health.get("p50_latency_ms") or 0)
@@ -120,18 +85,18 @@ def get_provider(provider_id: str) -> dict[str, Any] | None:
     return d
 
 
-def create_provider(payload: dict[str, Any]) -> dict[str, Any]:
+def create_provider(scope: TenantScope, payload: dict[str, Any]) -> dict[str, Any]:
     ensure_schema()
     pid = payload.get("id") or f"prov-{uuid.uuid4().hex[:8]}"
     raw_key = payload.get("apiKey") or payload.get("api_key") or ""
     masked = _mask_key(raw_key)
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             INSERT INTO model_provider (
                 id, name, base_url, api_key_masked, status, org_id, project_id
             ) VALUES (%s,%s,%s,%s,%s,%s,%s)
-            ON CONFLICT (id) DO UPDATE SET
+            ON CONFLICT (org_id,project_id,id) DO UPDATE SET
                 name=EXCLUDED.name, base_url=EXCLUDED.base_url,
                 api_key_masked=EXCLUDED.api_key_masked, status=EXCLUDED.status,
                 updated_at=NOW()
@@ -142,21 +107,22 @@ def create_provider(payload: dict[str, Any]) -> dict[str, Any]:
                 payload.get("baseUrl") or payload.get("base_url") or "",
                 masked,
                 payload.get("status") or "normal",
-                _DEFAULT_ORG,
-                _DEFAULT_PROJECT,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_provider(pid)  # type: ignore[return-value]
+    return get_provider(scope, pid)  # type: ignore[return-value]
 
 
-def update_provider(provider_id: str, patch: dict[str, Any]) -> dict[str, Any] | None:
-    cur = get_provider(provider_id)
+def update_provider(
+    scope: TenantScope, provider_id: str, patch: dict[str, Any]
+) -> dict[str, Any] | None:
+    cur = get_provider(scope, provider_id)
     if not cur:
         return None
     raw_key = patch.get("apiKey") or patch.get("api_key")
     masked = _mask_key(raw_key) if raw_key else cur.get("apiKeyMasked", "")
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             UPDATE model_provider SET
@@ -169,36 +135,35 @@ def update_provider(provider_id: str, patch: dict[str, Any]) -> dict[str, Any] |
                 masked,
                 patch.get("status", cur["status"]),
                 provider_id,
-                _DEFAULT_ORG,
-                _DEFAULT_PROJECT,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_provider(provider_id)
+    return get_provider(scope, provider_id)
 
 
-def delete_provider(provider_id: str) -> bool:
+def delete_provider(scope: TenantScope, provider_id: str) -> bool:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             "DELETE FROM provider_health WHERE provider_id=%s AND org_id=%s AND project_id=%s",
-            (provider_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (provider_id, *scope.key),
         )
         result = conn.execute(
             "DELETE FROM model_provider WHERE id=%s AND org_id=%s AND project_id=%s",
-            (provider_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (provider_id, *scope.key),
         )
         conn.commit()
         return result.rowcount > 0
 
 
-def get_provider_health(provider_id: str) -> dict[str, Any] | None:
+def get_provider_health(scope: TenantScope, provider_id: str) -> dict[str, Any] | None:
     """Return the latest health snapshot for a provider."""
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         prov = conn.execute(
             "SELECT * FROM model_provider WHERE id=%s AND org_id=%s AND project_id=%s",
-            (provider_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (provider_id, *scope.key),
         ).fetchone()
         if not prov:
             return None
@@ -208,35 +173,47 @@ def get_provider_health(provider_id: str) -> dict[str, Any] | None:
              WHERE provider_id=%s AND org_id=%s AND project_id=%s
              ORDER BY checked_at DESC LIMIT 1
             """,
-            (provider_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (provider_id, *scope.key),
         ).fetchone()
     return {
         "providerId": provider_id,
         "name": prov["name"],
         "status": prov.get("status") or "normal",
         "p50LatencyMs": int(health.get("p50_latency_ms") or 0) if health else 0,
-        "availabilityPct": float(health.get("availability_pct") or 100.0) if health else 100.0,
+        "availabilityPct": float(health.get("availability_pct") or 100.0)
+        if health
+        else 100.0,
         "checkedAt": str(health.get("checked_at", "")) if health else "",
     }
 
 
 def upsert_provider_health(
-    provider_id: str, p50_latency_ms: int, availability_pct: float
+    scope: TenantScope, provider_id: str, p50_latency_ms: int, availability_pct: float
 ) -> dict[str, Any]:
     ensure_schema()
     hid = f"ph-{uuid.uuid4().hex[:8]}"
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             INSERT INTO provider_health (
                 id, provider_id, p50_latency_ms, availability_pct, org_id, project_id
             ) VALUES (%s,%s,%s,%s,%s,%s)
             """,
-            (hid, provider_id, int(p50_latency_ms), float(availability_pct), _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (
+                hid,
+                provider_id,
+                int(p50_latency_ms),
+                float(availability_pct),
+                *scope.key,
+            ),
         )
         conn.commit()
-    return {"id": hid, "providerId": provider_id, "p50LatencyMs": int(p50_latency_ms),
-            "availabilityPct": float(availability_pct)}
+    return {
+        "id": hid,
+        "providerId": provider_id,
+        "p50LatencyMs": int(p50_latency_ms),
+        "availabilityPct": float(availability_pct),
+    }
 
 
 def _mask_key(raw: str) -> str:

@@ -3,18 +3,17 @@
 Providers: 深度求索 / Azure OpenAI / vLLM 本地 / Anthropic.
 Each has a provider row + a latest provider_health row (p50 latency, availability).
 """
-from __future__ import annotations
 
-import uuid
+from __future__ import annotations
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
 from aos_api.model_providers import ensure_schema
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.demo.seed_providers")
 
-_DEFAULT_ORG = "dev-org"
-_DEFAULT_PROJECT = "dev-project"
+_DEMO_SCOPE = TenantScope("dev-org", "dev-project")
 
 _PROVIDERS = [
     {
@@ -62,18 +61,18 @@ def _mask(raw: str) -> str:
     return raw[:4] + "***" + raw[-4:]
 
 
-def seed_providers() -> int:
+def seed_providers(scope: TenantScope = _DEMO_SCOPE) -> int:
     """Idempotently seed 4 providers + latest health snapshot. Returns count."""
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         # delete health first (FK-like)
         conn.execute(
             "DELETE FROM provider_health WHERE org_id=%s AND project_id=%s",
-            (_DEFAULT_ORG, _DEFAULT_PROJECT),
+            scope.key,
         )
         conn.execute(
             "DELETE FROM model_provider WHERE org_id=%s AND project_id=%s",
-            (_DEFAULT_ORG, _DEFAULT_PROJECT),
+            scope.key,
         )
         for p in _PROVIDERS:
             conn.execute(
@@ -81,7 +80,7 @@ def seed_providers() -> int:
                 INSERT INTO model_provider (
                     id, name, base_url, api_key_masked, status, org_id, project_id
                 ) VALUES (%s,%s,%s,%s,%s,%s,%s)
-                ON CONFLICT (id) DO UPDATE SET
+                ON CONFLICT (org_id,project_id,id) DO UPDATE SET
                     name=EXCLUDED.name, base_url=EXCLUDED.base_url,
                     api_key_masked=EXCLUDED.api_key_masked, status=EXCLUDED.status,
                     updated_at=NOW()
@@ -92,8 +91,7 @@ def seed_providers() -> int:
                     p["baseUrl"],
                     _mask(p["apiKey"]),
                     p["status"],
-                    _DEFAULT_ORG,
-                    _DEFAULT_PROJECT,
+                    *scope.key,
                 ),
             )
             conn.execute(
@@ -107,8 +105,7 @@ def seed_providers() -> int:
                     p["id"],
                     p["p50LatencyMs"],
                     p["availabilityPct"],
-                    _DEFAULT_ORG,
-                    _DEFAULT_PROJECT,
+                    *scope.key,
                 ),
             )
         conn.commit()

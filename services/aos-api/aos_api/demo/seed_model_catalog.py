@@ -2,6 +2,7 @@
 
 Idempotent: delete by org_id then insert.
 """
+
 from __future__ import annotations
 
 import json
@@ -9,11 +10,11 @@ import json
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
 from aos_api.model_catalog import ensure_schema
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.demo.seed_model_catalog")
 
-_DEFAULT_ORG = "dev-org"
-_DEFAULT_PROJECT = "dev-project"
+_DEMO_SCOPE = TenantScope("dev-org", "dev-project")
 
 # 12 models: GPT-4o/GPT-4o-mini/Claude-3.5-Sonnet/Claude-3-Haiku/
 # DeepSeek-V3/DeepSeek-R1/Llama-3.1-70B/Llama-3.1-8B/Qwen-2.5-72B/
@@ -166,13 +167,13 @@ _CATALOG = [
 ]
 
 
-def seed_model_catalog() -> int:
+def seed_model_catalog(scope: TenantScope = _DEMO_SCOPE) -> int:
     """Idempotently seed 12 model catalog entries. Returns count."""
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             "DELETE FROM model_catalog WHERE org_id=%s AND project_id=%s",
-            (_DEFAULT_ORG, _DEFAULT_PROJECT),
+            scope.key,
         )
         for c in _CATALOG:
             conn.execute(
@@ -182,7 +183,7 @@ def seed_model_catalog() -> int:
                     context_window, input_price, output_price, status, description,
                     org_id, project_id
                 ) VALUES (%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s,%s,%s,%s)
-                ON CONFLICT (id) DO UPDATE SET
+                ON CONFLICT (org_id,project_id,id) DO UPDATE SET
                     provider=EXCLUDED.provider, model=EXCLUDED.model,
                     display_name=EXCLUDED.display_name, capabilities=EXCLUDED.capabilities,
                     context_window=EXCLUDED.context_window, input_price=EXCLUDED.input_price,
@@ -200,8 +201,7 @@ def seed_model_catalog() -> int:
                     c["outputPrice"],
                     c["status"],
                     c["description"],
-                    _DEFAULT_ORG,
-                    _DEFAULT_PROJECT,
+                    *scope.key,
                 ),
             )
         conn.commit()

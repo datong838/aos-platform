@@ -3,6 +3,7 @@
 Registered: GPT-4o / Claude-3.5-Sonnet / DeepSeek-V3 / GLM-4-Plus.
 Each with quota (rpm/tpm) and alias.
 """
+
 from __future__ import annotations
 
 import json
@@ -10,11 +11,11 @@ import json
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
 from aos_api.registered_models import ensure_schema
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.demo.seed_registered_models")
 
-_DEFAULT_ORG = "dev-org"
-_DEFAULT_PROJECT = "dev-project"
+_DEMO_SCOPE = TenantScope("dev-org", "dev-project")
 
 _REGISTERED = [
     {
@@ -48,13 +49,13 @@ _REGISTERED = [
 ]
 
 
-def seed_registered_models() -> int:
+def seed_registered_models(scope: TenantScope = _DEMO_SCOPE) -> int:
     """Idempotently seed 4 registered models. Returns count."""
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             "DELETE FROM registered_models WHERE org_id=%s AND project_id=%s",
-            (_DEFAULT_ORG, _DEFAULT_PROJECT),
+            scope.key,
         )
         for r in _REGISTERED:
             conn.execute(
@@ -62,7 +63,7 @@ def seed_registered_models() -> int:
                 INSERT INTO registered_models (
                     id, model_id, alias, quota, status, org_id, project_id
                 ) VALUES (%s,%s,%s,%s::jsonb,%s,%s,%s)
-                ON CONFLICT (id) DO UPDATE SET
+                ON CONFLICT (org_id,project_id,id) DO UPDATE SET
                     model_id=EXCLUDED.model_id, alias=EXCLUDED.alias,
                     quota=EXCLUDED.quota, status=EXCLUDED.status, updated_at=NOW()
                 """,
@@ -72,8 +73,7 @@ def seed_registered_models() -> int:
                     r["alias"],
                     json.dumps(r["quota"]),
                     r["status"],
-                    _DEFAULT_ORG,
-                    _DEFAULT_PROJECT,
+                    *scope.key,
                 ),
             )
         conn.commit()

@@ -139,8 +139,9 @@ class TestSeedDataConsistency:
     def test_seed_model_catalog_loaded(self) -> None:
         """种子模型目录数据存在。"""
         from aos_api.model_catalog import list_catalog
+        from aos_api.tenant_scope import TenantScope
 
-        items = list_catalog()
+        items = list_catalog(TenantScope("dev-org", "dev-project"))
         assert len(items) > 0
         for m in items:
             assert "id" in m
@@ -323,15 +324,17 @@ class TestCRUDIntegrity:
         """从 model-catalog 列表 → 注册到 registered-models。"""
         from aos_api.model_catalog import list_catalog, get_catalog
         from aos_api.registered_models import register_model, list_registered
+        from aos_api.tenant_scope import TenantScope
 
-        catalog_items = list_catalog()
+        scope = TenantScope("dev-org", "dev-project")
+        catalog_items = list_catalog(scope)
         assert len(catalog_items) > 0
         model_id = catalog_items[0]["id"]
 
-        cat_detail = get_catalog(model_id)
+        cat_detail = get_catalog(scope, model_id)
         assert cat_detail is not None
 
-        reg = register_model({
+        reg = register_model(scope, {
             "modelId": model_id,
             "alias": "reg-test-alias",
             "quota": {"rpm": 100},
@@ -339,7 +342,7 @@ class TestCRUDIntegrity:
         })
         assert reg["modelId"] == model_id
 
-        all_reg = list_registered()
+        all_reg = list_registered(scope)
         assert len(all_reg) > 0
 
     def test_widget_create_and_query(self) -> None:
@@ -390,15 +393,17 @@ class TestCRUDIntegrity:
             upsert_limit,
             SCOPE_PROJECT,
         )
+        from aos_api.tenant_scope import TenantScope
 
+        scope = TenantScope("dev-org", "dev-project")
         key = "reg-test-project"
-        default = get_or_default_limit(SCOPE_PROJECT, key)
+        default = get_or_default_limit(scope, SCOPE_PROJECT, key)
         assert "rpmLimit" in default
 
-        updated = upsert_limit(SCOPE_PROJECT, key, {"rpmLimit": 200, "tpmLimit": 200000})
+        updated = upsert_limit(scope, SCOPE_PROJECT, key, {"rpmLimit": 200, "tpmLimit": 200000})
         assert updated["rpmLimit"] == 200
 
-        reread = get_or_default_limit(SCOPE_PROJECT, key)
+        reread = get_or_default_limit(scope, SCOPE_PROJECT, key)
         assert reread["rpmLimit"] == 200
 
 

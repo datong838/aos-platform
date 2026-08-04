@@ -2,6 +2,7 @@
 
 Stores model discovery metadata (provider, capabilities, pricing, status).
 """
+
 from __future__ import annotations
 
 import json
@@ -10,39 +11,17 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.model_catalog")
 
-_DEFAULT_ORG = "dev-org"
-_DEFAULT_PROJECT = "dev-project"
-
 
 def ensure_schema() -> None:
-    with connect() as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS model_catalog (
-              id TEXT PRIMARY KEY,
-              provider TEXT NOT NULL,
-              model TEXT NOT NULL,
-              display_name TEXT NOT NULL DEFAULT '',
-              capabilities JSONB NOT NULL DEFAULT '[]'::jsonb,
-              context_window INTEGER NOT NULL DEFAULT 4096,
-              input_price NUMERIC(12,6) NOT NULL DEFAULT 0,
-              output_price NUMERIC(12,6) NOT NULL DEFAULT 0,
-              status TEXT NOT NULL DEFAULT 'ga',
-              description TEXT NOT NULL DEFAULT '',
-              org_id TEXT NOT NULL DEFAULT 'dev-org',
-              project_id TEXT NOT NULL DEFAULT 'dev-project',
-              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-            """
-        )
-        conn.commit()
+    """Compatibility hook; schema ownership moved to Alembic in TI-5 B1."""
 
 
 def list_catalog(
+    scope: TenantScope,
     *,
     provider: str | None = None,
     status: str | None = None,
@@ -50,7 +29,7 @@ def list_catalog(
 ) -> list[dict[str, Any]]:
     ensure_schema()
     clauses = ["org_id=%s", "project_id=%s"]
-    params: list[Any] = [_DEFAULT_ORG, _DEFAULT_PROJECT]
+    params: list[Any] = list(scope.key)
     if provider:
         clauses.append("provider=%s")
         params.append(provider)
@@ -60,28 +39,30 @@ def list_catalog(
     if capability:
         clauses.append("capabilities @> %s::jsonb")
         params.append(json.dumps([capability]))
-    with connect() as conn:
+    with connect(scope) as conn:
         rows = conn.execute(
-            "SELECT * FROM model_catalog WHERE " + " AND ".join(clauses) + " ORDER BY created_at",
+            "SELECT * FROM model_catalog WHERE "
+            + " AND ".join(clauses)
+            + " ORDER BY created_at",
             tuple(params),
         ).fetchall()
     return [_row(r) for r in rows]
 
 
-def get_catalog(model_id: str) -> dict[str, Any] | None:
+def get_catalog(scope: TenantScope, model_id: str) -> dict[str, Any] | None:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         row = conn.execute(
             "SELECT * FROM model_catalog WHERE id=%s AND org_id=%s AND project_id=%s",
-            (model_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (model_id, *scope.key),
         ).fetchone()
     return _row(row) if row else None
 
 
-def create_catalog(payload: dict[str, Any]) -> dict[str, Any]:
+def create_catalog(scope: TenantScope, payload: dict[str, Any]) -> dict[str, Any]:
     ensure_schema()
     mid = payload.get("id") or f"mc-{uuid.uuid4().hex[:8]}"
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             INSERT INTO model_catalog (
@@ -89,7 +70,7 @@ def create_catalog(payload: dict[str, Any]) -> dict[str, Any]:
                 context_window, input_price, output_price, status, description,
                 org_id, project_id
             ) VALUES (%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s,%s,%s,%s)
-            ON CONFLICT (id) DO UPDATE SET
+            ON CONFLICT (org_id,project_id,id) DO UPDATE SET
                 provider=EXCLUDED.provider, model=EXCLUDED.model,
                 display_name=EXCLUDED.display_name, capabilities=EXCLUDED.capabilities,
                 context_window=EXCLUDED.context_window, input_price=EXCLUDED.input_price,
@@ -100,26 +81,33 @@ def create_catalog(payload: dict[str, Any]) -> dict[str, Any]:
                 mid,
                 payload["provider"],
                 payload["model"],
-                payload.get("displayName") or payload.get("display_name") or payload["model"],
+                payload.get("displayName")
+                or payload.get("display_name")
+                or payload["model"],
                 json.dumps(payload.get("capabilities") or []),
-                int(payload.get("contextWindow") or payload.get("context_window") or 4096),
+                int(
+                    payload.get("contextWindow")
+                    or payload.get("context_window")
+                    or 4096
+                ),
                 float(payload.get("inputPrice") or payload.get("input_price") or 0),
                 float(payload.get("outputPrice") or payload.get("output_price") or 0),
                 payload.get("status") or "ga",
                 payload.get("description") or "",
-                _DEFAULT_ORG,
-                _DEFAULT_PROJECT,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_catalog(mid)  # type: ignore[return-value]
+    return get_catalog(scope, mid)  # type: ignore[return-value]
 
 
-def update_catalog(model_id: str, patch: dict[str, Any]) -> dict[str, Any] | None:
-    cur = get_catalog(model_id)
+def update_catalog(
+    scope: TenantScope, model_id: str, patch: dict[str, Any]
+) -> dict[str, Any] | None:
+    cur = get_catalog(scope, model_id)
     if not cur:
         return None
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             UPDATE model_catalog SET
@@ -139,20 +127,19 @@ def update_catalog(model_id: str, patch: dict[str, Any]) -> dict[str, Any] | Non
                 patch.get("status", cur["status"]),
                 patch.get("description", cur.get("description", "")),
                 model_id,
-                _DEFAULT_ORG,
-                _DEFAULT_PROJECT,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_catalog(model_id)
+    return get_catalog(scope, model_id)
 
 
-def delete_catalog(model_id: str) -> bool:
+def delete_catalog(scope: TenantScope, model_id: str) -> bool:
     ensure_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         result = conn.execute(
             "DELETE FROM model_catalog WHERE id=%s AND org_id=%s AND project_id=%s",
-            (model_id, _DEFAULT_ORG, _DEFAULT_PROJECT),
+            (model_id, *scope.key),
         )
         conn.commit()
         return result.rowcount > 0
