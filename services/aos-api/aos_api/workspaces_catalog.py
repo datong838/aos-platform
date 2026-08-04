@@ -39,6 +39,10 @@ def reset_workspace_catalog(*, purge_db: bool = False) -> None:
 
 
 def _persist_ws(row: dict[str, Any]) -> None:
+    from aos_api.tenant_catalog import persistence_enabled
+
+    if not persistence_enabled():
+        return
     try:
         from aos_api.tenant_catalog import ensure_tenant_catalog_schema
 
@@ -80,6 +84,10 @@ def _persist_ws(row: dict[str, Any]) -> None:
 
 
 def _delete_ws_db(org_id: str, project_id: str) -> None:
+    from aos_api.tenant_catalog import persistence_enabled
+
+    if not persistence_enabled():
+        return
     try:
         with connect() as conn:
             conn.execute(

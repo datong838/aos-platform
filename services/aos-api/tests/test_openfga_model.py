@@ -70,13 +70,13 @@ def test_write_unknown_relation_400(client, auth_headers):
 def test_local_editor_implies_viewer(monkeypatch):
     monkeypatch.delenv("AOS_OPENFGA_API_URL", raising=False)
     init_schema()
-    ensure_inherit_openfga_seed()
     obj = "object:WorkOrder:wo-editor-demo"
     with connect() as conn:
+        ensure_inherit_openfga_seed(conn)
         fga.write_tuple(conn, "user:editor-only", "editor", obj)
-        conn.commit()
         assert fga.check(conn, "user:editor-only", "viewer", obj) is True
         assert fga.check(conn, "user:other", "viewer", obj) is False
+        conn.rollback()
 
 
 def test_local_org_member_tuple(monkeypatch):
@@ -84,6 +84,6 @@ def test_local_org_member_tuple(monkeypatch):
     init_schema()
     with connect() as conn:
         fga.write_tuple(conn, "user:alice", "member", "organization:acme")
-        conn.commit()
         assert fga.check(conn, "user:alice", "member", "organization:acme") is True
         assert fga.check(conn, "user:bob", "member", "organization:acme") is False
+        conn.rollback()

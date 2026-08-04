@@ -30,29 +30,6 @@ def _seed_multi_org_test_fixtures() -> None:
         upsert_member(oid, "dev-project", "alice", "owner", actor_id="alice")
 
 
-def _scrub_ephemeral_test_orgs() -> None:
-    """共享 aos_meta 时清掉多组织夹具/用例产生的临时组织，勿动 org-qyh。"""
-    from aos_api.db import connect
-
-    ephemeral = ("org-a", "org-b", "org-new-1", "org-x-unknown")
-    try:
-        with connect() as conn:
-            for oid in ephemeral:
-                conn.execute("DELETE FROM meta_membership WHERE org_id=%s", (oid,))
-                conn.execute("DELETE FROM meta_workspace WHERE org_id=%s", (oid,))
-                conn.execute("DELETE FROM meta_org WHERE id=%s", (oid,))
-            conn.execute("DELETE FROM meta_org WHERE id LIKE 'org-new-%'")
-            conn.execute(
-                "DELETE FROM meta_membership WHERE org_id LIKE 'org-new-%'"
-            )
-            conn.execute(
-                "DELETE FROM meta_workspace WHERE org_id LIKE 'org-new-%' OR project_id LIKE 'prj-rd-%'"
-            )
-            conn.commit()
-    except Exception:  # noqa: BLE001
-        pass
-
-
 @pytest.fixture()
 def api_client():
     idempotency_store.clear()
@@ -72,7 +49,6 @@ def api_client():
     app = create_app()
     with TestClient(app) as c:
         yield c
-    _scrub_ephemeral_test_orgs()
 
 
 def _auth(org: str, project: str, subject: str = "alice") -> dict[str, str]:

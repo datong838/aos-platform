@@ -43,6 +43,10 @@ def reset_membership_store(*, purge_db: bool = False) -> None:
 
 
 def _persist_member(org_id: str, project_id: str, subject: str, role: str) -> None:
+    from aos_api.tenant_catalog import persistence_enabled
+
+    if not persistence_enabled():
+        return
     try:
         from aos_api.tenant_catalog import ensure_tenant_catalog_schema
 
@@ -76,6 +80,10 @@ def _persist_member(org_id: str, project_id: str, subject: str, role: str) -> No
 
 
 def _delete_member_db(org_id: str, project_id: str, subject: str) -> None:
+    from aos_api.tenant_catalog import persistence_enabled
+
+    if not persistence_enabled():
+        return
     try:
         with connect() as conn:
             conn.execute(

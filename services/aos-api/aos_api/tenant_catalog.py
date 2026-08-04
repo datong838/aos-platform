@@ -9,8 +9,22 @@ log = get_logger("aos-api.tenant-catalog")
 _schema_ready = False
 
 
+def persistence_enabled() -> bool:
+    """Return whether the tenant catalog may read/write PostgreSQL.
+
+    ``AOS_TWA_STORE=memory`` is the unit-test/in-process boundary and must not
+    silently mutate the shared ``meta_*`` catalog.  ``auto`` and ``pg`` keep
+    the existing durable behavior.
+    """
+    from aos_api import twa_pg
+
+    return twa_pg.enabled()
+
+
 def ensure_tenant_catalog_schema() -> None:
     global _schema_ready
+    if not persistence_enabled():
+        return
     if _schema_ready:
         return
     with connect() as conn:
@@ -62,6 +76,9 @@ def boot_tenant_catalogs() -> None:
     dev-org / dev-project / 默认人员等测试数据已迁移到 ``aos_api.demo.seed_test_org``。
     企业上线后由管理员自建组织；开发/测试显式执行 ``seed_test_org()``。
     """
+    if not persistence_enabled():
+        log.info("tenant_catalog_boot_skipped store=memory")
+        return
     ensure_tenant_catalog_schema()
     from aos_api import membership as mem
     from aos_api import orgs as org_store
