@@ -12,11 +12,20 @@ from aos_api.constitution import lint_object_type
 from aos_api.db import connect
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
-from aos_api.marking import apply_field_redaction, can_access_object, ensure_object_access
+from aos_api.marking import (
+    apply_field_redaction,
+    can_access_object,
+    ensure_object_access,
+)
 from aos_api.ot_detail_meta import build_ot_detail_meta
+from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(tags=["ontology"])
 log = get_logger("aos-api.ontology")
+
+
+def _scope(principal: Principal) -> TenantScope:
+    return TenantScope(principal.org_id, principal.project_id)
 
 
 def _object_type_properties(conn, object_type: str) -> list[dict[str, Any]]:
@@ -333,20 +342,29 @@ def upsert_graph_edges(
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """Upsert link instances into graph_edge (scripted twin / VERIFY.2)."""
-    _ = principal
     if not body.edges:
         raise ApiError(code="VALIDATION", message="edges required", status_code=400)
     written = 0
     with connect() as conn:
         for e in body.edges:
-            conn.execute(
+            result = conn.execute(
                 """
-                INSERT INTO graph_edge (src_type, src_id, rel, dst_type, dst_id)
-                VALUES (%s,%s,%s,%s,%s)
-                ON CONFLICT (src_type, src_id, rel, dst_type, dst_id) DO NOTHING
+                INSERT INTO graph_edge (
+                  src_type, src_id, rel, dst_type, dst_id, org_id, project_id
+                ) VALUES (%s,%s,%s,%s,%s,%s,%s)
+                ON CONFLICT (src_type, src_id, rel, dst_type, dst_id) DO UPDATE
+                  SET org_id=graph_edge.org_id
+                WHERE graph_edge.org_id=EXCLUDED.org_id
+                  AND graph_edge.project_id=EXCLUDED.project_id
                 """,
-                (e.srcType, e.srcId, e.rel, e.dstType, e.dstId),
+                (e.srcType, e.srcId, e.rel, e.dstType, e.dstId, *_scope(principal).key),
             )
+            if result.rowcount == 0:
+                raise ApiError(
+                    code="TENANT_KEY_CONFLICT",
+                    message="graph edge key belongs to another tenant or legacy scope",
+                    status_code=409,
+                )
             written += 1
         conn.commit()
     log.info("graph_edges_upsert count=%s", written)
@@ -358,7 +376,6 @@ def get_link_type(
     link_id: str,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    _ = principal
     with connect() as conn:
         row = conn.execute(
             """
@@ -510,7 +527,15 @@ def put_object(
         ).fetchone()
         if not ot:
             raise ApiError(code="NOT_FOUND", message="object type not found", status_code=404)
-        upsert_overlay(conn, branch, object_type, object_id, body.props or {}, op=body.op or "upsert")
+        upsert_overlay(
+            conn,
+            _scope(principal),
+            branch,
+            object_type,
+            object_id,
+            body.props or {},
+            op=body.op or "upsert",
+        )
         conn.commit()
     log.info("object_overlay_put type=%s id=%s branch=%s op=%s", object_type, object_id, branch, body.op)
     return {"ok": True, "objectType": object_type, "objectId": object_id, "branch": branch, "op": body.op}
@@ -523,7 +548,6 @@ def neighbors(
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """1-hop graph read — adjacency table interim (AGE blocked, see 26 §阻塞)."""
-    _ = principal
     with connect() as conn:
         rows = conn.execute(
             """
@@ -872,15 +896,19 @@ def create_branch(
             raise ApiError(code="VALIDATION", message=f"branch exists: {bid}", status_code=400)
         base = body.baseRef.strip() or "main"
         if base not in {"main", "master"}:
-            base_row = conn.execute("SELECT 1 FROM meta_branch WHERE id=%s", (base,)).fetchone()
+            base_row = conn.execute(
+                "SELECT 1 FROM meta_branch WHERE id=%s AND org_id=%s AND project_id=%s",
+                (base, *_scope(principal).key),
+            ).fetchone()
             if not base_row:
                 raise ApiError(code="VALIDATION", message=f"baseRef not found: {base}", status_code=400)
         conn.execute(
             """
-            INSERT INTO meta_branch (id, name, base_ref, readonly)
-            VALUES (%s,%s,%s,FALSE)
+            INSERT INTO meta_branch (
+              id, name, base_ref, readonly, org_id, project_id
+            ) VALUES (%s,%s,%s,FALSE,%s,%s)
             """,
-            (bid, body.name.strip(), base),
+            (bid, body.name.strip(), base, *_scope(principal).key),
         )
         conn.commit()
     log.info("branch_created id=%s base=%s", bid, body.baseRef)
@@ -898,7 +926,6 @@ def branch_diff(
     branch_id: str,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    _ = principal
     with connect() as conn:
         from aos_api.branch_store import diff_branch, ensure_overlay_table
 
@@ -916,7 +943,7 @@ def branch_merge(
         from aos_api.branch_store import ensure_overlay_table, merge_branch
 
         ensure_overlay_table(conn)
-        out = merge_branch(conn, branch_id)
+        out = merge_branch(conn, _scope(principal), branch_id)
         conn.commit()
     log.info("branch_merged id=%s merged=%s", branch_id, out.get("merged"))
     return out
@@ -929,12 +956,18 @@ def branch_checkout(
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """Copy base object into branch overlay (optional patch) for demo/edit."""
-    _ = principal
     with connect() as conn:
         from aos_api.branch_store import checkout_object, ensure_overlay_table
 
         ensure_overlay_table(conn)
-        out = checkout_object(conn, branch_id, body.objectType, body.objectId, body.patch or None)
+        out = checkout_object(
+            conn,
+            _scope(principal),
+            branch_id,
+            body.objectType,
+            body.objectId,
+            body.patch or None,
+        )
         conn.commit()
     log.info(
         "branch_checkout branch=%s type=%s id=%s",
@@ -985,7 +1018,6 @@ def get_okf_mapping(
     industry: str,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    _ = principal
     from aos_api.aip_kv_store import get_payload
 
     key = f"okf_mapping:{industry}"
@@ -1068,15 +1100,24 @@ def funnel_rerun(
         "rerunAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
     }
     with connect() as conn:
-        conn.execute(
+        result = conn.execute(
             """
-            INSERT INTO funnel_status (object_type, stage, detail)
-            VALUES (%s,%s,%s::jsonb)
+            INSERT INTO funnel_status (
+              object_type, stage, detail, org_id, project_id
+            ) VALUES (%s,%s,%s::jsonb,%s,%s)
             ON CONFLICT (object_type) DO UPDATE
               SET stage = EXCLUDED.stage, detail = EXCLUDED.detail
+            WHERE funnel_status.org_id=EXCLUDED.org_id
+              AND funnel_status.project_id=EXCLUDED.project_id
             """,
-            (object_type, stage, json.dumps(detail)),
+            (object_type, stage, json.dumps(detail), *_scope(principal).key),
         )
+        if result.rowcount == 0:
+            raise ApiError(
+                code="TENANT_KEY_CONFLICT",
+                message="funnel key belongs to another tenant or legacy scope",
+                status_code=409,
+            )
         conn.commit()
     log.info("funnel_rerun type=%s mode=%s stage=%s", object_type, mode, stage)
     return {"objectType": object_type, "stage": stage, "mode": mode, "detail": detail, "stages": worker}

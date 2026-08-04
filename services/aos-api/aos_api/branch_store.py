@@ -5,6 +5,7 @@ import json
 from typing import Any
 
 from aos_api.errors import ApiError
+from aos_api.tenant_scope import TenantScope
 
 
 def ensure_overlay_table(conn) -> None:
@@ -23,10 +24,18 @@ def ensure_overlay_table(conn) -> None:
     )
 
 
-def get_branch_row(conn, branch_id: str) -> dict[str, Any] | None:
+def get_branch_row(
+    conn, branch_id: str, scope: TenantScope | None = None
+) -> dict[str, Any] | None:
+    if scope is None:
+        return conn.execute(
+            "SELECT id, name, base_ref, readonly FROM meta_branch WHERE id=%s",
+            (branch_id,),
+        ).fetchone()
     return conn.execute(
-        "SELECT id, name, base_ref, readonly FROM meta_branch WHERE id=%s",
-        (branch_id,),
+        "SELECT id, name, base_ref, readonly FROM meta_branch "
+        "WHERE id=%s AND org_id=%s AND project_id=%s",
+        (branch_id, *scope.key),
     ).fetchone()
 
 
@@ -38,7 +47,19 @@ def is_production_branch(branch_id: str | None, row: dict[str, Any] | None = Non
     return False
 
 
-def _base_props(conn, object_type: str, object_id: str) -> dict[str, Any] | None:
+def _base_props(
+    conn,
+    object_type: str,
+    object_id: str,
+    scope: TenantScope | None = None,
+) -> dict[str, Any] | None:
+    if scope is not None:
+        row = conn.execute(
+            "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s "
+            "AND org_id=%s AND project_id=%s",
+            (object_type, object_id, *scope.key),
+        ).fetchone()
+        return dict(row["props"] or {}) if row else None
     row = conn.execute(
         "SELECT props FROM obj_instance WHERE object_type=%s AND object_id=%s",
         (object_type, object_id),
@@ -56,24 +77,31 @@ def list_base_objects(conn, object_type: str) -> list[dict[str, Any]]:
     return [{"object_id": r["object_id"], "props": dict(r["props"] or {})} for r in rows]
 
 
-def list_overlays(conn, branch_id: str, object_type: str | None = None) -> list[dict[str, Any]]:
+def list_overlays(
+    conn,
+    branch_id: str,
+    object_type: str | None = None,
+    scope: TenantScope | None = None,
+) -> list[dict[str, Any]]:
+    scope_sql = "" if scope is None else " AND org_id=%s AND project_id=%s"
+    scope_params: tuple[str, ...] = () if scope is None else scope.key
     if object_type:
         rows = conn.execute(
-            """
+            f"""
             SELECT object_type, object_id, props, op FROM obj_branch_overlay
-            WHERE branch_id=%s AND object_type=%s
+            WHERE branch_id=%s AND object_type=%s{scope_sql}
             ORDER BY object_id
             """,
-            (branch_id, object_type),
+            (branch_id, object_type, *scope_params),
         ).fetchall()
     else:
         rows = conn.execute(
-            """
+            f"""
             SELECT object_type, object_id, props, op FROM obj_branch_overlay
-            WHERE branch_id=%s
+            WHERE branch_id=%s{scope_sql}
             ORDER BY object_type, object_id
             """,
-            (branch_id,),
+            (branch_id, *scope_params),
         ).fetchall()
     return [
         {
@@ -133,13 +161,14 @@ def effective_object(
 
 def upsert_overlay(
     conn,
+    scope: TenantScope,
     branch_id: str,
     object_type: str,
     object_id: str,
     props: dict[str, Any],
     op: str = "upsert",
 ) -> None:
-    row = get_branch_row(conn, branch_id)
+    row = get_branch_row(conn, branch_id, scope)
     if not row:
         raise ApiError(code="NOT_FOUND", message=f"branch not found: {branch_id}", status_code=404)
     if is_production_branch(branch_id, row):
@@ -150,29 +179,40 @@ def upsert_overlay(
         )
     if op not in {"upsert", "delete"}:
         raise ApiError(code="VALIDATION", message="op must be upsert|delete", status_code=400)
-    conn.execute(
+    result = conn.execute(
         """
-        INSERT INTO obj_branch_overlay (branch_id, object_type, object_id, props, op, updated_at)
-        VALUES (%s,%s,%s,%s::jsonb,%s,NOW())
+        INSERT INTO obj_branch_overlay (
+          branch_id, object_type, object_id, props, op, updated_at,
+          org_id, project_id
+        ) VALUES (%s,%s,%s,%s::jsonb,%s,NOW(),%s,%s)
         ON CONFLICT (branch_id, object_type, object_id) DO UPDATE
           SET props=EXCLUDED.props, op=EXCLUDED.op, updated_at=NOW()
+        WHERE obj_branch_overlay.org_id=EXCLUDED.org_id
+          AND obj_branch_overlay.project_id=EXCLUDED.project_id
         """,
-        (branch_id, object_type, object_id, json.dumps(props or {}), op),
+        (branch_id, object_type, object_id, json.dumps(props or {}), op, *scope.key),
     )
+    if result.rowcount == 0:
+        raise ApiError(
+            code="TENANT_KEY_CONFLICT",
+            message="branch overlay key belongs to another tenant or legacy scope",
+            status_code=409,
+        )
 
 
 def checkout_object(
     conn,
+    scope: TenantScope,
     branch_id: str,
     object_type: str,
     object_id: str,
     patch: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    base = _base_props(conn, object_type, object_id)
+    base = _base_props(conn, object_type, object_id, scope)
     if base is None:
         raise ApiError(code="NOT_FOUND", message="base object not found", status_code=404)
     props = {**base, **(patch or {})}
-    upsert_overlay(conn, branch_id, object_type, object_id, props, op="upsert")
+    upsert_overlay(conn, scope, branch_id, object_type, object_id, props, op="upsert")
     return {"objectType": object_type, "objectId": object_id, "props": props, "op": "upsert"}
 
 
@@ -246,8 +286,10 @@ def diff_branch(conn, branch_id: str) -> dict[str, Any]:
     }
 
 
-def merge_branch(conn, branch_id: str) -> dict[str, Any]:
-    row = get_branch_row(conn, branch_id)
+def merge_branch(
+    conn, scope: TenantScope, branch_id: str
+) -> dict[str, Any]:
+    row = get_branch_row(conn, branch_id, scope)
     if not row:
         raise ApiError(code="NOT_FOUND", message=f"branch not found: {branch_id}", status_code=404)
     if is_production_branch(branch_id, row):
@@ -260,25 +302,33 @@ def merge_branch(conn, branch_id: str) -> dict[str, Any]:
             message=f"v2 merge only supports baseRef main/master (got {base_ref})",
             status_code=400,
         )
-    overlays = list_overlays(conn, branch_id)
+    overlays = list_overlays(conn, branch_id, scope=scope)
     merged = 0
     for ov in overlays:
         ot, oid = ov["object_type"], ov["object_id"]
         if ov["op"] == "delete":
             conn.execute(
-                "DELETE FROM obj_instance WHERE object_type=%s AND object_id=%s",
-                (ot, oid),
+                "DELETE FROM obj_instance WHERE object_type=%s AND object_id=%s "
+                "AND org_id=%s AND project_id=%s",
+                (ot, oid, *scope.key),
             )
             merged += 1
             continue
         conn.execute(
             """
-            INSERT INTO obj_instance (object_type, object_id, props)
-            VALUES (%s,%s,%s::jsonb)
+            INSERT INTO obj_instance (
+              object_type, object_id, props, org_id, project_id
+            ) VALUES (%s,%s,%s::jsonb,%s,%s)
             ON CONFLICT (object_type, object_id) DO UPDATE SET props=EXCLUDED.props
+            WHERE obj_instance.org_id=EXCLUDED.org_id
+              AND obj_instance.project_id=EXCLUDED.project_id
             """,
-            (ot, oid, json.dumps(ov["props"] or {})),
+            (ot, oid, json.dumps(ov["props"] or {}), *scope.key),
         )
         merged += 1
-    conn.execute("DELETE FROM obj_branch_overlay WHERE branch_id=%s", (branch_id,))
+    conn.execute(
+        "DELETE FROM obj_branch_overlay WHERE branch_id=%s "
+        "AND org_id=%s AND project_id=%s",
+        (branch_id, *scope.key),
+    )
     return {"ok": True, "branchId": branch_id, "baseRef": base_ref, "merged": merged}
