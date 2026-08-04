@@ -1033,8 +1033,32 @@ def _persist_safe(fn_name: str, *args: Any, **kwargs: Any) -> None:
         from aos_api import data_os_store as dos
 
         getattr(dos, fn_name)(*args, **kwargs)
+    except ApiError:
+        raise
     except Exception:  # noqa: BLE001
         log.warning("data_os_persist_fail op=%s", fn_name, exc_info=True)
+
+
+def _mutation_scope(principal: Principal) -> TenantScope:
+    return TenantScope(principal.org_id, principal.project_id)
+
+
+def _assert_mutation_scope(
+    item: dict[str, Any] | None,
+    scope: TenantScope,
+    *,
+    resource: str,
+    resource_id: str,
+) -> None:
+    if item is None:
+        return
+    if (item.get("orgId"), item.get("projectId")) != scope.key:
+        raise ApiError(
+            code="TENANT_SCOPE_CONFLICT",
+            message=f"{resource} belongs to another or unresolved tenant",
+            status_code=409,
+            details={"resource": resource, "id": resource_id},
+        )
 
 
 def _org_visible(item: dict[str, Any] | None, org_id: str) -> bool:
@@ -1066,6 +1090,10 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
         raise ApiError(code="UNKNOWN_CONNECTOR", message=str(exc), status_code=400) from None
     except PermissionError as exc:
         raise ApiError(code="PLUGIN_NOT_INSTALLED", message=str(exc), status_code=400) from None
+    scope = _mutation_scope(principal)
+    _assert_mutation_scope(
+        _connectors.get(body.id), scope, resource="source", resource_id=body.id
+    )
     item = {
         **body.model_dump(exclude_none=True),
         "type": plugin_id,
@@ -1075,7 +1103,7 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
         "projectId": principal.project_id,
     }
     _connectors[body.id] = item
-    _persist_safe("persist_source", item)
+    _persist_safe("persist_source", scope, item)
     return item
 
 
@@ -1088,9 +1116,13 @@ def list_sources(principal: Principal = Depends(require_principal)):
 @router.post("/v1/syncs")
 def create_sync(body: SyncIn, principal: Principal = Depends(require_principal)):
     """G-ALIGN-04 — Dev Sync Job Facade (T-API /v1/syncs)."""
-    _ = principal
-    if body.sourceId not in _connectors:
+    scope = _mutation_scope(principal)
+    source = _connectors.get(body.sourceId)
+    if source is None:
         raise ApiError(code="NOT_FOUND", message="source missing", status_code=404)
+    _assert_mutation_scope(
+        source, scope, resource="source", resource_id=body.sourceId
+    )
     sid = body.id or f"sync-{uuid.uuid4().hex[:8]}"
     item = {
         "id": sid,
@@ -1099,12 +1131,16 @@ def create_sync(body: SyncIn, principal: Principal = Depends(require_principal))
         "startedAt": time.time(),
         "finishedAt": time.time(),
         "rowsSynced": 0,
+        "orgId": scope.org_id,
+        "projectId": scope.project_id,
     }
     _syncs[sid] = item
-    _persist_safe("persist_sync", item)
+    _persist_safe("persist_sync", scope, item)
     # Reflect sync into dataset history if a dataset is bound to this source
     for rid, ds in _datasets.items():
-        if ds.get("sourceId") == body.sourceId:
+        if ds.get("sourceId") == body.sourceId and (
+            ds.get("orgId"), ds.get("projectId")
+        ) == scope.key:
             hist = _dataset_history.setdefault(rid, [])
             hist.append(
                 {
@@ -1116,8 +1152,8 @@ def create_sync(body: SyncIn, principal: Principal = Depends(require_principal))
             )
             ds["lastSyncId"] = sid
             ds["updatedAt"] = item["finishedAt"]
-            _persist_safe("persist_dataset", ds)
-            _persist_safe("persist_dataset_history", rid, hist)
+            _persist_safe("persist_dataset", scope, ds)
+            _persist_safe("persist_dataset_history", scope, rid, hist)
     log.info("sync_created id=%s source=%s", sid, body.sourceId)
     return item
 
@@ -1389,8 +1425,24 @@ def parse_media(rid: str, principal: Principal = Depends(require_principal)):
 
 @router.post("/v1/pipelines")
 def create_pipeline(body: PipelineIn, principal: Principal = Depends(require_principal)):
+    scope = _mutation_scope(principal)
+    _assert_mutation_scope(
+        _connectors.get(body.sourceId),
+        scope,
+        resource="source",
+        resource_id=body.sourceId,
+    )
+    _assert_mutation_scope(
+        _pipelines.get(body.id), scope, resource="pipeline", resource_id=body.id
+    )
     build_id = f"build-{uuid.uuid4().hex[:8]}"
     dataset_rid = body.datasetRid or f"ri.dataset.{body.id}"
+    _assert_mutation_scope(
+        _datasets.get(dataset_rid),
+        scope,
+        resource="dataset",
+        resource_id=dataset_rid,
+    )
     item = {
         **body.model_dump(),
         "datasetRid": dataset_rid,
@@ -1426,9 +1478,9 @@ def create_pipeline(body: PipelineIn, principal: Principal = Depends(require_pri
             "at": now,
         }
     )
-    _persist_safe("persist_pipeline", item)
-    _persist_safe("persist_dataset", ds)
-    _persist_safe("persist_dataset_history", dataset_rid, hist)
+    _persist_safe("persist_pipeline", scope, item)
+    _persist_safe("persist_dataset", scope, ds)
+    _persist_safe("persist_dataset_history", scope, dataset_rid, hist)
     return item
 
 
@@ -1439,10 +1491,11 @@ def patch_dataset(
     principal: Principal = Depends(require_principal),
 ):
     """Update dataset display / objectTypeHint (preview wiring)."""
-    _ = principal
+    scope = _mutation_scope(principal)
     ds = _datasets.get(rid)
     if not ds:
         raise ApiError(code="NOT_FOUND", message="dataset missing", status_code=404)
+    _assert_mutation_scope(ds, scope, resource="dataset", resource_id=rid)
     if "name" in body and body["name"] is not None:
         ds["name"] = str(body["name"])
     if "displayName" in body and body["displayName"] is not None:
@@ -1455,7 +1508,7 @@ def patch_dataset(
         ds["status"] = str(body["status"])
     ds["updatedAt"] = time.time()
     _datasets[rid] = ds
-    _persist_safe("persist_dataset", ds)
+    _persist_safe("persist_dataset", scope, ds)
     return ds
 
 
@@ -1565,8 +1618,11 @@ def list_builds(principal: Principal = Depends(require_principal)):
 
 @router.post("/v1/schedules")
 def create_schedule(body: dict[str, Any], principal: Principal = Depends(require_principal)):
-    _ = principal
+    scope = _mutation_scope(principal)
     sid = body.get("id") or f"sch-{uuid.uuid4().hex[:6]}"
+    _assert_mutation_scope(
+        _schedules.get(sid), scope, resource="schedule", resource_id=sid
+    )
     item = {
         "id": sid,
         "cron": body.get("cron", "0 * * * *"),
@@ -1580,7 +1636,7 @@ def create_schedule(body: dict[str, Any], principal: Principal = Depends(require
         "lastRun": None,
     }
     _schedules[sid] = item
-    _persist_safe("persist_schedule", item)
+    _persist_safe("persist_schedule", scope, item)
     return item
 
 
@@ -1593,10 +1649,13 @@ def list_schedules(principal: Principal = Depends(require_principal)):
 
 @router.get("/v1/schedules/{schedule_id}")
 def get_schedule(schedule_id: str, principal: Principal = Depends(require_principal)):
-    _ = principal
+    scope = _mutation_scope(principal)
     item = _schedules.get(schedule_id)
     if not item:
         raise ApiError(code="NOT_FOUND", message="schedule missing", status_code=404)
+    _assert_mutation_scope(
+        item, scope, resource="schedule", resource_id=schedule_id
+    )
     return item
 
 
@@ -1622,7 +1681,7 @@ def patch_schedule(
     if "ingest" in body and (body["ingest"] is None or isinstance(body["ingest"], dict)):
         item["ingest"] = body["ingest"]
     _schedules[schedule_id] = item
-    _persist_safe("persist_schedule", item)
+    _persist_safe("persist_schedule", scope, item)
     return item
 
 
@@ -1632,6 +1691,10 @@ def run_schedule(schedule_id: str, principal: Principal = Depends(require_princi
     item = _schedules.get(schedule_id)
     if not item:
         raise ApiError(code="NOT_FOUND", message="schedule missing", status_code=404)
+    scope = _mutation_scope(principal)
+    _assert_mutation_scope(
+        item, scope, resource="schedule", resource_id=schedule_id
+    )
     if not item.get("enabled", True):
         raise ApiError(code="VALIDATION", message="schedule disabled", status_code=400)
     ingest_spec = item.get("ingest")
@@ -1653,7 +1716,7 @@ def run_schedule(schedule_id: str, principal: Principal = Depends(require_princi
         "mode": result.get("mode"),
     }
     _schedules[schedule_id] = item
-    _persist_safe("persist_schedule", item)
+    _persist_safe("persist_schedule", scope, item)
     log.info("schedule_run id=%s written=%s", schedule_id, result.get("written"))
     return {"scheduleId": schedule_id, "lastRun": item["lastRun"], "ingest": result}
 

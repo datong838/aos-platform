@@ -5,7 +5,9 @@ import json
 from typing import Any
 
 from aos_api.db import connect
+from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.data-os")
 
@@ -175,33 +177,59 @@ def ensure_data_os_schema() -> None:
     log.info("data_os_schema_ready")
 
 
-def persist_source(item: dict[str, Any]) -> None:
+def _assert_scoped_upsert(row: Any, *, resource: str, resource_id: str) -> None:
+    if row is None:
+        raise ApiError(
+            code="TENANT_SCOPE_CONFLICT",
+            message=f"{resource} id belongs to another or unresolved tenant",
+            status_code=409,
+            details={"resource": resource, "id": resource_id},
+        )
+
+
+def _require_scope(scope: TenantScope | None) -> TenantScope:
+    if not isinstance(scope, TenantScope):
+        raise ApiError(
+            code="TENANT_SCOPE_REQUIRED",
+            message="Data OS mutation requires TenantScope",
+            status_code=400,
+        )
+    return scope
+
+
+def persist_source(scope: TenantScope, item: dict[str, Any]) -> None:
+    scope = _require_scope(scope)
     ensure_data_os_schema()
     props = {k: v for k, v in item.items() if k not in {"id", "type", "status", "pluginId", "orgId", "projectId"}}
-    with connect() as conn:
-        conn.execute(
+    with connect(scope) as conn:
+        row = conn.execute(
             """
             INSERT INTO meta_source (id, type, status, plugin_id, org_id, project_id, props, updated_at)
             VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb,NOW())
             ON CONFLICT (id) DO UPDATE SET
               type=EXCLUDED.type, status=EXCLUDED.status, plugin_id=EXCLUDED.plugin_id,
-              org_id=EXCLUDED.org_id, project_id=EXCLUDED.project_id, props=EXCLUDED.props,
+              props=EXCLUDED.props,
               updated_at=NOW()
+            WHERE meta_source.org_id=EXCLUDED.org_id
+              AND meta_source.project_id=EXCLUDED.project_id
+            RETURNING id
             """,
             (
                 item["id"],
                 item.get("type") or "file",
                 item.get("status") or "registered",
                 item.get("pluginId"),
-                item.get("orgId") or "dev-org",
-                item.get("projectId") or "dev-project",
+                scope.org_id,
+                scope.project_id,
                 json.dumps(props, ensure_ascii=False, default=str),
             ),
-        )
+        ).fetchone()
+        _assert_scoped_upsert(row, resource="source", resource_id=str(item["id"]))
         conn.commit()
 
 
-def persist_pipeline(item: dict[str, Any]) -> None:
+def persist_pipeline(scope: TenantScope, item: dict[str, Any]) -> None:
+    scope = _require_scope(scope)
     ensure_data_os_schema()
     props = {
         k: v
@@ -220,20 +248,20 @@ def persist_pipeline(item: dict[str, Any]) -> None:
             "projectId",
         }
     }
-    if item.get("orgId"):
-        props["orgId"] = item["orgId"]
-    if item.get("projectId"):
-        props["projectId"] = item["projectId"]
-    with connect() as conn:
-        conn.execute(
+    with connect(scope) as conn:
+        row = conn.execute(
             """
             INSERT INTO meta_pipeline
-              (id, source_id, target, dataset_rid, name, object_type_hint, last_build, props, updated_at)
-            VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,NOW())
+              (id, source_id, target, dataset_rid, name, object_type_hint,
+               last_build, props, org_id, project_id, updated_at)
+            VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,NOW())
             ON CONFLICT (id) DO UPDATE SET
               source_id=EXCLUDED.source_id, target=EXCLUDED.target, dataset_rid=EXCLUDED.dataset_rid,
               name=EXCLUDED.name, object_type_hint=EXCLUDED.object_type_hint,
               last_build=EXCLUDED.last_build, props=EXCLUDED.props, updated_at=NOW()
+            WHERE meta_pipeline.org_id=EXCLUDED.org_id
+              AND meta_pipeline.project_id=EXCLUDED.project_id
+            RETURNING id
             """,
             (
                 item["id"],
@@ -244,8 +272,10 @@ def persist_pipeline(item: dict[str, Any]) -> None:
                 item.get("objectTypeHint"),
                 json.dumps(item.get("lastBuild") or {}, ensure_ascii=False, default=str),
                 json.dumps(props, ensure_ascii=False, default=str),
+                *scope.key,
             ),
-        )
+        ).fetchone()
+        _assert_scoped_upsert(row, resource="pipeline", resource_id=str(item["id"]))
         conn.commit()
 
 
@@ -325,7 +355,8 @@ def delete_phase5_pipeline_graph(pipeline_id: str) -> None:
         conn.commit()
 
 
-def persist_dataset(item: dict[str, Any]) -> None:
+def persist_dataset(scope: TenantScope, item: dict[str, Any]) -> None:
+    scope = _require_scope(scope)
     ensure_data_os_schema()
     props = {
         k: v
@@ -345,22 +376,21 @@ def persist_dataset(item: dict[str, Any]) -> None:
             "projectId",
         }
     }
-    if item.get("orgId"):
-        props["orgId"] = item["orgId"]
-    if item.get("projectId"):
-        props["projectId"] = item["projectId"]
-    with connect() as conn:
-        conn.execute(
+    with connect(scope) as conn:
+        row = conn.execute(
             """
             INSERT INTO meta_dataset
               (rid, name, display_name, pipeline_id, source_id, status, object_type_hint,
-               created_at, updated_at, props)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb)
+               created_at, updated_at, props, org_id, project_id)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s)
             ON CONFLICT (rid) DO UPDATE SET
               name=EXCLUDED.name, display_name=EXCLUDED.display_name,
               pipeline_id=EXCLUDED.pipeline_id, source_id=EXCLUDED.source_id,
               status=EXCLUDED.status, object_type_hint=EXCLUDED.object_type_hint,
               updated_at=EXCLUDED.updated_at, props=EXCLUDED.props
+            WHERE meta_dataset.org_id=EXCLUDED.org_id
+              AND meta_dataset.project_id=EXCLUDED.project_id
+            RETURNING rid
             """,
             (
                 item["rid"],
@@ -373,23 +403,30 @@ def persist_dataset(item: dict[str, Any]) -> None:
                 item.get("createdAt"),
                 item.get("updatedAt"),
                 json.dumps(props, ensure_ascii=False, default=str),
+                *scope.key,
             ),
-        )
+        ).fetchone()
+        _assert_scoped_upsert(row, resource="dataset", resource_id=str(item["rid"]))
         conn.commit()
 
 
-def persist_sync(item: dict[str, Any]) -> None:
+def persist_sync(scope: TenantScope, item: dict[str, Any]) -> None:
+    scope = _require_scope(scope)
     ensure_data_os_schema()
-    with connect() as conn:
-        conn.execute(
+    with connect(scope) as conn:
+        row = conn.execute(
             """
             INSERT INTO meta_sync
-              (id, source_id, status, rows_synced, started_at, finished_at, props, updated_at)
-            VALUES (%s,%s,%s,%s,%s,%s,'{}'::jsonb,NOW())
+              (id, source_id, status, rows_synced, started_at, finished_at,
+               props, org_id, project_id, updated_at)
+            VALUES (%s,%s,%s,%s,%s,%s,'{}'::jsonb,%s,%s,NOW())
             ON CONFLICT (id) DO UPDATE SET
               source_id=EXCLUDED.source_id, status=EXCLUDED.status,
               rows_synced=EXCLUDED.rows_synced, started_at=EXCLUDED.started_at,
               finished_at=EXCLUDED.finished_at, updated_at=NOW()
+            WHERE meta_sync.org_id=EXCLUDED.org_id
+              AND meta_sync.project_id=EXCLUDED.project_id
+            RETURNING id
             """,
             (
                 item["id"],
@@ -398,15 +435,18 @@ def persist_sync(item: dict[str, Any]) -> None:
                 int(item.get("rowsSynced") or 0),
                 item.get("startedAt"),
                 item.get("finishedAt"),
+                *scope.key,
             ),
-        )
+        ).fetchone()
+        _assert_scoped_upsert(row, resource="sync", resource_id=str(item["id"]))
         conn.commit()
 
 
-def persist_schedule(item: dict[str, Any]) -> None:
+def persist_schedule(scope: TenantScope, item: dict[str, Any]) -> None:
+    scope = _require_scope(scope)
     ensure_data_os_schema()
-    with connect() as conn:
-        conn.execute(
+    with connect(scope) as conn:
+        row = conn.execute(
             """
             INSERT INTO meta_schedule
               (id, cron, pipeline_id, enabled, name, ingest, last_run, org_id, project_id, props, updated_at)
@@ -414,7 +454,10 @@ def persist_schedule(item: dict[str, Any]) -> None:
             ON CONFLICT (id) DO UPDATE SET
               cron=EXCLUDED.cron, pipeline_id=EXCLUDED.pipeline_id, enabled=EXCLUDED.enabled,
               name=EXCLUDED.name, ingest=EXCLUDED.ingest, last_run=EXCLUDED.last_run,
-              org_id=EXCLUDED.org_id, project_id=EXCLUDED.project_id, updated_at=NOW()
+              updated_at=NOW()
+            WHERE meta_schedule.org_id=EXCLUDED.org_id
+              AND meta_schedule.project_id=EXCLUDED.project_id
+            RETURNING id
             """,
             (
                 item["id"],
@@ -428,24 +471,36 @@ def persist_schedule(item: dict[str, Any]) -> None:
                 json.dumps(item.get("lastRun"), ensure_ascii=False, default=str)
                 if item.get("lastRun") is not None
                 else None,
-                item.get("orgId"),
-                item.get("projectId"),
+                *scope.key,
             ),
-        )
+        ).fetchone()
+        _assert_scoped_upsert(row, resource="schedule", resource_id=str(item["id"]))
         conn.commit()
 
 
-def persist_dataset_history(dataset_rid: str, entries: list[dict[str, Any]]) -> None:
+def persist_dataset_history(
+    scope: TenantScope, dataset_rid: str, entries: list[dict[str, Any]]
+) -> None:
+    scope = _require_scope(scope)
     ensure_data_os_schema()
-    with connect() as conn:
-        conn.execute("DELETE FROM meta_dataset_history WHERE dataset_rid=%s", (dataset_rid,))
+    with connect(scope) as conn:
+        conn.execute(
+            "DELETE FROM meta_dataset_history "
+            "WHERE dataset_rid=%s AND org_id=%s AND project_id=%s",
+            (dataset_rid, *scope.key),
+        )
         for e in entries:
             conn.execute(
                 """
-                INSERT INTO meta_dataset_history (dataset_rid, payload)
-                VALUES (%s,%s::jsonb)
+                INSERT INTO meta_dataset_history
+                  (dataset_rid, payload, org_id, project_id)
+                VALUES (%s,%s::jsonb,%s,%s)
                 """,
-                (dataset_rid, json.dumps(e, ensure_ascii=False, default=str)),
+                (
+                    dataset_rid,
+                    json.dumps(e, ensure_ascii=False, default=str),
+                    *scope.key,
+                ),
             )
         conn.commit()
 

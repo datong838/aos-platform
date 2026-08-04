@@ -5,9 +5,9 @@ import os
 import time
 
 import pytest
-from fastapi.testclient import TestClient
-
 from aos_api import data_os_store as dos
+from aos_api import mock_data
+from aos_api.db import connect
 from aos_api.idempotency import idempotency_store
 from aos_api.main import create_app
 from aos_api.membership import reset_membership_store, seed_dev_defaults
@@ -15,11 +15,21 @@ from aos_api.metrics import reset_metrics
 from aos_api.oidc import issue_dev_token
 from aos_api.orgs import reset_org_store, seed_dev_orgs
 from aos_api.routers import wave_ext
-from aos_api import mock_data
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture()
 def api_client():
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO twa_org (id,name) VALUES ('dev-org','测试组织') "
+            "ON CONFLICT DO NOTHING"
+        )
+        conn.execute(
+            "INSERT INTO twa_workspace (org_id,project_id,name) "
+            "VALUES ('dev-org','dev-project','测试工作区') ON CONFLICT DO NOTHING"
+        )
+        conn.commit()
     idempotency_store.clear()
     mock_data.reset_mock_state()
     reset_metrics()
@@ -110,8 +120,8 @@ def _auth_org(org: str, project: str = "dev-project"):
 
 def test_sources_list_filtered_by_org(api_client):
     """185w v1.2 · stamped source only visible to its org."""
-    from aos_api.orgs import ensure_org
     from aos_api.membership import upsert_member
+    from aos_api.orgs import ensure_org
     from aos_api.workspaces_catalog import ensure_workspace
 
     ensure_org("org-filter-a", name="Filter A")
@@ -147,8 +157,6 @@ def test_sources_list_filtered_by_org(api_client):
 
     dos.delete_source(sa)
     dos.delete_source(sb)
-    from aos_api.db import connect
-
     with connect() as conn:
         for oid in ("org-filter-a", "org-filter-b"):
             conn.execute("DELETE FROM meta_membership WHERE org_id=%s", (oid,))
