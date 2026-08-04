@@ -32,7 +32,7 @@ def test_ti3_e1_real_schema_lint_is_green() -> None:
         report = build_ti3_e1_schema_report(conn)
 
     assert report["ok"] is True, report
-    assert report["alembicRevision"] == "228ti3e1expand"
+    assert report["alembicRevision"] in {"228ti3e1expand", "228ti3e4validate"}
     assert report["ti3MissingTenantColumns"] == []
     assert report["ti3ExpandColumnsNotNullable"] == []
     assert report["ti3TemplatesWithTenantScope"] == []

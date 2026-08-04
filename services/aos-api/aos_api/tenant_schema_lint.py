@@ -12,6 +12,7 @@ TI2_E4_REVISION = "228ti2e4validate"
 TI2_E6_REVISION = "228ti2e6rls"
 TI2_E7_REVISION = "228ti2e7contract"
 TI3_E1_REVISION = "228ti3e1expand"
+TI3_E4_REVISION = "228ti3e4validate"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {
@@ -82,6 +83,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI2_E6_REVISION,
         TI2_E7_REVISION,
         TI3_E1_REVISION,
+        TI3_E4_REVISION,
     }:
         issues.append("RLS_ENABLED_BEFORE_E6")
     if revision not in {
@@ -94,6 +96,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI2_E6_REVISION,
         TI2_E7_REVISION,
         TI3_E1_REVISION,
+        TI3_E4_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     return {
@@ -202,6 +205,7 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
         TI2_E6_REVISION,
         TI2_E7_REVISION,
         TI3_E1_REVISION,
+        TI3_E4_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -318,6 +322,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI2_E6_REVISION,
         TI2_E7_REVISION,
         TI3_E1_REVISION,
+        TI3_E4_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -402,6 +407,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
     if non_nullable_columns and report["alembicRevision"] not in {
         TI2_E7_REVISION,
         TI3_E1_REVISION,
+        TI3_E4_REVISION,
     }:
         issues.append("TI2_EXPAND_COLUMNS_NOT_NULLABLE")
     if missing_tables:
@@ -419,7 +425,9 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         "issues": issues,
         "ti2MissingColumns": missing_columns,
         "ti2NonNullableExpandColumns": (
-            {} if report["alembicRevision"] in {TI2_E7_REVISION, TI3_E1_REVISION}
+            {}
+            if report["alembicRevision"]
+            in {TI2_E7_REVISION, TI3_E1_REVISION, TI3_E4_REVISION}
             else non_nullable_columns
         ),
         "ti2MissingHistoryTables": missing_tables,
@@ -439,6 +447,7 @@ def build_ti2_e4_schema_report(conn: Any) -> dict[str, Any]:
         TI2_E6_REVISION,
         TI2_E7_REVISION,
         TI3_E1_REVISION,
+        TI3_E4_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     rows = conn.execute(
@@ -487,6 +496,7 @@ def build_ti2_e6_schema_report(conn: Any) -> dict[str, Any]:
         TI2_E6_REVISION,
         TI2_E7_REVISION,
         TI3_E1_REVISION,
+        TI3_E4_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -581,7 +591,11 @@ def build_ti2_e7_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] not in {TI2_E7_REVISION, TI3_E1_REVISION}:
+    if report["alembicRevision"] not in {
+        TI2_E7_REVISION,
+        TI3_E1_REVISION,
+        TI3_E4_REVISION,
+    }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     pk_rows = conn.execute(
@@ -680,7 +694,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] != TI3_E1_REVISION:
+    if report["alembicRevision"] not in {TI3_E1_REVISION, TI3_E4_REVISION}:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     rows = conn.execute(
@@ -726,8 +740,10 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         f"fk_{table}_workspace_ti3" for table in TI3_E1_SCOPED_TABLES
     }
     missing_fks = sorted(expected_fks - set(foreign_keys))
-    prematurely_validated = sorted(
-        name for name, validated in foreign_keys.items() if validated
+    prematurely_validated = (
+        sorted(name for name, validated in foreign_keys.items() if validated)
+        if report["alembicRevision"] == TI3_E1_REVISION
+        else []
     )
     if missing_fks:
         issues.append("TI3_FOREIGN_KEYS_MISSING")
