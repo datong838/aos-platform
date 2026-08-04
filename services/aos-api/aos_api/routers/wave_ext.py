@@ -59,6 +59,7 @@ _dlq: list[dict[str, Any]] = []
 _syncs: dict[str, dict[str, Any]] = {}
 _datasets: dict[str, dict[str, Any]] = {}
 _dataset_history: dict[str, list[dict[str, Any]]] = {}
+_data_os_loaded_scopes: set[tuple[str, str]] = set()
 
 
 def ensure_demo_data_seed(*, force: bool = False) -> dict[str, Any]:
@@ -339,7 +340,8 @@ def invoke_tool_endpoint(
 @router.get("/v1/plugins")
 def list_plugins_catalog(principal: Principal = Depends(require_principal)):
     """Aggregate tools + parsers + sources + capabilities + llm providers (T3.8 / 83)."""
-    _ = principal
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
     from aos_api.file_parsers import list_plugins as list_parsers
     from aos_api.llm_provider_registry import list_llm_provider_plugins
     from aos_api.connector_registry import list_connector_plugins
@@ -417,6 +419,8 @@ def list_plugins_catalog(principal: Principal = Depends(require_principal)):
             }
         )
     for s in _connectors.values():
+        if not _scope_visible(s, scope):
+            continue
         items.append(
             {"id": s["id"], "kind": "source", "type": s.get("type"), "status": s.get("status", "registered")}
         )
@@ -1043,6 +1047,32 @@ def _mutation_scope(principal: Principal) -> TenantScope:
     return TenantScope(principal.org_id, principal.project_id)
 
 
+def _hydrate_data_os_scope(scope: TenantScope, *, force: bool = False) -> None:
+    if scope.key in _data_os_loaded_scopes and not force:
+        return
+    from aos_api.data_os_store import load_all
+
+    data = load_all(scope)
+    scoped_dataset_ids = {
+        rid
+        for rid, item in _datasets.items()
+        if (item.get("orgId"), item.get("projectId")) == scope.key
+    }
+    for mapping in (_connectors, _pipelines, _datasets, _syncs, _schedules):
+        for resource_id, item in list(mapping.items()):
+            if (item.get("orgId"), item.get("projectId")) == scope.key:
+                mapping.pop(resource_id, None)
+    for rid in scoped_dataset_ids:
+        _dataset_history.pop(rid, None)
+    _connectors.update(data["connectors"])
+    _pipelines.update(data["pipelines"])
+    _datasets.update(data["datasets"])
+    _syncs.update(data["syncs"])
+    _schedules.update(data["schedules"])
+    _dataset_history.update(data["dataset_history"])
+    _data_os_loaded_scopes.add(scope.key)
+
+
 def _assert_mutation_scope(
     item: dict[str, Any] | None,
     scope: TenantScope,
@@ -1061,23 +1091,20 @@ def _assert_mutation_scope(
         )
 
 
-def _org_visible(item: dict[str, Any] | None, org_id: str) -> bool:
-    """185w v1.2 · stamped orgId must match; unstamped legacy visible to current org."""
-    if not item:
-        return False
-    stamped = item.get("orgId")
-    if stamped:
-        return stamped == org_id
-    return True
+def _scope_visible(item: dict[str, Any] | None, scope: TenantScope) -> bool:
+    return bool(
+        item
+        and (item.get("orgId"), item.get("projectId")) == scope.key
+    )
 
 
-def _source_org_visible(source_id: str | None, org_id: str) -> bool:
+def _source_scope_visible(source_id: str | None, scope: TenantScope) -> bool:
     if not source_id:
         return True
     src = _connectors.get(source_id)
     if src is None:
         return False
-    return _org_visible(src, org_id)
+    return _scope_visible(src, scope)
 
 
 @router.post("/v1/sources")
@@ -1091,6 +1118,7 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
     except PermissionError as exc:
         raise ApiError(code="PLUGIN_NOT_INSTALLED", message=str(exc), status_code=400) from None
     scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
     _assert_mutation_scope(
         _connectors.get(body.id), scope, resource="source", resource_id=body.id
     )
@@ -1109,7 +1137,9 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
 
 @router.get("/v1/sources")
 def list_sources(principal: Principal = Depends(require_principal)):
-    items = [c for c in _connectors.values() if _org_visible(c, principal.org_id)]
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
+    items = [c for c in _connectors.values() if _scope_visible(c, scope)]
     return {"items": items}
 
 
@@ -1117,6 +1147,7 @@ def list_sources(principal: Principal = Depends(require_principal)):
 def create_sync(body: SyncIn, principal: Principal = Depends(require_principal)):
     """G-ALIGN-04 — Dev Sync Job Facade (T-API /v1/syncs)."""
     scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
     source = _connectors.get(body.sourceId)
     if source is None:
         raise ApiError(code="NOT_FOUND", message="source missing", status_code=404)
@@ -1160,48 +1191,50 @@ def create_sync(body: SyncIn, principal: Principal = Depends(require_principal))
 
 @router.get("/v1/syncs")
 def list_syncs(principal: Principal = Depends(require_principal)):
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
     items = [
         s
         for s in _syncs.values()
-        if _source_org_visible(s.get("sourceId"), principal.org_id)
+        if _scope_visible(s, scope)
+        and _source_scope_visible(s.get("sourceId"), scope)
     ]
     return {"items": items}
 
 
 @router.get("/v1/syncs/{sync_id}")
 def get_sync(sync_id: str, principal: Principal = Depends(require_principal)):
-    _ = principal
-    if sync_id not in _syncs:
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
+    item = _syncs.get(sync_id)
+    if not _scope_visible(item, scope):
         raise ApiError(code="NOT_FOUND", message="sync missing", status_code=404)
-    return _syncs[sync_id]
+    return item
 
 
 @router.get("/v1/datasets")
 def list_datasets(principal: Principal = Depends(require_principal)):
-    items = [
-        d
-        for d in _datasets.values()
-        if _org_visible(d, principal.org_id)
-        or (
-            not d.get("orgId")
-            and _source_org_visible(d.get("sourceId"), principal.org_id)
-        )
-    ]
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
+    items = [d for d in _datasets.values() if _scope_visible(d, scope)]
     return {"items": items}
 
 
 @router.get("/v1/datasets/{rid}")
 def get_dataset(rid: str, principal: Principal = Depends(require_principal)):
-    _ = principal
-    if rid not in _datasets:
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
+    item = _datasets.get(rid)
+    if not _scope_visible(item, scope):
         raise ApiError(code="NOT_FOUND", message="dataset missing", status_code=404)
-    return _datasets[rid]
+    return item
 
 
 @router.get("/v1/datasets/{rid}/history")
 def dataset_history(rid: str, principal: Principal = Depends(require_principal)):
-    _ = principal
-    if rid not in _datasets:
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
+    if not _scope_visible(_datasets.get(rid), scope):
         raise ApiError(code="NOT_FOUND", message="dataset missing", status_code=404)
     return {"rid": rid, "items": list(_dataset_history.get(rid, []))}
 
@@ -1426,6 +1459,7 @@ def parse_media(rid: str, principal: Principal = Depends(require_principal)):
 @router.post("/v1/pipelines")
 def create_pipeline(body: PipelineIn, principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
     _assert_mutation_scope(
         _connectors.get(body.sourceId),
         scope,
@@ -1492,6 +1526,7 @@ def patch_dataset(
 ):
     """Update dataset display / objectTypeHint (preview wiring)."""
     scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
     ds = _datasets.get(rid)
     if not ds:
         raise ApiError(code="NOT_FOUND", message="dataset missing", status_code=404)
@@ -1514,15 +1549,9 @@ def patch_dataset(
 
 @router.get("/v1/pipelines")
 def list_pipelines(principal: Principal = Depends(require_principal)):
-    items = [
-        p
-        for p in _pipelines.values()
-        if _org_visible(p, principal.org_id)
-        or (
-            not p.get("orgId")
-            and _source_org_visible(p.get("sourceId"), principal.org_id)
-        )
-    ]
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
+    items = [p for p in _pipelines.values() if _scope_visible(p, scope)]
     return {"items": items}
 
 
@@ -1536,6 +1565,10 @@ def pipeline_embed(
     from aos_api.tenant_prefix import scoped_collection_name
     from aos_api.vector_index import embed_pipeline
 
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
+    if not _scope_visible(_pipelines.get(pipeline_id), scope):
+        raise ApiError(code="NOT_FOUND", message="pipeline missing", status_code=404)
     payload = dict(body or {})
     raw_collection = str(payload.get("collection") or pipeline_id).strip()
     payload["collection"] = scoped_collection_name(
@@ -1545,7 +1578,7 @@ def pipeline_embed(
         pipeline_id,
         payload,
         pipelines=_pipelines,
-        scope=TenantScope(principal.org_id, principal.project_id),
+        scope=scope,
     )
 
 
@@ -1612,13 +1645,19 @@ def vector_index_get(collection: str, principal: Principal = Depends(require_pri
 
 @router.get("/v1/builds")
 def list_builds(principal: Principal = Depends(require_principal)):
-    _ = principal
-    builds = [p["lastBuild"] | {"pipelineId": pid} for pid, p in _pipelines.items()]
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
+    builds = [
+        p["lastBuild"] | {"pipelineId": pid}
+        for pid, p in _pipelines.items()
+        if _scope_visible(p, scope)
+    ]
     return {"items": builds}
 
 @router.post("/v1/schedules")
 def create_schedule(body: dict[str, Any], principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
     sid = body.get("id") or f"sch-{uuid.uuid4().hex[:6]}"
     _assert_mutation_scope(
         _schedules.get(sid), scope, resource="schedule", resource_id=sid
@@ -1643,19 +1682,19 @@ def create_schedule(body: dict[str, Any], principal: Principal = Depends(require
 @router.get("/v1/schedules")
 def list_schedules(principal: Principal = Depends(require_principal)):
     """T-UI S2 · schedules list for 计划编辑器."""
-    items = [s for s in _schedules.values() if _org_visible(s, principal.org_id)]
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
+    items = [s for s in _schedules.values() if _scope_visible(s, scope)]
     return {"items": items}
 
 
 @router.get("/v1/schedules/{schedule_id}")
 def get_schedule(schedule_id: str, principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
     item = _schedules.get(schedule_id)
-    if not item:
+    if not _scope_visible(item, scope):
         raise ApiError(code="NOT_FOUND", message="schedule missing", status_code=404)
-    _assert_mutation_scope(
-        item, scope, resource="schedule", resource_id=schedule_id
-    )
     return item
 
 
@@ -1666,10 +1705,12 @@ def patch_schedule(
     principal: Principal = Depends(require_principal),
 ):
     """74 · edit cron / enabled / pipelineId for 计划编辑器."""
-    _ = principal
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
     item = _schedules.get(schedule_id)
     if not item:
         raise ApiError(code="NOT_FOUND", message="schedule missing", status_code=404)
+    _assert_mutation_scope(item, scope, resource="schedule", resource_id=schedule_id)
     if "cron" in body and body["cron"] is not None:
         item["cron"] = str(body["cron"])
     if "pipelineId" in body:
@@ -1688,10 +1729,11 @@ def patch_schedule(
 @router.post("/v1/schedules/{schedule_id}/run")
 def run_schedule(schedule_id: str, principal: Principal = Depends(require_principal)):
     """Execute bound connector ingest once (manual/batch face; not a cron daemon)."""
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
     item = _schedules.get(schedule_id)
     if not item:
         raise ApiError(code="NOT_FOUND", message="schedule missing", status_code=404)
-    scope = _mutation_scope(principal)
     _assert_mutation_scope(
         item, scope, resource="schedule", resource_id=schedule_id
     )

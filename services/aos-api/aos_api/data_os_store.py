@@ -584,8 +584,9 @@ def delete_schedule(scope: TenantScope, schedule_id: str) -> None:
         conn.commit()
 
 
-def load_all() -> dict[str, Any]:
-    """Return dicts suitable for wave_ext memory maps."""
+def load_all(scope: TenantScope) -> dict[str, Any]:
+    """Return one tenant's Data OS projection for wave_ext memory maps."""
+    scope = _require_scope(scope)
     ensure_data_os_schema()
     out: dict[str, Any] = {
         "connectors": {},
@@ -595,8 +596,11 @@ def load_all() -> dict[str, Any]:
         "schedules": {},
         "dataset_history": {},
     }
-    with connect() as conn:
-        for r in conn.execute("SELECT * FROM meta_source").fetchall():
+    with connect(scope) as conn:
+        params = scope.key
+        for r in conn.execute(
+            "SELECT * FROM meta_source WHERE org_id=%s AND project_id=%s", params
+        ).fetchall():
             item = dict(r.get("props") or {})
             item.update(
                 {
@@ -609,7 +613,9 @@ def load_all() -> dict[str, Any]:
                 }
             )
             out["connectors"][r["id"]] = item
-        for r in conn.execute("SELECT * FROM meta_pipeline").fetchall():
+        for r in conn.execute(
+            "SELECT * FROM meta_pipeline WHERE org_id=%s AND project_id=%s", params
+        ).fetchall():
             props = dict(r.get("props") or {})
             item = {
                 "id": r["id"],
@@ -619,12 +625,14 @@ def load_all() -> dict[str, Any]:
                 "name": r["name"],
                 "objectTypeHint": r["object_type_hint"],
                 "lastBuild": r["last_build"] or {},
-                "orgId": props.pop("orgId", None),
-                "projectId": props.pop("projectId", None),
+                "orgId": r["org_id"],
+                "projectId": r["project_id"],
             }
             item.update(props)
             out["pipelines"][r["id"]] = item
-        for r in conn.execute("SELECT * FROM meta_dataset").fetchall():
+        for r in conn.execute(
+            "SELECT * FROM meta_dataset WHERE org_id=%s AND project_id=%s", params
+        ).fetchall():
             props = dict(r.get("props") or {})
             item = {
                 "rid": r["rid"],
@@ -636,12 +644,14 @@ def load_all() -> dict[str, Any]:
                 "objectTypeHint": r["object_type_hint"],
                 "createdAt": r["created_at"],
                 "updatedAt": r["updated_at"],
-                "orgId": props.pop("orgId", None),
-                "projectId": props.pop("projectId", None),
+                "orgId": r["org_id"],
+                "projectId": r["project_id"],
             }
             item.update(props)
             out["datasets"][r["rid"]] = item
-        for r in conn.execute("SELECT * FROM meta_sync").fetchall():
+        for r in conn.execute(
+            "SELECT * FROM meta_sync WHERE org_id=%s AND project_id=%s", params
+        ).fetchall():
             out["syncs"][r["id"]] = {
                 "id": r["id"],
                 "sourceId": r["source_id"],
@@ -649,8 +659,12 @@ def load_all() -> dict[str, Any]:
                 "rowsSynced": r["rows_synced"],
                 "startedAt": r["started_at"],
                 "finishedAt": r["finished_at"],
+                "orgId": r["org_id"],
+                "projectId": r["project_id"],
             }
-        for r in conn.execute("SELECT * FROM meta_schedule").fetchall():
+        for r in conn.execute(
+            "SELECT * FROM meta_schedule WHERE org_id=%s AND project_id=%s", params
+        ).fetchall():
             out["schedules"][r["id"]] = {
                 "id": r["id"],
                 "cron": r["cron"],
@@ -663,7 +677,9 @@ def load_all() -> dict[str, Any]:
                 "projectId": r["project_id"],
             }
         for r in conn.execute(
-            "SELECT dataset_rid, payload FROM meta_dataset_history ORDER BY id"
+            "SELECT dataset_rid, payload FROM meta_dataset_history "
+            "WHERE org_id=%s AND project_id=%s ORDER BY id",
+            params,
         ).fetchall():
             rid = r["dataset_rid"]
             out["dataset_history"].setdefault(rid, []).append(r["payload"] or {})
@@ -679,26 +695,18 @@ def load_all() -> dict[str, Any]:
 
 
 def boot_data_os(wave_ext_module: Any) -> None:
-    """Load into wave_ext maps; strip demo surface unless AOS_DEMO_DATA_SEED=1."""
-    ensure_data_os_schema()
-    data = load_all()
+    """Reset Data OS runtime cache; request scope performs the lazy load."""
     wave_ext_module._connectors.clear()
-    wave_ext_module._connectors.update(data["connectors"])
     wave_ext_module._pipelines.clear()
-    wave_ext_module._pipelines.update(data["pipelines"])
     wave_ext_module._datasets.clear()
-    wave_ext_module._datasets.update(data["datasets"])
     wave_ext_module._syncs.clear()
-    wave_ext_module._syncs.update(data["syncs"])
     wave_ext_module._schedules.clear()
-    wave_ext_module._schedules.update(data["schedules"])
     wave_ext_module._dataset_history.clear()
-    wave_ext_module._dataset_history.update(data["dataset_history"])
-    # Runtime surface may drop known demo ids, but physical rows have no safe
-    # owner without an explicit TenantScope.  D2-B deliberately leaves them for
-    # the reviewed quarantine/backfill workflow instead of scanning/deleting PG.
+    loaded_scopes = getattr(wave_ext_module, "_data_os_loaded_scopes", None)
+    if loaded_scopes is not None:
+        loaded_scopes.clear()
     cleared = purge_demo_surface(wave_ext_module)
     log.info(
-        "data_os_booted demo_surface_cleared=%s physical_delete=deferred",
+        "data_os_booted mode=lazy_scoped demo_surface_cleared=%s physical_delete=deferred",
         cleared.get("removed"),
     )

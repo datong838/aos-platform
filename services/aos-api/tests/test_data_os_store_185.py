@@ -89,7 +89,8 @@ def test_source_pipeline_persist_roundtrip(api_client):
     ds_rid = r2.json().get("datasetRid")
     assert ds_rid
 
-    loaded = dos.load_all()
+    scope = TenantScope("dev-org", "dev-project")
+    loaded = dos.load_all(scope)
     assert sid in loaded["connectors"]
     assert pid in loaded["pipelines"]
     assert ds_rid in loaded["datasets"]
@@ -99,13 +100,13 @@ def test_source_pipeline_persist_roundtrip(api_client):
     wave_ext._pipelines.clear()
     wave_ext._datasets.clear()
     dos.boot_data_os(wave_ext)
+    wave_ext._hydrate_data_os_scope(scope, force=True)
     assert sid in wave_ext._connectors
     assert pid in wave_ext._pipelines
     assert ds_rid in wave_ext._datasets
     assert "demo-file-wo" not in wave_ext._connectors
 
     # cleanup probe rows
-    scope = TenantScope("dev-org", "dev-project")
     dos.delete_source(scope, sid)
     dos.delete_pipeline(scope, pid)
     dos.delete_dataset(scope, ds_rid)
