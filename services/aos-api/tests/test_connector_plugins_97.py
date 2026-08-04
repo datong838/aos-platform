@@ -63,6 +63,7 @@ def test_create_source_requires_installed_plugin(client, auth_headers):
 
 def test_create_source_persists_runtime_mode(client, auth_headers):
     from aos_api import data_os_store
+    from aos_api.tenant_scope import TenantScope
 
     created = client.post(
         "/v1/sources",
@@ -75,4 +76,4 @@ def test_create_source_persists_runtime_mode(client, auth_headers):
     listed = client.get("/v1/sources", headers=auth_headers)
     item = next(i for i in listed.json()["items"] if i["id"] == "src-97-runtime")
     assert item["runtimeMode"] == "worker"
-    data_os_store.delete_source("src-97-runtime")
+    data_os_store.delete_source(TenantScope("dev-org", "dev-project"), "src-97-runtime")

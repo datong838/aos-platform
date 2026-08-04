@@ -17,6 +17,7 @@ from urllib.parse import urlsplit
 from pydantic import BaseModel, Field
 
 from aos_api.public_contracts import redact_sensitive
+from aos_api.tenant_scope import TenantScope
 
 _LOCK = threading.RLock()
 
@@ -344,11 +345,11 @@ class PipelineEngine:
         self._edges.update({edge.id: edge for edge in edges})
         self._persisted_graph_ids.add(pl_id)
 
-    def get_graph(self, pl_id: str) -> dict[str, Any]:
+    def get_graph(self, scope: TenantScope, pl_id: str) -> dict[str, Any]:
         from aos_api.data_os_store import load_phase5_pipeline_graph
 
         with _LOCK:
-            persisted = load_phase5_pipeline_graph(pl_id)
+            persisted = load_phase5_pipeline_graph(scope, pl_id)
             if persisted is not None:
                 self._hydrate_persisted_graph_locked(persisted)
                 return copy.deepcopy(persisted)
@@ -356,6 +357,7 @@ class PipelineEngine:
 
     def replace_graph(
         self,
+        scope: TenantScope,
         pl_id: str,
         nodes: list[dict[str, Any]],
         edges: list[dict[str, Any]],
@@ -366,6 +368,7 @@ class PipelineEngine:
     ) -> dict[str, Any]:
         with _LOCK:
             return self._replace_graph_locked(
+                scope,
                 pl_id,
                 nodes,
                 edges,
@@ -376,6 +379,7 @@ class PipelineEngine:
 
     def _replace_graph_locked(
         self,
+        scope: TenantScope,
         pl_id: str,
         nodes: list[dict[str, Any]],
         edges: list[dict[str, Any]],
@@ -489,6 +493,7 @@ class PipelineEngine:
             target_type = pipeline_type or (pipeline.pipeline_type if pipeline else "ETL")
             target_write_mode = write_mode or (pipeline.write_mode if pipeline else "SNAPSHOT")
             committed = persist_phase5_pipeline_graph(
+                scope,
                 {
                     "pipeline_id": pl_id,
                     "name": target_name,
@@ -1195,7 +1200,12 @@ class PipelineEngine:
             return sc
 
     # ── Util ──
-    def reset(self, *, purge_persisted: bool = False) -> None:
+    def reset(
+        self,
+        *,
+        scope: TenantScope | None = None,
+        purge_persisted: bool = False,
+    ) -> None:
         with _LOCK:
             persisted_graph_ids = list(self._persisted_graph_ids)
             self._pipelines.clear()
@@ -1216,7 +1226,7 @@ class PipelineEngine:
                 from aos_api.data_os_store import delete_phase5_pipeline_graph
 
                 for pipeline_id in persisted_graph_ids:
-                    delete_phase5_pipeline_graph(pipeline_id)
+                    delete_phase5_pipeline_graph(scope, pipeline_id)
 
 
 def get_engine() -> PipelineEngine:

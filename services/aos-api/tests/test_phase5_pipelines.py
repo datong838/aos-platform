@@ -8,14 +8,29 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
+from aos_api.db import connect
 from aos_api.phase5_pipeline_engine import get_engine
+from aos_api.tenant_scope import TenantScope
+
+
+TEST_SCOPE = TenantScope("dev-org", "dev-project")
 
 
 @pytest.fixture(autouse=True)
 def reset_engine():
-    get_engine().reset(purge_persisted=True)
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO twa_org (id,name) VALUES ('dev-org','测试组织') "
+            "ON CONFLICT DO NOTHING"
+        )
+        conn.execute(
+            "INSERT INTO twa_workspace (org_id,project_id,name) "
+            "VALUES ('dev-org','dev-project','测试工作区') ON CONFLICT DO NOTHING"
+        )
+        conn.commit()
+    get_engine().reset(scope=TEST_SCOPE, purge_persisted=True)
     yield
-    get_engine().reset(purge_persisted=True)
+    get_engine().reset(scope=TEST_SCOPE, purge_persisted=True)
 
 
 # ═══════════════════════════════════════════
@@ -70,7 +85,7 @@ def test_pipeline_graph() -> None:
     n1 = eng.add_node(pl.id, "src", node_type="source")
     n2 = eng.add_node(pl.id, "sink", node_type="sink")
     eng.add_edge(pl.id, n1.id, n2.id)
-    graph = eng.get_graph(pl.id)
+    graph = eng.get_graph(TEST_SCOPE, pl.id)
     assert graph["node_count"] == 2
     assert graph["edge_count"] == 1
 
@@ -79,6 +94,7 @@ def test_replace_pipeline_graph_round_trip() -> None:
     eng = get_engine()
     pl = eng.create_pipeline(name="PL")
     result = eng.replace_graph(
+        TEST_SCOPE,
         pl.id,
         [
             {"id": "n-source", "name": "source", "node_type": "source", "position_x": 12, "position_y": 34},
@@ -101,6 +117,7 @@ def test_replace_pipeline_graph_rejects_cycle_without_mutation() -> None:
     original = eng.add_node(pl.id, "original", node_type="source")
     with pytest.raises(ValueError, match="acyclic"):
         eng.replace_graph(
+            TEST_SCOPE,
             pl.id,
             [
                 {"id": "a", "name": "A", "node_type": "source"},
@@ -121,6 +138,7 @@ def test_replace_pipeline_graph_rejects_cross_pipeline_id_collision() -> None:
     owned = eng.add_node(first.id, "owned", node_type="source")
     with pytest.raises(ValueError, match="another pipeline"):
         eng.replace_graph(
+            TEST_SCOPE,
             second.id,
             [{"id": owned.id, "name": "collision", "node_type": "source"}],
             [],
@@ -132,6 +150,7 @@ def test_replace_graph_creates_owner_for_external_canvas_id() -> None:
     eng = get_engine()
     pipeline_id = "test-external-canvas-pipeline"
     result = eng.replace_graph(
+        TEST_SCOPE,
         pipeline_id,
         [{"id": "external-source", "name": "source", "node_type": "source"}],
         [],
@@ -144,6 +163,7 @@ def test_replace_graph_creates_owner_for_external_canvas_id() -> None:
 def test_replace_graph_survives_engine_memory_restart() -> None:
     eng = get_engine()
     saved = eng.replace_graph(
+        TEST_SCOPE,
         "restart-pipeline",
         [
             {"id": "restart-source", "name": "source", "node_type": "source"},
@@ -157,7 +177,7 @@ def test_replace_graph_survives_engine_memory_restart() -> None:
     revision = saved["revision"]
 
     eng.reset(purge_persisted=False)
-    reloaded = eng.get_graph("restart-pipeline")
+    reloaded = eng.get_graph(TEST_SCOPE, "restart-pipeline")
     assert reloaded["persisted"] is True
     assert reloaded["revision"] == revision
     assert {node["id"] for node in reloaded["nodes"]} == {"restart-source", "restart-output"}
@@ -181,15 +201,15 @@ def test_replace_and_get_graph_return_only_complete_concurrent_snapshots() -> No
         return nodes, edges
 
     first_nodes, first_edges = payload(0)
-    eng.replace_graph(pipeline_id, first_nodes, first_edges)
+    eng.replace_graph(TEST_SCOPE, pipeline_id, first_nodes, first_edges)
 
     def write_versions() -> None:
         for version in range(1, 8):
             nodes, edges = payload(version)
-            eng.replace_graph(pipeline_id, nodes, edges)
+            eng.replace_graph(TEST_SCOPE, pipeline_id, nodes, edges)
 
     def read_snapshots() -> list[dict]:
-        return [eng.get_graph(pipeline_id) for _ in range(20)]
+        return [eng.get_graph(TEST_SCOPE, pipeline_id) for _ in range(20)]
 
     with ThreadPoolExecutor(max_workers=3) as pool:
         writer = pool.submit(write_versions)

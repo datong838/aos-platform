@@ -279,8 +279,11 @@ def persist_pipeline(scope: TenantScope, item: dict[str, Any]) -> None:
         conn.commit()
 
 
-def persist_phase5_pipeline_graph(payload: dict[str, Any]) -> dict[str, Any]:
+def persist_phase5_pipeline_graph(
+    scope: TenantScope, payload: dict[str, Any]
+) -> dict[str, Any]:
     """Atomically persist one complete Phase5 graph and return the committed snapshot."""
+    scope = _require_scope(scope)
     ensure_data_os_schema()
     pipeline_id = str(payload.get("pipeline_id") or "").strip()
     if not pipeline_id:
@@ -288,12 +291,13 @@ def persist_phase5_pipeline_graph(payload: dict[str, Any]) -> dict[str, Any]:
     node_ids = {str(node.get("id") or "") for node in payload.get("nodes") or []}
     edge_ids = {str(edge.get("id") or "") for edge in payload.get("edges") or []}
     encoded = json.dumps(payload, ensure_ascii=False, default=str)
-    with connect() as conn:
+    with connect(scope) as conn:
         # Serialize graph writers across processes so nested node/edge ids keep one owner.
         conn.execute("SELECT pg_advisory_xact_lock(%s)", (228301,))
         rows = conn.execute(
-            "SELECT pipeline_id, payload FROM phase5_pipeline_graph WHERE pipeline_id<>%s FOR UPDATE",
-            (pipeline_id,),
+            "SELECT pipeline_id, payload FROM phase5_pipeline_graph "
+            "WHERE org_id=%s AND project_id=%s AND pipeline_id<>%s FOR UPDATE",
+            (*scope.key, pipeline_id),
         ).fetchall()
         for row in rows:
             other_id = str(row["pipeline_id"])
@@ -312,16 +316,20 @@ def persist_phase5_pipeline_graph(payload: dict[str, Any]) -> dict[str, Any]:
                 )
         row = conn.execute(
             """
-            INSERT INTO phase5_pipeline_graph (pipeline_id, payload, revision, updated_at)
-            VALUES (%s,%s::jsonb,1,NOW())
+            INSERT INTO phase5_pipeline_graph
+              (pipeline_id, payload, revision, org_id, project_id, updated_at)
+            VALUES (%s,%s::jsonb,1,%s,%s,NOW())
             ON CONFLICT (pipeline_id) DO UPDATE SET
               payload=EXCLUDED.payload,
               revision=phase5_pipeline_graph.revision+1,
               updated_at=NOW()
+            WHERE phase5_pipeline_graph.org_id=EXCLUDED.org_id
+              AND phase5_pipeline_graph.project_id=EXCLUDED.project_id
             RETURNING payload, revision
             """,
-            (pipeline_id, encoded),
+            (pipeline_id, encoded, *scope.key),
         ).fetchone()
+        _assert_scoped_upsert(row, resource="pipeline_graph", resource_id=pipeline_id)
         conn.commit()
     committed = dict(row["payload"] or {})
     committed["revision"] = int(row["revision"])
@@ -330,13 +338,17 @@ def persist_phase5_pipeline_graph(payload: dict[str, Any]) -> dict[str, Any]:
     return committed
 
 
-def load_phase5_pipeline_graph(pipeline_id: str) -> dict[str, Any] | None:
+def load_phase5_pipeline_graph(
+    scope: TenantScope, pipeline_id: str
+) -> dict[str, Any] | None:
     """Load one committed graph snapshot from the shared metadata store."""
+    scope = _require_scope(scope)
     ensure_data_os_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         row = conn.execute(
-            "SELECT payload, revision FROM phase5_pipeline_graph WHERE pipeline_id=%s",
-            (pipeline_id,),
+            "SELECT payload, revision FROM phase5_pipeline_graph "
+            "WHERE pipeline_id=%s AND org_id=%s AND project_id=%s",
+            (pipeline_id, *scope.key),
         ).fetchone()
     if row is None:
         return None
@@ -347,11 +359,16 @@ def load_phase5_pipeline_graph(pipeline_id: str) -> dict[str, Any] | None:
     return payload
 
 
-def delete_phase5_pipeline_graph(pipeline_id: str) -> None:
+def delete_phase5_pipeline_graph(scope: TenantScope, pipeline_id: str) -> None:
     """Delete one explicitly identified graph; never truncate shared graph data."""
+    scope = _require_scope(scope)
     ensure_data_os_schema()
-    with connect() as conn:
-        conn.execute("DELETE FROM phase5_pipeline_graph WHERE pipeline_id=%s", (pipeline_id,))
+    with connect(scope) as conn:
+        conn.execute(
+            "DELETE FROM phase5_pipeline_graph "
+            "WHERE pipeline_id=%s AND org_id=%s AND project_id=%s",
+            (pipeline_id, *scope.key),
+        )
         conn.commit()
 
 
@@ -505,39 +522,65 @@ def persist_dataset_history(
         conn.commit()
 
 
-def delete_source(source_id: str) -> None:
+def delete_source(scope: TenantScope, source_id: str) -> None:
+    scope = _require_scope(scope)
     ensure_data_os_schema()
-    with connect() as conn:
-        conn.execute("DELETE FROM meta_source WHERE id=%s", (source_id,))
+    with connect(scope) as conn:
+        conn.execute(
+            "DELETE FROM meta_source WHERE id=%s AND org_id=%s AND project_id=%s",
+            (source_id, *scope.key),
+        )
         conn.commit()
 
 
-def delete_pipeline(pipeline_id: str) -> None:
+def delete_pipeline(scope: TenantScope, pipeline_id: str) -> None:
+    scope = _require_scope(scope)
     ensure_data_os_schema()
-    with connect() as conn:
-        conn.execute("DELETE FROM meta_pipeline WHERE id=%s", (pipeline_id,))
+    with connect(scope) as conn:
+        conn.execute(
+            "DELETE FROM meta_pipeline WHERE id=%s AND org_id=%s AND project_id=%s",
+            (pipeline_id, *scope.key),
+        )
         conn.commit()
 
 
-def delete_dataset(rid: str) -> None:
+def delete_dataset(scope: TenantScope, rid: str) -> None:
+    scope = _require_scope(scope)
     ensure_data_os_schema()
-    with connect() as conn:
-        conn.execute("DELETE FROM meta_dataset_history WHERE dataset_rid=%s", (rid,))
-        conn.execute("DELETE FROM meta_dataset WHERE rid=%s", (rid,))
+    with connect(scope) as conn:
+        conn.execute(
+            "DELETE FROM meta_dataset_history "
+            "WHERE dataset_rid=%s AND org_id=%s AND project_id=%s",
+            (rid, *scope.key),
+        )
+        conn.execute(
+            "DELETE FROM meta_dataset "
+            "WHERE rid=%s AND org_id=%s AND project_id=%s",
+            (rid, *scope.key),
+        )
         conn.commit()
 
 
-def delete_sync(sync_id: str) -> None:
+def delete_sync(scope: TenantScope, sync_id: str) -> None:
+    scope = _require_scope(scope)
     ensure_data_os_schema()
-    with connect() as conn:
-        conn.execute("DELETE FROM meta_sync WHERE id=%s", (sync_id,))
+    with connect(scope) as conn:
+        conn.execute(
+            "DELETE FROM meta_sync WHERE id=%s AND org_id=%s AND project_id=%s",
+            (sync_id, *scope.key),
+        )
         conn.commit()
 
 
-def delete_schedule(schedule_id: str) -> None:
+def delete_schedule(scope: TenantScope, schedule_id: str) -> None:
+    scope = _require_scope(scope)
     ensure_data_os_schema()
-    with connect() as conn:
-        conn.execute("DELETE FROM meta_schedule WHERE id=%s", (schedule_id,))
+    with connect(scope) as conn:
+        conn.execute(
+            "DELETE FROM meta_schedule "
+            "WHERE id=%s AND org_id=%s AND project_id=%s",
+            (schedule_id, *scope.key),
+        )
         conn.commit()
 
 
@@ -651,16 +694,11 @@ def boot_data_os(wave_ext_module: Any) -> None:
     wave_ext_module._schedules.update(data["schedules"])
     wave_ext_module._dataset_history.clear()
     wave_ext_module._dataset_history.update(data["dataset_history"])
-    # Always purge known demo ids from runtime + PG (product surface)
+    # Runtime surface may drop known demo ids, but physical rows have no safe
+    # owner without an explicit TenantScope.  D2-B deliberately leaves them for
+    # the reviewed quarantine/backfill workflow instead of scanning/deleting PG.
     cleared = purge_demo_surface(wave_ext_module)
-    for sid in cleared.get("removed", {}).get("sources") or []:
-        delete_source(sid)
-    for pid in cleared.get("removed", {}).get("pipelines") or []:
-        delete_pipeline(pid)
-    for rid in cleared.get("removed", {}).get("datasets") or []:
-        delete_dataset(rid)
-    for sid in cleared.get("removed", {}).get("syncs") or []:
-        delete_sync(sid)
-    for sch in cleared.get("removed", {}).get("schedules") or []:
-        delete_schedule(sch)
-    log.info("data_os_booted demo_cleared=%s", cleared.get("removed"))
+    log.info(
+        "data_os_booted demo_surface_cleared=%s physical_delete=deferred",
+        cleared.get("removed"),
+    )

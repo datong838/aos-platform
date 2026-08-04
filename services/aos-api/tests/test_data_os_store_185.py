@@ -15,6 +15,7 @@ from aos_api.metrics import reset_metrics
 from aos_api.oidc import issue_dev_token
 from aos_api.orgs import reset_org_store, seed_dev_orgs
 from aos_api.routers import wave_ext
+from aos_api.tenant_scope import TenantScope
 from fastapi.testclient import TestClient
 
 
@@ -104,9 +105,10 @@ def test_source_pipeline_persist_roundtrip(api_client):
     assert "demo-file-wo" not in wave_ext._connectors
 
     # cleanup probe rows
-    dos.delete_source(sid)
-    dos.delete_pipeline(pid)
-    dos.delete_dataset(ds_rid)
+    scope = TenantScope("dev-org", "dev-project")
+    dos.delete_source(scope, sid)
+    dos.delete_pipeline(scope, pid)
+    dos.delete_dataset(scope, ds_rid)
 
 
 def _auth_org(org: str, project: str = "dev-project"):
@@ -155,8 +157,8 @@ def test_sources_list_filtered_by_org(api_client):
     assert sa in ids_a and sb not in ids_a
     assert sb in ids_b and sa not in ids_b
 
-    dos.delete_source(sa)
-    dos.delete_source(sb)
+    dos.delete_source(TenantScope("org-filter-a", "dev-project"), sa)
+    dos.delete_source(TenantScope("org-filter-b", "dev-project"), sb)
     with connect() as conn:
         for oid in ("org-filter-a", "org-filter-b"):
             conn.execute("DELETE FROM meta_membership WHERE org_id=%s", (oid,))

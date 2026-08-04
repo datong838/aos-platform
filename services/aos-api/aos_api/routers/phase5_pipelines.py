@@ -4,13 +4,14 @@ pipelines + graph + files + nodes (preview/config/trial-run) + proposals + histo
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from aos_api.auth import require_principal
+from aos_api.auth import Principal, require_principal
 from aos_api.phase5_pipeline_engine import get_engine
+from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(
     prefix="/v1/pipelines",
@@ -138,11 +139,14 @@ async def update_pipeline(pl_id: str, req: UpdatePipelineRequest) -> dict[str, A
 
 
 @router.get("/{pl_id}/graph")
-async def get_graph(pl_id: str) -> dict[str, Any]:
+async def get_graph(
+    pl_id: str,
+    principal: Annotated[Principal, Depends(require_principal)],
+) -> dict[str, Any]:
     """Return DAG graph; unknown wave_ext pipeline ids get a demo 3-node linear graph."""
     eng = get_engine()
     try:
-        return eng.get_graph(pl_id)
+        return eng.get_graph(TenantScope(principal.org_id, principal.project_id), pl_id)
     except KeyError:
         # W3-C6 · demo fallback for UI pipeline ids outside phase5 store
         n_src = {"id": f"demo-src-{pl_id}", "pipeline_id": pl_id, "name": "source", "node_type": "source",
@@ -167,11 +171,16 @@ async def get_graph(pl_id: str) -> dict[str, Any]:
 
 
 @router.put("/{pl_id}/graph")
-async def replace_graph(pl_id: str, req: ReplaceGraphRequest) -> dict[str, Any]:
+async def replace_graph(
+    pl_id: str,
+    req: ReplaceGraphRequest,
+    principal: Annotated[Principal, Depends(require_principal)],
+) -> dict[str, Any]:
     """Persist the complete canvas graph after validating it as a DAG."""
     eng = get_engine()
     try:
         result = eng.replace_graph(
+            TenantScope(principal.org_id, principal.project_id),
             pl_id,
             [node.model_dump() for node in req.nodes],
             [edge.model_dump(exclude_none=True) for edge in req.edges],
