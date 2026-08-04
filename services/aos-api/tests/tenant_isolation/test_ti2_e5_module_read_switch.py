@@ -4,6 +4,7 @@ import uuid
 from pathlib import Path
 
 import pytest
+
 from aos_api.db import connect
 from aos_api.module_events import list_events
 from aos_api.module_identity import (
@@ -76,6 +77,10 @@ def test_child_business_predicates_use_module_pk() -> None:
 
 
 def test_orphan_event_is_hidden_without_parent_module() -> None:
+    with connect() as conn:
+        revision = conn.execute("SELECT version_num FROM alembic_version").fetchone()
+    if revision and revision["version_num"] == "228ti2e7contract":
+        pytest.skip("E7 rejects new orphan rows; quarantine is covered by E7 tests")
     suffix = uuid.uuid4().hex
     scope = TenantScope(f"org-orphan-{suffix}", f"project-orphan-{suffix}")
     module_id = f"orphan-{suffix}"

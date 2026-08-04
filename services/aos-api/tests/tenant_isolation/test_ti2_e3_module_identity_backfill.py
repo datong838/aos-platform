@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 
 import pytest
+
 from aos_api.canvas_config import put_config
 from aos_api.db import connect
 from aos_api.module_deployments import deploy
@@ -25,6 +26,12 @@ from aos_api.tenant_scope import TenantScope
 from aos_api.widget_instances import create_instance
 
 
+def _e7_contract_is_active() -> bool:
+    with connect() as conn:
+        row = conn.execute("SELECT version_num FROM alembic_version").fetchone()
+    return bool(row and row["version_num"] == "228ti2e7contract")
+
+
 def test_stable_module_pk_is_deterministic_and_scope_sensitive() -> None:
     first = stable_module_pk("org-a", "ws-a", "orders")
     assert first == stable_module_pk("org-a", "ws-a", "orders")
@@ -33,6 +40,8 @@ def test_stable_module_pk_is_deterministic_and_scope_sensitive() -> None:
 
 
 def test_plan_apply_verify_and_rollback_are_lossless(client) -> None:
+    if _e7_contract_is_active():
+        pytest.skip("E3 nullable backfill drill is superseded by the E7 NOT NULL contract")
     label = f"pytest-{uuid.uuid4().hex}"
     planner = stable_key_hash(label, "planner")
     approver = stable_key_hash(label, "approver")
@@ -108,6 +117,8 @@ def test_plan_apply_verify_and_rollback_are_lossless(client) -> None:
 
 
 def test_plan_quarantines_orphan_and_blocks_conflicting_identity(client) -> None:
+    if _e7_contract_is_active():
+        pytest.skip("E3 orphan injection is rejected by the E7 NOT NULL contract")
     label = f"negative-{uuid.uuid4().hex}"
     scope = TenantScope(f"org-{label}", f"project-{label}")
     module_id = f"module-{uuid.uuid4().hex}"

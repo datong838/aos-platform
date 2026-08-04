@@ -9,6 +9,7 @@ import json
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.module_identity import stable_module_pk
 from aos_api.module_queries import ensure_schema
 
 log = get_logger("aos-api.demo.seed_module_queries")
@@ -79,9 +80,9 @@ def seed_module_queries() -> int:
                     """
                     INSERT INTO module_query (
                         id, module_id, name, description, query_type, source,
-                        statement, params, enabled, org_id, project_id
-                    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s)
-                    ON CONFLICT (id) DO UPDATE SET
+                        statement, params, enabled, org_id, project_id, module_pk
+                    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s)
+                    ON CONFLICT (org_id, project_id, id) DO UPDATE SET
                         name=EXCLUDED.name, statement=EXCLUDED.statement,
                         params=EXCLUDED.params, query_type=EXCLUDED.query_type
                     """,
@@ -97,6 +98,7 @@ def seed_module_queries() -> int:
                         True,
                         _DEFAULT_ORG,
                         _DEFAULT_PROJECT,
+                        stable_module_pk(_DEFAULT_ORG, _DEFAULT_PROJECT, module_id),
                     ),
                 )
                 count += 1

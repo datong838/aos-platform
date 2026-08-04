@@ -9,6 +9,7 @@ import json
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.module_identity import stable_module_pk
 from aos_api.module_interfaces import ensure_schema
 
 log = get_logger("aos-api.demo.seed_module_interfaces")
@@ -47,9 +48,9 @@ def seed_module_interfaces() -> int:
                 """
                 INSERT INTO module_interface (
                     module_id, name, description, entry_params, expose,
-                    version, org_id, project_id
-                ) VALUES (%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s)
-                ON CONFLICT (module_id) DO UPDATE SET
+                    version, org_id, project_id, module_pk
+                ) VALUES (%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s,%s)
+                ON CONFLICT (org_id, project_id, module_pk) DO UPDATE SET
                     name=EXCLUDED.name, entry_params=EXCLUDED.entry_params,
                     expose=EXCLUDED.expose, version=EXCLUDED.version,
                     updated_at=NOW()
@@ -63,6 +64,7 @@ def seed_module_interfaces() -> int:
                     "1.0.0",
                     _DEFAULT_ORG,
                     _DEFAULT_PROJECT,
+                    stable_module_pk(_DEFAULT_ORG, _DEFAULT_PROJECT, module_id),
                 ),
             )
             count += 1

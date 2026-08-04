@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends, Header, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
@@ -107,6 +107,7 @@ def create_module(
 @router.get("/v1/modules/{module_id}")
 def get_module(
     module_id: str,
+    response: Response,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     mod = module_store.get_module(
@@ -115,7 +116,39 @@ def get_module(
     if not mod:
         raise ApiError(code="NOT_FOUND", message=f"module {module_id} not found", status_code=404)
     ensure_markings(principal, mod.get("markings") or ["public"])
+    response.headers["ETag"] = module_store.module_etag(mod)
     return mod
+
+
+@router.delete("/v1/modules/{module_id}")
+def uninstall_module(
+    module_id: str,
+    principal: Principal = Depends(require_principal),
+    if_match: str | None = Header(default=None, alias="If-Match"),
+) -> dict[str, Any]:
+    if not ({"admin", "owner"} & set(principal.roles)):
+        raise ApiError(
+            code="FORBIDDEN", message="admin or owner role required", status_code=403
+        )
+    if if_match is None:
+        raise ApiError(
+            code="PRECONDITION_REQUIRED",
+            message="If-Match header required",
+            status_code=428,
+        )
+    try:
+        result = module_store.uninstall_module(
+            _scope(principal), module_id, if_match
+        )
+    except ValueError as exc:
+        raise ApiError(
+            code="PRECONDITION_FAILED", message=str(exc), status_code=412
+        ) from exc
+    if result is None:
+        raise ApiError(
+            code="NOT_FOUND", message=f"module {module_id} not found", status_code=404
+        )
+    return result
 
 
 @router.patch("/v1/modules/{module_id}")

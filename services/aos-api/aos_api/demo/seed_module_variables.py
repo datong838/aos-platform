@@ -10,6 +10,7 @@ import json
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.module_identity import stable_module_pk
 from aos_api.module_variables import ensure_schema
 
 log = get_logger("aos-api.demo.seed_module_variables")
@@ -71,9 +72,10 @@ def seed_module_variables() -> int:
                 """
                 INSERT INTO module_variable (
                     id, module_id, name, var_type, group_name,
-                    initial_value, current_value, description, org_id, project_id
-                ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s)
-                ON CONFLICT (id) DO UPDATE SET
+                    initial_value, current_value, description, org_id, project_id,
+                    module_pk
+                ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s,%s)
+                ON CONFLICT (org_id, project_id, id) DO UPDATE SET
                     name=EXCLUDED.name, var_type=EXCLUDED.var_type,
                     group_name=EXCLUDED.group_name,
                     initial_value=EXCLUDED.initial_value,
@@ -91,6 +93,7 @@ def seed_module_variables() -> int:
                     desc,
                     _DEFAULT_ORG,
                     _DEFAULT_PROJECT,
+                    stable_module_pk(_DEFAULT_ORG, _DEFAULT_PROJECT, primary),
                 ),
             )
             count += 1
@@ -102,9 +105,10 @@ def seed_module_variables() -> int:
                 """
                 INSERT INTO module_variable (
                     id, module_id, name, var_type, group_name,
-                    initial_value, current_value, description, org_id, project_id
-                ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s)
-                ON CONFLICT (id) DO UPDATE SET
+                    initial_value, current_value, description, org_id, project_id,
+                    module_pk
+                ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s,%s)
+                ON CONFLICT (org_id, project_id, id) DO UPDATE SET
                     name=EXCLUDED.name, group_name=EXCLUDED.group_name,
                     initial_value=EXCLUDED.initial_value,
                     current_value=EXCLUDED.current_value
@@ -120,6 +124,7 @@ def seed_module_variables() -> int:
                     "当前选中状态",
                     _DEFAULT_ORG,
                     _DEFAULT_PROJECT,
+                    stable_module_pk(_DEFAULT_ORG, _DEFAULT_PROJECT, module_id),
                 ),
             )
             count += 1

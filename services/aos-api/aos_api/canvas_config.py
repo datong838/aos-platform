@@ -56,12 +56,14 @@ def put_config(
     ensure_schema()
     with connect(scope) as conn:
         module_pk = resolve_module_pk(conn, scope, module_id)
+        if module_pk is None:
+            raise PermissionError("module canvas parent is unavailable in tenant scope")
         result = conn.execute(
             """
             INSERT INTO module_canvas_config (
                 module_id, layout, components, version, org_id, project_id, module_pk
             ) VALUES (%s, %s::jsonb, %s::jsonb, 1, %s, %s, %s)
-            ON CONFLICT (module_id) DO UPDATE SET
+            ON CONFLICT (org_id, project_id, module_pk) DO UPDATE SET
                 layout = EXCLUDED.layout,
                 components = EXCLUDED.components,
                 version = module_canvas_config.version + 1,

@@ -22,7 +22,8 @@ def resolve_module_pk(conn: Any, scope: TenantScope, module_id: str) -> uuid.UUI
     expected = stable_module_pk(scope.org_id, scope.project_id, module_id)
     rows = conn.execute(
         "SELECT id, module_id, module_pk FROM meta_module "
-        "WHERE org_id=%s AND project_id=%s AND (module_pk=%s OR id=%s)",
+        "WHERE org_id=%s AND project_id=%s AND deleted_at IS NULL "
+        "AND (module_pk=%s OR id=%s)",
         (*scope.key, expected, module_id),
     ).fetchall()
     if not rows:

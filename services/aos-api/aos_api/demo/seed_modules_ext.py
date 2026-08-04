@@ -9,6 +9,7 @@ import json
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.module_identity import stable_module_pk
 from aos_api.module_store import ensure_module_schema
 
 log = get_logger("aos-api.demo.seed_modules_ext")
@@ -268,9 +269,9 @@ def seed_modules() -> int:
                 INSERT INTO meta_module (
                     id, name, status, description, object_type, markings,
                     entry_path, widgets, components, buddy_bound, org_id, project_id,
-                    category, theme
-                ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s,%s,%s,%s,%s)
-                ON CONFLICT (id) DO UPDATE SET
+                    category, theme, module_pk, module_id
+                ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s,%s,%s,%s,%s,%s,%s)
+                ON CONFLICT (org_id, project_id, module_pk) DO UPDATE SET
                     name=EXCLUDED.name, status=EXCLUDED.status,
                     description=EXCLUDED.description, object_type=EXCLUDED.object_type,
                     markings=EXCLUDED.markings, entry_path=EXCLUDED.entry_path,
@@ -293,6 +294,8 @@ def seed_modules() -> int:
                     _DEFAULT_PROJECT,
                     s["category"],
                     s["theme"],
+                    stable_module_pk(_DEFAULT_ORG, _DEFAULT_PROJECT, s["id"]),
+                    s["id"],
                 ),
             )
         conn.commit()

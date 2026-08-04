@@ -108,13 +108,15 @@ def put_interface(
     version = payload.get("version") or "1.0.0"
     with connect(scope) as conn:
         module_pk = resolve_module_pk(conn, scope, module_id)
+        if module_pk is None:
+            raise PermissionError("module interface parent is unavailable in tenant scope")
         result = conn.execute(
             """
             INSERT INTO module_interface (
                 module_id, name, description, entry_params, expose,
                 version, org_id, project_id, module_pk
             ) VALUES (%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s,%s)
-            ON CONFLICT (module_id) DO UPDATE SET
+            ON CONFLICT (org_id, project_id, module_pk) DO UPDATE SET
                 name = EXCLUDED.name,
                 description = EXCLUDED.description,
                 entry_params = EXCLUDED.entry_params,

@@ -10,6 +10,7 @@ TI1_E3_EXEC_REVISION = "228ti1e3exec"
 TI2_E1_REVISION = "228ti2e1expand"
 TI2_E4_REVISION = "228ti2e4validate"
 TI2_E6_REVISION = "228ti2e6rls"
+TI2_E7_REVISION = "228ti2e7contract"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {
@@ -76,7 +77,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         issues.append("TI1_FOREIGN_KEYS_MISSING")
     if prematurely_validated:
         issues.append("TI1_FOREIGN_KEYS_PREMATURELY_VALIDATED")
-    if rls_table_count and revision != TI2_E6_REVISION:
+    if rls_table_count and revision not in {TI2_E6_REVISION, TI2_E7_REVISION}:
         issues.append("RLS_ENABLED_BEFORE_E6")
     if revision not in {
         TI1_E1_REVISION,
@@ -86,6 +87,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI2_E1_REVISION,
         TI2_E4_REVISION,
         TI2_E6_REVISION,
+        TI2_E7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     return {
@@ -192,6 +194,7 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
         TI2_E1_REVISION,
         TI2_E4_REVISION,
         TI2_E6_REVISION,
+        TI2_E7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -306,6 +309,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI2_E1_REVISION,
         TI2_E4_REVISION,
         TI2_E6_REVISION,
+        TI2_E7_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -385,7 +389,9 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
 
     if missing_columns:
         issues.append("TI2_MODULE_COLUMNS_MISSING")
-    if non_nullable_columns:
+    # E1 is an expand-only gate. E7 intentionally freezes the canonical
+    # identities as NOT NULL, so the earlier warning is no longer an issue.
+    if non_nullable_columns and report["alembicRevision"] != TI2_E7_REVISION:
         issues.append("TI2_EXPAND_COLUMNS_NOT_NULLABLE")
     if missing_tables:
         issues.append("TI2_HISTORY_TABLES_MISSING")
@@ -401,7 +407,10 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         "ok": not issues,
         "issues": issues,
         "ti2MissingColumns": missing_columns,
-        "ti2NonNullableExpandColumns": non_nullable_columns,
+        "ti2NonNullableExpandColumns": (
+            {} if report["alembicRevision"] == TI2_E7_REVISION
+            else non_nullable_columns
+        ),
         "ti2MissingHistoryTables": missing_tables,
         "ti2MissingForeignKeys": missing_foreign_keys,
         "ti2PrematurelyValidatedForeignKeys": prematurely_validated,
@@ -414,7 +423,11 @@ def build_ti2_e4_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] not in {TI2_E4_REVISION, TI2_E6_REVISION}:
+    if report["alembicRevision"] not in {
+        TI2_E4_REVISION,
+        TI2_E6_REVISION,
+        TI2_E7_REVISION,
+    }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     rows = conn.execute(
         "SELECT conname, convalidated FROM pg_constraint "
@@ -458,7 +471,7 @@ def build_ti2_e6_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] != TI2_E6_REVISION:
+    if report["alembicRevision"] not in {TI2_E6_REVISION, TI2_E7_REVISION}:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     role = conn.execute(
@@ -532,4 +545,99 @@ def build_ti2_e6_schema_report(conn: Any) -> dict[str, Any]:
         "ti2RlsUnprotectedTables": unprotected,
         "ti2RuntimeOwnedTables": runtime_owned,
         "ti2RlsInvalidPolicies": invalid_policies,
+    }
+
+
+TI2_E7_PRIMARY_KEYS = {
+    "meta_module": "PRIMARY KEY (org_id, project_id, module_pk)",
+    "module_canvas_config": "PRIMARY KEY (org_id, project_id, module_pk)",
+    "module_interface": "PRIMARY KEY (org_id, project_id, module_pk)",
+    "module_deployment": "PRIMARY KEY (org_id, project_id, id)",
+    "module_events": "PRIMARY KEY (org_id, project_id, id)",
+    "module_query": "PRIMARY KEY (org_id, project_id, id)",
+    "module_variable": "PRIMARY KEY (org_id, project_id, id)",
+    "module_widget_instance": "PRIMARY KEY (org_id, project_id, id)",
+}
+
+
+def build_ti2_e7_schema_report(conn: Any) -> dict[str, Any]:
+    report = build_ti2_e6_schema_report(conn)
+    issues = [
+        issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
+    ]
+    if report["alembicRevision"] != TI2_E7_REVISION:
+        issues.append("ALEMBIC_REVISION_MISMATCH")
+
+    pk_rows = conn.execute(
+        "SELECT conrelid::regclass::text AS table_name, "
+        "pg_get_constraintdef(oid) AS definition FROM pg_constraint "
+        "WHERE contype='p' AND conrelid::regclass::text = ANY(%s)",
+        (sorted(TI2_E7_PRIMARY_KEYS),),
+    ).fetchall()
+    primary_keys = {
+        str(row["table_name"]): str(row["definition"]) for row in pk_rows
+    }
+    invalid_primary_keys = sorted(
+        table
+        for table, expected in TI2_E7_PRIMARY_KEYS.items()
+        if primary_keys.get(table) != expected
+    )
+    if invalid_primary_keys:
+        issues.append("TI2_CONTRACT_PRIMARY_KEY_INVALID")
+
+    nullable_rows = conn.execute(
+        "SELECT table_name FROM information_schema.columns "
+        "WHERE table_schema='public' AND column_name='module_pk' "
+        "AND table_name = ANY(%s) AND is_nullable='YES'",
+        (sorted(TI2_E7_PRIMARY_KEYS),),
+    ).fetchall()
+    nullable_module_pk = sorted(str(row["table_name"]) for row in nullable_rows)
+    module_id_row = conn.execute(
+        "SELECT is_nullable FROM information_schema.columns "
+        "WHERE table_schema='public' AND table_name='meta_module' "
+        "AND column_name='module_id'"
+    ).fetchone()
+    if nullable_module_pk or not module_id_row or module_id_row["is_nullable"] != "NO":
+        issues.append("TI2_CONTRACT_IDENTITY_NULLABLE")
+
+    quarantine = conn.execute(
+        "SELECT to_regclass('public.module_event_orphan_quarantine')::text AS name"
+    ).fetchone()
+    quarantine_exists = bool(quarantine and quarantine["name"])
+    quarantine_count = 0
+    runtime_quarantine_access = False
+    if quarantine_exists:
+        quarantine_count = int(
+            conn.execute(
+                "SELECT COUNT(*) AS count FROM module_event_orphan_quarantine"
+            ).fetchone()["count"]
+        )
+        runtime_quarantine_access = bool(
+            conn.execute(
+                "SELECT has_table_privilege('aos_runtime', "
+                "'module_event_orphan_quarantine', "
+                "'SELECT,INSERT,UPDATE,DELETE') AS allowed"
+            ).fetchone()["allowed"]
+        )
+    active_null_count = int(
+        conn.execute(
+            "SELECT COUNT(*) AS count FROM module_events WHERE module_pk IS NULL"
+        ).fetchone()["count"]
+    )
+    if not quarantine_exists or active_null_count:
+        issues.append("TI2_ORPHAN_QUARANTINE_INVALID")
+    if runtime_quarantine_access:
+        issues.append("TI2_RUNTIME_CAN_ACCESS_ORPHAN_QUARANTINE")
+
+    return {
+        **report,
+        "stage": "TI-2-E7",
+        "ok": not issues,
+        "issues": issues,
+        "ti2ContractInvalidPrimaryKeys": invalid_primary_keys,
+        "ti2ContractNullableModulePkTables": nullable_module_pk,
+        "ti2OrphanQuarantineExists": quarantine_exists,
+        "ti2OrphanQuarantineCount": quarantine_count,
+        "ti2ActiveNullModulePkEventCount": active_null_count,
+        "ti2RuntimeQuarantineAccess": runtime_quarantine_access,
     }

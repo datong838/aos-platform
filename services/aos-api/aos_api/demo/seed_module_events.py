@@ -10,6 +10,7 @@ import json
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
 from aos_api.module_events import ensure_events_schema
+from aos_api.module_identity import stable_module_pk
 
 log = get_logger("aos-api.demo.seed_module_events")
 
@@ -60,9 +61,9 @@ def seed_module_events() -> int:
                     """
                     INSERT INTO module_events (
                         id, module_id, name, trigger_config, action_config,
-                        enabled, sort_order, org_id, project_id
-                    ) VALUES (%s, %s, %s, %s::jsonb, %s::jsonb, %s, %s, %s, %s)
-                    ON CONFLICT (id) DO UPDATE SET
+                        enabled, sort_order, org_id, project_id, module_pk
+                    ) VALUES (%s, %s, %s, %s::jsonb, %s::jsonb, %s, %s, %s, %s, %s)
+                    ON CONFLICT (org_id, project_id, id) DO UPDATE SET
                         name=EXCLUDED.name, trigger_config=EXCLUDED.trigger_config,
                         action_config=EXCLUDED.action_config, enabled=EXCLUDED.enabled
                     """,
@@ -76,6 +77,7 @@ def seed_module_events() -> int:
                         i,
                         _DEFAULT_ORG,
                         _DEFAULT_PROJECT,
+                        stable_module_pk(_DEFAULT_ORG, _DEFAULT_PROJECT, module_id),
                     ),
                 )
                 count += 1

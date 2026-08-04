@@ -87,7 +87,7 @@ def seed_events_if_empty(scope: TenantScope, module_id: str) -> None:
                     id, module_id, name, trigger_config, action_config,
                     enabled, sort_order, org_id, project_id, module_pk
                 ) VALUES (%s, %s, %s, %s::jsonb, %s::jsonb, %s, %s, %s, %s, %s)
-                ON CONFLICT (id) DO NOTHING
+                ON CONFLICT (org_id, project_id, id) DO NOTHING
                 """,
                 (
                     eid,

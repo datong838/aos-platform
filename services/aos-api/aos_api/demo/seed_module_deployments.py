@@ -10,6 +10,7 @@ import json
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
 from aos_api.module_deployments import ensure_schema
+from aos_api.module_identity import stable_module_pk
 
 log = get_logger("aos-api.demo.seed_module_deployments")
 
@@ -51,9 +52,9 @@ def seed_module_deployments() -> int:
                     """
                     INSERT INTO module_deployment (
                         id, module_id, environment, version, status,
-                        config_snapshot, deployed_by, org_id, project_id
-                    ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s)
-                    ON CONFLICT (id) DO UPDATE SET
+                        config_snapshot, deployed_by, org_id, project_id, module_pk
+                    ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s)
+                    ON CONFLICT (org_id, project_id, id) DO UPDATE SET
                         version=EXCLUDED.version, status=EXCLUDED.status
                     """,
                     (
@@ -66,6 +67,7 @@ def seed_module_deployments() -> int:
                         "user:dev",
                         _DEFAULT_ORG,
                         _DEFAULT_PROJECT,
+                        stable_module_pk(_DEFAULT_ORG, _DEFAULT_PROJECT, module_id),
                     ),
                 )
                 count += 1

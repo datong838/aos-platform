@@ -5,6 +5,7 @@ TWA.5: rows scoped by org_id + project_id (configured instances are per-workspac
 from __future__ import annotations
 
 import json
+from hashlib import sha256
 from typing import Any
 
 from aos_api.db import connect
@@ -429,7 +430,7 @@ def seed_modules_if_empty(scope: TenantScope) -> None:
                   entry_path, widgets, components, buddy_bound, org_id, project_id,
                   category, theme, module_pk, module_id
                 ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s,%s,%s,%s,%s,%s,%s)
-                ON CONFLICT (id) DO UPDATE SET
+                ON CONFLICT (org_id, project_id, module_pk) DO UPDATE SET
                   name=EXCLUDED.name, status=EXCLUDED.status,
                   description=EXCLUDED.description, object_type=EXCLUDED.object_type,
                   markings=EXCLUDED.markings, entry_path=EXCLUDED.entry_path,
@@ -438,8 +439,6 @@ def seed_modules_if_empty(scope: TenantScope) -> None:
                   category=EXCLUDED.category, theme=EXCLUDED.theme,
                   module_pk=COALESCE(meta_module.module_pk, EXCLUDED.module_pk),
                   module_id=COALESCE(meta_module.module_id, EXCLUDED.module_id)
-                WHERE meta_module.org_id=EXCLUDED.org_id
-                  AND meta_module.project_id=EXCLUDED.project_id
                 """,
                 (
                     s["id"],
@@ -472,7 +471,7 @@ def list_modules(scope: TenantScope) -> list[dict[str, Any]]:
         rows = conn.execute(
             """
             SELECT * FROM meta_module
-             WHERE org_id=%s AND project_id=%s
+             WHERE org_id=%s AND project_id=%s AND deleted_at IS NULL
              ORDER BY id
             """,
             scope.key,
@@ -688,3 +687,61 @@ def module_runtime(
         "projectId": scope.project_id,
         "store": "postgres",
     }
+
+
+def module_etag(module: dict[str, Any]) -> str:
+    payload = {
+        key: module.get(key)
+        for key in (
+            "id",
+            "name",
+            "status",
+            "description",
+            "objectType",
+            "markings",
+            "entryPath",
+            "widgets",
+            "components",
+            "buddyBound",
+            "category",
+            "theme",
+            "lastOpenedAt",
+        )
+    }
+    digest = sha256(
+        json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    ).hexdigest()
+    return f'"{digest}"'
+
+
+def uninstall_module(
+    scope: TenantScope, module_id: str, expected_etag: str
+) -> dict[str, Any] | None:
+    ensure_module_schema()
+    with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
+        if module_pk is None:
+            return None
+        row = conn.execute(
+            "SELECT * FROM meta_module "
+            "WHERE module_pk=%s AND org_id=%s AND project_id=%s "
+            "AND deleted_at IS NULL FOR UPDATE",
+            (module_pk, *scope.key),
+        ).fetchone()
+        if row is None:
+            return None
+        current = _row_to_mod(row)
+        if module_etag(current) != expected_etag:
+            raise ValueError("module ETag mismatch")
+        conn.execute(
+            "UPDATE module_events SET enabled=false, updated_at=NOW() "
+            "WHERE module_pk=%s AND org_id=%s AND project_id=%s",
+            (module_pk, *scope.key),
+        )
+        conn.execute(
+            "UPDATE meta_module SET status='uninstalled', deleted_at=NOW() "
+            "WHERE module_pk=%s AND org_id=%s AND project_id=%s",
+            (module_pk, *scope.key),
+        )
+        conn.commit()
+    return {"moduleId": module_id, "status": "uninstalled"}

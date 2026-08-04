@@ -5,11 +5,12 @@ import uuid
 from pathlib import Path
 
 import pytest
+from psycopg.errors import InsufficientPrivilege
+
 from aos_api.db import connect
 from aos_api.module_store import create_module, get_module
 from aos_api.tenant_schema_lint import build_ti2_e6_schema_report
 from aos_api.tenant_scope import TenantScope
-from psycopg.errors import InsufficientPrivilege
 
 ROOT = Path(__file__).resolve().parents[2]
 MIGRATION = ROOT / "alembic" / "versions" / "228ti2e6_module_rls.py"
@@ -47,7 +48,7 @@ def test_schema_lint_confirms_runtime_role_and_eleven_policies() -> None:
         report = build_ti2_e6_schema_report(conn)
 
     assert report["ok"] is True
-    assert report["alembicRevision"] == "228ti2e6rls"
+    assert report["alembicRevision"] in {"228ti2e6rls", "228ti2e7contract"}
     assert report["ti2RuntimeRoleSafe"] is True
     assert report["ti2RlsTableCount"] == 11
     assert report["ti2RlsMissingTables"] == []

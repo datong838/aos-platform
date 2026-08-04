@@ -7,9 +7,10 @@ from __future__ import annotations
 
 import json
 
+from aos_api.canvas_config import ensure_schema as ensure_config_schema
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
-from aos_api.canvas_config import ensure_schema as ensure_config_schema
+from aos_api.module_identity import stable_module_pk
 from aos_api.widget_instances import ensure_schema as ensure_instance_schema
 
 log = get_logger("aos-api.demo.seed_module_widgets")
@@ -196,8 +197,9 @@ def seed_module_widgets() -> int:
             conn.execute(
                 """
                 INSERT INTO module_canvas_config (
-                    module_id, layout, components, version, org_id, project_id
-                ) VALUES (%s, %s::jsonb, %s::jsonb, 1, %s, %s)
+                    module_id, layout, components, version, org_id, project_id,
+                    module_pk
+                ) VALUES (%s, %s::jsonb, %s::jsonb, 1, %s, %s, %s)
                 """,
                 (
                     module_id,
@@ -205,6 +207,7 @@ def seed_module_widgets() -> int:
                     json.dumps(cfg["components"]),
                     _DEFAULT_ORG,
                     _DEFAULT_PROJECT,
+                    stable_module_pk(_DEFAULT_ORG, _DEFAULT_PROJECT, module_id),
                 ),
             )
 
@@ -215,8 +218,8 @@ def seed_module_widgets() -> int:
                     """
                     INSERT INTO module_widget_instance (
                         id, module_id, widget_id, type, title, config, layout,
-                        sort_order, org_id, project_id
-                    ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s)
+                        sort_order, org_id, project_id, module_pk
+                    ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s,%s)
                     """,
                     (
                         wi["id"],
@@ -229,6 +232,7 @@ def seed_module_widgets() -> int:
                         wi["sort_order"],
                         _DEFAULT_ORG,
                         _DEFAULT_PROJECT,
+                        stable_module_pk(_DEFAULT_ORG, _DEFAULT_PROJECT, module_id),
                     ),
                 )
             total += len(instances)
