@@ -10,6 +10,7 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.module_identity import resolve_module_pk
 from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.module_deployments")
@@ -68,12 +69,13 @@ def deploy(
     ensure_schema()
     did = f"dep-{module_id}-{environment}-{uuid.uuid4().hex[:6]}"
     with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
         conn.execute(
             """
             INSERT INTO module_deployment (
                 id, module_id, environment, version, status,
-                config_snapshot, deployed_by, org_id, project_id
-            ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s)
+                config_snapshot, deployed_by, org_id, project_id, module_pk
+            ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s)
             """,
             (
                 did,
@@ -84,6 +86,7 @@ def deploy(
                 json.dumps(config_snapshot or {}),
                 deployed_by,
                 *scope.key,
+                module_pk,
             ),
         )
         conn.commit()
@@ -117,12 +120,14 @@ def rollback(
     ensure_schema()
     new_id = f"dep-{module_id}-{target['environment']}-rb-{uuid.uuid4().hex[:6]}"
     with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
         conn.execute(
             """
             INSERT INTO module_deployment (
                 id, module_id, environment, version, status,
-                config_snapshot, deployed_by, rolled_back_from, org_id, project_id
-            ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s)
+                config_snapshot, deployed_by, rolled_back_from, org_id, project_id,
+                module_pk
+            ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s,%s)
             """,
             (
                 new_id,
@@ -134,6 +139,7 @@ def rollback(
                 deployed_by,
                 target_deployment_id,
                 *scope.key,
+                module_pk,
             ),
         )
         conn.commit()

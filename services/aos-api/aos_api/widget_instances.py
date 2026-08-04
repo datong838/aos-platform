@@ -10,6 +10,7 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.module_identity import resolve_module_pk
 from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.widget_instances")
@@ -76,12 +77,13 @@ def create_instance(
     ensure_schema()
     iid = payload.get("id") or f"wi-{uuid.uuid4().hex[:10]}"
     with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
         conn.execute(
             """
             INSERT INTO module_widget_instance (
                 id, module_id, widget_id, type, title, config, layout,
-                sort_order, org_id, project_id
-            ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s)
+                sort_order, org_id, project_id, module_pk
+            ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s,%s)
             """,
             (
                 iid,
@@ -93,6 +95,7 @@ def create_instance(
                 json.dumps(payload.get("layout") or {}),
                 int(payload.get("sortOrder") or payload.get("sort_order") or 0),
                 *scope.key,
+                module_pk,
             ),
         )
         conn.commit()

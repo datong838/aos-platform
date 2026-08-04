@@ -3,7 +3,10 @@ from __future__ import annotations
 import uuid
 
 import pytest
+from aos_api.canvas_config import put_config
 from aos_api.db import connect
+from aos_api.module_deployments import deploy
+from aos_api.module_events import create_event
 from aos_api.module_identity_backfill import (
     apply_plan,
     approve_plan,
@@ -13,7 +16,13 @@ from aos_api.module_identity_backfill import (
     stable_module_pk,
     verify_plan,
 )
+from aos_api.module_interfaces import put_interface
+from aos_api.module_queries import create_query
+from aos_api.module_store import create_module
+from aos_api.module_variables import create_variable
 from aos_api.tenant_dual_write import stable_key_hash
+from aos_api.tenant_scope import TenantScope
+from aos_api.widget_instances import create_instance
 
 
 def test_stable_module_pk_is_deterministic_and_scope_sensitive() -> None:
@@ -103,7 +112,7 @@ def test_plan_quarantines_orphan_and_blocks_conflicting_identity(client) -> None
     with connect() as conn:
         parent = conn.execute(
             "SELECT id, org_id, project_id FROM meta_module "
-            "WHERE module_pk IS NULL ORDER BY id LIMIT 1"
+            "ORDER BY id LIMIT 1"
         ).fetchone()
         assert parent is not None
         conn.execute(
@@ -130,6 +139,48 @@ def test_plan_quarantines_orphan_and_blocks_conflicting_identity(client) -> None
                 planner_actor_hash=stable_key_hash(label, "planner"),
             )
         conn.rollback()
+
+
+def test_new_module_and_children_inherit_stable_module_pk(client) -> None:
+    suffix = uuid.uuid4().hex
+    scope = TenantScope(f"org-new-{suffix}", f"ws-new-{suffix}")
+    module = create_module(scope, {"name": "orders"})
+    module_id = module["id"]
+
+    put_config(scope, module_id, {}, {})
+    create_instance(scope, module_id, {"title": "widget"})
+    create_variable(scope, module_id, {"name": "selected"})
+    create_query(scope, module_id, {"name": "orders"})
+    create_event(scope, module_id, {"name": "refresh"})
+    put_interface(scope, module_id, {"name": "orders-api"})
+    deploy(scope, module_id, "dev")
+
+    expected = stable_module_pk(*scope.key, module_id)
+    with connect() as conn:
+        parent = conn.execute(
+            "SELECT module_pk, module_id FROM meta_module "
+            "WHERE id=%s AND org_id=%s AND project_id=%s",
+            (module_id, *scope.key),
+        ).fetchone()
+        assert parent is not None
+        assert parent["module_pk"] == expected
+        assert parent["module_id"] == module_id
+        for table in (
+            "module_canvas_config",
+            "module_deployment",
+            "module_events",
+            "module_interface",
+            "module_query",
+            "module_variable",
+            "module_widget_instance",
+        ):
+            rows = conn.execute(
+                f"SELECT module_pk FROM {table} "
+                "WHERE module_id=%s AND org_id=%s AND project_id=%s",
+                (module_id, *scope.key),
+            ).fetchall()
+            assert rows, table
+            assert {row["module_pk"] for row in rows} == {expected}, table
 
 
 def _identity_counts(conn) -> dict[str, int]:

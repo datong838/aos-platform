@@ -6,11 +6,11 @@ Events are stored in a dedicated PostgreSQL table.
 from __future__ import annotations
 
 import json
-import time
 from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.module_identity import resolve_module_pk
 from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.module_events")
@@ -67,6 +67,7 @@ def seed_events_if_empty(scope: TenantScope, module_id: str) -> None:
     """Seed default events for a module if none exist."""
     ensure_events_schema()
     with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
         existing = conn.execute(
             """
             SELECT COUNT(*) as cnt FROM module_events
@@ -82,8 +83,8 @@ def seed_events_if_empty(scope: TenantScope, module_id: str) -> None:
                 """
                 INSERT INTO module_events (
                     id, module_id, name, trigger_config, action_config,
-                    enabled, sort_order, org_id, project_id
-                ) VALUES (%s, %s, %s, %s::jsonb, %s::jsonb, %s, %s, %s, %s)
+                    enabled, sort_order, org_id, project_id, module_pk
+                ) VALUES (%s, %s, %s, %s::jsonb, %s::jsonb, %s, %s, %s, %s, %s)
                 ON CONFLICT (id) DO NOTHING
                 """,
                 (
@@ -95,6 +96,7 @@ def seed_events_if_empty(scope: TenantScope, module_id: str) -> None:
                     evt["enabled"],
                     i,
                     *scope.key,
+                    module_pk,
                 ),
             )
         conn.commit()
@@ -146,12 +148,13 @@ def create_event(
     sort_order = int(payload.get("sortOrder") or payload.get("sort_order") or 0)
 
     with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
         conn.execute(
             """
             INSERT INTO module_events (
                 id, module_id, name, trigger_config, action_config,
-                enabled, sort_order, org_id, project_id
-            ) VALUES (%s, %s, %s, %s::jsonb, %s::jsonb, %s, %s, %s, %s)
+                enabled, sort_order, org_id, project_id, module_pk
+            ) VALUES (%s, %s, %s, %s::jsonb, %s::jsonb, %s, %s, %s, %s, %s)
             """,
             (
                 eid,
@@ -162,6 +165,7 @@ def create_event(
                 enabled,
                 sort_order,
                 *scope.key,
+                module_pk,
             ),
         )
         conn.commit()

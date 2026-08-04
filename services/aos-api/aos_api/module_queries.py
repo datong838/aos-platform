@@ -10,6 +10,7 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.module_identity import resolve_module_pk
 from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.module_queries")
@@ -77,12 +78,13 @@ def create_query(
     ensure_schema()
     qid = payload.get("id") or f"q-{uuid.uuid4().hex[:10]}"
     with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
         conn.execute(
             """
             INSERT INTO module_query (
                 id, module_id, name, description, query_type, source,
-                statement, params, enabled, org_id, project_id
-            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s)
+                statement, params, enabled, org_id, project_id, module_pk
+            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s)
             """,
             (
                 qid,
@@ -95,6 +97,7 @@ def create_query(
                 json.dumps(payload.get("params") or []),
                 bool(payload.get("enabled", True)),
                 *scope.key,
+                module_pk,
             ),
         )
         conn.commit()

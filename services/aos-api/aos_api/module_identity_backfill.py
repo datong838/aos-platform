@@ -6,6 +6,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from aos_api.asset_registry.canonical_json import canonical_sha256
+from aos_api.module_identity import MODULE_IDENTITY_NAMESPACE, stable_module_pk
 from aos_api.tenant_backfill_executor import (
     _actor_hashes,
     _append_batch_event,
@@ -15,7 +16,6 @@ from aos_api.tenant_backfill_executor import (
 )
 from aos_api.tenant_dual_write import stable_key_hash
 
-MODULE_IDENTITY_NAMESPACE = uuid.UUID("02aa6d2e-3d7b-5b7c-8aca-723dbf489a82")
 OWNER_SCOPE = ("dev-org", "dev-project")
 CHILDREN: dict[str, str] = {
     "module_canvas_config": "module_id",
@@ -26,11 +26,6 @@ CHILDREN: dict[str, str] = {
     "module_variable": "id",
     "module_widget_instance": "id",
 }
-
-
-def stable_module_pk(org_id: str, project_id: str, module_id: str) -> uuid.UUID:
-    identity = f"{org_id}/{project_id}/{module_id}"
-    return uuid.uuid5(MODULE_IDENTITY_NAMESPACE, identity)
 
 
 def _key_hash(table: str, row: Mapping[str, Any], key_column: str) -> str:

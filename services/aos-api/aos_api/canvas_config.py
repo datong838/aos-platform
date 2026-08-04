@@ -9,6 +9,7 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.module_identity import resolve_module_pk
 from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.canvas_config")
@@ -51,15 +52,17 @@ def put_config(
 ) -> dict[str, Any]:
     ensure_schema()
     with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
         result = conn.execute(
             """
             INSERT INTO module_canvas_config (
-                module_id, layout, components, version, org_id, project_id
-            ) VALUES (%s, %s::jsonb, %s::jsonb, 1, %s, %s)
+                module_id, layout, components, version, org_id, project_id, module_pk
+            ) VALUES (%s, %s::jsonb, %s::jsonb, 1, %s, %s, %s)
             ON CONFLICT (module_id) DO UPDATE SET
                 layout = EXCLUDED.layout,
                 components = EXCLUDED.components,
                 version = module_canvas_config.version + 1,
+                module_pk = COALESCE(module_canvas_config.module_pk, EXCLUDED.module_pk),
                 updated_at = NOW()
             WHERE module_canvas_config.org_id=EXCLUDED.org_id
               AND module_canvas_config.project_id=EXCLUDED.project_id
@@ -69,6 +72,7 @@ def put_config(
                 json.dumps(layout),
                 json.dumps(components),
                 *scope.key,
+                module_pk,
             ),
         )
         conn.commit()

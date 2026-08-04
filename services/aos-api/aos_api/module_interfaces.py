@@ -9,6 +9,7 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.module_identity import resolve_module_pk
 from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.module_interfaces")
@@ -103,18 +104,20 @@ def put_interface(
     expose = payload.get("expose") or {}
     version = payload.get("version") or "1.0.0"
     with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
         result = conn.execute(
             """
             INSERT INTO module_interface (
                 module_id, name, description, entry_params, expose,
-                version, org_id, project_id
-            ) VALUES (%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s)
+                version, org_id, project_id, module_pk
+            ) VALUES (%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s,%s)
             ON CONFLICT (module_id) DO UPDATE SET
                 name = EXCLUDED.name,
                 description = EXCLUDED.description,
                 entry_params = EXCLUDED.entry_params,
                 expose = EXCLUDED.expose,
                 version = EXCLUDED.version,
+                module_pk = COALESCE(module_interface.module_pk, EXCLUDED.module_pk),
                 updated_at = NOW()
             WHERE module_interface.org_id=EXCLUDED.org_id
               AND module_interface.project_id=EXCLUDED.project_id
@@ -127,6 +130,7 @@ def put_interface(
                 json.dumps(expose),
                 version,
                 *scope.key,
+                module_pk,
             ),
         )
         conn.commit()

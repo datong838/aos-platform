@@ -9,6 +9,7 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.module_identity import stable_module_pk
 from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.module_store")
@@ -426,15 +427,17 @@ def seed_modules_if_empty(scope: TenantScope) -> None:
                 INSERT INTO meta_module (
                   id, name, status, description, object_type, markings,
                   entry_path, widgets, components, buddy_bound, org_id, project_id,
-                  category, theme
-                ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s,%s,%s,%s,%s)
+                  category, theme, module_pk, module_id
+                ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s,%s,%s,%s,%s,%s,%s)
                 ON CONFLICT (id) DO UPDATE SET
                   name=EXCLUDED.name, status=EXCLUDED.status,
                   description=EXCLUDED.description, object_type=EXCLUDED.object_type,
                   markings=EXCLUDED.markings, entry_path=EXCLUDED.entry_path,
                   widgets=EXCLUDED.widgets, components=EXCLUDED.components,
                   buddy_bound=EXCLUDED.buddy_bound,
-                  category=EXCLUDED.category, theme=EXCLUDED.theme
+                  category=EXCLUDED.category, theme=EXCLUDED.theme,
+                  module_pk=COALESCE(meta_module.module_pk, EXCLUDED.module_pk),
+                  module_id=COALESCE(meta_module.module_id, EXCLUDED.module_id)
                 WHERE meta_module.org_id=EXCLUDED.org_id
                   AND meta_module.project_id=EXCLUDED.project_id
                 """,
@@ -452,6 +455,8 @@ def seed_modules_if_empty(scope: TenantScope) -> None:
                     *scope.key,
                     s.get("category") or "运营",
                     s.get("theme") or "light",
+                    stable_module_pk(scope.org_id, scope.project_id, s["id"]),
+                    s["id"],
                 ),
             )
         conn.commit()
@@ -531,8 +536,8 @@ def create_module(
             INSERT INTO meta_module (
               id, name, status, description, object_type, markings,
               entry_path, widgets, components, buddy_bound, org_id, project_id,
-              category, theme
-            ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s,%s,%s,%s,%s)
+              category, theme, module_pk, module_id
+            ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s,%s,%s,%s,%s,%s,%s)
             """,
             (
                 item["id"],
@@ -548,6 +553,8 @@ def create_module(
                 *scope.key,
                 item["category"],
                 item["theme"],
+                stable_module_pk(scope.org_id, scope.project_id, mid),
+                mid,
             ),
         )
         conn.commit()

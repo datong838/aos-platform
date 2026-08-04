@@ -13,6 +13,7 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.module_identity import resolve_module_pk
 from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.module_variables")
@@ -80,12 +81,13 @@ def create_variable(
     vid = payload.get("id") or f"var-{uuid.uuid4().hex[:10]}"
     init = payload.get("initialValue", payload.get("initial_value"))
     with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
         conn.execute(
             """
             INSERT INTO module_variable (
                 id, module_id, name, var_type, group_name,
-                initial_value, current_value, description, org_id, project_id
-            ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s)
+                initial_value, current_value, description, org_id, project_id, module_pk
+            ) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s,%s)
             """,
             (
                 vid,
@@ -97,6 +99,7 @@ def create_variable(
                 json.dumps(init),
                 payload.get("description") or "",
                 *scope.key,
+                module_pk,
             ),
         )
         conn.commit()
@@ -159,8 +162,8 @@ def list_usage(
 
     Scans widget instances and queries that reference the variable name.
     """
-    from aos_api.widget_instances import list_instances
     from aos_api.module_queries import list_queries
+    from aos_api.widget_instances import list_instances
 
     var = get_variable(scope, module_id, variable_id)
     if not var:
