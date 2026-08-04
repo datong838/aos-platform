@@ -134,7 +134,7 @@ resources:
   - {<<: *template, name: asset_bundle_evidence, tenantColumns: [], primaryKey: [version_pk, evidence_type, artifact_ref], currentState: NO_TENANT}
   - {<<: *template, name: asset_bundle_version, tenantColumns: [], primaryKey: [version_pk], currentState: NO_TENANT}
   - {<<: *template, name: asset_bundle_version_event, tenantColumns: [], primaryKey: [event_pk], currentState: NO_TENANT}
-  - {<<: *owned, name: authz_tuple, tenantColumns: [], primaryKey: [user_key, relation, object_key], targetTenantColumns: [org_id, project_id], currentState: NO_TENANT, migrationWave: TI-1}
+  - {<<: *owned, name: authz_tuple, tenantColumns: [org_id, project_id], primaryKey: [user_key, relation, object_key], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-1}
   - {<<: *owned, name: bundle_composition, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, composition_pk], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-2}
   - {<<: *owned, name: bundle_composition_lock, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, composition_pk, revision], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-2}
   - {<<: *owned, name: bundle_installation, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, installation_pk], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-2}

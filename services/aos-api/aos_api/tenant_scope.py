@@ -1,9 +1,72 @@
-"""TWA.5 — tenant scope helpers + ledger loader (no I/O beyond package data)."""
+"""TI-1 canonical tenant scope and transaction-local PostgreSQL context."""
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
+from dataclasses import dataclass
 from importlib import resources
 from typing import Any
+
+MAX_SCOPE_PART_LENGTH = 160
+ORG_GUC = "aos.org_id"
+PROJECT_GUC = "aos.project_id"
+
+
+@dataclass(frozen=True, slots=True)
+class TenantScope:
+    org_id: str
+    project_id: str
+
+    def __post_init__(self) -> None:
+        _validate_scope_part("org_id", self.org_id)
+        _validate_scope_part("project_id", self.project_id)
+
+    @property
+    def key(self) -> tuple[str, str]:
+        return self.org_id, self.project_id
+
+    @classmethod
+    def from_workspace(cls, *, org_id: str, workspace_id: str) -> TenantScope:
+        """Translate the e-commerce workspace alias at the adapter boundary."""
+        return cls(org_id=org_id, project_id=workspace_id)
+
+
+_current_scope: ContextVar[TenantScope | None] = ContextVar(
+    "tenant_scope", default=None
+)
+
+
+def current_tenant_scope() -> TenantScope | None:
+    return _current_scope.get()
+
+
+def require_tenant_scope() -> TenantScope:
+    scope = current_tenant_scope()
+    if scope is None:
+        raise RuntimeError("tenant scope is required")
+    return scope
+
+
+@contextmanager
+def bind_tenant_scope(scope: TenantScope) -> Iterator[TenantScope]:
+    token = _current_scope.set(scope)
+    try:
+        yield scope
+    finally:
+        _current_scope.reset(token)
+
+
+def apply_transaction_scope(conn: Any, scope: TenantScope) -> None:
+    """Set transaction-local GUCs; values disappear at transaction end."""
+    conn.execute(
+        """
+        SELECT set_config('aos.org_id', %s, true),
+               set_config('aos.project_id', %s, true)
+        """,
+        scope.key,
+    )
 
 
 def filter_by_tenant(
@@ -14,10 +77,11 @@ def filter_by_tenant(
     org_key: str = "orgId",
     project_key: str = "projectId",
 ) -> list[dict[str, Any]]:
+    """Compatibility helper retained from the TWA.5 public contract."""
     return [
-        it
-        for it in items
-        if it.get(org_key) == org_id and it.get(project_key) == project_id
+        item
+        for item in items
+        if item.get(org_key) == org_id and item.get(project_key) == project_id
     ]
 
 
@@ -41,10 +105,23 @@ def load_tenant_ledger() -> dict[str, Any]:
     return json.loads(raw)
 
 
-def p0_open_gaps(ledger: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+def p0_open_gaps(
+    ledger: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
     data = ledger or load_tenant_ledger()
     return [
-        e
-        for e in data.get("entries", [])
-        if e.get("priority") == "P0" and e.get("status") == "GAP"
+        entry
+        for entry in data.get("entries", [])
+        if entry.get("priority") == "P0" and entry.get("status") == "GAP"
     ]
+
+
+def _validate_scope_part(field: str, value: str) -> None:
+    if not isinstance(value, str):
+        raise TypeError(f"{field} must be a string")
+    if not value or value != value.strip():
+        raise ValueError(f"{field} must be non-empty and trimmed")
+    if len(value) > MAX_SCOPE_PART_LENGTH:
+        raise ValueError(f"{field} exceeds {MAX_SCOPE_PART_LENGTH} characters")
+    if any(ord(char) < 32 or ord(char) == 127 for char in value):
+        raise ValueError(f"{field} contains control characters")

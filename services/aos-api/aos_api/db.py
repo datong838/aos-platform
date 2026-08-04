@@ -2,13 +2,18 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Iterator
 
 import psycopg
 from psycopg.rows import dict_row
 
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import (
+    TenantScope,
+    apply_transaction_scope,
+    current_tenant_scope,
+)
 
 log = get_logger("aos-api.db")
 
@@ -20,12 +25,15 @@ def get_dsn() -> str:
 
 
 @contextmanager
-def connect() -> Iterator[psycopg.Connection]:
+def connect(scope: TenantScope | None = None) -> Iterator[psycopg.Connection]:
     dsn = get_dsn()
     log.debug("db_connect host_port_from_env=%s", "AOS_DATABASE_URL" in os.environ)
     with psycopg.connect(dsn, row_factory=dict_row) as conn:
         # 强制 UTF-8，避免客户端/驱动默认编码把中文写成 ???
         conn.execute("SET client_encoding TO 'UTF8'")
+        effective_scope = scope if scope is not None else current_tenant_scope()
+        if effective_scope is not None:
+            apply_transaction_scope(conn, effective_scope)
         yield conn
 
 
@@ -196,7 +204,7 @@ def init_schema() -> None:
         from aos_api.twa_pg import bootstrap as twa_bootstrap
 
         twa_bootstrap()
-    except Exception as exc:  # pragma: no cover
+    except Exception as exc:  # noqa: BLE001  # pragma: no cover
         log.warning("twa_store_bootstrap_skip err=%s", exc)
 
 
