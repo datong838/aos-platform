@@ -35,7 +35,7 @@ AIP 决策层
 - 技术重点：四层职责、读链与写链、控制流与数据流、共同引用对象。
 - 关键失败路径：跨层直连、语义漂移、模型直写、界面越权。
 
-### 02 数据操作系统如何形成可信资产：Connector、Pipeline 与 Lineage
+### 02 Agent 为什么不能直连数据库：Connector、Pipeline 与 Lineage
 
 - 核心问题：进入平台的数据怎样具备来源、版本、新鲜度和恢复能力。
 - 技术重点：插件化 Connector、同步状态、Pipeline DAG、Dataset/MediaSet 路由、Lineage、DLQ。
