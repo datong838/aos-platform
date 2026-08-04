@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.demo.module_seed")
 
@@ -17,6 +18,6 @@ def seed_modules() -> int:
     """
     from aos_api.module_store import seed_modules_if_empty
 
-    seed_modules_if_empty()
+    seed_modules_if_empty(TenantScope("dev-org", "dev-project"))
     log.info("seed_modules_done")
     return 3

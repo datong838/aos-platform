@@ -9,12 +9,9 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.module_store")
-
-_DEFAULT_ORG = "dev-org"
-_DEFAULT_PROJECT = "dev-project"
-
 
 def _iso(v: object) -> str | None:
     """Convert a datetime (or None) to ISO 8601 string for JSON-safe output."""
@@ -414,15 +411,15 @@ def _row_to_mod(r: dict[str, Any]) -> dict[str, Any]:
         "category": r.get("category") or "运营",
         "theme": r.get("theme") or "light",
         "lastOpenedAt": _iso(r.get("last_opened_at")),
-        "orgId": r.get("org_id") or _DEFAULT_ORG,
-        "projectId": r.get("project_id") or _DEFAULT_PROJECT,
+        "orgId": r["org_id"],
+        "projectId": r["project_id"],
         "createdAt": _iso(r.get("created_at")),
     }
 
 
-def seed_modules_if_empty() -> None:
+def seed_modules_if_empty(scope: TenantScope) -> None:
     ensure_module_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         for s in _SEED:
             conn.execute(
                 """
@@ -438,6 +435,8 @@ def seed_modules_if_empty() -> None:
                   widgets=EXCLUDED.widgets, components=EXCLUDED.components,
                   buddy_bound=EXCLUDED.buddy_bound,
                   category=EXCLUDED.category, theme=EXCLUDED.theme
+                WHERE meta_module.org_id=EXCLUDED.org_id
+                  AND meta_module.project_id=EXCLUDED.project_id
                 """,
                 (
                     s["id"],
@@ -450,8 +449,7 @@ def seed_modules_if_empty() -> None:
                     json.dumps(s["widgets"]),
                     json.dumps(s.get("components") or {}),
                     s["buddyBound"],
-                    _DEFAULT_ORG,
-                    _DEFAULT_PROJECT,
+                    *scope.key,
                     s.get("category") or "运营",
                     s.get("theme") or "light",
                 ),
@@ -459,56 +457,53 @@ def seed_modules_if_empty() -> None:
         conn.commit()
     log.info(
         "module_store_seed_ensured org=%s project=%s",
-        _DEFAULT_ORG,
-        _DEFAULT_PROJECT,
+        *scope.key,
     )
 
 
-def list_modules(org_id: str, project_id: str) -> list[dict[str, Any]]:
+def list_modules(scope: TenantScope) -> list[dict[str, Any]]:
     ensure_module_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         rows = conn.execute(
             """
             SELECT * FROM meta_module
              WHERE org_id=%s AND project_id=%s
              ORDER BY id
             """,
-            (org_id, project_id),
+            scope.key,
         ).fetchall()
     log.info(
         "module_list org=%s project=%s count=%s",
-        org_id,
-        project_id,
+        *scope.key,
         len(rows),
     )
     return [_row_to_mod(r) for r in rows]
 
 
 def get_module(
-    module_id: str, org_id: str, project_id: str
+    scope: TenantScope, module_id: str
 ) -> dict[str, Any] | None:
     ensure_module_schema()
-    with connect() as conn:
+    with connect(scope) as conn:
         row = conn.execute(
             """
             SELECT * FROM meta_module
              WHERE id=%s AND org_id=%s AND project_id=%s
             """,
-            (module_id, org_id, project_id),
+            (module_id, *scope.key),
         ).fetchone()
     if not row:
         log.warning(
             "module_miss id=%s org=%s project=%s",
             module_id,
-            org_id,
-            project_id,
+            *scope.key,
         )
         return None
     return _row_to_mod(row)
 
 
 def create_module(
-    payload: dict[str, Any], *, org_id: str, project_id: str
+    scope: TenantScope, payload: dict[str, Any]
 ) -> dict[str, Any]:
     ensure_module_schema()
     import uuid
@@ -527,10 +522,10 @@ def create_module(
         "buddyBound": bool(payload.get("buddyBound", True)),
         "category": payload.get("category") or "运营",
         "theme": payload.get("theme") or "light",
-        "orgId": org_id,
-        "projectId": project_id,
+        "orgId": scope.org_id,
+        "projectId": scope.project_id,
     }
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             INSERT INTO meta_module (
@@ -550,8 +545,7 @@ def create_module(
                 json.dumps(item["widgets"]),
                 json.dumps(item["components"]),
                 item["buddyBound"],
-                org_id,
-                project_id,
+                *scope.key,
                 item["category"],
                 item["theme"],
             ),
@@ -560,20 +554,17 @@ def create_module(
     log.info(
         "module_create id=%s org=%s project=%s",
         mid,
-        org_id,
-        project_id,
+        *scope.key,
     )
     return item
 
 
 def update_module(
+    scope: TenantScope,
     module_id: str,
     patch: dict[str, Any],
-    *,
-    org_id: str,
-    project_id: str,
 ) -> dict[str, Any] | None:
-    cur = get_module(module_id, org_id, project_id)
+    cur = get_module(scope, module_id)
     if not cur:
         return None
     mapping = {
@@ -592,7 +583,7 @@ def update_module(
     for k, v in patch.items():
         if k in mapping and v is not None:
             cur[mapping[k]] = v
-    with connect() as conn:
+    with connect(scope) as conn:
         conn.execute(
             """
             UPDATE meta_module SET
@@ -615,38 +606,37 @@ def update_module(
                 cur.get("category") or "运营",
                 cur.get("theme") or "light",
                 module_id,
-                org_id,
-                project_id,
+                *scope.key,
             ),
         )
         conn.commit()
-    return get_module(module_id, org_id, project_id)
+    return get_module(scope, module_id)
 
 
 def touch_module(
-    module_id: str, *, org_id: str, project_id: str
+    scope: TenantScope, module_id: str
 ) -> bool:
-    with connect() as conn:
+    with connect(scope) as conn:
         rows = conn.execute(
             """
             UPDATE meta_module
                SET last_opened_at = NOW()
              WHERE id=%s AND org_id=%s AND project_id=%s
             """,
-            (module_id, org_id, project_id),
+            (module_id, *scope.key),
         ).rowcount
     if rows == 0:
         log.warning("module_touch_not_found id=%s", module_id)
         return False
-    log.info("module_touch id=%s org=%s project=%s", module_id, org_id, project_id)
+    log.info("module_touch id=%s org=%s project=%s", module_id, *scope.key)
     return True
 
 
 def publish_module(
-    module_id: str, *, org_id: str, project_id: str
+    scope: TenantScope, module_id: str
 ) -> dict[str, Any] | None:
     mod = update_module(
-        module_id, {"status": "published"}, org_id=org_id, project_id=project_id
+        scope, module_id, {"status": "published"}
     )
     if not mod:
         return None
@@ -661,9 +651,9 @@ def publish_module(
 
 
 def module_runtime(
-    module_id: str, *, org_id: str, project_id: str
+    scope: TenantScope, module_id: str
 ) -> dict[str, Any] | None:
-    mod = get_module(module_id, org_id, project_id)
+    mod = get_module(scope, module_id)
     if not mod:
         return None
     return {
@@ -677,7 +667,7 @@ def module_runtime(
         "objectType": mod["objectType"],
         "entryPath": mod.get("entryPath") or "/workshop/inbox",
         "buddyBound": bool(mod.get("buddyBound", False)),
-        "orgId": org_id,
-        "projectId": project_id,
+        "orgId": scope.org_id,
+        "projectId": scope.project_id,
         "store": "postgres",
     }

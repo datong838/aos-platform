@@ -17,6 +17,7 @@ from aos_api.idempotency import idempotency_store
 from aos_api.main import create_app
 from aos_api.metrics import reset_metrics
 from aos_api.module_store import seed_modules_if_empty
+from aos_api.tenant_scope import TenantScope
 from aos_api import mock_data
 from fastapi.testclient import TestClient
 
@@ -136,7 +137,7 @@ def client():
     try:
         init_schema()
         seed_if_empty()
-        seed_modules_if_empty()
+        seed_modules_if_empty(TenantScope("dev-org", "dev-project"))
         from aos_api.db import connect as _connect
 
         with _connect() as _c:

@@ -7,25 +7,27 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from aos_api.db import ensure_system_meta, init_schema
-from aos_api.migrations import run_migrations
-from aos_api.module_store import seed_modules_if_empty
 from aos_api.errors import register_exception_handlers
 from aos_api.logging_facade import configure_logging, get_logger
 from aos_api.middleware import TraceLogMiddleware
+from aos_api.migrations import run_migrations
+from aos_api.module_store import seed_modules_if_empty
+
 # Domain router aggregates — all 505 routers grouped into 10 domain APIRouters.
 # Individual router modules are imported lazily inside each factory function.
-from aos_api.routers.domain_aggregates import (  # noqa: F401
-    create_ontology_router,
-    create_workshop_router,
-    create_aip_router,
-    create_data_router,
-    create_model_router,
+from aos_api.routers.domain_aggregates import (
     create_admin_router,
-    create_infra_router,
     create_agent_router,
-    create_system_router,
+    create_aip_router,
     create_apollo_router,
+    create_data_router,
+    create_infra_router,
+    create_model_router,
+    create_ontology_router,
+    create_system_router,
+    create_workshop_router,
 )
+from aos_api.tenant_scope import TenantScope
 
 configure_logging()
 log = get_logger("aos-api")
@@ -58,7 +60,7 @@ async def lifespan(_app: FastAPI):
             init_schema()
             ensure_system_meta()
             try:
-                seed_modules_if_empty()
+                seed_modules_if_empty(TenantScope("dev-org", "dev-project"))
             except Exception:
                 log.exception("startup_module_seed_failed_continue")
             try:

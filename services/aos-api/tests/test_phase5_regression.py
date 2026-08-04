@@ -116,8 +116,9 @@ class TestSeedDataConsistency:
     def test_seed_modules_loaded(self) -> None:
         """种子模块数据存在。"""
         from aos_api.module_store import list_modules
+        from aos_api.tenant_scope import TenantScope
 
-        items = list_modules("dev-org", "dev-project")
+        items = list_modules(TenantScope("dev-org", "dev-project"))
         assert len(items) > 0
         for m in items:
             assert "id" in m

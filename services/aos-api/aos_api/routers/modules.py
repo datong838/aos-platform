@@ -6,12 +6,13 @@ from fastapi import APIRouter, Depends, Header
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
+from aos_api import module_store
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 from aos_api.idempotency import idempotency_store
 from aos_api.logging_facade import get_logger
 from aos_api.marking import ensure_markings
-from aos_api import module_store
+from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(tags=["modules"])
 log = get_logger("aos-api.modules")
@@ -55,9 +56,13 @@ def _visible(principal: Principal, mod: dict[str, Any]) -> bool:
         return False
 
 
+def _scope(principal: Principal) -> TenantScope:
+    return TenantScope(principal.org_id, principal.project_id)
+
+
 @router.get("/v1/modules")
 def list_modules(principal: Principal = Depends(require_principal)) -> dict[str, Any]:
-    items = module_store.list_modules(principal.org_id, principal.project_id)
+    items = module_store.list_modules(_scope(principal))
     visible = [m for m in items if _visible(principal, m)]
     log.info(
         "list_modules store=pg visible=%s subject=%s org=%s project=%s",
@@ -85,9 +90,8 @@ def create_module(
                 content={**cached["body"], "idempotentReplay": True},
             )
     created = module_store.create_module(
+        _scope(principal),
         body.model_dump(),
-        org_id=principal.org_id,
-        project_id=principal.project_id,
     )
     if idempotency_key:
         idempotency_store.put(
@@ -106,7 +110,7 @@ def get_module(
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     mod = module_store.get_module(
-        module_id, principal.org_id, principal.project_id
+        _scope(principal), module_id
     )
     if not mod:
         raise ApiError(code="NOT_FOUND", message=f"module {module_id} not found", status_code=404)
@@ -121,16 +125,15 @@ def patch_module(
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     mod = module_store.get_module(
-        module_id, principal.org_id, principal.project_id
+        _scope(principal), module_id
     )
     if not mod:
         raise ApiError(code="NOT_FOUND", message=f"module {module_id} not found", status_code=404)
     ensure_markings(principal, mod.get("markings") or ["public"])
     updated = module_store.update_module(
+        _scope(principal),
         module_id,
         body.model_dump(exclude_unset=True),
-        org_id=principal.org_id,
-        project_id=principal.project_id,
     )
     assert updated is not None
     return updated
@@ -153,13 +156,13 @@ def publish_module(
                 content={**cached["body"], "idempotentReplay": True},
             )
     mod = module_store.get_module(
-        module_id, principal.org_id, principal.project_id
+        _scope(principal), module_id
     )
     if not mod:
         raise ApiError(code="NOT_FOUND", message=f"module {module_id} not found", status_code=404)
     ensure_markings(principal, mod.get("markings") or ["public"])
     published = module_store.publish_module(
-        module_id, org_id=principal.org_id, project_id=principal.project_id
+        _scope(principal), module_id
     )
     assert published is not None
     log.info(
@@ -187,13 +190,13 @@ def touch_module(
 ) -> dict[str, Any]:
     """Update module's last_opened_at timestamp."""
     mod = module_store.get_module(
-        module_id, principal.org_id, principal.project_id
+        _scope(principal), module_id
     )
     if not mod:
         raise ApiError(code="NOT_FOUND", message=f"module {module_id} not found", status_code=404)
     ensure_markings(principal, mod.get("markings") or ["public"])
     ok = module_store.touch_module(
-        module_id, org_id=principal.org_id, project_id=principal.project_id
+        _scope(principal), module_id
     )
     return {"ok": ok}
 
@@ -204,13 +207,13 @@ def get_runtime(
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     mod = module_store.get_module(
-        module_id, principal.org_id, principal.project_id
+        _scope(principal), module_id
     )
     if not mod:
         raise ApiError(code="NOT_FOUND", message=f"module {module_id} not found", status_code=404)
     ensure_markings(principal, mod.get("markings") or ["public"])
     rt = module_store.module_runtime(
-        module_id, org_id=principal.org_id, project_id=principal.project_id
+        _scope(principal), module_id
     )
     if not rt:
         raise ApiError(code="NOT_FOUND", message=f"module {module_id} not found", status_code=404)
