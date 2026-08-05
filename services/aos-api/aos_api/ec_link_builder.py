@@ -35,6 +35,19 @@ _PID_TO_OT: dict[str, str] = {
     "P07": "Shipment",
 }
 
+# frozen/02 简短名 → CORE_LINK_TYPES 点号名映射（与 ecom_core_models.CORE_LINK_TYPES 对齐）
+_FROZEN_TO_CORE: dict[str, str] = {
+    "hasSku": "ProductSku.ofProduct",
+    "inCategory": "Product.inCategory",
+    "contains": "Order.lines",
+    "forProduct": "OrderLine.ofProduct",
+    "forSku": "OrderLine.ofSku",
+    "ships": "Order.fulfilledBy",
+}
+
+# 需要反转 source/target 方向的简短名（frozen/02 方向与 CORE 方向相反）
+_REVERSED_LINKS: frozenset[str] = frozenset({"hasSku", "ships"})
+
 
 def build_link_rows(
     rows: list[dict[str, Any]],
@@ -224,9 +237,19 @@ def _make_link(
     target_source_pk: Any,
     row: dict[str, Any],
 ) -> dict[str, Any]:
-    """构造 Link 行 dict（与 ec_ot_writer._normalize_rows 对齐）。"""
+    """构造 Link 行 dict（与 ec_ot_writer._normalize_rows 对齐）。
+
+    应用 frozen/02 → CORE 点号名映射（``_FROZEN_TO_CORE``）；
+    对 hasSku/ships 反转 source/target 方向（``_REVERSED_LINKS``），
+    使输出方向与 ``ecom_core_models.CORE_LINK_TYPES`` 一致。
+    未知 link_type 透传原值（不映射、不反转）。
+    """
+    if link_type in _REVERSED_LINKS:
+        source_type, target_type = target_type, source_type
+        source_pk, target_source_pk = target_source_pk, source_pk
+    core_link_type = _FROZEN_TO_CORE.get(link_type, link_type)
     return {
-        "link_type": link_type,
+        "link_type": core_link_type,
         "source_type": source_type,
         "source_pk": source_pk,
         "target_type": target_type,
