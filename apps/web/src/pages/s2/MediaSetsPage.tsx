@@ -233,7 +233,7 @@ export function MediaSetsPage() {
           刷新
         </button>
         <Link to="/data" className="btn-nav">
-          数据连接 →
+          数据源管理 →
         </Link>
       </BpToolbar>
 
@@ -384,7 +384,7 @@ export function MediaSetsPage() {
 
       <BpBanner tone="info">
         媒体集对齐 <code>media-sets.html</code> · 支持拖拽上传 + 批量操作 ·{" "}
-        <Link to="/data">数据连接</Link> ·{" "}
+        <Link to="/data">数据源管理</Link> ·{" "}
         <Link to="/data/datasets">数据集</Link>
       </BpBanner>
     </S2Chrome>

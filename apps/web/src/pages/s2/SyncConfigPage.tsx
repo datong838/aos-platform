@@ -209,7 +209,7 @@ export function SyncConfigPage() {
         打开计划编辑器 →
       </Link>
       <Link to="/data" className="btn-nav" style={{ marginLeft: 8 }}>
-        数据连接器 →
+        数据源管理 →
       </Link>
       <button type="button" className="btn" style={{ marginLeft: 8 }} onClick={() => schedules.reload()}>
         刷新

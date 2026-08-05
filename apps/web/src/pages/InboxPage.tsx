@@ -375,7 +375,7 @@ export function InboxPage() {
                   {rows.length === 0 && !error && (
                     <tr>
                       <td colSpan={4} style={{ padding: "24px 12px", textAlign: "center", color: "#9CA3AF", fontSize: 12 }}>
-                        无行 · 改 Filter 或到数据连接接入源后刷新
+                        无行 · 改 Filter 或到数据源管理接入源后刷新
                       </td>
                     </tr>
                   )}

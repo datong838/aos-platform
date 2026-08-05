@@ -293,7 +293,7 @@ export function GraphExplorerPage() {
                     {filteredObjects.length === 0 && (
                       <tr>
                         <td colSpan={objectColumns.length + 1} style={{ textAlign: "center", padding: "2rem" }}>
-                          <span className="muted">暂无对象 · 请到数据链接器接入源</span>
+                          <span className="muted">暂无对象 · 请到数据源管理接入源</span>
                         </td>
                       </tr>
                     )}
@@ -346,7 +346,7 @@ export function GraphExplorerPage() {
                     );
                   })}
                   {!graphNodes.center && (
-                    <p className="muted" style={{ textAlign: "center" }}>暂无实例 · 请到数据链接器接入源</p>
+                    <p className="muted" style={{ textAlign: "center" }}>暂无实例 · 请到数据源管理接入源</p>
                   )}
                 </div>
               </div>

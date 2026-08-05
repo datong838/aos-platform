@@ -260,7 +260,7 @@ export function SchedulesPage() {
 
       <BpLinkRow
         links={[
-          { to: "/data", label: "数据连接" },
+          { to: "/data", label: "数据源管理" },
           { to: "/data/pipelines", label: "管道构建" },
         ]}
       />

@@ -173,7 +173,7 @@ export function SyncRoutesPage() {
           + 新建同步路由
         </Link>
         <Link to="/data" className="btn-nav">
-          数据连接器 →
+          数据源管理 →
         </Link>
         <Link to="/data/sync-config" className="btn-nav">
           同步配置 →

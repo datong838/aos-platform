@@ -59,6 +59,42 @@ export function verifyCreatedSource(items: SourceRow[], id: string, runtimeMode:
   return items.some((item) => item.id === id && item.runtimeMode === runtimeMode);
 }
 
+export type ConnectorCategory = "database" | "saas" | "api" | "file" | "stream";
+
+export function inferConnectorCategory(id: string): ConnectorCategory {
+  const lower = id.toLowerCase();
+  if (lower.includes("jdbc") || lower.includes("postgres") || lower.includes("mysql") || lower.includes("oracle") || lower.includes("snowflake"))
+    return "database";
+  if (lower.startsWith("file")) return "file";
+  if (lower.startsWith("rest") || lower === "rest-api") return "api";
+  if (lower === "kafka" || lower === "stream") return "stream";
+  return "saas";
+}
+
+export function validateConnConfig(
+  category: ConnectorCategory,
+  fields: { host: string; port: string; database: string; username: string; password: string; apiUrl: string; apiKey: string; filePath: string },
+): Record<string, string> {
+  const errors: Record<string, string> = {};
+  if (category === "database") {
+    if (!fields.host.trim()) errors.host = "主机不能为空";
+    if (!fields.port.trim()) errors.port = "端口不能为空";
+    else if (!/^\d+$/.test(fields.port)) errors.port = "端口必须为数字";
+    else if (Number(fields.port) < 1 || Number(fields.port) > 65535) errors.port = "端口范围 1-65535";
+    if (!fields.database.trim()) errors.database = "数据库名不能为空";
+    if (!fields.username.trim()) errors.username = "用户名不能为空";
+  } else if (category === "api") {
+    if (!fields.apiUrl.trim()) errors.apiUrl = "API URL 不能为空";
+    else if (!fields.apiUrl.startsWith("http")) errors.apiUrl = "URL 需以 http:// 或 https:// 开头";
+  } else if (category === "file") {
+    if (!fields.filePath.trim()) errors.filePath = "文件路径不能为空";
+  } else if (category === "stream") {
+    if (!fields.host.trim()) errors.host = "Broker 地址不能为空";
+    if (!fields.database.trim()) errors.database = "Topic 不能为空";
+  }
+  return errors;
+}
+
 function formatRelative(ts?: number): string {
   if (!ts || !Number.isFinite(ts)) return "—";
   const sec = Math.max(0, Math.round(Date.now() / 1000 - ts));
@@ -152,6 +188,15 @@ export function DataPage() {
   const [runtimeMode, setRuntimeMode] = useState<RuntimeMode>("agent");
   const [wizardStep, setWizardStep] = useState(1);
   const [connectorPlugins, setConnectorPlugins] = useState<ConnectorPlugin[]>([]);
+  const [connHost, setConnHost] = useState("");
+  const [connPort, setConnPort] = useState("");
+  const [connDatabase, setConnDatabase] = useState("");
+  const [connUsername, setConnUsername] = useState("");
+  const [connPassword, setConnPassword] = useState("");
+  const [connApiUrl, setConnApiUrl] = useState("");
+  const [connApiKey, setConnApiKey] = useState("");
+  const [connFilePath, setConnFilePath] = useState("");
+  const [connErrors, setConnErrors] = useState<Record<string, string>>({});
 
   async function refresh() {
     const [ds, d, src, syn, pipes, media, sch, agent, cps] = await Promise.all([
@@ -297,8 +342,8 @@ export function DataPage() {
 
   return (
     <PageChrome
-      title="数据链接器"
-      lede="把外部系统接入平台：先管数据源，再看同步与代理。日常从「数据源」列表运营。"
+      title="数据源管理"
+      lede="管理组织中已接入的数据源实例 · 从外部系统接入平台：先选连接器类型，再创建数据源连接。"
     >
       <BpTabs
         tabs={[
@@ -553,24 +598,174 @@ export function DataPage() {
           {wizardStep === 3 && (
             <>
               <div className="bp-ws-section-title">连接配置</div>
-              <label className="muted" style={{ display: "block", marginTop: 8 }}>
-                数据源名称{" "}
-                <input
-                  value={newSourceId}
-                  onChange={(e) => setNewSourceId(e.target.value)}
-                  placeholder="prod-mysql-orders"
-                  style={{ minWidth: "16rem" }}
-                />
-              </label>
-              <p className="muted" style={{ fontSize: "0.75rem", marginTop: 8 }}>
+              <p className="muted" style={{ fontSize: "0.75rem", marginTop: 4 }}>
                 连接器：{connectorLabel(connectorType, connectorPlugins)} · 运行时：
                 {runtimeMode === "direct" ? "直接连接" : runtimeMode === "agent" ? "代理连接" : "代理工作者"}
               </p>
+              {(() => {
+                const cat = inferConnectorCategory(connectorType);
+                if (cat === "database") {
+                  return (
+                    <>
+                      <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                        主机地址
+                        <input
+                          value={connHost}
+                          onChange={(e) => setConnHost(e.target.value)}
+                          placeholder="localhost"
+                          style={{ display: "block", width: "100%", marginTop: 4 }}
+                        />
+                        {connErrors.host && <span className="error" style={{ fontSize: "0.7rem" }}>{connErrors.host}</span>}
+                      </label>
+                      <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                        端口
+                        <input
+                          value={connPort}
+                          onChange={(e) => setConnPort(e.target.value)}
+                          placeholder={connectorType.includes("postgres") ? "5432" : "3306"}
+                          style={{ display: "block", width: "100%", marginTop: 4 }}
+                        />
+                        {connErrors.port && <span className="error" style={{ fontSize: "0.7rem" }}>{connErrors.port}</span>}
+                      </label>
+                      <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                        数据库名
+                        <input
+                          value={connDatabase}
+                          onChange={(e) => setConnDatabase(e.target.value)}
+                          placeholder="mydb"
+                          style={{ display: "block", width: "100%", marginTop: 4 }}
+                        />
+                        {connErrors.database && <span className="error" style={{ fontSize: "0.7rem" }}>{connErrors.database}</span>}
+                      </label>
+                      <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                        用户名
+                        <input
+                          value={connUsername}
+                          onChange={(e) => setConnUsername(e.target.value)}
+                          style={{ display: "block", width: "100%", marginTop: 4 }}
+                        />
+                        {connErrors.username && <span className="error" style={{ fontSize: "0.7rem" }}>{connErrors.username}</span>}
+                      </label>
+                      <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                        数据源名称（可选）
+                        <input
+                          value={newSourceId}
+                          onChange={(e) => setNewSourceId(e.target.value)}
+                          placeholder="留空自动生成"
+                          style={{ display: "block", width: "100%", marginTop: 4 }}
+                        />
+                      </label>
+                    </>
+                  );
+                }
+                if (cat === "api") {
+                  return (
+                    <>
+                      <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                        API URL
+                        <input
+                          value={connApiUrl}
+                          onChange={(e) => setConnApiUrl(e.target.value)}
+                          placeholder="https://api.example.com/v1"
+                          style={{ display: "block", width: "100%", marginTop: 4 }}
+                        />
+                        {connErrors.apiUrl && <span className="error" style={{ fontSize: "0.7rem" }}>{connErrors.apiUrl}</span>}
+                      </label>
+                      <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                        数据源名称（可选）
+                        <input
+                          value={newSourceId}
+                          onChange={(e) => setNewSourceId(e.target.value)}
+                          placeholder="留空自动生成"
+                          style={{ display: "block", width: "100%", marginTop: 4 }}
+                        />
+                      </label>
+                    </>
+                  );
+                }
+                if (cat === "file") {
+                  return (
+                    <>
+                      <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                        文件路径
+                        <input
+                          value={connFilePath}
+                          onChange={(e) => setConnFilePath(e.target.value)}
+                          placeholder="/data/orders.csv"
+                          style={{ display: "block", width: "100%", marginTop: 4 }}
+                        />
+                        {connErrors.filePath && <span className="error" style={{ fontSize: "0.7rem" }}>{connErrors.filePath}</span>}
+                      </label>
+                      <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                        数据源名称（可选）
+                        <input
+                          value={newSourceId}
+                          onChange={(e) => setNewSourceId(e.target.value)}
+                          placeholder="留空自动生成"
+                          style={{ display: "block", width: "100%", marginTop: 4 }}
+                        />
+                      </label>
+                    </>
+                  );
+                }
+                if (cat === "stream") {
+                  return (
+                    <>
+                      <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                        Broker 地址
+                        <input
+                          value={connHost}
+                          onChange={(e) => setConnHost(e.target.value)}
+                          placeholder="broker:9092"
+                          style={{ display: "block", width: "100%", marginTop: 4 }}
+                        />
+                        {connErrors.host && <span className="error" style={{ fontSize: "0.7rem" }}>{connErrors.host}</span>}
+                      </label>
+                      <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                        Topic
+                        <input
+                          value={connDatabase}
+                          onChange={(e) => setConnDatabase(e.target.value)}
+                          placeholder="events-topic"
+                          style={{ display: "block", width: "100%", marginTop: 4 }}
+                        />
+                        {connErrors.database && <span className="error" style={{ fontSize: "0.7rem" }}>{connErrors.database}</span>}
+                      </label>
+                    </>
+                  );
+                }
+                return (
+                  <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                    数据源名称
+                    <input
+                      value={newSourceId}
+                      onChange={(e) => setNewSourceId(e.target.value)}
+                      placeholder="prod-mysql-orders"
+                      style={{ display: "block", width: "100%", marginTop: 4 }}
+                    />
+                  </label>
+                );
+              })()}
               <BpToolbar>
                 <button type="button" className="btn" onClick={() => setWizardStep(2)}>
                   上一步
                 </button>
-                <button type="button" className="btn" onClick={() => setWizardStep(4)}>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => {
+                    const cat = inferConnectorCategory(connectorType);
+                    const errs = validateConnConfig(cat, {
+                      host: connHost, port: connPort, database: connDatabase,
+                      username: connUsername, password: connPassword,
+                      apiUrl: connApiUrl, apiKey: connApiKey, filePath: connFilePath,
+                    });
+                    setConnErrors(errs);
+                    if (Object.keys(errs).length === 0) {
+                      setWizardStep(4);
+                    }
+                  }}
+                >
                   下一步 →
                 </button>
               </BpToolbar>
@@ -581,6 +776,38 @@ export function DataPage() {
             <>
               <div className="bp-ws-section-title">凭证</div>
               <BpBanner tone="info">凭证走密钥引用（vault ref）· 不落明文。</BpBanner>
+              {(() => {
+                const cat = inferConnectorCategory(connectorType);
+                if (cat === "database") {
+                  return (
+                    <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                      密码
+                      <input
+                        type="password"
+                        value={connPassword}
+                        onChange={(e) => setConnPassword(e.target.value)}
+                        placeholder="数据库密码"
+                        style={{ display: "block", width: "100%", marginTop: 4 }}
+                      />
+                    </label>
+                  );
+                }
+                if (cat === "api" || cat === "saas") {
+                  return (
+                    <label className="muted" style={{ display: "block", marginTop: 8 }}>
+                      API Key / OAuth Token
+                      <input
+                        type="password"
+                        value={connApiKey}
+                        onChange={(e) => setConnApiKey(e.target.value)}
+                        placeholder="粘贴授权凭据"
+                        style={{ display: "block", width: "100%", marginTop: 4 }}
+                      />
+                    </label>
+                  );
+                }
+                return null;
+              })()}
               <BpPropGrid
                 items={[
                   { label: "连接器", value: connectorLabel(connectorType, connectorPlugins) },
@@ -588,7 +815,7 @@ export function DataPage() {
                     label: "运行时",
                     value: runtimeMode === "direct" ? "直接连接" : runtimeMode === "agent" ? "代理连接" : "代理工作者",
                   },
-                  { label: "凭证", value: "密钥引用" },
+                  { label: "连接", value: connHost ? `${connHost}${connPort ? ":" + connPort : ""}${connDatabase ? "/" + connDatabase : ""}` : "待填写" },
                   { label: "名称", value: newSourceId.trim() || "（自动生成）" },
                 ]}
               />

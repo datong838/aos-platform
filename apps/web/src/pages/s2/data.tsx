@@ -250,7 +250,7 @@ export function PipelinesPage() {
           </div>
           {items.length === 0 && (
             <p className="muted">
-              空 · 先到 <Link to="/data">数据连接</Link> 注册 Source / 跑 ingest
+              空 · 先到 <Link to="/data">数据源管理</Link> 注册 Source / 跑 ingest
             </p>
           )}
         </div>
@@ -471,7 +471,7 @@ export function DatasetsPage() {
 
       {!items.length && (
         <p className="muted">
-          暂无数据集 · 先到 <Link to="/data">数据连接</Link> 接入，或跑案例 bootstrap 脚本
+          暂无数据集 · 先到 <Link to="/data">数据源管理</Link> 接入，或跑案例 bootstrap 脚本
         </p>
       )}
 
@@ -630,7 +630,7 @@ export function DataHealthPage() {
           刷新
         </button>
         <Link to="/data" className="btn-nav">
-          返回数据连接
+          返回数据源管理
         </Link>
         <Link to="/ontology/graph-health" className="btn-nav">
           图谱健康度 →

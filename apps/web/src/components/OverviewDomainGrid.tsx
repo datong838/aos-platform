@@ -102,7 +102,7 @@ export function OverviewDomainGrid() {
         hint="连接器 → 管道 → 数据集 → 搭建 → 健康监控"
       >
         <div className="bp-index-grid bp-index-grid-4">
-          <BpIndexTile to="/data" eyebrow="Connect" title="数据链接器" accent="sky" />
+          <BpIndexTile to="/data" eyebrow="Connect" title="数据源管理" accent="sky" />
           <BpIndexTile to="/data/pipelines" eyebrow="Pipeline" title="管道构建" accent="sky" />
           <BpIndexTile to="/data/datasets" eyebrow="Dataset" title="数据集预览" accent="sky" />
           <BpIndexTile to="/data/lineage" eyebrow="Lineage" title="数据沿袭" accent="sky" />

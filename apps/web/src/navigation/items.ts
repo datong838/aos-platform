@@ -458,20 +458,20 @@ export const NAV_ITEMS: NavItem[] = [
 
   { section: "数据源与同步" },
   {
-    id: "data-connection",
+    id: "data-source-mgmt",
     path: "/data",
-    label: "数据链接器",
+    label: "数据源管理",
     icon: "plug",
     status: "live",
-    crumbs: ["数据源", "数据链接器"],
+    crumbs: ["数据源", "数据源管理"],
   },
   {
-    id: "data-connections",
+    id: "data-connector-catalog",
     path: "/data/connections",
-    label: "数据连接",
+    label: "连接器目录",
     icon: "plug",
     status: "live",
-    crumbs: ["数据源", "数据连接"],
+    crumbs: ["数据源", "连接器目录"],
   },
   {
     id: "data-source-create",
@@ -480,6 +480,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: "plus-circle",
     status: "live",
     crumbs: ["数据源", "新建数据源"],
+    hidden: true,
   },
   {
     id: "data-connection-agents",

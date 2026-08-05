@@ -546,7 +546,7 @@ export function SourceDetailPage() {
     <PageChrome title={sourceId || "数据源"} lede={source ? sourceSubtitle(source.type) : "Source 详情 · 连接器"}>
       <BpToolbar>
         <Link to="/data" className="btn-nav">
-          ← 数据连接
+          ← 数据源管理
         </Link>
         {source && (
           <ConnectorTagLink sourceId={sourceId} type={source.type} plugins={plugins} />

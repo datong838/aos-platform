@@ -447,7 +447,7 @@ export function DataLineagePage() {
       )}
       {(datasets.data?.items?.length || 0) === 0 && (
         <p className="muted">
-          空 · <Link to="/data">数据连接</Link>
+          空 · <Link to="/data">数据源管理</Link>
         </p>
       )}
     </S2Chrome>

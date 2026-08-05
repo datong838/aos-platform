@@ -507,11 +507,11 @@ export function DataTab({ moduleId: _moduleId }: { moduleId: string }) {
   return (
     <div className="canvas-tab-panel">
       <h3 className="canvas-tab-title">数据源 ({sources.length})</h3>
-      <p className="muted" style={{ fontSize: "12px", marginBottom: "8px" }}>Module 绑定的数据连接</p>
+      <p className="muted" style={{ fontSize: "12px", marginBottom: "8px" }}>Module 绑定的数据源</p>
       {loading && <TabLoading />}
       {error && <TabError msg={error} />}
       {!loading && !error && sources.length === 0 && (
-        <p className="muted" style={{ fontSize: "12px" }}>无数据源。请在数据连接中添加。</p>
+        <p className="muted" style={{ fontSize: "12px" }}>无数据源。请到数据源管理添加。</p>
       )}
       {sources.length > 0 && (
         <ul className="canvas-source-list">

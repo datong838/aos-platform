@@ -21,7 +21,7 @@ export function BlueprintStubPage({
         <Link to="/workshop/inbox"> 风险告警管理</Link> ·
         <Link to="/aip/drafts"> Draft 审批</Link> ·
         <Link to="/ontology"> 本体</Link> ·
-        <Link to="/data"> 数据链接器</Link>
+        <Link to="/data"> 数据源管理</Link>
       </p>
     </PageChrome>
   );

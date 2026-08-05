@@ -1,140 +1,97 @@
 import { describe, expect, it } from "vitest";
 import {
   CATEGORY_LABELS,
-  STATUS_LABELS,
-  computeConnectionStats,
-  filterConnections,
-  formatLastSync,
-  paginate,
-  statusTone,
-  totalPages,
-  type ConnectionCard,
-  type ConnectionFilter,
+  filterCatalog,
+  computeCatalogStats,
+  type ConnectorCatalogCard,
+  type CatalogFilter,
 } from "./DataConnectionPage";
 
-const MOCK_ITEMS: ConnectionCard[] = [
-  { id: "pg-prod", name: "PostgreSQL 生产库", category: "database", status: "online", tableCount: 48, lastSyncAt: new Date(Date.now() - 5 * 60000).toISOString() },
-  { id: "mysql-orders", name: "MySQL 订单库", category: "database", status: "syncing", tableCount: 23, lastSyncAt: new Date(Date.now() - 2 * 60000).toISOString() },
-  { id: "shopify", name: "Shopify 店铺", category: "saas", status: "online", tableCount: 12 },
-  { id: "kafka", name: "Kafka 事件流", category: "stream", status: "online", tableCount: 5 },
-  { id: "rest-weather", name: "天气 REST API", category: "api", status: "error", tableCount: 2 },
-  { id: "s3", name: "S3 数据湖", category: "file", status: "offline", tableCount: 0 },
+const MOCK_CATALOG: ConnectorCatalogCard[] = [
+  { id: "jdbc-mysql", name: "MySQL JDBC", category: "database", description: "MySQL 连接器", capabilities: ["Batch syncs"], installed: true, required: true, runtime: "ready" },
+  { id: "jdbc-postgres", name: "PostgreSQL JDBC", category: "database", description: "PostgreSQL 连接器", capabilities: ["Batch syncs", "Streaming syncs"], installed: true, required: true, runtime: "ready" },
+  { id: "jdbc-oracle", name: "Oracle JDBC", category: "database", description: "Oracle 连接器", capabilities: ["Batch syncs"], installed: false, runtime: "stub" },
+  { id: "file-local", name: "本地文件", category: "file", description: "本地文件", capabilities: ["Batch syncs"], installed: true, required: true, runtime: "ready" },
+  { id: "file-object-store", name: "对象存储文件", category: "file", description: "对象存储", capabilities: ["Batch syncs", "Media syncs"], installed: true, required: true, runtime: "ready" },
+  { id: "rest-api", name: "REST API", category: "api", description: "通用 REST API", capabilities: ["Batch syncs", "Webhooks"], installed: true, runtime: "ready" },
+  { id: "shopify", name: "Shopify", category: "saas", description: "Shopify 电商", capabilities: ["Batch syncs"], installed: false, runtime: "stub" },
+  { id: "salesforce", name: "Salesforce CRM", category: "saas", description: "Salesforce CRM", capabilities: ["Batch syncs"], installed: false, runtime: "stub" },
+  { id: "kafka", name: "Kafka", category: "stream", description: "Kafka 事件流", capabilities: ["Streaming syncs"], installed: false, runtime: "stub" },
 ];
 
-const NO_FILTER: ConnectionFilter = { query: "", category: "all", status: "all" };
+const NO_FILTER: CatalogFilter = { query: "", category: "all" };
 
-describe("DataConnectionPage · statusTone", () => {
-  it("online → ok", () => {
-    expect(statusTone("online")).toBe("ok");
-  });
-  it("syncing → warn", () => {
-    expect(statusTone("syncing")).toBe("warn");
-  });
-  it("error → bad", () => {
-    expect(statusTone("error")).toBe("bad");
-  });
-  it("offline → muted", () => {
-    expect(statusTone("offline")).toBe("muted");
-  });
-});
-
-describe("DataConnectionPage · CATEGORY_LABELS / STATUS_LABELS", () => {
+describe("DataConnectionPage · CATEGORY_LABELS", () => {
   it("数据库 label", () => {
     expect(CATEGORY_LABELS.database).toBe("数据库");
   });
-  it("在线 label", () => {
-    expect(STATUS_LABELS.online).toBe("在线");
+  it("SaaS label", () => {
+    expect(CATEGORY_LABELS.saas).toBe("SaaS");
+  });
+  it("API label", () => {
+    expect(CATEGORY_LABELS.api).toBe("API");
+  });
+  it("文件 label", () => {
+    expect(CATEGORY_LABELS.file).toBe("文件");
+  });
+  it("流式 label", () => {
+    expect(CATEGORY_LABELS.stream).toBe("流式");
   });
 });
 
-describe("DataConnectionPage · filterConnections", () => {
+describe("DataConnectionPage · filterCatalog", () => {
   it("空筛选返回全部", () => {
-    expect(filterConnections(MOCK_ITEMS, NO_FILTER).length).toBe(MOCK_ITEMS.length);
+    expect(filterCatalog(MOCK_CATALOG, NO_FILTER).length).toBe(MOCK_CATALOG.length);
   });
   it("按分类筛选 database", () => {
-    const result = filterConnections(MOCK_ITEMS, { ...NO_FILTER, category: "database" });
-    expect(result.length).toBe(2);
+    const result = filterCatalog(MOCK_CATALOG, { ...NO_FILTER, category: "database" });
+    expect(result.length).toBe(3);
     expect(result.every((c) => c.category === "database")).toBe(true);
   });
-  it("按状态筛选 online", () => {
-    const result = filterConnections(MOCK_ITEMS, { ...NO_FILTER, status: "online" });
-    expect(result.length).toBe(3);
+  it("按分类筛选 file", () => {
+    const result = filterCatalog(MOCK_CATALOG, { ...NO_FILTER, category: "file" });
+    expect(result.length).toBe(2);
   });
   it("搜索名称", () => {
-    const result = filterConnections(MOCK_ITEMS, { ...NO_FILTER, query: "kafka" });
+    const result = filterCatalog(MOCK_CATALOG, { ...NO_FILTER, query: "kafka" });
     expect(result.length).toBe(1);
     expect(result[0].id).toBe("kafka");
   });
-  it("搜索 ID", () => {
-    const result = filterConnections(MOCK_ITEMS, { ...NO_FILTER, query: "pg-prod" });
-    expect(result.length).toBe(1);
-  });
-  it("组合筛选", () => {
-    const result = filterConnections(MOCK_ITEMS, { query: "shop", category: "saas", status: "online" });
+  it("搜索描述", () => {
+    const result = filterCatalog(MOCK_CATALOG, { ...NO_FILTER, query: "Shopify" });
     expect(result.length).toBe(1);
     expect(result[0].id).toBe("shopify");
   });
+  it("组合筛选", () => {
+    const result = filterCatalog(MOCK_CATALOG, { query: "mysql", category: "database" });
+    expect(result.length).toBe(1);
+    expect(result[0].id).toBe("jdbc-mysql");
+  });
   it("不修改原数组", () => {
-    const orig = [...MOCK_ITEMS];
-    filterConnections(MOCK_ITEMS, { ...NO_FILTER, category: "database" });
-    expect(MOCK_ITEMS).toEqual(orig);
+    const orig = [...MOCK_CATALOG];
+    filterCatalog(MOCK_CATALOG, { ...NO_FILTER, category: "database" });
+    expect(MOCK_CATALOG).toEqual(orig);
   });
 });
 
-describe("DataConnectionPage · computeConnectionStats", () => {
+describe("DataConnectionPage · computeCatalogStats", () => {
   it("total 正确", () => {
-    expect(computeConnectionStats(MOCK_ITEMS).total).toBe(6);
+    expect(computeCatalogStats(MOCK_CATALOG).total).toBe(9);
   });
-  it("online 正确", () => {
-    expect(computeConnectionStats(MOCK_ITEMS).online).toBe(3);
+  it("installed 正确", () => {
+    expect(computeCatalogStats(MOCK_CATALOG).installed).toBe(5);
   });
-  it("error 正确", () => {
-    expect(computeConnectionStats(MOCK_ITEMS).error).toBe(1);
+  it("notInstalled 正确", () => {
+    expect(computeCatalogStats(MOCK_CATALOG).notInstalled).toBe(4);
   });
-  it("totalTables 正确", () => {
-    expect(computeConnectionStats(MOCK_ITEMS).totalTables).toBe(90);
+  it("required 正确", () => {
+    expect(computeCatalogStats(MOCK_CATALOG).required).toBe(4);
   });
   it("空数组返回全 0", () => {
-    const s = computeConnectionStats([]);
+    const s = computeCatalogStats([]);
     expect(s.total).toBe(0);
-    expect(s.totalTables).toBe(0);
-  });
-});
-
-describe("DataConnectionPage · paginate / totalPages", () => {
-  it("第一页返回前 pageSize 条", () => {
-    const page = paginate(MOCK_ITEMS, 1, 2);
-    expect(page.length).toBe(2);
-    expect(page[0].id).toBe("pg-prod");
-  });
-  it("超出范围返回空", () => {
-    expect(paginate(MOCK_ITEMS, 99, 2).length).toBe(0);
-  });
-  it("totalPages 向上取整", () => {
-    expect(totalPages(6, 2)).toBe(3);
-    expect(totalPages(5, 2)).toBe(3);
-  });
-  it("totalPages 至少 1", () => {
-    expect(totalPages(0, 10)).toBe(1);
-  });
-});
-
-describe("DataConnectionPage · formatLastSync", () => {
-  it("空值返回 —", () => {
-    expect(formatLastSync(undefined)).toBe("—");
-  });
-  it("无效日期返回 —", () => {
-    expect(formatLastSync("not-a-date")).toBe("—");
-  });
-  it("1 分钟内返回刚刚", () => {
-    expect(formatLastSync(new Date(Date.now() - 10000).toISOString())).toBe("刚刚");
-  });
-  it("小于 1 小时返回分钟", () => {
-    const result = formatLastSync(new Date(Date.now() - 30 * 60000).toISOString());
-    expect(result).toContain("分钟前");
-  });
-  it("大于 1 小时返回小时/天", () => {
-    const result = formatLastSync(new Date(Date.now() - 3 * 86400000).toISOString());
-    expect(result).toContain("天前");
+    expect(s.installed).toBe(0);
+    expect(s.notInstalled).toBe(0);
+    expect(s.required).toBe(0);
   });
 });
