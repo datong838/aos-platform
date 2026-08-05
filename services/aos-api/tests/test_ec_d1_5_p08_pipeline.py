@@ -24,7 +24,14 @@ import pytest
 
 from aos_api import ec_live_executor as ec_mod
 from aos_api import data_os_store
-from aos_api.ecom_core_models import BatchCommand, BatchResult
+from aos_api.ecom_consistency_store import EcomConsistencyStore, metadata as ecom_metadata
+from aos_api.ecom_core_models import (
+    BatchCommand,
+    BatchResult,
+    CoreObjectRecord,
+    EcomConsistencyError,
+    SyncScope,
+)
 from aos_api.ec_ot_writer import sink_to_ot
 from aos_api.ec_source_adapter import (
     fetch_source_rows,
@@ -32,11 +39,12 @@ from aos_api.ec_source_adapter import (
     reset_soft_delete_counts,
 )
 from aos_api.phase5_pipeline_engine import get_engine
-from aos_api.public_contracts import StableCursor
+from aos_api.public_contracts import ExternalIdentityKey, ForwardEnumValue, StableCursor
 from aos_api.tenant_scope import TenantScope
 
 NOW = datetime(2026, 8, 6, 10, 0, tzinfo=timezone.utc)
 TEST_SCOPE = TenantScope("dev-org", "dev-project")
+OTHER_SCOPE = TenantScope("other-org", "other-project")
 PID = "p08-customer-lite"
 
 # frozen/02 §P08 PII 排除清单（8 个字段）
@@ -546,3 +554,157 @@ def test_p08_external_id_namespace_niushop_1_member_id() -> None:
     assert command.scope.workspace_id == TEST_SCOPE.project_id
     assert command.scope.platform == "niushop"
     assert command.scope.shop_or_marketplace_id == "1"
+
+
+# ═══════════════════════════════════════════════
+# Section 4: P08 四段实施负向测试（FR-D1.5-11, AC-D1.5-8）
+# 追溯：退出门第 7 条"四段实施每段 6 项负向测试通过"。
+# 策略：用 sink_to_ot 直接 OT 落地（不经过 ec_live_executor），聚焦 CustomerLite
+# 边界行为；与 test_ec_d1_negative.py 同构，object_type=CustomerLite。
+# ═══════════════════════════════════════════════
+
+
+def _make_sqlite_store() -> EcomConsistencyStore:
+    """创建 in-memory sqlite EcomConsistencyStore（用于跨租户测试）。"""
+    from sqlalchemy import create_engine
+
+    engine = create_engine("sqlite:///:memory:")
+    ecom_metadata.create_all(engine)
+    return EcomConsistencyStore(engine)
+
+
+def test_p08_replay_same_batch_rows_not_doubled() -> None:
+    """AC-D1.5-8: P08 重跑幂等 — 相同 key+相同 hash → rows_written 不翻倍。"""
+    replay_result = BatchResult(
+        objects_written=1,
+        links_written=0,
+        checkpoint_version=1,
+        checkpoint=StableCursor(
+            source_updated_at_utc=NOW, external_id="niushop:1:1001"
+        ),
+        replayed=True,
+    )
+    store = FakeStore(result=replay_result)
+    eng = get_engine()
+    eng.ecom_consistency_store = store
+
+    row = customer_lite_row(member_id="1001")
+    first = sink_to_ot(eng, TEST_SCOPE, FakePipeline("p08-replay"), [row])
+    second = sink_to_ot(eng, TEST_SCOPE, FakePipeline("p08-replay"), [row])
+
+    assert first["objects_written"] == 1
+    assert second["objects_written"] == 1
+    assert len(store.calls) == 2
+    # 相同 batch → 相同 idempotency_key
+    assert store.calls[0].idempotency_key == store.calls[1].idempotency_key
+
+
+def test_p08_checkpoint_cas_does_not_regress() -> None:
+    """AC-D1.5-8: P08 断点恢复 — checkpoint CAS 不前移。
+
+    首装推进 checkpoint 到 v1 后，后续批次 expected 自动取当前 version=1。
+    """
+    store = FakeStore()
+    eng = get_engine()
+    eng.ecom_consistency_store = store
+
+    sink_to_ot(
+        eng, TEST_SCOPE, FakePipeline("p08-cas"),
+        [customer_lite_row(member_id="1001")],
+    )
+    assert store.calls[0].expected_checkpoint_version == 0
+
+    later = datetime(2026, 8, 6, 14, 0, tzinfo=timezone.utc)
+    sink_to_ot(
+        eng, TEST_SCOPE, FakePipeline("p08-cas"),
+        [customer_lite_row(member_id="1002", when=later)],
+    )
+
+    assert len(store.calls) == 2
+    assert store.calls[1].expected_checkpoint_version == 1
+
+
+def test_p08_same_version_different_hash_returns_conflict() -> None:
+    """AC-D1.5-8: P08 冲突检测 — 相同版本+不同 hash → IDEMPOTENCY_CONFLICT，不吞异常。"""
+    conflict = EcomConsistencyError(
+        "IDEMPOTENCY_CONFLICT",
+        "idempotency key was already used with a different request",
+    )
+    store = FakeStore(raises=conflict)
+    eng = get_engine()
+    eng.ecom_consistency_store = store
+
+    with pytest.raises(EcomConsistencyError) as caught:
+        sink_to_ot(
+            eng, TEST_SCOPE, FakePipeline("p08-conflict"),
+            [customer_lite_row(member_id="1001")],
+        )
+
+    assert caught.value.code == "IDEMPOTENCY_CONFLICT"
+
+
+def test_p08_cross_tenant_write_rejected() -> None:
+    """AC-D1.5-8: P08 越租户拒绝 — scope B 查不到 scope A 的 CustomerLite。
+
+    用真实 sqlite store 验证：
+    - 写入 scope A 的 CustomerLite 后，scope B 查不到
+    - BatchCommand validator 拒绝跨 scope 的 object identity
+    """
+    store = _make_sqlite_store()
+    eng = get_engine()
+    eng.ecom_consistency_store = store
+
+    sink_to_ot(
+        eng, TEST_SCOPE, FakePipeline("p08-ct"),
+        [customer_lite_row(member_id="1001")],
+    )
+
+    # scope B (other-org) 查不到 scope A 的 CustomerLite
+    identity_b = ExternalIdentityKey(
+        org_id=OTHER_SCOPE.org_id,
+        workspace_id=OTHER_SCOPE.project_id,
+        platform="niushop",
+        shop_or_marketplace_id="1",
+        external_id="niushop:1:1001",
+    )
+    assert store.get_object(identity_b, "CustomerLite") is None
+
+    # scope A 能查到
+    identity_a = ExternalIdentityKey(
+        org_id=TEST_SCOPE.org_id,
+        workspace_id=TEST_SCOPE.project_id,
+        platform="niushop",
+        shop_or_marketplace_id="1",
+        external_id="niushop:1:1001",
+    )
+    assert store.get_object(identity_a, "CustomerLite") is not None
+
+    # BatchCommand validator 拒绝跨 scope 的 object identity
+    scope_a = SyncScope(
+        org_id="dev-org", workspace_id="dev-project",
+        platform="niushop", shop_or_marketplace_id="1", stream="p08-ct",
+    )
+    cross_obj = CoreObjectRecord(
+        identity=identity_b,  # other-org
+        object_type="CustomerLite",
+        source_updated_at=NOW,
+        source_timezone="+00:00",
+        status=ForwardEnumValue.from_raw("ACTIVE", {"ACTIVE": "active"}),
+        properties={
+            "memberLevel": "1",
+            "status": "active",
+            "createdAt": "2026-01-01T00:00:00+08:00",
+            "updatedAt": "2026-07-31T18:00:00+08:00",
+        },
+    )
+    with pytest.raises(ValueError, match="outside the batch scope"):
+        BatchCommand(
+            scope=scope_a,
+            idempotency_key="p08-cross-tenant-neg",
+            expected_checkpoint_version=0,
+            next_checkpoint=StableCursor(
+                source_updated_at_utc=NOW, external_id="niushop:1:1001"
+            ),
+            objects=[cross_obj],
+            links=[],
+        )
