@@ -172,7 +172,7 @@ class TestP02LinkBuilder:
     def test_inCategory_single(self):
         rows = [_make_product_row(goods_id="g-1", category_id="c-1")]
         result = build_link_rows(rows, _make_pipeline("P02"))
-        links = _links_by_type(result, "inCategory")
+        links = _links_by_type(result, "Product.inCategory")
         assert len(links) == 1
         assert links[0]["source_pk"] == "g-1"
         assert links[0]["target_source_pk"] == "c-1"
@@ -183,7 +183,7 @@ class TestP02LinkBuilder:
         """7. inCategory 多值拆分: '1,2,3' → 3 条 Link。"""
         rows = [_make_product_row(goods_id="g-1", category_id="1,2,3")]
         result = build_link_rows(rows, _make_pipeline("P02"))
-        links = _links_by_type(result, "inCategory")
+        links = _links_by_type(result, "Product.inCategory")
         assert len(links) == 3
         assert {l["target_source_pk"] for l in links} == {"1", "2", "3"}
         assert all(l["source_pk"] == "g-1" for l in links)
@@ -192,7 +192,7 @@ class TestP02LinkBuilder:
         """8. inCategory 异常值: ' 1 , , 2 , 3 ' → 3 条 Link。"""
         rows = [_make_product_row(goods_id="g-1", category_id=" 1 , , 2 , 3 ")]
         result = build_link_rows(rows, _make_pipeline("P02"))
-        links = _links_by_type(result, "inCategory")
+        links = _links_by_type(result, "Product.inCategory")
         assert len(links) == 3
         assert {l["target_source_pk"] for l in links} == {"1", "2", "3"}
 
@@ -211,7 +211,7 @@ class TestP02LinkBuilder:
             },
         ]
         result = build_link_rows(rows, _make_pipeline("P02"))
-        assert _links_by_type(result, "inCategory") == []
+        assert _links_by_type(result, "Product.inCategory") == []
 
     def test_tc09_soft_deleted_filtered_at_source(self):
         """9. 软删行: SourceAdapter 层过滤 is_delete=1，这里验证有效行仍构造 Link。"""
@@ -220,13 +220,13 @@ class TestP02LinkBuilder:
         obj = _object_rows(result)
         assert len(obj) == 1
         assert obj[0]["source_pk"] == "g-2"
-        assert len(_links_by_type(result, "inCategory")) == 1
+        assert len(_links_by_type(result, "Product.inCategory")) == 1
 
     def test_link_row_no_ot_field(self):
         """Link 行不含 ot 字段。"""
         rows = [_make_product_row(goods_id="g-1", category_id="c-1")]
         result = build_link_rows(rows, _make_pipeline("P02"))
-        link = _links_by_type(result, "inCategory")[0]
+        link = _links_by_type(result, "Product.inCategory")[0]
         assert "ot" not in link
         assert link["is_deleted"] is False
         assert link["properties"] == {}
@@ -286,7 +286,7 @@ class TestP02ExecutorChain:
         assert len(calls) == 1
         _, _, output_rows = calls[0]
         objs = _object_rows(output_rows)
-        links = _links_by_type(output_rows, "inCategory")
+        links = _links_by_type(output_rows, "Product.inCategory")
         assert len(objs) == 2
         assert len(links) == 4
         # g-2 拆分出 3 个分类
@@ -318,7 +318,7 @@ class TestP02ExecutorChain:
         rows = [_make_product_row(goods_id="g-1", category_id="1,2,3")]
         _, calls = self._run(rows)
         output = calls[0][2]
-        links = _links_by_type(output, "inCategory")
+        links = _links_by_type(output, "Product.inCategory")
         assert len(links) == 3
         assert {l["source_pk"] for l in links} == {"g-1"}
         assert {l["target_source_pk"] for l in links} == {"1", "2", "3"}
@@ -338,7 +338,7 @@ class TestP02ExecutorChain:
         _, calls = self._run([row])
         output = calls[0][2]
         assert len(_object_rows(output)) == 1
-        assert _links_by_type(output, "inCategory") == []
+        assert _links_by_type(output, "Product.inCategory") == []
 
     def test_tc09_soft_deleted_source_adapter(self):
         """9. 软删行: SourceAdapter 过滤后只返回有效行，output 中无软删。"""

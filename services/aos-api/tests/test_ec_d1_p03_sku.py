@@ -173,12 +173,12 @@ class TestP03LinkBuilder:
     def test_hasSku_single(self):
         rows = [_make_sku_row(sku_id="s-1", product_id="g-1")]
         result = build_link_rows(rows, _make_pipeline("P03"))
-        links = _links_by_type(result, "hasSku")
+        links = _links_by_type(result, "ProductSku.ofProduct")
         assert len(links) == 1
-        assert links[0]["source_type"] == "Product"
-        assert links[0]["source_pk"] == "g-1"
-        assert links[0]["target_type"] == "ProductSku"
-        assert links[0]["target_source_pk"] == "s-1"
+        assert links[0]["source_type"] == "ProductSku"
+        assert links[0]["source_pk"] == "s-1"
+        assert links[0]["target_type"] == "Product"
+        assert links[0]["target_source_pk"] == "g-1"
 
     def test_hasSku_multiple_same_product(self):
         rows = [
@@ -187,20 +187,20 @@ class TestP03LinkBuilder:
             _make_sku_row(sku_id="s-3", product_id="g-1"),
         ]
         result = build_link_rows(rows, _make_pipeline("P03"))
-        links = _links_by_type(result, "hasSku")
+        links = _links_by_type(result, "ProductSku.ofProduct")
         assert len(links) == 3
-        assert all(l["source_pk"] == "g-1" for l in links)
-        assert {l["target_source_pk"] for l in links} == {"s-1", "s-2", "s-3"}
+        assert all(l["target_source_pk"] == "g-1" for l in links)
+        assert {l["source_pk"] for l in links} == {"s-1", "s-2", "s-3"}
 
     def test_tc07_hasSku_integrity(self):
-        """7. hasSku Link 完整性: source_pk = productId（Product 的 PK）。"""
+        """7. hasSku Link 完整性: source_pk = sku_id（ProductSku 的 PK），target = productId（W1 反转后）。"""
         rows = [_make_sku_row(sku_id="s-1", product_id="g-99")]
         result = build_link_rows(rows, _make_pipeline("P03"))
-        link = _links_by_type(result, "hasSku")[0]
-        # 悬挂由 store 拒绝，这里验证构造的 source_pk 等于 productId
-        assert link["source_pk"] == "g-99"
-        assert link["source_type"] == "Product"
-        assert link["target_source_pk"] == "s-1"
+        link = _links_by_type(result, "ProductSku.ofProduct")[0]
+        # 悬挂由 store 拒绝，这里验证构造：反转后 source 是 SKU，target 是 Product
+        assert link["source_pk"] == "s-1"
+        assert link["source_type"] == "ProductSku"
+        assert link["target_source_pk"] == "g-99"
 
     def test_tc08_orphan_sku_skip_link(self):
         """8. 孤儿 SKU: productId 空/0/缺失 → 不构造 hasSku Link。"""
@@ -217,21 +217,23 @@ class TestP03LinkBuilder:
         # 3 个 SKU 行保留
         assert len(_object_rows(result)) == 3
         # 无 hasSku Link（productId 都无效）
-        assert _links_by_type(result, "hasSku") == []
+        assert _links_by_type(result, "ProductSku.ofProduct") == []
 
     def test_tc09_dangling_link_still_constructed(self):
         """9. 悬挂 Link: 本模块只构造，悬挂由 store 拒绝。"""
         rows = [_make_sku_row(sku_id="s-dangling", product_id="g-nonexistent")]
         result = build_link_rows(rows, _make_pipeline("P03"))
-        links = _links_by_type(result, "hasSku")
+        links = _links_by_type(result, "ProductSku.ofProduct")
         # 构造了 Link（悬挂由 ecom_consistency_store 拒绝）
         assert len(links) == 1
-        assert links[0]["source_pk"] == "g-nonexistent"
+        # W1 反转后 source 是 SKU，target 是 Product（悬挂的 Product）
+        assert links[0]["source_pk"] == "s-dangling"
+        assert links[0]["target_source_pk"] == "g-nonexistent"
 
     def test_link_row_no_ot_field(self):
         rows = [_make_sku_row(sku_id="s-1", product_id="g-1")]
         result = build_link_rows(rows, _make_pipeline("P03"))
-        link = _links_by_type(result, "hasSku")[0]
+        link = _links_by_type(result, "ProductSku.ofProduct")[0]
         assert "ot" not in link
         assert link["is_deleted"] is False
         assert link["properties"] == {}
@@ -286,13 +288,13 @@ class TestP03ExecutorChain:
 
         _, _, output_rows = calls[0]
         objs = _object_rows(output_rows)
-        links = _links_by_type(output_rows, "hasSku")
+        links = _links_by_type(output_rows, "ProductSku.ofProduct")
         assert len(objs) == 3
         assert len(links) == 3
-        # g-1 有 2 个 SKU
-        g1_links = [l for l in links if l["source_pk"] == "g-1"]
+        # g-1 有 2 个 SKU（W1 反转后 target 指向 Product g-1）
+        g1_links = [l for l in links if l["target_source_pk"] == "g-1"]
         assert len(g1_links) == 2
-        assert {l["target_source_pk"] for l in g1_links} == {"s-1", "s-2"}
+        assert {l["source_pk"] for l in g1_links} == {"s-1", "s-2"}
 
     def test_tc02_incremental_watermark(self):
         """2. 增量: 不同 watermark，rows 都有相同结构。"""
@@ -312,18 +314,18 @@ class TestP03ExecutorChain:
         assert len(c1[0][2]) == len(c2[0][2])
 
     def test_tc07_hasSku_integrity_e2e(self):
-        """7. e2e 完整性: hasSku source_pk = productId，target = sku_id。"""
+        """7. e2e 完整性: hasSku source_pk = sku_id，target = productId（W1 反转后）。"""
         rows = [
             _make_sku_row(sku_id="s-1", product_id="g-1"),
             _make_sku_row(sku_id="s-2", product_id="g-2"),
         ]
         _, calls = self._run(rows)
         output = calls[0][2]
-        links = _links_by_type(output, "hasSku")
+        links = _links_by_type(output, "ProductSku.ofProduct")
         assert len(links) == 2
         pairs = {(l["source_pk"], l["target_source_pk"]) for l in links}
-        assert pairs == {("g-1", "s-1"), ("g-2", "s-2")}
-        assert all(l["link_type"] == "hasSku" for l in links)
+        assert pairs == {("s-1", "g-1"), ("s-2", "g-2")}
+        assert all(l["link_type"] == "ProductSku.ofProduct" for l in links)
 
     def test_tc08_orphan_sku_no_link(self):
         """8. 孤儿 SKU（productId 空/无效）: 不构造 hasSku Link。"""
@@ -332,18 +334,18 @@ class TestP03ExecutorChain:
         output = calls[0][2]
         # 1 object + 0 links = 1
         assert len(_object_rows(output)) == 1
-        assert _links_by_type(output, "hasSku") == []
+        assert _links_by_type(output, "ProductSku.ofProduct") == []
 
     def test_tc09_dangling_link_still_in_output(self):
         """9. 悬挂 Link: output_rows 包含 Link（DLQ 由 store 拒绝后处理）。"""
         rows = [_make_sku_row(sku_id="s-dangling", product_id="g-no-such-product")]
         _, calls = self._run(rows)
         output = calls[0][2]
-        links = _links_by_type(output, "hasSku")
+        links = _links_by_type(output, "ProductSku.ofProduct")
         assert len(links) == 1
-        # 悬挂的 Link 构造正确（source 是不存在 Product），悬挂拒绝在 store 层
-        assert links[0]["source_pk"] == "g-no-such-product"
-        assert links[0]["target_source_pk"] == "s-dangling"
+        # W1 反转后 source 是 SKU，target 是悬挂的 Product（拒绝在 store 层）
+        assert links[0]["source_pk"] == "s-dangling"
+        assert links[0]["target_source_pk"] == "g-no-such-product"
 
 
 # ═══════════════════════════════════════════════

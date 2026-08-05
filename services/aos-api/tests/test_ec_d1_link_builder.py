@@ -129,7 +129,7 @@ def _links(rows: list[dict]) -> list[dict]:
 
 
 def test_hasSku_normal_construction() -> None:
-    """hasSku: P03 ProductSku 行构造一条 Product → ProductSku Link。"""
+    """hasSku: P03 ProductSku 行构造一条 ProductSku → Product Link（W1 反转后）。"""
     rows = [sku_row(source_pk="s-1", product_id="g-1")]
     pipeline = _make_pipeline("P03", "ProductSku")
 
@@ -137,11 +137,11 @@ def test_hasSku_normal_construction() -> None:
 
     assert len(result) == 2  # 1 原始行 + 1 Link
     link = _links(result)[0]
-    assert link["link_type"] == "hasSku"
-    assert link["source_type"] == "Product"
-    assert link["source_pk"] == "g-1"
-    assert link["target_type"] == "ProductSku"
-    assert link["target_source_pk"] == "s-1"
+    assert link["link_type"] == "ProductSku.ofProduct"
+    assert link["source_type"] == "ProductSku"
+    assert link["source_pk"] == "s-1"
+    assert link["target_type"] == "Product"
+    assert link["target_source_pk"] == "g-1"
     assert link["source_updated_at"] == NOW
     assert link["is_deleted"] is False
     assert link["properties"] == {}
@@ -163,7 +163,7 @@ def test_hasSku_skips_empty_product_id() -> None:
 
 
 def test_hasSku_multiple_skus_same_product() -> None:
-    """hasSku: 多个 SKU 指向同一 Product，构造多条 Link。"""
+    """hasSku: 多个 SKU 指向同一 Product，构造多条 Link（W1 反转后 source 是各 SKU）。"""
     rows = [
         sku_row(source_pk="s-1", product_id="g-1"),
         sku_row(source_pk="s-2", product_id="g-1"),
@@ -176,9 +176,9 @@ def test_hasSku_multiple_skus_same_product() -> None:
     links = _links(result)
     assert len(links) == 3
     for link in links:
-        assert link["source_pk"] == "g-1"
-        assert link["link_type"] == "hasSku"
-    assert {link["target_source_pk"] for link in links} == {"s-1", "s-2", "s-3"}
+        assert link["link_type"] == "ProductSku.ofProduct"
+        assert link["target_source_pk"] == "g-1"
+    assert {link["source_pk"] for link in links} == {"s-1", "s-2", "s-3"}
 
 
 # ═══════════════════════════════════════════════
@@ -196,7 +196,7 @@ def test_inCategory_single_value() -> None:
     links = _links(result)
     assert len(links) == 1
     link = links[0]
-    assert link["link_type"] == "inCategory"
+    assert link["link_type"] == "Product.inCategory"
     assert link["source_type"] == "Product"
     assert link["source_pk"] == "g-1"
     assert link["target_type"] == "Category"
@@ -215,7 +215,7 @@ def test_inCategory_multi_value_split() -> None:
     assert {link["target_source_pk"] for link in links} == {"1", "2", "3"}
     for link in links:
         assert link["source_pk"] == "g-1"
-        assert link["link_type"] == "inCategory"
+        assert link["link_type"] == "Product.inCategory"
 
 
 def test_inCategory_empty_value() -> None:
@@ -255,7 +255,7 @@ def test_contains_normal_construction() -> None:
 
     result = build_link_rows(rows, pipeline)
 
-    contains_links = [r for r in _links(result) if r["link_type"] == "contains"]
+    contains_links = [r for r in _links(result) if r["link_type"] == "Order.lines"]
     assert len(contains_links) == 1
     link = contains_links[0]
     assert link["source_type"] == "Order"
@@ -275,7 +275,7 @@ def test_contains_skips_empty_order_id() -> None:
 
     result = build_link_rows(rows, pipeline)
 
-    contains_links = [r for r in _links(result) if r["link_type"] == "contains"]
+    contains_links = [r for r in _links(result) if r["link_type"] == "Order.lines"]
     assert contains_links == []
 
 
@@ -291,7 +291,7 @@ def test_forProduct_normal_construction() -> None:
 
     result = build_link_rows(rows, pipeline)
 
-    fp_links = [r for r in _links(result) if r["link_type"] == "forProduct"]
+    fp_links = [r for r in _links(result) if r["link_type"] == "OrderLine.ofProduct"]
     assert len(fp_links) == 1
     link = fp_links[0]
     assert link["source_type"] == "OrderLine"
@@ -310,7 +310,7 @@ def test_forProduct_skips_empty_goods_id() -> None:
 
     result = build_link_rows(rows, pipeline)
 
-    fp_links = [r for r in _links(result) if r["link_type"] == "forProduct"]
+    fp_links = [r for r in _links(result) if r["link_type"] == "OrderLine.ofProduct"]
     assert fp_links == []
 
 
@@ -326,7 +326,7 @@ def test_forSku_normal_construction() -> None:
 
     result = build_link_rows(rows, pipeline)
 
-    fs_links = [r for r in _links(result) if r["link_type"] == "forSku"]
+    fs_links = [r for r in _links(result) if r["link_type"] == "OrderLine.ofSku"]
     assert len(fs_links) == 1
     link = fs_links[0]
     assert link["source_type"] == "OrderLine"
@@ -346,7 +346,7 @@ def test_forSku_skips_zero_sku_id() -> None:
 
     result = build_link_rows(rows, pipeline)
 
-    fs_links = [r for r in _links(result) if r["link_type"] == "forSku"]
+    fs_links = [r for r in _links(result) if r["link_type"] == "OrderLine.ofSku"]
     assert fs_links == []
 
 
@@ -356,7 +356,7 @@ def test_forSku_skips_zero_sku_id() -> None:
 
 
 def test_ships_normal_construction() -> None:
-    """ships: P07 Shipment 行构造一条 Shipment → Order Link。"""
+    """ships: P07 Shipment 行构造一条 Order → Shipment Link（W1 反转后）。"""
     rows = [shipment_row(source_pk="sh-1", order_id="o-1")]
     pipeline = _make_pipeline("P07", "Shipment")
 
@@ -365,11 +365,11 @@ def test_ships_normal_construction() -> None:
     links = _links(result)
     assert len(links) == 1
     link = links[0]
-    assert link["link_type"] == "ships"
-    assert link["source_type"] == "Shipment"
-    assert link["source_pk"] == "sh-1"
-    assert link["target_type"] == "Order"
-    assert link["target_source_pk"] == "o-1"
+    assert link["link_type"] == "Order.fulfilledBy"
+    assert link["source_type"] == "Order"
+    assert link["source_pk"] == "o-1"
+    assert link["target_type"] == "Shipment"
+    assert link["target_source_pk"] == "sh-1"
 
 
 def test_ships_skips_empty_order_id() -> None:
@@ -438,7 +438,7 @@ def test_orderline_constructs_three_link_types() -> None:
     result = build_link_rows(rows, pipeline)
 
     link_types = {link["link_type"] for link in _links(result)}
-    assert link_types == {"contains", "forProduct", "forSku"}
+    assert link_types == {"Order.lines", "OrderLine.ofProduct", "OrderLine.ofSku"}
 
 
 def test_link_row_has_no_ot_field() -> None:
