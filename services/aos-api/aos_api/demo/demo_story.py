@@ -60,7 +60,7 @@ def ensure_demo_seed_full(*, repair: bool = True) -> dict[str, Any]:
     base = ensure_demo_seed(repair=repair)
     from aos_api.routers.wave_ext import ensure_demo_data_seed
 
-    surface = ensure_demo_data_seed(force=True)
+    surface = ensure_demo_data_seed(TEST_SCOPE, force=True)
     snap = base.get("snapshot") or {}
     snap["dataSurface"] = {
         "sources": int(surface.get("sources", 0)),
@@ -464,11 +464,13 @@ def run_capability_mirror(principal: Principal) -> dict[str, Any]:
         _capabilities,
         _media,
         _media_bytes,
+        _mutation_scope,
+        _resource_key,
         parsers_extract,
         submit_job,
     )
 
-    _ = principal
+    scope = _mutation_scope(principal)
     ensure_demo_seed(repair=False)
     cap_id = "demo-wo-cap"
     if cap_id not in _capabilities:
@@ -490,7 +492,8 @@ def run_capability_mirror(principal: Principal) -> dict[str, Any]:
     csv_text = "title,status\n机房巡检-A区,open\n"
     csv_b64 = base64.b64encode(csv_text.encode("utf-8")).decode("ascii")
     parse_media_rid = f"ri.mediaset.demo-parse-{uuid.uuid4().hex[:8]}"
-    _media[parse_media_rid] = {
+    media_key = _resource_key(scope, parse_media_rid)
+    _media[media_key] = {
         "rid": parse_media_rid,
         "name": "demo-workorder.csv",
         "contentType": "text/csv",
@@ -498,8 +501,10 @@ def run_capability_mirror(principal: Principal) -> dict[str, Any]:
         "stored": True,
         "bytes": len(csv_text.encode("utf-8")),
         "fromDemo": True,
+        "orgId": scope.org_id,
+        "projectId": scope.project_id,
     }
-    _media_bytes[parse_media_rid] = csv_text.encode("utf-8")
+    _media_bytes[media_key] = csv_text.encode("utf-8")
     extracted = parsers_extract(
         {
             "mediaRid": parse_media_rid,

@@ -103,7 +103,7 @@ def test_source_pipeline_persist_roundtrip(api_client):
     wave_ext._hydrate_data_os_scope(scope, force=True)
     assert sid in wave_ext._connectors
     assert pid in wave_ext._pipelines
-    assert ds_rid in wave_ext._datasets
+    assert wave_ext._resource_key(scope, ds_rid) in wave_ext._datasets
     assert "demo-file-wo" not in wave_ext._connectors
 
     # cleanup probe rows

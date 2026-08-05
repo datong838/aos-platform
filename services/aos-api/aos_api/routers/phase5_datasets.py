@@ -1,6 +1,11 @@
 """Phase 5 · Datasets 路由.
 
 datasets + preview + builds + health + sync-config.
+
+TI-5 C2-B：``GET /v1/datasets`` 与 ``GET /v1/datasets/{id}`` 因 Router
+注册顺序被 wave_ext Data OS 抢先匹配，本模块同名 GET 为
+``NOT_REACHABLE_DUPLICATE``（manifest 仍登记 2 条，本波不改 route 契约）。
+POST / preview / builds / health / sync-config 仍由本模块服务，存储已 scoped。
 """
 from __future__ import annotations
 

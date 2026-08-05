@@ -1,3 +1,6 @@
+from aos_api.tenant_scope import TenantScope
+
+
 def _mock_embed(monkeypatch, vectors_by_n: dict[int, list[list[float]]] | None = None):
     import json
     from urllib import request as urlrequest
@@ -60,7 +63,9 @@ def test_pipeline_embed_no_gateway_501(client, auth_headers, monkeypatch):
     client.get("/v1/pipelines", headers=auth_headers)
     from aos_api.routers import wave_ext
 
-    wave_ext.ensure_demo_data_seed(force=True)
+    wave_ext.ensure_demo_data_seed(
+        TenantScope("dev-org", "dev-project"), force=True
+    )
     r = client.post(
         "/v1/pipelines/demo-pipe-wo/embed",
         headers=auth_headers,
@@ -87,7 +92,9 @@ def test_pipeline_embed_and_search(client, auth_headers, monkeypatch):
     client.post("/v1/embedding-plugins/embed-openai-compatible/install", headers=auth_headers)
     from aos_api.routers import wave_ext
 
-    wave_ext.ensure_demo_data_seed(force=True)
+    wave_ext.ensure_demo_data_seed(
+        TenantScope("dev-org", "dev-project"), force=True
+    )
     up = client.post(
         "/v1/pipelines/demo-pipe-wo/embed",
         headers=auth_headers,

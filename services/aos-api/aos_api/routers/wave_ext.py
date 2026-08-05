@@ -50,19 +50,34 @@ _tools: list[dict[str, Any]] = [
 ]
 _capabilities: dict[str, dict[str, Any]] = {}
 _jobs: dict[str, dict[str, Any]] = {}
-_media: dict[str, dict[str, Any]] = {}
-_media_bytes: dict[str, bytes] = {}
+ScopedResourceKey = tuple[str, str, str]
+
+
+_media: dict[ScopedResourceKey, dict[str, Any]] = {}
+_media_bytes: dict[ScopedResourceKey, bytes] = {}
 _connectors: dict[str, dict[str, Any]] = {}
 _pipelines: dict[str, dict[str, Any]] = {}
 _schedules: dict[str, dict[str, Any]] = {}
 _dlq: list[dict[str, Any]] = []
 _syncs: dict[str, dict[str, Any]] = {}
-_datasets: dict[str, dict[str, Any]] = {}
-_dataset_history: dict[str, list[dict[str, Any]]] = {}
+_datasets: dict[ScopedResourceKey, dict[str, Any]] = {}
+_dataset_history: dict[ScopedResourceKey, list[dict[str, Any]]] = {}
 _data_os_loaded_scopes: set[tuple[str, str]] = set()
 
 
-def ensure_demo_data_seed(*, force: bool = False) -> dict[str, Any]:
+def _resource_key(scope: TenantScope, resource_id: str) -> ScopedResourceKey:
+    return scope.org_id, scope.project_id, resource_id
+
+
+def _scoped_values(
+    mapping: dict[ScopedResourceKey, dict[str, Any]], scope: TenantScope
+) -> list[dict[str, Any]]:
+    return [item for key, item in mapping.items() if key[:2] == scope.key]
+
+
+def ensure_demo_data_seed(
+    scope: TenantScope, *, force: bool = False
+) -> dict[str, Any]:
     """TB.2 · Idempotent demo source/pipeline/dataset.
 
     默认 **不** 自动播种（产品数据连接页禁止演示垃圾）。
@@ -76,23 +91,34 @@ def ensure_demo_data_seed(*, force: bool = False) -> dict[str, Any]:
     dlq_id = "dlq-demo-sample"
     sch_id = "demo-sch-wo"
 
-    if src_id not in _connectors:
-        _connectors[src_id] = {"id": src_id, "type": "file", "status": "registered"}
-    if pipe_id not in _pipelines:
-        build_id = "build-demo-wo"
-        now = time.time()
+    if not _scope_visible(_connectors.get(src_id), scope):
+        _connectors[src_id] = {
+            "id": src_id,
+            "type": "file",
+            "status": "registered",
+            "orgId": scope.org_id,
+            "projectId": scope.project_id,
+        }
+    build_id = "build-demo-wo"
+    now = time.time()
+    if not _scope_visible(_pipelines.get(pipe_id), scope):
         _pipelines[pipe_id] = {
             "id": pipe_id,
             "sourceId": src_id,
             "target": "dataset",
             "datasetRid": ds_rid,
+            "orgId": scope.org_id,
+            "projectId": scope.project_id,
             "lastBuild": {
                 "id": build_id,
                 "status": "SUCCEEDED",
                 "tasks": [{"name": "ingest", "ok": True}],
             },
         }
-        _datasets[ds_rid] = {
+    # Dataset/History 按 scope 分桶；同 RID 可在多 scope 共存，不依赖全局 pipeline 是否已存在
+    dataset_key = _resource_key(scope, ds_rid)
+    if dataset_key not in _datasets:
+        _datasets[dataset_key] = {
             "rid": ds_rid,
             "name": "WorkOrder-demo",
             "pipelineId": pipe_id,
@@ -101,26 +127,30 @@ def ensure_demo_data_seed(*, force: bool = False) -> dict[str, Any]:
             "createdAt": now,
             "updatedAt": now,
             "objectTypeHint": "WorkOrder",
+            "orgId": scope.org_id,
+            "projectId": scope.project_id,
         }
-        hist = _dataset_history.setdefault(ds_rid, [])
-        if not hist:
-            hist.append(
-                {
-                    "version": 1,
-                    "buildId": build_id,
-                    "status": "SUCCEEDED",
-                    "at": now,
-                }
-            )
-    if sch_id not in _schedules:
+    hist = _dataset_history.setdefault(dataset_key, [])
+    if not hist:
+        hist.append(
+            {
+                "version": 1,
+                "buildId": build_id,
+                "status": "SUCCEEDED",
+                "at": now,
+            }
+        )
+    if not _scope_visible(_schedules.get(sch_id), scope):
         _schedules[sch_id] = {
             "id": sch_id,
             "cron": "0 * * * *",
             "pipelineId": pipe_id,
             "enabled": True,
+            "orgId": scope.org_id,
+            "projectId": scope.project_id,
         }
     sync_id = "sync-demo-wo"
-    if sync_id not in _syncs:
+    if not _scope_visible(_syncs.get(sync_id), scope):
         now = time.time()
         _syncs[sync_id] = {
             "id": sync_id,
@@ -129,6 +159,8 @@ def ensure_demo_data_seed(*, force: bool = False) -> dict[str, Any]:
             "startedAt": now,
             "finishedAt": now,
             "rowsSynced": 3,
+            "orgId": scope.org_id,
+            "projectId": scope.project_id,
         }
     if not any(isinstance(d, dict) and d.get("id") == dlq_id for d in _dlq):
         _dlq.append(
@@ -143,11 +175,12 @@ def ensure_demo_data_seed(*, force: bool = False) -> dict[str, Any]:
                 },
             }
         )
+    _data_os_loaded_scopes.add(scope.key)
     return {
         "sources": len(_connectors),
         "syncs": len(_syncs),
         "pipelines": len(_pipelines),
-        "datasets": len(_datasets),
+        "datasets": len(_scoped_values(_datasets, scope)),
         "builds": len(_pipelines),
         "dlq": len(_dlq),
     }
@@ -342,7 +375,6 @@ def list_plugins_catalog(principal: Principal = Depends(require_principal)):
     """Aggregate tools + parsers + sources + capabilities + llm providers (T3.8 / 83)."""
     scope = _mutation_scope(principal)
     _hydrate_data_os_scope(scope)
-    from aos_api.file_parsers import list_plugins as list_parsers
     from aos_api.llm_provider_registry import list_llm_provider_plugins
     from aos_api.connector_registry import list_connector_plugins
     from aos_api.parser_registry import list_parser_plugins
@@ -773,7 +805,7 @@ def submit_job(
     principal: Principal = Depends(require_principal),
 ):
     """TC.4 light — artifact registers a MediaSet rid (metadata; bytes optional)."""
-    _ = principal
+    scope = _mutation_scope(principal)
     if cap_id not in _capabilities:
         raise ApiError(code="NOT_FOUND", message="capability missing", status_code=404)
     job_id = f"job-{uuid.uuid4().hex[:8]}"
@@ -791,7 +823,7 @@ def submit_job(
         "orgId": principal.org_id,
         "projectId": principal.project_id,
     }
-    _media[media_rid] = meta
+    _media[_resource_key(scope, media_rid)] = meta
     _jobs[job_id] = {
         "jobId": job_id,
         "capabilityId": cap_id,
@@ -1053,23 +1085,21 @@ def _hydrate_data_os_scope(scope: TenantScope, *, force: bool = False) -> None:
     from aos_api.data_os_store import load_all
 
     data = load_all(scope)
-    scoped_dataset_ids = {
-        rid
-        for rid, item in _datasets.items()
-        if (item.get("orgId"), item.get("projectId")) == scope.key
-    }
-    for mapping in (_connectors, _pipelines, _datasets, _syncs, _schedules):
+    for mapping in (_connectors, _pipelines, _syncs, _schedules):
         for resource_id, item in list(mapping.items()):
             if (item.get("orgId"), item.get("projectId")) == scope.key:
                 mapping.pop(resource_id, None)
-    for rid in scoped_dataset_ids:
-        _dataset_history.pop(rid, None)
+    for mapping in (_datasets, _dataset_history):
+        for key in [key for key in mapping if key[:2] == scope.key]:
+            mapping.pop(key, None)
     _connectors.update(data["connectors"])
     _pipelines.update(data["pipelines"])
-    _datasets.update(data["datasets"])
     _syncs.update(data["syncs"])
     _schedules.update(data["schedules"])
-    _dataset_history.update(data["dataset_history"])
+    for rid, item in data["datasets"].items():
+        _datasets[_resource_key(scope, rid)] = item
+    for rid, history in data["dataset_history"].items():
+        _dataset_history[_resource_key(scope, rid)] = history
     _data_os_loaded_scopes.add(scope.key)
 
 
@@ -1168,11 +1198,12 @@ def create_sync(body: SyncIn, principal: Principal = Depends(require_principal))
     _syncs[sid] = item
     _persist_safe("persist_sync", scope, item)
     # Reflect sync into dataset history if a dataset is bound to this source
-    for rid, ds in _datasets.items():
+    for key, ds in _datasets.items():
         if ds.get("sourceId") == body.sourceId and (
             ds.get("orgId"), ds.get("projectId")
         ) == scope.key:
-            hist = _dataset_history.setdefault(rid, [])
+            rid = str(ds.get("rid") or key[2])
+            hist = _dataset_history.setdefault(key, [])
             hist.append(
                 {
                     "version": len(hist) + 1,
@@ -1216,7 +1247,7 @@ def get_sync(sync_id: str, principal: Principal = Depends(require_principal)):
 def list_datasets(principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
     _hydrate_data_os_scope(scope)
-    items = [d for d in _datasets.values() if _scope_visible(d, scope)]
+    items = _scoped_values(_datasets, scope)
     return {"items": items}
 
 
@@ -1224,8 +1255,8 @@ def list_datasets(principal: Principal = Depends(require_principal)):
 def get_dataset(rid: str, principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
     _hydrate_data_os_scope(scope)
-    item = _datasets.get(rid)
-    if not _scope_visible(item, scope):
+    item = _datasets.get(_resource_key(scope, rid))
+    if item is None:
         raise ApiError(code="NOT_FOUND", message="dataset missing", status_code=404)
     return item
 
@@ -1234,9 +1265,10 @@ def get_dataset(rid: str, principal: Principal = Depends(require_principal)):
 def dataset_history(rid: str, principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
     _hydrate_data_os_scope(scope)
-    if not _scope_visible(_datasets.get(rid), scope):
+    key = _resource_key(scope, rid)
+    if key not in _datasets:
         raise ApiError(code="NOT_FOUND", message="dataset missing", status_code=404)
-    return {"rid": rid, "items": list(_dataset_history.get(rid, []))}
+    return {"rid": rid, "items": list(_dataset_history.get(key, []))}
 
 
 @router.post("/v1/media-sets")
@@ -1248,6 +1280,8 @@ def create_media(body: MediaIn, principal: Principal = Depends(require_principal
     from aos_api.tenant_prefix import assert_object_key_tenant
 
     rid = f"ri.mediaset.{uuid.uuid4().hex[:10]}"
+    scope = _mutation_scope(principal)
+    media_key = _resource_key(scope, rid)
     stored = False
     object_key = None
     etag = None
@@ -1259,7 +1293,7 @@ def create_media(body: MediaIn, principal: Principal = Depends(require_principal
         from aos_api import provisioning as prov
 
         prov.assert_storage_quota(principal.org_id, raw_len)
-        _media_bytes[rid] = raw
+        _media_bytes[media_key] = raw
         object_key = object_key_for(
             rid,
             body.name,
@@ -1295,13 +1329,13 @@ def create_media(body: MediaIn, principal: Principal = Depends(require_principal
     }
     from aos_api.media_meta import extract_metadata
 
-    raw_for_meta = _media_bytes.get(rid) if body.bytesBase64 else None
+    raw_for_meta = _media_bytes.get(media_key) if body.bytesBase64 else None
     item["metadata"] = extract_metadata(
         raw_for_meta,
         content_type=body.contentType or "application/octet-stream",
         name=body.name,
     )
-    _media[rid] = item
+    _media[media_key] = item
     log.info(
         "media_created rid=%s stored=%s bytes=%s org=%s project=%s",
         rid,
@@ -1318,42 +1352,31 @@ def enrich_media(rid: str, principal: Principal = Depends(require_principal)):
     """185m — re-extract metadata from in-memory bytes (or empty)."""
     from aos_api.media_meta import extract_metadata
 
-    if rid not in _media:
+    key = _resource_key(_mutation_scope(principal), rid)
+    meta = _media.get(key)
+    if meta is None:
         raise ApiError(code="NOT_FOUND", message="media missing", status_code=404)
-    meta = _media[rid]
-    if meta.get("orgId") and (
-        meta.get("orgId") != principal.org_id or meta.get("projectId") != principal.project_id
-    ):
-        raise ApiError(code="NOT_FOUND", message="media missing", status_code=404)
-    raw = _media_bytes.get(rid)
+    raw = _media_bytes.get(key)
     enriched = extract_metadata(
         raw,
         content_type=str(meta.get("contentType") or "application/octet-stream"),
         name=str(meta.get("name") or ""),
     )
     meta["metadata"] = enriched
-    _media[rid] = meta
+    _media[key] = meta
     return meta
 
 
 @router.get("/v1/media-sets")
 def list_media(principal: Principal = Depends(require_principal)):
-    items = [
-        m
-        for m in _media.values()
-        if m.get("orgId") == principal.org_id and m.get("projectId") == principal.project_id
-    ]
+    items = _scoped_values(_media, _mutation_scope(principal))
     return {"items": items}
 
 
 @router.get("/v1/media-sets/{rid}")
 def get_media(rid: str, principal: Principal = Depends(require_principal)):
-    if rid not in _media:
-        raise ApiError(code="NOT_FOUND", message="media missing", status_code=404)
-    meta = _media[rid]
-    if meta.get("orgId") and (
-        meta.get("orgId") != principal.org_id or meta.get("projectId") != principal.project_id
-    ):
+    meta = _media.get(_resource_key(_mutation_scope(principal), rid))
+    if meta is None:
         raise ApiError(code="NOT_FOUND", message="media missing", status_code=404)
     return meta
 
@@ -1366,12 +1389,8 @@ def get_media_content(rid: str, principal: Principal = Depends(require_principal
     from aos_api.object_store import get_bytes
     from aos_api.tenant_prefix import assert_object_key_tenant
 
-    if rid not in _media:
-        raise ApiError(code="NOT_FOUND", message="media missing", status_code=404)
-    meta = _media[rid]
-    if meta.get("orgId") and (
-        meta.get("orgId") != principal.org_id or meta.get("projectId") != principal.project_id
-    ):
+    meta = _media.get(_resource_key(_mutation_scope(principal), rid))
+    if meta is None:
         raise ApiError(code="NOT_FOUND", message="media missing", status_code=404)
     key = meta.get("objectKey")
     if not key or not meta.get("stored"):
@@ -1415,7 +1434,6 @@ def list_parsers(principal: Principal = Depends(require_principal)):
 @router.post("/v1/parsers/extract")
 def parsers_extract(body: dict[str, Any], principal: Principal = Depends(require_principal)):
     """T4.4b — extract text from upload or mediaRid."""
-    _ = principal
     import base64
 
     from aos_api.file_parsers import extract
@@ -1428,13 +1446,15 @@ def parsers_extract(body: dict[str, Any], principal: Principal = Depends(require
     if body.get("bytesBase64"):
         data = base64.b64decode(body["bytesBase64"])
     elif media_rid:
-        if media_rid in _media_bytes:
-            data = _media_bytes[media_rid]
-            meta = _media.get(media_rid) or {}
+        media_key = _resource_key(_mutation_scope(principal), str(media_rid))
+        meta = _media.get(media_key)
+        if meta is None:
+            raise ApiError(code="NOT_FOUND", message="media bytes missing", status_code=404)
+        if media_key in _media_bytes:
+            data = _media_bytes[media_key]
             name = name or meta.get("name")
             content_type = content_type or meta.get("contentType")
-        elif media_rid in _media and _media[media_rid].get("stored") and _media[media_rid].get("objectKey"):
-            meta = _media[media_rid]
+        elif meta.get("stored") and meta.get("objectKey"):
             data = get_bytes(key=meta["objectKey"])
             name = name or meta.get("name")
             content_type = content_type or meta.get("contentType")
@@ -1444,10 +1464,13 @@ def parsers_extract(body: dict[str, Any], principal: Principal = Depends(require
         raise ApiError(code="BAD_REQUEST", message="bytesBase64 or mediaRid required", status_code=400)
 
     result = extract(data=data, name=name, content_type=content_type)
-    if media_rid and media_rid in _media:
-        _media[media_rid]["extractedText"] = result.get("preview")
-        _media[media_rid]["parser"] = result.get("parser")
-        _media[media_rid]["parseOk"] = result.get("ok")
+    if media_rid:
+        media_key = _resource_key(_mutation_scope(principal), str(media_rid))
+        meta = _media.get(media_key)
+        if meta is not None:
+            meta["extractedText"] = result.get("preview")
+            meta["parser"] = result.get("parser")
+            meta["parseOk"] = result.get("ok")
     return result
 
 
@@ -1471,8 +1494,9 @@ def create_pipeline(body: PipelineIn, principal: Principal = Depends(require_pri
     )
     build_id = f"build-{uuid.uuid4().hex[:8]}"
     dataset_rid = body.datasetRid or f"ri.dataset.{body.id}"
+    dataset_key = _resource_key(scope, dataset_rid)
     _assert_mutation_scope(
-        _datasets.get(dataset_rid),
+        _datasets.get(dataset_key),
         scope,
         resource="dataset",
         resource_id=dataset_rid,
@@ -1488,7 +1512,7 @@ def create_pipeline(body: PipelineIn, principal: Principal = Depends(require_pri
     now = time.time()
     display = (body.displayName or body.name or body.id or "").strip() or body.id
     hint = (body.objectTypeHint or "").strip() or None
-    prev = _datasets.get(dataset_rid) or {}
+    prev = _datasets.get(dataset_key) or {}
     ds = {
         "rid": dataset_rid,
         "name": display,
@@ -1502,8 +1526,8 @@ def create_pipeline(body: PipelineIn, principal: Principal = Depends(require_pri
         "orgId": principal.org_id,
         "projectId": principal.project_id,
     }
-    _datasets[dataset_rid] = ds
-    hist = _dataset_history.setdefault(dataset_rid, [])
+    _datasets[dataset_key] = ds
+    hist = _dataset_history.setdefault(dataset_key, [])
     hist.append(
         {
             "version": len(hist) + 1,
@@ -1527,7 +1551,8 @@ def patch_dataset(
     """Update dataset display / objectTypeHint (preview wiring)."""
     scope = _mutation_scope(principal)
     _hydrate_data_os_scope(scope)
-    ds = _datasets.get(rid)
+    key = _resource_key(scope, rid)
+    ds = _datasets.get(key)
     if not ds:
         raise ApiError(code="NOT_FOUND", message="dataset missing", status_code=404)
     _assert_mutation_scope(ds, scope, resource="dataset", resource_id=rid)
@@ -1542,7 +1567,7 @@ def patch_dataset(
     if "status" in body and body["status"] is not None:
         ds["status"] = str(body["status"])
     ds["updatedAt"] = time.time()
-    _datasets[rid] = ds
+    _datasets[key] = ds
     _persist_safe("persist_dataset", scope, ds)
     return ds
 
@@ -2275,10 +2300,9 @@ def sync_routing(body: dict[str, Any], principal: Principal = Depends(require_pr
 
 @router.get("/v1/media-sets/{rid}/reference")
 def media_ref(rid: str, principal: Principal = Depends(require_principal)):
-    _ = principal
-    if rid not in _media:
+    m = _media.get(_resource_key(_mutation_scope(principal), rid))
+    if m is None:
         raise ApiError(code="NOT_FOUND", message="media missing", status_code=404)
-    m = _media[rid]
     return {"rid": rid, "previewUrl": f"/v1/media-sets/{rid}", "name": m["name"]}
 
 
@@ -2290,7 +2314,6 @@ def edge_agent(principal: Principal = Depends(require_principal)):
 
 @router.post("/v1/docintel/pipeline")
 def docintel_pipeline(body: dict[str, Any], principal: Principal = Depends(require_principal)):
-    _ = principal
     import base64
 
     fail = bool(body.get("fail", False))
@@ -2311,8 +2334,16 @@ def docintel_pipeline(body: dict[str, Any], principal: Principal = Depends(requi
     raw: bytes | None = None
     if body.get("bytesBase64"):
         raw = base64.b64decode(body["bytesBase64"])
-    elif body.get("mediaRid") and body["mediaRid"] in _media_bytes:
-        raw = _media_bytes[body["mediaRid"]]
+    elif body.get("mediaRid"):
+        media_key = _resource_key(
+            _mutation_scope(principal), str(body["mediaRid"])
+        )
+        if media_key in _media and media_key in _media_bytes:
+            raw = _media_bytes[media_key]
+        else:
+            raise ApiError(
+                code="NOT_FOUND", message="media bytes missing", status_code=404
+            )
     if raw is not None:
         parse_result = extract(
             data=raw,

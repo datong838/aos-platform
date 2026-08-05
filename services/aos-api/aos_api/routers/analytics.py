@@ -563,10 +563,11 @@ def _get_object_table(
     )
 
 
-def _lookup_dataset(rid: str) -> dict[str, Any] | None:
+def _lookup_dataset(principal: Principal, rid: str) -> dict[str, Any] | None:
     from aos_api.routers import wave_ext
 
-    ds = getattr(wave_ext, "_datasets", {}).get(rid)
+    scope = TenantScope(principal.org_id, principal.project_id)
+    ds = getattr(wave_ext, "_datasets", {}).get(wave_ext._resource_key(scope, rid))
     return dict(ds) if isinstance(ds, dict) else None
 
 
@@ -576,7 +577,7 @@ def _dataset_preview_table(
     *,
     limit: int,
 ) -> dict[str, Any]:
-    ds = _lookup_dataset(dataset_rid)
+    ds = _lookup_dataset(principal, dataset_rid)
     if not ds:
         raise ApiError(code="NOT_FOUND", message="dataset not found", status_code=404)
     hint = str(ds.get("objectTypeHint") or "").strip()
@@ -673,7 +674,10 @@ def analytics_ontology_rail(
     try:
         from aos_api.routers import wave_ext
 
-        raw_ds = list(getattr(wave_ext, "_datasets", {}).values())
+        scope = TenantScope(principal.org_id, principal.project_id)
+        raw_ds = wave_ext._scoped_values(
+            getattr(wave_ext, "_datasets", {}), scope
+        )
         for d in raw_ds[:datasetLimit]:
             if not isinstance(d, dict):
                 continue

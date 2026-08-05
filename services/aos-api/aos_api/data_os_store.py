@@ -48,10 +48,16 @@ def purge_demo_surface(wave_ext_module: Any) -> dict[str, Any]:
             del wave_ext_module._pipelines[pid]
             removed["pipelines"].append(pid)
     for rid in DEMO_SURFACE_IDS["datasets"]:
-        if rid in wave_ext_module._datasets:
-            del wave_ext_module._datasets[rid]
+        dataset_keys = [
+            key
+            for key in wave_ext_module._datasets
+            if (key[2] if isinstance(key, tuple) and len(key) == 3 else key) == rid
+        ]
+        if dataset_keys:
+            for key in dataset_keys:
+                wave_ext_module._datasets.pop(key, None)
+                wave_ext_module._dataset_history.pop(key, None)
             removed["datasets"].append(rid)
-        wave_ext_module._dataset_history.pop(rid, None)
     for sid in DEMO_SURFACE_IDS["syncs"]:
         if sid in wave_ext_module._syncs:
             del wave_ext_module._syncs[sid]

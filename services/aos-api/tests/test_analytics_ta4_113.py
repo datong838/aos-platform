@@ -1,5 +1,10 @@
 """113 · TA.4 analytics read (objects/list · get · dataset preview · sql)."""
 
+from aos_api.tenant_scope import TenantScope
+
+
+TEST_SCOPE = TenantScope("dev-org", "dev-project")
+
 
 def test_objects_list_workorder(client, auth_headers):
     r = client.post(
@@ -40,11 +45,13 @@ def test_dataset_preview_via_hint(client, auth_headers):
     from aos_api.routers import wave_ext
 
     rid = "ri.dataset.ta4-113"
-    wave_ext._datasets[rid] = {
+    wave_ext._datasets[wave_ext._resource_key(TEST_SCOPE, rid)] = {
         "rid": rid,
         "name": "ta4-hint",
         "objectTypeHint": "WorkOrder",
         "status": "READY",
+        "orgId": TEST_SCOPE.org_id,
+        "projectId": TEST_SCOPE.project_id,
     }
     r = client.post(
         "/v1/analytics/datasets/preview",
@@ -62,7 +69,13 @@ def test_dataset_preview_no_hint_empty_ok(client, auth_headers):
     from aos_api.routers import wave_ext
 
     rid = "ri.dataset.ta4-empty"
-    wave_ext._datasets[rid] = {"rid": rid, "name": "meta-only", "status": "READY"}
+    wave_ext._datasets[wave_ext._resource_key(TEST_SCOPE, rid)] = {
+        "rid": rid,
+        "name": "meta-only",
+        "status": "READY",
+        "orgId": TEST_SCOPE.org_id,
+        "projectId": TEST_SCOPE.project_id,
+    }
     r = client.post(
         "/v1/analytics/datasets/preview",
         headers=auth_headers,
@@ -78,7 +91,13 @@ def test_dataset_preview_get_is_read_only_browser_contract(client, auth_headers)
     from aos_api.routers import wave_ext
 
     rid = "ri.dataset.ta4-get"
-    wave_ext._datasets[rid] = {"rid": rid, "name": "get-preview", "status": "READY"}
+    wave_ext._datasets[wave_ext._resource_key(TEST_SCOPE, rid)] = {
+        "rid": rid,
+        "name": "get-preview",
+        "status": "READY",
+        "orgId": TEST_SCOPE.org_id,
+        "projectId": TEST_SCOPE.project_id,
+    }
     r = client.get(
         "/v1/analytics/datasets/preview",
         headers=auth_headers,
