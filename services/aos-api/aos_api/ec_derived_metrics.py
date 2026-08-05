@@ -1,8 +1,8 @@
-"""D1-W1: 派生指标计算 — Normalize/QualityGate 节点的派生字段。
+"""D1-W1 + D1.5: 派生指标计算 — Normalize/QualityGate 节点的派生字段。
 
-按 pipeline.target_ot 分发，计算 4 个派生指标并写入 row.properties。
+按 pipeline.target_ot 分发，计算派生指标并写入 row.properties。
 
-FR-D1-7 派生指标口径（基于 frozen/01 schema fingerprint）：
+FR-D1-7 单行派生指标口径（基于 frozen/01 schema fingerprint）：
 | 派生指标         | OT          | 计算口径                                                                 |
 |------------------|-------------|--------------------------------------------------------------------------|
 | quality_score    | Product     | evaluate > 0 时 = evaluate_haoping / evaluate；否则 null                 |
@@ -13,18 +13,29 @@ FR-D1-7 派生指标口径（基于 frozen/01 schema fingerprint）：
 | overdue_hours    | Shipment    | SLA_HOURS=48；delivery_time=0 AND Order.pay_time>0 时                     |
 |                  |             | = max(0, (now - Order.pay_time - 48h) / 3600)；否则 null                   |
 
-约束（FR-D1-7）：
+FR-D1.5-4 跨表聚合派生指标（D1.5 新增，CustomerLite OT）：
+| 派生指标         | OT            | 计算口径                                                                  |
+|------------------|---------------|---------------------------------------------------------------------------|
+| order_count Δ    | CustomerLite  | 由 placedByLite Link 反向聚合，按 member_id 计算 Order 数量              |
+| last_order_days Δ| CustomerLite  | now - max(Order.create_time)，按天；无订单时为 null                      |
+
+架构差异：D1 已有 4 个派生指标为单行派生（row 内字段计算）；
+D1.5 新增 2 个派生指标为跨表聚合（需查 ecom_link 表）。
+采用 link_aggregator 注入式接口保持派生指标模块的纯函数性与可测性。
+
+约束（FR-D1-7 + FR-D1.5-4）：
 - 派生指标 MUST 由 Pipeline 的 Normalize/QualityGate 节点计算后写入 OT，不能由 Logic 自行计算
 - 派生公式变更等同于 OT schema 变更，需走 228-EC-核心本体与增量一致性方案 审批
 - 源字段缺失时写 null，不阻塞 Pipeline
 - 不修改 source_pk / external_id / source_updated_at 等核心字段
 - 派生指标写入 row 的 properties 字段下（与 ec_ot_writer._build_object 的 properties 对齐）
+- apply_derived_metrics 签名向后兼容：link_aggregator 为 keyword-only 可选参数，默认 None
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Callable
 
 # overdue_hours 的 SLA 阈值（frozen/01）
 SLA_HOURS: int = 48
@@ -46,7 +57,19 @@ _PIPELINE_ID_TO_OT: dict[str, str] = {
     "p05": "Order",
     "p06": "OrderLine",
     "p07": "Shipment",
+    # D1.5: P08 CustomerLite（frozen/02 §P08）
+    "p08": "CustomerLite",
 }
+
+# D1.5: link_aggregator 接口契约（FR-D1.5-4）
+# 输入：member_ids 集合（来自 row.source_pk）
+# 输出：{member_id: (order_count, last_order_create_time)}
+#   - member_id 不在返回 dict 中 → null（无订单数据）
+#   - member_id 在返回 dict 中且 order_count=0 → 0（有数据但订单数为 0）
+LinkAggregator = Callable[
+    [frozenset[str]],
+    dict[str, tuple[int, datetime | None]],
+]
 
 
 def _now_utc() -> datetime:
@@ -57,19 +80,26 @@ def _now_utc() -> datetime:
 def apply_derived_metrics(
     rows: list[dict[str, Any]],
     pipeline: Any,
+    *,
+    link_aggregator: LinkAggregator | None = None,
 ) -> list[dict[str, Any]]:
     """对 rows 计算派生指标并写入 row.properties。
 
     按 pipeline 的 target_ot 分发：
-    - Product → quality_score
-    - ProductSku → stock_health
-    - Order → risk_score
-    - Shipment → overdue_hours
+    - Product → quality_score（FR-D1-7 单行派生）
+    - ProductSku → stock_health（FR-D1-7 单行派生）
+    - Order → risk_score（FR-D1-7 单行派生）
+    - Shipment → overdue_hours（FR-D1-7 单行派生）
+    - CustomerLite → order_count Δ / last_order_days Δ（FR-D1.5-4 跨表聚合）
     - 其他（Shop/Category/OrderLine 等）→ 透传不计算
 
     约束：
     - 源字段缺失时写 null，不阻塞 Pipeline
     - 不修改 source_pk / external_id / source_updated_at 等核心字段
+    - link_aggregator 为 keyword-only 可选参数（D1.5 新增）：
+      * 默认 None 时，CustomerLite 行写 null（字段存在但为 null）
+      * 提供时，批量查询 member_ids 聚合结果，按行写入实际值
+    - 非 CustomerLite OT 不读 link_aggregator（D1 行为不变）
     """
     target_ot = _resolve_target_ot(pipeline)
 
@@ -85,6 +115,8 @@ def apply_derived_metrics(
     elif target_ot == "Shipment":
         for row in rows:
             _apply_overdue_hours(row)
+    elif target_ot == "CustomerLite":
+        _apply_order_count_and_last_order_days(rows, link_aggregator)
 
     return rows
 
@@ -293,3 +325,108 @@ def _apply_overdue_hours(row: dict[str, Any]) -> None:
         _set_property(row, "overdue_hours", round(overdue, 4))
     else:
         _set_property(row, "overdue_hours", None)
+
+
+# ── order_count Δ / last_order_days Δ (CustomerLite, D1.5) ─────────────────────
+
+
+def _apply_order_count_and_last_order_days(
+    rows: list[dict[str, Any]],
+    link_aggregator: LinkAggregator | None,
+) -> None:
+    """计算 order_count Δ / last_order_days Δ 入口（FR-D1.5-4，跨表聚合派生指标）。
+
+    架构差异：与 D1 单行派生不同，本派生指标需要查 ecom_link 表聚合
+    placedByLite Link，因此通过 link_aggregator 注入式接口解耦。
+
+    合并入口：共享一次 link_aggregator 批量查询（避免 N+1），
+    然后分发到 _apply_order_count 和 _apply_last_order_days 子函数。
+
+    行为契约：
+    - link_aggregator=None：所有行写 null（字段存在但为 null，满足 AC-D1.5-4）
+    - link_aggregator 提供：
+      * 收集 rows 中所有有效 source_pk（member_id）集合
+      * 批量调用 link_aggregator(member_ids) 一次
+      * member_id 不在聚合结果中 → 子函数写 null
+      * member_id 在聚合结果中 → 子函数写实际值
+
+    fail-closed：link_aggregator 抛异常时不吞，向上传播。
+    """
+    # 收集有效 member_ids（source_pk 非空、非 None）
+    member_ids: set[str] = set()
+    for row in rows:
+        source_pk = row.get("source_pk")
+        if source_pk is None:
+            continue
+        pk_str = str(source_pk).strip()
+        if pk_str:
+            member_ids.add(pk_str)
+
+    # 无有效 member_id 或无 link_aggregator：所有行写 null
+    if not member_ids or link_aggregator is None:
+        for row in rows:
+            _apply_order_count(row, None)
+            _apply_last_order_days(row, None, _now_utc())
+        return
+
+    # 批量查询（只调用一次，避免 N+1）
+    aggregation = link_aggregator(frozenset(member_ids))
+
+    now = _now_utc()
+    for row in rows:
+        source_pk = row.get("source_pk")
+        pk_str = str(source_pk).strip() if source_pk is not None else ""
+        # member_id 无效或不在聚合结果中 → entry=None，子函数写 null
+        entry = aggregation.get(pk_str) if pk_str else None
+        _apply_order_count(row, entry)
+        _apply_last_order_days(row, entry, now)
+
+
+def _apply_order_count(
+    row: dict[str, Any],
+    entry: tuple[int, datetime | None] | None,
+) -> None:
+    """写入 order_count（FR-D1.5-4 派生指标）。
+
+    - entry=None（member_id 无效或不在聚合结果中）→ null
+    - entry 提供 → 写 order_count（int，≥0；0 表示有聚合数据但订单数为 0）
+
+    语义区分：
+    - member_id 不在聚合结果 → null（无订单数据）
+    - member_id 在聚合结果且 order_count=0 → 0（有数据但订单数为 0）
+    """
+    if entry is None:
+        _set_property(row, "order_count", None)
+        return
+    order_count, _ = entry
+    _set_property(row, "order_count", order_count)
+
+
+def _apply_last_order_days(
+    row: dict[str, Any],
+    entry: tuple[int, datetime | None] | None,
+    now: datetime,
+) -> None:
+    """写入 last_order_days（FR-D1.5-4 派生指标）。
+
+    - entry=None → null
+    - entry 提供 且 last_order_create_time=None → null（无订单）
+    - entry 提供 且 last_order_create_time 有效 → max(0, (now - last_order_create_time).days)
+
+    按天计算（timedelta.days，向下取整到整天），未来时间截断到 0。
+    """
+    if entry is None:
+        _set_property(row, "last_order_days", None)
+        return
+    _, last_order_create_time = entry
+    if last_order_create_time is None:
+        _set_property(row, "last_order_days", None)
+        return
+    delta = now - last_order_create_time
+    # timedelta.days 对负值会向下取整（如 -1天23小时 → -2），
+    # 因此先取 total_seconds 判断，负值截断到 0
+    if delta.total_seconds() < 0:
+        days = 0
+    else:
+        days = delta.days
+    _set_property(row, "last_order_days", days)

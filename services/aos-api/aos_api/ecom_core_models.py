@@ -25,7 +25,11 @@ from aos_api.public_contracts import (
 
 
 CORE_OBJECT_TYPES = frozenset(
-    {"Shop", "Product", "ProductSku", "Category", "Order", "OrderLine", "Shipment"}
+    {
+        "Shop", "Product", "ProductSku", "Category",
+        "Order", "OrderLine", "Shipment",
+        "CustomerLite",  # D1.5: 增长扩展 OT（隐私最小化，frozen/02 §P08）
+    }
 )
 
 CORE_LINK_TYPES: dict[str, tuple[str, str]] = {
@@ -36,6 +40,8 @@ CORE_LINK_TYPES: dict[str, tuple[str, str]] = {
     "Product.inCategory": ("Product", "Category"),
     "Shop.sellsProduct": ("Shop", "Product"),
     "Order.fulfilledBy": ("Order", "Shipment"),
+    # D1.5: Order → CustomerLite 关联（隐私最小化，frozen/02 §P08）
+    "Order.placedByLite": ("Order", "CustomerLite"),
 }
 
 REQUIRED_PROPERTIES: dict[str, frozenset[str]] = {
@@ -57,6 +63,10 @@ REQUIRED_PROPERTIES: dict[str, frozenset[str]] = {
     ),
     "Shipment": frozenset(
         {"orderId", "status", "carrier", "trackingNo", "shippedAt", "updatedAt"}
+    ),
+    # D1.5: CustomerLite 必填字段（不含 PII；frozen/02 §P08 隐私最小化映射）
+    "CustomerLite": frozenset(
+        {"memberLevel", "status", "createdAt", "updatedAt"}
     ),
 }
 

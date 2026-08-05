@@ -119,9 +119,11 @@ def _build_object(row: dict[str, Any], sync_scope: SyncScope) -> CoreObjectRecor
     """从 row 构造 CoreObjectRecord，应用 ``niushop:1:{source_pk}`` 命名空间。
 
     自动补齐 必填的 *At 时间属性（按 OT schema REQUIRED_PROPERTIES 约定）：
-    - updatedAt: Product/ProductSku/Category/Order/OrderLine/Shipment（源缺省时用 source_updated_at）
-    - createdAt: Product/Order（源缺省时用 source_updated_at）
+    - updatedAt: Product/ProductSku/Category/Order/OrderLine/Shipment/CustomerLite（源缺省时用 source_updated_at）
+    - createdAt: Product/Order/CustomerLite（源缺省时用 source_updated_at）
     - shippedAt: Shipment（源缺省时先取 delivery_time，再回退 source_updated_at）
+
+    D1.5: CustomerLite 必填 createdAt/updatedAt（frozen/02 §P08），与 Product/Order 同口径补齐。
     """
     object_type = row.get("ot")
     if not object_type:
@@ -132,10 +134,10 @@ def _build_object(row: dict[str, Any], sync_scope: SyncScope) -> CoreObjectRecor
 
     properties = dict(row.get("properties", {}))
 
-    if object_type in ("Product", "ProductSku", "Category", "Order", "OrderLine", "Shipment"):
+    if object_type in ("Product", "ProductSku", "Category", "Order", "OrderLine", "Shipment", "CustomerLite"):
         properties.setdefault("updatedAt", source_utc_iso)
 
-    if object_type in ("Product", "Order"):
+    if object_type in ("Product", "Order", "CustomerLite"):
         properties.setdefault("createdAt", source_utc_iso)
 
     if object_type == "Shipment":

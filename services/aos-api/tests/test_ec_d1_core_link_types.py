@@ -73,10 +73,12 @@ def _make_link(
 
 
 class TestCoreLinkTypesCompleteness:
-    """CORE_LINK_TYPES 完整性：7 条 / 点号格式 / 二元组结构。"""
+    """CORE_LINK_TYPES 完整性：D1 基线 7 条（跨波累积扩展）/ 点号格式 / 二元组结构。"""
 
     def test_has_seven_link_types(self):
-        assert len(CORE_LINK_TYPES) == 7
+        # FR-D1.5-1：CORE_LINK_TYPES 为跨波累积契约（D1 基线 7 条，D1.5 起新增 placedByLite）。
+        # D1 不变量="7 条核心 Link 全部注册"，由 test_keys_match_expected_set 子集断言守护。
+        assert len(CORE_LINK_TYPES) >= 7
 
     def test_all_keys_are_dot_format(self):
         for key in CORE_LINK_TYPES:
@@ -91,7 +93,8 @@ class TestCoreLinkTypesCompleteness:
             assert isinstance(tgt, str) and tgt, f"{key} target_type must be non-empty str"
 
     def test_keys_match_expected_set(self):
-        assert set(CORE_LINK_TYPES.keys()) == {item[0] for item in EXPECTED_LINKS}
+        # FR-D1.5-1：D1 的 7 条核心 Link MUST 全部注册（子集语义，允许后续波次扩展）。
+        assert {item[0] for item in EXPECTED_LINKS}.issubset(CORE_LINK_TYPES.keys())
 
 
 # ---------- 2. OrderLine.ofProduct 专项 ----------
@@ -186,17 +189,20 @@ class TestAllLinksValidation:
 
 
 class TestCoreObjectTypes:
-    """CORE_OBJECT_TYPES 完整性：7 种 OT。"""
+    """CORE_OBJECT_TYPES 完整性：D1 基线 7 种 OT（跨波累积扩展）。"""
 
     EXPECTED_OTS = frozenset(
         {"Shop", "Product", "ProductSku", "Category", "Order", "OrderLine", "Shipment"}
     )
 
     def test_has_seven_object_types(self):
-        assert len(CORE_OBJECT_TYPES) == 7
+        # FR-D1.5-1：CORE_OBJECT_TYPES 为跨波累积契约（D1 基线 7 种，D1.5 起新增 CustomerLite）。
+        # D1 不变量="7 种核心 OT 全部注册"，由 test_contains_all_expected_types 子集断言守护。
+        assert len(CORE_OBJECT_TYPES) >= 7
 
     def test_contains_all_expected_types(self):
-        assert set(CORE_OBJECT_TYPES) == self.EXPECTED_OTS
+        # FR-D1.5-1：D1 的 7 种核心 OT MUST 全部注册（子集语义，允许后续波次扩展）。
+        assert self.EXPECTED_OTS.issubset(CORE_OBJECT_TYPES)
 
     def test_orderline_is_registered(self):
         """OrderLine 必须注册（ofProduct 的 source_type 依赖）。"""

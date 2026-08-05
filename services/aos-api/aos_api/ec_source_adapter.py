@@ -34,6 +34,16 @@ SAMPLE_LIMIT: int = 100
 # 单查询超时 30s
 QUERY_TIMEOUT_SECONDS: int = 30
 
+# D1.5 P08 CustomerLite PII 排除（frozen/02 §P08 隐私最小化）
+# ns_member 表的 8 个 PII 字段在 SourceAdapter 层显式 drop，不进入 row 流
+_PII_DROP_TABLE: str = "ns_member"
+_PII_DROP_FIELDS: frozenset[str] = frozenset(
+    {
+        "mobile", "wx_openid", "nickname", "avatar",
+        "reg_address", "last_login_ip", "password", "pay_password",
+    }
+)
+
 # 软删行计数（module-level dict，key=(pipeline_id, node_id)），供 G6 DLQ 取用
 _SOFT_DELETE_COUNTS: dict[tuple[str, str], int] = {}
 
@@ -151,9 +161,9 @@ def _fetch_from_niushop(
     finally:
         conn.close()
 
-    # 4. 数据清洗：软删行过滤 + 0 时间转 null
+    # 4. 数据清洗：软删行过滤 + PII 排除 + 0 时间转 null
     pipeline_id = getattr(pipeline, "id", "") or ""
-    cleaned_rows = _clean_rows(rows, pipeline_id=pipeline_id, node_id=node_id)
+    cleaned_rows = _clean_rows(rows, pipeline_id=pipeline_id, node_id=node_id, table=table)
 
     return cleaned_rows
 
@@ -232,14 +242,17 @@ def _clean_rows(
     *,
     pipeline_id: str,
     node_id: str,
+    table: str | None = None,
 ) -> list[dict[str, Any]]:
-    """数据清洗：软删行过滤 + 0 时间转 null。
+    """数据清洗：软删行过滤 + PII 排除 + 0 时间转 null。
 
     - 软删行（is_delete=1）不入 OT，进 DLQ 计数（记录到 module-level dict）
+    - PII 排除（frozen/02 §P08）：ns_member 表的 8 个 PII 字段显式 drop，不进入 row 流
     - 0 时间转 null（Unix 秒 → UTC）：*_time 字段值为 0 时变 None
     """
     cleaned: list[dict[str, Any]] = []
     soft_delete_count = 0
+    drop_pii = table == _PII_DROP_TABLE
 
     for row in rows:
         # 软删行过滤（is_delete=1 不入 OT，进 DLQ 计数）
@@ -247,8 +260,12 @@ def _clean_rows(
             soft_delete_count += 1
             continue
 
-        # 0 时间转 null（Unix 秒 → UTC）：*_time 字段值为 0 时变 None
         cleaned_row = dict(row)
+        # PII 排除（frozen/02 §P08）：ns_member 表显式 drop 8 个 PII 字段，不进入 row 流
+        if drop_pii:
+            for pii_field in _PII_DROP_FIELDS:
+                cleaned_row.pop(pii_field, None)
+        # 0 时间转 null（Unix 秒 → UTC）：*_time 字段值为 0 时变 None
         for key, value in cleaned_row.items():
             if key.endswith("_time") and value == 0:
                 cleaned_row[key] = None

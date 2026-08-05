@@ -340,18 +340,23 @@ def test_exit_gate_source_adapter_read_only_transaction() -> None:
 
 
 def test_exit_gate_p01_p07_pipeline_config_exists() -> None:
-    """退出门 #5: P01-P07 7 条 Pipeline 配置存在。
+    """退出门 #5: P01-P07 7 条 Pipeline 配置存在（D1 基线，跨波累积扩展）。
 
     通过 _PIPELINE_ID_TO_OT 映射表验证 7 条 Pipeline 的 target_ot 配置存在
     （derived_metrics 和 link_builder 都有此映射，代表运行时配置可解析）。
+
+    FR-D1.5-1 累积契约：_PIPELINE_ID_TO_OT 为跨波累积扩展（D1 基线 P01-P07，
+    D1.5 起新增 P08 CustomerLite）。D1 不变量="P01-P07 全部注册"，
+    由子集断言守护，允许后续波次扩展。满足 AC-D1.5-10 D1 零回归。
     """
     from aos_api.ec_derived_metrics import _PIPELINE_ID_TO_OT
     from aos_api.ec_link_builder import _PID_TO_OT
 
-    # derived_metrics 的 P01-P07 映射
-    assert len(_PIPELINE_ID_TO_OT) == 7
+    # derived_metrics 的 P01-P07 映射（D1 基线 7 条，跨波累积扩展）
+    assert len(_PIPELINE_ID_TO_OT) >= 7
     expected_ots = {"Shop", "Product", "ProductSku", "Category", "Order", "OrderLine", "Shipment"}
-    assert set(_PIPELINE_ID_TO_OT.values()) == expected_ots
+    # D1 的 7 种核心 OT MUST 全部注册（子集语义，允许后续波次扩展）
+    assert expected_ots.issubset(set(_PIPELINE_ID_TO_OT.values()))
 
     # link_builder 的 P02-P07 映射（P01 Shop 无 Link）
     assert len(_PID_TO_OT) == 6

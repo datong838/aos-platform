@@ -43,6 +43,8 @@ _FROZEN_TO_CORE: dict[str, str] = {
     "forProduct": "OrderLine.ofProduct",
     "forSku": "OrderLine.ofSku",
     "ships": "Order.fulfilledBy",
+    # D1.5: Order → CustomerLite（frozen/02 §P08，同向不反转）
+    "placedByLite": "Order.placedByLite",
 }
 
 # 需要反转 source/target 方向的简短名（frozen/02 方向与 CORE 方向相反）
@@ -65,6 +67,8 @@ def build_link_rows(
         "ProductSku": _build_has_sku_links,
         "OrderLine": _build_orderline_links,
         "Shipment": _build_ships_links,
+        # D1.5: P05 Order 读取时构造 placedByLite Link（Order → CustomerLite）
+        "Order": _build_placed_by_lite_links,
     }.get(target_ot) if target_ot else None
 
     if builder is None or not rows:
@@ -218,6 +222,36 @@ def _build_ships_links(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             source_pk=shipment_id,
             target_type="Order",
             target_source_pk=order_id,
+            row=row,
+        ))
+    return links
+
+
+def _build_placed_by_lite_links(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """placedByLite: Order → CustomerLite（P05 Order 读取时，每行一条）。
+
+    source_pk = row.source_pk（order_id，Order 的 PK）
+    target_source_pk = row.properties.memberId（member_id，CustomerLite 的 PK）
+
+    完整性门禁（frozen/02 §P08 + FR-D1.5-3）：
+    - memberId 缺失或为 0 时跳过 Link 构造（不进 DLQ，因 D1 P05 已声明保留关联键）
+    - P08 未落地前 CustomerLite 不存在时，Link 由 ec_ot_writer/consistency_store 拒绝（本模块只构造）
+    """
+    links: list[dict[str, Any]] = []
+    for row in rows:
+        order_id = row.get("source_pk")
+        if not _is_valid_pk(order_id):
+            continue
+        props = row.get("properties") or {}
+        member_id = props.get("memberId")
+        if not _is_valid_pk(member_id):
+            continue
+        links.append(_make_link(
+            link_type="placedByLite",
+            source_type="Order",
+            source_pk=order_id,
+            target_type="CustomerLite",
+            target_source_pk=member_id,
             row=row,
         ))
     return links
