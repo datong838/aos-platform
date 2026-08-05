@@ -18,11 +18,12 @@ log = logging.getLogger(__name__)
 # FR-D1-3: 可重试，DLQ 条目带 retry_count 与 max_retry=3
 MAX_RETRY = 3
 
-# PII 脱敏规则：手机号 / 身份证 / 银行卡 / 邮箱 → ***
+# PII 脱敏规则：身份证 / 银行卡 / 手机号 / 邮箱 → ***
+# 顺序：长 pattern 先匹配，避免短 pattern（手机号）部分匹配 18 位身份证中的 11 位子串
 _PII_PATTERNS: list[tuple[re.Pattern[str], str]] = [
-    (re.compile(r"1[3-9]\d{9}"), "***"),       # 手机号
-    (re.compile(r"\d{15,18}"), "***"),          # 身份证
+    (re.compile(r"\d{15,18}"), "***"),          # 身份证（先长 pattern）
     (re.compile(r"62\d{14,17}"), "***"),        # 银行卡号
+    (re.compile(r"1[3-9]\d{9}"), "***"),       # 手机号（后短 pattern）
     (re.compile(r"\S+@\S+\.\S+"), "***"),       # 邮箱
 ]
 
