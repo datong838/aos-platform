@@ -468,8 +468,17 @@ def _file_object_store_health(**_: Any) -> dict[str, Any]:
     }
 
 
-def _file_object_store_probe(*, limit: int = 5, **_: Any) -> dict[str, Any]:
+def _file_object_store_probe(
+    *,
+    limit: int = 5,
+    org_id: str | None = None,
+    project_id: str | None = None,
+    **_: Any,
+) -> dict[str, Any]:
     from aos_api import object_store as ostore
+    from aos_api.tenant_prefix import tenant_key_prefix
+
+    scope = _ingest_scope(org_id, project_id)
 
     cfg = ostore.get_config()
     if not cfg.enabled:
@@ -480,7 +489,10 @@ def _file_object_store_probe(*, limit: int = 5, **_: Any) -> dict[str, Any]:
             details={"pluginId": "file-object-store", "op": "probe"},
         )
     try:
-        keys = ostore.list_keys_with_prefix(prefix="", cfg=cfg)[: max(1, int(limit or 5))]
+        prefix = tenant_key_prefix(*scope.key)
+        keys = ostore.list_keys_with_prefix(prefix=prefix, cfg=cfg)[
+            : max(1, int(limit or 5))
+        ]
     except Exception as exc:  # noqa: BLE001
         raise ApiError(
             code="CONNECTOR_UPSTREAM",
@@ -491,8 +503,11 @@ def _file_object_store_probe(*, limit: int = 5, **_: Any) -> dict[str, Any]:
         "ok": True,
         "mode": "s3",
         "sample": keys,
+        "prefix": prefix,
         "bucket": cfg.bucket,
         "pluginId": "file-object-store",
+        "orgId": scope.org_id,
+        "projectId": scope.project_id,
     }
 
 

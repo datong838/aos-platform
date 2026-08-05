@@ -2185,6 +2185,8 @@ def connector_probe(
     return dispatch(
         plugin_id,
         "probe",
+        org_id=principal.org_id,
+        project_id=principal.project_id,
         limit=_connector_limit(body, default=5),
         object_type=str(body.get("objectType") or "WorkOrder"),
         table=body.get("table"),
