@@ -49,8 +49,10 @@ _tools: list[dict[str, Any]] = [
     {"id": "wiki.read", "kind": "Wiki"},
 ]
 _capabilities: dict[str, dict[str, Any]] = {}
-_jobs: dict[str, dict[str, Any]] = {}
 ScopedResourceKey = tuple[str, str, str]
+
+
+_jobs: dict[ScopedResourceKey, dict[str, Any]] = {}
 
 
 _media: dict[ScopedResourceKey, dict[str, Any]] = {}
@@ -58,7 +60,7 @@ _media_bytes: dict[ScopedResourceKey, bytes] = {}
 _connectors: dict[str, dict[str, Any]] = {}
 _pipelines: dict[str, dict[str, Any]] = {}
 _schedules: dict[str, dict[str, Any]] = {}
-_dlq: list[dict[str, Any]] = []
+_dlq: dict[ScopedResourceKey, dict[str, Any]] = {}
 _syncs: dict[str, dict[str, Any]] = {}
 _datasets: dict[ScopedResourceKey, dict[str, Any]] = {}
 _dataset_history: dict[ScopedResourceKey, list[dict[str, Any]]] = {}
@@ -162,19 +164,20 @@ def ensure_demo_data_seed(
             "orgId": scope.org_id,
             "projectId": scope.project_id,
         }
-    if not any(isinstance(d, dict) and d.get("id") == dlq_id for d in _dlq):
-        _dlq.append(
-            {
-                "id": dlq_id,
-                "pipelineId": pipe_id,
-                "reason": "demo sample row rejected (bad status enum)",
-                "status": "open",
-                "payload": {
-                    "objectType": "WorkOrder",
-                    "row": {"title": "坏样例", "status": "???"},
-                },
-            }
-        )
+    dlq_key = _resource_key(scope, dlq_id)
+    if dlq_key not in _dlq:
+        _dlq[dlq_key] = {
+            "id": dlq_id,
+            "pipelineId": pipe_id,
+            "reason": "demo sample row rejected (bad status enum)",
+            "status": "open",
+            "payload": {
+                "objectType": "WorkOrder",
+                "row": {"title": "坏样例", "status": "???"},
+            },
+            "orgId": scope.org_id,
+            "projectId": scope.project_id,
+        }
     _data_os_loaded_scopes.add(scope.key)
     return {
         "sources": len(_connectors),
@@ -182,7 +185,7 @@ def ensure_demo_data_seed(
         "pipelines": len(_pipelines),
         "datasets": len(_scoped_values(_datasets, scope)),
         "builds": len(_pipelines),
-        "dlq": len(_dlq),
+        "dlq": len(_scoped_values(_dlq, scope)),
     }
 
 
@@ -824,7 +827,8 @@ def submit_job(
         "projectId": principal.project_id,
     }
     _media[_resource_key(scope, media_rid)] = meta
-    _jobs[job_id] = {
+    job_key = _resource_key(scope, job_id)
+    _jobs[job_key] = {
         "jobId": job_id,
         "capabilityId": cap_id,
         "status": "succeeded",
@@ -835,9 +839,11 @@ def submit_job(
             "name": artifact_name,
         },
         "input": body.input,
+        "orgId": scope.org_id,
+        "projectId": scope.project_id,
     }
     log.info("capability_job_ok job=%s media=%s", job_id, media_rid)
-    return _jobs[job_id]
+    return _jobs[job_key]
 
 
 @router.post("/v1/aip/capabilities/{cap_id}/invoke")
@@ -870,10 +876,10 @@ def invoke_capability(
 
 @router.get("/v1/aip/capabilities/jobs/{job_id}")
 def job_status(job_id: str, principal: Principal = Depends(require_principal)):
-    _ = principal
-    if job_id not in _jobs:
+    job = _jobs.get(_resource_key(_mutation_scope(principal), job_id))
+    if job is None:
         raise ApiError(code="NOT_FOUND", message="job missing", status_code=404)
-    return _jobs[job_id]
+    return job
 
 
 @router.get("/v1/aip/capabilities/{cap_id}/jobs/{job_id}")
@@ -1790,26 +1796,30 @@ def run_schedule(schedule_id: str, principal: Principal = Depends(require_princi
 
 @router.get("/v1/dlq")
 def list_dlq(principal: Principal = Depends(require_principal)):
-    _ = principal
-    return {"items": _dlq}
+    return {"items": _scoped_values(_dlq, _mutation_scope(principal))}
 
 
 @router.post("/v1/dlq")
 def push_dlq(body: dict[str, Any], principal: Principal = Depends(require_principal)):
-    _ = principal
-    item = {"id": f"dlq-{uuid.uuid4().hex[:6]}", **body, "status": "open"}
-    _dlq.append(item)
+    scope = _mutation_scope(principal)
+    item = {
+        "id": f"dlq-{uuid.uuid4().hex[:6]}",
+        **body,
+        "status": "open",
+        "orgId": scope.org_id,
+        "projectId": scope.project_id,
+    }
+    _dlq[_resource_key(scope, item["id"])] = item
     return item
 
 
 @router.post("/v1/dlq/{dlq_id}/retry")
 def retry_dlq(dlq_id: str, principal: Principal = Depends(require_principal)):
-    _ = principal
-    for i in _dlq:
-        if i["id"] == dlq_id:
-            i["status"] = "retried"
-            return i
-    raise ApiError(code="NOT_FOUND", message="dlq missing", status_code=404)
+    item = _dlq.get(_resource_key(_mutation_scope(principal), dlq_id))
+    if item is None:
+        raise ApiError(code="NOT_FOUND", message="dlq missing", status_code=404)
+    item["status"] = "retried"
+    return item
 
 
 @router.get("/v1/funnel/{object_type}/worker")
@@ -2318,13 +2328,16 @@ def docintel_pipeline(body: dict[str, Any], principal: Principal = Depends(requi
 
     fail = bool(body.get("fail", False))
     if fail:
+        scope = _mutation_scope(principal)
         item = {
             "id": f"dlq-{uuid.uuid4().hex[:6]}",
             "source": "docintel",
             "reason": body.get("reason", "parse-fail"),
             "status": "open",
+            "orgId": scope.org_id,
+            "projectId": scope.project_id,
         }
-        _dlq.append(item)
+        _dlq[_resource_key(scope, item["id"])] = item
         return {"batchOk": True, "failedIsolated": True, "dlqId": item["id"]}
 
     from aos_api.file_parsers import extract

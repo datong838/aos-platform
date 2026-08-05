@@ -45,7 +45,7 @@ def _restore_wave_ext_state() -> None:
         mapping.update(snapshots[name])
     wave_ext._data_os_loaded_scopes.clear()
     wave_ext._data_os_loaded_scopes.update(loaded)
-    wave_ext._dlq[:] = dlq
+    wave_ext._dlq.update(dlq)
 
 
 def test_hydrate_keeps_same_dataset_rid_in_two_scopes() -> None:

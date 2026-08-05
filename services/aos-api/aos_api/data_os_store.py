@@ -67,11 +67,13 @@ def purge_demo_surface(wave_ext_module: Any) -> dict[str, Any]:
             del wave_ext_module._schedules[sch]
             removed["schedules"].append(sch)
     before = len(wave_ext_module._dlq)
-    wave_ext_module._dlq[:] = [
-        d
-        for d in wave_ext_module._dlq
-        if not (isinstance(d, dict) and str(d.get("id", "")).startswith(_DEMO_DLQ_PREFIX))
-    ]
+    kept_dlq = {
+        key: item
+        for key, item in wave_ext_module._dlq.items()
+        if not str(item.get("id", "")).startswith(_DEMO_DLQ_PREFIX)
+    }
+    wave_ext_module._dlq.clear()
+    wave_ext_module._dlq.update(kept_dlq)
     removed["dlq"] = before - len(wave_ext_module._dlq)
     log.info("data_os_demo_purged %s", removed)
     return {"ok": True, "removed": removed}

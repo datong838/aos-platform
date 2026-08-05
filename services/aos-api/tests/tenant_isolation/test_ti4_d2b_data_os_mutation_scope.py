@@ -171,7 +171,7 @@ def test_d2b_boot_never_physically_deletes_demo_rows_without_scope() -> None:
         _syncs={},
         _schedules={},
         _dataset_history={},
-        _dlq=[],
+        _dlq={},
     )
     dos.boot_data_os(surface)
     assert demo_id not in surface._connectors
