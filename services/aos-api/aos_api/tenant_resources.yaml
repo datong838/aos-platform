@@ -44,7 +44,7 @@ executionPlan:
       wave: TI-2
       worker: W2
       dependsOn: [ti1-authorization, ti2-asset-templates]
-      resources: [meta_module, module_canvas_config, module_deployment, module_events, module_interface, module_query, module_variable, module_widget_instance, module_organization_profile, module_instance_overlay, module_user_view_preference, theme, widget_catalog]
+      resources: [meta_module, module_canvas_config, module_deployment, module_events, module_interface, module_query, module_variable, module_widget_instance, module_organization_profile, module_instance_overlay, module_user_view_preference, theme, widget_catalog, module_event_orphan_quarantine]
 
     - id: ti3-ontology-templates
       wave: TI-3
@@ -55,7 +55,7 @@ executionPlan:
       wave: TI-3
       worker: W3
       dependsOn: [ti3-ontology-templates]
-      resources: [funnel_status, graph_edge, meta_branch, obj_branch_overlay, obj_instance, object_lifecycle]
+      resources: [funnel_status, graph_edge, meta_branch, obj_branch_overlay, obj_instance, object_lifecycle, object_runtime_orphan_quarantine]
     - id: ti3-draft-wiki
       wave: TI-3
       worker: W3
@@ -71,7 +71,7 @@ executionPlan:
       wave: TI-4
       worker: W4
       dependsOn: [ti4-connectors]
-      resources: [meta_source, meta_pipeline, meta_dataset, meta_dataset_history, meta_sync, meta_schedule, phase5_pipeline_graph]
+      resources: [meta_source, meta_pipeline, meta_dataset, meta_dataset_history, meta_sync, meta_schedule, phase5_pipeline_graph, data_os_orphan_quarantine]
     - id: ti4-async-runtime
       wave: TI-4
       worker: W4
@@ -82,7 +82,7 @@ executionPlan:
       wave: TI-5
       worker: W4
       dependsOn: [ti3-object-graph, ti4-data-os]
-      resources: [aip_eval_report, aip_eval_suite, aip_logic_graph, aip_logic_graph_revision, aip_logic_graph_run_nodes, aip_logic_graph_runs, aip_logic_publication, meta_aip_kv]
+      resources: [aip_eval_report, aip_eval_suite, aip_logic_graph, aip_logic_graph_revision, aip_logic_graph_run_nodes, aip_logic_graph_runs, aip_logic_publication, meta_aip_kv, aip_kv_ownership_ledger, decision_lineage_ownership_ledger, decision_lineage_orphan_quarantine]
     - id: ti5-analytics-models
       wave: TI-5
       worker: W4
@@ -127,7 +127,7 @@ resources:
   # Platform control, asset templates and installation instances
   - {<<: *global, name: alembic_version, tenantColumns: [], primaryKey: [version_num], currentState: NO_TENANT}
   - {<<: *global, name: apollo_channel, tenantColumns: [], primaryKey: [id], currentState: NO_TENANT}
-  - {<<: *owned, name: apollo_spoke, tenantColumns: [org_id], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
+  - {<<: *owned, name: apollo_spoke, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
   - {<<: *template, name: asset_bundle, tenantColumns: [], primaryKey: [bundle_pk], currentState: NO_TENANT}
   - {<<: *template, name: asset_bundle_artifact, tenantColumns: [], primaryKey: [version_pk, relative_path], currentState: NO_TENANT}
   - {<<: *template, name: asset_bundle_dependency, tenantColumns: [], primaryKey: [version_pk, optional, ordinal], currentState: NO_TENANT}
@@ -152,8 +152,8 @@ resources:
   # Capacity, drafts and cross-object lineage
   - {<<: *owned, name: capacity_limits, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-5-B1}
   - {<<: *owned, name: capacity_usage, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-5-B1}
-  - {<<: *owned, name: decision_lineage, tenantColumns: [], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: NO_TENANT, migrationWave: TI-3}
-  - {<<: *owned, name: draft_dataset, tenantColumns: [org_id, project_id], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
+  - {<<: *owned, name: decision_lineage, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: draft_dataset, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
 
   # E-commerce connector data; workspace_id is the e-commerce project alias.
   - {<<: *owned, name: ecom_ingest_receipt, owner: ecom-connector, tenantColumns: [org_id, workspace_id], primaryKey: [org_id, workspace_id, platform, shop_or_marketplace_id, stream, idempotency_key], targetTenantColumns: [org_id, workspace_id], canonicalProjectAlias: workspace_id, currentState: STRONG_PK, migrationWave: TI-2}
@@ -162,8 +162,8 @@ resources:
   - {<<: *owned, name: ecom_sync_checkpoint, owner: ecom-connector, tenantColumns: [org_id, workspace_id], primaryKey: [org_id, workspace_id, platform, shop_or_marketplace_id, stream], targetTenantColumns: [org_id, workspace_id], canonicalProjectAlias: workspace_id, currentState: STRONG_PK, migrationWave: TI-2}
 
   # Object model and integration evidence
-  - {<<: *owned, name: funnel_status, tenantColumns: [org_id, project_id], primaryKey: [object_type], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
-  - {<<: *owned, name: graph_edge, tenantColumns: [org_id, project_id], primaryKey: [src_type, src_id, rel, dst_type, dst_id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
+  - {<<: *owned, name: funnel_status, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, object_type], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: graph_edge, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, src_type, src_id, rel, dst_type, dst_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
   - {<<: *owned, name: integration_case, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, case_pk], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-2}
   - {<<: *owned, name: integration_case_command, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, operation, idempotency_key], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-2}
   - {<<: *owned, name: integration_case_projection, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, case_pk], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-2}
@@ -175,42 +175,42 @@ resources:
 
   # Metadata: catalog definitions remain templates; instances and overlays are tenant-owned.
   - {<<: *template, name: meta_action_type, tenantColumns: [], primaryKey: [id], currentState: NO_TENANT}
-  - {<<: *owned, name: meta_aip_kv, tenantColumns: [], primaryKey: [key], targetTenantColumns: [org_id, project_id], currentState: NO_TENANT, migrationWave: TI-3}
-  - {<<: *owned, name: meta_branch, tenantColumns: [org_id, project_id], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
-  - {<<: *owned, name: meta_dataset, tenantColumns: [], primaryKey: [rid], targetTenantColumns: [org_id, project_id], currentState: NO_TENANT, migrationWave: TI-3}
-  - {<<: *owned, name: meta_dataset_history, tenantColumns: [], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: NO_TENANT, migrationWave: TI-3}
+  - {<<: *owned, name: meta_aip_kv, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, key], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: meta_branch, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: meta_dataset, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, rid], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: meta_dataset_history, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
   - {<<: *template, name: meta_link_type, tenantColumns: [], primaryKey: [id], currentState: NO_TENANT}
   - {<<: *owned, name: meta_membership, baselineScope: CONTROL_PLANE, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, subject], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-1}
-  - {<<: *owned, name: meta_module, tenantColumns: [org_id, project_id], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
+  - {<<: *owned, name: meta_module, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, module_pk], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
   - {<<: *template, name: meta_object_type, tenantColumns: [], primaryKey: [id], currentState: NO_TENANT}
   - {<<: *global, name: meta_org, tenantColumns: [], primaryKey: [id], currentState: NO_TENANT}
-  - {<<: *owned, name: meta_pipeline, tenantColumns: [], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: NO_TENANT, migrationWave: TI-3}
-  - {<<: *owned, name: meta_schedule, tenantColumns: [org_id, project_id], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
-  - {<<: *owned, name: meta_source, tenantColumns: [org_id, project_id], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
-  - {<<: *owned, name: meta_sync, tenantColumns: [], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: NO_TENANT, migrationWave: TI-3}
+  - {<<: *owned, name: meta_pipeline, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: meta_schedule, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: meta_source, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: meta_sync, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
   - {<<: *owned, name: meta_workspace, baselineScope: CONTROL_PLANE, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-1}
 
   # Models and organization-specific application/module instances
   - {<<: *owned, name: model_catalog, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-5-B1}
   - {<<: *owned, name: model_provider, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-5-B1}
   - {<<: *owned, name: model_route, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-5-B1}
-  - {<<: *owned, name: module_canvas_config, tenantColumns: [org_id, project_id], primaryKey: [module_id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
-  - {<<: *owned, name: module_deployment, tenantColumns: [org_id, project_id], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
-  - {<<: *owned, name: module_events, tenantColumns: [org_id, project_id], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
-  - {<<: *owned, name: module_interface, tenantColumns: [org_id, project_id], primaryKey: [module_id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
-  - {<<: *owned, name: module_query, tenantColumns: [org_id, project_id], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
-  - {<<: *owned, name: module_variable, tenantColumns: [org_id, project_id], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
-  - {<<: *owned, name: module_widget_instance, tenantColumns: [org_id, project_id], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
+  - {<<: *owned, name: module_canvas_config, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, module_pk], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: module_deployment, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: module_events, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: module_interface, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, module_pk], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: module_query, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: module_variable, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: module_widget_instance, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
   - {<<: *owned, name: module_organization_profile, tenantColumns: [org_id], primaryKey: [org_id, profile_revision], targetTenantColumns: [org_id], currentState: STRONG_PK, migrationWave: TI-2}
   - {<<: *owned, name: module_instance_overlay, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, module_pk, overlay_revision], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-2}
   - {<<: *owned, name: module_user_view_preference, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, module_pk, subject, preference_key, revision], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-2}
 
   # OAuth, branches, objects and pipeline runtime
   - {<<: *owned, name: oauth_token_store, owner: ecom-connector, tenantColumns: [org_id, workspace_id], primaryKey: [org_id, workspace_id, platform, external_account_id], targetTenantColumns: [org_id, workspace_id], canonicalProjectAlias: workspace_id, currentState: STRONG_PK, migrationWave: TI-1}
-  - {<<: *owned, name: obj_branch_overlay, tenantColumns: [org_id, project_id], primaryKey: [branch_id, object_type, object_id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
-  - {<<: *owned, name: obj_instance, tenantColumns: [org_id, project_id], primaryKey: [object_type, object_id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
-  - {<<: *owned, name: object_lifecycle, tenantColumns: [org_id, project_id], primaryKey: [object_type, object_id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
-  - {<<: *owned, name: phase5_pipeline_graph, tenantColumns: [], primaryKey: [pipeline_id], targetTenantColumns: [org_id, project_id], currentState: NO_TENANT, migrationWave: TI-3}
+  - {<<: *owned, name: obj_branch_overlay, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, branch_id, object_type, object_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: obj_instance, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, object_type, object_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: object_lifecycle, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, object_type, object_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: phase5_pipeline_graph, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, pipeline_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
   - {<<: *owned, name: provider_health, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-5-B1}
   - {<<: *owned, name: registered_models, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-5-B1}
 
@@ -225,8 +225,16 @@ resources:
   - {<<: *owned, name: twa_workspace, baselineScope: CONTROL_PLANE, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-1}
   - {<<: *owned, name: twa_ws_member, baselineScope: CONTROL_PLANE, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, subject], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-1}
   - {<<: *owned, name: widget_catalog, tenantColumns: [org_id, project_id], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
-  - {<<: *owned, name: wiki_page, tenantColumns: [org_id, project_id], primaryKey: [object_type, object_id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
-  - {<<: *owned, name: wiki_page_version, tenantColumns: [org_id, project_id], primaryKey: [id], targetTenantColumns: [org_id, project_id], currentState: WEAK_PK, migrationWave: TI-3}
+  - {<<: *owned, name: wiki_page, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, object_type, object_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+  - {<<: *owned, name: wiki_page_version, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
+
+  # Maintenance ledgers and immutable quarantine stores are system control-plane data.
+  - {<<: *global, name: aip_kv_ownership_ledger, tenantColumns: [org_id, project_id], primaryKey: [ledger_id], currentState: WEAK_PK, migrationWave: TI-5}
+  - {<<: *global, name: decision_lineage_ownership_ledger, tenantColumns: [org_id, project_id], primaryKey: [ledger_id], currentState: WEAK_PK, migrationWave: TI-5}
+  - {<<: *global, name: decision_lineage_orphan_quarantine, tenantColumns: [], primaryKey: [id], currentState: NO_TENANT, migrationWave: TI-5}
+  - {<<: *global, name: data_os_orphan_quarantine, tenantColumns: [], primaryKey: [quarantine_id], currentState: NO_TENANT, migrationWave: TI-4}
+  - {<<: *global, name: module_event_orphan_quarantine, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], currentState: STRONG_PK, migrationWave: TI-2}
+  - {<<: *global, name: object_runtime_orphan_quarantine, tenantColumns: [], primaryKey: [quarantine_id], currentState: NO_TENANT, migrationWave: TI-3}
 
   # Non-table resources must follow the same tenant boundary and clear lifecycle.
   - {name: tenant-object-prefixes, kind: object_store_prefix, classification: TENANT_OWNED, owner: platform-storage, targetTenantColumns: [org_id, project_id], currentState: N/A, migrationWave: TI-4}

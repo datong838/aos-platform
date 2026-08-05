@@ -51,19 +51,23 @@ def read_postgres_precheck(
 
     for name, entry in sorted(entries.items()):
         try:
-            table_reports.append(
-                _read_table_precheck(
-                    conn,
-                    name=name,
-                    entry=entry,
-                    json_columns=json_columns.get(name, ()),
-                    foreign_keys=foreign_keys.get(name, ()),
-                    test_org_id=test_org_id,
-                    test_project_id=test_project_id,
-                    target_org_id=target_org_id,
-                    target_project_id=target_project_id,
+            # A bad/stale registry entry must fail only its own probe.  psycopg
+            # leaves the transaction aborted after a SQL error, so isolate each
+            # resource behind a savepoint and preserve the remaining evidence.
+            with conn.transaction():
+                table_reports.append(
+                    _read_table_precheck(
+                        conn,
+                        name=name,
+                        entry=entry,
+                        json_columns=json_columns.get(name, ()),
+                        foreign_keys=foreign_keys.get(name, ()),
+                        test_org_id=test_org_id,
+                        test_project_id=test_project_id,
+                        target_org_id=target_org_id,
+                        target_project_id=target_project_id,
+                    )
                 )
-            )
         except Exception as exc:  # noqa: BLE001
             scan_errors.append(
                 {"resource": name, "errorClass": type(exc).__name__}

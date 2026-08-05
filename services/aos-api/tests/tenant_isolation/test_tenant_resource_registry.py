@@ -29,11 +29,11 @@ def test_registry_is_valid_and_covers_current_postgres_inventory() -> None:
     entries = postgres_registry_entries(registry)
 
     assert validate_registry(registry) == []
-    assert len(entries) == 95
+    assert len(entries) == 101
     assert Counter(entry["currentState"] for entry in entries.values()) == {
-        "STRONG_PK": 47,
-        "WEAK_PK": 26,
-        "NO_TENANT": 22,
+        "STRONG_PK": 75,
+        "WEAK_PK": 8,
+        "NO_TENANT": 18,
     }
 
 
@@ -45,7 +45,7 @@ def test_registry_separates_templates_globals_and_tenant_instances() -> None:
     assert entries["bundle_installation"]["classification"] == "TENANT_OWNED"
     assert entries["meta_org"]["classification"] == "SYSTEM_GLOBAL"
     assert entries["meta_module"]["classification"] == "TENANT_OWNED"
-    assert entries["meta_module"]["currentState"] == "WEAK_PK"
+    assert entries["meta_module"]["currentState"] == "STRONG_PK"
     assert entries["ecom_object"]["canonicalProjectAlias"] == "workspace_id"
 
     non_table_kinds = {
@@ -68,7 +68,7 @@ def test_registry_separates_templates_globals_and_tenant_instances() -> None:
         name for group in execution_groups for name in group["resources"]
     ]
     assert registry["executionPlan"]["authorization"] == "PLAN_ONLY"
-    assert len(planned_resources) == len(set(planned_resources)) == 102
+    assert len(planned_resources) == len(set(planned_resources)) == 108
 
 
 def test_coverage_report_accepts_exact_inventory_without_claiming_rls_green() -> None:
@@ -77,7 +77,7 @@ def test_coverage_report_accepts_exact_inventory_without_claiming_rls_green() ->
     )
 
     assert report["ok"] is True
-    assert report["database"]["tableCount"] == 95
+    assert report["database"]["tableCount"] == 101
     assert report["database"]["coveragePercent"] == 100.0
     assert report["database"]["rls"]["enabledTableCount"] == 0
     assert report["database"]["rls"]["policyCount"] == 0
