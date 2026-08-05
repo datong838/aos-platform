@@ -72,6 +72,7 @@ def test_a3_schema_report_is_green() -> None:
         "228ti5b1models",
         "228ti6bcontract",
         "228ti6cassets",
+        "228ti6drelations",
     }
     assert report["ti5DecisionLineageScopeValid"] is True
     assert report["ti5DecisionLineagePrimaryKeyValid"] is True

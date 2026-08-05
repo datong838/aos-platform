@@ -23,6 +23,7 @@ def _table(
     target_count: int = 0,
     test_count: int = 0,
     unattributed: int = 0,
+    workspace_root: bool = False,
 ) -> dict:
     return {
         "name": name,
@@ -38,6 +39,7 @@ def _table(
         "blankTenantRowCount": 0,
         "orphanRowCount": 0,
         "tenantForeignKeyPresent": False,
+        "workspaceRoot": workspace_root,
     }
 
 
@@ -117,6 +119,19 @@ def test_migration_ledger_fails_closed_for_weak_and_unattributed_tables() -> Non
     assert ledger["blockerCounts"]["TENANT_COLUMNS_MISSING"] == 1
     assert ledger["blockerCounts"]["UNATTRIBUTED_ROWS"] == 1
     assert all(item["precheckStatus"] == "REQUIRES_REMEDIATION" for item in ledger["resources"])
+
+
+def test_migration_ledger_accepts_declared_workspace_root_without_self_fk() -> None:
+    workspace = _table(
+        "meta_workspace", state="STRONG_PK", row_count=2, workspace_root=True
+    )
+    workspace["baselineScope"] = "CONTROL_PLANE"
+
+    ledger = build_migration_ledger({"tables": [workspace]})
+
+    assert ledger["blockerCounts"] == {}
+    assert ledger["resources"][0]["workspaceRoot"] is True
+    assert ledger["resources"][0]["precheckStatus"] == "READY"
 
 
 def test_qiyue_baseline_is_not_empty_when_any_resource_is_unprobed() -> None:

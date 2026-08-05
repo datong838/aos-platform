@@ -124,7 +124,9 @@ def build_migration_ledger(postgres_precheck: Mapping[str, Any]) -> dict[str, An
                 blockers.append("QIYUE_ALREADY_HAS_ROWS")
             if int(table.get("orphanRowCount") or 0):
                 blockers.append("EXISTING_FOREIGN_KEY_ORPHANS")
-            if not table.get("tenantForeignKeyPresent"):
+            if not table.get("tenantForeignKeyPresent") and not table.get(
+                "workspaceRoot"
+            ):
                 blockers.append("TENANT_COMPOSITE_FOREIGN_KEY_MISSING")
 
         resources.append(
@@ -135,6 +137,7 @@ def build_migration_ledger(postgres_precheck: Mapping[str, Any]) -> dict[str, An
                 "currentState": state,
                 "migrationWave": table["migrationWave"],
                 "targetTenantColumns": table["targetTenantColumns"],
+                "workspaceRoot": bool(table.get("workspaceRoot")),
                 "rowCount": table["rowCount"],
                 "action": action,
                 "blockers": sorted(set(blockers)),
@@ -508,6 +511,7 @@ def _read_table_precheck(
         "baselineScope": baseline_scope,
         "currentState": entry["currentState"],
         "migrationWave": entry["migrationWave"],
+        "workspaceRoot": bool(entry.get("workspaceRoot")),
         "tenantColumns": list(tenant_columns),
         "targetTenantColumns": list(target_columns),
         "primaryKey": list(entry.get("primaryKey") or []),

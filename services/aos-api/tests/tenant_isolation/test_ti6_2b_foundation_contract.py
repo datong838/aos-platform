@@ -68,7 +68,9 @@ def test_ti6_2b_live_schema_has_scoped_keys_valid_fks_and_workshop_rls() -> None
         ).fetchall()
         fks = conn.execute(
             "SELECT conrelid::regclass::text AS table_name, convalidated "
-            "FROM pg_constraint WHERE conname LIKE 'fk_%_workspace_ti6'"
+            "FROM pg_constraint WHERE conname LIKE 'fk_%%_workspace_ti6' "
+            "AND conrelid::regclass::text=ANY(%s)",
+            (list(TABLES),),
         ).fetchall()
 
     by_name = {str(row["relname"]): row for row in rows}

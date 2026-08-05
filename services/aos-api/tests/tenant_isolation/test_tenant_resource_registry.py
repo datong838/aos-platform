@@ -46,6 +46,8 @@ def test_registry_separates_templates_globals_and_tenant_instances() -> None:
     assert entries["meta_org"]["classification"] == "SYSTEM_GLOBAL"
     assert entries["meta_module"]["classification"] == "TENANT_OWNED"
     assert entries["meta_module"]["currentState"] == "STRONG_PK"
+    assert entries["meta_workspace"]["workspaceRoot"] is True
+    assert entries["twa_workspace"]["workspaceRoot"] is True
     assert entries["ecom_object"]["canonicalProjectAlias"] == "workspace_id"
 
     non_table_kinds = {

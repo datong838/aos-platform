@@ -82,6 +82,7 @@ def validate_registry(registry: dict[str, Any] | None = None) -> list[str]:
         baseline_scope = _text(entry.get("baselineScope")) or (
             "BUSINESS_DATA" if classification == "TENANT_OWNED" else "GLOBAL"
         )
+        workspace_root = entry.get("workspaceRoot", False)
         if not name:
             issues.append(f"{label}.name is required")
         if kind not in RESOURCE_KINDS:
@@ -92,6 +93,8 @@ def validate_registry(registry: dict[str, Any] | None = None) -> list[str]:
             issues.append(f"{label}.currentState is invalid: {current_state!r}")
         if baseline_scope not in BASELINE_SCOPES:
             issues.append(f"{label}.baselineScope is invalid: {baseline_scope!r}")
+        if not isinstance(workspace_root, bool):
+            issues.append(f"{label}.workspaceRoot must be a boolean")
         if not _text(entry.get("owner")):
             issues.append(f"{label}.owner is required")
         if not _text(entry.get("migrationWave")):
@@ -122,6 +125,17 @@ def validate_registry(registry: dict[str, Any] | None = None) -> list[str]:
                     f"{label}.currentState={current_state} does not match "
                     f"tenantColumns/primaryKey ({expected_state})"
                 )
+        if workspace_root and not (
+            kind == POSTGRES_KIND
+            and classification == "TENANT_OWNED"
+            and current_state == "STRONG_PK"
+            and baseline_scope == "CONTROL_PLANE"
+            and set(target_columns).issubset(set(primary_key))
+        ):
+            issues.append(
+                f"{label}.workspaceRoot requires a strong tenant-owned "
+                "control-plane PostgreSQL root"
+            )
 
     for key, count in sorted(names.items()):
         if count > 1:

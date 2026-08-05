@@ -188,7 +188,7 @@ resources:
   - {<<: *owned, name: meta_schedule, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
   - {<<: *owned, name: meta_source, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
   - {<<: *owned, name: meta_sync, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
-  - {<<: *owned, name: meta_workspace, baselineScope: CONTROL_PLANE, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-1}
+  - {<<: *owned, name: meta_workspace, baselineScope: CONTROL_PLANE, workspaceRoot: true, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-1}
 
   # Models and organization-specific application/module instances
   - {<<: *owned, name: model_catalog, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-5-B1}
@@ -222,7 +222,7 @@ resources:
   - {<<: *global, name: twa_org, tenantColumns: [], primaryKey: [id], currentState: NO_TENANT, migrationWave: TI-1}
   - {<<: *global, name: twa_otp, tenantColumns: [], primaryKey: [id], currentState: NO_TENANT, migrationWave: TI-1}
   - {<<: *global, name: twa_person_profile, tenantColumns: [], primaryKey: [subject], currentState: NO_TENANT, migrationWave: TI-1}
-  - {<<: *owned, name: twa_workspace, baselineScope: CONTROL_PLANE, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-1}
+  - {<<: *owned, name: twa_workspace, baselineScope: CONTROL_PLANE, workspaceRoot: true, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-1}
   - {<<: *owned, name: twa_ws_member, baselineScope: CONTROL_PLANE, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, subject], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-1}
   - {<<: *owned, name: widget_catalog, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}
   - {<<: *owned, name: wiki_page, tenantColumns: [org_id, project_id], primaryKey: [org_id, project_id, object_type, object_id], targetTenantColumns: [org_id, project_id], currentState: STRONG_PK, migrationWave: TI-3}

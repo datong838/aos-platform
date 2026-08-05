@@ -82,6 +82,7 @@ def test_d1_schema_report_is_green_and_preserves_frozen_counts() -> None:
             "228ti5b1models",
             "228ti6bcontract",
             "228ti6cassets",
+            "228ti6drelations",
     }
     assert report["ti4DataOsMissingScopeColumns"] == []
     assert report["ti4DataOsNonNullableExpandColumns"] == []
