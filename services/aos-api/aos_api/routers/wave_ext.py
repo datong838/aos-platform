@@ -236,6 +236,9 @@ class PipelineIn(BaseModel):
     objectTypeHint: str | None = None
     name: str | None = None
     displayName: str | None = None
+    nodes: list[dict[str, Any]] = Field(default_factory=list)
+    edges: list[dict[str, Any]] = Field(default_factory=list)
+    config: dict[str, Any] = Field(default_factory=dict)
 
 
 class SyncIn(BaseModel):
