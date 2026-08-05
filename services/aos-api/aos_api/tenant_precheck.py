@@ -245,12 +245,19 @@ def summarize_object_keys(
     target_count = sum(key.startswith(target_prefix) for key in key_list)
     known = set(known_tenant_scopes)
     canonical_count = sum(_looks_like_tenant_key(key, known) for key in key_list)
+    maintenance_count = sum(
+        key.lstrip("/").startswith("_maintenance/quarantine/unowned/")
+        for key in key_list
+    )
     return {
         "itemCount": len(key_list),
         "testTenantItemCount": test_count,
         "targetTenantItemCount": target_count,
         "canonicalPrefixItemCount": canonical_count,
-        "unknownPrefixItemCount": len(key_list) - canonical_count,
+        "maintenanceQuarantineItemCount": maintenance_count,
+        "unknownPrefixItemCount": len(key_list)
+        - canonical_count
+        - maintenance_count,
     }
 
 
@@ -334,23 +341,67 @@ def build_non_postgres_inventory(
     }
 
 
-def read_vector_report(conn: Any) -> dict[str, Any]:
-    row = conn.execute(
+def read_vector_report(
+    conn: Any,
+    *,
+    known_tenant_scopes: Iterable[tuple[str, str]] = (),
+    test_org_id: str = "dev-org",
+    test_project_id: str = "dev-project",
+    target_org_id: str = "org-org",
+    target_project_id: str = "dev-project",
+) -> dict[str, Any]:
+    rows = conn.execute(
         """
-        SELECT COUNT(*) AS item_count
+        SELECT key
           FROM meta_aip_kv
          WHERE key LIKE 'vector_index:%'
         """
-    ).fetchone()
-    count = int((row or {}).get("item_count") or 0)
+    ).fetchall()
+    summary = summarize_vector_keys(
+        (str(row["key"]) for row in rows),
+        known_tenant_scopes=known_tenant_scopes,
+        test_org_id=test_org_id,
+        test_project_id=test_project_id,
+        target_org_id=target_org_id,
+        target_project_id=target_project_id,
+    )
     return {
         "status": PROBED,
         "backend": "meta_aip_kv",
-        "itemCount": count,
-        "testTenantItemCount": 0,
-        "targetTenantItemCount": 0,
-        "unknownPrefixItemCount": count,
+        **summary,
         "contentInspected": False,
+    }
+
+
+def summarize_vector_keys(
+    keys: Iterable[str],
+    *,
+    known_tenant_scopes: Iterable[tuple[str, str]],
+    test_org_id: str,
+    test_project_id: str,
+    target_org_id: str,
+    target_project_id: str,
+) -> dict[str, int]:
+    """Aggregate canonical vector namespaces without returning logical names."""
+    key_list = list(keys)
+    known = set(known_tenant_scopes)
+    scopes: list[tuple[str, str] | None] = []
+    for key in key_list:
+        value = key.removeprefix("vector_index:")
+        parts = value.split("__", 2)
+        scope = (parts[0], parts[1]) if len(parts) == 3 and parts[2] else None
+        scopes.append(scope if scope in known else None)
+    canonical_count = sum(scope is not None for scope in scopes)
+    return {
+        "itemCount": len(key_list),
+        "testTenantItemCount": sum(
+            scope == (test_org_id, test_project_id) for scope in scopes
+        ),
+        "targetTenantItemCount": sum(
+            scope == (target_org_id, target_project_id) for scope in scopes
+        ),
+        "canonicalPrefixItemCount": canonical_count,
+        "unknownPrefixItemCount": len(key_list) - canonical_count,
     }
 
 

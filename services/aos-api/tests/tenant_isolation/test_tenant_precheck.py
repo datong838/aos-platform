@@ -11,6 +11,7 @@ from aos_api.tenant_precheck import (
     build_qiyue_baseline,
     scan_process_memory_sources,
     summarize_object_keys,
+    summarize_vector_keys,
 )
 
 
@@ -47,6 +48,7 @@ def test_object_key_summary_returns_counts_without_keys() -> None:
             "org-org/dev-project/mediasets/b.png",
             "unknown/prefix/value.bin",
             "dev-probes/aos-t42-probe.txt",
+            "_maintenance/quarantine/unowned/probe.bin",
         ],
         test_org_id="dev-org",
         test_project_id="dev-project",
@@ -59,13 +61,40 @@ def test_object_key_summary_returns_counts_without_keys() -> None:
     )
 
     assert result == {
-        "itemCount": 4,
+        "itemCount": 5,
         "testTenantItemCount": 1,
         "targetTenantItemCount": 1,
         "canonicalPrefixItemCount": 2,
+        "maintenanceQuarantineItemCount": 1,
         "unknownPrefixItemCount": 2,
     }
     assert "keys" not in result
+
+
+def test_vector_key_summary_recognizes_scoped_collection_contract() -> None:
+    result = summarize_vector_keys(
+        [
+            "vector_index:dev-org__dev-project__demo-pipe",
+            "vector_index:org-org__dev-project__catalog",
+            "vector_index:legacy-name",
+        ],
+        known_tenant_scopes={
+            ("dev-org", "dev-project"),
+            ("org-org", "dev-project"),
+        },
+        test_org_id="dev-org",
+        test_project_id="dev-project",
+        target_org_id="org-org",
+        target_project_id="dev-project",
+    )
+
+    assert result == {
+        "itemCount": 3,
+        "testTenantItemCount": 1,
+        "targetTenantItemCount": 1,
+        "canonicalPrefixItemCount": 2,
+        "unknownPrefixItemCount": 1,
+    }
 
 
 def test_migration_ledger_fails_closed_for_weak_and_unattributed_tables() -> None:

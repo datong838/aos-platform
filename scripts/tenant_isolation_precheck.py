@@ -101,8 +101,15 @@ def main() -> int:
             target_org_id=args.target_org,
             target_project_id=args.target_project,
         )
-        vector = read_vector_report(conn)
         known_scopes = read_known_tenant_scopes(conn)
+        vector = read_vector_report(
+            conn,
+            known_tenant_scopes=known_scopes,
+            test_org_id=args.test_org,
+            test_project_id=args.test_project,
+            target_org_id=args.target_org,
+            target_project_id=args.target_project,
+        )
 
     object_store = _object_store_report(
         test_org_id=args.test_org,
