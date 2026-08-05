@@ -116,10 +116,38 @@ def _normalize_rows(
 
 
 def _build_object(row: dict[str, Any], sync_scope: SyncScope) -> CoreObjectRecord | None:
-    """从 row 构造 CoreObjectRecord，应用 ``niushop:1:{source_pk}`` 命名空间。"""
+    """从 row 构造 CoreObjectRecord，应用 ``niushop:1:{source_pk}`` 命名空间。
+
+    自动补齐 必填的 *At 时间属性（按 OT schema REQUIRED_PROPERTIES 约定）：
+    - updatedAt: Product/ProductSku/Category/Order/OrderLine/Shipment（源缺省时用 source_updated_at）
+    - createdAt: Product/Order（源缺省时用 source_updated_at）
+    - shippedAt: Shipment（源缺省时先取 delivery_time，再回退 source_updated_at）
+    """
     object_type = row.get("ot")
     if not object_type:
         return None
+
+    source_dt = _parse_datetime(row["source_updated_at"])
+    source_utc_iso = source_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    properties = dict(row.get("properties", {}))
+
+    if object_type in ("Product", "ProductSku", "Category", "Order", "OrderLine", "Shipment"):
+        properties.setdefault("updatedAt", source_utc_iso)
+
+    if object_type in ("Product", "Order"):
+        properties.setdefault("createdAt", source_utc_iso)
+
+    if object_type == "Shipment":
+        if "shippedAt" not in properties:
+            delivery_time = row.get("delivery_time")
+            if isinstance(delivery_time, (int, float)) and delivery_time > 0:
+                properties["shippedAt"] = datetime.fromtimestamp(
+                    float(delivery_time), tz=timezone.utc
+                ).strftime("%Y-%m-%dT%H:%M:%SZ")
+            else:
+                properties["shippedAt"] = source_utc_iso
+
     external_id = row.get("external_id") or _format_external_id(str(row["source_pk"]))
     identity = ExternalIdentityKey(
         org_id=sync_scope.org_id,
@@ -133,12 +161,12 @@ def _build_object(row: dict[str, Any], sync_scope: SyncScope) -> CoreObjectRecor
     return CoreObjectRecord(
         identity=identity,
         object_type=object_type,
-        source_updated_at=_parse_datetime(row["source_updated_at"]),
+        source_updated_at=source_dt,
         source_timezone=row.get("source_timezone", _DEFAULT_SOURCE_TIMEZONE),
         status=ForwardEnumValue.from_raw(status_raw, _STATUS_MAPPING),
         is_deleted=is_deleted,
         schema_version=int(row.get("schema_version", _DEFAULT_SCHEMA_VERSION)),
-        properties=dict(row.get("properties", {})),
+        properties=properties,
     )
 
 
