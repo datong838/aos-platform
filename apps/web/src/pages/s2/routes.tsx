@@ -50,6 +50,7 @@ const OkfOverviewPage = lazify(() => import("./remainder"), "OkfOverviewPage");
 const IntegrationCasesPage = lazify(() => import("./IntegrationCasesPage"), "IntegrationCasesPage");
 const AnalyticsPage = lazify(() => import("./analytics"), "AnalyticsPage");
 const OrderManagementPage = lazify(() => import("./OrderManagementPage"), "OrderManagementPage");
+const ProductInventoryPage = lazify(() => import("./ProductInventoryPage"), "ProductInventoryPage");
 const ObservabilityPage = lazify(() => import("./ObservabilityPage"), "ObservabilityPage");
 const LogicCanvasPage = lazify(() => import("./LogicCanvasPage"), "LogicCanvasPage");
 const AgentRegistryPage = lazify(() => import("./AgentRegistryPage"), "AgentRegistryPage");
@@ -129,6 +130,7 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "apollo/config", Component: ApolloConfigPage },
   { path: "analytics", Component: AnalyticsPage },
   { path: "workshop/orders", Component: OrderManagementPage },
+  { path: "workshop/inventory", Component: ProductInventoryPage },
   { path: "aip/observability", Component: ObservabilityPage },
   { path: "aip/logic", Component: LogicCanvasPage },
   { path: "aip/logic/:flowId", Component: LogicCanvasPage },

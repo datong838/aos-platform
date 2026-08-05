@@ -16,7 +16,7 @@ import { apiGet, apiPost } from "../../api/client";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface OrderObject {
+export interface OrderObject {
   id: string;
   type?: string;
   order_no?: string;
@@ -29,6 +29,18 @@ interface OrderObject {
   items?: Array<{ product: string; qty: number; price: number }>;
   tracking_no?: string;
   remark?: string;
+  risk_score?: number | null;
+  [key: string]: unknown;
+}
+
+export interface ShipmentObject {
+  id: string;
+  type?: string;
+  order_id?: string;
+  tracking_no?: string;
+  status?: string;
+  overdue_hours?: number | null;
+  stock_health?: string;
   [key: string]: unknown;
 }
 
@@ -36,6 +48,36 @@ interface OrderListResponse {
   items?: OrderObject[];
   total?: number;
   objects?: OrderObject[];
+}
+
+export type OrderFunnel = {
+  total: number;
+  pending: number;
+  shipped: number;
+  delivered: number;
+};
+
+/** FR-D1.5-8 W01 状态漏斗 · 聚合 Order 状态为四桶（纯函数，供测试与 Widget 复用）。 */
+export function computeOrderFunnel(orders: OrderObject[]): OrderFunnel {
+  let pending = 0;
+  let shipped = 0;
+  let delivered = 0;
+  for (const o of orders) {
+    if (o.status === "pending") pending += 1;
+    else if (o.status === "shipped") shipped += 1;
+    else if (o.status === "delivered") delivered += 1;
+  }
+  return { total: orders.length, pending, shipped, delivered };
+}
+
+/** FR-D1.5-8 W01 异常订单表 · 过滤 risk_score > 0.6（null 安全降级，严格大于）。 */
+export function filterRiskyOrders(orders: OrderObject[]): OrderObject[] {
+  return orders.filter((o) => o.risk_score != null && o.risk_score > 0.6);
+}
+
+/** FR-D1.5-8 W01 SLA 队列 · 过滤 overdue_hours > 0（null 安全降级，严格大于）。 */
+export function filterOverdueShipments(shipments: ShipmentObject[]): ShipmentObject[] {
+  return shipments.filter((s) => s.overdue_hours != null && s.overdue_hours > 0);
 }
 
 type StatusTab = "all" | "pending" | "paid" | "shipped" | "delivered" | "cancelled" | "refunded";
@@ -63,6 +105,7 @@ const STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> 
 
 export function OrderManagementPage() {
   const [orders, setOrders] = useState<OrderObject[]>([]);
+  const [shipments, setShipments] = useState<ShipmentObject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<StatusTab>("all");
@@ -70,9 +113,11 @@ export function OrderManagementPage() {
   const [selectedOrder, setSelectedOrder] = useState<OrderObject | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [riskyOnly, setRiskyOnly] = useState(false);
 
   useEffect(() => {
     loadOrders();
+    loadShipments();
   }, []);
 
   function loadOrders() {
@@ -87,11 +132,24 @@ export function OrderManagementPage() {
       .finally(() => setLoading(false));
   }
 
+  function loadShipments() {
+    apiGet<{ items?: ShipmentObject[]; objects?: ShipmentObject[] }>("/v1/objects/Shipment")
+      .then((data) => {
+        setShipments(data.items || data.objects || []);
+      })
+      .catch(() => {
+        /* W01 SLA 队列为辅助 Widget，加载失败不阻塞主订单表 */
+      });
+  }
+
   // Filter + search
   const filteredOrders = useMemo(() => {
     let result = orders;
     if (activeTab !== "all") {
       result = result.filter((o) => o.status === activeTab);
+    }
+    if (riskyOnly) {
+      result = filterRiskyOrders(result);
     }
     if (searchTerm.trim()) {
       const term = searchTerm.trim().toLowerCase();
@@ -103,7 +161,13 @@ export function OrderManagementPage() {
       );
     }
     return result;
-  }, [orders, activeTab, searchTerm]);
+  }, [orders, activeTab, riskyOnly, searchTerm]);
+
+  // W01 异常订单数（risk_score > 0.6）· FR-D1.5-8
+  const riskyOrderCount = useMemo(() => filterRiskyOrders(orders).length, [orders]);
+
+  // W01 SLA 队列（overdue_hours > 0）· FR-D1.5-8
+  const overdueShipments = useMemo(() => filterOverdueShipments(shipments), [shipments]);
 
   // Stats
   const stats = useMemo(() => {
@@ -130,6 +194,9 @@ export function OrderManagementPage() {
     return days;
   }, [orders]);
 
+  /* 非 W01 最小版范围 · 兼容保留：以下写 Action（发货/取消/退款）早于 D1.5 W01 规格，
+     FR-D1.5-8 约束 W01 最小版仅做数据展示+Draft 创建。为避免破坏既有用户功能予以保留，
+     AC-D1.5-6 测试不覆盖写操作。决策标签（L02/L03）由 G2 评审通过后接入。 */
   function executeAction(actionTypeId: string, objectId: string, proposed: Record<string, unknown>) {
     setActionLoading(true);
     setActionMessage(null);
@@ -195,6 +262,63 @@ export function OrderManagementPage() {
           <StatCard title="总收入" value={`¥${(stats.revenue / 1000).toFixed(1)}K`} sublabel="已签收+已发货" color="#34D399" />
         </div>
 
+        {/* W01 SLA 队列 Widget · FR-D1.5-8 · P07 Shipment WHERE overdue_hours > 0 */}
+        <div
+          data-testid="w01-sla-queue"
+          style={{
+            background: "#fff",
+            borderRadius: 2,
+            border: "1px solid #E5E7EB",
+            padding: 16,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#1F2937" }}>SLA 超时队列</span>
+            <span
+              style={{
+                fontSize: 11,
+                padding: "1px 8px",
+                borderRadius: 4,
+                background: overdueShipments.length > 0 ? "#FEE2E2" : "#F3F4F6",
+                color: overdueShipments.length > 0 ? "#DC2626" : "#6B7280",
+                fontWeight: 500,
+              }}
+            >
+              {overdueShipments.length} 单超时
+            </span>
+          </div>
+          {overdueShipments.length === 0 ? (
+            <p style={{ fontSize: 12, color: "#9CA3AF", margin: 0 }}>暂无超时运单 · 所有发货均在 SLA 内</p>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+              <thead>
+                <tr style={{ background: "#F9FAFB" }}>
+                  <th style={{ textAlign: "left", padding: "6px 10px", color: "#374151" }}>运单号</th>
+                  <th style={{ textAlign: "left", padding: "6px 10px", color: "#374151" }}>订单</th>
+                  <th style={{ textAlign: "right", padding: "6px 10px", color: "#374151" }}>超时(h)</th>
+                  <th style={{ textAlign: "center", padding: "6px 10px", color: "#374151" }}>状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                {overdueShipments.slice(0, 10).map((s) => (
+                  <tr key={String(s.id)} style={{ borderBottom: "1px solid #F3F4F6" }}>
+                    <td style={{ padding: "6px 10px", fontFamily: "monospace", color: "#1F2937" }}>
+                      {String(s.tracking_no || s.id)}
+                    </td>
+                    <td style={{ padding: "6px 10px", color: "#6B7280" }}>{String(s.order_id || "—")}</td>
+                    <td style={{ padding: "6px 10px", textAlign: "right", fontWeight: 600, color: "#DC2626" }}>
+                      {String(s.overdue_hours ?? "—")}
+                    </td>
+                    <td style={{ padding: "6px 10px", textAlign: "center", color: "#6B7280" }}>
+                      {String(s.status || "—")}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
         {/* Trend Chart + Detail Panel */}
         <div style={{ display: "grid", gridTemplateColumns: selectedOrder ? "1fr 320px" : "1fr", gap: 12 }}>
           {/* Main Panel */}
@@ -235,6 +359,25 @@ export function OrderManagementPage() {
                     : ` (${orders.filter((o) => o.status === tab.key).length})`}
                 </button>
               ))}
+              {/* W01 异常订单表 Widget · FR-D1.5-8 · risk_score > 0.6 */}
+              <button
+                data-testid="w01-risky-toggle"
+                onClick={() => setRiskyOnly((v) => !v)}
+                style={{
+                  marginLeft: "auto",
+                  padding: "4px 12px",
+                  fontSize: 12,
+                  fontWeight: riskyOnly ? 600 : 400,
+                  border: riskyOnly ? "1px solid #DC2626" : "1px solid #E5E7EB",
+                  borderRadius: 4,
+                  background: riskyOnly ? "#DC2626" : "#fff",
+                  color: riskyOnly ? "#fff" : "#DC2626",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                }}
+              >
+                ⚠ 异常订单 ({riskyOrderCount})
+              </button>
             </div>
 
             {/* Search Bar */}

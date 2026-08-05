@@ -65,6 +65,14 @@ export const NAV_ITEMS: NavItem[] = [
     crumbs: ["工作台", "订单管理"],
   },
   {
+    id: "workshop-inventory",
+    path: "/workshop/inventory",
+    label: "商品库存管理",
+    icon: "layers",
+    status: "live",
+    crumbs: ["工作台", "商品库存管理"],
+  },
+  {
     id: "workshop-inbox",
     path: "/workshop/inbox",
     label: "风险告警管理",
