@@ -305,9 +305,15 @@ def test_expiry_batch_is_bounded_repeatable_and_skips_locked_cases() -> None:
             for _ in range(2)
         ]
         projector = IntegrationExpiryProjector(connect_factory)
-        first = projector.project_expired_batch(batch_size=1)
-        second = projector.project_expired_batch(batch_size=1)
-        repeated = projector.project_expired_batch(batch_size=1)
+        first = projector.project_expired_batch(
+            org_id=ORG, project_id=PROJECT, batch_size=1
+        )
+        second = projector.project_expired_batch(
+            org_id=ORG, project_id=PROJECT, batch_size=1
+        )
+        repeated = projector.project_expired_batch(
+            org_id=ORG, project_id=PROJECT, batch_size=1
+        )
         assert first.selected_count == first.projected_count == 1
         assert second.selected_count == second.projected_count == 1
         assert set(first.selected_case_ids + second.selected_case_ids) == {
@@ -331,10 +337,17 @@ def test_expiry_batch_is_bounded_repeatable_and_skips_locked_cases() -> None:
                 """,
                 (ORG, PROJECT, third.case_pk),
             )
-            skipped = projector.project_expired_batch(batch_size=10)
+            skipped = projector.project_expired_batch(
+                org_id=ORG, project_id=PROJECT, batch_size=10
+            )
             assert skipped.selected_count == 0
             locker.rollback()
-        assert projector.project_expired_batch(batch_size=10).selected_count == 1
+        assert (
+            projector.project_expired_batch(
+                org_id=ORG, project_id=PROJECT, batch_size=10
+            ).selected_count
+            == 1
+        )
 
 
 def test_expiry_batch_isolates_poison_case_and_projects_later_healthy_case() -> None:
@@ -357,7 +370,9 @@ def test_expiry_batch_isolates_poison_case_and_projects_later_healthy_case() -> 
             conn.execute("ALTER TABLE integration_evidence ENABLE TRIGGER USER")
             conn.commit()
 
-        result = IntegrationExpiryProjector(connect_factory).project_expired_batch()
+        result = IntegrationExpiryProjector(connect_factory).project_expired_batch(
+            org_id=ORG, project_id=PROJECT
+        )
         assert result.selected_count == 2
         assert result.projected_count == 1
         assert result.processed_case_refs == result.selected_case_refs
@@ -395,3 +410,8 @@ def test_expiry_batch_isolates_poison_case_and_projects_later_healthy_case() -> 
 def test_expiry_batch_rejects_unsafe_size(batch_size: object) -> None:
     with pytest.raises(ValueError):
         IntegrationExpiryProjector().project_expired_batch(batch_size=batch_size)  # type: ignore[arg-type]
+
+
+def test_expiry_batch_requires_explicit_tenant_scope() -> None:
+    with pytest.raises(ValueError, match="tenant scope is required"):
+        IntegrationExpiryProjector().project_expired_batch()

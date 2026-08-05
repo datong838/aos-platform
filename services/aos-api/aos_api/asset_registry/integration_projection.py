@@ -27,6 +27,7 @@ from aos_api.asset_registry.integration_store import (
     IntegrationPersistenceError,
     PostgresIntegrationStore,
 )
+from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
 from aos_api.db import connect
 
 _EXPIRY_CAUSE = "evidence_expired"
@@ -106,6 +107,7 @@ class IntegrationExpiryProjector:
         case_uuid = _case_uuid(case_id)
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 case = conn.execute(
                     """
                     SELECT c.org_id,c.project_id,c.case_pk,c.case_id,c.scope,
@@ -169,11 +171,13 @@ class IntegrationExpiryProjector:
             raise ValueError("batch_size must be an integer between 1 and 1000")
         if (org_id is None) != (project_id is None):
             raise ValueError("org_id and project_id must be supplied together")
-        if org_id is not None:
-            org_id = _normalized_text(org_id, "org_id")
-            project_id = _normalized_text(project_id, "project_id")
+        if org_id is None or project_id is None:
+            raise ValueError("tenant scope is required for expiry projection")
+        org_id = _normalized_text(org_id, "org_id")
+        project_id = _normalized_text(project_id, "project_id")
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 cutoff_at = _database_cutoff(conn)
                 conn.commit()
         except psycopg.Error as exc:
@@ -189,6 +193,7 @@ class IntegrationExpiryProjector:
             case_ref: str | None = None
             try:
                 with self._connect_factory() as conn:
+                    apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                     case = conn.execute(
                         """
                         SELECT c.org_id,c.project_id,c.case_pk,c.case_id,c.scope,

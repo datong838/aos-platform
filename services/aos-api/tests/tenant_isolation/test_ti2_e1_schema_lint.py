@@ -31,6 +31,7 @@ def test_ti2_e1_real_schema_lint_is_green() -> None:
         "228ti5a3lineage",
             "228ti5b1models",
             "228ti6bcontract",
+            "228ti6cassets",
     }
     assert report["ti2MissingColumns"] == {}
     assert report["ti2NonNullableExpandColumns"] == {}

@@ -39,6 +39,7 @@ from aos_api.asset_registry.integration_stage_policy import (
     StagePolicyResult,
     evaluate_contract_stage_policy,
 )
+from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
 from aos_api.db import connect
 
 JsonObject = dict[str, Any]
@@ -136,6 +137,7 @@ class PostgresIntegrationStore:
     ) -> StoredIntegrationCase:
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 result = self.create_current_case_in_transaction(
                     conn,
                     org_id=org_id,
@@ -293,6 +295,7 @@ class PostgresIntegrationStore:
         )
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 conn.execute(
                     """INSERT INTO integration_case (
                          org_id,project_id,case_pk,case_id,scope,display_name,
@@ -362,6 +365,7 @@ class PostgresIntegrationStore:
     ) -> IntegrationEvidenceEnvelope:
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 case = _lock_case(conn, org_id, project_id, case_id)
                 result = self.append_evidence_in_transaction(
                     conn,
@@ -475,6 +479,7 @@ class PostgresIntegrationStore:
     ) -> ProjectionSnapshot:
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 case = _lock_case(conn, org_id, project_id, case_id)
                 result = self.project_case_in_transaction(
                     conn,
@@ -811,6 +816,7 @@ class PostgresIntegrationStore:
         )
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 conn.execute(
                     "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
                     (f"{org_id}\x1f{project_id}\x1f{operation}\x1f{idempotency_key}",),
@@ -892,6 +898,7 @@ class PostgresIntegrationStore:
     ) -> StoredIntegrationCase:
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 case = _load_case_by_public_id(conn, org_id, project_id, case_id)
                 _verify_case_integrity(conn, case)
                 return case
@@ -904,6 +911,7 @@ class PostgresIntegrationStore:
         """Return current/reference counts separately; reference never contaminates current."""
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 row = conn.execute(
                     """SELECT COUNT(*) FILTER (WHERE scope='current') AS current_count,
                               COUNT(*) FILTER (WHERE scope='reference') AS reference_count

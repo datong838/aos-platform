@@ -94,6 +94,7 @@ def test_e7_schema_report_is_green() -> None:
         "228ti5a3lineage",
             "228ti5b1models",
             "228ti6bcontract",
+            "228ti6cassets",
     }
     assert report["ti3ContractInvalidPrimaryKeys"] == []
     assert report["ti3ContractNullableScopeColumns"] == []

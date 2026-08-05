@@ -27,7 +27,7 @@ TI5_A1_REVISION = "228ti5a1aip"
 TI5_A2_REVISION = "228ti5a2kv"
 TI5_A3_REVISION = "228ti5a3lineage"
 # The B1 contract remains required; schema reports accept the current TI-6 head.
-TI5_B1_REVISION = "228ti6bcontract"
+TI5_B1_REVISION = "228ti6cassets"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {

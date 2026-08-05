@@ -88,7 +88,7 @@ def test_b1_schema_report_is_green() -> None:
         report = build_ti5_b1_schema_report(conn)
 
     assert report["ok"] is True, report
-    assert report["alembicRevision"] == "228ti6bcontract"
+    assert report["alembicRevision"] == "228ti6cassets"
     assert report["ti5ModelManagementTableContractsValid"] is True
     assert report["ti5ModelManagementChildForeignKeysValid"] is True
 

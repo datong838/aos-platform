@@ -65,6 +65,7 @@ def test_a2_schema_report_is_green() -> None:
         "228ti5a3lineage",
         "228ti5b1models",
         "228ti6bcontract",
+        "228ti6cassets",
     }
     assert report["ti5AipKvScopeValid"] is True
     assert report["ti5AipKvPrimaryKeyValid"] is True

@@ -40,6 +40,7 @@ from aos_api.asset_registry.errors import (
     RevisionConflictError,
 )
 from aos_api.asset_registry.installation_evidence import verify_event_evidence
+from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
 from aos_api.db import connect
 
 JsonObject = dict[str, Any]
@@ -104,6 +105,7 @@ class PostgresInstallationStore:
         )
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 record = self.create_draft_in_transaction(conn, **values)
                 conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
                 conn.commit()
@@ -213,6 +215,7 @@ class PostgresInstallationStore:
         installation_uuid = _resource_uuid(installation_id)
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 row = conn.execute(
                     """
                     SELECT installation_pk
@@ -251,6 +254,7 @@ class PostgresInstallationStore:
         )
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 rows = conn.execute(
                     """
                     WITH filtered AS MATERIALIZED (
@@ -324,6 +328,7 @@ class PostgresInstallationStore:
         state_params: tuple[object, ...] = (query.state,) if query.state else ()
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 corrupt = conn.execute(
                     """
                     SELECT EXISTS (
@@ -427,6 +432,7 @@ class PostgresInstallationStore:
             raise ValueError("request_hash must be a canonical SHA-256 value")
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 lock_identity = (
                     f"{org_id}\x1f{project_id}\x1f{operation}\x1f{idempotency_key}"
                 )

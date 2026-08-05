@@ -65,6 +65,7 @@ def test_a1_schema_report_is_green() -> None:
         "228ti5a3lineage",
             "228ti5b1models",
             "228ti6bcontract",
+            "228ti6cassets",
     }
     assert report["ti5AipWorkspaceForeignKeysInvalid"] == []
     assert report["ti5AipRlsUnprotectedTables"] == []

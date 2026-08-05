@@ -32,6 +32,7 @@ from aos_api.asset_registry.integration_contracts import (
     ReferenceIntegrationCaseListItem,
 )
 from aos_api.asset_registry.integration_store import IntegrationPersistenceError
+from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
 from aos_api.db import connect
 
 _VISIBLE = """
@@ -62,6 +63,7 @@ class PostgresIntegrationCaseReader:
         markings = _markings(allowed_markings)
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 cutoff = conn.execute(
                     "SELECT statement_timestamp() AS cutoff"
                 ).fetchone()["cutoff"]
@@ -147,6 +149,7 @@ class PostgresIntegrationCaseReader:
             raise AssetNotFoundError("integration case not found") from exc
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 row = conn.execute(
                     f"""SELECT c.*,i.current_revision,i.etag_version,
                                   r.installation_revision,r.lock_revision,r.lock_hash,
@@ -224,6 +227,7 @@ class PostgresIntegrationCaseReader:
             raise AssetNotFoundError("integration case not found") from exc
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 case = conn.execute(
                     f"""SELECT c.case_pk,c.scope
                            FROM integration_case c

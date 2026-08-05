@@ -30,6 +30,7 @@ from aos_api.asset_registry.errors import (
     RegistrySnapshotStaleError,
     RevisionConflictError,
 )
+from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
 from aos_api.db import connect
 
 JsonObject = dict[str, Any]
@@ -102,6 +103,7 @@ class PostgresCompositionStore:
     ) -> StoredCompositionLock:
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 result = self.create_or_get_in_transaction(
                     conn,
                     org_id=org_id,
@@ -297,6 +299,7 @@ class PostgresCompositionStore:
             raise AssetNotFoundError("composition lock not found")
         try:
             with self._connect_factory() as conn:
+                apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
                 row = _select_by_id(
                     conn,
                     org_id=org_id,
