@@ -36,7 +36,7 @@ def seed_phase5_pipeline(scope: TenantScope) -> int:
 
     pipeline_ids: list[str] = []
     for spec in _PIPELINES:
-        pl = eng.create_pipeline(**spec)
+        pl = eng.create_pipeline(scope, **spec)
         pipeline_ids.append(pl.id)
         count += 1
 
@@ -50,7 +50,7 @@ def seed_phase5_pipeline(scope: TenantScope) -> int:
         ]
         nids: list[str] = []
         for nm, nt, x, y in node_specs:
-            node = eng.add_node(pl_id, nm, node_type=nt, position_x=x, position_y=y,
+            node = eng.add_node(scope, pl_id, nm, node_type=nt, position_x=x, position_y=y,
                                 config={"batch_size": 1000} if nt == "source" else {"target": "warehouse"})
             nids.append(node.id)
             count += 1
@@ -61,13 +61,13 @@ def seed_phase5_pipeline(scope: TenantScope) -> int:
         nids = node_ids_per_pipeline[pl_id]
         if len(nids) >= 2:
             extra = f"Edge-{idx}" if idx < 7 else ""
-            eng.add_edge(pl_id, nids[0], nids[1], label=extra)
+            eng.add_edge(scope, pl_id, nids[0], nids[1], label=extra)
             count += 1
     # Add 7 more edges for variety (source->transform on first 7)
     for idx, pl_id in enumerate(pipeline_ids[:7]):
         nids = node_ids_per_pipeline[pl_id]
         if len(nids) >= 2:
-            eng.add_edge(pl_id, nids[0], nids[1], label="secondary")
+            eng.add_edge(scope, pl_id, nids[0], nids[1], label="secondary")
             count += 1
 
     # ── Proposals: 10 ──
@@ -75,6 +75,7 @@ def seed_phase5_pipeline(scope: TenantScope) -> int:
                          "approved", "rejected", "pending", "approved", "pending"]
     for idx, pl_id in enumerate(pipeline_ids):
         eng.create_proposal(
+            scope,
             pl_id,
             title=f"Proposal-{idx} optimize flow",
             description=f"Optimization proposal for pipeline {idx}",
@@ -105,7 +106,7 @@ def seed_phase5_pipeline(scope: TenantScope) -> int:
     schedule_ids: list[str] = []
     for idx, (nm, tt, cron, st) in enumerate(schedule_specs):
         pl_id = pipeline_ids[idx % len(pipeline_ids)]
-        sc = eng.create_schedule(nm, pipeline_id=pl_id, trigger_type=tt, cron_expr=cron, status=st, owner="ops")
+        sc = eng.create_schedule(scope, nm, pipeline_id=pl_id, trigger_type=tt, cron_expr=cron, status=st, owner="ops")
         schedule_ids.append(sc.id)
         count += 1
 
@@ -124,7 +125,7 @@ def seed_phase5_pipeline(scope: TenantScope) -> int:
             rows_processed=500 + idx * 100,
             error="" if run_statuses[idx] != "failed" else "Connection timeout",
         )
-        eng._schedule_runs[r.id] = r
+        eng._schedule_runs[eng._tenant_key(scope, r.id)] = r
         count += 1
 
     # ── Datasets: 10 ──

@@ -6,12 +6,22 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
+from aos_api.auth import Principal, require_principal
 from aos_api.phase5_pipeline_engine import get_engine
+from aos_api.tenant_scope import TenantScope
 
-router = APIRouter(prefix="/v1/schedules", tags=["phase5-schedules"])
+router = APIRouter(
+    prefix="/v1/schedules",
+    tags=["phase5-schedules"],
+    dependencies=[Depends(require_principal)],
+)
+
+
+def _scope(principal: Principal) -> TenantScope:
+    return TenantScope(principal.org_id, principal.project_id)
 
 
 # ─────────── Request models ───────────
@@ -40,6 +50,7 @@ class UpdateScheduleRequest(BaseModel):
 
 @router.get("")
 async def list_schedules(
+    principal: Principal = Depends(require_principal),
     search: str | None = Query(None),
     status: str | None = Query(None),
     trigger_type: str | None = Query(None),
@@ -48,6 +59,7 @@ async def list_schedules(
 ) -> dict[str, Any]:
     eng = get_engine()
     items, total = eng.list_schedules(
+        _scope(principal),
         search=search, status=status, trigger_type=trigger_type,
         page=page, page_size=page_size,
     )
@@ -58,27 +70,27 @@ async def list_schedules(
 
 
 @router.post("")
-async def create_schedule(req: CreateScheduleRequest) -> dict[str, Any]:
+async def create_schedule(req: CreateScheduleRequest, principal: Principal = Depends(require_principal)) -> dict[str, Any]:
     eng = get_engine()
-    sc = eng.create_schedule(**req.model_dump())
+    sc = eng.create_schedule(_scope(principal), **req.model_dump())
     return sc.model_dump()
 
 
 @router.get("/{sc_id}")
-async def get_schedule(sc_id: str) -> dict[str, Any]:
+async def get_schedule(sc_id: str, principal: Principal = Depends(require_principal)) -> dict[str, Any]:
     eng = get_engine()
-    sc = eng.get_schedule(sc_id)
+    sc = eng.get_schedule(_scope(principal), sc_id)
     if sc is None:
         raise HTTPException(404, f"Schedule {sc_id} not found")
     return sc.model_dump()
 
 
 @router.put("/{sc_id}")
-async def update_schedule(sc_id: str, req: UpdateScheduleRequest) -> dict[str, Any]:
+async def update_schedule(sc_id: str, req: UpdateScheduleRequest, principal: Principal = Depends(require_principal)) -> dict[str, Any]:
     eng = get_engine()
     try:
         data = {k: v for k, v in req.model_dump().items() if v is not None}
-        sc = eng.update_schedule(sc_id, **data)
+        sc = eng.update_schedule(_scope(principal), sc_id, **data)
         return sc.model_dump()
     except KeyError:
         raise HTTPException(404, f"Schedule {sc_id} not found")
@@ -88,20 +100,20 @@ async def update_schedule(sc_id: str, req: UpdateScheduleRequest) -> dict[str, A
 
 
 @router.post("/{sc_id}/run")
-async def run_schedule(sc_id: str) -> dict[str, Any]:
+async def run_schedule(sc_id: str, principal: Principal = Depends(require_principal)) -> dict[str, Any]:
     eng = get_engine()
     try:
-        run = eng.run_schedule(sc_id)
+        run = eng.run_schedule(_scope(principal), sc_id)
         return run.model_dump()
     except KeyError:
         raise HTTPException(404, f"Schedule {sc_id} not found")
 
 
 @router.post("/{sc_id}/pause")
-async def pause_schedule(sc_id: str) -> dict[str, Any]:
+async def pause_schedule(sc_id: str, principal: Principal = Depends(require_principal)) -> dict[str, Any]:
     eng = get_engine()
     try:
-        sc = eng.pause_schedule(sc_id)
+        sc = eng.pause_schedule(_scope(principal), sc_id)
         return sc.model_dump()
     except KeyError:
         raise HTTPException(404, f"Schedule {sc_id} not found")
@@ -111,9 +123,10 @@ async def pause_schedule(sc_id: str) -> dict[str, Any]:
 
 
 @router.get("/{sc_id}/runs")
-async def list_schedule_runs(sc_id: str) -> dict[str, Any]:
+async def list_schedule_runs(sc_id: str, principal: Principal = Depends(require_principal)) -> dict[str, Any]:
     eng = get_engine()
-    if eng.get_schedule(sc_id) is None:
+    scope = _scope(principal)
+    if eng.get_schedule(scope, sc_id) is None:
         raise HTTPException(404, f"Schedule {sc_id} not found")
-    items = eng.list_schedule_runs(sc_id)
+    items = eng.list_schedule_runs(scope, sc_id)
     return {"items": [r.model_dump() for r in items], "count": len(items)}

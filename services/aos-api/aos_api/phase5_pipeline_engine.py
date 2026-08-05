@@ -180,36 +180,37 @@ class PipelineEngine:
             with cls._lock:
                 if cls._instance is None:
                     inst = super().__new__(cls)
-                    inst._pipelines: dict[str, Pipeline] = {}
-                    inst._nodes: dict[str, PipelineNode] = {}
-                    inst._edges: dict[str, PipelineEdge] = {}
-                    inst._proposals: dict[str, PipelineProposal] = {}
-                    inst._history: dict[str, PipelineHistory] = {}
-                    inst._schedules: dict[str, Schedule] = {}
-                    inst._schedule_runs: dict[str, ScheduleRun] = {}
+                    inst._pipelines: dict[tuple[str, str, str], Pipeline] = {}
+                    inst._nodes: dict[tuple[str, str, str], PipelineNode] = {}
+                    inst._edges: dict[tuple[str, str, str], PipelineEdge] = {}
+                    inst._proposals: dict[tuple[str, str, str], PipelineProposal] = {}
+                    inst._history: dict[tuple[str, str, str], PipelineHistory] = {}
+                    inst._schedules: dict[tuple[str, str, str], Schedule] = {}
+                    inst._schedule_runs: dict[tuple[str, str, str], ScheduleRun] = {}
                     inst._datasets: dict[tuple[str, str, str], Dataset] = {}
                     inst._builds: dict[tuple[str, str, str], DatasetBuild] = {}
                     inst._health: dict[tuple[str, str, str], HealthCheck] = {}
                     inst._sync_configs: dict[tuple[str, str, str], SyncConfig] = {}
                     inst._executors: dict[str, Callable[..., dict[str, Any]]] = {}
                     inst._evidence_resolvers: dict[str, Callable[[str], bool]] = {}
-                    inst._persisted_graph_ids: set[str] = set()
+                    inst._persisted_graph_ids: set[tuple[str, str, str]] = set()
                     cls._instance = inst
         return cls._instance
 
     # ── Pipelines ──
-    def create_pipeline(self, name: str, **kwargs: Any) -> Pipeline:
+    def create_pipeline(self, scope: TenantScope, name: str, **kwargs: Any) -> Pipeline:
         with _LOCK:
             pl = Pipeline(name=name, **kwargs)
-            self._pipelines[pl.id] = pl
-            self._add_history(pl.id, "created", "Pipeline created")
+            self._pipelines[self._tenant_key(scope, pl.id)] = pl
+            self._add_history(scope, pl.id, "created", "Pipeline created")
             return pl
 
-    def get_pipeline(self, pl_id: str) -> Pipeline | None:
-        return self._pipelines.get(pl_id)
+    def get_pipeline(self, scope: TenantScope, pl_id: str) -> Pipeline | None:
+        return self._pipelines.get(self._tenant_key(scope, pl_id))
 
     def list_pipelines(
         self,
+        scope: TenantScope,
         search: str | None = None,
         status: str | None = None,
         pipeline_type: str | None = None,
@@ -218,7 +219,7 @@ class PipelineEngine:
         sort_by: str = "updated_at",
         sort_order: str = "desc",
     ) -> tuple[list[Pipeline], int]:
-        items = list(self._pipelines.values())
+        items = [item for key, item in self._pipelines.items() if key[:2] == scope.key]
         if status:
             items = [p for p in items if p.status == status]
         if pipeline_type:
@@ -235,44 +236,46 @@ class PipelineEngine:
         start = (page - 1) * page_size
         return items[start : start + page_size], total
 
-    def update_pipeline(self, pl_id: str, **kwargs: Any) -> Pipeline:
+    def update_pipeline(self, scope: TenantScope, pl_id: str, **kwargs: Any) -> Pipeline:
         with _LOCK:
-            pl = self._pipelines.get(pl_id)
+            pl = self._pipelines.get(self._tenant_key(scope, pl_id))
             if pl is None:
                 raise KeyError(f"Pipeline {pl_id} not found")
             for k, v in kwargs.items():
                 if hasattr(pl, k) and k != "id":
                     setattr(pl, k, v)
             pl.updated_at = time.time()
-            self._add_history(pl_id, "updated", f"Updated: {list(kwargs.keys())}")
+            self._add_history(scope, pl_id, "updated", f"Updated: {list(kwargs.keys())}")
             return pl
 
-    def delete_pipeline(self, pl_id: str) -> bool:
+    def delete_pipeline(self, scope: TenantScope, pl_id: str) -> bool:
         with _LOCK:
-            existed = self._pipelines.pop(pl_id, None) is not None
+            existed = self._pipelines.pop(self._tenant_key(scope, pl_id), None) is not None
             if existed:
-                for nid in [n.id for n in self._nodes.values() if n.pipeline_id == pl_id]:
-                    self._nodes.pop(nid, None)
-                for eid in [e.id for e in self._edges.values() if e.pipeline_id == pl_id]:
-                    self._edges.pop(eid, None)
+                for key, node in list(self._nodes.items()):
+                    if key[:2] == scope.key and node.pipeline_id == pl_id:
+                        self._nodes.pop(key, None)
+                for key, edge in list(self._edges.items()):
+                    if key[:2] == scope.key and edge.pipeline_id == pl_id:
+                        self._edges.pop(key, None)
             return existed
 
     # ── Nodes ──
-    def add_node(self, pipeline_id: str, name: str, **kwargs: Any) -> PipelineNode:
+    def add_node(self, scope: TenantScope, pipeline_id: str, name: str, **kwargs: Any) -> PipelineNode:
         with _LOCK:
             node = PipelineNode(pipeline_id=pipeline_id, name=name, **kwargs)
-            self._nodes[node.id] = node
+            self._nodes[self._tenant_key(scope, node.id)] = node
             return node
 
-    def get_node(self, node_id: str) -> PipelineNode | None:
-        return self._nodes.get(node_id)
+    def get_node(self, scope: TenantScope, node_id: str) -> PipelineNode | None:
+        return self._nodes.get(self._tenant_key(scope, node_id))
 
-    def list_nodes(self, pipeline_id: str) -> list[PipelineNode]:
-        return [n for n in self._nodes.values() if n.pipeline_id == pipeline_id]
+    def list_nodes(self, scope: TenantScope, pipeline_id: str) -> list[PipelineNode]:
+        return [n for key, n in self._nodes.items() if key[:2] == scope.key and n.pipeline_id == pipeline_id]
 
-    def update_node(self, node_id: str, **kwargs: Any) -> PipelineNode:
+    def update_node(self, scope: TenantScope, node_id: str, **kwargs: Any) -> PipelineNode:
         with _LOCK:
-            node = self._nodes.get(node_id)
+            node = self._nodes.get(self._tenant_key(scope, node_id))
             if node is None:
                 raise KeyError(f"Node {node_id} not found")
             for k, v in kwargs.items():
@@ -281,69 +284,73 @@ class PipelineEngine:
             node.updated_at = time.time()
             return node
 
-    def delete_node(self, node_id: str) -> bool:
+    def delete_node(self, scope: TenantScope, node_id: str) -> bool:
         with _LOCK:
-            return self._nodes.pop(node_id, None) is not None
+            return self._nodes.pop(self._tenant_key(scope, node_id), None) is not None
 
     # ── Edges ──
-    def add_edge(self, pipeline_id: str, source_node_id: str, target_node_id: str, **kwargs: Any) -> PipelineEdge:
+    def add_edge(self, scope: TenantScope, pipeline_id: str, source_node_id: str, target_node_id: str, **kwargs: Any) -> PipelineEdge:
         with _LOCK:
             edge = PipelineEdge(
                 pipeline_id=pipeline_id, source_node_id=source_node_id, target_node_id=target_node_id, **kwargs
             )
-            self._edges[edge.id] = edge
+            self._edges[self._tenant_key(scope, edge.id)] = edge
             return edge
 
-    def list_edges(self, pipeline_id: str) -> list[PipelineEdge]:
-        return [e for e in self._edges.values() if e.pipeline_id == pipeline_id]
+    def list_edges(self, scope: TenantScope, pipeline_id: str) -> list[PipelineEdge]:
+        return [e for key, e in self._edges.items() if key[:2] == scope.key and e.pipeline_id == pipeline_id]
 
-    def delete_edge(self, edge_id: str) -> bool:
+    def delete_edge(self, scope: TenantScope, edge_id: str) -> bool:
         with _LOCK:
-            return self._edges.pop(edge_id, None) is not None
+            return self._edges.pop(self._tenant_key(scope, edge_id), None) is not None
 
     # ── Graph ──
-    def _snapshot_graph_locked(self, pl_id: str) -> dict[str, Any]:
-        if pl_id not in self._pipelines:
+    def _snapshot_graph_locked(self, scope: TenantScope, pl_id: str) -> dict[str, Any]:
+        pipeline = self.get_pipeline(scope, pl_id)
+        if pipeline is None:
             raise KeyError(f"Pipeline {pl_id} not found")
-        nodes = self.list_nodes(pl_id)
-        edges = self.list_edges(pl_id)
+        nodes = self.list_nodes(scope, pl_id)
+        edges = self.list_edges(scope, pl_id)
         return {
             "pipeline_id": pl_id,
             "nodes": [n.model_dump() for n in nodes],
             "edges": [e.model_dump() for e in edges],
             "node_count": len(nodes),
             "edge_count": len(edges),
-            "pipeline_type": self._pipelines[pl_id].pipeline_type,
-            "write_mode": self._pipelines[pl_id].write_mode,
+            "pipeline_type": pipeline.pipeline_type,
+            "write_mode": pipeline.write_mode,
         }
 
-    def _hydrate_persisted_graph_locked(self, payload: dict[str, Any]) -> None:
+    def _hydrate_persisted_graph_locked(self, scope: TenantScope, payload: dict[str, Any]) -> None:
         pl_id = str(payload.get("pipeline_id") or "")
         if not pl_id:
             raise ValueError("persisted graph requires pipeline_id")
         nodes = [PipelineNode.model_validate(node) for node in payload.get("nodes") or []]
         edges = [PipelineEdge.model_validate(edge) for edge in payload.get("edges") or []]
         for node in nodes:
-            current = self._nodes.get(node.id)
+            current = self._nodes.get(self._tenant_key(scope, node.id))
             if current is not None and current.pipeline_id != pl_id:
                 raise ValueError(f"node id belongs to another pipeline: {node.id}")
         for edge in edges:
-            current = self._edges.get(edge.id)
+            current = self._edges.get(self._tenant_key(scope, edge.id))
             if current is not None and current.pipeline_id != pl_id:
                 raise ValueError(f"edge id belongs to another pipeline: {edge.id}")
-        pipeline = self._pipelines.get(pl_id)
+        pipeline_key = self._tenant_key(scope, pl_id)
+        pipeline = self._pipelines.get(pipeline_key)
         if pipeline is None:
             pipeline = Pipeline(id=pl_id, name=str(payload.get("name") or pl_id))
-            self._pipelines[pl_id] = pipeline
+            self._pipelines[pipeline_key] = pipeline
         pipeline.pipeline_type = str(payload.get("pipeline_type") or pipeline.pipeline_type)
         pipeline.write_mode = str(payload.get("write_mode") or pipeline.write_mode)
-        for node_id in [n.id for n in self._nodes.values() if n.pipeline_id == pl_id]:
-            self._nodes.pop(node_id, None)
-        for edge_id in [e.id for e in self._edges.values() if e.pipeline_id == pl_id]:
-            self._edges.pop(edge_id, None)
-        self._nodes.update({node.id: node for node in nodes})
-        self._edges.update({edge.id: edge for edge in edges})
-        self._persisted_graph_ids.add(pl_id)
+        for key, node in list(self._nodes.items()):
+            if key[:2] == scope.key and node.pipeline_id == pl_id:
+                self._nodes.pop(key, None)
+        for key, edge in list(self._edges.items()):
+            if key[:2] == scope.key and edge.pipeline_id == pl_id:
+                self._edges.pop(key, None)
+        self._nodes.update({self._tenant_key(scope, node.id): node for node in nodes})
+        self._edges.update({self._tenant_key(scope, edge.id): edge for edge in edges})
+        self._persisted_graph_ids.add(pipeline_key)
 
     def get_graph(self, scope: TenantScope, pl_id: str) -> dict[str, Any]:
         from aos_api.data_os_store import load_phase5_pipeline_graph
@@ -351,9 +358,9 @@ class PipelineEngine:
         with _LOCK:
             persisted = load_phase5_pipeline_graph(scope, pl_id)
             if persisted is not None:
-                self._hydrate_persisted_graph_locked(persisted)
+                self._hydrate_persisted_graph_locked(scope, persisted)
                 return copy.deepcopy(persisted)
-            return copy.deepcopy(self._snapshot_graph_locked(pl_id))
+            return copy.deepcopy(self._snapshot_graph_locked(scope, pl_id))
 
     def replace_graph(
         self,
@@ -481,14 +488,15 @@ class PipelineEngine:
 
         with _LOCK:
             for node in prepared_nodes:
-                current = self._nodes.get(node.id)
+                current = self._nodes.get(self._tenant_key(scope, node.id))
                 if current is not None and current.pipeline_id != pl_id:
                     raise ValueError(f"node id belongs to another pipeline: {node.id}")
             for edge in prepared_edges:
-                current = self._edges.get(edge.id)
+                current = self._edges.get(self._tenant_key(scope, edge.id))
                 if current is not None and current.pipeline_id != pl_id:
                     raise ValueError(f"edge id belongs to another pipeline: {edge.id}")
-            pipeline = self._pipelines.get(pl_id)
+            pipeline_key = self._tenant_key(scope, pl_id)
+            pipeline = self._pipelines.get(pipeline_key)
             target_name = (name or (pipeline.name if pipeline else pl_id)).strip() or pl_id
             target_type = pipeline_type or (pipeline.pipeline_type if pipeline else "ETL")
             target_write_mode = write_mode or (pipeline.write_mode if pipeline else "SNAPSHOT")
@@ -507,27 +515,29 @@ class PipelineEngine:
             )
             if pipeline is None:
                 pipeline = Pipeline(id=pl_id, name=target_name)
-                self._pipelines[pl_id] = pipeline
+                self._pipelines[pipeline_key] = pipeline
             pipeline.pipeline_type = target_type
             pipeline.write_mode = target_write_mode
             pipeline.updated_at = now
 
-            for node_id in [n.id for n in self._nodes.values() if n.pipeline_id == pl_id]:
-                self._nodes.pop(node_id, None)
-            for edge_id in [e.id for e in self._edges.values() if e.pipeline_id == pl_id]:
-                self._edges.pop(edge_id, None)
-            self._nodes.update({node.id: node for node in prepared_nodes})
-            self._edges.update({edge.id: edge for edge in prepared_edges})
-            self._persisted_graph_ids.add(pl_id)
-            self._add_history(pl_id, "updated", "Canvas graph saved")
+            for key, node in list(self._nodes.items()):
+                if key[:2] == scope.key and node.pipeline_id == pl_id:
+                    self._nodes.pop(key, None)
+            for key, edge in list(self._edges.items()):
+                if key[:2] == scope.key and edge.pipeline_id == pl_id:
+                    self._edges.pop(key, None)
+            self._nodes.update({self._tenant_key(scope, node.id): node for node in prepared_nodes})
+            self._edges.update({self._tenant_key(scope, edge.id): edge for edge in prepared_edges})
+            self._persisted_graph_ids.add(pipeline_key)
+            self._add_history(scope, pl_id, "updated", "Canvas graph saved")
             return copy.deepcopy(committed)
 
     # ── Files tree ──
-    def get_files(self, pl_id: str) -> list[dict[str, Any]]:
-        if pl_id not in self._pipelines:
+    def get_files(self, scope: TenantScope, pl_id: str) -> list[dict[str, Any]]:
+        pl = self.get_pipeline(scope, pl_id)
+        if pl is None:
             raise KeyError(f"Pipeline {pl_id} not found")
-        pl = self._pipelines[pl_id]
-        nodes = self.list_nodes(pl_id)
+        nodes = self.list_nodes(scope, pl_id)
         tree: list[dict[str, Any]] = [
             {
                 "name": pl.name,
@@ -559,8 +569,8 @@ class PipelineEngine:
         return tree
 
     # ── Node preview ──
-    def preview_node(self, pl_id: str, node_id: str, limit: int = 20) -> dict[str, Any]:
-        node = self._nodes.get(node_id)
+    def preview_node(self, scope: TenantScope, pl_id: str, node_id: str, limit: int = 20) -> dict[str, Any]:
+        node = self._nodes.get(self._tenant_key(scope, node_id))
         if node is None or node.pipeline_id != pl_id:
             raise KeyError(f"Node {node_id} not found in pipeline {pl_id}")
         cols = ["id", "name", "value", "ts"]
@@ -580,15 +590,15 @@ class PipelineEngine:
         }
 
     # ── Node config (LLM) ──
-    def get_node_config(self, pl_id: str, node_id: str) -> dict[str, Any]:
-        node = self._nodes.get(node_id)
+    def get_node_config(self, scope: TenantScope, pl_id: str, node_id: str) -> dict[str, Any]:
+        node = self._nodes.get(self._tenant_key(scope, node_id))
         if node is None or node.pipeline_id != pl_id:
             raise KeyError(f"Node {node_id} not found in pipeline {pl_id}")
         return {"pipeline_id": pl_id, "node_id": node_id, "config": node.config}
 
-    def update_node_config(self, pl_id: str, node_id: str, config: dict[str, Any]) -> PipelineNode:
+    def update_node_config(self, scope: TenantScope, pl_id: str, node_id: str, config: dict[str, Any]) -> PipelineNode:
         with _LOCK:
-            node = self._nodes.get(node_id)
+            node = self._nodes.get(self._tenant_key(scope, node_id))
             if node is None or node.pipeline_id != pl_id:
                 raise KeyError(f"Node {node_id} not found in pipeline {pl_id}")
             node.config = config
@@ -596,14 +606,15 @@ class PipelineEngine:
             return node
 
     # ── Trial run ──
-    def trial_run(self, pl_id: str, node_id: str, sample_input: dict[str, Any] | None = None) -> dict[str, Any]:
-        node = self._nodes.get(node_id)
+    def trial_run(self, scope: TenantScope, pl_id: str, node_id: str, sample_input: dict[str, Any] | None = None) -> dict[str, Any]:
+        node = self._nodes.get(self._tenant_key(scope, node_id))
         if node is None or node.pipeline_id != pl_id:
             raise KeyError(f"Node {node_id} not found in pipeline {pl_id}")
-        pl = self._pipelines.get(pl_id)
+        pl = self.get_pipeline(scope, pl_id)
         if pl is None:
             raise KeyError(f"Pipeline {pl_id} not found")
         evidence, output_rows = self._execute(
+            scope,
             pl,
             node_id=node_id,
             sample_input=sample_input or {},
@@ -619,69 +630,70 @@ class PipelineEngine:
         }
 
     # ── Proposals ──
-    def create_proposal(self, pipeline_id: str, title: str, **kwargs: Any) -> PipelineProposal:
+    def create_proposal(self, scope: TenantScope, pipeline_id: str, title: str, **kwargs: Any) -> PipelineProposal:
         with _LOCK:
             pp = PipelineProposal(pipeline_id=pipeline_id, title=title, **kwargs)
-            self._proposals[pp.id] = pp
+            self._proposals[self._tenant_key(scope, pp.id)] = pp
             return pp
 
-    def get_proposal(self, pp_id: str) -> PipelineProposal | None:
-        return self._proposals.get(pp_id)
+    def get_proposal(self, scope: TenantScope, pp_id: str) -> PipelineProposal | None:
+        return self._proposals.get(self._tenant_key(scope, pp_id))
 
-    def list_proposals(self, pipeline_id: str, status: str | None = None) -> list[PipelineProposal]:
-        items = [p for p in self._proposals.values() if p.pipeline_id == pipeline_id]
+    def list_proposals(self, scope: TenantScope, pipeline_id: str, status: str | None = None) -> list[PipelineProposal]:
+        items = [p for key, p in self._proposals.items() if key[:2] == scope.key and p.pipeline_id == pipeline_id]
         if status:
             items = [p for p in items if p.status == status]
         return items
 
-    def discard_proposal(self, pipeline_id: str, pp_id: str) -> PipelineProposal:
+    def discard_proposal(self, scope: TenantScope, pipeline_id: str, pp_id: str) -> PipelineProposal:
         with _LOCK:
-            pp = self._proposals.get(pp_id)
+            pp = self._proposals.get(self._tenant_key(scope, pp_id))
             if pp is None or pp.pipeline_id != pipeline_id:
                 raise KeyError(f"Proposal {pp_id} not found in pipeline {pipeline_id}")
             pp.status = "discarded"
             pp.updated_at = time.time()
             return pp
 
-    def merge_proposal(self, pipeline_id: str, pp_id: str) -> PipelineProposal:
+    def merge_proposal(self, scope: TenantScope, pipeline_id: str, pp_id: str) -> PipelineProposal:
         with _LOCK:
-            pp = self._proposals.get(pp_id)
+            pp = self._proposals.get(self._tenant_key(scope, pp_id))
             if pp is None or pp.pipeline_id != pipeline_id:
                 raise KeyError(f"Proposal {pp_id} not found in pipeline {pipeline_id}")
             pp.status = "merged"
             pp.updated_at = time.time()
-            self._add_history(pipeline_id, "updated", f"Merged proposal {pp_id}")
+            self._add_history(scope, pipeline_id, "updated", f"Merged proposal {pp_id}")
             return pp
 
     # ── History ──
-    def _add_history(self, pipeline_id: str, action: str, detail: str = "") -> None:
+    def _add_history(self, scope: TenantScope, pipeline_id: str, action: str, detail: str = "") -> None:
         h = PipelineHistory(pipeline_id=pipeline_id, action=action, detail=detail)
-        self._history[h.id] = h
+        self._history[self._tenant_key(scope, h.id)] = h
 
-    def list_history(self, pipeline_id: str) -> list[PipelineHistory]:
-        items = [h for h in self._history.values() if h.pipeline_id == pipeline_id]
+    def list_history(self, scope: TenantScope, pipeline_id: str) -> list[PipelineHistory]:
+        items = [h for key, h in self._history.items() if key[:2] == scope.key and h.pipeline_id == pipeline_id]
         items.sort(key=lambda h: h.created_at, reverse=True)
         return items
 
     # ── Schedules ──
-    def create_schedule(self, name: str, **kwargs: Any) -> Schedule:
+    def create_schedule(self, scope: TenantScope, name: str, **kwargs: Any) -> Schedule:
         with _LOCK:
             sc = Schedule(name=name, **kwargs)
-            self._schedules[sc.id] = sc
+            self._schedules[self._tenant_key(scope, sc.id)] = sc
             return sc
 
-    def get_schedule(self, sc_id: str) -> Schedule | None:
-        return self._schedules.get(sc_id)
+    def get_schedule(self, scope: TenantScope, sc_id: str) -> Schedule | None:
+        return self._schedules.get(self._tenant_key(scope, sc_id))
 
     def list_schedules(
         self,
+        scope: TenantScope,
         search: str | None = None,
         status: str | None = None,
         trigger_type: str | None = None,
         page: int = 1,
         page_size: int = 20,
     ) -> tuple[list[Schedule], int]:
-        items = list(self._schedules.values())
+        items = [item for key, item in self._schedules.items() if key[:2] == scope.key]
         if status:
             items = [s for s in items if s.status == status]
         if trigger_type:
@@ -693,9 +705,9 @@ class PipelineEngine:
         start = (page - 1) * page_size
         return items[start : start + page_size], total
 
-    def update_schedule(self, sc_id: str, **kwargs: Any) -> Schedule:
+    def update_schedule(self, scope: TenantScope, sc_id: str, **kwargs: Any) -> Schedule:
         with _LOCK:
-            sc = self._schedules.get(sc_id)
+            sc = self._schedules.get(self._tenant_key(scope, sc_id))
             if sc is None:
                 raise KeyError(f"Schedule {sc_id} not found")
             for k, v in kwargs.items():
@@ -704,10 +716,10 @@ class PipelineEngine:
             sc.updated_at = time.time()
             return sc
 
-    def run_schedule(self, sc_id: str) -> ScheduleRun:
+    def run_schedule(self, scope: TenantScope, sc_id: str) -> ScheduleRun:
         started_at = time.time()
         with _LOCK:
-            sc = self._schedules.get(sc_id)
+            sc = self._schedules.get(self._tenant_key(scope, sc_id))
             if sc is None:
                 raise KeyError(f"Schedule {sc_id} not found")
             pipeline_id = sc.pipeline_id
@@ -718,7 +730,7 @@ class PipelineEngine:
                 )
                 dispatch = None
             else:
-                pipeline = self._pipelines.get(pipeline_id)
+                pipeline = self.get_pipeline(scope, pipeline_id)
                 if pipeline is None:
                     run = ScheduleRun(
                         schedule_id=sc_id,
@@ -726,7 +738,7 @@ class PipelineEngine:
                     )
                     dispatch = None
                 else:
-                    preflight = self._preflight(pipeline, started_at)
+                    preflight = self._preflight(scope, pipeline, started_at)
                     if preflight is not None:
                         run = ScheduleRun(schedule_id=sc_id, **preflight)
                         dispatch = None
@@ -741,15 +753,16 @@ class PipelineEngine:
                         )
                         # Store running before starting the external callback. Starting
                         # under the same lock closes the pause/check dispatch race.
-                        self._schedule_runs[run.id] = run
+                        self._schedule_runs[self._tenant_key(scope, run.id)] = run
                         dispatch = self._start_dispatch(
+                            scope,
                             pipeline,
                             node_id=None,
                             sample_input={},
                             execution_kind="schedule",
                             started_at=started_at,
                         )
-            self._schedule_runs[run.id] = run
+            self._schedule_runs[self._tenant_key(scope, run.id)] = run
 
         if dispatch is not None:
             evidence, _ = self._collect_dispatch(dispatch)
@@ -760,6 +773,7 @@ class PipelineEngine:
         with _LOCK:
             if pipeline_id:
                 self._add_history(
+                    scope,
                     pipeline_id,
                     "run",
                     "status={} executor={} output={}".format(
@@ -770,21 +784,21 @@ class PipelineEngine:
                 )
             return run.model_copy(deep=True)
 
-    def pause_schedule(self, sc_id: str) -> Schedule:
+    def pause_schedule(self, scope: TenantScope, sc_id: str) -> Schedule:
         with _LOCK:
-            sc = self._schedules.get(sc_id)
+            sc = self._schedules.get(self._tenant_key(scope, sc_id))
             if sc is None:
                 raise KeyError(f"Schedule {sc_id} not found")
             sc.status = "paused"
             sc.updated_at = time.time()
             return sc
 
-    def list_schedule_runs(self, sc_id: str) -> list[ScheduleRun]:
+    def list_schedule_runs(self, scope: TenantScope, sc_id: str) -> list[ScheduleRun]:
         with _LOCK:
             return [
                 r.model_copy(deep=True)
-                for r in self._schedule_runs.values()
-                if r.schedule_id == sc_id
+                for key, r in self._schedule_runs.items()
+                if key[:2] == scope.key and r.schedule_id == sc_id
             ]
 
     # ── Datasets ──
@@ -982,8 +996,8 @@ class PipelineEngine:
         except Exception:
             return False
 
-    def _preflight(self, pipeline: Pipeline, started_at: float) -> dict[str, Any] | None:
-        nodes = [n for n in self._nodes.values() if n.pipeline_id == pipeline.id]
+    def _preflight(self, scope: TenantScope, pipeline: Pipeline, started_at: float) -> dict[str, Any] | None:
+        nodes = self.list_nodes(scope, pipeline.id)
         supported_node_types = {"source", "transform", "filter", "sink", "llm"}
         if any(
             n.node_type.strip().lower() not in supported_node_types
@@ -1001,6 +1015,7 @@ class PipelineEngine:
 
     def _start_dispatch(
         self,
+        scope: TenantScope,
         pipeline: Pipeline,
         *,
         node_id: str | None,
@@ -1011,9 +1026,7 @@ class PipelineEngine:
         executor_id = pipeline.executor_id
         executor = self._executors[executor_id]
         pipeline_snapshot = pipeline.model_copy(deep=True)
-        nodes_snapshot = [
-            copy.deepcopy(n) for n in self._nodes.values() if n.pipeline_id == pipeline.id
-        ]
+        nodes_snapshot = [copy.deepcopy(n) for n in self.list_nodes(scope, pipeline.id)]
         result_queue: queue.Queue = queue.Queue(maxsize=1)
         cancel_event = threading.Event()
         deadline = time.monotonic() + pipeline.execution_timeout_seconds
@@ -1171,6 +1184,7 @@ class PipelineEngine:
 
     def _execute(
         self,
+        scope: TenantScope,
         pipeline: Pipeline,
         *,
         node_id: str | None = None,
@@ -1179,10 +1193,11 @@ class PipelineEngine:
     ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         started_at = time.time()
         with _LOCK:
-            preflight = self._preflight(pipeline, started_at)
+            preflight = self._preflight(scope, pipeline, started_at)
             if preflight is not None:
                 return preflight, []
             dispatch = self._start_dispatch(
+                scope,
                 pipeline,
                 node_id=node_id,
                 sample_input=sample_input or {},
@@ -1239,15 +1254,15 @@ class PipelineEngine:
         purge_persisted: bool = False,
     ) -> None:
         with _LOCK:
-            persisted_graph_ids = list(self._persisted_graph_ids)
-            self._pipelines.clear()
-            self._nodes.clear()
-            self._edges.clear()
-            self._proposals.clear()
-            self._history.clear()
-            self._schedules.clear()
-            self._schedule_runs.clear()
+            persisted_graph_ids = [key for key in self._persisted_graph_ids if key[:2] == scope.key]
             for store in (
+                self._pipelines,
+                self._nodes,
+                self._edges,
+                self._proposals,
+                self._history,
+                self._schedules,
+                self._schedule_runs,
                 self._datasets,
                 self._builds,
                 self._health,
@@ -1257,11 +1272,11 @@ class PipelineEngine:
                     store.pop(key)
             self._executors.clear()
             self._evidence_resolvers.clear()
-            self._persisted_graph_ids.clear()
+            self._persisted_graph_ids.difference_update(persisted_graph_ids)
             if purge_persisted:
                 from aos_api.data_os_store import delete_phase5_pipeline_graph
 
-                for pipeline_id in persisted_graph_ids:
+                for _, _, pipeline_id in persisted_graph_ids:
                     delete_phase5_pipeline_graph(scope, pipeline_id)
 
     def reset_all_for_tests(self) -> None:

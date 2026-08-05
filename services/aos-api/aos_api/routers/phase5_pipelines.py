@@ -20,6 +20,10 @@ router = APIRouter(
 )
 
 
+def _scope(principal: Principal) -> TenantScope:
+    return TenantScope(principal.org_id, principal.project_id)
+
+
 # ─────────── Request models ───────────
 
 
@@ -89,6 +93,7 @@ class CreateProposalRequest(BaseModel):
 
 @router.get("")
 async def list_pipelines(
+    principal: Annotated[Principal, Depends(require_principal)],
     search: str | None = Query(None),
     status: str | None = Query(None),
     pipeline_type: str | None = Query(None),
@@ -99,6 +104,7 @@ async def list_pipelines(
 ) -> dict[str, Any]:
     eng = get_engine()
     items, total = eng.list_pipelines(
+        _scope(principal),
         search=search, status=status, pipeline_type=pipeline_type,
         page=page, page_size=page_size, sort_by=sort_by, sort_order=sort_order,
     )
@@ -109,27 +115,27 @@ async def list_pipelines(
 
 
 @router.post("")
-async def create_pipeline(req: CreatePipelineRequest) -> dict[str, Any]:
+async def create_pipeline(req: CreatePipelineRequest, principal: Annotated[Principal, Depends(require_principal)]) -> dict[str, Any]:
     eng = get_engine()
-    pl = eng.create_pipeline(**req.model_dump())
+    pl = eng.create_pipeline(_scope(principal), **req.model_dump())
     return pl.model_dump()
 
 
 @router.get("/{pl_id}")
-async def get_pipeline(pl_id: str) -> dict[str, Any]:
+async def get_pipeline(pl_id: str, principal: Annotated[Principal, Depends(require_principal)]) -> dict[str, Any]:
     eng = get_engine()
-    pl = eng.get_pipeline(pl_id)
+    pl = eng.get_pipeline(_scope(principal), pl_id)
     if pl is None:
         raise HTTPException(404, f"Pipeline {pl_id} not found")
     return pl.model_dump()
 
 
 @router.put("/{pl_id}")
-async def update_pipeline(pl_id: str, req: UpdatePipelineRequest) -> dict[str, Any]:
+async def update_pipeline(pl_id: str, req: UpdatePipelineRequest, principal: Annotated[Principal, Depends(require_principal)]) -> dict[str, Any]:
     eng = get_engine()
     try:
         data = {k: v for k, v in req.model_dump().items() if v is not None}
-        pl = eng.update_pipeline(pl_id, **data)
+        pl = eng.update_pipeline(_scope(principal), pl_id, **data)
         return pl.model_dump()
     except KeyError:
         raise HTTPException(404, f"Pipeline {pl_id} not found")
@@ -188,7 +194,7 @@ async def replace_graph(
             write_mode=req.write_mode,
             name=req.name,
         )
-        pipeline = eng.get_pipeline(pl_id)
+        pipeline = eng.get_pipeline(_scope(principal), pl_id)
         return {
             **result,
             "pipeline_type": pipeline.pipeline_type if pipeline else req.pipeline_type,
@@ -204,10 +210,10 @@ async def replace_graph(
 
 
 @router.get("/{pl_id}/files")
-async def get_files(pl_id: str) -> dict[str, Any]:
+async def get_files(pl_id: str, principal: Annotated[Principal, Depends(require_principal)]) -> dict[str, Any]:
     eng = get_engine()
     try:
-        return {"tree": eng.get_files(pl_id)}
+        return {"tree": eng.get_files(_scope(principal), pl_id)}
     except KeyError:
         raise HTTPException(404, f"Pipeline {pl_id} not found")
 
@@ -217,11 +223,11 @@ async def get_files(pl_id: str) -> dict[str, Any]:
 
 @router.get("/{pl_id}/nodes/{node_id}/preview")
 async def preview_node(
-    pl_id: str, node_id: str, limit: int = Query(20, ge=1, le=200),
+    pl_id: str, node_id: str, principal: Annotated[Principal, Depends(require_principal)], limit: int = Query(20, ge=1, le=200),
 ) -> dict[str, Any]:
     eng = get_engine()
     try:
-        return eng.preview_node(pl_id, node_id, limit=limit)
+        return eng.preview_node(_scope(principal), pl_id, node_id, limit=limit)
     except KeyError:
         raise HTTPException(404, f"Node {node_id} not found in pipeline {pl_id}")
 
@@ -230,10 +236,10 @@ async def preview_node(
 
 
 @router.get("/{pl_id}/nodes/{node_id}/config")
-async def get_node_config(pl_id: str, node_id: str) -> dict[str, Any]:
+async def get_node_config(pl_id: str, node_id: str, principal: Annotated[Principal, Depends(require_principal)]) -> dict[str, Any]:
     eng = get_engine()
     try:
-        return eng.get_node_config(pl_id, node_id)
+        return eng.get_node_config(_scope(principal), pl_id, node_id)
     except KeyError:
         # W3-C6 · demo config for canvas transform panel
         if node_id.startswith("demo-"):
@@ -247,10 +253,10 @@ async def get_node_config(pl_id: str, node_id: str) -> dict[str, Any]:
 
 
 @router.put("/{pl_id}/nodes/{node_id}/config")
-async def update_node_config(pl_id: str, node_id: str, req: UpdateNodeConfigRequest) -> dict[str, Any]:
+async def update_node_config(pl_id: str, node_id: str, req: UpdateNodeConfigRequest, principal: Annotated[Principal, Depends(require_principal)]) -> dict[str, Any]:
     eng = get_engine()
     try:
-        node = eng.update_node_config(pl_id, node_id, req.config)
+        node = eng.update_node_config(_scope(principal), pl_id, node_id, req.config)
         return node.model_dump()
     except KeyError:
         if node_id.startswith("demo-"):
@@ -262,11 +268,11 @@ async def update_node_config(pl_id: str, node_id: str, req: UpdateNodeConfigRequ
 
 
 @router.post("/{pl_id}/nodes/{node_id}/trial-run")
-async def trial_run(pl_id: str, node_id: str, req: TrialRunRequest | None = None) -> dict[str, Any]:
+async def trial_run(pl_id: str, node_id: str, principal: Annotated[Principal, Depends(require_principal)], req: TrialRunRequest | None = None) -> dict[str, Any]:
     eng = get_engine()
     try:
         sample_input = req.sample_input if req else None
-        return eng.trial_run(pl_id, node_id, sample_input)
+        return eng.trial_run(_scope(principal), pl_id, node_id, sample_input)
     except KeyError:
         if node_id.startswith("demo-"):
             import time as _time
@@ -301,39 +307,41 @@ async def trial_run(pl_id: str, node_id: str, req: TrialRunRequest | None = None
 
 @router.get("/{pl_id}/proposals")
 async def list_proposals(
-    pl_id: str, status: str | None = Query(None),
+    pl_id: str, principal: Annotated[Principal, Depends(require_principal)], status: str | None = Query(None),
 ) -> dict[str, Any]:
     eng = get_engine()
-    if eng.get_pipeline(pl_id) is None:
+    scope = _scope(principal)
+    if eng.get_pipeline(scope, pl_id) is None:
         raise HTTPException(404, f"Pipeline {pl_id} not found")
-    items = eng.list_proposals(pl_id, status=status)
+    items = eng.list_proposals(scope, pl_id, status=status)
     return {"items": [p.model_dump() for p in items], "count": len(items)}
 
 
 @router.post("/{pl_id}/proposals")
-async def create_proposal(pl_id: str, req: CreateProposalRequest) -> dict[str, Any]:
+async def create_proposal(pl_id: str, req: CreateProposalRequest, principal: Annotated[Principal, Depends(require_principal)]) -> dict[str, Any]:
     eng = get_engine()
-    if eng.get_pipeline(pl_id) is None:
+    scope = _scope(principal)
+    if eng.get_pipeline(scope, pl_id) is None:
         raise HTTPException(404, f"Pipeline {pl_id} not found")
-    pp = eng.create_proposal(pipeline_id=pl_id, **req.model_dump())
+    pp = eng.create_proposal(scope, pipeline_id=pl_id, **req.model_dump())
     return pp.model_dump()
 
 
 @router.post("/{pl_id}/proposals/{pp_id}/discard")
-async def discard_proposal(pl_id: str, pp_id: str) -> dict[str, Any]:
+async def discard_proposal(pl_id: str, pp_id: str, principal: Annotated[Principal, Depends(require_principal)]) -> dict[str, Any]:
     eng = get_engine()
     try:
-        pp = eng.discard_proposal(pl_id, pp_id)
+        pp = eng.discard_proposal(_scope(principal), pl_id, pp_id)
         return pp.model_dump()
     except KeyError:
         raise HTTPException(404, f"Proposal {pp_id} not found in pipeline {pl_id}")
 
 
 @router.post("/{pl_id}/proposals/{pp_id}/merge")
-async def merge_proposal(pl_id: str, pp_id: str) -> dict[str, Any]:
+async def merge_proposal(pl_id: str, pp_id: str, principal: Annotated[Principal, Depends(require_principal)]) -> dict[str, Any]:
     eng = get_engine()
     try:
-        pp = eng.merge_proposal(pl_id, pp_id)
+        pp = eng.merge_proposal(_scope(principal), pl_id, pp_id)
         return pp.model_dump()
     except KeyError:
         raise HTTPException(404, f"Proposal {pp_id} not found in pipeline {pl_id}")
@@ -343,12 +351,13 @@ async def merge_proposal(pl_id: str, pp_id: str) -> dict[str, Any]:
 
 
 @router.get("/{pl_id}/history")
-async def list_history(pl_id: str) -> dict[str, Any]:
+async def list_history(pl_id: str, principal: Annotated[Principal, Depends(require_principal)]) -> dict[str, Any]:
     """Return run/edit history; unknown ids get demo entries (W3-C6)."""
     import time as _time
 
     eng = get_engine()
-    if eng.get_pipeline(pl_id) is None:
+    scope = _scope(principal)
+    if eng.get_pipeline(scope, pl_id) is None:
         now = _time.time()
         items = [
             {"id": f"ph-demo-1-{pl_id}", "pipeline_id": pl_id, "action": "created", "actor": "system",
@@ -359,5 +368,5 @@ async def list_history(pl_id: str) -> dict[str, Any]:
              "detail": "演示路径 · 不执行真实数据", "created_at": now - 600},
         ]
         return {"items": items, "count": len(items), "demo": True}
-    items = eng.list_history(pl_id)
+    items = eng.list_history(scope, pl_id)
     return {"items": [h.model_dump() for h in items], "count": len(items), "demo": False}
