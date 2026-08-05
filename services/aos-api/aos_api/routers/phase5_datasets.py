@@ -4,14 +4,20 @@ datasets + preview + builds + health + sync-config.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
+from aos_api.auth import Principal, require_principal
 from aos_api.phase5_pipeline_engine import get_engine
+from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/datasets", tags=["phase5-datasets"])
+
+
+def _scope(principal: Principal) -> TenantScope:
+    return TenantScope(principal.org_id, principal.project_id)
 
 
 # ─────────── Request models ───────────
@@ -39,12 +45,15 @@ class UpdateSyncConfigRequest(BaseModel):
 
 @router.get("")
 async def list_datasets(
+    principal: Annotated[Principal, Depends(require_principal)],
     search: str | None = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ) -> dict[str, Any]:
     eng = get_engine()
-    items, total = eng.list_datasets(search=search, page=page, page_size=page_size)
+    items, total = eng.list_datasets(
+        _scope(principal), search=search, page=page, page_size=page_size
+    )
     return {
         "items": [d.model_dump() for d in items],
         "total": total, "page": page, "page_size": page_size,
@@ -52,9 +61,12 @@ async def list_datasets(
 
 
 @router.post("")
-async def create_dataset(req: CreateDatasetRequest) -> dict[str, Any]:
+async def create_dataset(
+    req: CreateDatasetRequest,
+    principal: Annotated[Principal, Depends(require_principal)],
+) -> dict[str, Any]:
     eng = get_engine()
-    ds = eng.create_dataset(**req.model_dump())
+    ds = eng.create_dataset(_scope(principal), **req.model_dump())
     return ds.model_dump()
 
 
@@ -62,9 +74,12 @@ async def create_dataset(req: CreateDatasetRequest) -> dict[str, Any]:
 
 
 @router.get("/{ds_id}")
-async def get_dataset(ds_id: str) -> dict[str, Any]:
+async def get_dataset(
+    ds_id: str,
+    principal: Annotated[Principal, Depends(require_principal)],
+) -> dict[str, Any]:
     eng = get_engine()
-    ds = eng.get_dataset(ds_id)
+    ds = eng.get_dataset(_scope(principal), ds_id)
     if ds is None:
         raise HTTPException(404, f"Dataset {ds_id} not found")
     result = ds.model_dump()
@@ -83,11 +98,13 @@ async def get_dataset(ds_id: str) -> dict[str, Any]:
 
 @router.get("/{ds_id}/preview")
 async def preview_dataset(
-    ds_id: str, limit: int = Query(50, ge=1, le=500),
+    ds_id: str,
+    principal: Annotated[Principal, Depends(require_principal)],
+    limit: int = Query(50, ge=1, le=500),
 ) -> dict[str, Any]:
     eng = get_engine()
     try:
-        return eng.preview_dataset(ds_id, limit=limit)
+        return eng.preview_dataset(_scope(principal), ds_id, limit=limit)
     except KeyError:
         raise HTTPException(404, f"Dataset {ds_id} not found")
 
@@ -96,11 +113,15 @@ async def preview_dataset(
 
 
 @router.get("/{ds_id}/builds")
-async def list_builds(ds_id: str) -> dict[str, Any]:
+async def list_builds(
+    ds_id: str,
+    principal: Annotated[Principal, Depends(require_principal)],
+) -> dict[str, Any]:
     eng = get_engine()
-    if eng.get_dataset(ds_id) is None:
+    scope = _scope(principal)
+    if eng.get_dataset(scope, ds_id) is None:
         raise HTTPException(404, f"Dataset {ds_id} not found")
-    items = eng.list_builds(ds_id)
+    items = eng.list_builds(scope, ds_id)
     return {"items": [b.model_dump() for b in items], "count": len(items)}
 
 
@@ -108,12 +129,16 @@ async def list_builds(ds_id: str) -> dict[str, Any]:
 
 
 @router.get("/{ds_id}/health")
-async def check_health(ds_id: str) -> dict[str, Any]:
+async def check_health(
+    ds_id: str,
+    principal: Annotated[Principal, Depends(require_principal)],
+) -> dict[str, Any]:
     eng = get_engine()
+    scope = _scope(principal)
     try:
-        hc = eng.get_latest_health(ds_id)
+        hc = eng.get_latest_health(scope, ds_id)
         if hc is None:
-            hc = eng.check_health(ds_id)
+            hc = eng.check_health(scope, ds_id)
         return hc.model_dump()
     except KeyError:
         raise HTTPException(404, f"Dataset {ds_id} not found")
@@ -123,20 +148,27 @@ async def check_health(ds_id: str) -> dict[str, Any]:
 
 
 @router.get("/{ds_id}/sync-config")
-async def get_sync_config(ds_id: str) -> dict[str, Any]:
+async def get_sync_config(
+    ds_id: str,
+    principal: Annotated[Principal, Depends(require_principal)],
+) -> dict[str, Any]:
     eng = get_engine()
     try:
-        return eng.get_sync_config(ds_id).model_dump()
+        return eng.get_sync_config(_scope(principal), ds_id).model_dump()
     except KeyError:
         raise HTTPException(404, f"Dataset {ds_id} not found")
 
 
 @router.put("/{ds_id}/sync-config")
-async def update_sync_config(ds_id: str, req: UpdateSyncConfigRequest) -> dict[str, Any]:
+async def update_sync_config(
+    ds_id: str,
+    req: UpdateSyncConfigRequest,
+    principal: Annotated[Principal, Depends(require_principal)],
+) -> dict[str, Any]:
     eng = get_engine()
     try:
         data = {k: v for k, v in req.model_dump().items() if v is not None}
-        sc = eng.set_sync_config(ds_id, **data)
+        sc = eng.set_sync_config(_scope(principal), ds_id, **data)
         return sc.model_dump()
     except KeyError:
         raise HTTPException(404, f"Dataset {ds_id} not found")

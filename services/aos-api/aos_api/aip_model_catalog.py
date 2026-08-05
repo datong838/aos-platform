@@ -11,6 +11,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from aos_api.tenant_scope import TenantScope
+
 _MAX_ITEMS = 200
 _LOCK = threading.Lock()
 
@@ -36,26 +38,38 @@ class ModelCatalogEngine:
             with cls._lock:
                 if cls._instance is None:
                     cls._instance = super().__new__(cls)
-                    cls._instance._items: dict[str, ModelCatalogItem] = {}
+                    cls._instance._items: dict[tuple[str, str, str], ModelCatalogItem] = {}
         return cls._instance
 
-    def create(self, name: str, config: dict[str, Any] | None = None) -> ModelCatalogItem:
+    @staticmethod
+    def _key(scope: TenantScope, item_id: str) -> tuple[str, str, str]:
+        return scope.org_id, scope.project_id, item_id
+
+    def create(
+        self,
+        scope: TenantScope,
+        name: str,
+        config: dict[str, Any] | None = None,
+    ) -> ModelCatalogItem:
         with _LOCK:
-            if len(self._items) >= _MAX_ITEMS:
+            scope_size = sum(1 for key in self._items if key[:2] == scope.key)
+            if scope_size >= _MAX_ITEMS:
                 raise ValueError(f"已达容量上限 {_MAX_ITEMS}")
             item = ModelCatalogItem(name=name, config=config or {})
-            self._items[item.id] = item
+            self._items[self._key(scope, item.id)] = item
             return item
 
-    def get(self, item_id: str) -> ModelCatalogItem | None:
-        return self._items.get(item_id)
+    def get(self, scope: TenantScope, item_id: str) -> ModelCatalogItem | None:
+        return self._items.get(self._key(scope, item_id))
 
-    def list(self) -> list[ModelCatalogItem]:
-        return list(self._items.values())
+    def list(self, scope: TenantScope) -> list[ModelCatalogItem]:
+        return [item for key, item in self._items.items() if key[:2] == scope.key]
 
-    def update(self, item_id: str, **kwargs: Any) -> ModelCatalogItem:
+    def update(
+        self, scope: TenantScope, item_id: str, **kwargs: Any
+    ) -> ModelCatalogItem:
         with _LOCK:
-            item = self._items.get(item_id)
+            item = self._items.get(self._key(scope, item_id))
             if item is None:
                 raise KeyError(f"不存在 {item_id}")
             for k, v in kwargs.items():
@@ -64,12 +78,18 @@ class ModelCatalogEngine:
             item.updated_at = time.time()
             return item
 
-    def delete(self, item_id: str) -> bool:
+    def delete(self, scope: TenantScope, item_id: str) -> bool:
         with _LOCK:
-            return self._items.pop(item_id, None) is not None
+            return self._items.pop(self._key(scope, item_id), None) is not None
 
-    def reset(self) -> None:
-        """清空引擎（测试隔离用）。"""
+    def reset(self, scope: TenantScope) -> None:
+        """只清空指定租户的目录实例。"""
+        with _LOCK:
+            for key in [key for key in self._items if key[:2] == scope.key]:
+                self._items.pop(key)
+
+    def reset_all_for_tests(self) -> None:
+        """测试基础设施专用；生产路由不得调用。"""
         with _LOCK:
             self._items.clear()
 

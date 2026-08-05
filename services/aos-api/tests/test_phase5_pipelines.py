@@ -176,7 +176,7 @@ def test_replace_graph_survives_engine_memory_restart() -> None:
     assert saved["persisted"] is True
     revision = saved["revision"]
 
-    eng.reset(purge_persisted=False)
+    eng.reset(scope=TEST_SCOPE, purge_persisted=False)
     reloaded = eng.get_graph(TEST_SCOPE, "restart-pipeline")
     assert reloaded["persisted"] is True
     assert reloaded["revision"] == revision
@@ -408,8 +408,8 @@ def test_schedule_run_creates_record() -> None:
 
 def test_create_and_get_dataset() -> None:
     eng = get_engine()
-    ds = eng.create_dataset(name="customers", row_count=100)
-    fetched = eng.get_dataset(ds.id)
+    ds = eng.create_dataset(TEST_SCOPE, name="customers", row_count=100)
+    fetched = eng.get_dataset(TEST_SCOPE, ds.id)
     assert fetched is not None
     assert fetched.name == "customers"
     assert fetched.row_count == 100
@@ -417,9 +417,9 @@ def test_create_and_get_dataset() -> None:
 
 def test_list_datasets_search() -> None:
     eng = get_engine()
-    eng.create_dataset(name="customer_orders")
-    eng.create_dataset(name="product_catalog")
-    items, total = eng.list_datasets(search="customer")
+    eng.create_dataset(TEST_SCOPE, name="customer_orders")
+    eng.create_dataset(TEST_SCOPE, name="product_catalog")
+    items, total = eng.list_datasets(TEST_SCOPE, search="customer")
     assert total == 1
     assert items[0].name == "customer_orders"
 
@@ -427,8 +427,8 @@ def test_list_datasets_search() -> None:
 def test_dataset_preview() -> None:
     eng = get_engine()
     schema = [{"name": "id", "datatype": "int"}, {"name": "label", "datatype": "string"}]
-    ds = eng.create_dataset(name="ds", schema=schema, row_count=500)
-    result = eng.preview_dataset(ds.id, limit=10)
+    ds = eng.create_dataset(TEST_SCOPE, name="ds", schema=schema, row_count=500)
+    result = eng.preview_dataset(TEST_SCOPE, ds.id, limit=10)
     assert len(result["columns"]) == 2
     assert result["total"] == 500
     assert len(result["rows"]) == 10
@@ -439,19 +439,19 @@ def test_dataset_preview() -> None:
 
 def test_dataset_builds() -> None:
     eng = get_engine()
-    ds = eng.create_dataset(name="ds")
-    b1 = eng.add_build(ds.id, status="success")
-    b2 = eng.add_build(ds.id, status="failed")
-    builds = eng.list_builds(ds.id)
+    ds = eng.create_dataset(TEST_SCOPE, name="ds")
+    eng.add_build(TEST_SCOPE, ds.id, status="success")
+    eng.add_build(TEST_SCOPE, ds.id, status="failed")
+    builds = eng.list_builds(TEST_SCOPE, ds.id)
     assert len(builds) == 2
 
 
 def test_dataset_health() -> None:
     eng = get_engine()
-    ds = eng.create_dataset(name="ds")
-    hc = eng.check_health(ds.id)
+    ds = eng.create_dataset(TEST_SCOPE, name="ds")
+    hc = eng.check_health(TEST_SCOPE, ds.id)
     assert hc.status == "healthy"
-    latest = eng.get_latest_health(ds.id)
+    latest = eng.get_latest_health(TEST_SCOPE, ds.id)
     assert latest is not None
     assert latest.id == hc.id
     assert hc.mode == "demo"
@@ -460,8 +460,8 @@ def test_dataset_health() -> None:
 
 def test_sync_config_default() -> None:
     eng = get_engine()
-    ds = eng.create_dataset(name="ds")
-    sc = eng.get_sync_config(ds.id)
+    ds = eng.create_dataset(TEST_SCOPE, name="ds")
+    sc = eng.get_sync_config(TEST_SCOPE, ds.id)
     assert sc.mode == "full"
     assert sc.interval_minutes == 60
     assert sc.enabled is True
@@ -469,15 +469,17 @@ def test_sync_config_default() -> None:
 
 def test_sync_config_update() -> None:
     eng = get_engine()
-    ds = eng.create_dataset(name="ds")
-    sc = eng.set_sync_config(ds.id, mode="incremental", interval_minutes=15)
+    ds = eng.create_dataset(TEST_SCOPE, name="ds")
+    sc = eng.set_sync_config(
+        TEST_SCOPE, ds.id, mode="incremental", interval_minutes=15
+    )
     assert sc.mode == "incremental"
     assert sc.interval_minutes == 15
 
 
 def test_get_dataset_not_found() -> None:
     eng = get_engine()
-    assert eng.get_dataset("nope") is None
+    assert eng.get_dataset(TEST_SCOPE, "nope") is None
 
 
 def test_dataset_preview_datatypes() -> None:
@@ -488,8 +490,8 @@ def test_dataset_preview_datatypes() -> None:
         {"name": "active", "datatype": "boolean"},
         {"name": "label", "datatype": "string"},
     ]
-    ds = eng.create_dataset(name="ds", schema=schema)
-    result = eng.preview_dataset(ds.id, limit=5)
+    ds = eng.create_dataset(TEST_SCOPE, name="ds", schema=schema)
+    result = eng.preview_dataset(TEST_SCOPE, ds.id, limit=5)
     row0 = result["rows"][0]
     assert isinstance(row0["count"], int)
     assert isinstance(row0["price"], float)

@@ -6,12 +6,16 @@ import time
 import pytest
 
 from aos_api.phase5_pipeline_engine import get_engine
+from aos_api.tenant_scope import TenantScope
+
+
+TEST_SCOPE = TenantScope("dev-org", "dev-project")
 
 
 @pytest.fixture(autouse=True)
 def reset_engine():
     eng = get_engine()
-    eng.reset()
+    eng.reset(scope=TEST_SCOPE)
     for scheme in ("dataset", "artifact", "object", "lineage", "quality"):
         eng.register_evidence_resolver(scheme, lambda _ref: True)
     yield
@@ -282,18 +286,21 @@ def test_preview_and_health_are_explicitly_synthetic():
     eng = get_engine()
     pl = eng.create_pipeline(name="p")
     node = eng.add_node(pl.id, "n")
-    ds = eng.create_dataset(name="d", schema=[{"name": "id", "datatype": "int"}])
+    ds = eng.create_dataset(
+        TEST_SCOPE, name="d", schema=[{"name": "id", "datatype": "int"}]
+    )
 
     assert eng.preview_node(pl.id, node.id)["synthetic"] is True
-    assert eng.preview_dataset(ds.id)["mode"] == "demo"
-    health = eng.check_health(ds.id)
+    assert eng.preview_dataset(TEST_SCOPE, ds.id)["mode"] == "demo"
+    health = eng.check_health(TEST_SCOPE, ds.id)
     assert health.synthetic is True
     assert health.mode == "demo"
 
 
-def test_demo_trial_route_is_explicitly_unsupported(client):
+def test_demo_trial_route_is_explicitly_unsupported(client, auth_headers):
     response = client.post(
         "/v1/pipelines/demo-pipeline/nodes/demo-transform/trial-run",
+        headers=auth_headers,
         json={"sample_input": {"secret": "must-not-be-echoed"}},
     )
 

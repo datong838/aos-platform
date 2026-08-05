@@ -187,10 +187,10 @@ class PipelineEngine:
                     inst._history: dict[str, PipelineHistory] = {}
                     inst._schedules: dict[str, Schedule] = {}
                     inst._schedule_runs: dict[str, ScheduleRun] = {}
-                    inst._datasets: dict[str, Dataset] = {}
-                    inst._builds: dict[str, DatasetBuild] = {}
-                    inst._health: dict[str, HealthCheck] = {}
-                    inst._sync_configs: dict[str, SyncConfig] = {}
+                    inst._datasets: dict[tuple[str, str, str], Dataset] = {}
+                    inst._builds: dict[tuple[str, str, str], DatasetBuild] = {}
+                    inst._health: dict[tuple[str, str, str], HealthCheck] = {}
+                    inst._sync_configs: dict[tuple[str, str, str], SyncConfig] = {}
                     inst._executors: dict[str, Callable[..., dict[str, Any]]] = {}
                     inst._evidence_resolvers: dict[str, Callable[[str], bool]] = {}
                     inst._persisted_graph_ids: set[str] = set()
@@ -788,19 +788,29 @@ class PipelineEngine:
             ]
 
     # ── Datasets ──
-    def create_dataset(self, name: str, **kwargs: Any) -> Dataset:
+    @staticmethod
+    def _tenant_key(scope: TenantScope, resource_id: str) -> tuple[str, str, str]:
+        return scope.org_id, scope.project_id, resource_id
+
+    def create_dataset(self, scope: TenantScope, name: str, **kwargs: Any) -> Dataset:
         with _LOCK:
             ds = Dataset(name=name, **kwargs)
-            self._datasets[ds.id] = ds
+            self._datasets[self._tenant_key(scope, ds.id)] = ds
             return ds
 
-    def get_dataset(self, ds_id: str) -> Dataset | None:
-        return self._datasets.get(ds_id)
+    def get_dataset(self, scope: TenantScope, ds_id: str) -> Dataset | None:
+        return self._datasets.get(self._tenant_key(scope, ds_id))
 
     def list_datasets(
-        self, search: str | None = None, page: int = 1, page_size: int = 20
+        self,
+        scope: TenantScope,
+        search: str | None = None,
+        page: int = 1,
+        page_size: int = 20,
     ) -> tuple[list[Dataset], int]:
-        items = list(self._datasets.values())
+        items = [
+            item for key, item in self._datasets.items() if key[:2] == scope.key
+        ]
         if search:
             s = search.lower()
             items = [d for d in items if s in d.name.lower() or s in d.description.lower()]
@@ -808,8 +818,10 @@ class PipelineEngine:
         start = (page - 1) * page_size
         return items[start : start + page_size], total
 
-    def preview_dataset(self, ds_id: str, limit: int = 50) -> dict[str, Any]:
-        ds = self._datasets.get(ds_id)
+    def preview_dataset(
+        self, scope: TenantScope, ds_id: str, limit: int = 50
+    ) -> dict[str, Any]:
+        ds = self._datasets.get(self._tenant_key(scope, ds_id))
         if ds is None:
             raise KeyError(f"Dataset {ds_id} not found")
         cols = [c.get("name", f"col_{i}") for i, c in enumerate(ds.schema)]
@@ -839,19 +851,29 @@ class PipelineEngine:
         }
 
     # ── Dataset builds ──
-    def add_build(self, dataset_id: str, **kwargs: Any) -> DatasetBuild:
+    def add_build(
+        self, scope: TenantScope, dataset_id: str, **kwargs: Any
+    ) -> DatasetBuild:
         with _LOCK:
+            if self.get_dataset(scope, dataset_id) is None:
+                raise KeyError(f"Dataset {dataset_id} not found")
             b = DatasetBuild(dataset_id=dataset_id, **kwargs)
-            self._builds[b.id] = b
+            self._builds[self._tenant_key(scope, b.id)] = b
             return b
 
-    def list_builds(self, dataset_id: str) -> list[DatasetBuild]:
-        return [b for b in self._builds.values() if b.dataset_id == dataset_id]
+    def list_builds(
+        self, scope: TenantScope, dataset_id: str
+    ) -> list[DatasetBuild]:
+        return [
+            build
+            for key, build in self._builds.items()
+            if key[:2] == scope.key and build.dataset_id == dataset_id
+        ]
 
     # ── Health ──
-    def check_health(self, ds_id: str) -> HealthCheck:
+    def check_health(self, scope: TenantScope, ds_id: str) -> HealthCheck:
         with _LOCK:
-            if ds_id not in self._datasets:
+            if self.get_dataset(scope, ds_id) is None:
                 raise KeyError(f"Dataset {ds_id} not found")
             hc = HealthCheck(
                 dataset_id=ds_id,
@@ -860,7 +882,7 @@ class PipelineEngine:
                 duplicate_rate=0.01,
                 freshness_hours=1.5,
             )
-            self._health[hc.id] = hc
+            self._health[self._tenant_key(scope, hc.id)] = hc
             return hc
 
     # ── Honest execution ──
@@ -1169,31 +1191,41 @@ class PipelineEngine:
             )
         return self._collect_dispatch(dispatch)
 
-    def get_latest_health(self, ds_id: str) -> HealthCheck | None:
-        items = [h for h in self._health.values() if h.dataset_id == ds_id]
+    def get_latest_health(
+        self, scope: TenantScope, ds_id: str
+    ) -> HealthCheck | None:
+        items = [
+            health
+            for key, health in self._health.items()
+            if key[:2] == scope.key and health.dataset_id == ds_id
+        ]
         if not items:
             return None
         items.sort(key=lambda h: h.checked_at, reverse=True)
         return items[0]
 
     # ── Sync config ──
-    def get_sync_config(self, ds_id: str) -> SyncConfig:
-        if ds_id not in self._datasets:
+    def get_sync_config(self, scope: TenantScope, ds_id: str) -> SyncConfig:
+        if self.get_dataset(scope, ds_id) is None:
             raise KeyError(f"Dataset {ds_id} not found")
-        sc = self._sync_configs.get(ds_id)
+        key = self._tenant_key(scope, ds_id)
+        sc = self._sync_configs.get(key)
         if sc is None:
             sc = SyncConfig(dataset_id=ds_id)
-            self._sync_configs[ds_id] = sc
+            self._sync_configs[key] = sc
         return sc
 
-    def set_sync_config(self, ds_id: str, **kwargs: Any) -> SyncConfig:
+    def set_sync_config(
+        self, scope: TenantScope, ds_id: str, **kwargs: Any
+    ) -> SyncConfig:
         with _LOCK:
-            if ds_id not in self._datasets:
+            if self.get_dataset(scope, ds_id) is None:
                 raise KeyError(f"Dataset {ds_id} not found")
-            sc = self._sync_configs.get(ds_id)
+            key = self._tenant_key(scope, ds_id)
+            sc = self._sync_configs.get(key)
             if sc is None:
                 sc = SyncConfig(dataset_id=ds_id)
-                self._sync_configs[ds_id] = sc
+                self._sync_configs[key] = sc
             for k, v in kwargs.items():
                 if hasattr(sc, k) and k != "dataset_id":
                     setattr(sc, k, v)
@@ -1203,11 +1235,38 @@ class PipelineEngine:
     def reset(
         self,
         *,
-        scope: TenantScope | None = None,
+        scope: TenantScope,
         purge_persisted: bool = False,
     ) -> None:
         with _LOCK:
             persisted_graph_ids = list(self._persisted_graph_ids)
+            self._pipelines.clear()
+            self._nodes.clear()
+            self._edges.clear()
+            self._proposals.clear()
+            self._history.clear()
+            self._schedules.clear()
+            self._schedule_runs.clear()
+            for store in (
+                self._datasets,
+                self._builds,
+                self._health,
+                self._sync_configs,
+            ):
+                for key in [key for key in store if key[:2] == scope.key]:
+                    store.pop(key)
+            self._executors.clear()
+            self._evidence_resolvers.clear()
+            self._persisted_graph_ids.clear()
+            if purge_persisted:
+                from aos_api.data_os_store import delete_phase5_pipeline_graph
+
+                for pipeline_id in persisted_graph_ids:
+                    delete_phase5_pipeline_graph(scope, pipeline_id)
+
+    def reset_all_for_tests(self) -> None:
+        """测试基础设施专用；清空全部进程态，不得由租户路由调用。"""
+        with _LOCK:
             self._pipelines.clear()
             self._nodes.clear()
             self._edges.clear()
@@ -1222,11 +1281,6 @@ class PipelineEngine:
             self._executors.clear()
             self._evidence_resolvers.clear()
             self._persisted_graph_ids.clear()
-            if purge_persisted:
-                from aos_api.data_os_store import delete_phase5_pipeline_graph
-
-                for pipeline_id in persisted_graph_ids:
-                    delete_phase5_pipeline_graph(scope, pipeline_id)
 
 
 def get_engine() -> PipelineEngine:

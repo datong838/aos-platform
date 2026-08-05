@@ -1,8 +1,9 @@
 """Phase 5 seed · Pipeline core — 10 pipelines + 20 nodes + 15 edges + 10 proposals + 15 schedules + 10 runs + 10 datasets + 5 builds (≈95)."""
 from __future__ import annotations
 
-from aos_api.phase5_pipeline_engine import get_engine
 from aos_api.logging_facade import get_logger
+from aos_api.phase5_pipeline_engine import get_engine
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.demo.seed_phase5_pipeline")
 
@@ -28,7 +29,7 @@ _NODE_SPECS: list[tuple[str, str, float, float]] = [
 ]
 
 
-def seed_phase5_pipeline() -> int:
+def seed_phase5_pipeline(scope: TenantScope) -> int:
     """Seed Phase 5 pipeline data (~95 records). Returns total record count."""
     eng = get_engine()
     count = 0
@@ -73,13 +74,13 @@ def seed_phase5_pipeline() -> int:
     proposal_statuses = ["pending", "approved", "rejected", "discarded", "pending",
                          "approved", "rejected", "pending", "approved", "pending"]
     for idx, pl_id in enumerate(pipeline_ids):
-        pp = eng.create_proposal(
+        eng.create_proposal(
             pl_id,
             title=f"Proposal-{idx} optimize flow",
             description=f"Optimization proposal for pipeline {idx}",
             proposed_by="analyst",
             status=proposal_statuses[idx],
-            diff_summary=f"+10 -3 lines changed",
+            diff_summary="+10 -3 lines changed",
         )
         count += 1
 
@@ -113,7 +114,6 @@ def seed_phase5_pipeline() -> int:
                     "success", "failed", "success", "success", "running"]
     for idx, sc_id in enumerate(schedule_ids[:10]):
         import time as _t
-        run = eng._schedule_runs  # access dict
         from aos_api.phase5_pipeline_engine import ScheduleRun
         r = ScheduleRun(
             schedule_id=sc_id,
@@ -142,7 +142,7 @@ def seed_phase5_pipeline() -> int:
     ]
     dataset_ids: list[str] = []
     for spec in dataset_specs:
-        ds = eng.create_dataset(**spec)
+        ds = eng.create_dataset(scope, **spec)
         dataset_ids.append(ds.id)
         count += 1
 
@@ -151,16 +151,15 @@ def seed_phase5_pipeline() -> int:
     build_statuses = ["success", "success", "failed", "success", "running"]
     for idx in range(5):
         ds_id = dataset_ids[idx]
-        from aos_api.phase5_pipeline_engine import DatasetBuild
-        b = DatasetBuild(
-            dataset_id=ds_id,
+        eng.add_build(
+            scope,
+            ds_id,
             status=build_statuses[idx],
             started_at=_t2.time() - 300,
             finished_at=_t2.time() if build_statuses[idx] != "running" else 0.0,
             rows_written=10000 + idx * 5000 if build_statuses[idx] == "success" else 0,
             error="" if build_statuses[idx] != "failed" else "Schema mismatch",
         )
-        eng._builds[b.id] = b
         count += 1
 
     log.info("seed_phase5_pipeline_done records=%s", count)
