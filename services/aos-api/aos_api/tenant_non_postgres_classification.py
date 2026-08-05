@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from importlib import resources
+from pathlib import Path
 from typing import Any
 
 import yaml
@@ -27,6 +28,14 @@ NON_POSTGRES_RESOURCES = frozenset(
         "tenant-process-memory",
     }
 )
+_PACKAGE_ROOT = Path(str(resources.files("aos_api")))
+
+
+def _resolve_evidence_path(evidence: str) -> bool:
+    relative = evidence.split(":", 1)[0]
+    if relative.startswith("aos_api/"):
+        relative = relative[len("aos_api/") :]
+    return (_PACKAGE_ROOT / relative).is_file()
 
 
 def load_classification() -> dict[str, Any]:
@@ -73,6 +82,12 @@ def validate_classification(data: dict[str, Any] | None = None) -> list[str]:
             isinstance(item, str) and item.strip() for item in evidence
         ):
             issues.append(f"{label}.evidence must be a non-empty string list")
+        else:
+            for evidence_path in evidence:
+                if not _resolve_evidence_path(evidence_path):
+                    issues.append(
+                        f"{label}.evidence path does not exist: {evidence_path}"
+                    )
         resource = str(entry.get("resource") or "").strip()
         if resource:
             covered_resources.add(resource)

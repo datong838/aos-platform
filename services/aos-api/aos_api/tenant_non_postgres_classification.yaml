@@ -30,7 +30,7 @@ classifications:
     resource: tenant-scheduler-jobs
     classification: TENANT_OWNED_FIXED
     runtimeStatus: LOCAL_CONTRACT_GREEN
-    evidence: [aos_api/scheduler_engine.py, aos_api/phase5_pipeline_engine.py]
+    evidence: [aos_api/scheduling_engine.py, aos_api/phase5_pipeline_engine.py]
   - id: tenant-process-memory
     resource: tenant-process-memory
     classification: TENANT_OWNED_FIXED
