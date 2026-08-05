@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, Header, Response
@@ -12,6 +13,7 @@ from aos_api.errors import ApiError
 from aos_api.idempotency import idempotency_store
 from aos_api.logging_facade import get_logger
 from aos_api.marking import ensure_markings
+from aos_api.module_templates import list_module_templates
 from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(tags=["modules"])
@@ -46,6 +48,11 @@ class PatchModuleRequest(BaseModel):
     theme: str | None = None
 
 
+class InstallModuleTemplateRequest(BaseModel):
+    overlay: dict[str, Any] = Field(default_factory=dict)
+    installationId: uuid.UUID | None = None
+
+
 def _visible(principal: Principal, mod: dict[str, Any]) -> bool:
     if "admin" in principal.roles:
         return True
@@ -58,6 +65,39 @@ def _visible(principal: Principal, mod: dict[str, Any]) -> bool:
 
 def _scope(principal: Principal) -> TenantScope:
     return TenantScope(principal.org_id, principal.project_id)
+
+
+@router.get("/v1/module-templates")
+def list_templates(
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    return {"items": list_module_templates(), "scope": "platform"}
+
+
+@router.post("/v1/module-templates/{template_id}/install", status_code=201)
+def install_template(
+    template_id: str,
+    body: InstallModuleTemplateRequest,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    if not ({"admin", "owner"} & set(principal.roles)):
+        raise ApiError(
+            code="FORBIDDEN", message="admin or owner role required", status_code=403
+        )
+    try:
+        return module_store.install_module_template(
+            _scope(principal),
+            template_id=template_id,
+            overlay_patch=body.overlay,
+            actor=principal.subject,
+            installation_id=body.installationId,
+        )
+    except KeyError as exc:
+        raise ApiError(
+            code="NOT_FOUND", message="module template not found", status_code=404
+        ) from exc
+    except ValueError as exc:
+        raise ApiError(code="MODULE_TEMPLATE_CONFLICT", message=str(exc), status_code=409) from exc
 
 
 @router.get("/v1/modules")
@@ -118,6 +158,24 @@ def get_module(
     ensure_markings(principal, mod.get("markings") or ["public"])
     response.headers["ETag"] = module_store.module_etag(mod)
     return mod
+
+
+@router.get("/v1/modules/{module_id}/effective-config")
+def get_module_effective_config(
+    module_id: str,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    try:
+        config = module_store.get_effective_module_config(_scope(principal), module_id)
+    except ValueError as exc:
+        raise ApiError(
+            code="MODULE_TEMPLATE_INTEGRITY_ERROR", message=str(exc), status_code=409
+        ) from exc
+    if config is None:
+        raise ApiError(
+            code="NOT_FOUND", message=f"module {module_id} not found", status_code=404
+        )
+    return config
 
 
 @router.delete("/v1/modules/{module_id}")

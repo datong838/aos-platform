@@ -5,12 +5,19 @@ TWA.5: rows scoped by org_id + project_id (configured instances are per-workspac
 from __future__ import annotations
 
 import json
+import uuid
 from hashlib import sha256
 from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
 from aos_api.module_identity import resolve_module_pk, stable_module_pk
+from aos_api.module_templates import (
+    canonical_hash,
+    effective_config,
+    get_module_template,
+    template_view,
+)
 from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.module_store")
@@ -420,7 +427,181 @@ def _row_to_mod(r: dict[str, Any]) -> dict[str, Any]:
         "lastOpenedAt": _iso(r.get("last_opened_at")),
         "orgId": r["org_id"],
         "projectId": r["project_id"],
+        "templateId": r.get("template_id"),
+        "templateVersion": r.get("template_version"),
+        "installationId": str(r["installation_id"]) if r.get("installation_id") else None,
+        "activeOverlayRevision": r.get("active_overlay_revision"),
+        "effectiveConfigHash": r.get("effective_config_hash"),
         "createdAt": _iso(r.get("created_at")),
+    }
+
+
+def install_module_template(
+    scope: TenantScope,
+    *,
+    template_id: str,
+    overlay_patch: dict[str, Any],
+    actor: str,
+    installation_id: uuid.UUID | None = None,
+) -> dict[str, Any]:
+    """Materialize one immutable platform template into a scoped Module."""
+
+    template = get_module_template(template_id)
+    if template is None:
+        raise KeyError(template_id)
+    effective = effective_config(template, overlay_patch)
+    base_hash = canonical_hash(template)
+    effective_hash = canonical_hash(effective)
+    if not actor.strip():
+        raise ValueError("actor is required")
+    actor_hash = sha256(actor.strip().encode("utf-8")).hexdigest()
+    module_id = str(template["moduleId"])
+    module_pk = stable_module_pk(scope.org_id, scope.project_id, module_id)
+    module = template["module"]
+
+    with connect(scope) as conn:
+        existing = conn.execute(
+            "SELECT deleted_at FROM meta_module "
+            "WHERE org_id=%s AND project_id=%s AND module_pk=%s FOR UPDATE",
+            (*scope.key, module_pk),
+        ).fetchone()
+        if existing is not None and existing["deleted_at"] is None:
+            raise ValueError("module template is already installed in this workspace")
+        if installation_id is not None:
+            installation = conn.execute(
+                "SELECT 1 FROM bundle_installation "
+                "WHERE org_id=%s AND project_id=%s AND installation_pk=%s",
+                (*scope.key, installation_id),
+            ).fetchone()
+            if installation is None:
+                raise ValueError("installation does not belong to this workspace")
+
+        revision_row = conn.execute(
+            "SELECT COALESCE(MAX(overlay_revision),0)+1 AS revision "
+            "FROM module_instance_overlay "
+            "WHERE org_id=%s AND project_id=%s AND module_pk=%s",
+            (*scope.key, module_pk),
+        ).fetchone()
+        overlay_revision = int(revision_row["revision"])
+        module_values = (
+            template["name"],
+            template["description"],
+            module["objectType"],
+            module["entryPath"],
+            json.dumps(module["widgets"], ensure_ascii=False),
+            module["buddyBound"],
+            module["category"],
+            module["theme"],
+            template_id,
+            template["version"],
+            installation_id,
+        )
+        if existing is None:
+            conn.execute(
+                "INSERT INTO meta_module ("
+                "id,name,status,description,object_type,markings,entry_path,widgets,"
+                "components,buddy_bound,org_id,project_id,category,theme,module_pk,"
+                "module_id,template_id,template_version,installation_id) "
+                "VALUES (%s,%s,'published',%s,%s,'[\"public\"]'::jsonb,%s,%s::jsonb,"
+                "'{}'::jsonb,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                (
+                    module_id,
+                    template["name"],
+                    template["description"],
+                    module["objectType"],
+                    module["entryPath"],
+                    json.dumps(module["widgets"], ensure_ascii=False),
+                    module["buddyBound"],
+                    *scope.key,
+                    module["category"],
+                    module["theme"],
+                    module_pk,
+                    module_id,
+                    template_id,
+                    template["version"],
+                    installation_id,
+                ),
+            )
+        else:
+            conn.execute(
+                "UPDATE meta_module SET name=%s,status='published',description=%s,"
+                "object_type=%s,entry_path=%s,widgets=%s::jsonb,buddy_bound=%s,"
+                "category=%s,theme=%s,template_id=%s,template_version=%s,"
+                "installation_id=%s,deleted_at=NULL WHERE org_id=%s "
+                "AND project_id=%s AND module_pk=%s",
+                (*module_values, *scope.key, module_pk),
+            )
+        conn.execute(
+            "INSERT INTO module_instance_overlay ("
+            "org_id,project_id,module_pk,overlay_revision,base_template_id,"
+            "base_template_version,base_content_hash,patch_json,effective_config_hash,"
+            "actor_hash) VALUES (%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s)",
+            (
+                *scope.key,
+                module_pk,
+                overlay_revision,
+                template_id,
+                template["version"],
+                base_hash,
+                json.dumps(overlay_patch, ensure_ascii=False),
+                effective_hash,
+                actor_hash,
+            ),
+        )
+        conn.execute(
+            "UPDATE meta_module SET active_overlay_revision=%s,effective_config_hash=%s "
+            "WHERE org_id=%s AND project_id=%s AND module_pk=%s",
+            (overlay_revision, effective_hash, *scope.key, module_pk),
+        )
+        conn.commit()
+
+    installed = get_module(scope, module_id)
+    assert installed is not None
+    return {
+        "module": installed,
+        "template": template_view(template),
+        "overlay": {
+            "revision": overlay_revision,
+            "patch": overlay_patch,
+            "effectiveConfig": effective,
+            "effectiveConfigHash": effective_hash,
+        },
+    }
+
+
+def get_effective_module_config(
+    scope: TenantScope, module_id: str
+) -> dict[str, Any] | None:
+    with connect(scope) as conn:
+        module_pk = resolve_module_pk(conn, scope, module_id)
+        if module_pk is None:
+            return None
+        row = conn.execute(
+            "SELECT m.template_id,m.template_version,m.active_overlay_revision,"
+            "m.effective_config_hash,o.base_content_hash,o.patch_json "
+            "FROM meta_module m JOIN module_instance_overlay o "
+            "ON o.org_id=m.org_id AND o.project_id=m.project_id "
+            "AND o.module_pk=m.module_pk "
+            "AND o.overlay_revision=m.active_overlay_revision "
+            "WHERE m.org_id=%s AND m.project_id=%s AND m.module_pk=%s",
+            (*scope.key, module_pk),
+        ).fetchone()
+    if row is None:
+        return None
+    template = get_module_template(str(row["template_id"]))
+    if template is None or template["version"] != row["template_version"]:
+        raise ValueError("active module template is unavailable")
+    if canonical_hash(template) != row["base_content_hash"]:
+        raise ValueError("active module template content drift")
+    effective = effective_config(template, dict(row["patch_json"] or {}))
+    if canonical_hash(effective) != row["effective_config_hash"]:
+        raise ValueError("active module effective config drift")
+    return {
+        "templateId": template["templateId"],
+        "templateVersion": template["version"],
+        "overlayRevision": row["active_overlay_revision"],
+        "effectiveConfig": effective,
+        "effectiveConfigHash": row["effective_config_hash"],
     }
 
 
