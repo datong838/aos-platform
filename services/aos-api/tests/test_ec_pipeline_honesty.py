@@ -15,7 +15,7 @@ TEST_SCOPE = TenantScope("dev-org", "dev-project")
 @pytest.fixture(autouse=True)
 def reset_engine():
     eng = get_engine()
-    eng.reset(scope=TEST_SCOPE)
+    eng.reset_all_for_tests()
     for scheme in ("dataset", "artifact", "object", "lineage", "quality"):
         eng.register_evidence_resolver(scheme, lambda _ref: True)
     yield
@@ -310,3 +310,60 @@ def test_demo_trial_route_is_explicitly_unsupported(client, auth_headers):
     assert body["status"] == "unsupported"
     assert body["output_rows"] == []
     assert "must-not-be-echoed" not in response.text
+
+
+def test_reset_scope_does_not_clear_global_executors():
+    """G7: reset(scope=...) 不得清空进程级 executor/resolver 注册表。
+
+    生产中租户注销调用 reset(scope=X) 时，若清空全局 executor 会导致
+    所有其他租户的管道立刻不可用。executors/resolvers 是进程级单例资源，
+    其生命周期应由启动注册和 reset_all_for_tests 管理，不绑定到单个 scope。
+    """
+    eng = get_engine()
+
+    def _prod_executor(**kwargs):
+        return {
+            "output_ref": "dataset://output/v1",
+            "rows_read": 0,
+            "rows_written": 0,
+            "output_rows": [],
+        }
+
+    eng.register_executor("prod-should-survive", _prod_executor)
+    eng.register_evidence_resolver("dataset", lambda _ref: True)
+
+    other_scope = TenantScope("other-org", "other-project")
+    eng.reset(scope=other_scope)
+
+    assert "prod-should-survive" in eng._executors, (
+        "reset(scope=...) 不应清空全局 executor 注册表"
+    )
+    assert "dataset" in eng._evidence_resolvers, (
+        "reset(scope=...) 不应清空全局 evidence resolver 注册表"
+    )
+
+
+def test_executor_receives_tenant_scope():
+    """G1: executor 必须收到 scope kwarg，才能做租户级落库。
+
+    生产 executor 落 meta_dataset / ecom_object 时需要 (org_id, project_id)，
+    scope 不注入则 data_os_store 的 _assert_scoped_upsert 会 409。
+    """
+    eng = get_engine()
+    captured = {}
+
+    def _scope_capturing_executor(**kwargs):
+        captured["scope"] = kwargs.get("scope")
+        return _evidence_executor(**kwargs)
+
+    eng.register_executor("scope-capture", _scope_capturing_executor)
+    pl = eng.create_pipeline(
+        TEST_SCOPE, name="p", executor_id="scope-capture", execution_mode="live"
+    )
+    sc = eng.create_schedule(TEST_SCOPE, name="s", pipeline_id=pl.id)
+
+    eng.run_schedule(TEST_SCOPE, sc.id)
+
+    assert captured.get("scope") is not None, "executor 必须收到 scope kwarg"
+    assert captured["scope"].org_id == TEST_SCOPE.org_id
+    assert captured["scope"].project_id == TEST_SCOPE.project_id

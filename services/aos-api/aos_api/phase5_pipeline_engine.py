@@ -1042,6 +1042,7 @@ class PipelineEngine:
                         execution_kind=execution_kind,
                         cancel_event=cancel_event,
                         deadline=deadline,
+                        scope=scope,
                     ))
                 )
             except Exception as exc:
@@ -1270,8 +1271,6 @@ class PipelineEngine:
             ):
                 for key in [key for key in store if key[:2] == scope.key]:
                     store.pop(key)
-            self._executors.clear()
-            self._evidence_resolvers.clear()
             self._persisted_graph_ids.difference_update(persisted_graph_ids)
             if purge_persisted:
                 from aos_api.data_os_store import delete_phase5_pipeline_graph

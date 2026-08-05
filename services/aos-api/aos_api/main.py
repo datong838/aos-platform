@@ -76,6 +76,19 @@ async def lifespan(_app: FastAPI):
                 data_os_store.boot_data_os(wave_ext_mod)
             except Exception:
                 log.exception("startup_data_os_failed_continue")
+            try:
+                from aos_api.ec_live_executor import ec_live_executor
+                from aos_api.ec_pipeline_resolvers import dataset_resolver
+                from aos_api.phase5_pipeline_engine import get_engine
+
+                eng = get_engine()
+                eng.register_evidence_resolver("dataset", dataset_resolver)
+                eng.register_executor("ec-live-v1", ec_live_executor)
+                log.info(
+                    "startup_pipeline_registered resolver=dataset executor=ec-live-v1"
+                )
+            except Exception:
+                log.exception("startup_pipeline_registration_failed_continue")
             log.info("startup_meta_store_ok")
         except Exception:
             log.exception("startup_meta_store_failed_continue")
