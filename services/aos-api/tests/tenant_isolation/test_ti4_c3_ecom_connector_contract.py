@@ -83,6 +83,7 @@ def test_c3_schema_report_is_green() -> None:
             "228ti6bcontract",
             "228ti6cassets",
             "228ti6drelations",
+            "228ti6edirectory",
     }
     assert report["ti4EcomUnvalidatedWorkspaceForeignKeys"] == []
     assert report["ti4EcomRuntimeRoleSafe"] is True

@@ -231,6 +231,120 @@ def build_qiyue_baseline(
     }
 
 
+def read_directory_snapshot(
+    conn: Any,
+    *,
+    test_org_id: str,
+    target_org_id: str,
+    target_project_id: str,
+) -> dict[str, Any]:
+    """Read only the control-plane identities needed by the TI-6 local gate."""
+
+    meta_orgs = {
+        str(row["id"]): str(row["name"])
+        for row in conn.execute(
+            "SELECT id,name FROM meta_org WHERE id=ANY(%s)",
+            ([test_org_id, target_org_id],),
+        ).fetchall()
+    }
+    twa_orgs = {
+        str(row["id"]): str(row["name"])
+        for row in conn.execute(
+            "SELECT id,name FROM twa_org WHERE id=ANY(%s)",
+            ([test_org_id, target_org_id],),
+        ).fetchall()
+    }
+    meta_workspace = conn.execute(
+        "SELECT 1 FROM meta_workspace WHERE org_id=%s AND project_id=%s",
+        (target_org_id, target_project_id),
+    ).fetchone()
+    twa_workspace = conn.execute(
+        "SELECT 1 FROM twa_workspace WHERE org_id=%s AND project_id=%s",
+        (target_org_id, target_project_id),
+    ).fetchone()
+    return {
+        "testOrgNames": {
+            "meta": meta_orgs.get(test_org_id),
+            "authoritative": twa_orgs.get(test_org_id),
+        },
+        "targetOrgNames": {
+            "meta": meta_orgs.get(target_org_id),
+            "authoritative": twa_orgs.get(target_org_id),
+        },
+        "targetWorkspacePresent": {
+            "meta": meta_workspace is not None,
+            "authoritative": twa_workspace is not None,
+        },
+    }
+
+
+def read_active_module_count(conn: Any, *, org_id: str, project_id: str) -> int:
+    return _scalar_count(
+        conn,
+        sql.SQL(
+            "SELECT COUNT(*) AS count FROM meta_module "
+            "WHERE org_id=%s AND project_id=%s AND deleted_at IS NULL"
+        ),
+        [org_id, project_id],
+    )
+
+
+def build_microshop_readiness(
+    postgres_precheck: Mapping[str, Any],
+    non_postgres_inventory: Mapping[str, Any],
+    directory_snapshot: Mapping[str, Any],
+    *,
+    active_module_count: int,
+) -> dict[str, Any]:
+    """Compile separate local-development and production deployment gates."""
+
+    baseline = build_qiyue_baseline(postgres_precheck, non_postgres_inventory)
+    local_blockers: list[str] = []
+    if not postgres_precheck.get("scanOk"):
+        local_blockers.append("POSTGRES_SCAN_FAILED")
+    if set((directory_snapshot.get("testOrgNames") or {}).values()) != {
+        "测试组织"
+    }:
+        local_blockers.append("TEST_ORG_DISPLAY_NAME_MISMATCH")
+    if set((directory_snapshot.get("targetOrgNames") or {}).values()) != {
+        "栖月汇商贸有限公司"
+    }:
+        local_blockers.append("QIYUE_DIRECTORY_MISMATCH")
+    if not all((directory_snapshot.get("targetWorkspacePresent") or {}).values()):
+        local_blockers.append("QIYUE_WORKSPACE_MISSING")
+    if int(baseline["postgres"]["targetBusinessRowCount"]):
+        local_blockers.append("QIYUE_BUSINESS_DATA_PRESENT")
+    if active_module_count:
+        local_blockers.append("QIYUE_INSTALLED_MODULES_PRESENT")
+    if int(baseline["nonPostgres"]["targetTenantItemCount"]):
+        local_blockers.append("QIYUE_NON_POSTGRES_DATA_PRESENT")
+
+    production_blockers = sorted(
+        set(
+            local_blockers
+            + list(baseline["blockers"])
+            + ["TI1_E4_HISTORICAL_QUARANTINE"]
+        )
+    )
+    return {
+        "stage": "TI-6-3A",
+        "tenant": baseline["tenant"],
+        "directory": dict(directory_snapshot),
+        "targetBusinessRowCount": baseline["postgres"]["targetBusinessRowCount"],
+        "targetControlPlaneRowCount": baseline["postgres"][
+            "targetControlPlaneRowCount"
+        ],
+        "targetNonPostgresItemCount": baseline["nonPostgres"][
+            "targetTenantItemCount"
+        ],
+        "activeInstalledModuleCount": active_module_count,
+        "localDevelopmentReady": not local_blockers,
+        "localBlockers": sorted(set(local_blockers)),
+        "productionDeploymentReady": not production_blockers,
+        "productionBlockers": production_blockers,
+    }
+
+
 def summarize_object_keys(
     keys: Iterable[str],
     *,

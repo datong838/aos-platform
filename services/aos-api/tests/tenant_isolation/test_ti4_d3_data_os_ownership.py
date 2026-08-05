@@ -40,6 +40,7 @@ def _skip_after_d3_contract() -> None:
             "228ti6bcontract",
             "228ti6cassets",
             "228ti6drelations",
+            "228ti6edirectory",
     }:
         pytest.skip("D7 forbids new NULL-scope active rows; D3 history is frozen")
 

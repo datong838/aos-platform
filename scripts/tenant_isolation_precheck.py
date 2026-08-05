@@ -18,16 +18,20 @@ from aos_api.tenant_precheck import (
     NOT_CONFIGURED,
     PROBE_ERROR,
     PROBED,
+    build_microshop_readiness,
     build_migration_ledger,
     build_non_postgres_inventory,
     build_qiyue_baseline,
     postgres_scheduler_report,
+    read_active_module_count,
+    read_directory_snapshot,
     read_known_tenant_scopes,
     read_postgres_precheck,
     read_vector_report,
     scan_process_memory_sources,
     summarize_object_keys,
 )
+from aos_api.tenant_scope import TenantScope
 
 
 def _write_json(path: Path, value: dict[str, Any]) -> None:
@@ -127,6 +131,25 @@ def main() -> int:
     )
     ledger = build_migration_ledger(postgres)
     baseline = build_qiyue_baseline(postgres, non_postgres)
+    with connect() as conn:
+        conn.execute("SET TRANSACTION READ ONLY")
+        directory = read_directory_snapshot(
+            conn,
+            test_org_id=args.test_org,
+            target_org_id=args.target_org,
+            target_project_id=args.target_project,
+        )
+    with connect(TenantScope(args.target_org, args.target_project)) as conn:
+        conn.execute("SET TRANSACTION READ ONLY")
+        active_module_count = read_active_module_count(
+            conn, org_id=args.target_org, project_id=args.target_project
+        )
+    readiness = build_microshop_readiness(
+        postgres,
+        non_postgres,
+        directory,
+        active_module_count=active_module_count,
+    )
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     outputs = {
@@ -134,6 +157,7 @@ def main() -> int:
         "ti0d-migration-ledger.json": ledger,
         "ti0d-qiyue-baseline.json": baseline,
         "ti0d-non-postgres-inventory.json": non_postgres,
+        "ti6-microshop-readiness.json": readiness,
     }
     for filename, value in outputs.items():
         _write_json(args.output_dir / filename, value)
@@ -148,6 +172,8 @@ def main() -> int:
         "postgresProbedTableCount": postgres["probedTableCount"],
         "migrationBlockerCounts": ledger["blockerCounts"],
         "nonPostgresStatusCounts": non_postgres["statusCounts"],
+        "localMicroshopDevelopmentReady": readiness["localDevelopmentReady"],
+        "productionDeploymentReady": readiness["productionDeploymentReady"],
         "outputDir": str(args.output_dir.resolve()),
     }
     print(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True))
