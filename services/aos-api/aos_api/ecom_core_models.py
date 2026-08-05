@@ -31,6 +31,7 @@ CORE_OBJECT_TYPES = frozenset(
 CORE_LINK_TYPES: dict[str, tuple[str, str]] = {
     "Order.lines": ("Order", "OrderLine"),
     "OrderLine.ofSku": ("OrderLine", "ProductSku"),
+    "OrderLine.ofProduct": ("OrderLine", "Product"),
     "ProductSku.ofProduct": ("ProductSku", "Product"),
     "Product.inCategory": ("Product", "Category"),
     "Shop.sellsProduct": ("Shop", "Product"),
