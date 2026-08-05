@@ -7,10 +7,12 @@ from aos_api.file_parsers import (
     extract,
     list_plugins,
 )
+from aos_api.tenant_scope import TenantScope, bind_tenant_scope
 
 
 def test_list_plugins():
-    ids = {p["id"] for p in list_plugins()}
+    with bind_tenant_scope(TenantScope("dev-org", "dev-project")):
+        ids = {p["id"] for p in list_plugins()}
     assert "parser-text" in ids
     assert "parser-office-word" in ids
     assert "parser-office-sheet" in ids
