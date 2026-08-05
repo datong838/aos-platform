@@ -1,0 +1,58 @@
+schemaVersion: aos.dev/tenant-non-postgres-classification/v1alpha1
+generatedFor: TI-5-C3-C
+classifications:
+  - id: tenant-object-prefixes
+    resource: tenant-object-prefixes
+    classification: TENANT_OWNED_FIXED
+    runtimeStatus: LOCAL_CONTRACT_GREEN_EXTERNAL_BACKEND_UNVERIFIED
+    evidence: [aos_api/tenant_prefix.py, aos_api/connector_runtime.py]
+  - id: tenant-vector-records
+    resource: tenant-vector-records
+    classification: TENANT_OWNED_FIXED
+    runtimeStatus: LOCAL_CONTRACT_GREEN_EXTERNAL_BACKEND_UNVERIFIED
+    evidence: [aos_api/vector_index.py, aos_api/qdrant_backend.py]
+  - id: tenant-cache-namespaces
+    resource: tenant-cache-namespaces
+    classification: EXTERNAL_UNVERIFIED
+    runtimeStatus: NOT_CONFIGURED
+    evidence: [aos_api/tenant_precheck.py]
+  - id: tenant-offline-storage
+    resource: tenant-offline-storage
+    classification: EXTERNAL_UNVERIFIED
+    runtimeStatus: NOT_CONFIGURED
+    evidence: [aos_api/tenant_precheck.py]
+  - id: tenant-message-queues
+    resource: tenant-message-queues
+    classification: EXTERNAL_UNVERIFIED
+    runtimeStatus: NOT_CONFIGURED
+    evidence: [aos_api/tenant_precheck.py]
+  - id: tenant-scheduler-jobs
+    resource: tenant-scheduler-jobs
+    classification: TENANT_OWNED_FIXED
+    runtimeStatus: LOCAL_CONTRACT_GREEN
+    evidence: [aos_api/scheduler_engine.py, aos_api/phase5_pipeline_engine.py]
+  - id: tenant-process-memory
+    resource: tenant-process-memory
+    classification: TENANT_OWNED_FIXED
+    runtimeStatus: LOCAL_CONTRACT_GREEN
+    evidence: [aos_api/routers/wave_ext.py, aos_api/phase5_pipeline_engine.py]
+  - id: wave-ext-capability-definitions
+    classification: PLATFORM_TEMPLATE
+    runtimeStatus: SHARED_IMMUTABLE_DEFINITION
+    evidence: [aos_api/routers/wave_ext.py:_capabilities]
+  - id: phase5-executor-registry
+    classification: PLATFORM_TEMPLATE
+    runtimeStatus: SHARED_RUNTIME_CAPABILITY
+    evidence: [aos_api/phase5_pipeline_engine.py:_executors, aos_api/phase5_pipeline_engine.py:_evidence_resolvers]
+  - id: phase5-dispatch-queue
+    classification: CONSTANT
+    runtimeStatus: EXECUTION_LOCAL_NON_PERSISTENT
+    evidence: [aos_api/phase5_pipeline_engine.py:_start_dispatch]
+  - id: phase5-duplicate-pipeline-root-routes
+    classification: NOT_REACHABLE
+    runtimeStatus: NOT_REACHABLE_DUPLICATE
+    evidence: [aos_api/routers/domain_aggregates.py, aos_api/routers/wave_ext.py, aos_api/routers/phase5_pipelines.py]
+  - id: phase5-duplicate-schedule-routes
+    classification: NOT_REACHABLE
+    runtimeStatus: NOT_REACHABLE_DUPLICATE
+    evidence: [aos_api/routers/domain_aggregates.py, aos_api/routers/wave_ext.py, aos_api/routers/phase5_schedules.py]

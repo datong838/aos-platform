@@ -308,7 +308,7 @@ def build_non_postgres_inventory(
         },
         {
             "name": "tenant-offline-storage",
-            "status": NOT_IMPLEMENTED,
+            "status": NOT_CONFIGURED,
             "backend": "no-tenant-owned-offline-store-identified",
         },
         {

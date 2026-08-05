@@ -188,5 +188,5 @@ def test_non_postgres_inventory_preserves_incomplete_probe_states() -> None:
     assert inventory["resourceCount"] == 7
     assert inventory["statusCounts"][PROBED] == 3
     assert inventory["statusCounts"][STATIC_ONLY] == 1
-    assert inventory["statusCounts"]["NOT_CONFIGURED"] == 2
-    assert inventory["statusCounts"]["NOT_IMPLEMENTED"] == 1
+    assert inventory["statusCounts"]["NOT_CONFIGURED"] == 3
+    assert "NOT_IMPLEMENTED" not in inventory["statusCounts"]
