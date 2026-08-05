@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS twa_person_profile (
 );
 
 CREATE TABLE IF NOT EXISTS twa_invite (
-  token TEXT PRIMARY KEY,
+  token TEXT NOT NULL UNIQUE,
   org_id TEXT NOT NULL,
   project_id TEXT NOT NULL,
   role TEXT NOT NULL,
@@ -64,11 +64,12 @@ CREATE TABLE IF NOT EXISTS twa_invite (
   created_at TEXT NOT NULL,
   expires_at TEXT NOT NULL,
   expires_ts DOUBLE PRECISION NOT NULL,
-  status TEXT NOT NULL DEFAULT 'active'
+  status TEXT NOT NULL DEFAULT 'active',
+  PRIMARY KEY (org_id, project_id, token)
 );
 
 CREATE TABLE IF NOT EXISTS twa_join_request (
-  id TEXT PRIMARY KEY,
+  id TEXT NOT NULL UNIQUE,
   org_id TEXT NOT NULL,
   project_id TEXT NOT NULL,
   subject TEXT NOT NULL,
@@ -76,17 +77,19 @@ CREATE TABLE IF NOT EXISTS twa_join_request (
   status TEXT NOT NULL DEFAULT 'pending',
   created_at TEXT NOT NULL,
   decided_by TEXT,
-  decided_at TEXT
+  decided_at TEXT,
+  PRIMARY KEY (org_id, project_id, id)
 );
 
 CREATE TABLE IF NOT EXISTS twa_audit (
-  id TEXT PRIMARY KEY,
+  id TEXT NOT NULL UNIQUE,
   ts TEXT NOT NULL,
   org_id TEXT NOT NULL,
   project_id TEXT NOT NULL,
   actor_id TEXT NOT NULL,
   action TEXT NOT NULL,
-  detail JSONB NOT NULL DEFAULT '{}'::jsonb
+  detail JSONB NOT NULL DEFAULT '{}'::jsonb,
+  PRIMARY KEY (org_id, project_id, id)
 );
 
 CREATE TABLE IF NOT EXISTS twa_otp (

@@ -95,6 +95,7 @@ def test_orphan_event_is_hidden_without_parent_module() -> None:
             "228ti5a2kv",
             "228ti5a3lineage",
             "228ti5b1models",
+            "228ti6bcontract",
         }:
         pytest.skip("E7 rejects new orphan rows; quarantine is covered by E7 tests")
     suffix = uuid.uuid4().hex

@@ -31,8 +31,8 @@ def test_registry_is_valid_and_covers_current_postgres_inventory() -> None:
     assert validate_registry(registry) == []
     assert len(entries) == 101
     assert Counter(entry["currentState"] for entry in entries.values()) == {
-        "STRONG_PK": 75,
-        "WEAK_PK": 8,
+        "STRONG_PK": 80,
+        "WEAK_PK": 3,
         "NO_TENANT": 18,
     }
 

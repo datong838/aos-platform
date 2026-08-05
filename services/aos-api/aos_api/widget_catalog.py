@@ -20,7 +20,7 @@ def ensure_schema() -> None:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS widget_catalog (
-              id TEXT PRIMARY KEY,
+              id TEXT NOT NULL,
               name TEXT NOT NULL,
               name_zh TEXT NOT NULL DEFAULT '',
               type TEXT NOT NULL DEFAULT 'unknown',
@@ -34,7 +34,8 @@ def ensure_schema() -> None:
               org_id TEXT NOT NULL DEFAULT 'dev-org',
               project_id TEXT NOT NULL DEFAULT 'dev-project',
               created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+              PRIMARY KEY (org_id, project_id, id)
             )
             """
         )
@@ -88,7 +89,7 @@ def create_widget(scope: TenantScope, payload: dict[str, Any]) -> dict[str, Any]
                 id, name, name_zh, type, source, category, icon, description,
                 config_schema, version, installed, org_id, project_id
             ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s)
-            ON CONFLICT (id) DO NOTHING
+            ON CONFLICT (org_id, project_id, id) DO NOTHING
             """,
             (
                 wid,

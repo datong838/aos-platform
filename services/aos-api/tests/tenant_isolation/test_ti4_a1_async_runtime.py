@@ -52,6 +52,7 @@ def test_a1_schema_report_is_green() -> None:
         "228ti5a2kv",
         "228ti5a3lineage",
             "228ti5b1models",
+            "228ti6bcontract",
     }
     assert report["ti4ApolloSpokePrimaryKeyValid"] is True
     assert report["ti4ApolloSpokeWorkspaceForeignKeyValid"] is True

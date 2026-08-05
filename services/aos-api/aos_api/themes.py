@@ -19,7 +19,7 @@ def ensure_schema() -> None:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS theme (
-              id TEXT PRIMARY KEY,
+              id TEXT NOT NULL,
               name TEXT NOT NULL,
               mode TEXT NOT NULL DEFAULT 'light',
               is_preset BOOLEAN NOT NULL DEFAULT FALSE,
@@ -28,7 +28,8 @@ def ensure_schema() -> None:
               org_id TEXT NOT NULL DEFAULT 'dev-org',
               project_id TEXT NOT NULL DEFAULT 'dev-project',
               created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+              PRIMARY KEY (org_id, project_id, id)
             )
             """
         )
@@ -71,7 +72,7 @@ def create_theme(scope: TenantScope, payload: dict[str, Any]) -> dict[str, Any]:
             INSERT INTO theme (
                 id, name, mode, is_preset, tokens, description, org_id, project_id
             ) VALUES (%s,%s,%s,%s,%s::jsonb,%s,%s,%s)
-            ON CONFLICT (id) DO UPDATE SET
+            ON CONFLICT (org_id, project_id, id) DO UPDATE SET
                 name=EXCLUDED.name, mode=EXCLUDED.mode,
                 tokens=EXCLUDED.tokens, description=EXCLUDED.description,
                 updated_at=NOW()
