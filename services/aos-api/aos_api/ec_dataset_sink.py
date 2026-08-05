@@ -6,7 +6,20 @@ Worker W2 实现：加 data_os_store.persist_dataset + persist_dataset_history +
 
 from __future__ import annotations
 
+import logging
+import time
+import uuid
 from typing import Any
+
+from aos_api import data_os_store
+from aos_api.phase5_pipeline_engine import DatasetBuild
+
+log = logging.getLogger(__name__)
+
+
+def _gen_rid() -> str:
+    """生成 rid，格式 ri.dataset.<8 字符十六进制>（与 wave_ext.create_pipeline 模式一致）。"""
+    return f"ri.dataset.{uuid.uuid4().hex[:8]}"
 
 
 def sink_to_dataset(
@@ -17,7 +30,60 @@ def sink_to_dataset(
 ) -> Any:
     """将输出行落地为 Dataset，返回 dataset 对象。
 
-    骨架：调用 eng.create_dataset（与原 ec_live_executor 行为等价）。
-    W2 实现后：加 persist_dataset + persist_dataset_history + add_build。
+    流程（FR-D1-1）:
+      1. 生成 rid（ri.dataset.<uuid8>）
+      2. eng.create_dataset 创建 Dataset（ds.id == rid，向后兼容骨架）
+      3. eng.add_build 记录 DatasetBuild（rows_written = len(output_rows)，非负整数）
+      4. data_os_store.persist_dataset 落地 meta_dataset（scope 守门由内部 *scope.key 保证）
+      5. data_os_store.persist_dataset_history 落地历史
+    容错：persist 失败降级为 warning 不阻塞 sink 流程（与 wave_ext._persist_safe 一致）。
     """
-    return eng.create_dataset(scope, name=f"pipeline-{pipeline.id}-output")
+    rid = _gen_rid()
+    rows_written = max(0, len(output_rows))
+    name = f"pipeline-{getattr(pipeline, 'id', '?')}-output"
+
+    # 1. 创建 Dataset（骨架行为，向后兼容）。ds.id == rid 让 ec_live_executor
+    #    不修改即可产出 dataset://catalog/<rid> 格式 output_ref，且
+    #    dataset_resolver 通过 ds.id == rid 验证通过。
+    ds = eng.create_dataset(scope, name=name, id=rid)
+
+    # 2. 记录 DatasetBuild（add_build 签名为 (scope, dataset_id, **kwargs)，
+    #    kwargs 不能含 dataset_id，由内部 DatasetBuild(dataset_id=dataset_id, **kwargs) 注入）
+    try:
+        eng.add_build(
+            scope,
+            ds.id,
+            status="success",
+            rows_written=rows_written,
+            finished_at=time.time(),
+        )
+    except Exception:  # noqa: BLE001
+        log.warning("ec_dataset_sink_add_build_failed rid=%s", rid, exc_info=True)
+
+    # 3. 落地 meta_dataset（scope 守门由 persist_dataset 内部 *scope.key 保证）
+    now = time.time()
+    item = {
+        "rid": rid,
+        "name": name,
+        "displayName": name,
+        "pipelineId": getattr(pipeline, "id", ""),
+        "status": "READY",
+        "createdAt": now,
+        "updatedAt": now,
+    }
+    try:
+        data_os_store.persist_dataset(scope, item)
+    except Exception:  # noqa: BLE001
+        log.warning("ec_dataset_sink_persist_failed rid=%s", rid, exc_info=True)
+
+    # 4. 落地 dataset_history
+    try:
+        data_os_store.persist_dataset_history(
+            scope,
+            rid,
+            [{"version": 1, "status": "SUCCEEDED", "at": now, "rowsWritten": rows_written}],
+        )
+    except Exception:  # noqa: BLE001
+        log.warning("ec_dataset_sink_history_failed rid=%s", rid, exc_info=True)
+
+    return ds
