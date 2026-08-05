@@ -5,15 +5,51 @@ import uuid
 from pathlib import Path
 
 import pytest
+from alembic import command
+from alembic.config import Config
 from psycopg.errors import ForeignKeyViolation
 
-from aos_api.db import connect
+from aos_api.db import connect, get_dsn
 from aos_api.model_catalog import create_catalog, get_catalog
 from aos_api.tenant_schema_lint import build_ti5_b1_schema_report
 from aos_api.tenant_scope import TenantScope
 
 ROOT = Path(__file__).resolve().parents[2]
 MIGRATION = ROOT / "alembic" / "versions" / "228ti5b1_model_management_contract.py"
+
+
+def _config() -> Config:
+    cfg = Config(str(ROOT / "alembic.ini"))
+    cfg.set_main_option("script_location", str(ROOT / "alembic"))
+    cfg.set_main_option("sqlalchemy.url", get_dsn())
+    return cfg
+
+
+def _table_fingerprints() -> dict[str, tuple[int, str]]:
+    tables = (
+        "capacity_limits",
+        "capacity_usage",
+        "model_catalog",
+        "model_provider",
+        "model_route",
+        "provider_health",
+        "registered_models",
+    )
+    with connect() as conn:
+        return {
+            table: (
+                int(row["n"]),
+                str(row["digest"]),
+            )
+            for table in tables
+            for row in [
+                conn.execute(
+                    f"SELECT COUNT(*) AS n, md5(COALESCE(string_agg("  # noqa: S608
+                    f"row_to_json(t)::text, '' ORDER BY row_to_json(t)::text),'')) "
+                    f"AS digest FROM {table} t"
+                ).fetchone()
+            ]
+        }
 
 
 def _workspace(scope: TenantScope) -> None:
@@ -126,3 +162,13 @@ def test_b1_child_parent_scope_mismatch_is_rejected() -> None:
     with connect(scope_a) as conn:
         conn.execute("DELETE FROM model_provider WHERE id=%s", (provider_id,))
         conn.commit()
+
+
+def test_z_b1_downgrade_upgrade_preserves_all_model_rows_and_hashes() -> None:
+    before = _table_fingerprints()
+    command.downgrade(_config(), "228ti5a3lineage")
+    assert _table_fingerprints() == before
+    command.upgrade(_config(), "head")
+    assert _table_fingerprints() == before
+    with connect() as conn:
+        assert build_ti5_b1_schema_report(conn)["ok"] is True
