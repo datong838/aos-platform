@@ -1,6 +1,20 @@
 /** 187w · 数据连接列表/详情共享 UI · 对齐 data-connection.html 徽标 */
 import { Link } from "react-router-dom";
 
+export type ConfigSchemaProperty = {
+  type?: string;
+  title?: string;
+  description?: string;
+  default?: unknown;
+  format?: string;
+};
+
+export type ConfigSchema = {
+  type?: string;
+  properties?: Record<string, ConfigSchemaProperty>;
+  required?: string[];
+};
+
 export type ConnectorPlugin = {
   id: string;
   nameZh?: string;
@@ -10,9 +24,17 @@ export type ConnectorPlugin = {
   required?: boolean;
   runtime?: string;
   capabilities?: string[];
+  configSchema?: ConfigSchema;
 };
 
-export type SourceRow = { id?: string; type?: string; status?: string; runtimeMode?: string; pluginId?: string };
+export type SourceRow = {
+  id?: string;
+  type?: string;
+  status?: string;
+  runtimeMode?: string;
+  pluginId?: string;
+  [key: string]: unknown;
+};
 
 export function connectorLabel(t?: string, plugins?: ConnectorPlugin[]): string {
   if (!t) return "—";
@@ -20,8 +42,10 @@ export function connectorLabel(t?: string, plugins?: ConnectorPlugin[]): string 
   if (hit) return hit.nameZh || hit.name || t;
   if (t === "file" || t === "file-local") return "本地文件";
   if (t === "file-object-store") return "对象存储文件";
+  if (t === "jdbc-mysql-ssh") return "MySQL SSH 隧道";
   if (t === "jdbc" || t === "jdbc-mysql") return "MySQL JDBC";
   if (t === "jdbc-postgres") return "PostgreSQL";
+  if (t === "jdbc-postgres-ssh") return "PostgreSQL SSH 隧道";
   return t;
 }
 
@@ -42,7 +66,9 @@ export function storageLabel(t?: string): { text: string; kind: "dataset" | "med
 export function sourceSubtitle(t?: string): string {
   if (t === "file" || t === "file-local") return "文件接入 · 本地 / 上传";
   if (t === "file-object-store") return "文件接入 · 对象存储";
+  if (t === "jdbc-mysql-ssh") return "结构化入库 · MySQL SSH 隧道";
   if (t === "jdbc" || t === "jdbc-mysql") return "结构化入库 · MySQL";
+  if (t === "jdbc-postgres-ssh") return "结构化入库 · PostgreSQL SSH 隧道";
   if (t?.includes("postgres")) return "结构化入库 · PostgreSQL";
   if (t?.startsWith("jdbc")) return "结构化入库 · JDBC";
   return "外部系统接入";

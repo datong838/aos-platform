@@ -1,0 +1,70 @@
+{
+  "id": "jdbc-mysql-ssh",
+  "name": "MySQL over SSH Tunnel",
+  "nameZh": "MySQL SSH 隧道连接",
+  "description": "通用 JDBC 连接 · 通过 SSH 隧道访问 MySQL · 适合本地开发与生产",
+  "kind": "source",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "live",
+  "capabilities": [
+    "jdbc",
+    "mysql",
+    "ssh-tunnel",
+    "discover",
+    "ingest"
+  ],
+  "healthPath": "/v1/connectors/jdbc-mysql-ssh/health",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "sshHost": {
+        "type": "string",
+        "description": "SSH 远程服务器公网 IP (如 118.195.194.208)"
+      },
+      "sshPort": {
+        "type": "integer",
+        "default": 22,
+        "description": "SSH 端口 (默认 22)"
+      },
+      "sshUser": {
+        "type": "string",
+        "description": "SSH 登录用户名 (远程服务器账号，与数据库账号独立)"
+      },
+      "sshKeyRef": {
+        "type": "string",
+        "description": "SSH 私钥引用 (Vault secret ref，与 sshPassword 二选一)"
+      },
+      "sshPassword": {
+        "type": "string",
+        "description": "SSH 登录密码 (远程服务器账号密码，与 sshKeyRef 二选一)"
+      },
+      "dbHost": {
+        "type": "string",
+        "description": "远程 MySQL 主机 (在远程服务器上的地址，通常为 127.0.0.1)"
+      },
+      "dbPort": {
+        "type": "integer",
+        "default": 3306,
+        "description": "远程 MySQL 端口 (通常为 3306)"
+      },
+      "database": {
+        "type": "string",
+        "description": "数据库名 (如 niushop_b2c_v5)"
+      },
+      "username": {
+        "type": "string",
+        "description": "MySQL 数据库用户名 (与 SSH 账号独立)"
+      },
+      "secretRef": {
+        "type": "string",
+        "description": "数据库凭据引用 (Vault secret ref，与 password 二选一)"
+      },
+      "password": {
+        "type": "string",
+        "description": "MySQL 数据库密码 (与 secretRef 二选一)"
+      }
+    },
+    "required": ["sshHost", "sshUser", "dbHost", "database", "username"]
+  }
+}

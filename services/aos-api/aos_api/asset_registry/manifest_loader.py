@@ -65,7 +65,7 @@ _SECRET_ASSIGNMENT = re.compile(
     r"(?i)(?:^|[,{;\n]\s*)[\"']?"
     r"(?:password|passwd|token|access[_-]?token|refresh[_-]?token|"
     r"api[_-]?key|private[_-]?key|database[_-]?url|db[_-]?url|secretref)"
-    r"[\"']?\s*[:=]\s*(?!null\b|~\s*(?:[,;}\n]|$)|[\"']{2})\S+",
+    r"[\"']?\s*[:=]\s*(?!null\b|~\s*(?:[,;}\n]|$)|[\"']{2}|\{)\S+",
 )
 _BEARER_ASSIGNMENT = re.compile(r"(?i)authorization\s*[:=]\s*bearer\s+\S+")
 

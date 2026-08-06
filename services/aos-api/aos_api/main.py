@@ -69,6 +69,12 @@ async def lifespan(_app: FastAPI):
                 boot_tenant_catalogs()
             except Exception:
                 log.exception("startup_tenant_catalog_failed_continue")
+            # ── JDBC SSH 隧道预建立（boot_tenant_catalogs 之后，PG 已 ready）──
+            try:
+                from aos_api.jdbc_connector_runtime import prebuild_all_ssh_tunnels_from_meta_source
+                prebuild_all_ssh_tunnels_from_meta_source()
+            except Exception:
+                log.exception("startup_jdbc_ssh_prebuild_failed_continue")
             try:
                 from aos_api import data_os_store
                 from aos_api.routers import wave_ext as wave_ext_mod
@@ -95,6 +101,13 @@ async def lifespan(_app: FastAPI):
     else:
         log.info("startup_schema_bootstrap_skipped migration_mode=%s", mode_value)
     yield
+    # ── shutdown：清理 JDBC 缓存（SSH 隧道 + DB 连接）──
+    try:
+        from aos_api.jdbc_connector_runtime import jdbc_runtime_shutdown
+        jdbc_runtime_shutdown()
+        log.info("shutdown_jdbc_runtime_ok")
+    except Exception:
+        log.exception("shutdown_jdbc_runtime_failed_continue")
 
 
 def create_app() -> FastAPI:

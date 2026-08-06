@@ -84,7 +84,7 @@ describe("M3-4/M3-5 AssetBundlesPage integration", () => {
     setTenant({
       orgId: "dev-org",
       projectId: "dev-project",
-      workspaceName: "测试工作区",
+      workspaceName: "默认工作区",
       subject: "installer@example.test",
       roles: ["asset-installer"],
     });

@@ -512,7 +512,6 @@ export function DataPage() {
                         <div className="bp-discover-title">
                           {c.nameZh || c.name || c.id}
                           {c.runtime === "stub" ? " · stub" : ""}
-                          {c.required ? " · 必做" : ""}
                         </div>
                         <p className="bp-discover-meta">{c.description || c.id}</p>
                         <p className="muted" style={{ fontSize: "0.7rem", margin: "0.35rem 0 0" }}>

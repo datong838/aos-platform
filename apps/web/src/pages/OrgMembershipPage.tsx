@@ -238,7 +238,7 @@ export function OrgMembershipPage() {
       setTenant({
         ...t,
         projectId: "dev-project",
-        workspaceName: "测试工作区",
+        workspaceName: "默认工作区",
       });
       setMsg("工作区已删除，已切回默认工作区（若仍存在）");
       window.dispatchEvent(

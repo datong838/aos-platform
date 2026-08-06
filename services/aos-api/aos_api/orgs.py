@@ -293,6 +293,4 @@ def workspace_display_name(org_id: str, project_id: str) -> str:
     ws = ws_cat.get_workspace(org_id, project_id)
     if ws:
         return str(ws["name"])
-    if project_id in ("dev-project", "test-workspace", "qyh-test"):
-        return "测试工作区"
     return project_id

@@ -18,6 +18,7 @@ export type ConnectorType = {
 };
 
 export type ConnectionConfig = {
+  // 通用字段
   host: string;
   port: string;
   database: string;
@@ -26,6 +27,20 @@ export type ConnectionConfig = {
   apiKey: string;
   apiUrl: string;
   filePath: string;
+  // D2.6: SSH 隧道字段（jdbc-mysql-ssh / jdbc-postgres-ssh 用）
+  sshHost: string;
+  sshPort: string;
+  sshUser: string;
+  sshKeyRef: string;
+  sshPassword: string;
+  // D2.6: SSH 连接器专用字段
+  dbHost: string;
+  dbPort: string;
+  secretRef: string;
+  // Niushop 扩展字段
+  siteId: string;
+  // 内部字段
+  connector_type: string;
 };
 
 export type TableSelection = {
@@ -74,6 +89,21 @@ export const CONNECTOR_TYPES: ConnectorType[] = [
     category: "database",
     description: "Niushop 微商城专属 · 预设 8 表映射 + PII 排除",
     capabilities: ["Batch syncs", "Virtual tables", "PII exclusion"],
+  },
+  // D2.6: 通用 JDBC SSH 连接器（不绑 niushop，适合本地开发与生产）
+  {
+    id: "jdbc-mysql-ssh",
+    name: "MySQL SSH 隧道",
+    category: "database",
+    description: "通用 JDBC · 通过 SSH 隧道访问 MySQL · 适合本地开发与生产",
+    capabilities: ["Batch syncs", "Virtual tables", "ssh-tunnel"],
+  },
+  {
+    id: "jdbc-postgres-ssh",
+    name: "PostgreSQL SSH 隧道",
+    category: "database",
+    description: "通用 JDBC · 通过 SSH 隧道访问 PostgreSQL · 适合本地开发与生产",
+    capabilities: ["Batch syncs", "Virtual tables", "ssh-tunnel"],
   },
   {
     id: "snowflake",
@@ -146,14 +176,43 @@ export function validateConnectionConfig(
     errors.type = "请先选择连接器类型";
     return errors;
   }
+  const isSsh = type.id === "jdbc-mysql-ssh" || type.id === "jdbc-postgres-ssh";
   if (type.category === "database") {
-    if (!config.host.trim()) errors.host = "主机不能为空";
-    if (!config.port.trim()) errors.port = "端口不能为空";
-    else if (!/^\d+$/.test(config.port)) errors.port = "端口必须为数字";
-    else if (Number(config.port) < 1 || Number(config.port) > 65535) errors.port = "端口范围 1-65535";
-    if (!config.database.trim()) errors.database = "数据库名不能为空";
-    if (!config.username.trim()) errors.username = "用户名不能为空";
-    if (!config.password.trim()) errors.password = "密码不能为空";
+    if (isSsh) {
+      // SSH 连接器：校验 SSH 配置 + 数据库远端配置
+      const sshKeyRef = config.sshKeyRef ?? "";
+      const sshPassword = config.sshPassword ?? "";
+      const dbHost = config.dbHost ?? "";
+      const dbPort = config.dbPort ?? "";
+      const secretRef = config.secretRef ?? "";
+      if (!(config.sshHost ?? "").trim()) errors.sshHost = "SSH 主机不能为空";
+      if (!(config.sshUser ?? "").trim()) errors.sshUser = "SSH 用户名不能为空";
+      if ((config.sshPort ?? "").trim()) {
+        if (!/^\d+$/.test(config.sshPort)) errors.sshPort = "SSH 端口必须为数字";
+        else if (Number(config.sshPort) < 1 || Number(config.sshPort) > 65535)
+          errors.sshPort = "SSH 端口范围 1-65535";
+      }
+      if (!sshKeyRef.trim() && !sshPassword.trim()) {
+        errors.sshKeyRef = "SSH 私钥引用或密码至少填一个";
+      }
+      if (!dbHost.trim()) errors.dbHost = "数据库主机不能为空";
+      if (!dbPort.trim()) errors.dbPort = "数据库端口不能为空";
+      else if (!/^\d+$/.test(dbPort)) errors.dbPort = "数据库端口必须为数字";
+      if (!(config.database ?? "").trim()) errors.database = "数据库名不能为空";
+      if (!(config.username ?? "").trim()) errors.username = "用户名不能为空";
+      if (!(config.password ?? "").trim() && !secretRef.trim()) {
+        errors.password = "数据库密码或凭据引用至少填一个";
+      }
+    } else {
+      // 通用数据库连接器
+      if (!config.host.trim()) errors.host = "主机不能为空";
+      if (!config.port.trim()) errors.port = "端口不能为空";
+      else if (!/^\d+$/.test(config.port)) errors.port = "端口必须为数字";
+      else if (Number(config.port) < 1 || Number(config.port) > 65535) errors.port = "端口范围 1-65535";
+      if (!config.database.trim()) errors.database = "数据库名不能为空";
+      if (!config.username.trim()) errors.username = "用户名不能为空";
+      if (!config.password.trim()) errors.password = "密码不能为空";
+    }
   } else if (type.category === "api") {
     if (!config.apiUrl.trim()) errors.apiUrl = "API URL 不能为空";
     else if (!config.apiUrl.startsWith("http")) errors.apiUrl = "URL 需以 http:// 或 https:// 开头";
@@ -215,6 +274,9 @@ export function DataSourceCreatePage() {
   const [config, setConfig] = useState<ConnectionConfig>({
     host: "", port: "", database: "", username: "", password: "",
     apiKey: "", apiUrl: "", filePath: "",
+    sshHost: "", sshPort: "22", sshUser: "", sshKeyRef: "", sshPassword: "",
+    dbHost: "127.0.0.1", dbPort: "3306", secretRef: "",
+    siteId: "", connector_type: "",
   });
   const [configErrors, setConfigErrors] = useState<Record<string, string>>({});
   const [tables, setTables] = useState<TableSelection[]>(MOCK_TABLES);
@@ -407,31 +469,93 @@ export function DataSourceCreatePage() {
           </h2>
           {selectedType.category === "database" && (
             <>
-              <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4 }}>
-                主机地址
-                <input value={config.host} onChange={(e) => updateConfig("host", e.target.value)} placeholder="localhost" style={{ display: "block", width: "100%", marginTop: 4 }} />
-                {configErrors.host && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.host}</span>}
-              </label>
-              <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
-                端口
-                <input value={config.port} onChange={(e) => updateConfig("port", e.target.value)} placeholder={selectedType.id === "niushop-mysql" ? "13306" : "5432"} style={{ display: "block", width: "100%", marginTop: 4 }} />
-                {configErrors.port && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.port}</span>}
-              </label>
-              <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
-                数据库名
-                <input value={config.database} onChange={(e) => updateConfig("database", e.target.value)} placeholder={selectedType.id === "niushop-mysql" ? "niushop" : "mydb"} style={{ display: "block", width: "100%", marginTop: 4 }} />
-                {configErrors.database && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.database}</span>}
-              </label>
-              <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
-                用户名
-                <input value={config.username} onChange={(e) => updateConfig("username", e.target.value)} style={{ display: "block", width: "100%", marginTop: 4 }} />
-                {configErrors.username && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.username}</span>}
-              </label>
-              <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
-                密码
-                <input type="password" value={config.password} onChange={(e) => updateConfig("password", e.target.value)} style={{ display: "block", width: "100%", marginTop: 4 }} />
-                {configErrors.password && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.password}</span>}
-              </label>
+              {(selectedType.id === "jdbc-mysql-ssh" || selectedType.id === "jdbc-postgres-ssh") ? (
+                <>
+                  <div style={{ fontSize: "0.8rem", fontWeight: 600, marginBottom: 8 }}>SSH 隧道配置</div>
+                  <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4 }}>
+                    SSH 主机
+                    <input value={config.sshHost} onChange={(e) => updateConfig("sshHost", e.target.value)} placeholder="远程服务器 IP" style={{ display: "block", width: "100%", marginTop: 4 }} />
+                    {configErrors.sshHost && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.sshHost}</span>}
+                  </label>
+                  <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
+                    SSH 端口
+                    <input value={config.sshPort} onChange={(e) => updateConfig("sshPort", e.target.value)} placeholder="22" style={{ display: "block", width: "100%", marginTop: 4 }} />
+                    {configErrors.sshPort && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.sshPort}</span>}
+                  </label>
+                  <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
+                    SSH 用户名
+                    <input value={config.sshUser} onChange={(e) => updateConfig("sshUser", e.target.value)} style={{ display: "block", width: "100%", marginTop: 4 }} />
+                    {configErrors.sshUser && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.sshUser}</span>}
+                  </label>
+                  <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
+                    SSH 密码
+                    <input type="password" value={config.sshPassword} onChange={(e) => updateConfig("sshPassword", e.target.value)} placeholder="与私钥引用二选一" style={{ display: "block", width: "100%", marginTop: 4 }} />
+                  </label>
+                  <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
+                    SSH 私钥引用
+                    <input value={config.sshKeyRef} onChange={(e) => updateConfig("sshKeyRef", e.target.value)} placeholder="vault://ssh-key-id" style={{ display: "block", width: "100%", marginTop: 4 }} />
+                    {configErrors.sshKeyRef && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.sshKeyRef}</span>}
+                  </label>
+                  <div style={{ fontSize: "0.8rem", fontWeight: 600, marginBottom: 8, marginTop: 16 }}>数据库配置（隧道远端）</div>
+                  <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4 }}>
+                    数据库主机
+                    <input value={config.dbHost} onChange={(e) => updateConfig("dbHost", e.target.value)} placeholder="127.0.0.1" style={{ display: "block", width: "100%", marginTop: 4 }} />
+                    {configErrors.dbHost && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.dbHost}</span>}
+                  </label>
+                  <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
+                    数据库端口
+                    <input value={config.dbPort} onChange={(e) => updateConfig("dbPort", e.target.value)} placeholder="3306" style={{ display: "block", width: "100%", marginTop: 4 }} />
+                    {configErrors.dbPort && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.dbPort}</span>}
+                  </label>
+                  <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
+                    数据库名
+                    <input value={config.database} onChange={(e) => updateConfig("database", e.target.value)} placeholder="niushop_b2c_v5" style={{ display: "block", width: "100%", marginTop: 4 }} />
+                    {configErrors.database && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.database}</span>}
+                  </label>
+                  <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
+                    用户名
+                    <input value={config.username} onChange={(e) => updateConfig("username", e.target.value)} style={{ display: "block", width: "100%", marginTop: 4 }} />
+                    {configErrors.username && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.username}</span>}
+                  </label>
+                  <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
+                    密码
+                    <input type="password" value={config.password} onChange={(e) => updateConfig("password", e.target.value)} style={{ display: "block", width: "100%", marginTop: 4 }} />
+                    {configErrors.password && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.password}</span>}
+                  </label>
+                  <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
+                    凭据引用（可选）
+                    <input value={config.secretRef} onChange={(e) => updateConfig("secretRef", e.target.value)} placeholder="vault://db-secret-id" style={{ display: "block", width: "100%", marginTop: 4 }} />
+                  </label>
+                </>
+              ) : (
+                <>
+                  <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4 }}>
+                    主机地址
+                    <input value={config.host} onChange={(e) => updateConfig("host", e.target.value)} placeholder="localhost" style={{ display: "block", width: "100%", marginTop: 4 }} />
+                    {configErrors.host && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.host}</span>}
+                  </label>
+                  <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
+                    端口
+                    <input value={config.port} onChange={(e) => updateConfig("port", e.target.value)} placeholder={selectedType.id === "niushop-mysql" ? "13306" : "5432"} style={{ display: "block", width: "100%", marginTop: 4 }} />
+                    {configErrors.port && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.port}</span>}
+                  </label>
+                  <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
+                    数据库名
+                    <input value={config.database} onChange={(e) => updateConfig("database", e.target.value)} placeholder={selectedType.id === "niushop-mysql" ? "niushop" : "mydb"} style={{ display: "block", width: "100%", marginTop: 4 }} />
+                    {configErrors.database && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.database}</span>}
+                  </label>
+                  <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
+                    用户名
+                    <input value={config.username} onChange={(e) => updateConfig("username", e.target.value)} style={{ display: "block", width: "100%", marginTop: 4 }} />
+                    {configErrors.username && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.username}</span>}
+                  </label>
+                  <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
+                    密码
+                    <input type="password" value={config.password} onChange={(e) => updateConfig("password", e.target.value)} style={{ display: "block", width: "100%", marginTop: 4 }} />
+                    {configErrors.password && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.password}</span>}
+                  </label>
+                </>
+              )}
             </>
           )}
           {selectedType.category === "api" && (

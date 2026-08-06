@@ -7,6 +7,7 @@ import {
 import {
   REGISTRY_BUNDLE_DETAIL_FIXTURE,
   REGISTRY_BUNDLE_LIST_FIXTURE,
+  REGISTRY_ECOMMERCE_VERSION_DETAIL_FIXTURE,
   REGISTRY_VERSION_DETAIL_FIXTURE,
 } from "./registryFixtures";
 
@@ -83,5 +84,53 @@ describe("M3-0 Registry response contracts", () => {
     const badHash = structuredClone(REGISTRY_VERSION_DETAIL_FIXTURE) as unknown as Record<string, unknown>;
     badHash.contentHash = "sha1:not-canonical";
     expect(() => parseRegistryVersionDetail(badHash)).toThrow(/sha256 digest/);
+  });
+});
+
+describe("D2.6 ecommerce.core bundle fixture", () => {
+  it("exposes domain.ecommerce.core in the bundle list alongside solution.example", () => {
+    const bundleIds = REGISTRY_BUNDLE_LIST_FIXTURE.map((b) => b.bundleId);
+    expect(bundleIds).toContain("solution.example");
+    expect(bundleIds).toContain("domain.ecommerce.core");
+
+    const ecommerce = REGISTRY_BUNDLE_LIST_FIXTURE.find(
+      (b) => b.bundleId === "domain.ecommerce.core",
+    );
+    expect(ecommerce).toMatchObject({
+      publisher: "aos",
+      kind: "DomainPack",
+      displayName: "电商核心本体包",
+    });
+  });
+
+  it("parses ecommerce.core version detail through the fail-closed parser", () => {
+    const parsed = parseRegistryVersionDetail(REGISTRY_ECOMMERCE_VERSION_DETAIL_FIXTURE);
+    expect(parsed.bundleId).toBe("domain.ecommerce.core");
+    expect(parsed.kind).toBe("DomainPack");
+    expect(parsed.version).toBe("1.0.0");
+    expect(parsed.manifest.kind).toBe("DomainPack");
+    expect(parsed.manifest.metadata.id).toBe("domain.ecommerce.core");
+    expect(parsed.manifest.spec.dependencies).toEqual([]);
+    expect(parsed.manifest.spec.exports.ontology).toEqual(["content/ontology/"]);
+    expect(parsed.manifest.spec.exports.schemas).toEqual(["content/schemas/"]);
+    expect(parsed.manifest.spec.exports.policies).toEqual(["content/policies/"]);
+    expect(parsed.manifest.spec.migrations.downgradePolicy).toBe("retain-canonical");
+    expect(parsed.evidence[0].revokedAt).toBeNull();
+    expect(parsed.lifecycleEvents.map((e) => e.toStatus)).toEqual([
+      "validated",
+      "published",
+    ]);
+  });
+
+  it("registers ecommerce artifacts covering bundle.yaml + ontology/schemas/policies", () => {
+    const paths = REGISTRY_ECOMMERCE_VERSION_DETAIL_FIXTURE.artifacts.map(
+      (a) => a.relativePath,
+    );
+    expect(paths).toContain("bundle.yaml");
+    expect(paths).toContain("content/ontology/object-types.json");
+    expect(paths).toContain("content/ontology/link-types.json");
+    expect(paths).toContain("content/ontology/derived-metrics.json");
+    expect(paths).toContain("content/schemas/pipeline-skeleton.json");
+    expect(paths).toContain("content/policies/pii-exclusion.json");
   });
 });

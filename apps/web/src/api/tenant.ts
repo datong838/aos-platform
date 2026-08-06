@@ -12,11 +12,11 @@ export type TenantContext = {
 
 const STORAGE_KEY = "aos-tenant-v1";
 
-/** 开发默认落入「测试工作区」（技术 id 暂与历史种子兼容为 dev-project） */
+/** 开发默认落入「默认工作区」（技术 id 暂与历史种子兼容为 dev-project） */
 const DEFAULT_TENANT: TenantContext = {
   orgId: "dev-org",
   projectId: "dev-project",
-  workspaceName: "测试工作区",
+  workspaceName: "默认工作区",
 };
 
 let current: TenantContext = loadStored() ?? { ...DEFAULT_TENANT };
@@ -70,9 +70,7 @@ export function setTenant(partial: Partial<TenantContext>) {
     ...partial,
     workspaceName:
       partial.workspaceName ||
-      (partial.projectId === "dev-project" || partial.projectId === "test-workspace"
-        ? "测试工作区"
-        : partial.workspaceName || current.workspaceName),
+      current.workspaceName,
   };
   persist(current);
   console.info("[aos-tenant]", {
@@ -115,9 +113,7 @@ export function applyMeToTenant(me: MeResponse) {
     projectId: me.projectId,
     workspaceName:
       me.workspaceName ||
-      (me.projectId === "dev-project" || me.projectId === "test-workspace"
-        ? "测试工作区"
-        : me.projectId),
+      me.projectId,
     subject: me.subject,
     roles: me.roles || [],
   });

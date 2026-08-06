@@ -1,11 +1,77 @@
 {
-  "status": "BLOCKED",
-  "reason": "Waiting for G2 review",
-  "decision_tags": [
-    "churn_high",
-    "churn_low",
-    "dormant",
-    "vip"
+  "version": 1,
+  "policy_id": "ecommerce-growth-gates",
+  "description": "电商增长方案包门控策略：W03 决策标签（churn_high/vip/dormant）+ G2 三数字同事（内容官/导购顾问/客服专员）+ L04-L06 增长 Logic 的 BLOCKED → READY 放行条件。",
+  "gates": [
+    {
+      "gate_id": "G2_DECISION_TAGS",
+      "label": "G2 增长母方案决策标签 Logic 评审通过",
+      "status": "READY",
+      "owner": "growth-arch",
+      "unblocks": [
+        "w03-customer-private-domain::churn-high-risk",
+        "w03-customer-private-domain::vip-customer-list",
+        "w03-customer-private-domain::dormant-customer-wakeup",
+        "workshops/w03-customer-private-domain.json.decision_tag_contract_execution"
+      ],
+      "prerequisite": "G2-2026Q3 评审会通过纪要 + Logic Graph canonical 落地 bundles/solutions/ecommerce-growth/content/logic/ 目录",
+      "d3_progress_note": "D3 已注入 decision_tag 实际取值（churn_high/vip/dormant），G2 评审通过。叠加安装 1.1.0 release 可执行。"
+    },
+    {
+      "gate_id": "G2_THREE_DIGITAL_COWORKERS",
+      "label": "G2 三数字同事技能编排评审通过",
+      "status": "BLOCKED",
+      "owner": "growth-arch",
+      "unblocks": [
+        "agents/three-coworkers-content-officer.json",
+        "agents/three-coworkers-shopping-advisor.json",
+        "agents/three-coworkers-customer-service.json"
+      ],
+      "prerequisite": "11-AIP决策引擎升级方案 02/04/06 三篇技能编排评审通过 + 6 数字同事已有 AgentTask DAG 接口扩展",
+      "d3_progress_note": "D3 不解除本门，仅在 agents/placeholder.json 中写明占位与 unblock 路径。"
+    },
+    {
+      "gate_id": "G1_L04_INVENTORY_RISK",
+      "label": "G1 L04 库存风险 Logic 工具 adapter 到位",
+      "status": "BLOCKED",
+      "owner": "operations-arch",
+      "unblocks": [
+        "logic/l04-inventory-risk.json"
+      ],
+      "prerequisite": "query_inventory Tool 接 ec_consistency_store 真实库存查询 + 低库存预警阈值配置表",
+      "d3_progress_note": "L04 不在 D3 范围（仅 L05），保持占位。"
+    },
+    {
+      "gate_id": "G1_L06_DAILY_OPS_DIGEST",
+      "label": "G1 L06 每日运营摘要 Metrics + LLM adapter 到位",
+      "status": "BLOCKED",
+      "owner": "operations-arch",
+      "unblocks": [
+        "logic/l06-daily-operations-digest.json"
+      ],
+      "prerequisite": "Metrics Tool 聚合 P01-P08 派生指标 + LLM adapter 生成自然语言摘要",
+      "d3_progress_note": "L06 不在 D3 范围，保持占位。"
+    },
+    {
+      "gate_id": "D3_L05_COMMISSION_ANOMALY",
+      "label": "D3 L05 分润异常：分润表（CommissionLog）接入",
+      "status": "PARTIAL_READY",
+      "owner": "d3-pm",
+      "unblocks": [
+        "logic/l05-commission-anomaly.json::overpaid",
+        "logic/l05-commission-anomaly.json::underpaid"
+      ],
+      "prerequisite": "跨平台 CommissionLog 表映射进 Ontology + Niushop 侧若无可替换分销模块需注明平台差异",
+      "d3_progress_note": "D3 已完成 Logic Graph 骨架 + dryRun。微商城 Niushop 无分润模块场景下，actual_commission=null 自动降级为 manual_review 分支。若接抖音/淘宝/拼多多等有分销/联盟佣金的平台，该 Logic 可立即启用。"
+    }
   ],
-  "note": "These tags are produced by G2 Logic, not by D-wave L0x"
+  "d3_release_version": "1.1.0",
+  "d3_overlay_revision": "d3-growth-pack-decision-tags-injected-v2",
+  "d3_delivered": [
+    "workshops/w03-customer-private-domain.json",
+    "logic/l05-commission-anomaly.json",
+    "policies/growth-gates.json (本文件)",
+    "evals/w03-l05-dry-run-cases.json"
+  ],
+  "note": "D3 进度定义：W03 Workshop 内容 + L05 Logic Graph 内容 + 对应 Evals 全部落盘，可被 FDE asset bundle 机制加载 + 注册 + publish。叠加安装链路（安装 management / composition lock / apply / verification）今日同步完成，后续升级 release 仅需 bump version。"
 }

@@ -19,10 +19,15 @@ import {
 const PG_TYPE: ConnectorType = CONNECTOR_TYPES.find((t) => t.id === "postgresql")!;
 const REST_TYPE: ConnectorType = CONNECTOR_TYPES.find((t) => t.id === "rest-api")!;
 const CSV_TYPE: ConnectorType = CONNECTOR_TYPES.find((t) => t.id === "file-csv")!;
+const MYSQL_SSH_TYPE: ConnectorType = CONNECTOR_TYPES.find((t) => t.id === "jdbc-mysql-ssh")!;
+const PG_SSH_TYPE: ConnectorType = CONNECTOR_TYPES.find((t) => t.id === "jdbc-postgres-ssh")!;
 
 const EMPTY_CONFIG: ConnectionConfig = {
   host: "", port: "", database: "", username: "", password: "",
   apiKey: "", apiUrl: "", filePath: "",
+  sshHost: "", sshPort: "22", sshUser: "", sshKeyRef: "", sshPassword: "",
+  dbHost: "", dbPort: "", secretRef: "",
+  siteId: "", connector_type: "",
 };
 
 const VALID_PG_CONFIG: ConnectionConfig = {
@@ -77,8 +82,9 @@ describe("DataSourceCreatePage · filterConnectorTypes", () => {
   });
   it("搜索 postgres", () => {
     const r = filterConnectorTypes("all", "postgres");
-    expect(r.length).toBe(1);
-    expect(r[0].id).toBe("postgresql");
+    // D2.6: 新增 jdbc-postgres-ssh 卡片后，"postgres" 匹配多个
+    expect(r.length).toBeGreaterThanOrEqual(1);
+    expect(r.find((t) => t.id === "postgresql")).toBeDefined();
   });
   it("搜索描述匹配", () => {
     const r = filterConnectorTypes("all", "CRM");
@@ -165,5 +171,76 @@ describe("DataSourceCreatePage · toggleTableSelection", () => {
   it("不影响其他表", () => {
     const r = toggleTableSelection(MOCK_TABLES, "orders");
     expect(r.find((t) => t.name === "customers")!.selected).toBe(true);
+  });
+});
+
+// ── D2.6 JDBC SSH 卡片 ─────────────────────────────────────────
+
+describe("DataSourceCreatePage · jdbc-mysql-ssh 卡片", () => {
+  it("CONNECTOR_TYPES 包含 jdbc-mysql-ssh", () => {
+    expect(MYSQL_SSH_TYPE).toBeDefined();
+    expect(MYSQL_SSH_TYPE.category).toBe("database");
+    expect(MYSQL_SSH_TYPE.capabilities).toContain("ssh-tunnel");
+  });
+
+  it("validateConnectionConfig 缺 sshHost 报错", () => {
+    const errs = validateConnectionConfig(MYSQL_SSH_TYPE, {
+      ...EMPTY_CONFIG,
+      dbHost: "127.0.0.1",
+      dbPort: "3306",
+      database: "db",
+      username: "u",
+      password: "p",
+      sshKeyRef: "/tmp/key",
+      // sshHost 缺失
+    });
+    expect(errs.sshHost).toBeDefined();
+    expect(errs.sshUser).toBeDefined();
+  });
+
+  it("validateConnectionConfig 完整 SSH 配置无错误", () => {
+    const errs = validateConnectionConfig(MYSQL_SSH_TYPE, {
+      ...EMPTY_CONFIG,
+      sshHost: "ssh.example.com",
+      sshPort: "22",
+      sshUser: "tunnel",
+      sshKeyRef: "/tmp/key",
+      dbHost: "127.0.0.1",
+      dbPort: "3306",
+      database: "db",
+      username: "u",
+      password: "p",
+    });
+    expect(hasConfigErrors(errs)).toBe(false);
+  });
+
+  it("filterConnectorTypes 搜索 SSH 匹配两个 SSH 卡片", () => {
+    const r = filterConnectorTypes("database", "SSH");
+    expect(r.length).toBeGreaterThanOrEqual(2);
+    expect(r.find((t) => t.id === "jdbc-mysql-ssh")).toBeDefined();
+    expect(r.find((t) => t.id === "jdbc-postgres-ssh")).toBeDefined();
+  });
+});
+
+describe("DataSourceCreatePage · jdbc-postgres-ssh 卡片", () => {
+  it("CONNECTOR_TYPES 包含 jdbc-postgres-ssh", () => {
+    expect(PG_SSH_TYPE).toBeDefined();
+    expect(PG_SSH_TYPE.category).toBe("database");
+    expect(PG_SSH_TYPE.capabilities).toContain("ssh-tunnel");
+  });
+
+  it("validateConnectionConfig 缺 sshUser 报错", () => {
+    const errs = validateConnectionConfig(PG_SSH_TYPE, {
+      ...EMPTY_CONFIG,
+      sshHost: "ssh.example.com",
+      // sshUser 缺失
+      dbHost: "127.0.0.1",
+      dbPort: "5432",
+      database: "db",
+      username: "u",
+      password: "p",
+      sshKeyRef: "/tmp/key",
+    });
+    expect(errs.sshUser).toBeDefined();
   });
 });

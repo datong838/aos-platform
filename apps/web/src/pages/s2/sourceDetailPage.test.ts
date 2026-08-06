@@ -104,3 +104,51 @@ describe("Wave 3C W1 · applySchemaTree", () => {
     expect(applied.clearPreview).toBe(true);
   });
 });
+
+// ── D2.6 Niushop 专属 Schema ────────────────────────────────────
+
+describe("D2.6 demoSchemaTree · niushop-mysql", () => {
+  it("niushop-mysql 返回 8 张 ns_xxx 表", () => {
+    const tree = demoSchemaTree("niushop-mysql");
+    const tables = flattenTables(tree);
+    const tableNames = tables.map((t) => t.table);
+    expect(tableNames).toContain("ns_site");
+    expect(tableNames).toContain("ns_goods");
+    expect(tableNames).toContain("ns_goods_sku");
+    expect(tableNames).toContain("ns_goods_category");
+    expect(tableNames).toContain("ns_order");
+    expect(tableNames).toContain("ns_order_goods");
+    expect(tableNames).toContain("ns_member");
+    expect(tableNames).toContain("ns_express_delivery_package");
+    expect(tables.length).toBe(8);
+  });
+
+  it("niushop-mysql ns_order 含 order_id PK + member_id + create_time", () => {
+    const tree = demoSchemaTree("niushop-mysql");
+    const nsOrder = tree[0].tables.find((t) => t.name === "ns_order")!;
+    // columns 在 NIUSHOP_DEMO_SCHEMA 中每张表都内嵌，必然存在；SchemaTable.columns 设为 optional 是为兼容 API 分两步返回的场景
+    const colNames = nsOrder.columns!.map((c) => c.name);
+    expect(colNames).toContain("order_id");
+    expect(colNames).toContain("member_id");
+    expect(colNames).toContain("create_time");
+    const pk = nsOrder.columns!.find((c) => c.name === "order_id")!;
+    expect(pk.primary_key).toBe(true);
+  });
+
+  it("niushop-mysql ns_member 含 PII 字段（mobile/nickname）以可视化隐私字段", () => {
+    const tree = demoSchemaTree("niushop-mysql");
+    const nsMember = tree[0].tables.find((t) => t.name === "ns_member")!;
+    const colNames = nsMember.columns!.map((c) => c.name);
+    expect(colNames).toContain("member_id");
+    expect(colNames).toContain("mobile");
+    expect(colNames).toContain("nickname");
+  });
+
+  it("jdbc-mysql-ssh 也走 niushop schema（连接器类型名称包含 mysql 但不绑 niushop）", () => {
+    // jdbc-mysql-ssh 是通用连接器，不应自动走 niushop 分支
+    const tree = demoSchemaTree("jdbc-mysql-ssh");
+    const tables = flattenTables(tree);
+    // 应该走默认 public/analytics 分支，不是 niushop 8 表
+    expect(tables.some((t) => t.table === "ns_order")).toBe(false);
+  });
+});

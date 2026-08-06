@@ -75,11 +75,11 @@ const DEMO_CATALOG: ConnectorCatalogCard[] = [
     runtime: "ready",
   },
   {
-    id: "niushop-mysql",
-    name: "Niushop 微商城",
+    id: "jdbc-mysql-ssh",
+    name: "MySQL SSH 隧道",
     category: "database",
-    description: "Niushop 微商城专属 · 预设 8 表映射 + PII 排除",
-    capabilities: ["Batch syncs", "Virtual tables", "PII exclusion"],
+    description: "通用 JDBC · 通过 SSH 隧道访问远程 MySQL · 密码/密钥双模式",
+    capabilities: ["Batch syncs", "SSH tunnel", "Virtual tables", "Discover schemas"],
     installed: true,
     required: true,
     runtime: "ready",
@@ -93,6 +93,24 @@ const DEMO_CATALOG: ConnectorCatalogCard[] = [
     installed: true,
     required: true,
     runtime: "ready",
+  },
+  {
+    id: "jdbc-postgres-ssh",
+    name: "PostgreSQL SSH 隧道",
+    category: "database",
+    description: "通用 JDBC · 通过 SSH 隧道访问远程 PostgreSQL",
+    capabilities: ["Batch syncs", "SSH tunnel", "Virtual tables"],
+    installed: false,
+    runtime: "stub",
+  },
+  {
+    id: "niushop-mysql",
+    name: "Niushop 微商城",
+    category: "database",
+    description: "Niushop 微商城专属 · 预设 8 表映射 + PII 排除（后续移除）",
+    capabilities: ["Batch syncs", "Virtual tables", "PII exclusion"],
+    installed: false,
+    runtime: "stub",
   },
   {
     id: "jdbc-oracle",
@@ -251,7 +269,6 @@ export function DataConnectionPage() {
           { label: "连接器总数", value: stats.total, tone: "muted" },
           { label: "已安装", value: stats.installed, tone: "ok" },
           { label: "未安装", value: stats.notInstalled, tone: "warn" },
-          { label: "必做", value: stats.required, tone: "muted" },
         ]}
       />
 
@@ -291,7 +308,6 @@ export function DataConnectionPage() {
               <p className="bp-discover-meta">
                 {CATEGORY_LABELS[c.category]}
                 {c.runtime === "stub" ? " · stub" : ""}
-                {c.required ? " · 必做" : ""}
               </p>
               {c.description && (
                 <p

@@ -17,7 +17,13 @@ KEY_INSTALLS = "connector_plugin_installs"
 _ID_RE = re.compile(r"^[a-z][a-z0-9-]{1,63}$")
 
 # T05 必做 · 默认已装（兼容旧 sources type=file/jdbc）
-DEFAULT_INSTALLED = ("file-local", "file-object-store", "jdbc-mysql")
+# jdbc-mysql-ssh 已作为栖月汇真实数据源的唯一连接器，提升为必做
+DEFAULT_INSTALLED = (
+    "file-local",
+    "file-object-store",
+    "jdbc-mysql",
+    "jdbc-mysql-ssh",
+)
 
 # 旧 UI / API 别名 → 插件 id
 TYPE_ALIASES = {

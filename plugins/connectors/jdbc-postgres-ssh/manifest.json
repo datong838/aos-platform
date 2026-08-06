@@ -1,0 +1,62 @@
+{
+  "id": "jdbc-postgres-ssh",
+  "name": "PostgreSQL over SSH Tunnel",
+  "nameZh": "PostgreSQL SSH 隧道连接",
+  "description": "通用 JDBC 连接 · 通过 SSH 隧道访问 PostgreSQL · 适合本地开发与生产",
+  "kind": "source",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "live",
+  "capabilities": [
+    "jdbc",
+    "postgres",
+    "ssh-tunnel",
+    "discover",
+    "ingest"
+  ],
+  "healthPath": "/v1/connectors/jdbc-postgres-ssh/health",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "sshHost": {
+        "type": "string",
+        "description": "SSH 主机"
+      },
+      "sshPort": {
+        "type": "integer",
+        "default": 22,
+        "description": "SSH 端口"
+      },
+      "sshUser": {
+        "type": "string",
+        "description": "SSH 用户名"
+      },
+      "sshKeyRef": {
+        "type": "string",
+        "description": "SSH 私钥引用（Vault secret ref）"
+      },
+      "dbHost": {
+        "type": "string",
+        "description": "数据库主机（隧道远端）"
+      },
+      "dbPort": {
+        "type": "integer",
+        "default": 5432,
+        "description": "数据库端口"
+      },
+      "database": {
+        "type": "string",
+        "description": "数据库名"
+      },
+      "username": {
+        "type": "string",
+        "description": "数据库用户名"
+      },
+      "secretRef": {
+        "type": "string",
+        "description": "Vault 凭据引用（包含 db password / ssh passphrase）"
+      }
+    },
+    "required": ["sshHost", "sshUser", "dbHost", "database", "username"]
+  }
+}

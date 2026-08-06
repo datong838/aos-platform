@@ -14,10 +14,10 @@ describe("TWA.2 tenant context", () => {
     setTenant({ ...DEFAULT_TENANT });
   });
 
-  it("defaults to 测试工作区 / dev-project", () => {
+  it("defaults to 默认工作区 / dev-project", () => {
     const t = getTenant();
     expect(t.projectId).toBe("dev-project");
-    expect(t.workspaceName).toBe("测试工作区");
+    expect(t.workspaceName).toBe("默认工作区");
     expect(t.orgId).toBe("dev-org");
   });
 
@@ -34,12 +34,12 @@ describe("TWA.2 tenant context", () => {
       subject: "u",
       orgId: "dev-org",
       projectId: "dev-project",
-      workspaceName: "测试工作区",
+      workspaceName: "默认工作区",
       roles: [],
       markings: [],
       tokenKind: "dev",
     });
-    expect(getTenant().workspaceName).toBe("测试工作区");
+    expect(getTenant().workspaceName).toBe("默认工作区");
     const raw = sessionStorage.getItem(STORAGE_KEY);
     expect(raw).toContain("dev-project");
   });

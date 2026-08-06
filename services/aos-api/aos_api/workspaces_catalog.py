@@ -134,15 +134,15 @@ def load_workspaces_from_db() -> int:
 
 
 def seed_dev_workspaces() -> None:
-    # 仅默认组织保留测试/运营工作区种子；不再为 org-a/org-b 播种
+    # 仅默认组织保留默认/运营工作区种子；不再为 org-a/org-b 播种
     org = "dev-org"
     if (org, "dev-project") not in _WS:
         ensure_workspace(
             org,
             "dev-project",
-            name="测试工作区",
+            name="默认工作区",
             deletable=True,
-            kind="test",
+            kind="default",
         )
     if (org, "prj-ops") not in _WS:
         ensure_workspace(

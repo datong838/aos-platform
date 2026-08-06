@@ -32,28 +32,28 @@
 |---|---|---|---|
 | 01 | 01-agent-auditable-decision.md | juejin-series-228/02-evidence-driven-decisions.md | 已发布（2026-08-04 13:34） |
 | 02 | 02-agent-task-dag.md | juejin-series-228/03-task-dag-handoff.md | 已发布（2026-08-04 13:41） |
-| 03 | 03-agent-memory-governance.md | juejin-series-228/04-memory-governance.md | 待整理 |
-| 04 | 04-connector-unknown-state.md | juejin-series-228/05-connector-unknown-state.md | 待整理 |
-| 05 | 05-controlled-action.md | juejin-series-228/06-controlled-actions.md | 待整理 |
-| 06 | 06-composable-assets.md | juejin-series-228/07-composable-assets.md | 待整理 |
-| 07 | 07-enterprise-agent-engine.md | juejin-series-228/08-enterprise-agent-engine.md | 待整理 |
-| 08 | 08-ecommerce-agent-loop.md | juejin-series-228/01-operating-loop.md | 待整理 |
-| 09 | 09-data-advisor-loop.md | juejin-series-digital-colleagues/01-data-advisor-operating-loop.md | 待整理 |
-| 10 | 10-content-order-relay.md | juejin-series-digital-colleagues/02-content-to-order-relay.md | 待整理 |
-| 11 | 11-safe-user-context.md | juejin-series-digital-colleagues/03-repeat-purchase-collaboration.md | 待整理 |
-| 12 | 12-campaign-guardrails.md | juejin-series-digital-colleagues/04-campaign-decision-guardrails.md | 待整理 |
-| 13 | 13-complaint-feedback.md | juejin-series-digital-colleagues/05-complaint-feedback-learning.md | 待整理 |
-| 14 | 14-minimal-handoff.md | juejin-series-digital-colleagues/06-safe-handoff-minimal-context.md | 待整理 |
-| 15 | 15-governed-memory.md | juejin-series-digital-colleagues/07-governed-memory-evolution.md | 待整理 |
-| 16 | 16-action-control-plane.md | juejin-series-digital-colleagues/08-controlled-actions-maturity.md | 待整理 |
-| 17 | 17-enterprise-ai-four-layers.md | juejin-series-aos-four-layers/01-aos-four-layer-architecture.md | 待整理 |
-| 18 | 18-agent-data-layer.md | juejin-series-aos-four-layers/02-data-operating-system.md | 待整理 |
-| 19 | 19-agent-ontology.md | juejin-series-aos-four-layers/03-ontology-digital-twin.md | 待整理 |
-| 20 | 20-agent-decision-runtime.md | juejin-series-aos-four-layers/04-aip-decision-runtime.md | 待整理 |
-| 21 | 21-agent-workbench.md | juejin-series-aos-four-layers/05-agent-workbench-runtime.md | 待整理 |
-| 22 | 22-four-layer-decision-loop.md | juejin-series-aos-four-layers/06-agent-decision-four-layer-loop.md | 待整理 |
-| 23 | 23-four-layer-governance.md | juejin-series-aos-four-layers/07-four-layer-governance-spine.md | 待整理 |
-| 24 | 24-why-enterprise-ai-os.md | ../../../../docs/palantier/articles/01-why-enterprise-ai-needs-os.md | 待整理 |
+| 03 | 03-agent-memory-governance.md | juejin-series-228/04-memory-governance.md | 已发布（2026-08-04 15:17） |
+| 04 | 04-connector-unknown-state.md | juejin-series-228/05-connector-unknown-state.md | 已发布（2026-08-04 15:39） |
+| 05 | 05-controlled-action.md | juejin-series-228/06-controlled-actions.md | 已发布（2026-08-04 15:47） |
+| 06 | 06-composable-assets.md | juejin-series-228/07-composable-assets.md | 已发布（2026-08-04 15:58） |
+| 07 | 07-enterprise-agent-engine.md | juejin-series-228/08-enterprise-agent-engine.md | 已发布（2026-08-04 16:10） |
+| 08 | 08-ecommerce-agent-loop.md | juejin-series-228/01-operating-loop.md | 已发布（2026-08-04 16:20） |
+| 09 | 09-data-advisor-loop.md | juejin-series-digital-colleagues/01-data-advisor-operating-loop.md | 已发布（2026-08-04 16:31） |
+| 10 | 10-content-order-relay.md | juejin-series-digital-colleagues/02-content-to-order-relay.md | 已发布（2026-08-04 16:40） |
+| 11 | 11-safe-user-context.md | juejin-series-digital-colleagues/03-repeat-purchase-collaboration.md | 已发布（2026-08-04 16:49） |
+| 12 | 12-campaign-guardrails.md | juejin-series-digital-colleagues/04-campaign-decision-guardrails.md | 已发布（2026-08-04 16:59） |
+| 13 | 13-complaint-feedback.md | juejin-series-digital-colleagues/05-complaint-feedback-learning.md | 已发布（2026-08-04 17:14） |
+| 14 | 14-minimal-handoff.md | juejin-series-digital-colleagues/06-safe-handoff-minimal-context.md | 已发布（2026-08-04 17:21） |
+| 15 | 15-governed-memory.md | juejin-series-digital-colleagues/07-governed-memory-evolution.md | 已发布（2026-08-04 17:31） |
+| 16 | 16-action-control-plane.md | juejin-series-digital-colleagues/08-controlled-actions-maturity.md | 已发布（2026-08-04 17:41） |
+| 17 | 17-enterprise-ai-four-layers.md | juejin-series-aos-four-layers/01-aos-four-layer-architecture.md | 已发布（2026-08-04 18:01） |
+| 18 | 18-agent-data-layer.md | juejin-series-aos-four-layers/02-data-operating-system.md | 已发布（2026-08-04 18:11） |
+| 19 | 19-agent-ontology.md | juejin-series-aos-four-layers/03-ontology-digital-twin.md | 已发布（2026-08-04 18:21） |
+| 20 | 20-agent-decision-runtime.md | juejin-series-aos-four-layers/04-aip-decision-runtime.md | 已发布（2026-08-04 18:31） |
+| 21 | 21-agent-workbench.md | juejin-series-aos-four-layers/05-agent-workbench-runtime.md | 已发布（2026-08-04 18:41） |
+| 22 | 22-four-layer-decision-loop.md | juejin-series-aos-four-layers/06-agent-decision-four-layer-loop.md | 已发布（2026-08-04 18:51） |
+| 23 | 23-four-layer-governance.md | juejin-series-aos-four-layers/07-four-layer-governance-spine.md | 已发布（2026-08-04 19:16） |
+| 24 | 24-why-enterprise-ai-os.md | ../../../../docs/palantier/articles/01-why-enterprise-ai-needs-os.md | 已发布（2026-08-04 19:24） |
 
 ## 今日头条审核观察
 
@@ -67,6 +67,47 @@
 - 确认发布后进入作品管理，首篇显示“审核中”；不能把跳转成功当作审核通过。
 - 首篇随后在作品管理页变为“已发布”，未显示驳回原因或整改提示；首篇流程可以作为本批后续文章的操作基线。
 - 第 2 篇采用同一选项组合后也直接进入“已发布”；作品管理页存在数秒列表刷新延迟，提交后第一次读取可能仍只显示上一篇，刷新后才出现新文章。
+- 第 3 篇完成头条化重写后，以“无封面、非头条首发、不同步微头条、引用 AI、广告保持账号默认值”的组合提交；提交跳转后的首次列表仍为 2 篇，刷新后才出现新稿并显示“已发布”。这只能验证本篇的界面结果，不能据此推断重写方式或“引用 AI”声明必然影响审核结论。
+- 第 4 篇按同一发布选项组合提交后，作品管理页显示“审核中”；本次只能确认提交已进入审核流程，不能提前记为已发布，也不能据此推断标题、主题或声明对审核时长的影响。
+- 第 4 篇在后续作品管理页核验中变为“已发布”，未显示驳回原因或整改提示；该结果只证明本稿完成本次审核，不代表同类标题、状态机写法或发布选项必然通过。
+- 第 5 篇完成头条化重写并按既定选项提交后，作品管理页显示“审核中”；本轮不把提交成功视为审核通过，也不继续发布第 6 篇。
+- 第 5 篇在后续作品管理页核验中变为“已发布”，未显示驳回原因或整改提示；该结果只记录本次真实状态，不证明“七道安全门”标题结构或引用 AI 声明具有固定审核优势。
+- 第 6 篇确认发布后首次进入作品管理时列表短暂为空；未重复提交，等待并刷新后新稿显示“已发布”。这进一步验证列表加载状态不能作为提交失败证据，必须按标题等待刷新后再判断。
+- 第 7 篇将标题从 30 字主动缩短到 25 字后提交，作品管理页显示“审核中”；缩短标题是我方可读性纪律，不能把本次审核状态解释为平台偏好或审核因果。
+- 第 7 篇在后续作品管理页核验中变为“已发布”，未显示驳回或整改提示；该结果只证明本稿通过本次审核，不证明 25 字标题或三层架构主题具有固定审核优势。
+- 第 8 篇完成经营闭环主题的头条化重写后提交，作品管理页显示“审核中”；本轮只记录真实状态，不推断多智能体、电商或经营类标题的审核偏好。
+- 第 8 篇在后续作品管理页核验中变为“已发布”，未显示驳回或整改提示；该结果仅说明本稿通过本次审核，不足以总结电商经营主题的固定审核规律。
+- 第 9 篇沿用用户此前确认的标题并完成头条化重写后提交，作品管理页显示“审核中”；该状态不能用于推断“数据参谋”措辞或较短标题对审核结果的影响。
+- 第 9 篇在后续作品管理页核验中变为“已发布”，未显示驳回或整改提示；该结果仅证明本稿通过本次审核，不代表较短标题或“数据参谋”主题具有固定审核优势。
+- 第 10 篇完成内容、线索、推荐、订单与服务反馈的头条化重写后提交，作品管理页显示“审核中”；该状态不能用于推断订单、导购或多 Agent 主题的审核倾向。
+- 第 10 篇在后续作品管理页核验中变为“已发布”，未显示驳回或整改提示；该结果仅说明本稿通过本次审核，不足以形成订单或导购主题的固定审核规则。
+- 第 11 篇完成同意、用途、频控和撤回主题的头条化重写后提交，作品管理页显示“审核中”；该状态不能用于推断隐私、安全或多 Agent 主题的审核倾向。
+- 第 11 篇在后续作品管理页核验中变为“已发布”，未显示驳回或整改提示；该结果仅证明本稿通过本次审核，不代表隐私、安全或频控主题具有固定审核优势。
+- 第 12 篇完成活动决策护栏主题的头条化重写后提交，作品管理页显示“审核中”；该状态不能用于推断促销、毛利、库存或投诉主题的审核倾向。
+- 第 12 篇在后续作品管理页核验中变为“已发布”，未显示驳回或整改提示；该结果仅证明本稿通过本次审核，不代表活动、毛利、库存或投诉主题具有固定审核优势。
+- 第 13 篇完成客服反馈、版本追踪与反向修订闭环的头条化重写后提交，作品管理页显示“审核中”；该状态只证明投稿已进入审核流程，不能据此推断投诉、客服反馈或 Agent 反向学习主题的审核倾向。
+- 第 13 篇在后续作品管理页核验中变为“已发布”，未显示驳回或整改提示；该结果仅证明本稿通过本次审核，不代表投诉、客服反馈或反向学习主题具有固定审核优势。
+- 第 14 篇完成最小上下文、用途绑定、权限重验和失效状态主题的头条化重写后提交，作品管理页显示“审核中”；该状态只证明投稿已进入审核流程，不能据此推断安全、权限或多 Agent 交接主题的审核倾向。
+- 第 14 篇在后续作品管理页核验中变为“已发布”，未显示驳回或整改提示；该结果仅证明本稿通过本次审核，不代表安全、权限或最小交接主题具有固定审核优势。
+- 第 15 篇完成四层记忆、经验晋升、反例检索和回归评测主题的头条化重写后提交；作品管理页首次返回时新稿尚未出现，等待并刷新后显示“已发布”。该结果再次说明列表短暂延迟不能作为提交失败证据，也不代表记忆治理主题具有固定审核优势。
+- 第 16 篇完成动作风险分级、精确版本审批、幂等对账和自动化护栏主题的头条化重写后提交，作品管理页显示“审核中”；该状态只证明投稿已进入审核流程，不能据此推断自动执行、改价或动作控制主题的审核倾向。
+- 第 16 篇在后续作品管理页核验中变为“已发布”，未显示驳回或整改提示；该结果仅证明本稿通过本次审核，不代表自动执行、改价或动作控制主题具有固定审核优势。
+- 第 17 篇完成数据、本体、AIP 决策与工作台四层运行时主题的头条化重写后提交，作品管理页显示“审核中”；该状态只证明投稿已进入审核流程，不能据此推断企业 AI 架构或四层分层主题的审核倾向。
+- 第 17 篇在后续作品管理页核验中变为“已发布”，未显示驳回或整改提示；该结果仅证明本稿通过本次审核，不代表企业 AI 架构或四层分层主题具有固定审核优势。
+- 第 18 篇完成连接器、结构漂移、同步检查点、版本化数据管道与血缘主题的头条化重写后提交，作品管理页显示“审核中”；该状态只证明投稿已进入审核流程，不能据此推断数据库、数据管道或可信数据链主题的审核倾向。
+- 第 18 篇在后续作品管理页核验中变为“已发布”，未显示驳回或整改提示；该结果仅证明本稿通过本次审核，不代表数据库、数据管道或可信数据链主题具有固定审核优势。
+- 第 19 篇完成业务对象、关系、水合流程、只读函数与受控动作主题的头条化重写后提交，作品管理页显示“审核中”；该状态只证明投稿已进入审核流程，不能据此推断业务本体、数字孪生或对象关系主题的审核倾向。
+- 第 19 篇在后续作品管理页核验中变为“已发布”，未显示驳回或整改提示；该结果仅证明本稿通过本次审核，不代表业务本体、数字孪生或对象关系主题具有固定审核优势。
+- 第 20 篇完成模型路由、版本化决策逻辑、工具注册表、草案隔离与评测发布门主题的头条化重写后提交，作品管理页显示“审核中”；该状态只证明投稿已进入审核流程，不能据此推断模型决策、Agent 运行时或评测主题的审核倾向。
+- 第 20 篇在后续作品管理页核验中变为“已发布”，未显示驳回或整改提示；该结果仅证明本稿通过本次审核，不代表模型决策、Agent 运行时或评测主题具有固定审核优势。
+- 第 21 篇完成模块版本、组件、变量、选择集、幂等事件与执行回执主题的头条化重写后提交，作品管理页显示“审核中”；该状态只证明投稿已进入审核流程，不能据此推断 Agent 工作台、聊天界面或业务操作主题的审核倾向。
+- 第 21 篇在后续作品管理页核验中变为“已发布”，未显示驳回或整改提示；该结果仅证明本稿通过本次审核，不代表 Agent 工作台、聊天界面或业务操作主题具有固定审核优势。
+- 第 22 篇完成数据快照、对象集合、决策草案、精确审批、执行回执与结果对账主题的头条化重写后提交，作品管理页显示“审核中”；该状态只证明投稿已进入审核流程，不能据此推断四层决策闭环、审批或对账主题的审核倾向。
+- 第 22 篇在后续作品管理页核验中变为“已发布”，未显示驳回原因或整改提示；该结果仅证明本稿通过本次审核，不代表四层决策闭环、审批或对账主题具有固定审核优势。
+- 第 23 篇完成租户与工作区、用途、安全标记、决策谱系、跨层发布和回滚主题的头条化重写后提交，作品管理页显示“审核中”；本次还观察到“无封面”必须形成界面选中态，仅改变隐藏输入状态不足以通过表单校验。该界面行为属于本次表单操作事实，不能外推为内容审核规则。
+- 第 23 篇在后续作品管理页核验中变为“已发布”，未显示驳回原因或整改提示；该结果仅证明本稿通过本次审核，不代表治理、权限、发布或回滚主题具有固定审核优势。
+- 第 24 篇删除了未在本轮核验的公司市值、营收、客户与产品数字，改写为数据、本体、决策、工作台和受控动作组成共享运行底座的架构方法论；提交后作品管理页显示“审核中”。该状态只证明本稿进入审核流程，不能据此推断“操作系统”标题或纯方法论写法的审核倾向。
+- 第 24 篇在后续作品管理页核验中变为“已发布”，未显示驳回原因或整改提示；至此本批 24 篇均在作品管理页显示“已发布”。该批次结果证明既定流程完成了本次发布，不代表同类文章、标题、选项或账号在未来必然获得相同结果。
 
 以下项目继续逐篇记录，不能提前写成平台规则：
 

@@ -21,6 +21,7 @@ from typing import Any
 import pymysql
 
 from aos_api.db import connect
+from aos_api.jdbc_connector_runtime import JdbcConnectorRuntime
 from aos_api.logging_facade import get_logger
 
 log = get_logger("aos-api.ec-source")
@@ -42,6 +43,12 @@ _PII_DROP_FIELDS: frozenset[str] = frozenset(
         "mobile", "wx_openid", "nickname", "avatar",
         "reg_address", "last_login_ip", "password", "pay_password",
     }
+)
+
+# D2.6: 通用 JDBC SSH 连接器类型集合（走 JdbcConnectorRuntime 分支）
+# 其他类型（niushop-mysql / mysql / 缺失）走原 pymysql 直连分支（向后兼容）
+_JDBC_SSH_CONNECTOR_TYPES: frozenset[str] = frozenset(
+    {"jdbc-mysql-ssh", "jdbc-postgres-ssh"}
 )
 
 # 软删行计数（module-level dict，key=(pipeline_id, node_id)），供 G6 DLQ 取用
@@ -71,8 +78,10 @@ def fetch_source_rows(
     行为分支：
     1. 向后兼容：node_id 为 None / 找不到 source 节点 / node.config 无 source_id
        → 回退 sample_input 透传（与原 ec_live_executor 骨架行为等价）
-    2. Niushop 只读源：node.config 取 source_id → 查 meta_source → pymysql 只读连接
-       → 增量游标读取 → 数据清洗
+    2. D2.6 通用 JDBC SSH：meta_source.connector_type ∈ {jdbc-mysql-ssh, jdbc-postgres-ssh}
+       → 走 JdbcConnectorRuntime（SSH 隧道 + JDBC 连接）
+    3. Niushop 只读源：其他 connector_type（niushop-mysql / mysql / 缺失）
+       → 保留 pymysql 直连分支（向后兼容）
     """
     # 尝试找 source 节点并取其 config
     node_config = _resolve_source_node_config(nodes, node_id)
@@ -81,12 +90,27 @@ def fetch_source_rows(
     if node_config is None or not node_config.get("source_id"):
         return _fallback_sample_input(sample_input)
 
-    # Niushop 只读源分支
+    # 查 meta_source 拿连接配置（所有分支都需要）
+    source_id = node_config["source_id"]
+    props = _query_meta_source_props(source_id, scope)
+
+    # D2.6 分支派发：connector_type 决定走哪个运行时
+    connector_type = props.get("connector_type", "")
+    if connector_type in _JDBC_SSH_CONNECTOR_TYPES:
+        # 通用 JDBC SSH 分支
+        return _fetch_from_jdbc_ssh(
+            pipeline=pipeline,
+            node_id=node_id or "",
+            node_config=node_config,
+            props=props,
+        )
+
+    # 保留原 Niushop pymysql 直连分支（向后兼容）
     return _fetch_from_niushop(
         pipeline=pipeline,
         node_id=node_id or "",
         node_config=node_config,
-        scope=scope,
+        props=props,
     )
 
 
@@ -116,10 +140,12 @@ def _fetch_from_niushop(
     pipeline: Any,
     node_id: str,
     node_config: dict[str, Any],
-    scope: Any,
+    props: dict[str, Any],
 ) -> list[dict[str, Any]]:
-    """从 Niushop 只读源按游标增量读取。"""
-    source_id = node_config["source_id"]
+    """从 Niushop 只读源按游标增量读取（原 pymysql 直连分支，向后兼容）。
+
+    D2.6: 连接配置由 fetch_source_rows 统一查询后传入（不再内部查 meta_source）
+    """
     table = node_config["table"]
     pk = node_config["pk"]
     watermark_col = node_config.get("watermark_col", "modify_time")
@@ -127,10 +153,7 @@ def _fetch_from_niushop(
     cursor = node_config.get("cursor")
     initial = node_config.get("initial", False)
 
-    # 1. 查 meta_source 拿连接配置（强制走 meta_source，不接 config 直传连接串）
-    props = _query_meta_source_props(source_id, scope)
-
-    # 2. pymysql 只读连接（隧道断开时 fail-closed：异常向上抛出）
+    # pymysql 只读连接（隧道断开时 fail-closed：异常向上抛出）
     conn = pymysql.connect(
         host=props["host"],
         port=int(props["port"]),
@@ -146,7 +169,7 @@ def _fetch_from_niushop(
         # 只读事务（fail-closed：异常向上抛出）
         cur.execute(READ_ONLY_SQL)
 
-        # 3. 构造 SQL（初装/增量 + LIMIT 控制）并查询
+        # 构造 SQL（初装/增量 + LIMIT 控制）并查询
         sql, params = _build_query_sql(
             table=table,
             pk=pk,
@@ -161,7 +184,43 @@ def _fetch_from_niushop(
     finally:
         conn.close()
 
-    # 4. 数据清洗：软删行过滤 + PII 排除 + 0 时间转 null
+    # 数据清洗：软删行过滤 + PII 排除 + 0 时间转 null
+    pipeline_id = getattr(pipeline, "id", "") or ""
+    cleaned_rows = _clean_rows(rows, pipeline_id=pipeline_id, node_id=node_id, table=table)
+
+    return cleaned_rows
+
+
+def _fetch_from_jdbc_ssh(
+    *,
+    pipeline: Any,
+    node_id: str,
+    node_config: dict[str, Any],
+    props: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """D2.6: 从通用 JDBC SSH 连接器读取行流。
+
+    使用 JdbcConnectorRuntime（SSH 隧道 + JDBC 连接），不绑 niushop。
+    支持任意 MySQL / PostgreSQL 数据源，适合本地开发与生产。
+
+    数据清洗与 niushop 分支一致（软删行过滤 + PII 排除 + 0 时间转 null）。
+    """
+    table = node_config["table"]
+    pk = node_config.get("pk", "id")
+    cursor = node_config.get("cursor")
+
+    # 通用 JDBC SSH 运行时（with 上下文管理 SSH 隧道 + JDBC 连接生命周期）
+    with JdbcConnectorRuntime(props) as rt:
+        # 游标增量：如有 cursor 则 (watermark, pk) 二元组；初装传 None
+        if cursor:
+            watermark = cursor.get("watermark")
+            primary_key = cursor.get("primary_key", pk)
+            read_cursor: tuple[Any, str] | None = (watermark, primary_key)
+        else:
+            read_cursor = None
+        rows = rt.read_rows(table, cursor=read_cursor)
+
+    # 数据清洗：软删行过滤 + PII 排除 + 0 时间转 null（复用原逻辑）
     pipeline_id = getattr(pipeline, "id", "") or ""
     cleaned_rows = _clean_rows(rows, pipeline_id=pipeline_id, node_id=node_id, table=table)
 
