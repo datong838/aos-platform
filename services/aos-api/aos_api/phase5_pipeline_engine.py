@@ -654,11 +654,29 @@ class PipelineEngine:
             pp.updated_at = time.time()
             return pp
 
+    def approve_proposal(self, scope: TenantScope, pipeline_id: str, pp_id: str) -> PipelineProposal:
+        """审批提案：pending → approved（D4 修复：补齐 approved 中间态）。"""
+        with _LOCK:
+            pp = self._proposals.get(self._tenant_key(scope, pp_id))
+            if pp is None or pp.pipeline_id != pipeline_id:
+                raise KeyError(f"Proposal {pp_id} not found in pipeline {pipeline_id}")
+            if pp.status != "pending":
+                raise ValueError(f"Proposal {pp_id} status is '{pp.status}', expected 'pending'")
+            pp.status = "approved"
+            pp.updated_at = time.time()
+            return pp
+
     def merge_proposal(self, scope: TenantScope, pipeline_id: str, pp_id: str) -> PipelineProposal:
         with _LOCK:
             pp = self._proposals.get(self._tenant_key(scope, pp_id))
             if pp is None or pp.pipeline_id != pipeline_id:
                 raise KeyError(f"Proposal {pp_id} not found in pipeline {pipeline_id}")
+            # D4 修复：merge 前必须先 approve（pending → approved → merged）
+            if pp.status != "approved":
+                raise ValueError(
+                    f"Proposal {pp_id} status is '{pp.status}', expected 'approved'. "
+                    f"Call approve_proposal() first."
+                )
             pp.status = "merged"
             pp.updated_at = time.time()
             self._add_history(scope, pipeline_id, "updated", f"Merged proposal {pp_id}")
@@ -887,14 +905,18 @@ class PipelineEngine:
     # ── Health ──
     def check_health(self, scope: TenantScope, ds_id: str) -> HealthCheck:
         with _LOCK:
-            if self.get_dataset(scope, ds_id) is None:
+            ds = self.get_dataset(scope, ds_id)
+            if ds is None:
                 raise KeyError(f"Dataset {ds_id} not found")
+            # D4 修复：读 dataset.updated_at 计算真实 freshness_hours（原硬编码 1.5）
+            now = time.time()
+            freshness_hours = max(0.0, (now - ds.updated_at) / 3600.0)
             hc = HealthCheck(
                 dataset_id=ds_id,
                 status="healthy",
                 null_rate=0.02,
                 duplicate_rate=0.01,
-                freshness_hours=1.5,
+                freshness_hours=freshness_hours,
             )
             self._health[self._tenant_key(scope, hc.id)] = hc
             return hc

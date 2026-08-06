@@ -61,6 +61,11 @@ _PIPELINE_ID_TO_OT: dict[str, str] = {
     "p07": "Shipment",
     # D1.5: P08 CustomerLite（frozen/02 §P08）
     "p08": "CustomerLite",
+    # D4: P09~P12（frozen/02 §P09~P12）
+    "p09": "Weapp",
+    "p10": "SystemConfig",
+    "p11": "ProductReview",
+    "p12": "Payment",
 }
 
 
@@ -277,7 +282,74 @@ def to_shipment(row: dict[str, Any]) -> dict[str, Any]:
     return o
 
 
-# 8 OT mapper 注册表（normalize_rows 派发用）
+# ═══════════════════════════════════════════════
+# D4: 4 OT mapper（P09~P12，frozen/02 §3.1~3.3）
+# ═══════════════════════════════════════════════
+
+
+def to_weapp(row: dict[str, Any]) -> dict[str, Any]:
+    """P09: ns_weapp → Weapp（三小程序并存：栖月汇/源仓集/聚味台）。
+
+    主键 weapp_id；增量每日快照（全表量小）。
+    """
+    o = _base(row, "Weapp", row.get("weapp_id"), _ts(row, "modify_time", "create_time"))
+    o["properties"] = {
+        "appId": _str(row.get("appid"), _str(row.get("weapp_id"))),
+        "name": _str(row.get("weapp_name"), _str(row.get("weapp_id"))),
+        "status": "active",
+    }
+    return o
+
+
+def to_system_config(row: dict[str, Any]) -> dict[str, Any]:
+    """P10: ns_config → SystemConfig（业务开关；value 是 JSON）。
+
+    逻辑键 site_id + app_module + config_key（+ weapp_id?）。
+    source_pk 用 id 字段（如有），否则逻辑键拼接。
+    """
+    pk = row.get("id") or _str(row.get("site_id")) + ":" + _str(row.get("app_module")) + ":" + _str(row.get("config_key"))
+    o = _base(row, "SystemConfig", pk, _ts(row, "modify_time", "create_time"))
+    o["properties"] = {
+        "siteId": _str(row.get("site_id"), "1"),
+        "module": _str(row.get("app_module")),
+        "key": _str(row.get("config_key")),
+        # value 是 JSON，保留原始值（可能含密钥，由 SourceAdapter PII 脱敏处理）
+    }
+    return o
+
+
+def to_product_review(row: dict[str, Any]) -> dict[str, Any]:
+    """P11: ns_goods_evaluate → ProductReview（商品评价：文字+图片+评分）。
+
+    主键 id；含 goods_id/sku_id/member_id 三关联。
+    score 字段保留在 row 顶层（供 _apply_review_quality_bucket 读取）。
+    """
+    o = _base(row, "ProductReview", row.get("id"), _ts(row, "create_time"))
+    o["properties"] = {
+        "productId": _str(row.get("goods_id")),
+        "memberId": _str(row.get("member_id")),
+        "score": _str(row.get("scores"), _str(row.get("score"))),
+    }
+    return o
+
+
+def to_payment(row: dict[str, Any]) -> dict[str, Any]:
+    """P12: ns_pay → Payment（支付单）。
+
+    主键 id；次要唯一键 out_trade_no。
+    pay_time 保留在 row 顶层（供 _apply_pay_duration_min 读取）。
+    _order_create_time 由 SourceAdapter 管道内关联填充（ns_pay.relate_id≈order_id → ns_order.create_time）。
+    """
+    o = _base(row, "Payment", row.get("id"), _ts(row, "pay_time", "create_time"))
+    o["properties"] = {
+        "orderId": _str(row.get("relate_id"), _str(row.get("order_id"))),
+        "outTradeNo": _str(row.get("out_trade_no")),
+        "payStatus": _str(row.get("pay_status")),
+    }
+    return o
+
+
+# 12 OT mapper 注册表（normalize_rows 派发用）
 _NORMALIZERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "Shop": to_shop,
     "Category": to_category,
@@ -287,4 +359,9 @@ _NORMALIZERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "Order": to_order,
     "OrderLine": to_order_line,
     "Shipment": to_shipment,
+    # D4: P09~P12（frozen/02 §P09~P12）
+    "Weapp": to_weapp,
+    "SystemConfig": to_system_config,
+    "ProductReview": to_product_review,
+    "Payment": to_payment,
 }

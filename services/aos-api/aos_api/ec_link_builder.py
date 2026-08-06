@@ -33,6 +33,11 @@ _PID_TO_OT: dict[str, str] = {
     "P05": "Order",
     "P06": "OrderLine",
     "P07": "Shipment",
+    # D4: P09~P12（frozen/02 §P09~P12）
+    "P09": "Weapp",
+    "P10": "SystemConfig",
+    "P11": "ProductReview",
+    "P12": "Payment",
 }
 
 # frozen/02 简短名 → CORE_LINK_TYPES 点号名映射（与 ecom_core_models.CORE_LINK_TYPES 对齐）
@@ -45,9 +50,19 @@ _FROZEN_TO_CORE: dict[str, str] = {
     "ships": "Order.fulfilledBy",
     # D1.5: Order → CustomerLite（frozen/02 §P08，同向不反转）
     "placedByLite": "Order.placedByLite",
+    # D4: 6 条新 Link（frozen/02 §3.5）
+    "hasWeapp": "Shop.hasWeapp",
+    "hasReview": "Product.hasReview",
+    "ofSku": "ProductReview.ofSku",
+    "byMember": "ProductReview.byMember",
+    "hasPayment": "Order.hasPayment",
+    "fromWeapp": "Order.fromWeapp",
 }
 
 # 需要反转 source/target 方向的简短名（frozen/02 方向与 CORE 方向相反）
+# hasSku: frozen/02 是 Product→ProductSku，CORE 是 ProductSku.ofProduct（子→父），方向相反需反转
+# ships:  frozen/02 是 Shipment→Order，CORE 是 Order.fulfilledBy（父→子），方向相反需反转
+# D4 的 hasWeapp/hasReview/hasPayment：frozen/02 与 CORE 方向一致（父→子），不反转
 _REVERSED_LINKS: frozenset[str] = frozenset({"hasSku", "ships"})
 
 
@@ -68,7 +83,14 @@ def build_link_rows(
         "OrderLine": _build_orderline_links,
         "Shipment": _build_ships_links,
         # D1.5: P05 Order 读取时构造 placedByLite Link（Order → CustomerLite）
-        "Order": _build_placed_by_lite_links,
+        # D4: P05 Order 同时构造 fromWeapp Link（Order → Weapp）
+        "Order": _build_order_links,
+        # D4: P09 Weapp 读取时构造 hasWeapp Link（Shop → Weapp）
+        "Weapp": _build_has_weapp_links,
+        # D4: P11 ProductReview 读取时构造 hasReview/ofSku/byMember 三条 Link
+        "ProductReview": _build_review_links,
+        # D4: P12 Payment 读取时构造 hasPayment Link（Order → Payment）
+        "Payment": _build_has_payment_links,
     }.get(target_ot) if target_ot else None
 
     if builder is None or not rows:
@@ -252,6 +274,154 @@ def _build_placed_by_lite_links(rows: list[dict[str, Any]]) -> list[dict[str, An
             source_pk=order_id,
             target_type="CustomerLite",
             target_source_pk=member_id,
+            row=row,
+        ))
+    return links
+
+
+# ═══════════════════════════════════════════════
+# D4: 6 条新 Link 构造器（frozen/02 §3.5）
+# ═══════════════════════════════════════════════
+
+
+def _build_order_links(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """P05 Order 读取时构造 placedByLite + fromWeapp 两条 Link（D1.5 + D4 组合）。
+
+    - placedByLite: Order → CustomerLite（member_id）
+    - fromWeapp:    Order → Weapp（weapp_id）
+    """
+    return [*_build_placed_by_lite_links(rows), *_build_from_weapp_links(rows)]
+
+
+def _build_from_weapp_links(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """fromWeapp: Order → Weapp（P05 Order 读取时，每行一条）。
+
+    source_pk = row.source_pk（order_id，Order 的 PK）
+    target_source_pk = row 顶层的 weapp_id（ns_order.weapp_id 字段）
+
+    weapp_id 缺失或为 0 时跳过（not all orders have weapp）。
+    """
+    links: list[dict[str, Any]] = []
+    for row in rows:
+        order_id = row.get("source_pk")
+        if not _is_valid_pk(order_id):
+            continue
+        weapp_id = row.get("weapp_id")
+        if not _is_valid_pk(weapp_id):
+            continue
+        links.append(_make_link(
+            link_type="fromWeapp",
+            source_type="Order",
+            source_pk=order_id,
+            target_type="Weapp",
+            target_source_pk=weapp_id,
+            row=row,
+        ))
+    return links
+
+
+def _build_has_weapp_links(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """hasWeapp: Shop → Weapp（P09 Weapp 读取时，每行一条）。
+
+    source_pk = row 顶层的 site_id（ns_weapp.site_id 字段，Shop 的 PK）
+    target_source_pk = row.source_pk（weapp_id，Weapp 的 PK）
+
+    site_id 缺失时默认 '1'（栖月汇单租户）；weapp_id 无效时跳过。
+    """
+    links: list[dict[str, Any]] = []
+    for row in rows:
+        weapp_id = row.get("source_pk")
+        if not _is_valid_pk(weapp_id):
+            continue
+        site_id = row.get("site_id")
+        if not _is_valid_pk(site_id):
+            site_id = "1"  # 默认租户
+        links.append(_make_link(
+            link_type="hasWeapp",
+            source_type="Shop",
+            source_pk=site_id,
+            target_type="Weapp",
+            target_source_pk=weapp_id,
+            row=row,
+        ))
+    return links
+
+
+def _build_review_links(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """P11 ProductReview 读取时同时构造 hasReview + ofSku + byMember 三条 Link。
+
+    - hasReview: Product → ProductReview（source=goods_id, target=review_id）
+    - ofSku:     ProductReview → ProductSku（source=review_id, target=sku_id；sku_id=0 跳过）
+    - byMember:  ProductReview → CustomerLite（source=review_id, target=member_id）
+    """
+    links: list[dict[str, Any]] = []
+    for row in rows:
+        review_id = row.get("source_pk")
+        if not _is_valid_pk(review_id):
+            continue
+        props = row.get("properties") or {}
+        product_id = props.get("productId")
+        sku_id = row.get("sku_id")
+        member_id = props.get("memberId")
+
+        # hasReview: Product → ProductReview
+        if _is_valid_pk(product_id):
+            links.append(_make_link(
+                link_type="hasReview",
+                source_type="Product",
+                source_pk=product_id,
+                target_type="ProductReview",
+                target_source_pk=review_id,
+                row=row,
+            ))
+
+        # ofSku: ProductReview → ProductSku（sku_id=0 跳过）
+        if _is_valid_non_zero_pk(sku_id):
+            links.append(_make_link(
+                link_type="ofSku",
+                source_type="ProductReview",
+                source_pk=review_id,
+                target_type="ProductSku",
+                target_source_pk=sku_id,
+                row=row,
+            ))
+
+        # byMember: ProductReview → CustomerLite
+        if _is_valid_pk(member_id):
+            links.append(_make_link(
+                link_type="byMember",
+                source_type="ProductReview",
+                source_pk=review_id,
+                target_type="CustomerLite",
+                target_source_pk=member_id,
+                row=row,
+            ))
+    return links
+
+
+def _build_has_payment_links(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """hasPayment: Order → Payment（P12 Payment 读取时，每行一条）。
+
+    source_pk = row.properties.orderId（relate_id≈order_id，Order 的 PK）
+    target_source_pk = row.source_pk（pay_id，Payment 的 PK）
+
+    orderId 缺失时跳过（无法关联订单）。
+    """
+    links: list[dict[str, Any]] = []
+    for row in rows:
+        pay_id = row.get("source_pk")
+        if not _is_valid_pk(pay_id):
+            continue
+        props = row.get("properties") or {}
+        order_id = props.get("orderId")
+        if not _is_valid_pk(order_id):
+            continue
+        links.append(_make_link(
+            link_type="hasPayment",
+            source_type="Order",
+            source_pk=order_id,
+            target_type="Payment",
+            target_source_pk=pay_id,
             row=row,
         ))
     return links

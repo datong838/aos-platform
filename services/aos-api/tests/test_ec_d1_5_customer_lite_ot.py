@@ -52,8 +52,8 @@ def test_CORE_OBJECT_TYPES_preserves_existing_7_ots() -> None:
 
 
 def test_CORE_OBJECT_TYPES_now_has_8_ots() -> None:
-    """FR-D1.5-1: 扩展后 CORE_OBJECT_TYPES 共 8 个 OT。"""
-    assert len(CORE_OBJECT_TYPES) == 8
+    """FR-D1.5-1: 扩展后 CORE_OBJECT_TYPES 至少 8 个 OT（跨波累积契约，D4 起新增 4 OT）。"""
+    assert len(CORE_OBJECT_TYPES) >= 8
 
 
 # ═══════════════════════════════════════════════

@@ -35,15 +35,29 @@ SAMPLE_LIMIT: int = 100
 # 单查询超时 30s
 QUERY_TIMEOUT_SECONDS: int = 30
 
-# D1.5 P08 CustomerLite PII 排除（frozen/02 §P08 隐私最小化）
-# ns_member 表的 8 个 PII 字段在 SourceAdapter 层显式 drop，不进入 row 流
-_PII_DROP_TABLE: str = "ns_member"
-_PII_DROP_FIELDS: frozenset[str] = frozenset(
-    {
-        "mobile", "wx_openid", "nickname", "avatar",
-        "reg_address", "last_login_ip", "password", "pay_password",
-    }
-)
+# PII 排除（frozen/02 §P08 隐私最小化 + D4 §P12 ns_pay 支付凭证脱敏）
+# 按表名 → 字段集合：SourceAdapter 层显式 drop，不进入 row 流
+_PII_DROP_FIELDS_BY_TABLE: dict[str, frozenset[str]] = {
+    # D1.5: ns_member 的 8 个 PII 字段
+    "ns_member": frozenset(
+        {
+            "mobile", "wx_openid", "nickname", "avatar",
+            "reg_address", "last_login_ip", "password", "pay_password",
+        }
+    ),
+    # D4: ns_pay 的 6 个支付凭证/敏感字段（DDL niushop_b2c_v5.sql L11956-11971）
+    # 保留：id/site_id/weapp_id/out_trade_no/pay_type/pay_money/pay_status/pay_time/create_time/relate_id/event
+    "ns_pay": frozenset(
+        {
+            "mch_id",       # wechat 商户号
+            "trade_no",     # 第三方交易单号
+            "pay_no",       # 支付账号
+            "pay_body",     # 支付主体（可能含敏感信息）
+            "pay_detail",   # 支付详情（可能含敏感信息）
+            "pay_voucher",  # 支付票据
+        }
+    ),
+}
 
 # D2.6: 通用 JDBC SSH 连接器类型集合（走 JdbcConnectorRuntime 分支）
 # 其他类型（niushop-mysql / mysql / 缺失）走原 pymysql 直连分支（向后兼容）
@@ -311,7 +325,7 @@ def _clean_rows(
     """
     cleaned: list[dict[str, Any]] = []
     soft_delete_count = 0
-    drop_pii = table == _PII_DROP_TABLE
+    pii_fields = _PII_DROP_FIELDS_BY_TABLE.get(table or "", frozenset())
 
     for row in rows:
         # 软删行过滤（is_delete=1 不入 OT，进 DLQ 计数）
@@ -320,9 +334,9 @@ def _clean_rows(
             continue
 
         cleaned_row = dict(row)
-        # PII 排除（frozen/02 §P08）：ns_member 表显式 drop 8 个 PII 字段，不进入 row 流
-        if drop_pii:
-            for pii_field in _PII_DROP_FIELDS:
+        # PII 排除（frozen/02 §P08 + D4 §P12）：按表名 drop 敏感字段，不进入 row 流
+        if pii_fields:
+            for pii_field in pii_fields:
                 cleaned_row.pop(pii_field, None)
         # 0 时间转 null（Unix 秒 → UTC）：*_time 字段值为 0 时变 None
         for key, value in cleaned_row.items():

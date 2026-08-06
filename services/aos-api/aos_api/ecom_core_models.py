@@ -29,6 +29,8 @@ CORE_OBJECT_TYPES = frozenset(
         "Shop", "Product", "ProductSku", "Category",
         "Order", "OrderLine", "Shipment",
         "CustomerLite",  # D1.5: 增长扩展 OT（隐私最小化，frozen/02 §P08）
+        # D4: 横切底座 + 评价 + 支付（frozen/02 §P09~P12）
+        "Weapp", "SystemConfig", "ProductReview", "Payment",
     }
 )
 
@@ -42,6 +44,13 @@ CORE_LINK_TYPES: dict[str, tuple[str, str]] = {
     "Order.fulfilledBy": ("Order", "Shipment"),
     # D1.5: Order → CustomerLite 关联（隐私最小化，frozen/02 §P08）
     "Order.placedByLite": ("Order", "CustomerLite"),
+    # D4: 6 条新 Link（frozen/02 §3.5；Product.inCategory 已在 D1 落地不重复注册）
+    "Shop.hasWeapp": ("Shop", "Weapp"),            # site_id 关联
+    "Product.hasReview": ("Product", "ProductReview"),  # goods_id 关联
+    "ProductReview.ofSku": ("ProductReview", "ProductSku"),  # sku_id 关联
+    "ProductReview.byMember": ("ProductReview", "CustomerLite"),  # member_id 关联
+    "Order.hasPayment": ("Order", "Payment"),      # out_trade_no 或 relate_id≈order_id
+    "Order.fromWeapp": ("Order", "Weapp"),          # weapp_id 关联
 }
 
 REQUIRED_PROPERTIES: dict[str, frozenset[str]] = {
@@ -68,6 +77,11 @@ REQUIRED_PROPERTIES: dict[str, frozenset[str]] = {
     "CustomerLite": frozenset(
         {"memberLevel", "status", "createdAt", "updatedAt"}
     ),
+    # D4: 4 个新 OT 必填字段（frozen/02 §P09~P12）
+    "Weapp": frozenset({"appId", "name", "status", "updatedAt"}),
+    "SystemConfig": frozenset({"siteId", "module", "key", "updatedAt"}),
+    "ProductReview": frozenset({"productId", "memberId", "score", "updatedAt"}),
+    "Payment": frozenset({"orderId", "outTradeNo", "payStatus", "updatedAt"}),
 }
 
 _AMOUNT_PROPERTIES = frozenset({"price", "totalAmount", "unitPrice", "lineAmount"})

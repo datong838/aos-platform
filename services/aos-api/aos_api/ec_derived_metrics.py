@@ -59,6 +59,11 @@ _PIPELINE_ID_TO_OT: dict[str, str] = {
     "p07": "Shipment",
     # D1.5: P08 CustomerLite（frozen/02 §P08）
     "p08": "CustomerLite",
+    # D4: P09~P12（frozen/02 §P09~P12）
+    "p09": "Weapp",
+    "p10": "SystemConfig",
+    "p11": "ProductReview",
+    "p12": "Payment",
 }
 
 # D1.5: link_aggregator 接口契约（FR-D1.5-4）
@@ -117,6 +122,12 @@ def apply_derived_metrics(
             _apply_overdue_hours(row)
     elif target_ot == "CustomerLite":
         _apply_order_count_and_last_order_days(rows, link_aggregator)
+    elif target_ot == "ProductReview":
+        for row in rows:
+            _apply_review_quality_bucket(row)
+    elif target_ot == "Payment":
+        for row in rows:
+            _apply_pay_duration_min(row)
 
     return rows
 
@@ -430,3 +441,64 @@ def _apply_last_order_days(
     else:
         days = delta.days
     _set_property(row, "last_order_days", days)
+
+
+# ── review_quality_bucket (ProductReview · D4) ──────────────────────────────
+
+
+def _apply_review_quality_bucket(row: dict[str, Any]) -> None:
+    """计算 review_quality_bucket 好评/中评/差评分桶（FR-D4-DM1）。
+
+    口径（frozen/02 §3.6）：
+    - score >= 4.5 → "high"（好评）
+    - score <= 3.0 → "low"（差评）
+    - 3.0 < score < 4.5 → "mid"（中评）
+    - score 缺失或非法 → null
+
+    边界值：3.0 算 low，4.5 算 high（含等号）。
+    """
+    score = _to_float(_get_field(row, "score"))
+    if score is None:
+        _set_property(row, "review_quality_bucket", None)
+        return
+
+    if score >= 4.5:
+        bucket = "high"
+    elif score <= 3.0:
+        bucket = "low"
+    else:
+        bucket = "mid"
+    _set_property(row, "review_quality_bucket", bucket)
+
+
+# ── pay_duration_min (Payment · D4) ─────────────────────────────────────────
+
+
+def _apply_pay_duration_min(row: dict[str, Any]) -> None:
+    """计算 pay_duration_min 创单→支付耗时分钟差（FR-D4-DM2）。
+
+    口径（frozen/02 §3.6）：Order.create_time → Payment.pay_time 的分钟差。
+
+    管道内关联（用户 2026-08-06 拍板）：
+    - normalize 阶段已用 ns_pay.relate_id（≈order_id）关联查 ns_order.create_time，
+      结果挂到 row._order_create_time（内部字段，不进 properties）。
+    - 此函数直接读 row._order_create_time 和 row.pay_time 计算分钟差。
+    - 关联失败（relate_id 为空或查不到 order）→ null，不阻塞 Pipeline。
+    - pay_time 缺失或非法 → null。
+    - 负值（pay_time 早于 create_time，异常数据）→ 截断到 0。
+    """
+    pay_time = _to_datetime(_get_field(row, "pay_time"))
+    # 管道内关联挂载的内部字段（normalize 阶段填充）
+    order_create_time = _to_datetime(row.get("_order_create_time"))
+
+    if pay_time is None or order_create_time is None:
+        _set_property(row, "pay_duration_min", None)
+        return
+
+    delta = pay_time - order_create_time
+    if delta.total_seconds() < 0:
+        # 异常数据：支付早于创单，截断到 0
+        minutes = 0
+    else:
+        minutes = int(delta.total_seconds() // 60)
+    _set_property(row, "pay_duration_min", minutes)

@@ -337,6 +337,19 @@ async def discard_proposal(pl_id: str, pp_id: str, principal: Annotated[Principa
         raise HTTPException(404, f"Proposal {pp_id} not found in pipeline {pl_id}")
 
 
+@router.post("/{pl_id}/proposals/{pp_id}/approve")
+async def approve_proposal(pl_id: str, pp_id: str, principal: Annotated[Principal, Depends(require_principal)]) -> dict[str, Any]:
+    """审批提案：pending → approved（D4 新增：补齐 approved 中间态）。"""
+    eng = get_engine()
+    try:
+        pp = eng.approve_proposal(_scope(principal), pl_id, pp_id)
+        return pp.model_dump()
+    except KeyError:
+        raise HTTPException(404, f"Proposal {pp_id} not found in pipeline {pl_id}")
+    except ValueError as e:
+        raise HTTPException(409, str(e))
+
+
 @router.post("/{pl_id}/proposals/{pp_id}/merge")
 async def merge_proposal(pl_id: str, pp_id: str, principal: Annotated[Principal, Depends(require_principal)]) -> dict[str, Any]:
     eng = get_engine()
@@ -345,6 +358,8 @@ async def merge_proposal(pl_id: str, pp_id: str, principal: Annotated[Principal,
         return pp.model_dump()
     except KeyError:
         raise HTTPException(404, f"Proposal {pp_id} not found in pipeline {pl_id}")
+    except ValueError as e:
+        raise HTTPException(409, str(e))
 
 
 # ─────────── History ───────────

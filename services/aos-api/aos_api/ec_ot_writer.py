@@ -134,7 +134,9 @@ def _build_object(row: dict[str, Any], sync_scope: SyncScope) -> CoreObjectRecor
 
     properties = dict(row.get("properties", {}))
 
-    if object_type in ("Product", "ProductSku", "Category", "Order", "OrderLine", "Shipment", "CustomerLite"):
+    if object_type in ("Product", "ProductSku", "Category", "Order", "OrderLine", "Shipment", "CustomerLite",
+                       # D4: 4 个新 OT 的 REQUIRED_PROPERTIES 都含 updatedAt
+                       "Weapp", "SystemConfig", "ProductReview", "Payment"):
         properties.setdefault("updatedAt", source_utc_iso)
 
     if object_type in ("Product", "Order", "CustomerLite"):
