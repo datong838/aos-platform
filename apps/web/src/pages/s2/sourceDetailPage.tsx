@@ -389,7 +389,7 @@ export function SourceDetailPage() {
   );
   const primaryDatasetRid = datasets[0]?.rid || pipelines[0]?.datasetRid;
 
-  const [tab, setTab] = useState<"overview" | "explore" | "sync" | "credentials">("explore");
+  const [tab, setTab] = useState<"overview" | "explore" | "sync" | "credentials">("overview");
   const [activeTable, setActiveTable] = useState<string>("");
   const [preview, setPreview] = useState<PreviewResult | null>(null);
   const [previewErr, setPreviewErr] = useState<string | null>(null);
