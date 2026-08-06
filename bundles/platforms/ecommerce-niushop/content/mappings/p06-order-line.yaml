@@ -1,0 +1,49 @@
+pipeline_id: P06
+source_table: ns_order_goods
+target_ot: OrderLine
+primary_key: order_goods_id
+site_filter: "site_id=1"
+incremental_strategy: snapshot
+incremental_cursor:
+  fields: [refund_action_time, order_goods_id]
+  fallback: null
+  mode: snapshot
+unique_key_pattern: "niushop:{site_id}:{pk}"
+links:
+  - {name: contains, from: Order, to: OrderLine, source_field: order_id}
+  - {name: forProduct, from: OrderLine, to: Product, source_field: goods_id}
+  - {name: forSku, from: OrderLine, to: ProductSku, source_field: sku_id}
+validation:
+  non_negative: [num, goods_money, cost_money]
+  enum:
+    refund_status: [-3, 0, 3]
+field_mappings:
+  - {source: order_goods_id, target: id, type: int}
+  - {source: order_id, target: orderId, type: int}
+  - {source: order_no, target: orderNo, type: string}
+  - {source: site_id, target: siteId, type: int}
+  - {source: member_id, target: memberId, type: int}
+  - {source: goods_id, target: productId, type: int}
+  - {source: sku_id, target: skuId, type: int}
+  - {source: sku_name, target: skuName, type: string}
+  - {source: sku_no, target: skuNo, type: string}
+  - {source: goods_name, target: goodsName, type: string}
+  - {source: price, target: price, type: decimal}
+  - {source: cost_price, target: costPrice, type: decimal}
+  - {source: num, target: quantity, type: decimal}
+  - {source: goods_money, target: goodsMoney, type: decimal}
+  - {source: cost_money, target: costMoney, type: decimal}
+  - {source: delivery_status, target: deliveryStatus, type: int}
+  - {source: refund_status, target: refundStatus, type: int}
+  - {source: refund_type, target: refundType, type: int}
+  - {source: refund_apply_money, target: refundApplyMoney, type: decimal}
+  - {source: refund_real_money, target: refundRealMoney, type: decimal}
+  - {source: refund_action_time, target: refundActionTime, type: timestamp}
+  - {source: create_time, target: createTime, type: timestamp}
+pii_exclusion:
+  - refund_address
+  - refund_address_id
+notes:
+  - "frozen/01 L423: ns_order_goods count=227，pk=order_goods_id"
+  - "D-002 修正(frozen/02 L98): create_time 227 行全为 0 不可用作游标，改用 refund_action_time 辅游标 + 每日快照/order_id 关联重扫"
+  - "frozen/01 §2: refund_address/refund_address_id=PII_DIRECT，不出库"

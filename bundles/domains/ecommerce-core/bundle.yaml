@@ -3,7 +3,7 @@ kind: DomainPack
 metadata:
   id: domain.ecommerce.core
   version: 1.0.0
-  displayName: Ecommerce Core Fixture
+  displayName: 电商核心本体包
   publisher: aos
   license: internal
 spec:

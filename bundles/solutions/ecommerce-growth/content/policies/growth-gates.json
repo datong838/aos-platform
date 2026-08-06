@@ -1,0 +1,11 @@
+{
+  "status": "BLOCKED",
+  "reason": "Waiting for G2 review",
+  "decision_tags": [
+    "churn_high",
+    "churn_low",
+    "dormant",
+    "vip"
+  ],
+  "note": "These tags are produced by G2 Logic, not by D-wave L0x"
+}

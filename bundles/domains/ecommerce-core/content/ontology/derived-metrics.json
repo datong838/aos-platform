@@ -1,0 +1,38 @@
+[
+  {
+    "name": "quality_score",
+    "target_ot": "Product",
+    "formula": "evaluate_haoping / evaluate when evaluate > 0 else null; clamp to [0,1]; round to 4 decimals",
+    "description": "好评率派生指标，由 evaluate_haoping/evaluate 计算，源字段缺失时写 null 不阻塞 Pipeline"
+  },
+  {
+    "name": "stock_health",
+    "target_ot": "ProductSku",
+    "formula": "stock <= 0 -> low; 0 < stock <= alarm -> watch; stock > alarm -> ok; goods_stock_alarm missing defaults alarm=0; stock missing -> null",
+    "description": "库存健康度三态枚举（low/watch/ok），基于 stock 与 goods_stock_alarm 阈值比较"
+  },
+  {
+    "name": "risk_score",
+    "target_ot": "Order",
+    "formula": "base=0.0; commission_risk_flag=1 -> +0.40; refund_status in {-3,3} -> +0.30; is_lock=1 -> +0.20; order_status=0 AND pay_status=0 AND now-create_time>24h -> +0.10; clamp to [0,1]; round to 4 decimals",
+    "description": "订单风险分，四因子加权累加（佣金风险/退款/锁定/24h停滞），最终截断 [0,1]"
+  },
+  {
+    "name": "overdue_hours",
+    "target_ot": "Shipment",
+    "formula": "SLA_HOURS=48; when delivery_time=0 AND Order.pay_time>0 then max(0, (now - Order.pay_time - 48h) / 3600) else null; round to 4 decimals",
+    "description": "发货逾期小时数，仅未发货且已支付的包裹计算，基于 48h SLA 阈值"
+  },
+  {
+    "name": "order_count",
+    "target_ot": "CustomerLite",
+    "formula": "reverse-aggregate via placedByLite Link by member_id; member_id not in aggregation result -> null; in result with count=0 -> 0; otherwise the Order count",
+    "description": "跨表聚合派生指标，通过 placedByLite Link 反向聚合按 member_id 计算 Order 数量（D1.5 新增，需 link_aggregator）"
+  },
+  {
+    "name": "last_order_days",
+    "target_ot": "CustomerLite",
+    "formula": "now - max(Order.create_time) in days (floored); no order or future time -> null or 0",
+    "description": "跨表聚合派生指标，距最近一次下单的天数（D1.5 新增，需 link_aggregator）"
+  }
+]

@@ -1,0 +1,51 @@
+pipeline_id: P02
+source_table: ns_goods
+target_ot: Product
+primary_key: goods_id
+site_filter: "site_id=1 AND is_delete=0"
+incremental_strategy: watermark
+incremental_cursor:
+  fields: [modify_time, goods_id]
+  fallback: create_time
+unique_key_pattern: "niushop:{site_id}:{pk}"
+soft_delete:
+  field: is_delete
+  drop_value: 1
+  dlq: true
+validation:
+  non_negative: [price, market_price, cost_price]
+  enum:
+    goods_state: [0, 1]
+field_mappings:
+  - {source: goods_id, target: id, type: int}
+  - {source: goods_name, target: name, type: string}
+  - {source: goods_class, target: goodsClass, type: int}
+  - {source: goods_class_name, target: goodsClassName, type: string}
+  - {source: site_id, target: siteId, type: int}
+  - {source: site_name, target: siteName, type: string}
+  - {source: goods_image, target: image, type: string}
+  - {source: goods_content, target: content, type: text}
+  - {source: goods_state, target: state, type: int}
+  - {source: category_id, target: categoryId, type: string}
+  - {source: brand_id, target: brandId, type: int}
+  - {source: brand_name, target: brandName, type: string}
+  - {source: price, target: price, type: decimal}
+  - {source: market_price, target: marketPrice, type: decimal}
+  - {source: cost_price, target: costPrice, type: decimal}
+  - {source: goods_stock, target: stock, type: decimal}
+  - {source: is_virtual, target: isVirtual, type: int}
+  - {source: is_free_shipping, target: isFreeShipping, type: int}
+  - {source: introduction, target: introduction, type: string}
+  - {source: keywords, target: keywords, type: string}
+  - {source: unit, target: unit, type: string}
+  - {source: sort, target: sort, type: int}
+  - {source: sku_id, target: skuId, type: int}
+  - {source: supplier_id, target: supplierId, type: int}
+  - {source: sale_num, target: saleNum, type: decimal}
+  - {source: is_delete, target: isDelete, type: int}
+  - {source: create_time, target: createTime, type: timestamp}
+  - {source: modify_time, target: modifyTime, type: timestamp}
+pii_exclusion: []
+notes:
+  - "frozen/01 L30: ns_goods count=65（含软删 8 行），有效 57"
+  - "frozen/02 P02: price decimal 非负；goods_state 枚举{0,1}；0 时间转 null"

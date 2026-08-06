@@ -3,7 +3,7 @@ kind: PlatformAdapterPack
 metadata:
   id: platform.ecommerce.niushop
   version: 1.0.0
-  displayName: Ecommerce Platform Adapter Fixture
+  displayName: Niushop 微商城平台适配包
   publisher: aos
   license: internal
 spec:

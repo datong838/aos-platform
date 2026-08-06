@@ -1,0 +1,59 @@
+pipeline_id: P05
+source_table: ns_order
+target_ot: Order
+primary_key: order_id
+site_filter: "site_id=1 AND is_delete=0"
+incremental_strategy: watermark
+incremental_cursor:
+  initial_load: [create_time, order_id]
+  hourly_rescan: "最近 7 天"
+  daily_reconcile: "全状态对账"
+unique_key_pattern: "niushop:{site_id}:{pk}"
+soft_delete:
+  field: is_delete
+  drop_value: 1
+  dlq: true
+links:
+  - {name: placedByLite, from: Order, to: CustomerLite, source_field: member_id}
+validation:
+  non_negative: [goods_money, delivery_money, order_money, pay_money]
+field_mappings:
+  - {source: order_id, target: id, type: int}
+  - {source: order_no, target: orderNo, type: string}
+  - {source: site_id, target: siteId, type: int}
+  - {source: site_name, target: siteName, type: string}
+  - {source: order_from, target: orderFrom, type: string}
+  - {source: order_type, target: orderType, type: int}
+  - {source: order_status, target: orderStatus, type: int}
+  - {source: pay_status, target: payStatus, type: int}
+  - {source: delivery_status, target: deliveryStatus, type: int}
+  - {source: refund_status, target: refundStatus, type: int}
+  - {source: is_delete, target: isDelete, type: int}
+  - {source: member_id, target: memberId, type: int}
+  - {source: name, target: receiverName, type: string}
+  - {source: pay_type, target: payType, type: string}
+  - {source: goods_money, target: goodsMoney, type: decimal}
+  - {source: delivery_money, target: deliveryMoney, type: decimal}
+  - {source: promotion_money, target: promotionMoney, type: decimal}
+  - {source: coupon_money, target: couponMoney, type: decimal}
+  - {source: order_money, target: orderMoney, type: decimal}
+  - {source: pay_money, target: payMoney, type: decimal}
+  - {source: goods_num, target: goodsNum, type: decimal}
+  - {source: create_time, target: createTime, type: timestamp}
+  - {source: pay_time, target: payTime, type: timestamp}
+  - {source: delivery_time, target: deliveryTime, type: timestamp}
+  - {source: sign_time, target: signTime, type: timestamp}
+  - {source: finish_time, target: finishTime, type: timestamp}
+  - {source: close_time, target: closeTime, type: timestamp}
+pii_exclusion:
+  - mobile
+  - telephone
+  - address
+  - full_address
+  - invoice_full_address
+  - invoice_email
+notes:
+  - "frozen/01 L272: ns_order count=177（含软删 60 行），有效 117"
+  - "D-001 修正(frozen/02 L88): 上位方案 shipping_status 不存在，真实字段 delivery_status"
+  - "frozen/01 §2: mobile/telephone/address/full_address/invoice_full_address=PII_DIRECT；invoice_email=PII_QUASI，统一不出库"
+  - "member_id 仅保留关联键(placedByLite)，不引 PII"

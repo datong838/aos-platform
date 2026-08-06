@@ -1,0 +1,30 @@
+pipeline_id: P07
+source_table: ns_express_delivery_package
+target_ot: Shipment
+primary_key: id
+site_filter: "site_id=1"
+incremental_strategy: snapshot
+incremental_cursor:
+  fields: []
+  fallback: delivery_time
+  mode: snapshot
+unique_key_pattern: "niushop:{site_id}:{pk}"
+links:
+  - {name: ships, from: Shipment, to: Order, source_field: order_id}
+field_mappings:
+  - {source: id, target: id, type: int}
+  - {source: site_id, target: siteId, type: int}
+  - {source: order_id, target: orderId, type: int}
+  - {source: package_name, target: packageName, type: string}
+  - {source: delivery_type, target: deliveryType, type: int}
+  - {source: express_company_id, target: expressCompanyId, type: int}
+  - {source: express_company_name, target: expressCompanyName, type: string}
+  - {source: delivery_no, target: deliveryNo, type: string, masking: sensitive}
+  - {source: delivery_time, target: deliveryTime, type: timestamp}
+  - {source: member_id, target: memberId, type: int}
+  - {source: member_name, target: memberName, type: string}
+  - {source: trace, target: trace, type: text}
+pii_exclusion: []
+notes:
+  - "frozen/01 L510: 真实表名 ns_express_delivery_package（任务文本 ns_order_delivery 为笔误），count=19"
+  - "frozen/02 P07: delivery_no 物流号按敏感级别遮罩；delivery_time 可用性核验后可转增量"

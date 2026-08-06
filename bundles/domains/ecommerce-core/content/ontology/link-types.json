@@ -1,0 +1,37 @@
+[
+  {
+    "name": "hasSku",
+    "source_type": "Product",
+    "target_type": "ProductSku"
+  },
+  {
+    "name": "inCategory",
+    "source_type": "Product",
+    "target_type": "Category"
+  },
+  {
+    "name": "contains",
+    "source_type": "Order",
+    "target_type": "OrderLine"
+  },
+  {
+    "name": "forProduct",
+    "source_type": "OrderLine",
+    "target_type": "Product"
+  },
+  {
+    "name": "forSku",
+    "source_type": "OrderLine",
+    "target_type": "ProductSku"
+  },
+  {
+    "name": "ships",
+    "source_type": "Shipment",
+    "target_type": "Order"
+  },
+  {
+    "name": "placedByLite",
+    "source_type": "Order",
+    "target_type": "CustomerLite"
+  }
+]

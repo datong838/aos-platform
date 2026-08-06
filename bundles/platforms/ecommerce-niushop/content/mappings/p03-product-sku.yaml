@@ -1,0 +1,41 @@
+pipeline_id: P03
+source_table: ns_goods_sku
+target_ot: ProductSku
+primary_key: sku_id
+site_filter: "site_id=1 AND is_delete=0"
+incremental_strategy: watermark
+incremental_cursor:
+  fields: [modify_time, sku_id]
+  fallback: create_time
+unique_key_pattern: "niushop:{site_id}:{pk}"
+soft_delete:
+  field: is_delete
+  drop_value: 1
+  dlq: true
+links:
+  - {name: hasSku, from: Product, to: ProductSku, source_field: goods_id}
+validation:
+  non_negative: [price, market_price, cost_price, stock]
+field_mappings:
+  - {source: sku_id, target: id, type: int}
+  - {source: site_id, target: siteId, type: int}
+  - {source: goods_id, target: productId, type: int}
+  - {source: sku_name, target: name, type: string}
+  - {source: sku_no, target: skuNo, type: string}
+  - {source: price, target: price, type: decimal}
+  - {source: market_price, target: marketPrice, type: decimal}
+  - {source: cost_price, target: costPrice, type: decimal}
+  - {source: discount_price, target: discountPrice, type: decimal}
+  - {source: stock, target: stock, type: decimal}
+  - {source: sku_image, target: image, type: string}
+  - {source: goods_state, target: goodsState, type: int}
+  - {source: is_virtual, target: isVirtual, type: int}
+  - {source: is_default, target: isDefault, type: int}
+  - {source: is_delete, target: isDelete, type: int}
+  - {source: sale_num, target: saleNum, type: decimal}
+  - {source: create_time, target: createTime, type: timestamp}
+  - {source: modify_time, target: modifyTime, type: timestamp}
+pii_exclusion: []
+notes:
+  - "frozen/01 L142: ns_goods_sku count=73，pk=sku_id"
+  - "frozen/02 P03: product_id 指向 P02(hasSku)；孤儿 SKU 进 DLQ"

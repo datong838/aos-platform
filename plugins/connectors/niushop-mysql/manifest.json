@@ -1,0 +1,56 @@
+{
+  "id": "niushop-mysql",
+  "name": "Niushop MySQL",
+  "nameZh": "Niushop 微商城",
+  "description": "Niushop 微商城专属连接器 · 预设 8 表映射 + PII 排除",
+  "kind": "source",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "live",
+  "extends": "jdbc-mysql",
+  "capabilities": [
+    "jdbc",
+    "mysql",
+    "discover",
+    "ingest",
+    "niushop",
+    "pii-exclusion"
+  ],
+  "healthPath": "/v1/connectors/niushop-mysql/health",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "secretRef": {
+        "type": "string",
+        "description": "Vault 凭据引用"
+      },
+      "siteId": {
+        "type": "integer",
+        "default": 1,
+        "description": "Niushop 站点 ID"
+      }
+    }
+  },
+  "presets": {
+    "tables": [
+      "ns_site",
+      "ns_goods",
+      "ns_goods_sku",
+      "ns_goods_category",
+      "ns_order",
+      "ns_order_goods",
+      "ns_express_delivery_package",
+      "ns_member"
+    ],
+    "piiExclusion": [
+      "mobile",
+      "wx_openid",
+      "nickname",
+      "avatar",
+      "reg_address",
+      "last_login_ip",
+      "password",
+      "pay_password"
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+pipeline_id: P04
+source_table: ns_goods_category
+target_ot: Category
+primary_key: category_id
+site_filter: "site_id=1"
+incremental_strategy: snapshot
+incremental_cursor:
+  fields: []
+  fallback: null
+  mode: snapshot
+unique_key_pattern: "niushop:{site_id}:{pk}"
+links:
+  - {name: inCategory, from: Product, to: Category, source_field: category_id}
+validation:
+  custom: "pid=0 为根；检测分类环与孤儿父级"
+field_mappings:
+  - {source: category_id, target: id, type: int}
+  - {source: site_id, target: siteId, type: int}
+  - {source: category_name, target: name, type: string}
+  - {source: short_name, target: shortName, type: string}
+  - {source: pid, target: parentId, type: int}
+  - {source: level, target: level, type: int}
+  - {source: is_show, target: isShow, type: int}
+  - {source: sort, target: sort, type: int}
+  - {source: image, target: image, type: string}
+  - {source: category_id_1, target: categoryId1, type: int}
+  - {source: category_id_2, target: categoryId2, type: int}
+  - {source: category_id_3, target: categoryId3, type: int}
+  - {source: category_full_name, target: fullName, type: string}
+pii_exclusion: []
+notes:
+  - "frozen/01 L241: ns_goods_category count=11，pk=category_id"
+  - "frozen/02 P04: 多分类字符串需先定义拆分契约(inCategory)"

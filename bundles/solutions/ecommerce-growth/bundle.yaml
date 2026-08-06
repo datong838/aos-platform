@@ -3,7 +3,7 @@ kind: SolutionPack
 metadata:
   id: solution.ecommerce.growth
   version: 1.0.0
-  displayName: Ecommerce Growth Fixture
+  displayName: 电商增长方案包（占位）
   publisher: aos
   license: internal
 spec:

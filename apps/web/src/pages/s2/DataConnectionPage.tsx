@@ -75,6 +75,16 @@ const DEMO_CATALOG: ConnectorCatalogCard[] = [
     runtime: "ready",
   },
   {
+    id: "niushop-mysql",
+    name: "Niushop 微商城",
+    category: "database",
+    description: "Niushop 微商城专属 · 预设 8 表映射 + PII 排除",
+    capabilities: ["Batch syncs", "Virtual tables", "PII exclusion"],
+    installed: true,
+    required: true,
+    runtime: "ready",
+  },
+  {
     id: "jdbc-postgres",
     name: "PostgreSQL JDBC",
     category: "database",

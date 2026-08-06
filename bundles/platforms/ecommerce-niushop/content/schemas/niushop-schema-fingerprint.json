@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "source_ref": "docs/palantier/20_tech/电商平台接入/微商城电商接入方案/frozen/01-schema-fingerprint.md",
+  "generatedAt": "2026-08-05T08:16:51.688314+00:00",
+  "method": "qyh_discover_readonly 只读连接 recommend_ro@niushop_b2c_v5（只聚合不取值）",
+  "constraint": "PII_DIRECT 字段不出库",
+  "tableCount": 8,
+  "tables": [
+    {
+      "name": "ns_site",
+      "pipelineId": "P01",
+      "targetOt": "Shop",
+      "primaryKey": "site_id",
+      "rowCount": 1,
+      "softDelete": null,
+      "indices": [
+        {"name": "PRIMARY", "kind": "UNIQUE", "columns": ["site_id"]}
+      ]
+    },
+    {
+      "name": "ns_goods",
+      "pipelineId": "P02",
+      "targetOt": "Product",
+      "primaryKey": "goods_id",
+      "rowCount": 65,
+      "validRows": 57,
+      "softDelete": {"field": "is_delete", "dropped": 8},
+      "indices": [
+        {"name": "PRIMARY", "kind": "UNIQUE", "columns": ["goods_id"]},
+        {"name": "IDX_ns_goods_site_id", "kind": "INDEX", "columns": ["site_id"]},
+        {"name": "IDX_ns_goods_is_delete", "kind": "INDEX", "columns": ["is_delete"]},
+        {"name": "IDX_ns_goods_state", "kind": "INDEX", "columns": ["goods_state"]},
+        {"name": "IDX_ns_goods_category_id", "kind": "INDEX", "columns": ["category_id"]},
+        {"name": "IDX_ns_goods_sku_id", "kind": "INDEX", "columns": ["sku_id"]}
+      ],
+      "cursorIndexWarning": "增量游标 modify_time 无独立索引，全表扫描风险"
+    },
+    {
+      "name": "ns_goods_sku",
+      "pipelineId": "P03",
+      "targetOt": "ProductSku",
+      "primaryKey": "sku_id",
+      "rowCount": 73,
+      "softDelete": {"field": "is_delete"},
+      "indices": [
+        {"name": "PRIMARY", "kind": "UNIQUE", "columns": ["sku_id"]},
+        {"name": "IDX_ns_goods_site_id", "kind": "INDEX", "columns": ["site_id"]},
+        {"name": "IDX_ns_goods_is_delete", "kind": "INDEX", "columns": ["is_delete"]}
+      ],
+      "cursorIndexWarning": "增量游标 modify_time 无独立索引"
+    },
+    {
+      "name": "ns_goods_category",
+      "pipelineId": "P04",
+      "targetOt": "Category",
+      "primaryKey": "category_id",
+      "rowCount": 11,
+      "softDelete": null,
+      "indices": [
+        {"name": "PRIMARY", "kind": "UNIQUE", "columns": ["category_id"]},
+        {"name": "pid_level", "kind": "INDEX", "columns": ["pid", "level"]}
+      ]
+    },
+    {
+      "name": "ns_order",
+      "pipelineId": "P05",
+      "targetOt": "Order",
+      "primaryKey": "order_id",
+      "rowCount": 177,
+      "validRows": 117,
+      "softDelete": {"field": "is_delete", "dropped": 60},
+      "indices": [
+        {"name": "PRIMARY", "kind": "UNIQUE", "columns": ["order_id"]},
+        {"name": "IDX_ns_order_create_time", "kind": "INDEX", "columns": ["create_time"]},
+        {"name": "IDX_ns_order_member_id", "kind": "INDEX", "columns": ["member_id"]},
+        {"name": "IDX_ns_order_order_status", "kind": "INDEX", "columns": ["order_status"]},
+        {"name": "IDX_ns_order_pay_status", "kind": "INDEX", "columns": ["pay_status"]},
+        {"name": "IDX_ns_order_finish_time", "kind": "INDEX", "columns": ["finish_time"]}
+      ]
+    },
+    {
+      "name": "ns_order_goods",
+      "pipelineId": "P06",
+      "targetOt": "OrderLine",
+      "primaryKey": "order_goods_id",
+      "rowCount": 227,
+      "softDelete": null,
+      "indices": [
+        {"name": "PRIMARY", "kind": "UNIQUE", "columns": ["order_goods_id"]},
+        {"name": "IDX_ns_order_goods_order_id", "kind": "INDEX", "columns": ["order_id"]},
+        {"name": "IDX_ns_order_goods_goods_id", "kind": "INDEX", "columns": ["goods_id"]},
+        {"name": "IDX_ns_order_goods_sku_id", "kind": "INDEX", "columns": ["sku_id"]},
+        {"name": "IDX_ns_order_goods_member_id", "kind": "INDEX", "columns": ["member_id"]},
+        {"name": "IDX_ns_order_goods_refund_status", "kind": "INDEX", "columns": ["refund_status"]}
+      ],
+      "cursorAnomaly": "create_time 227 行全为 0（D-002），不可用作游标"
+    },
+    {
+      "name": "ns_express_delivery_package",
+      "pipelineId": "P07",
+      "targetOt": "Shipment",
+      "primaryKey": "id",
+      "rowCount": 19,
+      "softDelete": null,
+      "indices": [
+        {"name": "PRIMARY", "kind": "UNIQUE", "columns": ["id"]},
+        {"name": "IDX_ns_express_delivery_package_site_id", "kind": "INDEX", "columns": ["site_id"]},
+        {"name": "IDX_ns_express_delivery_package_order_id", "kind": "INDEX", "columns": ["order_id"]}
+      ]
+    },
+    {
+      "name": "ns_member",
+      "pipelineId": "P08",
+      "targetOt": "CustomerLite",
+      "primaryKey": "member_id",
+      "rowCount": 53,
+      "softDelete": null,
+      "indices": [],
+      "wave": "D1.5",
+      "note": "frozen/01 未列 ns_member 列清单与索引；rowCount/pk 来自 frozen/02 P08"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+pipeline_id: P01
+source_table: ns_site
+target_ot: Shop
+primary_key: site_id
+site_filter: "site_id=1"
+incremental_strategy: snapshot
+incremental_cursor:
+  fields: []
+  fallback: create_time
+  mode: snapshot
+unique_key_pattern: "niushop:{site_id}:{pk}"
+validation:
+  required: [site_name]
+field_mappings:
+  - {source: site_id, target: siteId, type: int}
+  - {source: site_type, target: siteType, type: string}
+  - {source: site_domain, target: domain, type: string}
+  - {source: site_name, target: name, type: string}
+  - {source: username, target: username, type: string}
+  - {source: logo, target: logo, type: string}
+  - {source: logo_square, target: logoSquare, type: string}
+  - {source: seo_keywords, target: seoKeywords, type: string}
+  - {source: seo_description, target: seoDescription, type: string}
+  - {source: seo_title, target: seoTitle, type: string}
+  - {source: create_time, target: createTime, type: timestamp}
+pii_exclusion:
+  - site_tel
+notes:
+  - "frozen/01 L10: 真实表名 ns_site（任务文本 ns_shop 为笔误）"
+  - "frozen/01 L23/L553: site_tel=PII_DIRECT，按约束 PII_DIRECT 不出库"

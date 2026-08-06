@@ -1,0 +1,35 @@
+pipeline_id: P08
+source_table: ns_member
+target_ot: CustomerLite
+primary_key: member_id
+site_filter: "site_id=1"
+incremental_strategy: watermark
+incremental_cursor:
+  fields: [modify_time, member_id]
+  fallback: create_time
+unique_key_pattern: "niushop:{site_id}:{pk}"
+wave: D1.5
+links:
+  - {name: placedByLite, from: Order, to: CustomerLite, source_field: member_id}
+derived_metrics:
+  - {name: order_count_delta, source: "P05 反向聚合 by member_id"}
+  - {name: last_order_days_delta, source: "now - max(Order.create_time)，按天"}
+field_mappings:
+  - {source: member_id, target: id, type: int}
+  - {source: member_level, target: memberLevel, type: int}
+  - {source: status, target: status, type: int}
+  - {source: create_time, target: createTime, type: timestamp}
+  - {source: modify_time, target: modifyTime, type: timestamp}
+pii_exclusion:
+  - mobile
+  - wx_openid
+  - nickname
+  - avatar
+  - reg_address
+  - last_login_ip
+  - password
+  - pay_password
+notes:
+  - "frozen/02 P08 L117: 波次 D1.5（不在 D1 范围），count=53，pk=member_id"
+  - "隐私最小化(frozen/02 L128): 仅保留 member_id/member_level/status/create_time/modify_time 等脱敏键"
+  - "frozen/01 未列 ns_member 列清单，field_mappings 不臆造其他列；8 字段 PII 排除来自 frozen/02 L129"

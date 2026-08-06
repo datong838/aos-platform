@@ -3,7 +3,7 @@ kind: SolutionPack
 metadata:
   id: solution.ecommerce.operations-base
   version: 1.0.0
-  displayName: Ecommerce Operations Base Fixture
+  displayName: 电商运营基础方案包
   publisher: aos
   license: internal
 spec:

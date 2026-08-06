@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { apiPost } from "../../api/client";
 import {
   BpBanner,
@@ -67,6 +67,13 @@ export const CONNECTOR_TYPES: ConnectorType[] = [
     category: "database",
     description: "常用关系型数据库 · 适合订单/用户数据",
     capabilities: ["Batch syncs", "Virtual tables"],
+  },
+  {
+    id: "niushop-mysql",
+    name: "Niushop 微商城",
+    category: "database",
+    description: "Niushop 微商城专属 · 预设 8 表映射 + PII 排除",
+    capabilities: ["Batch syncs", "Virtual tables", "PII exclusion"],
   },
   {
     id: "snowflake",
@@ -214,6 +221,19 @@ export function DataSourceCreatePage() {
   const [testResult, setTestResult] = useState<TestResult>({ status: "idle", message: "" });
   const [createdId, setCreatedId] = useState("");
   const [msg, setMsg] = useState("");
+
+  const [searchParams] = useSearchParams();
+  const connectorParam = searchParams.get("connector");
+
+  useEffect(() => {
+    if (connectorParam) {
+      const found = CONNECTOR_TYPES.find((t) => t.id === connectorParam);
+      if (found) {
+        setSelectedType(found);
+        setStep(1);
+      }
+    }
+  }, [connectorParam]);
 
   const filteredTypes = filterConnectorTypes(typeCategory, typeQuery);
   const selectedCount = selectedTableCount(tables);
@@ -394,12 +414,12 @@ export function DataSourceCreatePage() {
               </label>
               <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
                 端口
-                <input value={config.port} onChange={(e) => updateConfig("port", e.target.value)} placeholder="5432" style={{ display: "block", width: "100%", marginTop: 4 }} />
+                <input value={config.port} onChange={(e) => updateConfig("port", e.target.value)} placeholder={selectedType.id === "niushop-mysql" ? "13306" : "5432"} style={{ display: "block", width: "100%", marginTop: 4 }} />
                 {configErrors.port && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.port}</span>}
               </label>
               <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
                 数据库名
-                <input value={config.database} onChange={(e) => updateConfig("database", e.target.value)} placeholder="mydb" style={{ display: "block", width: "100%", marginTop: 4 }} />
+                <input value={config.database} onChange={(e) => updateConfig("database", e.target.value)} placeholder={selectedType.id === "niushop-mysql" ? "niushop" : "mydb"} style={{ display: "block", width: "100%", marginTop: 4 }} />
                 {configErrors.database && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.database}</span>}
               </label>
               <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>

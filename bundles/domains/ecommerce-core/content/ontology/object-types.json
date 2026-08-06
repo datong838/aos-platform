@@ -1,0 +1,85 @@
+[
+  {
+    "name": "Shop",
+    "required_properties": [
+      "currency",
+      "name",
+      "status",
+      "timezone"
+    ]
+  },
+  {
+    "name": "Product",
+    "required_properties": [
+      "categoryId",
+      "createdAt",
+      "shopId",
+      "status",
+      "title",
+      "updatedAt"
+    ]
+  },
+  {
+    "name": "ProductSku",
+    "required_properties": [
+      "barcode",
+      "currency",
+      "price",
+      "productId",
+      "status",
+      "updatedAt"
+    ]
+  },
+  {
+    "name": "Category",
+    "required_properties": [
+      "name",
+      "parentCategoryId",
+      "status",
+      "updatedAt"
+    ]
+  },
+  {
+    "name": "Order",
+    "required_properties": [
+      "createdAt",
+      "currency",
+      "shopId",
+      "status",
+      "totalAmount",
+      "updatedAt"
+    ]
+  },
+  {
+    "name": "OrderLine",
+    "required_properties": [
+      "currency",
+      "lineAmount",
+      "orderId",
+      "quantity",
+      "skuId",
+      "unitPrice",
+      "updatedAt"
+    ]
+  },
+  {
+    "name": "Shipment",
+    "required_properties": [
+      "carrier",
+      "orderId",
+      "shippedAt",
+      "status",
+      "trackingNo",
+      "updatedAt"
+    ]
+  },
+  {
+    "name": "CustomerLite",
+    "required_properties": [
+      "createdAt",
+      "memberLevel",
+      "status",
+      "updatedAt"
+    ]
+  }
+]
