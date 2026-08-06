@@ -301,9 +301,14 @@ def test_dataset_sink_called_and_output_ref_format(monkeypatch):
         scope=TEST_SCOPE,
     )
 
-    # sink_to_dataset 被调用一次，rows 为 sample_rows
+    # sink_to_dataset 被调用一次，rows 为 sample_rows 经 normalize 后的行（D2.5 架构缺口 1 修复）
     assert len(calls) == 1
-    assert calls[0][3] == sample_rows
+    sink_rows = calls[0][3]
+    assert len(sink_rows) == 1
+    # D2.5: normalize_rows 将 raw ns_xxx 行转为 OT normalized 行
+    assert sink_rows[0]["ot"] == "Category"
+    assert sink_rows[0]["source_pk"] == "1"
+    assert sink_rows[0]["properties"]["name"] == "根分类"
     # output_ref 格式：dataset://catalog/<rid>
     assert result["output_ref"].startswith("dataset://catalog/ri.dataset.")
     eng.reset_all_for_tests()
