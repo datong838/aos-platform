@@ -115,11 +115,22 @@ def fetch_source_rows(
 def _resolve_source_node_config(
     nodes: list[Any], node_id: str | None
 ) -> dict[str, Any] | None:
-    """从 nodes 中找到 node_id 对应的节点并返回其 config。"""
-    if node_id is None or not nodes:
+    """从 nodes 中找到 node_id 对应的节点并返回其 config。
+
+    O1-B: 当 node_id=None 时（execute_pipeline_once 的默认调用），
+    回退到第一个 source 类型的节点。
+    """
+    if not nodes:
         return None
+    # 优先按 node_id 匹配
+    if node_id is not None:
+        for node in nodes:
+            if getattr(node, "id", None) == node_id:
+                return getattr(node, "config", None) or {}
+    # O1-B: node_id=None 时，找第一个 source 节点
     for node in nodes:
-        if getattr(node, "id", None) == node_id:
+        nt = str(getattr(node, "node_type", "") or "").lower()
+        if nt == "source":
             return getattr(node, "config", None) or {}
     return None
 
@@ -144,8 +155,8 @@ def _fetch_from_niushop(
 
     D2.6: 连接配置由 fetch_source_rows 统一查询后传入（不再内部查 meta_source）
     """
-    table = node_config["table"]
-    pk = node_config["pk"]
+    table = node_config.get("table") or node_config.get("source_table", "")
+    pk = node_config.get("pk", "id")
     watermark_col = node_config.get("watermark_col", "modify_time")
     site_filter = node_config.get("site_filter", 1)
     cursor = node_config.get("cursor")
@@ -203,7 +214,7 @@ def _fetch_from_jdbc_ssh(
 
     数据清洗与 niushop 分支一致（软删行过滤 + PII 排除 + 0 时间转 null）。
     """
-    table = node_config["table"]
+    table = node_config.get("table") or node_config.get("source_table", "")
     pk = node_config.get("pk", "id")
     cursor = node_config.get("cursor")
 
