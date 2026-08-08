@@ -1861,6 +1861,33 @@ def execute_pipeline(
     if pl.get("config", {}).get("decommissioned"):
         raise ApiError(code="VALIDATION", message="已作废的管道不可执行，请先恢复", status_code=400)
 
+    # O1-B: 统一执行入口 — execution_mode=live 时委托到 phase5 引擎
+    try:
+        from aos_api.phase5_pipeline_engine import get_engine as _get_engine
+        _eng = _get_engine()
+        _phase5_pl = _eng.get_pipeline(scope, pl_id)
+        if _phase5_pl is not None and getattr(_phase5_pl, "execution_mode", "") == "live":
+            _eng_result = _eng.execute_pipeline_once(scope, pl_id)
+            return {
+                "buildId": f"build-{uuid.uuid4().hex[:10]}",
+                "pipelineId": pl_id,
+                "status": "succeeded" if _eng_result.get("ok") else "failed",
+                "rowsWritten": _eng_result.get("rows_written", 0),
+                "durationMs": _eng_result.get("duration_ms", 0),
+                "errorCode": _eng_result.get("error_code", ""),
+                "errorMessage": _eng_result.get("error_message", ""),
+                "executor": "ec_live_executor",
+                "logs": [
+                    {"time": "00:00:01", "level": "INFO", "msg": f"[O1-B] 委托到 ec_live_executor: rows={_eng_result.get('rows_written', 0)}"},
+                ],
+            }
+    except Exception as _o1b_err:
+        # 如果 phase5 引擎不可用或管道未注册，回退到内联执行（兼容模式）
+        import logging as _logging
+        _logging.getLogger("aos-api.wave-ext").debug(
+            "O1-B delegate fallback for pipeline %s: %s", pl_id, _o1b_err,
+        )
+
     body = body or {}
     mode = body.get("mode", "incremental")  # full / incremental
     now = time.time()

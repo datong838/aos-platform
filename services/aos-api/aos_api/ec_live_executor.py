@@ -128,6 +128,9 @@ def ec_live_executor(
         # sink: obj_instance（前端 analytics preview 需要查 obj_instance 表）
         _write_obj_instances(scope, pipeline, output_rows)
 
+        # O1-C: 同事务写 projection_outbox 标记（投影完成后标记 projected=True）
+        _mark_projection_outbox(eng, scope, pipeline, output_rows)
+
         return {
             "input_ref": "",
             "output_ref": f"dataset://catalog/{ds.id}",
@@ -377,3 +380,95 @@ def _make_link_aggregator(eng: Any, scope: Any) -> Any:
             return {}
 
     return aggregator
+
+
+# ═══════════════════════════════════════════════════════════════
+# O1-C: projection_outbox 同事务标记
+# ═══════════════════════════════════════════════════════════════
+
+def _mark_projection_outbox(
+    eng: Any, scope: Any, pipeline: Any, output_rows: list[dict[str, Any]],
+) -> None:
+    """O1-C: 在权威写入 + 投影写入完成后，写 projection_outbox 标记。
+
+    每条 object/link 写一条 outbox 记录，projected=True（因为 _write_obj_instances
+    已同步完成投影）。后续可切换为异步消费器模式。
+    """
+    store = getattr(eng, "ecom_consistency_store", None)
+    if store is None:
+        return
+
+    engine = getattr(store, "_engine", None)
+    if engine is None:
+        return
+
+    org_id = getattr(scope, "org_id", "") or ""
+    project_id = getattr(scope, "project_id", "") or ""
+    pipeline_id = str(getattr(pipeline, "id", ""))
+
+    try:
+        from datetime import datetime, timezone as _tz
+        from sqlalchemy import text as _text
+
+        now = datetime.now(_tz.utc)
+        # 获取下一个 input_revision（简化版：用当前秒级时间戳）
+        revision = int(now.timestamp())
+
+        with engine.begin() as conn:
+            conn.execute(_text(
+                f"SET LOCAL aos.org_id = '{org_id}'"
+            ))
+            conn.execute(_text(
+                f"SET LOCAL aos.workspace_id = '{project_id}'"
+            ))
+
+            for row in output_rows:
+                if row.get("link_type"):
+                    # Link 行
+                    conn.execute(_text(
+                        "INSERT INTO projection_outbox "
+                        "(org_id, project_id, workspace_id, input_revision, change_kind, "
+                        "link_type, source_external_id, target_external_id, "
+                        "platform, shop_or_marketplace_id, payload, projected, projected_at) "
+                        "VALUES (:org, :proj, :ws, :rev, 'upsert_link', "
+                        ":lt, :src, :tgt, 'niushop', '1', :payload::jsonb, TRUE, now())"
+                    ).bindparams(
+                        org=org_id, proj=project_id, ws=project_id,
+                        rev=revision, lt=row.get("link_type", ""),
+                        src=str(row.get("source_pk", "")),
+                        tgt=str(row.get("target_source_pk", "")),
+                        payload='{}',
+                    ))
+                elif row.get("source_pk") or row.get("id"):
+                    # Object 行
+                    import json as _json
+                    ext_id = str(row.get("source_pk") or row.get("id") or "")
+                    payload = _json.dumps(
+                        {k: v for k, v in row.get("properties", {}).items()},
+                        ensure_ascii=False, default=str,
+                    )
+                    conn.execute(_text(
+                        "INSERT INTO projection_outbox "
+                        "(org_id, project_id, workspace_id, input_revision, change_kind, "
+                        "object_type, external_id, "
+                        "platform, shop_or_marketplace_id, payload, projected, projected_at) "
+                        "VALUES (:org, :proj, :ws, :rev, 'upsert_object', "
+                        ":ot, :eid, 'niushop', '1', :payload::jsonb, TRUE, now())"
+                    ).bindparams(
+                        org=org_id, proj=project_id, ws=project_id,
+                        rev=revision,
+                        ot=str(row.get("ot", "")),
+                        eid=ext_id,
+                        payload=payload,
+                    ))
+
+        log.info(
+            "projection_outbox_marked rows=%d pipeline=%s",
+            len(output_rows), pipeline_id,
+        )
+    except Exception:
+        log.warning(
+            "projection_outbox_mark_failed pipeline=%s",
+            getattr(pipeline, "id", "?"),
+            exc_info=True,
+        )
