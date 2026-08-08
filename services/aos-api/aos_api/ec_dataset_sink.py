@@ -38,6 +38,22 @@ _PID_TO_OT: dict[str, str] = {
     "p12": "Payment",
 }
 
+# OT → 中文展示名（与 wave_ext._ALL_PIPE_IDS / phase5 _BUNDLE_DISPLAY_NAMES 对齐）
+_OT_TO_CN: dict[str, str] = {
+    "Shop": "栖月汇-店铺",
+    "Product": "栖月汇-商品",
+    "ProductSku": "栖月汇-商品SKU",
+    "Category": "栖月汇-类目",
+    "Order": "栖月汇-订单",
+    "OrderLine": "栖月汇-订单明细",
+    "Shipment": "栖月汇-发货",
+    "CustomerLite": "栖月汇-会员",
+    "Weapp": "栖月汇-小程序",
+    "SystemConfig": "栖月汇-系统配置",
+    "ProductReview": "栖月汇-商品评价",
+    "Payment": "栖月汇-支付",
+}
+
 
 def _resolve_ot_hint(pipeline: Any) -> str:
     """从 pipeline.config.target_ot 或 pipeline.id 前缀推断 OT hint。"""
@@ -51,6 +67,23 @@ def _resolve_ot_hint(pipeline: Any) -> str:
     return ""
 
 
+def _resolve_dataset_name(pipeline: Any) -> str:
+    """生成中文可读的数据集名称，如 '栖月汇-商品'。"""
+    ot = _resolve_ot_hint(pipeline)
+    if ot and ot in _OT_TO_CN:
+        return _OT_TO_CN[ot]
+    pid = getattr(pipeline, "id", "?")
+    return f"栖月汇-{pid}"
+
+
+def _resolve_stable_rid(pipeline: Any) -> str:
+    """生成幂等 RID：ri.aos.main.dataset.{pipeline_id}，保证同管道多次执行覆盖同一数据集。"""
+    pid = getattr(pipeline, "id", "")
+    if pid:
+        return f"ri.aos.main.dataset.{pid}"
+    return _gen_rid()
+
+
 def sink_to_dataset(
     eng: Any,
     scope: Any,
@@ -60,16 +93,16 @@ def sink_to_dataset(
     """将输出行落地为 Dataset，返回 dataset 对象。
 
     流程（FR-D1-1）:
-      1. 生成 rid（ri.dataset.<uuid8>）
+      1. 使用幂等 RID（ri.aos.main.dataset.{pipeline_id}），同管道多次执行覆盖而非累积
       2. eng.create_dataset 创建 Dataset（ds.id == rid，向后兼容骨架）
       3. eng.add_build 记录 DatasetBuild（rows_written = len(output_rows)，非负整数）
       4. data_os_store.persist_dataset 落地 meta_dataset（scope 守门由内部 *scope.key 保证）
       5. data_os_store.persist_dataset_history 落地历史
     容错：persist 失败降级为 warning 不阻塞 sink 流程（与 wave_ext._persist_safe 一致）。
     """
-    rid = _gen_rid()
+    rid = _resolve_stable_rid(pipeline)
     rows_written = max(0, len(output_rows))
-    name = f"pipeline-{getattr(pipeline, 'id', '?')}-output"
+    name = _resolve_dataset_name(pipeline)
 
     # 1. 创建 Dataset（骨架行为，向后兼容）。ds.id == rid 让 ec_live_executor
     #    不修改即可产出 dataset://catalog/<rid> 格式 output_ref，且

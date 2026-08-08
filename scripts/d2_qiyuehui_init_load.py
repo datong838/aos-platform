@@ -96,8 +96,8 @@ def _load_env() -> dict[str, str]:
 
 
 ENV = _load_env()
-NIUSHOP_USER = ENV.get("NIUSHOP_DB_USER", "niushop")
-NIUSHOP_PASSWORD = ENV.get("NIUSHOP_DB_PASSWORD", "ddt_227018")
+NIUSHOP_USER = ENV.get("NIUSHOP_DB_USER", "")
+NIUSHOP_PASSWORD = ENV.get("NIUSHOP_DB_PASSWORD", "")
 NIUSHOP_PORT = int(ENV.get("NIUSHOP_DB_PORT_TUNNEL", "13306"))
 
 

@@ -1020,10 +1020,10 @@ export function DatasetsPage() {
   }, [items.length, ridParam, sourceIdParam]);
 
   const previewColumns = useMemo(() => {
-    if (preview?.columns?.length) return preview.columns.slice(0, 8);
+    if (preview?.columns?.length) return preview.columns;
     const row0 = preview?.rows?.[0];
     if (!row0) return ["id"];
-    return Object.keys(row0).slice(0, 8);
+    return Object.keys(row0);
   }, [preview]);
 
   const previewTableRows = useMemo(() => {

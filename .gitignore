@@ -42,3 +42,5 @@ screenshot_d5*.py
 scripts/d5_phase_d_*.py
 scripts/d5_phase_d_targeted.py
 scripts/f4_verify.py
+scripts/d5_phase_d_report.html
+scripts/f_wave_report.html

@@ -1130,8 +1130,8 @@ export function PipelineCanvasPage() {
     };
   }, [pipe?.datasetRid, otHint]);
 
-  const cols = preview?.columns?.slice(0, 6) || [];
-  const rows = preview?.rows?.slice(0, 5) || [];
+  const cols = preview?.columns || [];
+  const rows = preview?.rows?.slice(0, 8) || [];
 
   return (
     <S2Chrome title={title} lede="管道构建 · 画布">

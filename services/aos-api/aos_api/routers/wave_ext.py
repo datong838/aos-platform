@@ -1975,8 +1975,14 @@ def execute_pipeline(
     field_mappings: list[dict[str, Any]] = []
     if source_config:
         source_id = str(source_config.get("source_id") or "")
-        source_table = str(source_config.get("source_table") or "")
+        source_table = str(source_config.get("source_table") or source_config.get("table") or "")
         site_filter = str(source_config.get("site_filter") or "")
+    # 如果 source_table 仍为空但有 YAML 配置，从 YAML 补
+    if not source_table and _yaml_source_config:
+        source_table = str(_yaml_source_config.get("source_table") or "")
+        if not source_id:
+            source_id = str(_yaml_source_config.get("source_id") or "")
+        _log("INFO", f"[fallback] source_table 从 YAML 补全: {source_table}")
     if transform_config:
         field_mappings = list(transform_config.get("field_mappings") or [])
     elif source_config:
