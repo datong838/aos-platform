@@ -3,6 +3,11 @@
 POST /v1/aip/logic/execute      — 逻辑执行（DAG 分支/汇聚）
 GET  /v1/aip/logic/automations  — 自动化触发器列表
 POST /v1/aip/logic/automations  — 创建自动化触发器
+POST /v1/aip/tasks              — 创建任务（Plan Mode）
+GET  /v1/aip/tasks              — 任务列表
+GET  /v1/aip/tasks/{id}         — 查询单个任务
+POST /v1/aip/tasks/{id}/plan/approve — 审批计划
+POST /v1/aip/tasks/{id}/execute — 执行任务
 """
 from __future__ import annotations
 

@@ -412,11 +412,9 @@ class EcomConsistencyStore:
             if incoming_time == stored_time:
                 if existing["payload_hash"] == payload_hash:
                     return "objects_ignored"
-                raise EcomConsistencyError(
-                    "SOURCE_VERSION_CONFLICT",
-                    "same object source version has a different payload",
-                    details={"objectType": record.object_type},
-                )
+                # D5-E2: Allow re-projection when payload changed (derived metric recompute).
+                # Instead of raising SOURCE_VERSION_CONFLICT, fall through to UPDATE.
+                # This enables CustomerLite/Payment second-pass derived metric refresh.
             conn.execute(
                 update(ecom_object)
                 .where(clause)
@@ -523,11 +521,8 @@ class EcomConsistencyStore:
             if link.source_updated_at == stored_time:
                 if existing["payload_hash"] == payload_hash:
                     return "links_ignored"
-                raise EcomConsistencyError(
-                    "SOURCE_VERSION_CONFLICT",
-                    "same link source version has a different payload",
-                    details={"linkType": link.link_type},
-                )
+                # D5-E2: Allow re-projection when payload changed (derived metric recompute).
+                # Fall through to UPDATE instead of raising SOURCE_VERSION_CONFLICT.
             stored_deleted_at = existing["deleted_at"]
             if stored_deleted_at is not None:
                 tombstone_time = _db_time(stored_deleted_at)

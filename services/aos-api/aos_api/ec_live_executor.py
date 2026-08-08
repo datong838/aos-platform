@@ -285,7 +285,9 @@ def _enrich_payment_order_create_time(
                         _tbl.c.org_id == org_id,
                         _tbl.c.workspace_id == workspace_id,
                         _tbl.c.object_type == "Order",
-                        _tbl.c.external_id.in_(order_ids),
+                        _tbl.c.external_id.in_(
+                            [f"niushop:1:{oid}" for oid in order_ids]
+                        ),
                     )
                 )
             ).fetchall()
@@ -293,7 +295,9 @@ def _enrich_payment_order_create_time(
         for ext_id, props in results:
             created_at = (props or {}).get("createdAt") if isinstance(props, dict) else None
             if created_at:
-                for row in id_to_rows.get(ext_id, []):
+                # ext_id is "niushop:1:6", strip prefix to match id_to_rows key
+                raw_id = ext_id.rsplit(":", 1)[-1] if ":" in ext_id else ext_id
+                for row in id_to_rows.get(raw_id, []):
                     row["_order_create_time"] = created_at
 
         log.info(

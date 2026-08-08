@@ -202,7 +202,12 @@ def test_concurrent_same_idempotency_key_replays_original_result(tmp_path) -> No
     assert {result.checkpoint_version for result in results} == {1}
 
 
-def test_same_source_version_with_different_payload_rolls_back_whole_batch(store: EcomConsistencyStore) -> None:
+def test_same_source_version_with_different_payload_allows_reprojection(store: EcomConsistencyStore) -> None:
+    """D5-E2: Same source_updated_at + different payload_hash now allows UPDATE (re-projection).
+
+    Previously this raised SOURCE_VERSION_CONFLICT and rolled back the batch.
+    Now it falls through to UPDATE to support derived metric recompute (e.g., CustomerLite order_count).
+    """
     existing = obj("Product", "z-existing")
     first = batch(existing, key="first", cursor_id="z-existing")
     store.apply_batch(first)
@@ -219,11 +224,15 @@ def test_same_source_version_with_different_payload_rolls_back_whole_batch(store
         expected=1,
         cursor_id="z-existing",
     )
-    with pytest.raises(EcomConsistencyError) as caught:
-        store.apply_batch(second)
-    assert caught.value.code == "SOURCE_VERSION_CONFLICT"
-    assert store.get_object(ident("a-new"), "Product") is None
-    assert store.get_checkpoint(first)["version"] == 1
+    # D5-E2: No longer raises — both objects are written (re-projection)
+    result = store.apply_batch(second)
+    assert result.objects_written >= 1
+    # The new object should exist
+    assert store.get_object(ident("a-new"), "Product") is not None
+    # The changed object should have the updated title
+    updated = store.get_object(ident("z-existing"), "Product")
+    assert updated is not None
+    assert updated["properties"].get("title") == "conflict"
 
 
 def test_older_source_version_is_ignored(store: EcomConsistencyStore) -> None:
@@ -312,7 +321,12 @@ def test_link_listing_requires_full_shop_scope(store: EcomConsistencyStore) -> N
     ) == 1
 
 
-def test_dangling_link_rolls_back_objects_checkpoint_and_receipt(store: EcomConsistencyStore) -> None:
+def test_dangling_link_is_ignored_and_objects_are_preserved(store: EcomConsistencyStore) -> None:
+    """D5-E1: Dangling links are now counted as links_ignored instead of rolling back the batch.
+
+    Objects are still written (objects-first + links-with-precheck pattern).
+    The dangling link can be retrieved via get_last_dangling_links() for DLQ processing.
+    """
     dangling = CoreLinkRecord(
         link_type="Shop.sellsProduct",
         source_type="Shop",
@@ -323,13 +337,15 @@ def test_dangling_link_rolls_back_objects_checkpoint_and_receipt(store: EcomCons
         cursor_external_id="dangling-link",
     )
     command = batch(obj("Shop", "shop-object"), key="dangling", links=[dangling])
-    with pytest.raises(EcomConsistencyError) as caught:
-        store.apply_batch(command)
-    assert caught.value.code == "DANGLING_LINK"
-    assert store.get_object(ident("shop-object"), "Shop") is None
-    assert store.get_checkpoint(command) is None
-    with store._engine.connect() as conn:  # receipt absence is part of transaction evidence
-        assert conn.execute(select(ecom_ingest_receipt)).first() is None
+    # D5-E1: No longer raises — dangling link is ignored, objects are preserved
+    result = store.apply_batch(command)
+    # Object should exist (not rolled back)
+    assert store.get_object(ident("shop-object"), "Shop") is not None
+    # Link should be ignored
+    assert result.links_ignored >= 1
+    # Dangling links available for DLQ
+    dangling_links = store.get_last_dangling_links()
+    assert len(dangling_links) >= 1
 
 
 def test_object_tombstone_also_tombstones_attached_links(store: EcomConsistencyStore) -> None:

@@ -204,7 +204,7 @@ def _to_int(value: Any) -> int | None:
 def _to_datetime(value: Any) -> datetime | None:
     """安全转 timezone-aware UTC datetime。
 
-    支持 datetime 对象和 Unix 时间戳（秒，int/float）。
+    支持 datetime 对象、Unix 时间戳（秒，int/float）和 ISO 8601 字符串。
     None 或非法值返回 None。
     """
     if value is None:
@@ -213,6 +213,12 @@ def _to_datetime(value: Any) -> datetime | None:
         if value.tzinfo is None or value.utcoffset() is None:
             return value.replace(tzinfo=timezone.utc)
         return value.astimezone(timezone.utc)
+    if isinstance(value, str):
+        # Try ISO 8601 format (e.g., "2026-01-24T14:49:35.000000Z")
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except (ValueError, TypeError):
+            pass
     try:
         ts = float(value)
     except (TypeError, ValueError):
