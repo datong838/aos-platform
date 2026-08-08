@@ -14,6 +14,7 @@ import {
   serializeEmptyInstallationAction,
   serializeRejectInstallationRequest,
   serializeRollbackInstallationRequest,
+  serializeUninstallInstallationRequest,
 } from "./installationActions";
 import {
   ASSET_CONTROL_HEADER_CONTRACT,
@@ -39,6 +40,7 @@ import type {
   RejectInstallationRequest,
   RollbackInstallationRequest,
   StoredCompositionLock,
+  UninstallInstallationRequest,
 } from "./types";
 
 type FetchImplementation = (
@@ -534,6 +536,19 @@ export class AssetControlClient {
       ASSET_CONTROL_OPERATIONS.rollbackInstallation,
       installationId,
       serializeRollbackInstallationRequest(body),
+      options,
+    );
+  }
+
+  uninstallInstallation(
+    installationId: string,
+    body: UninstallInstallationRequest,
+    options: InstallationActionOptions,
+  ): Promise<InstallationResponse> {
+    return this.installationAction(
+      ASSET_CONTROL_OPERATIONS.uninstallInstallation,
+      installationId,
+      serializeUninstallInstallationRequest(body),
       options,
     );
   }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { apiGet } from "../../api/client";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { apiDelete, apiGet } from "../../api/client";
 import {
   BpBanner,
   BpMetricGrid,
@@ -8,7 +8,7 @@ import {
   BpTabs,
   BpToolbar,
 } from "./blueprintUi";
-import { S2Chrome } from "./shared";
+import { S2Chrome, PipelineWorkflowStepper } from "./shared";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -320,13 +320,13 @@ const DEMO_ROWS: DatasetRow[] = [
 
 const DEMO_DATASET: DatasetPreview = {
   id: "curated_orders",
-  name: "curated_orders",
-  path: "/Curated/Ecom/orders",
-  format: "Parquet + Iceberg",
+  name: "栖月汇-订单 数据集",
+  path: "/栖月汇商贸/数据资产/订单/",
+  format: "PostgreSQL 对象实例（obj_instance）",
   rowCount: 892104,
   sizeBytes: 134217728, // 128 MB
   lastUpdatedAt: new Date(Date.now() - 2 * 60000).toISOString(),
-  branch: "master",
+  branch: "main",
   transactionId: "tx-847",
   columns: DEMO_COLUMNS,
   rows: DEMO_ROWS,
@@ -355,7 +355,7 @@ export function DatasetPreviewPage() {
     setLoading(true);
     setMsg("");
     try {
-      const raw = requestedId.startsWith("ri.dataset.")
+      const raw = requestedId.startsWith("ri.")
         ? await apiGet<DatasetPreviewApiResponse>(
           `/v1/analytics/datasets/preview?datasetRid=${encodeURIComponent(requestedId)}&limit=${PREVIEW_LIMIT}`,
         )
@@ -430,8 +430,34 @@ export function DatasetPreviewPage() {
     }
   }
 
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const navBack = useNavigate();
+
+  async function handleDeleteDataset() {
+    const confirmRid = window.prompt(
+      `⚠️ 不可逆操作：删除数据集「${ds.name}」\n\n审批通过后，数据集将被物理删除。\n请输入数据集 RID 「${requestedId}」确认。`,
+      ""
+    );
+    if (confirmRid !== requestedId) return;
+    setDeleteBusy(true);
+    try {
+      const res = (await apiDelete(
+        `/v1/datasets/${encodeURIComponent(requestedId)}`
+      )) as unknown as { deleteRequest: { id: string; status: string }; message?: string };
+      window.alert(
+        `删除请求已提交（req=${res.deleteRequest.id}, status=${res.deleteRequest.status}）。\n待 admin 审批通过后实际删除。`
+      );
+      navBack("/data/datasets");
+    } catch (e) {
+      window.alert(`提交删除失败：${(e as Error).message || e}`);
+    } finally {
+      setDeleteBusy(false);
+    }
+  }
+
   return (
     <S2Chrome title={`数据集预览 · ${ds.name}`} lede={`路径 ${ds.path} · 格式 ${ds.format}`}>
+      <PipelineWorkflowStepper current={4} />
       <BpToolbar>
         <Link to="/data/datasets" className="btn-nav">← 数据集列表</Link>
         <button
@@ -448,6 +474,16 @@ export function DatasetPreviewPage() {
           {loading ? "刷新中…" : "刷新预览"}
         </button>
         <Link to="/data/queries/new" className="btn-nav">新建查询</Link>
+        <button
+          type="button"
+          className="btn btn-danger"
+          disabled={deleteBusy || loading || source === "fallback-demo"}
+          title="提交删除审批请求（admin 审批通过后才实际删除）"
+          onClick={() => void handleDeleteDataset()}
+          style={{ padding: "2px 10px", fontSize: "0.75rem" }}
+        >
+          {deleteBusy ? "提交中…" : "删除数据集"}
+        </button>
         <span className="muted mono" style={{ marginLeft: "auto" }}>tx: {ds.transactionId}</span>
       </BpToolbar>
 

@@ -83,14 +83,7 @@ export const CONNECTOR_TYPES: ConnectorType[] = [
     description: "常用关系型数据库 · 适合订单/用户数据",
     capabilities: ["Batch syncs", "Virtual tables"],
   },
-  {
-    id: "niushop-mysql",
-    name: "Niushop 微商城",
-    category: "database",
-    description: "Niushop 微商城专属 · 预设 8 表映射 + PII 排除",
-    capabilities: ["Batch syncs", "Virtual tables", "PII exclusion"],
-  },
-  // D2.6: 通用 JDBC SSH 连接器（不绑 niushop，适合本地开发与生产）
+  // D2.6: 通用 JDBC SSH 连接器（niushop-mysql 已废弃，统一用通用 SSH 隧道）
   {
     id: "jdbc-mysql-ssh",
     name: "MySQL SSH 隧道",
@@ -536,12 +529,12 @@ export function DataSourceCreatePage() {
                   </label>
                   <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
                     端口
-                    <input value={config.port} onChange={(e) => updateConfig("port", e.target.value)} placeholder={selectedType.id === "niushop-mysql" ? "13306" : "5432"} style={{ display: "block", width: "100%", marginTop: 4 }} />
+                    <input value={config.port} onChange={(e) => updateConfig("port", e.target.value)} placeholder={selectedType.id === "jdbc-postgres-ssh" ? "5432" : "3306"} style={{ display: "block", width: "100%", marginTop: 4 }} />
                     {configErrors.port && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.port}</span>}
                   </label>
                   <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>
                     数据库名
-                    <input value={config.database} onChange={(e) => updateConfig("database", e.target.value)} placeholder={selectedType.id === "niushop-mysql" ? "niushop" : "mydb"} style={{ display: "block", width: "100%", marginTop: 4 }} />
+                    <input value={config.database} onChange={(e) => updateConfig("database", e.target.value)} placeholder="mydb" style={{ display: "block", width: "100%", marginTop: 4 }} />
                     {configErrors.database && <span className="error" style={{ fontSize: "0.7rem" }}>{configErrors.database}</span>}
                   </label>
                   <label className="muted" style={{ display: "block", fontSize: "0.75rem", marginBottom: 4, marginTop: 8 }}>

@@ -206,7 +206,8 @@ export type InstallationState =
   | "rejected"
   | "applied"
   | "active"
-  | "rolled_back";
+  | "rolled_back"
+  | "uninstalled";
 
 export interface CreateInstallationRequest {
   compositionId: string;
@@ -229,6 +230,10 @@ export interface RejectInstallationRequest {
 }
 
 export interface RollbackInstallationRequest {
+  reason: string;
+}
+
+export interface UninstallInstallationRequest {
   reason: string;
 }
 

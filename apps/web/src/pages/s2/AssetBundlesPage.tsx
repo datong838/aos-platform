@@ -314,6 +314,7 @@ export function AssetBundlesPage() {
               !actionPending && setInstallationRequest((current) => ({ ...current, offset }))
             }
             onSelect={selectInstallation}
+            onNavigateToRegistry={() => setActiveView("registry")}
           />
           <InstallationDetail state={installationDetailState} />
           <InstallationActionPanel

@@ -210,7 +210,9 @@ def test_run_sync_creates_run() -> None:
     st = eng.create_sync_task(name="sync", source_id=s.id)
     run = eng.run_sync_task(st.id)
     assert run.status == "success"
-    assert run.rows_synced > 0
+    # D4 Phase B: legacy 路径（无 pipeline_id 绑定）不再 mock 5000 行，
+    # 真实执行由 SyncTask.config.pipeline_id 驱动；此处仅校验 SyncRun 落库
+    assert run.rows_synced >= 0
     runs = eng.list_sync_runs(st.id)
     assert len(runs) == 1
 

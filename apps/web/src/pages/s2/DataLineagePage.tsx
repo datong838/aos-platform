@@ -190,13 +190,13 @@ export function edgePath(edge: LineageEdge, nodes: LineageNode[]): string {
 const DEMO_NODES: LineageNode[] = [
   { id: "src-taobao", name: "淘宝开放平台", type: "source", status: "healthy", level: 0, x: 40, y: 40, meta: { description: "订单/商品/会员数据", lastUpdated: new Date(Date.now() - 5 * 60000).toISOString() } },
   { id: "src-jd", name: "京东开放平台", type: "source", status: "healthy", level: 0, x: 40, y: 120, meta: { description: "京东电商数据", lastUpdated: new Date(Date.now() - 10 * 60000).toISOString() } },
-  { id: "ds-raw-orders", name: "raw_orders", type: "dataset", status: "healthy", level: 1, x: 280, y: 40, meta: { rowCount: 1200000, lastUpdated: new Date(Date.now() - 8 * 60000).toISOString() } },
-  { id: "ds-raw-products", name: "raw_products", type: "dataset", status: "healthy", level: 1, x: 280, y: 120, meta: { rowCount: 45000, lastUpdated: new Date(Date.now() - 15 * 60000).toISOString() } },
-  { id: "pl-clean", name: "clean_pipeline", type: "pipeline", status: "healthy", level: 2, x: 520, y: 80, meta: { description: "清洗 + 去重 + 格式化" } },
-  { id: "ds-curated", name: "curated_orders", type: "dataset", status: "stale", level: 3, x: 760, y: 40, meta: { rowCount: 892104, lastUpdated: new Date(Date.now() - 180 * 60000).toISOString() } },
-  { id: "ds-dim", name: "dim_products", type: "dataset", status: "healthy", level: 3, x: 760, y: 120, meta: { rowCount: 44890, lastUpdated: new Date(Date.now() - 30 * 60000).toISOString() } },
-  { id: "ot-order", name: "OrderType", type: "object_type", status: "healthy", level: 4, x: 1000, y: 40, meta: { description: "订单本体类型" } },
-  { id: "fn-sales", name: "SalesFunnel", type: "funnel", status: "error", level: 4, x: 1000, y: 120, meta: { description: "销售漏斗分析" } },
+  { id: "ds-raw-orders", name: "栖月汇-订单 Raw 接入", type: "dataset", status: "healthy", level: 1, x: 280, y: 40, meta: { rowCount: 1200000, lastUpdated: new Date(Date.now() - 8 * 60000).toISOString() } },
+  { id: "ds-raw-products", name: "栖月汇-商品 Raw 接入", type: "dataset", status: "healthy", level: 1, x: 280, y: 120, meta: { rowCount: 45000, lastUpdated: new Date(Date.now() - 15 * 60000).toISOString() } },
+  { id: "pl-clean", name: "栖月汇 订单清洗管道", type: "pipeline", status: "healthy", level: 2, x: 520, y: 80, meta: { description: "清洗 + 去重 + 格式化" } },
+  { id: "ds-curated", name: "栖月汇-订单 数据集", type: "dataset", status: "stale", level: 3, x: 760, y: 40, meta: { rowCount: 892104, lastUpdated: new Date(Date.now() - 180 * 60000).toISOString() } },
+  { id: "ds-dim", name: "栖月汇-商品维度 数据集", type: "dataset", status: "healthy", level: 3, x: 760, y: 120, meta: { rowCount: 44890, lastUpdated: new Date(Date.now() - 30 * 60000).toISOString() } },
+  { id: "ot-order", name: "订单 对象类型 (Order)", type: "object_type", status: "healthy", level: 4, x: 1000, y: 40, meta: { description: "订单本体类型" } },
+  { id: "fn-sales", name: "销售漏斗 分析模型", type: "funnel", status: "error", level: 4, x: 1000, y: 120, meta: { description: "销售漏斗分析" } },
 ];
 
 const DEMO_EDGES: LineageEdge[] = [

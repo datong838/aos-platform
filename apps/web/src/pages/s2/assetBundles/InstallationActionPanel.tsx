@@ -94,7 +94,7 @@ export function InstallationActionPanel({
             <button
               key={action}
               type="button"
-              className={action === "reject" || action === "rollback" ? "btn" : "btn btn-primary"}
+              className={action === "reject" || action === "rollback" || action === "uninstall" ? "btn" : "btn btn-primary"}
               disabled={!enabled}
               title={disabledReason ?? INSTALLATION_ACTION_LABELS[action]}
               onClick={() => { if (enabled) onSelectedActionChange(action); }}

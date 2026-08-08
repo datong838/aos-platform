@@ -1,0 +1,69 @@
+{
+  "id": "browser-pilot",
+  "name": "Browser Pilot",
+  "nameZh": "浏览器自动驾驶",
+  "description": "原生 CDP 浏览器操控智能体 — 基于 Kitewright MCP，无需 Chrome 扩展，支持导航/截图/点击/输入/填表/断言/无障碍树/控制台/网络/PDF/状态持久化，自带 kite 二进制，开箱即用",
+  "kind": "agent",
+  "version": "0.2.0",
+  "author": "aos",
+  "runtime": "sidecar",
+  "capabilities": [
+    "navigate",
+    "screenshot",
+    "click",
+    "type",
+    "fill_form",
+    "extract",
+    "extract_markdown",
+    "snapshot",
+    "assert",
+    "wait_for",
+    "console",
+    "network",
+    "pdf",
+    "save_state",
+    "restore_state",
+    "hover",
+    "select_option",
+    "press_key",
+    "handle_dialog"
+  ],
+  "healthPath": "/v1/agents/browser-pilot/health",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "headless": {
+        "type": "boolean",
+        "default": false,
+        "description": "是否无头模式（服务器环境设 true）"
+      },
+      "kite_endpoint": {
+        "type": "string",
+        "default": "http://localhost:8090",
+        "description": "Kitewright MCP Server HTTP 地址"
+      },
+      "kite_binary": {
+        "type": "string",
+        "description": "kite 二进制路径，留空则使用内置 bin/kite 或 PATH"
+      },
+      "idle_timeout_secs": {
+        "type": "integer",
+        "default": 1800,
+        "description": "空闲多少秒后回收浏览器进程"
+      },
+      "auth_token": {
+        "type": "string",
+        "description": "HTTP 模式的 Bearer 认证 token"
+      },
+      "secretRef": {
+        "type": "string",
+        "description": "Vault 凭据引用（存放 auth_token 等敏感信息）"
+      }
+    }
+  },
+  "defaultConfig": {
+    "headless": false,
+    "kite_endpoint": "http://localhost:8090",
+    "idle_timeout_secs": 1800
+  }
+}

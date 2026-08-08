@@ -3,11 +3,13 @@ import type {
   RegistryBundleSummary,
   RegistryVersionDetail,
 } from "../../../api/assetControl/registry";
+import { apiPost } from "../../../api/client";
 import type {
   AssetReadState,
   RegistryBundleSelection,
   RegistryVersionSelection,
 } from "./model";
+import { useState } from "react";
 
 export interface RegistryPanelProps {
   state: AssetReadState<RegistryBundleSummary[]>;
@@ -76,11 +78,33 @@ function BundleDetail({
   detail,
   selectedVersion,
   onSelectVersion,
+  onVersionAction,
 }: {
   detail: RegistryBundleDetail;
   selectedVersion: RegistryVersionSelection | null;
   onSelectVersion?: (selection: RegistryVersionSelection) => void;
+  onVersionAction?: () => void;
 }) {
+  const [actionMsg, setActionMsg] = useState("");
+  const [actioning, setActioning] = useState<string | null>(null);
+
+  async function versionAction(version: string, action: "publish" | "deprecate" | "revoke") {
+    setActionMsg("");
+    setActioning(`${version}:${action}`);
+    try {
+      await apiPost(
+        `/v1/bundles/${encodeURIComponent(detail.publisher)}/${encodeURIComponent(detail.bundleId)}/versions/${encodeURIComponent(version)}/${action}`,
+        {},
+      );
+      setActionMsg(`已${action === "publish" ? "发布" : action === "deprecate" ? "废弃" : "撤销"}版本 ${version}`);
+      onVersionAction?.();
+    } catch (e) {
+      setActionMsg(String((e as Error).message || e));
+    } finally {
+      setActioning(null);
+    }
+  }
+
   return (
     <section aria-label="Registry Bundle 详情" style={{ ...panelStyle, marginTop: 10 }}>
       <h4>Bundle 详情</h4>
@@ -90,16 +114,21 @@ function BundleDetail({
         <div><dt>名称</dt><dd>{detail.displayName}</dd></div>
         <div><dt>类型</dt><dd>{detail.kind}</dd></div>
       </dl>
+      {actionMsg && <div role="status" style={{ padding: 6, fontSize: "0.8rem", color: "var(--aos-muted)" }}>{actionMsg}</div>}
       <h5>真实版本（{detail.versions.length}）</h5>
       {detail.versions.length === 0 ? <p>该 Bundle 暂无服务端版本。</p> : (
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead><tr><th>版本</th><th>状态</th><th>Content hash</th><th>签名</th><th>创建者</th><th>选择</th></tr></thead>
+          <thead><tr><th>版本</th><th>状态</th><th>Content hash</th><th>签名</th><th>创建者</th><th>选择</th><th>生命周期</th></tr></thead>
           <tbody>
             {detail.versions.map((version) => {
               const selection = { publisher: detail.publisher, bundleId: detail.bundleId, version: version.version };
               const active = selectedVersion?.publisher === selection.publisher
                 && selectedVersion.bundleId === selection.bundleId
                 && selectedVersion.version === selection.version;
+              const canPublish = version.status === "draft" || version.status === "validated";
+              const canDeprecate = version.status === "published";
+              const canRevoke = version.status === "published";
+              const actionKey = `${version.version}:`;
               return (
                 <tr key={version.version} data-selected={active || undefined}>
                   <td><code>{version.version}</code></td>
@@ -108,6 +137,32 @@ function BundleDetail({
                   <td>{version.signature ? `${version.signature.algorithm} · ${version.signature.keyId} · ${version.signature.signedAt}` : "未签名"}</td>
                   <td>{version.createdBy}</td>
                   <td><button type="button" className="btn" aria-pressed={active} disabled={!onSelectVersion} onClick={() => onSelectVersion?.(selection)}>{active ? "已选择版本" : "查看版本事实"}</button></td>
+                  <td style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                    {canPublish && (
+                      <button
+                        type="button"
+                        className="btn"
+                        disabled={actioning === `${actionKey}publish`}
+                        onClick={() => void versionAction(version.version, "publish")}
+                      >发布</button>
+                    )}
+                    {canDeprecate && (
+                      <button
+                        type="button"
+                        className="btn"
+                        disabled={actioning === `${actionKey}deprecate`}
+                        onClick={() => void versionAction(version.version, "deprecate")}
+                      >废弃</button>
+                    )}
+                    {canRevoke && (
+                      <button
+                        type="button"
+                        className="btn"
+                        disabled={actioning === `${actionKey}revoke`}
+                        onClick={() => void versionAction(version.version, "revoke")}
+                      >撤销</button>
+                    )}
+                  </td>
                 </tr>
               );
             })}
@@ -212,7 +267,12 @@ export function RegistryPanel({
           {detailState.refreshing && <p role="status">正在刷新 Bundle 详情…</p>}
           <DetailStateNotice state={detailState} label="Bundle 详情" />
           {detailState.data && mayShow(detailState) && (
-            <BundleDetail detail={detailState.data} selectedVersion={selectedVersion} onSelectVersion={onSelectVersion} />
+            <BundleDetail
+              detail={detailState.data}
+              selectedVersion={selectedVersion}
+              onSelectVersion={onSelectVersion}
+              onVersionAction={() => detailState.reload()}
+            />
           )}
         </>
       )}
@@ -223,8 +283,86 @@ export function RegistryPanel({
           {versionState.refreshing && <p role="status">正在刷新版本详情…</p>}
           <DetailStateNotice state={versionState} label="版本详情" />
           {versionState.data && mayShow(versionState) && <VersionDetail detail={versionState.data} />}
+          {versionState.data && mayShow(versionState) && (
+            <InstallVersionCta
+              selection={selectedVersion}
+              onInstalled={() => {
+                versionState.reload();
+                detailState?.reload();
+              }}
+            />
+          )}
         </>
       )}
+    </section>
+  );
+}
+
+function InstallVersionCta({
+  selection,
+  onInstalled,
+}: {
+  selection: RegistryVersionSelection;
+  onInstalled?: () => void;
+}) {
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function install() {
+    setMsg("");
+    setBusy(true);
+    try {
+      const idem = () => crypto.randomUUID();
+      // 1. resolve composition → 拿到 compositionId + lockRevision
+      const lock = await apiPost<{
+        compositionId: string;
+        lockRevision: number;
+      }>(
+        "/v1/bundle-compositions:resolve",
+        {
+          requested: [
+            { publisher: selection.publisher, id: selection.bundleId, version: selection.version },
+          ],
+        },
+        { "Idempotency-Key": idem() },
+      );
+      // 2. create installation
+      const displayName = `安装 ${selection.bundleId}@${selection.version}`;
+      await apiPost(
+        "/v1/bundle-installations",
+        {
+          compositionId: lock.compositionId,
+          lockRevision: lock.lockRevision,
+          overlayRevision: "v1",
+          displayName,
+        },
+        { "Idempotency-Key": idem() },
+      );
+      setMsg(`✅ 安装已创建：${displayName}`);
+      onInstalled?.();
+    } catch (e) {
+      setMsg(`❌ ${String((e as Error).message || e)}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section style={{ ...panelStyle, marginTop: 10 }}>
+      <h5>安装此版本</h5>
+      <p style={{ color: "var(--aos-muted)", fontSize: "0.75rem" }}>
+        选中版本 <code>{selection.publisher}/{selection.bundleId}@{selection.version}</code> 后，
+        点击下方按钮创建安装实例（自动创建组合锁定 + 安装记录）。
+      </p>
+      <button
+        type="button"
+        className="btn btn-nav"
+        disabled={busy}
+        onClick={() => void install()}
+      >
+        {busy ? "正在创建安装…" : "安装此版本"}
+      </button>
+      {msg && <div role="status" style={{ marginTop: 8, fontSize: "0.8rem" }}>{msg}</div>}
     </section>
   );
 }

@@ -47,6 +47,16 @@ function ActionExplanation({
       </div>
     );
   }
+  if (action === "uninstall") {
+    return (
+      <div>
+        <p>服务端卸载当前 active revision 的资源并清空 active pointer，安装状态将转为 <code>uninstalled</code> 终态。</p>
+        <dl>
+          <div><dt>Active revision</dt><dd>{installation.activeRevision ?? "无"}</dd></div>
+        </dl>
+      </div>
+    );
+  }
   if (action === "submit") return <p>只提交当前 draft，不会自动批准或安装。</p>;
   if (action === "reject") return <p>拒绝将形成服务端 decision 和事件记录。</p>;
   return <p>批准仅确认当前服务端 revision 的四个 hash，不接受浏览器修改。</p>;
@@ -70,7 +80,7 @@ export function InstallationActionDialog({
   if (!action) return null;
   const activeAction = action;
 
-  const needsReason = activeAction === "reject" || activeAction === "rollback";
+  const needsReason = activeAction === "reject" || activeAction === "rollback" || activeAction === "uninstall";
   const reasonValidation = needsReason ? validateInstallationReason(reason) : null;
   const canConfirm = !pending &&
     (activeAction !== "approve" || hashesConfirmed) &&
@@ -78,7 +88,7 @@ export function InstallationActionDialog({
 
   function confirm() {
     if (!canConfirm) return;
-    if (activeAction === "reject" || activeAction === "rollback") {
+    if (activeAction === "reject" || activeAction === "rollback" || activeAction === "uninstall") {
       const result = validateInstallationReason(reason);
       if (!result.ok) return;
       onConfirm({ action: activeAction, reason: result.reason });

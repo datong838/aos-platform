@@ -8,7 +8,7 @@ import {
   BpTabs,
   BpToolbar,
 } from "./blueprintUi";
-import { S2Chrome, useJsonGet } from "./shared";
+import { PipelineWorkflowStepper, S2Chrome, useJsonGet } from "./shared";
 
 const CRON_PRESETS: { label: string; cron: string; hint: string }[] = [
   { label: "每小时", cron: "0 * * * *", hint: "每小时整点" },
@@ -122,6 +122,7 @@ export function SchedulesPage() {
 
   return (
     <S2Chrome title="同步计划编辑器" lede="Cron 调度与上游触发 · GET/POST/PATCH /v1/schedules">
+      <PipelineWorkflowStepper current={2} />
       <BpSplit
         left={
           <div className="bp-object-panel">
@@ -183,11 +184,11 @@ export function SchedulesPage() {
                 </p>
                 <label style={{ display: "block", marginTop: 8 }}>
                   <input type="checkbox" checked={upstreamA} onChange={(e) => setUpstreamA(e.target.checked)} />{" "}
-                  raw_orders 同步完成
+                  栖月汇-订单（P05）· 同步完成
                 </label>
                 <label style={{ display: "block", marginTop: 4 }}>
                   <input type="checkbox" checked={upstreamB} onChange={(e) => setUpstreamB(e.target.checked)} />{" "}
-                  库存聚合管道 #build-8842
+                  栖月汇-发货（P07）· 搭建成功触发
                 </label>
               </div>
             )}
@@ -219,8 +220,8 @@ export function SchedulesPage() {
 
             <BpLinkRow
               links={[
-                { to: "/data", label: "prod-mysql-orders 同步" },
-                { to: "/data/pipelines", label: "订单清洗管道" },
+                { to: "/data", label: "栖月汇微商城 数据源" },
+                { to: "/data/pipelines", label: "管道列表" },
               ]}
             />
           </div>

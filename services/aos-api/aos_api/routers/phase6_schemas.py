@@ -32,9 +32,9 @@ _JDBC_SSH_CONNECTOR_TYPES: frozenset[str] = frozenset(
     {"jdbc-mysql-ssh", "jdbc-postgres-ssh"}
 )
 
-# 所有走真实 JDBC discover 的类型（SSH + 通用 jdbc-mysql + 暂存 niushop-mysql，后者后续删除）
+# 所有走真实 JDBC discover 的类型（仅 SSH 隧道通用连接器，niushop-mysql 已废弃）
 _JDBC_REAL_DISCOVER_TYPES: frozenset[str] = _JDBC_SSH_CONNECTOR_TYPES | frozenset(
-    {"jdbc-mysql", "niushop-mysql"}
+    {"jdbc-mysql"}
 )
 
 
@@ -397,6 +397,9 @@ async def list_tables(source_id: str, schema_name: str, principal: Principal = D
                     "row_count": 0,
                     "size_bytes": 0,
                     "description": f"JDBC table {t['name']}",
+                    # D4 Phase C · C1: 透传 302 表分类标签
+                    "classification": t.get("classification", "D"),
+                    "comment": t.get("comment", ""),
                 }
                 for s in result["items"]
                 if s["name"] == schema_name

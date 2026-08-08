@@ -2,7 +2,7 @@ pipeline_id: P03
 source_table: ns_goods_sku
 target_ot: ProductSku
 primary_key: sku_id
-site_filter: "site_id=1 AND is_delete=0"
+site_filter: "site_id=1 AND is_delete=0 AND goods_state=1"
 incremental_strategy: watermark
 incremental_cursor:
   fields: [modify_time, sku_id]
@@ -39,3 +39,5 @@ pii_exclusion: []
 notes:
   - "frozen/01 L142: ns_goods_sku count=73，pk=sku_id"
   - "frozen/02 P03: product_id 指向 P02(hasSku)；孤儿 SKU 进 DLQ"
+  - "业务过滤增强：与 P02 对齐，只采集 goods_state=1 的 SKU（ns_goods_sku 自带 goods_state 冗余字段）"
+  - "假设：ns_goods_sku.goods_state 与 ns_goods.goods_state 同步；若源系统存在状态漂移，需改为 JOIN ns_goods 过滤"

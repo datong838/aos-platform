@@ -36,7 +36,7 @@ export const MOCK_HUB: HubData = {
 export const MOCK_SPOKES: Spoke[] = [
   {
     id: "spoke-prod-sh",
-    name: "spoke-prod-sh",
+    name: "上海生产运行节点",
     health: "online",
     channel: "stable",
     spokeType: "full",
@@ -48,7 +48,7 @@ export const MOCK_SPOKES: Spoke[] = [
   },
   {
     id: "spoke-prod-bj",
-    name: "spoke-prod-bj",
+    name: "北京生产运行节点",
     health: "online",
     channel: "stable",
     spokeType: "full",

@@ -2,7 +2,7 @@ pipeline_id: P02
 source_table: ns_goods
 target_ot: Product
 primary_key: goods_id
-site_filter: "site_id=1 AND is_delete=0"
+site_filter: "site_id=1 AND is_delete=0 AND goods_state=1"
 incremental_strategy: watermark
 incremental_cursor:
   fields: [modify_time, goods_id]
@@ -14,8 +14,7 @@ soft_delete:
   dlq: true
 validation:
   non_negative: [price, market_price, cost_price]
-  enum:
-    goods_state: [0, 1]
+  # goods_state=1 已在 site_filter 强制，无需再枚举校验
 field_mappings:
   - {source: goods_id, target: id, type: int}
   - {source: goods_name, target: name, type: string}
@@ -49,3 +48,5 @@ pii_exclusion: []
 notes:
   - "frozen/01 L30: ns_goods count=65（含软删 8 行），有效 57"
   - "frozen/02 P02: price decimal 非负；goods_state 枚举{0,1}；0 时间转 null"
+  - "业务过滤增强：只采集线上已上架商品（goods_state=1），下架/草稿不入仓"
+  - "watermark 增量陷阱：商品被下架会更新 modify_time 但被 goods_state=1 滤掉，仓库里会残留旧记录；如下架商品需同步移除，应另开补扫任务"

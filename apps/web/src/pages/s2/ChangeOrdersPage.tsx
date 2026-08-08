@@ -46,7 +46,7 @@ export const MOCK_CHANGE_ORDERS: ChangeOrder[] = [
     appliedAt: "2026-07-25 09:30",
     description:
       "将 apollo-core 从 2.14.0 升级至 2.14.1，修复本体索引性能问题。影响 platform-core、ontology-engine 两个运行时组件。",
-    targetSpoke: "spoke-prod-sh",
+    targetSpoke: "上海生产运行节点",
     bundleVersion: "apollo-core-2.14.1",
     plannedWindow: "2026-07-28 02:00 ~ 04:00",
     impactScope: "生产环境短暂中断约 5 分钟，本体查询在升级期间不可用。",
@@ -80,8 +80,8 @@ export const MOCK_CHANGE_ORDERS: ChangeOrder[] = [
     applicant: "陈SRE",
     appliedAt: "2026-07-22 11:00",
     description:
-      "调整 spoke-prod-bj 的 db.connection.poolSize 从 20 → 50，应对高峰期连接池耗尽问题。",
-    targetSpoke: "spoke-prod-bj",
+      "调整 北京生产运行节点 的 db.connection.poolSize 从 20 → 50，应对高峰期连接池耗尽问题。",
+    targetSpoke: "北京生产运行节点",
     bundleVersion: "config-overrides-bj-1.2.0",
     plannedWindow: "2026-07-24 01:00 ~ 01:30",
     impactScope: "数据库连接池热加载，无用户感知中断。",
@@ -116,8 +116,8 @@ export const MOCK_CHANGE_ORDERS: ChangeOrder[] = [
     applicant: "刘PM",
     appliedAt: "2026-07-20 16:00",
     description:
-      "部署 fde-库存预警 0.9.4 RC 版本到 spoke-staging-gz，进行多仓库联动预警预生产验证。",
-    targetSpoke: "spoke-staging-gz",
+      "部署 fde-库存预警 0.9.4 RC 版本到 广州预发布运行节点，进行多仓库联动预警预生产验证。",
+    targetSpoke: "广州预发布运行节点",
     bundleVersion: "fde-库存预警-0.9.4",
     plannedWindow: "2026-07-23 03:00 ~ 05:00",
     impactScope: "仅 staging 环境，不影响生产。",

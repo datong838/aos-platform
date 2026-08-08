@@ -23,7 +23,8 @@ export type AssetControlOperationId =
   | "reject_bundle_installation"
   | "apply_bundle_installation"
   | "verify_bundle_installation"
-  | "rollback_bundle_installation";
+  | "rollback_bundle_installation"
+  | "uninstall_bundle_installation";
 
 export type AssetControlOperationSpec = Readonly<{
   method: AssetControlHttpMethod;
@@ -140,6 +141,15 @@ export const ASSET_CONTROL_OPERATIONS = {
     method: "POST",
     pathTemplate: "/v1/bundle-installations/{installation_id}/rollback",
     operationId: "rollback_bundle_installation",
+    requiresIdempotencyKey: true,
+    requiresIfMatch: true,
+    returnsEtag: true,
+    errorStatuses: ACTION_ERRORS,
+  },
+  uninstallInstallation: {
+    method: "POST",
+    pathTemplate: "/v1/bundle-installations/{installation_id}/uninstall",
+    operationId: "uninstall_bundle_installation",
     requiresIdempotencyKey: true,
     requiresIfMatch: true,
     returnsEtag: true,

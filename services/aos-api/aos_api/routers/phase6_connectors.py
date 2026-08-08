@@ -74,6 +74,19 @@ async def update_connector(connector_id: str, req: UpdateConnectorRequest) -> di
         raise HTTPException(404, f"Connector {connector_id} not found")
 
 
+@router.delete("/{connector_id}")
+async def uninstall_connector(connector_id: str) -> dict[str, Any]:
+    """卸载（删除）连接器。
+
+    D4 Phase C: 新增卸载端点，支持删除不通用的专属插件（如 niushop-mysql）。
+    """
+    eng = get_engine()
+    ok = eng.delete_connector(connector_id)
+    if not ok:
+        raise HTTPException(404, f"Connector {connector_id} not found")
+    return {"connector_id": connector_id, "status": "uninstalled"}
+
+
 @router.get("/{connector_id}/capabilities")
 async def get_capabilities(connector_id: str) -> dict[str, Any]:
     eng = get_engine()

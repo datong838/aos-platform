@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { apiGet, apiPatch, apiPost } from "../../api/client";
+import { useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { apiDelete, apiGet, apiPatch, apiPost } from "../../api/client";
 import {
   BpBanner,
   BpMetricGrid,
@@ -11,7 +11,7 @@ import {
   BpToolbar,
   flattenRecordProps,
 } from "./blueprintUi";
-import { JsonBlock, S2Chrome, useJsonGet } from "./shared";
+import { JsonBlock, PipelineWorkflowStepper, S2Chrome, useJsonGet } from "./shared";
 import {
   TABLE_LABELS,
   buildStatusBadge,
@@ -21,8 +21,26 @@ import {
   type PipelineMeta,
 } from "./pipelineMeta";
 
-type PipelineRow = PipelineMeta & { vectorCollection?: string };
-type BuildRow = { id?: string; status?: string; tasks?: { name: string; ok: boolean }[]; pipelineId?: string };
+type PipelineRow = PipelineMeta & {
+  vectorCollection?: string;
+  config?: { decommissioned?: boolean; [k: string]: unknown };
+  nodes?: unknown[];
+};
+type BuildLogLine = { time?: string; level?: "INFO" | "WARN" | "ERROR" | "DEBUG"; msg?: string };
+type BuildRow = {
+  id?: string;
+  status?: string;
+  tasks?: { name: string; status?: string; ok?: boolean }[];
+  pipelineId?: string;
+  pipelineName?: string;
+  startedAt?: number;
+  finishedAt?: number;
+  duration?: number;
+  rowsRead?: number;
+  rowsWritten?: number;
+  mode?: string;
+  logs?: BuildLogLine[];
+};
 type DatasetRow = {
   rid: string;
   name?: string;
@@ -114,9 +132,103 @@ export function PipelinesPage() {
     return { total: all.length, success, failed, running };
   }, [data?.items]);
 
+  const [busy, setBusy] = useState<Record<string, string>>({});
+  const [flash, setFlash] = useState<string | null>(null);
+  const nav = useNavigate();
+
+  function showFlash(msg: string) {
+    setFlash(msg);
+    window.setTimeout(() => setFlash((cur) => (cur === msg ? null : cur)), 4000);
+  }
+
+  function isDecommissioned(p: PipelineRow): boolean {
+    return Boolean((p.config as Record<string, unknown> | null | undefined)?.decommissioned);
+  }
+
+  async function doDecommission(p: PipelineRow, ev: ReactMouseEvent) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    const name = pipelineDisplayTitle(p);
+    if (!window.confirm(`确定作废管道「${name}」？\n\n作废后：\n• 不可执行 build\n• 可随时「恢复」\n• 需要删除时，作废后再走删除审批`)) return;
+    setBusy((s) => ({ ...s, [p.id]: "decommission" }));
+    try {
+      await apiPost(`/v1/pipelines/${encodeURIComponent(p.id)}/decommission`, {});
+      showFlash(`「${name}」已作废`);
+      reload();
+    } catch (e) {
+      window.alert(`作废失败：${(e as Error).message || e}`);
+    } finally {
+      setBusy((s) => ({ ...s, [p.id]: "" }));
+    }
+  }
+
+  async function doRestore(p: PipelineRow, ev: ReactMouseEvent) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    setBusy((s) => ({ ...s, [p.id]: "restore" }));
+    try {
+      await apiPost(`/v1/pipelines/${encodeURIComponent(p.id)}/restore`, {});
+      showFlash(`管道已恢复`);
+      reload();
+    } catch (e) {
+      window.alert(`恢复失败：${(e as Error).message || e}`);
+    } finally {
+      setBusy((s) => ({ ...s, [p.id]: "" }));
+    }
+  }
+
+  async function doDelete(p: PipelineRow, ev: ReactMouseEvent) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    const name = pipelineDisplayTitle(p);
+    if (!isDecommissioned(p)) {
+      window.alert(`请先作废管道再删除（已内置防护：作废→删除两步）。`);
+      return;
+    }
+    const confirmId = window.prompt(
+      `⚠️ 不可逆操作：删除管道「${name}」\n\n审批通过后，管道及关联数据集将被物理删除。\n请输入管道 ID 「${p.id}」确认。`,
+      ""
+    );
+    if (confirmId !== p.id) return;
+    const cascade = window.confirm(
+      `是否同时删除关联输出数据集？\n确定 → 级联删除管道 + 输出数据集\n取消 → 仅删除管道（数据集保留）`
+    );
+    setBusy((s) => ({ ...s, [p.id]: "delete" }));
+    try {
+      const res = (await apiDelete(
+        `/v1/pipelines/${encodeURIComponent(p.id)}?cascadeDataset=${cascade ? "true" : "false"}`
+      )) as unknown as { deleteRequest: { id: string; status: string }; message?: string };
+      showFlash(
+        `删除请求已提交（req=${res.deleteRequest.id}, status=${res.deleteRequest.status}）。待 admin 审批通过后实际删除。`
+      );
+      reload();
+    } catch (e) {
+      window.alert(`提交删除失败：${(e as Error).message || e}`);
+    } finally {
+      setBusy((s) => ({ ...s, [p.id]: "" }));
+    }
+  }
+
+  const goCanvas = (id: string) => nav(`/data/pipelines/${encodeURIComponent(id)}`);
+
   return (
-    <S2Chrome title="Pipeline Builder" lede={`Ecom-Data-Project · ${items.length} / ${stats.total} 个管道`}>
+    <S2Chrome title="管道构建" lede={`Ecom-Data-Project · ${items.length} / ${stats.total} 个管道`}>
+      <PipelineWorkflowStepper current={0} />
       <BpToolbar>
+        {flash && (
+          <span
+            style={{
+              padding: "4px 10px",
+              background: "var(--aos-ok, #16a34a)",
+              color: "#fff",
+              borderRadius: 3,
+              fontSize: "0.75rem",
+            }}
+            role="status"
+          >
+            {flash}
+          </span>
+        )}
         <button type="button" className="btn" onClick={() => reload()}>
           刷新
         </button>
@@ -226,15 +338,34 @@ export function PipelinesPage() {
           <div className="bp-pipe-card-grid">
             {items.map((p) => {
               const badge = buildStatusBadge(p.lastBuild?.status);
+              const decom = isDecommissioned(p);
+              const loading = busy[p.id];
               return (
-                <Link
+                <div
                   key={p.id}
-                  to={`/data/pipelines/${encodeURIComponent(p.id)}`}
                   className="bp-pipe-card"
+                  onClick={() => goCanvas(p.id)}
+                  role="link"
+                  style={{ cursor: "pointer" }}
                 >
                   <div className="bp-pipe-card-top">
                     <div>
-                      <div className="bp-pipe-card-title">{pipelineDisplayTitle(p)}</div>
+                      <div className="bp-pipe-card-title">
+                        {pipelineDisplayTitle(p)}
+                        {decom && (
+                          <span
+                            className="bp-pipe-badge bp-pipe-badge-muted"
+                            style={{
+                              marginLeft: 6,
+                              fontSize: "0.625rem",
+                              background: "var(--aos-muted, #e2e8f0)",
+                              color: "var(--aos-muted-fg, #475569)",
+                            }}
+                          >
+                            已作废
+                          </span>
+                        )}
+                      </div>
                       <div className="bp-pipe-card-flow">{pipelineFlowLine(p)}</div>
                     </div>
                     <span className={`bp-pipe-badge bp-pipe-badge-${badge.tone}`}>{badge.label}</span>
@@ -242,9 +373,68 @@ export function PipelinesPage() {
                   <div className="bp-pipe-card-meta">
                     <span>分支 master</span>
                     <span>build {p.lastBuild?.status || "—"}</span>
-                    <span>3 个节点</span>
+                    <span>{p.nodes?.length || 3} 个节点</span>
                   </div>
-                </Link>
+                  <div
+                    className="bp-pipe-card-actions"
+                    onClick={(ev) => {
+                      ev.stopPropagation();
+                      ev.preventDefault();
+                    }}
+                    style={{
+                      marginTop: 8,
+                      display: "flex",
+                      gap: 6,
+                      flexWrap: "wrap",
+                      borderTop: "1px solid var(--aos-border, #e2e8f0)",
+                      paddingTop: 8,
+                    }}
+                  >
+                    {!decom ? (
+                      <button
+                        type="button"
+                        className="btn"
+                        disabled={Boolean(loading)}
+                        onClick={(ev) => doDecommission(p, ev)}
+                        style={{ padding: "2px 8px", fontSize: "0.7rem", minWidth: 56 }}
+                      >
+                        {loading === "decommission" ? "作废中…" : "作废"}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn"
+                        disabled={Boolean(loading)}
+                        onClick={(ev) => doRestore(p, ev)}
+                        style={{ padding: "2px 8px", fontSize: "0.7rem", minWidth: 56 }}
+                      >
+                        {loading === "restore" ? "恢复中…" : "恢复"}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      disabled={Boolean(loading) || !decom}
+                      title={!decom ? "删除前请先作废管道" : "提交删除审批请求"}
+                      onClick={(ev) => doDelete(p, ev)}
+                      style={{ padding: "2px 8px", fontSize: "0.7rem", minWidth: 56 }}
+                    >
+                      {loading === "delete" ? "提交中…" : "删除"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={(ev) => {
+                        ev.stopPropagation();
+                        ev.preventDefault();
+                        goCanvas(p.id);
+                      }}
+                      style={{ padding: "2px 8px", fontSize: "0.7rem", minWidth: 72 }}
+                    >
+                      打开画布
+                    </button>
+                  </div>
+                </div>
               );
             })}
           </div>
@@ -259,78 +449,481 @@ export function PipelinesPage() {
   );
 }
 
-/** 77 · 对齐 builds.html */
+/** 77 · 搭建操作工作台：执行管道 + 查看日志 + 数据预览 */
 export function BuildsPage() {
   const { data, err, reload } = useJsonGet<{ items: BuildRow[] }>("/v1/builds");
+  const { data: pipelinesData } = useJsonGet<{ items: PipelineRow[] }>("/v1/pipelines");
+  const { data: datasetsData } = useJsonGet<{ items: DatasetRow[] }>("/v1/datasets");
   const [selected, setSelected] = useState<string | null>(null);
+  const [executingIds, setExecutingIds] = useState<Set<string>>(new Set());
+  const [runMode, setRunMode] = useState<"incremental" | "full">("incremental");
+
   const builds = data?.items || [];
+  const pipelines = pipelinesData?.items || [];
+  const datasets = datasetsData?.items || [];
   const active = builds.find((b) => b.id === selected) || builds[0];
 
+  function taskIcon(t: { status?: string; ok?: boolean }): string {
+    if (t.status === "SUCCEEDED" || t.ok) return "✅";
+    if (t.status === "FAILED" || t.status === "ERROR") return "❌";
+    if (t.status === "RUNNING") return "🔄";
+    return "⏳";
+  }
+
+  function statusBadge(status?: string): { text: string; cls: string } {
+    switch (status) {
+      case "SUCCEEDED":
+        return { text: "成功", cls: "badge-ok" };
+      case "FAILED":
+      case "ERROR":
+        return { text: "失败", cls: "badge-err" };
+      case "RUNNING":
+        return { text: "运行中", cls: "badge-run" };
+      default:
+        return { text: status || "—", cls: "badge-muted" };
+    }
+  }
+
+  function formatTime(ts?: number): string {
+    if (!ts) return "—";
+    return new Date(ts * 1000).toLocaleString("zh-CN", { hour12: false });
+  }
+
+  function formatDuration(sec?: number): string {
+    if (!sec) return "—";
+    if (sec < 60) return `${sec.toFixed(1)}s`;
+    return `${Math.floor(sec / 60)}m ${(sec % 60).toFixed(0)}s`;
+  }
+
+  function findDatasetRid(pipelineId?: string): string | undefined {
+    if (!pipelineId) return undefined;
+    return datasets.find((d) => d.pipelineId === pipelineId)?.rid;
+  }
+
+  async function executePipeline(pipelineId: string) {
+    if (!pipelineId) return;
+    if (executingIds.has(pipelineId)) return;
+    setExecutingIds((prev) => new Set(prev).add(pipelineId));
+    try {
+      await apiPost<{ buildId: string }>(`/v1/pipelines/${encodeURIComponent(pipelineId)}/execute`, {
+        mode: runMode,
+      });
+      // 刷新 builds 列表
+      await reload();
+    } catch (e) {
+      alert(`执行失败：${(e as Error).message}`);
+    } finally {
+      setExecutingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(pipelineId);
+        return next;
+      });
+    }
+  }
+
+  async function executeAllActive() {
+    const toRun = pipelines.filter((p) => !p?.config?.decommissioned);
+    for (const p of toRun) {
+      await executePipeline(p.id);
+    }
+  }
+
   return (
-    <S2Chrome title="搭建" lede="对齐 builds · Build 列表 + 任务图">
+    <S2Chrome title="搭建" lede="管道执行工作台：立即执行、查看日志、预览数据">
+      <PipelineWorkflowStepper current={3} />
+
+      {/* 顶部工具栏 */}
       <BpToolbar>
-        <button type="button" className="btn" onClick={() => reload()}>
-          刷新
-        </button>
-        <Link to="/data/pipelines" className="btn-nav">
-          ← 管道列表
-        </Link>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <Link to="/data/pipelines" className="btn-nav">
+            ← 管道列表
+          </Link>
+          <button type="button" className="btn" onClick={() => reload()}>
+            🔄 刷新
+          </button>
+          <div style={{ width: 1, height: 24, background: "var(--aos-border)", margin: "0 4px" }} />
+          <select
+            value={runMode}
+            onChange={(e) => setRunMode(e.target.value as "incremental" | "full")}
+            style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--aos-border)", fontSize: 13 }}
+          >
+            <option value="incremental">增量模式</option>
+            <option value="full">全量模式</option>
+          </select>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => active?.pipelineId && executePipeline(active.pipelineId)}
+            disabled={!active?.pipelineId || executingIds.has(active.pipelineId || "")}
+          >
+            {executingIds.has(active?.pipelineId || "") ? "⏳ 执行中..." : "🚀 执行当前管道"}
+          </button>
+          <button
+            type="button"
+            className="btn"
+            onClick={executeAllActive}
+            disabled={executingIds.size > 0}
+          >
+            ⚡ 批量执行全部
+          </button>
+          {active?.pipelineId && findDatasetRid(active.pipelineId) && (
+            <Link
+              to={`/data/datasets?rid=${encodeURIComponent(findDatasetRid(active.pipelineId)!)}`}
+              className="btn btn-nav"
+              style={{ background: "var(--aos-blue-50)", color: "var(--aos-blue-600)" }}
+            >
+              🔍 查看数据集 →
+            </Link>
+          )}
+        </div>
       </BpToolbar>
+
       {err && <p className="error">{err}</p>}
 
       <BpSplit
         left={
-          <>
-            <h2 className="aos-text" style={{ fontSize: "0.875rem" }}>
-              搭建历史
-            </h2>
-            {builds.map((b) => (
-              <button
-                key={`${b.pipelineId}-${b.id}`}
-                type="button"
-                className={b.id === active?.id ? "nav-link active card" : "nav-link card"}
-                style={{ width: "100%", textAlign: "left", marginBottom: 4 }}
-                onClick={() => setSelected(b.id || null)}
-              >
-                <strong>{b.id}</strong>{" "}
-                <span className={b.status === "SUCCEEDED" ? "aos-text" : "error"}>{b.status}</span>
-                <div className="muted" style={{ fontSize: "0.7rem" }}>
-                  pipe={b.pipelineId}
+          <div style={{ minWidth: 280 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <h2 className="aos-text" style={{ fontSize: "0.875rem", margin: 0 }}>
+                搭建历史（{builds.length}）
+              </h2>
+            </div>
+
+            {builds.length === 0 && (
+              <div className="card" style={{ textAlign: "center", padding: "32px 16px", color: "var(--aos-text-muted)" }}>
+                <p>暂无搭建记录</p>
+                <button type="button" className="btn btn-primary" onClick={executeAllActive}>
+                  🚀 立即执行第一个搭建
+                </button>
+              </div>
+            )}
+
+            {builds.map((b) => {
+              const badge = statusBadge(b.status);
+              const isRunning = executingIds.has(b.pipelineId || "");
+              const dsRid = findDatasetRid(b.pipelineId);
+              return (
+                <div
+                  key={`${b.pipelineId}-${b.id}`}
+                  className={b.id === active?.id ? "card" : "card"}
+                  style={{
+                    marginBottom: 8,
+                    padding: "12px 14px",
+                    cursor: "pointer",
+                    border: b.id === active?.id ? "2px solid var(--aos-blue-400)" : "1px solid var(--aos-border)",
+                    background: b.id === active?.id ? "var(--aos-blue-50)" : undefined,
+                  }}
+                  onClick={() => setSelected(b.id || null)}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                    <strong style={{ fontSize: "0.9rem" }}>
+                      {b.pipelineName || b.pipelineId || b.id}
+                    </strong>
+                    <span
+                      className={badge.cls}
+                      style={{
+                        padding: "2px 8px",
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {isRunning ? "⏳ 执行中" : badge.text}
+                    </span>
+                  </div>
+
+                  <div className="muted" style={{ fontSize: "0.72rem", marginBottom: 8 }}>
+                    ID: {b.pipelineId}
+                  </div>
+
+                  {/* 统计信息 */}
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 4,
+                      fontSize: "0.72rem",
+                      marginBottom: 8,
+                    }}
+                  >
+                    <div style={{ color: "var(--aos-text-muted)" }}>
+                      耗时：<span className="aos-text">{formatDuration(b.duration)}</span>
+                    </div>
+                    <div style={{ color: "var(--aos-text-muted)" }}>
+                      记录：<span className="aos-text">{b.rowsWritten ?? 0}</span>
+                    </div>
+                  </div>
+
+                  {/* 操作按钮 */}
+                  <div style={{ display: "flex", gap: 6, marginTop: 6 }} onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      className="btn btn-small"
+                      onClick={() => b.pipelineId && executePipeline(b.pipelineId)}
+                      disabled={isRunning}
+                      style={{ padding: "4px 10px", fontSize: 12, flex: 1 }}
+                    >
+                      {isRunning ? "⏳ 执行中" : "▶ 执行"}
+                    </button>
+                    {dsRid && (
+                      <Link
+                        to={`/data/datasets?rid=${encodeURIComponent(dsRid)}`}
+                        className="btn btn-small btn-nav"
+                        style={{ padding: "4px 10px", fontSize: 12, flex: 1 }}
+                      >
+                        🔍 数据
+                      </Link>
+                    )}
+                  </div>
                 </div>
-              </button>
-            ))}
-            {builds.length === 0 && <p className="muted">空 · 先跑 Pipeline</p>}
-          </>
+              );
+            })}
+          </div>
         }
         right={
           active ? (
-            <>
-              <h1 className="aos-text" style={{ fontSize: "1.1rem" }}>
-                Build {active.id}
-              </h1>
-              <p className="muted">
-                Pipeline{" "}
-                {active.pipelineId ? (
-                  <Link to={`/data/pipelines/${encodeURIComponent(active.pipelineId)}`}>
-                    {active.pipelineId}
-                  </Link>
-                ) : (
-                  "—"
-                )}
-              </p>
-              <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: 12 }}>
-                任务
-              </h2>
-              <ul className="card-list">
-                {(active.tasks || []).map((t) => (
-                  <li key={t.name} className="card">
-                    {t.ok ? "✅" : "❌"} {t.name}
-                  </li>
+            <div style={{ paddingRight: 8 }}>
+              {/* 标题区 */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                <div>
+                  <h1
+                    className="aos-text"
+                    style={{ fontSize: "1.35rem", fontWeight: 700, margin: 0, marginBottom: 4 }}
+                  >
+                    {active.pipelineName || active.pipelineId || active.id}
+                  </h1>
+                  <p className="muted" style={{ margin: 0, fontSize: "0.78rem" }}>
+                    管道：
+                    {active.pipelineId ? (
+                      <Link to={`/data/pipelines/${encodeURIComponent(active.pipelineId)}`}>
+                        {active.pipelineName || active.pipelineId}
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
+                    {" · 模式："}
+                    <span className="aos-text">{active.mode === "full" ? "全量" : "增量"}</span>
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => active.pipelineId && executePipeline(active.pipelineId)}
+                    disabled={executingIds.has(active.pipelineId || "")}
+                  >
+                    {executingIds.has(active.pipelineId || "") ? "⏳ 执行中..." : "🚀 立即执行"}
+                  </button>
+                </div>
+              </div>
+
+              {/* 统计卡片 */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(4, 1fr)",
+                  gap: 12,
+                  marginBottom: 20,
+                }}
+              >
+                {[
+                  { label: "执行状态", value: statusBadge(active.status).text, highlight: active.status === "SUCCEEDED" },
+                  { label: "执行耗时", value: formatDuration(active.duration) },
+                  { label: "读取记录", value: (active.rowsRead ?? 0).toLocaleString() },
+                  { label: "写入记录", value: (active.rowsWritten ?? 0).toLocaleString(), highlight: true },
+                ].map((s) => (
+                  <div
+                    key={s.label}
+                    className="card"
+                    style={{
+                      padding: "14px 16px",
+                      borderLeft: s.highlight ? "3px solid var(--aos-blue-500)" : "3px solid var(--aos-border)",
+                    }}
+                  >
+                    <div style={{ fontSize: "0.72rem", color: "var(--aos-text-muted)", marginBottom: 4 }}>{s.label}</div>
+                    <div
+                      style={{
+                        fontSize: "1.25rem",
+                        fontWeight: 700,
+                        color: s.highlight ? "var(--aos-blue-600)" : "var(--aos-text)",
+                      }}
+                    >
+                      {s.value}
+                    </div>
+                  </div>
                 ))}
-              </ul>
-            </>
+              </div>
+
+              {/* 执行任务 */}
+              <div className="card" style={{ padding: 16, marginBottom: 20 }}>
+                <h2
+                  className="aos-text"
+                  style={{
+                    fontSize: "0.875rem",
+                    fontWeight: 600,
+                    margin: 0,
+                    marginBottom: 12,
+                    paddingBottom: 8,
+                    borderBottom: "1px solid var(--aos-border)",
+                  }}
+                >
+                  📋 执行阶段（3 步流水线）
+                </h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {(active.tasks || []).map((t, idx) => {
+                    const done = t.status === "SUCCEEDED" || t.ok;
+                    const running = t.status === "RUNNING";
+                    const failed = t.status === "FAILED" || t.status === "ERROR";
+                    return (
+                      <div
+                        key={t.name}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          padding: "10px 14px",
+                          borderRadius: 8,
+                          background: running
+                            ? "var(--aos-blue-50)"
+                            : failed
+                              ? "var(--aos-red-50)"
+                              : "var(--aos-gray-50)",
+                          border: `1px solid ${running ? "var(--aos-blue-200)" : failed ? "var(--aos-red-200)" : "var(--aos-border)"}`,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 22,
+                            height: 22,
+                            borderRadius: "50%",
+                            background: done
+                              ? "var(--aos-green-500)"
+                              : failed
+                                ? "var(--aos-red-500)"
+                                : running
+                                  ? "var(--aos-blue-500)"
+                                  : "var(--aos-gray-300)",
+                            color: "white",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            marginRight: 12,
+                          }}
+                        >
+                          {done ? "✓" : running ? "…" : failed ? "✕" : idx + 1}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <strong style={{ fontSize: "0.85rem" }} className="aos-text">
+                            {taskIcon(t)} {t.name}
+                          </strong>
+                          <div style={{ fontSize: "0.7rem", color: "var(--aos-text-muted)" }}>
+                            {idx === 0 && "从数据源读取原始数据"}
+                            {idx === 1 && "清洗、过滤、转换、校验"}
+                            {idx === 2 && "写入数据集表并生成索引"}
+                          </div>
+                        </div>
+                        <span
+                          className="aos-text"
+                          style={{
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            color: done
+                              ? "var(--aos-green-600)"
+                              : failed
+                                ? "var(--aos-red-600)"
+                                : running
+                                  ? "var(--aos-blue-600)"
+                                  : "var(--aos-text-muted)",
+                          }}
+                        >
+                          {done ? "完成" : running ? "进行中" : failed ? "失败" : "等待"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 执行日志 */}
+              <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+                <div
+                  style={{
+                    padding: "12px 16px",
+                    background: "var(--aos-gray-50)",
+                    borderBottom: "1px solid var(--aos-border)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <h2
+                    className="aos-text"
+                    style={{ fontSize: "0.875rem", fontWeight: 600, margin: 0 }}
+                  >
+                    📝 执行日志（{(active.logs || []).length} 条）
+                  </h2>
+                  <span className="muted" style={{ fontSize: "0.72rem" }}>
+                    开始：{formatTime(active.startedAt)} · 结束：{formatTime(active.finishedAt)}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    maxHeight: 260,
+                    overflowY: "auto",
+                    padding: "12px 16px",
+                    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                    fontSize: "0.75rem",
+                    lineHeight: 1.7,
+                    background: "#0f172a",
+                    color: "#e2e8f0",
+                  }}
+                >
+                  {(active.logs || []).length === 0 && (
+                    <div style={{ color: "#94a3b8", fontStyle: "italic" }}>暂无日志</div>
+                  )}
+                  {(active.logs || []).map((log, idx) => (
+                    <div key={idx} style={{ display: "flex", gap: 10 }}>
+                      <span style={{ color: "#64748b", minWidth: 60 }}>{log.time}</span>
+                      <span
+                        style={{
+                          minWidth: 52,
+                          fontWeight: 700,
+                          color:
+                            log.level === "ERROR"
+                              ? "#f87171"
+                              : log.level === "WARN"
+                                ? "#fbbf24"
+                                : log.level === "DEBUG"
+                                  ? "#94a3b8"
+                                  : "#60a5fa",
+                        }}
+                      >
+                        [{log.level}]
+                      </span>
+                      <span>{log.msg}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           ) : (
-            <p className="muted">选择 Build 查看任务</p>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: 400,
+                color: "var(--aos-text-muted)",
+              }}
+            >
+              <div style={{ fontSize: 48, marginBottom: 12 }}>⚙️</div>
+              <p style={{ fontSize: "0.9rem", marginBottom: 16 }}>选择左侧搭建记录查看执行详情</p>
+              <button type="button" className="btn btn-primary" onClick={executeAllActive}>
+                🚀 立即执行第一个搭建
+              </button>
+            </div>
           )
         }
       />
@@ -441,6 +1034,8 @@ export function DatasetsPage() {
 
   return (
     <S2Chrome title="数据集预览" lede="左栏选数据集 · 右栏为采样预览（非全表浏览）；总数见指标「预览行数/库内」">
+      <PipelineWorkflowStepper current={4} />
+
       <BpToolbar>
         <button
           type="button"

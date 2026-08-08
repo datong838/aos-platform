@@ -42,6 +42,99 @@ _TUNNEL_READY_RETRIES: int = 10
 _TUNNEL_READY_INTERVAL: float = 0.3
 
 
+# ═══════════════════════════════════════════════════════════════
+# D4 Phase C · C1: 302 表分类打标（A/B/C/D/E）
+# 上位规格：D4-12OT业务闭环与302表衔接执行规格.md §4.3
+# 分类规则（按判定顺序，先匹配先返回）：
+#   A = 核心 OT 源表（12 OT 来源的 16 张表名单，含 sku/category 等同名前缀）
+#   B = JOIN 维度表（仅做字典翻译，无独立业务实体）
+#   C = 明细扩展表（某主实体的附属明细/日志/轨迹）
+#   D = 配置类·按需（定义/开关/模板/活动，未识别也归 D）
+#   E = 系统/统计/消息（纯运维，不落 OT 孪生）
+# ═══════════════════════════════════════════════════════════════
+
+# A 类：12 条 P 管道源表（D4 规格 §3 冻结）
+_OT_SOURCE_TABLES: frozenset[str] = frozenset({
+    "ns_site",                     # P01 → Shop
+    "ns_goods",                    # P02 → Product
+    "ns_goods_sku",                # P03 → ProductSku
+    "ns_goods_category",           # P04 → Category
+    "ns_order",                    # P05 → Order
+    "ns_order_goods",              # P06 → OrderLine
+    "ns_express_delivery_package", # P07 → Shipment
+    "ns_member",                  # P08 → CustomerLite
+    "ns_weapp",                   # P09 → Weapp
+    "ns_config",                   # P10 → SystemConfig
+    "ns_goods_evaluate",          # P11 → ProductReview
+    "ns_pay",                     # P12 → Payment
+})
+
+# B 类前缀/表名（JOIN 维度字典，无独立业务实体）
+_B_EXACT_OR_PREFIX: tuple[str, ...] = (
+    "express_company", "member_level", "area", "goods_brand",
+    "goods_evaluate_image", "member_label", "promotion_coupon_type",
+    "goods_spec", "goods_attr", "goods_unit",
+)
+
+# C 类前缀（主实体附属明细/日志/轨迹）
+_C_PREFIXES: tuple[str, ...] = (
+    "order_log", "pay_refund_notify_log", "stat_",
+    "member_account", "member_address", "order_promotion_detail",
+    "order_refund", "order_action_log",
+)
+
+# E 类前缀/表名（系统/统计/消息，不落 OT 孪生）
+_E_EXACT_OR_PREFIX: tuple[str, ...] = (
+    "cron", "sys_", "user", "menu", "export",
+    "album", "printer_", "cashier_", "service_", "servicer_",
+    "document", "v3_upgrade_log", "session", "migration",
+)
+
+# D 类前缀（配置类·按需，未识别也归 D 作为兜底）
+_D_PREFIXES: tuple[str, ...] = (
+    "promotion_", "coupon_", "supercard_", "giftcard_",
+    "diy_", "form_", "notes_", "live_",
+    "fenxiao_", "store_", "weapp_",
+    "config_", "template_", "activity_",
+)
+
+
+def _classify_table(table_name: str) -> str:
+    """根据表名推断 302 表分类标签（A/B/C/D/E）。
+
+    顺序：A → B → C → E → D（默认）
+    A 类用精确匹配，B/C/E/D 用前缀或精确匹配。
+    未匹配任何规则的表归 D（配置类·按需，最安全）。
+
+    注：Niushop 所有表带 `ns_` 前缀，此处先剥离再匹配前缀规则。
+    """
+    if not table_name:
+        return "D"
+    # A: OT 源表（精确匹配，含 ns_ 前缀）
+    if table_name in _OT_SOURCE_TABLES:
+        return "A"
+    # 剥离 ns_ 前缀后再匹配 B/C/E/D 前缀规则
+    normalized = table_name[3:] if table_name.startswith("ns_") else table_name
+    # B: JOIN 维度（精确或前缀）
+    for p in _B_EXACT_OR_PREFIX:
+        if normalized == p or normalized.startswith(p):
+            return "B"
+    # C: 明细扩展（前缀）
+    for p in _C_PREFIXES:
+        if normalized.startswith(p):
+            return "C"
+    # E: 系统/统计（精确或前缀）
+    for p in _E_EXACT_OR_PREFIX:
+        if normalized == p or normalized.startswith(p):
+            return "E"
+    # D: 配置类（前缀）
+    for p in _D_PREFIXES:
+        if normalized.startswith(p):
+            return "D"
+    # 默认归 D（最安全，未识别的表按"按需"处理）
+    return "D"
+
+
 # ═══════════════════════════════════════════════
 # 全局单例缓存（SSH 隧道 + DB 连接）
 # ═══════════════════════════════════════════════
@@ -674,7 +767,11 @@ class JdbcConnectorRuntime:
                 for tbl_row in cur.fetchall():
                     table_name = tbl_row["table_name"]
                     table_comment = tbl_row.get("table_comment", "")
-                    table_entry: dict[str, Any] = {"name": table_name}
+                    # D4 Phase C · C1: 追加 302 表分类标签（A/B/C/D/E）
+                    table_entry: dict[str, Any] = {
+                        "name": table_name,
+                        "classification": _classify_table(table_name),
+                    }
                     if table_comment:
                         table_entry["comment"] = table_comment
                     tables.append(table_entry)

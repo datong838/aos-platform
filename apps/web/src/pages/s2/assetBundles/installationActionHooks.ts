@@ -14,6 +14,7 @@ import type {
   RejectInstallationRequest,
   RollbackInstallationRequest,
   StoredCompositionLock,
+  UninstallInstallationRequest,
 } from "../../../api/assetControl/types";
 import {
   INSTALLATION_ACTIONS,
@@ -70,6 +71,11 @@ export interface InstallationActionDependencies {
     body: RollbackInstallationRequest,
     options: ActionOptions,
   ) => Promise<InstallationResponse>;
+  readonly uninstallInstallation: (
+    installationId: string,
+    body: UninstallInstallationRequest,
+    options: ActionOptions,
+  ) => Promise<InstallationResponse>;
 }
 
 interface ActionOptions {
@@ -120,6 +126,8 @@ const defaultDependencies: InstallationActionDependencies = {
     assetControlClient.verifyInstallation(installationId, options),
   rollbackInstallation: (installationId, body, options) =>
     assetControlClient.rollbackInstallation(installationId, body, options),
+  uninstallInstallation: (installationId, body, options) =>
+    assetControlClient.uninstallInstallation(installationId, body, options),
 };
 
 export function useInstallationActionCommands(
@@ -341,6 +349,12 @@ export function useInstallationActionCommands(
           return dependencies.rollbackInstallation(
             attempt.installationId,
             attempt.body as RollbackInstallationRequest,
+            actionOptions,
+          );
+        case "uninstall":
+          return dependencies.uninstallInstallation(
+            attempt.installationId,
+            attempt.body as UninstallInstallationRequest,
             actionOptions,
           );
       }
@@ -607,7 +621,7 @@ async function buildActionBody(
     );
     return dependencies.buildApproveRequest(installation, lock);
   }
-  if (action === "reject" || action === "rollback") {
+  if (action === "reject" || action === "rollback" || action === "uninstall") {
     return { reason: normalizeInstallationActionReason(input.reason ?? "") };
   }
   return {};

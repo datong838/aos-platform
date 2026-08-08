@@ -17,6 +17,63 @@ export const TABLE_LABELS: Record<string, { ot: string; zh: string }> = {
   ns_express_delivery_package: { ot: "ExpressPackage", zh: "快递包裹" },
 };
 
+/** 数据源 ID → 中文名称映射 */
+export const SOURCE_LABELS: Record<string, { zh: string }> = {
+  "niushop-qyh": { zh: "栖月汇微商城" },
+  "src-qyh-jdbc": { zh: "栖月汇微商城" },
+  "demo-file-wo": { zh: "演示工单文件" },
+};
+
+/** 管道 ID / 数据集 RID → 中文业务名称映射 */
+export const PIPELINE_ZH_NAMES: Record<string, string> = {
+  "P01-shop": "店铺基础信息",
+  "P02-product": "商品主表",
+  "P03-product-sku": "商品SKU规格",
+  "P04-category": "商品类目",
+  "P05-order": "订单主表",
+  "P06-order-line": "订单明细行",
+  "P07-shipment": "物流发货单",
+  "P08-customer-lite": "会员基础档案",
+  "P09-member": "会员详细信息",
+  "P10-stock": "库存台账",
+};
+
+/** 获取数据源中文显示名 */
+export function getSourceDisplayName(sourceId?: string): string {
+  if (!sourceId) return "未指定数据源";
+  if (SOURCE_LABELS[sourceId]) return SOURCE_LABELS[sourceId].zh;
+  // 尝试从 ID 中提取
+  if (sourceId.includes("qyh")) return "栖月汇微商城";
+  return sourceId;
+}
+
+/** 获取管道/数据集中文显示名 */
+export function getPipelineDisplayName(id?: string, fallbackName?: string): string {
+  if (!id) return fallbackName || "管道";
+  // 尝试从完整 ID（如 P02-product-qyh）提取基础 ID
+  const baseId = id.replace(/-qyh$/, "");
+  if (PIPELINE_ZH_NAMES[baseId]) return PIPELINE_ZH_NAMES[baseId];
+  // 尝试从 dataset RID 中提取
+  const ridMatch = id.match(/P(\d+-[a-z-]+)/i);
+  if (ridMatch) {
+    const key = `P${ridMatch[1].toLowerCase()}`;
+    if (PIPELINE_ZH_NAMES[key]) return PIPELINE_ZH_NAMES[key];
+  }
+  return fallbackName || id;
+}
+
+/** 获取变换节点中文描述 */
+export const TRANSFORM_LABELS = {
+  title: "数据抽取",
+  subtitle: "表 → 对象实例",
+};
+
+/** 获取输出节点中文描述 */
+export function getOutputSubtitle(datasetRid?: string): string {
+  if (!datasetRid) return "输出数据集";
+  return datasetRid;
+}
+
 export type PipelineMeta = {
   id: string;
   sourceId?: string;

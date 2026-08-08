@@ -218,15 +218,15 @@ const DEMO_STEPS: BuildStep[] = [
 ];
 
 const DEMO_LOGS: BuildLogEntry[] = [
-  { timestamp: new Date(Date.now() - 300000).toISOString(), level: "info", message: "Build #847 started by worker-3" },
-  { timestamp: new Date(Date.now() - 299000).toISOString(), level: "info", message: "Using resource class: large" },
-  { timestamp: new Date(Date.now() - 295000).toISOString(), level: "info", message: "Step 1: Checking out code" },
-  { timestamp: new Date(Date.now() - 290000).toISOString(), level: "info", message: "Step 2: Installing dependencies" },
-  { timestamp: new Date(Date.now() - 228000).toISOString(), level: "info", message: "Step 3: Compiling TypeScript" },
-  { timestamp: new Date(Date.now() - 194000).toISOString(), level: "info", message: "Step 4: Running tests" },
-  { timestamp: new Date(Date.now() - 60000).toISOString(), level: "warn", message: "test_pipeline_edge_case is slow (>30s)" },
-  { timestamp: new Date(Date.now() - 30000).toISOString(), level: "error", message: "Flaky test detected: test_sync_retry" },
-  { timestamp: new Date(Date.now() - 10000).toISOString(), level: "info", message: "Retrying flaky test..." },
+  { timestamp: new Date(Date.now() - 300000).toISOString(), level: "info", message: "栖月汇-会员（P08）· 搭建任务启动 · 执行节点-3（上海区）" },
+  { timestamp: new Date(Date.now() - 299000).toISOString(), level: "info", message: "资源规格：大规格执行器（8C16G）" },
+  { timestamp: new Date(Date.now() - 295000).toISOString(), level: "info", message: "阶段 1/4：数据源连接探测（JDBC + SSH 隧道）" },
+  { timestamp: new Date(Date.now() - 290000).toISOString(), level: "info", message: "阶段 2/4：字段映射与 PII 脱敏加载（28列 / 13敏感字段）" },
+  { timestamp: new Date(Date.now() - 228000).toISOString(), level: "info", message: "阶段 3/4：真实数据抽取（ns_member site_id=1）" },
+  { timestamp: new Date(Date.now() - 194000).toISOString(), level: "info", message: "阶段 4/4：PostgreSQL obj_instance 写入 + Phase5 引擎注册" },
+  { timestamp: new Date(Date.now() - 60000).toISOString(), level: "warn", message: "会员等级字段映射类型转换较慢（>30s），建议下轮优化" },
+  { timestamp: new Date(Date.now() - 30000).toISOString(), level: "error", message: "发现 2 条记录 password 字段未空，已按 PII 规则自动剔除" },
+  { timestamp: new Date(Date.now() - 10000).toISOString(), level: "info", message: "PII 校验重跑通过，准备收尾..." },
 ];
 
 const DEMO_CONFIG: BuildConfig = {
@@ -242,9 +242,9 @@ const DEMO_CONFIG: BuildConfig = {
 
 const DEMO_BUILD: BuildJob = {
   id: "build-847",
-  name: "Build #847",
+  name: "栖月汇-会员（P08）· 搭建任务",
   status: "running",
-  triggeredBy: "worker-3",
+  triggeredBy: "执行节点-3（上海区）",
   startedAt: new Date(Date.now() - 300000).toISOString(),
   config: DEMO_CONFIG,
   steps: DEMO_STEPS,

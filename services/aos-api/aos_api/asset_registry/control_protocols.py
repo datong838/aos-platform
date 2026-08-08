@@ -19,6 +19,7 @@ if TYPE_CHECKING:
         RejectInstallationRequest,
         RollbackInstallationRequest,
         StoredCompositionLock,
+        UninstallInstallationRequest,
     )
     from aos_api.asset_registry.installation_store import (
         CommandReceipt,
@@ -194,6 +195,20 @@ class InstallationControl(Protocol):
         *,
         installation_id: str,
         request: RollbackInstallationRequest,
+        org_id: str,
+        project_id: str,
+        actor: str,
+        roles: Collection[str],
+        markings: Collection[str],
+        idempotency_key: str | None,
+        if_match: str | None,
+    ) -> CommandReceipt: ...
+
+    def uninstall(
+        self,
+        *,
+        installation_id: str,
+        request: UninstallInstallationRequest,
         org_id: str,
         project_id: str,
         actor: str,

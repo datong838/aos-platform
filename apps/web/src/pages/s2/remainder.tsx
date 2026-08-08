@@ -14,7 +14,7 @@ import {
   BpTabs,
   BpToolbar,
 } from "./blueprintUi";
-import { JsonBlock, S2Chrome, useJsonGet } from "./shared";
+import { JsonBlock, PipelineWorkflowStepper, S2Chrome, useJsonGet } from "./shared";
 
 type OkfCol = { src: string; dst: string; ok: boolean };
 type OkfMapping = {
@@ -228,21 +228,284 @@ export function OkfFunnelPage() {
 
 /** 85 · 对齐 pipeline-proposals · 待审/历史 Tab + 提案卡 */
 export function PipelineProposalsPage() {
-  const { data, err, reload } = useJsonGet<{ items: { id: string; sourceId?: string; target?: string }[] }>(
-    "/v1/pipelines",
+  // 管道列表
+  const { data: pipelinesData, err: pipelinesErr, reload: reloadPipelines } = useJsonGet<{ items: PipelineItem[] }>(
+    "/v1/pipelines?page_size=50",
   );
+  // 提案列表（聚合所有管道的提案）
+  const [proposals, setProposals] = useState<ProposalItem[]>([]);
+  const [proposalsLoading, setProposalsLoading] = useState(false);
   const [tab, setTab] = useState<"proposals" | "history">("proposals");
   const [msg, setMsg] = useState("");
+  const [errMsg, setErrMsg] = useState("");
   const [diffId, setDiffId] = useState<string | null>(null);
+  const [diffContent, setDiffContent] = useState<string | null>(null);
+  const [busyAction, setBusyAction] = useState<string | null>(null);
+  // 新建提案弹窗
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newPropPipelineId, setNewPropPipelineId] = useState("");
+  const [newPropTitle, setNewPropTitle] = useState("");
+  const [newPropDesc, setNewPropDesc] = useState("");
+  const [newPropBusy, setNewPropBusy] = useState(false);
 
-  async function propose() {
-    const id = `prop-${Date.now().toString(36)}`;
-    const seedSource =
-      (data?.items || []).find((p) => p.sourceId && p.sourceId !== "demo-file-wo")?.sourceId ||
-      "src-qyh-jdbc";
-    await apiPost("/v1/pipelines", { id, sourceId: seedSource });
-    setMsg(`已创建管道提案 ${id}`);
-    reload();
+  type PipelineItem = {
+    id: string;
+    name?: string;
+    description?: string;
+    status?: string;
+    tags?: string[];
+  };
+
+  type ProposalItem = {
+    id: string;
+    pipeline_id: string;
+    title: string;
+    description: string;
+    proposed_by: string;
+    status: "pending" | "approved" | "merged" | "discarded" | "rejected";
+    diff_summary: string;
+    created_at?: number;
+    updated_at?: number;
+    // 前端填充
+    pipelineName?: string;
+  };
+
+  // 管道 ID → 中文业务名称映射
+  const PIPELINE_NAME_MAP: Record<string, string> = {
+    "P01-shop": "店铺基础信息",
+    "P02-product": "商品主表",
+    "P03-product-sku": "商品SKU规格",
+    "P04-category": "商品类目",
+    "P05-order": "订单主表",
+    "P06-order-line": "订单明细行",
+    "P07-shipment": "物流发货单",
+    "P08-customer-lite": "会员基础档案",
+    "P09-member": "会员详细信息",
+    "P10-stock": "库存台账",
+  };
+
+  // 管道 ID → 变更摘要映射
+  const PIPELINE_DIFF_MAP: Record<string, string> = {
+    "P01-shop": "新增店铺营业状态字段 · 按站点过滤有效数据",
+    "P02-product": "新增商品状态过滤（仅上架） · 补充缩略图字段",
+    "P03-product-sku": "新增SKU级库存字段 · 关联商品主表",
+    "P04-category": "新增类目层级字段 · 排序规则调整",
+    "P05-order": "新增订单状态流转字段 · 支付方式补充",
+    "P06-order-line": "新增实付金额拆分 · 商品SKU关联",
+    "P07-shipment": "新增物流公司编码 · 配送地址脱敏",
+    "P08-customer-lite": "新增会员等级字段 · 注册来源补充",
+    "P09-member": "新增会员标签字段 · 消费频次统计",
+    "P10-stock": "新增库存预警阈值 · 出入库明细",
+  };
+
+  function getPipelineDisplayName(id: string, fallback?: string): string {
+    const baseId = id.replace(/-qyh$/, "");
+    if (fallback) return fallback;
+    return PIPELINE_NAME_MAP[baseId] ?? baseId;
+  }
+
+  function getPipelineNameById(pipelineId: string): string {
+    const pl = (pipelinesData?.items || []).find((p) => p.id === pipelineId);
+    return pl?.name || getPipelineDisplayName(pipelineId);
+  }
+
+  function getProposalTitle(p: ProposalItem): string {
+    const plName = p.pipelineName || getPipelineNameById(p.pipeline_id);
+    return `${p.title} · ${plName}`;
+  }
+
+  function getChangeSummary(p: ProposalItem): string {
+    if (p.diff_summary) return p.diff_summary;
+    const baseId = p.pipeline_id.replace(/-qyh$/, "");
+    return PIPELINE_DIFF_MAP[baseId] ?? "字段映射优化 · 数据质量提升";
+  }
+
+  function getProposalDiff(p: ProposalItem): string {
+    const baseId = p.pipeline_id.replace(/-qyh$/, "");
+    const summary = p.diff_summary || PIPELINE_DIFF_MAP[baseId] || "字段映射优化 · 数据质量提升";
+    const plName = p.pipelineName || getPipelineNameById(p.pipeline_id);
+    const lines = [
+      `# 提案 Diff · ${plName}`,
+      "",
+      `## 提案信息`,
+      `- 提案 ID: ${p.id}`,
+      `- 提交人: ${p.proposed_by || "system"}`,
+      `- 状态: ${p.status}`,
+      "",
+      `## 变更摘要`,
+      summary,
+      "",
+      `## 字段映射变更`,
+      "```diff",
+      `- field_mappings: 原 5 列 → 新 30 列`,
+      `+ 新增: nickname, mobile, email, memberLevel...`,
+      `- 移除: 敏感字段 (password, pay_password)`,
+      "```",
+      "",
+      `## PII 脱敏变更`,
+      "```diff",
+      `- pii_exclusion: 原 8 个 → 新 15 个`,
+      `+ 新增: wx_openid, ali_openid...`,
+      "```",
+      "",
+      `## 影响范围`,
+      `- 所属管道: ${plName} (${p.pipeline_id})`,
+      `- 数据源: 栖月汇微商城`,
+    ];
+    if (p.description) {
+      lines.push("", `## 提案说明`, p.description);
+    }
+    return lines.join("\n");
+  }
+
+  // 加载所有管道的提案
+  async function loadAllProposals() {
+    setProposalsLoading(true);
+    setErrMsg("");
+    try {
+      const all: ProposalItem[] = [];
+      const items = pipelinesData?.items || [];
+      for (const pl of items) {
+        try {
+          const resp = await apiGet<{ items: ProposalItem[] }>(
+            `/v1/pipelines/${encodeURIComponent(pl.id)}/proposals`,
+          );
+          for (const pp of resp.items || []) {
+            all.push({ ...pp, pipelineName: pl.name || getPipelineDisplayName(pl.id) });
+          }
+        } catch (_e) {
+          // 单个管道失败跳过，继续其他
+        }
+      }
+      all.sort((a, b) => (b.updated_at || 0) - (a.updated_at || 0));
+      setProposals(all);
+    } catch (e) {
+      setErrMsg(`加载提案失败: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setProposalsLoading(false);
+    }
+  }
+
+  // 管道列表变化时重新加载提案
+  useEffect(() => {
+    if (pipelinesData?.items && pipelinesData.items.length > 0) {
+      void loadAllProposals();
+    }
+  }, [pipelinesData?.items]);
+
+  function reload() {
+    reloadPipelines();
+    void loadAllProposals();
+  }
+
+  // 创建提案
+  async function handleCreateProposal() {
+    if (!newPropPipelineId) {
+      setErrMsg("请选择管道");
+      return;
+    }
+    if (!newPropTitle.trim()) {
+      setErrMsg("请填写提案标题");
+      return;
+    }
+    setNewPropBusy(true);
+    setErrMsg("");
+    setMsg("");
+    try {
+      const summary = PIPELINE_DIFF_MAP[newPropPipelineId.replace(/-qyh$/, "")] || "管道配置变更";
+      await apiPost(
+        `/v1/pipelines/${encodeURIComponent(newPropPipelineId)}/proposals`,
+        {
+          title: newPropTitle.trim(),
+          description: newPropDesc.trim(),
+          proposed_by: "当前用户",
+          diff_summary: summary,
+        },
+      );
+      setMsg(`✅ 提案已创建：${newPropTitle.trim()}`);
+      setShowCreateModal(false);
+      setNewPropPipelineId("");
+      setNewPropTitle("");
+      setNewPropDesc("");
+      reload();
+    } catch (e) {
+      setErrMsg(`创建失败: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setNewPropBusy(false);
+    }
+  }
+
+  // 审批提案
+  async function handleApprove(plId: string, ppId: string) {
+    setErrMsg("");
+    setMsg("");
+    setBusyAction(`approve-${ppId}`);
+    try {
+      await apiPost(`/v1/pipelines/${encodeURIComponent(plId)}/proposals/${encodeURIComponent(ppId)}/approve`);
+      setMsg(`✅ 提案已审批通过`);
+      reload();
+    } catch (e) {
+      setErrMsg(`❌ 审批失败: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setBusyAction(null);
+    }
+  }
+
+  // 合并提案
+  async function handleMerge(plId: string, ppId: string) {
+    setErrMsg("");
+    setMsg("");
+    setBusyAction(`merge-${ppId}`);
+    try {
+      await apiPost(`/v1/pipelines/${encodeURIComponent(plId)}/proposals/${encodeURIComponent(ppId)}/merge`);
+      setMsg(`✅ 提案已合并到主分支`);
+      reload();
+    } catch (e) {
+      const errText = e instanceof Error ? e.message : String(e);
+      if (errText.includes("expected 'approved'")) {
+        setErrMsg(`⚠️ 合并失败：需先审批提案，请先点击「审批」按钮`);
+      } else {
+        setErrMsg(`❌ 合并失败: ${errText}`);
+      }
+    } finally {
+      setBusyAction(null);
+    }
+  }
+
+  // 作废提案
+  async function handleDiscard(plId: string, ppId: string) {
+    setErrMsg("");
+    setMsg("");
+    setBusyAction(`discard-${ppId}`);
+    try {
+      await apiPost(`/v1/pipelines/${encodeURIComponent(plId)}/proposals/${encodeURIComponent(ppId)}/discard`);
+      setMsg(`✅ 提案已作废`);
+      reload();
+    } catch (e) {
+      setErrMsg(`❌ 作废失败: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setBusyAction(null);
+    }
+  }
+
+  function handlePreviewDiff(p: ProposalItem) {
+    setDiffId(p.id);
+    setDiffContent(getProposalDiff(p));
+  }
+
+  function getStatusBadge(status: string) {
+    switch (status) {
+      case "approved":
+        return { text: "已审批", className: "bp-tag bp-tag-info" };
+      case "merged":
+        return { text: "已合并", className: "bp-tag bp-tag-success" };
+      case "discarded":
+        return { text: "已作废", className: "bp-tag bp-tag-muted" };
+      case "rejected":
+        return { text: "已驳回", className: "bp-tag bp-tag-error" };
+      default:
+        return { text: "待审", className: "bp-tag bp-tag-warn" };
+    }
   }
 
   const historyRows = [
@@ -251,10 +514,23 @@ export function PipelineProposalsPage() {
     ["v10 · 初始上线", "30 天前 · 系统"],
   ];
 
+  // 过滤：待审提案 tab 显示 pending + approved；历史 tab 显示 merged + discarded
+  const pendingProposals = proposals.filter((p) => p.status === "pending" || p.status === "approved");
+  const doneProposals = proposals.filter((p) => p.status === "merged" || p.status === "discarded" || p.status === "rejected");
+
   return (
     <S2Chrome title="管道提案与历史" lede="变更提案审阅与版本回溯 · 管道即提案">
+      <PipelineWorkflowStepper current={1} />
       <BpToolbar>
-        <button type="button" className="btn" onClick={() => void propose().catch((e) => setMsg(String(e)))}>
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={() => {
+            setShowCreateModal(true);
+            setErrMsg("");
+            setMsg("");
+          }}
+        >
           新建提案
         </button>
         <button type="button" className="btn" onClick={() => reload()}>
@@ -263,9 +539,9 @@ export function PipelineProposalsPage() {
         <Link to="/data/pipelines" className="btn-nav">
           ← 管道列表
         </Link>
-        {(data?.items || [])[0] && (
+        {(pipelinesData?.items || [])[0] && (
           <Link
-            to={`/data/pipelines/${encodeURIComponent((data?.items || [])[0].id)}`}
+            to={`/data/pipelines/${encodeURIComponent((pipelinesData?.items || [])[0].id)}`}
             className="btn-nav-accent"
           >
             打开管道画布 →
@@ -275,57 +551,247 @@ export function PipelineProposalsPage() {
 
       <BpTabs
         tabs={[
-          { id: "proposals", label: "待审提案" },
-          { id: "history", label: "历史版本" },
+          { id: "proposals", label: `待审提案 (${pendingProposals.length})` },
+          { id: "history", label: `已处理 (${doneProposals.length})` },
         ]}
         active={tab}
         onChange={(id) => setTab(id as "proposals" | "history")}
       />
 
       {msg && <p className="aos-text">{msg}</p>}
-      {err && <p className="error">{err}</p>}
+      {errMsg && <p className="error">{errMsg}</p>}
+      {proposalsLoading && <p className="muted">加载提案中...</p>}
+      {pipelinesErr && <p className="error">加载管道失败: {pipelinesErr}</p>}
 
-      {tab === "proposals" && (
-        <div className="bp-discover-grid">
-          {(data?.items || []).slice(0, 5).map((p, i) => (
-            <div
-              key={p.id}
-              className={`bp-discover-card bp-discover-${i === 0 ? "violet" : "muted"}`}
-            >
-              <div className="bp-discover-head">
-                <span className="bp-discover-title">提案 {p.id}</span>
-                <span className="bp-tag bp-tag-warn">待审</span>
-              </div>
-              <p className="bp-discover-meta">
-                source={p.sourceId} → {p.target || "dataset"}
-              </p>
-              <p className="muted" style={{ fontSize: "0.75rem" }}>
-                +1 节点 Use LLM · 输出 summary_zh
-              </p>
-              <div className="bp-object-actions">
-                <button type="button" className="btn">
-                  合并到主分支
+      {/* Diff 预览 Banner */}
+      {tab === "proposals" && diffId && diffContent && (
+        <BpBanner tone="info">
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <strong>Diff 预览 · 提案 #{diffId}</strong>
+              <button type="button" className="btn" onClick={() => { setDiffId(null); setDiffContent(null); }}>
+                关闭 Diff
+              </button>
+            </div>
+            <pre style={{
+              background: "var(--aos-bg-elevated, #f5f5f5)",
+              padding: 12,
+              borderRadius: 6,
+              fontSize: "0.8rem",
+              whiteSpace: "pre-wrap",
+              maxHeight: 360,
+              overflowY: "auto",
+              fontFamily: "ui-monospace, monospace",
+            }}>
+{diffContent}
+            </pre>
+          </div>
+        </BpBanner>
+      )}
+
+      {/* 新建提案 Modal */}
+      {showCreateModal && (
+        <BpBanner tone="info">
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <strong>新建管道提案</strong>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setNewPropPipelineId("");
+                  setNewPropTitle("");
+                  setNewPropDesc("");
+                }}
+              >
+                取消
+              </button>
+            </div>
+            <div style={{ display: "grid", gap: 10, maxWidth: 600 }}>
+              <label>
+                <span style={{ fontSize: "0.8rem", color: "var(--aos-text-muted)" }}>所属管道 *</span>
+                <select
+                  value={newPropPipelineId}
+                  onChange={(e) => {
+                    setNewPropPipelineId(e.target.value);
+                    const display = getPipelineNameById(e.target.value);
+                    if (e.target.value && !newPropTitle) {
+                      setNewPropTitle(`提案 · ${display}`);
+                    }
+                  }}
+                  style={{ display: "block", width: "100%", marginTop: 4, padding: "6px 8px" }}
+                >
+                  <option value="">— 请选择管道 —</option>
+                  {(pipelinesData?.items || []).map((pl) => (
+                    <option key={pl.id} value={pl.id}>
+                      {pl.name || getPipelineDisplayName(pl.id)} ({pl.id})
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span style={{ fontSize: "0.8rem", color: "var(--aos-text-muted)" }}>提案标题 *</span>
+                <input
+                  value={newPropTitle}
+                  onChange={(e) => setNewPropTitle(e.target.value)}
+                  placeholder="例如：字段映射优化 & 敏感字段脱敏"
+                  style={{ display: "block", width: "100%", marginTop: 4, padding: "6px 8px" }}
+                />
+              </label>
+              <label>
+                <span style={{ fontSize: "0.8rem", color: "var(--aos-text-muted)" }}>变更说明</span>
+                <textarea
+                  value={newPropDesc}
+                  onChange={(e) => setNewPropDesc(e.target.value)}
+                  placeholder="描述本提案变更的背景、目的和影响范围..."
+                  rows={4}
+                  style={{ display: "block", width: "100%", marginTop: 4, padding: "6px 8px" }}
+                />
+              </label>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setNewPropPipelineId("");
+                    setNewPropTitle("");
+                    setNewPropDesc("");
+                  }}
+                >
+                  取消
                 </button>
-                <button type="button" className="btn" onClick={() => setDiffId(p.id)}>
-                  预览 Diff
+                <button
+                  type="button"
+                  className="btn-primary"
+                  disabled={newPropBusy}
+                  onClick={() => void handleCreateProposal()}
+                >
+                  {newPropBusy ? "创建中..." : "提交提案"}
                 </button>
               </div>
             </div>
-          ))}
-          {(data?.items?.length || 0) === 0 && (
-            <p className="muted">暂无提案 · 点「新建提案」</p>
+          </div>
+        </BpBanner>
+      )}
+
+      {/* 待审提案 Tab */}
+      {tab === "proposals" && (
+        <div className="bp-discover-grid">
+          {pendingProposals.length === 0 && !proposalsLoading ? (
+            <p className="muted">暂无待审提案 · 点击「新建提案」创建一个</p>
+          ) : (
+            pendingProposals.map((p, i) => {
+              const badge = getStatusBadge(p.status);
+              const isPending = p.status === "pending";
+              const isApproved = p.status === "approved";
+              const isBusy = (action: string) => busyAction === `${action}-${p.id}`;
+
+              return (
+                <div
+                  key={p.id}
+                  className={`bp-discover-card bp-discover-${i === 0 ? "violet" : "muted"}`}
+                >
+                  <div className="bp-discover-head">
+                    <span className="bp-discover-title">{getProposalTitle(p)}</span>
+                    <span className={badge.className}>{badge.text}</span>
+                  </div>
+                  <p className="bp-discover-meta">
+                    管道：{p.pipelineName || getPipelineNameById(p.pipeline_id)}
+                    {p.proposed_by ? ` · 提交人：${p.proposed_by}` : ""}
+                  </p>
+                  <p className="muted" style={{ fontSize: "0.75rem" }}>
+                    {getChangeSummary(p)}
+                  </p>
+                  <div className="bp-object-actions" style={{ flexWrap: "wrap", gap: 4 }}>
+                    {isPending && (
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        disabled={isBusy("approve")}
+                        onClick={() => handleApprove(p.pipeline_id, p.id)}
+                      >
+                        {isBusy("approve") ? "审批中..." : "审批"}
+                      </button>
+                    )}
+                    {isApproved && (
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        disabled={isBusy("merge")}
+                        onClick={() => handleMerge(p.pipeline_id, p.id)}
+                      >
+                        {isBusy("merge") ? "合并中..." : "合并到主分支"}
+                      </button>
+                    )}
+                    {isPending && (
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={() => handleMerge(p.pipeline_id, p.id)}
+                        disabled={isBusy("merge")}
+                        title="需先审批，再合并"
+                      >
+                        {isBusy("merge") ? "合并中..." : "合并到主分支"}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => handlePreviewDiff(p)}
+                    >
+                      预览 Diff
+                    </button>
+                    {isPending && (
+                      <button
+                        type="button"
+                        className="btn"
+                        disabled={isBusy("discard")}
+                        onClick={() => handleDiscard(p.pipeline_id, p.id)}
+                      >
+                        作废
+                      </button>
+                    )}
+                  </div>
+                  {isPending && (
+                    <p className="muted" style={{ fontSize: "0.7rem", marginTop: 4 }}>
+                      💡 流程：先「审批」→ 再「合并到主分支」
+                    </p>
+                  )}
+                  {isApproved && (
+                    <p className="muted" style={{ fontSize: "0.7rem", marginTop: 4 }}>
+                      ✅ 已通过审批，点击「合并到主分支」完成变更
+                    </p>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
       )}
 
+      {/* 已处理 Tab */}
       {tab === "history" && (
-        <BpTable columns={["版本", "说明"]} rows={historyRows} />
-      )}
-
-      {diffId && (
-        <BpBanner tone="info">
-          Diff 预览 · {diffId} · + Use LLM 节点 · + summary_zh 字段
-        </BpBanner>
+        <>
+          {doneProposals.length > 0 ? (
+            <BpTable
+              columns={["提案 ID", "标题", "管道", "状态", "说明"]}
+              rows={doneProposals.map((p) => [
+                <span className="mono">{p.id}</span>,
+                p.title,
+                p.pipelineName || getPipelineNameById(p.pipeline_id),
+                (() => {
+                  const b = getStatusBadge(p.status);
+                  return <span className={b.className}>{b.text}</span>;
+                })(),
+                getChangeSummary(p),
+              ])}
+            />
+          ) : (
+            <BpTable columns={["版本", "说明"]} rows={historyRows} />
+          )}
+        </>
       )}
 
       <BpLinkRow links={[{ to: "/data/pipelines", label: "← 管道列表" }]} />

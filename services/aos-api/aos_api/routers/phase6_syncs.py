@@ -6,8 +6,9 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from aos_api.auth import require_principal
+from aos_api.auth import Principal, require_principal
 from aos_api.phase6_datasource_engine import get_engine
+from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(
     prefix="/api/datasource/syncs",
@@ -40,20 +41,33 @@ class UpdateSyncRequest(BaseModel):
 
 @router.get("")
 async def list_syncs(
+    principal: Principal = Depends(require_principal),
     search: str | None = Query(None),
     status: str | None = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ) -> dict[str, Any]:
+    """D4 Phase C · C4: 列表按 principal 自动租户隔离。
+
+    scope 来自 Principal（org_id+project_id），不传时降级到全局字典（向后兼容）。
+    """
     eng = get_engine()
-    items, total = eng.list_sync_tasks(search=search, status=status, page=page, page_size=page_size)
+    scope = TenantScope(org_id=principal.org_id, project_id=principal.project_id)
+    items, total = eng.list_sync_tasks(
+        search=search, status=status, page=page, page_size=page_size, scope=scope,
+    )
     return {"items": [s.model_dump() for s in items], "total": total, "page": page, "page_size": page_size}
 
 
 @router.post("")
-async def create_sync(req: CreateSyncRequest) -> dict[str, Any]:
+async def create_sync(
+    req: CreateSyncRequest,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """D4 Phase C · C4: 创建 SyncTask 时绑定 principal 的租户。"""
     eng = get_engine()
-    s = eng.create_sync_task(**req.model_dump())
+    scope = TenantScope(org_id=principal.org_id, project_id=principal.project_id)
+    s = eng.create_sync_task(scope=scope, **req.model_dump())
     return s.model_dump()
 
 
@@ -88,9 +102,14 @@ async def run_sync(sync_id: str) -> dict[str, Any]:
 
 
 @router.get("/{sync_id}/runs")
-async def list_sync_runs(sync_id: str) -> dict[str, Any]:
+async def list_sync_runs(
+    sync_id: str,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """D4 Phase C · C4: 查询 SyncTask 运行历史，按 principal 租户隔离。"""
     eng = get_engine()
-    if eng.get_sync_task(sync_id) is None:
+    scope = TenantScope(org_id=principal.org_id, project_id=principal.project_id)
+    if eng.get_sync_task(sync_id, scope=scope) is None:
         raise HTTPException(404, f"Sync {sync_id} not found")
-    items = eng.list_sync_runs(sync_id)
+    items = eng.list_sync_runs(sync_id, scope=scope)
     return {"items": [r.model_dump() for r in items], "count": len(items)}

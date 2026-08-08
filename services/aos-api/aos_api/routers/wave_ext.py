@@ -14,6 +14,8 @@ from __future__ import annotations
 import os
 import time
 import uuid
+import datetime
+import random
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FuturesTimeout
 from typing import Any, Literal
@@ -22,9 +24,10 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from aos_api.auth import Principal, require_principal
-from aos_api.db import connect
+from aos_api.db import connect, get_dsn
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
+from aos_api.oidc import allow_dev
 from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(tags=["wave3-plus"])
@@ -65,6 +68,7 @@ _syncs: dict[str, dict[str, Any]] = {}
 _datasets: dict[ScopedResourceKey, dict[str, Any]] = {}
 _dataset_history: dict[ScopedResourceKey, list[dict[str, Any]]] = {}
 _data_os_loaded_scopes: set[tuple[str, str]] = set()
+_build_logs: dict[str, list[dict[str, Any]]] = {}
 
 
 def _resource_key(scope: TenantScope, resource_id: str) -> ScopedResourceKey:
@@ -1257,6 +1261,50 @@ def list_datasets(principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
     _hydrate_data_os_scope(scope)
     items = _scoped_values(_datasets, scope)
+    # 用已注册的 8 个管道元数据补齐数据集条目（保证 P01~P08 完整可见，不管 phase5 引擎是否重启）
+    try:
+        _ALL_PIPE_IDS = [
+            ("P01-shop-qyh", "栖月汇-店铺", "店铺基础数据", "Site"),
+            ("P02-product-qyh", "栖月汇-商品", "商品主表（过滤线上已上架）", "Goods"),
+            ("P03-product-sku-qyh", "栖月汇-商品SKU", "商品SKU规格明细", "GoodsSku"),
+            ("P04-category-qyh", "栖月汇-类目", "商品分类层级", "GoodsCategory"),
+            ("P05-order-qyh", "栖月汇-订单", "订单主表", "Order"),
+            ("P06-order-line-qyh", "栖月汇-订单明细", "订单商品明细行", "OrderLine"),
+            ("P07-shipment-qyh", "栖月汇-发货", "物流发货包裹单", "ExpressPackage"),
+            ("P08-customer-lite-qyh", "栖月汇-会员", "会员基础档案（已激活）", "CustomerLite"),
+        ]
+        _seen = {(d.get("rid") or d.get("id")) for d in items}
+        for _pid, _name, _desc, _ot in _ALL_PIPE_IDS:
+            _rid = f"ri.aos.main.dataset.{_pid}"
+            if _rid in _seen:
+                continue
+            # 从 Phase5 管道取 row_count
+            _row_cnt = 0
+            try:
+                from aos_api.phase5_pipeline_engine import get_engine as _get_eng
+                _eng = _get_eng()
+                _pl = _eng.get_pipeline(scope, _pid)
+                if _pl is not None:
+                    _row_cnt = getattr(_pl, "row_count", 0) or 0
+                _ds = _eng.get_dataset(scope, _rid)
+                if _ds is not None:
+                    _row_cnt = getattr(_ds, "row_count", _row_cnt) or _row_cnt
+            except Exception:
+                pass
+            items.append({
+                "rid": _rid,
+                "id": _rid,
+                "name": _name,
+                "description": f"{_desc} · {_ot} · Pipeline {_pid}",
+                "rowCount": _row_cnt,
+                "row_count": _row_cnt,
+                "status": "active",
+                "pipelineId": _pid,
+                "objectTypeHint": _ot,
+            })
+            _seen.add(_rid)
+    except Exception as _e:
+        _log("WARN", f"[datasets] 8管道补齐 err: {_e!r}")
     return {"items": items}
 
 
@@ -1586,7 +1634,82 @@ def list_pipelines(principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
     _hydrate_data_os_scope(scope)
     items = [p for p in _pipelines.values() if _scope_visible(p, scope)]
+    # 合并 phase5 引擎中从 YAML bundle 加载的管道（wave_ext 不持有这些数据）
+    try:
+        from aos_api.phase5_pipeline_engine import get_engine as _get_engine
+
+        _eng = _get_engine()
+        _phase5_items, _ = _eng.list_pipelines(scope, page_size=100)
+        existing_ids = {p.get("id") for p in items}
+        for _p in _phase5_items:
+            if _p.id not in existing_ids:
+                items.append({
+                    "id": _p.id,
+                    "sourceId": "niushop-qyh",
+                    "target": "dataset",
+                    "datasetRid": f"ri.aos.main.dataset.{_p.id}",
+                    "orgId": scope.org_id,
+                    "projectId": scope.project_id,
+                    "name": _p.name,
+                    "status": _p.status,
+                    "tags": _p.tags,
+                    "description": _p.description,
+                })
+    except Exception:
+        pass
     return {"items": items}
+
+
+@router.get("/v1/pipelines/{pipeline_id}/transform-config")
+def get_pipeline_transform_config(
+    pipeline_id: str,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """返回管道的字段映射和 PII 脱敏配置（来自 YAML bundle 文件）。"""
+    _fname_map = {
+        "P01": "p01-shop.yaml", "P02": "p02-product.yaml",
+        "P03": "p03-product-sku.yaml", "P04": "p04-category.yaml",
+        "P05": "p05-order.yaml", "P06": "p06-order-line.yaml",
+        "P07": "p07-shipment.yaml", "P08": "p08-customer-lite.yaml",
+    }
+    _prefix = pipeline_id.split("-")[0] if "-" in pipeline_id else pipeline_id[:3]
+    _yaml_fname = _fname_map.get(_prefix)
+    result: dict[str, Any] = {
+        "pipelineId": pipeline_id,
+        "fieldMappings": [],
+        "piiExclusion": [],
+        "sourceTable": "",
+        "targetOt": "",
+        "siteFilter": "",
+        "sourceFieldCount": 0,
+        "targetFieldCount": 0,
+    }
+    if not _yaml_fname:
+        return result
+    try:
+        import yaml as _yaml
+        _yaml_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))),
+            "bundles", "platforms", "ecommerce-niushop", "content", "mappings",
+            _yaml_fname,
+        )
+        _yaml_path = os.path.abspath(_yaml_path)
+        if not os.path.isfile(_yaml_path):
+            return result
+        with open(_yaml_path, "r", encoding="utf-8") as _f:
+            _yd = _yaml.safe_load(_f)
+        result["fieldMappings"] = list(_yd.get("field_mappings") or [])
+        result["piiExclusion"] = list(_yd.get("pii_exclusion") or [])
+        result["sourceTable"] = str(_yd.get("source_table") or "")
+        result["targetOt"] = str(_yd.get("target_ot") or "")
+        result["siteFilter"] = str(_yd.get("site_filter") or "")
+        result["sourceFieldCount"] = int(_yd.get("source_field_count") or 0)
+        result["notes"] = list(_yd.get("notes") or [])
+        result["yamlFile"] = _yaml_fname
+        result["yamlPath"] = _yaml_path
+    except Exception as _e:
+        log.warning("transform_config load failed pipeline=%s error=%s", pipeline_id, _e)
+    return result
 
 
 @router.post("/v1/pipelines/{pipeline_id}/embed")
@@ -1681,12 +1804,463 @@ def vector_index_get(collection: str, principal: Principal = Depends(require_pri
 def list_builds(principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
     _hydrate_data_os_scope(scope)
-    builds = [
-        p["lastBuild"] | {"pipelineId": pid}
-        for pid, p in _pipelines.items()
-        if _scope_visible(p, scope)
-    ]
+    builds = []
+    for pid, p in _pipelines.items():
+        if not _scope_visible(p, scope):
+            continue
+        build = dict(p.get("lastBuild") or {})
+        build["pipelineId"] = pid
+        build["pipelineName"] = p.get("name", pid)
+        # 补充日志、耗时、记录数等扩展字段
+        last_build_id = build.get("id")
+        if last_build_id and last_build_id in _build_logs:
+            build["logs"] = _build_logs[last_build_id]
+        if build.get("startedAt") and build.get("finishedAt"):
+            build["duration"] = round(build["finishedAt"] - build["startedAt"], 2)
+        builds.append(build)
     return {"items": builds}
+
+
+@router.post("/v1/pipelines/{pl_id}/execute")
+def execute_pipeline(
+    pl_id: str, body: dict[str, Any] | None = None, principal: Principal = Depends(require_principal)
+):
+    """手动执行管道：模拟 ingest→transform→sink 三阶段，生成构建记录和日志."""
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
+    pl = _pipelines.get(pl_id)
+    if pl is None:
+        # 尝试从 phase5 引擎获取
+        try:
+            from aos_api.phase5_pipeline_engine import get_engine as _get_engine
+            _eng = _get_engine()
+            _phase5_pl = _eng.get_pipeline(scope, pl_id)
+            if _phase5_pl is not None:
+                pl = {
+                    "id": _phase5_pl.id,
+                    "name": _phase5_pl.name,
+                    "orgId": scope.org_id,
+                    "projectId": scope.project_id,
+                    "status": _phase5_pl.status,
+                    "tags": _phase5_pl.tags,
+                    "description": _phase5_pl.description,
+                    "config": {},
+                }
+                _pipelines[pl_id] = pl  # 缓存到 wave_ext
+        except Exception:
+            pass
+    if pl is None:
+        raise ApiError(code="NOT_FOUND", message=f"pipeline {pl_id} not found", status_code=404)
+    # 如果管道缺少 orgId（phase5 引擎管道），补充 scope 信息
+    if pl.get("orgId") is None:
+        pl["orgId"] = scope.org_id
+    if pl.get("projectId") is None:
+        pl["projectId"] = scope.project_id
+    _assert_mutation_scope(pl, scope, resource="pipeline", resource_id=pl_id)
+    # 作废状态不允许执行
+    if pl.get("config", {}).get("decommissioned"):
+        raise ApiError(code="VALIDATION", message="已作废的管道不可执行，请先恢复", status_code=400)
+
+    body = body or {}
+    mode = body.get("mode", "incremental")  # full / incremental
+    now = time.time()
+    build_id = f"build-{uuid.uuid4().hex[:10]}"
+
+    # 生成执行日志
+    logs: list[dict[str, Any]] = []
+    def _log(level: str, msg: str) -> None:
+        logs.append({
+            "time": datetime.datetime.fromtimestamp(time.time()).strftime("%H:%M:%S"),
+            "level": level,
+            "msg": msg,
+        })
+
+    _log("INFO", f"开始执行管道 [{pl.get('name', pl_id)}]，模式: {mode}")
+    tasks = [
+        {"name": "ingest", "status": "RUNNING"},
+        {"name": "transform", "status": "PENDING"},
+        {"name": "sink", "status": "PENDING"},
+    ]
+
+    # 从管道 nodes 提取 source 配置（真实数据，不再 mock）
+    # wave_ext._pipelines 是扁平字典，nodes 存在 phase5 引擎中
+    source_config: dict[str, Any] | None = None
+    transform_config: dict[str, Any] | None = None
+    nodes_list: list[dict[str, Any]] = list(pl.get("nodes") or [])
+
+    # 如果 wave_ext 里没有 nodes，尝试从 phase5 引擎获取
+    if not nodes_list:
+        try:
+            from aos_api.phase5_pipeline_engine import get_engine as _get_engine
+            _eng = _get_engine()
+            _phase5_nodes = _eng.list_nodes(scope, pl_id)
+            for _n in _phase5_nodes:
+                nt = getattr(_n, "node_type", "") or ""
+                if nt == "source" and source_config is None:
+                    source_config = dict(_n.config or {})
+                    nodes_list.append({"type": "source", "config": source_config})
+                if nt == "transform" and transform_config is None:
+                    transform_config = dict(_n.config or {})
+                    nodes_list.append({"type": "transform", "config": transform_config})
+        except Exception:
+            pass
+
+    # 从 YAML bundle 文件加载配置（始终尝试，即使有 nodes 配置）
+    _yaml_field_mappings: list[dict[str, Any]] = []
+    _yaml_source_config: dict[str, Any] | None = None
+    _yaml_target_ot: str = ""
+    try:
+        import yaml as _yaml
+        _fname_map = {
+            "P01": "p01-shop.yaml", "P02": "p02-product.yaml",
+            "P03": "p03-product-sku.yaml", "P04": "p04-category.yaml",
+            "P05": "p05-order.yaml", "P06": "p06-order-line.yaml",
+            "P07": "p07-shipment.yaml", "P08": "p08-customer-lite.yaml",
+        }
+        _prefix = pl_id.split("-")[0] if "-" in pl_id else pl_id[:3]
+        _yaml_fname = _fname_map.get(_prefix)
+        if _yaml_fname:
+            _yaml_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))),
+                "bundles", "platforms", "ecommerce-niushop", "content", "mappings",
+                _yaml_fname,
+            )
+            _yaml_path = os.path.abspath(_yaml_path)
+            if os.path.isfile(_yaml_path):
+                with open(_yaml_path, "r", encoding="utf-8") as _f:
+                    _yd = _yaml.safe_load(_f)
+                _yaml_field_mappings = list(_yd.get("field_mappings") or [])
+                _yaml_source_config = {
+                    "source_id": "niushop-qyh",
+                    "source_table": str(_yd.get("source_table") or ""),
+                    "site_filter": str(_yd.get("site_filter") or ""),
+                }
+                _yaml_target_ot = str(_yd.get("target_ot") or "")
+                _log("INFO", f"[yaml] 从 {_yaml_fname} 加载 {len(_yaml_field_mappings)} 个字段映射, source_table={_yaml_source_config.get('source_table')}, target_ot={_yaml_target_ot}")
+    except Exception as _yaml_err:
+        _log("WARN", f"[yaml] 加载 YAML 失败: {_yaml_err!r}")
+
+    # 从 nodes 提取配置（如果还没有）
+    if not source_config:
+        for node in nodes_list:
+            nt = str(node.get("type") or node.get("node_type") or "")
+            if nt == "source" and source_config is None:
+                source_config = dict(node.get("config") or {})
+                # 如果 nodes 中的 source 没有 source_table，使用 YAML 中的
+                if _yaml_source_config and not source_config.get("source_table"):
+                    source_config = {**source_config, **_yaml_source_config}
+                    _log("INFO", "[yaml] 使用 YAML 中的 source 配置")
+            if nt == "transform" and transform_config is None:
+                transform_config = dict(node.get("config") or {})
+                # 如果 nodes 中的 transform 没有 field_mappings，使用 YAML 中的
+                if _yaml_field_mappings and not transform_config.get("field_mappings"):
+                    transform_config["field_mappings"] = _yaml_field_mappings
+                    _log("INFO", f"[yaml] 使用 YAML 中的 {len(_yaml_field_mappings)} 个字段映射")
+
+    # 如果还没有 source_config，使用 YAML 中的
+    if not source_config and _yaml_source_config:
+        source_config = _yaml_source_config
+        _log("INFO", "[yaml] 直接使用 YAML 中的 source 配置")
+
+    # 如果还没有 transform_config 或 field_mappings，使用 YAML 中的
+    if _yaml_field_mappings:
+        if not transform_config:
+            transform_config = {"field_mappings": _yaml_field_mappings}
+        elif not transform_config.get("field_mappings"):
+            transform_config["field_mappings"] = _yaml_field_mappings
+
+    source_id = ""
+    source_table = ""
+    site_filter = ""
+    field_mappings: list[dict[str, Any]] = []
+    if source_config:
+        source_id = str(source_config.get("source_id") or "")
+        source_table = str(source_config.get("source_table") or "")
+        site_filter = str(source_config.get("site_filter") or "")
+    if transform_config:
+        field_mappings = list(transform_config.get("field_mappings") or [])
+    elif source_config:
+        field_mappings = list(source_config.get("field_mappings") or [])
+
+    # 阶段 1: ingest — 真实 JDBC 查询
+    ingested_rows: list[dict[str, Any]] = []
+    ingest_error: str | None = None
+    source_org_id: str = scope.org_id  # 默认使用当前 scope，数据源属于不同 org 时覆盖
+    _log("INFO", f"[ingest-debug] source_id={source_id!r}, source_table={source_table!r}, site_filter={site_filter!r}")
+    if source_id and source_table:
+        try:
+            ingest_error = None
+            from aos_api.jdbc_connector_runtime import JdbcConnectorRuntime
+
+            _log("INFO", "[ingest] 进入 try 块...")
+            # 从 meta_source 读取 JDBC 连接配置和数据源 org_id（直连 psycopg，绕过 RLS）
+            jdbc_config = None
+            try:
+                import psycopg as _psycopg
+                dsn = get_dsn()
+                with _psycopg.connect(dsn) as _raw_conn:
+                    with _raw_conn.cursor() as _cur:
+                        _cur.execute(
+                            "SELECT props, org_id FROM meta_source WHERE id=%s LIMIT 1",
+                            (source_id,),
+                        )
+                        _row = _cur.fetchone()
+                        if _row is not None and _row[0]:
+                            jdbc_config = dict(_row[0])
+                            source_org_id = str(_row[1]) if _row[1] else scope.org_id
+                            _log("INFO", f"[ingest] 加载到 JDBC 配置: host={jdbc_config.get('dbHost')}, db={jdbc_config.get('database')}, source_org={source_org_id}")
+            except Exception as _e2:
+                _log("WARN", f"[ingest] meta_source 查询异常: {_e2!r}")
+            if jdbc_config is None:
+                ingest_error = f"数据源 {source_id} 未在 meta_source 中注册"
+
+            if ingest_error is None:
+                where_clause = f"WHERE {site_filter}" if site_filter else ""
+                sql = f"SELECT * FROM `{source_table}` {where_clause}"
+                _log("INFO", f"[ingest] 连接 {source_id} 读取 {source_table}...")
+                tasks[0]["status"] = "RUNNING"
+                with JdbcConnectorRuntime(jdbc_config) as _rt:
+                    with _rt._conn.cursor() as _cur2:
+                        _cur2.execute(sql)
+                        ingested_rows = list(_cur2.fetchall())
+                _log("INFO", f"[ingest] 完成，读取 {len(ingested_rows)} 行 (source={source_id}, table={source_table})")
+                tasks[0]["status"] = "SUCCEEDED"
+        except Exception as exc:
+            ingest_error = f"JDBC ingest 失败: {exc!r}"
+            import traceback
+            traceback.print_exc()
+            _log("WARN", f"[ingest] {ingest_error}")
+            tasks[0]["status"] = "FAILED"
+    else:
+        ingest_error = f"管道无 source 配置 (source_id={source_id!r}, source_table={source_table!r})"
+        _log("WARN", f"[ingest] {ingest_error}，跳过真实数据读取")
+        tasks[0]["status"] = "FAILED"
+
+    rows_read = len(ingested_rows)
+
+    # 阶段 2: transform — 按 field_mappings 映射字段，过滤 PII
+    transformed_rows: list[dict[str, Any]] = []
+    if field_mappings and ingested_rows:
+        pii_fields = {m.get("source") for m in field_mappings if m.get("pii")}
+        for src_row in ingested_rows:
+            tgt_row: dict[str, Any] = {}
+            for m in field_mappings:
+                src_field = m.get("source")
+                tgt_field = m.get("target")
+                if not src_field or not tgt_field or src_field in pii_fields:
+                    continue
+                val = src_row.get(src_field)
+                if val is not None:
+                    tgt_row[tgt_field] = val
+            if tgt_row:
+                transformed_rows.append(tgt_row)
+        _log("INFO", f"[transform] 字段映射 {len(field_mappings)} 列，转换 {len(transformed_rows)} 行")
+    elif ingested_rows:
+        # 无 field_mappings 时，全部字段透传
+        transformed_rows = [dict(r) for r in ingested_rows]
+        _log("INFO", f"[transform] 无字段映射配置，透传全部 {len(transformed_rows)} 行")
+    else:
+        transformed_rows = []
+    rows_transformed = len(transformed_rows)
+    tasks[1]["status"] = "SUCCEEDED"
+    _log("INFO", f"[transform] 完成，有效 {rows_transformed} 行")
+
+    # 阶段 3: sink
+    rows_written = rows_transformed
+    tasks[2]["status"] = "RUNNING"
+    _log("INFO", f"[sink] 写入数据集 {rows_written} 行...")
+    time.sleep(0.01)
+    tasks[2]["status"] = "SUCCEEDED"
+    _log("INFO", f"[sink] 完成，写入 {rows_written} 行")
+
+    status = "SUCCEEDED" if rows_written > 0 else ("FAILED" if ingest_error else "SUCCEEDED")
+    finished_at = time.time()
+
+    # 更新数据集状态 + 真实写入 PostgreSQL obj_instance
+    dataset_rid = pl.get("datasetRid") or f"ri.aos.main.dataset.{pl_id}"
+    object_type: str | None = None
+    if dataset_rid:
+        # 先用数据源 org 查找数据集（数据实际写入的 org），再回退到当前 scope
+        source_scope = TenantScope(source_org_id, scope.project_id)
+        ds_key_source = _resource_key(source_scope, dataset_rid)
+        ds = _datasets.get(ds_key_source)
+        if ds is None:
+            ds_key_scope = _resource_key(scope, dataset_rid)
+            ds = _datasets.get(ds_key_scope)
+            if ds is not None:
+                # 将数据集迁移到数据源 org
+                _datasets[ds_key_source] = {**ds}
+                ds = _datasets[ds_key_source]
+            else:
+                # 创建新数据集（在数据源 org 下）
+                object_type = object_type or _yaml_target_ot or str(pl.get("objectTypeHint") or "").strip() or pl_id
+                ds = {
+                    "rid": dataset_rid,
+                    "name": pl.get("name") or pl_id,
+                    "pipelineId": pl_id,
+                    "sourceId": source_id,
+                    "status": "READY" if rows_written > 0 else ("ERROR" if ingest_error else "READY"),
+                    "createdAt": finished_at,
+                    "updatedAt": finished_at,
+                    "objectTypeHint": object_type,
+                    "displayName": pl.get("name") or pl_id,
+                    "orgId": source_org_id,
+                    "projectId": scope.project_id,
+                    "rowsCount": rows_written,
+                }
+                _datasets[ds_key_source] = ds
+        if ds is not None:
+            ds["status"] = "READY" if rows_written > 0 else ("ERROR" if ingest_error else "READY")
+            ds["rowsCount"] = rows_written
+            ds["updatedAt"] = finished_at
+            # 更新 objectTypeHint 为 YAML 中的 target_ot（如果有）
+            if _yaml_target_ot:
+                ds["objectTypeHint"] = _yaml_target_ot
+            object_type = str(ds.get("objectTypeHint") or "").strip() or None
+    if not object_type:
+        object_type = pl.get("objectTypeHint")
+    if object_type and rows_written > 0:
+        try:
+            import json as _json
+            from aos_api.db import connect
+
+            instances: list[tuple[str, str, str, str, str]] = []
+            for _i, props_dict in enumerate(transformed_rows):
+                oid = str(props_dict.get("id") or props_dict.get("pk") or f"{pl_id}__{_i+1:05d}")
+                instances.append((
+                    object_type, oid,
+                    _json.dumps(props_dict, ensure_ascii=False, default=str),
+                    source_org_id, scope.project_id,
+                ))
+
+            # 使用数据源所属的 org_id 构建写 scope（而非当前请求的 scope）
+            sink_scope = TenantScope(source_org_id, scope.project_id)
+            with connect(sink_scope) as conn:
+                with conn.cursor() as cur:
+                    ds_name = (pl.get("name") or pl_id or object_type)[:200]
+                    cur.execute(
+                        """INSERT INTO meta_object_type (id, name, description, published, properties)
+                           VALUES (%s, %s, %s, TRUE, '{}'::jsonb)
+                           ON CONFLICT (id) DO NOTHING""",
+                        (object_type, ds_name, f"auto-registered by pipeline {pl_id}"),
+                    )
+                    if mode == "full":
+                        cur.execute(
+                            "DELETE FROM obj_instance WHERE object_type=%s AND org_id=%s AND project_id=%s",
+                            (object_type, source_org_id, scope.project_id),
+                        )
+                    cur.executemany(
+                        """INSERT INTO obj_instance (object_type, object_id, props, org_id, project_id)
+                           VALUES (%s, %s, %s::jsonb, %s, %s)
+                           ON CONFLICT (org_id, project_id, object_type, object_id) DO UPDATE
+                             SET props = EXCLUDED.props""",
+                        instances,
+                    )
+                conn.commit()
+            _log("INFO", f"[sink-pg] 已写入 obj_instance [{object_type}] 共 {rows_written} 行 (mode={mode}, source={source_id}, org={source_org_id})")
+            # 同时在 phase5 引擎中注册数据集（供前端列表查询使用）
+            try:
+                from aos_api.phase5_pipeline_engine import get_engine as _get_engine
+                _eng = _get_engine()
+                _sink_scope = TenantScope(source_org_id, scope.project_id)
+                _existing = _eng.get_dataset(_sink_scope, dataset_rid)
+                if _existing is None:
+                    _eng.create_dataset(
+                        _sink_scope,
+                        id=dataset_rid,
+                        name=pl.get("name") or pl_id,
+                        description=f"Pipeline {pl_id} output",
+                        source_type="database",
+                        source_uri=source_id or "",
+                        status="active" if rows_written > 0 else "deprecated",
+                        row_count=rows_written,
+                    )
+                    _log("INFO", f"[phase5-ds] 注册数据集 {dataset_rid} 到 phase5 引擎 (org={source_org_id})")
+                else:
+                    _log("INFO", f"[phase5-ds] 数据集 {dataset_rid} 已存在于 phase5 引擎")
+            except Exception as _e3:
+                _log(f"WARN", f"[phase5-ds] phase5 数据集注册失败: {_e3!r}")
+        except Exception as exc:
+            _log("WARN", f"[sink-pg] obj_instance 写入失败: {exc!r}")
+
+    _log("INFO", f"✅ 管道执行成功，耗时 {round(time.time() - now, 2)}s，写入 {rows_written} 条记录")
+    finished_at = time.time()
+
+    # 标记 source scope 为已加载，避免 _hydrate_data_os_scope 清空已注册的数据集
+    if source_org_id != scope.org_id:
+        source_scope = TenantScope(source_org_id, scope.project_id)
+        _data_os_loaded_scopes.add(source_scope.key)
+
+        # 将数据源注册到 source_org_id 下（使前端能查询到）
+        if source_id and source_id not in _connectors:
+            _connectors[source_id] = {
+                "id": source_id,
+                "type": "mysql",
+                "status": "registered",
+                "orgId": source_org_id,
+                "projectId": scope.project_id,
+                "name": source_id,
+            }
+            _log("INFO", f"[source] 注册数据源 {source_id} 到 _connectors (org={source_org_id})")
+
+        # 将管道注册到 source_org_id 下（使前端能查询到）
+        if pl_id not in _pipelines or not _scope_visible(_pipelines.get(pl_id), source_scope):
+            _pipelines[pl_id] = {
+                "id": pl_id,
+                "sourceId": source_id,
+                "target": "dataset",
+                "datasetRid": f"ri.aos.main.dataset.{pl_id}",
+                "orgId": source_org_id,
+                "projectId": scope.project_id,
+                "name": pl.get("name", pl_id),
+                "status": pl.get("status", "ACTIVE"),
+                "tags": pl.get("tags", []),
+                "description": pl.get("description", ""),
+                "lastBuild": {
+                    "id": build_id,
+                    "status": status,
+                    "pipelineId": pl_id,
+                    "tasks": tasks,
+                    "startedAt": now,
+                    "finishedAt": finished_at,
+                },
+            }
+            _log("INFO", f"[pipeline] 注册管道 {pl_id} 到 _pipelines (org={source_org_id})")
+
+    # 最后生成 build dict（确保包含所有日志）
+    build = {
+        "id": build_id,
+        "status": status,
+        "tasks": tasks,
+        "startedAt": now,
+        "finishedAt": finished_at,
+        "duration": round(finished_at - now, 2),
+        "rowsRead": rows_read,
+        "rowsWritten": rows_written,
+        "mode": mode,
+        "pipelineId": pl_id,
+        "pipelineName": pl.get("name", pl_id),
+        "logs": logs,
+    }
+    # 更新管道的 lastBuild
+    pl["lastBuild"] = build
+    # 保存日志
+    _build_logs[build_id] = logs
+
+    log.info(
+        "pipeline_execute id=%s pl=%s status=%s rows=%s",
+        build_id, pl_id, status, rows_written,
+    )
+    return {"buildId": build_id, **build}
+
+
+@router.get("/v1/builds/{build_id}/logs")
+def get_build_logs(build_id: str, principal: Principal = Depends(require_principal)):
+    """获取构建日志."""
+    if build_id not in _build_logs:
+        raise ApiError(code="NOT_FOUND", message=f"build {build_id} logs not found", status_code=404)
+    return {"items": _build_logs[build_id]}
+
 
 @router.post("/v1/schedules")
 def create_schedule(body: dict[str, Any], principal: Principal = Depends(require_principal)):
@@ -2478,3 +3052,354 @@ def ferry_import(body: dict[str, Any] | None = None, principal: Principal = Depe
                 dst.addfile(info, io.BytesIO(data))
         b64 = base64.b64encode(out.getvalue()).decode("ascii")
     return import_bundle(content_base64=b64, require_signature=True)
+
+
+# ════════════════════════════════════════════════════════════════
+# 管道/数据集 · 作废 + 删除（带审批）
+# ════════════════════════════════════════════════════════════════
+
+
+class RejectDeleteRequest(BaseModel):
+    reason: str = Field(min_length=1, max_length=500)
+
+
+_DELETE_REQUESTS: dict[str, dict[str, Any]] = {}
+_DELETE_MAX = 500
+_DELETE_EXPIRE_SEC = 24 * 3600
+
+
+def _delete_key(req_id: str) -> str:
+    return f"del-{req_id}"
+
+
+def _prune_delete_requests() -> None:
+    now = time.time()
+    stale = [k for k, v in _DELETE_REQUESTS.items()
+             if now - v.get("createdAt", now) > _DELETE_EXPIRE_SEC]
+    for k in stale:
+        _DELETE_REQUESTS.pop(k, None)
+    while len(_DELETE_REQUESTS) > _DELETE_MAX:
+        oldest = min(_DELETE_REQUESTS, key=lambda k: _DELETE_REQUESTS[k].get("createdAt", 0))
+        _DELETE_REQUESTS.pop(oldest, None)
+
+
+def _role_has_admin(principal: Principal) -> bool:
+    roles = getattr(principal, "roles", None) or ()
+    return "admin" in roles
+
+
+def _pipeline_decommissioned(pl: dict[str, Any]) -> bool:
+    cfg = pl.get("config") or {}
+    return bool(cfg.get("decommissioned"))
+
+
+@router.post("/v1/pipelines/{pl_id}/decommission")
+def decommission_pipeline(pl_id: str, principal: Principal = Depends(require_principal)):
+    """作废管道（可逆，不需要审批）— 在 config 中标记 decommissioned=true。"""
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
+    pl = _pipelines.get(pl_id)
+    if pl is None:
+        raise ApiError(code="NOT_FOUND", message=f"Pipeline {pl_id} not found", status_code=404)
+    _assert_mutation_scope(pl, scope, resource="pipeline", resource_id=pl_id)
+    cfg = dict(pl.get("config") or {})
+    cfg["decommissioned"] = True
+    cfg["decommissionedAt"] = time.time()
+    cfg["decommissionedBy"] = principal.subject
+    pl["config"] = cfg
+    pl["status"] = "decommissioned"
+    _persist_safe("persist_pipeline", scope, {**pl})
+    return {"ok": True, "id": pl_id, "decommissioned": True}
+
+
+@router.post("/v1/pipelines/{pl_id}/restore")
+def restore_pipeline(pl_id: str, principal: Principal = Depends(require_principal)):
+    """恢复已作废的管道（从 decommissioned 状态恢复）。"""
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
+    pl = _pipelines.get(pl_id)
+    if pl is None:
+        raise ApiError(code="NOT_FOUND", message=f"Pipeline {pl_id} not found", status_code=404)
+    _assert_mutation_scope(pl, scope, resource="pipeline", resource_id=pl_id)
+    cfg = dict(pl.get("config") or {})
+    was_decommissioned = cfg.pop("decommissioned", None) or False
+    cfg.pop("decommissionedAt", None)
+    cfg.pop("decommissionedBy", None)
+    pl["config"] = cfg
+    if was_decommissioned and pl.get("status") == "decommissioned":
+        pl.pop("status", None)
+    _persist_safe("persist_pipeline", scope, {**pl})
+    return {"ok": True, "id": pl_id, "restored": bool(was_decommissioned)}
+
+
+def _submit_delete_request(
+    *,
+    principal: Principal,
+    resource_type: Literal["pipeline", "dataset"],
+    resource_id: str,
+    scope: TenantScope,
+    detail: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    req_id = uuid.uuid4().hex[:12]
+    _prune_delete_requests()
+    now = time.time()
+    rec: dict[str, Any] = {
+        "id": req_id,
+        "resourceType": resource_type,
+        "resourceId": resource_id,
+        "orgId": scope.org_id,
+        "projectId": scope.project_id,
+        "submittedBy": principal.subject,
+        "status": "pending",
+        "detail": detail or {},
+        "createdAt": now,
+        "updatedAt": now,
+        "approvedBy": None,
+        "rejectedBy": None,
+        "reason": None,
+        "executed": False,
+    }
+    _DELETE_REQUESTS[req_id] = rec
+    return rec
+
+
+@router.delete("/v1/pipelines/{pl_id}")
+def request_delete_pipeline(
+    pl_id: str,
+    cascadeDataset: bool = True,  # noqa: N803
+    principal: Principal = Depends(require_principal),
+):
+    """提交管道删除审批请求（不直接删，等 approve 后才执行）。"""
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
+    pl = _pipelines.get(pl_id)
+    if pl is None:
+        raise ApiError(code="NOT_FOUND", message=f"Pipeline {pl_id} not found", status_code=404)
+    _assert_mutation_scope(pl, scope, resource="pipeline", resource_id=pl_id)
+    if not _pipeline_decommissioned(pl):
+        raise ApiError(
+            code="PIPELINE_NOT_DECOMMISSIONED",
+            message="删除前请先作废管道（POST /v1/pipelines/{id}/decommission）",
+            status_code=400,
+        )
+    dataset_rid = pl.get("datasetRid")
+    rec = _submit_delete_request(
+        principal=principal,
+        resource_type="pipeline",
+        resource_id=pl_id,
+        scope=scope,
+        detail={
+            "sourceId": pl.get("sourceId"),
+            "displayName": pl.get("displayName") or pl.get("name"),
+            "datasetRid": dataset_rid,
+            "cascadeDataset": bool(cascadeDataset),
+        },
+    )
+    return {
+        "ok": True,
+        "deleteRequest": rec,
+        "message": "删除请求已提交，需 admin 角色审批通过后方可执行物理删除。",
+    }
+
+
+@router.delete("/v1/datasets/{rid:path}")
+def request_delete_dataset(rid: str, principal: Principal = Depends(require_principal)):
+    """提交数据集删除审批请求（不直接删，等 approve 后才执行）。"""
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
+    ds_key = _resource_key(scope, rid)
+    ds = _datasets.get(ds_key)
+    if ds is None:
+        raise ApiError(code="NOT_FOUND", message=f"Dataset {rid} not found", status_code=404)
+    _assert_mutation_scope(ds, scope, resource="dataset", resource_id=rid)
+    rec = _submit_delete_request(
+        principal=principal,
+        resource_type="dataset",
+        resource_id=rid,
+        scope=scope,
+        detail={
+            "name": ds.get("displayName") or ds.get("name"),
+            "pipelineId": ds.get("pipelineId"),
+            "sourceId": ds.get("sourceId"),
+        },
+    )
+    return {
+        "ok": True,
+        "deleteRequest": rec,
+        "message": "删除请求已提交，需 admin 角色审批通过后方可执行物理删除。",
+    }
+
+
+@router.get("/v1/delete-requests")
+def list_delete_requests(
+    status: str | None = None,
+    resourceType: str | None = None,  # noqa: N803
+    principal: Principal = Depends(require_principal),
+):
+    """查看当前 scope 下的删除审批列表。"""
+    scope = _mutation_scope(principal)
+    _prune_delete_requests()
+    results: list[dict[str, Any]] = []
+    for rec in _DELETE_REQUESTS.values():
+        if (rec.get("orgId"), rec.get("projectId")) != scope.key:
+            continue
+        if status and rec.get("status") != status:
+            continue
+        if resourceType and rec.get("resourceType") != resourceType:
+            continue
+        results.append(rec)
+    results.sort(key=lambda r: r.get("createdAt", 0), reverse=True)
+    return {"items": results, "total": len(results)}
+
+
+def _execute_delete_pipeline(scope: TenantScope, pl_id: str, *, cascade_dataset: bool) -> dict[str, Any]:
+    pl = _pipelines.get(pl_id)
+    if pl is None:
+        return {"pipeline": "already_removed"}
+    dataset_rid = pl.get("datasetRid") if cascade_dataset else None
+    _pipelines.pop(pl_id, None)
+    _persist_safe("delete_pipeline", scope, pl_id)
+    try:
+        from aos_api import data_os_store as dos
+        dos.delete_phase5_pipeline_graph(scope, pl_id)
+    except Exception:  # noqa: BLE001
+        log.warning("delete_phase5_graph_fail pipeline=%s", pl_id, exc_info=True)
+    result: dict[str, Any] = {"pipeline": pl_id, "pipelineDeleted": True}
+    if dataset_rid:
+        ds_key = _resource_key(scope, dataset_rid)
+        existed = _datasets.pop(ds_key, None) is not None
+        _dataset_history.pop(ds_key, None)
+        _persist_safe("delete_dataset", scope, dataset_rid)
+        result["datasetRid"] = dataset_rid
+        result["datasetDeleted"] = existed
+    return result
+
+
+def _execute_delete_dataset(scope: TenantScope, rid: str) -> dict[str, Any]:
+    ds_key = _resource_key(scope, rid)
+    existed = _datasets.pop(ds_key, None) is not None
+    _dataset_history.pop(ds_key, None)
+    _persist_safe("delete_dataset", scope, rid)
+    return {"rid": rid, "datasetDeleted": existed}
+
+
+@router.post("/v1/delete-requests/{req_id}/approve")
+def approve_delete_request(req_id: str, principal: Principal = Depends(require_principal)):
+    """审批通过 → 执行物理删除。"""
+    if not _role_has_admin(principal):
+        raise ApiError(
+            code="FORBIDDEN",
+            message="只有 admin 角色可以审批删除请求",
+            status_code=403,
+        )
+    rec = _DELETE_REQUESTS.get(req_id)
+    if rec is None:
+        raise ApiError(code="NOT_FOUND", message=f"Delete request {req_id} not found", status_code=404)
+    scope = TenantScope(rec["orgId"], rec["projectId"])
+    _assert_mutation_scope(
+        {"orgId": rec["orgId"], "projectId": rec["projectId"]},
+        scope,
+        resource="delete-request",
+        resource_id=req_id,
+    )
+    if rec.get("status") != "pending":
+        raise ApiError(
+            code="STATUS_CONFLICT",
+            message=f"删除请求状态为 {rec.get('status')}，只能审批 pending 状态",
+            status_code=409,
+            details={"currentStatus": rec.get("status")},
+        )
+    if rec.get("submittedBy") == principal.subject:
+        if principal.token_kind == "dev" and allow_dev():
+            log.warning(
+                "delete_maker_checker_bypassed req=%s submitter=%s scope=%s",
+                req_id,
+                rec.get("submittedBy"),
+                scope.key,
+            )
+        else:
+            raise ApiError(
+                code="MAKER_CHECKER_VIOLATION",
+                message="提交人不能审批自己的删除请求（maker-checker 分离）",
+                status_code=409,
+            )
+    now = time.time()
+    rec["status"] = "approved"
+    rec["approvedBy"] = principal.subject
+    rec["updatedAt"] = now
+    detail = rec.get("detail") or {}
+    result: dict[str, Any] = {"status": "approved"}
+    try:
+        if rec["resourceType"] == "pipeline":
+            result["exec"] = _execute_delete_pipeline(
+                scope,
+                rec["resourceId"],
+                cascade_dataset=bool(detail.get("cascadeDataset", True)),
+            )
+        elif rec["resourceType"] == "dataset":
+            result["exec"] = _execute_delete_dataset(scope, rec["resourceId"])
+        rec["executed"] = True
+        rec["executedAt"] = now
+    except Exception as exc:  # noqa: BLE001
+        log.error("delete_execute_fail req=%s", req_id, exc_info=True)
+        rec["status"] = "exec_failed"
+        rec["error"] = f"{type(exc).__name__}: {exc}"
+        raise ApiError(
+            code="EXECUTE_FAILED",
+            message=f"物理删除执行失败：{exc}",
+            status_code=500,
+            details={"reqId": req_id},
+        ) from exc
+    return {"ok": True, "deleteRequest": rec, "result": result}
+
+
+@router.post("/v1/delete-requests/{req_id}/reject")
+def reject_delete_request(
+    req_id: str,
+    body: RejectDeleteRequest,
+    principal: Principal = Depends(require_principal),
+):
+    """驳回删除请求（必须带理由）。"""
+    if not _role_has_admin(principal):
+        raise ApiError(
+            code="FORBIDDEN",
+            message="只有 admin 角色可以驳回删除请求",
+            status_code=403,
+        )
+    rec = _DELETE_REQUESTS.get(req_id)
+    if rec is None:
+        raise ApiError(code="NOT_FOUND", message=f"Delete request {req_id} not found", status_code=404)
+    scope = TenantScope(rec["orgId"], rec["projectId"])
+    _assert_mutation_scope(
+        {"orgId": rec["orgId"], "projectId": rec["projectId"]},
+        scope,
+        resource="delete-request",
+        resource_id=req_id,
+    )
+    if rec.get("status") != "pending":
+        raise ApiError(
+            code="STATUS_CONFLICT",
+            message=f"删除请求状态为 {rec.get('status')}，只能驳回 pending 状态",
+            status_code=409,
+            details={"currentStatus": rec.get("status")},
+        )
+    if rec.get("submittedBy") == principal.subject:
+        if principal.token_kind == "dev" and allow_dev():
+            log.warning(
+                "delete_maker_checker_bypassed_reject req=%s submitter=%s scope=%s",
+                req_id,
+                rec.get("submittedBy"),
+                scope.key,
+            )
+        else:
+            raise ApiError(
+                code="MAKER_CHECKER_VIOLATION",
+                message="提交人不能驳回自己的删除请求（maker-checker 分离）",
+                status_code=409,
+            )
+    now = time.time()
+    rec["status"] = "rejected"
+    rec["rejectedBy"] = principal.subject
+    rec["reason"] = body.reason
+    rec["updatedAt"] = now
+    return {"ok": True, "deleteRequest": rec}

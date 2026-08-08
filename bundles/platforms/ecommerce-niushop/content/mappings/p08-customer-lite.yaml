@@ -15,21 +15,67 @@ derived_metrics:
   - {name: order_count_delta, source: "P05 反向聚合 by member_id"}
   - {name: last_order_days_delta, source: "now - max(Order.create_time)，按天"}
 field_mappings:
+  # 基础标识
   - {source: member_id, target: id, type: int}
+  - {source: site_id, target: siteId, type: int}
+  - {source: member_code, target: memberCode, type: string}
+  # 账号信息
+  - {source: username, target: username, type: string}
+  - {source: nickname, target: nickname, type: string}
+  - {source: mobile, target: mobile, type: string}
+  - {source: email, target: email, type: string}
+  - {source: headimg, target: avatar, type: string}
+  # 会员等级
   - {source: member_level, target: memberLevel, type: int}
+  - {source: member_level_name, target: memberLevelName, type: string}
+  - {source: member_label, target: memberLabel, type: string}
+  - {source: member_label_name, target: memberLabelName, type: string}
+  # 个人信息
+  - {source: realname, target: realName, type: string}
+  - {source: sex, target: gender, type: int}
+  - {source: birthday, target: birthday, type: date}
+  # 地域信息
+  - {source: province_id, target: provinceId, type: int}
+  - {source: city_id, target: cityId, type: int}
+  - {source: district_id, target: districtId, type: int}
+  - {source: address, target: address, type: string}
+  - {source: full_address, target: fullAddress, type: string}
+  # 统计数据
+  - {source: point, target: points, type: int}
+  - {source: balance, target: balance, type: decimal}
+  - {source: growth, target: growthValue, type: int}
+  - {source: order_money, target: totalOrderAmount, type: decimal}
+  - {source: order_num, target: orderCount, type: int}
+  # 时间信息
+  - {source: reg_time, target: createTime, type: timestamp}
+  - {source: last_login_time, target: lastLoginTime, type: timestamp}
+  - {source: login_type_name, target: loginTypeName, type: string}
+  # 状态
   - {source: status, target: status, type: int}
-  - {source: create_time, target: createTime, type: timestamp}
-  - {source: modify_time, target: modifyTime, type: timestamp}
+  - {source: is_delete, target: isDelete, type: int}
 pii_exclusion:
-  - mobile
-  - wx_openid
-  - nickname
-  - avatar
-  - reg_address
-  - last_login_ip
+  # 绝对敏感 - 绝不展示
   - password
   - pay_password
+  # OpenID 类 - 微信/支付宝/百度/头条/抖音/QQ
+  - wx_openid
+  - weapp_openid
+  - wx_unionid
+  - ali_openid
+  - baidu_openid
+  - toutiao_openid
+  - douyin_openid
+  - qq_openid
+  # IP 地址类
+  - login_ip
+  - last_login_ip
+  # 内部账号标识
+  - source_member
+  - fenxiao_id
+  - share_member
+source_field_count: 77
 notes:
-  - "frozen/02 P08 L117: 波次 D1.5（不在 D1 范围），count=53，pk=member_id"
-  - "隐私最小化(frozen/02 L128): 仅保留 member_id/member_level/status/create_time/modify_time 等脱敏键"
-  - "frozen/01 未列 ns_member 列清单，field_mappings 不臆造其他列；8 字段 PII 排除来自 frozen/02 L129"
+  - "ns_member 表共 77 个字段，site_id=1 会员数=53"
+  - "字段映射 28 个：基础标识(3)+账号信息(5)+会员等级(4)+个人信息(3)+地域信息(5)+统计数据(5)+时间信息(3)+状态(2)"
+  - "PII 排除 13 个：密码(2)+OpenID类(8)+IP地址(2)+内部标识(3)"
+  - "常见业务字段已映射：昵称/手机号/邮箱/头像/真实姓名/等级/标签/积分/余额/成长值/订单金额等"

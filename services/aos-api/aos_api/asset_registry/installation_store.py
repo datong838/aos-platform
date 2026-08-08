@@ -764,6 +764,24 @@ class PostgresInstallationStore:
             evidence=evidence,
         )
 
+    def append_uninstall_in_transaction(
+        self,
+        conn: Any,
+        *,
+        locked: LockedInstallation,
+        actor: str,
+        reason: str,
+        evidence: InstallationEventEvidence,
+    ) -> InstallationRecord:
+        return self._append_transition(
+            conn,
+            locked=locked,
+            actor=actor,
+            to_state="uninstalled",
+            reason=_normalized_text(reason, "reason"),
+            evidence=evidence,
+        )
+
     def _append_transition(
         self,
         conn: Any,
@@ -784,6 +802,7 @@ class PostgresInstallationStore:
             "applied": ("approved", "dry_apply"),
             "active": ("applied", "verification"),
             "rolled_back": ("active", "rollback"),
+            "uninstalled": ("active", "uninstall"),
         }
         expected_from, evidence_type = allowed[to_state]
         if current.state != expected_from:
@@ -798,7 +817,7 @@ class PostgresInstallationStore:
             raise InstallationStateConflictError(
                 "installation transition evidence type is inconsistent"
             )
-        if to_state in {"rejected", "rolled_back"}:
+        if to_state in {"rejected", "rolled_back", "uninstalled"}:
             if reason is None:
                 raise InstallationStateConflictError(
                     "installation transition requires a reason"
@@ -843,7 +862,7 @@ class PostgresInstallationStore:
                     timestamp,
                 ),
             )
-        if to_state in {"applied", "active", "rolled_back"} and decision_id is None:
+        if to_state in {"applied", "active", "rolled_back", "uninstalled"} and decision_id is None:
             raise LockIntegrityCorruptError()
 
         composition_pk, _ = load_stored_lock(
@@ -916,6 +935,9 @@ class PostgresInstallationStore:
             )
             pointer_params: tuple[object, ...] = (next_revision,)
         elif to_state == "rolled_back":
+            pointer_sql = ", active_revision = previous_active_revision"
+            pointer_params = ()
+        elif to_state == "uninstalled":
             pointer_sql = ", active_revision = previous_active_revision"
             pointer_params = ()
         else:

@@ -15,6 +15,7 @@ export interface InstallationPanelProps {
   onStateChange: (state: InstallationState | undefined) => void;
   onPageChange: (offset: number) => void;
   onSelect: (installationId: string) => void;
+  onNavigateToRegistry?: () => void;
 }
 
 const INSTALLATION_STATES: readonly InstallationState[] = [
@@ -48,6 +49,7 @@ export function InstallationPanel({
   onStateChange,
   onPageChange,
   onSelect,
+  onNavigateToRegistry,
 }: InstallationPanelProps) {
   const response = state.data;
   const items = response?.items ?? [];
@@ -62,9 +64,16 @@ export function InstallationPanel({
 
   return (
     <section aria-label="安装列表" style={panelStyle}>
-      <header>
-        <h3 style={{ margin: 0 }}>安装列表（只读）</h3>
-        <p style={{ color: "var(--aos-muted)", fontSize: "0.75rem" }}>列表数量与翻页均采用服务端 total、limit、offset。</p>
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h3 style={{ margin: 0 }}>安装列表</h3>
+          <p style={{ color: "var(--aos-muted)", fontSize: "0.75rem" }}>列表数量与翻页均采用服务端 total、limit、offset。</p>
+        </div>
+        {onNavigateToRegistry && (
+          <button type="button" className="btn btn-primary" onClick={onNavigateToRegistry}>
+            新建安装
+          </button>
+        )}
       </header>
 
       <label>

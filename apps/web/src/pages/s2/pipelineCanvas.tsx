@@ -21,9 +21,12 @@ import { BpBanner, BpToolbar } from "./blueprintUi";
 import { S2Chrome, useJsonGet } from "./shared";
 import {
   buildStatusBadge,
+  getPipelineDisplayName,
+  getSourceDisplayName,
   pipelineDisplayTitle,
   tableKeyFromBlob,
   TABLE_LABELS,
+  TRANSFORM_LABELS,
   type PipelineMeta,
 } from "./pipelineMeta";
 
@@ -506,8 +509,10 @@ export function PipelineCanvasPage() {
   const title = pipe ? pipelineDisplayTitle(pipe) : pipelineId || "管道";
   const badge = buildStatusBadge(pipe?.lastBuild?.status);
   const table = tableKeyFromBlob(pipe?.id, pipe?.datasetRid);
-  const outLabel = table ? TABLE_LABELS[table]?.zh || pipe?.datasetRid : pipe?.datasetRid || "输出数据集";
+  const outLabel = getPipelineDisplayName(pipe?.datasetRid, pipe?.displayName || pipe?.name) || pipe?.datasetRid || "输出数据集";
   const otHint = pipe?.objectTypeHint || (table ? TABLE_LABELS[table]?.ot : undefined);
+  const sourceDisplayName = getSourceDisplayName(pipe?.sourceId);
+  const outputSubtitle = "输出数据集"; // 画布输出节点副标题不显示RID
 
   const [selected, setSelected] = useState<"input" | "transform" | "output">("output");
   const [preview, setPreview] = useState<PreviewResult | null>(null);
@@ -571,7 +576,41 @@ export function PipelineCanvasPage() {
   const [xform, setXform] = useState<XformConfig>({ expression: "row", filter: "" });
   const [xformMsg, setXformMsg] = useState<string | null>(null);
   const [xformBusy, setXformBusy] = useState(false);
+
+  // 变换配置：从 YAML bundle 加载字段映射和 PII 脱敏配置
+  type TransformConfig = {
+    pipelineId: string;
+    fieldMappings: Array<{ source: string; target: string; type: string }>;
+    piiExclusion: string[];
+    sourceTable: string;
+    targetOt: string;
+    siteFilter: string;
+    sourceFieldCount: number;
+    notes: string[];
+  };
+  const [xformConfig, setXformConfig] = useState<TransformConfig | null>(null);
+  const [xformConfigErr, setXformConfigErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const cfg = await apiGet<TransformConfig>(
+          `/v1/pipelines/${encodeURIComponent(pipelineId)}/transform-config`,
+        );
+        if (!cancelled) setXformConfig(cfg);
+      } catch (e) {
+        if (!cancelled) setXformConfigErr(e instanceof Error ? e.message : String(e));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [pipelineId]);
+
   const transformNode = useMemo(() => pickTransformNode(graph), [graph]);
+  const sourceNode = useMemo(
+    () => (graph?.nodes || []).find((n) => ["source", "input"].includes((n.node_type || "").toLowerCase())) || null,
+    [graph],
+  );
   const canvasReady = Boolean(graph && loadedPipelineId === pipelineId && graph.pipeline_id === pipelineId);
 
   function markDirty() {
@@ -1075,8 +1114,9 @@ export function PipelineCanvasPage() {
       setPreviewErr(null);
       try {
         const body: Record<string, unknown> = { limit: 8 };
-        if (otHint) body.objectType = otHint;
-        if (pipe?.datasetRid) body.datasetRid = pipe.datasetRid;
+        // datasetRid 是 POST 端点的必填字段，管道未执行时用约定 RID 兜底
+        const fallbackRid = pipe?.datasetRid || `ri.aos.main.dataset.${pipelineId}`;
+        body.datasetRid = fallbackRid;
         const result = await apiPost<PreviewResult>("/v1/analytics/datasets/preview", body);
         if (!cancelled) setPreview(result);
       } catch (e) {
@@ -1094,7 +1134,7 @@ export function PipelineCanvasPage() {
   const rows = preview?.rows?.slice(0, 5) || [];
 
   return (
-    <S2Chrome title={title} lede="Pipeline Builder · 画布">
+    <S2Chrome title={title} lede="管道构建 · 画布">
       <BpToolbar>
         <Link to="/data/pipelines" className="btn-nav">
           ← 管道列表
@@ -1271,8 +1311,8 @@ export function PipelineCanvasPage() {
                     <span className="bp-pipe-node-icon bp-pipe-node-icon-amber" />
                     <span className="bp-pipe-node-kind bp-pipe-kind-amber">输入</span>
                   </div>
-                  <div className="bp-pipe-node-title">{pipe.sourceId || "source"}</div>
-                  <div className="bp-pipe-node-sub">Source</div>
+                  <div className="bp-pipe-node-title">{sourceDisplayName}</div>
+                  <div className="bp-pipe-node-sub">数据源</div>
                 </DraggableCanvasNode>
 
                 <DraggableCanvasNode
@@ -1294,8 +1334,8 @@ export function PipelineCanvasPage() {
                     <span className="bp-pipe-node-icon bp-pipe-node-icon-cyan" />
                     <span className="bp-pipe-node-kind bp-pipe-kind-cyan">变换</span>
                   </div>
-                  <div className="bp-pipe-node-title">Ingest</div>
-                  <div className="bp-pipe-node-sub">表 → 对象实例</div>
+                  <div className="bp-pipe-node-title">{TRANSFORM_LABELS.title}</div>
+                  <div className="bp-pipe-node-sub">{TRANSFORM_LABELS.subtitle}</div>
                 </DraggableCanvasNode>
 
                 <DraggableCanvasNode
@@ -1318,7 +1358,7 @@ export function PipelineCanvasPage() {
                     <span className="bp-pipe-node-kind bp-pipe-kind-emerald">输出</span>
                   </div>
                   <div className="bp-pipe-node-title">{outLabel}</div>
-                  <div className="bp-pipe-node-sub">{pipe.datasetRid || "dataset"}</div>
+                  <div className="bp-pipe-node-sub">{outputSubtitle}</div>
                 </DraggableCanvasNode>
 
                 {/* Phase E-03: 拖入的额外算子节点 */}
@@ -1514,7 +1554,7 @@ export function PipelineCanvasPage() {
                 {selected === "output" && "输出数据集"}
               </h3>
               <p className="muted bp-pipe-inspector-lede">
-                {selected === "input" && (pipe.sourceId || "—")}
+                {selected === "input" && (sourceNode?.config?.source_id || pipe.sourceId || "—")}
                 {selected === "transform" && (
                   transformNode
                     ? `${transformNode.name || "transform"} · ${transformNode.id}`
@@ -1524,32 +1564,186 @@ export function PipelineCanvasPage() {
               </p>
             </div>
 
+            {selected === "input" && sourceNode?.config && (
+              <div className="bp-pipe-inspector-block">
+                <label className="bp-pipe-field">
+                  <span>源表</span>
+                  <input readOnly value={String(sourceNode.config.source_table || "—")} className="bp-pipe-readonly" />
+                </label>
+                <label className="bp-pipe-field">
+                  <span>主键</span>
+                  <input readOnly value={String(sourceNode.config.primary_key || "—")} className="bp-pipe-readonly" />
+                </label>
+                <label className="bp-pipe-field">
+                  <span>过滤条件 (site_filter)</span>
+                  <textarea
+                    readOnly
+                    rows={2}
+                    value={String(sourceNode.config.site_filter || "—")}
+                    className="bp-pipe-readonly"
+                    style={{ fontFamily: "ui-monospace, monospace", fontSize: "0.8rem" }}
+                  />
+                </label>
+                <label className="bp-pipe-field">
+                  <span>增量策略</span>
+                  <input readOnly value={String(sourceNode.config.incremental_strategy || "—")} className="bp-pipe-readonly" />
+                </label>
+                <label className="bp-pipe-field">
+                  <span>唯一键模式</span>
+                  <input readOnly value={String(sourceNode.config.unique_key_pattern || "—")} className="bp-pipe-readonly" />
+                </label>
+              </div>
+            )}
+
             {selected === "transform" && (
               <div className="w3-c6-xform">
-                {graph?.demo && (
-                  <span className="w3-c6c7-path-badge is-demo">演示路径 · graph</span>
+                {xformConfigErr && (
+                  <p className="muted" style={{ color: "#c00", fontSize: "0.75rem" }}>
+                    加载变换配置失败：{xformConfigErr}
+                  </p>
                 )}
-                <label className="bp-pipe-field">
-                  <span>表达式</span>
-                  <textarea
-                    className="w3-c6-xform-input"
-                    rows={3}
-                    value={xform.expression}
-                    onChange={(e) => setXform((c) => ({ ...c, expression: e.target.value }))}
-                    aria-label="变换表达式"
-                  />
-                </label>
-                <label className="bp-pipe-field">
-                  <span>过滤条件</span>
-                  <input
-                    className="w3-c6-xform-input"
-                    value={xform.filter}
-                    onChange={(e) => setXform((c) => ({ ...c, filter: e.target.value }))}
-                    placeholder="可选 · 如 status = 'ok'"
-                    aria-label="过滤条件"
-                  />
-                </label>
-                <div className="w3-c6-xform-actions">
+
+                {/* 变换概览 */}
+                {xformConfig && (
+                  <div className="bp-pipe-inspector-block">
+                    <label className="bp-pipe-field">
+                      <span>源表 → 对象</span>
+                      <input
+                        readOnly
+                        value={`${xformConfig.sourceTable || "—"}  →  ${xformConfig.targetOt || "—"}`}
+                        className="bp-pipe-readonly"
+                      />
+                    </label>
+                    {xformConfig.siteFilter && (
+                      <label className="bp-pipe-field">
+                        <span>过滤条件 (site_filter)</span>
+                        <textarea
+                          readOnly
+                          rows={2}
+                          value={xformConfig.siteFilter}
+                          className="bp-pipe-readonly"
+                          style={{ fontFamily: "ui-monospace, monospace", fontSize: "0.8rem" }}
+                        />
+                      </label>
+                    )}
+                  </div>
+                )}
+
+                {/* 字段映射 */}
+                {xformConfig && xformConfig.fieldMappings.length > 0 && (
+                  <div className="bp-pipe-inspector-block">
+                    <div className="bp-section-label">
+                      字段映射 ({xformConfig.sourceFieldCount || "?"}列 → {xformConfig.fieldMappings.length}列)
+                    </div>
+                    <div className="bp-pipe-mapping-list" style={{ maxHeight: 200, overflowY: "auto", border: "1px solid var(--aos-border)", borderRadius: 4 }}>
+                      {xformConfig.fieldMappings.map((m, idx) => (
+                        <div
+                          key={`${m.source}-${idx}`}
+                          className="bp-pipe-mapping-row"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            padding: "4px 8px",
+                            borderBottom: idx < xformConfig.fieldMappings.length - 1 ? "1px solid var(--aos-border)" : "none",
+                            fontSize: "0.75rem",
+                          }}
+                        >
+                          <code style={{ flex: 1, fontFamily: "ui-monospace, monospace", color: "var(--aos-text-muted)" }}>{m.source}</code>
+                          <span style={{ color: "var(--aos-text-muted)" }}>→</span>
+                          <code style={{ flex: 1, fontFamily: "ui-monospace, monospace", color: "var(--aos-accent)" }}>{m.target}</code>
+                          <span
+                            className="bp-discover-badge"
+                            style={{
+                              fontSize: "0.65rem",
+                              padding: "1px 5px",
+                              borderRadius: 3,
+                              background: "var(--aos-accent-light, rgba(13,148,136,0.1))",
+                              color: "var(--aos-accent, #0d9488)",
+                            }}
+                          >
+                            {m.type}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* PII 脱敏 */}
+                {xformConfig && xformConfig.piiExclusion.length > 0 && (
+                  <div className="bp-pipe-inspector-block">
+                    <div className="bp-section-label">
+                      PII 脱敏（已排除 {xformConfig.piiExclusion.length} 个敏感字段）
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 4,
+                        padding: "6px 8px",
+                        border: "1px solid var(--aos-border)",
+                        borderRadius: 4,
+                        background: "rgba(220, 38, 38, 0.04)",
+                      }}
+                    >
+                      {xformConfig.piiExclusion.map((field) => (
+                        <span
+                          key={field}
+                          style={{
+                            fontSize: "0.7rem",
+                            padding: "2px 6px",
+                            borderRadius: 3,
+                            background: "rgba(220, 38, 38, 0.1)",
+                            color: "#b91c1c",
+                            fontFamily: "ui-monospace, monospace",
+                          }}
+                        >
+                          {field}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 备注 */}
+                {xformConfig?.notes && xformConfig.notes.length > 0 && (
+                  <div className="bp-pipe-inspector-block">
+                    <div className="bp-section-label">说明</div>
+                    {xformConfig.notes.slice(0, 3).map((note, idx) => (
+                      <p key={idx} className="muted" style={{ fontSize: "0.7rem", margin: "2px 0" }}>
+                        · {note}
+                      </p>
+                    ))}
+                  </div>
+                )}
+
+                {/* 表达式/过滤条件（保留用于高级自定义） */}
+                <div style={{ marginTop: 8, padding: "8px", border: "1px dashed var(--aos-border)", borderRadius: 4, opacity: 0.6 }}>
+                  <p className="muted" style={{ fontSize: "0.7rem", marginBottom: 6 }}>高级自定义（可选）</p>
+                  <label className="bp-pipe-field">
+                    <span>表达式</span>
+                    <textarea
+                      className="w3-c6-xform-input"
+                      rows={2}
+                      value={xform.expression}
+                      onChange={(e) => setXform((c) => ({ ...c, expression: e.target.value }))}
+                      aria-label="变换表达式"
+                    />
+                  </label>
+                  <label className="bp-pipe-field">
+                    <span>过滤条件</span>
+                    <input
+                      className="w3-c6-xform-input"
+                      value={xform.filter}
+                      onChange={(e) => setXform((c) => ({ ...c, filter: e.target.value }))}
+                      placeholder="可选 · 如 status = 'ok'"
+                      aria-label="过滤条件"
+                    />
+                  </label>
+                </div>
+
+                <div className="w3-c6-xform-actions" style={{ marginTop: 8 }}>
                   <button type="button" className="btn" disabled={xformBusy} onClick={() => void saveXformConfig()}>
                     保存配置
                   </button>
@@ -1563,34 +1757,91 @@ export function PipelineCanvasPage() {
 
             {selected === "output" && (
               <>
-                <label className="bp-pipe-field">
-                  <span>格式</span>
-                  <select disabled defaultValue="parquet">
-                    <option value="parquet">Parquet</option>
-                  </select>
-                </label>
-                <label className="bp-pipe-field">
-                  <span>表格式</span>
-                  <select disabled defaultValue="objects">
-                    <option value="objects">对象实例（PG）</option>
-                  </select>
-                </label>
-                {/* Phase E-06: 6 种 Write Mode 可选 */}
-                <label className="bp-pipe-field">
-                  <span>写入模式</span>
-                  <select
-                    value={writeMode}
-                    disabled={!canvasReady}
-                    onChange={(e) => { setWriteMode(e.target.value); markDirty(); }}
-                  >
-                    {WRITE_MODES.map((m) => (
-                      <option key={m.id} value={m.id}>{m.id} · {m.label}</option>
-                    ))}
-                  </select>
-                </label>
-                <p className="muted" style={{ fontSize: "0.7rem", marginTop: 4 }}>
-                  管道类型：{PIPE_TYPES.find((t) => t.id === pipeType)?.label} · 当前写入模式：{writeMode}
-                </p>
+                {/* 输出数据集概览 */}
+                <div className="bp-pipe-inspector-block">
+                  <div className="bp-section-label">输出目标</div>
+                  <label className="bp-pipe-field">
+                    <span>写入表</span>
+                    <input readOnly value="PostgreSQL · obj_instance" className="bp-pipe-readonly" />
+                  </label>
+                  <label className="bp-pipe-field">
+                    <span>对象类型</span>
+                    <input readOnly value={otHint || "—"} className="bp-pipe-readonly" />
+                  </label>
+                  <label className="bp-pipe-field">
+                    <span>数据集 RID</span>
+                    <input readOnly value={pipe?.datasetRid || `ri.aos.main.dataset.${pipelineId}`} className="bp-pipe-readonly" />
+                  </label>
+                </div>
+
+                {/* 格式配置 */}
+                <div className="bp-pipe-inspector-block">
+                  <div className="bp-section-label">格式配置</div>
+                  <label className="bp-pipe-field">
+                    <span>存储格式</span>
+                    <select disabled defaultValue="parquet">
+                      <option value="parquet">Parquet</option>
+                    </select>
+                  </label>
+                  <label className="bp-pipe-field">
+                    <span>表格式</span>
+                    <select disabled defaultValue="objects">
+                      <option value="objects">对象实例（PG）</option>
+                    </select>
+                  </label>
+                  <label className="bp-pipe-field">
+                    <span>写入模式</span>
+                    <select
+                      value={writeMode}
+                      disabled={!canvasReady}
+                      onChange={(e) => { setWriteMode(e.target.value); markDirty(); }}
+                    >
+                      {WRITE_MODES.map((m) => (
+                        <option key={m.id} value={m.id}>{m.id} · {m.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <p className="muted" style={{ fontSize: "0.7rem", marginTop: 4 }}>
+                    管道类型：{PIPE_TYPES.find((t) => t.id === pipeType)?.label} · 当前写入模式：{writeMode}
+                  </p>
+                </div>
+
+                {/* 元数据注册 */}
+                <div className="bp-pipe-inspector-block">
+                  <div className="bp-section-label">元数据注册</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: "0.7rem", color: "var(--aos-text-muted)" }}>Phase5 引擎</span>
+                      <span
+                        style={{
+                          fontSize: "0.65rem",
+                          padding: "1px 6px",
+                          borderRadius: 3,
+                          background: pipe?.datasetRid ? "rgba(13,148,136,0.1)" : "rgba(107,114,128,0.1)",
+                          color: pipe?.datasetRid ? "#0d9488" : "#6b7280",
+                        }}
+                      >
+                        {pipe?.datasetRid ? "已注册" : "待执行"}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: "0.7rem", color: "var(--aos-text-muted)" }}>PostgreSQL</span>
+                      <span
+                        style={{
+                          fontSize: "0.65rem",
+                          padding: "1px 6px",
+                          borderRadius: 3,
+                          background: "rgba(13,148,136,0.1)",
+                          color: "#0d9488",
+                        }}
+                      >
+                        obj_instance 表
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Schema */}
                 <div className="bp-pipe-schema">
                   <div className="bp-section-label">Schema</div>
                   {cols.length === 0 ? (

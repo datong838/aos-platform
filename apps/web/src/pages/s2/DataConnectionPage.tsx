@@ -100,18 +100,10 @@ const DEMO_CATALOG: ConnectorCatalogCard[] = [
     category: "database",
     description: "通用 JDBC · 通过 SSH 隧道访问远程 PostgreSQL",
     capabilities: ["Batch syncs", "SSH tunnel", "Virtual tables"],
-    installed: false,
-    runtime: "stub",
+    installed: true,
+    runtime: "ready",
   },
-  {
-    id: "niushop-mysql",
-    name: "Niushop 微商城",
-    category: "database",
-    description: "Niushop 微商城专属 · 预设 8 表映射 + PII 排除（后续移除）",
-    capabilities: ["Batch syncs", "Virtual tables", "PII exclusion"],
-    installed: false,
-    runtime: "stub",
-  },
+  // niushop-mysql 已废弃：统一用 jdbc-mysql-ssh 通用 SSH 隧道
   {
     id: "jdbc-oracle",
     name: "Oracle JDBC",
@@ -215,6 +207,17 @@ export function DataConnectionPage() {
     try {
       await apiPost(`/v1/connector-plugins/${encodeURIComponent(id)}/install`, {});
       setMsg(`已安装连接器插件 · ${id}`);
+      reload();
+    } catch (e) {
+      setMsg(String((e as Error).message || e));
+    }
+  }
+
+  async function handleUninstall(id: string) {
+    setMsg("");
+    try {
+      await apiPost(`/v1/connector-plugins/${encodeURIComponent(id)}/uninstall`, {});
+      setMsg(`已卸载连接器插件 · ${id}`);
       reload();
     } catch (e) {
       setMsg(String((e as Error).message || e));
@@ -345,12 +348,23 @@ export function DataConnectionPage() {
                 style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}
               >
                 {c.installed ? (
-                  <Link
-                    to={`/data/sources/new?connector=${encodeURIComponent(c.id)}`}
-                    className="btn-nav"
-                  >
-                    创建数据源
-                  </Link>
+                  <>
+                    <Link
+                      to={`/data/sources/new?connector=${encodeURIComponent(c.id)}`}
+                      className="btn-nav"
+                    >
+                      创建数据源
+                    </Link>
+                    <button
+                      type="button"
+                      className="btn-nav"
+                      disabled={c.required}
+                      title={c.required ? "必装连接器，不可卸载" : "卸载此连接器插件"}
+                      onClick={() => void handleUninstall(c.id)}
+                    >
+                      卸载
+                    </button>
+                  </>
                 ) : (
                   <button
                     type="button"

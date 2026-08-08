@@ -260,6 +260,133 @@ class PipelineEngine:
                         self._edges.pop(key, None)
             return existed
 
+    # ── Bundle YAML seeding (替代 demo fallback) ──
+    _BUNDLE_DISPLAY_NAMES: dict[str, str] = {
+        "Shop": "栖月汇-店铺", "Product": "栖月汇-商品",
+        "ProductSku": "栖月汇-商品SKU", "Category": "栖月汇-类目",
+        "Order": "栖月汇-订单", "OrderLine": "栖月汇-订单明细",
+        "Shipment": "栖月汇-发货", "CustomerLite": "栖月汇-会员",
+    }
+
+    def seed_from_bundles(self, scope: TenantScope, bundles_dir: str) -> int:
+        """从 bundles YAML 加载真实栖月汇管道（幂等）。
+
+        替代 W3-C6 demo fallback：服务启动时从 YAML 映射文件构造
+        真实的 Pipeline + Source/Transform/Sink 节点 + 连线。
+        Source 节点 config 包含 site_filter 等真实过滤条件。
+        """
+        import os
+        import yaml
+
+        bundles_path = os.path.abspath(bundles_dir)
+        if not os.path.isdir(bundles_path):
+            return 0
+
+        count = 0
+        for fname in sorted(os.listdir(bundles_path)):
+            if not (fname.startswith("p") and fname.endswith(".yaml")):
+                continue
+            fpath = os.path.join(bundles_path, fname)
+            try:
+                with open(fpath, "r", encoding="utf-8") as f:
+                    data = yaml.safe_load(f)
+            except Exception:
+                continue
+            if not data or not isinstance(data, dict):
+                continue
+            raw_pid = str(data.get("pipeline_id") or "")
+            if not raw_pid:
+                continue
+
+            # 幂等：已存在则跳过
+            # ID 格式：文件名首字母大写 + "-qyh"（与 d2_8 脚本对齐）
+            file_stem = os.path.splitext(fname)[0]  # e.g. "p02-product"
+            pl_id = f"{file_stem[0].upper()}{file_stem[1:]}-qyh"  # "P02-product-qyh"
+            if self.get_pipeline(scope, pl_id) is not None:
+                continue
+
+            source_table = str(data.get("source_table") or "")
+            target_ot = str(data.get("target_ot") or raw_pid)
+            primary_key = str(data.get("primary_key") or "")
+            site_filter = str(data.get("site_filter") or "")
+            incremental_strategy = str(data.get("incremental_strategy") or "snapshot")
+            unique_key_pattern = str(data.get("unique_key_pattern") or "")
+            soft_delete = data.get("soft_delete") or {}
+            validation = data.get("validation") or {}
+            field_mappings = data.get("field_mappings") or []
+            incremental_cursor = data.get("incremental_cursor") or {}
+            notes = data.get("notes") or []
+
+            display_name = self._BUNDLE_DISPLAY_NAMES.get(target_ot, f"栖月汇-{target_ot}")
+
+            # 创建 Pipeline
+            pl = self.create_pipeline(
+                scope, display_name,
+                description=f"栖月汇微商城 · {target_ot} · {source_table}",
+                pipeline_type="Batch",
+                status="active",
+                owner="data-team",
+                tags=["栖月汇", "niushop", target_ot],
+                write_mode="SNAPSHOT",
+            )
+            # 删除 create_pipeline 产生的随机 ID 条目，替换为确定性 ID
+            random_id = pl.id
+            self._pipelines.pop(self._tenant_key(scope, random_id), None)
+            pl.id = pl_id
+            self._pipelines[self._tenant_key(scope, pl_id)] = pl
+            self._add_history(scope, pl_id, "created", f"从 YAML 加载: {fname}")
+            count += 1
+
+            # Source 节点
+            src_config = {
+                "source_id": "niushop-qyh",
+                "source_table": source_table,
+                "primary_key": primary_key,
+                "site_filter": site_filter,
+                "incremental_strategy": incremental_strategy,
+                "incremental_cursor": incremental_cursor,
+                "unique_key_pattern": unique_key_pattern,
+                "soft_delete": soft_delete,
+                "validation": validation,
+                "notes": notes,
+            }
+            src_node = self.add_node(
+                scope, pl_id, "source",
+                node_type="source", position_x=60.0, position_y=60.0,
+                config=src_config, status="idle",
+            )
+
+            # Transform 节点
+            xf_config = {
+                "expression": "row",
+                "filter": site_filter,
+                "field_mappings": field_mappings,
+                "target_ot": target_ot,
+            }
+            xf_node = self.add_node(
+                scope, pl_id, "transform",
+                node_type="transform", position_x=320.0, position_y=60.0,
+                config=xf_config, status="idle",
+            )
+
+            # Sink 节点
+            sink_config = {
+                "target_ot": target_ot,
+                "write_mode": "SNAPSHOT",
+                "unique_key_pattern": unique_key_pattern,
+            }
+            sink_node = self.add_node(
+                scope, pl_id, "sink",
+                node_type="sink", position_x=580.0, position_y=60.0,
+                config=sink_config, status="idle",
+            )
+
+            # 连线
+            self.add_edge(scope, pl_id, src_node.id, xf_node.id, label="")
+            self.add_edge(scope, pl_id, xf_node.id, sink_node.id, label="")
+
+        return count
+
     # ── Nodes ──
     def add_node(self, scope: TenantScope, pipeline_id: str, name: str, **kwargs: Any) -> PipelineNode:
         with _LOCK:
@@ -800,7 +927,140 @@ class PipelineEngine:
                         str(redact_sensitive(run.output_ref)) if run.output_ref else "-",
                     ),
                 )
-            return run.model_copy(deep=True)
+            # B2 · Schedule → SyncTask 双记录（按 pipeline_id 松散匹配）
+            # 不在锁里等待外部 sync 引擎导入，锁释放后再写入。
+            copied = run.model_copy(deep=True)
+
+        self._write_syncrun_after_schedule(scope, pipeline_id, copied)
+        return copied
+
+    def _write_syncrun_after_schedule(
+        self,
+        scope: TenantScope,
+        pipeline_id: str,
+        run: ScheduleRun,
+    ) -> None:
+        """Phase B2: schedule run 成功后, 同 pipeline_id 的 SyncTask 写一份 SyncRun 双记录.
+
+        找不到 SyncTask 时静默跳过（不是所有 pipeline 都有 sync 映射）.
+        """
+        if not pipeline_id:
+            return
+        try:
+            from aos_api.phase6_datasource_engine import (
+                get_engine as p6_get_engine,
+            )
+        except Exception:
+            return
+        try:
+            p6 = p6_get_engine()
+            items, _ = p6.list_sync_tasks(scope=scope)
+            st = next(
+                (s for s in items if (s.config or {}).get("pipeline_id") == pipeline_id),
+                None,
+            )
+            if st is None:
+                return
+            finished = run.finished_at or run.started_at
+            duration_ms = max(
+                1,
+                int(run.duration_ms or ((finished - run.started_at) * 1000)),
+            )
+            rows = int(
+                run.rows_written
+                if hasattr(run, "rows_written")
+                else (getattr(run, "rows_processed", 0) or 0)
+            )
+            # 直接在 P6 侧构造 SyncRun 记录, 镜像 run_sync_task 路径的双写结构.
+            # Phase6 _LOCK 是模块级 (aos_api.phase6_datasource_engine._LOCK).
+            import aos_api.phase6_datasource_engine as _p6_mod
+            from aos_api.phase6_datasource_engine import SyncRun
+            sr = SyncRun(
+                sync_id=st.id,
+                status="success" if run.status in {"success", "succeeded"} else "failed",
+                started_at=run.started_at,
+                finished_at=finished,
+                duration_ms=duration_ms,
+                rows_synced=rows,
+                error_code=(
+                    "" if run.status in {"success", "succeeded"}
+                    else (getattr(run, "error_code", "") or "SCHEDULE_FAILED")
+                ),
+                error=(
+                    "" if run.status in {"success", "succeeded"}
+                    else str(redact_sensitive(getattr(run, "error_message") or getattr(run, "error") or ""))[:500]
+                ),
+                pipeline_id=pipeline_id,
+                org_id=scope.org_id,
+                project_id=scope.project_id,
+            )
+            with _p6_mod._LOCK:
+                p6._sync_runs[sr.id] = sr
+                if scope.org_id and scope.project_id:
+                    p6._scoped_sync_runs[(scope.org_id, scope.project_id, sr.id)] = sr
+        except Exception:
+            # 双记录写入失败不能影响 Schedule 主路径
+            return
+
+    def execute_pipeline_once(
+        self, scope: TenantScope, pipeline_id: str,
+    ) -> dict[str, Any]:
+        """Phase B1: 直接执行一次 Pipeline (不经过 Schedule).
+
+        返回: {ok, rows_written, duration_ms, error_code, error_message}
+        供 Phase6 run_sync_task 直接复用.
+        """
+        started = time.time()
+        with _LOCK:
+            pipeline = self.get_pipeline(scope, pipeline_id)
+            if pipeline is None:
+                return {
+                    "ok": False,
+                    "rows_written": 0,
+                    "duration_ms": 0,
+                    "error_code": "PIPELINE_NOT_FOUND",
+                    "error_message": f"Pipeline {pipeline_id} not found in scope {scope.key}",
+                }
+            preflight = self._preflight(scope, pipeline, started)
+            if preflight is not None:
+                return {
+                    "ok": False,
+                    "rows_written": 0,
+                    "duration_ms": max(1, int((time.time() - started) * 1000)),
+                    "error_code": str(preflight.get("error_code") or "PREFLIGHT_FAIL"),
+                    "error_message": str(preflight.get("error_message") or "preflight blocked execution"),
+                }
+            dispatch = self._start_dispatch(
+                scope,
+                pipeline,
+                node_id=None,
+                sample_input={},
+                execution_kind="direct_sync",
+                started_at=started,
+            )
+        evidence, _ = self._collect_dispatch(dispatch)
+        # ScheduleRun status 用 "succeeded"，SyncRun 用 "success"；两者都算成功。
+        ok = evidence.get("status") in {"success", "succeeded"}
+        finished = time.time()
+        duration_ms = max(1, int((finished - started) * 1000))
+        rows = int(
+            evidence.get("rows_written")
+            or evidence.get("rows_processed")
+            or 0
+        )
+        return {
+            "ok": ok,
+            "rows_written": rows,
+            "duration_ms": duration_ms,
+            "error_code": "" if ok else str(evidence.get("error_code") or "PIPELINE_EXEC_FAILED"),
+            "error_message": (
+                "" if ok else str(
+                    evidence.get("error_message")
+                    or evidence.get("error")
+                    or "pipeline execution failed"
+                )
+            ),
+        }
 
     def pause_schedule(self, scope: TenantScope, sc_id: str) -> Schedule:
         with _LOCK:
@@ -1319,5 +1579,10 @@ class PipelineEngine:
             self._persisted_graph_ids.clear()
 
 
+_engine_instance: PipelineEngine | None = None
+
 def get_engine() -> PipelineEngine:
-    return PipelineEngine()
+    global _engine_instance
+    if _engine_instance is None:
+        _engine_instance = PipelineEngine()
+    return _engine_instance

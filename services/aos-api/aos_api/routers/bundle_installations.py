@@ -22,6 +22,7 @@ from aos_api.asset_registry.composition_contracts import (
     InstallationState,
     RejectInstallationRequest,
     RollbackInstallationRequest,
+    UninstallInstallationRequest,
 )
 from aos_api.asset_registry.control_protocols import InstallationControl
 from aos_api.asset_registry.control_wiring import build_installation_service
@@ -268,4 +269,7 @@ verify_bundle_installation = _action_route(
 )
 rollback_bundle_installation = _action_route(
     "rollback", RollbackInstallationRequest, "rollback_bundle_installation"
+)
+uninstall_bundle_installation = _action_route(
+    "uninstall", UninstallInstallationRequest, "uninstall_bundle_installation"
 )

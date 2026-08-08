@@ -20,6 +20,7 @@ from aos_api.asset_registry.composition_contracts import (
     RejectInstallationRequest,
     RollbackInstallationRequest,
     StoredCompositionLock,
+    UninstallInstallationRequest,
 )
 from aos_api.asset_registry.composition_store import load_stored_lock
 from aos_api.asset_registry.control_policy import (
@@ -29,6 +30,7 @@ from aos_api.asset_registry.control_policy import (
     REJECT_INSTALLATION_OPERATION,
     ROLLBACK_INSTALLATION_OPERATION,
     SUBMIT_INSTALLATION_OPERATION,
+    UNINSTALL_INSTALLATION_OPERATION,
     VERIFY_INSTALLATION_OPERATION,
     parse_strong_if_match,
     require_control_read_role,
@@ -343,6 +345,35 @@ class InstallationService:
             if_match=if_match,
         )
 
+    def uninstall(
+        self,
+        *,
+        installation_id: str,
+        request: UninstallInstallationRequest,
+        org_id: str,
+        project_id: str,
+        actor: str,
+        roles: Collection[str],
+        markings: Collection[str],
+        idempotency_key: str | None,
+        if_match: str | None,
+    ) -> CommandReceipt:
+        return self._transition(
+            operation=UNINSTALL_INSTALLATION_OPERATION,
+            request_type=UninstallInstallationRequest,
+            mutate=self._append_uninstall,
+            revalidate=False,
+            installation_id=installation_id,
+            request=request,
+            org_id=org_id,
+            project_id=project_id,
+            actor=actor,
+            roles=roles,
+            markings=markings,
+            idempotency_key=idempotency_key,
+            if_match=if_match,
+        )
+
     def _transition(
         self,
         *,
@@ -526,6 +557,23 @@ class InstallationService:
             actor=actor,
             reason=request.reason,
             evidence=_evidence("rollback", locked, checked_at),
+        )
+
+    def _append_uninstall(
+        self,
+        conn: Any,
+        locked: LockedInstallation,
+        request: UninstallInstallationRequest,
+        actor: str,
+        lock: StoredCompositionLock,
+    ) -> InstallationRecord:
+        checked_at = self._store.read_control_clock_in_transaction(conn)
+        return self._store.append_uninstall_in_transaction(
+            conn,
+            locked=locked,
+            actor=actor,
+            reason=request.reason,
+            evidence=_evidence("uninstall", locked, checked_at),
         )
 
 

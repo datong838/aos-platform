@@ -188,21 +188,21 @@ export function ruleEffectiveness(rules: QualityRule[]): {
 // ── Mock data ──────────────────────────────────────────────────
 
 const DEMO_RULES: QualityRule[] = [
-  { id: "r-001", name: "订单ID非空检查", type: "completeness", target: "curated_orders", status: "passing", lastCheckedAt: new Date(Date.now() - 5 * 60000).toISOString(), threshold: 0.999, actual: 1.0 },
-  { id: "r-002", name: "客户名唯一性", type: "uniqueness", target: "curated_customers", status: "passing", lastCheckedAt: new Date(Date.now() - 12 * 60000).toISOString(), threshold: 0.99, actual: 0.998 },
-  { id: "r-003", name: "金额正值校验", type: "validity", target: "curated_orders", status: "failing", lastCheckedAt: new Date(Date.now() - 3 * 60000).toISOString(), threshold: 1.0, actual: 0.997 },
-  { id: "r-004", name: "货币代码一致性", type: "consistency", target: "curated_orders", status: "passing", lastCheckedAt: new Date(Date.now() - 30 * 60000).toISOString(), threshold: 0.95, actual: 1.0 },
-  { id: "r-005", name: "同步时效率", type: "timeliness", target: "sync_orders", status: "failing", lastCheckedAt: new Date(Date.now() - 60 * 60000).toISOString(), threshold: 0.9, actual: 0.82 },
-  { id: "r-006", name: "地址字段完整性", type: "completeness", target: "curated_addresses", status: "paused", lastCheckedAt: new Date(Date.now() - 240 * 60000).toISOString(), threshold: 0.9, actual: 0.85 },
-  { id: "r-007", name: "SKU编码格式", type: "validity", target: "dim_skus", status: "error", lastCheckedAt: new Date(Date.now() - 180 * 60000).toISOString(), threshold: 0.99, actual: 0.0 },
+  { id: "r-001", name: "订单ID非空检查", type: "completeness", target: "栖月汇-订单", status: "passing", lastCheckedAt: new Date(Date.now() - 5 * 60000).toISOString(), threshold: 0.999, actual: 1.0 },
+  { id: "r-002", name: "客户名唯一性", type: "uniqueness", target: "栖月汇-会员", status: "passing", lastCheckedAt: new Date(Date.now() - 12 * 60000).toISOString(), threshold: 0.99, actual: 0.998 },
+  { id: "r-003", name: "金额正值校验", type: "validity", target: "栖月汇-订单", status: "failing", lastCheckedAt: new Date(Date.now() - 3 * 60000).toISOString(), threshold: 1.0, actual: 0.997 },
+  { id: "r-004", name: "货币代码一致性", type: "consistency", target: "栖月汇-订单", status: "passing", lastCheckedAt: new Date(Date.now() - 30 * 60000).toISOString(), threshold: 0.95, actual: 1.0 },
+  { id: "r-005", name: "同步时效率", type: "timeliness", target: "栖月汇-订单同步", status: "failing", lastCheckedAt: new Date(Date.now() - 60 * 60000).toISOString(), threshold: 0.9, actual: 0.82 },
+  { id: "r-006", name: "地址字段完整性", type: "completeness", target: "栖月汇-会员地址", status: "paused", lastCheckedAt: new Date(Date.now() - 240 * 60000).toISOString(), threshold: 0.9, actual: 0.85 },
+  { id: "r-007", name: "SKU编码格式", type: "validity", target: "栖月汇-SKU维度", status: "error", lastCheckedAt: new Date(Date.now() - 180 * 60000).toISOString(), threshold: 0.99, actual: 0.0 },
 ];
 
 const DEMO_ISSUES: HealthIssue[] = [
-  { id: "i-001", severity: "critical", table: "curated_orders", column: "amount", message: "发现 3 笔负值金额记录", detectedAt: new Date(Date.now() - 3 * 60000).toISOString(), ruleId: "r-003" },
-  { id: "i-002", severity: "critical", table: "sync_orders", column: "synced_at", message: "同步延迟超过 2 小时", detectedAt: new Date(Date.now() - 8 * 60000).toISOString(), ruleId: "r-005" },
-  { id: "i-003", severity: "warning", table: "curated_addresses", column: "zip_code", message: "空值率 15% 超过阈值 10%", detectedAt: new Date(Date.now() - 45 * 60000).toISOString(), ruleId: "r-006" },
-  { id: "i-004", severity: "warning", table: "dim_skus", column: "sku_code", message: "规则引擎连接超时", detectedAt: new Date(Date.now() - 120 * 60000).toISOString(), ruleId: "r-007" },
-  { id: "i-005", severity: "info", table: "curated_orders", column: "currency", message: "新增货币代码 ZAR 未在白名单中", detectedAt: new Date(Date.now() - 200 * 60000).toISOString() },
+  { id: "i-001", severity: "critical", table: "栖月汇-订单", column: "amount", message: "发现 3 笔负值金额记录", detectedAt: new Date(Date.now() - 3 * 60000).toISOString(), ruleId: "r-003" },
+  { id: "i-002", severity: "critical", table: "栖月汇-订单同步", column: "synced_at", message: "同步延迟超过 2 小时", detectedAt: new Date(Date.now() - 8 * 60000).toISOString(), ruleId: "r-005" },
+  { id: "i-003", severity: "warning", table: "栖月汇-会员地址", column: "zip_code", message: "空值率 15% 超过阈值 10%", detectedAt: new Date(Date.now() - 45 * 60000).toISOString(), ruleId: "r-006" },
+  { id: "i-004", severity: "warning", table: "栖月汇-SKU维度", column: "sku_code", message: "规则引擎连接超时", detectedAt: new Date(Date.now() - 120 * 60000).toISOString(), ruleId: "r-007" },
+  { id: "i-005", severity: "info", table: "栖月汇-订单", column: "currency", message: "新增货币代码 ZAR 未在白名单中", detectedAt: new Date(Date.now() - 200 * 60000).toISOString() },
 ];
 
 const DEMO_TREND: TrendPoint[] = Array.from({ length: 14 }, (_, i) => {

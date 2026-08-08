@@ -22,7 +22,7 @@ describe("M3-4 installation action model", () => {
       ["submitted", ["approve", "reject"], "asset-install-approver"],
       ["approved", ["apply"], "asset-installer"],
       ["applied", ["verify"], "asset-installer"],
-      ["active", ["rollback"], "asset-installer"],
+      ["active", ["rollback", "uninstall"], "asset-installer"],
     ];
     for (const [state, expected, role] of cases) {
       const installation = record(state);
@@ -37,7 +37,7 @@ describe("M3-4 installation action model", () => {
         ).toBe(expected.includes(action));
       }
     }
-    for (const state of ["rejected", "rolled_back"] as const) {
+    for (const state of ["rejected", "rolled_back", "uninstalled"] as const) {
       expect(
         INSTALLATION_ACTIONS.every(
           (action) =>

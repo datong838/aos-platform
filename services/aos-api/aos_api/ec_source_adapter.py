@@ -89,13 +89,8 @@ def fetch_source_rows(
 ) -> list[dict[str, Any]]:
     """从源读取行流。
 
-    行为分支：
-    1. 向后兼容：node_id 为 None / 找不到 source 节点 / node.config 无 source_id
-       → 回退 sample_input 透传（与原 ec_live_executor 骨架行为等价）
-    2. D2.6 通用 JDBC SSH：meta_source.connector_type ∈ {jdbc-mysql-ssh, jdbc-postgres-ssh}
-       → 走 JdbcConnectorRuntime（SSH 隧道 + JDBC 连接）
-    3. Niushop 只读源：其他 connector_type（niushop-mysql / mysql / 缺失）
-       → 保留 pymysql 直连分支（向后兼容）
+    D4 Phase C: 统一走通用 JDBC SSH 分支，niushop-mysql 已废弃。
+    所有 connector_type（包括 legacy niushop-mysql）都走 JdbcConnectorRuntime。
     """
     # 尝试找 source 节点并取其 config
     node_config = _resolve_source_node_config(nodes, node_id)
@@ -108,19 +103,8 @@ def fetch_source_rows(
     source_id = node_config["source_id"]
     props = _query_meta_source_props(source_id, scope)
 
-    # D2.6 分支派发：connector_type 决定走哪个运行时
-    connector_type = props.get("connector_type", "")
-    if connector_type in _JDBC_SSH_CONNECTOR_TYPES:
-        # 通用 JDBC SSH 分支
-        return _fetch_from_jdbc_ssh(
-            pipeline=pipeline,
-            node_id=node_id or "",
-            node_config=node_config,
-            props=props,
-        )
-
-    # 保留原 Niushop pymysql 直连分支（向后兼容）
-    return _fetch_from_niushop(
+    # D4 Phase C: 统一走通用 JDBC SSH 分支（niushop-mysql 已废弃）
+    return _fetch_from_jdbc_ssh(
         pipeline=pipeline,
         node_id=node_id or "",
         node_config=node_config,

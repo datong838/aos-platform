@@ -95,6 +95,70 @@ async def lifespan(_app: FastAPI):
                 )
             except Exception:
                 log.exception("startup_pipeline_registration_failed_continue")
+            # ── 从 YAML bundle 加载真实栖月汇管道（替代 demo fallback）──
+            try:
+                from pathlib import Path as _Path
+                import time as _time
+                from aos_api.phase5_pipeline_engine import get_engine as _get_engine
+                from aos_api.tenant_scope import TenantScope as _TS
+
+                _bundles_dir = (
+                    _Path(__file__).resolve().parents[3]
+                    / "bundles" / "platforms" / "ecommerce-niushop" / "content" / "mappings"
+                )
+                _eng = _get_engine()
+                _scope = _TS("dev-org", "dev-project")
+                _count = _eng.seed_from_bundles(_scope, str(_bundles_dir))
+                # 同步填充 wave_ext._datasets + _pipelines，使前端能查到数据集和管道
+                if _count > 0:
+                    from aos_api.routers import wave_ext as _wx
+                    _items, _ = _eng.list_pipelines(_scope)
+                    _now = _time.time()
+                    for _p in _items:
+                        _dataset_rid = f"ri.aos.main.dataset.{_p.id}"
+                        _dkey = _wx._resource_key(_scope, _dataset_rid)
+                        _wx._datasets[_dkey] = {
+                            "rid": _dataset_rid,
+                            "name": _p.name,
+                            "pipelineId": _p.id,
+                            "sourceId": "niushop-qyh",
+                            "status": "READY",
+                            "createdAt": _now,
+                            "updatedAt": _now,
+                            "objectTypeHint": _p.id,
+                            "displayName": _p.name,
+                            "orgId": _scope.org_id,
+                            "projectId": _scope.project_id,
+                        }
+                        _wx._pipelines[_p.id] = {
+                            "id": _p.id,
+                            "sourceId": "niushop-qyh",
+                            "target": "dataset",
+                            "datasetRid": _dataset_rid,
+                            "orgId": _scope.org_id,
+                            "projectId": _scope.project_id,
+                            "name": _p.name,
+                            "status": _p.status,
+                            "tags": _p.tags,
+                            "description": _p.description,
+                            "lastBuild": {
+                                "id": f"seed-build-{_p.id}",
+                                "status": "SUCCEEDED",
+                                "pipelineId": _p.id,
+                                "tasks": [
+                                    {"name": "ingest", "status": "SUCCEEDED"},
+                                    {"name": "transform", "status": "SUCCEEDED"},
+                                    {"name": "sink", "status": "SUCCEEDED"},
+                                ],
+                                "startedAt": _now,
+                                "finishedAt": _now,
+                            },
+                        }
+                    # 标记 scope 已加载，避免 _hydrate_data_os_scope 清空上述数据
+                    _wx._data_os_loaded_scopes.add(_scope.key)
+                log.info("startup_seed_from_bundles count=%d dir=%s", _count, _bundles_dir)
+            except Exception:
+                log.exception("startup_seed_from_bundles_failed_continue")
             log.info("startup_meta_store_ok")
         except Exception:
             log.exception("startup_meta_store_failed_continue")

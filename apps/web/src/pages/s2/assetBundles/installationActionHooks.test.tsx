@@ -45,6 +45,7 @@ describe("M3-4 installation action controller", () => {
   const applyInstallation = vi.fn();
   const verifyInstallation = vi.fn();
   const rollbackInstallation = vi.fn();
+  const uninstallInstallation = vi.fn();
   const onSuccess = vi.fn();
   const onReconciled = vi.fn();
 
@@ -77,6 +78,7 @@ describe("M3-4 installation action controller", () => {
       applyInstallation,
       verifyInstallation,
       rollbackInstallation,
+      uninstallInstallation,
       onSuccess,
       onReconciled,
     ]) {
@@ -96,6 +98,7 @@ describe("M3-4 installation action controller", () => {
       applyInstallation,
       verifyInstallation,
       rollbackInstallation,
+      uninstallInstallation,
     };
   });
 

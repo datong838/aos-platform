@@ -85,6 +85,13 @@ export function FerryPage() {
         : MOCK_FERRY_BUNDLES
       : MOCK_FERRY_BUNDLES;
 
+  const SPOKE_LABEL: Record<string, string> = {
+    "spoke-prod-sh": "上海生产运行节点",
+    "spoke-prod-bj": "北京生产运行节点",
+    "spoke-staging-gz": "广州预发布运行节点",
+  };
+  const spokeLabel = (id: string) => SPOKE_LABEL[id] ?? id;
+
   const [selectedId, setSelectedId] = useState<string>("");
   const [targetSpoke, setTargetSpoke] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
@@ -250,7 +257,7 @@ export function FerryPage() {
                 >
                   {selected.targetSpokes.map((s) => (
                     <option key={s} value={s}>
-                      {s}
+                      {spokeLabel(s)}
                     </option>
                   ))}
                 </select>

@@ -6,6 +6,7 @@ import type {
   RollbackInstallationRequest,
   Sha256,
   StoredCompositionLock,
+  UninstallInstallationRequest,
 } from "./types";
 
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
@@ -89,6 +90,14 @@ export function serializeRollbackInstallationRequest(
 ): RollbackInstallationRequest {
   const record = objectRecord(value, "rollback installation request");
   exactKeys(record, ["reason"], "rollback installation request");
+  return { reason: reason(record.reason, "reason") };
+}
+
+export function serializeUninstallInstallationRequest(
+  value: unknown,
+): UninstallInstallationRequest {
+  const record = objectRecord(value, "uninstall installation request");
+  exactKeys(record, ["reason"], "uninstall installation request");
   return { reason: reason(record.reason, "reason") };
 }
 

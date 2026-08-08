@@ -12,6 +12,7 @@ _TRANSITIONS = {
     "dry_apply": ("approved", "applied"),
     "verification": ("applied", "active"),
     "rollback": ("active", "rolled_back"),
+    "uninstall": ("active", "uninstalled"),
 }
 
 

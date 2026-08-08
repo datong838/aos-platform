@@ -50,6 +50,26 @@ export type SchemaTable = {
   row_count?: number;
   columns?: SchemaColumn[];
   comment?: string;
+  // D4 Phase C · C1: 302 表分类标签 A/B/C/D/E
+  classification?: string;
+};
+
+// D4 Phase C · C1: 302 表分类标签映射
+export const CLASSIFICATION_LABELS: Record<string, string> = {
+  A: "OT源表",
+  B: "JOIN维度",
+  C: "明细扩展",
+  D: "配置·按需",
+  E: "系统·不落孪生",
+};
+
+// 分类标签的颜色映射（用于内联样式）
+export const CLASSIFICATION_COLORS: Record<string, { bg: string; fg: string }> = {
+  A: { bg: "#ddf4ff", fg: "#0969da" }, // 蓝色 · 核心源表
+  B: { bg: "#dafbe1", fg: "#1a7f37" }, // 绿色 · JOIN 维度
+  C: { bg: "#fff8c5", fg: "#9a6700" }, // 黄色 · 明细扩展
+  D: { bg: "#f6f8fa", fg: "#57606a" }, // 灰色 · 配置按需
+  E: { bg: "#ffebe9", fg: "#cf222e" }, // 红色 · 系统·不落孪生
 };
 
 export type SchemaNode = {
@@ -114,7 +134,7 @@ const NIUSHOP_DEMO_SCHEMA: SchemaNode[] = [
     description: "演示路径 · Niushop 微商城数据库",
     tables: [
       {
-        name: "ns_site",
+        name: "ns_shop",
         row_count: 1,
         columns: [
           { name: "site_id", datatype: "INT", primary_key: true },
@@ -232,11 +252,8 @@ const NIUSHOP_DEMO_SCHEMA: SchemaNode[] = [
 /** W3-C7 · 按连接器类型的本地演示 Schema（API 全失败时） */
 export function demoSchemaTree(connectorType?: string): SchemaNode[] {
   const t = (connectorType || "jdbc").toLowerCase();
-  // D2.6: Niushop 微商城专属 Schema（8 张 ns_xxx 表 + 真实字段）
-  // 仅当 connector_type 显式为 niushop-mysql 时返回（jdbc-mysql-ssh 不绑 niushop）
-  if (t === "niushop-mysql" || t.includes("niushop")) {
-    return NIUSHOP_DEMO_SCHEMA;
-  }
+  // D4 Phase C: niushop-mysql 已废弃，不再根据连接器类型返回专属 schema
+  // 所有 JDBC 连接器（包括 jdbc-mysql-ssh）都走默认 demo schema
   if (t.includes("kafka") || t.includes("stream")) {
     return [
       {
@@ -503,6 +520,8 @@ export function SourceDetailPage() {
               name: string;
               row_count?: number;
               comment?: string;
+              // D4 Phase C · C1: 302 表分类标签
+              classification?: string;
               columns?: { name: string; datatype?: string; primary_key?: boolean; nullable?: boolean; comment?: string }[];
             }[];
           }[];
@@ -522,6 +541,8 @@ export function SourceDetailPage() {
               name: tbl.name,
               row_count: tbl.row_count,
               comment: tbl.comment,
+              // D4 Phase C · C1: 透传 302 表分类标签
+              classification: tbl.classification,
               columns: [],
             }));
             tree.push({ name: sch.name, description: sch.description, tables });
@@ -529,13 +550,15 @@ export function SourceDetailPage() {
         } else {
           // 路径 B：回退到逐个请求表名（字段在点击时按需加载）
           for (const sch of schemas) {
-            const tblRes = await apiGet<{ items?: { name: string; row_count?: number; comment?: string }[] }>(
+            const tblRes = await apiGet<{ items?: { name: string; row_count?: number; comment?: string; classification?: string }[] }>(
               `/api/datasource/sources/${encodeURIComponent(sourceId)}/schemas/${encodeURIComponent(sch.name)}/tables`,
             );
             const tables: SchemaTable[] = (tblRes.items || []).map((t) => ({
               name: t.name,
               row_count: t.row_count,
               comment: t.comment,
+              // D4 Phase C · C1: 透传 302 表分类标签
+              classification: t.classification,
               columns: [],
             }));
             tree.push({ name: sch.name, description: sch.description, tables });
@@ -815,6 +838,28 @@ export function SourceDetailPage() {
                                 onClick={() => setActiveSchemaTable({ schema: sch.name, table: tbl.name })}
                               >
                                 <span className="mono" style={{ color: "#1f2328" }}>{tbl.name}</span>
+                                {/* D4 Phase C · C1: 302 表分类标签（A/B/C/D/E） */}
+                                {tbl.classification && (() => {
+                                  const cls = tbl.classification!;
+                                  const color = CLASSIFICATION_COLORS[cls] || CLASSIFICATION_COLORS.D;
+                                  return (
+                                    <span
+                                      title={CLASSIFICATION_LABELS[cls] || cls}
+                                      style={{
+                                        marginLeft: 6,
+                                        padding: "0 6px",
+                                        fontSize: "0.7rem",
+                                        fontWeight: 600,
+                                        background: color.bg,
+                                        color: color.fg,
+                                        borderRadius: 8,
+                                        border: `1px solid ${color.fg}33`,
+                                      }}
+                                    >
+                                      {cls}
+                                    </span>
+                                  );
+                                })()}
                                 {tbl.comment && (
                                   <>
                                     <span style={{ marginLeft: 6, fontSize: "0.8rem", color: "#57606a", fontWeight: 500 }}>·</span>

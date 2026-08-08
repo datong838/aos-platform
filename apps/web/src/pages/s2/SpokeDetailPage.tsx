@@ -58,7 +58,7 @@ export type SpokeDetailData = {
 export const MOCK_SPOKE_DETAIL: SpokeDetailData = {
   spoke: {
     id: "spoke-prod-sh",
-    name: "spoke-prod-sh",
+    name: "上海生产运行节点",
     region: "上海生产区",
     spokeType: "full",
     health: "online",

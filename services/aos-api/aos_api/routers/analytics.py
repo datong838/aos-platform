@@ -568,7 +568,45 @@ def _lookup_dataset(principal: Principal, rid: str) -> dict[str, Any] | None:
 
     scope = TenantScope(principal.org_id, principal.project_id)
     ds = getattr(wave_ext, "_datasets", {}).get(wave_ext._resource_key(scope, rid))
-    return dict(ds) if isinstance(ds, dict) else None
+    if ds is not None:
+        return dict(ds)
+
+    # 补齐逻辑：与 list_datasets 对齐，支持 8 个预置管道的数据集查找
+    _ALL_PIPE_IDS = [
+        ("P01-shop-qyh", "栖月汇-店铺", "Site"),
+        ("P02-product-qyh", "栖月汇-商品", "Goods"),
+        ("P03-product-sku-qyh", "栖月汇-商品SKU", "GoodsSku"),
+        ("P04-category-qyh", "栖月汇-类目", "GoodsCategory"),
+        ("P05-order-qyh", "栖月汇-订单", "Order"),
+        ("P06-order-line-qyh", "栖月汇-订单明细", "OrderLine"),
+        ("P07-shipment-qyh", "栖月汇-发货", "ExpressPackage"),
+        ("P08-customer-lite-qyh", "栖月汇-会员", "CustomerLite"),
+    ]
+    for _pid, _name, _ot in _ALL_PIPE_IDS:
+        _rid = f"ri.aos.main.dataset.{_pid}"
+        if _rid != rid:
+            continue
+        _row_cnt = 0
+        try:
+            from aos_api.phase5_pipeline_engine import get_engine as _get_eng
+            _eng = _get_eng()
+            _ds = _eng.get_dataset(scope, _rid)
+            if _ds is not None:
+                _row_cnt = getattr(_ds, "row_count", 0) or 0
+        except Exception:
+            pass
+        return {
+            "rid": _rid,
+            "id": _rid,
+            "name": _name,
+            "description": f"{_ot} · Pipeline {_pid}",
+            "rowCount": _row_cnt,
+            "row_count": _row_cnt,
+            "status": "active",
+            "pipelineId": _pid,
+            "objectTypeHint": _ot,
+        }
+    return None
 
 
 def _dataset_preview_table(

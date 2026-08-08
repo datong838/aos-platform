@@ -149,31 +149,12 @@ async def get_graph(
     pl_id: str,
     principal: Annotated[Principal, Depends(require_principal)],
 ) -> dict[str, Any]:
-    """Return DAG graph; unknown wave_ext pipeline ids get a demo 3-node linear graph."""
+    """Return DAG graph for a pipeline."""
     eng = get_engine()
     try:
         return eng.get_graph(TenantScope(principal.org_id, principal.project_id), pl_id)
     except KeyError:
-        # W3-C6 · demo fallback for UI pipeline ids outside phase5 store
-        n_src = {"id": f"demo-src-{pl_id}", "pipeline_id": pl_id, "name": "source", "node_type": "source",
-                 "position_x": 60, "position_y": 60, "config": {}, "status": "idle"}
-        n_xf = {"id": f"demo-xf-{pl_id}", "pipeline_id": pl_id, "name": "transform", "node_type": "transform",
-                "position_x": 300, "position_y": 60, "config": {"expression": "row", "filter": ""}, "status": "idle"}
-        n_sink = {"id": f"demo-sink-{pl_id}", "pipeline_id": pl_id, "name": "sink", "node_type": "sink",
-                  "position_x": 540, "position_y": 60, "config": {}, "status": "idle"}
-        return {
-            "pipeline_id": pl_id,
-            "nodes": [n_src, n_xf, n_sink],
-            "edges": [
-                {"id": f"demo-e1-{pl_id}", "pipeline_id": pl_id, "source_node_id": n_src["id"], "target_node_id": n_xf["id"], "label": ""},
-                {"id": f"demo-e2-{pl_id}", "pipeline_id": pl_id, "source_node_id": n_xf["id"], "target_node_id": n_sink["id"], "label": ""},
-            ],
-            "node_count": 3,
-            "edge_count": 2,
-            "pipeline_type": "Batch",
-            "write_mode": "SNAPSHOT",
-            "demo": True,
-        }
+        raise HTTPException(404, f"Pipeline {pl_id} not found")
 
 
 @router.put("/{pl_id}/graph")
@@ -241,14 +222,6 @@ async def get_node_config(pl_id: str, node_id: str, principal: Annotated[Princip
     try:
         return eng.get_node_config(_scope(principal), pl_id, node_id)
     except KeyError:
-        # W3-C6 · demo config for canvas transform panel
-        if node_id.startswith("demo-"):
-            return {
-                "pipeline_id": pl_id,
-                "node_id": node_id,
-                "config": {"expression": "row", "filter": ""},
-                "demo": True,
-            }
         raise HTTPException(404, f"Node {node_id} not found in pipeline {pl_id}")
 
 
@@ -259,8 +232,6 @@ async def update_node_config(pl_id: str, node_id: str, req: UpdateNodeConfigRequ
         node = eng.update_node_config(_scope(principal), pl_id, node_id, req.config)
         return node.model_dump()
     except KeyError:
-        if node_id.startswith("demo-"):
-            raise HTTPException(409, "Save the demo graph before updating node configuration")
         raise HTTPException(404, f"Node {node_id} not found in pipeline {pl_id}")
 
 
@@ -274,31 +245,6 @@ async def trial_run(pl_id: str, node_id: str, principal: Annotated[Principal, De
         sample_input = req.sample_input if req else None
         return eng.trial_run(_scope(principal), pl_id, node_id, sample_input)
     except KeyError:
-        if node_id.startswith("demo-"):
-            import time as _time
-            now = _time.time()
-            return {
-                "pipeline_id": pl_id,
-                "node_id": node_id,
-                "mode": "demo",
-                "status": "unsupported",
-                "started_at": now,
-                "finished_at": now,
-                "duration_ms": 0,
-                "executor_id": "",
-                "input_ref": "",
-                "output_ref": "",
-                "rows_read": 0,
-                "rows_written": 0,
-                "lineage_ref": "",
-                "quality_ref": "",
-                "error_code": "DEMO_EXECUTION_UNSUPPORTED",
-                "error_message": "demo pipeline does not execute live data",
-                "latency_ms": 0,
-                "output_rows": [],
-                "ran_at": now,
-                "demo": True,
-            }
         raise HTTPException(404, f"Node {node_id} not found in pipeline {pl_id}")
 
 
@@ -367,21 +313,10 @@ async def merge_proposal(pl_id: str, pp_id: str, principal: Annotated[Principal,
 
 @router.get("/{pl_id}/history")
 async def list_history(pl_id: str, principal: Annotated[Principal, Depends(require_principal)]) -> dict[str, Any]:
-    """Return run/edit history; unknown ids get demo entries (W3-C6)."""
-    import time as _time
-
+    """Return run/edit history for a pipeline."""
     eng = get_engine()
     scope = _scope(principal)
     if eng.get_pipeline(scope, pl_id) is None:
-        now = _time.time()
-        items = [
-            {"id": f"ph-demo-1-{pl_id}", "pipeline_id": pl_id, "action": "created", "actor": "system",
-             "detail": "演示路径 · 管道创建（phase5 无此 id）", "created_at": now - 86400},
-            {"id": f"ph-demo-2-{pl_id}", "pipeline_id": pl_id, "action": "deployed", "actor": "system",
-             "detail": "演示路径 · 最近一次部署", "created_at": now - 3600},
-            {"id": f"ph-demo-3-{pl_id}", "pipeline_id": pl_id, "action": "run", "actor": "system",
-             "detail": "演示路径 · 不执行真实数据", "created_at": now - 600},
-        ]
-        return {"items": items, "count": len(items), "demo": True}
+        raise HTTPException(404, f"Pipeline {pl_id} not found")
     items = eng.list_history(scope, pl_id)
-    return {"items": [h.model_dump() for h in items], "count": len(items), "demo": False}
+    return {"items": [h.model_dump() for h in items], "count": len(items)}

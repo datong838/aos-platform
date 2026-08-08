@@ -6,6 +6,7 @@ import type {
   InstallationState,
   RejectInstallationRequest,
   RollbackInstallationRequest,
+  UninstallInstallationRequest,
 } from "../../../api/assetControl/types";
 
 export type InstallationActionName =
@@ -14,7 +15,8 @@ export type InstallationActionName =
   | "reject"
   | "apply"
   | "verify"
-  | "rollback";
+  | "rollback"
+  | "uninstall";
 
 export type InstallationActionPhase =
   | "idle"
@@ -51,7 +53,8 @@ export type InstallationActionBody =
   | Record<string, never>
   | ApproveInstallationRequest
   | RejectInstallationRequest
-  | RollbackInstallationRequest;
+  | RollbackInstallationRequest
+  | UninstallInstallationRequest;
 
 export interface InstallationActionAttempt {
   readonly action: InstallationActionName;
@@ -96,6 +99,7 @@ export const INSTALLATION_ACTIONS: readonly InstallationActionName[] = [
   "apply",
   "verify",
   "rollback",
+  "uninstall",
 ];
 
 export const INSTALLATION_ACTION_TRANSITIONS: Readonly<
@@ -107,6 +111,7 @@ export const INSTALLATION_ACTION_TRANSITIONS: Readonly<
   apply: { from: "approved", to: "applied" },
   verify: { from: "applied", to: "active" },
   rollback: { from: "active", to: "rolled_back" },
+  uninstall: { from: "active", to: "uninstalled" },
 };
 
 const ACTION_ROLES: Readonly<Record<InstallationActionName, ReadonlySet<string>>> = {
@@ -116,6 +121,7 @@ const ACTION_ROLES: Readonly<Record<InstallationActionName, ReadonlySet<string>>
   apply: new Set(["admin", "asset-installer"]),
   verify: new Set(["admin", "asset-installer"]),
   rollback: new Set(["admin", "asset-installer"]),
+  uninstall: new Set(["admin", "asset-installer"]),
 };
 
 export function initialInstallationActionState(): InstallationActionCommandState {
@@ -219,7 +225,7 @@ export function exactActionSuccessWasObserved(
   ) {
     return false;
   }
-  if (attempt.action === "reject" || attempt.action === "rollback") {
+  if (attempt.action === "reject" || attempt.action === "rollback" || attempt.action === "uninstall") {
     if (event.reason !== (attempt.body as RejectInstallationRequest).reason) {
       return false;
     }
@@ -242,6 +248,12 @@ export function exactActionSuccessWasObserved(
       current.current.decisionId === current.decision.decisionId &&
       current.decision.actor === attempt.actorSubject &&
       current.decision.reason === (attempt.body as RejectInstallationRequest).reason &&
+      event.evidence === null
+    );
+  }
+  if (attempt.action === "uninstall") {
+    return (
+      event.reason === (attempt.body as UninstallInstallationRequest).reason &&
       event.evidence === null
     );
   }

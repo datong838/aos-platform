@@ -23,15 +23,15 @@ interface AuditEntry {
 }
 
 const SEED_AUDIT: AuditEntry[] = [
-  { id: "log-001", timestamp: "2026-07-27 19:45:23", user: "datong", action: "deploy", resource: "pipeline", resourceId: "pipe-orders-001", severity: "info", message: "管道「订单清洗」部署成功 (build #185)", ip: "192.168.1.100" },
-  { id: "log-002", timestamp: "2026-07-27 19:30:12", user: "datong", action: "update", resource: "model", resourceId: "model-gpt-4o", severity: "info", message: "更新模型路由配置：新增 fallback 链", ip: "192.168.1.100" },
-  { id: "log-003", timestamp: "2026-07-27 18:55:01", user: "system", action: "config", resource: "spoke", resourceId: "spoke-prod-useast", severity: "warn", message: "Spoke 配置覆盖已修改（log_level → DEBUG）", ip: "10.0.0.1" },
-  { id: "log-004", timestamp: "2026-07-27 17:20:45", user: "admin", action: "delete", resource: "schedule", resourceId: "sched-old-batch", severity: "critical", message: "删除计划任务「旧版批量同步」", ip: "172.16.0.5" },
-  { id: "log-005", timestamp: "2026-07-27 16:10:33", user: "datong", action: "create", resource: "ontology", resourceId: "type-customer", severity: "info", message: "创建对象类型「Customer」", ip: "192.168.1.100" },
+  { id: "log-001", timestamp: "2026-07-27 19:45:23", user: "datong", action: "deploy", resource: "pipeline", resourceId: "P05-栖月汇-订单", severity: "info", message: "管道「栖月汇-订单清洗」部署成功（搭建 #185）", ip: "192.168.1.100" },
+  { id: "log-002", timestamp: "2026-07-27 19:30:12", user: "datong", action: "update", resource: "model", resourceId: "智能路由模型", severity: "info", message: "更新模型路由配置：新增 fallback 链", ip: "192.168.1.100" },
+  { id: "log-003", timestamp: "2026-07-27 18:55:01", user: "system", action: "config", resource: "spoke", resourceId: "运行节点-美东-生产", severity: "warn", message: "运行节点配置已修改（日志级别 → DEBUG）", ip: "10.0.0.1" },
+  { id: "log-004", timestamp: "2026-07-27 17:20:45", user: "admin", action: "delete", resource: "schedule", resourceId: "栖月汇 旧版批量同步计划", severity: "critical", message: "删除计划任务「旧版批量同步」", ip: "172.16.0.5" },
+  { id: "log-005", timestamp: "2026-07-27 16:10:33", user: "datong", action: "create", resource: "ontology", resourceId: "对象类型-会员", severity: "info", message: "创建对象类型「CustomerLite 会员」", ip: "192.168.1.100" },
   { id: "log-006", timestamp: "2026-07-27 15:30:00", user: "datong", action: "login", resource: "user", resourceId: "datong", severity: "info", message: "用户登录", ip: "192.168.1.100" },
-  { id: "log-007", timestamp: "2026-07-27 14:15:22", user: "analyst1", action: "update", resource: "dataset", resourceId: "ds-orders-curated", severity: "warn", message: "数据集 schema 变更（新增列 region）", ip: "10.0.0.20" },
-  { id: "log-008", timestamp: "2026-07-27 12:00:00", user: "system", action: "deploy", resource: "spoke", resourceId: "spoke-prod-euwest", severity: "critical", message: "Spoke 部署失败：健康检查超时", ip: "10.0.0.1" },
-  { id: "log-009", timestamp: "2026-07-27 10:30:15", user: "admin", action: "config", resource: "user", resourceId: "analyst1", severity: "info", message: "用户角色变更 viewer → analyst", ip: "172.16.0.5" },
+  { id: "log-007", timestamp: "2026-07-27 14:15:22", user: "analyst1", action: "update", resource: "dataset", resourceId: "栖月汇-订单 数据集", severity: "warn", message: "数据集 schema 变更（新增列 region 地域）", ip: "10.0.0.20" },
+  { id: "log-008", timestamp: "2026-07-27 12:00:00", user: "system", action: "deploy", resource: "spoke", resourceId: "运行节点-西欧-生产", severity: "critical", message: "运行节点部署失败：健康检查超时", ip: "10.0.0.1" },
+  { id: "log-009", timestamp: "2026-07-27 10:30:15", user: "admin", action: "config", resource: "user", resourceId: "analyst1", severity: "info", message: "用户角色变更 只读 → 分析员", ip: "172.16.0.5" },
   { id: "log-010", timestamp: "2026-07-27 09:00:00", user: "system", action: "login", resource: "user", resourceId: "scheduler", severity: "info", message: "系统调度器启动", ip: "127.0.0.1" },
 ];
 

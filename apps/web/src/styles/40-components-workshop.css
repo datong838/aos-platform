@@ -154,6 +154,94 @@
   color: var(--aos-text);
 }
 
+/* ---------- PipelineWorkflowStepper（横向工作流导航） ---------- */
+.pw-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  padding: 10px 16px;
+  background: var(--aos-surface, #fff);
+  border: 1px solid var(--aos-border, #e5e7eb);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+.pw-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+.pw-step:hover .pw-step-label {
+  color: var(--aos-accent);
+}
+.pw-step-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+  background: var(--aos-surface-hover, #f3f4f6);
+  color: var(--aos-text-tertiary, #9ca3af);
+  border: 2px solid var(--aos-border, #e5e7eb);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.pw-step-dot svg { color: var(--text-on-brand, #fff); }
+.pw-step-done .pw-step-dot {
+  background: var(--aos-accent, #2563eb);
+  color: var(--text-on-brand, #fff);
+  border-color: var(--aos-accent, #2563eb);
+}
+.pw-step-current .pw-step-dot {
+  background: var(--aos-accent-light, #dbeafe);
+  color: var(--aos-accent, #2563eb);
+  border-color: var(--aos-accent, #2563eb);
+  box-shadow: 0 0 0 3px var(--aos-accent-light, #dbeafe);
+}
+.pw-step-pending .pw-step-dot {
+  background: var(--aos-surface, #fff);
+  color: var(--aos-faint, #9ca3af);
+  border-color: var(--aos-border, #e5e7eb);
+}
+.pw-step-label {
+  color: var(--aos-text-secondary, #6b7280);
+  transition: color 0.15s ease;
+}
+.pw-step-done .pw-step-label {
+  color: var(--aos-text, #111827);
+  font-weight: 600;
+}
+.pw-step-current .pw-step-label {
+  color: var(--aos-accent, #2563eb);
+  font-weight: 600;
+}
+.pw-step-pending .pw-step-label {
+  color: var(--aos-text-tertiary, #9ca3af);
+}
+.pw-step-sep {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 2px;
+  margin: 0 10px;
+  background: var(--aos-border, #e5e7eb);
+  border-radius: 1px;
+  align-self: center;
+}
+.pw-step-done .pw-step-sep,
+.pw-step-current .pw-step-sep {
+  background: var(--aos-accent, #2563eb);
+  opacity: 0.5;
+}
+
 /* ---------- BpArchitectureBar（对齐 aip-model-catalog.html 横向四卡） ---------- */
 .bp-arch-bar {
   display: flex;

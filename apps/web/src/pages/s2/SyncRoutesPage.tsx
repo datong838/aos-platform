@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiPost } from "../../api/client";
+import { apiGet, apiPut } from "../../api/client";
 import {
   BpBanner,
   BpMetricGrid,
@@ -26,6 +26,37 @@ export type SyncRoute = {
   conflicts?: number;
 };
 
+// D4 Phase C · C4: 后端 SyncTask API 返回结构（与 SyncRoute 字段名不同，需映射）
+export type SyncTaskApi = {
+  id: string;
+  name: string;
+  source_id: string;
+  target_dataset?: string;
+  mode?: string;       // full|incremental|cdc
+  cron_expr?: string;  // "0 * * * *"
+  status?: string;     // active|paused|error
+  owner?: string;
+  config?: Record<string, unknown>;
+  org_id?: string;
+  project_id?: string;
+  created_at?: number;
+  updated_at?: number;
+};
+
+// D4 Phase C · C4: 后端 SyncRun API 返回结构
+export type SyncRunApi = {
+  id: string;
+  sync_id: string;
+  status: string;       // success|failed|running
+  started_at: number;
+  finished_at: number;
+  duration_ms: number;
+  rows_synced: number;
+  error?: string;
+  error_code?: string;
+  pipeline_id?: string;
+};
+
 // ── Pure functions ─────────────────────────────────────────────
 
 export const ROUTE_STATUS_LABELS: Record<RouteStatus, string> = {
@@ -38,6 +69,40 @@ export function routeStatusTone(s: RouteStatus): "ok" | "warn" | "bad" {
   if (s === "active") return "ok";
   if (s === "paused") return "warn";
   return "bad";
+}
+
+// D4 Phase C · C4: SyncTask API → SyncRoute（前端展示用）
+export function syncTaskToRoute(t: SyncTaskApi): SyncRoute {
+  const rawStatus = (t.status || "active").toLowerCase();
+  const status: RouteStatus =
+    rawStatus === "paused" ? "paused" :
+    rawStatus === "error" || rawStatus === "failed" ? "error" : "active";
+  return {
+    id: t.id,
+    name: t.name,
+    source: t.source_id,
+    target: t.target_dataset || "",
+    frequency: cronToFrequency(t.cron_expr, t.mode),
+    status,
+    nextRunAt: undefined,  // 由后端调度器计算（暂未暴露）
+    progress: undefined,
+    conflicts: 0,
+  };
+}
+
+// cron_expr + mode → 中文频率标签
+function cronToFrequency(cron?: string, mode?: string): string {
+  const modeLabel = mode === "incremental" ? "增量" : mode === "cdc" ? "CDC" : "全量";
+  if (!cron) return modeLabel;
+  // 简化解析："0 * * * *" → 每小时；"0 0 * * *" → 每天 00:00
+  const parts = cron.split(/\s+/);
+  if (parts.length !== 5) return modeLabel;
+  const [min, hour, dom, mon, dow] = parts;
+  if (hour === "*" && min !== "*") return `每${min === "0" ? "小时" : `${min}分钟`} · ${modeLabel}`;
+  if (hour !== "*" && min !== "*" && dom === "*" && mon === "*" && dow === "*") {
+    return `每天 ${hour.padStart(2, "0")}:${min.padStart(2, "0")} · ${modeLabel}`;
+  }
+  return `${cron} · ${modeLabel}`;
 }
 
 export function computeRouteStats(routes: SyncRoute[]) {
@@ -59,6 +124,25 @@ export function formatNextRun(iso?: string): string {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return "—";
   return d.toLocaleString("zh-CN", { hour12: false });
+}
+
+// D4 Phase C · C4: SyncRun 历史展示工具
+export function formatRunTime(ts: number): string {
+  if (!ts) return "—";
+  return new Date(ts * 1000).toLocaleString("zh-CN", { hour12: false });
+}
+
+export function formatRunStatus(s: string): string {
+  if (s === "success" || s === "succeeded") return "成功";
+  if (s === "failed") return "失败";
+  if (s === "running") return "运行中";
+  return s || "—";
+}
+
+export function runStatusTone(s: string): "ok" | "warn" | "bad" {
+  if (s === "success" || s === "succeeded") return "ok";
+  if (s === "running") return "warn";
+  return "bad";
 }
 
 export function progressPercent(p?: number): number {
@@ -138,25 +222,57 @@ const DEMO_ROUTES: SyncRoute[] = [
 // ── Page Component ─────────────────────────────────────────────
 
 export function SyncRoutesPage() {
-  const { data, err, reload } = useJsonGet<{ items: SyncRoute[] }>("/v1/sync-routes");
+  // D4 Phase C · C4: 切换到真实后端 /api/datasource/syncs（带租户隔离）
+  const { data, err, reload } = useJsonGet<{ items: SyncTaskApi[]; total?: number }>("/api/datasource/syncs");
   const [tab, setTab] = useState<"all" | "active" | "paused" | "error">("all");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
 
+  // D4 Phase C · C4: 展开时拉取 SyncRun 历史
+  const [syncRuns, setSyncRuns] = useState<Record<string, SyncRunApi[]>>({});
+  const [syncRunsLoading, setSyncRunsLoading] = useState<Record<string, boolean>>({});
+  const [syncRunsErr, setSyncRunsErr] = useState<Record<string, string>>({});
+
   const allRoutes = useMemo(() => {
     const apiItems = data?.items;
-    if (apiItems && apiItems.length > 0) return apiItems;
+    if (apiItems && apiItems.length > 0) {
+      // 真实数据：SyncTask → SyncRoute 映射
+      return apiItems.map(syncTaskToRoute);
+    }
+    // 兜底：API 失败或返回空时降级到 DEMO_ROUTES
     return DEMO_ROUTES;
   }, [data?.items]);
 
   const filtered = useMemo(() => filterRoutesByTab(allRoutes, tab), [allRoutes, tab]);
   const stats = useMemo(() => computeRouteStats(allRoutes), [allRoutes]);
 
+  // D4 Phase C · C4: 展开时拉取该 SyncTask 的 SyncRun 历史
+  useEffect(() => {
+    if (!expanded) return;
+    // 已缓存或正在加载，跳过
+    if (syncRuns[expanded] || syncRunsLoading[expanded]) return;
+    setSyncRunsLoading((prev) => ({ ...prev, [expanded]: true }));
+    setSyncRunsErr((prev) => ({ ...prev, [expanded]: "" }));
+    apiGet<{ items: SyncRunApi[]; count?: number }>(
+      `/api/datasource/syncs/${encodeURIComponent(expanded)}/runs`,
+    )
+      .then((res) => {
+        setSyncRuns((prev) => ({ ...prev, [expanded]: res.items || [] }));
+      })
+      .catch((e) => {
+        setSyncRunsErr((prev) => ({ ...prev, [expanded]: String((e as Error).message || e) }));
+      })
+      .finally(() => {
+        setSyncRunsLoading((prev) => ({ ...prev, [expanded]: false }));
+      });
+  }, [expanded, syncRuns, syncRunsLoading]);
+
   async function handleToggle(id: string, current: RouteStatus) {
     setMsg("");
     try {
       const next = toggleRouteStatus({ status: current } as SyncRoute);
-      await apiPost(`/v1/sync-routes/${encodeURIComponent(id)}/status`, {
+      // D4 Phase C · C4: 后端 update_sync 是 PUT 方法
+      await apiPut(`/api/datasource/syncs/${encodeURIComponent(id)}`, {
         status: next,
       });
       setMsg(`已${next === "active" ? "启用" : "暂停"} · ${id}`);
@@ -254,6 +370,9 @@ export function SyncRoutesPage() {
         const route = filtered.find((r) => r.id === expanded);
         if (!route) return null;
         const pct = progressPercent(route.progress);
+        const runs = syncRuns[route.id] || [];
+        const runsLoading = syncRunsLoading[route.id];
+        const runsErr = syncRunsErr[route.id];
         return (
           <div className="card" style={{ marginTop: "0.75rem" }}>
             <h2 className="aos-text" style={{ fontSize: "0.9rem" }}>
@@ -280,6 +399,44 @@ export function SyncRoutesPage() {
                 </div>
               </div>
             </div>
+
+            {/* D4 Phase C · C4: SyncRun 运行历史（真实 API 拉取） */}
+            <div style={{ marginTop: "0.75rem" }}>
+              <div className="bp-prop-label">运行历史 · 最近 SyncRun</div>
+              {runsLoading ? (
+                <p className="muted" style={{ fontSize: "0.8rem" }}>加载中…</p>
+              ) : runsErr ? (
+                <p className="error" style={{ fontSize: "0.8rem" }}>{runsErr}</p>
+              ) : runs.length === 0 ? (
+                <p className="muted" style={{ fontSize: "0.8rem" }}>暂无运行记录</p>
+              ) : (
+                <BpTable
+                  columns={["运行ID", "状态", "开始时间", "耗时", "行数", "错误"]}
+                  rows={runs.slice(0, 10).map((r) => {
+                    const tone = runStatusTone(r.status);
+                    return [
+                      <span key="id" className="mono" style={{ fontSize: "0.8rem" }}>{r.id}</span>,
+                      <span key="status" className={`bp-discover-badge bp-discover-badge-${tone}`}>
+                        {formatRunStatus(r.status)}
+                      </span>,
+                      <span key="started" className="muted" style={{ fontSize: "0.8rem" }}>
+                        {formatRunTime(r.started_at)}
+                      </span>,
+                      <span key="dur" className="muted" style={{ fontSize: "0.8rem" }}>
+                        {r.duration_ms ? `${r.duration_ms}ms` : "—"}
+                      </span>,
+                      <span key="rows" className="muted" style={{ fontSize: "0.8rem" }}>
+                        {r.rows_synced || 0}
+                      </span>,
+                      <span key="err" className="muted" style={{ fontSize: "0.75rem", color: r.error ? "#cf222e" : "#6e7781" }}>
+                        {r.error ? r.error.slice(0, 60) : "—"}
+                      </span>,
+                    ];
+                  })}
+                />
+              )}
+            </div>
+
             {route.conflicts && route.conflicts > 0 ? (
               <BpBanner tone="warn">
                 检测到 {route.conflicts} 条冲突 · 主键重复/字段类型不匹配 ·{" "}

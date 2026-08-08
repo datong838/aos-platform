@@ -27,6 +27,9 @@ export interface IntegrationCaseReadViewState<T> {
 export interface IntegrationCaseDetailProps {
   state: IntegrationCaseReadViewState<IntegrationCaseDetailResponse>;
   onRetry?: () => void;
+  onCreateSnapshot?: () => void;
+  snapshotPending?: boolean;
+  snapshotError?: string | null;
 }
 
 const panelStyle = {
@@ -184,8 +187,9 @@ function DetailFacts({ detail }: { detail: IntegrationCaseDetailResponse }) {
   );
 }
 
-export function IntegrationCaseDetail({ state, onRetry }: IntegrationCaseDetailProps) {
+export function IntegrationCaseDetail({ state, onRetry, onCreateSnapshot, snapshotPending, snapshotError }: IntegrationCaseDetailProps) {
   const showData = state.data !== null && ["ready", "stale", "refreshing"].includes(state.status);
+  const canSnapshot = onCreateSnapshot && state.data?.scope === "current" && showData;
   return (
     <section aria-label="接入案例详情" style={panelStyle}>
       <header>
@@ -200,6 +204,22 @@ export function IntegrationCaseDetail({ state, onRetry }: IntegrationCaseDetailP
       {state.status === "stale" && <div role="status">当前详情是最后一次成功读取的服务端事实，刷新失败。<Retry onRetry={onRetry} /></div>}
       {state.status === "refreshing" && <p role="status">正在刷新接入案例详情；以下为最后一次服务端事实。</p>}
       {showData && state.data && <DetailFacts detail={state.data} />}
+      {canSnapshot && (
+        <section aria-label="Evidence 快照操作" style={{ marginTop: 12, borderTop: "1px solid var(--aos-border)", paddingTop: 12 }}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={snapshotPending}
+            onClick={onCreateSnapshot}
+          >
+            {snapshotPending ? "正在生成快照…" : "生成 Evidence 快照"}
+          </button>
+          {snapshotError && <p role="alert" style={{ color: "var(--aos-danger)" }}>{snapshotError}</p>}
+          <p style={{ color: "var(--aos-muted)", fontSize: "0.75rem", marginTop: 4 }}>
+            触发服务端重新投影阶段（可能产生新的 StageEvent）。
+          </p>
+        </section>
+      )}
     </section>
   );
 }

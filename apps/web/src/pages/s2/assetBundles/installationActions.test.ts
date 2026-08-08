@@ -19,8 +19,9 @@ const EXPECTED: Readonly<Record<InstallationState, readonly InstallationAction[]
   approved: ["apply"],
   rejected: [],
   applied: ["verify"],
-  active: ["rollback"],
+  active: ["rollback", "uninstall"],
   rolled_back: [],
+  uninstalled: [],
 };
 
 function context(overrides: Partial<InstallationActionContext> = {}): InstallationActionContext {

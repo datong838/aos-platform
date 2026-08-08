@@ -6,11 +6,12 @@ export type InstallationAction =
   | "reject"
   | "apply"
   | "verify"
-  | "rollback";
+  | "rollback"
+  | "uninstall";
 
 export type InstallationActionCommand =
   | { action: "submit" | "approve" | "apply" | "verify" }
-  | { action: "reject" | "rollback"; reason: string };
+  | { action: "reject" | "rollback" | "uninstall"; reason: string };
 
 export interface InstallationActionContext {
   state: InstallationState;
@@ -41,6 +42,7 @@ export const INSTALLATION_ACTION_LABELS: Readonly<Record<InstallationAction, str
   apply: "执行 Apply",
   verify: "验证并激活",
   rollback: "回滚",
+  uninstall: "卸载",
 };
 
 const ACTIONS_BY_STATE: Readonly<Record<InstallationState, readonly InstallationAction[]>> = {
@@ -49,8 +51,9 @@ const ACTIONS_BY_STATE: Readonly<Record<InstallationState, readonly Installation
   approved: ["apply"],
   rejected: [],
   applied: ["verify"],
-  active: ["rollback"],
+  active: ["rollback", "uninstall"],
   rolled_back: [],
+  uninstalled: [],
 };
 
 const ROLES_BY_ACTION: Readonly<Record<InstallationAction, ReadonlySet<string>>> = {
@@ -60,6 +63,7 @@ const ROLES_BY_ACTION: Readonly<Record<InstallationAction, ReadonlySet<string>>>
   apply: new Set(["admin", "asset-installer"]),
   verify: new Set(["admin", "asset-installer"]),
   rollback: new Set(["admin", "asset-installer"]),
+  uninstall: new Set(["admin", "asset-installer"]),
 };
 
 const CONTROL_CHARACTER = /[\u0000-\u001f\u007f-\u009f]/u;

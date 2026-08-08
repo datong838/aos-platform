@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { getTenant } from "../../api/tenant";
 import type { IntegrationCaseScope } from "../../api/integrationCases/types";
+import { integrationCaseClient } from "../../api/integrationCases/client";
 import { BpBanner, BpToolbar } from "./blueprintUi";
 import { S2Chrome } from "./shared";
 import { IntegrationCaseCatalog } from "./integrationCases/IntegrationCaseCatalog";
@@ -75,6 +76,27 @@ export function IntegrationCasesPage() {
   const [filter, setFilter] = useState("");
   const model = useIntegrationCasesReadModel({ tenantKey, scope, filter });
   const list = model.list.data;
+  const [snapshotPending, setSnapshotPending] = useState(false);
+  const [snapshotError, setSnapshotError] = useState<string | null>(null);
+
+  const createSnapshot = useCallback(async () => {
+    const detail = model.detail.data;
+    if (!detail || detail.scope !== "current") return;
+    setSnapshotPending(true);
+    setSnapshotError(null);
+    try {
+      await integrationCaseClient.createEvidenceSnapshot(detail.caseId, {
+        idempotencyKey: crypto.randomUUID(),
+        etagVersion: detail.etagVersion,
+      });
+      model.refreshDetail();
+      model.refreshTimeline();
+    } catch (e) {
+      setSnapshotError(String((e as Error).message || e));
+    } finally {
+      setSnapshotPending(false);
+    }
+  }, [model]);
   const listMatchesScope = list?.scope === scope;
   const listStatusMessage = model.list.error?.message ?? null;
 
@@ -158,7 +180,13 @@ export function IntegrationCasesPage() {
             marginTop: "1.5rem",
           }}
         >
-          <IntegrationCaseDetail state={model.detail} onRetry={model.refreshDetail} />
+          <IntegrationCaseDetail
+            state={model.detail}
+            onRetry={model.refreshDetail}
+            onCreateSnapshot={createSnapshot}
+            snapshotPending={snapshotPending}
+            snapshotError={snapshotError}
+          />
           <IntegrationCaseTimeline state={model.timeline} onRetry={model.refreshTimeline} />
         </div>
       ) : (

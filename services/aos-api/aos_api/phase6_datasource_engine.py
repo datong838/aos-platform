@@ -104,6 +104,8 @@ class SyncTask(BaseModel):
     status: str = "active"  # active|paused|error
     owner: str = "system"
     config: dict[str, Any] = Field(default_factory=dict)
+    org_id: str = ""
+    project_id: str = ""
     created_at: float = Field(default_factory=lambda: time.time())
     updated_at: float = Field(default_factory=lambda: time.time())
 
@@ -117,6 +119,10 @@ class SyncRun(BaseModel):
     duration_ms: int = 0
     rows_synced: int = 0
     error: str = ""
+    error_code: str = ""
+    pipeline_id: str = ""
+    org_id: str = ""
+    project_id: str = ""
 
 
 class EdgeAgent(BaseModel):
@@ -221,6 +227,8 @@ class DataSourceEngine:
                     inst._foreign_keys: dict[str, ForeignKey] = {}
                     inst._sync_tasks: dict[str, SyncTask] = {}
                     inst._sync_runs: dict[str, SyncRun] = {}
+                    inst._scoped_sync_tasks: dict[tuple[str, str, str], SyncTask] = {}
+                    inst._scoped_sync_runs: dict[tuple[str, str, str], SyncRun] = {}
                     inst._agents: dict[str, EdgeAgent] = {}
                     inst._media_sets: dict[str, MediaSet] = {}
                     inst._media_files: dict[str, MediaFile] = {}
@@ -267,6 +275,10 @@ class DataSourceEngine:
         if c is None:
             raise KeyError(f"Connector {cid} not found")
         return c.capabilities
+
+    def delete_connector(self, cid: str) -> bool:
+        with _LOCK:
+            return self._connectors.pop(cid, None) is not None
 
     # ── Sources ──
     def create_source(self, name: str, **kwargs: Any) -> DataSource:
@@ -408,20 +420,62 @@ class DataSourceEngine:
             return fk
 
     # ── Sync Tasks ──
-    def create_sync_task(self, name: str, **kwargs: Any) -> SyncTask:
-        with _LOCK:
-            st = SyncTask(name=name, **kwargs)
-            self._sync_tasks[st.id] = st
-            return st
 
-    def get_sync_task(self, sid: str) -> SyncTask | None:
+    @staticmethod
+    def _sync_scope_tuple(
+        scope: Any | None, org_id: str = "", project_id: str = "",
+    ) -> tuple[str, str]:
+        """Return (org_id, project_id) preferring scope.* fields."""
+        if scope is not None:
+            o = getattr(scope, "org_id", None) or org_id or ""
+            p = getattr(scope, "project_id", None) or project_id or ""
+            return o, p
+        return org_id or "", project_id or ""
+
+    def _resolve_sync_task(
+        self, sid: str, scope: Any | None,
+    ) -> SyncTask | None:
+        """Look up sync task. 显式 scope 且 org/proj 非空时 → 禁止 fallback,
+        保证越租户隔离 (G13)."""
+        org, proj = self._sync_scope_tuple(scope)
+        if org and proj:
+            # Strict: 只查 scoped dict, 不 fallback 全局 (越租户隔离 D 门)
+            return self._scoped_sync_tasks.get((org, proj, sid))
         return self._sync_tasks.get(sid)
 
+    def create_sync_task(
+        self, name: str, *, org_id: str = "", project_id: str = "",
+        scope: Any | None = None, **kwargs: Any,
+    ) -> SyncTask:
+        with _LOCK:
+            o, p = self._sync_scope_tuple(scope, org_id, project_id)
+            kwargs.pop("org_id", None)
+            kwargs.pop("project_id", None)
+            st = SyncTask(name=name, org_id=o, project_id=p, **kwargs)
+            self._sync_tasks[st.id] = st
+            if o and p:
+                self._scoped_sync_tasks[(o, p, st.id)] = st
+            return st
+
+    def get_sync_task(self, sid: str, scope: Any | None = None) -> SyncTask | None:
+        return self._resolve_sync_task(sid, scope)
+
     def list_sync_tasks(
-        self, search: str | None = None, status: str | None = None,
-        page: int = 1, page_size: int = 20,
+        self,
+        search: str | None = None,
+        status: str | None = None,
+        page: int = 1,
+        page_size: int = 20,
+        scope: Any | None = None,
     ) -> tuple[list[SyncTask], int]:
-        items = list(self._sync_tasks.values())
+        org, proj = self._sync_scope_tuple(scope)
+        if org and proj:
+            items = [
+                st for st in self._scoped_sync_tasks.values()
+                if st.org_id == org and st.project_id == proj
+            ]
+        else:
+            items = list(self._sync_tasks.values())
         if status:
             items = [s for s in items if s.status == status]
         if search:
@@ -431,9 +485,11 @@ class DataSourceEngine:
         start = (page - 1) * page_size
         return items[start : start + page_size], total
 
-    def update_sync_task(self, sid: str, **kwargs: Any) -> SyncTask:
+    def update_sync_task(
+        self, sid: str, *, scope: Any | None = None, **kwargs: Any,
+    ) -> SyncTask:
         with _LOCK:
-            st = self._sync_tasks.get(sid)
+            st = self._resolve_sync_task(sid, scope)
             if st is None:
                 raise KeyError(f"SyncTask {sid} not found")
             for k, v in kwargs.items():
@@ -442,24 +498,113 @@ class DataSourceEngine:
             st.updated_at = time.time()
             return st
 
-    def run_sync_task(self, sid: str) -> SyncRun:
+    def run_sync_task(
+        self, sid: str, scope: Any | None = None,
+    ) -> SyncRun:
         with _LOCK:
-            st = self._sync_tasks.get(sid)
+            st = self._resolve_sync_task(sid, scope)
             if st is None:
                 raise KeyError(f"SyncTask {sid} not found")
+            pipeline_id = (st.config or {}).get("pipeline_id", "")
+            org, proj = (
+                self._sync_scope_tuple(scope, st.org_id, st.project_id)
+            )
+            started = time.time()
             run = SyncRun(
                 sync_id=sid,
-                status="success",
-                started_at=time.time() - 30,
-                finished_at=time.time(),
-                duration_ms=30000,
-                rows_synced=5000,
+                status="running",
+                started_at=started,
+                pipeline_id=pipeline_id,
+                org_id=org,
+                project_id=proj,
             )
             self._sync_runs[run.id] = run
-            return run
+            if org and proj:
+                self._scoped_sync_runs[(org, proj, run.id)] = run
 
-    def list_sync_runs(self, sid: str) -> list[SyncRun]:
-        return [r for r in self._sync_runs.values() if r.sync_id == sid]
+        # Release lock during real pipeline execution to avoid deadlock.
+        if pipeline_id and org and proj:
+            result = self._execute_pipeline_via_phase5(
+                pipeline_id, org, proj,
+            )
+            status = "success" if result.get("ok") else "failed"
+            rows = int(result.get("rows_written") or 0)
+            finished = time.time()
+            duration_ms = max(1, int((finished - started) * 1000))
+            err_code = "" if result.get("ok") else (result.get("error_code") or "SYNC_FAILED")
+            err_msg = "" if result.get("ok") else self._sanitize_error(result.get("error_message") or err_code)
+        else:
+            # Legacy: no pipeline binding → best-effort, do not claim 5000 rows any more
+            status = "success"
+            rows = 0
+            finished = time.time()
+            duration_ms = max(1, int((finished - started) * 1000))
+            err_code = ""
+            err_msg = ""
+
+        with _LOCK:
+            run.status = status
+            run.finished_at = finished
+            run.duration_ms = duration_ms
+            run.rows_synced = rows
+            run.error_code = err_code
+            run.error = err_msg
+            # Also propagate status on SyncTask (active / error)
+            st.status = "error" if status == "failed" else "active"
+            st.updated_at = time.time()
+            return run.model_copy(deep=True)
+
+    @staticmethod
+    def _sanitize_error(raw: str) -> str:
+        """DLQ-safe: redact PII before crossing service boundaries."""
+        try:
+            from aos_api.public_contracts import redact_sensitive
+            out = str(redact_sensitive(raw))
+            return out[:500]
+        except Exception:
+            return (raw or "sync failed")[:500]
+
+    @staticmethod
+    def _execute_pipeline_via_phase5(
+        pipeline_id: str, org_id: str, project_id: str,
+    ) -> dict[str, Any]:
+        """Delegate to Phase5 PipelineEngine.execute_pipeline_once for real run."""
+        try:
+            from aos_api.phase5_pipeline_engine import TenantScope, get_engine as p5_get_engine
+            scope = TenantScope(org_id=org_id, project_id=project_id)
+            eng = p5_get_engine()
+            if not hasattr(eng, "execute_pipeline_once"):
+                return {
+                    "ok": False,
+                    "rows_written": 0,
+                    "error_code": "P5_NO_DIRECT_EXEC",
+                    "error_message": (
+                        "Phase5 engine missing execute_pipeline_once; "
+                        "run_schedule path available but SyncTask real execution "
+                        "requires the new direct method."
+                    ),
+                }
+            return eng.execute_pipeline_once(scope, pipeline_id)
+        except Exception as exc:  # noqa: BLE001
+            return {
+                "ok": False,
+                "rows_written": 0,
+                "error_code": "SYNC_EXEC_EXCEPTION",
+                "error_message": f"{type(exc).__name__}: {exc}",
+            }
+
+    def list_sync_runs(
+        self, sid: str, scope: Any | None = None,
+    ) -> list[SyncRun]:
+        org, proj = self._sync_scope_tuple(scope)
+        if org and proj:
+            items = [
+                r for r in self._scoped_sync_runs.values()
+                if r.sync_id == sid and r.org_id == org and r.project_id == proj
+            ]
+        else:
+            items = [r for r in self._sync_runs.values() if r.sync_id == sid]
+        return [r.model_copy(deep=True) for r in items]
 
     # ── Edge Agents ──
     def create_agent(self, name: str, **kwargs: Any) -> EdgeAgent:
@@ -792,6 +937,8 @@ class DataSourceEngine:
             self._foreign_keys.clear()
             self._sync_tasks.clear()
             self._sync_runs.clear()
+            self._scoped_sync_tasks.clear()
+            self._scoped_sync_runs.clear()
             self._agents.clear()
             self._media_sets.clear()
             self._media_files.clear()

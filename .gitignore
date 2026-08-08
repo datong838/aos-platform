@@ -31,3 +31,11 @@ packages/*/node_modules/
 *.egg-info/
 .venv/
 node_modules/
+
+# Temp debug / inspection scripts (not part of codebase)
+services/aos-api/_check_state.py
+cdp_selfcheck.py
+cdp_verify.py
+cdp_screenshot*.py
+inspect_d5*.py
+screenshot_d5*.py

@@ -1307,6 +1307,7 @@ InstallationState = Literal[
     "applied",
     "active",
     "rolled_back",
+    "uninstalled",
 ]
 INSTALLATION_STATE_TRANSITIONS = frozenset(
     {
@@ -1316,6 +1317,7 @@ INSTALLATION_STATE_TRANSITIONS = frozenset(
         ("approved", "applied"),
         ("applied", "active"),
         ("active", "rolled_back"),
+        ("active", "uninstalled"),
     }
 )
 
@@ -1383,9 +1385,19 @@ class RollbackInstallationRequest(StrictContract):
         return _normalized_text(value, label="rollback reason")
 
 
+class UninstallInstallationRequest(StrictContract):
+    reason: str = Field(min_length=1, max_length=MAX_INSTALLATION_REASON_LENGTH)
+
+    @field_validator("reason")
+    @classmethod
+    def _normalized_reason(cls, value: str) -> str:
+        return _normalized_text(value, label="uninstall reason")
+
+
 ApproveRequest = ApproveInstallationRequest
 RejectRequest = RejectInstallationRequest
 RollbackRequest = RollbackInstallationRequest
+UninstallRequest = UninstallInstallationRequest
 EmptyActionRequest = EmptyInstallationActionRequest
 
 
@@ -1456,6 +1468,7 @@ class InstallationRevision(StrictContract):
             "applied",
             "active",
             "rolled_back",
+            "uninstalled",
         }
         if requires_decision != (self.decision_id is not None):
             raise ValueError("decisionId is inconsistent with installation state")
@@ -1640,7 +1653,7 @@ class InstallationListItem(StrictContract):
             and self.previous_active_revision >= self.current_revision
         ):
             raise ValueError("active previousRevision must precede currentRevision")
-        if self.state == "rolled_back":
+        if self.state in ("rolled_back", "uninstalled"):
             if self.active_revision == self.current_revision:
                 raise ValueError("rolled-back installation cannot keep current active")
             if self.active_revision != self.previous_active_revision:
