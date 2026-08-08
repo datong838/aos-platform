@@ -107,7 +107,7 @@ async def lifespan(_app: FastAPI):
                     / "bundles" / "platforms" / "ecommerce-niushop" / "content" / "mappings"
                 )
                 _eng = _get_engine()
-                _scope = _TS("dev-org", "dev-project")
+                _scope = _TS("org-org", "dev-project")
                 _count = _eng.seed_from_bundles(_scope, str(_bundles_dir))
                 # 同步填充 wave_ext._datasets + _pipelines，使前端能查到数据集和管道
                 if _count > 0:
@@ -156,6 +156,18 @@ async def lifespan(_app: FastAPI):
                         }
                     # 标记 scope 已加载，避免 _hydrate_data_os_scope 清空上述数据
                     _wx._data_os_loaded_scopes.add(_scope.key)
+                    # 持久化到 PG（确保重启后 _hydrate_data_os_scope 能从 PG 恢复）
+                    for _p in _items:
+                        _pl_item = _wx._pipelines.get(_p.id)
+                        if _pl_item:
+                            _wx._persist_safe("persist_pipeline", _scope, {**_pl_item})
+                        _ds_rid = f"ri.aos.main.dataset.{_p.id}"
+                        _ds_item = _wx._datasets.get(_wx._resource_key(_scope, _ds_rid))
+                        if _ds_item:
+                            _wx._persist_safe("persist_dataset", _scope, {**_ds_item})
+                    # 强制 hydrate 从 PG 加载全部数据（包括 source/connector）
+                    # 这样 _connectors 也能从 meta_source 恢复
+                    _wx._hydrate_data_os_scope(_scope, force=True)
                 log.info("startup_seed_from_bundles count=%d dir=%s", _count, _bundles_dir)
             except Exception:
                 log.exception("startup_seed_from_bundles_failed_continue")

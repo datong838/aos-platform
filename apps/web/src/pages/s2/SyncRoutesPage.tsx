@@ -239,8 +239,8 @@ export function SyncRoutesPage() {
       // 真实数据：SyncTask → SyncRoute 映射
       return apiItems.map(syncTaskToRoute);
     }
-    // 兜底：API 失败或返回空时降级到 DEMO_ROUTES
-    return DEMO_ROUTES;
+    // API 返回空时不使用 DEMO_ROUTES 兜底，显示真实空状态
+    return [];
   }, [data?.items]);
 
   const filtered = useMemo(() => filterRoutesByTab(allRoutes, tab), [allRoutes, tab]);
