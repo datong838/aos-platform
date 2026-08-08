@@ -39,6 +39,52 @@ def _object_type_properties(conn, object_type: str) -> list[dict[str, Any]]:
     return list(props) if isinstance(props, list) else []
 
 
+# G18: Auto-redact known e-commerce PII fields that slip through marking config.
+# These fields come from raw Niushop source rows and must never be exposed via /v1/objects.
+_ECOM_PII_FIELDS = frozenset({
+    "mobile", "telephone", "phone",
+    "weapp_openid", "wx_openid", "openid",
+    "email",
+    "pay_password", "password",
+    "mobile_country_code",
+    "buyer_ip", "last_login_ip", "reg_ip",
+    "id_card", "id_card_no",
+    "bank_card", "bank_account",
+    "real_name",
+})
+
+_ECOM_PII_PREFIXES = (
+    "mobile", "phone", "tel",
+    "openid", "password",
+    "email",
+)
+
+
+def _auto_redact_ecom_pii(payload: dict[str, Any]) -> dict[str, Any]:
+    """Strip or mask known PII fields from e-commerce object payloads."""
+    if not isinstance(payload, dict):
+        return payload
+    out = dict(payload)
+    redacted = set(out.get("_redactedFields", []))
+    for key in list(out.keys()):
+        lk = key.lower()
+        is_pii = (
+            lk in _ECOM_PII_FIELDS
+            or any(lk.startswith(p) for p in _ECOM_PII_PREFIXES)
+        )
+        if is_pii and lk not in ("telephone",):  # telephone is public business contact
+            val = out[key]
+            if val is not None and str(val).strip() and str(val) not in ("0", "null", ""):
+                out[key] = "[REDACTED]"
+                redacted.add(key)
+            elif lk in _ECOM_PII_FIELDS:
+                out[key] = "[REDACTED]"
+                redacted.add(key)
+    if redacted:
+        out["_redactedFields"] = sorted(redacted)
+    return out
+
+
 class ObjectTypeIn(BaseModel):
     id: str = Field(min_length=1)
     name: str = Field(min_length=1)
@@ -488,7 +534,10 @@ def list_objects(
             if not can_access_object(principal, conn, object_type, r["object_id"]):
                 continue
             raw = {"id": r["object_id"], "type": object_type, **(r["props"] or {})}
-            items.append(apply_field_redaction(principal, raw, prop_defs, conn=conn))
+            redacted = apply_field_redaction(principal, raw, prop_defs, conn=conn)
+            # G18: auto-redact known e-commerce PII fields not caught by marking config
+            redacted = _auto_redact_ecom_pii(redacted)
+            items.append(redacted)
     out: dict[str, Any] = {"items": items, "total": len(items)}
     if branch:
         out["branch"] = branch
@@ -513,6 +562,7 @@ def get_object(
             )
         raw = {"id": object_id, "type": object_type, **(hit["props"] or {})}
         out = apply_field_redaction(principal, raw, prop_defs, conn=conn)
+        out = _auto_redact_ecom_pii(out)
     if branch:
         out = {**out, "branch": branch}
     return out
@@ -580,24 +630,85 @@ def neighbors(
     object_id: str,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    """1-hop graph read — adjacency table interim (AGE blocked, see 26 §阻塞)."""
+    """1-hop graph read — tries ecom_link first (authoritative e-commerce twin),
+    falls back to graph_edge if no e-commerce data found."""
+    org_id, project_id = _scope(principal).key
     with connect() as conn:
-        rows = conn.execute(
+        # Try ecom_link first: object_id may be raw (e.g. "1") or canonical ("niushop:1:1")
+        # Build canonical patterns to match
+        patterns = [object_id]
+        if not object_id.startswith("niushop:"):
+            patterns.append(f"niushop:%:{object_id}")
+
+        # Outgoing edges: source -> target
+        outgoing = conn.execute(
             """
-            SELECT rel, dst_type, dst_id FROM graph_edge
-            WHERE src_type=%s AND src_id=%s
-              AND org_id=%s AND project_id=%s
+            SELECT link_type, target_object_type, target_external_id
+            FROM ecom_link
+            WHERE org_id=%s AND workspace_id=%s
+              AND source_object_type=%s
+              AND (source_external_id = ANY(%s) OR source_external_id ~ %s)
+              AND deleted_at IS NULL
             """,
-            (object_type, object_id, *_scope(principal).key),
+            (
+                org_id, project_id, object_type, patterns,
+                f"^niushop:\\d+:{object_id}$",
+            ),
         ).fetchall()
-    items = [{"rel": r["rel"], "type": r["dst_type"], "id": r["dst_id"]} for r in rows]
-    log.info(
-        "graph_neighbors src=%s/%s count=%s engine=adjacency",
-        object_type,
-        object_id,
-        len(items),
-    )
-    return {"items": items, "engine": "adjacency_table"}
+
+        # Incoming edges: target -> source (reverse direction)
+        incoming = conn.execute(
+            """
+            SELECT link_type, source_object_type, source_external_id
+            FROM ecom_link
+            WHERE org_id=%s AND workspace_id=%s
+              AND target_object_type=%s
+              AND (target_external_id = ANY(%s) OR target_external_id ~ %s)
+              AND deleted_at IS NULL
+            """,
+            (
+                org_id, project_id, object_type, patterns,
+                f"^niushop:\\d+:{object_id}$",
+            ),
+        ).fetchall()
+
+        # If ecom_link has data, use it; otherwise fall back to graph_edge
+        if not outgoing and not incoming:
+            rows = conn.execute(
+                """
+                SELECT rel, dst_type, dst_id FROM graph_edge
+                WHERE src_type=%s AND src_id=%s
+                  AND org_id=%s AND project_id=%s
+                """,
+                (object_type, object_id, org_id, project_id),
+            ).fetchall()
+            items = [{"rel": r["rel"], "type": r["dst_type"], "id": r["dst_id"]} for r in rows]
+            log.info(
+                "graph_neighbors src=%s/%s count=%s engine=adjacency (fallback)",
+                object_type, object_id, len(items),
+            )
+            return {"items": items, "engine": "adjacency_table"}
+
+        items = []
+        for r in outgoing:
+            items.append({
+                "rel": r["link_type"],
+                "type": r["target_object_type"],
+                "id": r["target_external_id"],
+                "direction": "outgoing",
+            })
+        for r in incoming:
+            items.append({
+                "rel": r["link_type"],
+                "type": r["source_object_type"],
+                "id": r["source_external_id"],
+                "direction": "incoming",
+            })
+        log.info(
+            "graph_neighbors src=%s/%s count=%s engine=ecom_link (out=%s in=%s)",
+            object_type, object_id, len(items), len(outgoing), len(incoming),
+        )
+    return {"items": items, "engine": "ecom_link"}
 
 
 @router.get("/v1/wiki/{object_type}/{object_id}/versions")
