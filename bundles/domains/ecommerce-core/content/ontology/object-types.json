@@ -81,5 +81,41 @@
       "status",
       "updatedAt"
     ]
+  },
+  {
+    "name": "Weapp",
+    "required_properties": [
+      "appId",
+      "name",
+      "status",
+      "updatedAt"
+    ]
+  },
+  {
+    "name": "SystemConfig",
+    "required_properties": [
+      "siteId",
+      "module",
+      "key",
+      "updatedAt"
+    ]
+  },
+  {
+    "name": "ProductReview",
+    "required_properties": [
+      "productId",
+      "memberId",
+      "score",
+      "updatedAt"
+    ]
+  },
+  {
+    "name": "Payment",
+    "required_properties": [
+      "orderId",
+      "outTradeNo",
+      "payStatus",
+      "updatedAt"
+    ]
   }
 ]

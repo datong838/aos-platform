@@ -10,6 +10,11 @@
     "target_type": "Category"
   },
   {
+    "name": "sellsProduct",
+    "source_type": "Shop",
+    "target_type": "Product"
+  },
+  {
     "name": "contains",
     "source_type": "Order",
     "target_type": "OrderLine"
@@ -33,5 +38,35 @@
     "name": "placedByLite",
     "source_type": "Order",
     "target_type": "CustomerLite"
+  },
+  {
+    "name": "hasWeapp",
+    "source_type": "Shop",
+    "target_type": "Weapp"
+  },
+  {
+    "name": "hasReview",
+    "source_type": "Product",
+    "target_type": "ProductReview"
+  },
+  {
+    "name": "ofSku",
+    "source_type": "ProductReview",
+    "target_type": "ProductSku"
+  },
+  {
+    "name": "byMember",
+    "source_type": "ProductReview",
+    "target_type": "CustomerLite"
+  },
+  {
+    "name": "hasPayment",
+    "source_type": "Order",
+    "target_type": "Payment"
+  },
+  {
+    "name": "fromWeapp",
+    "source_type": "Order",
+    "target_type": "Weapp"
   }
 ]
