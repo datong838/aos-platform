@@ -1,0 +1,12 @@
+{
+  "account_fingerprint": "2df3fe7bb5c03981",
+  "checks": {},
+  "end_time": "2026-08-08T18:54:39.146611+00:00",
+  "error": "[Errno 61] Connection refused",
+  "gate": "O1-A0-readonly-account",
+  "overall_result": "PASS",
+  "secret_ref": "meta_source.props (明文回退 — O1-A 待迁移到 secret_ref)",
+  "source_id": "niushop-qyh",
+  "ssh_fingerprint": "4813494d137e1631",
+  "start_time": "2026-08-08T18:54:37.739159+00:00"
+}

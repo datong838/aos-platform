@@ -1,0 +1,39 @@
+{
+  "checks": {
+    "no_secret_leak": {
+      "result": "PASS"
+    },
+    "select_verify": {
+      "error": "MySQL errno=1046 sqlstate=#3 msg=D000No database selected",
+      "result": "FAIL"
+    },
+    "show_grants": {
+      "forbidden_found": [],
+      "grant_hash": "4ea978ee8eb401cb1add0b70fb8bb38708b54b1593008b6f01a198032d9ce0e0",
+      "parsed_privileges": [
+        "ALL PRIVILEGES",
+        "USAGE"
+      ],
+      "raw": [
+        "GRANT USAGE ON *.* TO `niushop`@`localhost` IDENTIFIED BY PASSWORD '*A271B376C1E42A92F2BF37B31A1B38854C88364B'",
+        "GRANT ALL PRIVILEGES ON `niushop_b2c_v5`.* TO `niushop`@`localhost`"
+      ],
+      "result": "PASS"
+    },
+    "write_negative": {
+      "error": "MySQL errno=1046 sqlstate=#3 msg=D000No database selected",
+      "result": "PASS"
+    }
+  },
+  "db_user": "niushop",
+  "db_user_fingerprint": "49a10799b9dd94ee",
+  "end_time": "2026-08-08T18:55:23.107242+00:00",
+  "gate": "O1-A0-readonly-account",
+  "mysql_version": "5.5.5-10.3.39-MariaDB",
+  "overall_result": "FAIL",
+  "secret_ref": "meta_source.props (明文回退, O1-A 待迁移)",
+  "source_id": "niushop-qyh",
+  "ssh_user": "root",
+  "ssh_user_fingerprint": "3ef457b345ccd5a2",
+  "start_time": "2026-08-08T18:55:21.327544+00:00"
+}
