@@ -2378,10 +2378,19 @@ def list_dlq(principal: Principal = Depends(require_principal)):
 
 @router.post("/v1/dlq")
 def push_dlq(body: dict[str, Any], principal: Principal = Depends(require_principal)):
+    from aos_api.ec_dlq_handler import _sanitize_pii
+
     scope = _mutation_scope(principal)
+    # 对 body 中所有字符串值做 PII 脱敏
+    sanitized_body = {}
+    for k, v in body.items():
+        if isinstance(v, str):
+            sanitized_body[k] = _sanitize_pii(v)
+        else:
+            sanitized_body[k] = v
     item = {
         "id": f"dlq-{uuid.uuid4().hex[:6]}",
-        **body,
+        **sanitized_body,
         "status": "open",
         "orgId": scope.org_id,
         "projectId": scope.project_id,

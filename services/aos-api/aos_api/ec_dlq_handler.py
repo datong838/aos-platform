@@ -20,11 +20,13 @@ MAX_RETRY = 3
 
 # PII 脱敏规则：身份证 / 银行卡 / 手机号 / 邮箱 → ***
 # 顺序：长 pattern 先匹配，避免短 pattern（手机号）部分匹配 18 位身份证中的 11 位子串
+# 手机号支持带分隔符格式：138-0000-0000、138 0000 0000、13800000000
 _PII_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\d{15,18}"), "***"),          # 身份证（先长 pattern）
     (re.compile(r"62\d{14,17}"), "***"),        # 银行卡号
-    (re.compile(r"1[3-9]\d{9}"), "***"),       # 手机号（后短 pattern）
+    (re.compile(r"1[3-9]\d[\s-]?\d{4}[\s-]?\d{4}"), "***"),  # 手机号（含分隔符）
     (re.compile(r"\S+@\S+\.\S+"), "***"),       # 邮箱
+    (re.compile(r"openid[_\w-]+", re.IGNORECASE), "***"),  # openid
 ]
 
 
