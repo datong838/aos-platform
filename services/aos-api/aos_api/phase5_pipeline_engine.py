@@ -333,6 +333,10 @@ class PipelineEngine:
             random_id = pl.id
             self._pipelines.pop(self._tenant_key(scope, random_id), None)
             pl.id = pl_id
+            # Phase B: 设置 executor 和 mode 使 pipeline 可被 execute_pipeline_once 执行
+            pl.executor_id = "ec-live-v1"
+            pl.execution_mode = "live"
+            pl.execution_timeout_seconds = 120
             self._pipelines[self._tenant_key(scope, pl_id)] = pl
             self._add_history(scope, pl_id, "created", f"从 YAML 加载: {fname}")
             count += 1

@@ -168,6 +168,26 @@ async def lifespan(_app: FastAPI):
                     # 强制 hydrate 从 PG 加载全部数据（包括 source/connector）
                     # 这样 _connectors 也能从 meta_source 恢复
                     _wx._hydrate_data_os_scope(_scope, force=True)
+
+                    # Phase B: 为每个 pipeline 创建 SyncTask（绑定 pipeline_id + source_id）
+                    # Phase6 引擎是纯内存的，每次启动需要重建 SyncTask
+                    from aos_api.phase6_datasource_engine import get_engine as _p6eng
+                    _p6 = _p6eng()
+                    for _p in _items:
+                        _st_id = f"sync-task-{_p.id}"
+                        if _p6.get_sync_task(_st_id, scope=_scope) is None:
+                            _p6.create_sync_task(
+                                name=f"栖月汇-{_p.id} 同步任务",
+                                source_id="niushop-qyh",
+                                target_dataset=f"ri.aos.main.dataset.{_p.id}",
+                                mode="full",
+                                cron_expr="0 * * * *",
+                                status="active",
+                                owner="data-team",
+                                config={"pipeline_id": _p.id},
+                                scope=_scope,
+                            )
+                    log.info("startup_sync_tasks_seeded count=%d", len(_items))
                 log.info("startup_seed_from_bundles count=%d dir=%s", _count, _bundles_dir)
             except Exception:
                 log.exception("startup_seed_from_bundles_failed_continue")
