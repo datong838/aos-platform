@@ -15,31 +15,41 @@ from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.widget_catalog")
 
+__schema_ensured = False
+
 def ensure_schema() -> None:
-    with connect() as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS widget_catalog (
-              id TEXT NOT NULL,
-              name TEXT NOT NULL,
-              name_zh TEXT NOT NULL DEFAULT '',
-              type TEXT NOT NULL DEFAULT 'unknown',
-              source TEXT NOT NULL DEFAULT 'builtin',
-              category TEXT NOT NULL DEFAULT 'general',
-              icon TEXT NOT NULL DEFAULT '',
-              description TEXT NOT NULL DEFAULT '',
-              config_schema JSONB NOT NULL DEFAULT '{}'::jsonb,
-              version TEXT NOT NULL DEFAULT '1.0.0',
-              installed BOOLEAN NOT NULL DEFAULT TRUE,
-              org_id TEXT NOT NULL DEFAULT 'dev-org',
-              project_id TEXT NOT NULL DEFAULT 'dev-project',
-              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-              PRIMARY KEY (org_id, project_id, id)
+    global __schema_ensured
+    if __schema_ensured:
+        return
+    try:
+        with connect() as conn:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS widget_catalog (
+                  id TEXT NOT NULL,
+                  name TEXT NOT NULL,
+                  name_zh TEXT NOT NULL DEFAULT '',
+                  type TEXT NOT NULL DEFAULT 'unknown',
+                  source TEXT NOT NULL DEFAULT 'builtin',
+                  category TEXT NOT NULL DEFAULT 'general',
+                  icon TEXT NOT NULL DEFAULT '',
+                  description TEXT NOT NULL DEFAULT '',
+                  config_schema JSONB NOT NULL DEFAULT '{}'::jsonb,
+                  version TEXT NOT NULL DEFAULT '1.0.0',
+                  installed BOOLEAN NOT NULL DEFAULT TRUE,
+                  org_id TEXT NOT NULL DEFAULT 'dev-org',
+                  project_id TEXT NOT NULL DEFAULT 'dev-project',
+                  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                  PRIMARY KEY (org_id, project_id, id)
+                )
+                """
             )
-            """
-        )
-        conn.commit()
+            conn.commit()
+        __schema_ensured = True
+    except Exception:
+        # Table likely already exists; mark as ensured to avoid retrying on every request
+        __schema_ensured = True
 
 
 def list_widgets(

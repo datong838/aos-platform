@@ -10,6 +10,9 @@ from aos_api.phase7_ops_engine import get_engine
 
 router = APIRouter(prefix="/api/v1/ops/releases", tags=["phase7-releases"])
 
+# Alias router: frontend uses /v1/releases (without /api prefix)
+alias_router = APIRouter(prefix="/v1/releases", tags=["phase7-releases"])
+
 
 class CreateReleaseRequest(BaseModel):
     channel: str = "beta"  # rc|beta|stable
@@ -87,3 +90,20 @@ async def execute_recall(req: ExecuteRecallRequest) -> dict[str, Any]:
     )
     r = eng.execute_recall(r.id)
     return r.model_dump()
+
+
+# ── Alias routes: frontend calls /v1/releases (without /api prefix) ──
+
+@alias_router.get("")
+async def alias_list_releases(channel: str | None = Query(None)) -> dict[str, Any]:
+    return await list_releases(channel=channel)
+
+
+@alias_router.get("/hotfix")
+async def alias_get_hotfix() -> dict[str, Any]:
+    return await get_hotfix()
+
+
+@alias_router.get("/recall")
+async def alias_list_recalls(limit: int = Query(20, ge=1, le=100)) -> dict[str, Any]:
+    return await list_recalls(limit=limit)
