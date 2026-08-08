@@ -155,11 +155,21 @@ def _get_field(row: dict[str, Any], name: str, default: Any = None) -> Any:
     """从 row 取源字段值，兼容顶层和 properties 两种位置。
 
     优先从 row 顶层取（raw niushop 格式），其次从 properties 取（normalized 格式）。
+    支持常见别名：score↔scores（Niushop ns_goods_evaluate 用 scores）。
     """
     if name in row:
         return row[name]
+    # 别名兼容
+    _aliases = {"score": "scores", "scores": "score"}
+    alias = _aliases.get(name)
+    if alias and alias in row:
+        return row[alias]
     props = row.get("properties") or {}
-    return props.get(name, default)
+    if name in props:
+        return props[name]
+    if alias and alias in props:
+        return props[alias]
+    return default
 
 
 def _set_property(row: dict[str, Any], name: str, value: Any) -> None:

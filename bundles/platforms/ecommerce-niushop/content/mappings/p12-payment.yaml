@@ -1,0 +1,50 @@
+pipeline_id: P12
+source_table: ns_pay
+target_ot: Payment
+primary_key: id
+site_filter: "site_id=1"
+incremental_strategy: watermark
+incremental_cursor:
+  fields: [create_time, id]
+  fallback: create_time
+unique_key_pattern: "niushop:{site_id}:{pk}"
+validation:
+  required: [out_trade_no]
+field_mappings:
+  # 基础标识
+  - {source: id, target: id, type: int}
+  - {source: site_id, target: siteId, type: int}
+  - {source: weapp_id, target: weappId, type: int}
+  # 交易信息
+  - {source: mch_id, target: merchantId, type: string}
+  - {source: pay_appid, target: payAppId, type: string}
+  - {source: out_trade_no, target: outTradeNo, type: string}
+  - {source: pay_type, target: payType, type: string}
+  - {source: trade_no, target: tradeNo, type: string}
+  - {source: pay_no, target: payNo, type: string}
+  # 金额与状态
+  - {source: pay_money, target: payMoney, type: decimal}
+  - {source: pay_status, target: payStatus, type: int}
+  - {source: pay_type, target: payTypeLabel, type: string}
+  - {source: return_url, target: returnUrl, type: string}
+  - {source: event, target: event, type: string}
+  # 会员与退款
+  - {source: member_id, target: memberId, type: int}
+  - {source: balance, target: balance, type: decimal}
+  - {source: balance_money, target: balanceMoney, type: decimal}
+  - {source: relate_id, target: relateId, type: int}
+  - {source: is_delete, target: isDelete, type: int}
+  # 时间
+  - {source: create_time, target: createTime, type: timestamp}
+  - {source: pay_time, target: payTime, type: timestamp}
+pii_exclusion:
+  - pay_body
+  - pay_detail
+  - pay_addon
+  - pay_voucher
+  - pay_json
+  - mch_info
+notes:
+  - "ns_pay 表共 26 个字段，支付记录信息"
+  - "字段映射 20 个：标识(3)+交易(7)+金额状态(3)+会员退款(5)+时间(2)"
+  - "PII 排除 6 个：pay_body/pay_detail/pay_addon/pay_voucher/pay_json/mch_info（含敏感支付凭证和商户密钥）"

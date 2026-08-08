@@ -1916,6 +1916,8 @@ def execute_pipeline(
             "P03": "p03-product-sku.yaml", "P04": "p04-category.yaml",
             "P05": "p05-order.yaml", "P06": "p06-order-line.yaml",
             "P07": "p07-shipment.yaml", "P08": "p08-customer-lite.yaml",
+            "P09": "p09-weapp.yaml", "P10": "p10-system-config.yaml",
+            "P11": "p11-product-review.yaml", "P12": "p12-payment.yaml",
         }
         _prefix = pl_id.split("-")[0] if "-" in pl_id else pl_id[:3]
         _yaml_fname = _fname_map.get(_prefix)
@@ -2070,6 +2072,20 @@ def execute_pipeline(
     rows_transformed = len(transformed_rows)
     tasks[1]["status"] = "SUCCEEDED"
     _log("INFO", f"[transform] 完成，有效 {rows_transformed} 行")
+
+    # 阶段 2.5: 派生指标计算（FR-D1-7 / FR-D1.5-4 / D4）
+    if transformed_rows and _yaml_target_ot:
+        try:
+            from aos_api.ec_derived_metrics import apply_derived_metrics
+            transformed_rows = apply_derived_metrics(
+                transformed_rows, type("P", (), {"id": pl_id, "config": {"target_ot": _yaml_target_ot}})()
+            )
+            metric_fields = {"quality_score", "stock_health", "risk_score", "overdue_hours",
+                             "order_count", "last_order_days", "review_quality_bucket", "pay_duration_min"}
+            hit_count = sum(1 for r in transformed_rows if metric_fields & set(r.keys()))
+            _log("INFO", f"[derived] 派生指标计算完成 OT={_yaml_target_ot} 命中={hit_count}/{rows_transformed}")
+        except Exception as exc:
+            _log("WARN", f"[derived] 派生指标计算失败(不阻塞): {exc!r}")
 
     # 阶段 3: sink
     rows_written = rows_transformed

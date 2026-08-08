@@ -266,6 +266,8 @@ class PipelineEngine:
         "ProductSku": "栖月汇-商品SKU", "Category": "栖月汇-类目",
         "Order": "栖月汇-订单", "OrderLine": "栖月汇-订单明细",
         "Shipment": "栖月汇-发货", "CustomerLite": "栖月汇-会员",
+        "Weapp": "栖月汇-小程序", "SystemConfig": "栖月汇-系统配置",
+        "ProductReview": "栖月汇-商品评价", "Payment": "栖月汇-支付",
     }
 
     def seed_from_bundles(self, scope: TenantScope, bundles_dir: str) -> int:

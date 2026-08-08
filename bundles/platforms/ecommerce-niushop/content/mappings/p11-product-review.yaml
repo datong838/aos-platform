@@ -1,0 +1,57 @@
+pipeline_id: P11
+source_table: ns_goods_evaluate
+target_ot: ProductReview
+primary_key: evaluate_id
+site_filter: "site_id=1"
+incremental_strategy: watermark
+incremental_cursor:
+  fields: [create_time, evaluate_id]
+  fallback: create_time
+unique_key_pattern: "niushop:{site_id}:{pk}"
+validation:
+  required: [goods_id]
+field_mappings:
+  # 基础标识
+  - {source: evaluate_id, target: id, type: int}
+  - {source: site_id, target: siteId, type: int}
+  - {source: order_id, target: orderId, type: int}
+  - {source: order_no, target: orderNo, type: string}
+  - {source: order_goods_id, target: orderGoodsId, type: int}
+  # 商品信息
+  - {source: goods_id, target: goodsId, type: int}
+  - {source: sku_id, target: skuId, type: int}
+  - {source: sku_name, target: skuName, type: string}
+  - {source: sku_price, target: skuPrice, type: decimal}
+  - {source: sku_image, target: skuImage, type: string}
+  # 评价内容
+  - {source: content, target: content, type: string}
+  - {source: images, target: images, type: string}
+  - {source: videos, target: videos, type: string}
+  - {source: explain_first, target: firstReply, type: string}
+  - {source: scores, target: scores, type: int}
+  - {source: explain_type, target: explainType, type: int}
+  - {source: is_show, target: isShow, type: int}
+  - {source: is_audit, target: isAudit, type: int}
+  # 追评
+  - {source: again_content, target: againContent, type: string}
+  - {source: again_images, target: againImages, type: string}
+  - {source: again_explain, target: againReply, type: string}
+  - {source: again_time, target: againTime, type: timestamp}
+  - {source: again_is_audit, target: againIsAudit, type: int}
+  # 会员信息
+  - {source: member_id, target: memberId, type: int}
+  - {source: member_name, target: memberName, type: string}
+  - {source: member_headimg, target: memberAvatar, type: string}
+  - {source: is_anonymous, target: isAnonymous, type: int}
+  # 评分
+  - {source: shop_desccredit, target: shopDescCredit, type: decimal}
+  - {source: shop_servicecredit, target: shopServiceCredit, type: decimal}
+  - {source: shop_deliverycredit, target: shopDeliveryCredit, type: decimal}
+  # 时间
+  - {source: create_time, target: createTime, type: timestamp}
+  - {source: website_id, target: websiteId, type: int}
+pii_exclusion: []
+notes:
+  - "ns_goods_evaluate 表共 32 个字段，商品评价信息"
+  - "字段映射 31 个：标识(5)+商品(5)+评价(8)+追评(5)+会员(4)+评分(3)+时间(1)"
+  - "PII 排除：无（评价表已脱敏，member_name 可能为昵称）"
