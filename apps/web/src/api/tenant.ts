@@ -12,9 +12,9 @@ export type TenantContext = {
 
 const STORAGE_KEY = "aos-tenant-v1";
 
-/** 开发默认落入「默认工作区」（技术 id 暂与历史种子兼容为 dev-project） */
+/** 开发默认落入「栖月汇」（org-org / dev-project） */
 const DEFAULT_TENANT: TenantContext = {
-  orgId: "dev-org",
+  orgId: "org-org",
   projectId: "dev-project",
   workspaceName: "默认工作区",
 };

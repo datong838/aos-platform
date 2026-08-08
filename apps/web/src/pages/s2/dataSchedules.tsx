@@ -17,7 +17,7 @@ const CRON_PRESETS: { label: string; cron: string; hint: string }[] = [
   { label: "自定义", cron: "", hint: "手动编辑 Cron" },
 ];
 
-// Phase 7: 近 14 次运行历史种子数据
+// 近 14 次运行历史（UI 展示种子数据，后端暂无 Schedule Run History API）
 const RUN_HISTORY: { status: "success" | "failed" | "running" | "scheduled"; time: string; duration: string }[] = [
   { status: "success", time: "2026-07-27 02:00", duration: "3m 24s" },
   { status: "success", time: "2026-07-26 02:00", duration: "3m 12s" },

@@ -188,6 +188,26 @@ async def lifespan(_app: FastAPI):
                                 scope=_scope,
                             )
                     log.info("startup_sync_tasks_seeded count=%d", len(_items))
+
+                    # Phase D: 为每个 pipeline 创建 Schedule（wave_ext _schedules dict）
+                    # 确保前端调度页能看到真实数据
+                    import time as _time
+                    for _p in _items:
+                        _sch_id = f"sch-{_p.id}"
+                        if _sch_id not in _wx._schedules:
+                            _wx._schedules[_sch_id] = {
+                                "id": _sch_id,
+                                "cron": "0 * * * *",
+                                "pipelineId": _p.id,
+                                "enabled": True,
+                                "name": f"栖月汇-{_p.id} 每小时同步",
+                                "ingest": None,
+                                "orgId": _scope.org_id,
+                                "projectId": _scope.project_id,
+                                "lastRun": None,
+                            }
+                            _wx._persist_safe("persist_schedule", _scope, _wx._schedules[_sch_id])
+                    log.info("startup_schedules_seeded count=%d", len(_wx._schedules))
                 log.info("startup_seed_from_bundles count=%d dir=%s", _count, _bundles_dir)
             except Exception:
                 log.exception("startup_seed_from_bundles_failed_continue")

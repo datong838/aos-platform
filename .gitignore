@@ -39,3 +39,5 @@ cdp_verify.py
 cdp_screenshot*.py
 inspect_d5*.py
 screenshot_d5*.py
+scripts/d5_phase_d_*.py
+scripts/d5_phase_d_targeted.py
