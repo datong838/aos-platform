@@ -222,7 +222,7 @@ def test_p05_ec_live_executor_reads_config(p05_pipeline, monkeypatch):
     monkeypatch.setattr(
         ec_mod, "fetch_source_rows", lambda **kw: [fake_row]
     )
-    monkeypatch.setattr(ec_mod, "apply_derived_metrics", lambda rows, _: rows)
+    monkeypatch.setattr(ec_mod, "apply_derived_metrics", lambda rows, pipeline, **kw: rows)
     monkeypatch.setattr(ec_mod, "build_link_rows", lambda rows, _: rows)
     monkeypatch.setattr(
         ec_mod,

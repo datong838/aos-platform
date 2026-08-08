@@ -175,10 +175,12 @@ def bind_tenant_ids(
         return claim_org, claim_project
 
     if allow_header_fallback:
+        # O1-A: dev 模式下 header 优先，缺失时才回退到 dev 默认
         org = claim_org or header_org or "dev-org"
         project = claim_project or header_project or "dev-project"
         log.info(
-            "tenant_bound source=header_fallback org=%s project=%s allow_dev=1",
+            "tenant_bound source=%s org=%s project=%s allow_dev=1",
+            "header" if (header_org or header_project) else "dev_default",
             org,
             project,
         )

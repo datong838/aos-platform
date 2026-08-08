@@ -38,6 +38,43 @@ def _sanitize_pii(text: str) -> str:
     return sanitized
 
 
+def _sanitize_recursive(obj: Any) -> Any:
+    """O1-A G18: 递归脱敏 — 深度遍历 dict/list/str，对所有字符串做 PII 脱敏。
+
+    - str → _sanitize_pii
+    - dict → 对每个 value 递归
+    - list/tuple → 对每个元素递归
+    - 其他类型 → 原样返回
+    """
+    if isinstance(obj, str):
+        return _sanitize_pii(obj)
+    if isinstance(obj, dict):
+        return {k: _sanitize_recursive(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return type(obj)(_sanitize_recursive(item) for item in obj)
+    return obj
+
+
+def classify_pipeline_error(exc: Exception) -> str:
+    """O1-A G18: 错误分类 — 先检查 EcomConsistencyError.code，否则用异常类名。
+
+    返回值用于 DLQ 的 errorCode 字段，确保领域错误有语义化的错误码。
+    """
+    # 检查 EcomConsistencyError（领域错误）
+    code = getattr(exc, "code", None)
+    if code and isinstance(code, str):
+        return code
+    # 检查 __cause__ 链中的 EcomConsistencyError
+    cause = getattr(exc, "__cause__", None)
+    while cause is not None:
+        cause_code = getattr(cause, "code", None)
+        if cause_code and isinstance(cause_code, str):
+            return cause_code
+        cause = getattr(cause, "__cause__", None)
+    # 回退到异常类名
+    return type(exc).__name__
+
+
 def _summarize_exception(exc: Exception) -> str:
     """生成脱敏的错误摘要：异常类型 + 简短描述（不含完整 traceback）。"""
     raw = f"{type(exc).__name__}: {exc}"
@@ -80,7 +117,7 @@ def handle_failure(
         item = {
             "id": dlq_id,
             "pipelineId": pipeline_id,
-            "errorCode": type(exc).__name__,
+            "errorCode": classify_pipeline_error(exc),
             "reason": summary,
             "status": "open",
             "retry_count": 0,

@@ -1,0 +1,26 @@
+{
+  "alembic_revision": "o1a0_001",
+  "d4_doc_sha256": "sha256:d79c3949d48081282e68345659f1334ba2cb10ad19c4a219e8d60bed7f87ca54",
+  "db_url_hash": "sha256:0a5b90098e32ebc3",
+  "doc_sha256": "sha256:d9cdf468a869b0b1f0078a1f7ea12d2a35288653394eb265d920e9c8c90d7c91",
+  "doc_version": "D5-E-v2.9",
+  "ended_at": "2026-08-08T19:37:43.205616+00:00",
+  "gate": "G19",
+  "git_sha": "8c1d1f8f94e372dcb997187dc34cd51948df546e",
+  "git_short_sha": "8c1d1f8",
+  "o1_doc_sha256": "sha256:989922535198898ea23824374fa7defb7a4d7f6ad4ee9b97f6658ee667619534",
+  "phase": "D5-E0",
+  "results": {
+    "ecom_link_count": 0,
+    "ecom_object_count": 640,
+    "graph_edge_count": 0,
+    "obj_instance_count": 1170,
+    "other_orgs_in_ecom_object": [],
+    "tenant_scope": {
+      "org_id": "org-org",
+      "workspace_id": "dev-project"
+    }
+  },
+  "started_at": "2026-08-08T19:37:43.199932+00:00",
+  "tenant_scope": "org-org/dev-project"
+}

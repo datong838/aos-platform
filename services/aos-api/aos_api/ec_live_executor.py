@@ -105,11 +105,18 @@ def ec_live_executor(
         # transform: normalize + 派生指标 + Link 构造（Phase B 拆分到独立模块）
         #   1. D2.5 缺口 1 修复：normalize_rows 将 raw ns_xxx 行转为 OT normalized 行（幂等）
         #   2. 浅拷贝避免污染 source 行
-        #   3. apply_derived_metrics: 按 target_ot 计算 4 个派生指标写入 row（W1）
-        #   4. build_link_rows: 按 target_ot 构造 6 条核心 Link 行追加到 rows（W3）
+        #   3. O1-A: Payment 丰富 _order_create_time（batch_read_public）
+        #   4. apply_derived_metrics: 按 target_ot 计算 8 个派生指标写入 row（含 link_aggregator）
+        #   5. build_link_rows: 按 target_ot 构造 14 条核心 Link 行追加到 rows
         normalized_rows = normalize_rows(input_rows, pipeline)
         output_rows = [dict(row) for row in normalized_rows]
-        output_rows = apply_derived_metrics(output_rows, pipeline)
+
+        # O1-A: Payment 丰富 — 从 ecom_object 批量查 Order.createdAt 填入 _order_create_time
+        _enrich_payment_order_create_time(eng, scope, output_rows, pipeline)
+
+        # O1-A: 构造 link_aggregator（从已写入的 ecom_object/ecom_link 查 Order 聚合数据）
+        aggregator = _make_link_aggregator(eng, scope)
+        output_rows = apply_derived_metrics(output_rows, pipeline, link_aggregator=aggregator)
         output_rows = build_link_rows(output_rows, pipeline)
 
         # sink: Dataset（G4，W2 实现）
@@ -212,3 +219,161 @@ def _write_obj_instances(scope: Any, pipeline: Any, output_rows: list[dict[str, 
         log.info("obj_instance_written ot=%s count=%d pipeline=%s", object_type, len(instances), pipeline_id)
     except Exception:
         log.warning("obj_instance_write_failed pipeline=%s", getattr(pipeline, "id", "?"), exc_info=True)
+
+
+# ═══════════════════════════════════════════════════════════════
+# O1-A: Payment 丰富 + link_aggregator 工厂
+# ═══════════════════════════════════════════════════════════════
+
+def _enrich_payment_order_create_time(
+    eng: Any, scope: Any, rows: list[dict[str, Any]], pipeline: Any,
+) -> None:
+    """O1-A §5.2.11: Payment 批量丰富 — 从 ecom_object 查 Order.createdAt。
+
+    当 target_ot=Payment 时，用 ns_pay.relate_id（≈order_id）关联查
+    ecom_object 中已存在的 Order 对象的 createdAt，挂到 row._order_create_time。
+    关联失败不阻塞 Pipeline。
+    """
+    from aos_api.ec_normalizer import _resolve_target_ot
+
+    target_ot = _resolve_target_ot(pipeline)
+    if target_ot != "Payment":
+        return
+
+    # 收集 relate_id → row 映射
+    id_to_rows: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        if row.get("link_type"):  # skip link rows
+            continue
+        relate_id = str(row.get("relate_id") or row.get("order_id") or "").strip()
+        if relate_id:
+            id_to_rows.setdefault(relate_id, []).append(row)
+
+    if not id_to_rows:
+        return
+
+    # 从 ecom_object 批量查 Order.createdAt
+    store = getattr(eng, "ecom_consistency_store", None)
+    if store is None:
+        return
+
+    org_id = getattr(scope, "org_id", "") or ""
+    workspace_id = getattr(scope, "workspace_id", "") or ""
+
+    try:
+        from aos_api.ecom_consistency_store import ecom_object as _tbl
+        from sqlalchemy import select, and_
+
+        order_ids = list(id_to_rows.keys())
+        _engine = getattr(store, "_engine", None)
+        if _engine is None:
+            return
+        with _engine.connect() as conn:
+            # 设置 GUC
+            conn.execute(text(f"SET LOCAL aos.org_id = '{org_id}'"))
+            conn.execute(text(f"SET LOCAL aos.workspace_id = '{workspace_id}'"))
+
+            results = conn.execute(
+                select(
+                    _tbl.c.external_id,
+                    _tbl.c.properties,
+                ).where(
+                    and_(
+                        _tbl.c.org_id == org_id,
+                        _tbl.c.workspace_id == workspace_id,
+                        _tbl.c.object_type == "Order",
+                        _tbl.c.external_id.in_(order_ids),
+                    )
+                )
+            ).fetchall()
+
+        for ext_id, props in results:
+            created_at = (props or {}).get("createdAt") if isinstance(props, dict) else None
+            if created_at:
+                for row in id_to_rows.get(ext_id, []):
+                    row["_order_create_time"] = created_at
+
+        log.info(
+            "payment_enriched orders_found=%d/%d pipeline=%s",
+            len(results), len(order_ids), getattr(pipeline, "id", "?"),
+        )
+    except Exception:
+        log.warning("payment_enrich_failed pipeline=%s", getattr(pipeline, "id", "?"), exc_info=True)
+
+
+def _make_link_aggregator(eng: Any, scope: Any) -> Any:
+    """O1-A: 构造 link_aggregator 闭包（从 ecom_object 查 Order 聚合数据）。
+
+    返回一个 Callable[[frozenset[str]], dict[str, tuple[int, datetime|None]]]。
+    输入 member_ids 集合，返回 {member_id: (order_count, last_created_at)}。
+    """
+    from datetime import datetime, timezone
+    from aos_api.ecom_consistency_store import ecom_object as _tbl, ecom_link as _link_tbl
+    from sqlalchemy import select, func, and_
+    from sqlalchemy.engine import Engine
+
+    store = getattr(eng, "ecom_consistency_store", None)
+    org_id = getattr(scope, "org_id", "") or ""
+    workspace_id = getattr(scope, "workspace_id", "") or ""
+    engine: Engine = getattr(store, "_engine", None) if store else None
+
+    def aggregator(member_ids: frozenset[str]) -> dict[str, tuple[int, datetime | None]]:
+        if not member_ids or engine is None:
+            return {}
+
+        try:
+            # 查 Order → CustomerLite (placedByLite) link，聚合 order_count + max(createdAt)
+            # 从 ecom_object 查 Order 的 properties.createdAt
+            # 从 ecom_link 查 placedByLite 关系
+            ids_list = list(member_ids)
+            with engine.connect() as conn:
+                # 设置 GUC
+                from sqlalchemy import text as _text
+
+                conn.execute(_text(f"SET LOCAL aos.org_id = '{org_id}'"))
+                conn.execute(_text(f"SET LOCAL aos.workspace_id = '{workspace_id}'"))
+
+                # 查 Order objects 的 member_id 和 createdAt
+                order_rows = conn.execute(
+                    select(
+                        _tbl.c.external_id,
+                        _tbl.c.properties,
+                    ).where(
+                        and_(
+                            _tbl.c.org_id == org_id,
+                            _tbl.c.workspace_id == workspace_id,
+                            _tbl.c.object_type == "Order",
+                        )
+                    )
+                ).fetchall()
+
+            # 从 Order properties 提取 memberId → createdAt
+            member_orders: dict[str, list[datetime | None]] = {}
+            for _ext_id, props in order_rows:
+                props = props if isinstance(props, dict) else {}
+                member_id = str(props.get("memberId") or "").strip()
+                if not member_id or member_id not in member_ids:
+                    continue
+                created_at_str = props.get("createdAt")
+                dt = None
+                if created_at_str:
+                    try:
+                        dt = datetime.fromisoformat(
+                            created_at_str.replace("Z", "+00:00")
+                        )
+                    except (ValueError, TypeError):
+                        pass
+                member_orders.setdefault(member_id, []).append(dt)
+
+            result: dict[str, tuple[int, datetime | None]] = {}
+            for mid, times in member_orders.items():
+                valid_times = [t for t in times if t is not None]
+                last = max(valid_times) if valid_times else None
+                result[mid] = (len(times), last)
+            return result
+
+        except Exception:
+            log.warning("link_aggregator_failed", exc_info=True)
+            return {}
+
+    return aggregator

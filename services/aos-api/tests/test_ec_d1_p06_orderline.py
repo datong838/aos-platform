@@ -207,7 +207,7 @@ def _mock_dataset_sink(monkeypatch):
 @pytest.fixture(autouse=True)
 def _mock_derived_and_links(monkeypatch):
     """mock apply_derived_metrics 和 build_link_rows 为透传（隔离 OT 落地）。"""
-    monkeypatch.setattr(ec_mod, "apply_derived_metrics", lambda rows, _: rows)
+    monkeypatch.setattr(ec_mod, "apply_derived_metrics", lambda rows, pipeline, **kw: rows)
     monkeypatch.setattr(ec_mod, "build_link_rows", lambda rows, _: rows)
 
 

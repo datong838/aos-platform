@@ -296,9 +296,9 @@ class TestP02ExecutorReadsApiConfig:
                 scope=TEST_SCOPE,
             )
 
-        # 2 source rows → 2 objects + 1 + 3 inCategory links = 6
+        # 2 source rows → 2 objects + 4 inCategory + 2 sellsProduct = 8
         assert result["rows_read"] == 2
-        assert result["rows_written"] == 6
+        assert result["rows_written"] == 8
         assert len(sink_ot_calls) == 1
         _, _, output_rows = sink_ot_calls[0]
         # 验证 inCategory Link 构造（与 config.link_rules.inCategory 对齐）
