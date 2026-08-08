@@ -94,10 +94,18 @@ ecom_link = Table(
     CheckConstraint(
         "(link_type = 'Order.lines' AND source_object_type = 'Order' AND target_object_type = 'OrderLine') OR "
         "(link_type = 'OrderLine.ofSku' AND source_object_type = 'OrderLine' AND target_object_type = 'ProductSku') OR "
+        "(link_type = 'OrderLine.ofProduct' AND source_object_type = 'OrderLine' AND target_object_type = 'Product') OR "
         "(link_type = 'ProductSku.ofProduct' AND source_object_type = 'ProductSku' AND target_object_type = 'Product') OR "
         "(link_type = 'Product.inCategory' AND source_object_type = 'Product' AND target_object_type = 'Category') OR "
         "(link_type = 'Shop.sellsProduct' AND source_object_type = 'Shop' AND target_object_type = 'Product') OR "
-        "(link_type = 'Order.fulfilledBy' AND source_object_type = 'Order' AND target_object_type = 'Shipment')",
+        "(link_type = 'Order.fulfilledBy' AND source_object_type = 'Order' AND target_object_type = 'Shipment') OR "
+        "(link_type = 'Order.placedByLite' AND source_object_type = 'Order' AND target_object_type = 'CustomerLite') OR "
+        "(link_type = 'Shop.hasWeapp' AND source_object_type = 'Shop' AND target_object_type = 'Weapp') OR "
+        "(link_type = 'Product.hasReview' AND source_object_type = 'Product' AND target_object_type = 'ProductReview') OR "
+        "(link_type = 'ProductReview.ofSku' AND source_object_type = 'ProductReview' AND target_object_type = 'ProductSku') OR "
+        "(link_type = 'ProductReview.byMember' AND source_object_type = 'ProductReview' AND target_object_type = 'CustomerLite') OR "
+        "(link_type = 'Order.hasPayment' AND source_object_type = 'Order' AND target_object_type = 'Payment') OR "
+        "(link_type = 'Order.fromWeapp' AND source_object_type = 'Order' AND target_object_type = 'Weapp')",
         name="ck_ecom_link_endpoint_types",
     ),
 )
@@ -200,6 +208,7 @@ class EcomConsistencyStore:
 
     def __init__(self, engine: Engine) -> None:
         self._engine = engine
+        self._last_dangling_links: list[CoreLinkRecord] = []
 
     def apply_batch(self, command: BatchCommand) -> BatchResult:
         # Pydantic's frozen models are shallow: callers could otherwise mutate
@@ -239,13 +248,32 @@ class EcomConsistencyStore:
                     "links_ignored": 0,
                     "links_tombstoned": 0,
                 }
+
+                # Phase 1: upsert all objects first (within the same transaction)
                 for record in command.ordered_objects():
                     outcome = self._upsert_object(conn, record)
                     counters[outcome] += 1
 
+                # Phase 2: upsert links, collecting dangling links for DLQ
+                # instead of aborting the entire batch
+                dangling_links: list[CoreLinkRecord] = []
                 for link in command.ordered_links():
-                    outcome = self._upsert_link(conn, link)
+                    if not self._object_exists(
+                        conn, link.source, link.source_type, allow_tombstone=link.is_deleted
+                    ) or not self._object_exists(
+                        conn, link.target, link.target_type, allow_tombstone=link.is_deleted
+                    ):
+                        dangling_links.append(link)
+                        counters["links_ignored"] += 1
+                        continue
+                    outcome = self._upsert_link_checked(conn, link)
                     counters[outcome] += 1
+
+                # Store dangling link info for DLQ (accessible via get_dangling_links)
+                if dangling_links:
+                    self._last_dangling_links = dangling_links
+                else:
+                    self._last_dangling_links = []
 
                 checkpoint_version = self._advance_checkpoint(conn, command)
                 result = BatchResult(
@@ -272,6 +300,10 @@ class EcomConsistencyStore:
                 "CONCURRENT_WRITE_CONFLICT",
                 "a concurrent write changed the consistency state",
             ) from exc
+
+    def get_last_dangling_links(self) -> list[CoreLinkRecord]:
+        """Return dangling links from the last apply_batch call (for DLQ)."""
+        return getattr(self, "_last_dangling_links", [])
 
     def get_object(
         self, identity: StorageIdentity, object_type: str
@@ -451,6 +483,9 @@ class EcomConsistencyStore:
         return conn.execute(query).first() is not None
 
     def _upsert_link(self, conn: Connection, link: CoreLinkRecord) -> str:
+        """Original method: checks existence then delegates to _upsert_link_checked.
+        Kept for backward compatibility and direct-call scenarios.
+        """
         if not self._object_exists(
             conn, link.source, link.source_type, allow_tombstone=link.is_deleted
         ) or not self._object_exists(
@@ -461,6 +496,10 @@ class EcomConsistencyStore:
                 "link endpoints must exist in the same committed tenant scope",
                 details={"linkType": link.link_type},
             )
+        return self._upsert_link_checked(conn, link)
+
+    def _upsert_link_checked(self, conn: Connection, link: CoreLinkRecord) -> str:
+        """Upsert link after endpoint existence is already verified (by apply_batch)."""
 
         clause = _link_clause(link)
         existing = (

@@ -261,11 +261,11 @@ def _enrich_payment_order_create_time(
         return
 
     org_id = getattr(scope, "org_id", "") or ""
-    workspace_id = getattr(scope, "workspace_id", "") or ""
+    workspace_id = getattr(scope, "project_id", "") or getattr(scope, "workspace_id", "") or ""
 
     try:
         from aos_api.ecom_consistency_store import ecom_object as _tbl
-        from sqlalchemy import select, and_
+        from sqlalchemy import select, and_, text
 
         order_ids = list(id_to_rows.keys())
         _engine = getattr(store, "_engine", None)
@@ -317,7 +317,7 @@ def _make_link_aggregator(eng: Any, scope: Any) -> Any:
 
     store = getattr(eng, "ecom_consistency_store", None)
     org_id = getattr(scope, "org_id", "") or ""
-    workspace_id = getattr(scope, "workspace_id", "") or ""
+    workspace_id = getattr(scope, "project_id", "") or getattr(scope, "workspace_id", "") or ""
     engine: Engine = getattr(store, "_engine", None) if store else None
 
     def aggregator(member_ids: frozenset[str]) -> dict[str, tuple[int, datetime | None]]:
@@ -430,8 +430,8 @@ def _mark_projection_outbox(
                         "(org_id, project_id, workspace_id, input_revision, change_kind, "
                         "link_type, source_external_id, target_external_id, "
                         "platform, shop_or_marketplace_id, payload, projected, projected_at) "
-                        "VALUES (:org, :proj, :ws, :rev, 'upsert_link', "
-                        ":lt, :src, :tgt, 'niushop', '1', :payload::jsonb, TRUE, now())"
+                        "VALUES (:org, :proj, :ws, :rev, 'links_written', "
+                        ":lt, :src, :tgt, 'niushop', '1', CAST(:payload AS jsonb), TRUE, now())"
                     ).bindparams(
                         org=org_id, proj=project_id, ws=project_id,
                         rev=revision, lt=row.get("link_type", ""),
@@ -452,8 +452,8 @@ def _mark_projection_outbox(
                         "(org_id, project_id, workspace_id, input_revision, change_kind, "
                         "object_type, external_id, "
                         "platform, shop_or_marketplace_id, payload, projected, projected_at) "
-                        "VALUES (:org, :proj, :ws, :rev, 'upsert_object', "
-                        ":ot, :eid, 'niushop', '1', :payload::jsonb, TRUE, now())"
+                        "VALUES (:org, :proj, :ws, :rev, 'objects_written', "
+                        ":ot, :eid, 'niushop', '1', CAST(:payload AS jsonb), TRUE, now())"
                     ).bindparams(
                         org=org_id, proj=project_id, ws=project_id,
                         rev=revision,

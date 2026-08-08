@@ -267,6 +267,7 @@ def to_order_line(row: dict[str, Any]) -> dict[str, Any]:
     o["properties"] = {
         "orderId": _str(row.get("order_id")),
         "skuId": _str(row.get("sku_id"), "0"),
+        "goodsId": _str(row.get("goods_id"), "0"),
         "quantity": _str(row.get("num"), "0"),
         "unitPrice": _money(row.get("price")),
         "lineAmount": _money(row.get("real_goods_money") or row.get("goods_money")),
@@ -325,10 +326,11 @@ def to_system_config(row: dict[str, Any]) -> dict[str, Any]:
 def to_product_review(row: dict[str, Any]) -> dict[str, Any]:
     """P11: ns_goods_evaluate → ProductReview（商品评价：文字+图片+评分）。
 
-    主键 id；含 goods_id/sku_id/member_id 三关联。
+    主键 evaluate_id；含 goods_id/sku_id/member_id 三关联。
     score 字段保留在 row 顶层（供 _apply_review_quality_bucket 读取）。
     """
-    o = _base(row, "ProductReview", row.get("id"), _ts(row, "create_time"))
+    pk = row.get("evaluate_id") or row.get("id")
+    o = _base(row, "ProductReview", pk, _ts(row, "create_time"))
     o["properties"] = {
         "productId": _str(row.get("goods_id")),
         "memberId": _str(row.get("member_id")),
