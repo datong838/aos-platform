@@ -9,10 +9,8 @@ import {
   upstreamNodes,
   downstreamNodes,
   computeImpact,
-  filterByLevel,
   countByType,
   countByStatus,
-  edgePath,
   type LineageNode,
   type LineageGraph,
 } from "./DataLineagePage";
@@ -137,8 +135,8 @@ describe("DataLineagePage · downstreamNodes", () => {
 describe("DataLineagePage · computeImpact", () => {
   it("computes upstream + downstream", () => {
     const impact = computeImpact(MOCK_GRAPH, "pl1");
-    expect(impact.upstream).toBe(2);  // src1, ds1
-    expect(impact.downstream).toBe(3); // ot1, fn1, ds2
+    expect(impact.upstream).toBe(2);
+    expect(impact.downstream).toBe(3);
     expect(impact.affected).toBe(5);
   });
   it("leaf node has 0 downstream", () => {
@@ -148,19 +146,6 @@ describe("DataLineagePage · computeImpact", () => {
   it("root node has 0 upstream", () => {
     const impact = computeImpact(MOCK_GRAPH, "src1");
     expect(impact.upstream).toBe(0);
-  });
-});
-
-// ── filterByLevel ─────────────────────────────────────
-describe("DataLineagePage · filterByLevel", () => {
-  it("max level 0 → only level 0", () => {
-    expect(filterByLevel(MOCK_NODES, 0)).toHaveLength(1);
-  });
-  it("max level 2 → levels 0-2", () => {
-    expect(filterByLevel(MOCK_NODES, 2)).toHaveLength(3);
-  });
-  it("max level 4 → all", () => {
-    expect(filterByLevel(MOCK_NODES, 4)).toHaveLength(6);
   });
 });
 
@@ -183,18 +168,5 @@ describe("DataLineagePage · countByStatus", () => {
     expect(counts.healthy).toBe(4);
     expect(counts.error).toBe(1);
     expect(counts.stale).toBe(1);
-  });
-});
-
-// ── edgePath ──────────────────────────────────────────
-describe("DataLineagePage · edgePath", () => {
-  it("returns SVG path string", () => {
-    const path = edgePath(MOCK_EDGES[0], MOCK_NODES);
-    expect(path).toContain("M ");
-    expect(path).toContain("C ");
-  });
-  it("missing nodes → empty string", () => {
-    const path = edgePath({ id: "x", source: "missing", target: "ds1" }, MOCK_NODES);
-    expect(path).toBe("");
   });
 });

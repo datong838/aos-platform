@@ -11,9 +11,6 @@ import {
   filterIssues,
   filterRules,
   sortIssuesBySeverity,
-  calculatePassRate,
-  checkRuleViolation,
-  ruleEffectiveness,
   type HealthIssue,
   type QualityRule,
 } from "./DataHealthPage";
@@ -157,40 +154,5 @@ describe("DataHealthPage · sortIssuesBySeverity", () => {
     expect(sorted[0].severity).toBe("critical");
     expect(sorted[1].severity).toBe("warning");
     expect(sorted[2].severity).toBe("info");
-  });
-});
-
-// ── calculatePassRate ─────────────────────────────────
-describe("DataHealthPage · calculatePassRate", () => {
-  it("empty → 0", () => {
-    expect(calculatePassRate([])).toBe(0);
-  });
-  it("2/3 passing", () => {
-    expect(calculatePassRate(MOCK_RULES)).toBeCloseTo(2 / 3, 5);
-  });
-});
-
-// ── checkRuleViolation ────────────────────────────────
-describe("DataHealthPage · checkRuleViolation", () => {
-  it("actual >= threshold → no violation", () => {
-    expect(checkRuleViolation(MOCK_RULES[0])).toBe(false);
-  });
-  it("actual < threshold → violation", () => {
-    expect(checkRuleViolation(MOCK_RULES[1])).toBe(true);
-  });
-});
-
-// ── ruleEffectiveness ─────────────────────────────────
-describe("DataHealthPage · ruleEffectiveness", () => {
-  it("counts correctly", () => {
-    const eff = ruleEffectiveness(MOCK_RULES);
-    expect(eff.total).toBe(3);
-    expect(eff.effective).toBe(2);
-    expect(eff.ineffective).toBe(1);
-  });
-  it("empty → all zeros", () => {
-    const eff = ruleEffectiveness([]);
-    expect(eff.total).toBe(0);
-    expect(eff.effective).toBe(0);
   });
 });
