@@ -3017,6 +3017,21 @@ _D6_ALL_PIPES = [
 ]
 
 
+def _pg_ot_row_count(scope: TenantScope, ot_name: str) -> int:
+    """从 PG obj_instance 表统计某 OT 的真实行数（后端重启后引擎内存丢失时的回退）。"""
+    try:
+        from aos_api.db import connect as _connect
+        with _connect(scope) as conn:
+            row = conn.execute(
+                "SELECT COUNT(*) AS c FROM obj_instance "
+                "WHERE org_id=%s AND project_id=%s AND object_type=%s",
+                (*scope.key, ot_name),
+            ).fetchone()
+            return int(row["c"] if row else 0)
+    except Exception:
+        return 0
+
+
 @router.get("/v1/data-lineage/graph")
 def data_lineage_graph(principal: Principal = Depends(require_principal)) -> dict[str, Any]:
     """D6 · 数据沿袭图谱 — 从真实管道/数据集/数据源/OT 组装。"""
@@ -3091,6 +3106,9 @@ def data_lineage_graph(principal: Principal = Depends(require_principal)) -> dic
                 ds_updated = getattr(_ds, "updated_at", None)
         except Exception:
             pass
+        # 引擎内存丢失时回退到 PG obj_instance 表
+        if pipe_row_count == 0:
+            pipe_row_count = _pg_ot_row_count(scope, ot_name)
         ds_status = "healthy" if pipe_row_count > 0 else "stale"
 
         nodes.append({
@@ -3148,6 +3166,10 @@ def data_health_summary(principal: Principal = Depends(require_principal)) -> di
                 last_build_at = getattr(_ds, "updated_at", 0) or 0
         except Exception:
             pass
+
+        # 引擎内存丢失时回退到 PG obj_instance 表
+        if row_count == 0:
+            row_count = _pg_ot_row_count(scope, ot_name)
 
         # 从 wave_ext._pipelines 获取 lastBuild
         _pl_item = _pipelines.get(_resource_key(scope, pid))
