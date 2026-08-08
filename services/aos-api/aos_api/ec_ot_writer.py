@@ -53,10 +53,13 @@ def sink_to_ot(
     if not output_rows:
         return {"objects_written": 0, "links_written": 0}
 
-    # 总控负责在 eng 上注入 ecom_consistency_store；缺失时退化为骨架零计数
+    # O1-A fail-closed: store 缺失时抛异常（ensure_store_assembled 已在 executor 入口保证装配）
     store = getattr(eng, "ecom_consistency_store", None)
     if store is None:
-        return {"objects_written": 0, "links_written": 0}
+        raise RuntimeError(
+            "sink_to_ot: ecom_consistency_store is None — pipeline cannot write "
+            "to authoritative layer without store (fail-closed)"
+        )
 
     sync_scope = _build_sync_scope(scope, pipeline)
     objects, links = _normalize_rows(output_rows, sync_scope)

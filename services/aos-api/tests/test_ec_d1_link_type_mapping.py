@@ -371,11 +371,12 @@ def test_all_six_link_types_mapped_correctly() -> None:
         + _links(shipment_result)
     )
 
-    # 6 条 Link，全部是点号名
+    # 7 条 Link（O1-A: 补 Shop.sellsProduct），全部是点号名
     link_types = {link["link_type"] for link in all_links}
     assert link_types == {
         "ProductSku.ofProduct",
         "Product.inCategory",
+        "Shop.sellsProduct",
         "Order.lines",
         "OrderLine.ofProduct",
         "OrderLine.ofSku",

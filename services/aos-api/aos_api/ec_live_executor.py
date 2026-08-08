@@ -34,19 +34,18 @@ log = get_logger("aos-api.ec-live-executor")
 
 
 def ensure_store_assembled(eng: Any) -> None:
-    """确保 PipelineEngine 单例已注入 ecom_consistency_store（D2.5 缺口 2 修复）。
+    """确保 PipelineEngine 单例已注入 ecom_consistency_store（O1-A fail-closed 修复）。
 
     行为：
     1. 已注入（getattr 返回非 None）→ 跳过（idempotent）
-    2. 未注入 → 尝试从 db.get_dsn() 装配：
+    2. 未注入 → 从 db.get_dsn() 装配：
        - create_engine(dsn) + EcomConsistencyStore(engine)
        - setattr(eng, "ecom_consistency_store", store)
-    3. 装配失败（测试环境无 PG / DSN 缺失）→ 记 warning 日志，保持骨架行为
-       （sink_to_ot 自身有 store=None 零计数分支，不抛异常）
+    3. 装配失败 → **fail-closed**：抛 RuntimeError，Pipeline 不得在权威层缺失时继续
 
-    设计权衡：
-    - 不在 PipelineEngine.__new__ 里装配：避免单例依赖 db engine，破坏单测
-    - 失败降级而非 fail-closed：测试环境（无 PG）仍能跑 ec_live_executor 链路
+    O1-A 变更：
+    - 删除 `ecom_metadata.create_all()` — 迁移由 Alembic 管理，禁止运行时 DDL
+    - 失败从 warning（fail-open）改为 raise RuntimeError（fail-closed）
     """
     if getattr(eng, "ecom_consistency_store", None) is not None:
         return
@@ -54,10 +53,7 @@ def ensure_store_assembled(eng: Any) -> None:
         from sqlalchemy import create_engine
 
         from aos_api.db import get_dsn
-        from aos_api.ecom_consistency_store import (
-            EcomConsistencyStore,
-            metadata as ecom_metadata,
-        )
+        from aos_api.ecom_consistency_store import EcomConsistencyStore
 
         dsn = get_dsn()
         # psycopg → sqlalchemy 格式
@@ -68,12 +64,15 @@ def ensure_store_assembled(eng: Any) -> None:
             pg_dsn = "postgresql+psycopg://" + pg_dsn[len("postgres://"):]
 
         pg_engine = create_engine(pg_dsn)
-        ecom_metadata.create_all(pg_engine)  # 已存在则 no-op
+        # O1-A: 禁止 metadata.create_all — 迁移由 Alembic 管理
         eng.ecom_consistency_store = EcomConsistencyStore(pg_engine)
         log.info("ecom_consistency_store assembled and injected to engine")
     except Exception as exc:
-        # 测试环境或 DSN 缺失：降级为骨架行为（sink_to_ot 自身有零计数分支）
-        log.warning("ecom_consistency_store assembly skipped: %s", exc)
+        # O1-A: fail-closed — 权威层装配失败时，Pipeline 必须终止
+        raise RuntimeError(
+            f"ecom_consistency_store assembly failed — pipeline cannot continue "
+            f"without authoritative store (fail-closed). Error: {exc}"
+        ) from exc
 
 
 def ec_live_executor(
@@ -90,7 +89,7 @@ def ec_live_executor(
 ) -> dict[str, Any]:
     eng = get_engine()
 
-    # D2.5 缺口 2 修复：装配 ecom_consistency_store（失败降级，不抛异常）
+    # O1-A fail-closed: 装配 ecom_consistency_store（失败抛异常终止 Pipeline）
     ensure_store_assembled(eng)
 
     try:

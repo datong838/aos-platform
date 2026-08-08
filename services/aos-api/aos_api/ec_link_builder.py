@@ -26,18 +26,19 @@ from __future__ import annotations
 from typing import Any, Callable
 
 # pipeline.id → target_ot 推断表（无 config.target_ot 时回退）
+# O1-A: key 改为小写 + startswith 前缀匹配（与 ec_dataset_sink / ec_normalizer 对齐）
 _PID_TO_OT: dict[str, str] = {
-    "P02": "Product",
-    "P03": "ProductSku",
-    "P04": "Category",
-    "P05": "Order",
-    "P06": "OrderLine",
-    "P07": "Shipment",
+    "p02": "Product",
+    "p03": "ProductSku",
+    "p04": "Category",
+    "p05": "Order",
+    "p06": "OrderLine",
+    "p07": "Shipment",
     # D4: P09~P12（frozen/02 §P09~P12）
-    "P09": "Weapp",
-    "P10": "SystemConfig",
-    "P11": "ProductReview",
-    "P12": "Payment",
+    "p09": "Weapp",
+    "p10": "SystemConfig",
+    "p11": "ProductReview",
+    "p12": "Payment",
 }
 
 # frozen/02 简短名 → CORE_LINK_TYPES 点号名映射（与 ecom_core_models.CORE_LINK_TYPES 对齐）
@@ -50,6 +51,8 @@ _FROZEN_TO_CORE: dict[str, str] = {
     "ships": "Order.fulfilledBy",
     # D1.5: Order → CustomerLite（frozen/02 §P08，同向不反转）
     "placedByLite": "Order.placedByLite",
+    # D1: Shop → Product（O1-A: 补 sellsProduct）
+    "sellsProduct": "Shop.sellsProduct",
     # D4: 6 条新 Link（frozen/02 §3.5）
     "hasWeapp": "Shop.hasWeapp",
     "hasReview": "Product.hasReview",
@@ -78,7 +81,8 @@ def build_link_rows(
     target_ot = _resolve_target_ot(pipeline)
 
     builder: Callable[[list[dict[str, Any]]], list[dict[str, Any]]] | None = {
-        "Product": _build_in_category_links,
+        # O1-A: Product 同时构造 inCategory + sellsProduct
+        "Product": _build_product_links,
         "ProductSku": _build_has_sku_links,
         "OrderLine": _build_orderline_links,
         "Shipment": _build_ships_links,
@@ -103,18 +107,58 @@ def build_link_rows(
 
 
 def _resolve_target_ot(pipeline: Any) -> str | None:
-    """从 pipeline 解析 target_ot：config.target_ot 优先，否则用 pipeline.id 推断。"""
+    """从 pipeline 解析 target_ot：config.target_ot 优先，否则用 pipeline.id startswith 前缀匹配。
+
+    O1-A: 从精确匹配改为 startswith 前缀匹配，以处理形如 'p02_qyh_niushop_goods' 的 Pipeline ID。
+    """
     config = getattr(pipeline, "config", None) or {}
     target_ot = config.get("target_ot") if isinstance(config, dict) else None
     if target_ot:
         return str(target_ot)
-    pid = str(getattr(pipeline, "id", "") or "")
-    return _PID_TO_OT.get(pid)
+    pid = str(getattr(pipeline, "id", "") or "").lower()
+    # startswith 前缀匹配（与 ec_dataset_sink / ec_normalizer 对齐）
+    for prefix, ot in _PID_TO_OT.items():
+        if pid.startswith(prefix):
+            return ot
+    return None
 
 
 # ═══════════════════════════════════════════════
 # Link 构造器
 # ═══════════════════════════════════════════════
+
+
+def _build_product_links(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """O1-A: Product builder — 同时构造 inCategory + sellsProduct。"""
+    links: list[dict[str, Any]] = []
+    links.extend(_build_in_category_links(rows))
+    links.extend(_build_sells_product_links(rows))
+    return links
+
+
+def _build_sells_product_links(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """sellsProduct: Shop → Product（O1-A: P02 Product 读取时构造）。
+
+    source_pk = row.properties.shopId（site_id，Shop 的 PK）
+    target_source_pk = row.source_pk（goods_id，Product 的 PK）
+    shopId 缺失时回退默认值 "1"（栖月汇 site_id=1）。
+    """
+    links: list[dict[str, Any]] = []
+    for row in rows:
+        goods_id = row.get("source_pk")
+        if not _is_valid_pk(goods_id):
+            continue
+        props = row.get("properties") or {}
+        shop_id = str(props.get("shopId") or props.get("siteId") or "1")
+        links.append(_make_link(
+            link_type="sellsProduct",
+            source_type="Shop",
+            source_pk=shop_id,
+            target_type="Product",
+            target_source_pk=goods_id,
+            row=row,
+        ))
+    return links
 
 
 def _build_has_sku_links(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:

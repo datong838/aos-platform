@@ -243,6 +243,9 @@ def to_customer_lite(row: dict[str, Any]) -> dict[str, Any]:
 
 def to_order(row: dict[str, Any]) -> dict[str, Any]:
     o = _base(row, "Order", row.get("order_id"), _ts(row, "modify_time", "create_time"))
+    # O1-A §5.2.13: 保存 properties.createdAt — 供 link_aggregator 读取 Order 创建时间
+    created_ts = _ts(row, "create_time")
+    created_iso = created_ts.strftime("%Y-%m-%dT%H:%M:%SZ") if created_ts else None
     o["properties"] = {
         "shopId": _str(row.get("site_id"), "1"),
         "status": "active",
@@ -254,6 +257,7 @@ def to_order(row: dict[str, Any]) -> dict[str, Any]:
         "payStatus": _str(row.get("pay_status")),
         "deliveryStatus": _str(row.get("delivery_status")),
         "isDelete": _str(row.get("is_delete"), "0"),
+        "createdAt": created_iso,  # O1-A: CustomerLite last_order_days 依赖此字段
     }
     return o
 
@@ -338,7 +342,8 @@ def to_payment(row: dict[str, Any]) -> dict[str, Any]:
 
     主键 id；次要唯一键 out_trade_no。
     pay_time 保留在 row 顶层（供 _apply_pay_duration_min 读取）。
-    _order_create_time 由 SourceAdapter 管道内关联填充（ns_pay.relate_id≈order_id → ns_order.create_time）。
+    O1-A §5.2.11: _order_create_time 由 batch_read_public 批量丰富填充（ns_pay.relate_id≈order_id → ns_order.create_time）。
+    缺失时 pay_duration_min 不计算。
     """
     o = _base(row, "Payment", row.get("id"), _ts(row, "pay_time", "create_time"))
     o["properties"] = {
@@ -346,6 +351,12 @@ def to_payment(row: dict[str, Any]) -> dict[str, Any]:
         "outTradeNo": _str(row.get("out_trade_no")),
         "payStatus": _str(row.get("pay_status")),
     }
+    # O1-A: batch_read_public 丰富后写入 _order_create_time
+    order_ct = row.get("_order_create_time")
+    if order_ct is not None and isinstance(order_ct, (int, float)) and order_ct > 0:
+        o["properties"]["orderCreatedAt"] = datetime.fromtimestamp(
+            float(order_ct), tz=timezone.utc
+        ).strftime("%Y-%m-%dT%H:%M:%SZ")
     return o
 
 

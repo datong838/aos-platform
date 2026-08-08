@@ -359,9 +359,10 @@ def test_exit_gate_p01_p07_pipeline_config_exists() -> None:
     assert expected_ots.issubset(set(_PIPELINE_ID_TO_OT.values()))
 
     # link_builder 的 P02-P07 映射（P01 Shop 无 Link；跨波累积扩展，D4 起新增 P09~P12）
+    # O1-A: key 改为小写（startswith 前缀匹配）
     assert len(_PID_TO_OT) >= 6
-    # P02-P07 都在
-    for pid in ("P02", "P03", "P04", "P05", "P06", "P07"):
+    # P02-P07 都在（小写 key）
+    for pid in ("p02", "p03", "p04", "p05", "p06", "p07"):
         assert pid in _PID_TO_OT, f"Pipeline {pid} 配置缺失"
 
     # P01 Shop 在 derived_metrics 中（无派生指标但配置存在）

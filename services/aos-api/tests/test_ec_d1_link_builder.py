@@ -187,39 +187,50 @@ def test_hasSku_multiple_skus_same_product() -> None:
 
 
 def test_inCategory_single_value() -> None:
-    """inCategory: 单值 categoryId 构造一条 Link。"""
+    """inCategory: 单值 categoryId 构造一条 Link + O1-A sellsProduct。"""
     rows = [product_row(source_pk="g-1", category_id="c-1")]
     pipeline = _make_pipeline("P02", "Product")
 
     result = build_link_rows(rows, pipeline)
 
     links = _links(result)
-    assert len(links) == 1
-    link = links[0]
-    assert link["link_type"] == "Product.inCategory"
+    # O1-A: Product builder 同时构造 inCategory + sellsProduct
+    in_cat = [l for l in links if l["link_type"] == "Product.inCategory"]
+    sells = [l for l in links if l["link_type"] == "Shop.sellsProduct"]
+    assert len(in_cat) == 1
+    assert len(sells) == 1
+
+    link = in_cat[0]
     assert link["source_type"] == "Product"
     assert link["source_pk"] == "g-1"
     assert link["target_type"] == "Category"
     assert link["target_source_pk"] == "c-1"
 
+    sell_link = sells[0]
+    assert sell_link["source_type"] == "Shop"
+    assert sell_link["target_type"] == "Product"
+    assert sell_link["target_source_pk"] == "g-1"
+
 
 def test_inCategory_multi_value_split() -> None:
-    """inCategory: 多值字符串 '1,2,3' 拆分为 3 条 Link。"""
+    """inCategory: 多值字符串 '1,2,3' 拆分为 3 条 Link + 1 条 sellsProduct。"""
     rows = [product_row(source_pk="g-1", category_id="1,2,3")]
     pipeline = _make_pipeline("P02", "Product")
 
     result = build_link_rows(rows, pipeline)
 
     links = _links(result)
-    assert len(links) == 3
-    assert {link["target_source_pk"] for link in links} == {"1", "2", "3"}
-    for link in links:
+    in_cat = [l for l in links if l["link_type"] == "Product.inCategory"]
+    sells = [l for l in links if l["link_type"] == "Shop.sellsProduct"]
+    assert len(in_cat) == 3
+    assert len(sells) == 1
+    assert {link["target_source_pk"] for link in in_cat} == {"1", "2", "3"}
+    for link in in_cat:
         assert link["source_pk"] == "g-1"
-        assert link["link_type"] == "Product.inCategory"
 
 
 def test_inCategory_empty_value() -> None:
-    """inCategory: categoryId 为空/缺失时跳过。"""
+    """inCategory: categoryId 为空/缺失时跳过（sellsProduct 仍生成）。"""
     rows = [
         product_row(source_pk="g-1", category_id=""),
         {"ot": "Product", "source_pk": "g-2", "source_updated_at": NOW, "properties": {}},
@@ -228,19 +239,27 @@ def test_inCategory_empty_value() -> None:
 
     result = build_link_rows(rows, pipeline)
 
-    assert _links(result) == []
+    # O1-A: sellsProduct 对每个 product 行生成一条 Link（inCategory 为空）
+    links = _links(result)
+    in_cat = [l for l in links if l["link_type"] == "Product.inCategory"]
+    sells = [l for l in links if l["link_type"] == "Shop.sellsProduct"]
+    assert len(in_cat) == 0
+    assert len(sells) == 2
 
 
 def test_inCategory_abnormal_value() -> None:
-    """inCategory: 异常值（含空格/连续逗号）正确拆分。"""
+    """inCategory: 异常值（含空格/连续逗号）正确拆分 + sellsProduct。"""
     rows = [product_row(source_pk="g-1", category_id=" 1 , , 2 , 3 ")]
     pipeline = _make_pipeline("P02", "Product")
 
     result = build_link_rows(rows, pipeline)
 
     links = _links(result)
-    assert len(links) == 3
-    assert {link["target_source_pk"] for link in links} == {"1", "2", "3"}
+    in_cat = [l for l in links if l["link_type"] == "Product.inCategory"]
+    sells = [l for l in links if l["link_type"] == "Shop.sellsProduct"]
+    assert len(in_cat) == 3
+    assert len(sells) == 1
+    assert {link["target_source_pk"] for link in in_cat} == {"1", "2", "3"}
 
 
 # ═══════════════════════════════════════════════
