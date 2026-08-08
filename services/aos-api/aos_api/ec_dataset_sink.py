@@ -22,6 +22,35 @@ def _gen_rid() -> str:
     return f"ri.dataset.{uuid.uuid4().hex[:8]}"
 
 
+# Pipeline ID 前缀 → OT 名称（与 ec_normalizer._PIPELINE_ID_TO_OT 对齐）
+_PID_TO_OT: dict[str, str] = {
+    "p01": "Shop",
+    "p02": "Product",
+    "p03": "ProductSku",
+    "p04": "Category",
+    "p05": "Order",
+    "p06": "OrderLine",
+    "p07": "Shipment",
+    "p08": "CustomerLite",
+    "p09": "Weapp",
+    "p10": "SystemConfig",
+    "p11": "ProductReview",
+    "p12": "Payment",
+}
+
+
+def _resolve_ot_hint(pipeline: Any) -> str:
+    """从 pipeline.config.target_ot 或 pipeline.id 前缀推断 OT hint。"""
+    config = getattr(pipeline, "config", None) or {}
+    if isinstance(config, dict) and config.get("target_ot"):
+        return str(config["target_ot"])
+    pid = str(getattr(pipeline, "id", "") or "").lower()
+    for prefix, ot in _PID_TO_OT.items():
+        if pid.startswith(prefix):
+            return ot
+    return ""
+
+
 def sink_to_dataset(
     eng: Any,
     scope: Any,
@@ -61,13 +90,16 @@ def sink_to_dataset(
         log.warning("ec_dataset_sink_add_build_failed rid=%s", rid, exc_info=True)
 
     # 3. 落地 meta_dataset（scope 守门由 persist_dataset 内部 *scope.key 保证）
+    #    objectTypeHint 让前端 datasets/preview 能通过 hint 查询 OT 数据
     now = time.time()
+    ot_hint = _resolve_ot_hint(pipeline)
     item = {
         "rid": rid,
         "name": name,
         "displayName": name,
         "pipelineId": getattr(pipeline, "id", ""),
         "status": "READY",
+        "objectTypeHint": ot_hint,
         "createdAt": now,
         "updatedAt": now,
     }

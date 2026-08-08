@@ -119,6 +119,9 @@ def ec_live_executor(
         # sink: OT + Link（G5，W3 实现）
         sink_to_ot(eng, scope, pipeline, output_rows)
 
+        # sink: obj_instance（前端 analytics preview 需要查 obj_instance 表）
+        _write_obj_instances(scope, pipeline, output_rows)
+
         return {
             "input_ref": "",
             "output_ref": f"dataset://catalog/{ds.id}",
@@ -133,3 +136,80 @@ def ec_live_executor(
         # G6 DLQ（W4 实现）
         handle_failure(pipeline, scope, exc)
         raise
+
+
+def _write_obj_instances(scope: Any, pipeline: Any, output_rows: list[dict[str, Any]]) -> None:
+    """将 normalized rows 写入 obj_instance 表（供前端 analytics preview 查询）。
+
+    与 wave_ext._execute_pipeline_once 的 obj_instance 写入逻辑对齐：
+    - 注册 OT 到 meta_object_type（不存在则创建）
+    - full mode 清空旧数据后批量插入
+    - props 存储所有字段（全字段保留映射）
+    容错：写入失败降级为 warning 不阻塞 sink 流程。
+    """
+    if not output_rows:
+        return
+
+    # 推断 target_ot
+    from aos_api.ec_normalizer import _resolve_target_ot
+
+    object_type = _resolve_target_ot(pipeline)
+    if not object_type:
+        log.warning("obj_instance_skip no target_ot pipeline=%s", getattr(pipeline, "id", "?"))
+        return
+
+    import json as _json
+    from aos_api.db import connect
+    from aos_api.tenant_scope import TenantScope
+
+    org_id = getattr(scope, "org_id", "") or ""
+    project_id = getattr(scope, "project_id", "") or ""
+    if not org_id or not project_id:
+        return
+
+    try:
+        instances: list[tuple[str, str, str, str, str]] = []
+        for row in output_rows:
+            oid = str(row.get("source_pk") or row.get("id") or "")
+            if not oid:
+                continue
+            # 排除 Link 行（link type 以 _link 结尾或含 link_type 字段）
+            if row.get("link_type"):
+                continue
+            props = {k: v for k, v in row.items() if k not in ("link_type",)}
+            instances.append((
+                object_type, oid,
+                _json.dumps(props, ensure_ascii=False, default=str),
+                org_id, project_id,
+            ))
+
+        if not instances:
+            return
+
+        write_scope = TenantScope(org_id, project_id)
+        pipeline_id = str(getattr(pipeline, "id", ""))
+        with connect(write_scope) as conn:
+            with conn.cursor() as cur:
+                ds_name = (str(getattr(pipeline, "name", "")) or pipeline_id or object_type)[:200]
+                cur.execute(
+                    """INSERT INTO meta_object_type (id, name, description, published, properties)
+                       VALUES (%s, %s, %s, TRUE, '{}'::jsonb)
+                       ON CONFLICT (id) DO NOTHING""",
+                    (object_type, ds_name, f"auto-registered by pipeline {pipeline_id}"),
+                )
+                # full mode: 清空旧数据
+                cur.execute(
+                    "DELETE FROM obj_instance WHERE object_type=%s AND org_id=%s AND project_id=%s",
+                    (object_type, org_id, project_id),
+                )
+                cur.executemany(
+                    """INSERT INTO obj_instance (object_type, object_id, props, org_id, project_id)
+                       VALUES (%s, %s, %s::jsonb, %s, %s)
+                       ON CONFLICT (org_id, project_id, object_type, object_id) DO UPDATE
+                         SET props = EXCLUDED.props""",
+                    instances,
+                )
+            conn.commit()
+        log.info("obj_instance_written ot=%s count=%d pipeline=%s", object_type, len(instances), pipeline_id)
+    except Exception:
+        log.warning("obj_instance_write_failed pipeline=%s", getattr(pipeline, "id", "?"), exc_info=True)
