@@ -56,12 +56,28 @@ _SENSITIVE_KEYS = frozenset(
         "token",
     }
 )
+_PII_KEYS = frozenset(
+    {
+        "avatar",
+        "email",
+        "id_card",
+        "idcard",
+        "mobile",
+        "openid",
+        "phone",
+        "real_name",
+        "wx_openid",
+    }
+)
 _PII_PATTERNS = (
     re.compile(r"\d{15,18}"),
     re.compile(r"62\d{14,17}"),
     re.compile(r"1[3-9]\d[\s-]?\d{4}[\s-]?\d{4}"),
     re.compile(r"\S+@\S+\.\S+"),
     re.compile(r"openid[_\w-]+", re.IGNORECASE),
+    # WeChat OpenID starts with ``o`` but tenant ids such as ``org-d5e-*``
+    # are not identities and must remain available for audit correlation.
+    re.compile(r"\bo(?!rg-)[A-Za-z0-9_-]{15,}\b"),
 )
 _CREDENTIAL_PATTERN = re.compile(
     r"(?i)\b(password|token|secret|authorization)\s*[:=]\s*[^\s,;]+"
@@ -114,11 +130,16 @@ def sanitize_metadata(value: Any) -> Any:
     if isinstance(value, str):
         return _sanitize_text(value)
     if isinstance(value, dict):
-        return {
-            str(key): sanitize_metadata(item)
-            for key, item in value.items()
-            if str(key).strip().lower() not in _SENSITIVE_KEYS
-        }
+        sanitized: dict[str, Any] = {}
+        for key, item in value.items():
+            normalized = str(key).strip().lower()
+            if normalized in _SENSITIVE_KEYS:
+                continue
+            if normalized in _PII_KEYS or normalized.startswith("nickname"):
+                sanitized[str(key)] = "[REDACTED]"
+                continue
+            sanitized[str(key)] = sanitize_metadata(item)
+        return sanitized
     if isinstance(value, (list, tuple)):
         return [sanitize_metadata(item) for item in value]
     if value is None or isinstance(value, (bool, int, float)):

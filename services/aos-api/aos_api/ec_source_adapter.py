@@ -86,6 +86,11 @@ BATCH_READ_SPECS: Mapping[str, BatchReadSpec] = MappingProxyType(
             columns=("order_id", "create_time"),
             filter_column="order_id",
         ),
+        "shipment_order_timing": BatchReadSpec(
+            table="ns_order",
+            columns=("order_id", "pay_time"),
+            filter_column="order_id",
+        ),
     }
 )
 

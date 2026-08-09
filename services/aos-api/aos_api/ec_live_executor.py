@@ -103,7 +103,7 @@ def ec_live_executor(
             scope=scope,
         )
 
-        # transform: Payment 权威丰富 + normalize + 派生指标 + Link 构造
+        # transform: Payment/Shipment 权威丰富 + normalize + 派生指标 + Link 构造
         #   1. 浅拷贝 raw source 行，避免污染 SourceAdapter 输出
         #   2. O1-A: Payment 在 normalize 前批量丰富 _order_create_time
         #   3. D2.5: normalize_rows 将 raw ns_xxx 行转为 OT normalized 行（幂等）
@@ -111,6 +111,13 @@ def ec_live_executor(
         #   5. build_link_rows: 按 target_ot 构造 14 条核心 Link 行追加到 rows
         enriched_input_rows = [dict(row) for row in input_rows]
         _enrich_payment_order_create_time(
+            pipeline=pipeline,
+            nodes=nodes,
+            node_id=node_id,
+            scope=scope,
+            rows=enriched_input_rows,
+        )
+        _enrich_shipment_order_pay_time(
             pipeline=pipeline,
             nodes=nodes,
             node_id=node_id,
@@ -219,6 +226,53 @@ def _enrich_payment_order_create_time(
 
     log.info(
         "payment_enriched orders_found=%d/%d pipeline=%s",
+        len(found_ids), len(order_ids), getattr(pipeline, "id", "?"),
+    )
+
+
+def _enrich_shipment_order_pay_time(
+    *,
+    pipeline: Any,
+    nodes: list[Any],
+    node_id: str | None,
+    scope: Any,
+    rows: list[dict[str, Any]],
+) -> None:
+    """W10：P07 在 normalize 前按 order_id 受控批读订单支付时间。"""
+    from aos_api.ec_normalizer import _resolve_target_ot
+
+    if _resolve_target_ot(pipeline) != "Shipment":
+        return
+    id_to_rows: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        if row.get("link_type"):
+            continue
+        order_id = str(row.get("order_id") or "").strip()
+        if order_id:
+            id_to_rows.setdefault(order_id, []).append(row)
+    if not id_to_rows:
+        return
+
+    order_ids = tuple(id_to_rows)
+    results = batch_read_public(
+        pipeline=pipeline,
+        nodes=nodes,
+        node_id=node_id,
+        scope=scope,
+        spec_id="shipment_order_timing",
+        filter_values=order_ids,
+    )
+    found_ids: set[str] = set()
+    for order in results:
+        raw_id = str(order.get("order_id") or "").strip()
+        pay_time = order.get("pay_time")
+        if not raw_id or pay_time in (None, ""):
+            continue
+        found_ids.add(raw_id)
+        for row in id_to_rows.get(raw_id, []):
+            row["_order_pay_time"] = pay_time
+    log.info(
+        "shipment_enriched orders_found=%d/%d pipeline=%s",
         len(found_ids), len(order_ids), getattr(pipeline, "id", "?"),
     )
 

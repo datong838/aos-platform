@@ -10,8 +10,8 @@ FR-D1-7 单行派生指标口径（基于 frozen/01 schema fingerprint）：
 | risk_score       | Order       | base=0.0；commission_risk_flag=1 → +0.40；refund_status∈{-3,3} → +0.30；   |
 |                  |             | is_lock=1 → +0.20；order_status=0 AND pay_status=0 AND                    |
 |                  |             | now-create_time>24h → +0.10；截断 [0,1]                                   |
-| overdue_hours    | Shipment    | SLA_HOURS=48；delivery_time=0 AND Order.pay_time>0 时                     |
-|                  |             | = max(0, (now - Order.pay_time - 48h) / 3600)；否则 null                   |
+| overdue_hours    | Shipment    | SLA_HOURS=48；Order.pay_time>0 时，已发货按 delivery_time-pay_time，      |
+|                  |             | 未发货按 now-pay_time；= max(0, (elapsed-48h)/3600)                       |
 
 FR-D1.5-4 跨表聚合派生指标（D1.5 新增，CustomerLite OT）：
 | 派生指标         | OT            | 计算口径                                                                  |
@@ -330,28 +330,34 @@ def _apply_risk_score(row: dict[str, Any]) -> None:
 def _apply_overdue_hours(row: dict[str, Any]) -> None:
     """计算 overdue_hours 发货逾期小时数。
 
-    SLA_HOURS=48。当 delivery_time=0（未发货）且 Order.pay_time>0（已支付）时：
-        overdue = max(0, (now - pay_time - 48h) / 3600)
-    否则 → null。
+    SLA_HOURS=48。Order.pay_time>0（已支付）时：
+    - 已发货：overdue = max(0, (delivery_time - pay_time - 48h) / 3600)
+    - 未发货：overdue = max(0, (now - pay_time - 48h) / 3600)
+    未支付或支付时间关联失败 → null。
 
     注：source_adapter 会把 0 时间转 None，所以 delivery_time=None 也视为未发货。
     """
     delivery_time = _get_field(row, "delivery_time")
-    pay_time_raw = _get_field(row, "pay_time")
+    pay_time_raw = row.get("_order_pay_time", _get_field(row, "pay_time"))
 
-    # delivery_time=0 或 None → 未发货；>0 → 已发货（不逾期）
+    # delivery_time=0 或 None → 未发货；>0 → 已发货并计算实际履约耗时。
     delivery_dt = _to_float(delivery_time)
     is_not_delivered = delivery_dt is None or delivery_dt == 0.0
 
     pay_time_dt = _to_datetime(pay_time_raw)
     is_paid = pay_time_dt is not None and pay_time_dt.timestamp() > 0
 
-    if is_not_delivered and is_paid:
-        elapsed = (_now_utc() - pay_time_dt).total_seconds()
-        overdue = max(0.0, (elapsed - _SLA_SECONDS) / 3600)
-        _set_property(row, "overdue_hours", round(overdue, 4))
-    else:
+    if not is_paid:
         _set_property(row, "overdue_hours", None)
+        return
+
+    end_time = _now_utc() if is_not_delivered else _to_datetime(delivery_time)
+    if end_time is None:
+        _set_property(row, "overdue_hours", None)
+        return
+    elapsed = (end_time - pay_time_dt).total_seconds()
+    overdue = max(0.0, (elapsed - _SLA_SECONDS) / 3600)
+    _set_property(row, "overdue_hours", round(overdue, 4))
 
 
 # ── order_count Δ / last_order_days Δ (CustomerLite, D1.5) ─────────────────────

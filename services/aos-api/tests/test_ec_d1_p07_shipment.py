@@ -64,6 +64,7 @@ class FakeStore:
 
     def __init__(self) -> None:
         self.calls: list[BatchCommand] = []
+        self.derived_calls: list[object] = []
         self._checkpoints: dict[tuple, int] = {}
         self._idempotency: dict[tuple, tuple] = {}
 
@@ -114,6 +115,16 @@ class FakeStore:
         if version is None:
             return None
         return {"version": version}
+
+    def get_latest_authoritative_revision(self, _identity) -> int:
+        return max(1, len(self.calls))
+
+    def get_derived_revision(self, _identity, _object_type: str) -> int:
+        return len(self.derived_calls)
+
+    def update_derived_metrics(self, command):
+        self.derived_calls.append(command)
+        return SimpleNamespace(updated=True, replayed=False)
 
 
 class TenantGuardStore(FakeStore):
@@ -267,8 +278,9 @@ def test_p07_initial_load_lands_ot_dataset_and_overdue_hours(mock_fetch):
     assert obj.object_type == "Shipment"
     assert obj.identity.external_id == "niushop:1:1"
     assert obj.identity.platform == "niushop"
-    # overdue_hours 派生指标写入 properties
-    assert obj.properties.get("overdue_hours") == 24.0
+    # overdue_hours 通过独立 CAS 命令写入，基础 properties 不再混入派生键。
+    assert "overdue_hours" not in obj.properties
+    assert store.derived_calls[0].derived_props["overdue_hours"] == 24.0
 
     # Dataset 落地验证
     assert result["output_ref"].startswith("dataset://catalog/")
@@ -399,16 +411,15 @@ def test_p07_cross_tenant_write_rejected_fail_closed(mock_fetch):
 # ═══════════════════════════════════════════════
 
 
-def test_p07_overdue_hours_null_when_delivered(mock_fetch):
-    """delivery_time>0（已发货）→ overdue_hours=null（通过 executor 端到端验证）。"""
+def test_p07_overdue_hours_for_delivered_uses_actual_duration(mock_fetch):
+    """delivery_time>0（已发货）→ 按实际履约时长计算。"""
     mock_fetch.return_value = [shipment_row(delivery_time=1000)]
     store = FakeStore()
     _inject_store(store)
 
     _run_executor()
 
-    obj = store.calls[0].objects[0]
-    assert obj.properties.get("overdue_hours") is None
+    assert store.derived_calls[0].derived_props["overdue_hours"] == 0.0
 
 
 def test_p07_overdue_hours_null_when_not_paid(mock_fetch):
@@ -419,8 +430,7 @@ def test_p07_overdue_hours_null_when_not_paid(mock_fetch):
 
     _run_executor()
 
-    obj = store.calls[0].objects[0]
-    assert obj.properties.get("overdue_hours") is None
+    assert store.derived_calls[0].derived_props["overdue_hours"] is None
 
 
 def test_p07_overdue_hours_zero_within_sla(mock_fetch):
@@ -432,5 +442,4 @@ def test_p07_overdue_hours_zero_within_sla(mock_fetch):
 
     _run_executor()
 
-    obj = store.calls[0].objects[0]
-    assert obj.properties.get("overdue_hours") == 0.0
+    assert store.derived_calls[0].derived_props["overdue_hours"] == 0.0

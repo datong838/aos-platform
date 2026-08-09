@@ -303,12 +303,12 @@ def test_overdue_hours_within_sla_is_zero():
     assert result[0]["properties"]["overdue_hours"] == 0.0
 
 
-def test_overdue_hours_delivery_time_positive_returns_null():
-    """delivery_time>0（已发货）→ null。"""
+def test_overdue_hours_delivery_time_positive_uses_actual_delivery_duration():
+    """delivery_time>0（已发货）→ 按实际履约时长计算。"""
     pay_time = FIXED_NOW - timedelta(hours=72)
     row = _row("Shipment", delivery_time=1000, pay_time=pay_time.timestamp())
     result = apply_derived_metrics([row], _pipeline("p07"))
-    assert result[0]["properties"]["overdue_hours"] is None
+    assert result[0]["properties"]["overdue_hours"] == 0.0
 
 
 def test_overdue_hours_pay_time_zero_returns_null():

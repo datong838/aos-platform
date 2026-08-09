@@ -95,9 +95,9 @@ def sink_derived_metrics(
     candidates: list[tuple[dict[str, Any], dict[str, Any]]] = []
     for row in output_rows:
         object_type = str(row.get("ot") or "")
-        # 本波只切换 P12 Payment。其他 7 项在 O1 后续波次逐项迁移，
-        # 避免一次性改变既有 P01-P11 的写入与重跑语义。
-        if object_type != "Payment":
+        # W10 本波完成 Payment + Shipment 两条权威派生链；其余六项仍按
+        # 已有兼容形态读取，待后续按同一 CAS 合同逐项迁移。
+        if object_type not in {"Payment", "Shipment"}:
             continue
         allowed = DERIVED_PROPERTIES.get(object_type)
         if not allowed or row.get("link_type"):
@@ -224,10 +224,12 @@ def _build_object(row: dict[str, Any], sync_scope: SyncScope) -> CoreObjectRecor
     source_utc_iso = source_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     properties = dict(row.get("properties", {}))
-    if object_type == "Payment":
-        # O1-A/P12：本波只迁移 Payment 的基础/派生物理分离。
-        for derived_key in DERIVED_PROPERTIES.get("Payment", frozenset()):
+    # O1-W10：Payment、Shipment 已切到独立 CAS/Receipt/Outbox，基础对象
+    # 不再混入派生键。其余 OT 仍保留既有兼容写法，避免在未迁移前丢指标。
+    if object_type in {"Payment", "Shipment"}:
+        for derived_key in DERIVED_PROPERTIES.get(str(object_type), frozenset()):
             properties.pop(derived_key, None)
+    if object_type == "Payment":
         # enrichment 只是 pay_duration_min 的计算输入，不是 Payment 基础属性。
         properties.pop("orderCreatedAt", None)
         properties.pop("orderCreatedAtSourceTimezone", None)

@@ -11,6 +11,7 @@ from aos_api.ec_dlq_store import (
     list_failures,
     record_failure,
     retry_failure,
+    sanitize_metadata,
 )
 from aos_api.tenant_scope import TenantScope
 
@@ -47,6 +48,30 @@ def test_record_failure_is_persistent_sanitized_and_tenant_scoped() -> None:
     assert len(item["payloadHash"]) == 64
     assert item["id"] in [row["id"] for row in list_failures(SCOPE)]
     assert item["id"] not in [row["id"] for row in list_failures(OTHER_SCOPE)]
+
+
+def test_recursive_sanitizer_redacts_sensitive_identity_keys_and_nested_values() -> None:
+    sanitized = sanitize_metadata(
+        {
+            "phone": "13800000000",
+            "openid": "oX1234567890abcdef",
+            "nickname_test": "真实昵称",
+            "meta": {"mobile": "138-0000-0000"},
+            "tags": ["110101199001011234"],
+            "safe": "保留字段",
+        }
+    )
+    serialized = str(sanitized)
+    assert sanitized["safe"] == "保留字段"
+    assert "13800000000" not in serialized
+    assert "138-0000-0000" not in serialized
+    assert "110101199001011234" not in serialized
+    assert "oX1234567890abcdef" not in serialized
+    assert "真实昵称" not in serialized
+
+
+def test_sanitizer_does_not_redact_audit_tenant_identifier() -> None:
+    assert sanitize_metadata("org-d5e-a-01234567") == "org-d5e-a-01234567"
 
 
 def test_record_failure_replays_same_request_and_rejects_changed_request() -> None:
