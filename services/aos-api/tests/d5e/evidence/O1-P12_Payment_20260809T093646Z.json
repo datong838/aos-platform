@@ -1,0 +1,39 @@
+{
+  "authority_and_projection": {
+    "authoritative_payment_total": 206,
+    "base_property_metric_leak_count": 0,
+    "derived_receipt_count": 412,
+    "eligible_metric_nonnull": 111,
+    "eligible_metric_rate_pct": 100.0,
+    "eligible_present_in_authority": 111,
+    "legacy_projection_alias_count": 100,
+    "legacy_projection_alias_hash": "9b4e83c3085032ebef21f361e52686088de480069f81836c368973f0415976ec",
+    "negative_metric_count": 0,
+    "projected_eligible_metric_nonnull": 111,
+    "projected_eligible_metric_rate_pct": 100.0,
+    "projected_payment_total": 306,
+    "projection_pending_count": 0
+  },
+  "ended_at": "2026-08-09T09:36:46.960518+00:00",
+  "gate": "O1-A/P12-Payment-authoritative-metric-chain",
+  "git_sha": "8cbf95e1aabcf89feb375b383633d34c3e8c9555",
+  "overall_d5_blockers": [
+    "O1-D alias migration is not implemented/applied",
+    "G17-SPEC and D4-SPEC-SYNC are not PASS",
+    "D5-E1 write/canary harness is not implemented"
+  ],
+  "overall_d5_status": "BLOCKED",
+  "scope": {
+    "org_id": "org-org",
+    "workspace_id": "dev-project"
+  },
+  "source": {
+    "eligible_definition": "ns_pay.pay_time > 0 and related ns_order.create_time exists",
+    "eligible_identity_hash": "5864269a0b282e06343167fefd4497d71f157e54fb796ffd6f2bba4ab6622bad",
+    "eligible_total": 111,
+    "payment_total": 206,
+    "source_id": "niushop-qyh"
+  },
+  "started_at": "2026-08-09T09:36:45.557341+00:00",
+  "status": "PASS"
+}
