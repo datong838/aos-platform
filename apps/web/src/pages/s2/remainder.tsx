@@ -22,6 +22,26 @@ type OkfMapping = {
   objectType?: string;
   label?: string;
   columns: OkfCol[];
+  revision?: number;
+  coverage?: { mapped: number; total: number; percent: number };
+  blockedFields?: string[];
+  impact?: { requiresRebuild?: boolean; affectedObjectType?: string; mappedFieldCount?: number };
+};
+
+export const ECOM_ORDER_MAPPING: OkfMapping = {
+  industry: "ecom",
+  objectType: "Order",
+  label: "微商城电商 · Order",
+  revision: 0,
+  columns: [
+    { src: "order_id", dst: "Order.id", ok: true },
+    { src: "site_id", dst: "Order.shopId", ok: true },
+    { src: "order_status", dst: "Order.status", ok: true },
+    { src: "order_money", dst: "Order.totalAmount", ok: true },
+    { src: "currency(default=CNY)", dst: "Order.currency", ok: true },
+    { src: "create_time", dst: "Order.createdAt", ok: true },
+    { src: "update_time", dst: "Order.updatedAt", ok: true },
+  ],
 };
 
 /** 89 · OKF 映射真持久化 + Lint errors */
@@ -67,7 +87,7 @@ export function OkfFunnelPage() {
   async function runLint() {
     setMsg("");
     setErr("");
-    const ot = mapping?.objectType || "WorkOrder";
+    const ot = mapping?.objectType || "Order";
     const r = await apiPost<{ ok?: boolean; errors?: { rule?: string; message?: string }[] }>(
       "/v1/ontology/constitution/lint",
       {
@@ -92,10 +112,14 @@ export function OkfFunnelPage() {
     try {
       const saved = await apiPut<OkfMapping>(
         `/v1/ontology/okf-mappings/${encodeURIComponent(industry)}`,
-        mapping,
+        { ...mapping, expectedRevision: mapping.revision ?? 0 },
       );
-      setMapping(saved);
-      setMsg(`已保存 ${industry} 映射 · ${saved.columns.length} 列`);
+      const verified = await apiGet<OkfMapping>(`/v1/ontology/okf-mappings/${encodeURIComponent(industry)}`);
+      if (verified.revision !== saved.revision || verified.objectType !== saved.objectType) {
+        throw new Error("OKF 保存回读不一致");
+      }
+      setMapping(verified);
+      setMsg(`已保存并回读 ${industry} 映射 · r${verified.revision} · ${verified.columns.length} 列`);
     } catch (e) {
       setErr(String((e as Error).message || e));
     } finally {
@@ -126,6 +150,15 @@ export function OkfFunnelPage() {
         <button type="button" className="btn-primary" disabled={busy || !mapping} onClick={() => void saveMapping()}>
           {busy ? "保存中…" : "保存映射"}
         </button>
+        {industry === "ecom" && mapping?.objectType !== "Order" && (
+          <button
+            type="button"
+            className="btn-outline-cyan"
+            onClick={() => setMapping({ ...ECOM_ORDER_MAPPING, revision: mapping?.revision ?? 0 })}
+          >
+            应用微商城 Order 默认
+          </button>
+        )}
         <button
           type="button"
           className="btn"
@@ -155,7 +188,7 @@ export function OkfFunnelPage() {
             <h2 className="okf-industry-title">行业模板</h2>
             <p className="okf-industry-hint">垂直行业定制 · 选中后右侧编辑映射</p>
             {[
-              { id: "ecom", label: "跨境电商 · WorkOrder" },
+              { id: "ecom", label: "微商城电商 · Order" },
               { id: "env", label: "环科院 · Pollutant" },
               { id: "bio", label: "生物 · Batch" },
             ].map((i) => (
@@ -195,8 +228,15 @@ export function OkfFunnelPage() {
                 },
                 { label: "Funnel stage", value: String(funnel.data?.stage || "—"), tone: "muted" },
                 { label: "Modules", value: modules.data?.items?.length ?? 0, tone: "muted" },
+                { label: "Mapping revision", value: mapping?.revision ?? 0, tone: "muted" },
+                { label: "阻断字段", value: mapping?.blockedFields?.length ?? columns.filter((c) => !c.ok).length, tone: "muted" },
               ]}
             />
+            <BpBanner tone={(mapping?.blockedFields?.length ?? columns.filter((c) => !c.ok).length) > 0 ? "warn" : "info"}>
+              影响分析 · Object Type={mapping?.impact?.affectedObjectType || mapping?.objectType || "—"} ·
+              覆盖率={mapping?.coverage?.percent ?? (columns.length ? Math.round(columns.filter((c) => c.ok).length * 100 / columns.length) : 0)}% ·
+              {mapping?.impact?.requiresRebuild ? "存在阻断字段，发布前须重建/影子对账" : "无阻断字段，可进入影子对账"}
+            </BpBanner>
             <BpTable
               columns={["源列", "目标 Property", "状态", ""]}
               rows={columns.map((c, idx) => [
@@ -1454,7 +1494,7 @@ export function OkfOverviewPage() {
     { id: "bio", name: "生物", request: bio },
   ].map(({ id, name, request }) => ({
     id, name, mapping: request.data,
-    mapped: Boolean(request.data?.columns?.length) && request.data!.columns.every((column) => column.ok),
+    mapped: Boolean(request.data?.columns?.length) && (request.data?.blockedFields?.length ?? request.data!.columns.filter((column) => !column.ok).length) === 0,
   }));
   const overviewError = Object.values(requests).map((request) => request.err).find(Boolean);
 
@@ -1490,6 +1530,9 @@ export function OkfOverviewPage() {
             </div>
             <p className="bp-discover-meta">
               {ind.mapping?.objectType || "未配置 Object Type"} · {ind.mapping?.columns?.length || 0} 个字段
+            </p>
+            <p className="bp-discover-meta">
+              覆盖率 {ind.mapping?.coverage?.percent ?? 0}% · 阻断 {ind.mapping?.blockedFields?.length ?? 0} · r{ind.mapping?.revision ?? 0}
             </p>
           </Link>
         ))}

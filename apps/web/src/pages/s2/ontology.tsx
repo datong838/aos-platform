@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { apiGet, apiPost } from "../../api/client";
+import { apiGet, apiPost, apiPut } from "../../api/client";
 import { getOntologyClient } from "../../api/ontologyClient";
 import { queryAuthoritativeGraph } from "../../api/ontologyGraph";
 import type { GraphDomain, GraphSnapshot } from "../../api/ontologyExplorerContracts";
@@ -10,6 +10,7 @@ import {
   BpBanner,
   BpLinkRow,
   BpMetricGrid,
+  BpPropGrid,
   BpSplit,
   BpStagePipeline,
   BpTable,
@@ -395,7 +396,7 @@ export function GraphHealthPage() {
 export function FunnelPage() {
   const [sp] = useSearchParams();
   const objectType = sp.get("type")?.trim() || "";
-  const status = useJsonGet<{ objectType: string; stage: string; detail?: unknown }>(
+  const status = useJsonGet<{ objectType: string; stage: string; detail?: { mode?: string; receiptId?: string; rerunAt?: string; failures?: unknown[] } }>(
     objectType ? `/v1/funnel/${encodeURIComponent(objectType)}/status` : null,
   );
   const worker = useJsonGet<{
@@ -427,11 +428,17 @@ export function FunnelPage() {
     setBusy(true);
     setMsg("");
     try {
-      const r = await apiPost<{ stage?: string; mode?: string }>(
+      const r = await apiPost<{ stage?: string; mode?: string; receiptId?: string; rerunAt?: string }>(
         `/v1/funnel/${encodeURIComponent(objectType)}/rerun`,
         { mode: pipeMode },
       );
-      setMsg(`已重跑 · mode=${r.mode} · stage=${r.stage}`);
+      const verified = await apiGet<{ objectType: string; stage: string; detail?: { mode?: string; receiptId?: string; rerunAt?: string } }>(
+        `/v1/funnel/${encodeURIComponent(objectType)}/status`,
+      );
+      if (!r.receiptId || verified.detail?.receiptId !== r.receiptId || verified.stage !== r.stage) {
+        throw new Error("Funnel 重跑回读与 Receipt 不一致");
+      }
+      setMsg(`已重跑并回读 · ${r.mode} · ${r.stage} · Receipt ${r.receiptId.slice(0, 8)}`);
       status.reload();
       worker.reload();
     } catch (e) {
@@ -504,6 +511,9 @@ export function FunnelPage() {
         <p className="muted" style={{ fontSize: "0.75rem", marginTop: 8 }}>
           切换模式后点「重跑」写入 funnel_status，worker 进度从服务端读取。
         </p>
+        <p className="muted" style={{ fontSize: "0.75rem", marginTop: 8 }}>
+          最近 Receipt: {status.data?.detail?.receiptId || "—"} · 重跑时间: {status.data?.detail?.rerunAt || "—"}
+        </p>
       </div>
 
       {stages.length > 0 ? (
@@ -512,11 +522,11 @@ export function FunnelPage() {
         <p className="muted">加载流水线…</p>
       )}
 
-      <BpBanner tone="warn">
-        最近错误 · Type Coherence · DLQ 见{" "}
-        <Link to="/data/health" className="bp-action-link">
-          数据健康
-        </Link>
+      <BpBanner tone={(status.data?.detail?.failures?.length || 0) > 0 ? "warn" : "info"}>
+        失败证据 · {(status.data?.detail?.failures?.length || 0) > 0
+          ? `${status.data?.detail?.failures?.length} 条，前往数据健康查看`
+          : "当前权威状态未报告失败"} · {" "}
+        <Link to="/data/health" className="bp-action-link">数据健康</Link>
       </BpBanner>
       <BpBanner tone="info">
         Funnel 不是 ETL，而是事务监听器——湖仓每一次 COMMIT，都驱动业务 Object 刷新。
@@ -913,15 +923,26 @@ type OverlayHistoryItem = {
   is_active: boolean;
   actor?: string;
   created_at?: string;
+  base_schema_sha256?: string;
+  visible_properties?: string[] | null;
+  extended_properties?: Record<string, unknown>;
+  policies?: Record<string, unknown> | null;
 };
+
+export function overlayIfMatch(item: Pick<OverlayHistoryItem, "ontology_revision" | "base_schema_sha256">): string {
+  if (!item.base_schema_sha256) throw new Error("Overlay 缺少 base schema hash，不能执行 CAS 写入");
+  return `\"ontology-overlay-v1:${item.ontology_revision}:${item.base_schema_sha256}\"`;
+}
 
 /** O1-R4 · 安装绑定的组织 Overlay 不可变历史。 */
 export function BranchesPage() {
   const [composition, setComposition] = useState<OverlayComposition | null>(null);
   const [history, setHistory] = useState<OverlayHistoryItem[]>([]);
+  const [active, setActive] = useState<OverlayHistoryItem[]>([]);
   const [target, setTarget] = useState("all");
   const [busy, setBusy] = useState(true);
   const [err, setErr] = useState("");
+  const [msg, setMsg] = useState("");
 
   async function reload() {
     setBusy(true);
@@ -936,13 +957,16 @@ export function BranchesPage() {
         setHistory([]);
         return;
       }
-      const response = await apiGet<{ items: OverlayHistoryItem[] }>(
-        `/v1/ontology/installations/${encodeURIComponent(nextComposition.installation_pk)}/overlays/history`,
-      );
+      const [response, activeResponse] = await Promise.all([
+        apiGet<{ items: OverlayHistoryItem[] }>(`/v1/ontology/installations/${encodeURIComponent(nextComposition.installation_pk)}/overlays/history`),
+        apiGet<{ items: OverlayHistoryItem[] }>(`/v1/ontology/installations/${encodeURIComponent(nextComposition.installation_pk)}/overlays`),
+      ]);
       setHistory(response.items || []);
+      setActive(activeResponse.items || []);
     } catch (e) {
       setComposition(null);
       setHistory([]);
+      setActive([]);
       setErr(String((e as Error).message || e));
     } finally {
       setBusy(false);
@@ -957,6 +981,37 @@ export function BranchesPage() {
   const visible = target === "all"
     ? history
     : history.filter((item) => `${item.target_kind}:${item.target_id}` === target);
+  const selectedHistory = target === "all" ? [] : visible;
+  const current = selectedHistory.find((item) => item.is_active) || null;
+  const previous = selectedHistory.find((item) => !item.is_active) || null;
+
+  async function resetToInherit(item: OverlayHistoryItem) {
+    if (!composition || item.mode !== "override" || !item.base_schema_sha256) return;
+    setBusy(true);
+    setErr("");
+    setMsg("");
+    try {
+      const expected = overlayIfMatch(item);
+      await apiPut(
+        `/v1/ontology/installations/${encodeURIComponent(composition.installation_pk)}/overlays/${item.target_kind}/${encodeURIComponent(item.target_id)}`,
+        { mode: "inherit" },
+        { "If-Match": expected, "Idempotency-Key": `ontology-reset-${crypto.randomUUID()}` },
+      );
+      const verified = await apiGet<{ items: OverlayHistoryItem[] }>(
+        `/v1/ontology/installations/${encodeURIComponent(composition.installation_pk)}/overlays`,
+      );
+      const next = verified.items.find((candidate) => candidate.target_kind === item.target_kind && candidate.target_id === item.target_id);
+      if (!next || next.mode !== "inherit" || next.ontology_revision !== item.ontology_revision + 1) {
+        throw new Error("恢复安装模板后回读不一致");
+      }
+      setMsg(`已恢复 ${item.target_kind}:${item.target_id} 为安装模板继承 · r${next.ontology_revision}`);
+      await reload();
+    } catch (error) {
+      setErr(String((error as Error).message || error));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <S2Chrome title="分支与 Overlay" lede="Installation 绑定 · 组织定制 · 不可变修订历史">
@@ -970,13 +1025,14 @@ export function BranchesPage() {
         </Link>
       </BpToolbar>
       {err && <p className="error">{err}</p>}
+      {msg && <p className="bp-prop-ok">{msg}</p>}
       {composition ? (
         <>
           <BpMetricGrid items={[
             { label: "Installation", value: composition.installation_pk.slice(0, 8) },
             { label: "安装修订", value: composition.installation_revision },
             { label: "Overlay 修订", value: history.length },
-            { label: "当前生效", value: history.filter((item) => item.is_active).length },
+            { label: "当前生效", value: active.length },
           ]} />
           <BpBanner tone="info">
             平台模板保持只读。组织定制通过强 ETag/CAS 与 Idempotency-Key 生成不可变修订；
@@ -989,6 +1045,22 @@ export function BranchesPage() {
               {targets.map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
           </label>
+          {current && (
+            <div className="card" style={{ marginBottom: "1rem" }}>
+              <h2 className="aos-text" style={{ fontSize: "0.9rem", marginTop: 0 }}>当前与上一修订差异</h2>
+              <BpPropGrid items={[
+                { label: "当前模式", value: current.mode },
+                { label: "当前显示名", value: current.display_name || "继承安装模板" },
+                { label: "上一模式", value: previous?.mode || "无历史" },
+                { label: "上一显示名", value: previous?.display_name || (previous ? "继承安装模板" : "—") },
+              ]} />
+              {current.mode === "override" && (
+                <button type="button" className="btn-outline-cyan" disabled={busy} onClick={() => void resetToInherit(current)}>
+                  恢复安装模板（保留历史）
+                </button>
+              )}
+            </div>
+          )}
           <BpTable
             columns={["目标", "修订", "模式", "显示名", "状态", "操作者 / 时间"]}
             rows={visible.map((item) => [

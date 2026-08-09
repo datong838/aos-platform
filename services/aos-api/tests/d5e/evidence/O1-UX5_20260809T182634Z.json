@@ -1,0 +1,71 @@
+{
+  "gate": "O1-UX5_NINE_MENU_TASK_CLOSURE_GATE",
+  "status": "GREEN",
+  "generatedAt": "2026-08-09T18:26:34.248181+00:00",
+  "gitSha": "de1a1d271e545f3602cc2a9d0fd74bd6bef44a63",
+  "targetScope": {
+    "orgId": "org-org",
+    "workspaceId": "dev-project"
+  },
+  "canaryScope": {
+    "orgId": "dev-org",
+    "workspaceId": "dev-project"
+  },
+  "facts": {
+    "okfRevision": 1,
+    "okfObjectType": "Order",
+    "funnelStage": "hydration",
+    "funnelReceiptId": "67df1e27-c0d0-4714-af58-2f4fcce123a6",
+    "wikiVisible": 61,
+    "wikiCovered": 0
+  },
+  "frontend": {
+    "testFiles": 158,
+    "tests": 2035,
+    "typeScript": "PASS",
+    "productionBuild": "PASS"
+  },
+  "browser": {
+    "menusChecked": [
+      "/ontology",
+      "/workshop/graph",
+      "/ontology/funnel",
+      "/ontology/okf-funnel",
+      "/ontology/okf-overview",
+      "/ontology/graph-health",
+      "/ontology/wiki",
+      "/ontology/wiki-index",
+      "/ontology/branches"
+    ],
+    "primaryInteractions": [
+      "save-exploration",
+      "share-workspace",
+      "graph-tab",
+      "fullscreen",
+      "funnel-rerun-reread",
+      "okf-save-reread",
+      "wiki-coverage-index"
+    ],
+    "scopeLabel": "栖月汇商贸有限公司 / 默认工作区",
+    "blockingErrors": 0
+  },
+  "artifacts": {
+    "services/aos-api/aos_api/routers/ontology.py": "691422c6f5fb980f9941c472013a70d12ddc4672b80e30baa2e0b1b71cb66ab4",
+    "apps/web/src/pages/s2/ontology.tsx": "507b6d55b4c05b40718326976c1bb1cf588280f3894fd51b2de9c5e525b21ea8",
+    "apps/web/src/pages/s2/remainder.tsx": "702b098e5bcede55c34ca5a57e6f59bf898e7814bfa6bc50d6548784f5909fe0",
+    "apps/web/src/pages/s2/WikiIndexPage.tsx": "c569daafa0826b25dbb3ecee11e2e37c50f8cad32266ca3b40072208db631848",
+    "apps/web/src/pages/s2/O1Ux5Contracts.test.ts": "7e47b99fe95b0a9dff36c62a9b5dd541dd085181ad0cc749bcc1c8ecda8ae8a9",
+    "apps/web/src/navigation/items.ts": "2efd4ea58b1fa428851cda8f3151ed3452e6e314028e8362e0c382a6bdf5549d"
+  },
+  "checks": {
+    "strictTargetScope": true,
+    "okfOrderMappingPersisted": true,
+    "funnelReceiptPersisted": true,
+    "wikiCoverageTruthful": true,
+    "crossTenantCanaryClean": true,
+    "nineMenuRoutesDeclared": true,
+    "frontendContractsPresent": true,
+    "bulkWikiCoverageImplemented": true
+  },
+  "evidenceSha256": "bedec47b5345bd18efc2e7579d4f29654578e7588e940b54fabfad4b90d17867"
+}

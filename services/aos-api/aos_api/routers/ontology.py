@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import json
+import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from aos_api.auth import Principal, require_principal
@@ -833,6 +834,56 @@ def get_wiki_version(
     }
 
 
+@router.get("/v1/wiki/{object_type}/coverage-index")
+def wiki_coverage_index(
+    object_type: str,
+    limit: int = Query(default=50, ge=1, le=200),
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """O1-UX5 · tenant-authoritative Object×Wiki coverage without expected 404 fan-out."""
+    scope = _scope(principal)
+    with connect(scope) as conn:
+        rows = conn.execute(
+            """
+            SELECT oi.object_id,wp.body,
+                   (SELECT COUNT(*) FROM wiki_page_version wv
+                     WHERE wv.org_id=oi.org_id AND wv.project_id=oi.project_id
+                       AND wv.object_type=oi.object_type AND wv.object_id=oi.object_id) AS version_count
+              FROM obj_instance oi
+              LEFT JOIN wiki_page wp
+                ON wp.org_id=oi.org_id AND wp.project_id=oi.project_id
+               AND wp.object_type=oi.object_type AND wp.object_id=oi.object_id
+             WHERE oi.org_id=%s AND oi.project_id=%s AND oi.object_type=%s
+             ORDER BY oi.object_id
+             LIMIT %s
+            """,
+            (*scope.key, object_type, limit),
+        ).fetchall()
+        total_row = conn.execute(
+            "SELECT COUNT(*) AS count FROM obj_instance WHERE org_id=%s AND project_id=%s AND object_type=%s",
+            (*scope.key, object_type),
+        ).fetchone()
+        items = []
+        for row in rows:
+            object_id = str(row["object_id"])
+            if not can_access_object(principal, conn, object_type, object_id):
+                continue
+            body = row["body"] if isinstance(row["body"], dict) else {}
+            items.append({
+                "objectType": object_type,
+                "objectId": object_id,
+                "covered": row["body"] is not None,
+                "summary": str(body.get("summary") or ""),
+                "versionCount": int(row["version_count"] or 0),
+            })
+    covered = sum(1 for item in items if item["covered"])
+    return {
+        "objectType": object_type,
+        "items": items,
+        "coverage": {"covered": covered, "gaps": len(items) - covered, "visible": len(items), "total": int(total_row["count"] or 0)},
+    }
+
+
 @router.get("/v1/wiki/{object_type}/{object_id}")
 def get_wiki(
     object_type: str,
@@ -1260,13 +1311,16 @@ def branch_checkout(
 _OKF_DEFAULTS: dict[str, dict[str, Any]] = {
     "ecom": {
         "industry": "ecom",
-        "objectType": "WorkOrder",
-        "label": "跨境电商 · WorkOrder",
+        "objectType": "Order",
+        "label": "微商城电商 · Order",
         "columns": [
-            {"src": "order_id", "dst": "WorkOrder.id", "ok": True},
-            {"src": "title", "dst": "WorkOrder.title", "ok": True},
-            {"src": "status", "dst": "WorkOrder.status", "ok": True},
-            {"src": "site", "dst": "WorkOrder.site", "ok": True},
+            {"src": "order_id", "dst": "Order.id", "ok": True},
+            {"src": "site_id", "dst": "Order.shopId", "ok": True},
+            {"src": "order_status", "dst": "Order.status", "ok": True},
+            {"src": "order_money", "dst": "Order.totalAmount", "ok": True},
+            {"src": "currency(default=CNY)", "dst": "Order.currency", "ok": True},
+            {"src": "create_time", "dst": "Order.createdAt", "ok": True},
+            {"src": "update_time", "dst": "Order.updatedAt", "ok": True},
         ],
     },
     "env": {
@@ -1292,6 +1346,26 @@ _OKF_DEFAULTS: dict[str, dict[str, Any]] = {
 }
 
 
+def _okf_mapping_view(payload: dict[str, Any], *, revision: int) -> dict[str, Any]:
+    columns = [dict(column) for column in payload.get("columns") or [] if isinstance(column, dict)]
+    blocked = [str(column.get("dst") or column.get("src") or "") for column in columns if not column.get("ok")]
+    mapped = len(columns) - len(blocked)
+    return {
+        "industry": str(payload.get("industry") or ""),
+        "objectType": str(payload.get("objectType") or ""),
+        "label": str(payload.get("label") or ""),
+        "columns": columns,
+        "revision": revision,
+        "coverage": {"mapped": mapped, "total": len(columns), "percent": round(mapped * 100 / len(columns)) if columns else 0},
+        "blockedFields": blocked,
+        "impact": {
+            "requiresRebuild": bool(blocked),
+            "affectedObjectType": str(payload.get("objectType") or ""),
+            "mappedFieldCount": mapped,
+        },
+    }
+
+
 @router.get("/v1/ontology/okf-mappings/{industry}")
 def get_okf_mapping(
     industry: str,
@@ -1300,15 +1374,15 @@ def get_okf_mapping(
     from aos_api.aip_kv_store import get_payload
 
     key = f"okf_mapping:{industry}"
-    stored = get_payload(key)
+    stored = get_payload(key, _scope(principal))
     if stored:
-        return stored
+        return _okf_mapping_view(stored, revision=int(stored.get("revision") or 0))
     default = _OKF_DEFAULTS.get(industry)
     if not default:
         raise ApiError(
             code="NOT_FOUND", message=f"unknown industry: {industry}", status_code=404
         )
-    return dict(default)
+    return _okf_mapping_view(dict(default), revision=0)
 
 
 @router.put("/v1/ontology/okf-mappings/{industry}")
@@ -1317,22 +1391,22 @@ def put_okf_mapping(
     body: dict[str, Any],
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    _ = principal
-    from aos_api.aip_kv_store import put_payload
-
-    if industry not in _OKF_DEFAULTS and not str(industry).strip():
+    if industry not in _OKF_DEFAULTS:
         raise ApiError(code="VALIDATION", message="invalid industry", status_code=400)
     columns = body.get("columns")
     if not isinstance(columns, list):
         raise ApiError(
             code="VALIDATION", message="columns must be a list", status_code=400
         )
+    expected_revision = body.get("expectedRevision")
+    if not isinstance(expected_revision, int) or expected_revision < 0:
+        raise ApiError(code="OKF_EXPECTED_REVISION_REQUIRED", message="expectedRevision must be a non-negative integer", status_code=428)
     payload = {
         "industry": industry,
         "objectType": str(
             body.get("objectType")
             or _OKF_DEFAULTS.get(industry, {}).get("objectType")
-            or "WorkOrder"
+            or "Order"
         ),
         "label": str(
             body.get("label")
@@ -1349,9 +1423,35 @@ def put_okf_mapping(
             if isinstance(c, dict)
         ],
     }
-    put_payload(f"okf_mapping:{industry}", payload)
-    log.info("okf_mapping_put industry=%s cols=%s", industry, len(payload["columns"]))
-    return payload
+    scope = _scope(principal)
+    key = f"okf_mapping:{industry}"
+    with connect(scope) as conn:
+        row = conn.execute(
+            "SELECT payload FROM meta_aip_kv WHERE org_id=%s AND project_id=%s AND key=%s FOR UPDATE",
+            (*scope.key, key),
+        ).fetchone()
+        current_payload = dict(row["payload"] or {}) if row else None
+        current_revision = int((current_payload or {}).get("revision") or 0)
+        if current_revision != expected_revision:
+            raise ApiError(
+                code="OKF_MAPPING_CAS_CONFLICT",
+                message="OKF mapping revision changed",
+                status_code=412,
+                details={"expected": expected_revision, "actual": current_revision},
+            )
+        payload["revision"] = current_revision + 1
+        conn.execute(
+            """
+            INSERT INTO meta_aip_kv (org_id,project_id,key,payload,updated_at)
+            VALUES (%s,%s,%s,%s::jsonb,NOW())
+            ON CONFLICT (org_id,project_id,key) DO UPDATE
+              SET payload=EXCLUDED.payload,updated_at=NOW()
+            """,
+            (*scope.key, key, json.dumps(payload, ensure_ascii=False)),
+        )
+        conn.commit()
+    log.info("okf_mapping_put industry=%s revision=%s cols=%s", industry, payload["revision"], len(payload["columns"]))
+    return _okf_mapping_view(payload, revision=payload["revision"])
 
 
 class FunnelRerunIn(BaseModel):
@@ -1391,6 +1491,8 @@ def funnel_rerun(
         "mode": mode,
         "worker": worker,
         "rerunAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "receiptId": str(uuid.uuid4()),
+        "failures": [],
     }
     with connect() as conn:
         result = conn.execute(
@@ -1418,5 +1520,7 @@ def funnel_rerun(
         "stage": stage,
         "mode": mode,
         "detail": detail,
+        "receiptId": detail["receiptId"],
+        "rerunAt": detail["rerunAt"],
         "stages": worker,
     }

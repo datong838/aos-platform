@@ -1357,6 +1357,23 @@ button.bp-discover-violet:hover {
   gap: 6px;
 }
 
+.wiki-index-layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+  gap: 1rem;
+  margin-top: 12px;
+}
+
+@media (max-width: 767px) {
+  .wiki-index-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .wiki-index-layout > aside {
+    min-height: 0 !important;
+  }
+}
+
 .okf-industry-title {
   margin: 0;
   font-size: 13px;

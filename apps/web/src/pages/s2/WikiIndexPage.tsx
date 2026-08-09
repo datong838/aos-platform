@@ -4,7 +4,7 @@
  */
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiPost } from "../../api/client";
+import { apiGet, apiPost } from "../../api/client";
 import { S2Chrome, useJsonGet } from "./shared";
 
 type Branch = { id: string; name: string; baseRef: string; readonly: boolean; changeCount?: number };
@@ -13,13 +13,18 @@ type OntologyRail = {
   objectTypes?: ObjectTypeItem[];
 };
 
+export function summarizeWikiCoverage(cards: { covered: boolean }[]): { covered: number; gaps: number; total: number } {
+  const covered = cards.filter((card) => card.covered).length;
+  return { covered, gaps: cards.length - covered, total: cards.length };
+}
+
 export function WikiIndexPage() {
   const branches = useJsonGet<{ items: Branch[] }>("/v1/ontology/branches");
   const rail = useJsonGet<OntologyRail>("/v1/analytics/ontology-rail");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [wikiCards, setWikiCards] = useState<{ type: string; id: string; summary: string }[]>([]);
+  const [wikiCards, setWikiCards] = useState<{ type: string; id: string; summary: string; covered: boolean; versionCount: number }[]>([]);
   const [loadingCards, setLoadingCards] = useState(false);
   const [cardErr, setCardErr] = useState<string | null>(null);
 
@@ -32,15 +37,46 @@ export function WikiIndexPage() {
     setSelectedType(typeId);
     setCardErr(null);
     try {
+      if (!branch) {
+        const coverage = await apiGet<{
+          items: { objectType: string; objectId: string; summary: string; covered: boolean; versionCount: number }[];
+        }>(`/v1/wiki/${encodeURIComponent(typeId)}/coverage-index?limit=50`);
+        setWikiCards((coverage.items || []).map((item) => ({
+          type: item.objectType,
+          id: item.objectId,
+          summary: item.summary,
+          covered: item.covered,
+          versionCount: item.versionCount,
+        })));
+        return;
+      }
       const res = await apiPost<{ columns: string[]; rows: Record<string, unknown>[] }>(
         "/v1/analytics/objects/list",
         { objectType: typeId, limit: 50, filters: [], branch },
       );
-      const cards = (res.rows || []).flatMap((row) => {
+      const subjects = (res.rows || []).flatMap((row) => {
         const id = String(row.id ?? "");
-        const summary = String(row.summary ?? row.title ?? row.name ?? "");
-        return id ? [{ type: typeId, id, summary }] : [];
+        return id ? [{ type: typeId, id, objectSummary: String(row.summary ?? row.title ?? row.name ?? "") }] : [];
       });
+      const cards = await Promise.all(subjects.map(async (subject) => {
+        try {
+          const [wiki, versions] = await Promise.all([
+            apiGet<{ body?: Record<string, unknown> }>(`/v1/wiki/${encodeURIComponent(subject.type)}/${encodeURIComponent(subject.id)}`),
+            apiGet<{ items?: unknown[] }>(`/v1/wiki/${encodeURIComponent(subject.type)}/${encodeURIComponent(subject.id)}/versions`),
+          ]);
+          return {
+            type: subject.type,
+            id: subject.id,
+            summary: String(wiki.body?.summary ?? subject.objectSummary),
+            covered: true,
+            versionCount: versions.items?.length ?? 0,
+          };
+        } catch (error) {
+          const status = Number((error as { status?: number }).status || 0);
+          if (status !== 404) throw error;
+          return { type: subject.type, id: subject.id, summary: subject.objectSummary, covered: false, versionCount: 0 };
+        }
+      }));
       setWikiCards(cards);
     } catch (e) {
       setCardErr(e instanceof Error ? e.message : String(e));
@@ -64,10 +100,11 @@ export function WikiIndexPage() {
     const q = searchQuery.toLowerCase();
     return types.filter((t) => t.id.toLowerCase().includes(q) || (t.name && t.name.toLowerCase().includes(q)));
   }, [types, searchQuery]);
+  const coverage = summarizeWikiCoverage(wikiCards);
 
   return (
     <S2Chrome title="Wiki 索引" lede="活知识 Wiki 索引 · 分支树 + 类型卡片 + 搜索">
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(200px, 260px) 1fr", gap: "1rem", marginTop: 12 }}>
+      <div className="wiki-index-layout">
         {/* 左侧分支树 */}
         <aside
           style={{
@@ -170,7 +207,7 @@ export function WikiIndexPage() {
           {filteredCards.length > 0 && (
             <>
               <p className="muted" style={{ fontSize: "0.75rem", marginBottom: 8 }}>
-                共 {filteredCards.length} 张 Wiki 卡片
+                主体 {filteredCards.length} · 已覆盖 {coverage.covered} · 知识缺口 {coverage.gaps}
                 {selectedBranch ? ` · 分支: ${selectedBranch}` : " · 默认分支"}
               </p>
               <div
@@ -195,7 +232,7 @@ export function WikiIndexPage() {
                     className="bp-wiki-card"
                   >
                     <div style={{ fontSize: "0.7rem", opacity: 0.6, marginBottom: 4 }}>
-                      {card.type}
+                      {card.type} · {card.covered ? `Wiki 已覆盖 · ${card.versionCount} 个历史版本` : "Wiki 知识缺口"}
                     </div>
                     <div style={{ fontSize: "0.9rem", fontWeight: 600, marginBottom: 4 }}>
                       {card.id}
@@ -206,7 +243,7 @@ export function WikiIndexPage() {
                       </div>
                     )}
                     <div style={{ fontSize: "0.7rem", marginTop: 8, color: "var(--aos-indigo-600)" }}>
-                      查看知识卡片 →
+                      {card.covered ? "查看知识卡片 →" : "为该主体补充知识 →"}
                     </div>
                   </Link>
                 ))}
