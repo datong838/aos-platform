@@ -73,6 +73,7 @@ class FakeStore:
 
     def __init__(self, *, raises: Exception | None = None) -> None:
         self.calls: list[BatchCommand] = []
+        self.derived_calls: list[object] = []
         self._raises = raises
         self._checkpoints: dict[tuple, int] = {}
         self._idempotency: dict[tuple, tuple] = {}
@@ -127,6 +128,16 @@ class FakeStore:
         if version is None:
             return None
         return {"version": version}
+
+    def get_latest_authoritative_revision(self, identity) -> int:
+        return 1
+
+    def get_derived_revision(self, identity, object_type: str) -> int:
+        return 0
+
+    def update_derived_metrics(self, command):
+        self.derived_calls.append(command)
+        return SimpleNamespace(updated=True, replayed=False)
 
 
 class TenantGuardStore(FakeStore):
@@ -387,8 +398,10 @@ def test_p12_initial_load_lands_ot_and_dataset(mock_fetch):
     assert obj.properties.get("orderId") == "o-1"
     assert obj.properties.get("outTradeNo") == "otn_001"
     assert obj.properties.get("payStatus") == "2"
-    # 派生指标 pay_duration_min（10 分钟差）
-    assert obj.properties.get("pay_duration_min") == 10
+    # 基础 properties 不再夹带派生指标；派生指标通过独立 CAS 命令写入。
+    assert obj.properties.get("pay_duration_min") is None
+    assert len(store.derived_calls) == 1
+    assert store.derived_calls[0].derived_props == {"pay_duration_min": 10}
     # updatedAt 经 ZonedInstant 规范化
     assert obj.properties.get("updatedAt", "").startswith("2026-08-06T10:00:00")
 
@@ -435,6 +448,29 @@ def test_p12_rerun_same_batch_idempotent_replayed(mock_fetch):
     assert second["rows_written"] == 1
     assert len(store.calls) == 2
     assert store.calls[0].idempotency_key == store.calls[1].idempotency_key
+
+
+def test_p12_derived_idempotency_key_tracks_expected_revision(mock_fetch):
+    """CAS 期望版本变化时必须使用新幂等键，禁止旧键承载新请求。"""
+
+    class EvolvingDerivedStore(FakeStore):
+        def get_derived_revision(self, identity, object_type: str) -> int:
+            return len(self.derived_calls)
+
+    mock_fetch.return_value = [payment_row()]
+    store = EvolvingDerivedStore()
+    _inject_store(store)
+
+    _run_executor(mock_fetch=mock_fetch)
+    _run_executor(mock_fetch=mock_fetch)
+
+    assert len(store.derived_calls) == 2
+    assert store.derived_calls[0].expected_derived_revision == 0
+    assert store.derived_calls[1].expected_derived_revision == 1
+    assert (
+        store.derived_calls[0].idempotency_key
+        != store.derived_calls[1].idempotency_key
+    )
 
 
 # ═══════════════════════════════════════════════

@@ -28,8 +28,9 @@ import subprocess
 import tempfile
 import threading
 import time
+from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Iterator, Sequence
 
 import pymysql
 
@@ -153,6 +154,9 @@ class _CachedConn:
     """已缓存的 DB 连接实例。"""
     conn: Any = None  # pymysql.Connection
     created_at: float = field(default_factory=time.time)
+    # pymysql Connection 不支持多线程同时使用。同一缓存连接的
+    # 健康检查、事务和查询必须持有同一 lease。
+    lease: threading.RLock = field(default_factory=threading.RLock)
 
 
 # 全局缓存字典（key -> 缓存对象）
@@ -203,11 +207,12 @@ def _is_tunnel_alive(cached: _CachedTunnel) -> bool:
 
 def _is_conn_alive(cached: _CachedConn) -> bool:
     """检测 DB 连接是否存活（ping）。"""
-    try:
-        cached.conn.ping(reconnect=False)
-        return True
-    except Exception:
-        return False
+    with cached.lease:
+        try:
+            cached.conn.ping(reconnect=False)
+            return True
+        except Exception:
+            return False
 
 
 def _build_ssh_tunnel(config: dict[str, Any]) -> _CachedTunnel:
@@ -297,8 +302,8 @@ def _build_db_conn(config: dict[str, Any], host: str, port: int) -> _CachedConn:
     return _CachedConn(conn=conn)
 
 
-def _get_or_create_conn(config: dict[str, Any], host: str, port: int) -> Any:
-    """获取或创建 DB 连接，返回 pymysql Connection。
+def _get_or_create_conn(config: dict[str, Any], host: str, port: int) -> _CachedConn:
+    """获取或创建 DB 连接及其 lease。
 
     带缓存：同 key 复用；健康检测失败自动重建。
     """
@@ -308,12 +313,12 @@ def _get_or_create_conn(config: dict[str, Any], host: str, port: int) -> Any:
 
     cached = _CONN_CACHE.get(key)
     if cached is not None and _is_conn_alive(cached):
-        return cached.conn
+        return cached
 
     with _CACHE_LOCK:
         cached = _CONN_CACHE.get(key)
         if cached is not None and _is_conn_alive(cached):
-            return cached.conn
+            return cached
 
         if cached is not None:
             try:
@@ -326,7 +331,21 @@ def _get_or_create_conn(config: dict[str, Any], host: str, port: int) -> Any:
 
         new_cached = _build_db_conn(config, host, port)
         _CONN_CACHE[key] = new_cached
-        return new_cached.conn
+        return new_cached
+
+
+def _evict_cached_conn(key: str, expected: _CachedConn) -> None:
+    """仅驱逐调用方实际使用的坏连接，避免误关闭并发重建的新连接。"""
+    with _CACHE_LOCK:
+        current = _CONN_CACHE.get(key)
+        if current is not expected:
+            return
+        _CONN_CACHE.pop(key, None)
+    with expected.lease:
+        try:
+            expected.conn.close()
+        except Exception as exc:
+            log.warning("Closing evicted DB conn failed (key=%s): %s", key, exc)
 
 
 def _cleanup_all_cached() -> None:
@@ -677,6 +696,9 @@ class JdbcConnectorRuntime:
         # 仅保留引用，用于 __exit__ 兼容；真实资源由全局缓存管理
         self._ssh_tunnel: SshTunnel | None = None
         self._conn: Any = None
+        self._cached_conn: _CachedConn | None = None
+        self._conn_key: str | None = None
+        self._standalone_lease = threading.RLock()
 
     def __enter__(self) -> "JdbcConnectorRuntime":
         # 1. 从缓存取/建 SSH 隧道
@@ -691,8 +713,59 @@ class JdbcConnectorRuntime:
             db_port = local_port
 
         # 2. 从缓存取/建 DB 连接
-        self._conn = _get_or_create_conn(self._config, db_host, db_port)
+        self._cached_conn = _get_or_create_conn(self._config, db_host, db_port)
+        self._conn = self._cached_conn.conn
+        local_port_for_key = db_port if db_host == "127.0.0.1" else None
+        self._conn_key = _conn_cache_key(self._config, local_port_for_key)
         return self
+
+    @contextmanager
+    def _read_only_transaction(self) -> Iterator[None]:
+        """在缓存连接 lease 内执行一个可恢复的只读事务。
+
+        所有分块共享同一快照；无论成功失败都 rollback 并恢复
+        autocommit。SQL/恢复失败时在释放 lease 后驱逐坏连接。
+        """
+        if self._conn is None:
+            raise RuntimeError("JDBC runtime is not connected")
+        cached = self._cached_conn
+        lease = cached.lease if cached is not None else self._standalone_lease
+        failure: BaseException | None = None
+        previous_autocommit = True
+        with lease:
+            try:
+                get_autocommit = getattr(self._conn, "get_autocommit", None)
+                if callable(get_autocommit):
+                    previous_autocommit = bool(get_autocommit())
+                self._conn.autocommit(False)
+                with self._conn.cursor() as cur:
+                    cur.execute("START TRANSACTION READ ONLY")
+                yield
+            except BaseException as exc:
+                failure = exc
+            finally:
+                try:
+                    self._conn.rollback()
+                except BaseException as exc:
+                    if failure is None:
+                        failure = exc
+                try:
+                    self._conn.autocommit(previous_autocommit)
+                except BaseException as exc:
+                    if failure is None:
+                        failure = exc
+
+        if failure is not None:
+            if cached is not None and self._conn_key is not None:
+                _evict_cached_conn(self._conn_key, cached)
+                self._cached_conn = None
+                self._conn = None
+            else:
+                try:
+                    self._conn.close()
+                except Exception:
+                    pass
+            raise failure
 
     def discover_schemas(self) -> list[dict[str, Any]]:
         """返回 schema/table/column 树（标准 information_schema 查询）。
@@ -855,11 +928,47 @@ class JdbcConnectorRuntime:
             sql += " LIMIT %s"
             params = (*params, limit)
 
-        with self._conn.cursor() as cur:
-            # 连接由运行时缓存复用，因此每次读取前都重新声明只读会话，失败即中止。
-            cur.execute("SET SESSION TRANSACTION READ ONLY")
-            cur.execute(sql, params)
-            return list(cur.fetchall())
+        with self._read_only_transaction():
+            with self._conn.cursor() as cur:
+                cur.execute(sql, params)
+                return list(cur.fetchall())
+
+    def read_rows_by_values(
+        self,
+        spec: Any,
+        values: Sequence[str],
+    ) -> list[dict[str, Any]]:
+        """按冻结白名单规格批量读取，禁止调用方拼接任意 SQL。"""
+        identifier = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+        table = str(getattr(spec, "table", ""))
+        columns = tuple(str(value) for value in getattr(spec, "columns", ()))
+        filter_column = str(getattr(spec, "filter_column", ""))
+        if not table or not columns or not filter_column:
+            raise ValueError("invalid batch read spec")
+        for value in (table, *columns, filter_column):
+            if not identifier.fullmatch(value):
+                raise ValueError(f"unsafe SQL identifier: {value!r}")
+
+        deduplicated = tuple(dict.fromkeys(str(value) for value in values))
+        if len(deduplicated) > 50_000:
+            raise ValueError("batch read values exceed 50000")
+        if not deduplicated:
+            return []
+
+        selected_columns = ", ".join(f"`{column}`" for column in columns)
+        rows: list[dict[str, Any]] = []
+        with self._read_only_transaction():
+            for start in range(0, len(deduplicated), 500):
+                chunk = deduplicated[start:start + 500]
+                placeholders = ", ".join("%s" for _ in chunk)
+                sql = (
+                    f"SELECT {selected_columns} FROM `{table}` "
+                    f"WHERE `{filter_column}` IN ({placeholders})"
+                )
+                with self._conn.cursor() as cur:
+                    cur.execute(sql, chunk)
+                    rows.extend(cur.fetchall())
+        return rows
 
     def __exit__(self, *args: Any) -> None:
         # 缓存复用模式：__exit__ 不关闭资源，后续请求复用
@@ -867,6 +976,8 @@ class JdbcConnectorRuntime:
         #   - 健康检测发现失效时（重建前清理）
         #   - 进程退出 atexit / FastAPI shutdown 钩子
         self._conn = None
+        self._cached_conn = None
+        self._conn_key = None
         self._ssh_tunnel = None
 
 

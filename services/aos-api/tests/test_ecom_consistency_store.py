@@ -11,6 +11,7 @@ from sqlalchemy.pool import StaticPool
 
 from aos_api.ecom_consistency_store import (
     EcomConsistencyStore,
+    ecom_derived_receipt,
     ecom_ingest_receipt,
     metadata,
     projection_outbox,
@@ -20,9 +21,11 @@ from aos_api.ecom_core_models import (
     CheckpointPosition,
     CoreLinkRecord,
     CoreObjectRecord,
+    DerivedMetricCommand,
     EcomConsistencyError,
     StorageIdentity,
     SyncScope,
+    deterministic_hash,
 )
 from aos_api.public_contracts import ExternalIdentityKey, ForwardEnumValue, StableCursor
 from test_ecom_core_models import VALID_PROPERTIES
@@ -277,6 +280,62 @@ def test_replay_and_ignored_records_do_not_create_new_outbox(
     with store._engine.connect() as conn:
         count = conn.execute(select(projection_outbox.c.outbox_id)).all()
     assert len(count) == 1
+
+
+def _derived_command(*, expected: int = 0, key: str = "metric-1", value: int = 5):
+    return DerivedMetricCommand(
+        identity=ident("payment-1"),
+        object_type="Payment",
+        stream="P12-payment",
+        expected_derived_revision=expected,
+        input_revision=7,
+        input_hash=deterministic_hash({"pay_time": 200, "order_create_time": 100}),
+        calculator_version="pay-duration-v1",
+        derived_props={"pay_duration_min": value},
+        computed_at=NOW,
+        idempotency_key=key,
+        actor="ec-live-v1",
+    )
+
+
+def test_derived_update_cas_receipt_and_outbox_commit_together(
+    store: EcomConsistencyStore,
+) -> None:
+    payment = {"orderId": "o-1", "outTradeNo": "t-1", "payStatus": "1", "updatedAt": NOW}
+    store.apply_batch(batch(obj("Payment", "payment-1", properties=payment)))
+    result = store.update_derived_metrics(_derived_command())
+
+    assert result.updated is True
+    assert result.resulting_revision == 1
+    stored = store.get_object(ident("payment-1"), "Payment")
+    assert stored["properties"].get("pay_duration_min") is None
+    assert stored["derived_payload"] == {"pay_duration_min": 5}
+    with store._engine.connect() as conn:
+        receipts = conn.execute(select(ecom_derived_receipt)).mappings().all()
+        events = conn.execute(
+            select(projection_outbox).where(
+                projection_outbox.c.change_kind == "derived_upsert"
+            )
+        ).mappings().all()
+    assert len(receipts) == 1
+    assert receipts[0]["expected_revision"] == 0
+    assert receipts[0]["resulting_revision"] == 1
+    assert len(events) == 1
+    assert events[0]["payload"]["record"]["properties"]["pay_duration_min"] == 5
+
+
+def test_derived_update_replay_and_cas_conflict_are_fail_closed(
+    store: EcomConsistencyStore,
+) -> None:
+    payment = {"orderId": "o-1", "outTradeNo": "t-1", "payStatus": "1", "updatedAt": NOW}
+    store.apply_batch(batch(obj("Payment", "payment-1", properties=payment)))
+    first = store.update_derived_metrics(_derived_command())
+    replay = store.update_derived_metrics(_derived_command())
+    assert first.updated is True
+    assert replay.replayed is True
+    with pytest.raises(EcomConsistencyError) as caught:
+        store.update_derived_metrics(_derived_command(expected=0, key="metric-2", value=6))
+    assert caught.value.code == "DERIVED_REVISION_CONFLICT"
 
 
 def test_older_source_version_is_ignored(store: EcomConsistencyStore) -> None:

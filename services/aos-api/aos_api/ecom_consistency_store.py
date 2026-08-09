@@ -40,6 +40,9 @@ from aos_api.ecom_core_models import (
     BatchResult,
     CoreLinkRecord,
     CoreObjectRecord,
+    DERIVED_PROPERTIES,
+    DerivedMetricCommand,
+    DerivedMetricResult,
     EcomConsistencyError,
     StorageIdentity,
     _jsonable,
@@ -67,6 +70,12 @@ ecom_object = Table(
     Column("deleted_at", DateTime(timezone=True), nullable=True),
     Column("created_at", DateTime(timezone=True), nullable=False),
     Column("updated_at", DateTime(timezone=True), nullable=False),
+    Column("derived_revision", BigInteger, nullable=False, default=0),
+    Column("derived_input_revision", BigInteger, nullable=True),
+    Column("derived_input_hash", String(64), nullable=True),
+    Column("derived_computed_at", DateTime(timezone=True), nullable=True),
+    Column("derived_payload", JSON, nullable=False, default=dict),
+    Column("derived_payload_hash", String(64), nullable=True),
 )
 
 ecom_link = Table(
@@ -139,6 +148,33 @@ ecom_ingest_receipt = Table(
     Column("request_hash", String(64), nullable=False),
     Column("result", JSON, nullable=False),
     Column("created_at", DateTime(timezone=True), nullable=False),
+)
+
+ecom_derived_receipt = Table(
+    "ecom_derived_receipt",
+    metadata,
+    Column("org_id", String, primary_key=True),
+    Column("project_id", String, primary_key=True),
+    Column("workspace_id", String, nullable=False),
+    Column("receipt_id", String, primary_key=True),
+    Column("object_type", String, nullable=False),
+    Column("external_id", String, nullable=False),
+    Column("calculator_version", String, nullable=False),
+    Column("idempotency_key", String, nullable=False),
+    Column("payload_hash", String(64), nullable=False),
+    Column("derived_revision", BigInteger, nullable=False),
+    Column("input_revision", BigInteger, nullable=False),
+    Column("input_hash", String(64), nullable=False),
+    Column("computed_at", DateTime(timezone=True), nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    Column("platform", String, nullable=False, default=""),
+    Column("shop_or_marketplace_id", String, nullable=False, default=""),
+    Column("stream", String, nullable=False, default=""),
+    Column("expected_revision", BigInteger, nullable=False, default=0),
+    Column("resulting_revision", BigInteger, nullable=False, default=0),
+    Column("actor", String, nullable=False, default=""),
+    Column("request_hash", String(64), nullable=False, default="0" * 64),
+    Column("result_json", JSON, nullable=False, default=dict),
 )
 
 projection_outbox = Table(
@@ -352,6 +388,204 @@ class EcomConsistencyStore:
                 "a concurrent write changed the consistency state",
             ) from exc
 
+    def get_derived_revision(
+        self, identity: StorageIdentity, object_type: str
+    ) -> int:
+        with self._engine.begin() as conn:
+            _apply_transaction_scope(
+                conn, org_id=identity.org_id, workspace_id=identity.workspace_id
+            )
+            value = conn.execute(
+                select(ecom_object.c.derived_revision).where(
+                    _object_clause(identity, object_type)
+                )
+            ).scalar_one_or_none()
+            if value is None:
+                raise EcomConsistencyError("OBJECT_NOT_FOUND", "derived target not found")
+            return int(value)
+
+    def get_latest_authoritative_revision(self, identity: StorageIdentity) -> int:
+        """返回 scope 内最新非派生权威 Outbox revision，作为派生输入水位。"""
+        with self._engine.begin() as conn:
+            _apply_transaction_scope(
+                conn, org_id=identity.org_id, workspace_id=identity.workspace_id
+            )
+            value = conn.execute(
+                select(func.coalesce(func.max(projection_outbox.c.input_revision), 0)).where(
+                    and_(
+                        projection_outbox.c.org_id == identity.org_id,
+                        projection_outbox.c.workspace_id == identity.workspace_id,
+                        projection_outbox.c.event_source == "authoritative_store",
+                        projection_outbox.c.change_kind.notin_(
+                            ("derived_upsert", "derived_tombstoned")
+                        ),
+                    )
+                )
+            ).scalar_one()
+            return int(value)
+
+    def update_derived_metrics(
+        self, command: DerivedMetricCommand
+    ) -> DerivedMetricResult:
+        """O1 §5.2.10：CAS、Receipt 和 Outbox 同事务的派生更新。"""
+        command = DerivedMetricCommand.model_validate(command.model_dump(mode="python"))
+        identity = command.identity
+        request_hash = command.request_hash()
+        receipt_id = hashlib.sha256(
+            "\x1f".join(
+                (
+                    identity.org_id,
+                    identity.workspace_id,
+                    identity.platform,
+                    identity.shop_or_marketplace_id,
+                    command.stream,
+                    command.idempotency_key,
+                )
+            ).encode("utf-8")
+        ).hexdigest()
+        lock_key = int.from_bytes(bytes.fromhex(receipt_id[:16]), byteorder="big", signed=True)
+        process_lock = _PROCESS_IDEMPOTENCY_LOCKS[
+            lock_key % len(_PROCESS_IDEMPOTENCY_LOCKS)
+        ]
+        with process_lock, self._engine.begin() as conn:
+            _apply_transaction_scope(
+                conn, org_id=identity.org_id, workspace_id=identity.workspace_id
+            )
+            self._lock_idempotency_key(conn, lock_key)
+            receipt = conn.execute(
+                select(ecom_derived_receipt).where(
+                    and_(
+                        ecom_derived_receipt.c.org_id == identity.org_id,
+                        ecom_derived_receipt.c.project_id == identity.workspace_id,
+                        ecom_derived_receipt.c.receipt_id == receipt_id,
+                    )
+                )
+            ).mappings().first()
+            if receipt is not None:
+                if receipt["request_hash"] != request_hash:
+                    raise EcomConsistencyError(
+                        "IDEMPOTENCY_CONFLICT",
+                        "derived idempotency key was reused with a different request",
+                    )
+                saved = dict(receipt["result_json"])
+                saved["replayed"] = True
+                return DerivedMetricResult.model_validate(saved)
+
+            stored = conn.execute(
+                select(ecom_object)
+                .where(_object_clause(identity, command.object_type))
+                .with_for_update()
+            ).mappings().first()
+            if stored is None:
+                raise EcomConsistencyError("OBJECT_NOT_FOUND", "derived target not found")
+            if stored["deleted_at"] is not None:
+                raise EcomConsistencyError("OBJECT_TOMBSTONED", "derived target is deleted")
+
+            current_revision = int(stored["derived_revision"] or 0)
+            if current_revision != command.expected_derived_revision:
+                raise EcomConsistencyError(
+                    "DERIVED_REVISION_CONFLICT",
+                    "derived revision CAS failed",
+                    details={"currentRevision": current_revision},
+                )
+            stored_input_revision = stored["derived_input_revision"]
+            stored_input_hash = stored["derived_input_hash"]
+            stored_computed_at = stored["derived_computed_at"]
+            if stored_input_revision is not None:
+                if command.input_revision < int(stored_input_revision):
+                    raise EcomConsistencyError(
+                        "DERIVED_INPUT_REGRESSION", "derived input revision regressed"
+                    )
+                if (
+                    command.input_revision == int(stored_input_revision)
+                    and stored_input_hash != command.input_hash
+                ):
+                    raise EcomConsistencyError(
+                        "DERIVED_INPUT_CONFLICT",
+                        "same derived input revision has a different hash",
+                    )
+                if (
+                    command.input_revision == int(stored_input_revision)
+                    and stored_input_hash == command.input_hash
+                    and stored_computed_at is not None
+                    and command.computed_at < _db_time(stored_computed_at)
+                ):
+                    raise EcomConsistencyError(
+                        "DERIVED_COMPUTED_AT_REGRESSION",
+                        "derived computation time regressed",
+                    )
+
+            payload = dict(command.derived_props)
+            payload_json = json.dumps(
+                _jsonable(payload), ensure_ascii=False, sort_keys=True, separators=(",", ":")
+            )
+            payload_hash = hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
+            unchanged = (
+                dict(stored["derived_payload"] or {}) == payload
+                and stored_input_revision == command.input_revision
+                and stored_input_hash == command.input_hash
+                and stored_computed_at is not None
+                and _db_time(stored_computed_at) == command.computed_at
+            )
+            resulting_revision = current_revision if unchanged else current_revision + 1
+            if not unchanged:
+                conn.execute(
+                    update(ecom_object)
+                    .where(_object_clause(identity, command.object_type))
+                    .values(
+                        derived_revision=resulting_revision,
+                        derived_input_revision=command.input_revision,
+                        derived_input_hash=command.input_hash,
+                        derived_computed_at=command.computed_at,
+                        derived_payload=payload,
+                        derived_payload_hash=payload_hash,
+                        updated_at=_utcnow(),
+                    )
+                )
+                effective = dict(stored["properties"] or {})
+                effective.update(payload)
+                self._write_derived_projection_event(
+                    conn,
+                    command=command,
+                    stored=stored,
+                    effective_properties=effective,
+                    authority_tx_id=request_hash,
+                )
+
+            result = DerivedMetricResult(
+                updated=not unchanged,
+                resulting_revision=resulting_revision,
+                input_revision=command.input_revision,
+                payload_hash=payload_hash,
+            )
+            conn.execute(
+                insert(ecom_derived_receipt).values(
+                    org_id=identity.org_id,
+                    project_id=identity.workspace_id,
+                    workspace_id=identity.workspace_id,
+                    receipt_id=receipt_id,
+                    object_type=command.object_type,
+                    external_id=identity.external_id,
+                    calculator_version=command.calculator_version,
+                    idempotency_key=command.idempotency_key,
+                    payload_hash=payload_hash,
+                    derived_revision=resulting_revision,
+                    input_revision=command.input_revision,
+                    input_hash=command.input_hash,
+                    computed_at=command.computed_at,
+                    created_at=_utcnow(),
+                    platform=identity.platform,
+                    shop_or_marketplace_id=identity.shop_or_marketplace_id,
+                    stream=command.stream,
+                    expected_revision=command.expected_derived_revision,
+                    resulting_revision=resulting_revision,
+                    actor=command.actor,
+                    request_hash=request_hash,
+                    result_json=result.model_dump(mode="json"),
+                )
+            )
+            return result
+
     def get_last_dangling_links(self) -> list[CoreLinkRecord]:
         """Return dangling links from the last apply_batch call (for DLQ)."""
         return getattr(self, "_last_dangling_links", [])
@@ -463,6 +697,31 @@ class EcomConsistencyStore:
             if incoming_time == stored_time:
                 if existing["payload_hash"] == payload_hash:
                     return "objects_ignored"
+                # O1-A/P12 一次性兼容门：旧执行器把冻结的派生键
+                # 写进 properties。仅当剔除该 ObjectType 的白名单派生键
+                # 后基础记录完全相同，才允许收敛为新基础 payload。
+                # 其他任何同版本差异仍 fail-closed。
+                legacy_properties = dict(existing["properties"] or {})
+                for key in DERIVED_PROPERTIES.get(record.object_type, frozenset()):
+                    legacy_properties.pop(key, None)
+                if (
+                    legacy_properties == dict(record.properties)
+                    and existing["source_timezone"] == record.source_timezone
+                    and existing["canonical_status"] == record.status.canonical_value
+                    and existing["raw_status"] == record.status.raw_status
+                    and int(existing["schema_version"]) == record.schema_version
+                    and (existing["deleted_at"] is not None) == record.is_deleted
+                ):
+                    conn.execute(
+                        update(ecom_object)
+                        .where(clause)
+                        .values(
+                            properties=dict(record.properties),
+                            payload_hash=payload_hash,
+                            updated_at=now,
+                        )
+                    )
+                    return "objects_written"
                 raise EcomConsistencyError(
                     "SOURCE_VERSION_CONFLICT",
                     "same source version has a different object payload",
@@ -701,6 +960,85 @@ class EcomConsistencyStore:
                 projected=False,
                 created_at=_utcnow(),
                 **identity_columns,
+            )
+        )
+
+    @classmethod
+    def _write_derived_projection_event(
+        cls,
+        conn: Connection,
+        *,
+        command: DerivedMetricCommand,
+        stored: Any,
+        effective_properties: dict[str, Any],
+        authority_tx_id: str,
+    ) -> None:
+        identity = command.identity
+        record = {
+            "identity": {
+                "orgId": identity.org_id,
+                "workspaceId": identity.workspace_id,
+                "platform": identity.platform,
+                "shopOrMarketplaceId": identity.shop_or_marketplace_id,
+                "externalId": identity.external_id,
+            },
+            "objectType": command.object_type,
+            "sourceUpdatedAt": _db_time(stored["source_updated_at"]).isoformat(),
+            "sourceTimezone": stored["source_timezone"],
+            "status": {
+                "canonical": stored["canonical_status"],
+                "rawStatus": stored["raw_status"],
+                "unknown": False,
+            },
+            "isDeleted": False,
+            "schemaVersion": int(stored["schema_version"]),
+            "properties": effective_properties,
+        }
+        payload = {
+            "schemaVersion": 1,
+            "entityKind": "object",
+            "changeKind": "derived_upsert",
+            "objectType": command.object_type,
+            "identity": record["identity"],
+            "record": record,
+        }
+        payload_json = json.dumps(
+            _jsonable(payload), ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        )
+        event_material = "\x1f".join(
+            (
+                identity.org_id,
+                identity.workspace_id,
+                identity.platform,
+                identity.shop_or_marketplace_id,
+                command.stream,
+                command.idempotency_key,
+                "derived_upsert",
+                command.object_type,
+                identity.external_id,
+            )
+        )
+        conn.execute(
+            insert(projection_outbox).values(
+                org_id=identity.org_id,
+                project_id=identity.workspace_id,
+                workspace_id=identity.workspace_id,
+                input_revision=cls._next_projection_revision(conn),
+                change_kind="derived_upsert",
+                object_type=command.object_type,
+                external_id=identity.external_id,
+                link_type=None,
+                source_external_id=None,
+                target_external_id=None,
+                platform=identity.platform,
+                shop_or_marketplace_id=identity.shop_or_marketplace_id,
+                payload=json.loads(payload_json),
+                event_key=hashlib.sha256(event_material.encode("utf-8")).hexdigest(),
+                payload_hash=hashlib.sha256(payload_json.encode("utf-8")).hexdigest(),
+                event_source="authoritative_store",
+                authority_tx_id=authority_tx_id,
+                projected=False,
+                created_at=_utcnow(),
             )
         )
 

@@ -203,30 +203,25 @@ def test_fetch_source_rows_dispatches_to_jdbc_postgres_ssh(
 
 
 # ═══════════════════════════════════════════════
-# Section C: 向后兼容 — niushop-mysql 保留 pymysql 直连
+# Section C: legacy niushop-mysql 也收敛到通用 Runtime
 # ═══════════════════════════════════════════════
 
 
-@patch("aos_api.ec_source_adapter.pymysql")
+@patch("aos_api.ec_source_adapter.JdbcConnectorRuntime")
 @patch("aos_api.ec_source_adapter.connect")
-def test_fetch_source_rows_keeps_niushop_mysql_pymysql_branch(
+def test_fetch_source_rows_routes_legacy_niushop_through_runtime(
     mock_connect: MagicMock,
-    mock_pymysql: MagicMock,
+    mock_runtime_cls: MagicMock,
 ) -> None:
-    """G3 connector_type=niushop-mysql → 保留 pymysql 直连分支（向后兼容）。
-
-    关键：不破坏现有 D1 测试，原 niushop-mysql 分支保持不变。
-    """
+    """G3 legacy connector_type 也复用已冻结的通用只读 Runtime。"""
     aos_conn = _fake_aos_conn(_meta_source_props_niushop_mysql())
     mock_connect.return_value.__enter__.return_value = aos_conn
     mock_connect.return_value.__exit__.return_value = None
 
-    niushop_conn = MagicMock()
-    cur = MagicMock()
-    niushop_conn.cursor.return_value = cur
-    cur.fetchall.return_value = [_ns_order_raw_row(order_id=1)]
-    mock_pymysql.connect.return_value = niushop_conn
-    mock_pymysql.cursors.DictCursor = MagicMock()
+    fake_rt = MagicMock()
+    fake_rt.__enter__.return_value = fake_rt
+    fake_rt.read_rows.return_value = [_ns_order_raw_row(order_id=1)]
+    mock_runtime_cls.return_value = fake_rt
 
     reset_soft_delete_counts()
     node = _FakeNode({
@@ -244,26 +239,23 @@ def test_fetch_source_rows_keeps_niushop_mysql_pymysql_branch(
         scope=TEST_SCOPE,
     )
 
-    # pymysql.connect 被调用（保留原分支）
-    mock_pymysql.connect.assert_called_once()
-    # JdbcConnectorRuntime 不应被调用
-    # （通过 patch 但断言 not called）
-
+    mock_runtime_cls.assert_called_once()
+    fake_rt.read_rows.assert_called_once()
     assert len(rows) == 1
 
 
 # ═══════════════════════════════════════════════
-# Section D: 无 connector_type 默认走 pymysql 直连（向后兼容）
+# Section D: 无 connector_type 也走通用 Runtime
 # ═══════════════════════════════════════════════
 
 
-@patch("aos_api.ec_source_adapter.pymysql")
+@patch("aos_api.ec_source_adapter.JdbcConnectorRuntime")
 @patch("aos_api.ec_source_adapter.connect")
-def test_fetch_source_rows_defaults_to_pymysql_when_no_connector_type(
+def test_fetch_source_rows_defaults_to_runtime_when_no_connector_type(
     mock_connect: MagicMock,
-    mock_pymysql: MagicMock,
+    mock_runtime_cls: MagicMock,
 ) -> None:
-    """G4 connector_type 缺失 → 默认走 pymysql 直连（向后兼容，防回归）。"""
+    """G4 connector_type 缺失仍走通用只读 Runtime。"""
     props = {
         # 无 connector_type 字段
         "host": "127.0.0.1",
@@ -276,12 +268,10 @@ def test_fetch_source_rows_defaults_to_pymysql_when_no_connector_type(
     mock_connect.return_value.__enter__.return_value = aos_conn
     mock_connect.return_value.__exit__.return_value = None
 
-    niushop_conn = MagicMock()
-    cur = MagicMock()
-    niushop_conn.cursor.return_value = cur
-    cur.fetchall.return_value = [_ns_order_raw_row(order_id=1)]
-    mock_pymysql.connect.return_value = niushop_conn
-    mock_pymysql.cursors.DictCursor = MagicMock()
+    fake_rt = MagicMock()
+    fake_rt.__enter__.return_value = fake_rt
+    fake_rt.read_rows.return_value = [_ns_order_raw_row(order_id=1)]
+    mock_runtime_cls.return_value = fake_rt
 
     reset_soft_delete_counts()
     node = _FakeNode({
@@ -299,5 +289,6 @@ def test_fetch_source_rows_defaults_to_pymysql_when_no_connector_type(
         scope=TEST_SCOPE,
     )
 
-    mock_pymysql.connect.assert_called_once()
+    mock_runtime_cls.assert_called_once()
+    fake_rt.read_rows.assert_called_once()
     assert len(rows) == 1

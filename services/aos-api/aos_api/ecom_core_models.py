@@ -53,6 +53,16 @@ CORE_LINK_TYPES: dict[str, tuple[str, str]] = {
     "Order.fromWeapp": ("Order", "Weapp"),          # weapp_id 关联
 }
 
+DERIVED_PROPERTIES: dict[str, frozenset[str]] = {
+    "Product": frozenset({"quality_score"}),
+    "ProductSku": frozenset({"stock_health"}),
+    "Order": frozenset({"risk_score"}),
+    "Shipment": frozenset({"overdue_hours"}),
+    "CustomerLite": frozenset({"order_count", "last_order_days"}),
+    "ProductReview": frozenset({"review_quality_bucket"}),
+    "Payment": frozenset({"pay_duration_min"}),
+}
+
 REQUIRED_PROPERTIES: dict[str, frozenset[str]] = {
     "Shop": frozenset({"name", "status", "currency", "timezone"}),
     "Product": frozenset(
@@ -382,6 +392,67 @@ class BatchResult(BaseModel):
     links_tombstoned: int = 0
     checkpoint_version: int
     checkpoint: CheckpointPosition
+
+
+class DerivedMetricCommand(BaseModel):
+    """O1 §5.2.10 内部派生指标 CAS 命令。"""
+
+    model_config = ConfigDict(frozen=True)
+
+    identity: ExternalIdentityKey
+    object_type: str
+    stream: str = Field(min_length=1)
+    expected_derived_revision: int = Field(ge=0)
+    input_revision: int = Field(ge=0)
+    input_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    calculator_version: str = Field(min_length=1)
+    derived_props: dict[str, Any]
+    computed_at: datetime
+    idempotency_key: str = Field(min_length=1)
+    actor: str = Field(min_length=1)
+
+    @field_validator("computed_at")
+    @classmethod
+    def validate_computed_at(cls, value: datetime) -> datetime:
+        return _aware_utc(value)
+
+    @model_validator(mode="after")
+    def validate_derived_contract(self) -> "DerivedMetricCommand":
+        allowed = DERIVED_PROPERTIES.get(self.object_type)
+        if allowed is None:
+            raise ValueError(f"unsupported derived object type: {self.object_type}")
+        unknown = set(self.derived_props) - allowed
+        if unknown:
+            raise ValueError(f"unsupported derived properties: {sorted(unknown)}")
+        if not self.derived_props:
+            raise ValueError("derived_props must not be empty")
+        return self
+
+    def request_hash(self) -> str:
+        return deterministic_hash(
+            {
+                "identity": self.identity,
+                "objectType": self.object_type,
+                "stream": self.stream,
+                "expectedDerivedRevision": self.expected_derived_revision,
+                "inputRevision": self.input_revision,
+                "inputHash": self.input_hash,
+                "calculatorVersion": self.calculator_version,
+                "derivedProps": self.derived_props,
+                "computedAt": self.computed_at,
+                "actor": self.actor,
+            }
+        )
+
+
+class DerivedMetricResult(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    updated: bool
+    replayed: bool = False
+    resulting_revision: int = Field(ge=0)
+    input_revision: int = Field(ge=0)
+    payload_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
 def stable_incremental_window(

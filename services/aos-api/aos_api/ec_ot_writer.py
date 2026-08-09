@@ -18,7 +18,10 @@ from aos_api.ecom_core_models import (
     BatchCommand,
     CoreLinkRecord,
     CoreObjectRecord,
+    DERIVED_PROPERTIES,
+    DerivedMetricCommand,
     SyncScope,
+    deterministic_hash,
 )
 from aos_api.public_contracts import (
     ExternalIdentityKey,
@@ -82,6 +85,91 @@ def sink_to_ot(
     }
 
 
+def sink_derived_metrics(
+    eng: Any,
+    scope: Any,
+    pipeline: Any,
+    output_rows: list[dict[str, Any]],
+) -> dict[str, int]:
+    """O1 §5.2.10：基础 batch 成功后通过独立 CAS 命令写派生属性。"""
+    candidates: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    for row in output_rows:
+        object_type = str(row.get("ot") or "")
+        # 本波只切换 P12 Payment。其他 7 项在 O1 后续波次逐项迁移，
+        # 避免一次性改变既有 P01-P11 的写入与重跑语义。
+        if object_type != "Payment":
+            continue
+        allowed = DERIVED_PROPERTIES.get(object_type)
+        if not allowed or row.get("link_type"):
+            continue
+        props = dict(row.get("properties") or {})
+        derived = {key: props.get(key) for key in allowed if key in props}
+        if derived:
+            candidates.append((row, derived))
+    if not candidates:
+        return {"derived_updated": 0, "derived_replayed": 0}
+    store = getattr(eng, "ecom_consistency_store", None)
+    if store is None:
+        raise RuntimeError("sink_derived_metrics: authoritative store is required")
+
+    first_row = candidates[0][0]
+    first_identity = ExternalIdentityKey(
+        org_id=scope.org_id,
+        workspace_id=scope.project_id,
+        platform=_NIUSHOP_PLATFORM,
+        shop_or_marketplace_id=_NIUSHOP_SITE_ID,
+        external_id=_format_external_id(str(first_row["source_pk"])),
+    )
+    input_revision = store.get_latest_authoritative_revision(first_identity)
+    calculator_version = "ec-derived-v1"
+    computed_at = max(_parse_datetime(row["source_updated_at"]) for row, _ in candidates)
+    updated = 0
+    replayed = 0
+    for row, derived in candidates:
+        identity = ExternalIdentityKey(
+            org_id=scope.org_id,
+            workspace_id=scope.project_id,
+            platform=_NIUSHOP_PLATFORM,
+            shop_or_marketplace_id=_NIUSHOP_SITE_ID,
+            external_id=row.get("external_id") or _format_external_id(str(row["source_pk"])),
+        )
+        input_hash = deterministic_hash(
+            {
+                "calculatorVersion": calculator_version,
+                "objectType": row["ot"],
+                "sourcePk": row["source_pk"],
+                "sourceUpdatedAt": row["source_updated_at"],
+                "payTime": row.get("pay_time"),
+                "orderCreateTime": row.get("_order_create_time"),
+                "derivedProps": derived,
+            }
+        )
+        expected_derived_revision = store.get_derived_revision(
+            identity, str(row["ot"])
+        )
+        command = DerivedMetricCommand(
+            identity=identity,
+            object_type=str(row["ot"]),
+            stream=str(pipeline.id),
+            expected_derived_revision=expected_derived_revision,
+            input_revision=input_revision,
+            input_hash=input_hash,
+            calculator_version=calculator_version,
+            derived_props=derived,
+            computed_at=computed_at,
+            idempotency_key=(
+                f"{pipeline.id}:{row['ot']}:{identity.external_id}:"
+                f"{calculator_version}:{input_revision}:"
+                f"{expected_derived_revision}:{input_hash}"
+            ),
+            actor="ec-live-v1",
+        )
+        result = store.update_derived_metrics(command)
+        updated += int(result.updated)
+        replayed += int(result.replayed)
+    return {"derived_updated": updated, "derived_replayed": replayed}
+
+
 def _build_sync_scope(scope: Any, pipeline: Any) -> SyncScope:
     """从 TenantScope 构造 SyncScope（Niushop site_id=1，stream=pipeline.id）。
 
@@ -136,6 +224,13 @@ def _build_object(row: dict[str, Any], sync_scope: SyncScope) -> CoreObjectRecor
     source_utc_iso = source_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     properties = dict(row.get("properties", {}))
+    if object_type == "Payment":
+        # O1-A/P12：本波只迁移 Payment 的基础/派生物理分离。
+        for derived_key in DERIVED_PROPERTIES.get("Payment", frozenset()):
+            properties.pop(derived_key, None)
+        # enrichment 只是 pay_duration_min 的计算输入，不是 Payment 基础属性。
+        properties.pop("orderCreatedAt", None)
+        properties.pop("orderCreatedAtSourceTimezone", None)
 
     if object_type in ("Product", "ProductSku", "Category", "Order", "OrderLine", "Shipment", "CustomerLite",
                        # D4: 4 个新 OT 的 REQUIRED_PROPERTIES 都含 updatedAt

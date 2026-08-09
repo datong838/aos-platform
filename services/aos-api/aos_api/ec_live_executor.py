@@ -22,9 +22,9 @@ from typing import Any
 
 from aos_api.logging_facade import get_logger
 from aos_api.phase5_pipeline_engine import get_engine
-from aos_api.ec_source_adapter import fetch_source_rows
+from aos_api.ec_source_adapter import batch_read_public, fetch_source_rows
 from aos_api.ec_dataset_sink import sink_to_dataset
-from aos_api.ec_ot_writer import sink_to_ot
+from aos_api.ec_ot_writer import sink_derived_metrics, sink_to_ot
 from aos_api.ec_dlq_handler import handle_failure
 from aos_api.ec_derived_metrics import apply_derived_metrics
 from aos_api.ec_link_builder import build_link_rows
@@ -103,17 +103,21 @@ def ec_live_executor(
             scope=scope,
         )
 
-        # transform: normalize + 派生指标 + Link 构造（Phase B 拆分到独立模块）
-        #   1. D2.5 缺口 1 修复：normalize_rows 将 raw ns_xxx 行转为 OT normalized 行（幂等）
-        #   2. 浅拷贝避免污染 source 行
-        #   3. O1-A: Payment 丰富 _order_create_time（batch_read_public）
+        # transform: Payment 权威丰富 + normalize + 派生指标 + Link 构造
+        #   1. 浅拷贝 raw source 行，避免污染 SourceAdapter 输出
+        #   2. O1-A: Payment 在 normalize 前批量丰富 _order_create_time
+        #   3. D2.5: normalize_rows 将 raw ns_xxx 行转为 OT normalized 行（幂等）
         #   4. apply_derived_metrics: 按 target_ot 计算 8 个派生指标写入 row（含 link_aggregator）
         #   5. build_link_rows: 按 target_ot 构造 14 条核心 Link 行追加到 rows
-        normalized_rows = normalize_rows(input_rows, pipeline)
-        output_rows = [dict(row) for row in normalized_rows]
-
-        # O1-A: Payment 丰富 — 从 ecom_object 批量查 Order.createdAt 填入 _order_create_time
-        _enrich_payment_order_create_time(eng, scope, output_rows, pipeline)
+        enriched_input_rows = [dict(row) for row in input_rows]
+        _enrich_payment_order_create_time(
+            pipeline=pipeline,
+            nodes=nodes,
+            node_id=node_id,
+            scope=scope,
+            rows=enriched_input_rows,
+        )
+        output_rows = normalize_rows(enriched_input_rows, pipeline)
 
         # O1-A: 构造 link_aggregator（从已写入的 ecom_object/ecom_link 查 Order 聚合数据）
         aggregator = _make_link_aggregator(eng, scope)
@@ -125,6 +129,9 @@ def ec_live_executor(
 
         # sink: OT + Link（G5，W3 实现）
         sink_to_ot(eng, scope, pipeline, output_rows)
+
+        # O1 §5.2.10：派生属性不得再次整对象覆盖，必须走 CAS/Receipt/Outbox。
+        derived = sink_derived_metrics(eng, scope, pipeline, output_rows)
 
         # O1-R2: 兼容 obj_instance/graph_edge 仅由单一 Projector 消费权威
         # Outbox 后写入；executor 禁止双写或制造事后伪 Outbox。
@@ -141,6 +148,7 @@ def ec_live_executor(
             "rows_written": len(output_rows),
             "output_rows": output_rows,
             "projection": projection,
+            "derived": derived,
         }
 
     except Exception as exc:
@@ -160,13 +168,17 @@ def ec_live_executor(
 # ═══════════════════════════════════════════════════════════════
 
 def _enrich_payment_order_create_time(
-    eng: Any, scope: Any, rows: list[dict[str, Any]], pipeline: Any,
+    *,
+    pipeline: Any,
+    nodes: list[Any],
+    node_id: str | None,
+    scope: Any,
+    rows: list[dict[str, Any]],
 ) -> None:
-    """O1-A §5.2.11: Payment 批量丰富 — 从 ecom_object 查 Order.createdAt。
+    """O1-A §5.2.11：在 normalize 前从 P12 当前 Source 批读 Order 时间。
 
-    当 target_ot=Payment 时，用 ns_pay.relate_id（≈order_id）关联查
-    ecom_object 中已存在的 Order 对象的 createdAt，挂到 row._order_create_time。
-    关联失败不阻塞 Pipeline。
+    连接/契约失败由 `batch_read_public` fail-closed。单个 relate_id 在源
+    `ns_order` 不存在时保持空值，后续由 G17 eligible 证据显式报告。
     """
     from aos_api.ec_normalizer import _resolve_target_ot
 
@@ -186,57 +198,29 @@ def _enrich_payment_order_create_time(
     if not id_to_rows:
         return
 
-    # 从 ecom_object 批量查 Order.createdAt
-    store = getattr(eng, "ecom_consistency_store", None)
-    if store is None:
-        return
+    order_ids = tuple(id_to_rows)
+    results = batch_read_public(
+        pipeline=pipeline,
+        nodes=nodes,
+        node_id=node_id,
+        scope=scope,
+        spec_id="payment_order_time",
+        filter_values=order_ids,
+    )
+    found_ids: set[str] = set()
+    for order in results:
+        raw_id = str(order.get("order_id") or "").strip()
+        created_at = order.get("create_time")
+        if not raw_id or created_at in (None, ""):
+            continue
+        found_ids.add(raw_id)
+        for row in id_to_rows.get(raw_id, []):
+            row["_order_create_time"] = created_at
 
-    org_id = getattr(scope, "org_id", "") or ""
-    workspace_id = getattr(scope, "project_id", "") or getattr(scope, "workspace_id", "") or ""
-
-    try:
-        from aos_api.ecom_consistency_store import ecom_object as _tbl
-        from sqlalchemy import select, and_, text
-
-        order_ids = list(id_to_rows.keys())
-        _engine = getattr(store, "_engine", None)
-        if _engine is None:
-            return
-        with _engine.connect() as conn:
-            # 设置 GUC
-            conn.execute(text(f"SET LOCAL aos.org_id = '{org_id}'"))
-            conn.execute(text(f"SET LOCAL aos.workspace_id = '{workspace_id}'"))
-
-            results = conn.execute(
-                select(
-                    _tbl.c.external_id,
-                    _tbl.c.properties,
-                ).where(
-                    and_(
-                        _tbl.c.org_id == org_id,
-                        _tbl.c.workspace_id == workspace_id,
-                        _tbl.c.object_type == "Order",
-                        _tbl.c.external_id.in_(
-                            [f"niushop:1:{oid}" for oid in order_ids]
-                        ),
-                    )
-                )
-            ).fetchall()
-
-        for ext_id, props in results:
-            created_at = (props or {}).get("createdAt") if isinstance(props, dict) else None
-            if created_at:
-                # ext_id is "niushop:1:6", strip prefix to match id_to_rows key
-                raw_id = ext_id.rsplit(":", 1)[-1] if ":" in ext_id else ext_id
-                for row in id_to_rows.get(raw_id, []):
-                    row["_order_create_time"] = created_at
-
-        log.info(
-            "payment_enriched orders_found=%d/%d pipeline=%s",
-            len(results), len(order_ids), getattr(pipeline, "id", "?"),
-        )
-    except Exception:
-        log.warning("payment_enrich_failed pipeline=%s", getattr(pipeline, "id", "?"), exc_info=True)
+    log.info(
+        "payment_enriched orders_found=%d/%d pipeline=%s",
+        len(found_ids), len(order_ids), getattr(pipeline, "id", "?"),
+    )
 
 
 def _make_link_aggregator(eng: Any, scope: Any) -> Any:

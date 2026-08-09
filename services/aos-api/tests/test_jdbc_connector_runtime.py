@@ -332,7 +332,7 @@ def test_jdbc_runtime_read_rows_without_cursor(
 
     assert len(rows) == 2
     assert rows[0]["order_id"] == 1
-    assert cursor.execute.call_args_list[0].args[0] == "SET SESSION TRANSACTION READ ONLY"
+    assert cursor.execute.call_args_list[0].args[0] == "START TRANSACTION READ ONLY"
     # 验证 SQL 构造（无 WHERE 子句）
     sql_arg = cursor.execute.call_args[0][0]
     assert "SELECT * FROM `ns_order`" in sql_arg
@@ -383,7 +383,7 @@ def test_jdbc_runtime_composite_cursor_is_read_only_and_stable(
             limit=100,
         )
     assert rows[0]["goods_id"] == 51
-    assert cursor.execute.call_args_list[0].args[0] == "SET SESSION TRANSACTION READ ONLY"
+    assert cursor.execute.call_args_list[0].args[0] == "START TRANSACTION READ ONLY"
     sql, params = cursor.execute.call_args.args
     assert "modify_time" in sql and "goods_id" in sql
     assert params == (1000, 1000, 50, 100)

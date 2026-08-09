@@ -353,16 +353,7 @@ def to_payment(row: dict[str, Any]) -> dict[str, Any]:
         "outTradeNo": _str(row.get("out_trade_no")),
         "payStatus": _str(row.get("pay_status")),
     }
-    # O1-A: batch_read_public 丰富后写入 _order_create_time
-    order_ct = row.get("_order_create_time")
-    if order_ct is not None:
-        if isinstance(order_ct, (int, float)) and order_ct > 0:
-            o["properties"]["orderCreatedAt"] = datetime.fromtimestamp(
-                float(order_ct), tz=timezone.utc
-            ).strftime("%Y-%m-%dT%H:%M:%SZ")
-        elif isinstance(order_ct, str) and order_ct.strip():
-            # ISO format string from Order.properties.createdAt
-            o["properties"]["orderCreatedAt"] = order_ct.strip()
+    # `_order_create_time` 仅保留在顶层作为派生计算输入，不写入基础 properties。
     return o
 
 

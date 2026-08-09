@@ -247,13 +247,12 @@ def test_scope_passed_to_apply_batch():
     assert obj.identity.workspace_id == TEST_SCOPE.project_id
 
 
-def test_skeleton_returns_zero_when_store_missing():
-    """骨架向后兼容：engine 没有 ecom_consistency_store 属性时返回零计数。"""
+def test_writer_fails_closed_when_store_missing():
+    """O1-A：权威 Store 缺失时必须失败关闭。"""
     eng = NoStoreEngine()
 
-    result = sink_to_ot(eng, TEST_SCOPE, FakePipeline(), [shop_row()])
-
-    assert result == {"objects_written": 0, "links_written": 0}
+    with pytest.raises(RuntimeError, match="fail-closed"):
+        sink_to_ot(eng, TEST_SCOPE, FakePipeline(), [shop_row()])
 
 
 def test_empty_rows_returns_zero():

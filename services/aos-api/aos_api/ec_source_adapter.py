@@ -15,7 +15,9 @@ FR-D1-4 关键约束：
 from __future__ import annotations
 
 import json
-from typing import Any
+from dataclasses import dataclass
+from types import MappingProxyType
+from typing import Any, Mapping, Sequence
 
 import pymysql
 
@@ -68,6 +70,26 @@ _JDBC_SSH_CONNECTOR_TYPES: frozenset[str] = frozenset(
 _SOFT_DELETE_COUNTS: dict[tuple[str, str], int] = {}
 
 
+@dataclass(frozen=True)
+class BatchReadSpec:
+    """公共批读的不可变 SQL 白名单；业务调用方只能传 spec_id 和值。"""
+
+    table: str
+    columns: tuple[str, ...]
+    filter_column: str
+
+
+BATCH_READ_SPECS: Mapping[str, BatchReadSpec] = MappingProxyType(
+    {
+        "payment_order_time": BatchReadSpec(
+            table="ns_order",
+            columns=("order_id", "create_time"),
+            filter_column="order_id",
+        ),
+    }
+)
+
+
 def get_soft_delete_count(pipeline_id: str, node_id: str) -> int:
     """获取指定 (pipeline_id, node_id) 的软删行计数，供 G6 DLQ 取用。"""
     return _SOFT_DELETE_COUNTS.get((pipeline_id, node_id), 0)
@@ -112,6 +134,40 @@ def fetch_source_rows(
         node_config=node_config,
         props=props,
     )
+
+
+def batch_read_public(
+    *,
+    pipeline: Any,
+    nodes: list[Any],
+    node_id: str | None,
+    scope: Any,
+    spec_id: str,
+    filter_values: Sequence[str],
+) -> list[dict[str, Any]]:
+    """O1 §5.2.11：复用当前 Pipeline Source 执行受控批读。
+
+    表名、列名和过滤列只能来自 `BATCH_READ_SPECS`。缺 Source、
+    未知规格或连接失败均向上抛出，不允许降级为部分指标。
+    """
+    del pipeline  # 保留公共契约参数，Source 解析以 nodes/node_id 为准。
+    spec = BATCH_READ_SPECS.get(spec_id)
+    if spec is None:
+        raise ValueError(f"unknown batch read spec: {spec_id}")
+
+    node_config = _resolve_source_node_config(nodes, node_id)
+    if node_config is None or not node_config.get("source_id"):
+        raise RuntimeError(
+            f"Source node '{node_id or '<auto>'}' has no source_id; "
+            "batch read refused"
+        )
+    values = tuple(dict.fromkeys(str(value) for value in filter_values))
+    if not values:
+        return []
+
+    props = _query_meta_source_props(str(node_config["source_id"]), scope)
+    with JdbcConnectorRuntime(props) as runtime:
+        return runtime.read_rows_by_values(spec, values)
 
 
 def _resolve_source_node_config(

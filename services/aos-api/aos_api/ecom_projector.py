@@ -28,9 +28,11 @@ def _verify_payload(row: dict[str, Any]) -> dict[str, Any]:
 
 def _project_object(conn: Any, scope: TenantScope, payload: dict[str, Any]) -> None:
     record = payload["record"]
-    object_type = str(record["objectType"])
-    object_id = str(record["identity"]["externalId"])
-    if bool(record.get("isDeleted")):
+    object_type = str(record.get("objectType") or record["object_type"])
+    identity = record["identity"]
+    object_id = str(identity.get("externalId") or identity["external_id"])
+    is_deleted = bool(record.get("isDeleted", record.get("is_deleted", False)))
+    if is_deleted:
         conn.execute(
             "DELETE FROM graph_edge WHERE org_id=%s AND project_id=%s "
             "AND ((src_type=%s AND src_id=%s) OR (dst_type=%s AND dst_id=%s))",
@@ -43,9 +45,9 @@ def _project_object(conn: Any, scope: TenantScope, payload: dict[str, Any]) -> N
         )
         return
     props = dict(record.get("properties") or {})
-    props["_sourceIdentity"] = record["identity"]
-    props["_sourceUpdatedAt"] = record["sourceUpdatedAt"]
-    props["_schemaVersion"] = record.get("schemaVersion", 1)
+    props["_sourceIdentity"] = identity
+    props["_sourceUpdatedAt"] = record.get("sourceUpdatedAt") or record["source_updated_at"]
+    props["_schemaVersion"] = record.get("schemaVersion", record.get("schema_version", 1))
     conn.execute(
         "INSERT INTO meta_object_type (id,name,description,published,properties) "
         "VALUES (%s,%s,%s,TRUE,'{}'::jsonb) ON CONFLICT (id) DO NOTHING",
@@ -61,15 +63,17 @@ def _project_object(conn: Any, scope: TenantScope, payload: dict[str, Any]) -> N
 
 def _project_link(conn: Any, scope: TenantScope, payload: dict[str, Any]) -> None:
     record = payload["record"]
+    source = record["source"]
+    target = record["target"]
     values = (
         *scope.key,
-        str(record["sourceType"]),
-        str(record["source"]["externalId"]),
-        str(record["linkType"]),
-        str(record["targetType"]),
-        str(record["target"]["externalId"]),
+        str(record.get("sourceType") or record["source_type"]),
+        str(source.get("externalId") or source["external_id"]),
+        str(record.get("linkType") or record["link_type"]),
+        str(record.get("targetType") or record["target_type"]),
+        str(target.get("externalId") or target["external_id"]),
     )
-    if bool(record.get("isDeleted")):
+    if bool(record.get("isDeleted", record.get("is_deleted", False))):
         conn.execute(
             "DELETE FROM graph_edge WHERE org_id=%s AND project_id=%s "
             "AND src_type=%s AND src_id=%s AND rel=%s AND dst_type=%s AND dst_id=%s",
