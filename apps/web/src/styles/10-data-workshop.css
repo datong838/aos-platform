@@ -1485,9 +1485,9 @@
 .p-objx-app {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 620px;
   background: var(--aos-elevated);
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--aos-border);
   border-radius: 6px;
 }
@@ -1684,13 +1684,130 @@
   font-weight: 600;
   color: var(--aos-accent);
 }
+.p-objx-selection-count {
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: var(--aos-green-bg);
+  border: 1px solid var(--aos-green-border);
+  color: var(--aos-green);
+  font-size: 11px;
+  font-weight: 600;
+}
+.p-objx-schema-warning {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--aos-amber-border);
+  background: var(--aos-amber-bg);
+  color: var(--aos-amber);
+  font-size: 11px;
+}
+
+.p-objx-workspace {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 480px;
+  background: var(--aos-bg-secondary);
+}
+.p-objx-canvas-shell {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 480px;
+  overflow: auto;
+  background: var(--aos-elevated);
+}
+.p-objx-focus-toggle {
+  position: sticky;
+  z-index: 5;
+  top: 10px;
+  float: right;
+  margin: 10px 12px 0 0;
+  padding: 5px 10px;
+  border: 1px solid var(--aos-border);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--aos-elevated) 92%, transparent);
+  color: var(--aos-text-secondary);
+  cursor: pointer;
+  box-shadow: var(--aos-shadow-sm);
+}
+.p-objx-focus-toggle:hover {
+  border-color: var(--aos-accent-border);
+  color: var(--aos-accent);
+}
+.p-objx-workspace.is-focus {
+  min-height: calc(100vh - 260px);
+}
+.p-objx-workspace.is-focus .p-objx-canvas-shell {
+  min-height: calc(100vh - 260px);
+}
+.p-objx-detail-drawer {
+  position: relative;
+  flex: 0 0 clamp(340px, 32vw, 520px);
+  width: clamp(340px, 32vw, 520px);
+  min-width: 320px;
+  max-width: 640px;
+  padding: 14px;
+  overflow: auto;
+  border-left: 1px solid var(--aos-border);
+  background: var(--aos-aside);
+  resize: horizontal;
+  direction: rtl;
+}
+.p-objx-detail-drawer > * {
+  direction: ltr;
+}
+.p-objx-detail-close {
+  position: sticky;
+  z-index: 4;
+  top: 0;
+  float: right;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--aos-border);
+  border-radius: 4px;
+  background: var(--aos-elevated);
+  color: var(--aos-text-secondary);
+  cursor: pointer;
+}
+.p-objx-detail-close:hover {
+  color: var(--aos-text);
+  background: var(--aos-surface-hover);
+}
+.p-objx-detail-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--aos-divider);
+}
+.p-objx-detail-tabs button {
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--aos-text-secondary);
+  cursor: pointer;
+  font-size: 11px;
+}
+.p-objx-detail-tabs button:hover,
+.p-objx-detail-tabs button.is-active {
+  border-color: var(--aos-border);
+  background: var(--aos-surface-hover);
+  color: var(--aos-text);
+}
+.p-objx-wiki-preview {
+  padding: 12px;
+  margin-top: 4px;
+}
 
 .p-objx-table-wrap {
   flex: 1;
   overflow: auto;
 }
 .p-objx-table {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 }
@@ -1712,7 +1829,18 @@
   top: 0;
   z-index: 1;
 }
+.p-objx-table th:not(.p-objx-check),
+.p-objx-table td:not(.p-objx-check) {
+  min-width: 140px;
+}
+.p-objx-table tbody tr {
+  cursor: pointer;
+}
 .p-objx-table tbody tr:hover { background: var(--aos-aside); }
+.p-objx-table tbody tr.is-current {
+  background: var(--aos-accent-light);
+  box-shadow: inset 3px 0 0 var(--aos-accent);
+}
 .p-objx-check { width: 40px; }
 .p-objx-check input { width: 14px; height: 14px; }
 .p-objx-cell-title {
@@ -1741,6 +1869,34 @@
   color: var(--aos-text-secondary);
 }
 .p-objx-set svg { width: 14px; height: 14px; color: var(--aos-text-tertiary); }
+
+@media (max-width: 900px) {
+  .p-objx-search-left { flex-wrap: wrap; }
+  .p-objx-search-field {
+    order: 3;
+    flex-basis: 100%;
+    max-width: none;
+  }
+  .p-objx-workspace { flex-direction: column; }
+  .p-objx-detail-drawer {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    max-height: 58vh;
+    border-top: 1px solid var(--aos-border);
+    border-left: none;
+    resize: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .p-objx-search-bar,
+  .p-objx-view-bar { padding-inline: 10px; }
+  .p-objx-view-bar { align-items: flex-start; }
+  .p-objx-view-center { flex-direction: column; align-items: flex-end; }
+  .p-objx-type-pill { max-width: 100%; }
+}
 
 /* workshop-canvas 画布 + widget */
 .bp-canvas-shell {

@@ -1,17 +1,27 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { getOntologyClient } from "../../api/ontologyClient";
+import {
+  buildExplorerSearchParams,
+  ObjectExplorerWorkspace,
+  resolveExplorerColumns,
+  toggleObjectSelection,
+} from "../../components/ontology/ObjectExplorerWorkspace";
 import { apiGet, apiPost, S2Chrome, useJsonGet } from "./shared";
 import {
   BpBanner,
   BpLinkRow,
   BpPropGrid,
-  BpSplit,
   BpTable,
   BpToolbar,
 } from "./blueprintUi";
 
 type Neighbor = { id?: string; type?: string; rel?: string; title?: string };
+type ObjectTypeSummary = {
+  id: string;
+  name: string;
+  properties?: unknown;
+};
 
 type ExplorerGraphNode = {
   key: string;
@@ -78,7 +88,7 @@ export function resolveObjectSelectionId(
 /** 83 · 对齐 Object Explorer · 标签+搜索+视图栏+表格+Object View 侧边栏 */
 export function GraphExplorerPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { data: types, err: tErr } = useJsonGet<{ items: { id: string; name: string }[] }>(
+  const { data: types, err: tErr } = useJsonGet<{ items: ObjectTypeSummary[] }>(
     "/v1/ontology/object-types",
   );
   const [typeId, setTypeId] = useState(searchParams.get("type")?.trim() || "Order");
@@ -91,6 +101,12 @@ export function GraphExplorerPage() {
   const [toast, setToast] = useState("");
   const [query, setQuery] = useState("");
   const [viewMode, setViewMode] = useState<"table" | "graph">("table");
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
+  const [detailTab, setDetailTab] = useState<
+    "overview" | "properties" | "relations" | "wiki" | "action" | "timeline"
+  >("overview");
 
   useEffect(() => {
     if (types?.items?.length && !types.items.some((t) => t.id === typeId)) {
@@ -108,11 +124,13 @@ export function GraphExplorerPage() {
     setDetail(null);
     setNeighbors([]);
     setWiki(null);
+    setDetailOpen(false);
+    setSelectedKeys([]);
     try {
       const r = await getOntologyClient().listObjects(t);
       setObjects((r.items || []) as Record<string, unknown>[]);
-      if (r.items.length > 0) {
-        const requestedId = searchParams.get("id")?.trim();
+      const requestedId = searchParams.get("id")?.trim();
+      if (r.items.length > 0 && requestedId) {
         const selected = resolveObjectSelectionId(
           r.items as Record<string, unknown>[],
           requestedId,
@@ -133,8 +151,10 @@ export function GraphExplorerPage() {
       const d = await ont.getObject(t, id);
       const n = (await ont.neighbors(t, id)) as { items?: Neighbor[] };
       setDetail(d as Record<string, unknown>);
-      setSearchParams({ type: t, id }, { replace: true });
+      setSearchParams(buildExplorerSearchParams(t, id, searchParams), { replace: true });
       setNeighbors(n.items || []);
+      setDetailOpen(true);
+      setDetailTab("overview");
       try {
         const w = await apiGet<{ body?: string }>(`/v1/wiki/${encodeURIComponent(t)}/${encodeURIComponent(id)}`);
         setWiki(w.body || null);
@@ -162,14 +182,15 @@ export function GraphExplorerPage() {
     setTypeId(nextType);
   }
 
-  const detailProps =
+  const allDetailProps =
     detail &&
     Object.entries(detail)
       .filter(([k]) => !k.startsWith("_"))
-      .slice(0, 6)
       .map(([k, v]) => ({ label: k, value: String(v ?? "—") }));
+  const detailProps = allDetailProps && allDetailProps.slice(0, 6);
 
-  const currentTypeName = types?.items?.find((t) => t.id === typeId)?.name || typeId;
+  const currentType = types?.items?.find((t) => t.id === typeId);
+  const currentTypeName = currentType?.name || typeId;
 
   const filteredObjects = useMemo(() => {
     if (!query.trim()) return objects;
@@ -179,12 +200,14 @@ export function GraphExplorerPage() {
     );
   }, [objects, query]);
 
-  const objectColumns = useMemo(() => {
-    if (objects.length === 0) return ["id", "title"];
-    const sample = objects[0];
-    const cols = Object.keys(sample).filter((k) => !k.startsWith("_")).slice(0, 5);
-    return cols;
-  }, [objects]);
+  const columnResolution = useMemo(
+    () => resolveExplorerColumns(currentType?.properties, objects),
+    [currentType?.properties, objects],
+  );
+  const objectColumns = columnResolution.columns;
+  const allVisibleKeys = filteredObjects.map((object) => `${typeId}:${String(object.id)}`);
+  const allVisibleSelected =
+    allVisibleKeys.length > 0 && allVisibleKeys.every((key) => selectedKeys.includes(key));
 
   return (
     <S2Chrome title="对象探索" lede="Object Explorer · 按类型浏览对象 · Selection 绑定 Object View + Wiki">
@@ -267,22 +290,49 @@ export function GraphExplorerPage() {
           </div>
           <div className="p-objx-view-center">
             <span className="p-objx-results-count">{filteredObjects.length} 条结果</span>
+            {selectedKeys.length > 0 && (
+              <span className="p-objx-selection-count">已选择 {selectedKeys.length} 条</span>
+            )}
           </div>
         </div>
 
-        {/* 主体：表格视图 + 右侧对象详情 */}
-        <BpSplit
-          left={
+        {columnResolution.schemaIncomplete && viewMode === "table" && (
+          <div className="p-objx-schema-warning" role="status">
+            当前 Object Type 的属性 Schema 元数据不完整，暂按全部已加载对象的字段并集展示；不会从第一行猜列。
+          </div>
+        )}
+
+        {/* 主体：默认全宽主画布，选择对象后按需打开详情抽屉 */}
+        <ObjectExplorerWorkspace
+          detailOpen={detailOpen && Boolean(detail)}
+          focusMode={focusMode}
+          onCloseDetail={() => setDetailOpen(false)}
+          onToggleFocus={() => setFocusMode((value) => !value)}
+          canvas={
             viewMode === "table" ? (
               <div className="p-objx-table-wrap">
                 <table className="p-objx-table">
                   <thead>
                     <tr>
                       <th className="p-objx-check">
-                        <input type="checkbox" />
+                        <input
+                          type="checkbox"
+                          aria-label="选择当前页全部对象"
+                          checked={allVisibleSelected}
+                          onChange={() =>
+                            setSelectedKeys((current) =>
+                              allVisibleSelected
+                                ? current.filter((key) => !allVisibleKeys.includes(key))
+                                : [...new Set([...current, ...allVisibleKeys])],
+                            )
+                          }
+                        />
                       </th>
                       {objectColumns.map((col) => (
-                        <th key={col}>{col}</th>
+                        <th key={col.key} title={[col.type, col.unit, col.pii ? "PII" : ""].filter(Boolean).join(" · ")}>
+                          {col.label}
+                          {col.pii ? " · 已脱敏" : ""}
+                        </th>
                       ))}
                     </tr>
                   </thead>
@@ -290,23 +340,33 @@ export function GraphExplorerPage() {
                     {filteredObjects.map((o) => (
                       <tr
                         key={String(o.id)}
-                        style={{ cursor: "pointer" }}
+                        className={objectId === String(o.id) ? "is-current" : ""}
                         onClick={() => void openObject(typeId, String(o.id))}
                       >
                         <td className="p-objx-check">
-                          <input type="checkbox" checked={objectId === String(o.id)} readOnly />
+                          <input
+                            type="checkbox"
+                            aria-label={`选择 ${typeId}/${String(o.id)}`}
+                            checked={selectedKeys.includes(`${typeId}:${String(o.id)}`)}
+                            onClick={(event) => event.stopPropagation()}
+                            onChange={() =>
+                              setSelectedKeys((current) =>
+                                toggleObjectSelection(current, `${typeId}:${String(o.id)}`),
+                              )
+                            }
+                          />
                         </td>
                         {objectColumns.map((col, idx) => (
-                          <td key={col}>
+                          <td key={col.key}>
                             {idx === 0 ? (
                               <div className="p-objx-cell-title">
                                 <div className="p-objx-avatar">
-                                  {String(o[col] || "?").charAt(0).toUpperCase()}
+                                  {String(o[col.key] || "?").charAt(0).toUpperCase()}
                                 </div>
-                                {String(o[col] ?? "—")}
+                                {String(o[col.key] ?? "—")}
                               </div>
                             ) : (
-                              String(o[col] ?? "—")
+                              String(o[col.key] ?? "—")
                             )}
                           </td>
                         ))}
@@ -370,7 +430,7 @@ export function GraphExplorerPage() {
               </div>
             )
           }
-          right={
+          detail={
             <div className="bp-cop-sidebar">
               <div className="bp-ws-section-title">Object View + Wiki</div>
               {detail ? (
@@ -379,48 +439,64 @@ export function GraphExplorerPage() {
                   <p className="muted" style={{ fontSize: "0.75rem" }}>
                     {typeId}/{objectId} · Selection 绑定
                   </p>
-                  {wiki ? (
-                    <div className="bp-domain bp-domain-wiki" style={{ padding: "0.75rem", margin: "0.75rem 0" }}>
-                      <div style={{ color: "#fb923c", fontSize: "0.7rem", marginBottom: 4 }}>🟣 Wiki</div>
-                      <p className="muted" style={{ fontSize: "0.8rem", margin: 0 }}>{wiki.slice(0, 200)}</p>
-                    </div>
-                  ) : (
-                    <p className="muted" style={{ fontSize: "0.75rem" }}>
-                      暂无 Wiki 页 · <Link to={`/ontology/wiki?type=${encodeURIComponent(typeId)}&id=${encodeURIComponent(String(objectId || ""))}`}>去 Wiki</Link>
-                    </p>
-                  )}
-                  {detailProps && <BpPropGrid items={detailProps} />}
-                  {neighbors.length > 0 && (
-                    <BpTable
-                      columns={["邻居", "type", "rel"]}
-                      rows={neighbors.map((n) => [
-                        String(n.id ?? "—"),
-                        String(n.type ?? "—"),
-                        String(n.rel ?? "—"),
-                      ])}
-                    />
-                  )}
-                  <div className="bp-object-actions">
-                    <Link to="/aip/drafts" className="btn">
-                      立案 Action 🟡
-                    </Link>
-                    <Link to={`/ontology/wiki?type=${encodeURIComponent(typeId)}&id=${encodeURIComponent(String(objectId || ""))}`} className="btn">
-                      Wiki 全页
-                    </Link>
-                    <Link to={`/ontology/funnel?type=${encodeURIComponent(typeId)}`} className="btn">
-                      Funnel 状态
-                    </Link>
-                    <Link
-                      to={
-                        objectId
-                          ? `/workshop/buddy?order=${encodeURIComponent(objectId)}&assist=1`
-                          : "/workshop/buddy"
-                      }
-                      className="btn"
-                    >
-                      @Buddy
-                    </Link>
+                  <div className="p-objx-detail-tabs" role="tablist" aria-label="对象详情视图">
+                    {(
+                      [
+                        ["overview", "概览"],
+                        ["properties", "属性"],
+                        ["relations", "关系"],
+                        ["wiki", "Wiki"],
+                        ["action", "Action"],
+                        ["timeline", "时间线"],
+                      ] as const
+                    ).map(([key, label]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        role="tab"
+                        aria-selected={detailTab === key}
+                        className={detailTab === key ? "is-active" : ""}
+                        onClick={() => setDetailTab(key)}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
+                  {detailTab === "overview" && detailProps && <BpPropGrid items={detailProps} />}
+                  {detailTab === "properties" && allDetailProps && <BpPropGrid items={allDetailProps} />}
+                  {detailTab === "relations" &&
+                    (neighbors.length > 0 ? (
+                      <BpTable
+                        columns={["邻居", "type", "rel"]}
+                        rows={neighbors.map((n) => [
+                          String(n.id ?? "—"),
+                          String(n.type ?? "—"),
+                          String(n.rel ?? "—"),
+                        ])}
+                      />
+                    ) : (
+                      <p className="muted">当前对象暂无可见关系。</p>
+                    ))}
+                  {detailTab === "wiki" &&
+                    (wiki ? (
+                      <div className="bp-domain bp-domain-wiki p-objx-wiki-preview">
+                        <div>Wiki · 当前生效内容</div>
+                        <p>{wiki.slice(0, 500)}</p>
+                        <Link to={`/ontology/wiki?type=${encodeURIComponent(typeId)}&id=${encodeURIComponent(String(objectId || ""))}`}>
+                          打开 Wiki 全页
+                        </Link>
+                      </div>
+                    ) : (
+                      <p className="muted">
+                        当前对象暂无 Wiki。UX1 保持只读，不在此处伪造创建成功。
+                      </p>
+                    ))}
+                  {detailTab === "action" && (
+                    <p className="muted">对象级受控 Action 将在 UA2/UX5 接入；当前不展示无目标绑定的假动作。</p>
+                  )}
+                  {detailTab === "timeline" && (
+                    <p className="muted">可审计任务、Action、版本和 Evidence 时间线将在 UA2 后接入。</p>
+                  )}
                 </>
               ) : (
                 <p className="muted">选择左侧实例查看 Object View</p>
