@@ -7,8 +7,13 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from aos_api.auth import Principal, require_principal
+from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
 from aos_api.ontology_governance import get_graph_engine, get_usage_engine
+from aos_api.ontology_explorer_contracts import GraphQueryDTO, GraphSnapshotDTO
+from aos_api.ontology_graph_query import get_authoritative_graph_service
+from aos_api.oidc import allow_dev
+from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(tags=["ontology-governance"])
 log = get_logger("aos-api.ontology_governance")
@@ -87,7 +92,7 @@ class PathQueryIn(BaseModel):
     srcId: str
     dstType: str
     dstId: str
-    maxHops: int = Field(default=6, ge=1, le=8)
+    maxHops: int = Field(default=5, ge=1, le=5)
     rels: list[str] | None = None
 
 
@@ -110,6 +115,18 @@ class GraphEdgeBatchIn(BaseModel):
     edges: list[GraphEdgeIn] = Field(default_factory=list)
 
 
+def _scope(principal: Principal) -> TenantScope:
+    return TenantScope(principal.org_id, principal.project_id)
+
+
+@router.post("/v1/ontology/graph/query", response_model=GraphSnapshotDTO)
+def authoritative_graph_query(
+    body: GraphQueryDTO,
+    principal: Principal = Depends(require_principal),
+) -> GraphSnapshotDTO:
+    return get_authoritative_graph_service().query(_scope(principal), body)
+
+
 @router.get("/v1/objects/{object_type}/{object_id}/neighbors/{hops}")
 def multi_hop_neighbors(
     object_type: str,
@@ -119,15 +136,26 @@ def multi_hop_neighbors(
     direction: str = Query(default="out", pattern=r"^(out|in|both)$"),
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    """#69 · 多跳邻居查询（BFS，1-5 跳）。"""
-    _ = principal
-    eng = get_graph_engine()
-    result = eng.multi_hop(
-        object_type, object_id, hops,
-        rel=rel, direction=direction,
+    """Compatibility projection backed by the authoritative GraphSnapshot service."""
+    snapshot = get_authoritative_graph_service().query(
+        _scope(principal),
+        GraphQueryDTO(
+            seeds=[{"objectType": object_type, "objectId": object_id}],
+            hops=hops,
+            maxNodes=500,
+            direction=direction,
+            relationTypes=[rel] if rel else [],
+        ),
     )
-    log.info("multi_hop src=%s/%s hops=%s nodes=%s",
-             object_type, object_id, hops, result["totalNodes"])
+    result = snapshot.model_dump(mode="json")
+    result.update({
+        "hops": hops,
+        "totalNodes": len(snapshot.nodes),
+        "nodes": [
+            {"type": node.objectType, "id": node.objectId, "depth": node.depth, "key": node.key}
+            for node in snapshot.nodes
+        ],
+    })
     return result
 
 
@@ -136,14 +164,15 @@ def shortest_path(
     body: PathQueryIn,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    """#69 · 最短路径查询（双向 BFS）。"""
-    _ = principal
-    eng = get_graph_engine()
-    result = eng.shortest_path(
-        body.srcType, body.srcId,
-        body.dstType, body.dstId,
+    """Shortest path over the same tenant-authoritative domain graph."""
+    result = get_authoritative_graph_service().shortest_path(
+        _scope(principal),
+        source_type=body.srcType,
+        source_id=body.srcId,
+        target_type=body.dstType,
+        target_id=body.dstId,
         max_hops=body.maxHops,
-        rels=body.rels,
+        relation_types=body.rels,
     )
     log.info("shortest_path found=%s distance=%s explored=%s",
              result["found"], result.get("distance", -1), result["explored"])
@@ -155,17 +184,31 @@ def graph_expand(
     body: ExpandQueryIn,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    """#69 · 子图扩展（从种子节点向外 N 跳）。"""
-    _ = principal
-    eng = get_graph_engine()
-    seeds = [(s["type"], s["id"]) for s in body.seeds if "type" in s and "id" in s]
-    result = eng.expand(
-        seeds, body.hops,
-        max_nodes=body.maxNodes,
-        rels=body.rels,
+    """Compatibility expand response backed by GraphSnapshot."""
+    seeds = [
+        {"objectType": seed["type"], "objectId": seed["id"]}
+        for seed in body.seeds if "type" in seed and "id" in seed
+    ]
+    snapshot = get_authoritative_graph_service().query(
+        _scope(principal),
+        GraphQueryDTO(
+            seeds=seeds,
+            hops=body.hops,
+            maxNodes=min(body.maxNodes, 500),
+            direction="out",
+            relationTypes=body.rels or [],
+        ),
     )
-    log.info("graph_expand seeds=%s hops=%s nodes=%s",
-             len(seeds), body.hops, result["totalNodes"])
+    result = snapshot.model_dump(mode="json")
+    result.update({
+        "hops": body.hops,
+        "seedCount": len(seeds),
+        "totalNodes": len(snapshot.nodes),
+        "nodes": [
+            {"type": node.objectType, "id": node.objectId, "depth": node.depth, "key": node.key}
+            for node in snapshot.nodes
+        ],
+    })
     return result
 
 
@@ -174,8 +217,13 @@ def upsert_graph_edges_dev(
     body: GraphEdgeBatchIn,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    """#69 · 向内存图引擎添加边（测试/脚本化用）。"""
-    _ = principal
+    """Legacy test-only in-memory writer; never reachable from a real tenant."""
+    if not allow_dev() or principal.org_id != "dev-org":
+        raise ApiError(
+            code="GRAPH_AUTHORITY_UNAVAILABLE",
+            message="legacy in-memory graph writes are disabled for authoritative tenants",
+            status_code=409,
+        )
     eng = get_graph_engine()
     written = 0
     for e in body.edges:

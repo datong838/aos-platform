@@ -8,6 +8,8 @@ import {
   listExplorations,
   type ExplorationAsset,
 } from "../../api/ontologyExplorationAssets";
+import { queryAuthoritativeGraph } from "../../api/ontologyGraph";
+import type { GraphSnapshot } from "../../api/ontologyExplorerContracts";
 import {
   buildExplorerSearchParams,
   ObjectExplorerWorkspace,
@@ -103,6 +105,7 @@ export function GraphExplorerPage() {
   const [objectId, setObjectId] = useState<string | null>(null);
   const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
   const [neighbors, setNeighbors] = useState<Neighbor[]>([]);
+  const [graphSnapshot, setGraphSnapshot] = useState<GraphSnapshot | null>(null);
   const [wiki, setWiki] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [toast, setToast] = useState("");
@@ -152,6 +155,7 @@ export function GraphExplorerPage() {
     setObjectId(null);
     setDetail(null);
     setNeighbors([]);
+    setGraphSnapshot(null);
     setWiki(null);
     setDetailOpen(false);
     setSelectedKeys([]);
@@ -178,10 +182,35 @@ export function GraphExplorerPage() {
     try {
       const ont = getOntologyClient();
       const d = await ont.getObject(t, id);
-      const n = (await ont.neighbors(t, id)) as { items?: Neighbor[] };
       setDetail(d as Record<string, unknown>);
       setSearchParams(buildExplorerSearchParams(t, id, searchParams), { replace: true });
-      setNeighbors(n.items || []);
+      try {
+        const snapshot = await queryAuthoritativeGraph({
+          seeds: [{ objectType: t, objectId: id }],
+          hops: 2,
+          maxNodes: 100,
+          direction: "both",
+          objectTypes: [],
+          relationTypes: [],
+          graphDomains: ["domain"],
+        });
+        setGraphSnapshot(snapshot);
+        const nodeByKey = new Map(snapshot.nodes.map((node) => [node.key, node]));
+        const seedKey = `${t}:${id}`;
+        setNeighbors(snapshot.edges.flatMap((edge) => {
+          const otherKey = edge.source === seedKey
+            ? edge.target
+            : edge.target === seedKey
+              ? edge.source
+              : null;
+          const other = otherKey ? nodeByKey.get(otherKey) : undefined;
+          return other ? [{ id: other.objectId, type: other.objectType, rel: edge.relationType }] : [];
+        }));
+      } catch (graphError) {
+        setGraphSnapshot(null);
+        setNeighbors([]);
+        setErr(`权威图查询失败：${String((graphError as Error).message || graphError)}`);
+      }
       setDetailOpen(true);
       setDetailTab("overview");
       try {
@@ -194,6 +223,7 @@ export function GraphExplorerPage() {
       setErr(String((e as Error).message || e));
       setDetail(null);
       setNeighbors([]);
+      setGraphSnapshot(null);
     }
   }
 
@@ -564,7 +594,9 @@ export function GraphExplorerPage() {
             ) : viewMode === "graph" ? (
               <div className="bp-graph-canvas">
                 <p className="muted" style={{ fontSize: "0.75rem", marginBottom: "0.75rem" }}>
-                  知识图谱 · 边=Link · 节点=Object · 高亮 1-hop 传导
+                  {graphSnapshot
+                    ? `权威知识图谱 · ${graphSnapshot.nodes.length} 节点 / ${graphSnapshot.edges.length} 边 · watermark ${graphSnapshot.snapshot.watermark}`
+                    : "请选择对象以加载权威知识图谱"}
                 </p>
                 <div className="bp-graph-stage">
                   {graphNodes.center && (

@@ -18,6 +18,9 @@ from aos_api.marking import (
     ensure_object_access,
 )
 from aos_api.ot_detail_meta import build_ot_detail_meta
+from aos_api.ontology_explorer_contracts import GraphQueryDTO
+from aos_api.ontology_graph_query import get_authoritative_graph_service
+from aos_api.oidc import allow_dev
 from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(tags=["ontology"])
@@ -436,7 +439,13 @@ def upsert_graph_edges(
     body: GraphEdgeBatchIn,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    """Upsert link instances into graph_edge (scripted twin / VERIFY.2)."""
+    """Legacy compatibility writer; disabled in production and for the real tenant."""
+    if not allow_dev() or principal.org_id == "org-org":
+        raise ApiError(
+            code="GRAPH_AUTHORITY_UNAVAILABLE",
+            message="compatibility graph_edge writes are disabled for authoritative tenants",
+            status_code=409,
+        )
     if not body.edges:
         raise ApiError(code="VALIDATION", message="edges required", status_code=400)
     written = 0
@@ -697,85 +706,54 @@ def neighbors(
     object_id: str,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    """1-hop graph read — tries ecom_link first (authoritative e-commerce twin),
-    falls back to graph_edge if no e-commerce data found."""
-    org_id, project_id = _scope(principal).key
-    with connect() as conn:
-        # Try ecom_link first: object_id may be raw (e.g. "1") or canonical ("niushop:1:1")
-        # Build canonical patterns to match
-        patterns = [object_id]
-        if not object_id.startswith("niushop:"):
-            patterns.append(f"niushop:%:{object_id}")
-
-        # Outgoing edges: source -> target
-        outgoing = conn.execute(
-            """
-            SELECT link_type, target_object_type, target_external_id
-            FROM ecom_link
-            WHERE org_id=%s AND workspace_id=%s
-              AND source_object_type=%s
-              AND (source_external_id = ANY(%s) OR source_external_id ~ %s)
-              AND deleted_at IS NULL
-            """,
-            (
-                org_id, project_id, object_type, patterns,
-                f"^niushop:\\d+:{object_id}$",
+    """1-hop compatibility projection from the authoritative GraphSnapshot."""
+    try:
+        snapshot = get_authoritative_graph_service().query(
+            _scope(principal),
+            GraphQueryDTO(
+                seeds=[{"objectType": object_type, "objectId": object_id}],
+                hops=1,
+                maxNodes=500,
+                direction="both",
             ),
-        ).fetchall()
-
-        # Incoming edges: target -> source (reverse direction)
-        incoming = conn.execute(
-            """
-            SELECT link_type, source_object_type, source_external_id
-            FROM ecom_link
-            WHERE org_id=%s AND workspace_id=%s
-              AND target_object_type=%s
-              AND (target_external_id = ANY(%s) OR target_external_id ~ %s)
-              AND deleted_at IS NULL
-            """,
-            (
-                org_id, project_id, object_type, patterns,
-                f"^niushop:\\d+:{object_id}$",
-            ),
-        ).fetchall()
-
-        # If ecom_link has data, use it; otherwise fall back to graph_edge
-        if not outgoing and not incoming:
-            rows = conn.execute(
-                """
-                SELECT rel, dst_type, dst_id FROM graph_edge
-                WHERE src_type=%s AND src_id=%s
-                  AND org_id=%s AND project_id=%s
-                """,
-                (object_type, object_id, org_id, project_id),
-            ).fetchall()
-            items = [{"rel": r["rel"], "type": r["dst_type"], "id": r["dst_id"]} for r in rows]
-            log.info(
-                "graph_neighbors src=%s/%s count=%s engine=adjacency (fallback)",
-                object_type, object_id, len(items),
-            )
-            return {"items": items, "engine": "adjacency_table"}
-
-        items = []
-        for r in outgoing:
-            items.append({
-                "rel": r["link_type"],
-                "type": r["target_object_type"],
-                "id": r["target_external_id"],
-                "direction": "outgoing",
-            })
-        for r in incoming:
-            items.append({
-                "rel": r["link_type"],
-                "type": r["source_object_type"],
-                "id": r["source_external_id"],
-                "direction": "incoming",
-            })
-        log.info(
-            "graph_neighbors src=%s/%s count=%s engine=ecom_link (out=%s in=%s)",
-            object_type, object_id, len(items), len(outgoing), len(incoming),
         )
-    return {"items": items, "engine": "ecom_link"}
+    except ApiError as exc:
+        if not (exc.code == "GRAPH_AUTHORITY_UNAVAILABLE" and allow_dev() and principal.org_id == "dev-org"):
+            raise
+        with connect(_scope(principal)) as conn:
+            rows = conn.execute(
+                "SELECT rel,dst_type,dst_id FROM graph_edge WHERE src_type=%s AND src_id=%s "
+                "AND org_id=%s AND project_id=%s",
+                (object_type, object_id, *_scope(principal).key),
+            ).fetchall()
+        return {
+            "items": [{"rel": row["rel"], "type": row["dst_type"], "id": row["dst_id"]} for row in rows],
+            "engine": "adjacency_table",
+            "sourceAuthority": "compat_projection",
+        }
+    seed_key = f"{object_type}:{object_id}"
+    nodes = {node.key: node for node in snapshot.nodes}
+    items: list[dict[str, Any]] = []
+    for edge in snapshot.edges:
+        if edge.source == seed_key and edge.target in nodes:
+            target = nodes[edge.target]
+            items.append({
+                "rel": edge.relationType, "type": target.objectType, "id": target.objectId,
+                "direction": "outgoing", "edgeAuthority": edge.edgeAuthority,
+            })
+        elif edge.target == seed_key and edge.source in nodes:
+            source = nodes[edge.source]
+            items.append({
+                "rel": edge.relationType, "type": source.objectType, "id": source.objectId,
+                "direction": "incoming", "edgeAuthority": edge.edgeAuthority,
+            })
+    return {
+        "items": items,
+        "engine": "ecom_authoritative",
+        "sourceAuthority": snapshot.sourceAuthority,
+        "watermark": snapshot.snapshot.watermark,
+        "schemaEtag": snapshot.schemaEtag,
+    }
 
 
 @router.get("/v1/wiki/{object_type}/{object_id}/versions")
@@ -927,11 +905,9 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
         ).fetchone()
         authoritative = int(authority_objs["c"]) > 0
         if authoritative:
-            objs = authority_objs
-            edges = conn.execute(
-                "SELECT COUNT(*) AS c FROM ecom_link WHERE org_id=%s AND workspace_id=%s AND deleted_at IS NULL",
-                scope.key,
-            ).fetchone()
+            authority_meta = get_authoritative_graph_service().metadata(scope)
+            objs = {"c": authority_meta["objects"]}
+            edges = {"c": authority_meta["edges"]}
             orphans = conn.execute(
                 """
                 SELECT COUNT(*) AS c FROM ecom_object o
@@ -1046,6 +1022,9 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
         "ageAvailable": False,
         "insightTtlDays": ttl_snap["ttlDays"],
     }
+    if authoritative:
+        metrics["graphWatermark"] = authority_meta["watermark"]
+        metrics["schemaEtag"] = authority_meta["schemaEtag"]
     score = 100
     issues: list[dict[str, Any]] = []
     if dangling_n > 0:
@@ -1055,7 +1034,10 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
                 "code": "GH-01",
                 "severity": "bad",
                 "object": f"悬空边 ×{dangling_n}",
-                "message": "graph_edge 端点在 obj_instance 中不存在",
+                "message": (
+                    "ecom_link 端点在活跃 ecom_object 中不存在"
+                    if authoritative else "graph_edge 端点在 obj_instance 中不存在"
+                ),
                 "href": "/workshop/graph",
             }
         )
@@ -1089,7 +1071,7 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
                 "code": "GH-03",
                 "severity": "warn",
                 "object": f"孤立实例 ×{orphan_n}",
-                "message": "无 graph_edge 关联",
+                "message": "无 ecom_link 关联" if authoritative else "无 graph_edge 关联",
                 "href": "/ontology",
             }
         )
@@ -1099,7 +1081,7 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
                 "code": "GH-03",
                 "severity": "warn",
                 "object": f"孤立实例 ×{orphan_n}",
-                "message": "无 graph_edge 关联",
+                "message": "无 ecom_link 关联" if authoritative else "无 graph_edge 关联",
                 "href": "/ontology",
             }
         )

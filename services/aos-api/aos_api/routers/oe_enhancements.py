@@ -5,7 +5,7 @@ from typing import Any
 from uuid import NAMESPACE_URL, uuid5
 
 from fastapi import APIRouter, Depends, Header, Response
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
@@ -25,6 +25,8 @@ from aos_api.ontology_exploration_assets import (
     list_assets,
     set_archived,
 )
+from aos_api.ontology_explorer_contracts import GraphQueryDTO, GraphSnapshotDTO
+from aos_api.ontology_graph_query import get_authoritative_graph_service
 from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(tags=["oe-enhancements"])
@@ -250,19 +252,43 @@ def restore_exploration(
     return result
 
 
-@router.post("/v1/ontology/explorations/{exp_id}/execute")
+@router.post("/v1/ontology/explorations/{exp_id}/execute", response_model=GraphSnapshotDTO)
 def execute_exploration(
     exp_id: str,
     principal: Principal = Depends(require_principal),
-) -> dict[str, Any]:
-    """Execution moves to the authoritative query service in O1-UX3."""
-    if get_asset(_scope(principal), kind="exploration", asset_id=exp_id, actor=principal.subject) is None:
+) -> GraphSnapshotDTO:
+    """Execute the server-persisted exploration against the authoritative graph."""
+    found = get_asset(_scope(principal), kind="exploration", asset_id=exp_id, actor=principal.subject)
+    if found is None:
         raise ApiError(code="EXPLORATION_NOT_FOUND", message="exploration not found", status_code=404)
-    raise ApiError(
-        code="GRAPH_AUTHORITY_UNAVAILABLE",
-        message="saved exploration execution requires the O1-UX3 authoritative graph/query service",
-        status_code=409,
-    )
+    asset, _ = found
+    payload = asset["payload"]
+    graph = payload.get("graph") if isinstance(payload.get("graph"), dict) else {}
+    focus_object_id = graph.get("focusObjectId")
+    if not isinstance(focus_object_id, str) or not focus_object_id.strip():
+        raise ApiError(
+            code="GRAPH_QUERY_INVALID",
+            message="saved exploration has no canonical graph focus object",
+            status_code=400,
+        )
+    try:
+        query = GraphQueryDTO.model_validate({
+            "seeds": [{"objectType": payload["objectType"], "objectId": focus_object_id}],
+            "hops": graph.get("hops", 1),
+            "maxNodes": graph.get("maxNodes", 100),
+            "direction": graph.get("direction", "both"),
+            "objectTypes": graph.get("objectTypes", []),
+            "relationTypes": graph.get("relationTypes", []),
+            "graphDomains": graph.get("graphDomains", ["domain"]),
+        })
+    except ValidationError as exc:
+        raise ApiError(
+            code="GRAPH_QUERY_INVALID",
+            message="saved exploration graph query is invalid",
+            status_code=400,
+            details={"errors": exc.errors(include_url=False)},
+        ) from exc
+    return get_authoritative_graph_service().query(_scope(principal), query)
 
 
 class ObjectSetIn(ObjectSetAssetPayload):
