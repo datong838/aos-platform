@@ -1,0 +1,43 @@
+{
+  "alembic_revision": "o1ux2_001",
+  "documents": {
+    "d4": "sha256:6fa507b708e1a7344c35b18d34db901456145a4775ec25d911099ac6e280424b",
+    "d5": "sha256:1bcbd54c6aba7d1b6b8f651bf51a0ab4066295eee7011f0f6255cfa2951bbea7",
+    "o1": "sha256:d7e35187792c2bb3da4c17d376f2117dff3bfd2a07ffc28ed8589b22ee93f880",
+    "plan": "sha256:5db62cf0a6d6adfe44ab7123924916f68375b8d8172ff925f67dc8cb6e8acf23"
+  },
+  "ended_at": "2026-08-09T19:29:07.298758+00:00",
+  "gate": "G18",
+  "git_sha": "24938e44a9f19a8878c91b702ba282e07f42491a",
+  "phase": "D5-E2",
+  "real_scope": {
+    "org_id": "org-org",
+    "workspace_id": "dev-project"
+  },
+  "results": {
+    "by_error_code": {
+      "SOURCE_CONNECTION_ERROR": 10,
+      "STORE_CONFLICT": 10,
+      "VALIDATION_ERROR": 10
+    },
+    "cleanup_before_counts": {
+      "ecom_dlq": 30,
+      "ecom_dlq_retry_event": 30,
+      "ecom_dlq_retry_receipt": 30
+    },
+    "cleanup_remaining": 0,
+    "cross_scope_visible": 0,
+    "persisted_count": 30,
+    "pii_hits": [],
+    "retry_event_count": 30,
+    "retry_receipt_count": 30,
+    "sample_count": 30,
+    "status": "PASS",
+    "temporary_scope": [
+      "org-d5e-dlq-10250af9",
+      "ws-dlq-10250af9"
+    ]
+  },
+  "run_id": "d5e2-8ca75538e67d49c2a303193e10250af9",
+  "started_at": "2026-08-09T19:29:03.206326+00:00"
+}

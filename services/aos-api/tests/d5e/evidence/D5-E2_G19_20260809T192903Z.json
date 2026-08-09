@@ -1,0 +1,758 @@
+{
+  "alembic_revision": "o1ux2_001",
+  "documents": {
+    "d4": "sha256:6fa507b708e1a7344c35b18d34db901456145a4775ec25d911099ac6e280424b",
+    "d5": "sha256:1bcbd54c6aba7d1b6b8f651bf51a0ab4066295eee7011f0f6255cfa2951bbea7",
+    "o1": "sha256:d7e35187792c2bb3da4c17d376f2117dff3bfd2a07ffc28ed8589b22ee93f880",
+    "plan": "sha256:5db62cf0a6d6adfe44ab7123924916f68375b8d8172ff925f67dc8cb6e8acf23"
+  },
+  "ended_at": "2026-08-09T19:29:07.298758+00:00",
+  "gate": "G19",
+  "git_sha": "24938e44a9f19a8878c91b702ba282e07f42491a",
+  "phase": "D5-E2",
+  "real_scope": {
+    "org_id": "org-org",
+    "workspace_id": "dev-project"
+  },
+  "results": {
+    "auth_matrix": {
+      "missing_org": 401,
+      "missing_workspace": 401,
+      "unknown_org": 403,
+      "unknown_workspace": 403
+    },
+    "cleanup_remaining": 0,
+    "cross_scope_write_rejected": true,
+    "matrices": [
+      {
+        "a_reads_b": 0,
+        "b_reads_a": 0,
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ]
+      },
+      {
+        "a_reads_b": 0,
+        "b_reads_a": 0,
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-a-10250af9",
+          "ws-a2-10250af9"
+        ]
+      },
+      {
+        "a_reads_b": 0,
+        "b_reads_a": 0,
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "shared-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "shared-10250af9"
+        ]
+      }
+    ],
+    "resource_count": 23,
+    "resources": [
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "pl-cfe6e2b6",
+        "cross_scope_write_rejected": true,
+        "resource_type": "Pipeline run",
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "db-34817ef1",
+        "cross_scope_write_rejected": true,
+        "resource_type": "Build",
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "sc-8cc98037",
+        "cross_scope_write_rejected": true,
+        "resource_type": "Schedule",
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "ds-4dd1c171",
+        "cross_scope_write_rejected": true,
+        "resource_type": "Dataset",
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "pp-28d2b4be",
+        "cross_scope_write_rejected": true,
+        "resource_type": "Proposal",
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:ecom_object",
+        "cross_scope_write_rejected": true,
+        "resource_type": "ecom_object",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:ecom_link",
+        "cross_scope_write_rejected": true,
+        "resource_type": "ecom_link",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:obj_instance",
+        "cross_scope_write_rejected": true,
+        "resource_type": "obj_instance",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:graph_edge",
+        "cross_scope_write_rejected": true,
+        "resource_type": "graph_edge",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:ecom_sync_checkpoint",
+        "cross_scope_write_rejected": true,
+        "resource_type": "checkpoint",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:ecom_ingest_receipt",
+        "cross_scope_write_rejected": true,
+        "resource_type": "receipt",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:ecom_dlq",
+        "cross_scope_write_rejected": true,
+        "resource_type": "DLQ",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:ontology_evidence_revision",
+        "cross_scope_write_rejected": true,
+        "resource_type": "Evidence",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:bundle_installation",
+        "cross_scope_write_rejected": true,
+        "resource_type": "Module installation/overlay",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:ecom_dlq",
+        "cross_scope_write_rejected": true,
+        "resource_type": "ecom_dlq",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:projection_outbox",
+        "cross_scope_write_rejected": true,
+        "resource_type": "projection_outbox",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:ecom_derived_receipt",
+        "cross_scope_write_rejected": true,
+        "resource_type": "ecom_derived_receipt",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:ontology_overlay_receipt",
+        "cross_scope_write_rejected": true,
+        "resource_type": "ontology_overlay_receipt",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:ontology_overlay",
+        "cross_scope_write_rejected": true,
+        "resource_type": "ontology_overlay",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:projection_watermark",
+        "cross_scope_write_rejected": true,
+        "resource_type": "projection_watermark",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:ecom_dlq_retry_receipt",
+        "cross_scope_write_rejected": true,
+        "resource_type": "ecom_dlq_retry_receipt",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:ecom_alias_migration",
+        "cross_scope_write_rejected": true,
+        "resource_type": "ecom_alias_migration",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      },
+      {
+        "a_reads_b": false,
+        "after_counts": {
+          "scope_a": 1,
+          "scope_b": 0
+        },
+        "b_reads_a": false,
+        "before_counts": {
+          "scope_a": 0,
+          "scope_b": 0
+        },
+        "cleanup_status": "PASS",
+        "create_receipt": "fresh-rls-contract:ecom_dlq_retry_event",
+        "cross_scope_write_rejected": true,
+        "resource_type": "ecom_dlq_retry_event",
+        "rls": {
+          "exists": true,
+          "force": true,
+          "rls": true
+        },
+        "scope_a": [
+          "org-d5e-a-10250af9",
+          "ws-a1-10250af9"
+        ],
+        "scope_b": [
+          "org-d5e-b-10250af9",
+          "ws-b-10250af9"
+        ],
+        "status": "PASS"
+      }
+    ],
+    "status": "PASS",
+    "temporary_scopes": [
+      [
+        "org-d5e-a-10250af9",
+        "ws-a1-10250af9"
+      ],
+      [
+        "org-d5e-a-10250af9",
+        "ws-a2-10250af9"
+      ],
+      [
+        "org-d5e-b-10250af9",
+        "ws-b-10250af9"
+      ],
+      [
+        "org-d5e-a-10250af9",
+        "shared-10250af9"
+      ],
+      [
+        "org-d5e-b-10250af9",
+        "shared-10250af9"
+      ]
+    ]
+  },
+  "run_id": "d5e2-8ca75538e67d49c2a303193e10250af9",
+  "started_at": "2026-08-09T19:29:03.206326+00:00"
+}
