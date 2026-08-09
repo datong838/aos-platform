@@ -13,6 +13,68 @@ import {
 
 type Neighbor = { id?: string; type?: string; rel?: string; title?: string };
 
+type ExplorerGraphNode = {
+  key: string;
+  id: string;
+  type: string;
+  label: string;
+  rel?: string;
+  kind: "center" | "neighbor";
+};
+
+export function buildGraphNodes(
+  detail: Record<string, unknown> | null,
+  neighbors: Neighbor[],
+  centerType: string,
+): { center: ExplorerGraphNode | null; outer: ExplorerGraphNode[] } {
+  const center = detail
+    ? {
+        key: `${centerType}:${String(detail.id)}`,
+        id: String(detail.id),
+        type: centerType,
+        label: String(detail.title || detail.id),
+        kind: "center" as const,
+      }
+    : null;
+  const outer = neighbors.slice(0, 6).map((neighbor, index) => {
+    const id = String(neighbor.id ?? index);
+    const type = String(neighbor.type || centerType);
+    const rel = neighbor.rel ? String(neighbor.rel) : undefined;
+    return {
+      key: `${type}:${id}:${rel || index}`,
+      id,
+      type,
+      label: String(neighbor.title || neighbor.id || neighbor.type || id),
+      rel,
+      kind: "neighbor" as const,
+    };
+  });
+  return { center, outer };
+}
+
+export function resolveObjectSelectionId(
+  items: Record<string, unknown>[],
+  requestedId: string | null | undefined,
+): string | null {
+  if (!requestedId) return items.length > 0 ? String(items[0].id) : null;
+  const exact = items.find((item) => String(item.id) === requestedId);
+  if (exact) return String(exact.id);
+  const byAuthority = items.find((item) => {
+    const identity = item._sourceIdentity;
+    if (!identity || typeof identity !== "object") return false;
+    const source = identity as Record<string, unknown>;
+    return String(source.externalId || source.external_id || "") === requestedId;
+  });
+  if (byAuthority) return String(byAuthority.id);
+  const canonicalParts = requestedId.split(":");
+  if (requestedId.startsWith("niushop:") && canonicalParts.length >= 3) {
+    const sourcePk = canonicalParts.slice(2).join(":");
+    const bySourcePk = items.find((item) => String(item.id) === sourcePk);
+    if (bySourcePk) return String(bySourcePk.id);
+  }
+  return items.length > 0 ? String(items[0].id) : null;
+}
+
 /** 83 · 对齐 Object Explorer · 标签+搜索+视图栏+表格+Object View 侧边栏 */
 export function GraphExplorerPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -51,10 +113,11 @@ export function GraphExplorerPage() {
       setObjects((r.items || []) as Record<string, unknown>[]);
       if (r.items.length > 0) {
         const requestedId = searchParams.get("id")?.trim();
-        const selected = requestedId && r.items.some((item) => String(item.id) === requestedId)
-          ? requestedId
-          : String(r.items[0].id);
-        await openObject(t, selected);
+        const selected = resolveObjectSelectionId(
+          r.items as Record<string, unknown>[],
+          requestedId,
+        );
+        if (selected) await openObject(t, selected);
       }
     } catch (e) {
       setErr(String((e as Error).message || e));
@@ -85,18 +148,19 @@ export function GraphExplorerPage() {
     }
   }
 
-  const graphNodes = useMemo(() => {
-    const center = detail
-      ? { id: String(detail.id), label: String(detail.title || detail.id), kind: "center" as const }
-      : null;
-    const outer = neighbors.slice(0, 6).map((n, i) => ({
-      id: String(n.id ?? i),
-      label: String(n.title || n.id || n.type),
-      rel: n.rel,
-      kind: "neighbor" as const,
-    }));
-    return { center, outer };
-  }, [detail, neighbors]);
+  const graphNodes = useMemo(
+    () => buildGraphNodes(detail, neighbors, typeId),
+    [detail, neighbors, typeId],
+  );
+
+  function selectObject(nextType: string, nextId: string) {
+    if (nextType === typeId) {
+      void openObject(nextType, nextId);
+      return;
+    }
+    setSearchParams({ type: nextType, id: nextId }, { replace: true });
+    setTypeId(nextType);
+  }
 
   const detailProps =
     detail &&
@@ -134,17 +198,6 @@ export function GraphExplorerPage() {
             </svg>
             {currentTypeName}
           </div>
-          <button type="button" className="p-objx-tab-new" title="多标签视图尚未启用" disabled>
-            +
-          </button>
-          <div className="p-objx-tab-actions">
-            <button type="button" className="p-objx-action" title="对象集写入需先完成 Overlay" disabled>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              新建对象集
-            </button>
-          </div>
         </div>
 
         {/* 搜索栏 */}
@@ -179,22 +232,6 @@ export function GraphExplorerPage() {
               </select>
             </label>
           </div>
-          <div className="p-objx-search-right">
-            <button type="button" className="p-objx-icon-btn" title="当前使用上方搜索筛选" disabled>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-              </svg>
-            </button>
-            <button type="button" className="p-objx-icon-btn" title="列设置将在 Overlay 闭环后启用" disabled>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <path d="M9 3v18" />
-                <path d="M15 3v18" />
-              </svg>
-            </button>
-            <button type="button" className="p-objx-share" onClick={() => setToast("当前对象已写入地址栏，可复制链接共享")}>共享</button>
-            <button type="button" className="p-objx-save" onClick={() => setToast("当前视图已由地址栏保存")}>保存</button>
-          </div>
         </div>
 
         {/* 视图栏 */}
@@ -227,30 +264,9 @@ export function GraphExplorerPage() {
               </svg>
               图谱
             </button>
-            <button type="button" className="p-objx-view-btn" disabled title="注释需通过 Draft/Overlay，尚未启用">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
-              注释
-            </button>
           </div>
           <div className="p-objx-view-center">
             <span className="p-objx-results-count">{filteredObjects.length} 条结果</span>
-          </div>
-          <div className="p-objx-view-right">
-            <button type="button" className="p-objx-view-btn" disabled title="展开配置尚未启用">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              展开
-            </button>
-            <button type="button" className="p-objx-view-btn" disabled title="更多配置尚未启用">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-              </svg>
-              更多
-            </button>
           </div>
         </div>
 
@@ -332,14 +348,10 @@ export function GraphExplorerPage() {
                     ];
                     return (
                       <button
-                        key={n.id}
+                        key={n.key}
                         type="button"
                         className={`bp-graph-node ${positions[i % positions.length]}`}
-                        onClick={() =>
-                          void openObject(typeId, n.id).catch((e) =>
-                            setErr(String(e.message || e)),
-                          )
-                        }
+                        onClick={() => selectObject(n.type, n.id)}
                         title={n.rel}
                       >
                         {n.label}
