@@ -6,6 +6,8 @@
 .o1-graph-toolbar { display: flex; gap: 6px; padding: 8px 16px; flex-wrap: wrap; border-bottom: 1px solid var(--aos-border); }
 .o1-graph-toolbar button { min-height: 34px; padding: 6px 11px; border: 1px solid var(--aos-border); border-radius: 4px; background: var(--aos-surface); color: var(--aos-text-secondary); cursor: pointer; }
 .o1-graph-toolbar button:hover, .o1-graph-toolbar button:focus-visible { border-color: var(--aos-accent-border); color: var(--aos-accent); outline: 2px solid color-mix(in srgb, var(--aos-accent) 32%, transparent); outline-offset: 1px; }
+.o1-graph-toolbar button:disabled { opacity: .45; cursor: not-allowed; }
+.o1-graph-path-hint { align-self: center; color: var(--aos-accent); font-size: 11px; }
 .o1-graph-legend { display: flex; align-items: center; gap: 14px; padding: 7px 16px; overflow-x: auto; white-space: nowrap; border-bottom: 1px solid var(--aos-border); color: var(--aos-text-tertiary); font-size: 11px; }
 .o1-graph-legend span { display: inline-flex; align-items: center; gap: 5px; }
 .o1-graph-legend i, .o1-graph-list i { width: 9px; height: 9px; border-radius: 2px; flex: 0 0 auto; }
@@ -13,10 +15,12 @@
 .o1-graph-viewport:active { cursor: grabbing; }
 .o1-graph-viewport svg { display: block; }
 .o1-graph-edge { fill: none; stroke: var(--aos-border-strong); stroke-width: 1.5; color: var(--aos-border-strong); }
+g.is-path .o1-graph-edge { stroke: var(--aos-accent); color: var(--aos-accent); stroke-width: 3; }
 .o1-graph-edge-label { fill: var(--aos-text-tertiary); font-size: 10px; text-anchor: middle; paint-order: stroke; stroke: var(--aos-bg-secondary); stroke-width: 4px; }
 .o1-graph-node { cursor: pointer; transition: opacity 120ms ease; }
 .o1-graph-node rect:first-of-type { fill: var(--aos-elevated); stroke: var(--aos-border-strong); stroke-width: 1.25; }
 .o1-graph-node:hover rect:first-of-type, .o1-graph-node:focus-visible rect:first-of-type, .o1-graph-node.is-selected rect:first-of-type { stroke: var(--aos-accent); stroke-width: 2.5; }
+.o1-graph-node.is-path rect:first-of-type { stroke: var(--aos-accent); stroke-width: 2.5; }
 .o1-graph-node:focus { outline: none; }
 .o1-graph-node-title { fill: var(--aos-text); font-size: 13px; font-weight: 650; }
 .o1-graph-node-meta { fill: var(--aos-text-tertiary); font-size: 10px; }

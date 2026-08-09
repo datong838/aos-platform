@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { GraphSnapshot } from "../../api/ontologyExplorerContracts";
 import {
   layoutOntologyGraph,
+  findVisibleGraphPath,
   stableObjectTypeColor,
   type OntologyGraphLayoutMode,
 } from "./ontologyGraphLayout";
@@ -29,6 +30,9 @@ export function OntologyGraphCanvas({
     typeof window !== "undefined" && window.matchMedia("(max-width: 560px)").matches ? "list" : "graph",
   );
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [pathStartKey, setPathStartKey] = useState<string | null>(null);
+  const [pathNodeKeys, setPathNodeKeys] = useState<Set<string>>(new Set());
+  const [pathEdgeKeys, setPathEdgeKeys] = useState<Set<string>>(new Set());
   const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, scale: 1 });
   const layout = useMemo(
     () => snapshot ? layoutOntologyGraph(snapshot, layoutMode) : null,
@@ -66,6 +70,12 @@ export function OntologyGraphCanvas({
 
   function select(node: GraphSnapshot["nodes"][number]) {
     setSelectedKey(node.key);
+    if (snapshot && pathStartKey && pathStartKey !== node.key) {
+      const path = findVisibleGraphPath(snapshot, pathStartKey, node.key);
+      setPathNodeKeys(path?.nodeKeys || new Set());
+      setPathEdgeKeys(path?.edgeKeys || new Set());
+      setPathStartKey(null);
+    }
     onSelectNode?.(node);
   }
 
@@ -96,6 +106,24 @@ export function OntologyGraphCanvas({
         <button type="button" onClick={() => setDisplayMode((value) => value === "graph" ? "list" : "graph")}>
           {displayMode === "graph" ? "邻居列表" : "图谱画布"}
         </button>
+        <button
+          type="button"
+          disabled={!selectedKey && !pathStartKey}
+          onClick={() => {
+            if (pathStartKey) {
+              setPathStartKey(null);
+              setPathNodeKeys(new Set());
+              setPathEdgeKeys(new Set());
+            } else if (selectedKey) {
+              setPathStartKey(selectedKey);
+              setPathNodeKeys(new Set([selectedKey]));
+              setPathEdgeKeys(new Set());
+            }
+          }}
+        >
+          {pathStartKey ? "取消路径选择" : "从选中节点找路径"}
+        </button>
+        {pathStartKey && <span className="o1-graph-path-hint">请选择路径终点</span>}
       </div>
       <div className="o1-graph-legend" aria-label="图例">
         {objectTypes.map((objectType) => (
@@ -144,9 +172,11 @@ export function OntologyGraphCanvas({
             </defs>
             <g transform={`translate(${viewport.x} ${viewport.y}) scale(${viewport.scale})`}>
               {layout.edges.map((edge) => {
-                const muted = selectedKey && (!adjacentKeys.has(edge.source) || !adjacentKeys.has(edge.target));
+                const muted = pathNodeKeys.size > 0
+                  ? !pathEdgeKeys.has(edge.key)
+                  : selectedKey && (!adjacentKeys.has(edge.source) || !adjacentKeys.has(edge.target));
                 return (
-                  <g key={edge.key} className={muted ? "is-muted" : ""}>
+                  <g key={edge.key} className={`${muted ? "is-muted" : ""} ${pathEdgeKeys.has(edge.key) ? "is-path" : ""}`}>
                     <path className="o1-graph-edge" d={edge.path} markerEnd="url(#o1-arrow)" />
                     {(layout.edges.length <= 80 || edge.source === selectedKey || edge.target === selectedKey) && (
                       <text className="o1-graph-edge-label" x={edge.labelX} y={edge.labelY}>{edge.relationType}</text>
@@ -154,17 +184,18 @@ export function OntologyGraphCanvas({
                   </g>
                 );
               })}
-              {layout.nodes.map((node) => {
+              {layout.nodes.map((node, nodeIndex) => {
                 const selected = selectedKey === node.key;
-                const muted = selectedKey && !adjacentKeys.has(node.key);
+                const muted = pathNodeKeys.size > 0 ? !pathNodeKeys.has(node.key) : selectedKey && !adjacentKeys.has(node.key);
                 return (
                   <g
                     key={node.key}
                     data-graph-node
+                    data-graph-node-index={nodeIndex}
                     role="button"
                     tabIndex={0}
                     aria-label={`${node.label}，${node.objectType}，深度 ${node.depth}`}
-                    className={`o1-graph-node ${selected ? "is-selected" : ""} ${muted ? "is-muted" : ""}`}
+                    className={`o1-graph-node ${selected ? "is-selected" : ""} ${pathNodeKeys.has(node.key) ? "is-path" : ""} ${muted ? "is-muted" : ""}`}
                     transform={`translate(${node.x - node.width / 2} ${node.y - node.height / 2})`}
                     onClick={() => select(node)}
                     onDoubleClick={() => onExpandNode?.(node)}
@@ -173,6 +204,20 @@ export function OntologyGraphCanvas({
                         event.preventDefault();
                         select(node);
                         if (event.key === "Enter") onExpandNode?.(node);
+                      } else if (["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp"].includes(event.key)) {
+                        event.preventDefault();
+                        const delta = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : -1;
+                        const nextIndex = (nodeIndex + delta + layout.nodes.length) % layout.nodes.length;
+                        const nextNode = layout.nodes[nextIndex];
+                        select(nextNode);
+                        shellRef.current
+                          ?.querySelector<SVGGElement>(`[data-graph-node-index="${nextIndex}"]`)
+                          ?.focus();
+                      } else if (event.key === "Escape") {
+                        setSelectedKey(null);
+                        setPathStartKey(null);
+                        setPathNodeKeys(new Set());
+                        setPathEdgeKeys(new Set());
                       }
                     }}
                   >

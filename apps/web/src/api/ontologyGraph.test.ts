@@ -35,7 +35,17 @@ describe("normalizeGraphSnapshot", () => {
     expect(() => normalizeGraphSnapshot({ ...snapshot(), scope: { orgId: "dev-org", workspaceId: "dev-project" } }))
       .toThrow("scope");
     expect(() => normalizeGraphSnapshot({ ...snapshot(), sourceAuthority: "compat_projection" }))
-      .toThrow("ecom_authoritative");
+      .toThrow("authority");
+  });
+
+  it("accepts operational lineage only with matching authority and edges", () => {
+    const value = snapshot();
+    expect(normalizeGraphSnapshot({
+      ...value,
+      graphDomain: "operational_lineage",
+      sourceAuthority: "operational_authoritative",
+      edges: value.edges.map((edge) => ({ ...edge, graphDomain: "operational_lineage" })),
+    }).graphDomain).toBe("operational_lineage");
   });
 
   it("rejects edges with missing endpoints", () => {

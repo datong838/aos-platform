@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GraphSnapshot } from "../../api/ontologyExplorerContracts";
-import { layoutOntologyGraph, stableObjectTypeColor } from "./ontologyGraphLayout";
+import { findVisibleGraphPath, layoutOntologyGraph, stableObjectTypeColor } from "./ontologyGraphLayout";
 
 function snapshot(size: number): GraphSnapshot {
   const nodes = Array.from({ length: size }, (_, index) => ({
@@ -57,5 +57,14 @@ describe("O1-UX4 deterministic graph layout", () => {
   it("keeps object type colors stable", () => {
     expect(stableObjectTypeColor("Order")).toBe(stableObjectTypeColor("Order"));
     expect(stableObjectTypeColor("Order")).not.toBe(stableObjectTypeColor("Payment"));
+  });
+
+  it("highlights only a path made from visible authoritative edges", () => {
+    const input = snapshot(8);
+    const path = findVisibleGraphPath(input, "Order:0", "Order:7");
+    expect(path?.nodeKeys.has("Order:0")).toBe(true);
+    expect(path?.nodeKeys.has("Order:7")).toBe(true);
+    expect(path?.edgeKeys.size).toBeGreaterThan(0);
+    expect(findVisibleGraphPath(input, "Order:0", "missing")).toBeNull();
   });
 });

@@ -111,6 +111,7 @@ export function GraphExplorerPage() {
   const [graphError, setGraphError] = useState<string | null>(null);
   const [graphHops, setGraphHops] = useState(2);
   const [graphRelationType, setGraphRelationType] = useState("");
+  const [graphObjectType, setGraphObjectType] = useState("");
   const [wiki, setWiki] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [toast, setToast] = useState("");
@@ -189,7 +190,7 @@ export function GraphExplorerPage() {
       const d = await ont.getObject(t, id);
       setDetail(d as Record<string, unknown>);
       setSearchParams(buildExplorerSearchParams(t, id, searchParams), { replace: true });
-      await loadGraph(t, id, graphHops, graphRelationType);
+      await loadGraph(t, id, graphHops, graphRelationType, graphObjectType);
       setDetailOpen(true);
       setDetailTab("overview");
       try {
@@ -206,7 +207,7 @@ export function GraphExplorerPage() {
     }
   }
 
-  async function loadGraph(t: string, id: string, hops: number, relationType: string) {
+  async function loadGraph(t: string, id: string, hops: number, relationType: string, objectType: string) {
     setGraphLoading(true);
     setGraphError(null);
     try {
@@ -215,7 +216,7 @@ export function GraphExplorerPage() {
         hops,
         maxNodes: 500,
         direction: "both",
-        objectTypes: [],
+        objectTypes: objectType ? [...new Set([t, objectType])] : [],
         relationTypes: relationType ? [relationType] : [],
         graphDomains: ["domain"],
       });
@@ -243,6 +244,13 @@ export function GraphExplorerPage() {
   const graphRelationTypes = useMemo(
     () => [...new Set(graphSnapshot?.edges.map((edge) => edge.relationType) || [])].sort(),
     [graphSnapshot],
+  );
+  const graphObjectTypes = useMemo(
+    () => [...new Set([
+      ...(graphSnapshot?.nodes.map((node) => node.objectType) || []),
+      ...(graphObjectType ? [graphObjectType] : []),
+    ])].sort(),
+    [graphSnapshot, graphObjectType],
   );
 
   function selectObject(nextType: string, nextId: string) {
@@ -526,7 +534,7 @@ export function GraphExplorerPage() {
                   onChange={(event) => {
                     const hops = Number(event.target.value);
                     setGraphHops(hops);
-                    void loadGraph(typeId, objectId, hops, graphRelationType);
+                    void loadGraph(typeId, objectId, hops, graphRelationType, graphObjectType);
                   }}
                 >
                   {[1, 2, 3, 4, 5].map((hops) => <option key={hops} value={hops}>{hops}</option>)}
@@ -540,11 +548,26 @@ export function GraphExplorerPage() {
                   onChange={(event) => {
                     const relationType = event.target.value;
                     setGraphRelationType(relationType);
-                    void loadGraph(typeId, objectId, graphHops, relationType);
+                    void loadGraph(typeId, objectId, graphHops, relationType, graphObjectType);
                   }}
                 >
                   <option value="">全部关系</option>
                   {graphRelationTypes.map((relationType) => <option key={relationType}>{relationType}</option>)}
+                </select>
+              </label>
+              <label>
+                类型过滤
+                <select
+                  aria-label="对象类型过滤"
+                  value={graphObjectType}
+                  onChange={(event) => {
+                    const objectType = event.target.value;
+                    setGraphObjectType(objectType);
+                    void loadGraph(typeId, objectId, graphHops, graphRelationType, objectType);
+                  }}
+                >
+                  <option value="">全部类型</option>
+                  {graphObjectTypes.map((objectType) => <option key={objectType}>{objectType}</option>)}
                 </select>
               </label>
             </div>

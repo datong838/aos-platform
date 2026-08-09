@@ -20,11 +20,14 @@ export function normalizeGraphSnapshot(value: unknown): GraphSnapshot {
   if (scope.orgId !== tenant.orgId || scope.workspaceId !== tenant.projectId) {
     throw new Error("GraphSnapshot scope 与当前组织/工作区不一致");
   }
-  if (raw.sourceAuthority !== "ecom_authoritative") {
-    throw new Error("当前页面只接受 ecom_authoritative Domain Graph");
+  if (raw.graphDomain !== "domain" && raw.graphDomain !== "operational_lineage") {
+    throw new Error("GraphSnapshot graphDomain 无效");
   }
-  if (raw.graphDomain !== "domain") {
-    throw new Error("当前页面只接受 domain GraphSnapshot");
+  const expectedAuthority = raw.graphDomain === "domain"
+    ? "ecom_authoritative"
+    : "operational_authoritative";
+  if (raw.sourceAuthority !== expectedAuthority) {
+    throw new Error("GraphSnapshot authority 与图域不匹配");
   }
   if (typeof raw.schemaEtag !== "string" || !raw.schemaEtag) {
     throw new Error("GraphSnapshot 缺少 schemaEtag");
@@ -58,7 +61,7 @@ export function normalizeGraphSnapshot(value: unknown): GraphSnapshot {
       || typeof edge.source !== "string" || !nodeKeys.has(edge.source)
       || typeof edge.target !== "string" || !nodeKeys.has(edge.target)
       || !hasKnownGraphMetadata(edge)
-      || edge.graphDomain !== "domain"
+      || edge.graphDomain !== raw.graphDomain
       || edge.edgeAuthority !== "authoritative"
     ) {
       throw new Error("GraphSnapshot edge authority 或端点合同无效");

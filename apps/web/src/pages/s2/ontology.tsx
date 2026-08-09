@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { apiGet, apiPost } from "../../api/client";
 import { getOntologyClient } from "../../api/ontologyClient";
+import { queryAuthoritativeGraph } from "../../api/ontologyGraph";
+import type { GraphDomain, GraphSnapshot } from "../../api/ontologyExplorerContracts";
 import { useOntologyObject } from "../../api/ontologyHooks";
+import { OntologyGraphCanvas } from "../../components/ontology/OntologyGraphCanvas";
 import {
   BpBanner,
   BpLinkRow,
@@ -61,6 +64,12 @@ export function GraphHealthPage() {
   const [ttlMsg, setTtlMsg] = useState("");
   const [ttlBusy, setTtlBusy] = useState(false);
   const [ttlPreview, setTtlPreview] = useState<TtlRunResult | null>(null);
+  const [graphDomain, setGraphDomain] = useState<GraphDomain>("domain");
+  const [graphSeedType, setGraphSeedType] = useState("Payment");
+  const [graphSeedId, setGraphSeedId] = useState("");
+  const [graphSnapshot, setGraphSnapshot] = useState<GraphSnapshot | null>(null);
+  const [graphBusy, setGraphBusy] = useState(false);
+  const [graphError, setGraphError] = useState<string | null>(null);
 
   const m = data?.metrics;
   const issues = data?.issues || [];
@@ -117,6 +126,40 @@ export function GraphHealthPage() {
       setTtlMsg(e instanceof Error ? e.message : String(e));
     } finally {
       setTtlBusy(false);
+    }
+  }
+
+  async function inspectGraph(nextType = graphSeedType, nextId = graphSeedId) {
+    setGraphBusy(true);
+    setGraphError(null);
+    try {
+      let resolvedId = nextId.trim();
+      if (!resolvedId && graphDomain === "domain") {
+        const items = await getOntologyClient().listObjects(nextType);
+        resolvedId = items.items[0] ? String(items.items[0].id) : "";
+      }
+      if (!resolvedId) {
+        throw new Error(graphDomain === "operational_lineage"
+          ? "运行血缘层需要填写 Task/Plan/Action/Evidence 等稳定对象 ID"
+          : "当前 Object Type 没有可用于检查的真实对象");
+      }
+      const snapshot = await queryAuthoritativeGraph({
+        seeds: [{ objectType: nextType, objectId: resolvedId }],
+        hops: 2,
+        maxNodes: 300,
+        direction: "both",
+        objectTypes: [],
+        relationTypes: [],
+        graphDomains: [graphDomain],
+      });
+      setGraphSeedType(nextType);
+      setGraphSeedId(resolvedId);
+      setGraphSnapshot(snapshot);
+    } catch (graphInspectError) {
+      setGraphSnapshot(null);
+      setGraphError(String((graphInspectError as Error).message || graphInspectError));
+    } finally {
+      setGraphBusy(false);
     }
   }
 
@@ -232,6 +275,57 @@ export function GraphHealthPage() {
           },
         ]}
       />
+
+      <section className="ont-section" aria-labelledby="graph-inspector-title">
+        <h2 id="graph-inspector-title" className="aos-text" style={{ fontSize: "0.875rem" }}>
+          权威图检查器
+        </h2>
+        <p className="muted" style={{ fontSize: "0.8rem" }}>
+          Domain Graph 与 Operational Lineage 分层读取；每个快照只包含一个图域，不在前端混写事实。
+        </p>
+        <BpToolbar>
+          <label>
+            图域
+            <select
+              aria-label="图检查器图域"
+              value={graphDomain}
+              onChange={(event) => {
+                setGraphDomain(event.target.value as GraphDomain);
+                setGraphSnapshot(null);
+                setGraphError(null);
+              }}
+            >
+              <option value="domain">领域知识图谱</option>
+              <option value="operational_lineage">运行血缘图</option>
+            </select>
+          </label>
+          <label>
+            对象类型
+            <input aria-label="图检查器对象类型" value={graphSeedType} onChange={(event) => setGraphSeedType(event.target.value)} />
+          </label>
+          <label>
+            稳定对象 ID
+            <input
+              aria-label="图检查器对象 ID"
+              value={graphSeedId}
+              placeholder={graphDomain === "domain" ? "留空自动选择首个真实对象" : "必须填写"}
+              onChange={(event) => setGraphSeedId(event.target.value)}
+            />
+          </label>
+          <button type="button" className="btn" disabled={graphBusy || !graphSeedType.trim()} onClick={() => void inspectGraph()}>
+            {graphBusy ? "读取中…" : "读取权威快照"}
+          </button>
+        </BpToolbar>
+        {graphError && <p className="error" role="alert">{graphError}</p>}
+        {(graphSnapshot || graphBusy) && (
+          <OntologyGraphCanvas
+            snapshot={graphSnapshot}
+            loading={graphBusy}
+            error={graphError}
+            onExpandNode={(node) => void inspectGraph(node.objectType, node.objectId)}
+          />
+        )}
+      </section>
 
       {(data?.archivePreview?.length ?? 0) > 0 ? (
         <>

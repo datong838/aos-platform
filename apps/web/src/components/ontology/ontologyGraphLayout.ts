@@ -141,3 +141,40 @@ export function stableObjectTypeColor(objectType: string): string {
   }
   return palette[Math.abs(hash) % palette.length];
 }
+
+export function findVisibleGraphPath(
+  snapshot: GraphSnapshot,
+  startKey: string,
+  endKey: string,
+): { nodeKeys: Set<string>; edgeKeys: Set<string> } | null {
+  if (startKey === endKey) return { nodeKeys: new Set([startKey]), edgeKeys: new Set() };
+  const adjacency = new Map<string, Array<{ node: string; edge: string }>>();
+  snapshot.edges.forEach((edge) => {
+    adjacency.set(edge.source, [...(adjacency.get(edge.source) || []), { node: edge.target, edge: edge.key }]);
+    adjacency.set(edge.target, [...(adjacency.get(edge.target) || []), { node: edge.source, edge: edge.key }]);
+  });
+  const queue = [startKey];
+  const previous = new Map<string, { node: string; edge: string } | null>([[startKey, null]]);
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    for (const next of (adjacency.get(current) || []).sort((a, b) => a.node.localeCompare(b.node))) {
+      if (previous.has(next.node)) continue;
+      previous.set(next.node, { node: current, edge: next.edge });
+      if (next.node === endKey) {
+        const nodeKeys = new Set<string>([endKey]);
+        const edgeKeys = new Set<string>();
+        let cursor = endKey;
+        while (cursor !== startKey) {
+          const step = previous.get(cursor);
+          if (!step) return null;
+          nodeKeys.add(step.node);
+          edgeKeys.add(step.edge);
+          cursor = step.node;
+        }
+        return { nodeKeys, edgeKeys };
+      }
+      queue.push(next.node);
+    }
+  }
+  return null;
+}
