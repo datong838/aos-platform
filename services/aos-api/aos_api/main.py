@@ -260,6 +260,10 @@ def create_app() -> FastAPI:
     application.include_router(create_model_router())
     application.include_router(create_apollo_router())
 
+    from aos_api.ontology_contract_openapi import install_ontology_contract_openapi
+
+    install_ontology_contract_openapi(application)
+
     # Reset lifespan to avoid the include_router lifi_chain with 500+ routers.
     application.router.lifespan_context = lifespan
 

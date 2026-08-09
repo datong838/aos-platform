@@ -9,7 +9,7 @@ import time
 import uuid
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from aos_api.public_contracts import TaskStatus, normalize_task_status, transition_task_status
 
@@ -45,6 +45,19 @@ class ActionRequest(BaseModel):
     requires_approval: bool = False
     side_effect: bool = False
     max_retries: int = 3
+
+    @model_validator(mode="after")
+    def enforce_server_risk_floor(self) -> "ActionRequest":
+        # Legacy TAOR does not yet have the UA2 ActionType policy service. Until
+        # it does, fail closed: only known read-only kinds may remain low risk.
+        if self.action_type not in {"llm_call", "ontology_query"}:
+            self.risk_level = "high"
+            self.requires_approval = True
+            self.side_effect = True
+        elif self.side_effect:
+            self.risk_level = "medium" if self.risk_level == "low" else self.risk_level
+            self.requires_approval = True
+        return self
 
 
 # ── Checkpoint ──

@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 import pytest
 
-from aos_api.aip_task_model import Task
+from aos_api.aip_task_model import ActionRequest, Task
 from aos_api.errors import register_exception_handlers
 from aos_api.public_contracts import ContractViolation, TaskStatus
 from aos_api.routers import phase3_aip_logic
@@ -26,6 +26,30 @@ def test_task_model_maps_created_and_rejects_illegal_transition() -> None:
     task.transition("planning")
     with pytest.raises(ContractViolation):
         task.transition("completed")
+
+
+@pytest.mark.parametrize("action_type", ["tool_call", "action_writeback", "unknown_plugin_action"])
+def test_action_request_refuses_client_risk_downgrade(action_type: str) -> None:
+    action = ActionRequest(
+        action_type=action_type,
+        risk_level="low",
+        requires_approval=False,
+        side_effect=False,
+    )
+    assert action.risk_level == "high"
+    assert action.requires_approval is True
+    assert action.side_effect is True
+
+
+def test_explicit_side_effect_requires_approval_even_for_read_kind() -> None:
+    action = ActionRequest(
+        action_type="ontology_query",
+        risk_level="low",
+        requires_approval=False,
+        side_effect=True,
+    )
+    assert action.risk_level == "medium"
+    assert action.requires_approval is True
 
 
 def test_task_api_keeps_main_shape_and_uses_canonical_lifecycle(task_client) -> None:

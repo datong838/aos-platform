@@ -27,7 +27,22 @@ ONTOLOGY_EXPLORER_ERROR_CODES = (
     "EXPLORATION_ARCHIVE_REQUIRED",
 )
 
-SourceAuthority = Literal["ecom_authoritative", "compat_projection"]
+GraphDomain = Literal["domain", "operational_lineage"]
+EdgeAuthority = Literal["authoritative", "inferred", "compat_projection"]
+SourceAuthority = Literal[
+    "ecom_authoritative",
+    "operational_authoritative",
+    "knowledge_authoritative",
+    "compat_projection",
+]
+KnowledgeSubjectType = Literal[
+    "object_type",
+    "object_instance",
+    "action_type",
+    "rule",
+    "platform",
+    "task_type",
+]
 ExplorationViewMode = Literal["table", "graph", "annotation"]
 ExplorationVisibility = Literal["private", "workspace"]
 
@@ -49,6 +64,36 @@ class ExplorationCreateDTO(FrozenDTO):
 class ObjectRefDTO(FrozenDTO):
     objectType: str = Field(min_length=1, max_length=128)
     objectId: str = Field(min_length=1, max_length=512)
+
+
+class LinkRefDTO(FrozenDTO):
+    relationType: str = Field(min_length=1, max_length=128)
+    source: ObjectRefDTO
+    target: ObjectRefDTO
+
+
+class KnowledgeSubjectRefDTO(FrozenDTO):
+    subjectType: KnowledgeSubjectType
+    subjectId: str = Field(min_length=1, max_length=512)
+    objectRef: ObjectRefDTO | None = None
+
+    @model_validator(mode="after")
+    def require_object_ref_for_instance(self) -> "KnowledgeSubjectRefDTO":
+        if self.subjectType == "object_instance" and self.objectRef is None:
+            raise ValueError("object_instance knowledge subjects require objectRef")
+        if self.subjectType != "object_instance" and self.objectRef is not None:
+            raise ValueError("objectRef is only valid for object_instance knowledge subjects")
+        return self
+
+
+class TaskRefDTO(FrozenDTO):
+    taskId: str = Field(min_length=1, max_length=512)
+    revision: int | None = Field(default=None, ge=1)
+
+
+class EvidenceRefDTO(FrozenDTO):
+    evidenceId: str = Field(min_length=1, max_length=512)
+    revision: int = Field(ge=1)
 
 
 class ObjectSetCreateDTO(FrozenDTO):
@@ -74,6 +119,7 @@ class GraphQueryDTO(FrozenDTO):
     direction: Literal["out", "in", "both"] = "both"
     objectTypes: list[str] = Field(default_factory=list, max_length=64)
     relationTypes: list[str] = Field(default_factory=list, max_length=128)
+    graphDomains: list[GraphDomain] = Field(default_factory=lambda: ["domain"], min_length=1, max_length=2)
     cursor: str | None = Field(default=None, max_length=2048)
 
 
@@ -96,14 +142,32 @@ class GraphNodeDTO(FrozenDTO):
     masked: bool = True
 
 
+class GraphValidityDTO(FrozenDTO):
+    validFrom: str | None = Field(default=None, max_length=64)
+    validUntil: str | None = Field(default=None, max_length=64)
+
+
 class GraphEdgeDTO(FrozenDTO):
     key: str = Field(min_length=1)
     relationType: str = Field(min_length=1)
     source: str = Field(min_length=1)
     target: str = Field(min_length=1)
     direction: Literal["out", "in"]
+    graphDomain: GraphDomain | None = None
+    edgeAuthority: EdgeAuthority | None = None
+    sourceRevision: str | None = Field(default=None, max_length=512)
+    validity: GraphValidityDTO | None = None
+    evidenceRefs: list[EvidenceRefDTO] = Field(default_factory=list, max_length=64)
+    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
+    inferenceBasis: str | None = Field(default=None, max_length=1024)
 
-
+    @model_validator(mode="after")
+    def require_inference_metadata(self) -> "GraphEdgeDTO":
+        if self.edgeAuthority == "inferred" and (
+            self.confidence is None or self.inferenceBasis is None
+        ):
+            raise ValueError("inferred edges require confidence and inferenceBasis")
+        return self
 class GraphPageDTO(FrozenDTO):
     truncated: bool
     nextCursor: str | None = None
@@ -117,10 +181,10 @@ class GraphLimitsDTO(FrozenDTO):
 class GraphSnapshotDTO(FrozenDTO):
     scope: GraphScopeDTO
     sourceAuthority: SourceAuthority
+    graphDomain: GraphDomain | None = None
     schemaEtag: str = Field(min_length=1)
     snapshot: GraphSnapshotMetaDTO
     nodes: list[GraphNodeDTO]
     edges: list[GraphEdgeDTO]
     page: GraphPageDTO
     limits: GraphLimitsDTO
-
