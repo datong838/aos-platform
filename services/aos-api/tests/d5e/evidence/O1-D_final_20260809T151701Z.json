@@ -1,0 +1,40 @@
+{
+  "authorityObjectCount": 617,
+  "bareGraphEndpointCount": 0,
+  "bareObjectIdCount": 0,
+  "canonicalMismatchCount": 0,
+  "canonicalProjectionCount": 617,
+  "canonicalSetHash": "425f12cd7e2db7c383965ade1acce76461fb0b820c87decb1636b6f6e01334bb",
+  "crossTenantCanary": {
+    "scope": "dev-org/dev-project",
+    "visibleAliasRows": 0,
+    "visibleCanonicalCoreObjects": 0
+  },
+  "gate": "O1-D",
+  "generatedAt": "2026-08-09T15:17:01.708289+00:00",
+  "gitSha": "72f210311e6435a8e9c89e9245177edceb2f608e",
+  "pendingOutboxCount": 0,
+  "reportHash": "9765d6bd94551dd999d2c5859aae08087eb49daccb06623ae1855af86e725bed",
+  "restoreRehearsalRows": 511,
+  "runId": "22a0de53-78a2-42c0-8fcc-b05a225d796e",
+  "schemaVersion": 1,
+  "scope": {
+    "orgId": "org-org",
+    "workspaceId": "dev-project"
+  },
+  "sidecar": [
+    {
+      "classification": "ALREADY_EQUAL",
+      "count": 100,
+      "min_cycle": 2,
+      "state": "cleaned"
+    },
+    {
+      "classification": "COPY",
+      "count": 411,
+      "min_cycle": 2,
+      "state": "cleaned"
+    }
+  ],
+  "status": "GREEN"
+}
