@@ -1771,10 +1771,41 @@
   color: var(--aos-accent);
 }
 .p-objx-workspace.is-focus {
-  min-height: calc(100vh - 260px);
+  position: fixed;
+  z-index: 1200;
+  inset: 12px;
+  min-height: 0;
+  border: 1px solid var(--aos-border-strong);
+  border-radius: 6px;
+  box-shadow: var(--aos-shadow-lg);
 }
 .p-objx-workspace.is-focus .p-objx-canvas-shell {
-  min-height: calc(100vh - 260px);
+  min-height: 0;
+  height: calc(100vh - 24px);
+}
+.p-objx-workspace.is-focus .o1-graph {
+  height: 100%;
+  min-height: 0;
+}
+.p-objx-graph-query-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.p-objx-graph-query-controls label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--aos-text-tertiary);
+  font-size: 11px;
+}
+.p-objx-graph-query-controls select {
+  min-height: 30px;
+  border: 1px solid var(--aos-border);
+  border-radius: 4px;
+  background: var(--aos-surface);
+  color: var(--aos-text-secondary);
 }
 .p-objx-detail-drawer {
   position: relative;
@@ -1938,6 +1969,9 @@
   .p-objx-view-bar { align-items: flex-start; }
   .p-objx-view-center { flex-direction: column; align-items: flex-end; }
   .p-objx-type-pill { max-width: 100%; }
+  .p-objx-graph-query-controls { width: 100%; margin-left: 0; }
+  .p-objx-workspace.is-focus { inset: 0; border: 0; border-radius: 0; }
+  .p-objx-workspace.is-focus .p-objx-canvas-shell { height: 100vh; }
 }
 
 /* workshop-canvas 画布 + widget */

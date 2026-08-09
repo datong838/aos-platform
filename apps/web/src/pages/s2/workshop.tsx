@@ -16,6 +16,7 @@ import {
   resolveExplorerColumns,
   toggleObjectSelection,
 } from "../../components/ontology/ObjectExplorerWorkspace";
+import { OntologyGraphCanvas } from "../../components/ontology/OntologyGraphCanvas";
 import { apiGet, apiPost, S2Chrome, useJsonGet } from "./shared";
 import {
   BpBanner,
@@ -106,6 +107,10 @@ export function GraphExplorerPage() {
   const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
   const [neighbors, setNeighbors] = useState<Neighbor[]>([]);
   const [graphSnapshot, setGraphSnapshot] = useState<GraphSnapshot | null>(null);
+  const [graphLoading, setGraphLoading] = useState(false);
+  const [graphError, setGraphError] = useState<string | null>(null);
+  const [graphHops, setGraphHops] = useState(2);
+  const [graphRelationType, setGraphRelationType] = useState("");
   const [wiki, setWiki] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [toast, setToast] = useState("");
@@ -184,33 +189,7 @@ export function GraphExplorerPage() {
       const d = await ont.getObject(t, id);
       setDetail(d as Record<string, unknown>);
       setSearchParams(buildExplorerSearchParams(t, id, searchParams), { replace: true });
-      try {
-        const snapshot = await queryAuthoritativeGraph({
-          seeds: [{ objectType: t, objectId: id }],
-          hops: 2,
-          maxNodes: 100,
-          direction: "both",
-          objectTypes: [],
-          relationTypes: [],
-          graphDomains: ["domain"],
-        });
-        setGraphSnapshot(snapshot);
-        const nodeByKey = new Map(snapshot.nodes.map((node) => [node.key, node]));
-        const seedKey = `${t}:${id}`;
-        setNeighbors(snapshot.edges.flatMap((edge) => {
-          const otherKey = edge.source === seedKey
-            ? edge.target
-            : edge.target === seedKey
-              ? edge.source
-              : null;
-          const other = otherKey ? nodeByKey.get(otherKey) : undefined;
-          return other ? [{ id: other.objectId, type: other.objectType, rel: edge.relationType }] : [];
-        }));
-      } catch (graphError) {
-        setGraphSnapshot(null);
-        setNeighbors([]);
-        setErr(`权威图查询失败：${String((graphError as Error).message || graphError)}`);
-      }
+      await loadGraph(t, id, graphHops, graphRelationType);
       setDetailOpen(true);
       setDetailTab("overview");
       try {
@@ -227,9 +206,43 @@ export function GraphExplorerPage() {
     }
   }
 
-  const graphNodes = useMemo(
-    () => buildGraphNodes(detail, neighbors, typeId),
-    [detail, neighbors, typeId],
+  async function loadGraph(t: string, id: string, hops: number, relationType: string) {
+    setGraphLoading(true);
+    setGraphError(null);
+    try {
+      const snapshot = await queryAuthoritativeGraph({
+        seeds: [{ objectType: t, objectId: id }],
+        hops,
+        maxNodes: 500,
+        direction: "both",
+        objectTypes: [],
+        relationTypes: relationType ? [relationType] : [],
+        graphDomains: ["domain"],
+      });
+      setGraphSnapshot(snapshot);
+      const nodeByKey = new Map(snapshot.nodes.map((node) => [node.key, node]));
+      const seedKey = `${t}:${id}`;
+      setNeighbors(snapshot.edges.flatMap((edge) => {
+        const otherKey = edge.source === seedKey
+          ? edge.target
+          : edge.target === seedKey
+            ? edge.source
+            : null;
+        const other = otherKey ? nodeByKey.get(otherKey) : undefined;
+        return other ? [{ id: other.objectId, type: other.objectType, rel: edge.relationType }] : [];
+      }));
+    } catch (graphLoadError) {
+      setGraphSnapshot(null);
+      setNeighbors([]);
+      setGraphError(`权威图查询失败：${String((graphLoadError as Error).message || graphLoadError)}`);
+    } finally {
+      setGraphLoading(false);
+    }
+  }
+
+  const graphRelationTypes = useMemo(
+    () => [...new Set(graphSnapshot?.edges.map((edge) => edge.relationType) || [])].sort(),
+    [graphSnapshot],
   );
 
   function selectObject(nextType: string, nextId: string) {
@@ -503,6 +516,39 @@ export function GraphExplorerPage() {
               <span className="p-objx-selection-count">已选择 {selectedKeys.length} 条</span>
             )}
           </div>
+          {viewMode === "graph" && objectId && (
+            <div className="p-objx-graph-query-controls" aria-label="权威图查询条件">
+              <label>
+                跳数
+                <select
+                  aria-label="图查询跳数"
+                  value={graphHops}
+                  onChange={(event) => {
+                    const hops = Number(event.target.value);
+                    setGraphHops(hops);
+                    void loadGraph(typeId, objectId, hops, graphRelationType);
+                  }}
+                >
+                  {[1, 2, 3, 4, 5].map((hops) => <option key={hops} value={hops}>{hops}</option>)}
+                </select>
+              </label>
+              <label>
+                关系
+                <select
+                  aria-label="关系类型过滤"
+                  value={graphRelationType}
+                  onChange={(event) => {
+                    const relationType = event.target.value;
+                    setGraphRelationType(relationType);
+                    void loadGraph(typeId, objectId, graphHops, relationType);
+                  }}
+                >
+                  <option value="">全部关系</option>
+                  {graphRelationTypes.map((relationType) => <option key={relationType}>{relationType}</option>)}
+                </select>
+              </label>
+            </div>
+          )}
         </div>
 
         {columnResolution.schemaIncomplete && viewMode === "table" && (
@@ -592,53 +638,16 @@ export function GraphExplorerPage() {
                 </table>
               </div>
             ) : viewMode === "graph" ? (
-              <div className="bp-graph-canvas">
-                <p className="muted" style={{ fontSize: "0.75rem", marginBottom: "0.75rem" }}>
-                  {graphSnapshot
-                    ? `权威知识图谱 · ${graphSnapshot.nodes.length} 节点 / ${graphSnapshot.edges.length} 边 · watermark ${graphSnapshot.snapshot.watermark}`
-                    : "请选择对象以加载权威知识图谱"}
-                </p>
-                <div className="bp-graph-stage">
-                  {graphNodes.center && (
-                    <button
-                      type="button"
-                      className="bp-graph-node bp-graph-node-center"
-                      onClick={() => setToast(`中心节点 ${graphNodes.center!.label}`)}
-                    >
-                      {graphNodes.center.label}
-                    </button>
-                  )}
-                  {graphNodes.outer.map((n, i) => {
-                    const positions = [
-                      "bp-graph-pos-n",
-                      "bp-graph-pos-e",
-                      "bp-graph-pos-s",
-                      "bp-graph-pos-w",
-                      "bp-graph-pos-ne",
-                      "bp-graph-pos-nw",
-                    ];
-                    return (
-                      <button
-                        key={n.key}
-                        type="button"
-                        className={`bp-graph-node ${positions[i % positions.length]}`}
-                        onClick={() => selectObject(n.type, n.id)}
-                        title={n.rel}
-                      >
-                        {n.label}
-                        {n.rel && (
-                          <span className="muted" style={{ display: "block", fontSize: "0.6rem" }}>
-                            {n.rel}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                  {!graphNodes.center && (
-                    <p className="muted" style={{ textAlign: "center" }}>暂无实例 · 请到数据源管理接入源</p>
-                  )}
-                </div>
-              </div>
+              <OntologyGraphCanvas
+                snapshot={graphSnapshot}
+                loading={graphLoading}
+                error={graphError}
+                onSelectNode={(node) => {
+                  setToast(`已选择 ${node.objectType}/${node.objectId}`);
+                  if (node.objectType === typeId && node.objectId === objectId) setDetailOpen(true);
+                }}
+                onExpandNode={(node) => selectObject(node.objectType, node.objectId)}
+              />
             ) : (
               <div className="p-objx-annotation-editor">
                 <h3>新建注释草稿</h3>

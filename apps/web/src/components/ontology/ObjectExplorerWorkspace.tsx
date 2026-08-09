@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 export type ExplorerColumn = {
   key: string;
@@ -162,6 +162,15 @@ export function ObjectExplorerWorkspace({
   onCloseDetail: () => void;
   onToggleFocus: () => void;
 }) {
+  useEffect(() => {
+    if (!focusMode) return;
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onToggleFocus();
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [focusMode, onToggleFocus]);
+
   return (
     <section
       className={getExplorerWorkspaceClasses({ detailOpen, focusMode })}
@@ -174,7 +183,7 @@ export function ObjectExplorerWorkspace({
           aria-pressed={focusMode}
           onClick={onToggleFocus}
         >
-          {focusMode ? "退出专注" : "展开画布"}
+          {focusMode ? "退出全屏" : "全屏画布"}
         </button>
         {canvas}
       </div>
