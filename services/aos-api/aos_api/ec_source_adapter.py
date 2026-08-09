@@ -1,7 +1,6 @@
 """D1-W1: Niushop SourceAdapter — 从只读源读取行流。
 
-骨架阶段：回退到合成 fixture（sample_input 透传），与原 ec_live_executor 行为等价。
-Worker W1 实现：切换到 Niushop 只读 MySQL 源（meta_source 查连接配置 + READ ONLY 事务）。
+真实执行只允许从已登记的只读数据源读取；缺失 source_id 必须失败关闭。
 
 FR-D1-4 关键约束：
 1. 从 node.config 取 source_id → 查 meta_source 拿连接配置（不接 config 直传连接串）
@@ -95,9 +94,12 @@ def fetch_source_rows(
     # 尝试找 source 节点并取其 config
     node_config = _resolve_source_node_config(nodes, node_id)
 
-    # 无 source_id → 回退 sample_input 透传（骨架行为，向后兼容）
+    # O1-R1：真实执行禁止 sample_input 隐式回退。
     if node_config is None or not node_config.get("source_id"):
-        return _fallback_sample_input(sample_input)
+        raise RuntimeError(
+            f"Source node '{node_id or '<auto>'}' has no source_id; "
+            "live execution refused"
+        )
 
     # 查 meta_source 拿连接配置（所有分支都需要）
     source_id = node_config["source_id"]
@@ -127,21 +129,13 @@ def _resolve_source_node_config(
         for node in nodes:
             if getattr(node, "id", None) == node_id:
                 return getattr(node, "config", None) or {}
-    # O1-B: node_id=None 时，找第一个 source 节点
+        return None
+    # node_id=None 时，找第一个 source 节点
     for node in nodes:
         nt = str(getattr(node, "node_type", "") or "").lower()
         if nt == "source":
             return getattr(node, "config", None) or {}
     return None
-
-
-def _fallback_sample_input(sample_input: Any) -> list[dict[str, Any]]:
-    """骨架行为：从 sample_input 构造行流（与原 ec_live_executor 行为等价）。"""
-    if isinstance(sample_input, dict):
-        return [sample_input]
-    elif isinstance(sample_input, list):
-        return [r for r in sample_input if isinstance(r, dict)]
-    return []
 
 
 def _fetch_from_niushop(
@@ -216,18 +210,24 @@ def _fetch_from_jdbc_ssh(
     """
     table = node_config.get("table") or node_config.get("source_table", "")
     pk = node_config.get("pk", "id")
+    watermark_col = node_config.get("watermark_col", "modify_time")
     cursor = node_config.get("cursor")
+    initial = bool(node_config.get("initial", False))
 
     # 通用 JDBC SSH 运行时（with 上下文管理 SSH 隧道 + JDBC 连接生命周期）
     with JdbcConnectorRuntime(props) as rt:
         # 游标增量：如有 cursor 则 (watermark, pk) 二元组；初装传 None
-        if cursor:
-            watermark = cursor.get("watermark")
-            primary_key = cursor.get("primary_key", pk)
-            read_cursor: tuple[Any, str] | None = (watermark, primary_key)
-        else:
-            read_cursor = None
-        rows = rt.read_rows(table, cursor=read_cursor)
+        composite_cursor = None
+        if cursor and not initial:
+            composite_cursor = (
+                cursor.get("watermark"), cursor.get("primary_key"),
+                watermark_col, pk,
+            )
+        rows = rt.read_rows(
+            table,
+            composite_cursor=composite_cursor,
+            limit=SAMPLE_LIMIT if composite_cursor is not None else None,
+        )
 
     # 数据清洗：软删行过滤 + PII 排除 + 0 时间转 null（复用原逻辑）
     pipeline_id = getattr(pipeline, "id", "") or ""

@@ -344,10 +344,10 @@ export const NAV_ITEMS: NavItem[] = [
   {
     id: "ontology-funnel",
     path: "/ontology/funnel",
-    label: "本体提案",
+    label: "Funnel 管道",
     icon: "funnel",
     status: "live",
-    crumbs: ["本体", "本体提案"],
+    crumbs: ["本体", "Funnel 管道"],
   },
   {
     id: "funnel",
@@ -392,10 +392,10 @@ export const NAV_ITEMS: NavItem[] = [
   {
     id: "ontology-branches",
     path: "/ontology/branches",
-    label: "分支管理",
+    label: "分支与 Overlay",
     icon: "git",
     status: "live",
-    crumbs: ["本体", "分支管理"],
+    crumbs: ["本体", "分支与 Overlay"],
   },
 
   { section: "管道与数据治理" },

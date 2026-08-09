@@ -22,6 +22,7 @@ from __future__ import annotations
 import atexit
 import hashlib
 import os
+import re
 import socket
 import subprocess
 import tempfile
@@ -289,6 +290,8 @@ def _build_db_conn(config: dict[str, Any], host: str, port: int) -> _CachedConn:
         user=config.get("username") or config.get("user") or "",
         password=password,
         database=config["database"],
+        connect_timeout=30,
+        read_timeout=30,
         cursorclass=pymysql.cursors.DictCursor,
     )
     return _CachedConn(conn=conn)
@@ -808,7 +811,8 @@ class JdbcConnectorRuntime:
         table: str,
         schema: str | None = None,
         cursor: tuple[Any, str] | None = None,
-        limit: int = 100,
+        limit: int | None = 100,
+        composite_cursor: tuple[Any, Any, str, str] | None = None,
     ) -> list[dict[str, Any]]:
         """读取表行流（带游标增量）。
 
@@ -817,16 +821,43 @@ class JdbcConnectorRuntime:
         - 有 cursor：SELECT * FROM {table} WHERE {pk} > %s ORDER BY {pk} LIMIT %s
           cursor = (watermark, pk)
         """
+        identifier = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+        for value in (table, schema):
+            if value is not None and not identifier.fullmatch(value):
+                raise ValueError(f"unsafe SQL identifier: {value!r}")
+        if limit is not None and (limit < 1 or limit > 10_000):
+            raise ValueError("limit must be between 1 and 10000")
+
         table_ref = f"`{schema}`.`{table}`" if schema else f"`{table}`"
-        if cursor:
+        if composite_cursor:
+            watermark, primary_key_value, watermark_column, primary_key_column = composite_cursor
+            for value in (watermark_column, primary_key_column):
+                if not identifier.fullmatch(value):
+                    raise ValueError(f"unsafe SQL identifier: {value!r}")
+            sql = (
+                f"SELECT * FROM {table_ref} WHERE "
+                f"(`{watermark_column}` > %s OR "
+                f"(`{watermark_column}` = %s AND `{primary_key_column}` > %s)) "
+                f"ORDER BY `{watermark_column}`, `{primary_key_column}`"
+            )
+            params = (watermark, watermark, primary_key_value)
+        elif cursor:
             watermark, pk = cursor
-            sql = f"SELECT * FROM {table_ref} WHERE `{pk}` > %s ORDER BY `{pk}` LIMIT %s"
-            params: tuple[Any, ...] = (watermark, limit)
+            if not identifier.fullmatch(pk):
+                raise ValueError(f"unsafe SQL identifier: {pk!r}")
+            sql = f"SELECT * FROM {table_ref} WHERE `{pk}` > %s ORDER BY `{pk}`"
+            params: tuple[Any, ...] = (watermark,)
         else:
-            sql = f"SELECT * FROM {table_ref} LIMIT %s"
-            params = (limit,)
+            sql = f"SELECT * FROM {table_ref}"
+            params = ()
+
+        if limit is not None and " LIMIT %s" not in sql:
+            sql += " LIMIT %s"
+            params = (*params, limit)
 
         with self._conn.cursor() as cur:
+            # 连接由运行时缓存复用，因此每次读取前都重新声明只读会话，失败即中止。
+            cur.execute("SET SESSION TRANSACTION READ ONLY")
             cur.execute(sql, params)
             return list(cur.fetchall())
 

@@ -45,8 +45,8 @@ describe("HubFleetPage", () => {
     expect(text).toContain("Hub 舰队总览");
     expect(text).toContain("cn-east-hub-01");
     expect(text).toContain("5 / 6");
-    expect(text).toContain("spoke-prod-sh");
-    expect(text).toContain("spoke-prod-bj");
+    expect(text).toContain("上海生产运行节点");
+    expect(text).toContain("北京生产运行节点");
     expect(text).toContain("spoke-pilot-gz");
     expect(text).toContain("spoke-staging");
     expect(text).toContain("spoke-edge-factory");

@@ -45,7 +45,6 @@ from aos_api.ec_source_adapter import READ_ONLY_SQL, fetch_source_rows
 from aos_api.ecom_core_models import BatchCommand, BatchResult
 from aos_api.logging_facade import configure_logging
 from aos_api.phase5_pipeline_engine import get_engine
-from aos_api.routers.wave_ext import _dlq
 from aos_api.tenant_scope import TenantScope
 
 # 预先完成 logging 配置（与 test_ec_d1_dlq.py / test_ec_d1_negative.py 一致）
@@ -100,13 +99,6 @@ def _reset_engine():
     eng.reset_all_for_tests()
     yield
     eng.reset_all_for_tests()
-
-
-@pytest.fixture(autouse=True)
-def _reset_dlq():
-    _dlq.clear()
-    yield
-    _dlq.clear()
 
 
 def _order_object_row(*, order_id: str = "100", when: datetime = NOW) -> dict[str, Any]:
@@ -212,8 +204,8 @@ def test_exit_gate_g4_dataset_sink_implemented() -> None:
 
     # 返回 dataset 对象
     assert ds is not None
-    # ds.id 是 rid 格式（ri.dataset.<uuid8>）
-    assert ds.id.startswith("ri.dataset.")
+    # Dataset RID 使用当前 AOS canonical namespace。
+    assert ds.id.startswith("ri.aos.main.dataset.")
     # 可构造合法 dataset://catalog/<rid> output_ref
     output_ref = f"dataset://catalog/{ds.id}"
     assert len(output_ref) <= 512
@@ -250,15 +242,17 @@ def test_exit_gate_g5_ot_writer_single_batch_command() -> None:
 
 def test_exit_gate_g6_dlq_has_retry_count_and_max_retry() -> None:
     """退出门 #3: handle_failure 可调用，DLQ 条目有 retry_count=0 和 max_retry=3。"""
-    handle_failure(_FakePipeline("exit-g6"), TEST_SCOPE, RuntimeError("boom"))
-
-    assert len(_dlq) == 1
-    [item] = list(_dlq.values())
+    item = handle_failure(
+        _FakePipeline("exit-g6"), TEST_SCOPE, RuntimeError("boom"),
+        run_id="run-exit-g6",
+    )
+    assert item is not None
     # DLQ 条目有 retry_count 和 max_retry
     assert item["retry_count"] == 0
     assert item["max_retry"] == 3
     # DLQ 条目有错误码、脱敏摘要、时间戳
-    assert item["errorCode"] == "RuntimeError"
+    assert item["errorCode"] == "VALIDATION_ERROR"
+    assert item["sourceErrorCode"] == "UNCLASSIFIED_EXCEPTION"
     assert "boom" in item["reason"]
     assert item["createdAt"]
     # status 为 open（不是 succeeded）
@@ -282,23 +276,10 @@ def test_exit_gate_source_adapter_read_only_transaction() -> None:
         }
     }
 
-    class _RecordingCursor:
-        def __init__(self, rows):
-            self.rows = rows
-            self.executed: list[tuple[str, Any]] = []
-
-        def execute(self, sql, params=None):
-            self.executed.append((sql, params))
-
-        def fetchall(self):
-            return self.rows
-
-        def close(self):
-            pass
-
-    cur = _RecordingCursor(niushop_rows)
-    niushop_conn = MagicMock()
-    niushop_conn.cursor.return_value = cur
+    runtime = MagicMock()
+    runtime.__enter__.return_value = runtime
+    runtime.__exit__.return_value = None
+    runtime.read_rows.return_value = niushop_rows
 
     node = SimpleNamespace(
         id="n-src", node_type="source",
@@ -311,10 +292,7 @@ def test_exit_gate_source_adapter_read_only_transaction() -> None:
             __enter__=MagicMock(return_value=aos_conn),
             __exit__=MagicMock(return_value=None),
         ),
-    ), patch("aos_api.ec_source_adapter.pymysql") as mock_pymysql:
-        mock_pymysql.connect.return_value = niushop_conn
-        mock_pymysql.cursors.DictCursor = MagicMock()
-
+    ), patch("aos_api.ec_source_adapter.JdbcConnectorRuntime", return_value=runtime):
         fetch_source_rows(
             pipeline=SimpleNamespace(id="pl-exit-ro"),
             nodes=[node], node_id="n-src",
@@ -323,15 +301,10 @@ def test_exit_gate_source_adapter_read_only_transaction() -> None:
 
     # READ_ONLY_SQL 常量为 "SET SESSION TRANSACTION READ ONLY"
     assert READ_ONLY_SQL == "SET SESSION TRANSACTION READ ONLY"
-    # 第一个 execute 是 READ ONLY
-    assert len(cur.executed) >= 1
-    assert "SET SESSION TRANSACTION READ ONLY" in cur.executed[0][0]
-    # 无写操作 SQL
-    write_keywords = ("INSERT", "UPDATE", "DELETE", "CREATE", "ALTER", "DROP", "TRUNCATE")
-    for sql, _ in cur.executed:
-        sql_upper = sql.upper()
-        for kw in write_keywords:
-            assert not sql_upper.startswith(kw), f"源库收到写操作 SQL: {kw}"
+    # SourceAdapter 只能通过统一 Runtime 读取；只读 SQL 由 Runtime 专项测试冻结。
+    runtime.read_rows.assert_called_once_with(
+        "ns_goods", composite_cursor=None, limit=None
+    )
 
 
 # ═══════════════════════════════════════════════

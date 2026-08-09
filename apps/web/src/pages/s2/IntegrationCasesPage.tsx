@@ -3,6 +3,10 @@ import { Link } from "react-router-dom";
 import { getTenant } from "../../api/tenant";
 import type { IntegrationCaseScope } from "../../api/integrationCases/types";
 import { integrationCaseClient } from "../../api/integrationCases/client";
+import {
+  createIntegrationCaseCommand,
+  integrationCaseIdempotencyKeyFor,
+} from "../../api/integrationCases/idempotency";
 import { BpBanner, BpToolbar } from "./blueprintUi";
 import { S2Chrome } from "./shared";
 import { IntegrationCaseCatalog } from "./integrationCases/IntegrationCaseCatalog";
@@ -86,7 +90,7 @@ export function IntegrationCasesPage() {
     setSnapshotError(null);
     try {
       await integrationCaseClient.createEvidenceSnapshot(detail.caseId, {
-        idempotencyKey: crypto.randomUUID(),
+        idempotencyKey: integrationCaseIdempotencyKeyFor(createIntegrationCaseCommand()),
         etagVersion: detail.etagVersion,
       });
       model.refreshDetail();

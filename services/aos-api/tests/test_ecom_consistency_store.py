@@ -13,6 +13,7 @@ from aos_api.ecom_consistency_store import (
     EcomConsistencyStore,
     ecom_ingest_receipt,
     metadata,
+    projection_outbox,
 )
 from aos_api.ecom_core_models import (
     BatchCommand,
@@ -202,12 +203,8 @@ def test_concurrent_same_idempotency_key_replays_original_result(tmp_path) -> No
     assert {result.checkpoint_version for result in results} == {1}
 
 
-def test_same_source_version_with_different_payload_allows_reprojection(store: EcomConsistencyStore) -> None:
-    """D5-E2: Same source_updated_at + different payload_hash now allows UPDATE (re-projection).
-
-    Previously this raised SOURCE_VERSION_CONFLICT and rolled back the batch.
-    Now it falls through to UPDATE to support derived metric recompute (e.g., CustomerLite order_count).
-    """
+def test_same_source_version_with_different_payload_is_rejected(store: EcomConsistencyStore) -> None:
+    """基础权威对象禁止同一源版本以不同 payload 静默覆盖。"""
     existing = obj("Product", "z-existing")
     first = batch(existing, key="first", cursor_id="z-existing")
     store.apply_batch(first)
@@ -224,15 +221,62 @@ def test_same_source_version_with_different_payload_allows_reprojection(store: E
         expected=1,
         cursor_id="z-existing",
     )
-    # D5-E2: No longer raises — both objects are written (re-projection)
-    result = store.apply_batch(second)
-    assert result.objects_written >= 1
-    # The new object should exist
-    assert store.get_object(ident("a-new"), "Product") is not None
-    # The changed object should have the updated title
-    updated = store.get_object(ident("z-existing"), "Product")
-    assert updated is not None
-    assert updated["properties"].get("title") == "conflict"
+    with pytest.raises(EcomConsistencyError) as caught:
+        store.apply_batch(second)
+    assert caught.value.code == "SOURCE_VERSION_CONFLICT"
+    assert store.get_object(ident("a-new"), "Product") is None
+    assert store.get_object(ident("z-existing"), "Product")["properties"].get("title") != "conflict"
+
+
+def test_authoritative_writes_create_unprojected_outbox_in_same_transaction(
+    store: EcomConsistencyStore,
+) -> None:
+    command = batch(
+        obj("Product", "product-1"),
+        obj("Shop", "shop-object"),
+        links=[shop_product_link()],
+    )
+    store.apply_batch(command)
+
+    with store._engine.connect() as conn:
+        rows = list(
+            conn.execute(
+                select(projection_outbox).order_by(projection_outbox.c.input_revision)
+            ).mappings()
+        )
+
+    assert [row["change_kind"] for row in rows] == [
+        "objects_written",
+        "objects_written",
+        "links_written",
+    ]
+    assert all(row["projected"] is False for row in rows)
+    assert all(row["event_source"] == "authoritative_store" for row in rows)
+    assert len({row["event_key"] for row in rows}) == 3
+    assert all(len(row["payload_hash"]) == 64 for row in rows)
+    assert [row["input_revision"] for row in rows] == sorted(
+        row["input_revision"] for row in rows
+    )
+
+
+def test_replay_and_ignored_records_do_not_create_new_outbox(
+    store: EcomConsistencyStore,
+) -> None:
+    command = batch(obj("Product", "product-1"))
+    store.apply_batch(command)
+    store.apply_batch(command)
+    stale = batch(
+        obj("Product", "product-1", when=NOW - timedelta(minutes=1)),
+        key="stale",
+        expected=1,
+        at=NOW,
+        cursor_id="product-1",
+    )
+    store.apply_batch(stale)
+
+    with store._engine.connect() as conn:
+        count = conn.execute(select(projection_outbox.c.outbox_id)).all()
+    assert len(count) == 1
 
 
 def test_older_source_version_is_ignored(store: EcomConsistencyStore) -> None:

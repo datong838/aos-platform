@@ -175,16 +175,15 @@ def bind_tenant_ids(
         return claim_org, claim_project
 
     if allow_header_fallback:
-        # O1-A: dev 模式下 header 优先，缺失时才回退到 dev 默认
-        org = claim_org or header_org or "dev-org"
-        project = claim_project or header_project or "dev-project"
-        log.info(
-            "tenant_bound source=%s org=%s project=%s allow_dev=1",
-            "header" if (header_org or header_project) else "dev_default",
-            org,
-            project,
-        )
-        return org, project
+        org = claim_org or header_org
+        project = claim_project or header_project
+        if org and project:
+            log.info(
+                "tenant_bound source=explicit_header org=%s project=%s allow_dev=1",
+                org,
+                project,
+            )
+            return org, project
 
     log.warning(
         "tenant_claim_required claim_org=%s claim_project=%s header_org=%s header_project=%s",
@@ -246,12 +245,12 @@ def resolve_principal(
                 message="Bearer dev disabled (AOS_AUTH_ALLOW_DEV=0)",
                 status_code=401,
             )
-        org = header_org or "dev-org"
-        project = header_project or "dev-project"
-        log.info(
-            "tenant_bound source=dev_bearer org=%s project=%s",
-            org,
-            project,
+        org, project = bind_tenant_ids(
+            claim_org=None,
+            claim_project=None,
+            header_org=header_org,
+            header_project=header_project,
+            allow_header_fallback=True,
         )
         return Principal(
             subject="user:dev",
@@ -287,6 +286,9 @@ async def require_principal(
         header_org=x_org_id,
         header_project=x_project_id,
     )
+    from aos_api.tenant_directory_service import require_workspace
+
+    require_workspace(TenantScope(principal.org_id, principal.project_id))
     # 188m — optional force-reject old desktop (skip matrix endpoints)
     path = request.url.path or ""
     if x_aos_desktop_version and not path.startswith("/v1/ops/version-matrix"):

@@ -90,7 +90,7 @@ export function OverviewDomainGrid() {
         <div className="bp-index-grid bp-index-grid-4">
           <BpIndexTile to="/ontology" eyebrow="Manager" title="本体管理" accent="violet" />
           <BpIndexTile to="/workshop/graph" eyebrow="Graph" title="对象探索" accent="violet" />
-          <BpIndexTile to="/ontology/funnel" eyebrow="Proposal" title="本体提案" accent="violet" />
+          <BpIndexTile to="/ontology/funnel" eyebrow="Runtime" title="Funnel 管道" accent="violet" />
           <BpIndexTile to="/ontology/wiki" eyebrow="Wiki" title="活知识 Wiki" accent="violet" />
           <BpIndexTile to="/ontology/graph-health" eyebrow="Health" title="图谱健康度" accent="violet" />
         </div>

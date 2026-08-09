@@ -49,6 +49,15 @@ describe("Wave 3C W1 · Source Detail 全量刷新与竞态", () => {
     )));
   }
 
+  async function openExplore() {
+    const button = Array.from(host.querySelectorAll("button")).find(
+      (item) => item.textContent?.trim() === "探索",
+    );
+    if (!button) throw new Error("explore tab not found");
+    await act(async () => button.click());
+    await flush(4);
+  }
+
   function listResponse(path: string) {
     if (path === "/v1/sources") {
       return { items: [
@@ -59,7 +68,7 @@ describe("Wave 3C W1 · Source Detail 全量刷新与竞态", () => {
     return { items: [] };
   }
 
-  it("Schema 失败回落时同步首表、列和 preview，并保留主错误与来源", async () => {
+  it("Schema 失败时诚实显示空状态，不回落本地演示数据", async () => {
     api.apiGet.mockImplementation((path: string) => {
       if (path.startsWith("/api/datasource/sources/s1/schemas")) {
         return Promise.reject(new Error("schema unavailable"));
@@ -69,13 +78,13 @@ describe("Wave 3C W1 · Source Detail 全量刷新与竞态", () => {
     api.apiPost.mockRejectedValue(new Error("preview unavailable"));
     renderAt("/data/sources/s1");
     await flush(12);
+    await openExplore();
 
-    expect(host.textContent).toContain("public.orders");
-    expect(host.textContent).toContain("order_id");
-    expect(host.textContent).toContain("Schema 主路径失败：schema unavailable");
-    expect(host.textContent).toContain("当前来源：演示回落");
-    expect(host.textContent).toContain("连接器采样失败：preview unavailable");
-    expect(host.textContent).toContain("当前来源：演示路径");
+    expect(host.textContent).toContain("Schema 加载失败：schema unavailable");
+    expect(host.textContent).toContain("当前来源：连接失败");
+    expect(host.textContent).toContain("暂无 Schema");
+    expect(host.textContent).not.toContain("public.orders");
+    expect(api.apiPost).not.toHaveBeenCalled();
   });
 
   it("页头刷新重读全部页面依赖并用新 Schema 覆盖旧树", async () => {
@@ -96,6 +105,7 @@ describe("Wave 3C W1 · Source Detail 全量刷新与竞态", () => {
     });
     renderAt("/data/sources/s1");
     await flush(12);
+    await openExplore();
     expect(host.textContent).toContain("old.orders_v1");
 
     const dependencyPaths = ["/v1/sources", "/v1/pipelines", "/v1/datasets", "/v1/syncs", "/v1/connector-plugins"];
@@ -108,7 +118,8 @@ describe("Wave 3C W1 · Source Detail 全量刷新与竞态", () => {
 
     for (const path of dependencyPaths) expect(calls.get(path) || 0).toBeGreaterThan(before[path]);
     expect(host.textContent).toContain("fresh.orders_v2");
-    expect(host.textContent).toContain("new_id");
+    expect(calls.has("/api/datasource/sources/s1/schemas/fresh/tables/orders_v2/columns")).toBe(true);
+    expect(host.textContent).toContain("id");
     expect(host.textContent).not.toContain("old.orders_v1");
   });
 
@@ -129,6 +140,7 @@ describe("Wave 3C W1 · Source Detail 全量刷新与竞态", () => {
     let navigate: NavigateFunction | undefined;
     renderAt("/data/sources/s1", (next) => { navigate = next; });
     await flush();
+    await openExplore();
     if (!navigate) throw new Error("navigate not captured");
     await act(async () => navigate?.("/data/sources/s2"));
     await flush(12);

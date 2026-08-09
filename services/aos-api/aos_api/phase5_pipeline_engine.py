@@ -1318,6 +1318,7 @@ class PipelineEngine:
         result_queue: queue.Queue = queue.Queue(maxsize=1)
         cancel_event = threading.Event()
         deadline = time.monotonic() + pipeline.execution_timeout_seconds
+        run_id = f"pipeline-run-{uuid.uuid4()}"
 
         def invoke() -> None:
             try:
@@ -1331,6 +1332,7 @@ class PipelineEngine:
                         cancel_event=cancel_event,
                         deadline=deadline,
                         scope=scope,
+                        run_id=run_id,
                     ))
                 )
             except Exception as exc:

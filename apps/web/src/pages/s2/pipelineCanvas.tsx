@@ -1554,13 +1554,13 @@ export function PipelineCanvasPage() {
                 {selected === "output" && "输出数据集"}
               </h3>
               <p className="muted bp-pipe-inspector-lede">
-                {selected === "input" && (sourceNode?.config?.source_id || pipe.sourceId || "—")}
-                {selected === "transform" && (
-                  transformNode
-                    ? `${transformNode.name || "transform"} · ${transformNode.id}`
-                    : "Ingest · 变换配置（演示节点）"
-                )}
-                {selected === "output" && `${outLabel}${otHint ? ` · ${otHint}` : ""}`}
+                {selected === "input"
+                  ? String(sourceNode?.config?.source_id || pipe.sourceId || "—")
+                  : selected === "transform"
+                    ? transformNode
+                      ? `${transformNode.name || "transform"} · ${transformNode.id}`
+                      : "Ingest · 变换配置（演示节点）"
+                    : `${outLabel}${otHint ? ` · ${otHint}` : ""}`}
               </p>
             </div>
 

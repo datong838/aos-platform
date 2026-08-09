@@ -12,7 +12,16 @@ export default defineConfig({
       "@aos/ontology-sdk": path.resolve(root, "../../packages/ontology-sdk/src/index.ts"),
     },
   },
-  server: { port: 5173 },
+  server: {
+    port: 5173,
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:8000",
+        changeOrigin: true,
+        rewrite: (requestPath) => requestPath.replace(/^\/api/, ""),
+      },
+    },
+  },
   build: {
     rollupOptions: {
       output: {

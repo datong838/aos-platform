@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { apiGet, apiPost, apiPut } from "../../api/client";
 import { useOntologyDrafts } from "../../api/ontologyHooks";
 import {
@@ -26,9 +26,11 @@ type OkfMapping = {
 
 /** 89 · OKF 映射真持久化 + Lint errors */
 export function OkfFunnelPage() {
-  const funnel = useJsonGet<Record<string, unknown>>("/v1/funnel/WorkOrder/status");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedIndustry = searchParams.get("industry") || "ecom";
+  const initialIndustry = ["ecom", "env", "bio"].includes(requestedIndustry) ? requestedIndustry : "ecom";
   const modules = useJsonGet<{ items: { id: string; name?: string }[] }>("/v1/modules");
-  const [industry, setIndustry] = useState("ecom");
+  const [industry, setIndustry] = useState(initialIndustry);
   const [mapping, setMapping] = useState<OkfMapping | null>(null);
   const [lint, setLint] = useState<{ ok?: boolean; errors?: { rule?: string; message?: string }[] } | null>(
     null,
@@ -53,6 +55,14 @@ export function OkfFunnelPage() {
   }, [industry]);
 
   const columns = mapping?.columns || [];
+  const funnel = useJsonGet<Record<string, unknown>>(
+    mapping?.objectType ? `/v1/funnel/${encodeURIComponent(mapping.objectType)}/status` : null,
+  );
+
+  function chooseIndustry(next: string) {
+    setIndustry(next);
+    setSearchParams({ industry: next }, { replace: true });
+  }
 
   async function runLint() {
     setMsg("");
@@ -135,8 +145,8 @@ export function OkfFunnelPage() {
         </Link>
       </BpToolbar>
       {msg && <p className="bp-prop-ok">{msg}</p>}
-      {(funnel.err || modules.err || err) && (
-        <p className="error">{funnel.err || modules.err || err}</p>
+      {(modules.err || err) && (
+        <p className="error">{modules.err || err}</p>
       )}
 
       <BpSplit
@@ -153,13 +163,13 @@ export function OkfFunnelPage() {
                 key={i.id}
                 type="button"
                 className={`okf-industry-item${industry === i.id ? " is-active" : ""}`}
-                onClick={() => setIndustry(i.id)}
+                onClick={() => chooseIndustry(i.id)}
               >
                 {i.label}
               </button>
             ))}
             <p className="muted" style={{ fontSize: "0.75rem", marginTop: 12 }}>
-              源 Dataset: <Link to="/data/datasets">WorkOrder-demo</Link>
+              源 Dataset: <Link to="/data/datasets">从真实数据集选择</Link>
               <br />
               Object Type: <span className="aos-text">{mapping?.objectType || "—"}</span>
             </p>
@@ -441,7 +451,7 @@ export function PipelineProposalsPage() {
     setMsg("");
     setBusyAction(`approve-${ppId}`);
     try {
-      await apiPost(`/v1/pipelines/${encodeURIComponent(plId)}/proposals/${encodeURIComponent(ppId)}/approve`);
+      await apiPost(`/v1/pipelines/${encodeURIComponent(plId)}/proposals/${encodeURIComponent(ppId)}/approve`, {});
       setMsg(`✅ 提案已审批通过`);
       reload();
     } catch (e) {
@@ -457,7 +467,7 @@ export function PipelineProposalsPage() {
     setMsg("");
     setBusyAction(`merge-${ppId}`);
     try {
-      await apiPost(`/v1/pipelines/${encodeURIComponent(plId)}/proposals/${encodeURIComponent(ppId)}/merge`);
+      await apiPost(`/v1/pipelines/${encodeURIComponent(plId)}/proposals/${encodeURIComponent(ppId)}/merge`, {});
       setMsg(`✅ 提案已合并到主分支`);
       reload();
     } catch (e) {
@@ -478,7 +488,7 @@ export function PipelineProposalsPage() {
     setMsg("");
     setBusyAction(`discard-${ppId}`);
     try {
-      await apiPost(`/v1/pipelines/${encodeURIComponent(plId)}/proposals/${encodeURIComponent(ppId)}/discard`);
+      await apiPost(`/v1/pipelines/${encodeURIComponent(plId)}/proposals/${encodeURIComponent(ppId)}/discard`, {});
       setMsg(`✅ 提案已作废`);
       reload();
     } catch (e) {
@@ -1434,13 +1444,19 @@ export function ApolloChangePage() {
 
 /** 本体 · 数字孪生 · OKF 概览 — 行业模板与映射活动概览 */
 export function OkfOverviewPage() {
-  const funnel = useJsonGet<Record<string, unknown>>("/v1/funnel/WorkOrder/status");
-  const [industries] = useState([
-    { id: "ecom", name: "电商", mapped: true },
-    { id: "supply", name: "供应链", mapped: true },
-    { id: "finance", name: "金融", mapped: false },
-    { id: "healthcare", name: "医疗", mapped: false },
-  ]);
+  const ecom = useJsonGet<OkfMapping>("/v1/ontology/okf-mappings/ecom");
+  const env = useJsonGet<OkfMapping>("/v1/ontology/okf-mappings/env");
+  const bio = useJsonGet<OkfMapping>("/v1/ontology/okf-mappings/bio");
+  const requests = { ecom, env, bio };
+  const industries = [
+    { id: "ecom", name: "电商", request: ecom },
+    { id: "env", name: "环境", request: env },
+    { id: "bio", name: "生物", request: bio },
+  ].map(({ id, name, request }) => ({
+    id, name, mapping: request.data,
+    mapped: Boolean(request.data?.columns?.length) && request.data!.columns.every((column) => column.ok),
+  }));
+  const overviewError = Object.values(requests).map((request) => request.err).find(Boolean);
 
   return (
     <S2Chrome title="OKF 概览" lede="行业漏斗模板与映射活动概览 · 选择行业查看详情">
@@ -1451,11 +1467,11 @@ export function OkfOverviewPage() {
         <Link to="/ontology/funnel" className="btn-nav">
           漏斗管道 →
         </Link>
-        <button type="button" className="btn" onClick={() => funnel.reload()}>
+        <button type="button" className="btn" onClick={() => Object.values(requests).forEach((request) => request.reload())}>
           刷新
         </button>
       </BpToolbar>
-      {funnel.err && <p className="error">{funnel.err}</p>}
+      {overviewError && <p className="error">{overviewError}</p>}
 
       <div className="bp-ws-section-title">行业模板</div>
       <div className="bp-index-grid bp-index-grid-4" style={{ marginBottom: "1rem" }}>
@@ -1472,7 +1488,9 @@ export function OkfOverviewPage() {
                 {ind.mapped ? "已映射" : "待映射"}
               </span>
             </div>
-            <p className="bp-discover-meta">{ind.id}</p>
+            <p className="bp-discover-meta">
+              {ind.mapping?.objectType || "未配置 Object Type"} · {ind.mapping?.columns?.length || 0} 个字段
+            </p>
           </Link>
         ))}
       </div>

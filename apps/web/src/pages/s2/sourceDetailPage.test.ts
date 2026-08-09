@@ -73,7 +73,7 @@ describe("W3-C7 flattenTables / badges", () => {
   });
 
   it("schemaPathLabel", () => {
-    expect(schemaPathLabel(true)).toBe("演示路径");
+    expect(schemaPathLabel(true)).toBe("数据源连接");
     expect(schemaPathLabel(false)).toBe("连接器 Schema");
   });
 });
@@ -121,14 +121,4 @@ describe("D4 Phase C demoSchemaTree · niushop-mysql 已废弃", () => {
     expect(tables.some((t) => t.table === "ns_order")).toBe(false);
   });
 
-  it("NIUSHOP_DEMO_SCHEMA 数据结构完整性（保留供后端真实数据 fallback）", () => {
-    // NIUSHOP_DEMO_SCHEMA 数据仍保留在代码中，作为后端真实数据的 fallback
-    // 验证其数据结构正确性
-    expect(NIUSHOP_DEMO_SCHEMA[0].name).toBe("niushop_b2c_v5");
-    const tableNames = NIUSHOP_DEMO_SCHEMA[0].tables.map((t) => t.name);
-    expect(tableNames).toContain("ns_site");
-    expect(tableNames).toContain("ns_order");
-    expect(tableNames).toContain("ns_member");
-    expect(tableNames.length).toBe(8);
-  });
 });

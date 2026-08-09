@@ -39,7 +39,7 @@ describe("SpokeDetailPage", () => {
     });
 
     const text = host.textContent || "";
-    expect(text).toContain("spoke-prod-sh");
+    expect(text).toContain("上海生产运行节点");
     expect(text).toContain("上海生产区");
     expect(text).toContain("健康");
     expect(text).toContain("platform-2.14.1");

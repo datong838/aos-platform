@@ -26,6 +26,12 @@ from pydantic import BaseModel, Field
 from aos_api.auth import Principal, require_principal
 from aos_api.db import connect, get_dsn
 from aos_api.errors import ApiError
+from aos_api.ec_dlq_store import (
+    DlqIdempotencyConflict,
+    list_failures,
+    record_failure,
+    retry_failure,
+)
 from aos_api.logging_facade import get_logger
 from aos_api.oidc import allow_dev
 from aos_api.tenant_scope import TenantScope
@@ -2435,34 +2441,47 @@ def run_schedule(schedule_id: str, principal: Principal = Depends(require_princi
 
 @router.get("/v1/dlq")
 def list_dlq(principal: Principal = Depends(require_principal)):
-    return {"items": _scoped_values(_dlq, _mutation_scope(principal))}
+    return {"items": list_failures(_mutation_scope(principal))}
 
 
 @router.post("/v1/dlq")
 def push_dlq(body: dict[str, Any], principal: Principal = Depends(require_principal)):
-    from aos_api.ec_dlq_handler import _sanitize_recursive
-
     scope = _mutation_scope(principal)
-    # O1-A G18: 递归脱敏 — 深度遍历 dict/list/str
-    sanitized_body = _sanitize_recursive(body)
-    item = {
-        "id": f"dlq-{uuid.uuid4().hex[:6]}",
-        **sanitized_body,
-        "status": "open",
-        "orgId": scope.org_id,
-        "projectId": scope.project_id,
-    }
-    _dlq[_resource_key(scope, item["id"])] = item
-    return item
+    pipeline_id = str(body.get("pipelineId") or "manual-dlq")
+    pipeline = type("DlqPipelineRef", (), {"id": pipeline_id})()
+    try:
+        return record_failure(
+            pipeline=pipeline,
+            scope=scope,
+            exc=ValueError(str(body.get("reason") or "manual DLQ submission")),
+            run_id=str(body.get("runId") or f"manual-{uuid.uuid4()}"),
+            stage_id=str(body.get("stageId") or "manual"),
+            attempt_no=int(body.get("attemptNo") or 1),
+            metadata=body.get("metadata") if isinstance(body.get("metadata"), dict) else {},
+        )
+    except DlqIdempotencyConflict as exc:
+        raise ApiError(code="IDEMPOTENCY_CONFLICT", message=str(exc), status_code=409) from exc
 
 
 @router.post("/v1/dlq/{dlq_id}/retry")
-def retry_dlq(dlq_id: str, principal: Principal = Depends(require_principal)):
-    item = _dlq.get(_resource_key(_mutation_scope(principal), dlq_id))
-    if item is None:
-        raise ApiError(code="NOT_FOUND", message="dlq missing", status_code=404)
-    item["status"] = "retried"
-    return item
+def retry_dlq(
+    dlq_id: str,
+    principal: Principal = Depends(require_principal),
+    body: dict[str, Any] | None = None,
+):
+    try:
+        return retry_failure(
+            scope=_mutation_scope(principal),
+            dlq_id=dlq_id,
+            retry_idempotency_key=str(
+                (body or {}).get("idempotencyKey") or f"retry-{uuid.uuid4()}"
+            ),
+            actor=principal.subject,
+        )
+    except KeyError as exc:
+        raise ApiError(code="NOT_FOUND", message="dlq missing", status_code=404) from exc
+    except DlqIdempotencyConflict as exc:
+        raise ApiError(code="IDEMPOTENCY_CONFLICT", message=str(exc), status_code=409) from exc
 
 
 @router.get("/v1/funnel/{object_type}/worker")

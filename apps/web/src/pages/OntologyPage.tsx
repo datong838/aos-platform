@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { apiGet, apiPost } from "../api/client";
+import { apiGet, apiPost, apiPut } from "../api/client";
 import { getOntologyClient } from "../api/ontologyClient";
 import { PageChrome } from "../components/PageChrome";
 import {
@@ -38,6 +38,26 @@ type TypeStats = {
   published?: boolean;
 };
 
+type OntologyComposition = {
+  installation_pk: string;
+  installation_revision: number;
+  composed_schema_etag: string;
+};
+
+type ActiveOverlay = {
+  target_kind: string;
+  target_id: string;
+  mode: "override" | "inherit";
+  display_name?: string | null;
+  ontology_revision: number;
+  base_schema_sha256: string;
+};
+
+const ECOM_OBJECT_TYPES = new Set([
+  "Shop", "Product", "ProductSku", "Category", "Order", "OrderLine", "Shipment",
+  "CustomerLite", "Weapp", "SystemConfig", "ProductReview", "Payment",
+]);
+
 /** 91/92 · 发现页 · 最近真源 · 分支偏好 */
 export function OntologyPage() {
   const navigate = useNavigate();
@@ -65,6 +85,10 @@ export function OntologyPage() {
   const [favoriteIds, setFavoriteIds] = useState<string[] | null>(() => loadFavorites());
   const [linkTypes, setLinkTypes] = useState<{ id: string; name: string; rel?: string; srcType?: string; dstType?: string }[]>([]);
   const [actionTypes, setActionTypes] = useState<{ id: string; name: string; objectType?: string }[]>([]);
+  const [composition, setComposition] = useState<OntologyComposition | null>(null);
+  const [activeOverlay, setActiveOverlay] = useState<ActiveOverlay | null>(null);
+  const [overlayName, setOverlayName] = useState("");
+  const [overlayBusy, setOverlayBusy] = useState(false);
 
   const recordRecentOt = useCallback((id: string, name?: string) => {
     setRecent(pushRecent({ kind: "objectType", id, label: name || id }));
@@ -108,7 +132,7 @@ export function OntologyPage() {
 
   const reloadTypes = useCallback(async () => {
     const [t, b, h, lt, at] = await Promise.all([
-      apiGet<{ items: ObjectTypeRow[] }>("/v1/ontology/object-types"),
+      apiGet<{ items: ObjectTypeRow[]; composition?: OntologyComposition | null }>("/v1/ontology/object-types"),
       apiGet<{ items: Branch[] }>("/v1/ontology/branches"),
       apiGet<Health>("/v1/ontology/graph-health"),
       apiGet<{ items: { id: string; name: string; rel?: string; srcType?: string; dstType?: string }[] }>(
@@ -119,6 +143,7 @@ export function OntologyPage() {
       })),
     ]);
     setTypes(t.items);
+    setComposition(t.composition || null);
     setBranches(b.items);
     setHealth(h);
     setLinkTypes(lt.items || []);
@@ -130,6 +155,56 @@ export function OntologyPage() {
     }
     await loadStats(t.items);
   }, [branchId, loadStats]);
+
+  useEffect(() => {
+    if (!selected || !composition?.installation_pk) {
+      setActiveOverlay(null);
+      return;
+    }
+    let current = true;
+    void apiGet<{ items: ActiveOverlay[] }>(
+      `/v1/ontology/installations/${encodeURIComponent(composition.installation_pk)}/overlays`,
+    ).then((result) => {
+      if (!current) return;
+      const hit = result.items.find((item) => item.target_kind === "ObjectType" && item.target_id === selected) || null;
+      setActiveOverlay(hit);
+      setOverlayName(hit?.display_name || types.find((type) => type.id === selected)?.name || selected);
+    }).catch((error) => current && setErr(String((error as Error).message || error)));
+    return () => { current = false; };
+  }, [composition?.installation_pk, selected, types]);
+
+  async function saveOrganizationOverlay(mode: "override" | "inherit") {
+    if (!selected || !composition?.installation_pk) return;
+    setOverlayBusy(true);
+    setErr(null);
+    setMsg(null);
+    try {
+      const ifMatch = activeOverlay
+        ? `"ontology-overlay-v1:${activeOverlay.ontology_revision}:${activeOverlay.base_schema_sha256}"`
+        : '"0"';
+      const result = await apiPut<{
+        ontologyRevision: number; baseSchemaSha256: string; mode: "override" | "inherit";
+        displayName?: string | null;
+      }>(
+        `/v1/ontology/installations/${encodeURIComponent(composition.installation_pk)}/overlays/ObjectType/${encodeURIComponent(selected)}`,
+        mode === "inherit"
+          ? { mode: "inherit", displayName: null, visibleProperties: null, extendedProperties: {}, policies: null }
+          : { mode: "override", displayName: overlayName.trim(), visibleProperties: null, extendedProperties: {}, policies: null },
+        { "If-Match": ifMatch, "Idempotency-Key": crypto.randomUUID() },
+      );
+      setActiveOverlay({
+        target_kind: "ObjectType", target_id: selected, mode: result.mode,
+        display_name: result.displayName, ontology_revision: result.ontologyRevision,
+        base_schema_sha256: result.baseSchemaSha256,
+      });
+      setMsg(mode === "inherit" ? "已创建 inherit 修订，恢复当前安装模板显示名" : "组织 Overlay 已保存；未修改平台模板");
+      await reloadTypes();
+    } catch (error) {
+      setErr(String((error as Error).message || error));
+    } finally {
+      setOverlayBusy(false);
+    }
+  }
 
   useEffect(() => {
     reloadTypes().catch((e) => setErr(String(e.message || e)));
@@ -191,7 +266,11 @@ export function OntologyPage() {
       }
       return rows.slice(0, 6);
     }
-    return typeStats.slice(0, 3);
+    if (typeStats.length > 0) return typeStats.slice(0, 3);
+    return types.slice(0, 3).map((type) => ({
+      id: type.id, name: type.name, instanceCount: 0, published: type.published,
+      funnelStage: undefined,
+    }));
   }, [favoriteIds, typeStats, types]);
 
   const branchReadonly = useMemo(() => {
@@ -346,27 +425,23 @@ export function OntologyPage() {
         <Link
           to="/ontology/branches"
           className="btn-nav"
-          onClick={() => recordRecentLink("branches", "分支管理", "/ontology/branches")}
+          onClick={() => recordRecentLink("branches", "分支与 Overlay", "/ontology/branches")}
         >
-          分支管理
+          分支与 Overlay
         </Link>
         <Link
-          to="/ontology/funnel"
+          to="/workshop/graph"
           className="btn-nav"
-          onClick={() =>
-            recordRecentLink("funnel-wo", "Funnel · WorkOrder Live Pipeline", "/ontology/funnel")
-          }
+          title="先选择真实 Object，再进入 Funnel"
         >
-          漏斗管道
+          从对象进入 Funnel
         </Link>
         <Link
-          to="/ontology/wiki"
+          to="/workshop/graph"
           className="btn-nav"
-          onClick={() =>
-            recordRecentLink("wiki-wo-1001", "Wiki · WorkOrder/wo-1001", "/ontology/wiki")
-          }
+          title="先选择真实 Object，再进入 Wiki"
         >
-          活知识 Wiki
+          从对象进入 Wiki
         </Link>
         <Link to="/ontology/link-types/new" className="btn-nav">
           新建 Link Type
@@ -556,7 +631,7 @@ export function OntologyPage() {
             <Link to="/ontology/okf-funnel" className="btn-nav">
               ① OKF
             </Link>
-            <Link to="/ontology/funnel" className="btn-nav">
+            <Link to="/workshop/graph" className="btn-nav" title="选择 Object Type 后进入 Funnel">
               ② Funnel
             </Link>
             <Link to="/workshop/inbox" className="btn-nav">
@@ -572,19 +647,23 @@ export function OntologyPage() {
             <div className="bp-discover-card ont-block" style={{ padding: "16px 18px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                 <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>交易域</span>
-                <span className="bp-badge bp-badge-gray" style={{ fontSize: 12 }}>14 Object</span>
+                <span className="bp-badge bp-badge-gray" style={{ fontSize: 12 }}>
+                  {types.filter((type) => /Order|Payment|Shipment|Product|Sku/.test(type.id)).length} Object
+                </span>
               </div>
               <p style={{ margin: 0, fontSize: "12px", color: "var(--aos-muted)", lineHeight: 1.5 }}>
-                Order · OrderItem · Payment · Refund · Shipment…
+                {types.filter((type) => /Order|Payment|Shipment|Product|Sku/.test(type.id)).map((type) => type.name).slice(0, 5).join(" · ") || "当前安装未贡献交易域类型"}
               </p>
             </div>
             <div className="bp-discover-card ont-block" style={{ padding: "16px 18px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                 <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>客户域</span>
-                <span className="bp-badge bp-badge-gray" style={{ fontSize: 12 }}>8 Object</span>
+                <span className="bp-badge bp-badge-gray" style={{ fontSize: 12 }}>
+                  {types.filter((type) => /Customer|Member|Review|Category/.test(type.id)).length} Object
+                </span>
               </div>
               <p style={{ margin: 0, fontSize: "12px", color: "var(--aos-muted)", lineHeight: 1.5 }}>
-                Customer · Address · Tag · Segment · Point…
+                {types.filter((type) => /Customer|Member|Review|Category/.test(type.id)).map((type) => type.name).slice(0, 5).join(" · ") || "当前安装未贡献客户域类型"}
               </p>
             </div>
           </div>
@@ -596,11 +675,11 @@ export function OntologyPage() {
           <div className="bp-discover-grid">
             <Link to="/ontology/branches" className="bp-discover-card ont-block" style={{ padding: "16px 18px", textDecoration: "none" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>分支管理</span>
-                <span className="bp-badge bp-badge-blue" style={{ fontSize: 12 }}>Branch</span>
+                <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>分支与 Overlay</span>
+                <span className="bp-badge bp-badge-blue" style={{ fontSize: 12 }}>Overlay</span>
               </div>
               <p style={{ margin: 0, fontSize: "12px", color: "var(--aos-muted)", lineHeight: 1.5 }}>
-                管理本体分支、合并提案与版本快照。
+                查看 Installation 绑定的组织定制、不可变修订和当前生效版本。
               </p>
             </Link>
             <Link to="/ontology/graph-health" className="bp-discover-card ont-block" style={{ padding: "16px 18px", textDecoration: "none" }}>
@@ -612,16 +691,16 @@ export function OntologyPage() {
                 监控本体图谱的一致性、连通性与告警。
               </p>
             </Link>
-            <Link to="/ontology/wiki" className="bp-discover-card ont-block" style={{ padding: "16px 18px", textDecoration: "none" }}>
+            <Link to="/workshop/graph" className="bp-discover-card ont-block" style={{ padding: "16px 18px", textDecoration: "none" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                 <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>活知识 Wiki</span>
                 <span className="bp-badge bp-badge-gray" style={{ fontSize: 12 }}>Wiki</span>
               </div>
               <p style={{ margin: 0, fontSize: "12px", color: "var(--aos-muted)", lineHeight: 1.5 }}>
-                沉淀本体的业务定义、示例与协作笔记。
+                从真实对象进入，沉淀业务定义、示例与协作笔记。
               </p>
             </Link>
-            <Link to="/ontology/object-types" className="bp-discover-card ont-block" style={{ padding: "16px 18px", textDecoration: "none" }}>
+            <Link to="/workshop/graph" className="bp-discover-card ont-block" style={{ padding: "16px 18px", textDecoration: "none" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                 <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>对象探索</span>
                 <span className="bp-badge bp-badge-amber" style={{ fontSize: 12 }}>Explore</span>
@@ -675,6 +754,47 @@ export function OntologyPage() {
               void reloadTypes().catch((e) => setErr(String((e as Error).message || e)))
             }
           />
+        </section>
+      )}
+
+      {selected && selectedMeta && composition && ECOM_OBJECT_TYPES.has(selected) && (
+        <section className="ont-layer ont-block">
+          <div className="mp-section-head">
+            <div>
+              <h2 className="bp-ws-section-title" style={{ margin: 0 }}>组织定制 Overlay</h2>
+              <p className="muted" style={{ margin: "0.35rem 0" }}>
+                当前组织/工作区专属 · Installation rev {composition.installation_revision} ·
+                Ontology rev {activeOverlay?.ontology_revision || 0} · 不反写平台模板
+              </p>
+            </div>
+          </div>
+          <label className="ont-form-field">
+            <span>显示名</span>
+            <input
+              className="aos-input"
+              value={overlayName}
+              disabled={overlayBusy}
+              onChange={(event) => setOverlayName(event.target.value)}
+            />
+          </label>
+          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={overlayBusy || !overlayName.trim()}
+              onClick={() => void saveOrganizationOverlay("override")}
+            >
+              {overlayBusy ? "保存中…" : "保存组织定制"}
+            </button>
+            <button
+              type="button"
+              className="btn"
+              disabled={overlayBusy || !activeOverlay}
+              onClick={() => void saveOrganizationOverlay("inherit")}
+            >
+              恢复安装模板
+            </button>
+          </div>
         </section>
       )}
 

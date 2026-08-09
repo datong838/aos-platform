@@ -27,7 +27,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from aos_api.jdbc_connector_runtime import JdbcConnectorRuntime, SshTunnel
+from aos_api.jdbc_connector_runtime import JdbcConnectorRuntime, SshTunnel, _cleanup_all_cached
+
+
+@pytest.fixture(autouse=True)
+def _isolate_runtime_cache():
+    """缓存是进程级能力；每个单测必须从独立连接状态起跑。"""
+    _cleanup_all_cached()
+    yield
+    _cleanup_all_cached()
 
 
 # ═══════════════════════════════════════════════
@@ -205,8 +213,8 @@ def test_jdbc_runtime_connects_via_tunnel(
         assert kwargs["user"] == "recommend_ro"
         assert kwargs["database"] == "niushop_b2c_v5"
 
-    # __exit__ 后连接关闭
-    fake_conn.close.assert_called_once()
+    # __exit__ 归还进程级缓存，不应提前关闭可复用连接。
+    fake_conn.close.assert_not_called()
 
 
 @patch("aos_api.jdbc_connector_runtime.pymysql.connect")
@@ -231,7 +239,7 @@ def test_jdbc_runtime_connects_direct_when_no_ssh(
         assert kwargs["host"] == "mysql.prod.internal"
         assert kwargs["port"] == 3306
 
-    fake_conn.close.assert_called_once()
+    fake_conn.close.assert_not_called()
 
 
 # ═══════════════════════════════════════════════
@@ -324,9 +332,10 @@ def test_jdbc_runtime_read_rows_without_cursor(
 
     assert len(rows) == 2
     assert rows[0]["order_id"] == 1
+    assert cursor.execute.call_args_list[0].args[0] == "SET SESSION TRANSACTION READ ONLY"
     # 验证 SQL 构造（无 WHERE 子句）
     sql_arg = cursor.execute.call_args[0][0]
-    assert "SELECT * FROM ns_order" in sql_arg
+    assert "SELECT * FROM `ns_order`" in sql_arg
     assert "LIMIT" in sql_arg
 
 
@@ -348,9 +357,45 @@ def test_jdbc_runtime_read_rows_with_cursor_incremental(
     assert len(rows) == 1
     assert rows[0]["order_id"] == 101
     sql_arg = cursor.execute.call_args[0][0]
-    assert "WHERE order_id >" in sql_arg
-    assert "ORDER BY order_id" in sql_arg
+    assert "WHERE `order_id` >" in sql_arg
+    assert "ORDER BY `order_id`" in sql_arg
     assert "LIMIT" in sql_arg
+
+
+@patch("aos_api.jdbc_connector_runtime.pymysql.connect")
+def test_jdbc_runtime_composite_cursor_is_read_only_and_stable(
+    mock_pymysql_connect: MagicMock,
+) -> None:
+    """增量源使用 (watermark, pk) 双游标，避免同秒数据遗漏。"""
+    fake_conn = MagicMock()
+    mock_pymysql_connect.return_value = fake_conn
+    cursor = MagicMock()
+    fake_conn.cursor.return_value.__enter__.return_value = cursor
+    cursor.fetchall.return_value = [{"goods_id": 51, "modify_time": 1000}]
+    config = {
+        "dbHost": "h", "dbPort": 3306, "database": "db",
+        "username": "u", "secretRef": "s",
+    }
+    with JdbcConnectorRuntime(config) as rt:
+        rows = rt.read_rows(
+            "ns_goods",
+            composite_cursor=(1000, 50, "modify_time", "goods_id"),
+            limit=100,
+        )
+    assert rows[0]["goods_id"] == 51
+    assert cursor.execute.call_args_list[0].args[0] == "SET SESSION TRANSACTION READ ONLY"
+    sql, params = cursor.execute.call_args.args
+    assert "modify_time" in sql and "goods_id" in sql
+    assert params == (1000, 1000, 50, 100)
+
+
+def test_jdbc_runtime_rejects_unsafe_identifier_before_query() -> None:
+    rt = JdbcConnectorRuntime({
+        "dbHost": "h", "database": "db", "username": "u", "password": "p",
+    })
+    rt._conn = MagicMock()
+    with pytest.raises(ValueError, match="unsafe SQL identifier"):
+        rt.read_rows("ns_goods; DROP TABLE ns_order")
 
 
 # ═══════════════════════════════════════════════
@@ -390,10 +435,9 @@ def test_jdbc_runtime_exit_closes_conn_and_tunnel(
     with rt:
         pass
 
-    # 连接关闭
-    fake_conn.close.assert_called_once()
-    # SSH 进程终止
-    proc_mock.terminate.assert_called_once()
+    # __exit__ 仅归还缓存；进程级 cleanup 才关闭连接和隧道。
+    fake_conn.close.assert_not_called()
+    proc_mock.terminate.assert_not_called()
 
 
 @patch("aos_api.jdbc_connector_runtime.pymysql.connect")

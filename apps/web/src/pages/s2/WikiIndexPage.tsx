@@ -4,7 +4,7 @@
  */
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiGet } from "../../api/client";
+import { apiPost } from "../../api/client";
 import { S2Chrome, useJsonGet } from "./shared";
 
 type Branch = { id: string; name: string; baseRef: string; readonly: boolean; changeCount?: number };
@@ -18,6 +18,7 @@ export function WikiIndexPage() {
   const rail = useJsonGet<OntologyRail>("/v1/analytics/ontology-rail");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<string | null>(null);
   const [wikiCards, setWikiCards] = useState<{ type: string; id: string; summary: string }[]>([]);
   const [loadingCards, setLoadingCards] = useState(false);
   const [cardErr, setCardErr] = useState<string | null>(null);
@@ -26,19 +27,20 @@ export function WikiIndexPage() {
   const branchItems = branches.data?.items ?? [];
 
   // 根据选中的 ObjectType 加载 Wiki 卡片
-  async function loadWikiCards(typeId: string) {
+  async function loadWikiCards(typeId: string, branch = selectedBranch) {
     setLoadingCards(true);
+    setSelectedType(typeId);
     setCardErr(null);
     try {
-      // 尝试获取该类型下所有对象的 Wiki 卡片
-      const res = await apiGet<{ items: { id: string; summary?: string }[] }>(
-        `/v1/analytics/objects/list?objectType=${encodeURIComponent(typeId)}&limit=50`,
+      const res = await apiPost<{ columns: string[]; rows: Record<string, unknown>[] }>(
+        "/v1/analytics/objects/list",
+        { objectType: typeId, limit: 50, filters: [], branch },
       );
-      const cards = (res.items || []).map((item) => ({
-        type: typeId,
-        id: item.id,
-        summary: item.summary || "",
-      }));
+      const cards = (res.rows || []).flatMap((row) => {
+        const id = String(row.id ?? "");
+        const summary = String(row.summary ?? row.title ?? row.name ?? "");
+        return id ? [{ type: typeId, id, summary }] : [];
+      });
       setWikiCards(cards);
     } catch (e) {
       setCardErr(e instanceof Error ? e.message : String(e));
@@ -91,7 +93,10 @@ export function WikiIndexPage() {
                     background: selectedBranch === b.id ? "var(--aos-indigo-600)" : undefined,
                     color: selectedBranch === b.id ? "var(--text-on-brand)" : undefined,
                   }}
-                  onClick={() => setSelectedBranch(b.id)}
+                  onClick={() => {
+                    setSelectedBranch(b.id);
+                    if (selectedType) void loadWikiCards(selectedType, b.id);
+                  }}
                 >
                   {b.readonly ? "🔒 " : "🌿 "}
                   {b.id}
@@ -178,7 +183,7 @@ export function WikiIndexPage() {
                 {filteredCards.map((card) => (
                   <Link
                     key={`${card.type}/${card.id}`}
-                    to={`/ontology/wiki?type=${encodeURIComponent(card.type)}&id=${encodeURIComponent(card.id)}`}
+                    to={`/ontology/wiki?type=${encodeURIComponent(card.type)}&id=${encodeURIComponent(card.id)}${selectedBranch ? `&branch=${encodeURIComponent(selectedBranch)}` : ""}`}
                     style={{
                       display: "block",
                       padding: "0.75rem",

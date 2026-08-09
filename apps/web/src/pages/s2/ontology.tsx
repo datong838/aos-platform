@@ -3,7 +3,6 @@ import { Link, useSearchParams } from "react-router-dom";
 import { apiGet, apiPost } from "../../api/client";
 import { getOntologyClient } from "../../api/ontologyClient";
 import { useOntologyObject } from "../../api/ontologyHooks";
-import { fieldDiff } from "../../lib/ontologyRecent";
 import {
   BpBanner,
   BpLinkRow,
@@ -16,7 +15,6 @@ import {
 } from "./blueprintUi";
 import { S2Chrome, useJsonGet } from "./shared";
 
-type Branch = { id: string; name: string; baseRef: string; readonly: boolean; changeCount?: number };
 type GhIssue = {
   code: string;
   severity?: string;
@@ -302,13 +300,13 @@ export function GraphHealthPage() {
 /** 89/94 · Funnel + 真重跑 · ?type= */
 export function FunnelPage() {
   const [sp] = useSearchParams();
-  const objectType = sp.get("type")?.trim() || "WorkOrder";
+  const objectType = sp.get("type")?.trim() || "";
   const status = useJsonGet<{ objectType: string; stage: string; detail?: unknown }>(
-    `/v1/funnel/${encodeURIComponent(objectType)}/status`,
+    objectType ? `/v1/funnel/${encodeURIComponent(objectType)}/status` : null,
   );
   const worker = useJsonGet<{
     stages: { name: string; progress: number }[];
-  }>(`/v1/funnel/${encodeURIComponent(objectType)}/worker`);
+  }>(objectType ? `/v1/funnel/${encodeURIComponent(objectType)}/worker` : null);
   const [pipeMode, setPipeMode] = useState<"live" | "replacement">("live");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
@@ -331,6 +329,7 @@ export function FunnelPage() {
   });
 
   async function rerun() {
+    if (!objectType) return;
     setBusy(true);
     setMsg("");
     try {
@@ -365,7 +364,7 @@ export function FunnelPage() {
         >
           刷新
         </button>
-        <button type="button" className="btn-primary" disabled={busy} onClick={() => void rerun()}>
+        <button type="button" className="btn-primary" disabled={busy || !objectType} onClick={() => void rerun()}>
           {busy ? "重跑中…" : pipeMode === "replacement" ? "重跑 Replacement" : "重跑 Live"}
         </button>
         <Link to="/ontology/okf-funnel" className="btn-nav">
@@ -380,13 +379,19 @@ export function FunnelPage() {
       </BpToolbar>
       {(status.err || worker.err) && <p className="error">{status.err || worker.err}</p>}
       {msg && <p className={msg.startsWith("已") ? "bp-prop-ok" : "error"}>{msg}</p>}
+      {!objectType && (
+        <BpBanner tone="info">
+          尚未选择 Object Type。请先到 <Link to="/workshop/graph">对象探索</Link> 选择真实对象类型，
+          再进入 Funnel；本页不再默认绑定测试 WorkOrder。
+        </BpBanner>
+      )}
 
       <div className="card" style={{ marginBottom: "1rem" }}>
         <p>
           <strong>Funnel Batch · {objectType}</strong> · stage={status.data?.stage || "—"}
         </p>
         <p className="muted" style={{ fontSize: "0.8rem" }}>
-          Backing: <Link to="/data/datasets">{objectType}-demo</Link> · PK: object_id · query type={objectType}
+          Backing: <Link to="/data/datasets">查看真实数据集</Link> · PK: object_id · query type={objectType || "未选择"}
         </p>
         <div style={{ marginTop: 8 }}>
           <label className="muted" style={{ marginRight: 12 }}>
@@ -430,11 +435,13 @@ export function FunnelPage() {
 /** 89/94 · Wiki 可编辑 → Draft · ?type=&id= */
 export function WikiPage() {
   const [sp] = useSearchParams();
-  const objectType = sp.get("type")?.trim() || "WorkOrder";
-  const objectId = sp.get("id")?.trim() || "wo-1001";
+  const objectType = sp.get("type")?.trim() || "";
+  const objectId = sp.get("id")?.trim() || "";
   const [tab, setTab] = useState("card");
   const wiki = useJsonGet<{ objectType: string; objectId: string; body: Record<string, unknown> }>(
-    `/v1/wiki/${encodeURIComponent(objectType)}/${encodeURIComponent(objectId)}`,
+    objectType && objectId
+      ? `/v1/wiki/${encodeURIComponent(objectType)}/${encodeURIComponent(objectId)}`
+      : null,
   );
   const obj = useOntologyObject(objectType, objectId);
   const [summary, setSummary] = useState("");
@@ -516,6 +523,13 @@ export function WikiPage() {
       {(wiki.err || obj.err || err) && <p className="error">{wiki.err || obj.err || err}</p>}
       {msg && <p className="bp-prop-ok">{msg}</p>}
 
+      {!objectType || !objectId ? (
+        <BpBanner tone="info">
+          尚未选择对象。请先到 <Link to="/workshop/graph">对象探索</Link> 选择真实 Object，
+          再从右侧进入 Wiki；本页不再默认绑定不存在的 WorkOrder/wo-1001。
+        </BpBanner>
+      ) : null}
+
       <BpTabs
         active={tab}
         onChange={setTab}
@@ -527,7 +541,7 @@ export function WikiPage() {
         ]}
       />
 
-      {tab === "card" && (
+      {objectType && objectId && tab === "card" && (
         <BpSplit
           left={
             <>
@@ -790,239 +804,116 @@ function WikiVersionsPanel({ objectType, objectId }: { objectType: string; objec
   );
 }
 
-/** 89 v2 · 分支列表 / 新建 / checkout / diff / merge */
+type OverlayComposition = {
+  installation_pk: string;
+  installation_revision: number;
+  composed_schema_etag: string;
+};
+
+type OverlayHistoryItem = {
+  target_kind: "ObjectType" | "LinkType";
+  target_id: string;
+  ontology_revision: number;
+  mode: "override" | "inherit";
+  display_name?: string | null;
+  is_active: boolean;
+  actor?: string;
+  created_at?: string;
+};
+
+/** O1-R4 · 安装绑定的组织 Overlay 不可变历史。 */
 export function BranchesPage() {
-  const { data, err, reload } = useJsonGet<{ items: Branch[] }>("/v1/ontology/branches");
-  const [newId, setNewId] = useState("");
-  const [newName, setNewName] = useState("");
-  const [baseRef, setBaseRef] = useState("main");
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState("");
-  const [formErr, setFormErr] = useState("");
-  const [diffBranch, setDiffBranch] = useState<string | null>(null);
-  const [diffItems, setDiffItems] = useState<
-    { objectType: string; objectId: string; kind: string; base?: unknown; branch?: unknown }[]
-  >([]);
-  const [diffErr, setDiffErr] = useState("");
+  const [composition, setComposition] = useState<OverlayComposition | null>(null);
+  const [history, setHistory] = useState<OverlayHistoryItem[]>([]);
+  const [target, setTarget] = useState("all");
+  const [busy, setBusy] = useState(true);
+  const [err, setErr] = useState("");
 
-  async function createBranch() {
+  async function reload() {
     setBusy(true);
-    setMsg("");
-    setFormErr("");
+    setErr("");
     try {
-      const id = newId.trim();
-      if (!id) throw new Error("请填写分支 id");
-      await apiPost("/v1/ontology/branches", {
-        id,
-        name: newName.trim() || id,
-        baseRef: baseRef.trim() || "main",
-      });
-      setMsg(`已创建分支 ${id}`);
-      setNewId("");
-      setNewName("");
-      reload();
-    } catch (e) {
-      setFormErr(String((e as Error).message || e));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function checkoutSample(branchId: string) {
-    setBusy(true);
-    setMsg("");
-    setFormErr("");
-    try {
-      await apiPost(`/v1/ontology/branches/${encodeURIComponent(branchId)}/checkout`, {
-        objectType: "WorkOrder",
-        objectId: "wo-1001",
-        patch: { title: `[${branchId}] 分支试改 · wo-1001` },
-      });
-      setMsg(`已检出并改写 WorkOrder/wo-1001 → ${branchId}`);
-      reload();
-    } catch (e) {
-      setFormErr(String((e as Error).message || e));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function showDiff(branchId: string) {
-    setBusy(true);
-    setDiffErr("");
-    setDiffBranch(branchId);
-    try {
-      const res = await apiGet<{
-        items: { objectType: string; objectId: string; kind: string; base?: unknown; branch?: unknown }[];
-      }>(`/v1/ontology/branches/${encodeURIComponent(branchId)}/diff`);
-      setDiffItems(res.items || []);
-    } catch (e) {
-      setDiffItems([]);
-      setDiffErr(String((e as Error).message || e));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function mergeBranch(branchId: string) {
-    if (!window.confirm(`确认将 ${branchId} 的 overlay 合并进 base（通常 main）？此操作写生产表。`)) {
-      return;
-    }
-    setBusy(true);
-    setMsg("");
-    setFormErr("");
-    try {
-      const res = await apiPost<{ merged: number }>(
-        `/v1/ontology/branches/${encodeURIComponent(branchId)}/merge`,
-        {},
+      const types = await apiGet<{ composition?: OverlayComposition | null }>(
+        "/v1/ontology/object-types",
       );
-      setMsg(`已合并 ${res.merged ?? 0} 个对象变更 → base`);
-      if (diffBranch === branchId) {
-        setDiffItems([]);
+      const nextComposition = types.composition || null;
+      setComposition(nextComposition);
+      if (!nextComposition) {
+        setHistory([]);
+        return;
       }
-      reload();
+      const response = await apiGet<{ items: OverlayHistoryItem[] }>(
+        `/v1/ontology/installations/${encodeURIComponent(nextComposition.installation_pk)}/overlays/history`,
+      );
+      setHistory(response.items || []);
     } catch (e) {
-      setFormErr(String((e as Error).message || e));
+      setComposition(null);
+      setHistory([]);
+      setErr(String((e as Error).message || e));
     } finally {
       setBusy(false);
     }
   }
+
+  useEffect(() => {
+    void reload();
+  }, []);
+
+  const targets = Array.from(new Set(history.map((item) => `${item.target_kind}:${item.target_id}`)));
+  const visible = target === "all"
+    ? history
+    : history.filter((item) => `${item.target_kind}:${item.target_id}` === target);
 
   return (
-    <S2Chrome title="分支管理" lede="本体分支 · overlay 变更 · 对比 / 合并写入 base（89 v2）">
+    <S2Chrome title="分支与 Overlay" lede="Installation 绑定 · 组织定制 · 不可变修订历史">
       <div className="ont-page">
       <BpToolbar>
-        <button type="button" className="btn" onClick={() => reload()}>
-          刷新
+        <button type="button" className="btn" disabled={busy} onClick={() => void reload()}>
+          {busy ? "刷新中…" : "刷新"}
         </button>
         <Link to="/ontology" className="btn-nav">
-          ← 本体管理
+          管理组织定制 →
         </Link>
       </BpToolbar>
       {err && <p className="error">{err}</p>}
-      {msg && <p className="bp-prop-ok">{msg}</p>}
-      {formErr && <p className="error">{formErr}</p>}
-
-      <div className="card" style={{ marginBottom: "1rem" }}>
-        <strong>新建分支</strong>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8, alignItems: "flex-end" }}>
-          <label className="mp-field">
-            <span className="mp-field-label">id</span>
-            <input className="aos-input" value={newId} onChange={(e) => setNewId(e.target.value)} placeholder="feature-x" />
+      {composition ? (
+        <>
+          <BpMetricGrid items={[
+            { label: "Installation", value: composition.installation_pk.slice(0, 8) },
+            { label: "安装修订", value: composition.installation_revision },
+            { label: "Overlay 修订", value: history.length },
+            { label: "当前生效", value: history.filter((item) => item.is_active).length },
+          ]} />
+          <BpBanner tone="info">
+            平台模板保持只读。组织定制通过强 ETag/CAS 与 Idempotency-Key 生成不可变修订；
+            “恢复安装模板”会追加 inherit 修订，不删除历史。
+          </BpBanner>
+          <label className="mp-field" style={{ maxWidth: 360, margin: "1rem 0" }}>
+            <span className="mp-field-label">筛选目标</span>
+            <select className="aos-input" value={target} onChange={(event) => setTarget(event.target.value)}>
+              <option value="all">全部目标</option>
+              {targets.map((value) => <option key={value} value={value}>{value}</option>)}
+            </select>
           </label>
-          <label className="mp-field">
-            <span className="mp-field-label">name</span>
-            <input className="aos-input" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="功能分支" />
-          </label>
-          <label className="mp-field">
-            <span className="mp-field-label">baseRef</span>
-            <input className="aos-input" value={baseRef} onChange={(e) => setBaseRef(e.target.value)} placeholder="main" />
-          </label>
-          <button type="button" className="btn-primary" disabled={busy} onClick={() => void createBranch()}>
-            {busy ? "创建中…" : "+ 新建分支"}
-          </button>
-        </div>
-      </div>
-
-      <BpTable
-        columns={["分支名", "基于", "Object 变更", "状态", "操作"]}
-        rows={(data?.items || []).map((b) => [
-          <strong key={`n-${b.id}`}>{b.id}</strong>,
-          b.baseRef || "—",
-          b.readonly ? "—" : `${b.changeCount ?? 0} 处`,
-          b.readonly ? <span className="aos-text">生产/只读</span> : <span className="muted">开发中</span>,
-          b.readonly ? (
-            <span className="muted">—</span>
-          ) : (
-            <span key={`ops-${b.id}`} style={{ display: "inline-flex", flexWrap: "wrap", gap: 8 }}>
-              <button
-                type="button"
-                className="bp-action-link"
-                disabled={busy}
-                onClick={() => void checkoutSample(b.id)}
-                title="检出 WorkOrder/wo-1001 并写入试改标题"
-              >
-                检出样例
-              </button>
-              <button type="button" className="bp-action-link" disabled={busy} onClick={() => void showDiff(b.id)}>
-                对比
-              </button>
-              <button
-                type="button"
-                className="bp-action-link"
-                disabled={busy || !(b.changeCount && b.changeCount > 0)}
-                onClick={() => void mergeBranch(b.id)}
-              >
-                合并
-              </button>
-            </span>
-          ),
-        ])}
-      />
-
-      {diffBranch && (
-        <div className="card" style={{ marginTop: "1rem" }}>
-          <div className="mp-section-head">
-            <strong>Diff · {diffBranch}</strong>
-            <button type="button" className="btn" onClick={() => setDiffBranch(null)}>
-              关闭
-            </button>
-          </div>
-          {diffErr && <p className="error">{diffErr}</p>}
-          {!diffErr && diffItems.length === 0 && <p className="muted">无 overlay 变更</p>}
-          {diffItems.map((d) => {
-            const baseObj =
-              d.base && typeof d.base === "object" ? (d.base as Record<string, unknown>) : null;
-            const branchObj =
-              d.branch && typeof d.branch === "object" ? (d.branch as Record<string, unknown>) : null;
-            const fields = fieldDiff(baseObj, branchObj);
-            return (
-              <div key={`${d.objectType}/${d.objectId}`} className="ont-diff-item">
-                <div className="ont-diff-head">
-                  <strong>
-                    {d.objectType}/{d.objectId}
-                  </strong>
-                  <span className={`ont-diff-kind is-${d.kind}`}>{d.kind}</span>
-                  <Link
-                    to={`/ontology/object-types/${encodeURIComponent(d.objectType)}`}
-                    className="bp-action-link"
-                  >
-                    打开类型 →
-                  </Link>
-                </div>
-                {d.kind === "deleted" && (
-                  <p className="muted" style={{ margin: "0.35rem 0" }}>
-                    将从 base 删除；原 props：{JSON.stringify(baseObj || {})}
-                  </p>
-                )}
-                {d.kind === "added" && (
-                  <p className="muted" style={{ margin: "0.35rem 0" }}>
-                    新增对象 props：{JSON.stringify(branchObj || {})}
-                  </p>
-                )}
-                {d.kind === "modified" && fields.length === 0 && (
-                  <p className="muted" style={{ margin: "0.35rem 0" }}>
-                    overlay 已跟踪，字段与 base 当前一致
-                  </p>
-                )}
-                {fields.length > 0 && (
-                  <BpTable
-                    columns={["字段", "base", "branch"]}
-                    rows={fields.map((f) => [f.key, f.base, f.branch])}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {(data?.items || []).some((b) => b.id === "sandbox") && (
-        <BpBanner tone="warn">
-          sandbox 为只读种子分支；请新建开发分支后「检出样例 → 对比 → 合并」。
-        </BpBanner>
-      )}
-      <BpLinkRow links={[{ to: "/ontology", label: "本体管理" }]} />
+          <BpTable
+            columns={["目标", "修订", "模式", "显示名", "状态", "操作者 / 时间"]}
+            rows={visible.map((item) => [
+              <strong key={`${item.target_kind}-${item.target_id}`}>{item.target_kind}:{item.target_id}</strong>,
+              item.ontology_revision,
+              item.mode,
+              item.display_name || "继承安装模板",
+              item.is_active ? <span className="aos-text">当前生效</span> : <span className="muted">历史</span>,
+              `${item.actor || "—"} · ${item.created_at ? new Date(item.created_at).toLocaleString() : "—"}`,
+            ])}
+          />
+          {!busy && history.length === 0 && (
+            <p className="muted">当前组织尚未创建本体定制；所有类型均继承当前安装模板。</p>
+          )}
+        </>
+      ) : !busy && !err ? (
+        <BpBanner tone="warn">当前工作区没有可用的电商领域包 Installation，无法创建组织 Overlay。</BpBanner>
+      ) : null}
+      <BpLinkRow links={[{ to: "/ontology", label: "本体管理与组织定制" }]} />
       </div>
     </S2Chrome>
   );

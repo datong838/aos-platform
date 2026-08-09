@@ -218,6 +218,7 @@ class ObjectsListIn(BaseModel):
     objectType: str
     limit: int = Field(default=50, ge=1, le=1000)
     filters: list[dict[str, Any]] = Field(default_factory=list)
+    branch: str | None = None
 
 
 class ObjectsGetIn(BaseModel):
@@ -480,31 +481,49 @@ def _list_objects_table(
     *,
     limit: int,
     filters: list[dict[str, Any]] | None = None,
+    branch: str | None = None,
 ) -> dict[str, Any]:
     from aos_api.db import connect
     from aos_api.marking import apply_field_redaction, can_access_object
     from aos_api.routers.object_sets import _prop_defs, _query_pg
 
-    result = _query_pg(
-        scope=TenantScope(principal.org_id, principal.project_id),
-        object_type=object_type,
-        filters=list(filters or []),
-        page=1,
-        page_size=limit,
-    )
+    scope = TenantScope(principal.org_id, principal.project_id)
+    with connect(scope) as visibility_conn:
+        from aos_api.ontology_compose import assert_object_type_visible
+
+        assert_object_type_visible(visibility_conn, scope, object_type)
+    if branch:
+        from aos_api.branch_store import effective_objects
+
+        with connect(scope) as branch_conn:
+            source_rows = effective_objects(branch_conn, scope, object_type, branch)[:limit]
+        items = [
+            {"id": row["object_id"], "type": object_type, **(row.get("props") or {})}
+            for row in source_rows
+        ]
+        result = {"items": items, "total": len(items), "source": "branch-overlay"}
+    else:
+        result = _query_pg(
+            scope=scope,
+            object_type=object_type,
+            filters=list(filters or []),
+            page=1,
+            page_size=limit,
+        )
     prop_defs = _prop_defs(object_type)
     kept: list[dict[str, Any]] = []
     with connect(TenantScope(principal.org_id, principal.project_id)) as conn:
+        from aos_api.routers.ontology import _auto_redact_ecom_pii
+
         for it in result.get("items") or []:
             oid = str(it.get("id") or "")
             if not oid or not can_access_object(principal, conn, object_type, oid):
                 continue
             if prop_defs:
-                kept.append(
-                    apply_field_redaction(principal, dict(it), prop_defs, conn=conn)
-                )
+                safe = apply_field_redaction(principal, dict(it), prop_defs, conn=conn)
             else:
-                kept.append(dict(it))
+                safe = dict(it)
+            kept.append(_auto_redact_ecom_pii(safe))
     columns, rows = _rows_to_table(kept)
     return _with_governance(
         {
@@ -517,6 +536,7 @@ def _list_objects_table(
             "total": int(result.get("total") or len(rows)),
             "pageSize": limit,
             "source": result.get("source") or "pg",
+            "branch": branch,
         }
     )
 
@@ -665,6 +685,9 @@ def analytics_ontology_rail(
             rows = conn.execute(
                 "SELECT id, name, description, published FROM meta_object_type ORDER BY id"
             ).fetchall()
+            from aos_api.ontology_compose import filter_object_type_rows
+
+            rows, _composition = filter_object_type_rows(conn, scope, list(rows))
             for r in rows[:typeLimit]:
                 tid = str(r["id"])
                 instances: list[dict[str, Any]] = []
@@ -769,6 +792,7 @@ def analytics_objects_list(
         body.objectType.strip(),
         limit=body.limit,
         filters=body.filters,
+        branch=body.branch,
     )
     log.info("analytics_objects_list type=%s total=%s", body.objectType, out["total"])
     return out

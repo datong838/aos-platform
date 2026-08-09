@@ -15,12 +15,13 @@ from aos_api import mock_data
 
 @pytest.fixture()
 def api_client():
-    """Auth-only client — no PG (TWA.1 HTTP paths only hit /v1/me)."""
+    """Auth binding client; directory existence is isolated from these unit tests."""
     idempotency_store.clear()
     mock_data.reset_mock_state()
     reset_metrics()
     app = create_app()
-    with TestClient(app) as c:
+    from unittest.mock import patch
+    with patch("aos_api.tenant_directory_service.require_workspace"), TestClient(app) as c:
         yield c
 
 
@@ -85,6 +86,34 @@ def test_bind_dev_header_fallback():
     )
     assert org == "h-org"
     assert project == "h-prj"
+
+
+@pytest.mark.parametrize(
+    ("header_org", "header_project"),
+    ((None, None), ("h-org", None), (None, "h-prj")),
+)
+def test_bind_dev_header_fallback_requires_both_dimensions(
+    header_org: str | None,
+    header_project: str | None,
+):
+    with pytest.raises(ApiError) as ei:
+        bind_tenant_ids(
+            claim_org=None,
+            claim_project=None,
+            header_org=header_org,
+            header_project=header_project,
+            allow_header_fallback=True,
+        )
+    assert ei.value.status_code == 401
+    assert ei.value.code == "AUTH_TENANT_CLAIM_REQUIRED"
+
+
+def test_dev_bearer_requires_explicit_tenant_headers(monkeypatch):
+    monkeypatch.setenv("AOS_AUTH_ALLOW_DEV", "1")
+    with pytest.raises(ApiError) as ei:
+        resolve_principal(token="dev")
+    assert ei.value.status_code == 401
+    assert ei.value.code == "AUTH_TENANT_CLAIM_REQUIRED"
 
 
 def test_jwt_forged_project_header_rejected(api_client):

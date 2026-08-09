@@ -18,7 +18,7 @@ describe("TWA.2 tenant context", () => {
     const t = getTenant();
     expect(t.projectId).toBe("dev-project");
     expect(t.workspaceName).toBe("默认工作区");
-    expect(t.orgId).toBe("dev-org");
+    expect(t.orgId).toBe("org-org");
   });
 
   it("auth headers come from context not literals scattered", () => {

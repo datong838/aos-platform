@@ -7,6 +7,7 @@ read or mutate legacy ``obj_instance`` / ``graph_edge`` state.
 from __future__ import annotations
 
 import hashlib
+import json
 from datetime import datetime, timezone
 from threading import RLock
 from typing import Any
@@ -14,6 +15,7 @@ from typing import Any
 from sqlalchemy import (
     JSON,
     BigInteger,
+    Boolean,
     CheckConstraint,
     Column,
     DateTime,
@@ -23,6 +25,7 @@ from sqlalchemy import (
     Table,
     Text,
     and_,
+    func,
     insert,
     or_,
     select,
@@ -135,6 +138,38 @@ ecom_ingest_receipt = Table(
     Column("idempotency_key", String, primary_key=True),
     Column("request_hash", String(64), nullable=False),
     Column("result", JSON, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+)
+
+projection_outbox = Table(
+    "projection_outbox",
+    metadata,
+    Column(
+        "outbox_id",
+        BigInteger().with_variant(Integer, "sqlite"),
+        primary_key=True,
+        autoincrement=True,
+    ),
+    Column("org_id", String, nullable=False),
+    Column("project_id", String, nullable=False),
+    Column("workspace_id", String, nullable=False),
+    Column("input_revision", BigInteger, nullable=False),
+    Column("change_kind", String, nullable=False),
+    Column("object_type", String, nullable=True),
+    Column("external_id", String, nullable=True),
+    Column("link_type", String, nullable=True),
+    Column("source_external_id", String, nullable=True),
+    Column("target_external_id", String, nullable=True),
+    Column("platform", String, nullable=False),
+    Column("shop_or_marketplace_id", String, nullable=False),
+    Column("payload", JSON, nullable=False),
+    Column("event_key", String(64), nullable=False),
+    Column("payload_hash", String(64), nullable=False),
+    Column("event_source", String, nullable=False),
+    Column("authority_tx_id", String(64), nullable=False),
+    Column("projected", Boolean, nullable=False, default=False),
+    Column("projected_at", DateTime(timezone=True), nullable=True),
+    Column("projection_error", Text, nullable=True),
     Column("created_at", DateTime(timezone=True), nullable=False),
 )
 
@@ -253,6 +288,14 @@ class EcomConsistencyStore:
                 for record in command.ordered_objects():
                     outcome = self._upsert_object(conn, record)
                     counters[outcome] += 1
+                    if outcome in {"objects_written", "objects_tombstoned"}:
+                        self._write_projection_event(
+                            conn,
+                            command=command,
+                            outcome=outcome,
+                            entity=record,
+                            authority_tx_id=request_hash,
+                        )
 
                 # Phase 2: upsert links, collecting dangling links for DLQ
                 # instead of aborting the entire batch
@@ -268,6 +311,14 @@ class EcomConsistencyStore:
                         continue
                     outcome = self._upsert_link_checked(conn, link)
                     counters[outcome] += 1
+                    if outcome in {"links_written", "links_tombstoned"}:
+                        self._write_projection_event(
+                            conn,
+                            command=command,
+                            outcome=outcome,
+                            entity=link,
+                            authority_tx_id=request_hash,
+                        )
 
                 # Store dangling link info for DLQ (accessible via get_dangling_links)
                 if dangling_links:
@@ -412,9 +463,11 @@ class EcomConsistencyStore:
             if incoming_time == stored_time:
                 if existing["payload_hash"] == payload_hash:
                     return "objects_ignored"
-                # D5-E2: Allow re-projection when payload changed (derived metric recompute).
-                # Instead of raising SOURCE_VERSION_CONFLICT, fall through to UPDATE.
-                # This enables CustomerLite/Payment second-pass derived metric refresh.
+                raise EcomConsistencyError(
+                    "SOURCE_VERSION_CONFLICT",
+                    "same source version has a different object payload",
+                    details={"objectType": record.object_type},
+                )
             conn.execute(
                 update(ecom_object)
                 .where(clause)
@@ -521,8 +574,11 @@ class EcomConsistencyStore:
             if link.source_updated_at == stored_time:
                 if existing["payload_hash"] == payload_hash:
                     return "links_ignored"
-                # D5-E2: Allow re-projection when payload changed (derived metric recompute).
-                # Fall through to UPDATE instead of raising SOURCE_VERSION_CONFLICT.
+                raise EcomConsistencyError(
+                    "SOURCE_VERSION_CONFLICT",
+                    "same source version has a different link payload",
+                    details={"linkType": link.link_type},
+                )
             stored_deleted_at = existing["deleted_at"]
             if stored_deleted_at is not None:
                 tombstone_time = _db_time(stored_deleted_at)
@@ -548,6 +604,105 @@ class EcomConsistencyStore:
                 )
             )
         return "links_tombstoned" if link.is_deleted else "links_written"
+
+    @staticmethod
+    def _next_projection_revision(conn: Connection) -> int:
+        if conn.dialect.name == "postgresql":
+            return int(
+                conn.execute(
+                    text("SELECT nextval('projection_input_revision_seq')")
+                ).scalar_one()
+            )
+        return int(
+            conn.execute(
+                select(func.coalesce(func.max(projection_outbox.c.input_revision), 0) + 1)
+            ).scalar_one()
+        )
+
+    @classmethod
+    def _write_projection_event(
+        cls,
+        conn: Connection,
+        *,
+        command: BatchCommand,
+        outcome: str,
+        entity: CoreObjectRecord | CoreLinkRecord,
+        authority_tx_id: str,
+    ) -> None:
+        if isinstance(entity, CoreObjectRecord):
+            identity = entity.identity
+            identity_material = (
+                entity.object_type,
+                identity.external_id,
+            )
+            payload = {
+                "schemaVersion": 1,
+                "entityKind": "object",
+                "changeKind": outcome,
+                "objectType": entity.object_type,
+                "identity": entity.identity.model_dump(mode="json"),
+                "record": entity.model_dump(mode="json"),
+            }
+            identity_columns = {
+                "object_type": entity.object_type,
+                "external_id": identity.external_id,
+                "link_type": None,
+                "source_external_id": None,
+                "target_external_id": None,
+            }
+        else:
+            identity = entity.source
+            identity_material = (
+                entity.link_type,
+                entity.source_type,
+                entity.source.external_id,
+                entity.target_type,
+                entity.target.external_id,
+            )
+            payload = {
+                "schemaVersion": 1,
+                "entityKind": "link",
+                "changeKind": outcome,
+                "record": entity.model_dump(mode="json"),
+            }
+            identity_columns = {
+                "object_type": None,
+                "external_id": None,
+                "link_type": entity.link_type,
+                "source_external_id": entity.source.external_id,
+                "target_external_id": entity.target.external_id,
+            }
+
+        payload_json = json.dumps(
+            _jsonable(payload), ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        )
+        event_material = "\x1f".join(
+            (
+                *command.scope.key(),
+                command.idempotency_key,
+                outcome,
+                *identity_material,
+            )
+        )
+        conn.execute(
+            insert(projection_outbox).values(
+                org_id=identity.org_id,
+                project_id=identity.workspace_id,
+                workspace_id=identity.workspace_id,
+                input_revision=cls._next_projection_revision(conn),
+                change_kind=outcome,
+                platform=identity.platform,
+                shop_or_marketplace_id=identity.shop_or_marketplace_id,
+                payload=json.loads(payload_json),
+                event_key=hashlib.sha256(event_material.encode("utf-8")).hexdigest(),
+                payload_hash=hashlib.sha256(payload_json.encode("utf-8")).hexdigest(),
+                event_source="authoritative_store",
+                authority_tx_id=authority_tx_id,
+                projected=False,
+                created_at=_utcnow(),
+                **identity_columns,
+            )
+        )
 
     @staticmethod
     def _tombstone_attached_links(

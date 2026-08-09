@@ -3,7 +3,7 @@
  * Web only talks to aos-api; no engine direct calls.
  */
 const STORAGE_KEY = "aos-api-base-v1";
-const FALLBACK = "http://127.0.0.1:8080";
+const FALLBACK = "/api";
 
 let runtimeOverride: string | null = null;
 

@@ -69,7 +69,7 @@ describe("FerryPage", () => {
     expect(text).toContain("签名者");
     expect(text).toContain("release-bot@aos-platform");
     expect(text).toContain("目标 Spoke");
-    expect(text).toContain("spoke-prod-sh");
+    expect(text).toContain("上海生产运行节点");
   });
 
   it("shows ferry submit button and metrics", async () => {

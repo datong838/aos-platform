@@ -154,11 +154,14 @@ def _check_link_scale(*, expected_edges: int, mdo_approved: bool) -> None:
 def list_object_types(
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    _ = principal
-    with connect() as conn:
+    from aos_api.ontology_compose import filter_object_type_rows
+
+    scope = TenantScope(principal.org_id, principal.project_id)
+    with connect(scope) as conn:
         rows = conn.execute(
             "SELECT id, name, description, published, properties FROM meta_object_type ORDER BY id"
         ).fetchall()
+        rows, installation = filter_object_type_rows(conn, scope, list(rows))
     items = [
         {
             "id": r["id"],
@@ -170,7 +173,7 @@ def list_object_types(
         for r in rows
     ]
     log.info("list_object_types count=%s", len(items))
-    return {"items": items}
+    return {"items": items, "composition": installation}
 
 
 @router.post("/v1/ontology/object-types")
@@ -178,7 +181,14 @@ def create_object_type(
     body: ObjectTypeIn,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    _ = principal
+    from aos_api.ecom_core_models import CORE_OBJECT_TYPES
+
+    if body.id in CORE_OBJECT_TYPES:
+        raise ApiError(
+            code="ONTOLOGY_TEMPLATE_WRITE_FORBIDDEN",
+            message="installed ecommerce types are customized through an organization overlay",
+            status_code=409,
+        )
     lint = lint_object_type(
         {
             "id": body.id,
@@ -225,8 +235,10 @@ def get_object_type(
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """OT 详情 · W3-C2 补齐派生元数据（RID/PK/TitleKey/Backing 等）。"""
-    _ = principal
-    with connect() as conn:
+    from aos_api.ontology_compose import filter_object_type_rows
+
+    scope = TenantScope(principal.org_id, principal.project_id)
+    with connect(scope) as conn:
         try:
             row = conn.execute(
                 """
@@ -244,11 +256,14 @@ def get_object_type(
                 """,
                 (type_id,),
             ).fetchone()
-    if not row:
+        rows, _installation = filter_object_type_rows(
+            conn, scope, [row] if row is not None else []
+        )
+    if not rows:
         raise ApiError(
             code="NOT_FOUND", message="object type not found", status_code=404
         )
-    row_d = dict(row)
+    row_d = dict(rows[0])
     return build_ot_detail_meta(
         type_id=row_d["id"],
         name=row_d["name"],
@@ -274,7 +289,14 @@ def update_object_type(
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """95 · 更新 OT 元数据 / properties（publish 走 constitution lint）。"""
-    _ = principal
+    from aos_api.ecom_core_models import CORE_OBJECT_TYPES
+
+    if type_id in CORE_OBJECT_TYPES:
+        raise ApiError(
+            code="ONTOLOGY_TEMPLATE_WRITE_FORBIDDEN",
+            message="installed ecommerce types are customized through an organization overlay",
+            status_code=409,
+        )
     lint = lint_object_type(
         {
             "id": type_id,
@@ -333,8 +355,10 @@ def update_object_type(
 def list_link_types(
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    _ = principal
-    with connect() as conn:
+    from aos_api.ontology_compose import filter_link_type_rows
+
+    scope = TenantScope(principal.org_id, principal.project_id)
+    with connect(scope) as conn:
         rows = conn.execute(
             """
             SELECT id, name, src_type, dst_type, rel, cardinality,
@@ -342,9 +366,10 @@ def list_link_types(
             FROM meta_link_type ORDER BY id
             """
         ).fetchall()
+        rows, installation = filter_link_type_rows(conn, scope, list(rows))
     items = [_row_to_link(r) for r in rows]
     log.info("list_link_types count=%s", len(items))
-    return {"items": items}
+    return {"items": items, "composition": installation}
 
 
 @router.post("/v1/ontology/link-types")
@@ -352,7 +377,14 @@ def create_link_type(
     body: LinkTypeIn,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    _ = principal
+    from aos_api.ecom_core_models import CORE_LINK_TYPES
+
+    if body.id in CORE_LINK_TYPES or body.rel in CORE_LINK_TYPES:
+        raise ApiError(
+            code="ONTOLOGY_TEMPLATE_WRITE_FORBIDDEN",
+            message="installed ecommerce links are customized through an organization overlay",
+            status_code=409,
+        )
     _check_link_scale(expected_edges=body.expectedEdges, mdo_approved=body.mdoApproved)
     with connect() as conn:
         exists = conn.execute(
@@ -441,7 +473,10 @@ def get_link_type(
     link_id: str,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    with connect() as conn:
+    from aos_api.ontology_compose import filter_link_type_rows
+
+    scope = _scope(principal)
+    with connect(scope) as conn:
         row = conn.execute(
             """
             SELECT id, name, src_type, dst_type, rel, cardinality,
@@ -450,9 +485,12 @@ def get_link_type(
             """,
             (link_id,),
         ).fetchone()
-    if not row:
+        rows, _installation = filter_link_type_rows(
+            conn, scope, [row] if row is not None else []
+        )
+    if not rows:
         raise ApiError(code="NOT_FOUND", message="link type not found", status_code=404)
-    return _row_to_link(row)
+    return _row_to_link(rows[0])
 
 
 @router.put("/v1/ontology/link-types/{link_id}")
@@ -461,7 +499,14 @@ def update_link_type(
     body: LinkTypeIn,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    _ = principal
+    from aos_api.ecom_core_models import CORE_LINK_TYPES
+
+    if link_id in CORE_LINK_TYPES or body.rel in CORE_LINK_TYPES:
+        raise ApiError(
+            code="ONTOLOGY_TEMPLATE_WRITE_FORBIDDEN",
+            message="installed ecommerce links are customized through an organization overlay",
+            status_code=409,
+        )
     if body.id != link_id:
         raise ApiError(code="VALIDATION", message="id mismatch", status_code=400)
     _check_link_scale(expected_edges=body.expectedEdges, mdo_approved=body.mdoApproved)
@@ -503,7 +548,14 @@ def delete_link_type(
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """Delete metadata only — does not cascade graph_edge."""
-    _ = principal
+    from aos_api.ecom_core_models import CORE_LINK_TYPES
+
+    if link_id in CORE_LINK_TYPES:
+        raise ApiError(
+            code="ONTOLOGY_TEMPLATE_WRITE_FORBIDDEN",
+            message="installed ecommerce links cannot be deleted from the platform template",
+            status_code=409,
+        )
     with connect() as conn:
         row = conn.execute(
             "SELECT 1 FROM meta_link_type WHERE id=%s", (link_id,)
@@ -525,7 +577,11 @@ def list_objects(
     branch: str | None = None,
 ) -> dict[str, Any]:
     """List instances. ``branch`` selects effective view (89 v2 overlay)."""
-    with connect() as conn:
+    from aos_api.ontology_compose import assert_object_type_visible
+
+    scope = _scope(principal)
+    with connect(scope) as conn:
+        assert_object_type_visible(conn, scope, object_type)
         from aos_api.branch_store import effective_objects
         prop_defs = _object_type_properties(conn, object_type)
         rows = effective_objects(conn, _scope(principal), object_type, branch)
@@ -551,7 +607,11 @@ def get_object(
     principal: Principal = Depends(require_principal),
     branch: str | None = None,
 ) -> dict[str, Any]:
-    with connect() as conn:
+    from aos_api.ontology_compose import assert_object_type_visible
+
+    scope = _scope(principal)
+    with connect(scope) as conn:
+        assert_object_type_visible(conn, scope, object_type)
         from aos_api.branch_store import effective_object
         ensure_object_access(principal, conn, object_type, object_id)
         prop_defs = _object_type_properties(conn, object_type)
@@ -582,7 +642,14 @@ def put_object(
     branch: str | None = None,
 ) -> dict[str, Any]:
     """89 v2 · write branch overlay only. Production writes stay on Draft path."""
-    _ = principal
+    from aos_api.ecom_core_models import CORE_OBJECT_TYPES
+
+    if object_type in CORE_OBJECT_TYPES:
+        raise ApiError(
+            code="ONTOLOGY_LEGACY_BRANCH_WRITE_FORBIDDEN",
+            message="ecommerce objects use the authoritative store and Installation Overlay path",
+            status_code=409,
+        )
     if not branch:
         raise ApiError(
             code="VALIDATION",
@@ -854,56 +921,95 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
     scope = _scope(principal)
     with connect(scope) as conn:
         types = conn.execute("SELECT COUNT(*) AS c FROM meta_object_type").fetchone()
-        objs = conn.execute(
-            "SELECT COUNT(*) AS c FROM obj_instance WHERE org_id=%s AND project_id=%s",
+        authority_objs = conn.execute(
+            "SELECT COUNT(*) AS c FROM ecom_object WHERE org_id=%s AND workspace_id=%s AND deleted_at IS NULL",
             scope.key,
         ).fetchone()
-        edges = conn.execute(
-            "SELECT COUNT(*) AS c FROM graph_edge WHERE org_id=%s AND project_id=%s",
-            scope.key,
-        ).fetchone()
-        orphans = conn.execute(
-            """
-            SELECT COUNT(*) AS c FROM obj_instance o
-            WHERE o.org_id=%s AND o.project_id=%s
-            AND NOT EXISTS (
-              SELECT 1 FROM graph_edge e
-              WHERE e.org_id=%s AND e.project_id=%s
-                AND ((e.src_type=o.object_type AND e.src_id=o.object_id)
-                  OR (e.dst_type=o.object_type AND e.dst_id=o.object_id))
-            )
-            """,
-            (*scope.key, *scope.key),
-        ).fetchone()
-        dangling = conn.execute(
-            """
-            SELECT COUNT(*) AS c FROM graph_edge e
-            WHERE e.org_id=%s AND e.project_id=%s
-            AND (NOT EXISTS (
-              SELECT 1 FROM obj_instance s
-              WHERE s.object_type=e.src_type AND s.object_id=e.src_id
-                AND s.org_id=%s AND s.project_id=%s
-            )
-            OR NOT EXISTS (
-              SELECT 1 FROM obj_instance d
-              WHERE d.object_type=e.dst_type AND d.object_id=e.dst_id
-                AND d.org_id=%s AND d.project_id=%s
-            ))
-            """,
-            (*scope.key, *scope.key, *scope.key),
-        ).fetchone()
-        # property key conflicts: instance keys not declared on OT (cap 2000 rows)
-        prop_rows = conn.execute(
-            """
-            SELECT o.object_type, o.object_id, o.props, t.properties
-            FROM obj_instance o
-            JOIN meta_object_type t ON t.id = o.object_type
-            WHERE o.org_id=%s AND o.project_id=%s
-            ORDER BY o.object_type, o.object_id
-            LIMIT 2000
-            """,
-            scope.key,
-        ).fetchall()
+        authoritative = int(authority_objs["c"]) > 0
+        if authoritative:
+            objs = authority_objs
+            edges = conn.execute(
+                "SELECT COUNT(*) AS c FROM ecom_link WHERE org_id=%s AND workspace_id=%s AND deleted_at IS NULL",
+                scope.key,
+            ).fetchone()
+            orphans = conn.execute(
+                """
+                SELECT COUNT(*) AS c FROM ecom_object o
+                WHERE o.org_id=%s AND o.workspace_id=%s AND o.deleted_at IS NULL
+                  AND NOT EXISTS (
+                    SELECT 1 FROM ecom_link e
+                    WHERE e.org_id=o.org_id AND e.workspace_id=o.workspace_id AND e.deleted_at IS NULL
+                      AND ((e.source_platform=o.platform
+                            AND e.source_shop_or_marketplace_id=o.shop_or_marketplace_id
+                            AND e.source_object_type=o.object_type AND e.source_external_id=o.external_id)
+                        OR (e.target_platform=o.platform
+                            AND e.target_shop_or_marketplace_id=o.shop_or_marketplace_id
+                            AND e.target_object_type=o.object_type AND e.target_external_id=o.external_id))
+                  )
+                """,
+                scope.key,
+            ).fetchone()
+            dangling = conn.execute(
+                """
+                SELECT COUNT(*) AS c FROM ecom_link e
+                WHERE e.org_id=%s AND e.workspace_id=%s AND e.deleted_at IS NULL
+                  AND (NOT EXISTS (
+                    SELECT 1 FROM ecom_object s WHERE s.org_id=e.org_id AND s.workspace_id=e.workspace_id
+                      AND s.platform=e.source_platform AND s.shop_or_marketplace_id=e.source_shop_or_marketplace_id
+                      AND s.object_type=e.source_object_type AND s.external_id=e.source_external_id
+                      AND s.deleted_at IS NULL
+                  ) OR NOT EXISTS (
+                    SELECT 1 FROM ecom_object d WHERE d.org_id=e.org_id AND d.workspace_id=e.workspace_id
+                      AND d.platform=e.target_platform AND d.shop_or_marketplace_id=e.target_shop_or_marketplace_id
+                      AND d.object_type=e.target_object_type AND d.external_id=e.target_external_id
+                      AND d.deleted_at IS NULL
+                  ))
+                """,
+                scope.key,
+            ).fetchone()
+            prop_rows = conn.execute(
+                """
+                SELECT o.object_type,o.external_id AS object_id,o.properties AS props,t.properties
+                FROM ecom_object o JOIN meta_object_type t ON t.id=o.object_type
+                WHERE o.org_id=%s AND o.workspace_id=%s AND o.deleted_at IS NULL
+                ORDER BY o.object_type,o.external_id LIMIT 2000
+                """,
+                scope.key,
+            ).fetchall()
+        else:
+            objs = conn.execute(
+                "SELECT COUNT(*) AS c FROM obj_instance WHERE org_id=%s AND project_id=%s", scope.key
+            ).fetchone()
+            edges = conn.execute(
+                "SELECT COUNT(*) AS c FROM graph_edge WHERE org_id=%s AND project_id=%s", scope.key
+            ).fetchone()
+            orphans = conn.execute(
+                """
+                SELECT COUNT(*) AS c FROM obj_instance o WHERE o.org_id=%s AND o.project_id=%s
+                  AND NOT EXISTS (SELECT 1 FROM graph_edge e WHERE e.org_id=%s AND e.project_id=%s
+                    AND ((e.src_type=o.object_type AND e.src_id=o.object_id)
+                      OR (e.dst_type=o.object_type AND e.dst_id=o.object_id)))
+                """,
+                (*scope.key, *scope.key),
+            ).fetchone()
+            dangling = conn.execute(
+                """
+                SELECT COUNT(*) AS c FROM graph_edge e WHERE e.org_id=%s AND e.project_id=%s
+                  AND (NOT EXISTS (SELECT 1 FROM obj_instance s WHERE s.object_type=e.src_type
+                    AND s.object_id=e.src_id AND s.org_id=%s AND s.project_id=%s)
+                  OR NOT EXISTS (SELECT 1 FROM obj_instance d WHERE d.object_type=e.dst_type
+                    AND d.object_id=e.dst_id AND d.org_id=%s AND d.project_id=%s))
+                """,
+                (*scope.key, *scope.key, *scope.key),
+            ).fetchone()
+            prop_rows = conn.execute(
+                """
+                SELECT o.object_type,o.object_id,o.props,t.properties FROM obj_instance o
+                JOIN meta_object_type t ON t.id=o.object_type
+                WHERE o.org_id=%s AND o.project_id=%s ORDER BY o.object_type,o.object_id LIMIT 2000
+                """,
+                scope.key,
+            ).fetchall()
     dangling_n = int(dangling["c"])
     conflict_n = 0
     conflict_samples: list[str] = []
@@ -936,7 +1042,7 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
         "danglingEdges": dangling_n,
         "propConflicts": conflict_n,
         "archiveCandidates": int(ttl_snap["archiveCandidates"]),
-        "engine": "adjacency_table",
+        "engine": "ecom_authoritative" if authoritative else "adjacency_table",
         "ageAvailable": False,
         "insightTtlDays": ttl_snap["ttlDays"],
     }

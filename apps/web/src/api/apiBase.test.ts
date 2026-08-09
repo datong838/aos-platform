@@ -19,7 +19,7 @@ describe("TWB.1 apiBase", () => {
     expect(resolveDefaultApiBase("https://aos.example.com/")).toBe(
       "https://aos.example.com/",
     );
-    expect(getApiBase()).toMatch(/^https?:\/\//);
+    expect(getApiBase()).toBe("/api");
   });
 
   it("override persists and strips trailing slash", () => {

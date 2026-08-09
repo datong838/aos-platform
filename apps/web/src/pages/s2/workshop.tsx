@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { getOntologyClient } from "../../api/ontologyClient";
 import { apiGet, apiPost, S2Chrome, useJsonGet } from "./shared";
 import {
@@ -15,10 +15,11 @@ type Neighbor = { id?: string; type?: string; rel?: string; title?: string };
 
 /** 83 · 对齐 Object Explorer · 标签+搜索+视图栏+表格+Object View 侧边栏 */
 export function GraphExplorerPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: types, err: tErr } = useJsonGet<{ items: { id: string; name: string }[] }>(
     "/v1/ontology/object-types",
   );
-  const [typeId, setTypeId] = useState("Order");
+  const [typeId, setTypeId] = useState(searchParams.get("type")?.trim() || "Order");
   const [objects, setObjects] = useState<Record<string, unknown>[]>([]);
   const [objectId, setObjectId] = useState<string | null>(null);
   const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
@@ -49,7 +50,11 @@ export function GraphExplorerPage() {
       const r = await getOntologyClient().listObjects(t);
       setObjects((r.items || []) as Record<string, unknown>[]);
       if (r.items.length > 0) {
-        await openObject(t, String(r.items[0].id));
+        const requestedId = searchParams.get("id")?.trim();
+        const selected = requestedId && r.items.some((item) => String(item.id) === requestedId)
+          ? requestedId
+          : String(r.items[0].id);
+        await openObject(t, selected);
       }
     } catch (e) {
       setErr(String((e as Error).message || e));
@@ -65,6 +70,7 @@ export function GraphExplorerPage() {
       const d = await ont.getObject(t, id);
       const n = (await ont.neighbors(t, id)) as { items?: Neighbor[] };
       setDetail(d as Record<string, unknown>);
+      setSearchParams({ type: t, id }, { replace: true });
       setNeighbors(n.items || []);
       try {
         const w = await apiGet<{ body?: string }>(`/v1/wiki/${encodeURIComponent(t)}/${encodeURIComponent(id)}`);
@@ -128,11 +134,11 @@ export function GraphExplorerPage() {
             </svg>
             {currentTypeName}
           </div>
-          <button type="button" className="p-objx-tab-new" title="新建标签">
+          <button type="button" className="p-objx-tab-new" title="多标签视图尚未启用" disabled>
             +
           </button>
           <div className="p-objx-tab-actions">
-            <button type="button" className="p-objx-action">
+            <button type="button" className="p-objx-action" title="对象集写入需先完成 Overlay" disabled>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M12 5v14M5 12h14" />
               </svg>
@@ -174,20 +180,20 @@ export function GraphExplorerPage() {
             </label>
           </div>
           <div className="p-objx-search-right">
-            <button type="button" className="p-objx-icon-btn" title="筛选器">
+            <button type="button" className="p-objx-icon-btn" title="当前使用上方搜索筛选" disabled>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
               </svg>
             </button>
-            <button type="button" className="p-objx-icon-btn" title="列设置">
+            <button type="button" className="p-objx-icon-btn" title="列设置将在 Overlay 闭环后启用" disabled>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="3" width="18" height="18" rx="2" />
                 <path d="M9 3v18" />
                 <path d="M15 3v18" />
               </svg>
             </button>
-            <button type="button" className="p-objx-share">共享</button>
-            <button type="button" className="p-objx-save">保存</button>
+            <button type="button" className="p-objx-share" onClick={() => setToast("当前对象已写入地址栏，可复制链接共享")}>共享</button>
+            <button type="button" className="p-objx-save" onClick={() => setToast("当前视图已由地址栏保存")}>保存</button>
           </div>
         </div>
 
@@ -221,7 +227,7 @@ export function GraphExplorerPage() {
               </svg>
               图谱
             </button>
-            <button type="button" className="p-objx-view-btn">
+            <button type="button" className="p-objx-view-btn" disabled title="注释需通过 Draft/Overlay，尚未启用">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
@@ -232,13 +238,13 @@ export function GraphExplorerPage() {
             <span className="p-objx-results-count">{filteredObjects.length} 条结果</span>
           </div>
           <div className="p-objx-view-right">
-            <button type="button" className="p-objx-view-btn">
+            <button type="button" className="p-objx-view-btn" disabled title="展开配置尚未启用">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M12 5v14M5 12h14" />
               </svg>
               展开
             </button>
-            <button type="button" className="p-objx-view-btn">
+            <button type="button" className="p-objx-view-btn" disabled title="更多配置尚未启用">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
@@ -368,7 +374,7 @@ export function GraphExplorerPage() {
                     </div>
                   ) : (
                     <p className="muted" style={{ fontSize: "0.75rem" }}>
-                      暂无 Wiki 页 · <Link to="/ontology/wiki">去 Wiki</Link>
+                      暂无 Wiki 页 · <Link to={`/ontology/wiki?type=${encodeURIComponent(typeId)}&id=${encodeURIComponent(String(objectId || ""))}`}>去 Wiki</Link>
                     </p>
                   )}
                   {detailProps && <BpPropGrid items={detailProps} />}
@@ -386,8 +392,11 @@ export function GraphExplorerPage() {
                     <Link to="/aip/drafts" className="btn">
                       立案 Action 🟡
                     </Link>
-                    <Link to="/ontology/wiki" className="btn">
+                    <Link to={`/ontology/wiki?type=${encodeURIComponent(typeId)}&id=${encodeURIComponent(String(objectId || ""))}`} className="btn">
                       Wiki 全页
+                    </Link>
+                    <Link to={`/ontology/funnel?type=${encodeURIComponent(typeId)}`} className="btn">
+                      Funnel 状态
                     </Link>
                     <Link
                       to={

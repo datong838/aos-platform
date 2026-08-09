@@ -1,7 +1,7 @@
 /**
  * 187w/188w · Source 详情（连接器页）· 对齐 source-detail.html
  * 统一壳：Tab · 探索两栏（左树 + 中预览）；探索区仅为采样预览，不冒充全量。
- * W3-C7：Schema 树（schema→表→列）优先接 phase6 datasource API；失败标演示路径。
+ * W3-C7：Schema 树（schema→表→列）只读取 phase6 datasource API；失败显示真实空状态。
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -43,6 +43,21 @@ export type SchemaColumn = {
   primary_key?: boolean;
   nullable?: boolean;
   comment?: string;
+  description?: string;
+};
+
+type ConnectorConfigProperty = {
+  format?: string;
+  default?: unknown;
+  description?: string;
+  title?: string;
+};
+
+type ConnectorPlugin = {
+  id: string;
+  nameZh?: string;
+  name?: string;
+  configSchema?: { properties?: Record<string, ConnectorConfigProperty> };
 };
 
 export type SchemaTable = {
@@ -118,138 +133,7 @@ function cellText(v: unknown): string {
   return s.length > 48 ? `${s.slice(0, 45)}…` : s;
 }
 
-/** D2.6 · Niushop 微商城专属 Demo Schema（8 张 ns_xxx 表 + 真实字段）。
- *
- * 字段映射参考 scripts/d2_qiyuehui_init_load.py 的 8 OT mapper：
- * - ns_site (Shop) / ns_goods_category (Category) / ns_goods (Product) /
- *   ns_goods_sku (ProductSku) / ns_member (CustomerLite) / ns_order (Order) /
- *   ns_order_goods (OrderLine) / ns_express_delivery_package (Shipment)
- *
- * 注：ns_member 包含 PII 字段（mobile/nickname 等）用于在 UI 可视化标记隐私字段，
- * 实际接入时由 SourceAdapter 层显式 drop（_PII_DROP_FIELDS）。
- */
-const NIUSHOP_DEMO_SCHEMA: SchemaNode[] = [
-  {
-    name: "niushop_b2c_v5",
-    description: "演示路径 · Niushop 微商城数据库",
-    tables: [
-      {
-        name: "ns_shop",
-        row_count: 1,
-        columns: [
-          { name: "site_id", datatype: "INT", primary_key: true },
-          { name: "site_name", datatype: "VARCHAR" },
-          { name: "create_time", datatype: "INT" },
-          { name: "modify_time", datatype: "INT" },
-        ],
-      },
-      {
-        name: "ns_goods_category",
-        row_count: 11,
-        columns: [
-          { name: "category_id", datatype: "INT", primary_key: true },
-          { name: "category_name", datatype: "VARCHAR" },
-          { name: "parent_id", datatype: "INT" },
-          { name: "sort", datatype: "INT", nullable: true },
-        ],
-      },
-      {
-        name: "ns_goods",
-        row_count: 65,
-        columns: [
-          { name: "goods_id", datatype: "INT", primary_key: true },
-          { name: "goods_name", datatype: "VARCHAR" },
-          { name: "category_id", datatype: "INT" },
-          { name: "sku_price", datatype: "DECIMAL", nullable: true },
-          { name: "market_price", datatype: "DECIMAL", nullable: true },
-          { name: "evaluate", datatype: "INT" },
-          { name: "evaluate_haoping", datatype: "INT" },
-          { name: "create_time", datatype: "INT" },
-          { name: "modify_time", datatype: "INT" },
-        ],
-      },
-      {
-        name: "ns_goods_sku",
-        row_count: 73,
-        columns: [
-          { name: "sku_id", datatype: "INT", primary_key: true },
-          { name: "goods_id", datatype: "INT" },
-          { name: "sku_name", datatype: "VARCHAR" },
-          { name: "price", datatype: "DECIMAL" },
-          { name: "stock", datatype: "INT" },
-          { name: "alarm_stock", datatype: "INT", nullable: true },
-          { name: "create_time", datatype: "INT" },
-          { name: "modify_time", datatype: "INT" },
-        ],
-      },
-      {
-        name: "ns_member",
-        row_count: 53,
-        columns: [
-          { name: "member_id", datatype: "INT", primary_key: true },
-          { name: "member_level", datatype: "INT" },
-          { name: "status", datatype: "INT" },
-          { name: "mobile", datatype: "VARCHAR", nullable: true },
-          { name: "wx_openid", datatype: "VARCHAR", nullable: true },
-          { name: "nickname", datatype: "VARCHAR", nullable: true },
-          { name: "avatar", datatype: "VARCHAR", nullable: true },
-          { name: "reg_address", datatype: "VARCHAR", nullable: true },
-          { name: "last_login_ip", datatype: "VARCHAR", nullable: true },
-          { name: "site_id", datatype: "INT" },
-          { name: "is_delete", datatype: "INT" },
-        ],
-      },
-      {
-        name: "ns_order",
-        row_count: 177,
-        columns: [
-          { name: "order_id", datatype: "BIGINT", primary_key: true },
-          { name: "order_no", datatype: "VARCHAR" },
-          { name: "member_id", datatype: "INT" },
-          { name: "order_money", datatype: "DECIMAL" },
-          { name: "pay_money", datatype: "DECIMAL", nullable: true },
-          { name: "order_status", datatype: "INT" },
-          { name: "pay_status", datatype: "INT" },
-          { name: "refund_status", datatype: "INT" },
-          { name: "is_lock", datatype: "INT" },
-          { name: "commission_risk_flag", datatype: "INT", nullable: true },
-          { name: "create_time", datatype: "INT" },
-          { name: "modify_time", datatype: "INT" },
-        ],
-      },
-      {
-        name: "ns_order_goods",
-        row_count: 227,
-        columns: [
-          { name: "order_goods_id", datatype: "BIGINT", primary_key: true },
-          { name: "order_id", datatype: "BIGINT" },
-          { name: "goods_id", datatype: "INT" },
-          { name: "sku_id", datatype: "INT" },
-          { name: "goods_name", datatype: "VARCHAR" },
-          { name: "goods_money", datatype: "DECIMAL" },
-          { name: "real_goods_money", datatype: "DECIMAL" },
-          { name: "num", datatype: "INT" },
-          { name: "create_time", datatype: "INT" },
-        ],
-      },
-      {
-        name: "ns_express_delivery_package",
-        row_count: 19,
-        columns: [
-          { name: "id", datatype: "BIGINT", primary_key: true },
-          { name: "order_id", datatype: "BIGINT" },
-          { name: "express_company_id", datatype: "INT", nullable: true },
-          { name: "express_no", datatype: "VARCHAR", nullable: true },
-          { name: "delivery_time", datatype: "INT", nullable: true },
-          { name: "member_id", datatype: "INT" },
-          { name: "site_id", datatype: "INT" },
-        ],
-      },
-    ],
-  },
-];
-
-/** W3-C7 · 按连接器类型的本地演示 Schema（API 全失败时） */
+/** W3-C7 · 纯函数测试夹具；运行时 API 失败时禁止使用。 */
 export function demoSchemaTree(connectorType?: string): SchemaNode[] {
   const t = (connectorType || "jdbc").toLowerCase();
   // D4 Phase C: niushop-mysql 已废弃，不再根据连接器类型返回专属 schema
@@ -384,7 +268,7 @@ export function SourceDetailPage() {
   const { data: pipeData, reload: reloadPipelines } = useJsonGet<{ items: PipelineRow[] }>("/v1/pipelines");
   const { data: dsData, reload: reloadDatasets } = useJsonGet<{ items: DatasetRow[] }>("/v1/datasets");
   const { data: syncData, reload: reloadSyncs } = useJsonGet<{ items: SyncRow[] }>("/v1/syncs");
-  const { data: pluginData, reload: reloadPlugins } = useJsonGet<{ items: { id: string; nameZh?: string; name?: string }[] }>(
+  const { data: pluginData, reload: reloadPlugins } = useJsonGet<{ items: ConnectorPlugin[] }>(
     "/v1/connector-plugins",
   );
 
@@ -412,8 +296,7 @@ export function SourceDetailPage() {
   const [previewErr, setPreviewErr] = useState<string | null>(null);
   const [previewBusy, setPreviewBusy] = useState(false);
   const [sampleTick, setSampleTick] = useState(0);
-  const [previewDemo, setPreviewDemo] = useState(false);
-  const [previewSource, setPreviewSource] = useState<"live" | "dataset" | "object" | "demo">("live");
+  const [previewSource, setPreviewSource] = useState<"live" | "dataset" | "object" | "none">("live");
   const [previewPrimaryErr, setPreviewPrimaryErr] = useState<string | null>(null);
 
   // W3-C7 schema tree
@@ -468,7 +351,6 @@ export function SourceDetailPage() {
       setPreview(null);
       setPreviewErr(null);
       setPreviewPrimaryErr(null);
-      setPreviewDemo(false);
       setPreviewSource("live");
       setPreviewBusy(false);
     }
@@ -489,7 +371,6 @@ export function SourceDetailPage() {
     setPreview(null);
     setPreviewErr(null);
     setPreviewPrimaryErr(null);
-    setPreviewDemo(false);
     setPreviewSource("live");
     setTableSearch("");
   }, [sourceId]);
@@ -644,7 +525,6 @@ export function SourceDetailPage() {
       previewRequestRef.current === requestId;
     setPreviewBusy(true);
     setPreviewErr(null);
-    setPreviewDemo(false);
     setPreviewPrimaryErr(null);
     let primaryError: string | null = null;
     try {
@@ -661,7 +541,6 @@ export function SourceDetailPage() {
           );
           if (!isCurrent()) return;
           setPreview(result);
-          setPreviewDemo(false);
           setPreviewSource("live");
           return;
         } catch (error) {
@@ -683,7 +562,6 @@ export function SourceDetailPage() {
         }
         if (!isCurrent()) return;
         setPreview(result);
-        setPreviewDemo(false);
         setPreviewSource(activeEntry.datasetRid ? "dataset" : "object");
         setPreviewPrimaryErr(primaryError);
         return;
@@ -697,7 +575,6 @@ export function SourceDetailPage() {
       if (!isCurrent()) return;
       setPreview(null);
       setPreviewErr(e instanceof Error ? e.message : String(e));
-      setPreviewDemo(false);
       setPreviewPrimaryErr(primaryError);
     } finally {
       if (isCurrent()) setPreviewBusy(false);
