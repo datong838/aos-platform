@@ -109,7 +109,7 @@ def test_queries_scoped_source_and_reads_initial_without_limit() -> None:
     assert "meta_source" in sql
     assert params == ("src-1", "org-org", "dev-project")
     assert runtime.calls == [
-        {"table": "ns_goods", "composite_cursor": None, "limit": None}
+        {"table": "ns_goods", "composite_cursor": None, "limit": None, "where_equals": {}}
     ]
     assert rows == [{"goods_id": 1, "is_delete": 0}]
 
@@ -128,6 +128,7 @@ def test_incremental_uses_composite_cursor_and_limit_100() -> None:
         "table": "ns_goods",
         "composite_cursor": (1000, 50, "modify_time", "goods_id"),
         "limit": 100,
+        "where_equals": {},
     }]
     assert rows[0]["goods_id"] == 51
 
@@ -162,6 +163,40 @@ def test_runtime_connection_failure_is_not_swallowed() -> None:
                 nodes=[_node({"source_id": "src-1", "table": "ns_goods"})],
                 node_id="n-src", sample_input=None, scope=TEST_SCOPE,
             )
+
+
+def test_jdbc_source_applies_parameterized_pipeline_filter() -> None:
+    runtime = _Runtime([{"goods_id": 1, "site_id": 1, "goods_state": 1, "is_delete": 0}])
+    rows, _conn = _run(
+        runtime,
+        config={
+            "source_id": "src-1",
+            "table": "ns_goods",
+            "initial": True,
+            "site_filter": "site_id=1 AND is_delete=0 AND goods_state=1",
+        },
+    )
+    assert rows[0]["goods_id"] == 1
+    assert runtime.calls == [{
+        "table": "ns_goods",
+        "composite_cursor": None,
+        "limit": None,
+        "where_equals": {"site_id": 1, "is_delete": 0, "goods_state": 1},
+    }]
+
+
+def test_jdbc_source_rejects_unsafe_pipeline_filter_before_query() -> None:
+    runtime = _Runtime()
+    with pytest.raises(ValueError, match="unsafe site_filter"):
+        _run(
+            runtime,
+            config={
+                "source_id": "src-1",
+                "table": "ns_goods",
+                "site_filter": "site_id=1 OR 1=1",
+            },
+        )
+    assert runtime.calls == []
 
 
 def test_meta_source_not_found_fails_closed() -> None:

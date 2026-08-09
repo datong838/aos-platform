@@ -12,7 +12,9 @@ import { queryAuthoritativeGraph } from "../../api/ontologyGraph";
 import type { GraphSnapshot } from "../../api/ontologyExplorerContracts";
 import {
   buildExplorerSearchParams,
+  filterOperationalObjects,
   ObjectExplorerWorkspace,
+  formatExplorerValue,
   resolveExplorerColumns,
   toggleObjectSelection,
 } from "../../components/ontology/ObjectExplorerWorkspace";
@@ -167,11 +169,15 @@ export function GraphExplorerPage() {
     setSelectedKeys([]);
     try {
       const r = await getOntologyClient().listObjects(t);
-      setObjects((r.items || []) as Record<string, unknown>[]);
+      const effectiveItems = filterOperationalObjects(
+        t,
+        (r.items || []) as Record<string, unknown>[],
+      );
+      setObjects(effectiveItems);
       const requestedId = searchParams.get("id")?.trim();
-      if (r.items.length > 0 && requestedId) {
+      if (effectiveItems.length > 0 && requestedId) {
         const selected = resolveObjectSelectionId(
-          r.items as Record<string, unknown>[],
+          effectiveItems,
           requestedId,
         );
         if (selected) await openObject(t, selected);
@@ -281,8 +287,8 @@ export function GraphExplorerPage() {
   }, [objects, query]);
 
   const columnResolution = useMemo(
-    () => resolveExplorerColumns(currentType?.properties, objects),
-    [currentType?.properties, objects],
+    () => resolveExplorerColumns(currentType?.properties, objects, typeId),
+    [currentType?.properties, objects, typeId],
   );
   const objectColumns = columnResolution.columns;
   const allVisibleKeys = filteredObjects.map((object) => `${typeId}:${String(object.id)}`);
@@ -391,6 +397,17 @@ export function GraphExplorerPage() {
     if (asset) applySavedExploration(asset);
   }
 
+  function chooseObjectType(nextTypeId: string) {
+    const nextType = types?.items?.find((item) => item.id === nextTypeId);
+    setTypeId(nextTypeId);
+    setAssetName(`${nextType?.name || nextTypeId}对象探索`);
+    const next = new URLSearchParams(searchParams);
+    next.set("type", nextTypeId);
+    next.delete("id");
+    next.delete("viewRef");
+    setSearchParams(next, { replace: true });
+  }
+
   return (
     <S2Chrome title="对象探索" lede="Object Explorer · 按类型浏览对象 · Selection 绑定 Object View + Wiki">
       <div className="p-objx-app">
@@ -414,12 +431,18 @@ export function GraphExplorerPage() {
                 <option key={item.id} value={item.id}>{item.payload.name}</option>
               ))}
             </select>
-            <input
-              aria-label="探索名称"
-              value={assetName}
-              onChange={(event) => setAssetName(event.target.value)}
-              maxLength={240}
-            />
+            <label className="p-objx-select-label">
+              对象类型
+              <select
+                aria-label="选择探索对象类型"
+                value={typeId}
+                onChange={(event) => chooseObjectType(event.target.value)}
+              >
+                {(types?.items || []).map((type) => (
+                  <option key={type.id} value={type.id}>{type.name}</option>
+                ))}
+              </select>
+            </label>
             <select
               aria-label="资产可见范围"
               value={assetVisibility}
@@ -467,16 +490,6 @@ export function GraphExplorerPage() {
                 onChange={(e) => setQuery(e.target.value)}
               />
             </div>
-            <label className="muted">
-              类型
-              <select value={typeId} onChange={(e) => setTypeId(e.target.value)}>
-                {(types?.items || []).map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
-            </label>
           </div>
         </div>
 
@@ -639,12 +652,12 @@ export function GraphExplorerPage() {
                             {idx === 0 ? (
                               <div className="p-objx-cell-title">
                                 <div className="p-objx-avatar">
-                                  {String(o[col.key] || "?").charAt(0).toUpperCase()}
+                                  {formatExplorerValue(typeId, col.key, o[col.key]).charAt(0).toUpperCase()}
                                 </div>
-                                {String(o[col.key] ?? "—")}
+                                {formatExplorerValue(typeId, col.key, o[col.key])}
                               </div>
                             ) : (
-                              String(o[col.key] ?? "—")
+                              formatExplorerValue(typeId, col.key, o[col.key])
                             )}
                           </td>
                         ))}

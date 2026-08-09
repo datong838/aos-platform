@@ -704,6 +704,21 @@ class EcomConsistencyStore:
                 legacy_properties = dict(existing["properties"] or {})
                 for key in DERIVED_PROPERTIES.get(record.object_type, frozenset()):
                     legacy_properties.pop(key, None)
+                incoming_base_properties = dict(record.properties)
+                for key in DERIVED_PROPERTIES.get(record.object_type, frozenset()):
+                    incoming_base_properties.pop(key, None)
+                additive_schema_upgrade = (
+                    record.schema_version > int(existing["schema_version"])
+                    and all(
+                        key in incoming_base_properties
+                        and incoming_base_properties[key] == value
+                        for key, value in legacy_properties.items()
+                    )
+                    and existing["source_timezone"] == record.source_timezone
+                    and existing["canonical_status"] == record.status.canonical_value
+                    and existing["raw_status"] == record.status.raw_status
+                    and (existing["deleted_at"] is not None) == record.is_deleted
+                )
                 if (
                     legacy_properties == dict(record.properties)
                     and existing["source_timezone"] == record.source_timezone
@@ -711,12 +726,13 @@ class EcomConsistencyStore:
                     and existing["raw_status"] == record.status.raw_status
                     and int(existing["schema_version"]) == record.schema_version
                     and (existing["deleted_at"] is not None) == record.is_deleted
-                ):
+                ) or additive_schema_upgrade:
                     conn.execute(
                         update(ecom_object)
                         .where(clause)
                         .values(
                             properties=dict(record.properties),
+                            schema_version=record.schema_version,
                             payload_hash=payload_hash,
                             updated_at=now,
                         )

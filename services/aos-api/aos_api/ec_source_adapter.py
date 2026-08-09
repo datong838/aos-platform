@@ -15,6 +15,7 @@ FR-D1-4 关键约束：
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any, Mapping, Sequence
@@ -274,6 +275,7 @@ def _fetch_from_jdbc_ssh(
     watermark_col = node_config.get("watermark_col", "modify_time")
     cursor = node_config.get("cursor")
     initial = bool(node_config.get("initial", False))
+    where_equals = _parse_site_filter(node_config.get("site_filter"))
 
     # 通用 JDBC SSH 运行时（with 上下文管理 SSH 隧道 + JDBC 连接生命周期）
     with JdbcConnectorRuntime(props) as rt:
@@ -288,6 +290,7 @@ def _fetch_from_jdbc_ssh(
             table,
             composite_cursor=composite_cursor,
             limit=SAMPLE_LIMIT if composite_cursor is not None else None,
+            where_equals=where_equals,
         )
 
     # 数据清洗：软删行过滤 + PII 排除 + 0 时间转 null（复用原逻辑）
@@ -295,6 +298,42 @@ def _fetch_from_jdbc_ssh(
     cleaned_rows = _clean_rows(rows, pipeline_id=pipeline_id, node_id=node_id, table=table)
 
     return cleaned_rows
+
+
+_FILTER_TERM = re.compile(
+    r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?:'([^']*)'|\"([^\"]*)\"|(-?\d+(?:\.\d+)?))\s*$"
+)
+
+
+def _parse_site_filter(value: Any) -> dict[str, Any]:
+    """把 Pipeline 的简单等值 AND 过滤转换为参数化查询条件。
+
+    这里只接受 ``column=value AND column=value``；任何 OR、函数、注释或
+    其他 SQL 语法均失败关闭，避免把配置文本直接拼接成 SQL。
+    """
+    if value is None or value == "":
+        return {}
+    if isinstance(value, bool):
+        raise ValueError("site_filter only accepts simple equality terms")
+    if isinstance(value, int):
+        return {"site_id": value}
+    if not isinstance(value, str):
+        raise ValueError("site_filter only accepts simple equality terms")
+
+    result: dict[str, Any] = {}
+    for term in re.split(r"\s+AND\s+", value.strip(), flags=re.IGNORECASE):
+        match = _FILTER_TERM.fullmatch(term)
+        if match is None:
+            raise ValueError(f"unsafe site_filter term: {term!r}")
+        column, single_quoted, double_quoted, numeric = match.groups()
+        if column in result:
+            raise ValueError(f"duplicate site_filter column: {column!r}")
+        if numeric is not None:
+            parsed: Any = float(numeric) if "." in numeric else int(numeric)
+        else:
+            parsed = single_quoted if single_quoted is not None else double_quoted
+        result[column] = parsed
+    return result
 
 
 def _query_meta_source_props(source_id: str, scope: Any) -> dict[str, Any]:

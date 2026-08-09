@@ -78,6 +78,7 @@ def obj(
     identity: StorageIdentity | None = None,
     deleted: bool = False,
     properties: dict | None = None,
+    schema_version: int = 1,
 ) -> CoreObjectRecord:
     return CoreObjectRecord(
         identity=identity or ident(external_id),
@@ -89,6 +90,7 @@ def obj(
             {"DELETED": "deleted", "ACTIVE": "active"},
         ),
         is_deleted=deleted,
+        schema_version=schema_version,
         properties={} if deleted else (properties or VALID_PROPERTIES[object_type]),
     )
 
@@ -229,6 +231,31 @@ def test_same_source_version_with_different_payload_is_rejected(store: EcomConsi
     assert caught.value.code == "SOURCE_VERSION_CONFLICT"
     assert store.get_object(ident("a-new"), "Product") is None
     assert store.get_object(ident("z-existing"), "Product")["properties"].get("title") != "conflict"
+
+
+def test_same_source_version_allows_additive_schema_upgrade(store: EcomConsistencyStore) -> None:
+    """Schema 升级可在不伪造源时间的前提下补充真实字段，但不得改写既有值。"""
+    first = batch(obj("Product", "product-1"), key="schema-v1")
+    store.apply_batch(first)
+    enriched = obj(
+        "Product",
+        "product-1",
+        schema_version=2,
+        properties={
+            **VALID_PROPERTIES["Product"],
+            "price": "59.00",
+            "stock": "120",
+        },
+    )
+    result = store.apply_batch(
+        batch(enriched, key="schema-v2", expected=1, cursor_id="product-1")
+    )
+
+    assert result.objects_written == 1
+    stored = store.get_object(ident("product-1"), "Product")
+    assert stored["schema_version"] == 2
+    assert stored["properties"]["price"] == "59.00"
+    assert stored["properties"]["stock"] == "120"
 
 
 def test_authoritative_writes_create_unprojected_outbox_in_same_transaction(

@@ -98,8 +98,17 @@ def test_to_product_maps_goods_id_and_modify_time():
     raw = {
         "goods_id": 65,
         "goods_name": "测试商品",
+        "goods_class_name": "服饰内衣",
         "category_id": "11,22",
         "site_id": 1,
+        "price": "59.00",
+        "market_price": "89.00",
+        "cost_price": "30.00",
+        "goods_stock": 120,
+        "sale_num": 18,
+        "unit": "件",
+        "goods_state": 1,
+        "is_delete": 0,
         "modify_time": 1700001000,
         "create_time": 1700000000,
         "evaluate": 10,
@@ -109,11 +118,21 @@ def test_to_product_maps_goods_id_and_modify_time():
 
     assert out["ot"] == "Product"
     assert out["source_pk"] == "65"
+    assert out["schema_version"] == 2
     # modify_time 优先
     assert out["source_updated_at"] == datetime.fromtimestamp(1700001000, tz=timezone.utc)
     assert out["properties"]["shopId"] == "1"
     assert out["properties"]["categoryId"] == "11,22"
     assert out["properties"]["title"] == "测试商品"
+    assert out["properties"]["goodsClassName"] == "服饰内衣"
+    assert out["properties"]["price"] == "59.00"
+    assert out["properties"]["marketPrice"] == "89.00"
+    assert out["properties"]["costPrice"] == "30.00"
+    assert out["properties"]["stock"] == "120"
+    assert out["properties"]["saleNum"] == "18"
+    assert out["properties"]["unit"] == "件"
+    assert out["properties"]["state"] == "1"
+    assert out["properties"]["isDelete"] == "0"
     # raw 字段保留（供 apply_derived_metrics._get_field 读取 evaluate/evaluate_haoping）
     assert out["evaluate"] == 10
     assert out["evaluate_haoping"] == 8

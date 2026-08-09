@@ -1542,6 +1542,14 @@
   gap: 6px;
   margin-left: auto;
 }
+.p-objx-select-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--aos-text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
 .p-objx-tab-actions input,
 .p-objx-tab-actions select {
   min-width: 120px;

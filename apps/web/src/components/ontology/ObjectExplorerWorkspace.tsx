@@ -10,9 +10,96 @@ export type ExplorerColumn = {
 
 export type ExplorerColumnResolution = {
   columns: ExplorerColumn[];
-  source: "schema" | "object-union";
+  source: "schema" | "object-union" | "domain-profile";
   schemaIncomplete: boolean;
 };
+
+const DOMAIN_COLUMN_PROFILES: Record<string, ExplorerColumn[]> = {
+  Order: [
+    { key: "id", label: "订单 ID" },
+    { key: "orderNo", label: "订单号" },
+    { key: "memberId", label: "会员 ID" },
+    { key: "createdAt", label: "下单时间", type: "datetime" },
+    { key: "totalAmount", label: "订单金额", type: "money", unit: "CNY" },
+    { key: "orderStatus", label: "订单状态" },
+    { key: "payStatus", label: "支付状态" },
+    { key: "deliveryStatus", label: "发货状态" },
+  ],
+  Product: [
+    { key: "id", label: "商品 ID" },
+    { key: "title", label: "商品名称" },
+    { key: "price", label: "销售价", type: "money", unit: "CNY" },
+    { key: "stock", label: "库存" },
+    { key: "saleNum", label: "销量" },
+    { key: "categoryId", label: "类目" },
+    { key: "state", label: "上架状态" },
+    { key: "updatedAt", label: "更新时间", type: "datetime" },
+  ],
+};
+
+const STATUS_LABELS: Record<string, Record<string, string>> = {
+  orderStatus: {
+    "-1": "已关闭",
+    "0": "待付款",
+    "1": "待发货",
+    "2": "待收货",
+    "10": "已完成",
+  },
+  payStatus: { "0": "未支付", "1": "已支付", "2": "已退款" },
+  deliveryStatus: { "0": "未发货", "1": "已发货", "2": "已收货" },
+  state: { "0": "已下架", "1": "已上架" },
+};
+
+export function formatExplorerValue(
+  objectType: string,
+  key: string,
+  value: unknown,
+): string {
+  if (value === null || value === undefined || value === "") return "—";
+  const raw = String(value);
+  const status = STATUS_LABELS[key]?.[raw];
+  if (status) return status;
+  if (key === "totalAmount" || key === "price" || key === "marketPrice" || key === "costPrice") {
+    const amount = Number(raw);
+    return Number.isFinite(amount) ? `¥${amount.toFixed(2)}` : raw;
+  }
+  if (key === "createdAt" || key === "updatedAt") {
+    const instant = new Date(raw);
+    if (!Number.isNaN(instant.getTime())) {
+      return new Intl.DateTimeFormat("zh-CN", {
+        timeZone: "Asia/Shanghai",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).format(instant);
+    }
+  }
+  void objectType;
+  return raw;
+}
+
+export function filterOperationalObjects(
+  objectType: string,
+  objects: Record<string, unknown>[],
+): Record<string, unknown>[] {
+  if (objectType === "Order") {
+    return objects.filter(
+      (object) => String(object.status) === "active" && Number(object.isDelete) === 0,
+    );
+  }
+  if (objectType === "Product") {
+    return objects.filter(
+      (object) =>
+        String(object.status) === "active" &&
+        Number(object.isDelete) === 0 &&
+        Number(object.state) === 1,
+    );
+  }
+  return objects;
+}
 
 type SchemaProperty = {
   name?: unknown;
@@ -52,7 +139,16 @@ function isVisibleProperty(key: string): boolean {
 export function resolveExplorerColumns(
   schemaProperties: unknown,
   objects: Record<string, unknown>[],
+  objectType?: string,
 ): ExplorerColumnResolution {
+  const profile = objectType ? DOMAIN_COLUMN_PROFILES[objectType] : undefined;
+  if (profile) {
+    const observed = new Set(objects.flatMap((object) => Object.keys(object)));
+    const columns = profile.filter((column) => column.key === "id" || observed.has(column.key));
+    if (columns.length > 1) {
+      return { columns, source: "domain-profile", schemaIncomplete: false };
+    }
+  }
   const schemaColumns = schemaPropertyList(schemaProperties).flatMap<ExplorerColumn>((property) => {
       const key = propertyKey(property);
       if (!isVisibleProperty(key) || key === "id") return [];

@@ -30,7 +30,7 @@ import threading
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Any, Iterator, Sequence
+from typing import Any, Iterator, Mapping, Sequence
 
 import pymysql
 
@@ -886,6 +886,7 @@ class JdbcConnectorRuntime:
         cursor: tuple[Any, str] | None = None,
         limit: int | None = 100,
         composite_cursor: tuple[Any, Any, str, str] | None = None,
+        where_equals: Mapping[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         """读取表行流（带游标增量）。
 
@@ -902,27 +903,40 @@ class JdbcConnectorRuntime:
             raise ValueError("limit must be between 1 and 10000")
 
         table_ref = f"`{schema}`.`{table}`" if schema else f"`{table}`"
+        where_parts: list[str] = []
+        params_list: list[Any] = []
+        for column, value in (where_equals or {}).items():
+            if not identifier.fullmatch(column):
+                raise ValueError(f"unsafe SQL identifier: {column!r}")
+            where_parts.append(f"`{column}` = %s")
+            params_list.append(value)
+
         if composite_cursor:
             watermark, primary_key_value, watermark_column, primary_key_column = composite_cursor
             for value in (watermark_column, primary_key_column):
                 if not identifier.fullmatch(value):
                     raise ValueError(f"unsafe SQL identifier: {value!r}")
-            sql = (
-                f"SELECT * FROM {table_ref} WHERE "
+            where_parts.append(
                 f"(`{watermark_column}` > %s OR "
-                f"(`{watermark_column}` = %s AND `{primary_key_column}` > %s)) "
-                f"ORDER BY `{watermark_column}`, `{primary_key_column}`"
+                f"(`{watermark_column}` = %s AND `{primary_key_column}` > %s))"
             )
-            params = (watermark, watermark, primary_key_value)
+            params_list.extend((watermark, watermark, primary_key_value))
+            order_by = f" ORDER BY `{watermark_column}`, `{primary_key_column}`"
         elif cursor:
             watermark, pk = cursor
             if not identifier.fullmatch(pk):
                 raise ValueError(f"unsafe SQL identifier: {pk!r}")
-            sql = f"SELECT * FROM {table_ref} WHERE `{pk}` > %s ORDER BY `{pk}`"
-            params: tuple[Any, ...] = (watermark,)
+            where_parts.append(f"`{pk}` > %s")
+            params_list.append(watermark)
+            order_by = f" ORDER BY `{pk}`"
         else:
-            sql = f"SELECT * FROM {table_ref}"
-            params = ()
+            order_by = ""
+
+        sql = f"SELECT * FROM {table_ref}"
+        if where_parts:
+            sql += " WHERE " + " AND ".join(where_parts)
+        sql += order_by
+        params: tuple[Any, ...] = tuple(params_list)
 
         if limit is not None and " LIMIT %s" not in sql:
             sql += " LIMIT %s"

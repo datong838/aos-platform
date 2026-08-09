@@ -389,6 +389,35 @@ def test_jdbc_runtime_composite_cursor_is_read_only_and_stable(
     assert params == (1000, 1000, 50, 100)
 
 
+@patch("aos_api.jdbc_connector_runtime.pymysql.connect")
+def test_jdbc_runtime_combines_parameterized_filters_with_composite_cursor(
+    mock_pymysql_connect: MagicMock,
+) -> None:
+    fake_conn = MagicMock()
+    mock_pymysql_connect.return_value = fake_conn
+    cursor = MagicMock()
+    fake_conn.cursor.return_value.__enter__.return_value = cursor
+    cursor.fetchall.return_value = [{"goods_id": 51, "goods_state": 1}]
+    config = {
+        "dbHost": "h", "dbPort": 3306, "database": "db",
+        "username": "u", "secretRef": "s",
+    }
+    with JdbcConnectorRuntime(config) as rt:
+        rows = rt.read_rows(
+            "ns_goods",
+            composite_cursor=(1000, 50, "modify_time", "goods_id"),
+            where_equals={"site_id": 1, "is_delete": 0, "goods_state": 1},
+            limit=100,
+        )
+    assert rows[0]["goods_id"] == 51
+    sql, params = cursor.execute.call_args.args
+    assert "`site_id` = %s" in sql
+    assert "`is_delete` = %s" in sql
+    assert "`goods_state` = %s" in sql
+    assert "`modify_time` > %s" in sql
+    assert params == (1, 0, 1, 1000, 1000, 50, 100)
+
+
 def test_jdbc_runtime_rejects_unsafe_identifier_before_query() -> None:
     rt = JdbcConnectorRuntime({
         "dbHost": "h", "database": "db", "username": "u", "password": "p",

@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { buildGraphNodes, resolveObjectSelectionId } from "./workshop";
 import {
   buildExplorerSearchParams,
+  filterOperationalObjects,
+  formatExplorerValue,
   getExplorerWorkspaceClasses,
   resolveExplorerColumns,
   toggleObjectSelection,
@@ -76,6 +78,101 @@ describe("O1-UX1 · Object Explorer workspace contracts", () => {
       "status",
       "totalAmount",
     ]);
+  });
+
+  it("uses real canonical Order fields instead of stale demo schema keys", () => {
+    const result = resolveExplorerColumns(
+      [
+        { name: "order_no", type: "string" },
+        { name: "customer_name", type: "string" },
+        { name: "order_date", type: "string" },
+        { name: "total_amount", type: "number" },
+      ],
+      [{
+        id: "niushop:1:1",
+        orderNo: "2026012421121001",
+        memberId: "1",
+        createdAt: "2026-01-24T13:12:34Z",
+        totalAmount: "15.00",
+        orderStatus: "1",
+        payStatus: "1",
+        deliveryStatus: "0",
+      }],
+      "Order",
+    );
+
+    expect(result.source).toBe("domain-profile");
+    expect(result.columns.map((column) => column.key)).toEqual([
+      "id",
+      "orderNo",
+      "memberId",
+      "createdAt",
+      "totalAmount",
+      "orderStatus",
+      "payStatus",
+      "deliveryStatus",
+    ]);
+    expect(result.columns.map((column) => column.label)).toEqual([
+      "订单 ID",
+      "订单号",
+      "会员 ID",
+      "下单时间",
+      "订单金额",
+      "订单状态",
+      "支付状态",
+      "发货状态",
+    ]);
+  });
+
+  it("shows only real Product properties from listed products", () => {
+    const result = resolveExplorerColumns(
+      {},
+      [{
+        id: "niushop:1:1",
+        title: "显瘦保暖打底裤",
+        price: "59.00",
+        stock: "20",
+        saleNum: "8",
+        categoryId: ",1,3,",
+        state: "1",
+        updatedAt: "2026-01-10T06:12:12Z",
+      }],
+      "Product",
+    );
+
+    expect(result.source).toBe("domain-profile");
+    expect(result.columns.map((column) => column.key)).toEqual([
+      "id",
+      "title",
+      "price",
+      "stock",
+      "saleNum",
+      "categoryId",
+      "state",
+      "updatedAt",
+    ]);
+  });
+
+  it("keeps only effective online orders and actually listed products", () => {
+    expect(filterOperationalObjects("Order", [
+      { id: "1", status: "active", isDelete: 0 },
+      { id: "2", status: "inactive", isDelete: 0 },
+      { id: "3", status: "active", isDelete: 1 },
+    ])).toEqual([{ id: "1", status: "active", isDelete: 0 }]);
+
+    expect(filterOperationalObjects("Product", [
+      { id: "1", status: "active", isDelete: 0, state: 1 },
+      { id: "2", status: "active", isDelete: 0, state: 0 },
+      { id: "3", status: "active", isDelete: 1, state: 1 },
+    ])).toEqual([{ id: "1", status: "active", isDelete: 0, state: 1 }]);
+  });
+
+  it("formats money, time, and commerce statuses without mutating canonical values", () => {
+    expect(formatExplorerValue("Order", "totalAmount", "15.00")).toBe("¥15.00");
+    expect(formatExplorerValue("Order", "createdAt", "2026-01-24T13:12:34Z")).toContain("2026");
+    expect(formatExplorerValue("Order", "payStatus", "1")).toBe("已支付");
+    expect(formatExplorerValue("Product", "state", "1")).toBe("已上架");
+    expect(formatExplorerValue("Order", "orderNo", "2026012421121001")).toBe("2026012421121001");
   });
 
   it("keeps row detail selection independent from multi-select state", () => {

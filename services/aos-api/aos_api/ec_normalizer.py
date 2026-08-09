@@ -205,11 +205,23 @@ def to_category(row: dict[str, Any]) -> dict[str, Any]:
 
 def to_product(row: dict[str, Any]) -> dict[str, Any]:
     o = _base(row, "Product", row.get("goods_id"), _ts(row, "modify_time", "create_time"))
+    # UX7: P02 Canonical Schema v2 只做真实源字段的 additive enrichment。
+    # source_updated_at 保持源 modify_time/create_time，不用伪时间绕过一致性门。
+    o["schema_version"] = 2
     o["properties"] = {
         "shopId": _str(row.get("site_id"), "1"),
         "title": _str(row.get("goods_name"), _str(row.get("goods_id"))),
         "status": "active",
         "categoryId": _str(row.get("category_id"), "0"),
+        "goodsClassName": _str(row.get("goods_class_name")),
+        "price": _money(row.get("price")),
+        "marketPrice": _money(row.get("market_price")),
+        "costPrice": _money(row.get("cost_price")),
+        "stock": _str(row.get("goods_stock"), "0"),
+        "saleNum": _str(row.get("sale_num"), "0"),
+        "unit": _str(row.get("unit")),
+        "state": _str(row.get("goods_state"), "1"),
+        "isDelete": _str(row.get("is_delete"), "0"),
     }
     return o
 
