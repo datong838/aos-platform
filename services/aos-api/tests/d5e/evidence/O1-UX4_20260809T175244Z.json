@@ -1,0 +1,72 @@
+{
+  "gate": "O1-UX4_UNIFIED_GRAPH_CANVAS_GATE",
+  "status": "GREEN",
+  "generatedAt": "2026-08-09T17:52:44.915013+00:00",
+  "gitSha": "2ba4fa0a25c9c72fa7ec249366a1d46ec63e9791",
+  "targetScope": {
+    "orgId": "org-org",
+    "workspaceId": "dev-project"
+  },
+  "canaryScope": {
+    "orgId": "dev-org",
+    "workspaceId": "dev-project"
+  },
+  "seed": {
+    "objectType": "Order",
+    "objectId": "niushop:1:1"
+  },
+  "snapshot": {
+    "nodes": 62,
+    "edges": 61,
+    "watermark": "2026-08-09T08:49:07.112841+00:00"
+  },
+  "benchmarksMs": {
+    "100": 0.213,
+    "300": 0.895,
+    "500": 0.554
+  },
+  "frontend": {
+    "testFiles": 157,
+    "tests": 2032,
+    "typeScript": "PASS",
+    "productionBuild": "PASS"
+  },
+  "browser": {
+    "route": "/workshop/graph?type=Payment&id=niushop:1:12",
+    "interactions": [
+      "mobile-list",
+      "graph",
+      "zoom",
+      "layout",
+      "fit",
+      "hops",
+      "relation-filter",
+      "object-filter",
+      "visible-path",
+      "node",
+      "fullscreen",
+      "domain-layer",
+      "operational-layer-fail-closed"
+    ],
+    "consoleErrors": 0
+  },
+  "canaryStatus": "GRAPH_AUTHORITY_UNAVAILABLE",
+  "artifacts": {
+    "apps/web/src/components/ontology/OntologyGraphCanvas.tsx": "ceee97413da2aa53bcb19f159a0dd56be121bf826febff798c6a2431cfb4ef7e",
+    "apps/web/src/components/ontology/ontologyGraphLayout.ts": "0b6f3a04a11672a97ffd93120a5b575d16580dc0037c065af83ebc2338348741",
+    "apps/web/src/components/ontology/ontologyGraphLayout.test.ts": "54786a82d167622c38429c5326943d5810f7c30b445218ca932af455a2f476ca",
+    "design-qa.md": "dc424641fa14b85b82f7a968de400613bc36271ae2e6e1863d06e6f177e3a6af",
+    ".evidence/o1-ux4-object-graph.png": "cbb20f66d74c4f983364e195bfc1f78303ec17892ce4e5671790863474875605"
+  },
+  "checks": {
+    "realGraphSnapshot": true,
+    "strictTargetScope": true,
+    "crossTenantCanary": true,
+    "noNewGraphDependency": true,
+    "deterministicBenchmarksDeclared": true,
+    "allPrimaryControlsImplemented": true,
+    "designQaPassed": true,
+    "browserScreenshotPresent": true
+  },
+  "evidenceSha256": "4c4c77a481a1f02936f51a0b3f5a74730f84ada682cf8d9133547dec9375fc78"
+}
