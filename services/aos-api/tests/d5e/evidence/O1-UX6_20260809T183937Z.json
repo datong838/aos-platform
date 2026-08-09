@@ -1,0 +1,92 @@
+{
+  "gate": "O1-UX6_FINAL_ACCEPTANCE_GATE",
+  "status": "GREEN",
+  "generatedAt": "2026-08-09T18:39:37.929291+00:00",
+  "gitSha": "dd1e6c52732fa29535b67c5164b6a6c5c32b551e",
+  "migrationHead": "o1ux2_001",
+  "targetScope": {
+    "orgId": "org-org",
+    "workspaceId": "dev-project"
+  },
+  "canaryScope": {
+    "orgId": "dev-org",
+    "workspaceId": "dev-project"
+  },
+  "featureFlags": {
+    "aosAllowDev": true,
+    "mockBusinessData": false
+  },
+  "graph": {
+    "schemaEtag": "composed-schema-v1:sha256:0bb9a7c416231bf1d17aedd7f4ea5438dde2981e649165bf046bfb18c28b811f",
+    "watermark": "2026-08-09T08:49:07.112841+00:00",
+    "nodes": 76,
+    "edges": 94,
+    "authority": "ecom_authoritative"
+  },
+  "facts": {
+    "objects": 617,
+    "links": 592,
+    "orderSubjects": 61,
+    "orderWikis": 0,
+    "overlays": 0,
+    "okfRevision": 1,
+    "funnelReceiptId": "67df1e27-c0d0-4714-af58-2f4fcce123a6"
+  },
+  "regression": {
+    "frontend": {
+      "testFiles": 158,
+      "tests": 2035,
+      "typeScript": "PASS",
+      "productionBuild": "PASS"
+    },
+    "backendO1Security": {
+      "passed": 86,
+      "skipped": 2,
+      "failed": 0
+    },
+    "graphLayoutBenchmarksMs": {
+      "100": 0.211,
+      "300": 0.285,
+      "500": 0.496
+    }
+  },
+  "browser": {
+    "menusChecked": 9,
+    "viewportObserved": {
+      "width": 498,
+      "height": 584,
+      "class": "narrow"
+    },
+    "desktopRegressionReusedFrom": "O1-UX4_20260809T175244Z.json",
+    "scopeLabel": "栖月汇商贸有限公司 / 默认工作区",
+    "blockingErrors": 0
+  },
+  "canaryGraphStatus": "GRAPH_AUTHORITY_UNAVAILABLE",
+  "artifacts": {
+    "apps/web/src/pages/s2/ontology.tsx": "507b6d55b4c05b40718326976c1bb1cf588280f3894fd51b2de9c5e525b21ea8",
+    "apps/web/src/pages/s2/remainder.tsx": "702b098e5bcede55c34ca5a57e6f59bf898e7814bfa6bc50d6548784f5909fe0",
+    "apps/web/src/pages/s2/WikiIndexPage.tsx": "c569daafa0826b25dbb3ecee11e2e37c50f8cad32266ca3b40072208db631848",
+    "apps/web/src/components/ontology/OntologyGraphCanvas.tsx": "ceee97413da2aa53bcb19f159a0dd56be121bf826febff798c6a2431cfb4ef7e",
+    "apps/web/src/navigation/items.ts": "2efd4ea58b1fa428851cda8f3151ed3452e6e314028e8362e0c382a6bdf5549d",
+    "services/aos-api/tests/test_o1r4_analytics_pii.py": "10dd6bba66250e483d498ead45064a76618d6647400a6c97c6a10dfee349bc98",
+    "services/aos-api/tests/test_ec_d1_pii_scan.py": "b6494428b92190b9c78f20c9f8d2957fc53a2566cf037009afc01686894bb347",
+    "services/aos-api/tests/test_actions_execute.py": "851ff7c0ecf20373945078c16d5d4406f91020116fa1f1deb94a7f279611e6e6",
+    "services/aos-api/tests/test_at_action_apply_perm.py": "d5932284a144615b84b40e19ff7f76cc190905169d6794edba4f002e56235a0d",
+    "services/aos-api/tests/tenant_isolation/test_ti3_e2b_draft_wiki_lifecycle_scope.py": "c2883df2089bab7b61eefe4f774718c82420748d6b62e691eb1ed5679de6f80a"
+  },
+  "checks": {
+    "migrationAtHead": true,
+    "strictTargetScope": true,
+    "realAuthoritativeGraph": true,
+    "graphContractBound": true,
+    "graphPiiMinimized": true,
+    "promptContentCannotExecuteFromO1Ui": true,
+    "securityRegressionSourcesPresent": true,
+    "okfAndFunnelReceiptsBound": true,
+    "wikiCoverageTruthful": true,
+    "crossTenantCanaryClean": true,
+    "browserNineMenuGate": true,
+    "browserBlockingErrorsZero": true
+  },
+  "evidenceSha256": "94960ea6348dbd76daaa7296354c12991678dbdb9836225c844c511f3d49e2ef"
+}
