@@ -2142,7 +2142,15 @@ def execute_pipeline(
                 ds = _datasets[ds_key_source]
             else:
                 # 创建新数据集（在数据源 org 下）
-                object_type = object_type or _yaml_target_ot or str(pl.get("objectTypeHint") or "").strip() or pl_id
+                # PID→OT 前缀推断（禁止 pl_id 作为 OT fallback 泄漏到 meta_object_type）
+                from aos_api.ec_normalizer import _PIPELINE_ID_TO_OT as _PID2OT_MAP
+                _pid_lower = (pl_id or "").lower()
+                _inferred_ot = ""
+                for _prefix, _ot in _PID2OT_MAP.items():
+                    if _pid_lower.startswith(_prefix):
+                        _inferred_ot = _ot
+                        break
+                object_type = object_type or _yaml_target_ot or str(pl.get("objectTypeHint") or "").strip() or _inferred_ot
                 ds = {
                     "rid": dataset_rid,
                     "name": pl.get("name") or pl_id,
@@ -2187,24 +2195,29 @@ def execute_pipeline(
             with connect(sink_scope) as conn:
                 with conn.cursor() as cur:
                     ds_name = (pl.get("name") or pl_id or object_type)[:200]
-                    cur.execute(
-                        """INSERT INTO meta_object_type (id, name, description, published, properties)
-                           VALUES (%s, %s, %s, TRUE, '{}'::jsonb)
-                           ON CONFLICT (id) DO NOTHING""",
-                        (object_type, ds_name, f"auto-registered by pipeline {pl_id}"),
-                    )
-                    if mode == "full":
+                    # 写入校验：拒绝管道 ID 格式的 OT（P01-xxx-qyh）作为最终防线
+                    import re as _re_mod
+                    if _re_mod.match(r'^[Pp]\d{2}-', object_type):
+                        _log("WARN", f"[sink-pg] 拒绝写入管道 ID 格式的 OT: {object_type}, pipeline={pl_id}")
+                    else:
                         cur.execute(
-                            "DELETE FROM obj_instance WHERE object_type=%s AND org_id=%s AND project_id=%s",
-                            (object_type, source_org_id, scope.project_id),
+                            """INSERT INTO meta_object_type (id, name, description, published, properties)
+                               VALUES (%s, %s, %s, TRUE, '{}'::jsonb)
+                               ON CONFLICT (id) DO NOTHING""",
+                            (object_type, ds_name, f"auto-registered by pipeline {pl_id}"),
                         )
-                    cur.executemany(
-                        """INSERT INTO obj_instance (object_type, object_id, props, org_id, project_id)
-                           VALUES (%s, %s, %s::jsonb, %s, %s)
-                           ON CONFLICT (org_id, project_id, object_type, object_id) DO UPDATE
-                             SET props = EXCLUDED.props""",
-                        instances,
-                    )
+                        if mode == "full":
+                            cur.execute(
+                                "DELETE FROM obj_instance WHERE object_type=%s AND org_id=%s AND project_id=%s",
+                                (object_type, source_org_id, scope.project_id),
+                            )
+                        cur.executemany(
+                            """INSERT INTO obj_instance (object_type, object_id, props, org_id, project_id)
+                               VALUES (%s, %s, %s::jsonb, %s, %s)
+                               ON CONFLICT (org_id, project_id, object_type, object_id) DO UPDATE
+                                 SET props = EXCLUDED.props""",
+                            instances,
+                        )
                 conn.commit()
             _log("INFO", f"[sink-pg] 已写入 obj_instance [{object_type}] 共 {rows_written} 行 (mode={mode}, source={source_id}, org={source_org_id})")
             # 同时在 phase5 引擎中注册数据集（供前端列表查询使用）
