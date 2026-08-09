@@ -1,0 +1,64 @@
+{
+  "gate": "O1-UX3_AUTH_GRAPH_GATE",
+  "status": "GREEN",
+  "generatedAt": "2026-08-09T17:10:09.656810+00:00",
+  "gitSha": "216e375465f3539712afa57d3e2b1f8700781d0a",
+  "targetScope": {
+    "orgId": "org-org",
+    "workspaceId": "dev-project"
+  },
+  "canaryScope": {
+    "orgId": "dev-org",
+    "workspaceId": "dev-project"
+  },
+  "seed": {
+    "objectType": "Shop",
+    "objectId": "niushop:1:1"
+  },
+  "metadata": {
+    "objects": 617,
+    "edges": 592,
+    "watermark": "2026-08-09T08:49:07.112841+00:00",
+    "schemaEtag": "composed-schema-v1:sha256:0bb9a7c416231bf1d17aedd7f4ea5438dde2981e649165bf046bfb18c28b811f"
+  },
+  "firstPage": {
+    "nodes": 10,
+    "edges": 9,
+    "truncated": true
+  },
+  "secondPage": {
+    "nodes": 10,
+    "edges": 0
+  },
+  "path": {
+    "found": true,
+    "distance": 1,
+    "path": [
+      {
+        "type": "Order",
+        "id": "niushop:1:1",
+        "key": "Order:niushop:1:1"
+      },
+      {
+        "type": "Weapp",
+        "id": "niushop:1:11",
+        "key": "Weapp:niushop:1:11"
+      }
+    ],
+    "explored": 9,
+    "watermark": "2026-08-09T08:49:07.112841+00:00",
+    "sourceAuthority": "ecom_authoritative"
+  },
+  "canaryStatus": "GRAPH_AUTHORITY_UNAVAILABLE",
+  "operationalEmptyStatus": "GRAPH_AUTHORITY_UNAVAILABLE",
+  "checks": {
+    "realDomainAuthority": true,
+    "serverScopeAndWatermark": true,
+    "cursorBounded": true,
+    "shortestPath": true,
+    "graphHealthSourceCounts": true,
+    "crossTenantCanary": true,
+    "emptyOperationalLayerFailsClosed": true
+  },
+  "evidenceSha256": "62544a30b27b3e5afce3634d410f906d883e17ed80bbc2650b641b685716dfef"
+}
