@@ -1,0 +1,137 @@
+{
+  "alembic_revision": "o1ux2_001",
+  "d4_spec_sync": "PASS",
+  "documents": {
+    "d4": "sha256:edc2391d1e83fa380ac3a8f63d6b1b5370354e5579334c5c63a81b709e74b769",
+    "d5": "sha256:bcdd955f579e3f0cb0a9b20d7ae422f245c06b37919f29d56471ab84c54f0e6e",
+    "o1": "sha256:d7e35187792c2bb3da4c17d376f2117dff3bfd2a07ffc28ed8589b22ee93f880",
+    "plan": "sha256:7d876ac9c72476896b28105704088457cbe540f76e1b97a97befc16fed1b4768"
+  },
+  "ended_at": "2026-08-09T19:26:11.514503+00:00",
+  "forbidden_states": [],
+  "g17": "PASS",
+  "g17_spec": "PASS",
+  "g18": "PASS",
+  "g19": "PASS",
+  "gate": "FINAL",
+  "git_sha": "a3d4619164e4aa57b180ecaf7f97ae48e534d32a",
+  "overall_pass": true,
+  "phase": "D5-E2",
+  "projection_ownership": "PASS",
+  "real_scope": {
+    "org_id": "org-org",
+    "workspace_id": "dev-project"
+  },
+  "real_scope_hash_after": {
+    "ecom_alias_migration": {
+      "count": 511,
+      "sha256": "66a376994ed7fa951fddde920fcd216265b0b6c2f613ff922657d80e1838ff44"
+    },
+    "ecom_derived_receipt": {
+      "count": 431,
+      "sha256": "9b556994aadcfa8273c5d95ae751b4adf4dd0b3872548d486e01d0662a123206"
+    },
+    "ecom_dlq": {
+      "count": 3,
+      "sha256": "4fd7762820d913c150164ec1eacb35c765c1f367ca42eb503e42790db9402833"
+    },
+    "ecom_dlq_retry_event": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "ecom_dlq_retry_receipt": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "ecom_link": {
+      "count": 592,
+      "sha256": "a7a23794c16fb3d7e37079e5390d1db6c19cdb2ae70277e5fe3b5cdc82524b83"
+    },
+    "ecom_object": {
+      "count": 617,
+      "sha256": "1343433b12ff70005e2b9c97f382892f2da788dbde66187441fe36625e397175"
+    },
+    "graph_edge": {
+      "count": 2,
+      "sha256": "6380df97c21722b403ba9684558fc26eaae7b721e264086cd4f81f365991d031"
+    },
+    "obj_instance": {
+      "count": 617,
+      "sha256": "650f9eb532c608592990d6821b0d86674ffdfb4e7cccec7ad688a40e86295bcd"
+    },
+    "ontology_overlay": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "ontology_overlay_receipt": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "projection_outbox": {
+      "count": 3865,
+      "sha256": "9fbf75acced235479f81952e4a5d3f6ba681a3b9ec7f71df6a65836558fbf022"
+    },
+    "projection_watermark": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "real_scope_hash_before": {
+    "ecom_alias_migration": {
+      "count": 511,
+      "sha256": "66a376994ed7fa951fddde920fcd216265b0b6c2f613ff922657d80e1838ff44"
+    },
+    "ecom_derived_receipt": {
+      "count": 431,
+      "sha256": "9b556994aadcfa8273c5d95ae751b4adf4dd0b3872548d486e01d0662a123206"
+    },
+    "ecom_dlq": {
+      "count": 3,
+      "sha256": "4fd7762820d913c150164ec1eacb35c765c1f367ca42eb503e42790db9402833"
+    },
+    "ecom_dlq_retry_event": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "ecom_dlq_retry_receipt": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "ecom_link": {
+      "count": 592,
+      "sha256": "a7a23794c16fb3d7e37079e5390d1db6c19cdb2ae70277e5fe3b5cdc82524b83"
+    },
+    "ecom_object": {
+      "count": 617,
+      "sha256": "1343433b12ff70005e2b9c97f382892f2da788dbde66187441fe36625e397175"
+    },
+    "graph_edge": {
+      "count": 2,
+      "sha256": "6380df97c21722b403ba9684558fc26eaae7b721e264086cd4f81f365991d031"
+    },
+    "obj_instance": {
+      "count": 617,
+      "sha256": "650f9eb532c608592990d6821b0d86674ffdfb4e7cccec7ad688a40e86295bcd"
+    },
+    "ontology_overlay": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "ontology_overlay_receipt": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "projection_outbox": {
+      "count": 3865,
+      "sha256": "9fbf75acced235479f81952e4a5d3f6ba681a3b9ec7f71df6a65836558fbf022"
+    },
+    "projection_watermark": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "real_scope_test_marker_hits": 0,
+  "real_scope_unchanged": true,
+  "run_id": "d5e2-3cbe7d88337949b58d5ab79a9dc0a4d1",
+  "started_at": "2026-08-09T19:26:07.168810+00:00"
+}

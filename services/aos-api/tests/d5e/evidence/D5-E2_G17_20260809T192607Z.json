@@ -1,0 +1,113 @@
+{
+  "alembic_revision": "o1ux2_001",
+  "documents": {
+    "d4": "sha256:edc2391d1e83fa380ac3a8f63d6b1b5370354e5579334c5c63a81b709e74b769",
+    "d5": "sha256:bcdd955f579e3f0cb0a9b20d7ae422f245c06b37919f29d56471ab84c54f0e6e",
+    "o1": "sha256:d7e35187792c2bb3da4c17d376f2117dff3bfd2a07ffc28ed8589b22ee93f880",
+    "plan": "sha256:7d876ac9c72476896b28105704088457cbe540f76e1b97a97befc16fed1b4768"
+  },
+  "ended_at": "2026-08-09T19:26:11.514503+00:00",
+  "gate": "G17",
+  "git_sha": "a3d4619164e4aa57b180ecaf7f97ae48e534d32a",
+  "phase": "D5-E2",
+  "real_scope": {
+    "org_id": "org-org",
+    "workspace_id": "dev-project"
+  },
+  "results": {
+    "d4_spec_sync": "PASS",
+    "g17_spec": "PASS",
+    "metrics": [
+      {
+        "eligible_total": 3,
+        "metric": "quality_score",
+        "nonnull_total": 3,
+        "object_type": "Product",
+        "rate_pct": 100.0,
+        "status": "PASS",
+        "threshold_pct": 90.0
+      },
+      {
+        "eligible_total": 62,
+        "metric": "stock_health",
+        "nonnull_total": 62,
+        "object_type": "ProductSku",
+        "rate_pct": 100.0,
+        "status": "PASS",
+        "threshold_pct": 85.0
+      },
+      {
+        "eligible_total": 61,
+        "metric": "risk_score",
+        "nonnull_total": 61,
+        "object_type": "Order",
+        "rate_pct": 100.0,
+        "status": "PASS",
+        "threshold_pct": 90.0
+      },
+      {
+        "eligible_total": 19,
+        "metric": "overdue_hours",
+        "nonnull_total": 19,
+        "object_type": "Shipment",
+        "rate_pct": 100.0,
+        "status": "PASS",
+        "threshold_pct": 90.0
+      },
+      {
+        "eligible_total": 14,
+        "metric": "order_count",
+        "nonnull_total": 14,
+        "object_type": "CustomerLite",
+        "rate_pct": 100.0,
+        "status": "PASS",
+        "threshold_pct": 90.0
+      },
+      {
+        "eligible_total": 14,
+        "metric": "last_order_days",
+        "nonnull_total": 14,
+        "object_type": "CustomerLite",
+        "rate_pct": 100.0,
+        "status": "PASS",
+        "threshold_pct": 90.0
+      },
+      {
+        "eligible_total": 5,
+        "metric": "review_quality_bucket",
+        "nonnull_total": 5,
+        "object_type": "ProductReview",
+        "rate_pct": 100.0,
+        "status": "PASS",
+        "threshold_pct": 90.0
+      },
+      {
+        "eligible_total": 111,
+        "metric": "pay_duration_min",
+        "nonnull_total": 111,
+        "object_type": "Payment",
+        "rate_pct": 100.0,
+        "status": "PASS",
+        "threshold_pct": 100.0
+      }
+    ],
+    "projection_ownership": {
+      "pending_outbox": 0,
+      "required_triggers": [
+        "trg_graph_edge_ecom_projector",
+        "trg_obj_instance_ecom_projector"
+      ],
+      "status": "PASS"
+    },
+    "source_snapshot": {
+      "payment_paid_eligible": 111,
+      "products": 57,
+      "quality_eligible": 3,
+      "shipment_paid_eligible": 19,
+      "shipments": 19
+    },
+    "status": "PASS"
+  },
+  "run_id": "d5e2-3cbe7d88337949b58d5ab79a9dc0a4d1",
+  "started_at": "2026-08-09T19:26:07.168810+00:00"
+}
