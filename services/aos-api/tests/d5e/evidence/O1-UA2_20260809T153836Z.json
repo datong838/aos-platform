@@ -1,0 +1,28 @@
+{
+  "gate": "O1-UA2_CONTRACT_GATE",
+  "status": "GREEN",
+  "generatedAt": "2026-08-09T15:38:36.720806+00:00",
+  "gitSha": "11a7a1f7d2769539843c3bf507f6ff17d4993399",
+  "migrationHead": "o1ua2_002",
+  "targetScope": {
+    "orgId": "org-org",
+    "workspaceId": "dev-project"
+  },
+  "canaryScope": {
+    "orgId": "dev-org",
+    "workspaceId": "dev-project"
+  },
+  "tableCount": 23,
+  "rlsForceCount": 23,
+  "targetNewAuthorityRows": 0,
+  "crossTenantVisibleRows": 0,
+  "canaryActiveInstallations": 0,
+  "checks": {
+    "migration": true,
+    "rlsAndForceRls": true,
+    "targetRemainedReadOnlyAndClean": true,
+    "crossTenantCanary": true,
+    "uninstalledCanary": true
+  },
+  "evidenceSha256": "2889df09e5648036f39775772056fe57489c88a684148b54aff8b1ee794441a7"
+}
