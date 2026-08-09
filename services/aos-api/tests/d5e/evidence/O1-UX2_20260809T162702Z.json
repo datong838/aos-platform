@@ -1,0 +1,43 @@
+{
+  "gate": "O1-UX2_PERSISTENCE_GATE",
+  "status": "GREEN",
+  "generatedAt": "2026-08-09T16:27:02.409667+00:00",
+  "gitSha": "b8a7f95ef525c4f37016e9f402f820dac1ceb5e8",
+  "migrationHead": "o1ux2_001",
+  "targetScope": {
+    "orgId": "org-org",
+    "workspaceId": "dev-project"
+  },
+  "canaryScope": {
+    "orgId": "dev-org",
+    "workspaceId": "dev-project"
+  },
+  "tableCount": 8,
+  "rlsForceCount": 8,
+  "activeTargetAssets": {
+    "ontology_exploration_asset_head": 0,
+    "ontology_object_set_asset_head": 0,
+    "ontology_annotation_asset_head": 0
+  },
+  "archivedTargetAssets": {
+    "ontology_exploration_asset_head": 2,
+    "ontology_object_set_asset_head": 1,
+    "ontology_annotation_asset_head": 1
+  },
+  "receiptCount": 8,
+  "archiveReceiptCount": 4,
+  "crossTenantVisibleRows": 0,
+  "canaryActiveAssets": {
+    "ontology_exploration_asset_head": 0,
+    "ontology_object_set_asset_head": 0,
+    "ontology_annotation_asset_head": 0
+  },
+  "checks": {
+    "migration": true,
+    "rlsAndForceRls": true,
+    "targetHasNoActiveAcceptanceAssets": true,
+    "archivedAcceptanceAuditRetained": true,
+    "crossTenantCanary": true
+  },
+  "evidenceSha256": "c96a1f5d76ad8fdbd94f1a660f0a9ef869e7f2cd8739b1bd6504d437646cddee"
+}
