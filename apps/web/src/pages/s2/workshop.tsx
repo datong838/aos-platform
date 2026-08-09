@@ -18,7 +18,7 @@ export function GraphExplorerPage() {
   const { data: types, err: tErr } = useJsonGet<{ items: { id: string; name: string }[] }>(
     "/v1/ontology/object-types",
   );
-  const [typeId, setTypeId] = useState("WorkOrder");
+  const [typeId, setTypeId] = useState("Order");
   const [objects, setObjects] = useState<Record<string, unknown>[]>([]);
   const [objectId, setObjectId] = useState<string | null>(null);
   const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
