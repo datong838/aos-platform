@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 
 from aos_api.db import connect
+from aos_api.ecom_projector import PROJECTOR_ACTOR
 from aos_api.module_store import (
     get_effective_module_config,
     get_module,
@@ -95,6 +96,10 @@ def test_ti6_3b_same_template_has_scoped_overlay_and_uninstall(client) -> None:
     )
     object_id = f"order-{suffix}"
     with connect(scope_a) as conn:
+        # O1-UA2 owns compatibility-view writes through the single projector.
+        # This fixture creates a projected business row so the uninstall test
+        # continues to exercise the real post-O1 authority boundary.
+        conn.execute("SELECT set_config('aos.projection_actor', %s, true)", (PROJECTOR_ACTOR,))
         conn.execute(
             "INSERT INTO obj_instance (object_type,object_id,props,org_id,project_id) "
             "VALUES ('Order',%s,'{\"status\":\"paid\"}'::jsonb,%s,%s)",

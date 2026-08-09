@@ -10,6 +10,7 @@ def test_wiki_version_list_empty_ok(client, auth_headers):
 def test_wiki_version_snapshot_on_approve(client, auth_headers):
     cur = client.get("/v1/wiki/WorkOrder/wo-1001", headers=auth_headers)
     assert cur.status_code == 200
+    previous_body = cur.json()["body"]
     before = client.get("/v1/wiki/WorkOrder/wo-1001/versions", headers=auth_headers).json()["items"]
     previous_latest_id = before[0]["id"] if before else None
 
@@ -46,4 +47,10 @@ def test_wiki_version_snapshot_on_approve(client, auth_headers):
     vid = items[0]["id"]
     one = client.get(f"/v1/wiki/WorkOrder/wo-1001/versions/{vid}", headers=auth_headers)
     assert one.status_code == 200
-    assert one.json()["body"]["summary"] == "ver-test-summary"
+    # Versions are immutable pre-write snapshots used for rollback/diff.  The
+    # approved body stays on the current page rather than being duplicated as
+    # a historical version.
+    assert one.json()["body"] == previous_body
+    current = client.get("/v1/wiki/WorkOrder/wo-1001", headers=auth_headers)
+    assert current.status_code == 200
+    assert current.json()["body"]["summary"] == "ver-test-summary"
