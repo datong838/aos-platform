@@ -2,6 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { getOntologyClient } from "../../api/ontologyClient";
 import {
+  createAnnotation,
+  createExploration,
+  createObjectSet,
+  listExplorations,
+  type ExplorationAsset,
+} from "../../api/ontologyExplorationAssets";
+import {
   buildExplorerSearchParams,
   ObjectExplorerWorkspace,
   resolveExplorerColumns,
@@ -100,13 +107,19 @@ export function GraphExplorerPage() {
   const [err, setErr] = useState<string | null>(null);
   const [toast, setToast] = useState("");
   const [query, setQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"table" | "graph">("table");
+  const [viewMode, setViewMode] = useState<"table" | "graph" | "annotation">("table");
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [detailOpen, setDetailOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [detailTab, setDetailTab] = useState<
     "overview" | "properties" | "relations" | "wiki" | "action" | "timeline"
   >("overview");
+  const [assetName, setAssetName] = useState("栖月汇对象探索");
+  const [assetVisibility, setAssetVisibility] = useState<"private" | "workspace">("private");
+  const [savedExplorations, setSavedExplorations] = useState<ExplorationAsset[]>([]);
+  const [assetBusy, setAssetBusy] = useState(false);
+  const [annotationTitle, setAnnotationTitle] = useState("");
+  const [annotationBody, setAnnotationBody] = useState("");
 
   useEffect(() => {
     if (types?.items?.length && !types.items.some((t) => t.id === typeId)) {
@@ -117,6 +130,22 @@ export function GraphExplorerPage() {
   useEffect(() => {
     void loadObjects(typeId);
   }, [typeId]);
+
+  useEffect(() => {
+    void refreshExplorations();
+  }, []);
+
+  async function refreshExplorations() {
+    try {
+      const items = await listExplorations();
+      setSavedExplorations(items);
+      const viewRef = searchParams.get("viewRef")?.trim();
+      const referenced = viewRef ? items.find((item) => item.id === viewRef) : undefined;
+      if (referenced) applySavedExploration(referenced, false);
+    } catch (e) {
+      setErr(String((e as Error).message || e));
+    }
+  }
 
   async function loadObjects(t: string) {
     setErr(null);
@@ -209,6 +238,108 @@ export function GraphExplorerPage() {
   const allVisibleSelected =
     allVisibleKeys.length > 0 && allVisibleKeys.every((key) => selectedKeys.includes(key));
 
+  async function saveCurrentExploration(visibility = assetVisibility) {
+    if (!assetName.trim()) {
+      setErr("请先填写探索名称");
+      return;
+    }
+    setAssetBusy(true);
+    setErr(null);
+    try {
+      const saved = await createExploration({
+        name: assetName.trim(),
+        objectType: typeId,
+        viewMode,
+        visibility,
+        query: { search: query },
+        columns: objectColumns.map((column) => ({ ...column })),
+        graph: { focusObjectId: objectId },
+      });
+      setAssetVisibility(visibility);
+      setToast(`已保存并重读 · ${saved.payload.name} · revision ${saved.revision}`);
+      await refreshExplorations();
+      const next = new URLSearchParams(searchParams);
+      next.set("viewRef", saved.id);
+      setSearchParams(next, { replace: true });
+    } catch (e) {
+      setErr(`保存探索失败：${String((e as Error).message || e)}`);
+    } finally {
+      setAssetBusy(false);
+    }
+  }
+
+  async function saveSelectedObjectSet() {
+    if (selectedKeys.length === 0) return;
+    setAssetBusy(true);
+    setErr(null);
+    try {
+      const saved = await createObjectSet({
+        name: `${assetName.trim() || currentTypeName} · 对象集`,
+        objectType: typeId,
+        visibility: assetVisibility,
+        items: selectedKeys.map((key) => ({
+          objectType: typeId,
+          objectId: key.slice(`${typeId}:`.length),
+        })),
+      });
+      setToast(`对象集已写入服务端 · ${saved.id} · ${selectedKeys.length} 项`);
+    } catch (e) {
+      setErr(`创建对象集失败：${String((e as Error).message || e)}`);
+    } finally {
+      setAssetBusy(false);
+    }
+  }
+
+  async function saveCurrentAnnotation() {
+    if (!annotationTitle.trim() || !annotationBody.trim()) {
+      setErr("注释标题和正文不能为空");
+      return;
+    }
+    setAssetBusy(true);
+    setErr(null);
+    try {
+      const selectedObjectId = objectId ? String(objectId) : null;
+      const saved = await createAnnotation({
+        title: annotationTitle.trim(),
+        body: annotationBody.trim(),
+        subject: selectedObjectId
+          ? {
+              subjectType: "object_instance",
+              subjectId: `${typeId}/${selectedObjectId}`,
+              objectRef: { objectType: typeId, objectId: selectedObjectId },
+            }
+          : { subjectType: "object_type", subjectId: typeId },
+        visibility: assetVisibility,
+        state: "draft",
+      });
+      setToast(`注释草稿已写入服务端 · ${saved.id}`);
+      setAnnotationBody("");
+    } catch (e) {
+      setErr(`保存注释失败：${String((e as Error).message || e)}`);
+    } finally {
+      setAssetBusy(false);
+    }
+  }
+
+  function applySavedExploration(asset: ExplorationAsset, updateUrl = true) {
+    setAssetName(asset.payload.name);
+    setAssetVisibility(asset.payload.visibility);
+    setViewMode(asset.payload.viewMode);
+    setQuery(String(asset.payload.query.search || ""));
+    setTypeId(asset.payload.objectType);
+    if (updateUrl) {
+      const next = new URLSearchParams(searchParams);
+      next.set("viewRef", asset.id);
+      setSearchParams(next, { replace: true });
+    }
+    setToast(`已从服务端恢复 ${asset.payload.name} · revision ${asset.revision}`);
+  }
+
+  function openSavedExploration(id: string) {
+    const asset = savedExplorations.find((item) => item.id === id);
+    if (asset) applySavedExploration(asset);
+  }
+
   return (
     <S2Chrome title="对象探索" lede="Object Explorer · 按类型浏览对象 · Selection 绑定 Object View + Wiki">
       <div className="p-objx-app">
@@ -220,6 +351,47 @@ export function GraphExplorerPage() {
               <path d="m21 21-4.3-4.3" />
             </svg>
             {currentTypeName}
+          </div>
+          <div className="p-objx-tab-actions">
+            <select
+              aria-label="打开已保存探索"
+              value={searchParams.get("viewRef") || ""}
+              onChange={(event) => openSavedExploration(event.target.value)}
+            >
+              <option value="">已保存探索</option>
+              {savedExplorations.map((item) => (
+                <option key={item.id} value={item.id}>{item.payload.name}</option>
+              ))}
+            </select>
+            <input
+              aria-label="探索名称"
+              value={assetName}
+              onChange={(event) => setAssetName(event.target.value)}
+              maxLength={240}
+            />
+            <select
+              aria-label="资产可见范围"
+              value={assetVisibility}
+              onChange={(event) => setAssetVisibility(event.target.value as "private" | "workspace")}
+            >
+              <option value="private">仅自己</option>
+              <option value="workspace">当前工作区</option>
+            </select>
+            <button type="button" className="p-objx-action" disabled={assetBusy} onClick={() => void saveCurrentExploration()}>
+              {assetBusy ? "写入中…" : "保存探索"}
+            </button>
+            <button type="button" className="p-objx-action" disabled={assetBusy} onClick={() => void saveCurrentExploration("workspace")}>
+              分享至工作区
+            </button>
+            <button
+              type="button"
+              className="p-objx-action"
+              disabled={assetBusy || selectedKeys.length === 0}
+              title={selectedKeys.length === 0 ? "请先选择至少一个对象" : "将选中对象保存为对象集"}
+              onClick={() => void saveSelectedObjectSet()}
+            >
+              新建对象集
+            </button>
           </div>
         </div>
 
@@ -286,6 +458,13 @@ export function GraphExplorerPage() {
                 <path d="M12 8v8M9.5 16.5l-2.5 1M14.5 16.5l2.5 1" />
               </svg>
               图谱
+            </button>
+            <button
+              type="button"
+              className={`p-objx-view-btn ${viewMode === "annotation" ? "is-active" : ""}`}
+              onClick={() => setViewMode("annotation")}
+            >
+              注释
             </button>
           </div>
           <div className="p-objx-view-center">
@@ -382,7 +561,7 @@ export function GraphExplorerPage() {
                   </tbody>
                 </table>
               </div>
-            ) : (
+            ) : viewMode === "graph" ? (
               <div className="bp-graph-canvas">
                 <p className="muted" style={{ fontSize: "0.75rem", marginBottom: "0.75rem" }}>
                   知识图谱 · 边=Link · 节点=Object · 高亮 1-hop 传导
@@ -427,6 +606,35 @@ export function GraphExplorerPage() {
                     <p className="muted" style={{ textAlign: "center" }}>暂无实例 · 请到数据源管理接入源</p>
                   )}
                 </div>
+              </div>
+            ) : (
+              <div className="p-objx-annotation-editor">
+                <h3>新建注释草稿</h3>
+                <p className="muted">
+                  {objectId ? `绑定对象 ${typeId}/${objectId}` : `绑定 Object Type ${typeId}`}
+                  {" · "}保存后形成不可变 revision，可在后续 Wiki 审批流中引用。
+                </p>
+                <label>
+                  标题
+                  <input
+                    aria-label="注释标题"
+                    value={annotationTitle}
+                    onChange={(event) => setAnnotationTitle(event.target.value)}
+                    maxLength={240}
+                  />
+                </label>
+                <label>
+                  正文
+                  <textarea
+                    aria-label="注释正文"
+                    value={annotationBody}
+                    onChange={(event) => setAnnotationBody(event.target.value)}
+                    rows={10}
+                  />
+                </label>
+                <button type="button" className="p-objx-save" disabled={assetBusy} onClick={() => void saveCurrentAnnotation()}>
+                  {assetBusy ? "写入中…" : "保存注释草稿"}
+                </button>
               </div>
             )
           }

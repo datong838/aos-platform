@@ -1542,6 +1542,17 @@
   gap: 6px;
   margin-left: auto;
 }
+.p-objx-tab-actions input,
+.p-objx-tab-actions select {
+  min-width: 120px;
+  max-width: 190px;
+  padding: 5px 8px;
+  border: 1px solid var(--aos-border);
+  border-radius: 4px;
+  background: var(--aos-elevated);
+  color: var(--aos-text);
+  font-size: 12px;
+}
 .p-objx-action {
   display: inline-flex;
   align-items: center;
@@ -1699,6 +1710,30 @@
   background: var(--aos-amber-bg);
   color: var(--aos-amber);
   font-size: 11px;
+}
+.p-objx-annotation-editor {
+  width: min(760px, calc(100% - 32px));
+  margin: 16px auto;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+.p-objx-annotation-editor label {
+  display: grid;
+  gap: 6px;
+  color: var(--aos-text-secondary);
+  font-size: 12px;
+}
+.p-objx-annotation-editor input,
+.p-objx-annotation-editor textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 10px;
+  border: 1px solid var(--aos-border);
+  border-radius: 5px;
+  background: var(--aos-elevated);
+  color: var(--aos-text);
+  font: inherit;
 }
 
 .p-objx-workspace {
@@ -1871,6 +1906,13 @@
 .p-objx-set svg { width: 14px; height: 14px; color: var(--aos-text-tertiary); }
 
 @media (max-width: 900px) {
+  .p-objx-tabs-bar { flex-wrap: wrap; }
+  .p-objx-tab-actions {
+    width: 100%;
+    margin-left: 0;
+    padding-bottom: 8px;
+    flex-wrap: wrap;
+  }
   .p-objx-search-left { flex-wrap: wrap; }
   .p-objx-search-field {
     order: 3;
