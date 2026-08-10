@@ -372,6 +372,21 @@ def _build_batch_command(
     existing = store.get_checkpoint(probe)
     expected_version = int(existing["version"]) if existing else 0
 
+    # 快照型源的本轮最大时间可能早于已经确认的 checkpoint（例如源表把
+    # ``modify_time=0`` 规范化为回退时间）。这不是允许倒退，而是保持
+    # 已确认水位：一致性内核仍会验证 next=max(current,batch)。
+    if existing and existing.get("cursor_updated_at") is not None:
+        current_cursor = (
+            _parse_datetime(existing["cursor_updated_at"]),
+            str(existing.get("cursor_external_id") or ""),
+        )
+        if current_cursor > max_cursor:
+            next_checkpoint = StableCursor(
+                source_updated_at_utc=current_cursor[0],
+                external_id=current_cursor[1],
+            )
+            probe = probe.model_copy(update={"next_checkpoint": next_checkpoint})
+
     if expected_version == 0:
         return probe
     # frozen model：用 model_copy 更新 expected，重新构造会触发 validator 开销

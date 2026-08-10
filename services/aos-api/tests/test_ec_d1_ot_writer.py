@@ -68,6 +68,22 @@ class FakeStore:
         return {"version": version}
 
 
+class CheckpointStore(FakeStore):
+    """带现有稳定游标的 FakeStore，用于快照回退防护。"""
+
+    def __init__(self, cursor: StableCursor) -> None:
+        super().__init__()
+        self.cursor = cursor
+        self._checkpoints[TEST_SCOPE.key] = 3
+
+    def get_checkpoint(self, command: BatchCommand) -> dict | None:
+        return {
+            "version": 3,
+            "cursor_updated_at": self.cursor.source_updated_at_utc,
+            "cursor_external_id": self.cursor.external_id,
+        }
+
+
 class FakePipeline:
     def __init__(self, pid: str = "p01-shop"):
         self.id = pid
@@ -320,3 +336,18 @@ def test_expected_checkpoint_version_advances_after_first_batch():
     assert len(store.calls) == 2
     assert store.calls[0].expected_checkpoint_version == 0
     assert store.calls[1].expected_checkpoint_version == 1
+
+
+def test_snapshot_batch_keeps_existing_checkpoint_when_source_time_is_older():
+    """快照源的旧数据不允许把已确认 checkpoint 往回推。"""
+    cursor = StableCursor(source_updated_at_utc=NOW, external_id="niushop:1:99")
+    store = CheckpointStore(cursor)
+    sink_to_ot(
+        FakeEngine(store),
+        TEST_SCOPE,
+        FakePipeline("p10-system-config"),
+        [shop_row(source_pk="1", when=NOW.replace(hour=9))],
+    )
+    command = store.calls[0]
+    assert command.expected_checkpoint_version == 3
+    assert command.next_checkpoint == cursor

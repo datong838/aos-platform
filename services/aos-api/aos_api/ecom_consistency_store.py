@@ -719,6 +719,31 @@ class EcomConsistencyStore:
                     and existing["raw_status"] == record.status.raw_status
                     and (existing["deleted_at"] is not None) == record.is_deleted
                 )
+                # P08 隐私最小化一次性收敛：历史 CustomerLite 可能在同一源
+                # 版本留下了已禁止的 PII 键。仅 schema v2 以上、且去掉白名单
+                # PII 后其余所有键值完全一致时，允许删除这些键；绝不放宽到
+                # 任意同版本 payload 差异。
+                pii_redaction_keys = frozenset(
+                    {
+                        "mobile", "wx_openid", "nickname", "avatar",
+                        "reg_address", "last_login_ip", "password", "pay_password",
+                    }
+                )
+                legacy_without_pii = {
+                    key: value
+                    for key, value in dict(existing["properties"] or {}).items()
+                    if key not in pii_redaction_keys
+                }
+                pii_redaction_upgrade = (
+                    record.object_type == "CustomerLite"
+                    and record.schema_version >= 2
+                    and record.schema_version > int(existing["schema_version"])
+                    and legacy_without_pii == dict(record.properties)
+                    and existing["source_timezone"] == record.source_timezone
+                    and existing["canonical_status"] == record.status.canonical_value
+                    and existing["raw_status"] == record.status.raw_status
+                    and (existing["deleted_at"] is not None) == record.is_deleted
+                )
                 if (
                     legacy_properties == dict(record.properties)
                     and existing["source_timezone"] == record.source_timezone
@@ -726,7 +751,7 @@ class EcomConsistencyStore:
                     and existing["raw_status"] == record.status.raw_status
                     and int(existing["schema_version"]) == record.schema_version
                     and (existing["deleted_at"] is not None) == record.is_deleted
-                ) or additive_schema_upgrade:
+                ) or additive_schema_upgrade or pii_redaction_upgrade:
                     conn.execute(
                         update(ecom_object)
                         .where(clause)

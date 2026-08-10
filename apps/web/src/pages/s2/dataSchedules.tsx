@@ -17,24 +17,6 @@ const CRON_PRESETS: { label: string; cron: string; hint: string }[] = [
   { label: "自定义", cron: "", hint: "手动编辑 Cron" },
 ];
 
-// 近 14 次运行历史（UI 展示种子数据，后端暂无 Schedule Run History API）
-const RUN_HISTORY: { status: "success" | "failed" | "running" | "scheduled"; time: string; duration: string }[] = [
-  { status: "success", time: "2026-07-27 02:00", duration: "3m 24s" },
-  { status: "success", time: "2026-07-26 02:00", duration: "3m 12s" },
-  { status: "success", time: "2026-07-25 02:00", duration: "4m 01s" },
-  { status: "failed", time: "2026-07-24 02:00", duration: "1m 30s" },
-  { status: "success", time: "2026-07-23 02:00", duration: "3m 45s" },
-  { status: "success", time: "2026-07-22 02:00", duration: "3m 33s" },
-  { status: "success", time: "2026-07-21 02:00", duration: "3m 58s" },
-  { status: "running", time: "2026-07-20 02:00", duration: "2m 15s…" },
-  { status: "success", time: "2026-07-19 02:00", duration: "3m 09s" },
-  { status: "success", time: "2026-07-18 02:00", duration: "3m 27s" },
-  { status: "scheduled", time: "2026-07-17 02:00", duration: "—" },
-  { status: "success", time: "2026-07-16 02:00", duration: "3m 51s" },
-  { status: "success", time: "2026-07-15 02:00", duration: "3m 40s" },
-  { status: "success", time: "2026-07-14 02:00", duration: "3m 22s" },
-];
-
 function cronHint(cron: string): string {
   if (cron === "0 * * * *") return "每小时整点执行";
   if (cron === "0 2 * * *") return "每天 02:00 执行 · Asia/Shanghai";
@@ -53,10 +35,19 @@ export function parseCronFields(cron: string): { label: string; value: string }[
 
 function nextRunLabel(cron: string, tab: "cron" | "upstream"): string {
   if (tab === "upstream") return "上游触发 · 无固定时间";
-  if (cron === "0 2 * * *") return "2026-07-19 02:00:00 · Asia/Shanghai";
-  if (cron === "0 2 * * 1") return "2026-07-21 02:00:00 · Asia/Shanghai（周一）";
   if (cron === "0 * * * *") return "下一整点 · Asia/Shanghai";
-  return "按自定义 Cron 计算 · Asia/Shanghai";
+  return "由服务端按 Cron 与 Asia/Shanghai 计算";
+}
+
+function formatRunTime(value?: string): string {
+  if (!value) return "—";
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.valueOf()) ? value : parsed.toLocaleString("zh-CN", { hour12: false });
+}
+
+function formatDuration(ms?: number): string {
+  if (!ms) return "—";
+  return ms >= 60_000 ? `${Math.floor(ms / 60_000)}分${Math.round((ms % 60_000) / 1000)}秒` : `${Math.round(ms / 1000)}秒`;
 }
 
 /** 85 · 对齐 schedules.html · Cron 预设 + Tab + 表格 */
@@ -68,6 +59,7 @@ export function SchedulesPage() {
       pipelineId?: string;
       enabled?: boolean;
       name?: string;
+      lastRun?: { at?: string };
     }[];
   }>("/v1/schedules");
   const [tab, setTab] = useState<"cron" | "upstream">("cron");
@@ -79,6 +71,9 @@ export function SchedulesPage() {
   const [upstreamB, setUpstreamB] = useState(false);
   const [localErr, setLocalErr] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const { data: runs, err: runsErr, loading: runsLoading, reload: reloadRuns } = useJsonGet<{
+    items: { id: string; status: string; startedAt?: string; durationMs?: number; rowsWritten?: number; errorCode?: string; errorMessage?: string }[];
+  }>(editId ? `/v1/schedules/${encodeURIComponent(editId)}/runs?limit=14` : null);
 
   const nextRun = useMemo(() => nextRunLabel(cron, tab), [tab, cron]);
   const cronFields = useMemo(() => parseCronFields(cron), [cron]);
@@ -115,6 +110,22 @@ export function SchedulesPage() {
       });
       setMsg(`已保存 ${editId}`);
       reload();
+    } catch (e) {
+      setLocalErr(String((e as Error).message || e));
+    }
+  }
+
+  async function runNow() {
+    if (!editId) {
+      setLocalErr("先选择一条真实计划");
+      return;
+    }
+    setLocalErr(null);
+    try {
+      const result = await apiPost<{ status: string; lastRun?: { rowsWritten?: number } }>(`/v1/schedules/${encodeURIComponent(editId)}/run`, {});
+      setMsg(result.status === "succeeded" ? `真实同步完成：${result.lastRun?.rowsWritten ?? 0} 行` : `同步未成功：${result.status}`);
+      reload();
+      reloadRuns();
     } catch (e) {
       setLocalErr(String((e as Error).message || e));
     }
@@ -209,6 +220,9 @@ export function SchedulesPage() {
               <button type="button" className="btn-primary" onClick={() => void saveSch()}>
                 保存计划
               </button>
+              <button type="button" onClick={() => void runNow()} disabled={!editId}>
+                立即真实同步
+              </button>
             </BpToolbar>
 
             <BpBanner tone="info">{cronHint(cron)}</BpBanner>
@@ -232,11 +246,12 @@ export function SchedulesPage() {
             {(err || localErr) && <p className="error">{err || localErr}</p>}
             {msg && <p className="aos-text">{msg}</p>}
             <BpTable
-              columns={["名称", "Cron", "Pipeline", ""]}
+              columns={["名称", "Cron", "Pipeline", "最近真实执行", ""]}
               rows={(data?.items || []).map((s) => [
                 s.name || s.id,
                 s.cron || "—",
                 s.pipelineId || "—",
+                s.lastRun?.at ? formatRunTime(s.lastRun.at) : "暂无真实记录",
                 <button
                   key={s.id}
                   type="button"
@@ -266,10 +281,9 @@ export function SchedulesPage() {
         ]}
       />
 
-      {/* Phase 7: 运行历史可视化条形图 */}
       <div style={{ marginTop: "1rem", padding: "12px", background: "var(--aos-surface, #f7fafc)", borderRadius: 4, border: "1px solid var(--aos-border, #e2e8f0)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-          <h4 className="aos-text" style={{ fontSize: "0.8rem", margin: 0 }}>近 14 次运行历史</h4>
+          <h4 className="aos-text" style={{ fontSize: "0.8rem", margin: 0 }}>最近真实运行记录</h4>
           <span className="muted" style={{ fontSize: "0.7rem" }}>
             <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: "#10B981", marginRight: 4 }} />成功
             <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: "#EF4444", margin: "0 4px 0 8px" }} />失败
@@ -277,25 +291,19 @@ export function SchedulesPage() {
             <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: "#D1D5DB", margin: "0 4px 0 8px" }} />计划中
           </span>
         </div>
-        <div style={{ display: "flex", gap: 2, alignItems: "flex-end", height: 28 }}>
-          {RUN_HISTORY.map((r, i) => (
-            <div
-              key={i}
-              className={`bp-sched-run-bar bp-sched-run-bar-${r.status}`}
-              style={{
-                width: 12,
-                height: r.status === "success" ? 28 : r.status === "failed" ? 20 : r.status === "running" ? 24 : 16,
-                borderRadius: 2,
-                background: r.status === "success" ? "#10B981" : r.status === "failed" ? "#EF4444" : r.status === "running" ? "#3B82F6" : "#D1D5DB",
-              }}
-              title={`${r.time} · ${r.status} · ${r.duration}`}
-            />
-          ))}
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: "0.65rem", color: "var(--aos-text-muted, #718096)" }}>
-          <span>14 天前</span>
-          <span>今天</span>
-        </div>
+        {!editId && <p className="muted">选择一个计划后查看其真实执行历史。</p>}
+        {editId && runsLoading && <p className="muted">读取真实运行记录…</p>}
+        {editId && (runsErr || localErr) && <p className="error">{runsErr || localErr}</p>}
+        {editId && !runsLoading && !runsErr && (runs?.items.length || 0) === 0 && <p className="muted">暂无真实运行记录；不会展示示例历史。</p>}
+        {editId && (runs?.items || []).map((run) => (
+          <div key={run.id} style={{ display: "grid", gridTemplateColumns: "150px 90px 100px 100px 1fr", gap: 8, padding: "7px 0", borderTop: "1px solid var(--aos-border, #e2e8f0)", fontSize: "0.75rem" }}>
+            <span>{formatRunTime(run.startedAt)}</span>
+            <strong>{run.status}</strong>
+            <span>{formatDuration(run.durationMs)}</span>
+            <span>{run.rowsWritten ?? 0} 行</span>
+            <span className="muted">{run.errorCode || run.errorMessage || "—"}</span>
+          </div>
+        ))}
       </div>
     </S2Chrome>
   );

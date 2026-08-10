@@ -250,6 +250,9 @@ def to_customer_lite(row: dict[str, Any]) -> dict[str, Any]:
         "memberLevel": _str(row.get("member_level"), "0"),
         "status": "active",
     }
+    # 隐私最小化 schema v2：只允许写入脱敏后的四个规范字段（createdAt /
+    # updatedAt 在 OTWriter 补齐）。用于一次性收敛历史 CustomerLite PII。
+    o["schema_version"] = 2
     return o
 
 

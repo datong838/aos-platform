@@ -2404,7 +2404,7 @@ def patch_schedule(
 
 @router.post("/v1/schedules/{schedule_id}/run")
 def run_schedule(schedule_id: str, principal: Principal = Depends(require_principal)):
-    """Execute bound connector ingest once (manual/batch face; not a cron daemon)."""
+    """手动触发一次真实 live pipeline，并写入持久运行历史。"""
     scope = _mutation_scope(principal)
     _hydrate_data_os_scope(scope)
     item = _schedules.get(schedule_id)
@@ -2415,28 +2415,35 @@ def run_schedule(schedule_id: str, principal: Principal = Depends(require_princi
     )
     if not item.get("enabled", True):
         raise ApiError(code="VALIDATION", message="schedule disabled", status_code=400)
-    ingest_spec = item.get("ingest")
-    if not isinstance(ingest_spec, dict) or not ingest_spec:
-        raise ApiError(
-            code="VALIDATION",
-            message="schedule has no ingest spec; PATCH ingest={pluginId,...}",
-            status_code=400,
-        )
-    plugin_id = str(ingest_spec.get("pluginId") or "jdbc-mysql")
-    body = {k: v for k, v in ingest_spec.items() if k != "pluginId"}
-    body.setdefault("autoCreateObjectType", True)
-    result = connector_ingest(plugin_id, body, principal)
-    item["lastRun"] = {
-        "at": time.time(),
-        "ok": bool(result.get("ok")),
-        "written": result.get("written"),
-        "objectType": result.get("objectType"),
-        "mode": result.get("mode"),
-    }
+    try:
+        from aos_api.qyh_cron_scheduler import execute_schedule
+
+        result = execute_schedule(scope, schedule_id, trigger="manual")
+    except ValueError as exc:
+        raise ApiError(code="VALIDATION", message=str(exc), status_code=400) from exc
+    item["lastRun"] = result.get("lastRun")
     _schedules[schedule_id] = item
     _persist_safe("persist_schedule", scope, item)
-    log.info("schedule_run id=%s written=%s", schedule_id, result.get("written"))
-    return {"scheduleId": schedule_id, "lastRun": item["lastRun"], "ingest": result}
+    log.info("schedule_run id=%s status=%s", schedule_id, result.get("status"))
+    return result
+
+
+@router.get("/v1/schedules/{schedule_id}/runs")
+def list_schedule_runs(
+    schedule_id: str,
+    limit: int = 24,
+    principal: Principal = Depends(require_principal),
+):
+    """返回 PostgreSQL 中的真实计划运行记录，不回退到种子数据。"""
+    scope = _mutation_scope(principal)
+    _hydrate_data_os_scope(scope)
+    item = _schedules.get(schedule_id)
+    if not _scope_visible(item, scope):
+        raise ApiError(code="NOT_FOUND", message="schedule missing", status_code=404)
+    from aos_api.qyh_cron_scheduler import list_runs
+
+    rows = list_runs(scope, schedule_id, limit=limit)
+    return {"items": rows, "count": len(rows)}
 
 
 @router.get("/v1/dlq")

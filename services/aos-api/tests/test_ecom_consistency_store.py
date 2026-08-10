@@ -650,6 +650,31 @@ def test_checkpoint_regression_is_rejected_without_writes(store: EcomConsistency
     assert store.get_checkpoint(first)["version"] == 1
 
 
+def test_customer_lite_schema_v2_can_only_remove_historical_pii(store: EcomConsistencyStore) -> None:
+    """P08 仅允许 schema v2 在相同源版本删除明确的 PII 键。"""
+    props = {
+        "memberLevel": "1", "status": "active",
+        "createdAt": "2026-07-31T10:00:00Z", "updatedAt": "2026-07-31T10:00:00Z",
+        "mobile": "masked-value",
+    }
+    first = batch(obj("CustomerLite", "member-1", properties=props), key="p08-old")
+    store.apply_batch(first)
+    redacted = {
+        key: value for key, value in props.items() if key != "mobile"
+    }
+    result = store.apply_batch(
+        batch(
+            obj("CustomerLite", "member-1", properties=redacted, schema_version=2),
+            key="p08-redact", expected=1,
+        )
+    )
+    assert result.objects_written == 1
+    saved = store.get_object(ident("member-1"), "CustomerLite")
+    assert "mobile" not in saved["properties"]
+    assert saved["schema_version"] == 2
+    assert saved["properties"]["memberLevel"] == "1"
+
+
 def test_batch_model_rejects_cross_tenant_link_before_transaction() -> None:
     with pytest.raises(ValidationError, match="cross-tenant"):
         CoreLinkRecord(

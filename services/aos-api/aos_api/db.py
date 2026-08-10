@@ -157,6 +157,28 @@ CREATE TABLE IF NOT EXISTS authz_tuple (
   object_key TEXT NOT NULL,
   PRIMARY KEY (user_key, relation, object_key)
 );
+
+CREATE TABLE IF NOT EXISTS meta_schedule_run (
+  id TEXT NOT NULL,
+  org_id TEXT NOT NULL,
+  project_id TEXT NOT NULL,
+  schedule_id TEXT NOT NULL,
+  scheduled_for TIMESTAMPTZ NOT NULL,
+  trigger TEXT NOT NULL,
+  status TEXT NOT NULL,
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  finished_at TIMESTAMPTZ,
+  duration_ms INTEGER NOT NULL DEFAULT 0,
+  rows_written INTEGER NOT NULL DEFAULT 0,
+  error_code TEXT NOT NULL DEFAULT '',
+  error_message TEXT NOT NULL DEFAULT '',
+  executor_id TEXT NOT NULL DEFAULT '',
+  PRIMARY KEY (org_id, project_id, schedule_id, scheduled_for),
+  UNIQUE (org_id, project_id, id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_meta_schedule_run_history
+  ON meta_schedule_run (org_id, project_id, schedule_id, started_at DESC);
 """
 
 

@@ -1,6 +1,8 @@
 """AOS API application factory — Wave-0/1/2."""
 from __future__ import annotations
 
+import asyncio
+from contextlib import suppress
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -45,6 +47,8 @@ except Exception:  # pragma: no cover
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    cron_stop = asyncio.Event()
+    cron_task: asyncio.Task[None] | None = None
     # Migration mode owns its failure policy. Keep it outside the best-effort
     # bootstrap boundary so managed-mode failures can stop application startup.
     migration_mode = run_migrations()
@@ -208,6 +212,14 @@ async def lifespan(_app: FastAPI):
                             }
                             _wx._persist_safe("persist_schedule", _scope, _wx._schedules[_sch_id])
                     log.info("startup_schedules_seeded count=%d", len(_wx._schedules))
+
+                    # D2.9：唯一真实目标租户下的 12 OT 统一收敛为 live pipeline
+                    # 每小时 Cron；保留已有运行历史，绝不把 UI 种子历史写回数据库。
+                    from aos_api.qyh_cron_scheduler import ensure_qyh_hourly_schedules
+
+                    for _schedule in ensure_qyh_hourly_schedules():
+                        _wx._schedules[_schedule["id"]] = _schedule
+                    log.info("startup_qyh_real_cron_ready count=12")
                 log.info("startup_seed_from_bundles count=%d dir=%s", _count, _bundles_dir)
             except Exception:
                 log.exception("startup_seed_from_bundles_failed_continue")
@@ -216,7 +228,29 @@ async def lifespan(_app: FastAPI):
             log.exception("startup_meta_store_failed_continue")
     else:
         log.info("startup_schema_bootstrap_skipped migration_mode=%s", mode_value)
+
+    async def _qyh_cron_loop() -> None:
+        """每 15 秒检查一次；Cron 命中按分钟数据库幂等领取。"""
+        while not cron_stop.is_set():
+            try:
+                from aos_api.qyh_cron_scheduler import run_due_qyh
+
+                await asyncio.to_thread(run_due_qyh)
+            except Exception:
+                log.exception("qyh_cron_tick_failed")
+            try:
+                await asyncio.wait_for(cron_stop.wait(), timeout=15)
+            except TimeoutError:
+                continue
+
+    cron_task = asyncio.create_task(_qyh_cron_loop(), name="qyh-real-cron")
+    log.info("startup_qyh_real_cron_worker_started interval_seconds=15")
     yield
+    cron_stop.set()
+    if cron_task is not None:
+        cron_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await cron_task
     # ── shutdown：清理 JDBC 缓存（SSH 隧道 + DB 连接）──
     try:
         from aos_api.jdbc_connector_runtime import jdbc_runtime_shutdown
