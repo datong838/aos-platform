@@ -1,7 +1,12 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from aos_api.qyh_cron_scheduler import QYH_PIPELINE_ORDER, cron_matches, next_run_at
+from aos_api.qyh_cron_scheduler import (
+    QYH_DAILY_CRON_BY_PIPELINE,
+    QYH_PIPELINE_ORDER,
+    cron_matches,
+    next_run_at,
+)
 
 
 def test_qyh_has_exactly_twelve_real_pipeline_targets() -> None:
@@ -10,6 +15,16 @@ def test_qyh_has_exactly_twelve_real_pipeline_targets() -> None:
     assert len(set(ids)) == 12
     assert "P05-order-qyh" in ids
     assert "P12-payment-qyh" in ids
+
+
+def test_qyh_daily_schedules_are_staggered_one_run_per_ot() -> None:
+    assert set(QYH_DAILY_CRON_BY_PIPELINE) == set(ids for ids, _ in QYH_PIPELINE_ORDER)
+    assert list(QYH_DAILY_CRON_BY_PIPELINE.values()) == [
+        f"0 {hour} * * *" for hour in range(2, 14)
+    ]
+    tz = ZoneInfo("Asia/Shanghai")
+    assert cron_matches("0 6 * * *", datetime(2026, 8, 10, 6, 0, tzinfo=tz))
+    assert not cron_matches("0 6 * * *", datetime(2026, 8, 10, 7, 0, tzinfo=tz))
 
 
 def test_hourly_cron_matches_only_at_hour_boundary_shanghai() -> None:

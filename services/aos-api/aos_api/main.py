@@ -118,6 +118,11 @@ async def lifespan(_app: FastAPI):
                     from aos_api.routers import wave_ext as _wx
                     _items, _ = _eng.list_pipelines(_scope)
                     _now = _time.time()
+                    from aos_api.qyh_cron_scheduler import (
+                        QYH_DAILY_CRON_BY_PIPELINE,
+                        ensure_qyh_staggered_daily_schedules,
+                    )
+
                     for _p in _items:
                         _dataset_rid = f"ri.aos.main.dataset.{_p.id}"
                         _dkey = _wx._resource_key(_scope, _dataset_rid)
@@ -185,7 +190,7 @@ async def lifespan(_app: FastAPI):
                                 source_id="niushop-qyh",
                                 target_dataset=f"ri.aos.main.dataset.{_p.id}",
                                 mode="full",
-                                cron_expr="0 * * * *",
+                                cron_expr=QYH_DAILY_CRON_BY_PIPELINE.get(_p.id, "0 2 * * *"),
                                 status="active",
                                 owner="data-team",
                                 config={"pipeline_id": _p.id},
@@ -201,10 +206,10 @@ async def lifespan(_app: FastAPI):
                         if _sch_id not in _wx._schedules:
                             _wx._schedules[_sch_id] = {
                                 "id": _sch_id,
-                                "cron": "0 * * * *",
+                                "cron": QYH_DAILY_CRON_BY_PIPELINE.get(_p.id, "0 2 * * *"),
                                 "pipelineId": _p.id,
                                 "enabled": True,
-                                "name": f"栖月汇-{_p.id} 每小时同步",
+                                "name": f"栖月汇-{_p.id} 每日错峰同步",
                                 "ingest": None,
                                 "orgId": _scope.org_id,
                                 "projectId": _scope.project_id,
@@ -214,10 +219,8 @@ async def lifespan(_app: FastAPI):
                     log.info("startup_schedules_seeded count=%d", len(_wx._schedules))
 
                     # D2.9：唯一真实目标租户下的 12 OT 统一收敛为 live pipeline
-                    # 每小时 Cron；保留已有运行历史，绝不把 UI 种子历史写回数据库。
-                    from aos_api.qyh_cron_scheduler import ensure_qyh_hourly_schedules
-
-                    for _schedule in ensure_qyh_hourly_schedules():
+                    # 每日一次、分小时错峰 Cron；保留已有运行历史，绝不把 UI 种子历史写回数据库。
+                    for _schedule in ensure_qyh_staggered_daily_schedules():
                         _wx._schedules[_schedule["id"]] = _schedule
                     log.info("startup_qyh_real_cron_ready count=12")
                 log.info("startup_seed_from_bundles count=%d dir=%s", _count, _bundles_dir)

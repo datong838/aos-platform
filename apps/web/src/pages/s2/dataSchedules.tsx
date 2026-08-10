@@ -19,7 +19,8 @@ const CRON_PRESETS: { label: string; cron: string; hint: string }[] = [
 
 function cronHint(cron: string): string {
   if (cron === "0 * * * *") return "每小时整点执行";
-  if (cron === "0 2 * * *") return "每天 02:00 执行 · Asia/Shanghai";
+  const daily = /^0\s+([01]?\d|2[0-3])\s+\*\s+\*\s+\*$/.exec(cron);
+  if (daily) return `每天 ${daily[1].padStart(2, "0")}:00 执行 · Asia/Shanghai`;
   if (cron === "0 2 * * 1") return "每周一 02:00 执行 · Asia/Shanghai";
   return "自定义 Cron · 请确认表达式";
 }
@@ -36,6 +37,7 @@ export function parseCronFields(cron: string): { label: string; value: string }[
 function nextRunLabel(cron: string, tab: "cron" | "upstream"): string {
   if (tab === "upstream") return "上游触发 · 无固定时间";
   if (cron === "0 * * * *") return "下一整点 · Asia/Shanghai";
+  if (/^0\s+([01]?\d|2[0-3])\s+\*\s+\*\s+\*$/.test(cron)) return "下一日定时执行 · Asia/Shanghai";
   return "由服务端按 Cron 与 Asia/Shanghai 计算";
 }
 

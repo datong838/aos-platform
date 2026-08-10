@@ -24,18 +24,23 @@ log = get_logger("aos-api.qyh-cron")
 QYH_SCOPE = TenantScope("org-org", "dev-project")
 QYH_PIPELINE_ORDER: tuple[tuple[str, str], ...] = (
     ("P01-shop-qyh", "店铺"),
-    ("P04-category-qyh", "类目"),
-    ("P08-customer-lite-qyh", "会员"),
-    ("P10-system-config-qyh", "系统配置"),
     ("P02-product-qyh", "商品"),
-    ("P09-weapp-qyh", "小程序"),
     ("P03-product-sku-qyh", "商品SKU"),
+    ("P04-category-qyh", "类目"),
     ("P05-order-qyh", "订单"),
-    ("P11-product-review-qyh", "商品评价"),
     ("P06-order-line-qyh", "订单明细"),
     ("P07-shipment-qyh", "发货"),
+    ("P08-customer-lite-qyh", "会员"),
+    ("P09-weapp-qyh", "小程序"),
+    ("P10-system-config-qyh", "系统配置"),
+    ("P11-product-review-qyh", "商品评价"),
     ("P12-payment-qyh", "支付"),
 )
+# 开发期保持真实数据链路，但每个 OT 每天仅拉取一次，按小时错峰以避免集中拉取。
+QYH_DAILY_CRON_BY_PIPELINE: dict[str, str] = {
+    pipeline_id: f"0 {hour} * * *"
+    for hour, (pipeline_id, _) in enumerate(QYH_PIPELINE_ORDER, start=2)
+}
 _SHANGHAI = ZoneInfo("Asia/Shanghai")
 _RUN_LOCK = threading.Lock()
 
@@ -86,8 +91,8 @@ def next_run_at(cron: str, now: datetime | None = None) -> datetime | None:
     return None
 
 
-def ensure_qyh_hourly_schedules() -> list[dict[str, Any]]:
-    """把 12 OT 的计划收敛为真实 live-pipeline 每小时 Cron，保留已有历史。"""
+def ensure_qyh_staggered_daily_schedules() -> list[dict[str, Any]]:
+    """把 12 OT 收敛为真实 live-pipeline 每日错峰 Cron，保留已有历史。"""
     from aos_api.phase5_pipeline_engine import get_engine
 
     engine = get_engine()
@@ -113,10 +118,10 @@ def ensure_qyh_hourly_schedules() -> list[dict[str, Any]]:
             last_run = row["last_run"] if row else None
             item = {
                 "id": schedule_id,
-                "cron": "0 * * * *",
+                "cron": QYH_DAILY_CRON_BY_PIPELINE[pipeline_id],
                 "pipelineId": pipeline_id,
                 "enabled": True,
-                "name": f"栖月汇-{label} 每小时同步",
+                "name": f"栖月汇-{label} 每天 {QYH_DAILY_CRON_BY_PIPELINE[pipeline_id].split()[1].zfill(2)}:00 同步",
                 "ingest": {
                     "kind": "pipeline-live-v1",
                     "pipelineId": pipeline_id,
