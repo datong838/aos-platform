@@ -1,11 +1,17 @@
-"""Self-test: OKF 必填映射全 12 OT + Wiki 冷启动 + 四层记忆 + 外部知识管道.
+"""Self-test: OKF 必填映射全 12 OT + Wiki 冷启动(含 Procedural Playbook) + 三层运行记忆.
+
+遵循 06-228-AIP三层记忆方案 §1 冻结口径：
+- 运行记忆 = 三层 (Working / Episodic / Semantic)
+- Procedural = 版本化 Wiki/Playbook（非运行记忆层）
+- Shared = 受治理投影（非独立存储层）
 
 Covers:
 1. OKF defaults for all 12 OTs — 100% required coverage.
-2. Wiki cold-start — 12 per-OT seed Wikis with canonical schema content.
-3. Four-layer memory — Working / Episodic / Semantic / Procedural model.
+2. Wiki cold-start — 12 per-OT schema Wikis + 3 procedural playbooks.
+3. Three-layer runtime memory — Working / Episodic / Semantic model.
 4. Memory search and layer filtering.
-5. External knowledge ingestion via OKF source type pipeline (simulated).
+5. Working layer TTL auto-expiry.
+6. Backward compatibility.
 """
 from __future__ import annotations
 
@@ -66,19 +72,19 @@ def test_okf_default_source_columns_match_normalizer():
 
 
 # ──────────────────────────────────────────────────────────────
-# 2. Wiki cold-start: 12 per-OT seed Wikis
+# 2. Wiki cold-start: 12 per-OT schema Wikis + 3 procedural playbooks
 # ──────────────────────────────────────────────────────────────
 
 
-def test_wiki_cold_start_seeds_all_12_ots():
-    """Wiki cold-start creates one Wiki per OT, each with schema content."""
+def test_wiki_cold_start_seeds_all_12_ots_plus_playbooks():
+    """Wiki cold-start creates 12 per-OT schema Wikis + 3 procedural playbooks = 15 total."""
     eng = get_wiki_engine()
     eng.reset()  # clean slate
 
     seeded = seed_okf_wiki_cold_start()
-    assert seeded == 12
+    assert seeded == 15  # 12 OT schema + 3 procedural playbooks
 
-    # Verify each OT has a wiki
+    # Verify each OT has a schema wiki
     for ot in sorted(CORE_OBJECT_TYPES):
         wiki_id = f"wiki-coldstart-{ot.lower()}"
         wiki = eng.get_wiki(wiki_id)
@@ -86,6 +92,18 @@ def test_wiki_cold_start_seeds_all_12_ots():
         assert ot in wiki.content
         assert "必填属性" in wiki.content
         assert wiki.object_type_id == ot
+
+    # Verify procedural playbooks exist as versioned Wikis
+    pb_ids = [
+        "wiki-coldstart-playbook-order-anomaly",
+        "wiki-coldstart-playbook-sku-stockout",
+        "wiki-coldstart-playbook-shipment-overdue",
+    ]
+    for pb_id in pb_ids:
+        wiki = eng.get_wiki(pb_id)
+        assert wiki is not None, f"Missing procedural playbook: {pb_id}"
+        assert "Playbook" in wiki.title
+        assert "procedural" in wiki.tags
 
 
 def test_wiki_cold_start_is_idempotent():
@@ -99,12 +117,13 @@ def test_wiki_cold_start_is_idempotent():
 
 
 # ──────────────────────────────────────────────────────────────
-# 3. Four-layer memory model
+# 3. Three-layer runtime memory model (Working / Episodic / Semantic)
 # ──────────────────────────────────────────────────────────────
 
 
-def test_four_layer_memory_crud():
-    """The LongMemoryEngine supports all four layers."""
+def test_three_layer_memory_crud():
+    """The LongMemoryEngine supports exactly three runtime layers
+    (NO Procedural — 06 §1 冻结口径)."""
     eng = get_engine()
     eng.reset()
 
@@ -122,17 +141,14 @@ def test_four_layer_memory_crud():
     s = eng.create("order-has-6-required-fields", layer=MemoryLayer.SEMANTIC.value, content="Order OT 有 6 个必填字段")
     assert s.layer == MemoryLayer.SEMANTIC.value
 
-    # Procedural layer
-    p = eng.create("triage-flow", layer=MemoryLayer.PROCEDURAL.value, content="订单异常分诊流程")
-    assert p.layer == MemoryLayer.PROCEDURAL.value
-
-    # Layer stats
+    # Layer stats — exactly 3 layers, no procedural
     stats = eng.layer_stats()
     assert stats["working"] == 1
     assert stats["episodic"] == 1
     assert stats["semantic"] == 1
-    assert stats["procedural"] == 1
-    assert stats["total"] == 4
+    assert stats["total"] == 3
+    # Procedural must NOT exist as a memory layer
+    assert "procedural" not in stats
 
 
 def test_memory_layer_filtering():
@@ -147,7 +163,6 @@ def test_memory_layer_filtering():
     assert len(eng.list_working()) == 2
     assert len(eng.list_semantic()) == 1
     assert len(eng.list_episodic()) == 0
-    assert len(eng.list_procedural()) == 0
 
 
 def test_memory_search():
@@ -179,15 +194,16 @@ def test_memory_search():
 
 
 def test_memory_cold_start_seed():
-    """seed_memory_cold_start populates semantic (12) + procedural (3) + episodic (1)."""
+    """seed_memory_cold_start populates semantic (12) + episodic (1) only.
+    Procedural knowledge goes to Wiki playbooks, not runtime memory."""
     eng = get_engine()
     eng.reset()
 
     result = seed_memory_cold_start()
     assert result["semantic"] == 12
-    assert result["procedural"] == 3
     assert result["episodic"] == 1
-    assert result["total"] == 16
+    assert result["total"] == 13
+    assert "procedural" not in result  # no procedural in runtime memory
 
 
 # ──────────────────────────────────────────────────────────────

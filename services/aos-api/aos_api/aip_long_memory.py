@@ -1,13 +1,15 @@
-"""AIP 四层记忆引擎 (Working / Episodic / Semantic / Procedural).
+"""AIP 三层运行记忆引擎 (Working / Episodic / Semantic).
 
-升级原有的泛型 CRUD 记忆容器为四层认知记忆模型：
-  - **Working** (工作记忆): 当前会话上下文，短生命周期，自动过期。
-  - **Episodic** (情景记忆): 带时间戳的具体事件记录（如"用户问了X，系统返回了Y"）。
-  - **Semantic** (语义记忆): 领域知识事实（如"栖月汇的 Order OT 有 6 个必填字段"）。
-  - **Procedural** (程序记忆): 可复用操作模式 / 最佳实践（如"分析订单异常的标准流程"）。
+遵循 06-228-AIP三层记忆方案冻结口径：
+  - **Working** (工作记忆): 当前 TaskRun 上下文，短生命周期，自动过期。真源=Task/Checkpoint store。
+  - **Episodic** (情景记忆): 一次任务的结果、失败和效果观察。真源=Run/EffectReview/Evidence。
+  - **Semantic** (语义记忆): 经治理的行业知识、规则、概念和方法。真源=O1 Wiki/KnowledgeSubject。
 
-向后兼容：保留 LongMemoryItem + LongMemoryEngine + get_engine()，
-旧 API 路由无需改动。四层能力通过新的 MemoryLayer enum 和分层查询 API 暴露。
+Procedural（程序性知识）不作为运行记忆层存在；其真源是版本化的 Skill/Logic/Policy/Playbook。
+Shared 不是第四种存储；是经授权、脱敏、适用范围明确的 Semantic/Episodic 投影。
+
+禁止用本模块 singleton 形成另一套生产记忆（06 §1 第17行）。
+本引擎仅作为 AIP-5 尚未落地前的 in-memory 适配层，待 Candidate store 迁移。
 """
 from __future__ import annotations
 
@@ -19,17 +21,20 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-_MAX_ITEMS = 500  # 从 200 提升到 500 以容纳四层
+_MAX_ITEMS = 500  # 三层运行记忆容量
 _LOCK = threading.Lock()
 
 
 class MemoryLayer(str, Enum):
-    """四层记忆模型。"""
+    """三层运行记忆模型（06-228-AIP方案 §1 冻结口径）。
 
-    WORKING = "working"        # 工作记忆：当前会话上下文
-    EPISODIC = "episodic"      # 情景记忆：具体事件
-    SEMANTIC = "semantic"      # 语义记忆：领域知识
-    PROCEDURAL = "procedural"  # 程序记忆：操作模式
+    Procedural 不在此处——程序性知识的真源是版本化的 Skill/Logic/Policy/Playbook。
+    Shared 不是独立存储层——是 Semantic/Episodic 的受治理跨 Agent 投影。
+    """
+
+    WORKING = "working"        # 工作记忆：当前 TaskRun 上下文
+    EPISODIC = "episodic"      # 情景记忆：具体任务/事件结果
+    SEMANTIC = "semantic"      # 语义记忆：经治理的行业知识
 
 
 # Working 记忆的默认 TTL（秒）：30 分钟
@@ -53,13 +58,15 @@ class LongMemoryItem(BaseModel):
 
 
 class LongMemoryEngine:
-    """长期记忆管理 引擎。Singleton + threading.Lock。
+    """运行记忆引擎。Singleton + threading.Lock。
 
-    升级功能：
-    - 四层分层 (Working / Episodic / Semantic / Procedural)
-    - 分层查询 list_by_layer()
-    - Working 层自动过期清理
-    - 语义检索 search()
+    三层运行记忆（06 方案口径）：
+    - Working (工作记忆): 30min TTL，自动过期
+    - Episodic (情景记忆): 具体事件记录
+    - Semantic (语义记忆): 领域知识事实
+
+    注意：本引擎是 in-memory 适配层，不是生产记忆真源。
+    生产记忆真源 = Task/Checkpoint(Working) + Run/Evidence(Episodic) + Wiki/KnowledgeSubject(Semantic)。
     """
 
     _instance: "LongMemoryEngine | None" = None
@@ -125,7 +132,7 @@ class LongMemoryEngine:
         with _LOCK:
             self._items.clear()
 
-    # ── 四层分层查询 ──
+    # ── 三层分层查询 ──
 
     def list_by_layer(self, layer: str) -> list[LongMemoryItem]:
         """按记忆层筛选。"""
@@ -143,10 +150,6 @@ class LongMemoryEngine:
     def list_semantic(self) -> list[LongMemoryItem]:
         """获取语义记忆。"""
         return self.list_by_layer(MemoryLayer.SEMANTIC.value)
-
-    def list_procedural(self) -> list[LongMemoryItem]:
-        """获取程序记忆。"""
-        return self.list_by_layer(MemoryLayer.PROCEDURAL.value)
 
     # ── 语义检索 ──
 

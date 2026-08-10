@@ -232,7 +232,7 @@ async def lifespan(_app: FastAPI):
     else:
         log.info("startup_schema_bootstrap_skipped migration_mode=%s", mode_value)
 
-    # ── OKF Wiki 冷启动 + 四层记忆冷启动（in-memory，best-effort）──
+    # ── OKF Wiki 冷启动(含 Procedural Playbook) + 三层运行记忆冷启动（in-memory，best-effort）──
     try:
         from aos_api.okf_wiki_cold_start import seed_okf_wiki_cold_start
 

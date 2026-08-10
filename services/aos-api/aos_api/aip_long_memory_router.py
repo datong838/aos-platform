@@ -1,9 +1,12 @@
-"""AIP 四层记忆管理 — FastAPI 路由。
+"""AIP 三层运行记忆管理 — FastAPI 路由。
+
+遵循 06-228-AIP方案 §1 冻结口径：三层运行记忆 (Working / Episodic / Semantic)。
+Procedural 不作为运行记忆层；Shared 是受治理投影，不是第四种存储。
 
 保留原有 CRUD 端点（向后兼容），新增：
-  - GET /api/aip/long-memory/meta/layers — 四层统计
+  - GET /api/aip/long-memory/meta/layers — 三层统计
   - GET /api/aip/long-memory/meta/by-layer/{layer} — 按层筛选
-  - GET /api/aip/long-memory/meta/search?q=xxx — 语义检索
+  - GET /api/aip/long-memory/meta/search?q=xxx — 关键词检索
 
 注意：FastAPI 按注册顺序匹配路由。meta/* 路径必须在 /{item_id} 之前注册，
 否则 "meta" 会被当作 item_id 参数。
@@ -22,7 +25,7 @@ _engine = get_engine()
 class CreateRequest(BaseModel):
     name: str
     config: dict = {}
-    layer: str | None = None       # working / episodic / semantic / procedural
+    layer: str | None = None       # working / episodic / semantic
     content: str | None = None     # 记忆正文
     object_type: str | None = None # 关联本体对象
     tags: list[str] | None = None  # 标签
@@ -43,7 +46,7 @@ class UpdateRequest(BaseModel):
 
 @router.get("/meta/layers")
 def layer_stats():
-    """返回四层记忆的统计信息。"""
+    """返回三层运行记忆的统计信息。"""
     return _engine.layer_stats()
 
 

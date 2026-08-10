@@ -1,13 +1,12 @@
-"""AIP 四层记忆冷启动 seed.
+"""AIP 三层运行记忆冷启动 seed.
 
-在引擎首次启动时灌入初始记忆条目，使 AIP 分析师/数字同事开机即有
-领域知识基础，而非空容器。
+遵循 06-228-AIP方案 §1 冻结口径：三层运行记忆 (Working / Episodic / Semantic)。
+Procedural 不作为运行记忆层——程序性知识以版本化 Wiki 形式灌入（见 okf_wiki_cold_start.py）。
 
 分层灌入策略：
   - **Semantic** (语义记忆): 7 个核心 OT 的领域事实（从 ecom_core_models 派生）。
-  - **Procedural** (程序记忆): 3 条标准操作流程（订单异常分诊 / SKU 缺货检测 / 物流超期）。
   - **Episodic** (情景记忆): 1 条系统初始化事件（记录冷启动时间戳）。
-  - **Working** (工作记忆): 空——由运行时会话按需写入。
+  - **Working** (工作记忆): 空——由运行时 TaskRun 按需写入。
 
 幂等：通过固定 id 前缀 + tags 标记，重复执行不重复插入。
 """
@@ -57,81 +56,6 @@ def _seed_semantic() -> int:
     return count
 
 
-def _seed_procedural() -> int:
-    """灌入程序记忆：标准操作流程。"""
-    eng = get_engine()
-    existing_ids = {item.id for item in eng.list_procedural()}
-
-    procedures = [
-        {
-            "id": "mem-procedural-order-anomaly",
-            "name": "订单异常分诊流程",
-            "content": (
-                "# 订单异常分诊标准流程\n\n"
-                "## 触发条件\n"
-                "- Order.risk_score > 0.7\n"
-                "- 或 Order.totalAmount 异常偏高 (>3σ)\n\n"
-                "## 步骤\n"
-                "1. 查询 Order + OrderLine + Shipment 三关联\n"
-                "2. 检查 CustomerLite.order_count（新客首单？）\n"
-                "3. 检查 Shipment.overdue_hours（跨境发货延迟？）\n"
-                "4. 查询 ProductReview.review_quality_bucket（商品评价？）\n"
-                "5. 输出分诊结论 + 建议操作\n"
-            ),
-            "object_type": "Order",
-            "tags": [_SEED_TAG, "order", "anomaly", "triage"],
-        },
-        {
-            "id": "mem-procedural-sku-stockout",
-            "name": "SKU 缺货检测流程",
-            "content": (
-                "# SKU 缺货检测标准流程\n\n"
-                "## 触发条件\n"
-                "- ProductSku.stock_health < 0.3\n"
-                "- 或 Product.stock < safety_threshold\n\n"
-                "## 步骤\n"
-                "1. 查询 ProductSku → Product 关联\n"
-                "2. 检查近 7 天 OrderLine.quantity 趋势\n"
-                "3. 计算补货建议量 = avg_daily_sales × lead_time - current_stock\n"
-                "4. 输出补货建议\n"
-            ),
-            "object_type": "ProductSku",
-            "tags": [_SEED_TAG, "sku", "stockout", "inventory"],
-        },
-        {
-            "id": "mem-procedural-shipment-overdue",
-            "name": "物流超期预警流程",
-            "content": (
-                "# 物流超期预警标准流程\n\n"
-                "## 触发条件\n"
-                "- Shipment.overdue_hours > 48\n\n"
-                "## 步骤\n"
-                "1. 查询 Shipment → Order 关联\n"
-                "2. 检查 Order.deliveryStatus\n"
-                "3. 查询承运商 (Shipment.carrier) 历史准时率\n"
-                "4. 输出预警等级 + 客服话术建议\n"
-            ),
-            "object_type": "Shipment",
-            "tags": [_SEED_TAG, "shipment", "overdue", "logistics"],
-        },
-    ]
-
-    count = 0
-    for proc in procedures:
-        if proc["id"] in existing_ids:
-            continue
-        eng.create(
-            name=proc["name"],
-            config={},
-            layer=MemoryLayer.PROCEDURAL.value,
-            content=proc["content"],
-            object_type=proc["object_type"],
-            tags=proc["tags"],
-        )
-        count += 1
-    return count
-
-
 def _seed_episodic() -> int:
     """灌入情景记忆：系统初始化事件。"""
     eng = get_engine()
@@ -146,8 +70,9 @@ def _seed_episodic() -> int:
         content=(
             f"# 系统冷启动\n\n"
             f"- **时间**: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}\n"
-            f"- **事件**: AIP 四层记忆引擎首次启动\n"
-            f"- **动作**: 灌入语义记忆 (12 OT 契约) + 程序记忆 (3 流程) + 本事件\n"
+            f"- **事件**: AIP 三层运行记忆引擎首次启动\n"
+            f"- **动作**: 灌入语义记忆 (12 OT 契约) + 本事件\n"
+            f"- **注**: 程序性知识以版本化 Wiki 形式灌入（okf_wiki_cold_start）\n"
         ),
         tags=[_SEED_TAG, "system", "boot"],
     )
@@ -155,17 +80,15 @@ def _seed_episodic() -> int:
 
 
 def seed_memory_cold_start() -> dict[str, int]:
-    """执行四层记忆冷启动灌入。返回各层灌入计数。"""
+    """执行三层运行记忆冷启动灌入。返回各层灌入计数。"""
     semantic = _seed_semantic()
-    procedural = _seed_procedural()
     episodic = _seed_episodic()
-    total = semantic + procedural + episodic
+    total = semantic + episodic
     if total:
         log.info(
-            "seed_memory_cold_start_done semantic=%s procedural=%s episodic=%s total=%s",
+            "seed_memory_cold_start_done semantic=%s episodic=%s total=%s",
             semantic,
-            procedural,
             episodic,
             total,
         )
-    return {"semantic": semantic, "procedural": procedural, "episodic": episodic, "total": total}
+    return {"semantic": semantic, "episodic": episodic, "total": total}
