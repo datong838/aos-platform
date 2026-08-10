@@ -305,7 +305,7 @@ ROUTER_SPECS: dict[str, tuple[tuple[str, str], ...]] = {
         ('aos_api.routers.phase3_aip_assist', 'router'),
         ('aos_api.routers.phase3_aip_agents', 'router'),
         ('aos_api.routers.phase3_aip_capabilities', 'router'),
-        ('aos_api.routers.phase3_aip_logic', 'router'),
+        ('aos_api.routers.aip_tasks', 'router'),
         ('aos_api.routers.phase3_aip_tools', 'router'),
         ('aos_api.routers.phase3_aip_drafts', 'router'),
         ('aos_api.routers.phase3_aip_lineage', 'router'),

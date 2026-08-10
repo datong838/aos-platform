@@ -1665,7 +1665,7 @@
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.phase3_aip_logic",
+      "module": "aos_api.routers.aip_tasks",
       "attribute": "router",
       "order": 277
     },
