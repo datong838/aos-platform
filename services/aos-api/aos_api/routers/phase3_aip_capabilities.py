@@ -1,17 +1,19 @@
 """Phase 3 · AIP Capabilities & Registry 路由.
 
-GET  /v1/aip/capabilities         — 能力列表
 PUT  /v1/aip/capabilities/{id}    — 能力配置更新（upsert）
 POST /v1/aip/capabilities/test    — 连通测试（W4-B5）
+
+能力列表的兼容 authority 是 ``wave_ext``；本模块不再注册重复 GET。
 """
 from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from aos_api.aip_capabilities_engine import get_engine
+from aos_api.auth import Principal, require_principal
 
 router = APIRouter(prefix="/v1/aip", tags=["aip-capabilities"])
 
@@ -34,7 +36,9 @@ class CapabilityTestIn(BaseModel):
 async def list_registry(
     status: str | None = Query(None),
     scope: str | None = Query(None),
+    principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
+    _ = principal
     eng = get_engine()
     items = eng.list_registry(status=status, scope=scope)
     stats = eng.registry_stats()
@@ -45,19 +49,13 @@ async def list_registry(
     }
 
 
-@router.get("/capabilities")
-async def list_capabilities(
-    category: str | None = Query(None),
-    enabled: bool | None = Query(None),
-) -> dict[str, Any]:
-    eng = get_engine()
-    eng.ensure_plugin_defaults()
-    items = eng.list_capabilities(category=category, enabled=enabled)
-    return {"items": [c.model_dump() for c in items], "count": len(items)}
-
-
 @router.put("/capabilities/{cap_id}")
-async def update_capability(cap_id: str, body: CapabilityUpdate) -> dict[str, Any]:
+async def update_capability(
+    cap_id: str,
+    body: CapabilityUpdate,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    _ = principal
     eng = get_engine()
     eng.ensure_plugin_defaults()
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
@@ -68,7 +66,11 @@ async def update_capability(cap_id: str, body: CapabilityUpdate) -> dict[str, An
 
 
 @router.post("/capabilities/test")
-async def test_capability(body: CapabilityTestIn) -> dict[str, Any]:
+async def test_capability(
+    body: CapabilityTestIn,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    _ = principal
     eng = get_engine()
     cap_id = body.capabilityId or body.id
     result = eng.test_connectivity(cap_id=cap_id, endpoint=body.endpoint)

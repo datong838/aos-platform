@@ -41,7 +41,7 @@ type CatalogFilter = {
   priceTier: string;
 };
 
-export type CatalogSourceMode = "loading" | "live" | "demo";
+export type CatalogSourceMode = "loading" | "live" | "error";
 
 export type ApiCatalogRow = {
   id?: string;
@@ -70,7 +70,7 @@ export const CAPABILITY_COLORS: Record<Capability, { bg: string; fg: string }> =
 
 // ── Mock catalog data ──────────────────────────────────────────
 
-const CATALOG_MODELS: CatalogModel[] = [
+export const CATALOG_MODELS: CatalogModel[] = [
   {
     id: "gpt-5-4-pro",
     name: "GPT-5.4 Pro",
@@ -447,8 +447,8 @@ export function ModelCatalogPage() {
       setSourceMode("live");
       setLoadError(null);
     } catch (e) {
-      setCatalogModels(CATALOG_MODELS);
-      setSourceMode("demo");
+      setCatalogModels([]);
+      setSourceMode("error");
       setLoadError(String((e as Error).message || e));
     }
   }, []);
@@ -470,9 +470,7 @@ export function ModelCatalogPage() {
   );
   const registeredRows = useMemo(() => {
     if (sourceMode === "live") return registeredRowsFromModels(catalogModels);
-    return MODEL_FAMILIES.filter((f) => f.status === "enabled").flatMap((f) =>
-      f.models.map((m) => ({ model: m, provider: f.provider, family: f.name })),
-    );
+    return [];
   }, [sourceMode, catalogModels]);
 
   const filteredOrgs = Object.entries(orgs).filter(([name]) =>
@@ -522,11 +520,11 @@ export function ModelCatalogPage() {
   return (
     <PageChrome title="模型目录" lede="管理 AIP 启用状态、模型家族和已注册模型">
       <div className="mc-wrap">
-        {sourceMode === "demo" && (
-          <div className="w2-a6a7-demo-banner" role="status">
-            <span className="w2-a6a7-demo-badge">演示路径</span>
+        {sourceMode === "error" && (
+          <div className="w2-a6a7-demo-banner" role="alert">
+            <span className="w2-a6a7-demo-badge">不可用</span>
             <span className="w2-a6a7-demo-text">
-              模型目录 API 不可用，当前为本地 MOCK{loadError ? ` · ${loadError}` : ""}
+              模型目录 API 读取失败，已停止展示本地 MOCK{loadError ? ` · ${loadError}` : ""}
             </span>
           </div>
         )}

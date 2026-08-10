@@ -89,7 +89,7 @@ export function filterAgents(agents: AgentCard[], filter: AgentFilter, search: s
   });
 }
 
-const MOCK_AGENTS: AgentCard[] = [
+export const MOCK_AGENTS: AgentCard[] = [
   {
     id: "repair-buddy",
     name: "维修派单 Buddy",
@@ -493,24 +493,54 @@ function AgentIcon({ type, bg, color }: { type: string; bg: string; color: strin
 }
 
 export function AgentRegistryPage() {
-  const [agents, setAgents] = useState<AgentCard[]>(MOCK_AGENTS);
+  const [agents, setAgents] = useState<AgentCard[]>([]);
   const [sourceTab, setSourceTab] = useState<AgentSource | "all">("all");
   const [statusTab, setStatusTab] = useState<AgentStatus | "all">("all");
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState("recent");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  // 尝试调 API，fallback 到 mock 数据
+  // AIP-0：Registry 失败或为空时保持真实错误/空态，禁止回退 MOCK_AGENTS。
   useEffect(() => {
     setLoading(true);
-    apiGet<{ items: AgentCard[] }>("/v1/aip/agent-registry")
+    setLoadError(null);
+    apiGet<{ items?: Array<{ id?: string; agent_id?: string; agent_name?: string; capabilities?: string[]; status?: string }> }>("/v1/aip/agent-registry")
       .then((data) => {
-        if (data?.items?.length) setAgents(data.items);
+        const items = (data.items ?? []).flatMap((entry): AgentCard[] => {
+          const id = entry.agent_id || entry.id;
+          if (!id || !entry.agent_name) return [];
+          const capabilities = Array.isArray(entry.capabilities) ? entry.capabilities : [];
+          const status: AgentStatus = entry.status === "pending"
+            ? "draft"
+            : entry.status === "revoked"
+              ? "stopped"
+              : "ready";
+          return [{
+            id,
+            name: entry.agent_name,
+            category: "Agent Registry",
+            source: "builtin",
+            sourceLabel: "服务端 Registry",
+            status,
+            statusLabel: status === "ready" ? "已注册" : status === "draft" ? "待注册" : "已撤销",
+            description: capabilities.length ? `已绑定能力：${capabilities.join("、")}` : "尚未绑定能力",
+            tags: capabilities.map((label) => ({ label, tone: "indigo" as const })),
+            toolCount: capabilities.length,
+            callCount: 0,
+            iconBg: "var(--aos-indigo-bg)",
+            iconColor: "var(--aos-indigo-600)",
+            iconType: "agent",
+            detailLink: "/aip/studio",
+            detailLabel: "查看 →",
+          }];
+        });
+        setAgents(items);
       })
-      .catch(() => {
-        // API 未就绪，保留默认 mock 数据
-        setAgents(MOCK_AGENTS);
+      .catch((error) => {
+        setAgents([]);
+        setLoadError(String((error as Error).message || error));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -561,12 +591,22 @@ export function AgentRegistryPage() {
   return (
     <PageChrome title="智能体目录" lede="平台全部智能体的浏览与发现。涵盖平台内创建、插件市场引入、外部 Adapter 接入三种来源。">
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {loadError && (
+          <div role="alert" style={{ padding: 12, border: "1px solid var(--aos-red-border)", background: "var(--aos-red-bg)", color: "var(--aos-red)" }}>
+            Agent Registry 读取失败：{loadError}。页面未使用本地样例回退。
+          </div>
+        )}
+        {!loading && !loadError && agents.length === 0 && (
+          <div role="status" style={{ padding: 12, border: "1px solid var(--aos-border)", background: "var(--aos-surface)" }}>
+            当前组织与工作区尚无已注册智能体。
+          </div>
+        )}
         {/* 标题 + 新建按钮 */}
         {/* 226：去掉与 PageChrome 重复的 h1，仅保留新建动作 */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Link
-              to="/s2/aip/agents/new"
+            <span
+              title="AIP-6 Registry 持久化与发布门完成后开放"
               style={{
                 padding: "8px 16px",
                 fontSize: 13,
@@ -578,10 +618,12 @@ export function AgentRegistryPage() {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 6,
+                opacity: 0.55,
+                cursor: "not-allowed",
               }}
             >
-              <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> 新建智能体
-            </Link>
+              <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> 新建智能体（AIP-6 开放）
+            </span>
           </div>
         </div>
 
@@ -878,13 +920,15 @@ export function AgentRegistryPage() {
                     <span style={{ color: "var(--aos-border)" }}>|</span>
                     <button
                       type="button"
+                      disabled
+                      aria-disabled="true"
                       title={agent.status === "running" ? "暂停" : "启动"}
                       style={{
                         fontSize: 11,
                         color: agent.status === "running" ? "var(--aos-amber-600)" : "var(--aos-green-600)",
                         background: "none",
                         border: "none",
-                        cursor: "pointer",
+                        cursor: "not-allowed",
                         padding: 0,
                         fontWeight: 500,
                       }}

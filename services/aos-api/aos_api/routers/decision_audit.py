@@ -178,14 +178,22 @@ def register_insight(
 
 @router.get("/v1/aip/insights")
 def list_insights(
+    status: str | None = None,
     source_decision_id: str | None = None,
     backfill_status: str | None = None,
     min_confidence: float = 0.0,
     limit: int = 50,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    """#85 · Insight 列表。"""
-    _ = principal
+    """#85 · Insight 列表；兼容 TTL 生命周期查询但保持单一路由权威。"""
+    if status is not None:
+        from aos_api import ttl_job
+        from aos_api.tenant_scope import TenantScope
+
+        items = ttl_job.list_insights(
+            TenantScope(principal.org_id, principal.project_id), status=status
+        )
+        return {"items": items, "count": len(items), "source": "ttl"}
     items = get_insight_backfill_engine().list_insights(
         source_decision_id=source_decision_id,
         backfill_status=backfill_status,

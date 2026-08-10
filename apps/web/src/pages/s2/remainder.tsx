@@ -252,7 +252,7 @@ export function OkfFunnelPage() {
                 ))}
               </>
             ) : (
-              <button type="button" className="okf-industry-item is-active">{mapping?.label || industry}</button>
+              <button type="button" disabled className="okf-industry-item is-active">{mapping?.label || industry}</button>
             )}
             <p className="muted" style={{ fontSize: "0.75rem", marginTop: 12 }}>
               源 Dataset: <Link to="/data/datasets">从真实数据集选择</Link>

@@ -35,15 +35,6 @@ DOMAIN_ORDER = (
     "apollo",
 )
 EXPECTED_DUPLICATES = [
-    ["/v1/aip/capabilities", "GET", 2],
-    ["/v1/aip/circuit/trip", "POST", 2],
-    ["/v1/aip/drafts", "GET", 2],
-    ["/v1/aip/drafts/{draft_id}", "GET", 2],
-    ["/v1/aip/drafts/{draft_id}/approve", "POST", 2],
-    ["/v1/aip/drafts/{draft_id}/reject", "POST", 2],
-    ["/v1/aip/evals", "GET", 2],
-    ["/v1/aip/insights", "GET", 2],
-    ["/v1/aip/tools", "GET", 2],
     ["/v1/builds", "GET", 2],
     ["/v1/datasets", "GET", 2],
     ["/v1/ontology/branches", "GET", 2],
@@ -160,12 +151,15 @@ def build_inventory(app: Any, schema_bytes: bytes) -> dict[str, Any]:
     duplicates = sorted(
         [[path, method, count] for (path, method), count in pairs.items() if count > 1]
     )
-    if len(rows) != 4069 or len(pairs) != 4050:
+    if len(rows) != 4075 or len(pairs) != 4065:
         raise ExportError(
             f"route totals changed: rows={len(rows)} unique_pairs={len(pairs)}"
         )
     if duplicates != EXPECTED_DUPLICATES:
         raise ExportError(f"duplicate route inventory changed: {duplicates!r}")
+    aip_duplicates = [item for item in duplicates if item[0].startswith("/v1/aip/")]
+    if aip_duplicates:
+        raise ExportError(f"AIP duplicate routes are forbidden: {aip_duplicates!r}")
     return {
         "summary": {
             "domains": {domain: domain_counts[domain] for domain in DOMAIN_ORDER},
@@ -188,7 +182,7 @@ def generate_payloads() -> tuple[bytes, bytes]:
     validate_openapi(schema)
     schema_bytes = canonical_json(schema)
     openapi_operation_count = sum(1 for _ in _operations(schema))
-    if openapi_operation_count != 4050:
+    if openapi_operation_count != 4065:
         raise ExportError(f"OpenAPI operation total changed: {openapi_operation_count}")
     inventory = build_inventory(app, schema_bytes)
     return schema_bytes, canonical_json(inventory)

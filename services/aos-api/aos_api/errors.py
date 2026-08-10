@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from aos_api.logging_facade import get_logger, get_trace_id
 from aos_api.public_contracts import redact_sensitive
+from aos_api.aip_contracts import AIP_ERROR_STATUS
 
 log = get_logger("aos-api.errors")
 
@@ -35,6 +36,24 @@ class ApiError(Exception):
         self.status_code = status_code
         self.details = details
         super().__init__(message)
+
+
+def aip_error(
+    code: str,
+    message: str,
+    *,
+    details: dict[str, Any] | None = None,
+) -> ApiError:
+    """Build a stable AIP error and reject unregistered public codes."""
+
+    if code not in AIP_ERROR_STATUS:
+        raise ValueError(f"unregistered AIP error code: {code}")
+    return ApiError(
+        code=code,
+        message=message,
+        status_code=AIP_ERROR_STATUS[code],
+        details=details,
+    )
 
 
 def error_payload(

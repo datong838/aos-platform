@@ -7,8 +7,8 @@ import { getApiBase } from "../../api/apiBase";
 /* ============================================================================
  * Phase 1 · AIP Assist 深度完善
  * - SSE 流式对话（fetch ReadableStream + 可中断）
- * - 对话历史持久化（侧栏 + localStorage 兜底）
- * - 动态建议问题（API + 兜底）
+ * - 对话历史持久化（仅本机草稿，不代表服务端事实）
+ * - 动态建议问题（API 失败时仅显示固定帮助入口）
  * - 权限感知标签（读取 API permissions 字段）
  * - 保存到分支 / 取消
  * ==========================================================================*/
@@ -206,7 +206,7 @@ type SseCallbacks = {
 };
 
 /**
- * 调用 SSE 端点。后端不可用时自动降级到本地流式 mock。
+ * 调用 SSE 端点。后端不可用时明确失败，不生成本地答案。
  * 返回一个 abort 函数，可中断流。
  */
 function streamChat(
@@ -283,32 +283,8 @@ function streamChat(
       cb.onDone?.(full, meta);
     } catch (e) {
       if (aborted || controller.signal.aborted) return;
-      // 降级到 mock 流
       cb.onError?.(e instanceof Error ? e : new Error(String(e)));
-      mockStream(query, cb);
     }
-  }
-
-  function mockStream(query: string, cb: SseCallbacks) {
-    const full = generateOfflineResponse(query);
-    const tokens = tokenizeForStream(full);
-    const meta: AiMessageMeta = { offline: true };
-    let i = 0;
-    const timer = setInterval(() => {
-      if (aborted) {
-        clearInterval(timer);
-        return;
-      }
-      if (i >= tokens.length) {
-        clearInterval(timer);
-        cb.onMeta?.(meta);
-        cb.onDone?.(full, meta);
-        return;
-      }
-      const piece = tokens[i];
-      i += 1;
-      cb.onToken(piece);
-    }, 20);
   }
 
   function abort() {
@@ -549,8 +525,19 @@ export function AipAssistPage() {
         setLoading(false);
         abortRef.current = null;
       },
-      onError: (_err) => {
-        // mockStream 会接管，无需额外处理
+      onError: (error) => {
+        patchActiveMessages((msgs) => [
+          ...msgs.filter((message) => message.id !== aiId),
+          {
+            id: newMessageId("err"),
+            role: "error",
+            code: "AIP_ASSIST_UNAVAILABLE",
+            message: `AIP 助手暂不可用：${error.message}`,
+            ts: Date.now(),
+          },
+        ]);
+        setLoading(false);
+        abortRef.current = null;
       },
     });
   }
@@ -589,26 +576,42 @@ export function AipAssistPage() {
         return { ...m, codeSuggestions: list };
       }),
     );
-    const branchName = `aip-assist/${cs.id}`;
     try {
-      await apiPost<{ branchName?: string }>(API_ENDPOINTS.saveToBranch, {
+      const result = await apiPost<{ branchName?: string }>(API_ENDPOINTS.saveToBranch, {
         title: cs.title,
         language: cs.language,
         diff: cs.diff,
         conversationId: activeConvId,
       });
-    } catch {
-      // API 未就绪，本地标记成功（演示）
+      const confirmedBranch = String(result.branchName || "").trim();
+      if (!confirmedBranch) throw new Error("服务端未返回 branchName");
+      patchActiveMessages((msgs) =>
+        msgs.map((m) => {
+          if (m.id !== msgId || m.role !== "ai") return m;
+          const list = (m.codeSuggestions || []).map((c) =>
+            c.id === cs.id ? { ...c, status: "saved" as const, branchName: confirmedBranch } : c,
+          );
+          return { ...m, codeSuggestions: list };
+        }),
+      );
+    } catch (error) {
+      patchActiveMessages((msgs) => [
+        ...msgs.map((m) => {
+          if (m.id !== msgId || m.role !== "ai") return m;
+          const list = (m.codeSuggestions || []).map((c) =>
+            c.id === cs.id ? { ...c, status: "pending" as const } : c,
+          );
+          return { ...m, codeSuggestions: list };
+        }),
+        {
+          id: newMessageId("err"),
+          role: "error" as const,
+          code: "AIP_BRANCH_SAVE_FAILED",
+          message: `保存分支失败：${String((error as Error).message || error)}`,
+          ts: Date.now(),
+        },
+      ]);
     }
-    patchActiveMessages((msgs) =>
-      msgs.map((m) => {
-        if (m.id !== msgId || m.role !== "ai") return m;
-        const list = (m.codeSuggestions || []).map((c) =>
-          c.id === cs.id ? { ...c, status: "saved" as const, branchName } : c,
-        );
-        return { ...m, codeSuggestions: list };
-      }),
-    );
   }
 
   function cancelSuggestion(msgId: string, csId: string) {

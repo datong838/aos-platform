@@ -122,9 +122,9 @@ describe("Wave 3C · six passing pages keep their main interactions honest", () 
     await render(CapabilityPage);
     await act(async () => buttonByText(host, "测连通").click());
     await flushEffects();
-    expect(host.textContent).toContain("连通失败 · 演示路径");
-    expect(host.textContent).toContain("真实连通接口失败");
-    expect(host.textContent).not.toContain("连通正常 · 演示路径");
+    expect(host.textContent).toContain("连通测试失败");
+    expect(host.textContent).toContain("未执行本地模拟");
+    expect(host.textContent).not.toContain("连通正常");
   });
 
   it("Model Providers distinguishes confirmed empty and never echoes a secret reference", async () => {
@@ -191,4 +191,3 @@ describe("Wave 3C · six passing pages keep their main interactions honest", () 
     expect(host.textContent).not.toContain("已 promote stable");
   });
 });
-

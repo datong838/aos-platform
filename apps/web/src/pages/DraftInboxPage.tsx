@@ -212,7 +212,7 @@ export const ACTION_COLORS: Record<TimelineAction, string> = {
  * 3. Mock 数据
  * ========================================================================= */
 
-const MOCK_DRAFTS: DraftItem[] = [
+export const MOCK_DRAFTS: DraftItem[] = [
   {
     id: "d1",
     title: "纯度异常 ↔ 设备振动 · 知识回填",
@@ -335,7 +335,7 @@ export function extractSubmitters(drafts: DraftItem[]): string[] {
 }
 
 /** 数据源模式：live=真 API；demo=MOCK 演示路径 */
-export type DraftSourceMode = "live" | "demo" | "loading";
+export type DraftSourceMode = "live" | "error" | "loading";
 
 const ALL_STATUSES: DraftStatus[] = [
   "draft",
@@ -513,9 +513,9 @@ const TAB_LABELS: { id: DraftTab; label: string }[] = [
 ];
 
 export function DraftInboxPage() {
-  const [drafts, setDrafts] = useState<DraftItem[]>(MOCK_DRAFTS);
+  const [drafts, setDrafts] = useState<DraftItem[]>([]);
   const [activeTab, setActiveTab] = useState<DraftTab>("pending");
-  const [selectedId, setSelectedId] = useState<string | null>(MOCK_DRAFTS[0]?.id ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<DraftFilter>({
     type: "all",
@@ -548,7 +548,7 @@ export function DraftInboxPage() {
     [allDrafts, selectedId],
   );
 
-  /* --- API 同步：成功→live（可空列表）；失败→demo MOCK --- */
+  /* --- API 同步：成功→live（可空列表）；失败→error（不注入示例） --- */
   const reloadFromApi = useCallback(async (preserveLiveOnFailure = false): Promise<DraftItem[] | null> => {
     try {
       const res = await getOntologyClient().listDrafts();
@@ -565,7 +565,7 @@ export function DraftInboxPage() {
       return items;
     } catch (e) {
       setApiError(String((e as Error).message || e));
-      if (!preserveLiveOnFailure) setSourceMode("demo");
+      if (!preserveLiveOnFailure) setSourceMode("error");
       return null;
     }
   }, []);
@@ -715,11 +715,11 @@ export function DraftInboxPage() {
     >
       <div className="di-page">
       {/* 数据源角标 */}
-      {sourceMode === "demo" && (
+      {sourceMode === "error" && (
         <div className="di-source-banner di-source-banner--demo mb-4" role="status">
-          <span className="di-source-badge di-source-badge--demo">演示路径</span>
+          <span className="di-source-badge di-source-badge--demo">加载失败</span>
           <span className="di-source-banner__text">
-            后端不可用{apiError ? `（${apiError}）` : ""} · 当前为 MOCK 数据，批准/驳回仅本地演示
+            Draft 服务不可用{apiError ? `（${apiError}）` : ""} · 未展示示例数据，所有写操作保持禁用
           </span>
         </div>
       )}

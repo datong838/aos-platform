@@ -2800,20 +2800,6 @@ def insight_backfill(body: dict[str, Any], principal: Principal = Depends(requir
     return stored
 
 
-@router.get("/v1/aip/insights")
-def list_insights(
-    status: str | None = None,
-    principal: Principal = Depends(require_principal),
-):
-    _ = principal
-    from aos_api import ttl_job
-
-    items = ttl_job.list_insights(
-        TenantScope(principal.org_id, principal.project_id), status=status
-    )
-    return {"items": items}
-
-
 # —— TC.5 / TC.6 ——
 @router.post("/v1/aip/capabilities/sync/manuscript")
 def sync_manuscript(body: dict[str, Any], principal: Principal = Depends(require_principal)):

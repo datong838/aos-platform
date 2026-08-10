@@ -81,16 +81,13 @@ describe("Wave 3B W2 · DOM 负向交互", () => {
     expect(apiMocks.apiPut).not.toHaveBeenCalled();
   });
 
-  it("Model Catalog demo 注册、Settings 与 Enablement 写动作均禁用", async () => {
+  it("Model Catalog 失败态不注入静态模型或注册入口", async () => {
     apiMocks.apiGet.mockRejectedValue(new Error("catalog unavailable"));
     await act(async () => root.render(<MemoryRouter><ModelCatalogPage /></MemoryRouter>));
     await flush();
-    const register = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent?.includes("注册到供应商"))!;
-    expect(register.disabled).toBe(true);
-    await act(async () => register.click());
-    const settings = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "AIP 设置")!;
-    await act(async () => settings.click());
-    expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).filter((button) => button.textContent?.includes("保存")).every((button) => button.disabled)).toBe(true);
+    expect(host.textContent).toContain("不可用");
+    expect(host.textContent).not.toContain("注册到供应商");
+    expect(host.textContent).not.toContain("GPT-4o");
     expect(apiMocks.apiPost).not.toHaveBeenCalled();
     expect(apiMocks.apiPut).not.toHaveBeenCalled();
   });

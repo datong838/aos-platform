@@ -261,7 +261,7 @@ export function normalizeListItems(payload: unknown): CapItem[] {
 
 export function CapabilityPage() {
   const [items, setItems] = useState<CapItem[]>([]);
-  const [listSource, setListSource] = useState<"live" | "demo">("demo");
+  const [listSource, setListSource] = useState<"loading" | "live" | "error">("loading");
   const [mediaRid, setMediaRid] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -278,8 +278,9 @@ export function CapabilityPage() {
       setListSource("live");
       setErr(null);
     } catch (e) {
-      setListSource("demo");
-      setErr(`列表不可用 · 演示路径（${String((e as Error).message || e)}）`);
+      setItems([]);
+      setListSource("error");
+      setErr(`能力列表不可用（${String((e as Error).message || e)}）`);
     }
   }
 
@@ -298,8 +299,7 @@ export function CapabilityPage() {
     setCfgType(nextType);
     setEditingCapId(capId);
     const base = defaultConfigFor(nextType);
-    const local = loadLocalConfig(capId);
-    const merged = mergeLiveItem(local || base, itemsById.get(capId));
+    const merged = mergeLiveItem(base, itemsById.get(capId));
     setForm(merged);
   }
 
@@ -320,13 +320,10 @@ export function CapabilityPage() {
         name: CAPABILITY_CARDS.find((c) => c.id === editingCapId)?.title || editingCapId,
         description: CFG_TYPE_META.find((t) => t.id === cfgType)?.desc,
       });
-      saveLocalConfig(editingCapId, form);
       setMsg(formatSaveMsg(false, editingCapId));
       await reloadCaps();
     } catch (e) {
-      saveLocalConfig(editingCapId, form);
-      setListSource("demo");
-      setMsg(formatSaveMsg(true, editingCapId, String((e as Error).message || e)));
+      setErr(`保存失败：${String((e as Error).message || e)}`);
     } finally {
       setBusy(false);
     }
@@ -346,11 +343,7 @@ export function CapabilityPage() {
       const ok = r.ok !== false && r.status !== "unhealthy";
       setMsg(formatTestMsg(false, ok, r.latencyMs));
     } catch (e) {
-      setListSource("demo");
-      setMsg(
-        formatTestMsg(true, false) +
-          `（真实连通接口失败：${String((e as Error).message || e)}；未用本地模拟结果冒充成功）`,
-      );
+      setErr(`连通测试失败：${String((e as Error).message || e)}；未执行本地模拟`);
     } finally {
       setBusy(false);
     }
@@ -391,28 +384,28 @@ export function CapabilityPage() {
     }
   }
 
-  const demo = listSource === "demo";
+  const live = listSource === "live";
 
   return (
     <PageChrome
       title="智能体插件"
       lede="大脑 vs 肌肉 · C0 同步轻能力可进 Function；C1 Job / C2 Session 外置 Adapter"
     >
-      <div className={`w4-b5-banner ${demo ? "is-demo" : "is-live"}`}>
-        <span className={`w4-b5-badge ${demo ? "is-demo" : "is-live"}`}>{pathLabel(demo)}</span>
+      <div className={`w4-b5-banner ${live ? "is-live" : "is-demo"}`}>
+        <span className={`w4-b5-badge ${live ? "is-live" : "is-demo"}`}>{live ? "真 API" : listSource === "loading" ? "加载中" : "不可用"}</span>
         <span className="w4-b5-banner-text">
-          {demo
-            ? "列表或写接口不可用时保留静态卡与本地配置；保存/测连通可降级。"
-            : "列表来自 GET /v1/aip/capabilities；配置 PUT、连通 POST /test。"}
+          {!live
+            ? "能力卡仅用于说明支持类型；服务不可用时保存、测连通与运行操作均禁用。"
+            : "列表来自 GET /v1/aip/capabilities；未登记模板保持只读，不把模板状态当作运行状态。"}
         </span>
       </div>
 
       {/* 顶部操作 */}
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <button type="button" className="btn" onClick={() => void runJob()}>
+        <button type="button" className="btn" disabled={!live || busy || !registered.has("video-job")} title={!registered.has("video-job") ? "能力尚未登记" : undefined} onClick={() => void runJob()}>
           登记并提交 Job
         </button>
-        <button type="button" className="btn" onClick={() => void openSession()}>
+        <button type="button" className="btn" disabled={!live || busy || !registered.has("avatar-commerce")} title={!registered.has("avatar-commerce") ? "能力尚未登记" : undefined} onClick={() => void openSession()}>
           打开 C2 Session
         </button>
         <button type="button" className="btn" onClick={() => void reloadCaps()}>
@@ -470,17 +463,17 @@ export function CapabilityPage() {
         </p>
       </div>
 
-      {/* 已接入 */}
+      {/* 服务端登记状态与支持模板 */}
       <section style={{ marginBottom: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: 0 }}>已接入</h2>
+          <h2 style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: 0 }}>能力模板与登记状态</h2>
           <span style={{ fontSize: 10, color: "#6B7280" }}>kind · 健康 · 配额</span>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
           {CAPABILITY_CARDS.map((cap) => {
             const statusMeta = STATUS_META[cap.status];
             const isRegistered = registered.has(cap.id);
-            const label = isRegistered ? "已登记" : statusMeta.label;
+            const label = isRegistered ? "服务端已登记" : "未登记模板";
             const cardCfgType = cfgTypeFromCard(cap);
             return (
               <div
@@ -517,6 +510,8 @@ export function CapabilityPage() {
                   <button
                     type="button"
                     className="w4-b5-chip-btn"
+                    disabled={!live || !isRegistered}
+                    title={!isRegistered ? "能力尚未登记，AIP-6 接入流程完成后开放配置" : undefined}
                     onClick={() => openConfig(cardCfgType, cap.id)}
                   >
                     配置
@@ -524,7 +519,8 @@ export function CapabilityPage() {
                   <button
                     type="button"
                     className="w4-b5-chip-btn"
-                    disabled={busy}
+                    disabled={busy || !live || !isRegistered}
+                    title={!isRegistered ? "能力尚未登记" : undefined}
                     onClick={() => {
                       const ep =
                         resolveEndpoint(cardCfgType, mergeLiveItem(defaultConfigFor(cardCfgType), itemsById.get(cap.id)));
@@ -634,6 +630,8 @@ export function CapabilityPage() {
               <button
                 key={t.id}
                 type="button"
+                disabled
+                title="AIP-6 持久化 Capability Registry 完成后开放接入"
                 onClick={() => openConfig(t.id, t.defaultCapId)}
                 style={{
                   textAlign: "left",
@@ -641,7 +639,7 @@ export function CapabilityPage() {
                   border: active ? "1px dashed #F59E0B" : "1px dashed #D1D5DB",
                   background: active ? "#FFFBEB" : "#F9FAFB",
                   padding: 16,
-                  cursor: "pointer",
+                  cursor: "not-allowed",
                   transition: "all 0.15s",
                 }}
               >

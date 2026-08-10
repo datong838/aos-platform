@@ -179,7 +179,6 @@ ROUTER_SPECS: dict[str, tuple[tuple[str, str], ...]] = {
         ('aos_api.routers.object_sets', 'router'),
         ('aos_api.routers.object_storage_indexing', 'router'),
         ('aos_api.routers.ontology', 'router'),
-        ('aos_api.routers.ontology_overlay', 'router'),
         ('aos_api.routers.ontology_governance', 'router'),
         ('aos_api.routers.ontology_management', 'router'),
         ('aos_api.routers.ontology_data_layer', 'router'),
@@ -542,7 +541,6 @@ ROUTER_SPECS: dict[str, tuple[tuple[str, str], ...]] = {
         ('aos_api.cp_alert_router', 'router'),
         ('aos_api.routers.phase7_hub_spokes', 'router'),
         ('aos_api.routers.phase7_releases', 'router'),
-        ('aos_api.routers.phase7_releases', 'alias_router'),
         ('aos_api.routers.phase7_ferry', 'router'),
     ),
 }

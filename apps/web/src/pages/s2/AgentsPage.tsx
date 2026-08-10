@@ -1,12 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageChrome } from "../../components/PageChrome";
 import { apiPost } from "../../api/client";
 import { useJsonGet } from "./shared";
 import { CreateAgentWizard } from "./CreateAgentWizard";
 import {
   // 常量与类型
-  MOCK_AGENTS,
-  MOCK_MODELS,
   HITL_PULSE_ANIMATION_NAME,
   HITL_PULSE_STYLE_TEXT,
   SOURCE_FILTERS,
@@ -36,7 +34,6 @@ import {
   formatCalls,
   parseModelsPayload,
   resolveModelLabel,
-  generateTrialReply,
 } from "./agentsCore";
 
 export { CreateAgentWizard };
@@ -48,18 +45,58 @@ interface TrialMessage {
   content: string;
 }
 
+type AgentListRow = {
+  id?: string;
+  name?: string;
+  description?: string;
+  source?: string;
+  status?: string;
+  calls?: number;
+  modelId?: string;
+  prompt?: string;
+  icon?: string;
+  tools?: AgentTool[];
+};
+
+function mapAgentRow(row: AgentListRow): AgentItem | null {
+  if (!row.id || !row.name) return null;
+  const source: AgentSource = row.source === "marketplace" || row.source === "plugin"
+    ? "plugin"
+    : row.source === "custom" || row.source === "external"
+      ? "external"
+      : "platform";
+  const status: AgentStatus = row.status === "draft"
+    ? "draft"
+    : row.status === "archived" || row.status === "stopped"
+      ? "stopped"
+      : "active";
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description || "暂无描述",
+    source,
+    status,
+    calls: Number.isFinite(row.calls) ? Number(row.calls) : 0,
+    modelId: row.modelId || "",
+    prompt: row.prompt || "",
+    icon: row.icon || "智",
+    tools: Array.isArray(row.tools) ? row.tools : [],
+  };
+}
+
 // -------------------- 主页面 --------------------
 
 export function AgentsPage() {
-  // 数据：Agent 列表（本地状态，支持新建后追加） + 模型目录
-  const [agents, setAgents] = useState<AgentItem[]>(MOCK_AGENTS);
+  // AIP-0：只展示 API 回读，禁止静态 Agent/模型回退冒充 Registry。
+  const agentsApi = useJsonGet<{ items?: AgentListRow[] }>("/v1/aip/agents");
+  const [agents, setAgents] = useState<AgentItem[]>([]);
   const modelsApi = useJsonGet<{ items?: unknown[] } | unknown[]>("/v1/aip/models");
   const models: CatalogModel[] = useMemo(
-    () => parseModelsPayload(modelsApi.data ?? MOCK_MODELS),
+    () => parseModelsPayload(modelsApi.data ?? []),
     [modelsApi.data],
   );
 
-  const [selectedId, setSelectedId] = useState(MOCK_AGENTS[0].id);
+  const [selectedId, setSelectedId] = useState("");
   const [activeTab, setActiveTab] = useState<"prompt" | "tools" | "try" | "publish">("prompt");
   const [showWizard, setShowWizard] = useState(false);
 
@@ -72,16 +109,32 @@ export function AgentsPage() {
   const [trialMessages, setTrialMessages] = useState<TrialMessage[]>([]);
 
   // 发布历史
-  const [publishHistory] = useState([
-    { env: "prod", version: "v1.2.0", time: "2025-07-20 14:32", status: "已发布" },
-    { env: "staging", version: "v1.3.0-rc1", time: "2025-07-25 09:15", status: "灰度中" },
-    { env: "dev", version: "v1.3.0-dev", time: "2025-07-27 10:08", status: "构建中" },
-  ]);
+  const [publishHistory] = useState<Array<{ env: string; version: string; time: string; status: string }>>([]);
+
+  useEffect(() => {
+    const next = (agentsApi.data?.items ?? []).map(mapAgentRow).filter((item): item is AgentItem => item !== null);
+    setAgents(next);
+    setSelectedId((current) => next.some((item) => item.id === current) ? current : (next[0]?.id ?? ""));
+  }, [agentsApi.data]);
 
   const selected = agents.find((a) => a.id === selectedId) ?? agents[0];
   const filtered = filterAgents(agents, sourceFilter, keyword);
-  const toolCounts = countToolStates(selected.tools);
-  const promptVars = extractPromptVars(selected.prompt);
+  const toolCounts = countToolStates(selected?.tools ?? []);
+  const promptVars = extractPromptVars(selected?.prompt ?? "");
+
+  if (!selected) {
+    return (
+      <PageChrome title="对话机器人" lede="Agent Registry 真实回读 · AIP-6 前不提供本地样例回退">
+        <div role={agentsApi.err ? "alert" : "status"} style={{ padding: 24, border: "1px solid var(--aos-border)", background: "var(--aos-surface)" }}>
+          {agentsApi.loading
+            ? "正在读取 Agent Registry…"
+            : agentsApi.err
+              ? `Agent Registry 读取失败：${agentsApi.err}`
+              : "当前组织与工作区尚未注册智能体。AIP-6 Registry 完成前，不展示静态智能体。"}
+        </div>
+      </PageChrome>
+    );
+  }
 
   function handleCreate(agent: AgentItem) {
     setAgents((prev) => [agent, ...prev]);
@@ -136,20 +189,21 @@ export function AgentsPage() {
     const text = trialInput.trim();
     if (!text) return;
     const userMsg: TrialMessage = { role: "user", content: text };
-    const replyMsg: TrialMessage = {
-      role: "assistant",
-      content: generateTrialReply(selected, text),
-    };
-    setTrialMessages((prev) => [...prev, userMsg, replyMsg]);
+    setTrialMessages((prev) => [...prev, userMsg]);
     setTrialInput("");
-    // 尝试调用后端 chat（失败静默，已有 mock 回复兜底）
     try {
-      await apiPost("/v1/aip/agents/trial", {
+      const result = await apiPost<{ reply?: string; message?: string; output?: string }>("/v1/aip/agents/trial", {
         agentId: selected.id,
         message: text,
       });
-    } catch {
-      /* 后端未就绪时静默使用 mock 回复 */
+      const reply = result.reply || result.output || result.message;
+      if (!reply) throw new Error("试运行响应缺少 reply/output/message");
+      setTrialMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+    } catch (error) {
+      setTrialMessages((prev) => [...prev, {
+        role: "assistant",
+        content: `试运行失败：${String((error as Error).message || error)}`,
+      }]);
     }
   }
 
@@ -219,7 +273,8 @@ export function AgentsPage() {
               })}
             </div>
             <button
-              onClick={() => setShowWizard(true)}
+              disabled
+              title="AIP-6 Registry 持久化与发布门完成后开放"
               style={{
                 width: "100%",
                 display: "flex",
@@ -233,11 +288,12 @@ export function AgentsPage() {
                 color: "var(--text-on-brand)",
                 background: "var(--aos-indigo-600)",
                 border: "none",
-                cursor: "pointer",
+                cursor: "not-allowed",
+                opacity: 0.55,
               }}
             >
               <span style={{ fontSize: 14, lineHeight: 1 }}>+</span>
-              <span>新建智能体</span>
+              <span>新建智能体（AIP-6 开放）</span>
             </button>
           </div>
 

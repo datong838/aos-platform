@@ -45,15 +45,6 @@ DOMAIN_COUNTS = {
     "apollo": 9,
 }
 EXPECTED_DUPLICATES = [
-    ["/v1/aip/capabilities", "GET", 2],
-    ["/v1/aip/circuit/trip", "POST", 2],
-    ["/v1/aip/drafts", "GET", 2],
-    ["/v1/aip/drafts/{draft_id}", "GET", 2],
-    ["/v1/aip/drafts/{draft_id}/approve", "POST", 2],
-    ["/v1/aip/drafts/{draft_id}/reject", "POST", 2],
-    ["/v1/aip/evals", "GET", 2],
-    ["/v1/aip/insights", "GET", 2],
-    ["/v1/aip/tools", "GET", 2],
     ["/v1/builds", "GET", 2],
     ["/v1/datasets", "GET", 2],
     ["/v1/ontology/branches", "GET", 2],
@@ -391,13 +382,17 @@ class RouterManifestRuntimeTests(unittest.TestCase):
 
         # Runtime inventory includes FastAPI's four framework routes; the
         # exported business-route inventory intentionally filters those out.
-        self.assertEqual(4051, result["count"])
+        self.assertEqual(4079, result["count"])
         self.assertEqual(
-            "71c6adfad65b6dd1a6c38f5e5480c4a9efe0fbe556594a54561b2d8cb084c966",
+            "58548a9d39c73ae992f7913857204477bc96f598fdb4a5ee4f80163aef80285e",
             result["sha256"],
         )
-        self.assertEqual(2284, result["openapi_paths"])
+        self.assertEqual(2311, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
+        self.assertEqual(
+            [],
+            [item for item in result["duplicates"] if item[0].startswith("/v1/aip/")],
+        )
         self.assertEqual([], result["missing_critical"])
         self.assertTrue(result["managed_skipped_bootstrap"])
         self.assertTrue(result["migration_failure_propagated"])
