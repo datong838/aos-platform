@@ -19,6 +19,13 @@ import {
   toggleObjectSelection,
 } from "../../components/ontology/ObjectExplorerWorkspace";
 import { OntologyGraphCanvas } from "../../components/ontology/OntologyGraphCanvas";
+import {
+  getObjectDisplayLabel,
+  getObjectTypeDisplayName,
+  getRelationTypeDisplayName,
+  getSourceIdentityLabel,
+  getSourceRecordLabel,
+} from "../../components/ontology/ontologyDisplayNames";
 import { apiGet, apiPost, S2Chrome, useJsonGet } from "./shared";
 import {
   BpBanner,
@@ -54,7 +61,7 @@ export function buildGraphNodes(
         key: `${centerType}:${String(detail.id)}`,
         id: String(detail.id),
         type: centerType,
-        label: String(detail.title || detail.id),
+        label: getObjectDisplayLabel(centerType, detail),
         kind: "center" as const,
       }
     : null;
@@ -66,7 +73,7 @@ export function buildGraphNodes(
       key: `${type}:${id}:${rel || index}`,
       id,
       type,
-      label: String(neighbor.title || neighbor.id || neighbor.type || id),
+      label: String(neighbor.title || `${getObjectTypeDisplayName(type)} · ${getSourceRecordLabel(id)}`),
       rel,
       kind: "neighbor" as const,
     };
@@ -236,7 +243,7 @@ export function GraphExplorerPage() {
             ? edge.source
             : null;
         const other = otherKey ? nodeByKey.get(otherKey) : undefined;
-        return other ? [{ id: other.objectId, type: other.objectType, rel: edge.relationType }] : [];
+        return other ? [{ id: other.objectId, type: other.objectType, rel: edge.relationType, title: other.label }] : [];
       }));
     } catch (graphLoadError) {
       setGraphSnapshot(null);
@@ -282,7 +289,8 @@ export function GraphExplorerPage() {
     if (!query.trim()) return objects;
     const q = query.toLowerCase();
     return objects.filter((o) =>
-      String(o.title || o.id || "").toLowerCase().includes(q),
+      [o._displayLabel, o.orderNo, o.title, o.id]
+        .some((value) => String(value || "").toLowerCase().includes(q)),
     );
   }, [objects, query]);
 
@@ -565,7 +573,11 @@ export function GraphExplorerPage() {
                   }}
                 >
                   <option value="">全部关系</option>
-                  {graphRelationTypes.map((relationType) => <option key={relationType}>{relationType}</option>)}
+                  {graphRelationTypes.map((relationType) => (
+                    <option key={relationType} value={relationType}>
+                      {getRelationTypeDisplayName(relationType)}
+                    </option>
+                  ))}
                 </select>
               </label>
               <label>
@@ -580,7 +592,11 @@ export function GraphExplorerPage() {
                   }}
                 >
                   <option value="">全部类型</option>
-                  {graphObjectTypes.map((objectType) => <option key={objectType}>{objectType}</option>)}
+                  {graphObjectTypes.map((objectType) => (
+                    <option key={objectType} value={objectType}>
+                      {getObjectTypeDisplayName(objectType)}
+                    </option>
+                  ))}
                 </select>
               </label>
             </div>
@@ -650,11 +666,14 @@ export function GraphExplorerPage() {
                         {objectColumns.map((col, idx) => (
                           <td key={col.key}>
                             {idx === 0 ? (
-                              <div className="p-objx-cell-title">
+                              <div className="p-objx-cell-title" title={getSourceIdentityLabel(o)}>
                                 <div className="p-objx-avatar">
-                                  {formatExplorerValue(typeId, col.key, o[col.key]).charAt(0).toUpperCase()}
+                                  {getObjectTypeDisplayName(typeId).charAt(0)}
                                 </div>
-                                {formatExplorerValue(typeId, col.key, o[col.key])}
+                                <span className="p-objx-cell-title-copy">
+                                  <strong>{getObjectDisplayLabel(typeId, o)}</strong>
+                                  <small>{getSourceRecordLabel(o)}</small>
+                                </span>
                               </div>
                             ) : (
                               formatExplorerValue(typeId, col.key, o[col.key])
@@ -679,7 +698,7 @@ export function GraphExplorerPage() {
                 loading={graphLoading}
                 error={graphError}
                 onSelectNode={(node) => {
-                  setToast(`已选择 ${node.objectType}/${node.objectId}`);
+                  setToast(`已选择 ${node.label}`);
                   if (node.objectType === typeId && node.objectId === objectId) setDetailOpen(true);
                 }}
                 onExpandNode={(node) => selectObject(node.objectType, node.objectId)}
@@ -720,9 +739,9 @@ export function GraphExplorerPage() {
               <div className="bp-ws-section-title">Object View + Wiki</div>
               {detail ? (
                 <>
-                  <div className="bp-object-title">{String(detail.title || detail.id)}</div>
+                  <div className="bp-object-title">{getObjectDisplayLabel(typeId, detail)}</div>
                   <p className="muted" style={{ fontSize: "0.75rem" }}>
-                    {typeId}/{objectId} · Selection 绑定
+                    {getSourceIdentityLabel(detail)} · Selection 绑定
                   </p>
                   <div className="p-objx-detail-tabs" role="tablist" aria-label="对象详情视图">
                     {(
@@ -752,11 +771,11 @@ export function GraphExplorerPage() {
                   {detailTab === "relations" &&
                     (neighbors.length > 0 ? (
                       <BpTable
-                        columns={["邻居", "type", "rel"]}
+                        columns={["邻居", "类型", "关系"]}
                         rows={neighbors.map((n) => [
-                          String(n.id ?? "—"),
-                          String(n.type ?? "—"),
-                          String(n.rel ?? "—"),
+                          String(n.title || getSourceRecordLabel(String(n.id ?? ""))),
+                          getObjectTypeDisplayName(String(n.type ?? "—")),
+                          getRelationTypeDisplayName(String(n.rel ?? "—")),
                         ])}
                       />
                     ) : (

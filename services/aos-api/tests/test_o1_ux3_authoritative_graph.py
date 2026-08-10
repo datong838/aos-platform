@@ -84,6 +84,9 @@ def test_snapshot_supports_five_hops_authority_filters_and_masking(authoritative
     assert len(own_nodes) == 4
     assert max(node.depth for node in own_nodes) == 3
     assert all(node.masked for node in own_nodes)
+    order_node = next(node for node in own_nodes if node.objectType == "Order")
+    assert order_node.label.startswith("订单 · 系统记录 ")
+    assert order_node.objectId == authoritative_chain["nodes"][0][1]
     assert all(edge.graphDomain == "domain" and edge.edgeAuthority == "authoritative" for edge in own_edges)
     assert snapshot.sourceAuthority == "ecom_authoritative"
     assert snapshot.scope.orgId == SCOPE.org_id

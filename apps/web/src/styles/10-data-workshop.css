@@ -1924,6 +1924,23 @@
   color: var(--aos-text);
   font-weight: 500;
 }
+.p-objx-cell-title-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.p-objx-cell-title-copy strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+.p-objx-cell-title-copy small {
+  color: var(--aos-text-tertiary);
+  font-size: 0.7rem;
+  font-weight: 400;
+}
 .p-objx-avatar {
   width: 26px;
   height: 26px;

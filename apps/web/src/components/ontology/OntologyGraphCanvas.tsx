@@ -6,6 +6,11 @@ import {
   stableObjectTypeColor,
   type OntologyGraphLayoutMode,
 } from "./ontologyGraphLayout";
+import {
+  getObjectTypeDisplayName,
+  getRelationTypeDisplayName,
+  getSourceRecordLabel,
+} from "./ontologyDisplayNames";
 import "./OntologyGraphCanvas.css";
 
 type Viewport = { x: number; y: number; scale: number };
@@ -127,16 +132,16 @@ export function OntologyGraphCanvas({
       </div>
       <div className="o1-graph-legend" aria-label="图例">
         {objectTypes.map((objectType) => (
-          <span key={objectType}><i style={{ background: stableObjectTypeColor(objectType) }} />{objectType}</span>
+          <span key={objectType}><i style={{ background: stableObjectTypeColor(objectType) }} />{getObjectTypeDisplayName(objectType)}</span>
         ))}
-        <span><b>实线</b> authoritative</span>
+        <span><b>实线</b> 权威关系</span>
       </div>
       {displayMode === "list" ? (
         <div className="o1-graph-list">
           {layout.nodes.map((node) => (
             <button key={node.key} type="button" onClick={() => select(node)} onDoubleClick={() => onExpandNode?.(node)}>
               <i style={{ background: stableObjectTypeColor(node.objectType) }} />
-              <span><strong>{node.label}</strong><small>{node.objectType} · {node.objectId} · depth {node.depth}</small></span>
+              <span><strong>{node.label}</strong><small>{getObjectTypeDisplayName(node.objectType)} · {getSourceRecordLabel(node.objectId)} · 第 {node.depth} 层</small></span>
             </button>
           ))}
         </div>
@@ -179,7 +184,7 @@ export function OntologyGraphCanvas({
                   <g key={edge.key} className={`${muted ? "is-muted" : ""} ${pathEdgeKeys.has(edge.key) ? "is-path" : ""}`}>
                     <path className="o1-graph-edge" d={edge.path} markerEnd="url(#o1-arrow)" />
                     {(layout.edges.length <= 80 || edge.source === selectedKey || edge.target === selectedKey) && (
-                      <text className="o1-graph-edge-label" x={edge.labelX} y={edge.labelY}>{edge.relationType}</text>
+                      <text className="o1-graph-edge-label" x={edge.labelX} y={edge.labelY}>{getRelationTypeDisplayName(edge.relationType)}</text>
                     )}
                   </g>
                 );
@@ -194,7 +199,7 @@ export function OntologyGraphCanvas({
                     data-graph-node-index={nodeIndex}
                     role="button"
                     tabIndex={0}
-                    aria-label={`${node.label}，${node.objectType}，深度 ${node.depth}`}
+                    aria-label={`${node.label}，${getObjectTypeDisplayName(node.objectType)}，第 ${node.depth} 层`}
                     className={`o1-graph-node ${selected ? "is-selected" : ""} ${pathNodeKeys.has(node.key) ? "is-path" : ""} ${muted ? "is-muted" : ""}`}
                     transform={`translate(${node.x - node.width / 2} ${node.y - node.height / 2})`}
                     onClick={() => select(node)}
@@ -224,7 +229,7 @@ export function OntologyGraphCanvas({
                     <rect width={node.width} height={node.height} rx="5" />
                     <rect className="o1-graph-node-accent" width="7" height={node.height} rx="5" fill={stableObjectTypeColor(node.objectType)} />
                     <text className="o1-graph-node-title" x="18" y="23">{node.label.slice(0, 23)}</text>
-                    <text className="o1-graph-node-meta" x="18" y="42">{node.objectType} · {node.objectId.slice(0, 18)} · d{node.depth}</text>
+                    <text className="o1-graph-node-meta" x="18" y="42">{getObjectTypeDisplayName(node.objectType)} · {getSourceRecordLabel(node.objectId)} · 第 {node.depth} 层</text>
                   </g>
                 );
               })}

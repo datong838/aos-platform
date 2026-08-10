@@ -20,6 +20,7 @@ from aos_api.marking import (
 )
 from aos_api.ot_detail_meta import build_ot_detail_meta
 from aos_api.ontology_explorer_contracts import GraphQueryDTO
+from aos_api.ontology_display_names import build_object_display_projection
 from aos_api.ontology_graph_query import get_authoritative_graph_service
 from aos_api.oidc import allow_dev
 from aos_api.tenant_scope import TenantScope
@@ -603,6 +604,9 @@ def list_objects(
             redacted = apply_field_redaction(principal, raw, prop_defs, conn=conn)
             # G18: auto-redact known e-commerce PII fields not caught by marking config
             redacted = _auto_redact_ecom_pii(redacted)
+            redacted.update(
+                build_object_display_projection(object_type, r["object_id"], redacted)
+            )
             items.append(redacted)
     out: dict[str, Any] = {"items": items, "total": len(items)}
     if branch:
@@ -633,6 +637,7 @@ def get_object(
         raw = {"id": object_id, "type": object_type, **(hit["props"] or {})}
         out = apply_field_redaction(principal, raw, prop_defs, conn=conn)
         out = _auto_redact_ecom_pii(out)
+        out.update(build_object_display_projection(object_type, object_id, out))
     if branch:
         out = {**out, "branch": branch}
     return out

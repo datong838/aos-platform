@@ -12,6 +12,7 @@ from typing import Any
 from aos_api.db import connect
 from aos_api.errors import ApiError
 from aos_api.ontology_explorer_contracts import GraphQueryDTO, GraphSnapshotDTO
+from aos_api.ontology_display_names import build_object_display_label
 from aos_api.tenant_scope import TenantScope
 
 
@@ -152,7 +153,11 @@ class AuthoritativeGraphService:
                 "key": key,
                 "objectType": graph["nodes"][key]["object_type"],
                 "objectId": graph["nodes"][key]["external_id"],
-                "label": f"{graph['nodes'][key]['object_type']} · {graph['nodes'][key]['external_id']}",
+                "label": build_object_display_label(
+                    graph["nodes"][key]["object_type"],
+                    graph["nodes"][key]["external_id"],
+                    graph["nodes"][key].get("properties"),
+                ),
                 "depth": depths[key],
                 "masked": True,
             }
@@ -266,7 +271,7 @@ class AuthoritativeGraphService:
         relation_params: tuple[object, ...] = (relation_types,) if relation_types else ()
         with connect(scope) as conn:
             objects = conn.execute(
-                "SELECT object_type,external_id,updated_at FROM ecom_object "
+                "SELECT object_type,external_id,properties,updated_at FROM ecom_object "
                 "WHERE org_id=%s AND workspace_id=%s AND deleted_at IS NULL "
                 "ORDER BY object_type,external_id LIMIT %s",
                 (*scope.key, MAX_SOURCE_OBJECTS + 1),
@@ -297,6 +302,7 @@ class AuthoritativeGraphService:
         nodes = {
             _node_key(row["object_type"], row["external_id"]): {
                 "object_type": row["object_type"], "external_id": row["external_id"],
+                "properties": dict(row["properties"] or {}),
                 "updated_at": row["updated_at"].isoformat(),
             }
             for row in objects
@@ -361,6 +367,7 @@ class AuthoritativeGraphService:
                     nodes[key] = {
                         "object_type": object_type,
                         "external_id": row["record_id"],
+                        "properties": row["payload"] if isinstance(row["payload"], dict) else {},
                         "updated_at": row["updated_at"].isoformat(),
                     }
         if len(nodes) > MAX_SOURCE_OBJECTS:

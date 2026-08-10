@@ -113,7 +113,7 @@ describe("O1-UX1 · Object Explorer workspace contracts", () => {
       "deliveryStatus",
     ]);
     expect(result.columns.map((column) => column.label)).toEqual([
-      "订单 ID",
+      "订单",
       "订单号",
       "会员 ID",
       "下单时间",

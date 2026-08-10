@@ -16,7 +16,7 @@ export type ExplorerColumnResolution = {
 
 const DOMAIN_COLUMN_PROFILES: Record<string, ExplorerColumn[]> = {
   Order: [
-    { key: "id", label: "订单 ID" },
+    { key: "id", label: "订单" },
     { key: "orderNo", label: "订单号" },
     { key: "memberId", label: "会员 ID" },
     { key: "createdAt", label: "下单时间", type: "datetime" },
@@ -26,7 +26,7 @@ const DOMAIN_COLUMN_PROFILES: Record<string, ExplorerColumn[]> = {
     { key: "deliveryStatus", label: "发货状态" },
   ],
   Product: [
-    { key: "id", label: "商品 ID" },
+    { key: "id", label: "商品" },
     { key: "title", label: "商品名称" },
     { key: "price", label: "销售价", type: "money", unit: "CNY" },
     { key: "stock", label: "库存" },
