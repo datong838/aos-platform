@@ -2,8 +2,8 @@
   "id": "browser-pilot",
   "name": "Browser Pilot",
   "nameZh": "浏览器自动驾驶",
-  "description": "原生 CDP 浏览器操控智能体 — 基于 Kitewright MCP，无需 Chrome 扩展，支持导航/截图/点击/输入/填表/断言/无障碍树/控制台/网络/PDF/状态持久化，自带 kite 二进制，开箱即用",
-  "kind": "agent",
+  "description": "原生 CDP 浏览器自动化引擎 — 基于 Kitewright MCP，无需 Chrome 扩展，支持导航/截图/点击/输入/填表/断言/无障碍树/控制台/网络/PDF/状态持久化，自带 kite 二进制，开箱即用",
+  "kind": "browser",
   "version": "0.2.0",
   "author": "aos",
   "runtime": "sidecar",
@@ -28,7 +28,7 @@
     "press_key",
     "handle_dialog"
   ],
-  "healthPath": "/v1/agents/browser-pilot/health",
+  "healthPath": "/v1/browser/browser-pilot/health",
   "configSchema": {
     "type": "object",
     "properties": {

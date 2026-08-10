@@ -1,15 +1,15 @@
 ---
 name: "browser-pilot"
-description: "原生 CDP 浏览器自动驾驶智能体 — 基于 Kitewright MCP，21 个高级工具操控原生 Chrome，无需任何扩展。支持导航/截图/点击/输入/填表/断言/无障碍树/控制台/网络/PDF/状态持久化。kite 二进制已内置，开箱即用。"
+description: "原生 CDP 浏览器自动驾驶引擎 — 基于 Kitewright MCP，24 个高级工具操控原生 Chrome，无需任何扩展。支持导航/截图/点击/输入/填表/断言/无障碍树/控制台/网络/PDF/状态持久化/状态保存恢复/对话框处理。kite 二进制已内置，开箱即用。"
 ---
 
 # Browser Pilot — 原生浏览器自动驾驶
 
 ## 是什么
 
-一个**通用的浏览器操控智能体插件**，底层通过 Chrome DevTools Protocol (CDP) 直接控制原生 Chrome/Chromium，**不依赖任何 Chrome 扩展、Electron 内嵌浏览器或第三方 browser MCP**。
+一个**通用的浏览器操控能力插件**（浏览器自动化引擎），底层通过 Chrome DevTools Protocol (CDP) 直接控制原生 Chrome/Chromium，**不依赖任何 Chrome 扩展、Electron 内嵌浏览器或第三方 browser MCP**。它是数字同事（Agent）调用的工具，自身不是数字同事实体。
 
-**引擎**：Kitewright MCP Server — Rust 编写的 CDP 自动化引擎，21 个高级工具，自动生命周期管理，per-session 上下文隔离，actionability auto-waiting（可见 + 可用 + 未被遮挡 + 稳定才操作）。
+**引擎**：Kitewright MCP Server — Rust 编写的 CDP 自动化引擎，24 个高级工具（含状态保存/恢复、对话框处理），自动生命周期管理，per-session 上下文隔离，actionability auto-waiting（可见 + 可用 + 未被遮挡 + 稳定才操作）。
 
 **kite 二进制已内置**在插件 `bin/` 目录下（arm64 Mach-O），无需安装 Rust 或 Node.js。
 
@@ -296,7 +296,7 @@ curl -X POST http://localhost:8090/mcp \
 
 ### 方式 4：AOS Plugin Manifest 模式
 
-作为 AOS 平台的 `kind=agent, runtime=sidecar` 插件安装。
+作为 AOS 平台的 `kind=browser, runtime=sidecar` 插件安装（位于 `plugins/browser/browser-pilot/`）。
 
 ## 自包含性
 
