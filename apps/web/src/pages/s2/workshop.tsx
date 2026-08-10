@@ -13,9 +13,11 @@ import type { GraphSnapshot } from "../../api/ontologyExplorerContracts";
 import {
   buildExplorerSearchParams,
   filterOperationalObjects,
+  type ExplorerColumn,
   ObjectExplorerWorkspace,
   formatExplorerValue,
   resolveExplorerColumns,
+  resolveSavedExplorerColumns,
   toggleObjectSelection,
 } from "../../components/ontology/ObjectExplorerWorkspace";
 import { OntologyGraphCanvas } from "../../components/ontology/OntologyGraphCanvas";
@@ -138,6 +140,11 @@ export function GraphExplorerPage() {
   const [assetBusy, setAssetBusy] = useState(false);
   const [annotationTitle, setAnnotationTitle] = useState("");
   const [annotationBody, setAnnotationBody] = useState("");
+  const [orderSortDirection, setOrderSortDirection] = useState<"asc" | "desc">("desc");
+  const [restoredColumns, setRestoredColumns] = useState<{
+    objectType: string;
+    columns: ExplorerColumn[];
+  } | null>(null);
 
   useEffect(() => {
     if (types?.items?.length && !types.items.some((t) => t.id === typeId)) {
@@ -147,7 +154,7 @@ export function GraphExplorerPage() {
 
   useEffect(() => {
     void loadObjects(typeId);
-  }, [typeId]);
+  }, [typeId, orderSortDirection]);
 
   useEffect(() => {
     void refreshExplorations();
@@ -175,7 +182,10 @@ export function GraphExplorerPage() {
     setDetailOpen(false);
     setSelectedKeys([]);
     try {
-      const r = await getOntologyClient().listObjects(t);
+      const r = await getOntologyClient().listObjects(
+        t,
+        t === "Order" ? { sortBy: "createdAt", sortDirection: orderSortDirection } : undefined,
+      );
       const effectiveItems = filterOperationalObjects(
         t,
         (r.items || []) as Record<string, unknown>[],
@@ -298,7 +308,9 @@ export function GraphExplorerPage() {
     () => resolveExplorerColumns(currentType?.properties, objects, typeId),
     [currentType?.properties, objects, typeId],
   );
-  const objectColumns = columnResolution.columns;
+  const objectColumns = restoredColumns?.objectType === typeId
+    ? restoredColumns.columns
+    : columnResolution.columns;
   const allVisibleKeys = filteredObjects.map((object) => `${typeId}:${String(object.id)}`);
   const allVisibleSelected =
     allVisibleKeys.length > 0 && allVisibleKeys.every((key) => selectedKeys.includes(key));
@@ -316,7 +328,10 @@ export function GraphExplorerPage() {
         objectType: typeId,
         viewMode,
         visibility,
-        query: { search: query },
+        query: {
+          search: query,
+          ...(typeId === "Order" ? { sortBy: "createdAt", sortDirection: orderSortDirection } : {}),
+        },
         columns: objectColumns.map((column) => ({ ...column })),
         graph: { focusObjectId: objectId },
       });
@@ -391,6 +406,11 @@ export function GraphExplorerPage() {
     setAssetVisibility(asset.payload.visibility);
     setViewMode(asset.payload.viewMode);
     setQuery(String(asset.payload.query.search || ""));
+    setOrderSortDirection(asset.payload.query.sortDirection === "asc" ? "asc" : "desc");
+    setRestoredColumns({
+      objectType: asset.payload.objectType,
+      columns: resolveSavedExplorerColumns(asset.payload.columns, columnResolution.columns),
+    });
     setTypeId(asset.payload.objectType);
     if (updateUrl) {
       const next = new URLSearchParams(searchParams);
@@ -408,6 +428,8 @@ export function GraphExplorerPage() {
   function chooseObjectType(nextTypeId: string) {
     const nextType = types?.items?.find((item) => item.id === nextTypeId);
     setTypeId(nextTypeId);
+    setRestoredColumns(null);
+    setOrderSortDirection("desc");
     setAssetName(`${nextType?.name || nextTypeId}对象探索`);
     const next = new URLSearchParams(searchParams);
     next.set("type", nextTypeId);
@@ -541,6 +563,22 @@ export function GraphExplorerPage() {
           </div>
           <div className="p-objx-view-center">
             <span className="p-objx-results-count">{filteredObjects.length} 条结果</span>
+            {typeId === "Order" && (
+              <label className="p-objx-sort-control">
+                排序
+                <select
+                  aria-label="订单排序"
+                  value={orderSortDirection}
+                  onChange={(event) => {
+                    setRestoredColumns(null);
+                    setOrderSortDirection(event.target.value === "asc" ? "asc" : "desc");
+                  }}
+                >
+                  <option value="desc">下单时间 ↓</option>
+                  <option value="asc">下单时间 ↑</option>
+                </select>
+              </label>
+            )}
             {selectedKeys.length > 0 && (
               <span className="p-objx-selection-count">已选择 {selectedKeys.length} 条</span>
             )}

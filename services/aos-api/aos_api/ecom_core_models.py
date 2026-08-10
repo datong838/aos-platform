@@ -94,6 +94,29 @@ REQUIRED_PROPERTIES: dict[str, frozenset[str]] = {
     "Payment": frozenset({"orderId", "outTradeNo", "payStatus", "updatedAt"}),
 }
 
+# Optional canonical properties emitted by the real ecommerce normalizer.  This
+# registry is intentionally separate from REQUIRED_PROPERTIES: Graph Health and
+# OKF may explain optional coverage, but optional fields never satisfy a
+# required-property completion gate.
+OPTIONAL_PROPERTIES: dict[str, frozenset[str]] = {
+    "Category": frozenset(),
+    "CustomerLite": frozenset(),
+    "Order": frozenset(
+        {"deliveryStatus", "isDelete", "memberId", "orderNo", "orderStatus", "payStatus"}
+    ),
+    "OrderLine": frozenset({"goodsId"}),
+    "Payment": frozenset(),
+    "Product": frozenset(
+        {"costPrice", "goodsClassName", "isDelete", "marketPrice", "price", "saleNum", "state", "stock", "unit"}
+    ),
+    "ProductReview": frozenset(),
+    "ProductSku": frozenset(),
+    "Shipment": frozenset(),
+    "Shop": frozenset(),
+    "SystemConfig": frozenset(),
+    "Weapp": frozenset(),
+}
+
 _AMOUNT_PROPERTIES = frozenset({"price", "totalAmount", "unitPrice", "lineAmount"})
 
 

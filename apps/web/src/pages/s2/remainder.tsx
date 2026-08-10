@@ -23,10 +23,35 @@ type OkfMapping = {
   label?: string;
   columns: OkfCol[];
   revision?: number;
-  coverage?: { mapped: number; total: number; percent: number };
+  status?: "configured" | "unconfigured";
+  coverage?:
+    | { mapped: number; total: number; percent: number }
+    | {
+        required: { mapped: number; total: number; percent: number };
+        optional: { mapped: number; total: number | null; percent: number | null; status: string };
+      };
   blockedFields?: string[];
+  source?: { available: boolean; count: number; watermark?: string | null };
   impact?: { requiresRebuild?: boolean; affectedObjectType?: string; mappedFieldCount?: number };
 };
+
+type OkfTypeOverview = {
+  industry: string;
+  items: OkfMapping[];
+  overall: {
+    required: { mapped: number; total: number; percent: number };
+    unknown: string[];
+    excluded: string[];
+    complete: boolean;
+    formula: string;
+  };
+};
+
+function requiredCoverage(mapping: OkfMapping | null | undefined) {
+  const coverage = mapping?.coverage;
+  if (!coverage) return { mapped: 0, total: 0, percent: 0 };
+  return "required" in coverage ? coverage.required : coverage;
+}
 
 export const ECOM_ORDER_MAPPING: OkfMapping = {
   industry: "ecom",
@@ -49,9 +74,12 @@ export function OkfFunnelPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedIndustry = searchParams.get("industry") || "ecom";
   const initialIndustry = ["ecom", "env", "bio"].includes(requestedIndustry) ? requestedIndustry : "ecom";
+  const requestedObjectType = searchParams.get("type") || "Order";
   const modules = useJsonGet<{ items: { id: string; name?: string }[] }>("/v1/modules");
   const [industry, setIndustry] = useState(initialIndustry);
   const [mapping, setMapping] = useState<OkfMapping | null>(null);
+  const [objectType, setObjectType] = useState(requestedObjectType);
+  const [typeOverview, setTypeOverview] = useState<OkfTypeOverview | null>(null);
   const [lint, setLint] = useState<{ ok?: boolean; errors?: { rule?: string; message?: string }[] } | null>(
     null,
   );
@@ -62,6 +90,20 @@ export function OkfFunnelPage() {
   async function loadMapping(ind: string) {
     setErr("");
     try {
+      if (ind === "ecom") {
+        const overview = await apiGet<OkfTypeOverview>("/v1/ontology/okf-mappings/ecom/types");
+        setTypeOverview(overview);
+        const selected = overview.items.some((item) => item.objectType === objectType)
+          ? objectType
+          : overview.items.find((item) => item.objectType === "Order")?.objectType || overview.items[0]?.objectType || "Order";
+        if (selected !== objectType) setObjectType(selected);
+        const m = await apiGet<OkfMapping>(
+          `/v1/ontology/okf-mappings/ecom/types/${encodeURIComponent(selected)}`,
+        );
+        setMapping(m);
+        return;
+      }
+      setTypeOverview(null);
       const m = await apiGet<OkfMapping>(`/v1/ontology/okf-mappings/${encodeURIComponent(ind)}`);
       setMapping(m);
     } catch (e) {
@@ -72,7 +114,7 @@ export function OkfFunnelPage() {
 
   useEffect(() => {
     void loadMapping(industry);
-  }, [industry]);
+  }, [industry, objectType]);
 
   const columns = mapping?.columns || [];
   const funnel = useJsonGet<Record<string, unknown>>(
@@ -81,7 +123,12 @@ export function OkfFunnelPage() {
 
   function chooseIndustry(next: string) {
     setIndustry(next);
-    setSearchParams({ industry: next }, { replace: true });
+    setSearchParams(next === "ecom" ? { industry: next, type: objectType } : { industry: next }, { replace: true });
+  }
+
+  function chooseObjectType(next: string) {
+    setObjectType(next);
+    setSearchParams({ industry: "ecom", type: next }, { replace: true });
   }
 
   async function runLint() {
@@ -111,10 +158,16 @@ export function OkfFunnelPage() {
     setErr("");
     try {
       const saved = await apiPut<OkfMapping>(
-        `/v1/ontology/okf-mappings/${encodeURIComponent(industry)}`,
+        industry === "ecom"
+          ? `/v1/ontology/okf-mappings/ecom/types/${encodeURIComponent(objectType)}`
+          : `/v1/ontology/okf-mappings/${encodeURIComponent(industry)}`,
         { ...mapping, expectedRevision: mapping.revision ?? 0 },
       );
-      const verified = await apiGet<OkfMapping>(`/v1/ontology/okf-mappings/${encodeURIComponent(industry)}`);
+      const verified = await apiGet<OkfMapping>(
+        industry === "ecom"
+          ? `/v1/ontology/okf-mappings/ecom/types/${encodeURIComponent(objectType)}`
+          : `/v1/ontology/okf-mappings/${encodeURIComponent(industry)}`,
+      );
       if (verified.revision !== saved.revision || verified.objectType !== saved.objectType) {
         throw new Error("OKF 保存回读不一致");
       }
@@ -150,15 +203,6 @@ export function OkfFunnelPage() {
         <button type="button" className="btn-primary" disabled={busy || !mapping} onClick={() => void saveMapping()}>
           {busy ? "保存中…" : "保存映射"}
         </button>
-        {industry === "ecom" && mapping?.objectType !== "Order" && (
-          <button
-            type="button"
-            className="btn-outline-cyan"
-            onClick={() => setMapping({ ...ECOM_ORDER_MAPPING, revision: mapping?.revision ?? 0 })}
-          >
-            应用微商城 Order 默认
-          </button>
-        )}
         <button
           type="button"
           className="btn"
@@ -185,22 +229,31 @@ export function OkfFunnelPage() {
       <BpSplit
         left={
           <aside className="okf-industry-pane">
-            <h2 className="okf-industry-title">行业模板</h2>
-            <p className="okf-industry-hint">垂直行业定制 · 选中后右侧编辑映射</p>
-            {[
-              { id: "ecom", label: "微商城电商 · Order" },
-              { id: "env", label: "环科院 · Pollutant" },
-              { id: "bio", label: "生物 · Batch" },
-            ].map((i) => (
-              <button
-                key={i.id}
-                type="button"
-                className={`okf-industry-item${industry === i.id ? " is-active" : ""}`}
-                onClick={() => chooseIndustry(i.id)}
-              >
-                {i.label}
-              </button>
-            ))}
+            <h2 className="okf-industry-title">行业与对象类型</h2>
+            <label className="okf-industry-hint" htmlFor="okf-industry">行业模板</label>
+            <select id="okf-industry" aria-label="OKF 行业" value={industry} onChange={(event) => chooseIndustry(event.target.value)}>
+              <option value="ecom">微商城电商</option>
+              <option value="env">环境</option>
+              <option value="bio">生物</option>
+            </select>
+            {industry === "ecom" ? (
+              <>
+                <p className="okf-industry-hint">具备真实 source dataset 的 Object Type</p>
+                {(typeOverview?.items || []).map((item) => (
+                  <button
+                    key={item.objectType}
+                    type="button"
+                    className={`okf-industry-item${objectType === item.objectType ? " is-active" : ""}`}
+                    onClick={() => chooseObjectType(item.objectType || "")}
+                  >
+                    <span>{item.label || item.objectType}</span>
+                    <small>{item.status === "configured" ? `r${item.revision ?? 0}` : "未配置"}</small>
+                  </button>
+                ))}
+              </>
+            ) : (
+              <button type="button" className="okf-industry-item is-active">{mapping?.label || industry}</button>
+            )}
             <p className="muted" style={{ fontSize: "0.75rem", marginTop: 12 }}>
               源 Dataset: <Link to="/data/datasets">从真实数据集选择</Link>
               <br />
@@ -219,23 +272,24 @@ export function OkfFunnelPage() {
             <BpMetricGrid
               items={[
                 {
-                  label: "完成度",
-                  value:
-                    columns.length === 0
-                      ? "—"
-                      : `${Math.round((columns.filter((c) => c.ok).length / columns.length) * 100)}%`,
+                  label: "必填覆盖率",
+                  value: mapping?.status === "unconfigured" ? "未配置" : `${requiredCoverage(mapping).percent}%`,
                   tone: "ok",
                 },
                 { label: "Funnel stage", value: String(funnel.data?.stage || "—"), tone: "muted" },
-                { label: "Modules", value: modules.data?.items?.length ?? 0, tone: "muted" },
+                { label: "真实源对象", value: mapping?.source?.count ?? "—", tone: "muted" },
                 { label: "Mapping revision", value: mapping?.revision ?? 0, tone: "muted" },
                 { label: "阻断字段", value: mapping?.blockedFields?.length ?? columns.filter((c) => !c.ok).length, tone: "muted" },
               ]}
             />
             <BpBanner tone={(mapping?.blockedFields?.length ?? columns.filter((c) => !c.ok).length) > 0 ? "warn" : "info"}>
-              影响分析 · Object Type={mapping?.impact?.affectedObjectType || mapping?.objectType || "—"} ·
-              覆盖率={mapping?.coverage?.percent ?? (columns.length ? Math.round(columns.filter((c) => c.ok).length * 100 / columns.length) : 0)}% ·
-              {mapping?.impact?.requiresRebuild ? "存在阻断字段，发布前须重建/影子对账" : "无阻断字段，可进入影子对账"}
+              {mapping?.status === "unconfigured" ? (
+                <>当前 Object Type 尚未配置映射；必填覆盖率不可作为完成声明，请先建立真实源列映射。</>
+              ) : (
+                <>影响分析 · Object Type={mapping?.impact?.affectedObjectType || mapping?.objectType || "—"} ·
+                  必填覆盖率={requiredCoverage(mapping).percent}% ·
+                  {mapping?.impact?.requiresRebuild ? "存在阻断字段，发布前须重建/影子对账" : "无阻断字段，可进入影子对账"}</>
+              )}
             </BpBanner>
             <BpTable
               columns={["源列", "目标 Property", "状态", ""]}
@@ -1484,12 +1538,11 @@ export function ApolloChangePage() {
 
 /** 本体 · 数字孪生 · OKF 概览 — 行业模板与映射活动概览 */
 export function OkfOverviewPage() {
-  const ecom = useJsonGet<OkfMapping>("/v1/ontology/okf-mappings/ecom");
+  const ecom = useJsonGet<OkfTypeOverview>("/v1/ontology/okf-mappings/ecom/types");
   const env = useJsonGet<OkfMapping>("/v1/ontology/okf-mappings/env");
   const bio = useJsonGet<OkfMapping>("/v1/ontology/okf-mappings/bio");
   const requests = { ecom, env, bio };
   const industries = [
-    { id: "ecom", name: "电商", request: ecom },
     { id: "env", name: "环境", request: env },
     { id: "bio", name: "生物", request: bio },
   ].map(({ id, name, request }) => ({
@@ -1513,7 +1566,38 @@ export function OkfOverviewPage() {
       </BpToolbar>
       {overviewError && <p className="error">{overviewError}</p>}
 
-      <div className="bp-ws-section-title">行业模板</div>
+      <div className="bp-ws-section-title">电商整体</div>
+      <BpMetricGrid
+        items={[
+          { label: "必填覆盖率", value: ecom.data ? `${ecom.data.overall.required.percent}%` : "—", tone: ecom.data?.overall.complete ? "ok" : "warn" },
+          { label: "已映射 / 必填", value: ecom.data ? `${ecom.data.overall.required.mapped} / ${ecom.data.overall.required.total}` : "—", tone: "muted" },
+          { label: "真实源类型", value: ecom.data?.items.length ?? "—", tone: "muted" },
+          { label: "不可判定/未配置", value: ecom.data?.overall.unknown.length ?? "—", tone: ecom.data?.overall.unknown.length ? "warn" : "ok" },
+        ]}
+      />
+      <BpBanner tone={ecom.data?.overall.complete ? "info" : "warn"}>
+        加权口径：所有具备真实 source dataset 的类型，按 required properties 分子/分母汇总。
+        {ecom.data?.overall.unknown.length ? ` 未配置：${ecom.data.overall.unknown.join("、")}；行业不得宣告完整。` : " 当前范围已完整。"}
+      </BpBanner>
+
+      <div className="bp-ws-section-title">电商 Object Type</div>
+      <div className="bp-index-grid bp-index-grid-4" style={{ marginBottom: "1rem" }}>
+        {(ecom.data?.items || []).map((mapping) => {
+          const required = requiredCoverage(mapping);
+          return (
+            <Link key={mapping.objectType} to={`/ontology/okf-funnel?industry=ecom&type=${encodeURIComponent(mapping.objectType || "")}`} className="bp-discover-card bp-discover-violet" style={{ textDecoration: "none" }}>
+              <div className="bp-discover-head">
+                <span className="bp-discover-title">{mapping.label || mapping.objectType}</span>
+                <span className={`bp-tag ${mapping.status === "configured" ? "bp-tag-ok" : "bp-tag-warn"}`}>{mapping.status === "configured" ? "已配置" : "未配置"}</span>
+              </div>
+              <p className="bp-discover-meta">必填覆盖 {required.mapped}/{required.total} · {required.percent}%</p>
+              <p className="bp-discover-meta">源对象 {mapping.source?.count ?? 0} · r{mapping.revision ?? 0} · 水位 {mapping.source?.watermark || "未知"}</p>
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="bp-ws-section-title">其他行业兼容模板</div>
       <div className="bp-index-grid bp-index-grid-4" style={{ marginBottom: "1rem" }}>
         {industries.map((ind) => (
           <Link
@@ -1532,7 +1616,7 @@ export function OkfOverviewPage() {
               {ind.mapping?.objectType || "未配置 Object Type"} · {ind.mapping?.columns?.length || 0} 个字段
             </p>
             <p className="bp-discover-meta">
-              覆盖率 {ind.mapping?.coverage?.percent ?? 0}% · 阻断 {ind.mapping?.blockedFields?.length ?? 0} · r{ind.mapping?.revision ?? 0}
+              覆盖率 {requiredCoverage(ind.mapping).percent}% · 阻断 {ind.mapping?.blockedFields?.length ?? 0} · r{ind.mapping?.revision ?? 0}
             </p>
           </Link>
         ))}

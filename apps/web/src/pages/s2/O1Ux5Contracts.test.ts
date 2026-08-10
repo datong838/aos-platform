@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ECOM_ORDER_MAPPING } from "./remainder";
-import { overlayIfMatch } from "./ontology";
+import { overlayDiffRows, overlayIfMatch } from "./ontology";
 import { summarizeWikiCoverage } from "./WikiIndexPage";
 
 describe("O1-UX5 页面合同", () => {
@@ -13,6 +13,32 @@ describe("O1-UX5 页面合同", () => {
     expect(overlayIfMatch({ ontology_revision: 7, base_schema_sha256: "a".repeat(64) }))
       .toBe(`"ontology-overlay-v1:7:${"a".repeat(64)}"`);
     expect(() => overlayIfMatch({ ontology_revision: 7 })).toThrow(/base schema hash/);
+  });
+
+  it("Overlay 对比覆盖显示名、可见属性、扩展属性与组织策略", () => {
+    const rows = overlayDiffRows(
+      {
+        target_kind: "ObjectType",
+        target_id: "Order",
+        ontology_revision: 2,
+        mode: "override",
+        is_active: true,
+        display_name: "栖月汇订单",
+        visible_properties: ["orderNo", "createdAt"],
+        extended_properties: { channel: { type: "string" } },
+        policies: { schemaVersion: 1, readRoles: ["operator"] },
+      },
+      {
+        target_kind: "ObjectType",
+        target_id: "Order",
+        ontology_revision: 1,
+        mode: "inherit",
+        is_active: false,
+      },
+    );
+    expect(rows.map(([field]) => field)).toEqual(["模式", "显示名", "可见属性", "扩展属性", "组织策略"]);
+    expect(rows[2]).toEqual(["可见属性", "orderNo、createdAt", "—"]);
+    expect(rows[3][1]).toBe("channel");
   });
 
   it("Wiki 索引区分真实覆盖和知识缺口", () => {

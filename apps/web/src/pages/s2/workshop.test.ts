@@ -7,6 +7,7 @@ import {
   formatExplorerValue,
   getExplorerWorkspaceClasses,
   resolveExplorerColumns,
+  resolveSavedExplorerColumns,
   toggleObjectSelection,
 } from "../../components/ontology/ObjectExplorerWorkspace";
 
@@ -104,7 +105,6 @@ describe("O1-UX1 · Object Explorer workspace contracts", () => {
     expect(result.source).toBe("domain-profile");
     expect(result.columns.map((column) => column.key)).toEqual([
       "id",
-      "orderNo",
       "memberId",
       "createdAt",
       "totalAmount",
@@ -114,7 +114,6 @@ describe("O1-UX1 · Object Explorer workspace contracts", () => {
     ]);
     expect(result.columns.map((column) => column.label)).toEqual([
       "订单",
-      "订单号",
       "会员 ID",
       "下单时间",
       "订单金额",
@@ -122,6 +121,16 @@ describe("O1-UX1 · Object Explorer workspace contracts", () => {
       "支付状态",
       "发货状态",
     ]);
+  });
+
+  it("replays an old exploration that explicitly saved the duplicate order number column", () => {
+    const defaults = resolveExplorerColumns({}, [{ id: "1", orderNo: "NO-1", createdAt: "2026-01-01" }], "Order").columns;
+    const restored = resolveSavedExplorerColumns([
+      { key: "id", label: "订单" },
+      { key: "orderNo", label: "订单号" },
+      { key: "createdAt", label: "下单时间", type: "datetime" },
+    ], defaults);
+    expect(restored.map((column) => column.key)).toEqual(["id", "orderNo", "createdAt"]);
   });
 
   it("shows only real Product properties from listed products", () => {

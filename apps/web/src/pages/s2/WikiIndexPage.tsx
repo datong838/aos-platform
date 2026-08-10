@@ -1,13 +1,12 @@
 /**
  * Phase E-13 · Wiki 索引页
- * 左侧分支树 + 右侧页面卡片 + 搜索 · 对接 /v1/ontology/branches + /v1/analytics/ontology-rail
+ * 左侧知识空间 + 右侧页面卡片 + 搜索。知识发布走 Draft；不把旧 meta_branch 当作组织定制真源。
  */
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiGet, apiPost } from "../../api/client";
+import { apiGet } from "../../api/client";
 import { S2Chrome, useJsonGet } from "./shared";
 
-type Branch = { id: string; name: string; baseRef: string; readonly: boolean; changeCount?: number };
 type ObjectTypeItem = { id: string; name: string; kind: string; snippet?: string; instances?: { id: string; kind?: string }[] };
 type OntologyRail = {
   objectTypes?: ObjectTypeItem[];
@@ -19,65 +18,34 @@ export function summarizeWikiCoverage(cards: { covered: boolean }[]): { covered:
 }
 
 export function WikiIndexPage() {
-  const branches = useJsonGet<{ items: Branch[] }>("/v1/ontology/branches");
   const rail = useJsonGet<OntologyRail>("/v1/analytics/ontology-rail");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [wikiCards, setWikiCards] = useState<{ type: string; id: string; summary: string; covered: boolean; versionCount: number }[]>([]);
+  const [wikiCards, setWikiCards] = useState<{ type: string; id: string; displayLabel: string; sourceRecordLabel: string; summary: string; covered: boolean; versionCount: number; lastUpdatedAt?: string | null }[]>([]);
   const [loadingCards, setLoadingCards] = useState(false);
   const [cardErr, setCardErr] = useState<string | null>(null);
 
   const types = rail.data?.objectTypes ?? [];
-  const branchItems = branches.data?.items ?? [];
 
   // 根据选中的 ObjectType 加载 Wiki 卡片
-  async function loadWikiCards(typeId: string, branch = selectedBranch) {
+  async function loadWikiCards(typeId: string) {
     setLoadingCards(true);
     setSelectedType(typeId);
     setCardErr(null);
     try {
-      if (!branch) {
-        const coverage = await apiGet<{
-          items: { objectType: string; objectId: string; summary: string; covered: boolean; versionCount: number }[];
-        }>(`/v1/wiki/${encodeURIComponent(typeId)}/coverage-index?limit=50`);
-        setWikiCards((coverage.items || []).map((item) => ({
-          type: item.objectType,
-          id: item.objectId,
-          summary: item.summary,
-          covered: item.covered,
-          versionCount: item.versionCount,
-        })));
-        return;
-      }
-      const res = await apiPost<{ columns: string[]; rows: Record<string, unknown>[] }>(
-        "/v1/analytics/objects/list",
-        { objectType: typeId, limit: 50, filters: [], branch },
-      );
-      const subjects = (res.rows || []).flatMap((row) => {
-        const id = String(row.id ?? "");
-        return id ? [{ type: typeId, id, objectSummary: String(row.summary ?? row.title ?? row.name ?? "") }] : [];
-      });
-      const cards = await Promise.all(subjects.map(async (subject) => {
-        try {
-          const [wiki, versions] = await Promise.all([
-            apiGet<{ body?: Record<string, unknown> }>(`/v1/wiki/${encodeURIComponent(subject.type)}/${encodeURIComponent(subject.id)}`),
-            apiGet<{ items?: unknown[] }>(`/v1/wiki/${encodeURIComponent(subject.type)}/${encodeURIComponent(subject.id)}/versions`),
-          ]);
-          return {
-            type: subject.type,
-            id: subject.id,
-            summary: String(wiki.body?.summary ?? subject.objectSummary),
-            covered: true,
-            versionCount: versions.items?.length ?? 0,
-          };
-        } catch (error) {
-          const status = Number((error as { status?: number }).status || 0);
-          if (status !== 404) throw error;
-          return { type: subject.type, id: subject.id, summary: subject.objectSummary, covered: false, versionCount: 0 };
-        }
-      }));
-      setWikiCards(cards);
+      const coverage = await apiGet<{
+        items: { objectType: string; objectId: string; displayLabel?: string; sourceRecordLabel?: string; summary: string; covered: boolean; versionCount: number; lastUpdatedAt?: string | null }[];
+      }>(`/v1/wiki/${encodeURIComponent(typeId)}/coverage-index?limit=200`);
+      setWikiCards((coverage.items || []).map((item) => ({
+        type: item.objectType,
+        id: item.objectId,
+        displayLabel: item.displayLabel || item.objectId,
+        sourceRecordLabel: item.sourceRecordLabel || item.objectId,
+        summary: item.summary,
+        covered: item.covered,
+        versionCount: item.versionCount,
+        lastUpdatedAt: item.lastUpdatedAt,
+      })));
     } catch (e) {
       setCardErr(e instanceof Error ? e.message : String(e));
       setWikiCards([]);
@@ -91,7 +59,7 @@ export function WikiIndexPage() {
     if (!searchQuery.trim()) return wikiCards;
     const q = searchQuery.toLowerCase();
     return wikiCards.filter(
-      (c) => c.id.toLowerCase().includes(q) || c.type.toLowerCase().includes(q) || c.summary.toLowerCase().includes(q),
+      (c) => c.id.toLowerCase().includes(q) || c.type.toLowerCase().includes(q) || c.displayLabel.toLowerCase().includes(q) || c.summary.toLowerCase().includes(q),
     );
   }, [wikiCards, searchQuery]);
 
@@ -103,9 +71,9 @@ export function WikiIndexPage() {
   const coverage = summarizeWikiCoverage(wikiCards);
 
   return (
-    <S2Chrome title="Wiki 索引" lede="活知识 Wiki 索引 · 分支树 + 类型卡片 + 搜索">
+    <S2Chrome title="Wiki 索引" lede="活知识 Wiki 索引 · 组织知识空间 + 类型卡片 + 搜索">
       <div className="wiki-index-layout">
-        {/* 左侧分支树 */}
+        {/* 左侧知识空间 */}
         <aside
           style={{
             border: "1px solid var(--aos-border)",
@@ -114,37 +82,11 @@ export function WikiIndexPage() {
           }}
         >
           <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: 0 }}>
-            分支
+            知识空间
           </h2>
-          {branches.err && <p className="error">{branches.err}</p>}
-          <ul style={{ listStyle: "none", padding: 0, margin: "0.5rem 0 0" }}>
-            {branchItems.map((b) => (
-              <li key={b.id} style={{ marginBottom: 6 }}>
-                <button
-                  type="button"
-                  className={`btn-nav${selectedBranch === b.id ? " is-active" : ""}`}
-                  style={{
-                    fontSize: "0.75rem",
-                    width: "100%",
-                    textAlign: "left",
-                    background: selectedBranch === b.id ? "var(--aos-indigo-600)" : undefined,
-                    color: selectedBranch === b.id ? "var(--text-on-brand)" : undefined,
-                  }}
-                  onClick={() => {
-                    setSelectedBranch(b.id);
-                    if (selectedType) void loadWikiCards(selectedType, b.id);
-                  }}
-                >
-                  {b.readonly ? "🔒 " : "🌿 "}
-                  {b.id}
-                  {b.changeCount ? ` (${b.changeCount})` : ""}
-                </button>
-              </li>
-            ))}
-            {branchItems.length === 0 && (
-              <li className="muted" style={{ fontSize: "0.75rem" }}>暂无分支</li>
-            )}
-          </ul>
+          <div className="bp-banner bp-banner-info" style={{ fontSize: "0.75rem" }}>
+            栖月汇商贸有限公司 · 默认工作区<br />生产知识空间<br />编辑统一提交 Draft 审批，不使用旧本体分支作为知识真源。
+          </div>
 
           <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: 16 }}>
             Object 类型
@@ -189,7 +131,7 @@ export function WikiIndexPage() {
             <button
               type="button"
               className="btn"
-              onClick={() => { branches.reload(); rail.reload(); }}
+              onClick={() => { rail.reload(); if (selectedType) void loadWikiCards(selectedType); }}
             >
               刷新
             </button>
@@ -208,7 +150,7 @@ export function WikiIndexPage() {
             <>
               <p className="muted" style={{ fontSize: "0.75rem", marginBottom: 8 }}>
                 主体 {filteredCards.length} · 已覆盖 {coverage.covered} · 知识缺口 {coverage.gaps}
-                {selectedBranch ? ` · 分支: ${selectedBranch}` : " · 默认分支"}
+                · 生产知识空间
               </p>
               <div
                 style={{
@@ -220,7 +162,7 @@ export function WikiIndexPage() {
                 {filteredCards.map((card) => (
                   <Link
                     key={`${card.type}/${card.id}`}
-                    to={`/ontology/wiki?type=${encodeURIComponent(card.type)}&id=${encodeURIComponent(card.id)}${selectedBranch ? `&branch=${encodeURIComponent(selectedBranch)}` : ""}`}
+                    to={`/ontology/wiki?type=${encodeURIComponent(card.type)}&id=${encodeURIComponent(card.id)}`}
                     style={{
                       display: "block",
                       padding: "0.75rem",
@@ -235,8 +177,9 @@ export function WikiIndexPage() {
                       {card.type} · {card.covered ? `Wiki 已覆盖 · ${card.versionCount} 个历史版本` : "Wiki 知识缺口"}
                     </div>
                     <div style={{ fontSize: "0.9rem", fontWeight: 600, marginBottom: 4 }}>
-                      {card.id}
+                      {card.displayLabel}
                     </div>
+                    <div style={{ fontSize: "0.7rem", opacity: 0.55 }}>{card.sourceRecordLabel}</div>
                     {card.summary && (
                       <div style={{ fontSize: "0.75rem", opacity: 0.7, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {card.summary}
@@ -245,6 +188,7 @@ export function WikiIndexPage() {
                     <div style={{ fontSize: "0.7rem", marginTop: 8, color: "var(--aos-indigo-600)" }}>
                       {card.covered ? "查看知识卡片 →" : "为该主体补充知识 →"}
                     </div>
+                    {card.lastUpdatedAt && <div style={{ fontSize: "0.68rem", marginTop: 4, opacity: 0.55 }}>最近更新 {card.lastUpdatedAt}</div>}
                   </Link>
                 ))}
               </div>

@@ -29,6 +29,74 @@ router = APIRouter(tags=["ontology"])
 log = get_logger("aos-api.ontology")
 
 
+_OBJECT_SORT_ALLOWLIST: dict[str, frozenset[str]] = {
+    "Order": frozenset({"createdAt"}),
+}
+_OBJECT_DEFAULT_SORTS: dict[str, tuple[str, str]] = {
+    "Order": ("createdAt", "desc"),
+}
+
+
+def _resolve_object_sort(
+    object_type: str,
+    sort_by: str | None,
+    sort_direction: str | None,
+) -> tuple[str, str] | None:
+    """Resolve an allow-listed global object sort without dynamic SQL."""
+    if sort_by is None and sort_direction is None:
+        return _OBJECT_DEFAULT_SORTS.get(object_type)
+    effective_by = sort_by or (_OBJECT_DEFAULT_SORTS.get(object_type) or (None, None))[0]
+    effective_direction = (sort_direction or "asc").lower()
+    if (
+        not effective_by
+        or effective_by not in _OBJECT_SORT_ALLOWLIST.get(object_type, frozenset())
+        or effective_direction not in {"asc", "desc"}
+    ):
+        raise ApiError(
+            code="OBJECT_SORT_INVALID",
+            message=f"unsupported sort for {object_type}",
+            status_code=422,
+        )
+    return effective_by, effective_direction
+
+
+def _object_sort_time(value: Any) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    normalized = value.strip()
+    if normalized.endswith("Z"):
+        normalized = f"{normalized[:-1]}+00:00"
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _sort_object_items(
+    items: list[dict[str, Any]],
+    sort: tuple[str, str] | None,
+) -> tuple[list[dict[str, Any]], int]:
+    """Sort the complete visible result; invalid timestamps are stable and last."""
+    if sort is None:
+        return list(items), 0
+    field, direction = sort
+    valid: list[tuple[datetime, str, dict[str, Any]]] = []
+    invalid: list[dict[str, Any]] = []
+    for item in items:
+        parsed = _object_sort_time(item.get(field))
+        if parsed is None:
+            invalid.append(item)
+        else:
+            valid.append((parsed, str(item.get("id") or ""), item))
+    reverse = direction == "desc"
+    valid.sort(key=lambda entry: (entry[0], entry[1]), reverse=reverse)
+    invalid.sort(key=lambda item: str(item.get("id") or ""), reverse=reverse)
+    return [entry[2] for entry in valid] + invalid, len(invalid)
+
+
 def _scope(principal: Principal) -> TenantScope:
     return TenantScope(principal.org_id, principal.project_id)
 
@@ -586,6 +654,8 @@ def list_objects(
     object_type: str,
     principal: Principal = Depends(require_principal),
     branch: str | None = None,
+    sort_by: str | None = Query(default=None, alias="sortBy"),
+    sort_direction: str | None = Query(default=None, alias="sortDirection"),
 ) -> dict[str, Any]:
     """List instances. ``branch`` selects effective view (89 v2 overlay)."""
     from aos_api.ontology_compose import assert_object_type_visible
@@ -593,6 +663,7 @@ def list_objects(
     scope = _scope(principal)
     with connect(scope) as conn:
         assert_object_type_visible(conn, scope, object_type)
+        object_sort = _resolve_object_sort(object_type, sort_by, sort_direction)
         from aos_api.branch_store import effective_objects
         prop_defs = _object_type_properties(conn, object_type)
         rows = effective_objects(conn, _scope(principal), object_type, branch)
@@ -608,7 +679,23 @@ def list_objects(
                 build_object_display_projection(object_type, r["object_id"], redacted)
             )
             items.append(redacted)
+    items, invalid_sort_value_count = _sort_object_items(items, object_sort)
     out: dict[str, Any] = {"items": items, "total": len(items)}
+    if object_sort:
+        out["sort"] = {
+            "by": object_sort[0],
+            "direction": object_sort[1],
+            "nulls": "last",
+            "tieBreak": "objectId",
+            "invalidValueCount": invalid_sort_value_count,
+        }
+        if invalid_sort_value_count:
+            log.warning(
+                "object_sort_invalid_values type=%s field=%s count=%s",
+                object_type,
+                object_sort[0],
+                invalid_sort_value_count,
+            )
     if branch:
         out["branch"] = branch
     return out
@@ -847,25 +934,33 @@ def wiki_coverage_index(
 ) -> dict[str, Any]:
     """O1-UX5 · tenant-authoritative Object×Wiki coverage without expected 404 fan-out."""
     scope = _scope(principal)
+    operational_clause = ""
+    if object_type == "Order":
+        operational_clause = " AND oi.props->>'status'='active' AND COALESCE(oi.props->>'isDelete','0')='0'"
+    elif object_type == "Product":
+        operational_clause = " AND oi.props->>'status'='active' AND COALESCE(oi.props->>'isDelete','0')='0' AND oi.props->>'state'='1'"
     with connect(scope) as conn:
         rows = conn.execute(
-            """
-            SELECT oi.object_id,wp.body,
+            f"""
+            SELECT oi.object_id,oi.props,wp.body,
                    (SELECT COUNT(*) FROM wiki_page_version wv
                      WHERE wv.org_id=oi.org_id AND wv.project_id=oi.project_id
-                       AND wv.object_type=oi.object_type AND wv.object_id=oi.object_id) AS version_count
+                       AND wv.object_type=oi.object_type AND wv.object_id=oi.object_id) AS version_count,
+                   (SELECT MAX(wv.created_at) FROM wiki_page_version wv
+                     WHERE wv.org_id=oi.org_id AND wv.project_id=oi.project_id
+                       AND wv.object_type=oi.object_type AND wv.object_id=oi.object_id) AS last_updated_at
               FROM obj_instance oi
               LEFT JOIN wiki_page wp
                 ON wp.org_id=oi.org_id AND wp.project_id=oi.project_id
                AND wp.object_type=oi.object_type AND wp.object_id=oi.object_id
-             WHERE oi.org_id=%s AND oi.project_id=%s AND oi.object_type=%s
+             WHERE oi.org_id=%s AND oi.project_id=%s AND oi.object_type=%s{operational_clause}
              ORDER BY oi.object_id
              LIMIT %s
             """,
             (*scope.key, object_type, limit),
         ).fetchall()
         total_row = conn.execute(
-            "SELECT COUNT(*) AS count FROM obj_instance WHERE org_id=%s AND project_id=%s AND object_type=%s",
+            f"SELECT COUNT(*) AS count FROM obj_instance oi WHERE oi.org_id=%s AND oi.project_id=%s AND oi.object_type=%s{operational_clause}",
             (*scope.key, object_type),
         ).fetchone()
         items = []
@@ -874,12 +969,16 @@ def wiki_coverage_index(
             if not can_access_object(principal, conn, object_type, object_id):
                 continue
             body = row["body"] if isinstance(row["body"], dict) else {}
+            display = build_object_display_projection(object_type, object_id, row["props"] or {})
             items.append({
                 "objectType": object_type,
                 "objectId": object_id,
                 "covered": row["body"] is not None,
                 "summary": str(body.get("summary") or ""),
                 "versionCount": int(row["version_count"] or 0),
+                "displayLabel": display["_displayLabel"],
+                "sourceRecordLabel": display["_sourceRecordLabel"],
+                "lastUpdatedAt": row["last_updated_at"].isoformat() if row["last_updated_at"] else None,
             })
     covered = sum(1 for item in items if item["covered"])
     return {
@@ -893,6 +992,7 @@ def wiki_coverage_index(
 def get_wiki(
     object_type: str,
     object_id: str,
+    allow_missing: bool = Query(default=False, alias="allowMissing"),
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     from aos_api.tenant_prefix import wiki_space_id
@@ -907,11 +1007,22 @@ def get_wiki(
             (object_type, object_id, principal.org_id, principal.project_id),
         ).fetchone()
     if not row:
+        if allow_missing:
+            return {
+                "objectType": object_type,
+                "objectId": object_id,
+                "body": {},
+                "exists": False,
+                "orgId": principal.org_id,
+                "projectId": principal.project_id,
+                "spaceId": wiki_space_id(principal.org_id, principal.project_id),
+            }
         raise ApiError(code="NOT_FOUND", message="wiki not found", status_code=404)
     return {
         "objectType": object_type,
         "objectId": object_id,
         "body": row["body"],
+        "exists": True,
         "orgId": principal.org_id,
         "projectId": principal.project_id,
         "spaceId": wiki_space_id(principal.org_id, principal.project_id),
@@ -947,6 +1058,86 @@ def constitution_lint(
 ) -> dict[str, Any]:
     _ = principal
     return lint_object_type(body.model_dump())
+
+
+_GRAPH_HEALTH_SCORE_VERSION = "GH-SCORE-v2"
+_REQUIRED_LINK_TYPES_BY_OBJECT: dict[str, frozenset[str]] = {
+    "Shop": frozenset({"Shop.hasWeapp"}),
+    "Weapp": frozenset({"Shop.hasWeapp"}),
+    "Product": frozenset({"Product.inCategory"}),
+    "ProductSku": frozenset({"ProductSku.ofProduct"}),
+    "ProductReview": frozenset({"Product.hasReview"}),
+    "Order": frozenset({"Order.fromWeapp"}),
+    "OrderLine": frozenset({"Order.lines"}),
+    "Payment": frozenset({"Order.hasPayment"}),
+    "Shipment": frozenset({"Order.fulfilledBy"}),
+}
+
+
+def _graph_health_score_breakdown(
+    *,
+    dangling_affected: int,
+    dangling_denominator: int,
+    conflict_affected: int,
+    conflict_denominator: int,
+    orphan_affected: int,
+    orphan_denominator: int,
+    rule_affected: int,
+    rule_denominator: int,
+) -> tuple[int, list[dict[str, Any]]]:
+    specs = [
+        ("GH-01", dangling_affected, dangling_denominator, 0.01, 40),
+        ("GH-02", conflict_affected, conflict_denominator, 0.10, 25),
+        ("GH-03", orphan_affected, orphan_denominator, 0.10, 25),
+        ("GH-04", rule_affected, rule_denominator, 0.05, 10),
+    ]
+    deductions = 0.0
+    breakdown: list[dict[str, Any]] = []
+    for code, affected, denominator, threshold, weight in specs:
+        rate = affected / denominator if denominator else 0.0
+        deduction = weight * min(1.0, rate / threshold) if denominator else 0.0
+        deductions += deduction
+        breakdown.append(
+            {
+                "code": code,
+                "affectedObjects": affected,
+                "denominator": denominator,
+                "rate": round(rate, 6),
+                "threshold": threshold,
+                "maxDeduction": weight,
+                "deduction": round(deduction, 2),
+            }
+        )
+    return max(0, min(100, round(100 - deductions))), breakdown
+
+
+def _classify_graph_properties(row: Any) -> dict[str, list[str]]:
+    from aos_api.ecom_core_models import DERIVED_PROPERTIES, OPTIONAL_PROPERTIES, REQUIRED_PROPERTIES
+
+    object_type = str(row["object_type"])
+    declared = row["properties"] if isinstance(row["properties"], list) else []
+    canonical = {
+        str(prop.get("name"))
+        for prop in declared
+        if isinstance(prop, dict) and prop.get("name")
+    }
+    canonical |= set(REQUIRED_PROPERTIES.get(object_type, frozenset()))
+    canonical |= set(OPTIONAL_PROPERTIES.get(object_type, frozenset()))
+    canonical |= set(DERIVED_PROPERTIES.get(object_type, frozenset()))
+    result: dict[str, list[str]] = {
+        "canonical": [], "system": [], "compatibilityAlias": [], "actualConflict": [],
+    }
+    props = row["props"] if isinstance(row["props"], dict) else {}
+    for key in props:
+        if key in canonical:
+            result["canonical"].append(key)
+        elif key.startswith("_") or key.endswith("SourceTimezone") or key == "currencyScale":
+            result["system"].append(key)
+        elif "_" in key:
+            result["compatibilityAlias"].append(key)
+        else:
+            result["actualConflict"].append(key)
+    return result
 
 
 @router.get("/v1/ontology/graph-health")
@@ -1008,6 +1199,24 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
                 """,
                 scope.key,
             ).fetchall()
+            identity_rows = conn.execute(
+                """
+                SELECT object_type,platform,shop_or_marketplace_id,external_id
+                FROM ecom_object
+                WHERE org_id=%s AND workspace_id=%s AND deleted_at IS NULL
+                """,
+                scope.key,
+            ).fetchall()
+            required_link_rows = conn.execute(
+                """
+                SELECT link_type,
+                       source_platform,source_shop_or_marketplace_id,source_object_type,source_external_id,
+                       target_platform,target_shop_or_marketplace_id,target_object_type,target_external_id
+                FROM ecom_link
+                WHERE org_id=%s AND workspace_id=%s AND deleted_at IS NULL
+                """,
+                scope.key,
+            ).fetchall()
         else:
             objs = conn.execute(
                 "SELECT COUNT(*) AS c FROM obj_instance WHERE org_id=%s AND project_id=%s", scope.key
@@ -1042,27 +1251,55 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
                 """,
                 scope.key,
             ).fetchall()
+            identity_rows = []
+            required_link_rows = []
     dangling_n = int(dangling["c"])
-    conflict_n = 0
+    raw_unlinked_n = int(orphans["c"])
+    conflict_objects: set[tuple[str, str]] = set()
     conflict_samples: list[str] = []
-    for r in prop_rows:
-        declared = r["properties"] if isinstance(r["properties"], list) else []
-        allowed = {
-            str(p.get("name"))
-            for p in declared
-            if isinstance(p, dict) and p.get("name")
+    property_classification = {
+        "canonical": 0,
+        "system": 0,
+        "compatibilityAlias": 0,
+        "actualConflict": 0,
+    }
+    for row in prop_rows:
+        classified = _classify_graph_properties(row) if authoritative else {
+            "canonical": [], "system": [], "compatibilityAlias": [], "actualConflict": [],
         }
-        allowed |= {"_requiredMarkings"}  # system key
-        props = r["props"] if isinstance(r["props"], dict) else {}
-        extra = [k for k in props.keys() if k not in allowed]
-        if extra:
-            conflict_n += 1
+        for category in property_classification:
+            property_classification[category] += len(classified[category])
+        if classified["actualConflict"]:
+            conflict_objects.add((str(row["object_type"]), str(row["object_id"])))
             if len(conflict_samples) < 5:
                 conflict_samples.append(
-                    f"{r['object_type']}/{r['object_id']}:{','.join(extra[:3])}"
+                    f"{row['object_type']}/{row['object_id']}:{','.join(classified['actualConflict'][:3])}"
                 )
+    conflict_n = len(conflict_objects)
 
-    orphan_n = int(orphans["c"])
+    required_link_eligible: set[tuple[str, str, str, str]] = set()
+    required_link_covered: set[tuple[str, str, str, str]] = set()
+    if authoritative:
+        for row in identity_rows:
+            object_type = str(row["object_type"])
+            if object_type in _REQUIRED_LINK_TYPES_BY_OBJECT:
+                required_link_eligible.add(
+                    (object_type, str(row["platform"]), str(row["shop_or_marketplace_id"]), str(row["external_id"]))
+                )
+        for row in required_link_rows:
+            link_type = str(row["link_type"])
+            source_type = str(row["source_object_type"])
+            target_type = str(row["target_object_type"])
+            if link_type in _REQUIRED_LINK_TYPES_BY_OBJECT.get(source_type, frozenset()):
+                required_link_covered.add(
+                    (source_type, str(row["source_platform"]), str(row["source_shop_or_marketplace_id"]), str(row["source_external_id"]))
+                )
+            if link_type in _REQUIRED_LINK_TYPES_BY_OBJECT.get(target_type, frozenset()):
+                required_link_covered.add(
+                    (target_type, str(row["target_platform"]), str(row["target_shop_or_marketplace_id"]), str(row["target_external_id"]))
+                )
+    required_orphans = required_link_eligible - required_link_covered
+    orphan_n = len(required_orphans) if authoritative else raw_unlinked_n
     from aos_api import ttl_job
 
     ttl_snap = ttl_job.status_snapshot(_scope(principal))
@@ -1071,8 +1308,11 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
         "instances": int(objs["c"]),
         "edges": int(edges["c"]),
         "orphanInstances": orphan_n,
+        "unlinkedInstances": raw_unlinked_n,
         "danglingEdges": dangling_n,
         "propConflicts": conflict_n,
+        "propertyClassification": property_classification,
+        "requiredLinkEligible": len(required_link_eligible),
         "archiveCandidates": int(ttl_snap["archiveCandidates"]),
         "engine": "ecom_authoritative" if authoritative else "adjacency_table",
         "ageAvailable": False,
@@ -1081,10 +1321,8 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
     if authoritative:
         metrics["graphWatermark"] = authority_meta["watermark"]
         metrics["schemaEtag"] = authority_meta["schemaEtag"]
-    score = 100
     issues: list[dict[str, Any]] = []
     if dangling_n > 0:
-        score -= min(40, 10 + dangling_n)
         issues.append(
             {
                 "code": "GH-01",
@@ -1098,7 +1336,6 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
             }
         )
     elif metrics["edges"] == 0:
-        score -= 15
         issues.append(
             {
                 "code": "GH-01",
@@ -1109,7 +1346,6 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
             }
         )
     if conflict_n > 0:
-        score -= min(25, 5 + conflict_n // 2)
         issues.append(
             {
                 "code": "GH-02",
@@ -1117,41 +1353,48 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
                 "object": f"属性冲突 ×{conflict_n}",
                 "message": "实例 props 含未声明键 · " + "; ".join(conflict_samples[:3]),
                 "href": "/ontology",
+                "samples": [
+                    {"objectType": object_type, "objectId": object_id}
+                    for object_type, object_id in sorted(conflict_objects)[:20]
+                ],
             }
         )
-    orphan_ratio = orphan_n / max(metrics["instances"], 1)
-    if metrics["instances"] and orphan_ratio > 0.8:
-        score -= 20
+    if orphan_n > 0:
         issues.append(
             {
                 "code": "GH-03",
                 "severity": "warn",
-                "object": f"孤立实例 ×{orphan_n}",
-                "message": "无 ecom_link 关联" if authoritative else "无 graph_edge 关联",
-                "href": "/ontology",
+                "object": f"必需关系缺失 ×{orphan_n}",
+                "message": (
+                    "只统计声明了必需 Link 约束但未命中的对象；允许独立对象不计错"
+                    if authoritative else "兼容图未加载必需 Link 注册表"
+                ),
+                "href": "/workshop/graph",
+                "samples": [
+                    {
+                        "objectType": object_type,
+                        "objectId": external_id,
+                    }
+                    for object_type, platform, shop_id, external_id in sorted(required_orphans)[:20]
+                ],
             }
         )
-    elif orphan_n > 0:
-        issues.append(
-            {
-                "code": "GH-03",
-                "severity": "warn",
-                "object": f"孤立实例 ×{orphan_n}",
-                "message": "无 ecom_link 关联" if authoritative else "无 graph_edge 关联",
-                "href": "/ontology",
-            }
+    if authoritative:
+        score, breakdown = _graph_health_score_breakdown(
+            dangling_affected=dangling_n,
+            dangling_denominator=int(metrics["edges"]),
+            conflict_affected=conflict_n,
+            conflict_denominator=int(metrics["instances"]),
+            orphan_affected=orphan_n,
+            orphan_denominator=len(required_link_eligible),
+            rule_affected=0,
+            rule_denominator=int(metrics["instances"]),
         )
-    score = max(0, min(100, score))
-    if score < 80:
-        issues.append(
-            {
-                "code": "GH-04",
-                "severity": "info",
-                "object": "规则",
-                "message": f"综合分 {score} < 80，建议 Draft 巡检",
-                "href": "/aip/drafts",
-            }
-        )
+        score_status = "known"
+    else:
+        score = None
+        breakdown = []
+        score_status = "unknown"
     log.info(
         "graph_health score=%s edges=%s dangling=%s conflicts=%s issues=%s",
         score,
@@ -1162,6 +1405,9 @@ def graph_health(principal: Principal = Depends(require_principal)) -> dict[str,
     )
     return {
         "score": score,
+        "scoreStatus": score_status,
+        "scoreVersion": _GRAPH_HEALTH_SCORE_VERSION,
+        "breakdown": breakdown,
         "metrics": metrics,
         "issues": issues,
         "archivePreview": ttl_snap.get("preview") or [],
@@ -1369,6 +1615,260 @@ def _okf_mapping_view(payload: dict[str, Any], *, revision: int) -> dict[str, An
             "mappedFieldCount": mapped,
         },
     }
+
+
+def _okf_type_key(industry: str, object_type: str) -> str:
+    return f"okf_mapping:{industry}:{object_type}"
+
+
+def _okf_required_coverage(
+    object_type: str,
+    columns: list[dict[str, Any]],
+) -> dict[str, int]:
+    from aos_api.ecom_core_models import REQUIRED_PROPERTIES
+
+    required = set(REQUIRED_PROPERTIES.get(object_type, frozenset()))
+    mapped = {
+        str(column.get("dst") or "").split(".")[-1]
+        for column in columns
+        if column.get("ok")
+    }
+    mapped_required = len(required & mapped)
+    total = len(required)
+    return {
+        "mapped": mapped_required,
+        "total": total,
+        "percent": round(mapped_required * 100 / total) if total else 0,
+    }
+
+
+def _okf_type_view(
+    payload: dict[str, Any] | None,
+    *,
+    industry: str,
+    object_type: str,
+    revision: int,
+    source_count: int = 0,
+    watermark: Any = None,
+    display_name: str | None = None,
+) -> dict[str, Any]:
+    from aos_api.ecom_core_models import REQUIRED_PROPERTIES
+
+    columns = [
+        dict(column)
+        for column in (payload or {}).get("columns") or []
+        if isinstance(column, dict)
+    ]
+    required = _okf_required_coverage(object_type, columns)
+    blocked = [
+        str(column.get("dst") or column.get("src") or "")
+        for column in columns
+        if not column.get("ok")
+    ]
+    configured = payload is not None
+    return {
+        "industry": industry,
+        "objectType": object_type,
+        "label": str((payload or {}).get("label") or display_name or f"{industry} · {object_type}"),
+        "columns": columns,
+        "revision": revision,
+        "status": "configured" if configured else "unconfigured",
+        "coverage": {
+            "required": required,
+            "optional": {
+                "mapped": len(
+                    [
+                        column
+                        for column in columns
+                        if column.get("ok")
+                        and str(column.get("dst") or "").split(".")[-1]
+                        not in set(REQUIRED_PROPERTIES.get(object_type, frozenset()))
+                    ]
+                ),
+                "total": None,
+                "percent": None,
+                "status": "unknown",
+            },
+        },
+        "blockedFields": blocked,
+        "source": {
+            "available": source_count > 0,
+            "count": source_count,
+            "watermark": watermark.isoformat() if hasattr(watermark, "isoformat") else watermark,
+        },
+        "impact": {
+            "requiresRebuild": bool(blocked),
+            "affectedObjectType": object_type,
+            "mappedRequiredFieldCount": required["mapped"],
+        },
+    }
+
+
+def _okf_source_types(principal: Principal) -> list[dict[str, Any]]:
+    scope = _scope(principal)
+    with connect(scope) as conn:
+        return [
+            dict(row)
+            for row in conn.execute(
+                """
+                SELECT o.object_type,MAX(t.name) AS display_name,
+                       COUNT(*) AS source_count,MAX(o.source_updated_at) AS watermark
+                FROM ecom_object o
+                LEFT JOIN meta_object_type t ON t.id=o.object_type
+                WHERE o.org_id=%s AND o.workspace_id=%s AND o.deleted_at IS NULL
+                GROUP BY o.object_type
+                ORDER BY o.object_type
+                """,
+                scope.key,
+            ).fetchall()
+        ]
+
+
+def _get_okf_type_payload(
+    industry: str,
+    object_type: str,
+    principal: Principal,
+) -> tuple[dict[str, Any] | None, int]:
+    from aos_api.aip_kv_store import get_payload
+
+    scope = _scope(principal)
+    stored = get_payload(_okf_type_key(industry, object_type), scope)
+    if stored:
+        return dict(stored), int(stored.get("revision") or 0)
+    # The legacy ecommerce key is an Order compatibility alias only. It is read,
+    # never copied or overwritten during detail reads.
+    if industry == "ecom" and object_type == "Order":
+        legacy = get_payload("okf_mapping:ecom", scope)
+        if legacy:
+            return dict(legacy), int(legacy.get("revision") or 0)
+        default = _OKF_DEFAULTS.get("ecom")
+        if default:
+            return dict(default), 0
+    return None, 0
+
+
+@router.get("/v1/ontology/okf-mappings/{industry}/types")
+def get_okf_mapping_types(
+    industry: str,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    if industry != "ecom":
+        raise ApiError(code="VALIDATION", message="multi-type OKF is available for ecom", status_code=400)
+    items: list[dict[str, Any]] = []
+    for source in _okf_source_types(principal):
+        object_type = str(source["object_type"])
+        payload, revision = _get_okf_type_payload(industry, object_type, principal)
+        items.append(
+            _okf_type_view(
+                payload,
+                industry=industry,
+                object_type=object_type,
+                revision=revision,
+                source_count=int(source["source_count"]),
+                watermark=source.get("watermark"),
+                display_name=str(source.get("display_name") or "") or None,
+            )
+        )
+    mapped = sum(item["coverage"]["required"]["mapped"] for item in items)
+    total = sum(item["coverage"]["required"]["total"] for item in items)
+    unknown = [item["objectType"] for item in items if item["status"] != "configured"]
+    overall = {
+        "required": {
+            "mapped": mapped,
+            "total": total,
+            "percent": round(mapped * 100 / total) if total else 0,
+        },
+        "excluded": [],
+        "unknown": unknown,
+        "complete": bool(total) and mapped == total and not unknown,
+        "formula": "sum(mapped required) / sum(composed required) for real source types",
+    }
+    return {"industry": industry, "items": items, "overall": overall}
+
+
+@router.get("/v1/ontology/okf-mappings/{industry}/types/{object_type}")
+def get_okf_type_mapping(
+    industry: str,
+    object_type: str,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    if industry != "ecom":
+        raise ApiError(code="VALIDATION", message="multi-type OKF is available for ecom", status_code=400)
+    source = next(
+        (row for row in _okf_source_types(principal) if row["object_type"] == object_type),
+        None,
+    )
+    payload, revision = _get_okf_type_payload(industry, object_type, principal)
+    return _okf_type_view(
+        payload,
+        industry=industry,
+        object_type=object_type,
+        revision=revision,
+        source_count=int((source or {}).get("source_count") or 0),
+        watermark=(source or {}).get("watermark"),
+        display_name=str((source or {}).get("display_name") or "") or None,
+    )
+
+
+@router.put("/v1/ontology/okf-mappings/{industry}/types/{object_type}")
+def put_okf_type_mapping(
+    industry: str,
+    object_type: str,
+    body: dict[str, Any],
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    from aos_api.ecom_core_models import CORE_OBJECT_TYPES
+
+    if industry != "ecom" or object_type not in CORE_OBJECT_TYPES:
+        raise ApiError(code="VALIDATION", message="invalid ecommerce object type", status_code=400)
+    columns = body.get("columns")
+    if not isinstance(columns, list):
+        raise ApiError(code="VALIDATION", message="columns must be a list", status_code=400)
+    expected_revision = body.get("expectedRevision")
+    if not isinstance(expected_revision, int) or expected_revision < 0:
+        raise ApiError(code="OKF_EXPECTED_REVISION_REQUIRED", message="expectedRevision must be a non-negative integer", status_code=428)
+    payload = {
+        "industry": industry,
+        "objectType": object_type,
+        "label": str(body.get("label") or f"微商城电商 · {object_type}"),
+        "columns": [
+            {
+                "src": str(column.get("src") or ""),
+                "dst": str(column.get("dst") or ""),
+                "ok": bool(column.get("ok")),
+            }
+            for column in columns
+            if isinstance(column, dict)
+        ],
+    }
+    scope = _scope(principal)
+    key = _okf_type_key(industry, object_type)
+    with connect(scope) as conn:
+        row = conn.execute(
+            "SELECT payload FROM meta_aip_kv WHERE org_id=%s AND project_id=%s AND key=%s FOR UPDATE",
+            (*scope.key, key),
+        ).fetchone()
+        current_payload = dict(row["payload"] or {}) if row else None
+        current_revision = int((current_payload or {}).get("revision") or 0)
+        if current_revision != expected_revision:
+            raise ApiError(
+                code="OKF_MAPPING_CAS_CONFLICT",
+                message="OKF mapping revision changed",
+                status_code=412,
+                details={"expected": expected_revision, "actual": current_revision},
+            )
+        payload["revision"] = current_revision + 1
+        conn.execute(
+            """
+            INSERT INTO meta_aip_kv (org_id,project_id,key,payload,updated_at)
+            VALUES (%s,%s,%s,%s::jsonb,NOW())
+            ON CONFLICT (org_id,project_id,key) DO UPDATE
+              SET payload=EXCLUDED.payload,updated_at=NOW()
+            """,
+            (*scope.key, key, json.dumps(payload, ensure_ascii=False)),
+        )
+        conn.commit()
+    return get_okf_type_mapping(industry, object_type, principal)
 
 
 @router.get("/v1/ontology/okf-mappings/{industry}")

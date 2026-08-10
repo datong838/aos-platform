@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
@@ -140,5 +142,31 @@ describe("Wave 3C W3 · Graph Health TTL 两阶段确认", () => {
     expect(host.textContent).toContain("insight-1");
     expect(host.querySelector("[data-testid='ttl-confirmation']")).not.toBeNull();
     expect(apiMocks.apiGet).toHaveBeenCalledTimes(1);
+  });
+
+  it("展示可复算计分、属性分类，并区分普通无边与必需关系缺失", async () => {
+    apiMocks.apiGet.mockResolvedValue({
+      score: 75,
+      scoreStatus: "known",
+      scoreVersion: "GH-SCORE-v2",
+      breakdown: [
+        { code: "GH-03", affectedObjects: 20, denominator: 100, rate: 0.2, threshold: 0.1, maxDeduction: 25, deduction: 25 },
+      ],
+      metrics: {
+        objectTypes: 12, instances: 617, edges: 492, orphanInstances: 20, unlinkedInstances: 237,
+        requiredLinkEligible: 300, danglingEdges: 0, propConflicts: 0, engine: "ecom_authoritative",
+        propertyClassification: { canonical: 5000, system: 400, compatibilityAlias: 8, actualConflict: 0 },
+      },
+      issues: [{ code: "GH-03", object: "必需关系缺失 ×20", message: "仅统计必需关系" }],
+    });
+    await act(async () => root.render(<MemoryRouter><GraphHealthPage /></MemoryRouter>));
+    await flush();
+
+    expect(host.textContent).toContain("公式=GH-SCORE-v2");
+    expect(host.textContent).toContain("兼容别名 8");
+    expect(host.textContent).toContain("普通无边对象 237 不直接扣分");
+    expect(host.textContent).toContain("20 / 100");
+    expect(host.querySelector("select[aria-label='图谱健康问题类型']")).not.toBeNull();
+    expect(host.textContent).toContain("问题图谱");
   });
 });

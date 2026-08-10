@@ -45,6 +45,8 @@ export type DraftRow = {
 
 export type ObjectQuery = {
   branch?: string;
+  sortBy?: string;
+  sortDirection?: "asc" | "desc";
 };
 
 function joinUrl(base: string, path: string): string {
@@ -54,9 +56,14 @@ function joinUrl(base: string, path: string): string {
 }
 
 function withQuery(path: string, query?: ObjectQuery): string {
-  if (!query?.branch) return path;
+  if (!query) return path;
+  const params = new URLSearchParams();
+  if (query.branch) params.set("branch", query.branch);
+  if (query.sortBy) params.set("sortBy", query.sortBy);
+  if (query.sortDirection) params.set("sortDirection", query.sortDirection);
+  if (params.size === 0) return path;
   const sep = path.includes("?") ? "&" : "?";
-  return `${path}${sep}branch=${encodeURIComponent(query.branch)}`;
+  return `${path}${sep}${params.toString()}`;
 }
 
 export function createOntologyClient(opts: OntologyClientOptions) {

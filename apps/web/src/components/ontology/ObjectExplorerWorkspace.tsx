@@ -14,10 +14,36 @@ export type ExplorerColumnResolution = {
   schemaIncomplete: boolean;
 };
 
+export function resolveSavedExplorerColumns(
+  savedColumns: unknown,
+  defaults: ExplorerColumn[],
+): ExplorerColumn[] {
+  if (!Array.isArray(savedColumns)) return defaults;
+  const seen = new Set<string>();
+  const restored = savedColumns.flatMap<ExplorerColumn>((raw) => {
+    if (!raw || typeof raw !== "object") return [];
+    const record = raw as Record<string, unknown>;
+    const key = String(record.key || "").trim();
+    if (!isVisibleProperty(key) || seen.has(key)) return [];
+    seen.add(key);
+    return [{
+      key,
+      label: String(record.label || key),
+      type: record.type ? String(record.type) : undefined,
+      unit: record.unit ? String(record.unit) : undefined,
+      pii: Boolean(record.pii),
+    }];
+  });
+  if (restored.length === 0) return defaults;
+  if (!seen.has("id")) {
+    restored.unshift(defaults.find((column) => column.key === "id") || { key: "id", label: "ID" });
+  }
+  return restored;
+}
+
 const DOMAIN_COLUMN_PROFILES: Record<string, ExplorerColumn[]> = {
   Order: [
     { key: "id", label: "订单" },
-    { key: "orderNo", label: "订单号" },
     { key: "memberId", label: "会员 ID" },
     { key: "createdAt", label: "下单时间", type: "datetime" },
     { key: "totalAmount", label: "订单金额", type: "money", unit: "CNY" },

@@ -1,0 +1,86 @@
+{
+  "gate": "O1-UX9_NINE_MENU_PRODUCT_COMPLETENESS_GATE",
+  "status": "GREEN",
+  "generatedAt": "2026-08-10T09:38:50Z",
+  "baseGitSha": "2fc361d74d20ad82ac73358cb0ce5e1cdbbfcd24",
+  "targetScope": {
+    "orgId": "org-org",
+    "workspaceId": "dev-project",
+    "organizationName": "栖月汇商贸有限公司"
+  },
+  "canaryScope": {
+    "orgId": "dev-org",
+    "workspaceId": "dev-project",
+    "purpose": "read-only negative isolation canary"
+  },
+  "authority": {
+    "objectsAndLinks": "ecom_authoritative",
+    "knowledge": "wiki_page + Draft approval",
+    "customization": "Installation-bound immutable Ontology Overlay",
+    "mockBusinessData": false
+  },
+  "facts": {
+    "orders": 61,
+    "listedProducts": 39,
+    "graphInstances": 617,
+    "graphEdges": 592,
+    "graphHealthScore": 75,
+    "graphHealthFormula": "GH-SCORE-v2",
+    "okfSourceTypes": 12,
+    "okfRequiredCoverage": "6/59",
+    "productWikiCoverage": {"covered": 0, "gaps": 39, "visible": 39},
+    "activeOntologyOverlays": 0,
+    "overlayState": "inherits installed template"
+  },
+  "regression": {
+    "backendO1": {"passed": 67, "failed": 0},
+    "frontendTargeted": {"testFiles": 8, "tests": 36, "failed": 0},
+    "typeScript": "PASS",
+    "productionBuild": "PASS"
+  },
+  "browser": {
+    "menusChecked": 9,
+    "routesWithBlockingPageError": 0,
+    "viewportObserved": {"width": 1280, "height": 720},
+    "previousNarrowEvidence": "O1-UX6_20260809T183937Z.json",
+    "interactions": [
+      "Order default createdAt descending and no duplicate order number column",
+      "Order Funnel four stages at 100 percent",
+      "OKF type and weighted overview navigation",
+      "Graph Health GH-03 issue localized to a 9-node 12-edge authoritative graph",
+      "Product Wiki selector exposes 39 actually listed products and treats missing Wiki as a knowledge gap",
+      "Product Wiki index uses business labels and 39-product operational scope",
+      "Overlay page exposes Installation, composed ETag, overlay-set hash and normal inherit state"
+    ],
+    "screenshotsDir": "services/aos-api/tests/d5e/evidence/o1-ux9"
+  },
+  "canary": {
+    "target": {"orders": 61, "listedProducts": 39, "graphInstances": 617, "okfTypes": 12},
+    "negative": {"orders": "404 fail-closed without Installation", "listedProducts": 0, "graphInstances": 0, "okfTypes": 0},
+    "crossTenantLeak": 0,
+    "writesPerformed": 0
+  },
+  "artifacts": {
+    "apps/web/src/components/ontology/ObjectExplorerWorkspace.tsx": "c385052c9dc1ad388141114b111b8fb04d4282c723c89110dfb4053a2ce7124a",
+    "apps/web/src/pages/s2/ontology.tsx": "0fe017a606b835dd3b4b727ae32cf4f35215bf58c769abafacec75a532b6d259",
+    "apps/web/src/pages/s2/remainder.tsx": "5423d704b513eb89dc3fcc14965cd80fd93f0511106935720c5974b0d768d44d",
+    "apps/web/src/pages/s2/WikiIndexPage.tsx": "6b2ca1b551a343724426cd91856117baec774fb450b258744552a236d5a5563a",
+    "packages/ontology-sdk/src/client.ts": "e8afaee5fca7fd0b637424c489e45182192e7a8f5322f4a88dbee18e34fd1519",
+    "services/aos-api/aos_api/routers/ontology.py": "c29c3dcf257099f1b4f7ad729b8f9259278aad92a42676bb874d78eae45584e9",
+    "services/aos-api/aos_api/ecom_core_models.py": "f2c4c7d54f0a0fef5e6602df1f33bd3b8d6dceff0936ebbaee80d85b4b188343"
+  },
+  "checks": {
+    "realTargetScope": true,
+    "canonicalIdentityPreserved": true,
+    "orderGlobalSortAuthoritative": true,
+    "savedExplorationCompatibilityPreserved": true,
+    "funnelStateHonest": true,
+    "okfIndustryNotMisrepresentedByOrderOnly": true,
+    "graphHealthRecomputable": true,
+    "wikiKnowledgeGapHonest": true,
+    "listedProductScopeAuthoritative": true,
+    "legacyBranchStoreNotPromoted": true,
+    "crossTenantCanaryClean": true,
+    "browserNineMenuGate": true
+  }
+}

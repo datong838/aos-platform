@@ -10,7 +10,6 @@ import {
   BpBanner,
   BpLinkRow,
   BpMetricGrid,
-  BpPropGrid,
   BpSplit,
   BpStagePipeline,
   BpTable,
@@ -25,6 +24,7 @@ type GhIssue = {
   object?: string;
   message?: string;
   href?: string;
+  samples?: { objectType: string; objectId: string }[];
 };
 
 type TtlCandidate = {
@@ -47,7 +47,10 @@ type TtlRunResult = {
 /** 89/94 · 对齐 ontology-graph-health · issues 服务端真源 */
 export function GraphHealthPage() {
   const { data, err, reload } = useJsonGet<{
-    score: number;
+    score: number | null;
+    scoreStatus?: "known" | "unknown";
+    scoreVersion?: string;
+    breakdown?: { code: string; affectedObjects: number; denominator: number; rate: number; threshold: number; maxDeduction: number; deduction: number }[];
     metrics: {
       objectTypes: number;
       instances: number;
@@ -55,6 +58,9 @@ export function GraphHealthPage() {
       orphanInstances: number;
       danglingEdges?: number;
       propConflicts?: number;
+      unlinkedInstances?: number;
+      requiredLinkEligible?: number;
+      propertyClassification?: { canonical: number; system: number; compatibilityAlias: number; actualConflict: number };
       archiveCandidates?: number;
       insightTtlDays?: number;
       engine: string;
@@ -71,12 +77,15 @@ export function GraphHealthPage() {
   const [graphSnapshot, setGraphSnapshot] = useState<GraphSnapshot | null>(null);
   const [graphBusy, setGraphBusy] = useState(false);
   const [graphError, setGraphError] = useState<string | null>(null);
+  const [healthView, setHealthView] = useState("list");
+  const [issueCodeFilter, setIssueCodeFilter] = useState("all");
 
   const m = data?.metrics;
   const issues = data?.issues || [];
   const gh01 = issues.filter((i) => i.code === "GH-01").length;
   const gh02 = m?.propConflicts ?? issues.filter((i) => i.code === "GH-02").length;
   const gh04 = issues.filter((i) => i.code === "GH-04").length;
+  const visibleIssues = issueCodeFilter === "all" ? issues : issues.filter((issue) => issue.code === issueCodeFilter);
 
   async function previewTtl() {
     setTtlBusy(true);
@@ -130,17 +139,17 @@ export function GraphHealthPage() {
     }
   }
 
-  async function inspectGraph(nextType = graphSeedType, nextId = graphSeedId) {
+  async function inspectGraph(nextType = graphSeedType, nextId = graphSeedId, nextDomain = graphDomain) {
     setGraphBusy(true);
     setGraphError(null);
     try {
       let resolvedId = nextId.trim();
-      if (!resolvedId && graphDomain === "domain") {
+      if (!resolvedId && nextDomain === "domain") {
         const items = await getOntologyClient().listObjects(nextType);
         resolvedId = items.items[0] ? String(items.items[0].id) : "";
       }
       if (!resolvedId) {
-        throw new Error(graphDomain === "operational_lineage"
+        throw new Error(nextDomain === "operational_lineage"
           ? "运行血缘层需要填写 Task/Plan/Action/Evidence 等稳定对象 ID"
           : "当前 Object Type 没有可用于检查的真实对象");
       }
@@ -151,7 +160,7 @@ export function GraphHealthPage() {
         direction: "both",
         objectTypes: [],
         relationTypes: [],
-        graphDomains: [graphDomain],
+        graphDomains: [nextDomain],
       });
       setGraphSeedType(nextType);
       setGraphSeedId(resolvedId);
@@ -238,8 +247,8 @@ export function GraphHealthPage() {
         </section>
       ) : null}
       <p className="muted" style={{ fontSize: "0.8rem" }}>
-        当前 score={data?.score ?? "—"} · engine={m?.engine ?? "—"} · instances={m?.instances ?? "—"} ·
-        dangling={m?.danglingEdges ?? "—"} · Insight TTL={m?.insightTtlDays ?? "—"} 天
+        当前 score={data?.scoreStatus === "unknown" ? "不可判定" : (data?.score ?? "—")} · 公式={data?.scoreVersion ?? "—"} ·
+        engine={m?.engine ?? "—"} · instances={m?.instances ?? "—"} · dangling={m?.danglingEdges ?? "—"} · Insight TTL={m?.insightTtlDays ?? "—"} 天
       </p>
 
       <BpMetricGrid
@@ -252,13 +261,13 @@ export function GraphHealthPage() {
           },
           {
             code: "GH-02",
-            label: "冲突",
+            label: "真实属性冲突",
             value: gh02,
             tone: gh02 > 0 ? "warn" : "ok",
           },
           {
             code: "GH-03",
-            label: "僵尸/孤立",
+            label: "必需关系缺失",
             value: m?.orphanInstances ?? 0,
             tone: (m?.orphanInstances ?? 0) > 10 ? "warn" : "muted",
           },
@@ -277,7 +286,30 @@ export function GraphHealthPage() {
         ]}
       />
 
-      <section className="ont-section" aria-labelledby="graph-inspector-title">
+      <BpBanner tone={data?.scoreStatus === "unknown" ? "warn" : "info"}>
+        属性分类：Canonical {m?.propertyClassification?.canonical ?? "—"} · 系统字段 {m?.propertyClassification?.system ?? "—"} ·
+        兼容别名 {m?.propertyClassification?.compatibilityAlias ?? "—"} · 真实冲突 {m?.propertyClassification?.actualConflict ?? "—"}。
+        普通无边对象 {m?.unlinkedInstances ?? "—"} 不直接扣分；仅 {m?.requiredLinkEligible ?? "—"} 个声明必需关系的对象进入 GH-03 分母。
+      </BpBanner>
+      {(data?.breakdown?.length ?? 0) > 0 && (
+        <BpTable
+          columns={["指标", "受影响 / 分母", "比率 / 阈值", "扣分"]}
+          rows={(data?.breakdown || []).map((item) => [
+            item.code,
+            `${item.affectedObjects} / ${item.denominator}`,
+            `${(item.rate * 100).toFixed(2)}% / ${(item.threshold * 100).toFixed(0)}%`,
+            `${item.deduction} / ${item.maxDeduction}`,
+          ])}
+        />
+      )}
+
+      <BpTabs
+        tabs={[{ id: "list", label: "问题列表" }, { id: "graph", label: "问题图谱" }]}
+        active={healthView}
+        onChange={setHealthView}
+      />
+
+      {healthView === "graph" && <section className="ont-section" aria-labelledby="graph-inspector-title">
         <h2 id="graph-inspector-title" className="aos-text" style={{ fontSize: "0.875rem" }}>
           权威图检查器
         </h2>
@@ -326,7 +358,7 @@ export function GraphHealthPage() {
             onExpandNode={(node) => void inspectGraph(node.objectType, node.objectId)}
           />
         )}
-      </section>
+      </section>}
 
       {(data?.archivePreview?.length ?? 0) > 0 ? (
         <>
@@ -343,15 +375,24 @@ export function GraphHealthPage() {
         </>
       ) : null}
 
-      <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: "1.25rem" }}>
-        问题列表
-      </h2>
-      {issues.length === 0 ? (
+      {healthView === "list" && <>
+      <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: "1.25rem" }}>问题列表</h2>
+      <label className="muted">
+        问题类型
+        <select aria-label="图谱健康问题类型" value={issueCodeFilter} onChange={(event) => setIssueCodeFilter(event.target.value)}>
+          <option value="all">全部</option>
+          <option value="GH-01">GH-01 悬空端点</option>
+          <option value="GH-02">GH-02 真实属性冲突</option>
+          <option value="GH-03">GH-03 必需关系缺失</option>
+          <option value="GH-04">GH-04 治理规则</option>
+        </select>
+      </label>
+      {visibleIssues.length === 0 ? (
         <p className="bp-prop-ok">暂无问题 · 扫描通过</p>
       ) : (
         <BpTable
           columns={["类型", "对象", "说明", "操作"]}
-          rows={issues.map((i) => [
+          rows={visibleIssues.map((i) => [
             <span
               key={`t-${i.code}`}
               className={
@@ -368,10 +409,16 @@ export function GraphHealthPage() {
             <span key={`m-${i.code}`} className="muted">
               {i.message || "—"}
             </span>,
-            i.href ? (
-              <Link key={`h-${i.code}`} to={i.href} className="bp-action-link">
-                处理 →
-              </Link>
+            i.samples?.[0] ? (
+              <button key={`h-${i.code}`} type="button" className="bp-action-link" onClick={() => {
+                setHealthView("graph");
+                setGraphDomain("domain");
+                void inspectGraph(i.samples![0].objectType, i.samples![0].objectId, "domain");
+              }}>
+                图中定位 →
+              </button>
+            ) : i.href ? (
+              <Link key={`h-${i.code}`} to={i.href} className="bp-action-link">处理 →</Link>
             ) : (
               <span key={`h-${i.code}`} className="muted">
                 —
@@ -380,6 +427,7 @@ export function GraphHealthPage() {
           ])}
         />
       )}
+      </>}
       <BpLinkRow
         links={[
           { to: "/ontology/funnel", label: "看 Funnel Merge" },
@@ -394,8 +442,11 @@ export function GraphHealthPage() {
 
 /** 89/94 · Funnel + 真重跑 · ?type= */
 export function FunnelPage() {
-  const [sp] = useSearchParams();
+  const [sp, setSp] = useSearchParams();
   const objectType = sp.get("type")?.trim() || "";
+  const objectTypes = useJsonGet<{ items: { id: string; name: string }[] }>(
+    "/v1/ontology/object-types",
+  );
   const status = useJsonGet<{ objectType: string; stage: string; detail?: { mode?: string; receiptId?: string; rerunAt?: string; failures?: unknown[] } }>(
     objectType ? `/v1/funnel/${encodeURIComponent(objectType)}/status` : null,
   );
@@ -451,10 +502,28 @@ export function FunnelPage() {
   return (
     <S2Chrome
       title="漏斗管道"
-      lede={`${objectType} 四阶段 · Changelog → Merge → Index → Hydration`}
+      lede={`${objectType || "请选择对象类型"} · Changelog → Merge → Index → Hydration`}
     >
       <div className="ont-page">
       <BpToolbar>
+        <label className="muted">
+          对象类型
+          <select
+            aria-label="选择 Funnel 对象类型"
+            value={objectType}
+            onChange={(event) => {
+              const next = new URLSearchParams(sp);
+              if (event.target.value) next.set("type", event.target.value);
+              else next.delete("type");
+              setSp(next, { replace: true });
+            }}
+          >
+            <option value="">请选择对象类型</option>
+            {(objectTypes.data?.items || []).map((item) => (
+              <option key={item.id} value={item.id}>{item.name || item.id}</option>
+            ))}
+          </select>
+        </label>
         <button
           type="button"
           className="btn"
@@ -516,10 +585,16 @@ export function FunnelPage() {
         </p>
       </div>
 
-      {stages.length > 0 ? (
+      {!objectType ? (
+        <p className="muted">请选择对象类型后查看权威 Funnel 四阶段状态。</p>
+      ) : status.loading || worker.loading ? (
+        <p className="muted">加载流水线…</p>
+      ) : status.err || worker.err ? (
+        <p className="error">流水线状态读取失败，请检查上方错误后重试。</p>
+      ) : stages.length > 0 ? (
         <BpStagePipeline stages={stages} />
       ) : (
-        <p className="muted">加载流水线…</p>
+        <p className="muted">当前对象类型暂无阶段状态。</p>
       )}
 
       <BpBanner tone={(status.data?.detail?.failures?.length || 0) > 0 ? "warn" : "info"}>
@@ -538,13 +613,17 @@ export function FunnelPage() {
 
 /** 89/94 · Wiki 可编辑 → Draft · ?type=&id= */
 export function WikiPage() {
-  const [sp] = useSearchParams();
+  const [sp, setSp] = useSearchParams();
   const objectType = sp.get("type")?.trim() || "";
   const objectId = sp.get("id")?.trim() || "";
   const [tab, setTab] = useState("card");
-  const wiki = useJsonGet<{ objectType: string; objectId: string; body: Record<string, unknown> }>(
+  const objectTypes = useJsonGet<{ items: { id: string; name: string }[] }>("/v1/ontology/object-types");
+  const subjects = useJsonGet<{ items: { objectId: string; displayLabel?: string; sourceRecordLabel?: string; covered: boolean }[] }>(
+    objectType ? `/v1/wiki/${encodeURIComponent(objectType)}/coverage-index?limit=200` : null,
+  );
+  const wiki = useJsonGet<{ objectType: string; objectId: string; body: Record<string, unknown>; exists?: boolean }>(
     objectType && objectId
-      ? `/v1/wiki/${encodeURIComponent(objectType)}/${encodeURIComponent(objectId)}`
+      ? `/v1/wiki/${encodeURIComponent(objectType)}/${encodeURIComponent(objectId)}?allowMissing=true`
       : null,
   );
   const obj = useOntologyObject(objectType, objectId);
@@ -596,6 +675,29 @@ export function WikiPage() {
     >
       <div className="ont-page">
       <BpToolbar>
+        <label className="muted">
+          对象类型
+          <select aria-label="Wiki 对象类型" value={objectType} onChange={(event) => {
+            const next = new URLSearchParams(sp);
+            if (event.target.value) next.set("type", event.target.value); else next.delete("type");
+            next.delete("id");
+            setSp(next, { replace: true });
+          }}>
+            <option value="">请选择对象类型</option>
+            {(objectTypes.data?.items || []).map((item) => <option key={item.id} value={item.id}>{item.name || item.id}</option>)}
+          </select>
+        </label>
+        <label className="muted">
+          业务对象
+          <select aria-label="Wiki 业务对象" value={objectId} disabled={!objectType || subjects.loading} onChange={(event) => {
+            const next = new URLSearchParams(sp);
+            if (event.target.value) next.set("id", event.target.value); else next.delete("id");
+            setSp(next, { replace: true });
+          }}>
+            <option value="">{subjects.loading ? "加载对象中…" : "请选择业务对象"}</option>
+            {(subjects.data?.items || []).map((item) => <option key={item.objectId} value={item.objectId}>{item.displayLabel || item.sourceRecordLabel || item.objectId}{item.covered ? " · 已有知识" : " · 知识缺口"}</option>)}
+          </select>
+        </label>
         <button
           type="button"
           className="btn"
@@ -624,14 +726,17 @@ export function WikiPage() {
           ← 本体管理
         </Link>
       </BpToolbar>
-      {(wiki.err || obj.err || err) && <p className="error">{wiki.err || obj.err || err}</p>}
+      {(objectTypes.err || subjects.err || wiki.err || obj.err || err) && <p className="error">{objectTypes.err || subjects.err || wiki.err || obj.err || err}</p>}
       {msg && <p className="bp-prop-ok">{msg}</p>}
 
       {!objectType || !objectId ? (
         <BpBanner tone="info">
-          尚未选择对象。请先到 <Link to="/workshop/graph">对象探索</Link> 选择真实 Object，
-          再从右侧进入 Wiki；本页不再默认绑定不存在的 WorkOrder/wo-1001。
+          请在上方选择真实对象类型和业务对象，或从 <Link to="/workshop/graph">对象探索</Link> 深链进入。
+          本页不再默认绑定测试 WorkOrder。
         </BpBanner>
+      ) : null}
+      {objectType && objectId && wiki.data?.exists === false ? (
+        <BpBanner tone="info">当前业务对象尚无知识卡，这是可补充的知识缺口，不是请求错误。填写后保存将创建 Draft，审批通过才写入生产 Wiki。</BpBanner>
       ) : null}
 
       <BpTabs
@@ -651,7 +756,7 @@ export function WikiPage() {
             <>
               <div className="bp-section-label">Object 挂载</div>
               <h2 className="aos-text" style={{ fontSize: "1rem" }}>
-                {objectType} · {objectId}
+                {String(obj.data?._displayLabel || `${objectType} · ${objectId}`)}
               </h2>
               <p className="muted" style={{ fontSize: "0.75rem" }}>
                 实例 PK: {objectId}
@@ -660,7 +765,7 @@ export function WikiPage() {
                 Object 属性（只读同步源）
               </h3>
               <ul className="card-list">
-                {["title", "status", "site", "priority"].map((k) => (
+                {Object.keys(obj.data || {}).filter((key) => !key.startsWith("_") && key !== "id" && key !== "type").slice(0, 8).map((k) => (
                   <li key={k} className="card">
                     <span className="muted">{k}</span>
                     <div>{String(obj.data?.[k] ?? "—")}</div>
@@ -683,7 +788,7 @@ export function WikiPage() {
                     setSummary(e.target.value);
                     setDirty(true);
                   }}
-                  placeholder="工单备注标题"
+                  placeholder={`${String(obj.data?._displayLabel || objectType)} · 运营知识摘要`}
                 />
                 <label className="muted" style={{ display: "block", marginTop: 8 }}>
                   specification（JSON）
@@ -912,6 +1017,7 @@ type OverlayComposition = {
   installation_pk: string;
   installation_revision: number;
   composed_schema_etag: string;
+  ontology_overlay_set_hash?: string;
 };
 
 type OverlayHistoryItem = {
@@ -932,6 +1038,26 @@ type OverlayHistoryItem = {
 export function overlayIfMatch(item: Pick<OverlayHistoryItem, "ontology_revision" | "base_schema_sha256">): string {
   if (!item.base_schema_sha256) throw new Error("Overlay 缺少 base schema hash，不能执行 CAS 写入");
   return `\"ontology-overlay-v1:${item.ontology_revision}:${item.base_schema_sha256}\"`;
+}
+
+function overlayFieldSummary(value: unknown): string {
+  if (value == null) return "—";
+  if (Array.isArray(value)) return value.length ? value.join("、") : "空";
+  if (typeof value === "object") {
+    const keys = Object.keys(value as Record<string, unknown>);
+    return keys.length ? keys.join("、") : "空";
+  }
+  return String(value);
+}
+
+export function overlayDiffRows(current: OverlayHistoryItem, previous: OverlayHistoryItem | null) {
+  return [
+    ["模式", current.mode, previous?.mode || "无历史"],
+    ["显示名", current.display_name || "继承安装模板", previous?.display_name || (previous ? "继承安装模板" : "无历史")],
+    ["可见属性", overlayFieldSummary(current.visible_properties), overlayFieldSummary(previous?.visible_properties)],
+    ["扩展属性", overlayFieldSummary(current.extended_properties), overlayFieldSummary(previous?.extended_properties)],
+    ["组织策略", overlayFieldSummary(current.policies), overlayFieldSummary(previous?.policies)],
+  ];
 }
 
 /** O1-R4 · 安装绑定的组织 Overlay 不可变历史。 */
@@ -1014,7 +1140,7 @@ export function BranchesPage() {
   }
 
   return (
-    <S2Chrome title="分支与 Overlay" lede="Installation 绑定 · 组织定制 · 不可变修订历史">
+    <S2Chrome title="组织定制 Overlay" lede="Installation 绑定 · 组织定制 · 不可变修订历史（不是代码分支）">
       <div className="ont-page">
       <BpToolbar>
         <button type="button" className="btn" disabled={busy} onClick={() => void reload()}>
@@ -1036,7 +1162,9 @@ export function BranchesPage() {
           ]} />
           <BpBanner tone="info">
             平台模板保持只读。组织定制通过强 ETag/CAS 与 Idempotency-Key 生成不可变修订；
-            “恢复安装模板”会追加 inherit 修订，不删除历史。
+            “恢复安装模板”会追加 inherit 修订，不删除历史。当前合成 ETag：
+            <code>{composition.composed_schema_etag}</code>；Overlay 集合：
+            <code>{composition.ontology_overlay_set_hash || "sha256:未返回"}</code>。
           </BpBanner>
           <label className="mp-field" style={{ maxWidth: 360, margin: "1rem 0" }}>
             <span className="mp-field-label">筛选目标</span>
@@ -1048,12 +1176,10 @@ export function BranchesPage() {
           {current && (
             <div className="card" style={{ marginBottom: "1rem" }}>
               <h2 className="aos-text" style={{ fontSize: "0.9rem", marginTop: 0 }}>当前与上一修订差异</h2>
-              <BpPropGrid items={[
-                { label: "当前模式", value: current.mode },
-                { label: "当前显示名", value: current.display_name || "继承安装模板" },
-                { label: "上一模式", value: previous?.mode || "无历史" },
-                { label: "上一显示名", value: previous?.display_name || (previous ? "继承安装模板" : "—") },
-              ]} />
+              <BpTable
+                columns={["字段", "当前修订", "上一修订"]}
+                rows={overlayDiffRows(current, previous)}
+              />
               {current.mode === "override" && (
                 <button type="button" className="btn-outline-cyan" disabled={busy} onClick={() => void resetToInherit(current)}>
                   恢复安装模板（保留历史）

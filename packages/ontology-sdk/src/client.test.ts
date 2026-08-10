@@ -80,6 +80,30 @@ describe("createOntologyClient", () => {
     await client.listObjects("WorkOrder", { branch: "main" });
   });
 
+  it("appends allow-listed object sort query without dropping branch", async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      expect(url).toBe(
+        "http://api/v1/objects/Order?branch=main&sortBy=createdAt&sortDirection=desc",
+      );
+      return new Response(JSON.stringify({ items: [], sort: { by: "createdAt", direction: "desc" } }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+    const client = createOntologyClient({
+      baseUrl: "http://api",
+      token: "t",
+      orgId: "o",
+      projectId: "p",
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+    await client.listObjects("Order", {
+      branch: "main",
+      sortBy: "createdAt",
+      sortDirection: "desc",
+    });
+  });
+
   it("approveDraft sends idempotency and conflict headers", async () => {
     const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
       expect(init?.method).toBe("POST");
