@@ -232,6 +232,25 @@ async def lifespan(_app: FastAPI):
     else:
         log.info("startup_schema_bootstrap_skipped migration_mode=%s", mode_value)
 
+    # ── OKF Wiki 冷启动 + 四层记忆冷启动（in-memory，best-effort）──
+    try:
+        from aos_api.okf_wiki_cold_start import seed_okf_wiki_cold_start
+
+        _wiki_count = seed_okf_wiki_cold_start()
+        if _wiki_count:
+            log.info("startup_okf_wiki_cold_start_seeded count=%d", _wiki_count)
+    except Exception:
+        log.exception("startup_okf_wiki_cold_start_failed_continue")
+
+    try:
+        from aos_api.demo.seed_memory_cold_start import seed_memory_cold_start
+
+        _mem_result = seed_memory_cold_start()
+        if _mem_result.get("total"):
+            log.info("startup_memory_cold_start_seeded %s", _mem_result)
+    except Exception:
+        log.exception("startup_memory_cold_start_failed_continue")
+
     async def _qyh_cron_loop() -> None:
         """每 15 秒检查一次；Cron 命中按分钟数据库幂等领取。"""
         while not cron_stop.is_set():

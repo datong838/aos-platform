@@ -80,6 +80,13 @@ class WikiEngine:
     def get_wiki(self, wiki_id: str) -> Wiki | None:
         return self._wikis.get(wiki_id)
 
+    def find_wiki_by_object_type(self, object_type_id: str) -> Wiki | None:
+        """Return the first Wiki matching an object_type_id."""
+        for wiki in self._wikis.values():
+            if wiki.object_type_id == object_type_id:
+                return wiki
+        return None
+
     def list_wikis(self, search: str | None = None, tag: str | None = None) -> list[Wiki]:
         items = list(self._wikis.values())
         if search:

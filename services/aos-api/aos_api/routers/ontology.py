@@ -1559,39 +1559,177 @@ def branch_checkout(
     return {"ok": True, "branchId": branch_id, **out}
 
 
+def _okf_col(src: str, ot: str, dst: str, ok: bool = True) -> dict[str, Any]:
+    """Shortcut for an OKF column entry."""
+    return {"src": src, "dst": f"{ot}.{dst}", "ok": ok}
+
+
+# ---------------------------------------------------------------------------
+# OKF defaults for all 12 ecommerce OTs.
+#
+# Source column names are derived from ec_normalizer.py's 12 mapper functions
+# (the authoritative source→ontology field mappings). Every REQUIRED_PROPERTIES
+# field for each OT is covered with ok=True. Optional source columns that the
+# normalizer also emits are included with ok=True where they enrich the mapping.
+#
+# This replaces the old single-OT Order-only default and the removed env/bio
+# examples. Industries other than "ecom" are not supported by the multi-type
+# endpoint anyway (see get_okf_mapping_types guard).
+# ---------------------------------------------------------------------------
 _OKF_DEFAULTS: dict[str, dict[str, Any]] = {
-    "ecom": {
+    "ecom_Shop": {
+        "industry": "ecom",
+        "objectType": "Shop",
+        "label": "微商城电商 · Shop",
+        "columns": [
+            _okf_col("site_id", "Shop", "id"),
+            _okf_col("site_name", "Shop", "name"),
+            _okf_col("(constant)", "Shop", "status"),
+            _okf_col("(constant=CNY)", "Shop", "currency"),
+            _okf_col("(constant=+08:00)", "Shop", "timezone"),
+        ],
+    },
+    "ecom_Product": {
+        "industry": "ecom",
+        "objectType": "Product",
+        "label": "微商城电商 · Product",
+        "columns": [
+            _okf_col("goods_id", "Product", "id"),
+            _okf_col("site_id", "Product", "shopId"),
+            _okf_col("goods_name", "Product", "title"),
+            _okf_col("(constant=active)", "Product", "status"),
+            _okf_col("category_id", "Product", "categoryId"),
+            _okf_col("create_time", "Product", "createdAt"),
+            _okf_col("modify_time", "Product", "updatedAt"),
+        ],
+    },
+    "ecom_ProductSku": {
+        "industry": "ecom",
+        "objectType": "ProductSku",
+        "label": "微商城电商 · ProductSku",
+        "columns": [
+            _okf_col("sku_id", "ProductSku", "id"),
+            _okf_col("goods_id", "ProductSku", "productId"),
+            _okf_col("(constant=active)", "ProductSku", "status"),
+            _okf_col("sku_no", "ProductSku", "barcode"),
+            _okf_col("price", "ProductSku", "price"),
+            _okf_col("(constant=CNY)", "ProductSku", "currency"),
+            _okf_col("modify_time", "ProductSku", "updatedAt"),
+        ],
+    },
+    "ecom_Category": {
+        "industry": "ecom",
+        "objectType": "Category",
+        "label": "微商城电商 · Category",
+        "columns": [
+            _okf_col("category_id", "Category", "id"),
+            _okf_col("pid", "Category", "parentCategoryId"),
+            _okf_col("category_name", "Category", "name"),
+            _okf_col("(constant=active)", "Category", "status"),
+            _okf_col("(now)", "Category", "updatedAt"),
+        ],
+    },
+    "ecom_Order": {
         "industry": "ecom",
         "objectType": "Order",
         "label": "微商城电商 · Order",
         "columns": [
-            {"src": "order_id", "dst": "Order.id", "ok": True},
-            {"src": "site_id", "dst": "Order.shopId", "ok": True},
-            {"src": "order_status", "dst": "Order.status", "ok": True},
-            {"src": "order_money", "dst": "Order.totalAmount", "ok": True},
-            {"src": "currency(default=CNY)", "dst": "Order.currency", "ok": True},
-            {"src": "create_time", "dst": "Order.createdAt", "ok": True},
-            {"src": "update_time", "dst": "Order.updatedAt", "ok": True},
+            _okf_col("order_id", "Order", "id"),
+            _okf_col("site_id", "Order", "shopId"),
+            _okf_col("order_status", "Order", "status"),
+            _okf_col("order_money", "Order", "totalAmount"),
+            _okf_col("(constant=CNY)", "Order", "currency"),
+            _okf_col("create_time", "Order", "createdAt"),
+            _okf_col("modify_time", "Order", "updatedAt"),
         ],
     },
-    "env": {
-        "industry": "env",
-        "objectType": "Pollutant",
-        "label": "环科院 · Pollutant",
+    "ecom_OrderLine": {
+        "industry": "ecom",
+        "objectType": "OrderLine",
+        "label": "微商城电商 · OrderLine",
         "columns": [
-            {"src": "pollutant_id", "dst": "Pollutant.id", "ok": True},
-            {"src": "name", "dst": "Pollutant.name", "ok": True},
-            {"src": "level", "dst": "Pollutant.level", "ok": False},
+            _okf_col("order_goods_id", "OrderLine", "id"),
+            _okf_col("order_id", "OrderLine", "orderId"),
+            _okf_col("sku_id", "OrderLine", "skuId"),
+            _okf_col("num", "OrderLine", "quantity"),
+            _okf_col("price", "OrderLine", "unitPrice"),
+            _okf_col("real_goods_money", "OrderLine", "lineAmount"),
+            _okf_col("(constant=CNY)", "OrderLine", "currency"),
+            _okf_col("create_time", "OrderLine", "updatedAt"),
         ],
     },
-    "bio": {
-        "industry": "bio",
-        "objectType": "Batch",
-        "label": "生物 · Batch",
+    "ecom_Shipment": {
+        "industry": "ecom",
+        "objectType": "Shipment",
+        "label": "微商城电商 · Shipment",
         "columns": [
-            {"src": "batch_id", "dst": "Batch.id", "ok": True},
-            {"src": "sku", "dst": "Batch.sku", "ok": True},
-            {"src": "qty", "dst": "Batch.qty", "ok": False},
+            _okf_col("id", "Shipment", "id"),
+            _okf_col("order_id", "Shipment", "orderId"),
+            _okf_col("(constant=active)", "Shipment", "status"),
+            _okf_col("express_company_id", "Shipment", "carrier"),
+            _okf_col("delivery_no", "Shipment", "trackingNo"),
+            _okf_col("delivery_time", "Shipment", "shippedAt"),
+            _okf_col("delivery_time", "Shipment", "updatedAt"),
+        ],
+    },
+    "ecom_CustomerLite": {
+        "industry": "ecom",
+        "objectType": "CustomerLite",
+        "label": "微商城电商 · CustomerLite",
+        "columns": [
+            _okf_col("member_id", "CustomerLite", "id"),
+            _okf_col("member_level", "CustomerLite", "memberLevel"),
+            _okf_col("(constant=active)", "CustomerLite", "status"),
+            _okf_col("reg_time", "CustomerLite", "createdAt"),
+            _okf_col("last_visit_time", "CustomerLite", "updatedAt"),
+        ],
+    },
+    "ecom_Weapp": {
+        "industry": "ecom",
+        "objectType": "Weapp",
+        "label": "微商城电商 · Weapp",
+        "columns": [
+            _okf_col("weapp_id", "Weapp", "id"),
+            _okf_col("appid", "Weapp", "appId"),
+            _okf_col("weapp_name", "Weapp", "name"),
+            _okf_col("(constant=active)", "Weapp", "status"),
+            _okf_col("modify_time", "Weapp", "updatedAt"),
+        ],
+    },
+    "ecom_SystemConfig": {
+        "industry": "ecom",
+        "objectType": "SystemConfig",
+        "label": "微商城电商 · SystemConfig",
+        "columns": [
+            _okf_col("id", "SystemConfig", "id"),
+            _okf_col("site_id", "SystemConfig", "siteId"),
+            _okf_col("app_module", "SystemConfig", "module"),
+            _okf_col("config_key", "SystemConfig", "key"),
+            _okf_col("modify_time", "SystemConfig", "updatedAt"),
+        ],
+    },
+    "ecom_ProductReview": {
+        "industry": "ecom",
+        "objectType": "ProductReview",
+        "label": "微商城电商 · ProductReview",
+        "columns": [
+            _okf_col("evaluate_id", "ProductReview", "id"),
+            _okf_col("goods_id", "ProductReview", "productId"),
+            _okf_col("member_id", "ProductReview", "memberId"),
+            _okf_col("scores", "ProductReview", "score"),
+            _okf_col("create_time", "ProductReview", "updatedAt"),
+        ],
+    },
+    "ecom_Payment": {
+        "industry": "ecom",
+        "objectType": "Payment",
+        "label": "微商城电商 · Payment",
+        "columns": [
+            _okf_col("id", "Payment", "id"),
+            _okf_col("relate_id", "Payment", "orderId"),
+            _okf_col("out_trade_no", "Payment", "outTradeNo"),
+            _okf_col("pay_status", "Payment", "payStatus"),
+            _okf_col("pay_time", "Payment", "updatedAt"),
         ],
     },
 }
@@ -1741,9 +1879,13 @@ def _get_okf_type_payload(
         legacy = get_payload("okf_mapping:ecom", scope)
         if legacy:
             return dict(legacy), int(legacy.get("revision") or 0)
-        default = _OKF_DEFAULTS.get("ecom")
-        if default:
-            return dict(default), 0
+    # Built-in defaults derived from ec_normalizer.py source field mappings.
+    # These give every OT a fully-configured initial mapping so that first-read
+    # yields 100% required coverage without manual configuration.  A user PUT
+    # always overrides (CAS-protected).
+    default = _OKF_DEFAULTS.get(f"{industry}_{object_type}")
+    if default:
+        return dict(default), 0
     return None, 0
 
 
@@ -1882,7 +2024,7 @@ def get_okf_mapping(
     stored = get_payload(key, _scope(principal))
     if stored:
         return _okf_mapping_view(stored, revision=int(stored.get("revision") or 0))
-    default = _OKF_DEFAULTS.get(industry)
+    default = _OKF_DEFAULTS.get(f"{industry}_Order") or _OKF_DEFAULTS.get(industry)
     if not default:
         raise ApiError(
             code="NOT_FOUND", message=f"unknown industry: {industry}", status_code=404
@@ -1896,7 +2038,7 @@ def put_okf_mapping(
     body: dict[str, Any],
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
-    if industry not in _OKF_DEFAULTS:
+    if f"{industry}_Order" not in _OKF_DEFAULTS and industry not in _OKF_DEFAULTS:
         raise ApiError(code="VALIDATION", message="invalid industry", status_code=400)
     columns = body.get("columns")
     if not isinstance(columns, list):
@@ -1910,12 +2052,12 @@ def put_okf_mapping(
         "industry": industry,
         "objectType": str(
             body.get("objectType")
-            or _OKF_DEFAULTS.get(industry, {}).get("objectType")
+            or (_OKF_DEFAULTS.get(f"{industry}_Order", {}).get("objectType"))
             or "Order"
         ),
         "label": str(
             body.get("label")
-            or _OKF_DEFAULTS.get(industry, {}).get("label")
+            or (_OKF_DEFAULTS.get(f"{industry}_Order", {}).get("label"))
             or industry
         ),
         "columns": [

@@ -50,7 +50,9 @@ def _source_object(org_id: str, project_id: str, object_type: str, external_id: 
         conn.commit()
 
 
-def test_ecom_overview_is_weighted_across_real_source_types_and_never_promotes_order_to_industry() -> None:
+def test_ecom_overview_all_types_have_defaults_and_full_required_coverage() -> None:
+    """After D2.9 OKF defaults, every OT has a built-in mapping derived from
+    ec_normalizer.py, giving 100% required coverage on first read."""
     suffix = uuid.uuid4().hex
     scope = (f"org-{suffix}", f"project-{suffix}")
     _workspace(*scope)
@@ -60,14 +62,16 @@ def test_ecom_overview_is_weighted_across_real_source_types_and_never_promotes_o
     try:
         overview = get_okf_mapping_types("ecom", principal)
         assert [item["objectType"] for item in overview["items"]] == ["Order", "Product"]
-        assert overview["overall"]["required"]["mapped"] == 6
+        # Both OTs have defaults → 100% required coverage
+        assert overview["overall"]["required"]["mapped"] == 12
         assert overview["overall"]["required"]["total"] == 12
-        assert overview["overall"]["required"]["percent"] == 50
-        assert overview["overall"]["complete"] is False
+        assert overview["overall"]["required"]["percent"] == 100
+        assert overview["overall"]["complete"] is True
+        assert overview["overall"]["unknown"] == []
         product = next(item for item in overview["items"] if item["objectType"] == "Product")
-        assert product["status"] == "unconfigured"
+        assert product["status"] == "configured"
         assert product["source"]["count"] == 1
-        assert product["coverage"]["required"] == {"mapped": 0, "total": 6, "percent": 0}
+        assert product["coverage"]["required"] == {"mapped": 6, "total": 6, "percent": 100}
     finally:
         with connect() as conn:
             conn.execute("DELETE FROM ecom_object WHERE org_id=%s AND workspace_id=%s", scope)
@@ -82,7 +86,9 @@ def test_per_type_cas_storage_does_not_overwrite_legacy_order_mapping() -> None:
     try:
         legacy_before = get_okf_mapping("ecom", principal)
         product_before = get_okf_type_mapping("ecom", "Product", principal)
-        assert product_before["status"] == "unconfigured"
+        # Product now has a built-in default mapping (configured, revision=0)
+        assert product_before["status"] == "configured"
+        assert product_before["revision"] == 0
         saved = put_okf_type_mapping(
             "ecom",
             "Product",

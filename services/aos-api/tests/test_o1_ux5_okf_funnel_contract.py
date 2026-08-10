@@ -39,7 +39,7 @@ def test_ecom_default_is_order_and_mapping_write_has_cas_revision() -> None:
     principal = _principal(*scope)
     try:
         default = get_okf_mapping("ecom", principal)
-        assert _OKF_DEFAULTS["ecom"]["objectType"] == "Order"
+        assert _OKF_DEFAULTS["ecom_Order"]["objectType"] == "Order"
         assert default["objectType"] == "Order"
         assert default["revision"] == 0
         saved = put_okf_mapping("ecom", {**default, "expectedRevision": 0}, principal)
