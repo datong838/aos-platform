@@ -198,6 +198,55 @@ def test_task_scope_is_hidden_across_registered_workspaces(client) -> None:
     assert hidden.json()["code"] == "AIP_RESOURCE_NOT_FOUND"
 
 
+def test_task_run_discovery_is_scoped_and_filters_exact_logic_graph(client) -> None:
+    suffix = uuid.uuid4().hex
+    graph_id = f"logic-{suffix}"
+    headers = {
+        "Authorization": "Bearer dev",
+        "X-Org-Id": "org-org",
+        "X-Project-Id": "dev-project",
+        "Idempotency-Key": f"discover-task-{suffix}",
+    }
+    task = client.post("/v1/aip/tasks", headers=headers, json={"title": "discover"}).json()
+    plan = client.post(
+        f"/v1/aip/tasks/{task['id']}/plans",
+        headers={**headers, "Idempotency-Key": f"discover-plan-{suffix}"},
+        json={"expectedTaskVersion": task["version"], "steps": [{"stepKey": "logic", "title": "执行逻辑"}]},
+    ).json()
+    current = client.get(f"/v1/aip/tasks/{task['id']}", headers=headers).json()
+    client.post(
+        f"/v1/aip/tasks/{task['id']}/plans/{plan['revision']}/approve",
+        headers={**headers, "Idempotency-Key": f"discover-approve-{suffix}"},
+        json={"expectedTaskVersion": current["version"], "expectedContentHash": plan["contentHash"]},
+    )
+    approved = client.get(f"/v1/aip/tasks/{task['id']}", headers=headers).json()
+    created = client.post(
+        f"/v1/aip/tasks/{task['id']}/runs",
+        headers={**headers, "Idempotency-Key": f"discover-run-{suffix}"},
+        json={
+            "planRevisionId": plan["id"],
+            "expectedTaskVersion": approved["version"],
+            "logicGraphId": graph_id,
+            "logicRevision": 1,
+        },
+    ).json()
+
+    own = client.get(
+        "/v1/aip/task-runs", headers=headers, params={"logic_graph_id": graph_id}
+    )
+    assert own.status_code == 200, own.text
+    assert own.json()["count"] == 1
+    assert own.json()["items"][0]["id"] == created["id"]
+
+    other_scope = client.get(
+        "/v1/aip/task-runs",
+        headers={**headers, "X-Org-Id": "dev-org"},
+        params={"logic_graph_id": graph_id},
+    )
+    assert other_scope.status_code == 200, other_scope.text
+    assert other_scope.json() == {"items": [], "count": 0}
+
+
 def test_aip_task_tables_force_rls_and_keep_single_migration_head() -> None:
     with connect() as conn:
         rows = conn.execute(

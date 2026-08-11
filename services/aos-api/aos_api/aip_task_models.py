@@ -93,6 +93,11 @@ class TaskRunSnapshot(TaskRun):
     updated_at: datetime
 
 
+class TaskRunListResponse(AipContractModel):
+    items: list[TaskRunSnapshot] = Field(default_factory=list)
+    count: int
+
+
 class TaskTimeline(AipContractModel):
     task: TaskSnapshot
     plan: PlanRevisionSnapshot

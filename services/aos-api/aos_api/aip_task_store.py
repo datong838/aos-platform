@@ -361,6 +361,32 @@ class AipTaskStore:
             raise AipTaskNotFound("task run not found in scope")
         return self._run(row)
 
+    def list_runs(
+        self,
+        scope: TenantScope,
+        *,
+        logic_graph_id: str | None = None,
+        task_id: str | None = None,
+        limit: int = 100,
+    ) -> list[TaskRunSnapshot]:
+        clauses = ["org_id=%s", "project_id=%s"]
+        params: list[Any] = [scope.org_id, scope.project_id]
+        if logic_graph_id is not None:
+            clauses.append("logic_graph_id=%s")
+            params.append(logic_graph_id)
+        if task_id is not None:
+            clauses.append("task_id=%s")
+            params.append(task_id)
+        params.append(limit)
+        with self._connect(scope) as conn:
+            rows = conn.execute(
+                f"""SELECT * FROM aip_task_run
+                    WHERE {' AND '.join(clauses)}
+                    ORDER BY updated_at DESC, run_id DESC LIMIT %s""",
+                tuple(params),
+            ).fetchall()
+        return [self._run(row) for row in rows]
+
     def timeline(self, scope: TenantScope, run_id: str) -> TaskTimeline:
         with self._connect(scope) as conn:
             run = conn.execute(

@@ -12,6 +12,7 @@ from aos_api.aip_task_models import (
     RunControlRequest,
     RunControlResult,
     TaskListResponse,
+    TaskRunListResponse,
     TaskRunSnapshot,
     TaskSnapshot,
     TaskTimeline,
@@ -176,6 +177,26 @@ def get_task_run(
         return store.get_run(TenantScope(principal.org_id, principal.project_id), run_id)
     except AipTaskStoreError as exc:
         raise _map_store_error(exc) from exc
+
+
+@router.get("/task-runs", response_model=TaskRunListResponse)
+def list_task_runs(
+    logic_graph_id: str | None = Query(default=None, min_length=1, max_length=200),
+    task_id: str | None = Query(default=None, min_length=1, max_length=200),
+    limit: int = Query(default=50, ge=1, le=200),
+    principal: Principal = Depends(require_principal),
+    store: AipTaskStore = Depends(get_aip_task_store),
+) -> TaskRunListResponse:
+    try:
+        items = store.list_runs(
+            TenantScope(principal.org_id, principal.project_id),
+            logic_graph_id=logic_graph_id,
+            task_id=task_id,
+            limit=limit,
+        )
+    except AipTaskStoreError as exc:
+        raise _map_store_error(exc) from exc
+    return TaskRunListResponse(items=items, count=len(items))
 
 
 @router.get("/task-runs/{run_id}/timeline", response_model=TaskTimeline)

@@ -28,6 +28,7 @@ import type {
   LogicPublicationEvalGate,
 } from "./logicPublicationContracts";
 import { LogicRunPanel, type LogicRunLoadState } from "./LogicRunPanel";
+import { CanonicalTaskRunPanel } from "./CanonicalTaskRunPanel";
 import {
   dryRunLogicGraph,
   getLogicRun,
@@ -882,6 +883,13 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
       )}
 
       <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+        {graph?.persisted && (
+          <CanonicalTaskRunPanel
+            graphId={graph.id}
+            graphRevision={graph.revision}
+            graphName={graph.name}
+          />
+        )}
         {graph?.persisted ? (
           <LogicRunPanel
             run={run}

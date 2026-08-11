@@ -8,7 +8,20 @@ export const AIP_OPERATIONS = {
   listEvals: { method: "GET", path: "/v1/aip/evals", mutation: false },
   listInsights: { method: "GET", path: "/v1/aip/insights", mutation: false },
   listTools: { method: "GET", path: "/v1/aip/tools", mutation: false },
+  createTask: { method: "POST", path: "/v1/aip/tasks", mutation: true },
+  listTasks: { method: "GET", path: "/v1/aip/tasks", mutation: false },
+  getTask: { method: "GET", path: "/v1/aip/tasks/{task_id}", mutation: false },
+  createPlanRevision: { method: "POST", path: "/v1/aip/tasks/{task_id}/plans", mutation: true },
+  approvePlanRevision: { method: "POST", path: "/v1/aip/tasks/{task_id}/plans/{revision}/approve", mutation: true },
+  createTaskRun: { method: "POST", path: "/v1/aip/tasks/{task_id}/runs", mutation: true },
+  listTaskRunsByLogic: { method: "GET", path: "/v1/aip/task-runs?logic_graph_id={logic_graph_id}&limit={limit}", mutation: false },
+  getTaskRun: { method: "GET", path: "/v1/aip/task-runs/{run_id}", mutation: false },
+  getTaskRunTimeline: { method: "GET", path: "/v1/aip/task-runs/{run_id}/timeline", mutation: false },
+  startTaskRun: { method: "POST", path: "/v1/aip/task-runs/{run_id}/start", mutation: true },
+  pauseTaskRun: { method: "POST", path: "/v1/aip/task-runs/{run_id}/pause", mutation: true },
+  resumeTaskRun: { method: "POST", path: "/v1/aip/task-runs/{run_id}/resume", mutation: true },
+  cancelTaskRun: { method: "POST", path: "/v1/aip/task-runs/{run_id}/cancel", mutation: true },
+  rollbackTaskRun: { method: "POST", path: "/v1/aip/task-runs/{run_id}/rollback", mutation: true },
 } as const;
 
 export type AipOperationId = keyof typeof AIP_OPERATIONS;
-

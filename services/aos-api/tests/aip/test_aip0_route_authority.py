@@ -13,6 +13,7 @@ AIP_AUTHORITIES = {
     ("POST", "/v1/aip/tasks/{task_id}/plans/{revision}/approve"): "approve_plan_revision",
     ("POST", "/v1/aip/tasks/{task_id}/runs"): "create_task_run",
     ("GET", "/v1/aip/task-runs/{run_id}"): "get_task_run",
+    ("GET", "/v1/aip/task-runs"): "list_task_runs",
     ("GET", "/v1/aip/task-runs/{run_id}/timeline"): "get_task_run_timeline",
     ("POST", "/v1/aip/task-runs/{run_id}/start"): "start_task_run",
     ("POST", "/v1/aip/task-runs/{run_id}/pause"): "pause_task_run",
