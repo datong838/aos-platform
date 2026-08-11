@@ -50,6 +50,19 @@ class EvalCaseKind(StrEnum):
     PII = "pii"
 
 
+class DatasetSourceKind(StrEnum):
+    OBJECT_SNAPSHOT = "object_snapshot"
+    SELECTION_SNAPSHOT = "selection_snapshot"
+    WIKI_SNAPSHOT = "wiki_snapshot"
+    ARTIFACT_SNAPSHOT = "artifact_snapshot"
+    EXTERNAL_SNAPSHOT = "external_snapshot"
+
+
+class DatasetPiiState(StrEnum):
+    NONE = "none"
+    REDACTED = "redacted"
+
+
 class EvalRunStatus(StrEnum):
     QUEUED = "queued"
     RUNNING = "running"
@@ -127,6 +140,37 @@ class DatasetRevisionRef(AipContractModel):
     content_hash: str = Field(pattern=SHA256_PATTERN)
     source_hash: str = Field(pattern=SHA256_PATTERN)
     redaction_policy: AssetRevisionRef
+
+
+class EvalDatasetManifest(AipContractModel):
+    """Metadata-only manifest; business rows never live in the registry."""
+
+    source_kind: DatasetSourceKind
+    source_id: str = Field(min_length=1, max_length=240)
+    source_revision: str = Field(min_length=1, max_length=120)
+    source_hash: str = Field(pattern=SHA256_PATTERN)
+    fields_allowlist: list[str] = Field(min_length=1)
+    redaction_receipt: ArtifactRef
+    pii_state: DatasetPiiState
+    case_count: int = Field(gt=0)
+    captured_at: datetime
+
+    @model_validator(mode="after")
+    def _metadata_only(self) -> "EvalDatasetManifest":
+        fields = [field.strip() for field in self.fields_allowlist]
+        if any(not field for field in fields) or len(fields) != len(set(fields)):
+            raise ValueError("fields_allowlist must contain unique non-blank fields")
+        receipt = self.redaction_receipt
+        if not receipt.revision or not receipt.content_hash:
+            raise ValueError("redaction_receipt requires exact revision/hash")
+        forbidden = {"mock", "synthetic", "demo"}
+        source_tokens = {
+            token.lower()
+            for token in self.source_id.replace(":", "-").replace("_", "-").split("-")
+        }
+        if forbidden & source_tokens:
+            raise ValueError("mock/synthetic/demo datasets are not authoritative")
+        return self
 
 
 class JudgeRevisionRef(AipContractModel):
@@ -326,6 +370,9 @@ __all__ = [
     "AssetRevisionRef",
     "AssetType",
     "DatasetRevisionRef",
+    "DatasetPiiState",
+    "DatasetSourceKind",
+    "EvalDatasetManifest",
     "EvalCaseDefinition",
     "EvalCaseKind",
     "EvalRunRecord",
