@@ -60,6 +60,12 @@ def research_api(client):
         provider_id="deerflow",
         provider_revision=1,
         capability_ref=capability,
+        lineage_ref=ResourceRef(
+            resource_type="aip.lineage",
+            resource_id="lineage-1",
+            revision="1",
+            authority="aos.lineage",
+        ),
         manifest_hash=HASH,
         output_schema_hash=HASH,
         status=ResearchJobStatus.RUNNING,

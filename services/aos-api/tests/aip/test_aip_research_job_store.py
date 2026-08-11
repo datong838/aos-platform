@@ -46,6 +46,8 @@ def authority_chain() -> dict[str, object]:
     task_id = f"research-task-{suffix}"
     plan_id = f"research-plan-{suffix}"
     run_id = f"research-run-{suffix}"
+    lineage_id = f"research-lineage-{suffix}"
+    lineage_event_id = f"research-lineage-event-{suffix}"
     provider_id = f"research-provider-{suffix}"
     capability = ResourceRef(
         resource_type="capability",
@@ -96,6 +98,25 @@ def authority_chain() -> dict[str, object]:
                 HASH,
             ),
         )
+        conn.execute(
+            """INSERT INTO aip_lineage_event (
+                 org_id,project_id,event_id,lineage_id,root_type,root_id,sequence,
+                 event_type,payload_hash,quality,occurred_at,observed_at,
+                 source_kind,source_id,source_hash)
+               VALUES (%s,%s,%s,%s,'task_run',%s,1,'input',%s,'measured',
+                 %s,%s,'task_run',%s,%s)""",
+            (
+                *SCOPE.key,
+                lineage_event_id,
+                lineage_id,
+                run_id,
+                HASH,
+                NOW,
+                NOW,
+                f"{run_id}:v1",
+                HASH,
+            ),
+        )
         conn.commit()
     service = AipResearchJobService(
         AipResearchJobStore(),
@@ -117,6 +138,12 @@ def authority_chain() -> dict[str, object]:
             resource_id=run_id,
             revision="1",
             authority="aos.task",
+        ),
+        lineage_ref=ResourceRef(
+            resource_type="aip.lineage",
+            resource_id=lineage_id,
+            revision="1",
+            authority="aos.lineage",
         ),
         provider=provider_id,
         binding_revision="1",
@@ -146,6 +173,8 @@ def authority_chain() -> dict[str, object]:
         "job": job,
         "run_id": run_id,
         "provider_id": provider_id,
+        "lineage_id": lineage_id,
+        "lineage_event_id": lineage_event_id,
     }
 
 
@@ -202,11 +231,29 @@ def _artifact(job_id: str, execution_id: str) -> RecordResearchArtifactRequest:
     )
 
 
+def _research_request_with_lineage(
+    request: CreateResearchJobRequest,
+    lineage_ref: ResourceRef,
+) -> CreateResearchJobRequest:
+    manifest = request.manifest.model_copy(
+        update={
+            "lineage_ref": lineage_ref,
+            "idempotency_key": f"research-job-negative-{uuid.uuid4().hex}",
+            "manifest_hash": "0" * 64,
+        }
+    )
+    manifest = manifest.model_copy(
+        update={"manifest_hash": canonical_research_manifest_hash(manifest)}
+    )
+    return request.model_copy(update={"manifest": manifest})
+
+
 def test_provider_job_and_submission_are_exactly_idempotent(authority_chain) -> None:
     service = authority_chain["service"]
     provider_request = authority_chain["provider_request"]
     create_request = authority_chain["create_request"]
     job = authority_chain["job"]
+    assert job.lineage_ref == create_request.manifest.lineage_ref
     assert (
         service.register_provider(SCOPE, provider_request, "tester", now=NOW)
         == authority_chain["provider"]
@@ -223,6 +270,94 @@ def test_provider_job_and_submission_are_exactly_idempotent(authority_chain) -> 
         )
     with pytest.raises(AipResearchJobNotFound):
         service.get_job(OTHER, job.job_id)
+
+
+def test_job_rejects_missing_stale_and_cross_run_lineage(authority_chain) -> None:
+    service = authority_chain["service"]
+    create_request = authority_chain["create_request"]
+    lineage_id = authority_chain["lineage_id"]
+    missing = ResourceRef(
+        resource_type="aip.lineage",
+        resource_id=f"missing-{uuid.uuid4().hex}",
+        revision="1",
+        authority="aos.lineage",
+    )
+    with pytest.raises(AipResearchJobNotFound, match="exact lineage event"):
+        service.create_job(
+            SCOPE,
+            _research_request_with_lineage(create_request, missing),
+            "tester",
+            now=NOW,
+        )
+
+    second_event = f"research-lineage-event-{uuid.uuid4().hex}"
+    with connect(SCOPE) as conn:
+        conn.execute(
+            """INSERT INTO aip_lineage_event (
+                 org_id,project_id,event_id,lineage_id,root_type,root_id,sequence,
+                 event_type,payload_hash,quality,occurred_at,observed_at,
+                 source_kind,source_id,source_hash)
+               VALUES (%s,%s,%s,%s,'task_run',%s,2,'retrieval',%s,'measured',
+                 %s,%s,'task_run',%s,%s)""",
+            (
+                *SCOPE.key,
+                second_event,
+                lineage_id,
+                authority_chain["run_id"],
+                HASH,
+                NOW,
+                NOW,
+                f"{authority_chain['run_id']}:v2",
+                HASH,
+            ),
+        )
+        conn.commit()
+    with pytest.raises(AipResearchJobBlocked, match="latest lineage sequence"):
+        service.create_job(
+            SCOPE,
+            _research_request_with_lineage(
+                create_request, create_request.manifest.lineage_ref
+            ),
+            "tester",
+            now=NOW,
+        )
+
+    foreign_lineage_id = f"foreign-lineage-{uuid.uuid4().hex}"
+    foreign_event = f"foreign-lineage-event-{uuid.uuid4().hex}"
+    with connect(SCOPE) as conn:
+        conn.execute(
+            """INSERT INTO aip_lineage_event (
+                 org_id,project_id,event_id,lineage_id,root_type,root_id,sequence,
+                 event_type,payload_hash,quality,occurred_at,observed_at,
+                 source_kind,source_id,source_hash)
+               VALUES (%s,%s,%s,%s,'task_run',%s,1,'input',%s,'measured',
+                 %s,%s,'task_run',%s,%s)""",
+            (
+                *SCOPE.key,
+                foreign_event,
+                foreign_lineage_id,
+                "another-run",
+                HASH,
+                NOW,
+                NOW,
+                f"another-run:{uuid.uuid4().hex}",
+                HASH,
+            ),
+        )
+        conn.commit()
+    foreign_ref = ResourceRef(
+        resource_type="aip.lineage",
+        resource_id=foreign_lineage_id,
+        revision="1",
+        authority="aos.lineage",
+    )
+    with pytest.raises(AipResearchJobBlocked, match="does not belong to task run"):
+        service.create_job(
+            SCOPE,
+            _research_request_with_lineage(create_request, foreign_ref),
+            "tester",
+            now=NOW,
+        )
 
 
 def test_events_persist_gaps_then_converge_and_delivery_validates_artifact(

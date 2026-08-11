@@ -203,6 +203,32 @@ class AipResearchJobStore:
                 raise AipResearchJobBlocked("manifest requires aos.task_run authority")
             if manifest.task_run_ref.revision != str(run["version"]):
                 raise AipResearchJobBlocked("manifest task run revision drifted")
+            lineage_sequence = int(manifest.lineage_ref.revision or "0")
+            lineage = conn.execute(
+                """SELECT * FROM aip_lineage_event
+                   WHERE org_id=%s AND project_id=%s AND lineage_id=%s AND sequence=%s""",
+                (
+                    scope.org_id,
+                    scope.project_id,
+                    manifest.lineage_ref.resource_id,
+                    lineage_sequence,
+                ),
+            ).fetchone()
+            if lineage is None:
+                raise AipResearchJobNotFound("exact lineage event not found in scope")
+            latest_sequence = conn.execute(
+                """SELECT MAX(sequence) AS sequence FROM aip_lineage_event
+                   WHERE org_id=%s AND project_id=%s AND lineage_id=%s""",
+                (
+                    scope.org_id,
+                    scope.project_id,
+                    manifest.lineage_ref.resource_id,
+                ),
+            ).fetchone()["sequence"]
+            if lineage_sequence != int(latest_sequence):
+                raise AipResearchJobBlocked("research job requires latest lineage sequence")
+            if lineage["root_type"] != "task_run" or lineage["root_id"] != request.run_id:
+                raise AipResearchJobBlocked("research lineage does not belong to task run")
             plan = conn.execute(
                 """SELECT * FROM aip_plan_revision
                    WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s""",
@@ -233,8 +259,9 @@ class AipResearchJobStore:
                      org_id,project_id,job_id,run_id,plan_revision_id,step_key,
                      provider_id,provider_revision,capability_type,capability_id,
                      capability_revision,capability_authority,manifest_hash,output_schema_hash,
+                     lineage_id,lineage_sequence,lineage_event_id,
                      idempotency_key,request_hash,manifest,created_by,created_at)
-                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s)""",
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s)""",
                 (
                     scope.org_id,
                     scope.project_id,
@@ -250,6 +277,9 @@ class AipResearchJobStore:
                     provider["capability_authority"],
                     manifest.manifest_hash,
                     manifest.output_schema_hash,
+                    lineage["lineage_id"],
+                    lineage["sequence"],
+                    lineage["event_id"],
                     manifest.idempotency_key,
                     request_hash,
                     _json(manifest.model_dump(mode="json", by_alias=True)),
@@ -645,6 +675,12 @@ class AipResearchJobStore:
                 resource_id=job["capability_id"],
                 revision=job["capability_revision"],
                 authority=job["capability_authority"],
+            ),
+            lineage_ref=ResourceRef(
+                resource_type="aip.lineage",
+                resource_id=job["lineage_id"],
+                revision=str(job["lineage_sequence"]),
+                authority="aos.lineage",
             ),
             manifest_hash=job["manifest_hash"],
             output_schema_hash=job["output_schema_hash"],

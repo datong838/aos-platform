@@ -41,6 +41,7 @@ class ResearchDeliveryStatus(StrEnum):
 
 class ResearchJobManifest(AipContractModel):
     task_run_ref: ResourceRef
+    lineage_ref: ResourceRef
     provider: str
     binding_revision: str
     manifest_hash: str
@@ -73,6 +74,23 @@ class ResearchJobManifest(AipContractModel):
     def _future_deadline(self) -> ResearchJobManifest:
         if self.deadline.tzinfo is None:
             raise ValueError("research deadline must include a timezone")
+        return self
+
+    @model_validator(mode="after")
+    def _exact_lineage(self) -> ResearchJobManifest:
+        ref = self.lineage_ref
+        try:
+            revision = int(ref.revision or "")
+        except ValueError as exc:
+            raise ValueError("research lineage revision must be a positive sequence") from exc
+        if (
+            ref.resource_type != "aip.lineage"
+            or ref.authority != "aos.lineage"
+            or revision < 1
+        ):
+            raise ValueError(
+                "research lineage_ref must bind an exact aos.lineage sequence"
+            )
         return self
 
 
@@ -149,6 +167,7 @@ class ResearchJobSnapshot(AipContractModel):
     provider_id: str
     provider_revision: int
     capability_ref: ResourceRef
+    lineage_ref: ResourceRef
     manifest_hash: str
     output_schema_hash: str
     status: ResearchJobStatus
