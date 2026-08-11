@@ -291,6 +291,17 @@ def client(monkeypatch):
             for statement in statements:
                 conn.execute(statement)
             conn.execute(
+                sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_runtime").format(
+                    sql.Identifier(schema)
+                )
+            )
+            conn.execute(
+                sql.SQL(
+                    "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES "
+                    "IN SCHEMA {} TO aos_runtime"
+                ).format(sql.Identifier(schema))
+            )
+            conn.execute(
                 """INSERT INTO aip_logic_graph
                 (org_id,project_id,graph_id,revision) VALUES (%s,%s,%s,1)""",
                 (_H["X-Org-Id"], _H["X-Project-Id"], "logic-eval-test"),
@@ -316,6 +327,11 @@ def client(monkeypatch):
     def scoped_connect():
         with connect() as conn:
             conn.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(schema)))
+            conn.execute("SELECT set_config('aos.org_id', %s, true)", (_H["X-Org-Id"],))
+            conn.execute(
+                "SELECT set_config('aos.project_id', %s, true)",
+                (_H["X-Project-Id"],),
+            )
             yield conn
 
     app = create_app()
@@ -340,7 +356,7 @@ def test_api_create_and_list_suite(client):
         "cases": [{"id": "c1", "inputs": {}, "expected": "ok", "judge": "exact"}],
         "gate_threshold": 0.8,
     }, headers=_H)
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.json()
     suite_id = resp.json()["id"]
 
     resp = client.get("/v1/evals/suites", headers=_H)
@@ -479,7 +495,8 @@ def test_api_target_hash_mismatch_and_cross_tenant_reads_are_blocked(client):
         "X-Project-Id": "other-project",
     }
     hidden = client.get(f"/v1/evals/suites/{suite_id}", headers=other_headers)
-    assert hidden.status_code == 404
+    assert hidden.status_code == 403
+    assert hidden.json()["code"] == "AUTH_TENANT_UNKNOWN"
 
 
 def test_api_report_not_found(client):
