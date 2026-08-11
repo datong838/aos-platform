@@ -5,7 +5,6 @@ import {
   BpBanner,
   BpDebugPanel,
   BpLinkRow,
-  BpMetricGrid,
   BpPropGrid,
   BpScoreGrid,
   BpTable,
@@ -14,6 +13,12 @@ import {
 } from "./blueprintUi";
 import { BpArchitectureBar } from "../../components/bp/BpArchitectureBar";
 import { MODEL_CONFIG_NO_VAULT } from "../../lib/productCopy";
+import {
+  aipEvidenceSdk,
+  LINEAGE_ROOT_TYPES,
+  type LineageEvent,
+  type LineageRootType,
+} from "../../api/aipEvidence";
 
 const TOOL_CATS = [
   { id: "action", label: "Action", zh: "写回动作（可 HITL）", defaultOn: true },
@@ -3074,157 +3079,67 @@ export function EvalsPage() {
 }
 
 export function DecisionLineagePage() {
-  const [lineageId, setLineageId] = useState("tr-8f3a2c91");
-  const [lineage, setLineage] = useState<{
-    id?: string;
-    draftId?: string;
-    actionTypeId?: string;
-    objectType?: string;
-    objectId?: string;
-    steps?: { step?: string; [key: string]: unknown }[];
-  } | null>(null);
+  const [rootType, setRootType] = useState<LineageRootType>("task_run");
+  const [rootId, setRootId] = useState("");
+  const [events, setEvents] = useState<LineageEvent[]>([]);
+  const [loadState, setLoadState] = useState<"idle" | "loading" | "loaded" | "error">("idle");
   const [localErr, setLocalErr] = useState<string | null>(null);
-  const [gov, setGov] = useState<{
-    asPublicViewer?: { redactedFields?: string[]; internalCost?: unknown };
-    markingForbidden?: { code?: string };
-    latestLineage?: { id?: string; objectId?: string; actionTypeId?: string };
-    objectId?: string;
-    objectType?: string;
-  } | null>(null);
 
-  async function load(id?: string) {
-    const target = id || lineageId;
-    if (!target) return;
+  async function load() {
+    const target = rootId.trim();
+    if (!target) {
+      setLocalErr("请输入真实 Root ID");
+      setLoadState("idle");
+      return;
+    }
     setLocalErr(null);
+    setEvents([]);
+    setLoadState("loading");
     try {
-      const r = await apiGet<{
-        id: string;
-        draftId?: string;
-        actionTypeId?: string;
-        objectType?: string;
-        objectId?: string;
-        steps?: { step?: string; [key: string]: unknown }[];
-      }>(`/v1/aip/lineage/${encodeURIComponent(target)}`);
-      setLineage(r);
-      setLineageId(r.id);
+      setEvents(await aipEvidenceSdk.lineage(rootType, target));
+      setLoadState("loaded");
     } catch (e) {
       setLocalErr(String((e as Error).message || e));
-      setLineage(null);
+      setLoadState("error");
     }
   }
 
-  async function loadGovernance() {
-    setLocalErr("治理探针已迁移到 scripts/demo 脚本（/v1/demo/governance 已下线）");
-    setGov(null);
-  }
-
-  const defaultSteps = [
-    {
-      phase: "输入",
-      title: "用户消息 + Selection（3 个 WorkOrder）",
-      subtitle: "Context 来自 Workshop Inbox",
-      tone: "input" as const,
-    },
-    {
-      phase: "检索",
-      title: "Wiki Tool · 维修 SOP v2.3",
-      subtitle: "命中 4 段 · 置信 0.89",
-      tone: "process" as const,
-    },
-    {
-      phase: "推理",
-      title: "gpt-4o-mini · 路由规则 #20",
-      subtitle: "tokens: 1,842 in / 312 out · 1.2s",
-      tone: "process" as const,
-    },
-    {
-      phase: "熔断事件",
-      title: "L4 自动化熔断触发",
-      subtitle: "连续 3 次 Action 超时 · 自动降级为 L2 建议模式 · 15:42:08",
-      detail: "未执行 bulkAssign · 已通知值班",
-      tone: "fuse" as const,
-    },
-    {
-      phase: "输出",
-      title: "建议派单方案（未自动执行）",
-      subtitle: "→ Draft Dataset 暂存 · 待 HITL",
-      tone: "output" as const,
-    },
-    {
-      phase: "回填",
-      title: "Insight Backfill（可选）",
-      subtitle: "高置信结论 → Draft(InsightBackfill) → Insight Object + Link 相关实体",
-      detail: "≠ Funnel 数据水合 · 见方案 25",
-      tone: "gov" as const,
-    },
-  ];
-
-  const timelineSteps = lineage
-    ? [
-        {
-          phase: "Trace",
-          title: `${lineage.id} · ${lineage.actionTypeId || "Action"}`,
-          subtitle: `${lineage.objectType}/${lineage.objectId} · draft=${lineage.draftId}`,
-          tone: "input" as const,
-        },
-        ...(lineage.steps || []).map((s) => {
-          const key = String(s.step || "process");
-          const stepLabel: Record<string, string> = {
-            read: "输入",
-            draft: "Draft",
-            approve: "批准",
-            write: "写生产",
-          };
-          return {
-            phase: stepLabel[key] || key,
-            title:
-              key === "write"
-                ? `合并字段：${((s.mergedKeys as string[]) || []).join(", ") || "—"}`
-                : key === "approve"
-                  ? `审批人：${s.actor || "—"}`
-                  : key === "draft"
-                    ? `Draft ${s.draftId || "—"}`
-                    : `${s.objectType}/${s.objectId}`,
-            subtitle:
-              key === "write" && Array.isArray(s.conflicts) && s.conflicts.length > 0
-                ? `冲突 ${s.conflicts.length} 项（已允许合并）`
-                : undefined,
-            tone:
-              key === "read"
-                ? ("input" as const)
-                : key === "write"
-                  ? ("output" as const)
-                  : ("process" as const),
-          };
-        }),
-      ]
-    : defaultSteps;
+  const lineageId = events[0]?.lineageId ?? null;
 
   return (
     <S2Chrome
       title="Decision Lineage"
-      lede="单次 Agent 决策的完整因果链：输入 → 工具 → 模型 → 输出 → 副作用。"
+      lede="从服务端权威事件还原 TaskRun / Action / Eval / Publication / ResearchJob 因果链。"
     >
       <BpToolbar>
-        <button type="button" className="btn" onClick={() => void loadGovernance()}>
-          治理探针
-        </button>
         <label className="muted">
-          Trace{" "}
+          Root 类型{" "}
+          <select value={rootType} onChange={(event) => setRootType(event.target.value as LineageRootType)} aria-label="lineage-root-type">
+            {LINEAGE_ROOT_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
+          </select>
+        </label>
+        <label className="muted">
+          Root ID{" "}
           <input
-            value={lineageId}
-            onChange={(e) => setLineageId(e.target.value)}
-            placeholder="tr-…"
+            value={rootId}
+            onChange={(e) => setRootId(e.target.value)}
+            placeholder="输入真实 run / action / eval / publication ID"
+            aria-label="lineage-root-id"
             style={{ minWidth: "12rem" }}
           />
         </label>
-        <button type="button" className="btn" onClick={() => void load()}>
-          查询
+        <button type="button" className="btn" onClick={() => void load()} disabled={loadState === "loading"}>
+          {loadState === "loading" ? "查询中…" : "查询权威谱系"}
         </button>
       </BpToolbar>
 
-      {/* 谱系头部信息 */}
+      {loadState === "idle" && !localErr && <BpBanner tone="info">请选择 Root 类型并输入真实 Root ID；页面不会展示示例 Trace 或固定步骤。</BpBanner>}
+      {loadState === "loaded" && events.length === 0 && <BpBanner tone="warn"><span data-testid="lineage-empty">该 Root 暂无权威谱系事件。</span></BpBanner>}
+      {localErr && <BpBanner tone="warn"><span data-testid="lineage-error">谱系读取失败：{localErr}</span></BpBanner>}
+
+      {events.length > 0 && (
       <div
+        data-testid="lineage-authority-timeline"
         style={{
           borderRadius: 2,
           border: "1px solid var(--aos-amber-border)",
@@ -3234,40 +3149,20 @@ export function DecisionLineagePage() {
         }}
       >
         <div style={{ fontSize: 12, color: "var(--aos-muted)", marginBottom: 16 }}>
-          Trace <span style={{ fontFamily: "monospace", color: "var(--aos-text)" }}>tr-8f3a2c91</span>
-          {" · "}维修派单 Buddy · 今天 15:42
+          Lineage <span style={{ fontFamily: "monospace", color: "var(--aos-text)" }}>{lineageId}</span>
+          {" · "}{rootType}/{rootId} · {events.length} 个权威事件
         </div>
 
-        {/* 时间线 */}
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-          {timelineSteps.map((s, i) => (
+          {events.map((event) => (
             <div
-              key={`${s.phase}-${i}`}
+              key={event.eventId}
               style={{
                 display: "flex",
                 gap: 16,
                 padding: "12px 0 12px 16px",
                 marginLeft: 8,
-                borderLeft: `2px solid ${
-                  s.tone === "input"
-                    ? "var(--aos-green-600)"
-                    : s.tone === "output"
-                      ? "var(--aos-blue-600)"
-                      : s.tone === "fuse"
-                        ? "var(--aos-red)"
-                        : s.tone === "gov"
-                          ? "var(--aos-purple-600)"
-                          : "var(--aos-amber)"
-                }`,
-                background:
-                  s.tone === "fuse"
-                    ? "var(--aos-red-bg)"
-                    : s.tone === "gov"
-                      ? "var(--aos-indigo-bg)"
-                      : "transparent",
-                margin: s.tone === "fuse" || s.tone === "gov" ? "0 -8px" : 0,
-                paddingLeft: s.tone === "fuse" || s.tone === "gov" ? 24 : 16,
-                borderRadius: s.tone === "fuse" || s.tone === "gov" ? 8 : 0,
+                borderLeft: `2px solid ${event.quality === "measured" ? "var(--aos-green-600)" : event.quality === "estimated" ? "var(--aos-amber)" : "var(--aos-muted)"}`,
               }}
             >
               <div
@@ -3276,84 +3171,27 @@ export function DecisionLineagePage() {
                   flexShrink: 0,
                   fontSize: 11,
                   textTransform: "uppercase",
-                  color:
-                    s.tone === "fuse"
-                      ? "var(--aos-red)"
-                      : s.tone === "gov"
-                        ? "var(--aos-purple-600)"
-                        : "var(--aos-muted)",
+                  color: "var(--aos-muted)",
                   paddingTop: 2,
                   letterSpacing: "0.05em",
                 }}
               >
-                {s.phase}
+                #{event.sequence} {event.eventType}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                  style={{
-                    color:
-                      s.tone === "fuse"
-                        ? "var(--aos-red)"
-                        : s.tone === "gov"
-                          ? "var(--aos-purple-600)"
-                          : "var(--aos-text)",
-                    fontSize: 14,
-                    fontWeight: s.tone === "fuse" ? 500 : 400,
-                  }}
-                >
-                  {s.title}
+                <div style={{ color: "var(--aos-text)", fontSize: 14 }}>{event.sourceKind || "无权威源类型"} · {event.sourceId || "无权威源 ID"}</div>
+                <div style={{ fontSize: 12, color: "var(--aos-muted)", marginTop: 4 }}>
+                  {event.quality} · 发生 {new Date(event.occurredAt).toLocaleString()} · 观测 {new Date(event.observedAt).toLocaleString()}
                 </div>
-                {s.subtitle && (
-                  <div style={{ fontSize: 12, color: "var(--aos-muted)", marginTop: 4 }}>
-                    {s.subtitle}
-                  </div>
-                )}
-                {(s as { detail?: string }).detail && (
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: s.tone === "fuse" ? "var(--aos-red)" : "var(--aos-purple-600)",
-                      marginTop: 4,
-                      opacity: 0.8,
-                    }}
-                  >
-                    {(s as { detail?: string }).detail}
-                  </div>
-                )}
+                <div style={{ fontSize: 11, color: "var(--aos-muted)", marginTop: 4, fontFamily: "monospace", overflowWrap: "anywhere" }}>
+                  event={event.eventId} · payload={event.payloadHash.slice(0, 12)}…{event.sourceHash ? ` · source=${event.sourceHash.slice(0, 12)}…` : ""}
+                </div>
               </div>
             </div>
           ))}
         </div>
       </div>
-
-      {gov && (
-        <BpMetricGrid
-          items={[
-            {
-              label: "public 脱敏字段",
-              value: (gov.asPublicViewer?.redactedFields || []).join(", ") || "—",
-              tone: "warn",
-            },
-            {
-              label: "internalCost (public)",
-              value: String(gov.asPublicViewer?.internalCost ?? "—"),
-              tone: "muted",
-            },
-            {
-              label: "Marking 拒绝",
-              value: gov.markingForbidden?.code ?? "—",
-              tone: gov.markingForbidden?.code ? "ok" : "muted",
-            },
-            {
-              label: "最近谱系",
-              value: gov.latestLineage?.id ?? "暂无",
-              tone: gov.latestLineage?.id ? "ok" : "bad",
-            },
-          ]}
-        />
       )}
-
-      {localErr && <p className="error">{localErr}</p>}
 
       <div style={{ display: "flex", gap: 8, marginTop: "1rem" }}>
         <Link

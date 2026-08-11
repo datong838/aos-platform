@@ -30,6 +30,9 @@ export const AIP_OPERATIONS = {
   acquireActionLease: { method: "POST", path: "/v1/aip/action-proposals/{proposal_id}/lease", mutation: true },
   executeActionLease: { method: "POST", path: "/v1/aip/action-leases/{lease_id}/execute", mutation: true },
   reconcileActionReceipt: { method: "POST", path: "/v1/aip/action-receipts/{receipt_id}/reconcile", mutation: true },
+  listLineageAuthority: { method: "GET", path: "/v1/aip/lineage-authority/roots/{root_type}/{root_id}", mutation: false },
+  listTelemetrySpans: { method: "GET", path: "/v1/aip/telemetry-authority/lineages/{lineage_id}/spans", mutation: false },
+  listUsageReceipts: { method: "GET", path: "/v1/aip/telemetry-authority/lineages/{lineage_id}/usage-receipts", mutation: false },
 } as const;
 
 export type AipOperationId = keyof typeof AIP_OPERATIONS;
