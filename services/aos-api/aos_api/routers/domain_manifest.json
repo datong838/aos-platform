@@ -3096,6 +3096,12 @@
       "module": "aos_api.routers.aip_lineage_authority",
       "attribute": "router",
       "order": 515
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_telemetry_usage",
+      "attribute": "router",
+      "order": 516
     }
   ]
 }

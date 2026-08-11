@@ -1,6 +1,8 @@
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from pydantic import ValidationError
+
 from aos_api.aip_contracts import ArtifactRef, TenantContext
 from aos_api.aip_eval_contracts import (
     AssetRevisionRef,
@@ -20,8 +22,8 @@ from aos_api.aip_eval_contracts import (
     ReleaseGateStatus,
     UsageKind,
     UsageReceipt,
+    UsageReceiptIngestRequest,
 )
-from pydantic import ValidationError
 
 HASH = "a" * 64
 NOW = datetime(2026, 8, 11, tzinfo=UTC)
@@ -138,6 +140,37 @@ def test_usage_cost_requires_currency_and_estimated_stays_explicit() -> None:
         UsageReceipt(**common)
     receipt = UsageReceipt(**common, currency="CNY")
     assert receipt.quality is EvidenceQuality.ESTIMATED
+
+
+def test_unknown_usage_cannot_invent_quantity_and_measured_requires_quantity() -> None:
+    common = {
+        "provider": "provider-1",
+        "provider_receipt_id": "provider-receipt-1",
+        "lineage_id": "lineage-1",
+        "usage_kind": UsageKind.INPUT_TOKEN,
+        "unit": "token",
+        "source_hash": HASH,
+        "observed_at": NOW,
+    }
+    with pytest.raises(ValidationError, match="must not invent"):
+        UsageReceiptIngestRequest(
+            **common,
+            quantity=1,
+            quality=EvidenceQuality.UNKNOWN,
+        )
+    with pytest.raises(ValidationError, match="requires quantity"):
+        UsageReceiptIngestRequest(
+            **common,
+            quantity=None,
+            quality=EvidenceQuality.MEASURED,
+        )
+
+    unknown = UsageReceiptIngestRequest(
+        **common,
+        quantity=None,
+        quality=EvidenceQuality.UNKNOWN,
+    )
+    assert unknown.quantity is None
 
 
 def test_invalidated_gate_requires_causal_reference() -> None:

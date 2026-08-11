@@ -135,6 +135,22 @@ class UsageKind(StrEnum):
     TOOL_UNIT = "tool_unit"
 
 
+class SpanKind(StrEnum):
+    INTERNAL = "internal"
+    SERVER = "server"
+    CLIENT = "client"
+    PRODUCER = "producer"
+    CONSUMER = "consumer"
+    MODEL = "model"
+    TOOL = "tool"
+
+
+class SpanStatus(StrEnum):
+    UNSET = "unset"
+    OK = "ok"
+    ERROR = "error"
+
+
 class AssetRevisionRef(AipContractModel):
     asset_type: AssetType
     asset_id: str = Field(min_length=1, max_length=200)
@@ -387,14 +403,36 @@ class LineageEvent(AipContractModel):
         return self
 
 
-class UsageReceipt(AipContractModel):
+class TelemetrySpanIngestRequest(AipContractModel):
+    provider: str = Field(min_length=1, max_length=200)
+    provider_receipt_id: str = Field(min_length=1, max_length=240)
+    lineage_id: str = Field(min_length=1, max_length=200)
+    trace_id: str = Field(min_length=1, max_length=200)
+    span_id: str = Field(min_length=1, max_length=200)
+    parent_span_id: str | None = Field(default=None, min_length=1, max_length=200)
+    name: str = Field(min_length=1, max_length=320)
+    kind: SpanKind
+    status: SpanStatus
+    producer_started_at: datetime
+    producer_ended_at: datetime | None = None
+    observed_at: datetime
+    attributes_hash: str = Field(pattern=SHA256_PATTERN)
+    source_hash: str = Field(pattern=SHA256_PATTERN)
+    quality: EvidenceQuality
+
+
+class TelemetrySpan(TelemetrySpanIngestRequest):
     tenant: TenantContext
-    receipt_id: str = Field(min_length=1, max_length=200)
+    span_record_id: str = Field(min_length=1, max_length=200)
+    ingested_at: datetime
+
+
+class UsageReceiptIngestRequest(AipContractModel):
     provider: str = Field(min_length=1, max_length=200)
     provider_receipt_id: str = Field(min_length=1, max_length=240)
     lineage_id: str = Field(min_length=1, max_length=200)
     usage_kind: UsageKind
-    quantity: float = Field(ge=0)
+    quantity: float | None = Field(default=None, ge=0)
     unit: str = Field(min_length=1, max_length=40)
     currency: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
     quality: EvidenceQuality
@@ -402,7 +440,11 @@ class UsageReceipt(AipContractModel):
     observed_at: datetime
 
     @model_validator(mode="after")
-    def _cost_currency(self) -> UsageReceipt:
+    def _quantity_and_currency(self) -> UsageReceiptIngestRequest:
+        if self.quality is EvidenceQuality.UNKNOWN and self.quantity is not None:
+            raise ValueError("unknown usage must not invent a quantity")
+        if self.quality is not EvidenceQuality.UNKNOWN and self.quantity is None:
+            raise ValueError("measured or estimated usage requires quantity")
         if self.usage_kind is UsageKind.COST and self.currency is None:
             raise ValueError("cost receipt requires currency")
         if self.usage_kind is not UsageKind.COST and self.currency is not None:
@@ -410,12 +452,20 @@ class UsageReceipt(AipContractModel):
         return self
 
 
-class UsageAdjustment(AipContractModel):
+class UsageReceipt(UsageReceiptIngestRequest):
     tenant: TenantContext
+    receipt_id: str = Field(min_length=1, max_length=200)
+
+
+class UsageAdjustmentRequest(AipContractModel):
     adjustment_id: str = Field(min_length=1, max_length=200)
     receipt_id: str = Field(min_length=1, max_length=200)
     delta: float
     reason_hash: str = Field(pattern=SHA256_PATTERN)
+
+
+class UsageAdjustment(UsageAdjustmentRequest):
+    tenant: TenantContext
     actor: str = Field(min_length=1, max_length=320)
     created_at: datetime
 
@@ -465,7 +515,13 @@ __all__ = [
     "PublicationEventType",
     "ReleaseGateDecision",
     "ReleaseGateStatus",
+    "SpanKind",
+    "SpanStatus",
+    "TelemetrySpan",
+    "TelemetrySpanIngestRequest",
     "UsageAdjustment",
+    "UsageAdjustmentRequest",
     "UsageKind",
     "UsageReceipt",
+    "UsageReceiptIngestRequest",
 ]

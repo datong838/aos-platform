@@ -19,6 +19,7 @@ from aos_api.aip_eval_contracts import (
     MetricDefinitionRevision,
     PublicationEvent,
     ReleaseGateDecision,
+    TelemetrySpan,
     UsageAdjustment,
     UsageReceipt,
 )
@@ -448,59 +449,116 @@ class AipEvalAuthorityStore:
                     raise AipEvalAuthorityNotFound(
                         "usage receipt lineage is not available in this scope"
                     )
+                row = conn.execute(
+                    """INSERT INTO aip_usage_receipt (
+                         org_id,project_id,receipt_id,provider,provider_receipt_id,
+                         lineage_id,usage_kind,quantity,unit,currency,quality,
+                         source_hash,observed_at
+                       ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                       ON CONFLICT DO NOTHING RETURNING *""",
+                    (
+                        *scope.key,
+                        receipt.receipt_id,
+                        receipt.provider,
+                        receipt.provider_receipt_id,
+                        receipt.lineage_id,
+                        receipt.usage_kind.value,
+                        receipt.quantity,
+                        receipt.unit,
+                        receipt.currency,
+                        receipt.quality.value,
+                        receipt.source_hash,
+                        receipt.observed_at,
+                    ),
+                ).fetchone()
+                if row is None:
+                    row = conn.execute(
+                        """SELECT * FROM aip_usage_receipt
+                           WHERE org_id=%s AND project_id=%s AND provider=%s
+                             AND provider_receipt_id=%s""",
+                        (*scope.key, receipt.provider, receipt.provider_receipt_id),
+                    ).fetchone()
+                if row is None or self._usage_from_row(scope, row) != receipt:
+                    raise AipEvalAuthorityConflict(
+                        "provider usage receipt was replayed with different content"
+                    )
+                conn.commit()
+                return self._usage_from_row(scope, row)
         except AipEvalAuthorityError:
             raise
         except Exception as exc:
             raise AipEvalAuthorityPersistenceError(
-                "usage lineage verification failed"
+                "usage receipt persistence failed"
             ) from exc
-        return self._append_contract(
-            scope,
-            table="aip_usage_receipt",
-            id_column="receipt_id",
-            identifier=receipt.receipt_id,
-            columns=(
-                "receipt_id",
-                "provider",
-                "provider_receipt_id",
-                "lineage_id",
-                "usage_kind",
-                "quantity",
-                "unit",
-                "currency",
-                "quality",
-                "source_hash",
-                "observed_at",
-            ),
-            values=(
-                receipt.receipt_id,
-                receipt.provider,
-                receipt.provider_receipt_id,
-                receipt.lineage_id,
-                receipt.usage_kind.value,
-                receipt.quantity,
-                receipt.unit,
-                receipt.currency,
-                receipt.quality.value,
-                receipt.source_hash,
-                receipt.observed_at,
-            ),
-            expected=receipt,
-            parser=lambda row: UsageReceipt(
-                tenant=self._tenant(scope),
-                receipt_id=row["receipt_id"],
-                provider=row["provider"],
-                provider_receipt_id=row["provider_receipt_id"],
-                lineage_id=row["lineage_id"],
-                usage_kind=row["usage_kind"],
-                quantity=row["quantity"],
-                unit=row["unit"],
-                currency=row["currency"],
-                quality=row["quality"],
-                source_hash=row["source_hash"],
-                observed_at=row["observed_at"],
-            ),
-        )
+
+    def append_telemetry_span(
+        self, scope: TenantScope, span: TelemetrySpan
+    ) -> TelemetrySpan:
+        self._require_tenant(scope, span.tenant)
+        try:
+            with self._connect(scope) as conn:
+                lineage = conn.execute(
+                    """SELECT 1 FROM aip_lineage_event
+                       WHERE org_id=%s AND project_id=%s AND lineage_id=%s LIMIT 1""",
+                    (*scope.key, span.lineage_id),
+                ).fetchone()
+                if lineage is None:
+                    raise AipEvalAuthorityNotFound(
+                        "telemetry span lineage is not available in this scope"
+                    )
+                row = conn.execute(
+                    """INSERT INTO aip_telemetry_span (
+                         org_id,project_id,span_record_id,provider,provider_receipt_id,
+                         lineage_id,trace_id,span_id,parent_span_id,name,kind,status,
+                         producer_started_at,producer_ended_at,observed_at,ingested_at,
+                         attributes_hash,source_hash,quality
+                       ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                       ON CONFLICT DO NOTHING RETURNING *""",
+                    (
+                        *scope.key,
+                        span.span_record_id,
+                        span.provider,
+                        span.provider_receipt_id,
+                        span.lineage_id,
+                        span.trace_id,
+                        span.span_id,
+                        span.parent_span_id,
+                        span.name,
+                        span.kind.value,
+                        span.status.value,
+                        span.producer_started_at,
+                        span.producer_ended_at,
+                        span.observed_at,
+                        span.ingested_at,
+                        span.attributes_hash,
+                        span.source_hash,
+                        span.quality.value,
+                    ),
+                ).fetchone()
+                if row is None:
+                    row = conn.execute(
+                        """SELECT * FROM aip_telemetry_span
+                           WHERE org_id=%s AND project_id=%s AND provider=%s
+                             AND provider_receipt_id=%s""",
+                        (*scope.key, span.provider, span.provider_receipt_id),
+                    ).fetchone()
+                if row is None:
+                    raise AipEvalAuthorityConflict("telemetry span replay disappeared")
+                stored = self._span_from_row(scope, row)
+                if stored != span.model_copy(
+                    update={"ingested_at": stored.ingested_at}
+                ):
+                    raise AipEvalAuthorityConflict(
+                        "provider span receipt was replayed with different content"
+                    )
+                conn.commit()
+                return stored
+        except AipEvalAuthorityError:
+            raise
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError(
+                "telemetry span persistence failed"
+            ) from exc
 
     def append_usage_adjustment(
         self, scope: TenantScope, adjustment: UsageAdjustment
@@ -610,6 +668,107 @@ class AipEvalAuthorityStore:
             )
             for row in rows
         ]
+
+    def list_telemetry_spans(
+        self, scope: TenantScope, lineage_id: str
+    ) -> list[TelemetrySpan]:
+        self._require_scope(scope)
+        try:
+            with self._connect(scope) as conn:
+                rows = conn.execute(
+                    """SELECT * FROM aip_telemetry_span
+                       WHERE org_id=%s AND project_id=%s AND lineage_id=%s
+                       ORDER BY producer_started_at,span_record_id""",
+                    (*scope.key, lineage_id),
+                ).fetchall()
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError(
+                "telemetry span read failed"
+            ) from exc
+        return [self._span_from_row(scope, row) for row in rows]
+
+    def list_usage_receipts(
+        self, scope: TenantScope, lineage_id: str
+    ) -> list[UsageReceipt]:
+        self._require_scope(scope)
+        try:
+            with self._connect(scope) as conn:
+                rows = conn.execute(
+                    """SELECT * FROM aip_usage_receipt
+                       WHERE org_id=%s AND project_id=%s AND lineage_id=%s
+                       ORDER BY observed_at,receipt_id""",
+                    (*scope.key, lineage_id),
+                ).fetchall()
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError("usage receipt read failed") from exc
+        return [self._usage_from_row(scope, row) for row in rows]
+
+    def list_usage_adjustments(
+        self, scope: TenantScope, receipt_id: str
+    ) -> list[UsageAdjustment]:
+        self._require_scope(scope)
+        try:
+            with self._connect(scope) as conn:
+                rows = conn.execute(
+                    """SELECT * FROM aip_usage_adjustment
+                       WHERE org_id=%s AND project_id=%s AND receipt_id=%s
+                       ORDER BY created_at,adjustment_id""",
+                    (*scope.key, receipt_id),
+                ).fetchall()
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError(
+                "usage adjustment read failed"
+            ) from exc
+        return [
+            UsageAdjustment(
+                tenant=self._tenant(scope),
+                adjustment_id=row["adjustment_id"],
+                receipt_id=row["receipt_id"],
+                delta=row["delta"],
+                reason_hash=row["reason_hash"],
+                actor=row["actor"],
+                created_at=row["created_at"],
+            )
+            for row in rows
+        ]
+
+    def _span_from_row(self, scope: TenantScope, row: Any) -> TelemetrySpan:
+        return TelemetrySpan(
+            tenant=self._tenant(scope),
+            span_record_id=row["span_record_id"],
+            provider=row["provider"],
+            provider_receipt_id=row["provider_receipt_id"],
+            lineage_id=row["lineage_id"],
+            trace_id=row["trace_id"],
+            span_id=row["span_id"],
+            parent_span_id=row["parent_span_id"],
+            name=row["name"],
+            kind=row["kind"],
+            status=row["status"],
+            producer_started_at=row["producer_started_at"],
+            producer_ended_at=row["producer_ended_at"],
+            observed_at=row["observed_at"],
+            ingested_at=row["ingested_at"],
+            attributes_hash=row["attributes_hash"],
+            source_hash=row["source_hash"],
+            quality=row["quality"],
+        )
+
+    def _usage_from_row(self, scope: TenantScope, row: Any) -> UsageReceipt:
+        return UsageReceipt(
+            tenant=self._tenant(scope),
+            receipt_id=row["receipt_id"],
+            provider=row["provider"],
+            provider_receipt_id=row["provider_receipt_id"],
+            lineage_id=row["lineage_id"],
+            usage_kind=row["usage_kind"],
+            quantity=row["quantity"],
+            unit=row["unit"],
+            currency=row["currency"],
+            quality=row["quality"],
+            source_hash=row["source_hash"],
+            observed_at=row["observed_at"],
+        )
 
     def _append_contract(
         self,
