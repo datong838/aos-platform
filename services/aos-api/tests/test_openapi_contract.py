@@ -83,20 +83,20 @@ def test_committed_artifacts_are_canonical_and_structurally_valid() -> None:
     assert INVENTORY_PATH.read_bytes() == exporter.canonical_json(inventory)
     exporter.validate_openapi(schema)
     assert schema["openapi"] == "3.1.0"
-    assert len(schema["paths"]) == 2319
-    assert len(schema.get("components", {}).get("schemas", {})) == 1529
+    assert len(schema["paths"]) == 2324
+    assert len(schema.get("components", {}).get("schemas", {})) == 1542
 
 
 def test_inventory_preserves_route_rows_and_known_duplicates() -> None:
     schema_bytes = OPENAPI_PATH.read_bytes()
     inventory = json.loads(INVENTORY_PATH.read_bytes())
     summary = inventory["summary"]
-    assert summary["routeRows"] == 4083
-    assert summary["uniqueOperationPairs"] == 4073
+    assert summary["routeRows"] == 4089
+    assert summary["uniqueOperationPairs"] == 4079
     assert summary["duplicatePairs"] == exporter.EXPECTED_DUPLICATES
     assert summary["openapiSha256"] == hashlib.sha256(schema_bytes).hexdigest()
-    assert len(inventory["routes"]) == 4083
-    assert [row["ordinal"] for row in inventory["routes"]] == list(range(4083))
+    assert len(inventory["routes"]) == 4089
+    assert [row["ordinal"] for row in inventory["routes"]] == list(range(4089))
     assert all(row["operationId"] for row in inventory["routes"])
     assert set(summary["domains"]) == set(exporter.DOMAIN_ORDER)
 
@@ -206,6 +206,44 @@ def test_m2_control_plane_openapi_is_explicit_and_complete() -> None:
     assert "ETag" not in operations[("/v1/bundle-installations", "get")]["responses"][
         "200"
     ].get("headers", {})
+
+
+def test_aip3_action_control_contract_is_explicit_and_complete() -> None:
+    schema = json.loads(OPENAPI_PATH.read_bytes())
+    expected = {
+        ("/v1/aip/action-proposals", "post"): (
+            "create_action_proposal_v1_aip_action_proposals_post",
+            "201",
+        ),
+        ("/v1/aip/action-proposals", "get"): (
+            "list_action_proposals_v1_aip_action_proposals_get",
+            "200",
+        ),
+        ("/v1/aip/action-proposals/{proposal_id}", "get"): (
+            "get_action_proposal_v1_aip_action_proposals__proposal_id__get",
+            "200",
+        ),
+        ("/v1/aip/action-proposals/{proposal_id}/decision", "post"): (
+            "decide_action_proposal_v1_aip_action_proposals__proposal_id__decision_post",
+            "200",
+        ),
+        ("/v1/aip/action-proposals/{proposal_id}/timeline", "get"): (
+            "get_action_proposal_timeline_v1_aip_action_proposals__proposal_id__timeline_get",
+            "200",
+        ),
+    }
+    for (path, method), (operation_id, success_status) in expected.items():
+        operation = schema["paths"][path][method]
+        assert operation["operationId"] == operation_id
+        assert success_status in operation["responses"]
+        parameters = {
+            (item["name"], item["in"]): item
+            for item in operation.get("parameters", [])
+        }
+        if method == "post":
+            assert parameters[("Idempotency-Key", "header")]["required"] is True
+        if "{proposal_id}" in path:
+            assert parameters[("proposal_id", "path")]["required"] is True
 
 
 def test_compatibility_allows_additions() -> None:

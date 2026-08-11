@@ -95,6 +95,42 @@ class StepRunStatus(StrEnum):
     UNKNOWN = "unknown"
 
 
+class ActionRiskLevel(StrEnum):
+    R0 = "R0"
+    R1 = "R1"
+    R2 = "R2"
+    R3 = "R3"
+    R4 = "R4"
+
+
+class ActionProposalStatus(StrEnum):
+    PROPOSED = "proposed"
+    DRAFTED = "drafted"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    EXPIRED = "expired"
+    LEASED = "leased"
+    EXECUTING = "executing"
+    APPLIED = "applied"
+    FAILED = "failed"
+    UNKNOWN = "unknown"
+    RECONCILED = "reconciled"
+    COMPENSATED = "compensated"
+
+
+class ApprovalDecision(StrEnum):
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+class ActionReceiptStatus(StrEnum):
+    ACCEPTED = "accepted"
+    APPLIED = "applied"
+    FAILED = "failed"
+    UNKNOWN = "unknown"
+    RECONCILED = "reconciled"
+
+
 TERMINAL_TASK_RUN_STATUSES = frozenset(
     {TaskRunStatus.SUCCEEDED, TaskRunStatus.FAILED, TaskRunStatus.CANCELLED, TaskRunStatus.UNKNOWN}
 )
@@ -196,6 +232,80 @@ class Evidence(AipContractModel):
         return normalized
 
 
+class ActionTypeRevisionRef(AipContractModel):
+    action_type_id: str
+    revision_hash: str
+    object_type: str
+
+    @field_validator("revision_hash")
+    @classmethod
+    def _revision_hash(cls, value: str) -> str:
+        normalized = value.lower().strip()
+        if not re.fullmatch(r"[0-9a-f]{64}", normalized):
+            raise ValueError("revision_hash must be a sha256 hex digest")
+        return normalized
+
+
+class ActionProposal(AipContractModel):
+    id: str
+    action_type: ActionTypeRevisionRef
+    task_id: str | None = None
+    run_id: str | None = None
+    object_ref: ResourceRef | None = None
+    purpose: str
+    risk_level: ActionRiskLevel
+    payload: dict[str, Any]
+    proposal_hash: str
+    status: ActionProposalStatus
+    expires_at: datetime
+    version: int = Field(ge=1)
+    created_by: ActorRef
+    created_at: datetime
+    updated_at: datetime
+
+
+class DraftSnapshot(AipContractModel):
+    id: str
+    proposal_id: str
+    proposal_version: int = Field(ge=1)
+    proposal_hash: str
+    diff: dict[str, Any] = Field(default_factory=dict)
+    evidence_refs: list[ResourceRef] = Field(default_factory=list)
+    status: str
+    created_at: datetime
+
+
+class ApprovalEvent(AipContractModel):
+    id: str
+    proposal_id: str
+    proposal_version: int = Field(ge=1)
+    proposal_hash: str
+    decision: ApprovalDecision
+    actor: ActorRef
+    reason: str = ""
+    expires_at: datetime | None = None
+    created_at: datetime
+
+
+class ExecutionLease(AipContractModel):
+    id: str
+    proposal_id: str
+    proposal_hash: str
+    attempt: int = Field(ge=1)
+    expires_at: datetime
+    created_at: datetime
+
+
+class ActionReceipt(AipContractModel):
+    id: str
+    proposal_id: str
+    lease_id: str
+    status: ActionReceiptStatus
+    provider_request_id: str | None = None
+    evidence_refs: list[ResourceRef] = Field(default_factory=list)
+    created_at: datetime
+
+
 AIP_ERROR_STATUS: dict[str, int] = {
     "AIP_INVALID_ARGUMENT": 400,
     "AUTH_REQUIRED": 401,
@@ -225,5 +335,10 @@ AIP_CONTRACT_MODELS = (
     Checkpoint,
     Artifact,
     Evidence,
+    ActionTypeRevisionRef,
+    ActionProposal,
+    DraftSnapshot,
+    ApprovalEvent,
+    ExecutionLease,
+    ActionReceipt,
 )
-
