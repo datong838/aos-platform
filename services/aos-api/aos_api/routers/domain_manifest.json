@@ -3084,6 +3084,12 @@
       "module": "aos_api.routers.aip_eval_authority",
       "attribute": "router",
       "order": 513
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_release_publications",
+      "attribute": "router",
+      "order": 514
     }
   ]
 }

@@ -88,6 +88,7 @@ class AipEvalRunner:
         execute_judge: JudgeExecutor,
     ) -> EvalReportRevision:
         suite = self._registry.get_suite_revision(scope, suite_id, suite_revision)
+        self._assert_target_not_withdrawn(scope, suite.target)
         tenant = TenantContext(org_id=scope.org_id, project_id=scope.project_id)
         now = datetime.now(UTC)
         run_id = f"eval-run-{uuid.uuid4().hex}"
@@ -177,7 +178,7 @@ class AipEvalRunner:
             )
             try:
                 self._authority.transition_eval_run(scope, failed, expected_version=2)
-            except Exception:
+            except Exception:  # noqa: BLE001,S110 - preserve original failure
                 pass
             raise
 
@@ -222,6 +223,31 @@ class AipEvalRunner:
             raise
         except Exception as exc:
             raise AipEvalAuthorityPersistenceError("eval report persistence failed") from exc
+
+    def _assert_target_not_withdrawn(
+        self, scope: TenantScope, target: AssetRevisionRef
+    ) -> None:
+        try:
+            with self._connect(scope) as conn:
+                row = conn.execute(
+                    """SELECT event_type FROM aip_publication_event
+                       WHERE org_id=%s AND project_id=%s
+                         AND target_ref=%s::jsonb
+                       ORDER BY occurred_at DESC,event_id DESC LIMIT 1""",
+                    (*scope.key, self._json(target)),
+                ).fetchone()
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError(
+                "publication state read failed before eval run"
+            ) from exc
+        if row is not None and row["event_type"] in {
+            "revoked",
+            "suspended",
+            "deprecated",
+        }:
+            raise AipEvalAuthorityConflict(
+                "eval target publication is withdrawn; a new revision is required"
+            )
 
     @staticmethod
     def _resolve_exact(resolver: ArtifactResolver, ref: ArtifactRef | None) -> Any:
