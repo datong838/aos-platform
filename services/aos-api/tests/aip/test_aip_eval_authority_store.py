@@ -8,8 +8,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from psycopg import sql
-
 from aos_api.aip_contracts import ArtifactRef, TenantContext
 from aos_api.aip_eval_authority_store import (
     AipEvalAuthorityConflict,
@@ -29,6 +27,7 @@ from aos_api.aip_eval_contracts import (
     LineageEvent,
     LineageEventType,
     LineageRootType,
+    LineageSourceKind,
     MetricDefinitionRevision,
     PublicationEvent,
     PublicationEventType,
@@ -40,6 +39,7 @@ from aos_api.aip_eval_contracts import (
 )
 from aos_api.db import connect
 from aos_api.tenant_scope import TenantScope
+from psycopg import sql
 
 NOW = datetime(2026, 8, 11, 10, 0, tzinfo=UTC)
 H1 = "1" * 64
@@ -56,20 +56,39 @@ def authority_store():
         Path(__file__).resolve().parents[2]
         / "alembic/versions/aip4_001_eval_lineage_observability_contract.py"
     )
-    spec = importlib.util.spec_from_file_location("aip4_store_migration", migration_path)
+    spec = importlib.util.spec_from_file_location(
+        "aip4_store_migration", migration_path
+    )
     assert spec and spec.loader
     migration = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(migration)
     statements: list[str] = []
     with patch.object(migration.op, "execute", statements.append):
         migration.upgrade()
+    source_migration_path = (
+        Path(__file__).resolve().parents[2]
+        / "alembic/versions/aip4_004_lineage_source_authority.py"
+    )
+    source_spec = importlib.util.spec_from_file_location(
+        "aip4_lineage_source_migration", source_migration_path
+    )
+    assert source_spec and source_spec.loader
+    source_migration = importlib.util.module_from_spec(source_spec)
+    source_spec.loader.exec_module(source_migration)
+    source_statements: list[str] = []
+    with patch.object(source_migration.op, "execute", source_statements.append):
+        source_migration.upgrade()
     create_tables = [
-        statement for statement in statements if statement.lstrip().startswith("CREATE TABLE")
+        statement
+        for statement in statements
+        if statement.lstrip().startswith("CREATE TABLE")
     ]
     try:
         with connect() as conn:
             conn.execute(sql.SQL("CREATE SCHEMA {}").format(sql.Identifier(schema)))
-            conn.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(schema)))
+            conn.execute(
+                sql.SQL("SET search_path TO {}").format(sql.Identifier(schema))
+            )
             conn.execute(
                 """CREATE TABLE twa_workspace (
                    org_id TEXT NOT NULL, project_id TEXT NOT NULL,
@@ -80,6 +99,8 @@ def authority_store():
             )
             for statement in create_tables:
                 conn.execute(statement)
+            for statement in source_statements:
+                conn.execute(statement)
             conn.commit()
     except Exception as exc:  # noqa: BLE001 - PostgreSQL is optional in developer CI
         pytest.skip(f"PG unavailable: {exc}")
@@ -87,7 +108,9 @@ def authority_store():
     @contextmanager
     def scoped_connect(_scope: TenantScope | None = None):
         with connect() as conn:
-            conn.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(schema)))
+            conn.execute(
+                sql.SQL("SET search_path TO {}").format(sql.Identifier(schema))
+            )
             yield conn
 
     yield AipEvalAuthorityStore(connect_factory=scoped_connect), scoped_connect
@@ -126,9 +149,7 @@ def _run(scope: TenantScope = SCOPE_A) -> EvalRunAuthorityRecord:
         suite_ref=_asset(AssetType.EVAL_SUITE, "suite-1"),
         target=_asset(AssetType.LOGIC_GRAPH, "logic-1", H2),
         dataset=_dataset(),
-        judge=JudgeRevisionRef(
-            judge_id="judge-1", revision=1, content_hash=H3
-        ),
+        judge=JudgeRevisionRef(judge_id="judge-1", revision=1, content_hash=H3),
         status=EvalRunStatus.QUEUED,
         idempotency_key="run-once",
         created_by="alice",
@@ -164,16 +185,22 @@ def test_dataset_revision_survives_recreation_and_is_tenant_scoped(
 ) -> None:
     store, scoped_connect = authority_store
     ref = _dataset()
-    assert store.create_dataset_revision(
-        SCOPE_A, ref, manifest={"cases": 12}, actor="alice"
-    ) == ref
+    assert (
+        store.create_dataset_revision(
+            SCOPE_A, ref, manifest={"cases": 12}, actor="alice"
+        )
+        == ref
+    )
     with pytest.raises(AipEvalAuthorityConflict):
         store.create_dataset_revision(
             SCOPE_A, ref, manifest={"cases": 13}, actor="alice"
         )
-    assert store.create_dataset_revision(
-        SCOPE_A, ref, manifest={"cases": 12}, actor="alice"
-    ) == ref
+    assert (
+        store.create_dataset_revision(
+            SCOPE_A, ref, manifest={"cases": 12}, actor="alice"
+        )
+        == ref
+    )
     restarted = AipEvalAuthorityStore(connect_factory=scoped_connect)
     assert restarted.get_dataset_revision(SCOPE_A, "dataset-1", 1) == ref
     with pytest.raises(AipEvalAuthorityNotFound):
@@ -305,6 +332,9 @@ def test_gate_publication_lineage_usage_and_metric_are_idempotent(
         quality=EvidenceQuality.MEASURED,
         occurred_at=NOW,
         observed_at=NOW,
+        source_kind=LineageSourceKind.EVAL_RUN,
+        source_id="run-1:v1",
+        source_hash=H3,
     )
     assert store.append_lineage_event(SCOPE_A, lineage) == lineage
     assert store.list_lineage_events(SCOPE_A, "lineage-1") == [lineage]
@@ -347,9 +377,7 @@ def test_gate_publication_lineage_usage_and_metric_are_idempotent(
     assert store.create_metric_definition(SCOPE_A, metric, actor="alice") == metric
     assert store.create_metric_definition(SCOPE_A, metric, actor="alice") == metric
     with pytest.raises(ValueError, match="authenticated scope"):
-        store.append_lineage_event(
-            SCOPE_B, lineage
-        )
+        store.append_lineage_event(SCOPE_B, lineage)
 
 
 def test_usage_without_scoped_lineage_fails_closed(authority_store) -> None:

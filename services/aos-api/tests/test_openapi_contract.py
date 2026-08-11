@@ -83,20 +83,20 @@ def test_committed_artifacts_are_canonical_and_structurally_valid() -> None:
     assert INVENTORY_PATH.read_bytes() == exporter.canonical_json(inventory)
     exporter.validate_openapi(schema)
     assert schema["openapi"] == "3.1.0"
-    assert len(schema["paths"]) == 2335
-    assert len(schema.get("components", {}).get("schemas", {})) == 1569
+    assert len(schema["paths"]) == 2337
+    assert len(schema.get("components", {}).get("schemas", {})) == 1570
 
 
 def test_inventory_preserves_route_rows_and_known_duplicates() -> None:
     schema_bytes = OPENAPI_PATH.read_bytes()
     inventory = json.loads(INVENTORY_PATH.read_bytes())
     summary = inventory["summary"]
-    assert summary["routeRows"] == 4100
-    assert summary["uniqueOperationPairs"] == 4090
+    assert summary["routeRows"] == 4102
+    assert summary["uniqueOperationPairs"] == 4092
     assert summary["duplicatePairs"] == exporter.EXPECTED_DUPLICATES
     assert summary["openapiSha256"] == hashlib.sha256(schema_bytes).hexdigest()
-    assert len(inventory["routes"]) == 4100
-    assert [row["ordinal"] for row in inventory["routes"]] == list(range(4100))
+    assert len(inventory["routes"]) == 4102
+    assert [row["ordinal"] for row in inventory["routes"]] == list(range(4102))
     assert all(row["operationId"] for row in inventory["routes"])
     assert set(summary["domains"]) == set(exporter.DOMAIN_ORDER)
 
@@ -253,14 +253,11 @@ def test_aip3_action_control_contract_is_explicit_and_complete() -> None:
         assert operation["operationId"] == operation_id
         assert success_status in operation["responses"]
         parameters = {
-            (item["name"], item["in"]): item
-            for item in operation.get("parameters", [])
+            (item["name"], item["in"]): item for item in operation.get("parameters", [])
         }
         if method == "post" and (
-            path.endswith("/lease")
-            or path.endswith("/compensation")
+            path.endswith(("/lease", "/compensation", "/decision"))
             or path == "/v1/aip/action-proposals"
-            or path.endswith("/decision")
         ):
             assert parameters[("Idempotency-Key", "header")]["required"] is True
         if "{proposal_id}" in path:

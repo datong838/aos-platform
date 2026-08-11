@@ -316,6 +316,7 @@ ROUTER_SPECS: dict[str, tuple[tuple[str, str], ...]] = {
         ('aos_api.routers.aip_logic_publications', 'router'),
         ('aos_api.routers.aip_eval_authority', 'router'),
         ('aos_api.routers.aip_release_publications', 'router'),
+        ('aos_api.routers.aip_lineage_authority', 'router'),
     ),
     "data": (
         ('aos_api.routers.builds', 'router'),

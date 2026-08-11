@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
-
 from aos_api.aip_contracts import TenantContext
 from aos_api.aip_eval_authority_store import (
     AipEvalAuthorityNotFound,
@@ -20,6 +19,7 @@ from aos_api.aip_eval_contracts import (
     LineageEvent,
     LineageEventType,
     LineageRootType,
+    LineageSourceKind,
 )
 from aos_api.routers.aip_eval_authority import (
     get_aip_eval_authority_store,
@@ -83,11 +83,15 @@ def eval_authority_api(client):
         quality=EvidenceQuality.MEASURED,
         occurred_at=NOW,
         observed_at=NOW,
+        source_kind=LineageSourceKind.EVAL_RUN,
+        source_id=f"{run.run_id}:v1",
+        source_hash=HASH,
     )
 
     class FakeStore:
-        error: Exception | None = None
-        scopes: list[TenantScope] = []
+        def __init__(self) -> None:
+            self.error: Exception | None = None
+            self.scopes: list[TenantScope] = []
 
         def _record(self, scope: TenantScope):
             self.scopes.append(scope)
@@ -131,9 +135,7 @@ def test_read_routes_use_authenticated_tenant_scope(eval_authority_api) -> None:
         "orgId": "dev-org",
         "projectId": "dev-project",
     }
-    lineage = client.get(
-        "/v1/aip/eval-authority/lineage/lineage-1", headers=headers
-    )
+    lineage = client.get("/v1/aip/eval-authority/lineage/lineage-1", headers=headers)
     assert lineage.status_code == 200
     assert lineage.json()[0]["quality"] == "measured"
     assert store.scopes == [TenantScope("dev-org", "dev-project")] * 3

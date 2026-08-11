@@ -4,6 +4,7 @@ The models in this module are intentionally storage-agnostic.  They freeze the
 cross-wave envelopes without registering routes, creating stores, or implying
 that Agent/Skill registries from later AIP waves already exist.
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -12,7 +13,6 @@ from enum import StrEnum
 from pydantic import Field, field_validator, model_validator
 
 from aos_api.aip_contracts import AipContractModel, ArtifactRef, TenantContext
-
 
 SHA256_PATTERN = r"^[0-9a-f]{64}$"
 
@@ -89,6 +89,8 @@ class PublicationEventType(StrEnum):
 class LineageRootType(StrEnum):
     TASK_RUN = "task_run"
     ACTION = "action"
+    EVAL_RUN = "eval_run"
+    PUBLICATION = "publication"
     RESEARCH_JOB = "research_job"
     LEGACY_DECISION = "legacy_decision_lineage"
 
@@ -108,6 +110,20 @@ class LineageEventType(StrEnum):
     FALLBACK = "fallback"
     RECONCILE = "reconcile"
     ERROR = "error"
+
+
+class LineageSourceKind(StrEnum):
+    TASK_RUN = "task_run"
+    STEP_RUN = "step_run"
+    CHECKPOINT = "checkpoint"
+    ARTIFACT = "artifact"
+    EVIDENCE = "evidence"
+    ACTION_EVENT = "action_event"
+    ACTION_RECEIPT = "action_receipt"
+    EVAL_RUN = "eval_run"
+    EVAL_RUN_EVENT = "eval_run_event"
+    EVAL_REPORT = "eval_report"
+    PUBLICATION_EVENT = "publication_event"
 
 
 class UsageKind(StrEnum):
@@ -156,7 +172,7 @@ class EvalDatasetManifest(AipContractModel):
     captured_at: datetime
 
     @model_validator(mode="after")
-    def _metadata_only(self) -> "EvalDatasetManifest":
+    def _metadata_only(self) -> EvalDatasetManifest:
         fields = [field.strip() for field in self.fields_allowlist]
         if any(not field for field in fields) or len(fields) != len(set(fields)):
             raise ValueError("fields_allowlist must contain unique non-blank fields")
@@ -200,7 +216,7 @@ class EvalSuiteRevision(AipContractModel):
     gate_threshold: float = Field(ge=0.0, le=1.0)
 
     @model_validator(mode="after")
-    def _unique_cases(self) -> "EvalSuiteRevision":
+    def _unique_cases(self) -> EvalSuiteRevision:
         ids = [case.case_id for case in self.cases]
         if len(ids) != len(set(ids)):
             raise ValueError("eval case ids must be unique inside a suite revision")
@@ -238,7 +254,7 @@ class EvalRunAuthorityRecord(AipContractModel):
     version: int = Field(ge=1)
 
     @model_validator(mode="after")
-    def _suite_reference(self) -> "EvalRunAuthorityRecord":
+    def _suite_reference(self) -> EvalRunAuthorityRecord:
         if self.suite_ref.asset_type is not AssetType.EVAL_SUITE:
             raise ValueError("suite_ref must reference an eval_suite")
         return self
@@ -285,7 +301,7 @@ class EvalReportRevision(AipContractModel):
     created_at: datetime
 
     @model_validator(mode="after")
-    def _consistent_counts(self) -> "EvalReportRevision":
+    def _consistent_counts(self) -> EvalReportRevision:
         if self.suite_ref.asset_type is not AssetType.EVAL_SUITE:
             raise ValueError("suite_ref must reference an eval_suite")
         actual_passed = sum(1 for result in self.results if result.passed)
@@ -315,7 +331,7 @@ class ReleaseGateDecision(AipContractModel):
     invalidated_by: str | None = Field(default=None, max_length=200)
 
     @model_validator(mode="after")
-    def _invalidation_reason(self) -> "ReleaseGateDecision":
+    def _invalidation_reason(self) -> ReleaseGateDecision:
         if not self.eval_report.revision or not self.eval_report.content_hash:
             raise ValueError("release gate requires an exact eval report revision/hash")
         if self.status is ReleaseGateStatus.INVALIDATED and not self.invalidated_by:
@@ -351,11 +367,23 @@ class LineageEvent(AipContractModel):
     quality: EvidenceQuality
     occurred_at: datetime
     observed_at: datetime
+    source_kind: LineageSourceKind | None = None
+    source_id: str | None = Field(default=None, min_length=1, max_length=240)
+    source_hash: str | None = Field(default=None, pattern=SHA256_PATTERN)
 
     @model_validator(mode="after")
-    def _observation_not_early(self) -> "LineageEvent":
+    def _observation_not_early(self) -> LineageEvent:
         if self.observed_at < self.occurred_at:
             raise ValueError("observed_at must not precede occurred_at")
+        source = (self.source_kind, self.source_id, self.source_hash)
+        if any(value is not None for value in source) and not all(
+            value is not None for value in source
+        ):
+            raise ValueError("lineage source kind/id/hash must be provided together")
+        if self.root_type is not LineageRootType.LEGACY_DECISION and not all(
+            value is not None for value in source
+        ):
+            raise ValueError("non-legacy lineage requires an authority source")
         return self
 
 
@@ -374,7 +402,7 @@ class UsageReceipt(AipContractModel):
     observed_at: datetime
 
     @model_validator(mode="after")
-    def _cost_currency(self) -> "UsageReceipt":
+    def _cost_currency(self) -> UsageReceipt:
         if self.usage_kind is UsageKind.COST and self.currency is None:
             raise ValueError("cost receipt requires currency")
         if self.usage_kind is not UsageKind.COST and self.currency is not None:
@@ -404,7 +432,7 @@ class MetricDefinitionRevision(AipContractModel):
     accepted_quality: list[EvidenceQuality] = Field(min_length=1)
 
     @model_validator(mode="after")
-    def _unique_quality(self) -> "MetricDefinitionRevision":
+    def _unique_quality(self) -> MetricDefinitionRevision:
         if len(self.accepted_quality) != len(set(self.accepted_quality)):
             raise ValueError("accepted_quality must not contain duplicates")
         return self
@@ -413,24 +441,25 @@ class MetricDefinitionRevision(AipContractModel):
 __all__ = [
     "AssetRevisionRef",
     "AssetType",
-    "DatasetRevisionRef",
     "DatasetPiiState",
+    "DatasetRevisionRef",
     "DatasetSourceKind",
-    "EvalDatasetManifest",
     "EvalCaseDefinition",
-    "EvalCaseResultEvidence",
     "EvalCaseKind",
-    "EvalRunRecord",
+    "EvalCaseResultEvidence",
+    "EvalDatasetManifest",
+    "EvalReportRevision",
     "EvalRunAuthorityRecord",
     "EvalRunEvent",
+    "EvalRunRecord",
     "EvalRunStatus",
-    "EvalReportRevision",
     "EvalSuiteRevision",
     "EvidenceQuality",
     "JudgeRevisionRef",
     "LineageEvent",
     "LineageEventType",
     "LineageRootType",
+    "LineageSourceKind",
     "MetricDefinitionRevision",
     "PublicationEvent",
     "PublicationEventType",

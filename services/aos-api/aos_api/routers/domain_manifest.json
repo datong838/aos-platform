@@ -3090,6 +3090,12 @@
       "module": "aos_api.routers.aip_release_publications",
       "attribute": "router",
       "order": 514
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_lineage_authority",
+      "attribute": "router",
+      "order": 515
     }
   ]
 }

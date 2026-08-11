@@ -1,8 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from pydantic import ValidationError
-
 from aos_api.aip_contracts import ArtifactRef, TenantContext
 from aos_api.aip_eval_contracts import (
     AssetRevisionRef,
@@ -16,12 +14,14 @@ from aos_api.aip_eval_contracts import (
     LineageEvent,
     LineageEventType,
     LineageRootType,
+    LineageSourceKind,
     MetricDefinitionRevision,
     ReleaseGateDecision,
     ReleaseGateStatus,
     UsageKind,
     UsageReceipt,
 )
+from pydantic import ValidationError
 
 HASH = "a" * 64
 NOW = datetime(2026, 8, 11, tzinfo=UTC)
@@ -59,9 +59,7 @@ def test_suite_revision_freezes_dataset_judge_and_unique_cases() -> None:
         content_hash=HASH,
         target=asset(),
         dataset=dataset,
-        judge=JudgeRevisionRef(
-            judge_id="judge-1", revision=1, content_hash=HASH
-        ),
+        judge=JudgeRevisionRef(judge_id="judge-1", revision=1, content_hash=HASH),
         cases=[
             EvalCaseDefinition(
                 case_id="positive-1",
@@ -99,23 +97,43 @@ def test_lineage_rejects_impossible_observation_order() -> None:
             quality=EvidenceQuality.MEASURED,
             occurred_at=NOW,
             observed_at=NOW - timedelta(seconds=1),
+            source_kind=LineageSourceKind.TASK_RUN,
+            source_id="run-1:v1",
+            source_hash=HASH,
+        )
+
+
+def test_non_legacy_lineage_requires_complete_authority_source() -> None:
+    with pytest.raises(ValidationError, match="authority source"):
+        LineageEvent(
+            tenant=TenantContext(org_id="org-org", project_id="dev-project"),
+            event_id="event-1",
+            lineage_id="lineage-1",
+            root_type=LineageRootType.TASK_RUN,
+            root_id="run-1",
+            sequence=1,
+            event_type=LineageEventType.INPUT,
+            payload_hash=HASH,
+            quality=EvidenceQuality.MEASURED,
+            occurred_at=NOW,
+            observed_at=NOW,
         )
 
 
 def test_usage_cost_requires_currency_and_estimated_stays_explicit() -> None:
-    common = dict(
-        tenant=TenantContext(org_id="org-org", project_id="dev-project"),
-        receipt_id="usage-1",
-        provider="provider-1",
-        provider_receipt_id="provider-receipt-1",
-        lineage_id="lineage-1",
-        usage_kind=UsageKind.COST,
-        quantity=1.25,
-        unit="major_currency",
-        quality=EvidenceQuality.ESTIMATED,
-        source_hash=HASH,
-        observed_at=NOW,
-    )
+    common = {
+        "tenant": TenantContext(org_id="org-org", project_id="dev-project"),
+        "receipt_id": "usage-1",
+        "provider": "provider-1",
+        "provider_receipt_id": "provider-receipt-1",
+        "lineage_id": "lineage-1",
+        "usage_kind": UsageKind.COST,
+        "quantity": 1.25,
+        "unit": "major_currency",
+        "quality": EvidenceQuality.ESTIMATED,
+        "source_hash": HASH,
+        "observed_at": NOW,
+    }
     with pytest.raises(ValidationError, match="currency"):
         UsageReceipt(**common)
     receipt = UsageReceipt(**common, currency="CNY")
@@ -123,18 +141,18 @@ def test_usage_cost_requires_currency_and_estimated_stays_explicit() -> None:
 
 
 def test_invalidated_gate_requires_causal_reference() -> None:
-    common = dict(
-        tenant=TenantContext(org_id="org-org", project_id="dev-project"),
-        decision_id="gate-1",
-        target=asset(),
-        suite_ref=asset(AssetType.EVAL_SUITE),
-        eval_run_id="eval-run-1",
-        eval_report=artifact("report-1"),
-        status=ReleaseGateStatus.INVALIDATED,
-        decision_hash=HASH,
-        decided_by="dev-user",
-        decided_at=NOW,
-    )
+    common = {
+        "tenant": TenantContext(org_id="org-org", project_id="dev-project"),
+        "decision_id": "gate-1",
+        "target": asset(),
+        "suite_ref": asset(AssetType.EVAL_SUITE),
+        "eval_run_id": "eval-run-1",
+        "eval_report": artifact("report-1"),
+        "status": ReleaseGateStatus.INVALIDATED,
+        "decision_hash": HASH,
+        "decided_by": "dev-user",
+        "decided_at": NOW,
+    }
     with pytest.raises(ValidationError, match="invalidated_by"):
         ReleaseGateDecision(**common)
     gate = ReleaseGateDecision(**common, invalidated_by="asset-revision-change")

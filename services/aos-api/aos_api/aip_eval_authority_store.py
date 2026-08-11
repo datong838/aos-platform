@@ -49,9 +49,7 @@ class AipEvalAuthorityPersistenceError(AipEvalAuthorityError):
 
 
 _ALLOWED_TRANSITIONS: dict[EvalRunStatus, frozenset[EvalRunStatus]] = {
-    EvalRunStatus.QUEUED: frozenset(
-        {EvalRunStatus.RUNNING, EvalRunStatus.CANCELLED}
-    ),
+    EvalRunStatus.QUEUED: frozenset({EvalRunStatus.RUNNING, EvalRunStatus.CANCELLED}),
     EvalRunStatus.RUNNING: frozenset(
         {
             EvalRunStatus.SUCCEEDED,
@@ -178,9 +176,7 @@ class AipEvalAuthorityStore:
                     self._run_insert_params(scope, record),
                 ).fetchone()
                 if row is None:
-                    row = self._run_by_idempotency(
-                        conn, scope, record.idempotency_key
-                    )
+                    row = self._run_by_idempotency(conn, scope, record.idempotency_key)
                     replay_event = self._run_event_by_sequence(
                         conn, scope, record.run_id, 1
                     )
@@ -203,9 +199,7 @@ class AipEvalAuthorityStore:
                 "eval run persistence failed"
             ) from exc
 
-    def get_eval_run(
-        self, scope: TenantScope, run_id: str
-    ) -> EvalRunAuthorityRecord:
+    def get_eval_run(self, scope: TenantScope, run_id: str) -> EvalRunAuthorityRecord:
         self._require_scope(scope)
         try:
             with self._connect(scope) as conn:
@@ -241,9 +235,7 @@ class AipEvalAuthorityStore:
                     raise AipEvalAuthorityTransitionBlocked(
                         f"transition {current.value}->{event.to_status.value} is blocked"
                     )
-                expected_sequence = self._next_run_sequence(
-                    conn, scope, event.run_id
-                )
+                expected_sequence = self._next_run_sequence(conn, scope, event.run_id)
                 if event.sequence != expected_sequence:
                     raise AipEvalAuthorityConflict("eval run event sequence changed")
                 self._insert_run_event(conn, scope, event)
@@ -399,6 +391,9 @@ class AipEvalAuthorityStore:
                 "quality",
                 "occurred_at",
                 "observed_at",
+                "source_kind",
+                "source_id",
+                "source_hash",
             ),
             values=(
                 event.event_id,
@@ -413,6 +408,9 @@ class AipEvalAuthorityStore:
                 event.quality.value,
                 event.occurred_at,
                 event.observed_at,
+                event.source_kind.value if event.source_kind else None,
+                event.source_id,
+                event.source_hash,
             ),
             expected=event,
             parser=lambda row: LineageEvent(
@@ -429,6 +427,9 @@ class AipEvalAuthorityStore:
                 quality=row["quality"],
                 occurred_at=row["occurred_at"],
                 observed_at=row["observed_at"],
+                source_kind=row["source_kind"],
+                source_id=row["source_id"],
+                source_hash=row["source_hash"],
             ),
         )
 
@@ -603,6 +604,9 @@ class AipEvalAuthorityStore:
                 quality=row["quality"],
                 occurred_at=row["occurred_at"],
                 observed_at=row["observed_at"],
+                source_kind=row["source_kind"],
+                source_id=row["source_id"],
+                source_hash=row["source_hash"],
             )
             for row in rows
         ]
@@ -684,9 +688,7 @@ class AipEvalAuthorityStore:
         return json.dumps(value, ensure_ascii=False, sort_keys=True)
 
     @staticmethod
-    def _dataset_row(
-        conn: Any, scope: TenantScope, dataset_id: str, revision: int
-    ):
+    def _dataset_row(conn: Any, scope: TenantScope, dataset_id: str, revision: int):
         return conn.execute(
             """SELECT dataset_id,revision,content_hash,source_hash,
                       redaction_policy_ref,manifest
@@ -770,9 +772,7 @@ class AipEvalAuthorityStore:
         )
 
     @staticmethod
-    def _insert_run_event(
-        conn: Any, scope: TenantScope, event: EvalRunEvent
-    ) -> None:
+    def _insert_run_event(conn: Any, scope: TenantScope, event: EvalRunEvent) -> None:
         row = conn.execute(
             """INSERT INTO aip_eval_run_event (
                org_id,project_id,event_id,run_id,sequence,event_type,from_status,
@@ -805,9 +805,7 @@ class AipEvalAuthorityStore:
             if existing is None:
                 raise AipEvalAuthorityConflict("eval run event sequence conflicts")
             replay = EvalRunEvent(
-                tenant=TenantContext(
-                    org_id=scope.org_id, project_id=scope.project_id
-                ),
+                tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
                 event_id=event.event_id,
                 **existing,
             )
