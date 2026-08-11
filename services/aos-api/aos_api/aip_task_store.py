@@ -6,6 +6,7 @@ import json
 import uuid
 from collections.abc import Callable
 from contextlib import AbstractContextManager
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from aos_api.aip_contracts import ActorRef, TaskRunStatus
@@ -14,6 +15,8 @@ from aos_api.aip_task_models import (
     CreateTaskRequest,
     CreateTaskRunRequest,
     PlanRevisionSnapshot,
+    RunControlResult,
+    StepLease,
     TaskRunSnapshot,
     TaskSnapshot,
     TaskTimeline,
@@ -397,6 +400,668 @@ class AipTaskStore:
             evidence=[dict(row) for row in evidence],
         )
 
+    def start_run(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        *,
+        expected_run_version: int,
+        expected_task_version: int,
+        actor: str,
+        idempotency_key: str,
+        reason: str = "",
+    ) -> RunControlResult:
+        with self._connect(scope) as conn:
+            run, task = self._locked_run_and_task(conn, scope, run_id)
+            request = self._control_request(
+                "start", expected_run_version, expected_task_version, reason
+            )
+            replay = self._control_replay(
+                conn, scope, run_id, str(task["task_id"]), "start", idempotency_key, request
+            )
+            if replay is not None:
+                return replay
+            self._expect_run_version(run, expected_run_version)
+            self._expect_version(task, expected_task_version)
+            if run["status"] != "queued" or TaskStatus(task["status"]) is not TaskStatus.APPROVED:
+                raise AipTaskTransitionBlocked("only an approved queued run can start")
+            task_status = transition_task_status(TaskStatus.APPROVED, TaskStatus.EXECUTING)
+            conn.execute(
+                """UPDATE aip_task_run SET status='running',started_at=NOW(),version=version+1,
+                     updated_at=NOW() WHERE org_id=%s AND project_id=%s AND run_id=%s AND version=%s""",
+                (scope.org_id, scope.project_id, run_id, expected_run_version),
+            )
+            conn.execute(
+                """UPDATE aip_task SET status=%s,version=version+1,updated_at=NOW()
+                   WHERE org_id=%s AND project_id=%s AND task_id=%s AND version=%s""",
+                (
+                    task_status.value,
+                    scope.org_id,
+                    scope.project_id,
+                    task["task_id"],
+                    expected_task_version,
+                ),
+            )
+            self._record_control_receipt(
+                conn, scope, run_id, actor, "start", idempotency_key, request
+            )
+            result = self._control_result(conn, scope, run_id, str(task["task_id"]))
+            conn.commit()
+            return result
+
+    def pause_run(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        *,
+        expected_run_version: int,
+        expected_task_version: int,
+        actor: str,
+        idempotency_key: str,
+        reason: str = "",
+    ) -> RunControlResult:
+        return self._change_running_task(
+            scope,
+            run_id,
+            expected_run_version=expected_run_version,
+            expected_task_version=expected_task_version,
+            expected_task_status=TaskStatus.EXECUTING,
+            target_task_status=TaskStatus.PAUSED,
+            operation="pause",
+            actor=actor,
+            idempotency_key=idempotency_key,
+            reason=reason,
+        )
+
+    def resume_run(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        *,
+        expected_run_version: int,
+        expected_task_version: int,
+        actor: str,
+        idempotency_key: str,
+        reason: str = "",
+    ) -> RunControlResult:
+        return self._change_running_task(
+            scope,
+            run_id,
+            expected_run_version=expected_run_version,
+            expected_task_version=expected_task_version,
+            expected_task_status=TaskStatus.PAUSED,
+            target_task_status=TaskStatus.EXECUTING,
+            operation="resume",
+            actor=actor,
+            idempotency_key=idempotency_key,
+            reason=reason,
+        )
+
+    def cancel_run(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        *,
+        expected_run_version: int,
+        expected_task_version: int,
+        actor: str,
+        idempotency_key: str,
+        reason: str = "",
+    ) -> RunControlResult:
+        with self._connect(scope) as conn:
+            run, task = self._locked_run_and_task(conn, scope, run_id)
+            request = self._control_request(
+                "cancel", expected_run_version, expected_task_version, reason
+            )
+            replay = self._control_replay(
+                conn, scope, run_id, str(task["task_id"]), "cancel", idempotency_key, request
+            )
+            if replay is not None:
+                return replay
+            self._expect_run_version(run, expected_run_version)
+            self._expect_version(task, expected_task_version)
+            current = TaskStatus(task["status"])
+            if run["status"] not in {"queued", "running"}:
+                raise AipTaskTransitionBlocked("terminal run cannot be cancelled")
+            try:
+                if current is TaskStatus.PAUSED:
+                    current = transition_task_status(current, TaskStatus.EXECUTING)
+                target = transition_task_status(current, TaskStatus.CANCELLED)
+            except ContractViolation as exc:
+                raise AipTaskTransitionBlocked(exc.message) from exc
+            conn.execute(
+                """UPDATE aip_task_run SET status='cancelled',finished_at=NOW(),version=version+1,
+                     updated_at=NOW() WHERE org_id=%s AND project_id=%s AND run_id=%s AND version=%s""",
+                (scope.org_id, scope.project_id, run_id, expected_run_version),
+            )
+            conn.execute(
+                """UPDATE aip_task SET status=%s,version=version+1,updated_at=NOW()
+                   WHERE org_id=%s AND project_id=%s AND task_id=%s AND version=%s""",
+                (target.value, scope.org_id, scope.project_id, task["task_id"], expected_task_version),
+            )
+            self._record_control_receipt(
+                conn, scope, run_id, actor, "cancel", idempotency_key, request
+            )
+            result = self._control_result(conn, scope, run_id, str(task["task_id"]))
+            conn.commit()
+            return result
+
+    def rollback_run(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        *,
+        expected_run_version: int,
+        expected_task_version: int,
+        actor: str,
+        idempotency_key: str,
+        reason: str = "",
+    ) -> RunControlResult:
+        with self._connect(scope) as conn:
+            run, task = self._locked_run_and_task(conn, scope, run_id)
+            request = self._control_request(
+                "rollback", expected_run_version, expected_task_version, reason
+            )
+            replay = self._control_replay(
+                conn, scope, run_id, str(task["task_id"]), "rollback", idempotency_key, request
+            )
+            if replay is not None:
+                return replay
+            self._expect_run_version(run, expected_run_version)
+            self._expect_version(task, expected_task_version)
+            if run["status"] != "succeeded" or TaskStatus(task["status"]) is not TaskStatus.COMPLETED:
+                raise AipTaskTransitionBlocked("only a completed run can be rolled back")
+            target = transition_task_status(TaskStatus.COMPLETED, TaskStatus.ROLLED_BACK)
+            conn.execute(
+                """UPDATE aip_task SET status=%s,version=version+1,updated_at=NOW()
+                   WHERE org_id=%s AND project_id=%s AND task_id=%s AND version=%s""",
+                (target.value, scope.org_id, scope.project_id, task["task_id"], expected_task_version),
+            )
+            conn.execute(
+                "UPDATE aip_task_run SET version=version+1,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND run_id=%s AND version=%s",
+                (scope.org_id, scope.project_id, run_id, expected_run_version),
+            )
+            self._insert_evidence(
+                conn,
+                scope,
+                run_id,
+                actor,
+                "rollback",
+                {"taskId": task["task_id"], "runId": run_id, "outcome": "rolled_back"},
+            )
+            self._record_control_receipt(
+                conn, scope, run_id, actor, "rollback", idempotency_key, request
+            )
+            result = self._control_result(conn, scope, run_id, str(task["task_id"]))
+            conn.commit()
+            return result
+
+    def claim_step(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        step_key: str,
+        worker_id: str,
+        *,
+        lease_seconds: int,
+    ) -> StepLease:
+        with self._connect(scope) as conn:
+            run, task = self._locked_run_and_task(conn, scope, run_id)
+            if run["status"] != "running" or TaskStatus(task["status"]) is not TaskStatus.EXECUTING:
+                raise AipTaskTransitionBlocked("run is not claimable")
+            plan = conn.execute(
+                "SELECT steps FROM aip_plan_revision WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s",
+                (scope.org_id, scope.project_id, run["plan_revision_id"]),
+            ).fetchone()
+            if plan is None or step_key not in {str(step.get("stepKey")) for step in plan["steps"]}:
+                raise AipTaskNotFound("plan step not found in scope")
+            row = conn.execute(
+                """SELECT * FROM aip_step_run WHERE org_id=%s AND project_id=%s AND run_id=%s
+                   AND step_key=%s ORDER BY attempt DESC LIMIT 1 FOR UPDATE""",
+                (scope.org_id, scope.project_id, run_id, step_key),
+            ).fetchone()
+            now = datetime.now(timezone.utc)
+            expires = now + timedelta(seconds=lease_seconds)
+            if row is None:
+                step_run_id = f"step-run-{uuid.uuid4().hex[:20]}"
+                row = conn.execute(
+                    """INSERT INTO aip_step_run (
+                         org_id,project_id,step_run_id,run_id,step_key,attempt,status,
+                         lease_owner,lease_expires_at,heartbeat_at,created_at,updated_at)
+                       VALUES (%s,%s,%s,%s,%s,1,'running',%s,%s,%s,NOW(),NOW()) RETURNING *""",
+                    (scope.org_id, scope.project_id, step_run_id, run_id, step_key, worker_id, expires, now),
+                ).fetchone()
+            else:
+                lease_expires = row["lease_expires_at"]
+                if row["status"] == "running" and lease_expires and lease_expires > now:
+                    raise AipTaskVersionConflict("step already has an active lease")
+                if row["status"] == "running" and row["action_ref"] is not None:
+                    conn.execute(
+                        """UPDATE aip_step_run SET status='unknown',error=%s::jsonb,updated_at=NOW()
+                           WHERE org_id=%s AND project_id=%s AND step_run_id=%s""",
+                        (
+                            self._json({"code": "AIP_OUTCOME_UNKNOWN", "message": "expired lease after action"}),
+                            scope.org_id,
+                            scope.project_id,
+                            row["step_run_id"],
+                        ),
+                    )
+                    conn.execute(
+                        "UPDATE aip_task_run SET status='unknown',finished_at=NOW(),version=version+1,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND run_id=%s",
+                        (scope.org_id, scope.project_id, run_id),
+                    )
+                    conn.execute(
+                        """UPDATE aip_task SET status='paused',version=version+1,updated_at=NOW()
+                           WHERE org_id=%s AND project_id=%s AND task_id=%s AND status='executing'""",
+                        (scope.org_id, scope.project_id, task["task_id"]),
+                    )
+                    conn.commit()
+                    raise AipTaskTransitionBlocked("expired action lease requires reconcile")
+                if row["status"] not in {"queued", "running"}:
+                    raise AipTaskTransitionBlocked("step is already terminal")
+                row = conn.execute(
+                    """UPDATE aip_step_run SET status='running',lease_owner=%s,lease_expires_at=%s,
+                         heartbeat_at=%s,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND step_run_id=%s
+                       RETURNING *""",
+                    (worker_id, expires, now, scope.org_id, scope.project_id, row["step_run_id"]),
+                ).fetchone()
+            conn.commit()
+            return StepLease(
+                step_run_id=str(row["step_run_id"]),
+                run_id=run_id,
+                step_key=step_key,
+                attempt=int(row["attempt"]),
+                worker_id=worker_id,
+                lease_expires_at=row["lease_expires_at"],
+            )
+
+    def heartbeat_step(
+        self, scope: TenantScope, step_run_id: str, worker_id: str, *, lease_seconds: int
+    ) -> StepLease:
+        expires = datetime.now(timezone.utc) + timedelta(seconds=lease_seconds)
+        with self._connect(scope) as conn:
+            row = conn.execute(
+                """UPDATE aip_step_run SET heartbeat_at=NOW(),lease_expires_at=%s,updated_at=NOW()
+                   WHERE org_id=%s AND project_id=%s AND step_run_id=%s AND status='running'
+                     AND lease_owner=%s AND lease_expires_at>NOW() RETURNING *""",
+                (expires, scope.org_id, scope.project_id, step_run_id, worker_id),
+            ).fetchone()
+            if row is None:
+                raise AipTaskVersionConflict("step lease is missing, expired, or owned by another worker")
+            conn.commit()
+            return StepLease(
+                step_run_id=step_run_id,
+                run_id=str(row["run_id"]),
+                step_key=str(row["step_key"]),
+                attempt=int(row["attempt"]),
+                worker_id=worker_id,
+                lease_expires_at=row["lease_expires_at"],
+            )
+
+    def record_step_phase(
+        self,
+        scope: TenantScope,
+        step_run_id: str,
+        worker_id: str,
+        actor: str,
+        phase: str,
+        payload: dict[str, Any],
+    ) -> str:
+        columns = {"think": "think_ref", "act": "action_ref", "verify": "verify_ref", "observe": "observe_ref"}
+        column = columns.get(phase)
+        if column is None:
+            raise ValueError("phase must be think, act, verify, or observe")
+        with self._connect(scope) as conn:
+            step = conn.execute(
+                """SELECT * FROM aip_step_run WHERE org_id=%s AND project_id=%s AND step_run_id=%s
+                   AND status='running' AND lease_owner=%s AND lease_expires_at>NOW() FOR UPDATE""",
+                (scope.org_id, scope.project_id, step_run_id, worker_id),
+            ).fetchone()
+            if step is None:
+                raise AipTaskVersionConflict("step phase write requires an active owned lease")
+            evidence_id = self._insert_evidence(
+                conn,
+                scope,
+                str(step["run_id"]),
+                actor,
+                f"taor.{phase}",
+                {"stepRunId": step_run_id, "stepKey": step["step_key"], "payload": payload},
+            )
+            conn.execute(
+                f"UPDATE aip_step_run SET {column}=%s::jsonb,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND step_run_id=%s",
+                (self._json({"evidenceId": evidence_id}), scope.org_id, scope.project_id, step_run_id),
+            )
+            conn.commit()
+            return evidence_id
+
+    def record_artifact(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        actor: str,
+        artifact_type: str,
+        payload: dict[str, Any],
+    ) -> str:
+        """Persist an artifact reference without storing opaque provider state or credentials."""
+        artifact_id = f"artifact-{uuid.uuid4().hex[:20]}"
+        content_ref = payload.get("contentRef")
+        schema_ref = payload.get("schemaRef")
+        metadata = payload.get("metadata", {})
+        source = payload.get("source", {})
+        evidence_refs = payload.get("evidenceRefs", [])
+        marking = payload.get("marking", [])
+        content_hash = payload.get("contentHash") or _canonical_hash(
+            {"contentRef": content_ref, "schemaRef": schema_ref, "metadata": metadata}
+        )
+        with self._connect(scope) as conn:
+            exists = conn.execute(
+                "SELECT 1 FROM aip_task_run WHERE org_id=%s AND project_id=%s AND run_id=%s",
+                (scope.org_id, scope.project_id, run_id),
+            ).fetchone()
+            if exists is None:
+                raise AipTaskNotFound("task run not found in scope")
+            conn.execute(
+                """INSERT INTO aip_artifact (
+                     org_id,project_id,artifact_id,run_id,artifact_type,content_ref,schema_ref,
+                     source,evidence_refs,marking,content_hash,metadata,created_by,created_at)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s,NOW())""",
+                (
+                    scope.org_id,
+                    scope.project_id,
+                    artifact_id,
+                    run_id,
+                    artifact_type,
+                    content_ref,
+                    schema_ref,
+                    self._json(source),
+                    self._json(evidence_refs),
+                    self._json(marking),
+                    content_hash,
+                    self._json(metadata),
+                    actor,
+                ),
+            )
+            conn.commit()
+        return artifact_id
+
+    def complete_step(
+        self, scope: TenantScope, step_run_id: str, worker_id: str, actor: str
+    ) -> str:
+        with self._connect(scope) as conn:
+            step = conn.execute(
+                """SELECT * FROM aip_step_run WHERE org_id=%s AND project_id=%s AND step_run_id=%s
+                   AND status='running' AND lease_owner=%s AND lease_expires_at>NOW() FOR UPDATE""",
+                (scope.org_id, scope.project_id, step_run_id, worker_id),
+            ).fetchone()
+            if step is None:
+                raise AipTaskVersionConflict("step completion requires an active owned lease")
+            if any(step[name] is None for name in ("think_ref", "action_ref", "verify_ref", "observe_ref")):
+                raise AipTaskTransitionBlocked("all four TAOR evidence phases are required")
+            sequence = int(
+                conn.execute(
+                    "SELECT COALESCE(MAX(sequence),0)+1 AS seq FROM aip_checkpoint WHERE org_id=%s AND project_id=%s AND run_id=%s",
+                    (scope.org_id, scope.project_id, step["run_id"]),
+                ).fetchone()["seq"]
+            )
+            checkpoint_id = f"checkpoint-{uuid.uuid4().hex[:20]}"
+            state = {"stepRunId": step_run_id, "stepKey": step["step_key"], "status": "succeeded"}
+            conn.execute(
+                """INSERT INTO aip_checkpoint (
+                     org_id,project_id,checkpoint_id,run_id,sequence,schema_version,step_key,
+                     state_hash,state_snapshot_ref,artifact_refs,created_by,created_at)
+                   VALUES (%s,%s,%s,%s,%s,1,%s,%s,%s::jsonb,'[]'::jsonb,%s,NOW())""",
+                (
+                    scope.org_id,
+                    scope.project_id,
+                    checkpoint_id,
+                    step["run_id"],
+                    sequence,
+                    step["step_key"],
+                    _canonical_hash(state),
+                    self._json(state),
+                    actor,
+                ),
+            )
+            conn.execute(
+                """UPDATE aip_step_run SET status='succeeded',lease_owner=NULL,lease_expires_at=NULL,
+                     heartbeat_at=NULL,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND step_run_id=%s""",
+                (scope.org_id, scope.project_id, step_run_id),
+            )
+            conn.execute(
+                "UPDATE aip_task_run SET last_checkpoint_id=%s,version=version+1,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND run_id=%s",
+                (checkpoint_id, scope.org_id, scope.project_id, step["run_id"]),
+            )
+            conn.commit()
+            return checkpoint_id
+
+    def complete_run(self, scope: TenantScope, run_id: str) -> RunControlResult:
+        with self._connect(scope) as conn:
+            run, task = self._locked_run_and_task(conn, scope, run_id)
+            if run["status"] != "running" or TaskStatus(task["status"]) is not TaskStatus.EXECUTING:
+                raise AipTaskTransitionBlocked("run is not completable")
+            plan = conn.execute(
+                "SELECT steps FROM aip_plan_revision WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s",
+                (scope.org_id, scope.project_id, run["plan_revision_id"]),
+            ).fetchone()
+            required = {str(step["stepKey"]) for step in plan["steps"]}
+            succeeded = {
+                str(row["step_key"])
+                for row in conn.execute(
+                    "SELECT step_key FROM aip_step_run WHERE org_id=%s AND project_id=%s AND run_id=%s AND status='succeeded'",
+                    (scope.org_id, scope.project_id, run_id),
+                ).fetchall()
+            }
+            if required != succeeded:
+                raise AipTaskTransitionBlocked("all plan steps must succeed before run completion")
+            target = transition_task_status(TaskStatus.EXECUTING, TaskStatus.COMPLETED)
+            conn.execute(
+                "UPDATE aip_task_run SET status='succeeded',finished_at=NOW(),version=version+1,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND run_id=%s",
+                (scope.org_id, scope.project_id, run_id),
+            )
+            conn.execute(
+                "UPDATE aip_task SET status=%s,version=version+1,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND task_id=%s",
+                (target.value, scope.org_id, scope.project_id, task["task_id"]),
+            )
+            result = self._control_result(conn, scope, run_id, str(task["task_id"]))
+            conn.commit()
+            return result
+
+    def fail_step(
+        self, scope: TenantScope, step_run_id: str, worker_id: str, actor: str, error: dict[str, Any]
+    ) -> RunControlResult:
+        with self._connect(scope) as conn:
+            step = conn.execute(
+                """SELECT * FROM aip_step_run WHERE org_id=%s AND project_id=%s AND step_run_id=%s
+                   AND status='running' AND lease_owner=%s AND lease_expires_at>NOW() FOR UPDATE""",
+                (scope.org_id, scope.project_id, step_run_id, worker_id),
+            ).fetchone()
+            if step is None:
+                raise AipTaskVersionConflict("step failure requires the owned lease")
+            run, task = self._locked_run_and_task(conn, scope, str(step["run_id"]))
+            self._insert_evidence(conn, scope, str(step["run_id"]), actor, "taor.failure", error)
+            conn.execute(
+                "UPDATE aip_step_run SET status='failed',error=%s::jsonb,lease_owner=NULL,lease_expires_at=NULL,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND step_run_id=%s",
+                (self._json(error), scope.org_id, scope.project_id, step_run_id),
+            )
+            conn.execute(
+                "UPDATE aip_task_run SET status='failed',finished_at=NOW(),version=version+1,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND run_id=%s",
+                (scope.org_id, scope.project_id, step["run_id"]),
+            )
+            target = transition_task_status(TaskStatus(task["status"]), TaskStatus.FAILED)
+            conn.execute(
+                "UPDATE aip_task SET status=%s,version=version+1,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND task_id=%s",
+                (target.value, scope.org_id, scope.project_id, task["task_id"]),
+            )
+            result = self._control_result(conn, scope, str(step["run_id"]), str(task["task_id"]))
+            conn.commit()
+            return result
+
+    def _change_running_task(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        *,
+        expected_run_version: int,
+        expected_task_version: int,
+        expected_task_status: TaskStatus,
+        target_task_status: TaskStatus,
+        operation: str,
+        actor: str,
+        idempotency_key: str,
+        reason: str,
+    ) -> RunControlResult:
+        with self._connect(scope) as conn:
+            run, task = self._locked_run_and_task(conn, scope, run_id)
+            request = self._control_request(
+                operation, expected_run_version, expected_task_version, reason
+            )
+            replay = self._control_replay(
+                conn,
+                scope,
+                run_id,
+                str(task["task_id"]),
+                operation,
+                idempotency_key,
+                request,
+            )
+            if replay is not None:
+                return replay
+            self._expect_run_version(run, expected_run_version)
+            self._expect_version(task, expected_task_version)
+            if run["status"] != "running" or TaskStatus(task["status"]) is not expected_task_status:
+                raise AipTaskTransitionBlocked("run/task state does not allow this operation")
+            target = transition_task_status(expected_task_status, target_task_status)
+            conn.execute(
+                "UPDATE aip_task_run SET version=version+1,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND run_id=%s AND version=%s",
+                (scope.org_id, scope.project_id, run_id, expected_run_version),
+            )
+            conn.execute(
+                "UPDATE aip_task SET status=%s,version=version+1,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND task_id=%s AND version=%s",
+                (target.value, scope.org_id, scope.project_id, task["task_id"], expected_task_version),
+            )
+            self._record_control_receipt(
+                conn, scope, run_id, actor, operation, idempotency_key, request
+            )
+            result = self._control_result(conn, scope, run_id, str(task["task_id"]))
+            conn.commit()
+            return result
+
+    def _locked_run_and_task(self, conn: Any, scope: TenantScope, run_id: str):
+        run = conn.execute(
+            "SELECT * FROM aip_task_run WHERE org_id=%s AND project_id=%s AND run_id=%s FOR UPDATE",
+            (scope.org_id, scope.project_id, run_id),
+        ).fetchone()
+        if run is None:
+            raise AipTaskNotFound("task run not found in scope")
+        task = self._task_row(conn, scope, str(run["task_id"]), for_update=True)
+        if task is None:
+            raise AipTaskNotFound("task not found in scope")
+        return run, task
+
+    def _control_result(self, conn: Any, scope: TenantScope, run_id: str, task_id: str) -> RunControlResult:
+        run = conn.execute(
+            "SELECT * FROM aip_task_run WHERE org_id=%s AND project_id=%s AND run_id=%s",
+            (scope.org_id, scope.project_id, run_id),
+        ).fetchone()
+        task = self._task_row(conn, scope, task_id)
+        return RunControlResult(task=self._task(task), run=self._run(run))
+
+    def _insert_evidence(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        run_id: str,
+        actor: str,
+        evidence_type: str,
+        payload: dict[str, Any],
+        *,
+        source_ref: str | None = None,
+    ) -> str:
+        evidence_id = f"evidence-{uuid.uuid4().hex[:20]}"
+        content_hash = _canonical_hash(payload)
+        conn.execute(
+            """INSERT INTO aip_evidence (
+                 org_id,project_id,evidence_id,run_id,evidence_type,subject_ref,
+                 source_type,source_ref,observed_at,freshness_at,content_hash,redaction,
+                 payload,created_by,created_at)
+               VALUES (%s,%s,%s,%s,%s,%s::jsonb,'aip-runtime',%s,NOW(),NOW(),%s,
+                       '{}'::jsonb,%s::jsonb,%s,NOW())""",
+            (
+                scope.org_id,
+                scope.project_id,
+                evidence_id,
+                run_id,
+                evidence_type,
+                self._json({"resourceType": "TaskRun", "resourceId": run_id, "authority": "aip-task-runtime"}),
+                source_ref or evidence_type,
+                content_hash,
+                self._json(payload),
+                actor,
+            ),
+        )
+        return evidence_id
+
+    @staticmethod
+    def _control_request(
+        operation: str,
+        expected_run_version: int,
+        expected_task_version: int,
+        reason: str,
+    ) -> dict[str, Any]:
+        request = {
+            "operation": operation,
+            "expectedRunVersion": expected_run_version,
+            "expectedTaskVersion": expected_task_version,
+            "reason": reason,
+        }
+        return {**request, "requestHash": _canonical_hash(request)}
+
+    def _control_replay(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        run_id: str,
+        task_id: str,
+        operation: str,
+        idempotency_key: str,
+        request: dict[str, Any],
+    ) -> RunControlResult | None:
+        source_ref = f"run-control:{operation}:{idempotency_key}"
+        receipt = conn.execute(
+            """SELECT payload FROM aip_evidence
+               WHERE org_id=%s AND project_id=%s AND run_id=%s
+                 AND evidence_type='run.control' AND source_ref=%s
+               ORDER BY created_at DESC LIMIT 1""",
+            (scope.org_id, scope.project_id, run_id, source_ref),
+        ).fetchone()
+        if receipt is None:
+            return None
+        if receipt["payload"].get("requestHash") != request["requestHash"]:
+            raise AipTaskIdempotencyConflict(
+                "run control idempotency key was reused for a different request"
+            )
+        return self._control_result(conn, scope, run_id, task_id)
+
+    def _record_control_receipt(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        run_id: str,
+        actor: str,
+        operation: str,
+        idempotency_key: str,
+        request: dict[str, Any],
+    ) -> str:
+        return self._insert_evidence(
+            conn,
+            scope,
+            run_id,
+            actor,
+            "run.control",
+            request,
+            source_ref=f"run-control:{operation}:{idempotency_key}",
+        )
+
     def _connect(self, scope: TenantScope):
         try:
             return self._connect_factory(scope)
@@ -417,6 +1082,14 @@ class AipTaskStore:
         if current != expected:
             raise AipTaskVersionConflict(
                 f"expected task version {expected}, current version is {current}"
+            )
+
+    @staticmethod
+    def _expect_run_version(row: Any, expected: int) -> None:
+        current = int(row["version"])
+        if current != expected:
+            raise AipTaskVersionConflict(
+                f"expected run version {expected}, current version is {current}"
             )
 
     @staticmethod

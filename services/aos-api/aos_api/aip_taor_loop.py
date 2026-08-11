@@ -6,7 +6,7 @@ Phase 1 核心：将 aip_logic_engine 的 mock execute_flow 替换为真实 TAOR
 from __future__ import annotations
 
 import time
-from typing import Any
+from typing import Any, Protocol
 
 from aos_api.aip_task_model import (
     ActResult,
@@ -23,6 +23,183 @@ from aos_api.aip_llm_adapter import get_llm_adapter
 from aos_api.aip_tool_executor import get_executor
 from aos_api.aip_verify_skills import get_verify_registry
 from aos_api.public_contracts import TaskStatus
+from aos_api.aip_task_models import RunControlResult
+from aos_api.aip_task_store import (
+    AipTaskStore,
+    AipTaskStoreError,
+    AipTaskTransitionBlocked,
+)
+from aos_api.tenant_scope import TenantScope
+
+
+class CanonicalTaorAdapter(Protocol):
+    """Capability adapter boundary; the runtime intentionally has no default/mock adapter."""
+
+    def think(self, step: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]: ...
+
+    def act(self, step: dict[str, Any], thought: dict[str, Any]) -> dict[str, Any]: ...
+
+    def verify(self, step: dict[str, Any], action: dict[str, Any]) -> dict[str, Any]: ...
+
+    def observe(
+        self,
+        step: dict[str, Any],
+        action: dict[str, Any],
+        verification: dict[str, Any],
+    ) -> dict[str, Any]: ...
+
+
+class CanonicalTaorRunner:
+    """PostgreSQL-backed TAOR runner for an exact approved PlanRevision."""
+
+    def __init__(self, store: AipTaskStore | None = None) -> None:
+        self.store = store or AipTaskStore()
+
+    def run(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        *,
+        actor: str,
+        worker_id: str,
+        adapter: CanonicalTaorAdapter,
+        lease_seconds: int = 30,
+    ) -> RunControlResult:
+        timeline = self.store.timeline(scope, run_id)
+        self._validate_bindings(timeline.model_dump(mode="json", by_alias=True))
+        if timeline.run.status.value == "queued":
+            started = self.store.start_run(
+                scope,
+                run_id,
+                expected_run_version=timeline.run.version,
+                expected_task_version=timeline.task.version,
+                actor=actor,
+                idempotency_key=f"taor-start:{run_id}",
+                reason="canonical TAOR worker start",
+            )
+            timeline = self.store.timeline(scope, started.run.id)
+        elif timeline.run.status.value != "running" or timeline.task.status is not TaskStatus.EXECUTING:
+            raise AipTaskTransitionBlocked("run must be queued or actively executing")
+
+        completed = {
+            str(row["step_key"])
+            for row in timeline.steps
+            if row.get("status") == "succeeded"
+        }
+        context: dict[str, Any] = {
+            "taskRef": timeline.task.id,
+            "runRef": timeline.run.id,
+            "planRevisionRef": timeline.plan.id,
+            "planContentHash": timeline.plan.content_hash,
+            "logicGraphRef": timeline.run.logic_graph_id,
+            "logicRevision": timeline.run.logic_revision,
+        }
+        for plan_step in timeline.plan.steps:
+            if plan_step.step_key in completed:
+                continue
+            step = plan_step.model_dump(mode="json", by_alias=True)
+            lease = self.store.claim_step(
+                scope,
+                run_id,
+                plan_step.step_key,
+                worker_id,
+                lease_seconds=lease_seconds,
+            )
+            try:
+                thought = adapter.think(step, dict(context))
+                self.store.record_step_phase(
+                    scope, lease.step_run_id, worker_id, actor, "think", thought
+                )
+                action = adapter.act(step, thought)
+                self.store.record_step_phase(
+                    scope, lease.step_run_id, worker_id, actor, "act", action
+                )
+                verification = adapter.verify(step, action)
+                if verification.get("passed") is not True:
+                    error = {
+                        "code": "AIP_VERIFY_FAILED",
+                        "message": str(verification.get("message") or "step verification failed"),
+                        "verification": verification,
+                    }
+                    self.store.record_step_phase(
+                        scope, lease.step_run_id, worker_id, actor, "verify", verification
+                    )
+                    return self.store.fail_step(
+                        scope, lease.step_run_id, worker_id, actor, error
+                    )
+                self.store.record_step_phase(
+                    scope, lease.step_run_id, worker_id, actor, "verify", verification
+                )
+                observation = adapter.observe(step, action, verification)
+                artifact_ids = self._persist_artifacts(
+                    scope, run_id, actor, observation.get("artifacts", [])
+                )
+                persisted_observation = {**observation, "artifactRefs": artifact_ids}
+                self.store.record_step_phase(
+                    scope,
+                    lease.step_run_id,
+                    worker_id,
+                    actor,
+                    "observe",
+                    persisted_observation,
+                )
+                self.store.complete_step(
+                    scope, lease.step_run_id, worker_id, actor
+                )
+                context[f"step:{plan_step.step_key}"] = persisted_observation
+            except AipTaskStoreError:
+                raise
+            except Exception as exc:
+                return self.store.fail_step(
+                    scope,
+                    lease.step_run_id,
+                    worker_id,
+                    actor,
+                    {
+                        "code": "AIP_ADAPTER_FAILED",
+                        "message": str(exc),
+                        "retryable": False,
+                    },
+                )
+        return self.store.complete_run(scope, run_id)
+
+    def _persist_artifacts(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        actor: str,
+        artifacts: Any,
+    ) -> list[str]:
+        if not isinstance(artifacts, list):
+            raise ValueError("observe artifacts must be a list")
+        result: list[str] = []
+        for artifact in artifacts:
+            if not isinstance(artifact, dict) or not str(artifact.get("type", "")).strip():
+                raise ValueError("each observed artifact must contain a type")
+            result.append(
+                self.store.record_artifact(
+                    scope,
+                    run_id,
+                    actor,
+                    str(artifact["type"]),
+                    artifact,
+                )
+            )
+        return result
+
+    @staticmethod
+    def _validate_bindings(timeline: dict[str, Any]) -> None:
+        run = timeline["run"]
+        if bool(run.get("logicGraphId")) != bool(run.get("logicRevision")):
+            raise AipTaskTransitionBlocked(
+                "logicGraphId and logicRevision must be bound together"
+            )
+        for step in timeline["plan"]["steps"]:
+            capability = step.get("capabilityRef")
+            if capability is not None and not capability.get("revision"):
+                raise AipTaskTransitionBlocked(
+                    "executable capabilityRef must bind an exact revision"
+                )
 
 
 class TAORLoopController:

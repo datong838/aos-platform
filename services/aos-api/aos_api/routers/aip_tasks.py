@@ -9,6 +9,8 @@ from aos_api.aip_task_models import (
     CreateTaskRequest,
     CreateTaskRunRequest,
     PlanRevisionSnapshot,
+    RunControlRequest,
+    RunControlResult,
     TaskListResponse,
     TaskRunSnapshot,
     TaskSnapshot,
@@ -186,6 +188,76 @@ def get_task_run_timeline(
         return store.timeline(TenantScope(principal.org_id, principal.project_id), run_id)
     except AipTaskStoreError as exc:
         raise _map_store_error(exc) from exc
+
+
+def _control_run(
+    operation: str,
+    run_id: str,
+    body: RunControlRequest,
+    idempotency_key: str,
+    principal: Principal,
+    service: AipTaskService,
+) -> RunControlResult:
+    try:
+        handler = getattr(service, f"{operation}_run")
+        return handler(principal, run_id, idempotency_key, body)
+    except AipTaskStoreError as exc:
+        raise _map_store_error(exc) from exc
+
+
+@router.post("/task-runs/{run_id}/start", response_model=RunControlResult)
+def start_task_run(
+    run_id: str,
+    body: RunControlRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipTaskService = Depends(get_aip_task_service),
+) -> RunControlResult:
+    return _control_run("start", run_id, body, _idem(idempotency_key), principal, service)
+
+
+@router.post("/task-runs/{run_id}/pause", response_model=RunControlResult)
+def pause_task_run(
+    run_id: str,
+    body: RunControlRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipTaskService = Depends(get_aip_task_service),
+) -> RunControlResult:
+    return _control_run("pause", run_id, body, _idem(idempotency_key), principal, service)
+
+
+@router.post("/task-runs/{run_id}/resume", response_model=RunControlResult)
+def resume_task_run(
+    run_id: str,
+    body: RunControlRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipTaskService = Depends(get_aip_task_service),
+) -> RunControlResult:
+    return _control_run("resume", run_id, body, _idem(idempotency_key), principal, service)
+
+
+@router.post("/task-runs/{run_id}/cancel", response_model=RunControlResult)
+def cancel_task_run(
+    run_id: str,
+    body: RunControlRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipTaskService = Depends(get_aip_task_service),
+) -> RunControlResult:
+    return _control_run("cancel", run_id, body, _idem(idempotency_key), principal, service)
+
+
+@router.post("/task-runs/{run_id}/rollback", response_model=RunControlResult)
+def rollback_task_run(
+    run_id: str,
+    body: RunControlRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipTaskService = Depends(get_aip_task_service),
+) -> RunControlResult:
+    return _control_run("rollback", run_id, body, _idem(idempotency_key), principal, service)
 
 
 # AIP-1 makes this module the single manifest owner for the canonical Task API.

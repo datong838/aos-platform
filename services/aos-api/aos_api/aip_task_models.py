@@ -101,3 +101,37 @@ class TaskTimeline(AipContractModel):
     checkpoints: list[dict[str, Any]] = Field(default_factory=list)
     artifacts: list[dict[str, Any]] = Field(default_factory=list)
     evidence: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class RunControlRequest(AipContractModel):
+    expected_run_version: int = Field(ge=1)
+    expected_task_version: int = Field(ge=1)
+    reason: str = ""
+
+
+class RunControlResult(AipContractModel):
+    task: TaskSnapshot
+    run: TaskRunSnapshot
+
+
+class ClaimStepRequest(AipContractModel):
+    step_key: str
+    worker_id: str
+    lease_seconds: int = Field(default=30, ge=5, le=300)
+
+    @field_validator("step_key", "worker_id")
+    @classmethod
+    def _claim_required(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("claim fields must not be empty")
+        return cleaned
+
+
+class StepLease(AipContractModel):
+    step_run_id: str
+    run_id: str
+    step_key: str
+    attempt: int
+    worker_id: str
+    lease_expires_at: datetime

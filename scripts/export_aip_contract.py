@@ -37,13 +37,15 @@ def payloads() -> tuple[bytes, bytes]:
         TaskRunStatus,
     )
     from aos_api.public_contracts import TaskStatus
+    from aos_api.aip_research_job import RESEARCH_JOB_CONTRACT_MODELS
 
     schemas = {
         model.__name__: model.model_json_schema(by_alias=True)
-        for model in AIP_CONTRACT_MODELS
+        for model in (*AIP_CONTRACT_MODELS, *RESEARCH_JOB_CONTRACT_MODELS)
     }
     contract = {
         "authority": "aos_api.aip_contracts",
+        "extensions": ["aos_api.aip_research_job"],
         "errors": AIP_ERROR_STATUS,
         "jsonFieldPolicy": "camelCase",
         "schemas": schemas,
@@ -89,4 +91,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

@@ -7,6 +7,8 @@ from aos_api.aip_task_models import (
     CreateTaskRequest,
     CreateTaskRunRequest,
     PlanRevisionSnapshot,
+    RunControlRequest,
+    RunControlResult,
     TaskRunSnapshot,
     TaskSnapshot,
 )
@@ -72,4 +74,73 @@ class AipTaskService:
     ) -> TaskRunSnapshot:
         return self.store.create_run(
             self.scope(principal), principal.subject, task_id, idempotency_key, body
+        )
+
+    def start_run(
+        self,
+        principal: Principal,
+        run_id: str,
+        idempotency_key: str,
+        body: RunControlRequest,
+    ) -> RunControlResult:
+        return self.store.start_run(
+            self.scope(principal),
+            run_id,
+            expected_run_version=body.expected_run_version,
+            expected_task_version=body.expected_task_version,
+            actor=principal.subject,
+            idempotency_key=idempotency_key,
+            reason=body.reason,
+        )
+
+    def pause_run(
+        self, principal: Principal, run_id: str, idempotency_key: str, body: RunControlRequest
+    ) -> RunControlResult:
+        return self.store.pause_run(
+            self.scope(principal),
+            run_id,
+            expected_run_version=body.expected_run_version,
+            expected_task_version=body.expected_task_version,
+            actor=principal.subject,
+            idempotency_key=idempotency_key,
+            reason=body.reason,
+        )
+
+    def resume_run(
+        self, principal: Principal, run_id: str, idempotency_key: str, body: RunControlRequest
+    ) -> RunControlResult:
+        return self.store.resume_run(
+            self.scope(principal),
+            run_id,
+            expected_run_version=body.expected_run_version,
+            expected_task_version=body.expected_task_version,
+            actor=principal.subject,
+            idempotency_key=idempotency_key,
+            reason=body.reason,
+        )
+
+    def cancel_run(
+        self, principal: Principal, run_id: str, idempotency_key: str, body: RunControlRequest
+    ) -> RunControlResult:
+        return self.store.cancel_run(
+            self.scope(principal),
+            run_id,
+            expected_run_version=body.expected_run_version,
+            expected_task_version=body.expected_task_version,
+            actor=principal.subject,
+            idempotency_key=idempotency_key,
+            reason=body.reason,
+        )
+
+    def rollback_run(
+        self, principal: Principal, run_id: str, idempotency_key: str, body: RunControlRequest
+    ) -> RunControlResult:
+        return self.store.rollback_run(
+            self.scope(principal),
+            run_id,
+            expected_run_version=body.expected_run_version,
+            expected_task_version=body.expected_task_version,
+            actor=principal.subject,
+            idempotency_key=idempotency_key,
+            reason=body.reason,
         )
