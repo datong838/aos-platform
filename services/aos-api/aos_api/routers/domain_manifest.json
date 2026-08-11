@@ -3102,6 +3102,12 @@
       "module": "aos_api.routers.aip_telemetry_usage",
       "attribute": "router",
       "order": 516
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_cost_attribution",
+      "attribute": "router",
+      "order": 517
     }
   ]
 }

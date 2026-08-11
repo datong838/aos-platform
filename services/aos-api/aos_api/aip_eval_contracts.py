@@ -12,7 +12,12 @@ from enum import StrEnum
 
 from pydantic import Field, field_validator, model_validator
 
-from aos_api.aip_contracts import AipContractModel, ArtifactRef, TenantContext
+from aos_api.aip_contracts import (
+    AipContractModel,
+    ArtifactRef,
+    ResourceRef,
+    TenantContext,
+)
 
 SHA256_PATTERN = r"^[0-9a-f]{64}$"
 
@@ -149,6 +154,21 @@ class SpanStatus(StrEnum):
     UNSET = "unset"
     OK = "ok"
     ERROR = "error"
+
+
+class AttributionSubjectType(StrEnum):
+    MODEL = "model"
+    TOOL = "tool"
+    CAPABILITY = "capability"
+    TASK = "task"
+    AGENT = "agent"
+
+
+class CapabilityReceiptStatus(StrEnum):
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    UNKNOWN = "unknown"
+    RECONCILED = "reconciled"
 
 
 class AssetRevisionRef(AipContractModel):
@@ -470,6 +490,86 @@ class UsageAdjustment(UsageAdjustmentRequest):
     created_at: datetime
 
 
+class UsageAttributionRequest(AipContractModel):
+    receipt_id: str = Field(min_length=1, max_length=200)
+    subject_type: AttributionSubjectType
+    subject: ResourceRef
+    quality: EvidenceQuality
+    weight: float = Field(gt=0, le=1)
+    source_hash: str = Field(pattern=SHA256_PATTERN)
+
+    @model_validator(mode="after")
+    def _exact_subject(self) -> UsageAttributionRequest:
+        if self.subject.resource_type != self.subject_type.value:
+            raise ValueError("subject resource_type must match subject_type")
+        if not self.subject.revision:
+            raise ValueError("usage attribution requires an exact subject revision")
+        return self
+
+
+class UsageAttribution(UsageAttributionRequest):
+    tenant: TenantContext
+    attribution_id: str = Field(min_length=1, max_length=200)
+    lineage_id: str = Field(min_length=1, max_length=200)
+    created_at: datetime
+
+
+class CapabilityReceiptIngestRequest(AipContractModel):
+    provider: str = Field(min_length=1, max_length=200)
+    provider_receipt_id: str = Field(min_length=1, max_length=240)
+    lineage_id: str = Field(min_length=1, max_length=200)
+    task_run_id: str = Field(min_length=1, max_length=200)
+    step_key: str = Field(min_length=1, max_length=200)
+    capability: ResourceRef
+    status: CapabilityReceiptStatus
+    quality: EvidenceQuality
+    input_hash: str = Field(pattern=SHA256_PATTERN)
+    output_hash: str | None = Field(default=None, pattern=SHA256_PATTERN)
+    source_hash: str = Field(pattern=SHA256_PATTERN)
+    observed_at: datetime
+
+    @model_validator(mode="after")
+    def _binding_and_result(self) -> CapabilityReceiptIngestRequest:
+        if self.capability.resource_type != AttributionSubjectType.CAPABILITY.value:
+            raise ValueError("capability receipt requires capability resource_type")
+        if not self.capability.revision:
+            raise ValueError("capability receipt requires an exact revision")
+        if (
+            self.status
+            in {
+                CapabilityReceiptStatus.SUCCEEDED,
+                CapabilityReceiptStatus.RECONCILED,
+            }
+            and self.output_hash is None
+        ):
+            raise ValueError("successful or reconciled capability requires output_hash")
+        if (
+            self.status is CapabilityReceiptStatus.UNKNOWN
+            and self.quality is not EvidenceQuality.UNKNOWN
+        ):
+            raise ValueError("unknown capability status requires unknown quality")
+        return self
+
+
+class CapabilityReceipt(CapabilityReceiptIngestRequest):
+    tenant: TenantContext
+    capability_receipt_id: str = Field(min_length=1, max_length=200)
+
+
+class CostAttributionSummary(AipContractModel):
+    tenant: TenantContext
+    subject_type: AttributionSubjectType
+    subject_id: str
+    subject_revision: str
+    currency: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
+    measured_amount: float = Field(ge=0)
+    estimated_amount: float = Field(ge=0)
+    unknown_receipt_count: int = Field(ge=0)
+    receipt_count: int = Field(ge=0)
+    hard_budget_eligible: bool
+    hard_budget_amount: float | None = Field(default=None, ge=0)
+
+
 class MetricDefinitionRevision(AipContractModel):
     metric_id: str = Field(min_length=1, max_length=200)
     revision: int = Field(ge=1)
@@ -491,6 +591,11 @@ class MetricDefinitionRevision(AipContractModel):
 __all__ = [
     "AssetRevisionRef",
     "AssetType",
+    "AttributionSubjectType",
+    "CapabilityReceipt",
+    "CapabilityReceiptIngestRequest",
+    "CapabilityReceiptStatus",
+    "CostAttributionSummary",
     "DatasetPiiState",
     "DatasetRevisionRef",
     "DatasetSourceKind",
@@ -521,6 +626,8 @@ __all__ = [
     "TelemetrySpanIngestRequest",
     "UsageAdjustment",
     "UsageAdjustmentRequest",
+    "UsageAttribution",
+    "UsageAttributionRequest",
     "UsageKind",
     "UsageReceipt",
     "UsageReceiptIngestRequest",

@@ -7,10 +7,11 @@ from collections.abc import Callable
 from contextlib import AbstractContextManager
 from typing import Any
 
-from aos_api.aip_contracts import TenantContext
+from aos_api.aip_contracts import ResourceRef, TenantContext
 from aos_api.aip_eval_contracts import (
     AssetRevisionRef,
     AssetType,
+    CapabilityReceipt,
     DatasetRevisionRef,
     EvalRunAuthorityRecord,
     EvalRunEvent,
@@ -21,6 +22,7 @@ from aos_api.aip_eval_contracts import (
     ReleaseGateDecision,
     TelemetrySpan,
     UsageAdjustment,
+    UsageAttribution,
     UsageReceipt,
 )
 from aos_api.db import connect as db_connect
@@ -564,38 +566,66 @@ class AipEvalAuthorityStore:
         self, scope: TenantScope, adjustment: UsageAdjustment
     ) -> UsageAdjustment:
         self._require_tenant(scope, adjustment.tenant)
-        return self._append_contract(
-            scope,
-            table="aip_usage_adjustment",
-            id_column="adjustment_id",
-            identifier=adjustment.adjustment_id,
-            columns=(
-                "adjustment_id",
-                "receipt_id",
-                "delta",
-                "reason_hash",
-                "actor",
-                "created_at",
-            ),
-            values=(
-                adjustment.adjustment_id,
-                adjustment.receipt_id,
-                adjustment.delta,
-                adjustment.reason_hash,
-                adjustment.actor,
-                adjustment.created_at,
-            ),
-            expected=adjustment,
-            parser=lambda row: UsageAdjustment(
-                tenant=self._tenant(scope),
-                adjustment_id=row["adjustment_id"],
-                receipt_id=row["receipt_id"],
-                delta=row["delta"],
-                reason_hash=row["reason_hash"],
-                actor=row["actor"],
-                created_at=row["created_at"],
-            ),
-        )
+        try:
+            with self._connect(scope) as conn:
+                receipt = conn.execute(
+                    """SELECT * FROM aip_usage_receipt
+                       WHERE org_id=%s AND project_id=%s AND receipt_id=%s
+                       FOR UPDATE""",
+                    (*scope.key, adjustment.receipt_id),
+                ).fetchone()
+                if receipt is None:
+                    raise AipEvalAuthorityNotFound(
+                        "usage receipt is not available in this scope"
+                    )
+                existing = conn.execute(
+                    """SELECT * FROM aip_usage_adjustment
+                       WHERE org_id=%s AND project_id=%s AND adjustment_id=%s""",
+                    (*scope.key, adjustment.adjustment_id),
+                ).fetchone()
+                if existing is not None:
+                    stored = self._adjustment_from_row(scope, existing)
+                    if stored != adjustment:
+                        raise AipEvalAuthorityConflict(
+                            "usage adjustment identifier was reused with different content"
+                        )
+                    conn.commit()
+                    return stored
+                total = conn.execute(
+                    """SELECT COALESCE(SUM(delta),0) AS total
+                       FROM aip_usage_adjustment
+                       WHERE org_id=%s AND project_id=%s AND receipt_id=%s""",
+                    (*scope.key, adjustment.receipt_id),
+                ).fetchone()["total"]
+                if receipt["quantity"] is not None and (
+                    float(receipt["quantity"]) + float(total) + adjustment.delta < 0
+                ):
+                    raise AipEvalAuthorityConflict(
+                        "usage adjustment would make effective quantity negative"
+                    )
+                row = conn.execute(
+                    """INSERT INTO aip_usage_adjustment (
+                         org_id,project_id,adjustment_id,receipt_id,delta,
+                         reason_hash,actor,created_at
+                       ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *""",
+                    (
+                        *scope.key,
+                        adjustment.adjustment_id,
+                        adjustment.receipt_id,
+                        adjustment.delta,
+                        adjustment.reason_hash,
+                        adjustment.actor,
+                        adjustment.created_at,
+                    ),
+                ).fetchone()
+                conn.commit()
+                return self._adjustment_from_row(scope, row)
+        except AipEvalAuthorityError:
+            raise
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError(
+                "usage adjustment persistence failed"
+            ) from exc
 
     def create_metric_definition(
         self,
@@ -703,6 +733,23 @@ class AipEvalAuthorityStore:
             raise AipEvalAuthorityPersistenceError("usage receipt read failed") from exc
         return [self._usage_from_row(scope, row) for row in rows]
 
+    def get_usage_receipt(self, scope: TenantScope, receipt_id: str) -> UsageReceipt:
+        self._require_scope(scope)
+        try:
+            with self._connect(scope) as conn:
+                row = conn.execute(
+                    """SELECT * FROM aip_usage_receipt
+                       WHERE org_id=%s AND project_id=%s AND receipt_id=%s""",
+                    (*scope.key, receipt_id),
+                ).fetchone()
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError("usage receipt read failed") from exc
+        if row is None:
+            raise AipEvalAuthorityNotFound(
+                "usage receipt is not available in this scope"
+            )
+        return self._usage_from_row(scope, row)
+
     def list_usage_adjustments(
         self, scope: TenantScope, receipt_id: str
     ) -> list[UsageAdjustment]:
@@ -719,18 +766,216 @@ class AipEvalAuthorityStore:
             raise AipEvalAuthorityPersistenceError(
                 "usage adjustment read failed"
             ) from exc
-        return [
-            UsageAdjustment(
-                tenant=self._tenant(scope),
-                adjustment_id=row["adjustment_id"],
-                receipt_id=row["receipt_id"],
-                delta=row["delta"],
-                reason_hash=row["reason_hash"],
-                actor=row["actor"],
-                created_at=row["created_at"],
-            )
-            for row in rows
-        ]
+        return [self._adjustment_from_row(scope, row) for row in rows]
+
+    def append_usage_attribution(
+        self, scope: TenantScope, attribution: UsageAttribution
+    ) -> UsageAttribution:
+        self._require_tenant(scope, attribution.tenant)
+        try:
+            with self._connect(scope) as conn:
+                receipt = conn.execute(
+                    """SELECT * FROM aip_usage_receipt
+                       WHERE org_id=%s AND project_id=%s AND receipt_id=%s
+                       FOR UPDATE""",
+                    (*scope.key, attribution.receipt_id),
+                ).fetchone()
+                if receipt is None:
+                    raise AipEvalAuthorityNotFound(
+                        "usage receipt is not available in this scope"
+                    )
+                if receipt["lineage_id"] != attribution.lineage_id:
+                    raise AipEvalAuthorityConflict(
+                        "usage attribution lineage does not match receipt"
+                    )
+                quality_rank = {"unknown": 0, "estimated": 1, "measured": 2}
+                if (
+                    quality_rank[attribution.quality.value]
+                    > quality_rank[receipt["quality"]]
+                ):
+                    raise AipEvalAuthorityConflict(
+                        "usage attribution cannot be more authoritative than its receipt"
+                    )
+                self._validate_attribution_subject(conn, scope, attribution)
+                existing = conn.execute(
+                    """SELECT * FROM aip_usage_attribution
+                       WHERE org_id=%s AND project_id=%s AND attribution_id=%s""",
+                    (*scope.key, attribution.attribution_id),
+                ).fetchone()
+                if existing is not None:
+                    stored = self._attribution_from_row(scope, existing)
+                    if stored != attribution.model_copy(
+                        update={"created_at": stored.created_at}
+                    ):
+                        raise AipEvalAuthorityConflict(
+                            "usage attribution identifier was reused with different content"
+                        )
+                    conn.commit()
+                    return stored
+                allocated = conn.execute(
+                    """SELECT COALESCE(SUM(weight),0) AS total
+                       FROM aip_usage_attribution
+                       WHERE org_id=%s AND project_id=%s AND receipt_id=%s
+                         AND subject_type=%s""",
+                    (
+                        *scope.key,
+                        attribution.receipt_id,
+                        attribution.subject_type.value,
+                    ),
+                ).fetchone()["total"]
+                if float(allocated) + attribution.weight > 1.000000001:
+                    raise AipEvalAuthorityConflict(
+                        "usage attribution weight exceeds one for subject type"
+                    )
+                row = conn.execute(
+                    """INSERT INTO aip_usage_attribution (
+                         org_id,project_id,attribution_id,receipt_id,lineage_id,
+                         subject_type,subject_id,subject_revision,subject_authority,
+                         quality,weight,source_hash,created_at
+                       ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                       ON CONFLICT DO NOTHING RETURNING *""",
+                    (
+                        *scope.key,
+                        attribution.attribution_id,
+                        attribution.receipt_id,
+                        attribution.lineage_id,
+                        attribution.subject_type.value,
+                        attribution.subject.resource_id,
+                        attribution.subject.revision,
+                        attribution.subject.authority,
+                        attribution.quality.value,
+                        attribution.weight,
+                        attribution.source_hash,
+                        attribution.created_at,
+                    ),
+                ).fetchone()
+                if row is None:
+                    row = conn.execute(
+                        """SELECT * FROM aip_usage_attribution
+                           WHERE org_id=%s AND project_id=%s AND attribution_id=%s""",
+                        (*scope.key, attribution.attribution_id),
+                    ).fetchone()
+                if row is None or self._attribution_from_row(scope, row) != attribution:
+                    raise AipEvalAuthorityConflict(
+                        "usage attribution identifier was reused with different content"
+                    )
+                conn.commit()
+                return self._attribution_from_row(scope, row)
+        except AipEvalAuthorityError:
+            raise
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError(
+                "usage attribution persistence failed"
+            ) from exc
+
+    def append_capability_receipt(
+        self, scope: TenantScope, receipt: CapabilityReceipt
+    ) -> CapabilityReceipt:
+        self._require_tenant(scope, receipt.tenant)
+        try:
+            with self._connect(scope) as conn:
+                self._validate_capability_binding(conn, scope, receipt)
+                row = conn.execute(
+                    """INSERT INTO aip_capability_receipt (
+                         org_id,project_id,capability_receipt_id,provider,
+                         provider_receipt_id,lineage_id,task_run_id,step_key,
+                         capability_type,capability_id,capability_revision,
+                         capability_authority,status,quality,input_hash,output_hash,
+                         source_hash,observed_at
+                       ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                       ON CONFLICT DO NOTHING RETURNING *""",
+                    (
+                        *scope.key,
+                        receipt.capability_receipt_id,
+                        receipt.provider,
+                        receipt.provider_receipt_id,
+                        receipt.lineage_id,
+                        receipt.task_run_id,
+                        receipt.step_key,
+                        receipt.capability.resource_type,
+                        receipt.capability.resource_id,
+                        receipt.capability.revision,
+                        receipt.capability.authority,
+                        receipt.status.value,
+                        receipt.quality.value,
+                        receipt.input_hash,
+                        receipt.output_hash,
+                        receipt.source_hash,
+                        receipt.observed_at,
+                    ),
+                ).fetchone()
+                if row is None:
+                    row = conn.execute(
+                        """SELECT * FROM aip_capability_receipt
+                           WHERE org_id=%s AND project_id=%s AND provider=%s
+                             AND provider_receipt_id=%s""",
+                        (*scope.key, receipt.provider, receipt.provider_receipt_id),
+                    ).fetchone()
+                if row is None or self._capability_from_row(scope, row) != receipt:
+                    raise AipEvalAuthorityConflict(
+                        "provider capability receipt was replayed with different content"
+                    )
+                conn.commit()
+                return self._capability_from_row(scope, row)
+        except AipEvalAuthorityError:
+            raise
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError(
+                "capability receipt persistence failed"
+            ) from exc
+
+    def list_capability_receipts(
+        self, scope: TenantScope, lineage_id: str
+    ) -> list[CapabilityReceipt]:
+        self._require_scope(scope)
+        try:
+            with self._connect(scope) as conn:
+                rows = conn.execute(
+                    """SELECT * FROM aip_capability_receipt
+                       WHERE org_id=%s AND project_id=%s AND lineage_id=%s
+                       ORDER BY observed_at,capability_receipt_id""",
+                    (*scope.key, lineage_id),
+                ).fetchall()
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError(
+                "capability receipt read failed"
+            ) from exc
+        return [self._capability_from_row(scope, row) for row in rows]
+
+    def cost_attribution_rows(
+        self,
+        scope: TenantScope,
+        *,
+        subject_type: str,
+        subject_id: str,
+        subject_revision: str,
+    ) -> list[Any]:
+        self._require_scope(scope)
+        try:
+            with self._connect(scope) as conn:
+                return conn.execute(
+                    """SELECT r.receipt_id,r.usage_kind,r.quantity,r.currency,
+                              r.quality AS receipt_quality,a.quality AS attribution_quality,
+                              a.weight,COALESCE(SUM(adj.delta),0) AS adjustment_total
+                       FROM aip_usage_attribution a
+                       JOIN aip_usage_receipt r
+                         ON r.org_id=a.org_id AND r.project_id=a.project_id
+                        AND r.receipt_id=a.receipt_id
+                       LEFT JOIN aip_usage_adjustment adj
+                         ON adj.org_id=r.org_id AND adj.project_id=r.project_id
+                        AND adj.receipt_id=r.receipt_id
+                       WHERE a.org_id=%s AND a.project_id=%s
+                         AND a.subject_type=%s AND a.subject_id=%s
+                         AND a.subject_revision=%s
+                       GROUP BY r.receipt_id,r.usage_kind,r.quantity,r.currency,
+                                r.quality,a.quality,a.weight
+                       ORDER BY r.receipt_id""",
+                    (*scope.key, subject_type, subject_id, subject_revision),
+                ).fetchall()
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError(
+                "cost attribution read failed"
+            ) from exc
 
     def _span_from_row(self, scope: TenantScope, row: Any) -> TelemetrySpan:
         return TelemetrySpan(
@@ -769,6 +1014,141 @@ class AipEvalAuthorityStore:
             source_hash=row["source_hash"],
             observed_at=row["observed_at"],
         )
+
+    def _adjustment_from_row(self, scope: TenantScope, row: Any) -> UsageAdjustment:
+        return UsageAdjustment(
+            tenant=self._tenant(scope),
+            adjustment_id=row["adjustment_id"],
+            receipt_id=row["receipt_id"],
+            delta=row["delta"],
+            reason_hash=row["reason_hash"],
+            actor=row["actor"],
+            created_at=row["created_at"],
+        )
+
+    def _attribution_from_row(self, scope: TenantScope, row: Any) -> UsageAttribution:
+        return UsageAttribution(
+            tenant=self._tenant(scope),
+            attribution_id=row["attribution_id"],
+            receipt_id=row["receipt_id"],
+            lineage_id=row["lineage_id"],
+            subject_type=row["subject_type"],
+            subject=ResourceRef(
+                resource_type=row["subject_type"],
+                resource_id=row["subject_id"],
+                revision=row["subject_revision"],
+                authority=row["subject_authority"],
+            ),
+            quality=row["quality"],
+            weight=row["weight"],
+            source_hash=row["source_hash"],
+            created_at=row["created_at"],
+        )
+
+    def _capability_from_row(self, scope: TenantScope, row: Any) -> CapabilityReceipt:
+        return CapabilityReceipt(
+            tenant=self._tenant(scope),
+            capability_receipt_id=row["capability_receipt_id"],
+            provider=row["provider"],
+            provider_receipt_id=row["provider_receipt_id"],
+            lineage_id=row["lineage_id"],
+            task_run_id=row["task_run_id"],
+            step_key=row["step_key"],
+            capability=ResourceRef(
+                resource_type=row["capability_type"],
+                resource_id=row["capability_id"],
+                revision=row["capability_revision"],
+                authority=row["capability_authority"],
+            ),
+            status=row["status"],
+            quality=row["quality"],
+            input_hash=row["input_hash"],
+            output_hash=row["output_hash"],
+            source_hash=row["source_hash"],
+            observed_at=row["observed_at"],
+        )
+
+    def _validate_attribution_subject(
+        self, conn: Any, scope: TenantScope, attribution: UsageAttribution
+    ) -> None:
+        task_run = self._lineage_task_run(conn, scope, attribution.lineage_id)
+        if attribution.subject_type.value == "task":
+            if (
+                attribution.subject.authority != "aos.task"
+                or attribution.subject.resource_id != task_run["task_id"]
+                or attribution.subject.revision != task_run["plan_revision_id"]
+            ):
+                raise AipEvalAuthorityConflict(
+                    "task attribution does not match lineage authority"
+                )
+            return
+        if attribution.subject_type.value == "capability":
+            plan = self._approved_plan(conn, scope, task_run["plan_revision_id"])
+            exact = attribution.subject.model_dump(mode="json", by_alias=True)
+            if not any(step.get("capabilityRef") == exact for step in plan["steps"]):
+                raise AipEvalAuthorityConflict(
+                    "capability attribution does not match an approved plan binding"
+                )
+            return
+        if attribution.quality.value == "measured":
+            raise AipEvalAuthorityConflict(
+                "measured subject attribution requires its authority registry"
+            )
+
+    def _validate_capability_binding(
+        self, conn: Any, scope: TenantScope, receipt: CapabilityReceipt
+    ) -> None:
+        task_run = self._lineage_task_run(conn, scope, receipt.lineage_id)
+        if task_run["run_id"] != receipt.task_run_id:
+            raise AipEvalAuthorityConflict(
+                "capability receipt lineage does not match task run"
+            )
+        plan = self._approved_plan(conn, scope, task_run["plan_revision_id"])
+        step = next(
+            (item for item in plan["steps"] if item.get("stepKey") == receipt.step_key),
+            None,
+        )
+        exact = receipt.capability.model_dump(mode="json", by_alias=True)
+        if step is None or step.get("capabilityRef") != exact:
+            raise AipEvalAuthorityConflict(
+                "capability receipt does not match exact approved plan binding"
+            )
+
+    @staticmethod
+    def _lineage_task_run(conn: Any, scope: TenantScope, lineage_id: str) -> Any:
+        root = conn.execute(
+            """SELECT root_type,root_id FROM aip_lineage_event
+               WHERE org_id=%s AND project_id=%s AND lineage_id=%s
+               ORDER BY sequence LIMIT 1""",
+            (*scope.key, lineage_id),
+        ).fetchone()
+        if root is None or root["root_type"] != "task_run":
+            raise AipEvalAuthorityConflict(
+                "cost authority requires a task_run lineage root"
+            )
+        task_run = conn.execute(
+            """SELECT run_id,task_id,plan_revision_id FROM aip_task_run
+               WHERE org_id=%s AND project_id=%s AND run_id=%s""",
+            (*scope.key, root["root_id"]),
+        ).fetchone()
+        if task_run is None:
+            raise AipEvalAuthorityNotFound(
+                "lineage task run is not available in this scope"
+            )
+        return task_run
+
+    @staticmethod
+    def _approved_plan(conn: Any, scope: TenantScope, plan_revision_id: str) -> Any:
+        plan = conn.execute(
+            """SELECT steps,approval_status FROM aip_plan_revision
+               WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s""",
+            (*scope.key, plan_revision_id),
+        ).fetchone()
+        if plan is None or plan["approval_status"] != "approved":
+            raise AipEvalAuthorityConflict(
+                "capability binding requires an approved plan revision"
+            )
+        return plan
 
     def _append_contract(
         self,
