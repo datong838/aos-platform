@@ -443,7 +443,6 @@ _controller: TAORLoopController | None = None
 
 
 def get_controller() -> TAORLoopController:
-    global _controller
-    if _controller is None:
-        _controller = TAORLoopController()
-    return _controller
+    raise RuntimeError(
+        "legacy in-memory TAOR controller is disabled; use CanonicalTaorRunner"
+    )

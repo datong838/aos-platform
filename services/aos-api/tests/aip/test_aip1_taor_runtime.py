@@ -127,6 +127,28 @@ def test_run_control_pause_resume_and_cancel_are_cas_guarded(client) -> None:
     assert cancelled["run"]["status"] == "cancelled"
 
 
+def test_legacy_logic_and_automation_fail_closed_in_real_scope(client, monkeypatch) -> None:
+    monkeypatch.setenv("AIP_DEMO_MOCK_ENABLED", "1")
+    headers = _headers(f"legacy-{uuid.uuid4().hex}")
+    unauthenticated = client.post(
+        "/v1/aip/logic/execute", json={"blocks": [{"kind": "task", "name": "x"}]}
+    )
+    assert unauthenticated.status_code == 401
+    execution = client.post(
+        "/v1/aip/logic/execute",
+        headers=headers,
+        json={"blocks": [{"kind": "task", "name": "x"}]},
+    )
+    assert execution.status_code == 422
+    assert execution.json()["code"] == "AIP_INVALID_TRANSITION"
+    automation = client.post(
+        "/v1/aip/logic/automations",
+        headers=headers,
+        json={"name": "must not persist in memory"},
+    )
+    assert automation.status_code == 422
+
+
 def test_only_one_worker_can_hold_an_active_step_lease(client) -> None:
     headers, run = _approved_run(client, steps=[{"stepKey": "one", "title": "唯一步骤"}])
     store = AipTaskStore()

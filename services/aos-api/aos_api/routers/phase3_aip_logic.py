@@ -11,10 +11,17 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
-from aos_api.aip_logic_engine import get_engine, LogicBlock
+from aos_api.aip_logic_engine import (
+    LegacyLogicExecutionDisabled,
+    LogicBlock,
+    get_engine,
+)
+from aos_api.auth import Principal, require_principal
+from aos_api.errors import ApiError
+from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip", tags=["aip-logic"])
 
@@ -40,17 +47,31 @@ class CreateAutomationRequest(BaseModel):
 
 
 @router.post("/logic/execute")
-async def execute_logic(req: LogicExecuteRequest) -> dict[str, Any]:
+async def execute_logic(
+    req: LogicExecuteRequest,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
     eng = get_engine()
     blocks = [LogicBlock(**b.model_dump()) for b in req.blocks]
-    result = eng.execute_flow(blocks, context=req.context)
-    return result
+    try:
+        return eng.execute_flow(
+            blocks,
+            context=req.context,
+            demo_scope=TenantScope(principal.org_id, principal.project_id),
+        )
+    except LegacyLogicExecutionDisabled as exc:
+        raise ApiError(
+            code="AIP_INVALID_TRANSITION",
+            message=str(exc),
+            status_code=422,
+        ) from exc
 
 
 @router.get("/logic/automations")
 async def list_automations(
     status: str | None = Query(None),
     trigger_type: str | None = Query(None),
+    principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     eng = get_engine()
     items = eng.list_automations(status=status, trigger_type=trigger_type)
@@ -58,7 +79,16 @@ async def list_automations(
 
 
 @router.post("/logic/automations")
-async def create_automation(req: CreateAutomationRequest) -> dict[str, Any]:
+async def create_automation(
+    req: CreateAutomationRequest,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    if principal.org_id != "dev-org":
+        raise ApiError(
+            code="AIP_INVALID_TRANSITION",
+            message="legacy in-memory automation creation is disabled outside dev-org",
+            status_code=422,
+        )
     eng = get_engine()
     auto = eng.create_automation(
         name=req.name,
