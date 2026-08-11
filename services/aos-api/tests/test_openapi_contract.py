@@ -83,20 +83,20 @@ def test_committed_artifacts_are_canonical_and_structurally_valid() -> None:
     assert INVENTORY_PATH.read_bytes() == exporter.canonical_json(inventory)
     exporter.validate_openapi(schema)
     assert schema["openapi"] == "3.1.0"
-    assert len(schema["paths"]) == 2347
-    assert len(schema.get("components", {}).get("schemas", {})) == 1586
+    assert len(schema["paths"]) == 2356
+    assert len(schema.get("components", {}).get("schemas", {})) == 1602
 
 
 def test_inventory_preserves_route_rows_and_known_duplicates() -> None:
     schema_bytes = OPENAPI_PATH.read_bytes()
     inventory = json.loads(INVENTORY_PATH.read_bytes())
     summary = inventory["summary"]
-    assert summary["routeRows"] == 4112
-    assert summary["uniqueOperationPairs"] == 4102
+    assert summary["routeRows"] == 4121
+    assert summary["uniqueOperationPairs"] == 4111
     assert summary["duplicatePairs"] == exporter.EXPECTED_DUPLICATES
     assert summary["openapiSha256"] == hashlib.sha256(schema_bytes).hexdigest()
-    assert len(inventory["routes"]) == 4112
-    assert [row["ordinal"] for row in inventory["routes"]] == list(range(4112))
+    assert len(inventory["routes"]) == 4121
+    assert [row["ordinal"] for row in inventory["routes"]] == list(range(4121))
     assert all(row["operationId"] for row in inventory["routes"])
     assert set(summary["domains"]) == set(exporter.DOMAIN_ORDER)
 

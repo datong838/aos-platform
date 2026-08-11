@@ -3108,6 +3108,12 @@
       "module": "aos_api.routers.aip_cost_attribution",
       "attribute": "router",
       "order": 517
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_research_jobs",
+      "attribute": "router",
+      "order": 518
     }
   ]
 }
