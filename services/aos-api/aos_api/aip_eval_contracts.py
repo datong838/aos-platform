@@ -257,6 +257,50 @@ class EvalRunEvent(AipContractModel):
     created_at: datetime
 
 
+class EvalCaseResultEvidence(AipContractModel):
+    case_id: str = Field(min_length=1, max_length=200)
+    passed: bool
+    actual_hash: str = Field(pattern=SHA256_PATTERN)
+    expected_hash: str | None = Field(default=None, pattern=SHA256_PATTERN)
+    detail_code: str = Field(min_length=1, max_length=120)
+    duration_ms: int = Field(ge=0)
+
+
+class EvalReportRevision(AipContractModel):
+    tenant: TenantContext
+    report_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    content_hash: str = Field(pattern=SHA256_PATTERN)
+    run_id: str = Field(min_length=1, max_length=200)
+    suite_ref: AssetRevisionRef
+    target: AssetRevisionRef
+    dataset: DatasetRevisionRef
+    judge: JudgeRevisionRef
+    results: list[EvalCaseResultEvidence] = Field(min_length=1)
+    passed: int = Field(ge=0)
+    failed: int = Field(ge=0)
+    total: int = Field(gt=0)
+    pass_rate: float = Field(ge=0.0, le=1.0)
+    gate_passed: bool
+    created_at: datetime
+
+    @model_validator(mode="after")
+    def _consistent_counts(self) -> "EvalReportRevision":
+        if self.suite_ref.asset_type is not AssetType.EVAL_SUITE:
+            raise ValueError("suite_ref must reference an eval_suite")
+        actual_passed = sum(1 for result in self.results if result.passed)
+        if (
+            self.total != len(self.results)
+            or self.passed != actual_passed
+            or self.failed != self.total - self.passed
+        ):
+            raise ValueError("eval report result counts are inconsistent")
+        expected_rate = round(self.passed / self.total, 6)
+        if abs(self.pass_rate - expected_rate) > 0.000001:
+            raise ValueError("eval report pass rate is inconsistent")
+        return self
+
+
 class ReleaseGateDecision(AipContractModel):
     tenant: TenantContext
     decision_id: str = Field(min_length=1, max_length=200)
@@ -374,11 +418,13 @@ __all__ = [
     "DatasetSourceKind",
     "EvalDatasetManifest",
     "EvalCaseDefinition",
+    "EvalCaseResultEvidence",
     "EvalCaseKind",
     "EvalRunRecord",
     "EvalRunAuthorityRecord",
     "EvalRunEvent",
     "EvalRunStatus",
+    "EvalReportRevision",
     "EvalSuiteRevision",
     "EvidenceQuality",
     "JudgeRevisionRef",
