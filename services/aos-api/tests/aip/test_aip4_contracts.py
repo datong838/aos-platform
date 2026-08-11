@@ -141,6 +141,24 @@ def test_invalidated_gate_requires_causal_reference() -> None:
     assert gate.status is ReleaseGateStatus.INVALIDATED
 
 
+def test_release_gate_requires_exact_report_reference() -> None:
+    with pytest.raises(ValidationError, match="exact eval report"):
+        ReleaseGateDecision(
+            tenant=TenantContext(org_id="org-org", project_id="dev-project"),
+            decision_id="gate-1",
+            target=asset(),
+            suite_ref=asset(AssetType.EVAL_SUITE),
+            eval_run_id="eval-run-1",
+            eval_report=ArtifactRef(
+                artifact_id="report-1", artifact_type="eval_report"
+            ),
+            status=ReleaseGateStatus.PASSED,
+            decision_hash=HASH,
+            decided_by="alice",
+            decided_at=NOW,
+        )
+
+
 def test_metric_quality_set_is_non_empty_and_unique() -> None:
     definition = MetricDefinitionRevision(
         metric_id="token-cost",

@@ -176,6 +176,43 @@ class EvalRunRecord(AipContractModel):
     version: int = Field(ge=1)
 
 
+class EvalRunAuthorityRecord(AipContractModel):
+    """Durable run snapshot; large Suite definitions remain separate assets."""
+
+    tenant: TenantContext
+    run_id: str = Field(min_length=1, max_length=200)
+    suite_ref: AssetRevisionRef
+    target: AssetRevisionRef
+    dataset: DatasetRevisionRef
+    judge: JudgeRevisionRef
+    status: EvalRunStatus
+    idempotency_key: str = Field(min_length=1, max_length=200)
+    created_by: str = Field(min_length=1, max_length=320)
+    created_at: datetime
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    version: int = Field(ge=1)
+
+    @model_validator(mode="after")
+    def _suite_reference(self) -> "EvalRunAuthorityRecord":
+        if self.suite_ref.asset_type is not AssetType.EVAL_SUITE:
+            raise ValueError("suite_ref must reference an eval_suite")
+        return self
+
+
+class EvalRunEvent(AipContractModel):
+    tenant: TenantContext
+    event_id: str = Field(min_length=1, max_length=200)
+    run_id: str = Field(min_length=1, max_length=200)
+    sequence: int = Field(ge=1)
+    event_type: str = Field(min_length=1, max_length=120)
+    from_status: EvalRunStatus | None = None
+    to_status: EvalRunStatus
+    payload_hash: str = Field(pattern=SHA256_PATTERN)
+    actor: str = Field(min_length=1, max_length=320)
+    created_at: datetime
+
+
 class ReleaseGateDecision(AipContractModel):
     tenant: TenantContext
     decision_id: str = Field(min_length=1, max_length=200)
@@ -191,6 +228,8 @@ class ReleaseGateDecision(AipContractModel):
 
     @model_validator(mode="after")
     def _invalidation_reason(self) -> "ReleaseGateDecision":
+        if not self.eval_report.revision or not self.eval_report.content_hash:
+            raise ValueError("release gate requires an exact eval report revision/hash")
         if self.status is ReleaseGateStatus.INVALIDATED and not self.invalidated_by:
             raise ValueError("invalidated gate requires invalidated_by")
         if self.status is not ReleaseGateStatus.INVALIDATED and self.invalidated_by:
@@ -290,6 +329,8 @@ __all__ = [
     "EvalCaseDefinition",
     "EvalCaseKind",
     "EvalRunRecord",
+    "EvalRunAuthorityRecord",
+    "EvalRunEvent",
     "EvalRunStatus",
     "EvalSuiteRevision",
     "EvidenceQuality",
