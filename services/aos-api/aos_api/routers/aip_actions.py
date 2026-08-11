@@ -4,11 +4,23 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Header, Query, status
 
 from aos_api.aip_action_models import (
+    AcquireExecutionLeaseRequest,
     ActionDraftBundle,
+    ActionExecutionView,
     ActionProposalListResponse,
     ActionProposalTimeline,
+    CreateCompensationRequest,
     CreateActionProposalRequest,
     DecideActionProposalRequest,
+    ExecuteActionLeaseRequest,
+    ReconcileActionReceiptRequest,
+)
+from aos_api.aip_action_adapters import ACTION_ADAPTERS
+from aos_api.aip_action_execution import (
+    AipActionBudgetExceeded,
+    AipActionDependencyUnavailable,
+    AipActionExecutionService,
+    AipActionForbidden,
 )
 from aos_api.aip_action_service import AipActionService
 from aos_api.aip_action_store import (
@@ -35,6 +47,12 @@ def get_aip_action_service(store: AipActionStore = Depends(get_aip_action_store)
     return AipActionService(store)
 
 
+def get_aip_action_execution_service(
+    store: AipActionStore = Depends(get_aip_action_store),
+) -> AipActionExecutionService:
+    return AipActionExecutionService(store, ACTION_ADAPTERS)
+
+
 def _idem(value: str) -> str:
     cleaned = value.strip()
     if not cleaned or len(cleaned) > 200:
@@ -43,6 +61,12 @@ def _idem(value: str) -> str:
 
 
 def _map_error(exc: AipActionStoreError) -> ApiError:
+    if isinstance(exc, AipActionForbidden):
+        return ApiError(code=exc.code, message=str(exc), status_code=403)
+    if isinstance(exc, AipActionBudgetExceeded):
+        return ApiError(code=exc.code, message=str(exc), status_code=429)
+    if isinstance(exc, AipActionDependencyUnavailable):
+        return ApiError(code=exc.code, message=str(exc), status_code=503)
     if isinstance(exc, AipActionNotFound):
         return ApiError(code=exc.code, message=str(exc), status_code=404)
     if isinstance(exc, (AipActionConflict, AipActionIdempotencyConflict)):
@@ -100,6 +124,60 @@ def decide_action_proposal(
 ) -> ActionDraftBundle:
     try:
         return service.decide(principal, proposal_id, _idem(idempotency_key), body)
+    except AipActionStoreError as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post("/action-proposals/{proposal_id}/lease", response_model=ActionExecutionView)
+def acquire_action_execution_lease(
+    proposal_id: str,
+    body: AcquireExecutionLeaseRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipActionExecutionService = Depends(get_aip_action_execution_service),
+) -> ActionExecutionView:
+    try:
+        return service.acquire_lease(principal, proposal_id, _idem(idempotency_key), body)
+    except AipActionStoreError as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post("/action-leases/{lease_id}/execute", response_model=ActionExecutionView)
+def execute_action_lease(
+    lease_id: str,
+    body: ExecuteActionLeaseRequest,
+    principal: Principal = Depends(require_principal),
+    service: AipActionExecutionService = Depends(get_aip_action_execution_service),
+) -> ActionExecutionView:
+    try:
+        return service.execute(principal, lease_id, body.expected_proposal_hash)
+    except AipActionStoreError as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post("/action-receipts/{receipt_id}/reconcile", response_model=ActionExecutionView)
+def reconcile_action_receipt(
+    receipt_id: str,
+    body: ReconcileActionReceiptRequest,
+    principal: Principal = Depends(require_principal),
+    service: AipActionExecutionService = Depends(get_aip_action_execution_service),
+) -> ActionExecutionView:
+    try:
+        return service.reconcile(principal, receipt_id, body.reason)
+    except AipActionStoreError as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post("/action-proposals/{proposal_id}/compensation", response_model=ActionDraftBundle, status_code=status.HTTP_201_CREATED)
+def create_action_compensation(
+    proposal_id: str,
+    body: CreateCompensationRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipActionExecutionService = Depends(get_aip_action_execution_service),
+) -> ActionDraftBundle:
+    try:
+        return service.create_compensation(principal, proposal_id, _idem(idempotency_key), body)
     except AipActionStoreError as exc:
         raise _map_error(exc) from exc
 

@@ -335,7 +335,12 @@ def approve_draft(
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     allow_conflicts: str | None = Header(default=None, alias="X-Allow-Conflicts"),
 ) -> JSONResponse:
-    """T3.4 — only path that writes production objects from Draft."""
+    """Legacy write path is closed; callers must use canonical AIP Proposal."""
+    raise ApiError(
+        code="AIP_LEGACY_WRITE_PATH_DISABLED",
+        message="legacy Draft approval is disabled; create and approve /v1/aip/action-proposals",
+        status_code=410,
+    )
     if idempotency_key:
         cached = idempotency_store.get(
             principal.org_id, principal.project_id, idempotency_key
@@ -369,7 +374,13 @@ def execute_action(
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     allow_conflicts: str | None = Header(default=None, alias="X-Allow-Conflicts"),
 ) -> JSONResponse:
-    """T-API write entry — Idempotency-Key required; production write only via Draft approve."""
+    """Compatibility Draft creation remains; every production-write shortcut fails closed."""
+    if body.autoApprove or body.draftId:
+        raise ApiError(
+            code="AIP_LEGACY_WRITE_PATH_DISABLED",
+            message="legacy direct execution is disabled; use Proposal, Approval and ExecutionLease",
+            status_code=410,
+        )
     if not idempotency_key or not str(idempotency_key).strip():
         raise ApiError(
             code="MISSING_IDEMPOTENCY_KEY",

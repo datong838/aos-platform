@@ -76,7 +76,7 @@ def test_export_ok_with_secret_marking(client):
     assert not (body.get("governance") or {}).get("redactedFieldUnion")
 
 
-def test_lineage_lists_after_approve(client, auth_headers):
+def test_legacy_approve_does_not_create_lineage(client, auth_headers):
     prop = client.post(
         "/v1/analytics/writeback/propose",
         headers={**auth_headers, "Idempotency-Key": "ta6-lin-p"},
@@ -96,7 +96,7 @@ def test_lineage_lists_after_approve(client, auth_headers):
             "X-Allow-Conflicts": "1",
         },
     )
-    assert appr.status_code == 200, appr.text
+    assert appr.status_code == 410, appr.text
     lin = client.get(
         "/v1/analytics/lineage",
         headers=auth_headers,
@@ -105,5 +105,4 @@ def test_lineage_lists_after_approve(client, auth_headers):
     assert lin.status_code == 200
     body = lin.json()
     assert body["mode"] == "ta6-lineage"
-    assert body["items"]
-    assert any(i.get("draftId") == draft_id for i in body["items"])
+    assert all(i.get("draftId") != draft_id for i in body["items"])

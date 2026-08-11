@@ -7,6 +7,7 @@ from typing import Any
 from pydantic import Field, field_validator, model_validator
 
 from aos_api.aip_contracts import (
+    ActionReceipt,
     ActionProposal,
     ActionRiskLevel,
     ActionTypeRevisionRef,
@@ -15,6 +16,7 @@ from aos_api.aip_contracts import (
     ApprovalDecision,
     ApprovalEvent,
     DraftSnapshot,
+    ExecutionLease,
     ResourceRef,
 )
 
@@ -88,6 +90,53 @@ class ActionProposalTimeline(AipContractModel):
     events: list[dict[str, Any]] = Field(default_factory=list)
 
 
+class AcquireExecutionLeaseRequest(AipContractModel):
+    expected_proposal_version: int = Field(ge=1)
+    expected_proposal_hash: str
+    lease_seconds: int = Field(default=120, ge=10, le=600)
+
+    @field_validator("expected_proposal_hash")
+    @classmethod
+    def _lease_hash(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if len(normalized) != 64 or any(ch not in "0123456789abcdef" for ch in normalized):
+            raise ValueError("expectedProposalHash must be a sha256 digest")
+        return normalized
+
+
+class ExecuteActionLeaseRequest(AipContractModel):
+    expected_proposal_hash: str
+
+    @field_validator("expected_proposal_hash")
+    @classmethod
+    def _execute_hash(cls, value: str) -> str:
+        return AcquireExecutionLeaseRequest._lease_hash(value)
+
+
+class ReconcileActionReceiptRequest(AipContractModel):
+    reason: str = "authorized provider reread"
+
+
+class CreateCompensationRequest(AipContractModel):
+    action_type_id: str
+    receipt_id: str
+    purpose: str
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class ActionReceiptSnapshot(ActionReceipt):
+    receipt_kind: str = "initial"
+    supersedes_receipt_id: str | None = None
+    request_fingerprint: str
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class ActionExecutionView(AipContractModel):
+    proposal: ActionProposalSnapshot
+    lease: ExecutionLease | None = None
+    receipts: list[ActionReceiptSnapshot] = Field(default_factory=list)
+
+
 def actor(actor_id: str) -> ActorRef:
     return ActorRef(actor_type="user", actor_id=actor_id)
 
@@ -97,8 +146,14 @@ __all__ = [
     "ActionProposalListResponse",
     "ActionProposalSnapshot",
     "ActionProposalTimeline",
+    "ActionReceiptSnapshot",
+    "ActionExecutionView",
+    "AcquireExecutionLeaseRequest",
+    "CreateCompensationRequest",
     "ActionTypeRevisionRef",
     "CreateActionProposalRequest",
     "DecideActionProposalRequest",
+    "ExecuteActionLeaseRequest",
+    "ReconcileActionReceiptRequest",
     "actor",
 ]

@@ -73,8 +73,7 @@ def test_propose_idempotent_replay(client, auth_headers):
     assert b.json().get("idempotentReplay") is True
 
 
-def test_approve_after_propose_writes_lineage(client, auth_headers):
-    """Full loop: propose (analytics) → approve (inbox path) → lineage."""
+def test_legacy_approve_after_analytics_propose_is_closed(client, auth_headers):
     prop = client.post(
         "/v1/analytics/writeback/propose",
         headers={**auth_headers, "Idempotency-Key": "ta5-loop-p"},
@@ -90,7 +89,5 @@ def test_approve_after_propose_writes_lineage(client, auth_headers):
         f"/v1/aip/drafts/{draft_id}/approve",
         headers={**auth_headers, "Idempotency-Key": "ta5-loop-a", "X-Allow-Conflicts": "1"},
     )
-    assert appr.status_code == 200, appr.text
-    body = appr.json()
-    assert body.get("productionWritten") is True or body.get("status") == "approved"
-    assert body.get("lineageId") or body.get("lineage") or "lineage" in str(body).lower()
+    assert appr.status_code == 410, appr.text
+    assert appr.json()["code"] == "AIP_LEGACY_WRITE_PATH_DISABLED"

@@ -1,4 +1,4 @@
-def test_approve_writes_production(client, auth_headers):
+def test_legacy_approve_cannot_write_production(client, auth_headers):
     create = client.post(
         "/v1/aip/drafts",
         headers=auth_headers,
@@ -14,17 +14,13 @@ def test_approve_writes_production(client, auth_headers):
     key = {"Idempotency-Key": f"approve-{draft_id}"}
     headers = {**auth_headers, **key}
     a1 = client.post(f"/v1/aip/drafts/{draft_id}/approve", headers=headers)
-    assert a1.status_code == 200
-    assert a1.json()["productionWritten"] is True
+    assert a1.status_code == 410
+    assert a1.json()["code"] == "AIP_LEGACY_WRITE_PATH_DISABLED"
     obj = client.get("/v1/objects/WorkOrder/wo-new-approve", headers=auth_headers)
-    assert obj.json()["status"] == "closed"
-    lin = client.get(f"/v1/aip/lineage/{a1.json()['lineageId']}", headers=auth_headers)
-    assert lin.status_code == 200
-    a2 = client.post(f"/v1/aip/drafts/{draft_id}/approve", headers=headers)
-    assert a2.json().get("idempotentReplay") is True
+    assert obj.status_code == 404
 
 
-def test_field_conflict_requires_header(client, auth_headers):
+def test_conflict_override_header_cannot_bypass_legacy_write_closure(client, auth_headers):
     # seed exists wo-1001; propose different site → conflict
     create = client.post(
         "/v1/aip/drafts",
@@ -41,7 +37,7 @@ def test_field_conflict_requires_header(client, auth_headers):
         f"/v1/aip/drafts/{draft_id}/approve",
         headers={**auth_headers, "Idempotency-Key": f"c1-{draft_id}"},
     )
-    assert blocked.status_code == 409
+    assert blocked.status_code == 410
     forced = client.post(
         f"/v1/aip/drafts/{draft_id}/approve",
         headers={
@@ -50,8 +46,8 @@ def test_field_conflict_requires_header(client, auth_headers):
             "X-Allow-Conflicts": "true",
         },
     )
-    assert forced.status_code == 200
-    assert "site" in forced.json()["conflicts"]
+    assert forced.status_code == 410
+    assert forced.json()["code"] == "AIP_LEGACY_WRITE_PATH_DISABLED"
 
 
 def test_function_timeout_and_tools(client, auth_headers):

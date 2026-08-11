@@ -30,7 +30,7 @@ def test_execute_hitl_creates_draft_only(client, auth_headers):
     assert obj.status_code == 404
 
 
-def test_execute_draft_id_writes(client, auth_headers):
+def test_execute_draft_id_write_is_disabled(client, auth_headers):
     create = client.post(
         "/v1/aip/drafts",
         headers=auth_headers,
@@ -49,21 +49,13 @@ def test_execute_draft_id_writes(client, auth_headers):
         headers=headers,
         json={"draftId": draft_id},
     )
-    assert r.status_code == 200
-    assert r.json()["productionWritten"] is True
-    assert r.json()["via"] == "draftId"
+    assert r.status_code == 410
+    assert r.json()["code"] == "AIP_LEGACY_WRITE_PATH_DISABLED"
     obj = client.get("/v1/objects/WorkOrder/wo-exec-approve", headers=auth_headers)
-    assert obj.json()["status"] == "closed"
-    # replay
-    r2 = client.post(
-        "/v1/actions/execute",
-        headers=headers,
-        json={"draftId": draft_id},
-    )
-    assert r2.json().get("idempotentReplay") is True
+    assert obj.status_code == 404
 
 
-def test_execute_auto_approve(client, auth_headers):
+def test_execute_auto_approve_is_disabled(client, auth_headers):
     headers = {**auth_headers, "Idempotency-Key": "exec-auto-1"}
     r = client.post(
         "/v1/actions/execute",
@@ -76,8 +68,7 @@ def test_execute_auto_approve(client, auth_headers):
             "autoApprove": True,
         },
     )
-    assert r.status_code == 200
-    assert r.json()["productionWritten"] is True
-    assert r.json()["via"] == "autoApprove"
+    assert r.status_code == 410
+    assert r.json()["code"] == "AIP_LEGACY_WRITE_PATH_DISABLED"
     obj = client.get("/v1/objects/WorkOrder/wo-exec-auto", headers=auth_headers)
-    assert obj.json()["status"] == "closed"
+    assert obj.status_code == 404

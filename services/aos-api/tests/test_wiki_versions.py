@@ -7,7 +7,7 @@ def test_wiki_version_list_empty_ok(client, auth_headers):
     assert "items" in r.json()
 
 
-def test_wiki_version_snapshot_on_approve(client, auth_headers):
+def test_legacy_wiki_approve_is_closed_without_mutating_versions(client, auth_headers):
     cur = client.get("/v1/wiki/WorkOrder/wo-1001", headers=auth_headers)
     assert cur.status_code == 200
     previous_body = cur.json()["body"]
@@ -34,23 +34,12 @@ def test_wiki_version_snapshot_on_approve(client, auth_headers):
     did = draft.json()["id"]
 
     appr = client.post(f"/v1/aip/drafts/{did}/approve", headers=auth_headers)
-    assert appr.status_code == 200, appr.text
+    assert appr.status_code == 410, appr.text
 
     after = client.get("/v1/wiki/WorkOrder/wo-1001/versions", headers=auth_headers)
     assert after.status_code == 200
     items = after.json()["items"]
-    assert items
-    assert items[0].get("draftId") == did
-    if previous_latest_id is not None:
-        assert items[0]["id"] > previous_latest_id
-
-    vid = items[0]["id"]
-    one = client.get(f"/v1/wiki/WorkOrder/wo-1001/versions/{vid}", headers=auth_headers)
-    assert one.status_code == 200
-    # Versions are immutable pre-write snapshots used for rollback/diff.  The
-    # approved body stays on the current page rather than being duplicated as
-    # a historical version.
-    assert one.json()["body"] == previous_body
+    assert (items[0]["id"] if items else None) == previous_latest_id
     current = client.get("/v1/wiki/WorkOrder/wo-1001", headers=auth_headers)
     assert current.status_code == 200
-    assert current.json()["body"]["summary"] == "ver-test-summary"
+    assert current.json()["body"] == previous_body
