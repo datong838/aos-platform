@@ -90,8 +90,8 @@ def publication_api(client):
     client.app.dependency_overrides[get_logic_eval_evidence_reader] = lambda: reader
     headers = {
         "Authorization": "Bearer dev",
-        "X-Org-Id": "org-api",
-        "X-Project-Id": "project-api",
+        "X-Org-Id": "dev-org",
+        "X-Project-Id": "dev-project",
     }
     yield client, store, reader, headers, publication
     client.app.dependency_overrides.pop(get_logic_publication_store, None)
@@ -118,8 +118,8 @@ def test_publish_list_and_get_use_tenant_scope(publication_api) -> None:
     assert published.status_code == 201
     assert published.json()["publication_id"] == publication.publication_id
     assert store.publish_args[:5] == (
-        "org-api",
-        "project-api",
+        "dev-org",
+        "dev-project",
         "user:dev",
         "logic-api",
         store.publish_args[4],
