@@ -237,6 +237,18 @@ class AipActionExecutionService:
             lease = conn.execute("SELECT * FROM aip_action_execution_lease WHERE org_id=%s AND project_id=%s AND lease_id=%s", (*scope.key, receipt["lease_id"])).fetchone()
         return self._view(scope, receipt["proposal_id"], lease)
 
+    def get_execution_view(self, principal: Principal, proposal_id: str) -> ActionExecutionView:
+        """Read the canonical execution projection without inventing client state."""
+        scope = TenantScope(principal.org_id, principal.project_id)
+        with connect(scope) as conn:
+            lease = conn.execute(
+                """SELECT * FROM aip_action_execution_lease
+                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s
+                   ORDER BY attempt DESC, created_at DESC LIMIT 1""",
+                (*scope.key, proposal_id),
+            ).fetchone()
+        return self._view(scope, proposal_id, lease)
+
     def create_compensation(
         self,
         principal: Principal,

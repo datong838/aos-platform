@@ -194,6 +194,9 @@ export function CanonicalTaskRunPanel({ graphId, graphRevision, graphName, sdk =
             <button type="button" disabled={busy || status !== "paused"} onClick={() => void control("resume")}>恢复</button>
             <button type="button" disabled={busy || !["queued", "running", "paused"].includes(status)} onClick={() => void control("cancel")}>取消</button>
             <button type="button" disabled={busy || status !== "succeeded"} onClick={() => void control("rollback")}>回滚</button>
+            <a href={`/aip/drafts?taskId=${encodeURIComponent(timeline.task.id)}&runId=${encodeURIComponent(timeline.run.id)}`}>
+              查看本次受控 Action
+            </a>
           </div>
 
           <div className="canonical-task-run__facts">

@@ -80,6 +80,20 @@ export function filterOverdueShipments(shipments: ShipmentObject[]): ShipmentObj
   return shipments.filter((s) => s.overdue_hours != null && s.overdue_hours > 0);
 }
 
+export function buildLegacyActionDraftRequest(
+  actionTypeId: string,
+  objectId: string,
+  proposed: Record<string, unknown>,
+) {
+  return {
+    actionTypeId,
+    objectType: "Order",
+    objectId,
+    proposed,
+    autoApprove: false as const,
+  };
+}
+
 type StatusTab = "all" | "pending" | "paid" | "shipped" | "delivered" | "cancelled" | "refunded";
 
 const STATUS_TABS: { key: StatusTab; label: string; color: string }[] = [
@@ -194,22 +208,14 @@ export function OrderManagementPage() {
     return days;
   }, [orders]);
 
-  /* 非 W01 最小版范围 · 兼容保留：以下写 Action（发货/取消/退款）早于 D1.5 W01 规格，
-     FR-D1.5-8 约束 W01 最小版仅做数据展示+Draft 创建。为避免破坏既有用户功能予以保留，
-     AC-D1.5-6 测试不覆盖写操作。决策标签（L02/L03）由 G2 评审通过后接入。 */
+  /* 旧入口仅允许 Draft-only 兼容创建。canonical Proposal 需要绑定精确 Action revision、
+     evidence 与审批职责，不能由本页用 autoApprove 绕过。 */
   function executeAction(actionTypeId: string, objectId: string, proposed: Record<string, unknown>) {
     setActionLoading(true);
     setActionMessage(null);
-    apiPost("/v1/actions/execute", {
-      actionTypeId,
-      objectType: "Order",
-      objectId,
-      proposed,
-      autoApprove: true,
-    })
+    apiPost("/v1/actions/execute", buildLegacyActionDraftRequest(actionTypeId, objectId, proposed))
       .then(() => {
-        setActionMessage(`✓ ${actionTypeId} 执行成功`);
-        loadOrders();
+        setActionMessage(`✓ ${actionTypeId} 待审草稿已创建，尚未执行`);
         setTimeout(() => setActionMessage(null), 3000);
       })
       .catch((e) => {

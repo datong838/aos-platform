@@ -22,6 +22,14 @@ export const AIP_OPERATIONS = {
   resumeTaskRun: { method: "POST", path: "/v1/aip/task-runs/{run_id}/resume", mutation: true },
   cancelTaskRun: { method: "POST", path: "/v1/aip/task-runs/{run_id}/cancel", mutation: true },
   rollbackTaskRun: { method: "POST", path: "/v1/aip/task-runs/{run_id}/rollback", mutation: true },
+  listActionProposals: { method: "GET", path: "/v1/aip/action-proposals?limit={limit}", mutation: false },
+  getActionProposal: { method: "GET", path: "/v1/aip/action-proposals/{proposal_id}", mutation: false },
+  getActionProposalTimeline: { method: "GET", path: "/v1/aip/action-proposals/{proposal_id}/timeline", mutation: false },
+  getActionExecution: { method: "GET", path: "/v1/aip/action-proposals/{proposal_id}/execution", mutation: false },
+  decideActionProposal: { method: "POST", path: "/v1/aip/action-proposals/{proposal_id}/decision", mutation: true },
+  acquireActionLease: { method: "POST", path: "/v1/aip/action-proposals/{proposal_id}/lease", mutation: true },
+  executeActionLease: { method: "POST", path: "/v1/aip/action-leases/{lease_id}/execute", mutation: true },
+  reconcileActionReceipt: { method: "POST", path: "/v1/aip/action-receipts/{receipt_id}/reconcile", mutation: true },
 } as const;
 
 export type AipOperationId = keyof typeof AIP_OPERATIONS;

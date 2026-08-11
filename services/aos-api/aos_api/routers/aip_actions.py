@@ -182,6 +182,18 @@ def create_action_compensation(
         raise _map_error(exc) from exc
 
 
+@router.get("/action-proposals/{proposal_id}/execution", response_model=ActionExecutionView)
+def get_action_execution_view(
+    proposal_id: str,
+    principal: Principal = Depends(require_principal),
+    service: AipActionExecutionService = Depends(get_aip_action_execution_service),
+) -> ActionExecutionView:
+    try:
+        return service.get_execution_view(principal, proposal_id)
+    except AipActionStoreError as exc:
+        raise _map_error(exc) from exc
+
+
 @router.get("/action-proposals/{proposal_id}/timeline", response_model=ActionProposalTimeline)
 def get_action_proposal_timeline(
     proposal_id: str,

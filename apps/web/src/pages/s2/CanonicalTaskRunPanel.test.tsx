@@ -42,6 +42,7 @@ describe("CanonicalTaskRunPanel", () => {
     expect(button(host, "启动").disabled).toBe(false);
     expect(button(host, "暂停").disabled).toBe(true);
     expect(sdk.listRunsByLogic).toHaveBeenCalledWith("logic-1");
+    expect(host.querySelector<HTMLAnchorElement>('a[href="/aip/drafts?taskId=task-1&runId=run-1"]')?.textContent).toContain("受控 Action");
   });
 
   it("unknown 明确要求对账并禁用重复动作", async () => {

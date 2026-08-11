@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { getOntologyClient } from "../api/ontologyClient";
 import { PageChrome } from "../components/PageChrome";
 import { BpBadge } from "../components/bp";
+import { CanonicalDraftInboxPage } from "./CanonicalDraftInboxPage";
 
 /* =========================================================================
  * 1. 类型定义
@@ -512,7 +513,7 @@ const TAB_LABELS: { id: DraftTab; label: string }[] = [
   { id: "withdrawn", label: "已撤回" },
 ];
 
-export function DraftInboxPage() {
+export function LegacyDraftInboxPage() {
   const [drafts, setDrafts] = useState<DraftItem[]>([]);
   const [activeTab, setActiveTab] = useState<DraftTab>("pending");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -1044,6 +1045,11 @@ export function DraftInboxPage() {
       </div>
     </PageChrome>
   );
+}
+
+/** AIP-3C canonical route entry. Legacy helpers remain exported only for compatibility tests. */
+export function DraftInboxPage() {
+  return <CanonicalDraftInboxPage />;
 }
 
 /* =========================================================================

@@ -326,3 +326,33 @@ def test_missing_adapter_does_not_consume_lease(client) -> None:
         assert row["consumed_at"] is None
     finally:
         client.app.dependency_overrides.pop(require_principal, None)
+
+
+def test_execution_view_restores_lease_and_is_tenant_scoped(client) -> None:
+    action_id = f"send_execution_view_{uuid.uuid4().hex}"
+    proposal = _create_approved(client, action_id)
+    try:
+        leased = _lease(client, proposal, executor="executor-view")
+        view = client.get(
+            f"/v1/aip/action-proposals/{proposal['id']}/execution",
+            headers=_headers(f"execution-view-{uuid.uuid4().hex}"),
+        )
+        assert view.status_code == 200, view.text
+        assert view.json()["proposal"]["id"] == proposal["id"]
+        assert view.json()["lease"]["id"] == leased["lease"]["id"]
+        assert view.json()["receipts"] == []
+
+        client.app.dependency_overrides[require_principal] = lambda: Principal(
+            subject="reader-canary",
+            org_id="dev-org",
+            project_id="dev-project",
+            roles=["admin"],
+            markings=["public"],
+        )
+        hidden = client.get(
+            f"/v1/aip/action-proposals/{proposal['id']}/execution",
+            headers={**_headers(f"execution-canary-{uuid.uuid4().hex}"), "X-Org-Id": "dev-org"},
+        )
+        assert hidden.status_code == 404
+    finally:
+        client.app.dependency_overrides.pop(require_principal, None)

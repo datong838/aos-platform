@@ -1,11 +1,24 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildLegacyActionDraftRequest,
   computeOrderFunnel,
   filterRiskyOrders,
   filterOverdueShipments,
   type OrderObject,
   type ShipmentObject,
 } from "./OrderManagementPage";
+
+describe("OrderManagementPage · legacy Action 兼容边界", () => {
+  it("只创建待审草稿，禁止 autoApprove", () => {
+    expect(buildLegacyActionDraftRequest("CancelOrder", "order-1", { reason: "用户取消" })).toEqual({
+      actionTypeId: "CancelOrder",
+      objectType: "Order",
+      objectId: "order-1",
+      proposed: { reason: "用户取消" },
+      autoApprove: false,
+    });
+  });
+});
 
 function makeOrder(overrides: Partial<OrderObject> = {}): OrderObject {
   return { id: "o-default", ...overrides };
