@@ -42,6 +42,19 @@ class MemoryItemStatus(StrEnum):
     EXPIRED = "expired"
 
 
+class ArtifactPiiStatus(StrEnum):
+    CLEAR = "clear"
+    REDACTED = "redacted"
+    CONTAINS_PII = "contains_pii"
+    UNKNOWN = "unknown"
+
+
+class LicensePolicyDecision(StrEnum):
+    ALLOWED = "allowed"
+    DENIED = "denied"
+    UNKNOWN = "unknown"
+
+
 class KnowledgeSourceKind(StrEnum):
     AUTHORIZED_DOCUMENT = "authorized_document"
     TASK_EVIDENCE = "task_evidence"
@@ -118,6 +131,24 @@ class GovernanceApprovalRef(AipContractModel):
     def _exact_eval(self) -> GovernanceApprovalRef:
         if not self.eval_report.revision or not self.eval_report.content_hash:
             raise ValueError("governance requires exact eval report revision/hash")
+        return self
+
+
+class ArtifactGovernanceInspection(AipContractModel):
+    artifact: ArtifactRef
+    pii_status: ArtifactPiiStatus
+    inspection_ref: ResourceRef
+    redaction_receipt: ResourceRef | None = None
+
+    @model_validator(mode="after")
+    def _exact_artifact(self) -> ArtifactGovernanceInspection:
+        if not self.artifact.revision or not self.artifact.content_hash:
+            raise ValueError("artifact inspection requires exact revision/hash")
+        if not self.inspection_ref.revision:
+            raise ValueError("artifact inspection evidence requires a revision")
+        if self.pii_status is ArtifactPiiStatus.REDACTED:
+            if self.redaction_receipt is None or not self.redaction_receipt.revision:
+                raise ValueError("redacted artifact requires an exact redaction receipt")
         return self
 
 
@@ -247,6 +278,8 @@ class KnowledgeQueryResult(AipContractModel):
 
 
 __all__ = [
+    "ArtifactGovernanceInspection",
+    "ArtifactPiiStatus",
     "GovernanceApprovalRef",
     "KnowledgeCitation",
     "KnowledgeQuery",
@@ -254,6 +287,7 @@ __all__ = [
     "KnowledgeScope",
     "KnowledgeSourceKind",
     "KnowledgeSourceRef",
+    "LicensePolicyDecision",
     "MemoryCandidate",
     "MemoryCandidateEvent",
     "MemoryCandidateStatus",
