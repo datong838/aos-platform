@@ -14,7 +14,13 @@ const apiMocks = vi.hoisted(() => ({
   apiPut: vi.fn(),
 }));
 
+const evidenceMocks = vi.hoisted(() => ({
+  spans: vi.fn(),
+  usage: vi.fn(),
+}));
+
 vi.mock("../api/client", () => apiMocks);
+vi.mock("../api/aipEvidence", () => ({ aipEvidenceSdk: evidenceMocks }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -37,6 +43,8 @@ describe("Wave 3B W2 · DOM 负向交互", () => {
     apiMocks.apiGet.mockReset();
     apiMocks.apiPost.mockReset();
     apiMocks.apiPut.mockReset();
+    evidenceMocks.spans.mockReset();
+    evidenceMocks.usage.mockReset();
   });
 
   afterEach(() => {
@@ -44,18 +52,15 @@ describe("Wave 3B W2 · DOM 负向交互", () => {
     host.remove();
   });
 
-  it("Observability 真实空 summary 不注入 MOCK，Dashboard Add Widget 禁用且不写", async () => {
-    apiMocks.apiGet.mockResolvedValue({ kpis: [], trend: [] });
+  it("Observability 初始空态不读取、不注入 MOCK 或伪功能", async () => {
     await act(async () => root.render(<ObservabilityPage />));
     await flush();
 
-    expect(host.querySelector("[data-testid='observability-empty']")).not.toBeNull();
+    expect(host.querySelector("[data-testid='observability-idle']")).not.toBeNull();
     expect(host.textContent).not.toContain("2.84M");
-    const dashboards = host.querySelector<HTMLButtonElement>("[data-testid='obs-tab-dashboards']")!;
-    await act(async () => dashboards.click());
-    const add = host.querySelector<HTMLButtonElement>("[data-testid='btn-add-widget']")!;
-    expect(add.disabled).toBe(true);
-    await act(async () => add.click());
+    expect(host.querySelector("[data-testid='obs-tab-dashboards']")).toBeNull();
+    expect(evidenceMocks.spans).not.toHaveBeenCalled();
+    expect(evidenceMocks.usage).not.toHaveBeenCalled();
     expect(apiMocks.apiPut).not.toHaveBeenCalled();
     expect(apiMocks.apiPost).not.toHaveBeenCalled();
   });

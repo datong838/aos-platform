@@ -1,305 +1,75 @@
 import { describe, expect, it } from "vitest";
-import {
-  avgTrend,
-  countAlertStatus,
-  deltaTone,
-  errorRateLevel,
-  filterAlerts,
-  filterTraces,
-  formatCount,
-  formatDelta,
-  formatDuration,
-  latencyLevel,
-  mapSummaryToKpis,
-  mapSummaryToTrend,
-  mapTraceItems,
-  normalizeSpans,
-  pointsForRange,
-  sparklinePath,
-  TIME_RANGES,
-  validateAlertMutation,
-  type AlertRow,
-  type TraceRow,
-  type TraceSpan,
-  type TrendPoint,
-} from "./ObservabilityPage";
 
-const TRACES: TraceRow[] = [
-  { traceId: "t_001", rootSpan: "sendEmail", service: "aip-functions", durationMs: 12261, status: "ok", spans: 13, startedAt: "10:42" },
-  { traceId: "t_002", rootSpan: "llm_summarize", service: "llm-router", durationMs: 6012, status: "error", spans: 4, startedAt: "10:41" },
-  { traceId: "t_003", rootSpan: "query.objects", service: "ontology-api", durationMs: 348, status: "ok", spans: 6, startedAt: "10:41" },
-];
+import type { TelemetrySpan, UsageReceipt } from "../../api/aipEvidence/contracts";
+import { filterAuthoritySpans, formatSpanDuration, formatUsageQuantity, summarizeAuthority } from "./ObservabilityPage";
 
-const ALERTS: AlertRow[] = [
-  { id: "a1", name: "P95 高", severity: "critical", status: "firing", firedAt: "10:44", value: "942ms" },
-  { id: "a2", name: "错误率高", severity: "warning", status: "acknowledged", firedAt: "10:40", value: "6.1%" },
-  { id: "a3", name: "Token 80%", severity: "warning", status: "firing", firedAt: "10:35", value: "82%" },
-  { id: "a4", name: "Pod 重启", severity: "info", status: "silenced", firedAt: "10:20", value: "1" },
-];
-
-describe("ObservabilityPage · formatCount", () => {
-  it("小于 1000 原样返回", () => {
-    expect(formatCount(42)).toBe("42");
-    expect(formatCount(999)).toBe("999");
-  });
-
-  it("千级别加 K", () => {
-    expect(formatCount(1500)).toBe("1.5K");
-    expect(formatCount(12400)).toBe("12.4K");
-  });
-
-  it("百万级别加 M", () => {
-    expect(formatCount(2_840_000)).toBe("2.84M");
-  });
-
-  it("十亿级别加 B", () => {
-    expect(formatCount(1_500_000_000)).toBe("1.50B");
-  });
+const span = (overrides: Partial<TelemetrySpan> = {}): TelemetrySpan => ({
+  spanRecordId: "span-record-1",
+  provider: "openai",
+  providerReceiptId: "provider-span-1",
+  lineageId: "lin-1",
+  traceId: "trace-1",
+  spanId: "span-1",
+  parentSpanId: null,
+  name: "model.invoke",
+  kind: "model",
+  status: "ok",
+  producerStartedAt: "2026-08-12T01:00:00.000Z",
+  producerEndedAt: "2026-08-12T01:00:01.250Z",
+  observedAt: "2026-08-12T01:00:02Z",
+  attributesHash: "a".repeat(64),
+  sourceHash: "b".repeat(64),
+  quality: "measured",
+  ingestedAt: "2026-08-12T01:00:03Z",
+  ...overrides,
 });
 
-describe("ObservabilityPage · formatDuration", () => {
-  it("< 1000 返回 ms", () => {
-    expect(formatDuration(348)).toBe("348ms");
-    expect(formatDuration(999)).toBe("999ms");
-  });
-
-  it(">= 1000 返回 s（两位小数）", () => {
-    expect(formatDuration(12261)).toBe("12.26s");
-    expect(formatDuration(6012)).toBe("6.01s");
-  });
+const receipt = (overrides: Partial<UsageReceipt> = {}): UsageReceipt => ({
+  receiptId: "usage-1",
+  provider: "openai",
+  providerReceiptId: "provider-usage-1",
+  lineageId: "lin-1",
+  usageKind: "input_token",
+  quantity: 120,
+  unit: "token",
+  currency: null,
+  quality: "measured",
+  sourceHash: "c".repeat(64),
+  observedAt: "2026-08-12T01:00:02Z",
+  ...overrides,
 });
 
-describe("ObservabilityPage · formatDelta & deltaTone", () => {
-  it("正数加 + 前缀", () => {
-    expect(formatDelta(8.2)).toBe("+8.2%");
-  });
-
-  it("负数不加前缀", () => {
-    expect(formatDelta(-3.1)).toBe("-3.1%");
-  });
-
-  it("0 不加前缀（formatDelta 只对 > 0 加 +）", () => {
-    expect(formatDelta(0)).toBe("0.0%");
-  });
-
-  it("deltaTone 上升为 up", () => {
-    expect(deltaTone(8.2)).toBe("up");
-    expect(deltaTone(15.6)).toBe("up");
-  });
-
-  it("deltaTone 下降为 down", () => {
-    expect(deltaTone(-12.5)).toBe("down");
-    expect(deltaTone(-3.1)).toBe("down");
-  });
-
-  it("deltaTone 0±0.5 为 flat", () => {
-    expect(deltaTone(0)).toBe("flat");
-    expect(deltaTone(0.3)).toBe("flat");
-    expect(deltaTone(-0.4)).toBe("flat");
-  });
-});
-
-describe("ObservabilityPage · latencyLevel / errorRateLevel", () => {
-  it("latency good <= 200", () => {
-    expect(latencyLevel(100)).toBe("good");
-    expect(latencyLevel(200)).toBe("good");
-  });
-
-  it("latency warn 201-800", () => {
-    expect(latencyLevel(500)).toBe("warn");
-    expect(latencyLevel(800)).toBe("warn");
-  });
-
-  it("latency bad > 800", () => {
-    expect(latencyLevel(801)).toBe("bad");
-    expect(latencyLevel(2000)).toBe("bad");
-  });
-
-  it("errorRate good <= 0.01", () => {
-    expect(errorRateLevel(0)).toBe("good");
-    expect(errorRateLevel(0.01)).toBe("good");
-  });
-
-  it("errorRate warn 0.01-0.05", () => {
-    expect(errorRateLevel(0.02)).toBe("warn");
-    expect(errorRateLevel(0.05)).toBe("warn");
-  });
-
-  it("errorRate bad > 0.05", () => {
-    expect(errorRateLevel(0.06)).toBe("bad");
-    expect(errorRateLevel(0.5)).toBe("bad");
-  });
-});
-
-describe("ObservabilityPage · filterTraces", () => {
-  it("空关键字返回全部", () => {
-    expect(filterTraces(TRACES, "")).toHaveLength(3);
-    expect(filterTraces(TRACES, "   ")).toHaveLength(3);
-  });
-
-  it("按 traceId 匹配", () => {
-    const r = filterTraces(TRACES, "t_002");
-    expect(r).toHaveLength(1);
-    expect(r[0].traceId).toBe("t_002");
-  });
-
-  it("按 service 匹配（大小写不敏感）", () => {
-    const r = filterTraces(TRACES, "LLM");
-    expect(r).toHaveLength(1);
-    expect(r[0].service).toBe("llm-router");
-  });
-
-  it("按 rootSpan 匹配", () => {
-    const r = filterTraces(TRACES, "sendemail");
-    expect(r).toHaveLength(1);
-    expect(r[0].rootSpan).toBe("sendEmail");
-  });
-
-  it("无匹配返回空数组", () => {
-    expect(filterTraces(TRACES, "nope")).toEqual([]);
-  });
-});
-
-describe("ObservabilityPage · filterAlerts & countAlertStatus", () => {
-  it("all 返回全部", () => {
-    expect(filterAlerts(ALERTS, "all")).toHaveLength(4);
-  });
-
-  it("critical 只返回严重", () => {
-    const r = filterAlerts(ALERTS, "critical");
-    expect(r).toHaveLength(1);
-    expect(r[0].id).toBe("a1");
-  });
-
-  it("warning 返回所有警告", () => {
-    expect(filterAlerts(ALERTS, "warning")).toHaveLength(2);
-  });
-
-  it("countAlertStatus 统计各状态", () => {
-    const c = countAlertStatus(ALERTS);
-    expect(c.firing).toBe(2);
-    expect(c.acknowledged).toBe(1);
-    expect(c.silenced).toBe(1);
-  });
-
-  it("countAlertStatus 空数组全 0", () => {
-    const c = countAlertStatus([]);
-    expect(c).toEqual({ firing: 0, acknowledged: 0, silenced: 0 });
-  });
-});
-
-describe("ObservabilityPage · normalizeSpans", () => {
-  it("空数组返回空", () => {
-    expect(normalizeSpans([])).toEqual([]);
-  });
-
-  it("归一化到 0-100", () => {
-    const spans: TraceSpan[] = [
-      { id: "s1", name: "a", service: "x", startMs: 0, durationMs: 1000, level: 0, kind: "parent" },
-      { id: "s2", name: "b", service: "x", startMs: 500, durationMs: 500, level: 1, kind: "nested" },
-    ];
-    const r = normalizeSpans(spans);
-    // 最大结束时间是 1000，归一化后 s1 的 start 应该是 0，duration 是 100
-    expect(r[0].startMs).toBeCloseTo(0);
-    expect(r[0].durationMs).toBeCloseTo(100);
-    expect(r[1].startMs).toBeCloseTo(50);
-    expect(r[1].durationMs).toBeCloseTo(50);
-  });
-});
-
-describe("ObservabilityPage · avgTrend & sparklinePath", () => {
-  const points: TrendPoint[] = [
-    { t: "0m", requests: 100, latencyMs: 200, errors: 0 },
-    { t: "5m", requests: 200, latencyMs: 300, errors: 2 },
-    { t: "10m", requests: 300, latencyMs: 400, errors: 1 },
-  ];
-
-  it("avgTrend 计算平均值", () => {
-    expect(avgTrend(points, "requests")).toBeCloseTo(200);
-    expect(avgTrend(points, "latencyMs")).toBeCloseTo(300);
-    expect(avgTrend(points, "errors")).toBeCloseTo(1);
-  });
-
-  it("avgTrend 空数组返回 0", () => {
-    expect(avgTrend([], "requests")).toBe(0);
-  });
-
-  it("sparklinePath 生成 M/L 指令", () => {
-    const path = sparklinePath([1, 2, 3]);
-    expect(path.startsWith("M")).toBe(true);
-    expect(path).toContain("L");
-  });
-
-  it("sparklinePath 空数组返回空字符串", () => {
-    expect(sparklinePath([])).toBe("");
-  });
-});
-
-describe("ObservabilityPage · 时间范围", () => {
-  it("TIME_RANGES 包含 4 个选项", () => {
-    expect(TIME_RANGES).toEqual(["1h", "6h", "24h", "7d"]);
-    expect(TIME_RANGES).toHaveLength(4);
-  });
-
-  it("pointsForRange 返回正整数", () => {
-    expect(pointsForRange("1h")).toBe(12);
-    expect(pointsForRange("6h")).toBe(24);
-    expect(pointsForRange("24h")).toBe(48);
-    expect(pointsForRange("7d")).toBe(56);
-  });
-});
-
-describe("ObservabilityPage · W2-A5 API 映射", () => {
-  it("mapSummaryToKpis 空响应保持真实空态", () => {
-    expect(mapSummaryToKpis(null)).toEqual([]);
-    expect(mapSummaryToKpis({})).toEqual([]);
-  });
-
-  it("mapSummaryToKpis 映射 API kpi", () => {
-    const mapped = mapSummaryToKpis({
-      kpis: [{ key: "requests", label: "请求量", value: "42", deltaPct: 1.5, unit: "req" }],
+describe("AIP 权威可观测性", () => {
+  it("只按权威记录计数，并分别保留 measured/estimated/unknown", () => {
+    expect(summarizeAuthority(
+      [span(), span({ spanRecordId: "span-record-2", providerReceiptId: "provider-span-2", status: "error", quality: "estimated" })],
+      [receipt({ quality: "unknown", quantity: null })],
+    )).toEqual({
+      spanCount: 2,
+      errorSpanCount: 1,
+      usageReceiptCount: 1,
+      measuredCount: 1,
+      estimatedCount: 1,
+      unknownCount: 1,
     });
-    expect(mapped).toHaveLength(1);
-    expect(mapped[0].value).toBe("42");
-    expect(mapped[0].deltaPct).toBe(1.5);
   });
 
-  it("mapSummaryToTrend 映射 trend 点", () => {
-    const trend = mapSummaryToTrend({
-      trend: [{ t: "0m", requests: 10, latencyMs: 20, errors: 0 }],
-    });
-    expect(trend).toHaveLength(1);
-    expect(trend[0].requests).toBe(10);
+  it("未知用量不伪造为 0，实测用量保持单位", () => {
+    expect(formatUsageQuantity(receipt({ quality: "unknown", quantity: null }))).toBe("未知（未伪造 0）");
+    expect(formatUsageQuantity(receipt())).toBe("120 token");
+    expect(formatUsageQuantity(receipt({ usageKind: "cost", quantity: 1.25, unit: "currency", currency: "CNY" }))).toBe("CNY 1.25");
   });
 
-  it("mapTraceItems 映射 traces", () => {
-    const rows = mapTraceItems({
-      items: [
-        {
-          traceId: "samp_001",
-          rootSpan: "GET /v1/health",
-          service: "aos-api",
-          durationMs: 15,
-          status: "ok",
-          spans: 2,
-          startedAt: "12:00:00",
-        },
-      ],
-    });
-    expect(rows).toHaveLength(1);
-    expect(rows[0].traceId).toBe("samp_001");
-    expect(rows[0].rootSpan).toBe("GET /v1/health");
+  it("Span 时长只由生产者时间计算，缺少结束时间保持未知", () => {
+    expect(formatSpanDuration(span())).toBe("1.25s");
+    expect(formatSpanDuration(span({ producerEndedAt: null }))).toBe("未知");
+    expect(formatSpanDuration(span({ producerEndedAt: "2026-08-12T00:59:59Z" }))).toBe("无效");
   });
 
-  it("mapTraceItems 空 items 保持真实空态", () => {
-    expect(mapTraceItems({ items: [] })).toEqual([]);
-  });
-});
-
-describe("ObservabilityPage · 告警写回严格核验", () => {
-  it("仅目标 id 与状态同时一致才通过", () => {
-    expect(validateAlertMutation({ id: "a1", status: "acknowledged" }, "a1", "acknowledged")).toBe(true);
-    expect(validateAlertMutation({ id: "other", status: "acknowledged" }, "a1", "acknowledged")).toBe(false);
-    expect(validateAlertMutation({ id: "a1", status: "firing" }, "a1", "acknowledged")).toBe(false);
+  it("过滤匹配 trace/span/provider/name/kind/status", () => {
+    const spans = [span(), span({ spanRecordId: "span-record-2", providerReceiptId: "provider-span-2", traceId: "trace-2", name: "tool.call", kind: "tool", provider: "browser" })];
+    expect(filterAuthoritySpans(spans, "BROWSER")).toHaveLength(1);
+    expect(filterAuthoritySpans(spans, "trace-1")).toHaveLength(1);
+    expect(filterAuthoritySpans(spans, "")).toHaveLength(2);
   });
 });

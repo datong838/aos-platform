@@ -9,6 +9,9 @@ export const LINEAGE_ROOT_TYPES = [
 
 export type LineageRootType = (typeof LINEAGE_ROOT_TYPES)[number];
 export type EvidenceQuality = "measured" | "estimated" | "unknown";
+export type TelemetrySpanKind = "internal" | "server" | "client" | "producer" | "consumer" | "model" | "tool";
+export type TelemetrySpanStatus = "unset" | "ok" | "error";
+export type UsageKind = "input_token" | "output_token" | "cached_token" | "cost" | "latency" | "tool_unit";
 
 export type LineageEvent = {
   eventId: string;
@@ -26,6 +29,40 @@ export type LineageEvent = {
   sourceHash: string | null;
   subject: Record<string, unknown> | null;
   artifact: Record<string, unknown> | null;
+};
+
+export type TelemetrySpan = {
+  spanRecordId: string;
+  provider: string;
+  providerReceiptId: string;
+  lineageId: string;
+  traceId: string;
+  spanId: string;
+  parentSpanId: string | null;
+  name: string;
+  kind: TelemetrySpanKind;
+  status: TelemetrySpanStatus;
+  producerStartedAt: string;
+  producerEndedAt: string | null;
+  observedAt: string;
+  attributesHash: string;
+  sourceHash: string;
+  quality: EvidenceQuality;
+  ingestedAt: string;
+};
+
+export type UsageReceipt = {
+  receiptId: string;
+  provider: string;
+  providerReceiptId: string;
+  lineageId: string;
+  usageKind: UsageKind;
+  quantity: number | null;
+  unit: string;
+  currency: string | null;
+  quality: EvidenceQuality;
+  sourceHash: string;
+  observedAt: string;
 };
 
 function record(value: unknown, label: string): Record<string, unknown> {
@@ -51,6 +88,18 @@ function hash(value: unknown, label: string): string {
 function positiveInt(value: unknown, label: string): number {
   if (!Number.isSafeInteger(value) || (value as number) < 1) throw new TypeError(`${label} 无效`);
   return value as number;
+}
+
+function enumValue<T extends string>(value: unknown, allowed: readonly T[], label: string): T {
+  const result = stringValue(value, label);
+  if (!allowed.includes(result as T)) throw new TypeError(`${label} 未知`);
+  return result as T;
+}
+
+function nullableNumber(value: unknown, label: string): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) throw new TypeError(`${label} 无效`);
+  return value;
 }
 
 function optionalRecord(value: unknown, label: string): Record<string, unknown> | null {
@@ -96,4 +145,69 @@ export function parseLineageEvents(value: unknown): LineageEvent[] {
     }
   }
   return events;
+}
+
+export function parseTelemetrySpans(value: unknown, expectedLineageId?: string): TelemetrySpan[] {
+  if (!Array.isArray(value)) throw new TypeError("TelemetrySpan 列表响应格式无效");
+  const spans = value.map((raw, index): TelemetrySpan => {
+    const label = `TelemetrySpan[${index}]`;
+    const item = record(raw, label);
+    const lineageId = stringValue(item.lineageId, `${label}.lineageId`);
+    if (expectedLineageId && lineageId !== expectedLineageId) throw new TypeError(`${label}.lineageId 不匹配`);
+    return {
+      spanRecordId: stringValue(item.spanRecordId, `${label}.spanRecordId`),
+      provider: stringValue(item.provider, `${label}.provider`),
+      providerReceiptId: stringValue(item.providerReceiptId, `${label}.providerReceiptId`),
+      lineageId,
+      traceId: stringValue(item.traceId, `${label}.traceId`),
+      spanId: stringValue(item.spanId, `${label}.spanId`),
+      parentSpanId: nullableString(item.parentSpanId, `${label}.parentSpanId`),
+      name: stringValue(item.name, `${label}.name`),
+      kind: enumValue(item.kind, ["internal", "server", "client", "producer", "consumer", "model", "tool"] as const, `${label}.kind`),
+      status: enumValue(item.status, ["unset", "ok", "error"] as const, `${label}.status`),
+      producerStartedAt: stringValue(item.producerStartedAt, `${label}.producerStartedAt`),
+      producerEndedAt: nullableString(item.producerEndedAt, `${label}.producerEndedAt`),
+      observedAt: stringValue(item.observedAt, `${label}.observedAt`),
+      attributesHash: hash(item.attributesHash, `${label}.attributesHash`),
+      sourceHash: hash(item.sourceHash, `${label}.sourceHash`),
+      quality: enumValue(item.quality, ["measured", "estimated", "unknown"] as const, `${label}.quality`),
+      ingestedAt: stringValue(item.ingestedAt, `${label}.ingestedAt`),
+    };
+  });
+  if (new Set(spans.map((span) => span.spanRecordId)).size !== spans.length) throw new TypeError("TelemetrySpan 含重复 spanRecordId");
+  if (new Set(spans.map((span) => `${span.provider}:${span.providerReceiptId}`)).size !== spans.length) throw new TypeError("TelemetrySpan 含重复 provider receipt");
+  return spans;
+}
+
+export function parseUsageReceipts(value: unknown, expectedLineageId?: string): UsageReceipt[] {
+  if (!Array.isArray(value)) throw new TypeError("UsageReceipt 列表响应格式无效");
+  const receipts = value.map((raw, index): UsageReceipt => {
+    const label = `UsageReceipt[${index}]`;
+    const item = record(raw, label);
+    const lineageId = stringValue(item.lineageId, `${label}.lineageId`);
+    if (expectedLineageId && lineageId !== expectedLineageId) throw new TypeError(`${label}.lineageId 不匹配`);
+    const usageKind = enumValue(item.usageKind, ["input_token", "output_token", "cached_token", "cost", "latency", "tool_unit"] as const, `${label}.usageKind`);
+    const quality = enumValue(item.quality, ["measured", "estimated", "unknown"] as const, `${label}.quality`);
+    const quantity = nullableNumber(item.quantity, `${label}.quantity`);
+    const currency = nullableString(item.currency, `${label}.currency`);
+    if ((quality === "unknown") !== (quantity === null)) throw new TypeError(`${label} quantity/quality 不一致`);
+    if ((usageKind === "cost") !== (currency !== null)) throw new TypeError(`${label} currency/usageKind 不一致`);
+    if (currency && !/^[A-Z]{3}$/.test(currency)) throw new TypeError(`${label}.currency 无效`);
+    return {
+      receiptId: stringValue(item.receiptId, `${label}.receiptId`),
+      provider: stringValue(item.provider, `${label}.provider`),
+      providerReceiptId: stringValue(item.providerReceiptId, `${label}.providerReceiptId`),
+      lineageId,
+      usageKind,
+      quantity,
+      unit: stringValue(item.unit, `${label}.unit`),
+      currency,
+      quality,
+      sourceHash: hash(item.sourceHash, `${label}.sourceHash`),
+      observedAt: stringValue(item.observedAt, `${label}.observedAt`),
+    };
+  });
+  if (new Set(receipts.map((receipt) => receipt.receiptId)).size !== receipts.length) throw new TypeError("UsageReceipt 含重复 receiptId");
+  if (new Set(receipts.map((receipt) => `${receipt.provider}:${receipt.providerReceiptId}`)).size !== receipts.length) throw new TypeError("UsageReceipt 含重复 provider receipt");
+  return receipts;
 }
