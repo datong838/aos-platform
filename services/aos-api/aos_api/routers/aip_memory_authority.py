@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Header, Query
 from pydantic import Field
 
 from aos_api.aip_contracts import AipContractModel
@@ -24,6 +24,34 @@ from aos_api.aip_memory_contracts import (
 from aos_api.aip_memory_governance import (
     AipMemoryGovernanceBlocked,
     AipMemoryGovernanceService,
+)
+from aos_api.aip_memory_pipeline_contracts import (
+    CompleteKnowledgePipelineRunRequest,
+    CreateKnowledgePipelineScheduleRequest,
+    KnowledgePipelineAlert,
+    KnowledgePipelineCheckpointRevision,
+    KnowledgePipelinePolicy,
+    KnowledgePipelineReceipt,
+    KnowledgePipelineRun,
+    KnowledgePipelineRunEvent,
+    KnowledgePipelineSchedule,
+    KnowledgePipelineScheduleEvent,
+    KnowledgePipelineScheduleStatus,
+    KnowledgePipelineTrigger,
+    StartKnowledgePipelineRunRequest,
+)
+from aos_api.aip_memory_contracts import LicensePolicyDecision
+from aos_api.aip_memory_pipeline_service import (
+    AipMemoryPipelinePolicyBlocked,
+    AipMemoryPipelineService,
+)
+from aos_api.aip_memory_pipeline_store import (
+    AipMemoryPipelineConflict,
+    AipMemoryPipelineNotFound,
+    AipMemoryPipelinePersistenceError,
+    AipMemoryPipelineStore,
+    AipMemoryPipelineStoreError,
+    AipMemoryPipelineTransitionBlocked,
 )
 from aos_api.aip_memory_retrieval import AipMemoryRetrieval
 from aos_api.aip_memory_store import (
@@ -43,6 +71,14 @@ router = APIRouter(
     tags=["aip-memory-authority"],
 )
 _STORE = AipMemoryStore()
+_PIPELINE_STORE = AipMemoryPipelineStore()
+_PIPELINE_SERVICE = AipMemoryPipelineService(
+    pipeline_store=_PIPELINE_STORE,
+    memory_store=_STORE,
+    dependency_resolver=lambda _scope, _kind: None,
+    receipt_resolver=lambda _scope, _ref: None,
+    license_resolver=lambda _scope, _receipt: LicensePolicyDecision.UNKNOWN,
+)
 
 
 class ApproveCandidateRequest(AipContractModel):
@@ -63,6 +99,25 @@ class MemoryAuthorityItem(AipContractModel):
     revision: MemoryItemRevision
 
 
+class TransitionPipelineScheduleCommand(AipContractModel):
+    expected_version: int = Field(ge=1)
+    from_status: KnowledgePipelineScheduleStatus
+    to_status: KnowledgePipelineScheduleStatus
+    reason_code: str = Field(min_length=1, max_length=120)
+
+
+class StartPipelineRunCommand(AipContractModel):
+    pipeline_run_id: str = Field(min_length=1, max_length=200)
+    schedule_id: str = Field(min_length=1, max_length=200)
+    task_id: str = Field(min_length=1, max_length=200)
+    run_id: str = Field(min_length=1, max_length=200)
+    trigger: KnowledgePipelineTrigger
+    expected_checkpoint_version: int = Field(ge=0)
+    scheduled_for: datetime
+    retry_of_run_id: str | None = Field(default=None, min_length=1, max_length=200)
+    authorized_manual: bool = False
+
+
 def get_aip_memory_store() -> AipMemoryStore:
     return _STORE
 
@@ -73,6 +128,14 @@ def get_aip_memory_governance_service() -> AipMemoryGovernanceService | None:
 
 def get_aip_memory_retrieval_service() -> AipMemoryRetrieval | None:
     return None
+
+
+def get_aip_memory_pipeline_store() -> AipMemoryPipelineStore:
+    return _PIPELINE_STORE
+
+
+def get_aip_memory_pipeline_service() -> AipMemoryPipelineService:
+    return _PIPELINE_SERVICE
 
 
 def _scope(principal: Principal) -> TenantScope:
@@ -89,6 +152,30 @@ def _require_role(principal: Principal, allowed: set[str]) -> None:
 
 
 def _map_error(exc: Exception) -> ApiError:
+    if isinstance(exc, AipMemoryPipelineNotFound):
+        return ApiError(code=exc.code, message="knowledge pipeline record not found", status_code=404)
+    if isinstance(exc, AipMemoryPipelineConflict):
+        return ApiError(code=exc.code, message=str(exc), status_code=409)
+    if isinstance(exc, (AipMemoryPipelinePolicyBlocked, AipMemoryPipelineTransitionBlocked)):
+        details = (
+            {"reasons": exc.reasons}
+            if isinstance(exc, AipMemoryPipelinePolicyBlocked)
+            else None
+        )
+        return ApiError(
+            code=exc.code,
+            message="knowledge pipeline operation blocked",
+            status_code=422,
+            details=details,
+        )
+    if isinstance(exc, AipMemoryPipelinePersistenceError):
+        return ApiError(
+            code=exc.code,
+            message="knowledge pipeline authority is unavailable",
+            status_code=503,
+        )
+    if isinstance(exc, AipMemoryPipelineStoreError):
+        return ApiError(code=exc.code, message="knowledge pipeline operation failed", status_code=422)
     if isinstance(exc, AipMemoryNotFound):
         return ApiError(code=exc.code, message="memory authority record not found", status_code=404)
     if isinstance(exc, AipMemoryConflict):
@@ -268,6 +355,249 @@ def query_knowledge(
         authorized_markings=principal.markings,
         required_applicability=[f"skill:{body.skill_ref.resource_id}"],
     )
+
+
+@router.get("/pipelines/policies", response_model=list[KnowledgePipelinePolicy])
+def list_pipeline_policies(
+    principal: Principal = Depends(require_principal),
+    service: AipMemoryPipelineService = Depends(get_aip_memory_pipeline_service),
+) -> list[KnowledgePipelinePolicy]:
+    _scope(principal)
+    return [service.policy_for(kind) for kind in service.policy_kinds()]
+
+
+@router.get("/pipelines/schedules", response_model=list[KnowledgePipelineSchedule])
+def list_pipeline_schedules(
+    limit: int = Query(default=100, ge=1, le=200),
+    principal: Principal = Depends(require_principal),
+    store: AipMemoryPipelineStore = Depends(get_aip_memory_pipeline_store),
+) -> list[KnowledgePipelineSchedule]:
+    try:
+        return store.list_schedules(_scope(principal), limit=limit)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post("/pipelines/schedules", response_model=KnowledgePipelineSchedule)
+def create_pipeline_schedule(
+    body: CreateKnowledgePipelineScheduleRequest,
+    idempotency_key: str = Header(min_length=1, max_length=240, alias="X-Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipMemoryPipelineService = Depends(get_aip_memory_pipeline_service),
+) -> KnowledgePipelineSchedule:
+    _require_role(principal, {"admin", "reviewer"})
+    try:
+        return service.create_schedule(
+            _scope(principal),
+            body,
+            idempotency_key=idempotency_key,
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get("/pipelines/schedules/{schedule_id}", response_model=KnowledgePipelineSchedule)
+def get_pipeline_schedule(
+    schedule_id: str,
+    principal: Principal = Depends(require_principal),
+    store: AipMemoryPipelineStore = Depends(get_aip_memory_pipeline_store),
+) -> KnowledgePipelineSchedule:
+    try:
+        return store.get_schedule(_scope(principal), schedule_id)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get(
+    "/pipelines/schedules/{schedule_id}/events",
+    response_model=list[KnowledgePipelineScheduleEvent],
+)
+def list_pipeline_schedule_events(
+    schedule_id: str,
+    principal: Principal = Depends(require_principal),
+    store: AipMemoryPipelineStore = Depends(get_aip_memory_pipeline_store),
+) -> list[KnowledgePipelineScheduleEvent]:
+    try:
+        store.get_schedule(_scope(principal), schedule_id)
+        return store.list_schedule_events(_scope(principal), schedule_id)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/pipelines/schedules/{schedule_id}/transitions",
+    response_model=KnowledgePipelineSchedule,
+)
+def transition_pipeline_schedule(
+    schedule_id: str,
+    body: TransitionPipelineScheduleCommand,
+    principal: Principal = Depends(require_principal),
+    service: AipMemoryPipelineService = Depends(get_aip_memory_pipeline_service),
+) -> KnowledgePipelineSchedule:
+    _require_role(principal, {"admin", "reviewer"})
+    try:
+        schedule, _event = service.transition_schedule(
+            _scope(principal),
+            schedule_id,
+            expected_version=body.expected_version,
+            from_status=body.from_status,
+            to_status=body.to_status,
+            reason_code=body.reason_code,
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+        return schedule
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get(
+    "/pipelines/schedules/{schedule_id}/checkpoint",
+    response_model=KnowledgePipelineCheckpointRevision | None,
+)
+def get_pipeline_checkpoint(
+    schedule_id: str,
+    principal: Principal = Depends(require_principal),
+    store: AipMemoryPipelineStore = Depends(get_aip_memory_pipeline_store),
+) -> KnowledgePipelineCheckpointRevision | None:
+    try:
+        store.get_schedule(_scope(principal), schedule_id)
+        return store.get_checkpoint(_scope(principal), schedule_id)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get("/pipelines/runs", response_model=list[KnowledgePipelineRun])
+def list_pipeline_runs(
+    schedule_id: str | None = None,
+    limit: int = Query(default=100, ge=1, le=200),
+    principal: Principal = Depends(require_principal),
+    store: AipMemoryPipelineStore = Depends(get_aip_memory_pipeline_store),
+) -> list[KnowledgePipelineRun]:
+    try:
+        return store.list_runs(
+            _scope(principal), schedule_id=schedule_id, limit=limit
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post("/pipelines/runs", response_model=KnowledgePipelineRun)
+def start_pipeline_run(
+    body: StartPipelineRunCommand,
+    idempotency_key: str = Header(min_length=1, max_length=240, alias="X-Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipMemoryPipelineService = Depends(get_aip_memory_pipeline_service),
+) -> KnowledgePipelineRun:
+    _require_role(principal, {"admin", "executor", "aip_executor"})
+    request = StartKnowledgePipelineRunRequest(
+        pipeline_run_id=body.pipeline_run_id,
+        schedule_id=body.schedule_id,
+        task_id=body.task_id,
+        run_id=body.run_id,
+        trigger=body.trigger,
+        expected_checkpoint_version=body.expected_checkpoint_version,
+        scheduled_for=body.scheduled_for,
+        retry_of_run_id=body.retry_of_run_id,
+    )
+    try:
+        return service.start_run(
+            _scope(principal),
+            request,
+            idempotency_key=idempotency_key,
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+            authorized_manual=body.authorized_manual,
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get("/pipelines/runs/{pipeline_run_id}", response_model=KnowledgePipelineRun)
+def get_pipeline_run(
+    pipeline_run_id: str,
+    principal: Principal = Depends(require_principal),
+    store: AipMemoryPipelineStore = Depends(get_aip_memory_pipeline_store),
+) -> KnowledgePipelineRun:
+    try:
+        return store.get_run(_scope(principal), pipeline_run_id)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get(
+    "/pipelines/runs/{pipeline_run_id}/events",
+    response_model=list[KnowledgePipelineRunEvent],
+)
+def list_pipeline_run_events(
+    pipeline_run_id: str,
+    principal: Principal = Depends(require_principal),
+    store: AipMemoryPipelineStore = Depends(get_aip_memory_pipeline_store),
+) -> list[KnowledgePipelineRunEvent]:
+    try:
+        store.get_run(_scope(principal), pipeline_run_id)
+        return store.list_run_events(_scope(principal), pipeline_run_id)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get(
+    "/pipelines/runs/{pipeline_run_id}/receipt",
+    response_model=KnowledgePipelineReceipt | None,
+)
+def get_pipeline_receipt(
+    pipeline_run_id: str,
+    principal: Principal = Depends(require_principal),
+    store: AipMemoryPipelineStore = Depends(get_aip_memory_pipeline_store),
+) -> KnowledgePipelineReceipt | None:
+    try:
+        store.get_run(_scope(principal), pipeline_run_id)
+        return store.get_receipt_for_run(
+            _scope(principal), pipeline_run_id, required=False
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get(
+    "/pipelines/runs/{pipeline_run_id}/alerts",
+    response_model=list[KnowledgePipelineAlert],
+)
+def list_pipeline_alerts(
+    pipeline_run_id: str,
+    principal: Principal = Depends(require_principal),
+    store: AipMemoryPipelineStore = Depends(get_aip_memory_pipeline_store),
+) -> list[KnowledgePipelineAlert]:
+    try:
+        store.get_run(_scope(principal), pipeline_run_id)
+        return store.list_alerts(_scope(principal), pipeline_run_id)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/pipelines/runs/{pipeline_run_id}/complete",
+    response_model=KnowledgePipelineReceipt,
+)
+def complete_pipeline_run(
+    pipeline_run_id: str,
+    body: CompleteKnowledgePipelineRunRequest,
+    principal: Principal = Depends(require_principal),
+    store: AipMemoryPipelineStore = Depends(get_aip_memory_pipeline_store),
+) -> KnowledgePipelineReceipt:
+    _require_role(principal, {"executor", "aip_executor"})
+    try:
+        return store.complete_run(
+            _scope(principal),
+            pipeline_run_id,
+            body,
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
 
 
 __all__ = ["router"]

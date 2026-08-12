@@ -243,6 +243,10 @@ class AipMemoryPipelineService:
     def policy_for(self, kind: KnowledgePipelineKind) -> KnowledgePipelinePolicy:
         return _POLICIES[kind].model_copy(deep=True)
 
+    @staticmethod
+    def policy_kinds() -> list[KnowledgePipelineKind]:
+        return list(KnowledgePipelineKind)
+
     def create_schedule(
         self,
         scope: TenantScope,
