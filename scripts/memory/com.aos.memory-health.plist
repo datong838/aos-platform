@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.aos.memory-health</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/ddt/work/projects/ai_agent/aos-platform/scripts/memory/memory-watch</string>
+    <string>--quiet</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StartInterval</key>
+  <integer>900</integer>
+  <key>WorkingDirectory</key>
+  <string>/Users/ddt/work/projects/ai_agent/aos-platform</string>
+  <key>StandardOutPath</key>
+  <string>/Users/ddt/.prime/agent/memory-health.stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/ddt/.prime/agent/memory-health.stderr.log</string>
+  <key>ProcessType</key>
+  <string>Background</string>
+</dict>
+</plist>
