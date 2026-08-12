@@ -380,8 +380,16 @@ def test_authority_update_uses_cas_and_increments_revision(tmp_path: Path) -> No
         delivery_status="IN_PROGRESS",
         last_green_gate="SHARED_MEMORY_PHASE2",
         next_gate="SHARED_MEMORY_PHASE3",
+        hard_boundaries=[
+            "org-org/dev-project is the only real target",
+            "AIP-5 E5 is authorized and gated",
+        ],
     )
     assert updated["project_revision"] == "AOS-000002"
+    assert updated["hard_boundaries"] == [
+        "org-org/dev-project is the only real target",
+        "AIP-5 E5 is authorized and gated",
+    ]
     with pytest.raises(memoryctl.RevisionConflict):
         memoryctl.update_authority(
             p,
@@ -390,6 +398,32 @@ def test_authority_update_uses_cas_and_increments_revision(tmp_path: Path) -> No
             delivery_status="IN_PROGRESS",
             last_green_gate="bad",
             next_gate="bad",
+        )
+
+
+def test_authority_update_rejects_empty_or_duplicate_hard_boundaries(
+    tmp_path: Path,
+) -> None:
+    p = paths(tmp_path, [])
+    with pytest.raises(memoryctl.MemoryErrorBase, match="non-empty"):
+        memoryctl.update_authority(
+            p,
+            expected_revision="AOS-000001",
+            current_phase="SHARED_MEMORY_PHASE3",
+            delivery_status="IN_PROGRESS",
+            last_green_gate="SHARED_MEMORY_PHASE2",
+            next_gate="SHARED_MEMORY_PHASE3",
+            hard_boundaries=[],
+        )
+    with pytest.raises(memoryctl.MemoryErrorBase, match="unique"):
+        memoryctl.update_authority(
+            p,
+            expected_revision="AOS-000001",
+            current_phase="SHARED_MEMORY_PHASE3",
+            delivery_status="IN_PROGRESS",
+            last_green_gate="SHARED_MEMORY_PHASE2",
+            next_gate="SHARED_MEMORY_PHASE3",
+            hard_boundaries=["same", "same"],
         )
 
 

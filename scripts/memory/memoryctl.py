@@ -771,6 +771,7 @@ def update_authority(
     incomplete: list[str] | None = None,
     next_steps: list[str] | None = None,
     source_commits: dict[str, str] | None = None,
+    hard_boundaries: list[str] | None = None,
     evidence: list[dict[str, str]] | None = None,
     evidence_cutoff: str | None = None,
 ) -> dict[str, Any]:
@@ -796,6 +797,13 @@ def update_authority(
             updated["next_steps"] = next_steps
         if source_commits is not None:
             updated["source_commits"] = source_commits
+        if hard_boundaries is not None:
+            cleaned_boundaries = [item.strip() for item in hard_boundaries]
+            if not cleaned_boundaries or any(not item for item in cleaned_boundaries):
+                raise MemoryErrorBase("hard_boundaries must be non-empty strings")
+            if len(cleaned_boundaries) != len(set(cleaned_boundaries)):
+                raise MemoryErrorBase("hard_boundaries must be unique")
+            updated["hard_boundaries"] = cleaned_boundaries
         if evidence is not None:
             updated["evidence"] = evidence
         if evidence_cutoff is not None:
@@ -1194,6 +1202,7 @@ def build_parser() -> argparse.ArgumentParser:
     update.add_argument("--incomplete", action="append")
     update.add_argument("--next-step", action="append")
     update.add_argument("--source-commit", action="append")
+    update.add_argument("--hard-boundary", action="append")
     update.add_argument("--evidence", action="append")
     update.add_argument("--evidence-cutoff")
     start = subparsers.add_parser("task-start")
@@ -1274,6 +1283,7 @@ def main(argv: list[str] | None = None) -> int:
                 incomplete=args.incomplete,
                 next_steps=args.next_step,
                 source_commits=parse_pairs(args.source_commit, option="--source-commit"),
+                hard_boundaries=args.hard_boundary,
                 evidence=parse_evidence(args.evidence),
                 evidence_cutoff=args.evidence_cutoff,
             )
