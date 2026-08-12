@@ -346,6 +346,17 @@ def test_task_receipt_rejects_path_traversal_and_expired_lease(tmp_path: Path) -
     with pytest.raises(memoryctl.MemoryErrorBase):
         memoryctl.start_task(
             p,
+            task_id="absolute",
+            owner="codex",
+            expected_revision="AOS-000001",
+            scope=["/Users/ddt/project"],
+            excluded_scope=[],
+            expected_outputs=[],
+            lease_expires_at="2099-01-01T00:00:00+08:00",
+        )
+    with pytest.raises(memoryctl.MemoryErrorBase):
+        memoryctl.start_task(
+            p,
             task_id="expired",
             owner="codex",
             expected_revision="AOS-000001",

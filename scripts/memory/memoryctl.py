@@ -502,7 +502,9 @@ def sync_projections(paths: MemoryPaths = DEFAULT_PATHS, *, apply: bool, include
         with memory_lock(paths, exclusive=True):
             _validate_installation_locked(paths)
             return _sync_projections_locked(paths, apply=True, include_prime=include_prime)
-    return _sync_projections_locked(paths, apply=False, include_prime=False)
+    with memory_lock(paths, exclusive=False):
+        _validate_installation_locked(paths)
+        return _sync_projections_locked(paths, apply=False, include_prime=False)
 
 
 def _sync_projections_locked(
@@ -658,6 +660,17 @@ def scopes_overlap(left: list[str], right: list[str]) -> bool:
     )
 
 
+def validate_scope(scope: list[str]) -> None:
+    if not scope:
+        raise MemoryErrorBase("at least one scope is required")
+    for value in scope:
+        if not value.strip() or value.startswith("/") or "\\" in value:
+            raise MemoryErrorBase("scope must be a non-empty repository-relative POSIX path")
+        parts = value.strip("/").split("/")
+        if any(part in {"", ".", ".."} for part in parts):
+            raise MemoryErrorBase("scope cannot contain empty, dot or parent path segments")
+
+
 def append_event(paths: MemoryPaths, event: dict[str, Any]) -> None:
     payload = {"schema": "aos-memory-event/v1", "occurred_at": utc_now(), **event}
     scan_secrets(payload)
@@ -708,8 +721,11 @@ def _start_task_locked(
 ) -> dict[str, Any]:
     if not TASK_ID_PATTERN.fullmatch(task_id):
         raise MemoryErrorBase("task_id must be path-safe and use letters, digits, dot, underscore or hyphen")
-    if not owner.strip() or not scope or any(not item.strip() for item in scope):
-        raise MemoryErrorBase("owner and non-empty scope are required")
+    if not owner.strip():
+        raise MemoryErrorBase("owner is required")
+    validate_scope(scope)
+    if excluded_scope:
+        validate_scope(excluded_scope)
     authority = load_authority(paths)
     if authority["project_revision"] != expected_revision:
         raise RevisionConflict(f"expected {expected_revision}, found {authority['project_revision']}")
