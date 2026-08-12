@@ -253,9 +253,19 @@ def test_prime_projection_marker_is_checked(tmp_path: Path) -> None:
             },
         },
     )
-    assert memoryctl.memory_status(p)["projections"][0]["status"] == "CURRENT"
+    assert memoryctl.memory_status(p)["projections"][0]["status"] == "DRIFTED"
 
     data = json.loads(p.prime_harness_state.read_text())
+    current_content = memoryctl.prime_projection_block(expected)
+    data["entries"]["memory"]["aos-milestones"]["content"] = current_content
+    write_json(p.prime_harness_state, data)
+    state = json.loads(p.prime_version_state_path.read_text())
+    state["entries"]["aos-milestones"]["entry_content_hash"] = "sha256:" + hashlib.sha256(
+        current_content.encode()
+    ).hexdigest()
+    write_json(p.prime_version_state_path, state)
+    assert memoryctl.memory_status(p)["projections"][0]["status"] == "CURRENT"
+
     data["entries"]["memory"]["aos-milestones"]["version"] = 1
     write_json(p.prime_harness_state, data)
     assert memoryctl.memory_status(p)["projections"][0]["status"] == "DRIFTED"
@@ -327,7 +337,8 @@ def test_prime_sync_recovers_monotonic_version_and_is_idempotent(tmp_path: Path)
     entry = harness["entries"]["memory"]["aos-milestones"]
     assert first["changed"] == 1
     assert entry["version"] == 22
-    assert entry["content"].startswith("historical facts")
+    assert entry["content"].startswith("<!-- AOS_PRIME_PROJECTION_BEGIN -->")
+    assert "## 历史材料（仅供追溯，可能过时）\n\nhistorical facts" in entry["content"]
     assert "AOS-000001" in entry["content"]
     assert harness["refinements"] == [{"id": "keep-me"}]
     state = json.loads(p.prime_version_state_path.read_text())

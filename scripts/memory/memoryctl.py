@@ -96,6 +96,7 @@ PRIME_MANAGED_PATTERN = re.compile(
     r"<!-- AOS_PRIME_PROJECTION_BEGIN -->.*?<!-- AOS_PRIME_PROJECTION_END -->\n?",
     re.DOTALL,
 )
+PRIME_HISTORY_HEADING = "## 历史材料（仅供追溯，可能过时）\n\n"
 SECRET_PATTERNS = (
     re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
     re.compile(r"\bsk-[A-Za-z0-9_-]{12,}\b"),
@@ -438,6 +439,8 @@ def read_projection_status(item: dict[str, Any], expected: dict[str, Any], paths
         content = entry.get("content")
         if not isinstance(version, int) or not isinstance(tracked_version, int) or not isinstance(content, str):
             return "UNVERSIONED", entry_id
+        if not content.startswith("<!-- AOS_PRIME_PROJECTION_BEGIN -->"):
+            return "DRIFTED", entry_id
         if version != tracked_version:
             return "DRIFTED", entry_id
         if expected_entry.get("project_revision") != expected["project_revision"]:
@@ -638,6 +641,9 @@ def prime_projection_block(projection: dict[str, Any]) -> str:
 def strip_prime_projection(content: str) -> str:
     cleaned = PRIME_MANAGED_PATTERN.sub("", content)
     cleaned = MARKER_PATTERN.sub("", cleaned)
+    cleaned = cleaned.lstrip()
+    if cleaned.startswith(PRIME_HISTORY_HEADING):
+        cleaned = cleaned[len(PRIME_HISTORY_HEADING) :]
     legacy_marker = cleaned.rfind("\n\n[2026-08-12 权威投影]")
     if legacy_marker >= 0:
         cleaned = cleaned[:legacy_marker]
@@ -670,6 +676,7 @@ def _sync_prime_locked(paths: MemoryPaths, projection: dict[str, Any], items: li
             marker_status = classify_marker(parse_marker(existing["content"]), projection)
             is_current = (
                 marker_status == "CURRENT"
+                and existing["content"].startswith("<!-- AOS_PRIME_PROJECTION_BEGIN -->")
                 and existing_version == tracked_version
                 and tracked.get("project_revision") == projection["project_revision"]
                 and tracked.get("authority_content_hash") == projection["content_hash"]
@@ -683,7 +690,12 @@ def _sync_prime_locked(paths: MemoryPaths, projection: dict[str, Any], items: li
             history = ""
             created_at = utc_now()
             existing = {}
-        new_content = (history + "\n\n" if history else "") + prime_projection_block(projection)
+        current_projection = prime_projection_block(projection)
+        new_content = (
+            current_projection + "\n" + PRIME_HISTORY_HEADING + history.rstrip() + "\n"
+            if history
+            else current_projection
+        )
         scan_secrets(new_content)
         new_version = max(existing_version, tracked_version) + 1
         metadata = existing.get("metadata", {})
