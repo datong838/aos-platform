@@ -65,13 +65,13 @@ def test_schedule_write_contract_rejects_tenant_credentials_and_loose_config() -
         trigger="manual",
         config=artifact(),
         initial_status="paused",
-        idempotency_key="schedule-seed",
-        request_hash=HASH_A,
     )
     assert request.initial_status is KnowledgePipelineScheduleStatus.PAUSED
     assert "org_id" not in CreateKnowledgePipelineScheduleRequest.model_fields
     assert "project_id" not in CreateKnowledgePipelineScheduleRequest.model_fields
     assert "credential_ref" not in CreateKnowledgePipelineScheduleRequest.model_fields
+    assert "request_hash" not in CreateKnowledgePipelineScheduleRequest.model_fields
+    assert "idempotency_key" not in CreateKnowledgePipelineScheduleRequest.model_fields
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         CreateKnowledgePipelineScheduleRequest(
             **request.model_dump(),
@@ -88,8 +88,6 @@ def test_schedule_write_contract_rejects_tenant_credentials_and_loose_config() -
                 artifact_type="knowledge_pipeline_config",
             ),
             initial_status="paused",
-            idempotency_key="schedule-bad",
-            request_hash=HASH_A,
         )
     with pytest.raises(ValidationError, match="cannot start active"):
         CreateKnowledgePipelineScheduleRequest(
@@ -98,25 +96,40 @@ def test_schedule_write_contract_rejects_tenant_credentials_and_loose_config() -
             trigger="manual",
             config=artifact(),
             initial_status="active",
-            idempotency_key="schedule-active",
-            request_hash=HASH_A,
         )
 
 
-def test_disabled_schedule_requires_review_before_returning_to_paused() -> None:
+def test_schedule_activation_and_disabled_recovery_require_exact_review() -> None:
     with pytest.raises(ValidationError, match="dependency review"):
         TransitionKnowledgePipelineScheduleRequest(
             expected_version=3,
             from_status="disabled",
             to_status="paused",
+            reason_code="dependency_recovered",
         )
     transition = TransitionKnowledgePipelineScheduleRequest(
         expected_version=3,
         from_status="disabled",
         to_status="paused",
+        reason_code="dependency_recovered",
         dependency_review=resource("aip.eval_report", "dependency-review-1"),
     )
     assert transition.to_status is KnowledgePipelineScheduleStatus.PAUSED
+    with pytest.raises(ValidationError, match="dependency review"):
+        TransitionKnowledgePipelineScheduleRequest(
+            expected_version=1,
+            from_status="paused",
+            to_status="active",
+            reason_code="activate",
+        )
+    activated = TransitionKnowledgePipelineScheduleRequest(
+        expected_version=1,
+        from_status="paused",
+        to_status="active",
+        reason_code="activate",
+        dependency_review=resource("aip.eval_report", "activation-review-1"),
+    )
+    assert activated.to_status is KnowledgePipelineScheduleStatus.ACTIVE
 
 
 def test_run_start_binds_existing_task_run_and_checkpoint_cas() -> None:
@@ -127,15 +140,15 @@ def test_run_start_binds_existing_task_run_and_checkpoint_cas() -> None:
         run_id="run-1",
         trigger="manual",
         expected_checkpoint_version=0,
-        idempotency_key="pipeline-run-1",
-        request_hash=HASH_A,
         scheduled_for=NOW,
     )
     assert request.expected_checkpoint_version == 0
     assert "tenant" not in StartKnowledgePipelineRunRequest.model_fields
-    with pytest.raises(ValidationError):
+    assert "request_hash" not in StartKnowledgePipelineRunRequest.model_fields
+    assert "idempotency_key" not in StartKnowledgePipelineRunRequest.model_fields
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         StartKnowledgePipelineRunRequest(
-            **{**request.model_dump(), "request_hash": "not-a-hash"}
+            **{**request.model_dump(), "request_hash": HASH_A}
         )
 
 
@@ -186,6 +199,18 @@ def test_terminal_completion_requires_exact_evidence_and_candidate_refs() -> Non
             checkpoint=None,
             produced_count=1,
             failed_count=0,
+            error_codes=[],
+        )
+    with pytest.raises(ValidationError, match="requires error codes"):
+        CompleteKnowledgePipelineRunRequest(
+            expected_run_version=2,
+            status="failed",
+            input_hash=HASH_A,
+            output_hash=HASH_B,
+            candidate_refs=[],
+            checkpoint=None,
+            produced_count=0,
+            failed_count=1,
             error_codes=[],
         )
 

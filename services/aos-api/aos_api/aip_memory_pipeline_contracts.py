@@ -98,17 +98,21 @@ class CreateKnowledgePipelineScheduleRequest(AipContractModel):
     config: ArtifactRef
     initial_status: KnowledgePipelineScheduleStatus = KnowledgePipelineScheduleStatus.PAUSED
     schedule_spec: str | None = Field(default=None, min_length=1, max_length=240)
-    idempotency_key: str = Field(min_length=1, max_length=200)
-    request_hash: str = Field(pattern=SHA256_PATTERN)
 
     @model_validator(mode="after")
     def _safe_initial_state(self) -> CreateKnowledgePipelineScheduleRequest:
         _require_exact_artifact(self.config, "pipeline config")
         if self.initial_status is KnowledgePipelineScheduleStatus.ACTIVE:
             raise ValueError("a knowledge pipeline schedule cannot start active")
-        if self.trigger is KnowledgePipelineTrigger.SCHEDULED and self.schedule_spec is None:
+        if (
+            self.trigger is KnowledgePipelineTrigger.SCHEDULED
+            and self.schedule_spec is None
+        ):
             raise ValueError("scheduled pipeline requires a normalized schedule spec")
-        if self.trigger is not KnowledgePipelineTrigger.SCHEDULED and self.schedule_spec is not None:
+        if (
+            self.trigger is not KnowledgePipelineTrigger.SCHEDULED
+            and self.schedule_spec is not None
+        ):
             raise ValueError("schedule spec is only valid for scheduled pipelines")
         return self
 
@@ -117,6 +121,7 @@ class TransitionKnowledgePipelineScheduleRequest(AipContractModel):
     expected_version: int = Field(ge=1)
     from_status: KnowledgePipelineScheduleStatus
     to_status: KnowledgePipelineScheduleStatus
+    reason_code: str = Field(min_length=1, max_length=120)
     dependency_review: ResourceRef | None = None
 
     @model_validator(mode="after")
@@ -136,10 +141,20 @@ class TransitionKnowledgePipelineScheduleRequest(AipContractModel):
         }
         if self.to_status not in allowed[self.from_status]:
             raise ValueError("invalid knowledge pipeline schedule transition")
-        if self.from_status is KnowledgePipelineScheduleStatus.DISABLED:
+        if (
+            self.from_status is KnowledgePipelineScheduleStatus.DISABLED
+            or self.to_status is KnowledgePipelineScheduleStatus.ACTIVE
+        ):
             review = self.dependency_review
-            if review is None or not review.revision:
-                raise ValueError("disabled schedule requires an exact dependency review")
+            if (
+                review is None
+                or review.resource_type != "aip.eval_report"
+                or review.authority != "postgresql"
+                or not review.revision
+            ):
+                raise ValueError(
+                    "schedule activation/recovery requires an exact PostgreSQL dependency review"
+                )
         return self
 
 
@@ -150,10 +165,31 @@ class StartKnowledgePipelineRunRequest(AipContractModel):
     run_id: str = Field(min_length=1, max_length=200)
     trigger: KnowledgePipelineTrigger
     expected_checkpoint_version: int = Field(ge=0)
-    idempotency_key: str = Field(min_length=1, max_length=200)
-    request_hash: str = Field(pattern=SHA256_PATTERN)
     scheduled_for: datetime
     retry_of_run_id: str | None = Field(default=None, min_length=1, max_length=200)
+
+
+class ClaimKnowledgePipelineRunRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    lease_owner: str = Field(min_length=1, max_length=200)
+    lease_seconds: int = Field(ge=1, le=900)
+
+
+class TransitionKnowledgePipelineRunRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    from_status: KnowledgePipelineRunStatus
+    to_status: KnowledgePipelineRunStatus
+    reason_code: str = Field(min_length=1, max_length=120)
+
+    @model_validator(mode="after")
+    def _valid_transition(self) -> TransitionKnowledgePipelineRunRequest:
+        allowed = {
+            KnowledgePipelineRunStatus.RUNNING: {KnowledgePipelineRunStatus.PAUSED},
+            KnowledgePipelineRunStatus.PAUSED: {KnowledgePipelineRunStatus.QUEUED},
+        }
+        if self.to_status not in allowed.get(self.from_status, set()):
+            raise ValueError("invalid recoverable knowledge pipeline run transition")
+        return self
 
 
 class CompleteKnowledgePipelineRunRequest(AipContractModel):
@@ -195,8 +231,16 @@ class CompleteKnowledgePipelineRunRequest(AipContractModel):
                 raise ValueError("failed/unknown/cancelled run cannot advance checkpoint")
         if self.status is KnowledgePipelineRunStatus.SUCCEEDED and self.failed_count:
             raise ValueError("succeeded run cannot report failed items")
+        if self.status is KnowledgePipelineRunStatus.SUCCEEDED and self.error_codes:
+            raise ValueError("succeeded run cannot report error codes")
         if self.status is KnowledgePipelineRunStatus.PARTIAL and not self.failed_count:
             raise ValueError("partial run requires failed items")
+        if self.status in {
+            KnowledgePipelineRunStatus.PARTIAL,
+            KnowledgePipelineRunStatus.FAILED,
+            KnowledgePipelineRunStatus.UNKNOWN,
+        } and not self.error_codes:
+            raise ValueError("partial/failed/unknown run requires error codes")
         return self
 
 
@@ -230,10 +274,50 @@ class KnowledgePipelineRun(AipContractModel):
     request_hash: str = Field(pattern=SHA256_PATTERN)
     version: int = Field(ge=1)
     scheduled_for: datetime
+    lease_owner: str | None = None
+    lease_expires_at: datetime | None = None
     started_at: datetime | None = None
     finished_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
+
+    @model_validator(mode="after")
+    def _complete_lease(self) -> KnowledgePipelineRun:
+        if (self.lease_owner is None) != (self.lease_expires_at is None):
+            raise ValueError("pipeline run lease owner/expiry must be present together")
+        return self
+
+
+class KnowledgePipelineScheduleEvent(AipContractModel):
+    tenant: TenantContext
+    event_id: str
+    schedule_id: str
+    sequence: int = Field(ge=1)
+    event_type: str
+    from_status: KnowledgePipelineScheduleStatus | None = None
+    to_status: KnowledgePipelineScheduleStatus
+    schedule_version: int = Field(ge=1)
+    reason_code: str
+    dependency_review: ResourceRef | None = None
+    event_hash: str = Field(pattern=SHA256_PATTERN)
+    actor: str
+    occurred_at: datetime
+
+
+class KnowledgePipelineRunEvent(AipContractModel):
+    tenant: TenantContext
+    event_id: str
+    pipeline_run_id: str
+    sequence: int = Field(ge=1)
+    event_type: str
+    from_status: KnowledgePipelineRunStatus | None = None
+    to_status: KnowledgePipelineRunStatus
+    run_version: int = Field(ge=1)
+    reason_code: str
+    lease_owner: str | None = None
+    event_hash: str = Field(pattern=SHA256_PATTERN)
+    actor: str
+    occurred_at: datetime
 
 
 class KnowledgePipelineReceipt(AipContractModel):
@@ -303,6 +387,7 @@ class KnowledgePipelineAlert(AipContractModel):
 
 
 __all__ = [
+    "ClaimKnowledgePipelineRunRequest",
     "CompleteKnowledgePipelineRunRequest",
     "CreateKnowledgePipelineScheduleRequest",
     "KnowledgePipelineAlert",
@@ -311,11 +396,14 @@ __all__ = [
     "KnowledgePipelineKind",
     "KnowledgePipelineReceipt",
     "KnowledgePipelineRun",
+    "KnowledgePipelineRunEvent",
     "KnowledgePipelineRunStatus",
     "KnowledgePipelineSchedule",
+    "KnowledgePipelineScheduleEvent",
     "KnowledgePipelineScheduleStatus",
     "KnowledgePipelineTrigger",
     "StartKnowledgePipelineRunRequest",
     "TERMINAL_PIPELINE_RUN_STATUSES",
     "TransitionKnowledgePipelineScheduleRequest",
+    "TransitionKnowledgePipelineRunRequest",
 ]
