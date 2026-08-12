@@ -37,6 +37,14 @@ export const AIP_OPERATIONS = {
   listLogicPublications: { method: "GET", path: "/v1/aip/logic/graphs/{graph_id}/publications", mutation: false },
   getLogicPublication: { method: "GET", path: "/v1/aip/logic/graphs/{graph_id}/publications/{publication_id}", mutation: false },
   publishLogicGraph: { method: "POST", path: "/v1/aip/logic/graphs/{graph_id}/publish", mutation: true },
+  listMemoryCandidates: { method: "GET", path: "/v1/aip/memory-authority/candidates", mutation: false },
+  getMemoryCandidate: { method: "GET", path: "/v1/aip/memory-authority/candidates/{candidate_id}", mutation: false },
+  listMemoryCandidateEvents: { method: "GET", path: "/v1/aip/memory-authority/candidates/{candidate_id}/events", mutation: false },
+  approveMemoryCandidate: { method: "POST", path: "/v1/aip/memory-authority/candidates/{candidate_id}/approve", mutation: true },
+  promoteMemoryCandidate: { method: "POST", path: "/v1/aip/memory-authority/candidates/{candidate_id}/promote", mutation: true },
+  listMemoryItems: { method: "GET", path: "/v1/aip/memory-authority/memories", mutation: false },
+  getMemoryItem: { method: "GET", path: "/v1/aip/memory-authority/memories/{memory_item_id}", mutation: false },
+  queryMemoryKnowledge: { method: "POST", path: "/v1/aip/memory-authority/knowledge-queries", mutation: false },
 } as const;
 
 export type AipOperationId = keyof typeof AIP_OPERATIONS;
