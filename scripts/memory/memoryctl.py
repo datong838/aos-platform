@@ -7,7 +7,6 @@ import hashlib
 import json
 import os
 import re
-import subprocess
 import sys
 import tempfile
 from contextlib import contextmanager
@@ -70,6 +69,14 @@ class MemoryPaths:
     def lock_path(self) -> Path:
         return self.context_root / "memory" / ".memoryctl.lock"
 
+    @property
+    def prime_version_state_path(self) -> Path:
+        return self.context_root / "memory" / "prime-version-state.json"
+
+    @property
+    def prime_lock_path(self) -> Path:
+        return self.prime_harness_state.parent / ".aos-memory-sync.lock"
+
 
 DEFAULT_PATHS = MemoryPaths(
     ai_root=Path("/Users/ddt/work/projects/ai_agent"),
@@ -83,6 +90,10 @@ TASK_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 MARKER_PATTERN = re.compile(r"<!-- AOS_MEMORY_PROJECTION (\{.*?\}) -->")
 MANAGED_PATTERN = re.compile(
     r"<!-- AOS_MEMORY_MANAGED_BEGIN -->.*?<!-- AOS_MEMORY_MANAGED_END -->\n?",
+    re.DOTALL,
+)
+PRIME_MANAGED_PATTERN = re.compile(
+    r"<!-- AOS_PRIME_PROJECTION_BEGIN -->.*?<!-- AOS_PRIME_PROJECTION_END -->\n?",
     re.DOTALL,
 )
 SECRET_PATTERNS = (
@@ -241,11 +252,27 @@ def atomic_write_json(path: Path, payload: dict[str, Any], *, mode: int = 0o644)
     atomic_write_text(path, json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", mode=mode)
 
 
+def file_content_hash(content: str) -> str:
+    return "sha256:" + hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+
 @contextmanager
 def memory_lock(paths: MemoryPaths, *, exclusive: bool):
     paths.lock_path.parent.mkdir(parents=True, exist_ok=True)
     with paths.lock_path.open("a+", encoding="utf-8") as handle:
         fcntl.flock(handle.fileno(), fcntl.LOCK_EX if exclusive else fcntl.LOCK_SH)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+@contextmanager
+def prime_lock(paths: MemoryPaths):
+    paths.prime_lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with paths.prime_lock_path.open("a+", encoding="utf-8") as handle:
+        os.chmod(paths.prime_lock_path, 0o600)
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
         try:
             yield
         finally:
@@ -316,6 +343,15 @@ def load_manifest(paths: MemoryPaths = DEFAULT_PATHS) -> dict[str, Any]:
     return manifest
 
 
+def load_prime_version_state(paths: MemoryPaths) -> dict[str, Any]:
+    state = read_json(paths.prime_version_state_path)
+    if state.get("schema") != "aos-memory-prime-version-state/v1":
+        raise MemoryErrorBase("unsupported Prime version-state schema")
+    if not isinstance(state.get("entries"), dict):
+        raise MemoryErrorBase("Prime version-state entries must be an object")
+    return state
+
+
 def expand_path(raw: str, paths: MemoryPaths) -> Path:
     expanded = raw.replace("${CONTEXT_ROOT}", str(paths.context_root))
     expanded = expanded.replace("${AI_ROOT}", str(paths.ai_root))
@@ -381,15 +417,36 @@ def read_projection_status(item: dict[str, Any], expected: dict[str, Any], paths
             status = "DRIFTED"
         return status, str(path)
     if adapter == "prime_harness":
-        if not paths.prime_harness_state.exists():
+        if not paths.prime_harness_state.exists() or not paths.prime_version_state_path.exists():
             return "UNAVAILABLE", str(paths.prime_harness_state)
         try:
             harness = read_json(paths.prime_harness_state)
-            entry = harness.get("entries", {}).get("memory", {}).get(item.get("entry_id"))
+            version_state = load_prime_version_state(paths)
+            entry_id = str(item.get("entry_id"))
+            entry = harness.get("entries", {}).get("memory", {}).get(entry_id)
+            expected_entry = version_state.get("entries", {}).get(entry_id)
             marker = parse_marker(entry.get("content", "")) if isinstance(entry, dict) else None
         except (MemoryErrorBase, OSError):
             return "UNAVAILABLE", str(paths.prime_harness_state)
-        return classify_marker(marker, expected), str(item.get("entry_id"))
+        marker_status = classify_marker(marker, expected)
+        if marker_status != "CURRENT":
+            return marker_status, entry_id
+        if not isinstance(entry, dict) or not isinstance(expected_entry, dict):
+            return "UNVERSIONED", entry_id
+        version = entry.get("version")
+        tracked_version = expected_entry.get("version")
+        content = entry.get("content")
+        if not isinstance(version, int) or not isinstance(tracked_version, int) or not isinstance(content, str):
+            return "UNVERSIONED", entry_id
+        if version != tracked_version:
+            return "DRIFTED", entry_id
+        if expected_entry.get("project_revision") != expected["project_revision"]:
+            return "DRIFTED", entry_id
+        if expected_entry.get("authority_content_hash") != expected["content_hash"]:
+            return "DRIFTED", entry_id
+        if expected_entry.get("entry_content_hash") != file_content_hash(content):
+            return "DRIFTED", entry_id
+        return "CURRENT", entry_id
     if adapter == "codex_ad_hoc":
         directory = expand_path(str(item.get("path", "")), paths)
         if not directory.exists():
@@ -551,45 +608,136 @@ def _sync_projections_locked(
 
 
 def sync_prime(paths: MemoryPaths, projection: dict[str, Any], items: list[dict[str, Any]]) -> None:
-    prime_bin = Path("/Users/ddt/.workbuddy/binaries/node/versions/22.22.2/bin/prime-agent")
-    if not prime_bin.exists():
-        raise MemoryErrorBase("Prime Agent executable is unavailable")
-    marker = projection_marker(projection)
-    entry_ids = [str(item["entry_id"]) for item in items]
-    facts = json.dumps(projection, ensure_ascii=False, sort_keys=True)
-    prompt = (
-        "你是 AOS 记忆协调器。使用 rlm.harness/memory 读取并原位更新这些 global memory 条目："
-        + ", ".join(entry_ids)
-        + "。保留历史有效内容，以以下 authority projection 覆盖当前状态；每条末尾必须原样追加 marker，"
-        + "版本各加 1。禁止写入凭据，不修改项目文件，只回复 entry id 和新版本。\nprojection="
-        + facts
-        + "\nmarker="
-        + marker
-    )
-    environment = {
-        "HOME": "/Users/ddt",
-        "USER": "ddt",
-        "LOGNAME": "ddt",
-        "LANG": os.environ.get("LANG", "en_US.UTF-8"),
-        "PATH": "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    with prime_lock(paths):
+        _sync_prime_locked(paths, projection, items)
+
+
+def prime_projection_block(projection: dict[str, Any]) -> str:
+    facts = {
+        "project_revision": projection["project_revision"],
+        "current_phase": projection["current_phase"],
+        "delivery_status": projection["delivery_status"],
+        "last_green_gate": projection["last_green_gate"],
+        "next_gate": projection["next_gate"],
+        "completed": projection["completed"],
+        "incomplete": projection["incomplete"],
+        "next_steps": projection["next_steps"],
+        "hard_boundaries": projection["hard_boundaries"],
+        "source_commits": projection["source_commits"],
+        "evidence": projection["evidence"],
     }
-    if os.environ.get("TMPDIR"):
-        environment["TMPDIR"] = os.environ["TMPDIR"]
-    result = subprocess.run(
-        [str(prime_bin), "--provider", "agnes", "--model", "agnes-2.5-flash", "-p", prompt],
-        cwd=paths.ai_root,
-        env=environment,
-        text=True,
-        capture_output=True,
-        timeout=180,
-        check=False,
+    return (
+        "<!-- AOS_PRIME_PROJECTION_BEGIN -->\n"
+        "## AOS 权威投影（自动生成，请勿手改）\n\n"
+        f"```json\n{json.dumps(facts, ensure_ascii=False, indent=2, sort_keys=True)}\n```\n\n"
+        f"{projection_marker(projection)}\n"
+        "<!-- AOS_PRIME_PROJECTION_END -->\n"
     )
-    if result.returncode != 0:
-        raise MemoryErrorBase(f"Prime projection sync failed with exit {result.returncode}")
+
+
+def strip_prime_projection(content: str) -> str:
+    cleaned = PRIME_MANAGED_PATTERN.sub("", content)
+    cleaned = MARKER_PATTERN.sub("", cleaned)
+    legacy_marker = cleaned.rfind("\n\n[2026-08-12 权威投影]")
+    if legacy_marker >= 0:
+        cleaned = cleaned[:legacy_marker]
+    return cleaned.rstrip()
+
+
+def _sync_prime_locked(paths: MemoryPaths, projection: dict[str, Any], items: list[dict[str, Any]]) -> None:
+    if not paths.prime_harness_state.exists():
+        raise MemoryErrorBase("Prime global harness state is unavailable")
+    harness_raw = paths.prime_harness_state.read_text(encoding="utf-8")
+    version_raw = paths.prime_version_state_path.read_text(encoding="utf-8")
+    original_mtime = paths.prime_harness_state.stat().st_mtime_ns
+    harness = read_json(paths.prime_harness_state)
+    version_state = load_prime_version_state(paths)
+    memories = harness.setdefault("entries", {}).setdefault("memory", {})
+    if not isinstance(memories, dict):
+        raise MemoryErrorBase("Prime harness memory entries must be an object")
+    tracked_entries = version_state["entries"]
+    changed_ids: list[str] = []
+
     for item in items:
-        status, _ = read_projection_status(item, projection, paths)
-        if status != "CURRENT":
-            raise MemoryErrorBase(f"Prime projection write-back verification failed: {item['id']}={status}")
+        entry_id = str(item["entry_id"])
+        existing = memories.get(entry_id)
+        tracked = tracked_entries.get(entry_id, {})
+        existing_version = existing.get("version", 0) if isinstance(existing, dict) else 0
+        tracked_version = tracked.get("version", 0) if isinstance(tracked, dict) else 0
+        if not isinstance(existing_version, int) or not isinstance(tracked_version, int):
+            raise MemoryErrorBase(f"Prime projection version is invalid: {entry_id}")
+        if isinstance(existing, dict) and isinstance(existing.get("content"), str):
+            marker_status = classify_marker(parse_marker(existing["content"]), projection)
+            is_current = (
+                marker_status == "CURRENT"
+                and existing_version == tracked_version
+                and tracked.get("project_revision") == projection["project_revision"]
+                and tracked.get("authority_content_hash") == projection["content_hash"]
+                and tracked.get("entry_content_hash") == file_content_hash(existing["content"])
+            )
+            if is_current:
+                continue
+            history = strip_prime_projection(existing["content"])
+            created_at = existing.get("created_at", utc_now())
+        else:
+            history = ""
+            created_at = utc_now()
+            existing = {}
+        new_content = (history + "\n\n" if history else "") + prime_projection_block(projection)
+        scan_secrets(new_content)
+        new_version = max(existing_version, tracked_version) + 1
+        metadata = existing.get("metadata", {})
+        if not isinstance(metadata, dict):
+            metadata = {}
+        memories[entry_id] = {
+            **existing,
+            "id": entry_id,
+            "kind": "memory",
+            "title": str(item.get("title") or existing.get("title") or entry_id),
+            "content": new_content,
+            "path": str(item.get("path") or existing.get("path") or "aos/authority"),
+            "scope": "global",
+            "reference": existing.get("reference", {}),
+            "arguments": existing.get("arguments", {}),
+            "metadata": {**metadata, "aos_projection": True, "project_revision": projection["project_revision"]},
+            "source": "aos-memory-sync",
+            "created_at": created_at,
+            "updated_at": utc_now(),
+            "version": new_version,
+        }
+        tracked_entries[entry_id] = {
+            "version": new_version,
+            "project_revision": projection["project_revision"],
+            "authority_content_hash": projection["content_hash"],
+            "entry_content_hash": file_content_hash(new_content),
+        }
+        changed_ids.append(entry_id)
+
+    if not changed_ids:
+        return
+    if paths.prime_harness_state.stat().st_mtime_ns != original_mtime:
+        raise MemoryErrorBase("Prime harness changed concurrently; refusing to overwrite")
+
+    backup_directory = paths.prime_harness_state.parent / "backups"
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    backup_path = backup_directory / f"{timestamp}-before-{projection['project_revision']}.json"
+    atomic_write_text(backup_path, harness_raw, mode=0o600)
+    version_state["updated_at"] = utc_now()
+    try:
+        atomic_write_text(
+            paths.prime_harness_state,
+            json.dumps(harness, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            mode=0o600,
+        )
+        atomic_write_json(paths.prime_version_state_path, version_state)
+        for item in items:
+            status, _ = read_projection_status(item, projection, paths)
+            if status != "CURRENT":
+                raise MemoryErrorBase(f"Prime projection write-back verification failed: {item['id']}={status}")
+    except Exception:
+        atomic_write_text(paths.prime_harness_state, harness_raw, mode=0o600)
+        atomic_write_text(paths.prime_version_state_path, version_raw)
+        raise
 
 
 def increment_revision(revision: str) -> str:
@@ -877,6 +1025,7 @@ def _validate_installation_locked(paths: MemoryPaths) -> dict[str, Any]:
         "projection-manifest.schema.json",
         "task-receipt.schema.json",
         "delivery-receipt.schema.json",
+        "prime-version-state.schema.json",
     }
     schema_directory = paths.context_root / "memory" / "schemas"
     schemas: dict[str, dict[str, Any]] = {}
@@ -889,6 +1038,12 @@ def _validate_installation_locked(paths: MemoryPaths) -> dict[str, Any]:
 
     validate_json_schema(authority, schemas["authority.schema.json"], source=str(paths.authority_path))
     validate_json_schema(manifest, schemas["projection-manifest.schema.json"], source=str(paths.manifest_path))
+    prime_version_state = load_prime_version_state(paths)
+    validate_json_schema(
+        prime_version_state,
+        schemas["prime-version-state.schema.json"],
+        source=str(paths.prime_version_state_path),
+    )
     validate_json_schema(
         canonical_projection(authority),
         schemas["projection.schema.json"],

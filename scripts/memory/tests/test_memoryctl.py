@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 
@@ -65,8 +66,17 @@ def paths(tmp_path: Path, projections: list[dict[str, object]]) -> object:
         "projection-manifest.schema.json",
         "task-receipt.schema.json",
         "delivery-receipt.schema.json",
+        "prime-version-state.schema.json",
     ):
         write_json(schema_directory / name, {"$schema": "https://json-schema.org/draft/2020-12/schema", "type": "object"})
+    write_json(
+        context / "memory" / "prime-version-state.json",
+        {
+            "schema": "aos-memory-prime-version-state/v1",
+            "updated_at": "2026-08-12T12:00:00+08:00",
+            "entries": {},
+        },
+    )
     write_json(
         context / "memory" / "templates" / "task-receipt-template.json",
         {
@@ -226,16 +236,111 @@ def test_prime_projection_marker_is_checked(tmp_path: Path) -> None:
     )
     expected = memoryctl.canonical_projection(authority())
     marker = memoryctl.projection_marker(expected)
+    content = f"facts\n{marker}\n"
+    write_json(p.prime_harness_state, {"entries": {"memory": {"aos-milestones": {"content": content, "version": 2}}}})
     write_json(
-        p.prime_harness_state,
-        {"entries": {"memory": {"aos-milestones": {"content": f"facts\n{marker}\n", "version": 2}}}},
+        p.prime_version_state_path,
+        {
+            "schema": "aos-memory-prime-version-state/v1",
+            "updated_at": "2026-08-12T12:00:00+08:00",
+            "entries": {
+                "aos-milestones": {
+                    "version": 2,
+                    "project_revision": "AOS-000001",
+                    "authority_content_hash": expected["content_hash"],
+                    "entry_content_hash": "sha256:" + hashlib.sha256(content.encode()).hexdigest(),
+                }
+            },
+        },
     )
     assert memoryctl.memory_status(p)["projections"][0]["status"] == "CURRENT"
 
     data = json.loads(p.prime_harness_state.read_text())
+    data["entries"]["memory"]["aos-milestones"]["version"] = 1
+    write_json(p.prime_harness_state, data)
+    assert memoryctl.memory_status(p)["projections"][0]["status"] == "DRIFTED"
+
+    data["entries"]["memory"]["aos-milestones"]["version"] = 2
     data["entries"]["memory"]["aos-milestones"]["content"] = "facts without marker"
     write_json(p.prime_harness_state, data)
     assert memoryctl.memory_status(p)["projections"][0]["status"] == "UNVERSIONED"
+
+
+def test_prime_sync_recovers_monotonic_version_and_is_idempotent(tmp_path: Path) -> None:
+    p = paths(
+        tmp_path,
+        [
+            {
+                "id": "prime",
+                "adapter": "prime_harness",
+                "consistency": "strong",
+                "entry_id": "aos-milestones",
+                "title": "AOS Milestones",
+                "path": "aos/milestones",
+            }
+        ],
+    )
+    write_json(
+        p.prime_harness_state,
+        {
+            "schema": 1,
+            "entries": {
+                "memory": {
+                    "aos-milestones": {
+                        "id": "aos-milestones",
+                        "kind": "memory",
+                        "title": "AOS Milestones",
+                        "content": "historical facts",
+                        "path": "aos/milestones",
+                        "scope": "global",
+                        "reference": {},
+                        "arguments": {},
+                        "metadata": {},
+                        "source": "agent",
+                        "created_at": "2026-08-08T00:00:00+00:00",
+                        "updated_at": "2026-08-08T00:00:00+00:00",
+                        "version": 1,
+                    }
+                }
+            },
+            "refinements": [{"id": "keep-me"}],
+        },
+    )
+    write_json(
+        p.prime_version_state_path,
+        {
+            "schema": "aos-memory-prime-version-state/v1",
+            "updated_at": "2026-08-12T11:00:00+08:00",
+            "entries": {
+                "aos-milestones": {
+                    "version": 21,
+                    "project_revision": "AOS-000000",
+                    "authority_content_hash": "sha256:" + "0" * 64,
+                    "entry_content_hash": "sha256:" + "0" * 64,
+                }
+            },
+        },
+    )
+
+    first = memoryctl.sync_projections(p, apply=True, include_prime=True)
+    harness = json.loads(p.prime_harness_state.read_text())
+    entry = harness["entries"]["memory"]["aos-milestones"]
+    assert first["changed"] == 1
+    assert entry["version"] == 22
+    assert entry["content"].startswith("historical facts")
+    assert "AOS-000001" in entry["content"]
+    assert harness["refinements"] == [{"id": "keep-me"}]
+    state = json.loads(p.prime_version_state_path.read_text())
+    assert state["entries"]["aos-milestones"]["version"] == 22
+    assert memoryctl.memory_status(p)["projections"][0]["status"] == "CURRENT"
+
+    first_harness = p.prime_harness_state.read_text()
+    first_state = p.prime_version_state_path.read_text()
+    second = memoryctl.sync_projections(p, apply=True, include_prime=True)
+    assert second["changed"] == 0
+    assert p.prime_harness_state.read_text() == first_harness
+    assert p.prime_version_state_path.read_text() == first_state
+    assert list((p.prime_harness_state.parent / "backups").glob("*.json"))
 
 
 def test_gate_separates_delivery_and_memory(tmp_path: Path) -> None:
