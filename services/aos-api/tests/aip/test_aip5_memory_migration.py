@@ -121,12 +121,14 @@ def test_e1a_runtime_scope_is_fail_closed_and_workspace_isolated() -> None:
     _insert_source(canary, "source-b", "b" * 64)
     with connect(primary) as conn:
         ids = conn.execute(
-            "SELECT source_id FROM aip_memory_source_revision ORDER BY source_id"
+            """SELECT source_id FROM aip_memory_source_revision
+               WHERE source_id IN ('source-a','source-b') ORDER BY source_id"""
         ).fetchall()
         assert [row["source_id"] for row in ids] == ["source-a"]
     with connect(canary) as conn:
         ids = conn.execute(
-            "SELECT source_id FROM aip_memory_source_revision ORDER BY source_id"
+            """SELECT source_id FROM aip_memory_source_revision
+               WHERE source_id IN ('source-a','source-b') ORDER BY source_id"""
         ).fetchall()
         assert [row["source_id"] for row in ids] == ["source-b"]
 

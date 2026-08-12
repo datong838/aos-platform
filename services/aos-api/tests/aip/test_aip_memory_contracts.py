@@ -10,7 +10,9 @@ from aos_api.aip_memory_contracts import (
     KnowledgeScope,
     KnowledgeSourceRef,
     MemoryCandidate,
+    MemoryCandidateEvent,
     MemoryCandidateStatus,
+    MemoryItem,
     RuntimeMemoryLayer,
     SubmitMemoryCandidateRequest,
 )
@@ -125,3 +127,31 @@ def test_quarantine_and_blocked_results_keep_explicit_reasons() -> None:
         assembled_tokens=0,
     )
     assert result.status == "blocked"
+
+
+def test_persisted_item_and_event_contracts_reject_working_or_drift() -> None:
+    with pytest.raises(ValidationError, match="Task/Checkpoint"):
+        MemoryItem(
+            tenant=TenantContext(org_id="org-org", project_id="dev-project"),
+            memory_item_id="item-1",
+            memory_layer="working",
+            scope="workspace",
+            status="active",
+            subject=resource("KnowledgeSubject", "subject-1"),
+            current_revision=1,
+            version=1,
+            created_at=NOW,
+            updated_at=NOW,
+        )
+    with pytest.raises(ValidationError, match="target status"):
+        MemoryCandidateEvent(
+            tenant=TenantContext(org_id="org-org", project_id="dev-project"),
+            event_id="event-1",
+            candidate_id="candidate-1",
+            sequence=1,
+            event_type="approved",
+            to_status="pending",
+            event_hash="d" * 64,
+            actor="pytest",
+            occurred_at=NOW,
+        )

@@ -142,6 +142,77 @@ class MemoryCandidate(AipContractModel):
         return self
 
 
+class MemoryCandidateEvent(AipContractModel):
+    tenant: TenantContext
+    event_id: str = Field(min_length=1, max_length=200)
+    candidate_id: str = Field(min_length=1, max_length=200)
+    sequence: int = Field(ge=1)
+    event_type: str = Field(pattern=r"^(submitted|quarantined|rejected|approved|promoted)$")
+    from_status: MemoryCandidateStatus | None = None
+    to_status: MemoryCandidateStatus
+    reason_codes: list[str] = Field(default_factory=list)
+    evidence_ref: ResourceRef | None = None
+    event_hash: str = Field(pattern=SHA256_PATTERN)
+    actor: str = Field(min_length=1, max_length=200)
+    occurred_at: datetime
+
+    @model_validator(mode="after")
+    def _event_matches_status(self) -> MemoryCandidateEvent:
+        expected = (
+            "submitted"
+            if self.to_status is MemoryCandidateStatus.PENDING
+            else self.to_status.value
+        )
+        if self.event_type != expected:
+            raise ValueError("candidate event type must match target status")
+        if self.sequence == 1 and self.from_status is not None:
+            raise ValueError("initial candidate event must not have from_status")
+        return self
+
+
+class MemoryItemRevision(AipContractModel):
+    tenant: TenantContext
+    memory_item_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    candidate_id: str = Field(min_length=1, max_length=200)
+    source_id: str = Field(min_length=1, max_length=200)
+    source_revision: int = Field(ge=1)
+    payload: ArtifactRef
+    content_hash: str = Field(pattern=SHA256_PATTERN)
+    confidence: float = Field(ge=0.0, le=1.0)
+    applicability: list[str] = Field(min_length=1)
+    markings: list[str] = Field(min_length=1)
+    effective_at: datetime
+    expires_at: datetime | None = None
+    created_by: str = Field(min_length=1, max_length=200)
+    created_at: datetime
+
+    @model_validator(mode="after")
+    def _validity_window(self) -> MemoryItemRevision:
+        if self.expires_at is not None and self.expires_at <= self.effective_at:
+            raise ValueError("memory revision expiry must follow effective_at")
+        return self
+
+
+class MemoryItem(AipContractModel):
+    tenant: TenantContext
+    memory_item_id: str = Field(min_length=1, max_length=200)
+    memory_layer: RuntimeMemoryLayer
+    scope: KnowledgeScope
+    status: MemoryItemStatus
+    subject: ResourceRef
+    current_revision: int = Field(ge=1)
+    version: int = Field(ge=1)
+    created_at: datetime
+    updated_at: datetime
+
+    @model_validator(mode="after")
+    def _persisted_layer(self) -> MemoryItem:
+        if self.memory_layer is RuntimeMemoryLayer.WORKING:
+            raise ValueError("working memory is restored from Task/Checkpoint")
+        return self
+
+
 class KnowledgeCitation(AipContractModel):
     memory_item_id: str = Field(min_length=1, max_length=200)
     revision: int = Field(ge=1)
@@ -184,7 +255,10 @@ __all__ = [
     "KnowledgeSourceKind",
     "KnowledgeSourceRef",
     "MemoryCandidate",
+    "MemoryCandidateEvent",
     "MemoryCandidateStatus",
+    "MemoryItem",
+    "MemoryItemRevision",
     "MemoryItemStatus",
     "RuntimeMemoryLayer",
     "SubmitMemoryCandidateRequest",
