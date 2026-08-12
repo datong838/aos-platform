@@ -205,8 +205,13 @@ class AipMemoryGovernanceService:
                     AND r.memory_item_id=i.memory_item_id
                     AND r.revision=i.current_revision
                    WHERE i.org_id=%s AND i.project_id=%s
-                     AND i.status='active' AND i.subject_ref=%s::jsonb""",
-                (*scope.key, AipMemoryStore._json(candidate.request.subject)),
+                     AND i.status='active' AND i.scope=%s
+                     AND i.subject_ref=%s::jsonb""",
+                (
+                    *scope.key,
+                    candidate.scope.value,
+                    AipMemoryStore._json(candidate.request.subject),
+                ),
             ).fetchall()
         if not rows:
             return []

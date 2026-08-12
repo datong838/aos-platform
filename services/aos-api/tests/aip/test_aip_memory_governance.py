@@ -458,3 +458,44 @@ def test_promotion_rechecks_time_sensitive_gates(chain) -> None:
             actor="promoter",
             occurred_at=NOW + timedelta(days=31),
         )
+
+
+def test_same_subject_in_different_knowledge_scope_is_not_a_conflict(chain) -> None:
+    approved = service(chain).approve_candidate(
+        PRIMARY,
+        chain["candidate"].candidate_id,
+        expected_version=1,
+        governance=chain["governance"],
+        required_applicability=["vertical:ecommerce"],
+        actor="reviewer",
+        occurred_at=NOW + timedelta(minutes=1),
+    )
+    service(chain).promote_candidate(
+        PRIMARY,
+        approved.candidate_id,
+        memory_item_id=f"memory-item-workspace-{chain['suffix']}",
+        expected_version=2,
+        required_applicability=["vertical:ecommerce"],
+        actor="promoter",
+        occurred_at=NOW + timedelta(minutes=2),
+    )
+    organization_candidate = chain["store"].submit_candidate(
+        PRIMARY,
+        f"memory-candidate-organization-{chain['suffix']}",
+        chain["candidate"].request,
+        source_id=f"memory-source-{chain['suffix']}",
+        source_revision=1,
+        knowledge_scope=KnowledgeScope.ORGANIZATION,
+        actor="pytest",
+        occurred_at=NOW + timedelta(minutes=3),
+    )
+    organization_approved = service(chain).approve_candidate(
+        PRIMARY,
+        organization_candidate.candidate_id,
+        expected_version=1,
+        governance=chain["governance"],
+        required_applicability=["vertical:ecommerce"],
+        actor="reviewer",
+        occurred_at=NOW + timedelta(minutes=4),
+    )
+    assert organization_approved.status is MemoryCandidateStatus.APPROVED
