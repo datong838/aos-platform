@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from "../../api/client";
+import { aipClient } from "../../api/aip/client";
 import {
   assertLogicPublicationDetailMatches,
   assertLogicPublicationRequest,
@@ -14,16 +14,12 @@ function resourceId(value: string, label: string): string {
   return value;
 }
 
-function publicationDetailPath(graphId: string, publicationId: string): string {
-  return `/v1/aip/logic/graphs/${encodeURIComponent(graphId)}/publications/${encodeURIComponent(publicationId)}`;
-}
-
 async function readPublicationDetail(
   graphId: string,
   publicationId: string,
   request?: LogicPublishRequest,
 ): Promise<LogicPublication> {
-  const response = await apiGet<unknown>(publicationDetailPath(graphId, publicationId));
+  const response = await aipClient.request<unknown>("getLogicPublication", { params: { graph_id: graphId, publication_id: publicationId } });
   const normalized = normalizeLogicPublication(response, { graphId, ...(request ? { request } : {}) });
   if (normalized.publication_id !== publicationId) {
     throw new Error("publication_id 与请求路径不一致");
@@ -33,9 +29,7 @@ async function readPublicationDetail(
 
 export async function listLogicPublications(graphId: string): Promise<LogicPublicationListResponse> {
   const safeGraphId = resourceId(graphId, "graphId");
-  const response = await apiGet<unknown>(
-    `/v1/aip/logic/graphs/${encodeURIComponent(safeGraphId)}/publications`,
-  );
+  const response = await aipClient.request<unknown>("listLogicPublications", { params: { graph_id: safeGraphId } });
   return normalizeLogicPublicationList(response, safeGraphId);
 }
 
@@ -55,10 +49,10 @@ export async function publishLogicGraph(
 ): Promise<LogicPublication> {
   const safeGraphId = resourceId(graphId, "graphId");
   assertLogicPublicationRequest(request);
-  const posted = normalizeLogicPublication(await apiPost<unknown>(
-    `/v1/aip/logic/graphs/${encodeURIComponent(safeGraphId)}/publish`,
-    request,
-  ), { graphId: safeGraphId, request });
+  const posted = normalizeLogicPublication(await aipClient.request<unknown>("publishLogicGraph", {
+    params: { graph_id: safeGraphId },
+    body: request,
+  }), { graphId: safeGraphId, request });
   const reread = await readPublicationDetail(
     safeGraphId,
     posted.publication_id,

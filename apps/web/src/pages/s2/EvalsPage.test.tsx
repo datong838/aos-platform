@@ -11,7 +11,13 @@ const apiMocks = vi.hoisted(() => ({
   apiDelete: vi.fn(),
 }));
 
+const evidenceMocks = vi.hoisted(() => ({ evalRun: vi.fn() }));
+
 vi.mock("../../api/client", () => apiMocks);
+vi.mock("../../api/aipEvidence", () => ({
+  aipEvidenceSdk: evidenceMocks,
+  LINEAGE_ROOT_TYPES: ["task_run", "action", "eval_run", "publication", "research_job", "legacy_decision_lineage"],
+}));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -73,6 +79,7 @@ describe("EvalsPage · 真实运行与门控", () => {
     apiMocks.apiPost.mockReset();
     apiMocks.apiPut.mockReset();
     apiMocks.apiDelete.mockReset();
+    evidenceMocks.evalRun.mockReset();
   });
 
   afterEach(() => {
@@ -305,5 +312,33 @@ describe("EvalsPage · 真实运行与门控", () => {
 
     expect(host.textContent).toContain("报告与门控字段不一致");
     expect(host.textContent).not.toContain("门控通过（");
+  });
+
+  it("按真实 Run ID 读取 AIP-4 权威引用且不产生写操作", async () => {
+    apiMocks.apiGet.mockImplementation((path: string) => Promise.resolve(
+      path === "/v1/aip/logic/graphs" ? graphList : { items: [] },
+    ));
+    evidenceMocks.evalRun.mockResolvedValue({
+      runId: "eval-run-1",
+      suiteRef: { assetType: "eval_suite", assetId: "suite-1", revision: "2", contentHash: "1".repeat(64) },
+      target: { assetType: "logic_graph", assetId: "logic-1", revision: "3", contentHash: "2".repeat(64) },
+      dataset: { datasetId: "dataset-1", revision: 4, contentHash: "3".repeat(64), sourceHash: "4".repeat(64), redactionPolicy: { assetType: "policy", assetId: "p1", revision: "1", contentHash: "5".repeat(64) } },
+      judge: { judgeId: "judge-1", revision: 2, contentHash: "6".repeat(64), modelRoute: null },
+      status: "succeeded", idempotencyKey: "key", createdBy: "user", createdAt: "2026-08-12T01:00:00Z", startedAt: "2026-08-12T01:00:01Z", finishedAt: "2026-08-12T01:00:02Z", version: 3,
+    });
+
+    await act(async () => root.render(createElement(MemoryRouter, null, createElement(EvalsPage))));
+    await flush();
+    const input = host.querySelector<HTMLInputElement>("[aria-label='eval-authority-run-id']")!;
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, "eval-run-1");
+    await act(async () => input.dispatchEvent(new Event("input", { bubbles: true })));
+    const read = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "读取权威 Run")!;
+    await act(async () => read.click());
+    await flush();
+
+    expect(evidenceMocks.evalRun).toHaveBeenCalledWith("eval-run-1");
+    expect(host.textContent).toContain("logic-1@3");
+    expect(host.textContent).toContain("succeeded");
+    expect(apiMocks.apiPost).not.toHaveBeenCalled();
   });
 });

@@ -1,12 +1,14 @@
 import { aipClient, type AipClient } from "../aip/client";
 import {
   parseLineageEvents,
+  parseEvalRunAuthority,
   parseTelemetrySpans,
   parseUsageReceipts,
   type LineageEvent,
   type LineageRootType,
   type TelemetrySpan,
   type UsageReceipt,
+  type EvalRunAuthority,
 } from "./contracts";
 
 export class AipEvidenceSdk {
@@ -31,6 +33,13 @@ export class AipEvidenceSdk {
     return parseUsageReceipts(await this.client.request("listUsageReceipts", {
       params: { lineage_id: lineageId },
     }), lineageId);
+  }
+
+  async evalRun(runId: string): Promise<EvalRunAuthority> {
+    if (!runId.trim() || runId !== runId.trim()) throw new TypeError("eval run id 无效");
+    return parseEvalRunAuthority(await this.client.request("getEvalAuthorityRun", {
+      params: { run_id: runId },
+    }), runId);
   }
 }
 

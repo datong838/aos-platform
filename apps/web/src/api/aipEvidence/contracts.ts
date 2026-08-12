@@ -65,6 +65,43 @@ export type UsageReceipt = {
   observedAt: string;
 };
 
+export type AssetRevisionRef = {
+  assetType: string;
+  assetId: string;
+  revision: string;
+  contentHash: string;
+};
+
+export type DatasetRevisionRef = {
+  datasetId: string;
+  revision: number;
+  contentHash: string;
+  sourceHash: string;
+  redactionPolicy: AssetRevisionRef;
+};
+
+export type JudgeRevisionRef = {
+  judgeId: string;
+  revision: number;
+  contentHash: string;
+  modelRoute: AssetRevisionRef | null;
+};
+
+export type EvalRunAuthority = {
+  runId: string;
+  suiteRef: AssetRevisionRef;
+  target: AssetRevisionRef;
+  dataset: DatasetRevisionRef;
+  judge: JudgeRevisionRef;
+  status: "queued" | "running" | "succeeded" | "failed" | "cancelled" | "unknown";
+  idempotencyKey: string;
+  createdBy: string;
+  createdAt: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+  version: number;
+};
+
 function record(value: unknown, label: string): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new TypeError(`${label} 响应格式无效`);
   return value as Record<string, unknown>;
@@ -104,6 +141,37 @@ function nullableNumber(value: unknown, label: string): number | null {
 
 function optionalRecord(value: unknown, label: string): Record<string, unknown> | null {
   return value === null || value === undefined ? null : record(value, label);
+}
+
+function assetRevisionRef(value: unknown, label: string): AssetRevisionRef {
+  const item = record(value, label);
+  return {
+    assetType: stringValue(item.assetType, `${label}.assetType`),
+    assetId: stringValue(item.assetId, `${label}.assetId`),
+    revision: stringValue(item.revision, `${label}.revision`),
+    contentHash: hash(item.contentHash, `${label}.contentHash`),
+  };
+}
+
+function datasetRevisionRef(value: unknown, label: string): DatasetRevisionRef {
+  const item = record(value, label);
+  return {
+    datasetId: stringValue(item.datasetId, `${label}.datasetId`),
+    revision: positiveInt(item.revision, `${label}.revision`),
+    contentHash: hash(item.contentHash, `${label}.contentHash`),
+    sourceHash: hash(item.sourceHash, `${label}.sourceHash`),
+    redactionPolicy: assetRevisionRef(item.redactionPolicy, `${label}.redactionPolicy`),
+  };
+}
+
+function judgeRevisionRef(value: unknown, label: string): JudgeRevisionRef {
+  const item = record(value, label);
+  return {
+    judgeId: stringValue(item.judgeId, `${label}.judgeId`),
+    revision: positiveInt(item.revision, `${label}.revision`),
+    contentHash: hash(item.contentHash, `${label}.contentHash`),
+    modelRoute: item.modelRoute === null || item.modelRoute === undefined ? null : assetRevisionRef(item.modelRoute, `${label}.modelRoute`),
+  };
 }
 
 export function parseLineageEvents(value: unknown): LineageEvent[] {
@@ -210,4 +278,30 @@ export function parseUsageReceipts(value: unknown, expectedLineageId?: string): 
   if (new Set(receipts.map((receipt) => receipt.receiptId)).size !== receipts.length) throw new TypeError("UsageReceipt 含重复 receiptId");
   if (new Set(receipts.map((receipt) => `${receipt.provider}:${receipt.providerReceiptId}`)).size !== receipts.length) throw new TypeError("UsageReceipt 含重复 provider receipt");
   return receipts;
+}
+
+export function parseEvalRunAuthority(value: unknown, expectedRunId?: string): EvalRunAuthority {
+  const item = record(value, "EvalRunAuthority");
+  const runId = stringValue(item.runId, "EvalRunAuthority.runId");
+  if (expectedRunId && runId !== expectedRunId) throw new TypeError("EvalRunAuthority.runId 与请求不匹配");
+  const suiteRef = assetRevisionRef(item.suiteRef, "EvalRunAuthority.suiteRef");
+  if (suiteRef.assetType !== "eval_suite") throw new TypeError("EvalRunAuthority.suiteRef 不是 eval_suite");
+  const startedAt = nullableString(item.startedAt, "EvalRunAuthority.startedAt");
+  const finishedAt = nullableString(item.finishedAt, "EvalRunAuthority.finishedAt");
+  const status = enumValue(item.status, ["queued", "running", "succeeded", "failed", "cancelled", "unknown"] as const, "EvalRunAuthority.status");
+  if (["succeeded", "failed", "cancelled"].includes(status) && !finishedAt) throw new TypeError("EvalRunAuthority 终态缺少 finishedAt");
+  return {
+    runId,
+    suiteRef,
+    target: assetRevisionRef(item.target, "EvalRunAuthority.target"),
+    dataset: datasetRevisionRef(item.dataset, "EvalRunAuthority.dataset"),
+    judge: judgeRevisionRef(item.judge, "EvalRunAuthority.judge"),
+    status,
+    idempotencyKey: stringValue(item.idempotencyKey, "EvalRunAuthority.idempotencyKey"),
+    createdBy: stringValue(item.createdBy, "EvalRunAuthority.createdBy"),
+    createdAt: stringValue(item.createdAt, "EvalRunAuthority.createdAt"),
+    startedAt,
+    finishedAt,
+    version: positiveInt(item.version, "EvalRunAuthority.version"),
+  };
 }

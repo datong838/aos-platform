@@ -18,6 +18,7 @@ import {
   LINEAGE_ROOT_TYPES,
   type LineageEvent,
   type LineageRootType,
+  type EvalRunAuthority,
 } from "../../api/aipEvidence";
 
 const TOOL_CATS = [
@@ -2843,6 +2844,10 @@ export function EvalsPage() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [runErr, setRunErr] = useState("");
+  const [authorityRunId, setAuthorityRunId] = useState("");
+  const [authorityRun, setAuthorityRun] = useState<EvalRunAuthority | null>(null);
+  const [authorityState, setAuthorityState] = useState<"idle" | "loading" | "loaded" | "error">("idle");
+  const [authorityError, setAuthorityError] = useState("");
 
   const suites = suitesApi.data?.items || [];
   const graphs = graphsApi.data?.items || [];
@@ -2953,6 +2958,25 @@ export function EvalsPage() {
       setMsg("已读取服务端最新评测报告");
     } catch (e) {
       setRunErr(`报告读取失败：${String((e as Error).message || e)}`);
+    }
+  }
+
+  async function readAuthorityRun() {
+    const runId = authorityRunId.trim();
+    if (!runId) {
+      setAuthorityError("请输入真实 Eval Run ID");
+      setAuthorityState("idle");
+      return;
+    }
+    setAuthorityRun(null);
+    setAuthorityError("");
+    setAuthorityState("loading");
+    try {
+      setAuthorityRun(await aipEvidenceSdk.evalRun(runId));
+      setAuthorityState("loaded");
+    } catch (error) {
+      setAuthorityError(String((error as Error).message || error));
+      setAuthorityState("error");
     }
   }
 
@@ -3067,6 +3091,37 @@ export function EvalsPage() {
           </>
         )}
       </BpBanner>
+
+      <section style={{ border: "1px solid var(--aos-border)", padding: 16, marginTop: 16 }} data-testid="eval-authority-reader">
+        <h3 style={{ marginTop: 0 }}>AIP-4 权威 Eval Run 核查</h3>
+        <p className="aos-text">旧评测执行入口保持兼容；此处只读 AIP-4 不可变 Run 引用，不允许手工修改状态或 revision/hash。</p>
+        <BpToolbar>
+          <input
+            aria-label="eval-authority-run-id"
+            value={authorityRunId}
+            onChange={(event) => setAuthorityRunId(event.target.value)}
+            placeholder="输入真实 eval-run ID"
+          />
+          <button type="button" className="btn" onClick={() => void readAuthorityRun()} disabled={authorityState === "loading"}>
+            {authorityState === "loading" ? "读取中…" : "读取权威 Run"}
+          </button>
+        </BpToolbar>
+        {authorityState === "idle" && !authorityError && <p className="aos-text">尚未选择权威 Eval Run。</p>}
+        {authorityError && <p className="error" role="alert">权威 Eval Run 读取失败：{authorityError}</p>}
+        {authorityRun && (
+          <BpTable
+            columns={["Run", "状态", "Suite revision/hash", "Target revision/hash", "Dataset revision/hash", "Judge revision/hash"]}
+            rows={[ [
+              authorityRun.runId,
+              authorityRun.status,
+              `${authorityRun.suiteRef.assetId}@${authorityRun.suiteRef.revision} · ${authorityRun.suiteRef.contentHash.slice(0, 12)}…`,
+              `${authorityRun.target.assetId}@${authorityRun.target.revision} · ${authorityRun.target.contentHash.slice(0, 12)}…`,
+              `${authorityRun.dataset.datasetId}@${authorityRun.dataset.revision} · ${authorityRun.dataset.contentHash.slice(0, 12)}…`,
+              `${authorityRun.judge.judgeId}@${authorityRun.judge.revision} · ${authorityRun.judge.contentHash.slice(0, 12)}…`,
+            ]]}
+          />
+        )}
+      </section>
 
       <BpLinkRow
         links={[

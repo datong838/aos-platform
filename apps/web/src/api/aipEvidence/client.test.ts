@@ -36,6 +36,19 @@ const usage = {
   sourceHash: "e".repeat(64), observedAt: "2026-08-12T01:00:02Z",
 };
 
+const evalRun = {
+  runId: "eval-run-1",
+  suiteRef: { assetType: "eval_suite", assetId: "suite-1", revision: "2", contentHash: "1".repeat(64) },
+  target: { assetType: "logic_graph", assetId: "logic-1", revision: "3", contentHash: "2".repeat(64) },
+  dataset: {
+    datasetId: "dataset-1", revision: 4, contentHash: "3".repeat(64), sourceHash: "4".repeat(64),
+    redactionPolicy: { assetType: "policy", assetId: "redact-1", revision: "1", contentHash: "5".repeat(64) },
+  },
+  judge: { judgeId: "judge-1", revision: 2, contentHash: "6".repeat(64), modelRoute: null },
+  status: "succeeded", idempotencyKey: "eval-once", createdBy: "user-1", createdAt: "2026-08-12T01:00:00Z",
+  startedAt: "2026-08-12T01:00:01Z", finishedAt: "2026-08-12T01:00:02Z", version: 3,
+};
+
 describe("AipEvidenceSdk", () => {
   it("通过唯一 AIP client 按 root 查询权威谱系", async () => {
     const request = vi.fn().mockResolvedValue([event]);
@@ -70,5 +83,27 @@ describe("AipEvidenceSdk", () => {
     expect(() => parseTelemetrySpans([span, { ...span, spanRecordId: "span-record-2" }])).toThrow("重复 provider receipt");
     expect(() => parseUsageReceipts([{ ...usage, quality: "unknown", quantity: 0 }])).toThrow("quantity/quality 不一致");
     expect(() => parseUsageReceipts([{ ...usage, usageKind: "cost", currency: null }])).toThrow("currency/usageKind 不一致");
+  });
+
+  it("读取精确 AIP-4 EvalRun 权威引用，路径与 run id 一致", async () => {
+    const request = vi.fn().mockResolvedValue(evalRun);
+    const sdk = new AipEvidenceSdk({ request } as unknown as AipClient);
+    await expect(sdk.evalRun("eval-run-1")).resolves.toMatchObject({
+      runId: "eval-run-1",
+      status: "succeeded",
+      target: { revision: "3", contentHash: "2".repeat(64) },
+    });
+    expect(request).toHaveBeenCalledWith("getEvalAuthorityRun", { params: { run_id: "eval-run-1" } });
+  });
+
+  it("EvalRun 错配、非 eval_suite 与终态缺失 finishedAt 失败关闭", async () => {
+    for (const malformed of [
+      { ...evalRun, runId: "other" },
+      { ...evalRun, suiteRef: { ...evalRun.suiteRef, assetType: "logic_graph" } },
+      { ...evalRun, finishedAt: null },
+    ]) {
+      const sdk = new AipEvidenceSdk({ request: vi.fn().mockResolvedValue(malformed) } as unknown as AipClient);
+      await expect(sdk.evalRun("eval-run-1")).rejects.toThrow();
+    }
   });
 });

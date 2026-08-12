@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const api = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
+const api = vi.hoisted(() => ({ request: vi.fn() }));
 
-vi.mock("../../api/client", () => ({ apiGet: api.get, apiPost: api.post }));
+vi.mock("../../api/aip/client", () => ({ aipClient: api }));
 
 import {
   getLogicPublication,
@@ -56,38 +56,36 @@ describe("logicPublicationApi", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("读取 publication 列表与详情并编码资源 ID", async () => {
-    api.get.mockResolvedValueOnce({ items: [publication()], count: 1 });
+    api.request.mockResolvedValueOnce({ items: [publication()], count: 1 });
     await expect(listLogicPublications("logic safe")).resolves.toMatchObject({ count: 1 });
-    expect(api.get).toHaveBeenNthCalledWith(1, "/v1/aip/logic/graphs/logic%20safe/publications");
+    expect(api.request).toHaveBeenNthCalledWith(1, "listLogicPublications", { params: { graph_id: "logic safe" } });
 
-    api.get.mockResolvedValueOnce(publication());
+    api.request.mockResolvedValueOnce(publication());
     await expect(getLogicPublication("logic safe", "pub/1")).resolves.toMatchObject({ publication_id: "pub/1" });
-    expect(api.get).toHaveBeenNthCalledWith(2, "/v1/aip/logic/graphs/logic%20safe/publications/pub%2F1");
+    expect(api.request).toHaveBeenNthCalledWith(2, "getLogicPublication", { params: { graph_id: "logic safe", publication_id: "pub/1" } });
   });
 
   it("发布必须 POST 后 GET 同一 publication 严格回读才返回成功", async () => {
-    api.post.mockResolvedValueOnce(publication());
-    api.get.mockResolvedValueOnce(publication());
+    api.request.mockResolvedValueOnce(publication()).mockResolvedValueOnce(publication());
 
     await expect(publishLogicGraph("logic safe", request)).resolves.toMatchObject({ publication_id: "pub/1" });
-    expect(api.post).toHaveBeenCalledWith("/v1/aip/logic/graphs/logic%20safe/publish", request);
-    expect(api.get).toHaveBeenCalledWith("/v1/aip/logic/graphs/logic%20safe/publications/pub%2F1");
+    expect(api.request).toHaveBeenNthCalledWith(1, "publishLogicGraph", { params: { graph_id: "logic safe" }, body: request });
+    expect(api.request).toHaveBeenNthCalledWith(2, "getLogicPublication", { params: { graph_id: "logic safe", publication_id: "pub/1" } });
   });
 
   it("POST 回包错配时不发 GET，回读错配时拒绝成功", async () => {
-    api.post.mockResolvedValueOnce(publication({ graph_revision: 8 }));
+    api.request.mockResolvedValueOnce(publication({ graph_revision: 8 }));
     await expect(publishLogicGraph("logic safe", request)).rejects.toThrow("graph_revision");
-    expect(api.get).not.toHaveBeenCalled();
+    expect(api.request).toHaveBeenCalledTimes(1);
 
-    api.post.mockResolvedValueOnce(publication());
-    api.get.mockResolvedValueOnce(publication({ actor: "other-user" }));
+    api.request.mockResolvedValueOnce(publication()).mockResolvedValueOnce(publication({ actor: "other-user" }));
     await expect(publishLogicGraph("logic safe", request)).rejects.toThrow("回读不一致");
   });
 
   it("拒绝空资源 ID 与不诚实列表", async () => {
     await expect(listLogicPublications(" ")).rejects.toThrow("graphId");
     await expect(getLogicPublication("logic safe", "")).rejects.toThrow("publicationId");
-    api.get.mockResolvedValueOnce({ items: [], count: 1 });
+    api.request.mockResolvedValueOnce({ items: [], count: 1 });
     await expect(listLogicPublications("logic safe")).rejects.toThrow("count");
   });
 });
