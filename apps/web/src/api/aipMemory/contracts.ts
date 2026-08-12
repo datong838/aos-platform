@@ -2,14 +2,23 @@ export const MEMORY_CANDIDATE_STATUSES = ["pending", "quarantined", "rejected", 
 export const MEMORY_ITEM_STATUSES = ["active", "stale", "revoked", "expired"] as const;
 export const MEMORY_SCOPES = ["workspace", "organization", "public_package"] as const;
 export const MEMORY_LAYERS = ["episodic", "semantic"] as const;
+export const PIPELINE_KINDS = ["seed_import", "operational_learning", "network_learning", "competitor_analysis", "professional_database", "customer_feedback", "human_experience"] as const;
+export const PIPELINE_TRIGGERS = ["manual", "task_event", "scheduled", "version_event", "domain_event"] as const;
+export const PIPELINE_SCHEDULE_STATUSES = ["active", "paused", "disabled"] as const;
+export const PIPELINE_RUN_STATUSES = ["queued", "running", "paused", "succeeded", "partial", "failed", "cancelled", "unknown"] as const;
+export const PIPELINE_ALERT_SEVERITIES = ["warning", "error", "critical"] as const;
 
 export type MemoryCandidateStatus = typeof MEMORY_CANDIDATE_STATUSES[number];
 export type MemoryItemStatus = typeof MEMORY_ITEM_STATUSES[number];
 export type MemoryScope = typeof MEMORY_SCOPES[number];
 export type MemoryLayer = typeof MEMORY_LAYERS[number];
+export type KnowledgePipelineKind = typeof PIPELINE_KINDS[number];
+export type KnowledgePipelineTrigger = typeof PIPELINE_TRIGGERS[number];
+export type KnowledgePipelineScheduleStatus = typeof PIPELINE_SCHEDULE_STATUSES[number];
+export type KnowledgePipelineRunStatus = typeof PIPELINE_RUN_STATUSES[number];
 export type TenantContext = { orgId: string; projectId: string };
-export type ResourceRef = { resourceType: string; resourceId: string; revision?: string };
-export type ArtifactRef = ResourceRef & { revision: string; contentHash: string };
+export type ResourceRef = { resourceType: string; resourceId: string; revision?: string; authority: string };
+export type ArtifactRef = { artifactType: string; artifactId: string; revision: string; contentHash: string };
 export type KnowledgeSourceRef = {
   sourceKind: string;
   sourceUri?: string;
@@ -115,6 +124,86 @@ export type KnowledgeQueryResult = {
   blockedReasons: string[];
   assembledTokens: number;
 };
+export type KnowledgePipelinePolicy = {
+  pipelineKind: KnowledgePipelineKind;
+  allowedTriggers: KnowledgePipelineTrigger[];
+  defaultStatus: KnowledgePipelineScheduleStatus;
+  requiredDependencies: string[];
+  allowedReceiptTypes: string[];
+  allowedSourceKinds: string[];
+};
+export type KnowledgePipelineSchedule = {
+  tenant: TenantContext;
+  scheduleId: string;
+  pipelineKind: KnowledgePipelineKind;
+  trigger: KnowledgePipelineTrigger;
+  config: ArtifactRef;
+  status: KnowledgePipelineScheduleStatus;
+  scheduleSpec?: string;
+  checkpointVersion: number;
+  version: number;
+  nextRunAt?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+export type KnowledgePipelineRun = {
+  tenant: TenantContext;
+  pipelineRunId: string;
+  scheduleId: string;
+  taskId: string;
+  runId: string;
+  trigger: KnowledgePipelineTrigger;
+  status: KnowledgePipelineRunStatus;
+  attempt: number;
+  retryOfRunId?: string;
+  expectedCheckpointVersion: number;
+  idempotencyKey: string;
+  requestHash: string;
+  version: number;
+  scheduledFor: string;
+  leaseOwner?: string;
+  leaseExpiresAt?: string;
+  startedAt?: string;
+  finishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+export type KnowledgePipelineReceipt = {
+  tenant: TenantContext;
+  receiptId: string;
+  pipelineRunId: string;
+  status: KnowledgePipelineRunStatus;
+  inputHash: string;
+  outputHash: string;
+  candidateRefs: ResourceRef[];
+  checkpointBeforeVersion: number;
+  checkpointAfterVersion: number;
+  producedCount: number;
+  failedCount: number;
+  errorCodes: string[];
+  receiptHash: string;
+  createdAt: string;
+};
+export type KnowledgePipelineCheckpoint = {
+  tenant: TenantContext;
+  scheduleId: string;
+  revision: number;
+  pipelineRunId: string;
+  receiptId: string;
+  checkpoint: ArtifactRef;
+  checkpointHash: string;
+  createdAt: string;
+};
+export type KnowledgePipelineAlert = {
+  tenant: TenantContext;
+  alertId: string;
+  pipelineRunId: string;
+  code: string;
+  severity: typeof PIPELINE_ALERT_SEVERITIES[number];
+  evidenceRef: ResourceRef;
+  alertHash: string;
+  createdAt: string;
+};
 
 function record(value: unknown, label: string): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new TypeError(`${label} 响应格式无效`);
@@ -129,6 +218,10 @@ function optionalText(value: unknown, label: string): string | undefined {
 }
 function integer(value: unknown, label: string): number {
   if (!Number.isSafeInteger(value) || (value as number) < 1) throw new TypeError(`${label} 无效`);
+  return value as number;
+}
+function nonNegativeInteger(value: unknown, label: string): number {
+  if (!Number.isSafeInteger(value) || (value as number) < 0) throw new TypeError(`${label} 无效`);
   return value as number;
 }
 function numberInRange(value: unknown, label: string): number {
@@ -158,12 +251,21 @@ function sameTenant(left: TenantContext, right: TenantContext): boolean {
 }
 function parseResourceRef(value: unknown, label: string): ResourceRef {
   const v = record(value, label);
-  return { resourceType: text(v.resourceType, `${label}.resourceType`), resourceId: text(v.resourceId, `${label}.resourceId`), revision: optionalText(v.revision, `${label}.revision`) };
+  return {
+    resourceType: text(v.resourceType, `${label}.resourceType`),
+    resourceId: text(v.resourceId, `${label}.resourceId`),
+    revision: optionalText(v.revision, `${label}.revision`),
+    authority: text(v.authority, `${label}.authority`),
+  };
 }
 function parseArtifactRef(value: unknown, label: string): ArtifactRef {
-  const ref = parseResourceRef(value, label);
   const v = record(value, label);
-  return { ...ref, revision: text(v.revision, `${label}.revision`), contentHash: sha(v.contentHash, `${label}.contentHash`) };
+  return {
+    artifactType: text(v.artifactType, `${label}.artifactType`),
+    artifactId: text(v.artifactId, `${label}.artifactId`),
+    revision: text(v.revision, `${label}.revision`),
+    contentHash: sha(v.contentHash, `${label}.contentHash`),
+  };
 }
 function parseSource(value: unknown, label: string): KnowledgeSourceRef {
   const v = record(value, label);
@@ -281,3 +383,92 @@ export function parseKnowledgeQueryResult(value: unknown): KnowledgeQueryResult 
   if (status === "blocked" && (chunks.length || !reasons.length)) throw new TypeError("blocked 结果无效");
   return { status, citations, chunks, blockedReasons: reasons, assembledTokens: tokens };
 }
+
+export function parseKnowledgePipelinePolicy(value: unknown): KnowledgePipelinePolicy {
+  const v = record(value, "PipelinePolicy");
+  return {
+    pipelineKind: enumValue(v.pipelineKind, PIPELINE_KINDS, "pipelineKind"),
+    allowedTriggers: parseEnumList(v.allowedTriggers, PIPELINE_TRIGGERS, "allowedTriggers"),
+    defaultStatus: enumValue(v.defaultStatus, PIPELINE_SCHEDULE_STATUSES, "defaultStatus"),
+    requiredDependencies: strings(v.requiredDependencies, "requiredDependencies", true),
+    allowedReceiptTypes: strings(v.allowedReceiptTypes, "allowedReceiptTypes", true),
+    allowedSourceKinds: strings(v.allowedSourceKinds, "allowedSourceKinds", true),
+  };
+}
+export function parseKnowledgePipelinePolicies(value: unknown): KnowledgePipelinePolicy[] {
+  if (!Array.isArray(value)) throw new TypeError("PipelinePolicy 列表响应格式无效");
+  const result = value.map(parseKnowledgePipelinePolicy);
+  if (new Set(result.map(item => item.pipelineKind)).size !== result.length) throw new TypeError("PipelinePolicy kind 重复");
+  return result;
+}
+function parseEnumList<T extends readonly string[]>(value: unknown, allowed: T, label: string): T[number][] {
+  if (!Array.isArray(value) || !value.length) throw new TypeError(`${label} 无效`);
+  const parsed = value.map(item => enumValue(item, allowed, label));
+  if (new Set(parsed).size !== parsed.length) throw new TypeError(`${label} 重复`);
+  return parsed;
+}
+export function parseKnowledgePipelineSchedule(value: unknown): KnowledgePipelineSchedule {
+  const v = record(value, "PipelineSchedule");
+  return {
+    tenant: parseTenant(v.tenant, "schedule.tenant"), scheduleId: text(v.scheduleId, "scheduleId"),
+    pipelineKind: enumValue(v.pipelineKind, PIPELINE_KINDS, "pipelineKind"), trigger: enumValue(v.trigger, PIPELINE_TRIGGERS, "trigger"),
+    config: parseArtifactRef(v.config, "config"), status: enumValue(v.status, PIPELINE_SCHEDULE_STATUSES, "schedule status"),
+    scheduleSpec: optionalText(v.scheduleSpec, "scheduleSpec"), checkpointVersion: nonNegativeInteger(v.checkpointVersion, "checkpointVersion"),
+    version: integer(v.version, "schedule.version"), nextRunAt: optionalText(v.nextRunAt, "nextRunAt"),
+    createdAt: text(v.createdAt, "schedule.createdAt"), updatedAt: text(v.updatedAt, "schedule.updatedAt"),
+  };
+}
+export function parseKnowledgePipelineSchedules(value: unknown): KnowledgePipelineSchedule[] {
+  if (!Array.isArray(value)) throw new TypeError("PipelineSchedule 列表响应格式无效");
+  return value.map(parseKnowledgePipelineSchedule);
+}
+export function parseKnowledgePipelineRun(value: unknown): KnowledgePipelineRun {
+  const v = record(value, "PipelineRun");
+  const tenant = parseTenant(v.tenant, "run.tenant");
+  const leaseOwner = optionalText(v.leaseOwner, "leaseOwner"); const leaseExpiresAt = optionalText(v.leaseExpiresAt, "leaseExpiresAt");
+  if ((leaseOwner ? 1 : 0) !== (leaseExpiresAt ? 1 : 0)) throw new TypeError("PipelineRun lease 不完整");
+  return {
+    tenant, pipelineRunId: text(v.pipelineRunId, "pipelineRunId"), scheduleId: text(v.scheduleId, "run.scheduleId"), taskId: text(v.taskId, "run.taskId"), runId: text(v.runId, "run.runId"),
+    trigger: enumValue(v.trigger, PIPELINE_TRIGGERS, "run.trigger"), status: enumValue(v.status, PIPELINE_RUN_STATUSES, "run.status"), attempt: integer(v.attempt, "attempt"),
+    retryOfRunId: optionalText(v.retryOfRunId, "retryOfRunId"), expectedCheckpointVersion: nonNegativeInteger(v.expectedCheckpointVersion, "expectedCheckpointVersion"),
+    idempotencyKey: text(v.idempotencyKey, "idempotencyKey"), requestHash: sha(v.requestHash, "requestHash"), version: integer(v.version, "run.version"),
+    scheduledFor: text(v.scheduledFor, "scheduledFor"), leaseOwner, leaseExpiresAt, startedAt: optionalText(v.startedAt, "startedAt"), finishedAt: optionalText(v.finishedAt, "finishedAt"),
+    createdAt: text(v.createdAt, "run.createdAt"), updatedAt: text(v.updatedAt, "run.updatedAt"),
+  };
+}
+export function parseKnowledgePipelineRuns(value: unknown): KnowledgePipelineRun[] {
+  if (!Array.isArray(value)) throw new TypeError("PipelineRun 列表响应格式无效");
+  return value.map(parseKnowledgePipelineRun);
+}
+export function parseKnowledgePipelineReceipt(value: unknown): KnowledgePipelineReceipt {
+  const v = record(value, "PipelineReceipt");
+  const refs = Array.isArray(v.candidateRefs) ? v.candidateRefs.map((ref, index) => parseResourceRef(ref, `candidateRefs[${index}]`)) : (() => { throw new TypeError("candidateRefs 无效"); })();
+  const producedCount = nonNegativeInteger(v.producedCount, "producedCount");
+  if (producedCount !== refs.length) throw new TypeError("producedCount 与 Candidate refs 不一致");
+  const before = nonNegativeInteger(v.checkpointBeforeVersion, "checkpointBeforeVersion"); const after = nonNegativeInteger(v.checkpointAfterVersion, "checkpointAfterVersion");
+  if (after < before) throw new TypeError("checkpoint 版本回退");
+  return {
+    tenant: parseTenant(v.tenant, "receipt.tenant"), receiptId: text(v.receiptId, "receiptId"), pipelineRunId: text(v.pipelineRunId, "receipt.pipelineRunId"),
+    status: enumValue(v.status, PIPELINE_RUN_STATUSES, "receipt.status"), inputHash: sha(v.inputHash, "inputHash"), outputHash: sha(v.outputHash, "outputHash"), candidateRefs: refs,
+    checkpointBeforeVersion: before, checkpointAfterVersion: after, producedCount, failedCount: nonNegativeInteger(v.failedCount, "failedCount"), errorCodes: strings(v.errorCodes, "errorCodes"),
+    receiptHash: sha(v.receiptHash, "receiptHash"), createdAt: text(v.createdAt, "receipt.createdAt"),
+  };
+}
+export function parseKnowledgePipelineReceiptView(value: unknown): KnowledgePipelineReceipt | null {
+  const v = record(value, "PipelineReceiptView");
+  return v.receipt == null ? null : parseKnowledgePipelineReceipt(v.receipt);
+}
+export function parseKnowledgePipelineCheckpoint(value: unknown): KnowledgePipelineCheckpoint {
+  const v = record(value, "PipelineCheckpoint"); const checkpoint = parseArtifactRef(v.checkpoint, "checkpoint"); const checkpointHash = sha(v.checkpointHash, "checkpointHash");
+  if (checkpoint.contentHash !== checkpointHash) throw new TypeError("checkpoint hash 不一致");
+  return { tenant: parseTenant(v.tenant, "checkpoint.tenant"), scheduleId: text(v.scheduleId, "checkpoint.scheduleId"), revision: integer(v.revision, "checkpoint.revision"), pipelineRunId: text(v.pipelineRunId, "checkpoint.pipelineRunId"), receiptId: text(v.receiptId, "checkpoint.receiptId"), checkpoint, checkpointHash, createdAt: text(v.createdAt, "checkpoint.createdAt") };
+}
+export function parseKnowledgePipelineCheckpointView(value: unknown): KnowledgePipelineCheckpoint | null {
+  const v = record(value, "PipelineCheckpointView");
+  return v.checkpoint == null ? null : parseKnowledgePipelineCheckpoint(v.checkpoint);
+}
+export function parseKnowledgePipelineAlert(value: unknown): KnowledgePipelineAlert {
+  const v = record(value, "PipelineAlert");
+  return { tenant: parseTenant(v.tenant, "alert.tenant"), alertId: text(v.alertId, "alertId"), pipelineRunId: text(v.pipelineRunId, "alert.pipelineRunId"), code: text(v.code, "alert.code"), severity: enumValue(v.severity, PIPELINE_ALERT_SEVERITIES, "alert.severity"), evidenceRef: parseResourceRef(v.evidenceRef, "alert.evidenceRef"), alertHash: sha(v.alertHash, "alertHash"), createdAt: text(v.createdAt, "alert.createdAt") };
+}
+export function parseKnowledgePipelineAlerts(value: unknown): KnowledgePipelineAlert[] { if (!Array.isArray(value)) throw new TypeError("PipelineAlert 列表响应格式无效"); return value.map(parseKnowledgePipelineAlert); }

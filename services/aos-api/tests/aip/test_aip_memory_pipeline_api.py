@@ -259,10 +259,10 @@ def test_read_endpoints_use_authenticated_tenant_and_return_strict_authority(pip
     assert client.get("/v1/aip/memory-authority/pipelines/policies").status_code == 200
     assert client.get("/v1/aip/memory-authority/pipelines/schedules").json()[0]["scheduleId"] == "seed-1"
     assert client.get("/v1/aip/memory-authority/pipelines/schedules/seed-1/events").json() == []
-    assert client.get("/v1/aip/memory-authority/pipelines/schedules/seed-1/checkpoint").json() is None
+    assert client.get("/v1/aip/memory-authority/pipelines/schedules/seed-1/checkpoint").json() == {"checkpoint": None}
     assert client.get("/v1/aip/memory-authority/pipelines/runs").json()[0]["pipelineRunId"] == "pipeline-run-1"
     assert client.get("/v1/aip/memory-authority/pipelines/runs/pipeline-run-1/events").json() == []
-    assert client.get("/v1/aip/memory-authority/pipelines/runs/pipeline-run-1/receipt").json()["receiptId"] == "receipt-1"
+    assert client.get("/v1/aip/memory-authority/pipelines/runs/pipeline-run-1/receipt").json()["receipt"]["receiptId"] == "receipt-1"
     assert client.get("/v1/aip/memory-authority/pipelines/runs/pipeline-run-1/alerts").json() == []
     assert store.scopes and all(scope == SCOPE for scope in store.scopes)
 
@@ -354,4 +354,3 @@ def test_complete_is_executor_only_and_uses_principal_as_lease_owner(pipeline_ap
     assert response.status_code == 200
     assert store.complete_call[0] == "pipeline-run-1"
     assert store.complete_call[2]["actor"] == "worker-1"
-

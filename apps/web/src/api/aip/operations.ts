@@ -45,6 +45,19 @@ export const AIP_OPERATIONS = {
   listMemoryItems: { method: "GET", path: "/v1/aip/memory-authority/memories", mutation: false },
   getMemoryItem: { method: "GET", path: "/v1/aip/memory-authority/memories/{memory_item_id}", mutation: false },
   queryMemoryKnowledge: { method: "POST", path: "/v1/aip/memory-authority/knowledge-queries", mutation: false },
+  listMemoryPipelinePolicies: { method: "GET", path: "/v1/aip/memory-authority/pipelines/policies", mutation: false },
+  listMemoryPipelineSchedules: { method: "GET", path: "/v1/aip/memory-authority/pipelines/schedules", mutation: false },
+  createMemoryPipelineSchedule: { method: "POST", path: "/v1/aip/memory-authority/pipelines/schedules", mutation: true },
+  getMemoryPipelineSchedule: { method: "GET", path: "/v1/aip/memory-authority/pipelines/schedules/{schedule_id}", mutation: false },
+  listMemoryPipelineScheduleEvents: { method: "GET", path: "/v1/aip/memory-authority/pipelines/schedules/{schedule_id}/events", mutation: false },
+  transitionMemoryPipelineSchedule: { method: "POST", path: "/v1/aip/memory-authority/pipelines/schedules/{schedule_id}/transitions", mutation: true },
+  getMemoryPipelineCheckpoint: { method: "GET", path: "/v1/aip/memory-authority/pipelines/schedules/{schedule_id}/checkpoint", mutation: false },
+  listMemoryPipelineRuns: { method: "GET", path: "/v1/aip/memory-authority/pipelines/runs", mutation: false },
+  createMemoryPipelineRun: { method: "POST", path: "/v1/aip/memory-authority/pipelines/runs", mutation: true },
+  getMemoryPipelineRun: { method: "GET", path: "/v1/aip/memory-authority/pipelines/runs/{pipeline_run_id}", mutation: false },
+  listMemoryPipelineRunEvents: { method: "GET", path: "/v1/aip/memory-authority/pipelines/runs/{pipeline_run_id}/events", mutation: false },
+  getMemoryPipelineReceipt: { method: "GET", path: "/v1/aip/memory-authority/pipelines/runs/{pipeline_run_id}/receipt", mutation: false },
+  listMemoryPipelineAlerts: { method: "GET", path: "/v1/aip/memory-authority/pipelines/runs/{pipeline_run_id}/alerts", mutation: false },
 } as const;
 
 export type AipOperationId = keyof typeof AIP_OPERATIONS;

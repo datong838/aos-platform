@@ -118,6 +118,14 @@ class StartPipelineRunCommand(AipContractModel):
     authorized_manual: bool = False
 
 
+class PipelineCheckpointView(AipContractModel):
+    checkpoint: KnowledgePipelineCheckpointRevision | None
+
+
+class PipelineReceiptView(AipContractModel):
+    receipt: KnowledgePipelineReceipt | None
+
+
 def get_aip_memory_store() -> AipMemoryStore:
     return _STORE
 
@@ -455,16 +463,18 @@ def transition_pipeline_schedule(
 
 @router.get(
     "/pipelines/schedules/{schedule_id}/checkpoint",
-    response_model=KnowledgePipelineCheckpointRevision | None,
+    response_model=PipelineCheckpointView,
 )
 def get_pipeline_checkpoint(
     schedule_id: str,
     principal: Principal = Depends(require_principal),
     store: AipMemoryPipelineStore = Depends(get_aip_memory_pipeline_store),
-) -> KnowledgePipelineCheckpointRevision | None:
+) -> PipelineCheckpointView:
     try:
         store.get_schedule(_scope(principal), schedule_id)
-        return store.get_checkpoint(_scope(principal), schedule_id)
+        return PipelineCheckpointView(
+            checkpoint=store.get_checkpoint(_scope(principal), schedule_id)
+        )
     except Exception as exc:
         raise _map_error(exc) from exc
 
@@ -545,17 +555,19 @@ def list_pipeline_run_events(
 
 @router.get(
     "/pipelines/runs/{pipeline_run_id}/receipt",
-    response_model=KnowledgePipelineReceipt | None,
+    response_model=PipelineReceiptView,
 )
 def get_pipeline_receipt(
     pipeline_run_id: str,
     principal: Principal = Depends(require_principal),
     store: AipMemoryPipelineStore = Depends(get_aip_memory_pipeline_store),
-) -> KnowledgePipelineReceipt | None:
+) -> PipelineReceiptView:
     try:
         store.get_run(_scope(principal), pipeline_run_id)
-        return store.get_receipt_for_run(
-            _scope(principal), pipeline_run_id, required=False
+        return PipelineReceiptView(
+            receipt=store.get_receipt_for_run(
+                _scope(principal), pipeline_run_id, required=False
+            )
         )
     except Exception as exc:
         raise _map_error(exc) from exc

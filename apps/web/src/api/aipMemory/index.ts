@@ -4,4 +4,10 @@ export type {
   MemoryAuthorityItem,
   MemoryCandidate,
   MemoryCandidateEvent,
+  KnowledgePipelineAlert,
+  KnowledgePipelineCheckpoint,
+  KnowledgePipelinePolicy,
+  KnowledgePipelineReceipt,
+  KnowledgePipelineRun,
+  KnowledgePipelineSchedule,
 } from "./contracts";
