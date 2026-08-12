@@ -247,11 +247,21 @@ class MemoryItem(AipContractModel):
 class KnowledgeCitation(AipContractModel):
     memory_item_id: str = Field(min_length=1, max_length=200)
     revision: int = Field(ge=1)
+    scope: KnowledgeScope
+    subject: ResourceRef
+    payload: ArtifactRef
     content_hash: str = Field(pattern=SHA256_PATTERN)
     source: KnowledgeSourceRef
     freshness: MemoryItemStatus
     confidence: float = Field(ge=0.0, le=1.0)
     applicability: list[str] = Field(min_length=1)
+    markings: list[str] = Field(min_length=1)
+
+
+class KnowledgeContextChunk(AipContractModel):
+    citation: KnowledgeCitation
+    content: str = Field(min_length=1)
+    token_count: int = Field(ge=1)
 
 
 class KnowledgeQuery(AipContractModel):
@@ -266,14 +276,24 @@ class KnowledgeQuery(AipContractModel):
 
 class KnowledgeQueryResult(AipContractModel):
     citations: list[KnowledgeCitation]
+    chunks: list[KnowledgeContextChunk] = Field(default_factory=list)
     status: str = Field(pattern=r"^(complete|degraded|blocked)$")
     blocked_reasons: list[str] = Field(default_factory=list)
     assembled_tokens: int = Field(ge=0)
 
     @model_validator(mode="after")
     def _blocked_is_empty(self) -> KnowledgeQueryResult:
-        if self.status == "blocked" and (self.citations or not self.blocked_reasons):
+        if self.status == "blocked" and (
+            self.citations or self.chunks or not self.blocked_reasons
+        ):
             raise ValueError("blocked result must contain reasons and no citations")
+        if len(self.citations) != len(self.chunks) or any(
+            citation != chunk.citation
+            for citation, chunk in zip(self.citations, self.chunks)
+        ):
+            raise ValueError("context chunks must align exactly with citations")
+        if self.assembled_tokens != sum(chunk.token_count for chunk in self.chunks):
+            raise ValueError("assembled token count must equal context chunks")
         return self
 
 
@@ -282,6 +302,7 @@ __all__ = [
     "ArtifactPiiStatus",
     "GovernanceApprovalRef",
     "KnowledgeCitation",
+    "KnowledgeContextChunk",
     "KnowledgeQuery",
     "KnowledgeQueryResult",
     "KnowledgeScope",
