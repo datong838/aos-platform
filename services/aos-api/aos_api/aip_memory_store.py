@@ -19,6 +19,7 @@ from aos_api.aip_memory_contracts import (
     MemoryCandidateStatus,
     MemoryItem,
     MemoryItemRevision,
+    MemoryItemStatus,
     SubmitMemoryCandidateRequest,
 )
 from aos_api.db import connect as db_connect
@@ -220,6 +221,37 @@ class AipMemoryStore:
             raise
         except Exception as exc:
             raise AipMemoryPersistenceError("candidate read failed") from exc
+
+    def list_candidates(
+        self,
+        scope: TenantScope,
+        *,
+        status: MemoryCandidateStatus | None = None,
+        limit: int = 100,
+    ) -> list[MemoryCandidate]:
+        self._require_scope(scope)
+        if limit < 1 or limit > 200:
+            raise ValueError("candidate list limit must be between 1 and 200")
+        try:
+            with self._connect(scope) as conn:
+                rows = conn.execute(
+                    """SELECT * FROM aip_memory_candidate
+                       WHERE org_id=%s AND project_id=%s
+                         AND (%s::text IS NULL OR status=%s)
+                       ORDER BY updated_at DESC,candidate_id
+                       LIMIT %s""",
+                    (
+                        *scope.key,
+                        status.value if status else None,
+                        status.value if status else None,
+                        limit,
+                    ),
+                ).fetchall()
+                return [self._candidate_from_row(conn, scope, row) for row in rows]
+        except (AipMemoryStoreError, ValueError):
+            raise
+        except Exception as exc:
+            raise AipMemoryPersistenceError("candidate list failed") from exc
 
     def transition_candidate(
         self,
@@ -456,6 +488,52 @@ class AipMemoryStore:
             if revision is None:
                 raise AipMemoryPersistenceError("current memory revision is missing")
             return self._item_from_row(scope, row), self._revision_from_row(scope, revision)
+
+    def list_memory_items(
+        self,
+        scope: TenantScope,
+        *,
+        status: MemoryItemStatus | None = None,
+        limit: int = 100,
+    ) -> list[tuple[MemoryItem, MemoryItemRevision]]:
+        self._require_scope(scope)
+        if limit < 1 or limit > 200:
+            raise ValueError("memory list limit must be between 1 and 200")
+        try:
+            with self._connect(scope) as conn:
+                rows = conn.execute(
+                    """SELECT * FROM aip_memory_item
+                       WHERE org_id=%s AND project_id=%s
+                         AND (%s::text IS NULL OR status=%s)
+                       ORDER BY updated_at DESC,memory_item_id
+                       LIMIT %s""",
+                    (
+                        *scope.key,
+                        status.value if status else None,
+                        status.value if status else None,
+                        limit,
+                    ),
+                ).fetchall()
+                result: list[tuple[MemoryItem, MemoryItemRevision]] = []
+                for row in rows:
+                    revision = self._revision_row(
+                        conn, scope, row["memory_item_id"], int(row["current_revision"])
+                    )
+                    if revision is None:
+                        raise AipMemoryPersistenceError(
+                            "current memory revision is missing"
+                        )
+                    result.append(
+                        (
+                            self._item_from_row(scope, row),
+                            self._revision_from_row(scope, revision),
+                        )
+                    )
+                return result
+        except (AipMemoryStoreError, ValueError):
+            raise
+        except Exception as exc:
+            raise AipMemoryPersistenceError("memory list failed") from exc
 
     @staticmethod
     def _require_scope(scope: TenantScope) -> None:

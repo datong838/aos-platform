@@ -3114,6 +3114,12 @@
       "module": "aos_api.routers.aip_research_jobs",
       "attribute": "router",
       "order": 518
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_memory_authority",
+      "attribute": "router",
+      "order": 519
     }
   ]
 }

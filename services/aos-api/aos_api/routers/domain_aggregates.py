@@ -320,6 +320,7 @@ ROUTER_SPECS: dict[str, tuple[tuple[str, str], ...]] = {
         ('aos_api.routers.aip_telemetry_usage', 'router'),
         ('aos_api.routers.aip_cost_attribution', 'router'),
         ('aos_api.routers.aip_research_jobs', 'router'),
+        ('aos_api.routers.aip_memory_authority', 'router'),
     ),
     "data": (
         ('aos_api.routers.builds', 'router'),
