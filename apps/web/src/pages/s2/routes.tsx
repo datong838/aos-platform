@@ -52,6 +52,7 @@ const AnalyticsPage = lazify(() => import("./analytics"), "AnalyticsPage");
 const OrderManagementPage = lazify(() => import("./OrderManagementPage"), "OrderManagementPage");
 const ProductInventoryPage = lazify(() => import("./ProductInventoryPage"), "ProductInventoryPage");
 const ObservabilityPage = lazify(() => import("./ObservabilityPage"), "ObservabilityPage");
+const MemoryGovernancePage = lazify(() => import("./MemoryGovernancePage"), "MemoryGovernancePage");
 const LogicCanvasPage = lazify(() => import("./LogicCanvasPage"), "LogicCanvasPage");
 const AgentRegistryPage = lazify(() => import("./AgentRegistryPage"), "AgentRegistryPage");
 const AgentsPage = lazify(() => import("./AgentsPage"), "AgentsPage");
@@ -132,6 +133,7 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "workshop/orders", Component: OrderManagementPage },
   { path: "workshop/inventory", Component: ProductInventoryPage },
   { path: "aip/observability", Component: ObservabilityPage },
+  { path: "aip/memory-governance", Component: MemoryGovernancePage },
   { path: "aip/logic", Component: LogicCanvasPage },
   { path: "aip/logic/:flowId", Component: LogicCanvasPage },
   { path: "aip/agent-registry", Component: AgentRegistryPage },

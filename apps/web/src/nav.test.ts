@@ -33,6 +33,11 @@ describe("nav product sections alignment", () => {
     expect(new Set(pages.map((page) => page.path)).size).toBe(pages.length);
   });
 
+  it("exposes governed memory as a live AIP authority page", () => {
+    expect(findNavPage("/aip/memory-governance")?.label).toBe("记忆与知识治理");
+    expect(S2_LIVE_PATHS.has("/aip/memory-governance")).toBe(true);
+  });
+
   it("TWB.2 ops section collapses by default flag", () => {
     const ops = NAV_ITEMS.find(
       (i) => "section" in i && (i as { section: string }).section === "运维交付",

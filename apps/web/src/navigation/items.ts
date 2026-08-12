@@ -288,6 +288,14 @@ export const NAV_ITEMS: NavItem[] = [
     status: "live",
     crumbs: ["AIP", "可观测性"],
   },
+  {
+    id: "aip-memory-governance",
+    path: "/aip/memory-governance",
+    label: "记忆与知识治理",
+    icon: "database",
+    status: "live",
+    crumbs: ["AIP", "记忆与知识治理"],
+  },
 
   { section: "模型管理" },
   // ─── 模型基础设施层（Model Infra） ───

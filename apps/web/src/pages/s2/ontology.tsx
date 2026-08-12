@@ -722,6 +722,9 @@ export function WikiPage() {
         <Link to="/aip/tools" className="btn-nav">
           Agent 工具面板 →
         </Link>
+        <Link to="/aip/memory-governance" className="btn-nav">
+          记忆与知识治理 →
+        </Link>
         <Link to="/ontology" className="btn-nav">
           ← 本体管理
         </Link>
@@ -819,10 +822,11 @@ export function WikiPage() {
       )}
       {tab === "agent" && (
         <BpBanner tone="info">
-          Agent 经工具读 Wiki 字段（wiki.read / tools.invoke）。配置入口：{" "}
+          Agent 经工具读 Wiki 字段（wiki.read / tools.invoke）；进入运行上下文前还须经过 Memory authority 的 scope、freshness、applicability、marking 与 Citation 校验。配置入口：{" "}
           <Link to="/aip/tools" className="bp-action-link">
             Agent 工具面板
           </Link>
+          {" · "}<Link to="/aip/memory-governance" className="bp-action-link">查看治理与 Citation</Link>
         </BpBanner>
       )}
       {tab === "versions" && (
