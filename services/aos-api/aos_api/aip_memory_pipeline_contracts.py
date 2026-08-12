@@ -12,7 +12,13 @@ from enum import StrEnum
 from pydantic import Field, field_validator, model_validator
 
 from aos_api.aip_contracts import AipContractModel, ArtifactRef, ResourceRef, TenantContext
-from aos_api.aip_memory_contracts import SHA256_PATTERN
+from aos_api.aip_memory_contracts import (
+    SHA256_PATTERN,
+    KnowledgeScope,
+    KnowledgeSourceKind,
+    KnowledgeSourceRef,
+    RuntimeMemoryLayer,
+)
 
 
 class KnowledgePipelineKind(StrEnum):
@@ -54,6 +60,12 @@ class KnowledgePipelineAlertSeverity(StrEnum):
     WARNING = "warning"
     ERROR = "error"
     CRITICAL = "critical"
+
+
+class KnowledgePipelineDependencyStatus(StrEnum):
+    AVAILABLE = "available"
+    UNAVAILABLE = "unavailable"
+    UNKNOWN = "unknown"
 
 
 TERMINAL_PIPELINE_RUN_STATUSES = frozenset(
@@ -386,6 +398,165 @@ class KnowledgePipelineAlert(AipContractModel):
     created_at: datetime
 
 
+class KnowledgePipelineDependencyResult(AipContractModel):
+    dependency: str = Field(min_length=1, max_length=120)
+    status: KnowledgePipelineDependencyStatus
+    evidence_ref: ResourceRef | None = None
+    reason_code: str | None = Field(default=None, min_length=1, max_length=120)
+
+    @field_validator("dependency")
+    @classmethod
+    def _dependency_name(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("dependency name must not be blank")
+        return cleaned
+
+    @model_validator(mode="after")
+    def _evidence_shape(self) -> KnowledgePipelineDependencyResult:
+        if self.status is KnowledgePipelineDependencyStatus.AVAILABLE:
+            evidence = self.evidence_ref
+            if (
+                evidence is None
+                or evidence.resource_type != "aip.eval_report"
+                or evidence.authority != "postgresql"
+                or not evidence.revision
+            ):
+                raise ValueError("available dependency requires exact PostgreSQL evidence")
+            if self.reason_code is not None:
+                raise ValueError("available dependency cannot carry a failure reason")
+        elif self.reason_code is None:
+            raise ValueError("unavailable/unknown dependency requires a reason")
+        return self
+
+
+class KnowledgePipelineDependencySnapshot(AipContractModel):
+    pipeline_kind: KnowledgePipelineKind
+    review_ref: ResourceRef
+    review_hash: str = Field(pattern=SHA256_PATTERN)
+    dependencies: list[KnowledgePipelineDependencyResult] = Field(
+        min_length=1, max_length=64
+    )
+    reviewed_at: datetime
+    expires_at: datetime
+
+    @field_validator("dependencies")
+    @classmethod
+    def _unique_dependencies(
+        cls, value: list[KnowledgePipelineDependencyResult]
+    ) -> list[KnowledgePipelineDependencyResult]:
+        names = [item.dependency for item in value]
+        if len(names) != len(set(names)):
+            raise ValueError("dependency snapshot entries must be unique")
+        return value
+
+    @model_validator(mode="after")
+    def _exact_review(self) -> KnowledgePipelineDependencySnapshot:
+        if (
+            self.review_ref.resource_type != "aip.eval_report"
+            or self.review_ref.authority != "postgresql"
+            or not self.review_ref.revision
+        ):
+            raise ValueError("dependency snapshot requires exact PostgreSQL eval report")
+        if self.reviewed_at.tzinfo is None or self.expires_at.tzinfo is None:
+            raise ValueError("dependency snapshot timestamps require timezones")
+        if self.expires_at <= self.reviewed_at:
+            raise ValueError("dependency snapshot expiry must follow review time")
+        return self
+
+
+class KnowledgePipelinePolicy(AipContractModel):
+    pipeline_kind: KnowledgePipelineKind
+    allowed_triggers: list[KnowledgePipelineTrigger] = Field(min_length=1)
+    default_status: KnowledgePipelineScheduleStatus
+    required_dependencies: list[str] = Field(min_length=1)
+    allowed_receipt_types: list[str] = Field(min_length=1)
+    allowed_source_kinds: list[KnowledgeSourceKind] = Field(min_length=1)
+
+    @field_validator(
+        "allowed_triggers",
+        "required_dependencies",
+        "allowed_receipt_types",
+        "allowed_source_kinds",
+    )
+    @classmethod
+    def _unique_policy_values(cls, value: list[object]) -> list[object]:
+        normalized = [str(item) for item in value]
+        if len(normalized) != len(set(normalized)):
+            raise ValueError("pipeline policy values must be unique")
+        return value
+
+
+class TrustedKnowledgeAdapterDefinition(AipContractModel):
+    adapter_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    contract_hash: str = Field(pattern=SHA256_PATTERN)
+    pipeline_kinds: list[KnowledgePipelineKind] = Field(min_length=1)
+    receipt_types: list[str] = Field(min_length=1)
+    source_kinds: list[KnowledgeSourceKind] = Field(min_length=1)
+
+    @field_validator("adapter_id")
+    @classmethod
+    def _adapter_id(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("adapter id must not be blank")
+        return cleaned
+
+    @field_validator("pipeline_kinds", "receipt_types", "source_kinds")
+    @classmethod
+    def _unique_adapter_values(cls, value: list[object]) -> list[object]:
+        normalized = [str(item) for item in value]
+        if len(normalized) != len(set(normalized)):
+            raise ValueError("adapter definition values must be unique")
+        return value
+
+
+class KnowledgePipelineInputReceipt(AipContractModel):
+    tenant: TenantContext
+    receipt_ref: ResourceRef
+    artifact: ArtifactRef
+    task_id: str = Field(min_length=1, max_length=200)
+    run_id: str = Field(min_length=1, max_length=200)
+    source: KnowledgeSourceRef
+
+    @model_validator(mode="after")
+    def _exact_authority(self) -> KnowledgePipelineInputReceipt:
+        if self.receipt_ref.authority != "postgresql" or not self.receipt_ref.revision:
+            raise ValueError("pipeline input requires exact PostgreSQL receipt")
+        _require_exact_artifact(self.artifact, "pipeline input artifact")
+        if self.source.source_ref != self.receipt_ref or self.source.source_uri is not None:
+            raise ValueError("pipeline input source must bind its exact receipt")
+        if self.source.content_hash != self.artifact.content_hash:
+            raise ValueError("pipeline input source hash must match its artifact")
+        return self
+
+
+class TrustedKnowledgeCandidateDraft(AipContractModel):
+    candidate_id: str = Field(min_length=1, max_length=200)
+    source_id: str = Field(min_length=1, max_length=200)
+    source_revision: int = Field(ge=1)
+    knowledge_scope: KnowledgeScope
+    candidate_layer: RuntimeMemoryLayer
+    subject: ResourceRef
+    confidence: float = Field(ge=0.0, le=1.0)
+    marking: list[str] = Field(min_length=1, max_length=32)
+
+    @field_validator("marking")
+    @classmethod
+    def _unique_markings(cls, value: list[str]) -> list[str]:
+        cleaned = [item.strip() for item in value]
+        if any(not item for item in cleaned) or len(cleaned) != len(set(cleaned)):
+            raise ValueError("candidate markings must be unique and non-blank")
+        return cleaned
+
+    @model_validator(mode="after")
+    def _promotable_layer(self) -> TrustedKnowledgeCandidateDraft:
+        if self.candidate_layer is RuntimeMemoryLayer.WORKING:
+            raise ValueError("adapter cannot create working memory candidates")
+        return self
+
+
 __all__ = [
     "ClaimKnowledgePipelineRunRequest",
     "CompleteKnowledgePipelineRunRequest",
@@ -393,7 +564,12 @@ __all__ = [
     "KnowledgePipelineAlert",
     "KnowledgePipelineAlertSeverity",
     "KnowledgePipelineCheckpointRevision",
+    "KnowledgePipelineDependencyResult",
+    "KnowledgePipelineDependencySnapshot",
+    "KnowledgePipelineDependencyStatus",
+    "KnowledgePipelineInputReceipt",
     "KnowledgePipelineKind",
+    "KnowledgePipelinePolicy",
     "KnowledgePipelineReceipt",
     "KnowledgePipelineRun",
     "KnowledgePipelineRunEvent",
@@ -406,4 +582,6 @@ __all__ = [
     "TERMINAL_PIPELINE_RUN_STATUSES",
     "TransitionKnowledgePipelineScheduleRequest",
     "TransitionKnowledgePipelineRunRequest",
+    "TrustedKnowledgeAdapterDefinition",
+    "TrustedKnowledgeCandidateDraft",
 ]
