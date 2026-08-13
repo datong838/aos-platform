@@ -260,12 +260,15 @@ class AipAgentRegistryStore:
             source_ref=row["source_ref"], source_license=row["source_license"], manifest=row["manifest"],
             content_hash=row["content_hash"], created_by=row["created_by"], created_at=row["created_at"])
 
-    @staticmethod
-    def _instance_from_row(scope: TenantScope, row: Any) -> AgentInstance:
+    @classmethod
+    def _instance_from_row(cls, scope: TenantScope, row: Any) -> AgentInstance:
         if row is None:
             raise AipAgentRegistryNotFound("agent instance not found")
+        snapshot = cls._instance_snapshot(row)
         return AgentInstance(tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
-            instance_id=row["instance_id"], template=VersionedAssetRef(asset_type="AgentTemplate",
+            instance_id=row["instance_id"], instance_ref=VersionedAssetRef(asset_type="AgentInstance",
+            asset_id=row["instance_id"], revision=row["version"], content_hash=cls._hash(snapshot)),
+            template=VersionedAssetRef(asset_type="AgentTemplate",
             asset_id=row["template_id"], revision=row["template_revision"], content_hash=row["content_hash"]),
             status=row["status"], overlay=row["overlay"], version=row["version"], created_by=row["created_by"],
             created_at=row["created_at"], updated_at=row["updated_at"])
@@ -279,9 +282,41 @@ class AipAgentRegistryStore:
 
     @staticmethod
     def _json(value: Any) -> str:
-        if hasattr(value, "model_dump"):
-            value = value.model_dump(mode="json", by_alias=True)
-        return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+        def normalize(item: Any) -> Any:
+            if hasattr(item, "model_dump"):
+                return normalize(item.model_dump(mode="json", by_alias=True))
+            if isinstance(item, dict):
+                return {key: normalize(child) for key, child in item.items()}
+            if isinstance(item, (list, tuple)):
+                return [normalize(child) for child in item]
+            return item
+
+        return json.dumps(
+            normalize(value),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            default=str,
+        )
+
+    @classmethod
+    def _hash(cls, value: Any) -> str:
+        return hashlib.sha256(cls._json(value).encode()).hexdigest()
+
+    @classmethod
+    def _instance_snapshot(cls, row: Any) -> dict[str, Any]:
+        return {
+            "instanceId": row["instance_id"],
+            "template": {
+                "assetType": "AgentTemplate",
+                "assetId": row["template_id"],
+                "revision": int(row["template_revision"]),
+                "contentHash": row["content_hash"],
+            },
+            "status": row["status"],
+            "overlay": row["overlay"],
+            "version": int(row["version"]),
+        }
 
     @classmethod
     def _command_hash(cls, request: Any, actor: str) -> str:

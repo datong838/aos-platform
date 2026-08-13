@@ -140,11 +140,17 @@ def test_a6b_cross_tenant_handoff_foreign_keys_fail_closed() -> None:
             conn.execute(
                 """INSERT INTO aip_handoff_envelope
                    (org_id,project_id,handoff_id,task_id,task_run_id,
-                    sender_instance_id,receiver_instance_id,object_refs,
+                    task_ref,task_run_ref,sender_instance_id,receiver_instance_id,sender_instance_ref,
+                    receiver_instance_ref,object_refs,
                     artifact_refs,evidence_refs,context_payload,
                     allowed_context_fields,markings,token_hash,status,expires_at)
-                   VALUES (%s,%s,'handoff-cross','missing-task','missing-run',
-                    'agent-primary','agent-canary','[]'::jsonb,'[]'::jsonb,
+                    VALUES (%s,%s,'handoff-cross','missing-task','missing-run',
+                    '{"resourceType":"Task","resourceId":"missing-task","revision":"1","authority":"aip-task-runtime"}'::jsonb,
+                    '{"resourceType":"TaskRun","resourceId":"missing-run","revision":"1","authority":"aip-task-runtime"}'::jsonb,
+                    'agent-primary','agent-canary',
+                    '{"assetType":"AgentInstance","assetId":"agent-primary","revision":1,"contentHash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}'::jsonb,
+                    '{"assetType":"AgentInstance","assetId":"agent-canary","revision":1,"contentHash":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}'::jsonb,
+                    '[]'::jsonb,'[]'::jsonb,
                     '[]'::jsonb,'{}'::jsonb,'[]'::jsonb,'["internal"]'::jsonb,
                     %s,'issued',NOW()+INTERVAL '10 minutes')""",
                 (*primary.key, "c" * 64),

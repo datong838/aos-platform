@@ -224,6 +224,7 @@ class UpdateAgentInstanceRequest(AipContractModel):
 class AgentInstance(AipContractModel):
     tenant: TenantContext
     instance_id: str
+    instance_ref: VersionedAssetRef
     template: VersionedAssetRef
     status: AgentInstanceStatus
     overlay: AgentInstanceOverlay
@@ -278,3 +279,84 @@ class RegistryReceipt(AipContractModel):
     status: str
     created_by: str
     created_at: datetime
+
+
+class CreateCapabilityBindingRequest(AipContractModel):
+    binding_id: str = Field(min_length=1, max_length=200)
+    binding: CapabilityBindingRequest
+
+
+class UpdateCapabilityBindingRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    from_status: str = Field(pattern=r"^(provisioning|active|suspended|revoked)$")
+    to_status: str = Field(pattern=r"^(provisioning|active|suspended|revoked)$")
+    health: BindingHealth
+    observed_at: datetime
+
+
+class CapabilityBinding(AipContractModel):
+    tenant: TenantContext
+    binding_id: str
+    capability: VersionedAssetRef
+    secret_ref: str
+    health: BindingHealth
+    network_policy_revision: str
+    quota_policy_revision: str
+    timeout_ms: int
+    max_concurrency: int
+    status: str
+    version: int
+    observed_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class CreateAgentRunRequest(AipContractModel):
+    agent_run_id: str = Field(min_length=1, max_length=200)
+    task_run_ref: ResourceRef
+    skill_binding_id: str = Field(min_length=1, max_length=200)
+    run: AgentRunRequest
+
+    @model_validator(mode="after")
+    def _task_run_kind(self) -> CreateAgentRunRequest:
+        if self.task_run_ref.resource_type != "TaskRun":
+            raise ValueError("task_run_ref must reference TaskRun")
+        return self
+
+
+class AgentRun(AipContractModel):
+    tenant: TenantContext
+    agent_run_id: str
+    task_id: str
+    task_run_id: str
+    instance_id: str
+    instance_version: int
+    skill_binding_id: str
+    request: AgentRunRequest
+    status: AgentRunStatus
+    version: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class IssueHandoffRequest(AipContractModel):
+    handoff_id: str = Field(min_length=1, max_length=200)
+    envelope: HandoffEnvelopeRequest
+
+
+class HandoffEnvelope(AipContractModel):
+    tenant: TenantContext
+    handoff_id: str
+    envelope: HandoffEnvelopeRequest
+    status: str
+    version: int
+    consumed_at: datetime | None = None
+    created_at: datetime
+
+
+class IssuedHandoff(AipContractModel):
+    handoff: HandoffEnvelope
+    # The bearer is returned only on the first successful issue. An idempotent
+    # replay can return the durable result but must never mint another token.
+    bearer_token: str | None = Field(default=None, min_length=32)
+    receipt: RegistryReceipt
