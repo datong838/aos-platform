@@ -80,11 +80,7 @@ class AipCapabilityRegistry(AipAgentRegistryStore):
                         existing = conn.execute(
                             "SELECT * FROM aip_capability_alias WHERE alias=%s", (alias,)
                         ).fetchone()
-                        if (
-                            existing is None
-                            or existing["capability_id"] != request.capability_id
-                            or existing["capability_revision"] != request.revision
-                        ):
+                        if existing is None or existing["capability_id"] != request.capability_id:
                             raise AipAgentRegistryConflict(
                                 "capability alias already resolves to another revision"
                             )
@@ -117,10 +113,12 @@ class AipCapabilityRegistry(AipAgentRegistryStore):
             with self._connect_factory() as conn:
                 row = conn.execute(
                     """SELECT c.* FROM aip_capability_alias a
-                       JOIN aip_capability_revision c
-                         ON c.capability_id=a.capability_id
-                        AND c.revision=a.capability_revision
-                       WHERE a.alias=%s""",
+                       JOIN LATERAL (
+                         SELECT * FROM aip_capability_revision r
+                         WHERE r.capability_id=a.capability_id
+                           AND r.lifecycle='published'
+                         ORDER BY r.revision DESC LIMIT 1
+                       ) c ON true WHERE a.alias=%s""",
                     (cleaned,),
                 ).fetchone()
             if row is None:

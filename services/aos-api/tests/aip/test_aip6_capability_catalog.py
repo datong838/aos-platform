@@ -99,6 +99,20 @@ def test_capability_alias_collision_fails_closed():
         registry.publish(request(f"test.second.{suffix}", alias), actor="pytest")
 
 
+def test_capability_alias_resolves_latest_published_revision_in_same_family():
+    suffix = uuid.uuid4().hex[:12]
+    capability_id = f"test.versioned.{suffix}"
+    alias = f"test.versioned.alias.{suffix}"
+    registry = AipCapabilityRegistry()
+    registry.publish(request(capability_id, alias), actor="pytest")
+    payload = request(capability_id, alias, content_hash=HASH_B).model_dump()
+    payload["revision"] = 2
+    second = registry.publish(
+        PublishCapabilityRevisionRequest(**payload), actor="pytest"
+    )
+    assert registry.resolve_alias(alias) == second
+
+
 def test_capability_tables_are_append_only():
     suffix = uuid.uuid4().hex[:12]
     capability_id = f"test.append.only.{suffix}"

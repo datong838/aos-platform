@@ -1,7 +1,7 @@
 {
   "version": 1,
   "policy_id": "ecommerce-growth-gates",
-  "description": "电商增长方案包门控策略：W03 决策标签（churn_high/vip/dormant）+ G2 三数字同事（内容官/导购顾问/客服专员）+ L04-L06 增长 Logic 的 BLOCKED → READY 放行条件。",
+  "description": "电商增长方案包门控策略：D3 真实增长资产 + A6E 六数字同事、37 Logic 与十共享 Capability 定义发布 + L04-L06 增长 Logic 的 BLOCKED → READY 放行条件。",
   "gates": [
     {
       "gate_id": "G2_DECISION_TAGS",
@@ -18,17 +18,17 @@
       "d3_progress_note": "D3 已注入 decision_tag 实际取值（churn_high/vip/dormant），G2 评审通过。叠加安装 1.1.0 release 可执行。"
     },
     {
-      "gate_id": "G2_THREE_DIGITAL_COWORKERS",
-      "label": "G2 三数字同事技能编排评审通过",
-      "status": "BLOCKED",
-      "owner": "growth-arch",
+      "gate_id": "A6E_ECOMMERCE_DEFINITION_CATALOG",
+      "label": "A6E 六数字同事、37 Logic 与十共享 Capability 定义目录",
+      "status": "PARTIAL_READY",
+      "owner": "aip-arch",
       "unblocks": [
-        "agents/three-coworkers-content-officer.json",
-        "agents/three-coworkers-shopping-advisor.json",
-        "agents/three-coworkers-customer-service.json"
+        "agents/ecommerce-six-coworkers.json",
+        "logic/ecommerce-37-logic-catalog.json",
+        "agents/ecommerce-capability-catalog.json"
       ],
-      "prerequisite": "11-AIP决策引擎升级方案 02/04/06 三篇技能编排评审通过 + 6 数字同事已有 AgentTask DAG 接口扩展",
-      "d3_progress_note": "D3 不解除本门，仅在 agents/placeholder.json 中写明占位与 unblock 路径。"
+      "prerequisite": "A6E 定义发布契约与数据库精确回读通过；运行仍须 A6F 实例安装、CapabilityBinding、EvalPack、Provider 与 AIP-7 路由权威",
+      "a6e_progress_note": "A6E 已移除 Agent/Logic 占位文件并发布严格 6/37/10 目录；本门仅 PARTIAL_READY，不把定义存在误报为能力可运行。"
     },
     {
       "gate_id": "G1_L04_INVENTORY_RISK",
@@ -66,12 +66,20 @@
     }
   ],
   "d3_release_version": "1.1.0",
+  "a6e_release_version": "1.2.0",
   "d3_overlay_revision": "d3-growth-pack-decision-tags-injected-v2",
   "d3_delivered": [
     "workshops/w03-customer-private-domain.json",
     "logic/l05-commission-anomaly.json",
     "policies/growth-gates.json (本文件)",
     "evals/w03-l05-dry-run-cases.json"
+  ],
+  "a6e_delivered": [
+    "agents/ecommerce-six-coworkers.json",
+    "agents/ecommerce-capability-catalog.json",
+    "logic/ecommerce-37-logic-catalog.json",
+    "schemas/aip6-contribution-schemas.json",
+    "policies/aip6-runtime-policies.json"
   ],
   "note": "D3 进度定义：W03 Workshop 内容 + L05 Logic Graph 内容 + 对应 Evals 全部落盘，可被 FDE asset bundle 机制加载 + 注册 + publish。叠加安装链路（安装 management / composition lock / apply / verification）今日同步完成，后续升级 release 仅需 bump version。"
 }

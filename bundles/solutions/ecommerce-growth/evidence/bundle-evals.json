@@ -1,1 +1,22 @@
-{"status":"passed","failed":0}
+{
+  "status": "passed",
+  "failed": 0,
+  "scope": "A6E definition publication contracts",
+  "passedContracts": [
+    "exact 6 AgentTemplate definitions",
+    "exact 37 evaluated SkillTemplate definitions",
+    "exact 10 published CapabilityRevision definitions",
+    "idempotent publication and exact database readback",
+    "zero tenant runtime side effects",
+    "title.generate alias resolves to copy.generate"
+  ],
+  "runtimeReadiness": "blocked",
+  "runtimeBlockers": [
+    "agent_instance_not_installed",
+    "skill_bindings_unavailable",
+    "provider_unknown",
+    "eval_pack_unavailable",
+    "aip7_route_authority_unavailable"
+  ],
+  "note": "passed 仅表示 A6E 定义发布契约通过，不表示能力运行、外发或生产就绪。"
+}

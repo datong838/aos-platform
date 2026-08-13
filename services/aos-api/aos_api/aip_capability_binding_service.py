@@ -101,6 +101,24 @@ class AipCapabilityBindingService(AipAgentRegistryStore):
                 if replay:
                     self._require_replay_hash(replay, request_hash)
                     return self._from_row(scope, self._row(conn, scope, binding_id)), self._receipt_from_row(scope, replay)
+                if request.to_status == "active":
+                    binding_row = self._row(conn, scope, binding_id)
+                    if binding_row is None:
+                        raise AipAgentRegistryNotFound("capability binding not found")
+                    capability_ref = binding_row["capability_ref"]
+                    capability = conn.execute(
+                        """SELECT readiness FROM aip_capability_revision
+                           WHERE capability_id=%s AND revision=%s AND content_hash=%s""",
+                        (
+                            capability_ref["assetId"],
+                            capability_ref["revision"],
+                            capability_ref["contentHash"],
+                        ),
+                    ).fetchone()
+                    if capability is None or capability["readiness"] != "available":
+                        raise AipAgentRegistryTransitionBlocked(
+                            "capability catalog readiness does not allow activation"
+                        )
                 row = conn.execute(
                     """UPDATE aip_capability_binding SET status=%s,health=%s,
                        observed_at=%s,version=version+1,updated_at=%s

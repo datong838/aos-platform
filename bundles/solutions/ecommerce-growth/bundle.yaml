@@ -2,8 +2,8 @@ apiVersion: aos.dev/v1alpha1
 kind: SolutionPack
 metadata:
   id: solution.ecommerce.growth
-  version: 1.1.0
-  displayName: 电商增长方案包（D3：W03 客户与私域运营台 + L05 分润异常检测）
+  version: 1.2.0
+  displayName: 电商增长方案包（六数字同事、37 Logic、十共享专业 Capability）
   publisher: aos
   license: internal
 spec:
@@ -25,8 +25,20 @@ spec:
       - content/evals/
     policies:
       - content/policies/
+    schemas:
+      - content/schemas/
   capabilities:
-    provides: []
+    provides:
+      - material.collect
+      - strategy.plan
+      - copy.generate
+      - script.compose
+      - speech.synthesize
+      - video.compose
+      - content.review
+      - live.orchestrate
+      - platform.adapt
+      - performance.review
     requires: []
   permissions:
     roles: []

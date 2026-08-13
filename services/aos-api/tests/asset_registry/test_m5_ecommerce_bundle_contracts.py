@@ -1,4 +1,4 @@
-"""M5-0 contracts for unsigned, content-free ecommerce bundle skeletons."""
+"""Contracts for unsigned ecommerce bundles with real exported artifacts."""
 
 from __future__ import annotations
 
@@ -28,9 +28,11 @@ class _BundleCase:
     relative_path: str
     bundle_id: str
     kind: str
+    version: str
     display_name: str
     dependencies: tuple[tuple[str, str, str], ...]
     exports: dict[str, tuple[str, ...]]
+    capabilities: tuple[str, ...] = ()
 
 
 BUNDLE_CASES = (
@@ -38,7 +40,8 @@ BUNDLE_CASES = (
         relative_path="domains/ecommerce-core",
         bundle_id=CORE_ID,
         kind="DomainPack",
-        display_name="Ecommerce Core Fixture",
+        version="1.0.0",
+        display_name="电商核心本体包",
         dependencies=(),
         exports={
             "ontology": ("content/ontology/",),
@@ -50,7 +53,8 @@ BUNDLE_CASES = (
         relative_path="solutions/ecommerce-operations-base",
         bundle_id="solution.ecommerce.operations-base",
         kind="SolutionPack",
-        display_name="Ecommerce Operations Base Fixture",
+        version="1.0.0",
+        display_name="电商运营基础方案包",
         dependencies=CORE_DEPENDENCY,
         exports={
             "logic": ("content/logic/",),
@@ -62,7 +66,8 @@ BUNDLE_CASES = (
         relative_path="solutions/ecommerce-growth",
         bundle_id="solution.ecommerce.growth",
         kind="SolutionPack",
-        display_name="Ecommerce Growth Fixture",
+        version="1.2.0",
+        display_name="电商增长方案包（六数字同事、37 Logic、十共享专业 Capability）",
         dependencies=CORE_DEPENDENCY,
         exports={
             "agents": ("content/agents/",),
@@ -70,13 +75,27 @@ BUNDLE_CASES = (
             "workshops": ("content/workshops/",),
             "evals": ("content/evals/",),
             "policies": ("content/policies/",),
+            "schemas": ("content/schemas/",),
         },
+        capabilities=(
+            "material.collect",
+            "strategy.plan",
+            "copy.generate",
+            "script.compose",
+            "speech.synthesize",
+            "video.compose",
+            "content.review",
+            "live.orchestrate",
+            "platform.adapt",
+            "performance.review",
+        ),
     ),
     _BundleCase(
         relative_path="platforms/ecommerce-niushop",
         bundle_id="platform.ecommerce.niushop",
         kind="PlatformAdapterPack",
-        display_name="Ecommerce Platform Adapter Fixture",
+        version="1.0.0",
+        display_name="Niushop 微商城平台适配包",
         dependencies=CORE_DEPENDENCY,
         exports={
             "connectors": ("content/connectors/",),
@@ -107,7 +126,7 @@ def test_bundle_manifest_matches_frozen_contract_and_existing_exports(
     assert manifest.kind.value == case.kind
     assert manifest.metadata.model_dump(by_alias=True) == {
         "id": case.bundle_id,
-        "version": "1.0.0",
+        "version": case.version,
         "displayName": case.display_name,
         "publisher": "aos",
         "license": "internal",
@@ -124,7 +143,7 @@ def test_bundle_manifest_matches_frozen_contract_and_existing_exports(
     assert all(satisfies("1.0.0", item.version) for item in manifest.spec.dependencies)
     assert manifest.spec.optional_dependencies == []
     assert manifest.spec.conflicts == []
-    assert manifest.spec.capabilities.provides == []
+    assert tuple(manifest.spec.capabilities.provides) == case.capabilities
     assert manifest.spec.capabilities.requires == []
     assert manifest.spec.permissions.model_dump(by_alias=True) == {
         "roles": [],
@@ -149,8 +168,10 @@ def test_bundle_manifest_matches_frozen_contract_and_existing_exports(
         for relative_path in paths:
             export_path = BUNDLES_ROOT / case.relative_path / relative_path
             assert export_path.is_dir()
-            assert [item.name for item in export_path.iterdir()] == [".gitkeep"]
-            assert (export_path / ".gitkeep").read_text(encoding="utf-8").strip() == ""
+            assert any(
+                item.is_file() and item.name != ".gitkeep"
+                for item in export_path.rglob("*")
+            )
 
 
 def test_shared_manifest_schema_remains_the_strict_dto_source_contract() -> None:
@@ -180,7 +201,7 @@ def test_three_leaf_bundles_depend_only_on_core() -> None:
 
 
 @pytest.mark.parametrize("case", BUNDLE_CASES, ids=lambda case: case.bundle_id)
-def test_real_loader_accepts_unsigned_skeleton_with_only_minimal_evidence(
+def test_real_loader_accepts_unsigned_bundle_with_stable_exported_artifacts(
     case: _BundleCase,
 ) -> None:
     loader = ManifestLoader({"m5-fixtures": BUNDLES_ROOT})
@@ -193,17 +214,23 @@ def test_real_loader_accepts_unsigned_skeleton_with_only_minimal_evidence(
     assert first.signature is None
     assert first.content_hash == second.content_hash
     assert first.artifacts == second.artifacts
-    assert [item.relative_path for item in first.artifacts] == sorted(
-        [
-            *(f"{path}.gitkeep" for paths in case.exports.values() for path in paths),
-            "evidence/bundle-evals.json",
-            "evidence/sbom.json",
-        ]
+    artifact_paths = [item.relative_path for item in first.artifacts]
+    assert artifact_paths == sorted(artifact_paths)
+    assert "evidence/bundle-evals.json" in artifact_paths
+    assert "evidence/sbom.json" in artifact_paths
+    export_prefixes = tuple(
+        path for paths in case.exports.values() for path in paths
     )
+    content_paths = [
+        path for path in artifact_paths if not path.startswith("evidence/")
+    ]
+    assert content_paths
+    assert all(path.startswith(export_prefixes) for path in content_paths)
     assert all(
-        item.size == 0 if item.relative_path.endswith(".gitkeep") else item.size > 0
-        for item in first.artifacts
+        any(path.startswith(prefix) for path in content_paths)
+        for prefix in export_prefixes
     )
+    assert all(item.size > 0 for item in first.artifacts)
     assert {(item.type.value, item.status.value) for item in first.evidence} == {
         ("manifest_validation", "valid"),
         ("content_hash", "valid"),

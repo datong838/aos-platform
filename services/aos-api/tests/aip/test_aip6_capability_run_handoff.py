@@ -210,8 +210,8 @@ def test_capability_binding_is_secret_ref_only_health_gated_and_scoped(ids):
             effect_review_schema_ref=asset("SchemaRevision", "effect-review"),
             license_policy_ref=asset("LicensePolicy", "license"),
             readiness_policy_ref=asset("ReadinessPolicy", "readiness"),
-            readiness="blocked",
-            readiness_reasons=["provider_unknown"],
+            readiness="available",
+            readiness_reasons=[],
             source_ref=resource(
                 "SolutionPack", "ecommerce", authority="solution-pack"
             ),

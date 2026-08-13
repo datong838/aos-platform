@@ -1,1 +1,10 @@
-{"format":"CycloneDX","components":[]}
+{
+  "format": "CycloneDX",
+  "components": [
+    {"type": "data", "name": "ecommerce-six-coworkers", "version": "1"},
+    {"type": "data", "name": "ecommerce-37-logic-catalog", "version": "1"},
+    {"type": "data", "name": "ecommerce-capability-catalog", "version": "1"},
+    {"type": "data", "name": "aip6-contribution-schemas", "version": "1"},
+    {"type": "data", "name": "aip6-runtime-policies", "version": "1"}
+  ]
+}
