@@ -37,9 +37,6 @@ const DataPage = lazy(() =>
 const ApolloPage = lazy(() =>
   import("./pages/ApolloPage").then((m) => ({ default: m.ApolloPage })),
 );
-const CapabilityPage = lazy(() =>
-  import("./pages/CapabilityPage").then((m) => ({ default: m.CapabilityPage })),
-);
 const ModelCatalogPage = lazy(() =>
   import("./pages/s2/ModelCatalogPage").then((m) => ({ default: m.ModelCatalogPage })),
 );
@@ -215,14 +212,6 @@ export function App() {
             element={
               <Suspense fallback={<PageFallback />}>
                 <StudioPage />
-              </Suspense>
-            }
-          />
-          <Route
-            path="aip/capabilities"
-            element={
-              <Suspense fallback={<PageFallback />}>
-                <CapabilityPage />
               </Suspense>
             }
           />

@@ -54,8 +54,9 @@ const ProductInventoryPage = lazify(() => import("./ProductInventoryPage"), "Pro
 const ObservabilityPage = lazify(() => import("./ObservabilityPage"), "ObservabilityPage");
 const MemoryGovernancePage = lazify(() => import("./MemoryGovernancePage"), "MemoryGovernancePage");
 const LogicCanvasPage = lazify(() => import("./LogicCanvasPage"), "LogicCanvasPage");
-const AgentRegistryPage = lazify(() => import("./AgentRegistryPage"), "AgentRegistryPage");
-const AgentsPage = lazify(() => import("./AgentsPage"), "AgentsPage");
+const AgentsPage = lazify(() => import("./CanonicalAgentsPage"), "CanonicalAgentsPage");
+const CanonicalAgentRegistryPage = lazify(() => import("./CanonicalAgentRegistryPage"), "CanonicalAgentRegistryPage");
+const CanonicalCapabilityPage = lazify(() => import("../CanonicalCapabilityPage"), "CanonicalCapabilityPage");
 const AgentImportPage = lazify(() => import("./AgentImportPage"), "AgentImportPage");
 const CapabilityImportPage = lazify(() => import("./CapabilityImportPage"), "CapabilityImportPage");
 const WorkshopCreatePage = lazify(() => import("./WorkshopCreatePage"), "WorkshopCreatePage");
@@ -136,8 +137,9 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "aip/memory-governance", Component: MemoryGovernancePage },
   { path: "aip/logic", Component: LogicCanvasPage },
   { path: "aip/logic/:flowId", Component: LogicCanvasPage },
-  { path: "aip/agent-registry", Component: AgentRegistryPage },
+  { path: "aip/agent-registry", Component: CanonicalAgentRegistryPage },
   { path: "aip/agents", Component: AgentsPage },
+  { path: "aip/capabilities", Component: CanonicalCapabilityPage },
   { path: "aip/agent-import", Component: AgentImportPage },
   { path: "aip/capability-import", Component: CapabilityImportPage },
   { path: "workshop/create", Component: WorkshopCreatePage },
