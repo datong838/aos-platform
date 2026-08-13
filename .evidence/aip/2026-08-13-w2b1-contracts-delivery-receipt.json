@@ -1,0 +1,36 @@
+{
+  "schema": "aos-branch-delivery-receipt/v1",
+  "task": "W2-B1 EvalContract and ResponsibilityPlan strict contracts",
+  "branch": "w1-aip",
+  "baseline": "d205427777f58e636a1b614f51aafdd19fc45d8a",
+  "status": "GREEN",
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/aip_production_contracts.py",
+      "beforeSha256": "b1f1fa275065b2f8a39d21456418b5d55ab9b48a2bab444240b9f77907d59989",
+      "afterSha256": "d8fede05915e69311fa77b8df1fcc265e19b463e133eedb5192417c466892d9f"
+    },
+    {
+      "path": "services/aos-api/tests/test_w2b_production_contracts.py",
+      "beforeSha256": null,
+      "afterSha256": "ab2339f1772dd7b8326c4449cf2fcfb7020f31c0217b9cc5d6fb999413896649"
+    }
+  ],
+  "verification": [
+    "uv run pytest -q tests/test_w2b_production_contracts.py => 3 passed",
+    "uv run pytest -q tests/test_w2a_production_contract_store.py tests/test_w2a_production_contract_api.py => 6 passed",
+    "uv run python -m compileall -q aos_api/aip_production_contracts.py => GREEN",
+    "git diff --check on exact files => GREEN"
+  ],
+  "readOnlyFacts": {
+    "tenant": "org-org/dev-project",
+    "alembicHead": "aip7_001",
+    "agentInstances": 6,
+    "skillBindings": 0,
+    "capabilityBindings": 0,
+    "evalSuites": 0,
+    "publicationEvents": 0,
+    "releaseGateDecisions": 0
+  },
+  "next": "W2-B1 migration and PostgreSQL Store; migration lease held by w1-aip"
+}
