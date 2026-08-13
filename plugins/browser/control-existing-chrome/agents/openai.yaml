@@ -1,0 +1,4 @@
+interface:
+  display_name: "控制现有 Chrome（macOS）"
+  short_description: "仅支持 macOS：无扩展复用已登录 Chrome"
+  default_prompt: "使用 $control-existing-chrome 在 macOS 上通过系统可视化控制操作我已打开并登录的普通 Chrome，不要求安装 Chrome 扩展。Windows 或 Linux 上不要执行该 Skill。"

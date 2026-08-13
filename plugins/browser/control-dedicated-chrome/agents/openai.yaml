@@ -1,0 +1,4 @@
+interface:
+  display_name: "专用 Chrome（macOS）"
+  short_description: "启动独立持久 Profile 的普通 Chrome"
+  default_prompt: "使用 $control-dedicated-chrome 在 macOS 上启动专用普通 Chrome；首次登录由我手动完成。"

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""D5-E2: Browser-based frontend verification using Browser Pilot."""
+"""D5-E2: Browser-based frontend verification using Kitewright."""
 
 import sys
 import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "plugins", "agents", "browser-pilot"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "plugins", "browser", "kitewright"))
 
-from engine_adapter import BrowserPilot
+from engine_adapter import Kitewright
 
 FRONTEND_URL = "http://localhost:5173"
 SCREENSHOT_DIR = "/tmp/d5e2-screenshots"
@@ -62,7 +62,7 @@ def main():
     print("D5-E2 Browser Verification — 6 key pages")
     print("=" * 70)
 
-    with BrowserPilot() as pilot:
+    with Kitewright() as pilot:
         results = pilot.verify_pages(PAGES, screenshot_dir=SCREENSHOT_DIR)
 
     print("\n" + "=" * 70)

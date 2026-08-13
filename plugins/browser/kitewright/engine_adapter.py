@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Browser Pilot — Engine Adapter (v0.2, Kitewright-only)
+Kitewright — Engine Adapter (v0.3)
 
 单引擎架构：只依赖 Kitewright MCP Server。
 kite 二进制已内置于插件 bin/ 目录，无需外部安装。
 
 使用方式：
-    from engine_adapter import BrowserPilot
+    from engine_adapter import Kitewright
 
-    with BrowserPilot() as pilot:
+    with Kitewright() as pilot:
         pilot.navigate("http://localhost:5173")
         pilot.screenshot("/tmp/page.png")
         result = pilot.assert_text("仪表盘", should_exist=True)
@@ -41,7 +41,7 @@ from typing import Any, Optional
 DEFAULT_KITE_PORT = 8090
 # NOTE: 优先用 127.0.0.1 而非 localhost，避免本机 DNS/IPv6 解析导致 initialize 握手超时。
 DEFAULT_KITE_ENDPOINT = f"http://127.0.0.1:{DEFAULT_KITE_PORT}"
-DEFAULT_SCREENSHOT_DIR = "/tmp/browser-pilot/screenshots"
+DEFAULT_SCREENSHOT_DIR = "/tmp/kitewright/screenshots"
 DEFAULT_TIMEOUT_MS = 10_000
 
 # 插件目录（用于定位内置 bin/kite）
@@ -211,7 +211,7 @@ class KitewrightMCP:
                 "params": {
                     "protocolVersion": "2024-11-05",
                     "capabilities": {},
-                    "clientInfo": {"name": "browser-pilot", "version": "0.2"},
+                    "clientInfo": {"name": "kitewright", "version": "0.3"},
                 },
             }).encode()
             headers = {
@@ -371,10 +371,10 @@ class KitewrightMCP:
 
 
 # ============================================================
-# BrowserPilot — 唯一入口
+# Kitewright — 主入口
 # ============================================================
 
-class BrowserPilot:
+class Kitewright:
     """
     浏览器自动驾驶 — 基于 Kitewright MCP
 
@@ -382,7 +382,7 @@ class BrowserPilot:
     kite 二进制已内置于插件 bin/ 目录。
 
     用法：
-        pilot = BrowserPilot()
+        pilot = Kitewright()
         pilot.start()
         pilot.navigate("http://localhost:5173")
         pilot.screenshot("/tmp/page.png")
@@ -390,7 +390,7 @@ class BrowserPilot:
         pilot.close()
 
     Context manager：
-        with BrowserPilot() as pilot:
+        with Kitewright() as pilot:
             pilot.navigate(url)
             pilot.screenshot(path)
     """
@@ -411,7 +411,7 @@ class BrowserPilot:
             auth_token=auth_token,
         )
 
-    def start(self) -> "BrowserPilot":
+    def start(self) -> "Kitewright":
         """启动 Kitewright MCP Server"""
         self._mcp.start()
         kite_src = self._mcp._kite_binary
@@ -419,7 +419,7 @@ class BrowserPilot:
             kite_src = "npx @kitewright/mcp"
         elif kite_src == _BUNDLED_KITE:
             kite_src = "bundled bin/kite"
-        print(f"[BrowserPilot] 引擎: Kitewright MCP ({self._mcp.endpoint}) [{kite_src}]")
+        print(f"[Kitewright] 引擎: Kitewright MCP ({self._mcp.endpoint}) [{kite_src}]")
         return self
 
     def close(self):
@@ -752,12 +752,16 @@ class BrowserPilot:
 
 
 # ============================================================
+# 向后兼容旧调用方；新代码统一使用 Kitewright。
+BrowserPilot = Kitewright
+
+
 # CLI 入口
 # ============================================================
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="Browser Pilot — 原生浏览器自动驾驶 (Kitewright)")
+    parser = argparse.ArgumentParser(description="Kitewright — 独立 Chrome/Chromium 自动化")
     parser.add_argument("--headless", action="store_true")
     parser.add_argument("--url", help="要访问的 URL")
     parser.add_argument("--screenshot", help="截图保存路径")
@@ -767,7 +771,7 @@ def main():
     parser.add_argument("--markdown", action="store_true", help="输出页面 Markdown")
     args = parser.parse_args()
 
-    pilot = BrowserPilot(headless=args.headless)
+    pilot = Kitewright(headless=args.headless)
 
     with pilot:
         if args.url:

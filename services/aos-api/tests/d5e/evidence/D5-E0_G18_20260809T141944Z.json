@@ -1,0 +1,22 @@
+{
+  "alembic_revision": "o1p12_001",
+  "d4_doc_sha256": "sha256:d79c3949d48081282e68345659f1334ba2cb10ad19c4a219e8d60bed7f87ca54",
+  "db_url_hash": "sha256:0a5b90098e32ebc3",
+  "doc_sha256": "sha256:b2dac8e41d40d904c9d16ec858765c404984395b95e2122ccfcfdf5bb62902e4",
+  "doc_version": "D5-E-v2.9",
+  "ended_at": "2026-08-09T14:19:44.667942+00:00",
+  "gate": "G18",
+  "git_sha": "cdf503e7ef7e2bfc89d7d1ddbbe882bcf01461cc",
+  "git_short_sha": "cdf503e",
+  "o1_doc_sha256": "sha256:d7e35187792c2bb3da4c17d376f2117dff3bfd2a07ffc28ed8589b22ee93f880",
+  "phase": "D5-E0",
+  "results": {
+    "id_card_detected": true,
+    "note": "Regex validation only, no PII stored in evidence",
+    "openid_detected": true,
+    "phone_detected": true,
+    "status": "PASS"
+  },
+  "started_at": "2026-08-09T14:19:44.639612+00:00",
+  "tenant_scope": "org-org/dev-project"
+}

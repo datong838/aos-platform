@@ -1,9 +1,9 @@
 ---
-name: "browser-pilot"
-description: "原生 CDP 浏览器自动驾驶引擎 — 基于 Kitewright MCP，24 个高级工具操控原生 Chrome，无需任何扩展。支持导航/截图/点击/输入/填表/断言/无障碍树/控制台/网络/PDF/状态持久化/状态保存恢复/对话框处理。kite 二进制已内置，开箱即用。"
+name: "kitewright"
+description: "Launch and control an isolated Chrome/Chromium through Kitewright MCP and CDP for local browser acceptance, batch E2E, screenshots, accessibility snapshots, console/network capture, PDF, and disposable-session automation. Use when an independent temporary browser profile is appropriate. Do not use when a task must reuse the user's existing ordinary Chrome tabs or login state, or when a strong-risk site challenges the automation browser."
 ---
 
-# Browser Pilot — 原生浏览器自动驾驶
+# Kitewright — 独立浏览器自动化
 
 ## 是什么
 
@@ -13,12 +13,40 @@ description: "原生 CDP 浏览器自动驾驶引擎 — 基于 Kitewright MCP�
 
 **kite 二进制已内置**在插件 `bin/` 目录下（arm64 Mach-O），无需安装 Rust 或 Node.js。
 
+## 运行边界：独立启动，不复用普通 Chrome
+
+Kitewright **自行启动一个独立 Chrome/Chromium**，并为每次启动创建临时 `user_data_dir`。它不连接用户当前打开的普通 Chrome，不复用现有标签页、Profile 或登录态。
+
+当前源码加入的主要启动参数包括：
+
+```text
+no-sandbox
+in-process-gpu
+disable-gpu
+disable-extensions
+mute-audio
+disable-dev-shm-usage
+no-first-run
+no-default-browser-check
+disable-background-networking
+disable-component-update
+disable-sync
+disable-default-apps
+hide-scrollbars
+disk-cache-dir=...
+window-size=...
+```
+
+源码没有显式加入名为 `webdriver=true` 的命令行参数。但在 2026-08-12 的掘金现场中，页面只读检查实际观察到 `navigator.webdriver=true`，随后停留在 `Please wait...` 前置挑战，没有进入登录流程。这是当前构建与该站点的一次真实观察，不是掘金官方规则，也不代表所有站点都会如此。
+
+遇到前置挑战、CAPTCHA 或风险验证时：停止操作，不修改指纹、不隐藏 webdriver、不绕过挑战。若任务必须复用用户已经登录的普通 Chrome，改用独立的 `control-existing-chrome` Skill。
+
 ## 什么时候调用
 
-**任何需要操控真实浏览器的场景**：
+**适合独立自动化浏览器的场景**：
 
 1. **前端页面验收** — 代码改动后截图 + 文字检查 + 断言
-2. **自动化表单操作** — 登录、填表、提交、分页浏览
+2. **自动化表单操作** — 测试环境填表、提交、分页浏览
 3. **数据采集** — 抓取页面内容、提取结构化数据（含 Shadow DOM 穿透）
 4. **UI 探索** — 截图 + 无障碍树快照，理解页面结构
 5. **端到端测试** — 导航 → 交互 → 验证 → 截图存证
@@ -29,6 +57,8 @@ description: "原生 CDP 浏览器自动驾驶引擎 — 基于 Kitewright MCP�
 - 纯 API 测试（用 curl / httpie 即可）
 - 静态代码分析（不需要浏览器）
 - 单元测试（用 Vitest / pytest）
+- 必须复用用户普通 Chrome 已登录会话的操作（用 `control-existing-chrome`）
+- 已出现前置挑战、CAPTCHA、风险验证或浏览器安全警告
 
 ## 架构
 
@@ -43,7 +73,7 @@ description: "原生 CDP 浏览器自动驾驶引擎 — 基于 Kitewright MCP�
 │                     │ Python SDK / HTTP API           │
 │  ┌──────────────────▼─────────────────────────────┐ │
 │  │  Engine Adapter (engine_adapter.py)             │ │
-│  │  BrowserPilot → KitewrightMCP.call_tool()       │ │
+│  │  Kitewright → KitewrightMCP.call_tool()       │ │
 │  └──────────────────┬─────────────────────────────┘ │
 │                     │ MCP JSON-RPC                    │
 │  ┌──────────────────▼─────────────────────────────┐ │
@@ -65,14 +95,14 @@ description: "原生 CDP 浏览器自动驾驶引擎 — 基于 Kitewright MCP�
 ```bash
 cd /path/to/kitewright
 cargo build --release -p kitewright
-cp target/release/kite /path/to/browser-pilot/bin/kite
+cp target/release/kite /path/to/kitewright/bin/kite
 ```
 
 **其他平台**：kite 是平台相关的二进制，跨平台使用时需重新编译或用 `npx -y @kitewright/mcp` 替代。
 
 ## 通信协议：MCP Streamable HTTP（内部细节）
 
-> 以下内容仅用于排查通信层问题。正常使用 `engine_adapter.py` 的 `BrowserPilot` 类时无需关心。
+> 以下内容仅用于排查通信层问题。正常使用 `engine_adapter.py` 的 `Kitewright` 类时无需关心。
 
 kite（默认 HTTP 模式）**不使用普通 JSON-RPC over HTTP**，而是使用 **MCP Streamable HTTP** 协议：
 
@@ -163,7 +193,7 @@ Kitewright 原生支持三种选择器：
 ## 批量验收模式
 
 ```python
-from engine_adapter import BrowserPilot
+from engine_adapter import Kitewright
 
 pages = [
     {
@@ -186,28 +216,28 @@ pages = [
     },
 ]
 
-with BrowserPilot() as pilot:
+    with Kitewright() as browser:
     results = pilot.verify_pages(pages)
-    # → PASS/FAIL 汇总 + 截图存到 /tmp/browser-pilot/screenshots/
+    # → PASS/FAIL 汇总 + 截图存到 /tmp/kitewright/screenshots/
 ```
 
 ## 会话状态持久化
 
 ```python
 # 首次：完成登录
-with BrowserPilot() as pilot:
-    pilot.navigate("https://example.com/login")
-    pilot.type_text("input[name='username']", "admin")
-    pilot.type_text("input[name='password']", "secret")
-    pilot.click("button[type='submit']")
-    pilot.wait_for(text="仪表盘")
-    state = pilot.save_state()
+with Kitewright() as pilot:
+        browser.navigate("https://example.test/login")
+        browser.type_text("input[name='username']", "test-user")
+        browser.type_text("input[name='password']", "test-password")
+        browser.click("button[type='submit']")
+        browser.wait_for(text="仪表盘")
+        state = browser.save_state()
     # state → {"cookies": [...], "localStorage": {...}, "url": "..."}
 
 # 后续：免登录复用
-with BrowserPilot() as pilot:
-    pilot.restore_state(state)
-    pilot.navigate("https://example.com/dashboard")
+    with Kitewright() as browser:
+        browser.restore_state(state)
+        browser.navigate("https://example.test/dashboard")
     # 已登录态
 ```
 
@@ -264,9 +294,9 @@ bin/kite --stdio
 ### 方式 2：Python SDK 模式
 
 ```python
-from engine_adapter import BrowserPilot
+from engine_adapter import Kitewright
 
-with BrowserPilot() as pilot:
+with Kitewright() as pilot:
     pilot.navigate("http://localhost:5173")
     pilot.screenshot("/tmp/page.png")
     result = pilot.assert_text("仪表盘")
@@ -296,17 +326,17 @@ curl -X POST http://localhost:8090/mcp \
 
 ### 方式 4：AOS Plugin Manifest 模式
 
-作为 AOS 平台的 `kind=browser, runtime=sidecar` 插件安装（位于 `plugins/browser/browser-pilot/`）。
+作为 AOS 平台的 `kind=browser, runtime=sidecar` 插件安装（位于 `plugins/browser/kitewright/`）。
 
 ## 自包含性
 
 本插件**不依赖 kitewright 源码目录**。核心文件：
 
 ```
-browser-pilot/
+kitewright/
 ├── bin/
 │   └── kite              # 内置 kite 二进制（arm64 Mach-O, 12MB）
-├── engine_adapter.py     # Python SDK（BrowserPilot 类）
+├── engine_adapter.py     # Python SDK（Kitewright 类）
 ├── SKILL.md              # 本文件
 ├── manifest.json         # AOS 插件清单
 └── demo.py               # 演示脚本
@@ -317,7 +347,7 @@ browser-pilot/
 ## 与 kitewright 源码目录的关系
 
 - `kitewright/` 目录：Kitewright 的 Rust 源码仓库，仅在**重新编译 kite 二进制**时需要
-- `browser-pilot/bin/kite`：已编译的 kite 二进制副本，运行时独立，不回读源码
+- `kitewright/bin/kite`：已编译的 kite 二进制副本，运行时独立，不回读源码
 - 升级 kite：在 kitewright 目录 `cargo build --release` → 复制到 `bin/kite` → 完成
 
 ## 常见坑
@@ -335,3 +365,4 @@ browser-pilot/
 | **snapshot 能看到但 click 返回 False** | CSS 选择器被 Shadow DOM 阻断 | 用 URL 参数直接导航，或键盘 Tab 导航，或 JS 穿透 `shadowRoot` |
 | **每次会话都要重新登录** | kite 默认用临时 Chrome 配置目录 | 首次登录后 `save_state()`，后续会话开头 `restore_state(state)` |
 | **多实例端口冲突？** | — | **不会**：MCP 用 stdio 管道（无端口），CDP 端口由 kite 动态分配，零冲突 |
+| **强风控站点停在 `Please wait...`** | 独立临时 Profile 或自动化环境可能触发前置挑战；本次现场观察到 `navigator.webdriver=true` | 停止，不绕过挑战；需要现有登录态时改用 `control-existing-chrome` 操作用户普通 Chrome |

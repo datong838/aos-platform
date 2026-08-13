@@ -1,10 +1,10 @@
 {
-  "id": "browser-pilot",
-  "name": "Browser Pilot",
-  "nameZh": "浏览器自动驾驶",
-  "description": "原生 CDP 浏览器自动化引擎 — 基于 Kitewright MCP，无需 Chrome 扩展，支持导航/截图/点击/输入/填表/断言/无障碍树/控制台/网络/PDF/状态持久化，自带 kite 二进制，开箱即用",
+  "id": "kitewright",
+  "name": "Kitewright",
+  "nameZh": "Kitewright 独立浏览器自动化",
+  "description": "独立 Chrome/Chromium 的原生 CDP 自动化引擎，适合本地验收、批量 E2E、无障碍树、控制台、网络、截图和 PDF；使用独立临时 Profile，不复用用户普通 Chrome 登录会话。",
   "kind": "browser",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": "aos",
   "runtime": "sidecar",
   "capabilities": [
@@ -28,7 +28,7 @@
     "press_key",
     "handle_dialog"
   ],
-  "healthPath": "/v1/browser/browser-pilot/health",
+  "healthPath": "/v1/browser/kitewright/health",
   "configSchema": {
     "type": "object",
     "properties": {
@@ -36,6 +36,12 @@
         "type": "boolean",
         "default": false,
         "description": "是否无头模式（服务器环境设 true）"
+      },
+      "browser_session_mode": {
+        "type": "string",
+        "const": "isolated-launch",
+        "default": "isolated-launch",
+        "description": "固定自行启动独立 Chrome/Chromium，不连接用户现有普通 Chrome Profile"
       },
       "kite_endpoint": {
         "type": "string",
@@ -63,6 +69,7 @@
   },
   "defaultConfig": {
     "headless": false,
+    "browser_session_mode": "isolated-launch",
     "kite_endpoint": "http://localhost:8090",
     "idle_timeout_secs": 1800
   }

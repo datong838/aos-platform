@@ -1,0 +1,4 @@
+interface:
+  display_name: "Kitewright"
+  short_description: "独立启动 Chrome/Chromium 的 CDP 自动化与 E2E 验收"
+  default_prompt: "使用 $kitewright 在独立浏览器会话中完成页面验收并保存证据。"

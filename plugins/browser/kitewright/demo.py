@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Browser Pilot — 快速演示 (v0.2, Kitewright-only)
+Kitewright — 快速演示 (v0.3)
 展示如何用 3 行代码完成前端页面验收
 """
 
@@ -9,22 +9,22 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from engine_adapter import BrowserPilot
+from engine_adapter import Kitewright
 
 
 def demo_single_page():
     """演示：单页面导航 + 截图 + 断言"""
     print("\n>>> 演示 1: 单页面导航 + 截图 + 断言")
 
-    with BrowserPilot() as pilot:
+    with Kitewright() as pilot:
         # 导航
         result = pilot.navigate("http://127.0.0.1:5173/")
         print(f"  成功: {result.success}")
         print(f"  文本长度: {len(result.text)} chars")
 
         # 截图
-        pilot.screenshot(output_path="/tmp/browser-pilot/demo_home.png")
-        print("  截图: /tmp/browser-pilot/demo_home.png")
+        pilot.screenshot(output_path="/tmp/kitewright/demo_home.png")
+        print("  截图: /tmp/kitewright/demo_home.png")
 
         # 无障碍树快照（穿透 Shadow DOM）
         tree = pilot.snapshot()
@@ -78,7 +78,7 @@ def demo_batch_verify():
         },
     ]
 
-    with BrowserPilot() as pilot:
+    with Kitewright() as pilot:
         results = pilot.verify_pages(pages)
         return results
 
@@ -87,7 +87,7 @@ def demo_form_fill():
     """演示：表单填写"""
     print("\n>>> 演示 3: 表单填写 + 提交")
 
-    with BrowserPilot() as pilot:
+    with Kitewright() as pilot:
         pilot.navigate("http://127.0.0.1:5173/data/source/new")
         pilot.wait_for(selector="input[name='name']", timeout_ms=10000)
 
@@ -104,7 +104,7 @@ def demo_state_persistence():
     print("\n>>> 演示 4: 状态持久化（登录一次，后续复用）")
 
     state = None
-    with BrowserPilot() as pilot:
+    with Kitewright() as pilot:
         pilot.navigate("http://127.0.0.1:5173/login")
         pilot.type_text("input[name='username']", "admin")
         pilot.type_text("input[name='password']", "password")
@@ -113,7 +113,7 @@ def demo_state_persistence():
         state = pilot.save_state()
         print(f"  状态已保存 ({len(str(state))} chars)")
 
-    with BrowserPilot() as pilot:
+    with Kitewright() as pilot:
         pilot.restore_state(state)
         pilot.navigate("http://127.0.0.1:5173/data")
         result = pilot.assert_text("数据源")
@@ -124,7 +124,7 @@ def demo_call_raw():
     """演示：直通调用 Kitewright MCP 工具"""
     print("\n>>> 演示 5: 直通调用（call_raw）")
 
-    with BrowserPilot() as pilot:
+    with Kitewright() as pilot:
         pilot.navigate("http://127.0.0.1:5173/")
         # 直接调用 engine_adapter 没有包装的工具
         result = pilot.call_raw("browser_snapshot", {"diff": False})
@@ -134,7 +134,7 @@ def demo_call_raw():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("  Browser Pilot v0.2 — Kitewright MCP 演示")
+    print("  Kitewright v0.3 — 独立 Chrome/Chromium MCP 演示")
     print("=" * 60)
 
     try:
