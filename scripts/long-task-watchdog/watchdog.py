@@ -36,7 +36,11 @@ class TranscriptStatus:
     active: bool
     last_activity_at: float
     latest_user_at: float | None
+    latest_assistant_at: float | None
     latest_final_at: float | None
+    latest_task_started_at: float | None
+    latest_task_completed_at: float | None
+    turn_running: bool
     pending_tool_calls: int
     oldest_pending_tool_at: float | None
 
@@ -64,7 +68,10 @@ def _message_role_phase(record: dict[str, Any]) -> tuple[str | None, str | None]
 
 def inspect_transcript(path: Path) -> TranscriptStatus:
     latest_user_at: float | None = None
+    latest_assistant_at: float | None = None
     latest_final_at: float | None = None
+    latest_task_started_at: float | None = None
+    latest_task_completed_at: float | None = None
     last_activity_at = path.stat().st_mtime
     tool_calls: dict[str, float] = {}
     with path.open("r", encoding="utf-8") as handle:
@@ -79,8 +86,17 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
             role, phase = _message_role_phase(record)
             if role == "user" and ts is not None:
                 latest_user_at = ts
-            elif role == "assistant" and phase == "final" and ts is not None:
-                latest_final_at = ts
+            elif role == "assistant" and ts is not None:
+                latest_assistant_at = ts
+                if phase == "final":
+                    latest_final_at = ts
+            if record.get("type") == "event_msg":
+                event_payload = record.get("payload")
+                if isinstance(event_payload, dict) and ts is not None:
+                    if event_payload.get("type") == "task_started":
+                        latest_task_started_at = ts
+                    elif event_payload.get("type") == "task_complete":
+                        latest_task_completed_at = ts
             if record.get("type") == "response_item":
                 payload = record.get("payload")
                 if isinstance(payload, dict):
@@ -97,11 +113,19 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
     active = latest_user_at is not None and (
         latest_final_at is None or latest_final_at < latest_user_at
     )
+    turn_running = latest_task_started_at is not None and (
+        latest_task_completed_at is None
+        or latest_task_completed_at < latest_task_started_at
+    )
     return TranscriptStatus(
         active,
         last_activity_at,
         latest_user_at,
+        latest_assistant_at,
         latest_final_at,
+        latest_task_started_at,
+        latest_task_completed_at,
+        turn_running,
         len(tool_calls),
         min(tool_calls.values()) if tool_calls else None,
     )
@@ -203,6 +227,8 @@ def evaluate(
         return "disabled", status
     if not status.active:
         return "idle", status
+    if status.turn_running:
+        return "turn-running", status
     if status.pending_tool_calls and status.oldest_pending_tool_at is not None and (
         now - status.oldest_pending_tool_at
         < int(config.get("max_tool_silence_seconds", 300))
@@ -249,8 +275,18 @@ def run_once(
         return decision
 
     failures = int(state.get("consecutive_failures", 0))
+    if failures == 0:
+        state.update(
+            {
+                "recovery_episode_id": f"recovery-{int(current * 1000)}",
+                "last_recovery_outcome": "attempting",
+                "visible_ack_at": None,
+                "last_recovered_at": None,
+            }
+        )
     attempts = 2 if failures == 0 else 1
     for attempt in range(1, attempts + 1):
+        before_resume = inspect_transcript(rollout_path)
         state["last_attempt_at"] = time.time()
         state["total_attempts"] = int(state.get("total_attempts", 0)) + 1
         _write_json(state_path, state)
@@ -264,22 +300,35 @@ def run_once(
             state["last_exit_code"] = result.returncode
             state["last_stdout_tail"] = result.stdout[-4000:]
             state["last_stderr_tail"] = result.stderr[-4000:]
-            if result.returncode == 0:
+            after_resume = inspect_transcript(rollout_path)
+            visible_final = (
+                after_resume.latest_final_at is not None
+                and (
+                    before_resume.latest_final_at is None
+                    or after_resume.latest_final_at > before_resume.latest_final_at
+                )
+            )
+            if result.returncode == 0 and visible_final:
                 state.update(
                     {
                         "consecutive_failures": 0,
                         "next_retry_at": 0,
                         "last_recovered_at": time.time(),
+                        "visible_ack_at": after_resume.latest_final_at,
+                        "last_recovery_outcome": "recovered",
                         "last_decision": "recovered",
                     }
                 )
                 _write_json(state_path, state)
                 return "recovered"
+            if result.returncode == 0:
+                state["last_error"] = "resume exited 0 without a visible final"
         if attempt < attempts:
             time.sleep(float(config.get("immediate_retry_delay_seconds", 2)))
 
     state["consecutive_failures"] = failures + attempts
     state["next_retry_at"] = time.time() + int(config.get("retry_interval_seconds", 300))
+    state["last_recovery_outcome"] = "failed"
     state["last_decision"] = "retry-scheduled"
     _write_json(state_path, state)
     return "retry-scheduled"

@@ -1,8 +1,8 @@
 # Codex 长任务断流 Watchdog
 
-该守护只服务显式登记的 Codex thread。它从 Codex 本地 SQLite 查到 rollout transcript，判断“最新用户消息之后是否存在 final assistant 消息”。若没有 final 且 transcript 超过宽限期无变化，则认为该 turn 疑似异常中断。
+该守护只服务显式登记的 Codex thread。它从 Codex 本地 SQLite 查到 rollout transcript，判断“最新用户消息之后是否存在 final assistant 消息”。若没有 final 且 transcript 超过宽限期无变化，并且最新 `task_started` 已有对应 `task_complete`，才认为该 turn 疑似异常中断；仍在运行的 turn 不允许恢复副本并发介入。
 
-恢复策略：首次检测立即执行两次 `codex exec resume`；均失败后按 300 秒退避，每到期只重试一次，直到恢复成功。互斥锁防止 `launchd` 重叠执行。
+恢复策略：首次检测立即执行两次 `codex exec resume`；均失败后按 300 秒退避，每到期只重试一次，直到恢复成功。互斥锁防止 `launchd` 重叠执行。每轮恢复有独立 episode；只有当前 episode 的命令成功退出且同一 transcript 写入更新的 assistant final，才可标记 recovered。
 
 安全边界：
 

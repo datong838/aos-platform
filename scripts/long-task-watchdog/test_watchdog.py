@@ -16,6 +16,14 @@ def record(timestamp, role, phase=None):
     }
 
 
+def task_event(timestamp, event_type):
+    return {
+        "timestamp": timestamp,
+        "type": "event_msg",
+        "payload": {"type": event_type},
+    }
+
+
 class WatchdogTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -71,6 +79,29 @@ class WatchdogTest(unittest.TestCase):
         )
         self.assertEqual(1, status.pending_tool_calls)
         self.assertEqual("tool-running", decision)
+
+    def test_running_turn_prevents_recovery_even_after_grace(self):
+        self.write(
+            task_event("1970-01-01T00:00:05Z", "task_started"),
+            record("1970-01-01T00:00:10Z", "user"),
+        )
+        decision, status = watchdog.evaluate(
+            self.config(), {}, now=1000, rollout_path=self.transcript
+        )
+        self.assertTrue(status.turn_running)
+        self.assertEqual("turn-running", decision)
+
+    def test_completed_failed_turn_allows_recovery(self):
+        self.write(
+            task_event("1970-01-01T00:00:05Z", "task_started"),
+            record("1970-01-01T00:00:10Z", "user"),
+            task_event("1970-01-01T00:00:20Z", "task_complete"),
+        )
+        decision, status = watchdog.evaluate(
+            self.config(), {}, now=1000, rollout_path=self.transcript
+        )
+        self.assertFalse(status.turn_running)
+        self.assertEqual("recover", decision)
 
     def test_completed_tool_call_allows_recovery(self):
         self.write(
@@ -151,6 +182,11 @@ class WatchdogTest(unittest.TestCase):
         config_path.write_text(json.dumps(self.config()), encoding="utf-8")
 
         def runner(*args, **kwargs):
+            with self.transcript.open("a", encoding="utf-8") as handle:
+                handle.write(
+                    json.dumps(record("1970-01-01T00:16:41Z", "assistant", "final"))
+                    + "\n"
+                )
             return subprocess.CompletedProcess(args[0], 0, "completed", "")
 
         decision = watchdog.run_once(
@@ -160,6 +196,31 @@ class WatchdogTest(unittest.TestCase):
         self.assertEqual("recovered", decision)
         self.assertEqual(0, state["next_retry_at"])
         self.assertEqual(0, state["consecutive_failures"])
+        self.assertEqual("recovered", state["last_recovery_outcome"])
+        self.assertIsNotNone(state["visible_ack_at"])
+
+    def test_exit_zero_without_visible_final_is_not_recovered(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.config()), encoding="utf-8")
+        state_path.write_text(
+            json.dumps({"last_recovered_at": 50, "consecutive_failures": 0}),
+            encoding="utf-8",
+        )
+
+        def runner(*args, **kwargs):
+            return subprocess.CompletedProcess(args[0], 0, "completed", "")
+
+        decision = watchdog.run_once(
+            config_path, state_path, now=1000, runner=runner
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("retry-scheduled", decision)
+        self.assertEqual("failed", state["last_recovery_outcome"])
+        self.assertIsNone(state["last_recovered_at"])
+        self.assertIsNone(state["visible_ack_at"])
+        self.assertTrue(state["recovery_episode_id"].startswith("recovery-"))
 
     def test_resume_environment_removes_api_keys(self):
         previous = os.environ.get("OPENAI_API_KEY")
