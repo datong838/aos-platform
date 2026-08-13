@@ -15,6 +15,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from aos_api.auth import Principal, require_principal
+from aos_api.errors import ApiError
 from aos_api.model_routes import delete_route, list_routes, upsert_route
 from aos_api.tenant_scope import TenantScope
 
@@ -50,6 +51,11 @@ def list_routes_api(
 def put_routes_api(
     body: RoutesPutRequest, principal: Principal = Depends(require_principal)
 ) -> dict[str, Any]:
+    raise ApiError(
+        code="AIP_MODEL_LEGACY_WRITE_DISABLED",
+        message="legacy model route writes are disabled; use /v1/aip/model-runtime/routes",
+        status_code=410,
+    )
     # Collect existing ids so we can delete ones not in the new set
     from aos_api.model_routes import list_routes as _list_routes
 

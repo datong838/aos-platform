@@ -19,6 +19,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from aos_api.auth import require_principal
+from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
 from aos_api.model_router_config import (
     get_router_config_v2,
@@ -36,6 +37,14 @@ from aos_api.model_router_config import (
 )
 
 log = get_logger("aos-api.router_config")
+
+
+def _legacy_write_disabled() -> None:
+    raise ApiError(
+        code="AIP_MODEL_LEGACY_WRITE_DISABLED",
+        message="legacy model router writes are disabled; use /v1/aip/model-runtime",
+        status_code=410,
+    )
 
 router = APIRouter(
     prefix="/api/models/router",
@@ -104,6 +113,7 @@ def list_routes():
 @router.put("")
 def replace_routes(body: RouterConfigReplace):
     """Replace all route rules using the caller's confirmed version."""
+    _legacy_write_disabled()
     try:
         items = [row.model_dump(exclude_none=True) for row in body.items]
         return replace_router_config_v2(items, body.expectedVersion)
@@ -128,6 +138,7 @@ def get_circuit_config():
 @router.put("/circuit-config")
 def put_circuit_config(body: CircuitConfigUpdate):
     """Update global circuit breaker config."""
+    _legacy_write_disabled()
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     if not updates:
         raise HTTPException(status_code=400, detail="No fields to update")
@@ -146,6 +157,7 @@ def get_route(route_id: str):
 @router.post("")
 def create_route(body: RouteRuleCreate):
     """Create a new route rule."""
+    _legacy_write_disabled()
     try:
         data = body.model_dump(exclude_none=True)
         return create_route_rule_v2(data)
@@ -156,6 +168,7 @@ def create_route(body: RouteRuleCreate):
 @router.put("/{route_id}")
 def update_route(route_id: str, body: RouteRuleUpdate):
     """Update a route rule."""
+    _legacy_write_disabled()
     try:
         updates = body.model_dump(exclude_none=True)
         if not updates:
@@ -170,6 +183,7 @@ def update_route(route_id: str, body: RouteRuleUpdate):
 @router.delete("/{route_id}")
 def delete_route(route_id: str):
     """Delete a route rule."""
+    _legacy_write_disabled()
     deleted = delete_route_rule_v2(route_id)
     if not deleted:
         raise HTTPException(status_code=404, detail=f"Route not found: {route_id}")
