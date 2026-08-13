@@ -146,6 +146,9 @@
         "evals": {
           "$ref": "#/$defs/pathList"
         },
+        "knowledge": {
+          "$ref": "#/$defs/pathList"
+        },
         "policies": {
           "$ref": "#/$defs/pathList"
         },

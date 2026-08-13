@@ -196,6 +196,7 @@ class BundleExports(StrictContract):
     logic: list[str] = Field(default_factory=list, max_length=500)
     workshops: list[str] = Field(default_factory=list, max_length=500)
     evals: list[str] = Field(default_factory=list, max_length=500)
+    knowledge: list[str] = Field(default_factory=list, max_length=500)
     policies: list[str] = Field(default_factory=list, max_length=500)
     connectors: list[str] = Field(default_factory=list, max_length=500)
     schemas: list[str] = Field(default_factory=list, max_length=500)
@@ -480,6 +481,8 @@ class BundleManifest(StrictContract):
 
     @model_validator(mode="after")
     def _cannot_depend_on_or_conflict_with_itself(self) -> BundleManifest:
+        if self.spec.exports.knowledge and self.kind is not BundleKind.VERTICAL_PACK:
+            raise ValueError("knowledge exports are restricted to VerticalPack bundles")
         own_key = (self.metadata.publisher, self.metadata.id)
 
         def dependency_key(item: BundleDependency | BundleConflict) -> tuple[str, str]:

@@ -53,6 +53,16 @@ from aos_api.asset_registry.errors import (
     VersionInvalidError,
 )
 from aos_api.asset_registry.manifest_loader import ManifestLoader
+from aos_api.asset_registry.knowledge_contracts import (
+    KNOWLEDGE_PACKAGE_API_VERSION,
+    KnowledgeLicenseDecision,
+    KnowledgePackageEntry,
+    KnowledgePackageManifest,
+    KnowledgePackageRollback,
+    KnowledgePackageRollbackMode,
+    KnowledgeSourceInventoryItem,
+    parse_knowledge_package_json,
+)
 from aos_api.asset_registry.registry_service import BundleLoader, RegistryService
 from aos_api.asset_registry.registry_store import (
     PostgresRegistryStore,
@@ -106,6 +116,13 @@ __all__ = [
     "DowngradePolicy",
     "DutySeparationRequiredError",
     "IdempotencyConflictError",
+    "KNOWLEDGE_PACKAGE_API_VERSION",
+    "KnowledgeLicenseDecision",
+    "KnowledgePackageEntry",
+    "KnowledgePackageManifest",
+    "KnowledgePackageRollback",
+    "KnowledgePackageRollbackMode",
+    "KnowledgeSourceInventoryItem",
     "LoadedBundle",
     "ManifestInvalidError",
     "ManifestLoader",
@@ -128,6 +145,7 @@ __all__ = [
     "canonical_json",
     "canonical_sha256",
     "parse_range",
+    "parse_knowledge_package_json",
     "parse_version",
     "satisfies",
     "select_highest",
