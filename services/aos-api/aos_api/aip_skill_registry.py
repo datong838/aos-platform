@@ -79,6 +79,38 @@ class AipSkillRegistry(AipAgentRegistryStore):
         except Exception as exc:
             raise AipAgentRegistryPersistenceError("skill template read failed") from exc
 
+    def list_skills(
+        self,
+        *,
+        source_resource_id: str | None = None,
+        source_revision: str | None = None,
+        lifecycle: TemplateLifecycle | None = None,
+        limit: int = 100,
+    ) -> list[SkillTemplateRevision]:
+        if limit < 1 or limit > 200:
+            raise ValueError("list limit must be between 1 and 200")
+        try:
+            with self._connect_factory() as conn:
+                rows = conn.execute(
+                    """SELECT * FROM aip_skill_template_revision
+                       WHERE (%s::text IS NULL OR source_ref->>'resourceId'=%s)
+                         AND (%s::text IS NULL OR source_ref->>'revision'=%s)
+                         AND (%s::text IS NULL OR lifecycle=%s)
+                       ORDER BY skill_id,revision DESC LIMIT %s""",
+                    (
+                        source_resource_id,
+                        source_resource_id,
+                        source_revision,
+                        source_revision,
+                        lifecycle.value if lifecycle else None,
+                        lifecycle.value if lifecycle else None,
+                        limit,
+                    ),
+                ).fetchall()
+            return [self._skill_from_row(row) for row in rows]
+        except Exception as exc:
+            raise AipAgentRegistryPersistenceError("skill template list failed") from exc
+
     def create_binding(self, scope: TenantScope, request: CreateSkillBindingRequest, *, idempotency_key: str, actor: str, occurred_at: datetime) -> tuple[SkillBinding, RegistryReceipt]:
         self._validate_command(scope, idempotency_key, actor)
         request_hash = self._command_hash(request, actor)

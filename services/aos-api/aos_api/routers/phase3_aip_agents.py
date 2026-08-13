@@ -1,146 +1,158 @@
-"""Phase 3 · AIP Agents 路由.
-
-GET  /v1/aip/agents                — Agent 列表（含统计）
-GET  /v1/aip/agents/{id}           — Agent 详情
-GET  /v1/aip/agents/{id}/prompt    — 系统提示词
-PUT  /v1/aip/agents/{id}/prompt    — 更新提示词
-GET  /v1/aip/agents/{id}/tools     — 工具列表
-GET  /v1/aip/agents/{id}/guardrails — 安全护栏
-PUT  /v1/aip/agents/{id}/guardrails — 更新护栏
-"""
+"""AIP-6 canonical tenant AgentInstance control plane."""
 from __future__ import annotations
 
-from typing import Any
+from fastapi import APIRouter, Depends, Header, Query, status
 
-from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel, Field
-
-from aos_api.aip_agents_engine import get_engine
+from aos_api.aip_agent_control_contracts import (
+    AgentInstallResponse,
+    AgentInstanceListResponse,
+)
+from aos_api.aip_agent_registry_contracts import AgentInstance
+from aos_api.aip_agent_registry_store import (
+    AipAgentRegistryConflict,
+    AipAgentRegistryError,
+    AipAgentRegistryNotFound,
+    AipAgentRegistryPersistenceError,
+    AipAgentRegistryStore,
+    AipAgentRegistryTransitionBlocked,
+)
+from aos_api.aip_contracts import TenantContext
+from aos_api.aip_ecommerce_agent_installer import AipEcommerceAgentInstaller
+from aos_api.auth import Principal, require_principal
+from aos_api.errors import ApiError
+from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip", tags=["aip-agents"])
+_STORE = AipAgentRegistryStore()
+_INSTALLER = AipEcommerceAgentInstaller(agents=_STORE)
 
 
-class PromptUpdate(BaseModel):
-    prompt: str
+def get_agent_store() -> AipAgentRegistryStore:
+    return _STORE
 
 
-class AgentCreate(BaseModel):
-    name: str
-    description: str = ""
-    source: str = "custom"
-    tags: list[str] = Field(default_factory=list)
-    status: str = "draft"
-    system_prompt: str = ""
+def get_ecommerce_agent_installer() -> AipEcommerceAgentInstaller:
+    return _INSTALLER
 
 
-class ToolsUpdate(BaseModel):
-    items: list[dict[str, Any]]
+def _scope(principal: Principal) -> TenantScope:
+    return TenantScope(principal.org_id, principal.project_id)
 
 
-class GuardrailsUpdate(BaseModel):
-    rules: list[dict[str, Any]]
+def _idem(value: str) -> str:
+    cleaned = value.strip()
+    if not cleaned or len(cleaned) > 120:
+        raise ApiError(code="AIP_INVALID_ARGUMENT", message="Idempotency-Key must be 1..120 characters", status_code=400)
+    return cleaned
 
 
-@router.get("/agents")
-async def list_agents(
-    source: str | None = Query(None),
-    tag: str | None = Query(None),
-    status: str | None = Query(None),
-) -> dict[str, Any]:
-    eng = get_engine()
-    items = eng.list(source=source, tag=tag, status=status)
-    stats = eng.stats()
-    return {
-        "items": [
-            {
-                "id": a.id,
-                "name": a.name,
-                "description": a.description,
-                "source": a.source,
-                "tags": a.tags,
-                "status": a.status,
-                "calls": a.calls,
-                "success_rate": a.success_rate,
-                "avg_latency_ms": a.avg_latency_ms,
-            }
-            for a in items
-        ],
-        "count": len(items),
-        "stats": stats,
-    }
+def _map_error(exc: AipAgentRegistryError) -> ApiError:
+    if isinstance(exc, AipAgentRegistryNotFound):
+        return ApiError(code=exc.code, message=str(exc), status_code=404)
+    if isinstance(exc, AipAgentRegistryConflict):
+        return ApiError(code=exc.code, message=str(exc), status_code=409)
+    if isinstance(exc, AipAgentRegistryTransitionBlocked):
+        return ApiError(code=exc.code, message=str(exc), status_code=422)
+    if isinstance(exc, AipAgentRegistryPersistenceError):
+        return ApiError(code=exc.code, message="agent registry persistence failed", status_code=503)
+    return ApiError(code=exc.code, message="agent registry failed", status_code=503)
+
+
+@router.get("/agents", response_model=AgentInstanceListResponse)
+def list_agents(
+    limit: int = Query(default=100, ge=1, le=200),
+    principal: Principal = Depends(require_principal),
+    store: AipAgentRegistryStore = Depends(get_agent_store),
+) -> AgentInstanceListResponse:
+    try:
+        items = store.list_instances(_scope(principal), limit=limit)
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+    return AgentInstanceListResponse(
+        tenant=TenantContext(org_id=principal.org_id, project_id=principal.project_id),
+        items=items,
+        count=len(items),
+    )
+
+
+@router.post(
+    "/agents/install-ecommerce",
+    response_model=AgentInstallResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def install_ecommerce_agents(
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    installer: AipEcommerceAgentInstaller = Depends(get_ecommerce_agent_installer),
+) -> AgentInstallResponse:
+    try:
+        return installer.install(principal, idempotency_key=_idem(idempotency_key))
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
 
 
 @router.post("/agents")
-async def create_agent(body: AgentCreate) -> dict[str, Any]:
-    agent = get_engine().create(**body.model_dump())
-    return agent.model_dump()
+def retired_create_agent(principal: Principal = Depends(require_principal)) -> None:
+    _ = principal
+    raise ApiError(
+        code="AIP_LEGACY_AGENT_WRITE_RETIRED",
+        message="legacy in-memory agent creation is retired; install a published SolutionPack",
+        status_code=409,
+    )
 
 
-@router.get("/agents/{agent_id}")
-async def get_agent(agent_id: str) -> dict[str, Any]:
-    eng = get_engine()
-    agent = eng.get(agent_id)
-    if not agent:
-        raise HTTPException(404, f"Agent {agent_id} not found")
-    return agent.model_dump()
-
-
-@router.get("/agents/{agent_id}/prompt")
-async def get_prompt(agent_id: str) -> dict[str, Any]:
-    eng = get_engine()
-    prompt = eng.get_prompt(agent_id)
-    if prompt is None:
-        raise HTTPException(404, f"Agent {agent_id} not found")
-    return {"agent_id": agent_id, "prompt": prompt}
-
-
-@router.put("/agents/{agent_id}/prompt")
-async def update_prompt(agent_id: str, body: PromptUpdate) -> dict[str, Any]:
-    eng = get_engine()
+@router.get("/agents/{instance_id}", response_model=AgentInstance)
+def get_agent(
+    instance_id: str,
+    principal: Principal = Depends(require_principal),
+    store: AipAgentRegistryStore = Depends(get_agent_store),
+) -> AgentInstance:
     try:
-        agent = eng.set_prompt(agent_id, body.prompt)
-    except KeyError:
-        raise HTTPException(404, f"Agent {agent_id} not found")
-    return {"ok": True, "agent_id": agent_id, "prompt": agent.system_prompt}
+        return store.get_instance(_scope(principal), instance_id)
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
 
 
-@router.get("/agents/{agent_id}/tools")
-async def get_tools(agent_id: str) -> dict[str, Any]:
-    eng = get_engine()
-    tools = eng.list_tools(agent_id)
-    if not tools and eng.get(agent_id) is None:
-        raise HTTPException(404, f"Agent {agent_id} not found")
-    return {"agent_id": agent_id, "items": [t.model_dump() for t in tools], "count": len(tools)}
+def _overlay_not_implemented(principal: Principal) -> None:
+    _ = principal
+    raise ApiError(
+        code="AIP_CANONICAL_OVERLAY_NOT_IMPLEMENTED",
+        message="prompt, tool and guardrail overlays require a versioned canonical overlay contract",
+        status_code=409,
+    )
 
 
-@router.put("/agents/{agent_id}/tools")
-async def update_tools(agent_id: str, body: ToolsUpdate) -> dict[str, Any]:
-    eng = get_engine()
-    try:
-        agent = eng.set_tools(agent_id, body.items)
-    except KeyError:
-        raise HTTPException(404, f"Agent {agent_id} not found")
-    return {
-        "agent_id": agent_id,
-        "items": [tool.model_dump() for tool in agent.tools],
-        "count": len(agent.tools),
-    }
+@router.get("/agents/{instance_id}/prompt")
+def get_prompt(instance_id: str, principal: Principal = Depends(require_principal)) -> None:
+    _ = instance_id
+    _overlay_not_implemented(principal)
 
 
-@router.get("/agents/{agent_id}/guardrails")
-async def get_guardrails(agent_id: str) -> dict[str, Any]:
-    eng = get_engine()
-    rules = eng.get_guardrails(agent_id)
-    if not rules and eng.get(agent_id) is None:
-        raise HTTPException(404, f"Agent {agent_id} not found")
-    return {"agent_id": agent_id, "items": [r.model_dump() for r in rules], "count": len(rules)}
+@router.put("/agents/{instance_id}/prompt")
+def update_prompt(instance_id: str, principal: Principal = Depends(require_principal)) -> None:
+    _ = instance_id
+    _overlay_not_implemented(principal)
 
 
-@router.put("/agents/{agent_id}/guardrails")
-async def update_guardrails(agent_id: str, body: GuardrailsUpdate) -> dict[str, Any]:
-    eng = get_engine()
-    try:
-        agent = eng.set_guardrails(agent_id, body.rules)
-    except KeyError:
-        raise HTTPException(404, f"Agent {agent_id} not found")
-    return {"ok": True, "count": len(agent.guardrails)}
+@router.get("/agents/{instance_id}/tools")
+def get_tools(instance_id: str, principal: Principal = Depends(require_principal)) -> None:
+    _ = instance_id
+    _overlay_not_implemented(principal)
+
+
+@router.put("/agents/{instance_id}/tools")
+def update_tools(instance_id: str, principal: Principal = Depends(require_principal)) -> None:
+    _ = instance_id
+    _overlay_not_implemented(principal)
+
+
+@router.get("/agents/{instance_id}/guardrails")
+def get_guardrails(instance_id: str, principal: Principal = Depends(require_principal)) -> None:
+    _ = instance_id
+    _overlay_not_implemented(principal)
+
+
+@router.put("/agents/{instance_id}/guardrails")
+def update_guardrails(instance_id: str, principal: Principal = Depends(require_principal)) -> None:
+    _ = instance_id
+    _overlay_not_implemented(principal)

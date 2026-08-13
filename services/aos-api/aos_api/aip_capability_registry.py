@@ -6,6 +6,7 @@ from typing import Any
 from aos_api.aip_agent_registry_contracts import (
     CapabilityRevision,
     PublishCapabilityRevisionRequest,
+    TemplateLifecycle,
 )
 from aos_api.aip_agent_registry_store import (
     AipAgentRegistryConflict,
@@ -128,6 +129,38 @@ class AipCapabilityRegistry(AipAgentRegistryStore):
             raise
         except Exception as exc:
             raise AipAgentRegistryPersistenceError("capability alias read failed") from exc
+
+    def list_capabilities(
+        self,
+        *,
+        source_resource_id: str | None = None,
+        source_revision: str | None = None,
+        lifecycle: TemplateLifecycle | None = None,
+        limit: int = 100,
+    ) -> list[CapabilityRevision]:
+        if limit < 1 or limit > 200:
+            raise ValueError("list limit must be between 1 and 200")
+        try:
+            with self._connect_factory() as conn:
+                rows = conn.execute(
+                    """SELECT * FROM aip_capability_revision
+                       WHERE (%s::text IS NULL OR source_ref->>'resourceId'=%s)
+                         AND (%s::text IS NULL OR source_ref->>'revision'=%s)
+                         AND (%s::text IS NULL OR lifecycle=%s)
+                       ORDER BY capability_id,revision DESC LIMIT %s""",
+                    (
+                        source_resource_id,
+                        source_resource_id,
+                        source_revision,
+                        source_revision,
+                        lifecycle.value if lifecycle else None,
+                        lifecycle.value if lifecycle else None,
+                        limit,
+                    ),
+                ).fetchall()
+            return [self._from_row(row) for row in rows]
+        except Exception as exc:
+            raise AipAgentRegistryPersistenceError("capability revision list failed") from exc
 
     @staticmethod
     def _row(conn: Any, capability_id: str, revision: int):

@@ -1,77 +1,69 @@
-"""Phase 3 · AIP Capabilities & Registry 路由.
-
-PUT  /v1/aip/capabilities/{id}    — 能力配置更新（upsert）
-POST /v1/aip/capabilities/test    — 连通测试（W4-B5）
-
-能力列表的兼容 authority 是 ``wave_ext``；本模块不再注册重复 GET。
-"""
+"""AIP-6 canonical agent and capability catalogs."""
 from __future__ import annotations
 
-from typing import Any
+from fastapi import APIRouter, Depends
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
-
-from aos_api.aip_capabilities_engine import get_engine
+from aos_api.aip_agent_control_contracts import (
+    AgentCatalogResponse,
+    CapabilityCatalogResponse,
+)
+from aos_api.aip_agent_registry_store import AipAgentRegistryError
+from aos_api.aip_ecommerce_agent_installer import AipEcommerceAgentInstaller
 from aos_api.auth import Principal, require_principal
+from aos_api.errors import ApiError
 
 router = APIRouter(prefix="/v1/aip", tags=["aip-capabilities"])
+_CONTROL = AipEcommerceAgentInstaller()
 
 
-class CapabilityUpdate(BaseModel):
-    name: str | None = None
-    description: str | None = None
-    enabled: bool | None = None
-    config: dict[str, Any] | None = None
-    category: str | None = None
+def get_agent_catalog_service() -> AipEcommerceAgentInstaller:
+    return _CONTROL
 
 
-class CapabilityTestIn(BaseModel):
-    id: str | None = None
-    capabilityId: str | None = None
-    endpoint: str | None = None
+def _map_error(exc: AipAgentRegistryError) -> ApiError:
+    return ApiError(code=exc.code, message=str(exc), status_code=409 if "INVALID" in exc.code or "CONFLICT" in exc.code else 503)
 
 
-@router.get("/agent-registry")
-async def list_registry(
-    status: str | None = Query(None),
-    scope: str | None = Query(None),
+@router.get("/agent-registry", response_model=AgentCatalogResponse)
+def list_registry(
     principal: Principal = Depends(require_principal),
-) -> dict[str, Any]:
-    _ = principal
-    eng = get_engine()
-    items = eng.list_registry(status=status, scope=scope)
-    stats = eng.registry_stats()
-    return {
-        "items": [e.model_dump() for e in items],
-        "count": len(items),
-        "stats": stats,
-    }
+    service: AipEcommerceAgentInstaller = Depends(get_agent_catalog_service),
+) -> AgentCatalogResponse:
+    try:
+        return service.catalog(principal)
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
 
 
-@router.put("/capabilities/{cap_id}")
-async def update_capability(
-    cap_id: str,
-    body: CapabilityUpdate,
+@router.get("/capability-catalog", response_model=CapabilityCatalogResponse)
+def list_capability_catalog(
     principal: Principal = Depends(require_principal),
-) -> dict[str, Any]:
+    service: AipEcommerceAgentInstaller = Depends(get_agent_catalog_service),
+) -> CapabilityCatalogResponse:
+    try:
+        return service.capability_catalog(principal)
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+
+
+def _binding_required(principal: Principal) -> None:
     _ = principal
-    eng = get_engine()
-    eng.ensure_plugin_defaults()
-    updates = {k: v for k, v in body.model_dump().items() if v is not None}
-    if not updates:
-        raise HTTPException(400, "No fields to update")
-    cap = eng.upsert_capability(cap_id, **updates)
-    return {"ok": True, "item": cap.model_dump()}
+    raise ApiError(
+        code="AIP_CAPABILITY_BINDING_REQUIRED",
+        message="capability configuration and connectivity require a versioned tenant CapabilityBinding",
+        status_code=409,
+    )
+
+
+@router.put("/capabilities/{capability_id}")
+def retired_update_capability(
+    capability_id: str,
+    principal: Principal = Depends(require_principal),
+) -> None:
+    _ = capability_id
+    _binding_required(principal)
 
 
 @router.post("/capabilities/test")
-async def test_capability(
-    body: CapabilityTestIn,
-    principal: Principal = Depends(require_principal),
-) -> dict[str, Any]:
-    _ = principal
-    eng = get_engine()
-    cap_id = body.capabilityId or body.id
-    result = eng.test_connectivity(cap_id=cap_id, endpoint=body.endpoint)
-    return {"ok": True, **result}
+def retired_test_capability(principal: Principal = Depends(require_principal)) -> None:
+    _binding_required(principal)

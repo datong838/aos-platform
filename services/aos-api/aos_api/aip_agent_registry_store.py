@@ -100,6 +100,38 @@ class AipAgentRegistryStore:
         except Exception as exc:
             raise AipAgentRegistryPersistenceError("agent template read failed") from exc
 
+    def list_templates(
+        self,
+        *,
+        source_resource_id: str | None = None,
+        source_revision: str | None = None,
+        lifecycle: TemplateLifecycle | None = None,
+        limit: int = 100,
+    ) -> list[AgentTemplateRevision]:
+        if limit < 1 or limit > 200:
+            raise ValueError("list limit must be between 1 and 200")
+        try:
+            with self._connect_factory() as conn:
+                rows = conn.execute(
+                    """SELECT * FROM aip_agent_template_revision
+                       WHERE (%s::text IS NULL OR source_ref->>'resourceId'=%s)
+                         AND (%s::text IS NULL OR source_ref->>'revision'=%s)
+                         AND (%s::text IS NULL OR lifecycle=%s)
+                       ORDER BY template_id,revision DESC LIMIT %s""",
+                    (
+                        source_resource_id,
+                        source_resource_id,
+                        source_revision,
+                        source_revision,
+                        lifecycle.value if lifecycle else None,
+                        lifecycle.value if lifecycle else None,
+                        limit,
+                    ),
+                ).fetchall()
+            return [self._template_from_row(row) for row in rows]
+        except Exception as exc:
+            raise AipAgentRegistryPersistenceError("agent template list failed") from exc
+
     def create_instance(self, scope: TenantScope, request: CreateAgentInstanceRequest, *, idempotency_key: str, actor: str, occurred_at: datetime) -> tuple[AgentInstance, RegistryReceipt]:
         self._validate_command(scope, idempotency_key, actor)
         request_hash = self._command_hash(request, actor)
