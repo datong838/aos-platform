@@ -24,7 +24,11 @@ from aos_api.asset_registry.contracts import (
     BundleEvidence,
     BundleManifest,
     BundleSignature,
+    LegacyWorkshopMigrationInput,
     LoadedBundle,
+    UiContributionClaim,
+    NavigationContributionClaim,
+    WorkshopModuleContribution,
 )
 from aos_api.asset_registry.errors import ManifestInvalidError
 from aos_api.asset_registry.signature import (
@@ -197,6 +201,7 @@ class ManifestLoader:
                 artifacts: list[BundleArtifact] = []
                 signature_bytes: bytes | None = None
                 evidence_documents: dict[str, bytes] = {}
+                workshop_documents: dict[str, bytes] = {}
                 for item in files:
                     relative_path = item.relative_path
                     content = self._read_regular_file(
@@ -246,9 +251,19 @@ class ManifestLoader:
                         BUNDLE_EVALS_RELATIVE_PATH,
                     }:
                         evidence_documents[relative_path] = content
+                    if self._is_exported_path(
+                        relative_path, manifest.spec.exports.workshops
+                    ):
+                        workshop_documents[relative_path] = content
                 final_files, final_paths = self._enumerate_files(bundle_descriptor)
                 if final_files != files or final_paths != available_paths:
                     raise ManifestInvalidError("bundle content changed while loading")
+
+            workshop_modules, legacy_workshops = self._parse_workshop_assets(
+                manifest=manifest,
+                available_paths=available_paths,
+                documents=workshop_documents,
+            )
 
             artifacts.sort(key=lambda item: item.relative_path)
             manifest_payload = manifest.model_dump(
@@ -313,6 +328,8 @@ class ManifestLoader:
                     "sourceRef": source_ref,
                     "manifest": manifest,
                     "artifacts": artifacts,
+                    "workshopModules": workshop_modules,
+                    "legacyWorkshops": legacy_workshops,
                     "evidence": evidence,
                     "contentHash": content_hash,
                     "signature": signature,
@@ -323,6 +340,179 @@ class ManifestLoader:
             raise
         except (OSError, ValueError, TypeError, ValidationError, yaml.YAMLError) as exc:
             raise ManifestInvalidError("bundle source failed safe loading") from exc
+
+    @staticmethod
+    def _is_exported_path(relative_path: str, exports: list[str]) -> bool:
+        return any(
+            relative_path.startswith(export_path)
+            if export_path.endswith("/")
+            else relative_path == export_path
+            for export_path in exports
+        )
+
+    @staticmethod
+    def _parse_workshop_assets(
+        *,
+        manifest: BundleManifest,
+        available_paths: frozenset[str],
+        documents: Mapping[str, bytes],
+    ) -> tuple[
+        list[WorkshopModuleContribution],
+        list[LegacyWorkshopMigrationInput],
+    ]:
+        modules: list[WorkshopModuleContribution] = []
+        legacy: list[LegacyWorkshopMigrationInput] = []
+        for relative_path, content in sorted(documents.items()):
+            if not relative_path.endswith(".json"):
+                raise ManifestInvalidError("Workshop exports must contain JSON assets")
+            try:
+                payload = ManifestLoader._parse_json_object(content)
+                ManifestLoader._scan_sensitive_value(payload)
+                if "schema" in payload:
+                    module = WorkshopModuleContribution.model_validate(payload)
+                    ManifestLoader._validate_workshop_module_binding(
+                        manifest=manifest,
+                        available_paths=available_paths,
+                        module=module,
+                    )
+                    modules.append(module)
+                else:
+                    legacy.append(
+                        ManifestLoader._parse_legacy_workshop(
+                            relative_path=relative_path,
+                            payload=payload,
+                        )
+                    )
+            except ManifestInvalidError:
+                raise
+            except (UnicodeDecodeError, ValueError, TypeError, ValidationError) as exc:
+                raise ManifestInvalidError(
+                    f"Workshop asset {relative_path} failed the canonical contract"
+                ) from exc
+
+        module_ids = [item.module_id for item in modules]
+        routes = [item.route for item in modules]
+        orders = [item.order for item in modules]
+        legacy_ids = [item.legacy_id for item in legacy]
+        if len(module_ids) != len(set(module_ids)):
+            raise ManifestInvalidError("Workshop module ids must be unique")
+        if len(routes) != len(set(routes)):
+            raise ManifestInvalidError("Workshop module routes must be unique")
+        if len(orders) != len(set(orders)):
+            raise ManifestInvalidError("Workshop module order values must be unique")
+        if len(legacy_ids) != len(set(legacy_ids)):
+            raise ManifestInvalidError("legacy Workshop ids must be unique")
+        return modules, legacy
+
+    @staticmethod
+    def _validate_workshop_module_binding(
+        *,
+        manifest: BundleManifest,
+        available_paths: frozenset[str],
+        module: WorkshopModuleContribution,
+    ) -> None:
+        expected_bundle_ref = (
+            f"bundle://{manifest.metadata.publisher}/"
+            f"{manifest.metadata.id}@{manifest.metadata.version}"
+        )
+        if module.bundle_ref != expected_bundle_ref:
+            raise ManifestInvalidError("Workshop bundleRef does not match its manifest")
+
+        has_route_claim = any(
+            isinstance(claim, NavigationContributionClaim)
+            and claim.route == module.route
+            and claim.mode == "exclusive"
+            for claim in manifest.spec.contributions
+        )
+        has_ui_claim = any(
+            isinstance(claim, UiContributionClaim)
+            and claim.slot == module.slot
+            and claim.id == module.module_id
+            and claim.mode == "exclusive"
+            for claim in manifest.spec.contributions
+        )
+        if not has_route_claim or not has_ui_claim:
+            raise ManifestInvalidError(
+                "Workshop module must bind exclusive navigation and UI claims"
+            )
+
+        references = [
+            *module.view_refs,
+            *module.eval_pack_refs,
+            *module.production_contract_refs,
+            *module.responsibility_template_refs,
+            *module.impact_calculator_refs,
+            *module.legacy_asset_refs,
+        ]
+        if any(reference not in available_paths for reference in references):
+            raise ManifestInvalidError("Workshop module references missing bundle content")
+
+    @staticmethod
+    def _parse_legacy_workshop(
+        *, relative_path: str, payload: dict
+    ) -> LegacyWorkshopMigrationInput:
+        allowed_top_level = {
+            "workshop_id",
+            "title",
+            "route",
+            "widgets",
+            "decision_tags",
+            "decision_tags_contract",
+            "status",
+            "note",
+        }
+        if set(payload).difference(allowed_top_level):
+            raise ManifestInvalidError("legacy Workshop contains unknown fields")
+        legacy_id = payload.get("workshop_id")
+        route = payload.get("route")
+        if (
+            not isinstance(legacy_id, str)
+            or not re.fullmatch(BUNDLE_ID_PATTERN, legacy_id)
+            or not isinstance(route, str)
+            or not route.startswith("workshop/")
+        ):
+            raise ManifestInvalidError("unknown unschematized Workshop asset")
+        widgets = payload.get("widgets")
+        if not isinstance(widgets, list) or not widgets:
+            raise ManifestInvalidError("legacy Workshop requires widgets")
+        allowed_widget_fields = {
+            "id",
+            "title",
+            "source_ot",
+            "aggregator",
+            "filter",
+            "description",
+            "decision_tag_ref",
+        }
+        widget_ids: list[str] = []
+        required_objects: list[str] = []
+        for widget in widgets:
+            if not isinstance(widget, dict) or set(widget).difference(
+                allowed_widget_fields
+            ):
+                raise ManifestInvalidError("legacy Workshop widget is invalid")
+            widget_id = widget.get("id")
+            title = widget.get("title")
+            source_ot = widget.get("source_ot")
+            if not all(
+                isinstance(value, str) and value and value == value.strip()
+                for value in (widget_id, title, source_ot)
+            ):
+                raise ManifestInvalidError("legacy Workshop widget is incomplete")
+            widget_ids.append(widget_id)
+            for object_id in source_ot.split("+"):
+                if object_id not in required_objects:
+                    required_objects.append(object_id)
+        return LegacyWorkshopMigrationInput.model_validate(
+            {
+                "sourcePath": relative_path,
+                "legacyId": legacy_id,
+                "title": payload.get("title"),
+                "route": f"/{route}",
+                "widgetIds": widget_ids,
+                "requiredObjects": required_objects,
+            }
+        )
 
     def _parse_source_ref(self, source_ref: str) -> tuple[str, tuple[str, ...]]:
         if (

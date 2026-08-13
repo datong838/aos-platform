@@ -238,3 +238,27 @@ def test_real_loader_accepts_unsigned_bundle_with_stable_exported_artifacts(
         ("bundle_evals", "valid"),
     }
     assert not (BUNDLES_ROOT / case.relative_path / "bundle.signature.json").exists()
+
+
+@pytest.mark.parametrize(
+    ("relative_path", "expected_legacy_ids"),
+    [
+        (
+            "solutions/ecommerce-operations-base",
+            ["w01-order-management", "w02-product-inventory"],
+        ),
+        ("solutions/ecommerce-growth", ["w03-customer-private-domain"]),
+    ],
+)
+def test_real_ecommerce_loader_exposes_only_frozen_legacy_migration_inputs(
+    relative_path: str, expected_legacy_ids: list[str]
+) -> None:
+    loader = ManifestLoader({"m5-fixtures": BUNDLES_ROOT})
+
+    loaded = loader.load(f"bundle://m5-fixtures/{relative_path}")
+
+    assert loaded.workshop_modules == []
+    assert [item.legacy_id for item in loaded.legacy_workshops] == expected_legacy_ids
+    assert all(item.route.startswith("/workshop/") for item in loaded.legacy_workshops)
+    assert all(item.widget_ids for item in loaded.legacy_workshops)
+    assert all(item.required_objects for item in loaded.legacy_workshops)
