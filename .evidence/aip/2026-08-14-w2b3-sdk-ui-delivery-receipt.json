@@ -1,0 +1,25 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "aip-w2b3-sdk-ui-20260814",
+  "branch": "w1-aip",
+  "baselineCommit": "7b5db73",
+  "files": [
+    {"path": "apps/web/src/api/aipProductionContracts/contracts.ts", "beforeSha256": "4d37599a8c064164247a75441bcd10ed4958492dea32a4ce09c5b44e398ade7e", "afterSha256": "92823a7dddf578a7d131c5cfc6e0e307e2c770870a607bff3831ae767f745c16"},
+    {"path": "apps/web/src/api/aipProductionContracts/parser.ts", "beforeSha256": "b0009d72b570f91554fb46d7da16f05935822036aa5b7c83e1ca9d4e2f9e899c", "afterSha256": "521c681ba4923b81e78d5e7603b422f661b12c1ecd452f0809513fd02a84b46d"},
+    {"path": "apps/web/src/api/aipProductionContracts/parser.test.ts", "beforeSha256": "02576b58d3d6fcbaebe5a233b7f7e7a91560a56ac74ee71c81fadfd91498d08e", "afterSha256": "53c74fdd41e29039ae4619f96bb792e43dc711c0aaa90564888a01486a71d14d"},
+    {"path": "apps/web/src/api/aipProductionContracts/index.ts", "beforeSha256": "285f537b6608348e7bc0eab2e097880b0cc4fb4dac130e291843f776c6b5a7f8", "afterSha256": "e5ba7075395aab24a75c5e489fea25d062ffd5c52956805c84f99f04ab4ee7ff"},
+    {"path": "apps/web/src/pages/s2/ProductionContractsPage.tsx", "beforeSha256": "d2b8a177e8937295d523ea81134c79ca33231cf6af07073f1f29d2f5be5880cb", "afterSha256": "44a8c52264edf31b21042b9c3f72488aad2cc4652d8afcf279a4491004a312ff"},
+    {"path": "apps/web/src/pages/s2/ProductionContractsPage.test.tsx", "beforeSha256": null, "afterSha256": "5c1f9f3687ade1d334c02515493293331b12fa77a318233fb31ad6e4f2a8e77e"}
+  ],
+  "verification": {
+    "targetedParserAndPage": "2 files / 6 tests passed",
+    "webRegression": "176 files / 2066 tests passed",
+    "webProductionBuild": "GREEN",
+    "typescriptNoEmit": "GREEN",
+    "diffCheck": "GREEN",
+    "tenantBoundary": "org/project headers continue to come from canonical tenant context; no tenant literal added to runtime paths"
+  },
+  "status": "W2B3_GREEN",
+  "knownBlocker": "ResponsibilityTemplateRevision authority remains unavailable; UI and API fail closed",
+  "next": "W2-B4 built-in-browser verification and cumulative evidence closure"
+}
