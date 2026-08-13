@@ -11,7 +11,7 @@ from typing import Any
 
 from pydantic import Field, field_validator, model_validator
 
-from aos_api.aip_contracts import AipContractModel, ResourceRef
+from aos_api.aip_contracts import AipContractModel, ResourceRef, TenantContext
 
 SHA256_PATTERN = r"^[0-9a-f]{64}$"
 
@@ -151,3 +151,130 @@ class AgentRunRequest(AipContractModel):
             if getattr(self, field_name).asset_type != asset_type:
                 raise ValueError(f"{field_name} must reference {asset_type}")
         return self
+
+
+class PublishAgentTemplateRequest(AipContractModel):
+    template_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    display_name: str = Field(min_length=1, max_length=120)
+    role_key: str = Field(min_length=1, max_length=120)
+    lifecycle: TemplateLifecycle
+    source_ref: ResourceRef
+    source_license: str = Field(min_length=1, max_length=200)
+    manifest: dict[str, Any]
+    content_hash: str = Field(pattern=SHA256_PATTERN)
+
+
+class AgentTemplateRevision(PublishAgentTemplateRequest):
+    created_by: str
+    created_at: datetime
+
+
+class PublishSkillTemplateRequest(AipContractModel):
+    skill_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    canonical_logic_id: str = Field(min_length=1, max_length=200)
+    lifecycle: TemplateLifecycle
+    input_schema: dict[str, Any]
+    output_schema: dict[str, Any]
+    tool_allowlist: list[str] = Field(default_factory=list, max_length=128)
+    required_capabilities: list[str] = Field(default_factory=list, max_length=128)
+    risk_level: str = Field(pattern=r"^(low|medium|high|critical)$")
+    eval_pack_ref: VersionedAssetRef | None = None
+    memory_policy_ref: VersionedAssetRef
+    handoff_policy_ref: VersionedAssetRef
+    source_ref: ResourceRef
+    source_license: str = Field(min_length=1, max_length=200)
+    content_hash: str = Field(pattern=SHA256_PATTERN)
+
+    @field_validator("tool_allowlist", "required_capabilities")
+    @classmethod
+    def _unique_non_blank_assets(cls, values: list[str]) -> list[str]:
+        cleaned = [value.strip() for value in values]
+        if any(not value for value in cleaned) or len(cleaned) != len(set(cleaned)):
+            raise ValueError("asset ids must be unique and non-blank")
+        return cleaned
+
+
+class SkillTemplateRevision(PublishSkillTemplateRequest):
+    created_by: str
+    created_at: datetime
+
+
+class CreateAgentInstanceRequest(AipContractModel):
+    instance_id: str = Field(min_length=1, max_length=200)
+    template: VersionedAssetRef
+    overlay: AgentInstanceOverlay = Field(default_factory=AgentInstanceOverlay)
+    initial_status: AgentInstanceStatus = AgentInstanceStatus.PROVISIONING
+
+    @model_validator(mode="after")
+    def _template_kind(self) -> CreateAgentInstanceRequest:
+        if self.template.asset_type != "AgentTemplate":
+            raise ValueError("template must reference AgentTemplate")
+        return self
+
+
+class UpdateAgentInstanceRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    from_status: AgentInstanceStatus
+    to_status: AgentInstanceStatus
+    overlay: AgentInstanceOverlay
+
+
+class AgentInstance(AipContractModel):
+    tenant: TenantContext
+    instance_id: str
+    template: VersionedAssetRef
+    status: AgentInstanceStatus
+    overlay: AgentInstanceOverlay
+    version: int = Field(ge=1)
+    created_by: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class CreateSkillBindingRequest(AipContractModel):
+    binding_id: str = Field(min_length=1, max_length=200)
+    instance_id: str = Field(min_length=1, max_length=200)
+    skill: VersionedAssetRef
+    capability_binding_ids: list[str] = Field(default_factory=list, max_length=128)
+    budget_policy_ref: VersionedAssetRef
+    initial_status: str = Field(default="provisioning", pattern=r"^(provisioning|active|suspended|revoked)$")
+
+    @model_validator(mode="after")
+    def _skill_kind(self) -> CreateSkillBindingRequest:
+        if self.skill.asset_type != "SkillTemplate":
+            raise ValueError("skill must reference SkillTemplate")
+        return self
+
+
+class UpdateSkillBindingRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    from_status: str = Field(pattern=r"^(provisioning|active|suspended|revoked)$")
+    to_status: str = Field(pattern=r"^(provisioning|active|suspended|revoked)$")
+
+
+class SkillBinding(AipContractModel):
+    tenant: TenantContext
+    binding_id: str
+    instance_id: str
+    skill: VersionedAssetRef
+    capability_binding_ids: list[str]
+    budget_policy_ref: VersionedAssetRef
+    status: str
+    version: int = Field(ge=1)
+    created_at: datetime
+    updated_at: datetime
+
+
+class RegistryReceipt(AipContractModel):
+    tenant: TenantContext
+    receipt_id: str
+    operation: str
+    idempotency_key: str
+    request_hash: str = Field(pattern=SHA256_PATTERN)
+    resource_ref: ResourceRef
+    result_ref: ResourceRef
+    status: str
+    created_by: str
+    created_at: datetime
