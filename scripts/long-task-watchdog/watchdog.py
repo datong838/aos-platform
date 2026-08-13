@@ -205,7 +205,7 @@ def evaluate(
         return "idle", status
     if status.pending_tool_calls and status.oldest_pending_tool_at is not None and (
         now - status.oldest_pending_tool_at
-        < int(config.get("max_tool_silence_seconds", 14_400))
+        < int(config.get("max_tool_silence_seconds", 300))
     ):
         return "tool-running", status
     if now - status.last_activity_at < int(config.get("grace_seconds", 240)):

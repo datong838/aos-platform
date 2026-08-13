@@ -10,7 +10,8 @@
 - 不传 API Key，并主动从子进程环境移除常见 Key。
 - 不使用 `--dangerously-bypass-approvals-and-sandbox`。
 - 不创建新 thread，只恢复配置中的同一 session。
-- 默认宽限 300 秒；尚未返回的工具调用最多保护 4 小时，兼顾长命令与崩溃工具调用最终可恢复。
+- 默认宽限 300 秒；尚未返回的工具调用同样只保护 300 秒。超过 5 分钟无 transcript 心跳即进入恢复判定，避免工具调用残留永久阻塞续跑。
+- Watchdog 唤醒后的第一条用户可见消息必须先声明“外部 Watchdog 检测到任务中断并已恢复本任务”，再读取检查点并继续；用户因此能够明确识别自动续跑。
 - 任务结束后将 `config.json` 的 `enabled` 改为 `false` 并卸载 LaunchAgent。
 
 本地状态：`~/.codex/long-task-watchdog/`（配置、运行状态和互斥锁均为本机文件，不进 Git）。
