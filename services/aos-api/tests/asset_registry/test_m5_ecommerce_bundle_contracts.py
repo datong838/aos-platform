@@ -53,7 +53,7 @@ BUNDLE_CASES = (
         relative_path="solutions/ecommerce-operations-base",
         bundle_id="solution.ecommerce.operations-base",
         kind="SolutionPack",
-        version="1.0.0",
+        version="1.1.0",
         display_name="电商运营基础方案包",
         dependencies=CORE_DEPENDENCY,
         exports={
@@ -66,7 +66,7 @@ BUNDLE_CASES = (
         relative_path="solutions/ecommerce-growth",
         bundle_id="solution.ecommerce.growth",
         kind="SolutionPack",
-        version="1.2.0",
+        version="1.3.0",
         display_name="电商增长方案包（六数字同事、37 Logic、十共享专业 Capability）",
         dependencies=CORE_DEPENDENCY,
         exports={
@@ -156,7 +156,11 @@ def test_bundle_manifest_matches_frozen_contract_and_existing_exports(
     assert manifest.spec.preflight is None
     assert manifest.spec.regression is None
     assert manifest.spec.rollback is None
-    assert manifest.spec.contributions == []
+    expected_claim_count = {
+        "solution.ecommerce.operations-base": 2,
+        "solution.ecommerce.growth": 14,
+    }.get(case.bundle_id, 0)
+    assert len(manifest.spec.contributions) == expected_claim_count
 
     actual_exports = {
         name: tuple(paths)
@@ -257,8 +261,144 @@ def test_real_ecommerce_loader_exposes_only_frozen_legacy_migration_inputs(
 
     loaded = loader.load(f"bundle://m5-fixtures/{relative_path}")
 
-    assert loaded.workshop_modules == []
     assert [item.legacy_id for item in loaded.legacy_workshops] == expected_legacy_ids
     assert all(item.route.startswith("/workshop/") for item in loaded.legacy_workshops)
     assert all(item.widget_ids for item in loaded.legacy_workshops)
     assert all(item.required_objects for item in loaded.legacy_workshops)
+
+
+EXPECTED_WORKSHOP_MODULES = (
+    ("ecommerce.task-cockpit", "/workshop/cockpit", 10, "solution.ecommerce.growth"),
+    (
+        "ecommerce.content-campaign",
+        "/workshop/content-campaign",
+        20,
+        "solution.ecommerce.growth",
+    ),
+    (
+        "ecommerce.operations",
+        "/workshop/operations",
+        30,
+        "solution.ecommerce.operations-base",
+    ),
+    (
+        "ecommerce.creator-growth",
+        "/workshop/creator-growth",
+        40,
+        "solution.ecommerce.growth",
+    ),
+    (
+        "ecommerce.media-studio",
+        "/workshop/media-studio",
+        50,
+        "solution.ecommerce.growth",
+    ),
+    ("ecommerce.analyst", "/workshop/analyst", 60, "solution.ecommerce.growth"),
+    (
+        "ecommerce.price-governance",
+        "/workshop/price-governance",
+        70,
+        "solution.ecommerce.growth",
+    ),
+    ("ecommerce.customer", "/workshop/customer", 80, "solution.ecommerce.growth"),
+)
+
+
+def test_two_solution_packs_export_exactly_eight_workshop_module_drafts() -> None:
+    loader = ManifestLoader({"m5-fixtures": BUNDLES_ROOT})
+    loaded_bundles = [
+        loader.load("bundle://m5-fixtures/solutions/ecommerce-operations-base"),
+        loader.load("bundle://m5-fixtures/solutions/ecommerce-growth"),
+    ]
+    actual = sorted(
+        (
+            module.module_id,
+            module.route,
+            module.order,
+            loaded.manifest.metadata.id,
+        )
+        for loaded in loaded_bundles
+        for module in loaded.workshop_modules
+    )
+
+    assert actual == sorted(EXPECTED_WORKSHOP_MODULES)
+    assert len({item[0] for item in actual}) == 8
+    assert len({item[1] for item in actual}) == 8
+    assert len({item[2] for item in actual}) == 8
+    assert all(
+        module.slot == "workshop.primary.ecommerce"
+        for loaded in loaded_bundles
+        for module in loaded.workshop_modules
+    )
+    assert all(
+        module.permissions.action_types == []
+        for loaded in loaded_bundles
+        for module in loaded.workshop_modules
+    )
+    assert all(
+        module.required_objects
+        for loaded in loaded_bundles
+        for module in loaded.workshop_modules
+    )
+    assert all(
+        module.required_aip_features
+        for loaded in loaded_bundles
+        for module in loaded.workshop_modules
+    )
+
+
+def test_every_workshop_module_has_exact_exclusive_navigation_and_ui_claims() -> None:
+    loader = ManifestLoader({"m5-fixtures": BUNDLES_ROOT})
+    loaded_bundles = [
+        loader.load("bundle://m5-fixtures/solutions/ecommerce-operations-base"),
+        loader.load("bundle://m5-fixtures/solutions/ecommerce-growth"),
+    ]
+
+    claims = [
+        claim.model_dump(mode="json", by_alias=True)
+        for loaded in loaded_bundles
+        for claim in loaded.manifest.spec.contributions
+    ]
+    assert len(claims) == 16
+    for loaded in loaded_bundles:
+        for module in loaded.workshop_modules:
+            assert {
+                "kind": "navigation",
+                "route": module.route,
+                "mode": "exclusive",
+            } in claims
+            assert {
+                "kind": "ui",
+                "slot": module.slot,
+                "id": module.module_id,
+                "mode": "exclusive",
+            } in claims
+
+
+def test_solution_release_evidence_names_modules_and_stays_blocked() -> None:
+    loader = ManifestLoader({"m5-fixtures": BUNDLES_ROOT})
+    loaded_bundles = [
+        loader.load("bundle://m5-fixtures/solutions/ecommerce-operations-base"),
+        loader.load("bundle://m5-fixtures/solutions/ecommerce-growth"),
+    ]
+
+    for loaded in loaded_bundles:
+        bundle_path = next(
+            BUNDLES_ROOT / case.relative_path
+            for case in BUNDLE_CASES
+            if case.bundle_id == loaded.manifest.metadata.id
+        )
+        evals = json.loads(
+            (bundle_path / "evidence/bundle-evals.json").read_text(encoding="utf-8")
+        )
+        sbom = json.loads(
+            (bundle_path / "evidence/sbom.json").read_text(encoding="utf-8")
+        )
+        component_names = {item["name"] for item in sbom["components"]}
+
+        assert evals["status"] == "passed"
+        assert evals["runtimeReadiness"] == "blocked"
+        assert "active_installation_unavailable" in evals["runtimeBlockers"]
+        assert {
+            module.module_id for module in loaded.workshop_modules
+        }.issubset(component_names)

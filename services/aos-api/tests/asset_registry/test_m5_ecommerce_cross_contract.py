@@ -94,7 +94,11 @@ def test_three_leaf_request_matches_the_four_bundle_dependency_graph() -> None:
     request = CompositionRequest.model_validate(
         {
             "requested": [
-                {"publisher": "aos", "id": coordinate, "version": "1.0.0"}
+                {
+                    "publisher": "aos",
+                    "id": coordinate,
+                    "version": by_id[coordinate]["metadata"]["version"],
+                }
                 for coordinate in sorted(LEAF_COORDINATES, reverse=True)
             ],
             "platformApiVersion": "1.7.0",

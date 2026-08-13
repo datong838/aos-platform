@@ -2,7 +2,7 @@ apiVersion: aos.dev/v1alpha1
 kind: SolutionPack
 metadata:
   id: solution.ecommerce.operations-base
-  version: 1.0.0
+  version: 1.1.0
   displayName: 电商运营基础方案包
   publisher: aos
   license: internal
@@ -35,3 +35,11 @@ spec:
   preflight: null
   regression: null
   rollback: null
+  contributions:
+    - kind: navigation
+      route: /workshop/operations
+      mode: exclusive
+    - kind: ui
+      slot: workshop.primary.ecommerce
+      id: ecommerce.operations
+      mode: exclusive

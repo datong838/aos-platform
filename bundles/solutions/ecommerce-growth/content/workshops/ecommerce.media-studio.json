@@ -1,0 +1,57 @@
+{
+  "schema": "aos.workshop-module/v1",
+  "moduleId": "ecommerce.media-studio",
+  "displayName": "多媒体任务全过程闭环工作台",
+  "menuLabel": "多媒体内容生产",
+  "route": "/workshop/media-studio",
+  "slot": "workshop.primary.ecommerce",
+  "order": 50,
+  "bundleRef": "bundle://aos/solution.ecommerce.growth@1.3.0",
+  "requiredObjects": [
+    "Product",
+    "TaskRun",
+    "Checkpoint",
+    "Artifact",
+    "ContentVariant",
+    "ReviewIssue"
+  ],
+  "requiredCapabilities": [
+    "material.collect",
+    "strategy.plan",
+    "copy.generate",
+    "script.compose",
+    "speech.synthesize",
+    "video.compose",
+    "content.review",
+    "live.orchestrate",
+    "platform.adapt",
+    "performance.review"
+  ],
+  "requiredAipFeatures": [
+    "aip.task-runtime",
+    "aip.production.task-brief",
+    "aip.production.evidence-bundle",
+    "aip.production.eval-contract",
+    "aip.production.responsibility-plan",
+    "aip.production.stage-template",
+    "aip.production.artifact-family",
+    "aip.production.review-issue",
+    "aip.production.impact-preview",
+    "aip.model-route",
+    "aip.media-provider"
+  ],
+  "permissions": {
+    "roles": [],
+    "markings": [],
+    "dataScopes": ["ecommerce.workshop.read"],
+    "actionTypes": []
+  },
+  "viewRefs": [],
+  "evalPackRefs": ["content/evals/placeholder.json"],
+  "productionContractRefs": [],
+  "responsibilityTemplateRefs": [],
+  "impactCalculatorRefs": [],
+  "legacyAssetRefs": [],
+  "legacyRedirects": ["/s2/media-studio"],
+  "minimumRuntimeVersion": "1.7.0"
+}

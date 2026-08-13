@@ -101,10 +101,15 @@ def _candidate(item: RuntimeSignedM5Bundle) -> RegistrySnapshotCandidate:
 def _request(
     requested_ids: tuple[str, ...], snapshot: RegistrySnapshot
 ) -> CompositionRequest:
+    versions = {item.id: item.version for item in snapshot.candidates}
     return CompositionRequest.model_validate(
         {
             "requested": [
-                {"publisher": "aos", "id": bundle_id, "version": "1.0.0"}
+                {
+                    "publisher": "aos",
+                    "id": bundle_id,
+                    "version": versions[bundle_id],
+                }
                 for bundle_id in requested_ids
             ],
             "platformApiVersion": "1.7.0",
@@ -116,7 +121,7 @@ def _request(
     )
 
 
-def _assert_empty_diffs(payload: CompositionLockPayload) -> None:
+def _assert_composition_diffs(payload: CompositionLockPayload) -> None:
     permission_diff = payload.permission_diff.model_dump(mode="json", by_alias=True)
     assert all(
         values == []
@@ -130,13 +135,14 @@ def _assert_empty_diffs(payload: CompositionLockPayload) -> None:
         "removed": [],
         "changed": [],
     }
-    assert payload.contribution_diff.model_dump(mode="json", by_alias=True) == {
-        "baseline": [],
-        "target": [],
-        "added": [],
-        "removed": [],
-        "unchanged": [],
-    }
+    contribution_diff = payload.contribution_diff.model_dump(
+        mode="json", by_alias=True
+    )
+    assert contribution_diff["baseline"] == []
+    assert contribution_diff["removed"] == []
+    assert contribution_diff["unchanged"] == []
+    assert contribution_diff["target"] == contribution_diff["added"]
+    assert len(contribution_diff["target"]) == 16
 
 
 def test_three_leaf_request_adds_one_core_and_three_required_edges(
@@ -168,7 +174,7 @@ def test_three_leaf_request_adds_one_core_and_three_required_edges(
         for edge in payload.edges
     } == {(bundle_id, CORE_ID, DEPENDENCY_RANGE, False) for bundle_id in LEAF_IDS}
     assert payload.capability_providers == []
-    _assert_empty_diffs(payload)
+    _assert_composition_diffs(payload)
 
 
 def test_request_and_candidate_permutations_keep_lock_and_selection_stable(

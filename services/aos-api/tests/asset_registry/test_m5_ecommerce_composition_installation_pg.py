@@ -51,17 +51,22 @@ MAKER_ROLES = {"asset-installer", "asset-install-approver"}
 CHECKER_ROLES = {"asset-install-approver"}
 
 
-def _three_leaf_request(snapshot_hash: str) -> CompositionRequest:
+def _three_leaf_request(snapshot) -> CompositionRequest:
+    versions = {item.id: item.version for item in snapshot.candidates}
     return CompositionRequest.model_validate(
         {
             "requested": [
-                {"publisher": "aos", "id": bundle_id, "version": "1.0.0"}
+                {
+                    "publisher": "aos",
+                    "id": bundle_id,
+                    "version": versions[bundle_id],
+                }
                 for bundle_id in LEAF_IDS
             ],
             "platformApiVersion": "1.7.0",
             "platformRelease": "aos-platform/1.7.0",
             "environment": "dev",
-            "registrySnapshotHash": snapshot_hash,
+            "registrySnapshotHash": snapshot.snapshot_hash,
             "currentInstallationRef": None,
         }
     )
@@ -139,13 +144,14 @@ def _assert_lock(lock: StoredCompositionLock) -> None:
         "removed": [],
         "changed": [],
     }
-    assert lock.payload.contribution_diff.model_dump(mode="json", by_alias=True) == {
-        "baseline": [],
-        "target": [],
-        "added": [],
-        "removed": [],
-        "unchanged": [],
-    }
+    contribution_diff = lock.payload.contribution_diff.model_dump(
+        mode="json", by_alias=True
+    )
+    assert contribution_diff["baseline"] == []
+    assert contribution_diff["removed"] == []
+    assert contribution_diff["unchanged"] == []
+    assert contribution_diff["target"] == contribution_diff["added"]
+    assert len(contribution_diff["target"]) == 16
     assert lock.lock_hash == canonical_sha256(lock.payload.hash_payload_dump())
     assert lock.permission_diff_hash == canonical_sha256(
         lock.payload.permission_diff.model_dump(
@@ -253,7 +259,7 @@ def test_m5_composition_and_installation_complete_real_pg_lifecycle(
 ) -> None:
     with m5_control_runtime(tmp_path / "runtime-bundles") as runtime:
         snapshot = runtime.snapshot_reader.read()
-        request = _three_leaf_request(snapshot.snapshot_hash)
+        request = _three_leaf_request(snapshot)
 
         resolved = runtime.resolve(
             request,

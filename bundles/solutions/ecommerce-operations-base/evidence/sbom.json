@@ -1,1 +1,20 @@
-{"format":"CycloneDX","components":[]}
+{
+  "format": "CycloneDX",
+  "components": [
+    {
+      "type": "data",
+      "name": "ecommerce.operations",
+      "version": "1"
+    },
+    {
+      "type": "data",
+      "name": "w01-order-management",
+      "version": "legacy"
+    },
+    {
+      "type": "data",
+      "name": "w02-product-inventory",
+      "version": "legacy"
+    }
+  ]
+}

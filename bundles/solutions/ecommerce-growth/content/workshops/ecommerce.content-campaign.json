@@ -1,0 +1,48 @@
+{
+  "schema": "aos.workshop-module/v1",
+  "moduleId": "ecommerce.content-campaign",
+  "displayName": "内容与活动工作台",
+  "menuLabel": "内容与活动工作台",
+  "route": "/workshop/content-campaign",
+  "slot": "workshop.primary.ecommerce",
+  "order": 20,
+  "bundleRef": "bundle://aos/solution.ecommerce.growth@1.3.0",
+  "requiredObjects": [
+    "Product",
+    "ProductSku",
+    "CustomerLite",
+    "CampaignRevision",
+    "CalendarEntry",
+    "ContentVariant"
+  ],
+  "requiredCapabilities": [
+    "material.collect",
+    "strategy.plan",
+    "copy.generate",
+    "content.review",
+    "platform.adapt",
+    "performance.review"
+  ],
+  "requiredAipFeatures": [
+    "aip.task-runtime",
+    "aip.production.task-brief",
+    "aip.production.evidence-bundle",
+    "aip.production.eval-contract",
+    "aip.production.artifact-family",
+    "aip.production.impact-preview"
+  ],
+  "permissions": {
+    "roles": [],
+    "markings": [],
+    "dataScopes": ["ecommerce.workshop.read"],
+    "actionTypes": []
+  },
+  "viewRefs": [],
+  "evalPackRefs": ["content/evals/placeholder.json"],
+  "productionContractRefs": [],
+  "responsibilityTemplateRefs": [],
+  "impactCalculatorRefs": [],
+  "legacyAssetRefs": [],
+  "legacyRedirects": ["/s2/content-campaign"],
+  "minimumRuntimeVersion": "1.7.0"
+}

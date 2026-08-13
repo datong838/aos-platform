@@ -248,7 +248,7 @@ def _publish_four_bundles(
         service.validate(
             publisher="aos",
             bundle_id=fixture.bundle_id,
-            version="1.0.0",
+            version=manifest.metadata.version,
             actor="m5-validator",
             roles={"developer"},
             publisher_scopes={"aos"},
@@ -256,7 +256,7 @@ def _publish_four_bundles(
         service.publish(
             publisher="aos",
             bundle_id=fixture.bundle_id,
-            version="1.0.0",
+            version=manifest.metadata.version,
             actor="m5-publisher",
             roles={"asset-publisher"},
             publisher_scopes={"aos"},
