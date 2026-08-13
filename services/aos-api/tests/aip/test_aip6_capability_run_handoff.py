@@ -16,6 +16,7 @@ from aos_api.aip_agent_registry_contracts import (
     HandoffEnvelopeRequest,
     IssueHandoffRequest,
     PublishAgentTemplateRequest,
+    PublishCapabilityRevisionRequest,
     PublishSkillTemplateRequest,
     UpdateAgentInstanceRequest,
     UpdateCapabilityBindingRequest,
@@ -29,6 +30,7 @@ from aos_api.aip_agent_registry_store import (
 )
 from aos_api.aip_agent_run_service import AipAgentRunService
 from aos_api.aip_capability_binding_service import AipCapabilityBindingService
+from aos_api.aip_capability_registry import AipCapabilityRegistry
 from aos_api.aip_contracts import ResourceRef
 from aos_api.aip_handoff_service import AipHandoffService
 from aos_api.aip_skill_registry import AipSkillRegistry
@@ -193,6 +195,31 @@ def _active_instance(ids, key: str):
 
 
 def test_capability_binding_is_secret_ref_only_health_gated_and_scoped(ids):
+    AipCapabilityRegistry().publish(
+        PublishCapabilityRevisionRequest(
+            capability_id="wiki.search",
+            revision=1,
+            display_name="知识检索",
+            lifecycle="published",
+            aliases=[],
+            input_schema_ref=asset("SchemaRevision", "wiki-search-input"),
+            output_schema_ref=asset("SchemaRevision", "wiki-search-output"),
+            risk_level="low",
+            memory_policy_ref=asset("MemoryPolicy", "memory"),
+            handoff_policy_ref=asset("HandoffPolicy", "handoff"),
+            effect_review_schema_ref=asset("SchemaRevision", "effect-review"),
+            license_policy_ref=asset("LicensePolicy", "license"),
+            readiness_policy_ref=asset("ReadinessPolicy", "readiness"),
+            readiness="blocked",
+            readiness_reasons=["provider_unknown"],
+            source_ref=resource(
+                "SolutionPack", "ecommerce", authority="solution-pack"
+            ),
+            source_license="internal-authorized",
+            content_hash=HASH_A,
+        ),
+        actor="pytest",
+    )
     service = AipCapabilityBindingService()
     request = CreateCapabilityBindingRequest(
         binding_id=ids["capability"],
@@ -244,6 +271,31 @@ def test_capability_binding_is_secret_ref_only_health_gated_and_scoped(ids):
         actor="pytest",
     )
     assert active.status == "active" and active.version == 2
+
+
+def test_capability_binding_requires_exact_published_revision(ids):
+    service = AipCapabilityBindingService()
+    request = CreateCapabilityBindingRequest(
+        binding_id=f"missing-{ids['capability']}",
+        binding=CapabilityBindingRequest(
+            capability=asset(
+                "CapabilityRevision", f"missing.{ids['capability']}", content_hash=HASH_C
+            ),
+            secret_ref="vault://aos/qyh/missing-capability",
+            network_policy_revision="network-1",
+            quota_policy_revision="quota-1",
+            timeout_ms=1000,
+            max_concurrency=1,
+        ),
+    )
+    with pytest.raises(AipAgentRegistryNotFound, match="exact capability"):
+        service.create(
+            PRIMARY,
+            request,
+            idempotency_key=f"missing-{ids['capability']}",
+            actor="pytest",
+            occurred_at=NOW,
+        )
 
 
 def test_agent_run_persists_exact_instance_snapshot_and_blocks_start_without_aip7(ids, monkeypatch):

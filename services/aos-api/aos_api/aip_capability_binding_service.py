@@ -43,6 +43,23 @@ class AipCapabilityBindingService(AipAgentRegistryStore):
                 if self._row(conn, scope, request.binding_id):
                     raise AipAgentRegistryConflict("capability binding id already exists")
                 binding = request.binding
+                capability = conn.execute(
+                    """SELECT lifecycle FROM aip_capability_revision
+                       WHERE capability_id=%s AND revision=%s AND content_hash=%s""",
+                    (
+                        binding.capability.asset_id,
+                        binding.capability.revision,
+                        binding.capability.content_hash,
+                    ),
+                ).fetchone()
+                if capability is None:
+                    raise AipAgentRegistryNotFound(
+                        "exact capability revision not found"
+                    )
+                if capability["lifecycle"] != "published":
+                    raise AipAgentRegistryTransitionBlocked(
+                        "only published capability revisions can be bound"
+                    )
                 row = conn.execute(
                     """INSERT INTO aip_capability_binding
                        (org_id,project_id,binding_id,capability_ref,secret_ref,health,
@@ -60,7 +77,11 @@ class AipCapabilityBindingService(AipAgentRegistryStore):
                     "CapabilityBinding", request.binding_id, actor, occurred_at)
                 conn.commit()
                 return self._from_row(scope, row), receipt
-        except (AipAgentRegistryConflict, AipAgentRegistryNotFound):
+        except (
+            AipAgentRegistryConflict,
+            AipAgentRegistryNotFound,
+            AipAgentRegistryTransitionBlocked,
+        ):
             raise
         except Exception as exc:
             raise AipAgentRegistryPersistenceError("capability binding persistence failed") from exc

@@ -90,6 +90,15 @@ def test_capability_binding_accepts_secret_ref_only() -> None:
             max_concurrency=2,
             api_key="plaintext-secret",
         )
+    with pytest.raises(ValidationError, match="CapabilityRevision"):
+        CapabilityBindingRequest(
+            capability=asset("ToolRevision"),
+            secret_ref="vault://aos/qyh/content-api",
+            network_policy_revision="network-1",
+            quota_policy_revision="quota-1",
+            timeout_ms=30000,
+            max_concurrency=2,
+        )
 
 
 def test_handoff_rejects_tenant_payload_and_unallowlisted_context() -> None:

@@ -82,7 +82,13 @@ def test_a6b_scoped_tables_force_rls_and_no_scope_is_empty() -> None:
 
 
 def test_a6b_append_only_facts_have_update_delete_and_truncate_guards() -> None:
-    tables = {"aip_agent_template_revision", "aip_skill_template_revision", "aip_handoff_event"}
+    tables = {
+        "aip_agent_template_revision",
+        "aip_skill_template_revision",
+        "aip_handoff_event",
+        "aip_capability_revision",
+        "aip_capability_alias",
+    }
     with connect() as conn:
         rows = conn.execute(
             """SELECT c.relname,t.tgname FROM pg_trigger t

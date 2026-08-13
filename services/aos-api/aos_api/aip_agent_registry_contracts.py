@@ -39,6 +39,14 @@ class BindingHealth(StrEnum):
     REVOKED = "revoked"
 
 
+class CapabilityReadiness(StrEnum):
+    AVAILABLE = "available"
+    DEGRADED = "degraded"
+    DISABLED = "disabled"
+    BLOCKED = "blocked"
+    UNKNOWN = "unknown"
+
+
 class AgentRunStatus(StrEnum):
     QUEUED = "queued"
     RUNNING = "running"
@@ -95,6 +103,12 @@ class CapabilityBindingRequest(AipContractModel):
         if not cleaned.startswith(("vault://", "secret://", "keychain://")):
             raise ValueError("secret_ref must be an opaque secret reference")
         return cleaned
+
+    @model_validator(mode="after")
+    def _capability_kind(self) -> CapabilityBindingRequest:
+        if self.capability.asset_type != "CapabilityRevision":
+            raise ValueError("capability must reference CapabilityRevision")
+        return self
 
 
 class HandoffEnvelopeRequest(AipContractModel):
@@ -197,6 +211,55 @@ class PublishSkillTemplateRequest(AipContractModel):
 
 
 class SkillTemplateRevision(PublishSkillTemplateRequest):
+    created_by: str
+    created_at: datetime
+
+
+class PublishCapabilityRevisionRequest(AipContractModel):
+    capability_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    display_name: str = Field(min_length=1, max_length=120)
+    lifecycle: TemplateLifecycle
+    parent_ref: VersionedAssetRef | None = None
+    aliases: list[str] = Field(default_factory=list, max_length=64)
+    input_schema_ref: VersionedAssetRef
+    output_schema_ref: VersionedAssetRef
+    risk_level: str = Field(pattern=r"^(low|medium|high|critical)$")
+    required_data_refs: list[VersionedAssetRef] = Field(default_factory=list, max_length=128)
+    required_tool_refs: list[VersionedAssetRef] = Field(default_factory=list, max_length=128)
+    required_capability_refs: list[VersionedAssetRef] = Field(default_factory=list, max_length=128)
+    eval_pack_ref: VersionedAssetRef | None = None
+    memory_policy_ref: VersionedAssetRef
+    handoff_policy_ref: VersionedAssetRef
+    effect_review_schema_ref: VersionedAssetRef
+    license_policy_ref: VersionedAssetRef
+    readiness_policy_ref: VersionedAssetRef
+    readiness: CapabilityReadiness
+    readiness_reasons: list[str] = Field(default_factory=list, max_length=64)
+    source_ref: ResourceRef
+    source_license: str = Field(min_length=1, max_length=200)
+    content_hash: str = Field(pattern=SHA256_PATTERN)
+
+    @field_validator("aliases", "readiness_reasons")
+    @classmethod
+    def _unique_non_blank_strings(cls, values: list[str]) -> list[str]:
+        cleaned = [value.strip() for value in values]
+        if any(not value for value in cleaned) or len(cleaned) != len(set(cleaned)):
+            raise ValueError("aliases and readiness reasons must be unique and non-blank")
+        return cleaned
+
+    @model_validator(mode="after")
+    def _capability_reference_kinds(self) -> PublishCapabilityRevisionRequest:
+        if self.parent_ref and self.parent_ref.asset_type != "CapabilityRevision":
+            raise ValueError("parent_ref must reference CapabilityRevision")
+        if any(ref.asset_type != "CapabilityRevision" for ref in self.required_capability_refs):
+            raise ValueError("required capability refs must reference CapabilityRevision")
+        if self.capability_id in self.aliases:
+            raise ValueError("canonical capability id cannot also be an alias")
+        return self
+
+
+class CapabilityRevision(PublishCapabilityRevisionRequest):
     created_by: str
     created_at: datetime
 
