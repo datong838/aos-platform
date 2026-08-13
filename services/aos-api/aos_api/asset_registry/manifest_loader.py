@@ -370,6 +370,10 @@ class ManifestLoader:
                 ManifestLoader._scan_sensitive_value(payload)
                 if "schema" in payload:
                     module = WorkshopModuleContribution.model_validate(payload)
+                    if Path(relative_path).stem != module.module_id:
+                        raise ManifestInvalidError(
+                            "Workshop module filename must match moduleId"
+                        )
                     ManifestLoader._validate_workshop_module_binding(
                         manifest=manifest,
                         available_paths=available_paths,
