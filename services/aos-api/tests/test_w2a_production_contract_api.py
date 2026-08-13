@@ -63,6 +63,9 @@ def test_brief_api_principal_tenant_idempotency_and_canary(client):
         created=client.post("/v1/aip/production-contracts/task-briefs",headers=headers(key=key),json=payload)
         assert created.status_code==201,created.text
         body=created.json(); assert body["tenant"]=={"orgId":"org-org","projectId":"dev-project"}; assert body["lifecycle"]=="draft"
+        listing=client.get("/v1/aip/production-contracts/task-briefs",headers=headers())
+        assert listing.status_code==200 and any(item["briefId"]==body["briefId"] for item in listing.json()["items"])
+        assert client.get("/v1/aip/production-contracts/task-briefs",headers=headers("dev-org")).json()["count"]==0
         assert client.post("/v1/aip/production-contracts/task-briefs",headers=headers(key=key),json=payload).json()["briefId"]==body["briefId"]
         assert client.get(f"/v1/aip/production-contracts/task-briefs/{body['briefId']}",headers=headers("dev-org")).status_code==404
         frozen=client.post(f"/v1/aip/production-contracts/task-briefs/{body['briefId']}/freeze",headers=headers(key=f"freeze-{uuid.uuid4().hex}"),json={"expectedVersion":1})
@@ -122,6 +125,9 @@ def test_evidence_bundle_api_binds_exact_frozen_brief_and_evidence(client):
         assert response.status_code==201,response.text
         bundle=response.json()
         assert bundle["itemRefs"][0]["resourceId"]==evidence_id
+        listing=client.get("/v1/aip/production-contracts/evidence-bundles",headers=headers())
+        assert listing.status_code==200 and any(item["bundleId"]==bundle["bundleId"] for item in listing.json()["items"])
+        assert client.get("/v1/aip/production-contracts/evidence-bundles",headers=headers("dev-org")).json()["count"]==0
         assert client.post("/v1/aip/production-contracts/evidence-bundles",headers=headers(key=key),json=payload).json()["bundleId"]==bundle["bundleId"]
         assert client.get(f"/v1/aip/production-contracts/evidence-bundles/{bundle['bundleId']}",headers=headers()).status_code==200
         assert client.get(f"/v1/aip/production-contracts/evidence-bundles/{bundle['bundleId']}",headers=headers("dev-org")).status_code==404

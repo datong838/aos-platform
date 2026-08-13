@@ -12,6 +12,7 @@ from aos_api.aip_contracts import ResourceRef, TenantContext
 from aos_api.aip_production_contracts import (
     BriefLifecycle, CreateBriefRequest, CreateEvidenceBundleRequest,
     EvidenceBundleRevision, ExactRevisionRef, ReviseBriefRequest, TaskBriefRevision,
+    EvidenceBundleListResponse, TaskBriefListResponse,
 )
 from aos_api.db import connect as db_connect
 from aos_api.tenant_scope import TenantScope
@@ -116,6 +117,25 @@ class AipProductionContractStore:
         if conn is not None: return read(conn)
         with self._connect_factory(scope) as c: return read(c)
 
+    def list_briefs(self, scope: TenantScope) -> TaskBriefListResponse:
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT revision.*, head.version
+                FROM aip_task_brief_head head
+                JOIN aip_task_brief_revision revision
+                  ON revision.org_id=head.org_id AND revision.project_id=head.project_id
+                 AND revision.brief_id=head.brief_id AND revision.revision=head.current_revision
+                WHERE head.org_id=%s AND head.project_id=%s
+                ORDER BY revision.created_at DESC, revision.brief_id""",
+                scope.key,
+            ).fetchall()
+            items = [self._brief(scope, row, int(row["version"])) for row in rows]
+            return TaskBriefListResponse(
+                tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+                items=items,
+                count=len(items),
+            )
+
     def create_evidence_bundle(self, scope: TenantScope, actor: str, key: str, body: CreateEvidenceBundleRequest) -> EvidenceBundleRevision:
         payload=body.model_dump(mode="json",by_alias=True); request_hash=canonical_hash(payload)
         with self._connect_factory(scope) as conn:
@@ -142,6 +162,21 @@ class AipProductionContractStore:
             return self._bundle(scope,row)
         if conn is not None:return read(conn)
         with self._connect_factory(scope) as c:return read(c)
+
+    def list_evidence_bundles(self, scope: TenantScope) -> EvidenceBundleListResponse:
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT * FROM aip_evidence_bundle_revision
+                WHERE org_id=%s AND project_id=%s
+                ORDER BY created_at DESC, bundle_id, revision DESC""",
+                scope.key,
+            ).fetchall()
+            items = [self._bundle(scope, row) for row in rows]
+            return EvidenceBundleListResponse(
+                tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+                items=items,
+                count=len(items),
+            )
 
     @staticmethod
     def _json(value:Any)->str:return json.dumps(value,ensure_ascii=False,separators=(",",":"),default=str)

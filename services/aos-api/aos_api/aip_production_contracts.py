@@ -66,6 +66,12 @@ class TaskBriefRevision(AipContractModel):
     created_at: datetime
 
 
+class TaskBriefListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[TaskBriefRevision]
+    count: int = Field(ge=0)
+
+
 class CreateEvidenceBundleRequest(AipContractModel):
     brief_ref: ExactRevisionRef
     subject_refs: list[ResourceRef] = Field(default_factory=list)
@@ -106,3 +112,9 @@ class EvidenceBundleRevision(AipContractModel):
     lifecycle: BriefLifecycle
     created_by: str
     created_at: datetime
+
+
+class EvidenceBundleListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[EvidenceBundleRevision]
+    count: int = Field(ge=0)

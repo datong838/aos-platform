@@ -57,6 +57,7 @@ const LogicCanvasPage = lazify(() => import("./LogicCanvasPage"), "LogicCanvasPa
 const AgentsPage = lazify(() => import("./CanonicalAgentsPage"), "CanonicalAgentsPage");
 const CanonicalAgentRegistryPage = lazify(() => import("./CanonicalAgentRegistryPage"), "CanonicalAgentRegistryPage");
 const CanonicalCapabilityPage = lazify(() => import("../CanonicalCapabilityPage"), "CanonicalCapabilityPage");
+const ProductionContractsPage = lazify(() => import("./ProductionContractsPage"), "ProductionContractsPage");
 const AgentImportPage = lazify(() => import("./AgentImportPage"), "AgentImportPage");
 const CapabilityImportPage = lazify(() => import("./CapabilityImportPage"), "CapabilityImportPage");
 const WorkshopCreatePage = lazify(() => import("./WorkshopCreatePage"), "WorkshopCreatePage");
@@ -140,6 +141,7 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "aip/agent-registry", Component: CanonicalAgentRegistryPage },
   { path: "aip/agents", Component: AgentsPage },
   { path: "aip/capabilities", Component: CanonicalCapabilityPage },
+  { path: "aip/production-contracts", Component: ProductionContractsPage },
   { path: "aip/agent-import", Component: AgentImportPage },
   { path: "aip/capability-import", Component: CapabilityImportPage },
   { path: "workshop/create", Component: WorkshopCreatePage },

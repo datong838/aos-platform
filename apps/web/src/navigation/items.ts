@@ -216,6 +216,14 @@ export const NAV_ITEMS: NavItem[] = [
   },
   { subgroup: "智能体" },
   {
+    id: "aip-production-contracts",
+    path: "/aip/production-contracts",
+    label: "生产契约",
+    icon: "table",
+    status: "live",
+    crumbs: ["AIP", "生产契约"],
+  },
+  {
     id: "aip-capabilities",
     path: "/aip/capabilities",
     label: "智能体插件",

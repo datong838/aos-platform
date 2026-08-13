@@ -11,8 +11,9 @@ from aos_api.aip_production_contract_store import (
     ProductionContractIdempotencyConflict, ProductionContractNotFound,
 )
 from aos_api.aip_production_contracts import (
-    CreateBriefRequest, CreateEvidenceBundleRequest, EvidenceBundleRevision,
-    ReviseBriefRequest, TaskBriefRevision,
+    CreateBriefRequest, CreateEvidenceBundleRequest, EvidenceBundleListResponse,
+    EvidenceBundleRevision, ReviseBriefRequest, TaskBriefListResponse,
+    TaskBriefRevision,
 )
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
@@ -54,6 +55,12 @@ def create_brief(body: CreateBriefRequest, idempotency_key: str=Header(alias="Id
     except ProductionContractError as exc:raise _map(exc) from exc
 
 
+@router.get("/task-briefs", response_model=TaskBriefListResponse)
+def list_briefs(principal:Principal=Depends(require_principal), store:AipProductionContractStore=Depends(get_store)):
+    try:return store.list_briefs(_scope(principal))
+    except ProductionContractError as exc:raise _map(exc) from exc
+
+
 @router.get("/task-briefs/{brief_id}", response_model=TaskBriefRevision)
 def get_brief(brief_id:str, revision:int|None=Query(default=None,ge=1), principal:Principal=Depends(require_principal), store:AipProductionContractStore=Depends(get_store)):
     try:return store.get_brief(_scope(principal),brief_id,revision)
@@ -75,6 +82,12 @@ def freeze_brief(brief_id:str,body:FreezeBriefRequest,idempotency_key:str=Header
 @router.post("/evidence-bundles",response_model=EvidenceBundleRevision,status_code=status.HTTP_201_CREATED)
 def create_bundle(body:CreateEvidenceBundleRequest,idempotency_key:str=Header(alias="Idempotency-Key"),principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
     try:return store.create_evidence_bundle(_scope(principal),principal.subject,_key(idempotency_key),body)
+    except ProductionContractError as exc:raise _map(exc) from exc
+
+
+@router.get("/evidence-bundles",response_model=EvidenceBundleListResponse)
+def list_bundles(principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
+    try:return store.list_evidence_bundles(_scope(principal))
     except ProductionContractError as exc:raise _map(exc) from exc
 
 
