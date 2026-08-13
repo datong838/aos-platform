@@ -51,6 +51,12 @@ class ExactRevisionRef(AipContractModel):
     content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
+class ContractBlocker(AipContractModel):
+    code: str = Field(min_length=1, max_length=120)
+    message: str = Field(min_length=1, max_length=1000)
+    resource_ref: ExactRevisionRef | None = None
+
+
 class AssigneeRef(AipContractModel):
     kind: AssigneeKind
     resource_id: str = Field(min_length=1, max_length=200)
@@ -133,6 +139,54 @@ class CreateResponsibilityPlanRequest(AipContractModel):
         if self.template_ref.resource_type != "ResponsibilityTemplateRevision":
             raise ValueError("templateRef must reference ResponsibilityTemplateRevision")
         return self
+
+
+class ReviseEvalContractRequest(CreateEvalContractRequest):
+    expected_version: int = Field(ge=1)
+
+
+class EvalContractRevision(CreateEvalContractRequest):
+    tenant: TenantContext
+    contract_id: str
+    revision: int = Field(ge=1)
+    version: int = Field(ge=1)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    lifecycle: BriefLifecycle
+    readiness: ContractReadiness
+    blockers: list[ContractBlocker]
+    created_by: str
+    created_at: datetime
+
+
+class EvalContractListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[EvalContractRevision]
+    count: int = Field(ge=0)
+
+
+class ReviseResponsibilityPlanRequest(CreateResponsibilityPlanRequest):
+    expected_version: int = Field(ge=1)
+
+
+class ResponsibilityPlanRevision(CreateResponsibilityPlanRequest):
+    tenant: TenantContext
+    plan_id: str
+    revision: int = Field(ge=1)
+    version: int = Field(ge=1)
+    coverage: Coverage
+    uncovered_slots: list[str]
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    lifecycle: BriefLifecycle
+    readiness: ContractReadiness
+    blockers: list[ContractBlocker]
+    created_by: str
+    created_at: datetime
+
+
+class ResponsibilityPlanListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[ResponsibilityPlanRevision]
+    count: int = Field(ge=0)
 
 
 class CreateBriefRequest(AipContractModel):

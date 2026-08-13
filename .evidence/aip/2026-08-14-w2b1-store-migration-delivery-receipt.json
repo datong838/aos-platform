@@ -1,0 +1,65 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "aip-w2b1-store-migration-20260814",
+  "branch": "w1-aip",
+  "baselineCommit": "7f540a3203abdbbdb29d9d15d38695b01415777a",
+  "scope": {
+    "worktree": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip",
+    "tenantRule": "org-org/dev-project only; dev-org/dev-project test fixtures and negative canary only",
+    "realBusinessWrites": false,
+    "disposableDatabaseOnly": true
+  },
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/aip_production_contracts.py",
+      "beforeSha256": "1dfa7ec9b6376f7f49147d68d202b34941188792f1f717c5a4792ad88aedbbcc",
+      "afterSha256": "0487b026cac71fc2067b3a609dfb1c87bd9926e919982f691129067ec7718d4a"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "beforeSha256": "21cfc015135c4936a3945eeeabcd6f8465c1d39f1897d25c8b3309cadd0b97e1",
+      "afterSha256": "1534800a87a21e8a56df68dbad9678f967f624cc2d9c2c11261bb82e228caa7f"
+    },
+    {
+      "path": "services/aos-api/alembic/versions/w2_002_eval_responsibility.py",
+      "beforeSha256": null,
+      "afterSha256": "d9a8a6b3fef79e5d4e41a512d88917e8d8bb09f3d6a9aec4e27d203be9ce7026"
+    },
+    {
+      "path": "services/aos-api/tests/test_w2b_production_contracts.py",
+      "beforeSha256": "ab2339f1772dd7b8326c4449cf2fcfb7020f31c0217b9cc5d6fb999413896649",
+      "afterSha256": "ab2339f1772dd7b8326c4449cf2fcfb7020f31c0217b9cc5d6fb999413896649"
+    },
+    {
+      "path": "services/aos-api/tests/test_w2b_production_contract_store.py",
+      "beforeSha256": null,
+      "afterSha256": "79aece26fb6735ce0e3e81520083475965df68ae97991e6fbdc988eec1c07fe9"
+    },
+    {
+      "path": "services/aos-api/tests/test_w2b_migration.py",
+      "beforeSha256": null,
+      "afterSha256": "aefe1b5eefbb440abf2fe26a13a61099eb38accf093cd0434d10973fa25806e1"
+    }
+  ],
+  "documentation": {
+    "path": "docs/palantier/20_tech/电商平台接入/AIP通用能力实施方案/24-AIP-W2-B-EvalContract与ResponsibilityPlan实施清单.md",
+    "afterSha256": "e15d48c426d69fffeb1edf429c9992856d9dec73cfb2282dd2aa1fefbec11f68",
+    "gitCommittedInThisWave": false,
+    "reason": "shared docs are disk-written by the AIP owner and committed only during serial m1 integration"
+  },
+  "verification": {
+    "migrationRoundtrip": "1 passed",
+    "w2bAndW2aRegression": "17 passed",
+    "compileall": "GREEN",
+    "alembicHeads": "w2_002 (head)",
+    "diffCheck": "GREEN",
+    "ruff": "UNAVAILABLE: executable not installed in locked dev environment"
+  },
+  "reviewFindings": [
+    "ResponsibilityTemplateRevision runtime authority does not exist; default resolver fails closed with RESPONSIBILITY_TEMPLATE_AUTHORITY_UNAVAILABLE.",
+    "Revision content hash uniqueness was removed because append-only freeze legitimately retains the same payload hash across draft and frozen revisions.",
+    "Revision tables have FORCE RLS and database triggers blocking UPDATE, DELETE, and TRUNCATE."
+  ],
+  "status": "W2B1_GREEN",
+  "next": "W2-B2 Canonical API and error mapping"
+}
