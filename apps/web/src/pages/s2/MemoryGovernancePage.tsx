@@ -10,16 +10,18 @@ import {
   type KnowledgePipelineRun,
   type KnowledgePipelineSchedule,
   type KnowledgeQueryResult,
+  type KnowledgeReadiness,
   type MemoryAuthorityItem,
   type MemoryCandidate,
   type MemoryCandidateEvent,
 } from "../../api/aipMemory";
 import { PageChrome } from "../../components/PageChrome";
 
-type View = "candidates" | "memories" | "query" | "pipelines";
+type View = "candidates" | "memories" | "query" | "pipelines" | "readiness";
 type LoadState = "loading" | "loaded" | "error";
 
 const panel = { border: "1px solid var(--aos-border)", background: "var(--aos-panel)", borderRadius: 6, padding: 18 } as const;
+const blockerText = { overflowWrap: "anywhere" } as const;
 const statusLabels: Record<string, string> = {
   pending: "待治理", quarantined: "已隔离", rejected: "已拒绝", approved: "已批准", promoted: "已晋升",
   active: "生效中", stale: "已过期", revoked: "已撤销", expired: "已失效",
@@ -72,6 +74,9 @@ export function MemoryGovernancePage() {
   const [selectedReceipt, setSelectedReceipt] = useState<KnowledgePipelineReceipt | null>(null);
   const [selectedCheckpoint, setSelectedCheckpoint] = useState<KnowledgePipelineCheckpoint | null>(null);
   const [selectedAlerts, setSelectedAlerts] = useState<KnowledgePipelineAlert[]>([]);
+  const [readiness, setReadiness] = useState<KnowledgeReadiness | null>(null);
+  const [readinessState, setReadinessState] = useState<LoadState>("loading");
+  const [readinessError, setReadinessError] = useState("");
 
   async function reload() {
     setLoadState("loading");
@@ -113,7 +118,13 @@ export function MemoryGovernancePage() {
     }
   }
 
-  useEffect(() => { void reload(); void reloadPipelines(); }, []);
+  async function reloadReadiness() {
+    setReadinessState("loading"); setReadinessError("");
+    try { setReadiness(await aipMemorySdk.knowledgeReadiness()); setReadinessState("loaded"); }
+    catch (caught) { setReadiness(null); setReadinessError(String((caught as Error).message || caught)); setReadinessState("error"); }
+  }
+
+  useEffect(() => { void reload(); void reloadPipelines(); void reloadReadiness(); }, []);
 
   async function transitionSchedule(schedule: KnowledgePipelineSchedule) {
     const toStatus = schedule.status === "active" ? "paused" : schedule.status === "paused" ? "active" : "paused";
@@ -203,12 +214,12 @@ export function MemoryGovernancePage() {
   return (
     <PageChrome title="Memory Governance" lede="Candidate → 审批证据 → 正式 Memory → 带 Citation 的 Knowledge Query。所有状态来自 PostgreSQL 权威链，不回填示例知识。">
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
-        {(["candidates", "memories", "query", "pipelines"] as const).map((item) => (
+        {(["candidates", "memories", "query", "pipelines", "readiness"] as const).map((item) => (
           <button key={item} type="button" className={`btn ${view === item ? "primary" : ""}`} onClick={() => setView(item)} data-testid={`memory-tab-${item}`}>
-            {item === "candidates" ? `知识候选（${candidates.length}）` : item === "memories" ? `正式 Memory（${memories.length}）` : item === "query" ? "Knowledge Query" : `知识管道（${pipelineSchedules.length}）`}
+            {item === "candidates" ? `知识候选（${candidates.length}）` : item === "memories" ? `正式 Memory（${memories.length}）` : item === "query" ? "Knowledge Query" : item === "pipelines" ? `知识管道（${pipelineSchedules.length}）` : "冷启动与检索"}
           </button>
         ))}
-        <button type="button" className="btn" onClick={() => { void reload(); void reloadPipelines(); }} disabled={loadState === "loading" || pipelineLoadState === "loading"}>{loadState === "loading" || pipelineLoadState === "loading" ? "读取中…" : "刷新权威状态"}</button>
+        <button type="button" className="btn" onClick={() => { void reload(); void reloadPipelines(); void reloadReadiness(); }} disabled={loadState === "loading" || pipelineLoadState === "loading" || readinessState === "loading"}>{loadState === "loading" || pipelineLoadState === "loading" || readinessState === "loading" ? "读取中…" : "刷新权威状态"}</button>
         <Link to="/ontology/wiki" className="btn-nav">活知识 Wiki →</Link>
       </div>
 
@@ -334,6 +345,28 @@ export function MemoryGovernancePage() {
               <dt>Alert</dt><dd>{selectedAlerts.length ? selectedAlerts.map((alert) => `${alert.severity}:${alert.code}`).join("、") : "无"}</dd>
             </dl>
           </div>}
+        </>}
+      </section>}
+
+      {view === "readiness" && <section data-testid="memory-readiness" style={panel}>
+        <h2 style={{ marginTop: 0, fontSize: 17 }}>知识冷启动与检索就绪度</h2>
+        <p className="muted">只读展示当前组织与工作区的真实权威状态；缺少 package/Eval registry 时明确显示权威缺口，不以 0 或示例数据代替。</p>
+        {readinessState === "loading" && <div className="callout info">正在读取知识就绪度…</div>}
+        {readinessState === "error" && <div data-testid="readiness-error" className="callout warning">知识就绪度读取失败：{readinessError}</div>}
+        {readiness && <>
+          <div className="callout info">租户：{readiness.tenant.orgId} / {readiness.tenant.projectId} · 观测时间：{new Date(readiness.observedAt).toLocaleString()}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 12, marginTop: 14 }}>
+            <article style={panel}><strong>知识包安装权威</strong><p>{readiness.package.status === "available" ? `${readiness.package.count} 个` : "权威映射尚未建立"}</p><span className="muted" style={blockerText}>{readiness.package.blocker || "无阻断"}</span></article>
+            <article style={panel}><strong>知识 Source</strong><p>{readiness.sources.length} 组来源策略</p><span className="muted" style={blockerText}>{readiness.sourceBlockers.join("、") || "已读取真实来源"}</span></article>
+            <article style={panel}><strong>检索 Reference</strong><p>{readiness.search.referenceCount} 条</p><span className="muted">provider：{readiness.search.providerConfigured ? "已装配" : "未装配"}</span></article>
+            <article style={panel}><strong>检索 Eval</strong><p>{readiness.eval.status === "available" ? `${readiness.eval.count} 条 Gold` : "GoldSet 权威尚未建立"}</p><span className="muted" style={blockerText}>{readiness.eval.blocker || "无阻断"}</span></article>
+          </div>
+          <h3 style={{ fontSize: 16, marginTop: 22 }}>检索通道</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(180px, 1fr))", gap: 12 }}>
+            {readiness.search.capabilities.map((item) => <article key={item.lane} style={panel}><strong>{item.lane}</strong><p><span className="tag">{memoryStatusLabel(item.status)}</span></p><span className="muted" style={blockerText}>{item.provider ? `${item.provider} · ${item.providerRevision}` : item.reasonCode}</span></article>)}
+          </div>
+          {!!readiness.sources.length && <><h3 style={{ fontSize: 16, marginTop: 22 }}>来源与使用政策</h3>{readiness.sources.map((source) => <article key={`${source.provider}:${source.providerVersion}:${source.licenseId}:${source.usagePolicy}`} style={{ borderTop: "1px solid var(--aos-border)", padding: "10px 0" }}><strong>{source.provider} · {source.providerVersion}</strong><div>license：{source.licenseId} · usage：{source.usagePolicy}</div><span className="muted">revision {source.revisionCount} · stale {source.staleCount}</span></article>)}</>}
+          {!!readiness.search.blockers.length && <div data-testid="readiness-blockers" className="callout warning" style={{ marginTop: 14 }}>当前阻断：{readiness.search.blockers.join("、")}</div>}
         </>}
       </section>}
     </PageChrome>

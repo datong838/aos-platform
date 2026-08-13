@@ -8,6 +8,7 @@ const sdk = vi.hoisted(() => ({
   candidates: vi.fn(), memories: vi.fn(), candidateEvents: vi.fn(), query: vi.fn(),
   pipelinePolicies: vi.fn(), pipelineSchedules: vi.fn(), pipelineRuns: vi.fn(),
   transitionPipelineSchedule: vi.fn(), pipelineReceipt: vi.fn(), pipelineCheckpoint: vi.fn(), pipelineAlerts: vi.fn(),
+  knowledgeReadiness: vi.fn(),
 }));
 vi.mock("../../api/aipMemory", () => ({ aipMemorySdk: sdk }));
 
@@ -19,6 +20,7 @@ describe("MemoryGovernancePage", () => {
     host = document.createElement("div"); document.body.appendChild(host);
     Object.values(sdk).forEach((mock) => mock.mockReset());
     sdk.pipelinePolicies.mockResolvedValue([]); sdk.pipelineSchedules.mockResolvedValue([]); sdk.pipelineRuns.mockResolvedValue([]);
+    sdk.knowledgeReadiness.mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, package: { status: "authority_unavailable", blocker: "knowledge_package_installation_authority_unavailable" }, sources: [], sourceBlockers: ["knowledge_source_missing"], search: { referenceCount: 0, providerConfigured: false, capabilities: [{ lane: "fulltext", status: "unbuilt", reasonCode: "capability_not_registered", version: 1, observedAt: "2026-08-13T00:00:00Z" }, { lane: "vector", status: "degraded", reasonCode: "degraded_vector_unavailable", version: 1, observedAt: "2026-08-13T00:00:00Z" }, { lane: "rerank", status: "unbuilt", reasonCode: "capability_not_registered", version: 1, observedAt: "2026-08-13T00:00:00Z" }], blockers: ["trusted_search_provider_unavailable", "search_reference_missing"] }, eval: { status: "authority_unavailable", blocker: "gold_set_registry_authority_unavailable" }, observedAt: "2026-08-13T00:00:00Z" });
   });
   afterEach(() => { host.remove(); });
 
@@ -73,6 +75,20 @@ describe("MemoryGovernancePage", () => {
     const action = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "尝试启用") as HTMLButtonElement;
     await act(async () => action.click());
     expect(sdk.transitionPipelineSchedule).toHaveBeenCalledWith("seed-1", expect.objectContaining({ expectedVersion: 3, fromStatus: "paused", toStatus: "active" }));
+    await act(async () => root.unmount());
+  });
+
+  it("冷启动与检索视图展示真实租户空态和权威缺口", async () => {
+    sdk.candidates.mockResolvedValue([]); sdk.memories.mockResolvedValue([]);
+    const root = createRoot(host);
+    await act(async () => root.render(<MemoryRouter><MemoryGovernancePage /></MemoryRouter>));
+    await act(async () => undefined);
+    await act(async () => (host.querySelector('[data-testid="memory-tab-readiness"]') as HTMLButtonElement).click());
+    expect(host.textContent).toContain("org-org / dev-project");
+    expect(host.textContent).toContain("权威映射尚未建立");
+    expect(host.textContent).toContain("0 条");
+    expect(host.textContent).toContain("trusted_search_provider_unavailable");
+    expect(host.textContent).not.toContain("美妆知识已安装");
     await act(async () => root.unmount());
   });
 });

@@ -204,6 +204,20 @@ export type KnowledgePipelineAlert = {
   alertHash: string;
   createdAt: string;
 };
+export type KnowledgeReadiness = {
+  tenant: TenantContext;
+  package: { status: "available" | "authority_unavailable"; count?: number; blocker?: string };
+  sources: { provider: string; providerVersion: string; licenseId: string; usagePolicy: string; revisionCount: number; staleCount: number }[];
+  sourceBlockers: string[];
+  search: {
+    referenceCount: number;
+    providerConfigured: boolean;
+    capabilities: { lane: "fulltext" | "vector" | "rerank"; status: "unbuilt" | "ready" | "degraded" | "blocked"; provider?: string; providerRevision?: string; reasonCode?: string; version: number; observedAt: string }[];
+    blockers: string[];
+  };
+  eval: { status: "available" | "authority_unavailable"; count?: number; blocker?: string };
+  observedAt: string;
+};
 
 function record(value: unknown, label: string): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new TypeError(`${label} 响应格式无效`);
@@ -226,6 +240,10 @@ function nonNegativeInteger(value: unknown, label: string): number {
 }
 function numberInRange(value: unknown, label: string): number {
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 1) throw new TypeError(`${label} 无效`);
+  return value;
+}
+function booleanValue(value: unknown, label: string): boolean {
+  if (typeof value !== "boolean") throw new TypeError(`${label} 无效`);
   return value;
 }
 function strings(value: unknown, label: string, requireValue = false): string[] {
@@ -382,6 +400,42 @@ export function parseKnowledgeQueryResult(value: unknown): KnowledgeQueryResult 
   citations.forEach((citation, index) => { if (JSON.stringify(citation) !== JSON.stringify(chunks[index].citation)) throw new TypeError("citation/chunk 引用不一致"); });
   if (status === "blocked" && (chunks.length || !reasons.length)) throw new TypeError("blocked 结果无效");
   return { status, citations, chunks, blockedReasons: reasons, assembledTokens: tokens };
+}
+
+export function parseKnowledgeReadiness(value: unknown): KnowledgeReadiness {
+  const v = record(value, "KnowledgeReadiness");
+  const parseAvailability = (raw: unknown, label: string) => {
+    const item = record(raw, label);
+    const status = enumValue(item.status, ["available", "authority_unavailable"] as const, `${label}.status`);
+    const count = item.count == null ? undefined : nonNegativeInteger(item.count, `${label}.count`);
+    const blocker = optionalText(item.blocker, `${label}.blocker`);
+    if (status === "authority_unavailable" && (count !== undefined || !blocker)) throw new TypeError(`${label} authority_unavailable 结构无效`);
+    if (status === "available" && count === undefined) throw new TypeError(`${label} available 缺 count`);
+    return { status, count, blocker };
+  };
+  if (!Array.isArray(v.sources)) throw new TypeError("sources 无效");
+  const search = record(v.search, "search");
+  if (!Array.isArray(search.capabilities)) throw new TypeError("search.capabilities 无效");
+  const capabilities = search.capabilities.map((raw, index) => {
+    const item = record(raw, `capability[${index}]`);
+    const status = enumValue(item.status, ["unbuilt", "ready", "degraded", "blocked"] as const, `capability[${index}].status`);
+    const provider = optionalText(item.provider, `capability[${index}].provider`);
+    const providerRevision = optionalText(item.providerRevision, `capability[${index}].providerRevision`);
+    const reasonCode = optionalText(item.reasonCode, `capability[${index}].reasonCode`);
+    if (status === "ready" && (!provider || !providerRevision || reasonCode)) throw new TypeError("ready capability 结构无效");
+    if (status !== "ready" && !reasonCode) throw new TypeError("non-ready capability 缺 reasonCode");
+    return { lane: enumValue(item.lane, ["fulltext", "vector", "rerank"] as const, `capability[${index}].lane`), status, provider, providerRevision, reasonCode, version: integer(item.version, `capability[${index}].version`), observedAt: text(item.observedAt, `capability[${index}].observedAt`) };
+  });
+  if (capabilities.length !== 3 || new Set(capabilities.map((item) => item.lane)).size !== 3) throw new TypeError("检索 capability 必须包含唯一三 lane");
+  return {
+    tenant: parseTenant(v.tenant, "readiness.tenant"),
+    package: parseAvailability(v.package, "package"),
+    sources: v.sources.map((raw, index) => { const item = record(raw, `source[${index}]`); return { provider: text(item.provider, `source[${index}].provider`), providerVersion: text(item.providerVersion, `source[${index}].providerVersion`), licenseId: text(item.licenseId, `source[${index}].licenseId`), usagePolicy: text(item.usagePolicy, `source[${index}].usagePolicy`), revisionCount: integer(item.revisionCount, `source[${index}].revisionCount`), staleCount: nonNegativeInteger(item.staleCount, `source[${index}].staleCount`) }; }),
+    sourceBlockers: strings(v.sourceBlockers, "sourceBlockers"),
+    search: { referenceCount: nonNegativeInteger(search.referenceCount, "search.referenceCount"), providerConfigured: booleanValue(search.providerConfigured, "search.providerConfigured"), capabilities, blockers: strings(search.blockers, "search.blockers") },
+    eval: parseAvailability(v.eval, "eval"),
+    observedAt: text(v.observedAt, "observedAt"),
+  };
 }
 
 export function parseKnowledgePipelinePolicy(value: unknown): KnowledgePipelinePolicy {

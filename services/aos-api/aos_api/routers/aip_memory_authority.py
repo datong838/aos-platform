@@ -56,6 +56,11 @@ from aos_api.aip_memory_pipeline_store import (
     AipMemoryPipelineTransitionBlocked,
 )
 from aos_api.aip_memory_retrieval import AipMemoryRetrieval
+from aos_api.aip_memory_readiness import (
+    AipMemoryReadinessError,
+    AipMemoryReadinessService,
+    KnowledgeReadiness,
+)
 from aos_api.aip_memory_search import AipMemoryKnowledgeSearch
 from aos_api.aip_memory_store import (
     AipMemoryConflict,
@@ -75,6 +80,7 @@ router = APIRouter(
 )
 _STORE = AipMemoryStore()
 _PIPELINE_STORE = AipMemoryPipelineStore()
+_READINESS_SERVICE = AipMemoryReadinessService()
 _PIPELINE_SERVICE = AipMemoryPipelineService(
     pipeline_store=_PIPELINE_STORE,
     memory_store=_STORE,
@@ -145,6 +151,10 @@ def get_aip_memory_search_service() -> AipMemoryKnowledgeSearch | None:
     return None
 
 
+def get_aip_memory_readiness_service() -> AipMemoryReadinessService:
+    return _READINESS_SERVICE
+
+
 def get_aip_memory_pipeline_store() -> AipMemoryPipelineStore:
     return _PIPELINE_STORE
 
@@ -167,6 +177,12 @@ def _require_role(principal: Principal, allowed: set[str]) -> None:
 
 
 def _map_error(exc: Exception) -> ApiError:
+    if isinstance(exc, AipMemoryReadinessError):
+        return ApiError(
+            code=exc.code,
+            message="knowledge readiness authority is unavailable",
+            status_code=503,
+        )
     if isinstance(exc, AipMemoryPipelineNotFound):
         return ApiError(code=exc.code, message="knowledge pipeline record not found", status_code=404)
     if isinstance(exc, AipMemoryPipelineConflict):
@@ -394,6 +410,20 @@ def search_knowledge(
         authorized_markings=principal.markings,
         required_applicability=[f"skill:{body.skill_ref.resource_id}"],
     )
+
+
+@router.get("/knowledge-readiness", response_model=KnowledgeReadiness)
+def get_knowledge_readiness(
+    principal: Principal = Depends(require_principal),
+    readiness: AipMemoryReadinessService = Depends(get_aip_memory_readiness_service),
+    search_service: AipMemoryKnowledgeSearch | None = Depends(get_aip_memory_search_service),
+) -> KnowledgeReadiness:
+    try:
+        return readiness.read(
+            _scope(principal), search_provider_configured=search_service is not None
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
 
 
 @router.get("/pipelines/policies", response_model=list[KnowledgePipelinePolicy])

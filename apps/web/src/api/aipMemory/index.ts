@@ -1,6 +1,7 @@
 export { AipMemorySdk, aipMemorySdk } from "./client";
 export type {
   KnowledgeQueryResult,
+  KnowledgeReadiness,
   MemoryAuthorityItem,
   MemoryCandidate,
   MemoryCandidateEvent,

@@ -45,6 +45,7 @@ export const AIP_OPERATIONS = {
   listMemoryItems: { method: "GET", path: "/v1/aip/memory-authority/memories", mutation: false },
   getMemoryItem: { method: "GET", path: "/v1/aip/memory-authority/memories/{memory_item_id}", mutation: false },
   queryMemoryKnowledge: { method: "POST", path: "/v1/aip/memory-authority/knowledge-queries", mutation: false },
+  getMemoryKnowledgeReadiness: { method: "GET", path: "/v1/aip/memory-authority/knowledge-readiness", mutation: false },
   listMemoryPipelinePolicies: { method: "GET", path: "/v1/aip/memory-authority/pipelines/policies", mutation: false },
   listMemoryPipelineSchedules: { method: "GET", path: "/v1/aip/memory-authority/pipelines/schedules", mutation: false },
   createMemoryPipelineSchedule: { method: "POST", path: "/v1/aip/memory-authority/pipelines/schedules", mutation: true },

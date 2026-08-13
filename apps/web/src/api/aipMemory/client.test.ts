@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AipClient } from "../aip/client";
 import { AipMemorySdk } from "./client";
-import { parseKnowledgePipelinePolicies, parseKnowledgeQueryResult, parseMemoryAuthorityItem, parseMemoryCandidate } from "./contracts";
+import { parseKnowledgePipelinePolicies, parseKnowledgeQueryResult, parseKnowledgeReadiness, parseMemoryAuthorityItem, parseMemoryCandidate } from "./contracts";
 
 const tenant = { orgId: "org-org", projectId: "dev-project" };
 const ref = (resourceType: string, resourceId: string, revision?: string) => ({ resourceType, resourceId, ...(revision ? { revision } : {}), authority: "postgresql" });
@@ -79,5 +79,15 @@ describe("AipMemorySdk", () => {
     expect(() => parseKnowledgePipelinePolicies([{ ...policy, pipelineKind: "future_pipeline" }])).toThrow("未知");
     expect(() => parseMemoryCandidate({ ...candidate, request: { ...request, subject: { resourceType: "Product", resourceId: "p1" } } })).toThrow("authority");
     expect(() => parseMemoryCandidate({ ...candidate, request: { ...request, payload: { ...artifact("payload-1"), contentHash: "bad" } } })).toThrow("sha256");
+  });
+
+  it("知识就绪度通过唯一 client 严格读取并保留权威缺口", async () => {
+    const readiness = { tenant, package: { status: "authority_unavailable", count: null, blocker: "knowledge_package_installation_authority_unavailable" }, sources: [], sourceBlockers: ["knowledge_source_missing"], search: { referenceCount: 0, providerConfigured: false, capabilities: [{ lane: "fulltext", status: "unbuilt", provider: null, providerRevision: null, reasonCode: "capability_not_registered", version: 1, observedAt: "2026-08-13T00:00:00Z" }, { lane: "vector", status: "degraded", provider: null, providerRevision: null, reasonCode: "degraded_vector_unavailable", version: 1, observedAt: "2026-08-13T00:00:00Z" }, { lane: "rerank", status: "unbuilt", provider: null, providerRevision: null, reasonCode: "capability_not_registered", version: 1, observedAt: "2026-08-13T00:00:00Z" }], blockers: ["trusted_search_provider_unavailable", "search_reference_missing"] }, eval: { status: "authority_unavailable", count: null, blocker: "gold_set_registry_authority_unavailable" }, observedAt: "2026-08-13T00:00:00Z" };
+    const request = vi.fn().mockResolvedValue(readiness);
+    const sdk = new AipMemorySdk({ request } as unknown as AipClient);
+    await expect(sdk.knowledgeReadiness()).resolves.toMatchObject({ tenant, search: { referenceCount: 0 } });
+    expect(request).toHaveBeenCalledWith("getMemoryKnowledgeReadiness");
+    expect(() => parseKnowledgeReadiness({ ...readiness, search: { ...readiness.search, capabilities: readiness.search.capabilities.slice(0, 2) } })).toThrow("三 lane");
+    expect(() => parseKnowledgeReadiness({ ...readiness, package: { status: "authority_unavailable", count: 0, blocker: "x" } })).toThrow("结构无效");
   });
 });

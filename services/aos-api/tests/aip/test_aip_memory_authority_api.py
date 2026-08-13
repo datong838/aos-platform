@@ -18,9 +18,16 @@ from aos_api.aip_memory_contracts import (
     RuntimeMemoryLayer,
     SubmitMemoryCandidateRequest,
 )
+from aos_api.aip_memory_readiness import (
+    KnowledgeAuthorityAvailability,
+    KnowledgeReadiness,
+    KnowledgeSearchReadiness,
+)
+from aos_api.aip_memory_search_index import SearchCapability
 from aos_api.auth import Principal, require_principal
 from aos_api.routers.aip_memory_authority import (
     get_aip_memory_governance_service,
+    get_aip_memory_readiness_service,
     get_aip_memory_retrieval_service,
     get_aip_memory_search_service,
     get_aip_memory_store,
@@ -337,3 +344,37 @@ def test_knowledge_search_rejects_tenant_injection(memory_api) -> None:
         },
     )
     assert response.status_code == 400
+
+
+def test_knowledge_readiness_uses_principal_scope(memory_api) -> None:
+    client, _store, _retrieval, _search = memory_api
+
+    class FakeReadiness:
+        def __init__(self) -> None: self.call = None
+        def read(self, scope, **kwargs):
+            self.call = (scope, kwargs)
+            return KnowledgeReadiness(
+                tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+                package=KnowledgeAuthorityAvailability(status="authority_unavailable", blocker="knowledge_package_installation_authority_unavailable"),
+                sources=[], source_blockers=["knowledge_source_missing"],
+                search=KnowledgeSearchReadiness(
+                    reference_count=0, provider_configured=True,
+                    capabilities=[
+                        SearchCapability(lane="fulltext", status="unbuilt", reason_code="capability_not_registered", version=1, observed_at=NOW),
+                        SearchCapability(lane="vector", status="degraded", reason_code="degraded_vector_unavailable", version=1, observed_at=NOW),
+                        SearchCapability(lane="rerank", status="unbuilt", reason_code="capability_not_registered", version=1, observed_at=NOW),
+                    ], blockers=["search_reference_missing"],
+                ),
+                eval=KnowledgeAuthorityAvailability(status="authority_unavailable", blocker="gold_set_registry_authority_unavailable"),
+                observed_at=NOW,
+            )
+
+    readiness = FakeReadiness()
+    client.app.dependency_overrides[get_aip_memory_readiness_service] = lambda: readiness
+    try:
+        response = client.get("/v1/aip/memory-authority/knowledge-readiness")
+    finally:
+        client.app.dependency_overrides.pop(get_aip_memory_readiness_service, None)
+    assert response.status_code == 200
+    assert response.json()["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
+    assert readiness.call == (SCOPE, {"search_provider_configured": True})
