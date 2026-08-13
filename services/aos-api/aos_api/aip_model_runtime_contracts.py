@@ -261,8 +261,8 @@ class ModelRouteRevision(AipContractModel):
                 raise ValueError("weighted route candidate weights must total 100")
         elif any(candidate.weight != 100 for candidate in self.candidates):
             raise ValueError("non-weighted route candidates must use weight 100")
-        if self.runtime_policy_ref.asset_type != "PolicyRevision":
-            raise ValueError("runtime_policy_ref must reference PolicyRevision")
+        if self.runtime_policy_ref.asset_type != "RuntimePolicyRevision":
+            raise ValueError("runtime_policy_ref must reference RuntimePolicyRevision")
         if self.eval_gate_ref.asset_type != "EvalGateDecision":
             raise ValueError("eval_gate_ref must reference EvalGateDecision")
         return self
@@ -290,8 +290,8 @@ class ModelRouteResolution(AipContractModel):
     def _readiness_is_honest(self) -> ModelRouteResolution:
         if self.route.asset_type != "ModelRouteRevision":
             raise ValueError("route must reference ModelRouteRevision")
-        if self.policy.asset_type != "PolicyRevision":
-            raise ValueError("policy must reference PolicyRevision")
+        if self.policy.asset_type != "RuntimePolicyRevision":
+            raise ValueError("policy must reference RuntimePolicyRevision")
         selected = self.selected_model is not None and self.selected_provider is not None
         if self.readiness is ModelRuntimeReadiness.READY:
             if not selected or self.blocker_codes:

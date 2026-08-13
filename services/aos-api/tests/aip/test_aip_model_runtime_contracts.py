@@ -68,7 +68,7 @@ def route(*, strategy: RouteStrategy = RouteStrategy.FAILOVER) -> ModelRouteRevi
             ModelRouteCandidate(model=ref("RegisteredModelRevision", "model-1"))
         ],
         strategy=strategy,
-        runtime_policy_ref=ref("PolicyRevision", "policy-default"),
+        runtime_policy_ref=ref("RuntimePolicyRevision", "policy-default"),
         eval_gate_ref=ref("EvalGateDecision", "eval-gate-1"),
         lifecycle=ModelRuntimeLifecycle.ACTIVE,
         created_by="reviewer",
@@ -142,7 +142,7 @@ def test_runtime_policy_never_fallbacks_on_security_denials() -> None:
 
 
 def test_route_requires_exact_unique_candidates_and_eval_policy_refs() -> None:
-    assert route().runtime_policy_ref.asset_type == "PolicyRevision"
+    assert route().runtime_policy_ref.asset_type == "RuntimePolicyRevision"
     duplicate = ModelRouteCandidate(
         model=ref("RegisteredModelRevision", "model-1")
     )
@@ -150,7 +150,7 @@ def test_route_requires_exact_unique_candidates_and_eval_policy_refs() -> None:
         ModelRouteRevision(
             **{**route().model_dump(), "candidates": [duplicate, duplicate]}
         )
-    with pytest.raises(ValidationError, match="PolicyRevision"):
+    with pytest.raises(ValidationError, match="RuntimePolicyRevision"):
         ModelRouteRevision(
             **{
                 **route().model_dump(),
@@ -181,7 +181,7 @@ def test_resolution_cannot_claim_ready_without_exact_selection() -> None:
     blocked = ModelRouteResolution(
         tenant=TENANT,
         route=ref("ModelRouteRevision", "route-copy"),
-        policy=ref("PolicyRevision", "policy-default"),
+        policy=ref("RuntimePolicyRevision", "policy-default"),
         readiness=ModelRuntimeReadiness.BLOCKED,
         blocker_codes=["provider_unavailable"],
         resolved_at=NOW,
@@ -191,7 +191,7 @@ def test_resolution_cannot_claim_ready_without_exact_selection() -> None:
         ModelRouteResolution(
             tenant=TENANT,
             route=ref("ModelRouteRevision", "route-copy"),
-            policy=ref("PolicyRevision", "policy-default"),
+            policy=ref("RuntimePolicyRevision", "policy-default"),
             readiness=ModelRuntimeReadiness.READY,
             resolved_at=NOW,
         )
