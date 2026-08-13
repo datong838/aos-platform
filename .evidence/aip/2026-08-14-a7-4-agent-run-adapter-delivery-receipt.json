@@ -1,0 +1,18 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "aip-a7-4-agent-run-adapter-20260814",
+  "branch": "w1-aip",
+  "baselineCommit": "0481e4e47bec491bc8ccb21d3bd4994acffe3fd0",
+  "files": [
+    {"path":"services/aos-api/aos_api/aip_agent_registry_contracts.py","beforeSha256":"b136524310dbb1c0bdff70b4449f7c0ef8f7b5b833785ee95b41fb325453e3df","afterSha256":"b34c1b9214cfe9e6b6b9b0c988d9c9d347a5207a1c726df1f40875be81d8dd1c"},
+    {"path":"services/aos-api/aos_api/aip_agent_run_service.py","beforeSha256":"404d298b34918461d19bc994ed9e9634825acf6b5d37d7ac34828c33e7ff1e8f","afterSha256":"d029acae36ff93bf336808c7f5030a8087fedfefba426f7801a4509633cd5f23"},
+    {"path":"services/aos-api/aos_api/aip_llm_adapter.py","beforeSha256":"288d0bd4d97e502c51d797fe6a830e08011ba48260b60ee3c2484fd59fe8820a","afterSha256":"9e90bb242ad24373cc8e6cba17da706261c2a4df277733a533ed5157c422d6c6"},
+    {"path":"services/aos-api/tests/aip/test_aip_agent_registry_contracts.py","beforeSha256":"2be2b22ad367403d0648ceddab47aa42ca8116972ecea3e6569b4d0a2b3ee667","afterSha256":"53a6d0aa2bb442a3a4145b0a6fa89d16871bef7648b67aad07a0177ce27cd6ff"},
+    {"path":"services/aos-api/tests/aip/test_aip6_capability_run_handoff.py","beforeSha256":"eda75b4f1f250fc9152b5aaa25824089e9b4eef3e667dea5580289dd7fafd895","afterSha256":"c98466d3ce850fdfd786bb189cab6a9594d33016beec43553f368d7e3edc7bb9"},
+    {"path":"services/aos-api/tests/aip/test_aip7_agent_run_transition.py","beforeSha256":null,"afterSha256":"5133818b394c54484728007aa87ba6abaefbd31f4eeb464c20541854118ccd51"},
+    {"path":"services/aos-api/tests/aip/test_aip7_llm_adapter.py","beforeSha256":null,"afterSha256":"12a9ac69f261a819d479f824ce39186496449182b516942a1245fc975f80fe7a"}
+  ],
+  "verification": {"aip1Aip6Aip7Adjacent":"46 passed","compileall":"GREEN","diffCheck":"GREEN","realRuntime":"BLOCKED until A7-5 capacity authority and provider invoker exist"},
+  "status":"A7_4_CODE_CONTROL_GREEN_PROVIDER_CAPACITY_BLOCKED",
+  "next":"A7-5 capacity reservation/usage/cost authority"
+}

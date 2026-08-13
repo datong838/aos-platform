@@ -159,11 +159,12 @@ class AgentRunRequest(AipContractModel):
             "skill": "SkillTemplate",
             "logic": "LogicRevision",
             "model_route": "ModelRouteRevision",
-            "policy": "PolicyRevision",
         }
         for field_name, asset_type in expected.items():
             if getattr(self, field_name).asset_type != asset_type:
                 raise ValueError(f"{field_name} must reference {asset_type}")
+        if self.policy.asset_type not in {"PolicyRevision", "RuntimePolicyRevision"}:
+            raise ValueError("policy must reference PolicyRevision or RuntimePolicyRevision")
         return self
 
 
