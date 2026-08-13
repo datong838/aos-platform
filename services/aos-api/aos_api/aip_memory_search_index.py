@@ -110,6 +110,15 @@ class SearchCapability(BaseModel):
         return self
 
 
+class SearchReferenceHit(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    memory_item_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    score: float = Field(ge=0.0)
+
+
 class AipMemorySearchIndexError(RuntimeError):
     pass
 
@@ -273,6 +282,55 @@ class AipMemorySearchIndex:
             ).fetchall()
         return [self._capability(row) for row in rows]
 
+    def search_references(
+        self,
+        scope: TenantScope,
+        query: str,
+        *,
+        authorized_markings: list[str],
+        required_applicability: list[str],
+        time_cutoff: datetime,
+        limit: int,
+    ) -> list[SearchReferenceHit]:
+        cleaned = " ".join(query.split())
+        if not cleaned or not authorized_markings or not required_applicability:
+            return []
+        if limit < 1 or limit > 50:
+            raise ValueError("search reference limit must be 1..50")
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT memory_item_id,revision,content_hash,
+                          ts_rank_cd(to_tsvector('simple',search_text),
+                                     plainto_tsquery('simple',%s)) AS score
+                   FROM aip_memory_search_reference
+                   WHERE org_id=%s AND project_id=%s
+                     AND to_tsvector('simple',search_text)
+                         @@ plainto_tsquery('simple',%s)
+                     AND markings <@ %s::jsonb
+                     AND applicability @> %s::jsonb
+                     AND freshness_expires_at > %s
+                   ORDER BY score DESC,memory_item_id,revision
+                   LIMIT %s""",
+                (
+                    cleaned,
+                    *scope.key,
+                    cleaned,
+                    self._json(authorized_markings),
+                    self._json(required_applicability),
+                    time_cutoff,
+                    limit,
+                ),
+            ).fetchall()
+        return [
+            SearchReferenceHit(
+                memory_item_id=row["memory_item_id"],
+                revision=int(row["revision"]),
+                content_hash=row["content_hash"],
+                score=float(row["score"]),
+            )
+            for row in rows
+        ]
+
     @staticmethod
     def _matches_authority(item: SearchReferenceDraft, row: Any) -> bool:
         subject = ResourceRef.model_validate(row["subject_ref"])
@@ -301,3 +359,15 @@ class AipMemorySearchIndex:
     @staticmethod
     def _json(value: Any) -> str:
         return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+__all__ = [
+    "AipMemorySearchIndex",
+    "AipMemorySearchIndexConflict",
+    "AipMemorySearchIndexError",
+    "SearchCapability",
+    "SearchCapabilityStatus",
+    "SearchLane",
+    "SearchReferenceDraft",
+    "SearchReferenceHit",
+]

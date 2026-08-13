@@ -297,6 +297,73 @@ class KnowledgeQueryResult(AipContractModel):
         return self
 
 
+class KnowledgeSearch(AipContractModel):
+    query: str = Field(min_length=2, max_length=500)
+    task_id: str = Field(min_length=1, max_length=200)
+    skill_ref: ResourceRef
+    time_cutoff: datetime
+    markings: list[str] = Field(min_length=1, max_length=32)
+    limit: int = Field(default=10, ge=1, le=50)
+    max_tokens: int = Field(default=2048, ge=64, le=32768)
+
+    @field_validator("query")
+    @classmethod
+    def _clean_query(cls, value: str) -> str:
+        cleaned = " ".join(value.split())
+        if len(cleaned) < 2:
+            raise ValueError("knowledge search query is too short")
+        return cleaned
+
+
+class KnowledgeSearchLane(AipContractModel):
+    lane: str = Field(pattern=r"^(fulltext|vector|rerank)$")
+    status: str = Field(pattern=r"^(unbuilt|ready|degraded|blocked)$")
+    reason_code: str | None = Field(default=None, min_length=1, max_length=200)
+    provider: str | None = Field(default=None, min_length=1, max_length=200)
+    provider_revision: str | None = Field(default=None, min_length=1, max_length=120)
+
+    @model_validator(mode="after")
+    def _lane_shape(self) -> KnowledgeSearchLane:
+        if self.status == "ready":
+            if not self.provider or not self.provider_revision or self.reason_code:
+                raise ValueError("ready search lane requires provider/revision and no reason")
+        elif not self.reason_code:
+            raise ValueError("non-ready search lane requires reason")
+        return self
+
+
+class KnowledgeSearchMatch(AipContractModel):
+    citation: KnowledgeCitation
+    chunk: KnowledgeContextChunk
+    score: float = Field(ge=0.0)
+
+    @model_validator(mode="after")
+    def _citation_is_exact(self) -> KnowledgeSearchMatch:
+        if self.chunk.citation != self.citation:
+            raise ValueError("search match chunk must use the same citation")
+        return self
+
+
+class KnowledgeSearchResult(AipContractModel):
+    matches: list[KnowledgeSearchMatch]
+    lanes: list[KnowledgeSearchLane] = Field(min_length=3, max_length=3)
+    status: str = Field(pattern=r"^(complete|degraded|blocked)$")
+    blocked_reasons: list[str] = Field(default_factory=list)
+    assembled_tokens: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _result_shape(self) -> KnowledgeSearchResult:
+        if [lane.lane for lane in self.lanes] != ["fulltext", "vector", "rerank"]:
+            raise ValueError("search lanes must be ordered fulltext/vector/rerank")
+        if self.status == "blocked" and (self.matches or not self.blocked_reasons):
+            raise ValueError("blocked search result must be empty with reasons")
+        if self.status != "blocked" and not self.matches:
+            raise ValueError("non-blocked search result requires matches")
+        if self.assembled_tokens != sum(match.chunk.token_count for match in self.matches):
+            raise ValueError("assembled token count must equal search chunks")
+        return self
+
+
 __all__ = [
     "ArtifactGovernanceInspection",
     "ArtifactPiiStatus",
@@ -305,6 +372,10 @@ __all__ = [
     "KnowledgeContextChunk",
     "KnowledgeQuery",
     "KnowledgeQueryResult",
+    "KnowledgeSearch",
+    "KnowledgeSearchLane",
+    "KnowledgeSearchMatch",
+    "KnowledgeSearchResult",
     "KnowledgeScope",
     "KnowledgeSourceKind",
     "KnowledgeSourceRef",

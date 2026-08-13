@@ -7,6 +7,8 @@ import pytest
 from aos_api.aip_contracts import ArtifactRef, ResourceRef, TenantContext
 from aos_api.aip_memory_contracts import (
     KnowledgeQueryResult,
+    KnowledgeSearchLane,
+    KnowledgeSearchResult,
     KnowledgeScope,
     KnowledgeSourceRef,
     MemoryCandidate,
@@ -20,6 +22,7 @@ from aos_api.auth import Principal, require_principal
 from aos_api.routers.aip_memory_authority import (
     get_aip_memory_governance_service,
     get_aip_memory_retrieval_service,
+    get_aip_memory_search_service,
     get_aip_memory_store,
 )
 from aos_api.tenant_scope import TenantScope
@@ -153,8 +156,33 @@ def memory_api(client):
                 blocked_reasons=["knowledge_not_found"], assembled_tokens=0,
             )
 
+    class FakeSearch:
+        def __init__(self) -> None:
+            self.call = None
+
+        def search(self, scope, body, **kwargs):
+            self.call = (scope, body, kwargs)
+            return KnowledgeSearchResult(
+                matches=[],
+                lanes=[
+                    KnowledgeSearchLane(
+                        lane="fulltext", status="unbuilt", reason_code="fulltext_index_unbuilt"
+                    ),
+                    KnowledgeSearchLane(
+                        lane="vector", status="degraded", reason_code="degraded_vector_unavailable"
+                    ),
+                    KnowledgeSearchLane(
+                        lane="rerank", status="unbuilt", reason_code="rerank_unconfigured"
+                    ),
+                ],
+                status="blocked",
+                blocked_reasons=["fulltext_index_unbuilt"],
+                assembled_tokens=0,
+            )
+
     store = FakeStore()
     retrieval = FakeRetrieval()
+    search = FakeSearch()
     client.app.dependency_overrides[require_principal] = lambda: Principal(
         subject="user:qyh",
         org_id=SCOPE.org_id,
@@ -164,11 +192,13 @@ def memory_api(client):
     )
     client.app.dependency_overrides[get_aip_memory_store] = lambda: store
     client.app.dependency_overrides[get_aip_memory_retrieval_service] = lambda: retrieval
-    yield client, store, retrieval
+    client.app.dependency_overrides[get_aip_memory_search_service] = lambda: search
+    yield client, store, retrieval, search
     for dependency in (
         require_principal,
         get_aip_memory_store,
         get_aip_memory_retrieval_service,
+        get_aip_memory_search_service,
         get_aip_memory_governance_service,
     ):
         client.app.dependency_overrides.pop(dependency, None)
@@ -191,7 +221,7 @@ def query_body() -> dict:
 
 
 def test_read_api_uses_authenticated_tenant_scope(memory_api) -> None:
-    client, store, _retrieval = memory_api
+    client, store, _retrieval, _search = memory_api
     candidates = client.get("/v1/aip/memory-authority/candidates")
     memories = client.get("/v1/aip/memory-authority/memories")
     assert candidates.status_code == 200
@@ -202,7 +232,7 @@ def test_read_api_uses_authenticated_tenant_scope(memory_api) -> None:
 
 
 def test_knowledge_query_uses_principal_markings_and_derived_skill(memory_api) -> None:
-    client, _store, retrieval = memory_api
+    client, _store, retrieval, _search = memory_api
     response = client.post(
         "/v1/aip/memory-authority/knowledge-queries", json=query_body()
     )
@@ -216,7 +246,7 @@ def test_knowledge_query_uses_principal_markings_and_derived_skill(memory_api) -
 
 
 def test_request_cannot_inject_tenant_fields(memory_api) -> None:
-    client, _store, _retrieval = memory_api
+    client, _store, _retrieval, _search = memory_api
     response = client.post(
         "/v1/aip/memory-authority/knowledge-queries",
         json={**query_body(), "orgId": "dev-org", "projectId": "other"},
@@ -226,7 +256,7 @@ def test_request_cannot_inject_tenant_fields(memory_api) -> None:
 
 
 def test_role_check_precedes_unavailable_governance_provider(memory_api) -> None:
-    client, _store, _retrieval = memory_api
+    client, _store, _retrieval, _search = memory_api
     client.app.dependency_overrides[require_principal] = lambda: Principal(
         subject="reader",
         org_id=SCOPE.org_id,
@@ -257,10 +287,53 @@ def test_role_check_precedes_unavailable_governance_provider(memory_api) -> None
 
 
 def test_trusted_provider_absence_is_explicit_503(memory_api) -> None:
-    client, _store, _retrieval = memory_api
+    client, _store, _retrieval, _search = memory_api
     client.app.dependency_overrides.pop(get_aip_memory_retrieval_service, None)
     response = client.post(
         "/v1/aip/memory-authority/knowledge-queries", json=query_body()
     )
     assert response.status_code == 503
     assert response.json()["code"] == "AIP_MEMORY_RETRIEVAL_UNAVAILABLE"
+
+
+def test_knowledge_search_uses_principal_scope_and_derived_skill(memory_api) -> None:
+    client, _store, _retrieval, search = memory_api
+    response = client.post(
+        "/v1/aip/memory-authority/knowledge-searches",
+        json={
+            "query": "美妆 成分安全",
+            "taskId": "task-1",
+            "skillRef": resource("aip.skill", "content").model_dump(
+                mode="json", by_alias=True
+            ),
+            "timeCutoff": NOW.isoformat(),
+            "markings": ["internal"],
+            "limit": 10,
+            "maxTokens": 256,
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "blocked"
+    assert search.call[0] == SCOPE
+    assert search.call[2] == {
+        "authorized_markings": ["public", "internal"],
+        "required_applicability": ["skill:content"],
+    }
+
+
+def test_knowledge_search_rejects_tenant_injection(memory_api) -> None:
+    client, _store, _retrieval, _search = memory_api
+    response = client.post(
+        "/v1/aip/memory-authority/knowledge-searches",
+        json={
+            "query": "美妆 成分安全",
+            "taskId": "task-1",
+            "skillRef": resource("aip.skill", "content").model_dump(
+                mode="json", by_alias=True
+            ),
+            "timeCutoff": NOW.isoformat(),
+            "markings": ["internal"],
+            "orgId": "dev-org",
+        },
+    )
+    assert response.status_code == 400

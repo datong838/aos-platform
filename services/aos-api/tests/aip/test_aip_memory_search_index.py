@@ -20,6 +20,9 @@ from aos_api.aip_memory_search_index import (
     SearchCapability,
     SearchReferenceDraft,
 )
+from aos_api.aip_memory_contracts import KnowledgeSearch
+from aos_api.aip_memory_retrieval import ResolvedKnowledgePayload
+from aos_api.aip_memory_search import AipMemoryKnowledgeSearch
 from aos_api.aip_memory_store import AipMemoryStore
 from aos_api.db import connect
 from aos_api.tenant_scope import TenantScope
@@ -31,6 +34,20 @@ NOW = datetime(2026, 8, 13, 6, tzinfo=UTC)
 HASH_A = "a" * 64
 HASH_B = "b" * 64
 HASH_C = "c" * 64
+
+
+@pytest.fixture(autouse=True)
+def clean_search_projections() -> None:
+    with connect() as conn:
+        conn.execute(
+            "DELETE FROM aip_memory_search_reference WHERE org_id IN (%s,%s)",
+            (PRIMARY.org_id, CANARY.org_id),
+        )
+        conn.execute(
+            "DELETE FROM aip_memory_search_capability WHERE org_id IN (%s,%s)",
+            (PRIMARY.org_id, CANARY.org_id),
+        )
+        conn.commit()
 
 
 def resource(kind: str, identifier: str) -> ResourceRef:
@@ -262,3 +279,114 @@ def test_capabilities_are_tenant_scoped_and_cas_guarded() -> None:
             ),
             expected_version=1,
         )
+
+
+def search_request(**changes) -> KnowledgeSearch:
+    values = {
+        "query": "美妆 成分安全",
+        "task_id": "search-task",
+        "skill_ref": resource("aip.skill", "content"),
+        "time_cutoff": NOW + timedelta(days=1),
+        "markings": ["internal"],
+        "limit": 10,
+        "max_tokens": 256,
+    }
+    values.update(changes)
+    return KnowledgeSearch(**values)
+
+
+def test_search_empty_capability_is_blocked_before_payload(promoted_memory) -> None:
+    calls = []
+    result = AipMemoryKnowledgeSearch(
+        payload_resolver=lambda *_args: calls.append("payload")
+    ).search(
+        PRIMARY,
+        search_request(),
+        authorized_markings=["internal"],
+        required_applicability=["vertical:ecommerce"],
+    )
+    assert result.status == "blocked"
+    assert result.blocked_reasons == [
+        "fulltext_index_unbuilt",
+        "degraded_vector_unavailable",
+        "rerank_unconfigured",
+    ]
+    assert calls == []
+
+
+def test_fulltext_search_rechecks_authority_and_binds_citation(promoted_memory) -> None:
+    index = AipMemorySearchIndex()
+    index.replace_references(PRIMARY, [draft(promoted_memory)], indexed_at=NOW)
+    index.set_capability(
+        PRIMARY,
+        SearchCapability(
+            lane="fulltext",
+            status="ready",
+            provider="postgresql_fulltext",
+            provider_revision="simple-v1",
+            version=1,
+            observed_at=NOW,
+        ),
+        expected_version=0,
+    )
+    revision = promoted_memory["revision"]
+    resolved = ResolvedKnowledgePayload(
+        artifact=revision.payload,
+        content="美妆成分安全知识",
+        token_count=8,
+    )
+    result = AipMemoryKnowledgeSearch(
+        payload_resolver=lambda _scope, _artifact: resolved,
+        index=index,
+    ).search(
+        PRIMARY,
+        search_request(),
+        authorized_markings=["internal"],
+        required_applicability=["vertical:ecommerce"],
+    )
+    assert result.status == "degraded"
+    assert len(result.matches) == 1
+    assert result.matches[0].citation == result.matches[0].chunk.citation
+    assert result.matches[0].citation.content_hash == revision.content_hash
+    assert result.blocked_reasons == [
+        "degraded_vector_unavailable",
+        "rerank_unconfigured",
+    ]
+
+
+def test_search_revoked_authority_never_resolves_payload(promoted_memory) -> None:
+    index = AipMemorySearchIndex()
+    index.replace_references(PRIMARY, [draft(promoted_memory)], indexed_at=NOW)
+    index.set_capability(
+        PRIMARY,
+        SearchCapability(
+            lane="fulltext",
+            status="ready",
+            provider="postgresql_fulltext",
+            provider_revision="simple-v1",
+            version=1,
+            observed_at=NOW,
+        ),
+        expected_version=0,
+    )
+    item = promoted_memory["item"]
+    with connect(PRIMARY) as conn:
+        conn.execute(
+            """UPDATE aip_memory_item SET status='revoked',version=version+1
+               WHERE org_id=%s AND project_id=%s AND memory_item_id=%s""",
+            (*PRIMARY.key, item.memory_item_id),
+        )
+        conn.commit()
+    calls = []
+    result = AipMemoryKnowledgeSearch(
+        payload_resolver=lambda *_args: calls.append("payload"),
+        index=index,
+    ).search(
+        PRIMARY,
+        search_request(),
+        authorized_markings=["internal"],
+        required_applicability=["vertical:ecommerce"],
+    )
+    assert result.status == "blocked"
+    assert "memory_revoked" in result.blocked_reasons
+    assert calls == []

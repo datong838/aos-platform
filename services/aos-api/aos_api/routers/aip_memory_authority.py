@@ -14,6 +14,8 @@ from aos_api.aip_memory_contracts import (
     GovernanceApprovalRef,
     KnowledgeQuery,
     KnowledgeQueryResult,
+    KnowledgeSearch,
+    KnowledgeSearchResult,
     MemoryCandidate,
     MemoryCandidateEvent,
     MemoryCandidateStatus,
@@ -54,6 +56,7 @@ from aos_api.aip_memory_pipeline_store import (
     AipMemoryPipelineTransitionBlocked,
 )
 from aos_api.aip_memory_retrieval import AipMemoryRetrieval
+from aos_api.aip_memory_search import AipMemoryKnowledgeSearch
 from aos_api.aip_memory_store import (
     AipMemoryConflict,
     AipMemoryNotFound,
@@ -135,6 +138,10 @@ def get_aip_memory_governance_service() -> AipMemoryGovernanceService | None:
 
 
 def get_aip_memory_retrieval_service() -> AipMemoryRetrieval | None:
+    return None
+
+
+def get_aip_memory_search_service() -> AipMemoryKnowledgeSearch | None:
     return None
 
 
@@ -358,6 +365,30 @@ def query_knowledge(
             status_code=503,
         )
     return service.query(
+        _scope(principal),
+        body,
+        authorized_markings=principal.markings,
+        required_applicability=[f"skill:{body.skill_ref.resource_id}"],
+    )
+
+
+@router.post("/knowledge-searches", response_model=KnowledgeSearchResult)
+def search_knowledge(
+    body: KnowledgeSearch,
+    principal: Principal = Depends(require_principal),
+    service: AipMemoryKnowledgeSearch | None = Depends(get_aip_memory_search_service),
+) -> KnowledgeSearchResult:
+    _require_role(
+        principal,
+        {"admin", "reviewer", "executor", "aip_executor", "developer"},
+    )
+    if service is None:
+        raise ApiError(
+            code="AIP_MEMORY_SEARCH_UNAVAILABLE",
+            message="trusted memory search providers are unavailable",
+            status_code=503,
+        )
+    return service.search(
         _scope(principal),
         body,
         authorized_markings=principal.markings,
