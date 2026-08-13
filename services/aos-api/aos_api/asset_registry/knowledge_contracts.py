@@ -10,6 +10,7 @@ from urllib.parse import urlsplit
 
 from pydantic import Field, field_validator, model_validator
 
+from aos_api.aip_contracts import ResourceRef
 from aos_api.asset_registry.contracts import (
     BUNDLE_ID_PATTERN,
     CAPABILITY_PATTERN,
@@ -95,6 +96,8 @@ class KnowledgePackageEntry(StrictContract):
     source_id: str = Field(
         alias="sourceId", min_length=1, max_length=160, pattern=CAPABILITY_PATTERN
     )
+    subject: ResourceRef
+    confidence: float = Field(ge=0.0, le=1.0)
     markings: list[str] = Field(min_length=1, max_length=32)
     applicability: list[str] = Field(min_length=1, max_length=64)
     owner_roles: list[str] = Field(alias="ownerRoles", min_length=1, max_length=32)
@@ -154,6 +157,12 @@ class KnowledgePackageManifest(StrictContract):
         if len(payload_paths) != len(set(payload_paths)):
             raise ValueError("knowledge payload paths must be unique")
         return self
+
+    def entry_by_id(self, entry_id: str) -> KnowledgePackageEntry:
+        matches = [entry for entry in self.entries if entry.entry_id == entry_id]
+        if len(matches) != 1:
+            raise ValueError("knowledge package entry must resolve exactly once")
+        return matches[0]
 
     def readiness_blockers(self, *, now: datetime) -> tuple[str, ...]:
         """Return stable fail-closed reasons without changing bundle authority."""

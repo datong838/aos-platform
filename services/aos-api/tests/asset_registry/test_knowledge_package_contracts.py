@@ -53,6 +53,13 @@ def _package() -> dict:
                 "payloadPath": "content/knowledge/entries/ingredient.example.json",
                 "payloadHash": HASH_B,
                 "sourceId": "nmpa.inventory",
+                "subject": {
+                    "resourceType": "knowledge.subject",
+                    "resourceId": "ingredient.example",
+                    "revision": "1",
+                    "authority": "vertical-pack",
+                },
+                "confidence": 0.92,
                 "markings": ["public"],
                 "applicability": ["vertical.ecommerce.beauty"],
                 "ownerRoles": ["shopping_advisor", "content_officer"],

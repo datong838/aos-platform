@@ -130,6 +130,8 @@
         "payloadPath",
         "payloadHash",
         "sourceId",
+        "subject",
+        "confidence",
         "markings",
         "applicability",
         "ownerRoles"
@@ -152,6 +154,14 @@
         "sourceId": {
           "$ref": "#/$defs/capabilityId"
         },
+        "subject": {
+          "$ref": "#/$defs/resourceRef"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
         "markings": {
           "$ref": "#/$defs/scopeList"
         },
@@ -171,6 +181,17 @@
       "items": {
         "type": "string",
         "minLength": 1
+      }
+    },
+    "resourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resourceType", "resourceId", "revision", "authority"],
+      "properties": {
+        "resourceType": {"type": "string", "minLength": 1, "maxLength": 120},
+        "resourceId": {"type": "string", "minLength": 1, "maxLength": 240},
+        "revision": {"type": "string", "minLength": 1, "maxLength": 120},
+        "authority": {"type": "string", "minLength": 1, "maxLength": 120}
       }
     },
     "rollback": {
