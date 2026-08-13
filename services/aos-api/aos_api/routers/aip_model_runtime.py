@@ -1,10 +1,12 @@
 """AIP-7 canonical exact model runtime API."""
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, Header, Query, status
 
 from aos_api.aip_model_runtime_contracts import (
-    ModelRouteResolution, ModelRouteRevision, ProviderHealthObservation,
+    ModelRouteResolution, ModelRouteRevision, ModelRuntimeOverview, ProviderHealthObservation,
     ProviderInstanceRevision, RegisteredModelRevision, RuntimePolicyRevision,
 )
 from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
@@ -100,5 +102,27 @@ def get_route(route_id: str, revision: int | None = Query(default=None, ge=1), p
 def resolve_route(route_id: str, principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
     try:
         return AipModelRuntimeResolver(store).resolve(_scope(principal), route_id)
+    except ModelRuntimeStoreError as exc:
+        raise _map(exc) from exc
+
+
+@router.get("/overview", response_model=ModelRuntimeOverview)
+def get_overview(principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
+    scope = _scope(principal)
+    try:
+        providers = store.list_current_assets(scope, "provider_instance")
+        models = store.list_current_assets(scope, "registered_model")
+        policies = store.list_current_assets(scope, "runtime_policy")
+        routes = store.list_current_assets(scope, "model_route")
+        prices = store.list_current_assets(scope, "model_price_snapshot")
+        eval_refs = [ref for item in [*models, *routes] for ref in item.dependency_refs if ref.asset_type == "EvalGateDecision"]
+        resolutions = [AipModelRuntimeResolver(store).resolve(scope, route.ref.asset_id) for route in routes]
+        return ModelRuntimeOverview(
+            tenant={"orgId": scope.org_id, "projectId": scope.project_id}, providers=providers,
+            models=models, routes=routes, policies=policies, priceSnapshots=prices,
+            evalGates=store.list_eval_gates(scope, eval_refs),
+            capacityPools=store.list_capacity_pools(scope), resolutions=resolutions,
+            generatedAt=datetime.now(UTC),
+        )
     except ModelRuntimeStoreError as exc:
         raise _map(exc) from exc

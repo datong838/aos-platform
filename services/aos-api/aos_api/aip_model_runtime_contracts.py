@@ -335,3 +335,45 @@ class ModelRouteResolution(AipContractModel):
         if self.selected_price_snapshot and self.selected_price_snapshot.asset_type != "ModelPriceSnapshotRevision":
             raise ValueError("selected_price_snapshot must reference ModelPriceSnapshotRevision")
         return self
+
+
+class ModelRuntimeAssetSummary(AipContractModel):
+    """Secret-free current-head projection for the AIP-7 control plane."""
+
+    ref: VersionedAssetRef
+    lifecycle: ModelRuntimeLifecycle
+    dependency_refs: list[VersionedAssetRef] = Field(default_factory=list, max_length=32)
+
+
+class ModelRuntimeEvalGateSummary(AipContractModel):
+    ref: VersionedAssetRef
+    status: str = Field(pattern=r"^(passed|failed|blocked|unknown)$")
+
+
+class ModelRuntimeCapacityPoolSummary(AipContractModel):
+    pool_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    route_ref: VersionedAssetRef
+    model_ref: VersionedAssetRef
+    provider_ref: VersionedAssetRef
+    max_concurrency: int = Field(ge=1)
+    max_token_units: int = Field(ge=1)
+    token_unit_per_reservation: int = Field(ge=1)
+    lease_seconds: int = Field(ge=1, le=86_400)
+    active_reservations: int = Field(ge=0)
+    reserved_token_units: int = Field(ge=0)
+    lifecycle: ModelRuntimeLifecycle
+
+
+class ModelRuntimeOverview(AipContractModel):
+    tenant: TenantContext
+    providers: list[ModelRuntimeAssetSummary]
+    models: list[ModelRuntimeAssetSummary]
+    routes: list[ModelRuntimeAssetSummary]
+    policies: list[ModelRuntimeAssetSummary]
+    price_snapshots: list[ModelRuntimeAssetSummary]
+    eval_gates: list[ModelRuntimeEvalGateSummary]
+    capacity_pools: list[ModelRuntimeCapacityPoolSummary]
+    resolutions: list[ModelRouteResolution]
+    generated_at: datetime
