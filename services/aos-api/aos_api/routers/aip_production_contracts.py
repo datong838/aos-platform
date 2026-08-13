@@ -12,8 +12,11 @@ from aos_api.aip_production_contract_store import (
 )
 from aos_api.aip_production_contracts import (
     CreateBriefRequest, CreateEvidenceBundleRequest, EvidenceBundleListResponse,
-    EvidenceBundleRevision, ReviseBriefRequest, TaskBriefListResponse,
-    TaskBriefRevision,
+    EvidenceBundleRevision, ReviseBriefRequest, TaskBriefListResponse, TaskBriefRevision,
+    CreateEvalContractRequest, ReviseEvalContractRequest, EvalContractRevision,
+    EvalContractListResponse, CreateResponsibilityPlanRequest,
+    ReviseResponsibilityPlanRequest, ResponsibilityPlanRevision,
+    ResponsibilityPlanListResponse,
 )
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
@@ -25,6 +28,9 @@ _STORE = AipProductionContractStore()
 
 class FreezeBriefRequest(AipContractModel):
     expected_version: int = Field(ge=1)
+
+
+FreezeContractRequest = FreezeBriefRequest
 
 
 def get_store() -> AipProductionContractStore:
@@ -95,3 +101,63 @@ def list_bundles(principal:Principal=Depends(require_principal),store:AipProduct
 def get_bundle(bundle_id:str,revision:int=Query(default=1,ge=1),principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
     try:return store.get_evidence_bundle(_scope(principal),bundle_id,revision)
     except ProductionContractError as exc:raise _map(exc) from exc
+
+
+@router.post("/eval-contracts", response_model=EvalContractRevision, status_code=201)
+def create_eval_contract(body: CreateEvalContractRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.create_eval_contract(_scope(principal), principal.subject, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/eval-contracts", response_model=EvalContractListResponse)
+def list_eval_contracts(principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.list_eval_contracts(_scope(principal))
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/eval-contracts/{contract_id}", response_model=EvalContractRevision)
+def get_eval_contract(contract_id: str, revision: int | None = Query(default=None, ge=1), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.get_eval_contract(_scope(principal), contract_id, revision)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/eval-contracts/{contract_id}/revisions", response_model=EvalContractRevision, status_code=201)
+def revise_eval_contract(contract_id: str, body: ReviseEvalContractRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.revise_eval_contract(_scope(principal), principal.subject, contract_id, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/eval-contracts/{contract_id}/freeze", response_model=EvalContractRevision)
+def freeze_eval_contract(contract_id: str, body: FreezeContractRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.freeze_eval_contract(_scope(principal), principal.subject, contract_id, body.expected_version, _key(idempotency_key))
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/responsibility-plans", response_model=ResponsibilityPlanRevision, status_code=201)
+def create_responsibility_plan(body: CreateResponsibilityPlanRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.create_responsibility_plan(_scope(principal), principal.subject, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/responsibility-plans", response_model=ResponsibilityPlanListResponse)
+def list_responsibility_plans(principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.list_responsibility_plans(_scope(principal))
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/responsibility-plans/{plan_id}", response_model=ResponsibilityPlanRevision)
+def get_responsibility_plan(plan_id: str, revision: int | None = Query(default=None, ge=1), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.get_responsibility_plan(_scope(principal), plan_id, revision)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/responsibility-plans/{plan_id}/revisions", response_model=ResponsibilityPlanRevision, status_code=201)
+def revise_responsibility_plan(plan_id: str, body: ReviseResponsibilityPlanRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.revise_responsibility_plan(_scope(principal), principal.subject, plan_id, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/responsibility-plans/{plan_id}/freeze", response_model=ResponsibilityPlanRevision)
+def freeze_responsibility_plan(plan_id: str, body: FreezeContractRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.freeze_responsibility_plan(_scope(principal), principal.subject, plan_id, body.expected_version, _key(idempotency_key))
+    except ProductionContractError as exc: raise _map(exc) from exc

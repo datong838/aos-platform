@@ -122,6 +122,7 @@ def _seed_dependencies() -> None:
 def test_eval_contract_create_replay_list_and_tenant_isolation() -> None:
     _seed_dependencies()
     store = AipProductionContractStore()
+    before_count = store.list_eval_contracts(SCOPE).count
     created = store.create_eval_contract(SCOPE, "test", "eval-create", _eval_request())
     replay = store.create_eval_contract(SCOPE, "test", "eval-create", _eval_request())
     assert replay.contract_id == created.contract_id
@@ -130,7 +131,7 @@ def test_eval_contract_create_replay_list_and_tenant_isolation() -> None:
         "EVAL_PUBLICATION_MISSING",
         "EVAL_GATE_MISSING",
     }
-    assert store.list_eval_contracts(SCOPE).count == 1
+    assert store.list_eval_contracts(SCOPE).count == before_count + 1
     assert store.list_eval_contracts(OTHER_SCOPE).count == 0
     with pytest.raises(ProductionContractIdempotencyConflict):
         store.create_eval_contract(
@@ -175,6 +176,7 @@ def test_responsibility_plan_draft_reports_inactive_binding_blockers() -> None:
     store = AipProductionContractStore(
         responsibility_template_resolver=lambda _scope, _ref: True
     )
+    before_count = store.list_responsibility_plans(SCOPE).count
     created = store.create_responsibility_plan(
         SCOPE,
         "test",
@@ -188,7 +190,7 @@ def test_responsibility_plan_draft_reports_inactive_binding_blockers() -> None:
         "SKILL_BINDING_NOT_ACTIVE",
         "CAPABILITY_BINDING_NOT_ACTIVE",
     }
-    assert store.list_responsibility_plans(SCOPE).count == 1
+    assert store.list_responsibility_plans(SCOPE).count == before_count + 1
 
 
 def test_eval_revise_uses_cas_and_blocked_freeze_does_not_advance_head() -> None:

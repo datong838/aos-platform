@@ -1,0 +1,32 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "aip-w2b2-canonical-api-20260814",
+  "branch": "w1-aip",
+  "baselineCommit": "bcfa085ee3d5d7dc06d6766eef42ac972bb2fed9",
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/routers/aip_production_contracts.py",
+      "beforeSha256": "5b06debf1a597a6437ebfca084cd36c3b6ea543e6e9583680849de56ec8e5e76",
+      "afterSha256": "680f93566f73c63e5ad40f70b2a03786a01e6ac12cee4be0927c5b7a995fa094"
+    },
+    {
+      "path": "services/aos-api/tests/test_w2b_production_contract_api.py",
+      "beforeSha256": null,
+      "afterSha256": "5e74f68ffe65ee2f25223cf1749e4b55f9d200fd66437cd503565fc5cb00dd65"
+    },
+    {
+      "path": "services/aos-api/tests/test_w2b_production_contract_store.py",
+      "beforeSha256": "79aece26fb6735ce0e3e81520083475965df68ae97991e6fbdc988eec1c07fe9",
+      "afterSha256": "f6482b6b309e20d91672b004cbad65a9ef54bc07f5f719b999f279148be30d1e"
+    }
+  ],
+  "verification": {
+    "w2bApiW2aStoreRegression": "18 passed",
+    "openapiCanonicalPaths": "8 of 8 present",
+    "compileall": "GREEN",
+    "diffCheck": "GREEN",
+    "knownWarnings": "pre-existing duplicate operation IDs outside W2 routes"
+  },
+  "status": "W2B2_GREEN",
+  "next": "W2-B3 strict TypeScript SDK and Production Contracts UI"
+}
