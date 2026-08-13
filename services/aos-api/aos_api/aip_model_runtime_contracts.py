@@ -169,6 +169,31 @@ class RegisteredModelRevision(AipContractModel):
         return self
 
 
+class ModelPriceSnapshotRevision(AipContractModel):
+    tenant: TenantContext
+    price_snapshot_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    currency: str = Field(pattern=r"^[A-Z]{3}$")
+    input_token_price: float | None = Field(default=None, ge=0)
+    output_token_price: float | None = Field(default=None, ge=0)
+    cached_token_price: float | None = Field(default=None, ge=0)
+    token_unit: int = Field(default=1000, ge=1)
+    effective_from: datetime
+    effective_until: datetime | None = None
+    lifecycle: ModelRuntimeLifecycle
+    created_by: str = Field(min_length=1, max_length=200)
+    created_at: datetime
+
+    @model_validator(mode="after")
+    def _price_snapshot_is_usable(self) -> ModelPriceSnapshotRevision:
+        if self.input_token_price is None and self.output_token_price is None:
+            raise ValueError("price snapshot requires an input or output token price")
+        if self.effective_until is not None and self.effective_until <= self.effective_from:
+            raise ValueError("price snapshot effective range is invalid")
+        return self
+
+
 class ModelRouteCandidate(AipContractModel):
     model: VersionedAssetRef
     weight: int = Field(default=100, ge=0, le=100)
@@ -275,6 +300,7 @@ class ModelRouteResolution(AipContractModel):
     readiness: ModelRuntimeReadiness
     selected_model: VersionedAssetRef | None = None
     selected_provider: VersionedAssetRef | None = None
+    selected_price_snapshot: VersionedAssetRef | None = None
     blocker_codes: list[str] = Field(default_factory=list, max_length=64)
     resolved_at: datetime
 
@@ -292,7 +318,11 @@ class ModelRouteResolution(AipContractModel):
             raise ValueError("route must reference ModelRouteRevision")
         if self.policy.asset_type != "RuntimePolicyRevision":
             raise ValueError("policy must reference RuntimePolicyRevision")
-        selected = self.selected_model is not None and self.selected_provider is not None
+        selected = (
+            self.selected_model is not None
+            and self.selected_provider is not None
+            and self.selected_price_snapshot is not None
+        )
         if self.readiness is ModelRuntimeReadiness.READY:
             if not selected or self.blocker_codes:
                 raise ValueError("ready resolution requires exact selections and no blockers")
@@ -302,4 +332,6 @@ class ModelRouteResolution(AipContractModel):
             raise ValueError("selected_model must reference RegisteredModelRevision")
         if self.selected_provider and self.selected_provider.asset_type != "ProviderInstanceRevision":
             raise ValueError("selected_provider must reference ProviderInstanceRevision")
+        if self.selected_price_snapshot and self.selected_price_snapshot.asset_type != "ModelPriceSnapshotRevision":
+            raise ValueError("selected_price_snapshot must reference ModelPriceSnapshotRevision")
         return self

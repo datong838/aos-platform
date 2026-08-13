@@ -7,6 +7,7 @@ from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_contracts import TenantContext
 from aos_api.aip_model_runtime_contracts import (
     ModelModality,
+    ModelPriceSnapshotRevision,
     ModelRouteCandidate,
     ModelRouteResolution,
     ModelRouteRevision,
@@ -195,6 +196,18 @@ def test_resolution_cannot_claim_ready_without_exact_selection() -> None:
             readiness=ModelRuntimeReadiness.READY,
             resolved_at=NOW,
         )
+
+
+def test_price_snapshot_requires_honest_currency_prices_and_effective_range() -> None:
+    snapshot = ModelPriceSnapshotRevision(
+        tenant=TENANT, priceSnapshotId="price-1", revision=1, contentHash="d" * 64,
+        currency="CNY", inputTokenPrice=0.001, outputTokenPrice=0.002,
+        tokenUnit=1000, effectiveFrom=NOW, lifecycle=ModelRuntimeLifecycle.ACTIVE,
+        createdBy="reviewer", createdAt=NOW,
+    )
+    assert snapshot.currency == "CNY"
+    with pytest.raises(ValidationError, match="requires an input or output"):
+        ModelPriceSnapshotRevision(**{**snapshot.model_dump(), "input_token_price": None, "output_token_price": None})
 
 
 def test_contracts_reject_tenant_payload_extensions() -> None:

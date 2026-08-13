@@ -22,11 +22,15 @@ from aos_api.aip_model_runtime_contracts import ModelRouteResolution, ModelRunti
 from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
 from aos_api.aip_model_runtime_store import ModelRuntimeStoreError
 from aos_api.tenant_scope import TenantScope
+from aos_api.logging_facade import get_logger
+
+log = get_logger("aos-api.aip-agent-run")
 
 
 class CapacityReservationGate(Protocol):
     def reserve(self, scope: TenantScope, resolution: ModelRouteResolution, agent_run_id: str) -> str: ...
     def release(self, scope: TenantScope, reservation_id: str) -> None: ...
+    def release_for_run(self, scope: TenantScope, agent_run_id: str) -> None: ...
 
 
 class UnavailableCapacityReservationGate:
@@ -36,12 +40,19 @@ class UnavailableCapacityReservationGate:
     def release(self, scope: TenantScope, reservation_id: str) -> None:
         return None
 
+    def release_for_run(self, scope: TenantScope, agent_run_id: str) -> None:
+        return None
+
 
 class AipAgentRunService(AipAgentRegistryStore):
     def __init__(self, connect_factory=None, *, model_resolver=None, capacity_gate=None) -> None:
         super().__init__(connect_factory)
         self._model_resolver = model_resolver or AipModelRuntimeResolver()
-        self._capacity_gate = capacity_gate or UnavailableCapacityReservationGate()
+        if capacity_gate is None:
+            from aos_api.aip_model_capacity_reservation import AipModelCapacityReservationGate
+
+            capacity_gate = AipModelCapacityReservationGate(self._connect_factory)
+        self._capacity_gate = capacity_gate
 
     def create(self, scope: TenantScope, request: CreateAgentRunRequest, *, idempotency_key: str, actor: str, occurred_at: datetime) -> tuple[AgentRun, RegistryReceipt]:
         self._validate_command(scope, idempotency_key, actor)
@@ -142,6 +153,18 @@ class AipAgentRunService(AipAgentRegistryStore):
                 if reservation_id:
                     self._capacity_gate.release(scope, reservation_id)
                 raise
+            if from_status in {AgentRunStatus.RUNNING, AgentRunStatus.PAUSED} and to_status is not AgentRunStatus.RUNNING:
+                try:
+                    self._capacity_gate.release_for_run(scope, agent_run_id)
+                except Exception:
+                    # AgentRun CAS is already committed. The reservation authority has
+                    # a bounded TTL, so report the recovery path without implying rollback.
+                    log.warning(
+                        "capacity_release_deferred agent_run_id=%s target_status=%s",
+                        agent_run_id,
+                        to_status.value,
+                        exc_info=True,
+                    )
             return self._from_row(scope, row)
 
     def _resolve_start(self, scope: TenantScope, current) -> ModelRouteResolution:

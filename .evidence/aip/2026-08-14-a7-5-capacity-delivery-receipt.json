@@ -1,0 +1,58 @@
+{
+  "receiptVersion": "1.0",
+  "wave": "AIP-7/A7-5",
+  "branch": "w1-aip",
+  "baselineSha": "7c3e124c02d6e6997bd48f56d941340efac8e413",
+  "tenantWritePolicy": {
+    "realTenant": "org-org/dev-project",
+    "realTenantBusinessWrites": 0,
+    "canaryTenant": "dev-org/dev-project",
+    "canaryUse": "disposable database isolation assertion only"
+  },
+  "deliveryStatus": "CODE_CONTROL_GREEN",
+  "externalStatus": "PROVIDER_CONFIGURATION_BLOCKED",
+  "authorities": {
+    "capacity": [
+      "aip_model_capacity_pool_revision",
+      "aip_model_capacity_reservation",
+      "aip_model_capacity_event"
+    ],
+    "price": "aip_model_price_snapshot_revision",
+    "usageCost": "reuse aip_usage_receipt/aip_usage_adjustment/aip_usage_attribution"
+  },
+  "verification": {
+    "targeted": "35 passed",
+    "concurrency": "101 concurrent requests => 100 reserved, 1 capacity_concurrency_exhausted",
+    "aipFull": "316 passed",
+    "alembicHeads": ["aip7_002"],
+    "compileall": "GREEN",
+    "diffCheck": "GREEN",
+    "browser": "DEFERRED_TO_M1_SERIAL_INTEGRATION_WINDOW"
+  },
+  "files": [
+    "services/aos-api/alembic/versions/aip7_002_model_capacity_reservation.py",
+    "services/aos-api/aos_api/aip_model_runtime_contracts.py",
+    "services/aos-api/aos_api/aip_model_runtime_store.py",
+    "services/aos-api/aos_api/aip_model_runtime_resolver.py",
+    "services/aos-api/aos_api/aip_model_capacity_reservation.py",
+    "services/aos-api/aos_api/aip_agent_run_service.py",
+    "services/aos-api/aos_api/aip_provider_usage_bridge.py",
+    "services/aos-api/aos_api/aip_llm_adapter.py",
+    "services/aos-api/tests/aip/test_aip7_capacity_migration.py",
+    "services/aos-api/tests/aip/test_aip7_capacity_reservation.py",
+    "services/aos-api/tests/aip/test_aip7_capacity_reservation_db.py",
+    "services/aos-api/tests/aip/test_aip7_provider_usage_bridge.py",
+    "services/aos-api/tests/aip/test_aip7_agent_run_transition.py",
+    "services/aos-api/tests/aip/test_aip7_llm_adapter.py",
+    "services/aos-api/tests/aip/test_aip7_model_runtime_store.py",
+    "services/aos-api/tests/aip/test_aip_model_runtime_contracts.py",
+    "services/aos-api/tests/aip/test_aip_model_runtime_resolver.py",
+    "services/aos-api/tests/aip/test_aip5_memory_pipeline_event_migration.py",
+    "services/aos-api/tests/aip/test_aip_memory_authority_api.py"
+  ],
+  "risks": [
+    "No real ProviderInstance, RegisteredModel, ModelRoute, RuntimePolicy, PriceSnapshot or CapacityPool is created for org-org/dev-project.",
+    "Provider invocation remains blocked until exact external configuration, secret reference, health and Eval gates exist.",
+    "Positive browser evidence must be collected only after serial merge into m1 and isolated service startup."
+  ]
+}

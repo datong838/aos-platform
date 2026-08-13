@@ -11,6 +11,7 @@ from typing import Any, TypeVar
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_model_runtime_contracts import (
     ModelRouteRevision,
+    ModelPriceSnapshotRevision,
     ProviderHealthObservation,
     ProviderInstanceRevision,
     RegisteredModelRevision,
@@ -26,6 +27,7 @@ RevisionT = TypeVar(
     RegisteredModelRevision,
     RuntimePolicyRevision,
     ModelRouteRevision,
+    ModelPriceSnapshotRevision,
 )
 
 
@@ -61,6 +63,7 @@ class AipModelRuntimeStore:
         "registered_model": ("registeredModelId", RegisteredModelRevision),
         "runtime_policy": ("policyId", RuntimePolicyRevision),
         "model_route": ("routeId", ModelRouteRevision),
+        "model_price_snapshot": ("priceSnapshotId", ModelPriceSnapshotRevision),
     }
 
     def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
@@ -78,6 +81,9 @@ class AipModelRuntimeStore:
     def publish_route(self, scope: TenantScope, actor: str, key: str, item: ModelRouteRevision, *, expected_version: int = 0) -> ModelRouteRevision:
         return self._publish("model_route", scope, actor, key, item, expected_version)
 
+    def publish_price_snapshot(self, scope: TenantScope, actor: str, key: str, item: ModelPriceSnapshotRevision, *, expected_version: int = 0) -> ModelPriceSnapshotRevision:
+        return self._publish("model_price_snapshot", scope, actor, key, item, expected_version)
+
     def get_provider(self, scope: TenantScope, asset_id: str, revision: int | None = None) -> ProviderInstanceRevision:
         return self._get("provider_instance", scope, asset_id, revision)
 
@@ -89,6 +95,9 @@ class AipModelRuntimeStore:
 
     def get_route(self, scope: TenantScope, asset_id: str, revision: int | None = None) -> ModelRouteRevision:
         return self._get("model_route", scope, asset_id, revision)
+
+    def get_price_snapshot(self, scope: TenantScope, asset_id: str, revision: int | None = None) -> ModelPriceSnapshotRevision:
+        return self._get("model_price_snapshot", scope, asset_id, revision)
 
     def record_health(self, scope: TenantScope, actor: str, key: str, observation: ProviderHealthObservation) -> ProviderHealthObservation:
         self._check_scope(scope, observation)
@@ -194,6 +203,7 @@ class AipModelRuntimeStore:
     def _validate_dependencies(self, conn: Any, scope: TenantScope, kind: str, item: RevisionT) -> None:
         if kind == "registered_model":
             self._require_ref(conn, scope, "provider_instance", item.provider)
+            self._require_ref(conn, scope, "model_price_snapshot", item.price_snapshot_ref)
         elif kind == "model_route":
             self._require_ref(conn, scope, "runtime_policy", item.runtime_policy_ref)
             for candidate in item.candidates:

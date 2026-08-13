@@ -8,6 +8,7 @@ from aos_api.aip_model_runtime_contracts import ModelRouteResolution, ModelRunti
 from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
 from aos_api.aip_task_model import ThinkResult
 from aos_api.tenant_scope import TenantScope
+from aos_api.aip_provider_usage_bridge import AipProviderUsageBridge
 
 
 class LLMRuntimeBlocked(RuntimeError):
@@ -22,9 +23,10 @@ def _default_invoker(resolution: ModelRouteResolution, query: str) -> dict[str, 
 
 
 class LLMAdapter:
-    def __init__(self, *, resolver: AipModelRuntimeResolver | None = None, provider_invoker: ProviderInvoker | None = None) -> None:
+    def __init__(self, *, resolver: AipModelRuntimeResolver | None = None, provider_invoker: ProviderInvoker | None = None, usage_bridge: AipProviderUsageBridge | None = None) -> None:
         self._resolver = resolver or AipModelRuntimeResolver()
         self._provider_invoker = provider_invoker or _default_invoker
+        self._usage_bridge = usage_bridge or AipProviderUsageBridge()
 
     def chat_exact(
         self,
@@ -32,8 +34,11 @@ class LLMAdapter:
         route_id: str,
         query: str,
         *,
+        lineage_id: str,
         system_prompt: str = "",
     ) -> dict[str, Any]:
+        if not lineage_id.strip():
+            raise LLMRuntimeBlocked("lineage_id_required")
         resolution = self._resolver.resolve(scope, route_id)
         if resolution.readiness is not ModelRuntimeReadiness.READY:
             blockers = ",".join(resolution.blocker_codes) or "model_runtime_not_ready"
@@ -50,6 +55,12 @@ class LLMAdapter:
         tokens = response.get("tokens")
         if not isinstance(tokens, int) or tokens < 0:
             raise LLMRuntimeBlocked("provider_usage_unknown")
+        try:
+            usage_receipt_ids = self._usage_bridge.record(
+                scope, lineage_id, resolution, response
+            )
+        except Exception as exc:
+            raise LLMRuntimeBlocked("provider_usage_authority_write_failed") from exc
         return {
             **response,
             "answer": answer,
@@ -58,6 +69,8 @@ class LLMAdapter:
             "policyRef": resolution.policy.model_dump(mode="json", by_alias=True),
             "modelRef": resolution.selected_model.model_dump(mode="json", by_alias=True),
             "providerRef": resolution.selected_provider.model_dump(mode="json", by_alias=True),
+            "priceSnapshotRef": resolution.selected_price_snapshot.model_dump(mode="json", by_alias=True),
+            "usageReceiptIds": usage_receipt_ids,
         }
 
     def chat(self, query: str, **_: Any) -> dict[str, Any]:
@@ -71,6 +84,7 @@ class LLMAdapter:
         step_name: str,
         context: dict[str, Any],
         memory: dict[str, Any] | None = None,
+        lineage_id: str = "",
     ) -> ThinkResult:
         memory_lines: list[str] = []
         for layer, items in (memory or {}).items():
@@ -81,7 +95,7 @@ class LLMAdapter:
             f"相关记忆:\n{chr(10).join(memory_lines)}\n请给出执行指令。"
         )
         response = self.chat_exact(
-            scope, route_id, query,
+            scope, route_id, query, lineage_id=lineage_id,
             system_prompt="你是任务执行引擎。只基于给定事实分析当前步骤。",
         )
         return ThinkResult(
