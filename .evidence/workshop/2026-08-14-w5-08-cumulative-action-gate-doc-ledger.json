@@ -1,0 +1,67 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w5-08-cumulative-action-gate-doc-ledger-20260814",
+  "authorityRevision": "AOS-000026",
+  "repositoryRevisionBefore": "f23a02e82e6ec89966ba2f1390142d107ea79a3f",
+  "result": "W5_08_CUMULATIVE_ACTION_GATE_DOC_LEDGER_ALIGNED",
+  "sourceEvidence": ".evidence/workshop/2026-08-14-w5-08-cumulative-action-gate-preflight.json",
+  "decision": "GENERIC_REGRESSION_GREEN_CUMULATIVE_RELEASE_GATE_REMAINS_BLOCKED",
+  "reviewLoop": [
+    {
+      "round": 1,
+      "finding": "W5-08 named cumulative safety, browser and rollback without specifying exact receipt inputs, real browser journey, external side-effect treatment or observability exit thresholds.",
+      "remediation": "added ADR48 and aligned the security, Adapter and D-wave contracts with exact cumulative gates."
+    },
+    {
+      "round": 2,
+      "finding": "rechecked test claims, browser evidence boundary, tenant truth, external rollback semantics, dependency closure and unchecked task state.",
+      "remediation": "no further defect found; retained W5-08 as NOT_STARTED and CUMULATIVE_GATE_BLOCKED."
+    }
+  ],
+  "documents": [
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/06-安全租户可观测测试与回滚.md",
+      "sha256Before": "e03a371b8400c8092bfc1b608e6903d58dec7d602ad8e8adb324a70f7d76ae46",
+      "sha256After": "bdf1f178642454fc562904619545e61340a794d90aeba8ed207758cc524068f9"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/19-Adapter能力矩阵与降级策略.md",
+      "sha256Before": "e735caa5c85602d641a5c41f27176dc62ad039325eb505278b92954cbfc6c387",
+      "sha256After": "1dd6388bfe120ee5eba32e5bcbc01f707898c2279dbfc4678c1d434f0f57e33d"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/48-W5-08累计安全浏览器与外部动作处置门预检ADR.md",
+      "sha256Before": null,
+      "sha256After": "09fa0f0b8d69d9f156856a3ccba8a11b62441e93d75dfbe3303228df81d04a44"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "sha256Before": "5c1d8dec7985e7546273b3e020ac1d2364b7d980c017f2efba92b2338331d982",
+      "sha256After": "dc0da6822368234ec2190f6eb69535e3ab69287c7591ba359c8b862033fab5df"
+    }
+  ],
+  "verification": {
+    "jsonValid": true,
+    "documentHashesMatched": true,
+    "twoRoundReviewComplete": true,
+    "backend": "103 passed, 7 warnings",
+    "frontend": "5 files, 18 tests passed",
+    "productionBuild": "GREEN",
+    "browser": "local fail-closed GREEN_WITH_BLOCKERS",
+    "w5_08Checked": false,
+    "realTenantRead": false,
+    "externalProviderEffect": false
+  },
+  "blockers": [
+    "W5_00_THROUGH_W5_07_NOT_IMPLEMENTED_GREEN",
+    "DEP_W5_CUMULATIVE_PRODUCTION_ADAPTER",
+    "DEP_W5_CUMULATIVE_EXACT_MATRIX",
+    "DEP_W5_CUMULATIVE_DURABLE_CHAIN",
+    "DEP_W5_CUMULATIVE_UNKNOWN_COMPENSATION",
+    "DEP_W5_CUMULATIVE_WEBHOOK",
+    "DEP_W5_CUMULATIVE_CANARY_KILL",
+    "DEP_W5_CUMULATIVE_BROWSER_JOURNEY",
+    "DEP_W5_CUMULATIVE_ROLLBACK_RUNBOOK",
+    "DEP_W5_CUMULATIVE_OBSERVABILITY_SLO"
+  ]
+}
