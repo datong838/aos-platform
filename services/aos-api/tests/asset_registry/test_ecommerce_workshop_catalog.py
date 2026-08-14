@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -21,6 +22,7 @@ from aos_api.ecommerce_workshop_catalog import (
     EcommerceWorkshopCatalog,
     PersistedBundleVersion,
     PostgresWorkshopCatalogSource,
+    _filter_effective_rows_by_markings,
     build_ecommerce_workshop_catalog,
 )
 
@@ -109,7 +111,12 @@ def _persisted(loaded, *, content_hash: str | None = None):
     )
 
 
-def _lock(persisted: PersistedBundleVersion) -> StoredCompositionLock:
+def _lock(
+    persisted: PersistedBundleVersion,
+    *,
+    current_installation_ref: dict[str, object] | None = None,
+    target_markings: Collection[str] = (),
+) -> StoredCompositionLock:
     request = CompositionRequest.model_validate(
         {
             "requested": [
@@ -124,11 +131,15 @@ def _lock(persisted: PersistedBundleVersion) -> StoredCompositionLock:
             "environment": "dev",
         }
     )
-    permissions = {
+    empty_permissions = {
         "roles": [],
         "markings": [],
         "dataScopes": [],
         "actionTypes": [],
+    }
+    target_permissions = {
+        **empty_permissions,
+        "markings": sorted(target_markings),
     }
     bindings = [
         {
@@ -174,11 +185,11 @@ def _lock(persisted: PersistedBundleVersion) -> StoredCompositionLock:
             "edges": [],
             "capabilityProviders": [],
             "permissionDiff": {
-                "baseline": permissions,
-                "target": permissions,
-                "added": permissions,
-                "removed": permissions,
-                "unchanged": permissions,
+                "baseline": empty_permissions,
+                "target": target_permissions,
+                "added": target_permissions,
+                "removed": empty_permissions,
+                "unchanged": empty_permissions,
             },
             "migrationPlan": {
                 "baseline": [],
@@ -194,7 +205,7 @@ def _lock(persisted: PersistedBundleVersion) -> StoredCompositionLock:
                 "removed": [],
                 "unchanged": [],
             },
-            "currentInstallationRef": None,
+            "currentInstallationRef": current_installation_ref,
         }
     )
     return StoredCompositionLock.model_validate(
@@ -225,6 +236,37 @@ def _active(persisted, *, installation_id=INSTALLATION_ID):
         lock=_lock(persisted),
         bundle=persisted,
     )
+
+
+def _active_row(
+    lock: StoredCompositionLock,
+    *,
+    installation_id: str,
+    overlay_revision: str,
+) -> dict[str, object]:
+    return {
+        "installation_id": installation_id,
+        "active_revision": 5,
+        "overlay_revision": overlay_revision,
+        "revision_lock_hash": lock.lock_hash,
+        "composition_id": lock.composition_id,
+        "lock_revision": lock.revision,
+        "lock_payload": lock.payload.model_dump(mode="json", by_alias=True),
+        "lock_hash": lock.lock_hash,
+        "permission_diff_json": lock.payload.permission_diff.model_dump(
+            mode="json", by_alias=True
+        ),
+        "permission_diff_hash": lock.permission_diff_hash,
+        "migration_plan_json": lock.payload.migration_plan.model_dump(
+            mode="json", by_alias=True
+        ),
+        "migration_plan_hash": lock.migration_plan_hash,
+        "contribution_diff_json": lock.payload.contribution_diff.model_dump(
+            mode="json", by_alias=True
+        ),
+        "contribution_diff_hash": lock.contribution_diff_hash,
+        "created_at": lock.created_at,
+    }
 
 
 def _catalog(source):
@@ -352,8 +394,45 @@ def test_postgres_source_uses_repeatable_read_and_explicit_tenant_predicates() -
     assert "app.current_" not in scope_query[0]
     active_query = next(call for call in conn.calls if "FROM bundle_installation i" in call[0])
     assert "WHERE i.org_id=%s AND i.project_id=%s" in active_query[0]
-    assert active_query[1][0:2] == ("org-org", "dev-project")
-    assert active_query[1][2].obj == ["public", "restricted"]
+    assert "permission_diff_json->'target'->'markings'" not in active_query[0]
+    assert active_query[1] == ("org-org", "dev-project")
+
+
+def test_replacement_graph_is_resolved_before_marking_visibility() -> None:
+    persisted = _persisted(_loaded_growth())
+    parent_overlay = "overlay-parent"
+    parent = _lock(persisted, target_markings=("public",))
+    child = _lock(
+        persisted,
+        current_installation_ref={
+            "installationId": INSTALLATION_ID,
+            "revision": 5,
+            "lockHash": parent.lock_hash,
+            "overlayRevision": parent_overlay,
+        },
+        target_markings=("restricted",),
+    )
+    rows = (
+        _active_row(
+            parent,
+            installation_id=INSTALLATION_ID,
+            overlay_revision=parent_overlay,
+        ),
+        _active_row(
+            child,
+            installation_id="33333333-3333-4333-8333-333333333333",
+            overlay_revision="overlay-child",
+        ),
+    )
+
+    assert _filter_effective_rows_by_markings(rows, {"public"}) == ()
+    visible = _filter_effective_rows_by_markings(
+        rows, {"public", "restricted"}
+    )
+    assert len(visible) == 1
+    assert visible[0][0]["installation_id"] == (
+        "33333333-3333-4333-8333-333333333333"
+    )
 
 
 def test_postgres_source_fails_closed_when_bound_scope_cannot_be_verified() -> None:

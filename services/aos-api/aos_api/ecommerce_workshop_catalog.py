@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Any, Protocol
 
 import psycopg
-from psycopg.types.json import Jsonb
 from pydantic import ValidationError
 
 from aos_api.asset_registry.composition_contracts import StoredCompositionLock
@@ -156,13 +155,13 @@ class PostgresWorkshopCatalogSource:
                      WHERE i.org_id=%s AND i.project_id=%s
                        AND i.active_revision IS NOT NULL
                        AND r.state='active'
-                       AND (l.permission_diff_json->'target'->'markings')
-                           <@ %s::jsonb
                      ORDER BY i.installation_id ASC
                     """,
-                    (checked_org, checked_project, Jsonb(checked_markings)),
+                    (checked_org, checked_project),
                 ).fetchall()
-                effective_rows = _effective_active_rows(rows)
+                effective_rows = _filter_effective_rows_by_markings(
+                    rows, set(checked_markings)
+                )
                 result: list[ActiveWorkshopBundle] = []
                 versions: dict[tuple[str, str, str], PersistedBundleVersion] = {}
                 for row, lock in effective_rows:
@@ -244,6 +243,22 @@ def _effective_active_rows(
         indexed[installation_id]
         for installation_id in sorted(indexed)
         if installation_id not in shadowed
+    )
+
+
+def _filter_effective_rows_by_markings(
+    rows: Collection[Any],
+    principal_markings: Collection[str],
+) -> tuple[tuple[Any, StoredCompositionLock], ...]:
+    """Resolve replacement authority before applying leaf visibility."""
+
+    checked_markings = set(principal_markings)
+    return tuple(
+        (row, lock)
+        for row, lock in _effective_active_rows(rows)
+        if set(lock.payload.permission_diff.target.markings).issubset(
+            checked_markings
+        )
     )
 
 
