@@ -1,0 +1,67 @@
+{
+  "schema": "aos-workshop-integration-rehearsal/v1",
+  "recordedAt": "2026-08-14T13:00:45+08:00",
+  "sourceBranch": "w2-workshop",
+  "targetBranch": "m1",
+  "targetBaselineCommit": "0957b9f65105b375029806478a2fcab11ddc9d2f",
+  "targetBaselineAlembicHead": "w2_003",
+  "sourceCommits": [
+    "bd1c2a00a6b45e72068dc16ba231444f86f0bbd5",
+    "b38cb02f5846a3a0d0b5cdfe44b670dbb504b893",
+    "5fd68cb5bcbec7763741c0b36abe9ba549f10838",
+    "13f5bf9d9be9a9544a763545808a315814c238ba",
+    "b8f5f4e1b7e2cd22fdfe2488c296422b6ffdb91b",
+    "239c2b10ded43d800bf046e27febd7d9a472542c",
+    "013c63fb7a090817715d6e9be3c82cc01c3357ce",
+    "3c94ca59deb6f91c4358276ef955e3267e2d91ef",
+    "0a83798be20d3e8333aa5f083724b46bee299cce",
+    "2c3ad4a71e4d189f3dc30e0269e2d79181f5831d",
+    "7bd3f82551b6de74468b179f80df131fcd8f62e3",
+    "51d175c9794e97a550fe516d75c7f243c1e4406d",
+    "33bf5578507189dcb2dfcd92d66a2c7db68969bf",
+    "611bc5ac7c8b2c190ab2d1237232c94bf3470ca0"
+  ],
+  "excludedCommits": [
+    {
+      "commit": "264e16c",
+      "reason": "Workshop Watchdog implementation has a known textual conflict with the m1 Watchdog and must be integrated as a separate operational change."
+    },
+    {
+      "commit": "42bbfe3",
+      "reason": "Workshop Watchdog transport backoff depends on the excluded Watchdog implementation and is not part of the W1 business integration."
+    }
+  ],
+  "rehearsal": {
+    "method": "local shared clone; ordered cherry-pick; no formal branch, database, browser session, or remote mutation",
+    "resultCommit": "1b1f05cf5e7a84c8af294d7e35606289c3c0e1fa",
+    "resultTree": "4955d614334ffe59fdf2721ffbc61c4acd1a520c",
+    "mergedAppTsxSha256": "cadcffd7956cd46aa37c9aacd4c6e91d071adc83f4b7fe2e10136b8430817088",
+    "cherryPickConflictCount": 0,
+    "alembicHeads": [
+      "w2_003"
+    ]
+  },
+  "verification": {
+    "backend": {
+      "scope": "tests/asset_registry plus AIP W2-C contracts, approval gate, and API",
+      "passed": 836,
+      "failed": 0
+    },
+    "web": {
+      "testFilesPassed": 188,
+      "testsPassed": 2112,
+      "failed": 0
+    },
+    "typescriptNoEmit": "GREEN",
+    "productionBuild": "GREEN",
+    "gitDiffCheck": "GREEN"
+  },
+  "nonClaims": [
+    "This is not a formal m1 integration.",
+    "This does not close AIP W2-C browser, CAS, authority, or Lease gates.",
+    "This does not authorize or execute the Workshop uninstall migration.",
+    "This does not mutate or accept org-org/dev-project.",
+    "This does not complete W1-09, W1-10, or W1."
+  ],
+  "nextGate": "Wait for both AIP W2-C Task Receipts to close and the migration Lease to be explicitly released; then refresh m1 and re-run the unique-head preflight before creating the Workshop uninstall migration."
+}
