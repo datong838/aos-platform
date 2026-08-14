@@ -1,0 +1,49 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "aip-w2c-stage-artifact-review-20260814",
+  "branch": "w1-aip",
+  "baselineCommit": "559e606e2447c650d621d0bb6d8fe88478875807",
+  "commits": [
+    "d04cbdc436fe5dd2cb5555f452e3d044f2c62eac",
+    "ed28858295d43d04359afed6f34c512e362dd392"
+  ],
+  "plan": {
+    "path": "docs/palantier/20_tech/电商平台接入/AIP通用能力实施方案/28-AIP-W2-C-Stage-Artifact-Review实施清单.md",
+    "sha256": "766d4fbf6842f7d86eec759949f69be52e540e46020e52f829203d0ae25fdf58",
+    "status": "APPROVED_FOR_IMPLEMENTATION"
+  },
+  "files": [
+    {"path":"services/aos-api/alembic/versions/w2_003_stage_artifact_review.py","beforeSha256":null,"afterSha256":"96cecd147d12098df1b81df86d4ad7d2ce13978152704aac98324bf95f489081"},
+    {"path":"services/aos-api/aos_api/aip_production_contracts.py","beforeSha256":"0487b026cac71fc2067b3a609dfb1c87bd9926e919982f691129067ec7718d4a","afterSha256":"c1776657739e9e1a225a37cfd30118b5b0c8f6714e988f1214b5bcc00f1f1caf"},
+    {"path":"services/aos-api/aos_api/aip_production_contract_store.py","beforeSha256":"1534800a87a21e8a56df68dbad9678f967f624cc2d9c2c11261bb82e228caa7f","afterSha256":"a682142a2caf7ad56a49d724caeafbea82c0cff9bb220b6a9e5cef9878c83708"},
+    {"path":"services/aos-api/aos_api/aip_task_store.py","beforeSha256":"6529ac0fe09ccd89a5033ac5e7596079181fbcec3f8c71cbe81b47f7e007e54b","afterSha256":"71f0dc1fdcd3da9882d5278e875ba731fb833e1362b04af02d06dd51322d1a1a"},
+    {"path":"services/aos-api/aos_api/routers/aip_production_contracts.py","beforeSha256":"680f93566f73c63e5ad40f70b2a03786a01e6ac12cee4be0927c5b7a995fa094","afterSha256":"f8fca466f6f3c03c467eff7f1189f0f0cb8e412882be27010bd14d48482dceaf"},
+    {"path":"services/aos-api/tests/aip/test_w2c_contracts.py","beforeSha256":null,"afterSha256":"004c8c24b1de511228297ae61823020d035cc4c79131c1d0f5e56fd69446a9e4"},
+    {"path":"services/aos-api/tests/aip/test_w2c_task_approval_gate.py","beforeSha256":null,"afterSha256":"a34060064c01230f3e2b758537dad2648ffde77af142d5e5fee3bc8f57abba82"},
+    {"path":"services/aos-api/tests/aip/test_w2c_api.py","beforeSha256":null,"afterSha256":"40fe7e9ee75283730778dd6cd36acdf2c277f77e47dbe19676032d4cbfb92c37"},
+    {"path":"apps/web/src/api/aipProductionContracts/contracts.ts","beforeSha256":"92823a7dddf578a7d131c5cfc6e0e307e2c770870a607bff3831ae767f745c16","afterSha256":"fd8c7f34f201590ffd5db129a32ccc1024a1d6ec7fb0f9cca1a38c412097cccc"},
+    {"path":"apps/web/src/api/aipProductionContracts/parser.ts","beforeSha256":"521c681ba4923b81e78d5e7603b422f661b12c1ecd452f0809513fd02a84b46d","afterSha256":"d18448f6f9751db4792ff60f4be863f6ee6a162053ade60c5d082fec6f72b9c2"},
+    {"path":"apps/web/src/api/aipProductionContracts/parser.test.ts","beforeSha256":"53c74fdd41e29039ae4619f96bb792e43dc711c0aaa90564888a01486a71d14d","afterSha256":"b1089b8ce731db98110647e36b1f79b650d79a4d3630758e1f8ff93de2221b2c"},
+    {"path":"apps/web/src/api/aipProductionContracts/index.ts","beforeSha256":"e5ba7075395aab24a75c5e489fea25d062ffd5c52956805c84f99f04ab4ee7ff","afterSha256":"035f8765dc86032293222396451d581771f4c94b86842fe4bf6446e17a4027c6"},
+    {"path":"apps/web/src/api/aipProductionContracts/index.test.ts","beforeSha256":null,"afterSha256":"d552f43bd209f7df017df6e7b3369c602fa2b790a6feb78c984e16e38e2a2af2"},
+    {"path":"apps/web/src/pages/s2/ProductionContractsPage.tsx","beforeSha256":"44a8c52264edf31b21042b9c3f72488aad2cc4652d8afcf279a4491004a312ff","afterSha256":"9e7bd32912e1ebfa6f8ae4699ca3786f0474ab65caeff3141a1690106ad1c19e"},
+    {"path":"apps/web/src/pages/s2/ProductionContractsPage.test.tsx","beforeSha256":"5c1f9f3687ade1d334c02515493293331b12fa77a318233fb31ad6e4f2a8e77e","afterSha256":"e26c99b5a58798093ad43370bb7a88e1e7444d81773b1727609f875ca7496f19"}
+  ],
+  "verification": {
+    "backendCumulative": "23 passed",
+    "frontendTargeted": "3 files / 13 tests passed",
+    "typescriptNoEmit": "GREEN",
+    "webProductionBuild": "GREEN",
+    "alembicHead": "w2_003 unique head",
+    "diffCheck": "GREEN",
+    "tenantBoundary": "all persistence is org/project scoped; tests use disposable database and dev-org isolation canary",
+    "realSideEffects": "no org-org/dev-project mutation, no AgentRun start, no external provider call"
+  },
+  "status": "W2C_CODE_GREEN_BROWSER_PENDING_M1",
+  "knownBoundaries": [
+    "StageTemplate source exact ref remains blocked when Asset Registry resolver is unavailable",
+    "production compiler Plan approval remains fail-closed until W2-D exact start gate exists",
+    "browser verification and authority/01/06/shared-memory CAS are deferred to serialized m1 integration"
+  ],
+  "next": "Commit this receipt, integrate w1-aip into clean m1 under serialized lease, run cumulative migration/tests/browser acceptance, then CAS-update authority/checkpoints and release W2-C leases."
+}
