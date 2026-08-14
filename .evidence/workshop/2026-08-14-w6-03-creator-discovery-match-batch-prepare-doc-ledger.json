@@ -1,0 +1,44 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w6-03-creator-discovery-match-batch-prepare-doc-ledger-20260814",
+  "authorityRevision": "AOS-000027",
+  "repositoryBaseRevision": "265d2dd66bb3d78dd89d1c38d8e15d7d75b3fa6c",
+  "result": "W6_03_CREATOR_DISCOVERY_MATCH_BATCH_PREPARE_DOC_LEDGER_ALIGNED",
+  "decision": "TARGET_CONTRACT_REVIEWED_IMPLEMENTATION_REMAINS_BLOCKED",
+  "documents": [
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/13-达人邀约技术方案.md",
+      "preSha256": "5865697c0a4b87c4cc6cf545e9e457bff167be18936cf1351876b4324e5b54a6",
+      "postSha256": "26c40016d0f162f31eb2727730c9c70e36c15105f616726e12e310188a3455bd",
+      "change": "expanded the target contract for domain authority, governed discovery/evidence/match, identity dedupe, side-effect-free batch prepare, exact freeze refs, count conservation, readiness and acceptance"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/51-W6-03-达人DiscoveryEvidenceMatch与BatchPrepare预检ADR.md",
+      "preSha256": null,
+      "postSha256": "1788c3a1f6ddee215aaae1d8a83abc3ba79719f210dec6477ab96f3f1b7b169d",
+      "change": "added current-state findings, reusable boundaries, ten stable blockers, ordered implementation decision and two-round review"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "065480e298fafae285c0b44bf9364140bd3e1aa6f518ddff92882bd9dff8465c",
+      "postSha256": "321cfcb1b5503cea34482ec4182c62f08cd7f0dd7fc375752942024adeadac85",
+      "change": "replaced the empty W6-03 evidence field with exact dependency IDs, verified foundation results and the honest unchecked status"
+    }
+  ],
+  "review": {
+    "round1": "GREEN: L1 domain authority remains separate from AIP/O1/Adapter truth; Observation/Decision, prepare/start and batch/external Action boundaries are explicit; missing identity conflict, conservation and drift semantics were remediated",
+    "round2": "GREEN: all P0 gaps have stable dependency IDs and exit conditions; PRELIMINARY, prepare-zero-effect, count conservation and unknown/reconcile are testable; W6-04 external actions were not pulled into W6-03",
+    "implementationStatus": "NOT_STARTED",
+    "checklistStatus": "UNCHECKED"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "staticVisualHtmlChanged": false,
+    "databaseChanged": false,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}
