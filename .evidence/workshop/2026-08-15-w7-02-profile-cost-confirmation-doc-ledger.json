@@ -1,0 +1,69 @@
+{
+  "schema": "aos-workshop-doc-alignment-ledger/v1",
+  "taskId": "workshop-w7-02-profile-cost-confirmation-doc-alignment-20260815",
+  "projectRevision": "AOS-000029",
+  "branch": "w2-workshop",
+  "baselineCommit": "f4a2a3f758e8d4eaf319ac45e235e7f2db2d4d6f",
+  "recordedAt": "2026-08-15T05:08:00+08:00",
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/14-多媒体技术方案.md",
+      "preSha256": "51443fef9fbe88e9752c7926b8b6d3e7bb20612e7963b51186dc6e401fa494a3",
+      "postSha256": "177463903de43428d591cdae2991c8e3945cdacb0f504d9d1569a950c0f1d256"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md",
+      "preSha256": "0259aad4f45019913a5f67ffca42b0e4b40a21776f1b0ab3e8dab5bb6b95ec15",
+      "postSha256": "cd48ef9492622686466dba273e6aca9749a8dee71a2726c22c0ef3b8f2b84a93"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "e151684f0799ed124dc375ce58caa4c4d99fd421704095940dcf70b1afe24b59",
+      "postSha256": "4bd607c082c91589618f2de44b6303df591cf8223d8314896e4f20cf5a9d631a"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/60-W7-02-Profile建议成本区间与用户确认预检ADR.md",
+      "preSha256": null,
+      "postSha256": "16c2fb26563d1577b717f9b73ac56051c846454ec0ad9cd023d7269e965491aa"
+    }
+  ],
+  "decisions": {
+    "recommendationAuthority": "immutable ProfileRecommendationRevision with exact inputs policy floor deterministic hash unknowns confidence and expiry",
+    "confirmationAuthority": "side-effect-free ProfileConfirmationReceipt with CAS idempotency actor reason and exact recommendation hash",
+    "projectedCostAuthority": "currency-bucketed ProjectedCostRange with exact price refs assumptions bounds unknowns confidence and validity",
+    "actualCostAuthority": "UsageReceipt -> Attribution -> Adjustment/Reconcile",
+    "driftRule": "recommendation and confirmation become stale on any frozen-input template policy provider-price license budget or readiness drift",
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "CONTRACT_BASELINE_APPROVED",
+    "dependencyStatus": "IMPLEMENTATION_BLOCKED",
+    "externalEffect": "NONE"
+  },
+  "review": {
+    "round1": {
+      "result": "PASS",
+      "checks": [
+        "recommendation does not replace user decision",
+        "confirmation has no start or provider side effect",
+        "projected and actual cost remain distinct",
+        "unknown assumptions confidence and expiry stay visible",
+        "downgrade cannot cross policy floor"
+      ]
+    },
+    "round2": {
+      "result": "PASS",
+      "checks": [
+        "exact refs immutable revisions CAS and idempotency required",
+        "multi-currency and missing price or license fail closed",
+        "drift requires recomputation and reconfirmation",
+        "thirteen blockers remain explicit",
+        "no source database tenant or external mutation"
+      ]
+    }
+  },
+  "verification": [
+    "four post SHA-256 values recomputed from filesystem",
+    "Recommendation ProjectedCost Confirmation Usage and policy-floor terms present",
+    "JSON parsed successfully",
+    "git diff check passed"
+  ]
+}
