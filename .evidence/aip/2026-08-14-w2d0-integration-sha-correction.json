@@ -1,0 +1,17 @@
+{
+  "schema": "aos-evidence-correction/v1",
+  "correctionId": "aip-w2d0-integration-sha-correction-20260814",
+  "recordedAt": "2026-08-14T14:47:00+08:00",
+  "subject": "W2-D0 m1 integration commit",
+  "incorrectRecordedValue": "3886503ac20f5400c36f04bb907e08d2a52222bf",
+  "canonicalValue": "38865035403734c39a6d7ac04750ae5afdc53155",
+  "basis": {
+    "shortSha": "3886503",
+    "m1Head": "38865035403734c39a6d7ac04750ae5afdc53155",
+    "w1AipHead": "38865035403734c39a6d7ac04750ae5afdc53155",
+    "originM1AheadBehind": "0/0",
+    "originW1AipAheadBehind": "0/0"
+  },
+  "impact": "Evidence transcription only; no code, migration, database, tenant data, test result or branch ancestry changed.",
+  "preservation": "The original task receipt is retained as immutable history; this append-only correction is the canonical interpretation."
+}
