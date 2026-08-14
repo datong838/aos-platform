@@ -50,6 +50,8 @@ class WatchdogTest(unittest.TestCase):
             "max_tool_silence_seconds": 100,
             "retry_interval_seconds": 300,
             "immediate_retry_delay_seconds": 0,
+            "max_consecutive_failures": 3,
+            "additional_writable_dirs": [],
         }
 
     def test_user_without_final_is_active(self):
@@ -148,6 +150,17 @@ class WatchdogTest(unittest.TestCase):
         status = watchdog.inspect_transcript(self.transcript)
         self.assertFalse(status.active)
 
+    def test_real_final_answer_phase_is_idle(self):
+        self.write(
+            task_event("1970-01-01T00:00:05Z", "task_started"),
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:00:20Z", "assistant", "final_answer"),
+            task_event("1970-01-01T00:00:21Z", "task_complete"),
+        )
+        status = watchdog.inspect_transcript(self.transcript)
+        self.assertFalse(status.active)
+        self.assertEqual(20, status.latest_final_at)
+
     def test_first_detection_retries_twice_then_backs_off(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))
         config_path = self.root / "config.json"
@@ -198,6 +211,135 @@ class WatchdogTest(unittest.TestCase):
         self.assertEqual(0, state["consecutive_failures"])
         self.assertEqual("recovered", state["last_recovery_outcome"])
         self.assertIsNotNone(state["visible_ack_at"])
+
+    def test_real_final_answer_stops_retry_chain(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.config()), encoding="utf-8")
+
+        def runner(*args, **kwargs):
+            with self.transcript.open("a", encoding="utf-8") as handle:
+                handle.write(
+                    json.dumps(
+                        record(
+                            "1970-01-01T00:16:41Z", "assistant", "final_answer"
+                        )
+                    )
+                    + "\n"
+                )
+            return subprocess.CompletedProcess(args[0], 0, "completed", "")
+
+        decision = watchdog.run_once(
+            config_path, state_path, now=1000, runner=runner
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("recovered", decision)
+        self.assertEqual(0, state["consecutive_failures"])
+        self.assertEqual("recovered", state["last_recovery_outcome"])
+
+    def test_third_failure_opens_circuit(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.config()), encoding="utf-8")
+        state_path.write_text(
+            json.dumps({"consecutive_failures": 2, "next_retry_at": 0}),
+            encoding="utf-8",
+        )
+        calls = []
+
+        def runner(*args, **kwargs):
+            calls.append((args, kwargs))
+            return subprocess.CompletedProcess(args[0], 1, "", "network")
+
+        decision = watchdog.run_once(
+            config_path, state_path, now=1000, runner=runner
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("circuit-open", decision)
+        self.assertEqual(1, len(calls))
+        self.assertEqual(3, state["consecutive_failures"])
+        self.assertEqual(0, state["next_retry_at"])
+        self.assertEqual("circuit_open", state["last_recovery_outcome"])
+
+    def test_open_circuit_never_calls_resume(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.config()), encoding="utf-8")
+        state_path.write_text(
+            json.dumps(
+                {
+                    "consecutive_failures": 3,
+                    "next_retry_at": 0,
+                    "last_recovery_outcome": "circuit_open",
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        def runner(*args, **kwargs):
+            self.fail("open circuit must not invoke codex resume")
+
+        decision = watchdog.run_once(
+            config_path, state_path, now=1000, runner=runner
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("circuit-open", decision)
+        self.assertEqual("circuit_open", state["last_recovery_outcome"])
+
+    def test_reset_circuit_requires_explicit_action(self):
+        state_path = self.root / "state.json"
+        state_path.write_text(
+            json.dumps(
+                {
+                    "consecutive_failures": 32,
+                    "next_retry_at": 1234,
+                    "last_recovery_outcome": "circuit_open",
+                    "circuit_opened_at": 1000,
+                }
+            ),
+            encoding="utf-8",
+        )
+        watchdog.reset_circuit(state_path, now=2000)
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual(0, state["consecutive_failures"])
+        self.assertEqual(0, state["next_retry_at"])
+        self.assertEqual("circuit_reset", state["last_recovery_outcome"])
+        self.assertEqual(2000, state["last_circuit_reset_at"])
+
+    def test_resume_command_adds_only_precise_writable_dirs(self):
+        docs_dir = self.root / "context"
+        git_dir = self.root / "main.git"
+        docs_dir.mkdir()
+        git_dir.mkdir()
+        config = self.config()
+        config["additional_writable_dirs"] = [str(docs_dir), str(git_dir)]
+        command = watchdog.resume_command(config)
+        self.assertEqual(
+            [
+                str(watchdog.DEFAULT_CODEX),
+                "exec",
+                "--sandbox",
+                "workspace-write",
+                "--add-dir",
+                str(docs_dir.resolve()),
+                "--add-dir",
+                str(git_dir.resolve()),
+                "resume",
+                "--json",
+                "thread-1",
+                "-",
+            ],
+            command,
+        )
+
+    def test_resume_command_rejects_broad_writable_directory(self):
+        config = self.config()
+        config["additional_writable_dirs"] = [str(Path.home())]
+        with self.assertRaisesRegex(ValueError, "broad writable directory"):
+            watchdog.resume_command(config)
 
     def test_exit_zero_without_visible_final_is_not_recovered(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))

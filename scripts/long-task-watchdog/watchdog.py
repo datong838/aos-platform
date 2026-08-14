@@ -29,6 +29,7 @@ DEFAULT_STATE = DEFAULT_HOME / "state.json"
 DEFAULT_LOCK = DEFAULT_HOME / "watchdog.lock"
 DEFAULT_CODEX_STATE = Path.home() / ".codex" / "state_5.sqlite"
 DEFAULT_CODEX = Path.home() / ".local" / "bin" / "codex"
+FINAL_PHASES = frozenset({"final", "final_answer"})
 
 
 @dataclass(frozen=True)
@@ -88,7 +89,7 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
                 latest_user_at = ts
             elif role == "assistant" and ts is not None:
                 latest_assistant_at = ts
-                if phase == "final":
+                if phase in FINAL_PHASES:
                     latest_final_at = ts
             if record.get("type") == "event_msg":
                 event_payload = record.get("payload")
@@ -181,15 +182,48 @@ def _sanitized_environment() -> dict[str, str]:
     return environment
 
 
+def _additional_writable_dirs(config: dict[str, Any]) -> list[str]:
+    configured = config.get("additional_writable_dirs", [])
+    if not isinstance(configured, list):
+        raise ValueError("additional_writable_dirs must be a list")
+    forbidden = {Path("/").resolve(), Path.home().resolve()}
+    result: list[str] = []
+    seen: set[Path] = set()
+    for item in configured:
+        if not isinstance(item, str) or not item.strip():
+            raise ValueError("additional writable directory must be a path string")
+        path = Path(item).expanduser()
+        if not path.is_absolute():
+            raise ValueError(f"additional writable directory must be absolute: {item}")
+        resolved = path.resolve()
+        if resolved in forbidden:
+            raise ValueError(f"broad writable directory is forbidden: {resolved}")
+        if not resolved.is_dir():
+            raise ValueError(f"additional writable directory does not exist: {resolved}")
+        if resolved not in seen:
+            seen.add(resolved)
+            result.append(str(resolved))
+    return result
+
+
 def resume_command(config: dict[str, Any]) -> list[str]:
-    return [
+    command = [
         str(config.get("codex_path", DEFAULT_CODEX)),
         "exec",
-        "resume",
-        "--json",
-        str(config["thread_id"]),
-        "-",
+        "--sandbox",
+        "workspace-write",
     ]
+    for writable_dir in _additional_writable_dirs(config):
+        command.extend(["--add-dir", writable_dir])
+    command.extend(
+        [
+            "resume",
+            "--json",
+            str(config["thread_id"]),
+            "-",
+        ]
+    )
+    return command
 
 
 def resume_once(
@@ -215,6 +249,33 @@ def _log(message: str) -> None:
     print(f"{now} {message}", flush=True)
 
 
+def _max_consecutive_failures(config: dict[str, Any]) -> int:
+    maximum = int(config.get("max_consecutive_failures", 3))
+    if maximum < 1:
+        raise ValueError("max_consecutive_failures must be at least 1")
+    return maximum
+
+
+def reset_circuit(state_path: Path, *, now: float | None = None) -> None:
+    state = _load_json(state_path, {})
+    reset_at = time.time() if now is None else now
+    state.update(
+        {
+            "consecutive_failures": 0,
+            "next_retry_at": 0,
+            "last_recovery_outcome": "circuit_reset",
+            "last_decision": "circuit-reset",
+            "last_circuit_reset_at": reset_at,
+            "recovery_episode_id": None,
+            "last_recovered_at": None,
+            "visible_ack_at": None,
+        }
+    )
+    state.pop("circuit_opened_at", None)
+    state.pop("circuit_reason", None)
+    _write_json(state_path, state)
+
+
 def evaluate(
     config: dict[str, Any],
     state: dict[str, Any],
@@ -236,6 +297,12 @@ def evaluate(
         return "tool-running", status
     if now - status.last_activity_at < int(config.get("grace_seconds", 240)):
         return "live", status
+    maximum_failures = _max_consecutive_failures(config)
+    if (
+        state.get("last_recovery_outcome") == "circuit_open"
+        or int(state.get("consecutive_failures", 0)) >= maximum_failures
+    ):
+        return "circuit-open", status
     next_retry_at = float(state.get("next_retry_at", 0))
     if next_retry_at > now:
         return "backoff", status
@@ -268,13 +335,24 @@ def run_once(
         }
     )
     if decision != "recover":
-        if decision == "idle":
+        if (
+            decision == "idle"
+            and state.get("last_recovery_outcome") != "circuit_open"
+        ):
             state["consecutive_failures"] = 0
             state["next_retry_at"] = 0
+        elif decision == "circuit-open":
+            state["next_retry_at"] = 0
+            state["last_recovery_outcome"] = "circuit_open"
+            state.setdefault("circuit_opened_at", current)
+            state.setdefault(
+                "circuit_reason", "maximum consecutive recovery failures reached"
+            )
         _write_json(state_path, state)
         return decision
 
     failures = int(state.get("consecutive_failures", 0))
+    maximum_failures = _max_consecutive_failures(config)
     if failures == 0:
         state.update(
             {
@@ -284,7 +362,8 @@ def run_once(
                 "last_recovered_at": None,
             }
         )
-    attempts = 2 if failures == 0 else 1
+    requested_attempts = 2 if failures == 0 else 1
+    attempts = min(requested_attempts, maximum_failures - failures)
     for attempt in range(1, attempts + 1):
         before_resume = inspect_transcript(rollout_path)
         state["last_attempt_at"] = time.time()
@@ -319,6 +398,8 @@ def run_once(
                         "last_decision": "recovered",
                     }
                 )
+                state.pop("circuit_opened_at", None)
+                state.pop("circuit_reason", None)
                 _write_json(state_path, state)
                 return "recovered"
             if result.returncode == 0:
@@ -326,8 +407,19 @@ def run_once(
         if attempt < attempts:
             time.sleep(float(config.get("immediate_retry_delay_seconds", 2)))
 
-    state["consecutive_failures"] = failures + attempts
-    state["next_retry_at"] = time.time() + int(config.get("retry_interval_seconds", 300))
+    total_failures = failures + attempts
+    state["consecutive_failures"] = total_failures
+    if total_failures >= maximum_failures:
+        state["next_retry_at"] = 0
+        state["last_recovery_outcome"] = "circuit_open"
+        state["last_decision"] = "circuit-open"
+        state["circuit_opened_at"] = time.time()
+        state["circuit_reason"] = "maximum consecutive recovery failures reached"
+        _write_json(state_path, state)
+        return "circuit-open"
+    state["next_retry_at"] = time.time() + int(
+        config.get("retry_interval_seconds", 300)
+    )
     state["last_recovery_outcome"] = "failed"
     state["last_decision"] = "retry-scheduled"
     _write_json(state_path, state)
@@ -351,14 +443,22 @@ def main() -> int:
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--state", type=Path, default=DEFAULT_STATE)
     parser.add_argument("--lock", type=Path, default=DEFAULT_LOCK)
-    parser.add_argument("--once", action="store_true")
-    parser.add_argument("--status", action="store_true")
+    action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument("--once", action="store_true")
+    action.add_argument("--status", action="store_true")
+    action.add_argument("--reset-circuit", action="store_true")
     args = parser.parse_args()
     if args.status:
         print(json.dumps(status(args.config, args.state), ensure_ascii=False, indent=2))
         return 0
-    if not args.once:
-        parser.error("choose --once or --status")
+    if args.reset_circuit:
+        try:
+            with exclusive_lock(args.lock):
+                reset_circuit(args.state)
+                _log("circuit reset")
+        except RuntimeError as exc:
+            _log(str(exc))
+        return 0
     try:
         with exclusive_lock(args.lock):
             _log(f"decision={run_once(args.config, args.state)}")
