@@ -6,14 +6,15 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Header, Query, status
+from pydantic import Field
 
+from aos_api.aip_contracts import AipContractModel
 from aos_api.aip_memory_improvement import (
     AipMemoryImprovementBlocked,
     AipMemoryImprovementConflict,
     AipMemoryImprovementError,
     AipMemoryImprovementNotFound,
     AipMemoryImprovementService,
-    ImprovementEvaluationRequest,
 )
 from aos_api.aip_memory_projection_contracts import (
     ChangeMemoryProjectionStatusRequest,
@@ -21,6 +22,7 @@ from aos_api.aip_memory_projection_contracts import (
     ImprovementObservation,
     MemoryProjection,
     MemoryProjectionEvent,
+    MemoryProjectionStatus,
 )
 from aos_api.aip_memory_projection_store import (
     AipMemoryProjectionBlocked,
@@ -34,9 +36,15 @@ from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
 
-router = APIRouter(prefix="/v1/aip/memory-governance", tags=["aip-memory-governance"])
+router = APIRouter(prefix="/v1/aip/memory-authority", tags=["aip-memory-authority"])
 _PROJECTIONS = AipMemoryProjectionStore()
 _IMPROVEMENT = AipMemoryImprovementService()
+
+
+class ProjectionTransitionCommand(AipContractModel):
+    expected_version: int = Field(ge=1)
+    from_status: MemoryProjectionStatus
+    reason_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
 def get_projection_store() -> AipMemoryProjectionStore:
@@ -96,7 +104,7 @@ def _improvement_error(exc: AipMemoryImprovementError) -> ApiError:
     return ApiError(code=exc.code, message="memory improvement persistence failed", status_code=503)
 
 
-@router.post("/projections", response_model=MemoryProjection, status_code=status.HTTP_201_CREATED)
+@router.post("/agent-projections", response_model=MemoryProjection, status_code=status.HTTP_201_CREATED)
 def create_projection(
     body: CreateMemoryProjectionRequest,
     idempotency_key: str = Header(alias="Idempotency-Key"),
@@ -114,7 +122,7 @@ def create_projection(
         raise _projection_error(exc) from exc
 
 
-@router.get("/projections", response_model=list[MemoryProjection])
+@router.get("/agent-projections", response_model=list[MemoryProjection])
 def list_projections(
     owner_instance_id: str | None = Query(default=None, alias="ownerInstanceId"),
     recipient_instance_id: str | None = Query(default=None, alias="recipientInstanceId"),
@@ -132,7 +140,7 @@ def list_projections(
         raise _projection_error(exc) from exc
 
 
-@router.get("/projections/{projection_id}", response_model=MemoryProjection)
+@router.get("/agent-projections/{projection_id}", response_model=MemoryProjection)
 def get_projection(
     projection_id: str,
     principal: Principal = Depends(require_principal),
@@ -145,18 +153,25 @@ def get_projection(
         raise _projection_error(exc) from exc
 
 
-@router.post("/projections/{projection_id}/status", response_model=MemoryProjection)
-def change_projection_status(
+def _change_projection_status(
     projection_id: str,
-    body: ChangeMemoryProjectionStatusRequest,
-    idempotency_key: str = Header(alias="Idempotency-Key"),
-    principal: Principal = Depends(require_principal),
-    store: AipMemoryProjectionStore = Depends(get_projection_store),
+    body: ProjectionTransitionCommand,
+    *,
+    target: MemoryProjectionStatus,
+    idempotency_key: str,
+    principal: Principal,
+    store: AipMemoryProjectionStore,
 ):
     _require_role(principal, {"admin", "reviewer"})
     try:
         projection, _receipt = store.change_status(
-            _scope(principal), projection_id, body,
+            _scope(principal), projection_id,
+            ChangeMemoryProjectionStatusRequest(
+                expected_version=body.expected_version,
+                from_status=body.from_status,
+                to_status=target,
+                reason_hash=body.reason_hash,
+            ),
             idempotency_key=_key(idempotency_key), actor=principal.subject,
             occurred_at=datetime.now(UTC),
         )
@@ -165,7 +180,49 @@ def change_projection_status(
         raise _projection_error(exc) from exc
 
 
-@router.get("/projections/{projection_id}/events", response_model=list[MemoryProjectionEvent])
+@router.post("/agent-projections/{projection_id}/suspend", response_model=MemoryProjection)
+def suspend_projection(
+    projection_id: str,
+    body: ProjectionTransitionCommand,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    store: AipMemoryProjectionStore = Depends(get_projection_store),
+):
+    return _change_projection_status(
+        projection_id, body, target=MemoryProjectionStatus.SUSPENDED,
+        idempotency_key=idempotency_key, principal=principal, store=store,
+    )
+
+
+@router.post("/agent-projections/{projection_id}/reactivate", response_model=MemoryProjection)
+def reactivate_projection(
+    projection_id: str,
+    body: ProjectionTransitionCommand,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    store: AipMemoryProjectionStore = Depends(get_projection_store),
+):
+    return _change_projection_status(
+        projection_id, body, target=MemoryProjectionStatus.ACTIVE,
+        idempotency_key=idempotency_key, principal=principal, store=store,
+    )
+
+
+@router.post("/agent-projections/{projection_id}/revoke", response_model=MemoryProjection)
+def revoke_projection(
+    projection_id: str,
+    body: ProjectionTransitionCommand,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    store: AipMemoryProjectionStore = Depends(get_projection_store),
+):
+    return _change_projection_status(
+        projection_id, body, target=MemoryProjectionStatus.REVOKED,
+        idempotency_key=idempotency_key, principal=principal, store=store,
+    )
+
+
+@router.get("/agent-projections/{projection_id}/events", response_model=list[MemoryProjectionEvent])
 def list_projection_events(
     projection_id: str,
     principal: Principal = Depends(require_principal),
@@ -178,7 +235,7 @@ def list_projection_events(
         raise _projection_error(exc) from exc
 
 
-@router.get("/projections/{projection_id}/impact", response_model=MemoryRevocationImpact)
+@router.get("/agent-projections/{projection_id}/impact", response_model=MemoryRevocationImpact)
 def get_projection_impact(
     projection_id: str,
     observed_at: datetime = Query(alias="observedAt"),
@@ -192,24 +249,7 @@ def get_projection_impact(
         raise ApiError(code="AIP_MEMORY_PROJECTION_NOT_FOUND", message=str(exc), status_code=404) from exc
 
 
-@router.post(
-    "/observations/evaluate",
-    response_model=ImprovementObservation,
-    status_code=status.HTTP_201_CREATED,
-)
-def evaluate_improvement(
-    body: ImprovementEvaluationRequest,
-    principal: Principal = Depends(require_principal),
-    service: AipMemoryImprovementService = Depends(get_improvement_service),
-):
-    _require_role(principal, {"admin", "reviewer", "executor", "aip_executor"})
-    try:
-        return service.evaluate(_scope(principal), body)
-    except AipMemoryImprovementError as exc:
-        raise _improvement_error(exc) from exc
-
-
-@router.get("/observations", response_model=list[ImprovementObservation])
+@router.get("/improvement-observations", response_model=list[ImprovementObservation])
 def list_observations(
     instance_id: str | None = Query(default=None, alias="instanceId"),
     limit: int = Query(default=100, ge=1, le=200),
@@ -223,7 +263,7 @@ def list_observations(
         raise _improvement_error(exc) from exc
 
 
-@router.get("/observations/{observation_id}", response_model=ImprovementObservation)
+@router.get("/improvement-observations/{observation_id}", response_model=ImprovementObservation)
 def get_observation(
     observation_id: str,
     principal: Principal = Depends(require_principal),

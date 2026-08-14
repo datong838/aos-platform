@@ -1,0 +1,47 @@
+{
+  "receiptId": "AIP5-E7-4C-20260815",
+  "status": "GREEN",
+  "branch": "w1-aip",
+  "baseCommit": "d9722b7c1fcbc590ead8606194a3ecb5f08b5700",
+  "tenantPolicy": {
+    "real": "org-org/dev-project",
+    "negativeCanaryOnly": "dev-org/dev-project"
+  },
+  "scope": [
+    "services/aos-api/aos_api/routers/aip_memory_improvement.py",
+    "services/aos-api/tests/aip/test_aip_memory_improvement_api.py"
+  ],
+  "excluded": [
+    "Alembic migrations",
+    "apps/web",
+    "aos-platform-w2-workshop",
+    "persistent real-tenant writes"
+  ],
+  "changes": [
+    "Canonical API root aligned to /v1/aip/memory-authority",
+    "Projection endpoints aligned to /agent-projections and explicit suspend/reactivate/revoke commands",
+    "Improvement observations exposed as read-only endpoints",
+    "Caller-facing observation evaluation endpoint removed"
+  ],
+  "hashes": {
+    "services/aos-api/aos_api/routers/aip_memory_improvement.py": {
+      "before": "979cc4ffaaa709f3a63432da8ea2ef9c87683187ca01c36c249dbb1f82b6dd40",
+      "after": "320f511a9e7ac3f376aa19404332de7255487ce98924ffc98e0d6cd88188612c"
+    },
+    "services/aos-api/tests/aip/test_aip_memory_improvement_api.py": {
+      "before": "50c0ff6efe26a5835efc46437ac08ca609dac02163ffbd228d7cc94ea72c821f",
+      "after": "0324ac8fdc0460141cd070f3453fc94dba3a9505e9d80c0ec14aa97eb916cdb0"
+    }
+  },
+  "verification": {
+    "pytest": "35 passed",
+    "pyCompile": "GREEN",
+    "gitDiffCheck": "GREEN",
+    "warnings": "18 pre-existing warnings; no new failure"
+  },
+  "remaining": [
+    "GET /v1/aip/memory-authority/memory-exposures",
+    "GET /v1/aip/memory-authority/agent-instances/{instance_id}/memory-context",
+    "E7-5 SDK/UI/browser seal"
+  ]
+}
