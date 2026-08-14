@@ -48,6 +48,7 @@ _EXPECTED_OPERATION_ROLES = {
     "bundle_installations.apply": {"admin", "asset-installer"},
     "bundle_installations.verify": {"admin", "asset-installer"},
     "bundle_installations.rollback": {"admin", "asset-installer"},
+    "bundle_installations.uninstall": {"admin", "asset-installer"},
 }
 
 
