@@ -1,0 +1,63 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w8-02-price-anomaly-operation-case-customer-remedy-doc-align-20260815",
+  "workItem": "W8-02",
+  "projectRevision": "AOS-000033",
+  "branch": "w2-workshop",
+  "sourceCommit": "4a212f7",
+  "recordedAt": "2026-08-15T08:12:00+08:00",
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/18-跨Module端到端场景技术方案.md",
+      "preSha256": "ce29501e8f26a1019fe29063ea3b16fc86efc313b5af95c9d2ac1eaf24edb3f9",
+      "postSha256": "482992940a340ccc0a20f08965df46e8bb4e57ab5fcb5cc0f62aa9d004f1a49d",
+      "change": "added PriceCase-root remedy binding independent actions privacy and outcome conservation contract"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "351f8b956da94d35ef93e1de4700d72b1acc92e9bd77394b35e169640f762866",
+      "postSha256": "38c187e6f804b0f697fdcec352bacf0da005b5a0edc278376783ad961a682e0d",
+      "change": "replaced W8-02 evidence placeholder with exact blockers and no-side-effect decision"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/71-W8-02-价格异常运营Case客户补救同链预检ADR.md",
+      "preSha256": null,
+      "postSha256": "3957c7cbd3cc01ee24b05e09a390b89c531d1f6f7fa31afacb48c273f6b341b0",
+      "change": "created W8-02 scenario ADR and two review rounds"
+    }
+  ],
+  "reviewRounds": [
+    {
+      "round": 1,
+      "focus": "business privacy and independent action boundaries",
+      "result": "PASS",
+      "evidence": [
+        "PriceCase OperationCase and customer remedy remain exact-ref linked",
+        "price financial and message actions have independent authorization and receipts",
+        "Consent frequency protected contact and order deduplication gate execution",
+        "unknown partial settlement and customer outcomes remain independent"
+      ]
+    },
+    {
+      "round": 2,
+      "focus": "execution qualification high-risk side effects and no false evidence",
+      "result": "PASS_WITH_HARD_GATE_BLOCKED",
+      "evidence": [
+        "product freeze and four cumulative dependencies are mandatory",
+        "P08 and shared canary failures cannot be bypassed by data deletion or weaker fallback",
+        "mock fixtures and test adapters cannot satisfy real remediation evidence",
+        "no price customer financial or browser mutation was performed"
+      ]
+    }
+  ],
+  "decision": "SCENARIO_CONTRACT_APPROVED_HARD_GATE_BLOCKED",
+  "implementationStatus": "NOT_STARTED",
+  "externalEffect": "NONE",
+  "safety": [
+    "no source code changed",
+    "no migration",
+    "no real tenant order customer or browser mutation",
+    "no price message refund compensation or payment side effect",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}
