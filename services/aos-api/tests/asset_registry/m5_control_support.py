@@ -85,11 +85,13 @@ class M5ControlRuntime:
         idempotency_key: str,
         roles: Collection[str] = ("asset-installer",),
         markings: Collection[str] = (),
+        org_id: str | None = None,
+        project_id: str | None = None,
     ) -> CommandReceipt:
         return self.composition_service.resolve(
             request=request,
-            org_id=self.org_id,
-            project_id=self.project_id,
+            org_id=self.org_id if org_id is None else org_id,
+            project_id=self.project_id if project_id is None else project_id,
             actor=actor,
             roles=roles,
             markings=markings,
@@ -104,9 +106,13 @@ class M5ControlRuntime:
         maker: str,
         checker: str,
         idempotency_prefix: str,
+        org_id: str | None = None,
+        project_id: str | None = None,
     ) -> tuple[CommandReceipt, ...]:
         """Create through active so negative tests can start from a real baseline."""
 
+        target_org = self.org_id if org_id is None else org_id
+        target_project = self.project_id if project_id is None else project_id
         created = self.installation_service.create(
             request=CreateInstallationRequest.model_validate(
                 {
@@ -116,8 +122,8 @@ class M5ControlRuntime:
                     "displayName": "Synthetic M5 ecommerce composition",
                 }
             ),
-            org_id=self.org_id,
-            project_id=self.project_id,
+            org_id=target_org,
+            project_id=target_project,
             actor=maker,
             roles={"asset-installer"},
             markings=set(),
@@ -129,8 +135,8 @@ class M5ControlRuntime:
         submitted = self.installation_service.submit(
             installation_id=installation_id,
             request=EmptyInstallationActionRequest(),
-            org_id=self.org_id,
-            project_id=self.project_id,
+            org_id=target_org,
+            project_id=target_project,
             actor=maker,
             roles={"asset-installer"},
             markings=set(),
@@ -147,8 +153,8 @@ class M5ControlRuntime:
                     "contributionDiffHash": lock.contribution_diff_hash,
                 }
             ),
-            org_id=self.org_id,
-            project_id=self.project_id,
+            org_id=target_org,
+            project_id=target_project,
             actor=checker,
             roles={"asset-install-approver"},
             markings=set(),
@@ -158,8 +164,8 @@ class M5ControlRuntime:
         applied = self.installation_service.apply(
             installation_id=installation_id,
             request=EmptyInstallationActionRequest(),
-            org_id=self.org_id,
-            project_id=self.project_id,
+            org_id=target_org,
+            project_id=target_project,
             actor=maker,
             roles={"asset-installer"},
             markings=set(),
@@ -169,8 +175,8 @@ class M5ControlRuntime:
         active = self.installation_service.verify(
             installation_id=installation_id,
             request=EmptyInstallationActionRequest(),
-            org_id=self.org_id,
-            project_id=self.project_id,
+            org_id=target_org,
+            project_id=target_project,
             actor=maker,
             roles={"asset-installer"},
             markings=set(),

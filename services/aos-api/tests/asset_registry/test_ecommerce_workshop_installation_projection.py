@@ -33,7 +33,12 @@ OVERLAY_FIXTURE = (
 )
 
 
-def _request(snapshot, *, current_installation_ref=None) -> CompositionRequest:
+def _request(
+    snapshot,
+    *,
+    current_installation_ref=None,
+    environment: str = "dev",
+) -> CompositionRequest:
     versions = {item.id: item.version for item in snapshot.candidates}
     return CompositionRequest.model_validate(
         {
@@ -47,7 +52,7 @@ def _request(snapshot, *, current_installation_ref=None) -> CompositionRequest:
             ],
             "platformApiVersion": "1.7.0",
             "platformRelease": "aos-platform/1.7.0",
-            "environment": "dev",
+            "environment": environment,
             "registrySnapshotHash": snapshot.snapshot_hash,
             "currentInstallationRef": current_installation_ref,
         }
@@ -541,3 +546,82 @@ def test_stale_predecessor_is_rejected_again_when_replacement_draft_is_created(
                 (runtime.org_id, runtime.project_id),
             ).fetchone()
         assert count == {"count": 1}
+
+
+def test_two_tenants_project_their_own_exact_locks_and_canary_stays_empty(
+    tmp_path: Path,
+) -> None:
+    with m5_control_runtime(tmp_path / "runtime-bundles") as runtime:
+        snapshot = runtime.snapshot_reader.read()
+        primary_lock = StoredCompositionLock.model_validate_json(
+            json.dumps(
+                runtime.resolve(
+                    _request(snapshot),
+                    actor="maker:workshop-tenant-primary",
+                    idempotency_key="workshop-tenant-primary-resolve",
+                ).response_json
+            )
+        )
+        primary = _response(
+            runtime.install_to_active(
+                lock=primary_lock,
+                overlay_revision="sha256:" + "3" * 64,
+                maker="maker:workshop-tenant-primary",
+                checker="checker:workshop-tenant-primary",
+                idempotency_prefix="workshop-tenant-primary-install",
+            )[-1]
+        )
+
+        secondary_org = "org-m5-secondary"
+        secondary_project = "project-m5-secondary"
+        secondary_lock = StoredCompositionLock.model_validate_json(
+            json.dumps(
+                runtime.resolve(
+                    _request(snapshot, environment="staging"),
+                    actor="maker:workshop-tenant-secondary",
+                    idempotency_key="workshop-tenant-secondary-resolve",
+                    org_id=secondary_org,
+                    project_id=secondary_project,
+                ).response_json
+            )
+        )
+        secondary = _response(
+            runtime.install_to_active(
+                lock=secondary_lock,
+                overlay_revision="sha256:" + "4" * 64,
+                maker="maker:workshop-tenant-secondary",
+                checker="checker:workshop-tenant-secondary",
+                idempotency_prefix="workshop-tenant-secondary-install",
+                org_id=secondary_org,
+                project_id=secondary_project,
+            )[-1]
+        )
+        assert primary_lock.lock_hash != secondary_lock.lock_hash
+
+        catalog = _catalog(runtime)
+        primary_modules = catalog.list_modules(
+            org_id=runtime.org_id,
+            project_id=runtime.project_id,
+            roles=["operator"],
+            markings=["public"],
+        )
+        secondary_modules = catalog.list_modules(
+            org_id=secondary_org,
+            project_id=secondary_project,
+            roles=["operator"],
+            markings=["public"],
+        )
+        canary = catalog.list_modules(
+            org_id="dev-org",
+            project_id="dev-project",
+            roles=["operator"],
+            markings=["public"],
+        )
+        assert primary_modules.count == secondary_modules.count == 8
+        assert {item.installation_ref.installation_id for item in primary_modules.items} == {
+            primary.installation_id
+        }
+        assert {
+            item.installation_ref.installation_id for item in secondary_modules.items
+        } == {secondary.installation_id}
+        assert canary.count == 0
