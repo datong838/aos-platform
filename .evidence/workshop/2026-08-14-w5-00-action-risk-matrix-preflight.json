@@ -1,0 +1,89 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w5-00-action-risk-matrix-preflight-20260814",
+  "authorityRevision": "AOS-000024",
+  "repositoryRevision": "c841aae357d04510c66e33dd77435b21661ceff9",
+  "result": "W5_00_ACTION_RISK_MATRIX_PREFLIGHT_FACTS_FROZEN",
+  "decision": "MATRIX_DESIGN_ALLOWED_IMPLEMENTATION_BLOCKED",
+  "currentCapabilities": [
+    "Action Proposal, Draft, Approval, ExecutionLease, append-only Receipt and reconcile authorities exist",
+    "maker, approver and executor separation, expiry, idempotency, tenant isolation, kill and count-based guardrails are tested",
+    "AIP CapabilityRevision and tenant-scoped CapabilityBinding authorities exist separately",
+    "R4 execution is disabled by the generic Action execution service"
+  ],
+  "findings": [
+    {
+      "id": "DEP-ACTION-TYPE-VERSIONED-AUTHORITY",
+      "severity": "P0",
+      "finding": "Action proposals read mutable meta_action_type rows and derive a snapshot hash; there is no published, install-locked ActionTypeRevision authority or lifecycle used by the Action chain."
+    },
+    {
+      "id": "DEP-ACTION-RISK-POLICY-AUTHORITY",
+      "severity": "P0",
+      "finding": "server risk is classified by keyword matching over action names, object names and payload keys; it is not resolved from a signed exact risk policy and can misclassify aliases or novel fields."
+    },
+    {
+      "id": "DEP-ACTION-CAPABILITY-BINDING",
+      "severity": "P0",
+      "finding": "ActionProposal and ExecutionLease do not bind an exact CapabilityRevision or CapabilityBinding, so catalog readiness, health, quota, network policy and adapter revision are not revalidated before execution."
+    },
+    {
+      "id": "DEP-ACTION-ACCOUNT-BINDING",
+      "severity": "P0",
+      "finding": "the proposal, preview and lease contain no exact accountRef; ActionAdapter.execute receives only payload and idempotency key, allowing no authority-level proof of which tenant account will be used."
+    },
+    {
+      "id": "DEP-ACTION-PRODUCTION-ADAPTERS",
+      "severity": "P0",
+      "finding": "no production registration of ACTION_ADAPTERS was found; all discovered registrations are test-only, so every real execution currently fails closed with adapter unavailable."
+    },
+    {
+      "id": "DEP-ACTION-ALLOWLIST",
+      "severity": "P0",
+      "finding": "the generic service accepts any existing meta_action_type for proposal creation and permits R2/R3 execution after generic approval; W5 requires an explicit low-risk allowlist while refund, price, inventory, payment and compensation remain independently disabled."
+    },
+    {
+      "id": "DEP-ACTION-BUDGET-POLICY",
+      "severity": "P0",
+      "finding": "guardrails count one budget unit when a lease is acquired, but do not bind currency, estimated or maximum cost, account budget, reservation, release, measured UsageReceipt or an exact BudgetPolicyRevision."
+    },
+    {
+      "id": "DEP-ACTION-RISK-NAMESPACE-MAP",
+      "severity": "P1",
+      "finding": "Action uses R0-R4 while CapabilityRevision uses low, medium, high and critical; no canonical monotonic mapping or conflict rule is implemented."
+    },
+    {
+      "id": "DEP-ACTION-GUARDRAIL-GOVERNANCE",
+      "severity": "P1",
+      "finding": "the guardrail table is enforced at lease time but no versioned CAS command, immutable change receipt, approval policy or installation-overlay binding was found for maintaining it."
+    },
+    {
+      "id": "DEP-ACTION-DRY-VALIDATION",
+      "severity": "P1",
+      "finding": "the ActionAdapter protocol exposes execute and reconcile only; there is no canonical dryValidate contract for account, permissions, limits, reversibility and provider readiness before approval."
+    }
+  ],
+  "verification": {
+    "command": "uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_aip3_action_control.py services/aos-api/tests/aip/test_aip3b_action_execution.py services/aos-api/tests/aip/test_aip6_capability_catalog.py services/aos-api/tests/aip/test_aip6_002_registry_receipts.py services/aos-api/tests/aip/test_w2c_task_approval_gate.py",
+    "result": "27 passed, 7 warnings in 57.05s",
+    "productionAdapterRegistrationScan": "0 production registrations; test registrations only",
+    "interpretation": "the existing generic safety chain is stable, but it is not an operationally authorized ecommerce Action matrix"
+  },
+  "matrixRules": [
+    "the effective risk is the maximum of ActionType, Capability, account, batch size, data marking, reversibility and policy floors; aliases can never lower it",
+    "every executable row must bind exact ActionTypeRevision, CapabilityRevision, CapabilityBinding, accountRef, AdapterRevision, BudgetPolicyRevision and kill policy",
+    "read and draft-only capabilities do not become external Actions merely because the UI exposes a button",
+    "unknown readiness, health, cost, account, policy or provider outcome is blocked; it cannot fall back to another account or adapter",
+    "R4 and all unlisted ActionTypes remain disabled; each R2 or R3 row requires its own explicit specialized policy and canary authorization",
+    "Secret values never enter the matrix, proposal, preview, receipt, logs or shared memory; only opaque refs are allowed"
+  ],
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipW2D3FilesTouched": false
+  }
+}
