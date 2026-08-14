@@ -230,6 +230,7 @@ def _config_revision(config: dict[str, Any]) -> str:
             "retry_schedule_seconds",
             "max_transport_failures",
             "dependency_watch",
+            "fact_watch",
         )
     }
     payload = json.dumps(relevant, ensure_ascii=False, sort_keys=True).encode("utf-8")
@@ -455,11 +456,12 @@ def _resume_prompt(
         f"--episode-id {episode_id} --outcome <outcome> --task-id <task> "
         "--next-task <next> --reason-code <code> --evidence-ref <ref>"
     )
-    first_message = (
-        "依赖 Watchdog 检测到迁移 Lease 已释放，正在重新核验后继续。"
-        if trigger == "dependency-released"
-        else "外部 Watchdog 检测到任务中断，正在恢复核验。"
-    )
+    if trigger == "dependency-released":
+        first_message = "依赖 Watchdog 检测到迁移 Lease 已释放，正在重新核验后继续。"
+    elif trigger == "dependency-fact-changed":
+        first_message = "依赖 Watchdog 检测到外部交付事实已变化，正在重新核验后继续。"
+    else:
+        first_message = "外部 Watchdog 检测到任务中断，正在恢复核验。"
     protocol = f"""
 
 [WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]
@@ -675,6 +677,81 @@ def _dependency_fingerprint(blockers: list[dict[str, Any]]) -> str:
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 
+def _fact_file_hash(path: Path, *, max_file_bytes: int) -> str:
+    if path.is_symlink():
+        raise RuntimeError("fact_watch symbolic links are forbidden")
+    if not path.is_file():
+        raise RuntimeError(f"fact_watch path is not a regular file: {path}")
+    size = path.stat().st_size
+    if size > max_file_bytes:
+        raise RuntimeError(f"fact_watch file exceeds max_file_bytes: {path}")
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(64 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _fact_fingerprint(config: dict[str, Any]) -> str | None:
+    raw = config.get("fact_watch")
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise RuntimeError("fact_watch must be an object")
+    if not raw.get("enabled", False):
+        return None
+    paths = raw.get("paths")
+    if (
+        not isinstance(paths, list)
+        or not paths
+        or not all(isinstance(item, str) and item for item in paths)
+    ):
+        raise RuntimeError("fact_watch paths must be non-empty strings")
+    max_files = raw.get("max_files", 10_000)
+    max_file_bytes = raw.get("max_file_bytes", 16 * 1024 * 1024)
+    if (
+        not isinstance(max_files, int)
+        or isinstance(max_files, bool)
+        or max_files <= 0
+        or not isinstance(max_file_bytes, int)
+        or isinstance(max_file_bytes, bool)
+        or max_file_bytes <= 0
+    ):
+        raise RuntimeError("fact_watch limits must be positive integers")
+    records: list[tuple[str, str]] = []
+    for raw_path in sorted(set(paths)):
+        path = Path(raw_path)
+        if not path.is_absolute():
+            raise RuntimeError("fact_watch paths must be absolute")
+        if path.is_symlink():
+            raise RuntimeError("fact_watch symbolic links are forbidden")
+        if path.is_file():
+            records.append((raw_path, _fact_file_hash(path, max_file_bytes=max_file_bytes)))
+            if len(records) > max_files:
+                raise RuntimeError("fact_watch exceeds max_files")
+            continue
+        if not path.is_dir():
+            raise RuntimeError(f"fact_watch path is unavailable: {path}")
+        for child in sorted(path.rglob("*"), key=lambda item: item.as_posix()):
+            if child.is_symlink():
+                raise RuntimeError("fact_watch symbolic links are forbidden")
+            if child.is_dir():
+                continue
+            relative = child.relative_to(path).as_posix()
+            records.append(
+                (
+                    f"{raw_path}/{relative}",
+                    _fact_file_hash(child, max_file_bytes=max_file_bytes),
+                )
+            )
+            if len(records) > max_files:
+                raise RuntimeError("fact_watch exceeds max_files")
+    encoded = json.dumps(records, ensure_ascii=False, separators=(",", ":")).encode(
+        "utf-8"
+    )
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
 def evaluate(
     config: dict[str, Any],
     state: dict[str, Any],
@@ -731,6 +808,16 @@ def run_once(
         config, state, now=current, rollout_path=rollout_path
     )
     blockers = _dependency_blockers(config, now=current)
+    fact_fingerprint = _fact_fingerprint(config)
+    previous_fact_fingerprint = state.get("fact_watch_fingerprint")
+    fact_changed = (
+        fact_fingerprint is not None
+        and isinstance(previous_fact_fingerprint, str)
+        and fact_fingerprint != previous_fact_fingerprint
+    )
+    if fact_fingerprint is not None:
+        state["fact_watch_fingerprint"] = fact_fingerprint
+        state["fact_watch_last_checked_at"] = current
     dependency_armed = bool(state.get("dependency_wait_armed", False))
     if blockers:
         state.update(
@@ -753,6 +840,10 @@ def run_once(
         if dependency_armed and decision in {"idle", "recover"}:
             decision = "dependency-released"
             state["dependency_released_at"] = current
+        elif fact_changed and decision in {"idle", "recover"}:
+            decision = "dependency-fact-changed"
+            state["fact_changed_at"] = current
+            state["fact_previous_fingerprint"] = previous_fact_fingerprint
     state["dependency_watch_last_checked_at"] = current
     state.update(
         {
@@ -763,7 +854,7 @@ def run_once(
             "rollout_path": str(rollout_path),
         }
     )
-    if decision not in {"recover", "dependency-released"}:
+    if decision not in {"recover", "dependency-released", "dependency-fact-changed"}:
         if decision in {"idle", "dependency-blocked"}:
             state["consecutive_failures"] = 0
             state["next_retry_at"] = 0
@@ -799,7 +890,11 @@ def run_once(
                 "recovery_episode_id": (
                     f"dependency-release-{int(current * 1000)}"
                     if trigger == "dependency-released"
-                    else f"recovery-{int(current * 1000)}"
+                    else (
+                        f"dependency-fact-{int(current * 1000)}"
+                        if trigger == "dependency-fact-changed"
+                        else f"recovery-{int(current * 1000)}"
+                    )
                 ),
                 "episode_trigger": trigger,
                 "last_recovery_outcome": "attempting",

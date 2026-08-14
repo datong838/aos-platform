@@ -72,6 +72,17 @@ class WatchdogTest(unittest.TestCase):
         }
         return config
 
+    def fact_config(self):
+        config = self.config()
+        config["fact_watch"] = {
+            "enabled": True,
+            "paths": [
+                str(self.root / "authority.json"),
+                str(self.root / "deliveries"),
+            ],
+        }
+        return config
+
     def write_leases(self, *leases):
         (self.root / "leases.json").write_text(
             json.dumps({"schema": "aos-memory-leases/v1", "leases": list(leases)}),
@@ -612,6 +623,96 @@ class WatchdogTest(unittest.TestCase):
         self.assertEqual("idle", watchdog.run_once(config_path, state_path, now=1000))
         state = json.loads(state_path.read_text(encoding="utf-8"))
         self.assertFalse(state.get("dependency_wait_armed", False))
+
+    def test_fact_watch_baselines_then_wakes_once_on_idle_change(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:00:20Z", "assistant", "final_answer"),
+        )
+        (self.root / "authority.json").write_text(
+            json.dumps({"project_revision": "AOS-000019"}), encoding="utf-8"
+        )
+        deliveries = self.root / "deliveries"
+        deliveries.mkdir()
+        (deliveries / "one.json").write_text("{}", encoding="utf-8")
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.fact_config()), encoding="utf-8")
+        calls = []
+
+        def runner(command, **kwargs):
+            calls.append(command)
+            self.assertIn(
+                "第一条用户可见消息只能说：依赖 Watchdog 检测到外部交付事实已变化，正在重新核验后继续。",
+                kwargs["input"],
+            )
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.write_ack(episode_id=state["recovery_episode_id"])
+            self.append(record("1970-01-01T00:21:41Z", "assistant", "final_answer"))
+            return subprocess.CompletedProcess(command, 0, "completed", "")
+
+        self.assertEqual("idle", watchdog.run_once(config_path, state_path, now=1000, runner=runner))
+        (deliveries / "two.json").write_text('{"result":"GREEN"}', encoding="utf-8")
+        self.assertEqual(
+            "resumed-progress",
+            watchdog.run_once(config_path, state_path, now=1300, runner=runner),
+        )
+        self.assertEqual("idle", watchdog.run_once(config_path, state_path, now=1600, runner=runner))
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("dependency-fact-changed", state["episode_trigger"])
+        self.assertEqual(1, len(calls))
+
+    def test_fact_watch_active_turn_absorbs_change_without_wake(self):
+        self.write(
+            task_event("1970-01-01T00:00:05Z", "task_started"),
+            record("1970-01-01T00:00:10Z", "user"),
+        )
+        authority = self.root / "authority.json"
+        authority.write_text('{"project_revision":"AOS-000019"}', encoding="utf-8")
+        deliveries = self.root / "deliveries"
+        deliveries.mkdir()
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.fact_config()), encoding="utf-8")
+        calls = []
+
+        def runner(*args, **kwargs):
+            calls.append(args)
+            return subprocess.CompletedProcess(args[0], 0, "", "")
+
+        self.assertEqual("turn-running", watchdog.run_once(config_path, state_path, now=1000, runner=runner))
+        authority.write_text('{"project_revision":"AOS-000020"}', encoding="utf-8")
+        self.assertEqual("turn-running", watchdog.run_once(config_path, state_path, now=1300, runner=runner))
+        self.append(
+            task_event("1970-01-01T00:21:41Z", "task_complete"),
+            record("1970-01-01T00:21:42Z", "assistant", "final_answer"),
+        )
+        self.assertEqual("idle", watchdog.run_once(config_path, state_path, now=1600, runner=runner))
+        self.assertEqual([], calls)
+
+    def test_fact_watch_rejects_symlink(self):
+        target = self.root / "target.json"
+        target.write_text("{}", encoding="utf-8")
+        link = self.root / "authority.json"
+        link.symlink_to(target)
+        deliveries = self.root / "deliveries"
+        deliveries.mkdir()
+        with self.assertRaisesRegex(RuntimeError, "symbolic links"):
+            watchdog._fact_fingerprint(self.fact_config())
+
+    def test_fact_watch_applies_max_files_to_individual_roots(self):
+        first = self.root / "authority.json"
+        second = self.root / "receipt.json"
+        first.write_text("{}", encoding="utf-8")
+        second.write_text("{}", encoding="utf-8")
+        config = self.config()
+        config["fact_watch"] = {
+            "enabled": True,
+            "paths": [str(first), str(second)],
+            "max_files": 1,
+        }
+        with self.assertRaisesRegex(RuntimeError, "exceeds max_files"):
+            watchdog._fact_fingerprint(config)
 
     def test_exit_zero_without_visible_final_is_not_recovered(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))
