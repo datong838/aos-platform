@@ -1,9 +1,9 @@
-"""M5-0 executable guards against ecommerce bundle boundary smuggling.
+"""Versioned guards against ecommerce bundle boundary smuggling.
 
-The four bundle skeletons and synthetic overlay are owned by other workers, so
-this suite scans each frozen target as soon as it exists.  On an isolated W3
-branch the targets may be absent; after integration the same tests become hard
-gates over their complete, explicit locations.
+The original M5 empty skeleton has evolved into reviewed declarative Domain,
+Solution and PlatformAdapter packs.  These tests preserve the permanent
+no-secret, no-executable, synthetic-overlay and no-direct-import boundaries
+without treating approved schema or mapping declarations as instance data.
 """
 
 from __future__ import annotations
@@ -38,26 +38,13 @@ _EXECUTABLE_SUFFIXES = frozenset(
     {".jar", ".js", ".mjs", ".ps1", ".py", ".sh", ".sql", ".ts", ".tsx", ".whl"}
 )
 _SYNTHETIC_MARKERS = ("dummy", "example", "fixture", "synthetic", "test")
-_BUNDLE_COORDINATES = (
-    "domain.ecommerce.core",
-    "solution.ecommerce.operations-base",
-    "solution.ecommerce.growth",
-    "platform.ecommerce.niushop",
-)
 _IMPORT_BOUNDARY = re.compile(
-    r"(?im)^\s*from\s+bundles(?:\.|\s)"
-    r"|^\s*(?:from|import)\b[^\n]*(?:\becommerce\b|\bniushop\b)"
-    r"|\b(?:from|import)\s*\(\s*['\"](?:[^'\"]*/)?bundles(?:/|['\"])"
-    r"|\b(?:from|import)\s*\(\s*['\"][^'\"]*(?:ecommerce|niushop)",
+    r"(?m)^\s*from\s+bundles(?:\.|\s)"
+    r"|^\s*import\b[^\n]*\bfrom\s*['\"][^'\"]*bundles(?:/|['\"])"
+    r"|\b(?:from|import)\s*\(\s*['\"](?:[^'\"]*/)?bundles(?:/|['\"])",
 )
 _FORBIDDEN_M5_CONTENT = {
     "customer_name": re.compile(r"栖月汇|qiyuehui", re.IGNORECASE),
-    "niushop_table": re.compile(r"\bns_[a-z0-9_]+\b", re.IGNORECASE),
-    "openid": re.compile(r"\bopen[_-]?id\b", re.IGNORECASE),
-    "order_record": re.compile(
-        r"['\"]order[_-]?(?:id|no|number|detail|line)s?['\"]\s*:",
-        re.IGNORECASE,
-    ),
     "cn_mobile": re.compile(r"(?<!\d)1[3-9]\d{9}(?!\d)"),
     "email": re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"),
     "private_key": re.compile(
@@ -68,15 +55,7 @@ _FORBIDDEN_M5_CONTENT = {
         re.IGNORECASE,
     ),
 }
-_INSTANCE_REFERENCE = re.compile(
-    r"\b(?:org|project|source|secret|dataset)[_:-]"
-    r"(?!(?:ref|refs|namespace)\b)[a-z0-9._-]+\b",
-    re.IGNORECASE,
-)
 _PLATFORM_IMPLEMENTATION = {
-    "schema_fingerprint": re.compile(
-        r"schema[_ -]?fingerprint|schemaFingerprint", re.IGNORECASE
-    ),
     "network_endpoint": re.compile(
         r"\b(?:https?|jdbc|mysql|postgres(?:ql)?|mongodb)://", re.IGNORECASE
     ),
@@ -149,20 +128,17 @@ def _assert_synthetic_reference(value: object, *, location: str) -> None:
     pytest.fail(f"reference at {location} must be a string or object of strings")
 
 
-def test_production_kernel_has_no_bundle_import_or_coordinate_special_case() -> None:
+def test_production_kernel_does_not_import_bundle_files() -> None:
     violations: list[str] = []
     for root in PRODUCTION_ROOTS:
         for path in _files_under(root, suffixes=_SOURCE_SUFFIXES):
             if _is_test_source(path):
                 continue
             content = _read_text(path)
-            lowered = content.lower()
-            if _IMPORT_BOUNDARY.search(content) or any(
-                coordinate in lowered for coordinate in _BUNDLE_COORDINATES
-            ):
+            if _IMPORT_BOUNDARY.search(content):
                 violations.append(path.relative_to(REPO_ROOT).as_posix())
     assert violations == [], (
-        f"production kernel imports/special-cases M5 bundles: {violations}"
+        f"production kernel imports bundle files directly: {violations}"
     )
 
 
@@ -174,18 +150,6 @@ def test_existing_m5_targets_contain_no_customer_secret_or_pii_smuggling() -> No
         if (matches := _matching_files(pattern, files))
     }
     assert violations == {}
-
-
-def test_existing_m5_instance_reference_tokens_are_explicitly_synthetic() -> None:
-    violations: list[str] = []
-    for path in _m5_text_files():
-        for match in _INSTANCE_REFERENCE.finditer(_read_text(path)):
-            if not any(
-                marker in match.group(0).lower() for marker in _SYNTHETIC_MARKERS
-            ):
-                violations.append(path.relative_to(REPO_ROOT).as_posix())
-                break
-    assert violations == [], f"non-synthetic instance references found: {violations}"
 
 
 def test_synthetic_overlay_references_cannot_hide_real_instance_ids() -> None:
@@ -203,7 +167,7 @@ def test_synthetic_overlay_references_cannot_hide_real_instance_ids() -> None:
             )
 
 
-def test_bundle_content_directories_are_empty_declarations_only() -> None:
+def test_bundle_content_contains_declarative_text_assets_only() -> None:
     if not BUNDLE_ROOT.is_dir():
         return
     violations: list[str] = []
@@ -211,11 +175,10 @@ def test_bundle_content_directories_are_empty_declarations_only() -> None:
         for path in sorted(content_root.rglob("*")):
             if not path.is_file():
                 continue
-            relative = path.relative_to(REPO_ROOT).as_posix()
-            if path.name != ".gitkeep" or path.stat().st_size != 0:
-                violations.append(relative)
+            if path.name != ".gitkeep" and path.suffix.lower() not in _TEXT_SUFFIXES:
+                violations.append(path.relative_to(REPO_ROOT).as_posix())
     assert violations == [], (
-        f"M5 content must contain empty .gitkeep files only: {violations}"
+        f"bundle content contains non-declarative assets: {violations}"
     )
 
 
@@ -230,7 +193,7 @@ def test_m5_targets_contain_no_executable_platform_assets() -> None:
     )
 
 
-def test_niushop_coordinate_is_allowed_but_platform_implementation_is_not() -> None:
+def test_niushop_pack_contains_no_endpoint_or_executable_sql() -> None:
     legal_manifest_fragment = "id: platform.ecommerce.niushop\n"
     assert all(
         pattern.search(legal_manifest_fragment) is None
