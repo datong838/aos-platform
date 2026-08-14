@@ -1,0 +1,60 @@
+{
+  "schema": "aos-workshop-doc-ledger-evidence/v1",
+  "taskId": "workshop-w4-08-cross-capability-doc-ledger-20260814",
+  "authorityRevision": "AOS-000024",
+  "result": "W4_08_CROSS_CAPABILITY_DOC_LEDGER_ALIGNED",
+  "reviewLoop": [
+    {
+      "round": 1,
+      "result": "REMEDIATION_REQUIRED",
+      "findings": [
+        "W4-08 was a one-line browser gate without a canonical cross-capability journey",
+        "security negatives, refresh recovery and exact evidence requirements were not enumerated",
+        "stable component tests could be mistaken for cumulative product completion"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "DOCUMENT_BASELINE_APPROVED_IMPLEMENTATION_BLOCKED",
+      "findings": [
+        "the unique cross-capability journey and authority boundaries are explicit",
+        "cross-tenant, marking, revoke, expiry, unknown and refresh cases are testable gates",
+        "backend and frontend regression results are accurately separated from browser acceptance",
+        "W4-08 remains unchecked until W4-01 through W4-07 are individually GREEN"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "path": "12-工作台层技术方案/04-EvidenceWiki查询与保存视图.md",
+      "preSha256": "6faf398cf60fce2d7bd8f117334d202931a471a06c125d75f594cfb3dc03d5cd",
+      "postSha256": "cd4432e7e14f2245983760bc3a0768d8519415c13ddb8ca90d3d8d2650d66510"
+    },
+    {
+      "path": "12-工作台层技术方案/39-W4-08跨能力浏览器与安全累计门预检ADR.md",
+      "preSha256": null,
+      "postSha256": "917f25f0d81fa1cba98c7535c1d4c86cc3035f4f781a1aae498cab3b3f53dcba"
+    },
+    {
+      "path": "12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "6f06acab8ca4542fed01f7269519fe625dd95e723a932a52afbd215b2c091a2e",
+      "postSha256": "aa637912082ab4712f7362c585f994709009d52deb66baeafa1f136fd73c1c34"
+    }
+  ],
+  "alignment": {
+    "preflightEvidence": ".evidence/workshop/2026-08-14-w4-08-cross-capability-gate-preflight.json",
+    "preflightCommit": "4e480b7",
+    "w4ItemChecked": false,
+    "implementationAuthorized": false,
+    "browserAcceptanceClaimed": false,
+    "aipW2D3FilesTouched": false,
+    "staticVisualsTouched": false
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "migrationLeaseAcquired": false
+  }
+}
