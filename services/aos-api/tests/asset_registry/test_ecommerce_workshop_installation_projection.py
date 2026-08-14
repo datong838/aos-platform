@@ -14,6 +14,7 @@ from aos_api.asset_registry.composition_contracts import (
     InstallationResponse,
     RollbackInstallationRequest,
     StoredCompositionLock,
+    UninstallInstallationRequest,
 )
 from aos_api.ecommerce_workshop_catalog import (
     EcommerceWorkshopCatalog,
@@ -177,6 +178,89 @@ def test_active_exact_lock_projects_eight_modules_and_rollback_preserves_history
                 ),
             ).fetchone()
         assert history == {"revisions": 6, "events": 6, "locks": 1}
+
+
+def test_active_installation_uninstall_is_immutable_and_removes_projection(
+    tmp_path: Path,
+) -> None:
+    with m5_control_runtime(tmp_path / "runtime-bundles") as runtime:
+        lock = StoredCompositionLock.model_validate_json(
+            json.dumps(
+                runtime.resolve(
+                    _request(runtime.snapshot_reader.read()),
+                    actor="maker:workshop-uninstall",
+                    idempotency_key="workshop-uninstall-resolve",
+                ).response_json
+            )
+        )
+        active = _response(
+            runtime.install_to_active(
+                lock=lock,
+                overlay_revision="sha256:" + "9" * 64,
+                maker="maker:workshop-uninstall",
+                checker="checker:workshop-uninstall",
+                idempotency_prefix="workshop-uninstall-install",
+            )[-1]
+        )
+
+        uninstalled_receipt = runtime.installation_service.uninstall(
+            installation_id=active.installation_id,
+            request=UninstallInstallationRequest.model_validate(
+                {"reason": "Workshop uninstall migration proof"}
+            ),
+            org_id=runtime.org_id,
+            project_id=runtime.project_id,
+            actor="maker:workshop-uninstall",
+            roles={"asset-installer"},
+            markings=set(),
+            idempotency_key="workshop-uninstall-command",
+            if_match='"5"',
+        )
+        uninstalled = _response(uninstalled_receipt)
+
+        assert uninstalled.state == "uninstalled"
+        assert uninstalled.current_revision == 6
+        assert uninstalled.active_revision is None
+        assert uninstalled.previous_active_revision is None
+        assert _catalog(runtime).list_modules(
+            org_id=runtime.org_id,
+            project_id=runtime.project_id,
+            roles=["operator"],
+            markings=["public"],
+        ).count == 0
+
+        with runtime.connect_factory() as connection:
+            history = connection.execute(
+                """
+                SELECT
+                  (SELECT COUNT(*) FROM bundle_installation_revision
+                    WHERE org_id=%s AND project_id=%s) AS revisions,
+                  (SELECT COUNT(*) FROM bundle_installation_event
+                    WHERE org_id=%s AND project_id=%s) AS events,
+                  (SELECT COUNT(*) FROM bundle_installation_command
+                    WHERE org_id=%s AND project_id=%s) AS commands,
+                  (SELECT evidence_json->>'type'
+                     FROM bundle_installation_event
+                    WHERE org_id=%s AND project_id=%s
+                    ORDER BY sequence DESC LIMIT 1) AS evidence_type
+                """,
+                (
+                    runtime.org_id,
+                    runtime.project_id,
+                    runtime.org_id,
+                    runtime.project_id,
+                    runtime.org_id,
+                    runtime.project_id,
+                    runtime.org_id,
+                    runtime.project_id,
+                ),
+            ).fetchone()
+        assert history == {
+            "revisions": 6,
+            "events": 6,
+            "commands": 7,
+            "evidence_type": "uninstall",
+        }
 
 
 def test_replacement_leaf_shadows_predecessor_and_rollback_restores_it(

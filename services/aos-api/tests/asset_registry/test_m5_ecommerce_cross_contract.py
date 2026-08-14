@@ -72,6 +72,7 @@ def test_control_runtime_stays_synthetic_and_stops_before_integration_cases() ->
         "228asset0_invariants.py",
         "228asset0_evidence_snapshot.py",
         "228asset1_composition_installation.py",
+        "w1e_001_bundle_installation_uninstall.py",
     ]
 
 

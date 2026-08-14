@@ -46,6 +46,24 @@ def test_evidence_is_reproducible_with_canonical_utc_timestamp() -> None:
     )
 
 
+def test_uninstall_evidence_is_a_canonical_active_transition() -> None:
+    arguments = {
+        **_arguments(),
+        "evidence_type": "uninstall",
+        "from_revision": 5,
+        "to_revision": 6,
+    }
+
+    evidence = build_event_evidence(**arguments)
+
+    assert evidence.type == "uninstall"
+    assert evidence.evidence_ref.endswith("/revisions/6/uninstall")
+    verify_event_evidence(
+        evidence,
+        **{key: value for key, value in arguments.items() if key != "evidence_type"},
+    )
+
+
 def test_evidence_tampering_is_rejected() -> None:
     evidence = build_event_evidence(**_arguments()).model_copy(
         update={"evidence_hash": "sha256:" + "f" * 64}

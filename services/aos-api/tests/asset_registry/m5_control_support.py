@@ -51,6 +51,7 @@ M5_CONTROL_MIGRATIONS = (
     API_ROOT / "alembic/versions/228asset0_invariants.py",
     API_ROOT / "alembic/versions/228asset0_evidence_snapshot.py",
     API_ROOT / "alembic/versions/228asset1_composition_installation.py",
+    API_ROOT / "alembic/versions/w1e_001_bundle_installation_uninstall.py",
 )
 M5_ORG_ID = "org-m5-synthetic"
 M5_PROJECT_ID = "project-m5-synthetic"
@@ -272,7 +273,7 @@ def _publish_four_bundles(
 
 @contextmanager
 def m5_control_runtime(destination: Path) -> Iterator[M5ControlRuntime]:
-    """Yield an isolated five-migration M5 control plane and always clean it up."""
+    """Yield an isolated M5 control plane and always clean it up."""
 
     schema = f"m5_control_{uuid.uuid4().hex}"
     created = False
