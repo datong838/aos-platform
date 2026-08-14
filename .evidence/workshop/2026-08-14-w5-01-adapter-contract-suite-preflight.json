@@ -1,0 +1,94 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w5-01-adapter-contract-suite-preflight-20260814",
+  "authorityRevision": "AOS-000025",
+  "repositoryRevision": "dd0b2fa5dc8f0750d8032c0985515760d6036273",
+  "result": "W5_01_ADAPTER_CONTRACT_SUITE_PREFLIGHT_FACTS_FROZEN",
+  "decision": "CONTRACT_SUITE_DESIGN_ALLOWED_IMPLEMENTATION_BLOCKED",
+  "findings": [
+    {
+      "id": "DEP-ADAPTER-CONTRACT-DEFINITION",
+      "severity": "P0",
+      "finding": "ActionAdapter is only an execute and reconcile Protocol; no immutable adapter definition binds capability, account kind, schemas, risk, idempotency domain, timeout, usage, webhook, version or readiness."
+    },
+    {
+      "id": "DEP-ADAPTER-DRY-VALIDATE",
+      "severity": "P0",
+      "finding": "the canonical Action adapter boundary has no dryValidate operation, so account permission, object scope, quota, capacity, estimated cost, reversibility and provider readiness cannot be proven before approval."
+    },
+    {
+      "id": "DEP-ADAPTER-CONFORMANCE-HARNESS",
+      "severity": "P0",
+      "finding": "no shared parameterized conformance suite was found that every production adapter must pass; current tests register local fake adapters directly."
+    },
+    {
+      "id": "DEP-ADAPTER-INPUT-OUTPUT-SCHEMA",
+      "severity": "P0",
+      "finding": "ActionAdapter receives and returns untyped dictionaries; the execution boundary does not validate signed input, provider output, Receipt payload or semantic status against exact schemas."
+    },
+    {
+      "id": "DEP-ADAPTER-TRUSTED-ACCOUNT-RESOLUTION",
+      "severity": "P0",
+      "finding": "there is no contract-level trusted AccountRef and secret resolver; tests bypass the account and secret boundary entirely."
+    },
+    {
+      "id": "DEP-ADAPTER-WEBHOOK-INBOX",
+      "severity": "P0",
+      "finding": "ResearchJob contains useful callback signature and nonce patterns, but the canonical Action chain has no tenant-scoped signed webhook inbox linked to ActionReceipt; the legacy action-webhook engine is a separate surface and cannot be adopted as authority."
+    },
+    {
+      "id": "DEP-ADAPTER-USAGE-BRIDGE",
+      "severity": "P1",
+      "finding": "AIP has a separate UsageReceipt authority and provider usage bridge, but Action execution does not require or link a measured, estimated or unknown usage receipt."
+    },
+    {
+      "id": "DEP-ADAPTER-PARTIAL-CANCEL",
+      "severity": "P1",
+      "finding": "Action outcomes support accepted, applied, failed and unknown only; batch partial, cancellation capability, cancellation receipt and partial reconciliation are absent."
+    },
+    {
+      "id": "DEP-ADAPTER-ERROR-TAXONOMY",
+      "severity": "P1",
+      "finding": "unexpected exceptions collapse to failed and invalid statuses to unknown without a signed provider-neutral reason taxonomy, retry safety declaration or redaction contract."
+    },
+    {
+      "id": "DEP-ADAPTER-PRODUCTION-PUBLISH-GATE",
+      "severity": "P1",
+      "finding": "there is no gate proving that a registered production adapter revision passed the exact contract suite before its CapabilityBinding can become available."
+    }
+  ],
+  "reusablePatterns": [
+    "AIP Action single-attempt lease, immutable initial and reconcile receipts, no automatic retry",
+    "ResearchJob signed callback timestamp, nonce and provider reread patterns",
+    "CapabilityRevision and CapabilityBinding exact ref, health, quota, network and secret-ref contracts",
+    "AIP UsageReceipt measured, estimated and unknown quality separation",
+    "existing tenant isolation, marking and idempotency conflict conventions"
+  ],
+  "requiredSuiteDimensions": [
+    "definition and exact revision",
+    "input, output, receipt and usage schemas",
+    "account, secret, tenant and marking isolation",
+    "dryValidate and drift between validate, approve, lease and execute",
+    "idempotency replay and same-key payload conflict",
+    "rate, capacity, timeout, accepted, applied, failed and unknown",
+    "reconcile by trusted provider reread without blind retry",
+    "partial batch, cancel and compensation capability declarations",
+    "signed webhook inbox, replay window, nonce, ordering and deduplication",
+    "kill switch, budget reservation and UsageReceipt settlement",
+    "redaction and zero secret or PII leakage",
+    "publish gate and rollback to the prior installed adapter revision"
+  ],
+  "verification": {
+    "command": "uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_aip3b_action_execution.py services/aos-api/tests/aip/test_aip_research_job_store.py services/aos-api/tests/aip/test_aip_research_job_api.py services/aos-api/tests/aip/test_aip_telemetry_usage_api.py services/aos-api/tests/aip/test_aip_telemetry_usage_service.py services/aos-api/tests/test_action_webhook.py",
+    "result": "69 passed, 7 warnings in 66.67s",
+    "interpretation": "reusable safety fragments are stable, but there is no single canonical Action adapter conformance suite or production publish gate"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false
+  }
+}
