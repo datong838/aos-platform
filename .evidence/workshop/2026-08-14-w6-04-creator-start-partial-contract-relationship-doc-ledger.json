@@ -1,0 +1,44 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w6-04-creator-start-partial-contract-relationship-doc-ledger-20260814",
+  "authorityRevision": "AOS-000027",
+  "repositoryBaseRevision": "af9f1cd13588a8c6df242c6779485cd447db3d0b",
+  "result": "W6_04_CREATOR_START_PARTIAL_CONTRACT_RELATIONSHIP_DOC_LEDGER_ALIGNED",
+  "decision": "TARGET_CONTRACT_REVIEWED_IMPLEMENTATION_REMAINS_BLOCKED",
+  "documents": [
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/13-达人邀约技术方案.md",
+      "preSha256": "26c40016d0f162f31eb2727730c9c70e36c15105f616726e12e310188a3455bd",
+      "postSha256": "f878a15ad8b7117d53a05ab738a75ef39be6b3ec5273939f6b361e29c22378a7",
+      "change": "added explicit start CAS, item-level action and partial conservation, four-action isolation, contract term Diff, delivery observation, relationship maturity and lineage rules"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/52-W6-04-达人显式StartPartial合同履约关系链预检ADR.md",
+      "preSha256": null,
+      "postSha256": "0007760837945eaea5383af7ec309e9b3a71823f4b288e43d537ae9aede17de0",
+      "change": "added current-state findings, common-versus-domain boundary, eleven blockers, durable execution decision and two-round review"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "321cfcb1b5503cea34482ec4182c62f08cd7f0dd7fc375752942024adeadac85",
+      "postSha256": "3b547925e49ee3a4692c3b3169620b0741ba577f0789bfc4fb403d2ddf7e8b7a",
+      "change": "replaced the empty W6-04 evidence field with exact dependency IDs, verified generic Action results and the honest unchecked/no-real-outreach status"
+    }
+  ],
+  "review": {
+    "round1": "GREEN: prepare/freeze and start are separate, four actions have independent authorization, unknown is not replayed and partial preserves item facts; durable attempt and count conservation were added",
+    "round2": "GREEN: contract Diff, commission maker-checker, delivery ordering and relationship maturity are explicit; history is append-only and every blocker has an exit condition",
+    "implementationStatus": "NOT_STARTED",
+    "checklistStatus": "UNCHECKED"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "staticVisualHtmlChanged": false,
+    "databaseChanged": false,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}
