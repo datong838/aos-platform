@@ -1,0 +1,90 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w5-06-webhook-inbox-replay-ordering-preflight-20260814",
+  "authorityRevision": "AOS-000026",
+  "repositoryRevision": "63ee03085cbfb541033ad581f71bb964d6361829",
+  "result": "W5_06_WEBHOOK_INBOX_REPLAY_ORDERING_PREFLIGHT_FACTS_FROZEN",
+  "decision": "RESEARCH_CALLBACK_PRIMITIVES_GREEN_ACTION_INBOX_BLOCKED",
+  "implementedFoundation": [
+    "ResearchJob callback verification binds provider revision, HMAC signature, body hash, timestamp and nonce",
+    "the Research callback replay window is five minutes and nonce hashes are persisted with a tenant-scoped unique constraint",
+    "Research provider events bind provider execution id, sequence, event id, status and payload hash and detect gaps or replay drift",
+    "the callback transport intentionally does not trust a callback as final state and instructs the caller to pull provider state"
+  ],
+  "findings": [
+    {
+      "id": "DEP-ACTION-WEBHOOK-INBOX",
+      "severity": "P0",
+      "finding": "there is no tenant-scoped canonical ActionWebhookInbox, ingress route or append-only webhook receipt linked to Action Attempt, provider request and account binding."
+    },
+    {
+      "id": "DEP-ACTION-WEBHOOK-INGRESS-IDENTITY",
+      "severity": "P0",
+      "finding": "an external callback cannot safely choose org or project from caller headers; Action ingress needs endpoint credential or registration authority that resolves tenant, account and Adapter revision before payload parsing."
+    },
+    {
+      "id": "DEP-ACTION-WEBHOOK-SIGNATURE-POLICY",
+      "severity": "P0",
+      "finding": "Action adapters expose execute and reconcile only; no versioned Adapter signature policy defines algorithm, canonical bytes, header mapping, key revision, timestamp window, rotation overlap or verification result."
+    },
+    {
+      "id": "DEP-ACTION-WEBHOOK-RAW-QUARANTINE",
+      "severity": "P0",
+      "finding": "there is no bounded raw-body quarantine with content hash, marking, malware and PII controls; parsing unverified or oversized webhook content would cross the trust boundary."
+    },
+    {
+      "id": "DEP-ACTION-WEBHOOK-REPLAY",
+      "severity": "P0",
+      "finding": "Research nonce persistence is reusable but not connected to Action provider identity or events; Action needs provider event id, nonce or body-hash replay keys and drift-conflict receipts."
+    },
+    {
+      "id": "DEP-ACTION-WEBHOOK-EVENT-BINDING",
+      "severity": "P0",
+      "finding": "no exact reducer binds a verified webhook event to one ActionExecutionAttempt, provider request id, actionBindingHash and Adapter schema; an unmatched event has no quarantine or investigation Case."
+    },
+    {
+      "id": "DEP-ACTION-WEBHOOK-ORDERING",
+      "severity": "P0",
+      "finding": "Action has no provider sequence, event time, received time, gap ledger, precedence rule or late-event policy, so out-of-order accepted, applied and failed events cannot be reduced safely."
+    },
+    {
+      "id": "DEP-ACTION-WEBHOOK-STATE-REDUCER",
+      "severity": "P1",
+      "finding": "verified webhook transport must append an Observation and trigger provider reread or deterministic reduction; it must never directly overwrite Proposal or Receipt status, but no Action reducer exists."
+    },
+    {
+      "id": "DEP-ACTION-WEBHOOK-SECRET-BOUNDARY",
+      "severity": "P1",
+      "finding": "the legacy in-memory action_webhook helper stores bearer and basic credentials in auth_config and is mutable, non-tenant-scoped and non-authoritative; it cannot be reused as the W5 inbox or secret authority."
+    },
+    {
+      "id": "DEP-ACTION-WEBHOOK-INGRESS-AUTH",
+      "severity": "P1",
+      "finding": "the reusable Research callback route still requires an AOS Principal; a provider-facing ingress needs a separately hardened authentication boundary without weakening tenant resolution or exposing canonical internal APIs."
+    }
+  ],
+  "verification": {
+    "backendCommand": "uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_aip_research_job_store.py services/aos-api/tests/aip/test_aip3b_action_execution.py",
+    "backendResult": "15 passed, 7 warnings in 35.88s",
+    "productionActionWebhookInboxScan": "no canonical Action webhook inbox, ingress or reducer found",
+    "legacyActionWebhookAssessment": "mutable in-memory request-mapping helper only; not a W5 authority",
+    "interpretation": "Research callback security primitives are reusable, while the Action webhook authority and ordering semantics remain unimplemented"
+  },
+  "sourceHashes": {
+    "services/aos-api/aos_api/aip_research_job.py": "5c2e1420b877ccdceffa89c5ebd4186da9db2709ce8c0c0420add30a0ad21ea8",
+    "services/aos-api/aos_api/aip_research_job_service.py": "539447e4aee3b2e3d4ed55a8307db4ce13b45055c85bd281a192524ae53f44d1",
+    "services/aos-api/aos_api/aip_research_job_store.py": "123d11da03d7724d8790abb01e5e0c663025e74fc5bd79925b32aabd69c2a390",
+    "services/aos-api/alembic/versions/aip4_007_research_job_authority.py": "a9faa408a7c16b4475da6924078849a876b8f57dad97d68f0c395524fb22f678",
+    "services/aos-api/aos_api/aip_action_adapters.py": "58ef4fb121c49a81ca9e7fc06d28b7db11bc2ca9143e71e1825c84cc03755974",
+    "services/aos-api/aos_api/aip_action_execution.py": "7b18fd98192cb9ffb6188a8317ac0dbdc33d38793f2a694199c075d52cb549ab",
+    "services/aos-api/aos_api/action_webhook.py": "b4bd25d60cdc14d70cf417bfcadff21e8b951d519f0bbc75ecb5dd90f509f797"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "testDatabaseUsed": true,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}
