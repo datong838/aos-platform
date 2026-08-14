@@ -1,0 +1,109 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w6-04-creator-start-partial-contract-relationship-preflight-20260814",
+  "authorityRevision": "AOS-000027",
+  "repositoryRevision": "100aa047f320c2515bcd1a245d2e512269103f03",
+  "result": "W6_04_CREATOR_START_PARTIAL_CONTRACT_RELATIONSHIP_PREFLIGHT_FACTS_FROZEN",
+  "decision": "GENERIC_ACTION_SAFETY_SKELETON_GREEN_CREATOR_START_AND_RELATIONSHIP_CHAIN_BLOCKED",
+  "foundations": [
+    "the canonical Action chain has tenant-scoped Proposal, Approval, ExecutionLease, immutable initial Receipt, unknown without blind retry, provider reread reconcile and compensation Proposal foundations",
+    "one generic Action Proposal binds one actionType revision and the current service enforces maker, approver and executor separation plus expiry, kill and basic budget/rate guards",
+    "the frontend differentiates approved, leased, executing, applied, failed, unknown and reconciled states and disables disconnected writes",
+    "the reviewed W6-03 target contract separates side-effect-free OutreachBatch prepare/freeze from W6-04 explicit start"
+  ],
+  "findings": [
+    {
+      "id": "DEP-W6-CREATOR-START-UPSTREAM",
+      "severity": "P0",
+      "finding": "W6-03 has no implemented OutreachBatchRevision or frozen eligible item set, so W6-04 has no valid batch authority to start."
+    },
+    {
+      "id": "DEP-W6-CREATOR-ACTION-TYPES",
+      "severity": "P0",
+      "finding": "outreach.send, sample.ship, contract.accept and commission.change are absent from the current SolutionPack and action authority; ecommerce.creator-growth permissions.actionTypes is empty."
+    },
+    {
+      "id": "DEP-W6-CREATOR-ACTION-INDEPENDENCE",
+      "severity": "P0",
+      "finding": "no domain policy/compiler proves that one approval and Lease are confined to one of the four creator capabilities, one account binding, one item set, one budget and one ImpactPreview."
+    },
+    {
+      "id": "DEP-W6-CREATOR-EXPLICIT-START",
+      "severity": "P0",
+      "finding": "no OutreachBatch start command, version CAS, start decision, start Receipt or exact revalidation of frozen Brief/Evidence/Eval/Responsibility/Match/Frequency/Capacity refs exists."
+    },
+    {
+      "id": "DEP-W6-CREATOR-BATCH-PARTIAL",
+      "severity": "P0",
+      "finding": "the generic ActionAdapter executes one arbitrary payload and returns a single outcome; no per-item Action/Receipt mapping, accepted/pending/failed/unknown conservation or batch partial reducer exists."
+    },
+    {
+      "id": "DEP-W6-CREATOR-PRODUCTION-ADAPTERS",
+      "severity": "P0",
+      "finding": "the production ActionAdapter registry has no registered creator messaging, shipment, contract or commission adapter and the generic contract lacks typed input/output, trusted account, usage and webhook conformance."
+    },
+    {
+      "id": "DEP-W6-CREATOR-DURABLE-EXECUTION",
+      "severity": "P0",
+      "finding": "the current executor commits Lease consumption and Proposal executing before calling the provider; a process crash in that window leaves no durable attempt/initial Receipt and prevents a safe retry."
+    },
+    {
+      "id": "DEP-W6-CREATOR-UNKNOWN-RECONCILE",
+      "severity": "P0",
+      "finding": "generic reconcile records top-level status reconciled while placing applied/failed only in payload, has no manual Case for missing provider refs and no creator batch/item roll-up semantics."
+    },
+    {
+      "id": "DEP-W6-CREATOR-CONTRACT-DELIVERY-RELATIONSHIP",
+      "severity": "P0",
+      "finding": "ContractRef, DeliveryRef and RelationshipRevision exist only as requiredObjects strings; no controlled reference validation, clause Diff, commission maker-checker, delivery observation, maturity window, store, API or lineage projection is implemented."
+    },
+    {
+      "id": "DEP-W6-CREATOR-ACTION-READ-MODEL",
+      "severity": "P1",
+      "finding": "only the generic Draft Inbox and common Workshop shell exist; the creator module has no item-level partial/unknown timeline, contract Diff, delivery or long-term relationship read model."
+    },
+    {
+      "id": "DEP-W6-CREATOR-W5-GATES",
+      "severity": "P0",
+      "finding": "W5-00 through W5-08 are all unchecked and production adapter registrations remain zero, so no creator external capability is code-green or operational-ready."
+    }
+  ],
+  "staticVerification": {
+    "creatorActionTypesDeclared": 0,
+    "creatorProductionAdaptersRegistered": 0,
+    "outreachBatchStartCommandsFound": 0,
+    "creatorBatchPartialReducersFound": 0,
+    "creatorContractStoresFound": 0,
+    "creatorDeliveryStoresFound": 0,
+    "creatorRelationshipStoresFound": 0,
+    "creatorActionBusinessViewsFound": 0,
+    "moduleActionTypes": []
+  },
+  "verification": {
+    "backendCommand": "services/aos-api/.venv/bin/pytest -q services/aos-api/tests/aip/test_aip3_action_control.py services/aos-api/tests/aip/test_aip3b_action_execution.py services/aos-api/tests/test_w2b_production_contracts.py services/aos-api/tests/asset_registry/test_workshop_module_contracts.py",
+    "backendResult": "6 tests passed",
+    "frontendCommand": "/Users/ddt/.nvm/versions/node/v20.20.2/bin/node node_modules/vitest/vitest.mjs run src/api/aipActions/contracts.test.ts src/api/aipActions/client.test.ts src/pages/CanonicalDraftInboxPage.test.tsx src/components/workshop/EcommerceWorkshopShell.test.tsx",
+    "frontendResult": "4 files and 11 tests passed",
+    "interpretation": "generic single-action safety and UI foundations are stable, while creator batch start, per-item partial accounting, four independent operational capabilities and contract/delivery/relationship authorities are absent"
+  },
+  "sourceHashes": {
+    "services/aos-api/aos_api/aip_action_models.py": "1dacef2f81483085129aa415679a554f535eb5917a7b935f78ae12a683bd9bb5",
+    "services/aos-api/aos_api/aip_action_execution.py": "7b18fd98192cb9ffb6188a8317ac0dbdc33d38793f2a694199c075d52cb549ab",
+    "services/aos-api/aos_api/aip_action_adapters.py": "58ef4fb121c49a81ca9e7fc06d28b7db11bc2ca9143e71e1825c84cc03755974",
+    "services/aos-api/aos_api/aip_action_service.py": "d9879038feece8d5736050efd26de98eee49556f8c4eab8e29898462848872b4",
+    "apps/web/src/api/aipActions/contracts.ts": "19e6f907e21316ecca7d1be3ecb1fa08803cac90dbca46c82b33d95c9dec5614",
+    "apps/web/src/pages/CanonicalDraftInboxPage.tsx": "8a3234f4044f5fd142fe4fd7defed11f3163208995861611e0486a3bec044a18",
+    "bundles/solutions/ecommerce-growth/content/workshops/ecommerce.creator-growth.json": "e22b6fa81f68f8dcb28fba5bee9f6c28f0ec88e5a15e1bede022cb45df8c5da8",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/13-达人邀约技术方案.md": "26c40016d0f162f31eb2727730c9c70e36c15105f616726e12e310188a3455bd",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md": "321cfcb1b5503cea34482ec4182c62f08cd7f0dd7fc375752942024adeadac85"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "testDatabaseUsed": true,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}
