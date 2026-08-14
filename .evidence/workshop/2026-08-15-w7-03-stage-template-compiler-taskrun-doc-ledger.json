@@ -1,0 +1,28 @@
+{
+  "schema":"aos-workshop-doc-alignment-ledger/v1",
+  "taskId":"workshop-w7-03-stage-template-compiler-taskrun-doc-alignment-20260815",
+  "projectRevision":"AOS-000029",
+  "branch":"w2-workshop",
+  "baselineCommit":"b712abc7230b978602ca5aced4c8d1f368eacc78",
+  "recordedAt":"2026-08-15T06:03:00+08:00",
+  "files":[
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/14-多媒体技术方案.md","preSha256":"177463903de43428d591cdae2991c8e3945cdacb0f504d9d1569a950c0f1d256","postSha256":"1baf7b0c44fe540713f1dd2724a3825d2d6189e06e68111f9644e6ad048bf42c"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md","preSha256":"cd48ef9492622686466dba273e6aca9749a8dee71a2726c22c0ef3b8f2b84a93","postSha256":"e125216a469eb7aee1e0a939989aefe869026ff36331821369a49e1d1ab534bb"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md","preSha256":"4bd607c082c91589618f2de44b6303df591cf8223d8314896e4f20cf5a9d631a","postSha256":"c0783fb2589ef5fc1943cb2d8bb097c87ad1e3aad97828ee7b13e7d6480cff66"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/61-W7-03-StageTemplate编译PlanStep与TaskRun组合门预检ADR.md","preSha256":null,"postSha256":"68220c8fd38905e6622d270e6dbc3b610ee31c6e8060a64edd01ceb827201d92"}
+  ],
+  "decisions":{
+    "compile":"pure deterministic draft PlanRevision materialization",
+    "approve":"canonical AIP plan approval only",
+    "start":"separate composite gate creates one queued canonical TaskRun",
+    "runtime":"AIP TaskRun StepRun Checkpoint RunEvent only",
+    "implementationStatus":"NOT_STARTED",
+    "contractStatus":"CONTRACT_BASELINE_APPROVED",
+    "dependencyStatus":"IMPLEMENTATION_BLOCKED"
+  },
+  "review":{
+    "round1":{"result":"PASS","focus":"visible lifecycle and preserved user approval"},
+    "round2":{"result":"PASS","focus":"single authority deterministic exact schema skip drift and fail-closed"}
+  },
+  "verification":["four post hashes matched","two review rounds passed","JSON parsed","git diff check"]
+}
