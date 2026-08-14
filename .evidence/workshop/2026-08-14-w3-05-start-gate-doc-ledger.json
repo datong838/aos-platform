@@ -1,0 +1,42 @@
+{
+  "schema": "aos-workshop-document-ledger-evidence/v1",
+  "taskId": "workshop-w3-05-start-gate-doc-ledger-20260814",
+  "authorityRevision": "AOS-000024",
+  "result": "W3_05_START_GATE_DOC_LEDGER_SYNCHRONIZED",
+  "documents": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/32-W3-05-AIP生产启动组合门消费与权限接缝ADR.md",
+      "sha256": "13fb9e19e4c65325229d275e6162b428b62a5ff18e30796cd4ad082c5480b08a",
+      "change": "created"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md",
+      "sha256": "e8fb4dd4af83257ab06efca7448b7ce5643d9d1609d75cb55abdde40a21a7606",
+      "change": "aligned start command with AIP W2-D2 canonical contract"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "sha256": "658c1c9500aaf5b1fa1788747f00aebab89b1353cdcc8192d88a3738d776de21",
+      "change": "added W3-05 upstream evidence and explicit dependency gates"
+    }
+  ],
+  "status": {
+    "AIP_W2D2": "CODE_CONTROL_GREEN",
+    "AIP_W2D3": "IN_PROGRESS",
+    "DEP_AIP_START_AUTHZ": "RED_REVIEW_REQUIRED",
+    "W3_05": "NOT_STARTED_IMPLEMENTATION_BLOCKED"
+  },
+  "verification": [
+    "document diff check passed",
+    "queued TaskRun is explicitly separated from running and AgentRun",
+    "Workshop second start service is explicitly forbidden",
+    "source code and real tenant data were not changed"
+  ],
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseChanged": false,
+    "realTenantMutation": false,
+    "aipW2D3FilesTouched": false,
+    "visualDraftChanged": false
+  }
+}
