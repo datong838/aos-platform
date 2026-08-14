@@ -1,0 +1,68 @@
+{
+  "schema": "aos-workshop-doc-ledger-evidence/v1",
+  "taskId": "workshop-w5-06-webhook-inbox-replay-ordering-doc-ledger-20260814",
+  "authorityRevision": "AOS-000026",
+  "result": "W5_06_WEBHOOK_INBOX_REPLAY_ORDERING_DOC_LEDGER_ALIGNED",
+  "reviewLoop": [
+    {
+      "round": 1,
+      "result": "REMEDIATION_REQUIRED",
+      "findings": [
+        "the plan named signature and replay controls but did not define a provider-facing tenant identity boundary",
+        "unverified raw bodies, exact Action binding and unmatched-event quarantine were underspecified",
+        "event-time ordering alone did not define sequence gaps, late events or terminal conflicts",
+        "the legacy in-memory webhook helper was not explicitly excluded from the canonical authority"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "DESIGN_BASELINE_APPROVED_IMPLEMENTATION_BLOCKED",
+      "findings": [
+        "immutable endpoint revision now resolves tenant and account before tenant-scoped ingestion without trusting request headers",
+        "raw body is bounded and quarantined before parsing while signature, nonce and key revision are append-only facts",
+        "verified events bind one exact Action Attempt or enter quarantine and ManualReconcileCase",
+        "Adapter state partial order handles sequence gaps, late events and terminal conflicts without last-write-wins",
+        "Webhook appends Observation and never directly overwrites Proposal or Receipt",
+        "W5-06 remains unchecked until W5-01, W5-04 and all named inbox dependencies are GREEN"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "path": "12-工作台层技术方案/03-TaskHandoff与Action闭环.md",
+      "preSha256": "c64d43fcb796f007b5b730afc36eb4efcd83610f1e47837c445065d56d746c11",
+      "postSha256": "59c2495e08076750d7607af892d9d9d7cc78222c15c69a8fd7fe9afd06f46f79"
+    },
+    {
+      "path": "12-工作台层技术方案/19-Adapter能力矩阵与降级策略.md",
+      "preSha256": "0a60f4dbfad8e3f57a27907820c0ba749979024abd8ef82901b88f29fe31d6d1",
+      "postSha256": "bc0fe48964619fc11db3bbd7acaa6ff265fd75d9b72e77c6f4f83a1c0e2887b8"
+    },
+    {
+      "path": "12-工作台层技术方案/46-W5-06-ActionWebhookInbox验签防重放与乱序对账预检ADR.md",
+      "preSha256": null,
+      "postSha256": "dc175236e05446c744210df31dd2986ca54d744d60d56bf0051fa4f33ad42cad"
+    },
+    {
+      "path": "12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "16c06de1cf92b92aaea626345cdbe131198761e4b95843251a789e158ddbfde7",
+      "postSha256": "28bdcccd4264aaf095a2f68e53260632ec1d1610f008f867e0b018371dd1f5dd"
+    }
+  ],
+  "alignment": {
+    "preflightEvidence": ".evidence/workshop/2026-08-14-w5-06-webhook-inbox-replay-ordering-preflight.json",
+    "preflightCommit": "27c071298ee73a3372ceccfdcfb5b340eb394a70",
+    "w5ItemChecked": false,
+    "implementationAuthorized": false,
+    "externalEffectAuthorized": false,
+    "staticVisualsTouched": false
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false
+  }
+}
