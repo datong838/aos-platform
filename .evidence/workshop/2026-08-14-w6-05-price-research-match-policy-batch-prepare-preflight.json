@@ -1,0 +1,112 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w6-05-price-research-match-policy-batch-prepare-preflight-20260814",
+  "authorityRevision": "AOS-000027",
+  "repositoryRevision": "0e480b18f6c286484fbff631149fc604cca742e6",
+  "result": "W6_05_PRICE_RESEARCH_MATCH_POLICY_BATCH_PREPARE_PREFLIGHT_FACTS_FROZEN",
+  "decision": "GENERIC_RESEARCH_AND_PRODUCTION_FOUNDATIONS_GREEN_PRICE_DOMAIN_AND_BATCH_PREPARE_BLOCKED",
+  "foundations": [
+    "tenant-scoped ResearchJob authority provides exact provider capability refs, manifest hashes, submission and artifact receipts, monotonic events, unknown handling and reconcile",
+    "TaskBrief, EvidenceBundle, EvalContract and ImpactPreview have PostgreSQL authority, immutable revisions, exact refs and receipt-first mutations",
+    "the canonical Product, ProductSku and Order object families are declared as price-governance dependencies rather than copied into the Workshop",
+    "the installed Workshop catalog exposes the canonical ecommerce.price-governance route and fails closed when dependencies are unavailable"
+  ],
+  "findings": [
+    {
+      "id": "DEP-W6-PRICE-DOMAIN-AUTHORITY",
+      "severity": "P0",
+      "finding": "no canonical PriceObservation, ComparisonSnapshot, ProductMatchObservation, ProductMatchDecision, PriceCase, MonitoringPolicyRevision or CompetitorValueCard contract, store, service or API exists in the current Workshop branch."
+    },
+    {
+      "id": "DEP-W6-PRICE-BUNDLE-CONTRACT",
+      "severity": "P0",
+      "finding": "ecommerce.price-governance lists three required object names but viewRefs, productionContractRefs, responsibilityTemplateRefs and impactCalculatorRefs are empty; evalPackRefs points to placeholder.json and actionTypes is empty."
+    },
+    {
+      "id": "DEP-W6-PRICE-RESEARCH-PROFILE",
+      "severity": "P0",
+      "finding": "the generic ResearchJob contract has no signed price research profile, provider/source allowlist, URL policy, source license decision, rate policy, currency/market scope, output schema or trusted manual-import contract."
+    },
+    {
+      "id": "DEP-W6-PRICE-OBSERVATION-NORMALIZATION",
+      "severity": "P0",
+      "finding": "no normalization authority converts provider artifacts into immutable price/currency/unit/promotion/shipping/tax/observed-at observations while preserving original refs and preventing external responses from overwriting Product price truth."
+    },
+    {
+      "id": "DEP-W6-PRICE-EVIDENCE-SELECTION",
+      "severity": "P0",
+      "finding": "EvidenceBundle creation accepts caller-supplied coverage, freshness, conflicts and licenseSummary; no price required-facts profile computes originals, freshness, license, currency/unit comparability and source conflict coverage."
+    },
+    {
+      "id": "DEP-W6-PRICE-MATCH-AUTHORITY",
+      "severity": "P0",
+      "finding": "no versioned product-match feature schema, model/policy exact refs, confidence threshold, explanation/evidence refs, preliminary state or human MatchDecision authority was found."
+    },
+    {
+      "id": "DEP-W6-PRICE-POLICY-AUTHORITY",
+      "severity": "P0",
+      "finding": "no MonitoringPolicyRevision or anomaly policy authority binds category, market, channel, price basis, tolerance, freshness, evaluation publication and invalidation semantics."
+    },
+    {
+      "id": "DEP-W6-PRICE-BATCH-PREPARE",
+      "severity": "P0",
+      "finding": "no price research/monitoring Batch prepare/freeze state machine, immutable target set, per-target eligibility/exclusion, schedule/rate/capacity estimate, version CAS, zero-external-effect invariant or prepare Receipt exists."
+    },
+    {
+      "id": "DEP-W6-PRICE-AGGREGATION-ORIGINALS",
+      "severity": "P0",
+      "finding": "no governed aggregation projection proves observation-to-originals reachability, deduplication, currency/unit consistency, late-event ordering and rebuildability before trend or anomaly use."
+    },
+    {
+      "id": "DEP-W6-PRICE-READ-MODEL",
+      "severity": "P1",
+      "finding": "the price route currently renders only the common installed-module shell; no governance/competitor/schedule views, match review, observation originals, policy Diff, batch preflight or evidence disclosure is implemented."
+    },
+    {
+      "id": "DEP-W6-PRICE-UPSTREAM-GATES",
+      "severity": "P0",
+      "finding": "W4-08 and W6-01 remain unchecked; exact Evidence/ResearchJob integration and assignee/capability readiness therefore cannot authorize W6-05 implementation or completion."
+    }
+  ],
+  "staticVerification": {
+    "priceDomainContractClassesFound": 0,
+    "priceDomainStoresFound": 0,
+    "priceDomainApisFound": 0,
+    "priceBusinessViewsFound": 0,
+    "priceViewRefs": 0,
+    "priceProductionContractRefs": 0,
+    "priceResponsibilityTemplateRefs": 0,
+    "priceImpactCalculatorRefs": 0,
+    "priceEvalPack": "content/evals/placeholder.json",
+    "priceActionTypes": [],
+    "canonicalRoute": "/workshop/price-governance"
+  },
+  "verification": {
+    "backendCommand": "services/aos-api/.venv/bin/pytest -q services/aos-api/tests/aip/test_aip_research_job_store.py services/aos-api/tests/aip/test_aip_research_job_api.py services/aos-api/tests/test_w2b_production_contracts.py services/aos-api/tests/test_w2b_production_contract_store.py services/aos-api/tests/test_w2b_production_contract_api.py services/aos-api/tests/asset_registry/test_workshop_module_contracts.py services/aos-api/tests/asset_registry/test_ecommerce_workshop_catalog.py",
+    "backendResult": "22 tests passed",
+    "frontendCommand": "/Users/ddt/.nvm/versions/node/v20.20.2/bin/node node_modules/vitest/vitest.mjs run src/api/ecommerceWorkshop/client.test.ts src/api/ecommerceWorkshop/parser.test.ts src/components/workshop/EcommerceWorkshopCatalogContext.test.tsx src/components/workshop/EcommerceWorkshopShell.test.tsx src/components/workshop/InstalledModuleNavigation.test.tsx src/shell/AppShell.workshop.test.tsx",
+    "frontendResult": "6 files and 18 tests passed",
+    "interpretation": "generic ResearchJob, production-contract and installed-module-shell foundations are stable, while price observations, governed product matching, monitoring policy and side-effect-free price batch preparation are absent"
+  },
+  "sourceHashes": {
+    "bundles/solutions/ecommerce-growth/content/workshops/ecommerce.price-governance.json": "de837ed99dbb64e56f94a42b53d66998bf11ad52b5ad91f84eb0f74ea4c52ba3",
+    "services/aos-api/aos_api/aip_research_job.py": "5c2e1420b877ccdceffa89c5ebd4186da9db2709ce8c0c0420add30a0ad21ea8",
+    "services/aos-api/aos_api/aip_research_job_service.py": "539447e4aee3b2e3d4ed55a8307db4ce13b45055c85bd281a192524ae53f44d1",
+    "services/aos-api/aos_api/aip_production_contracts.py": "d89d8c6e2076360c41260fa1a43e076c281f5ba2760d4e74f6670f6327ab3d11",
+    "services/aos-api/aos_api/aip_production_contract_store.py": "a682142a2caf7ad56a49d724caeafbea82c0cff9bb220b6a9e5cef9878c83708",
+    "services/aos-api/aos_api/ecommerce_workshop_catalog.py": "12eafb872bf132120f323c64053113a412037c4bba835f1878ce1ae3b54bae0d",
+    "apps/web/src/components/workshop/EcommerceWorkshopShell.tsx": "6ec6e7da34c7492768b3a72bbdff4ac5dd7b4756a4e4fb95f823f13544592dc9",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/16-价格治理技术方案.md": "3ca3b38fd3795489dde388777eabad4092bb95cef057ba3b274bee7875885437",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md": "3b547925e49ee3a4692c3b3169620b0741ba577f0789bfc4fb403d2ddf7e8b7a"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "testDatabaseUsed": true,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "externalResearchProviderEffect": false,
+    "priceActionEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}
