@@ -1,0 +1,61 @@
+{
+  "schema": "aos-workshop-preflight/v1",
+  "taskId": "workshop-w7-03-stage-template-compiler-taskrun-preflight-20260815",
+  "workItem": "W7-03",
+  "projectRevision": "AOS-000029",
+  "branch": "w2-workshop",
+  "head": "479ae9493e822f0e762267258ccb47395c544e36",
+  "recordedAt": "2026-08-15T05:34:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "foundationStatus": "GENERIC_COMPILER_FOUNDATION_GREEN",
+    "dependencyStatus": "IMPLEMENTATION_BLOCKED",
+    "externalEffect": "NONE",
+    "mayImplementNow": false,
+    "reason": "W7-01 and W7-02 are not GREEN; DEP-C0 production-start authority is incomplete; the generic compiler loses executable stage semantics"
+  },
+  "verifiedFoundations": [
+    "StageTemplate create revise freeze seal exact hash and source resolver hooks exist",
+    "template creation rejects unknown dependencies and dependency cycles",
+    "compile validates frozen template exact hash profile and frozen complete ready ResponsibilityPlan",
+    "compile writes a canonical AIP PlanRevision through AipTaskStore instead of creating a Workshop-local plan store",
+    "compile preserves applicability evidence and productionStartGateRequired in Plan risk metadata",
+    "AIP Task authority enforces plan approval before canonical TaskRun creation",
+    "idempotency and tenant-scoped stores exist"
+  ],
+  "blockers": [
+    {"code":"W7_01_NOT_GREEN","detail":"signed exact Stage/Responsibility templates are unavailable"},
+    {"code":"W7_02_NOT_GREEN","detail":"Recommendation and Confirmation exact refs are unavailable"},
+    {"code":"DEP_C0_START_SERVICE_INCOMPLETE","detail":"ProductionStartRequest/Decision are DTO-only; no production start service/router consumes the combined gate and creates TaskRun"},
+    {"code":"PLAN_STEP_CAPABILITY_REF_DROPPED","detail":"compiler creates PlanStep without capabilityRef even though canonical PlanStep supports it"},
+    {"code":"STAGE_EXECUTION_SEMANTICS_OPAQUE","detail":"required slots, gate refs, output schema, checkpoint retry and compensation policies live only inside risk.stageCompilation instead of an executable canonical contract"},
+    {"code":"NOT_APPLICABLE_STAGE_EXECUTABLE_SHAPE","detail":"not-applicable stages remain ordinary PlanStep entries; PlanStep has no canonical applicability or skip predicate"},
+    {"code":"COMPILE_INPUTS_INCOMPLETE","detail":"CompileStageTemplateRequest lacks Recommendation Confirmation Brief Evidence Eval MergePolicy and Policy exact refs"},
+    {"code":"SCHEMA_COMPATIBILITY_NOT_VALIDATED","detail":"compiler does not prove dependency output schema is compatible with downstream input schema"},
+    {"code":"CAPABILITY_ASSIGNEE_RESOLUTION_NOT_BOUND","detail":"compiled steps do not freeze responsibility-slot to exact capability and assignee resolution receipts"},
+    {"code":"DETERMINISTIC_NORMALIZATION_NOT_FROZEN","detail":"compiler preserves caller template order and has no published normalized topological ordering or compiler-input hash contract"},
+    {"code":"TRANSITIVE_DRIFT_NOT_ENFORCED","detail":"compiled Plan is not invalidated by later template responsibility capability policy provider or license revocation"},
+    {"code":"START_GATE_NOT_CONSUMED","detail":"productionStartGateRequired is true but productionStartGateRef remains null and no service closes it"},
+    {"code":"TASKRUN_CREATION_NOT_COMPOSED","detail":"generic TaskRun creation is available but W7 composition from approved compiled Plan plus fresh confirmation and impact gate is missing"},
+    {"code":"MEDIA_POSITIVE_PATH_NOT_PROVEN","detail":"no installed media template can produce an org-org/dev-project compiled Plan and queued TaskRun"}
+  ],
+  "targetBoundary": {
+    "compile": "pure deterministic materialization from frozen exact inputs into a draft canonical PlanRevision; it must not create or start TaskRun",
+    "approve": "canonical AIP plan approval remains the only approval authority",
+    "start": "a separate composite ProductionStart command revalidates all exact refs, creates one queued canonical TaskRun and returns an immutable decision",
+    "runtime": "TaskRun StepRun Checkpoint and RunEvent remain AIP authorities; no Workshop StageRun table or BFF state machine"
+  },
+  "tests": {
+    "initialAttempt": "one requested task-store test path did not exist; pytest exited before collection and was not counted",
+    "command": "uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_w2c_contracts.py services/aos-api/tests/aip/test_w2c_task_approval_gate.py services/aos-api/tests/aip/test_w2d_contracts.py services/aos-api/tests/test_aip_task_contract.py",
+    "result": "29 passed",
+    "meaning": "generic compiler DTO and Task approval foundations are stable; this does not prove W7-03"
+  },
+  "next": "align W7-03 contract documents, retain item unchecked, then preflight W7-04",
+  "safety": [
+    "no source code changed",
+    "no migration or database mutation outside test isolation",
+    "no real tenant or external action",
+    "AIP active scopes excluded and untouched"
+  ]
+}
