@@ -1,0 +1,69 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w7-08-capacity-budget-usage-cancel-settlement-doc-align-20260815",
+  "workItem": "W7-08",
+  "projectRevision": "AOS-000031",
+  "branch": "w2-workshop",
+  "sourceCommit": "0655024ae96c637887de69ce47e7cc5ee367988b",
+  "recordedAt": "2026-08-15T07:12:00+08:00",
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/14-多媒体技术方案.md",
+      "preSha256": "6586db685d5f3fce4168380c7d2ccfd78c18244d34544318014b39e84f412ab3",
+      "postSha256": "ebd9e70b8db3361e7a3bbfbe64ef7911f060abad0ec18b7b5a0b5ac66e5e9588",
+      "change": "added media capacity budget usage cancellation settlement contract and visible cost lifecycle"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md",
+      "preSha256": "2aaff86f5e3132d2e6ad08154730f7b1687fd3065bb5c5dc78b068e809578abf",
+      "postSha256": "3aceb0be62bef1b493e415223cb5df13c4972b1468e9e30245a83b75e9100637",
+      "change": "added exact media attempt binding and durable capacity budget usage settlement gate"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "8c22d94914de80074d5b1a5c4537afe58729c81043da5f33a662cdcc0e6f7843",
+      "postSha256": "7cebf856d4e164945d7bf365ba539dc7bfd1733d7acef9d0253794e6c246d7ca",
+      "change": "replaced W7-08 evidence placeholder with frozen facts blockers and artifact references"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/66-W7-08-CapacityBudgetUsage取消与最终对账预检ADR.md",
+      "preSha256": null,
+      "postSha256": "610e90e11df1e464cf8ef3243bc9745d99c1472eab252e326253893790180876",
+      "change": "created W7-08 preflight ADR with two-pass review and implementation gate"
+    }
+  ],
+  "reviewRounds": [
+    {
+      "round": 1,
+      "focus": "authority boundaries and contract consistency",
+      "result": "PASS",
+      "evidence": [
+        "Capacity and Budget remain separate authorities",
+        "projection and actual billing remain distinct",
+        "Usage cancellation settlement and unknown are append-only visible facts",
+        "attempt provider artifact price and policy exact refs share one immutable binding"
+      ]
+    },
+    {
+      "round": 2,
+      "focus": "implementability and no-gate-bypass",
+      "result": "PASS_WITH_IMPLEMENTATION_BLOCKED",
+      "evidence": [
+        "existing generic capacity usage and attribution are reused rather than forked",
+        "missing media dimensions budget reservation atomic join settlement reducer and UI remain explicit blockers",
+        "W7-08 remains unchecked until W7-07 focused tests UI and dual-tenant evidence are GREEN",
+        "22 foundation tests are not represented as W7-08 delivery evidence"
+      ]
+    }
+  ],
+  "decision": "CONTRACT_BASELINE_APPROVED_IMPLEMENTATION_BLOCKED",
+  "implementationStatus": "NOT_STARTED",
+  "externalEffect": "NONE",
+  "safety": [
+    "no source code changed",
+    "no migration",
+    "no real tenant mutation",
+    "no provider or payment side effect",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}
