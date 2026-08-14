@@ -1,0 +1,96 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w4-03-eval-binding-preflight-20260814",
+  "authorityRevision": "AOS-000024",
+  "result": "W4_03_EVAL_BINDING_PREFLIGHT_FACTS_FROZEN",
+  "implementationStatus": "PARTIAL_AUTHORITY_PRESENT_EXECUTION_AND_TRANSITIVE_INVALIDATION_MISSING",
+  "dependencyStatus": "BLOCKED_W3_EXIT_EVAL_RUN_BINDING_DIFF_AND_INVALIDATION_CLOSURE",
+  "observations": {
+    "evalContractPostgresqlAuthorityPresent": true,
+    "evalContractCreateReviseFreezeListGetPresent": true,
+    "evalContractExactBindsSuitePublicationAndReleaseGate": true,
+    "freezeRechecksDirectDependencies": true,
+    "evalRunnerConsumesEvalContractRef": false,
+    "evalRunnerConsumesExactSuiteRevision": true,
+    "sameContractRevisionRerunCommandPresent": false,
+    "evalContractDiffApiPresent": false,
+    "evalContractDiffUiPresent": false,
+    "productionContractsUiListsAndFreezesEvalContract": true,
+    "publicationRevocationIsAppendOnly": true,
+    "evalContractChecksLatestPublicationLifecycle": false,
+    "releaseGateInvalidationCommandPresent": false,
+    "impactPreviewSnapshotsEvalContractRow": true,
+    "impactPreviewRecomputesEvalContractTransitiveDependencies": false,
+    "startGateCanDetectPublicationRevocationThroughFrozenEvalContract": false
+  },
+  "findings": [
+    {
+      "id": "DEP-EVAL-RUN-CONTRACT-BINDING",
+      "severity": "P0",
+      "finding": "AipEvalRunner starts from suite_id and suite_revision and never consumes an exact EvalContractRevision, so the task-level severity, gate, return and override contract is not the execution authority."
+    },
+    {
+      "id": "DEP-EVAL-PUBLICATION-REVOCATION",
+      "severity": "P0",
+      "finding": "EvalContract readiness checks only the originally bound published event row. Revocation appends a second event and does not mutate the bound row, so a revoked publication can still leave the frozen EvalContract reporting ready."
+    },
+    {
+      "id": "DEP-EVAL-TRANSITIVE-START-INVALIDATION",
+      "severity": "P0",
+      "finding": "ImpactPreview revalidation compares the EvalContract row revision, hash and lifecycle only; it does not re-evaluate the contract's publication and release-gate dependencies, so the canonical start path cannot currently fail closed on this transitive drift."
+    },
+    {
+      "id": "DEP-EVAL-CONTRACT-DIFF",
+      "severity": "P1",
+      "finding": "Revision history is addressable, but there is no server-owned EvalContract diff contract or Workshop-ready Diff view."
+    },
+    {
+      "id": "DEP-EVAL-SAME-VERSION-RERUN",
+      "severity": "P1",
+      "finding": "There is no command that accepts an exact EvalContractRevision and proves that a returned EvalRun and EvalReport used that same contract version."
+    },
+    {
+      "id": "DEP-EVAL-RELEASE-GATE-LIFECYCLE",
+      "severity": "P1",
+      "finding": "ReleaseGateDecision stores invalidated_by, but no invalidation command or lifecycle transition was found; current gate derivation is append-only passed or failed."
+    }
+  ],
+  "decisions": [
+    "retain AIP EvalContractRevision, EvalSuiteRevision, EvalRun, EvalReport, ReleaseGateDecision and PublicationEvent as the only authorities; Workshop must not create a parallel eval store",
+    "add an AIP command that starts evaluation from an exact frozen EvalContractRevision and emits contract_ref on EvalRun and EvalReport lineage",
+    "resolve publication state by publication_id latest effective event, not by checking only the bound published event row",
+    "make frozen ImpactPreview revalidation recurse through EvalContract dynamic dependencies or consume a server-owned dependency-state hash that changes on revocation or invalidation",
+    "provide a server-owned semantic EvalContract diff over suite, thresholds, gate policy, return mapping, override policy, publication and release gate refs",
+    "a changed standard creates a new EvalContract revision; same-version rerun must preserve the exact contract ref and never silently select the latest suite or policy",
+    "do not implement Workshop Eval UI beyond read-only blocked-state consumption until these P0 boundaries and W3 exit are closed"
+  ],
+  "verification": {
+    "broadCommand": "uv run --project services/aos-api pytest -q services/aos-api/tests/test_w2b_production_contract_store.py services/aos-api/tests/test_w2b_production_contract_api.py services/aos-api/tests/aip/test_aip_eval_runner.py services/aos-api/tests/aip/test_aip_release_publication_service.py",
+    "broadResult": "20 passed, 1 failed; the failure was an unrelated responsibility-plan list count polluted by pre-existing synthetic test rows",
+    "targetedCommand": "uv run --project services/aos-api pytest -q services/aos-api/tests/test_w2b_production_contract_store.py::test_eval_contract_create_replay_list_and_tenant_isolation services/aos-api/tests/test_w2b_production_contract_store.py::test_eval_contract_rejects_cross_tenant_or_drifted_suite services/aos-api/tests/test_w2b_production_contract_store.py::test_eval_ready_contract_freezes_as_an_append_only_revision services/aos-api/tests/test_w2b_production_contract_api.py::test_eval_contract_api_create_replay_list_get_and_blocked_freeze services/aos-api/tests/test_w2b_production_contract_api.py::test_eval_contract_api_dependency_drift_and_idempotency_header services/aos-api/tests/aip/test_aip_eval_runner.py services/aos-api/tests/aip/test_aip_release_publication_service.py",
+    "targetedResult": "14 passed, 7 warnings",
+    "interpretation": "existing direct authority behavior is stable; the missing exact run binding, semantic diff and transitive invalidation are uncovered requirements, not regressions claimed by the current tests"
+  },
+  "fixedUpstreamSnapshot": {
+    "commit": "0391f6846beda58235dc60e16100f2a81f74ebcd",
+    "note": "read-only m1 snapshot; active AIP W2-D3 files were not modified"
+  },
+  "hashes": {
+    "w2ProductionContractStore": "a682142a2caf7ad56a49d724caeafbea82c0cff9bb220b6a9e5cef9878c83708",
+    "m1ProductionContractStoreAt0391f68": "0a323aa91db03bed5f0a5af0281255b146db9380578f80c112fd193e616de622",
+    "evalRunner": "afe45596c22e309f7d392745e9472702efd17a06c4078bcfbaf15d7c16ab04ba",
+    "releasePublicationService": "b6e76ffbb60f61e860442e3b8d5e602e1269f7abb53f66a1bfd9c523e0fa9b9d",
+    "productionContractsUiAt0391f68": "9e7bd32912e1ebfa6f8ae4699ca3786f0474ab65caeff3141a1690106ad1c19e",
+    "webContractsAt0391f68": "fd8c7f34f201590ffd5db129a32ccc1024a1d6ec7fb0f9cca1a38c412097cccc"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "productionDatabaseRead": false,
+    "productionDatabaseWrite": false,
+    "syntheticTestDatabaseMutatedByTests": true,
+    "realTenantMutation": false,
+    "aipW2D3FilesTouched": false,
+    "migrationLeaseAcquired": false
+  },
+  "nextGate": "AIP must close exact EvalContract-to-EvalRun lineage and transitive publication or release-gate invalidation before Workshop W4-03 implementation can be authorized."
+}
