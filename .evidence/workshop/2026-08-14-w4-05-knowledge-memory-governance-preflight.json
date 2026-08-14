@@ -1,0 +1,97 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w4-05-knowledge-memory-governance-preflight-20260814",
+  "authorityRevision": "AOS-000024",
+  "result": "W4_05_KNOWLEDGE_MEMORY_GOVERNANCE_PREFLIGHT_FACTS_FROZEN",
+  "implementationStatus": "AUTHORITY_AND_SERVICES_PRESENT_PRODUCTION_PROVIDERS_UNWIRED",
+  "dependencyStatus": "BLOCKED_AIP5_PROVIDER_WIRING_AND_REAL_READINESS",
+  "observations": {
+    "memoryCandidatePostgresqlAuthorityPresent": true,
+    "candidateEventTimelinePresent": true,
+    "memoryRevisionAuthorityPresent": true,
+    "governanceServicePresent": true,
+    "knowledgeQueryServicePresent": true,
+    "knowledgeSearchServicePresent": true,
+    "knowledgeReadinessServicePresent": true,
+    "canonicalCandidateAndMemoryReadRoutesPresent": true,
+    "canonicalApproveAndPromoteRoutesPresent": true,
+    "canonicalKnowledgeQueryAndSearchRoutesPresent": true,
+    "approvePromoteRoleGatePresent": true,
+    "querySearchRoleAndMarkingGatePresent": true,
+    "productionGovernanceProviderWired": false,
+    "productionRetrievalProviderWired": false,
+    "productionSearchProviderWired": false,
+    "productionApprovePromoteAvailable": false,
+    "productionKnowledgeQueryAvailable": false,
+    "productionKnowledgeSearchAvailable": false,
+    "candidateSubmissionIsPipelineOwned": true,
+    "workshopCreatesCandidateDirectly": false,
+    "strictMemorySdkPresent": true,
+    "memoryGovernanceReadUiPresent": true,
+    "memoryGovernanceUiExposesApprovePromote": false,
+    "realTenantReadinessVerified": false
+  },
+  "findings": [
+    {
+      "id": "DEP-A5-GOVERNANCE-PROVIDER",
+      "severity": "P0",
+      "finding": "the canonical router dependency for AipMemoryGovernanceService returns None, so approve and promote fail closed with 503 in the production wiring despite complete service and unit-test implementations."
+    },
+    {
+      "id": "DEP-A5-RETRIEVAL-PROVIDER",
+      "severity": "P0",
+      "finding": "the canonical retrieval dependency returns None, so KnowledgeQuery is not available through the production API."
+    },
+    {
+      "id": "DEP-A5-SEARCH-PROVIDER",
+      "severity": "P0",
+      "finding": "the canonical search dependency returns None, so KnowledgeSearch remains unavailable and readiness must report the provider gap."
+    },
+    {
+      "id": "DEP-A5-TRUSTED-RESOLVERS",
+      "severity": "P0",
+      "finding": "production wiring requires trusted artifact, license, payload, index and governance authority resolvers; test doubles cannot be promoted into runtime evidence."
+    },
+    {
+      "id": "DEP-A5-REAL-READINESS",
+      "severity": "P1",
+      "finding": "no current org-org/dev-project positive sample was read in this task, so candidate, memory, query and citation readiness for the real tenant is unverified."
+    },
+    {
+      "id": "DEP-W4-05-MODULE-PROJECTION",
+      "severity": "P1",
+      "finding": "the generic Memory Governance page provides read-only candidates, memories, events, query and pipeline views, but the eight Workshop modules do not yet have context-scoped governance projections or safe deep links."
+    }
+  ],
+  "decisions": [
+    "retain AIP-5 MemoryCandidate, CandidateEvent, MemoryItemRevision, KnowledgeQuery and KnowledgeCitation as the only authorities",
+    "candidate submission remains owned by trusted knowledge pipelines or evidence-backed EffectReview and Observation flows; Workshop must not expose an ungoverned submit form",
+    "wire governance, retrieval and search only with trusted exact resolvers and keep the current 503 fail-closed behavior until all dependencies are available",
+    "use KnowledgeReadiness as an explicit Workshop gate and never infer readiness from service classes or passing unit tests",
+    "Workshop modules may deep-link to the generic governance authority using exact candidate, memory or subject context, but must not duplicate approval or promotion state",
+    "verify org-org/dev-project candidates, memories, readiness and a complete citation query through read-only browser and API evidence before enabling W4-05 UI"
+  ],
+  "verification": {
+    "command": "uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_aip_memory_authority_api.py services/aos-api/tests/aip/test_aip_memory_governance.py services/aos-api/tests/aip/test_aip_memory_retrieval.py services/aos-api/tests/aip/test_aip_memory_readiness.py",
+    "result": "35 passed, 7 warnings",
+    "interpretation": "authority, policy and fail-closed contracts are stable under tests; production provider wiring and real-tenant readiness remain unproven"
+  },
+  "hashes": {
+    "memoryStore": "0e9ac5247087bb6c424ead650acf30218ef62bd86eae4a4ac23c08a01881a4a2",
+    "memoryGovernance": "2503fd9fb2e97cfd2ebe438d2b25f409a4969a63a674fae10d4e716635b8f25d",
+    "memoryRetrieval": "dab707c8c076bf12409cf655479b52979614efa6cf61e5ade76a8d11d02cad06",
+    "memoryRouter": "53da23f2d63a1a850114209924f33717901dfcebd9598a822328be37612d111f",
+    "memorySdk": "22097918c7f52326291ccb65d83c10387f8635c21d06beb5f286ed4d6523a334",
+    "memoryGovernancePage": "ad3bfe9460cb58f68da6a1774aa718793e05a4432af8b7cadcc022fd86cd833c"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "productionDatabaseRead": false,
+    "productionDatabaseWrite": false,
+    "syntheticTestDatabaseMutatedByTests": true,
+    "realTenantMutation": false,
+    "aipW2D3FilesTouched": false,
+    "migrationLeaseAcquired": false
+  },
+  "nextGate": "AIP-5 must wire trusted governance, retrieval and search providers and prove org-org/dev-project readiness before Workshop W4-05 implementation can be authorized."
+}
