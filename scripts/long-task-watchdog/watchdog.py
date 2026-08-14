@@ -38,7 +38,7 @@ RECOVERY_OUTCOMES = frozenset(
     {"resumed-progress", "safe-blocked", "completed", "reentry-noop"}
 )
 TERMINAL_FAILURE_OUTCOMES = frozenset(
-    {"protocol-failed", "outcome-uncertain"}
+    {"paused-failure", "protocol-failed", "outcome-uncertain"}
 )
 ACK_SCHEMA = "aos-watchdog-recovery-ack/v1"
 
@@ -227,6 +227,9 @@ def _config_revision(config: dict[str, Any]) -> str:
             "network_access",
             "writable_roots",
             "resume_prompt",
+            "retry_schedule_seconds",
+            "max_transport_failures",
+            "dependency_watch",
         )
     }
     payload = json.dumps(relevant, ensure_ascii=False, sort_keys=True).encode("utf-8")
@@ -443,26 +446,35 @@ def resume_command(
     return command
 
 
-def _resume_prompt(config: dict[str, Any], episode_id: str) -> str:
+def _resume_prompt(
+    config: dict[str, Any], episode_id: str, *, trigger: str = "interrupted"
+) -> str:
     ack_command = (
         f"python3 {Path(__file__).resolve()} --config {config.get('_config_path', '')} "
         f"--state {config.get('_state_path', '')} --record-ack "
         f"--episode-id {episode_id} --outcome <outcome> --task-id <task> "
         "--next-task <next> --reason-code <code> --evidence-ref <ref>"
     )
+    first_message = (
+        "依赖 Watchdog 检测到迁移 Lease 已释放，正在重新核验后继续。"
+        if trigger == "dependency-released"
+        else "外部 Watchdog 检测到任务中断，正在恢复核验。"
+    )
     protocol = f"""
 
 [WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]
 episode_id={episode_id}
+trigger={trigger}
 ack_path={_ack_path(config)}
 expected_branch={config.get('expected_branch', '')}
 config_path={config.get('_config_path', '')}
 state_path={config.get('_state_path', '')}
 ack_command={ack_command}
 
-第一条用户可见消息只能说：外部 Watchdog 检测到任务中断，正在恢复核验。
+第一条用户可见消息只能说：{first_message}
 禁止在权限、分支、Lease、Git/Receipt 和实际任务状态核验前声称“已恢复”。
-核验后必须继续一个依赖已满足的安全任务，或形成 safe-blocked/completed/reentry-noop。
+必须重新核验 authority、01/06、Git branch/log/status、最近 Delivery Receipt、memory status/validate/gate 和全部 Lease；不读取或覆盖 w1-aip 未提交内容。
+核验后必须继续一个依赖已满足且 scope 不冲突的安全任务，或形成 safe-blocked/completed/reentry-noop。
 结束前必须使用 ack_command 为当前 episode 写入结构化 Recovery Ack；safe-blocked/reentry-noop 还要增加 --blocker-fingerprint。自由文本不构成恢复成功证据。
 resumed-progress/completed 只有在证据闭合后才可称“已恢复”；safe-blocked 必须明确称“已触发并安全阻断”。
 [/WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]
@@ -474,9 +486,10 @@ def resume_once(
     config: dict[str, Any],
     episode_id: str,
     *,
+    trigger: str = "interrupted",
     runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> subprocess.CompletedProcess[str]:
-    prompt = _resume_prompt(config, episode_id)
+    prompt = _resume_prompt(config, episode_id, trigger=trigger)
     return runner(
         resume_command(config, episode_id=episode_id),
         input=prompt,
@@ -568,6 +581,9 @@ def _record_terminal_outcome(
     state["last_recovered_at"] = (
         time.time() if outcome in {"resumed-progress", "completed"} else None
     )
+    if state.get("episode_trigger") == "dependency-released":
+        state["dependency_wait_armed"] = False
+        state["dependency_release_resolved_at"] = time.time()
 
 
 def _log(message: str) -> None:
@@ -576,17 +592,87 @@ def _log(message: str) -> None:
 
 
 def _retry_delay_seconds(config: dict[str, Any], failure_count: int) -> int:
-    if failure_count < 1:
-        raise RuntimeError("failure_count must be positive")
-    base = int(config.get("retry_interval_seconds", 300))
-    maximum = int(config.get("max_retry_interval_seconds", 3600))
-    if base <= 0:
-        raise RuntimeError("retry_interval_seconds must be positive")
-    if maximum < base:
-        raise RuntimeError(
-            "max_retry_interval_seconds must be at least retry_interval_seconds"
+    raw = config.get(
+        "retry_schedule_seconds", [300, 600, 900, 1800, 3600, 7200]
+    )
+    if (
+        not isinstance(raw, list)
+        or not raw
+        or any(
+            not isinstance(item, int) or isinstance(item, bool) or item <= 0
+            for item in raw
         )
-    return min(base * failure_count, maximum)
+    ):
+        raise RuntimeError(
+            "retry_schedule_seconds must be a non-empty list of positive integers"
+        )
+    return raw[min(max(failure_count, 1) - 1, len(raw) - 1)]
+
+
+def _dependency_blockers(config: dict[str, Any], *, now: float) -> list[dict[str, Any]]:
+    raw = config.get("dependency_watch")
+    if raw is None:
+        return []
+    if not isinstance(raw, dict):
+        raise RuntimeError("dependency_watch must be an object")
+    if not raw.get("enabled", False):
+        return []
+    leases_path = raw.get("leases_path")
+    scope_tokens = raw.get("scope_tokens")
+    ignore_task_ids = raw.get("ignore_task_ids", [])
+    if not isinstance(leases_path, str) or not Path(leases_path).is_absolute():
+        raise RuntimeError("dependency_watch leases_path must be absolute")
+    if (
+        not isinstance(scope_tokens, list)
+        or not scope_tokens
+        or not all(isinstance(item, str) and item for item in scope_tokens)
+    ):
+        raise RuntimeError("dependency_watch scope_tokens must be non-empty strings")
+    if not isinstance(ignore_task_ids, list) or not all(
+        isinstance(item, str) and item for item in ignore_task_ids
+    ):
+        raise RuntimeError("dependency_watch ignore_task_ids must be strings")
+    try:
+        payload = json.loads(Path(leases_path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"dependency_watch leases unavailable: {type(exc).__name__}") from exc
+    leases = payload.get("leases") if isinstance(payload, dict) else None
+    if not isinstance(leases, list):
+        raise RuntimeError("dependency_watch leases payload is invalid")
+    ignored = set(ignore_task_ids)
+    blockers: list[dict[str, Any]] = []
+    for lease in leases:
+        if not isinstance(lease, dict) or lease.get("status") != "ACTIVE":
+            continue
+        task_id = lease.get("task_id")
+        if not isinstance(task_id, str) or task_id in ignored:
+            continue
+        scopes = lease.get("scope")
+        if not isinstance(scopes, list) or not all(isinstance(item, str) for item in scopes):
+            raise RuntimeError("dependency_watch active lease scope is invalid")
+        expiry_raw = lease.get("lease_expires_at")
+        expiry = _timestamp(expiry_raw)
+        if expiry is None:
+            raise RuntimeError("dependency_watch active lease expiry is invalid")
+        if expiry <= now:
+            continue
+        matched = sorted(set(scopes).intersection(scope_tokens))
+        if not matched:
+            continue
+        blockers.append(
+            {
+                "task_id": task_id,
+                "owner": lease.get("owner"),
+                "scope_tokens": matched,
+                "lease_expires_at": expiry_raw,
+            }
+        )
+    return sorted(blockers, key=lambda item: item["task_id"])
+
+
+def _dependency_fingerprint(blockers: list[dict[str, Any]]) -> str:
+    encoded = json.dumps(blockers, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 
 def evaluate(
@@ -644,6 +730,30 @@ def run_once(
     decision, status = evaluate(
         config, state, now=current, rollout_path=rollout_path
     )
+    blockers = _dependency_blockers(config, now=current)
+    dependency_armed = bool(state.get("dependency_wait_armed", False))
+    if blockers:
+        state.update(
+            {
+                "dependency_wait_armed": True,
+                "dependency_blocker_fingerprint": _dependency_fingerprint(blockers),
+                "dependency_blocking_task_ids": [item["task_id"] for item in blockers],
+                "dependency_last_blocked_at": current,
+            }
+        )
+        if decision not in {
+            "turn-running",
+            "tool-running",
+            "live",
+            *TERMINAL_FAILURE_OUTCOMES,
+        }:
+            decision = "dependency-blocked"
+    else:
+        state["dependency_blocking_task_ids"] = []
+        if dependency_armed and decision in {"idle", "recover"}:
+            decision = "dependency-released"
+            state["dependency_released_at"] = current
+    state["dependency_watch_last_checked_at"] = current
     state.update(
         {
             "last_check_at": current,
@@ -653,14 +763,22 @@ def run_once(
             "rollout_path": str(rollout_path),
         }
     )
-    if decision != "recover":
-        if decision == "idle":
+    if decision not in {"recover", "dependency-released"}:
+        if decision in {"idle", "dependency-blocked"}:
             state["consecutive_failures"] = 0
             state["next_retry_at"] = 0
             state["retry_delay_seconds"] = 0
         _write_json(state_path, state)
         return decision
 
+    max_failures = int(
+        config.get(
+            "max_transport_failures",
+            config.get("max_consecutive_failures", 12),
+        )
+    )
+    if max_failures <= 0:
+        raise RuntimeError("max_transport_failures must be positive")
     _retry_delay_seconds(config, max(int(state.get("consecutive_failures", 0)) + 1, 1))
 
     if state.get("last_recovery_outcome") in TERMINAL_FAILURE_OUTCOMES:
@@ -675,9 +793,15 @@ def run_once(
 
     failures = int(state.get("consecutive_failures", 0))
     if failures == 0:
+        trigger = decision
         state.update(
             {
-                "recovery_episode_id": f"recovery-{int(current * 1000)}",
+                "recovery_episode_id": (
+                    f"dependency-release-{int(current * 1000)}"
+                    if trigger == "dependency-released"
+                    else f"recovery-{int(current * 1000)}"
+                ),
+                "episode_trigger": trigger,
                 "last_recovery_outcome": "attempting",
                 "visible_ack_at": None,
                 "last_recovered_at": None,
@@ -696,7 +820,12 @@ def run_once(
         _write_json(state_path, state)
         _log(f"resume attempt {attempt}/{attempts} thread={config['thread_id']}")
         try:
-            result = resume_once(config, episode_id, runner=runner)
+            result = resume_once(
+                config,
+                episode_id,
+                trigger=str(state.get("episode_trigger", "interrupted")),
+                runner=runner,
+            )
         except (OSError, subprocess.SubprocessError) as exc:
             state["last_error"] = f"{type(exc).__name__}: {exc}"
             result = None
@@ -759,6 +888,22 @@ def run_once(
             if result.returncode == 0:
                 state["last_error"] = "resume exited 0 without current ack/final"
     state["consecutive_failures"] = failures + attempts
+    if state["consecutive_failures"] >= max_failures:
+        latest = inspect_transcript(rollout_path)
+        state.update(
+            {
+                "next_retry_at": 0,
+                "retry_delay_seconds": 0,
+                "last_recovery_outcome": "paused-failure",
+                "last_decision": "paused-failure",
+                "paused_user_at": latest.latest_user_at,
+                "paused_config_revision": _config_revision(config),
+            }
+        )
+        if state.get("episode_trigger") == "dependency-released":
+            state["dependency_wait_armed"] = False
+        _write_json(state_path, state)
+        return "paused-failure"
     retry_delay = _retry_delay_seconds(config, state["consecutive_failures"])
     state["retry_delay_seconds"] = retry_delay
     state["next_retry_at"] = current + retry_delay
