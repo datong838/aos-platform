@@ -1,0 +1,59 @@
+{
+  "schema": "aos-workshop-doc-ledger-evidence/v1",
+  "taskId": "workshop-w4-07-query-research-doc-ledger-20260814",
+  "authorityRevision": "AOS-000024",
+  "result": "W4_07_QUERY_RESEARCH_DOC_LEDGER_ALIGNED",
+  "reviewLoop": [
+    {
+      "round": 1,
+      "result": "REMEDIATION_REQUIRED",
+      "findings": [
+        "the plan named QueryJob and ResearchJob without separating TaskRun, ResearchJob and KnowledgePipelineRun authorities",
+        "the D-wave item did not expose the missing production adapter, trusted resolver, cancel or resume dependencies",
+        "a unified job drawer could be misimplemented as a fourth mutable store rather than a read-only projection"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "DOCUMENT_BASELINE_APPROVED_IMPLEMENTATION_BLOCKED",
+      "findings": [
+        "the three source authorities remain separate and a read-only AsyncJobProjection is the only unified surface",
+        "partial receipts, checkpoint, cancel, safe resume, list, SDK and UI acceptance gates are explicit",
+        "forbidden substitute implementations and unknown-state reconciliation are explicit",
+        "W4-07 remains unchecked and accurately blocked on upstream facts"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "path": "12-工作台层技术方案/04-EvidenceWiki查询与保存视图.md",
+      "preSha256": "b293335f3f196e7835a8e7aad04d7a9c8c024d11d8d4587019bcce39f6f9153e",
+      "postSha256": "6faf398cf60fce2d7bd8f117334d202931a471a06c125d75f594cfb3dc03d5cd"
+    },
+    {
+      "path": "12-工作台层技术方案/38-W4-07-QueryJobResearchJob与统一异步任务投影预检ADR.md",
+      "preSha256": null,
+      "postSha256": "b874f0e71b879ce0a1df090705b34f110b35754f3595ce0fac729fb5424bb766"
+    },
+    {
+      "path": "12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "df9e72f4d5223f0d730ac6437eb8dc6006a57e8470f56f3c4a7ba457ae5bf570",
+      "postSha256": "6f06acab8ca4542fed01f7269519fe625dd95e723a932a52afbd215b2c091a2e"
+    }
+  ],
+  "alignment": {
+    "preflightEvidence": ".evidence/workshop/2026-08-14-w4-07-query-research-job-preflight.json",
+    "preflightCommit": "db30b45",
+    "w4ItemChecked": false,
+    "implementationAuthorized": false,
+    "aipW2D3FilesTouched": false,
+    "staticVisualsTouched": false
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "migrationLeaseAcquired": false
+  }
+}
