@@ -1,0 +1,92 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w5-03-draft-proposal-approval-lease-preflight-20260814",
+  "authorityRevision": "AOS-000025",
+  "repositoryRevision": "8e3c3b9133facb6b4f5c7866f996dd62c9357a94",
+  "result": "W5_03_DRAFT_PROPOSAL_APPROVAL_LEASE_PREFLIGHT_FACTS_FROZEN",
+  "decision": "GENERIC_CHAIN_GREEN_W5_ADAPTER_BLOCKED",
+  "implementedFoundation": [
+    "tenant-scoped PostgreSQL Proposal, Draft, ApprovalEvent, ExecutionLease and timeline authorities exist",
+    "proposal and approval creation use transaction-scoped idempotency locks and exact proposal version and hash checks",
+    "maker cannot approve or execute its own proposal and an approver cannot execute the same proposal",
+    "approval quorum, proposal expiry, action-type snapshot drift, marking, field-write, kill and count guardrails are rechecked before lease",
+    "the canonical web SDK rereads authority after mutations and distinguishes approved, leased, applied and unknown states"
+  ],
+  "findings": [
+    {
+      "id": "DEP-ACTION-DRAFT-SUBMIT-TRANSITION",
+      "severity": "P0",
+      "finding": "create_proposal atomically creates both Proposal and a Draft already awaiting approval; there is no independently editable immutable Draft revision followed by an explicit submit-to-Proposal transition."
+    },
+    {
+      "id": "DEP-ACTION-DRAFT-ONLY-ENFORCEMENT",
+      "severity": "P0",
+      "finding": "the risk classifier writes draftOnly=true for R1 and R4, but the approval service never enforces draftOnly; R1 can become approved and leased through the generic chain."
+    },
+    {
+      "id": "DEP-ACTION-APPROVAL-POLICY-AUTHORITY",
+      "severity": "P0",
+      "finding": "approval policy is a mutable keyword-classifier snapshot rather than an exact published RiskPolicy and ApprovalPolicy authority bound to W5-00 and W5-02."
+    },
+    {
+      "id": "DEP-ACTION-APPROVER-ELIGIBILITY",
+      "severity": "P0",
+      "finding": "approval eligibility is only a broad admin, approver or aip_approver role check; there is no assigned approver set, role-slot quorum, organization delegation, conflict-of-interest or policy-specific eligibility resolution."
+    },
+    {
+      "id": "DEP-ACTION-APPROVAL-EXPIRY-POLICY",
+      "severity": "P0",
+      "finding": "approvalExpiresAt is caller optional and an approval without it remains valid indefinitely; no server policy constrains its TTL to Preview, account, adapter, budget reservation or proposal expiry."
+    },
+    {
+      "id": "DEP-ACTION-LEASE-JOINT-BINDING",
+      "severity": "P0",
+      "finding": "ExecutionLease stores only proposalHash and owner; it does not persist or revalidate the W5-02 actionBindingHash, Preview, capability, account, adapter, RiskPolicy, BudgetPolicy, KillPolicy or dry-validation receipt."
+    },
+    {
+      "id": "DEP-ACTION-LEASE-BUDGET-RESERVATION",
+      "severity": "P0",
+      "finding": "lease acquisition increments a count-based budget unit but does not create an exact monetary or quota reservation that can be released on lease expiry and settled from UsageReceipt."
+    },
+    {
+      "id": "DEP-ACTION-QUORUM-SEMANTICS",
+      "severity": "P1",
+      "finding": "minimumApprovals counts distinct approving actor rows, but does not prove required role slots, ordered stages or independent business and compliance approvals; rejection and supersession semantics are not policy driven."
+    },
+    {
+      "id": "DEP-ACTION-LEASE-LIFECYCLE",
+      "severity": "P1",
+      "finding": "the generic authority supports a single hard-coded attempt and expiry check but no canonical expiry transition, renewal prohibition receipt, reservation release or explicit revocation event for a never-consumed lease."
+    },
+    {
+      "id": "DEP-ACTION-UI-ELIGIBILITY-DISCLOSURE",
+      "severity": "P1",
+      "finding": "the Draft Inbox displays approve, reject, lease and execute buttons by state only; backend roles fail closed, but the UI does not project user eligibility, required approval slots, binding drift or stable disabled reason codes before a mutation."
+    }
+  ],
+  "verification": {
+    "backendCommand": "uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_aip3_action_control.py services/aos-api/tests/aip/test_aip3b_action_execution.py",
+    "backendResult": "16 passed, 7 warnings in 56.33s",
+    "frontendCommand": "pnpm exec vitest run src/api/aipActions/contracts.test.ts src/api/aipActions/client.test.ts src/pages/CanonicalDraftInboxPage.test.tsx",
+    "frontendResult": "3 files and 8 tests passed",
+    "interpretation": "the existing generic authority chain and strict client are stable, but they do not satisfy the W5 exact Draft-to-Lease adapter contract"
+  },
+  "sourceHashes": {
+    "services/aos-api/aos_api/aip_action_service.py": "d9879038feece8d5736050efd26de98eee49556f8c4eab8e29898462848872b4",
+    "services/aos-api/aos_api/aip_action_store.py": "8fbab79eba2e6c1e150520cbead9deee3cac415e76956b38adfb08d96ddb9317",
+    "services/aos-api/aos_api/aip_action_execution.py": "7b18fd98192cb9ffb6188a8317ac0dbdc33d38793f2a694199c075d52cb549ab",
+    "services/aos-api/aos_api/aip_action_models.py": "1dacef2f81483085129aa415679a554f535eb5917a7b935f78ae12a683bd9bb5",
+    "services/aos-api/aos_api/aip_action_policy.py": "68daf0ae089e7e5117c2b9f5a5723bce0df1a6e56c95a7414b9bb80c145035e2",
+    "apps/web/src/api/aipActions/client.ts": "a3302780958be0260aa6b2209c2585b05e2ba736c15043adf2f957d1b727f48b",
+    "apps/web/src/api/aipActions/contracts.ts": "19e6f907e21316ecca7d1be3ecb1fa08803cac90dbca46c82b33d95c9dec5614",
+    "apps/web/src/pages/CanonicalDraftInboxPage.tsx": "8a3234f4044f5fd142fe4fd7defed11f3163208995861611e0486a3bec044a18"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "testDatabaseUsed": true,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}
