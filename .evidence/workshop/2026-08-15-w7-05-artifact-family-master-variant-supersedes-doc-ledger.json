@@ -1,0 +1,30 @@
+{
+  "schema":"aos-workshop-doc-alignment-ledger/v1",
+  "taskId":"workshop-w7-05-artifact-family-master-variant-supersedes-doc-alignment-20260815",
+  "projectRevision":"AOS-000030",
+  "branch":"w2-workshop",
+  "baselineCommit":"2746812e972f64d101674280a36134a9992c9c81",
+  "recordedAt":"2026-08-15T06:38:00+08:00",
+  "files":[
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/14-多媒体技术方案.md","preSha256":"9655813c6bf8932044d5e6933e7a6ba37a4194064c35a53830002fda80625d61","postSha256":"039e87f803d3fc85eee0f8f0ae5d88ad856ceddee4f277329ce216049d971961"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md","preSha256":"792ba55a52da5ba048ef4413159181cbc5312989ffbbdb3403e43c7d51e2cd78","postSha256":"82e1003fdf07f5e0999e9b528bef14d6753f6de023adca986e4347b5ebdcae1c"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md","preSha256":"de8956f69ae3b6383f35c90e1b6ff01f4663d8c67831742ff82ad7c3ae4f98f5","postSha256":"79a9bde9a780bda15f63a474b110bd0fc7a461c3e555a3a2d63bae4c10208fcd"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/63-W7-05-ArtifactFamilyMasterVariantSupersedes预检ADR.md","preSha256":null,"postSha256":"4f10db5e81ebf414e7570542d49ec3af0f810d71bb85b81010908f6155a5abb5"}
+  ],
+  "decisions":{
+    "artifactAuthority":"canonical aip_artifact plus object storage only",
+    "familyManifest":"typed immutable ArtifactFamilyRevision carried by canonical Artifact",
+    "relationAuthority":"W2-C ArtifactRelation only; no Workshop lineage store",
+    "relationDirection":"new or child points to old or parent",
+    "concurrency":"multiple heads become conflict until explicit CAS FamilySelectionDecision",
+    "lifecycle":"artifact roles are immutable; approved and executed remain separate exact decisions and receipts",
+    "implementationStatus":"NOT_STARTED",
+    "contractStatus":"CONTRACT_BASELINE_APPROVED",
+    "dependencyStatus":"IMPLEMENTATION_BLOCKED"
+  },
+  "review":{
+    "round1":{"result":"PASS","focus":"family visibility user intervention Master Variant separation and historical preservation"},
+    "round2":{"result":"PASS","focus":"single authority typed manifest relation invariants conflict CAS exact refs RLS and fail-closed"}
+  },
+  "verification":["four post hashes matched","two review rounds passed","focused W2-C contract and API tests 8 passed","JSON parsed","git diff check"]
+}
