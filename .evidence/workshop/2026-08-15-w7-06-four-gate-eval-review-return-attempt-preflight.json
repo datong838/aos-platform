@@ -1,0 +1,65 @@
+{
+  "schema": "aos-workshop-preflight/v1",
+  "taskId": "workshop-w7-06-four-gate-eval-review-return-attempt-preflight-20260815",
+  "workItem": "W7-06",
+  "projectRevision": "AOS-000031",
+  "branch": "w2-workshop",
+  "head": "12507591d9a708ec3424e34b4788762bff475091",
+  "aipBaseline": "m1@5f80e62229f07836c11d280b891b48551febb038",
+  "recordedAt": "2026-08-15T06:48:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "foundationStatus": "GENERIC_EVAL_REVIEW_RETURN_FOUNDATION_PARTIAL_GREEN",
+    "dependencyStatus": "IMPLEMENTATION_BLOCKED",
+    "externalEffect": "NONE",
+    "mayImplementNow": false,
+    "reason": "W4-03 W4-04 and W7-05 remain implementation-blocked; generic EvalContract ReviewIssue ReturnDecision and attempt primitives do not close the four-gate same-version media review loop"
+  },
+  "verifiedFoundations": [
+    "EvalContractRevision can bind exact suite publication release gate artifact schema thresholds gate return and override policies",
+    "ReviewIssue validates exact Artifact EvalReport and Evidence refs and retains append-only issue events",
+    "ReturnDecision is append-only and queues a higher attempt without overwriting the old StepRun",
+    "ArtifactRelation preserves replacement lineage with exact hashes",
+    "canonical tenant-scoped Store API and SDK foundations exist",
+    "focused W2-C and TAOR tests remain GREEN"
+  ],
+  "blockers": [
+    "W4-03 is not GREEN: EvalRunner does not consume exact EvalContractRevision and transitive publication or release-gate revocation is not enforced",
+    "W4-04 is not GREEN: latest-attempt dispatch downstream invalidation rule authority resolution audit read model authorization and lineage remain incomplete",
+    "W7-05 is not GREEN and no trustworthy immutable Master or Variant family target exists",
+    "no signed media Eval profile requires exactly fact brand copyright and platform gates with stable gate IDs",
+    "no gate-set authority proves all four results used the same Artifact hash EvalContract revision policy cutoff dataset judge and attempt",
+    "generic severity thresholds do not define per-gate blocking unknown override and return-stage semantics",
+    "ReviewIssue ruleRef is not resolved against exact EvalRule authority",
+    "a failed gate is not bound to a server-owned return stage invalidation set and replacement Artifact lineage",
+    "return copies prior inputs and does not bind exact Issue ReturnDecision source Artifact repair Evidence and affected downstream Stages",
+    "TAOR may treat an older succeeded attempt as completion and skip the newer queued return attempt",
+    "no reuse decision proves unaffected paid Stages are hash-compatible before avoiding repeated charges",
+    "no rerun command proves impacted gates evaluated the replacement Artifact with the same contract or explicitly selected new contract revision",
+    "no aggregate approval gate requires four of four pass and blocks on missing stale conflict or unknown",
+    "no Workshop media review panel exposes four-gate status Issues return target attempts invalidation reuse and new Artifact lineage",
+    "no org-org positive media review loop or dev-org isolation canary exists"
+  ],
+  "targetBoundary": {
+    "gateSet": "one immutable MediaGateSetDecision binds four stable gate IDs to one exact Artifact EvalContract policy cutoff dataset judge and Stage attempt",
+    "gateKinds": "fact brand copyright and platform are required; missing stale conflict and unknown fail closed",
+    "issues": "every blocking finding creates or links an exact ReviewIssue rule evidence location severity and server-owned return stage",
+    "return": "ReturnDecision computes invalidation and reuse from Artifact lineage and queues a latest canonical attempt with exact repair inputs",
+    "rerun": "impacted gates rerun against the replacement Artifact and same contract revision unless an explicit contract migration decision starts a new review cycle",
+    "approval": "only a complete four-of-four exact gate set may feed approval; approval still remains a separate authority",
+    "cost": "unaffected paid stages may be reused only with hash and dependency proof; unknown usage remains budget risk"
+  },
+  "tests": {
+    "command": "UV_CACHE_DIR=/private/tmp/aos-workshop-uv-cache uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_w2c_contracts.py services/aos-api/tests/aip/test_aip1_taor_runtime.py",
+    "result": "13 passed",
+    "meaning": "generic issue return relation and ordinary TAOR foundations are stable; current tests do not cover older success followed by queued return or the four-gate media loop"
+  },
+  "next": "align W7-06 contracts and checklist through two review rounds, retain the item unchecked, then preflight W7-07",
+  "safety": [
+    "no source code changed",
+    "no migration",
+    "no real tenant mutation",
+    "no provider action",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}
