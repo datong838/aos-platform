@@ -1,0 +1,30 @@
+{
+  "schema":"aos-workshop-doc-alignment-ledger/v1",
+  "taskId":"workshop-w7-06-four-gate-eval-review-return-attempt-doc-alignment-20260815",
+  "projectRevision":"AOS-000031",
+  "branch":"w2-workshop",
+  "baselineCommit":"106152368c1416e324bfcef209ba6770dd4636e7",
+  "recordedAt":"2026-08-15T06:52:00+08:00",
+  "files":[
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/14-多媒体技术方案.md","preSha256":"039e87f803d3fc85eee0f8f0ae5d88ad856ceddee4f277329ce216049d971961","postSha256":"2c4660a966f2fb9a617ba5c22e491858eedf64f4d9ad819cf11b76d4c8ee1422"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md","preSha256":"82e1003fdf07f5e0999e9b528bef14d6753f6de023adca986e4347b5ebdcae1c","postSha256":"f7b1af7fed02531bff22982bea7ea9279ea142a67268ea6437f3854cac991c65"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md","preSha256":"79a9bde9a780bda15f63a474b110bd0fc7a461c3e555a3a2d63bae4c10208fcd","postSha256":"e41e0128b417da4850c6a61fe3a0377fbb70f13fa9362d19db841b8acd0d982c"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/64-W7-06-四门同版EvalReviewIssueReturnAttempt预检ADR.md","preSha256":null,"postSha256":"f91476a57fe72fb7c3fa1d03b13649aee030abffadf2b2c1dbae7f85f49296eb"}
+  ],
+  "decisions":{
+    "authorities":"canonical Eval ReviewIssue ReturnDecision Task attempt and Artifact relation only",
+    "gateSet":"fact brand copyright platform on one exact Artifact Contract policy cutoff and attempt",
+    "failure":"missing stale conflict and unknown fail closed",
+    "return":"server-owned invalidation and reuse with latest-attempt dispatch and exact repair inputs",
+    "rerun":"replacement Artifact gets a complete gate set; contract drift requires explicit migration decision",
+    "approval":"four of four gate set is an input to a separate approval authority",
+    "implementationStatus":"NOT_STARTED",
+    "contractStatus":"CONTRACT_BASELINE_APPROVED",
+    "dependencyStatus":"IMPLEMENTATION_BLOCKED"
+  },
+  "review":{
+    "round1":{"result":"PASS","focus":"same-version visibility issue-to-stage intervention explainable reuse and approval separation"},
+    "round2":{"result":"PASS","focus":"single authorities exact gate set latest attempt invalidation reuse migration hard block and fail-closed"}
+  },
+  "verification":["four post hashes matched","two review rounds passed","focused W2-C and TAOR tests 13 passed","JSON parsed","git diff check"]
+}
