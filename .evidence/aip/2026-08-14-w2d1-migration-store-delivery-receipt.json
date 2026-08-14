@@ -1,0 +1,91 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-W2-D1-20260814",
+  "status": "GREEN",
+  "branch": "w1-aip",
+  "baseCommit": "de2326d47178d7f1b0c1e6f550802108edf53872",
+  "tenantPolicy": {
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "realTenantSideEffects": false,
+    "note": "本波仅执行迁移、合成测试与隔离验证，不写真实租户业务数据。"
+  },
+  "lease": {
+    "taskId": "aip-w2d1-migration-store-20260814",
+    "owner": "codex-aip-w1",
+    "baseRevision": "AOS-000022",
+    "exclusiveMigrationLease": true
+  },
+  "summary": [
+    "新增 ImpactPreview head/revision 与 ProductionStartDecision 权威表。",
+    "新增租户 RLS/FORCE RLS、append-only、完整 exact ref 与版本 CAS。",
+    "Action Proposal 可选绑定冻结 ImpactPreview exact ref，并在创建、审批、Lease 与执行前回读漂移。",
+    "历史 Action Proposal 的 NULL ImpactPreview 保持兼容。"
+  ],
+  "changedFiles": [
+    {
+      "path": "services/aos-api/alembic/versions/w2_004_impact_start.py",
+      "beforeSha256": null,
+      "afterSha256": "f7d9e497fb2f3951bc3a0ea4d59b2a66cd52fbeb0b1daae2a32c27e68ce391ab"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "beforeSha256": "a682142a2caf7ad56a49d724caeafbea82c0cff9bb220b6a9e5cef9878c83708",
+      "afterSha256": "0a323aa91db03bed5f0a5af0281255b146db9380578f80c112fd193e616de622"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_action_models.py",
+      "beforeSha256": "1dacef2f81483085129aa415679a554f535eb5917a7b935f78ae12a683bd9bb5",
+      "afterSha256": "62ff5e775e539108036f7d4643feb8dd8519a8ac396768d8a8df1940efd65123"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_action_store.py",
+      "beforeSha256": "8fbab79eba2e6c1e150520cbead9deee3cac415e76956b38adfb08d96ddb9317",
+      "afterSha256": "867e15884ef7871dcc80b2179321d8b9a9935528a7478481b2584f4c455b5480"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_action_execution.py",
+      "beforeSha256": "7b18fd98192cb9ffb6188a8317ac0dbdc33d38793f2a694199c075d52cb549ab",
+      "afterSha256": "1eae0bee416325e14e1a2793952faf11b9d2270da3568785ab3dc35267526234"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_w2d_store.py",
+      "beforeSha256": null,
+      "afterSha256": "9ab3a071f12cbb29bafa4e4d66ac6067f68407932fdb80057d9403eed6a739da"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_w2d_action_binding.py",
+      "beforeSha256": null,
+      "afterSha256": "de2a98e41182c4efe79060b44eb114a625bbadf25e60f866ffa4cf67ecbbcd50"
+    }
+  ],
+  "verification": [
+    {
+      "name": "migration-roundtrip",
+      "result": "GREEN",
+      "evidence": "w2_004 -> w1e_001 -> w2_004; alembic current/heads 均为唯一 w2_004"
+    },
+    {
+      "name": "w2d-store-and-action-binding",
+      "result": "GREEN",
+      "evidence": "8 passed"
+    },
+    {
+      "name": "w2c-w2d-adjacent-and-action-regression",
+      "result": "GREEN",
+      "evidence": "43 passed"
+    },
+    {
+      "name": "compile-and-diff",
+      "result": "GREEN",
+      "evidence": "compileall and git diff --check"
+    }
+  ],
+  "knownWarnings": [
+    "既有 Pydantic schema 字段遮蔽告警。",
+    "既有 FastAPI OpenAPI duplicate operation ID 告警。",
+    "真实租户 canary 与 Canonical API 属于 W2-D2，不在 W2-D1 伪造完成。"
+  ],
+  "nextGate": "AIP_W2D2_START_SERVICE_CANONICAL_API",
+  "createdAt": "2026-08-14T15:55:21+08:00"
+}
