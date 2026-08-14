@@ -1,0 +1,70 @@
+{
+  "schema": "aos-workshop-doc-ledger-evidence/v1",
+  "taskId": "workshop-w5-02-impact-preview-exact-binding-doc-ledger-20260814",
+  "authorityRevision": "AOS-000025",
+  "result": "W5_02_IMPACT_PREVIEW_EXACT_BINDING_DOC_LEDGER_ALIGNED",
+  "reviewLoop": [
+    {
+      "round": 1,
+      "result": "REMEDIATION_REQUIRED",
+      "findings": [
+        "the generic W2-D Preview contract allowed optional capability and account refs that are insufficient for an external W5 Action",
+        "Preview, Proposal, Approval and ExecutionLease did not prove that action type, capability, account, adapter, risk and budget described one exact dependency set",
+        "legacy proposals without a Preview could still reach approval and lease paths",
+        "ProductionStartDecision and external Action ExecutionLease needed an explicit non-substitution boundary"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "DESIGN_BASELINE_APPROVED_IMPLEMENTATION_BLOCKED",
+      "findings": [
+        "ExternalActionPreviewProfileRevision makes external-action refs mandatory without weakening internal no-provider production compatibility",
+        "server-owned actionBindingHash now binds Preview, Proposal, Approval, ExecutionLease, Receipt and Lineage to the same exact dependency set",
+        "domain calculators, adapter dryValidate and policy authorities own impact facts; client-submitted values cannot become authority",
+        "ProductionStartDecision creates only a TaskRun and never grants an external Action ExecutionLease",
+        "W5-02 remains unchecked until W5-00 and W5-01 dependencies, account authority, mandatory Preview enforcement and transitive revocation are GREEN"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "path": "12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md",
+      "preSha256": "30f18bb5f5220bf62309436f59c642bbc69b12d782dbf43fbf35db2898cf2fa7",
+      "postSha256": "6a96b6b22dec0dafe242dec95d3ff1a38dd9cf139298861d8e679e878643b5ec"
+    },
+    {
+      "path": "12-工作台层技术方案/19-Adapter能力矩阵与降级策略.md",
+      "preSha256": "acff37404854e828cb80b9d0e9ff59f0376298c8f210634e7ebac490a2ec0447",
+      "postSha256": "2d2994b3ed7a0d09107cd53966655ac258d9bdf8ef533a97baaf9bdb737e3a73"
+    },
+    {
+      "path": "12-工作台层技术方案/42-W5-02-ImpactPreview外部Action精确绑定预检ADR.md",
+      "preSha256": null,
+      "postSha256": "998c1bbe176c42147a7753744bea37da4244cdf871c5eb2f006b76ae9044f16b"
+    },
+    {
+      "path": "12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "03656e4ebd6cc58faa8b66b97d88b87505f771c51a4b4074d8dcf8e53bcfac13",
+      "postSha256": "413fa8c8e864b9bf6f64340dabbabbcb3e803a6742d0a8b44ddef5f702b6546e"
+    }
+  ],
+  "alignment": {
+    "preflightEvidence": ".evidence/workshop/2026-08-14-w5-02-impact-preview-exact-binding-preflight.json",
+    "preflightCommit": "43420c8045976efbafbfc49a2d94ec06475aaa21",
+    "w2dBackendCommit": "0391f68",
+    "w2dStrictSdkUiCommit": "2eab0f7",
+    "w5ItemChecked": false,
+    "implementationAuthorized": false,
+    "externalEffectAuthorized": false,
+    "staticVisualsTouched": false
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}
