@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Header, Query, status
 from pydantic import Field
 
 from aos_api.aip_contracts import AipContractModel
+from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_memory_improvement import (
     AipMemoryImprovementBlocked,
     AipMemoryImprovementConflict,
@@ -20,6 +21,7 @@ from aos_api.aip_memory_projection_contracts import (
     ChangeMemoryProjectionStatusRequest,
     CreateMemoryProjectionRequest,
     ImprovementObservation,
+    MemoryExposure,
     MemoryProjection,
     MemoryProjectionEvent,
     MemoryProjectionStatus,
@@ -31,7 +33,12 @@ from aos_api.aip_memory_projection_store import (
     AipMemoryProjectionNotFound,
     AipMemoryProjectionStore,
 )
-from aos_api.aip_memory_retrieval import AipMemoryRetrieval, MemoryRevocationImpact
+from aos_api.aip_memory_retrieval import (
+    AgentMemoryContextRequest,
+    AgentMemoryContextView,
+    AipAgentMemoryRetrieval,
+    MemoryRevocationImpact,
+)
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
@@ -39,6 +46,9 @@ from aos_api.tenant_scope import TenantScope
 router = APIRouter(prefix="/v1/aip/memory-authority", tags=["aip-memory-authority"])
 _PROJECTIONS = AipMemoryProjectionStore()
 _IMPROVEMENT = AipMemoryImprovementService()
+_MEMORY_READER = AipAgentMemoryRetrieval(
+    payload_resolver=lambda _scope, _ref: None  # reference-only API never resolves bodies
+)
 
 
 class ProjectionTransitionCommand(AipContractModel):
@@ -55,9 +65,8 @@ def get_improvement_service() -> AipMemoryImprovementService:
     return _IMPROVEMENT
 
 
-def get_impact_reader() -> AipMemoryRetrieval:
-    # Revocation impact reads references only; the resolver is never invoked.
-    return AipMemoryRetrieval(payload_resolver=lambda _scope, _ref: None)  # type: ignore[arg-type]
+def get_memory_reader() -> AipAgentMemoryRetrieval:
+    return _MEMORY_READER
 
 
 def _scope(principal: Principal) -> TenantScope:
@@ -240,13 +249,76 @@ def get_projection_impact(
     projection_id: str,
     observed_at: datetime = Query(alias="observedAt"),
     principal: Principal = Depends(require_principal),
-    reader: AipMemoryRetrieval = Depends(get_impact_reader),
+    reader: AipAgentMemoryRetrieval = Depends(get_memory_reader),
 ):
     _require_role(principal, {"admin", "reviewer", "executor", "aip_executor"})
     try:
         return reader.revocation_impact(_scope(principal), projection_id, observed_at=observed_at)
     except ValueError as exc:
         raise ApiError(code="AIP_MEMORY_PROJECTION_NOT_FOUND", message=str(exc), status_code=404) from exc
+
+
+@router.get(
+    "/agent-instances/{instance_id}/memory-context",
+    response_model=AgentMemoryContextView,
+)
+def get_agent_memory_context(
+    instance_id: str,
+    instance_revision: int = Query(alias="instanceRevision", ge=1),
+    instance_hash: str = Query(alias="instanceHash", pattern=r"^[0-9a-f]{64}$"),
+    skill_id: str = Query(alias="skillId", min_length=1),
+    skill_revision: int = Query(alias="skillRevision", ge=1),
+    skill_hash: str = Query(alias="skillHash", pattern=r"^[0-9a-f]{64}$"),
+    logic_id: str = Query(alias="logicId", min_length=1),
+    logic_revision: int = Query(alias="logicRevision", ge=1),
+    logic_hash: str = Query(alias="logicHash", pattern=r"^[0-9a-f]{64}$"),
+    purpose: list[str] = Query(min_length=1),
+    time_cutoff: datetime = Query(alias="timeCutoff"),
+    principal: Principal = Depends(require_principal),
+    reader: AipAgentMemoryRetrieval = Depends(get_memory_reader),
+):
+    _require_role(principal, {"admin", "reviewer", "executor", "aip_executor"})
+    request = AgentMemoryContextRequest(
+        agent_instance_ref=VersionedAssetRef(
+            asset_type="AgentInstance",
+            asset_id=instance_id,
+            revision=instance_revision,
+            content_hash=instance_hash,
+        ),
+        skill_ref=VersionedAssetRef(
+            asset_type="SkillTemplate",
+            asset_id=skill_id,
+            revision=skill_revision,
+            content_hash=skill_hash,
+        ),
+        logic_ref=VersionedAssetRef(
+            asset_type="LogicRevision",
+            asset_id=logic_id,
+            revision=logic_revision,
+            content_hash=logic_hash,
+        ),
+        purposes=purpose,
+        authorized_markings=principal.markings,
+        time_cutoff=time_cutoff,
+    )
+    return reader.query_context_view(_scope(principal), request)
+
+
+@router.get("/memory-exposures", response_model=list[MemoryExposure])
+def list_memory_exposures(
+    instance_id: str | None = Query(default=None, alias="instanceId"),
+    projection_id: str | None = Query(default=None, alias="projectionId"),
+    limit: int = Query(default=100, ge=1, le=200),
+    principal: Principal = Depends(require_principal),
+    reader: AipAgentMemoryRetrieval = Depends(get_memory_reader),
+):
+    _require_role(principal, {"admin", "reviewer", "executor", "aip_executor"})
+    return reader.list_exposures(
+        _scope(principal),
+        instance_id=instance_id,
+        projection_id=projection_id,
+        limit=limit,
+    )
 
 
 @router.get("/improvement-observations", response_model=list[ImprovementObservation])

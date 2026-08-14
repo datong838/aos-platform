@@ -1,0 +1,52 @@
+{
+  "receiptId": "AIP5-E7-4D-20260815",
+  "status": "GREEN",
+  "branch": "w1-aip",
+  "baseCommit": "8cfc29a3d44ac4e12915371a547304452dad6d37",
+  "tenantPolicy": {
+    "real": "org-org/dev-project",
+    "negativeCanaryOnly": "dev-org/dev-project"
+  },
+  "scope": [
+    "services/aos-api/aos_api/aip_memory_retrieval.py",
+    "services/aos-api/aos_api/routers/aip_memory_improvement.py",
+    "services/aos-api/tests/aip/test_aip_memory_retrieval.py",
+    "services/aos-api/tests/aip/test_aip_memory_improvement_api.py"
+  ],
+  "changes": [
+    "Added tenant-scoped GET /memory-exposures with exact run and revision references",
+    "Added tenant-scoped GET /agent-instances/{instanceId}/memory-context",
+    "Memory context API returns projection/citation metadata without payload chunks",
+    "Authorized markings are derived from verified Principal claims, never query input",
+    "Corrected revocation impact dependency to the E7 agent memory retrieval authority"
+  ],
+  "hashes": {
+    "services/aos-api/aos_api/aip_memory_retrieval.py": {
+      "before": "0691a2c896e25e5c4476472e8b9093de9971616481c4a454838662fe64e80054",
+      "after": "6fbb7b13730763b9914c6f5772051a51f730495875cb3302afa841526b4e7339"
+    },
+    "services/aos-api/aos_api/routers/aip_memory_improvement.py": {
+      "before": "320f511a9e7ac3f376aa19404332de7255487ce98924ffc98e0d6cd88188612c",
+      "after": "75d0821c136c7cbea46781fe1626fb795aaf39e58be1e704a9bc0a8bc37f3095"
+    },
+    "services/aos-api/tests/aip/test_aip_memory_retrieval.py": {
+      "before": "f33e342435136c9b2af9628e60264700cc46a93d345491b431a5244b18244c96",
+      "after": "99856518f423e6e1cf6fc9c318c90a02d9c60674beff18cc8e259526b513bf4e"
+    },
+    "services/aos-api/tests/aip/test_aip_memory_improvement_api.py": {
+      "before": "0324ac8fdc0460141cd070f3453fc94dba3a9505e9d80c0ec14aa97eb916cdb0",
+      "after": "a475b3b5295a2604daa671186f8496986368a8e58d3733448c3f6b2ffa4df48c"
+    }
+  },
+  "verification": {
+    "retrieval": "13 passed",
+    "canonicalApiFocused": "2 passed",
+    "coreProjectionImprovement": "17 passed",
+    "pyCompile": "GREEN",
+    "gitDiffCheck": "GREEN"
+  },
+  "sideEffects": "No migration, no external call, no persistent real-tenant write",
+  "remaining": [
+    "E7-5 SDK/UI/browser seal"
+  ]
+}

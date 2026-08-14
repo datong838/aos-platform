@@ -16,7 +16,7 @@ from aos_api.aip_agent_registry_contracts import (
     VersionedAssetRef,
 )
 from aos_api.aip_agent_registry_store import AipAgentRegistryStore
-from aos_api.aip_contracts import ArtifactRef, ResourceRef, TenantContext
+from aos_api.aip_contracts import AipContractModel, ArtifactRef, ResourceRef, TenantContext
 from aos_api.aip_memory_contracts import (
     KnowledgeCitation,
     KnowledgeContextChunk,
@@ -119,6 +119,30 @@ class AgentMemoryContext(BaseModel):
         ):
             raise ValueError("degraded context requires content and blockers")
         return self
+
+
+class AgentMemoryContextView(AipContractModel):
+    """Reference-only API view; authoritative payload chunks never leave the assembler."""
+
+    tenant: TenantContext
+    agent_instance_ref: VersionedAssetRef
+    skill_ref: VersionedAssetRef
+    logic_ref: VersionedAssetRef
+    purposes: list[str]
+    authorized_markings: list[str]
+    projection_refs: list[MemoryProjectionExactRef]
+    memory_refs: list[MemoryRevisionExactRef]
+    citations: list[KnowledgeCitation]
+    status: str = Field(pattern=r"^(complete|degraded|blocked)$")
+    blocked_reasons: list[str]
+    assembled_tokens: int = Field(ge=0)
+    time_cutoff: datetime
+
+    @classmethod
+    def from_context(cls, context: AgentMemoryContext) -> AgentMemoryContextView:
+        return cls.model_validate(
+            context.model_dump(exclude={"chunks"})
+        )
 
 
 class MemoryRevocationImpact(BaseModel):
@@ -504,6 +528,61 @@ class AipMemoryRetrieval:
             assembled_tokens=resolved.token_count,
         )
 
+    def read_exact_memory_citation(
+        self,
+        scope: TenantScope,
+        memory_ref: MemoryRevisionExactRef,
+        *,
+        time_cutoff: datetime,
+        authorized_markings: list[str],
+        required_applicability: list[str],
+    ) -> tuple[KnowledgeCitation | None, list[str]]:
+        """Validate authority and return citation metadata without resolving body content."""
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                """SELECT i.memory_item_id,i.scope,i.status,i.subject_ref,
+                          i.current_revision,r.revision,r.payload_ref,r.content_hash,
+                          r.confidence,r.applicability,r.markings,r.effective_at,
+                          r.expires_at,s.source_kind,s.source_uri,s.source_ref,
+                          s.observed_at,s.freshness_expires_at,s.license_id,
+                          s.usage_policy,s.content_hash AS source_content_hash,
+                          s.provider,s.provider_version,
+                          s.applicability AS source_applicability
+                   FROM aip_memory_item i
+                   JOIN aip_memory_item_revision r ON r.org_id=i.org_id
+                    AND r.project_id=i.project_id AND r.memory_item_id=i.memory_item_id
+                   JOIN aip_memory_source_revision s ON s.org_id=r.org_id
+                    AND s.project_id=r.project_id AND s.source_id=r.source_id
+                    AND s.revision=r.source_revision
+                   WHERE i.org_id=%s AND i.project_id=%s AND i.memory_item_id=%s
+                     AND r.revision=%s""",
+                (*scope.key, memory_ref.memory_item_id, memory_ref.revision),
+            ).fetchone()
+        if row is None:
+            return None, ["exact_memory_not_found"]
+        reasons: list[str] = []
+        if row["content_hash"] != memory_ref.content_hash:
+            reasons.append("memory_hash_drifted")
+        if int(row["current_revision"]) != memory_ref.revision:
+            reasons.append("memory_revision_not_current")
+        if row["status"] != "active":
+            reasons.append(f"memory_{row['status']}")
+        if row["effective_at"] > time_cutoff:
+            reasons.append("time_cutoff_excluded")
+        if row["expires_at"] is not None and row["expires_at"] <= time_cutoff:
+            reasons.append("memory_expired")
+        if row["freshness_expires_at"] <= time_cutoff:
+            reasons.append("source_stale")
+        if not set(row["markings"]).issubset(set(authorized_markings)):
+            reasons.append("marking_forbidden")
+        wanted = {value.strip() for value in required_applicability if value.strip()}
+        if not wanted or not wanted.issubset(set(row["applicability"])):
+            reasons.append("applicability_mismatch")
+        if reasons:
+            return None, _unique(reasons)
+        artifact = ArtifactRef.model_validate(row["payload_ref"])
+        return _citation_from_row(row, artifact), []
+
 
 class AipAgentMemoryRetrieval:
     """E7 exact-instance projection adapter and append-only exposure authority."""
@@ -632,6 +711,107 @@ class AipAgentMemoryRetrieval:
             time_cutoff=request.time_cutoff,
         )
 
+    def query_context_view(
+        self, scope: TenantScope, request: AgentMemoryContextRequest
+    ) -> AgentMemoryContextView:
+        """Build the page-safe projection/citation view without resolving memory bodies."""
+        tenant = TenantContext(org_id=scope.org_id, project_id=scope.project_id)
+        with self._connect_factory(scope) as conn:
+            instance = self._exact_active_instance(conn, scope, request.agent_instance_ref)
+            if instance is None:
+                return AgentMemoryContextView.from_context(
+                    self._blocked_context(
+                        tenant, request, "agent_instance_not_exact_and_active"
+                    )
+                )
+            rows = conn.execute(
+                """SELECT DISTINCT p.*
+                   FROM aip_memory_agent_projection p
+                   LEFT JOIN aip_memory_agent_projection_recipient r
+                     ON r.org_id=p.org_id AND r.project_id=p.project_id
+                    AND r.projection_id=p.projection_id
+                   WHERE p.org_id=%s AND p.project_id=%s AND p.status='active'
+                     AND p.effective_at<=%s AND p.expires_at>%s
+                     AND ((p.kind='personal' AND p.owner_instance_id=%s
+                           AND p.owner_instance_version=%s
+                           AND p.owner_instance_hash=%s)
+                       OR (p.kind='shared' AND r.recipient_instance_id=%s
+                           AND r.recipient_instance_version=%s
+                           AND r.recipient_instance_hash=%s))
+                   ORDER BY p.projection_id""",
+                (
+                    *scope.key,
+                    request.time_cutoff,
+                    request.time_cutoff,
+                    request.agent_instance_ref.asset_id,
+                    request.agent_instance_ref.revision,
+                    request.agent_instance_ref.content_hash,
+                    request.agent_instance_ref.asset_id,
+                    request.agent_instance_ref.revision,
+                    request.agent_instance_ref.content_hash,
+                ),
+            ).fetchall()
+        if not rows:
+            return AgentMemoryContextView.from_context(
+                self._blocked_context(tenant, request, "projection_not_found")
+            )
+        projection_refs: list[MemoryProjectionExactRef] = []
+        memory_refs: list[MemoryRevisionExactRef] = []
+        citations: list[KnowledgeCitation] = []
+        reasons: list[str] = []
+        for row in rows:
+            if not set(request.purposes).issubset(set(row["allowed_purposes"])):
+                reasons.append(f"{row['projection_id']}:purpose_forbidden")
+                continue
+            if not set(row["allowed_markings"]).issubset(
+                set(request.authorized_markings)
+            ):
+                reasons.append(f"{row['projection_id']}:marking_forbidden")
+                continue
+            memory_ref = MemoryRevisionExactRef.model_validate(row["memory_ref"])
+            citation, citation_reasons = self._knowledge.read_exact_memory_citation(
+                scope,
+                memory_ref,
+                time_cutoff=request.time_cutoff,
+                authorized_markings=request.authorized_markings,
+                required_applicability=request.purposes,
+            )
+            if citation is None:
+                reasons.extend(
+                    f"{row['projection_id']}:{reason}" for reason in citation_reasons
+                )
+                continue
+            projection_refs.append(
+                MemoryProjectionExactRef(
+                    projection_id=row["projection_id"],
+                    version=int(row["version"]),
+                    content_hash=row["content_hash"],
+                )
+            )
+            memory_refs.append(memory_ref)
+            citations.append(citation)
+        if not projection_refs:
+            return AgentMemoryContextView.from_context(
+                self._blocked_context(
+                    tenant, request, *(_unique(reasons) or ["projection_not_found"])
+                )
+            )
+        return AgentMemoryContextView(
+            tenant=tenant,
+            agent_instance_ref=request.agent_instance_ref,
+            skill_ref=request.skill_ref,
+            logic_ref=request.logic_ref,
+            purposes=request.purposes,
+            authorized_markings=request.authorized_markings,
+            projection_refs=projection_refs,
+            memory_refs=memory_refs,
+            citations=citations,
+            status="degraded" if reasons else "complete",
+            blocked_reasons=_unique(reasons),
+            assembled_tokens=0,
+            time_cutoff=request.time_cutoff,
+        )
+
     def accept_context(
         self,
         scope: TenantScope,
@@ -754,6 +934,43 @@ class AipAgentMemoryRetrieval:
             conn.commit()
             return exposures
 
+    def list_exposures(
+        self,
+        scope: TenantScope,
+        *,
+        instance_id: str | None = None,
+        projection_id: str | None = None,
+        limit: int = 100,
+    ) -> list[MemoryExposure]:
+        if limit < 1 or limit > 200:
+            raise ValueError("limit must be between 1 and 200")
+        clauses = ["e.org_id=%s", "e.project_id=%s"]
+        params: list[Any] = [*scope.key]
+        if instance_id is not None:
+            clauses.append("e.instance_id=%s")
+            params.append(instance_id)
+        if projection_id is not None:
+            clauses.append("e.projection_id=%s")
+            params.append(projection_id)
+        params.append(limit)
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                f"""SELECT e.*, ar.version AS agent_run_version,
+                           tr.version AS task_run_version
+                      FROM aip_memory_exposure e
+                      JOIN aip_agent_run ar
+                        ON ar.org_id=e.org_id AND ar.project_id=e.project_id
+                       AND ar.agent_run_id=e.agent_run_id
+                      JOIN aip_task_run tr
+                        ON tr.org_id=e.org_id AND tr.project_id=e.project_id
+                       AND tr.run_id=e.task_run_id
+                     WHERE {' AND '.join(clauses)}
+                     ORDER BY e.accepted_at DESC, e.exposure_id
+                     LIMIT %s""",
+                tuple(params),
+            ).fetchall()
+        return [self._exposure_from_row(scope, row) for row in rows]
+
     def revocation_impact(
         self, scope: TenantScope, projection_id: str, *, observed_at: datetime
     ) -> MemoryRevocationImpact:
@@ -824,6 +1041,49 @@ class AipAgentMemoryRetrieval:
             status="blocked",
             blocked_reasons=_unique(list(reasons)),
             time_cutoff=request.time_cutoff,
+        )
+
+    @staticmethod
+    def _exposure_from_row(scope: TenantScope, row: Any) -> MemoryExposure:
+        return MemoryExposure(
+            tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+            exposure_id=row["exposure_id"],
+            agent_run_ref=ResourceRef(
+                resource_type="AgentRun",
+                resource_id=row["agent_run_id"],
+                revision=str(row["agent_run_version"]),
+                authority="postgresql",
+            ),
+            task_run_ref=ResourceRef(
+                resource_type="TaskRun",
+                resource_id=row["task_run_id"],
+                revision=str(row["task_run_version"]),
+                authority="postgresql",
+            ),
+            agent_instance_ref=VersionedAssetRef(
+                asset_type="AgentInstance",
+                asset_id=row["instance_id"],
+                revision=int(row["instance_version"]),
+                content_hash=row["instance_hash"],
+            ),
+            skill_ref=VersionedAssetRef.model_validate(row["skill_ref"]),
+            logic_ref=VersionedAssetRef.model_validate(row["logic_ref"]),
+            projection_ref=MemoryProjectionExactRef(
+                projection_id=row["projection_id"],
+                version=int(row["projection_version"]),
+                content_hash=row["projection_hash"],
+            ),
+            memory_ref=MemoryRevisionExactRef(
+                memory_item_id=row["memory_item_id"],
+                revision=int(row["memory_revision"]),
+                content_hash=row["memory_hash"],
+            ),
+            eval_contract_ref=VersionedAssetRef.model_validate(
+                row["eval_contract_ref"]
+            ),
+            time_cutoff=row["time_cutoff"],
+            accepted_at=row["accepted_at"],
+            exposure_hash=row["exposure_hash"],
         )
 
     @staticmethod
@@ -1194,6 +1454,7 @@ def _blocked(*reasons: str) -> KnowledgeQueryResult:
 __all__ = [
     "AgentMemoryContext",
     "AgentMemoryContextRequest",
+    "AgentMemoryContextView",
     "AipAgentMemoryRetrieval",
     "AipMemoryRetrieval",
     "AipMemoryRetrievalIndex",

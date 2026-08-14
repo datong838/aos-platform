@@ -871,6 +871,14 @@ def test_agent_projection_retrieval_is_exact_personal_shared_and_tenant_isolated
     assert cross.status == "blocked"
     assert cross.blocked_reasons == ["agent_instance_not_exact_and_active"]
 
+    view = adapter.query_context_view(
+        PRIMARY,
+        context_request(agent_memory_chain, agent_memory_chain["recipient_ref"]),
+    )
+    assert view.status == "complete"
+    assert len(view.projection_refs) == len(view.memory_refs) == len(view.citations) == 1
+    assert "chunks" not in view.model_dump()
+
 
 def test_projection_permissions_and_revocation_fail_closed_immediately(
     agent_memory_chain,
@@ -937,6 +945,13 @@ def test_exposure_appends_only_after_exact_running_agent_accepts_context(
         accepted_at=NOW + timedelta(seconds=1),
     )
     assert replay == exposures
+    listed = adapter.list_exposures(
+        PRIMARY,
+        instance_id=agent_memory_chain["recipient_ref"].asset_id,
+        projection_id=context.projection_refs[0].projection_id,
+    )
+    assert listed == exposures
+    assert adapter.list_exposures(CANARY) == []
     with connect() as conn:
         assert (
             conn.execute(
