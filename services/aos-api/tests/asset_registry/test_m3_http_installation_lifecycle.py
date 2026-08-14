@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+from unittest.mock import patch
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -78,7 +81,7 @@ def _assert_installation_response(
     state: str,
     revision: int,
 ) -> dict:
-    assert response.status_code in {200, 201}
+    assert response.status_code in {200, 201}, response.text
     assert response.headers["etag"] == f'"{revision}"'
     body = response.json()
     assert body["state"] == state
@@ -95,8 +98,19 @@ def test_m3_http_installation_lifecycle_with_real_jwt_and_postgres(
 ) -> None:
     monkeypatch.setenv("AOS_AUTH_ALLOW_DEV", "1")
     with _isolated_schema() as scoped_connect:
-        composition_store = PostgresCompositionStore(scoped_connect)
-        installation_store = PostgresInstallationStore(scoped_connect)
+        @contextmanager
+        def request_safe_scoped_connect():
+            # The request scope normally makes db.connect() activate the
+            # production runtime role.  This disposable schema deliberately
+            # predates RLS adoption, so let the Asset Store bind its own GUCs.
+            with (
+                patch("aos_api.db.current_tenant_scope", return_value=None),
+                scoped_connect() as conn,
+            ):
+                yield conn
+
+        composition_store = PostgresCompositionStore(request_safe_scoped_connect)
+        installation_store = PostgresInstallationStore(request_safe_scoped_connect)
         lock = _seed_composition(composition_store)
         service = InstallationService(
             store=installation_store,
@@ -104,7 +118,10 @@ def test_m3_http_installation_lifecycle_with_real_jwt_and_postgres(
             revalidator=_ControlClockRevalidator(),
         )
 
-        with TestClient(_application(service), raise_server_exceptions=False) as client:
+        with (
+            patch("aos_api.tenant_directory_service.require_workspace"),
+            TestClient(_application(service), raise_server_exceptions=False) as client,
+        ):
             maker_token = _token(
                 client,
                 subject="maker:m3",
