@@ -49,8 +49,7 @@ class WatchdogTest(unittest.TestCase):
             "grace_seconds": 10,
             "max_tool_silence_seconds": 100,
             "retry_interval_seconds": 300,
-            "immediate_retry_delay_seconds": 0,
-            "max_consecutive_failures": 3,
+            "max_retry_interval_seconds": 3600,
             "additional_writable_dirs": [],
         }
 
@@ -161,7 +160,7 @@ class WatchdogTest(unittest.TestCase):
         self.assertFalse(status.active)
         self.assertEqual(20, status.latest_final_at)
 
-    def test_first_detection_retries_twice_then_backs_off(self):
+    def test_first_failure_schedules_five_minute_backoff(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))
         config_path = self.root / "config.json"
         state_path = self.root / "state.json"
@@ -177,8 +176,9 @@ class WatchdogTest(unittest.TestCase):
         )
         state = json.loads(state_path.read_text(encoding="utf-8"))
         self.assertEqual("retry-scheduled", decision)
-        self.assertEqual(2, len(calls))
-        self.assertEqual(2, state["consecutive_failures"])
+        self.assertEqual(1, len(calls))
+        self.assertEqual(1, state["consecutive_failures"])
+        self.assertEqual(300, state["last_retry_delay_seconds"])
         self.assertGreater(state["next_retry_at"], 1000)
 
     def test_backoff_prevents_early_retry(self):
@@ -209,6 +209,7 @@ class WatchdogTest(unittest.TestCase):
         self.assertEqual("recovered", decision)
         self.assertEqual(0, state["next_retry_at"])
         self.assertEqual(0, state["consecutive_failures"])
+        self.assertEqual(0, state["last_retry_delay_seconds"])
         self.assertEqual("recovered", state["last_recovery_outcome"])
         self.assertIsNotNone(state["visible_ack_at"])
 
@@ -238,7 +239,15 @@ class WatchdogTest(unittest.TestCase):
         self.assertEqual(0, state["consecutive_failures"])
         self.assertEqual("recovered", state["last_recovery_outcome"])
 
-    def test_third_failure_opens_circuit(self):
+    def test_retry_delay_grows_linearly_and_caps_at_one_hour(self):
+        config = self.config()
+        self.assertEqual(300, watchdog.retry_delay_seconds(config, 1))
+        self.assertEqual(600, watchdog.retry_delay_seconds(config, 2))
+        self.assertEqual(900, watchdog.retry_delay_seconds(config, 3))
+        self.assertEqual(3600, watchdog.retry_delay_seconds(config, 12))
+        self.assertEqual(3600, watchdog.retry_delay_seconds(config, 24))
+
+    def test_third_transient_failure_schedules_fifteen_minute_backoff(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))
         config_path = self.root / "config.json"
         state_path = self.root / "state.json"
@@ -257,13 +266,14 @@ class WatchdogTest(unittest.TestCase):
             config_path, state_path, now=1000, runner=runner
         )
         state = json.loads(state_path.read_text(encoding="utf-8"))
-        self.assertEqual("circuit-open", decision)
+        self.assertEqual("retry-scheduled", decision)
         self.assertEqual(1, len(calls))
         self.assertEqual(3, state["consecutive_failures"])
-        self.assertEqual(0, state["next_retry_at"])
-        self.assertEqual("circuit_open", state["last_recovery_outcome"])
+        self.assertEqual(900, state["last_retry_delay_seconds"])
+        self.assertGreater(state["next_retry_at"], 1000)
+        self.assertEqual("failed", state["last_recovery_outcome"])
 
-    def test_open_circuit_never_calls_resume(self):
+    def test_many_transient_failures_continue_at_one_hour_cap(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))
         config_path = self.root / "config.json"
         state_path = self.root / "state.json"
@@ -271,23 +281,73 @@ class WatchdogTest(unittest.TestCase):
         state_path.write_text(
             json.dumps(
                 {
-                    "consecutive_failures": 3,
+                    "consecutive_failures": 20,
                     "next_retry_at": 0,
-                    "last_recovery_outcome": "circuit_open",
+                    "last_recovery_outcome": "failed",
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        calls = []
+
+        def runner(*args, **kwargs):
+            calls.append((args, kwargs))
+            return subprocess.CompletedProcess(args[0], 1, "", "backend unavailable")
+
+        decision = watchdog.run_once(
+            config_path, state_path, now=1000, runner=runner
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("retry-scheduled", decision)
+        self.assertEqual(1, len(calls))
+        self.assertEqual(21, state["consecutive_failures"])
+        self.assertEqual(3600, state["last_retry_delay_seconds"])
+        self.assertEqual("failed", state["last_recovery_outcome"])
+
+    def test_configuration_error_stops_without_calling_runner(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config = self.config()
+        config["additional_writable_dirs"] = [str(Path.home())]
+        config_path.write_text(json.dumps(config), encoding="utf-8")
+
+        def runner(*args, **kwargs):
+            self.fail("invalid local configuration must not invoke resume")
+
+        decision = watchdog.run_once(
+            config_path, state_path, now=1000, runner=runner
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("configuration-error", decision)
+        self.assertEqual(0, state.get("total_attempts", 0))
+        self.assertEqual("configuration_error", state["last_recovery_outcome"])
+        self.assertEqual(0, state["next_retry_at"])
+
+    def test_configuration_error_requires_explicit_reset(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.config()), encoding="utf-8")
+        state_path.write_text(
+            json.dumps(
+                {
+                    "consecutive_failures": 1,
+                    "next_retry_at": 0,
+                    "last_recovery_outcome": "configuration_error",
                 }
             ),
             encoding="utf-8",
         )
 
         def runner(*args, **kwargs):
-            self.fail("open circuit must not invoke codex resume")
+            self.fail("configuration error must remain stopped until reset")
 
         decision = watchdog.run_once(
             config_path, state_path, now=1000, runner=runner
         )
-        state = json.loads(state_path.read_text(encoding="utf-8"))
-        self.assertEqual("circuit-open", decision)
-        self.assertEqual("circuit_open", state["last_recovery_outcome"])
+        self.assertEqual("configuration-error", decision)
 
     def test_reset_circuit_requires_explicit_action(self):
         state_path = self.root / "state.json"
@@ -296,8 +356,9 @@ class WatchdogTest(unittest.TestCase):
                 {
                     "consecutive_failures": 32,
                     "next_retry_at": 1234,
-                    "last_recovery_outcome": "circuit_open",
+                    "last_recovery_outcome": "configuration_error",
                     "circuit_opened_at": 1000,
+                    "last_error": "invalid local configuration",
                 }
             ),
             encoding="utf-8",
@@ -308,6 +369,7 @@ class WatchdogTest(unittest.TestCase):
         self.assertEqual(0, state["next_retry_at"])
         self.assertEqual("circuit_reset", state["last_recovery_outcome"])
         self.assertEqual(2000, state["last_circuit_reset_at"])
+        self.assertNotIn("last_error", state)
 
     def test_resume_command_adds_only_precise_writable_dirs(self):
         docs_dir = self.root / "context"

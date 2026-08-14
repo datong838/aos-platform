@@ -249,11 +249,31 @@ def _log(message: str) -> None:
     print(f"{now} {message}", flush=True)
 
 
-def _max_consecutive_failures(config: dict[str, Any]) -> int:
-    maximum = int(config.get("max_consecutive_failures", 3))
-    if maximum < 1:
-        raise ValueError("max_consecutive_failures must be at least 1")
-    return maximum
+def retry_delay_seconds(config: dict[str, Any], failure_count: int) -> int:
+    if failure_count < 1:
+        raise ValueError("failure_count must be at least 1")
+    base = int(config.get("retry_interval_seconds", 300))
+    maximum = int(config.get("max_retry_interval_seconds", 3600))
+    if base < 1:
+        raise ValueError("retry_interval_seconds must be at least 1")
+    if maximum < base:
+        raise ValueError(
+            "max_retry_interval_seconds must be at least retry_interval_seconds"
+        )
+    return min(base * failure_count, maximum)
+
+
+def _validate_recovery_config(config: dict[str, Any]) -> None:
+    command = resume_command(config)
+    project_root = Path(config["project_root"]).expanduser().resolve()
+    if not project_root.is_dir():
+        raise ValueError(f"project_root does not exist: {project_root}")
+    executable = Path(command[0]).expanduser()
+    if executable.is_absolute() and (
+        not executable.is_file() or not os.access(executable, os.X_OK)
+    ):
+        raise ValueError(f"codex executable is unavailable: {executable}")
+    retry_delay_seconds(config, 1)
 
 
 def reset_circuit(state_path: Path, *, now: float | None = None) -> None:
@@ -263,6 +283,7 @@ def reset_circuit(state_path: Path, *, now: float | None = None) -> None:
         {
             "consecutive_failures": 0,
             "next_retry_at": 0,
+            "last_retry_delay_seconds": 0,
             "last_recovery_outcome": "circuit_reset",
             "last_decision": "circuit-reset",
             "last_circuit_reset_at": reset_at,
@@ -273,6 +294,8 @@ def reset_circuit(state_path: Path, *, now: float | None = None) -> None:
     )
     state.pop("circuit_opened_at", None)
     state.pop("circuit_reason", None)
+    state.pop("configuration_error_at", None)
+    state.pop("last_error", None)
     _write_json(state_path, state)
 
 
@@ -297,12 +320,11 @@ def evaluate(
         return "tool-running", status
     if now - status.last_activity_at < int(config.get("grace_seconds", 240)):
         return "live", status
-    maximum_failures = _max_consecutive_failures(config)
-    if (
-        state.get("last_recovery_outcome") == "circuit_open"
-        or int(state.get("consecutive_failures", 0)) >= maximum_failures
-    ):
-        return "circuit-open", status
+    if state.get("last_recovery_outcome") in {
+        "configuration_error",
+        "circuit_open",
+    }:
+        return "configuration-error", status
     next_retry_at = float(state.get("next_retry_at", 0))
     if next_retry_at > now:
         return "backoff", status
@@ -337,22 +359,19 @@ def run_once(
     if decision != "recover":
         if (
             decision == "idle"
-            and state.get("last_recovery_outcome") != "circuit_open"
+            and state.get("last_recovery_outcome")
+            not in {"configuration_error", "circuit_open"}
         ):
             state["consecutive_failures"] = 0
             state["next_retry_at"] = 0
-        elif decision == "circuit-open":
+            state["last_retry_delay_seconds"] = 0
+        elif decision == "configuration-error":
             state["next_retry_at"] = 0
-            state["last_recovery_outcome"] = "circuit_open"
-            state.setdefault("circuit_opened_at", current)
-            state.setdefault(
-                "circuit_reason", "maximum consecutive recovery failures reached"
-            )
+            state["last_recovery_outcome"] = "configuration_error"
         _write_json(state_path, state)
         return decision
 
     failures = int(state.get("consecutive_failures", 0))
-    maximum_failures = _max_consecutive_failures(config)
     if failures == 0:
         state.update(
             {
@@ -362,64 +381,85 @@ def run_once(
                 "last_recovered_at": None,
             }
         )
-    requested_attempts = 2 if failures == 0 else 1
-    attempts = min(requested_attempts, maximum_failures - failures)
-    for attempt in range(1, attempts + 1):
-        before_resume = inspect_transcript(rollout_path)
-        state["last_attempt_at"] = time.time()
-        state["total_attempts"] = int(state.get("total_attempts", 0)) + 1
+    try:
+        _validate_recovery_config(config)
+    except ValueError as exc:
+        state.update(
+            {
+                "next_retry_at": 0,
+                "last_retry_delay_seconds": 0,
+                "last_recovery_outcome": "configuration_error",
+                "last_decision": "configuration-error",
+                "configuration_error_at": time.time(),
+                "last_error": f"{type(exc).__name__}: {exc}",
+            }
+        )
         _write_json(state_path, state)
-        _log(f"resume attempt {attempt}/{attempts} thread={config['thread_id']}")
-        try:
-            result = resume_once(config, runner=runner)
-        except (OSError, subprocess.SubprocessError) as exc:
-            state["last_error"] = f"{type(exc).__name__}: {exc}"
-            result = None
-        if result is not None:
-            state["last_exit_code"] = result.returncode
-            state["last_stdout_tail"] = result.stdout[-4000:]
-            state["last_stderr_tail"] = result.stderr[-4000:]
-            after_resume = inspect_transcript(rollout_path)
-            visible_final = (
-                after_resume.latest_final_at is not None
-                and (
-                    before_resume.latest_final_at is None
-                    or after_resume.latest_final_at > before_resume.latest_final_at
-                )
-            )
-            if result.returncode == 0 and visible_final:
-                state.update(
-                    {
-                        "consecutive_failures": 0,
-                        "next_retry_at": 0,
-                        "last_recovered_at": time.time(),
-                        "visible_ack_at": after_resume.latest_final_at,
-                        "last_recovery_outcome": "recovered",
-                        "last_decision": "recovered",
-                    }
-                )
-                state.pop("circuit_opened_at", None)
-                state.pop("circuit_reason", None)
-                _write_json(state_path, state)
-                return "recovered"
-            if result.returncode == 0:
-                state["last_error"] = "resume exited 0 without a visible final"
-        if attempt < attempts:
-            time.sleep(float(config.get("immediate_retry_delay_seconds", 2)))
+        return "configuration-error"
 
-    total_failures = failures + attempts
-    state["consecutive_failures"] = total_failures
-    if total_failures >= maximum_failures:
-        state["next_retry_at"] = 0
-        state["last_recovery_outcome"] = "circuit_open"
-        state["last_decision"] = "circuit-open"
-        state["circuit_opened_at"] = time.time()
-        state["circuit_reason"] = "maximum consecutive recovery failures reached"
+    before_resume = inspect_transcript(rollout_path)
+    state["last_attempt_at"] = time.time()
+    state["total_attempts"] = int(state.get("total_attempts", 0)) + 1
+    _write_json(state_path, state)
+    _log(f"resume attempt thread={config['thread_id']}")
+    try:
+        result = resume_once(config, runner=runner)
+    except (FileNotFoundError, PermissionError, ValueError) as exc:
+        state.update(
+            {
+                "next_retry_at": 0,
+                "last_retry_delay_seconds": 0,
+                "last_recovery_outcome": "configuration_error",
+                "last_decision": "configuration-error",
+                "configuration_error_at": time.time(),
+                "last_error": f"{type(exc).__name__}: {exc}",
+            }
+        )
         _write_json(state_path, state)
-        return "circuit-open"
-    state["next_retry_at"] = time.time() + int(
-        config.get("retry_interval_seconds", 300)
-    )
+        return "configuration-error"
+    except (OSError, subprocess.SubprocessError) as exc:
+        state["last_error"] = f"{type(exc).__name__}: {exc}"
+        result = None
+    if result is not None:
+        state["last_exit_code"] = result.returncode
+        state["last_stdout_tail"] = result.stdout[-4000:]
+        state["last_stderr_tail"] = result.stderr[-4000:]
+        after_resume = inspect_transcript(rollout_path)
+        visible_final = (
+            after_resume.latest_final_at is not None
+            and (
+                before_resume.latest_final_at is None
+                or after_resume.latest_final_at > before_resume.latest_final_at
+            )
+        )
+        if result.returncode == 0 and visible_final:
+            state.update(
+                {
+                    "consecutive_failures": 0,
+                    "next_retry_at": 0,
+                    "last_retry_delay_seconds": 0,
+                    "last_recovered_at": time.time(),
+                    "visible_ack_at": after_resume.latest_final_at,
+                    "last_recovery_outcome": "recovered",
+                    "last_decision": "recovered",
+                }
+            )
+            state.pop("circuit_opened_at", None)
+            state.pop("circuit_reason", None)
+            state.pop("configuration_error_at", None)
+            state.pop("last_error", None)
+            _write_json(state_path, state)
+            return "recovered"
+        if result.returncode == 0:
+            state["last_error"] = "resume exited 0 without a visible final"
+        else:
+            state["last_error"] = f"resume exited {result.returncode}"
+
+    total_failures = failures + 1
+    state["consecutive_failures"] = total_failures
+    retry_delay = retry_delay_seconds(config, total_failures)
+    state["last_retry_delay_seconds"] = retry_delay
+    state["next_retry_at"] = time.time() + retry_delay
     state["last_recovery_outcome"] = "failed"
     state["last_decision"] = "retry-scheduled"
     _write_json(state_path, state)
