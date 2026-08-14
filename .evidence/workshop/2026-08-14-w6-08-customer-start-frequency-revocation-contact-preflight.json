@@ -1,0 +1,123 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w6-08-customer-start-frequency-revocation-contact-preflight-20260814",
+  "authorityRevision": "AOS-000029",
+  "repositoryRevision": "ca55e1978c8d696efdc0fb2eb03963db6a9e8c3b",
+  "result": "W6_08_CUSTOMER_START_FREQUENCY_REVOCATION_CONTACT_PREFLIGHT_FACTS_FROZEN",
+  "decision": "GENERIC_ACTION_SAFETY_SKELETON_GREEN_CUSTOMER_CONTACT_EXECUTION_BLOCKED",
+  "foundations": [
+    "the canonical Action chain has tenant-scoped Proposal, Approval, ExecutionLease, immutable initial Receipt, unknown without blind retry, provider reread reconcile and compensation Proposal foundations",
+    "generic execution revalidates ActionType revision, markings, approval quorum, expiry, risk and kill switches before leasing and refuses an unregistered adapter",
+    "the generic frontend distinguishes approved, leased, executing, applied, failed, unknown and reconciled and disables disconnected writes",
+    "the reviewed customer target contract separates side-effect-free Batch prepare and freeze in W6-07 from explicit start, contact resolution and channel Action in W6-08"
+  ],
+  "findings": [
+    {
+      "id": "DEP-W6-CUSTOMER-CONTACT-UPSTREAM",
+      "severity": "P0",
+      "finding": "W6-07 remains unchecked and has no frozen CustomerDialogueBatch, Segment, Journey, Dialogue or Consent authority, so W6-08 has no valid eligible item set to start."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-ACTION-TYPES",
+      "severity": "P0",
+      "finding": "no versioned customer message, service follow-up, care, recommendation or opt-out Action/Draft types are declared; ecommerce.customer permissions.actionTypes is empty."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-EXPLICIT-START",
+      "severity": "P0",
+      "finding": "no batch-level explicit start command, expected-version CAS, frozen-item hash verification, per-item Action creation Receipt, start idempotency key or zero-implicit-start invariant exists."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-CONSENT-REVOCATION-RACE",
+      "severity": "P0",
+      "finding": "generic acquire and execute do not resolve or bind Consent/Preference revisions and do not revalidate withdrawal immediately before provider invocation; there is no ordering authority for start versus consent revocation, so the race cannot fail closed."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-FREQUENCY-POLICY",
+      "severity": "P0",
+      "finding": "generic guardrails count executions by ActionType and minute/day, but no exact customer, channel, journey, campaign and rolling-window frequency policy, quiet-hours rule, prior-touchpoint query or reservation/settlement authority exists."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-PROTECTED-CONTACT",
+      "severity": "P0",
+      "finding": "no ProtectedContactRef authority or trusted contact resolver keeps destinations outside Workshop payloads and resolves them only after current consent and account checks; current generic adapter receives the Proposal payload directly."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-IMPACT-ACTION-BINDING",
+      "severity": "P0",
+      "finding": "no exact joint binding ties CustomerDialogueBatch item, Customer ref, Consent/frequency snapshots, Journey/Dialogue strategy, channel account, capability, budget and ImpactPreview to Proposal, Approval and Lease."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-PRODUCTION-ADAPTERS",
+      "severity": "P0",
+      "finding": "the production ActionAdapter registry has no typed customer channel adapter and no trusted account, contact-ref input schema, dry validation, provider idempotency, usage, webhook, unsubscribe, partial or conformance contract."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-DURABLE-EXECUTION",
+      "severity": "P0",
+      "finding": "the generic executor commits Lease consumption and proposal executing before provider invocation, retaining a crash-without-Receipt window; this can neither prove no-send nor safely decide whether a customer may be contacted again."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-BATCH-PARTIAL",
+      "severity": "P0",
+      "finding": "no item-level start reducer, immutable item attempt, eligible-to-terminal conservation, cancellation rule or partial aggregate exists; a batch cannot expose sent, accepted, failed, unknown, skipped-after-withdrawal and reconciled counts independently."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-UNKNOWN-OPTOUT-RECONCILE",
+      "severity": "P0",
+      "finding": "generic resolved provider outcome remains embedded in reconcile payload, manual Case is absent and no signed delivery/unsubscribe/complaint webhook or ordering reducer updates Touchpoint and Consent authorities without duplicate send."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-CONTACT-READ-MODEL",
+      "severity": "P1",
+      "finding": "only the generic Draft Inbox and common Workshop shell exist; no customer-specific start confirmation, frequency/consent disclosure, withdrawal race, per-item partial timeline, unknown/reconcile or protected-contact intervention UI is implemented."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-CONTACT-GATES",
+      "severity": "P0",
+      "finding": "W5-00 through W5-08 and W6-07 are unchecked, production adapter registrations remain zero and the P08/privacy baseline is not GREEN; no customer external capability is code-green or operational-ready."
+    }
+  ],
+  "staticVerification": {
+    "customerContactActionTypesDeclared": 0,
+    "customerProductionAdaptersRegistered": 0,
+    "customerExplicitStartCommandsFound": 0,
+    "customerConsentRacePoliciesFound": 0,
+    "customerFrequencyPolicyAuthoritiesFound": 0,
+    "protectedContactResolversFound": 0,
+    "customerJointImpactBindingsFound": 0,
+    "customerBatchPartialReducersFound": 0,
+    "customerContactBusinessViewsFound": 0,
+    "moduleActionTypes": []
+  },
+  "verification": {
+    "backendCommand": "services/aos-api/.venv/bin/pytest -q services/aos-api/tests/aip/test_aip3_action_control.py services/aos-api/tests/aip/test_aip3b_action_execution.py services/aos-api/tests/test_w2b_production_contracts.py services/aos-api/tests/asset_registry/test_workshop_module_contracts.py",
+    "backendResult": "29 tests passed",
+    "frontendCommand": "/Users/ddt/.nvm/versions/node/v20.20.2/bin/node node_modules/vitest/vitest.mjs run src/api/aipActions/contracts.test.ts src/api/aipActions/client.test.ts src/pages/CanonicalDraftInboxPage.test.tsx src/components/workshop/EcommerceWorkshopShell.test.tsx",
+    "frontendResult": "4 files and 11 tests passed",
+    "interpretation": "generic single-action safety and UI foundations are stable, while customer batch start, consent race control, per-customer frequency, protected contact resolution, typed adapters and item-level partial state are absent"
+  },
+  "sourceHashes": {
+    "services/aos-api/aos_api/aip_action_models.py": "1dacef2f81483085129aa415679a554f535eb5917a7b935f78ae12a683bd9bb5",
+    "services/aos-api/aos_api/aip_action_execution.py": "7b18fd98192cb9ffb6188a8317ac0dbdc33d38793f2a694199c075d52cb549ab",
+    "services/aos-api/aos_api/aip_action_policy.py": "68daf0ae089e7e5117c2b9f5a5723bce0df1a6e56c95a7414b9bb80c145035e2",
+    "services/aos-api/aos_api/aip_action_adapters.py": "58ef4fb121c49a81ca9e7fc06d28b7db11bc2ca9143e71e1825c84cc03755974",
+    "services/aos-api/aos_api/aip_action_service.py": "d9879038feece8d5736050efd26de98eee49556f8c4eab8e29898462848872b4",
+    "apps/web/src/api/aipActions/contracts.ts": "19e6f907e21316ecca7d1be3ecb1fa08803cac90dbca46c82b33d95c9dec5614",
+    "apps/web/src/pages/CanonicalDraftInboxPage.tsx": "8a3234f4044f5fd142fe4fd7defed11f3163208995861611e0486a3bec044a18",
+    "bundles/solutions/ecommerce-growth/content/workshops/ecommerce.customer.json": "5b6cfb5cb7d3e28dd5ad30c6ab61b276b9f7986358759604a236c4d33e46467c",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/17-客户关系技术方案.md": "531c7e0e1bc9569213296736320ec57cf140bd0c1a072f34742959f3f1246e29",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md": "edcdde02639370a83e8e3b4cf0466c5cb1da698c2cf6a452fc259253c738a4de"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "testDatabaseUsed": true,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "customerDataRead": false,
+    "customerDataMutation": false,
+    "externalChannelEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}
