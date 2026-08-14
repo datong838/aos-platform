@@ -1,0 +1,87 @@
+{
+  "schema": "aos-workshop-doc-alignment-ledger/v1",
+  "taskId": "workshop-w7-01-signed-stage-responsibility-capability-mapping-doc-alignment-20260815",
+  "projectRevision": "AOS-000029",
+  "branch": "w2-workshop",
+  "baselineCommit": "084d185f2de5d9a83d02c21cd69e7abced5a8918",
+  "recordedAt": "2026-08-15T04:08:00+08:00",
+  "scope": "W7-01 documentation contract alignment only",
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/14-多媒体技术方案.md",
+      "preSha256": "a7806495f457ca8d38216fd88de7eb602bd9628e5789ac0e14c7b0e16e73c9bd",
+      "postSha256": "51443fef9fbe88e9752c7926b8b6d3e7bb20612e7963b51186dc6e401fa494a3"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md",
+      "preSha256": "d3a2ac7e366f99181d535a6231fd6ee971b096f5c57f3c9318d5227e4b039125",
+      "postSha256": "0259aad4f45019913a5f67ffca42b0e4b40a21776f1b0ab3e8dab5bb6b95ec15"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "6c382920ddd68bd11b79b4e1d3699fa6cbb358c663861a233b0c2e72ac02d796",
+      "postSha256": "e151684f0799ed124dc375ce58caa4c4d99fd421704095940dcf70b1afe24b59"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/59-W7-01签名StageResponsibilityTemplate与十Capability映射预检ADR.md",
+      "preSha256": null,
+      "postSha256": "e68e5ed31c4ce6f47b92dc877eef46293da4cd2d550ca8aeb2ecf7e9ae7ac186"
+    }
+  ],
+  "decisions": {
+    "professionalResponsibilitySlots": 8,
+    "governanceResponsibilitiesSeparate": [
+      "external_release_approval",
+      "delivery_receipt",
+      "result_reconciliation",
+      "compensation"
+    ],
+    "canonicalCapabilities": [
+      "material.collect",
+      "strategy.plan",
+      "copy.generate",
+      "script.compose",
+      "speech.synthesize",
+      "video.compose",
+      "content.review",
+      "live.orchestrate",
+      "platform.adapt",
+      "performance.review"
+    ],
+    "authorityChain": "signed template definition -> bundle signature/content hash -> tenant active installation -> canonical source resolver -> tenant template revisions -> frozen exact refs",
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "CONTRACT_BASELINE_APPROVED",
+    "dependencyStatus": "IMPLEMENTATION_BLOCKED",
+    "externalEffect": "NONE"
+  },
+  "review": {
+    "round1": {
+      "focus": "product goals and responsibility boundaries",
+      "result": "PASS",
+      "checks": [
+        "eight professional responsibilities preserved",
+        "agent count remains adaptive",
+        "governance responsibilities are not weakened",
+        "canonical ten-capability vocabulary used"
+      ]
+    },
+    "round2": {
+      "focus": "implementability and safety",
+      "result": "PASS",
+      "checks": [
+        "single bundle-to-tenant authority chain",
+        "exact refs and readiness required",
+        "revocation and drift fail closed",
+        "thirteen blockers remain explicit",
+        "no code database tenant or external mutation"
+      ]
+    }
+  },
+  "verification": [
+    "all four post SHA-256 values recomputed from filesystem",
+    "exactly eight responsibility rows found in media design",
+    "all ten canonical capability IDs found in ADR",
+    "JSON parsed successfully",
+    "git diff check passed"
+  ]
+}
