@@ -72,6 +72,7 @@ def test_control_runtime_stays_synthetic_and_stops_before_integration_cases() ->
         "228asset0_invariants.py",
         "228asset0_evidence_snapshot.py",
         "228asset1_composition_installation.py",
+        "w1e_001_bundle_installation_uninstall.py",
     ]
 
 
@@ -94,7 +95,11 @@ def test_three_leaf_request_matches_the_four_bundle_dependency_graph() -> None:
     request = CompositionRequest.model_validate(
         {
             "requested": [
-                {"publisher": "aos", "id": coordinate, "version": "1.0.0"}
+                {
+                    "publisher": "aos",
+                    "id": coordinate,
+                    "version": by_id[coordinate]["metadata"]["version"],
+                }
                 for coordinate in sorted(LEAF_COORDINATES, reverse=True)
             ],
             "platformApiVersion": "1.7.0",

@@ -54,6 +54,10 @@ class RuntimeSignedM5Bundle:
     unsigned: LoadedBundle
     signed: LoadedBundle
 
+    @property
+    def version(self) -> str:
+        return self.signed.manifest.metadata.version
+
 
 @dataclass(frozen=True, slots=True)
 class RuntimeSignedM5BundleSet:
@@ -72,6 +76,9 @@ class RuntimeSignedM5BundleSet:
             if item.fixture.bundle_id == bundle_id:
                 return item
         raise KeyError(bundle_id)
+
+    def version_for(self, bundle_id: str) -> str:
+        return self.by_id(bundle_id).version
 
 
 def canonical_bundle_signature_payload(bundle: LoadedBundle) -> bytes:

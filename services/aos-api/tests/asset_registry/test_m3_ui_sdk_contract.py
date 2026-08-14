@@ -53,6 +53,10 @@ CONTROL_OPERATIONS = {
         "post",
         "/v1/bundle-installations/{installation_id}/rollback",
     ): "rollback_bundle_installation",
+    (
+        "post",
+        "/v1/bundle-installations/{installation_id}/uninstall",
+    ): "uninstall_bundle_installation",
 }
 COMPOSITION_ERROR_RESPONSES = {"400", "401", "403", "404", "409", "500"}
 INSTALLATION_BASE_ERROR_RESPONSES = {
@@ -69,7 +73,15 @@ INSTALLATION_ACTION_ERROR_RESPONSES = INSTALLATION_COMMAND_ERROR_RESPONSES | {
 }
 ACTION_PATHS = {
     f"/v1/bundle-installations/{{installation_id}}/{action}"
-    for action in ("submit", "approve", "reject", "apply", "verify", "rollback")
+    for action in (
+        "submit",
+        "approve",
+        "reject",
+        "apply",
+        "verify",
+        "rollback",
+        "uninstall",
+    )
 }
 
 
@@ -95,7 +107,7 @@ def _header_parameters(operation: dict[str, Any]) -> dict[str, dict[str, Any]]:
     }
 
 
-def test_control_plane_freezes_exactly_eleven_operation_ids_and_paths() -> None:
+def test_control_plane_freezes_exactly_twelve_operation_ids_and_paths() -> None:
     schema = _schema()
     actual = {
         (method, path): operation["operationId"]

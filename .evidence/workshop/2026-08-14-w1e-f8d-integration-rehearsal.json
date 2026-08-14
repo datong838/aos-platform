@@ -1,0 +1,99 @@
+{
+  "schema": "aos-workshop-integration-rehearsal/v1",
+  "recordedAt": "2026-08-14T13:44:22+08:00",
+  "sourceBranch": "w2-workshop",
+  "targetBranch": "m1",
+  "targetCandidateBaseline": "f8d5e1e20fa408724ec4ac8017ee106220a5d85f",
+  "targetCandidateDescription": "AIP W2-C acceptance isolation and route-manifest authority fix",
+  "sourceCommits": [
+    "bd1c2a00a6b45e72068dc16ba231444f86f0bbd5",
+    "b38cb02f5846a3a0d0b5cdfe44b670dbb504b893",
+    "5fd68cb5bcbec7763741c0b36abe9ba549f10838",
+    "13f5bf9d9be9a9544a763545808a315814c238ba",
+    "b8f5f4e1b7e2cd22fdfe2488c296422b6ffdb91b",
+    "239c2b10ded43d800bf046e27febd7d9a472542c",
+    "013c63fb7a090817715d6e9be3c82cc01c3357ce",
+    "3c94ca59deb6f91c4358276ef955e3267e2d91ef",
+    "0a83798be20d3e8333aa5f083724b46bee299cce",
+    "2c3ad4a71e4d189f3dc30e0269e2d79181f5831d",
+    "7bd3f82551b6de74468b179f80df131fcd8f62e3",
+    "51d175c9794e97a550fe516d75c7f243c1e4406d",
+    "33bf5578507189dcb2dfcd92d66a2c7db68969bf",
+    "611bc5ac7c8b2c190ab2d1237232c94bf3470ca0"
+  ],
+  "excludedCommits": [
+    {
+      "commit": "264e16c",
+      "reason": "Workshop Watchdog implementation is an operational change and is integrated independently from W1 business code."
+    },
+    {
+      "commit": "42bbfe3",
+      "reason": "Workshop Watchdog transport backoff depends on the independent Watchdog integration."
+    }
+  ],
+  "rehearsal": {
+    "method": "isolated temporary clone; ordered cherry-pick; conflict resolution; official OpenAPI regeneration; no formal m1, database, browser session, or remote mutation",
+    "temporaryResultCommit": "ba2796b6477d60a804fc839b8db72b0584c460b0",
+    "temporaryResultTree": "b2bf5dcda222d4b2bb571ab8e95e3936d1a8fac5",
+    "cherryPickConflictCount": 2,
+    "conflictFiles": [
+      "services/aos-api/aos_api/routers/domain_manifest.json",
+      "services/aos-api/tests/test_domain_router_manifest.py"
+    ],
+    "resolution": {
+      "manifestEntryCount": 523,
+      "workshopDomainEntryCount": 116,
+      "aipDomainEntryCount": 73,
+      "runtimeRouteCount": 4192,
+      "runtimeRouteSha256": "543cc0c76a2aa93b1c122ee1f350be3ee7f1ccf49360b956a8553c8c684f3d5c",
+      "openapiPathCount": 2414,
+      "exportExpectedRouteRows": 4188,
+      "exportExpectedUniqueOperationPairs": 4178,
+      "exportExpectedOpenapiOperations": 4178,
+      "openapiComponentSchemaCount": 1738
+    },
+    "alembicHeads": [
+      "w2_003"
+    ]
+  },
+  "artifactSha256": {
+    "services/aos-api/aos_api/routers/domain_manifest.json": "8dbc9248c1ca586dbf863453188df06433cb29db83037b13ef0395621b8bb2f1",
+    "services/aos-api/tests/test_domain_router_manifest.py": "32a3f45d81370d89fbe0ed273c2a93f6d8f7a4cf2763a155174024012ee2000b",
+    "packages/contracts/openapi/v1.generated.json": "77ef1743d6eeec136845abc09259e64ab5cdea8fc650b8150b0a786ca8944771",
+    "packages/contracts/openapi/v1.inventory.json": "f7d50b2229c8d2ad82fac6d7924942c9a4bd4c9b4c4ce5947427c20c0956d78b",
+    "scripts/export_openapi.py": "c43f48a9eec360da695bc6a8103132138da94c7e1784b7bb850d236116210",
+    "services/aos-api/tests/test_openapi_contract.py": "fbcb0f5fc9f4894562fba8d75b5c5352bfdee99495301ed5776aa06f181c7b37",
+    "apps/web/src/App.tsx": "cadcffd7956cd46aa37c9aacd4c6e91d071adc83f4b7fe2e10136b8430817088"
+  },
+  "verification": {
+    "backend": {
+      "scope": "Asset Registry, AIP W2-C contracts/approval/API/Cron, domain router manifest, and OpenAPI contract",
+      "passed": 868,
+      "failed": 0,
+      "warnings": 18,
+      "subtestsPassed": 2,
+      "durationSeconds": 98.94
+    },
+    "routerManifest": "8 passed",
+    "openapiContract": "12 passed",
+    "web": {
+      "testFilesPassed": 188,
+      "testsPassed": 2112,
+      "failed": 0
+    },
+    "typescriptNoEmit": "GREEN",
+    "productionBuild": "GREEN",
+    "gitDiffCheck": "GREEN",
+    "uniqueAlembicHead": "GREEN"
+  },
+  "nonClaims": [
+    "This is not a formal m1 integration.",
+    "This does not claim that f8d5e1e is already integrated into m1.",
+    "This does not close AIP W2-C browser, CAS, authority, or Lease gates.",
+    "The f8d5e1e baseline has two known textual conflicts; formal integration must apply the recorded combined manifest and OpenAPI authority values.",
+    "This does not authorize or execute the Workshop uninstall migration.",
+    "This does not mutate or accept org-org/dev-project.",
+    "This does not complete W1-09, W1-10, or W1."
+  ],
+  "nextGate": "Wait for both AIP W2-C Task Receipts to close and the migration Lease to be explicitly released; then refresh the actual m1 baseline, reproduce this resolution, and rerun the full integration gate before Workshop uninstall-migration work."
+}

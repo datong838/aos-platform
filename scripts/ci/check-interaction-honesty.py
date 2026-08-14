@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Iterable
 
 
-EXPECTED_PAGE_COUNT = 46
+EXPECTED_PAGE_COUNT = 55
 ALLOWED_SOURCE_MODES = {"live", "mixed", "static"}
 ALLOWED_WRITE_MODES = {"server", "demo", "none"}
 

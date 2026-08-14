@@ -3080,58 +3080,64 @@
       "order": 512
     },
     {
-      "domain": "aip",
-      "module": "aos_api.routers.aip_eval_authority",
+      "domain": "workshop",
+      "module": "aos_api.routers.ecommerce_workshop",
       "attribute": "router",
       "order": 513
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_release_publications",
+      "module": "aos_api.routers.aip_eval_authority",
       "attribute": "router",
       "order": 514
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_lineage_authority",
+      "module": "aos_api.routers.aip_release_publications",
       "attribute": "router",
       "order": 515
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_telemetry_usage",
+      "module": "aos_api.routers.aip_lineage_authority",
       "attribute": "router",
       "order": 516
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_cost_attribution",
+      "module": "aos_api.routers.aip_telemetry_usage",
       "attribute": "router",
       "order": 517
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_research_jobs",
+      "module": "aos_api.routers.aip_cost_attribution",
       "attribute": "router",
       "order": 518
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_memory_authority",
+      "module": "aos_api.routers.aip_research_jobs",
       "attribute": "router",
       "order": 519
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_production_contracts",
+      "module": "aos_api.routers.aip_memory_authority",
       "attribute": "router",
       "order": 520
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_model_runtime",
+      "module": "aos_api.routers.aip_production_contracts",
       "attribute": "router",
       "order": 521
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_model_runtime",
+      "attribute": "router",
+      "order": 522
     }
   ]
 }

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+from unittest.mock import patch
+
 from aos_api.asset_registry.integration_projection import IntegrationExpiryProjector
 from aos_api.asset_registry.integration_reader import (
     PostgresIntegrationCaseReader,
@@ -74,14 +77,27 @@ def _headers(token: str, *, org_id: str = ORG, **extra: str) -> dict[str, str]:
 def test_m4_http_case_lifecycle_marking_tenant_replay_and_cas(monkeypatch) -> None:
     monkeypatch.setenv("AOS_AUTH_ALLOW_DEV", "1")
     with _schema() as connect_factory:
-        _seed_active_installation(connect_factory)
+        @contextmanager
+        def request_safe_connect():
+            # Keep the disposable pre-RLS schema independent from the request
+            # context; each Integration store operation binds its own scope.
+            with (
+                patch("aos_api.db.current_tenant_scope", return_value=None),
+                connect_factory() as conn,
+            ):
+                yield conn
+
+        _seed_active_installation(request_safe_connect)
         service = IntegrationCaseService(
-            store=PostgresIntegrationStore(connect_factory),
-            reader=PostgresIntegrationCaseReader(connect_factory),
+            store=PostgresIntegrationStore(request_safe_connect),
+            reader=PostgresIntegrationCaseReader(request_safe_connect),
             marking_resolver=PrincipalMarkingResolver(),
-            expiry_projector=IntegrationExpiryProjector(connect_factory),
+            expiry_projector=IntegrationExpiryProjector(request_safe_connect),
         )
-        with TestClient(_application(service), raise_server_exceptions=False) as client:
+        with (
+            patch("aos_api.tenant_directory_service.require_workspace"),
+            TestClient(_application(service), raise_server_exceptions=False) as client,
+        ):
             token = _token(client, subject="operator:m4")
             create_headers = _headers(token, **{"Idempotency-Key": "m4-create-1"})
             request = {

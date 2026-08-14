@@ -1,0 +1,215 @@
+{
+  "$defs": {
+    "BundlePermissions": {
+      "additionalProperties": false,
+      "properties": {
+        "roles": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 500,
+          "title": "Roles",
+          "type": "array"
+        },
+        "markings": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 500,
+          "title": "Markings",
+          "type": "array"
+        },
+        "dataScopes": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 500,
+          "title": "Datascopes",
+          "type": "array"
+        },
+        "actionTypes": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 500,
+          "title": "Actiontypes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "roles",
+        "markings",
+        "dataScopes",
+        "actionTypes"
+      ],
+      "title": "BundlePermissions",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Canonical signed Workshop module metadata exported by one SolutionPack.",
+  "properties": {
+    "schema": {
+      "const": "aos.workshop-module/v1",
+      "title": "Schema",
+      "type": "string"
+    },
+    "moduleId": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$",
+      "title": "Moduleid",
+      "type": "string"
+    },
+    "displayName": {
+      "maxLength": 240,
+      "minLength": 1,
+      "title": "Displayname",
+      "type": "string"
+    },
+    "menuLabel": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Menulabel",
+      "type": "string"
+    },
+    "route": {
+      "maxLength": 1024,
+      "minLength": 1,
+      "title": "Route",
+      "type": "string"
+    },
+    "slot": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$",
+      "title": "Slot",
+      "type": "string"
+    },
+    "order": {
+      "maximum": 100000,
+      "minimum": 0,
+      "title": "Order",
+      "type": "integer"
+    },
+    "bundleRef": {
+      "maxLength": 1024,
+      "minLength": 1,
+      "title": "Bundleref",
+      "type": "string"
+    },
+    "requiredObjects": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 500,
+      "title": "Requiredobjects",
+      "type": "array"
+    },
+    "requiredCapabilities": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 500,
+      "title": "Requiredcapabilities",
+      "type": "array"
+    },
+    "requiredAipFeatures": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 500,
+      "title": "Requiredaipfeatures",
+      "type": "array"
+    },
+    "permissions": {
+      "$ref": "#/$defs/BundlePermissions"
+    },
+    "viewRefs": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 500,
+      "title": "Viewrefs",
+      "type": "array"
+    },
+    "evalPackRefs": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 500,
+      "title": "Evalpackrefs",
+      "type": "array"
+    },
+    "productionContractRefs": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 500,
+      "title": "Productioncontractrefs",
+      "type": "array"
+    },
+    "responsibilityTemplateRefs": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 500,
+      "title": "Responsibilitytemplaterefs",
+      "type": "array"
+    },
+    "impactCalculatorRefs": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 500,
+      "title": "Impactcalculatorrefs",
+      "type": "array"
+    },
+    "legacyAssetRefs": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 500,
+      "title": "Legacyassetrefs",
+      "type": "array"
+    },
+    "legacyRedirects": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 500,
+      "title": "Legacyredirects",
+      "type": "array"
+    },
+    "minimumRuntimeVersion": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Minimumruntimeversion",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "moduleId",
+    "displayName",
+    "menuLabel",
+    "route",
+    "slot",
+    "order",
+    "bundleRef",
+    "requiredObjects",
+    "requiredCapabilities",
+    "requiredAipFeatures",
+    "permissions",
+    "viewRefs",
+    "evalPackRefs",
+    "productionContractRefs",
+    "responsibilityTemplateRefs",
+    "impactCalculatorRefs",
+    "legacyAssetRefs",
+    "legacyRedirects",
+    "minimumRuntimeVersion"
+  ],
+  "title": "WorkshopModuleContribution",
+  "type": "object"
+}

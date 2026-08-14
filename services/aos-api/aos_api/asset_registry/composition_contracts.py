@@ -1531,7 +1531,7 @@ class InstallationDecision(StrictContract):
 
 
 class InstallationEventEvidence(StrictContract):
-    type: Literal["dry_apply", "verification", "rollback"]
+    type: Literal["dry_apply", "verification", "rollback", "uninstall"]
     evidence_ref: str = Field(
         alias="evidenceRef",
         min_length=1,

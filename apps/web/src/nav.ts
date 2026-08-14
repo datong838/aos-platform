@@ -6,6 +6,7 @@ import type {
   NavSection,
   NavSubgroup,
 } from "./navigation/types";
+import type { EcommerceWorkshopModule } from "./api/ecommerceWorkshop";
 
 export { NAV_ITEMS };
 export type { IconName, NavItem, NavPage, NavSection, NavSubgroup };
@@ -38,6 +39,19 @@ export function findNavPage(pathname: string): NavPage | undefined {
         (pathname === p.path || pathname.startsWith(`${p.path}/`)),
     )
     .sort((a, b) => b.path.length - a.path.length)[0];
+}
+
+export function workshopModuleNavPage(
+  module: EcommerceWorkshopModule,
+): NavPage {
+  return {
+    id: `workshop-module:${module.moduleId}`,
+    path: module.route,
+    label: module.menuLabel,
+    icon: "layers",
+    status: "live",
+    crumbs: ["工作台", module.menuLabel],
+  };
 }
 
 export const DEMO_VERSION = "v1.6.5";

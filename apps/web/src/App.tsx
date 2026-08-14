@@ -6,6 +6,10 @@ import { BlueprintStubPage } from "./pages/BlueprintStubPage";
 import { S2_LIVE_PATHS, S2_LIVE_ROUTES } from "./pages/s2/routes";
 import { RestrictedWidget } from "./marking";
 import { isNavPage, NAV_ITEMS } from "./nav";
+import {
+  EcommerceWorkshopCatalogProvider,
+} from "./components/workshop";
+import { EcommerceWorkshopEntryRoute } from "./pages/s2/ecommerce/routes";
 
 const WorkshopListPage = lazy(() =>
   import("./pages/WorkshopListPage").then((m) => ({ default: m.WorkshopListPage })),
@@ -99,8 +103,9 @@ const S2_STUB_ROUTES = NAV_ITEMS.filter(isNavPage).filter(
 export function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route element={<AppShell />}>
+      <EcommerceWorkshopCatalogProvider>
+        <Routes>
+          <Route element={<AppShell />}>
           <Route
             index
             element={
@@ -312,6 +317,8 @@ export function App() {
               }
             />
           ))}
+          <Route path="workshop/:workshopModule/*" element={<EcommerceWorkshopEntryRoute />} />
+          <Route path="s2/:workshopAlias/*" element={<EcommerceWorkshopEntryRoute />} />
           {S2_STUB_ROUTES.map((p) => (
             <Route
               key={p.id}
@@ -320,8 +327,9 @@ export function App() {
             />
           ))}
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
+          </Route>
+        </Routes>
+      </EcommerceWorkshopCatalogProvider>
     </BrowserRouter>
   );
 }

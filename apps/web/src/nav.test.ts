@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { findNavPage, isNavPage, NAV_ITEMS, navPages } from "./nav";
+import { findNavPage, isNavPage, NAV_ITEMS, navPages, workshopModuleNavPage } from "./nav";
+import { workshopModuleFixture } from "./components/workshop/workshopTestFixtures";
 import { readAppearancePreference } from "./lib/appearance";
 import { S2_LIVE_PATHS, S2_LIVE_ROUTES } from "./pages/s2/routes";
 
@@ -137,5 +138,15 @@ describe("findNavPage · 侧栏选中不误伤父路径", () => {
     const page = findNavPage("/ontology/wiki/abc/diff");
     expect(page?.path.startsWith("/ontology/wiki")).toBe(true);
     expect(page?.path).not.toBe("/");
+  });
+});
+
+describe("workshopModuleNavPage", () => {
+  it("用服务端 Module identity 生成唯一菜单与面包屑，不维护第二业务清单", () => {
+    const page = workshopModuleNavPage(workshopModuleFixture());
+    expect(page.id).toBe("workshop-module:ecommerce.operations");
+    expect(page.path).toBe("/workshop/operations");
+    expect(page.label).toBe("统一运营驾驶舱");
+    expect(page.crumbs).toEqual(["工作台", "统一运营驾驶舱"]);
   });
 });

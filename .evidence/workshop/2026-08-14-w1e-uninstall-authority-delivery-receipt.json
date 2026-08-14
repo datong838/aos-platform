@@ -1,0 +1,53 @@
+{
+  "schema": "aos-workshop-delivery-receipt/v1",
+  "recordedAt": "2026-08-14T14:44:27+08:00",
+  "taskId": "workshop-w1e-installation-http-20260814",
+  "subWave": "W1-09",
+  "branch": "w2-workshop",
+  "implementationCommit": "82a9810",
+  "parentCommit": "9719a74",
+  "result": "W1_09_IMPLEMENTED_GREEN_W1_10_NOT_STARTED",
+  "redGreenEvidence": [
+    "RED-1: InstallationEventEvidence rejected uninstall as an invalid literal.",
+    "RED-2: after the additive contract fix, PostgreSQL rejected active to uninstalled in guard_bundle_installation_revision_insert().",
+    "RED-3: after the revision guard fix, PostgreSQL rejected uninstalled in bundle_installation_event_to_state_check.",
+    "GREEN: w1e_001 closes the exact contract, revision guard, consistency function, revision state CHECK and event from/to state CHECK gaps."
+  ],
+  "migration": {
+    "revision": "w1e_001",
+    "downRevision": "w2_003",
+    "uniqueHead": true,
+    "createsTables": false,
+    "createsTriggers": false,
+    "changesIndexes": false,
+    "downgrade": "Allowed only when no uninstalled revision exists; otherwise SQLSTATE 55000 fail-closed."
+  },
+  "verification": {
+    "targeted": "12 passed",
+    "assetRegistry": "831 passed, 7 warnings",
+    "combinedBackend": "873 passed, 18 warnings, 2 subtests passed",
+    "openapiContract": "12 passed",
+    "openapiStructuredDiff": "one additive InstallationEventEvidence.type enum value plus the derived OpenAPI hash",
+    "webInheritedFromSameParent": "188 files, 2112 tests, TypeScript GREEN, production build GREEN",
+    "gitDiffCheck": "GREEN",
+    "push": "origin/w2-workshop contains 82a9810"
+  },
+  "changedFiles": {
+    "packages/contracts/openapi/v1.generated.json": {"preSha256": "77ef1743d6eeec136845abc09259e64ab5cdea8fc650b8150b0a786ca8944771", "postSha256": "34d3183310546eff957ac6fae70eb6c468eef689e389faa2672ed5d8973b06ca"},
+    "packages/contracts/openapi/v1.inventory.json": {"preSha256": "f7d50b2229c8d2ad82fac6d7924942c9a4bd4c9b4c4ce5947427c20c0956d78b", "postSha256": "c7f34617d3db8aa3e1048f4ebf2b7ee5c2928ff21d6846b759ef8caf601b6662"},
+    "services/aos-api/alembic/versions/w1e_001_bundle_installation_uninstall.py": {"preSha256": null, "postSha256": "51d361f0181a5199c3f77f1c14fb36d968258364c5924a7894fa5e4c17ba3ea7"},
+    "services/aos-api/aos_api/asset_registry/composition_contracts.py": {"preSha256": "7167a350fdfd144639519203443533d67b05dc9b548e154bc24ebe2c59ee2bf7", "postSha256": "3143fa0747d499066dfd58afe236ad76ecb98c4feb4e0c8c7928def5c4ec4f00"},
+    "services/aos-api/tests/asset_registry/m5_control_support.py": {"preSha256": "94cd2d98df4b4b47adb403eb231d95c48ac3846a113359319e4995c6abdc911d", "postSha256": "f8ea733d6c7cd49728766f2788275f27c99f7445df519368095d30afe3e2e859"},
+    "services/aos-api/tests/asset_registry/test_ecommerce_workshop_installation_projection.py": {"preSha256": "665a677ee660a8efb8b754cac4784cf8958e0de76a969da1007751506d83337f", "postSha256": "da3f6ebe78e1221838a9e56991b1cd77af6b9520890a0779f2709e9227b29988"},
+    "services/aos-api/tests/asset_registry/test_installation_evidence.py": {"preSha256": "640d25efc1d696f9ff6b15d446c883862b958cad3be52b7df3ff60260d70af28", "postSha256": "a47ad4c898c893747b245467666b8e5c9bb83a2a9430eed60737f56fb8612c03"},
+    "services/aos-api/tests/asset_registry/test_m5_ecommerce_cross_contract.py": {"preSha256": "ff1b0819355ec8b0d63eb811cb0852b62c504a95a0736eae82b04fd163119a73", "postSha256": "6e6eac15daa30916012f6eeb717b2fa51ea1eccec74928e5a7e62965a8c96253"},
+    "services/aos-api/tests/asset_registry/test_workshop_uninstall_migration.py": {"preSha256": null, "postSha256": "5df27f1fef8f2cb03dbd6bc47896c4dff2a33c8b07c3c30470bea4956dbfd98b"}
+  },
+  "nonClaims": [
+    "This receipt does not claim W1-10 browser acceptance.",
+    "This receipt does not mutate org-org/dev-project or dev-org/dev-project.",
+    "This receipt does not authorize W2 while DEP-DATA is RED.",
+    "Shared authority and Prime memory remain m1 CAS responsibilities."
+  ],
+  "nextGate": "Acquire the serialized real-effect Lease, start an isolated Cron-disabled acceptance server, prove meta_schedule_run count and latest row unchanged, and complete W1-10 in the built-in browser."
+}

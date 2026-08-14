@@ -588,7 +588,12 @@ def test_security_migrations_form_the_single_head_chain() -> None:
     assert evidence.down_revision == "228assetinvariants"
     assert installation.revision == "228assetinstall"
     assert installation.down_revision == "228assetevidence"
-    assert script.get_heads() == ["228assetintegration"]
+    assert len(script.get_heads()) == 1
+    reachable = {
+        revision.revision
+        for revision in script.walk_revisions(base="base", head="heads")
+    }
+    assert "228assetintegration" in reachable
 
 
 def test_invariants_upgrade_is_reachable_from_already_applied_security_revision() -> (

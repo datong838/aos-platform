@@ -26,6 +26,7 @@ MAX_PUBLISHER_ID_LENGTH = 120
 MAX_REFERENCE_LENGTH = 1024
 MAX_ARTIFACT_SIZE = 8 * 1024 * 1024 * 1024
 MAX_CONTRIBUTIONS_PER_MANIFEST = 10_000
+MAX_WORKSHOP_MODULES_PER_BUNDLE = 500
 
 _API_METHODS = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"})
 _API_PARAMETER = re.compile(r"^\{[A-Za-z][A-Za-z0-9_]*\}$")
@@ -396,6 +397,189 @@ class BundlePermissions(StrictContract):
         return values
 
 
+class WorkshopModuleContribution(StrictContract):
+    """Canonical signed Workshop module metadata exported by one SolutionPack."""
+
+    schema_id: Literal["aos.workshop-module/v1"] = Field(alias="schema")
+    module_id: str = Field(
+        alias="moduleId",
+        min_length=1,
+        max_length=160,
+        pattern=BUNDLE_ID_PATTERN,
+    )
+    display_name: str = Field(alias="displayName", min_length=1, max_length=240)
+    menu_label: str = Field(alias="menuLabel", min_length=1, max_length=120)
+    route: str = Field(min_length=1, max_length=1024)
+    slot: str = Field(
+        min_length=1,
+        max_length=160,
+        pattern=BUNDLE_ID_PATTERN,
+    )
+    order: int = Field(ge=0, le=100_000)
+    bundle_ref: str = Field(alias="bundleRef", min_length=1, max_length=1024)
+    required_objects: list[str] = Field(
+        alias="requiredObjects", max_length=500
+    )
+    required_capabilities: list[str] = Field(
+        alias="requiredCapabilities", max_length=500
+    )
+    required_aip_features: list[str] = Field(
+        alias="requiredAipFeatures", max_length=500
+    )
+    permissions: BundlePermissions
+    view_refs: list[str] = Field(alias="viewRefs", max_length=500)
+    eval_pack_refs: list[str] = Field(alias="evalPackRefs", max_length=500)
+    production_contract_refs: list[str] = Field(
+        alias="productionContractRefs", max_length=500
+    )
+    responsibility_template_refs: list[str] = Field(
+        alias="responsibilityTemplateRefs", max_length=500
+    )
+    impact_calculator_refs: list[str] = Field(
+        alias="impactCalculatorRefs", max_length=500
+    )
+    legacy_asset_refs: list[str] = Field(alias="legacyAssetRefs", max_length=500)
+    legacy_redirects: list[str] = Field(alias="legacyRedirects", max_length=500)
+    minimum_runtime_version: str = Field(
+        alias="minimumRuntimeVersion", min_length=1, max_length=120
+    )
+
+    @field_validator("display_name", "menu_label", "minimum_runtime_version")
+    @classmethod
+    def _normalized_module_text(cls, value: str) -> str:
+        return _require_exact_text(value, label="Workshop module value")
+
+    @field_validator("route")
+    @classmethod
+    def _canonical_route(cls, value: str) -> str:
+        normalize_navigation_route(value)
+        return value.removesuffix("/") or "/"
+
+    @field_validator("bundle_ref")
+    @classmethod
+    def _canonical_bundle_ref(cls, value: str) -> str:
+        value = _require_exact_text(value, label="Workshop bundleRef")
+        if not value.startswith("bundle://") or any(
+            marker in value for marker in ("\\", "?", "#", "\x00")
+        ):
+            raise ValueError("Workshop bundleRef is invalid")
+        identity = value.removeprefix("bundle://")
+        if identity.count("/") != 1 or "@" not in identity:
+            raise ValueError("Workshop bundleRef must identify publisher/bundle@version")
+        publisher, versioned_bundle = identity.split("/", 1)
+        bundle_id, version = versioned_bundle.rsplit("@", 1)
+        if (
+            not re.fullmatch(BUNDLE_ID_PATTERN, publisher)
+            or not re.fullmatch(BUNDLE_ID_PATTERN, bundle_id)
+            or not version
+            or version != version.strip()
+        ):
+            raise ValueError("Workshop bundleRef is invalid")
+        return value
+
+    @field_validator("required_objects")
+    @classmethod
+    def _unique_object_ids(cls, values: list[str]) -> list[str]:
+        for value in values:
+            if not re.fullmatch(r"^[A-Za-z][A-Za-z0-9_.-]*$", value):
+                raise ValueError("required object id is invalid")
+        if len(values) != len(set(values)):
+            raise ValueError("required object ids must be unique")
+        return values
+
+    @field_validator("required_capabilities")
+    @classmethod
+    def _unique_required_capabilities(cls, values: list[str]) -> list[str]:
+        for value in values:
+            if not re.fullmatch(CAPABILITY_PATTERN, value):
+                raise ValueError("required capability id is invalid")
+        if len(values) != len(set(values)):
+            raise ValueError("required capability ids must be unique")
+        return values
+
+    @field_validator("required_aip_features")
+    @classmethod
+    def _unique_aip_features(cls, values: list[str]) -> list[str]:
+        for value in values:
+            if not re.fullmatch(CAPABILITY_PATTERN, value):
+                raise ValueError("required AIP feature id is invalid")
+        if len(values) != len(set(values)):
+            raise ValueError("required AIP feature ids must be unique")
+        return values
+
+    @field_validator(
+        "view_refs",
+        "eval_pack_refs",
+        "production_contract_refs",
+        "responsibility_template_refs",
+        "impact_calculator_refs",
+        "legacy_asset_refs",
+    )
+    @classmethod
+    def _safe_unique_artifact_refs(cls, values: list[str]) -> list[str]:
+        checked = [
+            _require_relative_bundle_path(value, label="Workshop artifact ref")
+            for value in values
+        ]
+        if len(checked) != len(set(checked)):
+            raise ValueError("Workshop artifact refs must be unique")
+        return checked
+
+    @field_validator("legacy_redirects")
+    @classmethod
+    def _safe_unique_legacy_routes(cls, values: list[str]) -> list[str]:
+        checked = []
+        for value in values:
+            normalize_navigation_route(value)
+            checked.append(value.removesuffix("/") or "/")
+        if len(checked) != len(set(checked)):
+            raise ValueError("legacy redirect routes must be unique")
+        return checked
+
+
+class LegacyWorkshopMigrationInput(StrictContract):
+    """Domain-neutral safe summary of one unschematized Workshop source asset."""
+
+    source_path: str = Field(alias="sourcePath", min_length=1, max_length=1024)
+    legacy_id: str = Field(
+        alias="legacyId",
+        min_length=1,
+        max_length=160,
+        pattern=BUNDLE_ID_PATTERN,
+    )
+    title: str = Field(min_length=1, max_length=240)
+    route: str = Field(min_length=1, max_length=1024)
+    widget_ids: list[str] = Field(alias="widgetIds", min_length=1, max_length=500)
+    required_objects: list[str] = Field(
+        alias="requiredObjects", min_length=1, max_length=500
+    )
+
+    @field_validator("source_path")
+    @classmethod
+    def _safe_source_path(cls, value: str) -> str:
+        return _require_relative_bundle_path(value, label="legacy Workshop source path")
+
+    @field_validator("title")
+    @classmethod
+    def _normalized_title(cls, value: str) -> str:
+        return _require_exact_text(value, label="legacy Workshop title")
+
+    @field_validator("route")
+    @classmethod
+    def _normalized_route(cls, value: str) -> str:
+        normalize_navigation_route(value)
+        return value.removesuffix("/") or "/"
+
+    @field_validator("widget_ids", "required_objects")
+    @classmethod
+    def _unique_legacy_values(cls, values: list[str]) -> list[str]:
+        for value in values:
+            _require_exact_text(value, label="legacy Workshop value")
+        if len(values) != len(set(values)):
+            raise ValueError("legacy Workshop values must be unique")
+        return values
+
+
 class BundleMigrations(StrictContract):
     plan: str | None = Field(max_length=MAX_REFERENCE_LENGTH)
     downgrade_policy: DowngradePolicy = Field(alias="downgradePolicy", strict=False)
@@ -603,6 +787,18 @@ class LoadedBundle(StrictContract):
     source_ref: str = Field(alias="sourceRef", min_length=1, max_length=1024)
     manifest: BundleManifest
     artifacts: list[BundleArtifact] = Field(max_length=20_000)
+    workshop_modules: list[WorkshopModuleContribution] = Field(
+        default_factory=list,
+        alias="workshopModules",
+        max_length=MAX_WORKSHOP_MODULES_PER_BUNDLE,
+        exclude_if=lambda value: not value,
+    )
+    legacy_workshops: list[LegacyWorkshopMigrationInput] = Field(
+        default_factory=list,
+        alias="legacyWorkshops",
+        max_length=3,
+        exclude_if=lambda value: not value,
+    )
     evidence: list[BundleEvidence] = Field(max_length=500)
     content_hash: str = Field(alias="contentHash", pattern=SHA256_PATTERN)
     signature: BundleSignature | None
@@ -625,6 +821,17 @@ class LoadedBundle(StrictContract):
         paths = [artifact.relative_path for artifact in self.artifacts]
         if len(paths) != len(set(paths)):
             raise ValueError("artifact paths must be unique")
+        module_ids = [item.module_id for item in self.workshop_modules]
+        if len(module_ids) != len(set(module_ids)):
+            raise ValueError("Workshop module ids must be unique")
+        module_routes = [
+            normalize_navigation_route(item.route) for item in self.workshop_modules
+        ]
+        if len(module_routes) != len(set(module_routes)):
+            raise ValueError("Workshop module routes must be unique")
+        legacy_ids = [item.legacy_id for item in self.legacy_workshops]
+        if len(legacy_ids) != len(set(legacy_ids)):
+            raise ValueError("legacy Workshop ids must be unique")
         evidence_keys = [
             (item.type, item.artifact_ref, item.artifact_hash) for item in self.evidence
         ]

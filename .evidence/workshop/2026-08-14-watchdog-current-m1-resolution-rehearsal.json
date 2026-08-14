@@ -1,0 +1,64 @@
+{
+  "schema": "aos-watchdog-integration-rehearsal/v1",
+  "recordedAt": "2026-08-14T13:04:58+08:00",
+  "targetBaseline": {
+    "branch": "m1",
+    "commit": "0957b9f65105b375029806478a2fcab11ddc9d2f"
+  },
+  "resolutionSource": {
+    "branch": "w2-workshop",
+    "commits": [
+      "264e16c",
+      "42bbfe3"
+    ],
+    "strategy": "Resolve the three Watchdog file conflicts as one isolated operational change by preserving the complete Workshop episode protocol and decayed transport retry implementation."
+  },
+  "resolvedFiles": [
+    {
+      "path": "scripts/long-task-watchdog/README.md",
+      "sha256": "fe9e5398b4de46a2d344b49ec584047d820dc5e613dccf1966518d3237b9a510"
+    },
+    {
+      "path": "scripts/long-task-watchdog/test_watchdog.py",
+      "sha256": "e735c97f63718a3f13cb935d1fb701b0c92f94843c0d3e31c210a1c570453317"
+    },
+    {
+      "path": "scripts/long-task-watchdog/watchdog.py",
+      "sha256": "88bf966469bea4dcb858aec7c6fb4aca569f9d9146ebb95b141e1e9394274393"
+    }
+  ],
+  "verification": {
+    "unitTests": {
+      "passed": 29,
+      "failed": 0
+    },
+    "coveredBoundaries": [
+      "final and final_answer are both terminal transcript phases",
+      "exit zero without a current visible final and matching episode Ack is not accepted as recovery",
+      "resumed-progress, safe-blocked, completed, and reentry-noop stop retries",
+      "transport-only failures use 5/10/15/30/60/120 minute decayed backoff",
+      "the third transport failure is not an immediate circuit break",
+      "permissions, worktree branch, active turn, pending tool call, and recovery episode are checked before accepting recovery"
+    ],
+    "installedConfigurationTick": {
+      "commandExit": 0,
+      "decision": "turn-running",
+      "recoveryAttempted": false
+    },
+    "stateV2": {
+      "activeTurnDetected": true,
+      "lastRecoveryOutcome": "maintenance-reset",
+      "consecutiveFailures": 0,
+      "totalAttempts": 0,
+      "lastRecoveredAt": null,
+      "visibleAckAt": null
+    },
+    "gitDiffCheck": "GREEN"
+  },
+  "nonClaims": [
+    "This is not a formal m1 integration.",
+    "The Workshop Watchdog commits remain excluded from the W1 business cherry-pick sequence.",
+    "A LaunchAgent exit code alone is not recovery evidence.",
+    "No recovery attempt or user-visible recovery claim occurred in this active episode."
+  ]
+}

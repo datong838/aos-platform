@@ -5,6 +5,14 @@
     {"type": "data", "name": "ecommerce-37-logic-catalog", "version": "1"},
     {"type": "data", "name": "ecommerce-capability-catalog", "version": "1"},
     {"type": "data", "name": "aip6-contribution-schemas", "version": "1"},
-    {"type": "data", "name": "aip6-runtime-policies", "version": "1"}
+    {"type": "data", "name": "aip6-runtime-policies", "version": "1"},
+    {"type": "data", "name": "ecommerce.task-cockpit", "version": "1"},
+    {"type": "data", "name": "ecommerce.content-campaign", "version": "1"},
+    {"type": "data", "name": "ecommerce.creator-growth", "version": "1"},
+    {"type": "data", "name": "ecommerce.media-studio", "version": "1"},
+    {"type": "data", "name": "ecommerce.analyst", "version": "1"},
+    {"type": "data", "name": "ecommerce.price-governance", "version": "1"},
+    {"type": "data", "name": "ecommerce.customer", "version": "1"},
+    {"type": "data", "name": "w03-customer-private-domain", "version": "legacy"}
   ]
 }

@@ -1,0 +1,25 @@
+import { describe, expect, it, vi } from "vitest";
+import { EcommerceWorkshopClient, EcommerceWorkshopClientError } from "./client";
+
+const hash = (value: string) => `sha256:${value.repeat(64)}`;
+const module = { moduleId: "ecommerce.operations", displayName: "统一运营驾驶舱", menuLabel: "统一运营驾驶舱", route: "/workshop/operations", slot: "workshop.primary.ecommerce", order: 30, installationRef: { installationId: "11111111-1111-4111-8111-111111111111", revision: 5, compositionId: "22222222-2222-4222-8222-222222222222", lockRevision: 1, lockHash: hash("a"), overlayRevision: "overlay-5" }, moduleRef: { publisher: "aos", bundleId: "solution.ecommerce.operations-base", version: "1.1.0", bundleContentHash: hash("b"), moduleArtifactRef: "bundle://catalog/solutions/ecommerce-operations-base/content/workshops/ecommerce.operations.json", moduleArtifactHash: hash("c") }, readiness: "unknown", blockers: [{ dependencyType: "object", dependencyId: "Order", state: "unknown", reasonCode: "OBJECT_READINESS_UNVERIFIED", recoverable: true, requiredAction: "接入 reader", ref: null }], permissions: { roles: [], markings: [], dataScopes: ["ecommerce.workshop.read"], actionTypes: [] }, requiredObjects: ["Order"], requiredCapabilities: [], requiredAipFeatures: [], viewRefs: [], evalPackRefs: [], productionContractRefs: [], responsibilityTemplateRefs: [], impactCalculatorRefs: [], legacyAssetRefs: [], legacyRoutes: [], minimumRuntimeVersion: "1.7.0", lastReceiptRef: null };
+const envelope = { schemaVersion: "aos.ecommerce-workshop/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-14T00:00:00Z", dataCutoff: null };
+const ok = (payload: unknown) => new Response(JSON.stringify(payload), { status: 200, headers: { "Content-Type": "application/json" } });
+
+describe("EcommerceWorkshopClient", () => {
+  it("只发两个 canonical GET，并沿用会话鉴权头", async () => {
+    const fetch = vi.fn().mockResolvedValueOnce(ok({ ...envelope, items: [module], count: 1 })).mockResolvedValueOnce(ok({ ...envelope, item: module }));
+    const client = new EcommerceWorkshopClient({ fetch, getBaseUrl: () => "http://api.test", getAuthHeaders: () => ({ Authorization: "Bearer test" }) });
+    await expect(client.listModules()).resolves.toMatchObject({ count: 1 });
+    await expect(client.getModuleReadiness("ecommerce.operations")).resolves.toMatchObject({ item: { moduleId: "ecommerce.operations" } });
+    expect(fetch).toHaveBeenNthCalledWith(1, "http://api.test/v1/ecommerce-workshop/modules", expect.objectContaining({ method: "GET", headers: expect.objectContaining({ Authorization: "Bearer test" }) }));
+    expect(fetch).toHaveBeenNthCalledWith(2, "http://api.test/v1/ecommerce-workshop/modules/ecommerce.operations/readiness", expect.objectContaining({ method: "GET" }));
+  });
+  it("HTTP error、network 和无效 moduleId 不伪装为空态", async () => {
+    const denied = new EcommerceWorkshopClient({ fetch: vi.fn().mockResolvedValue(new Response(JSON.stringify({ code: "FORBIDDEN", message: "denied", details: null, traceId: "trace-1" }), { status: 403 })), getBaseUrl: () => "", getAuthHeaders: () => ({}) });
+    await expect(denied.listModules()).rejects.toMatchObject({ status: 403, body: { code: "FORBIDDEN" } });
+    const network = new EcommerceWorkshopClient({ fetch: vi.fn().mockRejectedValue(new Error("offline")), getBaseUrl: () => "", getAuthHeaders: () => ({}) });
+    await expect(network.listModules()).rejects.toBeInstanceOf(EcommerceWorkshopClientError);
+    await expect(network.getModuleReadiness("bad")).rejects.toBeInstanceOf(TypeError);
+  });
+});

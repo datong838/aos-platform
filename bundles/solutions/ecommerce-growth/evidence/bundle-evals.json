@@ -1,14 +1,19 @@
 {
   "status": "passed",
   "failed": 0,
-  "scope": "A6E definition publication contracts",
+  "scope": "A6E definition publication and W1-B Workshop module draft contracts",
   "passedContracts": [
     "exact 6 AgentTemplate definitions",
     "exact 37 evaluated SkillTemplate definitions",
     "exact 10 published CapabilityRevision definitions",
     "idempotent publication and exact database readback",
     "zero tenant runtime side effects",
-    "title.generate alias resolves to copy.generate"
+    "title.generate alias resolves to copy.generate",
+    "exact seven growth Workshop module identities, routes, slot and order",
+    "W03 widget and required-object conservation",
+    "legacy source ref and redirects retained",
+    "exclusive navigation and UI contribution claims",
+    "zero enabled action type"
   ],
   "runtimeReadiness": "blocked",
   "runtimeBlockers": [
@@ -16,7 +21,10 @@
     "skill_bindings_unavailable",
     "provider_unknown",
     "eval_pack_unavailable",
-    "aip7_route_authority_unavailable"
+    "aip7_route_authority_unavailable",
+    "active_installation_unavailable",
+    "workshop_read_models_unavailable",
+    "production_contracts_incomplete"
   ],
-  "note": "passed 仅表示 A6E 定义发布契约通过，不表示能力运行、外发或生产就绪。"
+  "note": "passed 仅表示 A6E 定义与 Workshop Bundle draft/旧资产守恒契约通过，不表示已安装、页面可用、能力运行、外发或生产就绪。"
 }

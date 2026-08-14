@@ -23,10 +23,24 @@ import { OrgSwitcher } from "../components/OrgSwitcher";
 import { PlatformBaseSwitcher } from "../components/PlatformBaseSwitcher";
 import { EnvReadonlyBadge } from "../components/EnvReadonlyBadge";
 import { getTenant } from "../api/tenant";
-import { DEMO_VERSION, findNavPage, isNavPage, isNavSubgroup, NAV_ITEMS } from "../nav";
+import {
+  DEMO_VERSION,
+  findNavPage,
+  isNavPage,
+  isNavSubgroup,
+  NAV_ITEMS,
+  workshopModuleNavPage,
+} from "../nav";
 import { NavIcon } from "./icons";
 import type { IconName, NavPage } from "../nav";
 import { OPS_NAV_SECTION } from "../lib/productCopy";
+import {
+  InstalledModuleNavigation,
+  WORKSHOP_FOCUS_EVENT,
+  findInstalledWorkshopRoute,
+  isReplacedLegacyWorkshopRoute,
+  useEcommerceWorkshopCatalog,
+} from "../components/workshop";
 
 const APPEARANCE_OPTS: {
   id: AppearancePreference;
@@ -252,7 +266,21 @@ export function AppShell() {
     () => `${getTenant().orgId}:${getTenant().projectId}`,
   );
   const location = useLocation();
-  const active = findNavPage(location.pathname);
+  const workshopCatalog = useEcommerceWorkshopCatalog();
+  const activeWorkshop = findInstalledWorkshopRoute(
+    workshopCatalog.modules,
+    location.pathname,
+  );
+  const staticActive = findNavPage(location.pathname);
+  const unresolvedWorkshopRoute =
+    !activeWorkshop &&
+    location.pathname.startsWith("/workshop/") &&
+    staticActive?.path === "/workshop";
+  const active = activeWorkshop
+    ? workshopModuleNavPage(activeWorkshop.module)
+    : unresolvedWorkshopRoute
+      ? undefined
+      : staticActive;
   const onApolloRoute = location.pathname.startsWith("/apollo");
 
   const { collapsed: sidebarCollapsed, toggle: toggleSidebar } =
@@ -265,6 +293,16 @@ export function AppShell() {
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches,
   );
+  const [workshopFocusMode, setWorkshopFocusMode] = useState(false);
+
+  useEffect(() => {
+    const onFocusMode = (event: Event) => {
+      const detail = (event as CustomEvent<{ active?: boolean }>).detail;
+      setWorkshopFocusMode(detail?.active === true);
+    };
+    window.addEventListener(WORKSHOP_FOCUS_EVENT, onFocusMode);
+    return () => window.removeEventListener(WORKSHOP_FOCUS_EVENT, onFocusMode);
+  }, []);
 
   // 外观：监听系统主题变化
   useEffect(() => {
@@ -315,8 +353,12 @@ export function AppShell() {
   }, [onApolloRoute, expandSection]);
 
   const crumbs = useMemo(
-    () => active?.crumbs ?? ["工作区", "AOS 概览"],
-    [active],
+    () => active?.crumbs ?? (
+      unresolvedWorkshopRoute
+        ? ["工作台", "电商工作台"]
+        : ["工作区", "AOS 概览"]
+    ),
+    [active, unresolvedWorkshopRoute],
   );
 
   const onAppearanceChange = useCallback((next: AppearancePreference) => {
@@ -356,6 +398,7 @@ export function AppShell() {
             className={`aos-nav-section-content${isCollapsed ? " is-collapsed" : ""}`}
           >
             {pages}
+            {key === "工作台" ? <InstalledModuleNavigation /> : null}
           </div>
         </div>,
       );
@@ -404,6 +447,9 @@ export function AppShell() {
       } else {
         // page：hidden 页面不在侧边栏渲染，但路由保留
         if (item.hidden) continue;
+        if (
+          isReplacedLegacyWorkshopRoute(workshopCatalog.modules, item.path)
+        ) continue;
         if (currentSectionKey === null) {
           // 不属于任何分组的页面（如概览）直接渲染
           nodes.push(renderPage(item));
@@ -418,10 +464,10 @@ export function AppShell() {
     }
 
     return nodes;
-  }, [collapsedSections, toggleSection, active?.id]);
+  }, [collapsedSections, toggleSection, active?.id, workshopCatalog.modules]);
 
   return (
-    <div className="p-app">
+    <div className={`p-app${workshopFocusMode ? " is-workshop-focus" : ""}`}>
       <GlobalNav
         onToggleSidebar={toggleSidebar}
         pathname={location.pathname}
@@ -472,6 +518,8 @@ export function AppShell() {
               type="button"
               className="aside-toggle"
               title="折叠/展开侧栏"
+              aria-label={sidebarCollapsed ? "展开侧栏" : "折叠侧栏"}
+              aria-expanded={!sidebarCollapsed}
               onClick={toggleSidebar}
             >
               <NavIcon name="chevron" />

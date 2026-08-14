@@ -11,7 +11,7 @@ from aos_api.tenant_scope import TenantScope, apply_transaction_scope
 def apply_asset_transaction_scope(
     conn: Any, *, org_id: str, project_id: str
 ) -> None:
-    """Bind real psycopg connections; lightweight unit fakes have no RLS layer."""
+    """Bind canonical GUCs; activate the runtime role only after RLS adoption."""
     if isinstance(conn, psycopg.Connection):
         # Asset-store unit fixtures intentionally build earlier migration
         # snapshots in isolated schemas.  Activate the runtime role only after
@@ -22,6 +22,13 @@ def apply_asset_transaction_scope(
             "AND policyname='tenant_scope_bundle_composition_ti6'"
         ).fetchone()
         if adopted is None:
+            conn.execute(
+                """
+                SELECT set_config('aos.org_id', %s, true),
+                       set_config('aos.project_id', %s, true)
+                """,
+                (org_id, project_id),
+            )
             return
         search_path = str(conn.execute("SHOW search_path").fetchone()["search_path"])
         apply_transaction_scope(conn, TenantScope(org_id, project_id))

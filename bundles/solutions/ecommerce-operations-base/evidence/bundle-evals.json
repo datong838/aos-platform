@@ -1,1 +1,20 @@
-{"status":"passed","failed":0}
+{
+  "status": "passed",
+  "failed": 0,
+  "scope": "W1-B Workshop module draft contribution contracts",
+  "passedContracts": [
+    "exact ecommerce.operations module identity, route, slot and order",
+    "W01 and W02 widget and required-object conservation",
+    "legacy source refs and redirects retained",
+    "exclusive navigation and UI contribution claims",
+    "zero enabled action type"
+  ],
+  "runtimeReadiness": "blocked",
+  "runtimeBlockers": [
+    "active_installation_unavailable",
+    "workshop_read_model_unavailable",
+    "production_contracts_incomplete",
+    "adapter_capabilities_unavailable"
+  ],
+  "note": "passed 仅表示 Bundle draft 与旧资产能力守恒契约通过，不表示已安装、页面可用或动作就绪。"
+}

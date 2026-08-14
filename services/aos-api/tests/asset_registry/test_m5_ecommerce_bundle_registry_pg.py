@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import uuid
 from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager
@@ -242,7 +243,7 @@ def test_four_m5_bundles_publish_and_survive_registry_restart(
         validated = service.validate(
             publisher="aos",
             bundle_id=fixture.bundle_id,
-            version="1.0.0",
+            version=manifest.metadata.version,
             actor=VALIDATOR,
             roles=CREATE_ROLES,
             publisher_scopes={"aos"},
@@ -255,7 +256,7 @@ def test_four_m5_bundles_publish_and_survive_registry_restart(
                 service.publish(
                     publisher="aos",
                     bundle_id=fixture.bundle_id,
-                    version="1.0.0",
+                    version=manifest.metadata.version,
                     actor=invalid_publisher,
                     roles=PUBLISH_ROLES,
                     publisher_scopes={"aos"},
@@ -263,7 +264,7 @@ def test_four_m5_bundles_publish_and_survive_registry_restart(
             unchanged = service.get_version(
                 publisher="aos",
                 bundle_id=fixture.bundle_id,
-                version="1.0.0",
+                version=manifest.metadata.version,
             )
             assert unchanged["status"] == "validated"
             assert [event["sequence"] for event in unchanged["lifecycleEvents"]] == [1]
@@ -271,7 +272,7 @@ def test_four_m5_bundles_publish_and_survive_registry_restart(
         published = service.publish(
             publisher="aos",
             bundle_id=fixture.bundle_id,
-            version="1.0.0",
+            version=manifest.metadata.version,
             actor=PUBLISHER,
             roles=PUBLISH_ROLES,
             publisher_scopes={"aos"},
@@ -312,13 +313,13 @@ def test_four_m5_bundles_publish_and_survive_registry_restart(
         expected = published_by_id[fixture.bundle_id]
         persisted = restarted_store.get_version(
             fixture.bundle_id,
-            "1.0.0",
+            prepared.version_for(fixture.bundle_id),
             "aos",
         )
         public = restarted_service.get_version(
             publisher="aos",
             bundle_id=fixture.bundle_id,
-            version="1.0.0",
+            version=prepared.version_for(fixture.bundle_id),
         )
         assert persisted["status"] == public["status"] == "published"
         assert (
@@ -358,7 +359,7 @@ def test_four_m5_bundles_publish_and_survive_registry_restart(
             if item["type"] == "signature_verification"
         )
         assert candidate.publisher == "aos"
-        assert candidate.version == "1.0.0"
+        assert candidate.version == signed_bundle.version
         assert candidate.kind == signed_bundle.signed.manifest.kind
         assert candidate.manifest == signed_bundle.signed.manifest
         assert candidate.content_hash == expected["contentHash"]
@@ -366,7 +367,13 @@ def test_four_m5_bundles_publish_and_survive_registry_restart(
         assert candidate.release_evidence_revision.startswith("sha256:")
         assert candidate.optional_dependencies == []
         assert candidate.conflicts == []
-        assert candidate.contributions == []
+        assert sorted(
+            json.dumps(item.model_dump(mode="json", by_alias=True), sort_keys=True)
+            for item in candidate.contributions
+        ) == sorted(
+            json.dumps(item.model_dump(mode="json", by_alias=True), sort_keys=True)
+            for item in signed_bundle.signed.manifest.spec.contributions
+        )
         if candidate.id == "domain.ecommerce.core":
             assert candidate.dependencies == []
         else:

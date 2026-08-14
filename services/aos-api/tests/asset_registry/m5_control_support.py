@@ -51,6 +51,7 @@ M5_CONTROL_MIGRATIONS = (
     API_ROOT / "alembic/versions/228asset0_invariants.py",
     API_ROOT / "alembic/versions/228asset0_evidence_snapshot.py",
     API_ROOT / "alembic/versions/228asset1_composition_installation.py",
+    API_ROOT / "alembic/versions/w1e_001_bundle_installation_uninstall.py",
 )
 M5_ORG_ID = "org-m5-synthetic"
 M5_PROJECT_ID = "project-m5-synthetic"
@@ -85,11 +86,13 @@ class M5ControlRuntime:
         idempotency_key: str,
         roles: Collection[str] = ("asset-installer",),
         markings: Collection[str] = (),
+        org_id: str | None = None,
+        project_id: str | None = None,
     ) -> CommandReceipt:
         return self.composition_service.resolve(
             request=request,
-            org_id=self.org_id,
-            project_id=self.project_id,
+            org_id=self.org_id if org_id is None else org_id,
+            project_id=self.project_id if project_id is None else project_id,
             actor=actor,
             roles=roles,
             markings=markings,
@@ -104,9 +107,13 @@ class M5ControlRuntime:
         maker: str,
         checker: str,
         idempotency_prefix: str,
+        org_id: str | None = None,
+        project_id: str | None = None,
     ) -> tuple[CommandReceipt, ...]:
         """Create through active so negative tests can start from a real baseline."""
 
+        target_org = self.org_id if org_id is None else org_id
+        target_project = self.project_id if project_id is None else project_id
         created = self.installation_service.create(
             request=CreateInstallationRequest.model_validate(
                 {
@@ -116,8 +123,8 @@ class M5ControlRuntime:
                     "displayName": "Synthetic M5 ecommerce composition",
                 }
             ),
-            org_id=self.org_id,
-            project_id=self.project_id,
+            org_id=target_org,
+            project_id=target_project,
             actor=maker,
             roles={"asset-installer"},
             markings=set(),
@@ -129,8 +136,8 @@ class M5ControlRuntime:
         submitted = self.installation_service.submit(
             installation_id=installation_id,
             request=EmptyInstallationActionRequest(),
-            org_id=self.org_id,
-            project_id=self.project_id,
+            org_id=target_org,
+            project_id=target_project,
             actor=maker,
             roles={"asset-installer"},
             markings=set(),
@@ -147,8 +154,8 @@ class M5ControlRuntime:
                     "contributionDiffHash": lock.contribution_diff_hash,
                 }
             ),
-            org_id=self.org_id,
-            project_id=self.project_id,
+            org_id=target_org,
+            project_id=target_project,
             actor=checker,
             roles={"asset-install-approver"},
             markings=set(),
@@ -158,8 +165,8 @@ class M5ControlRuntime:
         applied = self.installation_service.apply(
             installation_id=installation_id,
             request=EmptyInstallationActionRequest(),
-            org_id=self.org_id,
-            project_id=self.project_id,
+            org_id=target_org,
+            project_id=target_project,
             actor=maker,
             roles={"asset-installer"},
             markings=set(),
@@ -169,8 +176,8 @@ class M5ControlRuntime:
         active = self.installation_service.verify(
             installation_id=installation_id,
             request=EmptyInstallationActionRequest(),
-            org_id=self.org_id,
-            project_id=self.project_id,
+            org_id=target_org,
+            project_id=target_project,
             actor=maker,
             roles={"asset-installer"},
             markings=set(),
@@ -248,7 +255,7 @@ def _publish_four_bundles(
         service.validate(
             publisher="aos",
             bundle_id=fixture.bundle_id,
-            version="1.0.0",
+            version=manifest.metadata.version,
             actor="m5-validator",
             roles={"developer"},
             publisher_scopes={"aos"},
@@ -256,7 +263,7 @@ def _publish_four_bundles(
         service.publish(
             publisher="aos",
             bundle_id=fixture.bundle_id,
-            version="1.0.0",
+            version=manifest.metadata.version,
             actor="m5-publisher",
             roles={"asset-publisher"},
             publisher_scopes={"aos"},
@@ -266,7 +273,7 @@ def _publish_four_bundles(
 
 @contextmanager
 def m5_control_runtime(destination: Path) -> Iterator[M5ControlRuntime]:
-    """Yield an isolated five-migration M5 control plane and always clean it up."""
+    """Yield an isolated M5 control plane and always clean it up."""
 
     schema = f"m5_control_{uuid.uuid4().hex}"
     created = False

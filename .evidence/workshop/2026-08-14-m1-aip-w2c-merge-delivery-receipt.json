@@ -1,0 +1,68 @@
+{
+  "schema": "aos-workshop-merge-delivery-receipt/v1",
+  "recordedAt": "2026-08-14T14:24:12+08:00",
+  "taskId": "workshop-w1e-installation-http-20260814",
+  "sourceBranch": "m1",
+  "sourceCommit": "a994f03c542779fa085aeac1337f829758f18213",
+  "targetBranch": "w2-workshop",
+  "targetPreMergeCommit": "9960d193b545faadcf3044d3929d3f0047a1c5b5",
+  "result": "MERGE_ACCEPTANCE_GREEN_SAFE_CHECKPOINT_READY",
+  "conflicts": {
+    "count": 5,
+    "files": [
+      "scripts/long-task-watchdog/README.md",
+      "scripts/long-task-watchdog/test_watchdog.py",
+      "scripts/long-task-watchdog/watchdog.py",
+      "services/aos-api/aos_api/routers/domain_manifest.json",
+      "services/aos-api/tests/test_domain_router_manifest.py"
+    ],
+    "unresolvedCount": 0,
+    "resolution": "Preserved the Workshop episode-scoped recovery protocol and combined it with m1 progressive transport backoff; retained the union of Workshop and AIP route-manifest authority, then regenerated official OpenAPI artifacts."
+  },
+  "watchdogContract": {
+    "recoveryRequires": [
+      "current episode acknowledgement",
+      "visible final or progress evidence",
+      "classified outcome: resumed-progress, safe-blocked, completed, or reentry-noop"
+    ],
+    "transportRetryMinutes": "5, 10, 15, 20, ... capped at 60",
+    "fixedThreeFailureFuse": false,
+    "wakeOnlyIsRecovery": false,
+    "tests": "29 passed"
+  },
+  "routeAuthority": {
+    "runtimeRouteCount": 4192,
+    "runtimeRouteSha256": "543cc0c76a2aa93b1c122ee1f350be3ee7f1ccf49360b956a8553c8c684f3d5c",
+    "openapiPathCount": 2414,
+    "exportExpectedRouteRows": 4188,
+    "exportExpectedUniqueOperationPairs": 4178,
+    "exportExpectedOpenapiOperations": 4178,
+    "openapiComponentSchemaCount": 1738
+  },
+  "verification": {
+    "backend": "868 passed, 18 warnings, 2 subtests passed",
+    "web": "188 files passed, 2112 tests passed",
+    "typescriptNoEmit": "GREEN",
+    "productionBuild": "GREEN",
+    "uniqueAlembicHead": "w2_003",
+    "gitDiffCheck": "GREEN",
+    "memoryAuthority": "AOS-000020",
+    "memoryStrongProjections": "CURRENT",
+    "memoryValidate": "GREEN"
+  },
+  "artifactSha256": {
+    "services/aos-api/aos_api/routers/domain_manifest.json": "8dbc9248c1ca586dbf863453188df06433cb29db83037b13ef0395621b8bb2f1",
+    "services/aos-api/tests/test_domain_router_manifest.py": "32a3f45d81370d89fbe0ed273c2a93f6d8f7a4cf2763a155174024012ee2000b",
+    "packages/contracts/openapi/v1.generated.json": "77ef1743d6eeec136845abc09259e64ab5cdea8fc650b8150b0a786ca8944771",
+    "packages/contracts/openapi/v1.inventory.json": "f7d50b2229c8d2ad82fac6d7924942c9a4bd4c9b4c4ce5947427c20c0956d78b",
+    "scripts/long-task-watchdog/watchdog.py": "314802d4497bc258b4a6c468fa9fb9cc4fa5e428397a37c0a4ac4562de41b386",
+    "scripts/long-task-watchdog/test_watchdog.py": "82687eeee395f639737fc44c2dc82d9e02da918856c5afa6abc10cbf8ed8925c"
+  },
+  "nonClaims": [
+    "This receipt does not authorize or complete W1-09 uninstall migration.",
+    "This receipt does not execute W1-10 browser acceptance or mutate org-org/dev-project.",
+    "This receipt does not start W2 while DEP-DATA is RED.",
+    "This receipt does not update m1 authority or shared memory through the Workshop branch."
+  ],
+  "nextGate": "Commit and push this merge checkpoint, then execute W1-09 from a failing migration test before any implementation."
+}

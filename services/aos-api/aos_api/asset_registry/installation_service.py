@@ -532,6 +532,11 @@ class InstallationService:
         actor: str,
         lock: StoredCompositionLock,
     ) -> InstallationRecord:
+        self._store.guard_replacement_activation_in_transaction(
+            conn,
+            locked=locked,
+            requested_ref=lock.payload.current_installation_ref,
+        )
         checked_at = self._revalidator.revalidate_in_transaction(
             conn, lock=lock
         ).checked_at
@@ -550,6 +555,9 @@ class InstallationService:
         actor: str,
         lock: StoredCompositionLock,
     ) -> InstallationRecord:
+        self._store.guard_no_active_replacement_in_transaction(
+            conn, locked=locked
+        )
         checked_at = self._store.read_control_clock_in_transaction(conn)
         return self._store.append_rollback_in_transaction(
             conn,
@@ -567,6 +575,9 @@ class InstallationService:
         actor: str,
         lock: StoredCompositionLock,
     ) -> InstallationRecord:
+        self._store.guard_no_active_replacement_in_transaction(
+            conn, locked=locked
+        )
         checked_at = self._store.read_control_clock_in_transaction(conn)
         return self._store.append_uninstall_in_transaction(
             conn,

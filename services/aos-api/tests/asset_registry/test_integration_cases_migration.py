@@ -593,7 +593,12 @@ def test_migration_shape_single_head_and_empty_upgrade() -> None:
 
     assert module.revision == "228assetintegration"
     assert module.down_revision == "228assetinstall"
-    assert script.get_heads() == ["228assetintegration"]
+    assert len(script.get_heads()) == 1
+    reachable = {
+        revision.revision
+        for revision in script.walk_revisions(base="base", head="heads")
+    }
+    assert "228assetintegration" in reachable
     for table in M4_TABLES:
         assert f"CREATE TABLE {table}" in upgrade_sql
     assert "canonical_integration_case_sha256" in upgrade_sql

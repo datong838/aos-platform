@@ -36,7 +36,9 @@ targets = [
     "aos_api.asset_registry.installation_revalidation",
     "aos_api.asset_registry.installation_store",
 ]
-print(json.dumps({{name: name in sys.modules for name in targets}}, sort_keys=True))
+print("CONTROL_WIRING_RESULT=" + json.dumps(
+    {{name: name in sys.modules for name in targets}}, sort_keys=True
+))
 """
     completed = subprocess.run(
         [sys.executable, "-I", "-c", script],
@@ -44,7 +46,12 @@ print(json.dumps({{name: name in sys.modules for name in targets}}, sort_keys=Tr
         capture_output=True,
         text=True,
     )
-    loaded = json.loads(completed.stdout.strip().splitlines()[-1])
+    result_line = next(
+        line
+        for line in completed.stdout.splitlines()
+        if line.startswith("CONTROL_WIRING_RESULT=")
+    )
+    loaded = json.loads(result_line.removeprefix("CONTROL_WIRING_RESULT="))
     assert loaded == {
         "aos_api.asset_registry.composition_service": False,
         "aos_api.asset_registry.installation_revalidation": False,
