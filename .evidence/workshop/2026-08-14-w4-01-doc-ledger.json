@@ -1,0 +1,42 @@
+{
+  "schema": "aos-workshop-document-ledger-evidence/v1",
+  "taskId": "workshop-w4-01-doc-ledger-20260814",
+  "authorityRevision": "AOS-000024",
+  "result": "W4_01_EVIDENCE_BUILD_DOC_LEDGER_SYNCHRONIZED",
+  "documents": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/33-W4-01-EvidenceBuildJob八领域RequiredFacts与Evidence治理预检ADR.md",
+      "sha256": "f1f3ff69eb37ed3061b68581f88eae6978028fe9ace109c9bd583391f2134489",
+      "change": "created"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/04-EvidenceWiki查询与保存视图.md",
+      "sha256": "492f51e5e38a31e1ec9c6a21fa38235129c1873ba41ea7f5686504b5bd10b2d6",
+      "change": "separated Bundle persistence from authoritative Build Job and Evidence governance"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "sha256": "52420c95d7b694d3d1e2cc99bddfefab17ab78a6ebaf810b65ebf58f468476d4",
+      "change": "added W4-01 preflight evidence and governance dependency"
+    }
+  ],
+  "status": {
+    "bundleAuthority": "CODE_CONTROL_GREEN",
+    "buildJob": "RED",
+    "requiredFactsProfiles": "RED",
+    "evidenceImmutabilityRevoke": "RED",
+    "W4_01": "NOT_STARTED_IMPLEMENTATION_BLOCKED"
+  },
+  "verification": [
+    "document diff check passed",
+    "eight-module profile ownership and L0/L1 boundary are explicit",
+    "source code, database and real tenant were not changed"
+  ],
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseChanged": false,
+    "realTenantMutation": false,
+    "migrationLeaseAcquired": false,
+    "visualDraftChanged": false
+  }
+}
