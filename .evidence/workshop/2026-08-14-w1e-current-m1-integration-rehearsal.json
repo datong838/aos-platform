@@ -1,6 +1,7 @@
 {
   "schema": "aos-workshop-integration-rehearsal/v1",
   "recordedAt": "2026-08-14T13:00:45+08:00",
+  "supplementedAt": "2026-08-14T13:22:23+08:00",
   "sourceBranch": "w2-workshop",
   "targetBranch": "m1",
   "targetBaselineCommit": "0957b9f65105b375029806478a2fcab11ddc9d2f",
@@ -52,6 +53,15 @@
       "testsPassed": 2112,
       "failed": 0
     },
+    "routerManifestIntegration": {
+      "sourceBranchResult": "8 passed; source-only runtime baseline remains 4168 routes and 2395 OpenAPI paths",
+      "firstCombinedResult": "7 passed/1 failed because the fixed runtime baseline was stale after adding the AIP W2-C routes",
+      "combinedRuntimeRouteCount": 4192,
+      "combinedRuntimeSha256": "543cc0c76a2aa93b1c122ee1f350be3ee7f1ccf49360b956a8553c8c684f3d5c",
+      "combinedOpenapiPathCount": 2414,
+      "postResolutionResult": "8 passed; 2 subtests passed",
+      "requiredIntegrationRule": "Update these three fixed test-authority values only in the formal m1 integration result; do not change the independently correct w2 source baseline before integration."
+    },
     "typescriptNoEmit": "GREEN",
     "productionBuild": "GREEN",
     "gitDiffCheck": "GREEN"
@@ -59,6 +69,7 @@
   "nonClaims": [
     "This is not a formal m1 integration.",
     "This does not close AIP W2-C browser, CAS, authority, or Lease gates.",
+    "The 14 cherry-picks are textually conflict-free, but the formal integration must still update the combined router runtime count, digest, and OpenAPI path baseline.",
     "This does not authorize or execute the Workshop uninstall migration.",
     "This does not mutate or accept org-org/dev-project.",
     "This does not complete W1-09, W1-10, or W1."
