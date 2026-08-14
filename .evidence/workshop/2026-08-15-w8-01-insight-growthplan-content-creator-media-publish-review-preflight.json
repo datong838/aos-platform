@@ -1,0 +1,95 @@
+{
+  "schema": "aos-workshop-scenario-preflight/v1",
+  "taskId": "workshop-w8-01-insight-growthplan-content-creator-media-publish-review-preflight-20260815",
+  "workItem": "W8-01",
+  "scenario": "insight_to_growthplan_to_content_creator_media_publish_review",
+  "projectRevision": "AOS-000033",
+  "branch": "w2-workshop",
+  "head": "5c3ca93",
+  "aipBaseline": "m1@8cfc29a3d44ac4e12915371a547304452dad6d37",
+  "recordedAt": "2026-08-15T07:50:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "SCENARIO_TARGET_CONTRACT_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "mayRunScenario": false,
+    "reason": "every required cumulative upstream gate is unchecked, DEP-A8 is not GREEN, and the product baseline remains formally unreviewed and unfrozen"
+  },
+  "authorization": {
+    "continuousW1ToW8Development": true,
+    "effectfulPublishAuthorization": false,
+    "releaseAuthorization": false,
+    "meaning": "authorization permits safe planning and dependency-ready implementation but does not bypass scenario or release gates"
+  },
+  "dependencyMatrix": [
+    {"dependency": "W2-10", "status": "NOT_GREEN", "reason": "eight-page browser and real-data reconciliation unchecked"},
+    {"dependency": "W3-14", "status": "NOT_GREEN", "reason": "public orchestration and three domain authorities cumulative gate unchecked"},
+    {"dependency": "W4-08", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "cross Evidence Eval Wiki SavedExploration journey absent"},
+    {"dependency": "W5-08", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "production Adapter canary kill compensation and browser journey absent"},
+    {"dependency": "W6-10", "status": "IMPLEMENTATION_BLOCKED", "reason": "content creator and adjacent domain runtime plus positive browser evidence absent"},
+    {"dependency": "W7-11", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "media implementation browser security Provider and fault evidence absent"},
+    {"dependency": "DEP-A8", "status": "NOT_GREEN", "reason": "Assistant Analyst Workbench real Query SavedExploration Task Evidence chain not sealed"},
+    {"dependency": "product_formal_freeze", "status": "NOT_FROZEN", "reason": "current context states SUBSTANTIALLY_COMPLETE_DRAFT FORMAL_REVIEW_PENDING"},
+    {"dependency": "technical_formal_freeze", "status": "GREEN", "reason": "FORMALLY_REVIEWED_AND_FROZEN_TECHNICAL_BASELINE_V3"}
+  ],
+  "canonicalJourney": [
+    "MetricDefinition and MetricObservation with quality and cutoff",
+    "AnalysisBrief plus EvidenceBundle plus EvalContract frozen exact refs",
+    "InsightRevision and DecisionSummary preserving evidence assumptions counter-evidence and uncertainty",
+    "GrowthPlanRevision with objective constraints budget expected effect stop conditions and approval",
+    "canonical TaskGraph materialization and Handoff decisions into content creator and media modules",
+    "CampaignRevision and ContentBriefRevision with frozen Evidence Eval and delivery requirements",
+    "Creator selection outreach and collaboration refs only when applicable and explicitly accepted",
+    "Media ResponsibilityPlan signed Stage DAG Artifact family and same-artifact four-gate review",
+    "PublishCandidate ImpactPreview ActionProposal Approval Lease Provider Receipt and reconcile",
+    "Usage Settlement lineage Observation and mature EffectReview",
+    "MemoryCandidate with exact source refs and no automatic Wiki promotion"
+  ],
+  "invariants": [
+    "one root GrowthPlan and approved revision anchor the entire scenario",
+    "every downstream Task Handoff Artifact Eval Action Receipt Usage and Candidate is reachable by exact refs",
+    "Handoff accepted rejected request-more and returned states remain explicit and do not imply downstream completion",
+    "Task and batch item totals are conserved across module projections",
+    "Brief Evidence customer creator media payloads are not copied across modules; only scoped refs and purpose travel",
+    "approval of GrowthPlan Campaign Artifact or publish Action are independent decisions",
+    "provider applied usage settled effect mature and memory promoted are independent axes",
+    "stale revoked conflict partial forbidden unknown kill or budget blockers stop only authorized downstream transitions",
+    "no private model reasoning chain is stored; only decision summary evidence attribution assumptions and uncertainty",
+    "refresh restart and module switching restore the same canonical context"
+  ],
+  "requiredEvidencePack": [
+    "current Delivery Receipts for every dependency and exact source commit or release hash",
+    "real HTTP browser trace across analyst content creator media total-control and review surfaces",
+    "org-org positive authority snapshots and dev-org negative isolation assertions",
+    "all Handoff Proposal Approval Lease Receipt Usage EffectReview and Candidate refs",
+    "network console DOM database and lineage reconciliation",
+    "negative runs for stale metric revoked evidence missing capability rejected handoff provider unknown kill and revision conflict",
+    "external publish canary only under an independent exact authorization"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "the scenario hard gate is blocked before any positive E2E setup; running fixtures or mock services would create false success evidence",
+    "safeChecks": [
+      "dependency checklist and current context status were read",
+      "scenario A technical plan was reconciled with analyst content media and cumulative W7 contracts",
+      "no source changes exist to produce a runnable W8-01 path"
+    ]
+  },
+  "blockers": [
+    "product formal review and freeze are incomplete",
+    "W2-10 W3-14 W4-08 W5-08 W6-10 and W7-11 are not GREEN",
+    "DEP-A8 is not GREEN",
+    "GrowthPlan and domain runtime authorities required by the scenario are not implemented end to end",
+    "content creator media publish and EffectReview handoffs have no positive canonical browser chain",
+    "no independently authorized real publish canary exists"
+  ],
+  "next": "align W8-01 scenario contract and checklist through two review rounds while keeping the scenario unexecuted, then preflight W8-02",
+  "safety": [
+    "no source code changed",
+    "no migration",
+    "no real tenant or browser mutation",
+    "no Provider publish customer or payment side effect",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}
