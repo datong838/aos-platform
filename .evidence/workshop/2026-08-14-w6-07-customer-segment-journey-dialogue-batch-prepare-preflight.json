@@ -1,0 +1,123 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w6-07-customer-segment-journey-dialogue-batch-prepare-preflight-20260814",
+  "authorityRevision": "AOS-000029",
+  "repositoryRevision": "4a8dfb3d95b47e0e9f7b9034874890270e87dd4e",
+  "result": "W6_07_CUSTOMER_SEGMENT_JOURNEY_DIALOGUE_BATCH_PREPARE_PREFLIGHT_FACTS_FROZEN",
+  "decision": "CUSTOMER_LITE_AND_GENERIC_PRODUCTION_FOUNDATIONS_PARTIAL_CUSTOMER_DOMAIN_AND_BATCH_PREPARE_BLOCKED",
+  "foundations": [
+    "CustomerLite is a canonical tenant-scoped ecommerce object with stable identity, Order.placedByLite linkage and an explicit source-adapter PII drop policy",
+    "TaskBrief, EvidenceBundle, EvalContract and ImpactPreview provide generic PostgreSQL authority, immutable revisions, exact refs and receipt-first mutations",
+    "the installed Workshop catalog exposes the canonical ecommerce.customer route and fails closed when dependencies are unavailable",
+    "the approved design separates side-effect-free segment, journey and dialogue batch preparation from the later explicit start and channel Action"
+  ],
+  "findings": [
+    {
+      "id": "DEP-W6-CUSTOMER-DOMAIN-AUTHORITY",
+      "severity": "P0",
+      "finding": "CustomerLite exists, but no canonical SegmentRevision, JourneyRevision, DialogueBrief, DialogueEvidenceSelection, DialogueEvalPack, DialogueStrategyRevision, TouchpointObservation or RecommendationDraft contract, PostgreSQL store, service or API exists in the current Workshop branch."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-BUNDLE-CONTRACT",
+      "severity": "P0",
+      "finding": "ecommerce.customer declares required object and generic capability names, but viewRefs, productionContractRefs, responsibilityTemplateRefs, impactCalculatorRefs and actionTypes are empty; only one dry-run eval asset is referenced and no exact customer production contract is bound."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-CONSENT-PURPOSE-AUTHORITY",
+      "severity": "P0",
+      "finding": "no tenant-scoped Consent or Preference authority, purpose and marking decision, retention decision, channel eligibility snapshot, revocation version or exact policy refs were found; client-side hiding cannot authorize segmentation or outreach preparation."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-PII-CONTRACT-DRIFT",
+      "severity": "P0",
+      "finding": "the runtime source adapter explicitly drops eight ns_member PII fields and CustomerLite tests describe a PII-minimized object, while p08-customer-lite.yaml still lists nickname, mobile, email, realName and address fields as mappings and carries a different exclusion list. The canonical projection and asset manifest are therefore not a single reviewable privacy contract."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-SEGMENT-AUTHORITY",
+      "severity": "P0",
+      "finding": "no immutable segment definition, query hash, cutoff, consent-policy ref, membership-query revision, k-anonymity decision, exclusion reason or rebuild receipt exists; legacy decision tags and widget filters are not SegmentRevision authority."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-JOURNEY-AUTHORITY",
+      "severity": "P0",
+      "finding": "no versioned Journey definition, stage transition policy, entry and exit criteria, schedule and capacity refs, eligibility evaluator, invalidation semantics or human review authority was found."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-DIALOGUE-CONTRACT",
+      "severity": "P0",
+      "finding": "no typed DialogueBrief, evidence selection, independent Eval binding, strategy revision, protected contact-resolution boundary or aggregation policy with original message refs exists."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-BATCH-PREPARE",
+      "severity": "P0",
+      "finding": "no side-effect-free customer dialogue Batch prepare/freeze state machine, immutable target ref set, per-target consent and frequency eligibility, exclusion reasons, strategy and Eval exact refs, version CAS, zero-send invariant or prepare Receipt exists."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-READ-MODEL",
+      "severity": "P1",
+      "finding": "the customer route currently renders only the common installed-module shell; no consent-safe segment builder, journey version Diff, dialogue evidence and Eval disclosure, batch preflight or small-cohort aggregation view is implemented."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-P08-BASELINE-REGRESSION",
+      "severity": "P0",
+      "finding": "the focused CustomerLite and P08 suite is not GREEN: 27 tests passed and 6 failed. Four failures attempt the unavailable localhost:13306 path because the legacy pymysql mocks no longer intercept JdbcConnectorRuntime; two fail because old sample-input tests conflict with the current live-execution fail-closed rule. W6-07 cannot claim a stable customer foundation until tests and current connector behavior are reconciled without weakening live safety."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-TEST-ISOLATION",
+      "severity": "P1",
+      "finding": "the broader 51-test foundation run produced 50 passes and one failure because the dev-org/dev-project canary retained two ResponsibilityPlan rows while the API test assumes an empty shared tenant. No rows were deleted; the fixture must isolate or explicitly seed its own state before this result can be treated as a clean regression gate."
+    },
+    {
+      "id": "DEP-W6-CUSTOMER-UPSTREAM-GATES",
+      "severity": "P0",
+      "finding": "W4-08 and W6-01 remain unchecked; exact Evidence integration and assignee/capability readiness therefore cannot authorize W6-07 implementation or completion."
+    }
+  ],
+  "staticVerification": {
+    "customerLiteAuthorityFound": true,
+    "customerDomainContractClassesFound": 0,
+    "customerDomainStoresFound": 0,
+    "customerDomainApisFound": 0,
+    "customerBusinessViewsFound": 0,
+    "customerViewRefs": 0,
+    "customerProductionContractRefs": 0,
+    "customerResponsibilityTemplateRefs": 0,
+    "customerImpactCalculatorRefs": 0,
+    "customerActionTypes": [],
+    "customerEvalPack": "content/evals/w03-l05-dry-run-cases.json",
+    "canonicalRoute": "/workshop/customer"
+  },
+  "verification": {
+    "foundationBackendCommand": "services/aos-api/.venv/bin/pytest -q services/aos-api/tests/test_ec_d1_5_customer_lite_ot.py services/aos-api/tests/test_w2b_production_contracts.py services/aos-api/tests/test_w2b_production_contract_store.py services/aos-api/tests/test_w2b_production_contract_api.py services/aos-api/tests/asset_registry/test_workshop_module_contracts.py services/aos-api/tests/asset_registry/test_ecommerce_workshop_catalog.py",
+    "foundationBackendResult": "50 passed and 1 failed; failure is the shared dev-org/dev-project ResponsibilityPlan empty-state assumption (actual count 2), with no cleanup performed",
+    "customerPipelineCommand": "services/aos-api/.venv/bin/pytest -q services/aos-api/tests/test_ec_d1_5_customer_lite_ot.py services/aos-api/tests/test_ec_d1_5_p08_pipeline.py",
+    "customerPipelineResult": "27 passed and 6 failed; four JdbcConnectorRuntime versus legacy mock failures and two current fail-closed source_id versus legacy sample-input failures",
+    "frontendCommand": "/Users/ddt/.nvm/versions/node/v20.20.2/bin/node node_modules/vitest/vitest.mjs run src/api/ecommerceWorkshop/client.test.ts src/api/ecommerceWorkshop/parser.test.ts src/components/workshop/EcommerceWorkshopCatalogContext.test.tsx src/components/workshop/EcommerceWorkshopShell.test.tsx src/components/workshop/InstalledModuleNavigation.test.tsx src/shell/AppShell.workshop.test.tsx",
+    "frontendResult": "6 files and 18 tests passed",
+    "interpretation": "the generic production-contract and installed-module-shell foundations remain usable, but the privacy-sensitive customer baseline is not fully GREEN and no segment, journey, dialogue or side-effect-free batch-prepare authority exists"
+  },
+  "sourceHashes": {
+    "bundles/solutions/ecommerce-growth/content/workshops/ecommerce.customer.json": "5b6cfb5cb7d3e28dd5ad30c6ab61b276b9f7986358759604a236c4d33e46467c",
+    "bundles/platforms/ecommerce-niushop/content/mappings/p08-customer-lite.yaml": "9d35d293f9e2f73701f7c337413d0bb2862853d12d70bb08317bdfa9497c8093",
+    "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+    "services/aos-api/aos_api/ec_source_adapter.py": "4e1a94e932594dd5c193880fa22831556fa4b72f9fedb2241d3933661bfa6be3",
+    "services/aos-api/aos_api/ecom_core_models.py": "f2c4c7d54f0a0fef5e6602df1f33bd3b8d6dceff0936ebbaee80d85b4b188343",
+    "services/aos-api/aos_api/aip_production_contracts.py": "d89d8c6e2076360c41260fa1a43e076c281f5ba2760d4e74f6670f6327ab3d11",
+    "services/aos-api/aos_api/aip_production_contract_store.py": "a682142a2caf7ad56a49d724caeafbea82c0cff9bb220b6a9e5cef9878c83708",
+    "services/aos-api/aos_api/ecommerce_workshop_catalog.py": "12eafb872bf132120f323c64053113a412037c4bba835f1878ce1ae3b54bae0d",
+    "apps/web/src/components/workshop/EcommerceWorkshopShell.tsx": "6ec6e7da34c7492768b3a72bbdff4ac5dd7b4756a4e4fb95f823f13544592dc9",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/17-客户关系技术方案.md": "2846242605d55aefa31854447ba1c45f59b965ff729d2ee0573972909aa76635",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md": "c51c5b03c72151aa3f49bdcebf7a71919804b27b55d5e90f90ad9476293132ac"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "testDatabaseUsed": true,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "canaryRowsDeleted": false,
+    "customerDataRead": false,
+    "externalChannelEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}
