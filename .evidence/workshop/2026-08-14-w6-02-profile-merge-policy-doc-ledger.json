@@ -1,0 +1,66 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w6-02-profile-merge-policy-doc-ledger-20260814",
+  "authorityRevision": "AOS-000027",
+  "repositoryRevisionBefore": "6cc7bb95014164d6975a8d65e577da5deea074b9",
+  "result": "W6_02_PROFILE_MERGE_POLICY_DOC_LEDGER_ALIGNED",
+  "sourceEvidence": ".evidence/workshop/2026-08-14-w6-02-profile-merge-policy-preflight.json",
+  "decision": "GENERIC_MERGE_SHAPE_GREEN_GOVERNED_PROFILE_AND_MERGE_REMAIN_BLOCKED",
+  "reviewLoop": [
+    {
+      "round": 1,
+      "finding": "W6-02 lacked a durable recommendation/confirmation contract, signed profile templates, versioned merge policy, graph/capability-union validation and drift invalidation.",
+      "remediation": "added ADR50 and aligned production orchestration, security tests and the D-wave dependency contract."
+    },
+    {
+      "round": 2,
+      "finding": "rechecked preservation of all professional responsibilities, non-fixed Agent staffing, protected-duty separation, template coverage, test claims and unchecked task state.",
+      "remediation": "no further defect found; retained W6-02 as NOT_STARTED and IMPLEMENTATION_BLOCKED."
+    }
+  ],
+  "documents": [
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/06-安全租户可观测测试与回滚.md",
+      "sha256Before": "bdf1f178642454fc562904619545e61340a794d90aeba8ed207758cc524068f9",
+      "sha256After": "509f567453468c089cde932a1acea843d8fb6e60424f64783b6758a520327423"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md",
+      "sha256Before": "50f2379440221ba2b5371dde981bc5796dc017365d16a520ea289108c48386d7",
+      "sha256After": "d3a2ac7e366f99181d535a6231fd6ee971b096f5c57f3c9318d5227e4b039125"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/50-W6-02-LITE-STANDARD-FULL建议与MergePolicy预检ADR.md",
+      "sha256Before": null,
+      "sha256After": "fb15370a754051e920f4263eaf9685a9e6c70a1145242ea35151b78fc88493c5"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "sha256Before": "27b4ca034772116ff2c3077d80fdff4d954d648ac8f3a74eb8233702907a81e4",
+      "sha256After": "065480e298fafae285c0b44bf9364140bd3e1aa6f518ddff92882bd9dff8465c"
+    }
+  ],
+  "verification": {
+    "jsonValid": true,
+    "documentHashesMatched": true,
+    "twoRoundReviewComplete": true,
+    "backend": "8 passed, 7 warnings",
+    "frontend": "3 files, 13 tests passed",
+    "w6_02Checked": false,
+    "sourceCodeChanged": false,
+    "realTenantRead": false,
+    "externalProviderEffect": false
+  },
+  "blockers": [
+    "DEP_W6_PROFILE_TEMPLATE_ASSETS",
+    "DEP_W6_PROFILE_ENUM_EXACTNESS",
+    "DEP_W6_PROFILE_RECOMMENDER",
+    "DEP_W6_PROFILE_USER_CONFIRMATION",
+    "DEP_W6_MERGE_POLICY_AUTHORITY",
+    "DEP_W6_MERGE_GRAPH_INTEGRITY",
+    "DEP_W6_MERGE_CAPABILITY_UNION",
+    "DEP_W6_TEMPLATE_COVERAGE_COMPARISON",
+    "DEP_W6_PROFILE_DRIFT_INVALIDATION",
+    "DEP_W6_UPSTREAM_W6_01"
+  ]
+}
