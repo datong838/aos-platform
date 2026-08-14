@@ -1,0 +1,59 @@
+{
+  "schema": "aos-workshop-doc-ledger-evidence/v1",
+  "taskId": "workshop-w4-04-review-return-doc-ledger-20260814",
+  "authorityRevision": "AOS-000024",
+  "result": "W4_04_REVIEW_RETURN_DOC_LEDGER_ALIGNED",
+  "reviewLoop": [
+    {
+      "round": 1,
+      "result": "REMEDIATION_REQUIRED",
+      "findings": [
+        "the plan described a new attempt but did not define latest-attempt execution semantics",
+        "downstream invalidation and repair exact inputs were not acceptance gates",
+        "the D-wave item had no evidence and could be misread as ready because W2-C tables and commands exist"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "DOCUMENT_BASELINE_APPROVED_IMPLEMENTATION_BLOCKED",
+      "findings": [
+        "latest-attempt dispatch and succeeded-then-return regression are explicit",
+        "invalidation, reuse, rule authority, readable resolution audit and lineage are testable gates",
+        "AIP remains the sole authority and forbidden Workshop substitutes are explicit",
+        "W4-04 remains unchecked and accurately blocked"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "path": "12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md",
+      "preSha256": "afcf38ee5c5080e3a3ea923ed316643cfde30e114e7dfcbdfcaa5439f2f63875",
+      "postSha256": "30f18bb5f5220bf62309436f59c642bbc69b12d782dbf43fbf35db2898cf2fa7"
+    },
+    {
+      "path": "12-工作台层技术方案/35-W4-04-ReviewIssue返工Attempt与Lineage闭环预检ADR.md",
+      "preSha256": null,
+      "postSha256": "e3abca02bf31c42c82d0c40f591547a567b910f037ce7019d30249ee7a10a995"
+    },
+    {
+      "path": "12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "962bdbceac6cdbad17495c6c9e7e84cb8771549e7b1259783a5a79158e31adcc",
+      "postSha256": "5f50c76a330c85dffedbe1800c5755b1efdd39c8bb58c7b524dc9276625a556b"
+    }
+  ],
+  "alignment": {
+    "preflightEvidence": ".evidence/workshop/2026-08-14-w4-04-review-return-lineage-preflight.json",
+    "preflightCommit": "91ddcf6",
+    "w4ItemChecked": false,
+    "implementationAuthorized": false,
+    "aipW2D3FilesTouched": false,
+    "staticVisualsTouched": false
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "migrationLeaseAcquired": false
+  }
+}
