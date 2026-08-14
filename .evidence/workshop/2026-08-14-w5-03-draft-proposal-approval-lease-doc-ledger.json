@@ -1,0 +1,68 @@
+{
+  "schema": "aos-workshop-doc-ledger-evidence/v1",
+  "taskId": "workshop-w5-03-draft-proposal-approval-lease-doc-ledger-20260814",
+  "authorityRevision": "AOS-000025",
+  "result": "W5_03_DRAFT_PROPOSAL_APPROVAL_LEASE_DOC_LEDGER_ALIGNED",
+  "reviewLoop": [
+    {
+      "round": 1,
+      "result": "REMEDIATION_REQUIRED",
+      "findings": [
+        "the prior plan named Draft, Proposal, Approval and Lease but did not define their independent revisions and transitions",
+        "the generic broad-role approval and caller-optional expiry were not sufficient as an ecommerce approval policy",
+        "draftOnly was documented by the risk classifier but not identified as an unenforced runtime condition",
+        "the Lease contract lacked the W5-02 joint binding and budget reservation lifecycle"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "DESIGN_BASELINE_APPROVED_IMPLEMENTATION_BLOCKED",
+      "findings": [
+        "editable ActionDraftRevision, immutable submit-to-Proposal, exact ApprovalSet and single-use ExecutionLease are now separate authorities",
+        "server ApprovalPolicyRevision owns eligibility slots, order, independence and maximum validity",
+        "draftOnly, allowlist, R4 and unknown conditions are explicit submit, decide and acquire fail-closed gates",
+        "Lease atomically binds actionBindingHash and budget or quota reservation with auditable expiry and revocation release",
+        "the UI projects command readiness and disabled reasons instead of inferring authority from roles",
+        "W5-03 remains unchecked until W5-02 and all named implementation dependencies are GREEN"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "path": "12-工作台层技术方案/03-TaskHandoff与Action闭环.md",
+      "preSha256": "8d94032c5633731c0bc88b7ead741040a87ff43aa6f72d7bd664842799b53f0a",
+      "postSha256": "bdda2b950c0b7aa727466dd23cb753f96968452d1df261610fcf1a7ddc1fc77e"
+    },
+    {
+      "path": "12-工作台层技术方案/19-Adapter能力矩阵与降级策略.md",
+      "preSha256": "2d2994b3ed7a0d09107cd53966655ac258d9bdf8ef533a97baaf9bdb737e3a73",
+      "postSha256": "8af80df348dbe572772f51594c6b3b90f97259c8111b86a23828f5892368a788"
+    },
+    {
+      "path": "12-工作台层技术方案/43-W5-03-DraftProposalApprovalLease适配器预检ADR.md",
+      "preSha256": null,
+      "postSha256": "0b38e2064bf04160c0e96f36ed4538d4d18a3af85901584aff3b8ceac4fd4450"
+    },
+    {
+      "path": "12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "413fa8c8e864b9bf6f64340dabbabbcb3e803a6742d0a8b44ddef5f702b6546e",
+      "postSha256": "247a785052ee1a1d25e87437bbf2377ddb7a1304b3ea3085116c28e474b23944"
+    }
+  ],
+  "alignment": {
+    "preflightEvidence": ".evidence/workshop/2026-08-14-w5-03-draft-proposal-approval-lease-preflight.json",
+    "preflightCommit": "9bbc6ec7313d7dee2daeaef9c0edae5ee2183c30",
+    "w5ItemChecked": false,
+    "implementationAuthorized": false,
+    "externalEffectAuthorized": false,
+    "staticVisualsTouched": false
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false
+  }
+}
