@@ -41,6 +41,7 @@ TERMINAL_FAILURE_OUTCOMES = frozenset(
     {"paused-failure", "protocol-failed", "outcome-uncertain"}
 )
 ACK_SCHEMA = "aos-watchdog-recovery-ack/v1"
+RECOVERY_PROTOCOL_MARKER = "[WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]"
 
 
 @dataclass(frozen=True)
@@ -57,6 +58,7 @@ class TranscriptStatus:
     oldest_pending_tool_at: float | None
     latest_work_activity_at: float | None
     post_final_activity: bool
+    latest_user_is_watchdog: bool
 
 
 def _timestamp(value: object) -> float | None:
@@ -80,6 +82,28 @@ def _message_role_phase(record: dict[str, Any]) -> tuple[str | None, str | None]
     return None, None
 
 
+def _response_message_text(record: dict[str, Any]) -> str:
+    if record.get("type") != "response_item":
+        return ""
+    payload = record.get("payload")
+    if not isinstance(payload, dict) or payload.get("type") != "message":
+        return ""
+    content = payload.get("content")
+    if isinstance(content, str):
+        return content
+    if not isinstance(content, list):
+        return ""
+    parts: list[str] = []
+    for item in content:
+        if isinstance(item, str):
+            parts.append(item)
+        elif isinstance(item, dict):
+            text = item.get("text")
+            if isinstance(text, str):
+                parts.append(text)
+    return "\n".join(parts)
+
+
 def inspect_transcript(path: Path) -> TranscriptStatus:
     latest_user_at: float | None = None
     latest_assistant_at: float | None = None
@@ -88,6 +112,7 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
     latest_task_completed_at: float | None = None
     last_activity_at = path.stat().st_mtime
     latest_work_activity_at: float | None = None
+    latest_user_is_watchdog = False
     tool_calls: dict[str, float] = {}
     with path.open("r", encoding="utf-8") as handle:
         for raw in handle:
@@ -101,6 +126,9 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
             role, phase = _message_role_phase(record)
             if role == "user" and ts is not None:
                 latest_user_at = ts
+                latest_user_is_watchdog = (
+                    RECOVERY_PROTOCOL_MARKER in _response_message_text(record)
+                )
             elif role == "assistant" and ts is not None:
                 latest_assistant_at = ts
                 if phase in FINAL_PHASES:
@@ -160,6 +188,7 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
         min(tool_calls.values()) if tool_calls else None,
         latest_work_activity_at,
         post_final_activity,
+        latest_user_is_watchdog,
     )
 
 
@@ -844,6 +873,32 @@ def run_once(
             decision = "dependency-fact-changed"
             state["fact_changed_at"] = current
             state["fact_previous_fingerprint"] = previous_fact_fingerprint
+    last_attempt_at = state.get("last_attempt_at")
+    manual_reentry = (
+        state.get("episode_trigger")
+        in {"dependency-released", "dependency-fact-changed"}
+        and state.get("last_recovery_outcome") in {"attempting", "transport-failed"}
+        and isinstance(last_attempt_at, (int, float))
+        and status.latest_user_at is not None
+        and status.latest_user_at >= last_attempt_at
+        and not status.latest_user_is_watchdog
+    )
+    if manual_reentry:
+        decision = "manual-reentry"
+        state.update(
+            {
+                "consecutive_failures": 0,
+                "next_retry_at": 0,
+                "retry_delay_seconds": 0,
+                "last_recovery_outcome": "reentry-noop",
+                "manual_reentry_at": current,
+                "last_recovered_at": None,
+                "last_error": None,
+            }
+        )
+        if state.get("episode_trigger") == "dependency-released" and not blockers:
+            state["dependency_wait_armed"] = False
+            state["dependency_release_resolved_at"] = current
     state["dependency_watch_last_checked_at"] = current
     state.update(
         {

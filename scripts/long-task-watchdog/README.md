@@ -25,6 +25,7 @@ Recovery Ack 的 outcome 固定为：
 - 依赖监控只匹配显式 `scope_tokens`；存在其他不重叠 AIP Lease 不会阻断 Workshop，也不会读取 w1-aip 工作区。
 - 外部事实监控首次只建 baseline；仅 idle 且无精确 Lease blocker 时，新的 fingerprint 才单次唤醒。它只存 hash，不把文档正文写入 state/log/prompt；符号链接、缺失路径和超限文件失败关闭。
 - 外部事实变化的固定首句是“依赖 Watchdog 检测到外部交付事实已变化，正在重新核验后继续”。变化不等于依赖 GREEN，恢复 turn 仍必须全量复核。
+- dependency release/fact change 恢复尚未闭合时，如果同一 thread 出现更新的非 Watchdog 用户消息，视为用户已人工接管：当前 episode 记为 `manual-reentry/reentry-noop`，清零重试并消费旧 release 事件，但不写 `last_recovered_at`、不声称自动恢复成功。Watchdog 自己带协议标记的 resume prompt 不属于人工接管。
 - 任务结束后将 `config.json` 的 `enabled` 改为 `false` 并卸载 LaunchAgent。
 
 Workshop 专用配置至少应包含：

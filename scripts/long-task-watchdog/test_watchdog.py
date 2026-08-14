@@ -9,11 +9,14 @@ from pathlib import Path
 import watchdog
 
 
-def record(timestamp, role, phase=None):
+def record(timestamp, role, phase=None, content=None):
+    payload = {"type": "message", "role": role, "phase": phase}
+    if content is not None:
+        payload["content"] = [{"type": "input_text", "text": content}]
     return {
         "timestamp": timestamp,
         "type": "response_item",
-        "payload": {"type": "message", "role": role, "phase": phase},
+        "payload": payload,
     }
 
 
@@ -604,6 +607,76 @@ class WatchdogTest(unittest.TestCase):
         self.assertFalse(state["dependency_wait_armed"])
         self.assertEqual("dependency-released", state["episode_trigger"])
         self.assertEqual(1, len(calls))
+
+    def test_manual_reentry_consumes_failed_dependency_release_episode(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:00:20Z", "assistant", "final_answer"),
+        )
+        self.write_leases()
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.dependency_config()), encoding="utf-8")
+        state_path.write_text(json.dumps({"dependency_wait_armed": True}), encoding="utf-8")
+        calls = []
+
+        def runner(*args, **kwargs):
+            calls.append(args)
+            return subprocess.CompletedProcess(args[0], 1, "", "network")
+
+        self.assertEqual(
+            "retry-scheduled",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        state["last_attempt_at"] = 1000
+        state_path.write_text(json.dumps(state), encoding="utf-8")
+        self.append(record("1970-01-01T00:18:20Z", "user", content="继续开发"))
+
+        self.assertEqual(
+            "manual-reentry",
+            watchdog.run_once(config_path, state_path, now=1100, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("reentry-noop", state["last_recovery_outcome"])
+        self.assertFalse(state["dependency_wait_armed"])
+        self.assertEqual(0, state["consecutive_failures"])
+        self.assertEqual(0, state["next_retry_at"])
+        self.assertIsNone(state["last_recovered_at"])
+        self.assertEqual(1, len(calls))
+
+    def test_watchdog_resume_prompt_does_not_count_as_manual_reentry(self):
+        marker = "[WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]"
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:00:20Z", "assistant", "final_answer"),
+            record("1970-01-01T00:18:20Z", "user", content=marker),
+        )
+        self.write_leases()
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.dependency_config()), encoding="utf-8")
+        state_path.write_text(
+            json.dumps(
+                {
+                    "dependency_wait_armed": True,
+                    "episode_trigger": "dependency-released",
+                    "last_recovery_outcome": "transport-failed",
+                    "last_attempt_at": 1000,
+                    "consecutive_failures": 1,
+                    "next_retry_at": 1300,
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        self.assertEqual(
+            "live",
+            watchdog.run_once(config_path, state_path, now=1100),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("transport-failed", state["last_recovery_outcome"])
+        self.assertTrue(state["dependency_wait_armed"])
 
     def test_nonmatching_lease_does_not_arm_dependency_watch(self):
         self.write(
