@@ -1,0 +1,61 @@
+{
+  "schema": "aos-workshop-doc-ledger-evidence/v1",
+  "taskId": "workshop-w5-00-action-risk-matrix-doc-ledger-20260814",
+  "authorityRevision": "AOS-000025",
+  "result": "W5_00_ACTION_RISK_MATRIX_DOC_LEDGER_ALIGNED",
+  "reviewLoop": [
+    {
+      "round": 1,
+      "result": "REMEDIATION_REQUIRED",
+      "findings": [
+        "the Adapter plan listed fields but did not define the exact joint key enforced for an executable Action row",
+        "no explicit ecommerce action-family allowlist or forbidden high-risk set was frozen",
+        "count-based budget units could be mistaken for monetary and provider usage governance"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "MATRIX_BASELINE_APPROVED_IMPLEMENTATION_BLOCKED",
+      "findings": [
+        "the exact ActionType, capability, binding, account, adapter, risk, budget and kill key is explicit",
+        "R2 candidates are separated from disabled R3 and R4 families and unlisted types fail closed",
+        "account selection, dry validation, budget reservation, usage settlement and unknown reconciliation are testable",
+        "W5-00 remains unchecked until W4-08 and all implementation dependencies are GREEN"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "path": "12-工作台层技术方案/19-Adapter能力矩阵与降级策略.md",
+      "preSha256": "59ebd93f5f096ca33c238276821b24d8293589bdfabff10610e58e14a30aa935",
+      "postSha256": "0ce3cabb9ab7a1475979007284ad57c591b342d8a059302f705c227d5149ada1"
+    },
+    {
+      "path": "12-工作台层技术方案/40-W5-00-ActionType能力风险账号预算矩阵预检ADR.md",
+      "preSha256": null,
+      "postSha256": "04a66fdfb651cd3c18382f314e392cb6b4bd3b9e815b54e7ce57c80649c7b513"
+    },
+    {
+      "path": "12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "aa637912082ab4712f7362c585f994709009d52deb66baeafa1f136fd73c1c34",
+      "postSha256": "88d37aaf3202bf425cc1439a5938e5d2e3ef6582c607b9335611252f755be933"
+    }
+  ],
+  "alignment": {
+    "preflightEvidence": ".evidence/workshop/2026-08-14-w5-00-action-risk-matrix-preflight.json",
+    "preflightCommit": "c6079732aab54bc8953355c2dbf34e5191efefa4",
+    "w5ItemChecked": false,
+    "implementationAuthorized": false,
+    "externalEffectAuthorized": false,
+    "aipW2D3FilesTouched": false,
+    "staticVisualsTouched": false
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false
+  }
+}
