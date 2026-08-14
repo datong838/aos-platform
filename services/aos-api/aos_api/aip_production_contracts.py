@@ -70,6 +70,19 @@ class ReviewIssueStatus(StrEnum):
     SUPERSEDED = "superseded"
 
 
+class ImpactQuality(StrEnum):
+    MEASURED = "measured"
+    ESTIMATED = "estimated"
+    UNKNOWN = "unknown"
+
+
+class ProductionStartDecisionStatus(StrEnum):
+    STARTED = "started"
+    BLOCKED = "blocked"
+    STALE = "stale"
+    UNKNOWN = "unknown"
+
+
 class ExactRevisionRef(AipContractModel):
     resource_type: str = Field(min_length=1, max_length=80)
     resource_id: str = Field(min_length=1, max_length=200)
@@ -425,6 +438,204 @@ class ReturnDecision(AipContractModel):
     decision_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     actor: str
     created_at: datetime
+
+
+class MutableAuthorityRef(AipContractModel):
+    resource_type: str = Field(min_length=1, max_length=80)
+    resource_id: str = Field(min_length=1, max_length=200)
+    version: int = Field(ge=1)
+
+
+class ActionProposalExactRef(AipContractModel):
+    proposal_id: str = Field(min_length=1, max_length=200)
+    version: int = Field(ge=1)
+    proposal_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class ImpactDimension(AipContractModel):
+    quality: ImpactQuality
+    value: Any | None = None
+    source_refs: list[ResourceRef] = Field(default_factory=list)
+    cutoff_at: datetime | None = None
+    details: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _quality_matches_evidence(self) -> ImpactDimension:
+        if self.quality is ImpactQuality.UNKNOWN:
+            if self.value is not None:
+                raise ValueError("unknown impact dimension cannot carry a value")
+            return self
+        if self.value is None:
+            raise ValueError("measured or estimated impact dimension requires a value")
+        if not self.source_refs:
+            raise ValueError("measured or estimated impact dimension requires sourceRefs")
+        if self.cutoff_at is None or self.cutoff_at.tzinfo is None:
+            raise ValueError("measured or estimated impact dimension requires an aware cutoffAt")
+        return self
+
+
+class ImpactAssessment(AipContractModel):
+    object_scope: ImpactDimension
+    channel_scope: ImpactDimension
+    cost: ImpactDimension
+    budget: ImpactDimension
+    risks: ImpactDimension
+    reversibility: ImpactDimension
+    approval_chain: ImpactDimension
+    rate_capacity_kill: ImpactDimension
+
+
+class CreateImpactPreviewRequest(AipContractModel):
+    task_id: str = Field(min_length=1, max_length=200)
+    plan_ref: ExactRevisionRef
+    brief_ref: ExactRevisionRef
+    evidence_bundle_ref: ExactRevisionRef
+    eval_contract_ref: ExactRevisionRef
+    responsibility_plan_ref: ExactRevisionRef
+    stage_template_ref: ExactRevisionRef
+    model_route_ref: ExactRevisionRef | None = None
+    runtime_policy_ref: ExactRevisionRef | None = None
+    binding_refs: list[MutableAuthorityRef] = Field(default_factory=list, max_length=256)
+    capability_ref: ExactRevisionRef | None = None
+    account_ref: MutableAuthorityRef | None = None
+    impact: ImpactAssessment
+    expires_at: datetime
+
+    @model_validator(mode="after")
+    def _exact_dependency_kinds(self) -> CreateImpactPreviewRequest:
+        expected = (
+            (self.plan_ref, "PlanRevision", "planRef"),
+            (self.brief_ref, "TaskBriefRevision", "briefRef"),
+            (self.evidence_bundle_ref, "EvidenceBundleRevision", "evidenceBundleRef"),
+            (self.eval_contract_ref, "EvalContractRevision", "evalContractRef"),
+            (
+                self.responsibility_plan_ref,
+                "ResponsibilityPlanRevision",
+                "responsibilityPlanRef",
+            ),
+            (self.stage_template_ref, "StageTemplateRevision", "stageTemplateRef"),
+        )
+        for ref, resource_type, label in expected:
+            if ref.resource_type != resource_type:
+                raise ValueError(f"{label} must reference {resource_type}")
+        if (self.model_route_ref is None) is not (self.runtime_policy_ref is None):
+            raise ValueError("modelRouteRef and runtimePolicyRef must be supplied together")
+        if self.model_route_ref and self.model_route_ref.resource_type != "ModelRouteRevision":
+            raise ValueError("modelRouteRef must reference ModelRouteRevision")
+        if self.runtime_policy_ref and self.runtime_policy_ref.resource_type != "RuntimePolicyRevision":
+            raise ValueError("runtimePolicyRef must reference RuntimePolicyRevision")
+        if self.capability_ref and self.capability_ref.resource_type != "CapabilityRevision":
+            raise ValueError("capabilityRef must reference CapabilityRevision")
+        allowed_bindings = {"AgentInstance", "SkillBinding", "CapabilityBinding"}
+        if any(ref.resource_type not in allowed_bindings for ref in self.binding_refs):
+            raise ValueError("bindingRefs must reference AgentInstance, SkillBinding or CapabilityBinding")
+        binding_keys = [
+            (ref.resource_type, ref.resource_id, ref.version) for ref in self.binding_refs
+        ]
+        if len(binding_keys) != len(set(binding_keys)):
+            raise ValueError("bindingRefs must be unique")
+        if self.account_ref and self.account_ref.resource_type not in {
+            "AccountBinding",
+            "ChannelAccountBinding",
+            "ShopAccountBinding",
+        }:
+            raise ValueError("accountRef must reference a controlled account binding")
+        if self.expires_at.tzinfo is None:
+            raise ValueError("expiresAt must include timezone information")
+        return self
+
+
+class ReviseImpactPreviewRequest(CreateImpactPreviewRequest):
+    expected_version: int = Field(ge=1)
+
+
+class ImpactPreviewRevision(CreateImpactPreviewRequest):
+    tenant: TenantContext
+    preview_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    version: int = Field(ge=1)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    dependency_snapshot_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    lifecycle: BriefLifecycle
+    readiness: ContractReadiness
+    blockers: list[ContractBlocker]
+    frozen_by: str | None = None
+    frozen_at: datetime | None = None
+    created_by: str = Field(min_length=1, max_length=200)
+    created_at: datetime
+
+    @model_validator(mode="after")
+    def _frozen_revision_has_actor_and_time(self) -> ImpactPreviewRevision:
+        if (self.frozen_by is None) is not (self.frozen_at is None):
+            raise ValueError("frozenBy and frozenAt must be supplied together")
+        frozen = self.frozen_by is not None
+        if (self.lifecycle is BriefLifecycle.FROZEN) is not frozen:
+            raise ValueError("only frozen ImpactPreview revisions carry frozenBy and frozenAt")
+        if self.frozen_at is not None and self.frozen_at.tzinfo is None:
+            raise ValueError("frozenAt must include timezone information")
+        if self.readiness is ContractReadiness.READY:
+            if self.blockers:
+                raise ValueError("ready ImpactPreview revision cannot carry blockers")
+        elif not self.blockers:
+            raise ValueError("non-ready ImpactPreview revision requires blockers")
+        return self
+
+
+class ImpactPreviewListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[ImpactPreviewRevision]
+    count: int = Field(ge=0)
+
+
+class ProductionStartRequest(AipContractModel):
+    task_id: str = Field(min_length=1, max_length=200)
+    expected_task_version: int = Field(ge=1)
+    plan_ref: ExactRevisionRef
+    preview_ref: ExactRevisionRef
+    action_proposal_ref: ActionProposalExactRef
+    logic_graph_id: str = Field(min_length=1, max_length=200)
+    logic_revision: int = Field(ge=1)
+
+    @model_validator(mode="after")
+    def _start_ref_kinds(self) -> ProductionStartRequest:
+        if self.plan_ref.resource_type != "PlanRevision":
+            raise ValueError("planRef must reference PlanRevision")
+        if self.preview_ref.resource_type != "ImpactPreviewRevision":
+            raise ValueError("previewRef must reference ImpactPreviewRevision")
+        return self
+
+
+class ProductionStartDecision(AipContractModel):
+    tenant: TenantContext
+    decision_id: str = Field(min_length=1, max_length=200)
+    status: ProductionStartDecisionStatus
+    task_id: str = Field(min_length=1, max_length=200)
+    plan_ref: ExactRevisionRef
+    preview_ref: ExactRevisionRef
+    action_proposal_ref: ActionProposalExactRef
+    dependency_snapshot_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    blockers: list[ContractBlocker]
+    task_run_ref: ResourceRef | None = None
+    created_by: str = Field(min_length=1, max_length=200)
+    created_at: datetime
+
+    @model_validator(mode="after")
+    def _decision_outcome_is_unambiguous(self) -> ProductionStartDecision:
+        if self.status is ProductionStartDecisionStatus.STARTED:
+            if self.blockers or self.task_run_ref is None:
+                raise ValueError("started decision requires taskRunRef and no blockers")
+            if self.task_run_ref.resource_type != "TaskRun":
+                raise ValueError("taskRunRef must reference TaskRun")
+            return self
+        if not self.blockers or self.task_run_ref is not None:
+            raise ValueError("non-started decision requires blockers and cannot carry taskRunRef")
+        return self
+
+
+class ProductionStartDecisionListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[ProductionStartDecision]
+    count: int = Field(ge=0)
 
 
 class CreateBriefRequest(AipContractModel):
