@@ -1,0 +1,57 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w6-07-customer-segment-journey-dialogue-batch-prepare-doc-ledger-20260814",
+  "authorityRevision": "AOS-000029",
+  "authorityRevisionAtCompletion": "AOS-000029",
+  "repositoryBaseRevision": "bdcd36c5dd7ed29c056451c41c7d956054f45b4d",
+  "result": "W6_07_CUSTOMER_SEGMENT_JOURNEY_DIALOGUE_BATCH_PREPARE_DOC_LEDGER_ALIGNED",
+  "decision": "TARGET_CONTRACT_REVIEWED_IMPLEMENTATION_BLOCKED_CUSTOMER_PRIVACY_BASELINE_NOT_GREEN",
+  "documents": [
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/17-客户关系技术方案.md",
+      "preSha256": "2846242605d55aefa31854447ba1c45f59b965ff729d2ee0573972909aa76635",
+      "postSha256": "531c7e0e1bc9569213296736320ec57cf140bd0c1a072f34742959f3f1246e29",
+      "change": "expanded the customer authority, privacy, Segment, Journey, Dialogue, side-effect-free Batch prepare, protected-contact, start boundary, API/UI and test contracts"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/55-W6-07-客户SegmentJourneyDialogue与BatchPrepare预检ADR.md",
+      "preSha256": null,
+      "postSha256": "2bb6437357443c1fe43aa9e3f74b2b35d7c4aceedd2d99fe1f9d08870ddf144b",
+      "change": "added current findings, privacy drift decision, twelve blockers, exit conditions and two-round review"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "c51c5b03c72151aa3f49bdcebf7a71919804b27b55d5e90f90ad9476293132ac",
+      "postSha256": "edcdde02639370a83e8e3b4cf0466c5cb1da698c2cf6a452fc259253c738a4de",
+      "change": "replaced the empty W6-07 evidence field with exact blockers, current test failures and an explicit not-started implementation status"
+    }
+  ],
+  "review": {
+    "round1": "GREEN: CustomerLite, Consent, ProtectedContact, Segment, Journey and channel truth boundaries are separate; PII contract drift and current P08 failures are explicit P0 blockers",
+    "round2": "GREEN: prepare/freeze/start separation, item conservation, exact refs, drift invalidation and visible intervention semantics are complete; each blocker has an exit condition and W6-07 remains unchecked",
+    "implementationStatus": "NOT_STARTED",
+    "checklistStatus": "UNCHECKED",
+    "customerPrivacyBaseline": "NOT_GREEN"
+  },
+  "verification": {
+    "evidenceJson": "VALID",
+    "sourceHashes": "MATCH",
+    "foundationBackend": "50 passed and 1 shared-canary isolation failure",
+    "customerPipeline": "27 passed and 6 current connector-contract failures",
+    "frontend": "6 files and 18 tests passed",
+    "visualHtml": "UNCHANGED"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "staticVisualHtmlChanged": false,
+    "databaseChanged": false,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "customerDataRead": false,
+    "customerDataMutation": false,
+    "externalChannelEffect": false,
+    "canaryRowsDeleted": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}
