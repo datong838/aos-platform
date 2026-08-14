@@ -963,6 +963,52 @@ def test_exposure_appends_only_after_exact_running_agent_accepts_context(
         )
 
 
+def test_exposure_revalidates_context_purpose_marking_and_time_cutoff(
+    agent_memory_chain,
+) -> None:
+    adapter = agent_memory_chain["adapter"]
+    context = adapter.query_context(
+        PRIMARY,
+        context_request(agent_memory_chain, agent_memory_chain["recipient_ref"]),
+    )
+    agent_run_ref, task_run_ref, eval_ref = seed_running_agent_run(agent_memory_chain)
+
+    forged_purpose = context.model_copy(update={"purposes": ["skill:admin"]})
+    with pytest.raises(ValueError, match="purpose"):
+        adapter.accept_context(
+            PRIMARY,
+            forged_purpose,
+            agent_run_ref=agent_run_ref,
+            task_run_ref=task_run_ref,
+            eval_contract_ref=eval_ref,
+            accepted_at=NOW,
+        )
+
+    forged_marking = context.model_copy(update={"authorized_markings": ["public"]})
+    with pytest.raises(ValueError, match="markings"):
+        adapter.accept_context(
+            PRIMARY,
+            forged_marking,
+            agent_run_ref=agent_run_ref,
+            task_run_ref=task_run_ref,
+            eval_contract_ref=eval_ref,
+            accepted_at=NOW,
+        )
+
+    future_context = context.model_copy(
+        update={"time_cutoff": NOW + timedelta(seconds=1)}
+    )
+    with pytest.raises(ValueError, match="time cutoff"):
+        adapter.accept_context(
+            PRIMARY,
+            future_context,
+            agent_run_ref=agent_run_ref,
+            task_run_ref=task_run_ref,
+            eval_contract_ref=eval_ref,
+            accepted_at=NOW,
+        )
+
+
 def test_revocation_impact_is_reference_only_and_preserves_historical_exposure(
     agent_memory_chain,
 ) -> None:

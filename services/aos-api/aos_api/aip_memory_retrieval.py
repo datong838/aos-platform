@@ -75,6 +75,8 @@ class AgentMemoryContext(BaseModel):
     agent_instance_ref: VersionedAssetRef
     skill_ref: VersionedAssetRef
     logic_ref: VersionedAssetRef
+    purposes: list[str] = Field(min_length=1, max_length=64)
+    authorized_markings: list[str] = Field(min_length=1, max_length=32)
     projection_refs: list[MemoryProjectionExactRef] = Field(default_factory=list)
     memory_refs: list[MemoryRevisionExactRef] = Field(default_factory=list)
     citations: list[KnowledgeCitation] = Field(default_factory=list)
@@ -86,6 +88,14 @@ class AgentMemoryContext(BaseModel):
 
     @model_validator(mode="after")
     def _one_to_one_context(self) -> AgentMemoryContext:
+        for name, values in (
+            ("purposes", self.purposes),
+            ("authorized_markings", self.authorized_markings),
+        ):
+            cleaned = [value.strip() for value in values]
+            if any(not value for value in cleaned) or len(cleaned) != len(set(cleaned)):
+                raise ValueError(f"{name} must contain unique non-blank values")
+            setattr(self, name, cleaned)
         sizes = {
             len(self.projection_refs),
             len(self.memory_refs),
@@ -610,6 +620,8 @@ class AipAgentMemoryRetrieval:
             agent_instance_ref=request.agent_instance_ref,
             skill_ref=request.skill_ref,
             logic_ref=request.logic_ref,
+            purposes=request.purposes,
+            authorized_markings=request.authorized_markings,
             projection_refs=projection_refs,
             memory_refs=memory_refs,
             citations=citations,
@@ -636,6 +648,8 @@ class AipAgentMemoryRetrieval:
             org_id=scope.org_id, project_id=scope.project_id
         ):
             raise ValueError("context tenant does not match authority scope")
+        if context.time_cutoff > accepted_at:
+            raise ValueError("context time cutoff cannot be after acceptance")
         with self._connect_factory(scope) as conn:
             if (
                 self._exact_active_instance(conn, scope, context.agent_instance_ref)
@@ -663,7 +677,7 @@ class AipAgentMemoryRetrieval:
                 self._require_current_projection(
                     conn,
                     scope,
-                    context.agent_instance_ref,
+                    context,
                     projection_ref,
                     memory_ref,
                     accepted_at,
@@ -805,6 +819,8 @@ class AipAgentMemoryRetrieval:
             agent_instance_ref=request.agent_instance_ref,
             skill_ref=request.skill_ref,
             logic_ref=request.logic_ref,
+            purposes=request.purposes,
+            authorized_markings=request.authorized_markings,
             status="blocked",
             blocked_reasons=_unique(list(reasons)),
             time_cutoff=request.time_cutoff,
@@ -884,7 +900,7 @@ class AipAgentMemoryRetrieval:
 
     @classmethod
     def _require_current_projection(
-        cls, conn, scope, instance_ref, projection_ref, memory_ref, accepted_at
+        cls, conn, scope, context, projection_ref, memory_ref, accepted_at
     ):
         row = conn.execute(
             """SELECT p.* FROM aip_memory_agent_projection p
@@ -900,12 +916,12 @@ class AipAgentMemoryRetrieval:
             (
                 *scope.key,
                 projection_ref.projection_id,
-                instance_ref.asset_id,
-                instance_ref.revision,
-                instance_ref.content_hash,
-                instance_ref.asset_id,
-                instance_ref.revision,
-                instance_ref.content_hash,
+                context.agent_instance_ref.asset_id,
+                context.agent_instance_ref.revision,
+                context.agent_instance_ref.content_hash,
+                context.agent_instance_ref.asset_id,
+                context.agent_instance_ref.revision,
+                context.agent_instance_ref.content_hash,
             ),
         ).fetchone()
         if row is None:
@@ -920,6 +936,10 @@ class AipAgentMemoryRetrieval:
             or MemoryRevisionExactRef.model_validate(row["memory_ref"]) != memory_ref
         ):
             raise ValueError("projection or memory exact reference drifted")
+        if not set(context.purposes).issubset(set(row["allowed_purposes"])):
+            raise ValueError("projection purpose no longer authorizes context")
+        if not set(row["allowed_markings"]).issubset(set(context.authorized_markings)):
+            raise ValueError("projection markings no longer authorize context")
         blockers = cls._projection_dependency_blockers(conn, scope, row, accepted_at)
         if blockers:
             raise ValueError(",".join(blockers))
@@ -953,6 +973,7 @@ class AipAgentMemoryRetrieval:
             blockers.append("recipient_instance_inactive_or_drifted")
         memory = conn.execute(
             """SELECT i.status,i.current_revision,r.content_hash,r.expires_at,
+                      r.markings,r.applicability,
                       s.freshness_expires_at
                FROM aip_memory_item i JOIN aip_memory_item_revision r
                  ON r.org_id=i.org_id AND r.project_id=i.project_id
@@ -973,6 +994,10 @@ class AipAgentMemoryRetrieval:
                 blockers.append("memory_revision_not_current")
             if memory["content_hash"] != row["memory_hash"]:
                 blockers.append("memory_hash_drifted")
+            if not set(memory["markings"]).issubset(set(row["allowed_markings"])):
+                blockers.append("memory_marking_outside_projection")
+            if not set(row["allowed_purposes"]).issubset(set(memory["applicability"])):
+                blockers.append("memory_applicability_outside_projection")
             if memory["expires_at"] is not None and memory["expires_at"] <= observed_at:
                 blockers.append("memory_expired")
             if memory["freshness_expires_at"] <= observed_at:
