@@ -38,6 +38,7 @@ from aos_api.ecommerce_workshop_contracts import (
     WorkshopReadiness,
     WorkshopReadinessBlocker,
 )
+from aos_api.tenant_scope import ORG_GUC, PROJECT_GUC
 
 ConnectFactory = Callable[[], AbstractContextManager[Any]]
 Clock = Callable[[], datetime]
@@ -120,9 +121,9 @@ class PostgresWorkshopCatalogSource:
                 ):
                     raise RegistryIntegrityCorruptError()
                 scope = conn.execute(
-                    """
-                    SELECT current_setting('app.current_org_id', true) AS org_id,
-                           current_setting('app.current_project_id', true) AS project_id
+                    f"""
+                    SELECT current_setting('{ORG_GUC}', true) AS org_id,
+                           current_setting('{PROJECT_GUC}', true) AS project_id
                     """
                 ).fetchone()
                 if scope is None or (
@@ -350,9 +351,15 @@ class EcommerceWorkshopCatalog:
 def build_ecommerce_workshop_catalog(
     *, repository_root: Path = _REPOSITORY_ROOT
 ) -> EcommerceWorkshopCatalog:
+    bundle_root = repository_root / "bundles"
     return EcommerceWorkshopCatalog(
         source=PostgresWorkshopCatalogSource(),
-        loader=ManifestLoader({"catalog": repository_root / "bundles"}),
+        loader=ManifestLoader(
+            {
+                "catalog": bundle_root,
+                "d3-catalog": bundle_root,
+            }
+        ),
     )
 
 

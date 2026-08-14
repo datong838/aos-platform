@@ -21,6 +21,7 @@ from aos_api.ecommerce_workshop_catalog import (
     EcommerceWorkshopCatalog,
     PersistedBundleVersion,
     PostgresWorkshopCatalogSource,
+    build_ecommerce_workshop_catalog,
 )
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
@@ -77,7 +78,7 @@ class _ReadOnlyConnection:
                     "registry": "asset_bundle_version",
                 }
             )
-        if "current_setting('app.current_org_id'" in normalized:
+        if "current_setting('aos.org_id'" in normalized:
             return _QueryResult(
                 one={"org_id": self.org_id, "project_id": self.project_id}
             )
@@ -234,6 +235,15 @@ def _catalog(source):
     )
 
 
+def test_catalog_builder_allowlists_current_and_historical_fixed_source_aliases() -> None:
+    catalog = build_ecommerce_workshop_catalog(repository_root=REPOSITORY_ROOT)
+    for alias in ("catalog", "d3-catalog"):
+        loaded = catalog._loader.load(  # noqa: SLF001 - construction contract
+            f"bundle://{alias}/solutions/ecommerce-growth"
+        )
+        assert loaded.manifest.metadata.id == "solution.ecommerce.growth"
+
+
 def test_catalog_projects_only_active_tenant_modules_and_exact_refs() -> None:
     loaded = _loaded_growth()
     persisted = _persisted(loaded)
@@ -336,6 +346,10 @@ def test_postgres_source_uses_repeatable_read_and_explicit_tenant_predicates() -
     ) == ()
 
     assert conn.calls[0][0] == "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
+    scope_query = next(call for call in conn.calls if "current_setting(" in call[0])
+    assert "current_setting('aos.org_id'" in scope_query[0]
+    assert "current_setting('aos.project_id'" in scope_query[0]
+    assert "app.current_" not in scope_query[0]
     active_query = next(call for call in conn.calls if "FROM bundle_installation i" in call[0])
     assert "WHERE i.org_id=%s AND i.project_id=%s" in active_query[0]
     assert active_query[1][0:2] == ("org-org", "dev-project")
