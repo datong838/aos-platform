@@ -1,0 +1,100 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w4-07-query-research-job-preflight-20260814",
+  "authorityRevision": "AOS-000024",
+  "result": "W4_07_QUERY_RESEARCH_JOB_PREFLIGHT_FACTS_FROZEN",
+  "implementationStatus": "MULTIPLE_JOB_AUTHORITIES_PRESENT_UNIFIED_PROJECTION_AND_RESEARCH_RECOVERY_MISSING",
+  "dependencyStatus": "BLOCKED_RESEARCH_ADAPTER_RECOVERY_AND_QUERY_JOB_CONTRACT",
+  "observations": {
+    "researchJobPostgresqlAuthorityPresent": true,
+    "researchManifestExactLineagePresent": true,
+    "researchSubmissionEventArtifactDeliveryReconcileReceiptsPresent": true,
+    "researchCallbackNonceAndSignatureVerificationPresent": true,
+    "researchJobGetRoutePresent": true,
+    "researchJobListRoutePresent": false,
+    "researchJobPartialStatusPresent": false,
+    "researchJobCheckpointPresent": false,
+    "researchJobResumeCommandPresent": false,
+    "researchJobCancelCommandPresent": false,
+    "researchProviderProtocolDefinesCancel": true,
+    "researchProviderAdapterRuntimeWired": false,
+    "researchDefaultCallbackSecretResolverTrusted": false,
+    "researchDefaultArtifactHashResolverTrusted": false,
+    "researchFrontendSdkPresent": false,
+    "researchFrontendJobViewPresent": false,
+    "memoryPipelinePartialCheckpointResumeReceiptPresent": true,
+    "memoryPipelineIsGenericUserQueryJob": false,
+    "taskRunCancelResumeCheckpointPresent": true,
+    "taskRunIsExternalResearchAuthority": false,
+    "unifiedAsyncJobProjectionPresent": false
+  },
+  "findings": [
+    {
+      "id": "DEP-RESEARCH-ADAPTER-RUNTIME",
+      "severity": "P0",
+      "finding": "ResearchJob persists provider receipts but the production service is not wired to a provider adapter runtime; submission and provider events are recorded by trusted callers rather than orchestrated through the declared adapter protocol."
+    },
+    {
+      "id": "DEP-RESEARCH-TRUSTED-RESOLVERS",
+      "severity": "P0",
+      "finding": "the default callback secret and artifact hash resolvers intentionally fail closed, so callback and artifact verification cannot succeed in production wiring."
+    },
+    {
+      "id": "DEP-RESEARCH-CANCEL-RESUME",
+      "severity": "P0",
+      "finding": "ResearchJob has a cancelled terminal status and provider protocol cancel operation but exposes no cancel command; it has no checkpoint or resume model."
+    },
+    {
+      "id": "DEP-RESEARCH-PARTIAL",
+      "severity": "P1",
+      "finding": "ResearchJob and ResearchDeliveryStatus have no partial state, so partial artifacts cannot be distinguished from success, unknown or failure."
+    },
+    {
+      "id": "DEP-QUERY-JOB-CONTRACT",
+      "severity": "P1",
+      "finding": "no generic QueryJob authority exists for long internal queries; MemoryPipeline and TaskRun have useful controls but different ownership and cannot be relabeled as QueryJob."
+    },
+    {
+      "id": "DEP-ASYNC-JOB-PROJECTION",
+      "severity": "P1",
+      "finding": "there is no common read-only projection across TaskRun, ResearchJob and KnowledgePipelineRun for status, progress, partial artifacts, cancelability, resumability, checkpoint and receipt."
+    },
+    {
+      "id": "DEP-RESEARCH-UI-SDK",
+      "severity": "P1",
+      "finding": "ResearchJob has no strict frontend SDK, list view or recover-by-job-ref UI, so browser refresh cannot restore a visible research lifecycle."
+    }
+  ],
+  "decisions": [
+    "do not merge TaskRun, ResearchJob and KnowledgePipelineRun stores; retain their existing authorities and add a common read-only AsyncJobProjection",
+    "use ResearchJob for external C1 provider research and add trusted adapter submission, status, events, artifacts, cancel and reconcile wiring",
+    "use TaskRun or a reviewed additive QueryJob contract for long internal queries based on execution ownership; do not disguise KnowledgePipelineRun as an ad hoc query",
+    "extend ResearchJob with partial artifact receipts, checkpoint or provider cursor, explicit cancel and safe resume or retry-of semantics",
+    "wire callback secrets and artifact hash resolvers from trusted authorities before any real provider execution",
+    "add canonical list and exact get plus strict SDK and a refresh-safe job drawer that shows authority type and capability limits",
+    "unknown remains a reconcile-required state and must never trigger blind resubmission"
+  ],
+  "verification": {
+    "command": "uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_aip_research_job_store.py services/aos-api/tests/aip/test_aip_research_job_api.py services/aos-api/tests/aip/test_aip_memory_pipeline_store.py services/aos-api/tests/aip/test_aip1_taor_runtime.py",
+    "result": "24 passed, 7 warnings",
+    "interpretation": "the three authority implementations are stable in their own tested scopes; missing cross-authority projection and ResearchJob recovery controls are unimplemented requirements"
+  },
+  "hashes": {
+    "researchContracts": "5c2e1420b877ccdceffa89c5ebd4186da9db2709ce8c0c0420add30a0ad21ea8",
+    "researchStore": "123d11da03d7724d8790abb01e5e0c663025e74fc5bd79925b32aabd69c2a390",
+    "researchService": "539447e4aee3b2e3d4ed55a8307db4ce13b45055c85bd281a192524ae53f44d1",
+    "researchRouter": "ad9236b64513dd04aff87fc7a38bc331cd62327c8554eaf9a7b85bc13045ce6a",
+    "memoryPipelineStore": "703fe62c102d29d0aa14cbe8ecfe0b35bc5af0d97f00e9738d7f9102c87ad59f",
+    "taskStore": "71f0dc1fdcd3da9882d5278e875ba731fb833e1362b04af02d06dd51322d1a1a"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "productionDatabaseRead": false,
+    "productionDatabaseWrite": false,
+    "syntheticTestDatabaseMutatedByTests": true,
+    "realTenantMutation": false,
+    "aipW2D3FilesTouched": false,
+    "migrationLeaseAcquired": false
+  },
+  "nextGate": "Freeze the ownership decision for internal QueryJob, close ResearchJob adapter and recovery gaps, then authorize the shared AsyncJob projection and Workshop W4-07 UI."
+}
