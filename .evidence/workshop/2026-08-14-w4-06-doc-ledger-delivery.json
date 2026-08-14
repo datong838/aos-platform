@@ -1,0 +1,38 @@
+{
+  "schema": "aos-workshop-document-ledger-evidence/v1",
+  "taskId": "workshop-w4-06-doc-ledger-20260814",
+  "authorityRevision": "AOS-000024",
+  "result": "W4_06_PREFLIGHT_DOC_LEDGER_SYNCHRONIZED",
+  "documents": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/31-W4-06-SavedExploration唯一Store分享生命周期与旧入口收敛ADR.md",
+      "sha256": "f236dca12daf79e7847a8a7116ddfccde0fb23d5eb5f252d006822d2b9353b92",
+      "change": "created",
+      "status": "PREFLIGHT_COMPLETED_IMPLEMENTATION_BLOCKED"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "sha256": "f07a0113ced5f452376b6a7058ebb2e46c64b6112c0a532d00dccbdadcb68362",
+      "change": "updated W4-06 evidence and blocker ledger",
+      "status": "W4_06_NOT_CHECKED"
+    }
+  ],
+  "decisions": [
+    "PostgreSQL ontology_exploration_assets remains the only runtime authority",
+    "workspace visibility is not treated as an expiring and revocable share grant",
+    "DEP-O1 is split into runtime unique store, share lifecycle and legacy residue gates",
+    "W4-06 remains not started and unchecked until W3 and all DEP-O1 sub-gates are green"
+  ],
+  "verification": [
+    "document diff check passed",
+    "W4-06 ledger links the ADR and machine evidence",
+    "source code and real tenant data were not changed"
+  ],
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseChanged": false,
+    "realTenantMutation": false,
+    "migrationLeaseAcquired": false,
+    "visualDraftChanged": false
+  }
+}
