@@ -1,0 +1,50 @@
+{
+  "receiptType": "AIP_DELIVERY_RECEIPT",
+  "wave": "A7-6",
+  "branch": "w1-aip",
+  "baseCommit": "9215024cdfe0c6578fb04c207047fa246d6096f1",
+  "tenantPolicy": {
+    "real": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "realTenantWrites": false
+  },
+  "status": {
+    "codeControl": "GREEN",
+    "providerOperational": "BLOCKED_EXTERNAL_CONFIGURATION",
+    "browser": "DEFERRED_BY_M1_SERIAL_LEASE",
+    "realTenantHttpCanary": "DEFERRED_BY_M1_SERIAL_LEASE"
+  },
+  "scope": {
+    "backend": [
+      "services/aos-api/aos_api/aip_model_runtime_contracts.py",
+      "services/aos-api/aos_api/aip_model_runtime_store.py",
+      "services/aos-api/aos_api/routers/aip_model_runtime.py",
+      "services/aos-api/tests/aip/test_aip_model_runtime_api.py"
+    ],
+    "frontend": [
+      "apps/web/src/api/aipModelRuntime/contracts.ts",
+      "apps/web/src/api/aipModelRuntime/parser.ts",
+      "apps/web/src/api/aipModelRuntime/parser.test.ts",
+      "apps/web/src/api/aipModelRuntime/index.ts",
+      "apps/web/src/pages/s2/ModelRuntimePage.tsx",
+      "apps/web/src/pages/s2/ModelRuntimePage.test.tsx",
+      "apps/web/src/App.tsx",
+      "apps/web/src/navigation/items.ts"
+    ]
+  },
+  "verification": {
+    "backendTargeted": "25 passed",
+    "backendAipCumulative": "317 passed, 18 warnings",
+    "frontendCumulative": "179 files, 2074 tests passed",
+    "typescript": "GREEN",
+    "productionBuild": "GREEN",
+    "diffCheck": "GREEN",
+    "secretFieldProjection": "NONE"
+  },
+  "deferred": [
+    "m1 serial merge and cumulative verification",
+    "org-org/dev-project and dev-org/dev-project HTTP canary",
+    "built-in browser interaction evidence",
+    "external Provider operational evidence"
+  ]
+}

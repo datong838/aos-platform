@@ -10,7 +10,11 @@ from typing import Any, TypeVar
 
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_model_runtime_contracts import (
+    ModelRuntimeAssetSummary,
+    ModelRuntimeCapacityPoolSummary,
+    ModelRuntimeEvalGateSummary,
     ModelRouteRevision,
+    ModelPriceSnapshotRevision,
     ProviderHealthObservation,
     ProviderInstanceRevision,
     RegisteredModelRevision,
@@ -26,6 +30,7 @@ RevisionT = TypeVar(
     RegisteredModelRevision,
     RuntimePolicyRevision,
     ModelRouteRevision,
+    ModelPriceSnapshotRevision,
 )
 
 
@@ -61,6 +66,7 @@ class AipModelRuntimeStore:
         "registered_model": ("registeredModelId", RegisteredModelRevision),
         "runtime_policy": ("policyId", RuntimePolicyRevision),
         "model_route": ("routeId", ModelRouteRevision),
+        "model_price_snapshot": ("priceSnapshotId", ModelPriceSnapshotRevision),
     }
 
     def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
@@ -78,6 +84,9 @@ class AipModelRuntimeStore:
     def publish_route(self, scope: TenantScope, actor: str, key: str, item: ModelRouteRevision, *, expected_version: int = 0) -> ModelRouteRevision:
         return self._publish("model_route", scope, actor, key, item, expected_version)
 
+    def publish_price_snapshot(self, scope: TenantScope, actor: str, key: str, item: ModelPriceSnapshotRevision, *, expected_version: int = 0) -> ModelPriceSnapshotRevision:
+        return self._publish("model_price_snapshot", scope, actor, key, item, expected_version)
+
     def get_provider(self, scope: TenantScope, asset_id: str, revision: int | None = None) -> ProviderInstanceRevision:
         return self._get("provider_instance", scope, asset_id, revision)
 
@@ -89,6 +98,72 @@ class AipModelRuntimeStore:
 
     def get_route(self, scope: TenantScope, asset_id: str, revision: int | None = None) -> ModelRouteRevision:
         return self._get("model_route", scope, asset_id, revision)
+
+    def get_price_snapshot(self, scope: TenantScope, asset_id: str, revision: int | None = None) -> ModelPriceSnapshotRevision:
+        return self._get("model_price_snapshot", scope, asset_id, revision)
+
+    def list_current_assets(self, scope: TenantScope, kind: str) -> list[ModelRuntimeAssetSummary]:
+        if kind not in self._SPECS:
+            raise ModelRuntimeStoreError("unsupported model runtime asset kind")
+        id_alias, model = self._SPECS[kind]
+        id_column = f"{kind}_id"
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                f"""SELECT r.payload FROM aip_{kind}_head h
+                JOIN aip_{kind}_revision r ON r.org_id=h.org_id AND r.project_id=h.project_id
+                  AND r.{id_column}=h.{id_column} AND r.revision=h.current_revision
+                WHERE h.org_id=%s AND h.project_id=%s ORDER BY h.{id_column}""",
+                scope.key,
+            ).fetchall()
+        result: list[ModelRuntimeAssetSummary] = []
+        asset_type = model.__name__
+        for row in rows:
+            item = model.model_validate(self._load(row["payload"]))
+            payload = item.model_dump(mode="json", by_alias=False)
+            refs = self._dependency_refs(payload)
+            result.append(ModelRuntimeAssetSummary(
+                ref={"assetType": asset_type, "assetId": payload[self._snake(id_alias)],
+                     "revision": item.revision, "contentHash": item.content_hash},
+                lifecycle=item.lifecycle, dependencyRefs=refs,
+            ))
+        return result
+
+    def list_eval_gates(self, scope: TenantScope, refs: list[VersionedAssetRef]) -> list[ModelRuntimeEvalGateSummary]:
+        unique = {(ref.asset_id, ref.revision, ref.content_hash): ref for ref in refs if ref.asset_type == "EvalGateDecision"}
+        result: list[ModelRuntimeEvalGateSummary] = []
+        with self._connect_factory(scope) as conn:
+            for key, ref in sorted(unique.items()):
+                row = conn.execute(
+                    "SELECT status,decision_hash FROM aip_release_gate_decision WHERE org_id=%s AND project_id=%s AND decision_id=%s",
+                    (*scope.key, ref.asset_id),
+                ).fetchone()
+                gate_status = "unknown"
+                if row and row["decision_hash"] == ref.content_hash:
+                    gate_status = row["status"] if row["status"] in {"passed", "failed", "blocked"} else "unknown"
+                result.append(ModelRuntimeEvalGateSummary(ref=ref, status=gate_status))
+        return result
+
+    def list_capacity_pools(self, scope: TenantScope) -> list[ModelRuntimeCapacityPoolSummary]:
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute("""SELECT r.*,
+                COUNT(a.reservation_id) FILTER (WHERE a.status IN ('reserved','consumed') AND a.expires_at>NOW()) active_reservations,
+                COALESCE(SUM(a.token_units) FILTER (WHERE a.status IN ('reserved','consumed') AND a.expires_at>NOW()),0) reserved_token_units
+              FROM aip_model_capacity_pool_head h
+              JOIN aip_model_capacity_pool_revision r ON r.org_id=h.org_id AND r.project_id=h.project_id
+                AND r.pool_id=h.pool_id AND r.revision=h.current_revision
+              LEFT JOIN aip_model_capacity_reservation a ON a.org_id=r.org_id AND a.project_id=r.project_id
+                AND a.pool_id=r.pool_id AND a.pool_revision=r.revision
+              WHERE h.org_id=%s AND h.project_id=%s
+              GROUP BY r.org_id,r.project_id,r.pool_id,r.revision
+              ORDER BY r.pool_id""", scope.key).fetchall()
+        return [ModelRuntimeCapacityPoolSummary(
+            poolId=row["pool_id"], revision=row["revision"], contentHash=row["content_hash"],
+            routeRef=self._load(row["route_ref"]), modelRef=self._load(row["model_ref"]),
+            providerRef=self._load(row["provider_ref"]), maxConcurrency=row["max_concurrency"],
+            maxTokenUnits=row["max_token_units"], tokenUnitPerReservation=row["token_unit_per_reservation"],
+            leaseSeconds=row["lease_seconds"], activeReservations=row["active_reservations"],
+            reservedTokenUnits=row["reserved_token_units"], lifecycle=row["lifecycle"],
+        ) for row in rows]
 
     def record_health(self, scope: TenantScope, actor: str, key: str, observation: ProviderHealthObservation) -> ProviderHealthObservation:
         self._check_scope(scope, observation)
@@ -194,6 +269,7 @@ class AipModelRuntimeStore:
     def _validate_dependencies(self, conn: Any, scope: TenantScope, kind: str, item: RevisionT) -> None:
         if kind == "registered_model":
             self._require_ref(conn, scope, "provider_instance", item.provider)
+            self._require_ref(conn, scope, "model_price_snapshot", item.price_snapshot_ref)
         elif kind == "model_route":
             self._require_ref(conn, scope, "runtime_policy", item.runtime_policy_ref)
             for candidate in item.candidates:
@@ -250,3 +326,21 @@ class AipModelRuntimeStore:
     @staticmethod
     def _load(value: Any) -> Any:
         return json.loads(value) if isinstance(value, str) else value
+
+    @staticmethod
+    def _snake(value: str) -> str:
+        return "".join(("_" + char.lower()) if char.isupper() else char for char in value)
+
+    @classmethod
+    def _dependency_refs(cls, value: Any) -> list[VersionedAssetRef]:
+        refs: list[VersionedAssetRef] = []
+        if isinstance(value, dict):
+            if {"asset_type", "asset_id", "revision", "content_hash"} <= set(value):
+                refs.append(VersionedAssetRef.model_validate(value))
+            else:
+                for item in value.values():
+                    refs.extend(cls._dependency_refs(item))
+        elif isinstance(value, list):
+            for item in value:
+                refs.extend(cls._dependency_refs(item))
+        return refs

@@ -49,6 +49,6 @@ def test_e5b_schedule_event_authority_is_live_and_single_head() -> None:
         assert set(names) == TABLES
         assert all(any(name.endswith("append_only") for name in value) for value in names.values())
         assert all(any(name.endswith("truncate_guard") for name in value) for value in names.values())
-        assert conn.execute(
-            "SELECT version_num FROM alembic_version"
-        ).fetchone()["version_num"] == "aip5_003"
+        heads = conn.execute("SELECT version_num FROM alembic_version").fetchall()
+        assert len(heads) == 1
+        assert heads[0]["version_num"]

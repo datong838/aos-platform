@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from contextlib import suppress
 from contextlib import asynccontextmanager
 
@@ -33,6 +34,16 @@ from aos_api.tenant_scope import TenantScope
 
 configure_logging()
 log = get_logger("aos-api")
+
+
+def _qyh_cron_worker_enabled() -> bool:
+    """Keep production Cron on by default, with an explicit local-test off switch."""
+    return os.getenv("AOS_QYH_CRON_ENABLED", "true").strip().lower() not in {
+        "0",
+        "false",
+        "no",
+        "off",
+    }
 
 # Load aos-platform/.env (AGNES_* etc.) before request handlers run
 try:
@@ -265,8 +276,11 @@ async def lifespan(_app: FastAPI):
             except TimeoutError:
                 continue
 
-    cron_task = asyncio.create_task(_qyh_cron_loop(), name="qyh-real-cron")
-    log.info("startup_qyh_real_cron_worker_started interval_seconds=15")
+    if _qyh_cron_worker_enabled():
+        cron_task = asyncio.create_task(_qyh_cron_loop(), name="qyh-real-cron")
+        log.info("startup_qyh_real_cron_worker_started interval_seconds=15")
+    else:
+        log.info("startup_qyh_real_cron_worker_disabled explicit=true")
     yield
     cron_stop.set()
     if cron_task is not None:

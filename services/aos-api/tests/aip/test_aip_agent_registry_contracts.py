@@ -145,5 +145,10 @@ def test_agent_run_requires_exact_agent_skill_logic_and_policy() -> None:
         input_refs=[ref("Order", "order-1")],
     )
     assert run.skill.revision == 1
+    assert run.model_copy(update={"policy": asset("RuntimePolicyRevision")}).model_validate(
+        {**run.model_dump(mode="json", by_alias=True), "policy": asset("RuntimePolicyRevision").model_dump(mode="json", by_alias=True)}
+    ).policy.asset_type == "RuntimePolicyRevision"
+    with pytest.raises(ValidationError, match="PolicyRevision or RuntimePolicyRevision"):
+        AgentRunRequest(**{**run.model_dump(), "policy": asset("OtherPolicy")})
     with pytest.raises(ValidationError, match="Extra inputs"):
         AgentRunRequest(**run.model_dump(), project_id="dev-project")

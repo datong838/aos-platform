@@ -1,0 +1,42 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { aipModelRuntime, type ModelRuntimeOverview, type RuntimeAssetSummary } from "../../api/aipModelRuntime";
+import { PageChrome } from "../../components/PageChrome";
+
+const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 14 } as const;
+const names: Record<string, string> = { providers: "Provider", models: "Registered Model", routes: "Route", policies: "Runtime Policy", priceSnapshots: "价格快照", evalGates: "Eval Gate", capacityPools: "容量池" };
+const lifecycle: Record<string, string> = { draft: "草稿", validated: "已校验", active: "生效", suspended: "暂停", revoked: "撤销" };
+
+function AssetList({ items, empty }: { items: RuntimeAssetSummary[]; empty: string }) {
+  if (!items.length) return <div className="notice">{empty}</div>;
+  return <div>{items.map(item => <article key={`${item.ref.assetId}@${item.ref.revision}`} style={{ padding: "10px 0", borderTop: "1px solid var(--aos-border)" }}><strong>{item.ref.assetId}</strong><div><code>r{item.ref.revision} · {item.ref.contentHash.slice(0, 12)}…</code></div><small>{lifecycle[item.lifecycle] ?? item.lifecycle} · {item.dependencyRefs.length} 个 exact 依赖</small></article>)}</div>;
+}
+
+export function modelRuntimeControlStatus(data: ModelRuntimeOverview): "empty" | "blocked" | "ready" {
+  if (!data.providers.length && !data.models.length && !data.routes.length && !data.policies.length) return "empty";
+  return data.resolutions.length > 0 && data.resolutions.every(item => item.readiness === "ready") ? "ready" : "blocked";
+}
+
+export function ModelRuntimePage() {
+  const [data, setData] = useState<ModelRuntimeOverview | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const load = useCallback(async () => { setLoading(true); try { setData(await aipModelRuntime.overview()); setError(""); } catch (e) { setData(null); setError(String((e as Error).message || e)); } finally { setLoading(false); } }, []);
+  useEffect(() => { void load(); }, [load]);
+  const state = useMemo(() => data ? modelRuntimeControlStatus(data) : "empty", [data]);
+
+  return <PageChrome title="模型运行就绪" lede="AIP-7 exact Provider、Model、Route、Policy、Eval、价格与容量权威；控制面就绪不等于外部 Provider 已可调用">
+    {error ? <div role="alert" className="notice bad">exact model runtime authority 读取失败：{error}</div> : null}
+    {loading ? <div role="status" className="card">正在读取当前组织的 exact model runtime authority…</div> : null}
+    {!loading && data ? <>
+      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}><strong>控制面：{state === "ready" ? "就绪" : state === "blocked" ? "阻断" : "空"}</strong><span>组织 {data.tenant.orgId} · 工作区 {data.tenant.projectId}</span><button className="btn" onClick={() => void load()}>刷新权威快照</button></div>
+      {state === "empty" ? <div className="notice">当前组织没有 AIP-7 exact Provider / Model / Route / Policy。页面不会从旧 KV、静态模型目录或其他租户自动回填；请通过受控配置流程建立权威 revision。</div> : null}
+      <section style={grid} aria-label="模型运行权威分层">
+        {(["providers", "models", "routes", "policies", "priceSnapshots"] as const).map(key => <div className="card" style={{ padding: 16 }} key={key}><h2 style={{ marginTop: 0 }}>{names[key]} · {data[key].length}</h2><AssetList items={data[key]} empty={`当前组织尚无 ${names[key]} exact revision。`} /></div>)}
+        <div className="card" style={{ padding: 16 }}><h2 style={{ marginTop: 0 }}>Eval Gate · {data.evalGates.length}</h2>{data.evalGates.length ? data.evalGates.map(item => <p key={item.ref.assetId}><code>{item.ref.assetId}@{item.ref.revision}</code> · {item.status}</p>) : <div className="notice">尚无 Route / Model 引用的 Eval Gate。</div>}</div>
+        <div className="card" style={{ padding: 16 }}><h2 style={{ marginTop: 0 }}>容量池 · {data.capacityPools.length}</h2>{data.capacityPools.length ? data.capacityPools.map(pool => <article key={pool.poolId}><strong>{pool.poolId}@{pool.revision}</strong><p>{pool.activeReservations}/{pool.maxConcurrency} 并发 · {pool.reservedTokenUnits}/{pool.maxTokenUnits} token units</p></article>) : <div className="notice">尚无 exact 容量池；AgentRun 运行门将失败关闭。</div>}</div>
+      </section>
+      <section className="card" style={{ padding: 18, marginTop: 16 }}><h2 style={{ marginTop: 0 }}>Route Runtime Readiness</h2>{data.resolutions.length ? data.resolutions.map(item => <article key={item.route.assetId} style={{ padding: "12px 0", borderTop: "1px solid var(--aos-border)" }}><strong>{item.route.assetId}@{item.route.revision} · {item.readiness === "ready" ? "就绪" : "阻断"}</strong>{item.readiness === "ready" ? <p>Model {item.selectedModel?.assetId} · Provider {item.selectedProvider?.assetId} · Price {item.selectedPriceSnapshot?.assetId}</p> : <ul>{item.blockerCodes.map(code => <li key={code}><code>{code}</code></li>)}</ul>}</article>) : <div className="notice">没有 exact Route，因此没有可解析的运行就绪结果。</div>}</section>
+      <div className="notice" style={{ marginTop: 16 }}>本页从不显示 secretRef 或凭据。Provider operational、真实调用、Usage Receipt 与成本对账仍必须分别取得真实外部证据。</div>
+    </> : null}
+  </PageChrome>;
+}

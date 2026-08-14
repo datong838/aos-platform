@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Protocol
 
 from aos_api.aip_agent_registry_contracts import (
     AgentRun,
@@ -17,10 +18,42 @@ from aos_api.aip_agent_registry_store import (
     AipAgentRegistryTransitionBlocked,
 )
 from aos_api.aip_contracts import ResourceRef, TenantContext
+from aos_api.aip_model_runtime_contracts import ModelRouteResolution, ModelRuntimeReadiness
+from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
+from aos_api.aip_model_runtime_store import ModelRuntimeStoreError
 from aos_api.tenant_scope import TenantScope
+from aos_api.logging_facade import get_logger
+
+log = get_logger("aos-api.aip-agent-run")
+
+
+class CapacityReservationGate(Protocol):
+    def reserve(self, scope: TenantScope, resolution: ModelRouteResolution, agent_run_id: str) -> str: ...
+    def release(self, scope: TenantScope, reservation_id: str) -> None: ...
+    def release_for_run(self, scope: TenantScope, agent_run_id: str) -> None: ...
+
+
+class UnavailableCapacityReservationGate:
+    def reserve(self, scope: TenantScope, resolution: ModelRouteResolution, agent_run_id: str) -> str:
+        raise AipAgentRegistryTransitionBlocked("capacity_reservation_authority_unavailable")
+
+    def release(self, scope: TenantScope, reservation_id: str) -> None:
+        return None
+
+    def release_for_run(self, scope: TenantScope, agent_run_id: str) -> None:
+        return None
 
 
 class AipAgentRunService(AipAgentRegistryStore):
+    def __init__(self, connect_factory=None, *, model_resolver=None, capacity_gate=None) -> None:
+        super().__init__(connect_factory)
+        self._model_resolver = model_resolver or AipModelRuntimeResolver()
+        if capacity_gate is None:
+            from aos_api.aip_model_capacity_reservation import AipModelCapacityReservationGate
+
+            capacity_gate = AipModelCapacityReservationGate(self._connect_factory)
+        self._capacity_gate = capacity_gate
+
     def create(self, scope: TenantScope, request: CreateAgentRunRequest, *, idempotency_key: str, actor: str, occurred_at: datetime) -> tuple[AgentRun, RegistryReceipt]:
         self._validate_command(scope, idempotency_key, actor)
         operation = "agent_run.create"
@@ -103,16 +136,68 @@ class AipAgentRunService(AipAgentRegistryStore):
             if current is None:
                 raise AipAgentRegistryNotFound("agent run not found")
             if to_status is AgentRunStatus.RUNNING:
-                raise AipAgentRegistryTransitionBlocked(
-                    "AIP-7 exact ModelRouteRevision authority is not available"
-                )
+                resolution = self._resolve_start(scope, current)
+                reservation_id = self._capacity_gate.reserve(scope, resolution, agent_run_id)
+            else:
+                reservation_id = None
             row = conn.execute("""UPDATE aip_agent_run SET status=%s,version=version+1,updated_at=%s
                 WHERE org_id=%s AND project_id=%s AND agent_run_id=%s AND version=%s AND status=%s RETURNING *""",
                 (to_status.value, occurred_at, *scope.key, agent_run_id, expected_version, from_status.value)).fetchone()
             if row is None:
+                if reservation_id:
+                    self._capacity_gate.release(scope, reservation_id)
                 raise AipAgentRegistryConflict("agent run version or status changed")
-            conn.commit()
+            try:
+                conn.commit()
+            except Exception:
+                if reservation_id:
+                    self._capacity_gate.release(scope, reservation_id)
+                raise
+            if from_status in {AgentRunStatus.RUNNING, AgentRunStatus.PAUSED} and to_status is not AgentRunStatus.RUNNING:
+                try:
+                    self._capacity_gate.release_for_run(scope, agent_run_id)
+                except Exception:
+                    # AgentRun CAS is already committed. The reservation authority has
+                    # a bounded TTL, so report the recovery path without implying rollback.
+                    log.warning(
+                        "capacity_release_deferred agent_run_id=%s target_status=%s",
+                        agent_run_id,
+                        to_status.value,
+                        exc_info=True,
+                    )
             return self._from_row(scope, row)
+
+    def _resolve_start(self, scope: TenantScope, current) -> ModelRouteResolution:
+        route_ref = current["model_route_ref"]
+        policy_ref = current["policy_ref"]
+        if route_ref.get("assetType") != "ModelRouteRevision":
+            raise AipAgentRegistryTransitionBlocked("agent_run_model_route_kind_invalid")
+        if policy_ref.get("assetType") != "RuntimePolicyRevision":
+            raise AipAgentRegistryTransitionBlocked("agent_run_runtime_policy_revision_required")
+        try:
+            resolution = self._model_resolver.resolve(scope, route_ref["assetId"])
+        except ModelRuntimeStoreError as exc:
+            raise AipAgentRegistryTransitionBlocked("model_runtime_authority_unavailable") from exc
+        if resolution.readiness is not ModelRuntimeReadiness.READY:
+            blockers = ",".join(resolution.blocker_codes) or "model_runtime_not_ready"
+            raise AipAgentRegistryTransitionBlocked(blockers)
+        requested_route = (
+            route_ref.get("assetId"), route_ref.get("revision"), route_ref.get("contentHash")
+        )
+        exact_route = (
+            resolution.route.asset_id, resolution.route.revision, resolution.route.content_hash
+        )
+        requested_policy = (
+            policy_ref.get("assetId"), policy_ref.get("revision"), policy_ref.get("contentHash")
+        )
+        exact_policy = (
+            resolution.policy.asset_id, resolution.policy.revision, resolution.policy.content_hash
+        )
+        if requested_route != exact_route:
+            raise AipAgentRegistryTransitionBlocked("agent_run_model_route_exact_ref_drifted")
+        if requested_policy != exact_policy:
+            raise AipAgentRegistryTransitionBlocked("agent_run_runtime_policy_exact_ref_drifted")
+        return resolution
 
     def get(self, scope: TenantScope, agent_run_id: str) -> AgentRun:
         with self._connect_factory(scope) as conn:

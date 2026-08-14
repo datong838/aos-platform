@@ -49,8 +49,8 @@ class WatchdogTest(unittest.TestCase):
             "resume_prompt": "continue from checkpoint",
             "grace_seconds": 10,
             "max_tool_silence_seconds": 100,
-            "retry_schedule_seconds": [300, 600, 900, 1800, 3600, 7200],
-            "max_transport_failures": 12,
+            "retry_interval_seconds": 300,
+            "max_retry_interval_seconds": 3600,
             "config_revision": "workshop-watchdog-v2",
             "ack_path": str(self.root / "recovery-ack.json"),
             "expected_branch": "w2-workshop",
@@ -267,7 +267,7 @@ class WatchdogTest(unittest.TestCase):
     def test_invalid_backoff_config_fails_before_waking_runner(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))
         config = self.config()
-        config["retry_schedule_seconds"] = []
+        config["retry_interval_seconds"] = 0
         config_path = self.root / "config.json"
         state_path = self.root / "state.json"
         config_path.write_text(json.dumps(config), encoding="utf-8")
@@ -425,10 +425,9 @@ class WatchdogTest(unittest.TestCase):
         )
         self.assertEqual(1, len(calls))
 
-    def test_transport_failures_pause_at_limit_and_stop_runner(self):
+    def test_transport_failures_continue_after_third_failure(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))
         config = self.config()
-        config["max_transport_failures"] = 3
         config_path = self.root / "config.json"
         state_path = self.root / "state.json"
         config_path.write_text(json.dumps(config), encoding="utf-8")
@@ -447,17 +446,19 @@ class WatchdogTest(unittest.TestCase):
             watchdog.run_once(config_path, state_path, now=1300, runner=runner),
         )
         self.assertEqual(
-            "paused-failure",
+            "retry-scheduled",
             watchdog.run_once(config_path, state_path, now=1900, runner=runner),
         )
         self.assertEqual(
-            "paused-failure",
-            watchdog.run_once(config_path, state_path, now=10000, runner=runner),
+            "retry-scheduled",
+            watchdog.run_once(config_path, state_path, now=2800, runner=runner),
         )
-        self.assertEqual(3, len(calls))
+        self.assertEqual(4, len(calls))
         state = json.loads(state_path.read_text(encoding="utf-8"))
-        self.assertEqual("paused-failure", state["last_recovery_outcome"])
-        self.assertEqual(0, state["next_retry_at"])
+        self.assertEqual("transport-failed", state["last_recovery_outcome"])
+        self.assertEqual(4, state["consecutive_failures"])
+        self.assertEqual(1200, state["retry_delay_seconds"])
+        self.assertEqual(4000, state["next_retry_at"])
 
     def test_transport_backoff_decays_and_caps_without_third_failure_break(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))
@@ -471,7 +472,10 @@ class WatchdogTest(unittest.TestCase):
             return subprocess.CompletedProcess(args[0], 1, "", "network")
 
         now = 1000
-        expected = [300, 600, 900, 1800, 3600, 7200, 7200]
+        expected = [
+            300, 600, 900, 1200, 1500, 1800, 2100,
+            2400, 2700, 3000, 3300, 3600, 3600,
+        ]
         for failure_number, delay in enumerate(expected, start=1):
             self.assertEqual(
                 "retry-scheduled",
@@ -482,7 +486,7 @@ class WatchdogTest(unittest.TestCase):
             self.assertEqual(delay, state["retry_delay_seconds"])
             self.assertEqual(now + delay, state["next_retry_at"])
             now += delay
-        self.assertEqual(7, len(calls))
+        self.assertEqual(13, len(calls))
 
     def test_exit_zero_without_visible_final_is_not_recovered(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))

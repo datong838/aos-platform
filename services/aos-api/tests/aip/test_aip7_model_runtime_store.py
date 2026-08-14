@@ -9,6 +9,7 @@ from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_contracts import TenantContext
 from aos_api.aip_model_runtime_contracts import (
     ModelModality,
+    ModelPriceSnapshotRevision,
     ModelRouteCandidate,
     ModelRouteRevision,
     ModelRuntimeLifecycle,
@@ -108,6 +109,14 @@ def test_store_persists_exact_chain_replays_receipt_and_isolates_tenant() -> Non
         )
         assert store.record_health(SCOPE, SUFFIX, "health-1", health).status == "healthy"
 
+        price = hashed(ModelPriceSnapshotRevision, dict(
+            tenant=TENANT, priceSnapshotId=f"{SUFFIX}:price", revision=1,
+            currency="CNY", inputTokenPrice=0.001, outputTokenPrice=0.002,
+            tokenUnit=1000, effectiveFrom=NOW,
+            lifecycle=ModelRuntimeLifecycle.ACTIVE, createdBy=SUFFIX, createdAt=NOW,
+        ))
+        store.publish_price_snapshot(SCOPE, SUFFIX, "price-1", price)
+
         model = hashed(RegisteredModelRevision, dict(
             tenant=TENANT, registeredModelId=f"{SUFFIX}:model", revision=1,
             provider=ref("ProviderInstanceRevision", SUFFIX, provider.content_hash), providerModelId="model-test",
@@ -115,7 +124,7 @@ def test_store_persists_exact_chain_replays_receipt_and_isolates_tenant() -> Non
             capabilities=["structured_output"], contextWindow=4096,
             quotaPolicyRef=ref("QuotaPolicyRevision", "test:quota", "4" * 64),
             budgetPolicyRef=ref("BudgetPolicyRevision", "test:budget", "5" * 64),
-            priceSnapshotRef=ref("ModelPriceSnapshotRevision", "test:price", "6" * 64),
+            priceSnapshotRef=ref("ModelPriceSnapshotRevision", price.price_snapshot_id, price.content_hash),
             evalGateRef=ref("EvalGateDecision", "test:eval", "7" * 64),
             lifecycle=ModelRuntimeLifecycle.VALIDATED, createdBy=SUFFIX, createdAt=NOW,
         ))

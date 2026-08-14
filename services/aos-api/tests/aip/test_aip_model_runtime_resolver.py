@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_contracts import TenantContext
 from aos_api.aip_model_runtime_contracts import (
-    ModelModality, ModelRouteCandidate, ModelRouteRevision, ModelRuntimeLifecycle,
+    ModelModality, ModelPriceSnapshotRevision, ModelRouteCandidate, ModelRouteRevision, ModelRuntimeLifecycle,
     ModelRuntimeReadiness, ProviderEndpointProfile, ProviderInstanceRevision,
     RegisteredModelRevision, RouteStrategy, RuntimePolicyRevision,
 )
@@ -81,6 +81,14 @@ class ReadyRuntimeStore(EmptyRuntimeStore):
             egressPolicyRef=ref("EgressPolicyRevision", "egress", "6" * 64),
             dataClassificationPolicyRef=ref("DataClassificationPolicyRevision", "classification", "7" * 64),
             lifecycle=ModelRuntimeLifecycle.ACTIVE, createdBy="test", createdAt=NOW,
+        )
+
+    def get_price_snapshot(self, *args):
+        return ModelPriceSnapshotRevision(
+            tenant=TENANT, priceSnapshotId="price", revision=1, contentHash="b" * 64,
+            currency="CNY", inputTokenPrice=0.001, outputTokenPrice=0.002,
+            tokenUnit=1000, effectiveFrom=NOW, lifecycle=ModelRuntimeLifecycle.ACTIVE,
+            createdBy="test", createdAt=NOW,
         )
 
 def test_resolver_honestly_blocks_non_active_zero_dependency_route(monkeypatch) -> None:

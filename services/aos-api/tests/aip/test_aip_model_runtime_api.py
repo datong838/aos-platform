@@ -64,3 +64,38 @@ def test_openapi_registers_canonical_model_runtime_paths(client) -> None:
     assert "/v1/aip/model-runtime/models" in paths
     assert "/v1/aip/model-runtime/policies" in paths
     assert "/v1/aip/model-runtime/routes/{route_id}/resolution" in paths
+    assert "/v1/aip/model-runtime/overview" in paths
+
+
+class EmptyOverviewStore:
+    scopes = []
+
+    def list_current_assets(self, scope, kind):
+        self.scopes.append((scope.key, kind))
+        return []
+
+    def list_eval_gates(self, scope, refs):
+        assert refs == []
+        return []
+
+    def list_capacity_pools(self, scope):
+        return []
+
+
+def test_overview_is_secret_free_empty_and_tenant_scoped(client) -> None:
+    store = EmptyOverviewStore()
+    client.app.dependency_overrides[aip_model_runtime.get_store] = lambda: store
+    try:
+        response = client.get("/v1/aip/model-runtime/overview", headers=headers())
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
+        assert payload["providers"] == payload["models"] == payload["routes"] == []
+        assert payload["capacityPools"] == payload["resolutions"] == []
+        assert "secret" not in response.text.lower()
+        assert {scope for scope, _ in store.scopes} == {("org-org", "dev-project")}
+        assert {kind for _, kind in store.scopes} == {
+            "provider_instance", "registered_model", "runtime_policy", "model_route", "model_price_snapshot",
+        }
+    finally:
+        client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)

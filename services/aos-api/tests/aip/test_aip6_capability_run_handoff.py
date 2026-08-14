@@ -356,7 +356,7 @@ def test_agent_run_persists_exact_instance_snapshot_and_blocks_start_without_aip
         ).fetchone()
     assert row["instance_ref"] == instance.instance_ref.model_dump(mode="json", by_alias=True)
     assert row["instance_snapshot"]["overlay"]["displayName"] == "栖月汇-sender"
-    with pytest.raises(AipAgentRegistryTransitionBlocked, match="AIP-7"):
+    with pytest.raises(AipAgentRegistryTransitionBlocked, match="runtime_policy_revision_required"):
         service.transition(
             PRIMARY,
             run.agent_run_id,

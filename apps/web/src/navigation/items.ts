@@ -339,6 +339,14 @@ export const NAV_ITEMS: NavItem[] = [
     status: "live",
     crumbs: ["模型管理", "容量管理"],
   },
+  {
+    id: "aip-model-runtime",
+    path: "/aip/model-runtime",
+    label: "运行就绪",
+    icon: "activity",
+    status: "live",
+    crumbs: ["模型管理", "运行就绪"],
+  },
 
   { section: "本体 · 数字孪生" },
   {

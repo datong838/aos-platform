@@ -47,6 +47,9 @@ const ModelCatalogPage = lazy(() =>
 const CapacityPage = lazy(() =>
   import("./pages/s2/CapacityPage").then((m) => ({ default: m.CapacityPage })),
 );
+const ModelRuntimePage = lazy(() =>
+  import("./pages/s2/ModelRuntimePage").then((m) => ({ default: m.ModelRuntimePage })),
+);
 const AipAssistPage = lazy(() =>
   import("./pages/s2/AipAssistPage").then((m) => ({ default: m.AipAssistPage })),
 );
@@ -249,6 +252,14 @@ export function App() {
             element={
               <Suspense fallback={<PageFallback />}>
                 <CapacityPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="aip/model-runtime"
+            element={
+              <Suspense fallback={<PageFallback />}>
+                <ModelRuntimePage />
               </Suspense>
             }
           />

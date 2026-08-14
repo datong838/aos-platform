@@ -1,113 +1,108 @@
-"""AIP LLM Adapter — 封装 llm_gateway，提供 TAOR 循环的 LLM 调用接口.
-
-对接平台已有 llm_gateway.chat()，不重写底层调用。
-支持 mock 降级（当 LLM 不可用时返回模拟响应）。
-"""
+"""AIP LLM adapter with exact AIP-7 runtime resolution and no implicit mock success."""
 from __future__ import annotations
 
-import time
+from collections.abc import Callable
 from typing import Any
 
+from aos_api.aip_model_runtime_contracts import ModelRouteResolution, ModelRuntimeReadiness
+from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
 from aos_api.aip_task_model import ThinkResult
+from aos_api.tenant_scope import TenantScope
+from aos_api.aip_provider_usage_bridge import AipProviderUsageBridge
+
+
+class LLMRuntimeBlocked(RuntimeError):
+    """The exact model runtime or provider invocation is not safe to execute."""
+
+
+ProviderInvoker = Callable[[ModelRouteResolution, str], dict[str, Any]]
+
+
+def _default_invoker(resolution: ModelRouteResolution, query: str) -> dict[str, Any]:
+    raise LLMRuntimeBlocked("provider_invoker_authority_unavailable")
 
 
 class LLMAdapter:
-    """LLM 适配器 — 封装 llm_gateway.chat()。
+    def __init__(self, *, resolver: AipModelRuntimeResolver | None = None, provider_invoker: ProviderInvoker | None = None, usage_bridge: AipProviderUsageBridge | None = None) -> None:
+        self._resolver = resolver or AipModelRuntimeResolver()
+        self._provider_invoker = provider_invoker or _default_invoker
+        self._usage_bridge = usage_bridge or AipProviderUsageBridge()
 
-    设计原则（来源 Claude Blog Context Engineering 新规则）：
-    - 工具描述写清楚，不在 Prompt 里重复
-    - System Prompt 极简 — 只给判断边界，不给规则列表
-    """
-
-    def chat(
+    def chat_exact(
         self,
+        scope: TenantScope,
+        route_id: str,
         query: str,
         *,
+        lineage_id: str,
         system_prompt: str = "",
-        model: str | None = None,
-        temperature: float = 0.3,
-        max_tokens: int = 512,
     ) -> dict[str, Any]:
-        """调用 LLM，返回 {answer, provider, model, tokens}。
-
-        底层走 llm_gateway.chat()，自动处理 mock 降级。
-        """
+        if not lineage_id.strip():
+            raise LLMRuntimeBlocked("lineage_id_required")
+        resolution = self._resolver.resolve(scope, route_id)
+        if resolution.readiness is not ModelRuntimeReadiness.READY:
+            blockers = ",".join(resolution.blocker_codes) or "model_runtime_not_ready"
+            raise LLMRuntimeBlocked(blockers)
         full_query = f"{system_prompt}\n\n{query}" if system_prompt else query
-
+        response = self._provider_invoker(resolution, full_query)
+        answer = response.get("answer")
+        if not isinstance(answer, str) or not answer:
+            raise LLMRuntimeBlocked("provider_response_answer_missing")
+        provider = str(response.get("provider") or "")
+        route = str(response.get("route") or "")
+        if provider.lower().startswith("mock") or "mock" in route.lower():
+            raise LLMRuntimeBlocked("implicit_mock_provider_forbidden")
+        tokens = response.get("tokens")
+        if not isinstance(tokens, int) or tokens < 0:
+            raise LLMRuntimeBlocked("provider_usage_unknown")
         try:
-            from aos_api import llm_gateway
-
-            resp = llm_gateway.chat(full_query, model=model)
-            answer = resp.get("answer", "")
-            provider = resp.get("provider", resp.get("model", "unknown"))
-            # llm_gateway 不返回 token 数，用字符数估算
-            tokens = max(len(answer) // 4, 10)
-
-            return {
-                "answer": answer,
-                "provider": provider,
-                "model": resp.get("model", ""),
-                "tokens": tokens,
-                "route": resp.get("route", "unknown"),
-            }
+            usage_receipt_ids = self._usage_bridge.record(
+                scope, lineage_id, resolution, response
+            )
         except Exception as exc:
-            # mock 降级 — 保留向后兼容
-            return {
-                "answer": f"[LLM fallback: {query[:60]}]",
-                "provider": "mock",
-                "model": "mock",
-                "tokens": 10,
-                "route": "mock-fallback",
-                "error": str(exc),
-            }
+            raise LLMRuntimeBlocked("provider_usage_authority_write_failed") from exc
+        return {
+            **response,
+            "answer": answer,
+            "tokens": tokens,
+            "routeRef": resolution.route.model_dump(mode="json", by_alias=True),
+            "policyRef": resolution.policy.model_dump(mode="json", by_alias=True),
+            "modelRef": resolution.selected_model.model_dump(mode="json", by_alias=True),
+            "providerRef": resolution.selected_provider.model_dump(mode="json", by_alias=True),
+            "priceSnapshotRef": resolution.selected_price_snapshot.model_dump(mode="json", by_alias=True),
+            "usageReceiptIds": usage_receipt_ids,
+        }
 
-    def think(
+    def chat(self, query: str, **_: Any) -> dict[str, Any]:
+        raise LLMRuntimeBlocked("exact_scope_and_model_route_required")
+
+    def think_exact(
         self,
+        scope: TenantScope,
+        route_id: str,
         task_type: str,
         step_name: str,
         context: dict[str, Any],
         memory: dict[str, Any] | None = None,
+        lineage_id: str = "",
     ) -> ThinkResult:
-        """Think 阶段 — 让 LLM 分析当前步骤该怎么执行。
-
-        System Prompt 极简原则：只给角色和判断边界。
-        """
-        mem_str = ""
-        if memory:
-            parts = []
-            for layer, items in memory.items():
-                if items:
-                    parts.append(f"[{layer}]")
-                    if isinstance(items, list):
-                        for item in items[:3]:
-                            parts.append(f"  - {item}")
-                    else:
-                        parts.append(f"  {items}")
-            mem_str = "\n".join(parts)
-
+        memory_lines: list[str] = []
+        for layer, items in (memory or {}).items():
+            if items:
+                memory_lines.append(f"[{layer}] {items}")
         query = (
-            f"任务类型: {task_type}\n"
-            f"当前步骤: {step_name}\n"
-            f"上下文: {context}\n"
-            f"{'相关记忆:' + chr(10) + mem_str if mem_str else ''}\n"
-            f"请分析当前步骤应该怎么执行，给出执行指令。"
+            f"任务类型: {task_type}\n当前步骤: {step_name}\n上下文: {context}\n"
+            f"相关记忆:\n{chr(10).join(memory_lines)}\n请给出执行指令。"
         )
-
-        system = (
-            "你是任务执行引擎。分析当前步骤，给出简洁的执行指令。"
-            "用你的判断力决定最佳执行方式。"
+        response = self.chat_exact(
+            scope, route_id, query, lineage_id=lineage_id,
+            system_prompt="你是任务执行引擎。只基于给定事实分析当前步骤。",
         )
-
-        resp = self.chat(query, system_prompt=system, temperature=0.2)
         return ThinkResult(
-            instruction=resp["answer"],
-            memory_used=list((memory or {}).keys()),
-            confidence=0.8 if resp["provider"] != "mock" else 0.3,
-            tokens_used=resp["tokens"],
+            instruction=response["answer"], memory_used=list((memory or {}).keys()),
+            confidence=0.8, tokens_used=response["tokens"],
         )
 
-
-# ── Singleton ──
 
 _llm_adapter: LLMAdapter | None = None
 

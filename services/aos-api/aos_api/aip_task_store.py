@@ -255,6 +255,19 @@ class AipTaskStore:
                 raise AipTaskVersionConflict("only the current plan revision can be approved")
             if plan["content_hash"] != expected_content_hash:
                 raise AipTaskVersionConflict("plan content hash changed before approval")
+            risk = dict(plan["risk"] or {})
+            production_contract = risk.get("productionContract")
+            if (
+                isinstance(production_contract, dict)
+                and production_contract.get("productionStartGateRequired") is True
+            ):
+                # W2-C can compile a production-shaped draft Plan, but W2-D owns
+                # the exact Impact/start gate authority.  Until that authority is
+                # implemented and verified here, fail closed rather than trusting
+                # a client-provided risk field as proof of approval.
+                raise AipTaskTransitionBlocked(
+                    "production start gate authority is required before plan approval"
+                )
             try:
                 status = TaskStatus(task["status"])
                 if status is TaskStatus.PLANNING:

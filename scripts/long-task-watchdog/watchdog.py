@@ -38,7 +38,7 @@ RECOVERY_OUTCOMES = frozenset(
     {"resumed-progress", "safe-blocked", "completed", "reentry-noop"}
 )
 TERMINAL_FAILURE_OUTCOMES = frozenset(
-    {"paused-failure", "protocol-failed", "outcome-uncertain"}
+    {"protocol-failed", "outcome-uncertain"}
 )
 ACK_SCHEMA = "aos-watchdog-recovery-ack/v1"
 
@@ -576,21 +576,17 @@ def _log(message: str) -> None:
 
 
 def _retry_delay_seconds(config: dict[str, Any], failure_count: int) -> int:
-    raw = config.get(
-        "retry_schedule_seconds", [300, 600, 900, 1800, 3600, 7200]
-    )
-    if (
-        not isinstance(raw, list)
-        or not raw
-        or any(
-            not isinstance(item, int) or isinstance(item, bool) or item <= 0
-            for item in raw
-        )
-    ):
+    if failure_count < 1:
+        raise RuntimeError("failure_count must be positive")
+    base = int(config.get("retry_interval_seconds", 300))
+    maximum = int(config.get("max_retry_interval_seconds", 3600))
+    if base <= 0:
+        raise RuntimeError("retry_interval_seconds must be positive")
+    if maximum < base:
         raise RuntimeError(
-            "retry_schedule_seconds must be a non-empty list of positive integers"
+            "max_retry_interval_seconds must be at least retry_interval_seconds"
         )
-    return raw[min(max(failure_count, 1) - 1, len(raw) - 1)]
+    return min(base * failure_count, maximum)
 
 
 def evaluate(
@@ -665,14 +661,6 @@ def run_once(
         _write_json(state_path, state)
         return decision
 
-    max_failures = int(
-        config.get(
-            "max_transport_failures",
-            config.get("max_consecutive_failures", 12),
-        )
-    )
-    if max_failures <= 0:
-        raise RuntimeError("max_transport_failures must be positive")
     _retry_delay_seconds(config, max(int(state.get("consecutive_failures", 0)) + 1, 1))
 
     if state.get("last_recovery_outcome") in TERMINAL_FAILURE_OUTCOMES:
@@ -771,19 +759,6 @@ def run_once(
             if result.returncode == 0:
                 state["last_error"] = "resume exited 0 without current ack/final"
     state["consecutive_failures"] = failures + attempts
-    if state["consecutive_failures"] >= max_failures:
-        latest = inspect_transcript(rollout_path)
-        state.update(
-            {
-                "next_retry_at": 0,
-                "last_recovery_outcome": "paused-failure",
-                "last_decision": "paused-failure",
-                "paused_user_at": latest.latest_user_at,
-                "paused_config_revision": _config_revision(config),
-            }
-        )
-        _write_json(state_path, state)
-        return "paused-failure"
     retry_delay = _retry_delay_seconds(config, state["consecutive_failures"])
     state["retry_delay_seconds"] = retry_delay
     state["next_retry_at"] = current + retry_delay

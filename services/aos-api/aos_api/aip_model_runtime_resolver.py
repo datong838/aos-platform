@@ -46,16 +46,18 @@ class AipModelRuntimeResolver:
 
         selected_model = None
         selected_provider = None
+        selected_price_snapshot = None
         for candidate in route.candidates:
-            candidate_blockers, model_ref, provider_ref = self._candidate(scope, candidate.model, route, resolved_at)
+            candidate_blockers, model_ref, provider_ref, price_ref = self._candidate(scope, candidate.model, route, resolved_at)
             if not candidate_blockers:
                 selected_model = model_ref
                 selected_provider = provider_ref
+                selected_price_snapshot = price_ref
                 break
             blockers.extend(candidate_blockers)
 
         blockers = list(dict.fromkeys(blockers))
-        if blockers or selected_model is None or selected_provider is None:
+        if blockers or selected_model is None or selected_provider is None or selected_price_snapshot is None:
             return ModelRouteResolution(
                 tenant={"orgId": scope.org_id, "projectId": scope.project_id},
                 route=route_ref, policy=policy_ref, readiness=ModelRuntimeReadiness.BLOCKED,
@@ -64,7 +66,8 @@ class AipModelRuntimeResolver:
         return ModelRouteResolution(
             tenant={"orgId": scope.org_id, "projectId": scope.project_id},
             route=route_ref, policy=policy_ref, readiness=ModelRuntimeReadiness.READY,
-            selectedModel=selected_model, selectedProvider=selected_provider, resolvedAt=resolved_at,
+            selectedModel=selected_model, selectedProvider=selected_provider,
+            selectedPriceSnapshot=selected_price_snapshot, resolvedAt=resolved_at,
         )
 
     def _candidate(self, scope: TenantScope, model_ref: VersionedAssetRef, route, now: datetime):
@@ -72,7 +75,7 @@ class AipModelRuntimeResolver:
         try:
             model = self._store.get_model(scope, model_ref.asset_id, model_ref.revision)
         except ModelRuntimeStoreError:
-            return ["model_unavailable"], None, None
+            return ["model_unavailable"], None, None, None
         if model.content_hash != model_ref.content_hash:
             blockers.append("model_drifted")
         if model.lifecycle is not ModelRuntimeLifecycle.ACTIVE:
@@ -83,6 +86,21 @@ class AipModelRuntimeResolver:
             blockers.append("model_capability_mismatch")
         if not self._gate_passed(scope, model.eval_gate_ref):
             blockers.append("model_eval_gate_not_passed")
+        price_ref = model.price_snapshot_ref
+        try:
+            price = self._store.get_price_snapshot(
+                scope, model.price_snapshot_ref.asset_id, model.price_snapshot_ref.revision
+            )
+            if price.content_hash != model.price_snapshot_ref.content_hash:
+                blockers.append("model_price_snapshot_drifted")
+            elif price.lifecycle is not ModelRuntimeLifecycle.ACTIVE:
+                blockers.append("model_price_snapshot_not_active")
+            elif price.effective_from > now or (
+                price.effective_until is not None and price.effective_until <= now
+            ):
+                blockers.append("model_price_snapshot_not_effective")
+        except ModelRuntimeStoreError:
+            blockers.append("model_price_snapshot_unavailable")
         provider_ref = model.provider
         try:
             provider = self._store.get_provider(scope, provider_ref.asset_id, provider_ref.revision)
@@ -95,7 +113,7 @@ class AipModelRuntimeResolver:
         if not self._health_is_fresh(scope, provider_ref, now):
             blockers.append("provider_health_unavailable_or_stale")
         exact_model = self._ref("RegisteredModelRevision", model.registered_model_id, model.revision, model.content_hash)
-        return blockers, exact_model, provider_ref
+        return blockers, exact_model, provider_ref, price_ref
 
     @staticmethod
     def _ref(kind: str, asset_id: str, revision: int, content_hash: str) -> VersionedAssetRef:

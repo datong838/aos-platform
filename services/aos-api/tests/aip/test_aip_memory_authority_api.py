@@ -21,6 +21,7 @@ from aos_api.aip_memory_contracts import (
 from aos_api.aip_memory_readiness import (
     KnowledgeAuthorityAvailability,
     KnowledgeReadiness,
+    KnowledgeSearchCapability,
     KnowledgeSearchReadiness,
 )
 from aos_api.aip_memory_search_index import SearchCapability
@@ -360,9 +361,9 @@ def test_knowledge_readiness_uses_principal_scope(memory_api) -> None:
                 search=KnowledgeSearchReadiness(
                     reference_count=0, provider_configured=True,
                     capabilities=[
-                        SearchCapability(lane="fulltext", status="unbuilt", reason_code="capability_not_registered", version=1, observed_at=NOW),
-                        SearchCapability(lane="vector", status="degraded", reason_code="degraded_vector_unavailable", version=1, observed_at=NOW),
-                        SearchCapability(lane="rerank", status="unbuilt", reason_code="capability_not_registered", version=1, observed_at=NOW),
+                        KnowledgeSearchCapability(lane="fulltext", status="unbuilt", reason_code="capability_not_registered", version=1, observed_at=NOW),
+                        KnowledgeSearchCapability(lane="vector", status="degraded", reason_code="degraded_vector_unavailable", version=1, observed_at=NOW),
+                        KnowledgeSearchCapability(lane="rerank", status="unbuilt", reason_code="capability_not_registered", version=1, observed_at=NOW),
                     ], blockers=["search_reference_missing"],
                 ),
                 eval=KnowledgeAuthorityAvailability(status="authority_unavailable", blocker="gold_set_registry_authority_unavailable"),
