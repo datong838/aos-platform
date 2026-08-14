@@ -1,0 +1,112 @@
+{
+  "schema": "aos-workshop-browser-evidence/v1",
+  "task_id": "workshop-w1-10-readonly-http-browser-20260814",
+  "source_commit": "de2326d",
+  "tenant": {
+    "org_id": "org-org",
+    "project_id": "dev-project"
+  },
+  "runtime": {
+    "api_url": "http://127.0.0.1:8000",
+    "web_url": "http://127.0.0.1:5184",
+    "database_migration_mode": "disabled",
+    "qyh_cron_enabled": false,
+    "startup_schema_bootstrap": "skipped",
+    "servers_stopped_after_acceptance": true
+  },
+  "result": "FAIL_CLOSED_GREEN_POSITIVE_ACTIVE_INSTALLATION_REPLACEMENT_BLOCKED",
+  "http": {
+    "health_status": 200,
+    "me_status": 200,
+    "real_catalog_status": 500,
+    "real_catalog_code": "REGISTRY_INTEGRITY_CORRUPT",
+    "canary_catalog_status": 500,
+    "canary_catalog_code": "REGISTRY_INTEGRITY_CORRUPT",
+    "catalog_data_leaked": false
+  },
+  "browser": {
+    "viewports": [
+      {
+        "width": 1280,
+        "height": 900,
+        "horizontal_overflow": false,
+        "h1": "应用列表",
+        "alert": "读取失败 / 正式服务未返回可验证结果。",
+        "screenshot": "2026-08-14-w1-10-browser/workshop-1280x900.png",
+        "screenshot_sha256": "6ea62969a8d4558d3ab359648572f330f3a50b89175d6e83fbbeb5c880ce9559"
+      },
+      {
+        "width": 1440,
+        "height": 900,
+        "horizontal_overflow": false,
+        "h1": "应用列表",
+        "alert": "读取失败 / 正式服务未返回可验证结果。",
+        "screenshot": "2026-08-14-w1-10-browser/workshop-1440x900.png",
+        "screenshot_sha256": "e292d790c369cbb6751db870d9c50902d930e6b34fdb5fab96e0016cb2529dcd"
+      },
+      {
+        "width": 1920,
+        "height": 1080,
+        "horizontal_overflow": false,
+        "h1": "应用列表",
+        "alert": "读取失败 / 正式服务未返回可验证结果。",
+        "screenshot": "2026-08-14-w1-10-browser/workshop-1920x1080.png",
+        "screenshot_sha256": "83584dc477aed1c3d7c11cd96c4123ead4c30e7d4e67884787a032ec5ea23bf8"
+      }
+    ],
+    "canonical_routes": [
+      "/workshop/task-cockpit",
+      "/workshop/content-campaign",
+      "/workshop/operations",
+      "/workshop/creator-outreach",
+      "/workshop/media-studio",
+      "/workshop/analyst",
+      "/workshop/pricing-governance",
+      "/workshop/customer"
+    ],
+    "canonical_route_observation": "All eight routes remained reachable with one H1, no horizontal overflow, the same explicit failed alert, and no sample business module.",
+    "keyboard_retry": {
+      "tag": "BUTTON",
+      "tab_index": 0,
+      "enter_and_click_refetch_verified": true,
+      "failed_state_preserved": true
+    },
+    "network": {
+      "catalog_statuses": [500],
+      "loading_failures": 0
+    },
+    "console_errors": 0,
+    "console_warnings": {
+      "count_observed": 20,
+      "classification": "Repeated React Router v7 future-flag warnings across navigations; no uncaught application error."
+    },
+    "legacy_negative_gate": {
+      "route": "/workshop/orders",
+      "final_path": "/workshop/orders",
+      "h1": "订单管理系统",
+      "meaning": "Without a verifiable active installation the legacy route is not silently replaced."
+    }
+  },
+  "database_before_and_after": {
+    "schedule_runs": 85,
+    "latest_schedule_run": "2026-08-14T05:00:02.222454+00:00",
+    "installations": 17,
+    "active_installations": 5,
+    "uninstall_events": 0,
+    "canary_installations": 0,
+    "changed": false
+  },
+  "accepted": [
+    "Real service and real tenant fail closed without sample fallback.",
+    "Eight canonical routes, three viewports, keyboard retry, network and console were observed through the built-in browser.",
+    "Cron and migration side effects stayed disabled; the database counters and latest schedule-run identity did not change.",
+    "Canary did not disclose Workshop modules."
+  ],
+  "not_claimed": [
+    "A positive eight-module active-installation projection.",
+    "A positive legacy-route replacement under an exact active installation lock.",
+    "Repair of the historical real-tenant Registry or any installation mutation.",
+    "Full W1-10 GREEN or authorization to start W2 coding."
+  ],
+  "blocker": "The real org catalog is REGISTRY_INTEGRITY_CORRUPT with five historical active pointers. Positive active-installation and legacy-replacement acceptance requires a separately authorized real-effect reconciliation task and Receipt."
+}
