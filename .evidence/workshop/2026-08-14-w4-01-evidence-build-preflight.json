@@ -1,0 +1,81 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w4-01-evidence-build-preflight-20260814",
+  "authorityRevision": "AOS-000024",
+  "result": "W4_01_EVIDENCE_BUILD_PREFLIGHT_FACTS_FROZEN",
+  "implementationStatus": "AUTHORITY_PRESENT_BUILD_JOB_MISSING",
+  "dependencyStatus": "BLOCKED_W3_EXIT_REQUIRED_FACTS_PROFILE_AND_EVIDENCE_GOVERNANCE",
+  "observations": {
+    "evidenceBundlePostgresqlAuthorityPresent": true,
+    "canonicalCreateListGetRoutesPresent": true,
+    "strictReadSdkPresent": true,
+    "evidenceBuildJobPresent": false,
+    "requiredFactsProfilePresent": false,
+    "domainProfileCount": 0,
+    "serverComputesCoverage": false,
+    "serverComputesMissing": false,
+    "serverComputesConflicts": false,
+    "serverComputesUncertainties": false,
+    "serverComputesFreshness": false,
+    "serverValidatesLicenseAndPurpose": false,
+    "callerSuppliesAssessmentFields": true,
+    "serverValidatesFrozenBriefAndEvidenceHash": true,
+    "baseEvidenceHasRevisionLifecycle": false,
+    "baseEvidenceHasRevokeState": false,
+    "baseEvidenceRuntimeUpdateDeleteGrant": true,
+    "baseEvidenceMutationGuardFound": false
+  },
+  "findings": [
+    {
+      "id": "DEP-EVIDENCE-BUILD-JOB",
+      "severity": "P0",
+      "finding": "the current create endpoint persists caller-authored assessment fields and is not an authoritative Evidence Build Job"
+    },
+    {
+      "id": "DEP-EVIDENCE-REQUIRED-FACTS-PROFILES",
+      "severity": "P0",
+      "finding": "no signed required-facts or evidence-selection profiles exist for the eight Workshop modules"
+    },
+    {
+      "id": "DEP-EVIDENCE-IMMUTABILITY-REVOKE",
+      "severity": "P0",
+      "finding": "aip_evidence has no revision or revoke lifecycle and the initial migration grants runtime UPDATE and DELETE without a discovered mutation guard"
+    },
+    {
+      "id": "DEP-EVIDENCE-MINIMUM-DISCLOSURE",
+      "severity": "P1",
+      "finding": "the Bundle store does not evaluate purpose, marking, license, redaction or minimum-disclosure policy when selecting evidence"
+    }
+  ],
+  "decisions": [
+    "retain the existing EvidenceBundle revision table as the persistence authority",
+    "add a generic Build Job and profile resolver instead of allowing Workshop to calculate authoritative coverage",
+    "publish eight module required-facts profiles as signed domain or solution artifacts resolved through exact installation locks",
+    "close Evidence immutability and revoke semantics before implementing source-revoke or hash-drift rebuild behavior",
+    "treat the existing create API as a low-level authority command, not W4-01 completion evidence",
+    "do not copy evidence payload into Workshop read models or frontend state"
+  ],
+  "verification": {
+    "command": "uv run --project services/aos-api pytest -q services/aos-api/tests/test_w2a_production_contract_store.py services/aos-api/tests/test_w2a_production_contract_api.py",
+    "result": "6 passed, 7 warnings",
+    "interpretation": "existing persistence behavior is stable; the missing Build Job and governance are unimplemented requirements rather than current regression failures"
+  },
+  "hashes": {
+    "contracts": "d89d8c6e2076360c41260fa1a43e076c281f5ba2760d4e74f6670f6327ab3d11",
+    "store": "a682142a2caf7ad56a49d724caeafbea82c0cff9bb220b6a9e5cef9878c83708",
+    "router": "f8fca466f6f3c03c467eff7f1189f0f0cb8e412882be27010bd14d48482dceaf",
+    "baseEvidenceMigration": "f938ef5b67b62972192cae7ef293e1f22225dc1c9e236d2f78feb84bb22f5fcf",
+    "bundleMigration": "49bd74820e667cd0c9f1033525a00810d590ea07d5a04a12c6d0cb327125abfd",
+    "webContracts": "fd8c7f34f201590ffd5db129a32ccc1024a1d6ec7fb0f9cca1a38c412097cccc",
+    "webParser": "d18448f6f9751db4792ff60f4be863f6ee6a162053ade60c5d082fec6f72b9c2"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "aipW2D3FilesTouched": false,
+    "migrationLeaseAcquired": false
+  },
+  "nextGate": "Review and authorize a generic Evidence Build and governance wave after W3; migrations require the unique migration lease and exact compatibility review."
+}
