@@ -1,0 +1,42 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "aip-w2d0-impact-start-contracts-20260814",
+  "branch": "w1-aip",
+  "baselineCommit": "a994f03c542779fa085aeac1337f829758f18213",
+  "commits": [
+    "53dd5382c8d9d6ac7bab0a1c8f25ecef7e251d17"
+  ],
+  "plan": {
+    "path": "docs/palantier/20_tech/电商平台接入/AIP通用能力实施方案/29-AIP-W2-D-ImpactPreview与Start组合门实施清单.md",
+    "sha256": "979d12d0bfb4c7fb67926e3de42979e7baa892f944398f58932654f8dfeee515",
+    "status": "W2D0_IMPLEMENTED_GREEN / W2D1_MIGRATION_LEASE_REQUIRED"
+  },
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/aip_production_contracts.py",
+      "beforeSha256": "c1776657739e9e1a225a37cfd30118b5b0c8f6714e988f1214b5bcc00f1f1caf",
+      "afterSha256": "d89d8c6e2076360c41260fa1a43e076c281f5ba2760d4e74f6670f6327ab3d11"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_w2d_contracts.py",
+      "beforeSha256": null,
+      "afterSha256": "885a8d2c2898a16c1190ab02e9b1f9c062ecb8be3f55b64288f231d22576a0a2"
+    }
+  ],
+  "verification": {
+    "backendCumulative": "18 passed: W2-D0 + W2-C + W2-B",
+    "compileall": "GREEN",
+    "diffCheck": "GREEN",
+    "contractReview": "GREEN after failing closed partial freeze metadata and ambiguous readiness/blocker combinations",
+    "databaseMigration": "NOT_APPLICABLE_W2D0",
+    "realTenantSideEffects": "NONE",
+    "workshopIsolation": "No read or write of w2-workshop uncommitted worktree"
+  },
+  "status": "W2D0_IMPLEMENTED_GREEN",
+  "knownBoundaries": [
+    "W2-D1 migration and Store are not started until the unique Alembic migration Lease is available",
+    "No Preview or Start API is exposed in W2-D0",
+    "No TaskRun, AgentRun, Provider call, approval, lease or tenant data mutation occurred"
+  ],
+  "next": "Complete the W2-D0 task Lease and serialize the safe m1 integration checkpoint; then acquire the unique Alembic migration Lease before W2-D1."
+}
