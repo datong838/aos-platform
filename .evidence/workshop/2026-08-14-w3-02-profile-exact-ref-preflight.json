@@ -1,0 +1,46 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w3-02-profile-preflight-20260814",
+  "authorityRevision": "AOS-000023",
+  "workshopHead": "740b979851b8b478aaf807dc69c422bd710c3772",
+  "aipIntegratedHead": "79901dffc6497a2c50f2f15b0d02f86766126c9f",
+  "result": "W3_02_PROFILE_PREFLIGHT_FACTS_FROZEN",
+  "implementationStatus": "NOT_STARTED",
+  "dependencyStatus": "BLOCKED_DEP_C0_PROFILE_RESOLVER_AND_W2_EXIT_GATE",
+  "observations": {
+    "moduleCount": 8,
+    "emptyResponsibilityTemplateRefCount": 8,
+    "emptyProductionContractRefCount": 8,
+    "placeholderEvalRefCount": 6,
+    "legacyLogicDryRunEvalRefCount": 2,
+    "productionRouterUsesDefaultStore": true,
+    "productionResponsibilityTemplateResolverWired": false,
+    "aipCommonAuthoritiesAndSdkPresent": true
+  },
+  "decisions": [
+    "add DEP-C0-PROFILE-RESOLVER as an explicit Workshop dependency",
+    "keep common ecommerce profile envelopes in a new immutable domain.ecommerce.core revision",
+    "publish module-specific profiles only through new immutable SolutionPack revisions",
+    "resolve profile artifacts through installation lock and exact artifact hash",
+    "task-cockpit remains reference-only and cannot create a second supervisory Brief authority",
+    "do not use placeholder or historical Logic dry-run Eval as production profile evidence"
+  ],
+  "hashes": {
+    "eightModuleContributionAggregate": "680c87407f4d8ee6d030d36b2af0e1d6a00fbbd59cbdc9892846e7c42e905e97",
+    "aipContracts": "d89d8c6e2076360c41260fa1a43e076c281f5ba2760d4e74f6670f6327ab3d11",
+    "aipStore": "a682142a2caf7ad56a49d724caeafbea82c0cff9bb220b6a9e5cef9878c83708",
+    "aipRouter": "f8fca466f6f3c03c467eff7f1189f0f0cb8e412882be27010bd14d48482dceaf",
+    "webContracts": "fd8c7f34f201590ffd5db129a32ccc1024a1d6ec7fb0f9cca1a38c412097cccc",
+    "webParser": "d18448f6f9751db4792ff60f4be863f6ee6a162053ade60c5d082fec6f72b9c2",
+    "preflightAdr": "c7741c6931d727ab067d635beffefaf6e93023ef5cd6be9d7a5a8f95c2dce674"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "bundleChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "migrationLeaseAcquired": false
+  },
+  "nextGate": "AIP or Asset Registry owner must wire the generic installed-production-profile resolver; W3-02 publication also waits for the W2 exit gate."
+}
