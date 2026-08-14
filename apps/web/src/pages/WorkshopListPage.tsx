@@ -2,6 +2,11 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiPost } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
+import {
+  AsyncStateBoundary,
+  isReplacedLegacyWorkshopRoute,
+  useEcommerceWorkshopCatalog,
+} from "../components/workshop";
 
 /* ============================================================================
  * 226 · 严格对齐 foundry/html/workshop.html
@@ -222,14 +227,25 @@ export function getCategoryColor(category: string | undefined): string {
 
 export function WorkshopListPage() {
   const [filter, setFilter] = useState<CategoryId>("all");
+  const workshopCatalog = useEcommerceWorkshopCatalog();
+
+  const availablePlatformApps = useMemo(
+    () => CATALOG_APPS.filter(
+      (app) => !isReplacedLegacyWorkshopRoute(workshopCatalog.modules, app.entryPath),
+    ),
+    [workshopCatalog.modules],
+  );
 
   const recentApps = useMemo(
     () =>
-      RECENT_DEFAULT_IDS.map((id) => CATALOG_APPS.find((a) => a.id === id)!).filter(Boolean),
-    [],
+      RECENT_DEFAULT_IDS.map((id) => availablePlatformApps.find((a) => a.id === id)!).filter(Boolean),
+    [availablePlatformApps],
   );
 
-  const filteredApps = useMemo(() => filterCatalog(CATALOG_APPS, filter), [filter]);
+  const filteredApps = useMemo(
+    () => filterCatalog(availablePlatformApps, filter),
+    [availablePlatformApps, filter],
+  );
 
   async function handleTouch(id: string) {
     try {
@@ -246,7 +262,7 @@ export function WorkshopListPage() {
           <div className="wl-head-text">
             <h1 className="wl-head-title">应用列表</h1>
             <p className="wl-head-lede">
-              按业务场景打开模块。风险告警管理、对象探索、智能助手等都是从这里打开的模块，不是并列产品。
+              已安装电商工作台来自当前 active installation；平台辅助模块单独列出，不作为八个业务 Module。
             </p>
           </div>
           <Link to="/workshop/create" data-testid="btn-new-module" className="wl-btn-new">
@@ -257,11 +273,50 @@ export function WorkshopListPage() {
           </Link>
         </div>
 
-        {/* 最近使用 */}
-        <section className="wl-panel" data-testid="recent-section">
+        <section className="wl-panel" data-testid="installed-ecommerce-section">
           <div className="wl-panel-head">
-            <h2 className="wl-panel-title">最近使用</h2>
-            <span className="wl-panel-meta">按打开时间排序</span>
+            <h2 className="wl-panel-title">已安装电商工作台</h2>
+            <span className="wl-panel-meta">active installation · {workshopCatalog.modules.length} 个</span>
+          </div>
+          {workshopCatalog.phase === "loading" ? (
+            <AsyncStateBoundary state="loading" />
+          ) : workshopCatalog.phase === "forbidden" ? (
+            <AsyncStateBoundary state="forbidden" />
+          ) : workshopCatalog.phase === "failed" && workshopCatalog.modules.length === 0 ? (
+            <AsyncStateBoundary
+              state="failed"
+              action={<button type="button" onClick={workshopCatalog.reload}>重新读取目录</button>}
+            />
+          ) : workshopCatalog.modules.length === 0 ? (
+            <AsyncStateBoundary state="not-installed" />
+          ) : (
+            <>
+              {workshopCatalog.phase === "stale" ? (
+                <AsyncStateBoundary state="stale" dataCutoff={workshopCatalog.response?.dataCutoff ?? null} />
+              ) : null}
+              <div className="wl-grid" data-testid="installed-ecommerce-grid">
+                {workshopCatalog.modules.map((module) => (
+                  <article key={`${module.moduleId}:${module.moduleRef.moduleArtifactHash}`} className="wl-mod-card">
+                    <Link to={module.route} className="wl-mod-main">
+                      <div className="wl-mod-eyebrow is-purple">已安装 · {module.readiness}</div>
+                      <div className="wl-mod-title is-purple">{module.menuLabel}</div>
+                      <p className="wl-mod-desc">{module.moduleId} · {module.moduleRef.bundleId}@{module.moduleRef.version}</p>
+                    </Link>
+                    <div className="wl-mod-actions">
+                      <Link to={module.route}>▶ 打开运行态</Link>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+
+        {/* 平台辅助模块固定入口 */}
+        {recentApps.length > 0 ? <section className="wl-panel" data-testid="recent-section">
+          <div className="wl-panel-head">
+            <h2 className="wl-panel-title">常用平台辅助模块</h2>
+            <span className="wl-panel-meta">平台固定入口</span>
           </div>
           <div className="wl-grid" data-testid="recent-scroll">
             {recentApps.map((app) => (
@@ -285,12 +340,12 @@ export function WorkshopListPage() {
               </article>
             ))}
           </div>
-        </section>
+        </section> : null}
 
-        {/* 全部应用 */}
+        {/* 平台辅助模块 */}
         <section className="wl-panel" data-testid="all-section">
           <div className="wl-panel-head">
-            <h2 className="wl-panel-title">全部应用</h2>
+            <h2 className="wl-panel-title">平台辅助模块</h2>
             <div className="wl-cat-row" data-testid="category-filters">
               {CATEGORIES.map((cat) => (
                 <button

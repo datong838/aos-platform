@@ -162,6 +162,9 @@ body,
 .aside.is-collapsed { width: 48px; }
 .aside.is-collapsed .aos-nav-label,
 .aside.is-collapsed .aos-nav-section-toggle,
+.aside.is-collapsed .ecommerce-workshop-readiness-dot,
+.aside.is-collapsed .ecommerce-workshop-nav-message,
+.aside.is-collapsed .ecommerce-workshop-nav-retry,
 .aside.is-collapsed .brand-block,
 .aside.is-collapsed .aside-foot { display: none; }
 .aside.is-collapsed .aos-nav-link { justify-content: center; padding: 8px 0; }

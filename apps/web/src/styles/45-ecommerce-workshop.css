@@ -1,0 +1,206 @@
+.ecommerce-workshop-installed-navigation {
+  display: grid;
+  gap: 2px;
+}
+
+.ecommerce-workshop-nav-link {
+  padding-left: 16px;
+}
+
+.ecommerce-workshop-nav-glyph {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  box-shadow: 3px -3px 0 -2px var(--aos-aside), 3px -3px 0 -0.5px currentColor;
+}
+
+.ecommerce-workshop-readiness-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  color: var(--aos-text-tertiary);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.ecommerce-workshop-readiness-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--aos-text-tertiary);
+}
+.ecommerce-workshop-readiness-status.is-available { color: var(--aos-green); }
+.ecommerce-workshop-readiness-status.is-degraded,
+.ecommerce-workshop-readiness-status.is-unknown { color: var(--aos-amber); }
+.ecommerce-workshop-readiness-status.is-disabled,
+.ecommerce-workshop-readiness-status.is-blocked { color: var(--aos-red); }
+.ecommerce-workshop-readiness-status .ecommerce-workshop-readiness-dot {
+  background: currentColor;
+}
+
+.ecommerce-workshop-nav-message,
+.ecommerce-workshop-nav-retry {
+  margin: 4px 8px;
+  padding: 7px 8px;
+  border: 1px solid var(--aos-border);
+  background: var(--aos-surface-hover);
+  color: var(--aos-text-tertiary);
+  font: inherit;
+  text-align: left;
+}
+.ecommerce-workshop-nav-retry { cursor: pointer; }
+.ecommerce-workshop-nav-message.is-error { color: var(--aos-red); }
+.ecommerce-workshop-nav-message.is-stale { color: var(--aos-amber); }
+
+.ecommerce-workshop-shell,
+.ecommerce-workshop-host-state {
+  min-width: 0;
+  color: var(--aos-text);
+}
+
+.ecommerce-workshop-skip-link {
+  position: absolute;
+  left: -10000px;
+  top: 8px;
+  z-index: 100;
+  padding: 8px 12px;
+  background: var(--aos-surface);
+  color: var(--aos-accent);
+  border: 1px solid var(--aos-accent);
+}
+.ecommerce-workshop-skip-link:focus { left: 12px; }
+
+.ecommerce-workshop-context-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+.ecommerce-workshop-context-header h1,
+.ecommerce-workshop-host-state h1 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.3;
+}
+.ecommerce-workshop-eyebrow,
+.ecommerce-workshop-alias {
+  margin: 0 0 5px;
+  color: var(--aos-text-tertiary);
+}
+.ecommerce-workshop-alias { margin-top: 5px; }
+.ecommerce-workshop-context-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.ecommerce-workshop-readiness-badge,
+.ecommerce-workshop-blocker-state {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--aos-border);
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--aos-text-secondary);
+}
+.ecommerce-workshop-readiness-badge.is-available { color: var(--aos-green); border-color: var(--aos-green-border); }
+.ecommerce-workshop-readiness-badge.is-degraded { color: var(--aos-amber); }
+.ecommerce-workshop-readiness-badge.is-disabled,
+.ecommerce-workshop-readiness-badge.is-blocked { color: var(--aos-red); border-color: var(--aos-red-border); }
+.ecommerce-workshop-focus-button,
+.ecommerce-workshop-state-action button {
+  border: 1px solid var(--aos-border);
+  background: var(--aos-surface);
+  color: var(--aos-text);
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.ecommerce-workshop-focus-button:hover,
+.ecommerce-workshop-focus-button:focus-visible,
+.ecommerce-workshop-state-action button:focus-visible {
+  border-color: var(--aos-accent);
+  outline: 2px solid var(--aos-accent-light);
+}
+
+.ecommerce-workshop-context-refs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0 0 20px;
+  border: 1px solid var(--aos-border);
+  background: var(--aos-border);
+}
+.ecommerce-workshop-context-refs div {
+  min-width: 0;
+  padding: 10px 12px;
+  background: var(--aos-surface);
+}
+.ecommerce-workshop-context-refs dt { color: var(--aos-text-tertiary); font-size: 11px; }
+.ecommerce-workshop-context-refs dd { margin: 3px 0 0; overflow-wrap: anywhere; }
+
+.ecommerce-workshop-state-summary,
+.ecommerce-workshop-view-pending,
+.ecommerce-workshop-blockers {
+  border: 1px solid var(--aos-border);
+  background: var(--aos-surface);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.ecommerce-workshop-state-summary {
+  display: grid;
+  gap: 5px;
+  border-left: 3px solid var(--aos-text-tertiary);
+}
+.ecommerce-workshop-state.is-failed .ecommerce-workshop-state-summary,
+.ecommerce-workshop-state.is-forbidden .ecommerce-workshop-state-summary,
+.ecommerce-workshop-state.is-blocked .ecommerce-workshop-state-summary { border-left-color: var(--aos-red); }
+.ecommerce-workshop-state.is-stale .ecommerce-workshop-state-summary,
+.ecommerce-workshop-state.is-partial .ecommerce-workshop-state-summary,
+.ecommerce-workshop-state.is-unknown .ecommerce-workshop-state-summary { border-left-color: var(--aos-amber); }
+.ecommerce-workshop-state-summary span,
+.ecommerce-workshop-state-summary small,
+.ecommerce-workshop-view-pending p,
+.ecommerce-workshop-blockers > p { color: var(--aos-text-secondary); }
+.ecommerce-workshop-state-action { margin-top: 4px; }
+.ecommerce-workshop-preserved-content { opacity: 0.82; }
+.ecommerce-workshop-view-pending h2,
+.ecommerce-workshop-blockers h2 { margin: 0 0 6px; font-size: 16px; }
+
+.ecommerce-workshop-blockers ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0;
+}
+.ecommerce-workshop-blockers li {
+  min-width: 0;
+  border: 1px solid var(--aos-border);
+  padding: 12px;
+}
+.ecommerce-workshop-blockers li > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.ecommerce-workshop-blockers code { display: block; margin-top: 8px; overflow-wrap: anywhere; }
+.ecommerce-workshop-blockers li p { margin: 8px 0; color: var(--aos-text-secondary); }
+.ecommerce-workshop-blockers li small { color: var(--aos-text-tertiary); overflow-wrap: anywhere; }
+
+.p-app.is-workshop-focus > .p-nav-global,
+.p-app.is-workshop-focus .aside { display: none; }
+
+@media (max-width: 1439px) {
+  .ecommerce-workshop-context-refs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 1279px) {
+  .ecommerce-workshop-context-header { align-items: stretch; flex-direction: column; }
+  .ecommerce-workshop-context-actions { justify-content: space-between; }
+  .ecommerce-workshop-context-refs,
+  .ecommerce-workshop-blockers ul { grid-template-columns: 1fr; }
+}

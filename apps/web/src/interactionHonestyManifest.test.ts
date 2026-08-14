@@ -16,6 +16,17 @@ const ONTOLOGY_ROUTES = [
 
 const AIP_AUTHORITY_ROUTES = ["/aip/memory-governance"] as const;
 
+const ECOMMERCE_WORKSHOP_ROUTES = [
+  "/workshop/task-cockpit",
+  "/workshop/content-campaign",
+  "/workshop/operations",
+  "/workshop/creator-outreach",
+  "/workshop/media-studio",
+  "/workshop/analyst",
+  "/workshop/pricing-governance",
+  "/workshop/customer",
+] as const;
+
 describe("O1-UX0 · interaction honesty coverage", () => {
   it("registers each ontology digital-twin route exactly once", () => {
     const routes = INTERACTION_HONESTY_MANIFEST.map((entry) => entry.route);
@@ -23,6 +34,9 @@ describe("O1-UX0 · interaction honesty coverage", () => {
       expect(routes.filter((candidate) => candidate === route)).toHaveLength(1);
     }
     for (const route of AIP_AUTHORITY_ROUTES) {
+      expect(routes.filter((candidate) => candidate === route)).toHaveLength(1);
+    }
+    for (const route of ECOMMERCE_WORKSHOP_ROUTES) {
       expect(routes.filter((candidate) => candidate === route)).toHaveLength(1);
     }
     expect(new Set(routes).size).toBe(routes.length);
