@@ -1,0 +1,66 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w5-07-real-canary-kill-doc-ledger-20260814",
+  "authorityRevision": "AOS-000026",
+  "repositoryRevisionBefore": "b37252da816f6c8457bf5241425a24318662cfdc",
+  "result": "W5_07_REAL_CANARY_KILL_DOC_LEDGER_ALIGNED",
+  "sourceEvidence": ".evidence/workshop/2026-08-14-w5-07-real-canary-kill-preflight.json",
+  "decision": "PROTOCOL_BASELINE_APPROVED_REAL_CANARY_REMAINS_BLOCKED",
+  "reviewLoop": [
+    {
+      "round": 1,
+      "finding": "W5-07 only named a real canary and kill drill but did not freeze the exact authorization, kill authority, in-flight semantics, evidence or exit gates.",
+      "remediation": "added ADR47 and aligned the Action chain, Adapter release gate and D-wave dependencies."
+    },
+    {
+      "round": 2,
+      "finding": "rechecked tenant boundaries, dependency closure, no-adapter state, kill propagation, in-flight reconciliation, receipt semantics and checklist status.",
+      "remediation": "no further defect found; retained W5-07 unchecked and real execution explicitly blocked."
+    }
+  ],
+  "documents": [
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/03-TaskHandoff与Action闭环.md",
+      "sha256Before": "59c2495e08076750d7607af892d9d9d7cc78222c15c69a8fd7fe9afd06f46f79",
+      "sha256After": "6619d569d484726b96f18604245fffdbb33eee26bb1fdcf99e33fdb1dcd7e5fe"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/19-Adapter能力矩阵与降级策略.md",
+      "sha256Before": "bc0fe48964619fc11db3bbd7acaa6ff265fd75d9b72e77c6f4f83a1c0e2887b8",
+      "sha256After": "e735caa5c85602d641a5c41f27176dc62ad039325eb505278b92954cbfc6c387"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/47-W5-07-org-org小流量Canary与Kill演练预检ADR.md",
+      "sha256Before": null,
+      "sha256After": "ff788cb12add8b2d3200bee5b5ce771228a43061a3646eac86dcf056e0741c7c"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "sha256Before": "28bdcccd4264aaf095a2f68e53260632ec1d1610f008f867e0b018371dd1f5dd",
+      "sha256After": "5c1d8dec7985e7546273b3e020ac1d2364b7d980c017f2efba92b2338331d982"
+    }
+  ],
+  "verification": {
+    "jsonValid": true,
+    "documentHashesMatched": true,
+    "twoRoundReviewComplete": true,
+    "w5_07Checked": false,
+    "realCanaryExecuted": false,
+    "sourceCodeChanged": false,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false
+  },
+  "blockers": [
+    "W5_00_THROUGH_W5_06_NOT_IMPLEMENTED_GREEN",
+    "DEP_CANARY_PRODUCTION_ADAPTER",
+    "DEP_CANARY_EXPLICIT_AUTHORIZATION",
+    "DEP_CANARY_EXACT_SCOPE",
+    "DEP_KILL_POLICY_AUTHORITY",
+    "DEP_KILL_ACCOUNT_ADAPTER_SCOPE",
+    "DEP_KILL_INFLIGHT_SEMANTICS",
+    "DEP_KILL_DRILL_RECEIPT",
+    "DEP_CANARY_OBSERVABILITY_EXIT",
+    "DEP_CANARY_COMPENSATION_DRILL"
+  ]
+}
