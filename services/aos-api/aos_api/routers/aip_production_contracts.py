@@ -17,6 +17,12 @@ from aos_api.aip_production_contracts import (
     EvalContractListResponse, CreateResponsibilityPlanRequest,
     ReviseResponsibilityPlanRequest, ResponsibilityPlanRevision,
     ResponsibilityPlanListResponse,
+    ArtifactRelation, ArtifactRelationListResponse, CompileStageTemplateRequest,
+    CreateArtifactRelationRequest, CreateReviewIssueRequest,
+    CreateStageTemplateRequest, ResolveReviewIssueRequest, ReturnDecision,
+    ReturnReviewIssueRequest, ReviseStageTemplateRequest, ReviewIssue,
+    ReviewIssueListResponse, StageCompilationResult, StageTemplateListResponse,
+    StageTemplateRevision,
 )
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
@@ -160,4 +166,82 @@ def revise_responsibility_plan(plan_id: str, body: ReviseResponsibilityPlanReque
 @router.post("/responsibility-plans/{plan_id}/freeze", response_model=ResponsibilityPlanRevision)
 def freeze_responsibility_plan(plan_id: str, body: FreezeContractRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
     try: return store.freeze_responsibility_plan(_scope(principal), principal.subject, plan_id, body.expected_version, _key(idempotency_key))
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/stage-templates", response_model=StageTemplateRevision, status_code=201)
+def create_stage_template(body: CreateStageTemplateRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.create_stage_template(_scope(principal), principal.subject, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/stage-templates", response_model=StageTemplateListResponse)
+def list_stage_templates(principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.list_stage_templates(_scope(principal))
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/stage-templates/{template_id}", response_model=StageTemplateRevision)
+def get_stage_template(template_id: str, revision: int | None = Query(default=None, ge=1), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.get_stage_template(_scope(principal), template_id, revision)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/stage-templates/{template_id}/revisions", response_model=StageTemplateRevision, status_code=201)
+def revise_stage_template(template_id: str, body: ReviseStageTemplateRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.revise_stage_template(_scope(principal), principal.subject, template_id, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/stage-templates/{template_id}/freeze", response_model=StageTemplateRevision)
+def freeze_stage_template(template_id: str, body: FreezeContractRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.freeze_stage_template(_scope(principal), principal.subject, template_id, body.expected_version, _key(idempotency_key))
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/stage-templates/{template_id}/compile", response_model=StageCompilationResult, status_code=201)
+def compile_stage_template(template_id: str, body: CompileStageTemplateRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.compile_stage_template(_scope(principal), principal.subject, template_id, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/artifact-relations", response_model=ArtifactRelation, status_code=201)
+def create_artifact_relation(body: CreateArtifactRelationRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.create_artifact_relation(_scope(principal), principal.subject, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/artifact-relations", response_model=ArtifactRelationListResponse)
+def list_artifact_relations(principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.list_artifact_relations(_scope(principal))
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/review-issues", response_model=ReviewIssue, status_code=201)
+def create_review_issue(body: CreateReviewIssueRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.create_review_issue(_scope(principal), principal.subject, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/review-issues", response_model=ReviewIssueListResponse)
+def list_review_issues(principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.list_review_issues(_scope(principal))
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/review-issues/{issue_id}", response_model=ReviewIssue)
+def get_review_issue(issue_id: str, principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.get_review_issue(_scope(principal), issue_id)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/review-issues/{issue_id}/resolve", response_model=ReviewIssue)
+def resolve_review_issue(issue_id: str, body: ResolveReviewIssueRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.resolve_review_issue(_scope(principal), principal.subject, issue_id, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/review-issues/{issue_id}/return", response_model=ReturnDecision, status_code=201)
+def return_review_issue(issue_id: str, body: ReturnReviewIssueRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.return_review_issue(_scope(principal), principal.subject, issue_id, _key(idempotency_key), body)
     except ProductionContractError as exc: raise _map(exc) from exc

@@ -126,3 +126,125 @@ export type ResponsibilityPlanRevision = CreateResponsibilityPlanInput & {
   createdAt: string;
 };
 export type ResponsibilityPlanListResponse = { tenant: Tenant; items: ResponsibilityPlanRevision[]; count: number };
+
+export type StageApplicability = {
+  kind: "always" | "profile_in";
+  profiles: string[];
+};
+export type StageDefinition = {
+  stageId: string;
+  title: string;
+  dependsOn: string[];
+  applicability: StageApplicability;
+  requiredSlotIds: string[];
+  inputSchemaRef: ResourceRef;
+  outputSchemaRef: ResourceRef;
+  gateRefs: ExactRevisionRef[];
+  checkpointPolicy: Record<string, unknown>;
+  retryPolicy: Record<string, unknown>;
+  compensationPolicy: Record<string, unknown>;
+};
+export type CreateStageTemplateInput = {
+  profile: string;
+  sourceBundleRef: ExactRevisionRef;
+  stages: StageDefinition[];
+};
+export type ReviseStageTemplateInput = CreateStageTemplateInput & { expectedVersion: number };
+export type StageTemplateRevision = CreateStageTemplateInput & {
+  tenant: Tenant;
+  templateId: string;
+  revision: number;
+  version: number;
+  contentHash: string;
+  lifecycle: ContractLifecycle;
+  sealedBy: string | null;
+  sealedAt: string | null;
+  sealHash: string | null;
+  readiness: ContractReadiness;
+  blockers: ContractBlocker[];
+  createdBy: string;
+  createdAt: string;
+};
+export type StageTemplateListResponse = { tenant: Tenant; items: StageTemplateRevision[]; count: number };
+export type CompileStageTemplateInput = {
+  taskId: string;
+  expectedTaskVersion: number;
+  templateRevision: number;
+  templateContentHash: string;
+  responsibilityPlanRef: ExactRevisionRef;
+  profile: string;
+};
+export type StageCompilationResult = {
+  tenant: Tenant;
+  taskId: string;
+  templateRef: ExactRevisionRef;
+  responsibilityPlanRef: ExactRevisionRef;
+  planRef: ExactRevisionRef;
+  compilerVersion: string;
+  applicableStageIds: string[];
+  notApplicableStageIds: string[];
+  createdAt: string;
+};
+
+export type ExactArtifactRef = { artifactId: string; contentHash: string };
+export type ArtifactRelationType = "family_member" | "variant_of" | "supersedes" | "derived_from";
+export type CreateArtifactRelationInput = {
+  relationType: ArtifactRelationType;
+  fromArtifact: ExactArtifactRef;
+  toArtifact: ExactArtifactRef;
+  reason: string;
+};
+export type ArtifactRelation = CreateArtifactRelationInput & {
+  tenant: Tenant;
+  relationId: string;
+  createdBy: string;
+  createdAt: string;
+};
+export type ArtifactRelationListResponse = { tenant: Tenant; items: ArtifactRelation[]; count: number };
+
+export type ReviewSeverity = "info" | "warning" | "error" | "critical";
+export type ReviewIssueStatus = "open" | "resolved" | "returned" | "superseded";
+export type CreateReviewIssueInput = {
+  ruleRef: ExactRevisionRef;
+  severity: ReviewSeverity;
+  artifactRef: ExactArtifactRef;
+  evalReportRef: ExactRevisionRef;
+  location: Record<string, unknown>;
+  evidenceRefs: ExactRevisionRef[];
+  suggestedFix: string;
+  returnStage: string;
+};
+export type ReviewIssue = CreateReviewIssueInput & {
+  tenant: Tenant;
+  issueId: string;
+  status: ReviewIssueStatus;
+  version: number;
+  createdBy: string;
+  createdAt: string;
+  updatedBy: string;
+  updatedAt: string;
+};
+export type ReviewIssueListResponse = { tenant: Tenant; items: ReviewIssue[]; count: number };
+export type ResolveReviewIssueInput = { expectedVersion: number; reason: string; resolutionRefs: ExactRevisionRef[] };
+export type ReturnReviewIssueInput = {
+  expectedVersion: number;
+  runId: string;
+  targetStage: string;
+  reason: string;
+  attemptIdempotencyKey: string;
+};
+export type ReturnDecision = {
+  tenant: Tenant;
+  decisionId: string;
+  issueId: string;
+  issueVersion: number;
+  runId: string;
+  stepKey: string;
+  stepRunId: string;
+  attempt: number;
+  attemptIdempotencyKey: string;
+  reason: string;
+  decisionHash: string;
+  actor: string;
+  createdAt: string;
+};
