@@ -5,11 +5,13 @@
   "baselineCommit": "559e606e2447c650d621d0bb6d8fe88478875807",
   "commits": [
     "d04cbdc436fe5dd2cb5555f452e3d044f2c62eac",
-    "ed28858295d43d04359afed6f34c512e362dd392"
+    "ed28858295d43d04359afed6f34c512e362dd392",
+    "0957b9fb5aef1cb7748a50a6717c77b18f7760ae",
+    "f8d5e1e20fa408724ec4ac8017ee106220a5d85f"
   ],
   "plan": {
     "path": "docs/palantier/20_tech/电商平台接入/AIP通用能力实施方案/28-AIP-W2-C-Stage-Artifact-Review实施清单.md",
-    "sha256": "766d4fbf6842f7d86eec759949f69be52e540e46020e52f829203d0ae25fdf58",
+    "sha256": "b46ed9bf4b828b029ae6ba99cae013783e9f34a56abd1fd88fcd26888f614c8e",
     "status": "APPROVED_FOR_IMPLEMENTATION"
   },
   "files": [
@@ -27,23 +29,30 @@
     {"path":"apps/web/src/api/aipProductionContracts/index.ts","beforeSha256":"e5ba7075395aab24a75c5e489fea25d062ffd5c52956805c84f99f04ab4ee7ff","afterSha256":"035f8765dc86032293222396451d581771f4c94b86842fe4bf6446e17a4027c6"},
     {"path":"apps/web/src/api/aipProductionContracts/index.test.ts","beforeSha256":null,"afterSha256":"d552f43bd209f7df017df6e7b3369c602fa2b790a6feb78c984e16e38e2a2af2"},
     {"path":"apps/web/src/pages/s2/ProductionContractsPage.tsx","beforeSha256":"44a8c52264edf31b21042b9c3f72488aad2cc4652d8afcf279a4491004a312ff","afterSha256":"9e7bd32912e1ebfa6f8ae4699ca3786f0474ab65caeff3141a1690106ad1c19e"},
-    {"path":"apps/web/src/pages/s2/ProductionContractsPage.test.tsx","beforeSha256":"5c1f9f3687ade1d334c02515493293331b12fa77a318233fb31ad6e4f2a8e77e","afterSha256":"e26c99b5a58798093ad43370bb7a88e1e7444d81773b1727609f875ca7496f19"}
+    {"path":"apps/web/src/pages/s2/ProductionContractsPage.test.tsx","beforeSha256":"5c1f9f3687ade1d334c02515493293331b12fa77a318233fb31ad6e4f2a8e77e","afterSha256":"e26c99b5a58798093ad43370bb7a88e1e7444d81773b1727609f875ca7496f19"},
+    {"path":"services/aos-api/aos_api/main.py","beforeSha256":"3e8024936020566b689a8bf4546fb51df0a0dc6fddc9d026862b848103562ce2","afterSha256":"05168a79ec3acc48ef09474e2fe05782a51c3acd4b0aea03d20b62c1853642a8"},
+    {"path":"services/aos-api/tests/aip/test_w2c_cron_guard.py","beforeSha256":null,"afterSha256":"b3dde2a3c91c1aced7e4696440b7efe546649043bf4f26929ba4633b0834967a"},
+    {"path":"services/aos-api/aos_api/routers/domain_manifest.json","beforeSha256":"b59beea689367bb4306ac4cbb9aaf2b1b3d619abb73369a065f254c6f61aab91","afterSha256":"4115f5aa4d53d387d2ff7b3481ff9687eadd2e4ecfba31014399e698535c32f1"},
+    {"path":"services/aos-api/tests/test_domain_router_manifest.py","beforeSha256":"48c43ca8b1943fd1df43c1f32a494d3f245f86c8e68bc3236f66c13a7309971f","afterSha256":"7a85025e4bfd11593b0a29ce73f1d8371fa13ecec36c27e8c3d8edb2c9f5e6ec"}
   ],
   "verification": {
-    "backendCumulative": "23 passed",
+    "backendCumulative": "30 passed, 2 subtests passed",
     "frontendTargeted": "3 files / 13 tests passed",
     "typescriptNoEmit": "GREEN",
     "webProductionBuild": "GREEN",
     "alembicHead": "w2_003 unique head",
+    "routerManifest": "522 entries; AIP 73; generator --check GREEN; runtime 4190 method routes / 2412 OpenAPI paths; no duplicate /v1/aip route",
     "diffCheck": "GREEN",
-    "tenantBoundary": "all persistence is org/project scoped; tests use disposable database and dev-org isolation canary",
-    "realSideEffects": "no org-org/dev-project mutation, no AgentRun start, no external provider call"
+    "browser": "m1 built-in browser at /aip/production-contracts: org-org/dev-project, seven real 0 empty states, create/compile/resolve/return disabled, refresh GREEN, console 0 errors and 2 known React Router future warnings",
+    "tenantBoundary": "org-org/dev-project seven reads 200 and empty; dev-org/dev-project stage/review/relation canary 200 and empty with exact tenant echo",
+    "realSideEffects": "W2-C actions created no business object, AgentRun or provider call. The first unguarded acceptance produced one failed real control-plane run scr-61cbea02021f42f6 for P12 with rows=0/PIPELINE_NOT_FOUND; it is preserved. The guarded acceptance held meta_schedule_run at total=85 and latest id unchanged."
   },
-  "status": "W2C_CODE_GREEN_BROWSER_PENDING_M1",
+  "status": "W2C_IMPLEMENTED_GREEN_WITH_OPERATIONAL_FINDING",
   "knownBoundaries": [
     "StageTemplate source exact ref remains blocked when Asset Registry resolver is unavailable",
     "production compiler Plan approval remains fail-closed until W2-D exact start gate exists",
-    "browser verification and authority/01/06/shared-memory CAS are deferred to serialized m1 integration"
+    "the historical P12 failed schedule run is an immutable operational finding and must not be deleted or counted as W2-C success",
+    "W2-D ImpactPreview/start gate and AIP-7 Provider/Route/Eval/Binding remain independent blockers"
   ],
-  "next": "Commit this receipt, integrate w1-aip into clean m1 under serialized lease, run cumulative migration/tests/browser acceptance, then CAS-update authority/checkpoints and release W2-C leases."
+  "next": "CAS-update authority/checkpoints and shared memory, complete W2-C leases, then review the first authorized W2-D safe step without treating W2-C as AgentRun readiness."
 }
