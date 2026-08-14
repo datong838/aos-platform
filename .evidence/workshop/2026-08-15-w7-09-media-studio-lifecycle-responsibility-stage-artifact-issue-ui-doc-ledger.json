@@ -1,0 +1,69 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w7-09-media-studio-lifecycle-ui-doc-align-20260815",
+  "workItem": "W7-09",
+  "projectRevision": "AOS-000032",
+  "branch": "w2-workshop",
+  "sourceCommit": "d5ed54c",
+  "recordedAt": "2026-08-15T07:26:00+08:00",
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/14-多媒体技术方案.md",
+      "preSha256": "ebd9e70b8db3361e7a3bbfbe64ef7911f060abad0ec18b7b5a0b5ac66e5e9588",
+      "postSha256": "40513a824c3d28869fd5be3bd8137e8b93a0c75806f838b83722a051f2d3583f",
+      "change": "expanded Media Studio lifecycle tabs authority projections commands and accessibility contract"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md",
+      "preSha256": "3aceb0be62bef1b493e415223cb5df13c4972b1468e9e30245a83b75e9100637",
+      "postSha256": "f19b8d793ca92eca7aa59b1c66eba787560f7ed28556e6aa7ba0b3656baffa19",
+      "change": "added canonical MediaStudioView composition reducer command capability and no-local-authority rules"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "7cebf856d4e164945d7bf365ba539dc7bfd1733d7acef9d0253794e6c246d7ca",
+      "postSha256": "40996bd5c0436288a1cc16c7bb80b92a0e13869441ff3aa032c104c6aa6a1c1a",
+      "change": "replaced W7-09 evidence placeholder with frozen contracts current gaps and references"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/67-W7-09-MediaStudio生命周期职责StageArtifactIssueUI预检ADR.md",
+      "preSha256": null,
+      "postSha256": "21f94a6beb867a6d9f8bb8ed9f9e81b92cc0846d926732dd7911793b598a73d9",
+      "change": "created W7-09 UI preflight ADR and two review rounds"
+    }
+  ],
+  "reviewRounds": [
+    {
+      "round": 1,
+      "focus": "product intent information completeness and accessibility",
+      "result": "PASS",
+      "evidence": [
+        "full lifecycle evidence blockers and interventions remain visible",
+        "three semantic tabs reduce density without hiding cross-tab unknown or blockers",
+        "all eight professional responsibilities remain visible while assignment stays adaptive",
+        "existing Workshop shell visual hierarchy and accessibility baseline are preserved"
+      ]
+    },
+    {
+      "round": 2,
+      "focus": "authority composition implementability and no-gate-bypass",
+      "result": "PASS_WITH_IMPLEMENTATION_BLOCKED",
+      "evidence": [
+        "MediaStudioView composes exact canonical refs and creates no second source of truth",
+        "generic contract and task panels are not reused for incompatible media write paths",
+        "missing upstream W7 authorities manifest refs SDK UI browser and dual-tenant evidence remain explicit blockers",
+        "48 foundation tests are not represented as W7-09 product acceptance"
+      ]
+    }
+  ],
+  "decision": "CONTRACT_BASELINE_APPROVED_IMPLEMENTATION_BLOCKED",
+  "implementationStatus": "NOT_STARTED",
+  "externalEffect": "NONE",
+  "safety": [
+    "no source code changed",
+    "no migration",
+    "no browser or real tenant mutation",
+    "no provider or payment side effect",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}
