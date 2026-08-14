@@ -3120,6 +3120,18 @@
       "module": "aos_api.routers.aip_memory_authority",
       "attribute": "router",
       "order": 519
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_production_contracts",
+      "attribute": "router",
+      "order": 520
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_model_runtime",
+      "attribute": "router",
+      "order": 521
     }
   ]
 }
