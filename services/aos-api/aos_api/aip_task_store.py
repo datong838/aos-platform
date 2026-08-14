@@ -364,6 +364,94 @@ class AipTaskStore:
             conn.commit()
             return self._run(row)
 
+    def create_run_from_production_start_gate(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        *,
+        actor: str,
+        decision_id: str,
+        task_id: str,
+        expected_task_version: int,
+        plan_revision_id: str,
+        plan_content_hash: str,
+        logic_graph_id: str,
+        logic_revision: int,
+    ) -> TaskRunSnapshot:
+        """Approve a W2-C plan and create its sole TaskRun in the caller transaction."""
+        task = self._task_row(conn, scope, task_id, for_update=True)
+        if task is None:
+            raise AipTaskNotFound("task not found in scope")
+        self._expect_version(task, expected_task_version)
+        if task["current_plan_revision_id"] != plan_revision_id:
+            raise AipTaskVersionConflict("start gate must bind the current plan")
+        plan = conn.execute(
+            """SELECT * FROM aip_plan_revision
+               WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s FOR UPDATE""",
+            (*scope.key, plan_revision_id),
+        ).fetchone()
+        if plan is None or plan["task_id"] != task_id:
+            raise AipTaskNotFound("plan revision not found for task")
+        if plan["content_hash"] != plan_content_hash:
+            raise AipTaskVersionConflict("plan content hash changed before start")
+        if plan["approval_status"] != "draft":
+            raise AipTaskTransitionBlocked("production plan is not awaiting start approval")
+        if TaskStatus(task["status"]) not in {
+            TaskStatus.PLANNING,
+            TaskStatus.AWAITING_APPROVAL,
+        }:
+            raise AipTaskTransitionBlocked("task is not awaiting production start")
+        production_contract = dict(plan["risk"] or {}).get("productionContract")
+        if not isinstance(production_contract, dict) or not (
+            production_contract.get("compilerVersion") == "w2c.v1"
+            and production_contract.get("productionStartGateRequired") is True
+            and production_contract.get("productionStartGateRef") is None
+        ):
+            raise AipTaskTransitionBlocked("plan is not a sealed W2-C production draft")
+        run_key = f"w2d-start:{decision_id}"
+        request_hash = _canonical_hash(
+            {
+                "decisionId": decision_id,
+                "taskId": task_id,
+                "planRevisionId": plan_revision_id,
+                "planContentHash": plan_content_hash,
+                "logicGraphId": logic_graph_id,
+                "logicRevision": logic_revision,
+            }
+        )
+        run_id = f"run-{uuid.uuid4().hex[:20]}"
+        row = conn.execute(
+            """INSERT INTO aip_task_run (
+                 org_id,project_id,run_id,task_id,plan_revision_id,logic_graph_id,
+                 logic_revision,status,idempotency_key,request_hash,version,created_by,
+                 created_at,updated_at)
+               VALUES (%s,%s,%s,%s,%s,%s,%s,'queued',%s,%s,1,%s,NOW(),NOW())
+               RETURNING *""",
+            (
+                *scope.key,
+                run_id,
+                task_id,
+                plan_revision_id,
+                logic_graph_id,
+                logic_revision,
+                run_key,
+                request_hash,
+                actor,
+            ),
+        ).fetchone()
+        conn.execute(
+            """UPDATE aip_plan_revision SET approval_status='approved',approved_by=%s,
+                 approved_at=NOW() WHERE org_id=%s AND project_id=%s
+                 AND plan_revision_id=%s AND approval_status='draft'""",
+            (actor, *scope.key, plan_revision_id),
+        )
+        conn.execute(
+            """UPDATE aip_task SET status='approved',version=version+1,updated_at=NOW()
+               WHERE org_id=%s AND project_id=%s AND task_id=%s AND version=%s""",
+            (*scope.key, task_id, expected_task_version),
+        )
+        return self._run(row)
+
     def get_run(self, scope: TenantScope, run_id: str) -> TaskRunSnapshot:
         with self._connect(scope) as conn:
             row = conn.execute(

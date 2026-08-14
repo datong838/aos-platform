@@ -1,0 +1,186 @@
+from __future__ import annotations
+
+import json
+import uuid
+
+import pytest
+
+from aos_api.aip_action_models import (
+    CreateActionProposalRequest,
+    DecideActionProposalRequest,
+)
+from aos_api.aip_action_store import AipActionStore
+from aos_api.aip_contracts import ApprovalDecision
+from aos_api.aip_production_contract_store import (
+    AipProductionContractStore,
+    ProductionContractIdempotencyConflict,
+)
+from aos_api.aip_production_contracts import (
+    ActionProposalExactRef,
+    ExactRevisionRef,
+    ProductionStartDecisionStatus,
+    ProductionStartRequest,
+)
+from aos_api.aip_production_start_service import AipProductionStartService
+from aos_api.db import connect
+
+from test_w2d_action_binding import _action_snapshot, _risk
+from test_w2d_store import SCOPE, _seed
+
+
+def _seed_start_candidate() -> tuple[ProductionStartRequest, AipActionStore]:
+    preview_body, _ = _seed()
+    contracts = AipProductionContractStore()
+    preview = contracts.create_impact_preview(
+        SCOPE,
+        "maker:w2d-start",
+        f"preview-{uuid.uuid4().hex}",
+        preview_body,
+    )
+    preview = contracts.freeze_impact_preview(
+        SCOPE,
+        "maker:w2d-start",
+        preview.preview_id,
+        preview.version,
+        f"freeze-{uuid.uuid4().hex}",
+    )
+    preview_ref = ExactRevisionRef(
+        resource_type="ImpactPreviewRevision",
+        resource_id=preview.preview_id,
+        revision=preview.revision,
+        content_hash=preview.content_hash,
+    )
+    action_store = AipActionStore()
+    action_id = f"send_w2d_start_{uuid.uuid4().hex}"
+    proposal = action_store.create_proposal(
+        SCOPE,
+        "maker:w2d-start",
+        f"proposal-{uuid.uuid4().hex}",
+        CreateActionProposalRequest(
+            action_type_id=action_id,
+            task_id=preview_body.task_id,
+            purpose="W2-D 组合门受控启动",
+            impact_preview_ref=preview_ref,
+        ),
+        _action_snapshot(action_id),
+        _risk(),
+    ).proposal
+    graph_id = f"logic-w2d-{uuid.uuid4().hex[:16]}"
+    graph_hash = "7" * 64
+    with connect(SCOPE) as conn:
+        conn.execute(
+            """INSERT INTO aip_logic_graph
+               (org_id,project_id,graph_id,name,status,revision,published_version,
+                graph_hash,payload)
+               VALUES(%s,%s,%s,'W2-D start','published',1,1,%s,%s::jsonb)""",
+            (*SCOPE.key, graph_id, graph_hash, json.dumps({"nodes": [], "edges": []})),
+        )
+        conn.execute(
+            """INSERT INTO aip_logic_graph_revision
+               (org_id,project_id,graph_id,revision,graph_hash,snapshot,actor)
+               VALUES(%s,%s,%s,1,%s,%s::jsonb,'test:w2d')""",
+            (*SCOPE.key, graph_id, graph_hash, json.dumps({"nodes": [], "edges": []})),
+        )
+        task = conn.execute(
+            """SELECT version FROM aip_task
+               WHERE org_id=%s AND project_id=%s AND task_id=%s""",
+            (*SCOPE.key, preview_body.task_id),
+        ).fetchone()
+        conn.commit()
+    return (
+        ProductionStartRequest(
+            task_id=preview_body.task_id,
+            expected_task_version=int(task["version"]),
+            plan_ref=preview_body.plan_ref,
+            preview_ref=preview_ref,
+            action_proposal_ref=ActionProposalExactRef(
+                proposal_id=proposal.id,
+                version=proposal.version,
+                proposal_hash=proposal.proposal_hash,
+            ),
+            logic_graph_id=graph_id,
+            logic_revision=1,
+        ),
+        action_store,
+    )
+
+
+def _runtime_counts(task_id: str) -> tuple[int, int]:
+    with connect(SCOPE) as conn:
+        task_runs = conn.execute(
+            """SELECT COUNT(*) AS n FROM aip_task_run
+               WHERE org_id=%s AND project_id=%s AND task_id=%s""",
+            (*SCOPE.key, task_id),
+        ).fetchone()["n"]
+        agent_runs = conn.execute(
+            """SELECT COUNT(*) AS n FROM aip_agent_run
+               WHERE org_id=%s AND project_id=%s AND task_id=%s""",
+            (*SCOPE.key, task_id),
+        ).fetchone()["n"]
+    return int(task_runs), int(agent_runs)
+
+
+def test_blocked_start_is_append_only_and_has_zero_runtime_side_effects() -> None:
+    request, _ = _seed_start_candidate()
+    before = _runtime_counts(request.task_id)
+    decision = AipProductionStartService().start(
+        SCOPE, "approver:w2d", f"blocked-{uuid.uuid4().hex}", request
+    )
+    assert decision.status is ProductionStartDecisionStatus.BLOCKED
+    assert {item.code for item in decision.blockers} == {
+        "ACTION_PROPOSAL_NOT_APPROVED",
+        "ACTION_APPROVAL_QUORUM_LOST",
+    }
+    assert decision.task_run_ref is None
+    assert _runtime_counts(request.task_id) == before
+    with connect(SCOPE) as conn:
+        plan = conn.execute(
+            """SELECT approval_status FROM aip_plan_revision
+               WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s""",
+            (*SCOPE.key, request.plan_ref.resource_id),
+        ).fetchone()
+    assert plan["approval_status"] == "draft"
+
+
+def test_ready_start_atomically_creates_one_canonical_task_run_and_replays() -> None:
+    request, action_store = _seed_start_candidate()
+    proposal = action_store.decide(
+        SCOPE,
+        "checker:w2d-start",
+        request.action_proposal_ref.proposal_id,
+        f"approval-{uuid.uuid4().hex}",
+        DecideActionProposalRequest(
+            expected_proposal_version=request.action_proposal_ref.version,
+            expected_proposal_hash=request.action_proposal_ref.proposal_hash,
+            decision=ApprovalDecision.APPROVED,
+        ),
+    ).proposal
+    request = request.model_copy(
+        update={
+            "action_proposal_ref": ActionProposalExactRef(
+                proposal_id=proposal.id,
+                version=proposal.version,
+                proposal_hash=proposal.proposal_hash,
+            )
+        }
+    )
+    key = f"start-{uuid.uuid4().hex}"
+    service = AipProductionStartService()
+    started = service.start(SCOPE, "approver:w2d", key, request)
+    replay = service.start(SCOPE, "approver:w2d", key, request)
+    assert started.status is ProductionStartDecisionStatus.STARTED
+    assert replay.decision_id == started.decision_id
+    assert replay.task_run_ref == started.task_run_ref
+    assert _runtime_counts(request.task_id) == (1, 0)
+    with connect(SCOPE) as conn:
+        plan = conn.execute(
+            """SELECT approval_status FROM aip_plan_revision
+               WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s""",
+            (*SCOPE.key, request.plan_ref.resource_id),
+        ).fetchone()
+    assert plan["approval_status"] == "approved"
+    drifted = request.model_copy(
+        update={"expected_task_version": request.expected_task_version + 1}
+    )
+    with pytest.raises(ProductionContractIdempotencyConflict):
+        service.start(SCOPE, "approver:w2d", key, drifted)
