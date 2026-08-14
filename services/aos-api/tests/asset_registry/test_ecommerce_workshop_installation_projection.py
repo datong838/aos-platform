@@ -5,9 +5,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.asset_registry.composition_contracts import (
     CompositionRequest,
+    CreateInstallationRequest,
     InstallationResponse,
     RollbackInstallationRequest,
     StoredCompositionLock,
@@ -15,6 +18,10 @@ from aos_api.asset_registry.composition_contracts import (
 from aos_api.ecommerce_workshop_catalog import (
     EcommerceWorkshopCatalog,
     PostgresWorkshopCatalogSource,
+)
+from aos_api.asset_registry.errors import (
+    CurrentInstallationStaleError,
+    InstallationStateConflictError,
 )
 from tests.asset_registry.m5_control_support import m5_control_runtime
 from tests.asset_registry.test_m5_ecommerce_composition import LEAF_IDS
@@ -26,7 +33,7 @@ OVERLAY_FIXTURE = (
 )
 
 
-def _request(snapshot) -> CompositionRequest:
+def _request(snapshot, *, current_installation_ref=None) -> CompositionRequest:
     versions = {item.id: item.version for item in snapshot.candidates}
     return CompositionRequest.model_validate(
         {
@@ -42,7 +49,7 @@ def _request(snapshot) -> CompositionRequest:
             "platformRelease": "aos-platform/1.7.0",
             "environment": "dev",
             "registrySnapshotHash": snapshot.snapshot_hash,
-            "currentInstallationRef": None,
+            "currentInstallationRef": current_installation_ref,
         }
     )
 
@@ -165,3 +172,372 @@ def test_active_exact_lock_projects_eight_modules_and_rollback_preserves_history
                 ),
             ).fetchone()
         assert history == {"revisions": 6, "events": 6, "locks": 1}
+
+
+def test_replacement_leaf_shadows_predecessor_and_rollback_restores_it(
+    tmp_path: Path,
+) -> None:
+    with m5_control_runtime(tmp_path / "runtime-bundles") as runtime:
+        snapshot = runtime.snapshot_reader.read()
+        first_lock = StoredCompositionLock.model_validate_json(
+            json.dumps(
+                runtime.resolve(
+                    _request(snapshot),
+                    actor="maker:workshop-replacement",
+                    idempotency_key="workshop-replacement-resolve-a",
+                ).response_json
+            )
+        )
+        first_overlay = "sha256:" + "a" * 64
+        first = _response(
+            runtime.install_to_active(
+                lock=first_lock,
+                overlay_revision=first_overlay,
+                maker="maker:workshop-replacement",
+                checker="checker:workshop-replacement",
+                idempotency_prefix="workshop-replacement-install-a",
+            )[-1]
+        )
+
+        second_lock = StoredCompositionLock.model_validate_json(
+            json.dumps(
+                runtime.resolve(
+                    _request(
+                        snapshot,
+                        current_installation_ref={
+                            "installationId": first.installation_id,
+                            "revision": first.active_revision,
+                            "lockHash": first_lock.lock_hash,
+                            "overlayRevision": first_overlay,
+                        },
+                    ),
+                    actor="maker:workshop-replacement",
+                    idempotency_key="workshop-replacement-resolve-b",
+                ).response_json
+            )
+        )
+        assert second_lock.payload.current_installation_ref is not None
+        second_overlay = "sha256:" + "b" * 64
+        second = _response(
+            runtime.install_to_active(
+                lock=second_lock,
+                overlay_revision=second_overlay,
+                maker="maker:workshop-replacement",
+                checker="checker:workshop-replacement",
+                idempotency_prefix="workshop-replacement-install-b",
+            )[-1]
+        )
+
+        third_lock = StoredCompositionLock.model_validate_json(
+            json.dumps(
+                runtime.resolve(
+                    _request(
+                        snapshot,
+                        current_installation_ref={
+                            "installationId": second.installation_id,
+                            "revision": second.active_revision,
+                            "lockHash": second_lock.lock_hash,
+                            "overlayRevision": second_overlay,
+                        },
+                    ),
+                    actor="maker:workshop-replacement",
+                    idempotency_key="workshop-replacement-resolve-c",
+                ).response_json
+            )
+        )
+        third = _response(
+            runtime.install_to_active(
+                lock=third_lock,
+                overlay_revision="sha256:" + "f" * 64,
+                maker="maker:workshop-replacement",
+                checker="checker:workshop-replacement",
+                idempotency_prefix="workshop-replacement-install-c",
+            )[-1]
+        )
+
+        catalog = _catalog(runtime)
+        replacement = catalog.list_modules(
+            org_id=runtime.org_id,
+            project_id=runtime.project_id,
+            roles=["operator"],
+            markings=["public"],
+        )
+        assert replacement.count == 8
+        assert {
+            item.installation_ref.installation_id for item in replacement.items
+        } == {third.installation_id}
+
+        third_rolled = _response(
+            runtime.installation_service.rollback(
+                installation_id=third.installation_id,
+                request=RollbackInstallationRequest.model_validate(
+                    {"reason": "Restore middle Workshop predecessor"}
+                ),
+                org_id=runtime.org_id,
+                project_id=runtime.project_id,
+                actor="maker:workshop-replacement",
+                roles={"asset-installer"},
+                markings=set(),
+                idempotency_key="workshop-replacement-rollback-c",
+                if_match='"5"',
+            )
+        )
+        assert third_rolled.state == "rolled_back"
+        middle = catalog.list_modules(
+            org_id=runtime.org_id,
+            project_id=runtime.project_id,
+            roles=["operator"],
+            markings=["public"],
+        )
+        assert {item.installation_ref.installation_id for item in middle.items} == {
+            second.installation_id
+        }
+
+        rolled = _response(
+            runtime.installation_service.rollback(
+                installation_id=second.installation_id,
+                request=RollbackInstallationRequest.model_validate(
+                    {"reason": "Restore exact Workshop predecessor"}
+                ),
+                org_id=runtime.org_id,
+                project_id=runtime.project_id,
+                actor="maker:workshop-replacement",
+                roles={"asset-installer"},
+                markings=set(),
+                idempotency_key="workshop-replacement-rollback-b",
+                if_match='"5"',
+            )
+        )
+        assert rolled.state == "rolled_back"
+        restored = catalog.list_modules(
+            org_id=runtime.org_id,
+            project_id=runtime.project_id,
+            roles=["operator"],
+            markings=["public"],
+        )
+        assert restored.count == 8
+        assert {item.installation_ref.installation_id for item in restored.items} == {
+            first.installation_id
+        }
+
+        with runtime.connect_factory() as connection:
+            history = connection.execute(
+                """
+                SELECT installation_id, current_revision, active_revision,
+                       previous_active_revision
+                  FROM bundle_installation
+                 WHERE org_id=%s AND project_id=%s
+                 ORDER BY installation_id
+                """,
+                (runtime.org_id, runtime.project_id),
+            ).fetchall()
+        assert len(history) == 3
+        by_id = {str(row["installation_id"]): dict(row) for row in history}
+        assert by_id[first.installation_id]["active_revision"] == 5
+        assert by_id[first.installation_id]["current_revision"] == 5
+        assert by_id[second.installation_id]["active_revision"] is None
+        assert by_id[second.installation_id]["current_revision"] == 6
+        assert by_id[third.installation_id]["active_revision"] is None
+        assert by_id[third.installation_id]["current_revision"] == 6
+
+
+def test_active_replacement_blocks_predecessor_rollback_and_sibling_activation(
+    tmp_path: Path,
+) -> None:
+    with m5_control_runtime(tmp_path / "runtime-bundles") as runtime:
+        snapshot = runtime.snapshot_reader.read()
+        root_lock = StoredCompositionLock.model_validate_json(
+            json.dumps(
+                runtime.resolve(
+                    _request(snapshot),
+                    actor="maker:workshop-branch",
+                    idempotency_key="workshop-branch-resolve-root",
+                ).response_json
+            )
+        )
+        root_overlay = "sha256:" + "c" * 64
+        root = _response(
+            runtime.install_to_active(
+                lock=root_lock,
+                overlay_revision=root_overlay,
+                maker="maker:workshop-branch",
+                checker="checker:workshop-branch",
+                idempotency_prefix="workshop-branch-install-root",
+            )[-1]
+        )
+        root_ref = {
+            "installationId": root.installation_id,
+            "revision": root.active_revision,
+            "lockHash": root_lock.lock_hash,
+            "overlayRevision": root_overlay,
+        }
+
+        child_lock = StoredCompositionLock.model_validate_json(
+            json.dumps(
+                runtime.resolve(
+                    _request(snapshot, current_installation_ref=root_ref),
+                    actor="maker:workshop-branch",
+                    idempotency_key="workshop-branch-resolve-child",
+                ).response_json
+            )
+        )
+        child = _response(
+            runtime.install_to_active(
+                lock=child_lock,
+                overlay_revision="sha256:" + "d" * 64,
+                maker="maker:workshop-branch",
+                checker="checker:workshop-branch",
+                idempotency_prefix="workshop-branch-install-child",
+            )[-1]
+        )
+
+        with pytest.raises(
+            InstallationStateConflictError,
+            match="active replacement",
+        ):
+            runtime.installation_service.rollback(
+                installation_id=root.installation_id,
+                request=RollbackInstallationRequest.model_validate(
+                    {"reason": "Invalid predecessor rollback"}
+                ),
+                org_id=runtime.org_id,
+                project_id=runtime.project_id,
+                actor="maker:workshop-branch",
+                roles={"asset-installer"},
+                markings=set(),
+                idempotency_key="workshop-branch-rollback-root",
+                if_match='"5"',
+            )
+
+        sibling_lock = StoredCompositionLock.model_validate_json(
+            json.dumps(
+                runtime.resolve(
+                    _request(snapshot, current_installation_ref=root_ref),
+                    actor="maker:workshop-branch",
+                    idempotency_key="workshop-branch-resolve-sibling",
+                ).response_json
+            )
+        )
+        with pytest.raises(
+            InstallationStateConflictError,
+            match="already has an active replacement",
+        ):
+            runtime.install_to_active(
+                lock=sibling_lock,
+                overlay_revision="sha256:" + "e" * 64,
+                maker="maker:workshop-branch",
+                checker="checker:workshop-branch",
+                idempotency_prefix="workshop-branch-install-sibling",
+            )
+
+        with runtime.connect_factory() as connection:
+            sibling = connection.execute(
+                """
+                SELECT current_revision, active_revision
+                  FROM bundle_installation
+                 WHERE org_id=%s AND project_id=%s
+                   AND installation_id NOT IN (%s, %s)
+                """,
+                (
+                    runtime.org_id,
+                    runtime.project_id,
+                    root.installation_id,
+                    child.installation_id,
+                ),
+            ).fetchone()
+        assert sibling == {"current_revision": 4, "active_revision": None}
+
+        projected = _catalog(runtime).list_modules(
+            org_id=runtime.org_id,
+            project_id=runtime.project_id,
+            roles=["operator"],
+            markings=["public"],
+        )
+        assert projected.count == 8
+        assert {item.installation_ref.installation_id for item in projected.items} == {
+            child.installation_id
+        }
+
+
+def test_stale_predecessor_is_rejected_again_when_replacement_draft_is_created(
+    tmp_path: Path,
+) -> None:
+    with m5_control_runtime(tmp_path / "runtime-bundles") as runtime:
+        snapshot = runtime.snapshot_reader.read()
+        root_lock = StoredCompositionLock.model_validate_json(
+            json.dumps(
+                runtime.resolve(
+                    _request(snapshot),
+                    actor="maker:workshop-stale",
+                    idempotency_key="workshop-stale-resolve-root",
+                ).response_json
+            )
+        )
+        root_overlay = "sha256:" + "1" * 64
+        root = _response(
+            runtime.install_to_active(
+                lock=root_lock,
+                overlay_revision=root_overlay,
+                maker="maker:workshop-stale",
+                checker="checker:workshop-stale",
+                idempotency_prefix="workshop-stale-install-root",
+            )[-1]
+        )
+        replacement_lock = StoredCompositionLock.model_validate_json(
+            json.dumps(
+                runtime.resolve(
+                    _request(
+                        snapshot,
+                        current_installation_ref={
+                            "installationId": root.installation_id,
+                            "revision": root.active_revision,
+                            "lockHash": root_lock.lock_hash,
+                            "overlayRevision": root_overlay,
+                        },
+                    ),
+                    actor="maker:workshop-stale",
+                    idempotency_key="workshop-stale-resolve-replacement",
+                ).response_json
+            )
+        )
+        runtime.installation_service.rollback(
+            installation_id=root.installation_id,
+            request=RollbackInstallationRequest.model_validate(
+                {"reason": "Make resolved predecessor stale"}
+            ),
+            org_id=runtime.org_id,
+            project_id=runtime.project_id,
+            actor="maker:workshop-stale",
+            roles={"asset-installer"},
+            markings=set(),
+            idempotency_key="workshop-stale-rollback-root",
+            if_match='"5"',
+        )
+
+        with pytest.raises(CurrentInstallationStaleError):
+            runtime.installation_service.create(
+                request=CreateInstallationRequest.model_validate(
+                    {
+                        "compositionId": replacement_lock.composition_id,
+                        "lockRevision": replacement_lock.revision,
+                        "overlayRevision": "sha256:" + "2" * 64,
+                        "displayName": "Stale Workshop replacement",
+                    }
+                ),
+                org_id=runtime.org_id,
+                project_id=runtime.project_id,
+                actor="maker:workshop-stale",
+                roles={"asset-installer"},
+                markings=set(),
+                idempotency_key="workshop-stale-create-replacement",
+            )
+        with runtime.connect_factory() as connection:
+            count = connection.execute(
+                """
+                SELECT COUNT(*) AS count
+                  FROM bundle_installation
+                 WHERE org_id=%s AND project_id=%s
+                """,
+                (runtime.org_id, runtime.project_id),
+            ).fetchone()
+        assert count == {"count": 1}

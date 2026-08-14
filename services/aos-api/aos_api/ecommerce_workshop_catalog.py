@@ -162,12 +162,10 @@ class PostgresWorkshopCatalogSource:
                     """,
                     (checked_org, checked_project, Jsonb(checked_markings)),
                 ).fetchall()
+                effective_rows = _effective_active_rows(rows)
                 result: list[ActiveWorkshopBundle] = []
                 versions: dict[tuple[str, str, str], PersistedBundleVersion] = {}
-                for row in rows:
-                    lock = _lock_from_row(row)
-                    if str(row["revision_lock_hash"]) != lock.lock_hash:
-                        raise RegistryIntegrityCorruptError()
+                for row, lock in effective_rows:
                     for resolved in lock.payload.resolved:
                         coordinate = (resolved.publisher, resolved.id, resolved.version)
                         version = versions.get(coordinate)
@@ -190,6 +188,63 @@ class PostgresWorkshopCatalogSource:
             raise
         except (psycopg.Error, KeyError, TypeError, ValueError, ValidationError) as exc:
             raise RegistryIntegrityCorruptError() from exc
+
+
+def _effective_active_rows(
+    rows: Collection[Any],
+) -> tuple[tuple[Any, StoredCompositionLock], ...]:
+    """Validate the immutable replacement graph and return only active leaves."""
+
+    indexed: dict[str, tuple[Any, StoredCompositionLock]] = {}
+    for row in rows:
+        installation_id = str(row["installation_id"])
+        if installation_id in indexed:
+            raise RegistryIntegrityCorruptError()
+        lock = _lock_from_row(row)
+        if str(row["revision_lock_hash"]) != lock.lock_hash:
+            raise RegistryIntegrityCorruptError()
+        indexed[installation_id] = (row, lock)
+
+    parent_by_child: dict[str, str] = {}
+    children_by_parent: dict[str, list[str]] = {}
+    for child_id, (_, child_lock) in indexed.items():
+        current_ref = child_lock.payload.current_installation_ref
+        if current_ref is None:
+            continue
+        parent_id = current_ref.installation_id
+        if parent_id == child_id:
+            raise RegistryIntegrityCorruptError()
+        parent = indexed.get(parent_id)
+        if parent is None:
+            raise RegistryIntegrityCorruptError()
+        parent_row, parent_lock = parent
+        if (
+            current_ref.revision != int(parent_row["active_revision"])
+            or current_ref.lock_hash != parent_lock.lock_hash
+            or current_ref.overlay_revision != str(parent_row["overlay_revision"])
+        ):
+            raise RegistryIntegrityCorruptError()
+        parent_by_child[child_id] = parent_id
+        children_by_parent.setdefault(parent_id, []).append(child_id)
+
+    if any(len(children) != 1 for children in children_by_parent.values()):
+        raise RegistryIntegrityCorruptError()
+
+    for start in parent_by_child:
+        visited: set[str] = set()
+        cursor: str | None = start
+        while cursor is not None:
+            if cursor in visited:
+                raise RegistryIntegrityCorruptError()
+            visited.add(cursor)
+            cursor = parent_by_child.get(cursor)
+
+    shadowed = set(children_by_parent)
+    return tuple(
+        indexed[installation_id]
+        for installation_id in sorted(indexed)
+        if installation_id not in shadowed
+    )
 
 
 class EcommerceWorkshopCatalog:

@@ -139,6 +139,13 @@ class PostgresInstallationStore:
             composition_id=request.composition_id,
             revision=request.lock_revision,
         )
+        if lock.payload.current_installation_ref is not None:
+            self.load_active_baseline_in_transaction(
+                conn,
+                org_id=org_id,
+                project_id=project_id,
+                requested_ref=lock.payload.current_installation_ref,
+            )
         installation_pk = self._uuid_factory()
         installation_id = self._uuid_factory()
         conn.execute(
@@ -657,6 +664,112 @@ class PostgresInstallationStore:
         if row is None or not isinstance(row["checked_at"], datetime):
             raise InstallationPersistenceError()
         return row["checked_at"]
+
+    def guard_replacement_activation_in_transaction(
+        self,
+        conn: Any,
+        *,
+        locked: LockedInstallation,
+        requested_ref: CurrentInstallationRef | None,
+    ) -> None:
+        """Serialize siblings and require the exact predecessor to remain active."""
+
+        if requested_ref is None:
+            return
+        predecessor = conn.execute(
+            """
+            SELECT installation_pk
+              FROM bundle_installation
+             WHERE org_id=%s AND project_id=%s AND installation_id=%s
+             FOR UPDATE
+            """,
+            (
+                locked.org_id,
+                locked.project_id,
+                _resource_uuid(requested_ref.installation_id),
+            ),
+        ).fetchone()
+        if predecessor is None:
+            raise CurrentInstallationStaleError(
+                "replacement predecessor is unavailable"
+            )
+        self.load_active_baseline_in_transaction(
+            conn,
+            org_id=locked.org_id,
+            project_id=locked.project_id,
+            requested_ref=requested_ref,
+        )
+        active_child = self._find_active_replacement_in_transaction(
+            conn,
+            org_id=locked.org_id,
+            project_id=locked.project_id,
+            predecessor_installation_id=requested_ref.installation_id,
+            excluded_installation_pk=locked.installation_pk,
+        )
+        if active_child is not None:
+            raise InstallationStateConflictError(
+                "replacement predecessor already has an active replacement"
+            )
+
+    def guard_no_active_replacement_in_transaction(
+        self,
+        conn: Any,
+        *,
+        locked: LockedInstallation,
+    ) -> None:
+        """Require leaf-first rollback/uninstall for replacement lineages."""
+
+        active_child = self._find_active_replacement_in_transaction(
+            conn,
+            org_id=locked.org_id,
+            project_id=locked.project_id,
+            predecessor_installation_id=locked.record.installation_id,
+            excluded_installation_pk=locked.installation_pk,
+        )
+        if active_child is not None:
+            raise InstallationStateConflictError(
+                "installation has an active replacement and must be restored leaf-first"
+            )
+
+    def _find_active_replacement_in_transaction(
+        self,
+        conn: Any,
+        *,
+        org_id: str,
+        project_id: str,
+        predecessor_installation_id: str,
+        excluded_installation_pk: uuid.UUID,
+    ) -> str | None:
+        row = conn.execute(
+            """
+            SELECT child.installation_id
+              FROM bundle_installation child
+              JOIN bundle_installation_revision active
+                ON active.org_id=child.org_id
+               AND active.project_id=child.project_id
+               AND active.installation_pk=child.installation_pk
+               AND active.revision=child.active_revision
+              JOIN bundle_composition_lock lock
+                ON lock.org_id=active.org_id
+               AND lock.project_id=active.project_id
+               AND lock.composition_pk=active.composition_pk
+               AND lock.revision=active.lock_revision
+             WHERE child.org_id=%s AND child.project_id=%s
+               AND child.active_revision IS NOT NULL
+               AND child.installation_pk<>%s
+               AND lock.lock_payload->'currentInstallationRef'
+                   ->>'installationId'=%s
+             ORDER BY child.installation_id
+             LIMIT 1
+            """,
+            (
+                org_id,
+                project_id,
+                excluded_installation_pk,
+                predecessor_installation_id,
+            ),
+        ).fetchone()
+        return str(row["installation_id"]) if row is not None else None
 
     def append_submit_in_transaction(
         self, conn: Any, *, locked: LockedInstallation, actor: str
