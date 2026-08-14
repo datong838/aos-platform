@@ -1,0 +1,23 @@
+{
+  "schema": "aos-workshop-receipt-correction/v1",
+  "taskId": "workshop-w4-08-doc-receipt-correction-20260814",
+  "authorityRevision": "AOS-000024",
+  "supersedesFact": {
+    "deliveryTaskId": "workshop-w4-08-cross-capability-doc-ledger-20260814",
+    "incorrectCommitToken": "HEAD"
+  },
+  "correctFact": {
+    "commit": "3163946a474576fea29e22c135390d4ded899c82",
+    "shortCommit": "3163946",
+    "branch": "w2-workshop",
+    "remote": "origin/w2-workshop",
+    "pushVerified": true
+  },
+  "interpretation": "The prior delivery result and document hashes remain valid; only its symbolic commit token is corrected to the immutable Git SHA.",
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false
+  }
+}
