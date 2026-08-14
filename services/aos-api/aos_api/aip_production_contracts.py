@@ -44,6 +44,32 @@ class AssigneeKind(StrEnum):
     PROVIDER_CAPABILITY_BINDING = "provider_capability_binding"
 
 
+class StageApplicabilityKind(StrEnum):
+    ALWAYS = "always"
+    PROFILE_IN = "profile_in"
+
+
+class ArtifactRelationType(StrEnum):
+    FAMILY_MEMBER = "family_member"
+    VARIANT_OF = "variant_of"
+    SUPERSEDES = "supersedes"
+    DERIVED_FROM = "derived_from"
+
+
+class ReviewSeverity(StrEnum):
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+    CRITICAL = "critical"
+
+
+class ReviewIssueStatus(StrEnum):
+    OPEN = "open"
+    RESOLVED = "resolved"
+    RETURNED = "returned"
+    SUPERSEDED = "superseded"
+
+
 class ExactRevisionRef(AipContractModel):
     resource_type: str = Field(min_length=1, max_length=80)
     resource_id: str = Field(min_length=1, max_length=200)
@@ -187,6 +213,218 @@ class ResponsibilityPlanListResponse(AipContractModel):
     tenant: TenantContext
     items: list[ResponsibilityPlanRevision]
     count: int = Field(ge=0)
+
+
+class StageApplicability(AipContractModel):
+    kind: StageApplicabilityKind
+    profiles: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _controlled_predicate(self) -> StageApplicability:
+        if self.kind is StageApplicabilityKind.ALWAYS and self.profiles:
+            raise ValueError("always applicability cannot declare profiles")
+        if self.kind is StageApplicabilityKind.PROFILE_IN:
+            if not self.profiles or any(not item.strip() for item in self.profiles):
+                raise ValueError("profile_in applicability requires non-blank profiles")
+            if len(self.profiles) != len(set(self.profiles)):
+                raise ValueError("applicability profiles must be unique")
+        return self
+
+
+class StageDefinition(AipContractModel):
+    stage_id: str = Field(min_length=1, max_length=160)
+    title: str = Field(min_length=1, max_length=240)
+    depends_on: list[str] = Field(default_factory=list)
+    applicability: StageApplicability
+    required_slot_ids: list[str] = Field(min_length=1)
+    input_schema_ref: ResourceRef
+    output_schema_ref: ResourceRef
+    gate_refs: list[ExactRevisionRef] = Field(default_factory=list)
+    checkpoint_policy: dict[str, Any] = Field(default_factory=dict)
+    retry_policy: dict[str, Any] = Field(default_factory=dict)
+    compensation_policy: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _stage_lists_are_unique(self) -> StageDefinition:
+        for label, values in (
+            ("dependsOn", self.depends_on),
+            ("requiredSlotIds", self.required_slot_ids),
+        ):
+            if len(values) != len(set(values)) or any(not item.strip() for item in values):
+                raise ValueError(f"{label} must be unique and non-blank")
+        if self.stage_id in self.depends_on:
+            raise ValueError("stage cannot depend on itself")
+        return self
+
+
+class CreateStageTemplateRequest(AipContractModel):
+    profile: str = Field(min_length=1, max_length=80)
+    source_bundle_ref: ExactRevisionRef
+    stages: list[StageDefinition] = Field(min_length=1, max_length=200)
+
+    @model_validator(mode="after")
+    def _stage_ids_are_unique(self) -> CreateStageTemplateRequest:
+        stage_ids = [stage.stage_id for stage in self.stages]
+        if len(stage_ids) != len(set(stage_ids)):
+            raise ValueError("stage IDs must be unique")
+        return self
+
+
+class ReviseStageTemplateRequest(CreateStageTemplateRequest):
+    expected_version: int = Field(ge=1)
+
+
+class StageTemplateRevision(CreateStageTemplateRequest):
+    tenant: TenantContext
+    template_id: str
+    revision: int = Field(ge=1)
+    version: int = Field(ge=1)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    lifecycle: BriefLifecycle
+    sealed_by: str | None = None
+    sealed_at: datetime | None = None
+    seal_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    readiness: ContractReadiness
+    blockers: list[ContractBlocker]
+    created_by: str
+    created_at: datetime
+
+    @model_validator(mode="after")
+    def _frozen_revision_has_seal(self) -> StageTemplateRevision:
+        sealed = self.sealed_by is not None and self.sealed_at is not None and self.seal_hash is not None
+        if (self.lifecycle is BriefLifecycle.FROZEN) is not sealed:
+            raise ValueError("only frozen StageTemplate revisions carry a complete seal")
+        return self
+
+
+class StageTemplateListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[StageTemplateRevision]
+    count: int = Field(ge=0)
+
+
+class CompileStageTemplateRequest(AipContractModel):
+    task_id: str = Field(min_length=1, max_length=200)
+    expected_task_version: int = Field(ge=1)
+    template_revision: int = Field(ge=1)
+    template_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    responsibility_plan_ref: ExactRevisionRef
+    profile: str = Field(min_length=1, max_length=80)
+
+    @model_validator(mode="after")
+    def _responsibility_ref_type(self) -> CompileStageTemplateRequest:
+        if self.responsibility_plan_ref.resource_type != "ResponsibilityPlanRevision":
+            raise ValueError("responsibilityPlanRef must reference ResponsibilityPlanRevision")
+        return self
+
+
+class StageCompilationResult(AipContractModel):
+    tenant: TenantContext
+    task_id: str
+    template_ref: ExactRevisionRef
+    responsibility_plan_ref: ExactRevisionRef
+    plan_ref: ExactRevisionRef
+    compiler_version: str
+    applicable_stage_ids: list[str]
+    not_applicable_stage_ids: list[str]
+    created_at: datetime
+
+
+class ExactArtifactRef(AipContractModel):
+    artifact_id: str = Field(min_length=1, max_length=200)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class CreateArtifactRelationRequest(AipContractModel):
+    relation_type: ArtifactRelationType
+    from_artifact: ExactArtifactRef
+    to_artifact: ExactArtifactRef
+    reason: str = Field(min_length=1, max_length=1000)
+
+    @model_validator(mode="after")
+    def _not_self_relation(self) -> CreateArtifactRelationRequest:
+        if self.from_artifact.artifact_id == self.to_artifact.artifact_id:
+            raise ValueError("artifact relation cannot reference the same artifact")
+        return self
+
+
+class ArtifactRelation(CreateArtifactRelationRequest):
+    tenant: TenantContext
+    relation_id: str
+    created_by: str
+    created_at: datetime
+
+
+class ArtifactRelationListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[ArtifactRelation]
+    count: int = Field(ge=0)
+
+
+class CreateReviewIssueRequest(AipContractModel):
+    rule_ref: ExactRevisionRef
+    severity: ReviewSeverity
+    artifact_ref: ExactArtifactRef
+    eval_report_ref: ExactRevisionRef
+    location: dict[str, Any]
+    evidence_refs: list[ExactRevisionRef] = Field(default_factory=list)
+    suggested_fix: str = Field(min_length=1, max_length=4000)
+    return_stage: str = Field(min_length=1, max_length=160)
+
+    @model_validator(mode="after")
+    def _review_refs(self) -> CreateReviewIssueRequest:
+        if self.eval_report_ref.resource_type != "EvalReportRevision":
+            raise ValueError("evalReportRef must reference EvalReportRevision")
+        if any(ref.resource_type != "Evidence" for ref in self.evidence_refs):
+            raise ValueError("evidenceRefs must reference Evidence")
+        return self
+
+
+class ReviewIssue(CreateReviewIssueRequest):
+    tenant: TenantContext
+    issue_id: str
+    status: ReviewIssueStatus
+    version: int = Field(ge=1)
+    created_by: str
+    created_at: datetime
+    updated_by: str
+    updated_at: datetime
+
+
+class ReviewIssueListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[ReviewIssue]
+    count: int = Field(ge=0)
+
+
+class ResolveReviewIssueRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    reason: str = Field(min_length=1, max_length=2000)
+    resolution_refs: list[ExactRevisionRef] = Field(default_factory=list)
+
+
+class ReturnReviewIssueRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    run_id: str = Field(min_length=1, max_length=200)
+    target_stage: str = Field(min_length=1, max_length=160)
+    reason: str = Field(min_length=1, max_length=2000)
+    attempt_idempotency_key: str = Field(min_length=1, max_length=160)
+
+
+class ReturnDecision(AipContractModel):
+    tenant: TenantContext
+    decision_id: str
+    issue_id: str
+    issue_version: int = Field(ge=1)
+    run_id: str
+    step_key: str
+    step_run_id: str
+    attempt: int = Field(ge=1)
+    attempt_idempotency_key: str
+    reason: str
+    decision_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    actor: str
+    created_at: datetime
 
 
 class CreateBriefRequest(AipContractModel):

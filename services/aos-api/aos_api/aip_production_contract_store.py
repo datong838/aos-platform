@@ -6,24 +6,40 @@ import json
 import uuid
 from collections.abc import Callable
 from contextlib import AbstractContextManager
+from datetime import datetime, timezone
 from typing import Any
 
-from aos_api.aip_contracts import ResourceRef, TenantContext
+from aos_api.aip_contracts import PlanStep, ResourceRef, TenantContext
 from aos_api.aip_production_contracts import (
-    BriefLifecycle, ContractBlocker, ContractReadiness, Coverage,
-    CreateBriefRequest, CreateEvalContractRequest, CreateEvidenceBundleRequest,
-    CreateResponsibilityPlanRequest, EvalContractListResponse,
-    EvalContractRevision, EvidenceBundleRevision, ExactRevisionRef,
-    ResponsibilityPlanListResponse, ResponsibilityPlanRevision,
+    ArtifactRelation, ArtifactRelationListResponse, BriefLifecycle,
+    CompileStageTemplateRequest, ContractBlocker, ContractReadiness, Coverage,
+    CreateArtifactRelationRequest, CreateBriefRequest, CreateEvalContractRequest,
+    CreateEvidenceBundleRequest, CreateResponsibilityPlanRequest,
+    CreateReviewIssueRequest, CreateStageTemplateRequest, EvalContractListResponse,
+    EvalContractRevision, EvidenceBundleRevision, ExactArtifactRef,
+    ExactRevisionRef, ResolveReviewIssueRequest, ResponsibilityPlanListResponse,
+    ResponsibilityPlanRevision, ReturnDecision, ReturnReviewIssueRequest,
     ReviseBriefRequest, ReviseEvalContractRequest,
-    ReviseResponsibilityPlanRequest, TaskBriefRevision,
+    ReviseResponsibilityPlanRequest, ReviseStageTemplateRequest, ReviewIssue,
+    ReviewIssueListResponse, ReviewIssueStatus, StageCompilationResult,
+    StageDefinition, StageTemplateListResponse, StageTemplateRevision, TaskBriefRevision,
     EvidenceBundleListResponse, TaskBriefListResponse,
+)
+from aos_api.aip_task_models import CreatePlanRevisionRequest
+from aos_api.aip_task_store import (
+    AipTaskIdempotencyConflict,
+    AipTaskNotFound,
+    AipTaskStore,
+    AipTaskStoreError,
+    AipTaskTransitionBlocked,
+    AipTaskVersionConflict,
 )
 from aos_api.db import connect as db_connect
 from aos_api.tenant_scope import TenantScope
 
 ConnectFactory = Callable[..., AbstractContextManager[Any]]
 ResponsibilityTemplateResolver = Callable[[TenantScope, ExactRevisionRef], bool]
+StageTemplateSourceResolver = Callable[[TenantScope, ExactRevisionRef], bool]
 
 
 class ProductionContractError(RuntimeError):
@@ -57,9 +73,13 @@ class AipProductionContractStore:
         connect_factory: ConnectFactory | None = None,
         *,
         responsibility_template_resolver: ResponsibilityTemplateResolver | None = None,
+        stage_template_source_resolver: StageTemplateSourceResolver | None = None,
+        task_store: AipTaskStore | None = None,
     ) -> None:
         self._connect_factory = connect_factory or db_connect
         self._responsibility_template_resolver = responsibility_template_resolver
+        self._stage_template_source_resolver = stage_template_source_resolver
+        self._task_store = task_store or AipTaskStore(self._connect_factory)
 
     def create_eval_contract(self, scope: TenantScope, actor: str, key: str,
                              body: CreateEvalContractRequest) -> EvalContractRevision:
@@ -271,6 +291,869 @@ class AipProductionContractStore:
             items = [self._responsibility_plan(scope, row, int(row["version"]), conn) for row in rows]
             return ResponsibilityPlanListResponse(tenant=self._tenant(scope), items=items, count=len(items))
 
+    def create_stage_template(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        body: CreateStageTemplateRequest,
+    ) -> StageTemplateRevision:
+        self._validate_stage_graph(body.stages)
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(payload)
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "stage_template.create", key, request_hash)
+            if replay:
+                return self.get_stage_template(
+                    scope, replay["resourceId"], int(replay["revision"]), conn=conn
+                )
+            template_id = f"stage-template-{uuid.uuid4().hex[:20]}"
+            content_hash = canonical_hash(payload)
+            conn.execute(
+                """INSERT INTO aip_stage_template_head
+                (org_id,project_id,template_id,current_revision,version)
+                VALUES(%s,%s,%s,1,1)""",
+                (*scope.key, template_id),
+            )
+            row = self._insert_stage_template(
+                conn,
+                scope,
+                template_id,
+                1,
+                actor,
+                body,
+                content_hash,
+                BriefLifecycle.DRAFT,
+            )
+            self._receipt(
+                conn,
+                scope,
+                "stage_template.create",
+                key,
+                request_hash,
+                {
+                    "resourceType": "StageTemplateRevision",
+                    "resourceId": template_id,
+                    "revision": 1,
+                    "contentHash": content_hash,
+                },
+                actor,
+            )
+            conn.commit()
+            return self._stage_template(scope, row, 1)
+
+    def revise_stage_template(
+        self,
+        scope: TenantScope,
+        actor: str,
+        template_id: str,
+        key: str,
+        body: ReviseStageTemplateRequest,
+    ) -> StageTemplateRevision:
+        self._validate_stage_graph(body.stages)
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash({"templateId": template_id, **payload})
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "stage_template.revise", key, request_hash)
+            if replay:
+                return self.get_stage_template(
+                    scope, template_id, int(replay["revision"]), conn=conn
+                )
+            head = self._head(
+                conn,
+                scope,
+                "aip_stage_template_head",
+                "template_id",
+                template_id,
+            )
+            if not head:
+                raise ProductionContractNotFound("stage template not found")
+            if int(head["version"]) != body.expected_version:
+                raise ProductionContractConflict("stale stage template version")
+            current = self.get_stage_template(
+                scope, template_id, int(head["current_revision"]), conn=conn
+            )
+            if current.lifecycle is not BriefLifecycle.DRAFT:
+                raise ProductionContractConflict("only a draft stage template can be revised")
+            revision = int(head["current_revision"]) + 1
+            content = body.model_dump(
+                mode="json", by_alias=True, exclude={"expected_version"}
+            )
+            content_hash = canonical_hash(content)
+            row = self._insert_stage_template(
+                conn,
+                scope,
+                template_id,
+                revision,
+                actor,
+                body,
+                content_hash,
+                BriefLifecycle.DRAFT,
+            )
+            self._advance_head(
+                conn,
+                scope,
+                "aip_stage_template_head",
+                "template_id",
+                template_id,
+                revision,
+            )
+            self._receipt(
+                conn,
+                scope,
+                "stage_template.revise",
+                key,
+                request_hash,
+                {
+                    "resourceType": "StageTemplateRevision",
+                    "resourceId": template_id,
+                    "revision": revision,
+                    "contentHash": content_hash,
+                },
+                actor,
+            )
+            conn.commit()
+            return self._stage_template(scope, row, int(head["version"]) + 1)
+
+    def freeze_stage_template(
+        self,
+        scope: TenantScope,
+        actor: str,
+        template_id: str,
+        expected_version: int,
+        key: str,
+    ) -> StageTemplateRevision:
+        request_hash = canonical_hash(
+            {"templateId": template_id, "expectedVersion": expected_version}
+        )
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "stage_template.freeze", key, request_hash)
+            if replay:
+                return self.get_stage_template(
+                    scope, template_id, int(replay["revision"]), conn=conn
+                )
+            head = self._head(
+                conn,
+                scope,
+                "aip_stage_template_head",
+                "template_id",
+                template_id,
+            )
+            if not head:
+                raise ProductionContractNotFound("stage template not found")
+            if int(head["version"]) != expected_version:
+                raise ProductionContractConflict("stale stage template version")
+            current = self.get_stage_template(
+                scope, template_id, int(head["current_revision"]), conn=conn
+            )
+            if current.lifecycle is not BriefLifecycle.DRAFT:
+                raise ProductionContractConflict("stage template is not a draft")
+            if current.blockers:
+                codes = ",".join(blocker.code for blocker in current.blockers)
+                raise ProductionContractDependencyBlocked(
+                    f"STAGE_TEMPLATE_NOT_READY:{codes}"
+                )
+            revision = int(head["current_revision"]) + 1
+            sealed_at = datetime.now(timezone.utc)
+            seal_hash = canonical_hash(
+                {
+                    "resourceType": "StageTemplateRevision",
+                    "resourceId": template_id,
+                    "revision": revision,
+                    "contentHash": current.content_hash,
+                    "sealedBy": actor,
+                    "sealedAt": sealed_at.isoformat(),
+                }
+            )
+            row = conn.execute(
+                """INSERT INTO aip_stage_template_revision
+                (org_id,project_id,template_id,revision,profile,source_bundle_ref,stages,
+                 content_hash,lifecycle,sealed_by,sealed_at,seal_hash,created_by)
+                SELECT org_id,project_id,template_id,%s,profile,source_bundle_ref,stages,
+                 content_hash,'frozen',%s,%s,%s,%s
+                FROM aip_stage_template_revision
+                WHERE org_id=%s AND project_id=%s AND template_id=%s AND revision=%s
+                RETURNING *""",
+                (
+                    revision,
+                    actor,
+                    sealed_at,
+                    seal_hash,
+                    actor,
+                    *scope.key,
+                    template_id,
+                    head["current_revision"],
+                ),
+            ).fetchone()
+            self._advance_head(
+                conn,
+                scope,
+                "aip_stage_template_head",
+                "template_id",
+                template_id,
+                revision,
+            )
+            self._receipt(
+                conn,
+                scope,
+                "stage_template.freeze",
+                key,
+                request_hash,
+                {
+                    "resourceType": "StageTemplateRevision",
+                    "resourceId": template_id,
+                    "revision": revision,
+                    "contentHash": row["content_hash"],
+                },
+                actor,
+            )
+            conn.commit()
+            return self._stage_template(scope, row, expected_version + 1)
+
+    def get_stage_template(
+        self,
+        scope: TenantScope,
+        template_id: str,
+        revision: int | None = None,
+        *,
+        conn: Any | None = None,
+    ) -> StageTemplateRevision:
+        def read(connection: Any) -> StageTemplateRevision:
+            head = connection.execute(
+                """SELECT * FROM aip_stage_template_head
+                WHERE org_id=%s AND project_id=%s AND template_id=%s""",
+                (*scope.key, template_id),
+            ).fetchone()
+            if not head:
+                raise ProductionContractNotFound("stage template not found")
+            selected = revision or int(head["current_revision"])
+            row = connection.execute(
+                """SELECT * FROM aip_stage_template_revision
+                WHERE org_id=%s AND project_id=%s AND template_id=%s AND revision=%s""",
+                (*scope.key, template_id, selected),
+            ).fetchone()
+            if not row:
+                raise ProductionContractNotFound("stage template revision not found")
+            return self._stage_template(scope, row, int(head["version"]))
+
+        if conn is not None:
+            return read(conn)
+        with self._connect_factory(scope) as connection:
+            return read(connection)
+
+    def list_stage_templates(self, scope: TenantScope) -> StageTemplateListResponse:
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT revision.*,head.version
+                FROM aip_stage_template_head head
+                JOIN aip_stage_template_revision revision
+                  ON revision.org_id=head.org_id AND revision.project_id=head.project_id
+                 AND revision.template_id=head.template_id
+                 AND revision.revision=head.current_revision
+                WHERE head.org_id=%s AND head.project_id=%s
+                ORDER BY revision.created_at DESC,revision.template_id""",
+                scope.key,
+            ).fetchall()
+            items = [
+                self._stage_template(scope, row, int(row["version"])) for row in rows
+            ]
+            return StageTemplateListResponse(
+                tenant=self._tenant(scope), items=items, count=len(items)
+            )
+
+    def compile_stage_template(
+        self,
+        scope: TenantScope,
+        actor: str,
+        template_id: str,
+        key: str,
+        body: CompileStageTemplateRequest,
+    ) -> StageCompilationResult:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash({"templateId": template_id, **payload})
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "stage_template.compile", key, request_hash)
+            if replay:
+                return StageCompilationResult.model_validate(replay)
+            template = self.get_stage_template(
+                scope, template_id, body.template_revision, conn=conn
+            )
+            if template.lifecycle is not BriefLifecycle.FROZEN:
+                raise ProductionContractDependencyBlocked("STAGE_TEMPLATE_NOT_FROZEN")
+            if template.content_hash != body.template_content_hash:
+                raise ProductionContractDependencyBlocked("STAGE_TEMPLATE_DRIFTED")
+            if template.profile != body.profile:
+                raise ProductionContractDependencyBlocked("STAGE_TEMPLATE_PROFILE_MISMATCH")
+            if template.blockers:
+                raise ProductionContractDependencyBlocked("STAGE_TEMPLATE_SOURCE_DRIFTED")
+            plan = self.get_responsibility_plan(
+                scope,
+                body.responsibility_plan_ref.resource_id,
+                body.responsibility_plan_ref.revision,
+                conn=conn,
+            )
+            if plan.content_hash != body.responsibility_plan_ref.content_hash:
+                raise ProductionContractDependencyBlocked("RESPONSIBILITY_PLAN_DRIFTED")
+            if plan.lifecycle is not BriefLifecycle.FROZEN:
+                raise ProductionContractDependencyBlocked("RESPONSIBILITY_PLAN_NOT_FROZEN")
+            if (
+                plan.readiness is not ContractReadiness.READY
+                or plan.coverage is not Coverage.COMPLETE
+            ):
+                raise ProductionContractDependencyBlocked("RESPONSIBILITY_PLAN_NOT_READY")
+            if plan.profile != body.profile:
+                raise ProductionContractDependencyBlocked("RESPONSIBILITY_PROFILE_MISMATCH")
+
+            slot_ids = {slot.slot_id for slot in plan.slots}
+            missing_slots = sorted(
+                {
+                    slot_id
+                    for stage in template.stages
+                    for slot_id in stage.required_slot_ids
+                    if slot_id not in slot_ids
+                }
+            )
+            if missing_slots:
+                raise ProductionContractDependencyBlocked(
+                    "STAGE_REQUIRED_SLOT_MISSING:" + ",".join(missing_slots)
+                )
+            applicable: list[str] = []
+            not_applicable: list[str] = []
+            stage_compilation: list[dict[str, Any]] = []
+            steps: list[PlanStep] = []
+            dependencies: list[dict[str, Any]] = []
+            for stage in template.stages:
+                is_applicable = (
+                    stage.applicability.kind.value == "always"
+                    or body.profile in stage.applicability.profiles
+                )
+                (applicable if is_applicable else not_applicable).append(stage.stage_id)
+                stage_compilation.append(
+                    {
+                        **stage.model_dump(mode="json", by_alias=True),
+                        "applicabilityResult": (
+                            "applicable" if is_applicable else "not_applicable"
+                        ),
+                        "evaluatedProfile": body.profile,
+                    }
+                )
+                steps.append(
+                    PlanStep(
+                        step_key=stage.stage_id,
+                        title=stage.title,
+                        input_refs=[stage.input_schema_ref],
+                    )
+                )
+                dependencies.extend(
+                    {"from": dependency, "to": stage.stage_id}
+                    for dependency in stage.depends_on
+                )
+
+        production_risk = {
+            "productionContract": {
+                "compilerVersion": "w2c.v1",
+                "stageTemplateRef": {
+                    "resourceType": "StageTemplateRevision",
+                    "resourceId": template.template_id,
+                    "revision": template.revision,
+                    "contentHash": template.content_hash,
+                },
+                "responsibilityPlanRef": body.responsibility_plan_ref.model_dump(
+                    mode="json", by_alias=True
+                ),
+                "stageCompilation": stage_compilation,
+                "productionStartGateRequired": True,
+                "productionStartGateRef": None,
+            }
+        }
+        plan_key = "w2c-" + canonical_hash(
+            {"templateId": template_id, "idempotencyKey": key}
+        )[:48]
+        try:
+            canonical_plan = self._task_store.create_plan(
+                scope,
+                actor,
+                body.task_id,
+                plan_key,
+                CreatePlanRevisionRequest(
+                    expected_task_version=body.expected_task_version,
+                    steps=steps,
+                    dependencies=dependencies,
+                    risk=production_risk,
+                ),
+            )
+        except (AipTaskNotFound, AipTaskVersionConflict) as exc:
+            raise ProductionContractConflict(str(exc)) from exc
+        except AipTaskIdempotencyConflict as exc:
+            raise ProductionContractIdempotencyConflict(str(exc)) from exc
+        except AipTaskTransitionBlocked as exc:
+            raise ProductionContractDependencyBlocked(str(exc)) from exc
+        except AipTaskStoreError as exc:
+            raise ProductionContractError(str(exc)) from exc
+
+        result = StageCompilationResult(
+            tenant=self._tenant(scope),
+            task_id=body.task_id,
+            template_ref=ExactRevisionRef(
+                resource_type="StageTemplateRevision",
+                resource_id=template.template_id,
+                revision=template.revision,
+                content_hash=template.content_hash,
+            ),
+            responsibility_plan_ref=body.responsibility_plan_ref,
+            plan_ref=ExactRevisionRef(
+                resource_type="PlanRevision",
+                resource_id=canonical_plan.id,
+                revision=canonical_plan.revision,
+                content_hash=canonical_plan.content_hash,
+            ),
+            compiler_version="w2c.v1",
+            applicable_stage_ids=applicable,
+            not_applicable_stage_ids=not_applicable,
+            created_at=canonical_plan.created_at,
+        )
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "stage_template.compile", key, request_hash)
+            if replay:
+                return StageCompilationResult.model_validate(replay)
+            self._receipt(
+                conn,
+                scope,
+                "stage_template.compile",
+                key,
+                request_hash,
+                result.model_dump(mode="json", by_alias=True),
+                actor,
+            )
+            conn.commit()
+        return result
+
+    def create_artifact_relation(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        body: CreateArtifactRelationRequest,
+    ) -> ArtifactRelation:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(payload)
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "artifact_relation.create", key, request_hash)
+            if replay:
+                return self.get_artifact_relation(scope, replay["resourceId"], conn=conn)
+            self._require_artifact(conn, scope, body.from_artifact)
+            self._require_artifact(conn, scope, body.to_artifact)
+            cycle = conn.execute(
+                """WITH RECURSIVE reachable(artifact_id) AS (
+                  SELECT to_artifact_id FROM aip_artifact_relation
+                   WHERE org_id=%s AND project_id=%s AND from_artifact_id=%s
+                  UNION
+                  SELECT relation.to_artifact_id FROM aip_artifact_relation relation
+                  JOIN reachable path ON relation.from_artifact_id=path.artifact_id
+                   WHERE relation.org_id=%s AND relation.project_id=%s)
+                SELECT 1 FROM reachable WHERE artifact_id=%s LIMIT 1""",
+                (
+                    *scope.key,
+                    body.to_artifact.artifact_id,
+                    *scope.key,
+                    body.from_artifact.artifact_id,
+                ),
+            ).fetchone()
+            if cycle:
+                raise ProductionContractDependencyBlocked("ARTIFACT_RELATION_CYCLE")
+            relation_id = f"artifact-relation-{uuid.uuid4().hex[:20]}"
+            row = conn.execute(
+                """INSERT INTO aip_artifact_relation
+                (org_id,project_id,relation_id,relation_type,from_artifact_id,
+                 from_content_hash,to_artifact_id,to_content_hash,reason,created_by)
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *""",
+                (
+                    *scope.key,
+                    relation_id,
+                    body.relation_type.value,
+                    body.from_artifact.artifact_id,
+                    body.from_artifact.content_hash,
+                    body.to_artifact.artifact_id,
+                    body.to_artifact.content_hash,
+                    body.reason,
+                    actor,
+                ),
+            ).fetchone()
+            self._receipt(
+                conn,
+                scope,
+                "artifact_relation.create",
+                key,
+                request_hash,
+                {"resourceType": "ArtifactRelation", "resourceId": relation_id},
+                actor,
+            )
+            conn.commit()
+            return self._artifact_relation(scope, row)
+
+    def get_artifact_relation(
+        self,
+        scope: TenantScope,
+        relation_id: str,
+        *,
+        conn: Any | None = None,
+    ) -> ArtifactRelation:
+        def read(connection: Any) -> ArtifactRelation:
+            row = connection.execute(
+                """SELECT * FROM aip_artifact_relation
+                WHERE org_id=%s AND project_id=%s AND relation_id=%s""",
+                (*scope.key, relation_id),
+            ).fetchone()
+            if not row:
+                raise ProductionContractNotFound("artifact relation not found")
+            return self._artifact_relation(scope, row)
+
+        if conn is not None:
+            return read(conn)
+        with self._connect_factory(scope) as connection:
+            return read(connection)
+
+    def list_artifact_relations(
+        self, scope: TenantScope
+    ) -> ArtifactRelationListResponse:
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT * FROM aip_artifact_relation
+                WHERE org_id=%s AND project_id=%s
+                ORDER BY created_at DESC,relation_id""",
+                scope.key,
+            ).fetchall()
+            items = [self._artifact_relation(scope, row) for row in rows]
+            return ArtifactRelationListResponse(
+                tenant=self._tenant(scope), items=items, count=len(items)
+            )
+
+    def create_review_issue(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        body: CreateReviewIssueRequest,
+    ) -> ReviewIssue:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(payload)
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "review_issue.create", key, request_hash)
+            if replay:
+                return self.get_review_issue(scope, replay["resourceId"], conn=conn)
+            self._require_artifact(conn, scope, body.artifact_ref)
+            self._require_eval_report(conn, scope, body.eval_report_ref)
+            self._require_evidence(conn, scope, body.evidence_refs)
+            issue_id = f"review-issue-{uuid.uuid4().hex[:20]}"
+            row = conn.execute(
+                """INSERT INTO aip_review_issue
+                (org_id,project_id,issue_id,rule_ref,severity,artifact_id,artifact_hash,
+                 eval_report_id,eval_report_revision,eval_report_hash,location,evidence_refs,
+                 suggested_fix,return_stage,status,version,created_by,updated_by)
+                VALUES(%s,%s,%s,%s::jsonb,%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,
+                 %s,%s,'open',1,%s,%s) RETURNING *""",
+                (
+                    *scope.key,
+                    issue_id,
+                    self._json(payload["ruleRef"]),
+                    body.severity.value,
+                    body.artifact_ref.artifact_id,
+                    body.artifact_ref.content_hash,
+                    body.eval_report_ref.resource_id,
+                    body.eval_report_ref.revision,
+                    body.eval_report_ref.content_hash,
+                    self._json(body.location),
+                    self._json(payload["evidenceRefs"]),
+                    body.suggested_fix,
+                    body.return_stage,
+                    actor,
+                    actor,
+                ),
+            ).fetchone()
+            self._review_event(
+                conn,
+                scope,
+                issue_id,
+                1,
+                "opened",
+                1,
+                payload,
+                actor,
+            )
+            self._receipt(
+                conn,
+                scope,
+                "review_issue.create",
+                key,
+                request_hash,
+                {"resourceType": "ReviewIssue", "resourceId": issue_id, "version": 1},
+                actor,
+            )
+            conn.commit()
+            return self._review_issue(scope, row)
+
+    def get_review_issue(
+        self,
+        scope: TenantScope,
+        issue_id: str,
+        *,
+        conn: Any | None = None,
+        for_update: bool = False,
+    ) -> ReviewIssue:
+        def read(connection: Any) -> ReviewIssue:
+            suffix = " FOR UPDATE" if for_update else ""
+            row = connection.execute(
+                """SELECT * FROM aip_review_issue
+                WHERE org_id=%s AND project_id=%s AND issue_id=%s""" + suffix,
+                (*scope.key, issue_id),
+            ).fetchone()
+            if not row:
+                raise ProductionContractNotFound("review issue not found")
+            return self._review_issue(scope, row)
+
+        if conn is not None:
+            return read(conn)
+        with self._connect_factory(scope) as connection:
+            return read(connection)
+
+    def list_review_issues(self, scope: TenantScope) -> ReviewIssueListResponse:
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT * FROM aip_review_issue
+                WHERE org_id=%s AND project_id=%s
+                ORDER BY updated_at DESC,issue_id""",
+                scope.key,
+            ).fetchall()
+            items = [self._review_issue(scope, row) for row in rows]
+            return ReviewIssueListResponse(
+                tenant=self._tenant(scope), items=items, count=len(items)
+            )
+
+    def resolve_review_issue(
+        self,
+        scope: TenantScope,
+        actor: str,
+        issue_id: str,
+        key: str,
+        body: ResolveReviewIssueRequest,
+    ) -> ReviewIssue:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash({"issueId": issue_id, **payload})
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "review_issue.resolve", key, request_hash)
+            if replay:
+                return self.get_review_issue(scope, issue_id, conn=conn)
+            current = self.get_review_issue(
+                scope, issue_id, conn=conn, for_update=True
+            )
+            if current.status is not ReviewIssueStatus.OPEN:
+                raise ProductionContractConflict("review issue is not open")
+            if current.version != body.expected_version:
+                raise ProductionContractConflict("stale review issue version")
+            row = conn.execute(
+                """UPDATE aip_review_issue SET status='resolved',version=version+1,
+                 updated_by=%s,updated_at=NOW()
+                WHERE org_id=%s AND project_id=%s AND issue_id=%s AND version=%s
+                RETURNING *""",
+                (actor, *scope.key, issue_id, body.expected_version),
+            ).fetchone()
+            self._review_event(
+                conn,
+                scope,
+                issue_id,
+                2,
+                "resolved",
+                body.expected_version + 1,
+                payload,
+                actor,
+            )
+            self._receipt(
+                conn,
+                scope,
+                "review_issue.resolve",
+                key,
+                request_hash,
+                {
+                    "resourceType": "ReviewIssue",
+                    "resourceId": issue_id,
+                    "version": body.expected_version + 1,
+                },
+                actor,
+            )
+            conn.commit()
+            return self._review_issue(scope, row)
+
+    def return_review_issue(
+        self,
+        scope: TenantScope,
+        actor: str,
+        issue_id: str,
+        key: str,
+        body: ReturnReviewIssueRequest,
+    ) -> ReturnDecision:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash({"issueId": issue_id, **payload})
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "review_issue.return", key, request_hash)
+            if replay:
+                return self._return_decision_by_id(
+                    scope, replay["resourceId"], conn=conn
+                )
+            issue = self.get_review_issue(
+                scope, issue_id, conn=conn, for_update=True
+            )
+            if issue.status is not ReviewIssueStatus.OPEN:
+                raise ProductionContractConflict("review issue is not open")
+            if issue.version != body.expected_version:
+                raise ProductionContractConflict("stale review issue version")
+            if issue.return_stage != body.target_stage:
+                raise ProductionContractDependencyBlocked("RETURN_STAGE_MISMATCH")
+            self._require_artifact(conn, scope, issue.artifact_ref)
+            self._require_eval_report(conn, scope, issue.eval_report_ref)
+            self._require_evidence(conn, scope, issue.evidence_refs)
+            run = conn.execute(
+                """SELECT run.*,task.status AS task_status,task.version AS task_version
+                FROM aip_task_run run
+                JOIN aip_task task ON task.org_id=run.org_id AND task.project_id=run.project_id
+                 AND task.task_id=run.task_id
+                WHERE run.org_id=%s AND run.project_id=%s AND run.run_id=%s
+                FOR UPDATE OF run,task""",
+                (*scope.key, body.run_id),
+            ).fetchone()
+            if not run or run["status"] != "running" or run["task_status"] != "executing":
+                raise ProductionContractDependencyBlocked("RETURN_TARGET_NOT_RUNNING")
+            plan = conn.execute(
+                """SELECT steps FROM aip_plan_revision
+                WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s""",
+                (*scope.key, run["plan_revision_id"]),
+            ).fetchone()
+            if not plan or body.target_stage not in {
+                str(item.get("stepKey")) for item in self._load(plan["steps"])
+            }:
+                raise ProductionContractDependencyBlocked("RETURN_STAGE_NOT_IN_PLAN")
+            existing_key = conn.execute(
+                """SELECT * FROM aip_return_decision
+                WHERE org_id=%s AND project_id=%s AND attempt_idempotency_key=%s""",
+                (*scope.key, body.attempt_idempotency_key),
+            ).fetchone()
+            if existing_key:
+                raise ProductionContractIdempotencyConflict(
+                    "attempt idempotency key already belongs to another return"
+                )
+            latest = conn.execute(
+                """SELECT * FROM aip_step_run
+                WHERE org_id=%s AND project_id=%s AND run_id=%s AND step_key=%s
+                ORDER BY attempt DESC LIMIT 1 FOR UPDATE""",
+                (*scope.key, body.run_id, body.target_stage),
+            ).fetchone()
+            if not latest:
+                raise ProductionContractDependencyBlocked("RETURN_SOURCE_ATTEMPT_MISSING")
+            if latest["status"] not in {"succeeded", "failed", "skipped", "unknown"}:
+                raise ProductionContractDependencyBlocked("RETURN_SOURCE_ATTEMPT_NOT_TERMINAL")
+            attempt = int(latest["attempt"]) + 1
+            step_run_id = f"step-run-{uuid.uuid4().hex[:20]}"
+            conn.execute(
+                """INSERT INTO aip_step_run
+                (org_id,project_id,step_run_id,run_id,step_key,attempt,status,input_refs,
+                 created_at,updated_at)
+                VALUES(%s,%s,%s,%s,%s,%s,'queued',%s::jsonb,NOW(),NOW())""",
+                (
+                    *scope.key,
+                    step_run_id,
+                    body.run_id,
+                    body.target_stage,
+                    attempt,
+                    self._json(self._load(latest["input_refs"])),
+                ),
+            )
+            decision_id = f"return-decision-{uuid.uuid4().hex[:20]}"
+            decision_hash = canonical_hash(
+                {
+                    "issueId": issue_id,
+                    "issueVersion": body.expected_version,
+                    "runId": body.run_id,
+                    "stepKey": body.target_stage,
+                    "stepRunId": step_run_id,
+                    "attempt": attempt,
+                    "attemptIdempotencyKey": body.attempt_idempotency_key,
+                    "reason": body.reason,
+                    "actor": actor,
+                }
+            )
+            decision = conn.execute(
+                """INSERT INTO aip_return_decision
+                (org_id,project_id,decision_id,issue_id,issue_version,run_id,step_key,
+                 step_run_id,attempt,attempt_idempotency_key,reason,decision_hash,actor)
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *""",
+                (
+                    *scope.key,
+                    decision_id,
+                    issue_id,
+                    body.expected_version,
+                    body.run_id,
+                    body.target_stage,
+                    step_run_id,
+                    attempt,
+                    body.attempt_idempotency_key,
+                    body.reason,
+                    decision_hash,
+                    actor,
+                ),
+            ).fetchone()
+            conn.execute(
+                """UPDATE aip_review_issue SET status='returned',version=version+1,
+                 updated_by=%s,updated_at=NOW()
+                WHERE org_id=%s AND project_id=%s AND issue_id=%s AND version=%s""",
+                (actor, *scope.key, issue_id, body.expected_version),
+            )
+            self._review_event(
+                conn,
+                scope,
+                issue_id,
+                2,
+                "returned",
+                body.expected_version + 1,
+                {**payload, "decisionHash": decision_hash, "stepRunId": step_run_id},
+                actor,
+            )
+            self._receipt(
+                conn,
+                scope,
+                "review_issue.return",
+                key,
+                request_hash,
+                {
+                    "resourceType": "ReturnDecision",
+                    "resourceId": decision_id,
+                    "contentHash": decision_hash,
+                },
+                actor,
+            )
+            conn.commit()
+            return self._return_decision(scope, decision)
+
+    def _return_decision_by_id(
+        self,
+        scope: TenantScope,
+        decision_id: str,
+        *,
+        conn: Any | None = None,
+    ) -> ReturnDecision:
+        def read(connection: Any) -> ReturnDecision:
+            row = connection.execute(
+                """SELECT * FROM aip_return_decision
+                WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
+                (*scope.key, decision_id),
+            ).fetchone()
+            if not row:
+                raise ProductionContractNotFound("return decision not found")
+            return self._return_decision(scope, row)
+
+        if conn is not None:
+            return read(conn)
+        with self._connect_factory(scope) as connection:
+            return read(connection)
+
     def create_brief(self, scope: TenantScope, actor: str, key: str, body: CreateBriefRequest) -> TaskBriefRevision:
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash(payload)
@@ -399,6 +1282,258 @@ class AipProductionContractStore:
                 items=items,
                 count=len(items),
             )
+
+    @staticmethod
+    def _validate_stage_graph(stages: list[StageDefinition]) -> None:
+        stage_ids = {stage.stage_id for stage in stages}
+        unknown = sorted(
+            {
+                dependency
+                for stage in stages
+                for dependency in stage.depends_on
+                if dependency not in stage_ids
+            }
+        )
+        if unknown:
+            raise ProductionContractDependencyBlocked(
+                "STAGE_DEPENDENCY_UNKNOWN:" + ",".join(unknown)
+            )
+
+        dependencies = {stage.stage_id: set(stage.depends_on) for stage in stages}
+        ready = sorted(stage_id for stage_id, refs in dependencies.items() if not refs)
+        visited: set[str] = set()
+        while ready:
+            stage_id = ready.pop(0)
+            if stage_id in visited:
+                continue
+            visited.add(stage_id)
+            for candidate, refs in dependencies.items():
+                if candidate in visited or stage_id not in refs:
+                    continue
+                refs.remove(stage_id)
+                if not refs:
+                    ready.append(candidate)
+            ready.sort()
+        if len(visited) != len(stages):
+            cyclic = sorted(stage_ids - visited)
+            raise ProductionContractDependencyBlocked(
+                "STAGE_DEPENDENCY_CYCLE:" + ",".join(cyclic)
+            )
+
+    def _insert_stage_template(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        template_id: str,
+        revision: int,
+        actor: str,
+        body: CreateStageTemplateRequest | ReviseStageTemplateRequest,
+        content_hash: str,
+        lifecycle: BriefLifecycle,
+    ) -> Any:
+        payload = body.model_dump(
+            mode="json", by_alias=True, exclude={"expected_version"}
+        )
+        return conn.execute(
+            """INSERT INTO aip_stage_template_revision
+            (org_id,project_id,template_id,revision,profile,source_bundle_ref,stages,
+             content_hash,lifecycle,created_by)
+            VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s)
+            RETURNING *""",
+            (
+                *scope.key,
+                template_id,
+                revision,
+                body.profile,
+                self._json(payload["sourceBundleRef"]),
+                self._json(payload["stages"]),
+                content_hash,
+                lifecycle.value,
+                actor,
+            ),
+        ).fetchone()
+
+    def _stage_template(
+        self, scope: TenantScope, row: Any, version: int
+    ) -> StageTemplateRevision:
+        source_ref = ExactRevisionRef.model_validate(self._load(row["source_bundle_ref"]))
+        blockers: list[ContractBlocker] = []
+        if self._stage_template_source_resolver is None:
+            blockers.append(
+                ContractBlocker(
+                    code="STAGE_SOURCE_AUTHORITY_UNAVAILABLE",
+                    message="StageTemplate sourceBundleRef 权威解析器不可用",
+                    resource_ref=source_ref,
+                )
+            )
+        elif not self._stage_template_source_resolver(scope, source_ref):
+            blockers.append(
+                ContractBlocker(
+                    code="STAGE_SOURCE_MISSING_OR_DRIFTED",
+                    message="StageTemplate sourceBundleRef 缺失或 exact ref 漂移",
+                    resource_ref=source_ref,
+                )
+            )
+        return StageTemplateRevision(
+            tenant=self._tenant(scope),
+            template_id=row["template_id"],
+            revision=int(row["revision"]),
+            version=version,
+            profile=row["profile"],
+            source_bundle_ref=source_ref,
+            stages=[StageDefinition.model_validate(item) for item in self._load(row["stages"])],
+            content_hash=row["content_hash"],
+            lifecycle=row["lifecycle"],
+            sealed_by=row["sealed_by"],
+            sealed_at=row["sealed_at"],
+            seal_hash=row["seal_hash"],
+            readiness=(
+                ContractReadiness.READY if not blockers else ContractReadiness.BLOCKED
+            ),
+            blockers=blockers,
+            created_by=row["created_by"],
+            created_at=row["created_at"],
+        )
+
+    @staticmethod
+    def _require_artifact(
+        conn: Any, scope: TenantScope, ref: ExactArtifactRef
+    ) -> None:
+        row = conn.execute(
+            """SELECT content_hash FROM aip_artifact
+            WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
+            (*scope.key, ref.artifact_id),
+        ).fetchone()
+        if not row or not row["content_hash"]:
+            raise ProductionContractDependencyBlocked("ARTIFACT_HASH_MISSING")
+        if row["content_hash"] != ref.content_hash:
+            raise ProductionContractDependencyBlocked("ARTIFACT_HASH_DRIFTED")
+
+    @staticmethod
+    def _require_eval_report(
+        conn: Any, scope: TenantScope, ref: ExactRevisionRef
+    ) -> None:
+        if ref.resource_type != "EvalReportRevision":
+            raise ProductionContractDependencyBlocked("EVAL_REPORT_REF_TYPE_INVALID")
+        row = conn.execute(
+            """SELECT content_hash FROM aip_eval_report_revision
+            WHERE org_id=%s AND project_id=%s AND report_id=%s AND revision=%s""",
+            (*scope.key, ref.resource_id, ref.revision),
+        ).fetchone()
+        if not row:
+            raise ProductionContractDependencyBlocked("EVAL_REPORT_MISSING")
+        if row["content_hash"] != ref.content_hash:
+            raise ProductionContractDependencyBlocked("EVAL_REPORT_DRIFTED")
+
+    @staticmethod
+    def _require_evidence(
+        conn: Any, scope: TenantScope, refs: list[ExactRevisionRef]
+    ) -> None:
+        for ref in refs:
+            if ref.resource_type != "Evidence" or ref.revision != 1:
+                raise ProductionContractDependencyBlocked("EVIDENCE_REF_INVALID")
+            row = conn.execute(
+                """SELECT content_hash FROM aip_evidence
+                WHERE org_id=%s AND project_id=%s AND evidence_id=%s""",
+                (*scope.key, ref.resource_id),
+            ).fetchone()
+            if not row:
+                raise ProductionContractDependencyBlocked("EVIDENCE_MISSING")
+            if row["content_hash"] != ref.content_hash:
+                raise ProductionContractDependencyBlocked("EVIDENCE_DRIFTED")
+
+    def _artifact_relation(self, scope: TenantScope, row: Any) -> ArtifactRelation:
+        return ArtifactRelation(
+            tenant=self._tenant(scope),
+            relation_id=row["relation_id"],
+            relation_type=row["relation_type"],
+            from_artifact=ExactArtifactRef(
+                artifact_id=row["from_artifact_id"],
+                content_hash=row["from_content_hash"],
+            ),
+            to_artifact=ExactArtifactRef(
+                artifact_id=row["to_artifact_id"],
+                content_hash=row["to_content_hash"],
+            ),
+            reason=row["reason"],
+            created_by=row["created_by"],
+            created_at=row["created_at"],
+        )
+
+    def _review_event(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        issue_id: str,
+        sequence: int,
+        event_type: str,
+        issue_version: int,
+        payload: dict[str, Any],
+        actor: str,
+    ) -> None:
+        conn.execute(
+            """INSERT INTO aip_review_issue_event
+            (org_id,project_id,event_id,issue_id,sequence,event_type,issue_version,
+             payload_hash,actor)
+            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+            (
+                *scope.key,
+                f"review-event-{uuid.uuid4().hex[:20]}",
+                issue_id,
+                sequence,
+                event_type,
+                issue_version,
+                canonical_hash(payload),
+                actor,
+            ),
+        )
+
+    def _review_issue(self, scope: TenantScope, row: Any) -> ReviewIssue:
+        return ReviewIssue(
+            tenant=self._tenant(scope),
+            issue_id=row["issue_id"],
+            rule_ref=ExactRevisionRef.model_validate(self._load(row["rule_ref"])),
+            severity=row["severity"],
+            artifact_ref=ExactArtifactRef(
+                artifact_id=row["artifact_id"], content_hash=row["artifact_hash"]
+            ),
+            eval_report_ref=ExactRevisionRef(
+                resource_type="EvalReportRevision",
+                resource_id=row["eval_report_id"],
+                revision=int(row["eval_report_revision"]),
+                content_hash=row["eval_report_hash"],
+            ),
+            location=self._load(row["location"]),
+            evidence_refs=[
+                ExactRevisionRef.model_validate(item)
+                for item in self._load(row["evidence_refs"])
+            ],
+            suggested_fix=row["suggested_fix"],
+            return_stage=row["return_stage"],
+            status=row["status"],
+            version=int(row["version"]),
+            created_by=row["created_by"],
+            created_at=row["created_at"],
+            updated_by=row["updated_by"],
+            updated_at=row["updated_at"],
+        )
+
+    def _return_decision(self, scope: TenantScope, row: Any) -> ReturnDecision:
+        return ReturnDecision(
+            tenant=self._tenant(scope),
+            decision_id=row["decision_id"],
+            issue_id=row["issue_id"],
+            issue_version=int(row["issue_version"]),
+            run_id=row["run_id"],
+            step_key=row["step_key"],
+            step_run_id=row["step_run_id"],
+            attempt=int(row["attempt"]),
+            attempt_idempotency_key=row["attempt_idempotency_key"],
+            reason=row["reason"],
+            decision_hash=row["decision_hash"],
+            actor=row["actor"],
+            created_at=row["created_at"],
+        )
 
     def _require_eval_suite(self, conn: Any, scope: TenantScope, ref: ExactRevisionRef) -> None:
         row = conn.execute(
