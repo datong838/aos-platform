@@ -1,0 +1,67 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w6-01-exact-capability-assignee-readiness-doc-ledger-20260814",
+  "authorityRevision": "AOS-000027",
+  "repositoryRevisionBefore": "b368821512b1c011da2737d1f3913a57578a8c84",
+  "result": "W6_01_EXACT_CAPABILITY_ASSIGNEE_READINESS_DOC_LEDGER_ALIGNED",
+  "sourceEvidence": ".evidence/workshop/2026-08-14-w6-01-exact-capability-assignee-readiness-preflight.json",
+  "decision": "A6E_DEFINITION_CATALOG_GREEN_OPERATIONAL_RESOLVER_REMAINS_BLOCKED",
+  "reviewLoop": [
+    {
+      "round": 1,
+      "finding": "W6-01 did not distinguish catalog publication from deterministic assignee readiness and omitted current bundle-version drift, four assignee authorities, exact binding ownership and reassign semantics.",
+      "remediation": "added ADR49 and aligned production orchestration, Adapter readiness and the D-wave dependency contract."
+    },
+    {
+      "round": 2,
+      "finding": "rechecked 6/37/10 counts, eight empty template refs, publisher 1.3.0 versus 1.2.0 mismatch, tenant/binding exactness and unchecked task state.",
+      "remediation": "no further defect found; retained W6-01 as NOT_STARTED and IMPLEMENTATION_BLOCKED."
+    }
+  ],
+  "documents": [
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/19-Adapter能力矩阵与降级策略.md",
+      "sha256Before": "1dd6388bfe120ee5eba32e5bcbc01f707898c2279dbfc4678c1d434f0f57e33d",
+      "sha256After": "07b4486758e4ec0c45c4ad9c3727d95b71c9a43a39ebea86a2779b37828dd148"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md",
+      "sha256Before": "144c3f25adce2b2a01173c738f3fa471dfa3c45e3bbb685cc4dc8f57f372a64a",
+      "sha256After": "50f2379440221ba2b5371dde981bc5796dc017365d16a520ea289108c48386d7"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/49-W6-01-ExactCapabilityAssigneeResolver与Readiness预检ADR.md",
+      "sha256Before": null,
+      "sha256After": "a60010a02328fdfccbbfc8e770fcbd43b90a68c25ce77d66ab6290921e6e562d"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "sha256Before": "dc0da6822368234ec2190f6eb69535e3ab69287c7591ba359c8b862033fab5df",
+      "sha256After": "27b4ca034772116ff2c3077d80fdff4d954d648ac8f3a74eb8233702907a81e4"
+    }
+  ],
+  "verification": {
+    "jsonValid": true,
+    "documentHashesMatched": true,
+    "twoRoundReviewComplete": true,
+    "definitionCounts": "6 digital colleagues, 37 Logic identities, 10 Capability definitions",
+    "backend": "25 passed, 1 failed, 18 warnings",
+    "frontend": "4 files, 16 tests passed",
+    "w6_01Checked": false,
+    "sourceCodeChanged": false,
+    "realTenantRead": false,
+    "externalProviderEffect": false
+  },
+  "blockers": [
+    "DEP_W6_A6E_BUNDLE_PUBLISHER_VERSION",
+    "DEP_W6_RESPONSIBILITY_TEMPLATE_RESOLVER",
+    "DEP_W6_RESPONSIBILITY_TEMPLATE_ASSETS",
+    "DEP_W6_ASSIGNEE_RESOLVER",
+    "DEP_W6_ASSIGNEE_KIND_COVERAGE",
+    "DEP_W6_CAPABILITY_EXACTNESS",
+    "DEP_W6_CAPABILITY_ASSIGNEE_BINDING",
+    "DEP_W6_AGENT_RUNTIME_READINESS",
+    "DEP_W6_REASSIGN_TAKEOVER",
+    "DEP_W6_UPSTREAM_W3_W4"
+  ]
+}
