@@ -26,7 +26,7 @@
     "readmeBefore": "fd5e5f8e0df2f7f12bfd8fe33a96488eac9ac7b3344eefc38608784bf395fd88",
     "readmeAfter": "40b417a1179e9460a7d1409e6c79f35f1c71e00e2672995bce2590e3d6fa28ec",
     "adrAfter": "d0dff101b6bdfc7eab3c325437bf19a1bb465993c4d61305e2f419d12d09adf6",
-    "localConfig": "86caa6f458494c309fb2b584acfbdd10cb47c96fa4cd714147855b3b9e99cd75",
+    "localConfig": "669854e235780bd204fef4c24a17d44dee8e098779cfa111a5296ecbf562eb72",
     "launchAgent": "5eaa643572541b7b36b4e89c5276a1b1f685b58b22219292e1846d8c35ce12aa"
   },
   "verification": [
@@ -35,6 +35,7 @@
     "Python compile and git diff check GREEN",
     "real current-thread tick returned manual-reentry, reentry-noop, dependency_wait_armed=false, retry=0 and last_recovered_at=null",
     "no codex exec resume child remained after the manual takeover",
+    "local config revision is workshop-watchdog-v2.4-20260814",
     "LaunchAgent remains installed with a 300-second interval"
   ],
   "safety": {
