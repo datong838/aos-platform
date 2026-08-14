@@ -1,0 +1,94 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w5-08-cumulative-action-gate-preflight-20260814",
+  "authorityRevision": "AOS-000026",
+  "repositoryRevision": "cad96d0238f39dcf6863139709f6d3885d2bd7ff",
+  "result": "W5_08_CUMULATIVE_ACTION_GATE_PREFLIGHT_FACTS_FROZEN",
+  "decision": "GENERIC_REGRESSION_AND_FAIL_CLOSED_UI_GREEN_CUMULATIVE_W5_GATE_BLOCKED",
+  "foundations": [
+    "the canonical /aip/drafts route is registered as live and uses the single server-backed AIP Actions SDK",
+    "the UI distinguishes Proposal approval from external execution and treats Receipt as the result evidence",
+    "existing Action, ImpactPreview, capability, Research callback, Usage and lineage primitives pass their cumulative targeted regression",
+    "the production web build succeeds and the local route renders a stable H1 and explicit unavailable state when aos-api is absent"
+  ],
+  "findings": [
+    {
+      "id": "DEP-W5-CUMULATIVE-PREREQUISITES",
+      "severity": "P0",
+      "finding": "W5-00 through W5-07 are all unchecked and not implementation GREEN; W5-08 cannot convert partial foundations or preflight ADRs into a cumulative release gate."
+    },
+    {
+      "id": "DEP-W5-CUMULATIVE-PRODUCTION-ADAPTER",
+      "severity": "P0",
+      "finding": "the production source has zero ACTION_ADAPTERS registrations, so no real ecommerce Action journey is runnable."
+    },
+    {
+      "id": "DEP-W5-CUMULATIVE-EXACT-MATRIX",
+      "severity": "P0",
+      "finding": "there is no published exact ActionType, CapabilityBinding, Account, Adapter, risk, budget and kill matrix or allowed R2 candidate."
+    },
+    {
+      "id": "DEP-W5-CUMULATIVE-DURABLE-CHAIN",
+      "severity": "P0",
+      "finding": "ActionDraft submit, policy-bound Approval, joint-binding Lease, durable Attempt/outbox, governed Receipt, Usage settlement and automatic lineage are not implemented as one chain."
+    },
+    {
+      "id": "DEP-W5-CUMULATIVE-UNKNOWN-COMPENSATION",
+      "severity": "P0",
+      "finding": "manual reconcile authority, resolved provider outcome separation and policy-bound compensation remain absent, so external rollback semantics are not safe."
+    },
+    {
+      "id": "DEP-W5-CUMULATIVE-WEBHOOK",
+      "severity": "P0",
+      "finding": "there is no canonical Action webhook inbox, ingress identity, replay protection or ordering reducer."
+    },
+    {
+      "id": "DEP-W5-CUMULATIVE-CANARY-KILL",
+      "severity": "P0",
+      "finding": "no authorized real canary, versioned kill authority, KillDrillReceipt, in-flight treatment or safe reset evidence exists."
+    },
+    {
+      "id": "DEP-W5-CUMULATIVE-BROWSER-JOURNEY",
+      "severity": "P0",
+      "finding": "the local browser check proves only fail-closed rendering with aos-api unavailable; no authenticated org-org full Action journey, refresh recovery, unknown reconcile or kill drill was executed."
+    },
+    {
+      "id": "DEP-W5-CUMULATIVE-ROLLBACK-RUNBOOK",
+      "severity": "P1",
+      "finding": "generic TaskRun or Bundle rollback is unrelated to an already dispatched external Action; W5 has no complete reread, reconcile, compensation, reservation and incident runbook evidence."
+    },
+    {
+      "id": "DEP-W5-CUMULATIVE-OBSERVABILITY-SLO",
+      "severity": "P1",
+      "finding": "no cumulative dashboard or exit threshold covers dispatch, provider outcome, unknown age, webhook gaps, Usage settlement, lineage, budget and kill propagation."
+    }
+  ],
+  "verification": {
+    "backendCommand": "uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_w2d_contracts.py services/aos-api/tests/aip/test_aip3_action_control.py services/aos-api/tests/aip/test_aip3b_action_execution.py services/aos-api/tests/aip/test_aip6_capability_catalog.py services/aos-api/tests/aip/test_aip6_002_registry_receipts.py services/aos-api/tests/aip/test_w2c_task_approval_gate.py services/aos-api/tests/aip/test_aip_research_job_store.py services/aos-api/tests/aip/test_aip_research_job_api.py services/aos-api/tests/aip/test_aip_telemetry_usage_api.py services/aos-api/tests/aip/test_aip_telemetry_usage_service.py services/aos-api/tests/aip/test_aip_lineage_service.py services/aos-api/tests/aip/test_aip7_provider_usage_bridge.py services/aos-api/tests/test_action_webhook.py",
+    "backendResult": "103 passed, 7 warnings in 89.25s",
+    "frontendCommand": "pnpm exec vitest run src/api/aipActions/contracts.test.ts src/api/aipActions/client.test.ts src/api/aipEvidence/client.test.ts src/pages/CanonicalDraftInboxPage.test.tsx src/pages/s2/DecisionLineagePage.test.tsx",
+    "frontendResult": "5 files and 18 tests passed",
+    "buildResult": "TypeScript and Vite production build GREEN; 295 modules transformed",
+    "productionAdapterRegistrationScan": "0 registrations in services/aos-api/aos_api; registry declaration only",
+    "browser": {
+      "surface": "Codex in-app browser",
+      "url": "http://127.0.0.1:5182/aip/drafts",
+      "title": "AOS Web (scaffold)",
+      "h1": "Draft 审批台",
+      "observedState": "offline and Action service unavailable alerts; zero proposal counts; no demo Draft; no write action enabled",
+      "backend": "127.0.0.1:8000 unavailable; proxy failed closed",
+      "interpretation": "fail-closed browser state GREEN_WITH_BLOCKERS; not a real-tenant or end-to-end Action acceptance"
+    }
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "testDatabaseUsed": true,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "realCanaryExecuted": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false,
+    "localDevServerStopped": true
+  }
+}
