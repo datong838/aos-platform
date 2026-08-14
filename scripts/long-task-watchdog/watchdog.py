@@ -556,6 +556,7 @@ def _record_terminal_outcome(
         {
             "consecutive_failures": 0,
             "next_retry_at": 0,
+            "retry_delay_seconds": 0,
             "last_recovery_outcome": outcome,
             "last_decision": outcome,
             "visible_ack_at": final_at,
@@ -572,6 +573,24 @@ def _record_terminal_outcome(
 def _log(message: str) -> None:
     now = datetime.now(timezone.utc).isoformat()
     print(f"{now} {message}", flush=True)
+
+
+def _retry_delay_seconds(config: dict[str, Any], failure_count: int) -> int:
+    raw = config.get(
+        "retry_schedule_seconds", [300, 600, 900, 1800, 3600, 7200]
+    )
+    if (
+        not isinstance(raw, list)
+        or not raw
+        or any(
+            not isinstance(item, int) or isinstance(item, bool) or item <= 0
+            for item in raw
+        )
+    ):
+        raise RuntimeError(
+            "retry_schedule_seconds must be a non-empty list of positive integers"
+        )
+    return raw[min(max(failure_count, 1) - 1, len(raw) - 1)]
 
 
 def evaluate(
@@ -642,14 +661,26 @@ def run_once(
         if decision == "idle":
             state["consecutive_failures"] = 0
             state["next_retry_at"] = 0
+            state["retry_delay_seconds"] = 0
         _write_json(state_path, state)
         return decision
+
+    max_failures = int(
+        config.get(
+            "max_transport_failures",
+            config.get("max_consecutive_failures", 12),
+        )
+    )
+    if max_failures <= 0:
+        raise RuntimeError("max_transport_failures must be positive")
+    _retry_delay_seconds(config, max(int(state.get("consecutive_failures", 0)) + 1, 1))
 
     if state.get("last_recovery_outcome") in TERMINAL_FAILURE_OUTCOMES:
         state.update(
             {
                 "consecutive_failures": 0,
                 "next_retry_at": 0,
+                "retry_delay_seconds": 0,
                 "last_recovery_outcome": "attempting",
             }
         )
@@ -667,7 +698,7 @@ def run_once(
             }
         )
     episode_id = str(state["recovery_episode_id"])
-    attempts = 2 if failures == 0 else 1
+    attempts = 1
     for attempt in range(1, attempts + 1):
         before_resume = inspect_transcript(rollout_path)
         _remove_stale_ack(config)
@@ -739,11 +770,7 @@ def run_once(
                 return "outcome-uncertain"
             if result.returncode == 0:
                 state["last_error"] = "resume exited 0 without current ack/final"
-        if attempt < attempts:
-            time.sleep(float(config.get("immediate_retry_delay_seconds", 2)))
-
     state["consecutive_failures"] = failures + attempts
-    max_failures = int(config.get("max_consecutive_failures", 3))
     if state["consecutive_failures"] >= max_failures:
         latest = inspect_transcript(rollout_path)
         state.update(
@@ -757,7 +784,9 @@ def run_once(
         )
         _write_json(state_path, state)
         return "paused-failure"
-    state["next_retry_at"] = time.time() + int(config.get("retry_interval_seconds", 300))
+    retry_delay = _retry_delay_seconds(config, state["consecutive_failures"])
+    state["retry_delay_seconds"] = retry_delay
+    state["next_retry_at"] = current + retry_delay
     state["last_recovery_outcome"] = "transport-failed"
     state["last_decision"] = "retry-scheduled"
     _write_json(state_path, state)

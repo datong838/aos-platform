@@ -2,7 +2,7 @@
 
 该守护只服务显式登记的 Codex thread。它从 Codex 本地 SQLite 查到 rollout transcript，判断“最新用户消息之后是否存在 final assistant 消息”。若没有 final 且 transcript 超过宽限期无变化，并且最新 `task_started` 已有对应 `task_complete`，才认为该 turn 疑似异常中断；仍在运行的 turn 不允许恢复副本并发介入。
 
-恢复策略：首次检测最多执行两次 `codex exec resume`；纯传输失败后按 300 秒退避，达到 `max_consecutive_failures` 即进入 `paused-failure`，禁止无限空转。互斥锁防止 `launchd` 重叠执行。每轮恢复有独立 episode；只有当前 episode 的命令成功退出、同一 transcript 写入更新的 assistant `final`/`final_answer`，并存在匹配当前 episode 的结构化 Recovery Ack，才接受恢复结果。
+恢复策略：每次检测最多执行一次 `codex exec resume`；纯传输失败按 5、10、15、30、60、120 分钟渐进退避，之后保持 120 分钟低频重试，默认第 12 次仍失败才进入 `paused-failure`。互斥锁防止 `launchd` 重叠执行。每轮恢复有独立 episode；只有当前 episode 的命令成功退出、同一 transcript 写入更新的 assistant `final`/`final_answer`，并存在匹配当前 episode 的结构化 Recovery Ack，才接受恢复结果。
 
 Recovery Ack 的 outcome 固定为：
 
@@ -34,7 +34,8 @@ Workshop 专用配置至少应包含：
   "writable_roots": ["/absolute/path/to/git-common", "/absolute/path/to/docs"],
   "ack_path": "/absolute/path/to/recovery-ack.json",
   "authority_path": "/absolute/path/to/authority.json",
-  "max_consecutive_failures": 3
+  "retry_schedule_seconds": [300, 600, 900, 1800, 3600, 7200],
+  "max_transport_failures": 12
 }
 ```
 
