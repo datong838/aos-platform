@@ -1,0 +1,73 @@
+{
+  "schema": "aos-workshop-upstream-impact-preflight/v1",
+  "taskId": "workshop-aip-w2d2-impact-preflight-20260814",
+  "authorityRevision": "AOS-000024",
+  "upstreamCommit": "0391f68",
+  "upstreamDelivery": "aip-w2d2-start-service-api-20260814",
+  "result": "AIP_W2D2_WORKSHOP_IMPACT_FACTS_FROZEN",
+  "workshopTaskImpact": {
+    "primaryTask": "W3-05",
+    "status": "UPSTREAM_BACKEND_AVAILABLE_WITH_REMAINING_GATES",
+    "supported": [
+      "canonical impact preview create, read, revise and freeze API",
+      "canonical production start decision create, list and read API",
+      "frozen preview revalidation of Plan, Brief, EvidenceBundle, EvalContract, ResponsibilityPlan and StageTemplate exact refs",
+      "mutable AgentInstance, SkillBinding and CapabilityBinding version and readiness revalidation",
+      "ImpactPreview expiry, required-dimension quality and dependency snapshot drift checks",
+      "ActionProposal exact preview binding, approval quorum, expiry and execution policy checks",
+      "single-transaction approval of the W2-C Plan and creation of exactly one canonical TaskRun",
+      "append-only blocked, stale or unknown decision with zero TaskRun and AgentRun side effect",
+      "idempotent replay and cross-tenant non-disclosure"
+    ],
+    "mustNotDuplicateInWorkshop": [
+      "production start composition service",
+      "TaskRun creation",
+      "dependency snapshot hash calculation",
+      "blocked, stale and unknown status classification"
+    ]
+  },
+  "remainingGates": [
+    {
+      "id": "DEP-AIP-W2D3",
+      "status": "IN_PROGRESS",
+      "reason": "strict frontend SDK, UI and built-in-browser evidence are owned by the active AIP W2-D3 task"
+    },
+    {
+      "id": "DEP-AIP-START-AUTHZ",
+      "status": "RED_REVIEW_REQUIRED",
+      "reason": "the mutation route currently requires an authenticated Principal but does not visibly enforce a server-side start permission or allowed role"
+    },
+    {
+      "id": "DEP-AIP-REAL-PREVIEW",
+      "status": "BLOCKED",
+      "reason": "org-org/dev-project has zero ImpactPreview rows; the ready path is synthetic-only"
+    },
+    {
+      "id": "WORKSHOP-W3-SEQUENCE",
+      "status": "BLOCKED",
+      "reason": "W3-05 still waits for W2 exit and W3-01 through W3-04"
+    }
+  ],
+  "contractMapping": {
+    "workshopFourFrozenRefs": "Brief, EvidenceBundle, EvalContract and ResponsibilityPlan are carried and revalidated through the frozen ImpactPreview exact ref",
+    "startRequest": "Task version, Plan exact ref, frozen ImpactPreview exact ref, approved ActionProposal exact ref and LogicGraph revision",
+    "startedOutput": "ProductionStartDecision with canonical TaskRun ref; AgentRun remains zero until the runtime executor owns that transition"
+  },
+  "reviewFindings": [
+    "Workshop must consume the AIP canonical start API rather than create a second start service",
+    "frontend visibility and an approved ActionProposal cannot replace server-side authorization of the start mutation",
+    "W3 start UI must display Decision blockers and must not claim running when only a queued TaskRun exists",
+    "a successful synthetic ready-path test is not real-tenant operational readiness"
+  ],
+  "safety": {
+    "upstreamReadMode": "fixed m1 commit and Delivery Receipt only",
+    "w1UncommittedRead": false,
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "aipW2D3FilesTouched": false,
+    "migrationLeaseAcquired": false
+  },
+  "nextGate": "AIP W2-D3 delivery must be absorbed and DEP-AIP-START-AUTHZ reviewed before Workshop W3-05 implementation; W2 and W3-01 through W3-04 remain earlier sequence gates."
+}
