@@ -611,7 +611,15 @@ def evaluate(
             return str(state["last_recovery_outcome"]), status
     if not status.active:
         return "idle", status
-    if status.turn_running:
+    turn_silence_limit = int(
+        config.get(
+            "max_turn_silence_seconds",
+            config.get("max_tool_silence_seconds", 300),
+        )
+    )
+    if turn_silence_limit <= 0:
+        raise RuntimeError("max_turn_silence_seconds must be positive")
+    if status.turn_running and now - status.last_activity_at < turn_silence_limit:
         return "turn-running", status
     if status.pending_tool_calls and status.oldest_pending_tool_at is not None and (
         now - status.oldest_pending_tool_at
