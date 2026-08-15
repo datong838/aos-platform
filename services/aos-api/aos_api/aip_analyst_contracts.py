@@ -29,6 +29,25 @@ class AnalystQueryStatus(StrEnum):
     BLOCKED = "blocked"
 
 
+class QueryJobStatus(StrEnum):
+    QUEUED = "queued"
+    RUNNING = "running"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+    TIMED_OUT = "timed_out"
+
+
+class QueryJobEventKind(StrEnum):
+    CREATED = "created"
+    STARTED = "started"
+    RESULT_RECORDED = "result_recorded"
+    CANCELLED = "cancelled"
+    TIMED_OUT = "timed_out"
+    FAILED = "failed"
+    RECONCILED = "reconciled"
+
+
 class QueryBlocker(AipContractModel):
     code: str = Field(min_length=1, max_length=160)
     message: str = Field(min_length=1, max_length=500)
@@ -173,17 +192,59 @@ class QueryResultRevision(AipContractModel):
         return self
 
 
+class CreateQueryJobRequest(AipContractModel):
+    query: AnalystQueryRequest
+    deadline_at: datetime
+
+    @model_validator(mode="after")
+    def _deadline_after_cutoff(self) -> "CreateQueryJobRequest":
+        if self.deadline_at <= self.query.cutoff_at:
+            raise ValueError("deadlineAt must be after query cutoffAt")
+        return self
+
+
+class QueryJobCommand(AipContractModel):
+    expected_sequence: int = Field(ge=1)
+    reason_code: str = Field(min_length=1, max_length=160)
+
+
+class RecordQueryResultRequest(AipContractModel):
+    expected_sequence: int = Field(ge=1)
+    result: QueryResultRevision
+
+
+class QueryJobSnapshot(AipContractModel):
+    tenant: TenantContext
+    query_id: str = Field(min_length=1, max_length=240)
+    query: AnalystQueryRequest
+    request_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    status: QueryJobStatus
+    latest_sequence: int = Field(ge=1)
+    latest_event_kind: QueryJobEventKind
+    latest_reason_code: str | None = None
+    deadline_at: datetime
+    created_by: str = Field(min_length=1, max_length=240)
+    created_at: datetime
+    latest_result: QueryResultRevision | None = None
+
+
 __all__ = [
     "ANALYST_QUERY_ADAPTER",
     "AnalystQueryKind",
     "AnalystQueryRequest",
     "AnalystQueryStatus",
+    "CreateQueryJobRequest",
     "KnowledgeQueryRequest",
     "MetricQueryRequest",
     "QueryBlocker",
     "QueryColumn",
     "QueryFilter",
     "QueryResultRevision",
+    "QueryJobCommand",
+    "QueryJobEventKind",
+    "QueryJobSnapshot",
+    "QueryJobStatus",
+    "RecordQueryResultRequest",
     "QueryRow",
     "QuerySourceRef",
     "SemanticQueryRequest",
