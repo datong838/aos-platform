@@ -1,0 +1,49 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-technical-current-state-aos41-convergence-20260815",
+  "recordedAt": "2026-08-15T13:43:00+08:00",
+  "authorityRevision": "AOS-000041",
+  "baselineCommit": "7036c9edd2e083587fbf0835e18cabf76e3b7988",
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/13-达人邀约技术方案.md",
+      "preSha256": "af85656129969b1707167d0f0256f839aa33f3752a927e51537ccedbd8ae7f8d",
+      "postSha256": "dc5f9451deed4ecbfd6ee446a3772f9bc0b745a603596b7de96a77d8fbf2de5b"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/14-多媒体技术方案.md",
+      "preSha256": "a9b8b08d415bdc6236aaa44002c6cefc2b5e662e254a7b5bb05644c51cd482f4",
+      "postSha256": "d41ef2bd0b3b030661232c97073d28493c3f9f99be4193f702566bef6d3896ad"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/15-经营参谋技术方案.md",
+      "preSha256": "43c846c9b57a9c653b8571ac063f8d36f68acbf26157fda9e19a32e0eab79089",
+      "postSha256": "73ff5458ae0b505ac3080406af7c3b4680bc3ab317ba8860fcd075577cc81e63"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/16-价格治理技术方案.md",
+      "preSha256": "5616a2af4f6b17ae4d22458d0f9c79812e91c98206788c5ed18b3a545184efd9",
+      "postSha256": "f4f6dfed513cdf51d3c590503558ff0c42d39e0590524684c1bc17ebeb24f376"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/21-技术方案审查记录与封板结论.md",
+      "preSha256": "e9d07d60a1adfbaf9acbd5ac16d5a5b462b8fc52963926d86aad32295bc1205d",
+      "postSha256": "edc980c40070f619d74eccd06d4c81ef24c8d15e1bbd390fcff9cbb52f1f07b0"
+    }
+  ],
+  "reviewRounds": [
+    {
+      "round": 1,
+      "finding": "Four domain documents presented AOS-000037 through AOS-000040 or an obsolete P03 error as current, and the formal-review header presented its original non-authorization state as current.",
+      "remediation": "Aligned current statements to AOS-000041, zero real operational bindings and the latest P03 executor failure; separated original review authority from current execution authority."
+    },
+    {
+      "round": 2,
+      "finding": "The formal-review body still repeated NOT_IMPLEMENTATION_AUTHORIZED, 92 tasks and an unlabeled historical frozen hash.",
+      "remediation": "Labeled the 2026-08-13 snapshot, preserved its original conclusion, and added the later continuous authorization plus gated 20-of-96 current state without rewriting history."
+    }
+  ],
+  "verdict": "CURRENT_STATE_CONVERGED_GREEN; HISTORICAL_EVIDENCE_PRESERVED; NO_TASK_PROMOTION",
+  "noCodeOrVisualChange": true,
+  "externalEffect": false
+}
