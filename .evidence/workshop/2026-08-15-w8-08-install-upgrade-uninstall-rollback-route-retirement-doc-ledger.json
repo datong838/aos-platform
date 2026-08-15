@@ -1,0 +1,69 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w8-08-install-upgrade-uninstall-rollback-route-retirement-doc-align-20260815",
+  "workItem": "W8-08",
+  "projectRevision": "AOS-000034",
+  "branch": "w2-workshop",
+  "sourceCommit": "c02a78086bfb00c4aef94ad91fb0c071d799844c",
+  "recordedAt": "2026-08-15T08:38:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "findingsClosed": [
+        "separated install replacement upgrade graph rollback terminal uninstall and route retirement",
+        "superseded the obsolete same-Installation previous-active rollback assumption in the W0 ADR",
+        "required complete-graph effective-leaf resolution before marking visibility"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS_AFTER_REMEDIATION",
+      "findingsClosed": [
+        "added terminal-uninstall recovery and route-retirement release gates",
+        "added concurrency restart marking tenant and real-effect authorization negatives",
+        "corrected the D-waves current-next section from stale W1-09 blocked to W1-09 GREEN and AOS-000034"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/06-安全租户可观测测试与回滚.md",
+      "preSha256": "139ee06152f112e57014e589805c9da6ba61a58ede3d0660781b220a1166aefe",
+      "postSha256": "33f9578824c1206581eb5bd28c93c1d46f87cf03cc6cb19fde9beca0c5682601"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/22-产品需求技术资产与测试追踪矩阵.md",
+      "preSha256": "5c7cbfab42b57cdb3ae147dcf318c971106560c55b5b63494f650c53503fc614",
+      "postSha256": "f0bcef2c2a4ae2bdb6a9d508aeed252ae76efee09f51246f0ec0647ae3a2b68c"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/24-W0实施准备Authority兼容迁移与安全ADR.md",
+      "preSha256": "26a3b8abc21e8f272bc481ca4fe4cbb9752f089d202a9b016ce14d4bedf96b3c",
+      "postSha256": "aa5f599b022767c164e1fc544d3d155087809fb89910ae3c869613343bcd46e0"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "bb27630114cb20b4a88cbd0a847804bddec445023c6b817f41501d80b95be85e",
+      "postSha256": "96a47bc8893e136851ec49bb2252c1be94c97a62adb4ffd6caf7c177d6de8f1c"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/77-W8-08-安装升级卸载回滚与旧路由退役预检ADR.md",
+      "preSha256": null,
+      "postSha256": "347031b5e1f03fe9d8e1f42812d82012a68c0f5bf5445bb3e805fed3bff9664f"
+    }
+  ],
+  "decision": {
+    "contract": "APPROVED",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two semantic review and remediation rounds passed",
+    "W8-08 placeholder removed while checklist remains unchecked",
+    "obsolete rollback assumption is explicitly superseded",
+    "all shared file post hashes match this ledger",
+    "no source migration database browser installation or route mutation"
+  ]
+}
