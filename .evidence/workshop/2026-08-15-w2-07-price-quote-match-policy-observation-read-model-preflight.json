@@ -1,0 +1,157 @@
+{
+  "schema": "aos-workshop-w2-price-quote-match-policy-observation-read-model-preflight/v1",
+  "taskId": "workshop-w2-07-price-quote-match-policy-observation-read-model-preflight-20260815",
+  "workItem": "W2-07",
+  "projectRevision": "AOS-000038",
+  "branch": "w2-workshop",
+  "head": "608c3bdcba38d67ac324f409db8ad01cff17e31f",
+  "recordedAt": "2026-08-15T11:20:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "PRICE_OBSERVATION_MATCH_POLICY_CASE_READ_MODEL_TARGET_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "W1-10 and W2-00 are not GREEN; ProductSku latest pipeline is failed; all price-domain authorities and the Workshop aggregate are absent"
+  },
+  "dependencyFactRevalidation": {
+    "authorityRevision": "AOS-000038",
+    "authorityStage": "BIND1_1_CONTRACT_ADDITIVE_MIGRATION_GREEN_WITH_WARNINGS",
+    "w1_10": "not GREEN",
+    "w2_00": "not GREEN",
+    "productSkuData": "latest P03 run is failed with PIPELINE_NOT_FOUND in the current W2 data-readiness evidence",
+    "queryCapability": "base query projection exists but lacks the required freshness quality cutoff and blocker envelope",
+    "bind1Effect": "does not create price-domain source Match Policy Case Adapter or repricing readiness",
+    "leaseConflict": false
+  },
+  "liveCodeFindings": {
+    "workshopHttpOperations": [
+      "GET /v1/ecommerce-workshop/modules",
+      "GET /v1/ecommerce-workshop/modules/{module_id}/readiness"
+    ],
+    "priceGovernanceViewStoreSdk": "ABSENT",
+    "priceObservationRevision": "ABSENT",
+    "comparisonSnapshotRevision": "ABSENT",
+    "productMatchObservationAndDecision": "ABSENT",
+    "monitoringPolicyRevision": "ABSENT",
+    "priceCaseRevision": "ABSENT",
+    "genericResearchJob": "PRESENT with fail-closed event reconciliation but no licensed price profile normalizer originals or operational source Adapter",
+    "genericActionSafety": "PRESENT as reusable safety skeleton; no price notification advice handoff or repricing domain contract is registered",
+    "moduleManifest": {
+      "moduleId": "ecommerce.price-governance",
+      "requiredObjects": [
+        "Product",
+        "ProductSku",
+        "Order",
+        "PriceObservation",
+        "ProductMatchDecision",
+        "PriceCase"
+      ],
+      "viewRefs": [],
+      "evalPackRefs": [
+        "content/evals/placeholder.json"
+      ],
+      "productionContractRefs": [],
+      "responsibilityTemplateRefs": [],
+      "actionTypes": []
+    }
+  },
+  "targetViewContract": {
+    "operationId": "ecommerceWorkshopPriceGovernanceViewGet",
+    "method": "GET",
+    "canonicalPath": "/v1/ecommerce-workshop/views/price-governance",
+    "tenantSource": "verified Principal only",
+    "filters": [
+      "view=governance|competitor|schedule",
+      "productRef",
+      "skuRef",
+      "market",
+      "channel",
+      "caseStatus",
+      "windowStart",
+      "windowEnd",
+      "cursor"
+    ],
+    "rootAuthorities": [
+      "Product and ProductSku exact refs",
+      "PriceObservationRevision exact ref and immutable original Artifact refs",
+      "ComparisonSnapshotRevision exact ref",
+      "ProductMatchObservation and ProductMatchDecisionRevision exact refs",
+      "MonitoringPolicyRevision Eval and PriceCaseRevision exact refs",
+      "ResearchJob provider event reconcile and source license exact refs",
+      "Disposition Draft Impact Approval Lease Action Receipt and EffectReview exact refs when present"
+    ],
+    "readSlices": [
+      "normalized quote basis currency unit quantity promotion tax shipping effective window freshness and comparability",
+      "same-product candidates Observation Decision confidence feature evidence and stale state",
+      "MonitoringPolicy scope basis tolerance freshness minimum-original and exception summary",
+      "PriceCase calculation input hash evidence impact disposition and lifecycle",
+      "Research schedule source license rate capacity latest run gap unknown and reconcile",
+      "collection match case notification advice handoff and repricing readiness as separate axes"
+    ],
+    "requiredEnvelope": [
+      "schemaVersion resourceRevision evaluatedAt dataCutoff and stable cursor",
+      "collection match policy case and each disposition readiness kept separate",
+      "exact scoped refs disclosure decisions typed blockers and original reachability",
+      "all comparisons declare frozen cutoff market currency unit basis and eligible denominator",
+      "unknown stale failed not-comparable preliminary conflict and unlicensed remain explicit"
+    ]
+  },
+  "authorityBoundaries": [
+    "The view is rebuildable and never becomes Product ProductSku price original Match Policy Case Research Action or Effect authority",
+    "external quotes never overwrite Product or ProductSku price truth",
+    "normalized price preserves list versus landed basis quantity unit currency tax shipping promotion conditions and effective window",
+    "not-comparable and unknown are never coerced to zero or used in anomaly decisions",
+    "ProductMatchObservation and ProductMatchDecision remain separate; preliminary confidence cannot create a PriceCase",
+    "source collection Match Policy Case notification advice handoff and repricing readiness are independent",
+    "collection or Match GREEN never enables repricing; repricing remains disabled until a specialized R4 gate is operational",
+    "the W2 view exposes no arbitrary URL collect normalize decide policy-edit prepare freeze start notify advise handoff or reprice mutation"
+  ],
+  "priceAndOriginalInvariants": [
+    "each displayed price reaches at least one immutable licensed original and retains all deduplicated refs",
+    "comparison items share market currency unit quantity basis tax shipping promotion window and cutoff or are marked not-comparable",
+    "input observations equal comparable plus not-comparable plus stale plus invalid plus unknown plus deduplicated for one snapshot",
+    "each Match Decision binds exact Product or SKU candidate observations feature schema policy evidence and cutoff",
+    "low confidence conflicting specifications or missing originals remain preliminary or needs-review",
+    "PriceCase binds one exact MonitoringPolicy Eval comparison snapshot and calculation input hash",
+    "late or revoked originals make dependent snapshots and cases stale without rewriting history",
+    "published advice notification handoff or repricing outcome requires its own canonical Receipt and never derives from a collection success"
+  ],
+  "requiredTestsWhenUnblocked": [
+    "strict price observation original snapshot match policy case disposition blocker and cursor DTO parsers",
+    "tenant no-scope wrong-scope cross-tenant marking purpose license PII secret and arbitrary-URL checks",
+    "currency unit quantity promotion tax shipping time-window normalization and not-comparable cases",
+    "original reachability dedup late event revocation rebuild and count conservation",
+    "Match preliminary conflict decision drift and Observation-not-Decision negatives",
+    "Policy Eval cutoff freshness threshold exception and PriceCase input-hash drift",
+    "collection or Match readiness cannot enable notification advice handoff or repricing",
+    "repricing remains disabled without specialized maker-checker margin floor MAP inventory order canary kill and compensation gates",
+    "read-only HTTP method and absence of mutation controls in W2",
+    "org-org positive and dev-org negative three-viewport keyboard browser evidence"
+  ],
+  "blockers": [
+    "W1-10 real Registry reconciliation and positive Workshop projection are not GREEN",
+    "W2-00 DEP-DATA remains RED and ProductSku latest run is failed",
+    "price-governance Workshop view Store and strict SDK do not exist",
+    "PriceObservation Snapshot Match Policy and PriceCase authorities do not exist",
+    "price source profile normalizer originals and operational Research Adapter do not exist",
+    "module manifest has no view production responsibility impact or action refs and uses a placeholder Eval pack",
+    "repricing specialized risk Adapter account canary kill and compensation gates are absent"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "no W2-07 implementation exists and hard dependencies are RED; generic ResearchJob or Action safety tests do not prove the price-domain aggregate",
+    "doesNotProve": [
+      "current ProductSku freshness",
+      "licensed comparable price observations and originals",
+      "Match Policy PriceCase authority",
+      "notification advice handoff or repricing readiness",
+      "positive real-tenant browser readiness"
+    ]
+  },
+  "next": "align the W2-07 contract and evidence reference through two review rounds without runtime coding",
+  "safety": [
+    "read-only code document Git and shared-memory inspection only",
+    "no arbitrary URL database tenant provider notification repricing or external action",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}
