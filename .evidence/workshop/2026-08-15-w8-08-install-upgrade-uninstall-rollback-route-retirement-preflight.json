@@ -1,0 +1,112 @@
+{
+  "schema": "aos-workshop-lifecycle-acceptance-preflight/v1",
+  "taskId": "workshop-w8-08-install-upgrade-uninstall-rollback-route-retirement-preflight-20260815",
+  "workItem": "W8-08",
+  "projectRevision": "AOS-000034",
+  "branch": "w2-workshop",
+  "head": "8c93c445dc7e2846990fcf5bc5a3c6af84c48639",
+  "aipBaseline": "m1@4018dd382c169fbed567c633bdbb698e6f26447f",
+  "recordedAt": "2026-08-15T08:34:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "LIFECYCLE_ACCEPTANCE_TARGET_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "mayMutateInstallation": false,
+    "reason": "W1-09 code and control are GREEN but W1-10 and all domain cumulative gates are not GREEN; the real registry still contains conflicting active installations and no current real-effect authorization or Lease permits cleanup installation upgrade rollback or uninstall"
+  },
+  "dependencyMatrix": [
+    {"dependency": "W1-09", "status": "IMPLEMENTED_GREEN", "evidence": "82a9810e7b99f4371cbc6d0e848c83a6bec395d9 and W1-09 Delivery Receipt"},
+    {"dependency": "W1-10", "status": "HARD_GATE_BLOCKED", "reason": "read-only failure-close browser evidence exists but positive exact-lock catalog and legacy replacement do not"},
+    {"dependency": "W2-10", "status": "CUMULATIVE_GATE_BLOCKED"},
+    {"dependency": "W3-14", "status": "CUMULATIVE_GATE_BLOCKED"},
+    {"dependency": "W4-08", "status": "CUMULATIVE_GATE_BLOCKED"},
+    {"dependency": "W5-08", "status": "CUMULATIVE_GATE_BLOCKED"},
+    {"dependency": "W6-10", "status": "CUMULATIVE_GATE_BLOCKED"},
+    {"dependency": "W7-11", "status": "CUMULATIVE_GATE_BLOCKED"},
+    {"dependency": "real_registry", "status": "REGISTRY_INTEGRITY_CORRUPT", "reason": "the latest read-only W1-10 evidence records 17 installations and five raw active pointers with overlapping Workshop identities"},
+    {"dependency": "real_effect_authorization_and_lease", "status": "ABSENT", "reason": "no current authorization permits installation mutations or historical active-root cleanup"},
+    {"dependency": "product_formal_freeze", "status": "NOT_FROZEN"}
+  ],
+  "canonicalLifecycle": [
+    "publish a new immutable signed Bundle revision and verify artifact hashes without changing any tenant active pointer",
+    "resolve an exact composition diff against the current active leaf and freeze the predecessor coordinate in the immutable lock",
+    "create submit approve dry-apply apply and verify a new Installation under CAS maker-checker marking and tenant gates",
+    "activate the verified replacement so exactly one effective leaf exists for each exclusive module route and slot",
+    "switch catalog and navigation reads only after exact lock Registry artifact capability permission and browser checks pass",
+    "observe new routes while legacy aliases continue as entry-only redirects and generate no new canonical links",
+    "rollback the replacement through the canonical predecessor graph when the new leaf fails while preserving both histories",
+    "uninstall only as an append-only terminal transition when the installation must leave the effective catalog",
+    "retire legacy routes only after capability parity redirect telemetry zero-authoring observation rollback readiness and explicit release decision"
+  ],
+  "operationSemantics": {
+    "install": "creates a new Installation and immutable revision event receipt chain; it never overwrites an existing installation",
+    "upgrade": "is a new replacement Installation whose lock contains one exact predecessor coordinate and whose activation yields one effective leaf",
+    "rollback": "deactivates the replacement leaf and restores its exact predecessor through the canonical replacement graph; it does not delete either history",
+    "uninstall": "is a terminal append-only transition that removes one Installation from the effective catalog; the same installation is not reactivated in place",
+    "reinstallAfterUninstall": "requires a new separately reviewed Installation or replacement command",
+    "routeRetirement": "is a release decision after observation and rollback readiness, not an automatic consequence of activation or redirect success"
+  },
+  "invariants": [
+    "there is one ManifestLoader Registry Composition lock and Installation authority with no Workshop-local active state",
+    "same module route or exclusive slot cannot have two effective active leaves",
+    "unknown schema hash drift missing artifact marking invisibility stale lock and graph fork cycle or broken predecessor fail closed",
+    "replacement selection is computed on the complete graph before leaf marking visibility so an invisible new leaf never revives an old predecessor",
+    "install upgrade rollback and uninstall use ETag or expected revision plus idempotency and append immutable events and evidence",
+    "rollback uninstall and route retirement preserve Bundle Installation Receipt lineage saved links and historical object references",
+    "external actions already dispatched are not database-rolled-back and require kill reread reconcile or separately approved compensation",
+    "tenant scope comes only from Principal and dev-org remains a zero-data isolation canary"
+  ],
+  "requiredJourneys": [
+    "clean install from no active leaf to eight exact module projections",
+    "A to B to C upgrade with one effective leaf at each step and deterministic legacy redirects",
+    "C rollback to B then B rollback to A with all immutable events and locks readable",
+    "uninstall a current leaf and prove it disappears without deleting history or reactivating a sibling root",
+    "attempt in-place reactivation after uninstall and fail closed",
+    "concurrent create verify activate rollback and uninstall conflicts under deterministic locking and CAS",
+    "hash drift revoked Bundle marking hidden leaf broken predecessor fork cycle and sibling activation fail closed",
+    "refresh restart and tenant switch preserve the exact effective leaf and prevent late-response contamination",
+    "legacy deep link redirects only when replacement exact lock is active and falls back safely after rollback",
+    "retirement rejects while parity telemetry observation rollback or saved-link migration evidence is incomplete"
+  ],
+  "routeRetirementGate": [
+    "source to target capability and permission parity is one hundred percent with zero unresolved differences",
+    "canonical route production HTTP browser matrix is GREEN and legacy redirect target is exact",
+    "new authoring and generated links to the legacy route are zero",
+    "legacy traffic has completed the approved observation window or has an explicit exception decision",
+    "saved links notifications documentation and integrations have a migration inventory and rollback path",
+    "rollback restores the prior effective leaf and entry behavior without deleting historical refs",
+    "the release owner issues an explicit retirement Receipt; frontend code does not infer retirement from age"
+  ],
+  "currentEvidence": {
+    "w1_09": "implementation 82a9810; W1-E cumulative 873 plus two subtests, OpenAPI 12, single migration head and diff check GREEN as recorded in its Delivery Receipt",
+    "w1_10_readonly": "three viewports eight routes keyboard retry network console and fail-close behavior verified without installation writes",
+    "real_state": "17 installations, five raw active pointers, zero uninstall event and canary zero at the W1-10 read-only cutoff",
+    "sourceDrift": "git diff de2326d47178d7f1b0c1e6f550802108edf53872..8c93c445dc7e2846990fcf5bc5a3c6af84c48639 across services apps packages bundles is empty"
+  },
+  "tests": {
+    "executed": false,
+    "reason": "the W1 implementation source is unchanged since the de2326d integration seal and its cumulative evidence is already recorded; repeating code tests cannot authorize real registry mutations or prove W8 release lifecycle across unfinished domain modules",
+    "doesNotProve": [
+      "real registry cleanup or exact active leaf",
+      "positive eight-module catalog after installation",
+      "release upgrade rollback uninstall under real-effect Lease",
+      "legacy route retirement observation and rollback drill"
+    ]
+  },
+  "blockers": [
+    "product formal review and freeze are incomplete",
+    "W1-10 and W2-10 through W7-11 cumulative gates are not GREEN",
+    "real registry active conflicts remain unresolved",
+    "no current real-effect authorization and Lease exists",
+    "no release-bound install upgrade rollback uninstall and retirement EvidencePack exists"
+  ],
+  "next": "align W8-08 lifecycle and retirement contract through two review rounds with zero installation mutation, then preflight W8-09",
+  "safety": [
+    "no source code changed",
+    "no migration or migration lease requested",
+    "no real tenant installation registry or route mutation",
+    "no external action publication or provider call",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}
