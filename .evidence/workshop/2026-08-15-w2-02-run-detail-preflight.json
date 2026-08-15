@@ -1,0 +1,53 @@
+{
+  "schema": "workshop-preflight-receipt/v1",
+  "taskId": "workshop-w2-02-run-detail-read-20260815",
+  "authorityRevision": "AOS-000046",
+  "branch": "w2-workshop",
+  "baseHead": "11af0d4",
+  "decision": "TYPED_STEP_CHECKPOINT_READ_SUBWAVE_READY",
+  "dependencyFacts": {
+    "w1_10": "GREEN",
+    "taskRunCore": "GREEN_AT_EA20EE5",
+    "aipTaskRuntimeTables": "FORCE_RLS_READABLE",
+    "w2_00": "RED_BUT_NOT_REQUIRED_FOR_RUNTIME_DETAIL",
+    "p8_3": "IN_PROGRESS_BUT_NOT_REQUIRED_FOR_RUNTIME_DETAIL"
+  },
+  "contract": {
+    "stepPath": "/v1/ecommerce-workshop/views/task-cockpit/runs/{runId}/steps",
+    "checkpointPath": "/v1/ecommerce-workshop/views/task-cockpit/runs/{runId}/checkpoints",
+    "stepOrder": "updated_at DESC, step_run_id DESC",
+    "checkpointOrder": "sequence ASC, checkpoint_id ASC",
+    "cursorBindings": ["tenant", "runId", "kind", "cutoff", "last tuple"],
+    "moduleInstallationGate": true,
+    "readOnly": true
+  },
+  "excludedPayloads": [
+    "input_refs",
+    "output_refs",
+    "think_ref",
+    "action_ref",
+    "verify_ref",
+    "observe_ref",
+    "error details",
+    "lease_owner",
+    "heartbeat_at",
+    "state_snapshot_ref",
+    "artifact_refs",
+    "resume_token_hash",
+    "created_by"
+  ],
+  "remainingAfterSubwave": [
+    "exact Stage mapping",
+    "Responsibility and assignee readiness",
+    "Handoff Approval ReviewIssue",
+    "Action unknown and reconciliation",
+    "W2-00 business context enrichment",
+    "strict frontend SDK and browser EvidencePack"
+  ],
+  "safety": {
+    "databaseMutation": false,
+    "migration": false,
+    "taskControl": false,
+    "aipWorktreeRead": false
+  }
+}
