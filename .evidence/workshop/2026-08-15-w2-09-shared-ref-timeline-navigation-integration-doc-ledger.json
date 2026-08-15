@@ -1,0 +1,68 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w2-09-shared-ref-timeline-navigation-integration-doc-align-20260815",
+  "workItem": "W2-09",
+  "projectRevision": "AOS-000038",
+  "sourceCommit": "1e2dbff6e4bd088ae7ca540d6f4503d992352719",
+  "recordedAt": "2026-08-15T10:40:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "added the common Workshop shared-context timeline-event and navigation-target contracts",
+        "froze opaque tenant-scoped context token exact refs stable timeline ordering cursor dedup and originals",
+        "froze server-resolved cross-module targets and same-revision refresh back return focus restoration"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "bounded current catalog route unique navigation collapse and Focus Mode as shell foundations only",
+        "registered all eight domain views and shared context timeline merger strict SDK as absent runtime dependencies",
+        "rejected placeholder timeline sample context arbitrary return URLs payload copying and newest-row guessing"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/02-对象状态Readiness与API契约.md",
+      "preSha256": "08e7c4bb7fc607af0eb9c8d265586b8182b86b333a8795b5561126f3d931bfe4",
+      "postSha256": "10096ed79cacfb21aad1a5f08f4a2de25fba2a0c5dd5f0a0e816341e7351649e"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/05-前端壳交互状态与无障碍.md",
+      "preSha256": "030c13bc87075a33b1157a18348f802e054270a61da6f57fa792dfd4aac74cf9",
+      "postSha256": "18323b962e9567e1eee80b67aa6f77a879a23a74745f2d1ff21c52514acd3acf"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/18-跨Module端到端场景技术方案.md",
+      "preSha256": "970d470731ca9b000b40b0f8ff3776dedba8a14ceab2cfa80ef668ab672ab050",
+      "postSha256": "4562533a4cc238b3973c7a86dfbcab49a5167390cef96f95910bea98924f2e35"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "cbbcbac9815bcbf09107254e3423b1c529b7b7e625ccc3b59e2e496f46a65129",
+      "postSha256": "8b36fb0b2a16c818f9fed655686221f957397ac61acd07266dd56108ae7d1d92"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/90-W2-09-八ModuleSharedRefTimelineNavigation集成预检ADR.md",
+      "preSha256": null,
+      "postSha256": "0f82318430e61d83ace89f104464c0724435924aef524162e51c1f34e3ce547b"
+    }
+  ],
+  "decision": {
+    "contract": "APPROVED",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "mode": "READ_ONLY",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two review rounds passed after remediation",
+    "all five post hashes match",
+    "AOS-000038 BIND-1 progress was revalidated without promoting W2 domain-view or integration readiness",
+    "W2-09 remains unchecked and no route installation database tenant Task Handoff Action Evidence Receipt PII or external mutation was introduced"
+  ]
+}
