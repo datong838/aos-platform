@@ -1,0 +1,16 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w3-11-w0-matrix-naming-correction-20260815",
+  "recordedAt": "2026-08-15T12:26:00+08:00",
+  "authorityRevision": "AOS-000039",
+  "file": {
+    "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/W0-全量技术条款施工追踪矩阵与W1精确施工包.md",
+    "preSha256": "041a99347735357adcee4d099a4f9de893a37256647acdb26f938924fc7ee306",
+    "postSha256": "f5c0ac902167aeb286cf884f5ab3125f4854589e4918dd697e927fff132459cd"
+  },
+  "correction": "Replaced generic Master/Variant wording with the frozen ContentVariant projection and W3-11 DST, successor and schedule/publication boundaries.",
+  "runtimeTaskCountChanged": false,
+  "sourceCodeChanged": false,
+  "staticVisualChanged": false,
+  "externalEffect": false
+}
