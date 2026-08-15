@@ -24,7 +24,9 @@ from aos_api.ecommerce_workshop_task_cockpit import (
     TaskCockpitPersistenceError,
 )
 from aos_api.ecommerce_workshop_task_cockpit_contracts import (
+    TaskCockpitCheckpointPageEnvelope,
     TaskCockpitCoreEnvelope,
+    TaskCockpitStepPageEnvelope,
 )
 from aos_api.errors import ApiError, ErrorBody
 from aos_api.public_contracts import TaskStatus
@@ -40,6 +42,7 @@ _ERRORS = {
     401: {"model": ErrorBody},
     403: {"model": ErrorBody},
     404: {"model": ErrorBody},
+    409: {"model": ErrorBody},
     500: {"model": ErrorBody},
     503: {"model": ErrorBody},
 }
@@ -50,6 +53,14 @@ ModuleIdPath = Annotated[
         min_length=1,
         max_length=160,
         pattern=r"^ecommerce[.][a-z0-9]+(?:[.-][a-z0-9]+)*$",
+    ),
+]
+RunIdPath = Annotated[
+    str,
+    Path(
+        min_length=1,
+        max_length=200,
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$",
     ),
 ]
 ResultT = TypeVar("ResultT")
@@ -108,6 +119,20 @@ def _invoke(operation: Callable[[], ResultT]) -> ResultT:
             status_code=exc.http_status,
             details=exc.details,
         ) from exc
+
+
+def _require_task_cockpit_installation(
+    *, principal: Principal, catalog: EcommerceWorkshopCatalog
+) -> None:
+    _invoke(
+        lambda: catalog.get_readiness(
+            module_id="ecommerce.task-cockpit",
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            roles=principal.roles,
+            markings=principal.markings,
+        )
+    )
 
 
 @router.get(
@@ -174,20 +199,85 @@ def get_ecommerce_workshop_task_cockpit_core(
     _reject_unknown_query_parameters(
         request, allowed=frozenset({"status", "limit", "cursor"})
     )
-    _invoke(
-        lambda: catalog.get_readiness(
-            module_id="ecommerce.task-cockpit",
-            org_id=principal.org_id,
-            project_id=principal.project_id,
-            roles=principal.roles,
-            markings=principal.markings,
-        )
+    _require_task_cockpit_installation(
+        principal=principal,
+        catalog=catalog,
     )
     try:
         return cockpit.read_core(
             org_id=principal.org_id,
             project_id=principal.project_id,
             status=status,
+            limit=limit,
+            cursor=cursor,
+        )
+    except TaskCockpitPersistenceError as exc:
+        raise ApiError(
+            code="TASK_COCKPIT_DEPENDENCY_UNAVAILABLE",
+            message="Task Cockpit read dependency is unavailable",
+            status_code=503,
+        ) from exc
+
+
+@router.get(
+    "/views/task-cockpit/runs/{run_id}/steps",
+    response_model=TaskCockpitStepPageEnvelope,
+    operation_id="ecommerceWorkshopTaskCockpitRunStepsList",
+    responses=_ERRORS,
+)
+def list_ecommerce_workshop_task_cockpit_run_steps(
+    request: Request,
+    run_id: RunIdPath,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    cockpit: TaskCockpitDependency,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    cursor: Annotated[str | None, Query(min_length=1, max_length=4096)] = None,
+) -> TaskCockpitStepPageEnvelope:
+    _reject_unknown_query_parameters(
+        request, allowed=frozenset({"limit", "cursor"})
+    )
+    _require_task_cockpit_installation(principal=principal, catalog=catalog)
+    try:
+        return cockpit.read_steps(
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            run_id=run_id,
+            limit=limit,
+            cursor=cursor,
+        )
+    except TaskCockpitPersistenceError as exc:
+        raise ApiError(
+            code="TASK_COCKPIT_DEPENDENCY_UNAVAILABLE",
+            message="Task Cockpit read dependency is unavailable",
+            status_code=503,
+        ) from exc
+
+
+@router.get(
+    "/views/task-cockpit/runs/{run_id}/checkpoints",
+    response_model=TaskCockpitCheckpointPageEnvelope,
+    operation_id="ecommerceWorkshopTaskCockpitRunCheckpointsList",
+    responses=_ERRORS,
+)
+def list_ecommerce_workshop_task_cockpit_run_checkpoints(
+    request: Request,
+    run_id: RunIdPath,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    cockpit: TaskCockpitDependency,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    cursor: Annotated[str | None, Query(min_length=1, max_length=4096)] = None,
+) -> TaskCockpitCheckpointPageEnvelope:
+    _reject_unknown_query_parameters(
+        request, allowed=frozenset({"limit", "cursor"})
+    )
+    _require_task_cockpit_installation(principal=principal, catalog=catalog)
+    try:
+        return cockpit.read_checkpoints(
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            run_id=run_id,
             limit=limit,
             cursor=cursor,
         )

@@ -189,5 +189,13 @@ def test_openapi_freezes_w1_and_w2_core_operations_and_no_writes() -> None:
             "/v1/ecommerce-workshop/views/task-cockpit",
             "get",
         ),
+        "ecommerceWorkshopTaskCockpitRunStepsList": (
+            "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/steps",
+            "get",
+        ),
+        "ecommerceWorkshopTaskCockpitRunCheckpointsList": (
+            "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/checkpoints",
+            "get",
+        ),
     }
     assert all(method == "get" for _, method in operations.values())
