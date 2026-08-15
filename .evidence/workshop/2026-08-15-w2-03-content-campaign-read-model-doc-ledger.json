@@ -1,0 +1,63 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w2-03-content-campaign-read-model-doc-align-20260815",
+  "workItem": "W2-03",
+  "projectRevision": "AOS-000037",
+  "sourceCommit": "7295a2fabc7b6d5c44a5241b6c87ab6d9f90f011",
+  "recordedAt": "2026-08-15T09:47:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "separated Campaign Calendar Intent Master Artifact Variant production and publication responsibilities",
+        "added timezone cutoff denominator and append-only lineage invariants",
+        "required canonical Action Receipt or reconciliation evidence for published outcome"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "identified ContentVariant and ChannelVariant naming drift and added a canonical naming gate",
+        "confirmed generic TaskBrief and ArtifactRelation cannot replace missing domain authorities",
+        "replaced stale AOS-000034 E7-5 progress text, then revalidated AOS-000037 BIND-0 zero-binding facts without promoting readiness"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/07-领域读模型Command与错误契约.md",
+      "preSha256": "ab061acac729f91a1e91109ab09c7cec983863ee4ae36857153d49f7426836e9",
+      "postSha256": "591c1ae0caf65b493f563f5dde3f672e94b452665a00ae73f7001a9c44e1a33f"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/11-内容与活动技术方案.md",
+      "preSha256": "34225dcde1f58aa05531c5dc0afd1dcb2a78314a8cbf0f5f476d7f8931a07edd",
+      "postSha256": "d843e0d23cc5eca3e292fabdf8bd3802c5b5b3f9786e29b365e5453f3578e19d"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "098965ad4a00d763a12623a93bf0c6e9eeff3d163dc7cf26d0fe9bb4f5961f5e",
+      "postSha256": "0ef7ad2d6e84b1b4a75256638a447fd7c1aa5a05c36d7818509e989e35523274"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/84-W2-03-内容活动PlanCalendarMasterVariant只读模型预检ADR.md",
+      "preSha256": null,
+      "postSha256": "96ac2653a69c5b064b802138be7ce89e7bbadc8b3ed33a455fa5d150a07392df"
+    }
+  ],
+  "decision": {
+    "contract": "APPROVED",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "mode": "READ_ONLY",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two review rounds passed after remediation",
+    "all four post hashes match",
+    "W2-03 remains unchecked",
+    "no content-domain authority runtime mutation or external publication was introduced"
+  ]
+}
