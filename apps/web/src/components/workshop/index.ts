@@ -4,3 +4,4 @@ export * from "./EcommerceWorkshopCatalogContext";
 export * from "./EcommerceWorkshopHost";
 export * from "./EcommerceWorkshopShell";
 export * from "./InstalledModuleNavigation";
+export * from "./TaskCockpitPage";

@@ -191,11 +191,99 @@
 .ecommerce-workshop-blockers li p { margin: 8px 0; color: var(--aos-text-secondary); }
 .ecommerce-workshop-blockers li small { color: var(--aos-text-tertiary); overflow-wrap: anywhere; }
 
+.task-cockpit-page,
+.task-cockpit-read-model,
+.task-cockpit-tasks {
+  display: grid;
+  gap: 16px;
+}
+.task-cockpit-toolbar,
+.task-cockpit-section-heading,
+.task-cockpit-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.task-cockpit-toolbar {
+  justify-content: flex-end;
+  padding: 10px 12px;
+  border: 1px solid var(--aos-border);
+  background: var(--aos-surface);
+}
+.task-cockpit-toolbar label { color: var(--aos-text-secondary); }
+.task-cockpit-toolbar select,
+.task-cockpit-toolbar button,
+.task-cockpit-card button,
+.task-cockpit-tasks > button {
+  border: 1px solid var(--aos-border);
+  background: var(--aos-surface);
+  color: var(--aos-text);
+  padding: 7px 10px;
+}
+.task-cockpit-toolbar button,
+.task-cockpit-card button,
+.task-cockpit-tasks > button { cursor: pointer; }
+.task-cockpit-toolbar :focus-visible,
+.task-cockpit-card button:focus-visible,
+.task-cockpit-tasks > button:focus-visible {
+  outline: 2px solid var(--aos-accent);
+  outline-offset: 2px;
+}
+.task-cockpit-scope,
+.task-cockpit-blockers,
+.task-cockpit-card {
+  border: 1px solid var(--aos-border);
+  background: var(--aos-surface);
+  padding: 16px;
+}
+.task-cockpit-scope h2,
+.task-cockpit-blockers h2,
+.task-cockpit-section-heading h2,
+.task-cockpit-card h3 { margin: 0; }
+.task-cockpit-scope > p,
+.task-cockpit-card-heading p { color: var(--aos-text-secondary); }
+.task-cockpit-scope dl,
+.task-cockpit-card dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0 0;
+}
+.task-cockpit-scope dt,
+.task-cockpit-card dt { color: var(--aos-text-tertiary); font-size: 12px; }
+.task-cockpit-scope dd,
+.task-cockpit-card dd { margin: 3px 0 0; overflow-wrap: anywhere; }
+.task-cockpit-blockers ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+}
+.task-cockpit-blockers li { min-width: 0; border-left: 3px solid var(--aos-amber); padding: 8px 10px; background: var(--aos-surface-hover); }
+.task-cockpit-blockers li strong,
+.task-cockpit-blockers li span { display: block; overflow-wrap: anywhere; }
+.task-cockpit-blockers li span { margin-top: 5px; color: var(--aos-text-tertiary); }
+.task-cockpit-blockers li p { margin: 8px 0 0; color: var(--aos-text-secondary); }
+.task-cockpit-section-heading { justify-content: space-between; }
+.task-cockpit-section-heading span { color: var(--aos-text-tertiary); }
+.task-cockpit-card-heading { align-items: flex-start; justify-content: space-between; }
+.task-cockpit-card-heading p { margin: 0 0 4px; }
+.task-cockpit-card-heading > span { border: 1px solid var(--aos-border); border-radius: 999px; padding: 3px 8px; }
+.task-cockpit-card > button { margin-top: 14px; }
+.task-cockpit-run-detail { display: grid; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--aos-border); overflow-x: auto; }
+.task-cockpit-run-detail table { width: 100%; border-collapse: collapse; min-width: 560px; }
+.task-cockpit-run-detail caption { text-align: left; font-weight: 600; margin-bottom: 6px; }
+.task-cockpit-run-detail th,
+.task-cockpit-run-detail td { border-bottom: 1px solid var(--aos-border); padding: 7px 8px; text-align: left; }
+
 .p-app.is-workshop-focus > .p-nav-global,
 .p-app.is-workshop-focus .aside { display: none; }
 
 @media (max-width: 1439px) {
   .ecommerce-workshop-context-refs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .task-cockpit-blockers ul { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 1279px) {
@@ -203,4 +291,7 @@
   .ecommerce-workshop-context-actions { justify-content: space-between; }
   .ecommerce-workshop-context-refs,
   .ecommerce-workshop-blockers ul { grid-template-columns: 1fr; }
+  .task-cockpit-toolbar { align-items: stretch; flex-direction: column; }
+  .task-cockpit-scope dl,
+  .task-cockpit-card dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
