@@ -102,6 +102,15 @@ export type AssistThread = {
   createdBy: string;
   createdAt: string;
 };
+export type CancelTaskRunRequest = {
+  expectedRunVersion: number;
+  expectedTaskVersion: number;
+  reason: string;
+};
+export type TaskRunControlResult = {
+  task: { id: string; status: string; version: number };
+  run: { id: string; status: string; version: number };
+};
 export type AssistContext = AssistSubject & {
   tenant: Tenant;
   planRef: ResourceRef;

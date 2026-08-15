@@ -1,8 +1,8 @@
 import { getApiBase } from "../apiBase";
 import { apiGet, apiPost } from "../client";
 import { getTenant, tenantAuthHeaders } from "../tenant";
-import type { AnalystQuery, AssistEvent, AssistThread, CreateAssistThread, CreateAssistTurn, QueryResultRevision } from "./contracts";
-import { parseAssistEvent, parseAssistThread, parseQueryResult, validateAssistStream } from "./parser";
+import type { AnalystQuery, AssistEvent, AssistThread, CancelTaskRunRequest, CreateAssistThread, CreateAssistTurn, QueryResultRevision, TaskRunControlResult } from "./contracts";
+import { parseAssistEvent, parseAssistThread, parseQueryResult, parseTaskRunControlResult, validateAssistStream } from "./parser";
 
 function scope() { const { orgId, projectId } = getTenant(); return { orgId, projectId }; }
 export function newIdempotencyKey(): string { return globalThis.crypto.randomUUID(); }
@@ -15,6 +15,10 @@ export async function createAssistThread(body: CreateAssistThread, key = newIdem
 }
 export async function getAssistThread(threadId: string): Promise<AssistThread> {
   return parseAssistThread(await apiGet<unknown>(`/v1/aip/assist/threads/${encodeURIComponent(threadId)}`), scope());
+}
+export async function cancelAssistTaskRun(runId: string, body: CancelTaskRunRequest, key = newIdempotencyKey()): Promise<TaskRunControlResult> {
+  const payload = await apiPost<unknown>(`/v1/aip/task-runs/${encodeURIComponent(runId)}/cancel`, body, { "Idempotency-Key": key });
+  return parseTaskRunControlResult(payload);
 }
 
 function parseSse(text: string): AssistEvent[] {

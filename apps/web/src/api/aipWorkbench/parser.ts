@@ -9,6 +9,7 @@ import type {
   QueryRow,
   QuerySource,
   ResourceRef,
+  TaskRunControlResult,
   Tenant,
 } from "./contracts";
 
@@ -24,6 +25,10 @@ function exact(raw: Record<string, unknown>, label: string, fields: readonly str
 }
 function string(value: unknown, label: string): string {
   if (typeof value !== "string" || !value.trim()) throw new Error(`${label} 必须是非空字符串`);
+  return value;
+}
+function text(value: unknown, label: string): string {
+  if (typeof value !== "string") throw new Error(`${label} 必须是字符串`);
   return value;
 }
 function nullableString(value: unknown, label: string): string | null {
@@ -128,6 +133,37 @@ export function parseAssistThread(value: unknown, expectedTenant?: Tenant): Assi
   const scope = tenant(raw.tenant); assertTenant(scope, expectedTenant);
   const subjectRaw = object(raw.subject, "subject"); exact(subjectRaw, "subject", ["taskRef", "taskRunRef", "agentRunRef", "selectionRefs", "cutoffAt"]);
   return { tenant: scope, threadId: string(raw.threadId, "threadId"), subject: subject(subjectRaw, "subject"), status: enumeration(raw.status, "status", ["open", "blocked", "closed"] as const), version: integer(raw.version, "version"), createdBy: string(raw.createdBy, "createdBy"), createdAt: iso(raw.createdAt, "createdAt") };
+}
+export function parseTaskRunControlResult(value: unknown): TaskRunControlResult {
+  const raw = object(value, "TaskRunControlResult");
+  exact(raw, "TaskRunControlResult", ["task", "run"]);
+  const task = object(raw.task, "task");
+  exact(task, "task", ["id", "type", "title", "status", "priority", "createdBy", "createdAt", "currentPlanRevisionId", "version", "description", "goal", "selectionRef", "policyRevision", "updatedAt"]);
+  const run = object(raw.run, "run");
+  exact(run, "run", ["id", "taskId", "planRevisionId", "status", "startedAt", "finishedAt", "lastCheckpointId", "logicGraphId", "logicRevision", "version", "createdBy", "createdAt", "updatedAt"]);
+  const taskActor = object(task.createdBy, "task.createdBy");
+  exact(taskActor, "task.createdBy", ["actorType", "actorId"]);
+  const runActor = object(run.createdBy, "run.createdBy");
+  exact(runActor, "run.createdBy", ["actorType", "actorId"]);
+  string(taskActor.actorType, "task.createdBy.actorType"); string(taskActor.actorId, "task.createdBy.actorId");
+  string(runActor.actorType, "run.createdBy.actorType"); string(runActor.actorId, "run.createdBy.actorId");
+  string(task.type, "task.type"); string(task.title, "task.title"); text(task.description, "task.description"); integer(task.priority, "task.priority", 0);
+  iso(task.createdAt, "task.createdAt"); iso(task.updatedAt, "task.updatedAt");
+  object(task.goal, "task.goal");
+  if (task.selectionRef !== null) parseResourceRef(task.selectionRef, "task.selectionRef");
+  nullableString(task.currentPlanRevisionId, "task.currentPlanRevisionId");
+  nullableString(task.policyRevision, "task.policyRevision");
+  string(run.taskId, "run.taskId"); string(run.planRevisionId, "run.planRevisionId");
+  if (run.startedAt !== null) iso(run.startedAt, "run.startedAt");
+  if (run.finishedAt !== null) iso(run.finishedAt, "run.finishedAt");
+  nullableString(run.lastCheckpointId, "run.lastCheckpointId");
+  nullableString(run.logicGraphId, "run.logicGraphId");
+  if (run.logicRevision !== null) integer(run.logicRevision, "run.logicRevision");
+  iso(run.createdAt, "run.createdAt"); iso(run.updatedAt, "run.updatedAt");
+  return {
+    task: { id: string(task.id, "task.id"), status: string(task.status, "task.status"), version: integer(task.version, "task.version") },
+    run: { id: string(run.id, "run.id"), status: string(run.status, "run.status"), version: integer(run.version, "run.version") },
+  };
 }
 function context(value: unknown): AssistContext {
   const raw = object(value, "context"); exact(raw, "context", ["tenant", "taskRef", "taskRunRef", "planRef", "agentRunRef", "agentInstanceRef", "skillRef", "logicRef", "modelRouteRef", "policyRef", "evalRef", "skillBindingRef", "capabilityBindingRefs", "selectionRefs", "knowledgeCitationRefs", "markings", "cutoffAt", "readinessBlockers", "contextHash"]);
