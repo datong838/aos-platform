@@ -1,0 +1,88 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w3-04-freeze-cycle-remediation-doc-align-20260815",
+  "workItem": "W3-04",
+  "projectRevision": "AOS-000039",
+  "sourceCommit": "84e15a4c24cb8851566645077e048255014b5a76",
+  "recordedAt": "2026-08-15T11:09:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "findings": [
+        "W3-04 required an EvidenceBundle while W4-01 that builds it depended on W3-14",
+        "W3-03 correctly produced only a build request and could not close the gap without violating zero-side-effect prepare"
+      ],
+      "closed": [
+        "reclassified W4-01 as an early bridge after W3-02 and W3-03",
+        "made W3-04 explicitly depend on W4-01",
+        "kept W4-02 through W4-08 behind W3-14",
+        "forbade empty bundles, client-asserted complete and hidden provider execution"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS_AFTER_REMEDIATION",
+      "findings": [
+        "the existing frozen ImpactPreview includes Plan and StageTemplate and therefore cannot represent the pre-compile four-contract confirmation",
+        "individual freeze operations do not produce one atomic user-visible aggregate"
+      ],
+      "closed": [
+        "introduced the target AIP-owned ProductionContextRevision and DEP-PRODUCTION-CONTEXT-FREEZE",
+        "froze one server-side CAS, append-only Receipt, exact refs and no-latest semantics",
+        "required ProductionContext exact-ref propagation into Plan, ImpactPreview and StartDecision",
+        "kept W3-04 unchecked and runtime implementation blocked"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/07-领域读模型Command与错误契约.md",
+      "preSha256": "a16c2ae65988bf3a3cc45cbb7cc99be7ee631f2f0ef2f5f68369a121e2bae284",
+      "postSha256": "616f36e248f3399cbdb77d1cca1f72f79ad7c0c5ac6ee217640d935295b217e4"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/20-实施波次依赖门与交付清单.md",
+      "preSha256": "f99414570816489b75de4009c488981373340dc9b22aafd17d298b99e50ee421",
+      "postSha256": "adc68d394e18bdcf639f67fc1ae44ec101630ccee5ab387cd39df16991235c25"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md",
+      "preSha256": "b7b33681a4cbb1c6a8eeb8d709f5bfd94e7e43daa6bc19e2d7a2c24f60f8839d",
+      "postSha256": "4e797da6bf0993fc03c699d6cb744e20dd04050b64f9c46c69b5d31bf584d192"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/33-W4-01-EvidenceBuildJob八领域RequiredFacts与Evidence治理预检ADR.md",
+      "preSha256": "f1f3ff69eb37ed3061b68581f88eae6978028fe9ace109c9bd583391f2134489",
+      "postSha256": "d7fe806b5569826ac6558bd4d6024222bbdd78b17a214b4b7133dbe3c45cbad3"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/93-W3-04四合同ProductionContext组合冻结与依赖解环ADR.md",
+      "preSha256": null,
+      "postSha256": "592384949ec8a4de39036fbbbb2a3cb04cb7d99dbfac9056d5d75daa85fb0b80"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "27669221895f606fd97ebef816a2d1712b9670cfdec75aa5835374eda83db39f",
+      "postSha256": "44314860de009c834fac8f41f6ed1cf27b4f05f066f6bbfa5daa649d275ff592"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "9ed8e60f0e3312605e90011b2846314e351f52ce30e8f52e0c8656f8b6e54105",
+      "postSha256": "f35cffb578b559f03c4ede437e89ed9432e86792961db7d57d7aabd9eff1266c"
+    }
+  ],
+  "decision": {
+    "plan": "REMEDIATED_GREEN",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two review and remediation rounds passed",
+    "all shared-document post hashes match",
+    "the active D-waves and formal-review graph no longer make W4-01 depend on W3-14",
+    "ProductionContext and ImpactPreview ownership and ordering are distinct",
+    "no source, migration, database, tenant, provider or external mutation was introduced"
+  ]
+}
