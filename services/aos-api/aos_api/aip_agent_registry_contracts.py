@@ -235,6 +235,12 @@ class PublishSkillTemplateRequest(AipContractModel):
     handoff_policy_ref: VersionedAssetRef
     source_ref: ResourceRef
     source_license: str = Field(min_length=1, max_length=200)
+    parent_ref: VersionedAssetRef | None = None
+    publication_tenant: TenantContext | None = None
+    release_gate_ref: VersionedAssetRef | None = None
+    publication_ref: ResourceRef | None = None
+    model_route_ref: VersionedAssetRef | None = None
+    runtime_policy_ref: VersionedAssetRef | None = None
     content_hash: str = Field(pattern=SHA256_PATTERN)
 
     @field_validator("tool_allowlist", "required_capabilities")
@@ -245,10 +251,59 @@ class PublishSkillTemplateRequest(AipContractModel):
             raise ValueError("asset ids must be unique and non-blank")
         return cleaned
 
+    @model_validator(mode="after")
+    def _published_revision_has_exact_provenance(self) -> PublishSkillTemplateRequest:
+        provenance = (
+            self.parent_ref,
+            self.publication_tenant,
+            self.release_gate_ref,
+            self.publication_ref,
+            self.model_route_ref,
+            self.runtime_policy_ref,
+        )
+        if self.lifecycle is TemplateLifecycle.PUBLISHED:
+            if any(item is None for item in provenance):
+                raise ValueError("published skill requires exact publication provenance")
+            expected = {
+                "parent_ref": "SkillTemplate",
+                "release_gate_ref": "EvalGateDecision",
+                "model_route_ref": "ModelRouteRevision",
+                "runtime_policy_ref": "RuntimePolicyRevision",
+            }
+            for field_name, asset_type in expected.items():
+                if getattr(self, field_name).asset_type != asset_type:
+                    raise ValueError(f"{field_name} must reference {asset_type}")
+            if self.publication_ref.resource_type != "PublicationEvent":
+                raise ValueError("publication_ref must reference PublicationEvent")
+        elif any(item is not None for item in provenance):
+            raise ValueError("non-published skill cannot carry publication provenance")
+        return self
+
 
 class SkillTemplateRevision(PublishSkillTemplateRequest):
     created_by: str
     created_at: datetime
+
+
+class PublishEvaluatedSkillRevisionRequest(AipContractModel):
+    source_skill: VersionedAssetRef
+    publication_id: str = Field(min_length=1, max_length=200)
+    release_gate_decision_id: str = Field(min_length=1, max_length=200)
+    model_route_ref: VersionedAssetRef
+    runtime_policy_ref: VersionedAssetRef
+    idempotency_key: str = Field(min_length=1, max_length=200)
+
+    @model_validator(mode="after")
+    def _exact_reference_kinds(self) -> PublishEvaluatedSkillRevisionRequest:
+        expected = {
+            "source_skill": "SkillTemplate",
+            "model_route_ref": "ModelRouteRevision",
+            "runtime_policy_ref": "RuntimePolicyRevision",
+        }
+        for field_name, asset_type in expected.items():
+            if getattr(self, field_name).asset_type != asset_type:
+                raise ValueError(f"{field_name} must reference {asset_type}")
+        return self
 
 
 class PublishCapabilityRevisionRequest(AipContractModel):

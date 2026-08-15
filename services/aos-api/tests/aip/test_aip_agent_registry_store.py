@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+import json
 from datetime import UTC, datetime
 
 import pytest
@@ -31,6 +32,7 @@ CANARY = TenantScope("dev-org", "dev-project")
 NOW = datetime(2026, 8, 13, 18, tzinfo=UTC)
 HASH_A = "a" * 64
 HASH_B = "b" * 64
+HASH_C = "c" * 64
 
 
 def ref(kind: str, identifier: str, revision: int, content_hash: str) -> VersionedAssetRef:
@@ -93,7 +95,7 @@ def skill_request(ids: dict[str, str]):
         skill_id=ids["skill"],
         revision=1,
         canonical_logic_id="content.strategy.plan",
-        lifecycle="published",
+        lifecycle="evaluated",
         input_schema={"type": "object"},
         output_schema={"type": "object"},
         tool_allowlist=[],
@@ -105,6 +107,44 @@ def skill_request(ids: dict[str, str]):
         source_license="internal-authorized",
         content_hash=HASH_B,
     )
+
+
+def insert_governed_published_skill_fixture(ids: dict[str, str]) -> None:
+    """Publication behavior is tested separately; this fixture seeds its result."""
+    source = skill_request(ids)
+    AipSkillRegistry().publish_skill(source, actor="pytest")
+    encoded = lambda value: json.dumps(value, separators=(",", ":"))
+    with connect() as conn:
+        conn.execute(
+            """INSERT INTO aip_skill_template_revision
+               (skill_id,revision,canonical_logic_id,lifecycle,input_schema,
+                output_schema,tool_allowlist,required_capabilities,risk_level,
+                memory_policy_ref,handoff_policy_ref,source_ref,source_license,
+                parent_ref,publication_tenant,release_gate_ref,publication_ref,
+                model_route_ref,runtime_policy_ref,content_hash,created_by)
+               VALUES (%s,2,%s,'published',%s::jsonb,%s::jsonb,'[]'::jsonb,
+                '[]'::jsonb,'low',%s::jsonb,%s::jsonb,%s::jsonb,%s,
+                %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
+                %s,'pytest')""",
+            (
+                source.skill_id,
+                source.canonical_logic_id,
+                encoded(source.input_schema),
+                encoded(source.output_schema),
+                encoded(source.memory_policy_ref.model_dump(mode="json", by_alias=True)),
+                encoded(source.handoff_policy_ref.model_dump(mode="json", by_alias=True)),
+                encoded(source.source_ref.model_dump(mode="json", by_alias=True)),
+                source.source_license,
+                encoded(ref("SkillTemplate", source.skill_id, 1, HASH_B).model_dump(mode="json", by_alias=True)),
+                encoded({"orgId": PRIMARY.org_id, "projectId": PRIMARY.project_id}),
+                encoded(ref("EvalGateDecision", "gate-fixture", 1, HASH_A).model_dump(mode="json", by_alias=True)),
+                encoded({"resourceType": "PublicationEvent", "resourceId": "event-fixture", "revision": "publication-fixture", "authority": "postgresql"}),
+                encoded(ref("ModelRouteRevision", "route-fixture", 1, HASH_A).model_dump(mode="json", by_alias=True)),
+                encoded(ref("RuntimePolicyRevision", "policy-fixture", 1, HASH_A).model_dump(mode="json", by_alias=True)),
+                HASH_C,
+            ),
+        )
+        conn.commit()
 
 
 def publish_and_create(ids: dict[str, str]):
@@ -253,11 +293,11 @@ def test_skill_binding_exact_revision_cas_and_tenant_isolation(identifiers):
         occurred_at=NOW,
     )
     skills = AipSkillRegistry()
-    assert skills.publish_skill(skill_request(identifiers), actor="pytest").content_hash == HASH_B
+    insert_governed_published_skill_fixture(identifiers)
     request = CreateSkillBindingRequest(
         binding_id=identifiers["binding"],
         instance_id=identifiers["instance"],
-        skill=ref("SkillTemplate", identifiers["skill"], 1, HASH_B),
+        skill=ref("SkillTemplate", identifiers["skill"], 2, HASH_C),
         budget_policy_ref=ref("BudgetPolicy", "budget-default", 1, HASH_A),
     )
     binding, receipt = skills.create_binding(

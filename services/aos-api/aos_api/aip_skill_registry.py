@@ -36,6 +36,10 @@ class AipSkillRegistry(AipAgentRegistryStore):
     def publish_skill(self, request: PublishSkillTemplateRequest, *, actor: str) -> SkillTemplateRevision:
         if not actor.strip():
             raise ValueError("actor is required")
+        if request.lifecycle is TemplateLifecycle.PUBLISHED:
+            raise AipAgentRegistryTransitionBlocked(
+                "published skills require the governed Eval publication service"
+            )
         try:
             with self._connect_factory() as conn:
                 row = conn.execute(
@@ -43,9 +47,12 @@ class AipSkillRegistry(AipAgentRegistryStore):
                        (skill_id,revision,canonical_logic_id,lifecycle,input_schema,
                         output_schema,tool_allowlist,required_capabilities,risk_level,
                         eval_pack_ref,memory_policy_ref,handoff_policy_ref,source_ref,
-                        source_license,content_hash,created_by)
+                        source_license,parent_ref,publication_tenant,release_gate_ref,
+                        publication_ref,model_route_ref,runtime_policy_ref,content_hash,
+                        created_by)
                        VALUES (%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
-                        %s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s)
+                        %s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s::jsonb,
+                        %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s)
                        ON CONFLICT (skill_id,revision) DO NOTHING RETURNING *""",
                     (request.skill_id, request.revision, request.canonical_logic_id,
                      request.lifecycle.value, self._json(request.input_schema),
@@ -54,6 +61,12 @@ class AipSkillRegistry(AipAgentRegistryStore):
                      self._json(request.eval_pack_ref) if request.eval_pack_ref else None,
                      self._json(request.memory_policy_ref), self._json(request.handoff_policy_ref),
                      self._json(request.source_ref), request.source_license,
+                     self._json(request.parent_ref) if request.parent_ref else None,
+                     self._json(request.publication_tenant) if request.publication_tenant else None,
+                     self._json(request.release_gate_ref) if request.release_gate_ref else None,
+                     self._json(request.publication_ref) if request.publication_ref else None,
+                     self._json(request.model_route_ref) if request.model_route_ref else None,
+                     self._json(request.runtime_policy_ref) if request.runtime_policy_ref else None,
                      request.content_hash, actor.strip()),
                 ).fetchone()
                 if row is None:
@@ -266,6 +279,9 @@ class AipSkillRegistry(AipAgentRegistryStore):
             risk_level=row["risk_level"], eval_pack_ref=row["eval_pack_ref"],
             memory_policy_ref=row["memory_policy_ref"], handoff_policy_ref=row["handoff_policy_ref"],
             source_ref=row["source_ref"], source_license=row["source_license"],
+            parent_ref=row.get("parent_ref"), publication_tenant=row.get("publication_tenant"),
+            release_gate_ref=row.get("release_gate_ref"), publication_ref=row.get("publication_ref"),
+            model_route_ref=row.get("model_route_ref"), runtime_policy_ref=row.get("runtime_policy_ref"),
             content_hash=row["content_hash"], created_by=row["created_by"], created_at=row["created_at"])
 
     @staticmethod

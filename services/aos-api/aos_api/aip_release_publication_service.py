@@ -392,6 +392,26 @@ class AipReleasePublicationService:
     def _verify_publishable_target(
         conn: Any, scope: TenantScope, target: AssetRevisionRef
     ) -> None:
+        if target.asset_type is AssetType.SKILL_TEMPLATE:
+            revision = AipReleasePublicationService._int_revision(target.revision)
+            row = conn.execute(
+                """SELECT lifecycle,content_hash
+                   FROM aip_skill_template_revision
+                   WHERE skill_id=%s AND revision=%s""",
+                (target.asset_id, revision),
+            ).fetchone()
+            if row is None:
+                raise AipReleasePublicationNotFound(
+                    "skill template revision not found"
+                )
+            if (
+                row["lifecycle"] != "evaluated"
+                or row["content_hash"] != target.content_hash
+            ):
+                raise AipReleasePublicationIntegrityError(
+                    "skill template revision/hash/lifecycle changed after evaluation"
+                )
+            return
         if target.asset_type is not AssetType.LOGIC_GRAPH:
             raise AipReleaseAssetUnsupported(
                 "asset registry is not available for this target type"
