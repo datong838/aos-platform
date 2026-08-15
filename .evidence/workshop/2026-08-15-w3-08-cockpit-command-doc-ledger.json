@@ -4,34 +4,34 @@
   "workItem": "W3-08",
   "projectRevision": "AOS-000039",
   "sourceCommit": "5dde09b",
-  "recordedAt": "2026-08-15T11:55:00+08:00",
+  "recordedAt": "2026-08-15T11:52:00+08:00",
   "reviewRounds": [
     {
       "round": 1,
       "result": "PASS_AFTER_REMEDIATION",
       "findings": [
-        "prioritize, handoff or reassign and open-approval were listed as page actions without unique authority contracts",
-        "the cockpit could become a second Task, assignment or Approval state machine"
+        "prioritize, handoff or reassign and open-approval were presented as peer page actions without unique authority contracts",
+        "the cockpit could become a second task, ownership or approval state machine"
       ],
       "closed": [
-        "introduced immutable DispatchIntentRevision before confirmation",
-        "separated TaskPriorityDecisionRevision from ViewPreference sorting",
-        "introduced exact ApprovalNavigationTarget and destination reauthorization",
-        "kept all runtime items unchecked and blocked"
+        "introduced immutable DispatchIntentRevision before canonical dispatch confirmation",
+        "introduced policy-constrained TaskPriorityDecisionRevision",
+        "introduced server-resolved ApprovalNavigationTarget",
+        "kept the cockpit as an intent composer and read-only projection"
       ]
     },
     {
       "round": 2,
       "result": "PASS_AFTER_REMEDIATION",
       "findings": [
-        "canonical API invocation alone would not prevent optimistic owner, priority or approval success in the page",
-        "opening an approval page could be misreported as approval completion"
+        "calling canonical APIs alone did not prevent optimistic owner, priority or approval success",
+        "view sorting could be confused with business priority and navigation could bypass destination authorization"
       ],
       "closed": [
-        "required Receipt-first acknowledgement followed by CockpitReadModel refresh",
-        "forbade optimistic owner, priority and approval mutations",
-        "required target-page tenant, permission, maker-checker, expiry and drift revalidation",
-        "preserved focus return and stable blocked reason codes"
+        "required Receipt-backed read-model refresh with zero optimistic authority mutation",
+        "separated ViewPreference from Task priority",
+        "required exact navigation target, destination reauthorization and focus return",
+        "kept navigation, approval decision and Action execution as separate visible states"
       ]
     }
   ],
@@ -68,15 +68,10 @@
     "dependency": "HARD_GATE_BLOCKED",
     "externalEffect": "NONE"
   },
-  "externalFactReview": {
-    "observed": "AIP BIND1-3A delivery receipts added while authority remains AOS-000039",
-    "impact": "does not close W2-02, W3-05, W3-06, W3-07 or any W3-08 authority dependency",
-    "lease": "aip-bind1-3b is active but explicitly excludes w2 and this Workshop document scope"
-  },
   "verification": [
     "two review and remediation rounds passed",
     "all shared-document post hashes match",
-    "dispatch, business priority and approval navigation have separate authority contracts",
+    "dispatch, priority and approval navigation have separate contracts and user-visible states",
     "runtime implementation and 96-item completion count were not advanced",
     "no source, database, tenant, Task, Handoff, Approval, browser or external mutation was introduced"
   ]
