@@ -787,10 +787,31 @@ def seed_running_agent_run(chain) -> tuple[ResourceRef, ResourceRef, VersionedAs
                skill_id,revision,canonical_logic_id,lifecycle,input_schema,
                output_schema,tool_allowlist,required_capabilities,risk_level,
                memory_policy_ref,handoff_policy_ref,source_ref,source_license,
+               parent_ref,publication_tenant,release_gate_ref,publication_ref,
+               model_route_ref,runtime_policy_ref,
                content_hash,created_by)
                VALUES (%s,1,%s,'published','{}','{}','[]','[]','low',
-                 '{}'::jsonb,'{}'::jsonb,'{}'::jsonb,'internal',%s,'pytest')""",
-            (skill_id, f"e7.logic.{suffix}", HASH_A),
+                 '{}'::jsonb,'{}'::jsonb,'{}'::jsonb,'internal',
+                 %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
+                 %s,'pytest')""",
+            (
+                skill_id,
+                f"e7.logic.{suffix}",
+                json.dumps(asset("SkillTemplate", skill_id).model_dump(mode="json", by_alias=True)),
+                json.dumps({"orgId": PRIMARY.org_id, "projectId": PRIMARY.project_id}),
+                json.dumps(asset("EvalGateDecision", f"e7-gate-{suffix}").model_dump(mode="json", by_alias=True)),
+                json.dumps(
+                    {
+                        "resourceType": "PublicationEvent",
+                        "resourceId": f"e7-publication-{suffix}",
+                        "revision": "1",
+                        "authority": "postgresql",
+                    }
+                ),
+                json.dumps(asset("ModelRouteRevision", f"e7-route-{suffix}").model_dump(mode="json", by_alias=True)),
+                json.dumps(asset("RuntimePolicyRevision", f"e7-policy-{suffix}").model_dump(mode="json", by_alias=True)),
+                HASH_A,
+            ),
         )
         conn.execute(
             """INSERT INTO aip_skill_binding (

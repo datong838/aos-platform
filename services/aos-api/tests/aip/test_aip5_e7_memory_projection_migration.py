@@ -2,12 +2,15 @@ import json
 from pathlib import Path
 from uuid import uuid4
 
+import psycopg
 import pytest
 from alembic import command
 from alembic.config import Config
 from psycopg import DatabaseError
+from psycopg.rows import dict_row
 
 from aos_api.db import connect
+from tests.aip._migration_test_support import isolated_aip_migration_database
 
 ROOT = Path(__file__).resolve().parents[2]
 MIGRATION = ROOT / "alembic" / "versions" / "aip5_005_agent_memory_projection.py"
@@ -172,17 +175,18 @@ def test_e7_observation_is_tenant_isolated_fail_closed_and_append_only() -> None
 
 
 def test_z_e7_empty_downgrade_upgrade_is_reversible_and_single_head() -> None:
-    command.downgrade(_config(), "w2_004")
-    with connect() as conn:
-        count = conn.execute(
-            "SELECT COUNT(*) AS n FROM pg_class WHERE relname=ANY(%s)",
-            (list(TABLES),),
-        ).fetchone()["n"]
-        assert count == 0
-    command.upgrade(_config(), "head")
-    with connect() as conn:
-        restored = conn.execute(
-            "SELECT COUNT(*) AS n FROM pg_class WHERE relname=ANY(%s)",
-            (list(TABLES),),
-        ).fetchone()["n"]
-        assert restored == len(TABLES)
+    with isolated_aip_migration_database("e7_migration") as (config, database_url):
+        command.downgrade(config, "w2_004")
+        with psycopg.connect(database_url, row_factory=dict_row) as conn:
+            count = conn.execute(
+                "SELECT COUNT(*) AS n FROM pg_class WHERE relname=ANY(%s)",
+                (list(TABLES),),
+            ).fetchone()["n"]
+            assert count == 0
+        command.upgrade(config, "head")
+        with psycopg.connect(database_url, row_factory=dict_row) as conn:
+            restored = conn.execute(
+                "SELECT COUNT(*) AS n FROM pg_class WHERE relname=ANY(%s)",
+                (list(TABLES),),
+            ).fetchone()["n"]
+            assert restored == len(TABLES)

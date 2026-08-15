@@ -5,9 +5,12 @@ from uuid import uuid4
 import pytest
 from alembic import command
 from alembic.config import Config
+import psycopg
 from psycopg import DatabaseError
+from psycopg.rows import dict_row
 
 from aos_api.db import connect
+from tests.aip._migration_test_support import isolated_aip_migration_database
 
 ROOT = Path(__file__).resolve().parents[2]
 MIGRATION = ROOT / "alembic" / "versions" / "bind1_001_operational_bindings.py"
@@ -152,27 +155,32 @@ def test_bind1_legacy_capability_binding_defaults_fail_closed() -> None:
 
 
 def test_z_bind1_empty_downgrade_upgrade_is_reversible_and_single_head() -> None:
-    command.downgrade(_config(), "aip5_005")
-    with connect() as conn:
-        names = conn.execute(
-            """SELECT table_name,column_name FROM information_schema.columns
-               WHERE table_schema='public'
-                 AND table_name IN ('aip_capability_binding','aip_skill_binding')"""
-        ).fetchall()
-        by_table: dict[str, set[str]] = {}
-        for row in names:
-            by_table.setdefault(str(row["table_name"]), set()).add(str(row["column_name"]))
-        assert not (CAPABILITY_COLUMNS & by_table["aip_capability_binding"])
-        assert not (SKILL_COLUMNS & by_table["aip_skill_binding"])
-    command.upgrade(_config(), "head")
-    with connect() as conn:
-        restored = conn.execute(
-            """SELECT table_name,column_name FROM information_schema.columns
-               WHERE table_schema='public'
-                 AND table_name IN ('aip_capability_binding','aip_skill_binding')"""
-        ).fetchall()
-        by_table = {}
-        for row in restored:
-            by_table.setdefault(str(row["table_name"]), set()).add(str(row["column_name"]))
-        assert CAPABILITY_COLUMNS <= by_table["aip_capability_binding"]
-        assert SKILL_COLUMNS <= by_table["aip_skill_binding"]
+    with isolated_aip_migration_database("bind1_migration") as (config, database_url):
+        command.downgrade(config, "aip5_005")
+        with psycopg.connect(database_url, row_factory=dict_row) as conn:
+            names = conn.execute(
+                """SELECT table_name,column_name FROM information_schema.columns
+                   WHERE table_schema='public'
+                     AND table_name IN ('aip_capability_binding','aip_skill_binding')"""
+            ).fetchall()
+            by_table: dict[str, set[str]] = {}
+            for row in names:
+                by_table.setdefault(str(row["table_name"]), set()).add(
+                    str(row["column_name"])
+                )
+            assert not (CAPABILITY_COLUMNS & by_table["aip_capability_binding"])
+            assert not (SKILL_COLUMNS & by_table["aip_skill_binding"])
+        command.upgrade(config, "head")
+        with psycopg.connect(database_url, row_factory=dict_row) as conn:
+            restored = conn.execute(
+                """SELECT table_name,column_name FROM information_schema.columns
+                   WHERE table_schema='public'
+                     AND table_name IN ('aip_capability_binding','aip_skill_binding')"""
+            ).fetchall()
+            by_table = {}
+            for row in restored:
+                by_table.setdefault(str(row["table_name"]), set()).add(
+                    str(row["column_name"])
+                )
+            assert CAPABILITY_COLUMNS <= by_table["aip_capability_binding"]
+            assert SKILL_COLUMNS <= by_table["aip_skill_binding"]
