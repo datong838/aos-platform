@@ -1,0 +1,199 @@
+{
+  "schema": "aos-workshop-w2-eight-pages-browser-data-reconciliation-preflight/v1",
+  "taskId": "workshop-w2-10-eight-pages-browser-data-reconciliation-preflight-20260815",
+  "workItem": "W2-10",
+  "projectRevision": "AOS-000038",
+  "branch": "w2-workshop",
+  "head": "afe600f378adfe7d68bfee39a297190c7397f3c6",
+  "recordedAt": "2026-08-15T10:45:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "EIGHT_PAGE_BROWSER_DATA_RECONCILIATION_GATE_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "mayRunPositiveBrowserMatrix": false,
+    "reason": "W2-09 and all eight source views are not runtime GREEN; current data readiness is RED, so only the generic shell foundation can be tested without manufacturing positive business evidence"
+  },
+  "dependencyMatrix": [
+    {
+      "dependency": "W2-01..W2-08",
+      "status": "CONTRACT_APPROVED_IMPLEMENTATION_NOT_STARTED",
+      "reason": "all eight target view contracts were remediated but their Store API strict SDK and business pages are absent"
+    },
+    {
+      "dependency": "W2-09",
+      "status": "CONTRACT_APPROVED_IMPLEMENTATION_NOT_STARTED",
+      "reason": "SharedContext timeline merger and navigation target runtime are absent"
+    },
+    {
+      "dependency": "W1-10",
+      "status": "NOT_GREEN",
+      "reason": "real Registry reconciliation and positive Workshop projection are incomplete"
+    },
+    {
+      "dependency": "W2-00_DEP_DATA",
+      "status": "RED",
+      "reason": "latest real schedules are six succeeded and six failed and the common readiness envelope is incomplete"
+    }
+  ],
+  "moduleMatrix": [
+    {
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/cockpit",
+      "view": "task-cockpit"
+    },
+    {
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "view": "content-campaign"
+    },
+    {
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "view": "operations"
+    },
+    {
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-growth",
+      "view": "creator-growth"
+    },
+    {
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "view": "media-studio"
+    },
+    {
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "view": "analyst"
+    },
+    {
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/price-governance",
+      "view": "price-governance"
+    },
+    {
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "view": "customer"
+    }
+  ],
+  "browserMatrixContract": {
+    "viewports": [
+      1280,
+      1440,
+      1920
+    ],
+    "states": [
+      "loading",
+      "empty",
+      "forbidden",
+      "stale",
+      "partial",
+      "failed",
+      "unknown",
+      "blocked",
+      "ready"
+    ],
+    "perCellEvidence": [
+      "release bundle installation module API and schema revisions",
+      "tenant identity data cutoff source run freshness quality and reconciliation refs",
+      "DOM H1 nav main aria-current tabs dialogs drawers live regions and status text",
+      "keyboard path visible focus collapse Focus Mode refresh and return restoration",
+      "HTTP method URL status headers response hash timing and abort or late-response handling",
+      "console errors warnings unhandled promises CSP mixed content and secret or PII leak scan",
+      "authority refs timeline originals blockers and screenshot bound in one immutable EvidencePack"
+    ],
+    "rules": [
+      "formal HTTP only and no file URL static mock target-state or fixture positive evidence",
+      "org-org/dev-project is the sole positive tenant and dev-org/dev-project is only the zero-row isolation canary",
+      "blocked failed stale partial or unknown pages are valid negative evidence but never positive completion",
+      "each module proves its canonical business read model rather than only the common shell",
+      "no horizontal page overflow at the three frozen widths and two hundred percent zoom remains usable"
+    ]
+  },
+  "dataReconciliationContract": {
+    "sourceObjects": [
+      "Shop",
+      "Product",
+      "ProductSku",
+      "Category",
+      "Order",
+      "OrderLine",
+      "Shipment",
+      "CustomerLite",
+      "Weapp",
+      "SystemConfig",
+      "ProductReview",
+      "Payment"
+    ],
+    "requiredPerSource": [
+      "exact pipeline schedule and latest run refs",
+      "sourceEventAt projectedAt evaluatedAt and dataCutoff",
+      "freshness quality completeness reconciliation and blocker decisions",
+      "source count canonical projection count query count and unmatched or deduplicated buckets",
+      "PII secret marking purpose retention and disclosure decisions",
+      "org-org positive count and dev-org zero-row isolation"
+    ],
+    "currentSnapshot": {
+      "historicalProjection": "12 of 12 source and canonical query counts match",
+      "latestSchedules": "6 succeeded and 6 failed",
+      "pipelineNotFound": [
+        "ProductSku",
+        "Order",
+        "OrderLine",
+        "CustomerLite",
+        "Payment"
+      ],
+      "pipelineExecutorFailed": [
+        "Shipment"
+      ],
+      "canaryRows": 0,
+      "decision": "DEP_DATA_RED"
+    },
+    "invariants": [
+      "historical row equality never overrides a failed latest source run",
+      "unknown stale invalid missing not-comparable excluded and deduplicated never become zero or success",
+      "all headline and filtered totals declare exact denominator cutoff timezone and policy revision",
+      "cross-source joins declare matched unmatched ambiguous excluded unknown and deduplicated conservation",
+      "browser values must be reconciled to exact API and authority refs rather than visual text alone"
+    ]
+  },
+  "currentFoundationTests": {
+    "executed": true,
+    "command": "/Users/ddt/.nvm/versions/node/v20.20.2/bin/node node_modules/vitest/vitest.mjs run src/components/workshop/AsyncStateBoundary.test.tsx src/components/workshop/EcommerceWorkshopShell.test.tsx src/components/workshop/InstalledModuleNavigation.test.tsx src/components/workshop/EcommerceWorkshopCatalogContext.test.tsx src/pages/WorkshopListPage.workshop.test.tsx",
+    "result": "5 files and 22 tests passed",
+    "scope": "generic shell states navigation tenant switch late-response rejection and legacy replacement",
+    "warnings": "React Router v7 future-flag warnings only",
+    "doesNotProve": [
+      "any of the eight canonical business read models",
+      "org-org positive business data",
+      "the three-viewport full-page layout matrix",
+      "shared context merged timeline or cross-module navigation",
+      "API-to-authority data reconciliation",
+      "screen reader two-hundred-percent zoom reduced motion or complete keyboard paths"
+    ]
+  },
+  "blockers": [
+    "W2-01 through W2-09 implementations are not GREEN",
+    "W1-10 and W2-00 are not GREEN",
+    "six latest source pipelines are failed and P08 plus P10 contract drifts remain",
+    "eight domain view APIs Stores strict SDKs and pages do not exist",
+    "SharedContext timeline merger and server-resolved navigation target do not exist",
+    "no release-bound eight-by-three formal HTTP EvidencePack and authority reconciliation report exists"
+  ],
+  "nextGreenEvidence": [
+    "current release W1-10 and W2-00 GREEN",
+    "W2-01 through W2-09 runtime and strict-contract tests GREEN",
+    "fresh successful source runs with complete readiness envelope and query reconciliation",
+    "eight modules times three viewports formal HTTP DOM keyboard network console authority EvidencePack",
+    "org-org positive and dev-org zero-row isolation with no PII or secret leak"
+  ],
+  "next": "align the W2-10 cumulative browser and data reconciliation gate through two review rounds without running a false positive browser matrix",
+  "safety": [
+    "only generic local test fixtures and read-only code document Git and shared-memory inspection were used",
+    "no real browser positive matrix database pipeline schedule tenant route installation or external mutation",
+    "no real customer creator order price media Evidence or Secret content was read",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}
