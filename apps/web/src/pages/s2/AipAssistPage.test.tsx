@@ -15,4 +15,8 @@ describe("AipAssistPage exact subject", () => {
     expect(subjectFromSearch(params())).toEqual(expect.objectContaining({ taskRef: expect.objectContaining({ resourceType: "Task", revision: "1" }), taskRunRef: expect.objectContaining({ resourceType: "TaskRun", revision: "2" }), agentRunRef: expect.objectContaining({ resourceType: "AgentRun", revision: "3" }) }));
   });
   it("does not invent a default AgentRun", () => { const value = params(); value.delete("agentRunAuthority"); expect(subjectFromSearch(value)).toBeNull(); });
+  it("rejects invalid cutoff and partial Task authority", () => {
+    const invalidCutoff = params(); invalidCutoff.set("cutoffAt", "not-a-time"); expect(subjectFromSearch(invalidCutoff)).toBeNull();
+    const partialTask = params(); partialTask.delete("taskRevision"); expect(subjectFromSearch(partialTask)).toBeNull();
+  });
 });

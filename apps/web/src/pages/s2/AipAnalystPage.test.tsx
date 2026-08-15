@@ -15,4 +15,9 @@ describe("AipAnalystPage governed query", () => {
     expect(buildGovernedQuery({ kind: "metric", objectType: "", prompt: "", cutoffAt: "2026-08-16T00:00:00Z", taskRef: null, skillRef: null, metricRef: null })).toBeNull();
     expect(exact.revision).toBe("1");
   });
+
+  it("builds knowledge and metric queries only from exact upstream refs", () => {
+    expect(buildGovernedQuery({ kind: "knowledge", objectType: "", prompt: "核查订单风险", cutoffAt: "2026-08-16T00:00:00Z", taskRef: exact, skillRef: { ...exact, resourceType: "Skill", resourceId: "skill-1" }, metricRef: null })).toEqual(expect.objectContaining({ kind: "knowledge", taskRef: exact }));
+    expect(buildGovernedQuery({ kind: "metric", objectType: "", prompt: "", cutoffAt: "2026-08-16T00:00:00Z", taskRef: null, skillRef: null, metricRef: { ...exact, resourceType: "Metric", resourceId: "gmv" } })).toEqual(expect.objectContaining({ kind: "metric", dimensions: [] }));
+  });
 });

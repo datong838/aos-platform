@@ -16,4 +16,19 @@ describe("aipWorkbench Assist SSE client", () => {
     expect(new Headers(init?.headers).get("Idempotency-Key")).toBe("turn-key-1");
     expect(String(url)).not.toContain("/chat");
   });
+
+  it("fails closed on HTTP and network errors without a local answer", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(JSON.stringify({ message: "runtime blocked" }), { status: 503, headers: { "Content-Type": "application/json" } }));
+    await expect(streamAssistTurn("thread-1", { message: "核查订单", expectedThreadVersion: 1, cutoffAt: "2026-08-16T00:00:00Z" }, "turn-key-2")).rejects.toThrow("runtime blocked");
+    vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("network unavailable"));
+    await expect(streamAssistTurn("thread-1", { message: "核查订单", expectedThreadVersion: 1, cutoffAt: "2026-08-16T00:00:00Z" }, "turn-key-3")).rejects.toThrow("network unavailable");
+  });
+
+  it("rejects SSE name drift and missing terminal frames", async () => {
+    const start = { ...base, eventType: "start", sequence: 1 };
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(frame("delta", start), { status: 200 }));
+    await expect(streamAssistTurn("thread-1", { message: "核查订单", expectedThreadVersion: 1, cutoffAt: "2026-08-16T00:00:00Z" }, "turn-key-4")).rejects.toThrow("名称漂移");
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(frame("start", start), { status: 200 }));
+    await expect(streamAssistTurn("thread-1", { message: "核查订单", expectedThreadVersion: 1, cutoffAt: "2026-08-16T00:00:00Z" }, "turn-key-5")).rejects.toThrow("终态");
+  });
 });

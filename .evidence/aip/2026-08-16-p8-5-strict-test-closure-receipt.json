@@ -1,0 +1,55 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-P8-5-STRICT-TEST-CLOSURE-20260816",
+  "status": "CODE_CONTROL_GREEN_PENDING_INTEGRATION",
+  "branch": "w1-aip",
+  "baseCommit": "3ef20302dcffe5f1b59943a93db4b233d399a584",
+  "authorityRevision": "AOS-000053",
+  "observedAt": "2026-08-16T04:14:38+08:00",
+  "tenantPolicy": {
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "realTenantBusinessWrites": false
+  },
+  "leases": [
+    "aip-p8-5-strict-test-closure-20260816",
+    "aip-p8-5-strict-test-receipt-20260816"
+  ],
+  "implementation": [
+    "Closed strict parser coverage for complete, empty, partial and degraded Analyst responses and fail-closed evidence invariants",
+    "Closed strict Assist stream coverage for invalid non-terminal usage, event-name drift and missing terminal events",
+    "Closed client coverage for HTTP and network failure propagation without a local fallback answer",
+    "Closed page contract coverage for exact knowledge, metric, Task, TaskRun and AgentRun authority requirements"
+  ],
+  "fileHashes": {
+    "apps/web/src/api/aipWorkbench/parser.test.ts": {
+      "before": "7d05c29835898a9e80b8b6d0a3f24c4601e9e8e3abae1f2a86bd626e313e3e92",
+      "after": "d5d3483e51ff6b14b728e3818e0588c11a776cf6b645fa5006f249af8cac1937"
+    },
+    "apps/web/src/api/aipWorkbench/client.test.ts": {
+      "before": "7678159407a33269ce3e2d36adf9e59a432340de11d52f4300d7c98be4b931f0",
+      "after": "a84ed505f4ad91e835f3bb54921d3f67fbf6ad55ab5f0abbf9913e4740b8a400"
+    },
+    "apps/web/src/pages/s2/AipAnalystPage.test.tsx": {
+      "before": "fa888e97877fbd7532047dc8a0f6d228e98ab45e12de41ed5c32b132d9398d1a",
+      "after": "a57f5f510c1378228f6959e135f30d067f550a9a124221c97c8bdba40feaf45c"
+    },
+    "apps/web/src/pages/s2/AipAssistPage.test.tsx": {
+      "before": "32390c1df7651b5b01c20c8e1a36893e2a323b8f761e20f284f23ffbf117afae",
+      "after": "fe54e3bed3bc2f5dc9a059764e5b16618b52d23627ac78c848521b9138b5209e"
+    }
+  },
+  "verification": [
+    "4 targeted test files and 17 targeted tests passed",
+    "191 Web test files and 2069 Web tests passed",
+    "TypeScript production build and Vite bundle completed successfully",
+    "git diff check passed and the change remained limited to four tests plus this receipt"
+  ],
+  "baselineWarnings": [
+    "This closure strengthens control-plane tests only and performs no real-tenant business writes",
+    "Built-in browser keyboard automation did not activate the native toggle; keyboard behavior remains an explicit P8-6 verification item",
+    "Real positive-path Analyst and Assist evidence remains blocked by exact runnable authority and binding availability"
+  ],
+  "operationalStatus": "P8_5_STRICT_TEST_CLOSURE_GREEN_OPERATIONAL_AUTHORITY_BLOCKED",
+  "nextGate": "P8_6_CUMULATIVE_EVIDENCE_AND_RELEASE_CLOSURE"
+}
