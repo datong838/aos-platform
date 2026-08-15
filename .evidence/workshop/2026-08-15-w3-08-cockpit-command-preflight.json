@@ -1,0 +1,71 @@
+{
+  "schema": "aos-workshop-w3-cockpit-command-preflight/v1",
+  "taskId": "workshop-w3-08-cockpit-command-preflight-20260815",
+  "workItem": "W3-08",
+  "projectRevision": "AOS-000039",
+  "branch": "w2-workshop",
+  "head": "5bc2563793d1203164c6669b0afe69ea856d3cb9",
+  "recordedAt": "2026-08-15T11:41:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "preparationStatus": "PREFLIGHT_GREEN_WITH_PLAN_REMEDIATION_REQUIRED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "the cockpit read model and W3-05 to W3-07 runtime commands are not GREEN; canonical Task has a create-time priority field but no auditable reprioritize authority, while approval navigation can reuse canonical ActionProposal reads but needs exact navigation and readiness contracts"
+  },
+  "committedFacts": {
+    "fixedM1Commit": "c48868b3f40c75fd625f9dac00e1c2cc9b02f6c0",
+    "taskAuthority": "canonical tenant-scoped Task and TaskRun routes exist",
+    "priority": "Task priority is persisted at creation and exposed in snapshots, but no canonical reprioritize command, policy decision or priority-change Receipt was found",
+    "dispatch": "no Cockpit dispatch command exists; W3-06 and W3-07 transport, decision, assignment and takeover authorities remain unimplemented",
+    "approval": "canonical ActionProposal list, get, timeline and decide SDK operations exist, but the cockpit has no exact ApprovalNavigationTarget or server commandReadiness projection",
+    "readModel": "CockpitReadModel is planned but W2-02 is not runtime GREEN"
+  },
+  "ownershipDecision": {
+    "cockpit": "read-only projection plus intent composer; it never owns Task, priority, Handoff, Responsibility, Approval or execution state",
+    "dispatch": "DispatchIntentRevision binds exact TaskGraph, TaskRun, source and target Module installation, responsibility slot, current and requested assignee, readiness, Handoff policy, actor, cutoff and expected versions; confirmation invokes canonical services",
+    "priority": "TaskPriorityDecisionRevision owns a reasoned, policy-constrained priority change with expected Task version and Receipt; client-side sorting is only a view preference",
+    "approvalNavigation": "ApprovalNavigationTarget is an exact ref returned by the server read model; opening it is navigation only and destination authorization is rechecked",
+    "refresh": "the cockpit applies no optimistic owner, priority or approval success; it refreshes canonical Receipt-backed state"
+  },
+  "targetOperations": [
+    "ecommerceWorkshopDispatchIntentCreate",
+    "ecommerceWorkshopDispatchConfirm",
+    "ecommerceWorkshopTaskPriorityDecide",
+    "ecommerceWorkshopApprovalNavigationResolve"
+  ],
+  "dependencyDecision": {
+    "W2_02": "NOT_STARTED_HARD_GATE_BLOCKED",
+    "W3_05": "NOT_STARTED_PLAN_REMEDIATED_HARD_GATE_BLOCKED",
+    "W3_06": "NOT_STARTED_PLAN_REMEDIATED_HARD_GATE_BLOCKED",
+    "W3_07": "NOT_STARTED_PLAN_REMEDIATED_HARD_GATE_BLOCKED",
+    "DEP_TASK_PRIORITY_AUTHORITY": "MISSING",
+    "DEP_DISPATCH_INTENT_AUTHORITY": "MISSING",
+    "DEP_APPROVAL_NAVIGATION_READINESS": "MISSING",
+    "W3_08": "NOT_STARTED_PREFLIGHT_COMPLETE"
+  },
+  "requiredGreenEvidence": [
+    "W2-02 CockpitReadModel stable cursor, cutoff, blocker refs and quantity conservation GREEN",
+    "W3-05 to W3-07 runtime commands and exact refs GREEN",
+    "dispatch intent Diff, impact, expected-version, idempotency, permission and Receipt tests",
+    "priority policy bounds, reason, CAS, replay, conflicting operators and immutable history tests",
+    "approval target exact ref, stale or unauthorized target, destination reauthorization and keyboard focus-return tests",
+    "no optimistic local owner, priority or approval mutation",
+    "org-org positive, dev-org isolation, refresh and restart reconstruction"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "read-only committed Task, Action approval SDK and Workshop plan inspection only",
+    "doesNotProve": [
+      "a cockpit dispatch",
+      "auditable reprioritization",
+      "approval navigation readiness",
+      "a runnable Agent"
+    ]
+  },
+  "next": "align W3-08 plans around intent, canonical command and Receipt-backed refresh, then re-review without marking runtime complete",
+  "safety": [
+    "no source, database, tenant, Task, Handoff, Approval, browser or external mutation",
+    "w1-aip uncommitted content was not read or modified"
+  ]
+}
