@@ -1,0 +1,143 @@
+{
+  "schema": "aos-workshop-w2-shared-ref-timeline-navigation-integration-preflight/v1",
+  "taskId": "workshop-w2-09-shared-ref-timeline-navigation-integration-preflight-20260815",
+  "workItem": "W2-09",
+  "projectRevision": "AOS-000038",
+  "branch": "w2-workshop",
+  "head": "f128582d2252a58cd6a20f16aa977dd34fc047e2",
+  "recordedAt": "2026-08-15T10:35:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "SHARED_REF_TIMELINE_NAVIGATION_TARGET_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "W2-01 through W2-08 are contract-reviewed but none is runtime GREEN; therefore their shared refs timeline and navigation cannot be positively integrated"
+  },
+  "dependencyFactRevalidation": {
+    "authorityRevision": "AOS-000038",
+    "authorityStage": "BIND1_1_CONTRACT_ADDITIVE_MIGRATION_GREEN_WITH_WARNINGS",
+    "w2_01_to_w2_08": "all implementation NOT_STARTED and HARD_GATE_BLOCKED",
+    "w1_10": "not GREEN",
+    "w2_00": "not GREEN",
+    "bind1Effect": "does not create Workshop domain views cross-module context or an integrated timeline",
+    "leaseConflict": false
+  },
+  "liveCodeFindings": {
+    "resourceRef": "PRESENT as strict resourceType resourceId optional revision and authority fields, but not yet integrated into Workshop view DTOs",
+    "catalogAndNavigation": "PRESENT for active installed modules with canonical routes readiness badges unique active navigation and deep-route retention",
+    "workshopHttpOperations": [
+      "GET /v1/ecommerce-workshop/modules",
+      "GET /v1/ecommerce-workshop/modules/{module_id}/readiness"
+    ],
+    "domainViews": "ABSENT for W2-01 through W2-08",
+    "sharedWorkshopContext": "ABSENT",
+    "crossModuleNavigationTargets": "ABSENT",
+    "mergedCanonicalTimeline": "ABSENT",
+    "timelineFoundations": "Task Action Decision and other subsystems expose separate timelines, but no Workshop merger defines event algebra ordering disclosure dedup or cursor semantics",
+    "placeholderTimelineWidget": "PRESENT but explicitly a placeholder and not a canonical timeline authority",
+    "urlContext": "current deep routes preserve one active Module but do not carry a typed server-validated subject revision or return context"
+  },
+  "targetIntegrationContract": {
+    "sharedContext": {
+      "fields": [
+        "contextId as an opaque non-PII navigation token",
+        "moduleId viewId and route from active installation projection",
+        "primarySubjectRef and related exact ResourceRefs",
+        "purpose disclosureDecision and evaluatedAt",
+        "dataCutoff freshness readiness and typed blockers",
+        "lineageRefs timelineLink and permitted navigationTargets"
+      ],
+      "rules": [
+        "ResourceRef authority resourceType resourceId and revision are exact and never resolved by newest-row guessing",
+        "contextId is server issued scoped short-lived and useless across tenants",
+        "tenant org project PII provider ids Evidence bodies media payloads secrets and arbitrary return URLs never enter the browser URL",
+        "a context projection never becomes object Task Handoff Action Evidence Receipt or installation authority"
+      ]
+    },
+    "timeline": {
+      "eventFields": [
+        "eventKey eventType sourceAuthority sourceRef sequence occurredAt recordedAt",
+        "actorRef or systemRef disclosure summary status reasonCode",
+        "causationRef correlationRef attemptRef receiptRef originalRefs",
+        "late duplicate superseded unknown reconciled and stale markers"
+      ],
+      "rules": [
+        "stable ordering uses authority sequence then occurredAt recordedAt eventKey tie-breakers",
+        "dedup is by exact authority event identity and never drops original refs",
+        "late duplicate and out-of-order facts remain visible and cannot rewrite an earlier Receipt",
+        "merged timeline is a rebuildable projection and each item deep-links to its canonical authority",
+        "stable cursor binds filters cutoff installation lock and disclosure policy revision"
+      ]
+    },
+    "navigation": {
+      "rules": [
+        "targets come only from the active installation projection plus server permission purpose marking and readiness decisions",
+        "one route has one canonical module and exactly one aria-current page",
+        "cross-module links carry only the opaque contextId and a server-approved target identifier",
+        "forbidden expired uninstalled disabled stale or unresolved targets fail closed without revealing existence",
+        "back and return restore the same exact subject revision view cutoff filter summary focus and scroll anchor when still permitted",
+        "legacy redirects operate only at the entry layer and never select a second active authority"
+      ]
+    }
+  },
+  "crossModuleInvariants": [
+    "all eight views use the same ResourceRef Workshop context timeline event navigation target and error contracts",
+    "switching modules does not copy Evidence text customer lists creator contacts media payloads provider ids or mutable business state",
+    "Task Handoff Action Evidence Receipt and business objects retain separate authorities despite appearing in one timeline",
+    "accepted handoff is not completed task applied Action is not settled Usage and completed Task is not mature Effect",
+    "partial unknown stale failed blocked and forbidden survive navigation and refresh",
+    "refresh reconstructs the same context and timeline from canonical refs and Receipts",
+    "navigation collapse focus mode keyboard movement and deep linking preserve context and focus without changing business state"
+  ],
+  "requiredTestsWhenUnblocked": [
+    "strict shared context ResourceRef timeline event navigation target cursor and error parsers",
+    "all eight W2 views expose compatible shared context without per-module drift",
+    "active installation permission purpose marking readiness and route resolution",
+    "cross-tenant token replay expired token forbidden target uninstalled target and arbitrary-return-URL negatives",
+    "timeline sequence cursor dedup late duplicate out-of-order unknown reconcile and original reachability",
+    "cross-module minimal disclosure for Evidence customer creator media provider PII and secrets",
+    "refresh back forward legacy redirect same-revision restoration and no newest-row guessing",
+    "unique H1 nav main aria-current collapse focus mode skip link visible focus and keyboard return",
+    "org-org positive and dev-org negative three-viewport formal HTTP browser evidence"
+  ],
+  "blockers": [
+    "W2-01 through W2-08 domain view Store API and strict SDK implementations are absent",
+    "W1-10 and W2-00 are not GREEN",
+    "no shared Workshop context or server-resolved navigation-target contract is implemented",
+    "separate subsystem timelines have no common event algebra merger disclosure policy stable cursor or exact dedup contract",
+    "current deep routes preserve Module selection but not an exact server-validated subject revision context",
+    "positive org-org cross-module browser evidence cannot exist before the eight source views are runtime GREEN"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "the integration target does not exist and all eight required domain views are hard-gate blocked; existing catalog navigation tests prove only the shell foundation",
+    "existingFoundation": [
+      "installed-module catalog and readiness strict parser",
+      "canonical route and legacy redirect",
+      "one active navigation item and one H1/main on deep routes",
+      "sidebar collapse and Focus Mode context retention"
+    ],
+    "doesNotProve": [
+      "shared exact subject refs across eight views",
+      "merged canonical timeline ordering and disclosure",
+      "permission-safe cross-module navigation",
+      "refresh restoration against live domain authorities",
+      "positive real-tenant end-to-end integration"
+    ]
+  },
+  "sourceHashes": {
+    "services/aos-api/aos_api/aip_contracts.py": "4393a097a1d4d3baaf5192e9d244d9c5fad301e89209e3f27b7ca8d71311b418",
+    "services/aos-api/aos_api/ecommerce_workshop_contracts.py": "24b55de4d780e12fd83cf4bddaf6e438d8538ade9a0e0e363ea4a08d77dc2976",
+    "services/aos-api/aos_api/ecommerce_workshop_catalog.py": "12eafb872bf132120f323c64053113a412037c4bba835f1878ce1ae3b54bae0d",
+    "apps/web/src/components/workshop/InstalledModuleNavigation.tsx": "64817e9cade88a7bcf3dfeec3b7dcd732e6979e8a6e91176ca35e16639cc9876",
+    "apps/web/src/api/ecommerceWorkshop/contracts.ts": "91b5afc5c97e432bb07d980f7d3758b83707506f0d596e5eb5e90c025a602ef5",
+    "apps/web/src/api/ecommerceWorkshop/parser.ts": "5c6306b63c4fc8520e8a62e2f3395452bfdbe388466ee5fa2c0749cc0f4e2792",
+    "apps/web/src/shell/AppShell.workshop.test.tsx": "c221b52f8871617669b089df2503b035ebbc09f39040d901ad7671bf81bddf38"
+  },
+  "next": "align the W2-09 shared context timeline navigation contract through two review rounds without runtime coding",
+  "safety": [
+    "read-only code document Git and shared-memory inspection only",
+    "no database tenant route installation Task Action Handoff Evidence Receipt PII or external mutation",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}
