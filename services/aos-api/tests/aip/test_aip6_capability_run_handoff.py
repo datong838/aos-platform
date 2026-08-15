@@ -1,21 +1,22 @@
 from __future__ import annotations
 
-import uuid
 import json
+import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
-
 from aos_api.aip_agent_registry_contracts import (
     AgentInstanceOverlay,
     AgentRunRequest,
     AgentRunStatus,
     CapabilityBindingRequest,
+    CapabilityReadiness,
     CreateAgentInstanceRequest,
     CreateAgentRunRequest,
     CreateCapabilityBindingRequest,
     HandoffEnvelopeRequest,
     IssueHandoffRequest,
+    OperationalBindingReadiness,
     PublishAgentTemplateRequest,
     PublishCapabilityRevisionRequest,
     PublishSkillTemplateRequest,
@@ -44,6 +45,7 @@ NOW = datetime(2026, 8, 13, 20, tzinfo=UTC)
 HASH_A = "a" * 64
 HASH_B = "b" * 64
 HASH_C = "c" * 64
+HASH_D = "d" * 64
 
 
 def asset(kind: str, identifier: str, revision: int = 1, content_hash: str = HASH_A):
@@ -62,6 +64,18 @@ def resource(kind: str, identifier: str, *, authority: str = "aip-task-runtime")
         revision="1",
         authority=authority,
     )
+
+
+class _ReadySkillBindingService:
+    def evaluate(self, _scope, binding, *, evaluated_at):
+        return OperationalBindingReadiness(
+            readiness=CapabilityReadiness.AVAILABLE,
+            reasons=[],
+            dependencies=binding.dependencies,
+            dependency_snapshot_hash=HASH_D,
+            evaluated_at=evaluated_at,
+            expires_at=datetime(2030, 1, 1, tzinfo=UTC),
+        )
 
 
 @pytest.fixture()
@@ -338,7 +352,7 @@ def test_capability_binding_requires_exact_published_revision(ids):
 
 def test_agent_run_persists_exact_instance_snapshot_and_blocks_start_without_aip7(ids, monkeypatch):
     instance = _active_instance(ids, "sender")
-    skills = AipSkillRegistry()
+    skills = AipSkillRegistry(readiness_service=_ReadySkillBindingService())
     _insert_governed_published_skill_fixture(ids)
     binding, _ = skills.create_binding(
         PRIMARY,
@@ -346,12 +360,28 @@ def test_agent_run_persists_exact_instance_snapshot_and_blocks_start_without_aip
             binding_id=ids["binding"],
             instance_id=instance.instance_id,
             skill=asset("SkillTemplate", ids["skill"], revision=2, content_hash=HASH_C),
-            budget_policy_ref=asset("BudgetPolicy", "budget"),
+            budget_policy_ref=asset("BudgetPolicyRevision", "budget"),
         ),
         idempotency_key=f"bind-{ids['binding']}",
         actor="pytest",
         occurred_at=NOW,
     )
+    with connect(PRIMARY) as conn:
+        conn.execute(
+            """UPDATE aip_skill_binding
+               SET readiness='available',readiness_reasons='[]'::jsonb,
+                   dependency_snapshot_hash=%s,last_evaluated_at=%s,
+                   readiness_expires_at=%s
+               WHERE org_id=%s AND project_id=%s AND binding_id=%s""",
+            (
+                HASH_D,
+                NOW,
+                datetime(2030, 1, 1, tzinfo=UTC),
+                *PRIMARY.key,
+                binding.binding_id,
+            ),
+        )
+        conn.commit()
     binding, _ = skills.update_binding(
         PRIMARY,
         binding.binding_id,

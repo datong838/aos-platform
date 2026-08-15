@@ -394,12 +394,22 @@ class CreateSkillBindingRequest(AipContractModel):
     skill: VersionedAssetRef
     capability_binding_ids: list[str] = Field(default_factory=list, max_length=128)
     budget_policy_ref: VersionedAssetRef
-    initial_status: str = Field(default="provisioning", pattern=r"^(provisioning|active|suspended|revoked)$")
+    initial_status: str = Field(default="provisioning", pattern=r"^provisioning$")
+
+    @field_validator("capability_binding_ids")
+    @classmethod
+    def _unique_capability_bindings(cls, values: list[str]) -> list[str]:
+        cleaned = [value.strip() for value in values]
+        if any(not value for value in cleaned) or len(cleaned) != len(set(cleaned)):
+            raise ValueError("capability binding ids must be unique and non-blank")
+        return cleaned
 
     @model_validator(mode="after")
     def _skill_kind(self) -> CreateSkillBindingRequest:
         if self.skill.asset_type != "SkillTemplate":
             raise ValueError("skill must reference SkillTemplate")
+        if self.budget_policy_ref.asset_type != "BudgetPolicyRevision":
+            raise ValueError("budget_policy_ref must reference BudgetPolicyRevision")
         return self
 
 

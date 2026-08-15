@@ -1,15 +1,18 @@
 from __future__ import annotations
 
-import uuid
 import json
+import uuid
 from datetime import UTC, datetime
 
 import pytest
-
 from aos_api.aip_agent_registry_contracts import (
     AgentInstanceOverlay,
+    CapabilityReadiness,
     CreateAgentInstanceRequest,
     CreateSkillBindingRequest,
+    EvaluateOperationalBindingRequest,
+    OperationalBindingDependencies,
+    OperationalBindingReadiness,
     PublishAgentTemplateRequest,
     PublishSkillTemplateRequest,
     UpdateAgentInstanceRequest,
@@ -33,6 +36,19 @@ NOW = datetime(2026, 8, 13, 18, tzinfo=UTC)
 HASH_A = "a" * 64
 HASH_B = "b" * 64
 HASH_C = "c" * 64
+HASH_D = "d" * 64
+
+
+class _ReadySkillBindingService:
+    def evaluate(self, _scope, binding, *, evaluated_at):
+        return OperationalBindingReadiness(
+            readiness=CapabilityReadiness.AVAILABLE,
+            reasons=[],
+            dependencies=binding.dependencies,
+            dependency_snapshot_hash=HASH_D,
+            evaluated_at=evaluated_at,
+            expires_at=datetime(2030, 1, 1, tzinfo=UTC),
+        )
 
 
 def ref(kind: str, identifier: str, revision: int, content_hash: str) -> VersionedAssetRef:
@@ -292,13 +308,13 @@ def test_skill_binding_exact_revision_cas_and_tenant_isolation(identifiers):
         actor="pytest",
         occurred_at=NOW,
     )
-    skills = AipSkillRegistry()
+    skills = AipSkillRegistry(readiness_service=_ReadySkillBindingService())
     insert_governed_published_skill_fixture(identifiers)
     request = CreateSkillBindingRequest(
         binding_id=identifiers["binding"],
         instance_id=identifiers["instance"],
         skill=ref("SkillTemplate", identifiers["skill"], 2, HASH_C),
-        budget_policy_ref=ref("BudgetPolicy", "budget-default", 1, HASH_A),
+        budget_policy_ref=ref("BudgetPolicyRevision", "budget-default", 1, HASH_A),
     )
     binding, receipt = skills.create_binding(
         PRIMARY,
@@ -310,19 +326,64 @@ def test_skill_binding_exact_revision_cas_and_tenant_isolation(identifiers):
     assert binding.status == "provisioning" and receipt.status == "applied"
     assert skills.list_bindings(PRIMARY, instance_id=identifiers["instance"]) == [binding]
     assert skills.list_bindings(CANARY) == []
+    with pytest.raises(AipAgentRegistryTransitionBlocked, match="fresh skill binding"):
+        skills.update_binding(
+            PRIMARY,
+            binding.binding_id,
+            UpdateSkillBindingRequest(
+                expected_version=1,
+                from_status="provisioning",
+                to_status="active",
+            ),
+            idempotency_key=f"binding-active-{binding.binding_id}",
+            actor="pytest",
+            occurred_at=NOW,
+        )
+    evaluation = EvaluateOperationalBindingRequest(
+        expected_version=1,
+        dependencies=OperationalBindingDependencies(
+            model_route_ref=ref("ModelRouteRevision", "route-fixture", 1, HASH_A),
+            runtime_policy_ref=ref(
+                "RuntimePolicyRevision", "policy-fixture", 1, HASH_A
+            ),
+            eval_gate_ref=ref("EvalGateDecision", "gate-fixture", 1, HASH_A),
+            budget_policy_ref=request.budget_policy_ref,
+        ),
+    )
+    evaluated, readiness, evaluate_receipt = skills.evaluate_binding(
+        PRIMARY,
+        binding.binding_id,
+        evaluation,
+        idempotency_key=f"binding-evaluate-{binding.binding_id}",
+        actor="pytest",
+        evaluated_at=NOW,
+    )
+    assert evaluated.version == 2
+    assert evaluated.readiness is CapabilityReadiness.AVAILABLE
+    assert readiness.dependency_snapshot_hash == HASH_D
+    replay, _, replay_receipt = skills.evaluate_binding(
+        PRIMARY,
+        binding.binding_id,
+        evaluation,
+        idempotency_key=f"binding-evaluate-{binding.binding_id}",
+        actor="pytest",
+        evaluated_at=NOW,
+    )
+    assert replay.version == 2
+    assert replay_receipt.receipt_id == evaluate_receipt.receipt_id
     active, _ = skills.update_binding(
         PRIMARY,
         binding.binding_id,
         UpdateSkillBindingRequest(
-            expected_version=1,
+            expected_version=2,
             from_status="provisioning",
             to_status="active",
         ),
-        idempotency_key=f"binding-active-{binding.binding_id}",
+        idempotency_key=f"binding-active-after-eval-{binding.binding_id}",
         actor="pytest",
         occurred_at=NOW,
     )
-    assert active.version == 2 and active.status == "active"
+    assert active.version == 3 and active.status == "active"
     with pytest.raises(AipAgentRegistryConflict):
         skills.update_binding(
             PRIMARY,
