@@ -1,0 +1,65 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w2-01-unified-operations-read-model-doc-align-20260815",
+  "workItem": "W2-01",
+  "projectRevision": "AOS-000035",
+  "sourceCommits": [
+    "60fd35777434dd8e9844f2121ee7c47d601edef1",
+    "b1ca41f98507e11afb445cf3939d675ba3bc7b2b"
+  ],
+  "recordedAt": "2026-08-15T09:13:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "split the aggregate into seven source slices",
+        "added per-slice cutoff quality latest-run reconciliation and denominator semantics",
+        "added deterministic cursor and unmatched join conservation"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS",
+      "closed": [
+        "prevented generic Ontology reads from masquerading as a Workshop view",
+        "required canonical Inventory aftersale OperationCase and AggregationPolicy authority resolution",
+        "preserved minimum disclosure and explicit blocked states"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/07-领域读模型Command与错误契约.md",
+      "preSha256": "0b9b4b6b7e7b37a9c4da1e002c7711146e57a0a5dd58cd6ee4451155cbee1bb5",
+      "postSha256": "8cbe715dd3392e7dfe1cc192c9de7dc99bbcd5be805aebf8ab1bc0bda684158d"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/12-统一运营技术方案.md",
+      "preSha256": "bb6db403dc87a630af39913b7dcf2d3bd6b97aa8ccaeda9148cb89a76992881e",
+      "postSha256": "80aaae62bb5f37ede3f682c8deca632585862cfaa93a5e77ba7894129c15c2ae"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "204262571468b1c981f3b2787de5eb823b7ff2b721a2998cf8393aafe62df1ee",
+      "postSha256": "a6edc7f7cba97a3629339359fe986b3783b045860fbeb72a113f7fdd9b208ed1"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/82-W2-01-统一运营订单库存履约售后事件只读模型预检ADR.md",
+      "preSha256": null,
+      "postSha256": "ab9620c2e761318b8422d3a7ea40627db18583ab446b6972ec0350bf756610b4"
+    }
+  ],
+  "decision": {
+    "contract": "APPROVED",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two review rounds passed",
+    "post hashes match",
+    "W2-01 remains unchecked",
+    "no generic object query or historical projection was claimed as Workshop readiness"
+  ]
+}
