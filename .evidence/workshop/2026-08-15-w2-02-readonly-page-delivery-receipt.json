@@ -1,0 +1,79 @@
+{
+  "schema": "workshop-delivery-receipt/v1",
+  "taskId": "workshop-w2-02-readonly-page-20260815",
+  "authorityRevision": "AOS-000047",
+  "branch": "w2-workshop",
+  "planCommit": "19508a6",
+  "implementationCommit": "09e6fdf",
+  "decision": "PARTIAL_READONLY_PAGE_GREEN_FULL_W2_02_REMAINS_BLOCKED",
+  "scope": {
+    "route": "/workshop/cockpit",
+    "moduleId": "ecommerce.task-cockpit",
+    "transport": "three canonical GET operations only",
+    "viewState": "ephemeral request state only",
+    "moduleGate": "unknown and blocked remain visible; only this Module exposes an independent read-only evidence view"
+  },
+  "browserEvidence": {
+    "tenant": "org-org/dev-project",
+    "url": "http://127.0.0.1:5175/workshop/cockpit",
+    "moduleReadiness": "unknown",
+    "taskCountCurrentPage": 1,
+    "latestRunCount": 1,
+    "stepCountCurrentPage": 0,
+    "checkpointCountCurrentPage": 0,
+    "viewportChecks": [
+      {"width":1280,"height":900,"documentClientWidth":1280,"documentScrollWidth":1280,"h1Count":1},
+      {"width":1440,"height":900,"documentClientWidth":1440,"documentScrollWidth":1440,"h1Count":1},
+      {"width":1920,"height":900,"documentClientWidth":1920,"documentScrollWidth":1920,"h1Count":1}
+    ],
+    "accessibility": "skip link receives focus; one H1; filter label is associated; detail disclosure has aria-expanded and aria-controls",
+    "keyboardLimitation": "the in-app bridge did not reliably dispatch native Enter navigation; this is not claimed GREEN and is covered by component semantics tests",
+    "mutationControls": 0,
+    "staticVisualDraftChanged": false
+  },
+  "verification": {
+    "targetedWorkshop": "11 passed",
+    "webFullRegression": "2125 passed in 190 files",
+    "typescript": "GREEN",
+    "gitDiffCheck": "GREEN"
+  },
+  "safetyIncident": {
+    "code": "LOCAL_API_DEFAULT_BOOTSTRAP_STARTED_THEN_STOPPED",
+    "durationApproxSeconds": 34,
+    "facts": [
+      "the first local API start used the default legacy bootstrap and cron configuration",
+      "the process was stopped immediately after discovery",
+      "read-only database audit found meta_schedule_run count 0 and rows_written 0 after the start time",
+      "no Pipeline run or real business row execution was observed",
+      "startup may have updated updated_at metadata on 12 schedule definitions",
+      "later GET /v1/me bootstrap attempted tenant catalog DDL but PostgreSQL rejected it with insufficient privilege; membership and audit fallbacks remained process-local"
+    ],
+    "remediation": "all subsequent browser validation used AOS_DB_MIGRATION_MODE=disabled and AOS_QYH_CRON_ENABLED=false",
+    "claim": "no business-data mutation observed; zero metadata side effect is not claimed"
+  },
+  "fileIntegrity": [
+    {"path":"apps/web/src/components/workshop/EcommerceWorkshopHost.tsx","preSha256":"20c35edb772cee650ee81feb4a8cd88824aca1f644ee5a10e7a858c9e228f14d","postSha256":"84eced38fa4b2f475e5502665cdde19dbaa5e6ddae1c755409bd6ad5182d64f2"},
+    {"path":"apps/web/src/components/workshop/EcommerceWorkshopShell.tsx","preSha256":"6ec6e7da34c7492768b3a72bbdff4ac5dd7b4756a4e4fb95f823f13544592dc9","postSha256":"796792942020bf2f8a55b3f85ddb89679f083b556a5bf2938741b410f59f6e92"},
+    {"path":"apps/web/src/components/workshop/TaskCockpitPage.tsx","preSha256":null,"postSha256":"1dc8e46f55d2a7977e5c460c07b617f3ac79bd432d03a045af48d7978dd90453"},
+    {"path":"apps/web/src/components/workshop/EcommerceWorkshopHost.test.tsx","preSha256":null,"postSha256":"6745f4274596da5bbc6f7cc0ba92b3540cfd430ddda2a6d7b7fd54056fc9f10b"},
+    {"path":"apps/web/src/components/workshop/TaskCockpitPage.test.tsx","preSha256":null,"postSha256":"fa2f7d3be4d27a2781ac147520351f1ebf1fa254fd3a867ce07d25842fbbe2d3"},
+    {"path":"apps/web/src/components/workshop/index.ts","preSha256":"42a5c7232fe04fa41b684c1c92e6208321530156a39c464caa1514b55e111d24","postSha256":"9225a5a47858e55e5012aad7fbe170a845619f0b12a59823125641bc39791895"},
+    {"path":"apps/web/src/styles/45-ecommerce-workshop.css","preSha256":"6c26c51539e76a0bf51b790db1768d986be4a01718e62bd1f94a8fa7e2365439","postSha256":"78a4dc11d3c834bf53ad5e5e4a72dd2d432d3c4b12285d9ebe6373d8f6df814f"}
+  ],
+  "externalDocumentIntegrity": [
+    {"path":"12-工作台层技术方案/104-W2-02日常总控只读页面Store与浏览器预检ADR.md","preSha256":"ac9f33bcb20710335c2dbd8dd5fc2284ee43a1ce328b67a9c4db53bc70b6e1de","postSha256":"cd21d1dd670d964608a5209d47681e7cd7552dfc4e8d0d384d3174fdca17449d"},
+    {"path":"12-工作台层技术方案/83-W2-02-TaskRunStageBlocker日常总控只读模型预检ADR.md","preSha256":"40e3de6df7fdd9a80c769c58eb490c360b99fe80c9849d5400e9676577e012b7","postSha256":"fd3214fa65baf66ce2b717d433659132caf8b322bdace232362582a6f8c6137e"},
+    {"path":"12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md","preSha256":"e27b48eb9816ed8a2665dfe611412b394f64dff4115dca9c206e1eba5de1b2fc","postSha256":"16e90ac5562e99c4772fdb252496db3b0995850a792247b5f7aa1d320d9f09a5"},
+    {"path":"12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md","preSha256":"5f40a984fbdfa8739cd2b6f417f5493e3e8190d77b032ca1d716fc2a3ba350e5","postSha256":"eb7a1ad9a805d5b44b06be7e3bf0320f29c7c54dedbcbdedf7bd6e3b81ebc32a"}
+  ],
+  "remainingFullW2_02Gate": [
+    "exact signed production Stage mapping",
+    "Responsibility and assignee readiness",
+    "Handoff, Approval and ReviewIssue readers",
+    "Action unknown and reconciliation",
+    "W2-00 business context enrichment",
+    "real non-empty Step and Checkpoint evidence",
+    "complete target-state EvidencePack"
+  ],
+  "progress": {"completedTasks":21,"totalTasks":96,"w2Completed":0,"w2Total":11,"status":"W2_02_PARTIAL_PAGE_SUBWAVE_GREEN_FULL_TASK_OPEN"}
+}
