@@ -1,0 +1,20 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w3-14-three-domain-cumulative-gate-preflight-20260815",
+  "recordedAt": "2026-08-15T12:54:00+08:00",
+  "authorityRevision": "AOS-000040",
+  "baselineCommit": "20c4b9209fbab33216c25a874312fa7783292853",
+  "files": [
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/102-W3-14三领域Authority与公共编排最终累计门预检ADR.md","preSha256":null,"postSha256":"3197a029391fd726ebfe1d85a08c8fe18fc390418f216e84b7e3fa9d5179dc2d"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md","preSha256":"c431787ff3a7d2dc74e26a66b71eb3622eac8905778d1fd7c5a6bbdc8fcf2b21","postSha256":"c58402291f36b181075a6aa38758a63cb17003a8ae6f2234327b55266fd5e4bb"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/W0-全量技术条款施工追踪矩阵与W1精确施工包.md","preSha256":"262b068269838367270e9b05cfda7b065522480a6bad7c3a1e5c03244793f8e4","postSha256":"28d78a253d5f902bfdec24daaa7dd135ade17983e658d42173831e8278735044"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md","preSha256":"9caa873ac22c5affd10452fd890b2036856ac2a53e6c7b2454a46ce548d0a5d6","postSha256":"468bef9f26f14bbef917d069938e1f6f7e34ca1e71bcbd17f7ecda3260dfaaa9"}
+  ],
+  "reviewRounds": [
+    {"round":1,"finding":"The final gate named a shared EvidencePack but did not prevent isolated or cross-release green evidence from being assembled into a false cumulative pass.","remediation":"Froze one immutable release identity and seven simultaneous Contract, Store, API-SDK, Web, Browser, Security-Tenant and Recovery-Replay axes."},
+    {"round":2,"finding":"The exit criteria did not explicitly cover cross-domain partial or unknown outcomes, replay/rebuild conservation, or a hidden second Workflow authority.","remediation":"Added exact-ref coordination, visible reconciliation, predecessor/successor reachability, quantity conservation and zero second Task/Handoff/Action/Workflow truth; reconciled the W3 exit gate."}
+  ],
+  "reviewVerdict": "PLAN_REMEDIATED_GREEN; W3-14_RUNTIME_NOT_STARTED; CUMULATIVE_GATE_RED",
+  "noCodeOrVisualChange": true,
+  "externalEffect": false
+}

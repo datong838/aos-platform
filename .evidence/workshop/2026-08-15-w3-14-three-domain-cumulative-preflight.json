@@ -1,0 +1,57 @@
+{
+  "schema": "aos-workshop-w3-final-cumulative-preflight/v1",
+  "taskId": "workshop-w3-14-three-domain-cumulative-gate-preflight-20260815",
+  "workItem": "W3-14",
+  "projectRevision": "AOS-000040",
+  "branch": "w2-workshop",
+  "head": "20c4b9209fbab33216c25a874312fa7783292853",
+  "recordedAt": "2026-08-15T12:51:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "gateStatus": "CUMULATIVE_GATE_RED",
+    "preparationStatus": "PREFLIGHT_GREEN_WITH_PLAN_REMEDIATION_REQUIRED",
+    "externalEffect": "NONE",
+    "reason": "W3-10 through W3-13 are all runtime NOT_STARTED; reviewed plans and isolated preflight receipts cannot form a same-release cumulative EvidencePack"
+  },
+  "upstreamMatrix": [
+    {"item":"W3-10","status":"NOT_STARTED / CUMULATIVE_GATE_RED","gap":"W3-01 through W3-09 runtime and five-layer EvidencePack are absent"},
+    {"item":"W3-11","status":"NOT_STARTED / HARD_GATE_BLOCKED","gap":"content/campaign authorities and full stack are absent"},
+    {"item":"W3-12","status":"NOT_STARTED / HARD_GATE_BLOCKED","gap":"operations case/policy/SLA/kill authorities and full stack are absent"},
+    {"item":"W3-13","status":"NOT_STARTED / HARD_GATE_BLOCKED","gap":"analyst insight/plan/task-graph/effect authorities and full stack are absent"}
+  ],
+  "requiredSameReleaseIdentity": [
+    "git commit and immutable application release",
+    "schema and migration or no-migration proof",
+    "OpenAPI and strict SDK revision",
+    "SolutionPack/Bundle artifact and active installation lock",
+    "eight-Module route/navigation/component revision",
+    "org-org/dev-project evidence cutoff and Delivery Receipt set"
+  ],
+  "cumulativeAxes": {
+    "contract":"public orchestration and all three domain contracts exact and mutually compatible",
+    "store":"authority rows, RLS, CAS, idempotency, lineage and restart readback",
+    "apiSdk":"canonical operations, stable errors and strict DTO parsing",
+    "web":"eight Modules use one public production component package and expose authoritative lifecycle state",
+    "browser":"formal HTTP at 1280/1440/1920 with keyboard, focus, console and network evidence",
+    "securityTenant":"org-org positive, dev-org negative, minimum disclosure and no cross-tenant refs",
+    "recoveryReplay":"duplicate/out-of-order input, partial failure, unknown outcome, restart/rebuild and successor correction"
+  },
+  "crossDomainRules": [
+    "Campaign, OperationCase and GrowthPlan authorities remain domain-owned and never become second Task, Handoff, Action, Approval or Receipt truth.",
+    "Cross-domain work is coordinated by exact refs through canonical Task/Handoff/Action primitives, not by a hidden distributed transaction.",
+    "A partial or unknown cross-domain result stays visible and reconcileable; it cannot be collapsed into success or erased by retry.",
+    "Every domain projection can rebuild from canonical authorities while preserving historical predecessor/successor reachability and quantity conservation."
+  ],
+  "gateRule": {
+    "pass":"W3-10, W3-11, W3-12 and W3-13 are runtime GREEN on one exact release identity and all seven cumulative axes are GREEN in one signed EvidencePack",
+    "failClosed":"any missing, stale, unknown, cross-release, negative-only or synthetic-positive axis keeps W3-14 RED",
+    "doesNotCount":["approved plan","preflight or document ledger","isolated unit test","static visual HTML","mock or blocked-only UI","dev-org positive","eventual projection or future receipt"]
+  },
+  "tests": {
+    "executed": false,
+    "reason": "The runtime cumulative gate cannot execute while all four upstream runtime items are NOT_STARTED.",
+    "doesNotProve": ["W3 runtime readiness","cross-domain orchestration","real browser or tenant safety"]
+  },
+  "result": "PREFLIGHT_GREEN; W3-14_RUNTIME_NOT_STARTED; CUMULATIVE_GATE_RED; NO_EXTERNAL_EFFECT",
+  "next": "Remediate the W3-14 plan into a same-release seven-axis cumulative matrix, keep W3-14 unchecked, and re-evaluate only after W3-10 through W3-13 runtime receipts are all exact and current."
+}
