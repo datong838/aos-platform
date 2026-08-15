@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import subprocess
 import tempfile
 import time
@@ -83,6 +84,14 @@ class WatchdogTest(unittest.TestCase):
                 str(self.root / "authority.json"),
                 str(self.root / "deliveries"),
             ],
+        }
+        return config
+
+    def continuation_config(self):
+        config = self.config()
+        config["continuation_watch"] = {
+            "enabled": True,
+            "delay_seconds": 300,
         }
         return config
 
@@ -331,6 +340,142 @@ class WatchdogTest(unittest.TestCase):
         self.assertEqual(0, state["consecutive_failures"])
         self.assertEqual("resumed-progress", state["last_recovery_outcome"])
         self.assertIsNotNone(state["visible_ack_at"])
+
+    def test_resumed_progress_arms_one_shot_continuation_after_delay(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(
+            json.dumps(self.continuation_config()), encoding="utf-8"
+        )
+        calls = []
+
+        def first_runner(*args, **kwargs):
+            calls.append(kwargs["input"])
+            self.write_ack(next_task="W3-09")
+            self.append(record("1970-01-01T00:16:41Z", "assistant", "final_answer"))
+            return subprocess.CompletedProcess(args[0], 0, "completed", "")
+
+        self.assertEqual(
+            "resumed-progress",
+            watchdog.run_once(config_path, state_path, now=1000, runner=first_runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertTrue(state["continuation_armed"])
+        self.assertEqual("W3-09", state["continuation_next_task"])
+        self.assertEqual(
+            "idle",
+            watchdog.run_once(config_path, state_path, now=1299, runner=first_runner),
+        )
+        self.assertEqual(1, len(calls))
+
+        def continuation_runner(*args, **kwargs):
+            prompt = kwargs["input"]
+            calls.append(prompt)
+            episode = re.search(r"^episode_id=(.+)$", prompt, re.MULTILINE).group(1)
+            self.write_ack(
+                outcome="completed",
+                episode_id=episode,
+                next_task="NONE",
+            )
+            self.append(record("1970-01-01T00:21:41Z", "assistant", "final_answer"))
+            return subprocess.CompletedProcess(args[0], 0, "completed", "")
+
+        self.assertEqual(
+            "completed",
+            watchdog.run_once(
+                config_path, state_path, now=1300, runner=continuation_runner
+            ),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertFalse(state["continuation_armed"])
+        self.assertIn("trigger=continuation", calls[1])
+        self.assertIn(
+            "外部 Watchdog 检测到长任务仍有后续项，正在重新核验后继续。",
+            calls[1],
+        )
+
+    def test_manual_user_message_consumes_pending_continuation(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:16:41Z", "assistant", "final_answer"),
+        )
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(
+            json.dumps(self.continuation_config()), encoding="utf-8"
+        )
+        state_path.write_text(
+            json.dumps(
+                {
+                    "continuation_armed": True,
+                    "continuation_next_task": "W3-09",
+                    "continuation_ready_at": 1300,
+                    "continuation_user_cutoff_at": 10,
+                    "last_recovery_outcome": "resumed-progress",
+                }
+            ),
+            encoding="utf-8",
+        )
+        self.append(record("1970-01-01T00:18:20Z", "user", content="继续"))
+        calls = []
+
+        def runner(*args, **kwargs):
+            calls.append(args)
+            return subprocess.CompletedProcess(args[0], 1, "", "must not run")
+
+        self.assertEqual(
+            "continuation-manual-reentry",
+            watchdog.run_once(config_path, state_path, now=1200, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertFalse(state["continuation_armed"])
+        self.assertEqual([], calls)
+
+    def test_dependency_lease_keeps_continuation_armed_without_runner(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:16:41Z", "assistant", "final_answer"),
+        )
+        config = self.dependency_config()
+        config["continuation_watch"] = {"enabled": True, "delay_seconds": 300}
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(config), encoding="utf-8")
+        state_path.write_text(
+            json.dumps(
+                {
+                    "continuation_armed": True,
+                    "continuation_next_task": "W3-09",
+                    "continuation_ready_at": 900,
+                    "continuation_user_cutoff_at": 10,
+                    "last_recovery_outcome": "resumed-progress",
+                }
+            ),
+            encoding="utf-8",
+        )
+        self.write_leases(
+            {
+                "task_id": "aip-migration",
+                "owner": "w1-aip",
+                "status": "ACTIVE",
+                "scope": ["services/aos-api/alembic/versions"],
+                "lease_expires_at": "2099-01-01T00:00:00+00:00",
+            }
+        )
+        calls = []
+
+        def runner(*args, **kwargs):
+            calls.append(args)
+            return subprocess.CompletedProcess(args[0], 1, "", "must not run")
+
+        self.assertEqual(
+            "dependency-blocked",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertTrue(state["continuation_armed"])
+        self.assertEqual([], calls)
 
     def test_safe_blocked_ack_stops_retry_and_next_tick_does_not_resume(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))

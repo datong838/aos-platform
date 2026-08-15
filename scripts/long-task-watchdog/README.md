@@ -13,6 +13,8 @@ Recovery Ack 的 outcome 固定为：
 
 四种 outcome 都停止当前 episode 重试。新 final 无 Ack 为 `protocol-failed`；当前 Ack 无新 final 为 `outcome-uncertain`，两者都停止盲重试并等待核验。退出码 0、旧 final、旧 Ack、旧 `last_recovered_at` 或自由文本“已恢复”均不构成成功证据。
 
+Workshop 的长任务配置可显式启用 `continuation_watch`。当且仅当 current episode 以 `resumed-progress` 闭合且 Ack 含非空 `next_task` 时，Watchdog 在一个心跳周期后建立新的 one-shot continuation episode；它不会复用旧 episode 或旧 Ack。`next_task` 只用于恢复导航，不代表授权或依赖 GREEN。等待期间出现普通用户消息会立即 disarm，活跃 turn/tool/task 与精确依赖 Lease 始终 runner=0。`completed/safe-blocked/reentry-noop` 以及所有失败终态都停止连续续跑。
+
 安全边界：
 
 - 不匹配聊天正文中的错误字符串。
@@ -41,6 +43,10 @@ Workshop 专用配置至少应包含：
   "authority_path": "/absolute/path/to/authority.json",
   "retry_schedule_seconds": [300, 600, 900, 1800, 3600, 7200],
   "max_transport_failures": 12,
+  "continuation_watch": {
+    "enabled": true,
+    "delay_seconds": 300
+  },
   "dependency_watch": {
     "enabled": true,
     "leases_path": "/absolute/path/to/memory/leases.json",

@@ -489,6 +489,8 @@ def _resume_prompt(
         first_message = "依赖 Watchdog 检测到迁移 Lease 已释放，正在重新核验后继续。"
     elif trigger == "dependency-fact-changed":
         first_message = "依赖 Watchdog 检测到外部交付事实已变化，正在重新核验后继续。"
+    elif trigger == "continuation":
+        first_message = "外部 Watchdog 检测到长任务仍有后续项，正在重新核验后继续。"
     else:
         first_message = "外部 Watchdog 检测到任务中断，正在恢复核验。"
     protocol = f"""
@@ -592,9 +594,12 @@ def _validate_ack(
 def _record_terminal_outcome(
     state: dict[str, Any],
     *,
+    config: dict[str, Any],
     outcome: str,
     final_at: float | None,
     ack: dict[str, Any] | None,
+    resolved_at: float,
+    latest_user_at: float | None,
 ) -> None:
     state.update(
         {
@@ -604,17 +609,56 @@ def _record_terminal_outcome(
             "last_recovery_outcome": outcome,
             "last_decision": outcome,
             "visible_ack_at": final_at,
-            "last_resolved_at": time.time(),
+            "last_resolved_at": resolved_at,
             "last_ack": ack,
             "last_error": None,
         }
     )
     state["last_recovered_at"] = (
-        time.time() if outcome in {"resumed-progress", "completed"} else None
+        resolved_at if outcome in {"resumed-progress", "completed"} else None
     )
+    continuation = config.get("continuation_watch")
+    continuation_enabled = False
+    continuation_delay = 300
+    if continuation is not None:
+        if not isinstance(continuation, dict):
+            raise RuntimeError("continuation_watch must be an object")
+        continuation_enabled = bool(continuation.get("enabled", False))
+        continuation_delay = continuation.get("delay_seconds", 300)
+        if (
+            not isinstance(continuation_delay, int)
+            or isinstance(continuation_delay, bool)
+            or continuation_delay <= 0
+        ):
+            raise RuntimeError(
+                "continuation_watch delay_seconds must be a positive integer"
+            )
+    next_task = ack.get("next_task") if isinstance(ack, dict) else None
+    should_continue = (
+        outcome == "resumed-progress"
+        and continuation_enabled
+        and isinstance(next_task, str)
+        and bool(next_task.strip())
+        and next_task.strip().upper() not in {"NONE", "COMPLETED"}
+    )
+    if should_continue:
+        state.update(
+            {
+                "continuation_armed": True,
+                "continuation_source_episode_id": state.get("recovery_episode_id"),
+                "continuation_next_task": next_task.strip(),
+                "continuation_ack_at": ack.get("written_at"),
+                "continuation_ready_at": resolved_at + continuation_delay,
+                "continuation_user_cutoff_at": latest_user_at,
+                "continuation_disarm_reason": None,
+            }
+        )
+    else:
+        state["continuation_armed"] = False
+        state["continuation_disarm_reason"] = outcome
     if state.get("episode_trigger") == "dependency-released":
         state["dependency_wait_armed"] = False
-        state["dependency_release_resolved_at"] = time.time()
+        state["dependency_release_resolved_at"] = resolved_at
 
 
 def _log(message: str) -> None:
@@ -899,6 +943,29 @@ def run_once(
         if state.get("episode_trigger") == "dependency-released" and not blockers:
             state["dependency_wait_armed"] = False
             state["dependency_release_resolved_at"] = current
+    if bool(state.get("continuation_armed", False)):
+        cutoff = state.get("continuation_user_cutoff_at")
+        user_reentered = (
+            isinstance(cutoff, (int, float))
+            and status.latest_user_at is not None
+            and status.latest_user_at > cutoff
+            and not status.latest_user_is_watchdog
+        )
+        if user_reentered:
+            decision = "continuation-manual-reentry"
+            state.update(
+                {
+                    "continuation_armed": False,
+                    "continuation_disarm_reason": "manual-reentry",
+                    "continuation_manual_reentry_at": current,
+                }
+            )
+        elif (
+            not blockers
+            and decision == "idle"
+            and current >= float(state.get("continuation_ready_at", float("inf")))
+        ):
+            decision = "continuation"
     state["dependency_watch_last_checked_at"] = current
     state.update(
         {
@@ -909,7 +976,12 @@ def run_once(
             "rollout_path": str(rollout_path),
         }
     )
-    if decision not in {"recover", "dependency-released", "dependency-fact-changed"}:
+    if decision not in {
+        "recover",
+        "dependency-released",
+        "dependency-fact-changed",
+        "continuation",
+    }:
         if decision in {"idle", "dependency-blocked"}:
             state["consecutive_failures"] = 0
             state["next_retry_at"] = 0
@@ -948,7 +1020,11 @@ def run_once(
                     else (
                         f"dependency-fact-{int(current * 1000)}"
                         if trigger == "dependency-fact-changed"
-                        else f"recovery-{int(current * 1000)}"
+                        else (
+                            f"continuation-{int(current * 1000)}"
+                            if trigger == "continuation"
+                            else f"recovery-{int(current * 1000)}"
+                        )
                     )
                 ),
                 "episode_trigger": trigger,
@@ -959,6 +1035,10 @@ def run_once(
                 "episode_config_revision": _config_revision(config),
             }
         )
+        if trigger == "continuation":
+            state["continuation_armed"] = False
+            state["continuation_consumed_at"] = current
+            state["continuation_disarm_reason"] = "episode-created"
     episode_id = str(state["recovery_episode_id"])
     attempts = 1
     for attempt in range(1, attempts + 1):
@@ -1005,18 +1085,24 @@ def run_once(
                 outcome = str(ack["outcome"])
                 _record_terminal_outcome(
                     state,
+                    config=config,
                     outcome=outcome,
                     final_at=after_resume.latest_final_at,
                     ack=ack,
+                    resolved_at=current,
+                    latest_user_at=after_resume.latest_user_at,
                 )
                 _write_json(state_path, state)
                 return outcome
             if visible_final and not ack_valid:
                 _record_terminal_outcome(
                     state,
+                    config=config,
                     outcome="protocol-failed",
                     final_at=after_resume.latest_final_at,
                     ack=ack,
+                    resolved_at=current,
+                    latest_user_at=after_resume.latest_user_at,
                 )
                 state["last_error"] = ack_error
                 state["paused_user_at"] = after_resume.latest_user_at
@@ -1026,9 +1112,12 @@ def run_once(
             if ack_valid and (not visible_final or result.returncode != 0):
                 _record_terminal_outcome(
                     state,
+                    config=config,
                     outcome="outcome-uncertain",
                     final_at=after_resume.latest_final_at if visible_final else None,
                     ack=ack,
+                    resolved_at=current,
+                    latest_user_at=after_resume.latest_user_at,
                 )
                 state["last_error"] = "current episode ack exists without clean visible final"
                 state["paused_user_at"] = after_resume.latest_user_at
@@ -1048,6 +1137,8 @@ def run_once(
                 "last_decision": "paused-failure",
                 "paused_user_at": latest.latest_user_at,
                 "paused_config_revision": _config_revision(config),
+                "continuation_armed": False,
+                "continuation_disarm_reason": "paused-failure",
             }
         )
         if state.get("episode_trigger") == "dependency-released":

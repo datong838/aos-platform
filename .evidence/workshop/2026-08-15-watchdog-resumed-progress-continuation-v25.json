@@ -1,0 +1,56 @@
+{
+  "schema": "aos-workshop-watchdog-delivery-evidence/v1",
+  "taskId": "workshop-watchdog-resumed-progress-continuation-v25-20260815",
+  "recordedAt": "2026-08-15T13:05:00+08:00",
+  "authorityRevision": "AOS-000040",
+  "branch": "w2-workshop",
+  "baselineCommit": "ce192daf4304eb9c5d710f5204140106d839bcd6",
+  "problem": "A valid resumed-progress recovery ended its episode but the next tick treated the final as whole-goal completion and stayed idle despite a non-empty next_task.",
+  "decision": {
+    "mode": "explicit one-shot continuation_watch",
+    "delaySeconds": 300,
+    "arm": "only current resumed-progress Ack with a non-empty next_task",
+    "wake": "idle transcript, no turn/tool/task, no exact dependency Lease blocker, new episode",
+    "disarm": ["manual user reentry", "completed", "safe-blocked", "reentry-noop", "protocol-failed", "outcome-uncertain", "paused-failure"],
+    "authorizationBoundary": "next_task is navigation only and never proves authority or dependency GREEN"
+  },
+  "files": [
+    {"path":"scripts/long-task-watchdog/watchdog.py","preSha256":"9de91a9d5ebf036a7de5acf8291a98467917273a8f636b076be19272d545eb89","postSha256":"05c64c19784349aba61a7ccd9a9426d87c6e0efb4f9426a8c2dfd1cc4879cef6"},
+    {"path":"scripts/long-task-watchdog/test_watchdog.py","preSha256":"91ad18fa073c0b13c317fb83e323f18eea9dad100c7a034cd6cb9cb687e9d0c3","postSha256":"89ef18761023ed40df9d15adfa12440cbf1fa712601d433717928d4e4c3919f5"},
+    {"path":"scripts/long-task-watchdog/README.md","preSha256":"40b417a1179e9460a7d1409e6c79f35f1c71e00e2672995bce2590e3d6fa28ec","postSha256":"025dfc46652f9b29684b141d030fd363529815c0dc4f040220375485add02ba2"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/25-Workshop长任务Watchdog恢复闭环与权限ADR.md","preSha256":"8f618ce6d8a59f4e4c976437f29050c8964dc9c97fdc6291b769e954e285c4a9","postSha256":"240f43509af484f87a2a9bf9fb037b8008c2acd0f2118e201ffb6cb1697e0344"},
+    {"path":"/Users/ddt/.codex/long-task-watchdog-workshop/config.json","preSha256":"669854e235780bd204fef4c24a17d44dee8e098779cfa111a5296ecbf562eb72","postSha256":"f326ef56d48b1fa7d9a436d7d59abc712b4e239619de3d3e2c6fc9e7a61ef9af"},
+    {"path":"/Users/ddt/Library/LaunchAgents/com.aos.codex-long-task-watchdog-workshop.plist","preSha256":"5eaa643572541b7b36b4e89c5276a1b1f685b58b22219292e1846d8c35ce12aa","postSha256":"5eaa643572541b7b36b4e89c5276a1b1f685b58b22219292e1846d8c35ce12aa"}
+  ],
+  "redGreen": {
+    "red": ["continuation_armed missing after resumed-progress", "manual user reentry returned live and left continuation armed"],
+    "green": "42/42 unittest GREEN including one-shot delay, completed disarm, manual reentry and exact dependency Lease runner=0",
+    "compile": "watchdog.py and test_watchdog.py py_compile GREEN",
+    "diffCheck": "GREEN"
+  },
+  "liveNoop": {
+    "decisions": ["tool-running", "live"],
+    "activeTurnDetected": true,
+    "totalAttemptsBefore": 12,
+    "totalAttemptsAfter": 12,
+    "launchAgentIntervalSeconds": 300,
+    "launchAgentLastExitCode": 0,
+    "continuationArmed": false
+  },
+  "completionRevalidation": {
+    "authorityRevision": "AOS-000041",
+    "phase": "BIND1_4_CANONICAL_API_OPENAPI_GREEN_WITH_WARNINGS",
+    "nextGate": "BIND1_5_STRICT_SDK_UI_BROWSER",
+    "memoryValidate": "GREEN",
+    "memoryGate": true,
+    "activeLeases": ["workshop-watchdog-resumed-progress-continuation-v25-20260815"],
+    "impact": "No Watchdog verdict change; AIP BIND1-4 released its Lease, BIND1-5 remains pending, and no Workshop business-runtime gate became GREEN."
+  },
+  "reviewVerdict": "ACCEPTED_GREEN_WITH_FIRST_REAL_EPISODE_PENDING",
+  "safety": [
+    "no business source or runtime change",
+    "no database, migration, tenant, browser or external action",
+    "no w1-aip uncommitted content read or modified",
+    "no forced interruption or concurrent real resume injection"
+  ]
+}
