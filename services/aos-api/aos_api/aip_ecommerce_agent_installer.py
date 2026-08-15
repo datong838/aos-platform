@@ -28,13 +28,14 @@ from aos_api.aip_capability_registry import AipCapabilityRegistry
 from aos_api.aip_capability_binding_service import AipCapabilityBindingService
 from aos_api.aip_contracts import TenantContext
 from aos_api.aip_skill_registry import AipSkillRegistry
-from aos_api.aip_solution_pack_publisher import AGENT_LOGIC_COUNTS, CAPABILITY_IDS
+from aos_api.aip_solution_pack_publisher import (
+    AGENT_LOGIC_COUNTS,
+    CAPABILITY_IDS,
+    SOLUTION_PACK_ID,
+    SOLUTION_PACK_VERSION,
+)
 from aos_api.auth import Principal
 from aos_api.tenant_scope import TenantScope
-
-SOLUTION_PACK_ID = "solution.ecommerce.growth"
-SOLUTION_PACK_VERSION = "1.2.0"
-
 
 class AipEcommerceCatalogInvalid(AipAgentRegistryConflict):
     code = "AIP_ECOMMERCE_CATALOG_INVALID"

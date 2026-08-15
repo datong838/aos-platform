@@ -40,6 +40,8 @@ AGENT_LOGIC_COUNTS = {
     "ecommerce.private_domain_manager": 5,
     "ecommerce.campaign_planner": 6,
 }
+SOLUTION_PACK_ID = "solution.ecommerce.growth"
+SOLUTION_PACK_VERSION = "1.3.0"
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,7 +82,7 @@ class AipSolutionPackPublisher:
             raise AipSolutionPackInvalid("bundle metadata is required")
         bundle_id = metadata.get("id")
         bundle_version = metadata.get("version")
-        if bundle_id != "solution.ecommerce.growth" or bundle_version != "1.2.0":
+        if bundle_id != SOLUTION_PACK_ID or bundle_version != SOLUTION_PACK_VERSION:
             raise AipSolutionPackInvalid("unsupported solution pack identity or version")
 
         agent_document = self._json(root / "content/agents/ecommerce-six-coworkers.json")

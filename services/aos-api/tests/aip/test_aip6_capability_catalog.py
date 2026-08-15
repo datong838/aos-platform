@@ -14,6 +14,7 @@ from aos_api.aip_agent_registry_store import (
 )
 from aos_api.aip_capability_registry import AipCapabilityRegistry
 from aos_api.aip_contracts import ResourceRef
+from aos_api.aip_solution_pack_publisher import SOLUTION_PACK_ID, SOLUTION_PACK_VERSION
 from aos_api.db import connect
 
 HASH_A = "a" * 64
@@ -51,8 +52,8 @@ def request(capability_id: str, alias: str, *, content_hash: str = HASH_A):
         readiness_reasons=["provider_unknown", "eval_pack_unavailable"],
         source_ref=ResourceRef(
             resource_type="SolutionPack",
-            resource_id="solution.ecommerce.growth",
-            revision="1.2.0",
+            resource_id=SOLUTION_PACK_ID,
+            revision=SOLUTION_PACK_VERSION,
             authority="asset-registry",
         ),
         source_license="internal",
