@@ -16,7 +16,7 @@ from aos_api.aip_assist_contracts import (
 from aos_api.aip_assist_service import (
     AipAssistAuthorityUnavailable,
     AipAssistService,
-    UnavailableAipAssistService,
+    PostgresAipAssistService,
 )
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
@@ -27,7 +27,7 @@ router = APIRouter(prefix="/v1/aip/assist", tags=["aip-assist"])
 
 
 def get_aip_assist_service() -> AipAssistService:
-    return UnavailableAipAssistService()
+    return PostgresAipAssistService()
 
 
 def _scope(principal: Principal) -> TenantScope:

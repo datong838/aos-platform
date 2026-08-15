@@ -1,0 +1,80 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-P8-4B-20260816",
+  "status": "CODE_CONTROL_GREEN_PENDING_INTEGRATION",
+  "branch": "w1-aip",
+  "baseCommit": "e394df698c513e024dc2b545c62e182c7f429150",
+  "authorityRevision": "AOS-000050",
+  "observedAt": "2026-08-16T02:26:02+08:00",
+  "tenantPolicy": {
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "realTenantBusinessWrites": false
+  },
+  "lease": {
+    "taskId": "aip-p8-4b-assist-authority-20260816",
+    "owner": "w1-aip",
+    "migrationLease": true,
+    "baseRevision": "AOS-000050"
+  },
+  "implementation": [
+    "Added aip8_002 as the sole Alembic head with immutable Assist thread, turn, event and receipt authority tables",
+    "Enabled and forced tenant RLS on all four tables with runtime SELECT and INSERT only",
+    "Added append-only mutation guards plus contiguous event sequence and terminal-event insertion guards",
+    "Added deterministic idempotency receipts, thread-level CAS and tenant-hidden reads",
+    "Persisted thread creation and blocked turn start/terminal events atomically without Provider invocation or fabricated answer content",
+    "Mounted the PostgreSQL Assist service behind the canonical Principal-bound API"
+  ],
+  "fileHashes": {
+    "services/aos-api/alembic/versions/aip8_002_assist_authority.py": {
+      "before": null,
+      "after": "333ac9fad928c0328ad51b52a45a42d8d0c62b581ed8818d16fef2adc640fa25"
+    },
+    "services/aos-api/aos_api/aip_assist_contracts.py": {
+      "before": "180d0b2c088dbbb60d9aa11fc6ba25fac0b5a2ae05ebc6b6f1bf15f4dea2c33a",
+      "after": "a6d5fbe58fa860aed3e4651b9214ada7698719ef1a0ac17b890e0f60a7a4fbd1"
+    },
+    "services/aos-api/aos_api/aip_assist_store.py": {
+      "before": null,
+      "after": "738c50a7a38bb57cefabf3cfe57a5ab857230efcaacd3964fc354204f889f859"
+    },
+    "services/aos-api/aos_api/aip_assist_service.py": {
+      "before": "f236cb2c107a771dbac10c02dcad5a40a12b4bae34037b1a42b65f51fb62c2a7",
+      "after": "035fee79711b3c80a44446144663a4ae7116b482d12c2aa2114de1e66eb8a048"
+    },
+    "services/aos-api/aos_api/routers/aip_assist_runtime.py": {
+      "before": "328877b32eb236aae35c5ab4b481a16297f68a94350f4dd90d2fe4fcc5da055b",
+      "after": "3e5845a0e8cb19fb2fac516c89539d1d79971a0d62825268dc4ea65d61410751"
+    },
+    "services/aos-api/tests/aip/test_aip8_assist_migration.py": {
+      "before": null,
+      "after": "381267f3885e4b1d788a45f20df8aa9b076ddc256073226ef7b79f3c3eef1e51"
+    },
+    "services/aos-api/tests/aip/test_aip8_assist_store.py": {
+      "before": null,
+      "after": "92874bb0d0f223c0e02b233063e7a9b980c1e4a042c77c9506f85fe4e0173f85"
+    },
+    "services/aos-api/tests/aip/test_aip8_assist_api.py": {
+      "before": "ab1aeeac4d33f4770767eb2bc091f114d7353c0677c0124e86b7b7029802075b",
+      "after": "909f40334fe6ca561d420837c1521cc5dcac7559f11a17b810bed9423150c53a"
+    }
+  },
+  "verification": [
+    "19 P8-4B targeted Assist tests passed",
+    "54 cumulative test_aip8_* tests passed",
+    "PostgreSQL migration upgrade was exercised by the disposable test database",
+    "Cross-tenant negative canary returned hidden/not-found semantics",
+    "RLS/FORCE RLS and UPDATE rejection were verified against PostgreSQL",
+    "Canonical API persisted a thread and emitted persisted start plus blocked typed SSE",
+    "compileall, AST parse and git diff check passed",
+    "Alembic reports aip8_002 as the unique head",
+    "No real tenant business rows, external Provider calls, web changes or Workshop changes were performed"
+  ],
+  "baselineWarnings": [
+    "ruff is not installed in the project environment; compileall, AST parsing, tests and diff checks are the available code controls",
+    "P8-4B intentionally terminates each turn with ASSIST_RUNTIME_NOT_INSTALLED until P8-4C exact runtime assembly is installed",
+    "Operational Assist readiness remains blocked pending a fresh exact AgentRun and ModelRuntime authority read in P8-4C"
+  ],
+  "operationalStatus": "ASSIST_POSTGRESQL_AUTHORITY_READY_RUNTIME_NOT_INSTALLED",
+  "nextGate": "P8_4C_ASSIST_EXACT_RUNTIME"
+}

@@ -207,6 +207,35 @@ class AssistStreamEvent(AipContractModel):
         return self
 
 
+class AssistTurnRecord(AipContractModel):
+    thread: AssistThreadSnapshot
+    events: list[AssistStreamEvent] = Field(min_length=2, max_length=10_000)
+
+    @model_validator(mode="after")
+    def _ordered_terminal_stream(self) -> "AssistTurnRecord":
+        turn_ids = {event.turn_id for event in self.events}
+        if len(turn_ids) != 1:
+            raise ValueError("events must belong to one turn")
+        for sequence, event in enumerate(self.events, start=1):
+            if event.thread_id != self.thread.thread_id:
+                raise ValueError("event thread does not match snapshot")
+            if event.sequence != sequence:
+                raise ValueError("event sequences must be contiguous")
+            if event.event_type in {
+                AssistEventType.BLOCKED,
+                AssistEventType.DONE,
+                AssistEventType.ERROR,
+            } and sequence != len(self.events):
+                raise ValueError("terminal event must be last")
+        if self.events[-1].event_type not in {
+            AssistEventType.BLOCKED,
+            AssistEventType.DONE,
+            AssistEventType.ERROR,
+        }:
+            raise ValueError("turn record requires a terminal event")
+        return self
+
+
 __all__ = [
     "AssistAuthorityContext",
     "AssistBlocker",
@@ -216,6 +245,7 @@ __all__ = [
     "AssistSubjectRefs",
     "AssistThreadSnapshot",
     "AssistThreadStatus",
+    "AssistTurnRecord",
     "CreateAssistThreadRequest",
     "CreateAssistTurnRequest",
 ]

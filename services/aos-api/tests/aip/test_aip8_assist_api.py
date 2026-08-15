@@ -35,14 +35,30 @@ def test_canonical_assist_requires_authentication(client) -> None:
     assert response.status_code == 401
 
 
-def test_canonical_assist_fails_closed_without_authority(client, auth_headers) -> None:
+def test_canonical_assist_persists_thread_and_blocked_turn(client, auth_headers) -> None:
     response = client.post(
         "/v1/aip/assist/threads",
         headers=headers(auth_headers),
         json=body(),
     )
-    assert response.status_code == 503
-    assert response.json()["code"] == "ASSIST_AUTHORITY_UNAVAILABLE"
+    assert response.status_code == 200, response.text
+    thread = response.json()
+    assert thread["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
+    assert thread["version"] == 1
+
+    turn = client.post(
+        f"/v1/aip/assist/threads/{thread['threadId']}/turns:stream",
+        headers={**headers(auth_headers), "Idempotency-Key": "p8-4b-turn"},
+        json={
+            "message": "核查订单风险",
+            "expectedThreadVersion": 1,
+            "cutoffAt": body()["cutoffAt"],
+        },
+    )
+    assert turn.status_code == 200, turn.text
+    assert "event: start" in turn.text
+    assert "event: blocked" in turn.text
+    assert "ASSIST_RUNTIME_NOT_INSTALLED" in turn.text
 
 
 def test_legacy_sample_assist_routes_are_not_mounted(client, auth_headers) -> None:
