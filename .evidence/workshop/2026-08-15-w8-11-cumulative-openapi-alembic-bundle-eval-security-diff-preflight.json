@@ -1,0 +1,91 @@
+{
+  "schema": "aos-workshop-cumulative-gate-preflight/v1",
+  "taskId": "workshop-w8-11-cumulative-openapi-alembic-bundle-eval-security-diff-preflight-20260815",
+  "workItem": "W8-11",
+  "projectRevision": "AOS-000034",
+  "branch": "w2-workshop",
+  "head": "24d32238da4a289daeb1b6acf879f4e8698a2fbc",
+  "recordedAt": "2026-08-15T08:49:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "CUMULATIVE_GATE_TARGET_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "mayRunReleaseGate": false,
+    "reason": "W8-01 through W8-10 are not GREEN and no one-release evidence ledger can bind all contracts code migrations Bundles tenants browsers security operations and disaster drills"
+  },
+  "dependencyMatrix": [
+    {"dependency": "W8-01", "status": "HARD_GATE_BLOCKED"},
+    {"dependency": "W8-02", "status": "HARD_GATE_BLOCKED"},
+    {"dependency": "W8-03", "status": "HARD_GATE_BLOCKED"},
+    {"dependency": "W8-04", "status": "HARD_GATE_BLOCKED"},
+    {"dependency": "W8-05", "status": "HARD_GATE_BLOCKED"},
+    {"dependency": "W8-06", "status": "HARD_GATE_BLOCKED"},
+    {"dependency": "W8-07", "status": "HARD_GATE_BLOCKED"},
+    {"dependency": "W8-08", "status": "HARD_GATE_BLOCKED"},
+    {"dependency": "W8-09", "status": "HARD_GATE_BLOCKED"},
+    {"dependency": "W8-10", "status": "HARD_GATE_BLOCKED"},
+    {"dependency": "product_formal_freeze", "status": "NOT_FROZEN"}
+  ],
+  "releaseIdentity": [
+    "Git commit and clean tree",
+    "authority project revision and Delivery Receipt set",
+    "application build and container or artifact hashes",
+    "OpenAPI hash operation inventory and strict SDK hashes",
+    "Alembic head current schema compatibility and data snapshot",
+    "Bundle signature content hashes Composition lock Installation and eight Module refs",
+    "policy capability adapter account model provider and Eval exact revisions",
+    "org-org positive and dev-org negative tenant identity plus data cutoff"
+  ],
+  "gateColumns": [
+    "contract_and_schema",
+    "unit_and_parser",
+    "store_rls_cas_append_only",
+    "service_and_integration",
+    "openapi_operation_determinism",
+    "alembic_single_head_upgrade_downgrade_guard",
+    "bundle_signature_resolver_installation_eval",
+    "web_typecheck_production_build",
+    "browser_positive_negative_three_viewports_accessibility",
+    "security_secret_pii_supply_chain_and_cross_tenant",
+    "fault_injection_restart_race_unknown_reconcile",
+    "operational_slo_alert_runbook_and_dr",
+    "diff_scope_generated_artifact_and_interaction_honesty",
+    "delivery_receipts_and_exact_readback"
+  ],
+  "aggregationRules": [
+    "every column binds to the same release identity and current dependency revisions",
+    "historical test counts from different commits are evidence leads and are never added as cumulative coverage",
+    "skipped deselected xfail warning unavailable and not-applicable each require a reason owner and release disposition",
+    "a GREEN column requires command exit code immutable output reference and exact tested scope",
+    "generic AIP primitives cannot replace missing Workshop domain tests or positive browser evidence",
+    "negative failure-close evidence cannot become a positive capability result",
+    "any drift after a run invalidates only the affected columns but blocks the final aggregate until rerun",
+    "W8-11 is GREEN only when every required column is GREEN and unresolved critical high P0 P1 and unknown-release blockers are zero"
+  ],
+  "requiredNegativeProof": [
+    "client tenant injection no-scope wrong-scope and cross-tenant references",
+    "unknown schema enum field hash revision route operation and Bundle drift",
+    "duplicate replay concurrent CAS lease fence webhook and provider ordering",
+    "Secret PII marking purpose consent license malware prompt-injection and supply-chain violations",
+    "timeout partial unknown reconcile compensation restart network partition and disaster restore",
+    "mock fixture static visual API failure and canary data cannot satisfy positive gates"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "running selected current tests before W8-01 through W8-10 are GREEN would produce a mixed-revision partial result and cannot sign the cumulative release gate",
+    "doesNotProve": ["one-release cumulative coverage", "OpenAPI and SDK exact closure", "migration and real tenant closure", "Bundle Eval and browser closure", "operational and disaster readiness"]
+  },
+  "blockers": [
+    "product formal review and freeze are incomplete",
+    "W8-01 through W8-10 are all unclosed",
+    "no immutable release identity and cumulative evidence ledger spans every required column",
+    "positive tenant browser external effect operations SLO and DR evidence are absent"
+  ],
+  "next": "align W8-11 cumulative release gate through two review rounds without manufacturing aggregate test evidence, then preflight W8-12",
+  "safety": [
+    "no source migration database tenant browser external action publication or restore operation",
+    "no test count was summed across commits",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}
