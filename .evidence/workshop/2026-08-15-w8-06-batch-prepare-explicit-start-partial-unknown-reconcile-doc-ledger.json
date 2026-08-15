@@ -1,0 +1,63 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w8-06-batch-prepare-explicit-start-partial-unknown-reconcile-doc-align-20260815",
+  "workItem": "W8-06",
+  "projectRevision": "AOS-000034",
+  "branch": "w2-workshop",
+  "sourceCommit": "a854fda92a7a3f181154e6be72d171eb6e1e38b3",
+  "recordedAt": "2026-08-15T08:21:00+08:00",
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/18-跨Module端到端场景技术方案.md",
+      "preSha256": "03643311b9993625c68fd1c54084b166e1891aa94be29484ff6b643c978ac75f",
+      "postSha256": "970d470731ca9b000b40b0f8ff3776dedba8a14ceab2cfa80ef668ab672ab050",
+      "change": "expanded scenario F into exact zero-effect preparation explicit start item conservation and reconcile lifecycle"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "aae2fa3ffeb96a9d0d397ccfab8a43e60a189e736ee1cd21f1782053ec023d48",
+      "postSha256": "b7be743197079779ec3bd58c800324035acffe09c6527788ff17fc1ed0bbe01a",
+      "change": "replaced W8-06 evidence placeholder with exact shared-runtime blockers and no-effect decision"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/75-W8-06-批量准备显式启动PartialUnknownReconcile预检ADR.md",
+      "preSha256": null,
+      "postSha256": "0187a86e506a1a5ecf2f545713aa426dd8e3d1d0ed8bf1df3bc03529f9261628",
+      "change": "created W8-06 scenario ADR and two review rounds"
+    }
+  ],
+  "reviewRounds": [
+    {
+      "round": 1,
+      "focus": "user confirmation preparation safety and item conservation",
+      "result": "PASS",
+      "evidence": [
+        "prepare and start are strictly separated and preparation has zero external effect",
+        "included excluded blocked unknown impact and cost remain user-visible",
+        "frozen total and deterministic item keys are reconstructable",
+        "prepared approved and confirmed never imply started"
+      ]
+    },
+    {
+      "round": 2,
+      "focus": "partial unknown reconcile and execution qualification",
+      "result": "PASS_WITH_HARD_GATE_BLOCKED",
+      "evidence": [
+        "business Action Usage Effect and Handoff outcomes are independent",
+        "unknown only reconciles authoritatively and preserves original receipts",
+        "generic Action ResearchJob and domain batches do not prove shared runtime",
+        "no real batch tenant browser or external action mutation occurred"
+      ]
+    }
+  ],
+  "decision": "SCENARIO_CONTRACT_APPROVED_HARD_GATE_BLOCKED",
+  "implementationStatus": "NOT_STARTED",
+  "externalEffect": "NONE",
+  "safety": [
+    "no source code changed",
+    "no migration",
+    "no real tenant or browser mutation",
+    "no external call charged job customer contact price write publication or Wiki promotion was executed",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}
