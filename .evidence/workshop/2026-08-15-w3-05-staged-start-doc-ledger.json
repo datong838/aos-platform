@@ -1,0 +1,77 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w3-05-staged-start-doc-align-20260815",
+  "workItem": "W3-05",
+  "projectRevision": "AOS-000039",
+  "sourceCommit": "63798b3826e2ff821c5125d5e765384719301999",
+  "recordedAt": "2026-08-15T11:21:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "findings": [
+        "the plan stated that Start calls the compiler while committed AIP exposes compile and Start as separate operations",
+        "W2-D3 was still described as in progress although its Delivery Receipt is GREEN_WITH_WARNINGS"
+      ],
+      "closed": [
+        "split compile, ImpactPreview, Proposal or Approval and Start into visible stages",
+        "updated W2-D3 without claiming a real positive Start",
+        "forbade hidden compile, auto-approval and local Run creation"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS_AFTER_REMEDIATION",
+      "findings": [
+        "ProductionContext did not propagate through compiler, Plan, Preview and Start",
+        "the committed Start router authenticates but has no explicit start permission gate"
+      ],
+      "closed": [
+        "added DEP-PRODUCTION-CONTEXT-PROPAGATION across the full chain",
+        "kept DEP-AIP-START-AUTHZ and real Preview evidence as hard gates",
+        "preserved started plus queued TaskRun versus running and AgentRun distinction",
+        "kept W3-05 unchecked and runtime implementation blocked"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/07-领域读模型Command与错误契约.md",
+      "preSha256": "616f36e248f3399cbdb77d1cca1f72f79ad7c0c5ac6ee217640d935295b217e4",
+      "postSha256": "fe755e80dc2be6a31a73617fdd3d5ef5d755ca687f1d404df47af0c1fbc94ff4"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md",
+      "preSha256": "4e797da6bf0993fc03c699d6cb744e20dd04050b64f9c46c69b5d31bf584d192",
+      "postSha256": "e2e3dde3bc765019802b28a4fcf53be8d931d422ddf63b67212de6f513be5012"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/32-W3-05-AIP生产启动组合门消费与权限接缝ADR.md",
+      "preSha256": "13fb9e19e4c65325229d275e6162b428b62a5ff18e30796cd4ad082c5480b08a",
+      "postSha256": "c6ae82887b18689017aba4b02f819c8247c1fbf67fe8fa3c26497f29d13de611"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "44314860de009c834fac8f41f6ed1cf27b4f05f066f6bbfa5daa649d275ff592",
+      "postSha256": "f34a1ba1ca104555378af23c6c9ed0b537de51a20c9a9766129b8171181f1bb6"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "f35cffb578b559f03c4ede437e89ed9432e86792961db7d57d7aabd9eff1266c",
+      "postSha256": "ef884ca767c064afde7cd576f07808cc067e099f602fb7152ab582a6d7a2d74b"
+    }
+  ],
+  "decision": {
+    "plan": "REMEDIATED_GREEN",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two review and remediation rounds passed",
+    "all shared-document post hashes match",
+    "compile and Start match committed AIP operation ordering",
+    "W2-D3 progress is recorded without fabricating real positive evidence",
+    "no source, database, tenant, provider, Run, Action or external mutation was introduced"
+  ]
+}
