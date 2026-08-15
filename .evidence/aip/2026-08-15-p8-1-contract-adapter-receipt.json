@@ -1,0 +1,70 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-P8-1-20260815",
+  "status": "CODE_CONTROL_GREEN",
+  "branch": "w1-aip",
+  "baseCommit": "1dffb9535a3c66455d62e494302576c4db0428ae",
+  "authorityRevision": "AOS-000044",
+  "observedAt": "2026-08-15T16:49:40+08:00",
+  "tenantPolicy": {
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "realTenantSideEffects": false
+  },
+  "lease": {
+    "taskId": "aip-p8-1-contract-adapters-20260815",
+    "owner": "w1-aip",
+    "migrationLease": false
+  },
+  "implementation": [
+    "Removed process-local Northampton shops/inventory/sales and unknown-table fallback",
+    "Added discriminated semantic/knowledge/metric governed read requests",
+    "Added honest result revisions with exact source revision/hash/cutoff and typed blockers",
+    "Added injectable canonical read adapter protocols with server-bound tenant scope",
+    "Hardened the HTTP route with require_principal and stable legacy SQL validation failure"
+  ],
+  "fileHashes": {
+    "services/aos-api/aos_api/aip_analyst_contracts.py": {
+      "before": null,
+      "after": "9ee9a8dc3dc51efdc3db3e2b2f29df3a42f0b04824bf549aaf68185b38c1ec2a"
+    },
+    "services/aos-api/aos_api/aip_analyst_query.py": {
+      "before": "21aee882e03396a75d0761afe041d2ead604991357c83a847fdf1e0d8b685aeb",
+      "after": "85c6cfb1996471c81c54665ea46c05f32c80623c6101eb20ab1062fe63fca94c"
+    },
+    "services/aos-api/aos_api/routers/aip_analyst.py": {
+      "before": "9b902cd84da6069dd560652c50e9c22a25c65fca90d7128a75a5edfb9593abfd",
+      "after": "3d4b69f36207773d28c62f234678dd87744e7475259c51fae01a1fba60842ee3"
+    },
+    "services/aos-api/tests/aip/test_aip8_analyst_contracts.py": {
+      "before": null,
+      "after": "5d45faeee69457e9cf537494d255067cd9f4f543e63990f5d4a724a1f95f6172"
+    },
+    "services/aos-api/tests/aip/test_aip8_analyst_adapters.py": {
+      "before": null,
+      "after": "cf703ec167e4e91f501430e36a3b8b052f740c371443e7960dbeac03476b2c21"
+    },
+    "services/aos-api/tests/test_aip_analyst_query.py": {
+      "before": "29bca3c4b85631d696bddb7f2b2e1203a75ad6d944b67420591a509f03b6dd4e",
+      "after": "f48734ff686b1c8ce2d23668dc5a33d00f7f7d23c04a31a8ba085cf747ebc85f"
+    }
+  },
+  "schemeHashes": {
+    "07-228-AIP助手分析师与通用工作台实施方案.md": {
+      "before": "de43dcd8b1d6c6efbeaa2b15f6328d16746e43ca96719177375ece437503e7e4",
+      "after": "e316fee5666f0f876238fff6feb58a138df6addc90463327ed8682cac9cf107d"
+    },
+    "全量开发清单/07-AIP助手分析师与通用工作台开发清单.md": {
+      "before": "cc26cea6048def0a1aff0aedd919569a727cc02a4e59bbc0049bf803b8aa1035",
+      "after": "7222a209d2330d58ed17865fe421e216a19d4cc8ad60ab73a49e84e17abd8be6"
+    }
+  },
+  "verification": [
+    "28 targeted and adjacent analyst tests passed",
+    "changed Python modules compileall passed",
+    "git diff --check passed",
+    "no migration, database write, Provider call, browser side effect or cross-tenant read performed"
+  ],
+  "operationalStatus": "BLOCKED_UNTIL_CANONICAL_ADAPTERS_AND_QUERY_AUTHORITY_ARE_ASSEMBLED",
+  "nextGate": "P8_2_QUERY_JOB_RESULT_AUTHORITY"
+}
