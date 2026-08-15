@@ -50,6 +50,7 @@ class ReleaseVersionRecord(Protocol):
     status: BundleVersionStatus
     evidence: list[BundleEvidence]
     artifacts: list[dict[str, object]]
+    persisted_manifest: dict[str, object] | None
 
 
 @dataclass(frozen=True)
@@ -250,14 +251,7 @@ class ReleasePolicy:
         ):
             raise SignatureInvalidError("publisher trust root revision is invalid")
 
-        descriptor = {
-            "manifest": record.manifest.model_dump(
-                mode="json", by_alias=True, exclude_none=False
-            ),
-            "artifacts": record.artifacts,
-        }
-        if canonical_sha256(descriptor) != record.content_hash:
-            raise ManifestInvalidError("stored bundle content descriptor changed")
+        descriptor = _verified_content_descriptor(record)
         if not verify_ed25519(
             payload=canonical_json(descriptor),
             signature_b64=record.signature.signature,
@@ -304,14 +298,7 @@ class ReleasePolicy:
         )
         if len(signature_evidence) > 1:
             raise SignatureInvalidError("bundle signature evidence must be unique")
-        descriptor = {
-            "manifest": record.manifest.model_dump(
-                mode="json", by_alias=True, exclude_none=False
-            ),
-            "artifacts": record.artifacts,
-        }
-        if canonical_sha256(descriptor) != record.content_hash:
-            raise ManifestInvalidError("stored bundle content descriptor changed")
+        descriptor = _verified_content_descriptor(record)
         content_evidence = evidence_by_type.get(BundleEvidenceType.CONTENT_HASH, [])
         if any(item.artifact_hash != record.content_hash for item in content_evidence):
             raise ManifestInvalidError(
@@ -378,6 +365,33 @@ class ReleasePolicy:
             ):
                 raise _CandidateIneligible
         return evidence_by_type
+
+
+def _verified_content_descriptor(record: ReleaseVersionRecord) -> dict[str, object]:
+    """Return the signed descriptor, accepting only semantics-equivalent legacy JSON."""
+
+    current_manifest = record.manifest.model_dump(
+        mode="json", by_alias=True, exclude_none=False
+    )
+    current = {"manifest": current_manifest, "artifacts": record.artifacts}
+    if canonical_sha256(current) == record.content_hash:
+        return current
+
+    persisted = getattr(record, "persisted_manifest", None)
+    if not isinstance(persisted, dict):
+        raise ManifestInvalidError("stored bundle content descriptor changed")
+    try:
+        normalized = BundleManifest.model_validate(persisted).model_dump(
+            mode="json", by_alias=True, exclude_none=False
+        )
+    except Exception as exc:
+        raise ManifestInvalidError("stored bundle content descriptor changed") from exc
+    if normalized != current_manifest:
+        raise ManifestInvalidError("stored bundle content descriptor changed")
+    historical = {"manifest": persisted, "artifacts": record.artifacts}
+    if canonical_sha256(historical) != record.content_hash:
+        raise ManifestInvalidError("stored bundle content descriptor changed")
+    return historical
 
 
 class _SingleTrustRootProvider:

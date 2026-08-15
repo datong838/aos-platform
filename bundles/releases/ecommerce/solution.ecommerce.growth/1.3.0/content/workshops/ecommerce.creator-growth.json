@@ -1,0 +1,47 @@
+{
+  "schema": "aos.workshop-module/v1",
+  "moduleId": "ecommerce.creator-growth",
+  "displayName": "达人邀约与签约驾驶舱",
+  "menuLabel": "达人邀约驾驶舱",
+  "route": "/workshop/creator-growth",
+  "slot": "workshop.primary.ecommerce",
+  "order": 40,
+  "bundleRef": "bundle://aos/solution.ecommerce.growth@1.3.0",
+  "requiredObjects": [
+    "Product",
+    "CreatorCandidate",
+    "OutreachBatchRevision",
+    "ContractRef",
+    "DeliveryRef",
+    "RelationshipRevision"
+  ],
+  "requiredCapabilities": [
+    "material.collect",
+    "strategy.plan",
+    "copy.generate",
+    "content.review",
+    "performance.review"
+  ],
+  "requiredAipFeatures": [
+    "aip.task-runtime",
+    "aip.agent-handoff",
+    "aip.production.task-brief",
+    "aip.production.evidence-bundle",
+    "aip.production.eval-contract",
+    "aip.production.impact-preview"
+  ],
+  "permissions": {
+    "roles": [],
+    "markings": [],
+    "dataScopes": ["ecommerce.workshop.read"],
+    "actionTypes": []
+  },
+  "viewRefs": [],
+  "evalPackRefs": ["content/evals/placeholder.json"],
+  "productionContractRefs": [],
+  "responsibilityTemplateRefs": [],
+  "impactCalculatorRefs": [],
+  "legacyAssetRefs": [],
+  "legacyRedirects": ["/s2/creator-growth"],
+  "minimumRuntimeVersion": "1.7.0"
+}

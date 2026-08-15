@@ -6,6 +6,7 @@ from collections.abc import Collection
 from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -17,6 +18,7 @@ from aos_api.asset_registry.composition_contracts import (
 )
 from aos_api.asset_registry.errors import AssetNotFoundError, RegistryIntegrityCorruptError
 from aos_api.asset_registry.manifest_loader import ManifestLoader
+from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
 from aos_api.ecommerce_workshop_catalog import (
     ActiveWorkshopBundle,
     EcommerceWorkshopCatalog,
@@ -80,6 +82,8 @@ class _ReadOnlyConnection:
                     "registry": "asset_bundle_version",
                 }
             )
+        if "SELECT current_user AS current_user" in normalized:
+            return _QueryResult(one={"current_user": "aos_runtime"})
         if "current_setting('aos.org_id'" in normalized:
             return _QueryResult(
                 one={"org_id": self.org_id, "project_id": self.project_id}
@@ -396,6 +400,17 @@ def test_postgres_source_uses_repeatable_read_and_explicit_tenant_predicates() -
     assert "WHERE i.org_id=%s AND i.project_id=%s" in active_query[0]
     assert "permission_diff_json->'target'->'markings'" not in active_query[0]
     assert active_query[1] == ("org-org", "dev-project")
+
+
+def test_asset_scope_is_idempotent_when_request_connection_already_uses_runtime_role() -> None:
+    conn = _ReadOnlyConnection()
+    with patch("aos_api.asset_registry.tenant_transaction.psycopg.Connection", _ReadOnlyConnection):
+        apply_asset_transaction_scope(conn, org_id="org-org", project_id="dev-project")
+
+    statements = [call[0] for call in conn.calls]
+    assert statements[0] == "SELECT current_user AS current_user"
+    assert not any("SET LOCAL ROLE" in statement for statement in statements)
+    assert any("set_config('aos.org_id'" in statement for statement in statements)
 
 
 def test_replacement_graph_is_resolved_before_marking_visibility() -> None:

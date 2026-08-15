@@ -1,0 +1,54 @@
+{
+  "schema": "aos.workshop-module/v1",
+  "moduleId": "ecommerce.customer",
+  "displayName": "客户关系工作台",
+  "menuLabel": "客户关系工作台",
+  "route": "/workshop/customer",
+  "slot": "workshop.primary.ecommerce",
+  "order": 80,
+  "bundleRef": "bundle://aos/solution.ecommerce.growth@1.3.0",
+  "requiredObjects": [
+    "CustomerLite",
+    "Order",
+    "Product",
+    "SegmentRevision",
+    "JourneyRevision",
+    "TouchpointObservation"
+  ],
+  "requiredCapabilities": [
+    "strategy.plan",
+    "copy.generate",
+    "content.review",
+    "platform.adapt",
+    "performance.review"
+  ],
+  "requiredAipFeatures": [
+    "aip.task-runtime",
+    "aip.agent-handoff",
+    "aip.production.task-brief",
+    "aip.production.evidence-bundle",
+    "aip.production.eval-contract",
+    "aip.production.impact-preview",
+    "aip.action-runtime"
+  ],
+  "permissions": {
+    "roles": [],
+    "markings": [],
+    "dataScopes": ["ecommerce.workshop.read"],
+    "actionTypes": []
+  },
+  "viewRefs": [],
+  "evalPackRefs": ["content/evals/w03-l05-dry-run-cases.json"],
+  "productionContractRefs": [],
+  "responsibilityTemplateRefs": [],
+  "impactCalculatorRefs": [],
+  "legacyAssetRefs": [
+    "content/workshops/w03-customer-private-domain.json"
+  ],
+  "legacyRedirects": [
+    "/workshop/customers",
+    "/workshop/customer-relations",
+    "/s2/customer-relations"
+  ],
+  "minimumRuntimeVersion": "1.7.0"
+}

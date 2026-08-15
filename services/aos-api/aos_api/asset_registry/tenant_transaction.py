@@ -5,7 +5,7 @@ from typing import Any
 
 import psycopg
 
-from aos_api.tenant_scope import TenantScope, apply_transaction_scope
+from aos_api.tenant_scope import RUNTIME_DB_ROLE, TenantScope, apply_transaction_scope
 
 
 def apply_asset_transaction_scope(
@@ -13,6 +13,16 @@ def apply_asset_transaction_scope(
 ) -> None:
     """Bind canonical GUCs; activate the runtime role only after RLS adoption."""
     if isinstance(conn, psycopg.Connection):
+        current = conn.execute("SELECT current_user AS current_user").fetchone()
+        if current is not None and str(current["current_user"]) == RUNTIME_DB_ROLE:
+            conn.execute(
+                """
+                SELECT set_config('aos.org_id', %s, true),
+                       set_config('aos.project_id', %s, true)
+                """,
+                (org_id, project_id),
+            )
+            return
         # Asset-store unit fixtures intentionally build earlier migration
         # snapshots in isolated schemas.  Activate the runtime role only after
         # the current schema has adopted the TI6 asset-control RLS contract.

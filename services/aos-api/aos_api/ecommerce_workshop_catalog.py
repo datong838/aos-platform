@@ -6,6 +6,7 @@ from collections.abc import Callable, Collection, Iterable
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from functools import partial
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -82,8 +83,8 @@ class WorkshopBundleLoader(Protocol):
 class PostgresWorkshopCatalogSource:
     """Read every effective active lock and exact Registry version atomically."""
 
-    def __init__(self, connect_factory: ConnectFactory = connect) -> None:
-        self._connect_factory = connect_factory
+    def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
+        self._connect_factory = connect_factory or partial(connect, inherit_scope=False)
 
     def read_active_bundles(
         self,

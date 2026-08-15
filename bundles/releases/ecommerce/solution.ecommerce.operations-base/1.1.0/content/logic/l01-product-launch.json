@@ -1,0 +1,110 @@
+{
+  "id": "l01-product-launch",
+  "name": "L01 商品上架检测",
+  "description": "基于 P02 Product / P03 ProductSku / P04 Category 数据底座的商品上架检测 Logic Graph。输出 ProductLaunchDecision（pass/block/needs_review）；quality_score=null 时降级为 needs_review。",
+  "status": "draft",
+  "schema_version": 1,
+  "nodes": [
+    {
+      "id": "product_read",
+      "kind": "input",
+      "label": "读取商品上架上下文",
+      "position_x": 0,
+      "position_y": 0,
+      "config": {
+        "schema": {
+          "required": [
+            "product_id",
+            "quality_score",
+            "sku_count",
+            "category_id"
+          ]
+        }
+      }
+    },
+    {
+      "id": "sku_check",
+      "kind": "transform",
+      "label": "SKU 存在性检查",
+      "position_x": 0,
+      "position_y": 0,
+      "config": {
+        "expression": "if sku_count > 0 then true else false"
+      }
+    },
+    {
+      "id": "category_validate",
+      "kind": "transform",
+      "label": "分类有效性检查",
+      "position_x": 0,
+      "position_y": 0,
+      "config": {
+        "expression": "if category_id != \"\" then true else false"
+      }
+    },
+    {
+      "id": "quality_gate",
+      "kind": "branch",
+      "label": "质量决策门",
+      "position_x": 0,
+      "position_y": 0,
+      "config": {
+        "paths": [
+          {
+            "id": "needs_review",
+            "condition": "quality_score == null"
+          },
+          {
+            "id": "pass",
+            "condition": "quality_score >= 0.8 && sku_check && category_validate"
+          },
+          {
+            "id": "block",
+            "default": true
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-product_read-to-sku_check",
+      "source_node_id": "product_read",
+      "source_port": "out",
+      "target_node_id": "sku_check",
+      "target_port": "in",
+      "branch_path": "",
+      "order": 0
+    },
+    {
+      "id": "edge-product_read-to-category_validate",
+      "source_node_id": "product_read",
+      "source_port": "out",
+      "target_node_id": "category_validate",
+      "target_port": "in",
+      "branch_path": "",
+      "order": 1
+    },
+    {
+      "id": "edge-sku_check-to-quality_gate",
+      "source_node_id": "sku_check",
+      "source_port": "out",
+      "target_node_id": "quality_gate",
+      "target_port": "in",
+      "branch_path": "",
+      "order": 0
+    },
+    {
+      "id": "edge-category_validate-to-quality_gate",
+      "source_node_id": "category_validate",
+      "source_port": "out",
+      "target_node_id": "quality_gate",
+      "target_port": "in",
+      "branch_path": "",
+      "order": 1
+    }
+  ],
+  "entry_node_ids": [
+    "product_read"
+  ]
+}
