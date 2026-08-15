@@ -147,6 +147,10 @@ def test_canonical_catalog_install_replay_and_tenant_canary(client):
     }
     assert readiness_body["capabilityBindings"] == []
     assert readiness_body["skillBindings"] == []
+    assert all(
+        "agent_instance_not_installed" not in item["blockers"]
+        for item in readiness_body["catalog"]["items"]
+    )
 
     canary_readiness = client.get(
         "/v1/aip/agent-registry/runtime-readiness",
@@ -155,6 +159,10 @@ def test_canonical_catalog_install_replay_and_tenant_canary(client):
     assert canary_readiness.status_code == 200
     assert canary_readiness.json()["tenant"]["orgId"] == "dev-org"
     assert canary_readiness.json()["catalog"]["stats"]["installedCount"] == 0
+    assert all(
+        "agent_instance_not_installed" in item["blockers"]
+        for item in canary_readiness.json()["catalog"]["items"]
+    )
 
     with connect() as conn:
         counts = {

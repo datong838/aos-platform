@@ -120,15 +120,24 @@ class AipEcommerceAgentInstaller:
         items = []
         for template_id in sorted(templates):
             template = templates[template_id]
+            instance = instances.get(template_id)
             logic_ids = template.manifest.get("logicIds", [])
             role_skills = [skills_by_logic[logic_id] for logic_id in logic_ids if logic_id in skills_by_logic]
             if len(role_skills) != AGENT_LOGIC_COUNTS[template_id]:
                 raise AipEcommerceCatalogInvalid(f"skill crosswalk incomplete for {template_id}")
             required = sorted({cap for skill in role_skills for cap in skill.required_capabilities})
-            blockers = sorted({*template.manifest.get("blockers", []), "skill_templates_not_published", "capability_bindings_unavailable", "model_route_unavailable"})
+            blocker_set = {
+                *template.manifest.get("blockers", []),
+                "skill_templates_not_published",
+                "capability_bindings_unavailable",
+                "model_route_unavailable",
+            }
+            if instance is not None:
+                blocker_set.discard("agent_instance_not_installed")
+            blockers = sorted(blocker_set)
             items.append(AgentCatalogItem(
                 template=template,
-                instance=instances.get(template_id),
+                instance=instance,
                 skills=role_skills,
                 required_capability_ids=required,
                 blockers=blockers,
