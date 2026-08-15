@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AipClient } from "../aip/client";
 import { AipMemorySdk } from "./client";
-import { parseKnowledgePipelinePolicies, parseKnowledgeQueryResult, parseKnowledgeReadiness, parseMemoryAuthorityItem, parseMemoryCandidate } from "./contracts";
+import { parseKnowledgePipelinePolicies, parseKnowledgeQueryResult, parseKnowledgeReadiness, parseMemoryAuthorityItem, parseMemoryCandidate, parseMemoryImprovementObservations, type CreateMemoryAgentProjectionRequest, type MemoryAgentProjection } from "./contracts";
 
 const tenant = { orgId: "org-org", projectId: "dev-project" };
 const ref = (resourceType: string, resourceId: string, revision?: string) => ({ resourceType, resourceId, ...(revision ? { revision } : {}), authority: "postgresql" });
@@ -89,5 +89,38 @@ describe("AipMemorySdk", () => {
     expect(request).toHaveBeenCalledWith("getMemoryKnowledgeReadiness");
     expect(() => parseKnowledgeReadiness({ ...readiness, search: { ...readiness.search, capabilities: readiness.search.capabilities.slice(0, 2) } })).toThrow("三 lane");
     expect(() => parseKnowledgeReadiness({ ...readiness, package: { status: "authority_unavailable", count: 0, blocker: "x" } })).toThrow("结构无效");
+  });
+
+  it("数字同事记忆严格读取实例、投影、Exposure 与 unknown Observation", async () => {
+    const instanceRef = { assetType: "AgentInstance", assetId: "content-agent", revision: 2, contentHash: "a".repeat(64) };
+    const instance = { tenant, instanceId: "content-agent", instanceRef, template: { assetType: "AgentTemplate", assetId: "content", revision: 1, contentHash: "b".repeat(64) }, status: "active", overlay: { displayName: "内容官", allowedCapabilityIds: [] }, version: 2, createdBy: "admin", createdAt: "2026-08-15T00:00:00Z", updatedAt: "2026-08-15T00:00:00Z" };
+    const projection = { tenant, projectionRef: { projectionId: "projection-1", version: 1, contentHash: "c".repeat(64) }, kind: "personal", ownerInstanceRef: instanceRef, memoryRef: { memoryItemId: "memory-1", revision: 1, contentHash: "a".repeat(64) }, recipientInstanceRefs: [], allowedPurposes: ["skill:content"], allowedMarkings: ["internal"], disclosure: "citation_only", status: "active", effectiveAt: "2026-08-15T00:00:00Z", expiresAt: "2026-11-15T00:00:00Z", createdBy: "admin", createdAt: "2026-08-15T00:00:00Z", updatedAt: "2026-08-15T00:00:00Z" };
+    const exposure = { tenant, exposureId: "exposure-1", agentRunRef: ref("AgentRun", "run-1", "1"), taskRunRef: ref("TaskRun", "task-run-1", "1"), agentInstanceRef: instanceRef, skillRef: { assetType: "SkillTemplate", assetId: "content.write", revision: 1, contentHash: "d".repeat(64) }, logicRef: { assetType: "LogicRevision", assetId: "logic-1", revision: 1, contentHash: "e".repeat(64) }, projectionRef: projection.projectionRef, memoryRef: projection.memoryRef, evalContractRef: { assetType: "EvalContract", assetId: "eval-1", revision: 1, contentHash: "f".repeat(64) }, timeCutoff: "2026-08-15T00:00:00Z", acceptedAt: "2026-08-15T00:00:01Z", exposureHash: "1".repeat(64) };
+    const observation = { tenant, observationId: "observation-1", agentInstanceRef: instanceRef, metricDefinitionRef: { assetType: "MetricDefinition", assetId: "metric-1", revision: 1, contentHash: "2".repeat(64) }, evalContractRef: { assetType: "EvalContract", assetId: "eval-1", revision: 1, contentHash: "3".repeat(64) }, evalReportRef: null, baselineCohortRef: null, treatmentCohortRef: null, exposureRefs: [], metrics: [], quality: "unknown", sourceRefs: [], cutoffAt: "2026-08-15T00:00:00Z", observedAt: "2026-08-15T00:00:01Z", conclusion: "insufficient_evidence", limitations: ["sample_size_below_minimum"], observationHash: "4".repeat(64) };
+    const request = vi.fn().mockResolvedValueOnce({ tenant, items: [instance], count: 1 }).mockResolvedValueOnce([projection]).mockResolvedValueOnce([exposure]).mockResolvedValueOnce([observation]);
+    const sdk = new AipMemorySdk({ request } as unknown as AipClient);
+    await expect(sdk.agentInstances()).resolves.toMatchObject([{ instanceId: "content-agent", version: 2 }]);
+    await expect(sdk.agentProjections()).resolves.toMatchObject([{ kind: "personal", memoryRef: { memoryItemId: "memory-1" } }]);
+    await expect(sdk.memoryExposures()).resolves.toMatchObject([{ exposureId: "exposure-1" }]);
+    await expect(sdk.improvementObservations()).resolves.toMatchObject([{ quality: "unknown", metrics: [] }]);
+  });
+
+  it("unknown Observation 伪造零指标或 improved 时失败关闭", () => {
+    const base = { tenant, observationId: "observation-1", agentInstanceRef: { assetType: "AgentInstance", assetId: "content-agent", revision: 1, contentHash: "a".repeat(64) }, metricDefinitionRef: { assetType: "MetricDefinition", assetId: "metric-1", revision: 1, contentHash: "b".repeat(64) }, evalContractRef: { assetType: "EvalContract", assetId: "eval-1", revision: 1, contentHash: "c".repeat(64) }, evalReportRef: null, baselineCohortRef: null, treatmentCohortRef: null, exposureRefs: [], metrics: [], quality: "unknown", sourceRefs: [], cutoffAt: "2026-08-15T00:00:00Z", observedAt: "2026-08-15T00:00:01Z", conclusion: "insufficient_evidence", limitations: ["insufficient"], observationHash: "d".repeat(64) };
+    expect(parseMemoryImprovementObservations([base])[0].metrics).toEqual([]);
+    expect(() => parseMemoryImprovementObservations([{ ...base, conclusion: "improved" }])).toThrow("不得伪造");
+    expect(() => parseMemoryImprovementObservations([{ ...base, metrics: [{ metricName: "task_success_rate", baselineValue: 0, treatmentValue: 0, baselineSampleSize: 1, treatmentSampleSize: 1 }] }])).toThrow("不得伪造");
+  });
+
+  it("投影创建与撤回只走 canonical operation、幂等键和 exact CAS", async () => {
+    const instanceRef = { assetType: "AgentInstance", assetId: "content-agent", revision: 2, contentHash: "a".repeat(64) };
+    const projection: MemoryAgentProjection = { tenant, projectionRef: { projectionId: "projection-1", version: 3, contentHash: "c".repeat(64) }, kind: "personal", ownerInstanceRef: instanceRef, memoryRef: { memoryItemId: "memory-1", revision: 1, contentHash: "d".repeat(64) }, recipientInstanceRefs: [], allowedPurposes: ["skill:content"], allowedMarkings: ["internal"], disclosure: "citation_only", status: "active", effectiveAt: "2026-08-15T00:00:00Z", expiresAt: "2026-11-15T00:00:00Z", createdBy: "admin", createdAt: "2026-08-15T00:00:00Z", updatedAt: "2026-08-15T00:00:00Z" };
+    const request = vi.fn().mockResolvedValueOnce(projection).mockResolvedValueOnce({ ...projection, status: "revoked", projectionRef: { ...projection.projectionRef, version: 4 } });
+    const sdk = new AipMemorySdk({ request } as unknown as AipClient);
+    const body: CreateMemoryAgentProjectionRequest = { projectionId: "projection-1", kind: "personal", ownerInstanceRef: instanceRef, memoryRef: projection.memoryRef, recipientInstanceRefs: [], allowedPurposes: ["skill:content"], allowedMarkings: ["internal"], disclosure: "citation_only", effectiveAt: projection.effectiveAt, expiresAt: projection.expiresAt };
+    await sdk.createAgentProjection(body, "create-key");
+    await sdk.revokeAgentProjection(projection, "e".repeat(64), "revoke-key");
+    expect(request).toHaveBeenNthCalledWith(1, "createMemoryAgentProjection", { body, headers: { "Idempotency-Key": "create-key" } });
+    expect(request).toHaveBeenNthCalledWith(2, "revokeMemoryAgentProjection", { params: { projection_id: "projection-1" }, body: { expectedVersion: 3, fromStatus: "active", toStatus: "revoked", reasonHash: "e".repeat(64) }, headers: { "Idempotency-Key": "revoke-key" } });
   });
 });

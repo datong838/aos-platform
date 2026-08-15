@@ -12,19 +12,25 @@ import {
   type KnowledgeQueryResult,
   type KnowledgeReadiness,
   type MemoryAuthorityItem,
+  type MemoryAgentInstance,
+  type MemoryAgentProjection,
+  type MemoryExposure,
+  type MemoryImprovementObservation,
+  type MemoryRevocationImpact,
   type MemoryCandidate,
   type MemoryCandidateEvent,
 } from "../../api/aipMemory";
 import { PageChrome } from "../../components/PageChrome";
 
-type View = "candidates" | "memories" | "query" | "pipelines" | "readiness";
+type View = "candidates" | "memories" | "agents" | "query" | "pipelines" | "readiness";
 type LoadState = "loading" | "loaded" | "error";
 
 const panel = { border: "1px solid var(--aos-border)", background: "var(--aos-panel)", borderRadius: 6, padding: 18 } as const;
 const blockerText = { overflowWrap: "anywhere" } as const;
 const statusLabels: Record<string, string> = {
   pending: "待治理", quarantined: "已隔离", rejected: "已拒绝", approved: "已批准", promoted: "已晋升",
-  active: "生效中", stale: "已过期", revoked: "已撤销", expired: "已失效",
+  provisioning: "准备中", active: "生效中", suspended: "已暂停", deleted: "已删除",
+  stale: "已过期", revoked: "已撤销", expired: "已失效",
   queued: "排队中", running: "运行中", paused: "已暂停", succeeded: "已成功", partial: "部分成功",
   failed: "已失败", cancelled: "已取消", unknown: "状态未知", disabled: "已停用",
   complete: "完整", degraded: "降级回源", blocked: "已阻断",
@@ -214,9 +220,9 @@ export function MemoryGovernancePage() {
   return (
     <PageChrome title="Memory Governance" lede="Candidate → 审批证据 → 正式 Memory → 带 Citation 的 Knowledge Query。所有状态来自 PostgreSQL 权威链，不回填示例知识。">
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
-        {(["candidates", "memories", "query", "pipelines", "readiness"] as const).map((item) => (
+        {(["candidates", "memories", "agents", "query", "pipelines", "readiness"] as const).map((item) => (
           <button key={item} type="button" className={`btn ${view === item ? "primary" : ""}`} onClick={() => setView(item)} data-testid={`memory-tab-${item}`}>
-            {item === "candidates" ? `知识候选（${candidates.length}）` : item === "memories" ? `正式 Memory（${memories.length}）` : item === "query" ? "Knowledge Query" : item === "pipelines" ? `知识管道（${pipelineSchedules.length}）` : "冷启动与检索"}
+            {item === "candidates" ? `知识候选（${candidates.length}）` : item === "memories" ? `正式 Memory（${memories.length}）` : item === "agents" ? "数字同事记忆" : item === "query" ? "Knowledge Query" : item === "pipelines" ? `知识管道（${pipelineSchedules.length}）` : "冷启动与检索"}
           </button>
         ))}
         <button type="button" className="btn" onClick={() => { void reload(); void reloadPipelines(); void reloadReadiness(); }} disabled={loadState === "loading" || pipelineLoadState === "loading" || readinessState === "loading"}>{loadState === "loading" || pipelineLoadState === "loading" || readinessState === "loading" ? "读取中…" : "刷新权威状态"}</button>
@@ -271,6 +277,8 @@ export function MemoryGovernancePage() {
           </tr>)}</tbody>
         </table></div>}
       </section>}
+
+      {loadState === "loaded" && view === "agents" && <AgentMemoryPanel memories={memories} />}
 
       {view === "query" && <section style={panel}>
         <h2 style={{ marginTop: 0, fontSize: 17 }}>Knowledge Query</h2>
@@ -371,4 +379,143 @@ export function MemoryGovernancePage() {
       </section>}
     </PageChrome>
   );
+}
+
+function AgentMemoryPanel({ memories }: { memories: MemoryAuthorityItem[] }) {
+  const [instances, setInstances] = useState<MemoryAgentInstance[]>([]);
+  const [projections, setProjections] = useState<MemoryAgentProjection[]>([]);
+  const [exposures, setExposures] = useState<MemoryExposure[]>([]);
+  const [observations, setObservations] = useState<MemoryImprovementObservation[]>([]);
+  const [state, setState] = useState<LoadState>("loading");
+  const [error, setError] = useState("");
+  const [selectedId, setSelectedId] = useState("");
+  const [kind, setKind] = useState<"personal" | "shared">("personal");
+  const [memoryId, setMemoryId] = useState("");
+  const [recipientId, setRecipientId] = useState("");
+  const [purpose, setPurpose] = useState("skill:content");
+  const [busy, setBusy] = useState("");
+  const [impact, setImpact] = useState<MemoryRevocationImpact | null>(null);
+
+  async function reloadAgentMemory() {
+    setState("loading"); setError(""); setImpact(null);
+    try {
+      const [nextInstances, nextProjections, nextExposures, nextObservations] = await Promise.all([
+        aipMemorySdk.agentInstances(), aipMemorySdk.agentProjections(), aipMemorySdk.memoryExposures(), aipMemorySdk.improvementObservations(),
+      ]);
+      setInstances(nextInstances); setProjections(nextProjections); setExposures(nextExposures); setObservations(nextObservations);
+      const instanceIds = nextInstances.map((item) => item.instanceId);
+      const activeIds = nextInstances.filter((item) => item.status === "active").map((item) => item.instanceId);
+      setSelectedId((current) => instanceIds.includes(current) ? current : activeIds[0] || instanceIds[0] || "");
+      setRecipientId((current) => activeIds.includes(current) ? current : "");
+      setState("loaded");
+    } catch (caught) {
+      setInstances([]); setProjections([]); setExposures([]); setObservations([]);
+      setError(String((caught as Error).message || caught)); setState("error");
+    }
+  }
+  useEffect(() => { void reloadAgentMemory(); }, []);
+
+  const activeInstances = instances.filter((item) => item.status === "active");
+  const selected = instances.find((item) => item.instanceId === selectedId);
+  const selectedMemory = memories.find((item) => item.item.memoryItemId === memoryId && item.item.status === "active");
+  const recipient = activeInstances.find((item) => item.instanceId === recipientId && item.instanceId !== selectedId);
+  const selectedProjections = projections.filter((item) => item.ownerInstanceRef.assetId === selectedId || item.recipientInstanceRefs.some((ref) => ref.assetId === selectedId));
+  const personal = selectedProjections.filter((item) => item.kind === "personal");
+  const shared = selectedProjections.filter((item) => item.kind === "shared");
+  const selectedExposures = exposures.filter((item) => item.agentInstanceRef.assetId === selectedId);
+  const selectedObservations = observations.filter((item) => item.agentInstanceRef.assetId === selectedId);
+  const disabledReason = !selected ? "当前租户没有真实数字同事实例" : selected.status !== "active" ? `当前实例状态为 ${selected.status}，尚不可创建记忆投影` : !selectedMemory ? "请选择当前租户的生效 Memory exact revision" : kind === "shared" && !recipient ? "共享必须选择另一位生效中的真实接收实例" : !purpose.trim() ? "必须填写用途 allowlist" : "";
+
+  async function createProjection() {
+    if (disabledReason || !selected || !selectedMemory) return;
+    const now = new Date(); const expires = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+    const projectionId = `ui-${crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}`}`; setBusy("create"); setError("");
+    try {
+      await aipMemorySdk.createAgentProjection({ projectionId, kind, ownerInstanceRef: selected.instanceRef, memoryRef: { memoryItemId: selectedMemory.item.memoryItemId, revision: selectedMemory.revision.revision, contentHash: selectedMemory.revision.contentHash }, recipientInstanceRefs: kind === "shared" && recipient ? [recipient.instanceRef] : [], allowedPurposes: [purpose.trim()], allowedMarkings: selectedMemory.revision.markings, disclosure: "citation_only", effectiveAt: now.toISOString(), expiresAt: expires.toISOString() }, projectionId);
+      await reloadAgentMemory();
+    } catch (caught) { setError(`创建/共享被权威服务阻断：${String((caught as Error).message || caught)}`); }
+    finally { setBusy(""); }
+  }
+  async function revokeProjection(projection: MemoryAgentProjection) {
+    setBusy(projection.projectionRef.projectionId); setError("");
+    try {
+      const reasonHash = await sha256("memory-governance-ui-revoke");
+      await aipMemorySdk.revokeAgentProjection(projection, reasonHash, `revoke-${projection.projectionRef.projectionId}-${projection.projectionRef.version}`);
+      await reloadAgentMemory();
+    } catch (caught) { setError(`撤回被权威服务阻断：${String((caught as Error).message || caught)}`); }
+    finally { setBusy(""); }
+  }
+  async function loadImpact(projection: MemoryAgentProjection) {
+    setBusy(`impact:${projection.projectionRef.projectionId}`); setError(""); setImpact(null);
+    try { setImpact(await aipMemorySdk.agentProjectionImpact(projection.projectionRef.projectionId, new Date().toISOString())); }
+    catch (caught) { setError(`撤回影响读取失败：${String((caught as Error).message || caught)}`); }
+    finally { setBusy(""); }
+  }
+
+  return <section data-testid="agent-memory-panel" style={panel}>
+    <h2 style={{ marginTop: 0, fontSize: 17 }}>数字同事个人记忆与共享投影</h2>
+    <p className="muted">投影只保存 exact Memory citation 与授权范围，不复制正文；实例、状态、版本和改进事实均来自当前租户权威 API。</p>
+    {state === "loading" && <div data-testid="agent-memory-loading" className="callout info">正在读取真实数字同事实例、投影、Exposure 与 Observation…</div>}
+    {state === "error" && <div data-testid="agent-memory-error" className="callout warning">数字同事记忆读取失败：{error}</div>}
+    {state === "loaded" && <>
+      {!instances.length ? <div data-testid="agent-memory-empty" className="callout info">当前租户没有真实数字同事实例；不以六角色静态卡片或测试组织数据替代。</div> : <>
+        {!activeInstances.length && <div data-testid="agent-memory-no-active" className="callout warning">当前租户有 {instances.length} 个真实数字同事实例，但尚无 active 实例；页面展示权威状态并禁用投影写操作。</div>}
+        <div style={{ display: "flex", gap: 12, alignItems: "end", flexWrap: "wrap" }}>
+          <label>数字同事实例<select aria-label="agent-memory-instance" value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>{instances.map((item) => <option key={item.instanceId} value={item.instanceId}>{item.overlay.displayName || item.instanceId} · {memoryStatusLabel(item.status)}</option>)}</select></label>
+          {selected && <div className="callout info">{selected.tenant.orgId} / {selected.tenant.projectId} · {selected.instanceId} · v{selected.version} · {memoryStatusLabel(selected.status)}<br /><code>{selected.instanceRef.contentHash.slice(0, 12)}…</code></div>}
+          <button type="button" className="btn" onClick={() => void reloadAgentMemory()}>刷新数字同事记忆</button>
+        </div>
+
+        <div style={{ ...panel, marginTop: 14 }}>
+          <strong>创建引用投影</strong>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 10, marginTop: 10 }}>
+            <label>类型<select aria-label="agent-memory-kind" value={kind} onChange={(event) => setKind(event.target.value as "personal" | "shared")}><option value="personal">个人记忆</option><option value="shared">显式共享</option></select></label>
+            <label>正式 Memory<select aria-label="agent-memory-authority" value={memoryId} onChange={(event) => setMemoryId(event.target.value)}><option value="">请选择</option>{memories.filter((item) => item.item.status === "active").map((item) => <option key={item.item.memoryItemId} value={item.item.memoryItemId}>{item.item.memoryItemId} · r{item.revision.revision}</option>)}</select></label>
+            {kind === "shared" && <label>接收实例<select aria-label="agent-memory-recipient" value={recipientId} onChange={(event) => setRecipientId(event.target.value)}><option value="">请选择</option>{activeInstances.filter((item) => item.instanceId !== selectedId).map((item) => <option key={item.instanceId} value={item.instanceId}>{item.overlay.displayName || item.instanceId} · v{item.version}</option>)}</select></label>}
+            <label>允许用途<input aria-label="agent-memory-purpose" value={purpose} onChange={(event) => setPurpose(event.target.value)} /></label>
+          </div>
+          <button type="button" className="btn primary" style={{ marginTop: 10 }} disabled={!!disabledReason || busy === "create"} title={disabledReason} onClick={() => void createProjection()}>{busy === "create" ? "提交中…" : kind === "personal" ? "创建个人引用" : "显式共享引用"}</button>
+          {disabledReason && <small data-testid="agent-memory-create-blocker" className="muted" style={{ display: "block", marginTop: 6 }}>{disabledReason}</small>}
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 14, marginTop: 14 }}>
+          <ProjectionColumn title="个人记忆" items={personal} selectedId={selectedId} busy={busy} onImpact={loadImpact} onRevoke={revokeProjection} />
+          <ProjectionColumn title="共享记忆" items={shared} selectedId={selectedId} busy={busy} onImpact={loadImpact} onRevoke={revokeProjection} />
+        </div>
+        {impact && <div data-testid="agent-memory-impact" className="callout info" style={{ marginTop: 14 }}>撤回影响：recipient {impact.recipientCount} · Exposure {impact.exposureCount} · AgentRun {impact.affectedAgentRunCount} · 重评估 {impact.reEvaluationStatus}{impact.blockerCodes.length ? ` · ${impact.blockerCodes.join("、")}` : ""}</div>}
+
+        <h3 style={{ fontSize: 16, marginTop: 22 }}>改进度量</h3>
+        {!selectedObservations.length ? <div data-testid="agent-memory-observations-empty" className="callout info">当前实例没有权威 Observation；不以 0 或“已提升”替代未知。</div> : selectedObservations.map((item) => <article key={item.observationId} style={{ borderTop: "1px solid var(--aos-border)", padding: "10px 0" }}>
+          <strong>{item.quality === "unknown" ? "证据不足（unknown）· 不可判定提升" : `${item.quality} · ${item.conclusion}`}</strong>
+          <div className="muted">{item.observationId} · {new Date(item.observedAt).toLocaleString()} · Exposure ref {item.exposureRefs.length}</div>
+          {item.metrics.map((metric) => <div key={metric.metricName}>{metric.metricName}：baseline {(metric.baselineValue * 100).toFixed(1)}% / treatment {(metric.treatmentValue * 100).toFixed(1)}% · n={metric.baselineSampleSize}/{metric.treatmentSampleSize}</div>)}
+          {!!item.limitations.length && <div className="muted">限制：{item.limitations.join("、")}</div>}
+        </article>)}
+
+        <h3 style={{ fontSize: 16, marginTop: 22 }}>最近接受的引用</h3>
+        {!selectedExposures.length ? <div className="callout info">当前实例没有 Memory Exposure；页面不会创建或模拟使用记录。</div> : selectedExposures.map((item) => <div key={item.exposureId} style={{ borderTop: "1px solid var(--aos-border)", padding: "8px 0" }}>{item.memoryRef.memoryItemId} · r{item.memoryRef.revision} · AgentRun {item.agentRunRef.resourceId} · Skill {item.skillRef.assetId}<br /><span className="muted">accepted {new Date(item.acceptedAt).toLocaleString()} · hash {item.exposureHash.slice(0, 12)}…</span></div>)}
+      </>}
+      {error && <div className="callout warning" style={{ marginTop: 14 }}>{error}</div>}
+    </>}
+  </section>;
+}
+
+function ProjectionColumn({ title, items, selectedId, busy, onImpact, onRevoke }: { title: string; items: MemoryAgentProjection[]; selectedId: string; busy: string; onImpact: (item: MemoryAgentProjection) => Promise<void>; onRevoke: (item: MemoryAgentProjection) => Promise<void> }) {
+  return <section style={panel}><h3 style={{ marginTop: 0, fontSize: 16 }}>{title}（{items.length}）</h3>{!items.length ? <div className="muted">没有真实投影。</div> : items.map((item) => {
+    const direction = item.ownerInstanceRef.assetId === selectedId ? "我创建" : "共享给我";
+    const blocker = item.status === "stale" ? "Memory/实例 exact ref 已漂移" : item.status === "revoked" ? "投影已撤回，仅保留历史审计" : item.status === "expired" ? "授权有效期已结束" : item.status === "suspended" ? "投影已暂停" : "";
+    return <article key={item.projectionRef.projectionId} data-testid={`agent-projection-${item.projectionRef.projectionId}`} style={{ borderTop: "1px solid var(--aos-border)", padding: "10px 0" }}>
+      <strong>{item.memoryRef.memoryItemId} · r{item.memoryRef.revision}</strong> <span className="tag">{memoryStatusLabel(item.status)}</span>
+      <div>{direction} · owner {item.ownerInstanceRef.assetId} · recipient {item.recipientInstanceRefs.map((ref) => ref.assetId).join("、") || "无"}</div>
+      <div className="muted">marking {item.allowedMarkings.join("、")} · applicability {item.allowedPurposes.join("、")} · {item.disclosure}</div>
+      <div className="muted">有效 {new Date(item.effectiveAt).toLocaleString()} → {new Date(item.expiresAt).toLocaleString()} · v{item.projectionRef.version} · {item.projectionRef.contentHash.slice(0, 12)}…</div>
+      {blocker && <div className="callout warning" style={{ marginTop: 6 }}>{blocker}</div>}
+      <div style={{ display: "flex", gap: 8, marginTop: 8 }}><button type="button" className="btn" onClick={() => void onImpact(item)} disabled={busy === `impact:${item.projectionRef.projectionId}`}>查看撤回影响</button><button type="button" className="btn" onClick={() => void onRevoke(item)} disabled={!(["active", "suspended"] as string[]).includes(item.status) || busy === item.projectionRef.projectionId} title={!(["active", "suspended"] as string[]).includes(item.status) ? "当前状态不可撤回" : "提交真实撤回 API"}>撤回</button></div>
+    </article>;
+  })}</section>;
+}
+
+async function sha256(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value); const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }

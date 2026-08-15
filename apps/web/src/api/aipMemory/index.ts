@@ -11,4 +11,11 @@ export type {
   KnowledgePipelineReceipt,
   KnowledgePipelineRun,
   KnowledgePipelineSchedule,
+  CreateMemoryAgentProjectionRequest,
+  MemoryAgentInstance,
+  MemoryAgentProjection,
+  MemoryExposure,
+  MemoryImprovementObservation,
+  MemoryRevocationImpact,
+  VersionedAssetRef,
 } from "./contracts";
