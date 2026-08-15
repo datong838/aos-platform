@@ -18,7 +18,7 @@ def test_http_rejects_legacy_sql_payload(client, auth_headers):
     assert response.json()["code"] == "VALIDATION"
 
 
-def test_http_returns_honest_blocked_without_canonical_adapter(client, auth_headers):
+def test_http_rejects_removed_legacy_query_endpoint(client, auth_headers):
     response = client.post(
         "/v1/aip/analyst/query",
         headers=_org_headers(auth_headers),
@@ -28,12 +28,6 @@ def test_http_returns_honest_blocked_without_canonical_adapter(client, auth_head
             "cutoffAt": datetime.now(UTC).isoformat(),
         },
     )
-    assert response.status_code == 200
-    body = response.json()
-    assert body["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
-    assert body["status"] == "blocked"
-    assert body["rows"] == []
-    assert body["sourceRefs"] == []
-    assert [item["code"] for item in body["blockers"]] == [
-        "SEMANTIC_ADAPTER_UNAVAILABLE"
-    ]
+    assert response.status_code == 404
+    assert "rows" not in response.json()
+    assert "sourceRefs" not in response.json()

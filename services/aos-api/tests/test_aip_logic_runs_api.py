@@ -7,6 +7,7 @@ import time
 from datetime import UTC, datetime
 
 import pytest
+from aos_api.auth import Principal, require_principal
 from aos_api.aip_logic_dry_run_models import (
     LogicNodeCounts,
     LogicRunListResponse,
@@ -140,6 +141,14 @@ def logic_api(client):
     client.app.dependency_overrides[get_logic_run_graph_store] = lambda: graph_store
     client.app.dependency_overrides[get_logic_run_store] = lambda: run_store
     client.app.dependency_overrides[get_logic_runtime_adapters] = RuntimeAdapterRegistry
+    client.app.dependency_overrides[require_principal] = lambda: Principal(
+        subject="logic-run-test",
+        org_id="org",
+        project_id="project",
+        roles=["developer", "admin"],
+        markings=["public", "restricted"],
+        token_kind="test",
+    )
     headers = {
         "Authorization": "Bearer dev",
         "X-Org-Id": "org",
@@ -150,6 +159,7 @@ def logic_api(client):
         get_logic_run_graph_store,
         get_logic_run_store,
         get_logic_runtime_adapters,
+        require_principal,
     ):
         client.app.dependency_overrides.pop(dependency, None)
 
@@ -255,9 +265,17 @@ def test_archived_and_cross_tenant_graphs_do_not_create_run(client, logic_api) -
         json=_body(graph_store.graph),
     )
     assert archived.status_code == 422
+    client.app.dependency_overrides[require_principal] = lambda: Principal(
+        subject="logic-run-other-test",
+        org_id="org-other",
+        project_id="project-other",
+        roles=["developer", "admin"],
+        markings=["public", "restricted"],
+        token_kind="test",
+    )
     other = client.post(
         "/v1/aip/logic/graphs/graph/dry-run",
-        headers={**headers, "X-Org-Id": "org-other"},
+        headers={**headers, "X-Org-Id": "org-other", "X-Project-Id": "project-other"},
         json=_body(graph_store.graph),
     )
     assert other.status_code == 404
