@@ -1,0 +1,114 @@
+{
+  "schema": "workshop-readiness-evidence/v1",
+  "taskId": "workshop-w2-00-pipeline-root-cause-aos45-20260815",
+  "authorityRevision": "AOS-000045",
+  "decision": "W2_00_NOT_STARTED_DEP_DATA_RED_DEP_ADP_OPERATIONAL_QUERY_RED",
+  "scope": {
+    "tenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "readOnly": true,
+    "pipelineTriggered": false,
+    "databaseMutation": false
+  },
+  "scheduleSnapshot": {
+    "runCountBefore": 92,
+    "runCountAfter": 92,
+    "latestRunAtBefore": "2026-08-15T00:00:02.451829+00:00",
+    "latestRunAtAfter": "2026-08-15T00:00:02.451829+00:00",
+    "latestSucceeded": 7,
+    "latestFailed": 5,
+    "registeredPipelines": 12
+  },
+  "rootCauses": [
+    {
+      "pipelineId": "P03-product-sku-qyh",
+      "latestScheduleCode": "PIPELINE_EXECUTOR_FAILED",
+      "rootCauseClass": "SSH_TUNNEL_NOT_READY",
+      "dlqErrorCode": "VALIDATION_ERROR",
+      "dlqSourceErrorCode": "UNCLASSIFIED_EXCEPTION",
+      "classificationDrift": true
+    },
+    {
+      "pipelineId": "P05-order-qyh",
+      "latestScheduleCode": "PIPELINE_EXECUTOR_FAILED",
+      "rootCauseClass": "SSH_TUNNEL_NOT_READY",
+      "dlqErrorCode": "VALIDATION_ERROR",
+      "dlqSourceErrorCode": "UNCLASSIFIED_EXCEPTION",
+      "classificationDrift": true
+    },
+    {
+      "pipelineId": "P07-shipment-qyh",
+      "latestScheduleCode": "PIPELINE_EXECUTOR_FAILED",
+      "rootCauseClass": "MYSQL_ENDPOINT_UNREACHABLE_OR_CONNECTION_LOST",
+      "dlqErrorCode": "VALIDATION_ERROR",
+      "dlqSourceErrorCode": "UNCLASSIFIED_EXCEPTION",
+      "classificationDrift": true
+    },
+    {
+      "pipelineId": "P08-customer-lite-qyh",
+      "latestScheduleCode": "PIPELINE_NOT_FOUND",
+      "rootCauseClass": "NO_FRESH_RUN_AFTER_REGISTRATION"
+    },
+    {
+      "pipelineId": "P12-payment-qyh",
+      "latestScheduleCode": "PIPELINE_NOT_FOUND",
+      "rootCauseClass": "NO_FRESH_RUN_AFTER_REGISTRATION"
+    }
+  ],
+  "sourceReadiness": {
+    "sourceId": "niushop-qyh",
+    "declaredStatus": "active",
+    "type": "jdbc-mysql-ssh",
+    "runtimeMode": "agent",
+    "sshConfigurationPresent": true,
+    "configuredEndpointReachable": false,
+    "credentialBearingFieldsPresent": true,
+    "credentialValuesReadOrRecorded": false
+  },
+  "dlqAggregate": [
+    {
+      "pipelineId": "P03-product-sku-qyh",
+      "classification": "VALIDATION_ERROR/UNCLASSIFIED_EXCEPTION",
+      "count": 2
+    },
+    {
+      "pipelineId": "P05-order-qyh",
+      "classification": "VALIDATION_ERROR/UNCLASSIFIED_EXCEPTION",
+      "count": 2
+    },
+    {
+      "pipelineId": "P07-shipment-qyh",
+      "classification": "VALIDATION_ERROR/UNCLASSIFIED_EXCEPTION",
+      "count": 4
+    }
+  ],
+  "queryDependency": {
+    "receipt": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/aip-p8-1-contract-adapters-20260815.json",
+    "receiptSha256": "1d8157f01b7e2a00817094703d3e3d1843a8fa3ac7edf880a49b745ee8421646",
+    "p8_1": "CODE_CONTROL_GREEN",
+    "operationalQuery": "BLOCKED",
+    "remaining": [
+      "P8-2 PostgreSQL QueryJob authority",
+      "P8-3 exact canonical production adapters"
+    ]
+  },
+  "requiredClosure": [
+    "P03/P05/P07 source connection lifecycle repair and fresh success",
+    "P08/P12 fresh success after registration",
+    "source connection errors classified as SOURCE_CONNECTION_ERROR",
+    "P8-2 QueryJob authority GREEN",
+    "P8-3 operational exact adapters and readiness GREEN",
+    "P08 minimal field contract and P10 secret-flow closure",
+    "freshness quality cutoff reconciliation blocker envelope"
+  ],
+  "documentPreSha256": "ba3ffa3b6e5a32e8b49bfe3c191d0f6cbf7578ef50939ea76f5aad4be45cb525",
+  "documentPostSha256": "592c33cc672fc47ca78b568afc30370f781c5bbf2d3783b7b17ef5aa3d57d3d1",
+  "concurrentWorktreeBoundary": {
+    "preservedUncommittedTask": "workshop-watchdog-v27-prefix-lease-match-20260815",
+    "overlap": false,
+    "filesExcludedFromThisDelivery": [
+      "scripts/long-task-watchdog/watchdog.py",
+      "scripts/long-task-watchdog/test_watchdog.py"
+    ]
+  }
+}
