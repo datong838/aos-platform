@@ -1,0 +1,93 @@
+{
+  "schema": "workshop-delivery-receipt/v1",
+  "taskId": "workshop-w2-02-run-detail-read-v2-20260815",
+  "authorityRevision": "AOS-000046",
+  "branch": "w2-workshop",
+  "planCommit": "c1acae3",
+  "implementationCommit": "57a351a",
+  "decision": "TASK_RUN_STEP_CHECKPOINT_READ_SUBWAVES_GREEN_FULL_W2_02_REMAINS_BLOCKED",
+  "implementation": {
+    "operations": [
+      "GET /v1/ecommerce-workshop/views/task-cockpit",
+      "GET /v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/steps",
+      "GET /v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/checkpoints"
+    ],
+    "schemaVersion": "aos.ecommerce-workshop.task-cockpit/v1",
+    "authority": ["aip_task", "aip_task_run", "aip_step_run", "aip_checkpoint"],
+    "pagination": "immutable membership tuple plus tenant, resource, filter, cutoff and full-state fingerprint binding",
+    "stateConsistency": "current_state_per_page",
+    "staleBehavior": "409 TASK_COCKPIT_CURSOR_STALE",
+    "moduleGate": "active and principal-visible ecommerce.task-cockpit installation required",
+    "writes": []
+  },
+  "supersededHistoricalClaim": {
+    "receipt": ".evidence/workshop/2026-08-15-w2-02-task-run-core-delivery-receipt.json",
+    "claim": "updated_at based stable cursor",
+    "correction": "updated_at is mutable; 57a351a uses immutable membership ordering and rejects state drift with a fingerprint-bound 409",
+    "historyPreserved": true
+  },
+  "verification": {
+    "targetedAndCumulativeTests": "49 passed, 7 existing deprecation warnings",
+    "openapiDeterministicExport": "GREEN; 4181 unique operations and 2417 paths",
+    "pythonCompile": "GREEN",
+    "gitDiffCheck": "GREEN",
+    "formatter": "ruff unavailable in services/aos-api/.venv; compile, diff-check and tests used as available repository gates",
+    "formalHttpReadOnly": {
+      "org-org/dev-project": {
+        "coreStatus": 200,
+        "hasRun": true,
+        "stepsStatus": 200,
+        "stepCount": 0,
+        "checkpointsStatus": 200,
+        "checkpointCount": 0,
+        "stateConsistency": "current_state_per_page",
+        "nonEmptyDetailEvidence": "strict automated tests only; current real Run has no Step or Checkpoint records"
+      },
+      "dev-org/dev-project": {
+        "status": 404,
+        "code": "NOT_FOUND",
+        "reason": "ecommerce.task-cockpit is not installed for the isolation canary",
+        "acceptedAsRealCompletionEvidence": false
+      }
+    }
+  },
+  "fileIntegrity": [
+    {"path":"packages/contracts/openapi/v1.generated.json","preSha256":"34d3183310546eff957ac6fae70eb6c468eef689e389faa2672ed5d8973b06ca","postSha256":"94d438d4bcd66d6fc9a4a188b94c3b3638eb828d67abf865cc7699dab7170416"},
+    {"path":"packages/contracts/openapi/v1.inventory.json","preSha256":"c7f34617d3db8aa3e1048f4ebf2b7ee5c2928ff21d6846b759ef8caf601b6662","postSha256":"b953f0f434ea4d58fa46314c81484dd923cb71c65a1a73a00892c44853a25afe"},
+    {"path":"scripts/export_openapi.py","preSha256":"c43f48a9eec360da695bc6a8103132131138da94c7e1784b7bb850d236116210","postSha256":"804a3819e15392c9df72e8b52a345480635923e10f9f16057d2d30d4b2dea6a5"},
+    {"path":"services/aos-api/aos_api/ecommerce_workshop_task_cockpit.py","preSha256":"8f90de619598f3face627389f4aa5b19848d112122ca8b6894ab708dc6f7ddfc","postSha256":"22194eac2f5199810141da0b304a55494f588307a20ead7909e6325137031404"},
+    {"path":"services/aos-api/aos_api/ecommerce_workshop_task_cockpit_contracts.py","preSha256":"4cf5382169ffd11cc934db437e0ee077f690006cfdc044e9d388331515b0eee7","postSha256":"9e32a521e24548a83a4deaa6c59ba6348d23fb779abb8c892de23a435decd52b"},
+    {"path":"services/aos-api/aos_api/routers/ecommerce_workshop.py","preSha256":"af6eff1c0de9271f9ec5ae925df6aecfa7dff43d1a562f82ec88078c38256da0","postSha256":"b350b6881eb2bbca2177871e6fceae56c1ca277e2e87a81e677a4307e9b4ab98"},
+    {"path":"services/aos-api/tests/test_ecommerce_workshop_api.py","preSha256":"4d949441e6ea2fd49f209c7985e51e3efdb09d4e32affc5e553a04b7ea4c738e","postSha256":"640aead0f328b2759ba143e6cdfb839a2c1b2316ea39ff5c6edd0d23046123da"},
+    {"path":"services/aos-api/tests/test_ecommerce_workshop_task_cockpit.py","preSha256":"48b9b42f187ba700474c7d9bf636d8412e55d27ea30835ad956e285e8ea37f57","postSha256":"f9e320e3979835b7c3d8459d64ca89841b5360f65c3dcd999e363545f7197fd0"},
+    {"path":"services/aos-api/tests/test_openapi_contract.py","preSha256":"fbcb0f5fc9f4894562fba8d75b5c5352bfdee99495301ed5776aa06f181c7b37","postSha256":"ce5c41054b83d6bb6529e2202a6cab10f4cea36370d70e950b8454146d7b7cf3"}
+  ],
+  "externalDocumentIntegrity": [
+    {"path":"12-工作台层技术方案/83-W2-02-TaskRunStageBlocker日常总控只读模型预检ADR.md","preSha256":"a6d27f36d310c50260f82ad3cbbf1505157501fbcba623b8185e6b9b6567997f","postSha256":"08b555c5f7fe7e62dbf0ae449de03797949dcad869f69b37990ba01c9b4c4cb3"},
+    {"path":"12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md","preSha256":"b0836e2bc8b828ae010d4ea781a12316519037bc76fedf60e751493ba3a8a705","postSha256":"36f335ea38e451a71c6dbe583abb6e9066c5b79f650a58c2b16388f912dc793a"},
+    {"path":"12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md","preSha256":"95519a1102434faba765d5809aeca2fd3dbc3ad4af50204c34ac424285baa99b","postSha256":"8330be76450f13dd31ae543f50682a75d027d99bb3c7fedc91c8a7c3ec6946d6"}
+  ],
+  "safety": {
+    "databaseMutation": false,
+    "migrationChanged": false,
+    "taskControlInvoked": false,
+    "realBusinessPayloadLogged": false,
+    "aipWorktreeRead": false,
+    "canaryUsedAsCompletionEvidence": false
+  },
+  "remainingFullW2_02Gate": [
+    "exact signed production Stage mapping",
+    "Responsibility and assignee readiness",
+    "Handoff, Approval and ReviewIssue readers",
+    "Action unknown and reconciliation",
+    "W2-00 business context enrichment",
+    "strict frontend SDK and browser EvidencePack"
+  ],
+  "progress": {
+    "completedTasks": 21,
+    "totalTasks": 96,
+    "w2Completed": 0,
+    "w2Total": 11,
+    "status": "W2_02_TASK_RUN_STEP_CHECKPOINT_SUBWAVES_GREEN_FULL_TASK_OPEN"
+  }
+}
