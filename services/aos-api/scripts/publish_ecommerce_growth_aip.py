@@ -1,4 +1,4 @@
-"""Idempotently publish AIP definitions from solution.ecommerce.growth 1.2.0."""
+"""Idempotently publish AIP definitions from the ecommerce SolutionPack authority."""
 from __future__ import annotations
 
 import json
