@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { parseAgentInstances, parseCapabilities } from "./parser";
+import {
+  parseAgentCatalog,
+  parseAgentInstances,
+  parseCapabilities,
+  parseRuntimeReadiness,
+} from "./parser";
 
 const hash = "a".repeat(64);
 describe("aipAgentControl strict parser", () => {
@@ -12,5 +17,36 @@ describe("aipAgentControl strict parser", () => {
   });
   it("拒绝错误 hash", () => {
     expect(() => parseAgentInstances({tenant:{orgId:"o",projectId:"p"},count:1,items:[{tenant:{orgId:"o",projectId:"p"},instanceId:"x",instanceRef:{assetType:"AgentInstance",assetId:"x",revision:1,contentHash:"bad"},template:{assetType:"AgentTemplate",assetId:"x",revision:1,contentHash:hash},status:"provisioning",overlay:{displayName:null,allowedCapabilityIds:[]},version:1,updatedAt:"now"}]})).toThrow("SHA-256");
+  });
+
+  it("拒绝顶层和嵌套额外字段", () => {
+    expect(() => parseCapabilities({tenant:{orgId:"org-org",projectId:"dev-project"},count:0,availableCount:0,items:[],unexpected:true})).toThrow("额外字段");
+    expect(() => parseAgentInstances({tenant:{orgId:"org-org",projectId:"dev-project",unexpected:true},count:0,items:[]})).toThrow("额外字段");
+  });
+
+  it("拒绝响应租户与当前工作区不一致", () => {
+    expect(() => parseRuntimeReadiness({
+      tenant:{orgId:"dev-org",projectId:"dev-project"},
+      catalog:{tenant:{orgId:"dev-org",projectId:"dev-project"},items:[],stats:{definitionCount:0,installedCount:0,runnableCount:0,skillDefinitionCount:0,capabilityDefinitionCount:0}},
+      capabilityBindings:[],skillBindings:[],
+      bindingStats:{capabilityBindingCount:0,skillBindingCount:0,activeCapabilityBindingCount:0,activeSkillBindingCount:0},
+      evaluatedAt:"2026-08-15T06:00:00Z",
+    }, {orgId:"org-org",projectId:"dev-project"})).toThrow("tenant echo 不一致");
+  });
+
+  it("严格解析 runtime readiness 聚合空态", () => {
+    const catalog = {tenant:{orgId:"org-org",projectId:"dev-project"},items:[],stats:{definitionCount:6,installedCount:6,runnableCount:0,skillDefinitionCount:37,capabilityDefinitionCount:10}};
+    const parsed = parseRuntimeReadiness({
+      tenant:{orgId:"org-org",projectId:"dev-project"},catalog,
+      capabilityBindings:[],skillBindings:[],
+      bindingStats:{capabilityBindingCount:0,skillBindingCount:0,activeCapabilityBindingCount:0,activeSkillBindingCount:0},
+      evaluatedAt:"2026-08-15T06:00:00Z",
+    }, {orgId:"org-org",projectId:"dev-project"});
+    expect(parsed.catalog.stats.skillDefinitionCount).toBe(37);
+    expect(parsed.bindingStats.activeCapabilityBindingCount).toBe(0);
+  });
+
+  it("catalog 顶层同样执行 exact-key", () => {
+    expect(() => parseAgentCatalog({tenant:{orgId:"org-org",projectId:"dev-project"},items:[],stats:{definitionCount:0,installedCount:0,runnableCount:0,skillDefinitionCount:0,capabilityDefinitionCount:0},shadow:"mock"})).toThrow("额外字段");
   });
 });
