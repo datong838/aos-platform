@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import re
 import subprocess
 import tempfile
@@ -83,6 +84,25 @@ class WatchdogTest(unittest.TestCase):
             "paths": [
                 str(self.root / "authority.json"),
                 str(self.root / "deliveries"),
+            ],
+        }
+        return config
+
+    def probe_fact_config(self):
+        config = self.config()
+        probe = self.root / "fact-probe.py"
+        probe.write_text("print('stable-secret-fixture')\n", encoding="utf-8")
+        config["fact_watch"] = {
+            "enabled": True,
+            "paths": [],
+            "probes": [
+                {
+                    "name": "w2-data",
+                    "argv": [os.path.abspath(sys.executable), str(probe)],
+                    "cwd": str(self.root),
+                    "timeout_seconds": 5,
+                    "max_output_bytes": 1024,
+                }
             ],
         }
         return config
@@ -930,6 +950,28 @@ class WatchdogTest(unittest.TestCase):
             "max_files": 1,
         }
         with self.assertRaisesRegex(RuntimeError, "exceeds max_files"):
+            watchdog._fact_fingerprint(config)
+
+    def test_fact_watch_probe_is_deterministic_and_stores_only_digest(self):
+        config = self.probe_fact_config()
+        first = watchdog._fact_fingerprint(config)
+        second = watchdog._fact_fingerprint(config)
+        self.assertEqual(first, second)
+        self.assertNotIn("stable-secret-fixture", str(first))
+        probe = Path(config["fact_watch"]["probes"][0]["argv"][1])
+        probe.write_text("print('changed')\n", encoding="utf-8")
+        self.assertNotEqual(first, watchdog._fact_fingerprint(config))
+
+    def test_fact_watch_probe_rejects_relative_executable_and_nonzero_exit(self):
+        config = self.probe_fact_config()
+        config["fact_watch"]["probes"][0]["argv"][0] = "python3"
+        with self.assertRaisesRegex(RuntimeError, "existing absolute path"):
+            watchdog._fact_fingerprint(config)
+
+        config = self.probe_fact_config()
+        probe = Path(config["fact_watch"]["probes"][0]["argv"][1])
+        probe.write_text("raise SystemExit(2)\n", encoding="utf-8")
+        with self.assertRaisesRegex(RuntimeError, "exited nonzero"):
             watchdog._fact_fingerprint(config)
 
     def test_exit_zero_without_visible_final_is_not_recovered(self):

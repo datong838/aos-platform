@@ -1,0 +1,69 @@
+{
+  "schema": "workshop-delivery-receipt/v1",
+  "taskId": "workshop-watchdog-w2-data-fact-probe-20260815",
+  "branch": "w2-workshop",
+  "decision": "ACCEPTED_GREEN_WITH_FIRST_REAL_DATA_CHANGE_EPISODE_PENDING",
+  "scope": {
+    "databaseMutation": false,
+    "pipelineTrigger": false,
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "implementation": {
+    "watchdogConfigRevision": "workshop-watchdog-v2.6-20260815",
+    "probeMode": "argv-only-shell-false-read-only-aggregate",
+    "probeStdoutStored": false,
+    "probeStdoutDigest": "sha256:f7b0cc03040c4a23da5cfd16fff3dfbde333ec84b36c32d53ec2cdedcfb0f414",
+    "probeStdoutBytes": 2414
+  },
+  "verification": {
+    "unitTests": "44/44 GREEN",
+    "deterministicRuns": "2/2 byte-identical",
+    "foregroundDurationSecondsApprox": 0.25,
+    "launchAgentRun": 247,
+    "launchAgentExitCode": 0,
+    "launchAgentDecision": "live",
+    "wakeAttemptsBefore": 14,
+    "wakeAttemptsAfter": 14,
+    "scheduleRunCountBefore": 92,
+    "scheduleRunCountAfter": 92,
+    "latestScheduleRunBefore": "2026-08-15T00:00:02.451829+00:00",
+    "latestScheduleRunAfter": "2026-08-15T00:00:02.451829+00:00",
+    "canarySourceCount": 0,
+    "canaryProjectionCount": 0,
+    "configMode": "0600",
+    "diffCheck": "GREEN"
+  },
+  "changedFiles": [
+    {
+      "path": "scripts/long-task-watchdog/watchdog.py",
+      "preSha256": "05c64c19784349aba61a7ccd9a9426d87c6e0efb4f9426a8c2dfd1cc4879cef6",
+      "postSha256": "7eccf5c7846c49731d671782b89df4389274f1d214fa4d54bd35e58e6291d077"
+    },
+    {
+      "path": "scripts/long-task-watchdog/test_watchdog.py",
+      "preSha256": "89ef18761023ed40df9d15adfa12440cbf1fa712601d433717928d4e4c3919f5",
+      "postSha256": "d23b8a5de75ea98da9b11975b55739c191c555c543804ca5ad67b6015b04a32f"
+    },
+    {
+      "path": "scripts/long-task-watchdog/w2_data_fact_probe.py",
+      "preSha256": null,
+      "postSha256": "105b7b5fa859987c2fa9487885317ef77fbef645ceccd9afef347ae345c9875c"
+    }
+  ],
+  "externalArtifacts": [
+    {
+      "path": "/Users/ddt/.codex/long-task-watchdog-workshop/config.json",
+      "preSha256": null,
+      "postSha256": "6c4a12519627aab3c15552636c991741fe89879318b48c9dc4453335e9610c87",
+      "preHashGap": "original v2.5 bytes were not captured before the config edit"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/25-Workshop长任务Watchdog恢复闭环与权限ADR.md",
+      "preSha256": null,
+      "postSha256": "af53267446a7656d3454a00e42de80d90e2283f7a59f4d33817892311eb373ac",
+      "preHashGap": "shared documentation pre-hash was not captured before the edit"
+    }
+  ],
+  "knownBoundary": "The first real durable-data-change episode remains pending; a changed fingerprint requests re-verification and never proves W2 readiness GREEN."
+}

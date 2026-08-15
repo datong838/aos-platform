@@ -773,13 +773,16 @@ def _fact_fingerprint(config: dict[str, Any]) -> str | None:
         raise RuntimeError("fact_watch must be an object")
     if not raw.get("enabled", False):
         return None
-    paths = raw.get("paths")
-    if (
-        not isinstance(paths, list)
-        or not paths
-        or not all(isinstance(item, str) and item for item in paths)
+    paths = raw.get("paths", [])
+    probes = raw.get("probes", [])
+    if not isinstance(paths, list) or not all(
+        isinstance(item, str) and item for item in paths
     ):
-        raise RuntimeError("fact_watch paths must be non-empty strings")
+        raise RuntimeError("fact_watch paths must be strings")
+    if not isinstance(probes, list):
+        raise RuntimeError("fact_watch probes must be a list")
+    if not paths and not probes:
+        raise RuntimeError("fact_watch requires paths or probes")
     max_files = raw.get("max_files", 10_000)
     max_file_bytes = raw.get("max_file_bytes", 16 * 1024 * 1024)
     if (
@@ -819,10 +822,80 @@ def _fact_fingerprint(config: dict[str, Any]) -> str | None:
             )
             if len(records) > max_files:
                 raise RuntimeError("fact_watch exceeds max_files")
+    records.extend(_fact_probe_records(config, probes))
     encoded = json.dumps(records, ensure_ascii=False, separators=(",", ":")).encode(
         "utf-8"
     )
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def _fact_probe_records(
+    config: dict[str, Any], probes: list[object]
+) -> list[tuple[str, str]]:
+    project_root = Path(str(config["project_root"])).resolve()
+    records: list[tuple[str, str]] = []
+    names: set[str] = set()
+    for raw_probe in probes:
+        if not isinstance(raw_probe, dict):
+            raise RuntimeError("fact_watch probe must be an object")
+        name = raw_probe.get("name")
+        argv = raw_probe.get("argv")
+        cwd_raw = raw_probe.get("cwd", str(project_root))
+        timeout_seconds = raw_probe.get("timeout_seconds", 30)
+        max_output_bytes = raw_probe.get("max_output_bytes", 64 * 1024)
+        if not isinstance(name, str) or not name or name in names:
+            raise RuntimeError("fact_watch probe names must be unique non-empty strings")
+        if (
+            not isinstance(argv, list)
+            or not argv
+            or not all(isinstance(item, str) and item for item in argv)
+        ):
+            raise RuntimeError("fact_watch probe argv must be non-empty strings")
+        executable = Path(argv[0])
+        if not executable.is_absolute() or not executable.exists():
+            raise RuntimeError("fact_watch probe executable must be an existing absolute path")
+        cwd = Path(cwd_raw) if isinstance(cwd_raw, str) else Path("")
+        if not cwd.is_absolute() or not cwd.is_dir():
+            raise RuntimeError("fact_watch probe cwd must be an existing absolute directory")
+        resolved_cwd = cwd.resolve()
+        if not resolved_cwd.is_relative_to(project_root):
+            raise RuntimeError("fact_watch probe cwd must stay within project_root")
+        if (
+            not isinstance(timeout_seconds, int)
+            or isinstance(timeout_seconds, bool)
+            or not 1 <= timeout_seconds <= 60
+            or not isinstance(max_output_bytes, int)
+            or isinstance(max_output_bytes, bool)
+            or not 1 <= max_output_bytes <= 1024 * 1024
+        ):
+            raise RuntimeError("fact_watch probe limits are invalid")
+        try:
+            completed = subprocess.run(
+                argv,
+                cwd=resolved_cwd,
+                env=_sanitized_environment(),
+                capture_output=True,
+                timeout=timeout_seconds,
+                check=False,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise RuntimeError(
+                f"fact_watch probe failed: {name}:{type(exc).__name__}"
+            ) from exc
+        if completed.returncode != 0:
+            raise RuntimeError(f"fact_watch probe exited nonzero: {name}")
+        stdout = completed.stdout
+        if not isinstance(stdout, bytes):
+            stdout = str(stdout).encode("utf-8")
+        if not stdout or len(stdout) > max_output_bytes:
+            raise RuntimeError(f"fact_watch probe output is empty or too large: {name}")
+        try:
+            stdout.decode("utf-8", errors="strict")
+        except UnicodeDecodeError as exc:
+            raise RuntimeError(f"fact_watch probe output is not utf-8: {name}") from exc
+        names.add(name)
+        records.append((f"probe:{name}", hashlib.sha256(stdout).hexdigest()))
+    return sorted(records)
 
 
 def evaluate(
