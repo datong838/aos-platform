@@ -22,6 +22,19 @@
     "aip8": "not overall GREEN; advanced analyst experience cannot be treated as operational",
     "leaseConflict": false
   },
+  "closureRevalidation": {
+    "authorityRevision": "AOS-000038",
+    "authorityStage": "BIND1_1_CONTRACT_ADDITIVE_MIGRATION_GREEN_WITH_WARNINGS",
+    "newFact": "BIND-1 additive contracts and migration are GREEN, while no Agent is runnable and no evaluated binding is activatable",
+    "remainingAipGates": [
+      "BIND-2 through BIND-6",
+      "AIP-8",
+      "AIP-9",
+      "AIP-10",
+      "W4"
+    ],
+    "impact": "does not close W1-10 W2-00 Analyst aggregate metric quality Insight DecisionSummary GrowthPlan or AIP-8 gates; the W2-06 HARD_GATE_BLOCKED decision is unchanged"
+  },
   "liveCodeFindings": {
     "workshopHttpOperations": [
       "GET /v1/ecommerce-workshop/modules",
