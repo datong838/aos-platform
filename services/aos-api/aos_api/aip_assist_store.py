@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import UTC, datetime
-from typing import Any
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from typing import Any, Callable
 
 from aos_api.aip_assist_contracts import (
     AssistBlocker,
@@ -35,7 +36,26 @@ def _id(prefix: str, scope: TenantScope, *parts: object) -> str:
     return f"{prefix}-{_hash([scope.org_id, scope.project_id, *parts])[:24]}"
 
 
+@dataclass(frozen=True)
+class AssistPreparedTurn:
+    thread: AssistThreadSnapshot
+    turn_id: str
+    events: list[AssistStreamEvent]
+    request_hash: str
+    replay: AssistTurnRecord | None = None
+    resumed: bool = False
+
+
 class AipAssistStore:
+    def __init__(
+        self,
+        *,
+        clock: Callable[[], datetime] | None = None,
+        recovery_after: timedelta = timedelta(minutes=5),
+    ) -> None:
+        self._clock = clock or (lambda: datetime.now(UTC))
+        self._recovery_after = recovery_after
+
     def create_thread(
         self,
         scope: TenantScope,
@@ -55,7 +75,7 @@ class AipAssistStore:
         ).model_dump(mode="json", by_alias=True)
         request_hash = _hash({"scope": scope.key, "request": payload, "actor": actor})
         thread_id = _id("assist-thread", scope, idempotency_key)
-        now = datetime.now(UTC)
+        now = self._clock()
         with connect(scope) as conn:
             replay = self._replay(
                 conn, scope, "create_thread", idempotency_key, request_hash
@@ -114,7 +134,7 @@ class AipAssistStore:
                 "actor": actor,
             }
         )
-        now = datetime.now(UTC)
+        now = self._clock()
         with connect(scope) as conn:
             replay = self._replay(
                 conn, scope, "create_turn", idempotency_key, request_hash
@@ -206,6 +226,203 @@ class AipAssistStore:
             conn.commit()
             return outcome
 
+    def prepare_turn(
+        self,
+        scope: TenantScope,
+        thread_id: str,
+        request: CreateAssistTurnRequest,
+        *,
+        idempotency_key: str,
+        actor: str,
+    ) -> AssistPreparedTurn:
+        """Persist start before external work; replay or recover deterministically."""
+        self._require_identity(idempotency_key, actor)
+        payload = request.model_dump(mode="json", by_alias=True)
+        request_hash = _hash(
+            {
+                "scope": scope.key,
+                "threadId": thread_id,
+                "request": payload,
+                "actor": actor,
+            }
+        )
+        turn_id = _id("assist-turn", scope, thread_id, idempotency_key)
+        now = self._clock()
+        with connect(scope) as conn:
+            replay = self._replay(
+                conn, scope, "create_turn", idempotency_key, request_hash
+            )
+            if replay:
+                record = AssistTurnRecord.model_validate(replay)
+                return AssistPreparedTurn(
+                    thread=record.thread,
+                    turn_id=record.events[0].turn_id,
+                    events=record.events,
+                    request_hash=request_hash,
+                    replay=record,
+                )
+            existing = conn.execute(
+                """SELECT request_hash,created_at FROM aip_assist_turn
+                WHERE org_id=%s AND project_id=%s AND thread_id=%s AND turn_id=%s
+                FOR UPDATE""",
+                (*scope.key, thread_id, turn_id),
+            ).fetchone()
+            if existing is not None:
+                if existing["request_hash"] != request_hash:
+                    raise ApiError(
+                        code="IDEMPOTENCY_CONFLICT",
+                        message="idempotency key payload differs",
+                        status_code=409,
+                    )
+                if now - existing["created_at"] < self._recovery_after:
+                    raise ApiError(
+                        code="AIP_ASSIST_TURN_IN_PROGRESS",
+                        message="assist turn is still in progress",
+                        status_code=409,
+                        details={"retryAfterSeconds": int(self._recovery_after.total_seconds())},
+                    )
+                events = self._events(conn, scope, thread_id, turn_id)
+                return AssistPreparedTurn(
+                    thread=self._snapshot(conn, scope, thread_id),
+                    turn_id=turn_id,
+                    events=events,
+                    request_hash=request_hash,
+                    resumed=True,
+                )
+            row = conn.execute(
+                """SELECT thread_id FROM aip_assist_thread
+                WHERE org_id=%s AND project_id=%s AND thread_id=%s FOR UPDATE""",
+                (*scope.key, thread_id),
+            ).fetchone()
+            if row is None:
+                self._not_found()
+            latest = conn.execute(
+                """SELECT COALESCE(MAX(turn_sequence),0) AS sequence
+                FROM aip_assist_turn
+                WHERE org_id=%s AND project_id=%s AND thread_id=%s""",
+                (*scope.key, thread_id),
+            ).fetchone()
+            current_version = int(latest["sequence"]) + 1
+            if request.expected_thread_version != current_version:
+                raise ApiError(
+                    code="REVISION_CONFLICT",
+                    message="assist thread version changed",
+                    status_code=412,
+                    details={"expected": request.expected_thread_version, "actual": current_version},
+                )
+            conn.execute(
+                """INSERT INTO aip_assist_turn(
+                  org_id,project_id,thread_id,turn_id,turn_sequence,
+                  request_json,request_hash,cutoff_at,created_by,created_at)
+                  VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s)""",
+                (
+                    *scope.key,
+                    thread_id,
+                    turn_id,
+                    current_version,
+                    _json(payload),
+                    request_hash,
+                    request.cutoff_at,
+                    actor,
+                    now,
+                ),
+            )
+            start = AssistStreamEvent(
+                event_type=AssistEventType.START,
+                thread_id=thread_id,
+                turn_id=turn_id,
+                sequence=1,
+                occurred_at=now,
+            )
+            self._event(conn, scope, start, actor)
+            conn.commit()
+            return AssistPreparedTurn(
+                thread=self.get_thread(scope, thread_id),
+                turn_id=turn_id,
+                events=[start],
+                request_hash=request_hash,
+            )
+
+    def finalize_turn(
+        self,
+        scope: TenantScope,
+        prepared: AssistPreparedTurn,
+        new_events: list[AssistStreamEvent],
+        *,
+        idempotency_key: str,
+        actor: str,
+    ) -> AssistTurnRecord:
+        """Append a terminal suffix and receipt atomically after external work."""
+        self._require_identity(idempotency_key, actor)
+        now = self._clock()
+        with connect(scope) as conn:
+            replay = self._replay(
+                conn, scope, "create_turn", idempotency_key, prepared.request_hash
+            )
+            if replay:
+                return AssistTurnRecord.model_validate(replay)
+            turn = conn.execute(
+                """SELECT request_hash FROM aip_assist_turn
+                WHERE org_id=%s AND project_id=%s AND thread_id=%s AND turn_id=%s
+                FOR UPDATE""",
+                (*scope.key, prepared.thread.thread_id, prepared.turn_id),
+            ).fetchone()
+            if turn is None:
+                raise ApiError(
+                    code="AIP_ASSIST_TURN_NOT_FOUND",
+                    message="assist turn not found",
+                    status_code=404,
+                )
+            if turn["request_hash"] != prepared.request_hash:
+                raise ApiError(
+                    code="IDEMPOTENCY_CONFLICT",
+                    message="assist turn payload differs",
+                    status_code=409,
+                )
+            existing = self._events(
+                conn, scope, prepared.thread.thread_id, prepared.turn_id
+            )
+            if existing[-1].event_type in {
+                AssistEventType.BLOCKED,
+                AssistEventType.DONE,
+                AssistEventType.ERROR,
+            }:
+                record = AssistTurnRecord(
+                    thread=self._snapshot(conn, scope, prepared.thread.thread_id),
+                    events=existing,
+                )
+            else:
+                if not new_events:
+                    raise ValueError("terminal event suffix is required")
+                expected_sequence = len(existing) + 1
+                for event in new_events:
+                    if (
+                        event.thread_id != prepared.thread.thread_id
+                        or event.turn_id != prepared.turn_id
+                        or event.sequence != expected_sequence
+                    ):
+                        raise ValueError("assist event suffix is not contiguous")
+                    self._event(conn, scope, event, actor)
+                    expected_sequence += 1
+                all_events = [*existing, *new_events]
+                record = AssistTurnRecord(
+                    thread=self._snapshot(conn, scope, prepared.thread.thread_id),
+                    events=all_events,
+                )
+            self._receipt(
+                conn,
+                scope,
+                "create_turn",
+                idempotency_key,
+                prepared.request_hash,
+                record,
+                actor,
+                now,
+                turn_id=prepared.turn_id,
+            )
+            conn.commit()
+            return record
+
     def _snapshot(
         self, conn: Any, scope: TenantScope, thread_id: str
     ) -> AssistThreadSnapshot:
@@ -277,6 +494,21 @@ class AipAssistStore:
                 event.occurred_at,
             ),
         )
+
+    def _events(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        thread_id: str,
+        turn_id: str,
+    ) -> list[AssistStreamEvent]:
+        rows = conn.execute(
+            """SELECT event_json FROM aip_assist_event
+            WHERE org_id=%s AND project_id=%s AND thread_id=%s AND turn_id=%s
+            ORDER BY sequence""",
+            (*scope.key, thread_id, turn_id),
+        ).fetchall()
+        return [AssistStreamEvent.model_validate(row["event_json"]) for row in rows]
 
     def _replay(
         self,
@@ -352,4 +584,4 @@ class AipAssistStore:
         )
 
 
-__all__ = ["AipAssistStore"]
+__all__ = ["AipAssistStore", "AssistPreparedTurn"]

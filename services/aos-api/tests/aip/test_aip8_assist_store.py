@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import psycopg
@@ -8,6 +8,7 @@ import pytest
 
 from aos_api.aip_assist_contracts import (
     AssistEventType,
+    AssistStreamEvent,
     AssistThreadStatus,
     CreateAssistThreadRequest,
     CreateAssistTurnRequest,
@@ -154,3 +155,64 @@ def test_assist_tables_force_rls_and_reject_mutation() -> None:
                 WHERE org_id=%s AND project_id=%s AND thread_id=%s""",
                 (*SCOPE.key, created.thread_id),
             )
+
+
+def test_prepare_finalize_replay_and_interrupted_turn_recovery() -> None:
+    store = AipAssistStore(recovery_after=timedelta(0))
+    request = thread_request()
+    created = store.create_thread(
+        SCOPE,
+        request,
+        idempotency_key=key("runtime-thread"),
+        actor="user:dev",
+    )
+    turn_key = key("runtime-turn")
+    turn = CreateAssistTurnRequest(
+        message="核查当前订单风险",
+        expected_thread_version=1,
+        cutoff_at=request.cutoff_at,
+    )
+    prepared = store.prepare_turn(
+        SCOPE,
+        created.thread_id,
+        turn,
+        idempotency_key=turn_key,
+        actor="user:dev",
+    )
+    assert [event.event_type for event in prepared.events] == [AssistEventType.START]
+    resumed = store.prepare_turn(
+        SCOPE,
+        created.thread_id,
+        turn,
+        idempotency_key=turn_key,
+        actor="user:dev",
+    )
+    assert resumed.resumed is True
+    blocked = AssistStreamEvent(
+        event_type=AssistEventType.BLOCKED,
+        thread_id=created.thread_id,
+        turn_id=resumed.turn_id,
+        sequence=2,
+        occurred_at=datetime.now(UTC),
+        blocker={
+            "code": "ASSIST_TURN_RECOVERY_REQUIRED",
+            "message": "interrupted turn",
+            "retryable": True,
+        },
+    )
+    record = store.finalize_turn(
+        SCOPE,
+        resumed,
+        [blocked],
+        idempotency_key=turn_key,
+        actor="user:dev",
+    )
+    assert record.events[-1].blocker.code == "ASSIST_TURN_RECOVERY_REQUIRED"
+    replay = store.prepare_turn(
+        SCOPE,
+        created.thread_id,
+        turn,
+        idempotency_key=turn_key,
+        actor="user:dev",
+    )
+    assert replay.replay == record

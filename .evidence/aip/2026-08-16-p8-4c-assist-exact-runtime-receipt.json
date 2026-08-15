@@ -1,0 +1,75 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-P8-4C-20260816",
+  "status": "CODE_CONTROL_GREEN_PENDING_INTEGRATION",
+  "branch": "w1-aip",
+  "baseCommit": "e2c4d30634cd93876f780d5d7a5a3e9d047a3fa7",
+  "authorityRevision": "AOS-000051",
+  "observedAt": "2026-08-16T03:01:08+08:00",
+  "tenantPolicy": {
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "realTenantBusinessWrites": false
+  },
+  "lease": {
+    "taskId": "aip-p8-4c-assist-exact-runtime-20260816",
+    "owner": "w1-aip",
+    "migrationLease": false,
+    "baseRevision": "AOS-000051"
+  },
+  "implementation": [
+    "Added a canonical PostgreSQL authority reader for exact Task, TaskRun, Plan, AgentRun, AgentInstance, SkillBinding, CapabilityBinding and ModelRuntime references",
+    "Added an exact Assist runtime that uses LLMAdapter.chat_exact and persists context, delta, done, usage and lineage without local answers or implicit Provider fallback",
+    "Split turn execution into a committed start phase, an external runtime phase and an atomic terminal-event plus receipt phase so Provider calls never run inside a database transaction",
+    "Added deterministic replay and interrupted-turn protection so an existing nonterminal same-hash turn cannot invoke Provider twice",
+    "Preserved honest typed blockers when AgentRun, bindings, context or Provider runtime are not ready"
+  ],
+  "fileHashes": {
+    "services/aos-api/aos_api/aip_assist_context_assembler.py": {
+      "before": "ace572bd4ec567aa7f551e1129123f9b6680c80e4d032ec3b9afb580ae232260",
+      "after": "57e8e0b87ee72f5575086ff7ee4d4d9689ab575528c2aa0ae516333008a58e9e"
+    },
+    "services/aos-api/aos_api/aip_assist_runtime.py": {
+      "before": null,
+      "after": "981c57a57a4788e4dbaaf75eb99d2ff6709679996cab9f815053d735cf8077bf"
+    },
+    "services/aos-api/aos_api/aip_assist_store.py": {
+      "before": "738c50a7a38bb57cefabf3cfe57a5ab857230efcaacd3964fc354204f889f859",
+      "after": "19e988eb71a9deabb9c09f10e9532fef2ad9e91463ed4453e2bbd9cc0c3e7195"
+    },
+    "services/aos-api/aos_api/aip_assist_service.py": {
+      "before": "035fee79711b3c80a44446144663a4ae7116b482d12c2aa2114de1e66eb8a048",
+      "after": "e6638a10cff1e1fb87f4f8252dcce2b637e0d29f3dcd341678bffec03d8fd7fa"
+    },
+    "services/aos-api/tests/aip/test_aip8_assist_runtime.py": {
+      "before": null,
+      "after": "516b328f6ecc95b12115619a47a9df259f4f281ab88c6a94faec03bab32b40e9"
+    },
+    "services/aos-api/tests/aip/test_aip8_assist_store.py": {
+      "before": "92874bb0d0f223c0e02b233063e7a9b980c1e4a042c77c9506f85fe4e0173f85",
+      "after": "91a72ff403f40d8060b6f03ec9a68ed17a8d0784c0f682418d544107d91e5230"
+    },
+    "services/aos-api/tests/aip/test_aip8_assist_api.py": {
+      "before": "909f40334fe6ca561d420837c1521cc5dcac7559f11a17b810bed9423150c53a",
+      "after": "bba25d165235b39187cfd5baea7d0cc89b5cf12dad5341d4671d7ba51ca431fb"
+    }
+  },
+  "verification": [
+    "24 P8-4C targeted tests passed",
+    "57 cumulative test_aip8_* tests passed",
+    "Ready fixture emitted start, context, delta and done with exact usage and lineage references",
+    "Context and Provider dependency failures emitted persisted typed blockers without fabricated answer content",
+    "Interrupted nonterminal turns were closed with ASSIST_TURN_RECOVERY_REQUIRED and never re-invoked Provider",
+    "compileall, AST parsing and git diff check passed",
+    "Alembic reports aip8_002 as the unique head",
+    "Fresh org-org/dev-project read found zero AgentRun, ModelRoute head, SkillBinding and CapabilityBinding rows, so operational status remains blocked",
+    "No real tenant business rows, external Provider calls, web changes or Workshop changes were performed"
+  ],
+  "baselineWarnings": [
+    "The exact positive runtime path is code-tested with injected canonical authority because the real tenant has no runnable AgentRun or bindings",
+    "P8-4C establishes code and control readiness only; it does not claim an operational Assist answer",
+    "ruff is not installed in the project environment; compileall, AST parsing, tests and diff checks are the available code controls"
+  ],
+  "operationalStatus": "ASSIST_EXACT_RUNTIME_CODE_READY_REAL_AUTHORITY_EMPTY",
+  "nextGate": "P8_5_STRICT_SDK_AND_UI"
+}

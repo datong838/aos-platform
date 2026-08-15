@@ -58,7 +58,7 @@ def test_canonical_assist_persists_thread_and_blocked_turn(client, auth_headers)
     assert turn.status_code == 200, turn.text
     assert "event: start" in turn.text
     assert "event: blocked" in turn.text
-    assert "ASSIST_RUNTIME_NOT_INSTALLED" in turn.text
+    assert "ASSIST_AGENT_RUN_NOT_FOUND" in turn.text
 
 
 def test_legacy_sample_assist_routes_are_not_mounted(client, auth_headers) -> None:
