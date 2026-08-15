@@ -1,0 +1,170 @@
+{
+  "schema": "aos-workshop-w2-customerlite-consent-segment-journey-read-model-preflight/v1",
+  "taskId": "workshop-w2-08-customerlite-consent-segment-journey-read-model-preflight-20260815",
+  "workItem": "W2-08",
+  "projectRevision": "AOS-000038",
+  "branch": "w2-workshop",
+  "head": "f0d296db3777c830eefcc28691b766ecf6148588",
+  "recordedAt": "2026-08-15T10:25:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "CUSTOMERLITE_CONSENT_SEGMENT_JOURNEY_READ_MODEL_TARGET_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "W1-10 and W2-00 are not GREEN; CustomerLite latest pipeline is failed; customer Consent Segment Journey Dialogue and Workshop aggregate authorities are absent"
+  },
+  "dependencyFactRevalidation": {
+    "authorityRevision": "AOS-000038",
+    "authorityStage": "BIND1_1_CONTRACT_ADDITIVE_MIGRATION_GREEN_WITH_WARNINGS",
+    "w1_10": "not GREEN",
+    "w2_00": "not GREEN",
+    "customerLiteData": "53 historical query rows exist, but the latest P08 run is failed with PIPELINE_NOT_FOUND and its declared mapping still drifts from the runtime minimal projection contract",
+    "queryCapability": "base query projection exists but lacks the required freshness quality cutoff privacy and blocker envelope",
+    "bind1Effect": "does not create customer Consent Preference Segment Journey Dialogue ProtectedContact or batch readiness",
+    "leaseConflict": false
+  },
+  "liveCodeFindings": {
+    "workshopHttpOperations": [
+      "GET /v1/ecommerce-workshop/modules",
+      "GET /v1/ecommerce-workshop/modules/{module_id}/readiness"
+    ],
+    "customerViewStoreSdk": "ABSENT",
+    "customerLite": "PRESENT as a tenant-scoped PII-minimized object foundation, but its current P08 asset and runtime contracts are drifted and its latest pipeline is failed",
+    "consentPreferenceProtectedContactAuthorities": "ABSENT",
+    "segmentRevision": "ABSENT",
+    "journeyRevision": "ABSENT",
+    "dialogueAndTouchpointAuthorities": "ABSENT",
+    "batchPrepareAndStart": "ABSENT",
+    "moduleManifest": {
+      "moduleId": "ecommerce.customer",
+      "requiredObjects": [
+        "CustomerLite",
+        "Order",
+        "Product",
+        "SegmentRevision",
+        "JourneyRevision",
+        "TouchpointObservation"
+      ],
+      "viewRefs": [],
+      "evalPackRefs": [
+        "content/evals/w03-l05-dry-run-cases.json"
+      ],
+      "productionContractRefs": [],
+      "responsibilityTemplateRefs": [],
+      "actionTypes": []
+    }
+  },
+  "targetViewContract": {
+    "operationId": "ecommerceWorkshopCustomerViewGet",
+    "method": "GET",
+    "canonicalPath": "/v1/ecommerce-workshop/views/customer",
+    "tenantSource": "verified Principal only",
+    "filters": [
+      "view=customer|segment|journey|dialogue",
+      "customerRef",
+      "segmentRef",
+      "journeyRef",
+      "stage",
+      "consentStatus",
+      "purpose",
+      "windowStart",
+      "windowEnd",
+      "cursor"
+    ],
+    "rootAuthorities": [
+      "CustomerLite exact ref and source projection revision",
+      "ConsentRevision PreferenceRevision purpose marking retention and policy exact refs",
+      "SegmentRevision membership-query and k-anonymity decision exact refs",
+      "JourneyRevision stage transition stop-condition and eligibility exact refs",
+      "DialogueBrief EvidenceSelection EvalPack Strategy and Responsibility exact refs when present",
+      "TouchpointObservation original reachability and aggregation-policy exact refs",
+      "CustomerDialogueBatch prepare or freeze exact refs when present without exposing contact data"
+    ],
+    "readSlices": [
+      "privacy-minimized CustomerLite status source freshness quality and disclosure decision",
+      "Consent Preference purpose marking retention granted withdrawn expired unknown and conflict summaries",
+      "Segment definition revision Diff cutoff source revisions eligible excluded unknown deduplicated and small-cohort aggregation",
+      "Journey stage entry exit transition stop condition capacity schedule eligibility and stale state",
+      "Dialogue Brief evidence Eval responsibility lifecycle original message reachability and strategy revision",
+      "Batch prepare counts zero-send invariant blockers and readiness without protected-contact resolution"
+    ],
+    "requiredEnvelope": [
+      "schemaVersion resourceRevision evaluatedAt dataCutoff and stable cursor",
+      "CustomerLite consent segment journey dialogue batch and outreach readiness kept separate",
+      "exact scoped refs disclosure decisions typed blockers and original reachability",
+      "eligible plus excluded plus unknown plus deduplicated equals frozen input for one exact cutoff",
+      "withdrawn expired unknown stale conflict small-cohort and privacy-redacted remain explicit"
+    ]
+  },
+  "authorityBoundaries": [
+    "The view is rebuildable and never becomes Customer Consent Preference Segment Journey Dialogue Touchpoint Batch or Action authority",
+    "CustomerLite never exposes or copies mobile OpenID nickname avatar address email real name or protected contact material",
+    "Consent purpose marking retention and Preference are server-authoritative decisions; client visibility cannot grant eligibility",
+    "Segment membership uses exact source and policy revisions and never persists an exportable PII member list",
+    "small cohorts default to aggregate disclosure and unknown is never coerced to eligible",
+    "Journey stage summaries never mutate transitions and keep entry exit stop and invalidation facts visible",
+    "Dialogue summaries preserve Brief Evidence Eval Responsibility and original-message reachability without revealing private reasoning",
+    "W2 exposes no segment-build journey-transition prepare freeze start resolve-contact send opt-out or provider mutation"
+  ],
+  "privacyAndCountInvariants": [
+    "each CustomerLite disclosure is purpose-scoped minimal marked and traceable to one source projection revision",
+    "Consent withdrawal or retention expiry immediately makes dependent eligibility snapshots stale without rewriting history",
+    "segment input equals eligible plus excluded plus unknown plus deduplicated for one exact cutoff",
+    "membership rebuild preserves definition query policy and source revision Diff and emits a rebuild Receipt",
+    "Journey summaries bind exact definition and transition policy revisions and preserve stopped exited and conflicted states",
+    "aggregated dialogue preserves every original message ref occurredAt channel sequence and consent-purpose changes",
+    "prepare or freeze remains zero-send and never resolves ProtectedContactRef",
+    "outreach start frequency revocation race partial unknown and reconcile remain later specialized action gates"
+  ],
+  "requiredTestsWhenUnblocked": [
+    "strict CustomerLite consent segment journey dialogue batch blocker and cursor DTO parsers",
+    "tenant no-scope wrong-scope cross-tenant marking purpose retention PII secret and protected-contact checks",
+    "P08 mapping runtime drop Schema identity and current JDBC pipeline consistency",
+    "Consent granted withdrawn expired unknown conflict and dependent-snapshot staleness",
+    "Segment query hash cutoff k-anonymity small-cohort rebuild dedup and count conservation",
+    "Journey revision entry exit transition stop invalidation capacity schedule and conflict states",
+    "Dialogue Brief Evidence Eval Responsibility aggregation and original reachability",
+    "prepare and freeze zero-send and no protected-contact resolution",
+    "W2 read-only HTTP method and absence of build transition prepare freeze start or send controls",
+    "org-org positive and dev-org negative three-viewport keyboard browser evidence without PII"
+  ],
+  "blockers": [
+    "W1-10 real Registry reconciliation and positive Workshop projection are not GREEN",
+    "W2-00 DEP-DATA remains RED and CustomerLite latest P08 run is failed",
+    "P08 declared mapping runtime drop policy and CustomerLite minimal Schema are not one GREEN contract",
+    "customer Workshop view Store and strict SDK do not exist",
+    "Consent Preference purpose retention and ProtectedContact authorities do not exist",
+    "Segment Journey Dialogue Touchpoint and side-effect-free Batch authorities do not exist",
+    "module manifest has no view production responsibility impact or action refs",
+    "W6-07 and W6-08 specialized preparation and outreach gates remain blocked"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "no W2-08 implementation exists and hard dependencies are RED; historical foundation results include P08 and shared-canary failures and cannot prove the customer aggregate",
+    "latestKnownEvidence": [
+      "P08 focused suite: 27 passed and 6 failed",
+      "customer foundation combination: 50 passed and 1 shared-canary isolation failure",
+      "generic Workshop shell frontend: 6 files and 18 tests passed"
+    ],
+    "doesNotProve": [
+      "current CustomerLite privacy freshness and quality",
+      "Consent Segment Journey Dialogue or Batch authority",
+      "protected-contact or outreach readiness",
+      "positive real-tenant browser readiness"
+    ]
+  },
+  "sourceHashes": {
+    "bundles/solutions/ecommerce-growth/content/workshops/ecommerce.customer.json": "5b6cfb5cb7d3e28dd5ad30c6ab61b276b9f7986358759604a236c4d33e46467c",
+    "bundles/platforms/ecommerce-niushop/content/mappings/p08-customer-lite.yaml": "9d35d293f9e2f73701f7c337413d0bb2862853d12d70bb08317bdfa9497c8093",
+    "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+    "services/aos-api/aos_api/ec_source_adapter.py": "4e1a94e932594dd5c193880fa22831556fa4b72f9fedb2241d3933661bfa6be3",
+    "services/aos-api/aos_api/ecom_core_models.py": "f2c4c7d54f0a0fef5e6602df1f33bd3b8d6dceff0936ebbaee80d85b4b188343"
+  },
+  "next": "align the W2-08 contract and evidence reference through two review rounds without runtime coding",
+  "safety": [
+    "read-only code document Git and shared-memory inspection only",
+    "no database customer record consent segment journey contact provider or tenant mutation",
+    "no protected contact PII or real customer content was read",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}
