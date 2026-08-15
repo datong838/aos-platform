@@ -10,6 +10,7 @@ import yaml
 from aos_api.aip_agent_registry_store import AipAgentRegistryStore
 from aos_api.aip_capability_registry import AipCapabilityRegistry
 from aos_api.aip_solution_pack_publisher import (
+    AIP_DEFINITION_SOURCE_VERSION,
     AGENT_LOGIC_COUNTS,
     CAPABILITY_IDS,
     SOLUTION_PACK_ID,
@@ -73,6 +74,7 @@ def test_solution_pack_publisher_exactly_reads_back_6_37_10_and_is_idempotent():
     first = publisher.publish(BUNDLE, actor="pytest-a6e")
     second = publisher.publish(BUNDLE, actor="pytest-a6e")
     assert first == second
+    assert first.bundle_version == SOLUTION_PACK_VERSION
     assert (first.agent_count, first.skill_count, first.capability_count) == (6, 37, 10)
 
     agents = AipAgentRegistryStore()
@@ -80,15 +82,18 @@ def test_solution_pack_publisher_exactly_reads_back_6_37_10_and_is_idempotent():
     capabilities = AipCapabilityRegistry()
     for ref in first.agent_refs:
         revision = agents.get_template(ref.asset_id, ref.revision)
+        assert revision.source_ref.revision == AIP_DEFINITION_SOURCE_VERSION
         assert revision.content_hash == ref.content_hash
         assert revision.lifecycle.value == "published"
         assert revision.manifest["runtimeReadiness"] == "blocked"
     for ref in first.skill_refs:
         revision = skills.get_skill(ref.asset_id, ref.revision)
+        assert revision.source_ref.revision == AIP_DEFINITION_SOURCE_VERSION
         assert revision.content_hash == ref.content_hash
         assert revision.lifecycle.value == "evaluated"
     for ref in first.capability_refs:
         revision = capabilities.get(ref.asset_id, ref.revision)
+        assert revision.source_ref.revision == AIP_DEFINITION_SOURCE_VERSION
         assert revision.content_hash == ref.content_hash
         assert revision.lifecycle.value == "published"
         assert revision.readiness.value == "blocked"

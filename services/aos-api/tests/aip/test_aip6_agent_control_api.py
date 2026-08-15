@@ -86,7 +86,7 @@ def test_canonical_catalog_install_replay_and_tenant_canary(client):
     AipSolutionPackPublisher().publish(BUNDLE, actor="pytest-a6f")
 
     before = client.get("/v1/aip/agent-registry", headers=_headers("org-org"))
-    assert before.status_code == 200
+    assert before.status_code == 200, before.text
     assert before.json()["stats"] == {
         "definitionCount": 6,
         "installedCount": 0,
@@ -99,7 +99,7 @@ def test_canonical_catalog_install_replay_and_tenant_canary(client):
         "/v1/aip/agents/install-ecommerce",
         headers=_headers("org-org", key="pytest-a6f-install"),
     )
-    assert installed.status_code == 201
+    assert installed.status_code == 201, installed.text
     body = installed.json()
     assert body["status"] == "installed"
     assert (body["createdCount"], body["existingCount"], body["runnableCount"]) == (6, 0, 0)

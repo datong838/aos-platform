@@ -63,7 +63,7 @@ export type CapabilityRevision = {
 };
 
 export type CapabilityCatalogResponse = { tenant: Tenant; items: CapabilityRevision[]; count: number; availableCount: number };
-export type AgentInstallResponse = { tenant: Tenant; status: "installed" | "partial"; createdCount: number; existingCount: number; runnableCount: 0; items: Array<{ instance: AgentInstance; disposition: "created" | "existing" }> };
+export type AgentInstallResponse = { tenant: Tenant; solutionPackId: "solution.ecommerce.growth"; solutionPackVersion: string; status: "installed" | "partial"; createdCount: number; existingCount: number; runnableCount: 0; items: Array<{ instance: AgentInstance; disposition: "created" | "existing" }> };
 
 export type BindingReadiness = "available" | "degraded" | "disabled" | "blocked" | "unknown";
 export type BindingHealth = "unknown" | "healthy" | "degraded" | "unavailable" | "revoked";

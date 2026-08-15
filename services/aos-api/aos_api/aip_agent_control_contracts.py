@@ -79,7 +79,7 @@ class AgentInstallItem(AipContractModel):
 class AgentInstallResponse(AipContractModel):
     tenant: TenantContext
     solution_pack_id: Literal["solution.ecommerce.growth"]
-    solution_pack_version: Literal["1.2.0"]
+    solution_pack_version: str = Field(pattern=r"^[0-9]+\.[0-9]+\.[0-9]+$")
     status: Literal["installed", "partial"]
     items: list[AgentInstallItem]
     created_count: int = Field(ge=0)

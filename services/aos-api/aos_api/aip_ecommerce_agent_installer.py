@@ -29,8 +29,10 @@ from aos_api.aip_capability_binding_service import AipCapabilityBindingService
 from aos_api.aip_contracts import TenantContext
 from aos_api.aip_skill_registry import AipSkillRegistry
 from aos_api.aip_solution_pack_publisher import (
+    AIP_DEFINITION_SOURCE_VERSION,
     AGENT_LOGIC_COUNTS,
     CAPABILITY_IDS,
+    LOGIC_IDS,
     SOLUTION_PACK_ID,
     SOLUTION_PACK_VERSION,
 )
@@ -68,22 +70,32 @@ class AipEcommerceAgentInstaller:
     def _definitions(self):
         templates = self._agents.list_templates(
             source_resource_id=SOLUTION_PACK_ID,
-            source_revision=SOLUTION_PACK_VERSION,
+            source_revision=AIP_DEFINITION_SOURCE_VERSION,
             lifecycle=TemplateLifecycle.PUBLISHED,
         )
         skills = self._skills.list_skills(
             source_resource_id=SOLUTION_PACK_ID,
-            source_revision=SOLUTION_PACK_VERSION,
+            source_revision=AIP_DEFINITION_SOURCE_VERSION,
             lifecycle=TemplateLifecycle.EVALUATED,
         )
         capabilities = self._capabilities.list_capabilities(
             source_resource_id=SOLUTION_PACK_ID,
-            source_revision=SOLUTION_PACK_VERSION,
+            source_revision=AIP_DEFINITION_SOURCE_VERSION,
             lifecycle=TemplateLifecycle.PUBLISHED,
         )
-        latest_templates = self._latest(templates, "template_id")
-        latest_skills = self._latest(skills, "skill_id")
-        latest_capabilities = self._latest(capabilities, "capability_id")
+        expected_skill_ids = {f"ecommerce.skill.{logic_id}" for logic_id in LOGIC_IDS}
+        latest_templates = self._latest(
+            [item for item in templates if item.template_id in AGENT_LOGIC_COUNTS],
+            "template_id",
+        )
+        latest_skills = self._latest(
+            [item for item in skills if item.skill_id in expected_skill_ids],
+            "skill_id",
+        )
+        latest_capabilities = self._latest(
+            [item for item in capabilities if item.capability_id in CAPABILITY_IDS],
+            "capability_id",
+        )
         if set(latest_templates) != set(AGENT_LOGIC_COUNTS):
             raise AipEcommerceCatalogInvalid("ecommerce agent definitions differ from 6-role authority")
         if len(latest_skills) != 37:

@@ -14,7 +14,10 @@ from aos_api.aip_agent_registry_store import (
 )
 from aos_api.aip_capability_registry import AipCapabilityRegistry
 from aos_api.aip_contracts import ResourceRef
-from aos_api.aip_solution_pack_publisher import SOLUTION_PACK_ID, SOLUTION_PACK_VERSION
+from aos_api.aip_solution_pack_publisher import (
+    AIP_DEFINITION_SOURCE_VERSION,
+    SOLUTION_PACK_ID,
+)
 from aos_api.db import connect
 
 HASH_A = "a" * 64
@@ -53,7 +56,7 @@ def request(capability_id: str, alias: str, *, content_hash: str = HASH_A):
         source_ref=ResourceRef(
             resource_type="SolutionPack",
             resource_id=SOLUTION_PACK_ID,
-            revision=SOLUTION_PACK_VERSION,
+            revision=AIP_DEFINITION_SOURCE_VERSION,
             authority="asset-registry",
         ),
         source_license="internal",

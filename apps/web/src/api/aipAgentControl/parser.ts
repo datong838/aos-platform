@@ -234,8 +234,10 @@ export function parseRuntimeReadiness(value: unknown, expectedTenant: Tenant): A
 
 export function parseInstall(value: unknown, expectedTenant?: Tenant): AgentInstallResponse {
   const raw = obj(value, "AgentInstallResponse");
-  exact(raw, "AgentInstallResponse", ["tenant", "solutionPackId", "solutionPackVersion", "status", "items", "createdCount", "existingCount", "runnableCount"], ["tenant", "status", "items", "createdCount", "existingCount", "runnableCount"]);
+  exact(raw, "AgentInstallResponse", ["tenant", "solutionPackId", "solutionPackVersion", "status", "items", "createdCount", "existingCount", "runnableCount"]);
   const scope = tenant(raw.tenant); if (expectedTenant) sameTenant(scope, expectedTenant, "AgentInstallResponse");
+  if (raw.solutionPackId !== "solution.ecommerce.growth") throw new Error("solutionPackId 非法");
+  const solutionPackVersion = str(raw.solutionPackVersion, "solutionPackVersion"); if (!/^\d+\.\d+\.\d+$/.test(solutionPackVersion)) throw new Error("solutionPackVersion 非法");
   const runnableCount = integer(raw.runnableCount, "runnableCount"); if (runnableCount !== 0) throw new Error("runnableCount 必须为 0");
-  return { tenant: scope, status: enumeration(raw.status, "status", ["installed", "partial"] as const), createdCount: integer(raw.createdCount, "createdCount"), existingCount: integer(raw.existingCount, "existingCount"), runnableCount: 0, items: array(raw.items, "items").map((value, index) => { const item = obj(value, `items[${index}]`); exact(item, `items[${index}]`, ["instance", "disposition", "receipt"], ["instance", "disposition"]); return { instance: parseAgentInstance(item.instance, scope), disposition: enumeration(item.disposition, "disposition", ["created", "existing"] as const) }; }) };
+  return { tenant: scope, solutionPackId: "solution.ecommerce.growth", solutionPackVersion, status: enumeration(raw.status, "status", ["installed", "partial"] as const), createdCount: integer(raw.createdCount, "createdCount"), existingCount: integer(raw.existingCount, "existingCount"), runnableCount: 0, items: array(raw.items, "items").map((value, index) => { const item = obj(value, `items[${index}]`); exact(item, `items[${index}]`, ["instance", "disposition", "receipt"], ["instance", "disposition"]); return { instance: parseAgentInstance(item.instance, scope), disposition: enumeration(item.disposition, "disposition", ["created", "existing"] as const) }; }) };
 }

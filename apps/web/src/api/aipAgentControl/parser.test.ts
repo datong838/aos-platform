@@ -3,6 +3,7 @@ import {
   parseAgentCatalog,
   parseAgentInstances,
   parseCapabilities,
+  parseInstall,
   parseRuntimeReadiness,
 } from "./parser";
 
@@ -48,5 +49,11 @@ describe("aipAgentControl strict parser", () => {
 
   it("catalog 顶层同样执行 exact-key", () => {
     expect(() => parseAgentCatalog({tenant:{orgId:"org-org",projectId:"dev-project"},items:[],stats:{definitionCount:0,installedCount:0,runnableCount:0,skillDefinitionCount:0,capabilityDefinitionCount:0},shadow:"mock"})).toThrow("额外字段");
+  });
+
+  it("安装响应保留并校验 SolutionPack 容器版本", () => {
+    const payload = {tenant:{orgId:"org-org",projectId:"dev-project"},solutionPackId:"solution.ecommerce.growth",solutionPackVersion:"1.3.0",status:"installed",items:[],createdCount:0,existingCount:6,runnableCount:0};
+    expect(parseInstall(payload).solutionPackVersion).toBe("1.3.0");
+    expect(() => parseInstall({...payload,solutionPackVersion:"latest"})).toThrow("solutionPackVersion 非法");
   });
 });

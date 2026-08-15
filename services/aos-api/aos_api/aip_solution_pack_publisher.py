@@ -40,8 +40,17 @@ AGENT_LOGIC_COUNTS = {
     "ecommerce.private_domain_manager": 5,
     "ecommerce.campaign_planner": 6,
 }
+LOGIC_IDS = (
+    *(f"D{i:02d}" for i in range(1, 7)),
+    *(f"C{i:02d}" for i in range(1, 9)),
+    *(f"G{i:02d}" for i in range(1, 7)),
+    *(f"S{i:02d}" for i in range(1, 7)),
+    *(f"P{i:02d}" for i in range(1, 6)),
+    *(f"A{i:02d}" for i in range(1, 7)),
+)
 SOLUTION_PACK_ID = "solution.ecommerce.growth"
 SOLUTION_PACK_VERSION = "1.3.0"
+AIP_DEFINITION_SOURCE_VERSION = "1.2.0"
 
 
 @dataclass(frozen=True, slots=True)
@@ -114,7 +123,7 @@ class AipSolutionPackPublisher:
         source = ResourceRef(
             resource_type="SolutionPack",
             resource_id=bundle_id,
-            revision=bundle_version,
+            revision=AIP_DEFINITION_SOURCE_VERSION,
             authority="asset-registry",
         )
         schema_hash = self._file_hash(schema_path)
@@ -283,15 +292,7 @@ class AipSolutionPackPublisher:
             raise AipSolutionPackInvalid("agent ids differ from the W0A catalog")
         if len(logic_ids) != 37 or len(set(logic_ids)) != 37:
             raise AipSolutionPackInvalid("exactly 37 unique logic ids are required")
-        expected_logic_ids = {
-            *(f"D{i:02d}" for i in range(1, 7)),
-            *(f"C{i:02d}" for i in range(1, 9)),
-            *(f"G{i:02d}" for i in range(1, 7)),
-            *(f"S{i:02d}" for i in range(1, 7)),
-            *(f"P{i:02d}" for i in range(1, 6)),
-            *(f"A{i:02d}" for i in range(1, 7)),
-        }
-        if set(logic_ids) != expected_logic_ids:
+        if set(logic_ids) != set(LOGIC_IDS):
             raise AipSolutionPackInvalid("logic ids differ from the W0A crosswalk")
         if tuple(capability_ids) != CAPABILITY_IDS:
             raise AipSolutionPackInvalid("capability ids differ from the W0A catalog")
