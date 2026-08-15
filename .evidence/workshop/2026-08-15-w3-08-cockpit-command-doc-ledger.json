@@ -4,7 +4,7 @@
   "workItem": "W3-08",
   "projectRevision": "AOS-000039",
   "sourceCommit": "5dde09b",
-  "recordedAt": "2026-08-15T11:52:00+08:00",
+  "recordedAt": "2026-08-15T11:55:00+08:00",
   "reviewRounds": [
     {
       "round": 1,
@@ -67,6 +67,11 @@
     "implementation": "NOT_STARTED",
     "dependency": "HARD_GATE_BLOCKED",
     "externalEffect": "NONE"
+  },
+  "externalFactReview": {
+    "observed": "AIP BIND1-3A delivery receipts added while authority remains AOS-000039",
+    "impact": "does not close W2-02, W3-05, W3-06, W3-07 or any W3-08 authority dependency",
+    "lease": "aip-bind1-3b is active but explicitly excludes w2 and this Workshop document scope"
   },
   "verification": [
     "two review and remediation rounds passed",
