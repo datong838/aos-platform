@@ -1,0 +1,37 @@
+{
+  "schema": "workshop-doc-ledger/v1",
+  "taskId": "workshop-w2-02-core-doc-align-20260815",
+  "authorityRevision": "AOS-000046",
+  "branch": "w2-workshop",
+  "implementationCommit": "ea20ee5",
+  "decision": "TASK_RUN_CORE_FACTS_ALIGNED_FULL_W2_02_REMAINS_UNCHECKED",
+  "externalArtifacts": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/83-W2-02-TaskRunStageBlocker日常总控只读模型预检ADR.md",
+      "preSha256": "810749d74f464151b49eb8078ae25f7013d4664d83309d1f4c57b1416c8950cf",
+      "postSha256": "068eee7b61289b88615e87568ea8edcbcd68fad44703cab301cd06c1fd3c68d8"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "273b08323b5e43a2489ef83c0ec73f6639901fc244e0e5df6614a1980c873165",
+      "postSha256": "b0836e2bc8b828ae010d4ea781a12316519037bc76fedf60e751493ba3a8a705"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "45f4e73ae6e72ee5b3f31d53afa50217095b602f08349437201813bbaa151cc4",
+      "postSha256": "95519a1102434faba765d5809aeca2fd3dbc3ad4af50204c34ac424285baa99b"
+    }
+  ],
+  "alignedFacts": [
+    "Task/Run core subwave is implemented at w2-workshop@ea20ee5",
+    "full W2-02 remains unchecked and blocked by the cumulative gate",
+    "the 96-task headline remains 21/96 because a subwave is not a checklist completion",
+    "the previous statement that no W2 runtime could start was narrowed to dependency-specific gating"
+  ],
+  "safety": {
+    "staticVisualChanged": false,
+    "businessCodeChanged": false,
+    "authorityOrPrimeChanged": false,
+    "aipWorktreeRead": false
+  }
+}
