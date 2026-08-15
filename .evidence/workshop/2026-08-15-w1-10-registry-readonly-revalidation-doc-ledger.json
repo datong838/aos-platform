@@ -1,0 +1,34 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w1-10-registry-readonly-revalidation-20260815",
+  "recordedAt": "2026-08-15T13:31:00+08:00",
+  "authorityRevision": "AOS-000041",
+  "baselineCommit": "2af580e31e03465b1e146269e770ec692a1ddae5",
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/26-W1E安装投影真实租户与正式HTTP验收ADR.md",
+      "preSha256": "ea8b5b0f4b999637a803c863e513bafea06b4b965784643a47799d1d8b7d54dd",
+      "postSha256": "21e23563c5483402e1f132971ae3260d4114881fe6e8821cd366ee654a4fc774"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "25bd30793c0dad159f7de9856191b42b491b7770d0b642bad381153ef61f750d",
+      "postSha256": "9d4ba5a3ce004e061576258e11de0b29a0fd0ac3c45d63ff804eb6074284e171"
+    }
+  ],
+  "reviewRounds": [
+    {
+      "round": 1,
+      "finding": "The exact three-root target set, trusted replacement edge, zero uninstall events and empty canary remain unchanged under a fresh READ ONLY transaction.",
+      "remediation": "Refreshed the machine evidence and W1-10 checklist without performing any tenant mutation."
+    },
+    {
+      "round": 2,
+      "finding": "An obsolete rollback instruction and AOS-000037 status remained in current-reading positions; the historical schedule count could also be mistaken for a reusable execution baseline.",
+      "remediation": "Replaced the stale action with the sole canonical uninstall instruction, updated the current authority to AOS-000041 and required an immediate same-window Cron before/after snapshot."
+    }
+  ],
+  "verdict": "PLAN_REVALIDATED_GREEN; REAL_EFFECT_NOT_AUTHORIZED; W1-10_NOT_STARTED_POSITIVE_GATE",
+  "noCodeOrVisualChange": true,
+  "externalEffect": false
+}

@@ -1,0 +1,81 @@
+{
+  "schema": "aos-workshop-registry-readonly-revalidation/v1",
+  "taskId": "workshop-w1-10-registry-readonly-revalidation-20260815",
+  "observedAt": "2026-08-15T13:28:46+08:00",
+  "authorityRevision": "AOS-000041",
+  "mode": "PostgreSQL READ ONLY transaction; explicit org-org/dev-project runtime scope; rollback on exit",
+  "result": "REAL_EFFECT_EXECUTION_PACKAGE_CURRENT_BUT_NOT_AUTHORIZED",
+  "realTenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "installationCount": 17,
+    "rawActivePointerCount": 5,
+    "uninstallEventCount": 0,
+    "scheduleRunCount": 92,
+    "latestScheduleStartedAt": "2026-08-15T00:00:02.451829+00:00"
+  },
+  "canary": {
+    "orgId": "dev-org",
+    "projectId": "dev-project",
+    "installationCount": 0,
+    "rawActivePointerCount": 0
+  },
+  "trustedReplacementChain": {
+    "predecessor": "56c200af-9308-4125-af02-1035100785dd@5",
+    "effectiveLeaf": "1286521e-6d6e-42b4-8aad-b5daaa1b01bb@5",
+    "leafCurrentInstallationRefMatchesPredecessor": true
+  },
+  "independentRootsToReconcile": [
+    {
+      "installationId": "3a933345-cada-4d5f-b102-54c1f7ed2f03",
+      "activeRevision": 5,
+      "currentRevision": 5,
+      "etagVersion": 5,
+      "overlayRevision": "d3-qiyuehui-v1-full-stack",
+      "hasCurrentInstallationRef": false
+    },
+    {
+      "installationId": "3cff5d44-524e-42a6-9681-c51aa0d9e1bd",
+      "activeRevision": 5,
+      "currentRevision": 5,
+      "etagVersion": 5,
+      "overlayRevision": "d3-qiyuehui-v1-full-stack",
+      "hasCurrentInstallationRef": false
+    },
+    {
+      "installationId": "ff465fdc-e442-44fb-b1dc-0afb7df18229",
+      "activeRevision": 5,
+      "currentRevision": 5,
+      "etagVersion": 5,
+      "overlayRevision": "d3-qiyuehui-v1-full-stack",
+      "hasCurrentInstallationRef": false
+    }
+  ],
+  "reviewRounds": [
+    {
+      "round": 1,
+      "finding": "The 2026-08-14 exact target set, trusted replacement edge, zero uninstall events and empty canary remain current.",
+      "decision": "Keep canonical uninstall of only the three independent roots; forbid predecessor or effective-leaf mutation and direct SQL."
+    },
+    {
+      "round": 2,
+      "finding": "The historical schedule count of 85 is no longer a current execution baseline; normal schedules advanced it to 92 before this read-only check.",
+      "decision": "Capture schedule count and latest identity immediately before and after the isolated Cron-disabled execution window; historical counts are context only and cannot satisfy the zero-side-effect gate."
+    }
+  ],
+  "requiredAuthorization": "Explicit W1-10 org-org/dev-project real-effect authorization for three canonical uninstall commands and subsequent positive browser acceptance.",
+  "executionGuards": [
+    "re-read fresh GET and ETag immediately before each command",
+    "one unique Idempotency-Key and Receipt per target",
+    "one target at a time through canonical Installation API",
+    "migration disabled and Cron disabled in the isolated acceptance process",
+    "stop on any target, ETag, lock, replacement-edge, Lease or authority drift",
+    "verify 17 total, 2 raw active, 3 uninstall events, one effective leaf, eight canonical Modules, canary zero and no schedule delta"
+  ],
+  "safety": {
+    "databaseWrites": 0,
+    "tenantMutations": 0,
+    "browserMutations": 0,
+    "externalEffects": 0
+  }
+}
