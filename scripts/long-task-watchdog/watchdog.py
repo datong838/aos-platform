@@ -684,6 +684,21 @@ def _retry_delay_seconds(config: dict[str, Any], failure_count: int) -> int:
     return raw[min(max(failure_count, 1) - 1, len(raw) - 1)]
 
 
+def _dependency_scope_overlaps(watched: str, leased: str) -> bool:
+    if watched == leased:
+        return True
+    if "/" not in watched or "/" not in leased:
+        return False
+    watched_path = watched.rstrip("/")
+    leased_path = leased.rstrip("/")
+    if not watched_path or not leased_path:
+        return False
+    return (
+        leased_path.startswith(watched_path + "/")
+        or watched_path.startswith(leased_path + "/")
+    )
+
+
 def _dependency_blockers(config: dict[str, Any], *, now: float) -> list[dict[str, Any]]:
     raw = config.get("dependency_watch")
     if raw is None:
@@ -731,7 +746,11 @@ def _dependency_blockers(config: dict[str, Any], *, now: float) -> list[dict[str
             raise RuntimeError("dependency_watch active lease expiry is invalid")
         if expiry <= now:
             continue
-        matched = sorted(set(scopes).intersection(scope_tokens))
+        matched = sorted(
+            token
+            for token in scope_tokens
+            if any(_dependency_scope_overlaps(token, scope) for scope in scopes)
+        )
         if not matched:
             continue
         blockers.append(

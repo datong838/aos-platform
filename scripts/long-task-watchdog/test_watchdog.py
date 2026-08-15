@@ -713,6 +713,56 @@ class WatchdogTest(unittest.TestCase):
         self.assertEqual(["aip-w2d1"], state["dependency_blocking_task_ids"])
         self.assertEqual([], calls)
 
+    def test_dependency_directory_token_matches_descendant_file_lease(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:00:20Z", "assistant", "final_answer"),
+        )
+        self.write_leases({
+            "task_id": "aip-p8-2",
+            "owner": "codex-aip-w1",
+            "status": "ACTIVE",
+            "scope": [
+                "services/aos-api/alembic/versions/"
+                "aip8_001_analyst_query_authority.py"
+            ],
+            "lease_expires_at": "2099-01-01T00:00:00+08:00",
+        })
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.dependency_config()), encoding="utf-8")
+
+        self.assertEqual(
+            "dependency-blocked",
+            watchdog.run_once(config_path, state_path, now=1000),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertTrue(state["dependency_wait_armed"])
+        self.assertEqual(["aip-p8-2"], state["dependency_blocking_task_ids"])
+
+    def test_dependency_directory_token_does_not_match_adjacent_prefix(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:00:20Z", "assistant", "final_answer"),
+        )
+        self.write_leases({
+            "task_id": "aip-unrelated",
+            "owner": "codex-aip-w1",
+            "status": "ACTIVE",
+            "scope": [
+                "services/aos-api/alembic/versions-old/"
+                "aip8_001_analyst_query_authority.py"
+            ],
+            "lease_expires_at": "2099-01-01T00:00:00+08:00",
+        })
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.dependency_config()), encoding="utf-8")
+
+        self.assertEqual("idle", watchdog.run_once(config_path, state_path, now=1000))
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertFalse(state.get("dependency_wait_armed", False))
+
     def test_dependency_release_waits_while_turn_is_running(self):
         self.write(
             task_event("1970-01-01T00:00:05Z", "task_started"),
