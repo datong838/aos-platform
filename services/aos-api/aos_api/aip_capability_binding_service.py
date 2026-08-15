@@ -5,8 +5,8 @@ from datetime import UTC, datetime
 
 from aos_api.aip_agent_registry_contracts import (
     BindingHealth,
-    CapabilityReadiness,
     CapabilityBinding,
+    CapabilityReadiness,
     CreateCapabilityBindingRequest,
     EvaluateOperationalBindingRequest,
     OperationalBindingDependencies,
@@ -21,8 +21,9 @@ from aos_api.aip_agent_registry_store import (
     AipAgentRegistryStore,
     AipAgentRegistryTransitionBlocked,
 )
-from aos_api.aip_contracts import TenantContext
+from aos_api.aip_binding_api_contracts import CapabilityBindingPreviewRequest
 from aos_api.aip_binding_readiness_service import AipBindingReadinessService
+from aos_api.aip_contracts import TenantContext
 from aos_api.tenant_scope import TenantScope
 
 _TRANSITIONS = {
@@ -37,6 +38,20 @@ class AipCapabilityBindingService(AipAgentRegistryStore):
     def __init__(self, connect_factory=None, *, readiness_service: AipBindingReadinessService | None = None) -> None:
         super().__init__(connect_factory)
         self._readiness_service = readiness_service or AipBindingReadinessService()
+
+    def preview(
+        self,
+        scope: TenantScope,
+        request: CapabilityBindingPreviewRequest,
+        *,
+        evaluated_at: datetime,
+    ) -> OperationalBindingReadiness:
+        return self._readiness_service.evaluate_capability(
+            scope,
+            request.capability,
+            request.dependencies,
+            evaluated_at=evaluated_at,
+        )
 
     def create(self, scope: TenantScope, request: CreateCapabilityBindingRequest, *, idempotency_key: str, actor: str, occurred_at: datetime) -> tuple[CapabilityBinding, RegistryReceipt]:
         self._validate_command(scope, idempotency_key, actor)
@@ -279,6 +294,28 @@ class AipCapabilityBindingService(AipAgentRegistryStore):
         if row is None:
             raise AipAgentRegistryNotFound("capability binding not found")
         return self._from_row(scope, row)
+
+    def list_bindings(
+        self,
+        scope: TenantScope,
+        *,
+        limit: int = 100,
+    ) -> list[CapabilityBinding]:
+        if limit < 1 or limit > 200:
+            raise ValueError("list limit must be between 1 and 200")
+        try:
+            with self._connect_factory(scope) as conn:
+                rows = conn.execute(
+                    """SELECT * FROM aip_capability_binding
+                       WHERE org_id=%s AND project_id=%s
+                       ORDER BY updated_at DESC,binding_id LIMIT %s""",
+                    (*scope.key, limit),
+                ).fetchall()
+            return [self._from_row(scope, row) for row in rows]
+        except Exception as exc:
+            raise AipAgentRegistryPersistenceError(
+                "capability binding list failed"
+            ) from exc
 
     @staticmethod
     def _row(conn, scope: TenantScope, binding_id: str):

@@ -24,6 +24,7 @@ from aos_api.aip_agent_registry_store import (
     AipAgentRegistryStore,
     AipAgentRegistryTransitionBlocked,
 )
+from aos_api.aip_binding_api_contracts import SkillBindingPreviewRequest
 from aos_api.aip_contracts import TenantContext
 from aos_api.tenant_scope import TenantScope
 
@@ -47,6 +48,31 @@ class AipSkillRegistry(AipAgentRegistryStore):
                 connect_factory=connect_factory
             )
         self._readiness_service = readiness_service
+
+    def preview_binding(
+        self,
+        scope: TenantScope,
+        request: SkillBindingPreviewRequest,
+        *,
+        evaluated_at: datetime,
+    ) -> OperationalBindingReadiness:
+        self._require_skill_dependency_shape(request.dependencies)
+        candidate = SkillBinding(
+            tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+            binding_id="preview",
+            instance_id=request.instance_id,
+            skill=request.skill,
+            capability_binding_ids=request.capability_binding_ids,
+            budget_policy_ref=request.budget_policy_ref,
+            dependencies=request.dependencies,
+            status="provisioning",
+            version=1,
+            created_at=evaluated_at,
+            updated_at=evaluated_at,
+        )
+        return self._readiness_service.evaluate(
+            scope, candidate, evaluated_at=evaluated_at
+        )
 
     def publish_skill(self, request: PublishSkillTemplateRequest, *, actor: str) -> SkillTemplateRevision:
         if not actor.strip():

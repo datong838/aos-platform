@@ -3138,6 +3138,12 @@
       "module": "aos_api.routers.aip_model_runtime",
       "attribute": "router",
       "order": 522
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_bindings",
+      "attribute": "router",
+      "order": 523
     }
   ]
 }
