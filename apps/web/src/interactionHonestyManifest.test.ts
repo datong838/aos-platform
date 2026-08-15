@@ -14,7 +14,7 @@ const ONTOLOGY_ROUTES = [
   "/ontology/branches",
 ] as const;
 
-const AIP_AUTHORITY_ROUTES = ["/aip/memory-governance"] as const;
+const AIP_AUTHORITY_ROUTES = ["/aip/memory-governance", "/aip/assist", "/aip/analyst"] as const;
 
 const ECOMMERCE_WORKSHOP_ROUTES = [
   "/workshop/task-cockpit",
@@ -35,6 +35,7 @@ describe("O1-UX0 · interaction honesty coverage", () => {
     }
     for (const route of AIP_AUTHORITY_ROUTES) {
       expect(routes.filter((candidate) => candidate === route)).toHaveLength(1);
+      expect(INTERACTION_HONESTY_MANIFEST.find((entry) => entry.route === route)?.sourceMode).toBe("live");
     }
     for (const route of ECOMMERCE_WORKSHOP_ROUTES) {
       expect(routes.filter((candidate) => candidate === route)).toHaveLength(1);
