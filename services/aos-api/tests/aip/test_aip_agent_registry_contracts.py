@@ -107,7 +107,7 @@ def test_capability_binding_accepts_secret_ref_only() -> None:
 
 def test_operational_binding_dependencies_require_exact_authority_kinds() -> None:
     dependencies = OperationalBindingDependencies(
-        provider_ref=asset("ProviderRevision"),
+        provider_ref=asset("ProviderInstanceRevision"),
         model_route_ref=asset("ModelRouteRevision"),
         runtime_policy_ref=asset("RuntimePolicyRevision"),
         eval_gate_ref=asset("EvalGateDecision"),
@@ -118,7 +118,7 @@ def test_operational_binding_dependencies_require_exact_authority_kinds() -> Non
         budget_policy_ref=asset("BudgetPolicyRevision"),
     )
     assert dependencies.allow_degraded is False
-    with pytest.raises(ValidationError, match="provider_ref must reference ProviderRevision"):
+    with pytest.raises(ValidationError, match="provider_ref must reference ProviderInstanceRevision"):
         OperationalBindingDependencies(provider_ref=asset("Provider"))
     with pytest.raises(ValidationError, match="model_route_ref must reference ModelRouteRevision"):
         OperationalBindingDependencies(model_route_ref=asset("Route"))

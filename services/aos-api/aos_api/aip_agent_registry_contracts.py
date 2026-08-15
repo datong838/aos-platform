@@ -109,7 +109,7 @@ class OperationalBindingDependencies(AipContractModel):
     @model_validator(mode="after")
     def _exact_reference_kinds(self) -> OperationalBindingDependencies:
         expected = {
-            "provider_ref": "ProviderRevision",
+            "provider_ref": "ProviderInstanceRevision",
             "model_route_ref": "ModelRouteRevision",
             "runtime_policy_ref": "RuntimePolicyRevision",
             "eval_gate_ref": "EvalGateDecision",

@@ -257,20 +257,20 @@ def test_capability_binding_is_secret_ref_only_health_gated_and_scoped(ids):
             idempotency_key=f"bad-health-{ids['capability']}",
             actor="pytest",
         )
-    active, _ = service.update(
-        PRIMARY,
-        ids["capability"],
-        UpdateCapabilityBindingRequest(
-            expected_version=1,
-            from_status="provisioning",
-            to_status="active",
-            health="healthy",
-            observed_at=NOW,
-        ),
-        idempotency_key=f"healthy-{ids['capability']}",
-        actor="pytest",
-    )
-    assert active.status == "active" and active.version == 2
+    with pytest.raises(AipAgentRegistryTransitionBlocked, match="operational"):
+        service.update(
+            PRIMARY,
+            ids["capability"],
+            UpdateCapabilityBindingRequest(
+                expected_version=1,
+                from_status="provisioning",
+                to_status="active",
+                health="healthy",
+                observed_at=NOW,
+            ),
+            idempotency_key=f"healthy-{ids['capability']}",
+            actor="pytest",
+        )
 
 
 def test_capability_binding_requires_exact_published_revision(ids):
