@@ -1,6 +1,7 @@
 """AIP-6 A6F read models for canonical agent control plane."""
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Literal
 
 from pydantic import Field
@@ -8,8 +9,10 @@ from pydantic import Field
 from aos_api.aip_agent_registry_contracts import (
     AgentInstance,
     AgentTemplateRevision,
+    CapabilityBinding,
     CapabilityRevision,
     RegistryReceipt,
+    SkillBinding,
     SkillTemplateRevision,
 )
 from aos_api.aip_contracts import AipContractModel, TenantContext
@@ -36,6 +39,22 @@ class AgentCatalogResponse(AipContractModel):
     tenant: TenantContext
     items: list[AgentCatalogItem]
     stats: AgentCatalogStats
+
+
+class AgentRuntimeBindingStats(AipContractModel):
+    capability_binding_count: int = Field(ge=0)
+    skill_binding_count: int = Field(ge=0)
+    active_capability_binding_count: int = Field(ge=0)
+    active_skill_binding_count: int = Field(ge=0)
+
+
+class AgentRuntimeReadinessResponse(AipContractModel):
+    tenant: TenantContext
+    catalog: AgentCatalogResponse
+    capability_bindings: list[CapabilityBinding]
+    skill_bindings: list[SkillBinding]
+    binding_stats: AgentRuntimeBindingStats
+    evaluated_at: datetime
 
 
 class AgentInstanceListResponse(AipContractModel):

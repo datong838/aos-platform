@@ -9,6 +9,8 @@ from aos_api.aip_agent_control_contracts import (
     AgentCatalogStats,
     AgentInstallItem,
     AgentInstallResponse,
+    AgentRuntimeBindingStats,
+    AgentRuntimeReadinessResponse,
     CapabilityCatalogResponse,
 )
 from aos_api.aip_agent_registry_contracts import (
@@ -23,6 +25,7 @@ from aos_api.aip_agent_registry_store import (
     AipAgentRegistryStore,
 )
 from aos_api.aip_capability_registry import AipCapabilityRegistry
+from aos_api.aip_capability_binding_service import AipCapabilityBindingService
 from aos_api.aip_contracts import TenantContext
 from aos_api.aip_skill_registry import AipSkillRegistry
 from aos_api.aip_solution_pack_publisher import AGENT_LOGIC_COUNTS, CAPABILITY_IDS
@@ -44,11 +47,13 @@ class AipEcommerceAgentInstaller:
         agents: AipAgentRegistryStore | None = None,
         skills: AipSkillRegistry | None = None,
         capabilities: AipCapabilityRegistry | None = None,
+        capability_bindings: AipCapabilityBindingService | None = None,
         clock=None,
     ) -> None:
         self._agents = agents or AipAgentRegistryStore()
         self._skills = skills or AipSkillRegistry()
         self._capabilities = capabilities or AipCapabilityRegistry()
+        self._capability_bindings = capability_bindings or AipCapabilityBindingService()
         self._clock = clock or (lambda: datetime.now(UTC))
 
     @staticmethod
@@ -135,6 +140,29 @@ class AipEcommerceAgentInstaller:
             items=items,
             count=len(items),
             available_count=sum(item.readiness.value == "available" for item in items),
+        )
+
+    def runtime_readiness(self, principal: Principal) -> AgentRuntimeReadinessResponse:
+        scope = self._scope(principal)
+        catalog = self.catalog(principal)
+        capability_bindings = self._capability_bindings.list_bindings(scope, limit=200)
+        skill_bindings = self._skills.list_bindings(scope, limit=200)
+        return AgentRuntimeReadinessResponse(
+            tenant=self._tenant(principal),
+            catalog=catalog,
+            capability_bindings=capability_bindings,
+            skill_bindings=skill_bindings,
+            binding_stats=AgentRuntimeBindingStats(
+                capability_binding_count=len(capability_bindings),
+                skill_binding_count=len(skill_bindings),
+                active_capability_binding_count=sum(
+                    item.status == "active" for item in capability_bindings
+                ),
+                active_skill_binding_count=sum(
+                    item.status == "active" for item in skill_bindings
+                ),
+            ),
+            evaluated_at=self._clock(),
         )
 
     def install(self, principal: Principal, *, idempotency_key: str) -> AgentInstallResponse:

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from aos_api.aip_solution_pack_publisher import AipSolutionPackPublisher
 from aos_api.db import connect
+from aos_api.routers.phase3_aip_agents import get_ecommerce_agent_installer
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -34,6 +35,50 @@ def _ensure_tenants_and_clean() -> None:
         conn.execute("DELETE FROM aip_agent_registry_receipt WHERE org_id IN ('org-org','dev-org') AND result_ref->>'resourceId'=ANY(%s)", (list(ids),))
         conn.execute("DELETE FROM aip_agent_instance WHERE org_id IN ('org-org','dev-org') AND instance_id=ANY(%s)", (list(ids),))
         conn.commit()
+
+
+def test_runtime_readiness_contract_and_tenant_echo(client):
+    class FakeInstaller:
+        def runtime_readiness(self, principal):
+            tenant = {"orgId": principal.org_id, "projectId": principal.project_id}
+            return {
+                "tenant": tenant,
+                "catalog": {
+                    "tenant": tenant,
+                    "items": [],
+                    "stats": {
+                        "definitionCount": 6,
+                        "installedCount": 0,
+                        "runnableCount": 0,
+                        "skillDefinitionCount": 37,
+                        "capabilityDefinitionCount": 10,
+                    },
+                },
+                "capabilityBindings": [],
+                "skillBindings": [],
+                "bindingStats": {
+                    "capabilityBindingCount": 0,
+                    "skillBindingCount": 0,
+                    "activeCapabilityBindingCount": 0,
+                    "activeSkillBindingCount": 0,
+                },
+                "evaluatedAt": "2026-08-15T05:30:00Z",
+            }
+
+    client.app.dependency_overrides[get_ecommerce_agent_installer] = FakeInstaller
+    try:
+        response = client.get(
+            "/v1/aip/agent-registry/runtime-readiness",
+            headers=_headers("org-org"),
+        )
+    finally:
+        client.app.dependency_overrides.pop(get_ecommerce_agent_installer, None)
+    assert response.status_code == 200
+    assert response.json()["tenant"] == {
+        "orgId": "org-org",
+        "projectId": "dev-project",
+    }
+    assert response.json()["catalog"]["stats"]["runnableCount"] == 0
 
 
 def test_canonical_catalog_install_replay_and_tenant_canary(client):
@@ -76,6 +121,40 @@ def test_canonical_catalog_install_replay_and_tenant_canary(client):
     caps = client.get("/v1/aip/capability-catalog", headers=_headers("org-org"))
     assert caps.status_code == 200
     assert (caps.json()["count"], caps.json()["availableCount"]) == (10, 0)
+
+    readiness = client.get(
+        "/v1/aip/agent-registry/runtime-readiness",
+        headers=_headers("org-org"),
+    )
+    assert readiness.status_code == 200
+    readiness_body = readiness.json()
+    assert readiness_body["tenant"] == {
+        "orgId": "org-org",
+        "projectId": "dev-project",
+    }
+    assert readiness_body["catalog"]["stats"] == {
+        "definitionCount": 6,
+        "installedCount": 6,
+        "runnableCount": 0,
+        "skillDefinitionCount": 37,
+        "capabilityDefinitionCount": 10,
+    }
+    assert readiness_body["bindingStats"] == {
+        "capabilityBindingCount": 0,
+        "skillBindingCount": 0,
+        "activeCapabilityBindingCount": 0,
+        "activeSkillBindingCount": 0,
+    }
+    assert readiness_body["capabilityBindings"] == []
+    assert readiness_body["skillBindings"] == []
+
+    canary_readiness = client.get(
+        "/v1/aip/agent-registry/runtime-readiness",
+        headers=_headers("dev-org"),
+    )
+    assert canary_readiness.status_code == 200
+    assert canary_readiness.json()["tenant"]["orgId"] == "dev-org"
+    assert canary_readiness.json()["catalog"]["stats"]["installedCount"] == 0
 
     with connect() as conn:
         counts = {
