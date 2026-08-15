@@ -2,10 +2,18 @@
   "schema": "aos-workshop-w2-unified-operations-read-model-preflight/v1",
   "taskId": "workshop-w2-01-unified-operations-read-model-preflight-20260815",
   "workItem": "W2-01",
-  "projectRevision": "AOS-000034",
+  "projectRevision": "AOS-000035",
+  "initialProjectRevision": "AOS-000034",
   "branch": "w2-workshop",
   "head": "d2a72732907b495efc199bcf0ebd643abd5ce759",
   "recordedAt": "2026-08-15T09:08:00+08:00",
+  "revisionRevalidation": {
+    "observedAt": "2026-08-15T09:10:03+08:00",
+    "newAuthorityFact": "AIP5_E7_5_SDK_UI_BROWSER_SEAL_GREEN_WITH_WARNINGS",
+    "m1Commit": "5068ed1",
+    "memoryGate": "GREEN_WITH_WARNINGS",
+    "impact": "no ecommerce Workshop view, OperationCase, aftersale authority or source-pipeline readiness was added; W2-01 decision is unchanged"
+  },
   "decision": {
     "implementationStatus": "NOT_STARTED",
     "contractStatus": "READ_MODEL_TARGET_REVIEWED",
