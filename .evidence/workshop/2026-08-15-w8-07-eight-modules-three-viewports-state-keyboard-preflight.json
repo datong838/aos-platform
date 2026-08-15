@@ -1,0 +1,114 @@
+{
+  "schema": "aos-workshop-browser-acceptance-preflight/v1",
+  "taskId": "workshop-w8-07-eight-modules-three-viewports-state-keyboard-preflight-20260815",
+  "workItem": "W8-07",
+  "projectRevision": "AOS-000034",
+  "branch": "w2-workshop",
+  "head": "06891e2545f7539cc75d7cef154ab4b94148c37f",
+  "aipBaseline": "m1@4018dd382c169fbed567c633bdbb698e6f26447f",
+  "recordedAt": "2026-08-15T08:27:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "ACCEPTANCE_TARGET_CONTRACT_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "mayRunPositiveBrowserMatrix": false,
+    "reason": "the product baseline is not formally frozen and W1-10 W2-10 W3-14 W4-08 W5-08 W6-10 W7-11 are not GREEN; the current shell can prove generic state and accessibility primitives only, not eight operational module journeys"
+  },
+  "dependencyMatrix": [
+    {"dependency": "W1-10", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "installation registry reconciliation and real-effect closure are incomplete"},
+    {"dependency": "W2-10", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "eight canonical read models and their release-level evidence are incomplete"},
+    {"dependency": "W3-14", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "production contracts responsibility and stage runtime cumulative gate is incomplete"},
+    {"dependency": "W4-08", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "Evidence Wiki query saved-view browser and security gate is incomplete"},
+    {"dependency": "W5-08", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "external Action adapter canary kill reconcile compensation and browser gate is incomplete"},
+    {"dependency": "W6-10", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "three domain batch runtimes and positive browser proof are incomplete"},
+    {"dependency": "W7-11", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "media runtime provider security and fault-injection cumulative evidence is incomplete"},
+    {"dependency": "product_formal_freeze", "status": "NOT_FROZEN", "reason": "formal product review and freeze remain pending"},
+    {"dependency": "technical_formal_freeze", "status": "GREEN", "reason": "technical baseline V3 remains formally frozen"}
+  ],
+  "moduleMatrix": [
+    {"moduleId": "ecommerce.task-cockpit", "route": "/workshop/cockpit"},
+    {"moduleId": "ecommerce.content-campaign", "route": "/workshop/content-campaign"},
+    {"moduleId": "ecommerce.operations", "route": "/workshop/operations"},
+    {"moduleId": "ecommerce.creator-growth", "route": "/workshop/creator-growth"},
+    {"moduleId": "ecommerce.media-studio", "route": "/workshop/media-studio"},
+    {"moduleId": "ecommerce.analyst", "route": "/workshop/analyst"},
+    {"moduleId": "ecommerce.price-governance", "route": "/workshop/price-governance"},
+    {"moduleId": "ecommerce.customer", "route": "/workshop/customer"}
+  ],
+  "viewportMatrix": [
+    {"width": 1280, "expectation": "main region remains at least seventy percent and the right drawer defaults closed"},
+    {"width": 1440, "expectation": "left navigation main region and right drawer remain usable without obscuring the current context"},
+    {"width": 1920, "expectation": "evidence and task views may be placed side by side while preserving reading order"}
+  ],
+  "stateMatrix": {
+    "sevenAsyncStates": ["loading", "empty", "forbidden", "stale", "partial", "failed", "unknown"],
+    "separateDependencyState": "blocked",
+    "installationBoundaryState": "not-installed",
+    "positiveContentState": "ready",
+    "invariants": [
+      "stale and partial may preserve only explicitly labelled prior content with a data cutoff",
+      "failed forbidden and blocked use alert semantics and never inject sample data",
+      "unknown is not converted to empty failed zero or ready",
+      "blocked controls remain focusable and expose a stable reason code and recovery action",
+      "ready proves only the capability represented by the current canonical response and never implies all agents providers actions or modules are operational"
+    ]
+  },
+  "keyboardAndAccessibilityMatrix": [
+    "exactly one page-level H1 and stable main navigation and content landmarks",
+    "skip link moves focus to the module main region",
+    "current installed module has exactly one aria-current page marker",
+    "tablist tab and tabpanel use role aria-selected aria-controls and roving tabindex",
+    "ArrowLeft ArrowRight ArrowUp ArrowDown Home End Enter Space Tab Shift-Tab and Escape follow the component interaction contract",
+    "dialogs and drawers place initial focus on the summary and restore focus to the trigger after close",
+    "navigation collapse focus mode retry and manual takeover preserve or restore a visible focus target",
+    "status alert and asynchronous updates are exposed through appropriate live regions",
+    "status meaning is not color-only and icons have text equivalents",
+    "two hundred percent zoom and keyboard use do not hide required actions or trap focus",
+    "prefers-reduced-motion removes nonessential transitions and animations",
+    "charts expose a text summary or table and exact cutoff assumptions and unknown values"
+  ],
+  "browserEvidenceContract": [
+    "run a production build through formal HTTP rather than file URLs or static mockups",
+    "record the exact bundle installation module and API revisions plus tenant and data cutoff",
+    "for every module viewport and state assert DOM semantics keyboard path visible focus network response and console errors",
+    "use org-org/dev-project only for positive evidence and dev-org/dev-project only for isolation canary",
+    "capture refresh deep-link tenant-switch stale response and late response rejection",
+    "keep screenshot DOM network console authority and Receipt evidence in one immutable EvidencePack",
+    "a blocked or failed-close page is valid negative evidence but never positive feature completion"
+  ],
+  "currentImplementationFacts": {
+    "genericShell": "EcommerceWorkshopShell has one H1 a skip link focus mode focus restoration module exact refs and honest pending content",
+    "genericStates": "AsyncStateBoundary defines seven async states plus blocked not-installed and ready with status or alert semantics",
+    "navigation": "InstalledModuleNavigation renders only server-projected active installed modules and uses aria-current plus textual readiness",
+    "domainViews": "the eight production module read models and lifecycle views required by W2 through W7 are not all implemented or GREEN",
+    "browserHarness": "no current W8-07 production HTTP matrix exists for eight modules times three viewports times all required states and keyboard paths"
+  },
+  "tests": {
+    "executed": true,
+    "command": "/Users/ddt/.nvm/versions/node/v20.20.2/bin/node node_modules/vitest/vitest.mjs run src/components/workshop/AsyncStateBoundary.test.tsx src/components/workshop/EcommerceWorkshopShell.test.tsx src/components/workshop/InstalledModuleNavigation.test.tsx src/components/workshop/EcommerceWorkshopCatalogContext.test.tsx src/pages/WorkshopListPage.workshop.test.tsx",
+    "result": "5 files and 22 tests passed",
+    "scope": "generic shell state navigation tenant switch and legacy replacement behavior",
+    "doesNotProve": [
+      "eight module business read models",
+      "three viewport production layout",
+      "all tab drawer dialog and grid keyboard paths",
+      "two hundred percent zoom reduced motion screen reader or visible focus browser behavior",
+      "org-org positive operational journeys or dev-org negative network isolation across all modules"
+    ]
+  },
+  "blockers": [
+    "product formal review and freeze are incomplete",
+    "W1-10 W2-10 W3-14 W4-08 W5-08 W6-10 and W7-11 are not GREEN",
+    "the eight canonical module read models and lifecycle commands are not all present",
+    "no release-bound production HTTP accessibility EvidencePack covers the full matrix"
+  ],
+  "next": "align W8-07 acceptance contract through two review rounds without changing source or running a false positive browser matrix, then preflight W8-08",
+  "safety": [
+    "no source code changed",
+    "no migration or migration lease requested",
+    "no real tenant or browser mutation",
+    "no external action publication customer contact price write or provider execution",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}
