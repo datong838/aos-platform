@@ -1,0 +1,54 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w3-02-production-profile-resolver-refresh-doc-align-20260815",
+  "workItem": "W3-02",
+  "projectRevision": "AOS-000039",
+  "sourceCommit": "64751c2d7816e30d4278978309fa8885cf29385c",
+  "recordedAt": "2026-08-15T11:10:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "refreshed the eight-module asset inventory at AOS-000038",
+        "recorded eight empty view production and responsibility ref sets plus six placeholder and two legacy dry-run Evals",
+        "kept responsibility coverage independent from fixed Agent count"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "bounded reusable common production authorities from absent installed signed profile and Responsibility resolvers",
+        "kept immutable L1 profile assets separate from common writable authorities",
+        "froze W2 resolver eight non-placeholder refs and Bundle lifecycle EvidencePack as publication prerequisites",
+        "revalidated AOS-000039 BIND1_2 as Capability readiness progress that does not create profiles resolvers real bindings or runnable Agents"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/30-W3-02八Module生产Profile与ExactResolver预检ADR.md",
+      "preSha256": "c7741c6931d727ab067d635beffefaf6e93023ef5cd6be9d7a5a8f95c2dce674",
+      "postSha256": "f673cafd3e887d297f8e0dafe92eb94a4708b00521904332d16bf1a8ba87a21b"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "be8912d675d50c17190c41361284e779767a3ea46d89056ea6dfdbd74b260180",
+      "postSha256": "7f99a54508a756d6f775a050eddb79520cc3599962658f7cf633f1cb1cebf1ee"
+    }
+  ],
+  "decision": {
+    "preparation": "REFRESHED_GREEN",
+    "implementation": "NOT_STARTED",
+    "publication": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two review rounds passed after remediation",
+    "both post hashes match",
+    "AOS-000039 BIND1_2 progress was separated from profile publication and resolver readiness",
+    "W3-02 remains unchecked and no Bundle publish install profile Brief Task AgentRun Handoff Action database tenant provider or external mutation was introduced"
+  ]
+}
