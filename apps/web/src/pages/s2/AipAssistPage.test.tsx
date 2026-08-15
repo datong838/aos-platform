@@ -110,9 +110,12 @@ describe("AipAssistPage exact subject", () => {
     await act(async () => root.render(<MemoryRouter><AipAssistPage client={client} /></MemoryRouter>));
     const collapse = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "收起上下文")!;
     collapse.focus();
-    await act(async () => { collapse.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); collapse.click(); });
+    await act(async () => { collapse.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); });
     expect(collapse.tagName).toBe("BUTTON");
     expect(document.activeElement).toBe(collapse);
     expect(collapse.getAttribute("aria-expanded")).toBe("false");
+    const focus = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "Focus Mode")!;
+    await act(async () => { focus.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true })); });
+    expect(focus.getAttribute("aria-pressed")).toBe("true");
   });
 });

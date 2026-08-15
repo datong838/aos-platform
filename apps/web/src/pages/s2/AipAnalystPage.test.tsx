@@ -40,16 +40,16 @@ describe("AipAnalystPage governed query", () => {
     const collapse = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "收起查询")!;
     expect(collapse.tagName).toBe("BUTTON");
     collapse.focus();
-    await act(async () => { collapse.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); collapse.click(); });
+    await act(async () => { collapse.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); });
     expect(document.activeElement).toBe(collapse);
     expect(collapse.getAttribute("aria-expanded")).toBe("false");
-    await act(async () => { collapse.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true })); collapse.click(); });
+    await act(async () => { collapse.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true })); });
     expect(collapse.getAttribute("aria-expanded")).toBe("true");
     const evidence = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "收起证据")!;
-    await act(async () => { evidence.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); evidence.click(); });
+    await act(async () => { evidence.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); });
     expect(evidence.getAttribute("aria-expanded")).toBe("false");
     const focus = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "Focus Mode")!;
-    await act(async () => { focus.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true })); focus.click(); });
+    await act(async () => { focus.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true })); });
     expect(focus.getAttribute("aria-pressed")).toBe("true");
     await act(async () => focus.click());
 
