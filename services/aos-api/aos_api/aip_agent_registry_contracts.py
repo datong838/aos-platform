@@ -88,6 +88,41 @@ class AgentInstanceOverlay(AipContractModel):
         return cleaned
 
 
+class OperationalBindingDependencies(AipContractModel):
+    """Exact refs required to evaluate a tenant capability/skill binding.
+
+    The referenced authorities remain owned by AIP-4/AIP-7/O1.  BIND-1 only
+    freezes their exact identities in a tenant-scoped dependency snapshot.
+    """
+
+    provider_ref: VersionedAssetRef | None = None
+    model_route_ref: VersionedAssetRef | None = None
+    runtime_policy_ref: VersionedAssetRef | None = None
+    eval_gate_ref: VersionedAssetRef | None = None
+    eval_contract_ref: VersionedAssetRef | None = None
+    license_evidence_refs: list[ResourceRef] = Field(default_factory=list, max_length=128)
+    data_dependency_refs: list[VersionedAssetRef] = Field(default_factory=list, max_length=128)
+    tool_dependency_refs: list[VersionedAssetRef] = Field(default_factory=list, max_length=128)
+    budget_policy_ref: VersionedAssetRef | None = None
+    allow_degraded: bool = False
+
+    @model_validator(mode="after")
+    def _exact_reference_kinds(self) -> OperationalBindingDependencies:
+        expected = {
+            "provider_ref": "ProviderRevision",
+            "model_route_ref": "ModelRouteRevision",
+            "runtime_policy_ref": "RuntimePolicyRevision",
+            "eval_gate_ref": "EvalGateDecision",
+            "eval_contract_ref": "EvalContractRevision",
+            "budget_policy_ref": "BudgetPolicyRevision",
+        }
+        for field_name, asset_type in expected.items():
+            ref = getattr(self, field_name)
+            if ref is not None and ref.asset_type != asset_type:
+                raise ValueError(f"{field_name} must reference {asset_type}")
+        return self
+
+
 class CapabilityBindingRequest(AipContractModel):
     capability: VersionedAssetRef
     secret_ref: str = Field(min_length=1, max_length=512)
@@ -326,6 +361,14 @@ class SkillBinding(AipContractModel):
     skill: VersionedAssetRef
     capability_binding_ids: list[str]
     budget_policy_ref: VersionedAssetRef
+    dependencies: OperationalBindingDependencies = Field(
+        default_factory=OperationalBindingDependencies
+    )
+    readiness: CapabilityReadiness = CapabilityReadiness.UNKNOWN
+    readiness_reasons: list[str] = Field(default_factory=list, max_length=64)
+    dependency_snapshot_hash: str | None = Field(default=None, pattern=SHA256_PATTERN)
+    last_evaluated_at: datetime | None = None
+    readiness_expires_at: datetime | None = None
     status: str
     version: int = Field(ge=1)
     created_at: datetime
@@ -343,6 +386,33 @@ class RegistryReceipt(AipContractModel):
     status: str
     created_by: str
     created_at: datetime
+
+
+class EvaluateOperationalBindingRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    dependencies: OperationalBindingDependencies
+    expected_dependency_snapshot_hash: str | None = Field(
+        default=None, pattern=SHA256_PATTERN
+    )
+
+
+class OperationalBindingReadiness(AipContractModel):
+    readiness: CapabilityReadiness
+    reasons: list[str] = Field(default_factory=list, max_length=64)
+    dependencies: OperationalBindingDependencies
+    dependency_snapshot_hash: str = Field(pattern=SHA256_PATTERN)
+    evaluated_at: datetime
+    expires_at: datetime
+
+    @model_validator(mode="after")
+    def _valid_window(self) -> OperationalBindingReadiness:
+        if self.expires_at <= self.evaluated_at:
+            raise ValueError("operational binding readiness must expire after evaluation")
+        if len(self.reasons) != len(set(self.reasons)) or any(
+            not value.strip() for value in self.reasons
+        ):
+            raise ValueError("readiness reasons must be unique and non-blank")
+        return self
 
 
 class CreateCapabilityBindingRequest(AipContractModel):
@@ -368,6 +438,14 @@ class CapabilityBinding(AipContractModel):
     quota_policy_revision: str
     timeout_ms: int
     max_concurrency: int
+    dependencies: OperationalBindingDependencies = Field(
+        default_factory=OperationalBindingDependencies
+    )
+    operational_readiness: CapabilityReadiness = CapabilityReadiness.UNKNOWN
+    readiness_reasons: list[str] = Field(default_factory=list, max_length=64)
+    dependency_snapshot_hash: str | None = Field(default=None, pattern=SHA256_PATTERN)
+    last_evaluated_at: datetime | None = None
+    readiness_expires_at: datetime | None = None
     status: str
     version: int
     observed_at: datetime | None = None
