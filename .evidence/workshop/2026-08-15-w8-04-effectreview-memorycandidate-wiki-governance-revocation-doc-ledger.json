@@ -6,11 +6,18 @@
   "branch": "w2-workshop",
   "sourceCommit": "17ff561",
   "recordedAt": "2026-08-15T08:03:00+08:00",
+  "authorityRevalidatedAt": "2026-08-15T08:04:00+08:00",
+  "authorityRevalidation": {
+    "projectRevision": "AOS-000034",
+    "sourceCommit": "4018dd382c169fbed567c633bdbb698e6f26447f",
+    "newFact": "E7-4D read-only exposure/context API is GREEN; E7-5 remains",
+    "decisionImpact": "dependency improves but W8-04 remains HARD_GATE_BLOCKED"
+  },
   "files": [
     {
       "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/04-EvidenceWiki查询与保存视图.md",
       "preSha256": "cd4432e7e14f2245983760bc3a0768d8519415c13ddb8ca90d3d8d2650d66510",
-      "postSha256": "f24734fccba6e56fe5a171148f64ba5c6402739464f8a00acf4be4f12f13ee19",
+      "postSha256": "4f923b479e1f5ff644798e9d036d4eb59bc6de4457219b481676eb3c68a2e776",
       "change": "added EffectReview learning binding independent governance promotion and revocation impact contract"
     },
     {
@@ -22,13 +29,13 @@
     {
       "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
       "preSha256": "cff206bb02374c82f307caa2f00f284e02874dac44619e3609fe247ba5f6a8c2",
-      "postSha256": "8d6e9d2c224872c0cac88d53451d436b5f0b3d2974cf9c1e4f466b400221f1ea",
+      "postSha256": "92f9c4e93727ff725103407e9f335a4f4db79a333d54b020fd3670b3f2d8acb9",
       "change": "replaced W8-04 evidence placeholder with exact E7 maturity blockers and no-promotion decision"
     },
     {
       "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/73-W8-04-EffectReviewMemoryCandidateWiki治理撤销预检ADR.md",
       "preSha256": null,
-      "postSha256": "6e26a1c954f875019064e7257a85e38e466d13e09d4b588ed421ccae30901fb5",
+      "postSha256": "4135ebfb2782c98db293084b11d6e7671932a2d9a5882063bc744e6f2a1cf4ea",
       "change": "created W8-04 scenario ADR and two review rounds"
     }
   ],
@@ -51,7 +58,7 @@
       "evidence": [
         "revocation preserves historical exposure and receipt while future reads fail closed",
         "impact refs trigger review or recomputation and never silently rewrite historical decisions",
-        "E7-4C and generic tests are explicitly insufficient for DEP-E7 and Workshop E2E",
+        "E7-4D GREEN and generic tests are explicitly insufficient for DEP-E7 and Workshop E2E",
         "no candidate Wiki real-tenant browser or revocation mutation occurred"
       ]
     }
