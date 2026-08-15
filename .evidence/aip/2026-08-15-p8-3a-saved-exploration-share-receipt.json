@@ -1,0 +1,66 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-P8-3A-20260815",
+  "status": "CODE_CONTROL_GREEN_WITH_BASELINE_WARNINGS",
+  "branch": "w1-aip",
+  "baseCommit": "3d71ace4b75c2c09f1b20f716c2af607e9764f36",
+  "authorityRevision": "AOS-000046",
+  "observedAt": "2026-08-15T19:21:53+08:00",
+  "tenantPolicy": {
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "realTenantBusinessWrites": false
+  },
+  "lease": {
+    "taskId": "aip-p8-3a-saved-exploration-share-20260815",
+    "owner": "w1-aip",
+    "migrationLease": false,
+    "baseRevision": "AOS-000046"
+  },
+  "implementation": [
+    "Reused the O1 append-only SavedExploration head, revision and receipt authority without new tables",
+    "Added strict Analyst query, exact QueryResult revision, cutoff, exact source refs and sort fields",
+    "Rejected copied result bodies and authority, revision or cutoff drift",
+    "Added expiring workspace share and unshare commands with owner-only writes, CAS and idempotency",
+    "Failed closed for expired and cross-tenant reads while retaining owner governance access",
+    "Kept legacy O1 workspace visibility readable for backwards compatibility while new P8 shares require expiry"
+  ],
+  "fileHashes": {
+    "services/aos-api/aos_api/ontology_exploration_assets.py": {
+      "before": "c5d4f053c935e05bc0308ee3bc476a273586c1bc578b4d86d480ee49d6c5ed26",
+      "after": "82188e75388d575d1cac759b01dd01e19b07fa0833db02c8802102846a10d262"
+    },
+    "services/aos-api/aos_api/routers/oe_enhancements.py": {
+      "before": "c091ffdc5181f17eb5c791a639ac371cc53086a8c063e525df16c91511990510",
+      "after": "bed40bf473c1be12fc55cd02a62be9888964d43edec6dc0a901d97a18967085f"
+    },
+    "services/aos-api/tests/aip/test_aip8_saved_exploration.py": {
+      "before": null,
+      "after": "844bf29f3570ebdee559ad3fbbdb52aea97dc85674aa13aaf353107e902a3888"
+    }
+  },
+  "schemeHashes": {
+    "07-228-AIP助手分析师与通用工作台实施方案.md": {
+      "before": "20815ff44c0dfe7e05ef2eef182eae72bca3c47e5d91da5995ad34e47aaf7892",
+      "after": "1880d901f5d33674a10e45f60f736b514b98ff2b5906e764acd887b45de2330c"
+    },
+    "全量开发清单/07-AIP助手分析师与通用工作台开发清单.md": {
+      "before": "d7c7e5c6db9f0d6a4a07f208f3cb5082c3dde3817eaf7ccc708eff2b5c508617",
+      "after": "2275ad06758d3758934bc61bca2eaf8945a83d57ac7ead4448544972328c7e71"
+    }
+  },
+  "verification": [
+    "14 SavedExploration O1 and P8 strict, expiry, tenant, owner, HTTP and OpenAPI tests passed",
+    "28 cumulative P8-1, P8-2 and P8-3A tests passed",
+    "Alembic reports the unique aip8_001 head",
+    "compileall and git diff check passed",
+    "No migration, real tenant business write, external Provider call, web change or Workshop change was performed"
+  ],
+  "baselineWarnings": [
+    "The previously recorded full tests/aip baseline remains 430 passed and 10 failed",
+    "Six failures are the unmounted AIP-5 E7 canonical router and four are shared test database ordering pollution",
+    "Those debts are outside the P8-3A lease and remain open for cumulative closure"
+  ],
+  "operationalStatus": "BLOCKED_UNTIL_P8_3B_CANONICAL_ADAPTERS_ARE_ASSEMBLED",
+  "nextGate": "P8_3B_CANONICAL_READ_ADAPTER_ASSEMBLY"
+}
