@@ -1,0 +1,131 @@
+{
+  "schema": "aos-workshop-w2-unified-operations-read-model-preflight/v1",
+  "taskId": "workshop-w2-01-unified-operations-read-model-preflight-20260815",
+  "workItem": "W2-01",
+  "projectRevision": "AOS-000034",
+  "branch": "w2-workshop",
+  "head": "d2a72732907b495efc199bcf0ebd643abd5ce759",
+  "recordedAt": "2026-08-15T09:08:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "READ_MODEL_TARGET_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "W1-10 and W2-00 are not GREEN; the current Workshop API exposes only module catalog and readiness and has no unified operations view envelope"
+  },
+  "liveCodeFindings": {
+    "workshopHttpOperations": [
+      "ecommerceWorkshopModulesList",
+      "ecommerceWorkshopModuleReadinessGet"
+    ],
+    "workshopViewOperation": "ABSENT",
+    "workshopWebSdkViewContract": "ABSENT",
+    "canonicalOntologyObjects": [
+      "Order",
+      "OrderLine",
+      "ProductSku",
+      "Shipment",
+      "Payment"
+    ],
+    "genericOntologyRead": "GET /v1/objects/{object_type} exists with principal-derived tenant filtering and field redaction, but it lacks the Workshop view envelope, multi-source cutoff, quality, blocker, timeline, stable cursor and cross-object reconciliation semantics",
+    "operationCaseAuthority": "ABSENT",
+    "aggregationPolicyRevisionAuthority": "ABSENT",
+    "canonicalAftersaleObject": "ABSENT_FROM_CORE_12_OT",
+    "integrationOperationsReadiness": "generic release evidence type only; it is not the ecommerce.operations read model"
+  },
+  "sourceReadiness": {
+    "order": "BLOCKED_LATEST_PIPELINE_NOT_FOUND",
+    "orderLine": "BLOCKED_LATEST_PIPELINE_NOT_FOUND",
+    "shipment": "BLOCKED_LATEST_PIPELINE_EXECUTOR_FAILED",
+    "payment": "BLOCKED_LATEST_PIPELINE_NOT_FOUND",
+    "productSku": "BLOCKED_LATEST_PIPELINE_NOT_FOUND",
+    "historicalProjection": "QUERYABLE_BUT_NOT_CURRENT_READINESS",
+    "rule": "historical obj_instance or ecom_object rows cannot be promoted to current operational facts while the latest source runs are failed"
+  },
+  "targetViewContract": {
+    "operationId": "ecommerceWorkshopOperationsViewGet",
+    "method": "GET",
+    "canonicalPath": "/v1/ecommerce-workshop/views/operations",
+    "tenantSource": "verified Principal only",
+    "root": [
+      "moduleId",
+      "viewId",
+      "route",
+      "schemaVersion",
+      "resourceRevision",
+      "evaluatedAt",
+      "dataCutoff",
+      "readiness",
+      "permissions",
+      "lineageRefs",
+      "partialReasons"
+    ],
+    "sourceSlices": [
+      "orders",
+      "orderLines",
+      "inventory",
+      "fulfillment",
+      "payments",
+      "aftersaleEvents",
+      "operationCases"
+    ],
+    "perSliceRequirements": [
+      "source and projection cutoff",
+      "latest run ref status and error code",
+      "quality and reconciliation status",
+      "row and active counts with declared denominator",
+      "stable cursor and deterministic tie-break",
+      "scoped subject Evidence Task Action and Case refs",
+      "field disclosure and masking decision",
+      "blockers and next admissible action"
+    ]
+  },
+  "authorityBoundaries": [
+    "the view is a rebuildable L1 projection and never becomes Order Inventory Shipment Payment or event authority",
+    "OperationCase and AggregationPolicyRevision require canonical L0 authority before the corresponding slices can be READY",
+    "aftersale data must map to an approved canonical object or event contract; it cannot be inferred from refund-like fields or UI labels",
+    "client supplied org project cutoff readiness permission or aggregate totals are rejected",
+    "missing source cutoff quality or query capability produces blocked or unknown rather than zero",
+    "raw provider primary keys and address payment customer or secret payloads never enter subject refs logs or receipts"
+  ],
+  "stateAndCountInvariants": [
+    "module readiness and every source slice readiness remain separately visible",
+    "order header line payment shipment and case counts have explicit denominators and are not added together",
+    "late duplicate deleted partial and unknown records remain in reconciliation accounting",
+    "empty means an eligible current query returned zero; failed stale forbidden unknown and blocked are distinct",
+    "cross-object joins retain originals lineage and expose unmatched counts instead of silently dropping rows"
+  ],
+  "requiredTestsWhenUnblocked": [
+    "strict DTO and SDK parser including extra enum time hash cursor and count failures",
+    "store query tenant scope no-scope wrong-scope cross-tenant and field redaction",
+    "source freshness quality cutoff and latest-run precedence",
+    "Order OrderLine ProductSku Shipment Payment join and unmatched-count conservation",
+    "aftersale event and OperationCase authority absence or partial-state behavior",
+    "HTTP pagination sorting filter refresh and installation exact-lock drift",
+    "org-org positive and dev-org negative browser states without fixture fallback",
+    "PII Secret raw provider identifier and error-message leakage scans"
+  ],
+  "blockers": [
+    "W1-10 real Registry reconciliation and positive Workshop projection are not GREEN",
+    "W2-00 DEP-DATA remains RED",
+    "five required source pipelines report PIPELINE_NOT_FOUND and Shipment reports PIPELINE_EXECUTOR_FAILED",
+    "Workshop view API DTO store and strict Web SDK do not exist",
+    "OperationCase AggregationPolicyRevision and canonical aftersale authority are absent"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "there is no W2-01 implementation to test and its hard dependencies are RED; generic ontology tests cannot prove the Workshop read model",
+    "doesNotProve": [
+      "current ecommerce operations readiness",
+      "cross-source reconciliation",
+      "aftersale or OperationCase authority",
+      "positive Workshop browser behavior"
+    ]
+  },
+  "next": "align the W2-01 read-model contract and evidence reference through two review rounds, then continue W2-02 preflight without starting W2 runtime code",
+  "safety": [
+    "read-only repository and prior evidence inspection only",
+    "no database pipeline schedule tenant browser or external action",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}
