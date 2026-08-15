@@ -1,0 +1,20 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w8-11-cumulative-release-gate-doc-align-20260815",
+  "workItem": "W8-11",
+  "projectRevision": "AOS-000034",
+  "sourceCommit": "2e1acb15cccc4c8f6e181d7ea5b3a6433c564c66",
+  "recordedAt": "2026-08-15T08:52:00+08:00",
+  "reviewRounds": [
+    {"round": 1, "result": "PASS_AFTER_REMEDIATION", "closed": ["bound every gate to one release identity", "defined fourteen evidence columns", "forbade cross-commit test-count aggregation"]},
+    {"round": 2, "result": "PASS", "closed": ["added drift invalidation", "added skipped and not-applicable disposition", "separated negative failure-close from positive completion and required exact readback"]}
+  ],
+  "files": [
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/06-安全租户可观测测试与回滚.md", "preSha256": "20a28619c5bcc0933fd05bdb4c56e2278e482460b60ea59d65c930b3df5fbd2e", "postSha256": "8c10b81a61a93e1b1ae0470dccba4f835d2f6b1c4de92336aa6e4ee8009d9a36"},
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/20-实施波次依赖门与交付清单.md", "preSha256": "8dee7658ca52a342448a904922db648b133db2f01e15dbf727db59a460fc11ae", "postSha256": "d4972dabb5500849e510223e00538bf37d53ddc58790177fc61415c3031fe3ab"},
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md", "preSha256": "998e9f2e4d662c2a98a0a0738461d94c8a74faffbebb9c76314b56832ecc71cc", "postSha256": "f6f68c1fa0c4651017d86ab3c7d2419279208d0ac2b67e5c5ec7a9595613c6b6"},
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/80-W8-11-累计OpenAPIAlembicBundleEvalSecurityDiff门预检ADR.md", "preSha256": null, "postSha256": "ec040f8a15398347d411b6a0c6aeb81caa993bbdcdd1c02de9f67a784064923a"}
+  ],
+  "decision": {"contract": "APPROVED", "implementation": "NOT_STARTED", "dependency": "HARD_GATE_BLOCKED", "externalEffect": "NONE"},
+  "verification": ["two review rounds passed", "post hashes match", "W8-11 remains unchecked", "no cumulative test result was manufactured"]
+}
