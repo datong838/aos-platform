@@ -1,0 +1,63 @@
+{
+  "schema": "aos-workshop-w2-data-readiness-refresh/v1",
+  "taskId": "workshop-w2-00-data-readiness-aos41-refresh-20260815",
+  "observedAt": "2026-08-15T13:33:59+08:00",
+  "authorityRevision": "AOS-000041",
+  "mode": "PostgreSQL READ ONLY transaction; no Pipeline or Schedule triggered",
+  "result": "DEP_DATA_RED_W2_00_NOT_STARTED_PROGRESS_7_OF_12",
+  "latestRuns": {
+    "succeeded": [
+      {"pipeline": "P01", "rowsWritten": 1},
+      {"pipeline": "P02", "rowsWritten": 124},
+      {"pipeline": "P04", "rowsWritten": 11},
+      {"pipeline": "P06", "rowsWritten": 920},
+      {"pipeline": "P09", "rowsWritten": 6},
+      {"pipeline": "P10", "rowsWritten": 38},
+      {"pipeline": "P11", "rowsWritten": 20}
+    ],
+    "failed": {
+      "PIPELINE_EXECUTOR_FAILED": ["P03", "P05", "P07"],
+      "PIPELINE_NOT_FOUND": ["P08", "P12"]
+    }
+  },
+  "deltaFrom20260814": {
+    "succeeded": "6/12 -> 7/12",
+    "failed": "6/12 -> 5/12",
+    "P06": "PIPELINE_NOT_FOUND -> succeeded; rowsWritten=920",
+    "P03": "PIPELINE_NOT_FOUND -> PIPELINE_EXECUTOR_FAILED",
+    "P05": "PIPELINE_NOT_FOUND -> PIPELINE_EXECUTOR_FAILED",
+    "P07": "PIPELINE_EXECUTOR_FAILED unchanged",
+    "P08": "PIPELINE_NOT_FOUND unchanged",
+    "P12": "PIPELINE_NOT_FOUND unchanged"
+  },
+  "contractReview": {
+    "P08": {
+      "status": "DRIFTED_BLOCKER",
+      "finding": "Declared mapping still includes direct or quasi-identifying fields such as mobile, email, nickname, avatar, realName, birthday and address while runtime CustomerLite persists only memberLevel and status and the drop policy is stricter."
+    },
+    "P10": {
+      "status": "SECRET_FLOW_BLOCKER",
+      "finding": "Declared mapping still includes value and says no PII; runtime omits value from persisted properties but retains the raw value at the normalized row top level, and tests intentionally use a secret-bearing sample. Intermediate log, DLQ, Dataset and error-evidence exclusion is not proven."
+    }
+  },
+  "decision": {
+    "DEP_DATA": "RED",
+    "W2_00": "NOT_STARTED",
+    "canStartW2Runtime": false,
+    "remainingExitConditions": [
+      "fresh P03, P05 and P07 executor success or approved audited degradation",
+      "P08 registration plus one minimal CustomerLite contract across mapping, normalizer, schema, drop policy and query",
+      "P12 registration plus fresh success or approved audited degradation",
+      "P10 raw secret value proven absent from logs, DLQ, Dataset, error evidence and Workshop query",
+      "per-source freshness, quality, cutoff, reconciliation and blocker envelope",
+      "W1-10 positive gate GREEN"
+    ]
+  },
+  "safety": {
+    "databaseWrites": 0,
+    "pipelineRunsTriggered": 0,
+    "scheduleChanges": 0,
+    "tenantObjectsChanged": 0,
+    "externalEffects": 0
+  }
+}

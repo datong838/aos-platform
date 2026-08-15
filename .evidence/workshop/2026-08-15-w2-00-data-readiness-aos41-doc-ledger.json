@@ -1,0 +1,34 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w2-00-data-readiness-aos41-refresh-20260815",
+  "recordedAt": "2026-08-15T13:37:00+08:00",
+  "authorityRevision": "AOS-000041",
+  "baselineCommit": "dbec56be5fad2de8d1c76d8c05873af94cca6a16",
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/28-W2只读基座数据源Readiness预审与开工门.md",
+      "preSha256": "f72b05c6223d7e03332abe2df6e74502a37b325095115b0b52775b9e0c40af7b",
+      "postSha256": "5f91ddf3bf44fd9de0452de7794c958b47762cf79ca4f46c37b9507d8960d73f"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "9d4ba5a3ce004e061576258e11de0b29a0fd0ac3c45d63ff804eb6074284e171",
+      "postSha256": "5deedd63d8c77e3434ab6dd826c34b3e7593e9e92720bd04b06624579d210ae7"
+    }
+  ],
+  "reviewRounds": [
+    {
+      "round": 1,
+      "finding": "The latest source gate improved from six to seven successes; P06 is now successful and P03/P05 have moved from missing registration to executor failure.",
+      "remediation": "Updated W2-00, W2-01, W2-06 and W2-10 current status without promoting failed or historical rows to readiness."
+    },
+    {
+      "round": 2,
+      "finding": "P08 still has a declared-versus-runtime privacy contract split, and P10 retains secret-bearing raw value in the normalized row despite omitting it from persisted properties.",
+      "remediation": "Kept DEP-DATA RED and froze explicit privacy, secret-flow, freshness, quality, cutoff and reconciliation exit conditions."
+    }
+  ],
+  "verdict": "PLAN_REFRESHED_GREEN; DEP_DATA_RED; W2-00_NOT_STARTED; PROGRESS_7_OF_12",
+  "noCodeOrVisualChange": true,
+  "externalEffect": false
+}
