@@ -1,0 +1,58 @@
+{
+  "schema": "aos-workshop-dependency-refresh/v1",
+  "taskId": "workshop-w3-01-02-bind1-4-dependency-refresh-20260815",
+  "recordedAt": "2026-08-15T13:18:00+08:00",
+  "authorityRevision": "AOS-000041",
+  "phase": "BIND1_4_CANONICAL_API_OPENAPI_GREEN_WITH_WARNINGS",
+  "branch": "w2-workshop",
+  "head": "56ca3d77ed7ecd540c7f5910adbd1d68d4848c92",
+  "aipDeliveryReceipt": {
+    "taskId": "aip-bind1-4-canonical-binding-api-20260815",
+    "commit": "9da75a5c318cd7db506781bc1e6be14f4d081e22",
+    "result": "GREEN_WITH_WARNINGS",
+    "readback": "org-org/dev-project 0 bindings; dev-org/dev-project 0 bindings",
+    "nextGate": "BIND1_5_STRICT_SDK_UI_BROWSER"
+  },
+  "w3_01": {
+    "closedNow": [
+      "CapabilityBinding tenant-scoped canonical list/get/preview/create/evaluate/activate/suspend/revoke API",
+      "SkillBinding tenant-scoped canonical API",
+      "14 OpenAPI path families with Principal scope, Idempotency-Key, stable errors and Receipt semantics"
+    ],
+    "stillMissing": [
+      "BIND1-5 strict TypeScript SDK and browser evidence",
+      "AgentRun canonical lifecycle read API/OpenAPI/SDK",
+      "HandoffEnvelope issue/get/consume/revoke/expire API/OpenAPI/SDK",
+      "fixed integration commit visible in the Workshop baseline",
+      "any real operational CapabilityBinding, SkillBinding or runnable Agent"
+    ],
+    "ownership": "Workshop must wait for and reuse aipAgentControl BIND1-5; it must not create a second binding/run/handoff client or BFF authority.",
+    "decision": "NOT_STARTED / PREPARATION_REFRESHED_GREEN / HARD_GATE_BLOCKED"
+  },
+  "w3_02": {
+    "closedNow": [
+      "Skill publication and SkillBinding readiness foundations",
+      "binding API/OpenAPI needed later to expose assignee readiness"
+    ],
+    "stillMissing": [
+      "generic installed signed production-profile exact resolver",
+      "ResponsibilityTemplate and Brief/Eval schema artifact resolver wiring",
+      "eight immutable Module production profile descriptors",
+      "8/8 non-empty production and responsibility refs",
+      "6 placeholder and 2 legacy dry-run Eval replacement",
+      "Bundle publish/install/rollback/revoke and positive tenant EvidencePack"
+    ],
+    "nonSubstitution": "Skill publication or a zero-binding canonical API is not a production-profile publication or installed artifact resolution.",
+    "decision": "NOT_STARTED / PREPARATION_REFRESHED_GREEN / HARD_GATE_BLOCKED"
+  },
+  "tests": {
+    "executed": false,
+    "reason": "Dependency and committed Delivery Receipt refresh only; no Workshop runtime or profile artifact changed.",
+    "doesNotProve": ["W3-01 SDK integration", "W3-02 profile publication", "operational Agent readiness"]
+  },
+  "safety": [
+    "read-only shared authority, AIP Delivery Receipt and approved AIP plan inspection",
+    "no w1-aip uncommitted content read or modified",
+    "no code, Bundle, database, tenant, browser or external effect"
+  ]
+}

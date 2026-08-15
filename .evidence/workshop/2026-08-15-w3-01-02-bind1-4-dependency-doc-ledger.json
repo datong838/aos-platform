@@ -1,0 +1,44 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w3-01-02-bind1-4-dependency-refresh-20260815",
+  "recordedAt": "2026-08-15T13:22:30+08:00",
+  "authorityRevision": "AOS-000041",
+  "baselineCommit": "56ca3d77ed7ecd540c7f5910adbd1d68d4848c92",
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/29-W3-01唯一AgentCapabilityHandoff-SDK与ExactRef预检ADR.md",
+      "preSha256": "bc6da626582239395ae2cb169df985c91f3f6dfe2caa10d16c0601df47c46d6d",
+      "postSha256": "29f045c06f7145e773010546557e210b46fa2d9743e335970d7ed194d6d088a4"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/30-W3-02八Module生产Profile与ExactResolver预检ADR.md",
+      "preSha256": "f673cafd3e887d297f8e0dafe92eb94a4708b00521904332d16bf1a8ba87a21b",
+      "postSha256": "73936a2047da8f4d8115694b9c9b1c8acd9f3a8a1d2995c92952d6f933c986b0"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "c58402291f36b181075a6aa38758a63cb17003a8ae6f2234327b55266fd5e4bb",
+      "postSha256": "25bd30793c0dad159f7de9856191b42b491b7770d0b642bad381153ef61f750d"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "468bef9f26f14bbef917d069938e1f6f7e34ca1e71bcbd17f7ecda3260dfaaa9",
+      "postSha256": "31743eda493aaff4ae8012821cb44843ebf6fdc1e685f4796a5c11f6e7f49aa4"
+    }
+  ],
+  "reviewRounds": [
+    {
+      "round": 1,
+      "finding": "AOS-000038 era wording treated all runtime-control HTTP surfaces as absent after BIND1-4 had delivered CapabilityBinding and SkillBinding canonical API/OpenAPI.",
+      "remediation": "Split DEP-A6R into Binding API closed, AgentRun and Handoff API missing, and BIND1-5 strict SDK/browser missing; retained zero-binding and non-runnable boundaries."
+    },
+    {
+      "round": 2,
+      "finding": "The appended authority correction initially coexisted with stale current-body wording, and Skill or Binding readiness could be misread as a production-profile resolver.",
+      "remediation": "Updated the current conclusion, dependency table and formal DEP-A6R row; froze AIP versus Workshop ownership and the non-substitution rule for signed production-profile resolution."
+    }
+  ],
+  "verdict": "PREPARATION_REFRESHED_GREEN; W3-01_W3-02_RUNTIME_NOT_STARTED; HARD_GATE_BLOCKED",
+  "noCodeOrVisualChange": true,
+  "externalEffect": false
+}
