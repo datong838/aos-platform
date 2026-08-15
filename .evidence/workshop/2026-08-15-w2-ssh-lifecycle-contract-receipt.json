@@ -1,0 +1,73 @@
+{
+  "schema": "workshop-delivery-receipt/v1",
+  "taskId": "workshop-w2-ssh-lifecycle-contract-20260815",
+  "authorityRevision": "AOS-000045",
+  "branch": "w2-workshop",
+  "baseHead": "a625ac1571a1b368974b3879bda6120d851f241d",
+  "decision": "DATA_ADAPTER_SSH_LIFECYCLE_CONTRACT_READY_WORKSHOP_REMAINS_BLOCKED",
+  "reviewedCode": [
+    {
+      "path": "services/aos-api/aos_api/jdbc_connector_runtime.py",
+      "sha256": "bb2d6e9e70bf78e4055091b81a5eb7aa42f8c21130999d7a65d2aaf06b8f5f56"
+    },
+    {
+      "path": "services/aos-api/tests/test_jdbc_connector_runtime.py",
+      "sha256": "8ee65c78609a3ba31cb83674766ef64cbdc342e9cfe20f5a448565f46920b188"
+    }
+  ],
+  "externalArtifacts": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/28-W2只读基座数据源Readiness预审与开工门.md",
+      "preSha256": "592c33cc672fc47ca78b568afc30370f781c5bbf2d3783b7b17ef5aa3d57d3d1",
+      "postSha256": "5b268ddd13ae72250b100154d74782651351b39358de1c757d052ac0c8f2eff8"
+    }
+  ],
+  "confirmedFindings": [
+    "both SSH authentication modes detach with ssh -f while the runtime retains only the launcher Popen",
+    "tunnel health is currently inferred from local port openness without forward ownership or database handshake proof",
+    "password-mode failure paths do not guarantee askpass file and detached-process cleanup",
+    "password mode omits the configured SSH port and hardcodes the remote forward host",
+    "database query failures evict the connection but not its associated tunnel",
+    "tests do not cover password mode, cleanup, false-positive ports, paired eviction, or concurrent single-flight"
+  ],
+  "sanitizedHostSnapshot": {
+    "capturedAt": "2026-08-15T17:27:00+08:00",
+    "askpassFileCount": 7,
+    "askpassModes": [
+      "0700"
+    ],
+    "oldestApproximateAgeDays": 2.6,
+    "sshLocalForwardListenerCount": 2,
+    "contentsRead": false,
+    "filesDeleted": false,
+    "processesTerminated": false,
+    "attribution": "UNCONFIRMED_HOST_RESIDUE_ONLY"
+  },
+  "frozenRemediation": [
+    "owned foreground SSH child with deterministic shutdown",
+    "uniform sshPort and remoteHost command contract",
+    "finally-based askpass cleanup on all outcomes",
+    "process plus owned-forward plus read-only DB-handshake readiness",
+    "atomic single-flight cache publication",
+    "paired connection and tunnel eviction with one bounded rebuild",
+    "SOURCE_CONNECTION_ERROR taxonomy",
+    "tenant-scoped readiness envelope and real-run acceptance"
+  ],
+  "verification": {
+    "documentContractSectionsPresent": true,
+    "jsonValid": true,
+    "businessCodeChanged": false,
+    "pipelineTriggered": false,
+    "databaseMutation": false,
+    "credentialsReadOrLogged": false
+  },
+  "progress": {
+    "completedTasks": 21,
+    "totalTasks": 96,
+    "w2Completed": 0,
+    "w2Total": 11,
+    "dataGate": "RED_7_OF_12",
+    "queryGate": "CODE_CONTRACT_GREEN_OPERATIONAL_QUERY_RED"
+  },
+  "nextReentry": "Data/Adapter owner Delivery Receipt for the frozen SSH lifecycle contract, canonical fresh runs for P03/P05/P07/P08/P12, or AIP P8-2/P8-3 operational delivery; every fact change requires a fresh read-only gate review."
+}
