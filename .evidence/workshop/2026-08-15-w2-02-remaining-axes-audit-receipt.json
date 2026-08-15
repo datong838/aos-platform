@@ -1,0 +1,63 @@
+{
+  "schema": "workshop-audit-receipt/v1",
+  "taskId": "workshop-w2-02-remaining-axes-audit-20260815",
+  "authorityRevision": "AOS-000048",
+  "branch": "w2-workshop",
+  "baseCommit": "0ccd703",
+  "decision": "NO_SAFE_RUNTIME_SLICE_AVAILABLE_DEPENDENCY_BLOCKED_READ_ONLY",
+  "reviewedAxes": {
+    "stage": "BLOCKED_BY_W7_03_INCOMPLETE_PLANSTEP_COMPILATION",
+    "responsibility": "BLOCKED_BY_W3_07_W6_01_ASSIGNEE_OWNERSHIP_AND_FENCE",
+    "handoff": "BLOCKED_BY_W3_06_MODULE_COMPILER_AND_DECISION_AUTHORITY",
+    "approval": "BLOCKED_BY_W3_05_W3_08_EXACT_NAVIGATION_AND_READINESS",
+    "reviewIssue": "BLOCKED_BY_W4_04_W7_09_TASK_RUN_STAGE_EXACT_JOIN",
+    "actionAndBusinessContext": "BLOCKED_BY_ACTION_RECONCILIATION_AND_W2_00"
+  },
+  "dataFact": {
+    "probe": "scripts/long-task-watchdog/w2_data_fact_probe.py",
+    "registeredPipelines": 12,
+    "latestSucceeded": 7,
+    "latestFailed": 5,
+    "failedPipelines": {
+      "P03-product-sku-qyh": "PIPELINE_EXECUTOR_FAILED",
+      "P05-order-qyh": "PIPELINE_EXECUTOR_FAILED",
+      "P07-shipment-qyh": "PIPELINE_EXECUTOR_FAILED",
+      "P08-customer-lite-qyh": "PIPELINE_NOT_FOUND_NO_POST_REGISTRATION_FRESH_SUCCESS",
+      "P12-payment-qyh": "PIPELINE_NOT_FOUND_NO_POST_REGISTRATION_FRESH_SUCCESS"
+    },
+    "canarySourceCount": 0,
+    "canaryProjectionCount": 0,
+    "claim": "historical projection rows do not establish current freshness or readiness"
+  },
+  "reviewEvidence": [
+    "23-TaskBrief证据包评价契约与自适应生产编排技术方案.md sections 3.6 and 5",
+    "61-W7-03-StageTemplate编译PlanStep与TaskRun组合门预检ADR.md",
+    "94-W3-06-HandoffEnvelope传输与领域Decision分层预检ADR.md",
+    "95-W3-07职责覆盖Readiness改派与人工接管分层预检ADR.md",
+    "96-W3-08日常总控派发优先级与审批跳转命令分层预检ADR.md",
+    "services/aos-api/aos_api/aip_production_contract_store.py",
+    "services/aos-api/aos_api/ecommerce_workshop_task_cockpit.py"
+  ],
+  "unlockFingerprints": [
+    "W7-03 full PlanStep compilation, CompilationReceipt and ProductionStart",
+    "W3-07/W6-01 AssigneeResolutionReceipt, selected-assignee ownership and runtime fence",
+    "W3-06 canonical Handoff API/SDK, ModuleHandoffCompiler and HandoffDecisionRevision",
+    "W3-05/W3-08 ApprovalNavigationTarget and destination reauthorization",
+    "W4-04/W7-09 exact Task/Run/Stage/attempt to ReviewIssue lineage",
+    "W2-00 12 of 12 post-registration fresh success plus SourceReadinessEnvelope and operational query",
+    "Task-scoped Action unknown/reconciliation quantity conservation"
+  ],
+  "externalDocumentIntegrity": [
+    {"path":"12-工作台层技术方案/105-W2-02剩余Stage职责交接Action与业务上下文依赖差量复审ADR.md","preSha256":null,"postSha256":"0421df71efa3152b150a884c86013b81ce8fbbe9cab9b99836e35bc06c879278"},
+    {"path":"12-工作台层技术方案/83-W2-02-TaskRunStageBlocker日常总控只读模型预检ADR.md","preSha256":"fd3214fa65baf66ce2b717d433659132caf8b322bdace232362582a6f8c6137e","postSha256":"7e95cd7330439a98bf2810ccd84c001de6c26d3bc61912e47fa4e64e92636ede"},
+    {"path":"12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md","preSha256":"16e90ac5562e99c4772fdb252496db3b0995850a792247b5f7aa1d320d9f09a5","postSha256":"7401b53c0556feed16da5f7f3ed981e49e52a01c5ddb6e914964a8731c1d38ff"}
+  ],
+  "safety": {
+    "sourceCodeChanged": false,
+    "apiOrWebChanged": false,
+    "databaseOrTenantChanged": false,
+    "w1AipWorkspaceRead": false,
+    "staticVisualDraftChanged": false
+  },
+  "progress": {"completedTasks":21,"totalTasks":96,"w2Completed":0,"w2Total":11,"status":"W2_02_REMAINING_AXES_HARD_BLOCKED"}
+}
