@@ -1,0 +1,35 @@
+{
+  "schema": "aos-workshop-persisted-snapshot-compatibility/v1",
+  "taskId": "workshop-w1-10-persisted-snapshot-compatibility-20260815",
+  "observedAt": "2026-08-15T14:38:46+08:00",
+  "authorityRevision": "AOS-000041",
+  "result": "IMPLEMENTED_GREEN",
+  "incident": {
+    "symptom": "Canonical Installation GET returned LOCK_INTEGRITY_CORRUPT before any real-tenant mutation.",
+    "cause": "The persisted RegistrySnapshot hash was valid for the original JSON, while the current BundleExports model added an empty knowledge default before the old read path recomputed the hash.",
+    "writeBeforeStop": false
+  },
+  "decision": {
+    "scope": "PostgreSQL persisted RegistrySnapshot loader only",
+    "rawHashRequired": true,
+    "currentSchemaValidationRequired": true,
+    "publicModelValidationRemainsStrict": true,
+    "historicalDatabaseRewrite": false
+  },
+  "verification": [
+    "Red test reproduced the valid-old-snapshot rejection before implementation.",
+    "2/2 persisted legacy snapshot compatibility and tamper tests passed.",
+    "14/14 composition store tests passed.",
+    "35/35 composition contract, composition API, installation service and installation API adjacent tests passed.",
+    "Canonical GET returned HTTP 200 and ETag 5 for all three targets and both protected installations after remediation.",
+    "git diff --check passed."
+  ],
+  "hashes": {
+    "compositionStoreBefore": "a2686032748e3cd5a029a515180a0907bfd75a519b52c34ab2ebbe416739f876",
+    "compositionStoreAfter": "34bbaa9e55ecf1de523d727f14ed7f114f947e47e8f40001666e69b1e052e568",
+    "compositionStoreTestBefore": "6a627c220cb117140c36a7c4aec8cef8a558fd48dd0b978465f99191989f29ad",
+    "compositionStoreTestAfter": "4bb355fc333474abdf0508432f5db42440fc82a9d8dc70bbaf869f4f25dc8dc1",
+    "adrBefore": "aa5f599b022767c164e1fc544d3d155087809fb89910ae3c869613343bcd46e0",
+    "adrAfter": "472ab4e4ac32e7c215e9e6065ef50e2acfde27f9ecc2c67567bfecb443a403fd"
+  }
+}

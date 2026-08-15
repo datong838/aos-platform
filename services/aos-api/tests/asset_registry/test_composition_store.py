@@ -6,6 +6,7 @@ import importlib.util
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
+from copy import deepcopy
 from datetime import UTC, datetime
 from pathlib import Path
 from threading import Barrier
@@ -15,15 +16,19 @@ from unittest.mock import MagicMock, patch
 import psycopg
 import pytest
 from psycopg import errors, sql
+from pydantic import ValidationError
 
+from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.asset_registry.composition_contracts import (
     CompositionLockPayload,
     CompositionRequest,
     RegistrySnapshot,
+    RegistrySnapshotCandidate,
 )
 from aos_api.asset_registry.composition_store import (
     CompositionPersistenceError,
     PostgresCompositionStore,
+    _snapshot_from_json,
 )
 from aos_api.asset_registry.errors import (
     AssetNotFoundError,
@@ -204,6 +209,92 @@ def _inputs() -> tuple[CompositionRequest, RegistrySnapshot, CompositionLockPayl
     request = _request()
     snapshot = RegistrySnapshot.build(candidates=[], checked_at=datetime.now(UTC))
     return request, snapshot, _payload(request, snapshot)
+
+
+def _snapshot_with_candidate() -> RegistrySnapshot:
+    empty_permissions = _empty_permission_set()
+    candidate = RegistrySnapshotCandidate.model_validate(
+        {
+            "publisher": "aos",
+            "id": "solution.example",
+            "version": "1.0.0",
+            "kind": "SolutionPack",
+            "manifest": {
+                "apiVersion": "aos.dev/v1alpha1",
+                "kind": "SolutionPack",
+                "metadata": {
+                    "id": "solution.example",
+                    "version": "1.0.0",
+                    "displayName": "Example",
+                    "publisher": "aos",
+                    "license": "internal",
+                },
+                "spec": {
+                    "platformApi": ">=1.7.0 <2.0.0",
+                    "dependencies": [],
+                    "optionalDependencies": [],
+                    "conflicts": [],
+                    "exports": {},
+                    "capabilities": {"provides": [], "requires": []},
+                    "permissions": empty_permissions,
+                    "migrations": {
+                        "plan": None,
+                        "downgradePolicy": "retain-canonical",
+                    },
+                    "preflight": None,
+                    "regression": None,
+                    "rollback": None,
+                },
+            },
+            "contentHash": SHA_A,
+            "signatureFingerprint": SHA_B,
+            "releaseEvidenceRevision": SHA_C,
+            "dependencies": [],
+            "optionalDependencies": [],
+            "conflicts": [],
+            "capabilities": {"provides": [], "requires": []},
+            "permissions": empty_permissions,
+            "migration": {"planRef": None, "downgradePolicy": "retain-canonical"},
+            "contributions": [],
+        }
+    )
+    return RegistrySnapshot.build(candidates=[candidate], checked_at=datetime.now(UTC))
+
+
+def _legacy_snapshot_json() -> dict:
+    payload = _snapshot_with_candidate().model_dump(
+        mode="json", by_alias=True, exclude_none=False
+    )
+    del payload["candidates"][0]["manifest"]["spec"]["exports"]["knowledge"]
+    payload["snapshotHash"] = canonical_sha256(
+        {
+            "schemaVersion": payload["schemaVersion"],
+            "candidates": payload["candidates"],
+        }
+    )
+    return payload
+
+
+def test_persisted_legacy_snapshot_accepts_only_raw_hash_valid_default_addition() -> None:
+    payload = _legacy_snapshot_json()
+
+    loaded = _snapshot_from_json(payload)
+
+    assert loaded.snapshot_hash == payload["snapshotHash"]
+    assert loaded.candidates[0].manifest.spec.exports.knowledge == []
+    strict_payload = deepcopy(payload)
+    strict_payload["checkedAt"] = datetime.fromisoformat(strict_payload["checkedAt"])
+    with pytest.raises(ValidationError, match="does not match canonical"):
+        RegistrySnapshot.model_validate(strict_payload)
+
+
+def test_persisted_legacy_snapshot_rejects_raw_payload_tampering() -> None:
+    payload = _legacy_snapshot_json()
+    tampered = deepcopy(payload)
+    tampered["candidates"][0]["manifest"]["metadata"]["displayName"] = "Tampered"
+
+    with pytest.raises(ValueError, match="snapshotHash does not match"):
+        _snapshot_from_json(tampered)
 
 
 def _different_payload(payload: CompositionLockPayload) -> CompositionLockPayload:

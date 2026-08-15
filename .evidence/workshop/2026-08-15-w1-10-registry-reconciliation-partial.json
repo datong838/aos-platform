@@ -1,0 +1,83 @@
+{
+  "schema": "aos-workshop-registry-reconciliation/v1",
+  "taskId": "workshop-w1-10-registry-reconciliation-browser-20260815",
+  "observedAt": "2026-08-15T14:38:46+08:00",
+  "authorityRevision": "AOS-000041",
+  "result": "CANONICAL_UNINSTALL_GREEN_POSITIVE_BROWSER_SAFE_BLOCKED",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "canonicalUninstall": {
+    "targets": [
+      {
+        "installationId": "3a933345-cada-4d5f-b102-54c1f7ed2f03",
+        "before": "active@5",
+        "after": "uninstalled@6",
+        "httpStatus": 200,
+        "etagAfter": 6
+      },
+      {
+        "installationId": "3cff5d44-524e-42a6-9681-c51aa0d9e1bd",
+        "before": "active@5",
+        "after": "uninstalled@6",
+        "httpStatus": 200,
+        "etagAfter": 6
+      },
+      {
+        "installationId": "ff465fdc-e442-44fb-b1dc-0afb7df18229",
+        "before": "active@5",
+        "after": "uninstalled@6",
+        "httpStatus": 200,
+        "etagAfter": 6
+      }
+    ],
+    "databaseBefore": {
+      "installationCount": 17,
+      "activeCount": 5,
+      "uninstallEventCount": 0,
+      "scheduleRunCount": 92,
+      "latestScheduleStartedAt": "2026-08-15T00:00:02.451829+00:00",
+      "canaryInstallationCount": 0
+    },
+    "databaseAfter": {
+      "installationCount": 17,
+      "activeCount": 2,
+      "uninstallEventCount": 3,
+      "scheduleRunCount": 92,
+      "latestScheduleStartedAt": "2026-08-15T00:00:02.451829+00:00",
+      "canaryInstallationCount": 0
+    },
+    "protectedActive": [
+      "56c200af-9308-4125-af02-1035100785dd@5",
+      "1286521e-6d6e-42b4-8aad-b5daaa1b01bb@5"
+    ]
+  },
+  "positiveBrowser": {
+    "url": "http://127.0.0.1:1420/workshop/operations",
+    "status": "SAFE_BLOCKED",
+    "visibleState": "目录读取失败；正式服务未返回可验证结果",
+    "catalogHttpStatus": 500,
+    "errorCode": "REGISTRY_INTEGRITY_CORRUPT",
+    "reason": "The protected effective leaf pins growth 1.1.0 and operations-base 1.0.0, while their unversioned local bundle paths now contain growth 1.3.0 and operations-base 1.1.0. Both content hashes differ, so the immutable Registry verifier correctly fails closed.",
+    "persistedVsCurrent": [
+      {
+        "bundleId": "solution.ecommerce.growth",
+        "persistedVersion": "1.1.0",
+        "persistedContentHash": "sha256:f8d3ce3bfb493acf7b4df0914676cfc27605440db462c350ceb7e92faa81e40e",
+        "currentVersion": "1.3.0",
+        "currentContentHash": "sha256:e6b0930cead074bb04835009e45b174751ee4dca3c76967e981bd9567f769b08"
+      },
+      {
+        "bundleId": "solution.ecommerce.operations-base",
+        "persistedVersion": "1.0.0",
+        "persistedContentHash": "sha256:63b457682a071606513ffb64ea19827214871221f1769bc2e62f37f86c328070",
+        "currentVersion": "1.1.0",
+        "currentContentHash": "sha256:bc4a8bcf6105363bae2ec3099947d5951ec7b65ae84214e475c9457f8ab9c04f"
+      }
+    ],
+    "integrityBypass": false,
+    "additionalRealTenantMutation": false
+  },
+  "nextGate": "Obtain separate authority for either an exact immutable artifact recovery or a canonical successor installation of the currently published bundle versions, then rerun eight-route, three-viewport, keyboard, console/network and canary acceptance."
+}
