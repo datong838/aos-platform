@@ -1,0 +1,73 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w3-03-prepare-aggregate-doc-align-20260815",
+  "workItem": "W3-03",
+  "projectRevision": "AOS-000039",
+  "sourceCommit": "0ecd9cd4aef4dcfb569842da9d36d6aaba6a96dd",
+  "recordedAt": "2026-08-15T10:59:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "findings": [
+        "build Evidence was ambiguous between a durable request and actual provider-backed execution",
+        "responsibility resolution did not distinguish a recommendation from an accepted ResponsibilityPlan",
+        "a client-side sequence could falsely project multiple common mutations as one successful prepare"
+      ],
+      "closed": [
+        "separated EvidenceBuildRequest from EvidenceBundle and routed actual build execution to W4-01",
+        "separated ResponsibilityRecommendation from canonical ResponsibilityPlan",
+        "froze a server-side aggregate and PreparationReceipt instead of client-side success composition"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS_AFTER_REMEDIATION",
+      "findings": [
+        "cross-service atomicity, crash recovery and unknown handling needed an explicit contract",
+        "BIND1_2 readiness progress could be misread as prepare or assignee readiness",
+        "zero side effect needed measurable invariants rather than prose only"
+      ],
+      "closed": [
+        "added preparation intent or outbox plus idempotent reducer and reconcile semantics",
+        "kept W2-10, W3-01 and W3-02 as explicit hard gates despite AOS-000039",
+        "froze zero counts for provider fee and invocation, TaskRun, AgentRun, Action, Handoff, Approval, Lease and external business mutation",
+        "kept W3-03 unchecked and implementation NOT_STARTED"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/07-领域读模型Command与错误契约.md",
+      "preSha256": "d668bbbc9b3c5f9107e89932aa57545bdd8c659095b5186de13c6ce83b94c724",
+      "postSha256": "a16c2ae65988bf3a3cc45cbb7cc99be7ee631f2f0ef2f5f68369a121e2bae284"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md",
+      "preSha256": "9cdb835a0aa82bb44f657d41653117752f01a6c93bc06b69e8fec6ebc011bb58",
+      "postSha256": "b7b33681a4cbb1c6a8eeb8d709f5bfd94e7e43daa6bc19e2d7a2c24f60f8839d"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/92-W3-03-Prepare聚合EvidenceBuildRequest与职责建议预检ADR.md",
+      "preSha256": null,
+      "postSha256": "c9ad9a185e6d47773bc5d221cf6c7c4d61d386c923224afd1258e6dbd0a22528"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "7f99a54508a756d6f775a050eddb79520cc3599962658f7cf633f1cb1cebf1ee",
+      "postSha256": "27669221895f606fd97ebef816a2d1712b9670cfdec75aa5835374eda83db39f"
+    }
+  ],
+  "decision": {
+    "preparation": "PREFLIGHT_GREEN",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two review and remediation rounds passed",
+    "all post hashes match the shared documents",
+    "the old evidence-bundles/build ambiguity was removed from the governing API section",
+    "W3-03 remains unchecked and no source, database, tenant, provider or external mutation was introduced"
+  ]
+}
