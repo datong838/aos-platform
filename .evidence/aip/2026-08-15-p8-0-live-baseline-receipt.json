@@ -1,0 +1,113 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-P8-0-20260815",
+  "status": "REVIEWED_AND_APPROVED_FOR_INCREMENTAL_IMPLEMENTATION",
+  "branch": "w1-aip",
+  "baseCommit": "22737cb5e3ee5c1b168259adbeb1b0dad16c1e57",
+  "authorityRevision": "AOS-000043",
+  "tenantPolicy": {
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "realTenantSideEffects": false
+  },
+  "lease": {
+    "taskId": "aip-p8-0-live-baseline-20260815",
+    "owner": "w1-aip",
+    "migrationLease": false
+  },
+  "findings": [
+    {
+      "id": "P8-B01",
+      "severity": "BLOCKER",
+      "fact": "Analyst backend reads process-local Northampton shops/inventory/sales and returns a fixed fallback for unknown tables",
+      "files": [
+        "services/aos-api/aos_api/aip_analyst_query.py",
+        "services/aos-api/aos_api/routers/aip_analyst.py"
+      ]
+    },
+    {
+      "id": "P8-B02",
+      "severity": "BLOCKER",
+      "fact": "Analyst UI exposes arbitrary SQL, fixed Northampton/Walter samples, localStorage saved queries and sample export",
+      "files": [
+        "apps/web/src/pages/s2/AipAnalystPage.tsx"
+      ]
+    },
+    {
+      "id": "P8-B03",
+      "severity": "BLOCKER",
+      "fact": "Assist frontend query/conversationId payload does not match backend message/conversation_id contract and both sides retain sample or local-answer behavior",
+      "files": [
+        "apps/web/src/pages/s2/AipAssistPage.tsx",
+        "services/aos-api/aos_api/routers/phase3_aip_assist.py"
+      ]
+    },
+    {
+      "id": "P8-B04",
+      "severity": "HIGH",
+      "fact": "legacy AnalystExplore singleton and Analyst localStorage duplicate the existing O1 PostgreSQL exploration authority",
+      "files": [
+        "services/aos-api/aos_api/aip_analyst_explore.py",
+        "services/aos-api/aos_api/ontology_exploration_assets.py"
+      ]
+    }
+  ],
+  "canonicalOwners": {
+    "objectsGraphExploration": "O1 ontology_exploration_assets and canonical ObjectSet/Graph services",
+    "knowledge": "AIP-5 memory-authority knowledge search",
+    "taskPlanRun": "AIP-1/AIP-2",
+    "briefEvidenceProduction": "W2 production contracts",
+    "evalLineageUsage": "AIP-4",
+    "agentSkillCapability": "AIP-6/BIND-1",
+    "providerRoutePolicyCapacity": "AIP-7",
+    "research": "AIP ResearchJob authority"
+  },
+  "browserEvidence": [
+    {
+      "url": "http://localhost:5173/aip/analyst",
+      "organization": "栖月汇商贸有限公司",
+      "workspace": "默认工作区",
+      "observed": [
+        "查询 · 内置/本地样例",
+        "Northampton default SQL",
+        "保存到本机"
+      ]
+    },
+    {
+      "url": "http://localhost:5173/aip/assist",
+      "organization": "栖月汇商贸有限公司",
+      "workspace": "默认工作区",
+      "observed": [
+        "fixed platform welcome text",
+        "fixed sample suggestions",
+        "local conversation shell"
+      ]
+    }
+  ],
+  "fileHashes": {
+    "services/aos-api/aos_api/aip_analyst_query.py": "21aee882e03396a75d0761afe041d2ead604991357c83a847fdf1e0d8b685aeb",
+    "services/aos-api/aos_api/routers/aip_analyst.py": "9b902cd84da6069dd560652c50e9c22a25c65fca90d7128a75a5edfb9593abfd",
+    "services/aos-api/aos_api/aip_analyst_explore.py": "79c9e9e7503bb66eff668cfb3f832f66805137aecba44dfdaf8dd4e752ae2caf",
+    "apps/web/src/pages/s2/AipAnalystPage.tsx": "4445ce7dd09f1f3b0addc341d56a3afcc37cca2d29af00c41a1061082677e5ea",
+    "apps/web/src/pages/s2/AipAssistPage.tsx": "34f624e922001625a6b9be3c7df6c2b98b61d2ca59e79b0d71ddd92731fa6a61",
+    "services/aos-api/aos_api/routers/phase3_aip_assist.py": "aec64eeced339b7e026fe24f0efd243521db53a5b8d01d45fcd539c93a51e288",
+    "services/aos-api/aos_api/ontology_exploration_assets.py": "c5d4f053c935e05bc0308ee3bc476a273586c1bc578b4d86d480ee49d6c5ed26"
+  },
+  "schemeHashes": {
+    "07-228-AIP助手分析师与通用工作台实施方案.md": {
+      "before": "13c50aa825b0d09844c15adbd3f2e300b4ea094900b636472674879169f299ff",
+      "after": "de43dcd8b1d6c6efbeaa2b15f6328d16746e43ca96719177375ece437503e7e4"
+    },
+    "全量开发清单/07-AIP助手分析师与通用工作台开发清单.md": {
+      "before": "98c192c308bdbd4bb8036b7bc8f646392006ec5ff10fb82914e50c2cd77a22c7",
+      "after": "cc26cea6048def0a1aff0aedd919569a727cc02a4e59bbc0049bf803b8aa1035"
+    }
+  },
+  "verification": [
+    "source inspection completed",
+    "in-app browser read-only inspection completed for Analyst and Assist",
+    "no migration, database write, Provider call, external side effect or cross-tenant read performed",
+    "P8-1 exact file scope frozen in scheme before coding"
+  ],
+  "nextGate": "P8_1_STRICT_QUERY_CONTRACTS_AND_READ_ADAPTERS"
+}
