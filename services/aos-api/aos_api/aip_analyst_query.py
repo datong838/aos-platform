@@ -40,6 +40,22 @@ class AdapterResult:
     uncertainties: list[str]
 
 
+class CanonicalAdapterBlocked(RuntimeError):
+    def __init__(
+        self,
+        *,
+        code: str,
+        message: str,
+        dependency_ref: ResourceRef | None = None,
+        retryable: bool = False,
+    ) -> None:
+        self.code = code
+        self.message = message
+        self.dependency_ref = dependency_ref
+        self.retryable = retryable
+        super().__init__(message)
+
+
 class SemanticReadAdapter(Protocol):
     def execute(
         self, scope: TenantScope, principal: Principal, request: SemanticQueryRequest
@@ -77,6 +93,8 @@ def _blocked(
     *,
     code: str,
     message: str,
+    dependency_ref: ResourceRef | None = None,
+    retryable: bool = True,
 ) -> QueryResultRevision:
     created_at = datetime.now(UTC)
     request_hash = sha256(_canonical(request)).hexdigest()
@@ -92,8 +110,15 @@ def _blocked(
         revision=1,
         kind=AnalystQueryKind(request.kind),
         status=AnalystQueryStatus.BLOCKED,
-        blockers=[QueryBlocker(code=code, message=message, retryable=True)],
-        cutoff_at=request.cutoff_at,
+        blockers=[
+            QueryBlocker(
+                code=code,
+                message=message,
+                dependency_ref=dependency_ref,
+                retryable=retryable,
+            )
+        ],
+        cutoff_at=min(request.cutoff_at, created_at),
         content_hash=sha256(_canonical(payload)).hexdigest(),
         created_at=created_at,
     )
@@ -119,6 +144,14 @@ def execute_analyst_query(
     """Execute one typed read without accepting client tenant or arbitrary SQL."""
     if scope.key != (principal.org_id, principal.project_id):
         raise ValueError("principal and query scope must match")
+    if request.cutoff_at > datetime.now(UTC):
+        return _blocked(
+            scope,
+            request,
+            code="QUERY_CUTOFF_IN_FUTURE",
+            message="query cutoff must not be in the future",
+            retryable=False,
+        )
     adapter = _adapter_for(request, adapters)
     if adapter is None:
         return _blocked(
@@ -127,7 +160,17 @@ def execute_analyst_query(
             code=f"{request.kind.value.upper()}_ADAPTER_UNAVAILABLE",
             message=f"canonical {request.kind.value} query adapter is unavailable",
         )
-    result = adapter.execute(scope, principal, request)  # type: ignore[arg-type]
+    try:
+        result = adapter.execute(scope, principal, request)  # type: ignore[arg-type]
+    except CanonicalAdapterBlocked as exc:
+        return _blocked(
+            scope,
+            request,
+            code=exc.code,
+            message=exc.message,
+            dependency_ref=exc.dependency_ref,
+            retryable=exc.retryable,
+        )
     if result.status == AnalystQueryStatus.BLOCKED:
         raise ValueError("canonical adapters must raise or return a non-blocked result")
     if result.status == AnalystQueryStatus.EMPTY and result.rows:
@@ -164,6 +207,7 @@ def execute_analyst_query(
 __all__ = [
     "AdapterResult",
     "AnalystReadAdapters",
+    "CanonicalAdapterBlocked",
     "KnowledgeReadAdapter",
     "MetricReadAdapter",
     "SemanticReadAdapter",

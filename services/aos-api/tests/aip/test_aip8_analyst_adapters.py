@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -11,7 +11,12 @@ from aos_api.aip_analyst_contracts import (
     QuerySourceRef,
     SemanticQueryRequest,
 )
-from aos_api.aip_analyst_query import AdapterResult, AnalystReadAdapters, execute_analyst_query
+from aos_api.aip_analyst_query import (
+    AdapterResult,
+    AnalystReadAdapters,
+    CanonicalAdapterBlocked,
+    execute_analyst_query,
+)
 from aos_api.aip_contracts import ResourceRef
 from aos_api.auth import Principal
 from aos_api.tenant_scope import TenantScope
@@ -98,3 +103,37 @@ def test_cross_scope_principal_is_rejected_before_adapter() -> None:
             request=request,
             adapters=AnalystReadAdapters(semantic=SemanticAdapter()),
         )
+
+
+def test_canonical_adapter_blocker_becomes_typed_blocked_result() -> None:
+    class BlockedAdapter:
+        def execute(self, scope, principal, request):
+            raise CanonicalAdapterBlocked(
+                code="OBJECT_FIELD_UNAVAILABLE",
+                message="requested field is not in the installed schema",
+                retryable=False,
+            )
+
+    result = execute_analyst_query(
+        scope=SCOPE,
+        principal=PRINCIPAL,
+        request=SemanticQueryRequest(object_type="Order", cutoff_at=NOW),
+        adapters=AnalystReadAdapters(semantic=BlockedAdapter()),
+    )
+    assert result.status == AnalystQueryStatus.BLOCKED
+    assert result.blockers[0].code == "OBJECT_FIELD_UNAVAILABLE"
+    assert result.blockers[0].retryable is False
+
+
+def test_future_cutoff_is_typed_blocked_before_adapter() -> None:
+    result = execute_analyst_query(
+        scope=SCOPE,
+        principal=PRINCIPAL,
+        request=SemanticQueryRequest(
+            object_type="Order",
+            cutoff_at=datetime.now(UTC) + timedelta(minutes=1),
+        ),
+        adapters=AnalystReadAdapters(semantic=SemanticAdapter()),
+    )
+    assert result.status == AnalystQueryStatus.BLOCKED
+    assert result.blockers[0].code == "QUERY_CUTOFF_IN_FUTURE"

@@ -87,10 +87,16 @@ class QueryFilter(AipContractModel):
     value: Any
 
 
+class QuerySort(AipContractModel):
+    field: str = Field(min_length=1, max_length=160)
+    direction: Literal["asc", "desc"] = "asc"
+
+
 class SemanticQueryRequest(AipContractModel):
     kind: Literal[AnalystQueryKind.SEMANTIC] = AnalystQueryKind.SEMANTIC
     object_type: str = Field(min_length=1, max_length=160)
     filters: list[QueryFilter] = Field(default_factory=list, max_length=10)
+    sort: list[QuerySort] = Field(default_factory=list, max_length=8)
     selection_refs: list[ResourceRef] = Field(default_factory=list, max_length=100)
     page_size: int = Field(default=50, ge=1, le=200)
     cutoff_at: datetime
@@ -247,5 +253,6 @@ __all__ = [
     "RecordQueryResultRequest",
     "QueryRow",
     "QuerySourceRef",
+    "QuerySort",
     "SemanticQueryRequest",
 ]

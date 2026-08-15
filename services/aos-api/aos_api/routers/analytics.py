@@ -513,7 +513,7 @@ def _list_objects_table(
     prop_defs = _prop_defs(object_type)
     kept: list[dict[str, Any]] = []
     with connect(TenantScope(principal.org_id, principal.project_id)) as conn:
-        from aos_api.routers.ontology import _auto_redact_ecom_pii
+        from aos_api.ontology_object_redaction import redact_ecommerce_pii
 
         for it in result.get("items") or []:
             oid = str(it.get("id") or "")
@@ -523,7 +523,7 @@ def _list_objects_table(
                 safe = apply_field_redaction(principal, dict(it), prop_defs, conn=conn)
             else:
                 safe = dict(it)
-            kept.append(_auto_redact_ecom_pii(safe))
+            kept.append(redact_ecommerce_pii(safe))
     columns, rows = _rows_to_table(kept)
     return _with_governance(
         {

@@ -1,6 +1,8 @@
 """Canonical AIP-8 analyst read API."""
 from __future__ import annotations
 
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, Header
 
 from aos_api.aip_analyst_contracts import (
@@ -12,16 +14,35 @@ from aos_api.aip_analyst_contracts import (
     RecordQueryResultRequest,
 )
 from aos_api.aip_analyst_query import AnalystReadAdapters, execute_analyst_query
+from aos_api.aip_analyst_canonical_adapters import (
+    CanonicalKnowledgeReadAdapter,
+    CanonicalSemanticReadAdapter,
+)
 from aos_api.aip_analyst_query_store import AipAnalystQueryStore
+from aos_api.aip_memory_search import AipMemoryKnowledgeSearch
+from aos_api.routers.aip_memory_authority import get_aip_memory_search_service
 from aos_api.auth import Principal, require_principal
 from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip/analyst", tags=["aip-analyst"])
 
 
-def get_aip_analyst_read_adapters() -> AnalystReadAdapters:
-    """Fail-closed default until P8 canonical adapters are assembled."""
-    return AnalystReadAdapters()
+def get_aip_analyst_read_adapters(
+    search_service: Annotated[
+        AipMemoryKnowledgeSearch | None,
+        Depends(get_aip_memory_search_service),
+    ] = None,
+) -> AnalystReadAdapters:
+    """Assemble only canonical owners; unavailable owners remain blocked."""
+    return AnalystReadAdapters(
+        semantic=CanonicalSemanticReadAdapter(),
+        knowledge=(
+            CanonicalKnowledgeReadAdapter(search_service)
+            if search_service is not None
+            else None
+        ),
+        metric=None,
+    )
 
 
 def get_aip_analyst_query_store() -> AipAnalystQueryStore:

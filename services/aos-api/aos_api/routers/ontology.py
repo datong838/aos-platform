@@ -22,6 +22,7 @@ from aos_api.ot_detail_meta import build_ot_detail_meta
 from aos_api.ontology_explorer_contracts import GraphQueryDTO
 from aos_api.ontology_display_names import build_object_display_projection
 from aos_api.ontology_graph_query import get_authoritative_graph_service
+from aos_api.ontology_object_redaction import redact_ecommerce_pii
 from aos_api.oidc import allow_dev
 from aos_api.tenant_scope import TenantScope
 
@@ -110,52 +111,6 @@ def _object_type_properties(conn, object_type: str) -> list[dict[str, Any]]:
         return []
     props = row["properties"]
     return list(props) if isinstance(props, list) else []
-
-
-# G18: Auto-redact known e-commerce PII fields that slip through marking config.
-# These fields come from raw Niushop source rows and must never be exposed via /v1/objects.
-_ECOM_PII_FIELDS = frozenset({
-    "mobile", "telephone", "phone",
-    "weapp_openid", "wx_openid", "openid",
-    "email",
-    "pay_password", "password",
-    "mobile_country_code",
-    "buyer_ip", "last_login_ip", "reg_ip",
-    "id_card", "id_card_no",
-    "bank_card", "bank_account",
-    "real_name",
-})
-
-_ECOM_PII_PREFIXES = (
-    "mobile", "phone", "tel",
-    "openid", "password",
-    "email",
-)
-
-
-def _auto_redact_ecom_pii(payload: dict[str, Any]) -> dict[str, Any]:
-    """Strip or mask known PII fields from e-commerce object payloads."""
-    if not isinstance(payload, dict):
-        return payload
-    out = dict(payload)
-    redacted = set(out.get("_redactedFields", []))
-    for key in list(out.keys()):
-        lk = key.lower()
-        is_pii = (
-            lk in _ECOM_PII_FIELDS
-            or any(lk.startswith(p) for p in _ECOM_PII_PREFIXES)
-        )
-        if is_pii and lk not in ("telephone",):  # telephone is public business contact
-            val = out[key]
-            if val is not None and str(val).strip() and str(val) not in ("0", "null", ""):
-                out[key] = "[REDACTED]"
-                redacted.add(key)
-            elif lk in _ECOM_PII_FIELDS:
-                out[key] = "[REDACTED]"
-                redacted.add(key)
-    if redacted:
-        out["_redactedFields"] = sorted(redacted)
-    return out
 
 
 class ObjectTypeIn(BaseModel):
@@ -674,7 +629,7 @@ def list_objects(
             raw = {"id": r["object_id"], "type": object_type, **(r["props"] or {})}
             redacted = apply_field_redaction(principal, raw, prop_defs, conn=conn)
             # G18: auto-redact known e-commerce PII fields not caught by marking config
-            redacted = _auto_redact_ecom_pii(redacted)
+            redacted = redact_ecommerce_pii(redacted)
             redacted.update(
                 build_object_display_projection(object_type, r["object_id"], redacted)
             )
@@ -723,7 +678,7 @@ def get_object(
             )
         raw = {"id": object_id, "type": object_type, **(hit["props"] or {})}
         out = apply_field_redaction(principal, raw, prop_defs, conn=conn)
-        out = _auto_redact_ecom_pii(out)
+        out = redact_ecommerce_pii(out)
         out.update(build_object_display_projection(object_type, object_id, out))
     if branch:
         out = {**out, "branch": branch}
