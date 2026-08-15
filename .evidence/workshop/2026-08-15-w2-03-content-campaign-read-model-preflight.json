@@ -1,0 +1,153 @@
+{
+  "schema": "aos-workshop-w2-content-campaign-read-model-preflight/v1",
+  "taskId": "workshop-w2-03-content-campaign-read-model-preflight-20260815",
+  "workItem": "W2-03",
+  "projectRevision": "AOS-000036",
+  "branch": "w2-workshop",
+  "head": "36521e2b8c08ce1421724dfc416c7300b272fb32",
+  "recordedAt": "2026-08-15T09:35:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "CONTENT_CAMPAIGN_READ_MODEL_TARGET_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "BIND-1 detailed implementation-plan approval changes Agent binding planning but does not provide the missing content-domain authorities or close W1-10 and W2-00; a tenant-safe Workshop content-campaign view is absent"
+  },
+  "dependencyFactRevalidation": {
+    "authorityRevision": "AOS-000036",
+    "authorityStage": "BIND1_DETAILED_IMPLEMENTATION_PLAN_APPROVED",
+    "memoryStatus": "GREEN_WITH_WARNINGS",
+    "memoryValidate": "GREEN",
+    "memoryGateCanChangeState": true,
+    "bind1Effect": "future assignee and capability readiness input only; not Campaign Calendar Master or Variant authority",
+    "w1_10": "not GREEN because the real Registry positive projection remains unreconciled",
+    "w2_00": "not GREEN because the latest real data pipeline baseline remains incomplete",
+    "leaseConflict": false
+  },
+  "liveCodeFindings": {
+    "workshopHttpOperations": [
+      "GET /v1/ecommerce-workshop/modules",
+      "GET /v1/ecommerce-workshop/modules/{module_id}/readiness"
+    ],
+    "contentCampaignView": "ABSENT",
+    "workshopSdkViewContract": "ABSENT",
+    "campaignRevisionAuthority": "ABSENT",
+    "calendarEntryAuthority": "ABSENT",
+    "masterContentIntentAuthority": "ABSENT",
+    "channelVariantAuthority": "ABSENT",
+    "genericTaskBrief": "PRESENT but generic TaskBriefRevision does not replace CampaignRevision or content artifact authority",
+    "genericArtifactRelations": "PRESENT for variant_of supersedes and derived_from edges but not a content master or channel-variant head/revision authority",
+    "moduleManifest": {
+      "moduleId": "ecommerce.content-campaign",
+      "requiredObjects": [
+        "Product",
+        "ProductSku",
+        "CustomerLite",
+        "CampaignRevision",
+        "CalendarEntry",
+        "ContentVariant"
+      ],
+      "viewRefs": [],
+      "evalPackRefs": [
+        "content/evals/placeholder.json"
+      ],
+      "productionContractRefs": [],
+      "responsibilityTemplateRefs": []
+    },
+    "namingDrift": "The manifest requires ContentVariant while the technical plan names ChannelVariant; one canonical domain type and explicit compatibility alias are required before implementation"
+  },
+  "targetViewContract": {
+    "operationId": "ecommerceWorkshopContentCampaignViewGet",
+    "method": "GET",
+    "canonicalPath": "/v1/ecommerce-workshop/views/content-campaign",
+    "tenantSource": "verified Principal only",
+    "filters": [
+      "view=plan|calendar|content",
+      "campaignRef",
+      "channel",
+      "windowStart",
+      "windowEnd",
+      "cursor"
+    ],
+    "rootAuthorities": [
+      "CampaignRevision exact ref",
+      "CalendarEntry exact ref",
+      "MasterContentIntent exact ref",
+      "ChannelVariant exact ref",
+      "TaskBriefRevision and EvidenceBundleRevision exact refs when production context exists",
+      "ArtifactRelation exact edges for derived variants"
+    ],
+    "readSlices": [
+      "campaign plan and objective budget offer window summary",
+      "timezone-explicit calendar entries and conflicts",
+      "master content intent and current immutable revision",
+      "channel variants with exact master dependency and drift status",
+      "production readiness and typed blockers",
+      "publication outcome refs without provider payload or inferred success"
+    ],
+    "requiredEnvelope": [
+      "schemaVersion resourceRevision evaluatedAt and dataCutoff",
+      "stable cursor and deterministic order",
+      "module readiness and slice readiness kept separate",
+      "exact scoped refs lineage refs and disclosure decision",
+      "typed blocker reasonCode owner requiredAction ref and evidence refs",
+      "counts sharing one frozen cutoff and declared eligible denominator"
+    ]
+  },
+  "authorityBoundaries": [
+    "The read model is rebuildable and never becomes Campaign Calendar Content or Artifact authority",
+    "Campaign plan status calendar scheduling status production status review status and publication outcome remain separate axes",
+    "TaskBrief spec may reference a campaign but cannot be parsed as a CampaignRevision authority",
+    "Calendar entries use explicit timezone and exact campaign revision; a campaign edit never silently rewrites historical entries",
+    "Master intent and generated artifact are distinct; variants bind an exact master artifact or intent revision and record channel schema revision",
+    "approved or published variants are never overwritten in place; supersession is append-only",
+    "publication success is projected only from a canonical Action Receipt or provider reconciliation result, never from button state or missing errors",
+    "Product ProductSku and CustomerLite are read through canonical scoped refs; no customer list or provider identifier is copied into the projection",
+    "the W2 endpoint exposes no create revise schedule approve start publish or rollback mutation"
+  ],
+  "lifecycleAndCountInvariants": [
+    "every calendar row references one exact CampaignRevision and one explicit timezone window",
+    "calendar overlaps conflicts and unscheduled items are distinct counts and share one cutoff",
+    "every ChannelVariant belongs to one exact master lineage root; variants never form cycles",
+    "master drift marks affected variants stale without mutating approved or published revisions",
+    "draft frozen approved production-ready published failed unknown and reconciled are not compressed into one status axis",
+    "partial stale blocked and unknown are excluded from completed and published totals",
+    "refresh reconstructs the same plan calendar master variant and publication lineage from canonical refs"
+  ],
+  "requiredTestsWhenUnblocked": [
+    "strict Campaign Calendar Master Variant and blocker DTO parsers with extra-forbid",
+    "tenant no-scope wrong-scope cross-tenant marking purpose and PII disclosure checks",
+    "stable cursor deterministic order timezone DST cutoff and late-response rejection",
+    "campaign revision calendar reference and master-variant cardinality conservation",
+    "variant graph cycle orphan hash drift and channel-schema drift failures",
+    "generic TaskBrief and ArtifactRelation adapters cannot fabricate missing domain authority",
+    "published and unknown outcomes require canonical Receipt and reconciliation refs",
+    "read-only HTTP method and absence of mutation controls in W2",
+    "org-org positive and dev-org negative three-viewport keyboard browser evidence"
+  ],
+  "blockers": [
+    "W1-10 real Registry reconciliation and positive Workshop projection are not GREEN",
+    "W2-00 DEP-DATA remains RED for Product ProductSku and CustomerLite business context",
+    "CampaignRevision CalendarEntry MasterContentIntent and ChannelVariant canonical authority are absent",
+    "ContentVariant versus ChannelVariant naming is unresolved",
+    "content-campaign Workshop view Store and strict SDK do not exist",
+    "module manifest has no viewRefs productionContractRefs or responsibilityTemplateRefs and still uses a placeholder Eval pack",
+    "BIND-1 is plan-approved only and does not provide an operational assignee or domain content authority"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "no W2-03 implementation exists and hard dependencies are RED; catalog or generic production-contract tests do not prove the domain read model",
+    "doesNotProve": [
+      "Campaign Calendar Master Variant authority",
+      "content-campaign Workshop view",
+      "operational Agent binding",
+      "positive real-tenant browser readiness"
+    ]
+  },
+  "next": "align the W2-03 contract and evidence reference through two review rounds, then continue W2-04 preflight without runtime coding",
+  "safety": [
+    "read-only code document Git and shared-memory inspection only",
+    "no migration database tenant browser provider publication or external action",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}
