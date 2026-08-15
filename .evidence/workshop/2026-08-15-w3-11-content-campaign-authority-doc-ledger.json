@@ -1,0 +1,54 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w3-11-content-campaign-authority-doc-alignment-20260815",
+  "recordedAt": "2026-08-15T12:24:00+08:00",
+  "authorityRevision": "AOS-000039",
+  "baselineCommit": "74414496471dfb77a81cf4b545215acb22d8d7f5",
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/07-领域读模型Command与错误契约.md",
+      "preSha256": "fe755e80dc2be6a31a73617fdd3d5ef5d755ca687f1d404df47af0c1fbc94ff4",
+      "postSha256": "14f2514e2fc4c9d2befd823a95168911c43aecc41ef2195027ef3fca05df43b8"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/11-内容与活动技术方案.md",
+      "preSha256": "d843e0d23cc5eca3e292fabdf8bd3802c5b5b3f9786e29b365e5453f3578e19d",
+      "postSha256": "17061abb4fecf1fcbb8c80622ad03c4e8799288aba447e922edbeb85cbc8468e"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/84-W2-03-内容活动PlanCalendarMasterVariant只读模型预检ADR.md",
+      "preSha256": "96ac2653a69c5b064b802138be7ce89e7bbadc8b3ed33a455fa5d150a07392df",
+      "postSha256": "d4fc04b25df0adec71a240cbe3a80f5b1784ad70ea4eab1696ebd90b74f0101e"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/99-W3-11内容活动CampaignCalendarIntentArtifact排期预检ADR.md",
+      "preSha256": null,
+      "postSha256": "c6f34b273bbd9ccd169337d1d01774dd7f6e889c4f574cb1dce715b121f60ef9"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "8cca317d18ee40eff11bc1ebe03e52981de365526f323234c880966493d22b0b",
+      "postSha256": "75cf22e9df5d574fb31f0cdb6a77c9ff9f6ece322c6a8d268398a3ab402f8110"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "ef3dae596cedc38046890bedac05108d44a2ec7a94fd58232aa38142bda33465",
+      "postSha256": "e798d635c5e409d86ebdfcd1805c66babaf68b5cae9d46fba3f72da6ad6f382a"
+    }
+  ],
+  "reviewRounds": [
+    {
+      "round": 1,
+      "finding": "ContentVariant and ChannelVariant were unresolved and risked creating a duplicate content authority.",
+      "remediation": "Froze ContentVariant as the only canonical projection and Artifact revision as the only content authority."
+    },
+    {
+      "round": 2,
+      "finding": "Schedule commands lacked complete DST, conflict override, successor cancellation/reschedule, publication separation and drift rules; W2-03 checklist still claimed naming was unresolved.",
+      "remediation": "Added the command/state/invalidation contracts and removed the stale checklist statement."
+    }
+  ],
+  "reviewVerdict": "PLAN_REMEDIATED_GREEN; W3-11_RUNTIME_NOT_STARTED; HARD_GATE_BLOCKED",
+  "noCodeOrVisualChange": true,
+  "externalEffect": false
+}
