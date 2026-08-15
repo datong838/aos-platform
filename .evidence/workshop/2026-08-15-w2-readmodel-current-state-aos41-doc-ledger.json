@@ -1,0 +1,30 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w2-readmodel-current-state-aos41-convergence-20260815",
+  "recordedAt": "2026-08-15T13:47:00+08:00",
+  "authorityRevision": "AOS-000041",
+  "baselineCommit": "b092e164ef139ae03fbc603baff595079f8c4575",
+  "files": [
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/82-W2-01-统一运营订单库存履约售后事件只读模型预检ADR.md", "preSha256": "683836aca06b5fd038644054197aaf705be48459f8ac5630928d951f31522268", "postSha256": "2df1871d65b4ea5d373029066798ca7e49886d16eb3982e76d7fa75473fc660a"},
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/85-W2-04-达人双阶段轴候选合同履约关系只读模型预检ADR.md", "preSha256": "49bc580e51ab5433475486771b9465ee9a0b5dc025888743248128f80fcfb158", "postSha256": "f4df4fe7a3c9b88ad1616fdb85cf4c63c81c6c71f91bee338d8ade55cec474d5"},
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/86-W2-05-多媒体资产JobReadiness目标态只读模型预检ADR.md", "preSha256": "475fb8212ce260e0cb1033b9735550f88dde4e72eeb38579a3524f772020b4ab", "postSha256": "42bb22aa4e69960d7385fc47c7cc0f10fcd3abb6f99d167ba2d906db01a44f23"},
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/87-W2-06-经营参谋指标质量证据计划只读模型预检ADR.md", "preSha256": "4b65a15907a48e139cc2efbbe95d97ec723ef85b13f3d1807266bdb13480fa48", "postSha256": "bec747475c2124a623e4851c4645062e64cf88804f9d61ba5ddeb24f4e437fb7"},
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/88-W2-07-价格ObservationMatchPolicyCase只读模型预检ADR.md", "preSha256": "1550a7f26ac2c4d046b68d07f252a4ca280791c51bd4bd3d28386af45ece049e", "postSha256": "e8667e6b91515f51773d04e1b768d634d9ed85a8d1f5837f867aae466b07ec5d"},
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md", "preSha256": "ab09a0348b9cba36aaab0ad8b09afd80ad681415a6b1d6a60ffa5bdbd67a0ba0", "postSha256": "aa7888ba0b8b23a999aca62d4ff4677f8ba0817b9e793f014acf666be60e779e"}
+  ],
+  "reviewRounds": [
+    {
+      "round": 1,
+      "finding": "Six W2 ADRs retained current-state wording from AOS-000037 through AOS-000040 or the old six-failure source snapshot.",
+      "remediation": "Aligned operational-binding and latest-source statements to AOS-000041 and seven-of-twelve without changing historical baseline headers."
+    },
+    {
+      "round": 2,
+      "finding": "P06 success could be overgeneralized, while P03/P05 executor progress could be misread as success and the W2-10 exit gate still counted six failures.",
+      "remediation": "Kept per-source status explicit, preserved all domain and W1-10 blockers, and changed the cumulative exit wording to the current five failed sources or approved audited degradation."
+    }
+  ],
+  "verdict": "CURRENT_STATE_CONVERGED_GREEN; W2_RUNTIME_NOT_STARTED_HARD_GATE_BLOCKED",
+  "noCodeOrVisualChange": true,
+  "externalEffect": false
+}
