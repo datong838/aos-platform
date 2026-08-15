@@ -1,0 +1,96 @@
+{
+  "schema": "aos-workshop-disaster-recovery-preflight/v1",
+  "taskId": "workshop-w8-10-backup-projection-rebuild-rls-disaster-recovery-preflight-20260815",
+  "workItem": "W8-10",
+  "projectRevision": "AOS-000034",
+  "branch": "w2-workshop",
+  "head": "9e458415d302397a5095c6ef464de03404dfb9f6",
+  "recordedAt": "2026-08-15T08:46:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "DR_TARGET_CONTRACT_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "mayRunRestore": false,
+    "reason": "W1-10 W2-10 W3-14 W4-08 W5-08 W6-10 and W7-11 are not GREEN; no isolated full-authority restore projection rebuild RLS and disaster drill pack exists"
+  },
+  "dependencyMatrix": [
+    {"dependency": "W1-10", "status": "HARD_GATE_BLOCKED"},
+    {"dependency": "W2-10", "status": "CUMULATIVE_GATE_BLOCKED"},
+    {"dependency": "W3-14", "status": "CUMULATIVE_GATE_BLOCKED"},
+    {"dependency": "W4-08", "status": "CUMULATIVE_GATE_BLOCKED"},
+    {"dependency": "W5-08", "status": "CUMULATIVE_GATE_BLOCKED"},
+    {"dependency": "W6-10", "status": "CUMULATIVE_GATE_BLOCKED"},
+    {"dependency": "W7-11", "status": "CUMULATIVE_GATE_BLOCKED"},
+    {"dependency": "product_formal_freeze", "status": "NOT_FROZEN"},
+    {"dependency": "approved_rpo_rto_and_dr_environment", "status": "ABSENT"}
+  ],
+  "authorityInventory": [
+    "Bundle Registry Composition Installation and immutable locks",
+    "tenant-scoped ecommerce domain revisions events and cases",
+    "Task Plan Run Step Lease Checkpoint and Handoff",
+    "Evidence Artifact Eval Issue Action Receipt Usage Settlement and Lineage",
+    "Memory Wiki Candidate Exposure SavedExploration and revocation facts",
+    "Adapter Account Capability Policy Alert and Reconcile authorities",
+    "object storage artifacts quarantine indexes caches and materialized projections"
+  ],
+  "backupContract": [
+    "inventory each authority owner classification retention encryption key backup method frequency and restore dependency",
+    "bind every backup set to database log position object manifest schema and application or Bundle compatibility hashes",
+    "encrypt backups and manifests with separately recoverable audited keys; Secret values never enter evidence packs",
+    "prove immutability retention deletion and legal-hold behavior without deleting required Receipts or lineage",
+    "RPO and RTO remain TBD until approved from measured restore drills rather than inferred from configuration"
+  ],
+  "restoreOrder": [
+    "declare incident freeze new external dispatch and snapshot source and target environments",
+    "restore identity tenant policy marking key and Registry authorities into an isolated recovery environment",
+    "restore immutable domain and AIP authorities under exact schema and migration compatibility",
+    "verify hashes revision monotonicity foreign refs receipt uniqueness and append-only invariants before serving reads",
+    "enable FORCE RLS and test no-scope wrong-scope org-org positive and dev-org negative isolation before projections",
+    "rebuild disposable indexes caches search materializations and Workshop read models only from canonical authority and cutoff",
+    "reconcile provider unknown Usage external effects webhook gaps and in-flight leases without replaying mutations",
+    "run browser and API read-only verification then explicitly approve phased mutation recovery",
+    "record RecoveryDecision Receipt residual unknown RPO RTO evidence and rollback or roll-forward plan"
+  ],
+  "projectionRebuildInvariants": [
+    "projection deletion and rebuild never changes authority revision or external provider fact",
+    "each row records source revision cutoff build version completeness and tenant scope",
+    "missing extra revision mismatch conflict and unknown remain explicit until zero or accepted by signed decision",
+    "rebuild is idempotent resumable checkpointed rate limited and cannot join across tenants",
+    "SavedExploration shares search indexes caches and materialized views do not become alternate authority"
+  ],
+  "rlsAndSecurityDrills": [
+    "FORCE RLS exists on every tenant authority and recovery role is not an implicit bypass",
+    "no GUC yields zero rows and wrong scope yields zero cross-tenant visibility",
+    "background jobs adapters reconcilers and rebuild workers set scope explicitly and reset in finally",
+    "backup operator restore operator approver and verifier remain separated with audited temporary elevation",
+    "PII Secret media license purpose consent retention and deletion policy survive restore and rebuild",
+    "org-org/dev-project is the only positive proof and dev-org/dev-project remains a negative canary"
+  ],
+  "failureDrills": [
+    "database point-in-time restore and corrupted latest backup fallback",
+    "object artifact missing hash mismatch and quarantine restoration",
+    "partial projection rebuild crash retry and duplicate checkpoint",
+    "key unavailable or rotated and Secret reference recovery",
+    "RLS disabled wrong role wrong GUC and background worker scope leak",
+    "stale Bundle schema or application version incompatibility",
+    "provider result after restore unknown webhook gap and duplicate external receipt",
+    "region outage dependency loss alert silence and controlled failback"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "a destructive restore drill requires an approved isolated target exact backup set and resource Lease; generic RLS or restart tests cannot prove full disaster recovery",
+    "doesNotProve": ["backup restorability", "approved RPO or RTO", "full projection rebuild", "RLS after restore", "external-effect reconciliation or failback"]
+  },
+  "blockers": [
+    "product and seven upstream cumulative gates are incomplete",
+    "approved backup inventory RPO RTO isolated DR target and recovery roles are absent",
+    "no full restore projection rebuild RLS external reconciliation and failback EvidencePack exists"
+  ],
+  "next": "align W8-10 backup restore rebuild RLS and disaster contract through two review rounds without touching real data, then preflight W8-11",
+  "safety": [
+    "no source migration backup restore database tenant browser or external-effect operation",
+    "no secrets or customer payload read",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}
