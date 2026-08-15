@@ -1,14 +1,22 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const api = vi.hoisted(() => ({ apiPost: vi.fn(), apiGet: vi.fn() }));
+const api = vi.hoisted(() => ({ apiPost: vi.fn(), apiPostReadOnly: vi.fn(), apiGet: vi.fn() }));
 vi.mock("../client", () => api);
-import { cancelAssistTaskRun, streamAssistTurn } from "./client";
+import { cancelAssistTaskRun, queryAnalyst, streamAssistTurn } from "./client";
 
 afterEach(() => vi.restoreAllMocks());
 const base = { threadId: "thread-1", turnId: "turn-1", occurredAt: "2026-08-16T00:00:00Z", context: null, blocker: null, content: null, proposalRef: null, usageRefs: [], lineageRefs: [] };
 function frame(name: string, data: unknown) { return `event: ${name}\ndata: ${JSON.stringify(data)}\n\n`; }
 
 describe("aipWorkbench Assist SSE client", () => {
+  it("routes Analyst POST through the non-queueing read-only transport", async () => {
+    api.apiPostReadOnly.mockRejectedValueOnce(Object.assign(new Error("offline"), { body: { code: "OFFLINE_READ_ONLY" } }));
+    await expect(queryAnalyst({ kind: "semantic", objectType: "Order", filters: [], sort: [], selectionRefs: [], pageSize: 1, cutoffAt: "2026-08-16T00:00:00Z" }))
+      .rejects.toMatchObject({ body: { code: "OFFLINE_READ_ONLY" } });
+    expect(api.apiPostReadOnly).toHaveBeenCalledWith("/v1/aip/analyst/query", expect.objectContaining({ kind: "semantic", objectType: "Order" }));
+    expect(api.apiPost).not.toHaveBeenCalled();
+  });
+
   it("cancels through canonical TaskRun control with exact CAS and idempotency", async () => {
     api.apiPost.mockResolvedValue({
       task: {

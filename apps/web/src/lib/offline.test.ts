@@ -42,6 +42,17 @@ describe("TWC.8 offline queue & snapshot", () => {
     fetchSpy.mockRestore();
   });
 
+  it("fails closed for read-only POST without entering the write queue", async () => {
+    setConnectivity("offline", "test");
+    const { apiPostReadOnly } = await import("../api/client");
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    await expect(apiPostReadOnly("/v1/aip/analyst/query", { kind: "semantic" }))
+      .rejects.toMatchObject({ body: { code: "OFFLINE_READ_ONLY" } });
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(listOfflineQueue()).toHaveLength(0);
+    fetchSpy.mockRestore();
+  });
+
   it("isolates queue by workspace", () => {
     setConnectivity("offline", "test");
     enqueueOfflineWrite({ method: "POST", path: "/v1/a", body: {} });

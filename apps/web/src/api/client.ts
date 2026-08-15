@@ -18,6 +18,8 @@ export type ApiErrorBody = {
   details?: unknown;
 };
 
+type RequestPolicy = { queueOfflineWrite?: boolean };
+
 /** 76 · 网络层错误可读化（避免裸 Failed to fetch） */
 export function formatNetworkError(err: unknown, method: string, path: string): Error {
   const base = getApiBase();
@@ -81,10 +83,19 @@ async function request<T>(
   method: string,
   path: string,
   init?: RequestInit,
+  policy: RequestPolicy = {},
 ): Promise<T> {
   const m = method.toUpperCase();
   if (m !== "GET" && m !== "HEAD") {
-    guardOfflineWrite(m, path, init?.body ? tryParseBody(init.body) : undefined);
+    if (policy.queueOfflineWrite === false && isOffline()) {
+      throw Object.assign(new Error(`当前离线，无法执行只读请求：${path}`), {
+        status: 0,
+        body: { code: "OFFLINE_READ_ONLY", message: `当前离线，无法执行只读请求：${path}`, path, method: m } as ApiErrorBody,
+      });
+    }
+    if (policy.queueOfflineWrite !== false) {
+      guardOfflineWrite(m, path, init?.body ? tryParseBody(init.body) : undefined);
+    }
   }
 
   if (m === "GET" && isOffline()) {
@@ -140,6 +151,18 @@ export async function apiPost<T>(
     headers: extraHeaders,
     body: JSON.stringify(body),
   });
+}
+
+/** POST 形式的纯查询：离线时失败关闭，禁止进入写队列或恢复后重放。 */
+export async function apiPostReadOnly<T>(
+  path: string,
+  body: unknown,
+  extraHeaders?: HeadersInit,
+): Promise<T> {
+  return request<T>("POST", path, {
+    headers: extraHeaders,
+    body: JSON.stringify(body),
+  }, { queueOfflineWrite: false });
 }
 
 export async function apiPut<T>(
