@@ -1,13 +1,12 @@
 """D1.5: P08 CustomerLite Pipeline 专项测试（FR-D1.5-2）。
 
 覆盖：
-1. SourceAdapter ns_member 表 PII 排除（8 个 PII 字段显式 drop，不进入 row 流）
+1. SourceAdapter ns_member 表公开字段 allowlist，PII/身份字段不进入 row 流
 2. OTWriter _build_object CustomerLite 必填属性补齐（updatedAt/createdAt 自动补齐）
 3. P08 端到端：CustomerLite OT 落地 + niushop:1:{member_id} 命名空间
 
 约束（frozen/02 §P08）：
-- ns_member 源表 PII 排除清单：mobile/wx_openid/nickname/avatar/reg_address/
-  last_login_ip/password/pay_password（Project 节点显式 drop）
+- ns_member 源表只允许主键、租户过滤、状态/等级和水位字段；其余默认拒绝
 - 隐私最小化映射：只保留 member_id/member_level/status/create_time/modify_time 等脱敏键
 - CustomerLite REQUIRED_PROPERTIES = {memberLevel, status, createdAt, updatedAt}
 - 唯一键命名空间：niushop:1:{member_id}
@@ -32,7 +31,7 @@ from aos_api.ecom_core_models import (
     EcomConsistencyError,
     SyncScope,
 )
-from aos_api.ec_ot_writer import sink_to_ot
+from aos_api.ec_ot_writer import sink_derived_metrics, sink_to_ot
 from aos_api.ec_source_adapter import (
     fetch_source_rows,
     get_soft_delete_count,
@@ -47,10 +46,11 @@ TEST_SCOPE = TenantScope("dev-org", "dev-project")
 OTHER_SCOPE = TenantScope("other-org", "other-project")
 PID = "p08-customer-lite"
 
-# frozen/02 §P08 PII 排除清单（8 个字段）
+# P08 公开投影必须排除的代表性身份字段。
 PII_FIELDS: frozenset[str] = frozenset({
     "mobile", "wx_openid", "nickname", "avatar",
     "reg_address", "last_login_ip", "password", "pay_password",
+    "email", "headimg", "realname", "birthday", "address", "full_address",
 })
 
 
@@ -69,6 +69,7 @@ class FakeStore:
         raises: Exception | None = None,
     ) -> None:
         self.calls: list[BatchCommand] = []
+        self.derived_calls: list[Any] = []
         self._result = result
         self._raises = raises
         self._checkpoints: dict[tuple, int] = {}
@@ -97,6 +98,16 @@ class FakeStore:
         if version is None:
             return None
         return {"version": version}
+
+    def get_latest_authoritative_revision(self, _identity: Any) -> int:
+        return max(1, len(self.calls))
+
+    def get_derived_revision(self, _identity: Any, _object_type: str) -> int:
+        return len(self.derived_calls)
+
+    def update_derived_metrics(self, command: Any) -> Any:
+        self.derived_calls.append(command)
+        return SimpleNamespace(updated=True, replayed=False)
 
 
 class FakeEngine:
@@ -127,7 +138,7 @@ def _ns_member_raw_row(
         "status": 1,
         "create_time": 1700000000,
         "modify_time": 1700001000,
-        # PII 排除清单（frozen/02 §P08：Project 节点显式 drop）
+        # 历史已知 PII 与其他身份字段；公开投影必须全部拒绝。
         "mobile": "13800138000",
         "wx_openid": "wx_openid_secret_123",
         "nickname": "张三的昵称",
@@ -136,6 +147,12 @@ def _ns_member_raw_row(
         "last_login_ip": "10.0.0.1",
         "password": "hashed_password_secret",
         "pay_password": "hashed_pay_password_secret",
+        "email": "member@example.com",
+        "headimg": "https://cdn.example.com/head/1001.jpg",
+        "realname": "张三",
+        "birthday": "1990-01-01",
+        "address": "某街道",
+        "full_address": "北京市某街道某号",
         # 过滤/清洗键
         "site_id": 1,
         "is_delete": is_delete,
@@ -178,27 +195,29 @@ class _FakePymysqlCursor:
         pass
 
 
-def _fake_pymysql_conn(rows: list[dict[str, Any]]) -> tuple[MagicMock, _FakePymysqlCursor]:
-    cur = _FakePymysqlCursor(rows)
-    conn = MagicMock()
-    conn.cursor.return_value = cur
-    return conn, cur
+def _configure_runtime_rows(
+    mock_runtime_cls: MagicMock,
+    rows: list[dict[str, Any]],
+) -> MagicMock:
+    runtime = MagicMock()
+    runtime.__enter__.return_value = runtime
+    runtime.read_rows.return_value = rows
+    mock_runtime_cls.return_value = runtime
+    return runtime
 
 
-@patch("aos_api.ec_source_adapter.pymysql")
+@patch("aos_api.ec_source_adapter.JdbcConnectorRuntime")
 @patch("aos_api.ec_source_adapter.connect")
-def test_ns_member_drops_all_eight_pii_fields(
+def test_ns_member_public_projection_drops_identity_fields(
     mock_connect: MagicMock,
-    mock_pymysql: MagicMock,
+    mock_runtime_cls: MagicMock,
 ) -> None:
-    """FR-D1.5-2: ns_member 表的 8 个 PII 字段 MUST 在 SourceAdapter 显式 drop。"""
+    """FR-D1.5-2: ns_member 非公开身份字段不得进入 Source row 流。"""
     aos_conn = _fake_aos_conn(_meta_source_props())
     mock_connect.return_value.__enter__.return_value = aos_conn
     mock_connect.return_value.__exit__.return_value = None
 
-    niushop_conn, _ = _fake_pymysql_conn([_ns_member_raw_row(member_id=1001)])
-    mock_pymysql.connect.return_value = niushop_conn
-    mock_pymysql.cursors.DictCursor = MagicMock()
+    _configure_runtime_rows(mock_runtime_cls, [_ns_member_raw_row(member_id=1001)])
 
     reset_soft_delete_counts()
     node = SimpleNamespace(
@@ -226,20 +245,18 @@ def test_ns_member_drops_all_eight_pii_fields(
     assert not leaked, f"PII 字段未 drop: {leaked}"
 
 
-@patch("aos_api.ec_source_adapter.pymysql")
+@patch("aos_api.ec_source_adapter.JdbcConnectorRuntime")
 @patch("aos_api.ec_source_adapter.connect")
 def test_ns_member_keeps_desensitized_fields(
     mock_connect: MagicMock,
-    mock_pymysql: MagicMock,
+    mock_runtime_cls: MagicMock,
 ) -> None:
     """FR-D1.5-2: ns_member 表的脱敏键（member_id/member_level/status/create_time/modify_time）MUST 保留。"""
     aos_conn = _fake_aos_conn(_meta_source_props())
     mock_connect.return_value.__enter__.return_value = aos_conn
     mock_connect.return_value.__exit__.return_value = None
 
-    niushop_conn, _ = _fake_pymysql_conn([_ns_member_raw_row(member_id=1001)])
-    mock_pymysql.connect.return_value = niushop_conn
-    mock_pymysql.cursors.DictCursor = MagicMock()
+    _configure_runtime_rows(mock_runtime_cls, [_ns_member_raw_row(member_id=1001)])
 
     reset_soft_delete_counts()
     node = SimpleNamespace(
@@ -270,11 +287,11 @@ def test_ns_member_keeps_desensitized_fields(
     assert row["modify_time"] == 1700001000
 
 
-@patch("aos_api.ec_source_adapter.pymysql")
+@patch("aos_api.ec_source_adapter.JdbcConnectorRuntime")
 @patch("aos_api.ec_source_adapter.connect")
 def test_pii_exclusion_scoped_to_ns_member_only(
     mock_connect: MagicMock,
-    mock_pymysql: MagicMock,
+    mock_runtime_cls: MagicMock,
 ) -> None:
     """FR-D1.5-2: PII drop MUST 仅对 ns_member 表生效，不影响其他表（如 ns_goods）。
 
@@ -291,9 +308,7 @@ def test_pii_exclusion_scoped_to_ns_member_only(
         "goods_name": "测试商品",
         "mobile": "商家联系电话",  # 非 ns_member PII，不应 drop
     }
-    niushop_conn, _ = _fake_pymysql_conn([ns_goods_row])
-    mock_pymysql.connect.return_value = niushop_conn
-    mock_pymysql.cursors.DictCursor = MagicMock()
+    _configure_runtime_rows(mock_runtime_cls, [ns_goods_row])
 
     reset_soft_delete_counts()
     node = SimpleNamespace(
@@ -321,11 +336,11 @@ def test_pii_exclusion_scoped_to_ns_member_only(
     assert rows[0]["mobile"] == "商家联系电话"
 
 
-@patch("aos_api.ec_source_adapter.pymysql")
+@patch("aos_api.ec_source_adapter.JdbcConnectorRuntime")
 @patch("aos_api.ec_source_adapter.connect")
 def test_pii_drop_does_not_break_soft_delete_counting(
     mock_connect: MagicMock,
-    mock_pymysql: MagicMock,
+    mock_runtime_cls: MagicMock,
 ) -> None:
     """FR-D1.5-2: PII drop 不影响软删行过滤与 DLQ 计数。"""
     aos_conn = _fake_aos_conn(_meta_source_props())
@@ -337,9 +352,7 @@ def test_pii_drop_does_not_break_soft_delete_counting(
         _ns_member_raw_row(member_id=1002, is_delete=1),  # 软删
         _ns_member_raw_row(member_id=1003, is_delete=0),
     ]
-    niushop_conn, _ = _fake_pymysql_conn(niushop_rows)
-    mock_pymysql.connect.return_value = niushop_conn
-    mock_pymysql.cursors.DictCursor = MagicMock()
+    _configure_runtime_rows(mock_runtime_cls, niushop_rows)
 
     reset_soft_delete_counts()
     node = SimpleNamespace(
@@ -469,6 +482,26 @@ def test_build_object_CustomerLite_produces_valid_record() -> None:
     assert not obj.is_deleted
 
 
+def test_customer_lite_dynamic_metrics_use_derived_cas_not_base_payload() -> None:
+    """P08 动态指标不得在同一源版本下改写基础 Object payload。"""
+    store = FakeStore()
+    eng = FakeEngine(store)
+    row = customer_lite_row(member_id="1001", with_times=False)
+    row["properties"].update({"order_count": 2, "last_order_days": 3})
+
+    sink_to_ot(eng, TEST_SCOPE, FakePipeline(), [row])
+    base = store.calls[0].objects[0]
+    assert "order_count" not in base.properties
+    assert "last_order_days" not in base.properties
+
+    result = sink_derived_metrics(eng, TEST_SCOPE, FakePipeline(), [row])
+    assert result == {"derived_updated": 1, "derived_replayed": 0}
+    assert store.derived_calls[0].derived_props == {
+        "order_count": 2,
+        "last_order_days": 3,
+    }
+
+
 # ═══════════════════════════════════════════════
 # Section 3: P08 端到端（FR-D1.5-2 命名空间 + 落地）
 # ═══════════════════════════════════════════════
@@ -506,16 +539,22 @@ def _run_executor(
     """调用 ec_live_executor，注入 FakeStore 到 engine。"""
     eng = get_engine()
     eng.ecom_consistency_store = store
-    return ec_mod.ec_live_executor(
-        pipeline=FakePipeline(pipeline_id),
-        nodes=[],
-        node_id=None,
-        sample_input=rows,
-        execution_kind="schedule",
-        cancel_event=None,
-        deadline=0,
-        scope=scope,
+    source = SimpleNamespace(
+        id="n-src",
+        node_type="source",
+        config={"source_id": "src-p08", "source_table": "ns_member"},
     )
+    with patch.object(ec_mod, "fetch_source_rows", return_value=rows):
+        return ec_mod.ec_live_executor(
+            pipeline=FakePipeline(pipeline_id),
+            nodes=[source],
+            node_id=source.id,
+            sample_input=None,
+            execution_kind="schedule",
+            cancel_event=None,
+            deadline=0,
+            scope=scope,
+        )
 
 
 def test_p08_initial_load_lands_customer_lite_ot() -> None:
@@ -529,7 +568,7 @@ def test_p08_initial_load_lands_customer_lite_ot() -> None:
     result = _run_executor(rows, store=store)
 
     # Dataset 落地
-    assert result["output_ref"].startswith("dataset://catalog/ri.dataset.")
+    assert result["output_ref"] == "dataset://catalog/ri.aos.main.dataset.p08-customer-lite"
     # OT 落地：1 个 BatchCommand，2 个 CustomerLite 对象
     assert len(store.calls) == 1
     command = store.calls[0]

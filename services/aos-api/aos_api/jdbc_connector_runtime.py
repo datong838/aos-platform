@@ -39,9 +39,10 @@ from aos_api.logging_facade import get_logger
 log = get_logger("aos-api.jdbc-connector-runtime")
 
 
-# 隧道就绪探测最大重试次数与间隔
-_TUNNEL_READY_RETRIES: int = 10
-_TUNNEL_READY_INTERVAL: float = 0.3
+# 隧道就绪探测最大重试次数与间隔。弱网络下 SSH 认证可能
+# 超过旧的 3 秒窗口；保持总等待有界，但避免过早判失败后留下脱管隧道。
+_TUNNEL_READY_RETRIES: int = 50
+_TUNNEL_READY_INTERVAL: float = 0.2
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -509,15 +510,13 @@ class SshTunnel:
     """SSH 隧道（subprocess ssh -L 模式）。
 
     支持两种认证方式：
-    1. SSH key 认证：ssh -fN -L ... -i key user@host（ssh_key_path 模式）
-    2. SSH 密码认证：SSH_ASKPASS + ssh -f -L ... user@host（ssh_password 模式）
-       参考 ssh-tunnel-mysql-auto 技能：用 SSH_ASKPASS_REQUIRE=force 绕过 tty，
-       ssh -f 让进程自动 detach 到 init（ppid=1），独立于调用方进程
+    1. SSH key 认证：ssh -N -L ... -i key user@host（ssh_key_path 模式）
+    2. SSH 密码认证：SSH_ASKPASS + ssh -N -L ... user@host（ssh_password 模式）
+       用 SSH_ASKPASS_REQUIRE=force 绕过 tty，但不使用 ``-f`` 脱管。
 
     设计权衡：
     - 不引入 paramiko 依赖（用户环境可能未装）
-    - 密码模式：ssh -f 后进程 detach 到 init，主进程退出隧道仍存活，需显式 kill
-    - key 模式：ssh -fN 后台运行，同上
+    - SSH 子进程由 AOS 进程持有，shutdown/失败时可确定清理
     - 本地端口动态分配（从 29500 开始尝试，避免端口冲突）
     """
 
@@ -550,17 +549,18 @@ class SshTunnel:
         """
         self._local_port = _allocate_local_port()
 
-        if self.ssh_password:
-            return self._open_with_password()
-        if self.ssh_key_path:
-            return self._open_with_key()
-        raise RuntimeError("SSH tunnel: neither ssh_key_path nor ssh_password provided")
+        try:
+            if self.ssh_password:
+                return self._open_with_password()
+            if self.ssh_key_path:
+                return self._open_with_key()
+            raise RuntimeError("SSH tunnel: neither ssh_key_path nor ssh_password provided")
+        except Exception:
+            self.close()
+            raise
 
     def _open_with_password(self) -> int:
-        """密码认证模式：SSH_ASKPASS + ssh -f（参考 ssh-tunnel-mysql-auto 技能）。
-
-        ssh 进程自动 detach 到 init（ppid=1），独立于调用方进程。
-        """
+        """密码认证模式：SSH_ASKPASS + 由 AOS 持有的 ssh -N 子进程。"""
         # 创建临时 askpass helper 脚本
         askpass_content = f"""#!/bin/bash
 echo '{self.ssh_password}'
@@ -571,11 +571,12 @@ echo '{self.ssh_password}'
         os.chmod(self._askpass_file, 0o700)
 
         cmd = [
-            "ssh", "-4", "-f",
+            "ssh", "-4",
             "-o", "ServerAliveInterval=30",
             "-o", "ServerAliveCountMax=3",
             "-o", "StrictHostKeyChecking=no",
             "-o", "ExitOnForwardFailure=yes",
+            "-p", str(self.ssh_port),
             "-N", "-L",
             f"127.0.0.1:{self._local_port}:127.0.0.1:{self.remote_port}",
             f"{self.ssh_user}@{self.ssh_host}",
@@ -603,11 +604,10 @@ echo '{self.ssh_password}'
         return self._wait_ready()
 
     def _open_with_key(self) -> int:
-        """key 认证模式：ssh -fN -i key（原逻辑）。
-        """
+        """key 认证模式：ssh -N -i key，子进程由 AOS 持有。"""
         cmd = [
             "ssh",
-            "-fN",  # 后台运行，不执行远程命令
+            "-N",  # 不执行远程命令，保持为可管理子进程
             "-L", f"{self._local_port}:{self.remote_host}:{self.remote_port}",
             "-p", str(self.ssh_port),
             "-i", self.ssh_key_path,
