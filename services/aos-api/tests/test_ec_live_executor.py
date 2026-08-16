@@ -8,6 +8,7 @@ dataset_resolver 验证的 evidence。
 from __future__ import annotations
 
 import time
+from unittest.mock import patch
 
 import pytest
 
@@ -28,7 +29,18 @@ def _register_live_stack(eng):
     from aos_api.ec_live_executor import ec_live_executor
     from aos_api.ec_pipeline_resolvers import dataset_resolver
 
-    eng.register_executor("ec-live-v1", ec_live_executor)
+    def _contract_executor(**kwargs):
+        # 本文件验证 Phase5 执行与 evidence/resolver 合同，不读外部数据源。
+        # 真实 Source 节点与 JdbcConnectorRuntime 由专项测试覆盖。
+        with (
+            patch("aos_api.ec_live_executor.fetch_source_rows", return_value=[]),
+            patch("aos_api.ec_live_executor.ensure_store_assembled", return_value=None),
+            patch("aos_api.data_os_store.persist_dataset", return_value=None),
+            patch("aos_api.data_os_store.persist_dataset_history", return_value=None),
+        ):
+            return ec_live_executor(**kwargs)
+
+    eng.register_executor("ec-live-v1", _contract_executor)
     eng.register_evidence_resolver("dataset", dataset_resolver)
 
 
@@ -53,11 +65,9 @@ def test_live_executor_receives_scope():
     eng = get_engine()
     captured = {}
 
-    from aos_api.ec_live_executor import ec_live_executor
-
     def _wrapping_executor(**kwargs):
         captured["scope"] = kwargs.get("scope")
-        return ec_live_executor(**kwargs)
+        return {"output_ref": "dataset://catalog/scope-check", "rows_read": 0, "rows_written": 0}
 
     from aos_api.ec_pipeline_resolvers import dataset_resolver
 

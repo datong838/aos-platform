@@ -61,6 +61,19 @@ _PII_DROP_FIELDS_BY_TABLE: dict[str, frozenset[str]] = {
     ),
 }
 
+# P08 权威公开投影：CustomerLite 的 Source 行只允许流转主键、租户过滤、
+# 状态/等级和水位字段。使用 allowlist 而不是继续追加 denylist，防止源表
+# 新增身份字段后意外进入 Dataset、DLQ 或 Receipt。
+_PUBLIC_FIELDS_BY_TABLE: dict[str, frozenset[str]] = {
+    "ns_member": frozenset(
+        {
+            "member_id", "member_level", "status", "site_id", "is_delete",
+            "reg_time", "create_time", "modify_time", "last_visit_time",
+            "login_time", "last_login_time",
+        }
+    ),
+}
+
 # D2.6: 通用 JDBC SSH 连接器类型集合（走 JdbcConnectorRuntime 分支）
 # 其他类型（niushop-mysql / mysql / 缺失）走原 pymysql 直连分支（向后兼容）
 _JDBC_SSH_CONNECTOR_TYPES: frozenset[str] = frozenset(
@@ -420,7 +433,9 @@ def _clean_rows(
     """
     cleaned: list[dict[str, Any]] = []
     soft_delete_count = 0
-    pii_fields = _PII_DROP_FIELDS_BY_TABLE.get(table or "", frozenset())
+    table_name = table or ""
+    pii_fields = _PII_DROP_FIELDS_BY_TABLE.get(table_name, frozenset())
+    public_fields = _PUBLIC_FIELDS_BY_TABLE.get(table_name)
 
     for row in rows:
         # 软删行过滤（is_delete=1 不入 OT，进 DLQ 计数）
@@ -428,7 +443,11 @@ def _clean_rows(
             soft_delete_count += 1
             continue
 
-        cleaned_row = dict(row)
+        cleaned_row = (
+            {key: value for key, value in row.items() if key in public_fields}
+            if public_fields is not None
+            else dict(row)
+        )
         # PII 排除（frozen/02 §P08 + D4 §P12）：按表名 drop 敏感字段，不进入 row 流
         if pii_fields:
             for pii_field in pii_fields:
