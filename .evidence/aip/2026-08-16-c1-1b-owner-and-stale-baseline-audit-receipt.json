@@ -1,0 +1,52 @@
+{
+  "receiptId": "AIP-P9-C1-1B-OWNER-AND-STALE-BASELINE-AUDIT-20260816",
+  "recordedAt": "2026-08-16T00:00:00+08:00",
+  "branch": "w1-aip",
+  "baselineSha": "b989f3b2466bbd49047e369b3affac5f5f30fc40",
+  "scope": {
+    "positiveTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "mode": "read-only code and plan audit"
+  },
+  "decision": {
+    "content1B": "BLOCKED_EXTERNAL",
+    "budgetRevisionOwner": "ABSENT",
+    "governedContentObjectOwner": "ABSENT",
+    "memoryImprovementRouter": "MOUNTED_CODE_GREEN"
+  },
+  "findings": [
+    "aip_artifact is the canonical Artifact metadata and lineage owner, not a governed Blob payload store",
+    "UnavailableContentObjectVerifier is the correct fail-closed default and must not trust caller-reported hashes",
+    "BudgetPolicyRevision cannot substitute for the exact BudgetRevision required by Content Pipeline",
+    "C1-2 and C1-3 remain closed until canonical owners and exact real-tenant evidence exist",
+    "the historical aip_memory_improvement router-not-mounted warning is stale"
+  ],
+  "inspectedCode": [
+    "services/aos-api/aos_api/aip_content_draft_readiness.py",
+    "services/aos-api/aos_api/aip_content_draft_store.py",
+    "services/aos-api/aos_api/aip_content_contracts.py",
+    "services/aos-api/aos_api/routers/aip_memory_improvement.py",
+    "services/aos-api/aos_api/routers/domain_aggregates.py",
+    "services/aos-api/aos_api/routers/domain_manifest.json"
+  ],
+  "documents": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/AIP通用能力实施方案/33-AIP-P9-Content1草稿控制链实施清单.md",
+      "preSha256": "97cb90b89b8ea1aeae88c6ce38c1cc8911f89c877eef9e13b00cc58d2421ed1d",
+      "postSha256": "c24c63a37dcd18d8d4020ad2cde33ec603de6ab8f51e122f3208e37cd0cd9db2"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/AIP通用能力实施方案/全量开发清单/07-AIP助手分析师与通用工作台开发清单.md",
+      "preSha256": "a5485ee365df818a3310bb2225ac204c00ef4448336a601d5d17a44b6a157dc3",
+      "postSha256": "dd338e7492202ec950d1b6747d89a671c864bdec8d8dd2c78404131f0a416686"
+    }
+  ],
+  "verification": {
+    "command": "uv run pytest -q tests/aip/test_aip_memory_improvement_api.py tests/aip/test_aip_memory_improvement.py",
+    "result": "11 passed",
+    "browser": "N/A: no page or runtime behavior changed",
+    "databaseWrites": false,
+    "migrationLease": "not required"
+  },
+  "protectedUntrackedExcluded": ".evidence/aip/2026-08-14-watchdog-w2c-recovery-blocked-receipt.json"
+}
