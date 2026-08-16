@@ -1,0 +1,68 @@
+{
+  "schema": "aos-workshop-preparation-receipt/v1",
+  "taskId": "workshop-w2-dependency-aos82-fact-reconciliation-20260817",
+  "recordedAt": "2026-08-17T06:23:29+08:00",
+  "branch": "w2-workshop",
+  "baselineSha": "97591faeee12d5662804d2fbd23dba5196d45c9e",
+  "authorityRevision": "AOS-000082",
+  "result": "FACT_RECONCILIATION_GREEN_RUNTIME_IMPLEMENTATION_BLOCKED",
+  "scope": {
+    "businessCodeChanged": false,
+    "databaseChanged": false,
+    "migrationExecutedByWorkshop": false,
+    "externalSideEffect": false,
+    "authorityChanged": false,
+    "checkpointChanged": false,
+    "primeMemoryChanged": false
+  },
+  "freshDependencyProbe": {
+    "command": "services/aos-api/.venv/bin/python scripts/long-task-watchdog/w2_data_fact_probe.py",
+    "succeeded": 12,
+    "total": 12,
+    "canarySourceRows": 0,
+    "canaryProjectionRows": 0,
+    "result": "DEP_DATA_GREEN"
+  },
+  "aipDelta": {
+    "r107": "QUOTA_POLICY_REVISION_CODE_AUTHORITY_GREEN",
+    "r108": "BUDGET_POLICY_REVISION_CODE_AUTHORITY_GREEN",
+    "publicationGates": "EXACT_MODEL_AND_RUNTIME_POLICY_CODE_GATE_GREEN",
+    "verification": "W1_AIP_642_GREEN_M1_642_GREEN_ALEMBIC_HEAD_AIP10_003",
+    "keychainItem": "ABSENT",
+    "agnesRegionAndDataDestination": "UNKNOWN",
+    "liveProviderRouteBindingRun": "BLOCKED",
+    "r104ThroughR107Operational": "BLOCKED",
+    "r2": "NOT_STARTED",
+    "result": "CODE_CONTROL_GREEN_OPERATIONAL_BLOCKED"
+  },
+  "updatedFiles": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/106-W2至W8依赖并行执行准备与冲突控制ADR.md",
+      "preSha256": "9b265b8236a8ef85df8fb4f39f47380289d60746866e6f6f28b16b9597525af0",
+      "postSha256": "a13f8776dac2a593c778fe4953a873914750af4694328225806bddfd8c9d7a3e"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "58e98bc60e5a0f03caf6a096cb2c2c7a7a3e204e18f2a14b67a3cfb1e3811aa1",
+      "postSha256": "5c5ecb923f23c603cee18faa54e47eadf1e741ed18922063f877a7593a183646"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "38e802dc09be42bed12e2afd0fd3916b2e8b95712735e87fd3d527cbe022f151",
+      "postSha256": "177f1197480859b2ed2f1372b62a229774bcbcb047f285ce397972171713c86a"
+    }
+  ],
+  "reviewedDeliveryReceipt": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/aip-r1-07-r1-08-model-governance-policy-authority.json",
+  "remainingBlockers": [
+    "Owner Keychain item and ProviderInstanceRevision remain blocked",
+    "AGNES Region/data destination is unknown and no live active policy exists",
+    "R1-04 NetworkPolicy, R1-05 EvalGate, R1-06 ProviderHealth and R1-07 Capacity/Price exact operational evidence remain blocked",
+    "R2 Binding and runnable Agent combination are not started",
+    "W2-00 remains NOT_STARTED because DEP-ADP(query) is operational RED"
+  ],
+  "progress": {
+    "completed": 21,
+    "total": 96,
+    "nextTask": "W2-00"
+  }
+}
