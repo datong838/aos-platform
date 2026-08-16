@@ -25,6 +25,10 @@ from aos_api.aip_runtime_guard_policy_store import (
     AipRuntimeGuardPolicyStore,
     GuardPolicyDependencyBlocked,
 )
+from aos_api.aip_model_governance_policy_store import (
+    AipModelGovernancePolicyStore,
+    ModelGovernancePolicyDependencyBlocked,
+)
 from aos_api.tenant_scope import TenantScope
 
 ConnectFactory = Callable[..., AbstractContextManager[Any]]
@@ -73,9 +77,12 @@ class AipModelRuntimeStore:
         "model_price_snapshot": ("priceSnapshotId", ModelPriceSnapshotRevision),
     }
 
-    def __init__(self, connect_factory: ConnectFactory | None = None, *, guard_policy_store=None) -> None:
+    def __init__(self, connect_factory: ConnectFactory | None = None, *, guard_policy_store=None, governance_policy_store=None) -> None:
         self._connect_factory = connect_factory or db_connect
         self._guard_policy_store = guard_policy_store or AipRuntimeGuardPolicyStore(
+            connect_factory or db_connect
+        )
+        self._governance_policy_store = governance_policy_store or AipModelGovernancePolicyStore(
             connect_factory or db_connect
         )
 
@@ -87,9 +94,19 @@ class AipModelRuntimeStore:
         return self._publish("provider_instance", scope, actor, key, item, expected_version)
 
     def publish_model(self, scope: TenantScope, actor: str, key: str, item: RegisteredModelRevision, *, expected_version: int = 0) -> RegisteredModelRevision:
+        try:
+            self._governance_policy_store.require_model_dependencies(scope, item)
+        except ModelGovernancePolicyDependencyBlocked as exc:
+            raise ModelRuntimeDependencyBlocked(str(exc)) from None
         return self._publish("registered_model", scope, actor, key, item, expected_version)
 
     def publish_policy(self, scope: TenantScope, actor: str, key: str, item: RuntimePolicyRevision, *, expected_version: int = 0) -> RuntimePolicyRevision:
+        try:
+            self._guard_policy_store.require_exact_active(scope, item.egress_policy_ref)
+            self._guard_policy_store.require_exact_active(scope, item.data_classification_policy_ref)
+            self._governance_policy_store.require_runtime_policy_dependencies(scope, item)
+        except (GuardPolicyDependencyBlocked, ModelGovernancePolicyDependencyBlocked) as exc:
+            raise ModelRuntimeDependencyBlocked(str(exc)) from None
         return self._publish("runtime_policy", scope, actor, key, item, expected_version)
 
     def publish_route(self, scope: TenantScope, actor: str, key: str, item: ModelRouteRevision, *, expected_version: int = 0) -> ModelRouteRevision:

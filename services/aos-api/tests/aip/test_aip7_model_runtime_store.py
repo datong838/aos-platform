@@ -33,6 +33,13 @@ from aos_api.aip_runtime_guard_policy_contracts import (
     EgressPolicyRevisionCreate,
 )
 from aos_api.aip_runtime_guard_policy_store import AipRuntimeGuardPolicyStore
+from aos_api.aip_budget_contracts import BudgetRevisionCreate
+from aos_api.aip_budget_store import AipBudgetAuthorityStore
+from aos_api.aip_model_governance_policy_contracts import (
+    BudgetPolicyRevisionCreate,
+    QuotaPolicyRevisionCreate,
+)
+from aos_api.aip_model_governance_policy_store import AipModelGovernancePolicyStore
 from aos_api.db import get_dsn
 from aos_api.tenant_scope import TenantScope
 
@@ -130,13 +137,8 @@ def publish_runtime_guards() -> tuple[VersionedAssetRef, VersionedAssetRef]:
             lifecycle="active",
             allowedClassifications=["public_catalog"],
             prohibitedClassifications=[
-                "direct_pii",
-                "raw_order_detail",
-                "customer_conversation",
-                "credential",
-                "commercial_sensitive",
-                "cross_tenant",
-                "unknown",
+                "direct_pii", "raw_order_detail", "customer_conversation", "credential",
+                "commercial_sensitive", "cross_tenant", "unknown",
             ],
             denyUnknown=True,
             allowDirectPii=False,
@@ -147,6 +149,47 @@ def publish_runtime_guards() -> tuple[VersionedAssetRef, VersionedAssetRef]:
     return (
         ref("EgressPolicyRevision", egress.policy_id, egress.content_hash),
         ref("DataClassificationPolicyRevision", data.policy_id, data.content_hash),
+    )
+
+
+def publish_model_governance_policies() -> tuple[VersionedAssetRef, VersionedAssetRef]:
+    instant = datetime.now(UTC)
+    budget = AipBudgetAuthorityStore().publish(
+        SCOPE, SUFFIX, "model-budget-revision-1",
+        BudgetRevisionCreate(
+            budgetId=f"{SUFFIX}:budget-revision", revision=1, environment="development",
+            currency="CNY", dailyLimitMinor=500, monthlyLimitMinor=5000,
+            alertThresholdPct=80, hardStop=True, unknownUsageBehavior="block",
+            effectiveFrom=instant - timedelta(hours=2), effectiveUntil=instant + timedelta(days=60),
+            owner=SUFFIX, overBudgetApprover=SUFFIX, lifecycle="active",
+        ),
+    )
+    store = AipModelGovernancePolicyStore()
+    quota = store.publish_quota(
+        SCOPE, SUFFIX, "model-quota-policy-1",
+        QuotaPolicyRevisionCreate(
+            policyId=f"{SUFFIX}:quota-policy", revision=1, environment="development",
+            effectiveFrom=instant - timedelta(hours=1), effectiveUntil=instant + timedelta(days=30),
+            owner=SUFFIX, approvalRef="approval:test:aip7-store", lifecycle="active",
+            maxConcurrency=2, maxInputTokens=8000, maxOutputTokens=2000,
+            hourlyRequestLimit=50, dailyRequestLimit=200, reservationLeaseSeconds=60,
+            overflowBehavior="queue", allowPublicProviderFallback=False, allowAutoScale=False,
+        ),
+    )
+    budget_policy = store.publish_budget(
+        SCOPE, SUFFIX, "model-budget-policy-1",
+        BudgetPolicyRevisionCreate(
+            policyId=f"{SUFFIX}:budget-policy", revision=1, environment="development",
+            effectiveFrom=instant - timedelta(hours=1), effectiveUntil=instant + timedelta(days=30),
+            owner=SUFFIX, approvalRef="approval:test:aip7-store", lifecycle="active",
+            budgetRevisionRef=ref("BudgetRevision", budget.budget_id, budget.content_hash),
+            currency="CNY", hardStop=True, unknownUsageBehavior="block",
+            unknownPriceBehavior="block", allowZeroPrice=False,
+        ),
+    )
+    return (
+        ref("QuotaPolicyRevision", quota.policy_id, quota.content_hash),
+        ref("BudgetPolicyRevision", budget_policy.policy_id, budget_policy.content_hash),
     )
 
 
@@ -215,6 +258,14 @@ def test_store_persists_exact_chain_replays_receipt_and_isolates_tenant() -> Non
             evalGateRef=ref("EvalGateDecision", "test:eval", "7" * 64),
             lifecycle=ModelRuntimeLifecycle.VALIDATED, createdBy=SUFFIX, createdAt=NOW,
         ))
+        with pytest.raises(ModelRuntimeDependencyBlocked, match="model governance policy"):
+            store.publish_model(SCOPE, SUFFIX, "model-missing-governance", model)
+        quota_ref, budget_policy_ref = publish_model_governance_policies()
+        model = rehashed(
+            model,
+            quotaPolicyRef=quota_ref.model_dump(mode="json", by_alias=True),
+            budgetPolicyRef=budget_policy_ref.model_dump(mode="json", by_alias=True),
+        )
         store.publish_model(SCOPE, SUFFIX, "model-1", model)
 
         policy = hashed(RuntimePolicyRevision, dict(
@@ -222,8 +273,8 @@ def test_store_persists_exact_chain_replays_receipt_and_isolates_tenant() -> Non
             networkPolicyRef=ref("NetworkPolicyRevision", "test:network", "8" * 64),
             egressPolicyRef=egress_ref,
             dataClassificationPolicyRef=data_classification_ref,
-            quotaPolicyRef=ref("QuotaPolicyRevision", "test:quota", "4" * 64),
-            budgetPolicyRef=ref("BudgetPolicyRevision", "test:budget", "5" * 64),
+            quotaPolicyRef=quota_ref,
+            budgetPolicyRef=budget_policy_ref,
             deadlineMs=30_000, maxAttempts=2, allowedFallbackReasons=["provider_unavailable"],
             unknownUsageBehavior="block", unknownPriceBehavior="block", killSwitchEnabled=True,
             lifecycle=ModelRuntimeLifecycle.VALIDATED, createdBy=SUFFIX, createdAt=NOW,
