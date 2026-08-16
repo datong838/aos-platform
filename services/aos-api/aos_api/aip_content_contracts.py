@@ -288,6 +288,46 @@ class ContentDraftProjection(AipContractModel):
         return self
 
 
+class ContentDraftReadinessRequest(AipContractModel):
+    brief_ref: ExactRevisionRef
+    pipeline: ContentPipelineRefs
+    task_run_ref: ResourceRef
+    agent_run_ref: ResourceRef
+    variant_key: str = Field(min_length=1, max_length=160)
+    channel: ContentChannel
+
+    @model_validator(mode="after")
+    def _exact_runtime_refs(self) -> "ContentDraftReadinessRequest":
+        _require_ref_kind(self.brief_ref, "TaskBriefRevision", "briefRef")
+        for value, expected, label in (
+            (self.task_run_ref, "TaskRun", "taskRunRef"),
+            (self.agent_run_ref, "AgentRun", "agentRunRef"),
+        ):
+            _require_exact_resource(value, label)
+            if value.resource_type != expected:
+                raise ValueError(f"{label} must reference {expected}")
+        if self.pipeline.brief_ref != self.brief_ref:
+            raise ValueError("pipeline.briefRef must equal briefRef")
+        return self
+
+
+class ContentDraftReadinessDecision(AipContractModel):
+    tenant: TenantContext
+    readiness: ContractReadiness
+    request_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    dependency_snapshot_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    blockers: list[ContractBlocker] = Field(default_factory=list, max_length=100)
+    evaluated_at: datetime
+
+    @model_validator(mode="after")
+    def _honest_readiness(self) -> "ContentDraftReadinessDecision":
+        if self.readiness is ContractReadiness.READY and self.blockers:
+            raise ValueError("ready decision cannot carry blockers")
+        if self.readiness is not ContractReadiness.READY and not self.blockers:
+            raise ValueError("non-ready decision requires blockers")
+        return self
+
+
 class MediaJobCreateRequest(AipContractModel):
     task_run_ref: ResourceRef
     step_run_ref: ResourceRef
