@@ -1,0 +1,39 @@
+{
+  "receiptId": "AIP-E6F-E7-CURRENT-BASELINE-RECHECK-20260816",
+  "recordedAt": "2026-08-16T00:00:00+08:00",
+  "branch": "w1-aip",
+  "baselineSha": "fe787d23650be6961254e9d29333f98b00c395af",
+  "scope": {
+    "positiveTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "realBusinessWrites": false
+  },
+  "results": {
+    "e6fCodeControl": "GREEN",
+    "e6fOperationalData": "BLOCKED_EXTERNAL",
+    "e6fCurrentBrowser": "BROWSER_ENV_BLOCKED",
+    "e7CodeControl": "GREEN",
+    "e7BusinessEffect": "EFFECT_EVIDENCE_BLOCKED"
+  },
+  "verification": {
+    "backend": "24 passed: readiness, search index, search eval and authority API",
+    "frontend": "20 passed: strict SDK and MemoryGovernancePage",
+    "browserUrl": "http://localhost:5173/aip/memory-governance",
+    "browserTenant": "org-org/dev-project",
+    "browserInteraction": "opened Cold Start and Retrieval view",
+    "browserObserved": "page exposes honest Internal Server Error state because aos-api health is HTTP 500",
+    "browserConclusion": "failure-state interaction is correct; positive package/source/lane/Eval response was not available"
+  },
+  "document": {
+    "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/AIP通用能力实施方案/全量开发清单/06-AIP三层记忆行业Wiki与知识治理开发清单.md",
+    "preSha256": "046d5198cf14c99e6f1acb8b9ecf6704c0e03eb917fb96cd0ac3d4cdd822e17e",
+    "postSha256": "71d256712790ce118a7eaf82ef010c9e25de74c19b278dd29681502a5d5fccab"
+  },
+  "noCompletionClaims": [
+    "No real beauty knowledge package or approved GoldSet was created",
+    "No pgvector or trusted external search provider was claimed ready",
+    "No runnable Agent or measured improvement effect was claimed",
+    "No positive browser API response was claimed while health returned HTTP 500"
+  ],
+  "protectedUntrackedExcluded": ".evidence/aip/2026-08-14-watchdog-w2c-recovery-blocked-receipt.json"
+}
