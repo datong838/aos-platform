@@ -74,6 +74,30 @@ export type PublishProposalPayload = {
 
 export type MediaJobStatus = "queued" | "running" | "succeeded" | "failed" | "cancelled" | "unknown";
 export type MediaJobKind = "tts" | "subtitle" | "video_render" | "transcode" | "thumbnail";
+export type MediaJobCreateRequest = {
+  taskRunRef: ResourceRef;
+  stepRunRef: ResourceRef;
+  jobKind: MediaJobKind;
+  inputAssets: MediaAssetRef[];
+  outputSchemaRef: ResourceRef;
+  capabilityRef: ExactRevisionRef;
+  capabilityBindingRef: MutableAuthorityRef;
+  budgetRef: ExactRevisionRef;
+  deadlineAt: string;
+};
+export type ExpectedVersionCommand = { expectedVersion: number };
+export type MediaClaimCommand = ExpectedVersionCommand & {
+  executorLeaseRef: ResourceRef;
+  heartbeatAt: string;
+  leaseExpiresAt: string;
+};
+export type MediaCompleteCommand = ExpectedVersionCommand & { outputArtifactRefs: ArtifactRef[] };
+export type FailureCommand = ExpectedVersionCommand & { reasonCode: string };
+export type UnknownCommand = ExpectedVersionCommand & { blockers: ContractBlocker[] };
+export type MediaReconcileCommand = ExpectedVersionCommand & {
+  reconcileStatus: MediaJobStatus;
+  reasonCode?: string;
+};
 export type MediaJobSnapshot = {
   tenant: Tenant;
   jobId: string;
@@ -97,6 +121,29 @@ export type MediaJobSnapshot = {
 };
 
 export type AvatarSessionStatus = "opening" | "ready" | "live" | "paused" | "closing" | "closed" | "failed" | "killed" | "unknown";
+export type AvatarSessionOpenRequest = {
+  taskRunRef: ResourceRef;
+  stepRunRef: ResourceRef;
+  capabilityRef: ExactRevisionRef;
+  capabilityBindingRef: MutableAuthorityRef;
+  budgetRef: ExactRevisionRef;
+  killPolicyRef: ExactRevisionRef;
+  livePlanRef: ArtifactRef;
+  maxDurationSeconds: number;
+};
+export type AvatarLiveCommand = ExpectedVersionCommand & {
+  engineSessionRef: ExactRevisionRef;
+  heartbeatAt: string;
+  heartbeatExpiresAt: string;
+};
+export type AvatarHeartbeatCommand = ExpectedVersionCommand & {
+  heartbeatAt: string;
+  heartbeatExpiresAt: string;
+};
+export type AvatarReconcileCommand = ExpectedVersionCommand & {
+  reconcileStatus: AvatarSessionStatus;
+  reasonCode?: string;
+};
 export type AvatarSessionSnapshot = {
   tenant: Tenant;
   sessionId: string;
