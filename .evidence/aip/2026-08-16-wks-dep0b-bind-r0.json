@@ -1,11 +1,11 @@
 {
   "schema": "aos-aip-wks-dep0b-bind-r0/v1",
   "taskId": "aip-wks-dep0b-bind-r0-20260816",
-  "authorityRevision": "AOS-000057",
-  "observedAt": "2026-08-16T11:48:00+08:00",
+  "authorityRevision": "AOS-000063",
+  "observedAt": "2026-08-16T13:56:00+08:00",
   "git": {
     "branch": "w1-aip",
-    "commit": "d5d34d55fd15fa2f2d3f0588f3944bf9f750a6db"
+    "commit": "de72f8930fd1d1913d7b0109411a4efb6785400c"
   },
   "scope": {
     "mode": "read-only",
@@ -88,5 +88,56 @@
       "PRICE_SNAPSHOT_MISSING"
     ]
   },
+  "externalUnlockSequence": [
+    {
+      "order": 1,
+      "owner": "operator",
+      "required": [
+        "ProviderInstanceRevision",
+        "RegisteredModelRevision",
+        "vault/secret/keychain credential reference",
+        "license and network approval"
+      ]
+    },
+    {
+      "order": 2,
+      "owner": "AIP-7",
+      "required": [
+        "RuntimePolicyRevision",
+        "ModelRouteRevision",
+        "ProviderHealthObservation",
+        "ModelCapacityPoolRevision",
+        "ModelPriceSnapshotRevision"
+      ]
+    },
+    {
+      "order": 3,
+      "owner": "Eval governance",
+      "required": [
+        "passed EvalGateDecision",
+        "exact budget evidence"
+      ]
+    },
+    {
+      "order": 4,
+      "owner": "AIP-6/BIND-1",
+      "required": [
+        "immutable published SkillTemplate revision",
+        "active ready CapabilityBinding",
+        "active ready SkillBinding",
+        "active AgentInstance"
+      ]
+    },
+    {
+      "order": 5,
+      "owner": "AIP runtime",
+      "required": [
+        "real AgentRun",
+        "UsageReceipt",
+        "LineageEvent",
+        "runtime Receipt"
+      ]
+    }
+  ],
   "hardBoundary": "Do not create AgentRun, CapabilityBinding, SkillBinding or ModelRoute until one exact org-org/dev-project Provider/Route/Policy/Eval/Budget dependency chain exists."
 }
