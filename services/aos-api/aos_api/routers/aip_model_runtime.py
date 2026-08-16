@@ -6,8 +6,9 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Depends, Header, Query, status
 
 from aos_api.aip_model_runtime_contracts import (
-    ModelRouteResolution, ModelRouteRevision, ModelRuntimeOverview, ProviderHealthObservation,
-    ProviderInstanceRevision, RegisteredModelRevision, RuntimePolicyRevision,
+    ModelPriceSnapshotRevision, ModelRouteResolution, ModelRouteRevision,
+    ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision,
+    RegisteredModelRevision, RuntimePolicyRevision,
 )
 from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
 from aos_api.aip_model_runtime_store import (
@@ -62,9 +63,21 @@ def _publish(kind: str, item, key: str, if_match: str, principal: Principal, sto
         raise _map(exc) from exc
 
 
+def _get(kind: str, asset_id: str, revision: int | None, principal: Principal, store: AipModelRuntimeStore):
+    try:
+        return getattr(store, f"get_{kind}")(_scope(principal), asset_id, revision)
+    except ModelRuntimeStoreError as exc:
+        raise _map(exc) from exc
+
+
 @router.post("/providers", response_model=ProviderInstanceRevision, status_code=status.HTTP_201_CREATED)
 def publish_provider(body: ProviderInstanceRevision, idempotency_key: str = Header(alias="Idempotency-Key"), if_match: str = Header(alias="If-Match"), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
     return _publish("provider", body, idempotency_key, if_match, principal, store)
+
+
+@router.get("/providers/{provider_id}", response_model=ProviderInstanceRevision)
+def get_provider(provider_id: str, revision: int | None = Query(default=None, ge=1), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
+    return _get("provider", provider_id, revision, principal, store)
 
 
 @router.post("/models", response_model=RegisteredModelRevision, status_code=status.HTTP_201_CREATED)
@@ -72,9 +85,29 @@ def publish_model(body: RegisteredModelRevision, idempotency_key: str = Header(a
     return _publish("model", body, idempotency_key, if_match, principal, store)
 
 
+@router.get("/models/{model_id}", response_model=RegisteredModelRevision)
+def get_model(model_id: str, revision: int | None = Query(default=None, ge=1), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
+    return _get("model", model_id, revision, principal, store)
+
+
 @router.post("/policies", response_model=RuntimePolicyRevision, status_code=status.HTTP_201_CREATED)
 def publish_policy(body: RuntimePolicyRevision, idempotency_key: str = Header(alias="Idempotency-Key"), if_match: str = Header(alias="If-Match"), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
     return _publish("policy", body, idempotency_key, if_match, principal, store)
+
+
+@router.get("/policies/{policy_id}", response_model=RuntimePolicyRevision)
+def get_policy(policy_id: str, revision: int | None = Query(default=None, ge=1), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
+    return _get("policy", policy_id, revision, principal, store)
+
+
+@router.post("/price-snapshots", response_model=ModelPriceSnapshotRevision, status_code=status.HTTP_201_CREATED)
+def publish_price_snapshot(body: ModelPriceSnapshotRevision, idempotency_key: str = Header(alias="Idempotency-Key"), if_match: str = Header(alias="If-Match"), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
+    return _publish("price_snapshot", body, idempotency_key, if_match, principal, store)
+
+
+@router.get("/price-snapshots/{price_snapshot_id}", response_model=ModelPriceSnapshotRevision)
+def get_price_snapshot(price_snapshot_id: str, revision: int | None = Query(default=None, ge=1), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
+    return _get("price_snapshot", price_snapshot_id, revision, principal, store)
 
 
 @router.post("/routes", response_model=ModelRouteRevision, status_code=status.HTTP_201_CREATED)
@@ -92,10 +125,7 @@ def record_health(body: ProviderHealthObservation, idempotency_key: str = Header
 
 @router.get("/routes/{route_id}", response_model=ModelRouteRevision)
 def get_route(route_id: str, revision: int | None = Query(default=None, ge=1), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
-    try:
-        return store.get_route(_scope(principal), route_id, revision)
-    except ModelRuntimeStoreError as exc:
-        raise _map(exc) from exc
+    return _get("route", route_id, revision, principal, store)
 
 
 @router.get("/routes/{route_id}/resolution", response_model=ModelRouteResolution)

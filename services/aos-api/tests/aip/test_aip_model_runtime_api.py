@@ -22,6 +22,35 @@ class CapturingStore:
         raise ModelRuntimeNotFound("model_route not found")
 
 
+class ExactReadStore:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def _missing(self, kind, scope, asset_id, revision):
+        self.calls.append((kind, scope.key, asset_id, revision))
+        raise ModelRuntimeNotFound(f"{kind} not found")
+
+    def get_provider(self, scope, asset_id, revision=None):
+        return self._missing("provider", scope, asset_id, revision)
+
+    def get_model(self, scope, asset_id, revision=None):
+        return self._missing("model", scope, asset_id, revision)
+
+    def get_policy(self, scope, asset_id, revision=None):
+        return self._missing("policy", scope, asset_id, revision)
+
+    def get_price_snapshot(self, scope, asset_id, revision=None):
+        return self._missing("price_snapshot", scope, asset_id, revision)
+
+
+class PricePublishStore:
+    call = None
+
+    def publish_price_snapshot(self, scope, actor, key, item, *, expected_version=0):
+        self.call = (scope.key, actor, key, expected_version, item)
+        return item
+
+
 def test_canonical_route_read_uses_principal_scope_and_never_cross_tenant(client) -> None:
     store = CapturingStore()
     client.app.dependency_overrides[aip_model_runtime.get_store] = lambda: store
@@ -43,6 +72,56 @@ def test_canonical_write_requires_idempotency_and_if_match(client) -> None:
     assert response.json()["code"] == "VALIDATION"
 
 
+def test_exact_runtime_asset_reads_are_principal_scoped_and_revision_aware(client) -> None:
+    store = ExactReadStore()
+    client.app.dependency_overrides[aip_model_runtime.get_store] = lambda: store
+    try:
+        paths = (
+            ("provider", "/v1/aip/model-runtime/providers/provider-1?revision=2"),
+            ("model", "/v1/aip/model-runtime/models/model-1?revision=2"),
+            ("policy", "/v1/aip/model-runtime/policies/policy-1?revision=2"),
+            ("price_snapshot", "/v1/aip/model-runtime/price-snapshots/price-1?revision=2"),
+        )
+        for kind, path in paths:
+            response = client.get(path, headers=headers())
+            assert response.status_code == 404
+            assert response.json()["code"] == "AIP_RESOURCE_NOT_FOUND"
+            assert store.calls[-1] == (kind, ("org-org", "dev-project"), path.split("/")[-1].split("?")[0], 2)
+    finally:
+        client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)
+
+
+def test_price_snapshot_publish_uses_principal_scope_cas_and_idempotency(client) -> None:
+    store = PricePublishStore()
+    client.app.dependency_overrides[aip_model_runtime.get_store] = lambda: store
+    try:
+        response = client.post(
+            "/v1/aip/model-runtime/price-snapshots",
+            headers=headers(**{"Idempotency-Key": "price-1", "If-Match": "0"}),
+            json={
+                "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+                "priceSnapshotId": "price-1",
+                "revision": 1,
+                "contentHash": "a" * 64,
+                "currency": "CNY",
+                "inputTokenPrice": 0.001,
+                "outputTokenPrice": 0.002,
+                "cachedTokenPrice": None,
+                "tokenUnit": 1000,
+                "effectiveFrom": "2026-08-16T00:00:00Z",
+                "effectiveUntil": None,
+                "lifecycle": "draft",
+                "createdBy": "caller-must-not-win",
+                "createdAt": "2026-08-16T00:00:00Z",
+            },
+        )
+        assert response.status_code == 201, response.text
+        assert store.call[:4] == (("org-org", "dev-project"), "user:dev", "price-1", 0)
+        assert store.call[4].created_by == "user:dev"
+    finally:
+        client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)
+
+
 def test_all_legacy_route_writes_fail_closed_but_reads_remain(client) -> None:
     read = client.get("/v1/aip/model-admin/routes", headers=headers())
     assert read.status_code == 200
@@ -61,8 +140,13 @@ def test_all_legacy_route_writes_fail_closed_but_reads_remain(client) -> None:
 def test_openapi_registers_canonical_model_runtime_paths(client) -> None:
     paths = client.get("/openapi.json").json()["paths"]
     assert "/v1/aip/model-runtime/providers" in paths
+    assert "/v1/aip/model-runtime/providers/{provider_id}" in paths
     assert "/v1/aip/model-runtime/models" in paths
+    assert "/v1/aip/model-runtime/models/{model_id}" in paths
     assert "/v1/aip/model-runtime/policies" in paths
+    assert "/v1/aip/model-runtime/policies/{policy_id}" in paths
+    assert "/v1/aip/model-runtime/price-snapshots" in paths
+    assert "/v1/aip/model-runtime/price-snapshots/{price_snapshot_id}" in paths
     assert "/v1/aip/model-runtime/routes/{route_id}/resolution" in paths
     assert "/v1/aip/model-runtime/overview" in paths
 
