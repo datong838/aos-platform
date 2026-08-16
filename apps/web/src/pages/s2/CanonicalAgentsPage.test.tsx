@@ -1,0 +1,55 @@
+// @vitest-environment jsdom
+import { act } from "react";
+import { createRoot } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const sdk = vi.hoisted(() => ({ listInstances: vi.fn() }));
+vi.mock("../../api/aipAgentControl", () => ({ aipAgentControl: sdk }));
+import { CanonicalAgentsPage } from "./CanonicalAgentsPage";
+
+const hash = "a".repeat(64);
+const tenant = { orgId: "org-org", projectId: "dev-project" };
+const instance = {
+  tenant,
+  instanceId: "ecommerce.content_officer.default",
+  instanceRef: { assetType: "AgentInstance", assetId: "ecommerce.content_officer.default", revision: 1, contentHash: hash },
+  template: { assetType: "AgentTemplate", assetId: "ecommerce.content_officer", revision: 1, contentHash: hash },
+  status: "provisioning",
+  overlay: { displayName: "内容官", allowedCapabilityIds: [] },
+  version: 1,
+  updatedAt: "2026-08-16T00:00:00Z",
+};
+
+describe("CanonicalAgentsPage", () => {
+  let host: HTMLDivElement;
+
+  beforeEach(() => {
+    host = document.createElement("div");
+    document.body.appendChild(host);
+    sdk.listInstances.mockReset().mockResolvedValue({ tenant, items: [instance], count: 1 });
+  });
+
+  afterEach(() => host.remove());
+
+  it("只展示 canonical AgentInstance 并诚实显示未绑定状态", async () => {
+    const root = createRoot(host);
+    await act(async () => root.render(<MemoryRouter><CanonicalAgentsPage /></MemoryRouter>));
+    await act(async () => undefined);
+    expect(host.textContent).toContain("内容官");
+    expect(host.textContent).toContain("待配置");
+    expect(host.textContent).toContain("无 Skill/Capability Binding，不能试运行");
+    expect(host.textContent).not.toContain("MOCK_AGENTS");
+    await act(async () => root.unmount());
+  });
+
+  it("接口失败时显示错误且不注入样例", async () => {
+    sdk.listInstances.mockRejectedValueOnce(new Error("registry unavailable"));
+    const root = createRoot(host);
+    await act(async () => root.render(<MemoryRouter><CanonicalAgentsPage /></MemoryRouter>));
+    await act(async () => undefined);
+    expect(host.textContent).toContain("实例读取失败：registry unavailable");
+    expect(host.textContent).not.toContain("内容官");
+    await act(async () => root.unmount());
+  });
+});
