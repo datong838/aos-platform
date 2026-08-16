@@ -7,7 +7,10 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
-from aos_api.aip_eval_contracts import ReleaseGateStatus
+from aos_api.aip_eval_authority_store import (
+    AipEvalAuthorityStore,
+    AipEvalGateDependencyBlocked,
+)
 from aos_api.aip_model_runtime_contracts import (
     ModelRouteResolution,
     ModelRuntimeLifecycle,
@@ -41,7 +44,7 @@ class AipModelRuntimeResolver:
         except ModelRuntimeStoreError:
             blockers.append("runtime_policy_unavailable")
 
-        if not self._gate_passed(scope, route.eval_gate_ref):
+        if not self._gate_passed(scope, route.eval_gate_ref, route_ref, resolved_at):
             blockers.append("route_eval_gate_not_passed")
 
         selected_model = None
@@ -84,7 +87,8 @@ class AipModelRuntimeResolver:
             blockers.append("model_modality_mismatch")
         if not set(route.required_capabilities).issubset(model.capabilities):
             blockers.append("model_capability_mismatch")
-        if not self._gate_passed(scope, model.eval_gate_ref):
+        exact_model = self._ref("RegisteredModelRevision", model.registered_model_id, model.revision, model.content_hash)
+        if not self._gate_passed(scope, model.eval_gate_ref, exact_model, now):
             blockers.append("model_eval_gate_not_passed")
         price_ref = model.price_snapshot_ref
         try:
@@ -112,7 +116,6 @@ class AipModelRuntimeResolver:
             blockers.append("provider_unavailable")
         if not self._health_is_fresh(scope, provider_ref, now):
             blockers.append("provider_health_unavailable_or_stale")
-        exact_model = self._ref("RegisteredModelRevision", model.registered_model_id, model.revision, model.content_hash)
         return blockers, exact_model, provider_ref, price_ref
 
     @staticmethod
@@ -120,15 +123,19 @@ class AipModelRuntimeResolver:
         return VersionedAssetRef(assetType=kind, assetId=asset_id, revision=revision, contentHash=content_hash)
 
     @staticmethod
-    def _gate_passed(scope: TenantScope, ref: VersionedAssetRef) -> bool:
-        if ref.asset_type != "EvalGateDecision":
+    def _gate_passed(
+        scope: TenantScope,
+        ref: VersionedAssetRef,
+        expected_target: VersionedAssetRef,
+        now: datetime,
+    ) -> bool:
+        try:
+            AipEvalAuthorityStore().require_exact_passed(
+                scope, ref, expected_target=expected_target, now=now
+            )
+        except AipEvalGateDependencyBlocked:
             return False
-        with db_connect(scope) as conn:
-            row = conn.execute(
-                "SELECT status,decision_hash FROM aip_release_gate_decision WHERE org_id=%s AND project_id=%s AND decision_id=%s",
-                (*scope.key, ref.asset_id),
-            ).fetchone()
-            return bool(row and row["status"] == ReleaseGateStatus.PASSED.value and row["decision_hash"] == ref.content_hash)
+        return True
 
     @staticmethod
     def _health_is_fresh(scope: TenantScope, provider_ref: VersionedAssetRef, now: datetime) -> bool:

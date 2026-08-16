@@ -5,8 +5,10 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from contextlib import AbstractContextManager
+from datetime import UTC, datetime
 from typing import Any
 
+from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_contracts import ResourceRef, TenantContext
 from aos_api.aip_eval_contracts import (
     AssetRevisionRef,
@@ -45,6 +47,10 @@ class AipEvalAuthorityConflict(AipEvalAuthorityError):
 
 class AipEvalAuthorityTransitionBlocked(AipEvalAuthorityError):
     code = "AIP_EVAL_AUTHORITY_TRANSITION_BLOCKED"
+
+
+class AipEvalGateDependencyBlocked(AipEvalAuthorityError):
+    code = "AIP_DEPENDENCY_BLOCKED"
 
 
 class AipEvalAuthorityPersistenceError(AipEvalAuthorityError):
@@ -300,6 +306,7 @@ class AipEvalAuthorityStore:
                 "invalidated_by",
                 "decided_by",
                 "decided_at",
+                "expires_at",
             ),
             values=(
                 decision.decision_id,
@@ -312,6 +319,7 @@ class AipEvalAuthorityStore:
                 decision.invalidated_by,
                 decision.decided_by,
                 decision.decided_at,
+                decision.expires_at,
             ),
             expected=decision,
             parser=lambda row: ReleaseGateDecision(
@@ -326,8 +334,70 @@ class AipEvalAuthorityStore:
                 invalidated_by=row["invalidated_by"],
                 decided_by=row["decided_by"],
                 decided_at=row["decided_at"],
+                expires_at=row["expires_at"],
             ),
         )
+
+    def require_exact_passed(
+        self,
+        scope: TenantScope,
+        ref: VersionedAssetRef,
+        *,
+        expected_target: VersionedAssetRef | None = None,
+        now: datetime | None = None,
+    ) -> ReleaseGateDecision:
+        """Require one exact, unexpired PASSED gate for an optional exact target."""
+        self._require_scope(scope)
+        if ref.asset_type != "EvalGateDecision" or ref.revision != 1:
+            raise AipEvalGateDependencyBlocked("eval gate ref must be exact revision 1")
+        checked_at = now or datetime.now(UTC)
+        try:
+            with self._connect(scope) as conn:
+                row = conn.execute(
+                    """SELECT * FROM aip_release_gate_decision
+                       WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
+                    (*scope.key, ref.asset_id),
+                ).fetchone()
+        except AipEvalAuthorityError:
+            raise
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError("release gate read failed") from exc
+        if row is None:
+            raise AipEvalGateDependencyBlocked("eval gate is unavailable")
+        gate = ReleaseGateDecision(
+            tenant=self._tenant(scope),
+            decision_id=row["decision_id"],
+            target=row["target_ref"],
+            suite_ref=row["suite_ref"],
+            eval_run_id=row["eval_run_id"],
+            eval_report=row["eval_report_ref"],
+            status=row["status"],
+            decision_hash=row["decision_hash"],
+            invalidated_by=row["invalidated_by"],
+            decided_by=row["decided_by"],
+            decided_at=row["decided_at"],
+            expires_at=row["expires_at"],
+        )
+        if gate.decision_hash != ref.content_hash:
+            raise AipEvalGateDependencyBlocked("eval gate hash drifted")
+        if gate.status.value != "passed":
+            raise AipEvalGateDependencyBlocked("eval gate is not passed")
+        if not gate.decided_at <= checked_at < gate.expires_at:
+            raise AipEvalGateDependencyBlocked("eval gate is not currently effective")
+        if expected_target is not None:
+            target_types = {
+                "RegisteredModelRevision": AssetType.REGISTERED_MODEL,
+                "ModelRouteRevision": AssetType.MODEL_ROUTE,
+            }
+            expected_type = target_types.get(expected_target.asset_type)
+            if expected_type is None or (
+                gate.target.asset_type is not expected_type
+                or gate.target.asset_id != expected_target.asset_id
+                or gate.target.revision != str(expected_target.revision)
+                or gate.target.content_hash != expected_target.content_hash
+            ):
+                raise AipEvalGateDependencyBlocked("eval gate target drifted")
+        return gate
 
     def append_publication_event(
         self, scope: TenantScope, event: PublicationEvent

@@ -17,6 +17,18 @@ from aos_api.aip_runtime_guard_policy_store import (
     GuardPolicyNotFound,
     GuardPolicyStoreError,
 )
+from aos_api.aip_network_policy_contracts import (
+    NetworkPolicyRevision,
+    NetworkPolicyRevisionCreate,
+)
+from aos_api.aip_network_policy_store import (
+    AipNetworkPolicyStore,
+    NetworkPolicyConflict,
+    NetworkPolicyDependencyBlocked,
+    NetworkPolicyIdempotencyConflict,
+    NetworkPolicyNotFound,
+    NetworkPolicyStoreError,
+)
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
@@ -24,10 +36,15 @@ from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip/runtime-guard-policies", tags=["aip-runtime-guard-policies"])
 _STORE = AipRuntimeGuardPolicyStore()
+_NETWORK_STORE = AipNetworkPolicyStore()
 
 
 def get_store() -> AipRuntimeGuardPolicyStore:
     return _STORE
+
+
+def get_network_store() -> AipNetworkPolicyStore:
+    return _NETWORK_STORE
 
 
 def _scope(principal: Principal) -> TenantScope:
@@ -78,6 +95,16 @@ def _get(method: str, policy_id: str, revision: int | None, principal: Principal
         raise _map(exc) from exc
 
 
+def _map_network(exc: NetworkPolicyStoreError) -> ApiError:
+    if isinstance(exc, NetworkPolicyNotFound):
+        return ApiError(code=exc.code, message=str(exc), status_code=404)
+    if isinstance(exc, (NetworkPolicyConflict, NetworkPolicyIdempotencyConflict)):
+        return ApiError(code=exc.code, message=str(exc), status_code=409)
+    if isinstance(exc, NetworkPolicyDependencyBlocked):
+        return ApiError(code=exc.code, message=str(exc), status_code=422)
+    return ApiError(code=exc.code, message="network policy persistence failed", status_code=503)
+
+
 @router.post("/egress", response_model=EgressPolicyRevision, status_code=status.HTTP_201_CREATED)
 def publish_egress(
     body: EgressPolicyRevisionCreate,
@@ -118,3 +145,33 @@ def get_data_classification(
     store: AipRuntimeGuardPolicyStore = Depends(get_store),
 ):
     return _get("get_data_classification", policy_id, revision, principal, store)
+
+
+@router.post("/networks", response_model=NetworkPolicyRevision, status_code=status.HTTP_201_CREATED)
+def publish_network(
+    body: NetworkPolicyRevisionCreate,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    principal: Principal = Depends(require_principal),
+    store: AipNetworkPolicyStore = Depends(get_network_store),
+):
+    try:
+        return store.publish(
+            _scope(principal), principal.subject, _key(idempotency_key), body,
+            expected_version=_version(if_match),
+        )
+    except NetworkPolicyStoreError as exc:
+        raise _map_network(exc) from exc
+
+
+@router.get("/networks/{policy_id}", response_model=NetworkPolicyRevision)
+def get_network(
+    policy_id: str,
+    revision: int | None = Query(default=None, ge=1),
+    principal: Principal = Depends(require_principal),
+    store: AipNetworkPolicyStore = Depends(get_network_store),
+):
+    try:
+        return store.get(_scope(principal), policy_id, revision)
+    except NetworkPolicyStoreError as exc:
+        raise _map_network(exc) from exc

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from aos_api.aip_eval_contracts import (
@@ -220,9 +220,9 @@ def lineage_sources():
         conn.execute(
             """INSERT INTO aip_release_gate_decision
                (org_id,project_id,decision_id,target_ref,suite_ref,eval_run_id,
-                eval_report_ref,status,decision_hash,decided_by,decided_at)
+                eval_report_ref,status,decision_hash,decided_by,decided_at,expires_at)
                VALUES (%s,%s,%s,%s::jsonb,%s::jsonb,%s,
-                %s::jsonb,'failed',%s,'tester',%s)""",
+                %s::jsonb,'failed',%s,'tester',%s,%s)""",
             (
                 *SCOPE.key,
                 ids["gate"],
@@ -239,6 +239,7 @@ def lineage_sources():
                 ),
                 HASH,
                 NOW,
+                NOW + timedelta(days=30),
             ),
         )
         conn.execute(

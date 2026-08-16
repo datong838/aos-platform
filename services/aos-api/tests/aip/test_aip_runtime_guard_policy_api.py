@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 from aos_api.aip_runtime_guard_policy_store import GuardPolicyNotFound
 from aos_api.routers import aip_runtime_guard_policies
+from aos_api.aip_network_policy_store import NetworkPolicyNotFound, materialize_policy as materialize_network
 
 
 NOW = datetime(2026, 8, 17, tzinfo=UTC)
@@ -23,6 +24,19 @@ def egress_body() -> dict:
     }
 
 
+def network_body() -> dict:
+    return {
+        "policyId": "agnes-network-dev", "revision": 1,
+        "allowedSchemes": ["https"], "allowedHosts": ["apihub.agnes-ai.com"],
+        "allowedPorts": [443], "tlsRequired": True, "publicFallbackAllowed": False,
+        "egressPolicyRef": {"assetType": "EgressPolicyRevision", "assetId": "agnes-egress-dev",
+                            "revision": 1, "contentHash": "a" * 64},
+        "effectiveFrom": NOW.isoformat(),
+        "effectiveUntil": (NOW + timedelta(days=30)).isoformat(), "owner": "杜大同",
+        "approvalRef": "approval:r1-04", "lifecycle": "active",
+    }
+
+
 class CaptureStore:
     call = None
 
@@ -34,6 +48,18 @@ class CaptureStore:
     def get_egress(self, scope, policy_id, revision=None):
         self.call = (scope.key, policy_id, revision)
         raise GuardPolicyNotFound("not found")
+
+
+class CaptureNetworkStore:
+    call = None
+
+    def publish(self, scope, actor, key, item, *, expected_version=0):
+        self.call = (scope.key, actor, key, expected_version)
+        return materialize_network(scope, actor, item, created_at=NOW)
+
+    def get(self, scope, policy_id, revision=None):
+        self.call = (scope.key, policy_id, revision)
+        raise NetworkPolicyNotFound("not found")
 
 
 def test_guard_policy_api_uses_principal_scope_and_exact_read(client) -> None:
@@ -67,3 +93,24 @@ def test_guard_policy_api_rejects_tenant_injection_and_missing_cas_headers(clien
     assert injected.status_code == 400
     missing = client.post("/v1/aip/runtime-guard-policies/egress", headers=headers(), json=egress_body())
     assert missing.status_code == 400
+
+
+def test_network_policy_api_uses_principal_scope_and_exact_read(client) -> None:
+    store = CaptureNetworkStore()
+    client.app.dependency_overrides[aip_runtime_guard_policies.get_network_store] = lambda: store
+    try:
+        response = client.post(
+            "/v1/aip/runtime-guard-policies/networks",
+            headers=headers(**{"Idempotency-Key": "network-v1", "If-Match": "0"}),
+            json=network_body(),
+        )
+        assert response.status_code == 201, response.text
+        assert store.call == (("org-org", "dev-project"), "user:dev", "network-v1", 0)
+        missing = client.get(
+            "/v1/aip/runtime-guard-policies/networks/missing?revision=2",
+            headers=headers("dev-org"),
+        )
+        assert missing.status_code == 404
+        assert store.call == (("dev-org", "dev-project"), "missing", 2)
+    finally:
+        client.app.dependency_overrides.pop(aip_runtime_guard_policies.get_network_store, None)

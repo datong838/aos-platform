@@ -269,10 +269,12 @@ def test_failed_gate_cannot_publish_and_duplicate_revoke_is_rejected(
     with connect(scope) as conn:
         conn.execute(
             """INSERT INTO aip_release_gate_decision (
-               org_id,project_id,decision_id,target_ref,suite_ref,eval_run_id,
-               eval_report_ref,status,decision_hash,invalidated_by,decided_by,decided_at
-               ) SELECT org_id,project_id,%s,target_ref,suite_ref,eval_run_id,
-                        eval_report_ref,'failed',%s,NULL,decided_by,decided_at
+                   org_id,project_id,decision_id,target_ref,suite_ref,eval_run_id,
+                   eval_report_ref,status,decision_hash,invalidated_by,decided_by,decided_at,
+                   expires_at
+                   ) SELECT org_id,project_id,%s,target_ref,suite_ref,eval_run_id,
+                            eval_report_ref,'failed',%s,NULL,decided_by,decided_at,
+                            expires_at
                  FROM aip_release_gate_decision WHERE decision_id=%s""",
             ("failed-gate", H3, gate.decision_id),
         )

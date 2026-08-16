@@ -28,6 +28,7 @@ from aos_api.aip_model_runtime_store import (
     ModelRuntimeNotFound,
     canonical_hash,
 )
+from aos_api.aip_eval_authority_store import AipEvalGateDependencyBlocked
 from aos_api.aip_runtime_guard_policy_contracts import (
     DataClassificationPolicyRevisionCreate,
     EgressPolicyRevisionCreate,
@@ -40,6 +41,8 @@ from aos_api.aip_model_governance_policy_contracts import (
     QuotaPolicyRevisionCreate,
 )
 from aos_api.aip_model_governance_policy_store import AipModelGovernancePolicyStore
+from aos_api.aip_network_policy_contracts import NetworkPolicyRevisionCreate
+from aos_api.aip_network_policy_store import AipNetworkPolicyStore
 from aos_api.db import get_dsn
 from aos_api.tenant_scope import TenantScope
 
@@ -193,6 +196,62 @@ def publish_model_governance_policies() -> tuple[VersionedAssetRef, VersionedAss
     )
 
 
+def publish_network_policy(egress_ref: VersionedAssetRef) -> VersionedAssetRef:
+    instant = datetime.now(UTC)
+    network = AipNetworkPolicyStore().publish(
+        SCOPE, SUFFIX, "network-policy-1",
+        NetworkPolicyRevisionCreate(
+            policyId=f"{SUFFIX}:network", revision=1,
+            allowedSchemes=["https"], allowedHosts=["apihub.agnes-ai.com"],
+            allowedPorts=[443], tlsRequired=True, publicFallbackAllowed=False,
+            egressPolicyRef=egress_ref, effectiveFrom=instant - timedelta(minutes=30),
+            effectiveUntil=instant + timedelta(days=20), owner=SUFFIX,
+            approvalRef="approval:test:aip7-store", lifecycle="active",
+        ),
+    )
+    return ref("NetworkPolicyRevision", network.policy_id, network.content_hash)
+
+
+class _AllowGovernance:
+    def require_model_dependencies(self, *_args) -> None:
+        return None
+
+
+class _RejectEvalGate:
+    def require_exact_passed(self, *_args, **_kwargs) -> None:
+        raise AipEvalGateDependencyBlocked("eval gate target drifted")
+
+
+def test_active_model_publication_requires_exact_target_eval_gate() -> None:
+    item = hashed(
+        RegisteredModelRevision,
+        dict(
+            tenant=TENANT,
+            registeredModelId=f"{SUFFIX}:active-model",
+            revision=1,
+            provider=ref("ProviderInstanceRevision", "provider", "1" * 64),
+            providerModelId="model-test",
+            inputModalities=[ModelModality.TEXT],
+            outputModalities=[ModelModality.TEXT],
+            capabilities=["structured_output"],
+            contextWindow=4096,
+            quotaPolicyRef=ref("QuotaPolicyRevision", "quota", "2" * 64),
+            budgetPolicyRef=ref("BudgetPolicyRevision", "budget", "3" * 64),
+            priceSnapshotRef=ref("ModelPriceSnapshotRevision", "price", "4" * 64),
+            evalGateRef=ref("EvalGateDecision", "gate", "5" * 64),
+            lifecycle=ModelRuntimeLifecycle.ACTIVE,
+            createdBy=SUFFIX,
+            createdAt=NOW,
+        ),
+    )
+    store = AipModelRuntimeStore(
+        governance_policy_store=_AllowGovernance(),
+        eval_authority_store=_RejectEvalGate(),
+    )
+    with pytest.raises(ModelRuntimeDependencyBlocked, match="target drifted"):
+        store.publish_model(SCOPE, SUFFIX, "active-model", item)
+
+
 def test_store_persists_exact_chain_replays_receipt_and_isolates_tenant() -> None:
     cleanup()
     store = AipModelRuntimeStore()
@@ -279,6 +338,13 @@ def test_store_persists_exact_chain_replays_receipt_and_isolates_tenant() -> Non
             unknownUsageBehavior="block", unknownPriceBehavior="block", killSwitchEnabled=True,
             lifecycle=ModelRuntimeLifecycle.VALIDATED, createdBy=SUFFIX, createdAt=NOW,
         ))
+        with pytest.raises(ModelRuntimeDependencyBlocked, match="network policy"):
+            store.publish_policy(SCOPE, SUFFIX, "policy-missing-network", policy)
+        network_ref = publish_network_policy(egress_ref)
+        policy = rehashed(
+            policy,
+            networkPolicyRef=network_ref.model_dump(mode="json", by_alias=True),
+        )
         store.publish_policy(SCOPE, SUFFIX, "policy-1", policy)
 
         route = hashed(ModelRouteRevision, dict(

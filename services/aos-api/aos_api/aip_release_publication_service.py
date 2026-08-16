@@ -9,7 +9,7 @@ import hashlib
 import json
 from collections.abc import Callable
 from contextlib import AbstractContextManager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from aos_api.aip_contracts import ArtifactRef, TenantContext
@@ -85,6 +85,8 @@ def _jsonable(value: Any) -> Any:
         return {key: _jsonable(child) for key, child in value.items()}
     if isinstance(value, (list, tuple)):
         return [_jsonable(child) for child in value]
+    if isinstance(value, datetime):
+        return value.isoformat()
     return value
 
 
@@ -165,6 +167,7 @@ class AipReleasePublicationService:
                     else ReleaseGateStatus.FAILED
                 )
                 decided_at = datetime.now(UTC)
+                expires_at = decided_at + timedelta(days=30)
                 report_ref = ArtifactRef(
                     artifact_id=report.report_id,
                     artifact_type=AssetType.EVAL_REPORT.value,
@@ -178,6 +181,7 @@ class AipReleasePublicationService:
                         "evalRunId": report.run_id,
                         "evalReport": report_ref,
                         "status": status.value,
+                        "expiresAt": expires_at,
                     }
                 )
                 gate = ReleaseGateDecision(
@@ -191,6 +195,7 @@ class AipReleasePublicationService:
                     decision_hash=decision_hash,
                     decided_by=actor,
                     decided_at=decided_at,
+                    expires_at=expires_at,
                 )
                 self._insert_gate(conn, scope, gate)
                 conn.commit()
@@ -240,6 +245,8 @@ class AipReleasePublicationService:
                 gate = self._gate_from_row(scope, gate_row)
                 if gate.status is not ReleaseGateStatus.PASSED:
                     raise AipReleaseGateRejected("release gate is not passed")
+                if not gate.decided_at <= datetime.now(UTC) < gate.expires_at:
+                    raise AipReleaseGateRejected("release gate is expired or not effective")
                 self._verify_gate_evidence(conn, scope, gate)
                 self._verify_publishable_target(conn, scope, gate.target)
                 event = PublicationEvent(
@@ -330,7 +337,7 @@ class AipReleasePublicationService:
     def _verify_gate_evidence(
         conn: Any, scope: TenantScope, gate: ReleaseGateDecision
     ) -> None:
-        expected_hash = _canonical_hash(
+        legacy_hash = _canonical_hash(
             {
                 "target": gate.target,
                 "suiteRef": gate.suite_ref,
@@ -339,7 +346,17 @@ class AipReleasePublicationService:
                 "status": gate.status.value,
             }
         )
-        if gate.decision_hash != expected_hash:
+        expiry_hash = _canonical_hash(
+            {
+                "target": gate.target,
+                "suiteRef": gate.suite_ref,
+                "evalRunId": gate.eval_run_id,
+                "evalReport": gate.eval_report,
+                "status": gate.status.value,
+                "expiresAt": gate.expires_at,
+            }
+        )
+        if gate.decision_hash not in {legacy_hash, expiry_hash}:
             raise AipReleasePublicationIntegrityError(
                 "release gate decision hash verification failed"
             )
@@ -464,8 +481,9 @@ class AipReleasePublicationService:
         conn.execute(
             """INSERT INTO aip_release_gate_decision (
                org_id,project_id,decision_id,target_ref,suite_ref,eval_run_id,
-               eval_report_ref,status,decision_hash,invalidated_by,decided_by,decided_at
-               ) VALUES (%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s,%s,%s,%s,%s)""",
+               eval_report_ref,status,decision_hash,invalidated_by,decided_by,decided_at,
+               expires_at
+               ) VALUES (%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s,%s,%s,%s,%s,%s)""",
             (
                 *scope.key,
                 gate.decision_id,
@@ -478,6 +496,7 @@ class AipReleasePublicationService:
                 gate.invalidated_by,
                 gate.decided_by,
                 gate.decided_at,
+                gate.expires_at,
             ),
         )
 
@@ -531,6 +550,7 @@ class AipReleasePublicationService:
             invalidated_by=row["invalidated_by"],
             decided_by=row["decided_by"],
             decided_at=row["decided_at"],
+            expires_at=row["expires_at"],
         )
 
     @staticmethod

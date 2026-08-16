@@ -190,6 +190,13 @@ def test_invalidated_gate_requires_causal_reference() -> None:
         ReleaseGateDecision(**common)
     gate = ReleaseGateDecision(**common, invalidated_by="asset-revision-change")
     assert gate.status is ReleaseGateStatus.INVALIDATED
+    assert gate.expires_at == NOW + timedelta(days=30)
+    with pytest.raises(ValidationError, match="exactly 30 days"):
+        ReleaseGateDecision(
+            **common,
+            invalidated_by="asset-revision-change",
+            expires_at=NOW + timedelta(days=31),
+        )
 
 
 def test_release_gate_requires_exact_report_reference() -> None:

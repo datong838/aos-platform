@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from contextlib import AbstractContextManager
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 import json
 from typing import Any, Protocol
 
@@ -59,11 +59,17 @@ class PostgresBindingDependencyAuthority:
     def eval_gate_passed(self, scope: TenantScope, ref: VersionedAssetRef) -> bool:
         with self._connect_factory(scope) as conn:
             row = conn.execute(
-                """SELECT status,decision_hash FROM aip_release_gate_decision
+                """SELECT status,decision_hash,decided_at,expires_at FROM aip_release_gate_decision
                    WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
                 (*scope.key, ref.asset_id),
             ).fetchone()
-        return bool(row and row["status"] == "passed" and row["decision_hash"] == ref.content_hash)
+        now = datetime.now(UTC)
+        return bool(
+            row
+            and row["status"] == "passed"
+            and row["decision_hash"] == ref.content_hash
+            and row["decided_at"] <= now < row["expires_at"]
+        )
 
     def eval_contract_frozen(self, scope: TenantScope, ref: VersionedAssetRef) -> bool:
         with self._connect_factory(scope) as conn:
