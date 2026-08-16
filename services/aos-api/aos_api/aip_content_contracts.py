@@ -328,6 +328,46 @@ class ContentDraftReadinessDecision(AipContractModel):
         return self
 
 
+class GovernedContentObjectRef(AipContractModel):
+    content_ref: str = Field(min_length=1, max_length=2048)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    schema_ref: ResourceRef
+    byte_size: int = Field(ge=1)
+    media_type: Literal["text/plain", "text/markdown", "application/json"]
+    marking: list[str] = Field(default_factory=list, max_length=100)
+
+    @model_validator(mode="after")
+    def _exact_schema(self) -> "GovernedContentObjectRef":
+        _require_exact_resource(self.schema_ref, "schemaRef")
+        return self
+
+
+class ContentDraftRegisterRequest(AipContractModel):
+    readiness_request: ContentDraftReadinessRequest
+    content_object: GovernedContentObjectRef
+    prompt_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    evidence_bundle_ref: ExactRevisionRef
+    source_assets: list[MediaAssetRef] = Field(default_factory=list, max_length=100)
+
+    @model_validator(mode="after")
+    def _exact_sources(self) -> "ContentDraftRegisterRequest":
+        _require_ref_kind(
+            self.evidence_bundle_ref,
+            "EvidenceBundleRevision",
+            "evidenceBundleRef",
+        )
+        return self
+
+
+class ContentDraftRegistrationReceipt(AipContractModel):
+    tenant: TenantContext
+    receipt_id: str = Field(min_length=1, max_length=200)
+    request_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    content_ref: str = Field(min_length=1, max_length=2048)
+    draft: ContentDraftProjection
+    created_at: datetime
+
+
 class MediaJobCreateRequest(AipContractModel):
     task_run_ref: ResourceRef
     step_run_ref: ResourceRef
