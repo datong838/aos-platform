@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+from datetime import datetime, timezone
 
 from pydantic import ValidationError
 import pytest
@@ -132,16 +133,77 @@ def test_budget_reference_does_not_fake_budget_authority() -> None:
     def connect_factory(_scope: TenantScope):
         yield connection
 
+    class MissingBudgetStore:
+        def get(self, *_args, **_kwargs):
+            from aos_api.aip_budget_store import BudgetNotFound
+
+            raise BudgetNotFound("budget not found")
+
     decision = AipContentDraftReadinessService(
         connect_factory,
         model_resolver=ResolverMustNotRun(),
+        budget_store=MissingBudgetStore(),
     ).evaluate(SCOPE, ContentDraftReadinessRequest.model_validate(payload))
     blocker = next(
         value
         for value in decision.blockers
         if value.code == "CONTENT_DRAFT_BUDGET_AUTHORITY_UNAVAILABLE"
     )
-    assert "exact re-read" in blocker.message
+    assert "not found" in blocker.message
+
+
+def test_exact_active_budget_closes_only_budget_authority_blocker() -> None:
+    from datetime import timedelta
+
+    from aos_api.aip_budget_contracts import BudgetRevision
+
+    payload = request_payload()
+    pipeline = dict(payload["pipeline"])
+    pipeline["budgetRef"] = exact("BudgetRevision", "budget-1")
+    payload["pipeline"] = pipeline
+    connection = RecordingConnection()
+
+    @contextmanager
+    def connect_factory(_scope: TenantScope):
+        yield connection
+
+    now = datetime.now(timezone.utc)
+    budget = BudgetRevision(
+        tenant={"orgId": "org-org", "projectId": "dev-project"},
+        budgetId="budget-1",
+        revision=1,
+        contentHash="a" * 64,
+        environment="development",
+        currency="CNY",
+        dailyLimitMinor=500,
+        monthlyLimitMinor=5000,
+        alertThresholdPct=80,
+        hardStop=True,
+        unknownUsageBehavior="block",
+        effectiveFrom=now - timedelta(minutes=1),
+        effectiveUntil=now + timedelta(minutes=10),
+        owner="杜大同",
+        overBudgetApprover="杜大同",
+        lifecycle="active",
+        createdBy="owner",
+        createdAt=now,
+    )
+
+    class ExactBudgetStore:
+        def get(self, scope, budget_id, revision=None):
+            assert scope.key == SCOPE.key
+            assert (budget_id, revision) == ("budget-1", 1)
+            return budget
+
+    decision = AipContentDraftReadinessService(
+        connect_factory,
+        model_resolver=ResolverMustNotRun(),
+        budget_store=ExactBudgetStore(),
+    ).evaluate(SCOPE, ContentDraftReadinessRequest.model_validate(payload))
+    codes = {blocker.code for blocker in decision.blockers}
+    assert "CONTENT_DRAFT_BUDGET_AUTHORITY_UNAVAILABLE" not in codes
+    assert "CONTENT_DRAFT_BUDGET_BALANCE_AUTHORITY_UNAVAILABLE" in codes
+    assert "CONTENT_DRAFT_MODEL_ROUTE_UNAVAILABLE" in codes
 
 
 def test_request_rejects_tenant_injection_and_run_or_brief_drift() -> None:

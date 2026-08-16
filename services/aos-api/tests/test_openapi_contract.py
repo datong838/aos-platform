@@ -83,8 +83,8 @@ def test_committed_artifacts_are_canonical_and_structurally_valid() -> None:
     assert INVENTORY_PATH.read_bytes() == exporter.canonical_json(inventory)
     exporter.validate_openapi(schema)
     assert schema["openapi"] == "3.1.0"
-    assert len(schema["paths"]) == 2481
-    assert len(schema.get("components", {}).get("schemas", {})) == 1837
+    assert len(schema["paths"]) == 2484
+    assert len(schema.get("components", {}).get("schemas", {})) == 1841
 
 
 def test_inventory_preserves_route_rows_and_known_duplicates() -> None:

@@ -326,6 +326,7 @@ ROUTER_SPECS: dict[str, tuple[tuple[str, str], ...]] = {
         ('aos_api.routers.aip_memory_improvement', 'router'),
         ('aos_api.routers.aip_content_runtime', 'router'),
         ('aos_api.routers.aip_content_drafts', 'router'),
+        ('aos_api.routers.aip_budgets', 'router'),
     ),
     "data": (
         ('aos_api.routers.builds', 'router'),

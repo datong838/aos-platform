@@ -10,6 +10,8 @@ from aos_api.aip_content_contracts import (
     ContentDraftReadinessDecision,
     ContentDraftReadinessRequest,
 )
+from aos_api.aip_budget_contracts import BudgetLifecycle
+from aos_api.aip_budget_store import AipBudgetAuthorityStore, BudgetNotFound, BudgetStoreError
 from aos_api.aip_model_runtime_contracts import ModelRuntimeReadiness
 from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
 from aos_api.aip_production_contracts import ContractBlocker, ContractReadiness, ExactRevisionRef
@@ -18,9 +20,10 @@ from aos_api.tenant_scope import TenantScope
 
 
 class AipContentDraftReadinessService:
-    def __init__(self, connect_factory=None, *, model_resolver=None) -> None:
+    def __init__(self, connect_factory=None, *, model_resolver=None, budget_store=None) -> None:
         self._connect = connect_factory or connect
         self._resolver = model_resolver or AipModelRuntimeResolver()
+        self._budget_store = budget_store or AipBudgetAuthorityStore(connect_factory or connect)
 
     def evaluate(
         self,
@@ -77,15 +80,7 @@ class AipContentDraftReadinessService:
                     blockers.append(self._block("CONTENT_DRAFT_RUNTIME_REF_DRIFTED", "AgentRun route or policy differs from pipeline"))
         if body.pipeline.readiness is not ContractReadiness.READY:
             blockers.extend(body.pipeline.blockers)
-        if body.pipeline.budget_ref is None:
-            budget_message = "exact BudgetRevision is required"
-        else:
-            budget_message = (
-                "BudgetRevision canonical authority is not available for exact re-read"
-            )
-        blockers.append(
-            self._block("CONTENT_DRAFT_BUDGET_AUTHORITY_UNAVAILABLE", budget_message)
-        )
+        self._budget(body.pipeline.budget_ref, scope, snapshot, blockers)
         if body.pipeline.model_route_ref is None:
             blockers.append(self._block("CONTENT_DRAFT_MODEL_ROUTE_UNAVAILABLE", "exact ModelRouteRevision is required"))
         else:
@@ -116,6 +111,78 @@ class AipContentDraftReadinessService:
             dependencySnapshotHash=self._hash(snapshot),
             blockers=blockers,
             evaluatedAt=datetime.now(timezone.utc),
+        )
+
+    @staticmethod
+    def _now() -> datetime:
+        return datetime.now(timezone.utc)
+
+    def _budget(self, ref, scope, snapshot, blockers) -> None:
+        if ref is None:
+            blockers.append(
+                self._block(
+                    "CONTENT_DRAFT_BUDGET_AUTHORITY_UNAVAILABLE",
+                    "exact BudgetRevision is required",
+                )
+            )
+            return
+        try:
+            budget = self._budget_store.get(scope, ref.resource_id, ref.revision)
+        except BudgetNotFound:
+            blockers.append(
+                self._block(
+                    "CONTENT_DRAFT_BUDGET_AUTHORITY_UNAVAILABLE",
+                    "BudgetRevision exact authority was not found",
+                    ref,
+                )
+            )
+            return
+        except BudgetStoreError:
+            blockers.append(
+                self._block(
+                    "CONTENT_DRAFT_BUDGET_AUTHORITY_UNAVAILABLE",
+                    "BudgetRevision canonical authority is unavailable",
+                    ref,
+                )
+            )
+            return
+        except Exception:
+            blockers.append(
+                self._block(
+                    "CONTENT_DRAFT_BUDGET_AUTHORITY_UNAVAILABLE",
+                    "BudgetRevision canonical authority is unavailable",
+                    ref,
+                )
+            )
+            return
+        snapshot.append(
+            {
+                "kind": "BudgetRevision",
+                "id": budget.budget_id,
+                "expectedRevision": ref.revision,
+                "expectedHash": ref.content_hash,
+                "observedRevision": budget.revision,
+                "observedHash": budget.content_hash,
+                "lifecycle": budget.lifecycle.value,
+                "effectiveFrom": budget.effective_from,
+                "effectiveUntil": budget.effective_until,
+            }
+        )
+        if budget.content_hash != ref.content_hash:
+            blockers.append(self._block("CONTENT_DRAFT_BUDGET_REF_DRIFTED", "BudgetRevision exact ref drifted", ref))
+        if budget.lifecycle is not BudgetLifecycle.ACTIVE:
+            blockers.append(self._block("CONTENT_DRAFT_BUDGET_INACTIVE", "BudgetRevision is not active", ref))
+        now = self._now()
+        if not (budget.effective_from <= now < budget.effective_until):
+            blockers.append(self._block("CONTENT_DRAFT_BUDGET_OUTSIDE_EFFECTIVE_WINDOW", "BudgetRevision is outside its effective window", ref))
+        if not budget.hard_stop or budget.unknown_usage_behavior != "block":
+            blockers.append(self._block("CONTENT_DRAFT_BUDGET_POLICY_UNSAFE", "BudgetRevision does not fail closed", ref))
+        blockers.append(
+            self._block(
+                "CONTENT_DRAFT_BUDGET_BALANCE_AUTHORITY_UNAVAILABLE",
+                "Budget usage and remaining balance authority are not available",
+                ref,
+            )
         )
 
     @staticmethod
