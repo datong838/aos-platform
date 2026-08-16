@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from aos_api.aip_provider_plugin_authority import ProviderPluginAuthorityError
 from aos_api.aip_model_runtime_store import ModelRuntimeNotFound
 from aos_api.routers import aip_model_runtime
 
@@ -139,6 +140,7 @@ def test_all_legacy_route_writes_fail_closed_but_reads_remain(client) -> None:
 
 def test_openapi_registers_canonical_model_runtime_paths(client) -> None:
     paths = client.get("/openapi.json").json()["paths"]
+    assert "/v1/aip/model-runtime/provider-plugins/{plugin_id}" in paths
     assert "/v1/aip/model-runtime/providers" in paths
     assert "/v1/aip/model-runtime/providers/{provider_id}" in paths
     assert "/v1/aip/model-runtime/models" in paths
@@ -149,6 +151,124 @@ def test_openapi_registers_canonical_model_runtime_paths(client) -> None:
     assert "/v1/aip/model-runtime/price-snapshots/{price_snapshot_id}" in paths
     assert "/v1/aip/model-runtime/routes/{route_id}/resolution" in paths
     assert "/v1/aip/model-runtime/overview" in paths
+
+
+def test_approved_provider_plugin_exact_readback_is_principal_scoped(client) -> None:
+    response = client.get(
+        "/v1/aip/model-runtime/provider-plugins/agnes-text?revision=1",
+        headers=headers(),
+    )
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["providerPluginId"] == "agnes-text"
+    assert payload["revision"] == 1
+    assert len(payload["contentHash"]) == 64
+    assert payload["approvedCapabilities"] == ["llm", "chat"]
+    assert "secret" not in response.text.lower()
+
+    canary = client.get(
+        "/v1/aip/model-runtime/provider-plugins/agnes-text?revision=1",
+        headers=headers("dev-org"),
+    )
+    assert canary.status_code == 404
+    assert canary.json()["code"] == "AIP_PROVIDER_PLUGIN_UNAVAILABLE"
+
+
+class ProviderPublishStore:
+    called = False
+
+    def publish_provider(self, scope, actor, key, item, *, expected_version=0):
+        self.called = True
+        return item
+
+
+class PluginAuthorityProbe:
+    def __init__(self, *, fail: bool = False) -> None:
+        self.fail = fail
+        self.calls = []
+
+    def validate_ref(self, scope, ref):
+        self.calls.append((scope.key, ref.asset_type, ref.asset_id, ref.revision, ref.content_hash))
+        if self.fail:
+            raise ProviderPluginAuthorityError("provider_plugin_ref_drifted")
+
+
+def provider_body() -> dict:
+    return {
+        "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+        "providerInstanceId": "agnes-text-qyh-dev",
+        "revision": 1,
+        "contentHash": "a" * 64,
+        "pluginRef": {
+            "assetType": "ProviderPluginRevision",
+            "assetId": "agnes-text",
+            "revision": 1,
+            "contentHash": "b" * 64,
+        },
+        "endpointProfile": {
+            "baseUrl": "https://apihub.agnes-ai.com/v1",
+            "region": "development-external-unspecified",
+            "timeoutMs": 60000,
+            "metadata": {},
+        },
+        "secretRef": "keychain://com.aos.llm/agnes-text/org-org/dev-project/agnes-text-qyh-dev#api-key",
+        "secretVersion": "v1",
+        "egressPolicyRef": {
+            "assetType": "EgressPolicyRevision",
+            "assetId": "egress-1",
+            "revision": 1,
+            "contentHash": "c" * 64,
+        },
+        "dataClassificationPolicyRef": {
+            "assetType": "DataClassificationPolicyRevision",
+            "assetId": "classification-1",
+            "revision": 1,
+            "contentHash": "d" * 64,
+        },
+        "lifecycle": "validated",
+        "createdBy": "caller",
+        "createdAt": "2026-08-16T00:00:00Z",
+    }
+
+
+def test_provider_publish_validates_exact_plugin_ref_before_store_write(client) -> None:
+    store = ProviderPublishStore()
+    authority = PluginAuthorityProbe()
+    client.app.dependency_overrides[aip_model_runtime.get_store] = lambda: store
+    client.app.dependency_overrides[aip_model_runtime.get_plugin_authority] = lambda: authority
+    try:
+        response = client.post(
+            "/v1/aip/model-runtime/providers",
+            headers=headers(**{"Idempotency-Key": "provider-1", "If-Match": "0"}),
+            json=provider_body(),
+        )
+        assert response.status_code == 201, response.text
+        assert store.called is True
+        assert authority.calls == [
+            (("org-org", "dev-project"), "ProviderPluginRevision", "agnes-text", 1, "b" * 64)
+        ]
+    finally:
+        client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)
+        client.app.dependency_overrides.pop(aip_model_runtime.get_plugin_authority, None)
+
+
+def test_provider_publish_fails_before_store_when_plugin_ref_drifted(client) -> None:
+    store = ProviderPublishStore()
+    authority = PluginAuthorityProbe(fail=True)
+    client.app.dependency_overrides[aip_model_runtime.get_store] = lambda: store
+    client.app.dependency_overrides[aip_model_runtime.get_plugin_authority] = lambda: authority
+    try:
+        response = client.post(
+            "/v1/aip/model-runtime/providers",
+            headers=headers(**{"Idempotency-Key": "provider-2", "If-Match": "0"}),
+            json=provider_body(),
+        )
+        assert response.status_code == 422
+        assert response.json()["code"] == "AIP_PROVIDER_PLUGIN_REF_DRIFTED"
+        assert store.called is False
+    finally:
+        client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)
+        client.app.dependency_overrides.pop(aip_model_runtime.get_plugin_authority, None)
 
 
 class EmptyOverviewStore:
