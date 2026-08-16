@@ -3132,6 +3132,18 @@
       "module": "aos_api.routers.aip_bindings",
       "attribute": "router",
       "order": 521
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_memory_improvement",
+      "attribute": "router",
+      "order": 522
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_content_runtime",
+      "attribute": "router",
+      "order": 523
     }
   ]
 }

@@ -202,6 +202,42 @@ def test_media_unknown_reconcile_is_explicit_and_cannot_forge_success() -> None:
     assert queued.status is MediaJobStatus.QUEUED and not queued.blockers
 
 
+def test_content_runtime_lists_are_tenant_scoped_bounded_and_stably_sorted() -> None:
+    store = AipContentRuntimeStore()
+    first_at = datetime.now(UTC) + timedelta(days=2)
+    first = store.submit_media_job(
+        SCOPE, media_request(), idempotency_key=key("list-first"), actor="pytest",
+        occurred_at=first_at,
+    )
+    second = store.submit_media_job(
+        SCOPE, media_request(), idempotency_key=key("list-second"), actor="pytest",
+        occurred_at=first_at + timedelta(seconds=1),
+    )
+    assert [item.job_id for item in store.list_media_jobs(SCOPE, limit=2)] == [
+        second.job_id,
+        first.job_id,
+    ]
+    assert store.list_media_jobs(CANARY, limit=2) == []
+
+    avatar_first = store.open_avatar_session(
+        SCOPE, avatar_request(), idempotency_key=key("avatar-list-first"), actor="pytest",
+        occurred_at=first_at,
+    )
+    avatar_second = store.open_avatar_session(
+        SCOPE, avatar_request(), idempotency_key=key("avatar-list-second"), actor="pytest",
+        occurred_at=first_at + timedelta(seconds=1),
+    )
+    assert [item.session_id for item in store.list_avatar_sessions(SCOPE, limit=2)] == [
+        avatar_second.session_id,
+        avatar_first.session_id,
+    ]
+    assert store.list_avatar_sessions(CANARY, limit=2) == []
+    with pytest.raises(ValueError):
+        store.list_media_jobs(SCOPE, limit=0)
+    with pytest.raises(ValueError):
+        store.list_avatar_sessions(SCOPE, limit=201)
+
+
 def test_avatar_session_full_control_path_and_terminal_guard() -> None:
     store = AipContentRuntimeStore()
     opened = store.open_avatar_session(

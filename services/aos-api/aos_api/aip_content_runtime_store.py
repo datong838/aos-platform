@@ -98,6 +98,20 @@ class AipContentRuntimeStore:
         with connect(scope) as conn:
             return self._media_snapshot(conn, scope, job_id)
 
+    def list_media_jobs(
+        self, scope: TenantScope, *, limit: int = 100
+    ) -> list[MediaJobSnapshot]:
+        if limit < 1 or limit > 200:
+            raise ValueError("limit must be between 1 and 200")
+        with connect(scope) as conn:
+            rows = conn.execute(
+                """SELECT job_id FROM aip_media_job
+                   WHERE org_id=%s AND project_id=%s
+                   ORDER BY created_at DESC, job_id DESC LIMIT %s""",
+                (*scope.key, limit),
+            ).fetchall()
+            return [self._media_snapshot(conn, scope, row["job_id"]) for row in rows]
+
     def command_media_job(
         self,
         scope: TenantScope,
@@ -232,6 +246,20 @@ class AipContentRuntimeStore:
     def get_avatar_session(self, scope: TenantScope, session_id: str) -> AvatarSessionSnapshot:
         with connect(scope) as conn:
             return self._avatar_snapshot(conn, scope, session_id)
+
+    def list_avatar_sessions(
+        self, scope: TenantScope, *, limit: int = 100
+    ) -> list[AvatarSessionSnapshot]:
+        if limit < 1 or limit > 200:
+            raise ValueError("limit must be between 1 and 200")
+        with connect(scope) as conn:
+            rows = conn.execute(
+                """SELECT session_id FROM aip_avatar_session
+                   WHERE org_id=%s AND project_id=%s
+                   ORDER BY created_at DESC, session_id DESC LIMIT %s""",
+                (*scope.key, limit),
+            ).fetchall()
+            return [self._avatar_snapshot(conn, scope, row["session_id"]) for row in rows]
 
     def command_avatar_session(
         self,
