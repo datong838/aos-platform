@@ -21,6 +21,10 @@ from aos_api.aip_model_runtime_contracts import (
     RuntimePolicyRevision,
 )
 from aos_api.db import connect as db_connect
+from aos_api.aip_runtime_guard_policy_store import (
+    AipRuntimeGuardPolicyStore,
+    GuardPolicyDependencyBlocked,
+)
 from aos_api.tenant_scope import TenantScope
 
 ConnectFactory = Callable[..., AbstractContextManager[Any]]
@@ -69,10 +73,17 @@ class AipModelRuntimeStore:
         "model_price_snapshot": ("priceSnapshotId", ModelPriceSnapshotRevision),
     }
 
-    def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
+    def __init__(self, connect_factory: ConnectFactory | None = None, *, guard_policy_store=None) -> None:
         self._connect_factory = connect_factory or db_connect
+        self._guard_policy_store = guard_policy_store or AipRuntimeGuardPolicyStore(
+            connect_factory or db_connect
+        )
 
     def publish_provider(self, scope: TenantScope, actor: str, key: str, item: ProviderInstanceRevision, *, expected_version: int = 0) -> ProviderInstanceRevision:
+        try:
+            self._guard_policy_store.require_provider_dependencies(scope, item)
+        except GuardPolicyDependencyBlocked as exc:
+            raise ModelRuntimeDependencyBlocked(str(exc)) from None
         return self._publish("provider_instance", scope, actor, key, item, expected_version)
 
     def publish_model(self, scope: TenantScope, actor: str, key: str, item: RegisteredModelRevision, *, expected_version: int = 0) -> RegisteredModelRevision:

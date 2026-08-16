@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+import uuid
 
 import psycopg
 import pytest
@@ -22,10 +23,16 @@ from aos_api.aip_model_runtime_contracts import (
 )
 from aos_api.aip_model_runtime_store import (
     AipModelRuntimeStore,
+    ModelRuntimeDependencyBlocked,
     ModelRuntimeIdempotencyConflict,
     ModelRuntimeNotFound,
     canonical_hash,
 )
+from aos_api.aip_runtime_guard_policy_contracts import (
+    DataClassificationPolicyRevisionCreate,
+    EgressPolicyRevisionCreate,
+)
+from aos_api.aip_runtime_guard_policy_store import AipRuntimeGuardPolicyStore
 from aos_api.db import get_dsn
 from aos_api.tenant_scope import TenantScope
 
@@ -33,7 +40,7 @@ SCOPE = TenantScope(org_id="org-org", project_id="dev-project")
 CANARY = TenantScope(org_id="dev-org", project_id="dev-project")
 TENANT = TenantContext(org_id=SCOPE.org_id, project_id=SCOPE.project_id)
 NOW = datetime.now(UTC)
-SUFFIX = "test:aip7-store"
+SUFFIX = f"test:aip7-store:{uuid.uuid4().hex}"
 
 
 def ref(kind: str, asset_id: str, digest: str) -> VersionedAssetRef:
@@ -83,11 +90,71 @@ def cleanup() -> None:
         conn.commit()
 
 
+def publish_runtime_guards() -> tuple[VersionedAssetRef, VersionedAssetRef]:
+    instant = datetime.now(UTC)
+    store = AipRuntimeGuardPolicyStore()
+    egress = store.publish_egress(
+        SCOPE,
+        SUFFIX,
+        "guard-egress-1",
+        EgressPolicyRevisionCreate(
+            policyId=f"{SUFFIX}:egress",
+            revision=1,
+            environment="development",
+            effectiveFrom=instant - timedelta(hours=1),
+            effectiveUntil=instant + timedelta(days=30),
+            owner=SUFFIX,
+            approvalRef="approval:test:aip7-store",
+            lifecycle="active",
+            allowedSchemes=["https"],
+            allowedHosts=["apihub.agnes-ai.com"],
+            allowedPorts=[443],
+            allowPublicFallback=False,
+            unknownDestinationBehavior="block",
+            regionState="confirmed",
+            region="cn-approved-development",
+        ),
+    )
+    data = store.publish_data_classification(
+        SCOPE,
+        SUFFIX,
+        "guard-data-1",
+        DataClassificationPolicyRevisionCreate(
+            policyId=f"{SUFFIX}:classification",
+            revision=1,
+            environment="development",
+            effectiveFrom=instant - timedelta(hours=1),
+            effectiveUntil=instant + timedelta(days=30),
+            owner=SUFFIX,
+            approvalRef="approval:test:aip7-store",
+            lifecycle="active",
+            allowedClassifications=["public_catalog"],
+            prohibitedClassifications=[
+                "direct_pii",
+                "raw_order_detail",
+                "customer_conversation",
+                "credential",
+                "commercial_sensitive",
+                "cross_tenant",
+                "unknown",
+            ],
+            denyUnknown=True,
+            allowDirectPii=False,
+            allowCommercialSensitive=False,
+            allowCrossTenant=False,
+        ),
+    )
+    return (
+        ref("EgressPolicyRevision", egress.policy_id, egress.content_hash),
+        ref("DataClassificationPolicyRevision", data.policy_id, data.content_hash),
+    )
+
+
 def test_store_persists_exact_chain_replays_receipt_and_isolates_tenant() -> None:
     cleanup()
     store = AipModelRuntimeStore()
     try:
-        provider = hashed(ProviderInstanceRevision, dict(
+        provider_without_guards = hashed(ProviderInstanceRevision, dict(
             tenant=TENANT, providerInstanceId=SUFFIX, revision=1,
             pluginRef=ref("ProviderPluginRevision", "test:plugin", "1" * 64),
             endpointProfile=ProviderEndpointProfile(baseUrl="https://provider.invalid/v1", region="cn", timeoutMs=10_000),
@@ -96,6 +163,26 @@ def test_store_persists_exact_chain_replays_receipt_and_isolates_tenant() -> Non
             dataClassificationPolicyRef=ref("DataClassificationPolicyRevision", "test:classification", "3" * 64),
             lifecycle=ModelRuntimeLifecycle.VALIDATED, createdBy=SUFFIX, createdAt=NOW,
         ))
+        with pytest.raises(ModelRuntimeDependencyBlocked, match="exact runtime guard policy"):
+            store.publish_provider(SCOPE, SUFFIX, "provider-missing-guards", provider_without_guards)
+
+        egress_ref, data_classification_ref = publish_runtime_guards()
+        provider_outside_egress = rehashed(
+            provider_without_guards,
+            egressPolicyRef=egress_ref.model_dump(mode="json", by_alias=True),
+            dataClassificationPolicyRef=data_classification_ref.model_dump(mode="json", by_alias=True),
+        )
+        with pytest.raises(ModelRuntimeDependencyBlocked, match="outside exact egress policy"):
+            store.publish_provider(SCOPE, SUFFIX, "provider-outside-egress", provider_outside_egress)
+
+        provider = rehashed(
+            provider_outside_egress,
+            endpointProfile=ProviderEndpointProfile(
+                baseUrl="https://apihub.agnes-ai.com/v1",
+                region="cn-approved-development",
+                timeoutMs=10_000,
+            ).model_dump(mode="json", by_alias=True),
+        )
         stored_provider = store.publish_provider(SCOPE, SUFFIX, "provider-1", provider)
         assert store.publish_provider(SCOPE, SUFFIX, "provider-1", provider) == stored_provider
         with pytest.raises(ModelRuntimeIdempotencyConflict):
@@ -133,8 +220,8 @@ def test_store_persists_exact_chain_replays_receipt_and_isolates_tenant() -> Non
         policy = hashed(RuntimePolicyRevision, dict(
             tenant=TENANT, policyId=f"{SUFFIX}:policy", revision=1,
             networkPolicyRef=ref("NetworkPolicyRevision", "test:network", "8" * 64),
-            egressPolicyRef=ref("EgressPolicyRevision", "test:egress", "2" * 64),
-            dataClassificationPolicyRef=ref("DataClassificationPolicyRevision", "test:classification", "3" * 64),
+            egressPolicyRef=egress_ref,
+            dataClassificationPolicyRef=data_classification_ref,
             quotaPolicyRef=ref("QuotaPolicyRevision", "test:quota", "4" * 64),
             budgetPolicyRef=ref("BudgetPolicyRevision", "test:budget", "5" * 64),
             deadlineMs=30_000, maxAttempts=2, allowedFallbackReasons=["provider_unavailable"],

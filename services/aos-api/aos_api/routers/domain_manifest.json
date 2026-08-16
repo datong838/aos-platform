@@ -3156,6 +3156,12 @@
       "module": "aos_api.routers.aip_budgets",
       "attribute": "router",
       "order": 525
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_runtime_guard_policies",
+      "attribute": "router",
+      "order": 526
     }
   ]
 }
