@@ -1,0 +1,30 @@
+{
+  "receiptId": "AIP-TEST-ISOLATION-RECHECK-20260816",
+  "recordedAt": "2026-08-16T00:00:00+08:00",
+  "branch": "w1-aip",
+  "baselineSha": "df87899",
+  "mode": "read-only regression replay",
+  "historicalBlocker": "published Skill residue caused three exposure fixtures and one downgrade guard to fail",
+  "currentIsolation": {
+    "pytestSession": "session-scoped disposable PostgreSQL database",
+    "migrationContracts": "per-test isolated migration database",
+    "status": "GREEN"
+  },
+  "verification": {
+    "order": [
+      "test_aip_skill_publication_service.py",
+      "three memory exposure tests",
+      "test_bind1_003_skill_publication_provenance_migration.py"
+    ],
+    "result": "11 passed in 3.50s",
+    "database": "disposable test databases only",
+    "realTenantWrites": false,
+    "browser": "N/A"
+  },
+  "document": {
+    "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/AIP通用能力实施方案/全量开发清单/07-AIP助手分析师与通用工作台开发清单.md",
+    "preSha256": "dd338e7492202ec950d1b6747d89a671c864bdec8d8dd2c78404131f0a416686",
+    "postSha256": "3312b5c322ba0d25da559ff1fd004aaa892a88ae9e6e35c1839063dc50886abb"
+  },
+  "protectedUntrackedExcluded": ".evidence/aip/2026-08-14-watchdog-w2c-recovery-blocked-receipt.json"
+}
