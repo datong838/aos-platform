@@ -50,8 +50,19 @@ class KeychainLocator:
     ref_fingerprint: str
 
 
+@dataclass(frozen=True)
+class SecretProbeResult:
+    """Non-sensitive evidence that one exact secret version exists."""
+
+    exists: bool
+    ref_fingerprint: str
+    secret_version: str
+
+
 class SecretClient(Protocol):
     def read(self, locator: KeychainLocator) -> str: ...
+
+    def exists(self, locator: KeychainLocator) -> bool: ...
 
 
 def _safe_segment(value: str) -> bool:
@@ -106,8 +117,13 @@ def parse_keychain_ref(
         raise SecretBackendError("provider_secret_ref_mismatch")
     if provider.lifecycle not in _ALLOWED_PROVIDER_STATES:
         raise SecretBackendError("provider_lifecycle_blocked")
+    if not _safe_segment(provider.secret_version):
+        raise SecretBackendError("invalid_secret_version")
 
-    account = f"{plugin_id}/{org_id}/{project_id}/{provider_id}/api-key"
+    account = (
+        f"{plugin_id}/{org_id}/{project_id}/{provider_id}/api-key/"
+        f"{provider.secret_version}"
+    )
     return KeychainLocator(
         service=parsed.netloc,
         account=account,
@@ -156,6 +172,37 @@ class MacOSKeychainClient:
             raise SecretBackendError("keychain_empty")
         return value
 
+    def exists(self, locator: KeychainLocator) -> bool:
+        """Check an exact item without asking Keychain for its payload."""
+
+        argv = [
+            "/usr/bin/security",
+            "find-generic-password",
+            "-s",
+            locator.service,
+            "-a",
+            locator.account,
+        ]
+        try:
+            completed = self._runner(
+                argv,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+                shell=False,
+                timeout=self._timeout,
+            )
+        except subprocess.TimeoutExpired:
+            raise SecretBackendError("keychain_timeout") from None
+        except OSError:
+            raise SecretBackendError("keychain_command_unavailable") from None
+
+        if completed.returncode == 0:
+            return True
+        if completed.returncode == 44:
+            return False
+        raise SecretBackendError("keychain_probe_failed")
+
 
 class ExactSecretResolver:
     """Resolve a secret only after exact model-runtime identity validation."""
@@ -166,3 +213,15 @@ class ExactSecretResolver:
     def resolve(self, scope: TenantScope, provider: ProviderInstanceRevision) -> str:
         locator = parse_keychain_ref(provider.secret_ref, scope, provider)
         return self._client.read(locator)
+
+    def probe(
+        self,
+        scope: TenantScope,
+        provider: ProviderInstanceRevision,
+    ) -> SecretProbeResult:
+        locator = parse_keychain_ref(provider.secret_ref, scope, provider)
+        return SecretProbeResult(
+            exists=self._client.exists(locator),
+            ref_fingerprint=locator.ref_fingerprint,
+            secret_version=provider.secret_version,
+        )

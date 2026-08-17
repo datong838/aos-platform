@@ -15,6 +15,7 @@ from aos_api.aip_secret_backend import (
     ExactSecretResolver,
     MacOSKeychainClient,
     SecretBackendError,
+    SecretProbeResult,
     parse_keychain_ref,
 )
 from aos_api.tenant_scope import TenantScope
@@ -44,6 +45,7 @@ def provider(
     plugin_id: str = "agnes-text",
     provider_id: str = "agnes-text-qyh-dev",
     secret_ref: str = SECRET_REF,
+    secret_version: str = "v1",
 ) -> ProviderInstanceRevision:
     return ProviderInstanceRevision(
         tenant={"orgId": org_id, "projectId": project_id},
@@ -57,7 +59,7 @@ def provider(
             timeoutMs=30_000,
         ),
         secretRef=secret_ref,
-        secretVersion="owner-configured-v1",
+        secretVersion=secret_version,
         egressPolicyRef=ref("EgressPolicyRevision", "agnes-egress-dev"),
         dataClassificationPolicyRef=ref(
             "DataClassificationPolicyRevision", "agnes-data-dev"
@@ -73,10 +75,18 @@ def test_parse_approved_keychain_ref_derives_stable_non_secret_locator() -> None
 
     assert locator.service == "com.aos.llm"
     assert locator.account == (
-        "agnes-text/org-org/dev-project/agnes-text-qyh-dev/api-key"
+        "agnes-text/org-org/dev-project/agnes-text-qyh-dev/api-key/v1"
     )
     assert len(locator.ref_fingerprint) == 64
     assert SECRET_REF not in repr(locator)
+
+
+@pytest.mark.parametrize("version", ["", ".", "..", "v1/other", "v%31", "v\n1"])
+def test_secret_version_must_be_a_safe_exact_account_segment(version: str) -> None:
+    item = provider().model_copy(update={"secret_version": version})
+
+    with pytest.raises(SecretBackendError, match="invalid_secret_version"):
+        parse_keychain_ref(SECRET_REF, SCOPE, item)
 
 
 @pytest.mark.parametrize(
@@ -140,7 +150,7 @@ def test_macos_client_uses_fixed_argv_without_shell() -> None:
                 "-s",
                 "com.aos.llm",
                 "-a",
-                "agnes-text/org-org/dev-project/agnes-text-qyh-dev/api-key",
+                "agnes-text/org-org/dev-project/agnes-text-qyh-dev/api-key/v1",
                 "-w",
             ],
             {
@@ -152,6 +162,64 @@ def test_macos_client_uses_fixed_argv_without_shell() -> None:
             },
         )
     ]
+
+
+@pytest.mark.parametrize(("returncode", "exists"), [(0, True), (44, False)])
+def test_macos_probe_checks_versioned_item_without_reading_output(
+    returncode: int,
+    exists: bool,
+) -> None:
+    calls: list[tuple[list[str], dict]] = []
+
+    def runner(argv: list[str], **kwargs):
+        calls.append((argv, kwargs))
+        return subprocess.CompletedProcess(argv, returncode)
+
+    locator = parse_keychain_ref(SECRET_REF, SCOPE, provider())
+    assert MacOSKeychainClient(runner=runner).exists(locator) is exists
+    assert calls == [
+        (
+            [
+                "/usr/bin/security",
+                "find-generic-password",
+                "-s",
+                "com.aos.llm",
+                "-a",
+                "agnes-text/org-org/dev-project/agnes-text-qyh-dev/api-key/v1",
+            ],
+            {
+                "stdout": subprocess.DEVNULL,
+                "stderr": subprocess.DEVNULL,
+                "check": False,
+                "shell": False,
+                "timeout": 5.0,
+            },
+        )
+    ]
+
+
+@pytest.mark.parametrize("failure", ["timeout", "unavailable", "unexpected"])
+def test_macos_probe_fails_closed_on_operational_errors(failure: str) -> None:
+    secret = "must-never-leak"
+
+    def runner(argv: list[str], **kwargs):
+        if failure == "timeout":
+            raise subprocess.TimeoutExpired(argv, kwargs["timeout"], output=secret)
+        if failure == "unavailable":
+            raise OSError(secret)
+        return subprocess.CompletedProcess(argv, 1)
+
+    locator = parse_keychain_ref(SECRET_REF, SCOPE, provider())
+    with pytest.raises(SecretBackendError) as captured:
+        MacOSKeychainClient(runner=runner).exists(locator)
+
+    assert captured.value.code in {
+        "keychain_timeout",
+        "keychain_command_unavailable",
+        "keychain_probe_failed",
+    }
+    assert secret not in str(captured.value)
+    assert SECRET_REF not in str(captured.value)
 
 
 @pytest.mark.parametrize("failure", ["missing", "timeout", "empty", "unavailable"])
@@ -199,7 +267,38 @@ def test_exact_resolver_returns_secret_only_after_identity_validation() -> None:
     resolver = ExactSecretResolver(client=client)
 
     assert resolver.resolve(SCOPE, provider()) == "resolved-secret"
-    assert client.locator.account.endswith("agnes-text-qyh-dev/api-key")
+    assert client.locator.account.endswith("agnes-text-qyh-dev/api-key/v1")
 
     with pytest.raises(SecretBackendError, match="scope_mismatch"):
         resolver.resolve(TenantScope("dev-org", "dev-project"), provider())
+
+
+def test_probe_returns_only_non_sensitive_exact_metadata() -> None:
+    class Client:
+        def __init__(self) -> None:
+            self.locator = None
+
+        def exists(self, locator):
+            self.locator = locator
+            return True
+
+    client = Client()
+    result = ExactSecretResolver(client=client).probe(SCOPE, provider())
+
+    assert result == SecretProbeResult(
+        exists=True,
+        ref_fingerprint=client.locator.ref_fingerprint,
+        secret_version="v1",
+    )
+    assert SECRET_REF not in repr(result)
+    assert "top-secret" not in repr(result)
+
+
+def test_probe_rejects_negative_tenant_before_keychain_command() -> None:
+    class Client:
+        def exists(self, _locator):
+            raise AssertionError("Keychain must not be called")
+
+    resolver = ExactSecretResolver(client=Client())
+    with pytest.raises(SecretBackendError, match="scope_mismatch"):
+        resolver.probe(TenantScope("dev-org", "dev-project"), provider())
