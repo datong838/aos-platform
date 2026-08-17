@@ -20,9 +20,16 @@ from aos_api.aip_agent_registry_store import (
 )
 from aos_api.aip_contracts import ResourceRef, TenantContext
 from aos_api.aip_eval_contracts import AssetRevisionRef, AssetType
-from aos_api.aip_model_runtime_contracts import ModelRuntimeReadiness
-from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
-from aos_api.aip_model_runtime_store import AipModelRuntimeStore, ModelRuntimeStoreError
+from aos_api.aip_eval_authority_store import (
+    AipEvalAuthorityStore,
+    AipEvalGateDependencyBlocked,
+)
+from aos_api.aip_model_runtime_contracts import ModelRuntimeLifecycle
+from aos_api.aip_model_runtime_store import (
+    AipModelRuntimeStore,
+    ModelRuntimeStoreError,
+    evaluation_candidate_ref,
+)
 from aos_api.aip_skill_registry import AipSkillRegistry
 from aos_api.tenant_scope import TenantScope
 
@@ -86,10 +93,10 @@ class PostgresSkillPublicationRouteAuthority:
         self,
         *,
         store: AipModelRuntimeStore | None = None,
-        resolver: AipModelRuntimeResolver | None = None,
+        eval_authority: AipEvalAuthorityStore | None = None,
     ) -> None:
         self._store = store or AipModelRuntimeStore()
-        self._resolver = resolver or AipModelRuntimeResolver(self._store)
+        self._eval_authority = eval_authority or AipEvalAuthorityStore()
 
     def require_ready(
         self,
@@ -101,21 +108,29 @@ class PostgresSkillPublicationRouteAuthority:
     ) -> None:
         try:
             route = self._store.get_route(scope, route_ref.asset_id, route_ref.revision)
-            resolution = self._resolver.resolve(
-                scope, route_ref.asset_id, now=evaluated_at
+            policy = self._store.get_policy(
+                scope, policy_ref.asset_id, policy_ref.revision
             )
-        except ModelRuntimeStoreError as exc:
+            self._eval_authority.require_exact_passed(
+                scope,
+                route.eval_gate_ref,
+                expected_target=evaluation_candidate_ref(route),
+                now=evaluated_at,
+            )
+        except (ModelRuntimeStoreError, AipEvalGateDependencyBlocked) as exc:
             raise AipAgentRegistryTransitionBlocked(
                 "skill publication model route is unavailable"
             ) from exc
         if (
             route.content_hash != route_ref.content_hash
-            or resolution.route != route_ref
-            or resolution.policy != policy_ref
-            or resolution.readiness is not ModelRuntimeReadiness.READY
+            or route.lifecycle is not ModelRuntimeLifecycle.ACTIVE
+            or route.runtime_policy_ref != policy_ref
+            or policy.content_hash != policy_ref.content_hash
+            or policy.lifecycle is not ModelRuntimeLifecycle.ACTIVE
+            or policy.kill_switch_enabled
         ):
             raise AipAgentRegistryTransitionBlocked(
-                "skill publication requires an exact READY route and policy"
+                "skill publication requires exact active route, policy, and Eval gate"
             )
 
 

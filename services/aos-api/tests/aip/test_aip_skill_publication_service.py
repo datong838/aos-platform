@@ -2,6 +2,7 @@ import hashlib
 import json
 import uuid
 from datetime import UTC, datetime
+from types import SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
@@ -42,6 +43,10 @@ from aos_api.aip_release_publication_service import (
     AipReleasePublicationService,
 )
 from aos_api.aip_skill_publication_service import AipSkillPublicationService
+from aos_api.aip_skill_publication_service import (
+    PostgresSkillPublicationRouteAuthority,
+)
+from aos_api.aip_model_runtime_contracts import ModelRuntimeLifecycle
 from aos_api.aip_skill_registry import AipSkillRegistry
 from aos_api.db import connect
 from aos_api.tenant_scope import TenantScope
@@ -202,6 +207,104 @@ class _PublishedLogicAuthority:
         assert scope.org_id.startswith("bind3-org-")
         assert canonical_logic_id == logic_revision_ref.asset_id
         assert logic_revision_ref.asset_type == "LogicRevision"
+
+
+def test_skill_publication_route_gate_does_not_consume_transient_health(
+    monkeypatch,
+) -> None:
+    route_ref = ref("ModelRouteRevision", "route-1")
+    policy_ref = ref("RuntimePolicyRevision", "policy-1")
+    gate_ref = ref("EvalGateDecision", "gate-1")
+    route = SimpleNamespace(
+        route_id="route-1",
+        revision=1,
+        content_hash=route_ref.content_hash,
+        lifecycle=ModelRuntimeLifecycle.ACTIVE,
+        runtime_policy_ref=policy_ref,
+        eval_gate_ref=gate_ref,
+    )
+    policy = SimpleNamespace(
+        content_hash=policy_ref.content_hash,
+        lifecycle=ModelRuntimeLifecycle.ACTIVE,
+        kill_switch_enabled=False,
+    )
+
+    class Store:
+        @staticmethod
+        def get_route(*_args):
+            return route
+
+        @staticmethod
+        def get_policy(*_args):
+            return policy
+
+    class EvalAuthority:
+        called = False
+
+        def require_exact_passed(self, scope, selected_gate, **kwargs):
+            self.called = True
+            assert scope.key == ("org-org", "dev-project")
+            assert selected_gate == gate_ref
+            assert kwargs["expected_target"] == route_ref
+
+    eval_authority = EvalAuthority()
+    monkeypatch.setattr(
+        "aos_api.aip_skill_publication_service.evaluation_candidate_ref",
+        lambda _route: route_ref,
+    )
+    authority = PostgresSkillPublicationRouteAuthority(
+        store=Store(), eval_authority=eval_authority
+    )
+    authority.require_ready(
+        TenantScope("org-org", "dev-project"),
+        route_ref,
+        policy_ref,
+        evaluated_at=datetime(2026, 8, 17, 12, 0, tzinfo=UTC),
+    )
+    assert eval_authority.called is True
+
+
+def test_skill_publication_route_gate_blocks_kill_switch(monkeypatch) -> None:
+    route_ref = ref("ModelRouteRevision", "route-1")
+    policy_ref = ref("RuntimePolicyRevision", "policy-1")
+    route = SimpleNamespace(
+        route_id="route-1",
+        revision=1,
+        content_hash=route_ref.content_hash,
+        lifecycle=ModelRuntimeLifecycle.ACTIVE,
+        runtime_policy_ref=policy_ref,
+        eval_gate_ref=ref("EvalGateDecision", "gate-1"),
+    )
+    policy = SimpleNamespace(
+        content_hash=policy_ref.content_hash,
+        lifecycle=ModelRuntimeLifecycle.ACTIVE,
+        kill_switch_enabled=True,
+    )
+
+    class Store:
+        get_route = staticmethod(lambda *_args: route)
+        get_policy = staticmethod(lambda *_args: policy)
+
+    class EvalAuthority:
+        require_exact_passed = staticmethod(lambda *_args, **_kwargs: None)
+
+    monkeypatch.setattr(
+        "aos_api.aip_skill_publication_service.evaluation_candidate_ref",
+        lambda _route: route_ref,
+    )
+    authority = PostgresSkillPublicationRouteAuthority(
+        store=Store(), eval_authority=EvalAuthority()
+    )
+    with pytest.raises(
+        AipAgentRegistryTransitionBlocked,
+        match="exact active route, policy, and Eval gate",
+    ):
+        authority.require_ready(
+            TenantScope("org-org", "dev-project"),
+            route_ref,
+            policy_ref,
+            evaluated_at=datetime(2026, 8, 17, 12, 0, tzinfo=UTC),
+        )
 
 
 def _canonical_hash(value) -> str:
