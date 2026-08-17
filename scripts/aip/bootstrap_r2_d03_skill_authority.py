@@ -289,6 +289,7 @@ def _governance_evidence() -> tuple[ExactRevisionRef, ExactRevisionRef]:
             spec={"approvalRef": APPROVAL_REF, "skillId": SKILL_ID, "providerCalls": 0},
         ),
     )
+    brief = contracts.get_brief(SCOPE, brief.brief_id)
     if brief.lifecycle.value == "draft":
         brief = contracts.freeze_brief(
             SCOPE, ACTOR, brief.brief_id, brief.version, f"{TASK_KEY}-brief-freeze"
@@ -567,6 +568,7 @@ def _freeze_eval_contract(suite: Any, gate: Any, publication: Any, event_hash: s
             override_policy={"allowed": False},
         ),
     )
+    contract = store.get_eval_contract(SCOPE, contract.contract_id)
     if contract.lifecycle.value == "draft":
         contract = store.freeze_eval_contract(
             SCOPE,
