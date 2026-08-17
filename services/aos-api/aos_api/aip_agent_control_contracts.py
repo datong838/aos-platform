@@ -63,6 +63,18 @@ class AgentInstanceListResponse(AipContractModel):
     count: int = Field(ge=0)
 
 
+class ActivateAgentInstanceRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    capability_binding_ids: list[str] = Field(min_length=1, max_length=128)
+
+
+class AgentInstanceActivationResponse(AipContractModel):
+    tenant: TenantContext
+    instance: AgentInstance
+    capability_binding_ids: list[str]
+    receipt: RegistryReceipt
+
+
 class CapabilityCatalogResponse(AipContractModel):
     tenant: TenantContext
     items: list[CapabilityRevision]

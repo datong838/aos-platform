@@ -35,3 +35,17 @@ def test_put_tools_requires_canonical_overlay_contract():
         response = client.put("/v1/aip/agents/missing/tools", json={"items": []})
         assert response.status_code == 409
         assert response.json()["code"] == "AIP_CANONICAL_OVERLAY_NOT_IMPLEMENTED"
+
+
+def test_activate_agent_requires_idempotency_key():
+    app = FastAPI()
+    app.include_router(router)
+    app.dependency_overrides[require_principal] = _principal
+    register_exception_handlers(app)
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/aip/agents/ecommerce.data_advisor.default/activate",
+            json={"expectedVersion": 1, "capabilityBindingIds": ["binding-1"]},
+        )
+    assert response.status_code == 400
+    assert response.json()["code"] == "VALIDATION"

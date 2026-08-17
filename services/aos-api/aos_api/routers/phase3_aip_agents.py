@@ -1,12 +1,19 @@
 """AIP-6 canonical tenant AgentInstance control plane."""
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, Header, Query, status
 
 from aos_api.aip_agent_control_contracts import (
+    ActivateAgentInstanceRequest,
     AgentInstallResponse,
+    AgentInstanceActivationResponse,
     AgentInstanceListResponse,
     AgentRuntimeReadinessResponse,
+)
+from aos_api.aip_agent_instance_activation_service import (
+    AipAgentInstanceActivationService,
 )
 from aos_api.aip_agent_registry_contracts import AgentInstance
 from aos_api.aip_agent_registry_store import (
@@ -26,6 +33,7 @@ from aos_api.tenant_scope import TenantScope
 router = APIRouter(prefix="/v1/aip", tags=["aip-agents"])
 _STORE = AipAgentRegistryStore()
 _INSTALLER = AipEcommerceAgentInstaller(agents=_STORE)
+_ACTIVATION = AipAgentInstanceActivationService(store=_STORE)
 
 
 def get_agent_store() -> AipAgentRegistryStore:
@@ -34,6 +42,10 @@ def get_agent_store() -> AipAgentRegistryStore:
 
 def get_ecommerce_agent_installer() -> AipEcommerceAgentInstaller:
     return _INSTALLER
+
+
+def get_agent_activation_service() -> AipAgentInstanceActivationService:
+    return _ACTIVATION
 
 
 def _scope(principal: Principal) -> TenantScope:
@@ -126,6 +138,41 @@ def get_agent(
         return store.get_instance(_scope(principal), instance_id)
     except AipAgentRegistryError as exc:
         raise _map_error(exc) from exc
+
+
+@router.post(
+    "/agents/{instance_id}/activate",
+    response_model=AgentInstanceActivationResponse,
+)
+def activate_agent(
+    instance_id: str,
+    body: ActivateAgentInstanceRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipAgentInstanceActivationService = Depends(
+        get_agent_activation_service
+    ),
+) -> AgentInstanceActivationResponse:
+    try:
+        instance, receipt = service.activate(
+            _scope(principal),
+            instance_id,
+            body,
+            idempotency_key=_idem(idempotency_key),
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+    return AgentInstanceActivationResponse(
+        tenant=TenantContext(
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+        ),
+        instance=instance,
+        capability_binding_ids=body.capability_binding_ids,
+        receipt=receipt,
+    )
 
 
 def _overlay_not_implemented(principal: Principal) -> None:
