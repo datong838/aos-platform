@@ -4,7 +4,10 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
-from aos_api.aip_agent_registry_store import AipAgentRegistryTransitionBlocked
+from aos_api.aip_agent_registry_store import (
+    AipAgentRegistryConflict,
+    AipAgentRegistryTransitionBlocked,
+)
 from aos_api.aip_agent_run_execution_contracts import (
     AgentRunExecutionStatus,
     CreateAgentRunExecutionAttemptRequest,
@@ -125,6 +128,55 @@ def test_create_fails_closed_without_running_agent_run() -> None:
     with pytest.raises(AipAgentRegistryTransitionBlocked, match="not running"):
         AipAgentRunExecutionService(factory(conn)).create(
             SCOPE, create_request(), idempotency_key="idem-1", actor="pytest", occurred_at=NOW
+        )
+    assert not conn.committed
+
+
+@pytest.mark.parametrize(
+    ("target", "field", "value", "error_type", "message"),
+    [
+        ("run", "version", 2, AipAgentRegistryConflict, "exact revision drifted"),
+        ("run", "model_route_ref", {"drifted": True}, AipAgentRegistryConflict, "execution route differs"),
+        ("run", "policy_ref", {"drifted": True}, AipAgentRegistryConflict, "execution policy differs"),
+        ("capacity", "status", "released", AipAgentRegistryTransitionBlocked, "active capacity"),
+        ("capacity", "expires_at", NOW, AipAgentRegistryTransitionBlocked, "capacity reservation expired"),
+        ("capacity", "route_ref", {"drifted": True}, AipAgentRegistryConflict, "runtime refs drifted"),
+        ("capacity", "model_ref", {"drifted": True}, AipAgentRegistryConflict, "runtime refs drifted"),
+        ("capacity", "provider_ref", {"drifted": True}, AipAgentRegistryConflict, "runtime refs drifted"),
+        ("price", "lifecycle", "suspended", AipAgentRegistryTransitionBlocked, "active exact price"),
+        ("price", "content_hash", "0" * 64, AipAgentRegistryTransitionBlocked, "active exact price"),
+        ("budget", "lifecycle", "suspended", AipAgentRegistryTransitionBlocked, "active exact budget"),
+        ("budget", "content_hash", "0" * 64, AipAgentRegistryTransitionBlocked, "active exact budget"),
+        ("budget", "effective_from", NOW + timedelta(seconds=1), AipAgentRegistryTransitionBlocked, "active exact budget"),
+        ("budget", "effective_until", NOW, AipAgentRegistryTransitionBlocked, "active exact budget"),
+    ],
+)
+def test_create_rejects_runtime_authority_drift_and_expiry_before_insert(
+    target, field, value, error_type, message
+) -> None:
+    conn = CreateConn()
+    original = conn.execute
+
+    def execute(query, args=None):
+        result = original(query, args)
+        matched = (
+            (target == "run" and "FROM aip_agent_run WHERE" in query)
+            or (target == "capacity" and "FROM aip_model_capacity_reservation" in query)
+            or (target == "price" and "FROM aip_model_price_snapshot_revision" in query)
+            or (target == "budget" and "FROM aip_budget_revision" in query)
+        )
+        if matched:
+            result.row[field] = value
+        return result
+
+    conn.execute = execute
+    with pytest.raises(error_type, match=message):
+        AipAgentRunExecutionService(factory(conn)).create(
+            SCOPE,
+            create_request(),
+            idempotency_key="idem-1",
+            actor="pytest",
+            occurred_at=NOW,
         )
     assert not conn.committed
 

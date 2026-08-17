@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+
+import pytest
 
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_contracts import TenantContext
@@ -145,3 +147,83 @@ def test_resolver_checks_gates_against_candidate_hash_not_final_revision(monkeyp
     ]
     assert targets[0].content_hash != route.content_hash
     assert targets[1].content_hash != model.content_hash
+
+
+@pytest.mark.parametrize(
+    ("change", "reason"),
+    [
+        ({"content_hash": "0" * 64}, "model_price_snapshot_drifted"),
+        ({"lifecycle": ModelRuntimeLifecycle.SUSPENDED}, "model_price_snapshot_not_active"),
+        ({"effective_from": NOW + timedelta(seconds=1)}, "model_price_snapshot_not_effective"),
+        ({"effective_until": NOW}, "model_price_snapshot_not_effective"),
+    ],
+)
+def test_price_snapshot_drift_lifecycle_and_effective_range_fail_closed(
+    monkeypatch, change, reason
+) -> None:
+    class Store(ReadyRuntimeStore):
+        def get_price_snapshot(self, *args):
+            return super().get_price_snapshot(*args).model_copy(update=change)
+
+    monkeypatch.setattr(AipModelRuntimeResolver, "_gate_passed", staticmethod(lambda *_: True))
+    monkeypatch.setattr(AipModelRuntimeResolver, "_health_is_fresh", staticmethod(lambda *_: True))
+    result = AipModelRuntimeResolver(store=Store()).resolve(SCOPE, "route-copy", now=NOW)
+    assert result.readiness is ModelRuntimeReadiness.BLOCKED
+    assert reason in result.blocker_codes
+    assert result.selected_model is None and result.selected_provider is None
+
+
+@pytest.mark.parametrize(
+    ("change", "reason"),
+    [
+        ({"content_hash": "0" * 64}, "provider_drifted"),
+        ({"lifecycle": ModelRuntimeLifecycle.SUSPENDED}, "provider_not_active"),
+    ],
+)
+def test_provider_drift_and_lifecycle_fail_closed(monkeypatch, change, reason) -> None:
+    class Store(ReadyRuntimeStore):
+        def get_provider(self, *args):
+            return super().get_provider(*args).model_copy(update=change)
+
+    monkeypatch.setattr(AipModelRuntimeResolver, "_gate_passed", staticmethod(lambda *_: True))
+    monkeypatch.setattr(AipModelRuntimeResolver, "_health_is_fresh", staticmethod(lambda *_: True))
+    result = AipModelRuntimeResolver(store=Store()).resolve(SCOPE, "route-copy", now=NOW)
+    assert result.readiness is ModelRuntimeReadiness.BLOCKED
+    assert reason in result.blocker_codes
+
+
+def test_stale_provider_health_and_failed_eval_gates_fail_closed(monkeypatch) -> None:
+    monkeypatch.setattr(AipModelRuntimeResolver, "_gate_passed", staticmethod(lambda *_: False))
+    monkeypatch.setattr(AipModelRuntimeResolver, "_health_is_fresh", staticmethod(lambda *_: False))
+    result = AipModelRuntimeResolver(store=ReadyRuntimeStore()).resolve(
+        SCOPE, "route-copy", now=NOW
+    )
+    assert result.readiness is ModelRuntimeReadiness.BLOCKED
+    assert {
+        "route_eval_gate_not_passed",
+        "model_eval_gate_not_passed",
+        "provider_health_unavailable_or_stale",
+    } <= set(result.blocker_codes)
+
+
+@pytest.mark.parametrize(
+    ("change", "reason"),
+    [
+        ({"content_hash": "0" * 64}, "model_drifted"),
+        ({"lifecycle": ModelRuntimeLifecycle.SUSPENDED}, "model_not_active"),
+        ({"input_modalities": []}, "model_modality_mismatch"),
+        ({"capabilities": []}, "model_capability_mismatch"),
+    ],
+)
+def test_model_hash_lifecycle_modality_and_capability_fail_closed(
+    monkeypatch, change, reason
+) -> None:
+    class Store(ReadyRuntimeStore):
+        def get_model(self, *args):
+            return super().get_model(*args).model_copy(update=change)
+
+    monkeypatch.setattr(AipModelRuntimeResolver, "_gate_passed", staticmethod(lambda *_: True))
+    monkeypatch.setattr(AipModelRuntimeResolver, "_health_is_fresh", staticmethod(lambda *_: True))
+    result = AipModelRuntimeResolver(store=Store()).resolve(SCOPE, "route-copy", now=NOW)
+    assert result.readiness is ModelRuntimeReadiness.BLOCKED
+    assert reason in result.blocker_codes

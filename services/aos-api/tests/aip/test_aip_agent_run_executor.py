@@ -1,5 +1,7 @@
 from datetime import UTC, datetime
 
+import pytest
+
 from aos_api.aip_agent_registry_contracts import (
     AgentRun,
     AgentRunStatus,
@@ -350,6 +352,64 @@ def test_stale_preflight_blocks_before_attempt_and_provider() -> None:
         raise AssertionError("blocked preflight must fail")
     assert attempts.value is None and llm.calls == 0
     assert runs.transitions == [AgentRunStatus.FAILED]
+
+
+@pytest.mark.parametrize(
+    ("field", "reason"),
+    [
+        ("route", "MODEL_ROUTE_EXACT_REF_DRIFTED"),
+        ("policy", "RUNTIME_POLICY_EXACT_REF_DRIFTED"),
+    ],
+)
+def test_exact_route_and_policy_drift_block_before_attempt_and_provider(
+    field, reason
+) -> None:
+    ready = resolution()
+    drifted = ready.model_copy(update={field: asset(
+        "ModelRouteRevision" if field == "route" else "RuntimePolicyRevision",
+        "route-1" if field == "route" else "policy-1",
+    ).model_copy(update={"content_hash": "0" * 64})})
+    value, runs, attempts, llm, _ = executor(resolver_value=drifted)
+    with pytest.raises(AipAgentRunExecutorError, match=reason) as caught:
+        value.execute(
+            SCOPE,
+            "run-1",
+            execute_request(),
+            idempotency_key="idem-1",
+            actor="pytest",
+            occurred_at=NOW,
+        )
+    assert caught.value.reason_code == reason
+    assert attempts.value is None and llm.calls == 0
+    assert runs.transitions == [AgentRunStatus.FAILED]
+
+
+@pytest.mark.parametrize(
+    ("run_value", "request_version", "reason"),
+    [
+        (run(version=3), 2, "AGENT_RUN_VERSION_DRIFTED"),
+        (run(status=AgentRunStatus.QUEUED), 2, "AGENT_RUN_NOT_RUNNING"),
+    ],
+)
+def test_agent_run_version_and_status_drift_block_before_preflight(
+    run_value, request_version, reason
+) -> None:
+    value, runs, attempts, llm, _ = executor()
+    runs.value = run_value
+    request = execute_request().model_copy(
+        update={"expected_agent_run_version": request_version}
+    )
+    with pytest.raises(AipAgentRunExecutorError, match=reason) as caught:
+        value.execute(
+            SCOPE,
+            "run-1",
+            request,
+            idempotency_key="idem-1",
+            actor="pytest",
+            occurred_at=NOW,
+        )
+    assert caught.value.reason_code == reason
+    assert attempts.value is None and llm.calls == 0 and runs.transitions == []
 
 
 def test_unknown_attempt_write_failure_still_terminalizes_agent_run() -> None:
