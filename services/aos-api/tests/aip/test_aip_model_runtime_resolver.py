@@ -122,3 +122,26 @@ def test_resolver_returns_exact_ready_selection_only_when_all_gates_pass(monkeyp
     assert result.selected_model.asset_id == "model"
     assert result.selected_provider.asset_id == "provider"
     assert result.blocker_codes == []
+
+
+def test_resolver_checks_gates_against_candidate_hash_not_final_revision(monkeypatch) -> None:
+    targets = []
+
+    def capture(_scope, _gate, target, _now):
+        targets.append(target)
+        return True
+
+    monkeypatch.setattr(AipModelRuntimeResolver, "_gate_passed", staticmethod(capture))
+    monkeypatch.setattr(AipModelRuntimeResolver, "_health_is_fresh", staticmethod(lambda *_: True))
+    store = ReadyRuntimeStore()
+    route = store.get_route(SCOPE, "route-copy")
+    model = store.get_model(SCOPE, "model")
+    result = AipModelRuntimeResolver(store=store).resolve(SCOPE, "route-copy", now=NOW)
+
+    assert result.readiness is ModelRuntimeReadiness.READY
+    assert [target.asset_type for target in targets] == [
+        "ModelRouteRevision",
+        "RegisteredModelRevision",
+    ]
+    assert targets[0].content_hash != route.content_hash
+    assert targets[1].content_hash != model.content_hash
