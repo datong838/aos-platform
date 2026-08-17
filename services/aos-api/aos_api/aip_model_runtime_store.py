@@ -76,6 +76,35 @@ def canonical_hash(value: Any) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
+def evaluation_candidate_ref(
+    item: RegisteredModelRevision | ModelRouteRevision,
+) -> VersionedAssetRef:
+    """Return the exact model/route semantics evaluated before publication.
+
+    The final revision hash contains ``evalGateRef`` while the gate decision
+    contains its target hash. Excluding only that back-reference breaks the
+    hash cycle without weakening the canonical hash of the stored revision.
+    """
+    payload = item.model_dump(mode="json", by_alias=True)
+    candidate = {
+        name: value
+        for name, value in payload.items()
+        if name not in AipModelRuntimeStore._META_FIELDS and name != "evalGateRef"
+    }
+    if isinstance(item, RegisteredModelRevision):
+        asset_type = "RegisteredModelRevision"
+        asset_id = item.registered_model_id
+    else:
+        asset_type = "ModelRouteRevision"
+        asset_id = item.route_id
+    return VersionedAssetRef(
+        assetType=asset_type,
+        assetId=asset_id,
+        revision=item.revision,
+        contentHash=canonical_hash(candidate),
+    )
+
+
 class AipModelRuntimeStore:
     _META_FIELDS = {"tenant", "revision", "contentHash", "createdBy", "createdAt"}
     _SPECS = {
@@ -115,12 +144,7 @@ class AipModelRuntimeStore:
                 self._eval_authority_store.require_exact_passed(
                     scope,
                     item.eval_gate_ref,
-                    expected_target=self._ref_for_item(
-                        "RegisteredModelRevision",
-                        item.registered_model_id,
-                        item.revision,
-                        item.content_hash,
-                    ),
+                    expected_target=evaluation_candidate_ref(item),
                 )
         except (ModelGovernancePolicyDependencyBlocked, AipEvalGateDependencyBlocked) as exc:
             raise ModelRuntimeDependencyBlocked(str(exc)) from None
@@ -142,12 +166,7 @@ class AipModelRuntimeStore:
                 self._eval_authority_store.require_exact_passed(
                     scope,
                     item.eval_gate_ref,
-                    expected_target=self._ref_for_item(
-                        "ModelRouteRevision",
-                        item.route_id,
-                        item.revision,
-                        item.content_hash,
-                    ),
+                    expected_target=evaluation_candidate_ref(item),
                 )
             except AipEvalGateDependencyBlocked as exc:
                 raise ModelRuntimeDependencyBlocked(str(exc)) from None

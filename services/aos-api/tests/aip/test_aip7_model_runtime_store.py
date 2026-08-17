@@ -27,6 +27,7 @@ from aos_api.aip_model_runtime_store import (
     ModelRuntimeIdempotencyConflict,
     ModelRuntimeNotFound,
     canonical_hash,
+    evaluation_candidate_ref,
 )
 from aos_api.aip_eval_authority_store import AipEvalGateDependencyBlocked
 from aos_api.aip_runtime_guard_policy_contracts import (
@@ -250,6 +251,42 @@ def test_active_model_publication_requires_exact_target_eval_gate() -> None:
     )
     with pytest.raises(ModelRuntimeDependencyBlocked, match="target drifted"):
         store.publish_model(SCOPE, SUFFIX, "active-model", item)
+
+
+def test_evaluation_candidate_hash_excludes_only_gate_back_reference() -> None:
+    item = hashed(
+        RegisteredModelRevision,
+        dict(
+            tenant=TENANT,
+            registeredModelId=f"{SUFFIX}:candidate-model",
+            revision=1,
+            provider=ref("ProviderInstanceRevision", "provider", "1" * 64),
+            providerModelId="model-test",
+            inputModalities=[ModelModality.TEXT],
+            outputModalities=[ModelModality.TEXT],
+            capabilities=["structured_output"],
+            contextWindow=4096,
+            quotaPolicyRef=ref("QuotaPolicyRevision", "quota", "2" * 64),
+            budgetPolicyRef=ref("BudgetPolicyRevision", "budget", "3" * 64),
+            priceSnapshotRef=ref("ModelPriceSnapshotRevision", "price", "4" * 64),
+            evalGateRef=ref("EvalGateDecision", "gate-a", "5" * 64),
+            lifecycle=ModelRuntimeLifecycle.ACTIVE,
+            createdBy=SUFFIX,
+            createdAt=NOW,
+        ),
+    )
+    other_gate = rehashed(
+        item,
+        evalGateRef=ref("EvalGateDecision", "gate-b", "6" * 64).model_dump(
+            mode="json", by_alias=True
+        ),
+    )
+
+    candidate = evaluation_candidate_ref(item)
+    assert candidate.content_hash == evaluation_candidate_ref(other_gate).content_hash
+    assert candidate.content_hash != item.content_hash
+    changed_semantics = rehashed(item, contextWindow=8192)
+    assert candidate.content_hash != evaluation_candidate_ref(changed_semantics).content_hash
 
 
 def test_store_persists_exact_chain_replays_receipt_and_isolates_tenant() -> None:
