@@ -1,0 +1,54 @@
+{
+  "schema": "aos-workshop-preparation-receipt/v1",
+  "taskId": "workshop-w2-dependency-aos84-authority-convergence-20260817",
+  "recordedAt": "2026-08-17T08:13:09+08:00",
+  "branch": "w2-workshop",
+  "baselineSha": "2ce9d13de84bd2f983ee251cb62357d468592da0",
+  "authorityRevision": "AOS-000084",
+  "result": "AUTHORITY_CONVERGENCE_GREEN_RUNTIME_IMPLEMENTATION_BLOCKED",
+  "scope": {
+    "businessCodeChanged": false,
+    "databaseChanged": false,
+    "migrationExecutedByWorkshop": false,
+    "externalSideEffect": false,
+    "authorityChangedByWorkshop": false,
+    "checkpointChangedByWorkshop": false,
+    "primeMemoryChangedByWorkshop": false
+  },
+  "authorityConvergence": {
+    "phase": "WKS_DEP_0B_R1_04_R1_05_NETWORK_POLICY_EVAL_GATE_EXPIRY_CODE_GREEN",
+    "deliveryStatus": "CODE_CONTROL_GREEN_OPERATIONAL_BLOCKED",
+    "commit": "bd5f722",
+    "verification": "W1_AIP_640_GREEN_M1_640_GREEN_ALEMBIC_HEAD_AIP10_004_OPENAPI_COMPILE_DIFF_GREEN",
+    "activeLeaseCount": 0
+  },
+  "updatedFiles": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/106-W2至W8依赖并行执行准备与冲突控制ADR.md",
+      "preSha256": "3a28bb5a675fe147e6d25f5056c87c0af6ee4092887aa721dbe3b9bc792dfdb2",
+      "postSha256": "0ca63bbb4d1971556dfc1df6d8c9265998c27db785a8682ebff673d43962b406"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "9a765d95da99a709b2a25f38df6a02ebdeb3b3f00e9d57d9291d82e361ab560a",
+      "postSha256": "21f766f19352b06f704e72ff6177994e58b0009a68166de8d254236c22ac5922"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "7ff0dd1722d1a1d1bd4a7cdd5d45ae46b70745b3266454e445e06ef35874d067",
+      "postSha256": "5d6a75237ecb82048314e4f24bb2307464f6b3b38c4107bea5c5a165317d3a3d"
+    }
+  ],
+  "reviewedDeliveryReceipt": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/aip-r1-04-r1-05-network-eval-gate-authority-implementation.json",
+  "remainingBlockers": [
+    "Owner Keychain item and exact ProviderInstance secret reference/version remain blocked",
+    "Approved Region/site evidence remains absent",
+    "Live Provider, Model, Policy, Route, Eval, Health, Capacity, Price, Binding and runnable AgentRun evidence remains blocked",
+    "R2 is not started and W2-00 remains NOT_STARTED because DEP-ADP(query) is operational RED"
+  ],
+  "progress": {
+    "completed": 21,
+    "total": 96,
+    "nextTask": "W2-00"
+  }
+}
