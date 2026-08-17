@@ -1,0 +1,46 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "taskId": "workshop-w2-00a-m1-integration-20260817",
+  "recordedAt": "2026-08-17T13:58:00+08:00",
+  "authorityRevision": "AOS-000089",
+  "branch": "w2-workshop",
+  "baselineSha": "f137914",
+  "integratedM1Sha": "3ce94687d6b37f4e3406bd85dda3e6e4fcb1db88",
+  "mergeCommit": "526d00b",
+  "result": "W2_00A_INTEGRATION_GREEN_W2_00B_BLOCKED",
+  "scope": {
+    "databaseWritePerformed": false,
+    "migrationExecuted": false,
+    "realTenantMutationPerformed": false,
+    "externalEffectPerformed": false,
+    "authorityOrPrimeUpdated": false,
+    "w1UncommittedWorkspaceRead": false
+  },
+  "conflictResolution": {
+    "generatedOpenApi": "regenerated from merged runtime source",
+    "routeRows": 4271,
+    "uniqueOperationPairs": 4261,
+    "openApiOperations": 4261,
+    "paths": 2497,
+    "schemas": 1865,
+    "watchdog": "dependency and fact watches preserve active-turn no-op while ordinary stale turns remain recoverable"
+  },
+  "verification": [
+    "OpenAPI and inventory deterministic check GREEN",
+    "OpenAPI plus Watchdog: 60 passed and 10 subtests passed",
+    "QueryJob canonical adapter Binding readiness and Workshop adjacency: 35 passed",
+    "Web cumulative: 192 files and 1949 tests passed",
+    "TypeScript noEmit GREEN",
+    "compileall GREEN",
+    "Alembic single head aip10_004",
+    "git diff check GREEN",
+    "API /v1/health HTTP 200 and Web / HTTP 200"
+  ],
+  "remainingBlockers": [
+    "Canonical SourceReadinessEnvelope owner and API are absent after m1 integration",
+    "Same-version twelve-source freshness quality cutoff reconciliation EvidencePack is absent",
+    "R1-04 through R1-08 exact operational chain remains incomplete"
+  ],
+  "progress": "21/96",
+  "nextTask": "Wait for canonical SourceReadiness owner API and operational EvidencePack before W2-00B"
+}
