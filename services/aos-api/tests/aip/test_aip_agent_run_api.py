@@ -1,0 +1,73 @@
+from datetime import UTC, datetime
+
+from aos_api.aip_agent_registry_contracts import RegistryReceipt, VersionedAssetRef
+from aos_api.aip_agent_run_execution_contracts import AgentRunExecutionAttempt
+from aos_api.aip_contracts import ResourceRef, TenantContext
+from aos_api.routers import aip_agent_runs
+
+
+NOW = datetime(2026, 8, 17, tzinfo=UTC)
+HASH = "a" * 64
+
+
+def headers(org_id: str = "org-org", **extra: str) -> dict[str, str]:
+    return {"Authorization":"Bearer dev","X-Org-Id":org_id,"X-Project-Id":"dev-project",**extra}
+
+
+def asset(kind: str, value: str):
+    return VersionedAssetRef(assetType=kind, assetId=value, revision=1, contentHash=HASH)
+
+
+def attempt(org_id: str) -> AgentRunExecutionAttempt:
+    return AgentRunExecutionAttempt(
+        tenant=TenantContext(orgId=org_id, projectId="dev-project"), attemptId="attempt-1",
+        agentRunId="run-1", agentRunVersion=1, attemptNo=1,
+        routeRef=asset("ModelRouteRevision","route-1"), policyRef=asset("RuntimePolicyRevision","policy-1"),
+        modelRef=asset("RegisteredModelRevision","model-1"), providerRef=asset("ProviderInstanceRevision","provider-1"),
+        priceSnapshotRef=asset("ModelPriceSnapshotRevision","price-1"), budgetRef=asset("BudgetRevision","budget-1"),
+        capacityReservationRef=ResourceRef(resourceType="CapacityReservation",resourceId="cap-1",revision="1",authority="postgresql"),
+        dataClassification="internal", lineageId="lineage-1", requestHash="b"*64,
+        status="prepared", version=1, preparedAt=NOW, createdBy="user:dev", updatedAt=NOW,
+    )
+
+
+def receipt(org_id: str) -> RegistryReceipt:
+    return RegistryReceipt(
+        tenant=TenantContext(orgId=org_id,projectId="dev-project"), receiptId="receipt-1",
+        operation="agent_run_execution_attempt.create", idempotencyKey="idem-1", requestHash="c"*64,
+        resourceRef=ResourceRef(resourceType="AgentRun",resourceId="run-1",authority="postgresql"),
+        resultRef=ResourceRef(resourceType="AgentRunExecutionAttempt",resourceId="attempt-1",authority="postgresql"),
+        status="applied", createdBy="user:dev", createdAt=NOW,
+    )
+
+
+class Service:
+    def __init__(self): self.scope=None
+    def get(self, scope, attempt_id): self.scope=scope; return attempt(scope.org_id)
+    def list(self, scope, *, agent_run_id, limit): self.scope=scope; return [attempt(scope.org_id)]
+
+
+def test_read_api_is_principal_scoped_and_canary_isolated(client) -> None:
+    service = Service()
+    client.app.dependency_overrides[aip_agent_runs.get_agent_run_execution_service] = lambda: service
+    try:
+        response = client.get("/v1/aip/agent-runs/execution-attempts/attempt-1", headers=headers())
+        assert response.status_code == 200 and response.json()["tenant"]["orgId"] == "org-org"
+        assert service.scope.key == ("org-org","dev-project")
+        response = client.get("/v1/aip/agent-runs/execution-attempts/attempt-1", headers=headers("dev-org"))
+        assert response.status_code == 200 and response.json()["tenant"]["orgId"] == "dev-org"
+        assert service.scope.key == ("dev-org","dev-project")
+    finally:
+        client.app.dependency_overrides.pop(aip_agent_runs.get_agent_run_execution_service, None)
+
+
+def test_write_requires_idempotency_header(client) -> None:
+    response = client.post("/v1/aip/agent-runs/execution-attempts", headers=headers(), json={})
+    assert response.status_code == 400
+
+
+def test_openapi_registers_execution_attempt_authority(client) -> None:
+    paths = client.get("/openapi.json").json()["paths"]
+    assert "/v1/aip/agent-runs/execution-attempts" in paths
+    assert "/v1/aip/agent-runs/execution-attempts/{attempt_id}" in paths
+    assert "/v1/aip/agent-runs/execution-attempts/{attempt_id}/transition" in paths
