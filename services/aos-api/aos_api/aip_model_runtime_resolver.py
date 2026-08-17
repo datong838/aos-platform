@@ -16,7 +16,11 @@ from aos_api.aip_model_runtime_contracts import (
     ModelRuntimeLifecycle,
     ModelRuntimeReadiness,
 )
-from aos_api.aip_model_runtime_store import AipModelRuntimeStore, ModelRuntimeStoreError
+from aos_api.aip_model_runtime_store import (
+    AipModelRuntimeStore,
+    ModelRuntimeStoreError,
+    evaluation_candidate_ref,
+)
 from aos_api.db import connect as db_connect
 from aos_api.tenant_scope import TenantScope
 
@@ -44,7 +48,9 @@ class AipModelRuntimeResolver:
         except ModelRuntimeStoreError:
             blockers.append("runtime_policy_unavailable")
 
-        if not self._gate_passed(scope, route.eval_gate_ref, route_ref, resolved_at):
+        if not self._gate_passed(
+            scope, route.eval_gate_ref, evaluation_candidate_ref(route), resolved_at
+        ):
             blockers.append("route_eval_gate_not_passed")
 
         selected_model = None
@@ -88,7 +94,9 @@ class AipModelRuntimeResolver:
         if not set(route.required_capabilities).issubset(model.capabilities):
             blockers.append("model_capability_mismatch")
         exact_model = self._ref("RegisteredModelRevision", model.registered_model_id, model.revision, model.content_hash)
-        if not self._gate_passed(scope, model.eval_gate_ref, exact_model, now):
+        if not self._gate_passed(
+            scope, model.eval_gate_ref, evaluation_candidate_ref(model), now
+        ):
             blockers.append("model_eval_gate_not_passed")
         price_ref = model.price_snapshot_ref
         try:

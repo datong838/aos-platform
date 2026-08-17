@@ -161,6 +161,17 @@ def test_probe_validates_exact_authority_and_returns_metadata_only():
     assert transport.calls[0]["url"] == "https://apihub.agnes-ai.com/v1/chat/completions"
 
 
+def test_probe_fails_closed_when_expected_response_contract_is_missing():
+    assets, request = assembly()
+    request = request.model_copy(
+        update={"expected_response_behavior": "refusal"}
+    )
+    with pytest.raises(
+        R1BootstrapProbeBlocked, match="provider_response_contract_failed"
+    ):
+        probe(assets).run(TenantScope("org-org", "dev-project"), request)
+
+
 def test_probe_fails_closed_for_cross_tenant_and_unapproved_classification():
     assets, request = assembly()
     with pytest.raises(R1BootstrapProbeBlocked, match="provider_tenant_mismatch"):
@@ -189,4 +200,3 @@ def test_probe_fails_closed_for_model_drift_and_invalid_usage():
     ))
     with pytest.raises(R1BootstrapProbeBlocked, match="provider_response_usage_invalid"):
         probe(assets, transport=transport).run(TenantScope("org-org", "dev-project"), request)
-

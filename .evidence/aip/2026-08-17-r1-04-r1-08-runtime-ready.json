@@ -1,0 +1,66 @@
+{
+  "schema": "aos-aip-r1-runtime-evidence/v1",
+  "status": "RUNTIME_OPERATIONAL_VERIFICATION_PASSED",
+  "verifiedAt": "2026-08-17T07:57:23.296587+00:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "readiness": "ready",
+  "exactRefs": {
+    "provider": "agnes-text-qyh-dev@3#7d94a31ad6249357e22fb3f51b889e8b8f501d32da8ca433de56ca89a55972df",
+    "model": "model-qyh-text-dev@1#14b3adbbd1234522394362df55f183d0adf93d5958b83cf612b9644377b7cce0",
+    "route": "route-qyh-text-dev@1#2e5aa2f6f0f297d2fb65405ced3eb71eb6ed909c3c35fd95f36bacb111ef1d28",
+    "price": "price-qyh-text-dev@1#3f5ed08335529a26ce729310bb602f1d567eb2a3ba40d5e128707da150b7d20c",
+    "capacity": "capacity-qyh-text-dev@1#a455559961171c15b597dd61bdd30fb2d11a49b42d9c88639fc024c0189ee4b2"
+  },
+  "health": {
+    "observationId": "health-agnes-text-qyh-dev-r1-20260817075521",
+    "expiresAt": "2026-08-17T08:10:21.618367+00:00"
+  },
+  "eval": {
+    "goldSetCases": 20,
+    "liveProviderProbeCases": 3,
+    "policyContractCases": 17,
+    "succeededRuns": 2,
+    "failedHistoricalAttemptsRetained": 3,
+    "modelGate": "gate-a8bea863c9bd25e965b358132aeec3f5",
+    "routeGate": "gate-e81b42baf67638fe59e057fb31922eac"
+  },
+  "capacityVerification": {
+    "successfulReservations": 2,
+    "thirdReservationBlocker": "capacity_concurrency_exhausted",
+    "releasedReservations": 2,
+    "exactHashDriftBlocker": "capacity_pool_authority_unavailable"
+  },
+  "failClosed": {
+    "negativeTenant": "model_route not found",
+    "healthExpiry": [
+      "provider_health_unavailable_or_stale"
+    ],
+    "gateExpiry": [
+      "route_eval_gate_not_passed",
+      "model_eval_gate_not_passed"
+    ],
+    "priceExpiry": [
+      "model_price_snapshot_not_effective"
+    ]
+  },
+  "negativeCanaryCounts": {
+    "aip_registered_model_head": 0,
+    "aip_model_route_head": 0,
+    "aip_model_capacity_pool_head": 0
+  },
+  "forbiddenR2SideEffectsBefore": {
+    "CapabilityBinding": 0,
+    "SkillBinding": 0,
+    "AgentRun": 0
+  },
+  "forbiddenR2SideEffectsAfter": {
+    "CapabilityBinding": 0,
+    "SkillBinding": 0,
+    "AgentRun": 0
+  },
+  "sensitivePayloadPersisted": false,
+  "r2Authorized": false
+}

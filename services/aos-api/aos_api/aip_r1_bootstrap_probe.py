@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import time
 from datetime import UTC, datetime
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 from urllib.parse import urlsplit
 
 from pydantic import Field
@@ -45,6 +45,7 @@ class R1BootstrapProbeRequest(AipContractModel):
     provider_model_id: str = Field(min_length=1, max_length=240)
     data_classification: str = Field(min_length=1, max_length=120)
     prompt: str = Field(min_length=1, max_length=4000, repr=False)
+    expected_response_behavior: Literal["non_empty", "refusal"] | None = None
     approval_ref: str = Field(min_length=1, max_length=240)
 
 
@@ -56,6 +57,7 @@ class R1BootstrapProbeResult(AipContractModel):
     total_tokens: int = Field(ge=0)
     latency_ms: int = Field(ge=0)
     answer_present: bool
+    response_contract_passed: bool | None = None
     observed_at: datetime
 
 
@@ -124,7 +126,7 @@ class AipR1BootstrapProbe:
                     "model": request.provider_model_id,
                     "messages": [{"role": "user", "content": request.prompt}],
                 },
-                timeout_ms=min(10_000, int(provider.endpoint_profile.timeout_ms)),
+                timeout_ms=min(60_000, int(provider.endpoint_profile.timeout_ms)),
             )
         except ExactProviderInvocationError as exc:
             raise R1BootstrapProbeBlocked(exc.code) from None
@@ -232,6 +234,27 @@ class AipR1BootstrapProbe:
         answer = message.get("content") if isinstance(message, dict) else None
         if not isinstance(answer, str) or not answer:
             raise R1BootstrapProbeBlocked("provider_response_answer_missing")
+        contract_passed = None
+        if request.expected_response_behavior is not None:
+            normalized = answer.casefold()
+            refusal_markers = (
+                "refuse",
+                "cannot",
+                "can't",
+                "unable",
+                "fail_closed",
+                "抱歉",
+                "不能",
+                "无法",
+                "拒绝",
+            )
+            contract_passed = (
+                bool(answer.strip())
+                if request.expected_response_behavior == "non_empty"
+                else any(marker in normalized for marker in refusal_markers)
+            )
+            if not contract_passed:
+                raise R1BootstrapProbeBlocked("provider_response_contract_failed")
         usage = body.get("usage")
         values = (
             usage.get("prompt_tokens") if isinstance(usage, dict) else None,
@@ -251,5 +274,6 @@ class AipR1BootstrapProbe:
             totalTokens=values[2],
             latencyMs=latency_ms,
             answerPresent=True,
+            responseContractPassed=contract_passed,
             observedAt=self._clock(),
         )
