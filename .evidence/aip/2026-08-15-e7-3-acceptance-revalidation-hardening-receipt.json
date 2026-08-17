@@ -1,0 +1,33 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "task_id": "aip-e7-3-acceptance-revalidation-hardening-20260815",
+  "branch": "w1-aip",
+  "base_sha": "c3a8e4eb0c95148af15893d878dbf9f32e3728f1",
+  "status": "GREEN",
+  "delivery": [
+    "persist retrieval purposes and authorized markings in the accepted context",
+    "revalidate projection purpose, marking, memory applicability and memory marking at acceptance time",
+    "reject a context cutoff later than accepted_at"
+  ],
+  "verification": {
+    "targeted_tests": "13 passed, 7 pre-existing warnings",
+    "ruff_check": "GREEN",
+    "ruff_format": "GREEN",
+    "py_compile": "GREEN",
+    "diff_check": "GREEN"
+  },
+  "pre_sha256": {
+    "services/aos-api/aos_api/aip_memory_retrieval.py": "2f3c5650685539a0ba47c07d5c277b07de3875698d19bad896323b3b11db1e48",
+    "services/aos-api/tests/aip/test_aip_memory_retrieval.py": "f4543b1d7d4bdecb7488bde2256a844a6e88d52bc1bf6fce624bb0f33c08f554"
+  },
+  "post_sha256": {
+    "services/aos-api/aos_api/aip_memory_retrieval.py": "0691a2c896e25e5c4476472e8b9093de9971616481c4a454838662fe64e80054",
+    "services/aos-api/tests/aip/test_aip_memory_retrieval.py": "f33e342435136c9b2af9628e60264700cc46a93d345491b431a5244b18244c96"
+  },
+  "exclusions": [
+    "no migration",
+    "no API or UI",
+    "no real tenant write",
+    "no w2-workshop access"
+  ]
+}

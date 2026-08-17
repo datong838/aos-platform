@@ -1,0 +1,100 @@
+{
+  "schema": "aos-aip-bind1-evidence/v1",
+  "wave": "BIND-3B",
+  "taskId": "aip-bind1-3b-skill-binding-readiness-20260815",
+  "authorityRevision": "AOS-000039",
+  "baseCommit": "b82d0f9f81177787f7b5d7440a769f7e4ea4d96b",
+  "observedAt": "2026-08-15T04:20:54Z",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "usage": "real-target-read-only"
+  },
+  "negativeCanary": {
+    "orgId": "dev-org",
+    "projectId": "dev-project",
+    "usage": "isolation-only"
+  },
+  "result": "GREEN_WITH_WARNINGS",
+  "implemented": [
+    "SkillBinding create is provisioning-only and fixes an exact BudgetPolicyRevision",
+    "published Skill publication tenant and required Capability coverage are checked before create",
+    "readiness aggregates exact publication, gate, active instance, capability health, route, policy and budget authorities",
+    "readiness reasons are unique and sorted and the dependency snapshot is deterministic",
+    "evaluation persists tenant-scoped CAS state and an append-only RegistryReceipt",
+    "activation requires a fresh AVAILABLE result and transaction-adjacent snapshot revalidation"
+  ],
+  "verification": {
+    "targetedTests": {
+      "result": "GREEN",
+      "passed": 25,
+      "command": "uv run --project services/aos-api pytest -q test_aip_skill_binding_readiness_service.py test_aip_agent_registry_store.py test_aip6_capability_run_handoff.py test_aip_skill_publication_service.py test_aip_binding_readiness_service.py"
+    },
+    "cumulativeNonDestructiveTests": {
+      "result": "GREEN",
+      "passed": 51,
+      "command": "uv run --project services/aos-api pytest -q BIND-3/BIND-2/AIP-7/AgentRegistry non-destructive test set"
+    },
+    "ruff": {
+      "result": "GREEN",
+      "scope": "all changed production files, new readiness test, and changed registry test"
+    },
+    "gitDiffCheck": "GREEN",
+    "alembic": {
+      "current": "bind1_003",
+      "heads": [
+        "bind1_003"
+      ],
+      "singleHead": true
+    },
+    "liveReadback": {
+      "org-org/dev-project": {
+        "agentInstances": 6,
+        "activeAgentInstances": 0,
+        "capabilityBindings": 0,
+        "skillBindings": 0
+      },
+      "dev-org/dev-project": {
+        "agentInstances": 0,
+        "activeAgentInstances": 0,
+        "capabilityBindings": 0,
+        "skillBindings": 0
+      },
+      "skillLifecycle": {
+        "evaluated": 37,
+        "published": 0
+      }
+    }
+  },
+  "warnings": [
+    "No real Skill publication or binding was created; BIND-3B validates the governed code path without fabricating tenant completion.",
+    "The destructive migration downgrade test cannot run after publication tests have inserted published fixtures; bind1_003 correctly fails closed instead of dropping provenance. It is excluded from the non-destructive cumulative set and no real database cleanup was performed.",
+    "Existing schema-shadow and duplicate OpenAPI operation warnings remain outside this wave."
+  ],
+  "fileHashes": {
+    "services/aos-api/aos_api/aip_agent_registry_contracts.py": {
+      "before": "b01c364d34b4c5ec3fed66d835291a3daf44cb18c16859235c72fe9bd4711072",
+      "after": "cbc17772a7d50f4344a6f9fab354aa41a7f1ef7848c1b53427aa723c79c2ce54"
+    },
+    "services/aos-api/aos_api/aip_skill_registry.py": {
+      "before": "458b87dd288a401f3aba81c81299744e1358f5620beb2e7dfdd44cb38c4a709d",
+      "after": "f14a67c191c340244236e8a4ad5f72a646aa35340f88e48b81e5748ec4c9712d"
+    },
+    "services/aos-api/aos_api/aip_skill_binding_readiness_service.py": {
+      "before": null,
+      "after": "fcbf8975c6661af58873a9fdb63be89878652a1e6960c07474096ecf7c2f3d08"
+    },
+    "services/aos-api/tests/aip/test_aip_skill_binding_readiness_service.py": {
+      "before": null,
+      "after": "f927797a346fc91e629bb1f1368dfb9bd4393605d20f07c83f505434fd995e4b"
+    },
+    "services/aos-api/tests/aip/test_aip_agent_registry_store.py": {
+      "before": "3f76c05ddc7e35333c038889f3a86c74635892c746c7876783dfe5768022fc00",
+      "after": "e41661ccc1faa42dcb0cc4acb96c82638faca0ed0afb176f09e76ac5fe015cfc"
+    },
+    "services/aos-api/tests/aip/test_aip6_capability_run_handoff.py": {
+      "before": "93c46c2509864c2d3305cb39ffa1ef9db2bba9c3b6a7b4a3b7fbd7d07d7d909e",
+      "after": "28c06d7bf596532299d388c4992d1099412efd4b06e90823f88d284730c8b2d3"
+    }
+  }
+}

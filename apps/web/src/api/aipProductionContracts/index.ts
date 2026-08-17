@@ -1,10 +1,18 @@
 import { apiGet, apiPost } from "../client";
-import type { CompileStageTemplateInput, CreateArtifactRelationInput, CreateEvalContractInput, CreateResponsibilityPlanInput, CreateReviewIssueInput, CreateStageTemplateInput, CreateTaskBriefInput, ResolveReviewIssueInput, ReturnReviewIssueInput, ReviseEvalContractInput, ReviseResponsibilityPlanInput, ReviseStageTemplateInput } from "./contracts";
-import { parseArtifactRelation, parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContract, parseEvalContractList, parseResponsibilityPlan, parseResponsibilityPlanList, parseReturnDecision, parseReviewIssue, parseReviewIssueList, parseStageCompilation, parseStageTemplate, parseStageTemplateList, parseTaskBrief } from "./parser";
+import type { CompileStageTemplateInput, CreateArtifactRelationInput, CreateEvalContractInput, CreateImpactPreviewInput, CreateResponsibilityPlanInput, CreateReviewIssueInput, CreateStageTemplateInput, CreateTaskBriefInput, ProductionStartInput, ResolveReviewIssueInput, ReturnReviewIssueInput, ReviseEvalContractInput, ReviseImpactPreviewInput, ReviseResponsibilityPlanInput, ReviseStageTemplateInput } from "./contracts";
+import { parseArtifactRelation, parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContract, parseEvalContractList, parseImpactPreview, parseImpactPreviewList, parseProductionStartDecision, parseProductionStartDecisionList, parseResponsibilityPlan, parseResponsibilityPlanList, parseReturnDecision, parseReviewIssue, parseReviewIssueList, parseStageCompilation, parseStageTemplate, parseStageTemplateList, parseTaskBrief } from "./parser";
 
 const ROOT="/v1/aip/production-contracts";
 function keyHeaders(key:string){if(!key.trim())throw new Error("Idempotency-Key 不能为空");return{"Idempotency-Key":key};}
 export const aipProductionContracts={
+  async listImpactPreviews(){return parseImpactPreviewList(await apiGet<unknown>(`${ROOT}/impact-previews`));},
+  async getImpactPreview(previewId:string,revision?:number){return parseImpactPreview(await apiGet<unknown>(`${ROOT}/impact-previews/${encodeURIComponent(previewId)}${revision?`?revision=${revision}`:""}`));},
+  async createImpactPreview(input:CreateImpactPreviewInput,key:string){return parseImpactPreview(await apiPost<unknown>(`${ROOT}/impact-previews`,input,keyHeaders(key)));},
+  async reviseImpactPreview(previewId:string,input:ReviseImpactPreviewInput,key:string){return parseImpactPreview(await apiPost<unknown>(`${ROOT}/impact-previews/${encodeURIComponent(previewId)}/revisions`,input,keyHeaders(key)));},
+  async freezeImpactPreview(previewId:string,expectedVersion:number,key:string){return parseImpactPreview(await apiPost<unknown>(`${ROOT}/impact-previews/${encodeURIComponent(previewId)}/freeze`,{expectedVersion},keyHeaders(key)));},
+  async startProduction(input:ProductionStartInput,key:string){return parseProductionStartDecision(await apiPost<unknown>(`${ROOT}/production-runs/start`,input,keyHeaders(key)));},
+  async listProductionStartDecisions(){return parseProductionStartDecisionList(await apiGet<unknown>(`${ROOT}/production-start-decisions`));},
+  async getProductionStartDecision(decisionId:string){return parseProductionStartDecision(await apiGet<unknown>(`${ROOT}/production-start-decisions/${encodeURIComponent(decisionId)}`));},
   async listBriefs(){return parseBriefList(await apiGet<unknown>(`${ROOT}/task-briefs`));},
   async listBundles(){return parseBundleList(await apiGet<unknown>(`${ROOT}/evidence-bundles`));},
   async createBrief(input:CreateTaskBriefInput,key:string){return parseTaskBrief(await apiPost<unknown>(`${ROOT}/task-briefs`,input,keyHeaders(key)));},

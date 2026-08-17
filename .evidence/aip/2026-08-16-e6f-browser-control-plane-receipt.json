@@ -1,0 +1,51 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-E6F-BROWSER-CONTROL-PLANE-20260816",
+  "status": "CODE_CONTROL_BROWSER_GREEN_OPERATIONAL_BLOCKED",
+  "branch": "w1-aip",
+  "baseCommit": "9a26a267a66612bd46fca2cd7d86dd3d1b37dcec",
+  "observedAt": "2026-08-16T19:49:56+08:00",
+  "tenantPolicy": {
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "manualBusinessWrites": false
+  },
+  "browser": {
+    "url": "http://localhost:5173/aip/memory-governance",
+    "interaction": "opened Cold Start and Retrieval view",
+    "endpoint": "GET /v1/aip/memory-authority/knowledge-readiness",
+    "httpStatus": 200,
+    "observedAuthority": {
+      "knowledgePackageInstallation": "knowledge_package_installation_authority_unavailable",
+      "knowledgeSourceCount": 0,
+      "searchReferenceCount": 0,
+      "goldSet": "gold_set_registry_authority_unavailable",
+      "fulltext": "unbuilt/capability_not_registered",
+      "vector": "unbuilt/capability_not_registered",
+      "rerank": "unbuilt/capability_not_registered"
+    },
+    "conclusion": "browser interaction and fail-closed rendering are GREEN; operational knowledge data, provider, capability and eval remain BLOCKED"
+  },
+  "runtimeBoundary": {
+    "viteProxy": "http://127.0.0.1:8000",
+    "temporaryApiProcess": "stopped after read-only page verification",
+    "startupSideEffectsObserved": [
+      "legacy schema ensure and idempotent seed checks",
+      "real datasource SSH tunnel prebuild",
+      "cron worker startup"
+    ],
+    "futureRule": "do not start a temporary API for browser evidence without an authorized runtime and real-side-effect lease"
+  },
+  "document": {
+    "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/AIP通用能力实施方案/全量开发清单/06-AIP三层记忆行业Wiki与知识治理开发清单.md",
+    "preSha256": "71d256712790ce118a7eaf82ef010c9e25de74c19b278dd29681502a5d5fccab",
+    "postSha256": "31352278446a718a6c7f57a92803e4f7b752ee7e15ed8665fffa3ecb7383db5b"
+  },
+  "noCompletionClaims": [
+    "No beauty knowledge package was installed",
+    "No trusted search provider or lane capability was registered",
+    "No approved GoldSet or retrieval quality result was created",
+    "No operational readiness was claimed"
+  ],
+  "protectedUntrackedExcluded": ".evidence/aip/2026-08-14-watchdog-w2c-recovery-blocked-receipt.json"
+}

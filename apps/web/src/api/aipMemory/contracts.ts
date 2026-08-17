@@ -219,6 +219,50 @@ export type KnowledgeReadiness = {
   observedAt: string;
 };
 
+export const MEMORY_PROJECTION_STATUSES = ["active", "suspended", "revoked", "expired", "stale"] as const;
+export type VersionedAssetRef = { assetType: string; assetId: string; revision: number; contentHash: string };
+export type MemoryAgentInstance = {
+  tenant: TenantContext; instanceId: string; instanceRef: VersionedAssetRef; template: VersionedAssetRef;
+  status: "provisioning" | "active" | "suspended" | "deleted";
+  overlay: { displayName?: string; allowedCapabilityIds: string[] };
+  version: number; createdBy: string; createdAt: string; updatedAt: string;
+};
+export type MemoryRevisionExactRef = { memoryItemId: string; revision: number; contentHash: string };
+export type MemoryProjectionExactRef = { projectionId: string; version: number; contentHash: string };
+export type MemoryAgentProjection = {
+  tenant: TenantContext; projectionRef: MemoryProjectionExactRef; kind: "personal" | "shared";
+  ownerInstanceRef: VersionedAssetRef; memoryRef: MemoryRevisionExactRef; recipientInstanceRefs: VersionedAssetRef[];
+  allowedPurposes: string[]; allowedMarkings: string[]; disclosure: "citation_only" | "governed_summary";
+  status: typeof MEMORY_PROJECTION_STATUSES[number]; effectiveAt: string; expiresAt: string;
+  createdBy: string; createdAt: string; updatedAt: string;
+};
+export type CreateMemoryAgentProjectionRequest = Omit<MemoryAgentProjection, "tenant" | "projectionRef" | "status" | "createdBy" | "createdAt" | "updatedAt"> & { projectionId: string };
+export type MemoryExposure = {
+  tenant: TenantContext; exposureId: string; agentRunRef: ResourceRef; taskRunRef: ResourceRef;
+  agentInstanceRef: VersionedAssetRef; skillRef: VersionedAssetRef; logicRef: VersionedAssetRef;
+  projectionRef: MemoryProjectionExactRef; memoryRef: MemoryRevisionExactRef; evalContractRef: VersionedAssetRef;
+  timeCutoff: string; acceptedAt: string; exposureHash: string;
+};
+export type ImprovementMetric = {
+  metricName: "human_edit_rate" | "task_success_rate" | "citation_acceptance_rate";
+  baselineValue: number; treatmentValue: number; baselineSampleSize: number; treatmentSampleSize: number;
+  confidenceIntervalLower?: number; confidenceIntervalUpper?: number;
+};
+export type MemoryImprovementObservation = {
+  tenant: TenantContext; observationId: string; agentInstanceRef: VersionedAssetRef;
+  metricDefinitionRef: VersionedAssetRef; evalContractRef: VersionedAssetRef;
+  evalReportRef?: VersionedAssetRef; baselineCohortRef?: VersionedAssetRef; treatmentCohortRef?: VersionedAssetRef;
+  exposureRefs: VersionedAssetRef[]; metrics: ImprovementMetric[]; quality: "measured" | "estimated" | "unknown";
+  sourceRefs: VersionedAssetRef[]; cutoffAt: string; observedAt: string;
+  conclusion: "improved" | "unchanged" | "regressed" | "insufficient_evidence";
+  limitations: string[]; observationHash: string;
+};
+export type MemoryRevocationImpact = {
+  tenant: TenantContext; projectionRef: MemoryProjectionExactRef; projectionStatus: string;
+  recipientCount: number; exposureCount: number; affectedAgentRunCount: number;
+  affectedAgentRunRefs: ResourceRef[]; reEvaluationStatus: "not_required" | "required" | "blocked"; blockerCodes: string[];
+};
+
 function record(value: unknown, label: string): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new TypeError(`${label} 响应格式无效`);
   return value as Record<string, unknown>;
@@ -526,3 +570,99 @@ export function parseKnowledgePipelineAlert(value: unknown): KnowledgePipelineAl
   return { tenant: parseTenant(v.tenant, "alert.tenant"), alertId: text(v.alertId, "alertId"), pipelineRunId: text(v.pipelineRunId, "alert.pipelineRunId"), code: text(v.code, "alert.code"), severity: enumValue(v.severity, PIPELINE_ALERT_SEVERITIES, "alert.severity"), evidenceRef: parseResourceRef(v.evidenceRef, "alert.evidenceRef"), alertHash: sha(v.alertHash, "alertHash"), createdAt: text(v.createdAt, "alert.createdAt") };
 }
 export function parseKnowledgePipelineAlerts(value: unknown): KnowledgePipelineAlert[] { if (!Array.isArray(value)) throw new TypeError("PipelineAlert 列表响应格式无效"); return value.map(parseKnowledgePipelineAlert); }
+
+function parseVersionedAssetRef(value: unknown, label: string, expectedType?: string): VersionedAssetRef {
+  const v = record(value, label);
+  const result = { assetType: text(v.assetType, `${label}.assetType`), assetId: text(v.assetId, `${label}.assetId`), revision: integer(v.revision, `${label}.revision`), contentHash: sha(v.contentHash, `${label}.contentHash`) };
+  if (expectedType && result.assetType !== expectedType) throw new TypeError(`${label} 必须引用 ${expectedType}`);
+  return result;
+}
+function parseMemoryRevisionRef(value: unknown, label: string): MemoryRevisionExactRef {
+  const v = record(value, label);
+  return { memoryItemId: text(v.memoryItemId, `${label}.memoryItemId`), revision: integer(v.revision, `${label}.revision`), contentHash: sha(v.contentHash, `${label}.contentHash`) };
+}
+function parseProjectionRef(value: unknown, label: string): MemoryProjectionExactRef {
+  const v = record(value, label);
+  return { projectionId: text(v.projectionId, `${label}.projectionId`), version: integer(v.version, `${label}.version`), contentHash: sha(v.contentHash, `${label}.contentHash`) };
+}
+function uniqueAssetRefs(value: unknown, label: string, expectedType?: string): VersionedAssetRef[] {
+  if (!Array.isArray(value)) throw new TypeError(`${label} 无效`);
+  const refs = value.map((item, index) => parseVersionedAssetRef(item, `${label}[${index}]`, expectedType));
+  if (new Set(refs.map((ref) => `${ref.assetType}:${ref.assetId}:${ref.revision}:${ref.contentHash}`)).size !== refs.length) throw new TypeError(`${label} 重复`);
+  return refs;
+}
+function fraction(value: unknown, label: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 1) throw new TypeError(`${label} 无效`);
+  return value;
+}
+function signedFraction(value: unknown, label: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < -1 || value > 1) throw new TypeError(`${label} 无效`);
+  return value;
+}
+
+export function parseMemoryAgentInstances(value: unknown): MemoryAgentInstance[] {
+  const wrapper = record(value, "AgentInstanceList"); const tenant = parseTenant(wrapper.tenant, "AgentInstanceList.tenant");
+  if (!Array.isArray(wrapper.items)) throw new TypeError("AgentInstanceList.items 无效");
+  const items = wrapper.items.map((raw, index) => {
+    const v = record(raw, `AgentInstance[${index}]`); const instanceTenant = parseTenant(v.tenant, `AgentInstance[${index}].tenant`);
+    if (!sameTenant(tenant, instanceTenant)) throw new TypeError("AgentInstance tenant 不一致");
+    const instanceRef = parseVersionedAssetRef(v.instanceRef, `AgentInstance[${index}].instanceRef`, "AgentInstance");
+    const instanceId = text(v.instanceId, `AgentInstance[${index}].instanceId`); const version = integer(v.version, `AgentInstance[${index}].version`);
+    if (instanceRef.assetId !== instanceId || instanceRef.revision !== version) throw new TypeError("AgentInstance exact ref/version 不一致");
+    const overlay = record(v.overlay, `AgentInstance[${index}].overlay`);
+    return { tenant: instanceTenant, instanceId, instanceRef, template: parseVersionedAssetRef(v.template, `AgentInstance[${index}].template`, "AgentTemplate"), status: enumValue(v.status, ["provisioning", "active", "suspended", "deleted"] as const, `AgentInstance[${index}].status`), overlay: { displayName: optionalText(overlay.displayName, `AgentInstance[${index}].overlay.displayName`), allowedCapabilityIds: strings(overlay.allowedCapabilityIds, `AgentInstance[${index}].overlay.allowedCapabilityIds`) }, version, createdBy: text(v.createdBy, `AgentInstance[${index}].createdBy`), createdAt: text(v.createdAt, `AgentInstance[${index}].createdAt`), updatedAt: text(v.updatedAt, `AgentInstance[${index}].updatedAt`) };
+  });
+  if (nonNegativeInteger(wrapper.count, "AgentInstanceList.count") !== items.length) throw new TypeError("AgentInstanceList count 不一致");
+  return items;
+}
+
+export function parseMemoryAgentProjection(value: unknown): MemoryAgentProjection {
+  const v = record(value, "MemoryProjection"); const kind = enumValue(v.kind, ["personal", "shared"] as const, "projection.kind");
+  const owner = parseVersionedAssetRef(v.ownerInstanceRef, "projection.ownerInstanceRef", "AgentInstance");
+  const recipients = uniqueAssetRefs(v.recipientInstanceRefs, "projection.recipientInstanceRefs", "AgentInstance");
+  if ((kind === "personal" && recipients.length) || (kind === "shared" && !recipients.length)) throw new TypeError("projection personal/shared recipient 不变量失败");
+  if (recipients.some((item) => item.assetId === owner.assetId)) throw new TypeError("projection owner 不得成为 recipient");
+  const effectiveAt = text(v.effectiveAt, "projection.effectiveAt"); const expiresAt = text(v.expiresAt, "projection.expiresAt");
+  if (!(Date.parse(expiresAt) > Date.parse(effectiveAt))) throw new TypeError("projection 有效期无效");
+  return { tenant: parseTenant(v.tenant, "projection.tenant"), projectionRef: parseProjectionRef(v.projectionRef, "projection.projectionRef"), kind, ownerInstanceRef: owner, memoryRef: parseMemoryRevisionRef(v.memoryRef, "projection.memoryRef"), recipientInstanceRefs: recipients, allowedPurposes: strings(v.allowedPurposes, "projection.allowedPurposes", true), allowedMarkings: strings(v.allowedMarkings, "projection.allowedMarkings", true), disclosure: enumValue(v.disclosure, ["citation_only", "governed_summary"] as const, "projection.disclosure"), status: enumValue(v.status, MEMORY_PROJECTION_STATUSES, "projection.status"), effectiveAt, expiresAt, createdBy: text(v.createdBy, "projection.createdBy"), createdAt: text(v.createdAt, "projection.createdAt"), updatedAt: text(v.updatedAt, "projection.updatedAt") };
+}
+export function parseMemoryAgentProjections(value: unknown): MemoryAgentProjection[] { if (!Array.isArray(value)) throw new TypeError("MemoryProjection 列表响应格式无效"); return value.map(parseMemoryAgentProjection); }
+
+export function parseMemoryExposures(value: unknown): MemoryExposure[] {
+  if (!Array.isArray(value)) throw new TypeError("MemoryExposure 列表响应格式无效");
+  return value.map((raw, index) => {
+    const v = record(raw, `MemoryExposure[${index}]`); if ("payload" in v || "chunks" in v || "content" in v) throw new TypeError("MemoryExposure 不得包含正文");
+    const agentRunRef = parseResourceRef(v.agentRunRef, `MemoryExposure[${index}].agentRunRef`); const taskRunRef = parseResourceRef(v.taskRunRef, `MemoryExposure[${index}].taskRunRef`);
+    if (agentRunRef.resourceType !== "AgentRun" || !agentRunRef.revision || taskRunRef.resourceType !== "TaskRun" || !taskRunRef.revision) throw new TypeError("MemoryExposure Run ref 非 exact");
+    const timeCutoff = text(v.timeCutoff, `MemoryExposure[${index}].timeCutoff`); const acceptedAt = text(v.acceptedAt, `MemoryExposure[${index}].acceptedAt`);
+    if (!(Date.parse(acceptedAt) >= Date.parse(timeCutoff))) throw new TypeError("MemoryExposure acceptedAt 早于 timeCutoff");
+    return { tenant: parseTenant(v.tenant, `MemoryExposure[${index}].tenant`), exposureId: text(v.exposureId, `MemoryExposure[${index}].exposureId`), agentRunRef, taskRunRef, agentInstanceRef: parseVersionedAssetRef(v.agentInstanceRef, `MemoryExposure[${index}].agentInstanceRef`, "AgentInstance"), skillRef: parseVersionedAssetRef(v.skillRef, `MemoryExposure[${index}].skillRef`, "SkillTemplate"), logicRef: parseVersionedAssetRef(v.logicRef, `MemoryExposure[${index}].logicRef`, "LogicRevision"), projectionRef: parseProjectionRef(v.projectionRef, `MemoryExposure[${index}].projectionRef`), memoryRef: parseMemoryRevisionRef(v.memoryRef, `MemoryExposure[${index}].memoryRef`), evalContractRef: parseVersionedAssetRef(v.evalContractRef, `MemoryExposure[${index}].evalContractRef`, "EvalContract"), timeCutoff, acceptedAt, exposureHash: sha(v.exposureHash, `MemoryExposure[${index}].exposureHash`) };
+  });
+}
+
+export function parseMemoryImprovementObservations(value: unknown): MemoryImprovementObservation[] {
+  if (!Array.isArray(value)) throw new TypeError("ImprovementObservation 列表响应格式无效");
+  return value.map((raw, index) => {
+    const v = record(raw, `Observation[${index}]`); const quality = enumValue(v.quality, ["measured", "estimated", "unknown"] as const, `Observation[${index}].quality`); const conclusion = enumValue(v.conclusion, ["improved", "unchanged", "regressed", "insufficient_evidence"] as const, `Observation[${index}].conclusion`);
+    if (!Array.isArray(v.metrics)) throw new TypeError(`Observation[${index}].metrics 无效`);
+    const metrics = v.metrics.map((rawMetric, metricIndex) => { const metric = record(rawMetric, `Observation[${index}].metrics[${metricIndex}]`); const lower = metric.confidenceIntervalLower == null ? undefined : signedFraction(metric.confidenceIntervalLower, "confidenceIntervalLower"); const upper = metric.confidenceIntervalUpper == null ? undefined : signedFraction(metric.confidenceIntervalUpper, "confidenceIntervalUpper"); if ((lower === undefined) !== (upper === undefined) || (lower !== undefined && upper !== undefined && lower > upper)) throw new TypeError("Observation confidence interval 无效"); return { metricName: enumValue(metric.metricName, ["human_edit_rate", "task_success_rate", "citation_acceptance_rate"] as const, "metricName"), baselineValue: fraction(metric.baselineValue, "baselineValue"), treatmentValue: fraction(metric.treatmentValue, "treatmentValue"), baselineSampleSize: integer(metric.baselineSampleSize, "baselineSampleSize"), treatmentSampleSize: integer(metric.treatmentSampleSize, "treatmentSampleSize"), confidenceIntervalLower: lower, confidenceIntervalUpper: upper }; });
+    if (new Set(metrics.map((item) => item.metricName)).size !== metrics.length) throw new TypeError("Observation metricName 重复");
+    const sourceRefs = uniqueAssetRefs(v.sourceRefs, `Observation[${index}].sourceRefs`); const exposureRefs = uniqueAssetRefs(v.exposureRefs, `Observation[${index}].exposureRefs`, "MemoryExposure");
+    if (sourceRefs.some((ref) => !["EvalReport", "EvidenceSnapshot", "MetricSnapshot"].includes(ref.assetType))) throw new TypeError("Observation sourceRef 不是受治理证据");
+    const optionalRef = (rawRef: unknown, label: string, expected: string) => rawRef == null ? undefined : parseVersionedAssetRef(rawRef, label, expected);
+    const comparable = { evalReportRef: optionalRef(v.evalReportRef, "evalReportRef", "EvalReport"), baselineCohortRef: optionalRef(v.baselineCohortRef, "baselineCohortRef", "CohortSnapshot"), treatmentCohortRef: optionalRef(v.treatmentCohortRef, "treatmentCohortRef", "CohortSnapshot") };
+    if (quality === "unknown" && (metrics.length || sourceRefs.length || comparable.evalReportRef || comparable.baselineCohortRef || comparable.treatmentCohortRef || conclusion !== "insufficient_evidence")) throw new TypeError("unknown improvement 不得伪造指标或提升结论");
+    if (quality !== "unknown" && (!metrics.length || !sourceRefs.length || !exposureRefs.length || !comparable.evalReportRef || !comparable.baselineCohortRef || !comparable.treatmentCohortRef)) throw new TypeError("measured/estimated improvement 缺 exact 证据");
+    const cutoffAt = text(v.cutoffAt, `Observation[${index}].cutoffAt`); const observedAt = text(v.observedAt, `Observation[${index}].observedAt`);
+    if (!(Date.parse(observedAt) >= Date.parse(cutoffAt))) throw new TypeError("Observation observedAt 早于 cutoffAt");
+    return { tenant: parseTenant(v.tenant, `Observation[${index}].tenant`), observationId: text(v.observationId, `Observation[${index}].observationId`), agentInstanceRef: parseVersionedAssetRef(v.agentInstanceRef, `Observation[${index}].agentInstanceRef`, "AgentInstance"), metricDefinitionRef: parseVersionedAssetRef(v.metricDefinitionRef, `Observation[${index}].metricDefinitionRef`, "MetricDefinition"), evalContractRef: parseVersionedAssetRef(v.evalContractRef, `Observation[${index}].evalContractRef`, "EvalContract"), ...comparable, exposureRefs, metrics, quality, sourceRefs, cutoffAt, observedAt, conclusion, limitations: strings(v.limitations, `Observation[${index}].limitations`), observationHash: sha(v.observationHash, `Observation[${index}].observationHash`) };
+  });
+}
+
+export function parseMemoryRevocationImpact(value: unknown): MemoryRevocationImpact {
+  const v = record(value, "MemoryRevocationImpact"); if ("payload" in v || "chunks" in v || "content" in v) throw new TypeError("MemoryRevocationImpact 不得包含正文");
+  if (!Array.isArray(v.affectedAgentRunRefs)) throw new TypeError("affectedAgentRunRefs 无效");
+  const refs = v.affectedAgentRunRefs.map((raw, index) => { const ref = parseResourceRef(raw, `affectedAgentRunRefs[${index}]`); if (ref.resourceType !== "AgentRun" || !ref.revision) throw new TypeError("affectedAgentRunRef 非 exact"); return ref; });
+  const affectedAgentRunCount = nonNegativeInteger(v.affectedAgentRunCount, "affectedAgentRunCount"); if (refs.length !== affectedAgentRunCount) throw new TypeError("affectedAgentRunCount 不一致");
+  return { tenant: parseTenant(v.tenant, "impact.tenant"), projectionRef: parseProjectionRef(v.projectionRef, "impact.projectionRef"), projectionStatus: text(v.projectionStatus, "impact.projectionStatus"), recipientCount: nonNegativeInteger(v.recipientCount, "recipientCount"), exposureCount: nonNegativeInteger(v.exposureCount, "exposureCount"), affectedAgentRunCount, affectedAgentRunRefs: refs, reEvaluationStatus: enumValue(v.reEvaluationStatus, ["not_required", "required", "blocked"] as const, "reEvaluationStatus"), blockerCodes: strings(v.blockerCodes, "blockerCodes") };
+}

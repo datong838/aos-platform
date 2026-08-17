@@ -177,7 +177,18 @@ class WatchdogTest(unittest.TestCase):
         self.assertEqual(1, status.pending_tool_calls)
         self.assertEqual("tool-running", decision)
 
-    def test_running_turn_prevents_recovery_even_after_grace(self):
+    def test_recent_running_turn_prevents_recovery(self):
+        self.write(
+            task_event("1970-01-01T00:00:05Z", "task_started"),
+            record("1970-01-01T00:00:10Z", "user"),
+        )
+        decision, status = watchdog.evaluate(
+            self.config(), {}, now=150, rollout_path=self.transcript
+        )
+        self.assertTrue(status.turn_running)
+        self.assertEqual("turn-running", decision)
+
+    def test_stale_running_turn_without_activity_allows_recovery(self):
         self.write(
             task_event("1970-01-01T00:00:05Z", "task_started"),
             record("1970-01-01T00:00:10Z", "user"),
@@ -186,7 +197,17 @@ class WatchdogTest(unittest.TestCase):
             self.config(), {}, now=1000, rollout_path=self.transcript
         )
         self.assertTrue(status.turn_running)
-        self.assertEqual("turn-running", decision)
+        self.assertEqual("recover", decision)
+
+    def test_invalid_turn_silence_configuration_fails_closed(self):
+        self.write(
+            task_event("1970-01-01T00:00:05Z", "task_started"),
+            record("1970-01-01T00:00:10Z", "user"),
+        )
+        config = self.config()
+        config["max_turn_silence_seconds"] = 0
+        with self.assertRaisesRegex(RuntimeError, "max_turn_silence_seconds"):
+            watchdog.evaluate(config, {}, now=1000, rollout_path=self.transcript)
 
     def test_completed_failed_turn_allows_recovery(self):
         self.write(

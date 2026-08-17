@@ -59,6 +59,13 @@ export const AIP_OPERATIONS = {
   listMemoryPipelineRunEvents: { method: "GET", path: "/v1/aip/memory-authority/pipelines/runs/{pipeline_run_id}/events", mutation: false },
   getMemoryPipelineReceipt: { method: "GET", path: "/v1/aip/memory-authority/pipelines/runs/{pipeline_run_id}/receipt", mutation: false },
   listMemoryPipelineAlerts: { method: "GET", path: "/v1/aip/memory-authority/pipelines/runs/{pipeline_run_id}/alerts", mutation: false },
+  listMemoryAgentInstances: { method: "GET", path: "/v1/aip/agents", mutation: false },
+  listMemoryAgentProjections: { method: "GET", path: "/v1/aip/memory-authority/agent-projections", mutation: false },
+  createMemoryAgentProjection: { method: "POST", path: "/v1/aip/memory-authority/agent-projections", mutation: true },
+  revokeMemoryAgentProjection: { method: "POST", path: "/v1/aip/memory-authority/agent-projections/{projection_id}/revoke", mutation: true },
+  getMemoryAgentProjectionImpact: { method: "GET", path: "/v1/aip/memory-authority/agent-projections/{projection_id}/impact?observedAt={observed_at}", mutation: false },
+  listMemoryExposures: { method: "GET", path: "/v1/aip/memory-authority/memory-exposures", mutation: false },
+  listMemoryImprovementObservations: { method: "GET", path: "/v1/aip/memory-authority/improvement-observations", mutation: false },
 } as const;
 
 export type AipOperationId = keyof typeof AIP_OPERATIONS;

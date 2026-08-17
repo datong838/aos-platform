@@ -5,6 +5,10 @@ import {
   type ArtifactRelationListResponse,
   type EvalContractListResponse,
   type EvidenceBundleListResponse,
+  type ImpactDimension,
+  type ImpactPreviewListResponse,
+  type ImpactPreviewRevision,
+  type ProductionStartDecisionListResponse,
   type ResponsibilityPlanListResponse,
   type ReviewIssueListResponse,
   type StageTemplateListResponse,
@@ -20,16 +24,20 @@ type AuthorityState = {
   stages: StageTemplateListResponse;
   relations: ArtifactRelationListResponse;
   reviews: ReviewIssueListResponse;
+  previews: ImpactPreviewListResponse;
+  starts: ProductionStartDecisionListResponse;
 };
 
 const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 16 } as const;
 const itemStyle = { padding: "14px 0", borderTop: "1px solid var(--aos-border)" } as const;
-const label: Record<string, string> = { ready: "就绪", blocked: "阻断", stale: "过期", unknown: "未知", draft: "草稿", frozen: "已冻结", complete: "完整", partial: "部分" };
+const label: Record<string, string> = { ready: "就绪", blocked: "阻断", stale: "过期", unknown: "未知", measured: "实测", estimated: "估算", draft: "草稿", frozen: "已冻结", complete: "完整", partial: "部分" };
+const impactLabels: Record<string,string>={objectScope:"对象范围",channelScope:"渠道范围",cost:"成本",budget:"预算余量",risks:"主要风险",reversibility:"回滚/补偿",approvalChain:"审批链",rateCapacityKill:"限速/容量/熔断"};
 
 function Blockers({ items }: { items: ContractBlocker[] }) {
   if (!items.length) return null;
   return <ul aria-label="阻断原因" style={{ margin: "8px 0 0", paddingLeft: 20 }}>{items.map(item => <li key={`${item.code}:${item.message}`}><code>{item.code}</code> · {item.message}</li>)}</ul>;
 }
+function Quality({name,item}:{name:string;item:ImpactDimension}){return <div style={{padding:"8px 10px",border:"1px solid var(--aos-border)",borderRadius:6}}><strong>{impactLabels[name]??name}</strong><div>{item.quality==="unknown"?"未知（不以 0 代替）":label[item.quality]??item.quality}</div><small>{item.sourceRefs.length} 条来源{item.cutoffAt?` · 截止 ${new Date(item.cutoffAt).toLocaleString()}`:""}</small></div>}
 
 export function ProductionContractsPage() {
   const [state, setState] = useState<AuthorityState | null>(null);
@@ -43,16 +51,24 @@ export function ProductionContractsPage() {
   const [reviewIssueId, setReviewIssueId] = useState("");
   const [reviewRunId, setReviewRunId] = useState("");
   const [reviewReason, setReviewReason] = useState("");
+  const [previewId,setPreviewId]=useState("");
+  const [startTaskVersion,setStartTaskVersion]=useState("1");
+  const [proposalId,setProposalId]=useState("");
+  const [proposalVersion,setProposalVersion]=useState("1");
+  const [proposalHash,setProposalHash]=useState("");
+  const [logicGraphId,setLogicGraphId]=useState("");
+  const [logicRevision,setLogicRevision]=useState("1");
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [briefs, bundles, evals, plans, stages, relations, reviews] = await Promise.all([
+      const [briefs, bundles, evals, plans, stages, relations, reviews, previews, starts] = await Promise.all([
         aipProductionContracts.listBriefs(), aipProductionContracts.listBundles(),
         aipProductionContracts.listEvalContracts(), aipProductionContracts.listResponsibilityPlans(),
         aipProductionContracts.listStageTemplates(), aipProductionContracts.listArtifactRelations(),
-        aipProductionContracts.listReviewIssues(),
+        aipProductionContracts.listReviewIssues(), aipProductionContracts.listImpactPreviews(),
+        aipProductionContracts.listProductionStartDecisions(),
       ]);
-      setState({ briefs, bundles, evals, plans, stages, relations, reviews });
+      setState({ briefs, bundles, evals, plans, stages, relations, reviews, previews, starts });
       setError("");
     } catch (e) {
       setState(null);
@@ -87,13 +103,18 @@ export function ProductionContractsPage() {
   const canReviewCommand = Boolean(selectedReview && reviewReason.trim());
   const resolveReview = () => { if (selectedReview && canReviewCommand) void run(`review:${selectedReview.issueId}`, () => aipProductionContracts.resolveReviewIssue(selectedReview.issueId, { expectedVersion: selectedReview.version, reason: reviewReason.trim(), resolutionRefs: [] }, `w2-ui-review-resolve-${crypto.randomUUID()}`)); };
   const returnReview = () => { if (selectedReview && canReviewCommand && reviewRunId.trim()) void run(`review:${selectedReview.issueId}`, () => aipProductionContracts.returnReviewIssue(selectedReview.issueId, { expectedVersion: selectedReview.version, runId: reviewRunId.trim(), targetStage: selectedReview.returnStage, reason: reviewReason.trim(), attemptIdempotencyKey: `w2-ui-attempt-${crypto.randomUUID()}` }, `w2-ui-review-return-${crypto.randomUUID()}`)); };
+  const selectedPreview=state?.previews.items.find(item=>item.previewId===previewId);
+  const positiveInteger=(value:string)=>Number.isInteger(Number(value))&&Number(value)>0;
+  const startDisabledReason=(()=>{if(!selectedPreview)return"请选择 ImpactPreview exact revision";if(selectedPreview.lifecycle!=="frozen")return"Preview 尚未冻结";if(selectedPreview.readiness!=="ready")return`Preview 当前为${label[selectedPreview.readiness]??selectedPreview.readiness}`;if(selectedPreview.blockers.length)return"Preview 仍有权威阻断";if(new Date(selectedPreview.expiresAt).getTime()<=Date.now())return"Preview 已过期，请刷新并重新评估";if(!positiveInteger(startTaskVersion))return"Task version 必须大于 0";if(!proposalId.trim()||!positiveInteger(proposalVersion)||!/^[0-9a-f]{64}$/.test(proposalHash))return"请填写 ActionProposal ID、version 与 64 位 exact hash";if(!logicGraphId.trim()||!positiveInteger(logicRevision))return"请填写 LogicGraph ID 与 revision";return"";})();
+  const freezePreview=(item:ImpactPreviewRevision)=>run(`preview:${item.previewId}`,()=>aipProductionContracts.freezeImpactPreview(item.previewId,item.version,`w2-ui-preview-freeze-${crypto.randomUUID()}`));
+  const startProduction=()=>{if(!selectedPreview||startDisabledReason)return;void run("production:start",()=>aipProductionContracts.startProduction({taskId:selectedPreview.taskId,expectedTaskVersion:Number(startTaskVersion),planRef:selectedPreview.planRef,previewRef:{resourceType:"ImpactPreviewRevision",resourceId:selectedPreview.previewId,revision:selectedPreview.revision,contentHash:selectedPreview.contentHash},actionProposalRef:{proposalId:proposalId.trim(),version:Number(proposalVersion),proposalHash},logicGraphId:logicGraphId.trim(),logicRevision:Number(logicRevision)},`w2-ui-production-start-${crypto.randomUUID()}`));};
 
   return <PageChrome title="生产契约" lede="Brief、Evidence、Eval、Responsibility、Stage、Artifact Relation 与 Review 的租户权威视图；冻结不等于启动运行">
     {error && <div role="alert" className="notice bad">生产契约读取或操作失败：{error}</div>}
     {loading ? <div role="status" className="card">正在读取 PostgreSQL Production Contract authority…</div> : null}
     {!loading && state ? <>
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
-        <strong>{state.briefs.count} Brief</strong><span>{state.bundles.count} Evidence</span><span>{state.evals.count} Eval</span><span>{state.plans.count} Responsibility</span><span>{state.stages.count} Stage</span><span>{state.relations.count} Relation</span><span>{state.reviews.count} Review</span>
+        <strong>{state.briefs.count} Brief</strong><span>{state.bundles.count} Evidence</span><span>{state.evals.count} Eval</span><span>{state.plans.count} Responsibility</span><span>{state.stages.count} Stage</span><span>{state.relations.count} Relation</span><span>{state.reviews.count} Review</span><span>{state.previews.count} Preview</span><span>{state.starts.count} Start Decision</span>
         <button className="btn" onClick={() => void load()}>刷新权威状态</button>
         <button className="btn primary" disabled title="必须从真实 Task 与权威依赖创建；本页不生成样例或隐式权威">创建契约（需真实依赖）</button>
       </div>
@@ -120,6 +141,32 @@ export function ProductionContractsPage() {
           {state.reviews.count === 0 ? <div className="notice">当前组织尚无 Review Issue。问题必须绑定 exact Artifact、EvalReport 与 Evidence。</div> : state.reviews.items.map(item => <article key={item.issueId} style={itemStyle}><div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}><strong>{item.severity} · {item.issueId}</strong><span>{item.status}</span></div><p>{item.suggestedFix}</p><small>退回 Stage：{item.returnStage} · version {item.version}</small></article>)}
         </div>
       </section>
+      <section className="card" style={{ padding:18,marginTop:16 }} aria-label="Impact Preview 与 Start 组合门">
+        <h2 style={{marginTop:0}}>Impact Preview 与 Start 组合门</h2>
+        <p>Preview 只呈现权威影响评估；unknown 不显示为 0。只有 frozen + ready 的 exact revision 才能提交组合门，且成功只代表创建 canonical TaskRun，不代表 AgentRun 或 Provider 已运行。</p>
+        {state.previews.count===0?<div className="notice">当前组织尚无 ImpactPreview。请从真实 Task、Plan 与冻结的生产契约创建；本页不生成样例 Preview、费用或运行状态。</div>:state.previews.items.map(item=>{const canFreeze=item.lifecycle==="draft"&&item.readiness==="ready"&&!item.blockers.length;return <article key={`${item.previewId}@${item.revision}`} style={itemStyle}>
+          <div style={{display:"flex",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}><strong>{item.previewId}@{item.revision}</strong><span>{label[item.lifecycle]??item.lifecycle} · {label[item.readiness]??item.readiness}</span></div>
+          <p>Task <code>{item.taskId}</code> · 到期 {new Date(item.expiresAt).toLocaleString()}</p>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(170px,1fr))",gap:8}}>{Object.entries(item.impact).map(([name,dimension])=><Quality key={name} name={name} item={dimension}/>)}</div>
+          <Blockers items={item.blockers}/>
+          <details style={{marginTop:10}}><summary>展开 exact refs</summary><ul><li>Plan <code>{item.planRef.resourceId}@{item.planRef.revision}</code></li><li>Brief <code>{item.briefRef.resourceId}@{item.briefRef.revision}</code></li><li>Evidence <code>{item.evidenceBundleRef.resourceId}@{item.evidenceBundleRef.revision}</code></li><li>Eval <code>{item.evalContractRef.resourceId}@{item.evalContractRef.revision}</code></li><li>Responsibility <code>{item.responsibilityPlanRef.resourceId}@{item.responsibilityPlanRef.revision}</code></li><li>Stage <code>{item.stageTemplateRef.resourceId}@{item.stageTemplateRef.revision}</code></li><li>dependency snapshot <code>{item.dependencySnapshotHash.slice(0,16)}…</code></li></ul></details>
+          {item.lifecycle==="draft"?<button className="btn" disabled={!canFreeze||busy===`preview:${item.previewId}`} title={canFreeze?"冻结当前就绪 Preview exact revision":"Preview 非 ready 或仍有 blocker，禁止冻结"} onClick={()=>void freezePreview(item)} style={{marginTop:10}}>{busy===`preview:${item.previewId}`?"冻结中…":"冻结 Preview"}</button>:null}
+        </article>})}
+        <h3>受控创建 TaskRun</h3>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12}}>
+          <label>ImpactPreview<select value={previewId} onChange={event=>setPreviewId(event.target.value)}><option value="">选择 exact revision</option>{state.previews.items.map(item=><option key={`${item.previewId}@${item.revision}`} value={item.previewId}>{item.previewId}@{item.revision} · {label[item.lifecycle]??item.lifecycle}/{label[item.readiness]??item.readiness}</option>)}</select></label>
+          <label>Task version<input type="number" min="1" value={startTaskVersion} onChange={event=>setStartTaskVersion(event.target.value)}/></label>
+          <label>ActionProposal ID<input value={proposalId} onChange={event=>setProposalId(event.target.value)} placeholder="proposal-…"/></label>
+          <label>Proposal version<input type="number" min="1" value={proposalVersion} onChange={event=>setProposalVersion(event.target.value)}/></label>
+          <label>Proposal exact hash<input value={proposalHash} onChange={event=>setProposalHash(event.target.value.trim())} placeholder="64 位 SHA-256"/></label>
+          <label>LogicGraph ID<input value={logicGraphId} onChange={event=>setLogicGraphId(event.target.value)} placeholder="logic-…"/></label>
+          <label>Logic revision<input type="number" min="1" value={logicRevision} onChange={event=>setLogicRevision(event.target.value)}/></label>
+        </div>
+        {startDisabledReason?<div className="notice" role="status" style={{marginTop:12}}>启动门保持关闭：{startDisabledReason}。可先刷新权威状态；若依赖漂移，请回到对应 authority 修订后创建新 Preview。</div>:<div className="notice" style={{marginTop:12}}>组合门输入完整；服务端仍会重新核验 Preview、Proposal、Approval、Lease、Route、Binding 与容量。</div>}
+        <button className="btn primary" disabled={Boolean(startDisabledReason)||busy==="production:start"} title={startDisabledReason||"只创建 canonical TaskRun；不启动 AgentRun/Provider"} onClick={startProduction} style={{marginTop:12}}>{busy==="production:start"?"组合门核验中…":"通过组合门并创建 TaskRun"}</button>
+        <h3>Start Decision 审计记录</h3>
+        {state.starts.count===0?<div className="notice">当前组织尚无 Start Decision；这表示没有提交过组合门，不等于运行成功。</div>:state.starts.items.map(item=><article key={item.decisionId} style={itemStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><strong>{item.decisionId}</strong><span>{item.status==="started"?"已创建 TaskRun（尚未启动 AgentRun）":label[item.status]??item.status}</span></div><p>Task <code>{item.taskId}</code> · Preview <code>{item.previewRef.resourceId}@{item.previewRef.revision}</code></p>{item.taskRunRef?<small>TaskRun <code>{item.taskRunRef.resourceId}</code></small>:null}<Blockers items={item.blockers}/></article>)}
+      </section>
       <section className="card" style={{ padding: 18, marginTop: 16 }} aria-label="Stage 编译命令">
         <h2 style={{ marginTop: 0 }}>Stage 编译为 canonical Plan 草稿</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
@@ -139,7 +186,7 @@ export function ProductionContractsPage() {
         </div>
         <div style={{ display: "flex", gap: 10, marginTop: 12 }}><button className="btn" disabled={!canReviewCommand || Boolean(busy)} onClick={resolveReview}>标记已解决</button><button className="btn primary" disabled={!canReviewCommand || !reviewRunId.trim() || Boolean(busy)} title="只向真实 running TaskRun 的目标 Stage 追加 queued attempt" onClick={returnReview}>退回目标 Stage</button></div>
       </section>
-      <div className="notice" style={{ marginTop: 16 }}>运行门保持阻断：Production Contract authority 齐备且冻结，仍不等于 AgentRun 可启动；W2-D Impact / Start Gate 与 AIP-7 Route / Provider / Binding 必须独立通过。</div>
+      <div className="notice" style={{ marginTop: 16 }}>W2-D Preview / Start 组合门已接入 PostgreSQL authority；即使 Start Decision 为 started，也只创建 canonical TaskRun。AgentRun、Route、Provider、Binding 与容量仍由独立服务端门禁控制。</div>
     </> : null}
   </PageChrome>;
 }

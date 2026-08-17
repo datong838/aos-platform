@@ -18,17 +18,18 @@ class Usage:
     def record(self,scope,lineage,resolved,response):return ["usage-1"]
 
 def test_exact_adapter_returns_authority_refs_without_secret_or_mock():
-    adapter=LLMAdapter(resolver=Resolver(resolution()),provider_invoker=lambda resolved,prompt:{"answer":"真实回答","provider":"provider-1","model":"model-1","tokens":12,"route":"exact"},usage_bridge=Usage())
-    result=adapter.chat_exact(SCOPE,"route-1","问题",lineage_id="lineage-1")
+    adapter=LLMAdapter(resolver=Resolver(resolution()),provider_invoker=lambda resolved,prompt,classification:{"answer":"真实回答","provider":"provider-1","model":"model-1","tokens":12,"route":"exact"},usage_bridge=Usage())
+    result=adapter.chat_exact(SCOPE,"route-1","问题",lineage_id="lineage-1",data_classification="approved_internal_knowledge")
     assert result["routeRef"]["assetId"]=="route-1" and result["providerRef"]["assetId"]=="provider-1"
     assert "secret" not in str(result).lower()
 
 def test_legacy_and_blocked_calls_fail_closed():
     adapter=LLMAdapter(resolver=Resolver(resolution(ModelRuntimeReadiness.BLOCKED)))
     with pytest.raises(LLMRuntimeBlocked,match="exact_scope_and_model_route_required"):adapter.chat("问题")
-    with pytest.raises(LLMRuntimeBlocked,match="provider_health_unavailable_or_stale"):adapter.chat_exact(SCOPE,"route-1","问题",lineage_id="lineage-1")
+    with pytest.raises(LLMRuntimeBlocked,match="provider_health_unavailable_or_stale"):adapter.chat_exact(SCOPE,"route-1","问题",lineage_id="lineage-1",data_classification="approved_internal_knowledge")
+    with pytest.raises(LLMRuntimeBlocked,match="data_classification_required"):adapter.chat_exact(SCOPE,"route-1","问题",lineage_id="lineage-1")
 
 @pytest.mark.parametrize("response",[{"answer":"fallback","provider":"mock","model":"mock","tokens":10,"route":"mock-fallback"},{"answer":"真实回答","provider":"provider-1","model":"model-1","route":"exact"}])
 def test_mock_or_unknown_usage_is_rejected(response):
     adapter=LLMAdapter(resolver=Resolver(resolution()),provider_invoker=lambda *_:response,usage_bridge=Usage())
-    with pytest.raises(LLMRuntimeBlocked):adapter.chat_exact(SCOPE,"route-1","问题",lineage_id="lineage-1")
+    with pytest.raises(LLMRuntimeBlocked):adapter.chat_exact(SCOPE,"route-1","问题",lineage_id="lineage-1",data_classification="approved_internal_knowledge")

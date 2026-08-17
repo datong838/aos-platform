@@ -1,0 +1,85 @@
+{
+  "schema": "aos-aip-delivery-receipt/v1",
+  "receipt_id": "AIP5-E7-1-20260814-001",
+  "task_id": "aip-e7-1-agent-memory-projection-migration-20260814",
+  "wave": "AIP-5-E7-1",
+  "status": "GREEN",
+  "tenant_effect": "SCHEMA_ONLY_ZERO_BACKFILL",
+  "base_revision": "AOS-000026",
+  "base_git_sha": "5261257754af07093adf93de7a58f00060adf9c7",
+  "branch": "w1-aip",
+  "created_at": "2026-08-14T19:37:03+08:00",
+  "scope": {
+    "changed_files": [
+      "services/aos-api/alembic/versions/aip5_005_agent_memory_projection.py",
+      "services/aos-api/tests/aip/test_aip5_e7_memory_projection_migration.py",
+      ".evidence/aip/2026-08-14-e7-1-agent-memory-projection-migration-delivery-receipt.json"
+    ],
+    "excluded": [
+      "apps/web",
+      "aos-platform-w2-workshop",
+      "real-tenant-data",
+      "external-provider-effects"
+    ]
+  },
+  "file_hashes": [
+    {
+      "path": "services/aos-api/alembic/versions/aip5_005_agent_memory_projection.py",
+      "before_sha256": null,
+      "after_sha256": "85ff7d70e73daee8cb1f18522dae4e093edd3f26de37fe34adf1a34f4083a103"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_aip5_e7_memory_projection_migration.py",
+      "before_sha256": null,
+      "after_sha256": "f4b3d583631824d90671f60b53e3f67b6804de4b8cd06337c59ff46fcba1d78b"
+    }
+  ],
+  "migration": {
+    "revision": "aip5_005",
+    "down_revision": "w2_004",
+    "head_count": 1,
+    "current": "aip5_005",
+    "tables": [
+      "aip_memory_agent_projection",
+      "aip_memory_agent_projection_recipient",
+      "aip_memory_agent_projection_event",
+      "aip_memory_agent_projection_receipt",
+      "aip_memory_exposure",
+      "aip_memory_improvement_observation"
+    ],
+    "row_counts_after_upgrade": [0, 0, 0, 0, 0, 0],
+    "rls": "ENABLED_AND_FORCED",
+    "audit_tables": "APPEND_ONLY",
+    "projection_updates": "CAS_STATUS_ONLY_WITH_MUTABLE_EXACT_SNAPSHOT_HASH",
+    "downgrade": "EMPTY_TABLES_ONLY"
+  },
+  "verification": [
+    {
+      "command": "pytest test_aip5_e7_memory_projection_migration.py test_aip_memory_projection_contracts.py",
+      "result": "GREEN",
+      "summary": "12 passed; 7 pre-existing warnings"
+    },
+    {
+      "command": "isolated Alembic downgrade w2_004 and upgrade head",
+      "result": "GREEN"
+    },
+    {
+      "command": "shared development schema empty downgrade and revised upgrade",
+      "result": "GREEN",
+      "summary": "aip5_005 single head; six tables remain zero rows"
+    },
+    {
+      "command": "compileall and git diff --check",
+      "result": "GREEN"
+    }
+  ],
+  "side_effects": {
+    "database_schema_changed": true,
+    "database_business_rows_written": false,
+    "database_backfill": false,
+    "provider_call": false,
+    "agent_run_started": false,
+    "browser_required": false
+  },
+  "next_gate": "AIP5_E7_2_PROJECTION_STORE_SERVICE_RECEIPT_CAS"
+}

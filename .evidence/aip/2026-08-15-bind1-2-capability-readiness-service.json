@@ -1,0 +1,58 @@
+{
+  "schema": "aos-aip-delivery-receipt/v1",
+  "wave": "AIP-BIND-1/BIND-2",
+  "status": "GREEN_WITH_WARNINGS",
+  "tenant": {
+    "real": "org-org/dev-project",
+    "negative_canary": "dev-org/dev-project"
+  },
+  "base_commit": "bd96c86a52c8517f6d0bb52db3a056cf6cf7765a",
+  "authority_revision": "AOS-000038",
+  "occurred_at": "2026-08-15T10:42:14+08:00",
+  "scope": [
+    "services/aos-api/aos_api/aip_agent_registry_contracts.py",
+    "services/aos-api/aos_api/aip_capability_binding_service.py",
+    "services/aos-api/aos_api/aip_binding_readiness_service.py",
+    "services/aos-api/alembic/versions/bind1_002_provider_instance_ref.py",
+    "services/aos-api/tests/aip/test_aip_agent_registry_contracts.py",
+    "services/aos-api/tests/aip/test_bind1_002_provider_instance_ref_migration.py",
+    "services/aos-api/tests/aip/test_aip_binding_readiness_service.py",
+    "services/aos-api/tests/aip/test_aip6_capability_run_handoff.py"
+  ],
+  "plan": {
+    "path": "docs/palantier/20_tech/电商平台接入/AIP通用能力实施方案/31-AIP-BIND-1六数字同事实例与共享Capability运行绑定实施清单.md",
+    "pre_sha256": "d0f13abebee74f8e9d351e2983f19117a71ec802e2fc3161e247a5c21cc39a0f",
+    "post_sha256": "b759a68d74cc7aea9a433e6fcc2cb65fa011ddf305fa5418e09f148fc2ab2d8d",
+    "correction": "ProviderRevision was rejected in favor of canonical AIP-7 ProviderInstanceRevision"
+  },
+  "file_hashes": {
+    "services/aos-api/aos_api/aip_agent_registry_contracts.py": "de9ae9f167758879e9da71db5f42a64c8945450898c43e98b11d472aaafc8e87",
+    "services/aos-api/aos_api/aip_capability_binding_service.py": "e2c2c1b502f1d923c4b7d567c262670c6060fdaf5134bb24e10f1df388bc80b6",
+    "services/aos-api/aos_api/aip_binding_readiness_service.py": "1711c18febf3e5729b79812d10cc50190351b44456463e34f6cba168a30b64af",
+    "services/aos-api/alembic/versions/bind1_002_provider_instance_ref.py": "d053710766ee92ee5c0ea8ccb1568c87e78d15cb5c905b4a9f1c85707670a499",
+    "services/aos-api/tests/aip/test_aip_agent_registry_contracts.py": "5eb7c1ef8cfe806d04ce1098724018ee3fd7f69751dba982712ff3cf8942bc41",
+    "services/aos-api/tests/aip/test_bind1_002_provider_instance_ref_migration.py": "b61a2d6ca089db9cd8c7de4df75b7c76d57d68d0c9835592492dfc8a874a7df2",
+    "services/aos-api/tests/aip/test_aip_binding_readiness_service.py": "398510395b3ad25db06809826ea1c65609f283a3746d309a3ba4c4306ad65ee5",
+    "services/aos-api/tests/aip/test_aip6_capability_run_handoff.py": "a849b483ff10d2e32a8a14044fe5522d5803c5042eb07d1a5b96178bc4ae6ae9"
+  },
+  "verification": {
+    "targeted_and_adjacent_tests": "30 passed",
+    "alembic_head": "bind1_002",
+    "compileall": "GREEN",
+    "git_diff_check": "GREEN",
+    "ruff": "UNAVAILABLE_IN_WORKSPACE"
+  },
+  "closed_risks": [
+    "catalog readiness is no longer used as tenant activation authority",
+    "activation uses server time and recomputes exact dependency readiness",
+    "snapshot hashing canonicalizes set-like dependency reference arrays",
+    "Route, ProviderInstance, RuntimePolicy and EvalGate exact refs must agree",
+    "expired, drifted, missing or cross-tenant evidence fails closed"
+  ],
+  "warnings": [
+    "No real tenant Provider/Route/Eval/License/Budget evidence exists yet, so no CapabilityBinding was created or activated",
+    "ruff is not installed in the service virtual environment",
+    "Previously observed ecommerce solution-pack 1.2.0 versus 1.3.0 regression remains outside this exact scope"
+  ],
+  "next_gate": "BIND-3 Skill publication gate and SkillBinding readiness"
+}

@@ -39,3 +39,23 @@ describe("W2-C production contract SDK",()=>{
     expect(transport.apiPost).toHaveBeenCalledWith("/v1/aip/production-contracts/review-issues/issue-1/return",input,{"Idempotency-Key":"return-1"});
   });
 });
+
+describe("W2-D production contract SDK",()=>{
+  beforeEach(()=>{transport.apiGet.mockReset();transport.apiPost.mockReset();});
+  it("读取 Preview 与 StartDecision authority",async()=>{
+    transport.apiGet.mockResolvedValue({tenant,items:[],count:0});
+    await aipProductionContracts.listImpactPreviews();await aipProductionContracts.listProductionStartDecisions();
+    expect(transport.apiGet.mock.calls.map(call=>call[0])).toEqual(["/v1/aip/production-contracts/impact-previews","/v1/aip/production-contracts/production-start-decisions"]);
+  });
+  it("冻结 Preview 使用 expectedVersion 与幂等键",async()=>{
+    transport.apiPost.mockRejectedValue(new Error("parser fixture not needed"));
+    await expect(aipProductionContracts.freezeImpactPreview("preview 1",3,"freeze-1")).rejects.toThrow();
+    expect(transport.apiPost).toHaveBeenCalledWith("/v1/aip/production-contracts/impact-previews/preview%201/freeze",{expectedVersion:3},{"Idempotency-Key":"freeze-1"});
+  });
+  it("Start 只提交组合门输入并携带幂等键",async()=>{
+    const input={taskId:"task-1",expectedTaskVersion:2,planRef:exact("PlanRevision","plan-1"),previewRef:exact("ImpactPreviewRevision","preview-1"),actionProposalRef:{proposalId:"proposal-1",version:1,proposalHash:hash},logicGraphId:"logic-1",logicRevision:1};
+    transport.apiPost.mockRejectedValue(new Error("parser fixture not needed"));
+    await expect(aipProductionContracts.startProduction(input,"start-1")).rejects.toThrow();
+    expect(transport.apiPost).toHaveBeenCalledWith("/v1/aip/production-contracts/production-runs/start",input,{"Idempotency-Key":"start-1"});
+  });
+});

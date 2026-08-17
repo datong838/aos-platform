@@ -1,0 +1,36 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "task_id": "aip-watchdog-stale-turn-ack-protocol-20260815",
+  "branch": "w1-aip",
+  "base_sha": "65aad29d70a9d830284fe848e869f5fb9084a443",
+  "status": "GREEN",
+  "scope": [
+    "scripts/long-task-watchdog/watchdog.py",
+    "scripts/long-task-watchdog/test_watchdog.py",
+    "/Users/ddt/.codex/long-task-watchdog/config.json"
+  ],
+  "changes": [
+    "仅把有新活动的 task_started 判作 turn-running；超过 max_turn_silence_seconds 且无新活动时重新进入恢复判定",
+    "生产配置补齐 Recovery Ack、w1-aip 分支、权限预检、精确可写根目录和 300 秒 turn 静默阈值",
+    "保留 5/10/15 分钟递增、最大 60 分钟的传输失败退避策略"
+  ],
+  "verification": {
+    "unit_tests": "31 passed",
+    "py_compile": "GREEN",
+    "json_config": "GREEN",
+    "diff_check": "GREEN",
+    "live_status": "turn-running; no duplicate resume while current turn has fresh activity"
+  },
+  "post_sha256": {
+    "scripts/long-task-watchdog/watchdog.py": "04be20fdcac45b56091f68fd5a32ead2da2ea336f76344c015ad5a8d1df880e9",
+    "scripts/long-task-watchdog/test_watchdog.py": "d5cca1c6dc9bd8ba6d04b31d4610d409cc75f68a93475030f641205d4cb55ca6",
+    "/Users/ddt/.codex/long-task-watchdog/config.json": "894242db278784297ef9cd5952da6b57f534ce5d7aef349b983211808f393bcf"
+  },
+  "exclusions": [
+    "no database migration",
+    "no apps/web change",
+    "no real tenant data write",
+    "no external provider effect",
+    "no w2-workshop access"
+  ]
+}

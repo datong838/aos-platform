@@ -1,0 +1,43 @@
+{
+  "schema": "aos-aip-delivery-evidence/v1",
+  "wave": "BIND1_3A_SKILL_PUBLICATION_GATE",
+  "status": "GREEN_WITH_WARNINGS",
+  "tenantBoundary": {
+    "real": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "commits": {
+    "w1Aip": "af96889e758e252d9a2175b3f1720af707b02d0f",
+    "m1": "af96889e758e252d9a2175b3f1720af707b02d0f"
+  },
+  "database": {
+    "alembicCurrent": "bind1_003",
+    "alembicHead": "bind1_003",
+    "evaluatedSkillCount": 37,
+    "publishedSkillCount": 0,
+    "orgOrgSkillBindingCount": 0,
+    "orgOrgCapabilityBindingCount": 0,
+    "devOrgSkillBindingCount": 0,
+    "devOrgCapabilityBindingCount": 0
+  },
+  "verification": [
+    "22 targeted and adjacent tests passed on m1 after bind1_003",
+    "real PostgreSQL EvalSuite -> EvalRun -> EvalReport -> passed Gate -> PublicationEvent -> immutable published Skill r2 -> RegistryReceipt test passed",
+    "source evaluated r1 remained immutable and idempotent replay returned the same r2 and Receipt",
+    "compileall, Alembic single head/current and git diff check passed"
+  ],
+  "warnings": [
+    "No real org-org Skill was published and no Agent is runnable",
+    "Four A6E solution-pack tests remain RED because bundle metadata is 1.3.0 while the historical publisher/tests require 1.2.0; this is the separately registered ecommerce solution-pack version-alignment gap",
+    "Ruff is unavailable in the service virtual environment"
+  ],
+  "fileHashes": {
+    "aip_agent_registry_contracts.py": "b01c364d34b4c5ec3fed66d835291a3daf44cb18c16859235c72fe9bd4711072",
+    "aip_skill_registry.py": "458b87dd288a401f3aba81c81299744e1358f5620beb2e7dfdd44cb38c4a709d",
+    "aip_skill_publication_service.py": "c560b8e7c6052851455641474fd80a2b7939fffcc94cae133c39c1b7c5e077f4",
+    "aip_release_publication_service.py": "efda8938adf84f198725802f687624c5ab0ee4c377046af36af74a8142031754",
+    "bind1_003_skill_publication_provenance.py": "86d7db8f23f28226a8d69f87fc3c3c840279f8e81d0626d3f117a0ea73df6b21",
+    "test_aip_skill_publication_service.py": "edf74f6b92500fd46dc1af1198088ef9680661d0c21f97e5bffcdc1483fd6b31",
+    "plan": "26889133ebf7cfb32b9dcbdbb2d963655f4f5c0545869d994bd4735c5dc2e3c3"
+  }
+}

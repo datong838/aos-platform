@@ -1,0 +1,109 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-W2-D3-20260814",
+  "status": "GREEN_WITH_WARNINGS",
+  "branch": "w1-aip",
+  "baseCommit": "0391f6846beda58235dc60e16100f2a81f74ebcd",
+  "tenantPolicy": {
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "realTenantSideEffects": false,
+    "note": "内置浏览器仅对真实租户读取 authority 空态并验证 fail-closed；没有创建 Preview、StartDecision、TaskRun 或 AgentRun。"
+  },
+  "lease": {
+    "taskId": "aip-w2d3-strict-sdk-ui-browser-20260814",
+    "owner": "codex-aip-w1",
+    "baseRevision": "AOS-000024",
+    "exclusiveMigrationLease": false
+  },
+  "summary": [
+    "补齐 ImpactPreview 与 ProductionStartDecision 严格 TypeScript contract、parser 和 canonical SDK。",
+    "Impact quality 对 unknown 与 measured/estimated 严格分流，unknown 禁止携带伪 0，已知值强制 sourceRefs 与 cutoffAt。",
+    "生产契约页接入 Preview、8 维影响评估、blocker、exact refs、冻结动作和受控 Start 组合门。",
+    "Start UI 只允许 frozen + ready + 无 blocker + 未过期的 exact Preview；服务端仍重新核验 Proposal、Approval、Lease、Route、Binding 与容量。",
+    "started Decision 只显示已创建 canonical TaskRun，明确不等于 AgentRun 或 Provider 已运行。"
+  ],
+  "changedFiles": [
+    {
+      "path": "apps/web/src/api/aipProductionContracts/contracts.ts",
+      "beforeSha256": "fd8c7f34f201590ffd5db129a32ccc1024a1d6ec7fb0f9cca1a38c412097cccc",
+      "afterSha256": "349dc0a86a7461ec239db8bc42e7ef0274b17c244aa4a6b43239c862d2dd33f0"
+    },
+    {
+      "path": "apps/web/src/api/aipProductionContracts/parser.ts",
+      "beforeSha256": "d18448f6f9751db4792ff60f4be863f6ee6a162053ade60c5d082fec6f72b9c2",
+      "afterSha256": "a5cb748dbadbed37599fab7dae5cdca593331415dcd7ec5aec0ac6bc303225b2"
+    },
+    {
+      "path": "apps/web/src/api/aipProductionContracts/parser.test.ts",
+      "beforeSha256": "b1089b8ce731db98110647e36b1f79b650d79a4d3630758e1f8ff93de2221b2c",
+      "afterSha256": "87afc964433ae91a052fd7695035a59cdf6f1bbcbc9ad2db5076c6254fd3ab25"
+    },
+    {
+      "path": "apps/web/src/api/aipProductionContracts/index.ts",
+      "beforeSha256": "035f8765dc86032293222396451d581771f4c94b86842fe4bf6446e17a4027c6",
+      "afterSha256": "d68344ca82f9d71590fa038dbbad8527639498c07c908082f7770375bd367843"
+    },
+    {
+      "path": "apps/web/src/api/aipProductionContracts/index.test.ts",
+      "beforeSha256": "d552f43bd209f7df017df6e7b3369c602fa2b790a6feb78c984e16e38e2a2af2",
+      "afterSha256": "86c31f3b1da0b429fa1607d926c04698e6f32e225134f9b2c3234cef9ba55955"
+    },
+    {
+      "path": "apps/web/src/pages/s2/ProductionContractsPage.tsx",
+      "beforeSha256": "9e7bd32912e1ebfa6f8ae4699ca3786f0474ab65caeff3141a1690106ad1c19e",
+      "afterSha256": "79b0a1baf7e8609856b1c8754079cb7c6f358764c43be5319b8b02256a95b499"
+    },
+    {
+      "path": "apps/web/src/pages/s2/ProductionContractsPage.test.tsx",
+      "beforeSha256": "e26c99b5a58798093ad43370bb7a88e1e7444d81773b1727609f875ca7496f19",
+      "afterSha256": "759da6fb344cbbefa5d54e0e160905673ab0aab9d45e499d97728de5ce0d85f0"
+    }
+  ],
+  "verification": [
+    {
+      "name": "w2d3-targeted-sdk-parser-page",
+      "result": "GREEN",
+      "evidence": "3 files / 22 tests passed"
+    },
+    {
+      "name": "web-production-build",
+      "result": "GREEN",
+      "evidence": "TypeScript and Vite production build passed"
+    },
+    {
+      "name": "web-cumulative-regression",
+      "result": "GREEN",
+      "evidence": "188 files / 2121 tests passed"
+    },
+    {
+      "name": "built-in-browser-real-tenant",
+      "result": "GREEN_WITH_WARNINGS",
+      "evidence": "isolated web 127.0.0.1:5174 + API 127.0.0.1:8000；org-org/dev-project 显示 0 Preview / 0 StartDecision，Start 与创建按钮保持禁用，刷新后状态稳定，console error 0。"
+    },
+    {
+      "name": "runtime-side-effect-isolation",
+      "result": "GREEN_WITH_WARNINGS",
+      "evidence": "AOS_DB_MIGRATION_MODE=disabled、AOS_QYH_CRON_ENABLED=false；dev membership 持久化尝试因数据库 public schema 权限被拒，未发生业务数据写入；W2-D GET 均为 200。"
+    },
+    {
+      "name": "diff-check",
+      "result": "GREEN",
+      "evidence": "git diff --check"
+    }
+  ],
+  "knownWarnings": [
+    "真实租户当前无 ImpactPreview，因此浏览器不能在不造数据的前提下点击 ready 正向 Start；正向 started/blocked 由严格前端单测和 W2-D2 后端组合门测试覆盖。",
+    "浏览器左侧导航出现既有“目录读取失败，重试”提示，不属于 W2-D3 生产契约范围。",
+    "受保护的未跟踪 Watchdog receipt 未读取、修改或纳入本次提交。"
+  ],
+  "forbiddenSideEffects": {
+    "migration": false,
+    "providerCall": false,
+    "taskRunCreated": false,
+    "agentRunCreated": false,
+    "realTenantMutation": false
+  },
+  "nextGate": "M1_SERIAL_INTEGRATION_AND_AUTHORITY_CAS",
+  "createdAt": "2026-08-14T17:52:47+08:00"
+}

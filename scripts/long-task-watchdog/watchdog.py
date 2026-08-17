@@ -939,7 +939,27 @@ def evaluate(
             return str(state["last_recovery_outcome"]), status
     if not status.active:
         return "idle", status
-    if status.turn_running:
+    turn_silence_limit = int(
+        config.get(
+            "max_turn_silence_seconds",
+            config.get("max_tool_silence_seconds", 300),
+        )
+    )
+    if turn_silence_limit <= 0:
+        raise RuntimeError("max_turn_silence_seconds must be positive")
+    dependency_watch_enabled = bool(
+        isinstance(config.get("dependency_watch"), dict)
+        and config["dependency_watch"].get("enabled", False)
+    )
+    fact_watch_enabled = bool(
+        isinstance(config.get("fact_watch"), dict)
+        and config["fact_watch"].get("enabled", False)
+    )
+    if status.turn_running and (
+        dependency_watch_enabled
+        or fact_watch_enabled
+        or now - status.last_activity_at < turn_silence_limit
+    ):
         return "turn-running", status
     if status.pending_tool_calls and status.oldest_pending_tool_at is not None and (
         now - status.oldest_pending_tool_at

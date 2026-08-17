@@ -88,6 +88,41 @@ class AgentInstanceOverlay(AipContractModel):
         return cleaned
 
 
+class OperationalBindingDependencies(AipContractModel):
+    """Exact refs required to evaluate a tenant capability/skill binding.
+
+    The referenced authorities remain owned by AIP-4/AIP-7/O1.  BIND-1 only
+    freezes their exact identities in a tenant-scoped dependency snapshot.
+    """
+
+    provider_ref: VersionedAssetRef | None = None
+    model_route_ref: VersionedAssetRef | None = None
+    runtime_policy_ref: VersionedAssetRef | None = None
+    eval_gate_ref: VersionedAssetRef | None = None
+    eval_contract_ref: VersionedAssetRef | None = None
+    license_evidence_refs: list[ResourceRef] = Field(default_factory=list, max_length=128)
+    data_dependency_refs: list[VersionedAssetRef] = Field(default_factory=list, max_length=128)
+    tool_dependency_refs: list[VersionedAssetRef] = Field(default_factory=list, max_length=128)
+    budget_policy_ref: VersionedAssetRef | None = None
+    allow_degraded: bool = False
+
+    @model_validator(mode="after")
+    def _exact_reference_kinds(self) -> OperationalBindingDependencies:
+        expected = {
+            "provider_ref": "ProviderInstanceRevision",
+            "model_route_ref": "ModelRouteRevision",
+            "runtime_policy_ref": "RuntimePolicyRevision",
+            "eval_gate_ref": "EvalGateDecision",
+            "eval_contract_ref": "EvalContractRevision",
+            "budget_policy_ref": "BudgetPolicyRevision",
+        }
+        for field_name, asset_type in expected.items():
+            ref = getattr(self, field_name)
+            if ref is not None and ref.asset_type != asset_type:
+                raise ValueError(f"{field_name} must reference {asset_type}")
+        return self
+
+
 class CapabilityBindingRequest(AipContractModel):
     capability: VersionedAssetRef
     secret_ref: str = Field(min_length=1, max_length=512)
@@ -200,6 +235,12 @@ class PublishSkillTemplateRequest(AipContractModel):
     handoff_policy_ref: VersionedAssetRef
     source_ref: ResourceRef
     source_license: str = Field(min_length=1, max_length=200)
+    parent_ref: VersionedAssetRef | None = None
+    publication_tenant: TenantContext | None = None
+    release_gate_ref: VersionedAssetRef | None = None
+    publication_ref: ResourceRef | None = None
+    model_route_ref: VersionedAssetRef | None = None
+    runtime_policy_ref: VersionedAssetRef | None = None
     content_hash: str = Field(pattern=SHA256_PATTERN)
 
     @field_validator("tool_allowlist", "required_capabilities")
@@ -210,10 +251,59 @@ class PublishSkillTemplateRequest(AipContractModel):
             raise ValueError("asset ids must be unique and non-blank")
         return cleaned
 
+    @model_validator(mode="after")
+    def _published_revision_has_exact_provenance(self) -> PublishSkillTemplateRequest:
+        provenance = (
+            self.parent_ref,
+            self.publication_tenant,
+            self.release_gate_ref,
+            self.publication_ref,
+            self.model_route_ref,
+            self.runtime_policy_ref,
+        )
+        if self.lifecycle is TemplateLifecycle.PUBLISHED:
+            if any(item is None for item in provenance):
+                raise ValueError("published skill requires exact publication provenance")
+            expected = {
+                "parent_ref": "SkillTemplate",
+                "release_gate_ref": "EvalGateDecision",
+                "model_route_ref": "ModelRouteRevision",
+                "runtime_policy_ref": "RuntimePolicyRevision",
+            }
+            for field_name, asset_type in expected.items():
+                if getattr(self, field_name).asset_type != asset_type:
+                    raise ValueError(f"{field_name} must reference {asset_type}")
+            if self.publication_ref.resource_type != "PublicationEvent":
+                raise ValueError("publication_ref must reference PublicationEvent")
+        elif any(item is not None for item in provenance):
+            raise ValueError("non-published skill cannot carry publication provenance")
+        return self
+
 
 class SkillTemplateRevision(PublishSkillTemplateRequest):
     created_by: str
     created_at: datetime
+
+
+class PublishEvaluatedSkillRevisionRequest(AipContractModel):
+    source_skill: VersionedAssetRef
+    publication_id: str = Field(min_length=1, max_length=200)
+    release_gate_decision_id: str = Field(min_length=1, max_length=200)
+    model_route_ref: VersionedAssetRef
+    runtime_policy_ref: VersionedAssetRef
+    idempotency_key: str = Field(min_length=1, max_length=200)
+
+    @model_validator(mode="after")
+    def _exact_reference_kinds(self) -> PublishEvaluatedSkillRevisionRequest:
+        expected = {
+            "source_skill": "SkillTemplate",
+            "model_route_ref": "ModelRouteRevision",
+            "runtime_policy_ref": "RuntimePolicyRevision",
+        }
+        for field_name, asset_type in expected.items():
+            if getattr(self, field_name).asset_type != asset_type:
+                raise ValueError(f"{field_name} must reference {asset_type}")
+        return self
 
 
 class PublishCapabilityRevisionRequest(AipContractModel):
@@ -304,12 +394,22 @@ class CreateSkillBindingRequest(AipContractModel):
     skill: VersionedAssetRef
     capability_binding_ids: list[str] = Field(default_factory=list, max_length=128)
     budget_policy_ref: VersionedAssetRef
-    initial_status: str = Field(default="provisioning", pattern=r"^(provisioning|active|suspended|revoked)$")
+    initial_status: str = Field(default="provisioning", pattern=r"^provisioning$")
+
+    @field_validator("capability_binding_ids")
+    @classmethod
+    def _unique_capability_bindings(cls, values: list[str]) -> list[str]:
+        cleaned = [value.strip() for value in values]
+        if any(not value for value in cleaned) or len(cleaned) != len(set(cleaned)):
+            raise ValueError("capability binding ids must be unique and non-blank")
+        return cleaned
 
     @model_validator(mode="after")
     def _skill_kind(self) -> CreateSkillBindingRequest:
         if self.skill.asset_type != "SkillTemplate":
             raise ValueError("skill must reference SkillTemplate")
+        if self.budget_policy_ref.asset_type != "BudgetPolicyRevision":
+            raise ValueError("budget_policy_ref must reference BudgetPolicyRevision")
         return self
 
 
@@ -326,6 +426,14 @@ class SkillBinding(AipContractModel):
     skill: VersionedAssetRef
     capability_binding_ids: list[str]
     budget_policy_ref: VersionedAssetRef
+    dependencies: OperationalBindingDependencies = Field(
+        default_factory=OperationalBindingDependencies
+    )
+    readiness: CapabilityReadiness = CapabilityReadiness.UNKNOWN
+    readiness_reasons: list[str] = Field(default_factory=list, max_length=64)
+    dependency_snapshot_hash: str | None = Field(default=None, pattern=SHA256_PATTERN)
+    last_evaluated_at: datetime | None = None
+    readiness_expires_at: datetime | None = None
     status: str
     version: int = Field(ge=1)
     created_at: datetime
@@ -343,6 +451,33 @@ class RegistryReceipt(AipContractModel):
     status: str
     created_by: str
     created_at: datetime
+
+
+class EvaluateOperationalBindingRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    dependencies: OperationalBindingDependencies
+    expected_dependency_snapshot_hash: str | None = Field(
+        default=None, pattern=SHA256_PATTERN
+    )
+
+
+class OperationalBindingReadiness(AipContractModel):
+    readiness: CapabilityReadiness
+    reasons: list[str] = Field(default_factory=list, max_length=64)
+    dependencies: OperationalBindingDependencies
+    dependency_snapshot_hash: str = Field(pattern=SHA256_PATTERN)
+    evaluated_at: datetime
+    expires_at: datetime
+
+    @model_validator(mode="after")
+    def _valid_window(self) -> OperationalBindingReadiness:
+        if self.expires_at <= self.evaluated_at:
+            raise ValueError("operational binding readiness must expire after evaluation")
+        if len(self.reasons) != len(set(self.reasons)) or any(
+            not value.strip() for value in self.reasons
+        ):
+            raise ValueError("readiness reasons must be unique and non-blank")
+        return self
 
 
 class CreateCapabilityBindingRequest(AipContractModel):
@@ -368,6 +503,14 @@ class CapabilityBinding(AipContractModel):
     quota_policy_revision: str
     timeout_ms: int
     max_concurrency: int
+    dependencies: OperationalBindingDependencies = Field(
+        default_factory=OperationalBindingDependencies
+    )
+    operational_readiness: CapabilityReadiness = CapabilityReadiness.UNKNOWN
+    readiness_reasons: list[str] = Field(default_factory=list, max_length=64)
+    dependency_snapshot_hash: str | None = Field(default=None, pattern=SHA256_PATTERN)
+    last_evaluated_at: datetime | None = None
+    readiness_expires_at: datetime | None = None
     status: str
     version: int
     observed_at: datetime | None = None

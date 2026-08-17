@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Header, Query, status
 from aos_api.aip_agent_control_contracts import (
     AgentInstallResponse,
     AgentInstanceListResponse,
+    AgentRuntimeReadinessResponse,
 )
 from aos_api.aip_agent_registry_contracts import AgentInstance
 from aos_api.aip_agent_registry_store import (
@@ -73,6 +74,20 @@ def list_agents(
         items=items,
         count=len(items),
     )
+
+
+@router.get(
+    "/agent-registry/runtime-readiness",
+    response_model=AgentRuntimeReadinessResponse,
+)
+def get_agent_runtime_readiness(
+    principal: Principal = Depends(require_principal),
+    installer: AipEcommerceAgentInstaller = Depends(get_ecommerce_agent_installer),
+) -> AgentRuntimeReadinessResponse:
+    try:
+        return installer.runtime_readiness(principal)
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
 
 
 @router.post(

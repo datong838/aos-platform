@@ -7,7 +7,7 @@ that Agent/Skill registries from later AIP waves already exist.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import StrEnum
 
 from pydantic import Field, field_validator, model_validator
@@ -28,6 +28,7 @@ class AssetType(StrEnum):
     AGENT_INSTANCE = "agent_instance"
     SKILL_TEMPLATE = "skill_template"
     MODEL_ROUTE = "model_route"
+    REGISTERED_MODEL = "registered_model"
     POLICY = "policy"
     WIKI_SNAPSHOT = "wiki_snapshot"
     FDE_BUNDLE = "fde_bundle"
@@ -364,7 +365,19 @@ class ReleaseGateDecision(AipContractModel):
     decision_hash: str = Field(pattern=SHA256_PATTERN)
     decided_by: str = Field(min_length=1, max_length=320)
     decided_at: datetime
+    expires_at: datetime
     invalidated_by: str | None = Field(default=None, max_length=200)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _default_expiry(cls, value):
+        if isinstance(value, dict) and "expiresAt" not in value and "expires_at" not in value:
+            decided_at = value.get("decidedAt", value.get("decided_at"))
+            if isinstance(decided_at, str):
+                decided_at = datetime.fromisoformat(decided_at.replace("Z", "+00:00"))
+            if isinstance(decided_at, datetime):
+                value = {**value, "expiresAt": decided_at + timedelta(days=30)}
+        return value
 
     @model_validator(mode="after")
     def _invalidation_reason(self) -> ReleaseGateDecision:
@@ -374,6 +387,10 @@ class ReleaseGateDecision(AipContractModel):
             raise ValueError("invalidated gate requires invalidated_by")
         if self.status is not ReleaseGateStatus.INVALIDATED and self.invalidated_by:
             raise ValueError("only invalidated gate may carry invalidated_by")
+        if self.decided_at.tzinfo is None or self.expires_at.tzinfo is None:
+            raise ValueError("release gate timestamps must be timezone-aware")
+        if self.expires_at - self.decided_at != timedelta(days=30):
+            raise ValueError("release gate expiry must be exactly 30 days")
         return self
 
 

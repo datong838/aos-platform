@@ -1,0 +1,82 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-W2-D2-20260814",
+  "status": "GREEN",
+  "branch": "w1-aip",
+  "baseCommit": "79901dffc6497a2c50f2f15b0d02f86766126c9f",
+  "tenantPolicy": {
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "realTenantSideEffects": false,
+    "note": "真实租户仅执行只读计数 canary；组合门写入、TaskRun 创建和隔离测试均使用合成数据。"
+  },
+  "lease": {
+    "taskId": "aip-w2d2-start-service-api-20260814",
+    "owner": "codex-aip-w1",
+    "baseRevision": "AOS-000023",
+    "exclusiveMigrationLease": false
+  },
+  "summary": [
+    "新增 Production Start 组合门服务，统一复核 Task、Plan、ImpactPreview、ActionProposal 和 LogicGraph exact ref。",
+    "blocked/stale/unknown 仅追加 StartDecision，Plan、TaskRun、AgentRun 与 Provider 均不发生副作用。",
+    "ready 路径在单一事务内批准 W2-C Plan 并创建唯一 AIP-1 canonical TaskRun。",
+    "补齐 ImpactPreview 与 ProductionStartDecision Canonical API，mutation 强制 Idempotency-Key，跨租户引用失败关闭为 404。",
+    "增加 mutable binding、Action approval 与 LogicGraph 并发锁，关闭校验到使用之间的 TOCTOU 时间窗。"
+  ],
+  "changedFiles": [
+    {
+      "path": "services/aos-api/aos_api/aip_task_store.py",
+      "beforeSha256": "71f0dc1fdcd3da9882d5278e875ba731fb833e1362b04af02d06dd51322d1a1a",
+      "afterSha256": "a2b860c77a74af95df3bfb30762bb5210aee3626eedbf274c9ec2f72ec141e91"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_production_start_service.py",
+      "beforeSha256": null,
+      "afterSha256": "e53b7dc34f25c2f453bf994b6a23990cdec378bf9dc8b9919bb15d1ef9d6e9c0"
+    },
+    {
+      "path": "services/aos-api/aos_api/routers/aip_production_contracts.py",
+      "beforeSha256": "f8fca466f6f3c03c467eff7f1189f0f0cb8e412882be27010bd14d48482dceaf",
+      "afterSha256": "148697bf59ea4c9b7bfe66572ced7379bf934f27fb70bcebf094bb7f4da4f4f4"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_w2d_start_gate.py",
+      "beforeSha256": null,
+      "afterSha256": "f29910454806104851aa91ec6bcd1efd789ede5bd463926ec0e2f775969f832b"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_w2d_api.py",
+      "beforeSha256": null,
+      "afterSha256": "f081962188e8c95d0f4d8d6239dfa358b754519d6577b7450fbbd50cdfa1c540"
+    }
+  ],
+  "verification": [
+    {
+      "name": "w2d-start-and-api-targeted",
+      "result": "GREEN",
+      "evidence": "5 passed"
+    },
+    {
+      "name": "w2c-w2d-action-cumulative-regression",
+      "result": "GREEN",
+      "evidence": "61 passed"
+    },
+    {
+      "name": "real-tenant-read-only-canary",
+      "result": "GREEN_WITH_WARNINGS",
+      "evidence": "org-org/dev-project: tasks=1, impact_previews=0, start_decisions=0, task_runs=1, agent_runs=0；未执行 mutation。"
+    },
+    {
+      "name": "compile-and-diff",
+      "result": "GREEN",
+      "evidence": "compileall and git diff --check"
+    }
+  ],
+  "knownWarnings": [
+    "真实租户当前无 ImpactPreview 配置，因此只证明零误启动与读取稳定，不能伪报 ready 正向启动。",
+    "既有 Pydantic schema 字段遮蔽和 FastAPI duplicate operation ID 告警未由本波引入。",
+    "W2-D3 严格 SDK、UI 和内置浏览器验收尚未开始。"
+  ],
+  "nextGate": "AIP_W2D3_STRICT_SDK_UI_BROWSER",
+  "createdAt": "2026-08-14T16:49:00+08:00"
+}

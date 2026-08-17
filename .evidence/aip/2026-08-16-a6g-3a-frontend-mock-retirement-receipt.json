@@ -1,0 +1,46 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-A6G-3A-FRONTEND-MOCK-RETIREMENT-20260816",
+  "status": "FRONTEND_CANONICAL_SOURCE_GREEN_OPERATIONAL_READINESS_UNCHANGED",
+  "branch": "w1-aip",
+  "baseCommit": "18f52c36ffe1573d101c76c4ea4fa9f20748a2ff",
+  "observedAt": "2026-08-16T21:02:35+08:00",
+  "deletedFiles": {
+    "apps/web/src/pages/s2/AgentRegistryPage.tsx": "7e72d9bcfdf8e7c5dcabebda3427566f8efd3d93346cb8de4e9f7e1bece1646d",
+    "apps/web/src/pages/s2/AgentRegistryPage.test.ts": "6a249d1b5a0bdc84bfb4dfcb27341612ca0c00df4d88adb62b73af2e33c6bfee",
+    "apps/web/src/pages/s2/AgentsPage.tsx": "ba2804d771b514763f5f3978d193c676d420e7e146b14ed7528682ecf9921815",
+    "apps/web/src/pages/s2/AgentsPage.test.ts": "a5274c8d0f1d8d6332137568e9021e176e70047b5cb159d255e836e41d269456",
+    "apps/web/src/pages/s2/__tests__/AgentsPage.test.ts": "a1c4951df6f0e28342217bcff4ad8fb2608311f553eb55aef46a40c17bd52bd8",
+    "apps/web/src/pages/s2/agentsCore.ts": "7242630cd5018ace96446ebe020a89c2f17548c8e63298d4098b29841b77deff",
+    "apps/web/src/pages/s2/CreateAgentWizard.tsx": "097876f06e93c8d65ce372dbc642803605a7d75fc7d3298d5a738c7a21b0623c"
+  },
+  "postHashes": {
+    "interactionHonestyManifestSha256": "19e69cc754002c2dc972f04eff6a3aa551193672cdff8aeeffeaba0185b209a9",
+    "canonicalAgentsPageTestSha256": "7277d99eb95ec12b0809842931d001c372af80921bcc2c27dfd5bd8c60e43ed3",
+    "schemeSha256": "a682f4397444b1c9c61872a5821c225c853d58799211e95b956d4efcb5df6b3e",
+    "checklistSha256": "cf052e21d022d49d8ab946b9eb955b8164b49d4d699b177dbeebaf515e70075e"
+  },
+  "verification": {
+    "legacyMockSourceReferences": 0,
+    "targetedTests": "4 files, 12 tests passed",
+    "webFullRegression": "190 files, 1936 tests passed",
+    "typecheck": "GREEN",
+    "productionBuild": "GREEN",
+    "gitDiffCheck": "GREEN",
+    "browser": {
+      "url": "http://localhost:5173/aip/agents",
+      "tenant": "org-org/dev-project",
+      "canonicalPageVisible": true,
+      "mockAgentsTextCount": 0,
+      "legacyOrderAssistantTextCount": 0,
+      "apiHealth": "HTTP 500 shown fail-closed"
+    }
+  },
+  "boundaries": [
+    "Canonical Agent pages, SDK and routes were not redesigned",
+    "Backend singleton and demo seed are deferred to A6G-3B because historical backend tests still import them",
+    "No database, Provider, Binding, AgentRun or Workshop state was changed",
+    "Workshop R1 and R2 remain operationally blocked"
+  ],
+  "protectedUntrackedExcluded": ".evidence/aip/2026-08-14-watchdog-w2c-recovery-blocked-receipt.json"
+}

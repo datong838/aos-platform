@@ -1,0 +1,78 @@
+{
+  "schema": "aos-aip-delivery-receipt/v1",
+  "receipt_id": "AIP5-E7-2-20260814-001",
+  "task_id": "aip-e7-2-projection-store-service-20260814",
+  "wave": "AIP-5-E7-2",
+  "status": "GREEN",
+  "tenant_effect": "AUTHORITY_CODE_ONLY_ZERO_BUSINESS_WRITES",
+  "base_revision": "AOS-000027",
+  "base_git_sha": "acc2ed75660b4818e81a00a3f2f91153e6497c63",
+  "branch": "w1-aip",
+  "created_at": "2026-08-14T20:30:00+08:00",
+  "scope": {
+    "changed_files": [
+      "services/aos-api/aos_api/aip_memory_projection_store.py",
+      "services/aos-api/tests/aip/test_aip_memory_projection_store.py",
+      ".evidence/aip/2026-08-14-e7-2-projection-store-service-delivery-receipt.json"
+    ],
+    "excluded": [
+      "services/aos-api/alembic/versions",
+      "apps/web",
+      "aos-platform-w2-workshop",
+      "real-tenant-data",
+      "external-provider-effects"
+    ]
+  },
+  "file_hashes": [
+    {
+      "path": "services/aos-api/aos_api/aip_memory_projection_store.py",
+      "before_sha256": null,
+      "after_sha256": "b8f41b702c0ffa2b74ab2278349c83f2c549ece05a612e3e016347af3074ae8e"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_aip_memory_projection_store.py",
+      "before_sha256": null,
+      "after_sha256": "8cd560837465f39d0982d9455cfd9943f517a430579eb5596997d235424b042f"
+    }
+  ],
+  "authority": {
+    "projection": "reference-only personal/shared rows with explicit recipients",
+    "dependencies": "exact active AgentInstance plus exact current active Memory revision and source freshness",
+    "status": "expectedVersion CAS for suspend/reactivate/revoke; reactivate fully revalidates dependencies and effective interval",
+    "audit": "single-transaction event and idempotent Receipt; event exact hash is recovered through the one-to-one immutable Receipt",
+    "tenant": "org_id and project_id on every read/write; dev-org/dev-project is negative canary only"
+  },
+  "verification": [
+    {
+      "command": "pytest agent registry + memory authority + E7 contract/migration/store suites",
+      "result": "GREEN",
+      "summary": "24 passed; 7 pre-existing warnings"
+    },
+    {
+      "command": "ruff check and ruff format --check for E7-2 files",
+      "result": "GREEN"
+    },
+    {
+      "command": "shared development schema read-only row-count check",
+      "result": "GREEN",
+      "summary": "aip5_005 remains current; all six E7 tables remain zero rows"
+    },
+    {
+      "command": "git diff --check and Python compile",
+      "result": "GREEN"
+    }
+  ],
+  "side_effects": {
+    "database_schema_changed": false,
+    "database_business_rows_written": false,
+    "database_backfill": false,
+    "provider_call": false,
+    "agent_run_started": false,
+    "browser_required": false
+  },
+  "risks": [
+    "Active projection retrieval-time dependency revalidation and Exposure append are intentionally deferred to E7-3",
+    "Canonical HTTP API and UI are intentionally deferred to E7-4/E7-5"
+  ],
+  "next_gate": "AIP5_E7_3_RETRIEVAL_EXPOSURE_REVOCATION_IMPACT"
+}

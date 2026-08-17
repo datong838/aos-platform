@@ -1,20 +1,22 @@
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
-
 from aos_api.aip_agent_registry_contracts import (
     AgentInstanceOverlay,
     AgentRunRequest,
     AgentRunStatus,
     CapabilityBindingRequest,
+    CapabilityReadiness,
     CreateAgentInstanceRequest,
     CreateAgentRunRequest,
     CreateCapabilityBindingRequest,
     HandoffEnvelopeRequest,
     IssueHandoffRequest,
+    OperationalBindingReadiness,
     PublishAgentTemplateRequest,
     PublishCapabilityRevisionRequest,
     PublishSkillTemplateRequest,
@@ -43,6 +45,7 @@ NOW = datetime(2026, 8, 13, 20, tzinfo=UTC)
 HASH_A = "a" * 64
 HASH_B = "b" * 64
 HASH_C = "c" * 64
+HASH_D = "d" * 64
 
 
 def asset(kind: str, identifier: str, revision: int = 1, content_hash: str = HASH_A):
@@ -61,6 +64,18 @@ def resource(kind: str, identifier: str, *, authority: str = "aip-task-runtime")
         revision="1",
         authority=authority,
     )
+
+
+class _ReadySkillBindingService:
+    def evaluate(self, _scope, binding, *, evaluated_at):
+        return OperationalBindingReadiness(
+            readiness=CapabilityReadiness.AVAILABLE,
+            reasons=[],
+            dependencies=binding.dependencies,
+            dependency_snapshot_hash=HASH_D,
+            evaluated_at=evaluated_at,
+            expires_at=datetime(2030, 1, 1, tzinfo=UTC),
+        )
 
 
 @pytest.fixture()
@@ -147,7 +162,7 @@ def _skill(ids):
         skill_id=ids["skill"],
         revision=1,
         canonical_logic_id="content.plan",
-        lifecycle="published",
+        lifecycle="evaluated",
         input_schema={"type": "object"},
         output_schema={"type": "object"},
         tool_allowlist=[],
@@ -159,6 +174,43 @@ def _skill(ids):
         source_license="internal-authorized",
         content_hash=HASH_B,
     )
+
+
+def _insert_governed_published_skill_fixture(ids):
+    source = _skill(ids)
+    AipSkillRegistry().publish_skill(source, actor="pytest")
+    encoded = lambda value: json.dumps(value, separators=(",", ":"))
+    with connect() as conn:
+        conn.execute(
+            """INSERT INTO aip_skill_template_revision
+               (skill_id,revision,canonical_logic_id,lifecycle,input_schema,
+                output_schema,tool_allowlist,required_capabilities,risk_level,
+                memory_policy_ref,handoff_policy_ref,source_ref,source_license,
+                parent_ref,publication_tenant,release_gate_ref,publication_ref,
+                model_route_ref,runtime_policy_ref,content_hash,created_by)
+               VALUES (%s,2,%s,'published',%s::jsonb,%s::jsonb,'[]'::jsonb,
+                '[]'::jsonb,'low',%s::jsonb,%s::jsonb,%s::jsonb,%s,
+                %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
+                %s,'pytest')""",
+            (
+                source.skill_id,
+                source.canonical_logic_id,
+                encoded(source.input_schema),
+                encoded(source.output_schema),
+                encoded(source.memory_policy_ref.model_dump(mode="json", by_alias=True)),
+                encoded(source.handoff_policy_ref.model_dump(mode="json", by_alias=True)),
+                encoded(source.source_ref.model_dump(mode="json", by_alias=True)),
+                source.source_license,
+                encoded(asset("SkillTemplate", source.skill_id, content_hash=HASH_B).model_dump(mode="json", by_alias=True)),
+                encoded({"orgId": PRIMARY.org_id, "projectId": PRIMARY.project_id}),
+                encoded(asset("EvalGateDecision", "gate-fixture").model_dump(mode="json", by_alias=True)),
+                encoded({"resourceType": "PublicationEvent", "resourceId": "event-fixture", "revision": "publication-fixture", "authority": "postgresql"}),
+                encoded(asset("ModelRouteRevision", "route-fixture").model_dump(mode="json", by_alias=True)),
+                encoded(asset("RuntimePolicyRevision", "policy-fixture").model_dump(mode="json", by_alias=True)),
+                HASH_C,
+            ),
+        )
+        conn.commit()
 
 
 def _active_instance(ids, key: str):
@@ -257,20 +309,20 @@ def test_capability_binding_is_secret_ref_only_health_gated_and_scoped(ids):
             idempotency_key=f"bad-health-{ids['capability']}",
             actor="pytest",
         )
-    active, _ = service.update(
-        PRIMARY,
-        ids["capability"],
-        UpdateCapabilityBindingRequest(
-            expected_version=1,
-            from_status="provisioning",
-            to_status="active",
-            health="healthy",
-            observed_at=NOW,
-        ),
-        idempotency_key=f"healthy-{ids['capability']}",
-        actor="pytest",
-    )
-    assert active.status == "active" and active.version == 2
+    with pytest.raises(AipAgentRegistryTransitionBlocked, match="operational"):
+        service.update(
+            PRIMARY,
+            ids["capability"],
+            UpdateCapabilityBindingRequest(
+                expected_version=1,
+                from_status="provisioning",
+                to_status="active",
+                health="healthy",
+                observed_at=NOW,
+            ),
+            idempotency_key=f"healthy-{ids['capability']}",
+            actor="pytest",
+        )
 
 
 def test_capability_binding_requires_exact_published_revision(ids):
@@ -300,20 +352,36 @@ def test_capability_binding_requires_exact_published_revision(ids):
 
 def test_agent_run_persists_exact_instance_snapshot_and_blocks_start_without_aip7(ids, monkeypatch):
     instance = _active_instance(ids, "sender")
-    skills = AipSkillRegistry()
-    skills.publish_skill(_skill(ids), actor="pytest")
+    skills = AipSkillRegistry(readiness_service=_ReadySkillBindingService())
+    _insert_governed_published_skill_fixture(ids)
     binding, _ = skills.create_binding(
         PRIMARY,
         __import__("aos_api.aip_agent_registry_contracts", fromlist=["CreateSkillBindingRequest"]).CreateSkillBindingRequest(
             binding_id=ids["binding"],
             instance_id=instance.instance_id,
-            skill=asset("SkillTemplate", ids["skill"], content_hash=HASH_B),
-            budget_policy_ref=asset("BudgetPolicy", "budget"),
+            skill=asset("SkillTemplate", ids["skill"], revision=2, content_hash=HASH_C),
+            budget_policy_ref=asset("BudgetPolicyRevision", "budget"),
         ),
         idempotency_key=f"bind-{ids['binding']}",
         actor="pytest",
         occurred_at=NOW,
     )
+    with connect(PRIMARY) as conn:
+        conn.execute(
+            """UPDATE aip_skill_binding
+               SET readiness='available',readiness_reasons='[]'::jsonb,
+                   dependency_snapshot_hash=%s,last_evaluated_at=%s,
+                   readiness_expires_at=%s
+               WHERE org_id=%s AND project_id=%s AND binding_id=%s""",
+            (
+                HASH_D,
+                NOW,
+                datetime(2030, 1, 1, tzinfo=UTC),
+                *PRIMARY.key,
+                binding.binding_id,
+            ),
+        )
+        conn.commit()
     binding, _ = skills.update_binding(
         PRIMARY,
         binding.binding_id,

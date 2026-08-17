@@ -1,0 +1,45 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "task_id": "aip-e7-3-retrieval-exposure-impact-20260814",
+  "branch": "w1-aip",
+  "base_sha": "09ef8b6f1669c4660a84653f4b5bf249b8e28925",
+  "status": "GREEN",
+  "scope": [
+    "services/aos-api/aos_api/aip_memory_retrieval.py",
+    "services/aos-api/tests/aip/test_aip_memory_retrieval.py"
+  ],
+  "delivery": [
+    "exact AgentInstance personal/shared projection retrieval with purpose, marking, cutoff, memory revision and source freshness fail-close gates",
+    "trusted running AgentRun acceptance with exact Skill, Logic, TaskRun and frozen EvalContract validation",
+    "append-only deterministic MemoryExposure without payload and idempotent exact replay",
+    "revocation impact summary retaining historical Exposure and affected AgentRun refs without payload"
+  ],
+  "pre_sha256": {
+    "services/aos-api/aos_api/aip_memory_retrieval.py": "dab707c8c076bf12409cf655479b52979614efa6cf61e5ade76a8d11d02cad06",
+    "services/aos-api/tests/aip/test_aip_memory_retrieval.py": "1cd9f339e632df8cb20fac446f452ef02a5701fd2b3bb553c4ac91d094a9b751"
+  },
+  "post_sha256": {
+    "services/aos-api/aos_api/aip_memory_retrieval.py": "2f3c5650685539a0ba47c07d5c277b07de3875698d19bad896323b3b11db1e48",
+    "services/aos-api/tests/aip/test_aip_memory_retrieval.py": "f4543b1d7d4bdecb7488bde2256a844a6e88d52bc1bf6fce624bb0f33c08f554"
+  },
+  "verification": {
+    "targeted_retrieval_tests": "12 passed",
+    "e7_cumulative_tests": "44 passed, 7 pre-existing warnings",
+    "ruff_check": "GREEN",
+    "ruff_format": "GREEN",
+    "py_compile": "GREEN",
+    "alembic_heads": "aip5_005 (head)",
+    "diff_check": "GREEN",
+    "real_org_org_dev_project_counts": "projections=0, recipients=0, exposures=0",
+    "negative_dev_org_dev_project_counts": "projections=0, recipients=0, exposures=0"
+  },
+  "risk_assertions": [
+    "no API route or UI added in E7-3",
+    "no migration created or executed",
+    "no real tenant write or seed",
+    "no Provider or AgentRun created",
+    "no payload copied into projection, exposure or impact",
+    "no w2-workshop access"
+  ],
+  "next_gate": "E7-4 Improvement evaluator and Canonical API"
+}

@@ -1,0 +1,83 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-P8-2-20260815",
+  "status": "CODE_CONTROL_GREEN_WITH_BASELINE_WARNINGS",
+  "branch": "w1-aip",
+  "baseCommit": "164b8db2b9cca5a56959d42f4d6d92f5ac3b6436",
+  "authorityRevision": "AOS-000045",
+  "observedAt": "2026-08-15T18:09:21+08:00",
+  "tenantPolicy": {
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "realTenantBusinessWrites": false
+  },
+  "lease": {
+    "taskId": "aip-p8-2-query-authority-20260815",
+    "owner": "w1-aip",
+    "migrationLease": true,
+    "baseRevision": "AOS-000045"
+  },
+  "implementation": [
+    "Added one additive aip8_001 migration with four append-only QueryJob authority tables",
+    "Enabled RLS and FORCE RLS with runtime SELECT and INSERT only",
+    "Added immutable lifecycle events for queued, running, succeeded, failed, cancelled and timed_out states",
+    "Added expected-sequence CAS and operation-scoped idempotency receipt replay",
+    "Revalidated result tenant, query, kind, revision, cutoff, content hash and execution time window",
+    "Added authenticated canonical create, read, start, result, cancel, timeout, fail and reconcile APIs"
+  ],
+  "fileHashes": {
+    "services/aos-api/alembic/versions/aip8_001_analyst_query_authority.py": {
+      "before": null,
+      "after": "cf6228e350322eba30c2c9d29af4d74833a68969be35b680e85e53c8a0f933ec"
+    },
+    "services/aos-api/aos_api/aip_analyst_contracts.py": {
+      "before": "9ee9a8dc3dc51efdc3db3e2b2f29df3a42f0b04824bf549aaf68185b38c1ec2a",
+      "after": "194b3918c75fce8791277547012edae125c6890eb50fe0e549b92ce2538755ba"
+    },
+    "services/aos-api/aos_api/aip_analyst_query_store.py": {
+      "before": null,
+      "after": "8306d16ceec1284d4b9e1bc6f5c5940dbceb7eefb7e67cd447b9a95d37292c07"
+    },
+    "services/aos-api/aos_api/routers/aip_analyst.py": {
+      "before": "3d4b69f36207773d28c62f234678dd87744e7475259c51fae01a1fba60842ee3",
+      "after": "ebe60d4b62cc89371bb31ebcdd8e73e229d8b45bec8d900bd36037b2ee1323b5"
+    },
+    "services/aos-api/tests/aip/test_aip8_query_api.py": {
+      "before": null,
+      "after": "94c19fa871b41cc2eaabbada91bd58ba5bb680eaa6455f8eccc7b34f2bcf0de8"
+    },
+    "services/aos-api/tests/aip/test_aip8_query_migration.py": {
+      "before": null,
+      "after": "da38d2cb369c64e16135e0026e8cb5f4060e1f7322de49de6805b488f5280e55"
+    },
+    "services/aos-api/tests/aip/test_aip8_query_store.py": {
+      "before": null,
+      "after": "4f6a1e0799106d3f352e8516ef62f019fa6b24cbc4d246c779f799bc6c1ab322"
+    }
+  },
+  "schemeHashes": {
+    "07-228-AIP助手分析师与通用工作台实施方案.md": {
+      "before": "e316fee5666f0f876238fff6feb58a138df6addc90463327ed8682cac9cf107d",
+      "after": "20815ff44c0dfe7e05ef2eef182eae72bca3c47e5d91da5995ad34e47aaf7892"
+    },
+    "全量开发清单/07-AIP助手分析师与通用工作台开发清单.md": {
+      "before": "7222a209d2330d58ed17865fe421e216a19d4cc8ad60ab73a49e84e17abd8be6",
+      "after": "d7c7e5c6db9f0d6a4a07f208f3cb5082c3dde3817eaf7ccc708eff2b5c508617"
+    }
+  },
+  "verification": [
+    "34 targeted and adjacent Analyst tests passed after restoring aip8_001 head",
+    "Alembic current and heads both report the unique aip8_001 head",
+    "OpenAPI required path and Idempotency-Key parameters passed",
+    "compileall and git diff check passed",
+    "negative tenant read is hidden by FORCE RLS and append-only mutation is rejected"
+  ],
+  "baselineWarnings": [
+    "Full tests/aip run was 430 passed and 10 failed",
+    "Six Memory Improvement API failures reproduce unchanged on m1 and are caused by the canonical router not being mounted",
+    "Four ordered-suite failures are caused by published Skill rows leaking across shared-database tests and blocking provenance fixtures or downgrade guards",
+    "The warnings are outside the P8-2 lease and are not represented as P8-2 regressions or full-suite GREEN"
+  ],
+  "operationalStatus": "BLOCKED_UNTIL_CANONICAL_ADAPTERS_AND_SAVED_EXPLORATION_ARE_ASSEMBLED",
+  "nextGate": "P8_3_SAVED_EXPLORATION_AND_CANONICAL_ADAPTER_ASSEMBLY"
+}

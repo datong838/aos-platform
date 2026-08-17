@@ -1,0 +1,91 @@
+{
+  "schema": "aos-aip-bind1-pilot-eligibility/v1",
+  "taskId": "aip-bind1-6-pilot-eligibility-20260815",
+  "authorityRevision": "AOS-000042",
+  "observedAt": "2026-08-15T16:11:53+08:00",
+  "git": {
+    "branch": "w1-aip",
+    "commit": "8ace38b2061cd3c506bca25c4d5fbfa6e43ad931"
+  },
+  "scope": {
+    "mode": "read-only",
+    "realTenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "negativeCanary": {
+      "orgId": "dev-org",
+      "projectId": "dev-project"
+    },
+    "databaseWrites": 0,
+    "externalSideEffects": 0
+  },
+  "catalog": {
+    "agentDefinitions": 6,
+    "installedAgentInstances": 6,
+    "runnableAgents": 0,
+    "skills": {
+      "count": 37,
+      "evaluated": 37,
+      "published": 0
+    },
+    "capabilities": {
+      "count": 10,
+      "available": 0,
+      "blocked": 10,
+      "reasonCodes": [
+        "provider_unknown",
+        "eval_pack_unavailable",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ]
+    }
+  },
+  "operationalAuthority": {
+    "capabilityBindings": 0,
+    "skillBindings": 0,
+    "agentRuns": 0,
+    "providerInstanceRevisions": 0,
+    "registeredModelRevisions": 0,
+    "runtimePolicyRevisions": 0,
+    "modelRouteRevisions": 0,
+    "providerHealthObservations": 0,
+    "modelCapacityPoolRevisions": 0,
+    "evalGates": 0,
+    "resolutions": 0
+  },
+  "negativeCanaryReadback": {
+    "agentInstances": 0,
+    "capabilityBindings": 0,
+    "skillBindings": 0,
+    "agentRuns": 0,
+    "providerInstanceRevisions": 0,
+    "registeredModelRevisions": 0,
+    "runtimePolicyRevisions": 0,
+    "modelRouteRevisions": 0,
+    "providerHealthObservations": 0,
+    "modelCapacityPoolRevisions": 0
+  },
+  "eligibility": {
+    "eligible": false,
+    "candidateCount": 0,
+    "decision": "NO_ELIGIBLE_PILOT",
+    "reasonCodes": [
+      "SKILL_REVISION_NOT_PUBLISHED",
+      "CAPABILITY_CATALOG_BLOCKED",
+      "CAPABILITY_BINDING_MISSING",
+      "SKILL_BINDING_MISSING",
+      "PROVIDER_INSTANCE_MISSING",
+      "REGISTERED_MODEL_MISSING",
+      "RUNTIME_POLICY_MISSING",
+      "MODEL_ROUTE_MISSING",
+      "EVAL_GATE_MISSING",
+      "PROVIDER_HEALTH_MISSING",
+      "CAPACITY_POOL_MISSING"
+    ]
+  },
+  "result": "GREEN_WITH_WARNINGS",
+  "classification": "FAIL_CLOSED_NO_WRITE",
+  "nextGate": "BIND1_CONTROL_PLANE_SEAL",
+  "hardBoundary": "Do not create or activate a Pilot until one exact org-org/dev-project dependency chain is complete; do not borrow dev-org data or legacy mutable routes."
+}

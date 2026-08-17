@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContractList, parseResponsibilityPlanList, parseReviewIssueList, parseStageTemplateList } from "./parser";
+import { parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContractList, parseImpactPreviewList, parseProductionStartDecisionList, parseResponsibilityPlanList, parseReviewIssueList, parseStageTemplateList } from "./parser";
 const hash="a".repeat(64), tenant={orgId:"org-org",projectId:"dev-project"};
 describe("W2-A production contract parser",()=>{
   it("parses exact authority lists",()=>{
@@ -40,5 +40,20 @@ describe("W2-C production contract parser",()=>{
     const value={tenant,count:1,items:[{tenant,templateId:"stage-1",revision:2,version:2,profile:"standard",sourceBundleRef:exact("AssetBundleRevision","bundle-1"),stages:[{stageId:"analysis",title:"分析",dependsOn:[],applicability:{kind:"always",profiles:[]},requiredSlotIds:["analyst"],inputSchemaRef:schema("in"),outputSchemaRef:schema("out"),gateRefs:[],checkpointPolicy:{},retryPolicy:{},compensationPolicy:{}}],contentHash:hash,lifecycle:"frozen",sealedBy:"user:dev",sealedAt:null,sealHash:hash,readiness:"ready",blockers:[],createdBy:"user:dev",createdAt:"2026-08-14T00:00:00Z"}]};
     expect(()=>parseStageTemplateList(value)).toThrow("seal");
     expect(()=>parseArtifactRelationList({tenant,count:1,items:[{tenant,relationId:"r",relationType:"bad",fromArtifact:{artifactId:"a",contentHash:hash},toArtifact:{artifactId:"b",contentHash:hash},reason:"x",createdBy:"u",createdAt:"now"}]})).toThrow("relationType");
+  });
+});
+
+describe("W2-D production contract parser",()=>{
+  const exact=(resourceType:string,resourceId:string)=>({resourceType,resourceId,revision:1,contentHash:hash});
+  const source={resourceType:"MetricSnapshot",resourceId:"metric-1",revision:"1",authority:"aip"};
+  const known=(quality:"measured"|"estimated"="measured")=>({quality,value:{count:3},sourceRefs:[source],cutoffAt:"2026-08-14T00:00:00Z",details:{}});
+  const unknown={quality:"unknown",value:null,sourceRefs:[],cutoffAt:null,details:{reason:"未接入"}};
+  const preview={tenant,previewId:"preview-1",revision:1,version:1,taskId:"task-1",planRef:exact("PlanRevision","plan-1"),briefRef:exact("TaskBriefRevision","brief-1"),evidenceBundleRef:exact("EvidenceBundleRevision","bundle-1"),evalContractRef:exact("EvalContractRevision","eval-1"),responsibilityPlanRef:exact("ResponsibilityPlanRevision","responsibility-1"),stageTemplateRef:exact("StageTemplateRevision","stage-1"),modelRouteRef:null,runtimePolicyRef:null,bindingRefs:[],capabilityRef:null,accountRef:null,impact:{objectScope:known(),channelScope:known(),cost:unknown,budget:unknown,risks:known("estimated"),reversibility:known(),approvalChain:known(),rateCapacityKill:known()},expiresAt:"2026-08-15T00:00:00Z",contentHash:hash,dependencySnapshotHash:hash,lifecycle:"draft",readiness:"blocked",blockers:[{code:"ROUTE_REQUIRED",message:"缺少模型路由",resourceRef:null}],frozenBy:null,frozenAt:null,createdBy:"user:dev",createdAt:"2026-08-14T00:00:00Z"};
+  it("解析 Preview quality、blocker 与 exact refs",()=>{const result=parseImpactPreviewList({tenant,count:1,items:[preview]});expect(result.items[0].impact.cost.quality).toBe("unknown");expect(result.items[0].blockers[0].code).toBe("ROUTE_REQUIRED");});
+  it("拒绝虚假 unknown 数值与 readiness 漂移",()=>{expect(()=>parseImpactPreviewList({tenant,count:1,items:[{...preview,impact:{...preview.impact,cost:{...unknown,value:0}}}]})).toThrow("unknown");expect(()=>parseImpactPreviewList({tenant,count:1,items:[{...preview,readiness:"ready"}]})).toThrow("blockers");});
+  it("区分 started 与 blocked Decision，不把已创建 TaskRun 显示成 AgentRun",()=>{
+    const common={tenant,decisionId:"decision-1",taskId:"task-1",planRef:exact("PlanRevision","plan-1"),previewRef:exact("ImpactPreviewRevision","preview-1"),actionProposalRef:{proposalId:"proposal-1",version:1,proposalHash:hash},dependencySnapshotHash:hash,createdBy:"user:dev",createdAt:"2026-08-14T00:00:00Z"};
+    const started=parseProductionStartDecisionList({tenant,count:1,items:[{...common,status:"started",blockers:[],taskRunRef:{resourceType:"TaskRun",resourceId:"run-1",revision:"1",authority:"aip-task-store"}}]});expect(started.items[0].taskRunRef?.resourceId).toBe("run-1");
+    expect(()=>parseProductionStartDecisionList({tenant,count:1,items:[{...common,status:"blocked",blockers:[],taskRunRef:null}]})).toThrow("blockers");
   });
 });

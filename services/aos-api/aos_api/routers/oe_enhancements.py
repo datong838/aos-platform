@@ -1,6 +1,7 @@
 """W2-M · Object Explorer 增强路由：高级搜索 + 保存探索 + 批量导出."""
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 from uuid import NAMESPACE_URL, uuid5
 
@@ -8,6 +9,8 @@ from fastapi import APIRouter, Depends, Header, Response
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from aos_api.auth import Principal, require_principal
+from aos_api.aip_analyst_contracts import AnalystQueryRequest, QuerySourceRef
+from aos_api.aip_contracts import ResourceRef
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
 from aos_api.oe_enhancements import (
@@ -19,6 +22,7 @@ from aos_api.oe_enhancements import (
 from aos_api.ontology_exploration_assets import (
     AnnotationAssetPayload,
     ExplorationAssetPayload,
+    ExplorationSort,
     ObjectSetAssetPayload,
     append_asset,
     get_asset,
@@ -117,6 +121,16 @@ class ExplorationUpdateIn(BaseModel):
     query: dict[str, Any] | None = None
     columns: list[dict[str, Any]] | None = None
     graph: dict[str, Any] | None = None
+    analystQuery: AnalystQueryRequest | None = None
+    resultRef: ResourceRef | None = None
+    cutoffAt: datetime | None = None
+    sourceRefs: list[QuerySourceRef] | None = None
+    sort: list[ExplorationSort] | None = None
+
+
+class ExplorationShareIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    expiresAt: datetime
 
 
 def _scope(principal: Principal) -> TenantScope:
@@ -207,7 +221,7 @@ def update_exploration(
     current = get_asset(_scope(principal), kind="exploration", asset_id=exp_id, actor=principal.subject)
     if current is None:
         raise ApiError(code="EXPLORATION_NOT_FOUND", message="exploration not found", status_code=404)
-    updates = {k: v for k, v in body.model_dump().items() if v is not None}
+    updates = body.model_dump(mode="json", by_alias=True, exclude_none=True)
     payload = {**current[0]["payload"], **updates}
     result, etag = append_asset(
         _scope(principal), kind="exploration", asset_id=exp_id, payload=payload,
@@ -216,6 +230,82 @@ def update_exploration(
     )
     response.headers["ETag"] = etag
     return result
+
+
+def _revise_exploration_access(
+    *,
+    exp_id: str,
+    response: Response,
+    if_match: str | None,
+    idempotency_key: str | None,
+    principal: Principal,
+    share: dict[str, Any] | None,
+) -> dict[str, Any]:
+    current = get_asset(
+        _scope(principal),
+        kind="exploration",
+        asset_id=exp_id,
+        actor=principal.subject,
+    )
+    if current is None:
+        raise ApiError(
+            code="EXPLORATION_NOT_FOUND",
+            message="exploration not found",
+            status_code=404,
+        )
+    payload = {
+        **current[0]["payload"],
+        "visibility": "workspace" if share else "private",
+        "share": share,
+    }
+    result, etag = append_asset(
+        _scope(principal),
+        kind="exploration",
+        asset_id=exp_id,
+        payload=payload,
+        expected_revision=_expected_revision(if_match),
+        idempotency_key=_required_key(idempotency_key),
+        actor=principal.subject,
+    )
+    response.headers["ETag"] = etag
+    return result
+
+
+@router.post("/v1/ontology/explorations/{exp_id}/share")
+def share_exploration(
+    exp_id: str,
+    body: ExplorationShareIn,
+    response: Response,
+    if_match: str = Header(alias="If-Match", min_length=1),
+    idempotency_key: str = Header(alias="Idempotency-Key", min_length=1),
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    return _revise_exploration_access(
+        exp_id=exp_id,
+        response=response,
+        if_match=if_match,
+        idempotency_key=idempotency_key,
+        principal=principal,
+        share={"scope": "workspace", "expiresAt": body.expiresAt.isoformat()},
+    )
+
+
+@router.post("/v1/ontology/explorations/{exp_id}/unshare")
+def unshare_exploration(
+    exp_id: str,
+    response: Response,
+    if_match: str = Header(alias="If-Match", min_length=1),
+    idempotency_key: str = Header(alias="Idempotency-Key", min_length=1),
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    return _revise_exploration_access(
+        exp_id=exp_id,
+        response=response,
+        if_match=if_match,
+        idempotency_key=idempotency_key,
+        principal=principal,
+        share=None,
+    )
 
 
 @router.delete("/v1/ontology/explorations/{exp_id}")

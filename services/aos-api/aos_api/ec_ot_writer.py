@@ -95,9 +95,9 @@ def sink_derived_metrics(
     candidates: list[tuple[dict[str, Any], dict[str, Any]]] = []
     for row in output_rows:
         object_type = str(row.get("ot") or "")
-        # W10 本波完成 Payment + Shipment 两条权威派生链；其余六项仍按
-        # 已有兼容形态读取，待后续按同一 CAS 合同逐项迁移。
-        if object_type not in {"Payment", "Shipment"}:
+        # Payment/Shipment 以及 P08 CustomerLite 已迁入权威派生链；
+        # 其余指标待后续按同一 CAS 合同逐项迁移。
+        if object_type not in {"Payment", "Shipment", "CustomerLite"}:
             continue
         allowed = DERIVED_PROPERTIES.get(object_type)
         if not allowed or row.get("link_type"):
@@ -112,15 +112,6 @@ def sink_derived_metrics(
     if store is None:
         raise RuntimeError("sink_derived_metrics: authoritative store is required")
 
-    first_row = candidates[0][0]
-    first_identity = ExternalIdentityKey(
-        org_id=scope.org_id,
-        workspace_id=scope.project_id,
-        platform=_NIUSHOP_PLATFORM,
-        shop_or_marketplace_id=_NIUSHOP_SITE_ID,
-        external_id=_format_external_id(str(first_row["source_pk"])),
-    )
-    input_revision = store.get_latest_authoritative_revision(first_identity)
     calculator_version = "ec-derived-v1"
     computed_at = max(_parse_datetime(row["source_updated_at"]) for row, _ in candidates)
     updated = 0
@@ -133,6 +124,7 @@ def sink_derived_metrics(
             shop_or_marketplace_id=_NIUSHOP_SITE_ID,
             external_id=row.get("external_id") or _format_external_id(str(row["source_pk"])),
         )
+        input_revision = store.get_latest_authoritative_revision(identity)
         input_hash = deterministic_hash(
             {
                 "calculatorVersion": calculator_version,
@@ -224,9 +216,9 @@ def _build_object(row: dict[str, Any], sync_scope: SyncScope) -> CoreObjectRecor
     source_utc_iso = source_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     properties = dict(row.get("properties", {}))
-    # O1-W10：Payment、Shipment 已切到独立 CAS/Receipt/Outbox，基础对象
+    # Payment、Shipment 与 CustomerLite 已切到独立 CAS/Receipt/Outbox，基础对象
     # 不再混入派生键。其余 OT 仍保留既有兼容写法，避免在未迁移前丢指标。
-    if object_type in {"Payment", "Shipment"}:
+    if object_type in {"Payment", "Shipment", "CustomerLite"}:
         for derived_key in DERIVED_PROPERTIES.get(str(object_type), frozenset()):
             properties.pop(derived_key, None)
     if object_type == "Payment":

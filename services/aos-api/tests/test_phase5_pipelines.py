@@ -282,6 +282,8 @@ def test_proposals_lifecycle() -> None:
     discarded = eng.discard_proposal(TEST_SCOPE, pl.id, pp.id)
     assert discarded.status == "discarded"
     pp2 = eng.create_proposal(TEST_SCOPE, pl.id, "Add field", status="pending")
+    approved = eng.approve_proposal(TEST_SCOPE, pl.id, pp2.id)
+    assert approved.status == "approved"
     merged = eng.merge_proposal(TEST_SCOPE, pl.id, pp2.id)
     assert merged.status == "merged"
 

@@ -8,7 +8,11 @@ from aos_api.aip_agent_registry_contracts import (
     AgentInstanceStatus,
     AgentRunRequest,
     CapabilityBindingRequest,
+    CapabilityReadiness,
+    EvaluateOperationalBindingRequest,
     HandoffEnvelopeRequest,
+    OperationalBindingDependencies,
+    OperationalBindingReadiness,
     TemplateLifecycle,
     VersionedAssetRef,
 )
@@ -98,6 +102,59 @@ def test_capability_binding_accepts_secret_ref_only() -> None:
             quota_policy_revision="quota-1",
             timeout_ms=30000,
             max_concurrency=2,
+        )
+
+
+def test_operational_binding_dependencies_require_exact_authority_kinds() -> None:
+    dependencies = OperationalBindingDependencies(
+        provider_ref=asset("ProviderInstanceRevision"),
+        model_route_ref=asset("ModelRouteRevision"),
+        runtime_policy_ref=asset("RuntimePolicyRevision"),
+        eval_gate_ref=asset("EvalGateDecision"),
+        eval_contract_ref=asset("EvalContractRevision"),
+        license_evidence_refs=[ref("LicenseEvidence", "license-1")],
+        data_dependency_refs=[asset("DatasetRevision")],
+        tool_dependency_refs=[asset("ToolRevision")],
+        budget_policy_ref=asset("BudgetPolicyRevision"),
+    )
+    assert dependencies.allow_degraded is False
+    with pytest.raises(ValidationError, match="provider_ref must reference ProviderInstanceRevision"):
+        OperationalBindingDependencies(provider_ref=asset("Provider"))
+    with pytest.raises(ValidationError, match="model_route_ref must reference ModelRouteRevision"):
+        OperationalBindingDependencies(model_route_ref=asset("Route"))
+
+
+def test_operational_binding_evaluation_requires_explicit_dependencies() -> None:
+    request = EvaluateOperationalBindingRequest(
+        expected_version=1,
+        dependencies=OperationalBindingDependencies(
+            model_route_ref=asset("ModelRouteRevision")
+        ),
+    )
+    assert request.dependencies.model_route_ref is not None
+    with pytest.raises(ValidationError, match="Field required"):
+        EvaluateOperationalBindingRequest(expected_version=1)
+
+
+def test_operational_binding_readiness_requires_hash_window_and_unique_reasons() -> None:
+    readiness = OperationalBindingReadiness(
+        readiness=CapabilityReadiness.BLOCKED,
+        reasons=["PROVIDER_REF_MISSING"],
+        dependencies=OperationalBindingDependencies(),
+        dependency_snapshot_hash="b" * 64,
+        evaluated_at=NOW,
+        expires_at=NOW + timedelta(minutes=5),
+    )
+    assert readiness.readiness is CapabilityReadiness.BLOCKED
+    with pytest.raises(ValidationError, match="expire after evaluation"):
+        OperationalBindingReadiness(
+            **readiness.model_dump(exclude={"expires_at"}),
+            expires_at=NOW,
+        )
+    with pytest.raises(ValidationError, match="unique and non-blank"):
+        OperationalBindingReadiness(
+            **readiness.model_dump(exclude={"reasons"}),
+            reasons=["PROVIDER_REF_MISSING", "PROVIDER_REF_MISSING"],
         )
 
 

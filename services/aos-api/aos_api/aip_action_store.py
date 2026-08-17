@@ -103,6 +103,11 @@ class AipActionStore:
             "payload": body.payload,
             "diff": body.diff,
             "evidenceRefs": [item.model_dump(mode="json", by_alias=True) for item in body.evidence_refs],
+            "impactPreviewRef": (
+                body.impact_preview_ref.model_dump(mode="json", by_alias=True)
+                if body.impact_preview_ref
+                else None
+            ),
             "expiresAt": expires_at.isoformat(),
         }
         policy = stable["policy"]
@@ -127,19 +132,28 @@ class AipActionStore:
                     raise AipActionIdempotencyConflict("idempotency key reused for different proposal")
                 return self._bundle(conn, scope, replay["proposal_id"])
             self._validate_task_run(conn, scope, body.task_id, body.run_id)
+            if body.impact_preview_ref is not None:
+                self.assert_bound_impact_preview_current(
+                    conn, scope, body.impact_preview_ref
+                )
             conn.execute(
                 """INSERT INTO aip_action_proposal (
                    org_id,project_id,proposal_id,action_type_id,action_type_revision_hash,
                    action_type_snapshot,task_id,run_id,object_ref,purpose,client_risk_hint,risk_level,
-                   policy_snapshot,payload,diff,evidence_refs,proposal_hash,status,expires_at,
+                   policy_snapshot,payload,diff,evidence_refs,impact_preview_id,
+                   impact_preview_revision,impact_preview_hash,proposal_hash,status,expires_at,
                    idempotency_key,request_hash,version,created_by,created_at,updated_at)
                    VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s::jsonb,%s,%s,%s,%s::jsonb,
-                           %s::jsonb,%s::jsonb,%s::jsonb,%s,'drafted',%s,%s,%s,1,%s,NOW(),NOW())""",
+                           %s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s,%s,'drafted',%s,%s,%s,1,%s,NOW(),NOW())""",
                 (*scope.key, proposal_id, body.action_type_id, action_snapshot["revisionHash"],
                  self._json(action_snapshot), body.task_id, body.run_id, self._json(stable["objectRef"]),
                  body.purpose, body.risk_hint.value if body.risk_hint else None, risk.level.value,
                  self._json(policy), self._json(body.payload), self._json(body.diff),
-                 self._json(stable["evidenceRefs"]), proposal_hash, expires_at, idempotency_key,
+                 self._json(stable["evidenceRefs"]),
+                 body.impact_preview_ref.resource_id if body.impact_preview_ref else None,
+                 body.impact_preview_ref.revision if body.impact_preview_ref else None,
+                 body.impact_preview_ref.content_hash if body.impact_preview_ref else None,
+                 proposal_hash, expires_at, idempotency_key,
                  request_hash, actor_id),
             )
             conn.execute(
@@ -208,6 +222,7 @@ class AipActionStore:
                 raise AipActionTransitionBlocked("proposal expired")
             if int(row["version"]) != body.expected_proposal_version or row["proposal_hash"] != body.expected_proposal_hash:
                 raise AipActionConflict("proposal revision or hash changed before decision")
+            self.assert_bound_impact_preview_current(conn, scope, row)
             if conn.execute(
                 "SELECT 1 FROM aip_action_approval_event WHERE org_id=%s AND project_id=%s AND proposal_id=%s AND actor_id=%s AND decision='approved'",
                 (*scope.key, proposal_id, actor_id),
@@ -275,6 +290,16 @@ class AipActionStore:
             client_risk_hint=ActionRiskLevel(row["client_risk_hint"]) if row["client_risk_hint"] else None,
             policy_snapshot=row["policy_snapshot"], payload=row["payload"], diff=row["diff"],
             evidence_refs=[ResourceRef.model_validate(item) for item in row["evidence_refs"]],
+            impact_preview_ref=(
+                None
+                if row["impact_preview_id"] is None
+                else {
+                    "resourceType": "ImpactPreviewRevision",
+                    "resourceId": row["impact_preview_id"],
+                    "revision": int(row["impact_preview_revision"]),
+                    "contentHash": row["impact_preview_hash"],
+                }
+            ),
             proposal_hash=row["proposal_hash"], status=ActionProposalStatus(row["status"]),
             expires_at=row["expires_at"], version=row["version"], created_by=actor(row["created_by"]),
             created_at=row["created_at"], updated_at=row["updated_at"],
@@ -301,6 +326,34 @@ class AipActionStore:
             row = conn.execute("SELECT task_id FROM aip_task_run WHERE org_id=%s AND project_id=%s AND run_id=%s", (*scope.key, run_id)).fetchone()
             if row is None or row["task_id"] != task_id:
                 raise AipActionNotFound("run not found for task in scope")
+
+    @staticmethod
+    def assert_bound_impact_preview_current(
+        conn: Any,
+        scope: TenantScope,
+        proposal_or_ref: Any,
+    ) -> None:
+        from aos_api.aip_production_contract_store import (
+            AipProductionContractStore,
+            ProductionContractDependencyBlocked,
+        )
+        from aos_api.aip_production_contracts import ExactRevisionRef
+
+        if isinstance(proposal_or_ref, ExactRevisionRef):
+            ref = proposal_or_ref
+        else:
+            if proposal_or_ref["impact_preview_id"] is None:
+                return
+            ref = ExactRevisionRef(
+                resource_type="ImpactPreviewRevision",
+                resource_id=proposal_or_ref["impact_preview_id"],
+                revision=int(proposal_or_ref["impact_preview_revision"]),
+                content_hash=proposal_or_ref["impact_preview_hash"],
+            )
+        try:
+            AipProductionContractStore().assert_frozen_preview_current(conn, scope, ref)
+        except ProductionContractDependencyBlocked as exc:
+            raise AipActionTransitionBlocked(str(exc)) from exc
 
     @staticmethod
     def _json(value: Any) -> str:

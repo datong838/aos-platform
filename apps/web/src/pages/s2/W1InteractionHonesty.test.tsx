@@ -59,13 +59,16 @@ describe("Wave 3B W1 · 页面交互真实性", () => {
     expect(Array.from(host.querySelectorAll("button")).some((button) => button.textContent?.includes("批准精确版本"))).toBe(false);
   });
 
-  it("Analyst 初始为空，新建后仍无伪结果且可见未保存状态", async () => {
+  it("Analyst 初始为空且仅开放受治理真实查询，不注入 SQL 或本地草稿", async () => {
     await act(async () => root.render(createElement(MemoryRouter, null, createElement(AipAnalystPage))));
-    expect(host.textContent).toContain("未运行查询");
+    expect(host.textContent).toContain("尚未运行查询");
+    expect(host.textContent).toContain("不接受任意 SQL");
     expect(host.textContent).not.toContain("Walter and Sons");
-    const button = host.querySelector('[data-testid="btn-new-query"]') as HTMLButtonElement;
-    await act(async () => button.click());
-    expect((host.querySelector('[data-testid="sql-editor"]') as HTMLTextAreaElement).value).toBe("SELECT * FROM ");
-    expect(host.textContent).toContain("未保存的本地草稿");
+    expect(host.textContent).not.toContain("Northampton");
+    expect(host.textContent).not.toContain("未保存的本地草稿");
+    expect(host.querySelector('[data-testid="sql-editor"]')).toBeNull();
+    const run = Array.from(host.querySelectorAll("button")).find((button) => button.textContent?.includes("运行真实查询"));
+    expect(run).toBeDefined();
+    expect(run?.disabled).toBe(false);
   });
 });

@@ -1,0 +1,96 @@
+{
+  "schema": "aos-aip-bind1-preflight-receipt/v1",
+  "taskId": "aip-bind1-0-read-only-preflight-20260815",
+  "authorityRevision": "AOS-000036",
+  "observedAt": "2026-08-15T09:30:00+08:00",
+  "git": {
+    "branch": "w1-aip",
+    "commit": "5068ed16b81ef6d08e1421f53cc1e7e488599aa2"
+  },
+  "scope": {
+    "realTenant": {"orgId": "org-org", "projectId": "dev-project"},
+    "negativeCanary": {"orgId": "dev-org", "projectId": "dev-project"},
+    "mode": "read-only",
+    "databaseMutations": 0,
+    "externalSideEffects": 0
+  },
+  "catalog": {
+    "agentTemplates": {"count": 6, "lifecycle": {"published": 6}},
+    "skillTemplates": {"count": 37, "lifecycle": {"evaluated": 37, "published": 0}},
+    "capabilityRevisions": {
+      "count": 10,
+      "readiness": {"blocked": 10, "available": 0},
+      "reasons": [
+        "provider_unknown",
+        "eval_pack_unavailable",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ]
+    }
+  },
+  "realTenantReadback": {
+    "agentInstances": {"count": 6, "status": {"provisioning": 6}},
+    "skillBindings": 0,
+    "capabilityBindings": 0,
+    "agentRuns": 0,
+    "modelRouteRevisions": 0,
+    "providerInstanceRevisions": 0,
+    "providerHealthObservations": 0,
+    "evalContractRevisions": 0,
+    "api": {
+      "agentRegistry": {"definitionCount": 6, "installedCount": 6, "runnableCount": 0, "skillDefinitionCount": 37, "capabilityDefinitionCount": 10},
+      "capabilityCatalog": {"count": 10, "availableCount": 0}
+    }
+  },
+  "negativeCanaryReadback": {
+    "agentInstances": 0,
+    "skillBindings": 0,
+    "capabilityBindings": 0,
+    "modelRouteRevisions": 0,
+    "providerInstanceRevisions": 0,
+    "providerHealthObservations": 0,
+    "evalContractRevisions": 0,
+    "api": {"definitionCount": 6, "installedCount": 0, "runnableCount": 0, "skillDefinitionCount": 37, "capabilityDefinitionCount": 10}
+  },
+  "migration": {
+    "alembicHeads": ["aip5_005"],
+    "uniqueHead": true,
+    "migrationExecuted": false
+  },
+  "codeTruth": {
+    "skillBindingRequiresPublishedSkill": true,
+    "capabilityActivationRequiresCatalogAvailable": true,
+    "capabilityBindingHasOperationalDependencyRefs": false,
+    "canonicalCapabilityBindingApiExists": false,
+    "canonicalSkillBindingApiExists": false,
+    "sourceHashes": {
+      "services/aos-api/aos_api/aip_agent_registry_contracts.py": "b34c1b9214cfe9e6b6b9b0c988d9c9d347a5207a1c726df1f40875be81d8dd1c",
+      "services/aos-api/aos_api/aip_capability_binding_service.py": "d958184e6b2273466f41eb89d4c9dc9ca65dd1ec6b009b0d921343231add51a4",
+      "services/aos-api/aos_api/aip_skill_registry.py": "4620c7af1d28c986b47553655a53a93eb09c77be0d94f1b34aab9b60822b732c",
+      "services/aos-api/aos_api/aip_ecommerce_agent_installer.py": "145c308b5e3ac1c24ff469b6d7f2e3e2ce60213aa76459372ddffed0bb17bb2c",
+      "services/aos-api/aos_api/routers/phase3_aip_capabilities.py": "67fa9ad9563165e77542f5b29d121952b46e3ea1ce6a447adb081bc2270b7817",
+      "bundles/solutions/ecommerce-growth/content/agents/ecommerce-capability-catalog.json": "0d33aac853f9f7cac835ea97cd8409388a9c4afe22ddec3b4a8eb668c72acf5a",
+      "bundles/solutions/ecommerce-growth/content/logic/ecommerce-37-logic-catalog.json": "2ebfba4bc26a308f4d93882eaa5105ae364b857cea667ed769fbb1fcb8e4463b"
+    }
+  },
+  "pilotDecision": {
+    "eligible": false,
+    "runnableCount": 0,
+    "reasonCodes": [
+      "SKILL_REVISION_NOT_PUBLISHED",
+      "CAPABILITY_BINDING_MISSING",
+      "PROVIDER_REF_MISSING",
+      "PROVIDER_HEALTH_UNAVAILABLE",
+      "MODEL_ROUTE_REF_MISSING",
+      "EVAL_GATE_REF_MISSING",
+      "EVAL_CONTRACT_MISSING"
+    ],
+    "decision": "Do not create bindings, activate instances or claim a runnable pilot. Continue with BIND-1 contract and additive migration only."
+  },
+  "result": "GREEN_WITH_WARNINGS",
+  "nextGate": "BIND1_1_CONTRACT_ADDITIVE_MIGRATION",
+  "warnings": [
+    "The implementation baseline is internally safe but cannot produce a real runnable binding until Provider, Route, Eval and dependency evidence exists.",
+    "BIND-1 code may close authority and explainability gaps while operational runnable remains zero."
+  ]
+}

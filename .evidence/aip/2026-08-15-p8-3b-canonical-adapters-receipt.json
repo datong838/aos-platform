@@ -1,0 +1,93 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-P8-3B-20260815",
+  "status": "CODE_CONTROL_GREEN_WITH_OPERATIONAL_BLOCKERS",
+  "branch": "w1-aip",
+  "baseCommit": "af7f8758402b229084945e820e88789cfb9f1c6c",
+  "authorityRevision": "AOS-000047",
+  "observedAt": "2026-08-15T20:33:38+08:00",
+  "tenantPolicy": {
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "realTenantBusinessWrites": false
+  },
+  "lease": {
+    "taskId": "aip-p8-3b-canonical-adapters-20260815",
+    "owner": "w1-aip",
+    "migrationLease": false,
+    "baseRevision": "AOS-000047"
+  },
+  "implementation": [
+    "Added a tenant-scoped semantic adapter over ecom_object and installed Object Type schema",
+    "Enforced allow-listed filters, schema-typed sorting, cutoff and exact Selection revisions without accepting SQL",
+    "Reused OpenFGA, markings, field redaction and shared ecommerce PII redaction",
+    "Mapped governed AIP memory search results to exact knowledge citations and typed readiness blockers",
+    "Kept metric queries blocked because no canonical metric value authority exists",
+    "Centralized canonical adapter failures as typed blocked QueryResult revisions"
+  ],
+  "fileHashes": {
+    "services/aos-api/aos_api/aip_analyst_contracts.py": {
+      "before": "194b3918c75fce8791277547012edae125c6890eb50fe0e549b92ce2538755ba",
+      "after": "135f5512ee28ac157d0a75db53b83a7cf6433ac0b70f59a9c3983e5ec54b18ec"
+    },
+    "services/aos-api/aos_api/aip_analyst_query.py": {
+      "before": "85c6cfb1996471c81c54665ea46c05f32c80623c6101eb20ab1062fe63fca94c",
+      "after": "3d74d4e7c85a2c54dd4e8ca480e02c9a8ac5562f158d47589128cb08d4bedb75"
+    },
+    "services/aos-api/aos_api/aip_analyst_canonical_adapters.py": {
+      "before": null,
+      "after": "96b36c04b2f37b4ff60c0a27b1346f13445e3955e6c8968634a22ca39c5a5897"
+    },
+    "services/aos-api/aos_api/ontology_object_redaction.py": {
+      "before": null,
+      "after": "5c7dc747baafb26d1a62f78ed8dcef6cb6d2da74b04ceee87a2858a21e93c0f1"
+    },
+    "services/aos-api/aos_api/routers/aip_analyst.py": {
+      "before": "ebe60d4b62cc89371bb31ebcdd8e73e229d8b45bec8d900bd36037b2ee1323b5",
+      "after": "020fd483b9c9ba1065469915900e4ee019aa859fae864f273ee2cd2826eb6888"
+    },
+    "services/aos-api/aos_api/routers/ontology.py": {
+      "before": "2318cb7cd5b79169845fa4d4c64a5c266c8f622e11ff7d46666ab463c261308c",
+      "after": "cc2d1ad3e7b2cd0c1043d0bf1b0abab6f5046c432bb38944cca136d3c8b702ca"
+    },
+    "services/aos-api/aos_api/routers/analytics.py": {
+      "before": "193fc14c1f55a31313befed33b1ec030e34acbf4ed64ca30d4f5c81b59f55c12",
+      "after": "f5451ddc66fd3f918e6ba2d7f1d01dc78ee6dbc61a32b18faff7e41c791aec16"
+    },
+    "services/aos-api/tests/aip/test_aip8_analyst_adapters.py": {
+      "before": "cf703ec167e4e91f501430e36a3b8b052f740c371443e7960dbeac03476b2c21",
+      "after": "c1144bdc9892a9081aeebe6c0e2cb4f24e1f571dd49955b8c926e7b0eae1922c"
+    },
+    "services/aos-api/tests/aip/test_aip8_canonical_adapters.py": {
+      "before": null,
+      "after": "389eff046b77cbfe03a3187190a8a0d64a4340faa6f4c9c5fe7317c76eea040a"
+    }
+  },
+  "schemeHashes": {
+    "07-228-AIP助手分析师与通用工作台实施方案.md": {
+      "before": "1880d901f5d33674a10e45f60f736b514b98ff2b5906e764acd887b45de2330c",
+      "after": "ae4bd67e542817c88306071e82425a6bf02f767f4ef9dde39862662e7c5c9c1f"
+    },
+    "全量开发清单/07-AIP助手分析师与通用工作台开发清单.md": {
+      "before": "4f6274431b35deeeced62abfe736f4ef56e34182a75d6288a4750e274119df90",
+      "after": "b1a289c487d5248d47c4922f764239ba0521465b8dfda23f6a4388827d99c5de"
+    }
+  },
+  "verification": [
+    "31 cumulative P8 contract, adapter, query API, query store and SavedExploration tests passed",
+    "Semantic tests cover tenant scope, cutoff, access filtering, schema-typed numeric sorting, unknown fields and Selection revision drift",
+    "Knowledge tests cover exact citations and governed readiness blockers",
+    "Metric tests verify METRIC_ADAPTER_UNAVAILABLE without a canonical value owner",
+    "Alembic reports the unique aip8_001 head",
+    "compileall and git diff check passed",
+    "No migration, real tenant business write, external Provider call, web change or Workshop change was performed"
+  ],
+  "baselineWarnings": [
+    "The previously recorded full tests/aip baseline remains 430 passed and 10 failed",
+    "Six failures are the unmounted AIP-5 E7 canonical router and four are shared test database ordering pollution",
+    "Knowledge remains blocked when its canonical service factory is unavailable",
+    "Metric remains blocked until a canonical metric value authority is implemented"
+  ],
+  "operationalStatus": "SEMANTIC_READY_KNOWLEDGE_AND_METRIC_DEPENDENCY_BLOCKED",
+  "nextGate": "P8_4_ASSIST_CANONICAL_CONTEXT_AND_TYPED_SSE"
+}

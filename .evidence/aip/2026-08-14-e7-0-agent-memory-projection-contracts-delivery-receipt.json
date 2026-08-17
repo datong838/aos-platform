@@ -1,0 +1,75 @@
+{
+  "schema": "aos-aip-delivery-receipt/v1",
+  "receipt_id": "AIP5-E7-0-20260814-001",
+  "task_id": "aip-e7-0-agent-memory-projection-contracts-20260814",
+  "wave": "AIP-5-E7-0",
+  "status": "GREEN",
+  "tenant_effect": "NONE",
+  "base_revision": "AOS-000025",
+  "base_git_sha": "2eab0f78a1679aa4fb0adf17468cc9c1875157f0",
+  "branch": "w1-aip",
+  "created_at": "2026-08-14T18:48:44+08:00",
+  "scope": {
+    "changed_files": [
+      "services/aos-api/aos_api/aip_memory_projection_contracts.py",
+      "services/aos-api/tests/aip/test_aip_memory_projection_contracts.py",
+      ".evidence/aip/2026-08-14-e7-0-agent-memory-projection-contracts-delivery-receipt.json"
+    ],
+    "reviewed_unchanged_plan": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/AIP通用能力实施方案/30-AIP-5-E7六数字同事个人记忆共享投影与改进度量实施清单.md",
+    "excluded": [
+      "services/aos-api/alembic/versions",
+      "apps/web",
+      "aos-platform-w2-workshop",
+      "real-tenant-data",
+      "external-provider-effects"
+    ]
+  },
+  "file_hashes": [
+    {
+      "path": "services/aos-api/aos_api/aip_memory_projection_contracts.py",
+      "before_sha256": null,
+      "after_sha256": "2eb4d88bc5c6681f503fbc490028714d8b2f0b1bb06b9102391eb60921b49914"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_aip_memory_projection_contracts.py",
+      "before_sha256": null,
+      "after_sha256": "5b29691217916383398d31b51517a1ace73c3c00d87d08e64b9e6390106aac0c"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/AIP通用能力实施方案/30-AIP-5-E7六数字同事个人记忆共享投影与改进度量实施清单.md",
+      "before_sha256": "09bc4e51b39e9347ff22a210e388a399537dd5c2e5964f357a921b608c1e54bd",
+      "after_sha256": "09bc4e51b39e9347ff22a210e388a399537dd5c2e5964f357a921b608c1e54bd"
+    }
+  ],
+  "contract_facts": [
+    "personal and shared memory are reference-only projections over exact Memory revisions",
+    "owner and recipients require exact AgentInstance version and content hash",
+    "role strings, Memory payloads, implicit shared recipients and self-recipient projections are rejected",
+    "MemoryExposure is a trusted output contract bound to exact runtime and evaluation references",
+    "unknown improvement cannot carry invented metrics or claim improvement",
+    "measured or estimated improvement requires exact exposure, source, eval and cohort evidence"
+  ],
+  "verification": [
+    {
+      "command": "python -m pytest -q test_aip_memory_projection_contracts.py test_aip_agent_registry_contracts.py test_aip_memory_pipeline_contracts.py",
+      "result": "GREEN",
+      "summary": "20 passed; 7 pre-existing warnings"
+    },
+    {
+      "command": "python -m compileall -q aip_memory_projection_contracts.py",
+      "result": "GREEN"
+    },
+    {
+      "command": "git diff --check",
+      "result": "GREEN"
+    }
+  ],
+  "side_effects": {
+    "database_migration": false,
+    "database_write": false,
+    "provider_call": false,
+    "agent_run_started": false,
+    "browser_required": false
+  },
+  "next_gate": "AIP5_E7_1_AGENT_MEMORY_PROJECTION_MIGRATION"
+}

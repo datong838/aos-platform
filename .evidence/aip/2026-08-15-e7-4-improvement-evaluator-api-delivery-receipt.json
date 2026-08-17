@@ -1,0 +1,54 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "task_id": "aip-e7-4-improvement-evaluator-api-20260815",
+  "branch": "w1-aip",
+  "base_sha": "5f80e62229f07836c11d280b891b48551febb038",
+  "status": "GREEN",
+  "delivery": [
+    "fail-closed improvement evaluator accepts exact AgentInstance, MetricDefinition and frozen EvalContract references",
+    "caller cannot submit self-reported improvement metrics through the canonical API",
+    "minimum sample, confidence interval, revoked exposure and governed-comparison gates precede any improvement conclusion",
+    "unknown evidence appends immutable insufficient_evidence observation without invented metrics or source references",
+    "tenant-scoped canonical projection, status, event, revocation-impact and observation endpoints with stable errors and role gates",
+    "OpenAPI registration through the AIP aggregate"
+  ],
+  "verification": {
+    "targeted_and_adjacent_tests": "35 passed, 18 pre-existing warnings",
+    "postgresql_unknown_observation_shape": "GREEN; SQL NULL constraint accepted inside rollback transaction",
+    "postgresql_rollback_cleanup": "GREEN; residual row count 0",
+    "py_compile": "GREEN",
+    "compileall": "GREEN",
+    "diff_check": "GREEN",
+    "ruff_check": "UNAVAILABLE; ruff is not installed in the service virtual environment",
+    "browser": "NOT_APPLICABLE; E7-4 has no UI change"
+  },
+  "pre_sha256": {
+    "services/aos-api/aos_api/aip_memory_improvement.py": null,
+    "services/aos-api/aos_api/routers/aip_memory_improvement.py": null,
+    "services/aos-api/aos_api/routers/domain_aggregates.py": "fd08683f89a479af3f386aeda194baff2c38ea6ad6dd46b49bade7631ae6d706",
+    "services/aos-api/tests/aip/test_aip_memory_improvement.py": null,
+    "services/aos-api/tests/aip/test_aip_memory_improvement_api.py": null
+  },
+  "post_sha256": {
+    "services/aos-api/aos_api/aip_memory_improvement.py": "48213879b76a30cf29f3b04be043a8990421b9b52e5e22dfa319bb7ab87c9831",
+    "services/aos-api/aos_api/routers/aip_memory_improvement.py": "979cc4ffaaa709f3a63432da8ea2ef9c87683187ca01c36c249dbb1f82b6dd40",
+    "services/aos-api/aos_api/routers/domain_aggregates.py": "1b6136f7a1824a328214e428052dba3f4533ba4afcf95d2f0e657d5141e835af",
+    "services/aos-api/tests/aip/test_aip_memory_improvement.py": "92b01b471f7d5b339990a3e0084ea0a4ae394d06b315599b158535184a6dbac4",
+    "services/aos-api/tests/aip/test_aip_memory_improvement_api.py": "50c0ff6efe26a5835efc46437ac08ca609dac02163ffbd228d7cc94ea72c821f"
+  },
+  "tenant_evidence": {
+    "real_target": "org-org/dev-project",
+    "negative_canary": "dev-org/dev-project",
+    "persistent_real_business_rows_written": 0,
+    "provider_or_agent_run_side_effects": 0
+  },
+  "exclusions": [
+    "no migration",
+    "no external Provider call",
+    "no AgentRun creation",
+    "no apps/web modification",
+    "no w2-workshop access",
+    "positive measured improvement still requires a future trusted evidence resolver and sufficient real samples"
+  ],
+  "next_gate": "AIP5_E7_5_SDK_UI_BROWSER_SEAL"
+}

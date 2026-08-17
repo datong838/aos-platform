@@ -86,6 +86,7 @@ class AipActionExecutionService:
                 raise AipActionTransitionBlocked("proposal expired before execution")
             if int(proposal["version"]) != body.expected_proposal_version or proposal["proposal_hash"] != body.expected_proposal_hash:
                 raise AipActionConflict("proposal revision or hash changed before lease")
+            self._store.assert_bound_impact_preview_current(conn, scope, proposal)
             if proposal["created_by"] == principal.subject:
                 raise AipActionTransitionBlocked("maker cannot execute own proposal")
             approvals = conn.execute(
@@ -159,6 +160,7 @@ class AipActionExecutionService:
                 "SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s FOR UPDATE",
                 (*scope.key, lease["proposal_id"]),
             ).fetchone()
+            self._store.assert_bound_impact_preview_current(conn, scope, proposal)
             adapter = self._adapters.get(proposal["action_type_id"])
             if adapter is None:
                 raise AipActionDependencyUnavailable("Action adapter is not registered")

@@ -1,0 +1,61 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP5-E7-5-20260815",
+  "status": "GREEN_WITH_WARNINGS",
+  "branch": "w1-aip",
+  "baseCommit": "4018dd382c169fbed567c633bdbb698e6f26447f",
+  "tenantPolicy": {
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "realTenantSideEffects": false,
+    "note": "浏览器只读取真实实例、投影、Exposure 与 Observation；没有点击创建、共享、撤回等写操作。"
+  },
+  "lease": {
+    "taskId": "aip-e7-5-sdk-ui-browser-seal-20260815",
+    "owner": "codex-aip-w1",
+    "baseRevision": "AOS-000034",
+    "exclusiveMigrationLease": false
+  },
+  "summary": [
+    "扩展严格 aipMemory SDK，覆盖 AgentInstance、个人/共享引用投影、Exposure、Observation 与撤回影响查询。",
+    "所有响应执行 tenant、exact ref、revision/version/hash、personal/shared、有效期、引用-only 与 unknown 诚实性校验。",
+    "Memory Governance 新增数字同事记忆视图，展示当前租户权威实例、状态、版本、投影授权、Exposure 与改进度量。",
+    "栖月汇 6 个真实实例当前均为 provisioning；页面如实展示并禁用投影写操作，不伪装 active。",
+    "dev-org/dev-project 四个权威读取接口均返回隔离空集。"
+  ],
+  "changedFiles": [
+    { "path": "apps/web/src/api/aip/operations.ts", "beforeSha256": "56ceeaea38471349f7f9c6443d3d85103d267a79489e0e15052121e70001da0b", "afterSha256": "194d53410959772692e1edfee9760006925cc7344290908dddc34855247a5e56" },
+    { "path": "apps/web/src/api/aipMemory/client.test.ts", "beforeSha256": "1c3cf4227ae6fcbaf97d2fad428ece81bac81e61f7a0936168e8f77ecc972643", "afterSha256": "3df940b0cc839b3d3c611f39b1fec58fb4f78a95392d9089719135151848b843" },
+    { "path": "apps/web/src/api/aipMemory/client.ts", "beforeSha256": "22097918c7f52326291ccb65d83c10387f8635c21d06beb5f286ed4d6523a334", "afterSha256": "8aed0bd36cf49d05312f1e179d7a34b3920b4d3ec93aba3fc7ba8b44c802c630" },
+    { "path": "apps/web/src/api/aipMemory/contracts.ts", "beforeSha256": "09594dac7c7a6efaa2ecced4fd5dd0fd8d69d4d72e5a030c728535daafb30c05", "afterSha256": "198024a707f95a935558c65dc4054a916b0bb62f862c367b87261e68841ba600" },
+    { "path": "apps/web/src/api/aipMemory/index.ts", "beforeSha256": "555bd75f708896f5df9a1f9cce0a1d89a76503576def06c33187fe8fb03bd630", "afterSha256": "ef2895bb1c75c7080fac1c03bf3277284358e4ef8a9746d19a47210dc2b75060" },
+    { "path": "apps/web/src/pages/s2/MemoryGovernancePage.test.tsx", "beforeSha256": "260bcd69bfbdb5b1e41742bce5305f6c8eb7489aae766b4bbd9bccceb6a93dfe", "afterSha256": "9c94fafb0f3e692ff934ff65e126c5ffa8f7a7e494d91c616c600e28e7d69e01" },
+    { "path": "apps/web/src/pages/s2/MemoryGovernancePage.tsx", "beforeSha256": "ad3bfe9460cb58f68da6a1774aa718793e05a4432af8b7cadcc022fd86cd833c", "afterSha256": "77fddc76b704005313b417bc0a42454736226b4d8a1e77c758e1ee5f1ce34e07" }
+  ],
+  "verification": [
+    { "name": "e7-5-targeted-sdk-page", "result": "GREEN", "evidence": "2 files / 20 tests passed" },
+    { "name": "web-cumulative-regression", "result": "GREEN", "evidence": "188 files / 2127 tests passed" },
+    { "name": "workspace-typecheck", "result": "GREEN", "evidence": "web and desktop TypeScript checks passed" },
+    { "name": "web-production-build", "result": "GREEN", "evidence": "Vite production build passed" },
+    { "name": "built-in-browser-real-tenant", "result": "GREEN", "evidence": "http://127.0.0.1:5174/aip/memory-governance；org-org/dev-project 显示 6 个 provisioning v1 实例、exact hash、0 投影、0 Exposure、0 Observation，创建按钮精确禁用。" },
+    { "name": "negative-tenant-api-canary", "result": "GREEN", "evidence": "dev-org/dev-project 的 AgentInstance、Projection、Exposure、Observation 四个 GET 均为 200 且独立空集。" },
+    { "name": "runtime-side-effect-isolation", "result": "GREEN_WITH_WARNINGS", "evidence": "唯一 API 以 migration=disabled、AOS_QYH_CRON_ENABLED=0 重启；未执行迁移、Cron、Provider 调用或 E7 写 API。" },
+    { "name": "browser-console", "result": "GREEN_WITH_WARNINGS", "evidence": "无 E7 页面 error；仅 React Router future flag 与既有目录读取告警。" },
+    { "name": "diff-check", "result": "GREEN", "evidence": "git diff --check" }
+  ],
+  "knownWarnings": [
+    "当前真实六数字同事实例均为 provisioning，无法在不改变权威状态的前提下浏览器正向创建个人/共享投影；active 正向、stale、unknown、create/revoke canonical 调用由严格单测覆盖。",
+    "只读启动时租户目录仅列出 org-org，内置浏览器无法通过可见 UI 切换 dev-org；负向隔离改由同一运行时四个 canonical GET 验证。",
+    "受保护的未跟踪 Watchdog receipt 未读取、修改或纳入本次提交。"
+  ],
+  "forbiddenSideEffects": {
+    "migration": false,
+    "cronExecution": false,
+    "providerCall": false,
+    "projectionCreated": false,
+    "projectionRevoked": false,
+    "realTenantMutation": false
+  },
+  "nextGate": "M1_SERIAL_INTEGRATION_AND_AUTHORITY_CAS",
+  "createdAt": "2026-08-15T08:58:21+08:00"
+}

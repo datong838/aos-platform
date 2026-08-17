@@ -17,7 +17,9 @@ from aos_api.aip_production_contracts import (
     CreateEvidenceBundleRequest, CreateResponsibilityPlanRequest,
     CreateReviewIssueRequest, CreateStageTemplateRequest, EvalContractListResponse,
     EvalContractRevision, EvidenceBundleRevision, ExactArtifactRef,
-    ExactRevisionRef, ResolveReviewIssueRequest, ResponsibilityPlanListResponse,
+    ExactRevisionRef, ImpactPreviewListResponse, ImpactPreviewRevision,
+    CreateImpactPreviewRequest, ReviseImpactPreviewRequest,
+    ResolveReviewIssueRequest, ResponsibilityPlanListResponse,
     ResponsibilityPlanRevision, ReturnDecision, ReturnReviewIssueRequest,
     ReviseBriefRequest, ReviseEvalContractRequest,
     ReviseResponsibilityPlanRequest, ReviseStageTemplateRequest, ReviewIssue,
@@ -290,6 +292,296 @@ class AipProductionContractStore:
                 ORDER BY revision.created_at DESC,revision.plan_id""", scope.key).fetchall()
             items = [self._responsibility_plan(scope, row, int(row["version"]), conn) for row in rows]
             return ResponsibilityPlanListResponse(tenant=self._tenant(scope), items=items, count=len(items))
+
+    def create_impact_preview(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        body: CreateImpactPreviewRequest,
+    ) -> ImpactPreviewRevision:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(payload)
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "impact_preview.create", key, request_hash)
+            if replay:
+                return self.get_impact_preview(
+                    scope, replay["resourceId"], int(replay["revision"]), conn=conn
+                )
+            self._require_task_plan(conn, scope, body)
+            preview_id = f"impact-preview-{uuid.uuid4().hex[:20]}"
+            content_hash = canonical_hash(payload)
+            snapshot, blockers, readiness = self._preview_dependency_state(
+                conn, scope, body
+            )
+            conn.execute(
+                """INSERT INTO aip_impact_preview_head
+                (org_id,project_id,preview_id,current_revision,version)
+                VALUES(%s,%s,%s,1,1)""",
+                (*scope.key, preview_id),
+            )
+            row = self._insert_impact_preview(
+                conn,
+                scope,
+                preview_id,
+                1,
+                actor,
+                body,
+                content_hash,
+                snapshot,
+                blockers,
+                readiness,
+                BriefLifecycle.DRAFT,
+            )
+            self._receipt(
+                conn,
+                scope,
+                "impact_preview.create",
+                key,
+                request_hash,
+                {
+                    "resourceType": "ImpactPreviewRevision",
+                    "resourceId": preview_id,
+                    "revision": 1,
+                    "contentHash": content_hash,
+                },
+                actor,
+            )
+            conn.commit()
+            return self._impact_preview(scope, row, 1)
+
+    def revise_impact_preview(
+        self,
+        scope: TenantScope,
+        actor: str,
+        preview_id: str,
+        key: str,
+        body: ReviseImpactPreviewRequest,
+    ) -> ImpactPreviewRevision:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash({"previewId": preview_id, **payload})
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "impact_preview.revise", key, request_hash)
+            if replay:
+                return self.get_impact_preview(
+                    scope, preview_id, int(replay["revision"]), conn=conn
+                )
+            head = self._head(
+                conn, scope, "aip_impact_preview_head", "preview_id", preview_id
+            )
+            if not head:
+                raise ProductionContractNotFound("impact preview not found")
+            if int(head["version"]) != body.expected_version:
+                raise ProductionContractConflict("stale impact preview version")
+            current = self.get_impact_preview(
+                scope, preview_id, int(head["current_revision"]), conn=conn
+            )
+            if current.lifecycle is not BriefLifecycle.DRAFT:
+                raise ProductionContractConflict("only a draft impact preview can be revised")
+            self._require_task_plan(conn, scope, body)
+            revision = int(head["current_revision"]) + 1
+            content = body.model_dump(
+                mode="json", by_alias=True, exclude={"expected_version"}
+            )
+            content_hash = canonical_hash(content)
+            snapshot, blockers, readiness = self._preview_dependency_state(
+                conn, scope, body
+            )
+            row = self._insert_impact_preview(
+                conn,
+                scope,
+                preview_id,
+                revision,
+                actor,
+                body,
+                content_hash,
+                snapshot,
+                blockers,
+                readiness,
+                BriefLifecycle.DRAFT,
+            )
+            self._advance_head(
+                conn,
+                scope,
+                "aip_impact_preview_head",
+                "preview_id",
+                preview_id,
+                revision,
+            )
+            self._receipt(
+                conn,
+                scope,
+                "impact_preview.revise",
+                key,
+                request_hash,
+                {
+                    "resourceType": "ImpactPreviewRevision",
+                    "resourceId": preview_id,
+                    "revision": revision,
+                    "contentHash": content_hash,
+                },
+                actor,
+            )
+            conn.commit()
+            return self._impact_preview(scope, row, int(head["version"]) + 1)
+
+    def freeze_impact_preview(
+        self,
+        scope: TenantScope,
+        actor: str,
+        preview_id: str,
+        expected_version: int,
+        key: str,
+    ) -> ImpactPreviewRevision:
+        request_hash = canonical_hash(
+            {"previewId": preview_id, "expectedVersion": expected_version}
+        )
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "impact_preview.freeze", key, request_hash)
+            if replay:
+                return self.get_impact_preview(
+                    scope, preview_id, int(replay["revision"]), conn=conn
+                )
+            head = self._head(
+                conn, scope, "aip_impact_preview_head", "preview_id", preview_id
+            )
+            if not head:
+                raise ProductionContractNotFound("impact preview not found")
+            if int(head["version"]) != expected_version:
+                raise ProductionContractConflict("stale impact preview version")
+            current = self.get_impact_preview(
+                scope, preview_id, int(head["current_revision"]), conn=conn
+            )
+            if current.lifecycle is not BriefLifecycle.DRAFT:
+                raise ProductionContractConflict("impact preview is not a draft")
+            body = CreateImpactPreviewRequest.model_validate(
+                current.model_dump(
+                    mode="json",
+                    by_alias=True,
+                    include=set(CreateImpactPreviewRequest.model_fields),
+                )
+            )
+            snapshot, blockers, readiness = self._preview_dependency_state(
+                conn, scope, body
+            )
+            if readiness is not ContractReadiness.READY:
+                codes = ",".join(blocker.code for blocker in blockers)
+                raise ProductionContractDependencyBlocked(
+                    f"IMPACT_PREVIEW_NOT_READY:{codes}"
+                )
+            revision = int(head["current_revision"]) + 1
+            row = self._insert_impact_preview(
+                conn,
+                scope,
+                preview_id,
+                revision,
+                actor,
+                body,
+                current.content_hash,
+                snapshot,
+                blockers,
+                readiness,
+                BriefLifecycle.FROZEN,
+                frozen_by=actor,
+            )
+            self._advance_head(
+                conn,
+                scope,
+                "aip_impact_preview_head",
+                "preview_id",
+                preview_id,
+                revision,
+            )
+            self._receipt(
+                conn,
+                scope,
+                "impact_preview.freeze",
+                key,
+                request_hash,
+                {
+                    "resourceType": "ImpactPreviewRevision",
+                    "resourceId": preview_id,
+                    "revision": revision,
+                    "contentHash": current.content_hash,
+                },
+                actor,
+            )
+            conn.commit()
+            return self._impact_preview(scope, row, expected_version + 1)
+
+    def get_impact_preview(
+        self,
+        scope: TenantScope,
+        preview_id: str,
+        revision: int | None = None,
+        *,
+        conn: Any | None = None,
+    ) -> ImpactPreviewRevision:
+        def read(connection: Any) -> ImpactPreviewRevision:
+            head = connection.execute(
+                """SELECT * FROM aip_impact_preview_head
+                WHERE org_id=%s AND project_id=%s AND preview_id=%s""",
+                (*scope.key, preview_id),
+            ).fetchone()
+            if not head:
+                raise ProductionContractNotFound("impact preview not found")
+            selected = revision or int(head["current_revision"])
+            row = connection.execute(
+                """SELECT * FROM aip_impact_preview_revision
+                WHERE org_id=%s AND project_id=%s AND preview_id=%s AND revision=%s""",
+                (*scope.key, preview_id, selected),
+            ).fetchone()
+            if not row:
+                raise ProductionContractNotFound("impact preview revision not found")
+            return self._impact_preview(scope, row, int(head["version"]))
+
+        if conn is not None:
+            return read(conn)
+        with self._connect_factory(scope) as connection:
+            return read(connection)
+
+    def list_impact_previews(self, scope: TenantScope) -> ImpactPreviewListResponse:
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT revision.*,head.version FROM aip_impact_preview_head head
+                JOIN aip_impact_preview_revision revision ON revision.org_id=head.org_id
+                  AND revision.project_id=head.project_id
+                  AND revision.preview_id=head.preview_id
+                  AND revision.revision=head.current_revision
+                WHERE head.org_id=%s AND head.project_id=%s
+                ORDER BY revision.created_at DESC,revision.preview_id""",
+                scope.key,
+            ).fetchall()
+        items = [self._impact_preview(scope, row, int(row["version"])) for row in rows]
+        return ImpactPreviewListResponse(
+            tenant=self._tenant(scope), items=items, count=len(items)
+        )
+
+    def assert_frozen_preview_current(
+        self, conn: Any, scope: TenantScope, ref: ExactRevisionRef
+    ) -> Any:
+        if ref.resource_type != "ImpactPreviewRevision":
+            raise ProductionContractDependencyBlocked("IMPACT_PREVIEW_REF_INVALID")
+        row = conn.execute(
+            """SELECT * FROM aip_impact_preview_revision
+            WHERE org_id=%s AND project_id=%s AND preview_id=%s AND revision=%s""",
+            (*scope.key, ref.resource_id, ref.revision),
+        ).fetchone()
+        if not row:
+            raise ProductionContractDependencyBlocked("IMPACT_PREVIEW_MISSING")
+        if row["content_hash"] != ref.content_hash:
+            raise ProductionContractDependencyBlocked("IMPACT_PREVIEW_HASH_DRIFTED")
+        if row["lifecycle"] != "frozen" or row["readiness"] != "ready":
+            raise ProductionContractDependencyBlocked("IMPACT_PREVIEW_NOT_FROZEN_READY")
+        if row["expires_at"] <= datetime.now(timezone.utc):
+            raise ProductionContractDependencyBlocked("IMPACT_PREVIEW_EXPIRED")
+        body = self._impact_body(row)
+        snapshot, blockers, readiness = self._preview_dependency_state(conn, scope, body)
+        if blockers or readiness is not ContractReadiness.READY:
+            raise ProductionContractDependencyBlocked("IMPACT_PREVIEW_DEPENDENCY_DRIFTED")
+        if canonical_hash(snapshot) != row["dependency_snapshot_hash"]:
+            raise ProductionContractDependencyBlocked("IMPACT_PREVIEW_SNAPSHOT_DRIFTED")
+        return row
 
     def create_stage_template(
         self,
@@ -1532,6 +1824,373 @@ class AipProductionContractStore:
             reason=row["reason"],
             decision_hash=row["decision_hash"],
             actor=row["actor"],
+            created_at=row["created_at"],
+        )
+
+    def _require_task_plan(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        body: CreateImpactPreviewRequest | ReviseImpactPreviewRequest,
+    ) -> None:
+        task = conn.execute(
+            """SELECT task_id FROM aip_task
+            WHERE org_id=%s AND project_id=%s AND task_id=%s""",
+            (*scope.key, body.task_id),
+        ).fetchone()
+        if not task:
+            raise ProductionContractDependencyBlocked("TASK_MISSING")
+        plan = conn.execute(
+            """SELECT task_id,revision,content_hash FROM aip_plan_revision
+            WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s""",
+            (*scope.key, body.plan_ref.resource_id),
+        ).fetchone()
+        if not plan or plan["task_id"] != body.task_id:
+            raise ProductionContractDependencyBlocked("PLAN_MISSING_OR_TASK_MISMATCH")
+        if (
+            int(plan["revision"]) != body.plan_ref.revision
+            or plan["content_hash"] != body.plan_ref.content_hash
+        ):
+            raise ProductionContractDependencyBlocked("PLAN_EXACT_REF_DRIFTED")
+
+    def _preview_dependency_state(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        body: CreateImpactPreviewRequest | ReviseImpactPreviewRequest,
+    ) -> tuple[list[dict[str, Any]], list[ContractBlocker], ContractReadiness]:
+        snapshot: list[dict[str, Any]] = []
+        blockers: list[ContractBlocker] = []
+        exact_specs = (
+            (body.plan_ref, "aip_plan_revision", "plan_revision_id", False),
+            (body.brief_ref, "aip_task_brief_revision", "brief_id", True),
+            (
+                body.evidence_bundle_ref,
+                "aip_evidence_bundle_revision",
+                "bundle_id",
+                True,
+            ),
+            (body.eval_contract_ref, "aip_eval_contract_revision", "contract_id", True),
+            (
+                body.responsibility_plan_ref,
+                "aip_responsibility_plan_revision",
+                "plan_id",
+                True,
+            ),
+            (
+                body.stage_template_ref,
+                "aip_stage_template_revision",
+                "template_id",
+                True,
+            ),
+        )
+        for ref, table, id_column, require_frozen in exact_specs:
+            self._snapshot_exact(
+                conn,
+                scope,
+                ref,
+                table,
+                id_column,
+                snapshot,
+                blockers,
+                require_frozen=require_frozen,
+            )
+        if body.model_route_ref:
+            self._snapshot_exact(
+                conn,
+                scope,
+                body.model_route_ref,
+                "aip_model_route_revision",
+                "model_route_id",
+                snapshot,
+                blockers,
+                require_frozen=False,
+            )
+        if body.runtime_policy_ref:
+            self._snapshot_exact(
+                conn,
+                scope,
+                body.runtime_policy_ref,
+                "aip_runtime_policy_revision",
+                "runtime_policy_id",
+                snapshot,
+                blockers,
+                require_frozen=False,
+            )
+        if body.capability_ref:
+            ref = body.capability_ref
+            row = conn.execute(
+                """SELECT revision,content_hash,lifecycle,readiness
+                FROM aip_capability_revision WHERE capability_id=%s AND revision=%s""",
+                (ref.resource_id, ref.revision),
+            ).fetchone()
+            observed = {
+                "resourceType": ref.resource_type,
+                "resourceId": ref.resource_id,
+                "requestedRevision": ref.revision,
+                "requestedHash": ref.content_hash,
+                "observedRevision": int(row["revision"]) if row else None,
+                "observedHash": row["content_hash"] if row else None,
+                "lifecycle": row["lifecycle"] if row else None,
+                "readiness": row["readiness"] if row else None,
+            }
+            snapshot.append(observed)
+            if not row:
+                blockers.append(
+                    ContractBlocker(
+                        code="CAPABILITY_MISSING",
+                        message="CapabilityRevision 不存在",
+                        resource_ref=ref,
+                    )
+                )
+            elif row["content_hash"] != ref.content_hash:
+                blockers.append(
+                    ContractBlocker(
+                        code="CAPABILITY_DRIFTED",
+                        message="CapabilityRevision exact hash 漂移",
+                        resource_ref=ref,
+                    )
+                )
+            elif row["lifecycle"] != "published" or row["readiness"] != "available":
+                blockers.append(
+                    ContractBlocker(
+                        code="CAPABILITY_NOT_READY",
+                        message="CapabilityRevision 尚不可生产使用",
+                        resource_ref=ref,
+                    )
+                )
+        mutable_specs = {
+            "AgentInstance": ("aip_agent_instance", "instance_id", "status", {"active"}),
+            "SkillBinding": ("aip_skill_binding", "binding_id", "status", {"active"}),
+            "CapabilityBinding": (
+                "aip_capability_binding",
+                "binding_id",
+                "status",
+                {"active"},
+            ),
+        }
+        for ref in body.binding_refs:
+            table, id_column, status_column, ready_values = mutable_specs[ref.resource_type]
+            row = conn.execute(
+                f"""SELECT version,{status_column} AS status FROM {table}
+                WHERE org_id=%s AND project_id=%s AND {id_column}=%s""",
+                (*scope.key, ref.resource_id),
+            ).fetchone()
+            observed = {
+                "resourceType": ref.resource_type,
+                "resourceId": ref.resource_id,
+                "requestedVersion": ref.version,
+                "observedVersion": int(row["version"]) if row else None,
+                "status": row["status"] if row else None,
+            }
+            snapshot.append(observed)
+            if not row:
+                blockers.append(
+                    ContractBlocker(
+                        code=f"{ref.resource_type.upper()}_MISSING",
+                        message=f"{ref.resource_type} 不存在",
+                    )
+                )
+            elif int(row["version"]) != ref.version:
+                blockers.append(
+                    ContractBlocker(
+                        code=f"{ref.resource_type.upper()}_DRIFTED",
+                        message=f"{ref.resource_type} version 漂移",
+                    )
+                )
+            elif row["status"] not in ready_values:
+                blockers.append(
+                    ContractBlocker(
+                        code=f"{ref.resource_type.upper()}_NOT_READY",
+                        message=f"{ref.resource_type} 尚未 active",
+                    )
+                )
+        if body.account_ref:
+            snapshot.append(
+                {
+                    "resourceType": body.account_ref.resource_type,
+                    "resourceId": body.account_ref.resource_id,
+                    "requestedVersion": body.account_ref.version,
+                    "observedVersion": None,
+                    "status": "authority_unavailable",
+                }
+            )
+            blockers.append(
+                ContractBlocker(
+                    code="ACCOUNT_AUTHORITY_UNAVAILABLE",
+                    message="受控账号 authority 尚未接入 W2-D",
+                )
+            )
+        impact = body.impact.model_dump(mode="json", by_alias=True)
+        if any(item["quality"] == "unknown" for item in impact.values()):
+            blockers.append(
+                ContractBlocker(
+                    code="IMPACT_REQUIRED_DIMENSION_UNKNOWN",
+                    message="必需 impact 分区仍为 unknown",
+                )
+            )
+        if body.expires_at <= datetime.now(timezone.utc):
+            blockers.append(
+                ContractBlocker(code="IMPACT_PREVIEW_EXPIRED", message="ImpactPreview 已过期")
+            )
+        if not blockers:
+            readiness = ContractReadiness.READY
+        elif any("DRIFTED" in item.code or "EXPIRED" in item.code for item in blockers):
+            readiness = ContractReadiness.STALE
+        elif any("UNKNOWN" in item.code for item in blockers):
+            readiness = ContractReadiness.UNKNOWN
+        else:
+            readiness = ContractReadiness.BLOCKED
+        return snapshot, blockers, readiness
+
+    def _snapshot_exact(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        ref: ExactRevisionRef,
+        table: str,
+        id_column: str,
+        snapshot: list[dict[str, Any]],
+        blockers: list[ContractBlocker],
+        *,
+        require_frozen: bool,
+    ) -> None:
+        row = conn.execute(
+            f"""SELECT revision,content_hash{',lifecycle' if require_frozen else ''}
+            FROM {table} WHERE org_id=%s AND project_id=%s
+              AND {id_column}=%s AND revision=%s""",
+            (*scope.key, ref.resource_id, ref.revision),
+        ).fetchone()
+        observed = {
+            "resourceType": ref.resource_type,
+            "resourceId": ref.resource_id,
+            "requestedRevision": ref.revision,
+            "requestedHash": ref.content_hash,
+            "observedRevision": int(row["revision"]) if row else None,
+            "observedHash": row["content_hash"] if row else None,
+            "lifecycle": row["lifecycle"] if row and require_frozen else None,
+        }
+        snapshot.append(observed)
+        if not row:
+            blockers.append(
+                ContractBlocker(
+                    code=f"{ref.resource_type.upper()}_MISSING",
+                    message=f"{ref.resource_type} exact revision 不存在",
+                    resource_ref=ref,
+                )
+            )
+        elif row["content_hash"] != ref.content_hash:
+            blockers.append(
+                ContractBlocker(
+                    code=f"{ref.resource_type.upper()}_DRIFTED",
+                    message=f"{ref.resource_type} exact hash 漂移",
+                    resource_ref=ref,
+                )
+            )
+        elif require_frozen and row["lifecycle"] != "frozen":
+            blockers.append(
+                ContractBlocker(
+                    code=f"{ref.resource_type.upper()}_NOT_FROZEN",
+                    message=f"{ref.resource_type} 尚未 frozen",
+                    resource_ref=ref,
+                )
+            )
+
+    def _insert_impact_preview(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        preview_id: str,
+        revision: int,
+        actor: str,
+        body: CreateImpactPreviewRequest | ReviseImpactPreviewRequest,
+        content_hash: str,
+        snapshot: list[dict[str, Any]],
+        blockers: list[ContractBlocker],
+        readiness: ContractReadiness,
+        lifecycle: BriefLifecycle,
+        *,
+        frozen_by: str | None = None,
+    ) -> Any:
+        payload = body.model_dump(mode="json", by_alias=True, exclude={"expected_version"})
+        blocker_payload = [item.model_dump(mode="json", by_alias=True) for item in blockers]
+        return conn.execute(
+            """INSERT INTO aip_impact_preview_revision
+            (org_id,project_id,preview_id,revision,task_id,plan_ref,brief_ref,
+             evidence_bundle_ref,eval_contract_ref,responsibility_plan_ref,stage_template_ref,
+             model_route_ref,runtime_policy_ref,binding_refs,capability_ref,account_ref,
+             impact,expires_at,content_hash,dependency_snapshot_hash,dependency_snapshot,
+             lifecycle,readiness,blockers,frozen_by,frozen_at,created_by)
+            VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
+             %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,
+             %s,%s,%s::jsonb,%s,%s,%s::jsonb,%s,
+             CASE WHEN %s::text IS NULL THEN NULL ELSE NOW() END,%s) RETURNING *""",
+            (
+                *scope.key,
+                preview_id,
+                revision,
+                body.task_id,
+                self._json(payload["planRef"]),
+                self._json(payload["briefRef"]),
+                self._json(payload["evidenceBundleRef"]),
+                self._json(payload["evalContractRef"]),
+                self._json(payload["responsibilityPlanRef"]),
+                self._json(payload["stageTemplateRef"]),
+                self._json(payload.get("modelRouteRef")),
+                self._json(payload.get("runtimePolicyRef")),
+                self._json(payload["bindingRefs"]),
+                self._json(payload.get("capabilityRef")),
+                self._json(payload.get("accountRef")),
+                self._json(payload["impact"]),
+                body.expires_at,
+                content_hash,
+                canonical_hash(snapshot),
+                self._json(snapshot),
+                lifecycle.value,
+                readiness.value,
+                self._json(blocker_payload),
+                frozen_by,
+                frozen_by,
+                actor,
+            ),
+        ).fetchone()
+
+    def _impact_body(self, row: Any) -> CreateImpactPreviewRequest:
+        return CreateImpactPreviewRequest(
+            task_id=row["task_id"],
+            plan_ref=self._load(row["plan_ref"]),
+            brief_ref=self._load(row["brief_ref"]),
+            evidence_bundle_ref=self._load(row["evidence_bundle_ref"]),
+            eval_contract_ref=self._load(row["eval_contract_ref"]),
+            responsibility_plan_ref=self._load(row["responsibility_plan_ref"]),
+            stage_template_ref=self._load(row["stage_template_ref"]),
+            model_route_ref=self._load(row["model_route_ref"]),
+            runtime_policy_ref=self._load(row["runtime_policy_ref"]),
+            binding_refs=self._load(row["binding_refs"]),
+            capability_ref=self._load(row["capability_ref"]),
+            account_ref=self._load(row["account_ref"]),
+            impact=self._load(row["impact"]),
+            expires_at=row["expires_at"],
+        )
+
+    def _impact_preview(
+        self, scope: TenantScope, row: Any, version: int
+    ) -> ImpactPreviewRevision:
+        body = self._impact_body(row)
+        return ImpactPreviewRevision(
+            **body.model_dump(),
+            tenant=self._tenant(scope),
+            preview_id=row["preview_id"],
+            revision=int(row["revision"]),
+            version=version,
+            content_hash=row["content_hash"],
+            dependency_snapshot_hash=row["dependency_snapshot_hash"],
+            lifecycle=row["lifecycle"],
+            readiness=row["readiness"],
+            blockers=self._load(row["blockers"]),
+            frozen_by=row["frozen_by"],
+            frozen_at=row["frozen_at"],
+            created_by=row["created_by"],
             created_at=row["created_at"],
         )
 

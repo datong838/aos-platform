@@ -10,6 +10,7 @@ from aos_api.aip_production_contract_store import (
     ProductionContractDependencyBlocked, ProductionContractError,
     ProductionContractIdempotencyConflict, ProductionContractNotFound,
 )
+from aos_api.aip_production_start_service import AipProductionStartService
 from aos_api.aip_production_contracts import (
     CreateBriefRequest, CreateEvidenceBundleRequest, EvidenceBundleListResponse,
     EvidenceBundleRevision, ReviseBriefRequest, TaskBriefListResponse, TaskBriefRevision,
@@ -23,6 +24,10 @@ from aos_api.aip_production_contracts import (
     ReturnReviewIssueRequest, ReviseStageTemplateRequest, ReviewIssue,
     ReviewIssueListResponse, StageCompilationResult, StageTemplateListResponse,
     StageTemplateRevision,
+    CreateImpactPreviewRequest, ReviseImpactPreviewRequest,
+    ImpactPreviewRevision, ImpactPreviewListResponse,
+    ProductionStartRequest, ProductionStartDecision,
+    ProductionStartDecisionListResponse,
 )
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
@@ -30,6 +35,7 @@ from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip/production-contracts", tags=["aip-production-contracts"])
 _STORE = AipProductionContractStore()
+_START_SERVICE = AipProductionStartService(contract_store=_STORE)
 
 
 class FreezeBriefRequest(AipContractModel):
@@ -41,6 +47,10 @@ FreezeContractRequest = FreezeBriefRequest
 
 def get_store() -> AipProductionContractStore:
     return _STORE
+
+
+def get_start_service() -> AipProductionStartService:
+    return _START_SERVICE
 
 
 def _scope(principal: Principal) -> TenantScope:
@@ -59,6 +69,54 @@ def _map(exc: ProductionContractError) -> ApiError:
     if isinstance(exc,(ProductionContractConflict,ProductionContractIdempotencyConflict)): return ApiError(code=exc.code,message=str(exc),status_code=409)
     if isinstance(exc,ProductionContractDependencyBlocked): return ApiError(code=exc.code,message=str(exc),status_code=422)
     return ApiError(code=exc.code,message="production contract persistence failed",status_code=503)
+
+
+@router.post("/impact-previews", response_model=ImpactPreviewRevision, status_code=201)
+def create_impact_preview(body: CreateImpactPreviewRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.create_impact_preview(_scope(principal), principal.subject, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/impact-previews", response_model=ImpactPreviewListResponse)
+def list_impact_previews(principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.list_impact_previews(_scope(principal))
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/impact-previews/{preview_id}", response_model=ImpactPreviewRevision)
+def get_impact_preview(preview_id: str, revision: int | None = Query(default=None, ge=1), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.get_impact_preview(_scope(principal), preview_id, revision)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/impact-previews/{preview_id}/revisions", response_model=ImpactPreviewRevision, status_code=201)
+def revise_impact_preview(preview_id: str, body: ReviseImpactPreviewRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.revise_impact_preview(_scope(principal), principal.subject, preview_id, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/impact-previews/{preview_id}/freeze", response_model=ImpactPreviewRevision)
+def freeze_impact_preview(preview_id: str, body: FreezeContractRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.freeze_impact_preview(_scope(principal), principal.subject, preview_id, body.expected_version, _key(idempotency_key))
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/production-runs/start", response_model=ProductionStartDecision)
+def start_production_run(body: ProductionStartRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), service: AipProductionStartService = Depends(get_start_service)):
+    try: return service.start(_scope(principal), principal.subject, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/production-start-decisions", response_model=ProductionStartDecisionListResponse)
+def list_production_start_decisions(principal: Principal = Depends(require_principal), service: AipProductionStartService = Depends(get_start_service)):
+    try: return service.list(_scope(principal))
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/production-start-decisions/{decision_id}", response_model=ProductionStartDecision)
+def get_production_start_decision(decision_id: str, principal: Principal = Depends(require_principal), service: AipProductionStartService = Depends(get_start_service)):
+    try: return service.get(_scope(principal), decision_id)
+    except ProductionContractError as exc: raise _map(exc) from exc
 
 
 @router.post("/task-briefs", response_model=TaskBriefRevision, status_code=status.HTTP_201_CREATED)

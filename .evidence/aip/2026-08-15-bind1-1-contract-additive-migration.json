@@ -1,0 +1,77 @@
+{
+  "schema": "aos-aip-bind1-delivery-receipt/v1",
+  "taskId": "aip-bind1-1-contract-additive-migration-20260815",
+  "authorityRevision": "AOS-000037",
+  "wave": "BIND-1",
+  "result": "GREEN_WITH_WARNINGS",
+  "baseCommit": "39fad9a32d575aad29ec66f033f8f95b7db10dbb",
+  "scope": {
+    "branch": "w1-aip",
+    "realTenantDataMutations": 0,
+    "externalSideEffects": 0,
+    "migrationLease": "aip-bind1-1-contract-additive-migration-20260815"
+  },
+  "changedFiles": [
+    {
+      "path": "services/aos-api/aos_api/aip_agent_registry_contracts.py",
+      "beforeSha256": "b34c1b9214cfe9e6b6b9b0c988d9c9d347a5207a1c726df1f40875be81d8dd1c",
+      "afterSha256": "5b716f946afcf8340d4e94564d6dd69680097f7c247ca747fc839c9f3d128852"
+    },
+    {
+      "path": "services/aos-api/alembic/versions/bind1_001_operational_bindings.py",
+      "beforeSha256": null,
+      "afterSha256": "8af9d94fbebe395d36caaa00535787e297b9f8ba68b8eca4536bc0b97f881197"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_aip_agent_registry_contracts.py",
+      "beforeSha256": "53a6d0aa2bb442a3a4145b0a6fa89d16871bef7648b67aad07a0177ce27cd6ff",
+      "afterSha256": "010184107b9e8f9bcd2ca8a5f8a1bb2853588ace911e548be0dc3f911e718233"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_bind1_001_operational_bindings_migration.py",
+      "beforeSha256": null,
+      "afterSha256": "f1f2b649e959b653dd643106fa5178ab7c04546751cb3ac0c329f6e090a201a5"
+    }
+  ],
+  "contract": {
+    "newModels": [
+      "OperationalBindingDependencies",
+      "EvaluateOperationalBindingRequest",
+      "OperationalBindingReadiness"
+    ],
+    "requestSafety": "Existing create requests do not accept dependency fields yet, so no service can silently ignore new dependency input before BIND-2.",
+    "defaultReadiness": "unknown",
+    "defaultReason": "BINDING_NOT_EVALUATED"
+  },
+  "migration": {
+    "revision": "bind1_001",
+    "downRevision": "aip5_005",
+    "heads": ["bind1_001"],
+    "additive": true,
+    "zeroBackfill": true,
+    "legacyRowsFailClosed": true,
+    "downgradeRequiresEmptyBindings": true,
+    "liveDatabaseCurrentAfterTests": "aip5_005",
+    "note": "Migration upgrade/downgrade was exercised by the isolated pytest migration harness; the shared development database was not advanced by this delivery."
+  },
+  "verification": [
+    {"name": "BIND-1 contract and migration targeted", "result": "GREEN", "tests": 13},
+    {"name": "AIP-6 migration and capability/run/handoff regression", "result": "GREEN", "tests": 13},
+    {"name": "Python compileall", "result": "GREEN"},
+    {"name": "Alembic head", "result": "GREEN", "value": "bind1_001"},
+    {"name": "git diff --check", "result": "GREEN"}
+  ],
+  "baselineWarning": {
+    "code": "ECOMMERCE_SOLUTION_PACK_VERSION_DRIFT",
+    "result": "PRE_EXISTING_RED_NOT_CAUSED_BY_BIND1",
+    "details": "Historical AIP-6 cumulative tests have 5 failures because bundles/solutions/ecommerce-growth/bundle.yaml is 1.3.0 while AipSolutionPackPublisher and its tests still require 1.2.0. The drift was introduced by pre-existing commit b38cb02 and is outside this task's exact scope.",
+    "passingBeforeFailure": 13,
+    "failing": 5
+  },
+  "hardBoundaries": [
+    "No evaluated SkillTemplate revision 1 was made bindable.",
+    "No AgentInstance, SkillBinding, CapabilityBinding, Provider, Route or Eval rows were created.",
+    "Operational readiness remains unknown/blocked-safe until BIND-2 evaluates exact dependencies."
+  ],
+  "nextGate": "BIND1_2_CAPABILITY_READINESS_SERVICE"
+}

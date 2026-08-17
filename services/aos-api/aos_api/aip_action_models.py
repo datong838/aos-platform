@@ -19,6 +19,7 @@ from aos_api.aip_contracts import (
     ExecutionLease,
     ResourceRef,
 )
+from aos_api.aip_production_contracts import ExactRevisionRef
 
 
 class CreateActionProposalRequest(AipContractModel):
@@ -31,6 +32,7 @@ class CreateActionProposalRequest(AipContractModel):
     payload: dict[str, Any] = Field(default_factory=dict)
     diff: dict[str, Any] = Field(default_factory=dict)
     evidence_refs: list[ResourceRef] = Field(default_factory=list)
+    impact_preview_ref: ExactRevisionRef | None = None
     expires_at: datetime | None = None
 
     @field_validator("action_type_id", "purpose")
@@ -45,6 +47,11 @@ class CreateActionProposalRequest(AipContractModel):
     def _run_requires_task(self) -> "CreateActionProposalRequest":
         if self.run_id and not self.task_id:
             raise ValueError("runId requires taskId")
+        if (
+            self.impact_preview_ref is not None
+            and self.impact_preview_ref.resource_type != "ImpactPreviewRevision"
+        ):
+            raise ValueError("impactPreviewRef must reference ImpactPreviewRevision")
         return self
 
     def effective_expiry(self) -> datetime:
@@ -56,6 +63,7 @@ class ActionProposalSnapshot(ActionProposal):
     policy_snapshot: dict[str, Any] = Field(default_factory=dict)
     diff: dict[str, Any] = Field(default_factory=dict)
     evidence_refs: list[ResourceRef] = Field(default_factory=list)
+    impact_preview_ref: ExactRevisionRef | None = None
 
 
 class ActionDraftBundle(AipContractModel):

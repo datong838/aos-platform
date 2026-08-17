@@ -6,8 +6,14 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Depends, Header, Query, status
 
 from aos_api.aip_model_runtime_contracts import (
-    ModelRouteResolution, ModelRouteRevision, ModelRuntimeOverview, ProviderHealthObservation,
-    ProviderInstanceRevision, RegisteredModelRevision, RuntimePolicyRevision,
+    ModelPriceSnapshotRevision, ModelRouteResolution, ModelRouteRevision,
+    ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision,
+    RegisteredModelRevision, RuntimePolicyRevision,
+)
+from aos_api.aip_provider_plugin_authority import (
+    ProviderPluginAuthority,
+    ProviderPluginAuthorityError,
+    ProviderPluginRevision,
 )
 from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
 from aos_api.aip_model_runtime_store import (
@@ -20,10 +26,15 @@ from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip/model-runtime", tags=["aip-model-runtime"])
 _STORE = AipModelRuntimeStore()
+_PLUGIN_AUTHORITY = ProviderPluginAuthority()
 
 
 def get_store() -> AipModelRuntimeStore:
     return _STORE
+
+
+def get_plugin_authority() -> ProviderPluginAuthority:
+    return _PLUGIN_AUTHORITY
 
 
 def _scope(principal: Principal) -> TenantScope:
@@ -54,6 +65,33 @@ def _map(exc: ModelRuntimeStoreError) -> ApiError:
     return ApiError(code=exc.code, message="model runtime persistence failed", status_code=503)
 
 
+def _map_plugin(exc: ProviderPluginAuthorityError) -> ApiError:
+    if exc.code in {
+        "provider_plugin_not_found",
+        "provider_plugin_not_approved",
+        "provider_plugin_scope_not_approved",
+    }:
+        return ApiError(
+            code="AIP_PROVIDER_PLUGIN_UNAVAILABLE",
+            message="approved provider plugin revision is unavailable",
+            status_code=404,
+        )
+    if exc.code in {
+        "provider_plugin_approval_drifted",
+        "provider_plugin_ref_drifted",
+    }:
+        return ApiError(
+            code="AIP_PROVIDER_PLUGIN_REF_DRIFTED",
+            message="provider plugin exact reference is drifted",
+            status_code=422,
+        )
+    return ApiError(
+        code="AIP_PROVIDER_PLUGIN_AUTHORITY_UNAVAILABLE",
+        message="provider plugin authority is unavailable",
+        status_code=503,
+    )
+
+
 def _publish(kind: str, item, key: str, if_match: str, principal: Principal, store: AipModelRuntimeStore):
     normalized = item.model_copy(update={"created_by": principal.subject})
     try:
@@ -62,9 +100,38 @@ def _publish(kind: str, item, key: str, if_match: str, principal: Principal, sto
         raise _map(exc) from exc
 
 
+def _get(kind: str, asset_id: str, revision: int | None, principal: Principal, store: AipModelRuntimeStore):
+    try:
+        return getattr(store, f"get_{kind}")(_scope(principal), asset_id, revision)
+    except ModelRuntimeStoreError as exc:
+        raise _map(exc) from exc
+
+
+@router.get("/provider-plugins/{plugin_id}", response_model=ProviderPluginRevision)
+def get_provider_plugin(
+    plugin_id: str,
+    revision: int | None = Query(default=None, ge=1),
+    principal: Principal = Depends(require_principal),
+    authority: ProviderPluginAuthority = Depends(get_plugin_authority),
+):
+    try:
+        return authority.get(_scope(principal), plugin_id, revision)
+    except ProviderPluginAuthorityError as exc:
+        raise _map_plugin(exc) from None
+
+
 @router.post("/providers", response_model=ProviderInstanceRevision, status_code=status.HTTP_201_CREATED)
-def publish_provider(body: ProviderInstanceRevision, idempotency_key: str = Header(alias="Idempotency-Key"), if_match: str = Header(alias="If-Match"), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
+def publish_provider(body: ProviderInstanceRevision, idempotency_key: str = Header(alias="Idempotency-Key"), if_match: str = Header(alias="If-Match"), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store), authority: ProviderPluginAuthority = Depends(get_plugin_authority)):
+    try:
+        authority.validate_ref(_scope(principal), body.plugin_ref)
+    except ProviderPluginAuthorityError as exc:
+        raise _map_plugin(exc) from None
     return _publish("provider", body, idempotency_key, if_match, principal, store)
+
+
+@router.get("/providers/{provider_id}", response_model=ProviderInstanceRevision)
+def get_provider(provider_id: str, revision: int | None = Query(default=None, ge=1), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
+    return _get("provider", provider_id, revision, principal, store)
 
 
 @router.post("/models", response_model=RegisteredModelRevision, status_code=status.HTTP_201_CREATED)
@@ -72,9 +139,29 @@ def publish_model(body: RegisteredModelRevision, idempotency_key: str = Header(a
     return _publish("model", body, idempotency_key, if_match, principal, store)
 
 
+@router.get("/models/{model_id}", response_model=RegisteredModelRevision)
+def get_model(model_id: str, revision: int | None = Query(default=None, ge=1), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
+    return _get("model", model_id, revision, principal, store)
+
+
 @router.post("/policies", response_model=RuntimePolicyRevision, status_code=status.HTTP_201_CREATED)
 def publish_policy(body: RuntimePolicyRevision, idempotency_key: str = Header(alias="Idempotency-Key"), if_match: str = Header(alias="If-Match"), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
     return _publish("policy", body, idempotency_key, if_match, principal, store)
+
+
+@router.get("/policies/{policy_id}", response_model=RuntimePolicyRevision)
+def get_policy(policy_id: str, revision: int | None = Query(default=None, ge=1), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
+    return _get("policy", policy_id, revision, principal, store)
+
+
+@router.post("/price-snapshots", response_model=ModelPriceSnapshotRevision, status_code=status.HTTP_201_CREATED)
+def publish_price_snapshot(body: ModelPriceSnapshotRevision, idempotency_key: str = Header(alias="Idempotency-Key"), if_match: str = Header(alias="If-Match"), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
+    return _publish("price_snapshot", body, idempotency_key, if_match, principal, store)
+
+
+@router.get("/price-snapshots/{price_snapshot_id}", response_model=ModelPriceSnapshotRevision)
+def get_price_snapshot(price_snapshot_id: str, revision: int | None = Query(default=None, ge=1), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
+    return _get("price_snapshot", price_snapshot_id, revision, principal, store)
 
 
 @router.post("/routes", response_model=ModelRouteRevision, status_code=status.HTTP_201_CREATED)
@@ -92,10 +179,7 @@ def record_health(body: ProviderHealthObservation, idempotency_key: str = Header
 
 @router.get("/routes/{route_id}", response_model=ModelRouteRevision)
 def get_route(route_id: str, revision: int | None = Query(default=None, ge=1), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
-    try:
-        return store.get_route(_scope(principal), route_id, revision)
-    except ModelRuntimeStoreError as exc:
-        raise _map(exc) from exc
+    return _get("route", route_id, revision, principal, store)
 
 
 @router.get("/routes/{route_id}/resolution", response_model=ModelRouteResolution)

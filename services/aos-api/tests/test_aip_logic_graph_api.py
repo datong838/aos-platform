@@ -8,6 +8,7 @@ import pytest
 from psycopg import sql
 
 from aos_api.aip_logic_graph_store import LogicGraphIntegrityError, LogicGraphStore
+from aos_api.auth import Principal, require_principal
 from aos_api.db import connect
 from aos_api.routers.aip_logic_graphs import get_logic_graph_store, router
 
@@ -70,6 +71,14 @@ def api_store(client):
 
     store = LogicGraphStore(connect_factory=scoped_connect)
     client.app.dependency_overrides[get_logic_graph_store] = lambda: store
+    client.app.dependency_overrides[require_principal] = lambda: Principal(
+        subject="logic-api-test",
+        org_id=org_id,
+        project_id=project_id,
+        roles=["developer", "admin"],
+        markings=["public", "restricted"],
+        token_kind="test",
+    )
     headers = {
         "Authorization": "Bearer dev",
         "X-Org-Id": org_id,
@@ -78,6 +87,7 @@ def api_store(client):
     }
     yield headers
     client.app.dependency_overrides.pop(get_logic_graph_store, None)
+    client.app.dependency_overrides.pop(require_principal, None)
     with connect() as conn:
         conn.execute(
             sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema_name))
@@ -163,8 +173,17 @@ def test_tenant_headers_bind_scope_and_body_tenant_is_rejected(client, api_store
         "X-Org-Id": api_store["X-Org-Id"] + "-other",
         "X-Project-Id": api_store["X-Project-Id"] + "-other",
     }
+    client.app.dependency_overrides[require_principal] = lambda: Principal(
+        subject="logic-api-other-test",
+        org_id=other_headers["X-Org-Id"],
+        project_id=other_headers["X-Project-Id"],
+        roles=["developer", "admin"],
+        markings=["public", "restricted"],
+        token_kind="test",
+    )
     hidden = client.get(f"/v1/aip/logic/graphs/{first['id']}", headers=other_headers)
     assert hidden.status_code == 404
+    assert hidden.json()["code"] == "LOGIC_GRAPH_NOT_FOUND"
 
 
 def test_invalid_graph_replace_is_422_and_keeps_last_snapshot(client, api_store) -> None:

@@ -3,7 +3,7 @@ from __future__ import annotations
 import importlib.util
 import uuid
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch
 
@@ -14,7 +14,9 @@ from aos_api.aip_eval_authority_store import (
     AipEvalAuthorityNotFound,
     AipEvalAuthorityStore,
     AipEvalAuthorityTransitionBlocked,
+    AipEvalGateDependencyBlocked,
 )
+from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_eval_contracts import (
     AssetRevisionRef,
     AssetType,
@@ -47,6 +49,12 @@ H2 = "2" * 64
 H3 = "3" * 64
 SCOPE_A = TenantScope("org-a", "project-a")
 SCOPE_B = TenantScope("org-b", "project-b")
+
+
+def _versioned_ref(kind: str, asset_id: str, digest: str) -> VersionedAssetRef:
+    return VersionedAssetRef(
+        assetType=kind, assetId=asset_id, revision=1, contentHash=digest
+    )
 
 
 @pytest.fixture()
@@ -101,6 +109,18 @@ def authority_store():
                 conn.execute(statement)
             for statement in source_statements:
                 conn.execute(statement)
+            conn.execute(
+                """ALTER TABLE aip_release_gate_decision
+                   ADD COLUMN expires_at TIMESTAMPTZ"""
+            )
+            conn.execute(
+                """UPDATE aip_release_gate_decision
+                   SET expires_at=decided_at + INTERVAL '30 days'"""
+            )
+            conn.execute(
+                """ALTER TABLE aip_release_gate_decision
+                   ALTER COLUMN expires_at SET NOT NULL"""
+            )
             conn.commit()
     except Exception as exc:  # noqa: BLE001 - PostgreSQL is optional in developer CI
         pytest.skip(f"PG unavailable: {exc}")
@@ -398,3 +418,54 @@ def test_usage_without_scoped_lineage_fails_closed(authority_store) -> None:
     )
     with pytest.raises(AipEvalAuthorityNotFound):
         store.append_usage_receipt(SCOPE_A, receipt)
+
+
+def test_exact_release_gate_verifier_enforces_target_hash_and_expiry(
+    authority_store,
+) -> None:
+    store, _ = authority_store
+    store.create_eval_run(
+        SCOPE_A,
+        _run(),
+        _event(
+            SCOPE_A,
+            event_id="event-model-1",
+            sequence=1,
+            from_status=None,
+            to_status=EvalRunStatus.QUEUED,
+        ),
+    )
+    gate = ReleaseGateDecision(
+        tenant=_tenant(SCOPE_A),
+        decision_id="gate-model-1",
+        target=_asset(AssetType.REGISTERED_MODEL, "model-1", H2),
+        suite_ref=_asset(AssetType.EVAL_SUITE, "suite-model-1"),
+        eval_run_id="run-1",
+        eval_report=ArtifactRef(
+            artifact_id="report-model-1",
+            artifact_type="eval_report",
+            revision="1",
+            content_hash=H3,
+        ),
+        status=ReleaseGateStatus.PASSED,
+        decision_hash=H1,
+        decided_by="alice",
+        decided_at=NOW,
+    )
+    store.append_release_gate(SCOPE_A, gate)
+    ref = _versioned_ref("EvalGateDecision", gate.decision_id, H1)
+    target = _versioned_ref("RegisteredModelRevision", "model-1", H2)
+    assert store.require_exact_passed(
+        SCOPE_A, ref, expected_target=target, now=NOW + timedelta(days=1)
+    ) == gate
+    with pytest.raises(AipEvalGateDependencyBlocked, match="target drifted"):
+        store.require_exact_passed(
+            SCOPE_A,
+            ref,
+            expected_target=_versioned_ref("RegisteredModelRevision", "model-2", H2),
+            now=NOW + timedelta(days=1),
+        )
+    with pytest.raises(AipEvalGateDependencyBlocked, match="not currently effective"):
+        store.require_exact_passed(
+            SCOPE_A, ref, expected_target=target, now=NOW + timedelta(days=30)
+        )

@@ -248,3 +248,83 @@ export type ReturnDecision = {
   actor: string;
   createdAt: string;
 };
+
+export type MutableAuthorityRef = { resourceType: string; resourceId: string; version: number };
+export type ActionProposalExactRef = { proposalId: string; version: number; proposalHash: string };
+export type ImpactQuality = "measured" | "estimated" | "unknown";
+export type ImpactDimension = {
+  quality: ImpactQuality;
+  value: unknown | null;
+  sourceRefs: ResourceRef[];
+  cutoffAt: string | null;
+  details: Record<string, unknown>;
+};
+export type ImpactAssessment = {
+  objectScope: ImpactDimension;
+  channelScope: ImpactDimension;
+  cost: ImpactDimension;
+  budget: ImpactDimension;
+  risks: ImpactDimension;
+  reversibility: ImpactDimension;
+  approvalChain: ImpactDimension;
+  rateCapacityKill: ImpactDimension;
+};
+export type CreateImpactPreviewInput = {
+  taskId: string;
+  planRef: ExactRevisionRef;
+  briefRef: ExactRevisionRef;
+  evidenceBundleRef: ExactRevisionRef;
+  evalContractRef: ExactRevisionRef;
+  responsibilityPlanRef: ExactRevisionRef;
+  stageTemplateRef: ExactRevisionRef;
+  modelRouteRef: ExactRevisionRef | null;
+  runtimePolicyRef: ExactRevisionRef | null;
+  bindingRefs: MutableAuthorityRef[];
+  capabilityRef: ExactRevisionRef | null;
+  accountRef: MutableAuthorityRef | null;
+  impact: ImpactAssessment;
+  expiresAt: string;
+};
+export type ReviseImpactPreviewInput = CreateImpactPreviewInput & { expectedVersion: number };
+export type ImpactPreviewRevision = CreateImpactPreviewInput & {
+  tenant: Tenant;
+  previewId: string;
+  revision: number;
+  version: number;
+  contentHash: string;
+  dependencySnapshotHash: string;
+  lifecycle: ContractLifecycle;
+  readiness: ContractReadiness;
+  blockers: ContractBlocker[];
+  frozenBy: string | null;
+  frozenAt: string | null;
+  createdBy: string;
+  createdAt: string;
+};
+export type ImpactPreviewListResponse = { tenant: Tenant; items: ImpactPreviewRevision[]; count: number };
+
+export type ProductionStartInput = {
+  taskId: string;
+  expectedTaskVersion: number;
+  planRef: ExactRevisionRef;
+  previewRef: ExactRevisionRef;
+  actionProposalRef: ActionProposalExactRef;
+  logicGraphId: string;
+  logicRevision: number;
+};
+export type ProductionStartStatus = "started" | "blocked" | "stale" | "unknown";
+export type ProductionStartDecision = {
+  tenant: Tenant;
+  decisionId: string;
+  status: ProductionStartStatus;
+  taskId: string;
+  planRef: ExactRevisionRef;
+  previewRef: ExactRevisionRef;
+  actionProposalRef: ActionProposalExactRef;
+  dependencySnapshotHash: string;
+  blockers: ContractBlocker[];
+  taskRunRef: ResourceRef | null;
+  createdBy: string;
+  createdAt: string;
+};
+export type ProductionStartDecisionListResponse = { tenant: Tenant; items: ProductionStartDecision[]; count: number };

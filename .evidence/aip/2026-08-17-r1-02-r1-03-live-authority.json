@@ -1,0 +1,86 @@
+{
+  "schema": "aos-aip-r1-live-authority-evidence/v1",
+  "generatedAt": "2026-08-17T13:25:30+08:00",
+  "taskId": "AIP-WKS-DEP-0B-R1-02-R1-03-LIVE-AUTHORITY",
+  "authorityBaseRevision": "AOS-000088",
+  "branch": "w1-aip",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "negativeCanary": {
+    "orgId": "dev-org",
+    "projectId": "dev-project",
+    "egressPolicyVisible": false,
+    "dataClassificationPolicyVisible": false,
+    "providerInstanceVisible": false,
+    "result": "GREEN"
+  },
+  "secretMetadata": {
+    "backend": "macOS-keychain",
+    "reference": "keychain://com.aos.llm/agnes-text/org-org/dev-project/agnes-text-qyh-dev#api-key",
+    "version": "v1",
+    "referenceFingerprint": "62844cde6e699851f831b4e64cd189522cd2be0ea64a0605506b4e9025ef905c",
+    "metadataProbe": "GREEN",
+    "payloadReadOrEmitted": false
+  },
+  "assets": {
+    "egressPolicy": {
+      "id": "agnes-text-qyh-dev-egress",
+      "revision": 1,
+      "contentHash": "9f870a11f22bcfb283c514f41e7c3692b9589bf308bd1458f0453b79bd2fe5fb",
+      "lifecycle": "active",
+      "endpoint": "https://apihub.agnes-ai.com:443",
+      "region": "Singapore (International)",
+      "publicFallbackAllowed": false,
+      "unknownDestinationBehavior": "block",
+      "exactReadback": "GREEN"
+    },
+    "dataClassificationPolicy": {
+      "id": "agnes-text-qyh-dev-data-classification",
+      "revision": 1,
+      "contentHash": "8ae7068807818c410d55c02958e1ef1ac7df63da71c77c58a7f767fa12625dc4",
+      "lifecycle": "active",
+      "allowed": [
+        "public_catalog",
+        "deidentified_order_aggregate",
+        "approved_development_sample",
+        "approved_internal_knowledge"
+      ],
+      "prohibited": [
+        "direct_pii",
+        "raw_order_detail",
+        "customer_conversation",
+        "credential",
+        "commercial_sensitive",
+        "cross_tenant",
+        "unknown"
+      ],
+      "exactReadback": "GREEN"
+    },
+    "providerInstance": {
+      "id": "agnes-text-qyh-dev",
+      "revision": 1,
+      "contentHash": "49df0d1db871d6fe4609f82383a0eb824009d5f626f0b4e9a7110882658eeb8f",
+      "lifecycle": "validated",
+      "providerPlugin": {
+        "id": "agnes-text",
+        "revision": 1
+      },
+      "providerModelId": "agnes-2.0-flash",
+      "exactReadback": "GREEN"
+    }
+  },
+  "sideEffects": {
+    "providerCalled": false,
+    "healthOrEvalCreated": false,
+    "bindingOrAgentRunCreated": false,
+    "secretPayloadPersisted": false
+  },
+  "verification": {
+    "targetedTests": "49 passed",
+    "tenantIsolation": "GREEN",
+    "hashChain": "GREEN",
+    "result": "GREEN"
+  }
+}

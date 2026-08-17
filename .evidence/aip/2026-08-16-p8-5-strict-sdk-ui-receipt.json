@@ -1,0 +1,64 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-P8-5-20260816",
+  "status": "CODE_CONTROL_GREEN_PENDING_INTEGRATION",
+  "branch": "w1-aip",
+  "baseCommit": "b88ebe5fd7ecd029b13dcc4d8971257ba5054ee7",
+  "authorityRevision": "AOS-000052",
+  "observedAt": "2026-08-16T03:52:28+08:00",
+  "tenantPolicy": {
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "realTenantBusinessWrites": false
+  },
+  "leases": [
+    "aip-p8-5-strict-sdk-ui-20260816",
+    "aip-p8-5-legacy-test-retirement-20260816",
+    "aip-p8-5-w1-honesty-test-20260816",
+    "aip-p8-5-honesty-manifest-20260816",
+    "aip-p8-5-browser-5175-20260816"
+  ],
+  "implementation": [
+    "Added a strict AIP Workbench TypeScript contract, parser and client for governed Analyst queries, canonical Assist threads and persisted SSE replay",
+    "Replaced the Analyst page with semantic, knowledge and metric query builders that reject arbitrary SQL, demo rows, local answers and localStorage authority",
+    "Replaced the Assist page with exact Task, TaskRun and AgentRun reference gates; missing authority disables input and send rather than creating a default test Agent",
+    "Made table, chart, map and raw views consume one result revision with explicit evidence, lineage, cutoff and uncertainty details",
+    "Retired legacy tests that asserted Northampton data, local drafts, offline answers and deprecated suggestion endpoints",
+    "Aligned the interaction-honesty manifest with the live fail-closed AIP Workbench implementation and current tests"
+  ],
+  "fileHashes": {
+    "apps/web/src/api/aipWorkbench/contracts.ts": {"before": null, "after": "066cdde062611c87c502b886c1a4f2aaa0cda46533714c9234cc4d3a3e5aebca"},
+    "apps/web/src/api/aipWorkbench/parser.ts": {"before": null, "after": "b4c2ef07a93495564b83147d64058c82920e6250f91acd37e7864de9990c3e62"},
+    "apps/web/src/api/aipWorkbench/client.ts": {"before": null, "after": "e71f687a1615aadd0c8a6f7726a82c3aad07737f41a51cd4ba63dee50065505d"},
+    "apps/web/src/api/aipWorkbench/index.ts": {"before": null, "after": "121eaacc6ad849465d761c99dfebd5e5c4c9f9ec4866f7a3dbaa0f25e8e44f93"},
+    "apps/web/src/api/aipWorkbench/parser.test.ts": {"before": null, "after": "7d05c29835898a9e80b8b6d0a3f24c4601e9e8e3abae1f2a86bd626e313e3e92"},
+    "apps/web/src/api/aipWorkbench/client.test.ts": {"before": null, "after": "7678159407a33269ce3e2d36adf9e59a432340de11d52f4300d7c98be4b931f0"},
+    "apps/web/src/interactionHonestyManifest.test.ts": {"before": "1ef2c060aee91d40e9515c195a84ad4847933659b4335e3748e3ad4961b052f8", "after": "614b38d1e96e3deac2fe0785537249f48c2ac5c823a04fbf0b49483fd1e6bf4b"},
+    "apps/web/src/interactionHonestyManifest.ts": {"before": "c8aef0556dab365af2efd8a464c248512e79bddc8c187270819e9da4c6f007ad", "after": "f10101307eba2887a84a6b31a8b9b402d38c296cca4b532dc2930bf0ca27d74f"},
+    "apps/web/src/pages/s2/AipAnalystPage.tsx": {"before": "4445ce7dd09f1f3b0addc341d56a3afcc37cca2d29af00c41a1061082677e5ea", "after": "b77b81617369f10002a3db8b6ade09e2d9ffa0d2ae085308d40fb391b26541e9"},
+    "apps/web/src/pages/s2/AipAnalystPage.test.ts": {"before": "d9c3f090b0e1ad945afb38abab4d2485378d80312cf6ae1b0e88ecb81c063291", "after": null},
+    "apps/web/src/pages/s2/AipAnalystPage.test.tsx": {"before": null, "after": "fa888e97877fbd7532047dc8a0f6d228e98ab45e12de41ed5c32b132d9398d1a"},
+    "apps/web/src/pages/s2/AipAssistPage.tsx": {"before": "34f624e922001625a6b9be3c7df6c2b98b61d2ca59e79b0d71ddd92731fa6a61", "after": "07adaf1517b355b2170d7e681535db39da92c31f4ee4a8f772d14f090511d8f5"},
+    "apps/web/src/pages/s2/AipAssistPage.test.ts": {"before": "67b8d64924b67aab12db4b73e58eb5de663eda87f65a929f216d2d7c9c86db06", "after": null},
+    "apps/web/src/pages/s2/AipAssistPage.test.tsx": {"before": null, "after": "32390c1df7651b5b01c20c8e1a36893e2a323b8f761e20f284f23ffbf117afae"},
+    "apps/web/src/pages/s2/AipAssistPageInteractions.test.tsx": {"before": "b8e67eef20f2d4da70f4d260de1e7ab2f879fcc0694b352cbfcdf62bed659d00", "after": null},
+    "apps/web/src/pages/s2/W1InteractionHonesty.test.tsx": {"before": "a83e454c94aff96c868a699573d646734ec787e43e41bd851b21a9b7cdfb1aef", "after": "144cd7918177d3087e8eb3cbf81b3dbd25efc29f6d48b03079b7cdb861afd0fa"}
+  },
+  "verification": [
+    "11 targeted AIP Workbench and interaction-honesty tests passed",
+    "191 Web test files and 2059 Web tests passed",
+    "57 cumulative test_aip8_* backend tests passed",
+    "TypeScript production build and Vite bundle completed successfully",
+    "Interaction-honesty CI scan passed for 55 pages",
+    "Built-in browser verified Analyst live empty state, governed query gates, Focus Mode, evidence layout and fail-closed knowledge query behavior",
+    "Built-in browser verified Assist exact-reference empty state, disabled input and send, collapsible context and absence of local answer content",
+    "git diff check passed and scoped scan found no Northampton, Walter and Sons, localStorage, arbitrary SQL, offline answer or legacy Assist endpoint"
+  ],
+  "baselineWarnings": [
+    "The isolated browser verification intentionally ran without aos-api; it proves honest offline and authority-empty behavior, not a real operational answer",
+    "The real tenant remains operationally blocked because P8-4C found no runnable AgentRun, SkillBinding or CapabilityBinding authority",
+    "P8-5 establishes strict SDK and UI control readiness only; live positive-path evidence remains a later authority-binding gate"
+  ],
+  "operationalStatus": "AIP_WORKBENCH_STRICT_SDK_UI_CODE_READY_REAL_AUTHORITY_EMPTY",
+  "nextGate": "P8_6_EVIDENCE_AND_RELEASE_CLOSURE"
+}

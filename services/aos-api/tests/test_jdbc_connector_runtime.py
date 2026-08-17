@@ -110,7 +110,7 @@ def test_ssh_tunnel_opens_with_correct_command(
     mock_popen: MagicMock,
     mock_port_open: MagicMock,
 ) -> None:
-    """G2 SSH 隧道：ssh -L local_port:db_host:db_port -N -f 隧道命令正确构造。"""
+    """G2 SSH 隧道使用由 AOS 持有的 ``ssh -N`` 子进程。"""
     proc_mock = MagicMock()
     proc_mock.poll.return_value = None  # 进程存活
     proc_mock.pid = 12345
@@ -131,8 +131,9 @@ def test_ssh_tunnel_opens_with_correct_command(
     cmd_args = mock_popen.call_args[0][0]
     assert cmd_args[0] == "ssh"
     assert "-L" in cmd_args
-    # -fN 是合并选项（-f 后台 + -N 不执行远程命令）
-    assert any(arg in ("-fN", "-Nf") or "-N" in arg for arg in cmd_args)
+    assert "-N" in cmd_args
+    assert "-f" not in cmd_args
+    assert "-fN" not in cmd_args
     assert "-p" in cmd_args
     # user 与 host 合并为 user@host 字符串
     assert any("tunnel_user@ssh.example.com" == a for a in cmd_args), \
@@ -168,6 +169,35 @@ def test_ssh_tunnel_raises_on_failure(
     )
     with pytest.raises(RuntimeError, match="SSH tunnel"):
         tunnel.open()
+    proc_mock.terminate.assert_called_once()
+
+
+@patch("aos_api.jdbc_connector_runtime._is_port_open", return_value=False)
+@patch("aos_api.jdbc_connector_runtime.subprocess.Popen")
+@patch("aos_api.jdbc_connector_runtime.time.sleep")
+def test_ssh_tunnel_timeout_cleans_owned_process(
+    mock_sleep: MagicMock,
+    mock_popen: MagicMock,
+    mock_port_open: MagicMock,
+) -> None:
+    """G2 就绪超时后必须清理子进程，不留脱管隧道。"""
+    proc_mock = MagicMock()
+    proc_mock.poll.return_value = None
+    mock_popen.return_value = proc_mock
+    tunnel = SshTunnel(
+        ssh_host="ssh.example.com",
+        ssh_port=2222,
+        ssh_user="tunnel_user",
+        ssh_key_path="/tmp/test_key",
+        remote_host="mysql.internal",
+        remote_port=3306,
+    )
+
+    with pytest.raises(RuntimeError, match="failed to become ready"):
+        tunnel.open()
+
+    proc_mock.terminate.assert_called_once()
+    proc_mock.wait.assert_called_once_with(timeout=5)
 
 
 # ═══════════════════════════════════════════════

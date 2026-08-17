@@ -1,0 +1,85 @@
+{
+  "receiptType": "AIP_BIND1_5_SDK_UI_BROWSER",
+  "result": "GREEN_WITH_WARNINGS",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "workspaceName": "默认工作区"
+  },
+  "negativeCanary": {
+    "orgId": "dev-org",
+    "projectId": "dev-project",
+    "installedCount": 0,
+    "agentInstanceNotInstalledBlockerCount": 6
+  },
+  "git": {
+    "branch": "w1-aip",
+    "baseSha": "12b62fa",
+    "fixCommit": "a289b08945bda99f316d8298921b0fd070f85b08"
+  },
+  "scope": [
+    "services/aos-api/aos_api/aip_ecommerce_agent_installer.py",
+    "services/aos-api/tests/aip/test_aip6_agent_control_api.py",
+    "apps/web/src/pages/s2/CanonicalAgentRegistryPage.test.tsx"
+  ],
+  "hashes": {
+    "services/aos-api/aos_api/aip_ecommerce_agent_installer.py": {
+      "before": "f50f1a2bf6f41542a2409037aff0dda4070a17e28ec35c21b807eef6382ac869",
+      "after": "1b0bf4e88bffd3f861f8cdd882ff7c7401c96e529baaf52e401fd983e97f4d18"
+    },
+    "services/aos-api/tests/aip/test_aip6_agent_control_api.py": {
+      "before": "923a7fd496fd52271b664e8169d548b57f62e2cc4b922caeba624bf6d4073be8",
+      "after": "80325f41971fb78043b1b5f1121d597d4315a3519180ebb55c132a861bc2fcef"
+    },
+    "apps/web/src/pages/s2/CanonicalAgentRegistryPage.test.tsx": {
+      "before": "7074e7391605acb93b38ecedd8fcdfe246d4e0ff99b49be7a22ae526a0b13535",
+      "after": "514c670ce0f7d023b4b7c76f47e3d6a4ef855f4b1c010658c567b3a5e83fc365"
+    }
+  },
+  "tests": {
+    "backend": "13 passed",
+    "frontend": "10 passed",
+    "typecheck": "GREEN",
+    "diffCheck": "GREEN"
+  },
+  "runtimeReadback": {
+    "definitionCount": 6,
+    "installedCount": 6,
+    "runnableCount": 0,
+    "skillDefinitionCount": 37,
+    "capabilityDefinitionCount": 10,
+    "skillBindingCount": 0,
+    "capabilityBindingCount": 0,
+    "installedItemsWithNotInstalledBlocker": 0
+  },
+  "browser": {
+    "agentRegistry": {
+      "url": "http://localhost:5173/aip/agent-registry",
+      "roleCards": 6,
+      "preflightButtonsDisabled": 6,
+      "consoleErrors": 0,
+      "screenshot": ".evidence/aip/2026-08-15-bind1-5-agent-registry.png",
+      "sha256": "7191119db04e164fb56e3de7e6ad871524e34afbb8d4ca0adf4457d306a431fc"
+    },
+    "capabilityCatalog": {
+      "url": "http://localhost:5173/aip/capabilities",
+      "capabilityCards": 10,
+      "preflightButtonsDisabled": 10,
+      "activateButtonsDisabled": 10,
+      "consoleErrors": 0,
+      "screenshot": ".evidence/aip/2026-08-15-bind1-5-capabilities.png",
+      "sha256": "1c0b3400179795cc82643107c99ebc6bed44f44a7a5e3c6149a6c3f04013e755"
+    }
+  },
+  "sideEffects": {
+    "databaseWrites": 0,
+    "migrations": 0,
+    "bindingsCreated": 0,
+    "instancesActivated": 0
+  },
+  "warnings": [
+    "runnable remains 0 because Skill/Capability bindings and AIP-7 route authority are not yet available",
+    "navigation independently reports the Workshop module catalog integrity error; this belongs to the isolated Workshop line and was not modified"
+  ],
+  "nextGate": "BIND1_6_REAL_PILOT_ELIGIBILITY"
+}

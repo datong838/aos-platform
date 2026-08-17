@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "aos.delivery-receipt/v1",
+  "receiptId": "AIP-A6G-3B-20260816",
+  "recordedAt": "2026-08-16T13:16:59Z",
+  "branch": "w1-aip",
+  "baselineCommit": "7e6bb75",
+  "tenantScope": {
+    "real": "org-org/dev-project",
+    "negativeCanaryOnly": "dev-org/dev-project"
+  },
+  "scope": "Retire the unmounted in-memory AIP Agent singleton and demo seed while preserving the canonical PostgreSQL control-plane router.",
+  "changes": [
+    {
+      "path": "services/aos-api/aos_api/aip_agents_engine.py",
+      "action": "deleted",
+      "beforeSha256": "f903c1cdf94d6b48954b3708813982ea8c61d1d370f7883315e9537813ad1d8f"
+    },
+    {
+      "path": "services/aos-api/aos_api/demo/seed_phase3_agents.py",
+      "action": "deleted",
+      "beforeSha256": "cbef2d8c5923f850083546ef17a8caf0fc12fa569202a6a6398a103e18f82299"
+    },
+    {
+      "path": "services/aos-api/tests/test_phase3_aip_agents.py",
+      "action": "modified",
+      "beforeSha256": "ff7f1c02c36673b5d61f2aa1b038fa3ce7058929c3916db6524212df31dfbba3",
+      "afterSha256": "52d72079f81bce846ebdcb4789180518ebd9c1c1972974ad085a2df263ce4af4"
+    },
+    {
+      "path": "services/aos-api/tests/test_phase5_regression.py",
+      "action": "modified",
+      "beforeSha256": "cb3272054698516fb3d264250f5248eb5ba44995f861cf5215439bb6158d373f",
+      "afterSha256": "2649945c71f211c39f62eaaf4d7a704e46436eedc1f0ca82ff832043ba6d85ab"
+    }
+  ],
+  "verification": {
+    "canonicalAndAip6Tests": "9 passed",
+    "relatedPhase5Collections": "6 passed, 30 deselected",
+    "referenceAudit": "0 references to aip_agents_engine or seed_phase3_agents under services/aos-api",
+    "compileall": "GREEN",
+    "diffCheck": "GREEN",
+    "knownUnrelatedHistoricalFailures": "7 dev-org/dev-project seed or workspace-FK failures in the full legacy phase5 regression file"
+  },
+  "claims": {
+    "a6g3b": "COMPLETED_GREEN_WITH_RECORDED_HISTORICAL_TEST_WARNINGS",
+    "workshopR1R2": "UNCHANGED_BLOCKED",
+    "providerOrBindingCreated": false,
+    "databaseWritten": false,
+    "migrationRun": false,
+    "externalSideEffect": false
+  }
+}

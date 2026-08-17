@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from aos_api.db import connect
 from aos_api.errors import ApiError
+from aos_api.aip_analyst_contracts import AnalystQueryRequest, QuerySourceRef
+from aos_api.aip_contracts import ResourceRef
 from aos_api.ontology_explorer_contracts import KnowledgeSubjectRefDTO, ObjectRefDTO
 from aos_api.ontology_operational_authority import canonical_hash
 from aos_api.tenant_scope import TenantScope
@@ -22,6 +25,22 @@ class StrictAsset(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class ExplorationSort(StrictAsset):
+    field: str = Field(min_length=1, max_length=160)
+    direction: Literal["asc", "desc"] = "asc"
+
+
+class ExplorationShare(StrictAsset):
+    scope: Literal["workspace"] = "workspace"
+    expiresAt: datetime
+
+    @model_validator(mode="after")
+    def timezone_required(self) -> "ExplorationShare":
+        if self.expiresAt.tzinfo is None:
+            raise ValueError("exploration share expiresAt must be timezone-aware")
+        return self
+
+
 class ExplorationAssetPayload(StrictAsset):
     name: str = Field(min_length=1, max_length=240)
     objectType: str = Field(min_length=1, max_length=128)
@@ -30,6 +49,53 @@ class ExplorationAssetPayload(StrictAsset):
     query: dict[str, Any] = Field(default_factory=dict)
     columns: list[dict[str, Any]] = Field(default_factory=list, max_length=256)
     graph: dict[str, Any] = Field(default_factory=dict)
+    analystQuery: AnalystQueryRequest | None = None
+    resultRef: ResourceRef | None = None
+    cutoffAt: datetime | None = None
+    sourceRefs: list[QuerySourceRef] = Field(default_factory=list, max_length=100)
+    sort: list[ExplorationSort] = Field(default_factory=list, max_length=16)
+    share: ExplorationShare | None = None
+
+    @model_validator(mode="after")
+    def analyst_binding_is_exact(self) -> "ExplorationAssetPayload":
+        p8_bound = any(
+            (
+                self.analystQuery is not None,
+                self.resultRef is not None,
+                self.cutoffAt is not None,
+                bool(self.sourceRefs),
+            )
+        )
+        if p8_bound and (self.analystQuery is None or self.cutoffAt is None):
+            raise ValueError("P8 exploration requires analystQuery and cutoffAt")
+        if self.analystQuery is not None and self.cutoffAt != self.analystQuery.cutoff_at:
+            raise ValueError("exploration cutoffAt must match analystQuery cutoffAt")
+        if self.analystQuery is not None and {
+            "rows",
+            "result",
+            "results",
+            "data",
+            "records",
+        }.intersection(self.query):
+            raise ValueError("saved exploration must reference results, not copy result data")
+        if self.resultRef is not None:
+            if (
+                self.resultRef.resource_type != "QueryResultRevision"
+                or self.resultRef.authority != "aip-analyst"
+                or not self.resultRef.revision
+            ):
+                raise ValueError("resultRef must be an exact AIP Analyst result revision")
+            if not self.sourceRefs:
+                raise ValueError("saved resultRef requires exact sourceRefs")
+        if self.sourceRefs and self.resultRef is None:
+            raise ValueError("sourceRefs require resultRef")
+        if self.cutoffAt is not None and any(
+            source.cutoff_at > self.cutoffAt for source in self.sourceRefs
+        ):
+            raise ValueError("sourceRefs cannot exceed exploration cutoffAt")
+        if self.share is not None and self.visibility != "workspace":
+            raise ValueError("workspace visibility is required for an active share")
+        return self
 
 
 class ObjectSetAssetPayload(StrictAsset):
@@ -72,7 +138,22 @@ def _normalize(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
     model = MODELS.get(kind)
     if model is None:
         raise ValueError("unknown exploration asset kind")
-    return model.model_validate(payload).model_dump(mode="json")
+    return model.model_validate(payload).model_dump(mode="json", by_alias=True)
+
+
+def _now() -> datetime:
+    return datetime.now(UTC)
+
+
+def _share_active(payload: dict[str, Any]) -> bool:
+    share = payload.get("share")
+    if share is None:
+        return payload.get("visibility") == "workspace"
+    try:
+        expires_at = datetime.fromisoformat(str(share["expiresAt"]))
+    except (KeyError, TypeError, ValueError):
+        return False
+    return payload.get("visibility") == "workspace" and expires_at > _now()
 
 
 def _etag(kind: str, revision: int, payload_hash: str) -> str:
@@ -92,6 +173,14 @@ def append_asset(
     if expected_revision < 0 or not asset_id.strip() or not idempotency_key.strip() or not actor.strip():
         raise ValueError("asset id, revision, idempotency key and actor are required")
     normalized = _normalize(kind, payload)
+    if kind == "exploration" and normalized.get("share") is not None:
+        expires_at = datetime.fromisoformat(normalized["share"]["expiresAt"])
+        if expires_at <= _now():
+            raise ApiError(
+                code="EXPLORATION_SHARE_EXPIRED",
+                message="exploration share expiry must be in the future",
+                status_code=400,
+            )
     request_hash = canonical_hash({
         "scope": scope.key,
         "kind": kind,
@@ -176,7 +265,7 @@ def get_asset(
         if row is None or (row["archived_at"] is not None and not include_archived):
             return None
         payload = dict(row["payload"])
-        if payload.get("visibility") == "private" and row["owner_subject"] != actor:
+        if row["owner_subject"] != actor and not _share_active(payload):
             return None
         result = _result(
             kind, asset_id, row["owner_subject"], int(row["revision"]), payload,
@@ -210,6 +299,7 @@ def list_assets(
                 dict(row["payload"]), row["payload_hash"], archived=row["archived_at"] is not None,
             )
             for row in rows
+            if row["owner_subject"] == actor or _share_active(dict(row["payload"]))
         ]
 
 

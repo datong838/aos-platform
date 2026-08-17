@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "aip-bind1-evidence/v1",
+  "wave": "BIND-4",
+  "gate": "BIND1_4_CANONICAL_API_OPENAPI",
+  "result": "GREEN_WITH_WARNINGS",
+  "branch": "w1-aip",
+  "baseGitSha": "521afdafeacb61de0af8311b9e5e5f64b97c35c4",
+  "tenantPolicy": {
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "writesPerformed": false
+  },
+  "scope": {
+    "added": [
+      "services/aos-api/aos_api/aip_binding_api_contracts.py",
+      "services/aos-api/aos_api/routers/aip_bindings.py",
+      "services/aos-api/tests/aip/test_aip_binding_api.py"
+    ],
+    "modified": [
+      "services/aos-api/aos_api/aip_capability_binding_service.py",
+      "services/aos-api/aos_api/aip_skill_registry.py",
+      "services/aos-api/aos_api/routers/domain_manifest.json",
+      "services/aos-api/aos_api/routers/domain_aggregates.py",
+      "services/aos-api/tests/test_domain_router_manifest.py"
+    ],
+    "excluded": [
+      "Alembic migrations",
+      "database writes",
+      "SDK and UI",
+      "w2-workshop uncommitted workspace"
+    ]
+  },
+  "hashes": {
+    "services/aos-api/aos_api/aip_binding_api_contracts.py": {"before": null, "after": "04f131983e81c196481f2be6721adc5afe1f243dcde8b2962b9e1df92742b357"},
+    "services/aos-api/aos_api/aip_capability_binding_service.py": {"before": "e2c2c1b502f1d923c4b7d567c262670c6060fdaf5134bb24e10f1df388bc80b6", "after": "44dd0839a2149ae653f9a742e08a9d870acecfec322f11b98b2af32b9f22e2ca"},
+    "services/aos-api/aos_api/aip_skill_registry.py": {"before": "f14a67c191c340244236e8a4ad5f72a646aa35340f88e48b81e5748ec4c9712d", "after": "aba39df95f3338c823f26e4966dc7b0f3a88f40ff3747f55a09e34f76755ba72"},
+    "services/aos-api/aos_api/routers/aip_bindings.py": {"before": null, "after": "f0a92039e6bc1fb05f55b18ced73368ec301ae3955312f2528d67da1afda2206"},
+    "services/aos-api/aos_api/routers/domain_manifest.json": {"before": "8dbc9248c1ca586dbf863453188df06433cb29db83037b13ef0395621b8bb2f1", "after": "17a35ad78e243770fc16ee1799e230c9f2d4413b5c83c7cc96304089b89d2e3f"},
+    "services/aos-api/aos_api/routers/domain_aggregates.py": {"before": "1b6136f7a1824a328214e428052dba3f4533ba4afcf95d2f0e657d5141e835af", "after": "1f86cc86ff3b307256bb72e031d9e03ec7255b740360103a2e2327dcb4ee4ab0"},
+    "services/aos-api/tests/aip/test_aip_binding_api.py": {"before": null, "after": "3403de96eb4378d509a4ecdcb38f3bb4ddddd6bd93daad853d19c804a1a7245f"},
+    "services/aos-api/tests/test_domain_router_manifest.py": {"before": "32a3f45d81370d89fbe0ed273c2a93f6d8f7a4cf2763a155174024012ee2000b", "after": "c60a5c3edbe5c5129033492ae9b0911ef79ba02ee39ad8934eb93753856a225b"}
+  },
+  "capabilities": [
+    "tenant-scoped CapabilityBinding list/get/preview/create/evaluate/activate/suspend/revoke",
+    "tenant-scoped SkillBinding list/get/preview/create/evaluate/activate/suspend/revoke",
+    "required Idempotency-Key on every write",
+    "principal subject audit actor and tenant echo",
+    "expected-version CAS delegated to authority service",
+    "dependency snapshot hash drift fails closed",
+    "stable HTTP error mapping and generated OpenAPI"
+  ],
+  "verification": {
+    "targetedTests": "27 passed, 2 subtests passed",
+    "ruff": "GREEN with B008 ignored consistently for FastAPI Depends defaults",
+    "compileall": "GREEN",
+    "diffCheck": "GREEN",
+    "routerManifest": "524 entries; AIP 74; runtime 4216 routes; OpenAPI 2435 operations",
+    "realTenantReadback": {"capabilityBindings": 0, "skillBindings": 0},
+    "negativeCanaryReadback": {"capabilityBindings": 0, "skillBindings": 0}
+  },
+  "warnings": [
+    "No runnable Agent or real binding was created; readiness remains eventual until exact dependencies exist.",
+    "SDK, UI and browser acceptance are intentionally deferred to BIND-5.",
+    "Repository-wide pre-existing OpenAPI duplicate operation warnings remain outside this wave."
+  ],
+  "nextGate": "BIND1_5_STRICT_SDK_UI_BROWSER"
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-A6G-0-DETERMINISTIC-SKILL-SCAN-20260816",
+  "status": "CODE_CONTROL_GREEN_OPERATIONAL_READINESS_UNCHANGED",
+  "branch": "w1-aip",
+  "baseCommit": "01d5b049d6edd80bc496d7ee0fa79b5098b23dfc",
+  "observedAt": "2026-08-16T20:27:54+08:00",
+  "scope": {
+    "implementation": "services/aos-api/aos_api/aip_skill_scan.py",
+    "tests": "services/aos-api/tests/aip/test_aip_skill_scan.py",
+    "noMigration": true,
+    "noDatabaseWrite": true,
+    "noProviderCall": true,
+    "noBrowserChange": true,
+    "noWorkshopWrite": true
+  },
+  "hashes": {
+    "implementationSha256": "b07cf4950af5413e911babfd1839ec09ce8513b0ab1707b7401ab8f7a0f938c0",
+    "testsSha256": "3c6d00306b23c2aad38d1c6c1efdc652d157d6c8a0291c6023bf3c24a378411a",
+    "schemePreSha256": "26cd7f250084f3512703308192b37d9928932031304412886403850c579edcf0",
+    "schemePostSha256": "08719bedf31027a4c8c95d576fb11feeb9704534afcf3b7487bc7b664ad3b449",
+    "checklistPreSha256": "850615db883618863319b51080851256d2ad1add0cc7a8898f4878e40ae8a2c3",
+    "checklistPostSha256": "d156024701c535ba366b8f3d52f1c61de012c40af4d14cede8000b7472ea6329"
+  },
+  "verification": {
+    "skillScanTests": "16 passed",
+    "adjacentA6Regression": "22 passed",
+    "compileall": "GREEN",
+    "gitDiffCheck": "GREEN",
+    "knownWarnings": "7 pre-existing Pydantic/Starlette warnings; no new failure"
+  },
+  "claims": [
+    "scanner is deterministic and performs no I/O or code execution",
+    "blocking findings expose only an evidence hash and not the raw matched line",
+    "source commit, content, license and SBOM participate in content addressing",
+    "malicious input, path and capacity violations fail closed"
+  ],
+  "noCompletionClaims": [
+    "ImportJob authority is not implemented",
+    "Provider and runtime Binding are not made ready",
+    "Workshop R1 and R2 are not unlocked",
+    "C1 or C2 external Harness receipts are not fabricated"
+  ],
+  "tenantPolicy": {
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "tenantDataTouched": false
+  },
+  "protectedUntrackedExcluded": ".evidence/aip/2026-08-14-watchdog-w2c-recovery-blocked-receipt.json"
+}

@@ -182,13 +182,6 @@ class TestEngineSingleton:
         e2 = VsEventsEngine()
         assert e1 is e2
 
-    def test_aip_agents_engine_singleton(self) -> None:
-        from aos_api.aip_agents_engine import get_engine
-
-        e1 = get_engine()
-        e2 = get_engine()
-        assert e1 is e2
-
     def test_singleton_reset_works(self) -> None:
         """reset 后 singleton 实例不变，但数据被清空。"""
         from aos_api.ontology_engine import get_engine
@@ -432,28 +425,6 @@ class TestCrossModuleIntegration:
         branches = eng.list_branches()
         assert len(branches) > 0
         eng.reset()
-
-    def test_aip_agent_prompt_tools_flow(self) -> None:
-        """创建 AIP agent → 设置 prompt → 查看 prompt → 查看 tools。"""
-        from aos_api.aip_agents_engine import get_engine
-
-        eng = get_engine()
-        # 先创建一个 agent
-        agent = eng.create(
-            name="integration-agent",
-            description="Integration test agent",
-            source="platform",
-        )
-        assert agent is not None
-
-        # 设置 prompt
-        eng.set_prompt(agent.id, "You are a helpful assistant.")
-        prompt = eng.get_prompt(agent.id)
-        assert prompt == "You are a helpful assistant."
-
-        # 查看 tools
-        tools = eng.list_tools(agent.id)
-        assert isinstance(tools, list)
 
     def test_vs_events_full_crud(self) -> None:
         """VS Events 引擎：注册 → 列表 → 详情 → 更新 → 删除。"""

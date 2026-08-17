@@ -9,6 +9,8 @@ from aos_api.aip_agent_control_contracts import (
     AgentCatalogStats,
     AgentInstallItem,
     AgentInstallResponse,
+    AgentRuntimeBindingStats,
+    AgentRuntimeReadinessResponse,
     CapabilityCatalogResponse,
 )
 from aos_api.aip_agent_registry_contracts import (
@@ -23,15 +25,19 @@ from aos_api.aip_agent_registry_store import (
     AipAgentRegistryStore,
 )
 from aos_api.aip_capability_registry import AipCapabilityRegistry
+from aos_api.aip_capability_binding_service import AipCapabilityBindingService
 from aos_api.aip_contracts import TenantContext
 from aos_api.aip_skill_registry import AipSkillRegistry
-from aos_api.aip_solution_pack_publisher import AGENT_LOGIC_COUNTS, CAPABILITY_IDS
+from aos_api.aip_solution_pack_publisher import (
+    AIP_DEFINITION_SOURCE_VERSION,
+    AGENT_LOGIC_COUNTS,
+    CAPABILITY_IDS,
+    LOGIC_IDS,
+    SOLUTION_PACK_ID,
+    SOLUTION_PACK_VERSION,
+)
 from aos_api.auth import Principal
 from aos_api.tenant_scope import TenantScope
-
-SOLUTION_PACK_ID = "solution.ecommerce.growth"
-SOLUTION_PACK_VERSION = "1.2.0"
-
 
 class AipEcommerceCatalogInvalid(AipAgentRegistryConflict):
     code = "AIP_ECOMMERCE_CATALOG_INVALID"
@@ -44,11 +50,13 @@ class AipEcommerceAgentInstaller:
         agents: AipAgentRegistryStore | None = None,
         skills: AipSkillRegistry | None = None,
         capabilities: AipCapabilityRegistry | None = None,
+        capability_bindings: AipCapabilityBindingService | None = None,
         clock=None,
     ) -> None:
         self._agents = agents or AipAgentRegistryStore()
         self._skills = skills or AipSkillRegistry()
         self._capabilities = capabilities or AipCapabilityRegistry()
+        self._capability_bindings = capability_bindings or AipCapabilityBindingService()
         self._clock = clock or (lambda: datetime.now(UTC))
 
     @staticmethod
@@ -62,22 +70,32 @@ class AipEcommerceAgentInstaller:
     def _definitions(self):
         templates = self._agents.list_templates(
             source_resource_id=SOLUTION_PACK_ID,
-            source_revision=SOLUTION_PACK_VERSION,
+            source_revision=AIP_DEFINITION_SOURCE_VERSION,
             lifecycle=TemplateLifecycle.PUBLISHED,
         )
         skills = self._skills.list_skills(
             source_resource_id=SOLUTION_PACK_ID,
-            source_revision=SOLUTION_PACK_VERSION,
+            source_revision=AIP_DEFINITION_SOURCE_VERSION,
             lifecycle=TemplateLifecycle.EVALUATED,
         )
         capabilities = self._capabilities.list_capabilities(
             source_resource_id=SOLUTION_PACK_ID,
-            source_revision=SOLUTION_PACK_VERSION,
+            source_revision=AIP_DEFINITION_SOURCE_VERSION,
             lifecycle=TemplateLifecycle.PUBLISHED,
         )
-        latest_templates = self._latest(templates, "template_id")
-        latest_skills = self._latest(skills, "skill_id")
-        latest_capabilities = self._latest(capabilities, "capability_id")
+        expected_skill_ids = {f"ecommerce.skill.{logic_id}" for logic_id in LOGIC_IDS}
+        latest_templates = self._latest(
+            [item for item in templates if item.template_id in AGENT_LOGIC_COUNTS],
+            "template_id",
+        )
+        latest_skills = self._latest(
+            [item for item in skills if item.skill_id in expected_skill_ids],
+            "skill_id",
+        )
+        latest_capabilities = self._latest(
+            [item for item in capabilities if item.capability_id in CAPABILITY_IDS],
+            "capability_id",
+        )
         if set(latest_templates) != set(AGENT_LOGIC_COUNTS):
             raise AipEcommerceCatalogInvalid("ecommerce agent definitions differ from 6-role authority")
         if len(latest_skills) != 37:
@@ -102,15 +120,24 @@ class AipEcommerceAgentInstaller:
         items = []
         for template_id in sorted(templates):
             template = templates[template_id]
+            instance = instances.get(template_id)
             logic_ids = template.manifest.get("logicIds", [])
             role_skills = [skills_by_logic[logic_id] for logic_id in logic_ids if logic_id in skills_by_logic]
             if len(role_skills) != AGENT_LOGIC_COUNTS[template_id]:
                 raise AipEcommerceCatalogInvalid(f"skill crosswalk incomplete for {template_id}")
             required = sorted({cap for skill in role_skills for cap in skill.required_capabilities})
-            blockers = sorted({*template.manifest.get("blockers", []), "skill_templates_not_published", "capability_bindings_unavailable", "model_route_unavailable"})
+            blocker_set = {
+                *template.manifest.get("blockers", []),
+                "skill_templates_not_published",
+                "capability_bindings_unavailable",
+                "model_route_unavailable",
+            }
+            if instance is not None:
+                blocker_set.discard("agent_instance_not_installed")
+            blockers = sorted(blocker_set)
             items.append(AgentCatalogItem(
                 template=template,
-                instance=instances.get(template_id),
+                instance=instance,
                 skills=role_skills,
                 required_capability_ids=required,
                 blockers=blockers,
@@ -135,6 +162,29 @@ class AipEcommerceAgentInstaller:
             items=items,
             count=len(items),
             available_count=sum(item.readiness.value == "available" for item in items),
+        )
+
+    def runtime_readiness(self, principal: Principal) -> AgentRuntimeReadinessResponse:
+        scope = self._scope(principal)
+        catalog = self.catalog(principal)
+        capability_bindings = self._capability_bindings.list_bindings(scope, limit=200)
+        skill_bindings = self._skills.list_bindings(scope, limit=200)
+        return AgentRuntimeReadinessResponse(
+            tenant=self._tenant(principal),
+            catalog=catalog,
+            capability_bindings=capability_bindings,
+            skill_bindings=skill_bindings,
+            binding_stats=AgentRuntimeBindingStats(
+                capability_binding_count=len(capability_bindings),
+                skill_binding_count=len(skill_bindings),
+                active_capability_binding_count=sum(
+                    item.status == "active" for item in capability_bindings
+                ),
+                active_skill_binding_count=sum(
+                    item.status == "active" for item in skill_bindings
+                ),
+            ),
+            evaluated_at=self._clock(),
         )
 
     def install(self, principal: Principal, *, idempotency_key: str) -> AgentInstallResponse:

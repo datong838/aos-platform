@@ -6,6 +6,7 @@ import json
 import uuid
 from collections.abc import Callable
 from contextlib import AbstractContextManager
+from datetime import UTC, datetime
 from typing import Any, TypeVar
 
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
@@ -21,6 +22,22 @@ from aos_api.aip_model_runtime_contracts import (
     RuntimePolicyRevision,
 )
 from aos_api.db import connect as db_connect
+from aos_api.aip_runtime_guard_policy_store import (
+    AipRuntimeGuardPolicyStore,
+    GuardPolicyDependencyBlocked,
+)
+from aos_api.aip_model_governance_policy_store import (
+    AipModelGovernancePolicyStore,
+    ModelGovernancePolicyDependencyBlocked,
+)
+from aos_api.aip_network_policy_store import (
+    AipNetworkPolicyStore,
+    NetworkPolicyDependencyBlocked,
+)
+from aos_api.aip_eval_authority_store import (
+    AipEvalAuthorityStore,
+    AipEvalGateDependencyBlocked,
+)
 from aos_api.tenant_scope import TenantScope
 
 ConnectFactory = Callable[..., AbstractContextManager[Any]]
@@ -69,19 +86,71 @@ class AipModelRuntimeStore:
         "model_price_snapshot": ("priceSnapshotId", ModelPriceSnapshotRevision),
     }
 
-    def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
+    def __init__(self, connect_factory: ConnectFactory | None = None, *, guard_policy_store=None, governance_policy_store=None, network_policy_store=None, eval_authority_store=None) -> None:
         self._connect_factory = connect_factory or db_connect
+        self._guard_policy_store = guard_policy_store or AipRuntimeGuardPolicyStore(
+            connect_factory or db_connect
+        )
+        self._governance_policy_store = governance_policy_store or AipModelGovernancePolicyStore(
+            connect_factory or db_connect
+        )
+        self._network_policy_store = network_policy_store or AipNetworkPolicyStore(
+            connect_factory or db_connect, guard_policy_store=self._guard_policy_store
+        )
+        self._eval_authority_store = eval_authority_store or AipEvalAuthorityStore(
+            connect_factory or db_connect
+        )
 
     def publish_provider(self, scope: TenantScope, actor: str, key: str, item: ProviderInstanceRevision, *, expected_version: int = 0) -> ProviderInstanceRevision:
+        try:
+            self._guard_policy_store.require_provider_dependencies(scope, item)
+        except GuardPolicyDependencyBlocked as exc:
+            raise ModelRuntimeDependencyBlocked(str(exc)) from None
         return self._publish("provider_instance", scope, actor, key, item, expected_version)
 
     def publish_model(self, scope: TenantScope, actor: str, key: str, item: RegisteredModelRevision, *, expected_version: int = 0) -> RegisteredModelRevision:
+        try:
+            self._governance_policy_store.require_model_dependencies(scope, item)
+            if item.lifecycle.value == "active":
+                self._eval_authority_store.require_exact_passed(
+                    scope,
+                    item.eval_gate_ref,
+                    expected_target=self._ref_for_item(
+                        "RegisteredModelRevision",
+                        item.registered_model_id,
+                        item.revision,
+                        item.content_hash,
+                    ),
+                )
+        except (ModelGovernancePolicyDependencyBlocked, AipEvalGateDependencyBlocked) as exc:
+            raise ModelRuntimeDependencyBlocked(str(exc)) from None
         return self._publish("registered_model", scope, actor, key, item, expected_version)
 
     def publish_policy(self, scope: TenantScope, actor: str, key: str, item: RuntimePolicyRevision, *, expected_version: int = 0) -> RuntimePolicyRevision:
+        try:
+            self._network_policy_store.require_runtime_policy_dependency(scope, item)
+            self._guard_policy_store.require_exact_active(scope, item.egress_policy_ref)
+            self._guard_policy_store.require_exact_active(scope, item.data_classification_policy_ref)
+            self._governance_policy_store.require_runtime_policy_dependencies(scope, item)
+        except (NetworkPolicyDependencyBlocked, GuardPolicyDependencyBlocked, ModelGovernancePolicyDependencyBlocked) as exc:
+            raise ModelRuntimeDependencyBlocked(str(exc)) from None
         return self._publish("runtime_policy", scope, actor, key, item, expected_version)
 
     def publish_route(self, scope: TenantScope, actor: str, key: str, item: ModelRouteRevision, *, expected_version: int = 0) -> ModelRouteRevision:
+        if item.lifecycle.value == "active":
+            try:
+                self._eval_authority_store.require_exact_passed(
+                    scope,
+                    item.eval_gate_ref,
+                    expected_target=self._ref_for_item(
+                        "ModelRouteRevision",
+                        item.route_id,
+                        item.revision,
+                        item.content_hash,
+                    ),
+                )
+            except AipEvalGateDependencyBlocked as exc:
+                raise ModelRuntimeDependencyBlocked(str(exc)) from None
         return self._publish("model_route", scope, actor, key, item, expected_version)
 
     def publish_price_snapshot(self, scope: TenantScope, actor: str, key: str, item: ModelPriceSnapshotRevision, *, expected_version: int = 0) -> ModelPriceSnapshotRevision:
@@ -134,12 +203,15 @@ class AipModelRuntimeStore:
         with self._connect_factory(scope) as conn:
             for key, ref in sorted(unique.items()):
                 row = conn.execute(
-                    "SELECT status,decision_hash FROM aip_release_gate_decision WHERE org_id=%s AND project_id=%s AND decision_id=%s",
+                    "SELECT status,decision_hash,expires_at FROM aip_release_gate_decision WHERE org_id=%s AND project_id=%s AND decision_id=%s",
                     (*scope.key, ref.asset_id),
                 ).fetchone()
                 gate_status = "unknown"
                 if row and row["decision_hash"] == ref.content_hash:
-                    gate_status = row["status"] if row["status"] in {"passed", "failed", "blocked"} else "unknown"
+                    if row["status"] == "passed" and row["expires_at"] <= datetime.now(UTC):
+                        gate_status = "blocked"
+                    else:
+                        gate_status = row["status"] if row["status"] in {"passed", "failed", "blocked"} else "unknown"
                 result.append(ModelRuntimeEvalGateSummary(ref=ref, status=gate_status))
         return result
 
@@ -330,6 +402,17 @@ class AipModelRuntimeStore:
     @staticmethod
     def _snake(value: str) -> str:
         return "".join(("_" + char.lower()) if char.isupper() else char for char in value)
+
+    @staticmethod
+    def _ref_for_item(
+        asset_type: str, asset_id: str, revision: int, content_hash: str
+    ) -> VersionedAssetRef:
+        return VersionedAssetRef(
+            assetType=asset_type,
+            assetId=asset_id,
+            revision=revision,
+            contentHash=content_hash,
+        )
 
     @classmethod
     def _dependency_refs(cls, value: Any) -> list[VersionedAssetRef]:
