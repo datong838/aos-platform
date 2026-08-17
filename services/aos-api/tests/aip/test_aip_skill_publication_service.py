@@ -95,6 +95,7 @@ def test_direct_registry_publication_is_fail_closed_before_persistence() -> None
         ),
         model_route_ref=ref("ModelRouteRevision", "route-1"),
         runtime_policy_ref=ref("RuntimePolicyRevision", "policy-1"),
+        logic_revision_ref=ref("LogicRevision", "logic.demo"),
     )
     with pytest.raises(
         AipAgentRegistryTransitionBlocked, match="governed Eval publication"
@@ -111,6 +112,30 @@ def test_published_contract_requires_all_exact_provenance() -> None:
         skill_request(parent_ref=ref("SkillTemplate", "skill.demo"))
 
 
+def test_legacy_published_skill_without_logic_ref_remains_readable_but_new_ref_is_exact() -> None:
+    legacy = skill_request(
+        lifecycle=TemplateLifecycle.PUBLISHED,
+        parent_ref=ref("SkillTemplate", "skill.demo"),
+        publication_tenant=TenantContext(org_id="org-org", project_id="dev-project"),
+        release_gate_ref=ref("EvalGateDecision", "gate-1"),
+        publication_ref=ResourceRef(
+            resource_type="PublicationEvent",
+            resource_id="event-1",
+            revision="publication-1",
+            authority="postgresql",
+        ),
+        model_route_ref=ref("ModelRouteRevision", "route-1"),
+        runtime_policy_ref=ref("RuntimePolicyRevision", "policy-1"),
+    )
+    assert legacy.logic_revision_ref is None
+    payload = legacy.model_dump(mode="json", by_alias=True)
+    payload["logicRevisionRef"] = ref(
+        "ModelRouteRevision", "logic.demo"
+    ).model_dump(mode="json", by_alias=True)
+    with pytest.raises(ValidationError, match="logic_revision_ref must reference"):
+        PublishSkillTemplateRequest.model_validate(payload)
+
+
 def test_governed_publication_request_rejects_wrong_ref_kinds() -> None:
     with pytest.raises(ValidationError, match="source_skill must reference SkillTemplate"):
         PublishEvaluatedSkillRevisionRequest(
@@ -119,6 +144,7 @@ def test_governed_publication_request_rejects_wrong_ref_kinds() -> None:
             release_gate_decision_id="gate-1",
             model_route_ref=ref("ModelRouteRevision", "route-1"),
             runtime_policy_ref=ref("RuntimePolicyRevision", "policy-1"),
+            logic_revision_ref=ref("LogicRevision", "logic.demo"),
             idempotency_key="publish-once",
         )
 
@@ -167,6 +193,15 @@ class _ReadyRouteAuthority:
         assert route_ref.asset_type == "ModelRouteRevision"
         assert policy_ref.asset_type == "RuntimePolicyRevision"
         assert evaluated_at.tzinfo is not None
+
+
+class _PublishedLogicAuthority:
+    def require_published(
+        self, _conn, scope, canonical_logic_id, logic_revision_ref
+    ):
+        assert scope.org_id.startswith("bind3-org-")
+        assert canonical_logic_id == logic_revision_ref.asset_id
+        assert logic_revision_ref.asset_type == "LogicRevision"
 
 
 def _canonical_hash(value) -> str:
@@ -300,9 +335,13 @@ def test_real_eval_publication_creates_new_immutable_skill_revision_and_receipt(
         release_gate_decision_id=gate.decision_id,
         model_route_ref=ref("ModelRouteRevision", f"route-{suffix}"),
         runtime_policy_ref=ref("RuntimePolicyRevision", f"policy-{suffix}"),
+        logic_revision_ref=ref("LogicRevision", source.canonical_logic_id),
         idempotency_key=f"publish-skill-{suffix}",
     )
-    service = AipSkillPublicationService(route_authority=_ReadyRouteAuthority())
+    service = AipSkillPublicationService(
+        route_authority=_ReadyRouteAuthority(),
+        logic_authority=_PublishedLogicAuthority(),
+    )
     published, receipt = service.publish_evaluated_revision(
         scope,
         request,
@@ -319,6 +358,7 @@ def test_real_eval_publication_creates_new_immutable_skill_revision_and_receipt(
     assert published.lifecycle is TemplateLifecycle.PUBLISHED and published.revision == 2
     assert published.parent_ref == request.source_skill
     assert published.release_gate_ref.asset_id == gate.decision_id
+    assert published.logic_revision_ref == request.logic_revision_ref
     assert published.publication_tenant == TenantContext(
         org_id=scope.org_id, project_id=scope.project_id
     )

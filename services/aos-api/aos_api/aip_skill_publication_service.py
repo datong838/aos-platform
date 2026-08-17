@@ -38,6 +38,49 @@ class SkillPublicationRouteAuthority(Protocol):
     ) -> None: ...
 
 
+class SkillLogicPublicationAuthority(Protocol):
+    def require_published(
+        self,
+        conn,
+        scope: TenantScope,
+        canonical_logic_id: str,
+        logic_revision_ref: VersionedAssetRef,
+    ) -> None: ...
+
+
+class PostgresSkillLogicPublicationAuthority:
+    def require_published(
+        self,
+        conn,
+        scope: TenantScope,
+        canonical_logic_id: str,
+        logic_revision_ref: VersionedAssetRef,
+    ) -> None:
+        if canonical_logic_id != logic_revision_ref.asset_id:
+            raise AipAgentRegistryTransitionBlocked(
+                "skill canonical logic id does not match the exact LogicRevision"
+            )
+        row = conn.execute(
+            """SELECT 1 FROM aip_logic_graph_revision r
+               JOIN aip_logic_publication p
+                 ON p.org_id=r.org_id AND p.project_id=r.project_id
+                AND p.graph_id=r.graph_id AND p.graph_revision=r.revision
+                AND p.graph_hash=r.graph_hash
+               WHERE r.org_id=%s AND r.project_id=%s AND r.graph_id=%s
+                 AND r.revision=%s AND r.graph_hash=%s LIMIT 1""",
+            (
+                *scope.key,
+                logic_revision_ref.asset_id,
+                logic_revision_ref.revision,
+                logic_revision_ref.content_hash,
+            ),
+        ).fetchone()
+        if row is None:
+            raise AipAgentRegistryTransitionBlocked(
+                "skill publication requires an exact published LogicRevision"
+            )
+
+
 class PostgresSkillPublicationRouteAuthority:
     def __init__(
         self,
@@ -81,10 +124,19 @@ class AipSkillPublicationService(AipSkillRegistry):
 
     _OPERATION = "skill_template.publish_evaluated"
 
-    def __init__(self, connect_factory=None, *, route_authority=None) -> None:
+    def __init__(
+        self,
+        connect_factory=None,
+        *,
+        route_authority=None,
+        logic_authority=None,
+    ) -> None:
         super().__init__(connect_factory)
         self._route_authority = (
             route_authority or PostgresSkillPublicationRouteAuthority()
+        )
+        self._logic_authority = (
+            logic_authority or PostgresSkillLogicPublicationAuthority()
         )
 
     def publish_evaluated_revision(
@@ -183,6 +235,13 @@ class AipSkillPublicationService(AipSkillRegistry):
                         "skill publication event is revoked, drifted, or targets another revision"
                     )
 
+                self._logic_authority.require_published(
+                    conn,
+                    scope,
+                    source.canonical_logic_id,
+                    request.logic_revision_ref,
+                )
+
                 self._route_authority.require_ready(
                     scope,
                     request.model_route_ref,
@@ -235,6 +294,9 @@ class AipSkillPublicationService(AipSkillRegistry):
                     runtimePolicyRef=request.runtime_policy_ref.model_dump(
                         mode="json", by_alias=True
                     ),
+                    logicRevisionRef=request.logic_revision_ref.model_dump(
+                        mode="json", by_alias=True
+                    ),
                 )
                 published_request = PublishSkillTemplateRequest(
                     **payload, content_hash=self._hash(payload)
@@ -245,11 +307,11 @@ class AipSkillPublicationService(AipSkillRegistry):
                         output_schema,tool_allowlist,required_capabilities,risk_level,
                         eval_pack_ref,memory_policy_ref,handoff_policy_ref,source_ref,
                         source_license,parent_ref,publication_tenant,release_gate_ref,
-                        publication_ref,model_route_ref,runtime_policy_ref,content_hash,
+                        publication_ref,model_route_ref,runtime_policy_ref,logic_revision_ref,content_hash,
                         created_by,created_at)
                        VALUES (%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
                         %s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s::jsonb,
-                        %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s)
+                        %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s)
                        RETURNING *""",
                     (
                         published_request.skill_id,
@@ -274,6 +336,7 @@ class AipSkillPublicationService(AipSkillRegistry):
                         self._json(published_request.publication_ref),
                         self._json(published_request.model_route_ref),
                         self._json(published_request.runtime_policy_ref),
+                        self._json(published_request.logic_revision_ref),
                         published_request.content_hash,
                         actor.strip(),
                         happened_at,

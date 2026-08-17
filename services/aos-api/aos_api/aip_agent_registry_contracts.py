@@ -241,6 +241,7 @@ class PublishSkillTemplateRequest(AipContractModel):
     publication_ref: ResourceRef | None = None
     model_route_ref: VersionedAssetRef | None = None
     runtime_policy_ref: VersionedAssetRef | None = None
+    logic_revision_ref: VersionedAssetRef | None = None
     content_hash: str = Field(pattern=SHA256_PATTERN)
 
     @field_validator("tool_allowlist", "required_capabilities")
@@ -275,8 +276,13 @@ class PublishSkillTemplateRequest(AipContractModel):
                     raise ValueError(f"{field_name} must reference {asset_type}")
             if self.publication_ref.resource_type != "PublicationEvent":
                 raise ValueError("publication_ref must reference PublicationEvent")
-        elif any(item is not None for item in provenance):
+        elif any(item is not None for item in provenance) or self.logic_revision_ref is not None:
             raise ValueError("non-published skill cannot carry publication provenance")
+        if (
+            self.logic_revision_ref is not None
+            and self.logic_revision_ref.asset_type != "LogicRevision"
+        ):
+            raise ValueError("logic_revision_ref must reference LogicRevision")
         return self
 
 
@@ -291,6 +297,7 @@ class PublishEvaluatedSkillRevisionRequest(AipContractModel):
     release_gate_decision_id: str = Field(min_length=1, max_length=200)
     model_route_ref: VersionedAssetRef
     runtime_policy_ref: VersionedAssetRef
+    logic_revision_ref: VersionedAssetRef
     idempotency_key: str = Field(min_length=1, max_length=200)
 
     @model_validator(mode="after")
@@ -299,6 +306,7 @@ class PublishEvaluatedSkillRevisionRequest(AipContractModel):
             "source_skill": "SkillTemplate",
             "model_route_ref": "ModelRouteRevision",
             "runtime_policy_ref": "RuntimePolicyRevision",
+            "logic_revision_ref": "LogicRevision",
         }
         for field_name, asset_type in expected.items():
             if getattr(self, field_name).asset_type != asset_type:
