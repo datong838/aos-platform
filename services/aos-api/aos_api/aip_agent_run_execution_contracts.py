@@ -6,7 +6,7 @@ from enum import StrEnum
 
 from pydantic import Field, model_validator
 
-from aos_api.aip_agent_registry_contracts import RegistryReceipt, VersionedAssetRef
+from aos_api.aip_agent_registry_contracts import AgentRun, RegistryReceipt, VersionedAssetRef
 from aos_api.aip_contracts import AipContractModel, ArtifactRef, ResourceRef, TenantContext
 
 
@@ -120,3 +120,34 @@ class AgentRunExecutionAttemptListResponse(AipContractModel):
     tenant: TenantContext
     items: list[AgentRunExecutionAttempt]
     count: int = Field(ge=0)
+
+
+class ExecuteAgentRunRequest(AipContractModel):
+    expected_agent_run_version: int = Field(ge=1)
+    attempt_id: str = Field(min_length=1, max_length=200)
+    attempt_no: int = Field(ge=1)
+    budget_ref: VersionedAssetRef
+    capacity_reservation_ref: ResourceRef
+    query: str = Field(min_length=1, max_length=16000)
+    system_prompt: str = Field(default="", max_length=8000)
+    data_classification: str = Field(pattern=r"^(public|internal|confidential)$")
+
+    @model_validator(mode="after")
+    def _exact_execution_refs(self) -> "ExecuteAgentRunRequest":
+        if self.budget_ref.asset_type != "BudgetRevision":
+            raise ValueError("budget_ref must reference BudgetRevision")
+        if self.capacity_reservation_ref.resource_type != "CapacityReservation":
+            raise ValueError("capacity_reservation_ref must reference CapacityReservation")
+        if not self.query.strip():
+            raise ValueError("query must not be blank")
+        return self
+
+
+class ExecuteAgentRunResponse(AipContractModel):
+    tenant: TenantContext
+    agent_run: AgentRun
+    attempt: AgentRunExecutionAttempt
+    attempt_receipt: RegistryReceipt
+    answer: str | None = None
+    replayed: bool = False
+    lineage_event_count: int = Field(default=0, ge=0)

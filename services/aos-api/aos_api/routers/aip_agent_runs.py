@@ -17,8 +17,11 @@ from aos_api.aip_agent_run_execution_contracts import (
     AgentRunExecutionAttemptCommandResponse,
     AgentRunExecutionAttemptListResponse,
     CreateAgentRunExecutionAttemptRequest,
+    ExecuteAgentRunRequest,
+    ExecuteAgentRunResponse,
     TransitionAgentRunExecutionAttemptRequest,
 )
+from aos_api.aip_agent_run_executor import AipAgentRunExecutor, AipAgentRunExecutorError
 from aos_api.aip_agent_run_execution_service import AipAgentRunExecutionService
 from aos_api.aip_contracts import TenantContext
 from aos_api.auth import Principal, require_principal
@@ -28,10 +31,15 @@ from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip/agent-runs", tags=["aip-agent-runs"])
 _SERVICE = AipAgentRunExecutionService()
+_EXECUTOR = AipAgentRunExecutor()
 
 
 def get_agent_run_execution_service() -> AipAgentRunExecutionService:
     return _SERVICE
+
+
+def get_agent_run_executor() -> AipAgentRunExecutor:
+    return _EXECUTOR
 
 
 def _scope(principal: Principal) -> TenantScope:
@@ -67,6 +75,33 @@ def _map_error(exc: AipAgentRegistryError) -> ApiError:
             status_code=503,
         )
     return ApiError(code=exc.code, message="agent run execution authority failed", status_code=503)
+
+
+@router.post("/{agent_run_id}/execute", response_model=ExecuteAgentRunResponse)
+def execute_agent_run(
+    agent_run_id: str,
+    body: ExecuteAgentRunRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    executor: AipAgentRunExecutor = Depends(get_agent_run_executor),
+) -> ExecuteAgentRunResponse:
+    try:
+        return executor.execute(
+            _scope(principal),
+            agent_run_id,
+            body,
+            idempotency_key=_idem(idempotency_key),
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+    except AipAgentRunExecutorError as exc:
+        raise ApiError(
+            code=exc.code,
+            message=exc.reason_code,
+            status_code=422,
+        ) from exc
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
 
 
 @router.post(
