@@ -1,0 +1,66 @@
+{
+  "schema": "aos-workshop-preparation-receipt/v1",
+  "taskId": "workshop-w2-dependency-aos88-keychain-version-probe-reconciliation-20260817",
+  "recordedAt": "2026-08-17T10:50:34+08:00",
+  "branch": "w2-workshop",
+  "baselineSha": "521124f260781b190168f610398d09a0e4857fc3",
+  "authorityRevision": "AOS-000088",
+  "result": "DEPENDENCY_FACT_RECONCILED_GREEN_RUNTIME_IMPLEMENTATION_BLOCKED",
+  "scope": {
+    "businessCodeChanged": false,
+    "databaseChanged": false,
+    "migrationExecutedByWorkshop": false,
+    "externalSideEffect": false,
+    "authorityChangedByWorkshop": false,
+    "checkpointChangedByWorkshop": false,
+    "primeMemoryChangedByWorkshop": false
+  },
+  "authorityConvergence": {
+    "phase": "WKS_DEP_0B_R1_02_KEYCHAIN_VERSION_PROBE_CODE_GREEN",
+    "deliveryStatus": "CODE_CONTROL_GREEN_OPERATIONAL_BLOCKED",
+    "commit": "574e78b2f74162a5e1f4090384515976cc290714",
+    "verification": "32_TARGETED_GREEN_W1_AIP_667_GREEN_M1_667_GREEN_COMPILEALL_DIFF_GREEN",
+    "activeLeaseCount": 0,
+    "memoryStatus": "GREEN_WITH_WARNINGS",
+    "memoryValidate": "GREEN",
+    "memoryGateCanChangeState": true
+  },
+  "updatedFiles": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/106-W2至W8依赖并行执行准备与冲突控制ADR.md",
+      "preSha256": "0ca63bbb4d1971556dfc1df6d8c9265998c27db785a8682ebff673d43962b406",
+      "postSha256": "462e3244da59d3c2e4e40fab8f5512e6b8f6a38f8946e8cb768f42ddca937222"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "004cd657771c612b73ce37755f200d591fd8574d22c9aea4a4ce6d7b1a6b3736",
+      "postSha256": "07890aeba0e25378cf8d26a2f5672f1bcf100439ac61ac5b665b833310359d93"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "5d6a75237ecb82048314e4f24bb2307464f6b3b38c4107bea5c5a165317d3a3d",
+      "postSha256": "02fd1916bb06ca7439a2fe5637eac4fb820848750b4e170f8673c99e7e416e7a"
+    }
+  ],
+  "reviewedDeliveryReceipts": [
+    "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/aip-r1-02-keychain-version-probe.json",
+    "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/aip-r1-02-keychain-doc-reconciliation.json"
+  ],
+  "dataProbe": {
+    "realTenantLatestRuns": "12/12 succeeded",
+    "canarySourceRows": 0,
+    "canaryProjectionRows": 0
+  },
+  "remainingBlockers": [
+    "Owner-configured versioned Keychain item is absent or inaccessible",
+    "Provider Region and external destination remain unconfirmed",
+    "Live Provider, Model, Policy, Route, Eval, Health, Capacity, Price and Budget evidence remains absent",
+    "CapabilityBinding and runnable AgentRun evidence remains absent",
+    "W2-00 remains NOT_STARTED because DEP-ADP(query) is operational RED"
+  ],
+  "progress": {
+    "completed": 21,
+    "total": 96,
+    "nextTask": "W2-00"
+  }
+}
