@@ -1,0 +1,39 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevision": "AOS-000116",
+  "recordedAt": "2026-08-18T18:15:40+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-4V-note",
+  "kind": "env-smoke-not-aip-health",
+  "providerCandidate": {
+    "vendor": "zhipu-bigmodel",
+    "product": "GLM Coding Plan OpenAI-compatible",
+    "model": "glm-5.2",
+    "host": "open.bigmodel.cn",
+    "path": "/api/coding/paas/v4/chat/completions",
+    "modalities": ["text"],
+    "deniedModalities": ["image", "audio", "video"],
+    "envVarNames": ["GLM_5_2_KEY", "GLM_5_2_URL"]
+  },
+  "execution": {
+    "script": "scripts/aip/probe_glm52_env_smoke.py",
+    "probeCount": 3,
+    "okCount": 3,
+    "httpStatus": 200,
+    "latenciesMs": [3230, 1251, 1517],
+    "aipHealthWritten": false,
+    "keychainUpdated": false,
+    "providerInstancePublished": false
+  },
+  "constraints": {
+    "textOnly": true,
+    "notAipAuthority": true,
+    "doesNotReplaceAgnesR4": true
+  },
+  "result": "GLM52_ENV_SMOKE_TEXT_ONLY_3_OF_3",
+  "nextGate": "R2_4W_PROVIDER_R4_HEALTH_THEN_V6"
+}
