@@ -1,0 +1,29 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevision": "AOS-000117",
+  "recordedAt": "2026-08-18T18:24:00+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-4W",
+  "approvalRef": "46-R2-4W-PROVIDER-R4-HEALTH-THEN-V6-OPTION-A",
+  "leaseRef": "AIP-R2-4W-PROVIDER-R4-HEALTH-THEN-V6",
+  "startGate": {
+    "providerPath": "Agnes text option A",
+    "keychainMatchedEnv": true,
+    "glmUsedAsAuthority": false
+  },
+  "execution": {
+    "healthTripleProbeLimit": 1,
+    "healthProbesCompleted": 1,
+    "healthObservationWritten": false,
+    "blockerCode": "provider_timeout",
+    "providerBusinessCallLimit": 1,
+    "providerBusinessCalls": 0,
+    "automaticRetries": 0
+  },
+  "result": "R2_4W_HEALTH_TIMEOUT_OPTION_A",
+  "nextGate": "R2_4X_PROVIDER_R4_HEALTH_THEN_V6"
+}
