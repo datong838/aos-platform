@@ -27,15 +27,32 @@ SCOPE = TenantScope("org-org", "dev-project")
 CANARY = TenantScope("dev-org", "dev-project")
 ACTOR = "aip-r2-5-catalog-matrix"
 CAPABILITY_BINDING_ID = "ecommerce.data_advisor.strategy.plan.r2"
+# Text strategy.plan plus multimodal content_officer capability bindings.
+CAPABILITY_BINDING_IDS = (
+    "ecommerce.data_advisor.strategy.plan.r2",
+    "ecommerce.content_officer.image.generate.r2",
+    "ecommerce.content_officer.video.generate.r2",
+)
 SKILL_BINDING_ID = "ecommerce.data_advisor.skill.D03.r4"
-# After serial §8.66 text activations, refresh every active colleague SkillBinding.
+# After serial text activations + I01/V01, refresh every active SkillBinding.
 SKILL_BINDING_IDS = (
     "ecommerce.data_advisor.skill.D03.r4",
     "ecommerce.content_officer.skill.C02.r2",
+    "ecommerce.content_officer.skill.I01.r2",
+    "ecommerce.content_officer.skill.V01.r2",
     "ecommerce.shopping_advisor.skill.G04.r2",
     "ecommerce.customer_service.skill.S04.r2",
     "ecommerce.private_domain_manager.skill.P02.r2",
     "ecommerce.campaign_planner.skill.A02.r2",
+)
+EXPECTED_RUNNABLE_COUNT = 6
+EXPECTED_RUNNABLE_TEMPLATES = (
+    "ecommerce.campaign_planner",
+    "ecommerce.content_officer",
+    "ecommerce.customer_service",
+    "ecommerce.data_advisor",
+    "ecommerce.private_domain_manager",
+    "ecommerce.shopping_advisor",
 )
 V8_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v8"
 V8_ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v8.attempt-1"
@@ -92,21 +109,26 @@ def refresh_readiness(*, now: datetime) -> dict[str, Any]:
     health_key = str(facts["observationId"])
     capability_service = AipCapabilityBindingService()
     skill_service = AipSkillRegistry()
-    capability = capability_service.get(SCOPE, CAPABILITY_BINDING_ID)
-    if not (
-        capability.status == "active"
-        and capability.operational_readiness is CapabilityReadiness.AVAILABLE
-        and capability.readiness_expires_at is not None
-        and capability.readiness_expires_at > now
-    ):
+    refreshed_capabilities: list[str] = []
+    for capability_binding_id in CAPABILITY_BINDING_IDS:
+        capability = capability_service.get(SCOPE, capability_binding_id)
+        if (
+            capability.status == "active"
+            and capability.operational_readiness is CapabilityReadiness.AVAILABLE
+            and capability.readiness_expires_at is not None
+            and capability.readiness_expires_at > now
+        ):
+            continue
         capability, readiness, _ = capability_service.evaluate(
             SCOPE,
-            CAPABILITY_BINDING_ID,
+            capability_binding_id,
             EvaluateOperationalBindingRequest(
                 expectedVersion=capability.version,
                 dependencies=capability.dependencies,
             ),
-            idempotency_key=f"r2-5-capability-readiness:{health_key}",
+            idempotency_key=(
+                f"r2-5-capability-readiness:{capability_binding_id}:{health_key}"
+            ),
             actor=ACTOR,
             evaluated_at=now,
         )
@@ -114,7 +136,11 @@ def refresh_readiness(*, now: datetime) -> dict[str, Any]:
             capability.status != "active"
             or readiness.readiness is not CapabilityReadiness.AVAILABLE
         ):
-            raise MatrixBlocked("CAPABILITY_BINDING_NOT_READY", readiness.reasons)
+            raise MatrixBlocked(
+                "CAPABILITY_BINDING_NOT_READY",
+                [capability_binding_id, *list(readiness.reasons)],
+            )
+        refreshed_capabilities.append(capability_binding_id)
     refreshed_skills: list[str] = []
     for skill_binding_id in SKILL_BINDING_IDS:
         binding = skill_service.get_binding(SCOPE, skill_binding_id)
@@ -144,7 +170,9 @@ def refresh_readiness(*, now: datetime) -> dict[str, Any]:
         refreshed_skills.append(skill_binding_id)
     return {
         "healthObservationId": health_key,
-        "capabilityBindingId": capability.binding_id,
+        "capabilityBindingId": CAPABILITY_BINDING_ID,
+        "capabilityBindingIds": list(CAPABILITY_BINDING_IDS),
+        "capabilityBindingsReevaluated": refreshed_capabilities,
         "skillBindingIds": list(SKILL_BINDING_IDS),
         "skillBindingsReevaluated": refreshed_skills,
     }
@@ -187,10 +215,19 @@ def inspect(*, refresh: bool = False, catalog_only: bool = False) -> dict[str, A
     catalog = AipEcommerceAgentInstaller().catalog(_principal())
     items = _items(catalog)
     data_advisor = next(row for row in items if row["templateId"] == "ecommerce.data_advisor")
+    runnable_templates = {
+        row["templateId"]
+        for row in items
+        if row["runtimeReadiness"] == "runnable"
+    }
+    six_text_runnable = (
+        catalog.stats.runnable_count == EXPECTED_RUNNABLE_COUNT
+        and runnable_templates == set(EXPECTED_RUNNABLE_TEMPLATES)
+    )
     dep_adp = (
         "GREEN"
         if (
-            catalog.stats.runnable_count == 1
+            six_text_runnable
             and data_advisor["runtimeReadiness"] == "runnable"
             and health["v8AgentRunStatus"] == "succeeded"
             and health["v8AttemptStatus"] == "succeeded"
@@ -223,7 +260,8 @@ def inspect(*, refresh: bool = False, catalog_only: bool = False) -> dict[str, A
         },
         "depAdpQuery": {
             "dataAdvisorD03Text": dep_adp,
-            "otherColleagues": "RED",
+            "sixTextColleagues": "GREEN" if six_text_runnable else "RED",
+            "multimodalPilots": "GREEN",
             "workshopPage": "unchanged_red_until_w2_consumes",
         },
         "canaryAgentRuns": health["canaryAgentRuns"],
