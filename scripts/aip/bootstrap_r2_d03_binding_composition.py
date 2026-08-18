@@ -276,6 +276,126 @@ def inspect(*, now: datetime | None = None) -> dict[str, Any]:
     }
 
 
+def skill_binding_dependencies(
+    composition: ExactComposition | Any,
+) -> OperationalBindingDependencies:
+    """Use the Skill publication gate, never the ModelRoute evaluation gate."""
+    skill = composition.skill
+    if (
+        skill.release_gate_ref is None
+        or skill.model_route_ref is None
+        or skill.runtime_policy_ref is None
+    ):
+        raise CompositionBlocked("SKILL_PUBLICATION_PROVENANCE_MISSING")
+    if (
+        skill.model_route_ref != composition.dependencies.model_route_ref
+        or skill.runtime_policy_ref != composition.dependencies.runtime_policy_ref
+    ):
+        raise CompositionBlocked("SKILL_PUBLICATION_RUNTIME_REF_DRIFT")
+    return OperationalBindingDependencies(
+        model_route_ref=skill.model_route_ref,
+        runtime_policy_ref=skill.runtime_policy_ref,
+        eval_gate_ref=skill.release_gate_ref,
+        budget_policy_ref=composition.dependencies.budget_policy_ref,
+    )
+
+
+def _skill_readiness_reusable(
+    binding: Any,
+    dependencies: OperationalBindingDependencies,
+    decision_at: datetime,
+) -> bool:
+    return bool(
+        binding.readiness is CapabilityReadiness.AVAILABLE
+        and binding.dependencies == dependencies
+        and binding.dependency_snapshot_hash
+        and binding.readiness_expires_at
+        and binding.readiness_expires_at > decision_at
+    )
+
+
+def ensure_skill_binding_active(
+    *,
+    service: Any,
+    binding: Any,
+    dependencies: OperationalBindingDependencies,
+    decision_at: datetime,
+) -> Any:
+    """Resume the approved SkillBinding composition without duplicate writes."""
+    if binding.status == "active":
+        if not _skill_readiness_reusable(binding, dependencies, decision_at):
+            raise CompositionBlocked("ACTIVE_SKILL_BINDING_READINESS_STALE")
+        return binding
+    if binding.status != "provisioning":
+        raise CompositionBlocked(
+            "SKILL_BINDING_LIFECYCLE_NOT_RESUMABLE", [str(binding.status)]
+        )
+    if not _skill_readiness_reusable(binding, dependencies, decision_at):
+        binding, readiness, _ = service.evaluate_binding(
+            SCOPE,
+            binding.binding_id,
+            EvaluateOperationalBindingRequest(
+                expected_version=binding.version,
+                dependencies=dependencies,
+            ),
+            idempotency_key=(
+                f"{APPROVAL_REF}-skill-binding-evaluate-skill-gate-v1"
+            ),
+            actor=ACTOR,
+            evaluated_at=decision_at,
+        )
+        if readiness.readiness is not CapabilityReadiness.AVAILABLE:
+            raise CompositionBlocked("SKILL_BINDING_NOT_READY", readiness.reasons)
+    binding, _ = service.update_binding(
+        SCOPE,
+        binding.binding_id,
+        UpdateSkillBindingRequest(
+            expected_version=binding.version,
+            from_status="provisioning",
+            to_status="active",
+        ),
+        idempotency_key=f"{APPROVAL_REF}-skill-binding-activate-skill-gate-v1",
+        actor=ACTOR,
+        occurred_at=decision_at,
+    )
+    return binding
+
+
+def ensure_capability_binding_active(
+    *,
+    service: Any,
+    binding: Any,
+    readiness: Any,
+    decision_at: datetime,
+) -> Any:
+    """Do not replay the timestamped activation command after it succeeded."""
+    if binding.status == "active":
+        if (
+            readiness.readiness is not CapabilityReadiness.AVAILABLE
+            or readiness.expires_at <= decision_at
+        ):
+            raise CompositionBlocked("ACTIVE_CAPABILITY_BINDING_READINESS_STALE")
+        return binding
+    if binding.status != "provisioning":
+        raise CompositionBlocked(
+            "CAPABILITY_BINDING_LIFECYCLE_NOT_RESUMABLE", [str(binding.status)]
+        )
+    binding, _ = service.update(
+        SCOPE,
+        CAPABILITY_BINDING_ID,
+        UpdateCapabilityBindingRequest(
+            expected_version=binding.version,
+            from_status="provisioning",
+            to_status="active",
+            health=BindingHealth.HEALTHY,
+            observed_at=decision_at,
+        ),
+        idempotency_key=f"{APPROVAL_REF}-capability-binding-activate",
+        actor=ACTOR,
+    )
+    return binding
+
+
 def apply(*, now: datetime | None = None) -> dict[str, Any]:
     decision_at = now or datetime.now(UTC)
     before = _counts(SCOPE)
@@ -331,30 +451,26 @@ def apply(*, now: datetime | None = None) -> dict[str, Any]:
         actor=ACTOR,
         evaluated_at=decision_at,
     )
-    capability_binding, _ = capability_service.update(
-        SCOPE,
-        CAPABILITY_BINDING_ID,
-        UpdateCapabilityBindingRequest(
-            expected_version=2,
-            from_status="provisioning",
-            to_status="active",
-            health=BindingHealth.HEALTHY,
-            observed_at=decision_at,
-        ),
-        idempotency_key=f"{APPROVAL_REF}-capability-binding-activate",
-        actor=ACTOR,
+    capability_binding = ensure_capability_binding_active(
+        service=capability_service,
+        binding=capability_binding,
+        readiness=readiness,
+        decision_at=decision_at,
     )
-    instance, _ = AipAgentInstanceActivationService().activate(
-        SCOPE,
-        INSTANCE_ID,
-        ActivateAgentInstanceRequest(
-            expected_version=1,
-            capability_binding_ids=[CAPABILITY_BINDING_ID],
-        ),
-        idempotency_key=f"{APPROVAL_REF}-instance-activate",
-        actor=ACTOR,
-        occurred_at=decision_at,
-    )
+    if composition.instance.status.value == "active":
+        instance = composition.instance
+    else:
+        instance, _ = AipAgentInstanceActivationService().activate(
+            SCOPE,
+            INSTANCE_ID,
+            ActivateAgentInstanceRequest(
+                expected_version=composition.instance.version,
+                capability_binding_ids=[CAPABILITY_BINDING_ID],
+            ),
+            idempotency_key=f"{APPROVAL_REF}-instance-activate",
+            actor=ACTOR,
+            occurred_at=decision_at,
+        )
     skill_ref = exact_ref("SkillTemplate", composition.skill, "skill_id")
     skill_service = AipSkillRegistry()
     skill_binding, _ = skill_service.create_binding(
@@ -370,33 +486,11 @@ def apply(*, now: datetime | None = None) -> dict[str, Any]:
         actor=ACTOR,
         occurred_at=decision_at,
     )
-    skill_dependencies = OperationalBindingDependencies(
-        model_route_ref=composition.dependencies.model_route_ref,
-        runtime_policy_ref=composition.dependencies.runtime_policy_ref,
-        eval_gate_ref=composition.dependencies.eval_gate_ref,
-        budget_policy_ref=composition.dependencies.budget_policy_ref,
-    )
-    skill_binding, skill_readiness, _ = skill_service.evaluate_binding(
-        SCOPE,
-        SKILL_BINDING_ID,
-        EvaluateOperationalBindingRequest(
-            expected_version=1, dependencies=skill_dependencies
-        ),
-        idempotency_key=f"{APPROVAL_REF}-skill-binding-evaluate",
-        actor=ACTOR,
-        evaluated_at=decision_at,
-    )
-    skill_binding, _ = skill_service.update_binding(
-        SCOPE,
-        SKILL_BINDING_ID,
-        UpdateSkillBindingRequest(
-            expected_version=2,
-            from_status="provisioning",
-            to_status="active",
-        ),
-        idempotency_key=f"{APPROVAL_REF}-skill-binding-activate",
-        actor=ACTOR,
-        occurred_at=decision_at,
+    skill_binding = ensure_skill_binding_active(
+        service=skill_service,
+        binding=skill_binding,
+        dependencies=skill_binding_dependencies(composition),
+        decision_at=decision_at,
     )
     canary_after = _counts(CANARY_SCOPE)
     if canary_after != canary_before:
@@ -413,7 +507,7 @@ def apply(*, now: datetime | None = None) -> dict[str, Any]:
         "skillBinding": {
             "bindingId": skill_binding.binding_id,
             "status": skill_binding.status,
-            "readiness": skill_readiness.readiness.value,
+            "readiness": skill_binding.readiness.value,
         },
         "beforeCounts": before,
         "afterCounts": _counts(SCOPE),
