@@ -1,0 +1,46 @@
+{
+  "schema": "aos-aip-code-control-evidence/v1",
+  "authorityRevision": "AOS-000098",
+  "recordedAt": "2026-08-18T13:38:00+08:00",
+  "scope": "R2-4E transport blocker safe observability",
+  "commit": "9afdca3",
+  "fileHashes": {
+    "services/aos-api/aos_api/aip_agent_run_executor.py": {
+      "before": "16814d8870c64dd5c1583707083ffc3c74d36489977590ce491b85d4e83e66e5",
+      "after": "8b2bef524a49ac43b73667e28e1cecfa3df94d007565bf391e551592e2ee1b5f"
+    },
+    "services/aos-api/tests/aip/test_aip_agent_run_executor.py": {
+      "before": "3cf41c432f6faa9f4dd8b1d89a5770f01ddc7b5a56e059922e40a16bb7963d3a",
+      "after": "5c17486817d7b1508ceae68adea4a720e1cffa7bb89d3714cb7c0019c860767c"
+    },
+    "plan": {
+      "before": "4e0c2e6c7147597c07df2605acd1dc804fe4128b36d043c1d911a266d154dbd2",
+      "after": "841d17519337594592aceac58d413e4741d26676612ec6864605956243e85180"
+    }
+  },
+  "safeMappings": {
+    "provider_http_error": "PROVIDER_HTTP_ERROR",
+    "provider_timeout": "PROVIDER_TIMEOUT",
+    "provider_transport_error": "PROVIDER_TRANSPORT_ERROR",
+    "provider_response_invalid": "PROVIDER_RESPONSE_INVALID"
+  },
+  "fallback": "PROVIDER_RESULT_UNKNOWN",
+  "verification": {
+    "redPhase": "4 expected failures",
+    "focusedTests": "20 passed",
+    "cumulativeTests": "111 passed",
+    "pythonCompile": "GREEN",
+    "gitDiffCheck": "GREEN",
+    "providerBusinessCalls": 0,
+    "realDatabaseWrites": 0,
+    "migrationChanges": 0,
+    "workshopChanges": 0
+  },
+  "boundaries": [
+    "No free-form exception text is persisted.",
+    "No Provider response body, prompt, answer, Secret, header, cookie or bearer material is persisted.",
+    "The v3 immutable incident remains PROVIDER_RESULT_UNKNOWN and is not rewritten."
+  ],
+  "result": "R2_4E_CODE_CONTROL_GREEN",
+  "nextGate": "R2_4F_V4_SINGLE_PROVIDER_CALL_REQUIRES_EXPLICIT_APPROVAL"
+}
