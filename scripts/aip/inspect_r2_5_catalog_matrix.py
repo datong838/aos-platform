@@ -133,10 +133,8 @@ def refresh_readiness(*, now: datetime) -> dict[str, str]:
     }
 
 
-def inspect(*, refresh: bool = False) -> dict[str, Any]:
+def inspect(*, refresh: bool = False, catalog_only: bool = False) -> dict[str, Any]:
     now = datetime.now(UTC)
-    health = _health(now)
-    refreshed = refresh_readiness(now=now) if refresh else {"skipped": True}
     catalog = AipEcommerceAgentInstaller().catalog(_principal())
     items = []
     for item in catalog.items:
@@ -152,6 +150,19 @@ def inspect(*, refresh: bool = False) -> dict[str, Any]:
                 ),
             }
         )
+    if catalog_only:
+        return {
+            "status": "READONLY_CATALOG_MATRIX",
+            "scope": {"orgId": SCOPE.org_id, "projectId": SCOPE.project_id},
+            "mode": "catalog_only_no_health_refresh_no_provider",
+            "catalogStats": catalog.stats.model_dump(by_alias=True),
+            "colleagues": items,
+            "providerBusinessCalls": 0,
+            "healthProbes": 0,
+            "secretPayloadReads": 0,
+        }
+    health = _health(now)
+    refreshed = refresh_readiness(now=now) if refresh else {"skipped": True}
     data_advisor = next(row for row in items if row["templateId"] == "ecommerce.data_advisor")
     dep_adp = (
         "GREEN"
@@ -202,10 +213,11 @@ def inspect(*, refresh: bool = False) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--refresh-readiness", action="store_true")
+    parser.add_argument("--catalog-only", action="store_true")
     parser.add_argument("--write-evidence", action="store_true")
     args = parser.parse_args()
     try:
-        result = inspect(refresh=args.refresh_readiness)
+        result = inspect(refresh=args.refresh_readiness, catalog_only=args.catalog_only)
     except MatrixBlocked as exc:
         result = {
             "status": "blocked",
@@ -224,6 +236,8 @@ def main() -> int:
         EVIDENCE.write_text(json.dumps(payload, ensure_ascii=False, indent=2, default=str) + "\n")
         result["evidencePath"] = str(EVIDENCE)
     print(json.dumps(result, ensure_ascii=False, sort_keys=True, default=str))
+    if args.catalog_only:
+        return 0 if result.get("status") == "READONLY_CATALOG_MATRIX" else 2
     return 0 if result.get("status") == "R2_5_DEP_ADP_QUERY_EVIDENCE_GREEN" else 2
 
 
