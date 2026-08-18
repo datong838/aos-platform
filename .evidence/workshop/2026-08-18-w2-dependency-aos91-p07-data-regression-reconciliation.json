@@ -1,0 +1,77 @@
+{
+  "schema": "workshop-data-regression-fact-reconciliation/v1",
+  "taskId": "workshop-w2-dependency-aos91-p07-data-regression-reconciliation",
+  "recordedAt": "2026-08-18T08:06:55+08:00",
+  "authority": {
+    "projectRevision": "AOS-000091",
+    "sourceCommit": "730c1f61259532c3054376017503ad3de22c1c43",
+    "realStartAuthorized": false
+  },
+  "git": {
+    "branch": "w2-workshop",
+    "headBefore": "1b1d83550a1c11f9355e9aa6c5d6824ede314d20"
+  },
+  "dataProbe": {
+    "previousEvidenceCutoff": {
+      "succeeded": 9,
+      "total": 12,
+      "failedPipelines": ["P01", "P02", "P05"]
+    },
+    "current": {
+      "succeeded": 8,
+      "total": 12,
+      "failedPipelines": ["P01", "P02", "P05", "P07"]
+    },
+    "newRegression": {
+      "pipeline": "P07",
+      "startedAt": "2026-08-18T00:00:09.675451+00:00",
+      "status": "PIPELINE_EXECUTOR_FAILED",
+      "rowsWritten": 0
+    },
+    "isolationCanary": {
+      "tenant": "dev-org/dev-project",
+      "sourceRows": 0,
+      "projectionRows": 0
+    },
+    "durableCountsChanged": false
+  },
+  "operationalGates": {
+    "canonicalSourceReadinessOwnerApi": "ABSENT",
+    "sameCutoffEvidencePack": "ABSENT",
+    "r2RealStart": "NOT_AUTHORIZED",
+    "workshopDepAdpQueryHandoff": "PENDING",
+    "activeLeasesBeforeTask": 0,
+    "w2_00": "NOT_STARTED",
+    "w2_00b": "BLOCKED",
+    "progress": "21/96"
+  },
+  "sideEffects": {
+    "businessCodeChanges": 0,
+    "databaseWrites": 0,
+    "providerCalls": 0,
+    "bindingOrAgentRunCreates": 0,
+    "migrations": 0,
+    "releases": 0,
+    "authorityUpdates": 0,
+    "primeUpdates": 0
+  },
+  "fileIntegrity": [
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/107-W2-00-SourceReadinessEnvelope接入与m1合流施工准备ADR.md",
+      "preSha256": "181b4232b3ae2a8d757ae1d1749cf88ffe20c9a469fb4239125c17f7a8da59af",
+      "postSha256": "bae1403e30ae940d14ca585422a54ceb8837dc5e63fe2ab33112eacc79f16de7"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "7be26d1a9248985728ba9186637c1bc8d99f9e35fbba980c1e4507aa76094609",
+      "postSha256": "375b4dedb74a05da35786c2bb0269397ff8158b9d9e1db4cb1963ae2babf30cd"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "5e6f8f220740e233b13c2fc4eb82344b891484eba313c8e2c4b36d556e1033af",
+      "postSha256": "37fa43af08ee0bc3bad92b9a2eb65010dca579bb1d49a40358e16ed5d4ff424d"
+    }
+  ],
+  "result": "COMPLETED_GREEN_WITH_RUNTIME_BLOCKERS",
+  "verdict": "AOS91_P07_DATA_REGRESSION_RECONCILED__DEP_DATA_RED_8_OF_12__W2_00B_BLOCKED"
+}
