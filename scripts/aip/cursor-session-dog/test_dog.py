@@ -18,17 +18,24 @@ def _hb(**updates) -> dict:
 
 
 def test_looping_fresh_heartbeat_does_not_wake() -> None:
-    now = datetime(2026, 8, 18, 9, 12, tzinfo=timezone.utc)
+    now = datetime(2026, 8, 18, 9, 10, 45, tzinfo=timezone.utc)
     decision = decide_wake(heartbeat=_hb(status="looping"), now=now)
     assert decision["wake"] is False
     assert decision["reason"] == "healthy"
 
 
 def test_working_fresh_heartbeat_does_not_wake() -> None:
-    now = datetime(2026, 8, 18, 9, 12, tzinfo=timezone.utc)
+    now = datetime(2026, 8, 18, 9, 10, 59, tzinfo=timezone.utc)
     decision = decide_wake(heartbeat=_hb(), now=now)
     assert decision["wake"] is False
     assert decision["reason"] == "healthy"
+
+
+def test_working_heartbeat_stale_at_60s() -> None:
+    now = datetime(2026, 8, 18, 9, 11, tzinfo=timezone.utc)
+    decision = decide_wake(heartbeat=_hb(), now=now)
+    assert decision["wake"] is True
+    assert decision["reason"] == "stale-heartbeat"
 
 
 def test_failed_stopped_wakes_after_short_delay() -> None:

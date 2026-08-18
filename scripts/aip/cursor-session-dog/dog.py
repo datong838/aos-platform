@@ -17,7 +17,7 @@ from typing import Any
 SCHEMA = "aos-cursor-session-dog/v1"
 SENTINEL = "AGENT_LOOP_WAKE_aip_dog"
 DEFAULT_HOME = Path.home() / ".cursor" / "aip-session-dog"
-GRACE_SECONDS = 300
+GRACE_SECONDS = 60
 STOP_WAKE_SECONDS = 90
 POLL_SECONDS = 15
 WAKE_PROMPT = (
