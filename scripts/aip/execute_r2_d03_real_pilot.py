@@ -255,7 +255,7 @@ def refresh_active_binding_readiness(*, now: datetime) -> dict[str, str]:
 
     capability_is_fresh = (
         capability.status == "active"
-        and capability.readiness is CapabilityReadiness.AVAILABLE
+        and capability.operational_readiness is CapabilityReadiness.AVAILABLE
         and capability.readiness_expires_at is not None
         and capability.readiness_expires_at > now
     )

@@ -79,7 +79,7 @@ def test_fresh_binding_readiness_replay_is_read_only(monkeypatch) -> None:
     now = datetime(2026, 8, 18, 4, 45, tzinfo=UTC)
     capability = SimpleNamespace(
         status="active",
-        readiness=MODULE.CapabilityReadiness.AVAILABLE,
+        operational_readiness=MODULE.CapabilityReadiness.AVAILABLE,
         readiness_expires_at=now + timedelta(minutes=5),
         dependency_snapshot_hash="capability-snapshot",
     )
