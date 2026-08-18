@@ -1,0 +1,100 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevision": "AOS-000097",
+  "recordedAt": "2026-08-18T13:31:06+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-4D-v3",
+  "approvalRef": "46-R2-4D-V3-EXACT-BLOCKER-START-APPROVED",
+  "commits": {
+    "m1": "ec0c29a6220565400d72ceefd008d332f3bd79d0",
+    "w1-aip": "ec0c29a6220565400d72ceefd008d332f3bd79d0"
+  },
+  "fileHashes": {
+    "scripts/aip/execute_r2_d03_real_pilot.py": {
+      "before": "ee6dfec2a0acc6a9570d0ca1a2f2b3dd2abadb682686afdc3f0e462d71be9f74",
+      "after": "e6983c2874d106c1509c8b8eb5956e5038c2fc91387559d045e015be9beef3cd"
+    },
+    "services/aos-api/tests/aip/test_execute_r2_d03_real_pilot.py": {
+      "before": "e867fc0369d1162dfd473215ece0166636d3a1984619c38bd0f71adc16d73685",
+      "after": "c258b3be0f3ffbd456c206c5249f589b2c902518f9314ea09dff2e2a0de57b67"
+    },
+    "plan": {
+      "before": "ae813186a7c4e52ddaae9c115b82468d9fb7be6067292b9ad1633bbe45d9b54e",
+      "after": "4e0c2e6c7147597c07df2605acd1dc804fe4128b36d043c1d911a266d154dbd2"
+    }
+  },
+  "startGate": {
+    "schemaHead": "aip10_006",
+    "providerHealthObservationId": "health-agnes-text-qyh-r2-20260818051807067534",
+    "providerHealthProbeCount": 3,
+    "providerHealthStatus": "healthy",
+    "bindingReadiness": "available",
+    "capacityGate": "GREEN",
+    "negativeCanaryBefore": {
+      "task": 0,
+      "taskRun": 0,
+      "agentRun": 0,
+      "attempt": 0,
+      "skillBinding": 0
+    }
+  },
+  "execution": {
+    "providerBusinessCallLimit": 1,
+    "providerBusinessCalls": 1,
+    "automaticRetries": 0,
+    "taskId": "task-6300d457939c42a8b424",
+    "taskStatus": "executing",
+    "taskRunId": "run-474995a1aa9b49bf8dde",
+    "taskRunStatus": "running",
+    "agentRunId": "ecommerce.data_advisor.D03.real-pilot.v3",
+    "agentRunStatus": "unknown",
+    "attemptId": "ecommerce.data_advisor.D03.real-pilot.v3.attempt-1",
+    "attemptStatus": "unknown",
+    "reasonCode": "PROVIDER_RESULT_UNKNOWN"
+  },
+  "readback": {
+    "providerReceiptIdPresent": false,
+    "usageReceiptCount": 0,
+    "outputArtifactPresent": false,
+    "lineageEventCount": 0,
+    "capacityStatus": "released",
+    "negativeCanaryAfter": {
+      "task": 0,
+      "taskRun": 0,
+      "agentRun": 0,
+      "attempt": 0
+    },
+    "secretPayloadReads": 0,
+    "sensitiveBodiesPersisted": 0,
+    "externalBusinessActions": 0
+  },
+  "verification": {
+    "focusedTests": "8 passed",
+    "cumulativeTests": "107 passed",
+    "pythonCompile": "GREEN",
+    "gitDiffCheck": "GREEN",
+    "browserRoute": "/aip/agent-registry",
+    "browserTenant": "org-org/dev-project",
+    "browserInstalledRoles": 6,
+    "browserRunnableCount": 0,
+    "browserDataAdvisorPreflightDisabled": true,
+    "browserResult": "HONEST_BLOCKED_NOT_GREEN"
+  },
+  "diagnosis": {
+    "rootCauseStatus": "NOT_PROVEN",
+    "safeObservabilityGap": [
+      "provider_http_error",
+      "provider_timeout",
+      "provider_transport_error",
+      "provider_response_invalid"
+    ],
+    "historicalAttemptImmutable": true,
+    "nextRealCallRequiresNewExplicitApproval": true
+  },
+  "result": "OPERATIONAL_ATTEMPT_UNKNOWN",
+  "nextGate": "R2_4E_TRANSPORT_BLOCKER_SAFE_OBSERVABILITY_REVIEW"
+}
