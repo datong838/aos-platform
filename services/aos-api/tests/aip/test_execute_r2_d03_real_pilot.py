@@ -27,6 +27,23 @@ def test_plan_freezes_one_business_call_and_no_sensitive_output() -> None:
     assert "query" not in plan and "answer" not in plan
 
 
+def test_r2_4c_uses_new_v2_authority_and_preserves_v1_incident_refs() -> None:
+    plan = MODULE.build_plan()
+    assert MODULE.APPROVAL_REF == "46-R2-4C-SECOND-REAL-START-APPROVED"
+    assert MODULE.AGENT_RUN_ID.endswith("real-pilot.v2")
+    assert MODULE.ATTEMPT_ID.endswith("real-pilot.v2.attempt-1")
+    assert MODULE.EXECUTE_KEY.endswith("execute-v2")
+    assert MODULE.INCIDENT_AGENT_RUN_ID.endswith("real-pilot.v1")
+    assert MODULE.INCIDENT_ATTEMPT_ID.endswith("real-pilot.attempt-1")
+    assert plan["recoveryOf"] == {
+        "agentRunId": MODULE.INCIDENT_AGENT_RUN_ID,
+        "attemptId": MODULE.INCIDENT_ATTEMPT_ID,
+        "status": "unknown",
+    }
+    assert MODULE.AGENT_RUN_ID != MODULE.INCIDENT_AGENT_RUN_ID
+    assert MODULE.ATTEMPT_ID != MODULE.INCIDENT_ATTEMPT_ID
+
+
 def test_active_binding_readiness_refresh_is_supported_without_lifecycle_write() -> None:
     capability_source = (
         Path(__file__).resolve().parents[2]
