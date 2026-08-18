@@ -1,0 +1,53 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevisionBefore": "AOS-000138",
+  "recordedAt": "2026-08-19T02:16:15+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-IMG-0-3",
+  "approvalRef": "46-§8.75-IMG-0..IMG-3 / 35-R1-C",
+  "assets": {
+    "plugin": {
+      "assetId": "agnes-image",
+      "revision": 1,
+      "contentHash": "7028d67189378afd1299b3e8dfbdd409e2a818c40930e6d26b05f65f38e51c87"
+    },
+    "egress": {
+      "assetId": "agnes-image-qyh-dev-egress",
+      "revision": 1,
+      "contentHash": "d204fe88ceb6c8f10d73bff147f73a6cd7ea21fee67e8b315ff97b2f1a474efe"
+    },
+    "network": {
+      "assetId": "network-qyh-image-dev",
+      "revision": 1,
+      "contentHash": "fffc2027106729a215589dd67081ce6a68380b4c01208624afd95236c7e811f2"
+    },
+    "provider": {
+      "assetId": "agnes-image-qyh-dev",
+      "revision": 2,
+      "contentHash": "576be088955911595071b309be735729dbbaf320a80d70b7d7c241b663188289"
+    },
+    "secretRefShape": "keychain://com.aos.llm/agnes-image/org-org/dev-project/agnes-image-qyh-dev#api-key",
+    "secretVersion": "v1"
+  },
+  "health": {
+    "observationId": "health-agnes-image-qyh-r2-20260818181614721758",
+    "status": "healthy",
+    "probeCount": 3,
+    "maxAttemptsPerProbe": 1,
+    "automaticRetries": 0,
+    "p50LatencyMs": 9987,
+    "endpoint": "/v1/images/generations",
+    "providerModelId": "agnes-image-2.1-flash",
+    "expiresAt": "2026-08-18T18:31:14.721758+00:00"
+  },
+  "result": "PROVIDER_IMAGE_HEALTH_REFRESH_GREEN",
+  "immutable": true,
+  "secretPayloadReads": 0,
+  "sensitiveBodiesPrinted": 0,
+  "textColleaguesUntouched": true,
+  "nextGate": "AIP_IMG_4_ROUTE_CAPACITY_SPLIT"
+}
