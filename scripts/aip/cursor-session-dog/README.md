@@ -31,4 +31,17 @@ Loop 是 Agent 自己续跑 AIP 波次。Dog 不代替 Loop，不定时喊人，
 - 代码：本目录 `dog.py`
 - 哨兵：`AGENT_LOOP_WAKE_aip_dog`
 
-Agent 每波开工、波中、收口都要自己 `heartbeat`。失败收口写 `failed-stopped`，正常收口若还要继续则保持 `working` 并刷新心跳。
+Agent 每波开工、波中、收口都要自己 `heartbeat`。失败收口写 `failed-stopped`。
+
+## Loop 防空窗（2026-08-18）
+
+Dog **不能**代替 Loop。上次空窗是：封板后只汇报「下一门」，回合结束；心跳仍写 `looping`；Dog `stale-heartbeat` 喊了，前台却因旧唤醒词写 **reentry-noop** 收工。
+
+| 必须 | 禁止 |
+|---|---|
+| 封板后 `next_gate` 本会话可执行 → **同一回合接着干** | 只说「下一门是 X」然后结束回合 |
+| 回合不得不结束 → 武装 15s 一次性 `AGENT_LOOP_WAKE_aip_loop` | 把续跑寄托在 Dog 身上 |
+| Dog 唤醒且无人在跑工具 → **继续 next_gate** | 只因心跳还是 `looping` 就 reentry-noop |
+| 用户门禁（合 m1 / push / 图像视频 / 其余五同事）→ 说停 + `quiet_until` | 假装还在开发、空转心跳 |
+
+`reentry-noop` 只用于「前台已经在跑工具」；不是「心跳文件里写着 looping」。

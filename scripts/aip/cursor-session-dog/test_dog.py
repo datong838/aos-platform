@@ -102,3 +102,11 @@ def test_missing_heartbeat_does_not_wake() -> None:
     decision = decide_wake(heartbeat=None, now=now)
     assert decision["wake"] is False
     assert decision["reason"] == "no-heartbeat"
+
+
+def test_wake_prompt_does_not_noop_just_because_status_is_looping() -> None:
+    from dog import WAKE_PROMPT
+
+    assert "立即写 reentry-noop 并退出" not in WAKE_PROMPT
+    assert "前台正在跑工具" in WAKE_PROMPT
+    assert "不要只汇报下一门" in WAKE_PROMPT

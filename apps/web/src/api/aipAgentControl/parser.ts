@@ -188,7 +188,8 @@ export function parseAgentCatalog(value: unknown, expectedTenant?: Tenant): Agen
     exact(manifest, `items[${index}].template.manifest`, ["id", "displayName", "roleKey", "logicIds", "responsibility", "runtimeReadiness", "blockers"]);
     const skills = array(item.skills, `items[${index}].skills`).map((value, skillIndex) => {
       const skill = obj(value, `items[${index}].skills[${skillIndex}]`);
-      exact(skill, `items[${index}].skills[${skillIndex}]`, ["skillId", "revision", "canonicalLogicId", "lifecycle", "inputSchema", "outputSchema", "toolAllowlist", "requiredCapabilities", "riskLevel", "evalPackRef", "memoryPolicyRef", "handoffPolicyRef", "sourceRef", "sourceLicense", "parentRef", "publicationTenant", "releaseGateRef", "publicationRef", "modelRouteRef", "runtimePolicyRef", "contentHash", "createdBy", "createdAt"]);
+      const skillRequired = ["skillId", "revision", "canonicalLogicId", "lifecycle", "inputSchema", "outputSchema", "toolAllowlist", "requiredCapabilities", "riskLevel", "evalPackRef", "memoryPolicyRef", "handoffPolicyRef", "sourceRef", "sourceLicense", "parentRef", "publicationTenant", "releaseGateRef", "publicationRef", "modelRouteRef", "runtimePolicyRef", "contentHash", "createdBy", "createdAt"] as const;
+      exact(skill, `items[${index}].skills[${skillIndex}]`, [...skillRequired, "logicRevisionRef"], skillRequired);
       return { skillId: str(skill.skillId, "skillId"), canonicalLogicId: str(skill.canonicalLogicId, "canonicalLogicId"), lifecycle: enumeration(skill.lifecycle, "skill.lifecycle", ["evaluated", "published"] as const), requiredCapabilities: strings(skill.requiredCapabilities, "requiredCapabilities"), riskLevel: str(skill.riskLevel, "riskLevel") };
     });
     return {

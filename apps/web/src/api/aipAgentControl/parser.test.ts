@@ -62,6 +62,35 @@ describe("aipAgentControl strict parser", () => {
     expect(parsed.catalog.stats.runnableCount).toBe(1);
   });
 
+  it("catalog skill 允许 AIP additive 字段 logicRevisionRef", () => {
+    const tenant = {orgId:"org-org",projectId:"dev-project"};
+    const skill = {
+      skillId:"ecommerce.skill.D03", revision:4, canonicalLogicId:"D03", lifecycle:"published",
+      inputSchema:{}, outputSchema:{}, toolAllowlist:[], requiredCapabilities:["strategy.plan"], riskLevel:"medium",
+      evalPackRef:null, memoryPolicyRef:null, handoffPolicyRef:null,
+      sourceRef:{resourceType:"SolutionPack",resourceId:"solution.ecommerce.growth",revision:"1.3.0",authority:"bundle"},
+      sourceLicense:"internal", parentRef:null, publicationTenant:tenant, releaseGateRef:null, publicationRef:null,
+      modelRouteRef:null, runtimePolicyRef:null, contentHash:hash, createdBy:"aip", createdAt:"2026-08-18T00:00:00Z",
+      logicRevisionRef:null,
+    };
+    const catalog = {
+      tenant,
+      stats:{definitionCount:6,installedCount:6,runnableCount:1,skillDefinitionCount:37,capabilityDefinitionCount:10},
+      items:[{
+        template:{templateId:"ecommerce.data_advisor",revision:1,displayName:"数据参谋",roleKey:"data_advisor",lifecycle:"published",
+          sourceRef:{resourceType:"SolutionPack",resourceId:"solution.ecommerce.growth",revision:"1.3.0",authority:"bundle"},
+          sourceLicense:"internal", manifest:{id:"ecommerce.data_advisor",displayName:"数据参谋",roleKey:"data_advisor",logicIds:["D03"],responsibility:"增长方案",runtimeReadiness:"runnable",blockers:[]},
+          contentHash:hash, createdBy:"aip", createdAt:"2026-08-18T00:00:00Z"},
+        instance:null,
+        skills:[skill], requiredCapabilityIds:["strategy.plan"], runtimeReadiness:"runnable", blockers:[],
+      }],
+    };
+    const parsed = parseAgentCatalog(catalog, tenant);
+    expect(parsed.stats.runnableCount).toBe(1);
+    expect(parsed.items[0].runtimeReadiness).toBe("runnable");
+    expect(parsed.items[0].skills[0].canonicalLogicId).toBe("D03");
+  });
+
   it("安装响应保留并校验 SolutionPack 容器版本", () => {
     const payload = {tenant:{orgId:"org-org",projectId:"dev-project"},solutionPackId:"solution.ecommerce.growth",solutionPackVersion:"1.3.0",status:"installed",items:[],createdCount:0,existingCount:6,runnableCount:0};
     expect(parseInstall(payload).solutionPackVersion).toBe("1.3.0");
