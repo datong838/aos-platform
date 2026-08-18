@@ -64,10 +64,10 @@ export function CanonicalAgentRegistryPage() {
             <details style={{marginTop:12}}><summary>查看 {item.skills.length} 个 Skill 状态</summary>
               <ul>{item.skills.map(skill => { const binding = bindings.find(value => value.skill.assetId === skill.skillId); return <li key={skill.skillId}><code>{skill.canonicalLogicId}</code> · {skill.lifecycle === "published" ? "已发布" : "仅已评测"} · {binding ? `绑定 ${binding.status}` : "未绑定"}</li>; })}</ul>
             </details>
-            <div style={{marginTop:10,padding:10,background:"var(--aos-amber-bg)",color:"var(--aos-amber-700)"}}>
-              {item.blockers.length ? item.blockers.join("；") : "缺少完整 Capability/Skill 绑定与依赖快照，运行失败关闭"}
+            <div style={{marginTop:10,padding:10,background:item.runtimeReadiness === "runnable" ? "var(--aos-green-bg, #ecfdf3)" : "var(--aos-amber-bg)",color:item.runtimeReadiness === "runnable" ? "var(--aos-green-700)" : "var(--aos-amber-700)"}}>
+              {item.runtimeReadiness === "runnable" ? "受限 Pilot 可运行" : (item.blockers.length ? item.blockers.join("；") : "缺少完整 Capability/Skill 绑定与依赖快照，运行失败关闭")}
             </div>
-            <button className="btn" disabled title="需先完成 Skill 发布、Capability 绑定、八维依赖与新鲜快照" style={{marginTop:12}}>预检运行（依赖未齐）</button>
+            <button className="btn" disabled={item.runtimeReadiness !== "runnable"} title={item.runtimeReadiness === "runnable" ? "目录已可运行；业务执行仍走受限 Pilot 权威，不在本页直接外呼" : "需先完成 Skill 发布、Capability 绑定、八维依赖与新鲜快照"} style={{marginTop:12}}>{item.runtimeReadiness === "runnable" ? "预检运行（目录已就绪）" : "预检运行（依赖未齐）"}</button>
           </article>;
         })}
       </div>

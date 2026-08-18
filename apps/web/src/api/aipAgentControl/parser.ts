@@ -193,7 +193,7 @@ export function parseAgentCatalog(value: unknown, expectedTenant?: Tenant): Agen
     });
     return {
       template: { templateId: str(template.templateId, "templateId"), revision: integer(template.revision, "revision", 1), displayName: str(template.displayName, "displayName"), roleKey: str(template.roleKey, "roleKey"), lifecycle: enumeration(template.lifecycle, "lifecycle", ["published"] as const), sourceRef: resourceRef(template.sourceRef, "sourceRef"), sourceLicense: str(template.sourceLicense, "sourceLicense"), manifest: { logicIds: strings(manifest.logicIds, "logicIds"), responsibility: str(manifest.responsibility, "responsibility"), runtimeReadiness: str(manifest.runtimeReadiness, "runtimeReadiness"), blockers: strings(manifest.blockers, "blockers") }, contentHash: sha256(template.contentHash, "contentHash") },
-      instance: item.instance == null ? null : parseAgentInstance(item.instance, scope), skills, requiredCapabilityIds: strings(item.requiredCapabilityIds, "requiredCapabilityIds"), runtimeReadiness: enumeration(item.runtimeReadiness, "runtimeReadiness", ["blocked"] as const), blockers: strings(item.blockers, "blockers"),
+      instance: item.instance == null ? null : parseAgentInstance(item.instance, scope), skills, requiredCapabilityIds: strings(item.requiredCapabilityIds, "requiredCapabilityIds"), runtimeReadiness: enumeration(item.runtimeReadiness, "runtimeReadiness", ["blocked", "runnable"] as const), blockers: strings(item.blockers, "blockers"),
     };
   });
   const stats = obj(raw.stats, "stats"); exact(stats, "stats", ["definitionCount", "installedCount", "runnableCount", "skillDefinitionCount", "capabilityDefinitionCount"]);

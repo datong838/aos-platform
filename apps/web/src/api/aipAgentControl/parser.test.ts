@@ -51,9 +51,21 @@ describe("aipAgentControl strict parser", () => {
     expect(() => parseAgentCatalog({tenant:{orgId:"org-org",projectId:"dev-project"},items:[],stats:{definitionCount:0,installedCount:0,runnableCount:0,skillDefinitionCount:0,capabilityDefinitionCount:0},shadow:"mock"})).toThrow("额外字段");
   });
 
+  it("catalog 允许真实 runnableCount 与 runtimeReadiness=runnable", () => {
+    const catalog = {tenant:{orgId:"org-org",projectId:"dev-project"},items:[],stats:{definitionCount:6,installedCount:6,runnableCount:1,skillDefinitionCount:37,capabilityDefinitionCount:10}};
+    const parsed = parseRuntimeReadiness({
+      tenant:{orgId:"org-org",projectId:"dev-project"},catalog,
+      capabilityBindings:[],skillBindings:[],
+      bindingStats:{capabilityBindingCount:1,skillBindingCount:1,activeCapabilityBindingCount:1,activeSkillBindingCount:1},
+      evaluatedAt:"2026-08-18T13:34:01Z",
+    }, {orgId:"org-org",projectId:"dev-project"});
+    expect(parsed.catalog.stats.runnableCount).toBe(1);
+  });
+
   it("安装响应保留并校验 SolutionPack 容器版本", () => {
     const payload = {tenant:{orgId:"org-org",projectId:"dev-project"},solutionPackId:"solution.ecommerce.growth",solutionPackVersion:"1.3.0",status:"installed",items:[],createdCount:0,existingCount:6,runnableCount:0};
     expect(parseInstall(payload).solutionPackVersion).toBe("1.3.0");
     expect(() => parseInstall({...payload,solutionPackVersion:"latest"})).toThrow("solutionPackVersion 非法");
+    expect(() => parseInstall({...payload,runnableCount:1})).toThrow("runnableCount 必须为 0");
   });
 });

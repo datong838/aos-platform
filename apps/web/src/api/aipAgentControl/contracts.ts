@@ -38,7 +38,7 @@ export type AgentCatalogItem = {
   instance: AgentInstance | null;
   skills: SkillTemplate[];
   requiredCapabilityIds: string[];
-  runtimeReadiness: "blocked";
+  runtimeReadiness: "blocked" | "runnable";
   blockers: string[];
 };
 

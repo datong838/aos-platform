@@ -15,6 +15,8 @@ from aos_api.aip_agent_control_contracts import (
 )
 from aos_api.aip_agent_registry_contracts import (
     AgentInstanceOverlay,
+    AgentInstanceStatus,
+    CapabilityReadiness,
     CreateAgentInstanceRequest,
     TemplateLifecycle,
     VersionedAssetRef,
@@ -41,6 +43,100 @@ from aos_api.tenant_scope import TenantScope
 
 class AipEcommerceCatalogInvalid(AipAgentRegistryConflict):
     code = "AIP_ECOMMERCE_CATALOG_INVALID"
+
+
+def _value(item: object) -> str:
+    if item is None:
+        return ""
+    return str(getattr(item, "value", item))
+
+
+def _fresh_available(status: object, readiness: object, expires_at: object, now: datetime) -> bool:
+    return (
+        _value(status) == "active"
+        and _value(readiness) == "available"
+        and expires_at is not None
+        and expires_at > now
+    )
+
+
+def compute_catalog_item_runtime(
+    *,
+    instance: object | None,
+    role_skills: list[object],
+    skill_bindings: list[object],
+    capability_bindings: list[object],
+    now: datetime,
+) -> tuple[str, list[str]]:
+    """Compute live catalog readiness. Template.manifest blockers are definition placeholders."""
+    blockers: list[str] = []
+    instance_active = instance is not None and _value(getattr(instance, "status", None)) == "active"
+    if instance is None:
+        blockers.append("agent_instance_not_installed")
+    elif not instance_active:
+        blockers.append("agent_instance_not_active")
+
+    published_skills = [
+        skill for skill in role_skills if _value(getattr(skill, "lifecycle", None)) == "published"
+    ]
+    if not published_skills:
+        blockers.append("skill_templates_not_published")
+    published_by_id = {getattr(skill, "skill_id"): skill for skill in published_skills}
+
+    instance_id = getattr(instance, "instance_id", None) if instance is not None else None
+    fresh_skill = False
+    stale_skill = False
+    for binding in skill_bindings:
+        if instance_id and getattr(binding, "instance_id", None) != instance_id:
+            continue
+        skill_ref = getattr(binding, "skill", None)
+        skill = published_by_id.get(getattr(skill_ref, "asset_id", None))
+        if skill is None or getattr(skill_ref, "revision", None) != getattr(skill, "revision", None):
+            continue
+        if _fresh_available(
+            getattr(binding, "status", None),
+            getattr(binding, "readiness", None),
+            getattr(binding, "readiness_expires_at", None),
+            now,
+        ):
+            fresh_skill = True
+        elif _value(getattr(binding, "status", None)) == "active":
+            stale_skill = True
+    if not fresh_skill:
+        blockers.append(
+            "skill_binding_readiness_stale" if stale_skill else "skill_binding_unavailable"
+        )
+
+    required = {
+        cap
+        for skill in published_skills
+        for cap in getattr(skill, "required_capabilities", [])
+    }
+    fresh_cap = False
+    stale_cap = False
+    for binding in capability_bindings:
+        cap_ref = getattr(binding, "capability", None)
+        cap_id = getattr(cap_ref, "asset_id", None)
+        if required and cap_id not in required:
+            continue
+        if _fresh_available(
+            getattr(binding, "status", None),
+            getattr(binding, "operational_readiness", None),
+            getattr(binding, "readiness_expires_at", None),
+            now,
+        ):
+            fresh_cap = True
+        elif _value(getattr(binding, "status", None)) == "active":
+            stale_cap = True
+    if not fresh_cap:
+        blockers.append(
+            "capability_binding_readiness_stale" if stale_cap else "capability_bindings_unavailable"
+        )
+
+    blockers = sorted(set(blockers))
+    if instance_active and fresh_skill and fresh_cap:
+        return "runnable", []
+    return "blocked", blockers
 
 
 class AipEcommerceAgentInstaller:
@@ -76,7 +172,7 @@ class AipEcommerceAgentInstaller:
         skills = self._skills.list_skills(
             source_resource_id=SOLUTION_PACK_ID,
             source_revision=AIP_DEFINITION_SOURCE_VERSION,
-            lifecycle=TemplateLifecycle.EVALUATED,
+            limit=200,
         )
         capabilities = self._capabilities.list_capabilities(
             source_resource_id=SOLUTION_PACK_ID,
@@ -115,9 +211,14 @@ class AipEcommerceAgentInstaller:
 
     def catalog(self, principal: Principal) -> AgentCatalogResponse:
         templates, skills, capabilities = self._definitions()
-        instances = {item.template.asset_id: item for item in self._agents.list_instances(self._scope(principal))}
+        scope = self._scope(principal)
+        now = self._clock()
+        instances = {item.template.asset_id: item for item in self._agents.list_instances(scope)}
+        skill_bindings = self._skills.list_bindings(scope, limit=200)
+        capability_bindings = self._capability_bindings.list_bindings(scope, limit=200)
         skills_by_logic = {item.canonical_logic_id.removeprefix("ecommerce.logic."): item for item in skills.values()}
         items = []
+        runnable_count = 0
         for template_id in sorted(templates):
             template = templates[template_id]
             instance = instances.get(template_id)
@@ -126,20 +227,21 @@ class AipEcommerceAgentInstaller:
             if len(role_skills) != AGENT_LOGIC_COUNTS[template_id]:
                 raise AipEcommerceCatalogInvalid(f"skill crosswalk incomplete for {template_id}")
             required = sorted({cap for skill in role_skills for cap in skill.required_capabilities})
-            blocker_set = {
-                *template.manifest.get("blockers", []),
-                "skill_templates_not_published",
-                "capability_bindings_unavailable",
-                "model_route_unavailable",
-            }
-            if instance is not None:
-                blocker_set.discard("agent_instance_not_installed")
-            blockers = sorted(blocker_set)
+            readiness, blockers = compute_catalog_item_runtime(
+                instance=instance,
+                role_skills=role_skills,
+                skill_bindings=skill_bindings,
+                capability_bindings=capability_bindings,
+                now=now,
+            )
+            if readiness == "runnable":
+                runnable_count += 1
             items.append(AgentCatalogItem(
                 template=template,
                 instance=instance,
                 skills=role_skills,
                 required_capability_ids=required,
+                runtime_readiness=readiness,
                 blockers=blockers,
             ))
         return AgentCatalogResponse(
@@ -148,7 +250,7 @@ class AipEcommerceAgentInstaller:
             stats=AgentCatalogStats(
                 definition_count=len(items),
                 installed_count=sum(item.instance is not None for item in items),
-                runnable_count=0,
+                runnable_count=runnable_count,
                 skill_definition_count=len(skills),
                 capability_definition_count=len(capabilities),
             ),

@@ -23,7 +23,7 @@ class AgentCatalogItem(AipContractModel):
     instance: AgentInstance | None = None
     skills: list[SkillTemplateRevision] = Field(default_factory=list)
     required_capability_ids: list[str] = Field(default_factory=list)
-    runtime_readiness: Literal["blocked"] = "blocked"
+    runtime_readiness: Literal["blocked", "runnable"] = "blocked"
     blockers: list[str] = Field(default_factory=list)
 
 

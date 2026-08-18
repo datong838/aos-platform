@@ -29,4 +29,25 @@ describe("CanonicalAgentRegistryPage", () => {
     expect(host.textContent).not.toContain("agent_instance_not_installed");
     await act(async () => root.unmount());
   });
+  it("数据参谋 runnable 时展示受限 Pilot 可运行", async () => {
+    sdk.runtimeReadiness.mockResolvedValue({
+      ...runtime,
+      catalog: {
+        ...runtime.catalog,
+        stats: { ...runtime.catalog.stats, installedCount: 6, runnableCount: 1 },
+        items: [{
+          ...runtime.catalog.items[0],
+          template: { ...runtime.catalog.items[0].template, templateId: "ecommerce.data_advisor", displayName: "数据参谋", roleKey: "data_advisor", manifest: { ...runtime.catalog.items[0].template.manifest, logicIds: ["D03"], responsibility: "增长方案" } },
+          instance: { ...runtime.catalog.items[0].instance!, instanceId: "ecommerce.data_advisor.default", status: "active" },
+          runtimeReadiness: "runnable",
+          blockers: [],
+        }],
+      },
+    });
+    const root = createRoot(host); await act(async () => root.render(<MemoryRouter><CanonicalAgentRegistryPage /></MemoryRouter>)); await act(async () => undefined);
+    expect(host.textContent).toContain("可运行 1");
+    expect(host.textContent).toContain("受限 Pilot 可运行");
+    expect(host.textContent).toContain("数据参谋");
+    await act(async () => root.unmount());
+  });
 });
