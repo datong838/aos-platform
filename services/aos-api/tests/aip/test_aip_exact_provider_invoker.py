@@ -339,6 +339,29 @@ def test_malformed_provider_response_fails_closed(payload, code) -> None:
         invoker(resolution, "prompt", "approved_internal_knowledge")
 
 
+def test_image_invoker_uses_generations_endpoint_without_payload_leak() -> None:
+    invoker, resolution, assets, _, transport = assembly()
+    assets.plugin.modalities = ["image"]
+    assets.plugin.approved_capabilities = ["image"]
+    assets.plugin.default_models = ["agnes-2.0-flash"]
+    assets.model.input_modalities = ["text"]
+    assets.model.output_modalities = ["image"]
+    assets.model.capabilities = ["image"]
+    transport.response = ProviderTransportResponse(
+        status_code=200,
+        payload={
+            "model": "agnes-2.0-flash",
+            "data": [{"url": "https://example.invalid/secret.png"}],
+        },
+    )
+    result = invoker(resolution, "solid pale blue square", "approved_internal_knowledge")
+    assert result["answer"] == "image_generation_succeeded"
+    assert result["modality"] == "image"
+    assert transport.calls[0][0].endswith("/v1/images/generations")
+    assert "example.invalid" not in repr(result)
+    assert "secret.png" not in repr(result)
+
+
 @pytest.mark.parametrize("classification", ["", "unknown", "direct_pii"])
 def test_unapproved_data_classification_fails_before_secret(classification) -> None:
     invoker, resolution, _, secret, transport = assembly()

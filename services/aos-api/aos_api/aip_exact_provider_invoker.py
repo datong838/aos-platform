@@ -137,7 +137,9 @@ class ExactProviderInvoker:
             raise ExactProviderInvocationError("provider_prompt_empty")
 
         route, policy, model, provider = self._load_exact(scope, resolution)
-        self._validate_composition(scope, resolution, route, policy, model, provider)
+        modality = self._validate_composition(
+            scope, resolution, route, policy, model, provider
+        )
         self._validate_runtime_dependencies(
             scope,
             policy,
@@ -145,7 +147,7 @@ class ExactProviderInvoker:
             provider,
             data_classification,
         )
-        url = self._validated_url(policy, provider)
+        url = self._validated_url(policy, provider, modality=modality)
 
         try:
             secret = self._secret_resolver.resolve(scope, provider)
@@ -162,13 +164,12 @@ class ExactProviderInvoker:
                 "Authorization": f"Bearer {secret}",
                 "Content-Type": "application/json",
             },
-            payload={
-                "model": model.provider_model_id,
-                "messages": [{"role": "user", "content": prompt}],
-            },
+            payload=self._request_payload(modality, model, prompt),
             timeout_ms=timeout_ms,
         )
-        return self._validated_response(response, route, model, provider)
+        return self._validated_response(
+            response, route, model, provider, modality=modality
+        )
 
     def _load_exact(self, scope: TenantScope, resolution: ModelRouteResolution):
         try:
@@ -249,15 +250,41 @@ class ExactProviderInvoker:
             plugin = self._plugin_authority.validate_ref(scope, provider.plugin_ref)
         except ProviderPluginAuthorityError:
             raise ExactProviderInvocationError("provider_plugin_authority_blocked") from None
-        if (
-            "text" not in plugin.modalities
-            or not {"llm", "chat"}.issubset(set(plugin.approved_capabilities))
-            or model.provider_model_id not in plugin.default_models
-            or "text" not in {str(value) for value in model.input_modalities}
-            or "text" not in {str(value) for value in model.output_modalities}
-            or not set(model.capabilities).issubset(set(plugin.approved_capabilities))
-        ):
+        return self._resolve_invocation_modality(plugin, model)
+
+    @staticmethod
+    def _resolve_invocation_modality(plugin: Any, model: Any) -> str:
+        caps = set(plugin.approved_capabilities)
+        modalities = set(plugin.modalities)
+        model_caps = set(model.capabilities)
+        model_in = {str(value) for value in model.input_modalities}
+        model_out = {str(value) for value in model.output_modalities}
+        if model.provider_model_id not in plugin.default_models:
             raise ExactProviderInvocationError("provider_plugin_capability_blocked")
+        if not model_caps.issubset(caps):
+            raise ExactProviderInvocationError("provider_plugin_capability_blocked")
+        if (
+            "image" in modalities
+            and "image" in caps
+            and "image" in model_out
+            and "image" in model_caps
+        ):
+            return "image"
+        if (
+            "video" in modalities
+            and "video" in caps
+            and "video" in model_out
+            and "video" in model_caps
+        ):
+            return "video"
+        if (
+            "text" in modalities
+            and {"llm", "chat"}.issubset(caps)
+            and "text" in model_in
+            and "text" in model_out
+        ):
+            return "text"
+        raise ExactProviderInvocationError("provider_plugin_capability_blocked")
 
     def _validate_runtime_dependencies(
         self,
@@ -298,7 +325,7 @@ class ExactProviderInvoker:
         except ModelGovernancePolicyStoreError:
             raise ExactProviderInvocationError("model_governance_policy_blocked") from None
 
-    def _validated_url(self, policy: Any, provider: Any) -> str:
+    def _validated_url(self, policy: Any, provider: Any, *, modality: str) -> str:
         from aos_api.aip_runtime_guard_policy_contracts import APPROVED_AGNES_HOSTS
 
         try:
@@ -320,7 +347,31 @@ class ExactProviderInvoker:
             raise ExactProviderInvocationError("provider_endpoint_blocked")
         if policy.deadline_ms <= 0 or provider.endpoint_profile.timeout_ms <= 0:
             raise ExactProviderInvocationError("provider_timeout_policy_blocked")
+        if modality == "image":
+            return f"https://{host}/v1/images/generations"
+        if modality == "video":
+            return f"https://{host}/v1/video/generations"
         return f"https://{host}/v1/chat/completions"
+
+    @staticmethod
+    def _request_payload(modality: str, model: Any, prompt: str) -> dict[str, Any]:
+        if modality == "image":
+            return {
+                "model": model.provider_model_id,
+                "prompt": prompt,
+                "n": 1,
+                "size": "256x256",
+            }
+        if modality == "video":
+            return {
+                "model": model.provider_model_id,
+                "prompt": prompt,
+                "n": 1,
+            }
+        return {
+            "model": model.provider_model_id,
+            "messages": [{"role": "user", "content": prompt}],
+        }
 
     @staticmethod
     def _require_exact(ref: Any, item: Any, id_field: str, code: str) -> None:
@@ -337,39 +388,109 @@ class ExactProviderInvoker:
         route: Any,
         model: Any,
         provider: Any,
+        *,
+        modality: str = "text",
     ) -> dict[str, Any]:
         if not 200 <= response.status_code < 300:
             raise ExactProviderInvocationError("provider_http_error")
         body = response.payload
         if not isinstance(body, dict):
             raise ExactProviderInvocationError("provider_response_invalid")
-        provider_receipt_id = body.get("id")
-        if not isinstance(provider_receipt_id, str) or not provider_receipt_id.strip():
-            raise ExactProviderInvocationError("provider_response_receipt_missing")
         response_model = body.get("model")
-        if not isinstance(response_model, str) or not response_model:
-            raise ExactProviderInvocationError("provider_response_model_missing")
-        if response_model != model.provider_model_id:
-            raise ExactProviderInvocationError("provider_response_model_drifted")
-        choices = body.get("choices")
-        message = choices[0].get("message") if isinstance(choices, list) and choices else None
-        answer = message.get("content") if isinstance(message, dict) else None
-        if not isinstance(answer, str) or not answer:
-            raise ExactProviderInvocationError("provider_response_answer_missing")
-        usage = body.get("usage")
-        if not isinstance(usage, dict):
-            raise ExactProviderInvocationError("provider_response_usage_missing")
-        prompt_tokens = usage.get("prompt_tokens")
-        completion_tokens = usage.get("completion_tokens")
-        total_tokens = usage.get("total_tokens")
-        if (
-            not all(
-                isinstance(value, int) and not isinstance(value, bool) and value >= 0
-                for value in (prompt_tokens, completion_tokens, total_tokens)
+        if modality in {"image", "video"}:
+            if response_model is not None:
+                if not isinstance(response_model, str) or not response_model:
+                    raise ExactProviderInvocationError("provider_response_model_missing")
+                if response_model != model.provider_model_id:
+                    raise ExactProviderInvocationError("provider_response_model_drifted")
+            else:
+                response_model = model.provider_model_id
+
+        if modality == "image":
+            data = body.get("data")
+            if not isinstance(data, list) or not data or not isinstance(data[0], dict):
+                raise ExactProviderInvocationError("provider_response_answer_missing")
+            item = data[0]
+            if not (item.get("url") or item.get("b64_json")):
+                raise ExactProviderInvocationError("provider_response_answer_missing")
+            provider_receipt_id = body.get("id")
+            if not isinstance(provider_receipt_id, str) or not provider_receipt_id.strip():
+                provider_receipt_id = (
+                    "img-"
+                    + hashlib.sha256(
+                        f"{model.provider_model_id}:{route.route_id}:image".encode()
+                    ).hexdigest()[:32]
+                )
+            answer = "image_generation_succeeded"
+            prompt_tokens = 0
+            completion_tokens = 0
+            total_tokens = 0
+        elif modality == "video":
+            has_video = False
+            data = body.get("data")
+            if isinstance(data, list) and data and isinstance(data[0], dict):
+                item = data[0]
+                has_video = bool(
+                    item.get("url")
+                    or item.get("b64_json")
+                    or item.get("id")
+                    or item.get("video_url")
+                )
+            if not has_video:
+                has_video = any(
+                    isinstance(body.get(key), str) and body.get(key)
+                    for key in ("id", "video_id", "task_id")
+                )
+            if not has_video:
+                raise ExactProviderInvocationError("provider_response_answer_missing")
+            provider_receipt_id = body.get("id") or body.get("task_id") or body.get(
+                "video_id"
             )
-            or total_tokens != prompt_tokens + completion_tokens
-        ):
-            raise ExactProviderInvocationError("provider_response_usage_missing")
+            if not isinstance(provider_receipt_id, str) or not provider_receipt_id.strip():
+                provider_receipt_id = (
+                    "vid-"
+                    + hashlib.sha256(
+                        f"{model.provider_model_id}:{route.route_id}:video".encode()
+                    ).hexdigest()[:32]
+                )
+            answer = "video_generation_accepted"
+            prompt_tokens = 0
+            completion_tokens = 0
+            total_tokens = 0
+        else:
+            provider_receipt_id = body.get("id")
+            if not isinstance(provider_receipt_id, str) or not provider_receipt_id.strip():
+                raise ExactProviderInvocationError("provider_response_receipt_missing")
+            if not isinstance(response_model, str) or not response_model:
+                raise ExactProviderInvocationError("provider_response_model_missing")
+            if response_model != model.provider_model_id:
+                raise ExactProviderInvocationError("provider_response_model_drifted")
+            choices = body.get("choices")
+            message = (
+                choices[0].get("message")
+                if isinstance(choices, list) and choices
+                else None
+            )
+            answer = message.get("content") if isinstance(message, dict) else None
+            if not isinstance(answer, str) or not answer:
+                raise ExactProviderInvocationError("provider_response_answer_missing")
+            usage = body.get("usage")
+            if not isinstance(usage, dict):
+                raise ExactProviderInvocationError("provider_response_usage_missing")
+            prompt_tokens = usage.get("prompt_tokens")
+            completion_tokens = usage.get("completion_tokens")
+            total_tokens = usage.get("total_tokens")
+            if (
+                not all(
+                    isinstance(value, int)
+                    and not isinstance(value, bool)
+                    and value >= 0
+                    for value in (prompt_tokens, completion_tokens, total_tokens)
+                )
+                or total_tokens != prompt_tokens + completion_tokens
+            ):
+                raise ExactProviderInvocationError("provider_response_usage_missing")
+
         observed_at = datetime.now(UTC)
 
         def usage_receipt(kind: str, quantity: int) -> dict[str, Any]:
@@ -407,4 +528,5 @@ class ExactProviderInvoker:
                 usage_receipt("input_token", prompt_tokens),
                 usage_receipt("output_token", completion_tokens),
             ],
+            "modality": modality,
         }
