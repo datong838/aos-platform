@@ -197,6 +197,92 @@
   display: grid;
   gap: 16px;
 }
+.task-cockpit-read-model { gap: 12px; }
+.task-cockpit-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(110px, 1fr)) minmax(230px, 1.6fr);
+  border: 1px solid var(--aos-border);
+  background: var(--aos-surface);
+}
+.task-cockpit-metrics > .sr-only { position: absolute; }
+.task-cockpit-metrics > div {
+  min-width: 0;
+  padding: 14px 16px;
+  border-right: 1px solid var(--aos-border);
+}
+.task-cockpit-metrics > div:last-child { border-right: 0; }
+.task-cockpit-metrics span,
+.task-cockpit-metrics small { display: block; color: var(--aos-text-tertiary); }
+.task-cockpit-metrics strong { display: block; margin: 3px 0; font-size: 24px; line-height: 1.15; overflow-wrap: anywhere; }
+.task-cockpit-metrics small { font-size: 11px; }
+.task-cockpit-metrics .is-blocked strong { color: var(--aos-red); }
+.task-cockpit-metrics .is-warning strong { color: var(--aos-amber); }
+.task-cockpit-metrics .is-clear strong { color: var(--aos-green); }
+.task-cockpit-metric-cutoff strong { font-size: 14px; }
+.task-cockpit-command-blocked {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--aos-accent);
+  background: color-mix(in srgb, var(--aos-accent) 8%, var(--aos-surface));
+}
+.task-cockpit-command-blocked h2,
+.task-cockpit-command-blocked p { margin: 0; }
+.task-cockpit-command-blocked h2 { font-size: 15px; }
+.task-cockpit-command-blocked p { margin-top: 3px; color: var(--aos-text-secondary); }
+.task-cockpit-command-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  background: var(--aos-accent);
+  color: white;
+  font-size: 20px;
+}
+.task-cockpit-readonly-badge {
+  margin-left: auto;
+  white-space: nowrap;
+  border: 1px solid var(--aos-border);
+  border-radius: 999px;
+  padding: 5px 10px;
+  color: var(--aos-text-secondary);
+  background: var(--aos-surface);
+}
+.task-cockpit-board {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.75fr) minmax(520px, 3.2fr) minmax(140px, 0.75fr) minmax(280px, 1.55fr);
+  border: 1px solid var(--aos-border);
+  background: var(--aos-surface-hover);
+  min-height: 520px;
+}
+.task-cockpit-role-lane,
+.task-cockpit-review,
+.task-cockpit-tasks { min-width: 0; padding: 16px; }
+.task-cockpit-role-lane,
+.task-cockpit-tasks { border-right: 1px solid var(--aos-border); }
+.task-cockpit-role-lane h2,
+.task-cockpit-review h2 { margin: 0; font-size: 14px; }
+.task-cockpit-lane-state {
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+  margin-top: 18px;
+  padding: 18px 10px;
+  text-align: center;
+  border: 1px dashed var(--aos-border);
+  background: var(--aos-surface);
+}
+.task-cockpit-lane-state > span { font-size: 28px; color: var(--aos-text-tertiary); }
+.task-cockpit-lane-state p,
+.task-cockpit-lane-blocker p { margin: 0; color: var(--aos-text-secondary); font-size: 12px; }
+.task-cockpit-lane-blocker { margin-top: 10px; padding: 10px; border-left: 3px solid var(--aos-amber); background: var(--aos-surface); }
+.task-cockpit-lane-blocker span { color: var(--aos-text-tertiary); font-size: 11px; overflow-wrap: anywhere; }
+.task-cockpit-lane-blocker p { margin-top: 5px; }
+.task-cockpit-tasks { align-content: start; background: color-mix(in srgb, var(--aos-surface-hover) 76%, var(--aos-surface)); }
+.task-cockpit-tasks-header { display: grid; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--aos-border); }
 .task-cockpit-toolbar,
 .task-cockpit-section-heading,
 .task-cockpit-card-heading {
@@ -206,6 +292,7 @@
 }
 .task-cockpit-toolbar {
   justify-content: flex-end;
+  flex-wrap: wrap;
   padding: 10px 12px;
   border: 1px solid var(--aos-border);
   background: var(--aos-surface);
@@ -236,6 +323,13 @@
   background: var(--aos-surface);
   padding: 16px;
 }
+.task-cockpit-card { position: relative; border-radius: 8px; border-left: 4px solid var(--aos-accent); box-shadow: 0 1px 2px color-mix(in srgb, var(--aos-text) 8%, transparent); }
+.task-cockpit-card.is-failed,
+.task-cockpit-card.is-cancelled,
+.task-cockpit-card.is-rolled_back { border-left-color: var(--aos-red); }
+.task-cockpit-card.is-awaiting_approval,
+.task-cockpit-card.is-paused { border-left-color: var(--aos-amber); }
+.task-cockpit-card.is-completed { border-left-color: var(--aos-green); }
 .task-cockpit-scope h2,
 .task-cockpit-blockers h2,
 .task-cockpit-section-heading h2,
@@ -271,12 +365,29 @@
 .task-cockpit-card-heading { align-items: flex-start; justify-content: space-between; }
 .task-cockpit-card-heading p { margin: 0 0 4px; }
 .task-cockpit-card-heading > span { border: 1px solid var(--aos-border); border-radius: 999px; padding: 3px 8px; }
+.task-cockpit-progress { height: 6px; margin-top: 12px; overflow: hidden; border-radius: 999px; background: var(--aos-surface-hover); }
+.task-cockpit-progress span { display: block; height: 100%; border-radius: inherit; background: var(--aos-accent); }
 .task-cockpit-card > button { margin-top: 14px; }
 .task-cockpit-run-detail { display: grid; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--aos-border); overflow-x: auto; }
 .task-cockpit-run-detail table { width: 100%; border-collapse: collapse; min-width: 560px; }
 .task-cockpit-run-detail caption { text-align: left; font-weight: 600; margin-bottom: 6px; }
 .task-cockpit-run-detail th,
 .task-cockpit-run-detail td { border-bottom: 1px solid var(--aos-border); padding: 7px 8px; text-align: left; }
+.task-cockpit-empty { margin: 0; padding: 24px; text-align: center; border: 1px dashed var(--aos-border); background: var(--aos-surface); }
+.task-cockpit-review { align-content: start; background: var(--aos-surface); }
+.task-cockpit-review > p { color: var(--aos-text-secondary); }
+.task-cockpit-review ul { display: grid; gap: 10px; list-style: none; padding: 0; margin: 12px 0 0; }
+.task-cockpit-review li { padding: 12px; border: 1px solid var(--aos-border); border-left: 3px solid var(--aos-amber); background: var(--aos-surface-hover); }
+.task-cockpit-review li.is-blocking { border-left-color: var(--aos-red); }
+.task-cockpit-review li strong,
+.task-cockpit-review li span { display: block; overflow-wrap: anywhere; }
+.task-cockpit-review li span { margin-top: 4px; color: var(--aos-text-tertiary); font-size: 12px; }
+.task-cockpit-review li p { margin: 8px 0 0; color: var(--aos-text-secondary); }
+.task-cockpit-capabilities { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 12px 16px; border: 1px solid var(--aos-border); background: var(--aos-surface); }
+.task-cockpit-capabilities h2 { margin: 0; white-space: nowrap; font-size: 13px; }
+.task-cockpit-capabilities > div { display: flex; gap: 8px; min-width: 0; overflow-x: auto; padding: 2px; }
+.task-cockpit-capabilities > div span { white-space: nowrap; border: 1px solid var(--aos-amber); border-radius: 999px; padding: 6px 10px; color: var(--aos-amber); background: color-mix(in srgb, var(--aos-amber) 8%, var(--aos-surface)); }
+.task-cockpit-capabilities > p { margin: 0 0 0 auto; color: var(--aos-text-tertiary); font-size: 11px; }
 
 .p-app.is-workshop-focus > .p-nav-global,
 .p-app.is-workshop-focus .aside { display: none; }
@@ -284,6 +395,12 @@
 @media (max-width: 1439px) {
   .ecommerce-workshop-context-refs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .task-cockpit-blockers ul { grid-template-columns: 1fr; }
+  .task-cockpit-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .task-cockpit-metrics > div:nth-child(3) { border-right: 0; }
+  .task-cockpit-metrics > div:nth-child(-n+3) { border-bottom: 1px solid var(--aos-border); }
+  .task-cockpit-board { grid-template-columns: minmax(125px, 0.75fr) minmax(480px, 3fr) minmax(125px, 0.75fr); }
+  .task-cockpit-review { grid-column: 1 / -1; border-top: 1px solid var(--aos-border); }
+  .task-cockpit-review ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 1279px) {
@@ -294,4 +411,14 @@
   .task-cockpit-toolbar { align-items: stretch; flex-direction: column; }
   .task-cockpit-scope dl,
   .task-cockpit-card dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .task-cockpit-board { grid-template-columns: 1fr; }
+  .task-cockpit-role-lane,
+  .task-cockpit-tasks { border-right: 0; border-bottom: 1px solid var(--aos-border); }
+  .task-cockpit-review { grid-column: auto; }
+  .task-cockpit-review ul { grid-template-columns: 1fr; }
+  .task-cockpit-command-blocked { align-items: flex-start; }
+  .task-cockpit-readonly-badge { margin-left: 0; }
+  .task-cockpit-capabilities { align-items: flex-start; flex-direction: column; }
+  .task-cockpit-capabilities > div { width: 100%; }
+  .task-cockpit-capabilities > p { margin-left: 0; }
 }

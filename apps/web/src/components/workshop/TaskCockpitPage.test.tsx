@@ -23,9 +23,24 @@ describe("TaskCockpitPage", () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), listTaskCockpitRunSteps: vi.fn(), listTaskCockpitRunCheckpoints: vi.fn() };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
     expect(host.querySelectorAll("h1")).toHaveLength(0);
-    expect(host.textContent).toContain("当前只读范围"); expect(host.textContent).toContain("每日巡检"); expect(host.textContent).toContain("TASK_COCKPIT_STAGE_MAPPING_UNAVAILABLE");
+    expect(host.textContent).toContain("当前任务权威指标"); expect(host.textContent).toContain("每日巡检"); expect(host.textContent).toContain("TASK_COCKPIT_STAGE_MAPPING_UNAVAILABLE");
     expect(host.textContent).not.toMatch(/派发|暂停任务|取消任务|批准任务/);
+    expect(host.querySelector(".task-cockpit-command-blocked input")).toBeNull();
+    expect([...host.querySelectorAll("button")].some((item) => item.textContent === "下达")).toBe(false);
     expect(client.getTaskCockpitCore).toHaveBeenCalledWith({ status: undefined, limit: 20, cursor: undefined });
+  });
+
+  it("按正式视觉层次呈现真实计数和明确阻断，不复制经营示例", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), listTaskCockpitRunSteps: vi.fn(), listTaskCockpitRunCheckpoints: vi.fn() };
+    await act(async () => root.render(<TaskCockpitPage client={client} />));
+    expect(host.querySelectorAll(".task-cockpit-metrics > div")).toHaveLength(6);
+    expect(host.textContent).toContain("任务指令尚未开放");
+    expect(host.textContent).toContain("执行组"); expect(host.textContent).toContain("策划组");
+    expect(host.textContent).toContain("当日任务流 · 执行进度");
+    expect(host.textContent).toContain("复盘 · 权威缺口");
+    expect(host.textContent).toContain("共享能力 · 待接入");
+    expect(host.textContent).toContain("当前页任务1"); expect(host.textContent).toContain("latest Run1");
+    expect(host.textContent).not.toMatch(/今日 GMV|六数字同事在线|经验已入库|朋友圈3条内容/);
   });
 
   it("显式展开 Run 后诚实显示 Step/Checkpoint 空权威集合", async () => {

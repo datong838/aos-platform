@@ -1,0 +1,35 @@
+{
+  "schema": "workshop-preflight-receipt/v1",
+  "taskId": "workshop-w2-02-readonly-visual-sync-20260818",
+  "authorityRevision": "AOS-000092",
+  "branch": "w2-workshop",
+  "baseHead": "7fd188e8c650d19dd50ae931db13671e1c2a274e",
+  "decision": "PREFLIGHT_GREEN_READONLY_VISUAL_SYNC_AUTHORIZED_FULL_W2_02_REMAINS_BLOCKED",
+  "visualBaseline": {
+    "path": "docs/palantier/foundry/html/workshop-task-cockpit.html",
+    "sha256": "3bf08e973777098755d499239b61ac5942d62917707d98ff57881efbe4ca5938"
+  },
+  "allowed": [
+    "existing Task latest Run Step Checkpoint canonical GET responses",
+    "server blocker codes dependencies and required actions",
+    "visual information hierarchy and responsive layout",
+    "targeted cumulative build and built-in browser validation"
+  ],
+  "forbidden": [
+    "GMV order creator price content campaign or retrospective example values",
+    "invented digital colleague assignments or Agent readiness",
+    "command input submit optimistic state or local persistence",
+    "backend database migration Provider call or real tenant mutation",
+    "authority 01 06 Prime static visual source or w1-aip workspace changes"
+  ],
+  "preSha256": {
+    "apps/web/src/components/workshop/TaskCockpitPage.tsx": "1dc8e46f55d2a7977e5c460c07b617f3ac79bd432d03a045af48d7978dd90453",
+    "apps/web/src/components/workshop/TaskCockpitPage.test.tsx": "fa2f7d3be4d27a2781ac147520351f1ebf1fa254fd3a867ce07d25842fbbe2d3",
+    "apps/web/src/styles/45-ecommerce-workshop.css": "78a4dc11d3c834bf53ad5e5e4a72dd2d432d3c4b12285d9ebe6373d8f6df814f",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md": "375b4dedb74a05da35786c2bb0269397ff8158b9d9e1db4cb1963ae2babf30cd",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md": "37fa43af08ee0bc3bad92b9a2eb65010dca579bb1d49a40358e16ed5d4ff424d"
+  },
+  "activeSemanticLeasesBeforeStart": 0,
+  "memoryGate": "GREEN_WITH_WARNINGS_CAN_CHANGE_STATE_TRUE",
+  "operationalBoundary": "AOS-000092 keeps DEP-ADP query blocked and second Provider attempt unauthorized; this subwave does not consume either"
+}

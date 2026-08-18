@@ -1,0 +1,39 @@
+{
+  "schema": "workshop-verification-receipt/v1",
+  "taskId": "workshop-w2-02-readonly-visual-sync-20260818",
+  "authorityRevision": "AOS-000092",
+  "branch": "w2-workshop",
+  "decision": "CODE_CONTROL_GREEN_BROWSER_ACCEPTANCE_BLOCKED",
+  "targeted": {
+    "command": "npx vitest run TaskCockpitPage.test.tsx EcommerceWorkshopHost.test.tsx",
+    "result": "9 passed"
+  },
+  "workshopCumulative": {
+    "command": "npx vitest run src/components/workshop src/shell/AppShell.workshop.test.tsx src/pages/WorkshopListPage.test.ts --maxWorkers=1 --minWorkers=1",
+    "result": "8 files passed; 54 tests passed"
+  },
+  "fullWebAttempt": {
+    "command": "npm test",
+    "result": "not green; interrupted after unrelated legacy page tests produced widespread 5s timeouts under default concurrent resource contention",
+    "scopeRelation": "none of the reported failures referenced TaskCockpitPage or its three changed runtime files",
+    "remediation": "same Workshop cumulative scope rerun with one worker and passed 54/54"
+  },
+  "build": "TypeScript and Vite production build green; 300 modules transformed",
+  "diffCheck": "green",
+  "browser": {
+    "surface": "built-in browser",
+    "target": "http://127.0.0.1:5173/workshop/cockpit",
+    "discovery": "No browser is available; bootstrap discovery returned an empty list",
+    "fallbackUsed": false,
+    "screenshots": 0,
+    "viewportsVerified": [],
+    "decision": "BLOCKED_NO_BROWSER_INSTANCE"
+  },
+  "postSha256": {
+    "apps/web/src/components/workshop/TaskCockpitPage.tsx": "8e9a75164e4ac2a350c7f8396e1b58731f2031cf83e79fcdfbbe7738d45ce1a0",
+    "apps/web/src/components/workshop/TaskCockpitPage.test.tsx": "9023e51725910ecd0c32a0e078499868830178698ab2040bfc75284e78ecbbc2",
+    "apps/web/src/styles/45-ecommerce-workshop.css": "03153d64c19a21a85e663f2589c3327f10381339f108a4568aae8d8fcb2d734d"
+  },
+  "externalEffects": "none",
+  "remainingGate": "connect built-in browser and close 1280/1440/1920 visual acceptance before marking W2-02-VISUAL complete"
+}
