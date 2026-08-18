@@ -1,0 +1,35 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevision": "AOS-000107",
+  "recordedAt": "2026-08-18T16:34:40+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-4N",
+  "approvalRef": "46-R2-4N-D03-SKILL-PUBLICATION-ROUTE-GATE-CASCADE",
+  "leaseRef": "AIP-R2-4N-D03-SKILL-PUBLICATION-ROUTE-GATE-CASCADE",
+  "execution": {
+    "providerBusinessCallLimit": 0,
+    "providerBusinessCalls": 0,
+    "healthProbes": 0,
+    "automaticRetries": 0,
+    "secretPayloadReads": 0
+  },
+  "result": {
+    "status": "R2_4N_D03_SKILL_PUBLICATION_ROUTE_GATE_ALIGNED",
+    "skillId": "ecommerce.skill.D03",
+    "skillRevision": 3,
+    "skillHash": "5e4b6a944a918e944644cf3a3e28433bafdd3536947ed1da95f2525d36b17841",
+    "skillRouteRevision": 2,
+    "skillReleaseGateId": "gate-6ef82dc8eec775758457915de213c5ea",
+    "bindingId": "ecommerce.data_advisor.skill.D03.r3",
+    "bindingStatus": "active",
+    "bindingReadiness": "available",
+    "historicalSkillRevision": 2,
+    "historicalBindingReadiness": "blocked",
+    "canaryBindingCount": 0
+  },
+  "nextGate": "R2_4O_PROVIDER_R4_HEALTH_THEN_V6"
+}

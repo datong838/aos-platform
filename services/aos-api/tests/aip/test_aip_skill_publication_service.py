@@ -467,3 +467,21 @@ def test_real_eval_publication_creates_new_immutable_skill_revision_and_receipt(
     )
     assert receipt.operation == "skill_template.publish_evaluated"
     assert replay == published and replay_receipt == receipt
+    r3_request = request.model_copy(
+        update={
+            "model_route_ref": ref("ModelRouteRevision", f"route-{suffix}-r2"),
+            "idempotency_key": f"publish-skill-{suffix}-r3",
+        }
+    )
+    published_r3, _ = service.publish_evaluated_revision(
+        scope,
+        r3_request,
+        actor="pytest-bind3",
+        occurred_at=datetime(2026, 8, 15, 3, 32, tzinfo=UTC),
+    )
+    unchanged_r2 = AipSkillRegistry().get_skill(skill_id, 2)
+    assert published_r3.revision == 3
+    assert published_r3.lifecycle is TemplateLifecycle.PUBLISHED
+    assert published_r3.model_route_ref == r3_request.model_route_ref
+    assert unchanged_r2.content_hash == published.content_hash
+    assert unchanged_r2.model_route_ref == request.model_route_ref

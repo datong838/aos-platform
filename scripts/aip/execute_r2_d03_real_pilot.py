@@ -50,8 +50,8 @@ REQUIRED_ALEMBIC_HEAD = "aip10_006"
 
 INSTANCE_ID = "ecommerce.data_advisor.default"
 SKILL_ID = "ecommerce.skill.D03"
-SKILL_REVISION = 2
-SKILL_BINDING_ID = "ecommerce.data_advisor.skill.D03.r2"
+SKILL_REVISION = 3
+SKILL_BINDING_ID = "ecommerce.data_advisor.skill.D03.r3"
 ROUTE_ID = "route-qyh-text-dev"
 CAPABILITY_BINDING_ID = "ecommerce.data_advisor.strategy.plan.r2"
 TASK_KEY = "r2-d03-real-pilot-task-v6"
