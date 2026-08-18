@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -72,6 +73,62 @@ def test_active_binding_readiness_refresh_is_supported_without_lifecycle_write()
     assert "SET status=" not in skill_source.split("def evaluate_binding(", 1)[1].split(
         "def preview_binding(", 1
     )[0]
+
+
+def test_fresh_binding_readiness_replay_is_read_only(monkeypatch) -> None:
+    now = datetime(2026, 8, 18, 4, 45, tzinfo=UTC)
+    capability = SimpleNamespace(
+        status="active",
+        readiness=MODULE.CapabilityReadiness.AVAILABLE,
+        readiness_expires_at=now + timedelta(minutes=5),
+        dependency_snapshot_hash="capability-snapshot",
+    )
+    skill = SimpleNamespace(
+        status="active",
+        readiness=MODULE.CapabilityReadiness.AVAILABLE,
+        readiness_expires_at=now + timedelta(minutes=5),
+        dependency_snapshot_hash="skill-snapshot",
+    )
+
+    class Result:
+        def fetchone(self):
+            return {
+                "observation_id": "health-current",
+                "expires_at": now + timedelta(minutes=10),
+            }
+
+    class Conn:
+        def execute(self, *_args):
+            return Result()
+
+    class Context:
+        def __enter__(self):
+            return Conn()
+
+        def __exit__(self, *_args):
+            return False
+
+    monkeypatch.setattr(MODULE, "db_connect", lambda _scope: Context())
+    monkeypatch.setattr(
+        MODULE.AipCapabilityBindingService, "get", lambda *_args: capability
+    )
+    monkeypatch.setattr(MODULE.AipSkillRegistry, "get_binding", lambda *_args: skill)
+    monkeypatch.setattr(
+        MODULE.AipCapabilityBindingService,
+        "evaluate",
+        lambda *_args, **_kwargs: pytest.fail("fresh replay must not write capability"),
+    )
+    monkeypatch.setattr(
+        MODULE.AipSkillRegistry,
+        "evaluate_binding",
+        lambda *_args, **_kwargs: pytest.fail("fresh replay must not write skill"),
+    )
+
+    assert MODULE.refresh_active_binding_readiness(now=now) == {
+        "healthObservationId": "health-current",
+        "capabilitySnapshotHash": "capability-snapshot",
+        "skillSnapshotHash": "skill-snapshot",
+    }
 
 
 def test_readback_result_never_contains_prompt_or_answer(monkeypatch) -> None:

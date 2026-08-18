@@ -250,42 +250,58 @@ def refresh_active_binding_readiness(*, now: datetime) -> dict[str, str]:
     health_key = str(health["observation_id"])
     capability_service = AipCapabilityBindingService()
     capability = capability_service.get(SCOPE, CAPABILITY_BINDING_ID)
-    capability, capability_readiness, _ = capability_service.evaluate(
-        SCOPE,
-        CAPABILITY_BINDING_ID,
-        EvaluateOperationalBindingRequest(
-            expectedVersion=capability.version,
-            dependencies=capability.dependencies,
-        ),
-        idempotency_key=f"{EXECUTE_KEY}:capability-readiness:{health_key}",
-        actor=ACTOR,
-        evaluated_at=now,
-    )
-    if (
-        capability.status != "active"
-        or capability_readiness.readiness is not CapabilityReadiness.AVAILABLE
-    ):
-        raise PilotBlocked(
-            "CAPABILITY_BINDING_NOT_READY", capability_readiness.reasons
-        )
     skill_service = AipSkillRegistry()
     binding = skill_service.get_binding(SCOPE, SKILL_BINDING_ID)
-    binding, skill_readiness, _ = skill_service.evaluate_binding(
-        SCOPE,
-        SKILL_BINDING_ID,
-        EvaluateOperationalBindingRequest(
-            expectedVersion=binding.version,
-            dependencies=binding.dependencies,
-        ),
-        idempotency_key=f"{EXECUTE_KEY}:skill-readiness:{health_key}",
-        actor=ACTOR,
-        evaluated_at=now,
+
+    capability_is_fresh = (
+        capability.status == "active"
+        and capability.readiness is CapabilityReadiness.AVAILABLE
+        and capability.readiness_expires_at is not None
+        and capability.readiness_expires_at > now
     )
-    if (
-        binding.status != "active"
-        or skill_readiness.readiness is not CapabilityReadiness.AVAILABLE
-    ):
-        raise PilotBlocked("SKILL_BINDING_NOT_READY", skill_readiness.reasons)
+    if not capability_is_fresh:
+        capability, capability_readiness, _ = capability_service.evaluate(
+            SCOPE,
+            CAPABILITY_BINDING_ID,
+            EvaluateOperationalBindingRequest(
+                expectedVersion=capability.version,
+                dependencies=capability.dependencies,
+            ),
+            idempotency_key=f"{EXECUTE_KEY}:capability-readiness:{health_key}",
+            actor=ACTOR,
+            evaluated_at=now,
+        )
+        if (
+            capability.status != "active"
+            or capability_readiness.readiness is not CapabilityReadiness.AVAILABLE
+        ):
+            raise PilotBlocked(
+                "CAPABILITY_BINDING_NOT_READY", capability_readiness.reasons
+            )
+
+    skill_is_fresh = (
+        binding.status == "active"
+        and binding.readiness is CapabilityReadiness.AVAILABLE
+        and binding.readiness_expires_at is not None
+        and binding.readiness_expires_at > now
+    )
+    if not skill_is_fresh:
+        binding, skill_readiness, _ = skill_service.evaluate_binding(
+            SCOPE,
+            SKILL_BINDING_ID,
+            EvaluateOperationalBindingRequest(
+                expectedVersion=binding.version,
+                dependencies=binding.dependencies,
+            ),
+            idempotency_key=f"{EXECUTE_KEY}:skill-readiness:{health_key}",
+            actor=ACTOR,
+            evaluated_at=now,
+        )
+        if (
+            binding.status != "active"
+            or skill_readiness.readiness is not CapabilityReadiness.AVAILABLE
+        ):
+            raise PilotBlocked("SKILL_BINDING_NOT_READY", skill_readiness.reasons)
     return {
         "healthObservationId": health_key,
         "capabilitySnapshotHash": str(capability.dependency_snapshot_hash),
