@@ -1,0 +1,72 @@
+{
+  "schema": "aos-aip-r2-real-pilot-receipt/v1",
+  "receiptId": "R2-4C-SECOND-REAL-PILOT-UNKNOWN-20260818",
+  "evidenceCutoff": "2026-08-18T11:58:41+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "negativeCanary": {
+    "orgId": "dev-org",
+    "projectId": "dev-project",
+    "agentRun": 0,
+    "attempt": 0,
+    "task": 0,
+    "taskRun": 0
+  },
+  "approvalRef": "46-R2-4C-SECOND-REAL-START-APPROVED",
+  "leaseRef": "AIP-R2-4C-SECOND-REAL-PILOT",
+  "recoveryOf": {
+    "agentRunId": "ecommerce.data_advisor.D03.real-pilot.v1",
+    "attemptId": "ecommerce.data_advisor.D03.real-pilot.attempt-1",
+    "status": "unknown"
+  },
+  "execution": {
+    "taskId": "task-b785ab08140246e19f39",
+    "taskRunId": "run-9f2171cdd13040f89c6f",
+    "agentRunId": "ecommerce.data_advisor.D03.real-pilot.v2",
+    "attemptId": "ecommerce.data_advisor.D03.real-pilot.v2.attempt-1",
+    "taskStatus": "executing",
+    "taskRunStatus": "running",
+    "agentRunStatus": "unknown",
+    "attemptStatus": "unknown",
+    "reasonCode": "PROVIDER_RESULT_UNKNOWN",
+    "providerBusinessCallCount": 1,
+    "providerBusinessCallLimit": 1,
+    "automaticRetryCount": 0,
+    "capacityReleased": true
+  },
+  "startGate": {
+    "providerHealthObservationId": "health-agnes-text-qyh-r2-20260818033504708723",
+    "providerHealthProbeCount": 3,
+    "bindingReadiness": "available",
+    "alembicHead": "aip10_006"
+  },
+  "readback": {
+    "providerReceiptIdPresent": false,
+    "usageReceiptCount": 0,
+    "outputArtifactPresent": false,
+    "lineageEventCount": 0,
+    "secretPayloadReads": 0,
+    "sensitiveBodiesPersisted": 0,
+    "externalBusinessActions": 0
+  },
+  "diagnosis": {
+    "rootCauseStatus": "NOT_PROVEN",
+    "hypothesis": "Provider response receipt contract mismatch",
+    "hypothesisIsInference": true,
+    "safeDiagnosticCommit": "f139d5c260bf7058710f1e05cececda645e27b22",
+    "nextRealCallRequiresNewExplicitApproval": true
+  },
+  "verification": {
+    "focusedTests": "16 passed",
+    "cumulativeTests": "86 passed",
+    "browserRoute": "/aip/agent-registry",
+    "browserTenant": "组织 · 栖月汇商贸有限公司 / 默认工作区",
+    "browserRunnableCount": 0,
+    "browserPreflightDisabled": true,
+    "browserResult": "HONEST_BLOCKED_NOT_GREEN"
+  },
+  "result": "OPERATIONAL_ATTEMPT_UNKNOWN",
+  "nextGate": "R2_4D_V3_EXACT_BLOCKER_PROOF_REQUIRES_EXPLICIT_APPROVAL"
+}
