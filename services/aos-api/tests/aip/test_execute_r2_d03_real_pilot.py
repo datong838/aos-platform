@@ -27,19 +27,29 @@ def test_plan_freezes_one_business_call_and_no_sensitive_output() -> None:
     assert "query" not in plan and "answer" not in plan
 
 
-def test_r2_4c_uses_new_v2_authority_and_preserves_v1_incident_refs() -> None:
+def test_r2_4d_uses_new_v3_authority_and_preserves_v1_v2_incident_chain() -> None:
     plan = MODULE.build_plan()
-    assert MODULE.APPROVAL_REF == "46-R2-4C-SECOND-REAL-START-APPROVED"
-    assert MODULE.AGENT_RUN_ID.endswith("real-pilot.v2")
-    assert MODULE.ATTEMPT_ID.endswith("real-pilot.v2.attempt-1")
-    assert MODULE.EXECUTE_KEY.endswith("execute-v2")
-    assert MODULE.INCIDENT_AGENT_RUN_ID.endswith("real-pilot.v1")
-    assert MODULE.INCIDENT_ATTEMPT_ID.endswith("real-pilot.attempt-1")
+    assert MODULE.APPROVAL_REF == "46-R2-4D-V3-EXACT-BLOCKER-START-APPROVED"
+    assert MODULE.AGENT_RUN_ID.endswith("real-pilot.v3")
+    assert MODULE.ATTEMPT_ID.endswith("real-pilot.v3.attempt-1")
+    assert MODULE.EXECUTE_KEY.endswith("execute-v3")
+    assert MODULE.INCIDENT_AGENT_RUN_ID.endswith("real-pilot.v2")
+    assert MODULE.INCIDENT_ATTEMPT_ID.endswith("real-pilot.v2.attempt-1")
+    assert MODULE.EARLIER_INCIDENT_AGENT_RUN_ID.endswith("real-pilot.v1")
+    assert MODULE.EARLIER_INCIDENT_ATTEMPT_ID.endswith("real-pilot.attempt-1")
     assert plan["recoveryOf"] == {
         "agentRunId": MODULE.INCIDENT_AGENT_RUN_ID,
         "attemptId": MODULE.INCIDENT_ATTEMPT_ID,
         "status": "unknown",
     }
+    assert plan["priorIncidents"] == [
+        {
+            "agentRunId": MODULE.EARLIER_INCIDENT_AGENT_RUN_ID,
+            "attemptId": MODULE.EARLIER_INCIDENT_ATTEMPT_ID,
+            "status": "unknown",
+        },
+        plan["recoveryOf"],
+    ]
     assert MODULE.AGENT_RUN_ID != MODULE.INCIDENT_AGENT_RUN_ID
     assert MODULE.ATTEMPT_ID != MODULE.INCIDENT_ATTEMPT_ID
 

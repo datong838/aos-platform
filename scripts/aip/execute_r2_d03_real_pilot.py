@@ -44,8 +44,8 @@ from aos_api.tenant_scope import TenantScope
 
 SCOPE = TenantScope("org-org", "dev-project")
 CANARY_SCOPE = TenantScope("dev-org", "dev-project")
-ACTOR = "aip-r2-4c-d03-real-pilot"
-APPROVAL_REF = "46-R2-4C-SECOND-REAL-START-APPROVED"
+ACTOR = "aip-r2-4d-d03-real-pilot"
+APPROVAL_REF = "46-R2-4D-V3-EXACT-BLOCKER-START-APPROVED"
 REQUIRED_ALEMBIC_HEAD = "aip10_006"
 
 INSTANCE_ID = "ecommerce.data_advisor.default"
@@ -54,16 +54,18 @@ SKILL_REVISION = 2
 SKILL_BINDING_ID = "ecommerce.data_advisor.skill.D03.r2"
 ROUTE_ID = "route-qyh-text-dev"
 CAPABILITY_BINDING_ID = "ecommerce.data_advisor.strategy.plan.r2"
-TASK_KEY = "r2-d03-real-pilot-task-v2"
-PLAN_KEY = "r2-d03-real-pilot-plan-v2"
-TASK_RUN_KEY = "r2-d03-real-pilot-task-run-v2"
-AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v2"
-ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v2.attempt-1"
-EXECUTE_KEY = "r2-d03-real-pilot-execute-v2"
+TASK_KEY = "r2-d03-real-pilot-task-v3"
+PLAN_KEY = "r2-d03-real-pilot-plan-v3"
+TASK_RUN_KEY = "r2-d03-real-pilot-task-run-v3"
+AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v3"
+ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v3.attempt-1"
+EXECUTE_KEY = "r2-d03-real-pilot-execute-v3"
 STEP_KEY = "execute-d03-pilot"
 
-INCIDENT_AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v1"
-INCIDENT_ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.attempt-1"
+INCIDENT_AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v2"
+INCIDENT_ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v2.attempt-1"
+EARLIER_INCIDENT_AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v1"
+EARLIER_INCIDENT_ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.attempt-1"
 
 QUERY = (
     "请基于以下无敏感信息的内部演示目标给出三条结构化电商增长建议："
@@ -106,6 +108,18 @@ def build_plan() -> dict[str, Any]:
             "attemptId": INCIDENT_ATTEMPT_ID,
             "status": "unknown",
         },
+        "priorIncidents": [
+            {
+                "agentRunId": EARLIER_INCIDENT_AGENT_RUN_ID,
+                "attemptId": EARLIER_INCIDENT_ATTEMPT_ID,
+                "status": "unknown",
+            },
+            {
+                "agentRunId": INCIDENT_AGENT_RUN_ID,
+                "attemptId": INCIDENT_ATTEMPT_ID,
+                "status": "unknown",
+            },
+        ],
         "steps": [
             "read exact runtime and binding authority",
             "create canonical Task/Plan/TaskRun and AgentRun",
@@ -333,7 +347,7 @@ def _task_chain(authority: PilotAuthority):
         TASK_KEY,
         CreateTaskRequest(
             type="aip.runtime.acceptance",
-            title="R2-4C D03 数据参谋第二次有界真实运行验收",
+            title="R2-4D D03 数据参谋 v3 精确阻断有界验收",
             description=(
                 "独立恢复验收；仅验证受限文本建议链，不包含客户数据、工具或外部业务动作。"
             ),
@@ -346,6 +360,7 @@ def _task_chain(authority: PilotAuthority):
                     "attemptId": INCIDENT_ATTEMPT_ID,
                     "status": "unknown",
                 },
+                "priorIncidents": build_plan()["priorIncidents"],
             },
         ),
     )
@@ -378,6 +393,10 @@ def _task_chain(authority: PilotAuthority):
                     "externalBusinessActions": False,
                     "dataClassification": "internal",
                     "recoveryOfUnknownAttempt": INCIDENT_ATTEMPT_ID,
+                    "priorUnknownAttempts": [
+                        EARLIER_INCIDENT_ATTEMPT_ID,
+                        INCIDENT_ATTEMPT_ID,
+                    ],
                 },
             ),
         )
