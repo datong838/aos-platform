@@ -44,8 +44,8 @@ from aos_api.tenant_scope import TenantScope
 
 SCOPE = TenantScope("org-org", "dev-project")
 CANARY_SCOPE = TenantScope("dev-org", "dev-project")
-ACTOR = "aip-r2-4h-d03-real-pilot"
-APPROVAL_REF = "46-R2-4H-V5-SINGLE-PROVIDER-CALL-APPROVED"
+ACTOR = "aip-r2-4j-d03-real-pilot"
+APPROVAL_REF = "46-R2-4J-V6-SINGLE-PROVIDER-CALL-APPROVED"
 REQUIRED_ALEMBIC_HEAD = "aip10_006"
 
 INSTANCE_ID = "ecommerce.data_advisor.default"
@@ -54,16 +54,18 @@ SKILL_REVISION = 2
 SKILL_BINDING_ID = "ecommerce.data_advisor.skill.D03.r2"
 ROUTE_ID = "route-qyh-text-dev"
 CAPABILITY_BINDING_ID = "ecommerce.data_advisor.strategy.plan.r2"
-TASK_KEY = "r2-d03-real-pilot-task-v5"
-PLAN_KEY = "r2-d03-real-pilot-plan-v5"
-TASK_RUN_KEY = "r2-d03-real-pilot-task-run-v5"
-AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v5"
-ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v5.attempt-1"
-EXECUTE_KEY = "r2-d03-real-pilot-execute-v5"
+TASK_KEY = "r2-d03-real-pilot-task-v6"
+PLAN_KEY = "r2-d03-real-pilot-plan-v6"
+TASK_RUN_KEY = "r2-d03-real-pilot-task-run-v6"
+AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v6"
+ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v6.attempt-1"
+EXECUTE_KEY = "r2-d03-real-pilot-execute-v6"
 STEP_KEY = "execute-d03-pilot"
 
-INCIDENT_AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v4"
-INCIDENT_ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v4.attempt-1"
+INCIDENT_AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v5"
+INCIDENT_ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v5.attempt-1"
+PRIOR_INCIDENT_V4_AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v4"
+PRIOR_INCIDENT_V4_ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v4.attempt-1"
 PRIOR_INCIDENT_V3_AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v3"
 PRIOR_INCIDENT_V3_ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v3.attempt-1"
 PRIOR_INCIDENT_V2_AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v2"
@@ -126,6 +128,11 @@ def build_plan() -> dict[str, Any]:
             {
                 "agentRunId": PRIOR_INCIDENT_V3_AGENT_RUN_ID,
                 "attemptId": PRIOR_INCIDENT_V3_ATTEMPT_ID,
+                "status": "unknown",
+            },
+            {
+                "agentRunId": PRIOR_INCIDENT_V4_AGENT_RUN_ID,
+                "attemptId": PRIOR_INCIDENT_V4_ATTEMPT_ID,
                 "status": "unknown",
             },
             {
@@ -377,9 +384,9 @@ def _task_chain(authority: PilotAuthority):
         TASK_KEY,
         CreateTaskRequest(
             type="aip.runtime.acceptance",
-            title="R2-4H D03 数据参谋 v5 单次真实 Provider 验收",
+            title="R2-4J D03 数据参谋 v6 单次真实 Provider 验收",
             description=(
-                "独立 v5 有界验收；仅验证受限文本建议链，不包含客户数据、工具或外部业务动作。"
+                "独立 v6 有界验收；仅验证受限文本建议链，不包含客户数据、工具或外部业务动作。"
             ),
             goal={
                 "approvalRef": APPROVAL_REF,
@@ -427,6 +434,7 @@ def _task_chain(authority: PilotAuthority):
                         EARLIER_INCIDENT_ATTEMPT_ID,
                         PRIOR_INCIDENT_V2_ATTEMPT_ID,
                         PRIOR_INCIDENT_V3_ATTEMPT_ID,
+                        PRIOR_INCIDENT_V4_ATTEMPT_ID,
                         INCIDENT_ATTEMPT_ID,
                     ],
                 },
