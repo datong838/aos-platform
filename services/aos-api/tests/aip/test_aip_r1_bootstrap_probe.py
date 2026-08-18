@@ -300,3 +300,89 @@ def test_image_probe_fails_closed_without_image_payload():
         probe(assets, transport=transport).run(
             TenantScope("org-org", "dev-project"), request
         )
+
+
+def assembly_video(*, scope=TenantScope("org-org", "dev-project")):
+    host = "api.agnes-ai.cn"
+    region = "China (Domestic)"
+    provider_ref = VersionedAssetRef(
+        assetType="ProviderInstanceRevision",
+        assetId="agnes-video-qyh-dev",
+        revision=1,
+        contentHash=HASH,
+    )
+    egress_ref = ref("EgressPolicyRevision", "agnes-video-qyh-dev-egress")
+    data_ref = ref(
+        "DataClassificationPolicyRevision", "agnes-text-qyh-dev-data-classification"
+    )
+    network_ref = ref("NetworkPolicyRevision", "network-qyh-video-dev")
+    provider = SimpleNamespace(
+        tenant=SimpleNamespace(org_id=scope.org_id, project_id=scope.project_id),
+        provider_instance_id=provider_ref.asset_id,
+        revision=1,
+        content_hash=provider_ref.content_hash,
+        lifecycle=ModelRuntimeLifecycle.ACTIVE,
+        plugin_ref=ref("ProviderPluginRevision", "agnes-video"),
+        endpoint_profile=SimpleNamespace(
+            base_url=f"https://{host}/v1", region=region, timeout_ms=60_000
+        ),
+        egress_policy_ref=egress_ref,
+        data_classification_policy_ref=data_ref,
+    )
+    assets = SimpleNamespace(
+        provider=provider,
+        egress=SimpleNamespace(region=region),
+        data_policy=SimpleNamespace(
+            allowed_classifications=["approved_development_sample"],
+            prohibited_classifications=["direct_pii", "unknown"],
+        ),
+        network=SimpleNamespace(
+            allowed_schemes=["https"],
+            allowed_hosts=[host],
+            allowed_ports=[443],
+            tls_required=True,
+            public_fallback_allowed=False,
+            egress_policy_ref=egress_ref,
+            effective_from=NOW - timedelta(days=1),
+            effective_until=NOW + timedelta(days=1),
+        ),
+        plugin=SimpleNamespace(
+            modalities=["video"],
+            approved_capabilities=["video"],
+            default_models=["agnes-video-v2.0"],
+        ),
+    )
+    request = R1BootstrapProbeRequest(
+        provider=provider_ref,
+        networkPolicy=network_ref,
+        providerModelId="agnes-video-v2.0",
+        dataClassification="approved_development_sample",
+        prompt="short abstract calm clip",
+        expectedResponseBehavior="non_empty",
+        approvalRef="35-R1-C",
+    )
+    return assets, request
+
+
+def test_video_probe_uses_domestic_video_endpoint_and_keeps_no_payload():
+    assets, request = assembly_video()
+    transport = Transport(
+        ProviderTransportResponse(
+            status_code=200,
+            payload={
+                "model": "agnes-video-v2.0",
+                "id": "vid-task-opaque",
+                "video_id": "vid-opaque",
+                "task_id": "task-opaque",
+                "status": "queued",
+            },
+        )
+    )
+    result = probe(assets, transport=transport).run(
+        TenantScope("org-org", "dev-project"), request
+    )
+    assert result.status == "healthy"
+    assert result.answer_present is True
+    assert transport.calls[0]["url"] == "https://api.agnes-ai.cn/v1/video/generations"
+    assert "vid-task-opaque" not in repr(result)
+    assert "top-secret" not in repr(result)

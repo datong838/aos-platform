@@ -117,9 +117,24 @@ class AipR1BootstrapProbe:
         endpoint = urlsplit(str(provider.endpoint_profile.base_url))
         host = endpoint.hostname or ""
         image_mode = "image" in plugin.modalities and "image" in plugin.approved_capabilities
+        video_mode = "video" in plugin.modalities and "video" in plugin.approved_capabilities
         started = time.perf_counter()
         try:
-            if image_mode:
+            if video_mode:
+                response = self._transport.post(
+                    url=f"https://{host}/v1/video/generations",
+                    headers={
+                        "Authorization": f"Bearer {secret}",
+                        "Content-Type": "application/json",
+                    },
+                    payload={
+                        "model": request.provider_model_id,
+                        "prompt": request.prompt,
+                        "n": 1,
+                    },
+                    timeout_ms=min(60_000, int(provider.endpoint_profile.timeout_ms)),
+                )
+            elif image_mode:
                 response = self._transport.post(
                     url=f"https://{host}/v1/images/generations",
                     headers={
@@ -150,6 +165,8 @@ class AipR1BootstrapProbe:
         except ExactProviderInvocationError as exc:
             raise R1BootstrapProbeBlocked(exc.code) from None
         latency_ms = max(0, int((time.perf_counter() - started) * 1000))
+        if video_mode:
+            return self._video_result(request, response, latency_ms)
         if image_mode:
             return self._image_result(request, response, latency_ms)
         return self._result(request, response, latency_ms)
@@ -215,7 +232,12 @@ class AipR1BootstrapProbe:
             and "image" in modalities
             and "image" in caps
         )
-        if not (text_ok or image_ok):
+        video_ok = (
+            request.provider_model_id in plugin.default_models
+            and "video" in modalities
+            and "video" in caps
+        )
+        if not (text_ok or image_ok or video_ok):
             raise R1BootstrapProbeBlocked("provider_model_blocked")
         if (
             request.data_classification not in data_policy.allowed_classifications
@@ -271,6 +293,55 @@ class AipR1BootstrapProbe:
         if not has_image:
             raise R1BootstrapProbeBlocked("provider_response_answer_missing")
         if request.expected_response_behavior == "non_empty" and not has_image:
+            raise R1BootstrapProbeBlocked("provider_response_contract_failed")
+        return R1BootstrapProbeResult(
+            status="healthy",
+            responseModel=request.provider_model_id,
+            promptTokens=0,
+            completionTokens=0,
+            totalTokens=0,
+            latencyMs=latency_ms,
+            answerPresent=True,
+            responseContractPassed=(
+                True if request.expected_response_behavior == "non_empty" else None
+            ),
+            observedAt=self._clock(),
+        )
+
+    def _video_result(
+        self,
+        request: R1BootstrapProbeRequest,
+        response: ProviderTransportResponse,
+        latency_ms: int,
+    ) -> R1BootstrapProbeResult:
+        """Accept video generation metadata only; never retain URL/id payloads."""
+        if not 200 <= response.status_code < 300:
+            raise R1BootstrapProbeBlocked("provider_http_error")
+        body = response.payload
+        if not isinstance(body, dict):
+            raise R1BootstrapProbeBlocked("provider_response_invalid")
+        model = body.get("model")
+        if model is not None and model != request.provider_model_id:
+            raise R1BootstrapProbeBlocked("provider_response_model_drifted")
+        data = body.get("data")
+        has_video = False
+        if isinstance(data, list) and data and isinstance(data[0], dict):
+            item = data[0]
+            has_video = bool(
+                item.get("url")
+                or item.get("b64_json")
+                or item.get("id")
+                or item.get("video_url")
+            )
+        elif any(
+            isinstance(body.get(key), str) and body.get(key)
+            for key in ("id", "video_id", "task_id")
+        ):
+            # Domestic Agnes returns async generation metadata without data[].
+            has_video = True
+        if not has_video:
+            raise R1BootstrapProbeBlocked("provider_response_answer_missing")
+        if request.expected_response_behavior == "non_empty" and not has_video:
             raise R1BootstrapProbeBlocked("provider_response_contract_failed")
         return R1BootstrapProbeResult(
             status="healthy",
