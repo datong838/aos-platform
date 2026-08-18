@@ -340,6 +340,12 @@ def test_provider_error_after_invoking_is_unknown_not_retryable() -> None:
             "provider_usage_authority_write_failed",
             "PROVIDER_USAGE_AUTHORITY_WRITE_FAILED",
         ),
+        ("model_runtime_not_ready", "MODEL_RUNTIME_NOT_READY"),
+        ("network_policy_blocked", "NETWORK_POLICY_BLOCKED"),
+        ("provider_endpoint_blocked", "PROVIDER_ENDPOINT_BLOCKED"),
+        ("data_classification_required", "DATA_CLASSIFICATION_REQUIRED"),
+        ("secret_not_found", "SECRET_NOT_FOUND"),
+        ("route_ref_drifted", "ROUTE_REF_DRIFTED"),
     ],
 )
 def test_safe_provider_blocker_is_preserved_without_response_payload(
@@ -354,6 +360,18 @@ def test_safe_provider_blocker_is_preserved_without_response_payload(
     assert result.attempt.reason_code == reason_code
     assert blocker not in str(result.model_dump(mode="json"))
     assert llm.calls == 1 and runs.transitions == [AgentRunStatus.UNKNOWN]
+
+
+def test_comma_joined_or_freeform_blocker_collapses_to_unknown() -> None:
+    value, _, _, llm, _ = executor(
+        llm=Llm(LLMRuntimeBlocked("model_runtime_not_ready,network_policy_blocked"))
+    )
+    result = value.execute(
+        SCOPE, "run-1", execute_request(), idempotency_key="idem-1",
+        actor="pytest", occurred_at=NOW,
+    )
+    assert result.attempt.reason_code == "PROVIDER_RESULT_UNKNOWN"
+    assert llm.calls == 1
 
 
 def test_untrusted_provider_exception_text_is_never_persisted() -> None:

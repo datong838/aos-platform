@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from datetime import datetime
 from typing import Any
 
@@ -58,7 +59,39 @@ _SAFE_PROVIDER_UNKNOWN_REASONS = {
     "provider_response_usage_missing": "PROVIDER_RESPONSE_USAGE_MISSING",
     "provider_usage_unknown": "PROVIDER_USAGE_UNKNOWN",
     "provider_usage_authority_write_failed": "PROVIDER_USAGE_AUTHORITY_WRITE_FAILED",
+    "provider_prompt_empty": "PROVIDER_PROMPT_EMPTY",
+    "model_runtime_not_ready": "MODEL_RUNTIME_NOT_READY",
+    "model_runtime_authority_unavailable": "MODEL_RUNTIME_AUTHORITY_UNAVAILABLE",
+    "model_runtime_lifecycle_blocked": "MODEL_RUNTIME_LIFECYCLE_BLOCKED",
+    "provider_tenant_mismatch": "PROVIDER_TENANT_MISMATCH",
+    "runtime_policy_kill_switch": "RUNTIME_POLICY_KILL_SWITCH",
+    "route_ref_drifted": "ROUTE_REF_DRIFTED",
+    "route_policy_ref_drifted": "ROUTE_POLICY_REF_DRIFTED",
+    "route_model_ref_drifted": "ROUTE_MODEL_REF_DRIFTED",
+    "model_ref_drifted": "MODEL_REF_DRIFTED",
+    "provider_ref_drifted": "PROVIDER_REF_DRIFTED",
+    "model_provider_ref_drifted": "MODEL_PROVIDER_REF_DRIFTED",
+    "quota_policy_ref_drifted": "QUOTA_POLICY_REF_DRIFTED",
+    "budget_policy_ref_drifted": "BUDGET_POLICY_REF_DRIFTED",
+    "egress_policy_ref_drifted": "EGRESS_POLICY_REF_DRIFTED",
+    "data_policy_ref_drifted": "DATA_POLICY_REF_DRIFTED",
+    "provider_plugin_authority_blocked": "PROVIDER_PLUGIN_AUTHORITY_BLOCKED",
+    "provider_plugin_capability_blocked": "PROVIDER_PLUGIN_CAPABILITY_BLOCKED",
+    "runtime_guard_policy_blocked": "RUNTIME_GUARD_POLICY_BLOCKED",
+    "data_classification_blocked": "DATA_CLASSIFICATION_BLOCKED",
+    "provider_region_unconfirmed": "PROVIDER_REGION_UNCONFIRMED",
+    "network_policy_blocked": "NETWORK_POLICY_BLOCKED",
+    "model_governance_policy_blocked": "MODEL_GOVERNANCE_POLICY_BLOCKED",
+    "provider_endpoint_blocked": "PROVIDER_ENDPOINT_BLOCKED",
+    "provider_timeout_policy_blocked": "PROVIDER_TIMEOUT_POLICY_BLOCKED",
+    "lineage_id_required": "LINEAGE_ID_REQUIRED",
+    "data_classification_required": "DATA_CLASSIFICATION_REQUIRED",
+    "exact_scope_and_model_route_required": "EXACT_SCOPE_AND_MODEL_ROUTE_REQUIRED",
+    "implicit_mock_provider_forbidden": "IMPLICIT_MOCK_PROVIDER_FORBIDDEN",
 }
+
+
+_SAFE_CODE_PATTERN = re.compile(r"^[a-z][a-z0-9_]{0,120}$")
 
 
 class AipAgentRunExecutor:
@@ -297,9 +330,16 @@ class AipAgentRunExecutor:
     def _safe_provider_unknown_reason(exc: Exception) -> str:
         if not isinstance(exc, LLMRuntimeBlocked):
             return "PROVIDER_RESULT_UNKNOWN"
-        return _SAFE_PROVIDER_UNKNOWN_REASONS.get(
-            str(exc), "PROVIDER_RESULT_UNKNOWN"
-        )
+        code = str(getattr(exc, "code", "") or exc)
+        if not _SAFE_CODE_PATTERN.fullmatch(code):
+            # secret_* codes are stable prefixes without free-form payload.
+            if code.startswith("secret_") and _SAFE_CODE_PATTERN.fullmatch(code[7:] or "x"):
+                return f"SECRET_{code[7:].upper()}"
+            return "PROVIDER_RESULT_UNKNOWN"
+        mapped = _SAFE_PROVIDER_UNKNOWN_REASONS.get(code)
+        if mapped is not None:
+            return mapped
+        return code.upper()
 
     def _mark_unknown(
         self,
