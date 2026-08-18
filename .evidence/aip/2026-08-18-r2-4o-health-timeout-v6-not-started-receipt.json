@@ -1,0 +1,27 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevision": "AOS-000108",
+  "recordedAt": "2026-08-18T16:41:00+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-4O",
+  "approvalRef": "46-R2-4O-PROVIDER-R4-HEALTH-THEN-V6",
+  "leaseRef": "AIP-R2-4O-PROVIDER-R4-HEALTH-THEN-V6",
+  "execution": {
+    "healthTripleProbeLimit": 1,
+    "healthProbesCompleted": 1,
+    "healthObservationWritten": false,
+    "blockerCode": "provider_timeout",
+    "providerBusinessCallLimit": 1,
+    "providerBusinessCalls": 0,
+    "automaticRetries": 0
+  },
+  "result": "R2_4O_HEALTH_TIMEOUT_V6_NOT_STARTED",
+  "diagnosis": {
+    "note": "First probe returned; second probe mapped to provider_timeout. 3/3 gate held. v6 AgentRun was not started. No timeout bump and no immediate retry in this lease."
+  },
+  "nextGate": "R2_4P_PROVIDER_R4_HEALTH_THEN_V6"
+}
