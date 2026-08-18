@@ -28,6 +28,15 @@ CANARY = TenantScope("dev-org", "dev-project")
 ACTOR = "aip-r2-5-catalog-matrix"
 CAPABILITY_BINDING_ID = "ecommerce.data_advisor.strategy.plan.r2"
 SKILL_BINDING_ID = "ecommerce.data_advisor.skill.D03.r4"
+# After serial §8.66 text activations, refresh every active colleague SkillBinding.
+SKILL_BINDING_IDS = (
+    "ecommerce.data_advisor.skill.D03.r4",
+    "ecommerce.content_officer.skill.C02.r2",
+    "ecommerce.shopping_advisor.skill.G04.r2",
+    "ecommerce.customer_service.skill.S04.r2",
+    "ecommerce.private_domain_manager.skill.P02.r2",
+    "ecommerce.campaign_planner.skill.A02.r2",
+)
 V8_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v8"
 V8_ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v8.attempt-1"
 EVIDENCE = Path(__file__).resolve().parents[2] / ".evidence/aip/2026-08-18-r2-5-dep-adp-query-evidence.json"
@@ -78,13 +87,12 @@ def _health(now: datetime) -> dict[str, Any]:
     }
 
 
-def refresh_readiness(*, now: datetime) -> dict[str, str]:
+def refresh_readiness(*, now: datetime) -> dict[str, Any]:
     facts = _health(now)
     health_key = str(facts["observationId"])
     capability_service = AipCapabilityBindingService()
     skill_service = AipSkillRegistry()
     capability = capability_service.get(SCOPE, CAPABILITY_BINDING_ID)
-    binding = skill_service.get_binding(SCOPE, SKILL_BINDING_ID)
     if not (
         capability.status == "active"
         and capability.operational_readiness is CapabilityReadiness.AVAILABLE
@@ -107,29 +115,38 @@ def refresh_readiness(*, now: datetime) -> dict[str, str]:
             or readiness.readiness is not CapabilityReadiness.AVAILABLE
         ):
             raise MatrixBlocked("CAPABILITY_BINDING_NOT_READY", readiness.reasons)
-    if not (
-        binding.status == "active"
-        and binding.readiness is CapabilityReadiness.AVAILABLE
-        and binding.readiness_expires_at is not None
-        and binding.readiness_expires_at > now
-    ):
+    refreshed_skills: list[str] = []
+    for skill_binding_id in SKILL_BINDING_IDS:
+        binding = skill_service.get_binding(SCOPE, skill_binding_id)
+        if (
+            binding.status == "active"
+            and binding.readiness is CapabilityReadiness.AVAILABLE
+            and binding.readiness_expires_at is not None
+            and binding.readiness_expires_at > now
+        ):
+            continue
         binding, readiness, _ = skill_service.evaluate_binding(
             SCOPE,
-            SKILL_BINDING_ID,
+            skill_binding_id,
             EvaluateOperationalBindingRequest(
                 expectedVersion=binding.version,
                 dependencies=binding.dependencies,
             ),
-            idempotency_key=f"r2-5-skill-readiness:{health_key}",
+            idempotency_key=f"r2-5-skill-readiness:{skill_binding_id}:{health_key}",
             actor=ACTOR,
             evaluated_at=now,
         )
         if binding.status != "active" or readiness.readiness is not CapabilityReadiness.AVAILABLE:
-            raise MatrixBlocked("SKILL_BINDING_NOT_READY", readiness.reasons)
+            raise MatrixBlocked(
+                "SKILL_BINDING_NOT_READY",
+                [skill_binding_id, *list(readiness.reasons)],
+            )
+        refreshed_skills.append(skill_binding_id)
     return {
         "healthObservationId": health_key,
         "capabilityBindingId": capability.binding_id,
-        "skillBindingId": binding.binding_id,
+        "skillBindingIds": list(SKILL_BINDING_IDS),
+        "skillBindingsReevaluated": refreshed_skills,
     }
 
 
