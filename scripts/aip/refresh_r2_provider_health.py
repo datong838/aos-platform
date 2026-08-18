@@ -29,10 +29,10 @@ SCOPE = TenantScope("org-org", "dev-project")
 ACTOR = "aip-r2-health-refresh"
 APPROVAL_REF = "35-R1-C"
 PROVIDER_ID = "agnes-text-qyh-dev"
-PROVIDER_REVISION = 4
+PROVIDER_REVISION = 7
 NETWORK_ID = "network-qyh-text-dev"
-NETWORK_REVISION = 1
-PROVIDER_MODEL_ID = "agnes-2.0-flash"
+NETWORK_REVISION = 3
+PROVIDER_MODEL_ID = "agnes-2.5-flash"
 
 _SAFE_PROBES = (
     "请仅回复一个简短的服务可用状态词。",

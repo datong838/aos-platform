@@ -114,10 +114,12 @@ class AipR1BootstrapProbe:
         except SecretBackendError as exc:
             raise R1BootstrapProbeBlocked(f"secret_{exc.code}") from None
 
+        endpoint = urlsplit(str(provider.endpoint_profile.base_url))
+        host = endpoint.hostname or ""
         started = time.perf_counter()
         try:
             response = self._transport.post(
-                url="https://apihub.agnes-ai.com/v1/chat/completions",
+                url=f"https://{host}/v1/chat/completions",
                 headers={
                     "Authorization": f"Bearer {secret}",
                     "Content-Type": "application/json",
@@ -193,10 +195,13 @@ class AipR1BootstrapProbe:
             or request.data_classification in data_policy.prohibited_classifications
         ):
             raise R1BootstrapProbeBlocked("data_classification_blocked")
+        from aos_api.aip_runtime_guard_policy_contracts import APPROVED_AGNES_HOSTS
+
         endpoint = urlsplit(str(provider.endpoint_profile.base_url))
+        host = endpoint.hostname
         if (
             endpoint.scheme != "https"
-            or endpoint.hostname != "apihub.agnes-ai.com"
+            or host not in APPROVED_AGNES_HOSTS
             or (endpoint.port or 443) != 443
             or endpoint.path.rstrip("/") != "/v1"
             or endpoint.username is not None
@@ -209,7 +214,7 @@ class AipR1BootstrapProbe:
             provider.endpoint_profile.region != egress.region
             or network.egress_policy_ref != provider.egress_policy_ref
             or network.allowed_schemes != ["https"]
-            or network.allowed_hosts != ["apihub.agnes-ai.com"]
+            or network.allowed_hosts != [host]
             or network.allowed_ports != [443]
             or not network.tls_required
             or network.public_fallback_allowed

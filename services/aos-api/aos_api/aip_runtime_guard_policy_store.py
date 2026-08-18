@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_runtime_guard_policy_contracts import (
+    APPROVED_AGNES_HOSTS,
     DataClassificationPolicyRevision,
     DataClassificationPolicyRevisionCreate,
     EgressPolicyRevision,
@@ -127,7 +128,8 @@ class AipRuntimeGuardPolicyStore:
                 raise GuardPolicyDependencyBlocked("egress region is not confirmed")
             if (
                 item.allowed_schemes != ["https"]
-                or item.allowed_hosts != ["apihub.agnes-ai.com"]
+                or len(item.allowed_hosts) != 1
+                or item.allowed_hosts[0] not in APPROVED_AGNES_HOSTS
                 or item.allowed_ports != [443]
                 or item.allow_public_fallback
                 or item.unknown_destination_behavior != "block"

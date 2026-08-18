@@ -68,9 +68,25 @@ class GuardPolicyCreate(AipContractModel):
         return self
 
 
+# Domestic api.agnes-ai.cn is the forward authority.
+# Historical hosts remain valid for existing revisions only.
+ApprovedAgnesHost = Literal[
+    "apihub.agnes-ai.com",
+    "apihub.agnes-ai.cn",
+    "api.agnes-ai.cn",
+]
+APPROVED_AGNES_HOSTS: frozenset[str] = frozenset(
+    {
+        "apihub.agnes-ai.com",
+        "apihub.agnes-ai.cn",
+        "api.agnes-ai.cn",
+    }
+)
+
+
 class EgressPolicyRevisionCreate(GuardPolicyCreate):
     allowed_schemes: list[Literal["https"]] = Field(min_length=1, max_length=1)
-    allowed_hosts: list[Literal["apihub.agnes-ai.com"]] = Field(min_length=1, max_length=1)
+    allowed_hosts: list[ApprovedAgnesHost] = Field(min_length=1, max_length=1)
     allowed_ports: list[Literal[443]] = Field(min_length=1, max_length=1)
     allow_public_fallback: Literal[False] = False
     unknown_destination_behavior: Literal["block"] = "block"

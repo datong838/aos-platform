@@ -299,14 +299,17 @@ class ExactProviderInvoker:
             raise ExactProviderInvocationError("model_governance_policy_blocked") from None
 
     def _validated_url(self, policy: Any, provider: Any) -> str:
+        from aos_api.aip_runtime_guard_policy_contracts import APPROVED_AGNES_HOSTS
+
         try:
             endpoint = urlsplit(str(provider.endpoint_profile.base_url))
             port = endpoint.port or 443
         except ValueError:
             raise ExactProviderInvocationError("provider_endpoint_blocked") from None
+        host = endpoint.hostname
         if (
             endpoint.scheme != "https"
-            or endpoint.hostname != "apihub.agnes-ai.com"
+            or host not in APPROVED_AGNES_HOSTS
             or port != 443
             or endpoint.username is not None
             or endpoint.password is not None
@@ -317,7 +320,7 @@ class ExactProviderInvoker:
             raise ExactProviderInvocationError("provider_endpoint_blocked")
         if policy.deadline_ms <= 0 or provider.endpoint_profile.timeout_ms <= 0:
             raise ExactProviderInvocationError("provider_timeout_policy_blocked")
-        return "https://apihub.agnes-ai.com/v1/chat/completions"
+        return f"https://{host}/v1/chat/completions"
 
     @staticmethod
     def _require_exact(ref: Any, item: Any, id_field: str, code: str) -> None:
