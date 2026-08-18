@@ -34,6 +34,7 @@ from aos_api.aip_eval_contracts import LineageRootType
 from aos_api.aip_lineage_service import AipLineageService
 from aos_api.aip_llm_adapter import LLMAdapter, LLMRuntimeBlocked
 from aos_api.aip_model_runtime_contracts import ModelRuntimeReadiness
+from aos_api.aip_runtime_guard_policy_contracts import APPROVED_DATA_CLASSIFICATIONS
 from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
 from aos_api.aip_task_store import AipTaskStore
 from aos_api.tenant_scope import TenantScope
@@ -92,6 +93,23 @@ _SAFE_PROVIDER_UNKNOWN_REASONS = {
 
 
 _SAFE_CODE_PATTERN = re.compile(r"^[a-z][a-z0-9_]{0,120}$")
+
+_AGENT_RUN_TO_GUARD_CLASSIFICATION = {
+    "public": "public_catalog",
+    "internal": "approved_internal_knowledge",
+}
+
+
+def map_agent_run_data_classification(value: str) -> str:
+    """Map ExecuteAgentRun coarse labels onto Guard allowlist labels.
+
+    Attempt rows still persist public|internal|confidential. confidential has
+    no approved Guard mapping and is returned unchanged so invocation fail-closes.
+    """
+    cleaned = (value or "").strip()
+    if cleaned in APPROVED_DATA_CLASSIFICATIONS:
+        return cleaned
+    return _AGENT_RUN_TO_GUARD_CLASSIFICATION.get(cleaned, cleaned)
 
 
 class AipAgentRunExecutor:
@@ -246,15 +264,23 @@ class AipAgentRunExecutor:
         response: dict[str, Any] | None = None
         artifact_ref: ArtifactRef | None = None
         lineage_count = 0
-        failure_reason = "PROVIDER_RESULT_UNKNOWN"
+        failure_reason = "LINEAGE_RECONCILE_FAILED"
         try:
+            lineage_count = len(
+                self._lineage_service.reconcile(
+                    scope, LineageRootType.TASK_RUN, run.task_run_id
+                )
+            )
+            failure_reason = "PROVIDER_RESULT_UNKNOWN"
             response = self._llm_adapter.chat_exact(
                 scope,
                 attempt.route_ref.asset_id,
                 request.query,
                 lineage_id=attempt.lineage_id,
                 system_prompt=request.system_prompt,
-                data_classification=request.data_classification,
+                data_classification=map_agent_run_data_classification(
+                    request.data_classification
+                ),
             )
             failure_reason = "ARTIFACT_WRITE_FAILED"
             artifact_ref = self._record_output_artifact(scope, run, attempt, response, actor)

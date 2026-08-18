@@ -14,7 +14,11 @@ from aos_api.aip_agent_run_execution_contracts import (
     AgentRunExecutionStatus,
     ExecuteAgentRunRequest,
 )
-from aos_api.aip_agent_run_executor import AipAgentRunExecutor, AipAgentRunExecutorError
+from aos_api.aip_agent_run_executor import (
+    AipAgentRunExecutor,
+    AipAgentRunExecutorError,
+    map_agent_run_data_classification,
+)
 from aos_api.aip_contracts import ResourceRef, TenantContext
 from aos_api.aip_llm_adapter import LLMRuntimeBlocked
 from aos_api.aip_model_runtime_contracts import ModelRouteResolution, ModelRuntimeReadiness
@@ -196,12 +200,18 @@ class Resolver:
 
 
 class Llm:
-    def __init__(self, error: Exception | None = None) -> None:
+    def __init__(
+        self, error: Exception | None = None, *, order: list[str] | None = None
+    ) -> None:
         self.error = error
         self.calls = 0
+        self.kwargs: dict = {}
+        self.order = order if order is not None else []
 
     def chat_exact(self, scope, route_id, query, **kwargs):
         self.calls += 1
+        self.order.append("invoke")
+        self.kwargs = kwargs
         if self.error:
             raise self.error
         return {
@@ -224,18 +234,23 @@ class Artifacts:
 
 
 class Lineage:
+    def __init__(self) -> None:
+        self.order: list[str] = []
+
     @staticmethod
     def lineage_id(root_type, root_id):
         return f"lineage-{root_id}"
 
     def reconcile(self, scope, root_type, root_id):
+        self.order.append("reconcile")
         return ["event-1", "event-2"]
 
 
 def executor(*, llm=None, artifacts=None, resolver_value=None):
     runs = RunService()
     attempts = AttemptService()
-    llm = llm or Llm()
+    lineage = Lineage()
+    llm = llm or Llm(order=lineage.order)
     artifacts = artifacts or Artifacts()
     value = AipAgentRunExecutor(
         run_service=runs,
@@ -243,7 +258,7 @@ def executor(*, llm=None, artifacts=None, resolver_value=None):
         resolver=Resolver(resolver_value),
         llm_adapter=llm,
         artifact_store=artifacts,
-        lineage_service=Lineage(),
+        lineage_service=lineage,
     )
     return value, runs, attempts, llm, artifacts
 
@@ -502,3 +517,51 @@ def test_unknown_attempt_write_failure_still_terminalizes_agent_run() -> None:
         raise AssertionError("unknown write failure must be visible")
     assert runs.transitions == [AgentRunStatus.UNKNOWN]
     assert llm.calls == 1
+
+
+@pytest.mark.parametrize(
+    ("coarse", "guard"),
+    [
+        ("public", "public_catalog"),
+        ("internal", "approved_internal_knowledge"),
+        ("confidential", "confidential"),
+        ("approved_internal_knowledge", "approved_internal_knowledge"),
+        ("approved_development_sample", "approved_development_sample"),
+    ],
+)
+def test_agent_run_classification_maps_to_guard_allowlist(coarse: str, guard: str) -> None:
+    assert map_agent_run_data_classification(coarse) == guard
+
+
+def test_execute_passes_guard_classification_to_adapter_but_persists_coarse() -> None:
+    value, _, attempts, llm, _ = executor()
+    result = value.execute(
+        SCOPE, "run-1", execute_request(), idempotency_key="idem-1",
+        actor="pytest", occurred_at=NOW,
+    )
+    assert result.attempt.status is AgentRunExecutionStatus.SUCCEEDED
+    assert attempts.value.data_classification == "internal"
+    assert llm.kwargs["data_classification"] == "approved_internal_knowledge"
+
+
+def test_execute_maps_public_to_public_catalog() -> None:
+    value, _, attempts, llm, _ = executor()
+    request = execute_request().model_copy(update={"data_classification": "public"})
+    value.execute(
+        SCOPE, "run-1", request, idempotency_key="idem-1",
+        actor="pytest", occurred_at=NOW,
+    )
+    assert attempts.value.data_classification == "public"
+    assert llm.kwargs["data_classification"] == "public_catalog"
+
+
+def test_execute_reconciles_lineage_before_provider_invoke() -> None:
+    value, _, _, llm, _ = executor()
+    result = value.execute(
+        SCOPE, "run-1", execute_request(), idempotency_key="idem-1",
+        actor="pytest", occurred_at=NOW,
+    )
+    assert result.attempt.status is AgentRunExecutionStatus.SUCCEEDED
+    assert llm.order[0] == "reconcile"
+    assert "invoke" in llm.order
+    assert llm.order.index("reconcile") < llm.order.index("invoke")

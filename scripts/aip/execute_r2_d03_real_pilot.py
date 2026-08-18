@@ -30,6 +30,7 @@ from aos_api.aip_agent_run_service import AipAgentRunService
 from aos_api.aip_budget_store import AipBudgetAuthorityStore
 from aos_api.aip_contracts import PlanStep, ResourceRef
 from aos_api.aip_model_governance_policy_store import AipModelGovernancePolicyStore
+from aos_api.aip_model_capacity_reservation import AipModelCapacityReservationGate
 from aos_api.aip_model_runtime_contracts import ModelRuntimeReadiness
 from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
 from aos_api.aip_skill_registry import AipSkillRegistry
@@ -45,25 +46,29 @@ from aos_api.tenant_scope import TenantScope
 SCOPE = TenantScope("org-org", "dev-project")
 CANARY_SCOPE = TenantScope("dev-org", "dev-project")
 ACTOR = "aip-r2-4j-d03-real-pilot"
-APPROVAL_REF = "46-R2-4J-V6-SINGLE-PROVIDER-CALL-APPROVED"
+APPROVAL_REF = "46-R2-4Z-V8-LINEAGE-BEFORE-USAGE"
 REQUIRED_ALEMBIC_HEAD = "aip10_006"
 
 INSTANCE_ID = "ecommerce.data_advisor.default"
 SKILL_ID = "ecommerce.skill.D03"
-SKILL_REVISION = 3
-SKILL_BINDING_ID = "ecommerce.data_advisor.skill.D03.r3"
+SKILL_REVISION = 4
+SKILL_BINDING_ID = "ecommerce.data_advisor.skill.D03.r4"
 ROUTE_ID = "route-qyh-text-dev"
 CAPABILITY_BINDING_ID = "ecommerce.data_advisor.strategy.plan.r2"
-TASK_KEY = "r2-d03-real-pilot-task-v6"
-PLAN_KEY = "r2-d03-real-pilot-plan-v6"
-TASK_RUN_KEY = "r2-d03-real-pilot-task-run-v6"
-AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v6"
-ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v6.attempt-1"
-EXECUTE_KEY = "r2-d03-real-pilot-execute-v6"
+TASK_KEY = "r2-d03-real-pilot-task-v8"
+PLAN_KEY = "r2-d03-real-pilot-plan-v8"
+TASK_RUN_KEY = "r2-d03-real-pilot-task-run-v8"
+AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v8"
+ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v8.attempt-1"
+EXECUTE_KEY = "r2-d03-real-pilot-execute-v8"
 STEP_KEY = "execute-d03-pilot"
 
-INCIDENT_AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v5"
-INCIDENT_ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v5.attempt-1"
+INCIDENT_AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v7"
+INCIDENT_ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v7.attempt-1"
+PRIOR_INCIDENT_V6_AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v6"
+PRIOR_INCIDENT_V6_ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v6.attempt-1"
+PRIOR_INCIDENT_V5_AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v5"
+PRIOR_INCIDENT_V5_ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v5.attempt-1"
 PRIOR_INCIDENT_V4_AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v4"
 PRIOR_INCIDENT_V4_ATTEMPT_ID = "ecommerce.data_advisor.D03.real-pilot.v4.attempt-1"
 PRIOR_INCIDENT_V3_AGENT_RUN_ID = "ecommerce.data_advisor.D03.real-pilot.v3"
@@ -133,6 +138,16 @@ def build_plan() -> dict[str, Any]:
             {
                 "agentRunId": PRIOR_INCIDENT_V4_AGENT_RUN_ID,
                 "attemptId": PRIOR_INCIDENT_V4_ATTEMPT_ID,
+                "status": "unknown",
+            },
+            {
+                "agentRunId": PRIOR_INCIDENT_V5_AGENT_RUN_ID,
+                "attemptId": PRIOR_INCIDENT_V5_ATTEMPT_ID,
+                "status": "unknown",
+            },
+            {
+                "agentRunId": PRIOR_INCIDENT_V6_AGENT_RUN_ID,
+                "attemptId": PRIOR_INCIDENT_V6_ATTEMPT_ID,
                 "status": "unknown",
             },
             {
@@ -537,18 +552,13 @@ def _agent_run(authority: PilotAuthority, task: Any, plan: Any, task_run: Any):
     return service, run
 
 
-def _capacity_ref(agent_run_id: str) -> ResourceRef:
-    with db_connect(SCOPE) as conn:
-        row = conn.execute(
-            "SELECT reservation_id,status,expires_at FROM aip_model_capacity_reservation "
-            "WHERE org_id=%s AND project_id=%s AND agent_run_id=%s",
-            (*SCOPE.key, agent_run_id),
-        ).fetchone()
-    if row is None or row["status"] != "reserved" or row["expires_at"] <= datetime.now(UTC):
-        raise PilotBlocked("ACTIVE_CAPACITY_RESERVATION_REQUIRED")
+def _capacity_ref(agent_run_id: str, resolution) -> ResourceRef:
+    reservation_id = AipModelCapacityReservationGate().reserve(
+        SCOPE, resolution, agent_run_id
+    )
     return ResourceRef(
         resourceType="CapacityReservation",
-        resourceId=row["reservation_id"],
+        resourceId=reservation_id,
         authority="postgresql",
     )
 
@@ -672,7 +682,7 @@ def apply() -> dict[str, Any]:
             attemptId=ATTEMPT_ID,
             attemptNo=1,
             budgetRef=authority.budget_ref,
-            capacityReservationRef=_capacity_ref(run.agent_run_id),
+            capacityReservationRef=_capacity_ref(run.agent_run_id, authority.resolution),
             query=QUERY,
             systemPrompt=SYSTEM_PROMPT,
             dataClassification="internal",
