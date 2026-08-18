@@ -110,3 +110,13 @@ def test_wake_prompt_does_not_noop_just_because_status_is_looping() -> None:
     assert "立即写 reentry-noop 并退出" not in WAKE_PROMPT
     assert "前台正在跑工具" in WAKE_PROMPT
     assert "不要只汇报下一门" in WAKE_PROMPT
+
+
+def test_wake_prompt_does_not_treat_commit_merge_push_as_user_gates() -> None:
+    from dog import WAKE_PROMPT
+
+    assert "合 m1/push" not in WAKE_PROMPT
+    assert "图像" in WAKE_PROMPT
+    assert "其余五同事" in WAKE_PROMPT
+    assert "w2-workshop" in WAKE_PROMPT
+    assert "每波自做" in WAKE_PROMPT

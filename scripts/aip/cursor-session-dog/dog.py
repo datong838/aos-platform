@@ -25,7 +25,9 @@ WAKE_PROMPT = (
     "读 authority.json next_gate，不要等批准。这是 Dog 唤醒，不是 Loop tick。"
     "reentry-noop 只在本对话前台正在跑工具时写；不要因为心跳 status 仍是 looping 就收工。"
     "若 next_gate 仍是本 Agent 可执行的工作，立即继续干，不要只汇报下一门。"
-    "若下一门被用户门禁拦住（合 m1/push/图像视频/其余五同事），刷新心跳、设 quiet_until，并明确说停在门禁。"
+    "合 m1 与 push 每波自做，不是用户门禁。"
+    "本 AIP 会话禁止改 w2-workshop。"
+    "若下一门被用户门禁拦住（图像/视频进 AIP 权威、其余五同事），刷新心跳、设 quiet_until，并明确说停在门禁。"
 )
 
 
