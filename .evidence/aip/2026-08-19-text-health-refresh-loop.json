@@ -1,0 +1,124 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "wave": "AIP-TEXT-HEALTH-REFRESH-LOOP",
+  "recordedAt": "2026-08-19T01:21:26+08:00",
+  "inspectOrderFix": "catalog_after_refresh_readiness",
+  "providerHealthCalls": 3,
+  "businessProviderCalls": 0,
+  "v8Replay": false,
+  "remainingFiveActivated": false,
+  "w2ParserHasLogicRevisionRef": false,
+  "canaryAgentRuns": 0,
+  "catalogStats": {
+    "capabilityDefinitionCount": 10,
+    "definitionCount": 6,
+    "installedCount": 6,
+    "runnableCount": 1,
+    "skillDefinitionCount": 37
+  },
+  "colleagues": [
+    {
+      "blockers": [
+        "agent_instance_not_active",
+        "skill_binding_unavailable",
+        "skill_templates_not_published"
+      ],
+      "displayName": "活动策划师",
+      "instanceStatus": "provisioning",
+      "publishedSkillCount": 0,
+      "runtimeReadiness": "blocked",
+      "templateId": "ecommerce.campaign_planner"
+    },
+    {
+      "blockers": [
+        "agent_instance_not_active",
+        "skill_binding_unavailable",
+        "skill_templates_not_published"
+      ],
+      "displayName": "内容官",
+      "instanceStatus": "provisioning",
+      "publishedSkillCount": 0,
+      "runtimeReadiness": "blocked",
+      "templateId": "ecommerce.content_officer"
+    },
+    {
+      "blockers": [
+        "agent_instance_not_active",
+        "skill_binding_unavailable",
+        "skill_templates_not_published"
+      ],
+      "displayName": "客服专员",
+      "instanceStatus": "provisioning",
+      "publishedSkillCount": 0,
+      "runtimeReadiness": "blocked",
+      "templateId": "ecommerce.customer_service"
+    },
+    {
+      "blockers": [],
+      "displayName": "数据参谋",
+      "instanceStatus": "active",
+      "publishedSkillCount": 1,
+      "runtimeReadiness": "runnable",
+      "templateId": "ecommerce.data_advisor"
+    },
+    {
+      "blockers": [
+        "agent_instance_not_active",
+        "skill_binding_unavailable",
+        "skill_templates_not_published"
+      ],
+      "displayName": "私域管家",
+      "instanceStatus": "provisioning",
+      "publishedSkillCount": 0,
+      "runtimeReadiness": "blocked",
+      "templateId": "ecommerce.private_domain_manager"
+    },
+    {
+      "blockers": [
+        "agent_instance_not_active",
+        "skill_binding_unavailable",
+        "skill_templates_not_published"
+      ],
+      "displayName": "导购顾问",
+      "instanceStatus": "provisioning",
+      "publishedSkillCount": 0,
+      "runtimeReadiness": "blocked",
+      "templateId": "ecommerce.shopping_advisor"
+    }
+  ],
+  "combination": {
+    "agentRun": "ecommerce.data_advisor.D03.real-pilot.v8",
+    "agentRunStatus": "succeeded",
+    "attempt": "ecommerce.data_advisor.D03.real-pilot.v8.attempt-1",
+    "attemptStatus": "succeeded",
+    "capability": "strategy.plan r2",
+    "host": "api.agnes-ai.cn",
+    "model": "agnes-2.5-flash",
+    "provider": "agnes-text-qyh-dev r7",
+    "route": "route-qyh-text-dev r4",
+    "skill": "ecommerce.skill.D03 r4"
+  },
+  "depAdpQuery": {
+    "dataAdvisorD03Text": "GREEN",
+    "otherColleagues": "RED",
+    "workshopPage": "unchanged_red_until_w2_consumes"
+  },
+  "health": {
+    "expiresAt": "2026-08-18 17:35:12.820121+00:00",
+    "observationId": "health-agnes-text-qyh-r2-20260818172012820121",
+    "p50LatencyMs": 577
+  },
+  "providerBusinessCalls": 0,
+  "readinessRefresh": {
+    "capabilityBindingId": "ecommerce.data_advisor.strategy.plan.r2",
+    "healthObservationId": "health-agnes-text-qyh-r2-20260818172012820121",
+    "skillBindingId": "ecommerce.data_advisor.skill.D03.r4"
+  },
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "secretPayloadReads": 0,
+  "sensitiveBodiesPrinted": 0,
+  "status": "R2_5_DEP_ADP_QUERY_EVIDENCE_GREEN"
+}

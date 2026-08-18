@@ -135,34 +135,40 @@ def refresh_readiness(*, now: datetime) -> dict[str, str]:
 
 def inspect(*, refresh: bool = False, catalog_only: bool = False) -> dict[str, Any]:
     now = datetime.now(UTC)
-    catalog = AipEcommerceAgentInstaller().catalog(_principal())
-    items = []
-    for item in catalog.items:
-        items.append(
-            {
-                "templateId": item.template.template_id,
-                "displayName": item.template.display_name,
-                "instanceStatus": None if item.instance is None else item.instance.status.value,
-                "runtimeReadiness": item.runtime_readiness,
-                "blockers": item.blockers,
-                "publishedSkillCount": sum(
-                    1 for skill in item.skills if skill.lifecycle.value == "published"
-                ),
-            }
-        )
+
+    def _items(catalog: Any) -> list[dict[str, Any]]:
+        rows = []
+        for item in catalog.items:
+            rows.append(
+                {
+                    "templateId": item.template.template_id,
+                    "displayName": item.template.display_name,
+                    "instanceStatus": None if item.instance is None else item.instance.status.value,
+                    "runtimeReadiness": item.runtime_readiness,
+                    "blockers": item.blockers,
+                    "publishedSkillCount": sum(
+                        1 for skill in item.skills if skill.lifecycle.value == "published"
+                    ),
+                }
+            )
+        return rows
+
     if catalog_only:
+        catalog = AipEcommerceAgentInstaller().catalog(_principal())
         return {
             "status": "READONLY_CATALOG_MATRIX",
             "scope": {"orgId": SCOPE.org_id, "projectId": SCOPE.project_id},
             "mode": "catalog_only_no_health_refresh_no_provider",
             "catalogStats": catalog.stats.model_dump(by_alias=True),
-            "colleagues": items,
+            "colleagues": _items(catalog),
             "providerBusinessCalls": 0,
             "healthProbes": 0,
             "secretPayloadReads": 0,
         }
     health = _health(now)
     refreshed = refresh_readiness(now=now) if refresh else {"skipped": True}
+    catalog = AipEcommerceAgentInstaller().catalog(_principal())
+    items = _items(catalog)
     data_advisor = next(row for row in items if row["templateId"] == "ecommerce.data_advisor")
     dep_adp = (
         "GREEN"
