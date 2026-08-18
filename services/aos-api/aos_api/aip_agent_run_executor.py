@@ -47,6 +47,10 @@ class AipAgentRunExecutorError(RuntimeError):
 
 
 _SAFE_PROVIDER_UNKNOWN_REASONS = {
+    "provider_http_error": "PROVIDER_HTTP_ERROR",
+    "provider_timeout": "PROVIDER_TIMEOUT",
+    "provider_transport_error": "PROVIDER_TRANSPORT_ERROR",
+    "provider_response_invalid": "PROVIDER_RESPONSE_INVALID",
     "provider_response_receipt_missing": "PROVIDER_RESPONSE_RECEIPT_MISSING",
     "provider_response_model_missing": "PROVIDER_RESPONSE_MODEL_MISSING",
     "provider_response_model_drifted": "PROVIDER_RESPONSE_MODEL_DRIFTED",

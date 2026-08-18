@@ -332,6 +332,10 @@ def test_provider_error_after_invoking_is_unknown_not_retryable() -> None:
         ("provider_response_receipt_missing", "PROVIDER_RESPONSE_RECEIPT_MISSING"),
         ("provider_response_model_drifted", "PROVIDER_RESPONSE_MODEL_DRIFTED"),
         ("provider_response_usage_missing", "PROVIDER_RESPONSE_USAGE_MISSING"),
+        ("provider_http_error", "PROVIDER_HTTP_ERROR"),
+        ("provider_timeout", "PROVIDER_TIMEOUT"),
+        ("provider_transport_error", "PROVIDER_TRANSPORT_ERROR"),
+        ("provider_response_invalid", "PROVIDER_RESPONSE_INVALID"),
         (
             "provider_usage_authority_write_failed",
             "PROVIDER_USAGE_AUTHORITY_WRITE_FAILED",
