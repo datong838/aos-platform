@@ -235,7 +235,7 @@ class AipCapabilityBindingService(AipAgentRegistryStore):
                        readiness_reasons=%s::jsonb,last_evaluated_at=%s,
                        readiness_expires_at=%s,version=version+1,updated_at=%s
                        WHERE org_id=%s AND project_id=%s AND binding_id=%s
-                         AND version=%s AND status IN ('provisioning','suspended')
+                         AND version=%s AND status IN ('provisioning','active','suspended')
                        RETURNING *""",
                     (
                         self._json(deps.provider_ref) if deps.provider_ref else None,
