@@ -149,6 +149,21 @@ def _counts(scope: TenantScope) -> dict[str, int]:
         }
 
 
+def _existing_terminal_attempt() -> dict[str, str] | None:
+    with db_connect(SCOPE) as conn:
+        row = conn.execute(
+            "SELECT status,reason_code FROM aip_agent_run_execution_attempt "
+            "WHERE org_id=%s AND project_id=%s AND attempt_id=%s",
+            (*SCOPE.key, ATTEMPT_ID),
+        ).fetchone()
+    if row is None or row["status"] not in {"succeeded", "failed", "unknown"}:
+        return None
+    return {
+        "attemptStatus": str(row["status"]),
+        "reasonCode": str(row["reason_code"] or ""),
+    }
+
+
 def load_authority(*, now: datetime) -> PilotAuthority:
     _require_schema_head()
     instance = AipAgentRegistryStore().get_instance(SCOPE, INSTANCE_ID)
@@ -262,6 +277,16 @@ def inspect(*, now: datetime | None = None) -> dict[str, Any]:
             **build_plan(),
             "status": "blocked",
             "blockerCode": "NEGATIVE_CANARY_DIRTY",
+            "sideEffectCounts": before,
+            "canaryCounts": canary,
+        }
+    terminal = _existing_terminal_attempt()
+    if terminal is not None:
+        return {
+            **build_plan(),
+            "status": "blocked",
+            "blockerCode": "EXISTING_ATTEMPT_TERMINAL",
+            "blockerReasons": [terminal["attemptStatus"], terminal["reasonCode"]],
             "sideEffectCounts": before,
             "canaryCounts": canary,
         }
@@ -545,6 +570,12 @@ def apply() -> dict[str, Any]:
     canary_before = _counts(CANARY_SCOPE)
     if any(canary_before.values()):
         raise PilotBlocked("NEGATIVE_CANARY_DIRTY")
+    terminal = _existing_terminal_attempt()
+    if terminal is not None:
+        raise PilotBlocked(
+            "EXISTING_ATTEMPT_TERMINAL",
+            [terminal["attemptStatus"], terminal["reasonCode"]],
+        )
     refresh_active_binding_readiness(now=datetime.now(UTC))
     authority = load_authority(now=datetime.now(UTC))
     tasks, task, plan, task_run = _task_chain(authority)

@@ -139,6 +139,7 @@ def test_apply_never_executes_when_authority_is_blocked(monkeypatch) -> None:
         "refresh_active_binding_readiness",
         lambda **_kwargs: {},
     )
+    monkeypatch.setattr(MODULE, "_existing_terminal_attempt", lambda: None)
     monkeypatch.setattr(
         MODULE,
         "load_authority",
@@ -152,4 +153,29 @@ def test_apply_never_executes_when_authority_is_blocked(monkeypatch) -> None:
         lambda *_args, **_kwargs: pytest.fail("Provider path must not execute"),
     )
     with pytest.raises(MODULE.PilotBlocked, match="MODEL_RUNTIME_NOT_READY"):
+        MODULE.apply()
+
+
+def test_apply_never_refreshes_or_reinvokes_a_terminal_attempt(monkeypatch) -> None:
+    monkeypatch.setattr(
+        MODULE,
+        "_counts",
+        lambda _scope: {"agentRun": 0, "attempt": 0, "skillBinding": 0},
+    )
+    monkeypatch.setattr(
+        MODULE,
+        "_existing_terminal_attempt",
+        lambda: {"attemptStatus": "unknown", "reasonCode": "PROVIDER_RESULT_UNKNOWN"},
+    )
+    monkeypatch.setattr(
+        MODULE,
+        "refresh_active_binding_readiness",
+        lambda **_kwargs: pytest.fail("terminal replay must stay read-only"),
+    )
+    monkeypatch.setattr(
+        MODULE.AipAgentRunExecutor,
+        "execute",
+        lambda *_args, **_kwargs: pytest.fail("Provider path must not execute"),
+    )
+    with pytest.raises(MODULE.PilotBlocked, match="EXISTING_ATTEMPT_TERMINAL"):
         MODULE.apply()

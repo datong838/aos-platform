@@ -7,7 +7,10 @@ provider fallback path.
 """
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any, Protocol
 from urllib.parse import urlsplit
 
@@ -337,6 +340,9 @@ class ExactProviderInvoker:
         body = response.payload
         if not isinstance(body, dict):
             raise ExactProviderInvocationError("provider_response_invalid")
+        provider_receipt_id = body.get("id")
+        if not isinstance(provider_receipt_id, str) or not provider_receipt_id.strip():
+            raise ExactProviderInvocationError("provider_response_receipt_missing")
         response_model = body.get("model")
         if not isinstance(response_model, str) or not response_model:
             raise ExactProviderInvocationError("provider_response_model_missing")
@@ -361,6 +367,30 @@ class ExactProviderInvoker:
             or total_tokens != prompt_tokens + completion_tokens
         ):
             raise ExactProviderInvocationError("provider_response_usage_missing")
+        observed_at = datetime.now(UTC)
+
+        def usage_receipt(kind: str, quantity: int) -> dict[str, Any]:
+            source = {
+                "providerReceiptId": provider_receipt_id,
+                "providerModelId": response_model,
+                "usageKind": kind,
+                "quantity": quantity,
+                "unit": "token",
+            }
+            source_hash = hashlib.sha256(
+                json.dumps(source, sort_keys=True, separators=(",", ":")).encode(
+                    "utf-8"
+                )
+            ).hexdigest()
+            return {
+                "usageKind": kind,
+                "quantity": quantity,
+                "unit": "token",
+                "quality": "measured",
+                "sourceHash": source_hash,
+                "observedAt": observed_at,
+            }
+
         return {
             "answer": answer,
             "provider": provider.provider_instance_id,
@@ -369,4 +399,9 @@ class ExactProviderInvoker:
             "promptTokens": prompt_tokens,
             "completionTokens": completion_tokens,
             "route": route.route_id,
+            "providerReceiptId": provider_receipt_id,
+            "usageReceipts": [
+                usage_receipt("input_token", prompt_tokens),
+                usage_receipt("output_token", completion_tokens),
+            ],
         }

@@ -1,0 +1,81 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-R2-4B-USAGE-ENVELOPE-20260818",
+  "status": "CODE_CONTROL_GREEN_OPERATIONAL_ATTEMPT_UNKNOWN",
+  "branch": "w1-aip",
+  "baseCommit": "cdf2d3d",
+  "authorityRevision": "AOS-000091",
+  "observedAt": "2026-08-18T03:00:38Z",
+  "tenantPolicy": {
+    "realTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "negativeCanaryCounts": {
+      "agentRun": 0,
+      "attempt": 0,
+      "task": 0,
+      "taskRun": 0
+    }
+  },
+  "lease": {
+    "taskId": "AIP-R2-4B-REAL-START-ACCEPTANCE",
+    "owner": "codex-w1-aip",
+    "migrationLease": true,
+    "baseRevision": "AOS-000091"
+  },
+  "incident": {
+    "agentRunId": "ecommerce.data_advisor.D03.real-pilot.v1",
+    "agentRunStatus": "unknown",
+    "attemptId": "ecommerce.data_advisor.D03.real-pilot.attempt-1",
+    "attemptStatus": "unknown",
+    "reasonCode": "PROVIDER_RESULT_UNKNOWN",
+    "providerReceiptIdPresent": false,
+    "usageReceiptCount": 0,
+    "outputArtifactPresent": false,
+    "providerCallOutcome": "unknown",
+    "providerBusinessCallBudgetConsumedConservatively": true,
+    "automaticRetryForbidden": true
+  },
+  "rootCause": [
+    "ExactProviderInvoker validated answer and token counts but did not return providerReceiptId or usageReceipts to AipProviderUsageBridge",
+    "AipProviderUsageBridge therefore could not establish UsageReceipt authority and the canonical executor correctly failed closed to unknown",
+    "The original terminal Attempt is retained unchanged and must never be reused for a Provider call"
+  ],
+  "implementation": [
+    "Require a non-empty Provider response id after the 2xx response envelope is validated",
+    "Build measured input_token and output_token envelopes from canonical non-sensitive response metadata",
+    "Hash only Provider receipt id, model id, usage kind, quantity and unit; prompt, answer, Secret, headers and cookies remain excluded",
+    "Make the D03 harness detect an existing terminal Attempt before readiness refresh or any write and block replay"
+  ],
+  "fileHashes": {
+    "services/aos-api/aos_api/aip_exact_provider_invoker.py": {
+      "before": "8b3232611716bb605acff6ffffbbdb4e815f5bf3512b3503f65104ba19b9a17c",
+      "after": "91ebc367d6c011f6877b0895b59dc89b8bdddee2efebb5470decfdc7fb08d3b8"
+    },
+    "services/aos-api/tests/aip/test_aip_exact_provider_invoker.py": {
+      "before": "5611f4fed822799b3d6ac6aae339e815b90b828502543f9e0076b66f9f9cb5d7",
+      "after": "dbef7e4a995e1e4e600f9cf7972156ab5ff5a34eeac697488dfee129b3ff7112"
+    },
+    "scripts/aip/execute_r2_d03_real_pilot.py": {
+      "before": "9a6bbef7fe2d67005aa72942a30dcb8a6d8506822d0c771ab7cd4a77991a3ff4",
+      "after": "2afe9fc52c2ff25fe940ac40ff7c713cd80dc18cb70516fecd52ed1c242caa38"
+    },
+    "services/aos-api/tests/aip/test_execute_r2_d03_real_pilot.py": {
+      "before": "aa6595408ac210406886fab0f2f1caeba085af8f081283e903f1bb32088eab58",
+      "after": "d40d670bc6c9c04ff2f7379011835fdf06afa1237e55af24b224cc77d4a90bb1"
+    }
+  },
+  "verification": [
+    "39 targeted exact-provider, Usage Bridge, adapter, executor and harness tests passed",
+    "52 cumulative R2 binding, AgentRun, attempt and migration tests passed",
+    "Python compilation and git diff check passed",
+    "Harness dry-run returned EXISTING_ATTEMPT_TERMINAL with unknown/PROVIDER_RESULT_UNKNOWN and performed no Provider retry",
+    "Built-in browser showed 可运行 0 and disabled 预检运行（依赖未齐） for the data advisor; unknown was not represented as success"
+  ],
+  "baselineWarnings": [
+    "The first R2-4B operational attempt is not GREEN and remains an immutable unknown incident record",
+    "The existing Task and TaskRun remain executing/running for an independent recovery and closure decision",
+    "A second real-provider acceptance requires a new approval, new Attempt/idempotency keys, fresh health and a start-time readiness gate"
+  ],
+  "operationalStatus": "R2_D03_REAL_PILOT_UNKNOWN_RETRY_NOT_AUTHORIZED",
+  "nextGate": "R2_4C_INDEPENDENT_RECOVERY_AND_SECOND_ATTEMPT_REVIEW"
+}
