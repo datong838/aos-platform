@@ -1,0 +1,78 @@
+{
+  "schema": "aip-r2-pilot-green-receipt/v1",
+  "status": "R2_V01_REAL_PILOT_GREEN",
+  "approvalRef": "46-R2-V01-VIDEO-DRAFT",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "modality": "video",
+  "endpoint": "/v1/video/generations",
+  "assets": {
+    "capability": {
+      "assetId": "video.generate",
+      "revision": 2
+    },
+    "skill": {
+      "assetId": "ecommerce.skill.V01",
+      "revision": 2
+    },
+    "logic": {
+      "assetId": "ecommerce.logic.V01",
+      "revision": 1
+    },
+    "capabilityBinding": {
+      "assetId": "ecommerce.content_officer.video.generate.r2",
+      "reused": false
+    },
+    "skillBinding": {
+      "assetId": "ecommerce.content_officer.skill.V01.r2",
+      "status": "active"
+    },
+    "instance": {
+      "assetId": "ecommerce.content_officer.default",
+      "status": "active"
+    },
+    "route": {
+      "assetId": "route-qyh-video-dev",
+      "revision": 1
+    },
+    "model": {
+      "assetId": "model-qyh-video-dev",
+      "revision": 1
+    },
+    "provider": {
+      "assetId": "agnes-video-qyh-dev",
+      "revision": 1
+    }
+  },
+  "pilot": {
+    "agentRunId": "ecommerce.content_officer.V01.real-pilot.v1",
+    "attemptId": "ecommerce.content_officer.V01.real-pilot.v1.attempt-1",
+    "agentRunStatus": "succeeded",
+    "attemptStatus": "succeeded",
+    "providerBusinessCalls": 1,
+    "retries": 0,
+    "usageReceiptCount": 2,
+    "lineageEventCount": 3,
+    "artifactCount": 1,
+    "secretPayloadReads": 0,
+    "sensitiveBodiesPrinted": 0,
+    "answerOpaque": "video_generation_accepted"
+  },
+  "healthPrerequisite": {
+    "observationId": "health-agnes-video-qyh-r2-20260818191944582031",
+    "probeCount": 3,
+    "status": "PROVIDER_VIDEO_HEALTH_REFRESH_GREEN"
+  },
+  "verification": [
+    "pytest tests/aip/test_aip_v01_pilot.py: 5 passed",
+    "bootstrap V01 logic: V01_LOGIC_PUBLICATION_GREEN",
+    "skill+capability: V01_SKILL_CAPABILITY_PUBLICATION_GREEN (video.generate r2, skill V01 r2)",
+    "binding: V01_BINDING_COMPOSITION_GREEN",
+    "pilot: R2_V01_REAL_PILOT_GREEN; providerBusinessCalls=1; retries=0"
+  ],
+  "sealed": true,
+  "immutable": true,
+  "recordedAt": "2026-08-18T19:21:48.686129+00:00"
+}
