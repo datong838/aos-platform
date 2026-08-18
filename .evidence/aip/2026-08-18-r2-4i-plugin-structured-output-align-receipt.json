@@ -1,0 +1,57 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevision": "AOS-000102",
+  "recordedAt": "2026-08-18T16:08:00+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-4I",
+  "approvalRef": "46-R2-4I-PLUGIN-STRUCTURED-OUTPUT-ALIGN",
+  "leaseRef": "AIP-R2-4I-PLUGIN-STRUCTURED-OUTPUT-ALIGN",
+  "alignment": {
+    "pluginId": "agnes-text",
+    "pluginRevision": 2,
+    "pluginHash": "071bb22606a1cb539fc8900c39b02aeb00fdd188ba9cd1cd67d4c4ca27188bd4",
+    "approvedCapabilities": ["llm", "chat", "structured_output"],
+    "providerId": "agnes-text-qyh-dev",
+    "providerRevision": 4,
+    "modelId": "model-qyh-text-dev",
+    "modelRevision": 2,
+    "routeId": "route-qyh-text-dev",
+    "routeRevision": 2,
+    "capacityId": "capacity-qyh-text-dev",
+    "capacityRevision": 2,
+    "capabilityBindingId": "ecommerce.data_advisor.strategy.plan.r2",
+    "capabilityVersion": 9,
+    "capabilityReadiness": "blocked",
+    "capabilityReasons": ["MODEL_ROUTE_BLOCKED", "PROVIDER_HEALTH_UNAVAILABLE"],
+    "skillBindingId": "ecommerce.data_advisor.skill.D03.r2",
+    "skillVersion": 10,
+    "skillReadiness": "blocked"
+  },
+  "verification": {
+    "focusedTests": "35 passed",
+    "cumulativeTests": "99 passed",
+    "providerBusinessCalls": 0,
+    "healthProbes": 0,
+    "secretPayloadReads": 0,
+    "liveCatalog": {
+      "definitionCount": 6,
+      "installedCount": 6,
+      "runnableCount": 0
+    },
+    "negativeCanaryAgentCount": 0,
+    "agentRegistryPageHttp": 200
+  },
+  "diagnosis": {
+    "pluginCascade": "COMPLETE",
+    "providerPluginRefMatchesPluginR2": true,
+    "invokerSubsetGateUnchanged": true,
+    "bindingBlockedUntilFreshHealthForProviderR4": true,
+    "note": "Health probes were intentionally skipped in this wave. Binding remains blocked on PROVIDER_HEALTH_UNAVAILABLE / MODEL_ROUTE_BLOCKED until R2-4J refreshes Health against provider r4."
+  },
+  "result": "R2_4I_PLUGIN_STRUCTURED_OUTPUT_ALIGNED",
+  "nextGate": "R2_4J_V6_SINGLE_PROVIDER_CALL"
+}

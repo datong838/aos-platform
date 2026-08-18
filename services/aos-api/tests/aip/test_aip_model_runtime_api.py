@@ -155,19 +155,19 @@ def test_openapi_registers_canonical_model_runtime_paths(client) -> None:
 
 def test_approved_provider_plugin_exact_readback_is_principal_scoped(client) -> None:
     response = client.get(
-        "/v1/aip/model-runtime/provider-plugins/agnes-text?revision=1",
+        "/v1/aip/model-runtime/provider-plugins/agnes-text?revision=2",
         headers=headers(),
     )
     assert response.status_code == 200, response.text
     payload = response.json()
     assert payload["providerPluginId"] == "agnes-text"
-    assert payload["revision"] == 1
+    assert payload["revision"] == 2
     assert len(payload["contentHash"]) == 64
-    assert payload["approvedCapabilities"] == ["llm", "chat"]
+    assert payload["approvedCapabilities"] == ["llm", "chat", "structured_output"]
     assert "secret" not in response.text.lower()
 
     canary = client.get(
-        "/v1/aip/model-runtime/provider-plugins/agnes-text?revision=1",
+        "/v1/aip/model-runtime/provider-plugins/agnes-text?revision=2",
         headers=headers("dev-org"),
     )
     assert canary.status_code == 404

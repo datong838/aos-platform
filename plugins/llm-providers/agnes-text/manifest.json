@@ -9,7 +9,8 @@
   ],
   "capabilities": [
     "llm",
-    "chat"
+    "chat",
+    "structured_output"
   ],
   "formFamily": "openai_compatible",
   "defaultModels": [

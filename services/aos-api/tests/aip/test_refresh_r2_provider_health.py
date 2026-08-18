@@ -24,7 +24,7 @@ class RuntimeStore:
 
     def get_provider(self, scope, asset_id, revision):
         assert scope.key == ("org-org", "dev-project")
-        assert (asset_id, revision) == ("agnes-text-qyh-dev", 3)
+        assert (asset_id, revision) == ("agnes-text-qyh-dev", 4)
         return SimpleNamespace(
             provider_instance_id=asset_id,
             revision=revision,
