@@ -31,7 +31,7 @@ from aos_api.aip_agent_run_service import AipAgentRunService
 from aos_api.aip_contracts import ArtifactRef, ResourceRef, TenantContext
 from aos_api.aip_eval_contracts import LineageRootType
 from aos_api.aip_lineage_service import AipLineageService
-from aos_api.aip_llm_adapter import LLMAdapter
+from aos_api.aip_llm_adapter import LLMAdapter, LLMRuntimeBlocked
 from aos_api.aip_model_runtime_contracts import ModelRuntimeReadiness
 from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
 from aos_api.aip_task_store import AipTaskStore
@@ -44,6 +44,17 @@ class AipAgentRunExecutorError(RuntimeError):
     def __init__(self, reason_code: str) -> None:
         self.reason_code = reason_code
         super().__init__(reason_code)
+
+
+_SAFE_PROVIDER_UNKNOWN_REASONS = {
+    "provider_response_receipt_missing": "PROVIDER_RESPONSE_RECEIPT_MISSING",
+    "provider_response_model_missing": "PROVIDER_RESPONSE_MODEL_MISSING",
+    "provider_response_model_drifted": "PROVIDER_RESPONSE_MODEL_DRIFTED",
+    "provider_response_answer_missing": "PROVIDER_RESPONSE_ANSWER_MISSING",
+    "provider_response_usage_missing": "PROVIDER_RESPONSE_USAGE_MISSING",
+    "provider_usage_unknown": "PROVIDER_USAGE_UNKNOWN",
+    "provider_usage_authority_write_failed": "PROVIDER_USAGE_AUTHORITY_WRITE_FAILED",
+}
 
 
 class AipAgentRunExecutor:
@@ -232,7 +243,9 @@ class AipAgentRunExecutor:
                 actor=actor,
                 occurred_at=occurred_at,
             )
-        except Exception:
+        except Exception as exc:
+            if failure_reason == "PROVIDER_RESULT_UNKNOWN":
+                failure_reason = self._safe_provider_unknown_reason(exc)
             try:
                 attempt = self._mark_unknown(
                     scope,
@@ -274,6 +287,14 @@ class AipAgentRunExecutor:
             answer=str(response["answer"]),
             replayed=False,
             lineage_event_count=lineage_count,
+        )
+
+    @staticmethod
+    def _safe_provider_unknown_reason(exc: Exception) -> str:
+        if not isinstance(exc, LLMRuntimeBlocked):
+            return "PROVIDER_RESULT_UNKNOWN"
+        return _SAFE_PROVIDER_UNKNOWN_REASONS.get(
+            str(exc), "PROVIDER_RESULT_UNKNOWN"
         )
 
     def _mark_unknown(

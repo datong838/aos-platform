@@ -16,6 +16,7 @@ from aos_api.aip_agent_run_execution_contracts import (
 )
 from aos_api.aip_agent_run_executor import AipAgentRunExecutor, AipAgentRunExecutorError
 from aos_api.aip_contracts import ResourceRef, TenantContext
+from aos_api.aip_llm_adapter import LLMRuntimeBlocked
 from aos_api.aip_model_runtime_contracts import ModelRouteResolution, ModelRuntimeReadiness
 from aos_api.tenant_scope import TenantScope
 
@@ -323,6 +324,44 @@ def test_provider_error_after_invoking_is_unknown_not_retryable() -> None:
     assert result.attempt.reason_code == "PROVIDER_RESULT_UNKNOWN"
     assert llm.calls == 1 and runs.transitions == [AgentRunStatus.UNKNOWN]
     assert attempts.transitions[-1] is AgentRunExecutionStatus.UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("blocker", "reason_code"),
+    [
+        ("provider_response_receipt_missing", "PROVIDER_RESPONSE_RECEIPT_MISSING"),
+        ("provider_response_model_drifted", "PROVIDER_RESPONSE_MODEL_DRIFTED"),
+        ("provider_response_usage_missing", "PROVIDER_RESPONSE_USAGE_MISSING"),
+        (
+            "provider_usage_authority_write_failed",
+            "PROVIDER_USAGE_AUTHORITY_WRITE_FAILED",
+        ),
+    ],
+)
+def test_safe_provider_blocker_is_preserved_without_response_payload(
+    blocker: str, reason_code: str
+) -> None:
+    value, runs, _, llm, _ = executor(llm=Llm(LLMRuntimeBlocked(blocker)))
+    result = value.execute(
+        SCOPE, "run-1", execute_request(), idempotency_key="idem-1",
+        actor="pytest", occurred_at=NOW,
+    )
+    assert result.attempt.status is AgentRunExecutionStatus.UNKNOWN
+    assert result.attempt.reason_code == reason_code
+    assert blocker not in str(result.model_dump(mode="json"))
+    assert llm.calls == 1 and runs.transitions == [AgentRunStatus.UNKNOWN]
+
+
+def test_untrusted_provider_exception_text_is_never_persisted() -> None:
+    secret_text = "Bearer secret-token customer-answer"
+    value, _, _, _, _ = executor(llm=Llm(RuntimeError(secret_text)))
+    result = value.execute(
+        SCOPE, "run-1", execute_request(), idempotency_key="idem-1",
+        actor="pytest", occurred_at=NOW,
+    )
+    payload = str(result.model_dump(mode="json"))
+    assert result.attempt.reason_code == "PROVIDER_RESULT_UNKNOWN"
+    assert secret_text not in payload
 
 
 def test_artifact_failure_preserves_provider_and_usage_refs_as_unknown() -> None:
