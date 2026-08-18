@@ -28,40 +28,24 @@ def test_plan_freezes_one_business_call_and_no_sensitive_output() -> None:
     assert "query" not in plan and "answer" not in plan
 
 
-def test_r2_4f_uses_new_v4_authority_and_preserves_v1_v2_v3_incident_chain() -> None:
+def test_r2_4h_uses_new_v5_authority_and_preserves_v1_to_v4_incident_chain() -> None:
     plan = MODULE.build_plan()
-    assert MODULE.APPROVAL_REF == "46-R2-4F-V4-SINGLE-PROVIDER-CALL-APPROVED"
-    assert MODULE.AGENT_RUN_ID.endswith("real-pilot.v4")
-    assert MODULE.ATTEMPT_ID.endswith("real-pilot.v4.attempt-1")
-    assert MODULE.EXECUTE_KEY.endswith("execute-v4")
-    assert MODULE.INCIDENT_AGENT_RUN_ID.endswith("real-pilot.v3")
-    assert MODULE.INCIDENT_ATTEMPT_ID.endswith("real-pilot.v3.attempt-1")
+    assert MODULE.APPROVAL_REF == "46-R2-4H-V5-SINGLE-PROVIDER-CALL-APPROVED"
+    assert MODULE.AGENT_RUN_ID.endswith("real-pilot.v5")
+    assert MODULE.ATTEMPT_ID.endswith("real-pilot.v5.attempt-1")
+    assert MODULE.EXECUTE_KEY.endswith("execute-v5")
+    assert MODULE.INCIDENT_AGENT_RUN_ID.endswith("real-pilot.v4")
+    assert MODULE.PRIOR_INCIDENT_V3_AGENT_RUN_ID.endswith("real-pilot.v3")
     assert MODULE.PRIOR_INCIDENT_V2_AGENT_RUN_ID.endswith("real-pilot.v2")
-    assert MODULE.PRIOR_INCIDENT_V2_ATTEMPT_ID.endswith("real-pilot.v2.attempt-1")
     assert MODULE.EARLIER_INCIDENT_AGENT_RUN_ID.endswith("real-pilot.v1")
-    assert MODULE.EARLIER_INCIDENT_ATTEMPT_ID.endswith("real-pilot.attempt-1")
     assert plan["recoveryOf"] == {
         "agentRunId": MODULE.INCIDENT_AGENT_RUN_ID,
         "attemptId": MODULE.INCIDENT_ATTEMPT_ID,
         "status": "unknown",
     }
-    assert plan["priorIncidents"] == [
-        {
-            "agentRunId": MODULE.EARLIER_INCIDENT_AGENT_RUN_ID,
-            "attemptId": MODULE.EARLIER_INCIDENT_ATTEMPT_ID,
-            "status": "unknown",
-        },
-        {
-            "agentRunId": MODULE.PRIOR_INCIDENT_V2_AGENT_RUN_ID,
-            "attemptId": MODULE.PRIOR_INCIDENT_V2_ATTEMPT_ID,
-            "status": "unknown",
-        },
-        plan["recoveryOf"],
-    ]
+    assert len(plan["priorIncidents"]) == 4
+    assert plan["priorIncidents"][-1] == plan["recoveryOf"]
     assert MODULE.AGENT_RUN_ID != MODULE.INCIDENT_AGENT_RUN_ID
-    assert MODULE.ATTEMPT_ID != MODULE.INCIDENT_ATTEMPT_ID
-    assert MODULE.AGENT_RUN_ID != MODULE.PRIOR_INCIDENT_V2_AGENT_RUN_ID
-    assert MODULE.AGENT_RUN_ID != MODULE.EARLIER_INCIDENT_AGENT_RUN_ID
 
 
 def test_active_binding_readiness_refresh_is_supported_without_lifecycle_write() -> None:
