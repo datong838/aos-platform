@@ -113,10 +113,28 @@ export function ProductionContractsPage() {
     {error && <div role="alert" className="notice bad">生产契约读取或操作失败：{error}</div>}
     {loading ? <div role="status" className="card">正在读取 PostgreSQL Production Contract authority…</div> : null}
     {!loading && state ? <>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 16 }}>
+        {[
+          ["Brief", state.briefs.count],
+          ["Bundle", state.bundles.count],
+          ["Eval", state.evals.count],
+          ["职责计划", state.plans.count],
+          ["阶段模板", state.stages.count],
+          ["产物关系", state.relations.count],
+          ["评审", state.reviews.count],
+          ["Preview", state.previews.count],
+          ["Start", state.starts.count],
+        ].map(([name, count]) => (
+          <div key={String(name)} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{name}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{count}</div>
+          </div>
+        ))}
+      </div>
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
-        <strong>{state.briefs.count} 个任务简报</strong><span>{state.bundles.count} 个证据包</span><span>{state.evals.count} 个评测契约</span><span>{state.plans.count} 个职责计划</span><span>{state.stages.count} 个阶段模板</span><span>{state.relations.count} 个产物关系</span><span>{state.reviews.count} 个评审</span><span>{state.previews.count} 个影响预览</span><span>{state.starts.count} 个启动决策</span>
         <button className="btn" onClick={() => void load()}>刷新权威状态</button>
         <button className="btn primary" disabled title="必须从真实 Task 与权威依赖创建；本页不生成样例或隐式权威">创建契约（需真实依赖）</button>
+        <span className="notice" style={{ padding: "6px 10px" }}>密表运维台 · 空态诚实 · 启动门 fail-closed</span>
       </div>
       <section style={grid}>
         <div className="card" style={{ padding: 18 }}><h2 style={{ marginTop: 0 }}>Task Brief</h2>
