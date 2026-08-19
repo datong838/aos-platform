@@ -168,8 +168,8 @@ function PaletteButton({
       {...attributes}
     >
       <span className="bp-logic-canvas-palette-icon" aria-hidden>{item.icon}</span>
-      <span>{item.label}</span>
-      <small>{item.title}</small>
+      <span>{item.label} · {item.title}</span>
+      <small>{item.description}</small>
     </button>
   );
 }
@@ -580,7 +580,7 @@ export function LogicGraphCanvas({
         </div>
 
         <aside className="bp-logic-canvas-palette" aria-label="Logic Block 组件库">
-          <h3>Block 组件库</h3>
+          <h3>Block 组件库 · 中英并列 · {palette.length} 种</h3>
           {palette.map((item) => (
             <PaletteButton key={item.kind} item={item} disabled={disabled} onAdd={addNode} />
           ))}
