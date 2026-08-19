@@ -1,0 +1,41 @@
+{
+  "wave": [
+    "W-A1",
+    "W-A2"
+  ],
+  "at": "2026-08-19T14:06:06.994856+00:00",
+  "text_health": "PROVIDER_HEALTH_REFRESH_GREEN",
+  "runnableCount": 6,
+  "items": [
+    {
+      "name": "活动策划师",
+      "ready": "runnable",
+      "blockers": []
+    },
+    {
+      "name": "内容官",
+      "ready": "runnable",
+      "blockers": []
+    },
+    {
+      "name": "客服专员",
+      "ready": "runnable",
+      "blockers": []
+    },
+    {
+      "name": "数据参谋",
+      "ready": "runnable",
+      "blockers": []
+    },
+    {
+      "name": "私域管家",
+      "ready": "runnable",
+      "blockers": []
+    },
+    {
+      "name": "导购顾问",
+      "ready": "runnable",
+      "blockers": []
+    }
+  ]
+}
