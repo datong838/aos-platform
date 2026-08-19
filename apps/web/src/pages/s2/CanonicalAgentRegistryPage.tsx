@@ -53,25 +53,29 @@ export function CanonicalAgentRegistryPage() {
     }
   }
   const stale = useMemo(() => data ? runtimeSnapshotStale(data.evaluatedAt) : false, [data]);
-  return <PageChrome title="智能体目录" lede="六数字同事的安装、技能与专业能力就绪状态">
+  return <PageChrome title="智能体目录" lede="绑定真相台 · 安装、技能与专业能力就绪（非市场发现壳）">
     {error && <div role="alert" className="notice bad">运行就绪度读取失败：{error}</div>}
     {!data ? <div role="status" className="card">正在读取组织智能体目录与绑定…</div> : <>
       <section className="card" style={{padding:18,marginBottom:16}}>
-        <div style={{display:"flex",gap:14,alignItems:"center",flexWrap:"wrap"}}>
-          <strong>{data.catalog.stats.definitionCount} 个角色定义</strong>
-          <span>{data.catalog.stats.installedCount} 个已安装</span>
-          <span>{data.catalog.stats.skillDefinitionCount} 个技能定义</span>
-          <span>{data.catalog.stats.capabilityDefinitionCount} 类专业能力</span>
-          <span>技能绑定 {data.bindingStats.activeSkillBindingCount}/{data.bindingStats.skillBindingCount} 已激活</span>
-          <span>能力绑定 {data.bindingStats.activeCapabilityBindingCount}/{data.bindingStats.capabilityBindingCount} 已激活</span>
-          <strong style={{color:"var(--aos-amber-700)"}}>可运行 {data.catalog.stats.runnableCount}</strong>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:10,marginBottom:14}}>
+          <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>角色定义</div><strong>{data.catalog.stats.definitionCount}</strong></div>
+          <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>已安装</div><strong>{data.catalog.stats.installedCount}</strong></div>
+          <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>可运行</div><strong style={{color:data.catalog.stats.runnableCount === data.catalog.stats.definitionCount ? "var(--aos-green-700)" : "var(--aos-amber-700)"}}>{data.catalog.stats.runnableCount}</strong></div>
+          <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>技能绑定</div><strong>{data.bindingStats.activeSkillBindingCount}/{data.bindingStats.skillBindingCount}</strong></div>
+          <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>能力绑定</div><strong>{data.bindingStats.activeCapabilityBindingCount}/{data.bindingStats.capabilityBindingCount}</strong></div>
+          <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>技能定义</div><strong>{data.catalog.stats.skillDefinitionCount}</strong></div>
+          <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>专业能力类</div><strong>{data.catalog.stats.capabilityDefinitionCount}</strong></div>
+        </div>
+        <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
           <button className="btn primary" disabled={busy || refreshing || data.catalog.stats.installedCount === data.catalog.stats.definitionCount} onClick={() => void install()}>{busy ? "安装中…" : data.catalog.stats.installedCount === data.catalog.stats.definitionCount ? "六数字同事已安装" : "安装电商六数字同事"}</button>
           <button className="btn" disabled={refreshing || busy} onClick={() => void refresh()} title="刷新并重评绑定就绪">{refreshing ? "重评中…" : "刷新"}</button>
+          <Link className="btn" to="/aip/agent-marketplace">市场发现（只读）</Link>
         </div>
         <div style={{marginTop:10,fontSize:13,color:stale ? "var(--aos-amber-700)" : "var(--aos-text-secondary)"}}>
           快照 {new Date(data.evaluatedAt).toLocaleString()} · {stale ? "已过期，请点「刷新」重评绑定" : "15 分钟有效期内"}
         </div>
         <nav aria-label="相关页面" style={{marginTop:12,fontSize:13,display:"flex",gap:12,flexWrap:"wrap"}}>
+          <Link to="/aip/agent-marketplace">市场发现</Link>
           <Link to="/aip/evals">评测</Link>
           <Link to="/aip/maturity">成熟度</Link>
           <Link to="/aip/capabilities">智能体插件</Link>

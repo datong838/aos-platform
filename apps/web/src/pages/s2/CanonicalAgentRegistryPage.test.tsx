@@ -42,7 +42,7 @@ describe("CanonicalAgentRegistryPage", () => {
   afterEach(() => host.remove());
   it("展示六同事、Skill/Capability 绑定覆盖和稳定阻断原因", async () => {
     const root = createRoot(host); await act(async () => root.render(<MemoryRouter><CanonicalAgentRegistryPage /></MemoryRouter>)); await act(async () => undefined);
-    expect(host.textContent).toContain("6 个角色定义"); expect(host.textContent).toContain("37 个技能定义"); expect(host.textContent).toContain("内容官"); expect(host.textContent).toContain("技能 0/1 已绑定"); expect(host.textContent).toContain("技能尚未发布"); expect(host.textContent).toContain("热点竞品");
+    expect(host.textContent).toMatch(/角色定义\s*6/); expect(host.textContent).toMatch(/技能定义\s*37/); expect(host.textContent).toContain("内容官"); expect(host.textContent).toContain("技能 0/1 已绑定"); expect(host.textContent).toContain("技能尚未发布"); expect(host.textContent).toContain("热点竞品");
     expect(host.textContent).not.toContain("agent_instance_not_installed");
     expect(host.textContent).not.toContain("ecommerce.content_officer@");
     expect(host.textContent).toContain("查看 1 个技能状态");
@@ -56,11 +56,13 @@ describe("CanonicalAgentRegistryPage", () => {
   });
   it("点击刷新会调用 refreshReadiness 重评绑定", async () => {
     const root = createRoot(host); await act(async () => root.render(<MemoryRouter><CanonicalAgentRegistryPage /></MemoryRouter>)); await act(async () => undefined);
+    expect(host.textContent).toContain("绑定真相台");
+    expect(host.textContent).toContain("市场发现");
     const refreshBtn = Array.from(host.querySelectorAll("button")).find((btn) => btn.textContent === "刷新");
     expect(refreshBtn).toBeTruthy();
     await act(async () => { refreshBtn!.click(); });
     expect(sdk.refreshReadiness).toHaveBeenCalledTimes(1);
-    expect(host.textContent).toContain("可运行 1");
+    expect(host.textContent).toMatch(/可运行\s*1/);
     await act(async () => root.unmount());
   });
   it("数据参谋 runnable 时展示可运行", async () => {
@@ -79,8 +81,7 @@ describe("CanonicalAgentRegistryPage", () => {
       },
     });
     const root = createRoot(host); await act(async () => root.render(<MemoryRouter><CanonicalAgentRegistryPage /></MemoryRouter>)); await act(async () => undefined);
-    expect(host.textContent).toContain("可运行 1");
-    expect(host.textContent).toMatch(/可运行/);
+    expect(host.textContent).toMatch(/可运行\s*1/);
     expect(host.textContent).toContain("数据参谋");
     expect(host.textContent).not.toContain("Pilot");
     await act(async () => root.unmount());

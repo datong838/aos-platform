@@ -240,6 +240,14 @@ export const NAV_ITEMS: NavItem[] = [
     crumbs: ["AIP", "智能体目录"],
   },
   {
+    id: "aip-agent-marketplace",
+    path: "/aip/agent-marketplace",
+    label: "智能体市场",
+    icon: "apps",
+    status: "live",
+    crumbs: ["AIP", "智能体市场"],
+  },
+  {
     id: "aip-agents",
     path: "/aip/agents",
     label: "智能体列表",
