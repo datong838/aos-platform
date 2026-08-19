@@ -1573,14 +1573,14 @@ export function ProvidersPage() {
                   <button type="button" className="btn" onClick={() => openCredentials(p.id)}>
                     管理凭据
                   </button>
-                  <button
-                    type="button"
+                  <span
                     className="btn-nav"
-                    disabled
                     title="网关运行态由环境 / 边车托管，不走插件「启用/取消就绪」；要下线请改网关配置或停边车"
+                    style={{ opacity: 0.85, cursor: "default" }}
+                    data-testid="provider-runtime-hosted-badge"
                   >
-                    运行态托管
-                  </button>
+                    运行态：环境/边车托管
+                  </span>
                 </div>
               </div>
             );

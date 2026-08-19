@@ -231,9 +231,13 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
 
         {state === "loading" && <p role="status" className="py-12 text-center text-sm text-gray-500">正在读取 Action Proposal…</p>}
         {state === "ready" && items.length === 0 && (
-          <div className="rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center">
+          <div className="rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center" data-testid="drafts-empty">
             <h2 className="font-medium text-gray-800">当前工作区暂无受控 Action</h2>
             <p className="mt-2 text-sm text-gray-500">这是有效的真实空状态，不会使用 Mock Proposal 填充页面。</p>
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              <Link to="/aip/logic" className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white no-underline" data-testid="drafts-cta-logic">去逻辑画布产生提案</Link>
+              <Link to="/aip/evals" className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 no-underline" data-testid="drafts-cta-evals">查看 Evals 门控</Link>
+            </div>
           </div>
         )}
 

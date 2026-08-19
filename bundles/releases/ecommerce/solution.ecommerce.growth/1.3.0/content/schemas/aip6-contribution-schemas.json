@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "schemas": [
+    "MaterialCollectRequest","MaterialBundleRef","StrategyPlanningRequest","StrategyPlanDraftRef",
+    "CopyGenerationRequest","ContentVariantListRef","ScriptCompositionRequest","ScriptArtifactRef",
+    "SpeechSynthesisRequest","AudioArtifactRef","VideoCompositionRequest","VideoArtifactRef",
+    "ContentReviewRequest","ContentEvalReportRef","LiveOrchestrationRequest","LivePlanRef",
+    "PlatformAdaptationRequest","PlatformVariantRef","PerformanceReviewRequest","EffectReviewRef",
+    "EcommerceLogicInput","EcommerceLogicOutput"
+  ],
+  "contract": {"type":"object","additionalProperties":false,"properties":{"refs":{"type":"array","items":{"type":"object"}}},"required":["refs"]},
+  "status":"catalog_only",
+  "note":"W0B public production contracts and executable Logic schemas are separate future exact revisions."
+}

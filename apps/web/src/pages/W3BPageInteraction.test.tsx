@@ -97,13 +97,14 @@ describe("Wave 3B W2 · DOM 负向交互", () => {
     expect(apiMocks.apiPut).not.toHaveBeenCalled();
   });
 
-  it("Studio Agent 空列表不回填硬编码，新建禁用", async () => {
+  it("Studio Agent 空列表不回填硬编码，新建入口指向智能体目录", async () => {
     apiMocks.apiGet.mockImplementation(async (path: string) => path === "/v1/aip/agents" ? { items: [] } : { items: [] });
     await act(async () => root.render(<MemoryRouter><StudioPage /></MemoryRouter>));
     await flush();
     expect(host.querySelector("[data-testid='studio-agents-empty']")).not.toBeNull();
-    const create = host.querySelector<HTMLButtonElement>("[data-testid='studio-btn-new-agent']")!;
-    expect(create.disabled).toBe(true);
+    const create = host.querySelector<HTMLAnchorElement>("[data-testid='studio-btn-new-agent']")!;
+    expect(create.getAttribute("href")).toBe("/aip/agent-registry");
+    expect(create.textContent).toContain("去智能体目录安装");
     expect(host.textContent).not.toContain("维修派单 Buddy");
     expect(apiMocks.apiPost).not.toHaveBeenCalled();
   });

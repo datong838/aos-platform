@@ -99,6 +99,9 @@ class PostgresWorkshopCatalogSource:
         )
         try:
             with self._connect_factory() as conn:
+                # connect() may already open a transaction (client_encoding /
+                # tenant GUC). SET TRANSACTION must be the first statement.
+                conn.rollback()
                 conn.execute(
                     "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
                 )

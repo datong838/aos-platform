@@ -1,0 +1,45 @@
+apiVersion: aos.dev/v1alpha1
+kind: SolutionPack
+metadata:
+  id: solution.ecommerce.operations-base
+  version: 1.1.0
+  displayName: 电商运营基础方案包
+  publisher: aos
+  license: internal
+spec:
+  platformApi: ">=1.7.0 <2.0.0"
+  dependencies:
+    - publisher: aos
+      id: domain.ecommerce.core
+      version: ">=1.0.0 <2.0.0"
+  optionalDependencies: []
+  conflicts: []
+  exports:
+    logic:
+      - content/logic/
+    workshops:
+      - content/workshops/
+    evals:
+      - content/evals/
+  capabilities:
+    provides: []
+    requires: []
+  permissions:
+    roles: []
+    markings: []
+    dataScopes: []
+    actionTypes: []
+  migrations:
+    plan: null
+    downgradePolicy: retain-canonical
+  preflight: null
+  regression: null
+  rollback: null
+  contributions:
+    - kind: navigation
+      route: /workshop/operations
+      mode: exclusive
+    - kind: ui
+      slot: workshop.primary.ecommerce
+      id: ecommerce.operations
+      mode: exclusive

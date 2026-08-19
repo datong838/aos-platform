@@ -1,0 +1,51 @@
+{
+  "schema": "aos.workshop-module/v1",
+  "moduleId": "ecommerce.operations",
+  "displayName": "统一运营驾驶舱",
+  "menuLabel": "统一运营驾驶舱",
+  "route": "/workshop/operations",
+  "slot": "workshop.primary.ecommerce",
+  "order": 30,
+  "bundleRef": "bundle://aos/solution.ecommerce.operations-base@1.1.0",
+  "requiredObjects": [
+    "Order",
+    "OrderLine",
+    "Product",
+    "ProductSku",
+    "Category",
+    "Shipment",
+    "ProductReview",
+    "Payment",
+    "OperationCase"
+  ],
+  "requiredCapabilities": ["performance.review"],
+  "requiredAipFeatures": [
+    "aip.task-runtime",
+    "aip.production.task-brief",
+    "aip.production.evidence-bundle",
+    "aip.production.eval-contract",
+    "aip.production.impact-preview",
+    "aip.action-runtime"
+  ],
+  "permissions": {
+    "roles": [],
+    "markings": [],
+    "dataScopes": ["ecommerce.workshop.read"],
+    "actionTypes": []
+  },
+  "viewRefs": [],
+  "evalPackRefs": ["content/evals/logic-dry-run-cases.json"],
+  "productionContractRefs": [],
+  "responsibilityTemplateRefs": [],
+  "impactCalculatorRefs": [],
+  "legacyAssetRefs": [
+    "content/workshops/w01-order-management.json",
+    "content/workshops/w02-product-inventory.json"
+  ],
+  "legacyRedirects": [
+    "/workshop/orders",
+    "/workshop/inventory",
+    "/s2/orders"
+  ],
+  "minimumRuntimeVersion": "1.7.0"
+}

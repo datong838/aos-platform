@@ -1,0 +1,34 @@
+{
+  "schema": "aos.workshop-module/v1",
+  "moduleId": "ecommerce.task-cockpit",
+  "displayName": "电商日常任务总控大屏",
+  "menuLabel": "日常任务总控大屏",
+  "route": "/workshop/cockpit",
+  "slot": "workshop.primary.ecommerce",
+  "order": 10,
+  "bundleRef": "bundle://aos/solution.ecommerce.growth@1.3.0",
+  "requiredObjects": ["Task", "TaskRun", "Checkpoint", "Handoff"],
+  "requiredCapabilities": ["strategy.plan", "performance.review"],
+  "requiredAipFeatures": [
+    "aip.task-runtime",
+    "aip.agent-handoff",
+    "aip.production.responsibility-plan",
+    "aip.production.stage-template",
+    "aip.production.review-issue",
+    "aip.production.impact-preview"
+  ],
+  "permissions": {
+    "roles": [],
+    "markings": [],
+    "dataScopes": ["ecommerce.workshop.read"],
+    "actionTypes": []
+  },
+  "viewRefs": [],
+  "evalPackRefs": ["content/evals/placeholder.json"],
+  "productionContractRefs": [],
+  "responsibilityTemplateRefs": [],
+  "impactCalculatorRefs": [],
+  "legacyAssetRefs": [],
+  "legacyRedirects": ["/s2/task-cockpit"],
+  "minimumRuntimeVersion": "1.7.0"
+}

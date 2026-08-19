@@ -35,6 +35,15 @@ type ApiAgent = {
   tags?: string[];
   status?: string;
   calls?: number;
+  /** Canonical AgentInstance fields (AIP-6). */
+  instanceId?: string;
+  overlay?: {
+    displayName?: string | null;
+    allowedCapabilityIds?: string[];
+  };
+  template?: {
+    assetId?: string;
+  };
 };
 
 type StudioTool = {
@@ -45,12 +54,24 @@ type StudioTool = {
 };
 
 export function mapApiAgentToStudio(agent: ApiAgent): AgentItem {
-  const status = agent.status === "draft" ? "draft" : agent.status === "archived" ? "stopped" : "running";
+  const id = String(agent.instanceId || agent.id || "");
+  const rawStatus = String(agent.status || "");
+  const status: AgentItem["status"] =
+    rawStatus === "draft" || rawStatus === "provisioning"
+      ? "draft"
+      : rawStatus === "archived" || rawStatus === "suspended" || rawStatus === "deleted"
+        ? "stopped"
+        : "running";
   const level = agent.tags?.find((tag) => /^L[0-4]$/.test(tag)) || "L2";
+  const category =
+    agent.tags?.find((tag) => !/^L[0-4]$/.test(tag)) ||
+    agent.template?.assetId ||
+    agent.source ||
+    "未分类";
   return {
-    id: String(agent.id || ""),
-    name: String(agent.name || "未命名智能体"),
-    category: agent.tags?.find((tag) => !/^L[0-4]$/.test(tag)) || agent.source || "未分类",
+    id,
+    name: String(agent.overlay?.displayName || agent.name || id || "未命名智能体"),
+    category,
     level,
     levelLabel: `${level} · API`,
     status,
@@ -59,6 +80,12 @@ export function mapApiAgentToStudio(agent: ApiAgent): AgentItem {
     iconColor: "var(--aos-indigo-600)",
     iconPath: "M21 11.5a8.5 8.5 0 01-8.5 8.5H5l-3 3V11.5A8.5 8.5 0 0110.5 3h2A8.5 8.5 0 0121 11.5z",
   };
+}
+
+export function studioOverlayBlockedMessage(error: unknown): string | null {
+  const code = (error as { body?: { code?: string } } | null)?.body?.code;
+  if (code !== "AIP_CANONICAL_OVERLAY_NOT_IMPLEMENTED") return null;
+  return "提示词/工具 overlay 尚未实现版本化权威契约（AIP_CANONICAL_OVERLAY_NOT_IMPLEMENTED）。本页不读写假配置；请到「智能体列表」查看实例状态，后续门完成后再编辑。";
 }
 
 export function sameToolIds(left: string[], right: string[]): boolean {
@@ -114,6 +141,7 @@ export function StudioPage() {
   const [toolsSaveMsg, setToolsSaveMsg] = useState<string | null>(null);
   const [promptSaving, setPromptSaving] = useState(false);
   const [toolsSaving, setToolsSaving] = useState(false);
+  const [overlayBlocked, setOverlayBlocked] = useState(false);
   const loadGeneration = useRef(0);
   const activeAgent = agents.find((a) => a.id === activeId) || null;
   const displayAgent: AgentItem = activeAgent || {
@@ -148,13 +176,14 @@ export function StudioPage() {
   }, []);
 
   useEffect(() => {
-    if (!activeId) { setSystemPrompt(""); setEnabledTools([]); return; }
+    if (!activeId) { setSystemPrompt(""); setEnabledTools([]); setOverlayBlocked(false); return; }
     const generation = ++loadGeneration.current;
     setSystemPrompt("");
     setEnabledTools([]);
     setPromptSaveMsg(null);
     setToolsSaveMsg(null);
     setResourceError(null);
+    setOverlayBlocked(false);
     Promise.all([
       apiGet<{ agent_id?: string; prompt?: string }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/prompt`),
       apiGet<{ agent_id?: string; items?: StudioTool[] }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/tools`),
@@ -176,14 +205,17 @@ export function StudioPage() {
         })),
       ]);
       setAgents((prev) => prev.map((agent) => agent.id === activeId ? { ...agent, toolCount: assignedItems.length } : agent));
+      setOverlayBlocked(false);
     }).catch((error) => {
       if (generation !== loadGeneration.current) return;
-      setResourceError(`Agent 配置加载失败：${String((error as Error).message || error)}`);
+      const blocked = studioOverlayBlockedMessage(error);
+      setOverlayBlocked(Boolean(blocked));
+      setResourceError(blocked || `Agent 配置加载失败：${String((error as Error).message || error)}`);
     });
   }, [activeId]);
 
   async function savePrompt() {
-    if (promptSaving || !activeId) return;
+    if (promptSaving || !activeId || overlayBlocked) return;
     const targetId = activeId;
     const snapshot = systemPrompt;
     setPromptSaving(true);
@@ -215,7 +247,7 @@ export function StudioPage() {
   }
 
   async function saveTools() {
-    if (toolsSaving || !activeId) return;
+    if (toolsSaving || !activeId || overlayBlocked) return;
     const targetId = activeId;
     const snapshot = [...enabledTools];
     setToolsSaving(true);
@@ -298,11 +330,10 @@ export function StudioPage() {
             }}
           >
             <div style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)" }}>智能体列表</div>
-            <button
-              type="button"
+            <Link
+              to="/aip/agent-registry"
               data-testid="studio-btn-new-agent"
-              disabled
-              title="共享创建向导与 Agent API 工具 ID 契约尚未对齐"
+              title="Studio 内联创建向导与 Agent API 工具 ID 契约尚未对齐；请到智能体目录安装/管理组织实例"
               style={{
                 marginTop: 8,
                 width: "100%",
@@ -317,15 +348,16 @@ export function StudioPage() {
                 border: "none",
                 fontSize: 13,
                 fontWeight: 500,
-                cursor: "not-allowed",
-                opacity: 0.55,
+                cursor: "pointer",
+                textDecoration: "none",
+                boxSizing: "border-box",
               }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M12 5v14M5 12h14" strokeLinecap="round" />
               </svg>
-              新建智能体（契约协调中）
-            </button>
+              去智能体目录安装
+            </Link>
           </div>
 
           {loadState === "error" && <p role="alert" style={{ padding: 12 }}>Agent 列表加载失败：{resourceError}</p>}
@@ -592,7 +624,7 @@ export function StudioPage() {
                     type="button"
                     className="w2-b2-save-btn"
                     onClick={() => void savePrompt()}
-                    disabled={promptSaving || !activeAgent}
+                    disabled={promptSaving || !activeAgent || overlayBlocked}
                     style={{
                       padding: "8px 16px",
                       borderRadius: 2,
@@ -698,7 +730,7 @@ export function StudioPage() {
                     type="button"
                     className="w2-b2-save-btn"
                     onClick={() => void saveTools()}
-                    disabled={toolsSaving || !activeAgent}
+                    disabled={toolsSaving || !activeAgent || overlayBlocked}
                     style={{
                       padding: "8px 16px",
                       borderRadius: 2,

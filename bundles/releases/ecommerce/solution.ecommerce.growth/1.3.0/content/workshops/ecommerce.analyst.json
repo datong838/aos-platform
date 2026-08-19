@@ -1,0 +1,46 @@
+{
+  "schema": "aos.workshop-module/v1",
+  "moduleId": "ecommerce.analyst",
+  "displayName": "经营参谋 · 增长指挥中心",
+  "menuLabel": "经营参谋 · 增长指挥中心",
+  "route": "/workshop/analyst",
+  "slot": "workshop.primary.ecommerce",
+  "order": 60,
+  "bundleRef": "bundle://aos/solution.ecommerce.growth@1.3.0",
+  "requiredObjects": [
+    "Shop",
+    "Product",
+    "Order",
+    "OrderLine",
+    "CustomerLite",
+    "ProductReview",
+    "Payment",
+    "Metric",
+    "Observation",
+    "GrowthPlan"
+  ],
+  "requiredCapabilities": ["strategy.plan", "performance.review"],
+  "requiredAipFeatures": [
+    "aip.task-runtime",
+    "aip.production.task-brief",
+    "aip.production.evidence-bundle",
+    "aip.production.eval-contract",
+    "aip.production.impact-preview",
+    "aip.saved-exploration",
+    "aip.knowledge-query"
+  ],
+  "permissions": {
+    "roles": [],
+    "markings": [],
+    "dataScopes": ["ecommerce.workshop.read"],
+    "actionTypes": []
+  },
+  "viewRefs": [],
+  "evalPackRefs": ["content/evals/placeholder.json"],
+  "productionContractRefs": [],
+  "responsibilityTemplateRefs": [],
+  "impactCalculatorRefs": [],
+  "legacyAssetRefs": [],
+  "legacyRedirects": ["/s2/data-analyst", "/s2/analyst"],
+  "minimumRuntimeVersion": "1.7.0"
+}
