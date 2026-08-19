@@ -52,11 +52,27 @@ export function CanonicalCapabilityPage() {
   useEffect(() => { void load(); }, [load]);
 
   return <PageChrome title="智能体插件" lede="10 类共享专业能力：组织绑定与定义八维分栏阅读">
+    {catalog && runtime ? (
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 14 }}>
+        {[
+          ["定义", catalog.count],
+          ["目录可用", catalog.availableCount],
+          ["组织绑定", runtime.bindingStats.capabilityBindingCount],
+          ["已激活", runtime.bindingStats.activeCapabilityBindingCount],
+          ["技能绑定", runtime.bindingStats.skillBindingCount],
+        ].map(([name, count]) => (
+          <div key={String(name)} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{name}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{count}</div>
+          </div>
+        ))}
+      </div>
+    ) : null}
     <div style={{display:"flex",gap:12,marginBottom:16,alignItems:"center",flexWrap:"wrap"}}>
       <button className="btn" onClick={() => void load()}>刷新</button>
       <Link to="/aip/agent-registry">智能体目录 →</Link>
       <Link to="/aip/capability-import">能力导入 →</Link>
-      {catalog && runtime && <><strong>{catalog.count} 个定义</strong><span>组织绑定 {runtime.bindingStats.capabilityBindingCount}</span><span>已激活 {runtime.bindingStats.activeCapabilityBindingCount}</span><span>目录可用 {catalog.availableCount}</span></>}
+      <span className="notice" style={{ padding: "6px 10px" }}>密表卡片 · 组织绑定 ≠ 定义八维</span>
     </div>
     <div className="notice" style={{marginBottom:14,padding:10}} role="note">
       两层状态请分开看：<strong>组织绑定</strong>表示本租户是否已创建 Binding；<strong>定义就绪</strong>是目录八维投影，blocked 不等于「未绑定」。
