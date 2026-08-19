@@ -11,6 +11,7 @@ from aos_api.aip_production_contract_store import (
     ProductionContractIdempotencyConflict, ProductionContractNotFound,
 )
 from aos_api.aip_production_start_service import AipProductionStartService
+from aos_api.aip_responsibility_template_authority import resolve_responsibility_template
 from aos_api.aip_production_contracts import (
     CreateBriefRequest, CreateEvidenceBundleRequest, EvidenceBundleListResponse,
     EvidenceBundleRevision, ReviseBriefRequest, TaskBriefListResponse, TaskBriefRevision,
@@ -34,7 +35,9 @@ from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip/production-contracts", tags=["aip-production-contracts"])
-_STORE = AipProductionContractStore()
+_STORE = AipProductionContractStore(
+    responsibility_template_resolver=resolve_responsibility_template,
+)
 _START_SERVICE = AipProductionStartService(contract_store=_STORE)
 
 

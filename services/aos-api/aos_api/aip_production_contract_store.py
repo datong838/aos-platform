@@ -2277,7 +2277,7 @@ class AipProductionContractStore:
             bound_capabilities: set[str] = set()
             for skill in skill_rows:
                 for ref in self._load(skill["capability_refs"]):
-                    identifier = ref.get("assetId") or ref.get("resourceId") or ref.get("capabilityId")
+                    identifier = self._capability_identifier(ref)
                     if identifier:
                         bound_capabilities.add(identifier)
             active_capability_rows = conn.execute("""SELECT capability_ref FROM aip_capability_binding
@@ -2285,9 +2285,7 @@ class AipProductionContractStore:
                 scope.key).fetchall()
             active_capabilities = {
                 value for item in active_capability_rows
-                if (value := (self._load(item["capability_ref"]).get("assetId")
-                              or self._load(item["capability_ref"]).get("resourceId")
-                              or self._load(item["capability_ref"]).get("capabilityId")))
+                if (value := self._capability_identifier(self._load(item["capability_ref"])))
             }
             if not capabilities <= (bound_capabilities & active_capabilities):
                 blockers.append(ContractBlocker(code="CAPABILITY_BINDING_NOT_ACTIVE", message=f"职责 {slot_id} 的 required capabilities 未全部 active/healthy"))
@@ -2351,6 +2349,19 @@ class AipProductionContractStore:
         return {key: row[key] for key in (
             "event_id", "publication_id", "target_ref", "event_type",
             "release_gate_decision_id", "reason_hash", "actor", "occurred_at")}
+
+    @staticmethod
+    def _capability_identifier(ref: Any) -> str | None:
+        """Skill/capability bindings may store plain ids or ResourceRef-shaped objects."""
+        if isinstance(ref, str):
+            value = ref.strip()
+            return value or None
+        if isinstance(ref, dict):
+            value = ref.get("assetId") or ref.get("resourceId") or ref.get("capabilityId")
+            if isinstance(value, str):
+                value = value.strip()
+                return value or None
+        return None
 
     @staticmethod
     def _tenant(scope: TenantScope) -> TenantContext:
