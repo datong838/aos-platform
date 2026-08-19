@@ -6,6 +6,7 @@ import {
   type AgentRuntimeReadinessResponse,
 } from "../../api/aipAgentControl";
 import { PageChrome } from "../../components/PageChrome";
+import { formatBlockers } from "../../lib/aipChineseLabels";
 
 export function CanonicalAgentsPage() {
   const [data, setData] = useState<AgentInstanceListResponse | null>(null);
@@ -65,8 +66,8 @@ export function CanonicalAgentsPage() {
               : runnable
                 ? "受限 Pilot 可运行（目录已就绪；本页不直接外呼）"
                 : gate.blockers.length
-                  ? gate.blockers.join("；")
-                  : "缺少完整 Capability/Skill 绑定与依赖快照，不能试运行";
+                  ? formatBlockers(gate.blockers)
+                  : "缺少完整能力/技能绑定与依赖快照，不能试运行";
             return (
               <article
                 className="card"

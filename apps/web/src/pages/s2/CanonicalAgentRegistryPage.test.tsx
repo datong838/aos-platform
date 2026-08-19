@@ -25,8 +25,11 @@ describe("CanonicalAgentRegistryPage", () => {
   afterEach(() => host.remove());
   it("展示六同事、Skill/Capability 绑定覆盖和稳定阻断原因", async () => {
     const root = createRoot(host); await act(async () => root.render(<MemoryRouter><CanonicalAgentRegistryPage /></MemoryRouter>)); await act(async () => undefined);
-    expect(host.textContent).toContain("6 个角色定义"); expect(host.textContent).toContain("37 个技能定义"); expect(host.textContent).toContain("内容官"); expect(host.textContent).toContain("Skill 0/1 已绑定"); expect(host.textContent).toContain("skill_revision_not_published:C01");
+    expect(host.textContent).toContain("6 个角色定义"); expect(host.textContent).toContain("37 个技能定义"); expect(host.textContent).toContain("内容官"); expect(host.textContent).toContain("技能 0/1 已绑定"); expect(host.textContent).toContain("技能尚未发布"); expect(host.textContent).toContain("热点竞品");
     expect(host.textContent).not.toContain("agent_instance_not_installed");
+    expect(host.textContent).not.toContain("ecommerce.content_officer@");
+    expect(host.textContent).toContain("查看 1 个技能状态");
+    expect(host.textContent).toContain("热点竞品与获客机会研究");
     await act(async () => root.unmount());
   });
   it("数据参谋 runnable 时展示受限 Pilot 可运行", async () => {

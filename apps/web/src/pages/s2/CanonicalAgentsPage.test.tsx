@@ -69,8 +69,9 @@ describe("CanonicalAgentsPage", () => {
     await act(async () => undefined);
     expect(host.textContent).toContain("内容官");
     expect(host.textContent).toContain("待配置");
-    expect(host.textContent).toContain("skill_binding_readiness_stale");
+    expect(host.textContent).toContain("技能绑定就绪快照已过期");
     expect(host.textContent).not.toContain("MOCK_AGENTS");
+    expect(host.textContent).not.toContain("skill_binding_readiness_stale");
     await act(async () => root.unmount());
   });
 
