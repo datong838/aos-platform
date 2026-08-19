@@ -1,0 +1,34 @@
+{
+  "approvalRef": "58-W0A-CAP-BIND",
+  "at": "2026-08-19T20:05:00+08:00",
+  "scope": {"orgId": "org-org", "projectId": "dev-project"},
+  "w0aBound": [
+    "material.collect",
+    "strategy.plan",
+    "copy.generate",
+    "script.compose",
+    "speech.synthesize",
+    "video.compose",
+    "content.review",
+    "live.orchestrate",
+    "platform.adapt",
+    "performance.review"
+  ],
+  "createdBindings": [
+    "ecommerce.shared.material.collect.r1",
+    "ecommerce.shared.copy.generate.r1",
+    "ecommerce.shared.script.compose.r1",
+    "ecommerce.shared.speech.synthesize.r1",
+    "ecommerce.shared.video.compose.r1",
+    "ecommerce.shared.content.review.r1",
+    "ecommerce.shared.live.orchestrate.r1",
+    "ecommerce.shared.platform.adapt.r1",
+    "ecommerce.shared.performance.review.r1"
+  ],
+  "notes": [
+    "Bindings reuse text Provider/Route/Eval/License stack from strategy.plan for readiness projection.",
+    "Does not prove specialized speech/video/live providers are callable.",
+    "image.generate and video.generate remain separate extension bindings (often blocked on Health)."
+  ],
+  "secretPayloadReads": 0
+}
