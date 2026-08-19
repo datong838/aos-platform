@@ -6,6 +6,7 @@ import {
   studioOverlayBlockedMessage,
   toggleToolId,
   validateAgentToolsResponse,
+  validateGuardrailsResponse,
   validatePromptResponse,
 } from "./StudioPage";
 
@@ -84,6 +85,18 @@ describe("StudioPage · 写后重读严格核验", () => {
     expect(validateAgentToolsResponse(response, "other", ["t1", "t2"])).toBe(false);
     expect(validateAgentToolsResponse(response, "a1", ["t1"])).toBe(false);
     expect(sameToolIds(["t2", "t1"], ["t1", "t2"])).toBe(true);
+  });
+
+  it("Guardrails 回包按 enabled 集合核验", () => {
+    const response = {
+      agent_id: "a1",
+      items: [
+        { id: "no_fs_write", enabled: true },
+        { id: "no_fork", enabled: false },
+      ],
+    };
+    expect(validateGuardrailsResponse(response, "a1", ["no_fs_write"])).toBe(true);
+    expect(validateGuardrailsResponse(response, "a1", ["no_fs_write", "no_fork"])).toBe(false);
   });
 });
 

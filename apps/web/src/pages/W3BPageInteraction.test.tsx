@@ -97,14 +97,18 @@ describe("Wave 3B W2 · DOM 负向交互", () => {
     expect(apiMocks.apiPut).not.toHaveBeenCalled();
   });
 
-  it("Studio Agent 空列表不回填硬编码，新建入口指向智能体目录", async () => {
+  it("Studio Agent 空列表不回填硬编码，新建入口打开安装向导", async () => {
     apiMocks.apiGet.mockImplementation(async (path: string) => path === "/v1/aip/agents" ? { items: [] } : { items: [] });
     await act(async () => root.render(<MemoryRouter><StudioPage /></MemoryRouter>));
     await flush();
     expect(host.querySelector("[data-testid='studio-agents-empty']")).not.toBeNull();
-    const create = host.querySelector<HTMLAnchorElement>("[data-testid='studio-btn-new-agent']")!;
-    expect(create.getAttribute("href")).toBe("/aip/agent-registry");
-    expect(create.textContent).toContain("去智能体目录安装");
+    const create = host.querySelector<HTMLButtonElement>("[data-testid='studio-btn-new-agent']")!;
+    expect(create.textContent).toContain("安装数字同事");
+    await act(async () => create.click());
+    await flush();
+    expect(host.querySelector("[data-testid='studio-install-wizard']")).not.toBeNull();
+    expect(host.querySelector("[data-testid='studio-install-ecommerce']")).not.toBeNull();
+    expect(host.querySelector<HTMLAnchorElement>("[data-testid='studio-install-registry-link']")?.getAttribute("href")).toBe("/aip/agent-registry");
     expect(host.textContent).not.toContain("维修派单 Buddy");
     expect(apiMocks.apiPost).not.toHaveBeenCalled();
   });
@@ -114,6 +118,7 @@ describe("Wave 3B W2 · DOM 负向交互", () => {
       if (path === "/v1/aip/agents") return { items: [{ id: "a1", name: "真实 Agent", status: "draft", tags: ["L2"] }] };
       if (path.endsWith("/prompt")) return { agent_id: "a1", prompt: "system" };
       if (path.endsWith("/tools")) return { agent_id: "a1", items: [] };
+      if (path.endsWith("/guardrails")) return { agent_id: "a1", items: [] };
       if (path === "/v1/aip/tools") return { items: [] };
       if (path === "/v1/aip/models") return { defaultTextModel: "m1" };
       throw new Error(`unexpected ${path}`);

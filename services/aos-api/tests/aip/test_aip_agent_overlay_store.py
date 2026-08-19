@@ -61,6 +61,19 @@ def test_overlay_tools_roundtrip(instance_id: str):
     assert overlay.get_tools(PRIMARY, instance_id)["items"] == items
 
 
+def test_overlay_guardrails_roundtrip(instance_id: str):
+    overlay = AipAgentOverlayStore()
+    items = [{"id": "no_fs_write", "name": "禁止写文件系统", "enabled": True}]
+    written = overlay.put_guardrails(
+        PRIMARY, instance_id, items=items, actor="pytest-overlay"
+    )
+    assert written["items"] == items
+    assert overlay.get_guardrails(PRIMARY, instance_id)["items"] == items
+    agents = AipAgentRegistryStore()
+    instance = agents.get_instance(PRIMARY, instance_id)
+    assert instance.overlay.policy_revision is not None
+
+
 def test_overlay_missing_instance_404():
     overlay = AipAgentOverlayStore()
     with pytest.raises(AipAgentRegistryNotFound):

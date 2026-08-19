@@ -19,6 +19,7 @@ class _FakeOverlayStore:
     def __init__(self) -> None:
         self.prompts: dict[str, str] = {}
         self.tools: dict[str, list[dict]] = {}
+        self.guardrails: dict[str, list[dict]] = {}
 
     def get_prompt(self, scope, instance_id: str) -> dict:
         _ = scope
@@ -44,6 +45,19 @@ class _FakeOverlayStore:
         if instance_id == "missing":
             raise AipAgentRegistryNotFound("agent instance not found")
         self.tools[instance_id] = list(items)
+        return {"agent_id": instance_id, "items": list(items)}
+
+    def get_guardrails(self, scope, instance_id: str) -> dict:
+        _ = scope
+        if instance_id == "missing":
+            raise AipAgentRegistryNotFound("agent instance not found")
+        return {"agent_id": instance_id, "items": list(self.guardrails.get(instance_id, []))}
+
+    def put_guardrails(self, scope, instance_id: str, *, items: list[dict], actor: str) -> dict:
+        _ = scope, actor
+        if instance_id == "missing":
+            raise AipAgentRegistryNotFound("agent instance not found")
+        self.guardrails[instance_id] = list(items)
         return {"agent_id": instance_id, "items": list(items)}
 
 
@@ -115,14 +129,31 @@ def test_overlay_missing_instance_returns_404():
         tools = client.put("/v1/aip/agents/missing/tools", json={"items": []})
         assert tools.status_code == 404
         assert tools.json()["code"] == "AIP_AGENT_REGISTRY_NOT_FOUND"
+        guardrails = client.put("/v1/aip/agents/missing/guardrails", json={"items": []})
+        assert guardrails.status_code == 404
+        assert guardrails.json()["code"] == "AIP_AGENT_REGISTRY_NOT_FOUND"
 
 
-def test_guardrails_remain_unimplemented():
-    app = _app_with_overlay()
+def test_guardrails_overlay_roundtrip_for_existing_instance():
+    store = _FakeOverlayStore()
+    app = _app_with_overlay(store)
+    items = [{"id": "no_fs_write", "name": "禁止写文件系统", "enabled": True}]
     with TestClient(app) as client:
-        response = client.get("/v1/aip/agents/ecommerce.content_officer.default/guardrails")
-        assert response.status_code == 409
-        assert response.json()["code"] == "AIP_CANONICAL_OVERLAY_NOT_IMPLEMENTED"
+        empty = client.get("/v1/aip/agents/ecommerce.content_officer.default/guardrails")
+        assert empty.status_code == 200
+        assert empty.json() == {
+            "agent_id": "ecommerce.content_officer.default",
+            "items": [],
+        }
+        written = client.put(
+            "/v1/aip/agents/ecommerce.content_officer.default/guardrails",
+            json={"items": items},
+        )
+        assert written.status_code == 200
+        assert written.json()["items"] == items
+        reread = client.get("/v1/aip/agents/ecommerce.content_officer.default/guardrails")
+        assert reread.status_code == 200
+        assert reread.json()["items"] == items
 
 
 def test_activate_agent_requires_idempotency_key():

@@ -47,6 +47,10 @@ class ToolsBody(BaseModel):
     items: list[dict] = Field(default_factory=list)
 
 
+class GuardrailsBody(BaseModel):
+    items: list[dict] = Field(default_factory=list)
+
+
 def get_agent_store() -> AipAgentRegistryStore:
     return _STORE
 
@@ -190,15 +194,6 @@ def activate_agent(
     )
 
 
-def _overlay_not_implemented(principal: Principal) -> None:
-    _ = principal
-    raise ApiError(
-        code="AIP_CANONICAL_OVERLAY_NOT_IMPLEMENTED",
-        message="prompt, tool and guardrail overlays require a versioned canonical overlay contract",
-        status_code=409,
-    )
-
-
 @router.get("/agents/{instance_id}/prompt")
 def get_prompt(
     instance_id: str,
@@ -268,12 +263,34 @@ def update_tools(
 
 
 @router.get("/agents/{instance_id}/guardrails")
-def get_guardrails(instance_id: str, principal: Principal = Depends(require_principal)) -> None:
-    _ = instance_id
-    _overlay_not_implemented(principal)
+def get_guardrails(
+    instance_id: str,
+    principal: Principal = Depends(require_principal),
+    overlay: AipAgentOverlayStore = Depends(get_agent_overlay_store),
+) -> dict:
+    try:
+        return overlay.get_guardrails(_scope(principal), instance_id)
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+    except ValueError as exc:
+        raise ApiError(code="AIP_INVALID_ARGUMENT", message=str(exc), status_code=400) from exc
 
 
 @router.put("/agents/{instance_id}/guardrails")
-def update_guardrails(instance_id: str, principal: Principal = Depends(require_principal)) -> None:
-    _ = instance_id
-    _overlay_not_implemented(principal)
+def update_guardrails(
+    instance_id: str,
+    body: GuardrailsBody,
+    principal: Principal = Depends(require_principal),
+    overlay: AipAgentOverlayStore = Depends(get_agent_overlay_store),
+) -> dict:
+    try:
+        return overlay.put_guardrails(
+            _scope(principal),
+            instance_id,
+            items=list(body.items or []),
+            actor=principal.subject,
+        )
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+    except ValueError as exc:
+        raise ApiError(code="AIP_INVALID_ARGUMENT", message=str(exc), status_code=400) from exc

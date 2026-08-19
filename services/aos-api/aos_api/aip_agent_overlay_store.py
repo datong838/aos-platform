@@ -1,4 +1,4 @@
-"""Tenant-scoped versioned AgentInstance prompt/tools overlay authority."""
+"""Tenant-scoped versioned AgentInstance prompt/tools/guardrails overlay authority."""
 
 from __future__ import annotations
 
@@ -27,6 +27,7 @@ class OverlaySnapshot:
     revision: int | None
     prompt: str
     tools: list[dict[str, Any]]
+    guardrails: list[dict[str, Any]]
     content_hash: str | None
 
 
@@ -50,7 +51,9 @@ class AipAgentOverlayStore:
         cleaned = str(prompt or "")
         if len(cleaned) > 8000:
             raise ValueError("prompt exceeds 8000 characters")
-        snap = self._write(scope, instance_id, prompt=cleaned, tools=None, actor=actor)
+        snap = self._write(
+            scope, instance_id, prompt=cleaned, tools=None, guardrails=None, actor=actor
+        )
         return {"ok": True, "agent_id": instance_id, "prompt": snap.prompt}
 
     def get_tools(self, scope: TenantScope, instance_id: str) -> dict[str, Any]:
@@ -66,8 +69,28 @@ class AipAgentOverlayStore:
         actor: str,
     ) -> dict[str, Any]:
         normalized = _normalize_tools(items)
-        snap = self._write(scope, instance_id, prompt=None, tools=normalized, actor=actor)
+        snap = self._write(
+            scope, instance_id, prompt=None, tools=normalized, guardrails=None, actor=actor
+        )
         return {"agent_id": instance_id, "items": snap.tools}
+
+    def get_guardrails(self, scope: TenantScope, instance_id: str) -> dict[str, Any]:
+        snap = self._read(scope, instance_id)
+        return {"agent_id": instance_id, "items": snap.guardrails}
+
+    def put_guardrails(
+        self,
+        scope: TenantScope,
+        instance_id: str,
+        *,
+        items: list[dict[str, Any]],
+        actor: str,
+    ) -> dict[str, Any]:
+        normalized = _normalize_guardrails(items)
+        snap = self._write(
+            scope, instance_id, prompt=None, tools=None, guardrails=normalized, actor=actor
+        )
+        return {"agent_id": instance_id, "items": snap.guardrails}
 
     def _require_instance(self, scope: TenantScope, instance_id: str) -> None:
         try:
@@ -88,7 +111,7 @@ class AipAgentOverlayStore:
             apply_transaction_scope(conn, scope)
             row = conn.execute(
                 """
-                SELECT revision, prompt, tools_json, content_hash
+                SELECT revision, prompt, tools_json, guardrails_json, content_hash
                   FROM aip_agent_instance_overlay_revision
                  WHERE org_id=%s AND project_id=%s AND instance_id=%s
                  ORDER BY revision DESC
@@ -102,16 +125,15 @@ class AipAgentOverlayStore:
                     revision=None,
                     prompt="",
                     tools=[],
+                    guardrails=[],
                     content_hash=None,
                 )
-            tools = row["tools_json"]
-            if isinstance(tools, str):
-                tools = json.loads(tools)
             return OverlaySnapshot(
                 instance_id=checked,
                 revision=int(row["revision"]),
                 prompt=str(row["prompt"] or ""),
-                tools=list(tools or []),
+                tools=_as_list(row["tools_json"]),
+                guardrails=_as_list(row.get("guardrails_json")),
                 content_hash=str(row["content_hash"]),
             )
 
@@ -122,6 +144,7 @@ class AipAgentOverlayStore:
         *,
         prompt: str | None,
         tools: list[dict[str, Any]] | None,
+        guardrails: list[dict[str, Any]] | None,
         actor: str,
     ) -> OverlaySnapshot:
         checked = instance_id.strip()
@@ -132,7 +155,7 @@ class AipAgentOverlayStore:
             apply_transaction_scope(conn, scope)
             current = conn.execute(
                 """
-                SELECT revision, prompt, tools_json
+                SELECT revision, prompt, tools_json, guardrails_json
                   FROM aip_agent_instance_overlay_revision
                  WHERE org_id=%s AND project_id=%s AND instance_id=%s
                  ORDER BY revision DESC
@@ -151,9 +174,18 @@ class AipAgentOverlayStore:
             elif current is None:
                 next_tools = []
             else:
-                raw = current["tools_json"]
-                next_tools = json.loads(raw) if isinstance(raw, str) else list(raw or [])
-            payload = {"prompt": next_prompt, "tools": next_tools}
+                next_tools = _as_list(current["tools_json"])
+            if guardrails is not None:
+                next_guardrails = guardrails
+            elif current is None:
+                next_guardrails = []
+            else:
+                next_guardrails = _as_list(current.get("guardrails_json"))
+            payload = {
+                "prompt": next_prompt,
+                "tools": next_tools,
+                "guardrails": next_guardrails,
+            }
             content_hash = hashlib.sha256(
                 json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
             ).hexdigest()
@@ -162,8 +194,8 @@ class AipAgentOverlayStore:
                 """
                 INSERT INTO aip_agent_instance_overlay_revision
                   (org_id, project_id, instance_id, revision, prompt, tools_json,
-                   content_hash, created_by, created_at)
-                VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s)
+                   guardrails_json, content_hash, created_by, created_at)
+                VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s)
                 """,
                 (
                     *scope.key,
@@ -171,12 +203,12 @@ class AipAgentOverlayStore:
                     next_revision,
                     next_prompt,
                     json.dumps(next_tools, ensure_ascii=False),
+                    json.dumps(next_guardrails, ensure_ascii=False),
                     content_hash,
                     actor.strip(),
                     occurred,
                 ),
             )
-            # Bind promptRevision on instance overlay JSON (best-effort; fail-closed if missing).
             row = conn.execute(
                 """
                 SELECT overlay, version FROM aip_agent_instance
@@ -192,6 +224,7 @@ class AipAgentOverlayStore:
                 overlay = json.loads(overlay)
             overlay = dict(overlay or {})
             overlay["promptRevision"] = str(next_revision)
+            overlay["policyRevision"] = str(next_revision)
             updated = conn.execute(
                 """
                 UPDATE aip_agent_instance
@@ -215,8 +248,17 @@ class AipAgentOverlayStore:
                 revision=next_revision,
                 prompt=next_prompt,
                 tools=next_tools,
+                guardrails=next_guardrails,
                 content_hash=content_hash,
             )
+
+
+def _as_list(raw: Any) -> list[dict[str, Any]]:
+    if raw is None:
+        return []
+    if isinstance(raw, str):
+        raw = json.loads(raw)
+    return list(raw or [])
 
 
 def _normalize_tools(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -232,6 +274,24 @@ def _normalize_tools(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "id": tool_id,
                 "name": str(raw.get("name") or tool_id),
                 "category": str(raw.get("category") or "tool"),
+                "enabled": bool(raw.get("enabled", True)),
+            }
+        )
+    return out
+
+
+def _normalize_guardrails(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for raw in items or []:
+        rule_id = str(raw.get("id") or "").strip()
+        if not rule_id or rule_id in seen:
+            continue
+        seen.add(rule_id)
+        out.append(
+            {
+                "id": rule_id,
+                "name": str(raw.get("name") or rule_id),
                 "enabled": bool(raw.get("enabled", True)),
             }
         )

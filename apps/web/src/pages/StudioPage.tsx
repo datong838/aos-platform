@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
+import { aipAgentControl } from "../api/aipAgentControl";
 import { apiGet, apiPost, apiPut } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
 
@@ -108,9 +109,27 @@ export function validateAgentToolsResponse(
   return response?.agent_id === agentId && sameToolIds((response.items || []).map((item) => String(item.id || "")), toolIds);
 }
 
+export function validateGuardrailsResponse(
+  response: { agent_id?: string; items?: Array<{ id?: string; enabled?: boolean }> } | null | undefined,
+  agentId: string,
+  enabledIds: string[],
+): boolean {
+  if (response?.agent_id !== agentId) return false;
+  const actual = (response.items || []).filter((item) => item.enabled !== false).map((item) => String(item.id || ""));
+  return sameToolIds(actual, enabledIds);
+}
+
+export const STUDIO_GUARDRAIL_CATALOG = [
+  { id: "no_fs_write", name: "禁止写文件系统" },
+  { id: "no_fork", name: "禁止进程分叉" },
+  { id: "token_limit", name: "强制 Token 上限" },
+  { id: "auto_draft", name: "外呼默认进 Draft" },
+] as const;
+
 const STUDIO_TABS = [
   { id: "prompt", label: "提示词" },
   { id: "tools", label: "工具箱" },
+  { id: "guardrails", label: "护栏" },
   { id: "try", label: "试运行" },
   { id: "publish", label: "发布" },
 ];
@@ -139,9 +158,17 @@ export function StudioPage() {
   const [err, setErr] = useState<string | null>(null);
   const [promptSaveMsg, setPromptSaveMsg] = useState<string | null>(null);
   const [toolsSaveMsg, setToolsSaveMsg] = useState<string | null>(null);
+  const [guardrailsSaveMsg, setGuardrailsSaveMsg] = useState<string | null>(null);
   const [promptSaving, setPromptSaving] = useState(false);
   const [toolsSaving, setToolsSaving] = useState(false);
+  const [guardrailsSaving, setGuardrailsSaving] = useState(false);
+  const [enabledGuardrails, setEnabledGuardrails] = useState<string[]>(
+    STUDIO_GUARDRAIL_CATALOG.map((item) => item.id),
+  );
   const [overlayBlocked, setOverlayBlocked] = useState(false);
+  const [installOpen, setInstallOpen] = useState(false);
+  const [installBusy, setInstallBusy] = useState(false);
+  const [installMsg, setInstallMsg] = useState<string | null>(null);
   const loadGeneration = useRef(0);
   const activeAgent = agents.find((a) => a.id === activeId) || null;
   const displayAgent: AgentItem = activeAgent || {
@@ -151,17 +178,19 @@ export function StudioPage() {
   const selectedTools = enabledTools;
   const selectedToolItems = useMemo(() => toolCatalog.filter((tool) => enabledTools.includes(tool.id)), [enabledTools, toolCatalog]);
 
+  async function refreshAgents() {
+    const response = await apiGet<{ items?: ApiAgent[] }>("/v1/aip/agents");
+    const next = (response.items || []).map(mapApiAgentToStudio).filter((agent) => agent.id);
+    setAgents(next);
+    setActiveId((current) => (next.some((agent) => agent.id === current) ? current : next[0]?.id || ""));
+    setLoadState("live");
+    setResourceError(null);
+    return next;
+  }
+
   useEffect(() => {
     let cancelled = false;
-    apiGet<{ items?: ApiAgent[] }>("/v1/aip/agents")
-      .then((response) => {
-        if (cancelled) return;
-        const next = (response.items || []).map(mapApiAgentToStudio).filter((agent) => agent.id);
-        setAgents(next);
-        setActiveId((current) => next.some((agent) => agent.id === current) ? current : next[0]?.id || "");
-        setLoadState("live");
-        setResourceError(null);
-      })
+    refreshAgents()
       .catch((error) => {
         if (cancelled) return;
         setAgents([]);
@@ -170,27 +199,38 @@ export function StudioPage() {
         setResourceError(String((error as Error).message || error));
       });
     apiGet<{ defaultTextModel?: string }>("/v1/aip/models")
-      .then((r) => setDefaultModel(r.defaultTextModel || "—"))
-      .catch(() => setDefaultModel("—"));
+      .then((r) => { if (!cancelled) setDefaultModel(r.defaultTextModel || "—"); })
+      .catch(() => { if (!cancelled) setDefaultModel("—"); });
     return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
-    if (!activeId) { setSystemPrompt(""); setEnabledTools([]); setOverlayBlocked(false); return; }
+    if (!activeId) {
+      setSystemPrompt("");
+      setEnabledTools([]);
+      setEnabledGuardrails(STUDIO_GUARDRAIL_CATALOG.map((item) => item.id));
+      setOverlayBlocked(false);
+      return;
+    }
     const generation = ++loadGeneration.current;
     setSystemPrompt("");
     setEnabledTools([]);
+    setEnabledGuardrails(STUDIO_GUARDRAIL_CATALOG.map((item) => item.id));
     setPromptSaveMsg(null);
     setToolsSaveMsg(null);
+    setGuardrailsSaveMsg(null);
     setResourceError(null);
     setOverlayBlocked(false);
     Promise.all([
       apiGet<{ agent_id?: string; prompt?: string }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/prompt`),
       apiGet<{ agent_id?: string; items?: StudioTool[] }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/tools`),
+      apiGet<{ agent_id?: string; items?: Array<{ id?: string; enabled?: boolean }> }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/guardrails`),
       apiGet<{ items?: Array<{ id?: string; name?: string; kind?: string }> }>("/v1/aip/tools"),
-    ]).then(([prompt, assigned, catalog]) => {
+    ]).then(([prompt, assigned, guardrails, catalog]) => {
       if (generation !== loadGeneration.current) return;
-      if (prompt.agent_id !== activeId || assigned.agent_id !== activeId) throw new Error("Agent 资源响应目标错配");
+      if (prompt.agent_id !== activeId || assigned.agent_id !== activeId || guardrails.agent_id !== activeId) {
+        throw new Error("Agent 资源响应目标错配");
+      }
       setSystemPrompt(String(prompt.prompt || ""));
       const assignedItems = assigned.items || [];
       setEnabledTools(assignedItems.map((tool) => tool.id));
@@ -204,6 +244,12 @@ export function StudioPage() {
           id: tool.id, name: tool.name || tool.id, category: tool.category || "tool", enabled: tool.enabled !== false,
         })),
       ]);
+      const saved = guardrails.items || [];
+      if (saved.length === 0) {
+        setEnabledGuardrails(STUDIO_GUARDRAIL_CATALOG.map((item) => item.id));
+      } else {
+        setEnabledGuardrails(saved.filter((item) => item.enabled !== false).map((item) => String(item.id || "")).filter(Boolean));
+      }
       setAgents((prev) => prev.map((agent) => agent.id === activeId ? { ...agent, toolCount: assignedItems.length } : agent));
       setOverlayBlocked(false);
     }).catch((error) => {
@@ -277,6 +323,59 @@ export function StudioPage() {
     }
   }
 
+  async function saveGuardrails() {
+    if (guardrailsSaving || !activeId || overlayBlocked) return;
+    const targetId = activeId;
+    const snapshot = [...enabledGuardrails];
+    setGuardrailsSaving(true);
+    setGuardrailsSaveMsg(null);
+    setErr(null);
+    try {
+      const items = STUDIO_GUARDRAIL_CATALOG.map((item) => ({
+        id: item.id,
+        name: item.name,
+        enabled: snapshot.includes(item.id),
+      }));
+      const written = await apiPut<{ agent_id?: string; items?: Array<{ id?: string; enabled?: boolean }> }>(
+        `/v1/aip/agents/${encodeURIComponent(targetId)}/guardrails`,
+        { items },
+      );
+      if (!validateGuardrailsResponse(written, targetId, snapshot)) throw new Error("Guardrails 写回响应与目标不一致");
+      let reread: { agent_id?: string; items?: Array<{ id?: string; enabled?: boolean }> };
+      try {
+        reread = await apiGet(`/v1/aip/agents/${encodeURIComponent(targetId)}/guardrails`);
+      } catch (error) {
+        setGuardrailsSaveMsg(formatStudioSaveMsg(false, String((error as Error).message || error)));
+        return;
+      }
+      if (!validateGuardrailsResponse(reread, targetId, snapshot)) {
+        setGuardrailsSaveMsg(formatStudioSaveMsg(false, "服务端护栏不一致"));
+        return;
+      }
+      setGuardrailsSaveMsg(formatStudioSaveMsg(true, "agents/{id}/guardrails"));
+    } catch (ex) {
+      setGuardrailsSaveMsg(`保存失败 · ${String((ex as Error).message || ex).slice(0, 120)}`);
+    } finally {
+      setGuardrailsSaving(false);
+    }
+  }
+
+  async function installEcommercePack() {
+    if (installBusy) return;
+    setInstallBusy(true);
+    setInstallMsg(null);
+    try {
+      await aipAgentControl.installEcommerce(`studio-install-${crypto.randomUUID()}`);
+      const next = await refreshAgents();
+      setInstallMsg(`安装完成 · 当前列表 ${next.length} 个实例`);
+      setInstallOpen(false);
+    } catch (ex) {
+      setInstallMsg(`安装失败 · ${String((ex as Error).message || ex).slice(0, 160)}`);
+    } finally {
+      setInstallBusy(false);
+    }
+  }
+
   async function onChat(e: FormEvent) {
     e.preventDefault();
     setErr(null);
@@ -330,10 +429,11 @@ export function StudioPage() {
             }}
           >
             <div style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)" }}>智能体列表</div>
-            <Link
-              to="/aip/agent-registry"
+            <button
+              type="button"
               data-testid="studio-btn-new-agent"
-              title="Studio 内联创建向导与 Agent API 工具 ID 契约尚未对齐；请到智能体目录安装/管理组织实例"
+              title="打开组织安装向导（SolutionPack）；不解封自由创建 Agent API"
+              onClick={() => { setInstallOpen((open) => !open); setInstallMsg(null); }}
               style={{
                 marginTop: 8,
                 width: "100%",
@@ -349,15 +449,46 @@ export function StudioPage() {
                 fontSize: 13,
                 fontWeight: 500,
                 cursor: "pointer",
-                textDecoration: "none",
                 boxSizing: "border-box",
               }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M12 5v14M5 12h14" strokeLinecap="round" />
               </svg>
-              去智能体目录安装
-            </Link>
+              安装数字同事…
+            </button>
+            {installOpen && (
+              <div
+                data-testid="studio-install-wizard"
+                style={{
+                  marginTop: 10,
+                  padding: 10,
+                  border: "1px solid var(--aos-border)",
+                  borderRadius: 2,
+                  background: "var(--aos-surface-hover)",
+                  fontSize: 12,
+                  color: "var(--aos-text-secondary)",
+                }}
+              >
+                <p style={{ margin: "0 0 8px" }}>
+                  权威入口是电商六数字同事 SolutionPack 组织安装，不是自由创建 Agent。
+                </p>
+                <button
+                  type="button"
+                  className="btn primary"
+                  data-testid="studio-install-ecommerce"
+                  disabled={installBusy}
+                  onClick={() => void installEcommercePack()}
+                  style={{ width: "100%", marginBottom: 8 }}
+                >
+                  {installBusy ? "安装中…" : "安装电商六数字同事"}
+                </button>
+                <Link to="/aip/agent-registry" data-testid="studio-install-registry-link" style={{ fontSize: 12 }}>
+                  打开智能体目录查看就绪度 →
+                </Link>
+                {installMsg && <p role="status" style={{ margin: "8px 0 0" }}>{installMsg}</p>}
+              </div>
+            )}
           </div>
 
           {loadState === "error" && <p role="alert" style={{ padding: 12 }}>Agent 列表加载失败：{resourceError}</p>}
@@ -777,6 +908,58 @@ export function StudioPage() {
                   </Link>
                 </div>
                 {err && <p style={{ color: "var(--aos-red)", fontSize: 12, marginTop: 12 }}>{err}</p>}
+              </div>
+            )}
+
+            {tab === "guardrails" && (
+              <div
+                data-testid="studio-guardrails-panel"
+                style={{
+                  borderRadius: 2,
+                  border: "1px solid var(--aos-border)",
+                  background: "var(--aos-surface)",
+                  padding: 20,
+                }}
+              >
+                <h3 style={{ margin: "0 0 8px", fontSize: 14 }}>运行护栏</h3>
+                <p style={{ margin: "0 0 16px", fontSize: 12, color: "var(--aos-text-secondary)" }}>
+                  租户作用域版本化配置；空初值表示尚未写入 overlay，默认勾选推荐项。
+                </p>
+                <div style={{ display: "grid", gap: 10 }}>
+                  {STUDIO_GUARDRAIL_CATALOG.map((item) => (
+                    <label key={item.id} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
+                      <input
+                        type="checkbox"
+                        checked={enabledGuardrails.includes(item.id)}
+                        disabled={overlayBlocked || !activeAgent}
+                        onChange={() => setEnabledGuardrails((prev) => toggleToolId(prev, item.id))}
+                      />
+                      <span>{item.name}</span>
+                      <code style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>{item.id}</code>
+                    </label>
+                  ))}
+                </div>
+                <div style={{ marginTop: 16, display: "flex", gap: 12, alignItems: "center" }}>
+                  <button
+                    type="button"
+                    data-testid="studio-save-guardrails"
+                    disabled={guardrailsSaving || !activeAgent || overlayBlocked}
+                    onClick={() => void saveGuardrails()}
+                    style={{
+                      padding: "8px 14px",
+                      borderRadius: 2,
+                      border: "none",
+                      background: guardrailsSaving ? "var(--aos-gray-100)" : "var(--aos-indigo-600)",
+                      color: guardrailsSaving ? "var(--aos-text-secondary)" : "var(--text-on-brand)",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      cursor: guardrailsSaving ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {guardrailsSaving ? "保存中…" : "保存护栏"}
+                  </button>
+                  {guardrailsSaveMsg && <span style={{ fontSize: 12 }}>{guardrailsSaveMsg}</span>}
+                </div>
               </div>
             )}
 
