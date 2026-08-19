@@ -1,0 +1,5 @@
+{
+  "emptyStateGone": true,
+  "hasPreview": true,
+  "snippet": "Impact Preview 与 Start 组合门\n\nPreview 只呈现权威影响评估；unknown 不显示为 0。只有 frozen + ready 的 exact revision 才能提交组合门，且成功只代表创建 canonical TaskRun，不代表 AgentRun 或 Provider 已运行。\n\nimpact-preview-d5ac652a3c094bdcaafc@1\n草稿 · 未知\n\nTask task-8a8c2131d4e04dc5bb8d · 到期 2026/8/27 05:17:49\n\n对象范围\n未知（不以 0 代替）\n0 条来源\n渠道范围\n未知（不以 0 代替）\n0 条来源\n成本\n未知（不以 0 代替）\n0 条来源\n预算余量\n未知（不以 0 代替）\n0 条来源\n主要风险\n未知（不以 0 代替）\n0 条来源\n回滚/补偿\n未知（不以 0 代替）\n0 条来源\n审批链\n未知（不以 0 代替）\n0 条来源\n限速/容量/熔断\n未知（不以 0 代替）\n0 条来源\n"
+}
