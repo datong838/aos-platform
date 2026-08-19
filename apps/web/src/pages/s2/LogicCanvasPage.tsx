@@ -191,12 +191,14 @@ interface LogicEvalReport {
 }
 
 export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
+  type ShellTab = "edit" | "history" | "automation";
   const params = useParams<{ flowId?: string }>();
   const navigate = useNavigate();
   const activeFlowId = flowId ?? params.flowId;
   const templateRef = useRef<LogicGraphSnapshot | null>(null);
   if (!templateRef.current) templateRef.current = createTemplate();
 
+  const [shellTab, setShellTab] = useState<ShellTab>("edit");
   const [graph, setGraph] = useState<LogicGraphSnapshot | null>(() => cloneGraph(templateRef.current!));
   const [dirty, setDirty] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -733,9 +735,37 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
 
   return (
     <PageChrome
-      title="AIP Logic 无代码编辑器"
-      lede="自由编排 canonical Logic Graph；保存仅在服务端提交与严格 GET 回读一致后确认。"
+      title="逻辑编排"
+      lede="自由画布编辑 canonical Logic Graph；保存须与服务端严格回读一致。Tab 分区对齐蓝图信息架构，中栏仍保留自由图。"
     >
+      <div role="tablist" aria-label="逻辑页分区" style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
+        {(
+          [
+            ["edit", "编辑"],
+            ["history", "运行历史"],
+            ["automation", "自动化"],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={shellTab === id}
+            className="btn"
+            style={{
+              borderBottom: shellTab === id ? "2px solid var(--aos-indigo-600,#4f46e5)" : "2px solid transparent",
+              borderRadius: 0,
+              fontWeight: shellTab === id ? 700 : 500,
+            }}
+            onClick={() => setShellTab(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {shellTab === "edit" ? (
+      <>
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
         <button type="button" className="btn btn-primary" disabled={!graph || loading || saving || running || !dirty} onClick={() => void saveGraph()}>
           {saving ? "保存并回读中…" : `保存${dirty ? " *" : ""}`}
@@ -890,29 +920,6 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
             graphName={graph.name}
           />
         )}
-        {graph?.persisted ? (
-          <LogicRunPanel
-            run={run}
-            runState={runState}
-            runError={runError}
-            history={history}
-            historyState={historyState}
-            historyError={historyError}
-            selectedRunId={selectedRunId}
-            hasMoreHistory={Boolean(historyCursor)}
-            loadingMoreHistory={loadingMoreHistory}
-            onSelectRun={(runId) => void loadRunDetail(runId)}
-            onLocateNode={locateRunNode}
-            onRetryRun={selectedRunId ? () => void loadRunDetail(selectedRunId) : undefined}
-            onRetryHistory={() => void refreshHistory()}
-            onLoadMoreHistory={() => void loadMoreHistory()}
-          />
-        ) : (
-          <section style={{ border: "1px solid var(--aos-border)", padding: 12, borderRadius: 2 }}>
-            <h3 style={{ margin: "0 0 6px", fontSize: "0.84rem" }}>运行历史</h3>
-            <p style={{ margin: 0, color: "var(--aos-muted)", fontSize: "0.75rem" }}>保存并回读确认后，才从服务端读取不可变运行历史。</p>
-          </section>
-        )}
         {graph?.persisted && (
           <section style={{ border: "1px solid var(--aos-border)", padding: 12, borderRadius: 2 }}>
             <div style={{ display: "flex", alignItems: "end", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
@@ -962,6 +969,46 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           </section>
         )}
       </div>
+      </>
+      ) : null}
+
+      {shellTab === "history" ? (
+        <div style={{ display: "grid", gap: 10 }} role="tabpanel" aria-label="运行历史">
+          {graph?.persisted ? (
+            <LogicRunPanel
+              run={run}
+              runState={runState}
+              runError={runError}
+              history={history}
+              historyState={historyState}
+              historyError={historyError}
+              selectedRunId={selectedRunId}
+              hasMoreHistory={Boolean(historyCursor)}
+              loadingMoreHistory={loadingMoreHistory}
+              onSelectRun={(runId) => void loadRunDetail(runId)}
+              onLocateNode={locateRunNode}
+              onRetryRun={selectedRunId ? () => void loadRunDetail(selectedRunId) : undefined}
+              onRetryHistory={() => void refreshHistory()}
+              onLoadMoreHistory={() => void loadMoreHistory()}
+            />
+          ) : (
+            <section style={{ border: "1px solid var(--aos-border)", padding: 12, borderRadius: 2 }}>
+              <h3 style={{ margin: "0 0 6px", fontSize: "0.84rem" }}>运行历史</h3>
+              <p style={{ margin: 0, color: "var(--aos-muted)", fontSize: "0.75rem" }}>保存并回读确认后，才从服务端读取不可变运行历史。</p>
+            </section>
+          )}
+        </div>
+      ) : null}
+
+      {shellTab === "automation" ? (
+        <section className="card" style={{ padding: 18 }} role="tabpanel" aria-label="自动化">
+          <h2 style={{ marginTop: 0 }}>自动化</h2>
+          <p style={{ color: "var(--aos-text-secondary)" }}>
+            蓝图中的 Uses / 触发器列表为本波<strong>诚实占位</strong>：不写入演示自动化，不伪造触发成功。后续 H2/H3 再接权威 Uses 真源。
+          </p>
+          <div className="notice" style={{ padding: 10 }}>当前组织尚无已登记的逻辑自动化 Uses（占位）。</div>
+        </section>
+      ) : null}
     </PageChrome>
   );
 }
