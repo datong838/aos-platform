@@ -2,9 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   blockerDisplayName,
   capabilityDisplayName,
+  definitionReadinessDisplayName,
+  dimensionDisplayName,
   formatBlockers,
+  instanceStatusDisplayName,
   logicDisplayName,
   responsibilityDisplayName,
+  riskDisplayName,
 } from "./aipChineseLabels";
 
 describe("aipChineseLabels", () => {
@@ -20,5 +24,12 @@ describe("aipChineseLabels", () => {
     expect(blockerDisplayName("skill_binding_readiness_stale")).toContain("技能绑定");
     expect(blockerDisplayName("skill_revision_not_published:C01")).toContain("热点竞品");
     expect(formatBlockers(["capability_binding_readiness_stale", "skill_binding_readiness_stale"])).toContain("；");
+  });
+
+  it("实例状态与八维标签中文", () => {
+    expect(instanceStatusDisplayName("active")).toBe("已启用");
+    expect(riskDisplayName("high")).toBe("高");
+    expect(definitionReadinessDisplayName("blocked")).toBe("定义未就绪");
+    expect(dimensionDisplayName("providerRef")).toBe("供应商");
   });
 });

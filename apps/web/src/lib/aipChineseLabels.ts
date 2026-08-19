@@ -52,10 +52,42 @@ const CAPABILITY_NAMES: Record<string, string> = {
   "script.compose": "脚本撰写",
   "speech.synthesize": "语音合成",
   "video.compose": "视频合成",
+  "image.generate": "图像生成",
+  "video.generate": "视频生成",
   "content.review": "内容审核",
   "live.orchestrate": "直播编排",
   "platform.adapt": "平台适配",
   "performance.review": "数据复盘",
+};
+
+const RISK_NAMES: Record<string, string> = {
+  low: "低",
+  medium: "中",
+  high: "高",
+  critical: "严重",
+};
+
+const DEFINITION_READINESS_NAMES: Record<string, string> = {
+  available: "定义可用",
+  blocked: "定义未就绪",
+  degraded: "定义降级",
+};
+
+const DIMENSION_NAMES: Record<string, string> = {
+  providerRef: "供应商",
+  modelRouteRef: "路由",
+  evalGateRef: "评测门",
+  licenseEvidenceRefs: "许可",
+  dataDependencyRefs: "数据依赖",
+  toolDependencyRefs: "工具依赖",
+  budgetPolicyRef: "预算策略",
+};
+
+const INSTANCE_STATUS_NAMES: Record<string, string> = {
+  provisioning: "待配置",
+  active: "已启用",
+  suspended: "已暂停",
+  deleted: "已删除",
 };
 
 const RESPONSIBILITY_NAMES: Record<string, string> = {
@@ -133,6 +165,22 @@ export function blockerDisplayName(code: string): string {
 
 export function bindingStatusDisplayName(status: string): string {
   return BINDING_STATUS_NAMES[status] || status;
+}
+
+export function instanceStatusDisplayName(status: string): string {
+  return INSTANCE_STATUS_NAMES[status] || status;
+}
+
+export function riskDisplayName(risk: string): string {
+  return RISK_NAMES[String(risk || "").toLowerCase()] || risk;
+}
+
+export function definitionReadinessDisplayName(readiness: string): string {
+  return DEFINITION_READINESS_NAMES[String(readiness || "").toLowerCase()] || readiness;
+}
+
+export function dimensionDisplayName(key: string): string {
+  return DIMENSION_NAMES[key] || key;
 }
 
 export function formatBlockers(codes: string[]): string {

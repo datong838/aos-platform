@@ -6,7 +6,7 @@ import {
   type AgentRuntimeReadinessResponse,
 } from "../../api/aipAgentControl";
 import { PageChrome } from "../../components/PageChrome";
-import { formatBlockers } from "../../lib/aipChineseLabels";
+import { formatBlockers, instanceStatusDisplayName } from "../../lib/aipChineseLabels";
 
 export function CanonicalAgentsPage() {
   const [data, setData] = useState<AgentInstanceListResponse | null>(null);
@@ -40,7 +40,7 @@ export function CanonicalAgentsPage() {
   }, [runtime]);
 
   return (
-    <PageChrome title="智能体列表" lede="当前组织与工作区的 AgentInstance；运行前置门未满足时诚实失败关闭">
+    <PageChrome title="智能体列表" lede="当前组织与工作区已安装的数字同事；运行前置门未满足时诚实失败关闭">
       <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
         <button className="btn" type="button" onClick={() => void load()}>刷新</button>
         <Link to="/aip/agent-registry">打开智能体目录 →</Link>
@@ -60,7 +60,7 @@ export function CanonicalAgentsPage() {
           {data.items.map((item) => {
             const gate = readinessByTemplate.get(item.template.assetId);
             const runnable = gate?.readiness === "runnable";
-            const statusLabel = item.status === "provisioning" ? "待配置" : item.status;
+            const statusLabel = instanceStatusDisplayName(item.status);
             const note = !gate
               ? "运行就绪尚未对账；请打开智能体目录刷新"
               : runnable
@@ -76,18 +76,12 @@ export function CanonicalAgentsPage() {
               >
                 <div>
                   <h3 style={{ margin: 0 }}>{item.overlay.displayName || item.instanceId}</h3>
-                  <p>
-                    <code>{item.instanceId}</code> · 模板{" "}
-                    <code>
-                      {item.template.assetId}@{item.template.revision}
-                    </code>
-                  </p>
-                  <small>
-                    组织 {item.tenant.orgId} · 工作区 {item.tenant.projectId} · revision {item.version}
+                  <small style={{ color: "var(--aos-text-secondary)" }}>
+                    组织 {item.tenant.orgId} · 工作区 {item.tenant.projectId} · 版本 {item.version}
                   </small>
                 </div>
                 <div>
-                  <strong>{statusLabel}</strong>
+                  <strong style={{ color: item.status === "active" ? "var(--aos-green-700)" : "var(--aos-amber-700)" }}>{statusLabel}</strong>
                   <p style={{ color: runnable ? "var(--aos-green-700)" : "var(--aos-amber-700)" }}>{note}</p>
                 </div>
               </article>
