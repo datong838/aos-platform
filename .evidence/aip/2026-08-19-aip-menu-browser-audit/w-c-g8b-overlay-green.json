@@ -1,0 +1,19 @@
+{
+  "wave": "W-C",
+  "gate": "G8b_VERSIONED_OVERLAY",
+  "tenant": "org-org/dev-project",
+  "migration": "aip6_007",
+  "verifiedAt": "2026-08-19T14:42:00+08:00",
+  "checks": [
+    {"path": "GET /v1/aip/agents/ecommerce.content_officer.default/prompt", "status": 200},
+    {"path": "PUT /v1/aip/agents/ecommerce.content_officer.default/prompt", "status": 200, "reread": true},
+    {"path": "PUT/GET .../tools", "status": 200},
+    {"path": "GET .../guardrails", "status": 409, "code": "AIP_CANONICAL_OVERLAY_NOT_IMPLEMENTED"},
+    {"path": "GET .../missing.nope/prompt", "status": 404},
+    {"path": "Vite 5174 proxy prompt", "status": 200}
+  ],
+  "tests": {
+    "test_phase3_aip_agents": "7 passed (isolated DB)",
+    "test_aip_agent_overlay_store_shared": "4 passed with AOS_TEST_USE_SHARED_DATABASE=1"
+  }
+}

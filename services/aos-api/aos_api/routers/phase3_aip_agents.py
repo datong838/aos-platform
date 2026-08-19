@@ -15,6 +15,7 @@ from aos_api.aip_agent_control_contracts import (
 from aos_api.aip_agent_instance_activation_service import (
     AipAgentInstanceActivationService,
 )
+from aos_api.aip_agent_overlay_store import AipAgentOverlayStore
 from aos_api.aip_agent_registry_contracts import AgentInstance
 from aos_api.aip_agent_registry_store import (
     AipAgentRegistryConflict,
@@ -29,11 +30,21 @@ from aos_api.aip_ecommerce_agent_installer import AipEcommerceAgentInstaller
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
+from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/v1/aip", tags=["aip-agents"])
 _STORE = AipAgentRegistryStore()
 _INSTALLER = AipEcommerceAgentInstaller(agents=_STORE)
 _ACTIVATION = AipAgentInstanceActivationService(store=_STORE)
+_OVERLAY = AipAgentOverlayStore(agents=_STORE)
+
+
+class PromptBody(BaseModel):
+    prompt: str = Field(default="", max_length=8000)
+
+
+class ToolsBody(BaseModel):
+    items: list[dict] = Field(default_factory=list)
 
 
 def get_agent_store() -> AipAgentRegistryStore:
@@ -46,6 +57,10 @@ def get_ecommerce_agent_installer() -> AipEcommerceAgentInstaller:
 
 def get_agent_activation_service() -> AipAgentInstanceActivationService:
     return _ACTIVATION
+
+
+def get_agent_overlay_store() -> AipAgentOverlayStore:
+    return _OVERLAY
 
 
 def _scope(principal: Principal) -> TenantScope:
@@ -185,27 +200,71 @@ def _overlay_not_implemented(principal: Principal) -> None:
 
 
 @router.get("/agents/{instance_id}/prompt")
-def get_prompt(instance_id: str, principal: Principal = Depends(require_principal)) -> None:
-    _ = instance_id
-    _overlay_not_implemented(principal)
+def get_prompt(
+    instance_id: str,
+    principal: Principal = Depends(require_principal),
+    overlay: AipAgentOverlayStore = Depends(get_agent_overlay_store),
+) -> dict:
+    try:
+        return overlay.get_prompt(_scope(principal), instance_id)
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+    except ValueError as exc:
+        raise ApiError(code="AIP_INVALID_ARGUMENT", message=str(exc), status_code=400) from exc
 
 
 @router.put("/agents/{instance_id}/prompt")
-def update_prompt(instance_id: str, principal: Principal = Depends(require_principal)) -> None:
-    _ = instance_id
-    _overlay_not_implemented(principal)
+def update_prompt(
+    instance_id: str,
+    body: PromptBody,
+    principal: Principal = Depends(require_principal),
+    overlay: AipAgentOverlayStore = Depends(get_agent_overlay_store),
+) -> dict:
+    try:
+        return overlay.put_prompt(
+            _scope(principal),
+            instance_id,
+            prompt=body.prompt,
+            actor=principal.subject,
+        )
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+    except ValueError as exc:
+        raise ApiError(code="AIP_INVALID_ARGUMENT", message=str(exc), status_code=400) from exc
 
 
 @router.get("/agents/{instance_id}/tools")
-def get_tools(instance_id: str, principal: Principal = Depends(require_principal)) -> None:
-    _ = instance_id
-    _overlay_not_implemented(principal)
+def get_tools(
+    instance_id: str,
+    principal: Principal = Depends(require_principal),
+    overlay: AipAgentOverlayStore = Depends(get_agent_overlay_store),
+) -> dict:
+    try:
+        return overlay.get_tools(_scope(principal), instance_id)
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+    except ValueError as exc:
+        raise ApiError(code="AIP_INVALID_ARGUMENT", message=str(exc), status_code=400) from exc
 
 
 @router.put("/agents/{instance_id}/tools")
-def update_tools(instance_id: str, principal: Principal = Depends(require_principal)) -> None:
-    _ = instance_id
-    _overlay_not_implemented(principal)
+def update_tools(
+    instance_id: str,
+    body: ToolsBody,
+    principal: Principal = Depends(require_principal),
+    overlay: AipAgentOverlayStore = Depends(get_agent_overlay_store),
+) -> dict:
+    try:
+        return overlay.put_tools(
+            _scope(principal),
+            instance_id,
+            items=list(body.items or []),
+            actor=principal.subject,
+        )
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+    except ValueError as exc:
+        raise ApiError(code="AIP_INVALID_ARGUMENT", message=str(exc), status_code=400) from exc
 
 
 @router.get("/agents/{instance_id}/guardrails")
