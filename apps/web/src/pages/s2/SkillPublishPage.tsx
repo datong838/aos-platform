@@ -33,6 +33,7 @@ function lifecycleLabel(lifecycle: string): string {
 
 export function SkillPublishPage() {
   const [data, setData] = useState<SkillListResponse | null>(null);
+  const [allItems, setAllItems] = useState<SkillItem[]>([]);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<"all" | "evaluated" | "published">("evaluated");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -43,12 +44,16 @@ export function SkillPublishPage() {
   const load = useCallback(async () => {
     try {
       const qs = filter === "all" ? "" : `?lifecycle=${filter}`;
-      const body = await apiGet<SkillListResponse>(`/v1/aip/skills${qs}`);
+      const [body, all] = await Promise.all([
+        apiGet<SkillListResponse>(`/v1/aip/skills${qs}`),
+        apiGet<SkillListResponse>(`/v1/aip/skills?limit=200`),
+      ]);
       const tenant = getTenant();
       if (body.tenant.orgId !== tenant.orgId || body.tenant.projectId !== tenant.projectId) {
         throw new Error("技能列表租户与当前工作区不一致");
       }
       setData(body);
+      setAllItems(all.items);
       setError("");
       setSelectedId((prev) => {
         if (prev && body.items.some((item) => `${item.skillId}@${item.revision}` === prev)) return prev;
@@ -57,6 +62,7 @@ export function SkillPublishPage() {
       });
     } catch (e) {
       setData(null);
+      setAllItems([]);
       setError(String((e as Error).message || e));
     }
   }, [filter]);
@@ -69,6 +75,18 @@ export function SkillPublishPage() {
     if (!data || !selectedId) return null;
     return data.items.find((item) => `${item.skillId}@${item.revision}` === selectedId) || null;
   }, [data, selectedId]);
+
+  const batchStats = useMemo(() => {
+    const published = new Set(
+      allItems.filter((item) => item.lifecycle === "published").map((item) => item.skillId),
+    );
+    const evaluatedOnly = new Set(
+      allItems
+        .filter((item) => item.lifecycle === "evaluated" && !published.has(item.skillId))
+        .map((item) => item.skillId),
+    );
+    return { published: published.size, waitingLogic: evaluatedOnly.size, total: allItems.length };
+  }, [allItems]);
 
   async function tryPublish() {
     if (!selected || selected.lifecycle !== "evaluated") return;
@@ -101,6 +119,13 @@ export function SkillPublishPage() {
         {data ? <span className="notice" style={{ padding: "6px 10px" }}>共 {data.count} 条</span> : null}
       </div>
       {error && <div role="alert" className="notice bad">技能列表读取失败：{error}</div>}
+      {allItems.length > 0 ? (
+        <div className="notice" style={{ padding: 12, marginBottom: 12 }} role="status">
+          首批发布对账：已发布技能 <strong>{batchStats.published}</strong> 个 ·
+          仍待 Logic 权威进库 <strong>{batchStats.waitingLogic}</strong> 个 ·
+          列表共 {batchStats.total} 条修订。缺 Logic 图时保持 fail-closed，不在此页伪造发布。
+        </div>
+      ) : null}
       {!data ? (
         <div className="card" role="status">正在读取技能模板…</div>
       ) : (
