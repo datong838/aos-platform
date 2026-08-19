@@ -1,0 +1,47 @@
+{
+  "evaluatedAt": "2026-08-19T21:30:11.312027Z",
+  "bindingStats": {
+    "capabilityBindingCount": 12,
+    "skillBindingCount": 10,
+    "activeCapabilityBindingCount": 12,
+    "activeSkillBindingCount": 10
+  },
+  "runtime": {
+    "runnable": 6
+  },
+  "items": [
+    {
+      "instanceId": "ecommerce.campaign_planner.default",
+      "runtimeReadiness": "runnable",
+      "blockers": []
+    },
+    {
+      "instanceId": "ecommerce.content_officer.default",
+      "runtimeReadiness": "runnable",
+      "blockers": []
+    },
+    {
+      "instanceId": "ecommerce.customer_service.default",
+      "runtimeReadiness": "runnable",
+      "blockers": []
+    },
+    {
+      "instanceId": "ecommerce.data_advisor.default",
+      "runtimeReadiness": "runnable",
+      "blockers": []
+    },
+    {
+      "instanceId": "ecommerce.private_domain_manager.default",
+      "runtimeReadiness": "runnable",
+      "blockers": []
+    },
+    {
+      "instanceId": "ecommerce.shopping_advisor.default",
+      "runtimeReadiness": "runnable",
+      "blockers": []
+    }
+  ],
+  "textHealth": "PROVIDER_HEALTH_REFRESH_GREEN",
+  "imageHealth": "PROVIDER_IMAGE_HEALTH_REFRESH_GREEN",
+  "videoHealth": "PROVIDER_VIDEO_HEALTH_REFRESH_GREEN"
+}
