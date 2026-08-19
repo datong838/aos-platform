@@ -2051,6 +2051,19 @@ export function ModelRouterPage() {
       lede="任务类型 · 出境 · 熔断降级。供应商安装与类型化配置见大模型接入(插件)。"
     >
       <BpArchitectureBar activeLayer="L2" />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, margin: "10px 0 12px" }}>
+        {[
+          ["路由规则", routeRows.length],
+          ["候选模型", items.length],
+          ["配置版本", confirmedVersion ?? "—"],
+          ["预热就绪", warm.data?.ready ? "是" : "否"],
+        ].map(([name, count]) => (
+          <div key={String(name)} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{name}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{count}</div>
+          </div>
+        ))}
+      </div>
       <BpToolbar>
         <button
           type="button"
