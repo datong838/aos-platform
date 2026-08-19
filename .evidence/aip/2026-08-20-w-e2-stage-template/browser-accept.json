@@ -1,0 +1,5 @@
+{
+  "emptyStateGone": true,
+  "hasSignals": true,
+  "snippet": "Stage Template\necommerce-standard\n就绪\n\n1 个 Stage · stage-template-d4d555e8280640d88f2a@2\n\n已冻结 · source solution.ecommerce.growth@1\nArtifact Relation\n当前组织尚无 Artifact Relation。只有两端 artifactId/contentHash 均匹配权威记录时才能建立关系。\nReview Issue\n当前组织尚无 Review Issue。问题必须绑定 exact Artifact、EvalReport 与 Evidence。\nImpact Preview 与 Start 组合门\n\nPreview 只呈现权威影响评估；unknown 不显示为 0。只有 frozen + ready 的 exact revision 才能提交组合门，且成功只代表创建 canonical TaskRun，不代表 AgentRun 或 Provider 已运行。\n\n当前组织尚无 ImpactPreview。请从真实 Task、Plan 与冻结的生产契约"
+}
