@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const sdk = vi.hoisted(() => ({ runtimeReadiness: vi.fn(), installEcommerce: vi.fn() }));
 vi.mock("../../api/aipAgentControl", () => ({ aipAgentControl: sdk }));
-import { CanonicalAgentRegistryPage } from "./CanonicalAgentRegistryPage";
+import { CanonicalAgentRegistryPage, precheckDisabledTitle } from "./CanonicalAgentRegistryPage";
 
 const hash = "a".repeat(64);
 const tenant = { orgId: "org-org", projectId: "dev-project" };
@@ -19,6 +19,13 @@ const runtime = {
   }] }, capabilityBindings: [], skillBindings: [], bindingStats: { capabilityBindingCount: 0, skillBindingCount: 0, activeCapabilityBindingCount: 0, activeSkillBindingCount: 0 }, evaluatedAt: "2026-08-15T06:00:00Z",
 };
 
+describe("precheckDisabledTitle", () => {
+  it("快照过期时不误导成「必须先全量技能发布」", () => {
+    expect(precheckDisabledTitle(["skill_binding_readiness_stale", "capability_binding_readiness_stale"])).toContain("就绪快照已过期");
+    expect(precheckDisabledTitle(["skill_binding_readiness_stale"])).not.toContain("需先完成技能发布、能力绑定");
+  });
+});
+
 describe("CanonicalAgentRegistryPage", () => {
   let host: HTMLDivElement;
   beforeEach(() => { host = document.createElement("div"); document.body.appendChild(host); sdk.runtimeReadiness.mockReset().mockResolvedValue(runtime); sdk.installEcommerce.mockReset(); });
@@ -30,6 +37,8 @@ describe("CanonicalAgentRegistryPage", () => {
     expect(host.textContent).not.toContain("ecommerce.content_officer@");
     expect(host.textContent).toContain("查看 1 个技能状态");
     expect(host.textContent).toContain("热点竞品与获客机会研究");
+    expect(host.textContent).toContain("Evals 门控");
+    expect(host.textContent).toContain("仅已评测 · 未绑定");
     await act(async () => root.unmount());
   });
   it("数据参谋 runnable 时展示受限 Pilot 可运行", async () => {

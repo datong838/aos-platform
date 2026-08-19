@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { aipAgentControl, type AgentRuntimeReadinessResponse } from "../../api/aipAgentControl";
 import { PageChrome } from "../../components/PageChrome";
 import {
@@ -14,6 +15,14 @@ function statusLabel(status: string | undefined) {
 
 export function runtimeSnapshotStale(evaluatedAt: string, now = Date.now()): boolean {
   return now - Date.parse(evaluatedAt) > 15 * 60 * 1000;
+}
+
+export function precheckDisabledTitle(blockers: string[]): string {
+  if (!blockers.length) return "缺少完整能力/技能绑定与依赖快照";
+  if (blockers.every((code) => /_stale$|_stale:/.test(code) || code.endsWith("_stale"))) {
+    return "就绪快照已过期：请点击本页「刷新」。R2 不要求该角色全部技能都发布绑定。";
+  }
+  return formatBlockers(blockers);
 }
 
 export function CanonicalAgentRegistryPage() {
@@ -50,6 +59,15 @@ export function CanonicalAgentRegistryPage() {
         <div style={{marginTop:10,fontSize:13,color:stale ? "var(--aos-amber-700)" : "var(--aos-text-secondary)"}}>
           快照 {new Date(data.evaluatedAt).toLocaleString()} · {stale ? "已过期，请刷新后再判断" : "15 分钟有效期内"}
         </div>
+        <div className="notice" style={{marginTop:12,fontSize:13}}>
+          R2 口径：每位同事至少 1 条已发布 Pilot 技能可运行即可；列表里「仅已评测 · 未绑定」是尚未全量发布的定义，不是本页故障。
+          评测门 → <Link to="/aip/evals">Evals 门控</Link>
+          {" · "}成熟度 → <Link to="/aip/maturity">成熟度楼梯</Link>
+          {" · "}专业能力 → <Link to="/aip/capabilities">智能体插件</Link>
+          {" · "}模型健康 → <Link to="/aip/model-runtime">运行就绪</Link>
+          {" · "}逻辑图 → <Link to="/aip/logic">逻辑画布</Link>
+          。全量技能发布台尚未上线，需受控 API/脚本完成 evaluated→published。
+        </div>
       </section>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(360px,1fr))",gap:14}}>
         {data.catalog.items.map(item => {
@@ -57,6 +75,7 @@ export function CanonicalAgentRegistryPage() {
           const bindings = data.skillBindings.filter(binding => binding.instanceId === instanceId);
           const activeBindings = bindings.filter(binding => binding.status === "active");
           const requiredBindingCount = data.capabilityBindings.filter(binding => item.requiredCapabilityIds.includes(binding.capability.assetId)).length;
+          const blockedTitle = precheckDisabledTitle(item.blockers);
           return <article key={item.template.templateId} className="card" style={{padding:18}}>
             <div style={{display:"flex",justifyContent:"space-between",gap:10,alignItems:"start"}}>
               <div>
@@ -84,7 +103,7 @@ export function CanonicalAgentRegistryPage() {
             <div style={{marginTop:10,padding:10,background:item.runtimeReadiness === "runnable" ? "var(--aos-green-bg, #ecfdf3)" : "var(--aos-amber-bg)",color:item.runtimeReadiness === "runnable" ? "var(--aos-green-700)" : "var(--aos-amber-700)"}}>
               {item.runtimeReadiness === "runnable" ? "受限 Pilot 可运行" : (item.blockers.length ? formatBlockers(item.blockers) : "缺少完整能力/技能绑定与依赖快照，运行失败关闭")}
             </div>
-            <button className="btn" disabled={item.runtimeReadiness !== "runnable"} title={item.runtimeReadiness === "runnable" ? "目录已可运行；业务执行仍走受限 Pilot 权威，不在本页直接外呼" : "需先完成技能发布、能力绑定、八维依赖与新鲜快照"} style={{marginTop:12}}>{item.runtimeReadiness === "runnable" ? "预检运行（目录已就绪）" : "预检运行（依赖未齐）"}</button>
+            <button className="btn" disabled={item.runtimeReadiness !== "runnable"} title={item.runtimeReadiness === "runnable" ? "目录已可运行；业务执行仍走受限 Pilot 权威，不在本页直接外呼" : blockedTitle} style={{marginTop:12}}>{item.runtimeReadiness === "runnable" ? "预检运行（目录已就绪）" : "预检运行（依赖未齐）"}</button>
           </article>;
         })}
       </div>
