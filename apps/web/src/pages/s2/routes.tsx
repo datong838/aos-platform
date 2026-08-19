@@ -53,6 +53,7 @@ const ObservabilityPage = lazify(() => import("./ObservabilityPage"), "Observabi
 const MemoryGovernancePage = lazify(() => import("./MemoryGovernancePage"), "MemoryGovernancePage");
 const LogicCanvasPage = lazify(() => import("./LogicCanvasPage"), "LogicCanvasPage");
 const AgentsPage = lazify(() => import("./CanonicalAgentsPage"), "CanonicalAgentsPage");
+const SkillPublishPage = lazify(() => import("./SkillPublishPage"), "SkillPublishPage");
 const CanonicalAgentRegistryPage = lazify(() => import("./CanonicalAgentRegistryPage"), "CanonicalAgentRegistryPage");
 const AgentMarketplacePage = lazify(() => import("./AgentMarketplacePage"), "AgentMarketplacePage");
 const CanonicalCapabilityPage = lazify(() => import("../CanonicalCapabilityPage"), "CanonicalCapabilityPage");
@@ -138,6 +139,7 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "aip/agent-registry", Component: CanonicalAgentRegistryPage },
   { path: "aip/agent-marketplace", Component: AgentMarketplacePage },
   { path: "aip/agents", Component: AgentsPage },
+  { path: "aip/skill-publish", Component: SkillPublishPage },
   { path: "aip/capabilities", Component: CanonicalCapabilityPage },
   { path: "aip/production-contracts", Component: ProductionContractsPage },
   { path: "aip/agent-import", Component: AgentImportPage },

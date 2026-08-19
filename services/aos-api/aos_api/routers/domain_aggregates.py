@@ -303,6 +303,7 @@ ROUTER_SPECS: dict[str, tuple[tuple[str, str], ...]] = {
         ('aos_api.aip_docintel_semantic_router', 'router'),
         ('aos_api.routers.aip_assist_runtime', 'router'),
         ('aos_api.routers.phase3_aip_agents', 'router'),
+        ('aos_api.routers.phase3_aip_skills', 'router'),
         ('aos_api.routers.phase3_aip_capabilities', 'router'),
         ('aos_api.routers.aip_tasks', 'router'),
         ('aos_api.routers.aip_actions', 'router'),
