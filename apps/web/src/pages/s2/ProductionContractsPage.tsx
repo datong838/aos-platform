@@ -109,12 +109,12 @@ export function ProductionContractsPage() {
   const freezePreview=(item:ImpactPreviewRevision)=>run(`preview:${item.previewId}`,()=>aipProductionContracts.freezeImpactPreview(item.previewId,item.version,`w2-ui-preview-freeze-${crypto.randomUUID()}`));
   const startProduction=()=>{if(!selectedPreview||startDisabledReason)return;void run("production:start",()=>aipProductionContracts.startProduction({taskId:selectedPreview.taskId,expectedTaskVersion:Number(startTaskVersion),planRef:selectedPreview.planRef,previewRef:{resourceType:"ImpactPreviewRevision",resourceId:selectedPreview.previewId,revision:selectedPreview.revision,contentHash:selectedPreview.contentHash},actionProposalRef:{proposalId:proposalId.trim(),version:Number(proposalVersion),proposalHash},logicGraphId:logicGraphId.trim(),logicRevision:Number(logicRevision)},`w2-ui-production-start-${crypto.randomUUID()}`));};
 
-  return <PageChrome title="生产契约" lede="Brief、Evidence、Eval、Responsibility、Stage、Artifact Relation 与 Review 的租户权威视图；冻结不等于启动运行">
+  return <PageChrome title="生产契约" lede="任务简报、证据包、评测契约、职责计划、阶段模板、产物关系与评审的租户权威视图；冻结不等于启动运行">
     {error && <div role="alert" className="notice bad">生产契约读取或操作失败：{error}</div>}
     {loading ? <div role="status" className="card">正在读取 PostgreSQL Production Contract authority…</div> : null}
     {!loading && state ? <>
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
-        <strong>{state.briefs.count} Brief</strong><span>{state.bundles.count} Evidence</span><span>{state.evals.count} Eval</span><span>{state.plans.count} Responsibility</span><span>{state.stages.count} Stage</span><span>{state.relations.count} Relation</span><span>{state.reviews.count} Review</span><span>{state.previews.count} Preview</span><span>{state.starts.count} Start Decision</span>
+        <strong>{state.briefs.count} 个任务简报</strong><span>{state.bundles.count} 个证据包</span><span>{state.evals.count} 个评测契约</span><span>{state.plans.count} 个职责计划</span><span>{state.stages.count} 个阶段模板</span><span>{state.relations.count} 个产物关系</span><span>{state.reviews.count} 个评审</span><span>{state.previews.count} 个影响预览</span><span>{state.starts.count} 个启动决策</span>
         <button className="btn" onClick={() => void load()}>刷新权威状态</button>
         <button className="btn primary" disabled title="必须从真实 Task 与权威依赖创建；本页不生成样例或隐式权威">创建契约（需真实依赖）</button>
       </div>

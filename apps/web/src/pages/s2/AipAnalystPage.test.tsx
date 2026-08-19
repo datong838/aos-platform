@@ -48,7 +48,7 @@ describe("AipAnalystPage governed query", () => {
     const evidence = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "收起证据")!;
     await act(async () => { evidence.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); });
     expect(evidence.getAttribute("aria-expanded")).toBe("false");
-    const focus = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "Focus Mode")!;
+    const focus = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "专注模式")!;
     await act(async () => { focus.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true })); });
     expect(focus.getAttribute("aria-pressed")).toBe("true");
     await act(async () => focus.click());

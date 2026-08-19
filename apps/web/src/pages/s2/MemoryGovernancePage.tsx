@@ -186,7 +186,7 @@ export function MemoryGovernancePage() {
   async function runKnowledgeQuery() {
     const required = [subjectType, subjectId, taskId, skillId].map((value) => value.trim());
     if (required.some((value) => !value)) {
-      setQueryError("请完整填写主体类型、主体 ID、Task ID 和 Skill ID。");
+      setQueryError("请完整填写主体类型、主体 ID、Task ID 和技能 ID。");
       setQueryState("idle");
       return;
     }
@@ -287,7 +287,7 @@ export function MemoryGovernancePage() {
           <label>主体类型<input value={subjectType} onChange={(event) => setSubjectType(event.target.value)} aria-label="memory-subject-type" /></label>
           <label>主体 ID<input value={subjectId} onChange={(event) => setSubjectId(event.target.value)} aria-label="memory-subject-id" placeholder="真实 Object ID" /></label>
           <label>Task ID<input value={taskId} onChange={(event) => setTaskId(event.target.value)} aria-label="memory-task-id" placeholder="权威 Task ID" /></label>
-          <label>Skill ID<input value={skillId} onChange={(event) => setSkillId(event.target.value)} aria-label="memory-skill-id" placeholder="例如 content.strategy" /></label>
+          <label>技能 ID<input value={skillId} onChange={(event) => setSkillId(event.target.value)} aria-label="memory-skill-id" placeholder="例如 content.strategy" /></label>
           <label>请求 markings<input value={markings} onChange={(event) => setMarkings(event.target.value)} aria-label="memory-markings" /></label>
         </div>
         <button type="button" className="btn primary" style={{ marginTop: 14 }} onClick={() => void runKnowledgeQuery()} disabled={queryState === "loading"}>{queryState === "loading" ? "检索中…" : "执行权威检索"}</button>

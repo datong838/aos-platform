@@ -293,7 +293,7 @@ spec:
           <div style={{ fontSize: 56, marginBottom: 16, color: "var(--aos-green-600)" }}>✓</div>
           <div style={{ fontSize: 22, fontWeight: 600, color: "var(--aos-text)", marginBottom: 8 }}>导入成功</div>
           <p style={{ fontSize: 14, color: "var(--aos-text-secondary)", marginBottom: 4 }}>
-            <strong style={{ color: "var(--aos-text)" }}>{capDisplayName}</strong> 已成功导入并注册为 Capability
+            <strong style={{ color: "var(--aos-text)" }}>{capDisplayName}</strong> 已成功导入并注册为专业能力
           </p>
           <p style={{ fontSize: 12, color: "var(--aos-text-tertiary)", marginBottom: 20 }}>
             Adapter: {adapterInfo?.label} · 能力等级: {capLevel}
@@ -337,7 +337,7 @@ spec:
   }
 
   return (
-    <PageChrome title="导入外部 Agent（Adapter 桥接）" lede="从开源社区或自有代码导入 Agent，通过 Adapter 桥接为平台 Capability。">
+    <PageChrome title="导入外部智能体（Adapter 桥接）" lede="从开源社区或自有代码导入智能体，通过 Adapter 桥接为平台专业能力。">
       {/* Adapter 路径说明 */}
       <div
         style={{
@@ -459,7 +459,7 @@ spec:
           {/* Step 1: 选择来源 */}
           {step === 1 && (
             <div>
-              <h2 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: "0 0 4px 0" }}>选择 Agent 来源</h2>
+              <h2 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: "0 0 4px 0" }}>选择智能体来源</h2>
               <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", margin: "0 0 16px 0" }}>
                 支持从 GitHub 仓库、本地代码库或市场导入
               </p>
@@ -468,7 +468,7 @@ spec:
                 {[
                   { key: "github", label: "GitHub 仓库", desc: "从 awesome-llm-apps 或任意 GitHub 仓库导入", icon: "⌨" },
                   { key: "local", label: "本地代码库", desc: "从 AOS 代码库中已有的 Agent 代码导入", icon: "📁" },
-                  { key: "market", label: "市场安装", desc: "从 AOS Capability Marketplace 搜索安装", icon: "🛒" },
+                  { key: "market", label: "市场安装", desc: "从 AOS 专业能力市场搜索安装", icon: "🛒" },
                 ].map((src) => (
                   <div
                     key={src.key}

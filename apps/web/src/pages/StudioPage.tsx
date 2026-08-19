@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { aipAgentControl } from "../api/aipAgentControl";
 import { apiGet, apiPost, apiPut } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
+import { templateDisplayName } from "../lib/aipChineseLabels";
 
 type AgentItem = {
   id: string;
@@ -66,7 +67,7 @@ export function mapApiAgentToStudio(agent: ApiAgent): AgentItem {
   const level = agent.tags?.find((tag) => /^L[0-4]$/.test(tag)) || "L2";
   const category =
     agent.tags?.find((tag) => !/^L[0-4]$/.test(tag)) ||
-    agent.template?.assetId ||
+    (agent.template?.assetId ? templateDisplayName(agent.template.assetId) : null) ||
     agent.source ||
     "未分类";
   return {
@@ -580,7 +581,7 @@ export function StudioPage() {
                       {a.name}
                     </div>
                     <div style={{ fontSize: 10, color: "var(--aos-text-secondary)", marginTop: 2 }}>
-                      {a.category} · {a.levelLabel}
+                      {a.levelLabel} · {sb.label}
                     </div>
                     <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
                       <span

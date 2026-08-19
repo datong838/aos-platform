@@ -229,7 +229,7 @@ permissions:
 
   if (imported) {
     return (
-      <PageChrome title="接入插件能力" lede="声明外部能力端点和契约，注册为 C0/C1/C2 Capability 供智能体调用。">
+      <PageChrome title="接入插件能力" lede="声明外部能力端点和契约，注册为 C0/C1/C2 专业能力供智能体调用。">
         <div
           style={{
             textAlign: "center",
@@ -300,7 +300,7 @@ permissions:
   }
 
   return (
-    <PageChrome title="接入插件能力" lede="声明外部能力端点和契约，注册为 C0/C1/C2 Capability 供智能体调用。">
+    <PageChrome title="接入插件能力" lede="声明外部能力端点和契约，注册为 C0/C1/C2 专业能力供智能体调用。">
       {/* C0/C1/C2 分层说明 */}
       <div
         style={{

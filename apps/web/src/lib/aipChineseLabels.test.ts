@@ -9,6 +9,7 @@ import {
   logicDisplayName,
   responsibilityDisplayName,
   riskDisplayName,
+  templateDisplayName,
 } from "./aipChineseLabels";
 
 describe("aipChineseLabels", () => {
@@ -31,5 +32,6 @@ describe("aipChineseLabels", () => {
     expect(riskDisplayName("high")).toBe("高");
     expect(definitionReadinessDisplayName("blocked")).toBe("定义未就绪");
     expect(dimensionDisplayName("providerRef")).toBe("供应商");
+    expect(templateDisplayName("ecommerce.content_officer")).toBe("内容官");
   });
 });

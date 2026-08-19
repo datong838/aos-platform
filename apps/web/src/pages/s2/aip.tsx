@@ -22,14 +22,14 @@ import {
 } from "../../api/aipEvidence";
 
 const TOOL_CATS = [
-  { id: "action", label: "Action", zh: "写回动作（可 HITL）", defaultOn: true },
-  { id: "query", label: "Object Query", zh: "对象属性查询", defaultOn: true },
-  { id: "function", label: "Function", zh: "函数 / 已发布 Logic", defaultOn: true },
-  { id: "var", label: "Update App Var", zh: "更新应用变量", defaultOn: false },
-  { id: "cmd", label: "Command", zh: "命令类工具", defaultOn: false },
-  { id: "clarify", label: "Request Clarification", zh: "向用户澄清", defaultOn: true },
-  { id: "capability", label: "Capability", zh: "重能力（平台代调）", defaultOn: true },
-  { id: "wiki", label: "Wiki Field Tool", zh: "Wiki 结构化字段", defaultOn: true, wiki: true },
+  { id: "action", label: "写回动作", zh: "可 HITL 确认", defaultOn: true },
+  { id: "query", label: "对象查询", zh: "属性子集查询", defaultOn: true },
+  { id: "function", label: "函数", zh: "已发布 Logic", defaultOn: true },
+  { id: "var", label: "应用变量", zh: "更新 App 变量", defaultOn: false },
+  { id: "cmd", label: "命令", zh: "命令类工具", defaultOn: false },
+  { id: "clarify", label: "澄清", zh: "向用户澄清", defaultOn: true },
+  { id: "capability", label: "专业能力", zh: "平台代调重能力", defaultOn: true },
+  { id: "wiki", label: "Wiki 字段", zh: "结构化 Wiki", defaultOn: true, wiki: true },
 ];
 
 function toolCategory(kind: string): string {
@@ -292,9 +292,9 @@ export function ToolsPage() {
     if (selectedCat === "capability") {
       return (
         <>
-          <h2 className="bp-tool-detail-title">工具卡 · Capability</h2>
+          <h2 className="bp-tool-detail-title">工具卡 · 专业能力</h2>
           <p className="bp-tool-detail-meta">
-            Capability: <code style={{ color: "#67e8f9" }}>{selected.id}</code>
+            专业能力：<code style={{ color: "#67e8f9" }}>{selected.id}</code>
           </p>
           <p className="muted" style={{ fontSize: "0.75rem" }}>
             LLM 只请求；平台代调。产物进媒体集；状态写回须经 Action。
@@ -548,7 +548,7 @@ export function ToolsPage() {
 
       <div className="bp-tool-foot">
         <span>
-          Logic：Apply Action · Call Function · Call Capability · Query。Studio{" "}
+          Logic：执行动作 · 调用函数 · 调用专业能力 · 查询。Studio{" "}
           <Link to="/aip/studio">试聊</Link>
         </span>
         <button
@@ -3022,7 +3022,7 @@ export function EvalsPage() {
         >
           <option value="">选择 Eval 套件</option>
           {suites.map((suite) => (
-            <option key={suite.id} value={suite.id}>{suite.name} · {suite.id}</option>
+            <option key={suite.id} value={suite.id}>{suite.name}</option>
           ))}
         </select>
         <select

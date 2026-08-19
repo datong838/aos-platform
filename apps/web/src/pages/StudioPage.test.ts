@@ -36,7 +36,7 @@ describe("StudioPage · Agent API 映射", () => {
     });
     expect(mapped.id).toBe("ecommerce.content_officer.default");
     expect(mapped.name).toBe("内容官");
-    expect(mapped.category).toBe("ecommerce.content_officer");
+    expect(mapped.category).toBe("内容官");
     expect(mapped.status).toBe("running");
   });
 

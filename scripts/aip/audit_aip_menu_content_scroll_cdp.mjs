@@ -181,11 +181,11 @@ function classifyProduct({ bodyText, pageErrors, failedApi, path: pagePath, disa
       detail: `disabledPrimaryCount=${disabledPrimaryCount}`,
     });
   }
-  if (/目录可用 0|active 0|组织绑定 0/.test(text) && pagePath === "/aip/capabilities" && !unboundHonest) {
+  if (/目录可用 0|active 0|组织绑定 0|已激活 0/.test(text) && pagePath === "/aip/capabilities" && !unboundHonest) {
     issues.push({ severity: "product_gap", code: "capability_zero_ready", detail: "capabilities catalog not ready for org" });
   }
   // Unbound capability catalog with CTA is acceptable honesty relative to visual "已接入" target.
-  if (pagePath === "/aip/capabilities" && unboundHonest && /组织绑定 [1-9]|active [1-9]/.test(text)) {
+  if (pagePath === "/aip/capabilities" && unboundHonest && /组织绑定 [1-9]|已激活 [1-9]|active [1-9]/.test(text)) {
     issues.push({
       severity: "warn",
       code: "capability_partial_bound",
@@ -199,6 +199,23 @@ function classifyProduct({ bodyText, pageErrors, failedApi, path: pagePath, disa
 
   const api4 = failedApi.filter((f) => f.status >= 400 && f.status < 500);
   if (api4.length) issues.push({ severity: "warn", code: "api_4xx", detail: api4.slice(0, 5) });
+
+  // 中文军规：方案代号/英文术语不得作为主文案（52）
+  const englishPrimary = [
+    /\becommerce\.logic\.[A-Z0-9]+\b/,
+    /\becommerce\.(content_officer|campaign_planner|customer_service|data_advisor|private_domain_manager|shopping_advisor)\b/,
+    /\bSkill\b(?!\s*状态)/,
+    /\bCapability\b(?!\s*Manifest)/,
+    /\bblocked\b/i,
+    /\bFocus Mode\b/,
+    /skill_binding_readiness_stale|capability_binding_readiness_stale/,
+  ];
+  for (const re of englishPrimary) {
+    if (re.test(text)) {
+      issues.push({ severity: "warn", code: "english_primary_copy", detail: String(re) });
+      break;
+    }
+  }
 
   let verdict = "product_ok";
   if (issues.some((i) => i.severity === "crash")) verdict = "crash";

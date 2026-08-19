@@ -183,6 +183,20 @@ export function dimensionDisplayName(key: string): string {
   return DIMENSION_NAMES[key] || key;
 }
 
+const TEMPLATE_NAMES: Record<string, string> = {
+  "ecommerce.content_officer": "内容官",
+  "ecommerce.campaign_planner": "活动策划师",
+  "ecommerce.customer_service": "客服专员",
+  "ecommerce.data_advisor": "数据参谋",
+  "ecommerce.private_domain_manager": "私域管家",
+  "ecommerce.shopping_advisor": "导购顾问",
+};
+
+export function templateDisplayName(templateId: string): string {
+  const raw = String(templateId || "").trim();
+  return TEMPLATE_NAMES[raw] || raw;
+}
+
 export function formatBlockers(codes: string[]): string {
   return codes.map(blockerDisplayName).join("；");
 }
