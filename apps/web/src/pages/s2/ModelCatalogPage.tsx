@@ -525,7 +525,7 @@ export function ModelCatalogPage() {
   }
 
   return (
-    <PageChrome title="模型目录" lede="管理 AIP 启用状态、模型家族和已注册模型">
+    <PageChrome title="模型目录" lede="目录浏览、筛选与已注册模型；Live 接权威 API，失败时不回落本地演示目录">
       <div className="mc-wrap">
         {sourceMode === "error" && (
           <div className="w2-a6a7-demo-banner" role="alert">
@@ -538,7 +538,7 @@ export function ModelCatalogPage() {
         {sourceMode === "live" && (
           <div className="w2-a6a7-live-banner" role="status">
             <span className="w2-a6a7-live-badge">Live</span>
-            <span className="w2-a6a7-demo-text">目录/已注册已接 `/v1/aip/model-catalog`</span>
+            <span className="w2-a6a7-demo-text">目录/已注册已接 `/v1/aip/model-catalog` · 密表筛选壳</span>
           </div>
         )}
         {registerMsg && (
@@ -561,7 +561,7 @@ export function ModelCatalogPage() {
             { label: "目录模型总数", value: catalogStats.total, color: "var(--aos-accent)" },
             { label: "已注册", value: catalogStats.registered, color: "var(--aos-green-600)" },
             { label: "供应商数", value: catalogStats.providers, color: "var(--aos-purple-600)" },
-            { label: "免费模型", value: catalogStats.free, color: "var(--aos-amber-600)" },
+            { label: "当前筛选", value: filteredModels.length, color: "var(--aos-amber-600)" },
           ].map((s) => (
             <div key={s.label} className="mc-stat-card">
               <div className="mc-stat-value" style={{ color: s.color }}>{s.value}</div>
@@ -635,6 +635,9 @@ export function ModelCatalogPage() {
                 <option value="mid">中价 ($1-$5/1M)</option>
                 <option value="high">高价 (&gt;$5/1M)</option>
               </select>
+              <span className="notice" style={{ padding: "6px 10px" }} role="status">
+                筛选命中 {filteredModels.length} / {catalogStats.total}
+              </span>
             </div>
 
             <div className="mc-compare-bar">
