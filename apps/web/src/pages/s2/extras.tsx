@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiPost, S2Chrome, useJsonGet } from "./shared";
 import { BpMaturityStairs } from "./blueprintUi";
@@ -13,6 +13,14 @@ export function isBreakerTripConfirmed(value: { open?: boolean; mode?: string })
 export function MaturityPage() {
   const evals = useJsonGet<{ green?: boolean; l4Allowed?: boolean }>("/v1/aip/evals/status");
   const drafts = useJsonGet<{ count?: number; items?: unknown[] }>("/v1/aip/drafts");
+  const agents = useJsonGet<{
+    items?: Array<{
+      instanceId?: string;
+      id?: string;
+      name?: string;
+      overlay?: { displayName?: string };
+    }>;
+  }>("/v1/aip/agents");
   const [level, setLevel] = useState(2);
   const [toast, setToast] = useState("");
 
@@ -28,6 +36,13 @@ export function MaturityPage() {
   }
 
   const green = evals.data?.green === true;
+  const workspaceAgentLabel = useMemo(() => {
+    const items = agents.data?.items || [];
+    if (!items.length) return null;
+    const preferred =
+      items.find((item) => String(item.instanceId || item.id || "").includes("content_officer")) || items[0];
+    return preferred.overlay?.displayName || preferred.name || preferred.instanceId || preferred.id || null;
+  }, [agents.data]);
 
   const levelLabel = level === 1 ? "临时分析" : level === 2 ? "任务 Agent" : level === 3 ? "Agentic 应用" : "自动化 Agent";
 
@@ -54,7 +69,12 @@ export function MaturityPage() {
       >
         <div>
           <div style={{ fontSize: 12, color: "var(--aos-muted)", marginBottom: 2 }}>当前工作区</div>
-          <div style={{ color: "var(--aos-text)", fontWeight: 500 }}>维修派单 Buddy</div>
+          <div style={{ color: "var(--aos-text)", fontWeight: 500 }}>
+            {workspaceAgentLabel || (agents.loading ? "读取数字同事…" : "尚未安装栖月汇数字同事")}
+          </div>
+          {!workspaceAgentLabel && !agents.loading ? (
+            <Link to="/aip/studio" style={{ fontSize: 12 }}>去 Studio 安装 →</Link>
+          ) : null}
         </div>
         <div>
           <div style={{ fontSize: 12, color: "var(--aos-muted)", marginBottom: 2 }}>判定层</div>

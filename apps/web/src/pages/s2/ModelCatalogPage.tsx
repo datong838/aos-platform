@@ -429,10 +429,17 @@ export function ModelCatalogPage() {
   const loadCatalog = useCallback(async () => {
     try {
       let items: ApiCatalogRow[] = [];
+      let loaded = false;
       try {
         const admin = await apiGet<{ items?: ApiCatalogRow[] }>("/v1/aip/model-admin/models");
-        items = admin.items || [];
+        if ((admin.items || []).length > 0) {
+          items = admin.items || [];
+          loaded = true;
+        }
       } catch {
+        /* fall through to Phase-2 catalog */
+      }
+      if (!loaded) {
         const [cat, reg] = await Promise.all([
           apiGet<{ items?: ApiCatalogRow[] }>("/v1/aip/model-catalog"),
           apiGet<{ items?: Array<{ modelId?: string }> }>("/v1/aip/registered-models"),

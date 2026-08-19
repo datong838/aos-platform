@@ -59,6 +59,15 @@ export function ToolsPage() {
   const { data, err, reload } = useJsonGet<{ items: { id: string; kind: string }[] }>(
     "/v1/aip/tools",
   );
+  const agents = useJsonGet<{
+    items?: Array<{
+      instanceId?: string;
+      id?: string;
+      name?: string;
+      status?: string;
+      overlay?: { displayName?: string };
+    }>;
+  }>("/v1/aip/agents");
   const toolsCfg = useJsonGet<{
     categories?: string[];
     mode?: string;
@@ -95,6 +104,17 @@ export function ToolsPage() {
 
   const selected = tools.find((t) => t.id === selectedId) || tools[0] || null;
   const selectedCat = selected ? toolCategory(selected.kind) : null;
+  const currentAgent = useMemo(() => {
+    const items = agents.data?.items || [];
+    if (!items.length) return null;
+    const preferred =
+      items.find((item) => {
+        const id = String(item.instanceId || item.id || "");
+        return id.includes("content_officer");
+      }) || items[0];
+    const label = preferred.overlay?.displayName || preferred.name || preferred.instanceId || preferred.id || "";
+    return label ? { label, status: preferred.status || "" } : null;
+  }, [agents.data]);
 
   function toggleCat(id: string) {
     setCats((prev) => {
@@ -360,13 +380,19 @@ export function ToolsPage() {
                 />
               </svg>
             </div>
-            <span>维修派单 Buddy</span>
+            <span>{currentAgent?.label || "尚未绑定栖月汇数字同事"}</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <span className="bp-tag bp-tag-ok">运行中</span>
-          <span className="bp-tag bp-tag-warn">L2 · HITL</span>
+          {currentAgent ? (
+            <>
+              <span className="bp-tag bp-tag-ok">{currentAgent.status === "active" || currentAgent.status === "running" ? "运行中" : currentAgent.status || "已安装"}</span>
+              <span className="bp-tag bp-tag-warn">L2 · HITL</span>
+            </>
+          ) : (
+            <Link to="/aip/studio" className="bp-tag bp-tag-warn">去 Studio 安装</Link>
+          )}
         </div>
         <span className="bp-agent-selector-count">{tools.length} 个工具已启用 / {TOOL_CATS.filter((c) => cats.has(c.id)).length} 类可配</span>
       </div>

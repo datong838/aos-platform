@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 export function PageChrome({
   title,
@@ -16,6 +16,15 @@ export function PageChrome({
   hideHeader?: boolean;
   children?: ReactNode;
 }) {
+  useEffect(() => {
+    if (!title) return;
+    const previous = document.title;
+    document.title = `${title} · AOS`;
+    return () => {
+      document.title = previous;
+    };
+  }, [title]);
+
   const showHeader = !hideHeader && Boolean(title);
   return (
     <div className="content-inner">

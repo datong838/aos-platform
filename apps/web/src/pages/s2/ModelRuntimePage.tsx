@@ -11,9 +11,20 @@ function AssetList({ items, empty }: { items: RuntimeAssetSummary[]; empty: stri
   return <div>{items.map(item => <article key={`${item.ref.assetId}@${item.ref.revision}`} style={{ padding: "10px 0", borderTop: "1px solid var(--aos-border)" }}><strong>{item.ref.assetId}</strong><div><code>r{item.ref.revision} · {item.ref.contentHash.slice(0, 12)}…</code></div><small>{lifecycle[item.lifecycle] ?? item.lifecycle} · {item.dependencyRefs.length} 个 exact 依赖</small></article>)}</div>;
 }
 
-export function modelRuntimeControlStatus(data: ModelRuntimeOverview): "empty" | "blocked" | "ready" {
+export function modelRuntimeControlStatus(data: ModelRuntimeOverview): "empty" | "blocked" | "partial" | "ready" {
   if (!data.providers.length && !data.models.length && !data.routes.length && !data.policies.length) return "empty";
-  return data.resolutions.length > 0 && data.resolutions.every(item => item.readiness === "ready") ? "ready" : "blocked";
+  if (!data.resolutions.length) return "blocked";
+  const readyCount = data.resolutions.filter((item) => item.readiness === "ready").length;
+  if (readyCount === data.resolutions.length) return "ready";
+  if (readyCount > 0) return "partial";
+  return "blocked";
+}
+
+export function modelRuntimeControlLabel(state: "empty" | "blocked" | "partial" | "ready"): string {
+  if (state === "ready") return "就绪";
+  if (state === "partial") return "部分就绪";
+  if (state === "blocked") return "阻断";
+  return "空";
 }
 
 export function ModelRuntimePage() {
@@ -23,13 +34,43 @@ export function ModelRuntimePage() {
   const load = useCallback(async () => { setLoading(true); try { setData(await aipModelRuntime.overview()); setError(""); } catch (e) { setData(null); setError(String((e as Error).message || e)); } finally { setLoading(false); } }, []);
   useEffect(() => { void load(); }, [load]);
   const state = useMemo(() => data ? modelRuntimeControlStatus(data) : "empty", [data]);
+  const blockedResolutions = useMemo(
+    () => (data?.resolutions || []).filter((item) => item.readiness !== "ready"),
+    [data],
+  );
+  const readyResolutionCount = useMemo(
+    () => (data?.resolutions || []).filter((item) => item.readiness === "ready").length,
+    [data],
+  );
 
   return <PageChrome title="模型运行就绪" lede="AIP-7 exact Provider、Model、Route、Policy、Eval、价格与容量权威；控制面就绪不等于外部 Provider 已可调用">
     {error ? <div role="alert" className="notice bad">exact model runtime authority 读取失败：{error}</div> : null}
     {loading ? <div role="status" className="card">正在读取当前组织的 exact model runtime authority…</div> : null}
     {!loading && data ? <>
-      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}><strong>控制面：{state === "ready" ? "就绪" : state === "blocked" ? "阻断" : "空"}</strong><span>组织 {data.tenant.orgId} · 工作区 {data.tenant.projectId}</span><button className="btn" onClick={() => void load()}>刷新权威快照</button></div>
+      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
+        <strong>控制面：{modelRuntimeControlLabel(state)}</strong>
+        <span>组织 {data.tenant.orgId} · 工作区 {data.tenant.projectId}</span>
+        {data.resolutions.length ? <span>Route 就绪 {readyResolutionCount}/{data.resolutions.length}</span> : null}
+        <button className="btn" onClick={() => void load()}>刷新权威快照</button>
+      </div>
       {state === "empty" ? <div className="notice">当前组织没有 AIP-7 exact Provider / Model / Route / Policy。页面不会从旧 KV、静态模型目录或其他租户自动回填；请通过受控配置流程建立权威 revision。</div> : null}
+      {state === "partial" || state === "blocked" ? (
+        <div className="notice" role="status" style={{ marginBottom: 16 }}>
+          {state === "partial"
+            ? "部分 Route 已就绪；未就绪项恢复 Provider Health 后刷新本页即升为「控制面：就绪」，不伪造全绿。"
+            : "尚无就绪 Route；请检查 Provider Health / Eval / 价格与容量权威后刷新。"}
+          {blockedResolutions.length ? (
+            <ul style={{ margin: "8px 0 0", paddingLeft: 20 }}>
+              {blockedResolutions.map((item) => (
+                <li key={item.route.assetId}>
+                  <code>{item.route.assetId}</code>
+                  {item.blockerCodes.length ? ` · ${item.blockerCodes.join("；")}` : " · readiness≠ready"}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
       <section style={grid} aria-label="模型运行权威分层">
         {(["providers", "models", "routes", "policies", "priceSnapshots"] as const).map(key => <div className="card" style={{ padding: 16 }} key={key}><h2 style={{ marginTop: 0 }}>{names[key]} · {data[key].length}</h2><AssetList items={data[key]} empty={`当前组织尚无 ${names[key]} exact revision。`} /></div>)}
         <div className="card" style={{ padding: 16 }}><h2 style={{ marginTop: 0 }}>Eval Gate · {data.evalGates.length}</h2>{data.evalGates.length ? data.evalGates.map(item => <p key={item.ref.assetId}><code>{item.ref.assetId}@{item.ref.revision}</code> · {item.status}</p>) : <div className="notice">尚无 Route / Model 引用的 Eval Gate。</div>}</div>

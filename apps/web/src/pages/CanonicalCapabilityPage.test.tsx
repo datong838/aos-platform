@@ -20,6 +20,8 @@ describe("CanonicalCapabilityPage", () => {
   it("显示组织绑定空态并禁用没有依赖快照的操作", async () => {
     const root = createRoot(host); await act(async () => root.render(<MemoryRouter><CanonicalCapabilityPage /></MemoryRouter>)); await act(async () => undefined);
     expect(host.textContent).toContain("文案生成"); expect(host.textContent).toContain("组织绑定 0");
+    expect(host.textContent).toContain("未绑定");
+    expect(host.textContent).toContain("去目录绑定");
     for (const dimension of ["Provider", "Route", "Eval", "License", "Data", "Tool", "Budget"]) expect(host.textContent).toContain(`${dimension} —`);
     const action = Array.from(host.querySelectorAll("button")).find((button) => button.textContent?.includes("预检")) as HTMLButtonElement;
     expect(action.disabled).toBe(true);
