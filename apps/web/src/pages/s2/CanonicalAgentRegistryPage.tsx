@@ -20,7 +20,7 @@ export function runtimeSnapshotStale(evaluatedAt: string, now = Date.now()): boo
 export function precheckDisabledTitle(blockers: string[]): string {
   if (!blockers.length) return "缺少完整能力/技能绑定与依赖快照";
   if (blockers.every((code) => /_stale$|_stale:/.test(code) || code.endsWith("_stale"))) {
-    return "就绪快照已过期：请点击本页「刷新」重评绑定。R2 不要求该角色全部技能都发布绑定。";
+    return "就绪快照已过期：请点击本页「刷新」重评绑定。";
   }
   return formatBlockers(blockers);
 }
@@ -53,7 +53,7 @@ export function CanonicalAgentRegistryPage() {
     }
   }
   const stale = useMemo(() => data ? runtimeSnapshotStale(data.evaluatedAt) : false, [data]);
-  return <PageChrome title="智能体目录" lede="六数字同事的模板、实例、技能与专业能力运行绑定真相">
+  return <PageChrome title="智能体目录" lede="六数字同事的安装、技能与专业能力就绪状态">
     {error && <div role="alert" className="notice bad">运行就绪度读取失败：{error}</div>}
     {!data ? <div role="status" className="card">正在读取组织智能体目录与绑定…</div> : <>
       <section className="card" style={{padding:18,marginBottom:16}}>
@@ -66,20 +66,18 @@ export function CanonicalAgentRegistryPage() {
           <span>能力绑定 {data.bindingStats.activeCapabilityBindingCount}/{data.bindingStats.capabilityBindingCount} 已激活</span>
           <strong style={{color:"var(--aos-amber-700)"}}>可运行 {data.catalog.stats.runnableCount}</strong>
           <button className="btn primary" disabled={busy || refreshing || data.catalog.stats.installedCount === data.catalog.stats.definitionCount} onClick={() => void install()}>{busy ? "安装中…" : data.catalog.stats.installedCount === data.catalog.stats.definitionCount ? "六数字同事已安装" : "安装电商六数字同事"}</button>
-          <button className="btn" disabled={refreshing || busy} onClick={() => void refresh()} title="对过期或未就绪的激活绑定执行软重评，再投影可运行数">{refreshing ? "重评中…" : "刷新"}</button>
+          <button className="btn" disabled={refreshing || busy} onClick={() => void refresh()} title="刷新并重评绑定就绪">{refreshing ? "重评中…" : "刷新"}</button>
         </div>
         <div style={{marginTop:10,fontSize:13,color:stale ? "var(--aos-amber-700)" : "var(--aos-text-secondary)"}}>
           快照 {new Date(data.evaluatedAt).toLocaleString()} · {stale ? "已过期，请点「刷新」重评绑定" : "15 分钟有效期内"}
         </div>
-        <div className="notice" style={{marginTop:12,fontSize:13}}>
-          R2 口径：每位同事至少 1 条已发布 Pilot 技能可运行即可；列表里「仅已评测 · 未绑定」是尚未全量发布的定义，不是本页故障。
-          评测门 → <Link to="/aip/evals">Evals 门控</Link>
-          {" · "}成熟度 → <Link to="/aip/maturity">成熟度楼梯</Link>
-          {" · "}专业能力 → <Link to="/aip/capabilities">智能体插件</Link>
-          {" · "}模型健康 → <Link to="/aip/model-runtime">运行就绪</Link>
-          {" · "}逻辑图 → <Link to="/aip/logic">逻辑画布</Link>
-          。全量技能发布台尚未上线，需受控 API/脚本完成 evaluated→published。
-        </div>
+        <nav aria-label="相关页面" style={{marginTop:12,fontSize:13,display:"flex",gap:12,flexWrap:"wrap"}}>
+          <Link to="/aip/evals">评测</Link>
+          <Link to="/aip/maturity">成熟度</Link>
+          <Link to="/aip/capabilities">智能体插件</Link>
+          <Link to="/aip/model-runtime">运行就绪</Link>
+          <Link to="/aip/logic">逻辑画布</Link>
+        </nav>
       </section>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(360px,1fr))",gap:14}}>
         {data.catalog.items.map(item => {
@@ -106,16 +104,16 @@ export function CanonicalAgentRegistryPage() {
                 return <li key={skill.skillId}>
                   <strong>{logicDisplayName(skill.canonicalLogicId)}</strong>
                   {" · "}
-                  {skill.lifecycle === "published" ? "已发布" : "仅已评测"}
+                  {skill.lifecycle === "published" ? "已发布" : "未发布"}
                   {" · "}
                   {binding ? `绑定${bindingStatusDisplayName(binding.status)}` : "未绑定"}
                 </li>;
               })}</ul>
             </details>
             <div style={{marginTop:10,padding:10,background:item.runtimeReadiness === "runnable" ? "var(--aos-green-bg, #ecfdf3)" : "var(--aos-amber-bg)",color:item.runtimeReadiness === "runnable" ? "var(--aos-green-700)" : "var(--aos-amber-700)"}}>
-              {item.runtimeReadiness === "runnable" ? "受限 Pilot 可运行" : (item.blockers.length ? formatBlockers(item.blockers) : "缺少完整能力/技能绑定与依赖快照，运行失败关闭")}
+              {item.runtimeReadiness === "runnable" ? "可运行" : (item.blockers.length ? formatBlockers(item.blockers) : "缺少完整能力/技能绑定与依赖快照")}
             </div>
-            <button className="btn" disabled={item.runtimeReadiness !== "runnable"} title={item.runtimeReadiness === "runnable" ? "目录已可运行；业务执行仍走受限 Pilot 权威，不在本页直接外呼" : blockedTitle} style={{marginTop:12}}>{item.runtimeReadiness === "runnable" ? "预检运行（目录已就绪）" : "预检运行（依赖未齐）"}</button>
+            <button className="btn" disabled={item.runtimeReadiness !== "runnable"} title={item.runtimeReadiness === "runnable" ? "目录已就绪；本页不直接外呼" : blockedTitle} style={{marginTop:12}}>{item.runtimeReadiness === "runnable" ? "预检运行（目录已就绪）" : "预检运行（依赖未齐）"}</button>
           </article>;
         })}
       </div>

@@ -47,8 +47,11 @@ describe("CanonicalAgentRegistryPage", () => {
     expect(host.textContent).not.toContain("ecommerce.content_officer@");
     expect(host.textContent).toContain("查看 1 个技能状态");
     expect(host.textContent).toContain("热点竞品与获客机会研究");
-    expect(host.textContent).toContain("Evals 门控");
-    expect(host.textContent).toContain("仅已评测 · 未绑定");
+    expect(host.textContent).toContain("评测");
+    expect(host.textContent).toContain("未发布 · 未绑定");
+    expect(host.textContent).not.toContain("R2 口径");
+    expect(host.textContent).not.toContain("evaluated→published");
+    expect(host.textContent).not.toContain("Pilot");
     await act(async () => root.unmount());
   });
   it("点击刷新会调用 refreshReadiness 重评绑定", async () => {
@@ -60,7 +63,7 @@ describe("CanonicalAgentRegistryPage", () => {
     expect(host.textContent).toContain("可运行 1");
     await act(async () => root.unmount());
   });
-  it("数据参谋 runnable 时展示受限 Pilot 可运行", async () => {
+  it("数据参谋 runnable 时展示可运行", async () => {
     sdk.runtimeReadiness.mockResolvedValue({
       ...runtime,
       catalog: {
@@ -77,8 +80,9 @@ describe("CanonicalAgentRegistryPage", () => {
     });
     const root = createRoot(host); await act(async () => root.render(<MemoryRouter><CanonicalAgentRegistryPage /></MemoryRouter>)); await act(async () => undefined);
     expect(host.textContent).toContain("可运行 1");
-    expect(host.textContent).toContain("受限 Pilot 可运行");
+    expect(host.textContent).toMatch(/可运行/);
     expect(host.textContent).toContain("数据参谋");
+    expect(host.textContent).not.toContain("Pilot");
     await act(async () => root.unmount());
   });
 });

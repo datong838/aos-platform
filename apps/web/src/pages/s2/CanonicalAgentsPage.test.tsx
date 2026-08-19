@@ -89,8 +89,9 @@ describe("CanonicalAgentsPage", () => {
     const root = createRoot(host);
     await act(async () => root.render(<MemoryRouter><CanonicalAgentsPage /></MemoryRouter>));
     await act(async () => undefined);
-    expect(host.textContent).toContain("受限 Pilot 可运行");
+    expect(host.textContent).toContain("可运行（目录已就绪");
     expect(host.textContent).toContain("可运行 1/1");
+    expect(host.textContent).not.toContain("Pilot");
     await act(async () => root.unmount());
   });
 

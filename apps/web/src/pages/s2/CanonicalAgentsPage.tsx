@@ -40,7 +40,7 @@ export function CanonicalAgentsPage() {
   }, [runtime]);
 
   return (
-    <PageChrome title="智能体列表" lede="当前组织与工作区已安装的数字同事；运行前置门未满足时诚实失败关闭">
+    <PageChrome title="智能体列表" lede="当前组织与工作区已安装的数字同事">
       <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
         <button className="btn" type="button" onClick={() => void load()}>刷新</button>
         <Link to="/aip/agent-registry">打开智能体目录 →</Link>
@@ -52,7 +52,7 @@ export function CanonicalAgentsPage() {
       ) : data.count === 0 ? (
         <div className="card">
           <h3>尚未安装智能体</h3>
-          <p>请先在「智能体目录」安装电商六数字同事。本页不显示本地样例。</p>
+          <p>请先在「智能体目录」安装电商六数字同事。</p>
           <Link to="/aip/agent-registry">前往安装 →</Link>
         </div>
       ) : (
@@ -64,10 +64,10 @@ export function CanonicalAgentsPage() {
             const note = !gate
               ? "运行就绪尚未对账；请打开智能体目录刷新"
               : runnable
-                ? "受限 Pilot 可运行（目录已就绪；本页不直接外呼）"
+                ? "可运行（目录已就绪；本页不直接外呼）"
                 : gate.blockers.length
                   ? formatBlockers(gate.blockers)
-                  : "缺少完整能力/技能绑定与依赖快照，不能试运行";
+                  : "缺少完整能力/技能绑定与依赖快照";
             return (
               <article
                 className="card"
