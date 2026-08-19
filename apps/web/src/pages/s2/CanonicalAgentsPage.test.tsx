@@ -70,6 +70,8 @@ describe("CanonicalAgentsPage", () => {
     expect(host.textContent).toContain("内容官");
     expect(host.textContent).toContain("待配置");
     expect(host.textContent).toContain("技能绑定就绪快照已过期");
+    expect(host.textContent).toContain("概览");
+    expect(host.textContent).toContain("工具箱");
     expect(host.textContent).not.toContain("MOCK_AGENTS");
     expect(host.textContent).not.toContain("skill_binding_readiness_stale");
     expect(host.textContent).not.toContain("ecommerce.content_officer.default");
@@ -77,7 +79,7 @@ describe("CanonicalAgentsPage", () => {
     await act(async () => root.unmount());
   });
 
-  it("目录 runnable 时显示可运行说明", async () => {
+  it("目录 runnable 时显示可运行说明且试运行可点进工具面板", async () => {
     sdk.runtimeReadiness.mockResolvedValue({
       ...blockedRuntime,
       catalog: {
@@ -91,6 +93,10 @@ describe("CanonicalAgentsPage", () => {
     await act(async () => undefined);
     expect(host.textContent).toContain("可运行（目录已就绪");
     expect(host.textContent).toContain("可运行 1/1");
+    const tryTab = Array.from(host.querySelectorAll("button")).find((b) => b.textContent === "试运行");
+    expect(tryTab).toBeTruthy();
+    await act(async () => { tryTab!.click(); });
+    expect(host.textContent).toContain("前往工具面板试跑");
     expect(host.textContent).not.toContain("Pilot");
     await act(async () => root.unmount());
   });
@@ -102,6 +108,17 @@ describe("CanonicalAgentsPage", () => {
     await act(async () => undefined);
     expect(host.textContent).toContain("实例读取失败：registry unavailable");
     expect(host.textContent).not.toContain("内容官");
+    await act(async () => root.unmount());
+  });
+
+  it("未就绪时试运行按钮禁用", async () => {
+    const root = createRoot(host);
+    await act(async () => root.render(<MemoryRouter><CanonicalAgentsPage /></MemoryRouter>));
+    await act(async () => undefined);
+    const tryTab = Array.from(host.querySelectorAll("button")).find((b) => b.textContent === "试运行");
+    await act(async () => { tryTab!.click(); });
+    const tryBtn = Array.from(host.querySelectorAll("button")).find((b) => b.textContent?.includes("试运行（依赖未齐）")) as HTMLButtonElement;
+    expect(tryBtn?.disabled).toBe(true);
     await act(async () => root.unmount());
   });
 });
