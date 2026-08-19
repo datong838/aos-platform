@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const sdk = vi.hoisted(() => ({ runtimeReadiness: vi.fn(), installEcommerce: vi.fn() }));
+const sdk = vi.hoisted(() => ({ runtimeReadiness: vi.fn(), refreshReadiness: vi.fn(), installEcommerce: vi.fn() }));
 vi.mock("../../api/aipAgentControl", () => ({ aipAgentControl: sdk }));
 import { CanonicalAgentRegistryPage, precheckDisabledTitle } from "./CanonicalAgentRegistryPage";
 
@@ -21,14 +21,24 @@ const runtime = {
 
 describe("precheckDisabledTitle", () => {
   it("快照过期时不误导成「必须先全量技能发布」", () => {
-    expect(precheckDisabledTitle(["skill_binding_readiness_stale", "capability_binding_readiness_stale"])).toContain("就绪快照已过期");
+    expect(precheckDisabledTitle(["skill_binding_readiness_stale", "capability_binding_readiness_stale"])).toContain("重评绑定");
     expect(precheckDisabledTitle(["skill_binding_readiness_stale"])).not.toContain("需先完成技能发布、能力绑定");
   });
 });
 
 describe("CanonicalAgentRegistryPage", () => {
   let host: HTMLDivElement;
-  beforeEach(() => { host = document.createElement("div"); document.body.appendChild(host); sdk.runtimeReadiness.mockReset().mockResolvedValue(runtime); sdk.installEcommerce.mockReset(); });
+  beforeEach(() => {
+    host = document.createElement("div");
+    document.body.appendChild(host);
+    sdk.runtimeReadiness.mockReset().mockResolvedValue(runtime);
+    sdk.refreshReadiness.mockReset().mockResolvedValue({
+      ...runtime,
+      evaluatedAt: "2026-08-15T06:10:00Z",
+      catalog: { ...runtime.catalog, stats: { ...runtime.catalog.stats, runnableCount: 1 } },
+    });
+    sdk.installEcommerce.mockReset();
+  });
   afterEach(() => host.remove());
   it("展示六同事、Skill/Capability 绑定覆盖和稳定阻断原因", async () => {
     const root = createRoot(host); await act(async () => root.render(<MemoryRouter><CanonicalAgentRegistryPage /></MemoryRouter>)); await act(async () => undefined);
@@ -39,6 +49,15 @@ describe("CanonicalAgentRegistryPage", () => {
     expect(host.textContent).toContain("热点竞品与获客机会研究");
     expect(host.textContent).toContain("Evals 门控");
     expect(host.textContent).toContain("仅已评测 · 未绑定");
+    await act(async () => root.unmount());
+  });
+  it("点击刷新会调用 refreshReadiness 重评绑定", async () => {
+    const root = createRoot(host); await act(async () => root.render(<MemoryRouter><CanonicalAgentRegistryPage /></MemoryRouter>)); await act(async () => undefined);
+    const refreshBtn = Array.from(host.querySelectorAll("button")).find((btn) => btn.textContent === "刷新");
+    expect(refreshBtn).toBeTruthy();
+    await act(async () => { refreshBtn!.click(); });
+    expect(sdk.refreshReadiness).toHaveBeenCalledTimes(1);
+    expect(host.textContent).toContain("可运行 1");
     await act(async () => root.unmount());
   });
   it("数据参谋 runnable 时展示受限 Pilot 可运行", async () => {

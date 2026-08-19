@@ -65,11 +65,25 @@ def test_runtime_readiness_contract_and_tenant_echo(client):
                 "evaluatedAt": "2026-08-15T05:30:00Z",
             }
 
+        def refresh_binding_readiness(self, principal, *, idempotency_key: str):
+            assert idempotency_key
+            body = self.runtime_readiness(principal)
+            body = dict(body)
+            body["evaluatedAt"] = "2026-08-15T05:45:00Z"
+            body["catalog"] = dict(body["catalog"])
+            body["catalog"]["stats"] = dict(body["catalog"]["stats"])
+            body["catalog"]["stats"]["runnableCount"] = 1
+            return body
+
     client.app.dependency_overrides[get_ecommerce_agent_installer] = FakeInstaller
     try:
         response = client.get(
             "/v1/aip/agent-registry/runtime-readiness",
             headers=_headers("org-org"),
+        )
+        refreshed = client.post(
+            "/v1/aip/agent-registry/refresh-readiness",
+            headers=_headers("org-org", key="pytest-refresh-readiness"),
         )
     finally:
         client.app.dependency_overrides.pop(get_ecommerce_agent_installer, None)
@@ -79,6 +93,9 @@ def test_runtime_readiness_contract_and_tenant_echo(client):
         "projectId": "dev-project",
     }
     assert response.json()["catalog"]["stats"]["runnableCount"] == 0
+    assert refreshed.status_code == 200
+    assert refreshed.json()["catalog"]["stats"]["runnableCount"] == 1
+    assert refreshed.json()["evaluatedAt"] == "2026-08-15T05:45:00Z"
 
 
 def test_canonical_catalog_install_replay_and_tenant_canary(client):

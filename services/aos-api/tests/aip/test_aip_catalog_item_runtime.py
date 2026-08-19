@@ -96,3 +96,70 @@ def test_stale_skill_binding_is_not_runnable() -> None:
     assert readiness == "blocked"
     assert "skill_binding_readiness_stale" in blockers
     assert blockers != []
+
+
+def test_refresh_binding_readiness_soft_fails_and_continues() -> None:
+    from aos_api.aip_ecommerce_agent_installer import AipEcommerceAgentInstaller
+    from aos_api.auth import Principal
+
+    principal = Principal(
+        subject="pytest",
+        org_id="org-org",
+        project_id="dev-project",
+        roles=["owner"],
+    )
+    stale_cap = SimpleNamespace(
+        binding_id="cap-stale",
+        status="active",
+        version=2,
+        operational_readiness=CapabilityReadiness.BLOCKED,
+        readiness_expires_at=NOW - timedelta(minutes=1),
+        dependencies=SimpleNamespace(),
+    )
+    fresh_cap = SimpleNamespace(
+        binding_id="cap-fresh",
+        status="active",
+        version=1,
+        operational_readiness=CapabilityReadiness.AVAILABLE,
+        readiness_expires_at=NOW + timedelta(minutes=10),
+        dependencies=SimpleNamespace(),
+    )
+    stale_skill = SimpleNamespace(
+        binding_id="skill-stale",
+        status="active",
+        version=3,
+        readiness=CapabilityReadiness.BLOCKED,
+        readiness_expires_at=NOW - timedelta(minutes=1),
+        dependencies=SimpleNamespace(),
+    )
+
+    class Caps:
+        def list_bindings(self, scope, limit=200):
+            return [stale_cap, fresh_cap]
+
+        def evaluate(self, *args, **kwargs):
+            raise RuntimeError("provider_http_error")
+
+    class Skills:
+        def list_bindings(self, scope, limit=200):
+            return [stale_skill]
+
+        def evaluate_binding(self, *args, **kwargs):
+            raise RuntimeError("capability_not_ready")
+
+    calls = {"runtime": 0}
+
+    installer = AipEcommerceAgentInstaller(
+        capability_bindings=Caps(),
+        skills=Skills(),
+        clock=lambda: NOW,
+    )
+
+    def runtime_readiness(_principal):
+        calls["runtime"] += 1
+        return SimpleNamespace(ok=True)
+
+    installer.runtime_readiness = runtime_readiness  # type: ignore[method-assign]
+    result = installer.refresh_binding_readiness(principal, idempotency_key="pytest-soft")
+    assert result.ok is True
+    assert calls["runtime"] == 1

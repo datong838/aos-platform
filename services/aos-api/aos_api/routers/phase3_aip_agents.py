@@ -122,6 +122,23 @@ def get_agent_runtime_readiness(
 
 
 @router.post(
+    "/agent-registry/refresh-readiness",
+    response_model=AgentRuntimeReadinessResponse,
+)
+def refresh_agent_runtime_readiness(
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    installer: AipEcommerceAgentInstaller = Depends(get_ecommerce_agent_installer),
+) -> AgentRuntimeReadinessResponse:
+    try:
+        return installer.refresh_binding_readiness(
+            principal, idempotency_key=_idem(idempotency_key)
+        )
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
     "/agents/install-ecommerce",
     response_model=AgentInstallResponse,
     status_code=status.HTTP_201_CREATED,

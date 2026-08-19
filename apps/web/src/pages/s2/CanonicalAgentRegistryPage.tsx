@@ -20,7 +20,7 @@ export function runtimeSnapshotStale(evaluatedAt: string, now = Date.now()): boo
 export function precheckDisabledTitle(blockers: string[]): string {
   if (!blockers.length) return "缺少完整能力/技能绑定与依赖快照";
   if (blockers.every((code) => /_stale$|_stale:/.test(code) || code.endsWith("_stale"))) {
-    return "就绪快照已过期：请点击本页「刷新」。R2 不要求该角色全部技能都发布绑定。";
+    return "就绪快照已过期：请点击本页「刷新」重评绑定。R2 不要求该角色全部技能都发布绑定。";
   }
   return formatBlockers(blockers);
 }
@@ -29,6 +29,7 @@ export function CanonicalAgentRegistryPage() {
   const [data, setData] = useState<AgentRuntimeReadinessResponse | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const load = useCallback(async () => {
     try { setData(await aipAgentControl.runtimeReadiness()); setError(""); }
     catch (e) { setData(null); setError(String((e as Error).message || e)); }
@@ -39,6 +40,17 @@ export function CanonicalAgentRegistryPage() {
     try { await aipAgentControl.installEcommerce(`a6f-ui-${crypto.randomUUID()}`); await load(); }
     catch (e) { setError(String((e as Error).message || e)); }
     finally { setBusy(false); }
+  }
+  async function refresh() {
+    setRefreshing(true);
+    try {
+      setData(await aipAgentControl.refreshReadiness(`a6f-refresh-${crypto.randomUUID()}`));
+      setError("");
+    } catch (e) {
+      setError(String((e as Error).message || e));
+    } finally {
+      setRefreshing(false);
+    }
   }
   const stale = useMemo(() => data ? runtimeSnapshotStale(data.evaluatedAt) : false, [data]);
   return <PageChrome title="智能体目录" lede="六数字同事的模板、实例、技能与专业能力运行绑定真相">
@@ -53,11 +65,11 @@ export function CanonicalAgentRegistryPage() {
           <span>技能绑定 {data.bindingStats.activeSkillBindingCount}/{data.bindingStats.skillBindingCount} 已激活</span>
           <span>能力绑定 {data.bindingStats.activeCapabilityBindingCount}/{data.bindingStats.capabilityBindingCount} 已激活</span>
           <strong style={{color:"var(--aos-amber-700)"}}>可运行 {data.catalog.stats.runnableCount}</strong>
-          <button className="btn primary" disabled={busy || data.catalog.stats.installedCount === data.catalog.stats.definitionCount} onClick={() => void install()}>{busy ? "安装中…" : data.catalog.stats.installedCount === data.catalog.stats.definitionCount ? "六数字同事已安装" : "安装电商六数字同事"}</button>
-          <button className="btn" onClick={() => void load()}>刷新</button>
+          <button className="btn primary" disabled={busy || refreshing || data.catalog.stats.installedCount === data.catalog.stats.definitionCount} onClick={() => void install()}>{busy ? "安装中…" : data.catalog.stats.installedCount === data.catalog.stats.definitionCount ? "六数字同事已安装" : "安装电商六数字同事"}</button>
+          <button className="btn" disabled={refreshing || busy} onClick={() => void refresh()} title="对过期或未就绪的激活绑定执行软重评，再投影可运行数">{refreshing ? "重评中…" : "刷新"}</button>
         </div>
         <div style={{marginTop:10,fontSize:13,color:stale ? "var(--aos-amber-700)" : "var(--aos-text-secondary)"}}>
-          快照 {new Date(data.evaluatedAt).toLocaleString()} · {stale ? "已过期，请刷新后再判断" : "15 分钟有效期内"}
+          快照 {new Date(data.evaluatedAt).toLocaleString()} · {stale ? "已过期，请点「刷新」重评绑定" : "15 分钟有效期内"}
         </div>
         <div className="notice" style={{marginTop:12,fontSize:13}}>
           R2 口径：每位同事至少 1 条已发布 Pilot 技能可运行即可；列表里「仅已评测 · 未绑定」是尚未全量发布的定义，不是本页故障。

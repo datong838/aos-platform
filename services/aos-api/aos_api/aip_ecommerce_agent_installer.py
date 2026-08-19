@@ -18,6 +18,7 @@ from aos_api.aip_agent_registry_contracts import (
     AgentInstanceStatus,
     CapabilityReadiness,
     CreateAgentInstanceRequest,
+    EvaluateOperationalBindingRequest,
     TemplateLifecycle,
     VersionedAssetRef,
 )
@@ -288,6 +289,74 @@ class AipEcommerceAgentInstaller:
             ),
             evaluated_at=self._clock(),
         )
+
+    def refresh_binding_readiness(
+        self,
+        principal: Principal,
+        *,
+        idempotency_key: str,
+    ) -> AgentRuntimeReadinessResponse:
+        """Re-evaluate stale/unavailable active Bindings, then return live catalog projection.
+
+        Soft-fail per binding: multimedia Health gaps must not abort text Pilot refresh.
+        """
+        scope = self._scope(principal)
+        now = self._clock()
+        actor = principal.subject or "aip-catalog-refresh"
+
+        for binding in self._capability_bindings.list_bindings(scope, limit=200):
+            if _value(getattr(binding, "status", None)) != "active":
+                continue
+            if _fresh_available(
+                binding.status,
+                getattr(binding, "operational_readiness", None),
+                getattr(binding, "readiness_expires_at", None),
+                now,
+            ):
+                continue
+            try:
+                self._capability_bindings.evaluate(
+                    scope,
+                    binding.binding_id,
+                    EvaluateOperationalBindingRequest(
+                        expected_version=binding.version,
+                        dependencies=binding.dependencies,
+                    ),
+                    idempotency_key=(
+                        f"{idempotency_key}:capability:{binding.binding_id}"
+                    ),
+                    actor=actor,
+                    evaluated_at=now,
+                )
+            except Exception:
+                continue
+
+        for binding in self._skills.list_bindings(scope, limit=200):
+            if _value(getattr(binding, "status", None)) != "active":
+                continue
+            if _fresh_available(
+                binding.status,
+                getattr(binding, "readiness", None),
+                getattr(binding, "readiness_expires_at", None),
+                now,
+            ):
+                continue
+            try:
+                self._skills.evaluate_binding(
+                    scope,
+                    binding.binding_id,
+                    EvaluateOperationalBindingRequest(
+                        expected_version=binding.version,
+                        dependencies=binding.dependencies,
+                    ),
+                    idempotency_key=f"{idempotency_key}:skill:{binding.binding_id}",
+                    actor=actor,
+                    evaluated_at=now,
+                )
+            except Exception:
+                continue
+
+        return self.runtime_readiness(principal)
 
     def install(self, principal: Principal, *, idempotency_key: str) -> AgentInstallResponse:
         templates, _, _ = self._definitions()
