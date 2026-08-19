@@ -1477,9 +1477,22 @@ export function ProvidersPage() {
   return (
     <S2Chrome
       title="大模型接入(插件)"
-      lede="每种供应商 = 一个插件（20 §3.1）。先安装插件，再填类型化配置；运行时经平台网关，不直连厂商。"
+      lede="每种供应商对应一个插件：先安装，再填类型化配置；运行时经平台网关，不直连厂商。"
     >
       <BpArchitectureBar activeLayer="L1" />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, margin: "10px 0 12px" }}>
+        {[
+          ["运行供应商", (data?.items || []).length],
+          ["已安装插件", installedPlugins.length],
+          ["目录待装", catalogPlugins.length],
+          ["插件合计", pluginItems.length],
+        ].map(([name, count]) => (
+          <div key={String(name)} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{name}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{count}</div>
+          </div>
+        ))}
+      </div>
       <BpToolbar>
         <button
           type="button"
