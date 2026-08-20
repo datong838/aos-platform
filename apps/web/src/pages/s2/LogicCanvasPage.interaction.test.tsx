@@ -9,6 +9,7 @@ import type { LogicDryRun, LogicRunSummary } from "./logicRunContracts";
 import type { LogicPublication } from "./logicPublicationContracts";
 
 const graphApi = vi.hoisted(() => ({
+  listLogicGraphs: vi.fn(),
   getLogicGraph: vi.fn(),
   createLogicGraph: vi.fn(),
   replaceLogicGraph: vi.fn(),
@@ -197,8 +198,11 @@ function historySummary(run: LogicDryRun): LogicRunSummary {
 }
 
 let currentPath = "";
+let currentSearch = "";
 function LocationProbe() {
-  currentPath = useLocation().pathname;
+  const location = useLocation();
+  currentPath = location.pathname;
+  currentSearch = location.search;
   return null;
 }
 
@@ -219,6 +223,7 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     document.body.appendChild(host);
     root = createRoot(host);
     currentPath = "";
+    currentSearch = "";
     Object.values(graphApi).forEach((mock) => mock.mockReset());
     Object.values(runApi).forEach((mock) => mock.mockReset());
     Object.values(publicationApi).forEach((mock) => mock.mockReset());
@@ -226,6 +231,7 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     productionContracts.listStageTemplates.mockClear();
     productionContracts.listResponsibilityPlans.mockClear();
     agentControl.runtimeReadiness.mockClear();
+    graphApi.listLogicGraphs.mockResolvedValue({ items: [], count: 0 });
     runApi.listLogicRuns.mockResolvedValue({ items: [], count: 0, next_cursor: null });
     publicationApi.listLogicPublications.mockResolvedValue({ items: [], count: 0 });
     clientApi.apiGet.mockResolvedValue({ items: [] });
@@ -281,8 +287,24 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
-  it("无 flowId 显示带 4 节点 3 连接的明确未保存模板，显式 POST 后 replace 导航", async () => {
+  it("无 flowId 优先选择 exact persisted Graph；空列表诚实展示且仅显式新建后产生草稿", async () => {
+    const saved = graphSnapshot("default-saved", 5);
+    graphApi.listLogicGraphs.mockResolvedValueOnce({ items: [saved], count: 1 });
     await renderPage();
+    expect(graphApi.listLogicGraphs).toHaveBeenCalledTimes(1);
+    expect(host.textContent).toContain("Logic default-saved");
+    expect(host.textContent).not.toContain("未保存模板");
+    expect(currentPath).toBe("/aip/logic/default-saved");
+
+    act(() => root.unmount());
+    root = createRoot(host);
+    graphApi.listLogicGraphs.mockResolvedValueOnce({ items: [], count: 0 });
+    await renderPage();
+    expect(host.textContent).toContain("尚无已保存 Logic Graph");
+    expect(host.textContent).not.toContain("节点 4 · 连接 3");
+
+    await act(async () => button("新建 Logic 草稿").click());
+    await flush();
     expect(host.textContent).toContain("未保存模板");
     expect(host.textContent).toContain("节点 4 · 连接 3");
     expect(host.textContent).toContain("未保存更改");
@@ -304,7 +326,32 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     });
     const createdId = graphApi.createLogicGraph.mock.calls[0][0].id;
     expect(currentPath).toBe(`/aip/logic/${createdId}`);
-    expect(host.textContent).toContain("已保存并回读确认");
+  });
+
+  it("三个 Tab 与 URL/tabpanel 一一绑定，并支持方向键和 Home/End 焦点语义", async () => {
+    graphApi.getLogicGraph.mockResolvedValue(graphSnapshot("tabs", 2));
+    await renderPage("tabs");
+    expect(host.querySelectorAll('[role="tabpanel"]')).toHaveLength(1);
+    expect(host.querySelector('[role="tabpanel"]')?.id).toBe("logic-panel-edit");
+
+    await act(async () => button("运行历史").click());
+    expect(currentSearch).toBe("?tab=history");
+    expect(host.querySelectorAll('[role="tabpanel"]')).toHaveLength(1);
+    expect(host.querySelector('[role="tabpanel"]')?.id).toBe("logic-panel-history");
+
+    const historyTab = button("运行历史");
+    await act(async () => historyTab.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })));
+    await flush();
+    expect(currentSearch).toBe("?tab=automation");
+    expect(host.querySelector('[role="tabpanel"]')?.id).toBe("logic-panel-automation");
+    expect(host.textContent).toContain("tabs@2");
+    expect(host.textContent).toContain("Uses 真源尚未接入");
+    expect(host.textContent).not.toContain("已登记 Uses0");
+
+    await act(async () => button("自动化").dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true })));
+    await flush();
+    expect(currentSearch).toBe("");
+    expect(host.querySelector('[role="tabpanel"]')?.id).toBe("logic-panel-edit");
   });
 
   it("flowId 切换立即隔离旧图，迟到的旧 GET 不得覆盖新图", async () => {
@@ -442,6 +489,8 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
 
   it("安全试跑按钮始终可见，并按未保存、loading、dirty、saving、Inputs 与 running 严格门禁", async () => {
     await renderPage();
+    await act(async () => button("新建 Logic 草稿").click());
+    await flush();
     expect(button("安全试跑").disabled).toBe(true);
     expect(host.textContent).toContain("请先保存 Logic Graph");
 
@@ -707,6 +756,8 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     await openHistoryTab();
     await act(async () => button("run-old-late").click());
     await act(async () => root.render(<MemoryRouter><LogicCanvasPage key="new-run" flowId="new-run" /></MemoryRouter>));
+    await flush();
+    await act(async () => button("编辑").click());
     await flush();
     oldDetail.resolve(dryRunResult(oldGraph, "run-old-late"));
     await flush();
