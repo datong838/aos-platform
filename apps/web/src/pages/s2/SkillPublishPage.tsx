@@ -120,7 +120,7 @@ export function SkillPublishPage() {
       </div>
       {error && <div role="alert" className="notice bad">技能列表读取失败：{error}</div>}
       {allItems.length > 0 ? (
-        <div className="notice" style={{ padding: 12, marginBottom: 12 }} role="status">
+        <div className="notice" style={{ padding: 12, marginBottom: 12 }} role="status" data-testid="skill-publish-batch-stats">
           首批发布对账：已发布技能 <strong>{batchStats.published}</strong> 个 ·
           仍待 Logic 权威进库 <strong>{batchStats.waitingLogic}</strong> 个 ·
           列表共 {batchStats.total} 条修订。缺 Logic 图时保持 fail-closed，不在此页伪造发布。
