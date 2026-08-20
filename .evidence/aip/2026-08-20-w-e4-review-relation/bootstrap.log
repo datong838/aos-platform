@@ -10,12 +10,11 @@
   class Dataset(BaseModel):
 /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase5_datasets.py:31: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
   class CreateDatasetRequest(BaseModel):
-{"ts": "2026-08-19T21:19:03.583406+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
-{"ts": "2026-08-19T21:19:03.583485+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-08-20T05:20:09.529392+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
 {
   "relationId": "artifact-relation-8bf33b8b20f74b9bb3d4",
   "issueId": "review-issue-5a620b9e1c5141d4a0b2",
   "relationCount": 1,
   "issueCount": 1
 }
-{"ts": "2026-08-19T21:19:03.724927+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-08-20T05:20:09.651669+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

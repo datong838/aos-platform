@@ -1,0 +1,224 @@
+F........                                                                [100%]
+=================================== FAILURES ===================================
+E   AssertionError: assert 'STAGE_SOURCE...NG_OR_DRIFTED' == 'STAGE_SOURCE...Y_UNAVAILABLE'
+      
+      - STAGE_SOURCE_AUTHORITY_UNAVAILABLE
+      + STAGE_SOURCE_MISSING_OR_DRIFTED
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 6cd2ca0eff8f, Core-schema baseline migration asset for Wave 0.
+INFO  [alembic.runtime.migration] Running upgrade 6cd2ca0eff8f -> 228ec02oauth, Add tenant-scoped encrypted OAuth token store.
+INFO  [alembic.runtime.migration] Running upgrade 228ec02oauth -> b7e2c4a92283, Add tenant-safe ecommerce core objects, links and sync state.
+INFO  [alembic.runtime.migration] Running upgrade b7e2c4a92283 -> 228ec03linkguard, Add database guards for ecommerce Link tenant and endpoint shape.
+INFO  [alembic.runtime.migration] Running upgrade 228ec03linkguard -> 228logicgraph, Add tenant-scoped canonical AIP Logic graph snapshots and revisions.
+INFO  [alembic.runtime.migration] Running upgrade 228logicgraph -> 228logicrun, Add immutable tenant-scoped AIP Logic dry-run history.
+INFO  [alembic.runtime.migration] Running upgrade 228logicrun -> 228logiceval, Add tenant-scoped Evals suites and immutable Logic report evidence.
+INFO  [alembic.runtime.migration] Running upgrade 228logiceval -> 228logicpublish, Add immutable tenant-scoped AIP Logic publications.
+INFO  [alembic.runtime.migration] Running upgrade 228logicpublish -> a93c7e1b4f20, Add the canonical asset bundle registry.
+INFO  [alembic.runtime.migration] Running upgrade a93c7e1b4f20 -> 228assetsecurity, Add atomic asset bundle lifecycle audit events.
+INFO  [alembic.runtime.migration] Running upgrade 228assetsecurity -> 228assetinvariants, Seal asset registry status and projection invariants.
+INFO  [alembic.runtime.migration] Running upgrade 228assetinvariants -> 228assetevidence, Persist immutable evidence snapshots with lifecycle events.
+INFO  [alembic.runtime.migration] Running upgrade 228assetevidence -> 228assetinstall, Add immutable bundle composition and installation control-plane storage.
+INFO  [alembic.runtime.migration] Running upgrade 228assetinstall -> 228assetintegration, Add immutable Integration Case, Evidence, and projection storage.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 228assetintegration -> 228ti1e1expand, TI-1 E1 nullable tenant scope and NOT VALID relationship expansion.
+INFO  [alembic.runtime.migration] Running upgrade 228ti1e1expand -> 228ti1e2dual, TI-1 E2 authz dual-write evidence ledger.
+INFO  [alembic.runtime.migration] Running upgrade 228ti1e2dual -> 228ti1e3ledger, TI-1 E3 append-only ownership and quarantine ledger.
+INFO  [alembic.runtime.migration] Running upgrade 228ti1e3ledger -> 228ti1e3exec, TI-1 E3 append-only execution and role-separation events.
+INFO  [alembic.runtime.migration] Running upgrade 228ti1e3exec -> 228ti2e1expand, TI-2 E1 nullable Module instance and overlay expansion.
+INFO  [alembic.runtime.migration] Running upgrade 228ti2e1expand -> 228ti2e4validate, TI-2 E4 validate Module identity foreign keys.
+INFO  [alembic.runtime.migration] Running upgrade 228ti2e4validate -> 228ti2e6rls, TI-2 E6 enforce tenant RLS for the Module instance family.
+INFO  [alembic.runtime.migration] Running upgrade 228ti2e6rls -> 228ti2e7contract, TI-2 E7 contract Module identities and tenant-scoped primary keys.
+INFO  [alembic.runtime.migration] Running upgrade 228ti2e7contract -> 228ti3e1expand, TI-3 E1 expand TenantScope columns for object runtime resources.
+INFO  [alembic.runtime.migration] Running upgrade 228ti3e1expand -> 228ti3e4validate, TI-3 E4 validate Object runtime workspace foreign keys.
+INFO  [alembic.runtime.migration] Running upgrade 228ti3e4validate -> 228ti3e6rls, TI-3 E6 enforce tenant RLS for the Object Runtime family.
+INFO  [alembic.runtime.migration] Running upgrade 228ti3e6rls -> 228ti3e7contract, TI-3 E7 contract Object Runtime tenant identities and active rows.
+INFO  [alembic.runtime.migration] Running upgrade 228ti3e7contract -> 228ti4c1expand, TI-4 C1 add NOT VALID workspace alias foreign keys to e-commerce tables.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4c1expand -> 228ti4d1expand, TI-4 D1 expand TenantScope columns and workspace FKs for Data OS.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4d1expand -> 228ti4d4validate, TI-4 D4 validate Data OS workspace foreign keys.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4d4validate -> 228ti4d6rls, TI-4 D6 enforce tenant RLS for the Data OS family.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4d6rls -> 228ti4d7contract, TI-4 D7 contract Data OS tenant identities and quarantine history.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4d7contract -> 228ti4c3contract, TI-4 C3 validate and enforce e-commerce Connector tenant boundaries.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4c3contract -> 228ti4a1apollo, TI-4 A1 contract Apollo Spoke tenant instances.
+INFO  [alembic.runtime.migration] Running upgrade 228ti4a1apollo -> 228ti5a1aip, TI-5 A1 contract tenant-scoped AIP runtime tables.
+INFO  [alembic.runtime.migration] Running upgrade 228ti5a1aip -> 228ti5a2kv, TI-5 A2 contract legacy AIP KV into tenant-scoped storage.
+INFO  [alembic.runtime.migration] Running upgrade 228ti5a2kv -> 228ti5a3lineage, TI-5 A3 contract decision lineage from its draft execution context.
+INFO  [alembic.runtime.migration] Running upgrade 228ti5a3lineage -> 228ti5b1models, TI-5 B1 tenant contract for model-management tables.
+INFO  [alembic.runtime.migration] Running upgrade 228ti5b1models -> 228ti6bcontract, TI-6 2B contract remaining Workshop and TWA scoped identities.
+INFO  [alembic.runtime.migration] Running upgrade 228ti6bcontract -> 228ti6cassets, TI-6 2C enforce RLS for asset installation and Integration Case stores.
+INFO  [alembic.runtime.migration] Running upgrade 228ti6cassets -> 228ti6drelations, TI-6 2D anchor asset-control roots to the canonical workspace.
+INFO  [alembic.runtime.migration] Running upgrade 228ti6drelations -> 228ti6edirectory, TI-6 3A align the test and Qiyue control-plane directory.
+INFO  [alembic.runtime.migration] Running upgrade 228ti6edirectory -> o1a0_001, O1-A0: Expand-only migration — DLQ + derived columns + projection outbox + alias sidecar + uninstalled fix.
+INFO  [alembic.runtime.migration] Running upgrade o1a0_001 -> d5e1_001, D5-E1: Expand ecom_object/ecom_link CHECK constraints for 12 OT + 14 Link types.
+INFO  [alembic.runtime.migration] Running upgrade d5e1_001 -> o1r1_001, O1-R1: distinguish legacy projection receipts from authoritative Outbox events.
+INFO  [alembic.runtime.migration] Running upgrade o1r1_001 -> o1r1_002, O1-R1: replace the empty O1-A0 DLQ shell with the reviewed PG contract.
+INFO  [alembic.runtime.migration] Running upgrade o1r1_002 -> o1r2_001, O1-R2: enforce the single-projector compatibility-write boundary.
+INFO  [alembic.runtime.migration] Running upgrade o1r2_001 -> o1r3_001, O1-R3: installation-bound organization ontology overlays.
+INFO  [alembic.runtime.migration] Running upgrade o1r3_001 -> o1p12_001, O1-A/P12 derived metric CAS, receipt and outbox contract.
+INFO  [alembic.runtime.migration] Running upgrade o1p12_001 -> o1d_001, O1-D versioned and reversible canonical alias migration contract.
+INFO  [alembic.runtime.migration] Running upgrade o1d_001 -> o1d_002, O1-D make the manifest run part of the immutable sidecar identity.
+INFO  [alembic.runtime.migration] Running upgrade o1d_002 -> o1ua2_001, O1-UA2 tenant-authoritative knowledge, action, task and evidence records.
+INFO  [alembic.runtime.migration] Running upgrade o1ua2_001 -> o1ua2_002, O1-UA2 explicit Plan/Checkpoint records and cleanup idempotency.
+INFO  [alembic.runtime.migration] Running upgrade o1ua2_002 -> o1ux2_001, O1-UX2 tenant-authoritative exploration assets.
+INFO  [alembic.runtime.migration] Running upgrade o1ux2_001 -> aip1_001, AIP-1 canonical Task/Plan/Run runtime.
+INFO  [alembic.runtime.migration] Running upgrade aip1_001 -> aip3_001, AIP-3 canonical Action Proposal, Approval, Lease and Receipt authority.
+INFO  [alembic.runtime.migration] Running upgrade aip3_001 -> aip3b_001, AIP-3B execution guardrails and append-only receipt reconciliation.
+INFO  [alembic.runtime.migration] Running upgrade aip3b_001 -> aip3b_002, Make AIP Action Receipt chains database-immutable.
+INFO  [alembic.runtime.migration] Running upgrade aip3b_002 -> aip4_001, AIP-4 Eval, release, lineage, and usage authority contracts.
+INFO  [alembic.runtime.migration] Running upgrade aip4_001 -> aip4_002, AIP-4 E1A immutable EvalPack suite revisions.
+INFO  [alembic.runtime.migration] Running upgrade aip4_002 -> aip4_003, AIP-4 E1B immutable Eval report revisions.
+INFO  [alembic.runtime.migration] Running upgrade aip4_003 -> aip4_004, Bind AIP lineage facts to immutable authority source events.
+INFO  [alembic.runtime.migration] Running upgrade aip4_004 -> aip4_005, Persist tenant-scoped telemetry spans and honest usage quantities.
+INFO  [alembic.runtime.migration] Running upgrade aip4_005 -> aip4_006, Add append-only usage attribution and capability receipts.
+INFO  [alembic.runtime.migration] Running upgrade aip4_006 -> aip4_007, Add the append-only ResearchJob provider and receipt authority.
+INFO  [alembic.runtime.migration] Running upgrade aip4_007 -> aip4_008, Bind every ResearchJob manifest to one exact immutable lineage event.
+INFO  [alembic.runtime.migration] Running upgrade aip4_008 -> aip5_001, Add the governed AIP memory authority tables.
+INFO  [alembic.runtime.migration] Running upgrade aip5_001 -> aip5_002, Add tenant-scoped AIP memory pipeline control authority.
+INFO  [alembic.runtime.migration] Running upgrade aip5_002 -> aip5_003, Add immutable schedule events for AIP memory pipelines.
+INFO  [alembic.runtime.migration] Running upgrade aip5_003 -> aip5_004, Add tenant-scoped rebuildable knowledge search projections.
+INFO  [alembic.runtime.migration] Running upgrade aip5_004 -> aip6_001, Add canonical AIP agent, skill and handoff authority.
+INFO  [alembic.runtime.migration] Running upgrade aip6_001 -> aip6_002, Add durable AIP-6 registry command receipts.
+INFO  [alembic.runtime.migration] Running upgrade aip6_002 -> aip6_003, Persist exact AgentInstance snapshots on AgentRun and Handoff.
+INFO  [alembic.runtime.migration] Running upgrade aip6_003 -> aip6_004, Add immutable AIP capability catalog authority.
+INFO  [alembic.runtime.migration] Running upgrade aip6_004 -> w2_001, Add W2-A task brief and evidence bundle authority.
+INFO  [alembic.runtime.migration] Running upgrade w2_001 -> aip7_001, Add AIP-7 immutable model runtime authority.
+INFO  [alembic.runtime.migration] Running upgrade aip7_001 -> w2_002, Add W2-B eval contract and responsibility plan authority.
+INFO  [alembic.runtime.migration] Running upgrade w2_002 -> aip7_002, Add AIP-7 exact model capacity pool and reservation authority.
+INFO  [alembic.runtime.migration] Running upgrade aip7_002 -> w2_003, Add W2-C stage template, artifact relation and review return authority.
+INFO  [alembic.runtime.migration] Running upgrade w2_003 -> w1e_001, Make bundle installation uninstall a complete immutable transition.
+INFO  [alembic.runtime.migration] Running upgrade w1e_001 -> w2_004, Add W2-D impact preview and production start decision authority.
+INFO  [alembic.runtime.migration] Running upgrade w2_004 -> aip5_005, Add AIP-5 E7 agent memory projection and improvement authorities.
+INFO  [alembic.runtime.migration] Running upgrade aip5_005 -> bind1_001, Add BIND-1 operational dependency snapshots to existing bindings.
+INFO  [alembic.runtime.migration] Running upgrade bind1_001 -> bind1_002, Align BIND provider refs with the AIP-7 ProviderInstance authority.
+INFO  [alembic.runtime.migration] Running upgrade bind1_002 -> bind1_003, Add exact provenance for governed published Skill revisions.
+INFO  [alembic.runtime.migration] Running upgrade bind1_003 -> aip8_001, Add governed Analyst QueryJob and Result authority.
+INFO  [alembic.runtime.migration] Running upgrade aip8_001 -> aip8_002, Add append-only Assist thread, turn, event and receipt authority.
+INFO  [alembic.runtime.migration] Running upgrade aip8_002 -> aip9_001, Add tenant-scoped MediaJob and AvatarSession runtime authority.
+INFO  [alembic.runtime.migration] Running upgrade aip9_001 -> aip9_002, Run AIP-9 event sequence locking through a fixed-path definer guard.
+INFO  [alembic.runtime.migration] Running upgrade aip9_002 -> aip10_001, Add canonical tenant-scoped AIP BudgetRevision authority.
+INFO  [alembic.runtime.migration] Running upgrade aip10_001 -> aip10_002, Add canonical tenant runtime guard policy authority.
+INFO  [alembic.runtime.migration] Running upgrade aip10_002 -> aip10_003, Add immutable model quota and budget-policy authority.
+INFO  [alembic.runtime.migration] Running upgrade aip10_003 -> aip10_004, Add NetworkPolicy authority and fixed EvalGate expiry.
+INFO  [alembic.runtime.migration] Running upgrade aip10_004 -> aip10_005, Bind governed published Skills to an exact published LogicRevision.
+INFO  [alembic.runtime.migration] Running upgrade aip10_005 -> aip10_006, Add durable AgentRun execution-attempt authority.
+INFO  [alembic.runtime.migration] Running upgrade aip10_006 -> aip6_007, Add versioned AgentInstance prompt/tools overlay authority.
+INFO  [alembic.runtime.migration] Running upgrade aip6_007 -> aip6_008, Add guardrails_json to AgentInstance overlay revision authority.
+INFO  [alembic.runtime.migration] Running upgrade aip6_008 -> w2_005, Add EvidenceBundle revoke events and disclosure decision authority (W-L10).
+INFO  [alembic.runtime.migration] Running upgrade w2_005 -> w2_006, Add ProductionContextRevision four-contract freeze authority (W-L11).
+INFO  [alembic.runtime.migration] Running upgrade w2_006 -> w2_007, Add HandoffDecisionRevision authority separate from Envelope transport (W-L12).
+INFO  [alembic.runtime.migration] Running upgrade w2_007 -> o1ux2_002, O1-UX2 SavedExploration share grant authority (W-L16).
+INFO  [alembic.runtime.migration] Running upgrade o1ux2_002 -> aip11_001, ResearchJob cancel/retry command receipts (W-L17).
+INFO  [alembic.runtime.migration] Running upgrade aip11_001 -> aip12_001, Add EffectReviewRevision and EffectMaturityDecision authority (W-L19).
+INFO  [alembic.runtime.migration] Running upgrade aip12_001 -> aip13_001, ToolBinding table + AssigneeResolutionReceipt (W-L20).
+/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/tests/aip/test_w2c_api.py:60: AssertionError: assert 'STAGE_SOURCE...NG_OR_DRIFTED' == 'STAGE_SOURCE...Y_UNAVAILABLE'
+=============================== warnings summary ===============================
+aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+aos_api/routers/phase5_datasets.py:31
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase5_datasets.py:31: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+tests/aip/test_w2c_api.py::test_w2c_stage_template_api_create_replay_list_get_and_blocked_freeze
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'profile' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2c_api.py::test_w2c_stage_template_api_create_replay_list_get_and_blocked_freeze
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'profile' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2c_api.py::test_w2c_stage_template_api_create_replay_list_get_and_blocked_freeze
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'profile' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2c_api.py::test_w2c_stage_template_api_create_replay_list_get_and_blocked_freeze
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'sourceBundleRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2c_api.py::test_w2c_stage_template_api_create_replay_list_get_and_blocked_freeze
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'sourceBundleRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2c_api.py::test_w2c_stage_template_api_create_replay_list_get_and_blocked_freeze
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'sourceBundleRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2c_api.py::test_w2c_stage_template_api_create_replay_list_get_and_blocked_freeze
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'stages' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2c_api.py::test_w2c_stage_template_api_create_replay_list_get_and_blocked_freeze
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'stages' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2c_api.py::test_w2c_stage_template_api_create_replay_list_get_and_blocked_freeze
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'stages' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2c_api.py::test_w2c_openapi_contains_all_canonical_routes
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/json_schema.py:2463: PydanticJsonSchemaWarning: Default value <function require_principal at 0x11b464ae0> is not JSON serializable; excluding default from JSON schema [non-serializable-default]
+    warnings.warn(message, PydanticJsonSchemaWarning)
+
+tests/aip/test_w2c_api.py::test_w2c_openapi_contains_all_canonical_routes
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID list_object_types_v1_ontology_object_types_get for function list_object_types at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase4_ontology_types.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2c_api.py::test_w2c_openapi_contains_all_canonical_routes
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID list_branches_v1_ontology_branches_get for function list_branches at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase4_ontology_branches.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2c_api.py::test_w2c_openapi_contains_all_canonical_routes
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID create_branch_v1_ontology_branches_post for function create_branch at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase4_ontology_branches.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2c_api.py::test_w2c_openapi_contains_all_canonical_routes
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID graph_health_v1_ontology_graph_health_get for function graph_health at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase4_ontology_branches.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2c_api.py::test_w2c_openapi_contains_all_canonical_routes
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID list_builds_v1_builds_get for function list_builds at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/builds.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2c_api.py::test_w2c_openapi_contains_all_canonical_routes
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID list_pipelines_v1_pipelines_get for function list_pipelines at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase5_pipelines.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2c_api.py::test_w2c_openapi_contains_all_canonical_routes
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID create_pipeline_v1_pipelines_post for function create_pipeline at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase5_pipelines.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2c_api.py::test_w2c_openapi_contains_all_canonical_routes
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID list_schedules_v1_schedules_get for function list_schedules at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase5_schedules.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2c_api.py::test_w2c_openapi_contains_all_canonical_routes
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID create_schedule_v1_schedules_post for function create_schedule at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase5_schedules.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2c_api.py::test_w2c_openapi_contains_all_canonical_routes
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID list_datasets_v1_datasets_get for function list_datasets at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase5_datasets.py
+    warnings.warn(message, stacklevel=1)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/aip/test_w2c_api.py::test_w2c_stage_template_api_create_replay_list_get_and_blocked_freeze
+1 failed, 8 passed, 26 warnings in 14.77s

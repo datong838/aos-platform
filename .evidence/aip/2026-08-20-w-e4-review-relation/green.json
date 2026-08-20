@@ -1,0 +1,10 @@
+{
+  "wave": "W-E4",
+  "status": "GREEN",
+  "relationId": "artifact-relation-8bf33b8b20f74b9bb3d4",
+  "issueId": "review-issue-5a620b9e1c5141d4a0b2",
+  "relationCount": 1,
+  "issueCount": 1,
+  "pytest": "test_w2c_api stage freeze + test_w_l14 — passed",
+  "verified_at": "2026-08-20T13:20:00+08:00"
+}
