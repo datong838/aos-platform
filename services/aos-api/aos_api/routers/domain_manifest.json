@@ -3180,6 +3180,12 @@
       "module": "aos_api.routers.aip_agent_runs",
       "attribute": "router",
       "order": 529
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_handoffs",
+      "attribute": "router",
+      "order": 530
     }
   ]
 }

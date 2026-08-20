@@ -140,3 +140,52 @@ def test_openapi_registers_execution_attempt_authority(client) -> None:
     assert "/v1/aip/agent-runs/execution-attempts/{attempt_id}" in paths
     assert "/v1/aip/agent-runs/execution-attempts/{attempt_id}/transition" in paths
     assert "/v1/aip/agent-runs/{agent_run_id}/execute" in paths
+    assert "/v1/aip/agent-runs" in paths
+    assert "/v1/aip/agent-runs/{agent_run_id}" in paths
+
+
+class AgentRunAuthority:
+    def __init__(self) -> None:
+        self.scope = None
+
+    def create(self, scope, request, *, idempotency_key, actor, occurred_at):
+        self.scope = scope
+        return agent_run(scope.org_id), receipt(scope.org_id)
+
+    def get(self, scope, agent_run_id):
+        self.scope = scope
+        return agent_run(scope.org_id)
+
+
+def test_agent_run_create_get_are_principal_scoped(client) -> None:
+    service = AgentRunAuthority()
+    client.app.dependency_overrides[aip_agent_runs.get_agent_run_service] = lambda: service
+    body = {
+        "agentRunId": "run-1",
+        "taskRunRef": ResourceRef(resourceType="TaskRun", resourceId="task-run-1", revision="1", authority="postgresql").model_dump(mode="json", by_alias=True),
+        "skillBindingId": "binding-1",
+        "run": agent_run("org-org").request.model_dump(mode="json", by_alias=True)
+        if hasattr(agent_run("org-org").request, "model_dump")
+        else {
+            "taskRef": ResourceRef(resourceType="Task", resourceId="task-1", revision="1", authority="postgresql").model_dump(mode="json", by_alias=True),
+            "planRef": ResourceRef(resourceType="PlanRevision", resourceId="plan-1", revision="1", authority="postgresql").model_dump(mode="json", by_alias=True),
+            "agentInstance": asset("AgentInstance", "instance-1").model_dump(mode="json", by_alias=True),
+            "skill": asset("SkillTemplate", "skill-1").model_dump(mode="json", by_alias=True),
+            "logic": asset("LogicRevision", "logic-1").model_dump(mode="json", by_alias=True),
+            "modelRoute": asset("ModelRouteRevision", "route-1").model_dump(mode="json", by_alias=True),
+            "policy": asset("RuntimePolicyRevision", "policy-1").model_dump(mode="json", by_alias=True),
+            "inputRefs": [],
+        },
+    }
+    try:
+        created = client.post("/v1/aip/agent-runs", headers=headers(**{"Idempotency-Key": "create-1"}), json=body)
+        assert created.status_code == 201
+        assert created.json()["agentRun"]["agentRunId"] == "run-1"
+        assert service.scope.key == ("org-org", "dev-project")
+        got = client.get("/v1/aip/agent-runs/run-1", headers=headers())
+        assert got.status_code == 200 and got.json()["agentRunId"] == "run-1"
+        # static execution-attempts path must not be stolen by /{agent_run_id}
+        listed = client.get("/v1/aip/agent-runs/execution-attempts", headers=headers())
+        assert listed.status_code == 200
+    finally:
+        client.app.dependency_overrides.pop(aip_agent_runs.get_agent_run_service, None)

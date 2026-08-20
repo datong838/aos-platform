@@ -1,0 +1,20 @@
+{
+  "wave": "W-L3",
+  "scope": "aos-platform-w1-aip",
+  "tenant": "org-org/dev-project",
+  "openapiPaths": [
+    "/v1/aip/handoffs",
+    "/v1/aip/handoffs/{handoff_id}",
+    "/v1/aip/handoffs/{handoff_id}/consume",
+    "/v1/aip/agent-runs",
+    "/v1/aip/agent-runs/{agent_run_id}"
+  ],
+  "tests": {
+    "test_aip_handoff_api.py": "3 passed",
+    "test_aip_agent_run_api.py": "5 passed",
+    "service_regression": "test_handoff_is_one_time..."
+  },
+  "authority": "aip_handoff_envelope_only",
+  "w2": "untouched",
+  "ok": true
+}

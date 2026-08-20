@@ -575,3 +575,20 @@ class IssuedHandoff(AipContractModel):
     # replay can return the durable result but must never mint another token.
     bearer_token: str | None = Field(default=None, min_length=32)
     receipt: RegistryReceipt
+
+
+class ConsumeHandoffRequest(AipContractModel):
+    bearer_token: str = Field(min_length=1, max_length=512)
+    receiver_instance: VersionedAssetRef
+
+    @model_validator(mode="after")
+    def _receiver_kind(self) -> ConsumeHandoffRequest:
+        if self.receiver_instance.asset_type != "AgentInstance":
+            raise ValueError("receiver_instance must reference AgentInstance")
+        return self
+
+
+class AgentRunCommandResponse(AipContractModel):
+    tenant: TenantContext
+    agent_run: AgentRun
+    receipt: RegistryReceipt

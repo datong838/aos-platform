@@ -5,6 +5,11 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Header, Query, status
 
+from aos_api.aip_agent_registry_contracts import (
+    AgentRun,
+    AgentRunCommandResponse,
+    CreateAgentRunRequest,
+)
 from aos_api.aip_agent_registry_store import (
     AipAgentRegistryConflict,
     AipAgentRegistryError,
@@ -23,6 +28,7 @@ from aos_api.aip_agent_run_execution_contracts import (
 )
 from aos_api.aip_agent_run_executor import AipAgentRunExecutor, AipAgentRunExecutorError
 from aos_api.aip_agent_run_execution_service import AipAgentRunExecutionService
+from aos_api.aip_agent_run_service import AipAgentRunService
 from aos_api.aip_contracts import TenantContext
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
@@ -32,6 +38,7 @@ from aos_api.tenant_scope import TenantScope
 router = APIRouter(prefix="/v1/aip/agent-runs", tags=["aip-agent-runs"])
 _SERVICE = AipAgentRunExecutionService()
 _EXECUTOR = AipAgentRunExecutor()
+_AGENT_RUN_SERVICE = AipAgentRunService()
 
 
 def get_agent_run_execution_service() -> AipAgentRunExecutionService:
@@ -40,6 +47,10 @@ def get_agent_run_execution_service() -> AipAgentRunExecutionService:
 
 def get_agent_run_executor() -> AipAgentRunExecutor:
     return _EXECUTOR
+
+
+def get_agent_run_service() -> AipAgentRunService:
+    return _AGENT_RUN_SERVICE
 
 
 def _scope(principal: Principal) -> TenantScope:
@@ -181,3 +192,35 @@ def transition_execution_attempt(
     return AgentRunExecutionAttemptCommandResponse(
         tenant=_tenant(principal), attempt=attempt, receipt=receipt
     )
+
+
+@router.post("", response_model=AgentRunCommandResponse, status_code=status.HTTP_201_CREATED)
+def create_agent_run(
+    body: CreateAgentRunRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipAgentRunService = Depends(get_agent_run_service),
+) -> AgentRunCommandResponse:
+    try:
+        agent_run, receipt = service.create(
+            _scope(principal),
+            body,
+            idempotency_key=_idem(idempotency_key),
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+    return AgentRunCommandResponse(tenant=_tenant(principal), agent_run=agent_run, receipt=receipt)
+
+
+@router.get("/{agent_run_id}", response_model=AgentRun)
+def get_agent_run(
+    agent_run_id: str,
+    principal: Principal = Depends(require_principal),
+    service: AipAgentRunService = Depends(get_agent_run_service),
+) -> AgentRun:
+    try:
+        return service.get(_scope(principal), agent_run_id)
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
