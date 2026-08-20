@@ -309,6 +309,7 @@ export type ImpactPreviewListResponse = { tenant: Tenant; items: ImpactPreviewRe
 export type ProductionStartInput = {
   taskId: string;
   expectedTaskVersion: number;
+  productionContextRef: ExactRevisionRef;
   planRef: ExactRevisionRef;
   previewRef: ExactRevisionRef;
   actionProposalRef: ActionProposalExactRef;

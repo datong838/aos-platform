@@ -53,7 +53,7 @@ describe("W2-D production contract SDK",()=>{
     expect(transport.apiPost).toHaveBeenCalledWith("/v1/aip/production-contracts/impact-previews/preview%201/freeze",{expectedVersion:3},{"Idempotency-Key":"freeze-1"});
   });
   it("Start 只提交组合门输入并携带幂等键",async()=>{
-    const input={taskId:"task-1",expectedTaskVersion:2,planRef:exact("PlanRevision","plan-1"),previewRef:exact("ImpactPreviewRevision","preview-1"),actionProposalRef:{proposalId:"proposal-1",version:1,proposalHash:hash},logicGraphId:"logic-1",logicRevision:1,logicGraphHash:hash};
+    const input={taskId:"task-1",expectedTaskVersion:2,productionContextRef:exact("ProductionContextRevision","ctx-1"),planRef:exact("PlanRevision","plan-1"),previewRef:exact("ImpactPreviewRevision","preview-1"),actionProposalRef:{proposalId:"proposal-1",version:1,proposalHash:hash},logicGraphId:"logic-1",logicRevision:1,logicGraphHash:hash};
     transport.apiPost.mockRejectedValue(new Error("parser fixture not needed"));
     await expect(aipProductionContracts.startProduction(input,"start-1")).rejects.toThrow();
     expect(transport.apiPost).toHaveBeenCalledWith("/v1/aip/production-contracts/production-runs/start",input,{"Idempotency-Key":"start-1"});
