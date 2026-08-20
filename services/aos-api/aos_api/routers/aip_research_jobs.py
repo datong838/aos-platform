@@ -7,6 +7,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Header, Request
 
 from aos_api.aip_research_job import (
+    CancelResearchJobRequest,
     CreateResearchJobRequest,
     ReconcileResearchJobRequest,
     RecordResearchArtifactRequest,
@@ -16,9 +17,11 @@ from aos_api.aip_research_job import (
     ResearchArtifactReceipt,
     ResearchDeliveryReceipt,
     ResearchJobEvent,
+    ResearchJobListResponse,
     ResearchJobSnapshot,
     ResearchProviderRevision,
     ResearchSubmissionReceipt,
+    RetryResearchJobRequest,
 )
 from aos_api.aip_research_job_service import AipResearchJobService
 from aos_api.aip_research_job_store import (
@@ -98,6 +101,18 @@ def create_job(
         raise _map_error(exc) from exc
 
 
+@router.get("/jobs", response_model=ResearchJobListResponse)
+def list_jobs(
+    limit: int = 50,
+    principal: Principal = Depends(require_principal),
+    service: AipResearchJobService = Depends(get_aip_research_job_service),
+) -> ResearchJobListResponse:
+    try:
+        return service.list_jobs(_scope(principal), limit=limit)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
 @router.get("/jobs/{job_id}", response_model=ResearchJobSnapshot)
 def get_job(
     job_id: str,
@@ -106,6 +121,43 @@ def get_job(
 ) -> ResearchJobSnapshot:
     try:
         return service.get_job(_scope(principal), job_id)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post("/jobs/{job_id}/cancel", response_model=ResearchJobSnapshot)
+def cancel_job(
+    job_id: str,
+    body: CancelResearchJobRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key", min_length=1),
+    principal: Principal = Depends(require_principal),
+    service: AipResearchJobService = Depends(get_aip_research_job_service),
+) -> ResearchJobSnapshot:
+    _require_role(principal, {"admin", "executor", "aip_executor"})
+    try:
+        return service.cancel_job(
+            _scope(principal),
+            job_id,
+            body,
+            principal.subject,
+            idempotency_key,
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post("/jobs/{job_id}/retry", response_model=ResearchJobSnapshot)
+def retry_job(
+    job_id: str,
+    body: RetryResearchJobRequest,
+    principal: Principal = Depends(require_principal),
+    service: AipResearchJobService = Depends(get_aip_research_job_service),
+) -> ResearchJobSnapshot:
+    _require_role(principal, {"admin", "executor", "aip_executor"})
+    try:
+        return service.retry_job(
+            _scope(principal), job_id, body, principal.subject
+        )
     except Exception as exc:
         raise _map_error(exc) from exc
 

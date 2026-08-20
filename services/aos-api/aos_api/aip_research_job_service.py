@@ -8,6 +8,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 
 from aos_api.aip_research_job import (
+    CancelResearchJobRequest,
     CreateResearchJobRequest,
     ReconcileResearchJobRequest,
     RecordResearchArtifactRequest,
@@ -17,10 +18,12 @@ from aos_api.aip_research_job import (
     ResearchArtifactReceipt,
     ResearchDeliveryReceipt,
     ResearchJobEvent,
+    ResearchJobListResponse,
     ResearchJobSnapshot,
     ResearchProviderRevision,
     ResearchProviderStatus,
     ResearchSubmissionReceipt,
+    RetryResearchJobRequest,
     verify_research_callback,
 )
 from aos_api.aip_research_job_store import (
@@ -180,6 +183,43 @@ class AipResearchJobService:
 
     def get_job(self, scope: TenantScope, job_id: str) -> ResearchJobSnapshot:
         return self._store.get_job(scope, job_id)
+
+    def list_jobs(
+        self, scope: TenantScope, *, limit: int = 50
+    ) -> ResearchJobListResponse:
+        return self._store.list_jobs(scope, limit=limit)
+
+    def cancel_job(
+        self,
+        scope: TenantScope,
+        job_id: str,
+        request: CancelResearchJobRequest,
+        actor: str,
+        idempotency_key: str,
+        *,
+        now: datetime | None = None,
+    ) -> ResearchJobSnapshot:
+        return self._store.cancel_job(
+            scope,
+            job_id,
+            request,
+            actor,
+            idempotency_key,
+            now=now or datetime.now(UTC),
+        )
+
+    def retry_job(
+        self,
+        scope: TenantScope,
+        job_id: str,
+        request: RetryResearchJobRequest,
+        actor: str,
+        *,
+        now: datetime | None = None,
+    ) -> ResearchJobSnapshot:
+        return self._store.retry_job(
+            scope, job_id, request, actor, now=now or datetime.now(UTC)
+        )
 
     @staticmethod
     def _canonical_payload(payload: object) -> bytes:

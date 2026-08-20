@@ -12,6 +12,7 @@ from aos_api.aip_analyst_contracts import (
     CreateQueryJobRequest,
     QueryJobCommand,
     QueryJobEventKind,
+    QueryJobListResponse,
     QueryJobSnapshot,
     QueryJobStatus,
     QueryResultRevision,
@@ -91,6 +92,25 @@ class AipAnalystQueryStore:
     def get(self, scope: TenantScope, query_id: str) -> QueryJobSnapshot:
         with connect(scope) as conn:
             return self._snapshot(conn, scope, query_id)
+
+    def list_jobs(
+        self, scope: TenantScope, *, limit: int = 50
+    ) -> QueryJobListResponse:
+        limit = max(1, min(int(limit), 200))
+        with connect(scope) as conn:
+            rows = conn.execute(
+                """SELECT query_id FROM aip_analyst_query_job
+                   WHERE org_id=%s AND project_id=%s
+                   ORDER BY created_at DESC, query_id DESC
+                   LIMIT %s""",
+                (*scope.key, limit),
+            ).fetchall()
+            items = [self._snapshot(conn, scope, row["query_id"]) for row in rows]
+            return QueryJobListResponse(
+                tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+                items=items,
+                count=len(items),
+            )
 
     def command(
         self,

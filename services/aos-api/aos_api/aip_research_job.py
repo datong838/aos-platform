@@ -175,6 +175,26 @@ class ResearchJobSnapshot(AipContractModel):
     last_sequence: int = 0
     has_gap: bool = False
     created_at: datetime
+    cancel_requested: bool = False
+    resumability: str = Field(default="unsupported", pattern=r"^(unsupported|supported)$")
+    retry_of_job_id: str | None = None
+
+
+class CancelResearchJobRequest(AipContractModel):
+    reason: str = Field(default="cancelled_by_operator", min_length=1, max_length=500)
+
+
+class RetryResearchJobRequest(AipContractModel):
+    """Create a new job; never resumes the original Provider execution."""
+
+    idempotency_key: str = Field(min_length=1, max_length=160)
+    reason: str = Field(default="retry_after_failure", min_length=1, max_length=500)
+
+
+class ResearchJobListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[ResearchJobSnapshot]
+    count: int = Field(ge=0)
 
 
 class ResearchJobSubmission(AipContractModel):
