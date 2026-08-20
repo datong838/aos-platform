@@ -200,6 +200,24 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
       title="Draft 审批台"
       lede="Proposal → Draft → Approval → Lease → Receipt 权威闭环；批准不等于已执行，只有 Receipt 证明外部结果。"
     >
+      <div
+        data-testid="drafts-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
+      >
+        {[
+          { label: "加载态", value: state === "ready" ? "就绪" : state === "loading" ? "读取中" : "失败" },
+          { label: "合计", value: String(items.length) },
+          { label: "待批", value: String(counts.approval) },
+          { label: "已批", value: String(counts.approved) },
+          { label: "执行中", value: String(counts.execution) },
+          { label: "已关", value: String(counts.closed) },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
       <div className="space-y-4" data-testid="canonical-action-inbox">
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
           <strong>真实 AIP Action 权威链</strong> · 页面不注入示例 Draft，也不在浏览器维护第二套状态机。
