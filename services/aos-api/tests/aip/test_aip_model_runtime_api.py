@@ -1,6 +1,15 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
 from aos_api.aip_provider_plugin_authority import ProviderPluginAuthorityError
+from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+from aos_api.aip_contracts import TenantContext
+from aos_api.aip_model_runtime_contracts import (
+    ModelRuntimeAssetSummary,
+    ModelRuntimeLifecycle,
+    ProviderHealthObservation,
+)
 from aos_api.aip_model_runtime_store import ModelRuntimeNotFound
 from aos_api.routers import aip_model_runtime
 
@@ -285,6 +294,10 @@ class EmptyOverviewStore:
     def list_capacity_pools(self, scope):
         return []
 
+    def list_latest_provider_health(self, scope):
+        assert scope.key == ("org-org", "dev-project")
+        return []
+
 
 def test_overview_is_secret_free_empty_and_tenant_scoped(client) -> None:
     store = EmptyOverviewStore()
@@ -296,10 +309,53 @@ def test_overview_is_secret_free_empty_and_tenant_scoped(client) -> None:
         assert payload["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
         assert payload["providers"] == payload["models"] == payload["routes"] == []
         assert payload["capacityPools"] == payload["resolutions"] == []
+        assert payload["healthObservations"] == []
         assert "secret" not in response.text.lower()
         assert {scope for scope, _ in store.scopes} == {("org-org", "dev-project")}
         assert {kind for _, kind in store.scopes} == {
             "provider_instance", "registered_model", "runtime_policy", "model_route", "model_price_snapshot",
         }
+    finally:
+        client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)
+
+
+class CurrentHealthOverviewStore(EmptyOverviewStore):
+    current = VersionedAssetRef(
+        assetType="ProviderInstanceRevision", assetId="provider-current", revision=2,
+        contentHash="a" * 64,
+    )
+    historical = VersionedAssetRef(
+        assetType="ProviderInstanceRevision", assetId="provider-current", revision=1,
+        contentHash="b" * 64,
+    )
+
+    def list_current_assets(self, scope, kind):
+        self.scopes.append((scope.key, kind))
+        if kind == "provider_instance":
+            return [ModelRuntimeAssetSummary(ref=self.current, lifecycle=ModelRuntimeLifecycle.ACTIVE)]
+        return []
+
+    def list_latest_provider_health(self, scope):
+        observed_at = datetime.now(UTC)
+        common = {
+            "tenant": TenantContext(orgId="org-org", projectId="dev-project"),
+            "status": "healthy", "observedAt": observed_at,
+            "expiresAt": observed_at + timedelta(minutes=15),
+        }
+        return [
+            ProviderHealthObservation(observationId="health-current", provider=self.current, **common),
+            ProviderHealthObservation(observationId="health-historical", provider=self.historical, **common),
+        ]
+
+
+def test_overview_only_exposes_health_for_current_exact_provider_revisions(client) -> None:
+    store = CurrentHealthOverviewStore()
+    client.app.dependency_overrides[aip_model_runtime.get_store] = lambda: store
+    try:
+        response = client.get("/v1/aip/model-runtime/overview", headers=headers())
+        assert response.status_code == 200, response.text
+        health = response.json()["healthObservations"]
+        assert [item["observationId"] for item in health] == ["health-current"]
+        assert health[0]["provider"]["revision"] == 2
     finally:
         client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)

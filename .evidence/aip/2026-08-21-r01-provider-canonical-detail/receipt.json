@@ -1,0 +1,34 @@
+{
+  "receiptType": "AIP_WAVE_DELIVERY",
+  "waveId": "R01",
+  "status": "GREEN",
+  "branch": "w1-aip",
+  "baseCommit": "d1a66dae9470a1cfe7509cdd32c22571b4c2d3f2",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "negativeCanary": {
+    "orgId": "dev-org",
+    "projectId": "dev-project"
+  },
+  "sideEffects": {
+    "migration": false,
+    "providerCall": false,
+    "secretPayloadRead": false,
+    "realDatabaseWrite": false
+  },
+  "verification": {
+    "webTargeted": "4 files, 21 passed",
+    "backendTargeted": "13 passed, 1 unrelated baseline test deselected",
+    "viteBuild": "GREEN",
+    "browser": "GREEN",
+    "secretExposure": "GREEN"
+  },
+  "baselineWarnings": [
+    "CanonicalCapabilityPage.test.tsx has one pre-existing copy-spacing assertion failure",
+    "Two pre-existing TypeScript errors exist outside R01 scope",
+    "Current Provider region is China (Domestic), not the historical Singapore approval wording"
+  ],
+  "evidencePath": ".evidence/aip/2026-08-21-r01-provider-canonical-detail"
+}

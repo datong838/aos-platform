@@ -12,6 +12,7 @@ const names: Record<string, string> = {
   priceSnapshots: "价格快照",
   evalGates: "评测门",
   capacityPools: "容量池",
+  healthObservations: "Health",
 };
 const lifecycle: Record<string, string> = { draft: "草稿", validated: "已校验", active: "生效", suspended: "暂停", revoked: "撤销" };
 
@@ -68,6 +69,7 @@ export function ModelRuntimePage() {
           { label: "路由就绪", value: data.resolutions.length ? `${readyResolutionCount}/${data.resolutions.length}` : "0/0" },
           { label: "未就绪", value: String(blockedResolutions.length) },
           { label: "容量池", value: String(data.capacityPools.length) },
+          { label: "Health", value: String(data.healthObservations.length) },
           { label: "评测门", value: String(data.evalGates.length) },
         ].map((s) => (
           <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
@@ -104,6 +106,7 @@ export function ModelRuntimePage() {
         {(["providers", "models", "routes", "policies", "priceSnapshots"] as const).map(key => <div className="card" style={{ padding: 16 }} key={key}><h2 style={{ marginTop: 0 }}>{names[key]} · {data[key].length}</h2><AssetList items={data[key]} empty={`当前组织尚无 ${names[key]} exact revision。`} /></div>)}
         <div className="card" style={{ padding: 16 }}><h2 style={{ marginTop: 0 }}>评测门 · {data.evalGates.length}</h2>{data.evalGates.length ? data.evalGates.map(item => <p key={item.ref.assetId}><code>{item.ref.assetId}@{item.ref.revision}</code> · {item.status}</p>) : <div className="notice">尚无路由 / 模型引用的评测门。</div>}</div>
         <div className="card" style={{ padding: 16 }}><h2 style={{ marginTop: 0 }}>容量池 · {data.capacityPools.length}</h2>{data.capacityPools.length ? data.capacityPools.map(pool => <article key={pool.poolId}><strong>{pool.poolId}@{pool.revision}</strong><p>{pool.activeReservations}/{pool.maxConcurrency} 并发 · {pool.reservedTokenUnits}/{pool.maxTokenUnits} token 单位</p></article>) : <div className="notice">尚无 exact 容量池；AgentRun 运行门将失败关闭。</div>}</div>
+        <div className="card" style={{ padding: 16 }}><h2 style={{ marginTop: 0 }}>Health · {data.healthObservations.length}</h2>{data.healthObservations.length ? data.healthObservations.map(item => <article key={item.observationId}><strong>{item.provider.assetId}@{item.provider.revision}</strong><p>{Date.parse(item.expiresAt) > Date.now() ? "新鲜" : "已过期"} · {item.status} · P50 {item.p50LatencyMs ?? "—"} ms</p></article>) : <div className="notice">尚无 Provider Health observation；相关路由必须失败关闭。</div>}</div>
       </section>
       <section className="card" style={{ padding: 18, marginTop: 16 }}><h2 style={{ marginTop: 0 }}>路由运行就绪</h2>{data.resolutions.length ? data.resolutions.map(item => <article key={item.route.assetId} style={{ padding: "12px 0", borderTop: "1px solid var(--aos-border)" }}><strong>{item.route.assetId}@{item.route.revision} · {item.readiness === "ready" ? "就绪" : "阻断"}</strong>{item.readiness === "ready" ? <p>模型 {item.selectedModel?.assetId} · 供应商 {item.selectedProvider?.assetId} · 价格 {item.selectedPriceSnapshot?.assetId}</p> : <ul>{item.blockerCodes.map(code => <li key={code}>{formatBlockers([code])}</li>)}</ul>}</article>) : <div className="notice">没有 exact 路由，因此没有可解析的运行就绪结果。</div>}</section>
       <div className="notice" style={{ marginTop: 16 }}>本页从不显示 secretRef 或凭据。供应商 operational、真实调用、Usage Receipt 与成本对账仍必须分别取得真实外部证据。</div>

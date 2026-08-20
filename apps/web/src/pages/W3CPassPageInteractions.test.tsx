@@ -145,6 +145,20 @@ describe("Wave 3C · six passing pages keep their main interactions honest", () 
     expect(host.textContent).not.toContain("服务端已确认暂无已安装插件");
   });
 
+  it("Model Providers credentials view accepts only an opaque reference", async () => {
+    mocks.apiGet.mockImplementation(async (path: string) => {
+      if (path === "/v1/aip/providers") return { items: [{ id: "agnes-text", name: "Agnes 文本", kind: "openai", ready: true, apiKeyRef: "keychain://aos/agnes" }] };
+      if (path === "/v1/aip/llm-provider-plugins") return { items: [], totals: { installed: 0 } };
+      if (path === "/v1/aip/gateway-default") return { options: [] };
+      return {};
+    });
+    await render(ProvidersPage);
+    await act(async () => buttonByText(host, "管理凭据").click());
+    expect(host.textContent).toContain("凭据引用");
+    expect(host.textContent).not.toContain("新密钥");
+    expect(host.querySelector('input[type="password"]')).toBeNull();
+  });
+
   it("Ontology Discover searches and opens objects from the live response", async () => {
     await render(OntologyPage);
     const search = host.querySelector('input[type="search"]') as HTMLInputElement;

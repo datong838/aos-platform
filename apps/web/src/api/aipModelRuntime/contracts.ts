@@ -43,6 +43,52 @@ export type RuntimeResolution = {
   resolvedAt: string;
 };
 
+export type ProviderHealthObservation = {
+  tenant: { orgId: string; projectId: string };
+  observationId: string;
+  provider: ExactRuntimeRef;
+  status: "healthy" | "degraded" | "unavailable" | "unknown";
+  availabilityPct: number | null;
+  p50LatencyMs: number | null;
+  observedAt: string;
+  expiresAt: string;
+};
+
+export type ProviderInstanceRevision = {
+  tenant: { orgId: string; projectId: string };
+  providerInstanceId: string;
+  revision: number;
+  contentHash: string;
+  pluginRef: ExactRuntimeRef;
+  endpointProfile: { baseUrl: string; region: string; timeoutMs: number; metadata: Record<string, string> };
+  secretBackend: "vault" | "secret" | "keychain";
+  secretVersion: string;
+  egressPolicyRef: ExactRuntimeRef;
+  dataClassificationPolicyRef: ExactRuntimeRef;
+  lifecycle: RuntimeLifecycle;
+  createdBy: string;
+  createdAt: string;
+};
+
+export type ProviderPluginRevision = {
+  providerPluginId: string;
+  revision: number;
+  contentHash: string;
+  manifestVersion: string;
+  manifestSourceHash: string;
+  sourceRef: string;
+  owner: string;
+  usageBasis: string;
+  approvedCapabilities: string[];
+  deniedCapabilities: string[];
+  modalities: string[];
+  defaultModels: string[];
+  allowedTenants: Array<{ orgId: string; projectId: string }>;
+  approvalStatus: string;
+  approvedBy: string;
+  approvedAt: string;
+};
+
 export type ModelRuntimeOverview = {
   tenant: { orgId: string; projectId: string };
   providers: RuntimeAssetSummary[];
@@ -52,6 +98,7 @@ export type ModelRuntimeOverview = {
   priceSnapshots: RuntimeAssetSummary[];
   evalGates: RuntimeEvalGateSummary[];
   capacityPools: RuntimeCapacityPoolSummary[];
+  healthObservations: ProviderHealthObservation[];
   resolutions: RuntimeResolution[];
   generatedAt: string;
 };

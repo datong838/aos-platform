@@ -14,7 +14,7 @@ const GraphExplorerPage = lazify(() => import("./workshop"), "GraphExplorerPage"
 const EventsPage = lazify(() => import("./EventsPage"), "EventsPage");
 const ToolsPage = lazify(() => import("./aip"), "ToolsPage");
 const ProvidersPage = lazify(() => import("./aip"), "ProvidersPage");
-const ProviderDetailPage = lazify(() => import("./aip"), "ProviderDetailPage");
+const ProviderDetailPage = lazify(() => import("./ProviderDetailPage"), "ProviderDetailPage");
 const ModelRouterPage = lazify(() => import("./aip"), "ModelRouterPage");
 const EvalsPage = lazify(() => import("./aip"), "EvalsPage");
 const DecisionLineagePage = lazify(() => import("./aip"), "DecisionLineagePage");

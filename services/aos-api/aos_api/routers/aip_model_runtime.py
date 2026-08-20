@@ -201,11 +201,21 @@ def get_overview(principal: Principal = Depends(require_principal), store: AipMo
         prices = store.list_current_assets(scope, "model_price_snapshot")
         eval_refs = [ref for item in [*models, *routes] for ref in item.dependency_refs if ref.asset_type == "EvalGateDecision"]
         resolutions = [AipModelRuntimeResolver(store).resolve(scope, route.ref.asset_id) for route in routes]
+        current_provider_refs = {
+            (item.ref.asset_id, item.ref.revision, item.ref.content_hash)
+            for item in providers
+        }
+        health_observations = [
+            item for item in store.list_latest_provider_health(scope)
+            if (item.provider.asset_id, item.provider.revision, item.provider.content_hash)
+            in current_provider_refs
+        ]
         return ModelRuntimeOverview(
             tenant={"orgId": scope.org_id, "projectId": scope.project_id}, providers=providers,
             models=models, routes=routes, policies=policies, priceSnapshots=prices,
             evalGates=store.list_eval_gates(scope, eval_refs),
             capacityPools=store.list_capacity_pools(scope), resolutions=resolutions,
+            healthObservations=health_observations,
             generatedAt=datetime.now(UTC),
         )
     except ModelRuntimeStoreError as exc:

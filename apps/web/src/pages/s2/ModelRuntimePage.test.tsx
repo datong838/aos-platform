@@ -12,6 +12,7 @@ const base = {
   priceSnapshots: [],
   evalGates: [],
   capacityPools: [],
+  healthObservations: [],
   resolutions: [],
   generatedAt: "2026-08-14T00:00:00Z",
 } satisfies ModelRuntimeOverview;

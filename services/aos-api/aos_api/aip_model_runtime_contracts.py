@@ -375,5 +375,6 @@ class ModelRuntimeOverview(AipContractModel):
     price_snapshots: list[ModelRuntimeAssetSummary]
     eval_gates: list[ModelRuntimeEvalGateSummary]
     capacity_pools: list[ModelRuntimeCapacityPoolSummary]
+    health_observations: list[ProviderHealthObservation]
     resolutions: list[ModelRouteResolution]
     generated_at: datetime

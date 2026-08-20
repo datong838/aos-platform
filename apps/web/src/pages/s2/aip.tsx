@@ -984,7 +984,6 @@ export function ProvidersPage() {
   const [sonnetOn, setSonnetOn] = useState(true);
   const [opusOn, setOpusOn] = useState(false);
   const [secretRef, setSecretRef] = useState("");
-  const [newSecret, setNewSecret] = useState("");
   const [keyUpdatedAt, setKeyUpdatedAt] = useState<string | null>(null);
 
   const apiVaultRef =
@@ -1051,7 +1050,6 @@ export function ProvidersPage() {
     setProbeMsg("");
     setProbePayload(null);
     setSaveMsg("");
-    setNewSecret("");
   }
 
   function hydrateForm(opts: {
@@ -1291,8 +1289,8 @@ export function ProvidersPage() {
   async function saveCredentials() {
     setSaveMsg("");
     setMsg("");
-    const stamped = newSecret.trim() ? new Date().toISOString() : keyUpdatedAt || undefined;
-    if (newSecret.trim()) setKeyUpdatedAt(stamped || null);
+    const stamped = keyUpdatedAt || new Date().toISOString();
+    setKeyUpdatedAt(stamped);
     const ref = secretRef.trim() || (activePluginId ? `vault:secret/data/aos/llm#${activePluginId}` : apiVaultRef);
 
     if (activePluginId) {
@@ -1308,11 +1306,9 @@ export function ProvidersPage() {
                 : []
               : [],
           ready: true,
-          apiKey: newSecret.trim() || undefined,
         });
-        setNewSecret("");
         setSecretRef(ref);
-        setSaveMsg("凭据已保存并启用 · 试聊将按所选模型路由（不再回落 Agnes）");
+        setSaveMsg("opaque 凭据引用已保存并启用 · 页面不接收或传输明文密钥");
         pluginsApi.reload();
       } catch (e) {
         setMsg(String((e as Error).message || e));
@@ -1325,8 +1321,7 @@ export function ProvidersPage() {
       secretRef: ref,
       keyUpdatedAt: stamped,
     });
-    setNewSecret("");
-    setSaveMsg("凭据草稿已更新 · 明文密钥不会写入页面日志");
+    setSaveMsg("opaque 凭据引用草稿已更新");
   }
 
   async function testConnectivity() {
@@ -1433,7 +1428,7 @@ export function ProvidersPage() {
     return (
       <S2Chrome
         title={`管理凭据 · ${cfgTitle}`}
-        lede="可改凭据引用或粘贴新密钥；明文不会出现在列表与日志中。"
+        lede="仅绑定由安全后端维护的 opaque 凭据引用；本页不接收、传输或回显明文密钥。"
       >
         <BpToolbar>
           <button type="button" className="btn-nav" onClick={backToList}>
@@ -1462,23 +1457,13 @@ export function ProvidersPage() {
                 placeholder="vault://aip/providers/...#api_key"
               />
             </label>
-            <label className="mp-field mp-field-span">
-              <span>新密钥（可选 · 不回显）</span>
-              <input
-                type="password"
-                value={newSecret}
-                onChange={(e) => setNewSecret(e.target.value)}
-                placeholder="粘贴新 API Key，保存后仅记「已更新」"
-                autoComplete="new-password"
-              />
-            </label>
           </div>
           <p className="muted" style={{ fontSize: "0.75rem", marginTop: "0.75rem" }}>
-            保存后请到「配置」页测连通。服务端 PUT 未上线前，草稿仅存本机会话。
+            请先在 Vault、AOS Secret backend 或本机 Keychain 中维护密钥，再在此绑定引用。服务端 PUT 未上线前，草稿仅存本机会话。
           </p>
           <div className="mp-cfg-actions">
             <button type="button" className="btn-primary" onClick={() => void saveCredentials()}>
-              轮换 / 重新绑定
+              保存凭据引用
             </button>
             <button type="button" className="btn-nav" onClick={reopenConfigureFromCredentials}>
               去配置页测连通 →
@@ -3763,7 +3748,7 @@ type CallLogStats = {
 
 type DetailTab = "credentials" | "models" | "security" | "logs";
 
-export function ProviderDetailPage() {
+export function LegacyProviderDetailPage() {
   const { providerId = "" } = useParams<{ providerId: string }>();
   const [tab, setTab] = useState<DetailTab>("credentials");
   const [creds, setCreds] = useState<Credential[]>([]);
