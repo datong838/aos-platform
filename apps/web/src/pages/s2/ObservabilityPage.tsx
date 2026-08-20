@@ -117,6 +117,24 @@ export function ObservabilityPage() {
 
   return (
     <PageChrome title="AIP 可观测性" lede="按 Lineage 查询权威 Telemetry Span 与 Usage Receipt；不推算趋势，不回填演示数据。">
+      <div
+        data-testid="observability-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
+      >
+        {[
+          { label: "加载态", value: loadState === "loaded" ? "已载" : loadState === "loading" ? "读取中" : loadState === "error" ? "失败" : "空闲" },
+          { label: "视图", value: view === "overview" ? "概览" : view === "spans" ? "Spans" : "Usage" },
+          { label: "Spans", value: String(spans.length) },
+          { label: "Usage", value: String(receipts.length) },
+          { label: "筛选命中", value: String(filteredSpans.length) },
+          { label: "输入", value: lineageId.trim() ? "已填" : "待填" },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
       <div className="bp5-card" style={{ ...cardStyle, display: "flex", gap: 12, alignItems: "end", flexWrap: "wrap" }}>
         <label style={{ display: "grid", gap: 6, minWidth: 320 }}>
           <span className="muted">Lineage ID</span>
