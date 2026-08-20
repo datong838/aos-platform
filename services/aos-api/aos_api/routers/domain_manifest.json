@@ -3123,75 +3123,81 @@
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_memory_authority",
+      "module": "aos_api.routers.aip_effect_authority",
       "attribute": "router",
       "order": 520
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_production_contracts",
+      "module": "aos_api.routers.aip_memory_authority",
       "attribute": "router",
       "order": 521
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_model_runtime",
+      "module": "aos_api.routers.aip_production_contracts",
       "attribute": "router",
       "order": 522
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_bindings",
+      "module": "aos_api.routers.aip_model_runtime",
       "attribute": "router",
       "order": 523
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_memory_improvement",
+      "module": "aos_api.routers.aip_bindings",
       "attribute": "router",
       "order": 524
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_content_runtime",
+      "module": "aos_api.routers.aip_memory_improvement",
       "attribute": "router",
       "order": 525
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_content_drafts",
+      "module": "aos_api.routers.aip_content_runtime",
       "attribute": "router",
       "order": 526
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_budgets",
+      "module": "aos_api.routers.aip_content_drafts",
       "attribute": "router",
       "order": 527
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_runtime_guard_policies",
+      "module": "aos_api.routers.aip_budgets",
       "attribute": "router",
       "order": 528
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_model_governance_policies",
+      "module": "aos_api.routers.aip_runtime_guard_policies",
       "attribute": "router",
       "order": 529
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_agent_runs",
+      "module": "aos_api.routers.aip_model_governance_policies",
       "attribute": "router",
       "order": 530
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_handoffs",
+      "module": "aos_api.routers.aip_agent_runs",
       "attribute": "router",
       "order": 531
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_handoffs",
+      "attribute": "router",
+      "order": 532
     }
   ]
 }

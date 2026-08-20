@@ -1,0 +1,14 @@
+{
+  "wave": "W-L19",
+  "scheme": "127-W-L19-UsageEffectReviewEffectMaturity.md",
+  "status": "GREEN",
+  "verified_at": "2026-08-20T13:15:00+08:00",
+  "pytest": "tests/aip/test_w_l19_effect_review.py — 2 passed",
+  "migration": "aip12_001",
+  "apis": [
+    "POST /v1/aip/effect-authority/reviews",
+    "GET /v1/aip/effect-authority/reviews/{subjectId}",
+    "POST /v1/aip/effect-authority/maturity",
+    "GET /v1/aip/effect-authority/axes/{subjectId}"
+  ]
+}
