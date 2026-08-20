@@ -218,7 +218,25 @@ export function MemoryGovernancePage() {
   }
 
   return (
-    <PageChrome title="Memory Governance" lede="Candidate → 审批证据 → 正式 Memory → 带 Citation 的 Knowledge Query。所有状态来自 PostgreSQL 权威链，不回填示例知识。">
+    <PageChrome title="记忆与知识治理" lede="Candidate → 审批证据 → 正式 Memory → 带 Citation 的 Knowledge Query；全部来自权威链，不回填示例知识。">
+      <div
+        data-testid="memory-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
+      >
+        {[
+          { label: "视图", value: view },
+          { label: "加载", value: loadState === "loaded" ? "就绪" : loadState === "loading" ? "读取中" : "失败" },
+          { label: "候选", value: String(candidates.length) },
+          { label: "正式记忆", value: String(memories.length) },
+          { label: "Pipeline", value: String(pipelineRuns.length) },
+          { label: "查询态", value: queryState },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
         {(["candidates", "memories", "agents", "query", "pipelines", "readiness"] as const).map((item) => (
           <button key={item} type="button" className={`btn ${view === item ? "primary" : ""}`} onClick={() => setView(item)} data-testid={`memory-tab-${item}`}>
