@@ -306,6 +306,28 @@ export type ImpactPreviewRevision = CreateImpactPreviewInput & {
 };
 export type ImpactPreviewListResponse = { tenant: Tenant; items: ImpactPreviewRevision[]; count: number };
 
+export type ProductionContextRevision = {
+  tenant: Tenant;
+  contextId: string;
+  revision: number;
+  taskId: string;
+  briefRef: ExactRevisionRef;
+  evidenceBundleRef: ExactRevisionRef;
+  evalContractRef: ExactRevisionRef;
+  responsibilityPlanRef: ExactRevisionRef;
+  preparationRef: ExactRevisionRef | null;
+  profile: string;
+  dependencySnapshot: Record<string, unknown>[];
+  dependencySnapshotHash: string;
+  contentHash: string;
+  lifecycle: ContractLifecycle;
+  readiness: ContractReadiness;
+  blockers: ContractBlocker[];
+  createdBy: string;
+  createdAt: string;
+};
+export type ProductionContextListResponse = { tenant: Tenant; items: ProductionContextRevision[]; count: number };
+
 export type ProductionStartInput = {
   taskId: string;
   expectedTaskVersion: number;

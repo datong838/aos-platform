@@ -70,6 +70,22 @@ describe("Wave 3B W2 · DOM 负向交互", () => {
       if (path.includes("/usage")) return { items: [] };
       if (path.includes("/project-limits")) return { scope: "project", scopeKey: "default", rpmLimit: 60, tpmLimit: 60000 };
       if (path.includes("/user-limits")) return { items: [] };
+      if (path === "/v1/aip/model-runtime/overview") return {
+        tenant: { orgId: "org-org", projectId: "dev-project" },
+        providers: [], models: [], routes: [], policies: [], priceSnapshots: [],
+        evalGates: [], capacityPools: [], healthObservations: [], resolutions: [],
+        generatedAt: "2026-08-21T00:00:00Z",
+      };
+      if (path === "/v1/aip/model-runtime/cost-overview") return {
+        tenant: { orgId: "org-org", projectId: "dev-project" },
+        modelPrices: [], budgets: [],
+        usage: {
+          state: "unobserved", receiptCount: 0, measuredCount: 0,
+          estimatedCount: 0, unknownCount: 0, adjustmentCount: 0,
+          costTotals: {}, latestObservedAt: null, truncated: false,
+        },
+        generatedAt: "2026-08-21T00:00:00Z",
+      };
       throw new Error(`unexpected ${path}`);
     });
     await act(async () => root.render(<MemoryRouter><CapacityPage /></MemoryRouter>));

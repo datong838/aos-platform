@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiGet, apiPost } from "../../api/client";
+import { aipModelRuntime, type ModelPriceAuthoritySummary } from "../../api/aipModelRuntime";
 import { PageChrome } from "../../components/PageChrome";
 import {
   BpArchitectureBar,
@@ -22,6 +23,8 @@ export type CatalogModel = {
   outputPrice: string;
   capabilities: Capability[];
   registered: boolean;
+  providerModelId?: string;
+  priceAuthorityStatus?: ModelPriceAuthoritySummary["status"];
 };
 
 type ModelFamily = {
@@ -265,14 +268,16 @@ export function extractAllCapabilities(models: CatalogModel[]): Capability[] {
 
 /** Parse a price string like "$10/1M" or "¥4/1M" or "免费" into a numeric per-million value. */
 export function parsePricePerMillion(price: string): number {
-  if (!price || price === "—" || price === "免费") return 0;
+  if (!price || price === "—" || price.includes("未知") || price.includes("待补")) return Number.NaN;
+  if (price === "免费" || price.includes("审批免费")) return 0;
   const m = price.match(/([\d.]+)/);
   return m ? parseFloat(m[1]) : 0;
 }
 
 /** Classify a price into tier: free / low / mid / high. */
-export function priceTierOf(price: string): "free" | "low" | "mid" | "high" {
+export function priceTierOf(price: string): "unknown" | "free" | "low" | "mid" | "high" {
   const v = parsePricePerMillion(price);
+  if (!Number.isFinite(v)) return "unknown";
   if (v === 0) return "free";
   if (v < 1) return "low";
   if (v < 5) return "mid";
@@ -378,7 +383,32 @@ export function mapApiCatalogRow(row: ApiCatalogRow): CatalogModel {
     outputPrice: formatApiPrice(row.outputPrice),
     capabilities: caps.length ? caps : ["chat"],
     registered: Boolean(row.registered ?? row.registration),
+    providerModelId: String(row.model || row.id || ""),
   };
+}
+
+export function applyPriceAuthority(
+  models: CatalogModel[],
+  authorities: ModelPriceAuthoritySummary[],
+): CatalogModel[] {
+  const byProviderModel = new Map(authorities.map((item) => [item.providerModelId, item]));
+  const format = (amount: number | null, item: ModelPriceAuthoritySummary) => {
+    if (item.status === "approved_zero") return "已审批免费";
+    if (item.status === "unit_mismatch") return "计价单位待补";
+    if (item.status !== "priced" || amount === null || !item.currency || !item.tokenUnit) return "价格未知";
+    const symbol = item.currency === "CNY" ? "¥" : `${item.currency} `;
+    return `${symbol}${amount}/${item.tokenUnit} token`;
+  };
+  return models.map((model) => {
+    const authority = byProviderModel.get(model.providerModelId || "");
+    if (!authority) return model.registered ? { ...model, inputPrice: "价格未知", outputPrice: "价格未知", priceAuthorityStatus: "unknown" } : model;
+    return {
+      ...model,
+      inputPrice: format(authority.inputTokenPrice, authority),
+      outputPrice: format(authority.outputTokenPrice, authority),
+      priceAuthorityStatus: authority.status,
+    };
+  });
 }
 
 export function registeredRowsFromModels(models: CatalogModel[]): Array<{ model: string; provider: string; family: string }> {
@@ -450,7 +480,8 @@ export function ModelCatalogPage() {
           registered: regSet.has(String(c.id || "")),
         }));
       }
-      setCatalogModels(items.map(mapApiCatalogRow).filter((m) => m.id));
+      const cost = await aipModelRuntime.costOverview();
+      setCatalogModels(applyPriceAuthority(items.map(mapApiCatalogRow).filter((m) => m.id), cost.modelPrices));
       setSourceMode("live");
       setLoadError(null);
     } catch (e) {
@@ -634,6 +665,7 @@ export function ModelCatalogPage() {
                 <option value="low">低价 (&lt;$1/1M)</option>
                 <option value="mid">中价 ($1-$5/1M)</option>
                 <option value="high">高价 (&gt;$5/1M)</option>
+                <option value="unknown">价格未知/单位待补</option>
               </select>
               <span className="notice" style={{ padding: "6px 10px" }} role="status">
                 筛选命中 {filteredModels.length} / {catalogStats.total}

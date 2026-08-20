@@ -378,3 +378,69 @@ class ModelRuntimeOverview(AipContractModel):
     health_observations: list[ProviderHealthObservation]
     resolutions: list[ModelRouteResolution]
     generated_at: datetime
+
+
+class ModelPriceAuthoritySummary(AipContractModel):
+    """Secret-free operational price interpretation for one exact model."""
+
+    model_ref: VersionedAssetRef
+    provider_model_id: str = Field(min_length=1, max_length=240)
+    output_modalities: list[ModelModality] = Field(min_length=1, max_length=8)
+    price_snapshot_ref: VersionedAssetRef | None = None
+    status: str = Field(
+        pattern=r"^(priced|approved_zero|unknown|inactive|out_of_window|unit_mismatch|drifted)$"
+    )
+    currency: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
+    input_token_price: float | None = Field(default=None, ge=0)
+    output_token_price: float | None = Field(default=None, ge=0)
+    cached_token_price: float | None = Field(default=None, ge=0)
+    token_unit: int | None = Field(default=None, ge=1)
+    effective_from: datetime | None = None
+    effective_until: datetime | None = None
+    zero_price_approval_ref: str | None = None
+    blocker_codes: list[str] = Field(default_factory=list, max_length=32)
+
+
+class RuntimeBudgetAuthoritySummary(AipContractModel):
+    budget_policy_ref: VersionedAssetRef
+    budget_ref: VersionedAssetRef | None = None
+    status: str = Field(pattern=r"^(active|inactive|out_of_window|drifted|unknown)$")
+    currency: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
+    daily_limit_minor: int | None = Field(default=None, ge=0)
+    monthly_limit_minor: int | None = Field(default=None, ge=0)
+    hard_stop: bool | None = None
+    unknown_usage_behavior: str | None = None
+    unknown_price_behavior: str | None = None
+    effective_from: datetime | None = None
+    effective_until: datetime | None = None
+    blocker_codes: list[str] = Field(default_factory=list, max_length=32)
+
+
+class RuntimeUsageAuthoritySummary(AipContractModel):
+    state: str = Field(pattern=r"^(unobserved|measured|partial|unknown)$")
+    receipt_count: int = Field(ge=0)
+    measured_count: int = Field(ge=0)
+    estimated_count: int = Field(ge=0)
+    unknown_count: int = Field(ge=0)
+    adjustment_count: int = Field(ge=0)
+    cost_totals: dict[str, float] = Field(default_factory=dict, max_length=16)
+    latest_observed_at: datetime | None = None
+    truncated: bool = False
+
+    @model_validator(mode="after")
+    def _counts_are_consistent(self) -> ModelRuntimeUsageAuthoritySummary:
+        if self.measured_count + self.estimated_count + self.unknown_count != self.receipt_count:
+            raise ValueError("usage quality counts must total receipt_count")
+        if self.state == "unobserved" and self.receipt_count != 0:
+            raise ValueError("unobserved usage must not contain receipts")
+        if self.state != "unobserved" and self.receipt_count == 0:
+            raise ValueError("observed usage requires receipts")
+        return self
+
+
+class ModelRuntimeCostOverview(AipContractModel):
+    tenant: TenantContext
+    model_prices: list[ModelPriceAuthoritySummary]
+    budgets: list[RuntimeBudgetAuthoritySummary]
+    usage: RuntimeUsageAuthoritySummary
+    generated_at: datetime

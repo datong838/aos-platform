@@ -102,3 +102,64 @@ export type ModelRuntimeOverview = {
   resolutions: RuntimeResolution[];
   generatedAt: string;
 };
+
+export type ModelPriceAuthorityStatus =
+  | "priced"
+  | "approved_zero"
+  | "unknown"
+  | "inactive"
+  | "out_of_window"
+  | "unit_mismatch"
+  | "drifted";
+
+export type ModelPriceAuthoritySummary = {
+  modelRef: ExactRuntimeRef;
+  providerModelId: string;
+  outputModalities: string[];
+  priceSnapshotRef: ExactRuntimeRef | null;
+  status: ModelPriceAuthorityStatus;
+  currency: string | null;
+  inputTokenPrice: number | null;
+  outputTokenPrice: number | null;
+  cachedTokenPrice: number | null;
+  tokenUnit: number | null;
+  effectiveFrom: string | null;
+  effectiveUntil: string | null;
+  zeroPriceApprovalRef: string | null;
+  blockerCodes: string[];
+};
+
+export type RuntimeBudgetAuthoritySummary = {
+  budgetPolicyRef: ExactRuntimeRef;
+  budgetRef: ExactRuntimeRef | null;
+  status: "active" | "inactive" | "out_of_window" | "drifted" | "unknown";
+  currency: string | null;
+  dailyLimitMinor: number | null;
+  monthlyLimitMinor: number | null;
+  hardStop: boolean | null;
+  unknownUsageBehavior: string | null;
+  unknownPriceBehavior: string | null;
+  effectiveFrom: string | null;
+  effectiveUntil: string | null;
+  blockerCodes: string[];
+};
+
+export type RuntimeUsageAuthoritySummary = {
+  state: "unobserved" | "measured" | "partial" | "unknown";
+  receiptCount: number;
+  measuredCount: number;
+  estimatedCount: number;
+  unknownCount: number;
+  adjustmentCount: number;
+  costTotals: Record<string, number>;
+  latestObservedAt: string | null;
+  truncated: boolean;
+};
+
+export type ModelRuntimeCostOverview = {
+  tenant: { orgId: string; projectId: string };
+  modelPrices: ModelPriceAuthoritySummary[];
+  budgets: RuntimeBudgetAuthoritySummary[];
+  usage: RuntimeUsageAuthoritySummary;
+  generatedAt: string;
+};

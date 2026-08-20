@@ -13,6 +13,7 @@ import {
 } from "./blueprintUi";
 import { BpArchitectureBar } from "../../components/bp/BpArchitectureBar";
 import { AipOperationalProjectionStrip } from "../../components/aip/AipOperationalProjectionStrip";
+import type { ModelRuntimeOverview } from "../../api/aipModelRuntime";
 import { MODEL_CONFIG_NO_VAULT } from "../../lib/productCopy";
 import {
   aipEvidenceSdk,
@@ -929,6 +930,21 @@ function saveMpDraft(id: string, draft: MpDraft) {
   sessionStorage.setItem(mpDraftKey(id), JSON.stringify(draft));
 }
 
+function canonicalRuntimeProjection(data: ModelRuntimeOverview | null, error: string | null) {
+  const resolutions = data?.resolutions ?? [];
+  const total = resolutions.length;
+  const ready = resolutions.filter((item) => item.readiness === "ready").length;
+  const blockers = Array.from(
+    new Set(resolutions.flatMap((item) => item.blockerCodes ?? [])),
+  );
+  return {
+    total,
+    ready,
+    blockers,
+    isReady: !error && total > 0 && ready === total,
+  };
+}
+
 /** 78 v1.2 · list / configure / credentials · 表单可编辑 · 会话草稿 */
 export function ProvidersPage() {
   const { data, err, loading, reload } = useJsonGet<{
@@ -947,6 +963,8 @@ export function ProvidersPage() {
     current?: { kind?: string; pluginId?: string | null; defaultModel?: string | null; source?: string };
     options?: Array<{ kind: string; pluginId?: string | null; label: string; defaultModel?: string }>;
   }>("/v1/aip/gateway-default");
+  const runtimeApi = useJsonGet<ModelRuntimeOverview>("/v1/aip/model-runtime/overview");
+  const runtimeProjection = canonicalRuntimeProjection(runtimeApi.data, runtimeApi.err);
   const agnesReady = data?.sidecar === "agnes-openai-compatible";
   const [view, setView] = useState<ProviderView>("list");
   const [gwChoice, setGwChoice] = useState("");
@@ -1020,6 +1038,10 @@ export function ProvidersPage() {
     setMsg("");
     setSaveMsg("");
     try {
+      if (!runtimeProjection.isReady) {
+        setMsg("Canonical 模型运行链未全量 ready，兼容默认网关禁止切换");
+        return;
+      }
       const opt = (gatewayApi.data?.options || []).find((o) => {
         const k = o.kind === "plugin" && o.pluginId ? `plugin:${o.pluginId}` : o.kind;
         return k === gwChoice;
@@ -1726,10 +1748,10 @@ export function ProvidersPage() {
       <BpArchitectureBar activeLayer="L1" />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, margin: "10px 0 12px" }}>
         {[
-          ["运行供应商", (data?.items || []).length],
+          ["Canonical Provider", runtimeApi.data?.providers?.length ?? "—"],
+          ["Canonical 路由", `${runtimeProjection.ready}/${runtimeProjection.total}`],
           ["已安装插件", installedPlugins.length],
           ["目录待装", catalogPlugins.length],
-          ["插件合计", pluginItems.length],
         ].map(([name, count]) => (
           <div key={String(name)} className="card" style={{ padding: "10px 12px" }}>
             <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{name}</div>
@@ -1745,6 +1767,7 @@ export function ProvidersPage() {
             reload();
             pluginsApi.reload();
             gatewayApi.reload();
+            runtimeApi.reload();
           }}
         >
           刷新
@@ -1773,12 +1796,26 @@ export function ProvidersPage() {
       )}
       {saveMsg && <p className="bp-prop-ok">{saveMsg}</p>}
       <BpBanner tone="info">{MODEL_CONFIG_NO_VAULT}</BpBanner>
+      <BpBanner tone={runtimeProjection.isReady ? "info" : "warn"}>
+        <strong>Canonical 模型运行权威：</strong>{" "}
+        {runtimeApi.err
+          ? `读取失败（${runtimeApi.err}），兼容网关只读。`
+          : `${runtimeProjection.ready}/${runtimeProjection.total} 路由 ready。`}
+        {!runtimeProjection.isReady && (
+          <>
+            {runtimeProjection.blockers.length
+              ? ` 阻断：${runtimeProjection.blockers.join("、")}。`
+              : " 当前没有可核验的 ready resolution。"}
+            {" "}下方旧网关与插件状态仅作兼容诊断，不代表 Provider 可运行。
+          </>
+        )}
+      </BpBanner>
 
       <section className="mp-section">
         <div className="mp-section-head">
-          <h2 className="mp-section-title">平台默认网关</h2>
+          <h2 className="mp-section-title">兼容默认网关（非 canonical 运行权威）</h2>
           <span className="mp-section-hint">
-            运行态 = 网关托管的默认通道 · 就绪 ≠ 自动升运行态
+            仅用于旧网关兼容 · canonical 未全量 ready 时禁止切换
           </span>
         </div>
         <div className="mp-gateway-bar">
@@ -1788,7 +1825,11 @@ export function ProvidersPage() {
               className="mp-input"
               value={gwChoice}
               onChange={(e) => setGwChoice(e.target.value)}
-              disabled={gwBusy || !(gatewayApi.data?.options || []).length}
+              disabled={
+                gwBusy ||
+                !(gatewayApi.data?.options || []).length ||
+                !runtimeProjection.isReady
+              }
             >
               {(gatewayApi.data?.options || []).map((o) => {
                 const k = o.kind === "plugin" && o.pluginId ? `plugin:${o.pluginId}` : o.kind;
@@ -1803,7 +1844,7 @@ export function ProvidersPage() {
           <button
             type="button"
             className="btn-nav-accent"
-            disabled={gwBusy || !gwChoice}
+            disabled={gwBusy || !gwChoice || !runtimeProjection.isReady}
             onClick={() => void saveGatewayDefault()}
           >
             {gwBusy ? "保存中…" : "保存为默认"}
@@ -1819,25 +1860,22 @@ export function ProvidersPage() {
 
       <section className="mp-section">
         <div className="mp-section-head">
-          <h2 className="mp-section-title">已安装 / 运行中</h2>
+          <h2 className="mp-section-title">兼容网关发现 / 已安装插件</h2>
           <span className="mp-section-hint">
-            插件 {pluginsApi.data?.totals?.installed ?? installedPlugins.length} · 运行态{" "}
+            插件 {pluginsApi.data?.totals?.installed ?? installedPlugins.length} · 兼容发现{" "}
             {data?.items?.length || 0}
           </span>
         </div>
         <div className="mp-card-grid">
           {(data?.items || []).map((p) => {
-            const ready = p.ready !== false;
             return (
-              <div key={`rt-${p.id}`} className={`mp-provider-card${ready ? " is-ready" : " is-warn"}`}>
+              <div key={`rt-${p.id}`} className="mp-provider-card is-warn">
                 <div className="mp-provider-card-head">
                   <div>
                     <div className="mp-provider-name">{p.name || p.id}</div>
-                    <div className="mp-provider-meta">{providerMeta(p)} · 运行态</div>
+                    <div className="mp-provider-meta">{providerMeta(p)} · 兼容网关发现</div>
                   </div>
-                  <span className={ready ? "mp-badge-ok" : "mp-badge-warn"}>
-                    {ready ? "就绪" : "未就绪"}
-                  </span>
+                  <span className="mp-badge-warn">非运行权威</span>
                 </div>
                 <div className="mp-provider-actions">
                   <Link
@@ -1858,11 +1896,11 @@ export function ProvidersPage() {
                   </button>
                   <span
                     className="btn-nav"
-                    title="网关运行态由环境 / 边车托管，不走插件「启用/取消就绪」；要下线请改网关配置或停边车"
+                    title="旧网关由环境 / 边车托管；是否可运行必须以 canonical resolution 为准"
                     style={{ opacity: 0.85, cursor: "default" }}
                     data-testid="provider-runtime-hosted-badge"
                   >
-                    运行态：环境/边车托管
+                    兼容来源：环境/边车
                   </span>
                 </div>
               </div>
@@ -1881,7 +1919,7 @@ export function ProvidersPage() {
                   </div>
                 </div>
                 <span className={p.ready ? "mp-badge-ok" : "mp-badge-warn"}>
-                  {p.ready ? "就绪" : "已安装"}
+                  {p.ready ? "插件配置就绪" : "已安装"}
                 </span>
               </div>
               <div className="mp-provider-actions">
@@ -1903,7 +1941,7 @@ export function ProvidersPage() {
                 </button>
                 {p.ready ? (
                   <button type="button" className="btn-nav" onClick={() => void disablePluginReady(p)}>
-                    取消就绪
+                    取消插件就绪
                   </button>
                 ) : (
                   <button
@@ -1911,7 +1949,7 @@ export function ProvidersPage() {
                     className="btn-nav-accent"
                     onClick={() => void enablePluginReady(p)}
                   >
-                    启用就绪
+                    启用插件就绪
                   </button>
                 )}
               </div>
@@ -2059,6 +2097,8 @@ export function ModelRouterPage() {
     models?: { id: string; state?: string }[];
     sidecar?: string;
   }>("/v1/aip/models/warmup");
+  const runtimeApi = useJsonGet<ModelRuntimeOverview>("/v1/aip/model-runtime/overview");
+  const runtimeProjection = canonicalRuntimeProjection(runtimeApi.data, runtimeApi.err);
   const [view, setView] = useState<"rules" | "warmup">("rules");
   const [modelId, setModelId] = useState("");
   const [query, setQuery] = useState("你好，介绍一下本系统的模型路由");
@@ -2097,7 +2137,10 @@ export function ModelRouterPage() {
   }
 
   async function saveRoutes() {
-    if (confirmedVersion == null) return;
+    if (confirmedVersion == null || !runtimeProjection.isReady) {
+      setLocalErr("Canonical 模型运行链未全量 ready，兼容路由禁止写入");
+      return;
+    }
     setSaving(true);
     setLocalErr(null);
     setSaveMsg("");
@@ -2127,6 +2170,10 @@ export function ModelRouterPage() {
   async function runCircuitDrill() {
     setDrillMsg("");
     setLocalErr(null);
+    if (!runtimeProjection.isReady) {
+      setLocalErr("Canonical 模型运行链未全量 ready，禁止熔断演练");
+      return;
+    }
     const routeId = routeRows[0]?.id;
     if (!routeId || confirmedVersion == null) return;
     try {
@@ -2170,6 +2217,10 @@ export function ModelRouterPage() {
     setChatErr(null);
     setChatAnswer("");
     setChatPayload(null);
+    if (!runtimeProjection.isReady) {
+      setChatErr("Canonical 模型运行链未全量 ready，禁止试聊");
+      return;
+    }
     try {
       const r = await apiPost<{ answer?: string; model?: string }>("/v1/aip/chat", {
         query,
@@ -2248,6 +2299,7 @@ export function ModelRouterPage() {
                     type="radio"
                     name="router-model"
                     checked={modelId === m.id}
+                    disabled={!runtimeProjection.isReady}
                     onChange={() => setModelId(m.id)}
                   />
                 </div>
@@ -2261,7 +2313,12 @@ export function ModelRouterPage() {
               style={{ minWidth: "16rem", flex: 1 }}
               aria-label="router-query"
             />
-            <button type="button" className="btn-primary" onClick={() => void tryChat()}>
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={!runtimeProjection.isReady}
+              onClick={() => void tryChat()}
+            >
               试聊
             </button>
           </div>
@@ -2316,6 +2373,7 @@ export function ModelRouterPage() {
             models.reload();
             routerApi.reload();
             warm.reload();
+            runtimeApi.reload();
           }}
         >
           刷新
@@ -2338,15 +2396,30 @@ export function ModelRouterPage() {
         </p>
       )}
 
+      <BpBanner tone={runtimeProjection.isReady ? "info" : "warn"}>
+        <strong>Canonical 模型运行权威：</strong>{" "}
+        {runtimeApi.err
+          ? `读取失败（${runtimeApi.err}）。`
+          : `${runtimeProjection.ready}/${runtimeProjection.total} 路由 ready。`}
+        {!runtimeProjection.isReady && (
+          <>
+            {runtimeProjection.blockers.length
+              ? ` 阻断：${runtimeProjection.blockers.join("、")}。`
+              : " 当前没有可核验的 ready resolution。"}
+            {" "}本页旧路由配置只读，禁止保存、演练和试聊；审计导出仍可使用。
+          </>
+        )}
+      </BpBanner>
+
       <p className="mr-hint">
-        本页只选<strong>已就绪</strong>模型做策略。新装插件（如 DeepSeek）须在供应商页点「启用就绪」或「保存并启用」后，再回本页刷新。
+        本页保留兼容路由快照。只有 canonical resolution 全量 ready 时才允许编辑；插件页的“就绪”不等于运行链 ready。
       </p>
 
       <div className="mr-rules-card">
         <div className="mr-rules-head">
           <h2 className="mr-rules-title">路由规则</h2>
           <span className="mr-rules-meta">
-            任务类型 / 回退 / 出境 · 可编辑 · 配置版本 v{confirmedVersion ?? "—"}
+            任务类型 / 回退 / 出境 · {runtimeProjection.isReady ? "可编辑" : "兼容只读"} · 配置版本 v{confirmedVersion ?? "—"}
           </span>
         </div>
         <table className="mr-table">
@@ -2370,6 +2443,7 @@ export function ModelRouterPage() {
                       <select
                         className="mr-select"
                         value={r.primary}
+                        disabled={!runtimeProjection.isReady}
                         onChange={(e) => patchRow(r.id, { primary: e.target.value })}
                         aria-label={`${r.task}-degrade`}
                       >
@@ -2389,6 +2463,7 @@ export function ModelRouterPage() {
                         <select
                           className="mr-select mr-select-primary"
                           value={r.primary}
+                          disabled={!runtimeProjection.isReady}
                           onChange={(e) => patchRow(r.id, { primary: e.target.value })}
                           aria-label={`${r.task}-primary`}
                         >
@@ -2405,6 +2480,7 @@ export function ModelRouterPage() {
                         <select
                           className="mr-select"
                           value={r.fallback || "—"}
+                          disabled={!runtimeProjection.isReady}
                           onChange={(e) => patchRow(r.id, { fallback: e.target.value })}
                           aria-label={`${r.task}-fallback`}
                         >
@@ -2437,6 +2513,7 @@ export function ModelRouterPage() {
                     <select
                       className="mr-select"
                       value={r.egress}
+                      disabled={!runtimeProjection.isReady}
                       onChange={(e) => patchRow(r.id, { egress: e.target.value })}
                       aria-label={`${r.task}-egress`}
                     >
@@ -2459,7 +2536,12 @@ export function ModelRouterPage() {
           <button
             type="button"
             className="btn-nav-accent"
-            disabled={saving || routeRows.length === 0 || confirmedVersion == null}
+            disabled={
+              saving ||
+              routeRows.length === 0 ||
+              confirmedVersion == null ||
+              !runtimeProjection.isReady
+            }
             onClick={() => void saveRoutes()}
           >
             {saving ? "保存中…" : "保存策略"}
@@ -2467,7 +2549,11 @@ export function ModelRouterPage() {
           <button
             type="button"
             className="btn-nav"
-            disabled={confirmedVersion == null || routeRows.length === 0}
+            disabled={
+              confirmedVersion == null ||
+              routeRows.length === 0 ||
+              !runtimeProjection.isReady
+            }
             onClick={() => void runCircuitDrill()}
           >
             熔断演练
@@ -2487,6 +2573,7 @@ export function ModelRouterPage() {
       <ModelRouterPanels
         routeRows={routeRows}
         configVersion={confirmedVersion}
+        runtimeReady={runtimeProjection.isReady}
       />
     </S2Chrome>
   );
@@ -2496,9 +2583,11 @@ export function ModelRouterPage() {
 function ModelRouterPanels({
   routeRows,
   configVersion,
+  runtimeReady,
 }: {
   routeRows: V2RouteRule[];
   configVersion: number | null;
+  runtimeReady: boolean;
 }) {
   const [activePanel, setActivePanel] = useState<"weights" | "circuit" | "fallback" | "test">(
     "weights",
@@ -2534,7 +2623,10 @@ function ModelRouterPanels({
   }, [v2Rules]);
 
   async function saveCircuitConfig() {
-    if (!circuitDraft) return;
+    if (!circuitDraft || !runtimeReady) {
+      setCircuitMsg("Canonical 模型运行链未全量 ready，禁止保存熔断配置");
+      return;
+    }
     setCircuitSaving(true);
     setCircuitMsg("");
     try {
@@ -2549,7 +2641,10 @@ function ModelRouterPanels({
   }
 
   async function runRouteTest() {
-    if (!testRouteId || configVersion == null) return;
+    if (!testRouteId || configVersion == null || !runtimeReady) {
+      setTestErr("Canonical 模型运行链未全量 ready，禁止路由测试");
+      return;
+    }
     setTestLoading(true);
     setTestErr(null);
     setTestResult(null);
@@ -2703,6 +2798,7 @@ function ModelRouterPanels({
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <input
                   type="range"
+                  disabled={!runtimeReady}
                   min={1}
                   max={50}
                   value={circuitCfg.error_rate_threshold_pct ?? 10}
@@ -2724,6 +2820,7 @@ function ModelRouterPanels({
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <input
                   type="range"
+                  disabled={!runtimeReady}
                   min={500}
                   max={10000}
                   step={500}
@@ -2746,6 +2843,7 @@ function ModelRouterPanels({
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <input
                   type="range"
+                  disabled={!runtimeReady}
                   min={10}
                   max={300}
                   step={10}
@@ -2768,6 +2866,7 @@ function ModelRouterPanels({
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <input
                   type="range"
+                  disabled={!runtimeReady}
                   min={1}
                   max={20}
                   value={circuitCfg.half_open_probes ?? 3}
@@ -2808,7 +2907,7 @@ function ModelRouterPanels({
             <button
               type="button"
               className="btn-nav-accent"
-              disabled={circuitSaving}
+              disabled={circuitSaving || !runtimeReady}
               onClick={() => void saveCircuitConfig()}
             >
               {circuitSaving ? "保存中…" : "保存熔断配置"}
@@ -2905,6 +3004,7 @@ function ModelRouterPanels({
             <select
               className="mr-select"
               value={testRouteId}
+              disabled={!runtimeReady}
               onChange={(e) => setTestRouteId(e.target.value)}
               aria-label="test-route-select"
               style={{ minWidth: "10rem" }}
@@ -2917,6 +3017,7 @@ function ModelRouterPanels({
             </select>
             <input
               value={testPrompt}
+              disabled={!runtimeReady}
               onChange={(e) => setTestPrompt(e.target.value)}
               style={{ flex: 1, minWidth: "16rem" }}
               aria-label="test-prompt"
@@ -2924,7 +3025,7 @@ function ModelRouterPanels({
             <button
               type="button"
               className="btn-primary"
-              disabled={testLoading || !testRouteId || configVersion == null}
+              disabled={testLoading || !testRouteId || configVersion == null || !runtimeReady}
               onClick={() => void runRouteTest()}
             >
               {testLoading ? "测试中…" : "测试路由"}

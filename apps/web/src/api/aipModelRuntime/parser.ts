@@ -1,4 +1,4 @@
-import type { ExactRuntimeRef, ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision, ProviderPluginRevision, RuntimeAssetSummary, RuntimeCapacityPoolSummary, RuntimeEvalGateSummary, RuntimeLifecycle, RuntimeReadiness, RuntimeResolution } from "./contracts";
+import type { ExactRuntimeRef, ModelPriceAuthoritySummary, ModelRuntimeCostOverview, ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision, ProviderPluginRevision, RuntimeAssetSummary, RuntimeBudgetAuthoritySummary, RuntimeCapacityPoolSummary, RuntimeEvalGateSummary, RuntimeLifecycle, RuntimeReadiness, RuntimeResolution, RuntimeUsageAuthoritySummary } from "./contracts";
 
 function object(value: unknown, label: string): Record<string, unknown> { if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} 必须是对象`); return value as Record<string, unknown>; }
 function array(value: unknown, label: string): unknown[] { if (!Array.isArray(value)) throw new Error(`${label} 必须是数组`); return value; }
@@ -8,6 +8,10 @@ function enumeration<T extends string>(value: unknown, label: string, values: re
 function sha(value: unknown, label: string): string { const result = string(value, label); if (!/^[0-9a-f]{64}$/.test(result)) throw new Error(`${label} 非 SHA-256`); return result; }
 function iso(value: unknown, label: string): string { const result = string(value, label); if (Number.isNaN(Date.parse(result))) throw new Error(`${label} 非时间`); return result; }
 function numberOrNull(value: unknown, label: string, min = 0, max = Number.POSITIVE_INFINITY): number | null { if (value === null) return null; if (typeof value !== "number" || !Number.isFinite(value) || value < min || value > max) throw new Error(`${label} 非法`); return value; }
+function integerOrNull(value: unknown, label: string, min = 0): number | null { return value === null ? null : integer(value, label, min); }
+function isoOrNull(value: unknown, label: string): string | null { return value === null ? null : iso(value, label); }
+function stringOrNull(value: unknown, label: string): string | null { return value === null ? null : string(value, label); }
+function booleanOrNull(value: unknown, label: string): boolean | null { if (value === null) return null; if (typeof value !== "boolean") throw new Error(`${label} 必须是布尔值`); return value; }
 function tenant(value: unknown, label: string) { const raw = object(value, label); return { orgId: string(raw.orgId, `${label}.orgId`), projectId: string(raw.projectId, `${label}.projectId`) }; }
 function strings(value: unknown, label: string): string[] { return array(value, label).map((item, index) => string(item, `${label}[${index}]`)); }
 function forbidCredentialPayload(raw: Record<string, unknown>, label: string) { const forbidden = ["apiKey", "api_key", "token", "secret", "password", "authorization", "apiKeyMasked", "api_key_masked"]; const found = forbidden.find((key) => key in raw); if (found) throw new Error(`${label} 含禁止的明文凭据字段 ${found}`); }
@@ -36,4 +40,76 @@ export function parseModelRuntimeOverview(value: unknown): ModelRuntimeOverview 
   const raw = object(value, "ModelRuntimeOverview"); const tenantRaw = object(raw.tenant, "tenant");
   const map = <T>(key: string, parser: (item: unknown, label: string) => T) => array(raw[key], key).map((item, index) => parser(item, `${key}[${index}]`));
   return { tenant: { orgId: string(tenantRaw.orgId, "tenant.orgId"), projectId: string(tenantRaw.projectId, "tenant.projectId") }, providers: map("providers", asset), models: map("models", asset), routes: map("routes", asset), policies: map("policies", asset), priceSnapshots: map("priceSnapshots", asset), evalGates: map("evalGates", gate), capacityPools: map("capacityPools", pool), healthObservations: map("healthObservations", health), resolutions: map("resolutions", resolution), generatedAt: iso(raw.generatedAt, "generatedAt") };
+}
+
+function priceAuthority(value: unknown, label: string): ModelPriceAuthoritySummary {
+  const raw = object(value, label);
+  return {
+    modelRef: ref(raw.modelRef, `${label}.modelRef`),
+    providerModelId: string(raw.providerModelId, `${label}.providerModelId`),
+    outputModalities: strings(raw.outputModalities, `${label}.outputModalities`),
+    priceSnapshotRef: raw.priceSnapshotRef === null ? null : ref(raw.priceSnapshotRef, `${label}.priceSnapshotRef`),
+    status: enumeration(raw.status, `${label}.status`, ["priced", "approved_zero", "unknown", "inactive", "out_of_window", "unit_mismatch", "drifted"] as const),
+    currency: stringOrNull(raw.currency, `${label}.currency`),
+    inputTokenPrice: numberOrNull(raw.inputTokenPrice, `${label}.inputTokenPrice`),
+    outputTokenPrice: numberOrNull(raw.outputTokenPrice, `${label}.outputTokenPrice`),
+    cachedTokenPrice: numberOrNull(raw.cachedTokenPrice, `${label}.cachedTokenPrice`),
+    tokenUnit: integerOrNull(raw.tokenUnit, `${label}.tokenUnit`, 1),
+    effectiveFrom: isoOrNull(raw.effectiveFrom, `${label}.effectiveFrom`),
+    effectiveUntil: isoOrNull(raw.effectiveUntil, `${label}.effectiveUntil`),
+    zeroPriceApprovalRef: stringOrNull(raw.zeroPriceApprovalRef, `${label}.zeroPriceApprovalRef`),
+    blockerCodes: strings(raw.blockerCodes, `${label}.blockerCodes`),
+  };
+}
+
+function budgetAuthority(value: unknown, label: string): RuntimeBudgetAuthoritySummary {
+  const raw = object(value, label);
+  return {
+    budgetPolicyRef: ref(raw.budgetPolicyRef, `${label}.budgetPolicyRef`),
+    budgetRef: raw.budgetRef === null ? null : ref(raw.budgetRef, `${label}.budgetRef`),
+    status: enumeration(raw.status, `${label}.status`, ["active", "inactive", "out_of_window", "drifted", "unknown"] as const),
+    currency: stringOrNull(raw.currency, `${label}.currency`),
+    dailyLimitMinor: integerOrNull(raw.dailyLimitMinor, `${label}.dailyLimitMinor`),
+    monthlyLimitMinor: integerOrNull(raw.monthlyLimitMinor, `${label}.monthlyLimitMinor`),
+    hardStop: booleanOrNull(raw.hardStop, `${label}.hardStop`),
+    unknownUsageBehavior: stringOrNull(raw.unknownUsageBehavior, `${label}.unknownUsageBehavior`),
+    unknownPriceBehavior: stringOrNull(raw.unknownPriceBehavior, `${label}.unknownPriceBehavior`),
+    effectiveFrom: isoOrNull(raw.effectiveFrom, `${label}.effectiveFrom`),
+    effectiveUntil: isoOrNull(raw.effectiveUntil, `${label}.effectiveUntil`),
+    blockerCodes: strings(raw.blockerCodes, `${label}.blockerCodes`),
+  };
+}
+
+function usageAuthority(value: unknown, label: string): RuntimeUsageAuthoritySummary {
+  const raw = object(value, label);
+  const costTotals = Object.fromEntries(Object.entries(object(raw.costTotals, `${label}.costTotals`)).map(([currency, amount]) => {
+    const parsed = numberOrNull(amount, `${label}.costTotals.${currency}`);
+    if (parsed === null) throw new Error(`${label}.costTotals.${currency} 不能为空`);
+    return [currency, parsed];
+  }));
+  const result: RuntimeUsageAuthoritySummary = {
+    state: enumeration(raw.state, `${label}.state`, ["unobserved", "measured", "partial", "unknown"] as const),
+    receiptCount: integer(raw.receiptCount, `${label}.receiptCount`),
+    measuredCount: integer(raw.measuredCount, `${label}.measuredCount`),
+    estimatedCount: integer(raw.estimatedCount, `${label}.estimatedCount`),
+    unknownCount: integer(raw.unknownCount, `${label}.unknownCount`),
+    adjustmentCount: integer(raw.adjustmentCount, `${label}.adjustmentCount`),
+    costTotals,
+    latestObservedAt: isoOrNull(raw.latestObservedAt, `${label}.latestObservedAt`),
+    truncated: typeof raw.truncated === "boolean" ? raw.truncated : (() => { throw new Error(`${label}.truncated 必须是布尔值`); })(),
+  };
+  if (result.measuredCount + result.estimatedCount + result.unknownCount !== result.receiptCount) throw new Error(`${label} 用量质量计数不一致`);
+  if ((result.state === "unobserved") !== (result.receiptCount === 0)) throw new Error(`${label} 未观测状态与回执数量不一致`);
+  return result;
+}
+
+export function parseModelRuntimeCostOverview(value: unknown): ModelRuntimeCostOverview {
+  const raw = object(value, "ModelRuntimeCostOverview");
+  return {
+    tenant: tenant(raw.tenant, "tenant"),
+    modelPrices: array(raw.modelPrices, "modelPrices").map((item, index) => priceAuthority(item, `modelPrices[${index}]`)),
+    budgets: array(raw.budgets, "budgets").map((item, index) => budgetAuthority(item, `budgets[${index}]`)),
+    usage: usageAuthority(raw.usage, "usage"),
+    generatedAt: iso(raw.generatedAt, "generatedAt"),
+  };
 }

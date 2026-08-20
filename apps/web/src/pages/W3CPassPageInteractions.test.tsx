@@ -84,6 +84,16 @@ describe("Wave 3C · six passing pages keep their main interactions honest", () 
       }
       if (path === "/v1/aip/llm-provider-plugins") return { items: [], totals: { installed: 0 } };
       if (path === "/v1/aip/gateway-default") return { current: { kind: "agnes" }, options: [] };
+      if (path === "/v1/aip/model-runtime/overview") {
+        return {
+          providers: [],
+          resolutions: [
+            { readiness: "blocked", blockerCodes: ["PROVIDER_HEALTH_EXPIRED"] },
+            { readiness: "blocked", blockerCodes: ["PRICE_SNAPSHOT_MISSING"] },
+            { readiness: "blocked", blockerCodes: ["EVAL_GATE_BLOCKED"] },
+          ],
+        };
+      }
       if (path === "/v1/ontology/object-types") {
         return { items: [{ id: "WorkOrder", name: "工作单", description: "live" }] };
       }
@@ -130,7 +140,34 @@ describe("Wave 3C · six passing pages keep their main interactions honest", () 
   it("Model Providers distinguishes confirmed empty and never echoes a secret reference", async () => {
     await render(ProvidersPage);
     expect(host.textContent).toContain("服务端已确认暂无已安装插件");
+    expect(host.textContent).toContain("0/3 路由 ready");
     expect(host.textContent).not.toContain("never-render-this-token");
+  });
+
+  it("Model Providers treats legacy gateway discovery as compatibility and blocks default writes", async () => {
+    mocks.apiGet.mockImplementation(async (path: string) => {
+      if (path === "/v1/aip/providers") {
+        return { items: [{ id: "mock-llm", name: "Legacy Mock", kind: "openai", ready: true }], sidecar: "fallback-mock" };
+      }
+      if (path === "/v1/aip/llm-provider-plugins") return { items: [], totals: { installed: 0 } };
+      if (path === "/v1/aip/gateway-default") {
+        return { current: { kind: "mock" }, options: [{ kind: "mock", label: "Local Mock" }] };
+      }
+      if (path === "/v1/aip/model-runtime/overview") {
+        return {
+          providers: [{ ref: { assetId: "agnes-text" } }],
+          resolutions: [{ readiness: "blocked", blockerCodes: ["PROVIDER_HEALTH_EXPIRED"] }],
+        };
+      }
+      return {};
+    });
+    await render(ProvidersPage);
+
+    expect(host.textContent).toContain("兼容默认网关（非 canonical 运行权威）");
+    expect(host.textContent).toContain("非运行权威");
+    expect(host.textContent).not.toContain("Legacy Mock · 运行态");
+    expect(buttonByText(host, "保存为默认").disabled).toBe(true);
+    expect(mocks.apiPut).not.toHaveBeenCalled();
   });
 
   it("Model Providers failure does not masquerade as a confirmed empty result", async () => {

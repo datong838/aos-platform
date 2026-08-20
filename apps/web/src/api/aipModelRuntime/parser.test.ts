@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision } from "./parser";
+import { parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision } from "./parser";
 
 const H = "a".repeat(64);
 const ref = (assetType: string, assetId: string) => ({ assetType, assetId, revision: 1, contentHash: H });
@@ -22,5 +22,25 @@ describe("AIP-7 exact model runtime parser", () => {
   it("解析 Provider 插件审批权威", () => {
     const plugin = parseProviderPluginRevision({ providerPluginId: "agnes-text", revision: 1, contentHash: H, manifestVersion: "1.0.0", manifestSourceHash: H, sourceRef: "plugins/llm-providers/agnes-text/manifest.json", owner: "AOS/FDE", usageBasis: "internal", approvedCapabilities: ["text", "llm", "chat"], deniedCapabilities: ["image", "audio", "video", "tool_execution"], modalities: ["text"], defaultModels: ["agnes-2.5-flash"], allowedTenants: [empty.tenant], approvalStatus: "approved", approvedBy: "owner", approvedAt: empty.generatedAt });
     expect(plugin.approvalStatus).toBe("approved");
+  });
+});
+
+describe("AIP-7 cost authority parser", () => {
+  const cost = {
+    tenant: empty.tenant,
+    modelPrices: [],
+    budgets: [],
+    usage: { state: "unobserved", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, adjustmentCount: 0, costTotals: {}, latestObservedAt: null, truncated: false },
+    generatedAt: empty.generatedAt,
+  };
+  it("保留未观测而非伪造零成本", () => {
+    expect(parseModelRuntimeCostOverview(cost).usage.state).toBe("unobserved");
+  });
+  it("拒绝质量计数与 Receipt 总数不一致", () => {
+    expect(() => parseModelRuntimeCostOverview({ ...cost, usage: { ...cost.usage, state: "partial", receiptCount: 2, measuredCount: 1 } })).toThrow(/计数不一致/);
+  });
+  it("解析单位不匹配的图像价格权威", () => {
+    const parsed = parseModelRuntimeCostOverview({ ...cost, modelPrices: [{ modelRef: ref("RegisteredModelRevision", "image"), providerModelId: "agnes-image-2.1-flash", outputModalities: ["image"], priceSnapshotRef: ref("ModelPriceSnapshotRevision", "price-image"), status: "unit_mismatch", currency: "CNY", inputTokenPrice: 0, outputTokenPrice: 0, cachedTokenPrice: null, tokenUnit: 1000, effectiveFrom: empty.generatedAt, effectiveUntil: null, zeroPriceApprovalRef: null, blockerCodes: ["TOKEN_PRICE_UNIT_MISMATCH"] }] });
+    expect(parsed.modelPrices[0].status).toBe("unit_mismatch");
   });
 });

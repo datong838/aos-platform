@@ -8,6 +8,7 @@ import {
   type ImpactDimension,
   type ImpactPreviewListResponse,
   type ImpactPreviewRevision,
+  type ProductionContextListResponse,
   type ProductionStartDecisionListResponse,
   type ResponsibilityPlanListResponse,
   type ReviewIssueListResponse,
@@ -27,6 +28,7 @@ type AuthorityState = {
   reviews: ReviewIssueListResponse;
   previews: ImpactPreviewListResponse;
   starts: ProductionStartDecisionListResponse;
+  contexts: ProductionContextListResponse;
 };
 
 const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 16 } as const;
@@ -53,6 +55,7 @@ export function ProductionContractsPage() {
   const [reviewRunId, setReviewRunId] = useState("");
   const [reviewReason, setReviewReason] = useState("");
   const [previewId,setPreviewId]=useState("");
+  const [productionContextId,setProductionContextId]=useState("");
   const [startTaskVersion,setStartTaskVersion]=useState("1");
   const [proposalId,setProposalId]=useState("");
   const [proposalVersion,setProposalVersion]=useState("1");
@@ -64,16 +67,16 @@ export function ProductionContractsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [briefs, bundles, evals, plans, stages, relations, reviews, previews, starts, logicList] = await Promise.all([
+      const [briefs, bundles, evals, plans, stages, relations, reviews, contexts, previews, starts, logicList] = await Promise.all([
         aipProductionContracts.listBriefs(), aipProductionContracts.listBundles(),
         aipProductionContracts.listEvalContracts(), aipProductionContracts.listResponsibilityPlans(),
         aipProductionContracts.listStageTemplates(), aipProductionContracts.listArtifactRelations(),
-        aipProductionContracts.listReviewIssues(), aipProductionContracts.listImpactPreviews(),
+        aipProductionContracts.listReviewIssues(), aipProductionContracts.listProductionContexts(), aipProductionContracts.listImpactPreviews(),
         aipProductionContracts.listProductionStartDecisions(),
         apiGet<{items?:Array<{id:string;name:string;revision:number;graph_hash:string;published_version?:number|null;persisted?:boolean}>}>("/v1/aip/logic/graphs").catch(()=>({items:[] as Array<{id:string;name:string;revision:number;graph_hash:string;published_version?:number|null;persisted?:boolean}>})),
       ]);
       setPublishedLogic((logicList.items||[]).filter(item=>item.persisted!==false && Number(item.published_version||0)>0 && /^[0-9a-f]{64}$/.test(item.graph_hash)));
-      setState({ briefs, bundles, evals, plans, stages, relations, reviews, previews, starts });
+      setState({ briefs, bundles, evals, plans, stages, relations, reviews, contexts, previews, starts });
       setError("");
     } catch (e) {
       setState(null);
@@ -109,8 +112,9 @@ export function ProductionContractsPage() {
   const resolveReview = () => { if (selectedReview && canReviewCommand) void run(`review:${selectedReview.issueId}`, () => aipProductionContracts.resolveReviewIssue(selectedReview.issueId, { expectedVersion: selectedReview.version, reason: reviewReason.trim(), resolutionRefs: [] }, `w2-ui-review-resolve-${crypto.randomUUID()}`)); };
   const returnReview = () => { if (selectedReview && canReviewCommand && reviewRunId.trim()) void run(`review:${selectedReview.issueId}`, () => aipProductionContracts.returnReviewIssue(selectedReview.issueId, { expectedVersion: selectedReview.version, runId: reviewRunId.trim(), targetStage: selectedReview.returnStage, reason: reviewReason.trim(), attemptIdempotencyKey: `w2-ui-attempt-${crypto.randomUUID()}` }, `w2-ui-review-return-${crypto.randomUUID()}`)); };
   const selectedPreview=state?.previews.items.find(item=>item.previewId===previewId);
+  const selectedProductionContext=state?.contexts.items.find(item=>item.contextId===productionContextId);
   const positiveInteger=(value:string)=>Number.isInteger(Number(value))&&Number(value)>0;
-  const startDisabledReason=(()=>{if(!selectedPreview)return"请选择 ImpactPreview exact revision";if(selectedPreview.lifecycle!=="frozen")return"Preview 尚未冻结";if(selectedPreview.readiness!=="ready")return`Preview 当前为${label[selectedPreview.readiness]??selectedPreview.readiness}`;if(selectedPreview.blockers.length)return"Preview 仍有权威阻断";if(new Date(selectedPreview.expiresAt).getTime()<=Date.now())return"Preview 已过期，请刷新并重新评估";if(!positiveInteger(startTaskVersion))return"Task version 必须大于 0";if(!proposalId.trim()||!positiveInteger(proposalVersion)||!/^[0-9a-f]{64}$/.test(proposalHash))return"请填写 ActionProposal ID、version 与 64 位 exact hash";if(!logicGraphId.trim()||!positiveInteger(logicRevision)||!/^[0-9a-f]{64}$/.test(logicGraphHash.trim()))return"请填写已发布 LogicGraph ID、revision 与 exact graph hash";if(publishedLogic.length===0)return"当前组织尚无已发布 Logic；空图/未发布 revision 不可 start";return"";})();
+  const startDisabledReason=(()=>{if(!selectedPreview)return"请选择 ImpactPreview exact revision";if(!selectedProductionContext)return"请选择 ProductionContext exact revision";if(selectedProductionContext.lifecycle!=="frozen"||selectedProductionContext.readiness!=="ready"||selectedProductionContext.blockers.length)return"ProductionContext 尚未 frozen + ready";if(selectedProductionContext.taskId!==selectedPreview.taskId)return"ProductionContext 与 Preview 不属于同一 Task";if(selectedPreview.lifecycle!=="frozen")return"Preview 尚未冻结";if(selectedPreview.readiness!=="ready")return`Preview 当前为${label[selectedPreview.readiness]??selectedPreview.readiness}`;if(selectedPreview.blockers.length)return"Preview 仍有权威阻断";if(new Date(selectedPreview.expiresAt).getTime()<=Date.now())return"Preview 已过期，请刷新并重新评估";if(!positiveInteger(startTaskVersion))return"Task version 必须大于 0";if(!proposalId.trim()||!positiveInteger(proposalVersion)||!/^[0-9a-f]{64}$/.test(proposalHash))return"请填写 ActionProposal ID、version 与 64 位 exact hash";if(!logicGraphId.trim()||!positiveInteger(logicRevision)||!/^[0-9a-f]{64}$/.test(logicGraphHash.trim()))return"请填写已发布 LogicGraph ID、revision 与 exact graph hash";if(publishedLogic.length===0)return"当前组织尚无已发布 Logic；空图/未发布 revision 不可 start";return"";})();
   const freezePreview=(item:ImpactPreviewRevision)=>run(`preview:${item.previewId}`,()=>aipProductionContracts.freezeImpactPreview(item.previewId,item.version,`w2-ui-preview-freeze-${crypto.randomUUID()}`));
   const applyPublishedLogic=(graphId:string)=>{
     const hit=publishedLogic.find(item=>item.id===graphId);
@@ -119,7 +123,7 @@ export function ProductionContractsPage() {
     setLogicRevision(String(hit.revision));
     setLogicGraphHash(hit.graph_hash);
   };
-  const startProduction=()=>{if(!selectedPreview||startDisabledReason)return;void run("production:start",()=>aipProductionContracts.startProduction({taskId:selectedPreview.taskId,expectedTaskVersion:Number(startTaskVersion),planRef:selectedPreview.planRef,previewRef:{resourceType:"ImpactPreviewRevision",resourceId:selectedPreview.previewId,revision:selectedPreview.revision,contentHash:selectedPreview.contentHash},actionProposalRef:{proposalId:proposalId.trim(),version:Number(proposalVersion),proposalHash},logicGraphId:logicGraphId.trim(),logicRevision:Number(logicRevision),logicGraphHash:logicGraphHash.trim()},`w2-ui-production-start-${crypto.randomUUID()}`));};
+  const startProduction=()=>{if(!selectedPreview||!selectedProductionContext||startDisabledReason)return;void run("production:start",()=>aipProductionContracts.startProduction({taskId:selectedPreview.taskId,expectedTaskVersion:Number(startTaskVersion),productionContextRef:{resourceType:"ProductionContextRevision",resourceId:selectedProductionContext.contextId,revision:selectedProductionContext.revision,contentHash:selectedProductionContext.contentHash},planRef:selectedPreview.planRef,previewRef:{resourceType:"ImpactPreviewRevision",resourceId:selectedPreview.previewId,revision:selectedPreview.revision,contentHash:selectedPreview.contentHash},actionProposalRef:{proposalId:proposalId.trim(),version:Number(proposalVersion),proposalHash},logicGraphId:logicGraphId.trim(),logicRevision:Number(logicRevision),logicGraphHash:logicGraphHash.trim()},`w2-ui-production-start-${crypto.randomUUID()}`));};
 
   return <PageChrome title="生产契约" lede="任务简报、证据包、评测契约、职责计划、阶段模板、产物关系与评审的租户权威视图；冻结不等于启动运行">
     {error && <div role="alert" className="notice bad">生产契约读取或操作失败：{error}</div>}
@@ -185,6 +189,7 @@ export function ProductionContractsPage() {
         <h3>受控创建 TaskRun</h3>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12}}>
           <label>ImpactPreview<select value={previewId} onChange={event=>setPreviewId(event.target.value)}><option value="">选择 exact revision</option>{state.previews.items.map(item=><option key={`${item.previewId}@${item.revision}`} value={item.previewId}>{item.previewId}@{item.revision} · {label[item.lifecycle]??item.lifecycle}/{label[item.readiness]??item.readiness}</option>)}</select></label>
+          <label>ProductionContext<select value={productionContextId} onChange={event=>setProductionContextId(event.target.value)}><option value="">选择 frozen + ready exact revision</option>{state.contexts.items.map(item=><option key={`${item.contextId}@${item.revision}`} value={item.contextId}>{item.contextId}@{item.revision} · {label[item.lifecycle]??item.lifecycle}/{label[item.readiness]??item.readiness}</option>)}</select></label>
           <label>Task version<input type="number" min="1" value={startTaskVersion} onChange={event=>setStartTaskVersion(event.target.value)}/></label>
           <label>ActionProposal ID<input value={proposalId} onChange={event=>setProposalId(event.target.value)} placeholder="proposal-…"/></label>
           <label>Proposal version<input type="number" min="1" value={proposalVersion} onChange={event=>setProposalVersion(event.target.value)}/></label>
