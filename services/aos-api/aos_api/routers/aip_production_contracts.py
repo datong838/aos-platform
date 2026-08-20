@@ -33,6 +33,8 @@ from aos_api.aip_production_contracts import (
     ProductionStartDecisionListResponse,
     RevokeEvidenceBundleRequest, ResolveEvidenceDisclosureRequest,
     EvidenceDisclosureDecision,
+    FreezeProductionContextRequest, ProductionContextRevision,
+    ProductionContextListResponse,
 )
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
@@ -107,6 +109,24 @@ def revise_impact_preview(preview_id: str, body: ReviseImpactPreviewRequest, ide
 def freeze_impact_preview(preview_id: str, body: FreezeContractRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
     try: return store.freeze_impact_preview(_scope(principal), principal.subject, preview_id, body.expected_version, _key(idempotency_key))
     except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/production-contexts/freeze", response_model=ProductionContextRevision, status_code=201)
+def freeze_production_context(body:FreezeProductionContextRequest,idempotency_key:str=Header(alias="Idempotency-Key"),principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
+    try:return store.freeze_production_context(_scope(principal),principal.subject,_key(idempotency_key),body)
+    except ProductionContractError as exc:raise _map(exc) from exc
+
+
+@router.get("/production-contexts", response_model=ProductionContextListResponse)
+def list_production_contexts(principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
+    try:return store.list_production_contexts(_scope(principal))
+    except ProductionContractError as exc:raise _map(exc) from exc
+
+
+@router.get("/production-contexts/{context_id}", response_model=ProductionContextRevision)
+def get_production_context(context_id:str,revision:int=Query(default=1,ge=1),principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
+    try:return store.get_production_context(_scope(principal),context_id,revision)
+    except ProductionContractError as exc:raise _map(exc) from exc
 
 
 @router.post("/production-runs/start", response_model=ProductionStartDecision)

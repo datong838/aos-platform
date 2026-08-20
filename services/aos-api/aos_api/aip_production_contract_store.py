@@ -19,8 +19,10 @@ from aos_api.aip_production_contracts import (
     CreateStageTemplateRequest, DisclosureLevel, DisclosureStatus,
     EvalContractListResponse, EvalContractRevision, EvidenceBundleListResponse,
     EvidenceBundleRevision, EvidenceDisclosureDecision, ExactArtifactRef,
-    ExactRevisionRef, Freshness, ImpactPreviewListResponse, ImpactPreviewRevision,
-    CreateImpactPreviewRequest, ResolveEvidenceDisclosureRequest,
+    ExactRevisionRef, FreezeProductionContextRequest, Freshness,
+    ImpactPreviewListResponse, ImpactPreviewRevision,
+    CreateImpactPreviewRequest, ProductionContextListResponse,
+    ProductionContextRevision, ResolveEvidenceDisclosureRequest,
     RevokeEvidenceBundleRequest, ReviseImpactPreviewRequest,
     ResolveReviewIssueRequest, ResponsibilityPlanListResponse,
     ResponsibilityPlanRevision, ReturnDecision, ReturnReviewIssueRequest,
@@ -1964,6 +1966,374 @@ class AipProductionContractStore:
             return read(conn)
         with self._connect_factory(scope) as c:
             return read(c)
+
+    def freeze_production_context(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        body: FreezeProductionContextRequest,
+    ) -> ProductionContextRevision:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(payload)
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(
+                conn, scope, "production_context.freeze", key, request_hash
+            )
+            if replay:
+                return self.get_production_context(
+                    scope, replay["resourceId"], int(replay["revision"]), conn=conn
+                )
+            snapshot: list[dict[str, Any]] = []
+            blockers: list[ContractBlocker] = []
+            self._assert_context_brief(conn, scope, body.brief_ref, snapshot, blockers)
+            self._assert_context_bundle(
+                conn, scope, body.evidence_bundle_ref, snapshot, blockers
+            )
+            self._assert_context_eval(
+                conn, scope, body.eval_contract_ref, snapshot, blockers
+            )
+            self._assert_context_responsibility(
+                conn, scope, body.responsibility_plan_ref, snapshot, blockers
+            )
+            if blockers:
+                raise ProductionContractDependencyBlocked(
+                    blockers[0].code + ":" + blockers[0].message
+                )
+            context_id = f"ctx-{uuid.uuid4().hex[:20]}"
+            dependency_snapshot_hash = canonical_hash(snapshot)
+            content_hash = canonical_hash(
+                {
+                    "taskId": body.task_id,
+                    "briefRef": payload["briefRef"],
+                    "evidenceBundleRef": payload["evidenceBundleRef"],
+                    "evalContractRef": payload["evalContractRef"],
+                    "responsibilityPlanRef": payload["responsibilityPlanRef"],
+                    "preparationRef": payload.get("preparationRef"),
+                    "profile": body.profile,
+                    "dependencySnapshotHash": dependency_snapshot_hash,
+                }
+            )
+            conn.execute(
+                """INSERT INTO aip_production_context_revision
+                   (org_id,project_id,context_id,revision,task_id,brief_ref,
+                    evidence_bundle_ref,eval_contract_ref,responsibility_plan_ref,
+                    preparation_ref,profile,dependency_snapshot,dependency_snapshot_hash,
+                    content_hash,lifecycle,readiness,blockers,created_by)
+                   VALUES(%s,%s,%s,1,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
+                          %s::jsonb,%s,%s::jsonb,%s,%s,'frozen','ready','[]'::jsonb,%s)""",
+                (
+                    *scope.key,
+                    context_id,
+                    body.task_id,
+                    self._json(payload["briefRef"]),
+                    self._json(payload["evidenceBundleRef"]),
+                    self._json(payload["evalContractRef"]),
+                    self._json(payload["responsibilityPlanRef"]),
+                    None
+                    if body.preparation_ref is None
+                    else self._json(payload["preparationRef"]),
+                    body.profile,
+                    self._json(snapshot),
+                    dependency_snapshot_hash,
+                    content_hash,
+                    actor,
+                ),
+            )
+            self._receipt(
+                conn,
+                scope,
+                "production_context.freeze",
+                key,
+                request_hash,
+                {
+                    "resourceType": "ProductionContextRevision",
+                    "resourceId": context_id,
+                    "revision": 1,
+                    "contentHash": content_hash,
+                },
+                actor,
+            )
+            conn.commit()
+            return self.get_production_context(scope, context_id, 1, conn=conn)
+
+    def get_production_context(
+        self,
+        scope: TenantScope,
+        context_id: str,
+        revision: int = 1,
+        *,
+        conn: Any | None = None,
+    ) -> ProductionContextRevision:
+        def read(c: Any) -> ProductionContextRevision:
+            row = c.execute(
+                """SELECT * FROM aip_production_context_revision
+                   WHERE org_id=%s AND project_id=%s AND context_id=%s AND revision=%s""",
+                (*scope.key, context_id, revision),
+            ).fetchone()
+            if row is None:
+                raise ProductionContractNotFound("production context not found")
+            return self._production_context(scope, row)
+
+        if conn is not None:
+            return read(conn)
+        with self._connect_factory(scope) as c:
+            return read(c)
+
+    def list_production_contexts(
+        self, scope: TenantScope
+    ) -> ProductionContextListResponse:
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT * FROM aip_production_context_revision
+                   WHERE org_id=%s AND project_id=%s
+                   ORDER BY created_at DESC, context_id, revision DESC""",
+                scope.key,
+            ).fetchall()
+            items = [self._production_context(scope, row) for row in rows]
+            return ProductionContextListResponse(
+                tenant=self._tenant(scope), items=items, count=len(items)
+            )
+
+    def _production_context(
+        self, scope: TenantScope, row: Any
+    ) -> ProductionContextRevision:
+        preparation = self._load(row["preparation_ref"])
+        return ProductionContextRevision(
+            tenant=self._tenant(scope),
+            context_id=row["context_id"],
+            revision=int(row["revision"]),
+            task_id=row["task_id"],
+            brief_ref=ExactRevisionRef.model_validate(self._load(row["brief_ref"])),
+            evidence_bundle_ref=ExactRevisionRef.model_validate(
+                self._load(row["evidence_bundle_ref"])
+            ),
+            eval_contract_ref=ExactRevisionRef.model_validate(
+                self._load(row["eval_contract_ref"])
+            ),
+            responsibility_plan_ref=ExactRevisionRef.model_validate(
+                self._load(row["responsibility_plan_ref"])
+            ),
+            preparation_ref=None
+            if preparation is None
+            else ExactRevisionRef.model_validate(preparation),
+            profile=row["profile"],
+            dependency_snapshot=self._load(row["dependency_snapshot"]),
+            dependency_snapshot_hash=row["dependency_snapshot_hash"],
+            content_hash=row["content_hash"],
+            lifecycle=row["lifecycle"],
+            readiness=row["readiness"],
+            blockers=[
+                ContractBlocker.model_validate(item)
+                for item in (self._load(row["blockers"]) or [])
+            ],
+            created_by=row["created_by"],
+            created_at=row["created_at"],
+        )
+
+    def _assert_context_brief(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        ref: ExactRevisionRef,
+        snapshot: list[dict[str, Any]],
+        blockers: list[ContractBlocker],
+    ) -> None:
+        row = conn.execute(
+            """SELECT revision,content_hash,lifecycle FROM aip_task_brief_revision
+               WHERE org_id=%s AND project_id=%s AND brief_id=%s AND revision=%s""",
+            (*scope.key, ref.resource_id, ref.revision),
+        ).fetchone()
+        snapshot.append(
+            {
+                "resourceType": ref.resource_type,
+                "resourceId": ref.resource_id,
+                "expectedRevision": ref.revision,
+                "observedRevision": None if row is None else int(row["revision"]),
+                "expectedHash": ref.content_hash,
+                "observedHash": None if row is None else row["content_hash"],
+                "lifecycle": None if row is None else row["lifecycle"],
+            }
+        )
+        if row is None:
+            blockers.append(
+                ContractBlocker(
+                    code="BRIEF_EXACT_REF_MISSING",
+                    message="TaskBrief exact ref 不存在",
+                    resource_ref=ref,
+                )
+            )
+            return
+        if row["content_hash"] != ref.content_hash:
+            blockers.append(
+                ContractBlocker(
+                    code="BRIEF_EXACT_REF_DRIFTED",
+                    message="TaskBrief exact hash 漂移",
+                    resource_ref=ref,
+                )
+            )
+        if row["lifecycle"] != "frozen":
+            blockers.append(
+                ContractBlocker(
+                    code="BRIEF_NOT_FROZEN",
+                    message="TaskBrief 未冻结",
+                    resource_ref=ref,
+                )
+            )
+
+    def _assert_context_bundle(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        ref: ExactRevisionRef,
+        snapshot: list[dict[str, Any]],
+        blockers: list[ContractBlocker],
+    ) -> None:
+        row = conn.execute(
+            """SELECT revision,content_hash,lifecycle,coverage,freshness
+               FROM aip_evidence_bundle_revision
+               WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s""",
+            (*scope.key, ref.resource_id, ref.revision),
+        ).fetchone()
+        revoked, reason = (False, None)
+        if row is not None:
+            revoked, reason = self._bundle_revoke(
+                conn, scope, ref.resource_id, int(row["revision"]), row["content_hash"]
+            )
+        snapshot.append(
+            {
+                "resourceType": ref.resource_type,
+                "resourceId": ref.resource_id,
+                "expectedHash": ref.content_hash,
+                "observedHash": None if row is None else row["content_hash"],
+                "coverage": None if row is None else row["coverage"],
+                "freshness": None if row is None else row["freshness"],
+                "revoked": revoked,
+                "revokeReason": reason,
+            }
+        )
+        if row is None or row["content_hash"] != ref.content_hash:
+            blockers.append(
+                ContractBlocker(
+                    code="EVIDENCE_BUNDLE_EXACT_REF_MISSING_OR_DRIFTED",
+                    message="EvidenceBundle exact ref 不可用",
+                    resource_ref=ref,
+                )
+            )
+            return
+        if row["lifecycle"] != "frozen":
+            blockers.append(
+                ContractBlocker(
+                    code="EVIDENCE_BUNDLE_NOT_FROZEN",
+                    message="EvidenceBundle 未冻结",
+                    resource_ref=ref,
+                )
+            )
+        if row["coverage"] != "complete":
+            blockers.append(
+                ContractBlocker(
+                    code="EVIDENCE_BUNDLE_NOT_COMPLETE",
+                    message="EvidenceBundle coverage 非 complete",
+                    resource_ref=ref,
+                )
+            )
+        if row["freshness"] != "fresh":
+            blockers.append(
+                ContractBlocker(
+                    code="EVIDENCE_BUNDLE_NOT_FRESH",
+                    message="EvidenceBundle freshness 非 fresh",
+                    resource_ref=ref,
+                )
+            )
+        if revoked:
+            blockers.append(
+                ContractBlocker(
+                    code="EVIDENCE_BUNDLE_REVOKED",
+                    message=f"EvidenceBundle 已撤销: {reason or 'revoked'}",
+                    resource_ref=ref,
+                )
+            )
+
+    def _assert_context_eval(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        ref: ExactRevisionRef,
+        snapshot: list[dict[str, Any]],
+        blockers: list[ContractBlocker],
+    ) -> None:
+        row = conn.execute(
+            """SELECT revision,content_hash,lifecycle FROM aip_eval_contract_revision
+               WHERE org_id=%s AND project_id=%s AND contract_id=%s AND revision=%s""",
+            (*scope.key, ref.resource_id, ref.revision),
+        ).fetchone()
+        snapshot.append(
+            {
+                "resourceType": ref.resource_type,
+                "resourceId": ref.resource_id,
+                "expectedHash": ref.content_hash,
+                "observedHash": None if row is None else row["content_hash"],
+                "lifecycle": None if row is None else row["lifecycle"],
+            }
+        )
+        if row is None or row["content_hash"] != ref.content_hash:
+            blockers.append(
+                ContractBlocker(
+                    code="EVAL_CONTRACT_EXACT_REF_MISSING_OR_DRIFTED",
+                    message="EvalContract exact ref 不可用",
+                    resource_ref=ref,
+                )
+            )
+            return
+        if row["lifecycle"] != "frozen":
+            blockers.append(
+                ContractBlocker(
+                    code="EVAL_CONTRACT_NOT_FROZEN",
+                    message="EvalContract 未冻结",
+                    resource_ref=ref,
+                )
+            )
+
+    def _assert_context_responsibility(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        ref: ExactRevisionRef,
+        snapshot: list[dict[str, Any]],
+        blockers: list[ContractBlocker],
+    ) -> None:
+        # 近场：只校验 frozen exact；assignee SkillBinding 运营就绪由 W-L4/Start 另门复验
+        row = conn.execute(
+            """SELECT revision,content_hash,lifecycle FROM aip_responsibility_plan_revision
+               WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s""",
+            (*scope.key, ref.resource_id, ref.revision),
+        ).fetchone()
+        snapshot.append(
+            {
+                "resourceType": ref.resource_type,
+                "resourceId": ref.resource_id,
+                "expectedHash": ref.content_hash,
+                "observedHash": None if row is None else row["content_hash"],
+                "lifecycle": None if row is None else row["lifecycle"],
+            }
+        )
+        if row is None or row["content_hash"] != ref.content_hash:
+            blockers.append(
+                ContractBlocker(
+                    code="RESPONSIBILITY_PLAN_EXACT_REF_MISSING_OR_DRIFTED",
+                    message="ResponsibilityPlan exact ref 不可用",
+                    resource_ref=ref,
+                )
+            )
+            return
+        if row["lifecycle"] != "frozen":
+            blockers.append(
+                ContractBlocker(
+                    code="RESPONSIBILITY_PLAN_NOT_FROZEN",
+                    message="ResponsibilityPlan 未冻结",
+                    resource_ref=ref,
+                )
+            )
 
     def _evaluate_disclosure(
         self,

@@ -604,6 +604,7 @@ class ImpactPreviewListResponse(AipContractModel):
 class ProductionStartRequest(AipContractModel):
     task_id: str = Field(min_length=1, max_length=200)
     expected_task_version: int = Field(ge=1)
+    production_context_ref: ExactRevisionRef
     plan_ref: ExactRevisionRef
     preview_ref: ExactRevisionRef
     action_proposal_ref: ActionProposalExactRef
@@ -613,6 +614,8 @@ class ProductionStartRequest(AipContractModel):
 
     @model_validator(mode="after")
     def _start_ref_kinds(self) -> ProductionStartRequest:
+        if self.production_context_ref.resource_type != "ProductionContextRevision":
+            raise ValueError("productionContextRef must reference ProductionContextRevision")
         if self.plan_ref.resource_type != "PlanRevision":
             raise ValueError("planRef must reference PlanRevision")
         if self.preview_ref.resource_type != "ImpactPreviewRevision":
@@ -650,6 +653,62 @@ class ProductionStartDecision(AipContractModel):
 class ProductionStartDecisionListResponse(AipContractModel):
     tenant: TenantContext
     items: list[ProductionStartDecision]
+    count: int = Field(ge=0)
+
+
+class FreezeProductionContextRequest(AipContractModel):
+    task_id: str = Field(min_length=1, max_length=200)
+    brief_ref: ExactRevisionRef
+    evidence_bundle_ref: ExactRevisionRef
+    eval_contract_ref: ExactRevisionRef
+    responsibility_plan_ref: ExactRevisionRef
+    profile: str = Field(default="default", min_length=1, max_length=120)
+    preparation_ref: ExactRevisionRef | None = None
+
+    @model_validator(mode="after")
+    def _four_contract_kinds(self) -> FreezeProductionContextRequest:
+        expected = {
+            "brief_ref": "TaskBriefRevision",
+            "evidence_bundle_ref": "EvidenceBundleRevision",
+            "eval_contract_ref": "EvalContractRevision",
+            "responsibility_plan_ref": "ResponsibilityPlanRevision",
+        }
+        for field, kind in expected.items():
+            ref = getattr(self, field)
+            if ref.resource_type != kind:
+                raise ValueError(f"{field} must reference {kind}")
+        if (
+            self.preparation_ref is not None
+            and self.preparation_ref.resource_type != "PreparationReceipt"
+        ):
+            raise ValueError("preparationRef must reference PreparationReceipt")
+        return self
+
+
+class ProductionContextRevision(AipContractModel):
+    tenant: TenantContext
+    context_id: str
+    revision: int
+    task_id: str
+    brief_ref: ExactRevisionRef
+    evidence_bundle_ref: ExactRevisionRef
+    eval_contract_ref: ExactRevisionRef
+    responsibility_plan_ref: ExactRevisionRef
+    preparation_ref: ExactRevisionRef | None
+    profile: str
+    dependency_snapshot: list[dict[str, Any]]
+    dependency_snapshot_hash: str
+    content_hash: str
+    lifecycle: BriefLifecycle
+    readiness: ContractReadiness
+    blockers: list[ContractBlocker]
+    created_by: str
+    created_at: datetime
+
+
+class ProductionContextListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[ProductionContextRevision]
     count: int = Field(ge=0)
 
 

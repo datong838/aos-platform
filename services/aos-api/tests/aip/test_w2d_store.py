@@ -124,7 +124,7 @@ def _seed() -> tuple[CreateImpactPreviewRequest, str]:
              item_refs,coverage,missing,conflicts,uncertainties,freshness,marking,
              license_summary,content_hash,lifecycle,created_by)
             VALUES(%s,%s,%s,1,%s::jsonb,'[]',NOW(),'[]','complete','[]','[]','[]',
-             'fresh','{}','{}',%s,'frozen','test')""",
+             'fresh','[]','{}',%s,'frozen','test')""",
             (
                 *SCOPE.key,
                 bundle_id,

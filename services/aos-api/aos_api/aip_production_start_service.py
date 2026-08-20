@@ -76,6 +76,7 @@ class AipProductionStartService:
             blockers: list[ContractBlocker] = []
             plan = self._check_plan(conn, scope, body, task, snapshot, blockers)
             preview = self._check_preview(conn, scope, body, snapshot, blockers)
+            self._check_production_context(conn, scope, body, preview, snapshot, blockers)
             self._check_action(conn, scope, body, preview, snapshot, blockers)
             self._check_logic(conn, scope, body, snapshot, blockers)
             status = self._blocked_status(blockers)
@@ -275,6 +276,78 @@ class AipProductionStartService:
         ):
             blockers.append(ContractBlocker(code="PREVIEW_TASK_PLAN_MISMATCH", message="ImpactPreview 未绑定本次 Task/Plan exact ref", resource_ref=body.preview_ref))
         return row
+
+    def _check_production_context(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        body: ProductionStartRequest,
+        preview: Any | None,
+        snapshot: list[dict[str, Any]],
+        blockers: list[ContractBlocker],
+    ) -> None:
+        ref = body.production_context_ref
+        row = conn.execute(
+            """SELECT * FROM aip_production_context_revision
+               WHERE org_id=%s AND project_id=%s AND context_id=%s AND revision=%s""",
+            (*scope.key, ref.resource_id, ref.revision),
+        ).fetchone()
+        snapshot.append(
+            {
+                "resourceType": ref.resource_type,
+                "resourceId": ref.resource_id,
+                "expectedRevision": ref.revision,
+                "expectedHash": ref.content_hash,
+                "observedHash": None if row is None else row["content_hash"],
+                "lifecycle": None if row is None else row["lifecycle"],
+                "readiness": None if row is None else row["readiness"],
+            }
+        )
+        if row is None or row["content_hash"] != ref.content_hash:
+            blockers.append(
+                ContractBlocker(
+                    code="PRODUCTION_CONTEXT_EXACT_REF_MISSING_OR_DRIFTED",
+                    message="ProductionContext exact ref 不可用",
+                    resource_ref=ref,
+                )
+            )
+            return
+        if row["lifecycle"] != "frozen" or row["readiness"] != "ready":
+            blockers.append(
+                ContractBlocker(
+                    code="PRODUCTION_CONTEXT_NOT_READY",
+                    message="ProductionContext 未 frozen/ready",
+                    resource_ref=ref,
+                )
+            )
+        if preview is None:
+            return
+        pairs = (
+            ("brief_ref", "brief_ref"),
+            ("evidence_bundle_ref", "evidence_bundle_ref"),
+            ("eval_contract_ref", "eval_contract_ref"),
+            ("responsibility_plan_ref", "responsibility_plan_ref"),
+        )
+        for context_col, preview_col in pairs:
+            left = self._contracts._load(row[context_col])
+            right = self._contracts._load(preview[preview_col])
+            if left != right:
+                blockers.append(
+                    ContractBlocker(
+                        code="PRODUCTION_CONTEXT_PREVIEW_CONTRACT_MISMATCH",
+                        message=f"ProductionContext 与 Preview 的 {preview_col} 不一致",
+                        resource_ref=ref,
+                    )
+                )
+                break
+        if row["task_id"] != body.task_id:
+            blockers.append(
+                ContractBlocker(
+                    code="PRODUCTION_CONTEXT_TASK_MISMATCH",
+                    message="ProductionContext taskId 与 Start 请求不一致",
+                    resource_ref=ref,
+                )
+            )
 
     def _check_action(
         self,

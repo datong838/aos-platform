@@ -1,0 +1,330 @@
+.........                                                                [100%]
+=============================== warnings summary ===============================
+aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+aos_api/routers/phase5_datasets.py:31
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase5_datasets.py:31: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'taskId' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'taskId' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'taskId' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'planRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'planRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'planRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'briefRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'briefRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'briefRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'evidenceBundleRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'evidenceBundleRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'evidenceBundleRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'evalContractRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'evalContractRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'evalContractRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'responsibilityPlanRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'responsibilityPlanRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'responsibilityPlanRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'stageTemplateRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'stageTemplateRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'stageTemplateRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'modelRouteRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'modelRouteRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'modelRouteRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'runtimePolicyRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'runtimePolicyRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'runtimePolicyRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'bindingRefs' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'bindingRefs' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'bindingRefs' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'capabilityRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'capabilityRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'capabilityRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'accountRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'accountRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'accountRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'impact' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'impact' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'impact' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'expiresAt' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'expiresAt' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_impact_preview_api_uses_principal_tenant_and_reads_back
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'expiresAt' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'expectedTaskVersion' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'expectedTaskVersion' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'expectedTaskVersion' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'productionContextRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'productionContextRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'productionContextRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'previewRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'previewRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'previewRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'actionProposalRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'actionProposalRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'actionProposalRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'logicGraphId' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'logicGraphId' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'logicGraphId' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'logicRevision' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'logicRevision' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'logicRevision' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'logicGraphHash' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'logicGraphHash' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_start_api_returns_machine_readable_blocked_without_runtime
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'logicGraphHash' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/aip/test_w2d_api.py::test_w2d_mutation_requires_idempotency_key_and_openapi_is_frozen
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/json_schema.py:2463: PydanticJsonSchemaWarning: Default value <function require_principal at 0x114e64ae0> is not JSON serializable; excluding default from JSON schema [non-serializable-default]
+    warnings.warn(message, PydanticJsonSchemaWarning)
+
+tests/aip/test_w2d_api.py::test_w2d_mutation_requires_idempotency_key_and_openapi_is_frozen
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID list_object_types_v1_ontology_object_types_get for function list_object_types at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase4_ontology_types.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2d_api.py::test_w2d_mutation_requires_idempotency_key_and_openapi_is_frozen
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID list_branches_v1_ontology_branches_get for function list_branches at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase4_ontology_branches.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2d_api.py::test_w2d_mutation_requires_idempotency_key_and_openapi_is_frozen
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID create_branch_v1_ontology_branches_post for function create_branch at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase4_ontology_branches.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2d_api.py::test_w2d_mutation_requires_idempotency_key_and_openapi_is_frozen
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID graph_health_v1_ontology_graph_health_get for function graph_health at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase4_ontology_branches.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2d_api.py::test_w2d_mutation_requires_idempotency_key_and_openapi_is_frozen
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID list_builds_v1_builds_get for function list_builds at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/builds.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2d_api.py::test_w2d_mutation_requires_idempotency_key_and_openapi_is_frozen
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID list_pipelines_v1_pipelines_get for function list_pipelines at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase5_pipelines.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2d_api.py::test_w2d_mutation_requires_idempotency_key_and_openapi_is_frozen
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID create_pipeline_v1_pipelines_post for function create_pipeline at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase5_pipelines.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2d_api.py::test_w2d_mutation_requires_idempotency_key_and_openapi_is_frozen
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID list_schedules_v1_schedules_get for function list_schedules at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase5_schedules.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2d_api.py::test_w2d_mutation_requires_idempotency_key_and_openapi_is_frozen
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID create_schedule_v1_schedules_post for function create_schedule at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase5_schedules.py
+    warnings.warn(message, stacklevel=1)
+
+tests/aip/test_w2d_api.py::test_w2d_mutation_requires_idempotency_key_and_openapi_is_frozen
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/fastapi/openapi/utils.py:225: UserWarning: Duplicate Operation ID list_datasets_v1_datasets_get for function list_datasets at /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase5_datasets.py
+    warnings.warn(message, stacklevel=1)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+9 passed, 86 warnings in 15.39s

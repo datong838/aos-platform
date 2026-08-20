@@ -18,6 +18,7 @@ from aos_api.aip_production_contract_store import (
 from aos_api.aip_production_contracts import (
     ActionProposalExactRef,
     ExactRevisionRef,
+    FreezeProductionContextRequest,
     ProductionStartDecisionStatus,
     ProductionStartRequest,
 )
@@ -44,11 +45,29 @@ def _seed_start_candidate() -> tuple[ProductionStartRequest, AipActionStore]:
         preview.version,
         f"freeze-{uuid.uuid4().hex}",
     )
+    context = contracts.freeze_production_context(
+        SCOPE,
+        "maker:w2d-start",
+        f"ctx-{uuid.uuid4().hex}",
+        FreezeProductionContextRequest(
+            task_id=preview_body.task_id,
+            brief_ref=preview_body.brief_ref,
+            evidence_bundle_ref=preview_body.evidence_bundle_ref,
+            eval_contract_ref=preview_body.eval_contract_ref,
+            responsibility_plan_ref=preview_body.responsibility_plan_ref,
+        ),
+    )
     preview_ref = ExactRevisionRef(
         resource_type="ImpactPreviewRevision",
         resource_id=preview.preview_id,
         revision=preview.revision,
         content_hash=preview.content_hash,
+    )
+    context_ref = ExactRevisionRef(
+        resource_type="ProductionContextRevision",
+        resource_id=context.context_id,
+        revision=context.revision,
+        content_hash=context.content_hash,
     )
     action_store = AipActionStore()
     action_id = f"send_w2d_start_{uuid.uuid4().hex}"
@@ -95,6 +114,7 @@ def _seed_start_candidate() -> tuple[ProductionStartRequest, AipActionStore]:
         ProductionStartRequest(
             task_id=preview_body.task_id,
             expected_task_version=int(task["version"]),
+            production_context_ref=context_ref,
             plan_ref=preview_body.plan_ref,
             preview_ref=preview_ref,
             action_proposal_ref=ActionProposalExactRef(
