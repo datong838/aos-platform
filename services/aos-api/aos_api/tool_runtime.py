@@ -49,6 +49,11 @@ def invoke_tool(
 
         return invoke_function_tool(tool_id, payload=payload)
 
+    if tool_id == "action.close" or tool_id.startswith("action."):
+        from aos_api.aip_action_tool_exits import invoke_action_tool
+
+        return invoke_action_tool(tool_id, payload=payload)
+
     if tool_id not in KNOWN:
         raise ApiError(
             code="NOT_FOUND", message=f"tool {tool_id} unknown", status_code=404

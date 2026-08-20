@@ -307,8 +307,17 @@ export function ToolsPage() {
         `/v1/aip/tools/${encodeURIComponent(id)}/invoke`,
         payload,
       );
-      setInvokeSummary(`试跑完成 · ${id} · ${payload.objectType}/${payload.objectId}`);
       setInvokePayload(r);
+      if (r.ok === false || r.blocked === true || r.requiresDraft === true) {
+        const msg =
+          typeof (r.result as { message?: string } | undefined)?.message === "string"
+            ? String((r.result as { message?: string }).message)
+            : "工具门禁拒绝直接成功";
+        setInvokeSummary(`诚实失败 · ${id} · ${msg}`);
+        setLocalErr(msg);
+      } else {
+        setInvokeSummary(`试跑完成 · ${id} · ${payload.objectType}/${payload.objectId}`);
+      }
     } catch (e) {
       setLocalErr(String((e as Error).message || e));
     }
@@ -339,9 +348,14 @@ export function ToolsPage() {
           <h2 className="bp-tool-detail-title">工具卡 · Action</h2>
           <p className="bp-tool-detail-meta">
             Action Type: <code>{selected.id}</code>
+            {selected.name ? ` · ${selected.name}` : ""}
+          </p>
+          <p className="error" data-testid="tools-action-draft-gate" style={{ fontSize: "0.8rem" }}>
+            {selected.blockedReason ||
+              "Action 写回必须经 HITL→Draft/Approval/Receipt；禁止面板直接写成功（W-T7）"}
           </p>
           <fieldset className="bp-tool-strategy">
-            <legend>执行策略</legend>
+            <legend>执行策略（偏好，不绕过 Draft 门）</legend>
             <label>
               <input
                 type="radio"
@@ -349,7 +363,7 @@ export function ToolsPage() {
                 checked={hitl === "auto"}
                 onChange={() => setHitl("auto")}
               />
-              对话中自动提交
+              对话中自动提交（仍须 Draft 权威）
             </label>
             <label>
               <input
@@ -370,12 +384,9 @@ export function ToolsPage() {
               仅生成 Draft（提案台）
             </label>
           </fieldset>
-          <p className="muted" style={{ fontSize: "0.75rem" }}>
-            说明给 LLM：「仅当严重级≥高且用户未否决时调用」
-          </p>
           <div className="mp-cfg-actions" style={{ marginTop: "0.75rem" }}>
             <InvokeButton toolId={selected.id} />
-            <Link to="/aip/drafts" className="btn-nav">
+            <Link to="/aip/drafts" className="btn-nav" data-testid="tools-action-drafts-link">
               打开 Draft 审批台 →
             </Link>
           </div>

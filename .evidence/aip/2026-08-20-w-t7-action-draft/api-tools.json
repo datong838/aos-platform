@@ -1,0 +1,5 @@
+{
+  "requiresDraft": true,
+  "blocked": true,
+  "reason": "Action 写回必须经 HITL→Draft/Approval/Receipt；工具面板禁止直接写成功（W-T7）"
+}

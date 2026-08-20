@@ -369,6 +369,7 @@ def _invoke_function_core(body: FnInvokeIn, principal: Principal):
 @router.get("/v1/aip/tools")
 def list_tools(principal: Principal = Depends(require_principal)):
     scope = TenantScope(principal.org_id, principal.project_id)
+    from aos_api.aip_action_tool_exits import list_action_tool_exits
     from aos_api.aip_capability_binding_service import AipCapabilityBindingService
     from aos_api.aip_capability_tool_exits import list_capability_tool_exits
     from aos_api.aip_function_tool_exits import list_function_tool_exits
@@ -393,9 +394,10 @@ def list_tools(principal: Principal = Depends(require_principal)):
     except Exception:
         graphs = []
     functions = list_function_tool_exits(scope, graphs=graphs)
+    actions = list_action_tool_exits()
 
-    base = [t for t in _tools if str(t.get("id")) != "fn.echo"]
-    return {"items": [*base, *functions, *caps]}
+    base = [t for t in _tools if str(t.get("id")) not in {"fn.echo", "action.close"}]
+    return {"items": [*base, *functions, *actions, *caps]}
 
 
 @router.post("/v1/aip/tools/{tool_id}/invoke")
