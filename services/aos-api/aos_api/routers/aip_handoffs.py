@@ -7,6 +7,10 @@ from fastapi import APIRouter, Depends, Header, status
 
 from aos_api.aip_agent_registry_contracts import (
     ConsumeHandoffRequest,
+    CreateHandoffDecisionRequest,
+    DecidedHandoff,
+    HandoffDecisionListResponse,
+    HandoffDecisionRevision,
     HandoffEnvelope,
     IssueHandoffRequest,
     IssuedHandoff,
@@ -109,5 +113,61 @@ def consume_handoff(
             actor=principal.subject,
             occurred_at=datetime.now(UTC),
         )
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/{handoff_id}/decisions",
+    response_model=DecidedHandoff,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_handoff_decision(
+    handoff_id: str,
+    body: CreateHandoffDecisionRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipHandoffService = Depends(get_handoff_service),
+) -> DecidedHandoff:
+    try:
+        return service.decide(
+            _scope(principal),
+            handoff_id,
+            body,
+            idempotency_key=_idem(idempotency_key),
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get("/{handoff_id}/decisions", response_model=HandoffDecisionListResponse)
+def list_handoff_decisions(
+    handoff_id: str,
+    principal: Principal = Depends(require_principal),
+    service: AipHandoffService = Depends(get_handoff_service),
+) -> HandoffDecisionListResponse:
+    try:
+        return service.list_decisions(_scope(principal), handoff_id)
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get(
+    "/{handoff_id}/decisions/{decision_id}",
+    response_model=HandoffDecisionRevision,
+)
+def get_handoff_decision(
+    handoff_id: str,
+    decision_id: str,
+    principal: Principal = Depends(require_principal),
+    service: AipHandoffService = Depends(get_handoff_service),
+) -> HandoffDecisionRevision:
+    try:
+        decision = service.get_decision(_scope(principal), decision_id)
+        if decision.handoff_id != handoff_id:
+            raise AipAgentRegistryNotFound("handoff decision not found")
+        return decision
     except AipAgentRegistryError as exc:
         raise _map_error(exc) from exc

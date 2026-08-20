@@ -13,6 +13,11 @@ from aos_api.aip_agent_registry_contracts import (
     IssuedHandoff,
     RegistryReceipt,
     VersionedAssetRef,
+    CreateHandoffDecisionRequest,
+    DecidedHandoff,
+    HandoffDecisionKind,
+    HandoffDecisionListResponse,
+    HandoffDecisionRevision,
 )
 from aos_api.aip_agent_registry_store import (
     AipAgentRegistryConflict,
@@ -231,6 +236,303 @@ class AipHandoffService(AipAgentRegistryStore):
         if row is None:
             raise AipAgentRegistryNotFound("handoff not found")
         return self._from_row(scope, row)
+
+    def decide(
+        self,
+        scope: TenantScope,
+        handoff_id: str,
+        request: CreateHandoffDecisionRequest,
+        *,
+        idempotency_key: str,
+        actor: str,
+        occurred_at: datetime,
+    ) -> DecidedHandoff:
+        self._validate_command(scope, idempotency_key, actor)
+        operation = "handoff.decision"
+        request_hash = hashlib.sha256(
+            self._json(
+                {
+                    "actor": actor.strip(),
+                    "request": {
+                        "handoffId": handoff_id,
+                        **request.model_dump(mode="json", by_alias=True),
+                    },
+                }
+            ).encode()
+        ).hexdigest()
+        try:
+            with self._connect_factory(scope) as conn:
+                self._lock(conn, scope, operation, idempotency_key)
+                replay = self._receipt_row(conn, scope, operation, idempotency_key)
+                if replay is not None:
+                    self._require_replay_hash(replay, request_hash)
+                    decision = self.get_decision(
+                        scope, replay["result_ref"]["resourceId"], conn=conn
+                    )
+                    return DecidedHandoff(
+                        decision=decision,
+                        receipt=self._receipt_from_row(scope, replay),
+                    )
+                envelope = conn.execute(
+                    """SELECT * FROM aip_handoff_envelope
+                       WHERE org_id=%s AND project_id=%s AND handoff_id=%s
+                       FOR UPDATE""",
+                    (*scope.key, handoff_id),
+                ).fetchone()
+                if envelope is None:
+                    raise AipAgentRegistryNotFound("handoff not found")
+                if envelope["status"] != "consumed":
+                    raise AipAgentRegistryTransitionBlocked(
+                        "handoff decision requires consumed envelope"
+                    )
+                stored_receiver = VersionedAssetRef.model_validate(
+                    envelope["receiver_instance_ref"]
+                )
+                if request.receiver_instance != stored_receiver:
+                    raise AipAgentRegistryTransitionBlocked(
+                        "handoff decision receiver exact revision drifted"
+                    )
+                self._require_exact_active_instance(
+                    conn, scope, request.receiver_instance
+                )
+                head = conn.execute(
+                    """SELECT * FROM aip_handoff_decision_head
+                       WHERE org_id=%s AND project_id=%s AND handoff_id=%s
+                       FOR UPDATE""",
+                    (*scope.key, handoff_id),
+                ).fetchone()
+                current_version = 0 if head is None else int(head["version"])
+                if current_version != request.expected_head_version:
+                    raise AipAgentRegistryConflict(
+                        "handoff decision head version conflict"
+                    )
+                if head is not None and head["terminal_decision"] is not None:
+                    raise AipAgentRegistryConflict(
+                        "handoff decision already terminal"
+                    )
+                if (
+                    head is not None
+                    and request.decision is not HandoffDecisionKind.RETURNED
+                    and head["terminal_decision"] is None
+                    and int(head["current_revision"]) >= 1
+                ):
+                    # after request_more only returned may append; after no head, any first decision ok
+                    last = conn.execute(
+                        """SELECT decision FROM aip_handoff_decision_revision
+                           WHERE org_id=%s AND project_id=%s AND handoff_id=%s
+                           ORDER BY revision DESC LIMIT 1""",
+                        (*scope.key, handoff_id),
+                    ).fetchone()
+                    if last is not None and last["decision"] == "request_more":
+                        if request.decision is not HandoffDecisionKind.RETURNED:
+                            raise AipAgentRegistryTransitionBlocked(
+                                "after request_more only returned is allowed"
+                            )
+                    elif last is not None:
+                        raise AipAgentRegistryConflict(
+                            "handoff decision already recorded"
+                        )
+                revision = 1 if head is None else int(head["current_revision"]) + 1
+                decision_id = f"handoff-decision-{uuid.uuid4().hex[:20]}"
+                envelope_ref = ResourceRef(
+                    resource_type="HandoffEnvelope",
+                    resource_id=handoff_id,
+                    revision=str(envelope["version"]),
+                    authority="postgresql",
+                )
+                payload = {
+                    "handoffId": handoff_id,
+                    "revision": revision,
+                    "envelopeRef": envelope_ref.model_dump(mode="json", by_alias=True),
+                    "decision": request.decision.value,
+                    "reasonCode": request.reason_code,
+                    "gapCodes": request.gap_codes,
+                    "returnRefs": [
+                        item.model_dump(mode="json", by_alias=True)
+                        for item in request.return_refs
+                    ],
+                    "correlationRef": None
+                    if request.correlation_ref is None
+                    else request.correlation_ref.model_dump(mode="json", by_alias=True),
+                    "receiverInstance": request.receiver_instance.model_dump(
+                        mode="json", by_alias=True
+                    ),
+                }
+                content_hash = self._hash(payload)
+                conn.execute(
+                    """INSERT INTO aip_handoff_decision_revision
+                       (org_id,project_id,decision_id,handoff_id,revision,envelope_ref,
+                        decision,reason_code,gap_codes,return_refs,correlation_ref,
+                        receiver_instance_ref,content_hash,actor,created_at)
+                       VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s::jsonb,%s::jsonb,
+                              %s::jsonb,%s::jsonb,%s,%s,%s)""",
+                    (
+                        *scope.key,
+                        decision_id,
+                        handoff_id,
+                        revision,
+                        self._json(envelope_ref),
+                        request.decision.value,
+                        request.reason_code,
+                        self._json(request.gap_codes),
+                        self._json(
+                            [
+                                item.model_dump(mode="json", by_alias=True)
+                                for item in request.return_refs
+                            ]
+                        ),
+                        None
+                        if request.correlation_ref is None
+                        else self._json(request.correlation_ref),
+                        self._json(request.receiver_instance),
+                        content_hash,
+                        actor,
+                        occurred_at,
+                    ),
+                )
+                terminal = (
+                    request.decision.value
+                    if request.decision
+                    in {
+                        HandoffDecisionKind.ACCEPTED,
+                        HandoffDecisionKind.REJECTED,
+                        HandoffDecisionKind.RETURNED,
+                    }
+                    else None
+                )
+                if head is None:
+                    conn.execute(
+                        """INSERT INTO aip_handoff_decision_head
+                           (org_id,project_id,handoff_id,current_revision,version,
+                            terminal_decision,updated_at)
+                           VALUES(%s,%s,%s,%s,1,%s,%s)""",
+                        (
+                            *scope.key,
+                            handoff_id,
+                            revision,
+                            terminal,
+                            occurred_at,
+                        ),
+                    )
+                else:
+                    conn.execute(
+                        """UPDATE aip_handoff_decision_head
+                           SET current_revision=%s, version=version+1,
+                               terminal_decision=%s, updated_at=%s
+                           WHERE org_id=%s AND project_id=%s AND handoff_id=%s
+                             AND version=%s""",
+                        (
+                            revision,
+                            terminal,
+                            occurred_at,
+                            *scope.key,
+                            handoff_id,
+                            request.expected_head_version,
+                        ),
+                    )
+                # Envelope transport status must stay consumed — never reopen.
+                still = conn.execute(
+                    """SELECT status FROM aip_handoff_envelope
+                       WHERE org_id=%s AND project_id=%s AND handoff_id=%s""",
+                    (*scope.key, handoff_id),
+                ).fetchone()
+                if still is None or still["status"] != "consumed":
+                    raise AipAgentRegistryPersistenceError(
+                        "handoff envelope transport integrity failed"
+                    )
+                receipt = self._insert_receipt(
+                    conn,
+                    scope,
+                    operation,
+                    idempotency_key,
+                    request_hash,
+                    "HandoffEnvelope",
+                    handoff_id,
+                    "HandoffDecisionRevision",
+                    decision_id,
+                    actor,
+                    occurred_at,
+                )
+                conn.commit()
+                return DecidedHandoff(
+                    decision=self.get_decision(scope, decision_id),
+                    receipt=receipt,
+                )
+        except (
+            AipAgentRegistryConflict,
+            AipAgentRegistryNotFound,
+            AipAgentRegistryTransitionBlocked,
+        ):
+            raise
+        except Exception as exc:
+            raise AipAgentRegistryPersistenceError("handoff decision failed") from exc
+
+    def get_decision(
+        self,
+        scope: TenantScope,
+        decision_id: str,
+        *,
+        conn=None,
+    ) -> HandoffDecisionRevision:
+        def read(c) -> HandoffDecisionRevision:
+            row = c.execute(
+                """SELECT * FROM aip_handoff_decision_revision
+                   WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
+                (*scope.key, decision_id),
+            ).fetchone()
+            if row is None:
+                raise AipAgentRegistryNotFound("handoff decision not found")
+            return self._decision_from_row(scope, row)
+
+        if conn is not None:
+            return read(conn)
+        with self._connect_factory(scope) as c:
+            return read(c)
+
+    def list_decisions(
+        self, scope: TenantScope, handoff_id: str
+    ) -> HandoffDecisionListResponse:
+        with self._connect_factory(scope) as conn:
+            if self._row(conn, scope, handoff_id) is None:
+                raise AipAgentRegistryNotFound("handoff not found")
+            rows = conn.execute(
+                """SELECT * FROM aip_handoff_decision_revision
+                   WHERE org_id=%s AND project_id=%s AND handoff_id=%s
+                   ORDER BY revision ASC""",
+                (*scope.key, handoff_id),
+            ).fetchall()
+            head = conn.execute(
+                """SELECT version FROM aip_handoff_decision_head
+                   WHERE org_id=%s AND project_id=%s AND handoff_id=%s""",
+                (*scope.key, handoff_id),
+            ).fetchone()
+            items = [self._decision_from_row(scope, row) for row in rows]
+            return HandoffDecisionListResponse(
+                tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+                handoff_id=handoff_id,
+                items=items,
+                count=len(items),
+                head_version=0 if head is None else int(head["version"]),
+            )
+
+    @staticmethod
+    def _decision_from_row(scope: TenantScope, row) -> HandoffDecisionRevision:
+        return HandoffDecisionRevision(
+            tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+            decision_id=row["decision_id"],
+            handoff_id=row["handoff_id"],
+            revision=int(row["revision"]),
+            envelope_ref=row["envelope_ref"],
+            decision=row["decision"],
+            reason_code=row["reason_code"],
+            gap_codes=row["gap_codes"] or [],
+            return_refs=row["return_refs"] or [],
+            correlation_ref=row["correlation_ref"],
+            receiver_instance=row["receiver_instance_ref"],
+            content_hash=row["content_hash"],
+            created_by=row["actor"],
+            created_at=row["created_at"],
+        )
 
     @staticmethod
     def _row(conn, scope: TenantScope, handoff_id: str):

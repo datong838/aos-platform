@@ -105,6 +105,8 @@ def test_openapi_registers_handoff_consume_surface(client) -> None:
     assert "/v1/aip/handoffs" in paths
     assert "/v1/aip/handoffs/{handoff_id}" in paths
     assert "/v1/aip/handoffs/{handoff_id}/consume" in paths
+    assert "/v1/aip/handoffs/{handoff_id}/decisions" in paths
+    assert "/v1/aip/handoffs/{handoff_id}/decisions/{decision_id}" in paths
 
 
 def test_issue_replay_hides_bearer_and_consume_is_one_shot(client) -> None:

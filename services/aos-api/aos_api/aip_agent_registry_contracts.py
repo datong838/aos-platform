@@ -588,6 +588,67 @@ class ConsumeHandoffRequest(AipContractModel):
         return self
 
 
+class HandoffDecisionKind(StrEnum):
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    REQUEST_MORE = "request_more"
+    RETURNED = "returned"
+
+
+class CreateHandoffDecisionRequest(AipContractModel):
+    decision: HandoffDecisionKind
+    expected_head_version: int = Field(ge=0)
+    reason_code: str | None = Field(default=None, max_length=120)
+    gap_codes: list[str] = Field(default_factory=list)
+    return_refs: list[ResourceRef] = Field(default_factory=list)
+    correlation_ref: ResourceRef | None = None
+    receiver_instance: VersionedAssetRef
+
+    @model_validator(mode="after")
+    def _decision_payload(self) -> CreateHandoffDecisionRequest:
+        if self.receiver_instance.asset_type != "AgentInstance":
+            raise ValueError("receiver_instance must reference AgentInstance")
+        if self.decision is HandoffDecisionKind.REQUEST_MORE and not self.gap_codes:
+            raise ValueError("request_more requires gapCodes")
+        if self.decision is HandoffDecisionKind.RETURNED and not self.return_refs:
+            raise ValueError("returned requires returnRefs")
+        if self.decision is HandoffDecisionKind.REJECTED and not (
+            self.reason_code and self.reason_code.strip()
+        ):
+            raise ValueError("rejected requires reasonCode")
+        return self
+
+
+class HandoffDecisionRevision(AipContractModel):
+    tenant: TenantContext
+    decision_id: str
+    handoff_id: str
+    revision: int
+    envelope_ref: ResourceRef
+    decision: HandoffDecisionKind
+    reason_code: str | None = None
+    gap_codes: list[str] = Field(default_factory=list)
+    return_refs: list[ResourceRef] = Field(default_factory=list)
+    correlation_ref: ResourceRef | None = None
+    receiver_instance: VersionedAssetRef
+    content_hash: str
+    created_by: str
+    created_at: datetime
+
+
+class HandoffDecisionListResponse(AipContractModel):
+    tenant: TenantContext
+    handoff_id: str
+    items: list[HandoffDecisionRevision]
+    count: int = Field(ge=0)
+    head_version: int = Field(ge=0)
+
+
+class DecidedHandoff(AipContractModel):
+    decision: HandoffDecisionRevision
+    receipt: RegistryReceipt
+
+
 class AgentRunCommandResponse(AipContractModel):
     tenant: TenantContext
     agent_run: AgentRun
