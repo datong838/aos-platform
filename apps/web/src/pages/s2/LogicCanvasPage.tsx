@@ -40,6 +40,12 @@ import type {
   LogicNodeRunStatus,
   LogicRunSummary,
 } from "./logicRunContracts";
+import { aipProductionContracts } from "../../api/aipProductionContracts";
+import {
+  productionProjectionEmptyMessage,
+  projectProductionProfiles,
+  type ProductionProfileProjection,
+} from "./logicProductionProjection";
 
 /** 向后兼容：旧测试和外部引用仍使用这些导出。 */
 export interface BranchPath {
@@ -208,6 +214,11 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [profileProjection, setProfileProjection] = useState<ProductionProfileProjection[]>([]);
+  const [projectionStageCount, setProjectionStageCount] = useState(0);
+  const [projectionPlanCount, setProjectionPlanCount] = useState(0);
+  const [projectionState, setProjectionState] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [projectionError, setProjectionError] = useState("");
   const [inputsDraft, setInputsDraft] = useState("{}");
   const [appliedInputs, setAppliedInputs] = useState<JsonObject | null>(null);
   const [inputsError, setInputsError] = useState("");
@@ -260,6 +271,32 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
     });
     return states;
   }, [activeFlowId, graph, run, runState]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setProjectionState("loading");
+    setProjectionError("");
+    void Promise.all([
+      aipProductionContracts.listStageTemplates(),
+      aipProductionContracts.listResponsibilityPlans(),
+    ])
+      .then(([stages, plans]) => {
+        if (cancelled) return;
+        setProjectionStageCount(stages.count);
+        setProjectionPlanCount(plans.count);
+        setProfileProjection(projectProductionProfiles(stages.items, plans.items));
+        setProjectionState("ready");
+      })
+      .catch((cause) => {
+        if (cancelled) return;
+        setProfileProjection([]);
+        setProjectionStageCount(0);
+        setProjectionPlanCount(0);
+        setProjectionError(cause instanceof Error ? cause.message : String(cause));
+        setProjectionState("error");
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     const generation = ++requestGeneration.current;
@@ -772,7 +809,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           { label: "分区", value: shellTab === "edit" ? "编辑" : shellTab === "history" ? "历史" : "自动化" },
           { label: "图", value: graph?.persisted ? "已确认" : graph ? "未确认" : "未载" },
           { label: "历史条", value: String(history.length) },
-          { label: "Uses", value: shellTab === "automation" ? "0" : "—" },
+          { label: "Profile", value: projectionState === "ready" ? String(profileProjection.length) : projectionState === "loading" ? "…" : "—" },
           { label: "更多", value: historyCursor ? "有" : "无" },
           { label: "互跳", value: shellTab === "automation" ? "草稿/评测" : "观测/谱系" },
         ].map((s) => (
@@ -799,6 +836,45 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
         {" · "}
         <Link to="/aip/production-contracts">生产契约</Link>
         {" "}完成发布与启动；安全试跑不写生产。
+      </div>
+      <div
+        className="notice"
+        role="region"
+        aria-label="生产契约只读投影"
+        data-testid="logic-production-projection"
+        style={{ padding: 12, marginBottom: 12, border: "1px solid var(--aos-border)" }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <strong>可被引用的生产 Profile（只读）</strong>
+          <Link to="/aip/production-contracts" data-testid="logic-projection-jump-contracts" style={{ fontSize: 12 }}>
+            打开生产契约 →
+          </Link>
+        </div>
+        <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--aos-muted)" }}>
+          来自 StageTemplate / ResponsibilityPlan 权威表；空表不伪造 Profile，画布不可由此旁路启动生产。
+        </p>
+        {projectionState === "loading" && <p style={{ marginTop: 8, fontSize: 12 }} data-testid="logic-projection-loading">正在读取生产契约…</p>}
+        {projectionError && (
+          <p role="alert" style={{ marginTop: 8, fontSize: 12, color: "var(--aos-amber-700)" }} data-testid="logic-projection-error">
+            投影读取失败：{projectionError}。未注入演示 Profile。
+          </p>
+        )}
+        {projectionState === "ready" && productionProjectionEmptyMessage(projectionStageCount, projectionPlanCount) && (
+          <p style={{ marginTop: 8, fontSize: 12 }} data-testid="logic-projection-empty">
+            {productionProjectionEmptyMessage(projectionStageCount, projectionPlanCount)}
+          </p>
+        )}
+        {profileProjection.length > 0 && (
+          <ul style={{ margin: "8px 0 0", paddingLeft: 18, fontSize: 13 }} data-testid="logic-projection-profiles">
+            {profileProjection.map((row) => (
+              <li key={row.profile}>
+                <code>{row.profile}</code>
+                {" · "}Stage {row.stageReady}/{row.stageCount} ready
+                {" · "}Plan {row.planReady}/{row.planCount} ready
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
         <button type="button" className="btn btn-primary" disabled={!graph || loading || saving || running || !dirty} onClick={() => void saveGraph()}>
