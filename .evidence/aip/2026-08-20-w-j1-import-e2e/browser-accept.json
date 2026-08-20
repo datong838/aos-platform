@@ -1,0 +1,11 @@
+{
+  "capability": {
+    "testError": true,
+    "honesty": true,
+    "noFakeSuccess": true,
+    "preview": "接入插件能力\n\n声明外部能力端点与契约，注册为 C0/C1/C2；向导校验态可见，不伪造连通通过。\n\n当前步\n4/5\n能力级\nC0\n安全级\nmedium\n联通测\n失败\n导入态\n待导入\n知识库\n2/3\nC0 / C1 / C2 能力分层\nC0 sync — 同步函数， <15s，可直接挂 Function\nC1 Job — 异步任务， GPU/长耗时，产物写 MediaSet\nC2 Session — 实时会话， WebSocket 长连接，AV 流外置\n✓\n能力类型\n✓\nManifest 配置\n✓\n安全与配额\n4\n连通测试\n连通性测试与确认\n\n点击「运行测试」验证端点可达、鉴权有效、Schema 匹配\n\n▶ 运行连通测试\n连通测试未通过（诚实失败）：capability configuration and connectivity require a versioned tenant Ca"
+  },
+  "agent": {
+    "stats": true
+  }
+}

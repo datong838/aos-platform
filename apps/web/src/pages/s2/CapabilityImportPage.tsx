@@ -158,7 +158,10 @@ export function CapabilityImportPage() {
   const [secLevel, setSecLevel] = useState("medium");
   const [testing, setTesting] = useState(false);
   const [testDone, setTestDone] = useState(false);
+  const [testError, setTestError] = useState<string | null>(null);
   const [imported, setImported] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
 
   // 新增 state
   const [kbDocs, setKbDocs] = useState<KBDocument[]>(MOCK_KB_DOCUMENTS);
@@ -199,20 +202,24 @@ permissions:
 
   function runTests() {
     setTesting(true);
-    // 尝试调 API，fallback 到 mock
+    setTestDone(false);
+    setTestError(null);
     apiPost("/v1/aip/capabilities/test", { endpoint: manifestUrl })
-      .catch(() => {
-        // API 未就绪，使用模拟结果
+      .then(() => {
+        setTestDone(true);
+      })
+      .catch((e) => {
+        setTestDone(false);
+        setTestError(String((e as Error).message || e) || "连通测试失败：权威尚未接受该 Manifest 端点");
       })
       .finally(() => {
-        setTimeout(() => {
-          setTesting(false);
-          setTestDone(true);
-        }, 1500);
+        setTesting(false);
       });
   }
 
   async function handleImport() {
+    setImportError(null);
+    setImporting(true);
     try {
       await apiPost("/v1/aip/capabilities", {
         type: capType,
@@ -221,9 +228,11 @@ permissions:
         secret_ref: secretRef,
       });
       setImported(true);
-    } catch {
-      // API 未就绪，直接显示成功
-      setImported(true);
+    } catch (e) {
+      setImported(false);
+      setImportError(String((e as Error).message || e) || "导入失败：未写入权威能力目录");
+    } finally {
+      setImporting(false);
     }
   }
 
@@ -309,8 +318,8 @@ permissions:
           { label: "当前步", value: `${step}/5` },
           { label: "能力级", value: capType },
           { label: "安全级", value: secLevel },
-          { label: "联通测", value: testDone ? "已测" : testing ? "测试中" : "未测" },
-          { label: "导入态", value: imported ? "已导入" : "待导入" },
+          { label: "联通测", value: testError ? "失败" : testDone ? "已测" : testing ? "测试中" : "未测" },
+          { label: "导入态", value: imported ? "已导入" : importError ? "失败" : importing ? "导入中" : "待导入" },
           { label: "知识库", value: `${kbDocs.filter((d) => d.status === "indexed").length}/${kbDocs.length}` },
         ].map((s) => (
           <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
@@ -1140,6 +1149,28 @@ permissions:
                   {testing ? "测试中…" : "▶ 运行连通测试"}
                 </button>
                 {testDone && (
+                  <span style={{ fontSize: 12, color: "var(--aos-green-700)" }}>权威连通测试已通过</span>
+                )}
+                {testError && (
+                  <div
+                    role="alert"
+                    data-testid="capability-import-test-error"
+                    style={{
+                      marginTop: 8,
+                      padding: 10,
+                      borderRadius: 2,
+                      background: "var(--aos-amber-bg, #fffbeb)",
+                      border: "1px solid var(--aos-amber-700, #b45309)",
+                      color: "var(--aos-amber-700, #92400e)",
+                      fontSize: 12,
+                    }}
+                  >
+                    <strong>连通测试未通过（诚实失败）：</strong>
+                    {testError}
+                    。未写入演示通过结果。
+                  </div>
+                )}
+                {testDone && !testError && (
                   <span style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>
                     通过 <strong style={{ color: "var(--aos-green-600)" }}>{computeTestStats(DETAILED_TEST_ITEMS).pass}</strong>/
                     {computeTestStats(DETAILED_TEST_ITEMS).total} 项
@@ -1149,11 +1180,11 @@ permissions:
 
               <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 16 }}>
                 {DETAILED_TEST_ITEMS.map((item, i) => {
-                  const statusIndex = testDone ? 3 : testing ? Math.min(i + 1, 2) : 0;
-                  const status = ["pending", "pending", "pending", "pass"][statusIndex] || item.status;
-                  const isPass = status === "pass";
-                  const isPending = status === "pending";
-                  return (
+                  const statusIndex = testError ? 0 : testDone ? 3 : testing ? Math.min(i + 1, 2) : 0;
+                  const status = testError ? "fail" : (["pending", "pending", "pending", "pass"][statusIndex] || item.status);
+                    const isPass = status === "pass";
+                    const isPending = status === "pending";
+                    return (
                     <div
                       key={i}
                       style={{
@@ -1176,7 +1207,7 @@ permissions:
                       </span>
                       <span style={{ fontWeight: 500 }}>{item.name}</span>
                       <span style={{ fontSize: 11, marginLeft: "auto", color: "var(--aos-text-secondary)" }}>
-                        {testDone ? item.detail : isPending ? "测试中…" : "等待"}
+                        {testError ? "权威失败" : testDone ? item.detail : isPending && testing ? "测试中…" : "等待"}
                       </span>
                     </div>
                   );
@@ -1222,7 +1253,8 @@ permissions:
                 </div>
               </div>
 
-              {/* 注册后说明 */}
+              {/* 注册后说明：仅在权威测试通过后展示，避免假成功叙事 */}
+              {testDone && !testError ? (
               <div
                 style={{
                   padding: "10px 12px",
@@ -1235,10 +1267,31 @@ permissions:
               >
                 <strong style={{ color: "var(--aos-green-600)" }}>注册后：</strong>
                 该能力将出现在「智能体插件」列表中，状态为「就绪」。可在「智能体工具面板」中将此 Capability 挂载为 Agent 的 Function Tool。
-                <Link to="/s2/aip/tools" style={{ color: "var(--aos-blue-600)", marginLeft: 4, textDecoration: "none" }}>
+                <Link to="/aip/tools" style={{ color: "var(--aos-blue-600)", marginLeft: 4, textDecoration: "none" }}>
                   去挂载 →
                 </Link>
               </div>
+              ) : (
+              <div
+                data-testid="capability-import-honesty"
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 2,
+                  background: "var(--aos-surface-hover)",
+                  border: "1px solid var(--aos-border)",
+                  fontSize: 11,
+                  color: "var(--aos-text-secondary)",
+                }}
+              >
+                连通测试未通过前不会写入权威目录，也不会展示「注册成功」叙事。
+              </div>
+              )}
+
+              {importError && (
+                <div role="alert" data-testid="capability-import-error" className="notice" style={{ padding: 10, marginTop: 12, color: "var(--aos-amber-700)" }}>
+                  <strong>导入失败：</strong>{importError}
+                </div>
+              )}
 
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 24 }}>
                 <button
@@ -1259,19 +1312,19 @@ permissions:
                 <button
                   type="button"
                   onClick={handleImport}
-                  disabled={!testDone}
+                  disabled={!testDone || Boolean(testError) || importing}
                   style={{
                     padding: "8px 24px",
                     borderRadius: 2,
                     fontSize: 13,
                     fontWeight: 500,
-                    background: testDone ? "var(--aos-accent)" : "var(--aos-border-strong)",
-                    color: testDone ? "var(--text-on-brand)" : "var(--aos-faint)",
+                    background: testDone && !testError ? "var(--aos-accent)" : "var(--aos-border-strong)",
+                    color: testDone && !testError ? "var(--text-on-brand)" : "var(--aos-faint)",
                     border: "none",
-                    cursor: testDone ? "pointer" : "default",
+                    cursor: testDone && !testError && !importing ? "pointer" : "default",
                   }}
                 >
-                  确认接入
+                  {importing ? "接入中…" : "确认接入"}
                 </button>
               </div>
             </div>
