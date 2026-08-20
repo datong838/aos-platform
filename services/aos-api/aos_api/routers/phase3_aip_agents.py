@@ -2,15 +2,21 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+import hashlib
+import json
+from typing import Any
 
 from fastapi import APIRouter, Depends, Header, Query, status
 
 from aos_api.aip_agent_control_contracts import (
     ActivateAgentInstanceRequest,
+    AipOperationalProjectionResponse,
     AgentInstallResponse,
     AgentInstanceActivationResponse,
     AgentInstanceListResponse,
     AgentRuntimeReadinessResponse,
+    OperationalProjectionSources,
+    OperationalStageCounts,
 )
 from aos_api.aip_agent_instance_activation_service import (
     AipAgentInstanceActivationService,
@@ -117,6 +123,288 @@ def get_agent_runtime_readiness(
 ) -> AgentRuntimeReadinessResponse:
     try:
         return installer.runtime_readiness(principal)
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+
+
+def _ref_key(value: Any) -> tuple[str, int, str]:
+    return (str(value.asset_id), int(value.revision), str(value.content_hash))
+
+
+def _fresh(value: datetime | None, now: datetime) -> bool:
+    if value is None:
+        return False
+    checked = value if value.tzinfo else value.replace(tzinfo=UTC)
+    return checked > now
+
+
+def _build_operational_projection(
+    *,
+    principal: Principal,
+    runtime: AgentRuntimeReadinessResponse,
+    model_runtime: Any,
+    tool_items: list[dict[str, Any]],
+    overlay_tools: dict[str, list[dict[str, Any]]],
+    generated_at: datetime,
+) -> AipOperationalProjectionResponse:
+    """Build a deterministic, secret-free projection from canonical read models."""
+
+    catalog_items = runtime.catalog.items
+    instance_ids = {
+        item.instance.instance_id
+        for item in catalog_items
+        if item.instance is not None
+    }
+    active_instance_ids = {
+        item.instance.instance_id
+        for item in catalog_items
+        if item.instance is not None and item.instance.status == "active"
+    }
+    runnable_instance_ids = {
+        item.instance.instance_id
+        for item in catalog_items
+        if item.instance is not None and item.runtime_readiness == "runnable"
+    }
+    bound_instance_ids = {
+        item.instance_id
+        for item in runtime.skill_bindings
+        if item.instance_id in instance_ids
+    }
+    role_counts = OperationalStageCounts(
+        definition=runtime.catalog.stats.definition_count,
+        bound=len(bound_instance_ids),
+        enabled=len(active_instance_ids & bound_instance_ids),
+        runnable=len(runnable_instance_ids & active_instance_ids & bound_instance_ids),
+    )
+
+    catalog_capability_ids = {
+        capability_id
+        for item in catalog_items
+        for capability_id in item.required_capability_ids
+    }
+    capability_bindings = [
+        item for item in runtime.capability_bindings
+        if item.capability.asset_id in catalog_capability_ids
+    ]
+    bound_capability_ids = {item.capability.asset_id for item in capability_bindings}
+    enabled_capability_ids = {
+        item.capability.asset_id for item in capability_bindings
+        if item.status == "active"
+    }
+    runnable_capability_ids = {
+        item.capability.asset_id for item in capability_bindings
+        if item.status == "active"
+        and item.operational_readiness == "available"
+        and _fresh(item.readiness_expires_at, generated_at)
+    }
+    capability_counts = OperationalStageCounts(
+        definition=runtime.catalog.stats.capability_definition_count,
+        bound=len(bound_capability_ids),
+        enabled=len(enabled_capability_ids),
+        runnable=len(runnable_capability_ids),
+    )
+
+    tool_definition_ids = {
+        str(item.get("id") or "").strip() for item in tool_items
+        if str(item.get("id") or "").strip()
+    }
+    dependency_tool_ids = {
+        ref.asset_id
+        for binding in [*runtime.capability_bindings, *runtime.skill_bindings]
+        for ref in binding.dependencies.tool_dependency_refs
+        if ref.asset_id in tool_definition_ids
+    }
+    overlay_bound_ids: set[str] = set()
+    overlay_enabled_ids: set[str] = set()
+    overlay_runnable_ids: set[str] = set()
+    for instance_id, items in overlay_tools.items():
+        for item in items:
+            tool_id = str(item.get("id") or "").strip()
+            if tool_id not in tool_definition_ids:
+                continue
+            overlay_bound_ids.add(tool_id)
+            if item.get("enabled") is not False and instance_id in active_instance_ids:
+                overlay_enabled_ids.add(tool_id)
+                if instance_id in runnable_instance_ids:
+                    overlay_runnable_ids.add(tool_id)
+    dependency_enabled_ids = {
+        ref.asset_id
+        for binding in runtime.capability_bindings
+        if binding.status == "active"
+        for ref in binding.dependencies.tool_dependency_refs
+        if ref.asset_id in tool_definition_ids
+    }
+    dependency_runnable_ids = {
+        ref.asset_id
+        for binding in runtime.capability_bindings
+        if binding.status == "active"
+        and binding.operational_readiness == "available"
+        and _fresh(binding.readiness_expires_at, generated_at)
+        for ref in binding.dependencies.tool_dependency_refs
+        if ref.asset_id in tool_definition_ids
+    }
+    bound_tool_ids = dependency_tool_ids | overlay_bound_ids
+    enabled_tool_ids = (dependency_enabled_ids | overlay_enabled_ids) & bound_tool_ids
+    runnable_tool_ids = (dependency_runnable_ids | overlay_runnable_ids) & enabled_tool_ids
+    tool_counts = OperationalStageCounts(
+        definition=len(tool_definition_ids),
+        bound=len(bound_tool_ids),
+        enabled=len(enabled_tool_ids),
+        runnable=len(runnable_tool_ids),
+    )
+
+    eval_definition = len(model_runtime.eval_gates)
+    eval_evaluated = sum(item.status != "unknown" for item in model_runtime.eval_gates)
+    eval_passed = sum(item.status == "passed" for item in model_runtime.eval_gates)
+    eval_counts = OperationalStageCounts(
+        definition=eval_definition,
+        bound=eval_definition,
+        enabled=eval_evaluated,
+        runnable=eval_passed,
+    )
+
+    bound_route_keys = {
+        _ref_key(binding.dependencies.model_route_ref)
+        for binding in [*runtime.capability_bindings, *runtime.skill_bindings]
+        if binding.dependencies.model_route_ref is not None
+    }
+    route_keys = {_ref_key(item.ref) for item in model_runtime.routes}
+    active_route_keys = {
+        _ref_key(item.ref) for item in model_runtime.routes if item.lifecycle == "active"
+    }
+    ready_route_keys = {
+        _ref_key(item.route) for item in model_runtime.resolutions
+        if item.readiness == "ready"
+    }
+    bound_routes = route_keys & bound_route_keys
+    enabled_routes = bound_routes & active_route_keys
+    runnable_routes = enabled_routes & ready_route_keys
+    route_counts = OperationalStageCounts(
+        definition=len(route_keys),
+        bound=len(bound_routes),
+        enabled=len(enabled_routes),
+        runnable=len(runnable_routes),
+    )
+
+    blockers: list[str] = []
+    if role_counts.definition == 0 or role_counts.runnable != role_counts.definition:
+        blockers.append("roles_not_fully_runnable")
+    if capability_counts.definition == 0 or capability_counts.runnable != capability_counts.definition:
+        blockers.append("capabilities_not_fully_runnable")
+    if tool_counts.definition == 0 or tool_counts.runnable != tool_counts.definition:
+        blockers.append("tools_not_fully_runnable")
+    if route_counts.definition == 0 or route_counts.runnable != route_counts.definition:
+        blockers.append("routes_not_fully_runnable")
+    if eval_counts.definition == 0 or eval_counts.runnable != eval_counts.definition:
+        blockers.append("eval_gates_not_fully_passed")
+
+    basis = {
+        "tenant": [principal.org_id, principal.project_id],
+        "catalog": [
+            {
+                "template": [item.template.template_id, item.template.revision, item.template.content_hash],
+                "instance": None if item.instance is None else [
+                    item.instance.instance_id,
+                    item.instance.instance_ref.revision,
+                    item.instance.instance_ref.content_hash,
+                    item.instance.status,
+                ],
+                "readiness": item.runtime_readiness,
+                "blockers": sorted(item.blockers),
+            }
+            for item in catalog_items
+        ],
+        "capabilityBindings": sorted([
+            [item.binding_id, item.version, item.status, item.operational_readiness, item.dependency_snapshot_hash]
+            for item in runtime.capability_bindings
+        ]),
+        "skillBindings": sorted([
+            [item.binding_id, item.version, item.instance_id, item.status, item.readiness, item.dependency_snapshot_hash]
+            for item in runtime.skill_bindings
+        ]),
+        "tools": sorted([
+            [str(item.get("id") or ""), str(item.get("kind") or ""), bool(item.get("blocked", False))]
+            for item in tool_items
+        ]),
+        "overlayTools": {
+            key: sorted([[str(item.get("id") or ""), item.get("enabled") is not False] for item in value])
+            for key, value in sorted(overlay_tools.items())
+        },
+        "modelAssets": sorted([
+            [item.ref.asset_type, item.ref.asset_id, item.ref.revision, item.ref.content_hash, item.lifecycle]
+            for item in [
+                *model_runtime.providers,
+                *model_runtime.models,
+                *model_runtime.routes,
+                *model_runtime.policies,
+                *model_runtime.price_snapshots,
+            ]
+        ]),
+        "evalGates": sorted([
+            [item.ref.asset_id, item.ref.revision, item.ref.content_hash, item.status]
+            for item in model_runtime.eval_gates
+        ]),
+        "resolutions": sorted([
+            [item.route.asset_id, item.route.revision, item.route.content_hash, item.readiness, sorted(item.blocker_codes)]
+            for item in model_runtime.resolutions
+        ]),
+    }
+    snapshot_hash = hashlib.sha256(
+        json.dumps(basis, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    return AipOperationalProjectionResponse(
+        tenant={"orgId": principal.org_id, "projectId": principal.project_id},
+        roles=role_counts,
+        capabilities=capability_counts,
+        tools=tool_counts,
+        evalGates=eval_counts,
+        routes=route_counts,
+        overallReadiness="ready" if not blockers else "blocked",
+        blockerCodes=blockers,
+        sources=OperationalProjectionSources(
+            agentReadinessAt=runtime.evaluated_at,
+            modelRuntimeAt=model_runtime.generated_at,
+        ),
+        snapshotHash=snapshot_hash,
+        generatedAt=generated_at,
+    )
+
+
+@router.get(
+    "/operational-projection",
+    response_model=AipOperationalProjectionResponse,
+)
+def get_operational_projection(
+    principal: Principal = Depends(require_principal),
+    installer: AipEcommerceAgentInstaller = Depends(get_ecommerce_agent_installer),
+    overlay: AipAgentOverlayStore = Depends(get_agent_overlay_store),
+) -> AipOperationalProjectionResponse:
+    """Cross-page read projection. It never writes, refreshes, evaluates or calls a provider."""
+
+    from aos_api.routers.aip_model_runtime import get_overview as model_overview
+    from aos_api.routers.aip_model_runtime import get_store as get_model_runtime_store
+    from aos_api.routers.wave_ext import list_tools
+
+    try:
+        runtime = installer.runtime_readiness(principal)
+        model_runtime = model_overview(principal, get_model_runtime_store())
+        tool_items = list_tools(principal).get("items") or []
+        scope = _scope(principal)
+        overlay_tools = {
+            item.instance.instance_id: overlay.get_tools(
+                scope, item.instance.instance_id
+            ).get("items", [])
+            for item in runtime.catalog.items
+            if item.instance is not None
+        }
+        return _build_operational_projection(
+            principal=principal,
+            runtime=runtime,
+            model_runtime=model_runtime,
+            tool_items=tool_items,
+            overlay_tools=overlay_tools,
+            generated_at=datetime.now(UTC),
+        )
     except AipAgentRegistryError as exc:
         raise _map_error(exc) from exc
 

@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { aipAgentControl } from "../api/aipAgentControl";
 import { apiGet, apiPost, apiPut } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
+import { AipOperationalProjectionStrip } from "../components/aip/AipOperationalProjectionStrip";
 import { templateDisplayName } from "../lib/aipChineseLabels";
 
 type AgentItem = {
@@ -426,6 +427,7 @@ export function StudioPage() {
 
   return (
     <PageChrome title="对话机器人 Studio" lede="配置壳：提示词 · 工具 · 本体/Wiki 上下文；L4 须 Evals 绿且 Draft 默认，不伪造发布通过。">
+      <AipOperationalProjectionStrip />
       <div
         data-testid="studio-ops-stats"
         style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}

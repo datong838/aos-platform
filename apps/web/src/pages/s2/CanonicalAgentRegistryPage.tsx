@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { aipAgentControl, type AgentRuntimeReadinessResponse } from "../../api/aipAgentControl";
 import { PageChrome } from "../../components/PageChrome";
+import { AipOperationalProjectionStrip } from "../../components/aip/AipOperationalProjectionStrip";
 import {
   agentReadinessLadderSummary,
   bindingStatusDisplayName,
@@ -80,6 +81,7 @@ export function CanonicalAgentRegistryPage() {
   }
   const stale = useMemo(() => data ? runtimeSnapshotStale(data.evaluatedAt) : false, [data]);
   return <PageChrome title="智能体目录" lede="绑定真相台 · 安装、技能与专业能力就绪（非市场发现壳）">
+    <AipOperationalProjectionStrip />
     {error && <div role="alert" className="notice bad">运行就绪度读取失败：{error}</div>}
     {!data ? <div role="status" className="card">正在读取组织智能体目录与绑定…</div> : <>
       <section className="card" style={{padding:18,marginBottom:16}}>

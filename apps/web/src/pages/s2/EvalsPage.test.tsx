@@ -18,6 +18,9 @@ vi.mock("../../api/aipEvidence", () => ({
   aipEvidenceSdk: evidenceMocks,
   LINEAGE_ROOT_TYPES: ["task_run", "action", "eval_run", "publication", "research_job", "legacy_decision_lineage"],
 }));
+vi.mock("../../components/aip/AipOperationalProjectionStrip", () => ({
+  AipOperationalProjectionStrip: () => createElement("div", { "data-testid": "aip-operational-projection-test-double" }),
+}));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 

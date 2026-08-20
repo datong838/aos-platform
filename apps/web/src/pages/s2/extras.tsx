@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiPost, S2Chrome, useJsonGet } from "./shared";
 import { BpMaturityStairs } from "./blueprintUi";
+import { AipOperationalProjectionStrip } from "../../components/aip/AipOperationalProjectionStrip";
 
 export { ModuleInterfacePage } from "./ModuleInterfacePage";
 
@@ -51,6 +52,7 @@ export function MaturityPage() {
       title="Agent 成熟度楼梯"
       lede="先 Threads，再固化 Agent，再嵌应用，最后才自动化；楼梯预览不伪造 L4 真门控。"
     >
+      <AipOperationalProjectionStrip />
       <div style={{ marginBottom: 12, fontSize: 13 }}>
         <Link to="/aip/memory-governance?view=candidates" data-testid="maturity-memory-bridge">
           Memory Candidate 治理 →

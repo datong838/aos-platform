@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from aos_api.aip_solution_pack_publisher import AipSolutionPackPublisher
+from aos_api.aip_agent_control_contracts import OperationalStageCounts
 from aos_api.db import connect
 from aos_api.routers.phase3_aip_agents import get_ecommerce_agent_installer
 from pathlib import Path
+from pydantic import ValidationError
+import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 BUNDLE = REPO_ROOT / "bundles/solutions/ecommerce-growth"
@@ -35,6 +38,11 @@ def _ensure_tenants_and_clean() -> None:
         conn.execute("DELETE FROM aip_agent_registry_receipt WHERE org_id IN ('org-org','dev-org') AND result_ref->>'resourceId'=ANY(%s)", (list(ids),))
         conn.execute("DELETE FROM aip_agent_instance WHERE org_id IN ('org-org','dev-org') AND instance_id=ANY(%s)", (list(ids),))
         conn.commit()
+
+
+def test_operational_stage_counts_reject_non_monotonic_projection():
+    with pytest.raises(ValidationError):
+        OperationalStageCounts(definition=1, bound=2, enabled=1, runnable=0)
 
 
 def test_runtime_readiness_contract_and_tenant_echo(client):
@@ -180,6 +188,48 @@ def test_canonical_catalog_install_replay_and_tenant_canary(client):
         "agent_instance_not_installed" in item["blockers"]
         for item in canary_readiness.json()["catalog"]["items"]
     )
+
+    projection = client.get(
+        "/v1/aip/operational-projection",
+        headers=_headers("org-org"),
+    )
+    projection_replay = client.get(
+        "/v1/aip/operational-projection",
+        headers=_headers("org-org"),
+    )
+    canary_projection = client.get(
+        "/v1/aip/operational-projection",
+        headers=_headers("dev-org"),
+    )
+    assert projection.status_code == 200, projection.text
+    assert projection_replay.status_code == 200, projection_replay.text
+    assert canary_projection.status_code == 200, canary_projection.text
+    projection_body = projection.json()
+    canary_projection_body = canary_projection.json()
+    assert projection_body["tenant"] == {
+        "orgId": "org-org",
+        "projectId": "dev-project",
+    }
+    assert canary_projection_body["tenant"] == {
+        "orgId": "dev-org",
+        "projectId": "dev-project",
+    }
+    assert projection_body["snapshotHash"] == projection_replay.json()["snapshotHash"]
+    assert len(projection_body["snapshotHash"]) == 64
+    assert projection_body["snapshotHash"] != canary_projection_body["snapshotHash"]
+    assert projection_body["roles"]["definition"] == 6
+    assert canary_projection_body["roles"] == {
+        "definition": 6,
+        "bound": 0,
+        "enabled": 0,
+        "runnable": 0,
+    }
+    for body in (projection_body, canary_projection_body):
+        for key in ("roles", "capabilities", "tools", "evalGates", "routes"):
+            counts = body[key]
+            assert counts["runnable"] <= counts["enabled"] <= counts["bound"] <= counts["definition"]
+        assert body["overallReadiness"] == "blocked"
+        assert body["blockerCodes"]
 
     with connect() as conn:
         counts = {

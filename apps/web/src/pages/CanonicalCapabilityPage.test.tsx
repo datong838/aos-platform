@@ -6,6 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const sdk = vi.hoisted(() => ({ listCapabilities: vi.fn(), runtimeReadiness: vi.fn() }));
 vi.mock("../api/aipAgentControl", () => ({ aipAgentControl: sdk }));
+vi.mock("../components/aip/AipOperationalProjectionStrip", () => ({
+  AipOperationalProjectionStrip: () => null,
+}));
 import { CanonicalCapabilityPage, orgBindingStatusLabel } from "./CanonicalCapabilityPage";
 
 const tenant = { orgId: "org-org", projectId: "dev-project" };
@@ -26,13 +29,13 @@ describe("CanonicalCapabilityPage", () => {
 
   it("显示组织绑定空态并禁用没有依赖快照的操作", async () => {
     const root = createRoot(host); await act(async () => root.render(<MemoryRouter><CanonicalCapabilityPage /></MemoryRouter>)); await act(async () => undefined);
-    expect(host.textContent).toContain("文案生成"); expect(host.textContent).toContain("组织绑定 0");
+    expect(host.textContent).toContain("文案生成"); expect(host.textContent).toMatch(/组织绑定\s*0/);
     expect(host.textContent).toContain("组织绑定：未绑定");
     expect(host.textContent).toContain("定义就绪");
     expect(host.textContent).toContain("组织绑定侧");
     expect(host.textContent).toContain("定义层");
     expect(host.textContent).toContain("去目录绑定");
-    expect(host.textContent).toContain("已激活 0");
+    expect(host.textContent).toMatch(/已激活\s*0/);
     expect(host.textContent).not.toContain("copy.generate@");
     expect(host.textContent).not.toContain("Capability");
     for (const dimension of ["供应商", "路由", "评测门", "许可", "数据依赖", "工具依赖", "预算策略"]) expect(host.textContent).toContain(`${dimension} —`);

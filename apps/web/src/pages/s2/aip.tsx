@@ -12,6 +12,7 @@ import {
   BpToolGrid,
 } from "./blueprintUi";
 import { BpArchitectureBar } from "../../components/bp/BpArchitectureBar";
+import { AipOperationalProjectionStrip } from "../../components/aip/AipOperationalProjectionStrip";
 import { MODEL_CONFIG_NO_VAULT } from "../../lib/productCopy";
 import {
   aipEvidenceSdk,
@@ -517,6 +518,7 @@ export function ToolsPage() {
       title="Agent 工具面板"
       lede="按 AgentInstance Overlay 配置本实例工具集（与 Studio 同一权威）；LLM 只请求，平台按权限代调。全局 tools/config 不再作为完成态。"
     >
+      <AipOperationalProjectionStrip />
       <div
         data-testid="tools-ops-stats"
         style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, margin: "0 0 12px" }}
@@ -3283,6 +3285,7 @@ export function EvalsPage() {
 
   return (
     <S2Chrome title="Evals 门控" lede="L4 自动化上线前须通过 Eval；未达标禁止发布为 Function / Automate。">
+      <AipOperationalProjectionStrip />
       <div
         data-testid="evals-ops-stats"
         style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, margin: "0 0 12px" }}
