@@ -371,6 +371,7 @@ def list_tools(principal: Principal = Depends(require_principal)):
     scope = TenantScope(principal.org_id, principal.project_id)
     from aos_api.aip_capability_binding_service import AipCapabilityBindingService
     from aos_api.aip_capability_tool_exits import list_capability_tool_exits
+    from aos_api.aip_function_tool_exits import list_function_tool_exits
 
     bindings: list[dict[str, Any]] = []
     try:
@@ -383,7 +384,18 @@ def list_tools(principal: Principal = Depends(require_principal)):
     except Exception:
         bindings = []
     caps = list_capability_tool_exits(scope, bindings=bindings)
-    return {"items": [*_tools, *caps]}
+
+    graphs: list[Any] = []
+    try:
+        from aos_api.aip_logic_graph_store import LogicGraphStore
+
+        graphs = list(LogicGraphStore().list(scope.org_id, scope.project_id) or [])
+    except Exception:
+        graphs = []
+    functions = list_function_tool_exits(scope, graphs=graphs)
+
+    base = [t for t in _tools if str(t.get("id")) != "fn.echo"]
+    return {"items": [*base, *functions, *caps]}
 
 
 @router.post("/v1/aip/tools/{tool_id}/invoke")

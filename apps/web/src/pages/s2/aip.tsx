@@ -76,6 +76,7 @@ export function ToolsPage() {
       blocked?: boolean;
       blockedReason?: string;
       capabilityId?: string;
+      publishedVersion?: number;
     }[];
   }>("/v1/aip/tools");
   const agents = useJsonGet<{
@@ -193,6 +194,7 @@ export function ToolsPage() {
       blocked?: boolean;
       blockedReason?: string;
       capabilityId?: string;
+      publishedVersion?: number;
     };
     const catalog = (data?.items || []).filter((t) => cats.has(toolCategory(t.kind)));
     const byId = new Map<string, ToolRow>(
@@ -206,6 +208,7 @@ export function ToolsPage() {
           blocked: t.blocked,
           blockedReason: t.blockedReason,
           capabilityId: t.capabilityId,
+          publishedVersion: (t as { publishedVersion?: number }).publishedVersion,
         },
       ]),
     );
@@ -399,15 +402,24 @@ export function ToolsPage() {
     }
 
     if (selectedCat === "function") {
+      const blocked = Boolean(selected.blocked);
       return (
         <>
           <h2 className="bp-tool-detail-title">工具卡 · Function</h2>
           <p className="bp-tool-detail-meta">
-            <code style={{ color: "#6ee7b7" }}>{selected.id}</code> · 类型安全核
+            <code style={{ color: "#6ee7b7" }}>{selected.id}</code>
+            {selected.name ? ` · ${selected.name}` : ""} · 须 published Logic
           </p>
-          <p className="muted" style={{ fontSize: "0.75rem" }}>
-            亦可挂已发布 AIP Logic（见画布）
-          </p>
+          {blocked ? (
+            <p className="error" data-testid="tools-function-blocked" style={{ fontSize: "0.8rem" }}>
+              {selected.blockedReason || "未挂已发布 Logic，Function 不可用"}
+            </p>
+          ) : (
+            <p className="muted" style={{ fontSize: "0.75rem" }}>
+              已绑定 published Logic
+              {selected.publishedVersion != null ? ` · v${selected.publishedVersion}` : ""}
+            </p>
+          )}
           <div className="mp-cfg-actions">
             <Link to="/aip/logic" className="btn-nav-accent">
               打开 Logic →

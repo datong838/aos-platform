@@ -44,6 +44,11 @@ def invoke_tool(
                 binding_dict = None
         return invoke_capability_tool(tool_id, binding=binding_dict, payload=payload)
 
+    if tool_id == "fn.echo" or tool_id.startswith("fn.logic."):
+        from aos_api.aip_function_tool_exits import invoke_function_tool
+
+        return invoke_function_tool(tool_id, payload=payload)
+
     if tool_id not in KNOWN:
         raise ApiError(
             code="NOT_FOUND", message=f"tool {tool_id} unknown", status_code=404
