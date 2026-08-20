@@ -23,6 +23,27 @@ def invoke_tool(
     scope: TenantScope, tool_id: str, payload: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     payload = payload or {}
+    if tool_id.startswith("cap."):
+        from aos_api.aip_capability_binding_service import AipCapabilityBindingService
+        from aos_api.aip_capability_tool_exits import (
+            capability_id_from_tool,
+            invoke_capability_tool,
+        )
+
+        cid = capability_id_from_tool(tool_id)
+        binding_dict = None
+        if cid:
+            try:
+                for row in AipCapabilityBindingService().list_bindings(scope, limit=200):
+                    dump = row.model_dump(by_alias=True) if hasattr(row, "model_dump") else dict(row)
+                    cap = dump.get("capability") or {}
+                    if str(cap.get("assetId") or "") == cid:
+                        binding_dict = dump
+                        break
+            except Exception:
+                binding_dict = None
+        return invoke_capability_tool(tool_id, binding=binding_dict, payload=payload)
+
     if tool_id not in KNOWN:
         raise ApiError(
             code="NOT_FOUND", message=f"tool {tool_id} unknown", status_code=404

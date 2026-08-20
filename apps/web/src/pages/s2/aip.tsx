@@ -67,9 +67,17 @@ function toolSubtitle(kind: string): string {
 /** 80 / 81 · 对齐 aip-tools.html · 三栏 + 策略 radio；W-T1 权威 = AgentInstance Overlay */
 export function ToolsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { data, err, reload } = useJsonGet<{ items: { id: string; kind: string; name?: string }[] }>(
-    "/v1/aip/tools",
-  );
+  const { data, err, reload } = useJsonGet<{
+    items: {
+      id: string;
+      kind: string;
+      name?: string;
+      nameZh?: string;
+      blocked?: boolean;
+      blockedReason?: string;
+      capabilityId?: string;
+    }[];
+  }>("/v1/aip/tools");
   const agents = useJsonGet<{
     items?: Array<{
       instanceId?: string;
@@ -177,13 +185,31 @@ export function ToolsPage() {
   }, [activeInstanceId, defaultCats]);
 
   const tools = useMemo(() => {
+    type ToolRow = {
+      id: string;
+      kind: string;
+      name?: string;
+      nameZh?: string;
+      blocked?: boolean;
+      blockedReason?: string;
+      capabilityId?: string;
+    };
     const catalog = (data?.items || []).filter((t) => cats.has(toolCategory(t.kind)));
-    const byId = new Map(catalog.map((t) => [t.id, { id: t.id, kind: t.kind, name: t.name }]));
+    const byId = new Map<string, ToolRow>(
+      catalog.map((t) => [
+        t.id,
+        {
+          id: t.id,
+          kind: t.kind,
+          name: t.name,
+          nameZh: t.nameZh,
+          blocked: t.blocked,
+          blockedReason: t.blockedReason,
+          capabilityId: t.capabilityId,
+        },
+      ]),
+    );
     for (const item of overlayToolItems) {
-      if (!cats.has(item.category) && item.category !== "tool") {
-        // still show overlay-enabled tools even if category checkbox off? No — honor cats.
-        // If category from overlay not in cats, skip unless cats empty after load.
-      }
       if (item.category && !cats.has(item.category)) continue;
       if (!byId.has(item.id)) {
         byId.set(item.id, {
@@ -425,15 +451,23 @@ export function ToolsPage() {
     }
 
     if (selectedCat === "capability") {
+      const blocked = Boolean(selected.blocked);
       return (
         <>
           <h2 className="bp-tool-detail-title">工具卡 · 专业能力</h2>
           <p className="bp-tool-detail-meta">
-            专业能力：<code style={{ color: "#67e8f9" }}>{selected.id}</code>
+            专业能力：<code style={{ color: "#67e8f9" }}>{selected.capabilityId || selected.id}</code>
+            {selected.nameZh || selected.name ? ` · ${selected.nameZh || selected.name}` : ""}
           </p>
-          <p className="muted" style={{ fontSize: "0.75rem" }}>
-            LLM 只请求；平台代调。产物进媒体集；状态写回须经 Action。
-          </p>
+          {blocked ? (
+            <p className="error" data-testid="tools-capability-blocked" style={{ fontSize: "0.8rem" }}>
+              {selected.blockedReason || "专业能力暂不可代调"}
+            </p>
+          ) : (
+            <p className="muted" style={{ fontSize: "0.75rem" }}>
+              LLM 只请求；平台代调。产物进媒体集；状态写回须经 Action。
+            </p>
+          )}
           <div className="mp-cfg-actions">
             <Link to="/aip/capabilities" className="btn-nav">
               打开重能力接入 →

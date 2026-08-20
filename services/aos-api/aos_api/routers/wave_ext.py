@@ -368,8 +368,22 @@ def _invoke_function_core(body: FnInvokeIn, principal: Principal):
 # —— T3.7 Tool registry ——
 @router.get("/v1/aip/tools")
 def list_tools(principal: Principal = Depends(require_principal)):
-    _ = principal
-    return {"items": _tools}
+    scope = TenantScope(principal.org_id, principal.project_id)
+    from aos_api.aip_capability_binding_service import AipCapabilityBindingService
+    from aos_api.aip_capability_tool_exits import list_capability_tool_exits
+
+    bindings: list[dict[str, Any]] = []
+    try:
+        rows = AipCapabilityBindingService().list_bindings(scope, limit=200)
+        for row in rows:
+            if hasattr(row, "model_dump"):
+                bindings.append(row.model_dump(by_alias=True))
+            elif isinstance(row, dict):
+                bindings.append(row)
+    except Exception:
+        bindings = []
+    caps = list_capability_tool_exits(scope, bindings=bindings)
+    return {"items": [*_tools, *caps]}
 
 
 @router.post("/v1/aip/tools/{tool_id}/invoke")
