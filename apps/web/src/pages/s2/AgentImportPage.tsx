@@ -337,7 +337,25 @@ spec:
   }
 
   return (
-    <PageChrome title="导入外部智能体（Adapter 桥接）" lede="从开源社区或自有代码导入智能体，通过 Adapter 桥接为平台专业能力。">
+    <PageChrome title="导入外部智能体（Adapter 桥接）" lede="从开源或自有代码导入智能体，经 Adapter 桥接为平台能力；向导五步，不伪造扫描通过。">
+      <div
+        data-testid="agent-import-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
+      >
+        {[
+          { label: "当前步", value: `${step}/5` },
+          { label: "步骤名", value: STEPS[step - 1]?.label || "—" },
+          { label: "来源", value: sourceType },
+          { label: "Adapter", value: adapterType },
+          { label: "安全确认", value: securityApproved ? "已批" : "未批" },
+          { label: "导入态", value: success ? "成功" : importing ? "导入中" : error ? "失败" : "待跑" },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
       {/* Adapter 路径说明 */}
       <div
         style={{

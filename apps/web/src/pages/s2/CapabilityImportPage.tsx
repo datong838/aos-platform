@@ -300,7 +300,25 @@ permissions:
   }
 
   return (
-    <PageChrome title="接入插件能力" lede="声明外部能力端点和契约，注册为 C0/C1/C2 专业能力供智能体调用。">
+    <PageChrome title="接入插件能力" lede="声明外部能力端点与契约，注册为 C0/C1/C2；向导校验态可见，不伪造连通通过。">
+      <div
+        data-testid="capability-import-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
+      >
+        {[
+          { label: "当前步", value: `${step}/5` },
+          { label: "能力级", value: capType },
+          { label: "安全级", value: secLevel },
+          { label: "联通测", value: testDone ? "已测" : testing ? "测试中" : "未测" },
+          { label: "导入态", value: imported ? "已导入" : "待导入" },
+          { label: "知识库", value: `${kbDocs.filter((d) => d.status === "indexed").length}/${kbDocs.length}` },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
       {/* C0/C1/C2 分层说明 */}
       <div
         style={{
