@@ -67,8 +67,20 @@ def invoke_tool(
         }
 
     if tool_id == "wiki.read":
-        ot = str(payload.get("objectType") or "WorkOrder")
-        oid = str(payload.get("objectId") or "wo-1001")
+        ot = str(payload.get("objectType") or "").strip()
+        oid = str(payload.get("objectId") or "").strip()
+        if not ot or not oid:
+            raise ApiError(
+                code="AIP_INVALID_ARGUMENT",
+                message="wiki.read requires exact objectType and objectId (demo wo-1001 disabled)",
+                status_code=400,
+            )
+        if oid.lower() == "wo-1001":
+            raise ApiError(
+                code="AIP_INVALID_ARGUMENT",
+                message="demo objectId wo-1001 is disabled",
+                status_code=400,
+            )
         try:
             with connect(scope) as conn:
                 row = conn.execute(

@@ -25,6 +25,11 @@ import {
   encodeToolsPanelOverlay,
   type ToolsPanelHitl,
 } from "./toolsPanelOverlay";
+import {
+  buildToolsInvokePayload,
+  parseToolsInvokeContext,
+  toolsInvokeBlocker,
+} from "./toolsInvokeContext";
 
 const TOOL_CATS = [
   { id: "action", label: "写回动作", zh: "可 HITL 确认", defaultOn: true },
@@ -94,6 +99,14 @@ export function ToolsPage() {
     Array<{ id: string; name: string; category: string; enabled: boolean }>
   >([]);
   const [packVersion, setPackVersion] = useState<string | null>(null);
+  const [draftObjectType, setDraftObjectType] = useState("");
+  const [draftObjectId, setDraftObjectId] = useState("");
+
+  const urlInvokeCtx = useMemo(() => parseToolsInvokeContext(searchParams), [searchParams]);
+  const invokeBlocker = toolsInvokeBlocker(urlInvokeCtx, {
+    draftObjectType,
+    draftObjectId,
+  });
 
   const agentItems = useMemo(() => {
     return (agents.data?.items || [])
@@ -252,16 +265,38 @@ export function ToolsPage() {
     setLocalErr(null);
     setInvokeSummary("");
     setInvokePayload(null);
+    const payload = buildToolsInvokePayload(urlInvokeCtx, {
+      draftObjectType,
+      draftObjectId,
+    });
+    if (!payload) {
+      setLocalErr(invokeBlocker || "缺少 exact 试跑上下文");
+      return;
+    }
     try {
-      const r = await apiPost<Record<string, unknown>>(`/v1/aip/tools/${encodeURIComponent(id)}/invoke`, {
-        objectType: "WorkOrder",
-        objectId: "wo-1001",
-      });
-      setInvokeSummary(`试跑完成 · ${id}`);
+      const r = await apiPost<Record<string, unknown>>(
+        `/v1/aip/tools/${encodeURIComponent(id)}/invoke`,
+        payload,
+      );
+      setInvokeSummary(`试跑完成 · ${id} · ${payload.objectType}/${payload.objectId}`);
       setInvokePayload(r);
     } catch (e) {
       setLocalErr(String((e as Error).message || e));
     }
+  }
+
+  function InvokeButton({ toolId }: { toolId: string }) {
+    return (
+      <button
+        type="button"
+        className="btn-outline-cyan"
+        disabled={Boolean(invokeBlocker)}
+        title={invokeBlocker || undefined}
+        onClick={() => void invoke(toolId)}
+      >
+        试跑
+      </button>
+    );
   }
 
   function renderDetail() {
@@ -310,9 +345,7 @@ export function ToolsPage() {
             说明给 LLM：「仅当严重级≥高且用户未否决时调用」
           </p>
           <div className="mp-cfg-actions" style={{ marginTop: "0.75rem" }}>
-            <button type="button" className="btn-outline-cyan" onClick={() => void invoke(selected.id)}>
-              试跑
-            </button>
+            <InvokeButton toolId={selected.id} />
             <Link to="/aip/drafts" className="btn-nav">
               打开 Draft 审批台 →
             </Link>
@@ -353,9 +386,7 @@ export function ToolsPage() {
             <Link to="/aip/logic" className="btn-nav-accent">
               打开 Logic →
             </Link>
-            <button type="button" className="btn-outline-cyan" onClick={() => void invoke(selected.id)}>
-              试跑
-            </button>
+            <InvokeButton toolId={selected.id} />
           </div>
         </>
       );
@@ -407,9 +438,7 @@ export function ToolsPage() {
             <Link to="/aip/capabilities" className="btn-nav">
               打开重能力接入 →
             </Link>
-            <button type="button" className="btn-outline-cyan" onClick={() => void invoke(selected.id)}>
-              试跑
-            </button>
+            <InvokeButton toolId={selected.id} />
           </div>
         </>
       );
@@ -421,9 +450,7 @@ export function ToolsPage() {
         <p className="bp-tool-detail-meta">
           id: <code>{selected.id}</code>
         </p>
-        <button type="button" className="btn-outline-cyan" onClick={() => void invoke(selected.id)}>
-          试跑
-        </button>
+        <InvokeButton toolId={selected.id} />
       </>
     );
   }
@@ -458,6 +485,55 @@ export function ToolsPage() {
           {activeInstanceId || "未选择实例"}
           {overlayLoading ? " · 加载中…" : ""}
         </BpBanner>
+      </div>
+      <div data-testid="tools-invoke-context" className="card" style={{ padding: 12, marginBottom: 12 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>试跑 exact 上下文（W-T3）</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+          <label className="muted" style={{ fontSize: "0.65rem" }}>
+            objectType
+            <input
+              aria-label="tools-object-type"
+              value={urlInvokeCtx?.objectType || draftObjectType}
+              onChange={(e) => setDraftObjectType(e.target.value)}
+              disabled={Boolean(urlInvokeCtx)}
+              placeholder="如 WorkOrder"
+              style={{ marginLeft: 6, minWidth: 120 }}
+            />
+          </label>
+          <label className="muted" style={{ fontSize: "0.65rem" }}>
+            objectId
+            <input
+              aria-label="tools-object-id"
+              value={urlInvokeCtx?.objectId || draftObjectId}
+              onChange={(e) => setDraftObjectId(e.target.value)}
+              disabled={Boolean(urlInvokeCtx)}
+              placeholder="真实对象 ID（禁 wo-1001）"
+              style={{ marginLeft: 6, minWidth: 160 }}
+            />
+          </label>
+          <button
+            type="button"
+            className="btn-outline-cyan"
+            data-testid="tools-invoke"
+            disabled={Boolean(invokeBlocker) || !selected}
+            title={invokeBlocker || (!selected ? "请先选择工具" : undefined)}
+            onClick={() => selected && void invoke(selected.id)}
+          >
+            试跑当前工具
+          </button>
+          <Link to="/aip/assist" className="btn-nav" style={{ fontSize: "0.7rem" }}>
+            从 Assist 带 Task/AgentRun →
+          </Link>
+        </div>
+        {invokeBlocker ? (
+          <p className="error" data-testid="tools-invoke-blocker" style={{ marginTop: 8, fontSize: "0.75rem" }}>
+            {invokeBlocker}
+          </p>
+        ) : (
+          <p className="muted" style={{ marginTop: 8, fontSize: "0.7rem" }}>
+            已绑定 {(urlInvokeCtx?.objectType || draftObjectType)}/{(urlInvokeCtx?.objectId || draftObjectId)}
+          </p>
+        )}
       </div>
       <BpToolbar>
         <label className="muted" style={{ fontSize: "0.65rem", display: "inline-flex", alignItems: "center", gap: 8 }}>

@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "wo1001": {
+    "status": 400,
+    "code": "AIP_INVALID_ARGUMENT"
+  },
+  "empty": {
+    "status": 400,
+    "code": "AIP_INVALID_ARGUMENT"
+  }
+}
