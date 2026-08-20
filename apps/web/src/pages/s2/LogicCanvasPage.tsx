@@ -764,6 +764,25 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
         ))}
       </div>
 
+      <div
+        data-testid="logic-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
+      >
+        {[
+          { label: "分区", value: shellTab === "edit" ? "编辑" : shellTab === "history" ? "历史" : "自动化" },
+          { label: "图", value: graph?.persisted ? "已确认" : graph ? "未确认" : "未载" },
+          { label: "历史条", value: String(history.length) },
+          { label: "历史态", value: historyState },
+          { label: "更多", value: historyCursor ? "有" : "无" },
+          { label: "互跳", value: "观测/谱系" },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
       {shellTab === "edit" ? (
       <>
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
@@ -974,6 +993,11 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
 
       {shellTab === "history" ? (
         <div style={{ display: "grid", gap: 10 }} role="tabpanel" aria-label="运行历史">
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <Link to="/aip/observability" className="btn" style={{ textDecoration: "none" }} data-testid="history-jump-observability">可观测性 →</Link>
+            <Link to="/aip/lineage" className="btn" style={{ textDecoration: "none" }} data-testid="history-jump-lineage">决策谱系 →</Link>
+            <Link to="/aip/evals" className="btn" style={{ textDecoration: "none" }}>Evals 门控 →</Link>
+          </div>
           {graph?.persisted ? (
             <LogicRunPanel
               run={run}
@@ -994,7 +1018,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           ) : (
             <section style={{ border: "1px solid var(--aos-border)", padding: 12, borderRadius: 2 }}>
               <h3 style={{ margin: "0 0 6px", fontSize: "0.84rem" }}>运行历史</h3>
-              <p style={{ margin: 0, color: "var(--aos-muted)", fontSize: "0.75rem" }}>保存并回读确认后，才从服务端读取不可变运行历史。</p>
+              <p style={{ margin: 0, color: "var(--aos-muted)", fontSize: "0.75rem" }}>保存并回读确认后，才从服务端读取不可变运行历史。不伪造 Run 列表。</p>
             </section>
           )}
         </div>
