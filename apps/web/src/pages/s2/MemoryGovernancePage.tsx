@@ -255,7 +255,12 @@ export function MemoryGovernancePage() {
         <div style={{ display: "grid", gridTemplateColumns: "minmax(320px, 1fr) minmax(360px, 1.2fr)", gap: 16, alignItems: "start" }}>
           <section style={panel}>
             <h2 style={{ marginTop: 0, fontSize: 17 }}>知识候选</h2>
-            {!candidates.length ? <div data-testid="memory-candidates-empty" className="callout info">当前租户没有待治理或历史 Candidate；页面未注入静态候选。</div> : candidates.map((candidate) => (
+            {!candidates.length ? (
+              <div data-testid="memory-candidates-empty" className="callout info">
+                <strong>空态策略：</strong>
+                当前租户没有待治理或历史 Candidate。页面<strong>不</strong>注入静态/演示候选；有真实来源写入后再出现条目，再经审批晋升为正式 Memory。
+              </div>
+            ) : candidates.map((candidate) => (
               <button key={candidate.candidateId} type="button" className="btn" onClick={() => void inspectCandidate(candidate)} style={{ width: "100%", display: "grid", textAlign: "left", gap: 5, marginBottom: 8, padding: 12 }}>
                 <strong>{authoritySubjectLabel(candidate.request.subject)}</strong>
                 <span>{memoryStatusLabel(candidate.status)} · {candidate.scope} · v{candidate.version}</span>
@@ -286,7 +291,12 @@ export function MemoryGovernancePage() {
 
       {loadState === "loaded" && view === "memories" && <section style={panel}>
         <h2 style={{ marginTop: 0, fontSize: 17 }}>正式 Memory authority</h2>
-        {!memories.length ? <div data-testid="memory-items-empty" className="callout info">当前租户尚无正式 Memory；冷启动或治理晋升完成后才会出现，不以 Wiki 示例替代。</div> : <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse" }}>
+        {!memories.length ? (
+          <div data-testid="memory-items-empty" className="callout info">
+            <strong>空态策略：</strong>
+            当前租户尚无正式 Memory。冷启动或 Candidate 治理晋升完成后才会出现；不以 Wiki 示例或本地 seed 冒充权威记忆。
+          </div>
+        ) : <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead><tr><th>主体</th><th>状态 / Scope</th><th>Revision</th><th>来源</th><th>适用范围</th><th>生效时间</th></tr></thead>
           <tbody>{memories.map(({ item, revision }) => <tr key={item.memoryItemId}>
             <td>{authoritySubjectLabel(item.subject)}<br /><span className="muted">{item.memoryItemId}</span></td>

@@ -785,6 +785,21 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
 
       {shellTab === "edit" ? (
       <>
+      <div
+        className="notice"
+        role="note"
+        data-testid="logic-no-production-bypass"
+        style={{ padding: 12, marginBottom: 12, borderLeft: "3px solid var(--aos-amber-700,#b45309)" }}
+      >
+        <strong>生产旁路已关闭：</strong>
+        本画布不提供「一键创建 / 批准生产 Task」。请经{" "}
+        <Link to="/aip/drafts">Draft 审批台</Link>
+        {" · "}
+        <Link to="/aip/evals">Evals 门控</Link>
+        {" · "}
+        <Link to="/aip/production-contracts">生产契约</Link>
+        {" "}完成发布与启动；安全试跑不写生产。
+      </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
         <button type="button" className="btn btn-primary" disabled={!graph || loading || saving || running || !dirty} onClick={() => void saveGraph()}>
           {saving ? "保存并回读中…" : `保存${dirty ? " *" : ""}`}
