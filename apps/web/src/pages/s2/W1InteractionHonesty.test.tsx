@@ -60,7 +60,9 @@ describe("Wave 3B W1 · 页面交互真实性", () => {
   });
 
   it("Analyst 初始为空且仅开放受治理真实查询，不注入 SQL 或本地草稿", async () => {
-    await act(async () => root.render(createElement(MemoryRouter, null, createElement(AipAnalystPage))));
+    const listObjectTypes = vi.fn().mockResolvedValue([{ id: "Order", name: "订单" }]);
+    await act(async () => root.render(createElement(MemoryRouter, null, createElement(AipAnalystPage, { listObjectTypes }))));
+    await flush();
     expect(host.textContent).toContain("尚未运行查询");
     expect(host.textContent).toContain("不接受任意 SQL");
     expect(host.textContent).not.toContain("Walter and Sons");

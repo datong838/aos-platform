@@ -1,0 +1,12 @@
+{
+  "apiStatus": "complete",
+  "apiRows": 5,
+  "apiFirstRow": "Order/niushop:1:1",
+  "ontologyTypeCount": 15,
+  "uiTypeValue": "Order",
+  "uiTypeOptions": 15,
+  "resultMeta": "complete · 50 行 · r1",
+  "hasFakeRow": false,
+  "hasNiushop": true,
+  "ok": true
+}

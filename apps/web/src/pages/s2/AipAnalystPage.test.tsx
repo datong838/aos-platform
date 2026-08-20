@@ -36,7 +36,9 @@ describe("AipAnalystPage governed query", () => {
   it("uses native buttons for keyboard activation and never double-runs while busy", async () => {
     let resolve!: (value: QueryResultRevision) => void;
     const runQuery = vi.fn(() => new Promise<QueryResultRevision>((done) => { resolve = done; }));
-    await act(async () => root.render(<MemoryRouter><AipAnalystPage runQuery={runQuery} /></MemoryRouter>));
+    const listObjectTypes = vi.fn().mockResolvedValue([{ id: "Order", name: "订单" }]);
+    await act(async () => root.render(<MemoryRouter><AipAnalystPage runQuery={runQuery} listObjectTypes={listObjectTypes} /></MemoryRouter>));
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
     const collapse = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "收起查询")!;
     expect(collapse.tagName).toBe("BUTTON");
     collapse.focus();
@@ -75,7 +77,9 @@ describe("AipAnalystPage governed query", () => {
       lineageRefs: [], blockers: [], uncertainties: [], cutoffAt: "2026-08-16T00:00:00Z", contentHash: "b".repeat(64), createdAt: "2026-08-16T00:00:01Z",
     };
     const runQuery = vi.fn().mockResolvedValueOnce(result).mockRejectedValueOnce(new Error("authority unavailable"));
-    await act(async () => root.render(<MemoryRouter><AipAnalystPage runQuery={runQuery} /></MemoryRouter>));
+    const listObjectTypes = vi.fn().mockResolvedValue([{ id: "Order", name: "订单" }]);
+    await act(async () => root.render(<MemoryRouter><AipAnalystPage runQuery={runQuery} listObjectTypes={listObjectTypes} /></MemoryRouter>));
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
     const run = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "运行真实查询")!;
     await act(async () => run.click());
     expect(host.textContent).toContain("r3");
@@ -83,5 +87,15 @@ describe("AipAnalystPage governed query", () => {
     expect(host.textContent).toContain("请求失败：authority unavailable");
     expect(host.textContent).not.toContain("r3");
     expect(host.textContent).not.toContain("Northampton");
+  });
+
+  it("loads Object Types from authority and refuses demo fallback when empty", async () => {
+    const listObjectTypes = vi.fn().mockResolvedValue([]);
+    await act(async () => root.render(<MemoryRouter><AipAnalystPage listObjectTypes={listObjectTypes} /></MemoryRouter>));
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    expect(host.textContent).toContain("当前租户暂无已安装 Object Type；不生成演示类型");
+    expect(host.textContent).not.toContain("Northampton");
+    expect(host.querySelector('[data-testid="analyst-run-query"]')).toBeTruthy();
+    expect((host.querySelector('[data-testid="analyst-run-query"]') as HTMLButtonElement).disabled).toBe(true);
   });
 });
