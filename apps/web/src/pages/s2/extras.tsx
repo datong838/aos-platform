@@ -51,6 +51,13 @@ export function MaturityPage() {
       title="Agent 成熟度楼梯"
       lede="先 Threads，再固化 Agent，再嵌应用，最后才自动化；楼梯预览不伪造 L4 真门控。"
     >
+      <div style={{ marginBottom: 12, fontSize: 13 }}>
+        <Link to="/aip/memory-governance?view=candidates" data-testid="maturity-memory-bridge">
+          Memory Candidate 治理 →
+        </Link>
+        <span style={{ color: "var(--aos-text-secondary)", margin: "0 8px" }}>·</span>
+        <Link to="/aip/memory-governance?view=readiness">Knowledge 就绪门 →</Link>
+      </div>
       <div
         data-testid="maturity-ops-stats"
         style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}

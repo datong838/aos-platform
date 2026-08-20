@@ -296,7 +296,8 @@ def test_role_check_precedes_unavailable_governance_provider(memory_api) -> None
 
 def test_trusted_provider_absence_is_explicit_503(memory_api) -> None:
     client, _store, _retrieval, _search = memory_api
-    client.app.dependency_overrides.pop(get_aip_memory_retrieval_service, None)
+    # Explicit None still 503; production factory wires a real service by default.
+    client.app.dependency_overrides[get_aip_memory_retrieval_service] = lambda: None
     response = client.post(
         "/v1/aip/memory-authority/knowledge-queries", json=query_body()
     )

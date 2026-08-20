@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import {
   aipMemorySdk,
@@ -55,7 +55,13 @@ export function authoritySubjectLabel(subject: { resourceType: string; resourceI
 }
 
 export function MemoryGovernancePage() {
-  const [view, setView] = useState<View>("candidates");
+  const [searchParams] = useSearchParams();
+  const initialView = (searchParams.get("view") as View | null) || "candidates";
+  const [view, setView] = useState<View>(
+    ["candidates", "memories", "agents", "query", "pipelines", "readiness"].includes(initialView)
+      ? initialView
+      : "candidates"
+  );
   const [candidates, setCandidates] = useState<MemoryCandidate[]>([]);
   const [memories, setMemories] = useState<MemoryAuthorityItem[]>([]);
   const [events, setEvents] = useState<MemoryCandidateEvent[]>([]);
