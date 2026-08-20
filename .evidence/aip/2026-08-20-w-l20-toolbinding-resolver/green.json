@@ -1,0 +1,8 @@
+{
+  "wave": "W-L20",
+  "scheme": "128-W-L20-ToolBindingResolverPublisher13.md",
+  "status": "GREEN",
+  "verified_at": "2026-08-20T13:20:00+08:00",
+  "pytest": "tests/aip/test_w_l20_assignee_resolution.py — 3 passed",
+  "migration": "aip13_001"
+}
