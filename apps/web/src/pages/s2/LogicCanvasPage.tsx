@@ -772,9 +772,9 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           { label: "分区", value: shellTab === "edit" ? "编辑" : shellTab === "history" ? "历史" : "自动化" },
           { label: "图", value: graph?.persisted ? "已确认" : graph ? "未确认" : "未载" },
           { label: "历史条", value: String(history.length) },
-          { label: "历史态", value: historyState },
+          { label: "Uses", value: shellTab === "automation" ? "0" : "—" },
           { label: "更多", value: historyCursor ? "有" : "无" },
-          { label: "互跳", value: "观测/谱系" },
+          { label: "互跳", value: shellTab === "automation" ? "草稿/评测" : "观测/谱系" },
         ].map((s) => (
           <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
             <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
@@ -1025,12 +1025,39 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
       ) : null}
 
       {shellTab === "automation" ? (
-        <section className="card" style={{ padding: 18 }} role="tabpanel" aria-label="自动化">
-          <h2 style={{ marginTop: 0 }}>自动化</h2>
-          <p style={{ color: "var(--aos-text-secondary)" }}>
-            蓝图中的 Uses / 触发器列表为本波<strong>诚实占位</strong>：不写入演示自动化，不伪造触发成功。后续 H2/H3 再接权威 Uses 真源。
-          </p>
-          <div className="notice" style={{ padding: 10 }}>当前组织尚无已登记的逻辑自动化 Uses（占位）。</div>
+        <section className="card" style={{ padding: 18 }} role="tabpanel" aria-label="自动化" data-testid="logic-automation-panel">
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "start" }}>
+            <div>
+              <h2 style={{ marginTop: 0, marginBottom: 6 }}>自动化</h2>
+              <p style={{ margin: 0, color: "var(--aos-text-secondary)", maxWidth: 560 }}>
+                Uses / 触发器以权威登记为准。当前无假列表、无演示触发；有 Uses 真源后再填充。
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <Link to="/aip/drafts" className="btn" style={{ textDecoration: "none" }} data-testid="automation-jump-drafts">Draft 审批台 →</Link>
+              <Link to="/aip/evals" className="btn" style={{ textDecoration: "none" }} data-testid="automation-jump-evals">Evals 门控 →</Link>
+              <Link to="/aip/production-contracts" className="btn" style={{ textDecoration: "none" }} data-testid="automation-jump-contracts">生产契约 →</Link>
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10, margin: "14px 0" }}>
+            {[
+              ["已登记 Uses", "0"],
+              ["启用中", "0"],
+              ["最近触发", "无"],
+              ["真源", "待权威"],
+            ].map(([k, v]) => (
+              <div key={k} className="notice" style={{ padding: "10px 12px" }}>
+                <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{k}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{v}</div>
+              </div>
+            ))}
+          </div>
+          <div className="notice" style={{ padding: 12 }} role="status" data-testid="automation-empty">
+            当前组织尚无已登记的逻辑自动化 Uses。请经 Draft / Evals / 生产契约完成发布与门控后再回此查看；本页不伪造触发成功。
+          </div>
+          <button type="button" className="btn" disabled title="无 Uses 真源前禁止绑定演示自动化" style={{ marginTop: 12 }}>
+            绑定自动化（禁用）
+          </button>
         </section>
       ) : null}
     </PageChrome>
