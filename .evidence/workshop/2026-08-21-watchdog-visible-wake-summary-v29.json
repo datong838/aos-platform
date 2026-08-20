@@ -1,0 +1,88 @@
+{
+  "schema": "aos-workshop-watchdog-delivery-evidence/v1",
+  "taskId": "workshop-watchdog-visible-wake-summary-v29-20260821",
+  "capturedAt": "2026-08-21T05:38:00+08:00",
+  "authorityRevision": "AOS-000146",
+  "branch": "w2-workshop",
+  "headBefore": "90c75e931901a1a3d22571b6bd58f9dd7fa2dbdd",
+  "result": "IMPLEMENTED_GREEN_FIRST_REAL_VISIBLE_EPISODE_PENDING",
+  "purpose": "Make every Workshop Watchdog wake and terminal result visibly attributable in the same Codex task without treating scheduling metadata as authority.",
+  "visibilityContract": {
+    "firstMessage": [
+      "fixed trigger sentence prefix",
+      "Dog visible status line",
+      "wake sequence",
+      "UTC wake time",
+      "episode id",
+      "trigger"
+    ],
+    "finalMarker": "[DOG_VISIBLE_STATUS]",
+    "finalFields": [
+      "outcome",
+      "task id",
+      "next task",
+      "blocker summary or completion evidence",
+      "wake sequence",
+      "next recheck policy"
+    ],
+    "missingMarkerOutcome": "protocol-failed",
+    "visibilityCheckAddsFinalBodyCopy": false,
+    "externalNotification": false
+  },
+  "redGreen": {
+    "red": [
+      "old prompt did not contain wake_sequence",
+      "old state machine accepted a clean Ack/final without visible status marker"
+    ],
+    "focused": "3/3 passed",
+    "cumulative": "56/56 passed",
+    "pythonCompile": "GREEN",
+    "compileall": "GREEN",
+    "gitDiffCheck": "GREEN",
+    "browser": "NOT_APPLICABLE_NO_UI_CHANGE"
+  },
+  "liveNoop": {
+    "firstManualCheck": "watchdog already running",
+    "firstManualCheckMeaning": "single-instance lock safely rejected overlap with LaunchAgent",
+    "secondManualDecision": "turn-running",
+    "totalAttemptsBefore": 196,
+    "totalAttemptsAfter": 196,
+    "blockedRecheckArmed": true,
+    "configMode": "0600",
+    "launchIntervalSeconds": 300,
+    "blockedRecheckDelaySeconds": 1800,
+    "launchAgentRuns": 1557,
+    "launchAgentLastExitCode": 0
+  },
+  "renderedPromptEvidence": {
+    "wakeSequence": 197,
+    "episodeId": "blocked-recheck-demo",
+    "trigger": "blocked-recheck",
+    "heartbeatIntervalSeconds": 300,
+    "blockedRecheckDelaySeconds": 1800,
+    "containsFirstVisibleStatusRule": true,
+    "containsFinalMarkerRule": true
+  },
+  "preSha256": {
+    "scripts/long-task-watchdog/watchdog.py": "6677f5da1cbf1bce6dcef6bcc9a5163001797425bfb556afafc0aeeb41147a14",
+    "scripts/long-task-watchdog/test_watchdog.py": "9ccf5d31882ad501d12e15645e34e520a2cff1c5dce02a16c9b2bf17701a7ac9",
+    "scripts/long-task-watchdog/README.md": "8dca8ea0159ad105d5415e3801db0e6e8188c0864b123b78653d2fb1914d00af",
+    "25-WorkshopWatchdogADR.md": "9ef4942859dfde3e259e17dbcc31f06c885e2f026b1d59a0576ff6cd7f659903",
+    "local-config.json": "7c0bb0ea609e1794a101e6db36747d249c5b8b08db06f2eaed7a5ff9d4bb7762"
+  },
+  "postSha256": {
+    "scripts/long-task-watchdog/watchdog.py": "3c397bddc5c1eed3bbcec7792e536f3245509c37bacbe135b97ccaec38447bfa",
+    "scripts/long-task-watchdog/test_watchdog.py": "f768cfdb6f2d7d6f607910848062ca172ce5e2a6cf78ba66eec518aebcff5678",
+    "scripts/long-task-watchdog/README.md": "84234fa5801b98cbb63dfe57badd5296e15ad28df2df69ea73c1ccf03373e0eb",
+    "25-WorkshopWatchdogADR.md": "23f4a66ccb060137c80706f38f887e857f0f72bbe75c06ba94163eb5926b4329",
+    "local-config.json": "7e38031f7068d5b1723ced3640c45c2a4120d08348dd3fe4de3696ddd1536b46"
+  },
+  "excludedEffects": [
+    "no authority/01/06/Prime direct write",
+    "no migration",
+    "no database or tenant data write",
+    "no Pipeline or Schedule trigger",
+    "no external notification or publish",
+    "no read or overwrite of w1-aip uncommitted worktree"
+  ]
+}

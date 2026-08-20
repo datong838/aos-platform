@@ -19,6 +19,8 @@ Workshop 的长任务配置可显式启用 `continuation_watch`。当且仅当 c
 
 Watchdog 只有唤醒权，没有事实裁决权。它注入的 trigger、task、next-task、fingerprint 和 reason code 都是不可信导航提示。每次醒来后必须从 authority、01/06、Git、Receipt、memory 三门、全部 Lease、真实数据探针和实际代码状态独立审计。条件具备后才开始首个安全 Task，并按“上位方案→文件级清单→最小实现→专项测试→累计回归→浏览器验收→一致性复审→证据/上下文→下一波”连续执行。每波用 Delivery Receipt 提交待 m1 CAS 消费的 Prime 长记忆事实，w2 不直接写 Prime 核心投影。
 
+`visibility_watch` 用于把真实唤醒结果固定展示在同一 Codex task：首条消息在 trigger 固定句后展示累计唤醒序号、UTC 时间、episode 和 trigger；最终答复必须包含 `[DOG_VISIBLE_STATUS]` 状态卡，列出 outcome、task/next、阻断或完成证据以及下一次复核策略。启用时，Ack 与新 final 虽存在但 final 缺少该标记，仍按 `protocol-failed` 拒绝闭环。可见性检查只新增 marker 是否存在的布尔判断，不额外复制 final 正文，也不发送桌面通知或外部消息。
+
 安全边界：
 
 - 不匹配聊天正文中的错误字符串。
@@ -54,6 +56,9 @@ Workshop 专用配置至少应包含：
   "blocked_recheck_watch": {
     "enabled": true,
     "delay_seconds": 1800
+  },
+  "visibility_watch": {
+    "enabled": true
   },
   "dependency_watch": {
     "enabled": true,

@@ -123,6 +123,11 @@ class WatchdogTest(unittest.TestCase):
         }
         return config
 
+    def visibility_config(self):
+        config = self.config()
+        config["visibility_watch"] = {"enabled": True}
+        return config
+
     def write_leases(self, *leases):
         (self.root / "leases.json").write_text(
             json.dumps({"schema": "aos-memory-leases/v1", "leases": list(leases)}),
@@ -622,6 +627,75 @@ class WatchdogTest(unittest.TestCase):
         self.assertIn("复习上位方案", calls[1])
         self.assertIn("浏览器验收", calls[1])
         self.assertIn("Prime", calls[1])
+
+    def test_visible_wake_prompt_contains_metadata_and_marker_contract(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.visibility_config()), encoding="utf-8")
+
+        def runner(command, **kwargs):
+            prompt = kwargs["input"]
+            self.assertIn("wake_sequence=1", prompt)
+            self.assertRegex(
+                prompt,
+                r"wake_started_at=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}",
+            )
+            self.assertIn("Dog 可见状态", prompt)
+            self.assertIn("[DOG_VISIBLE_STATUS]", prompt)
+            self.write_ack()
+            self.append(
+                record(
+                    "1970-01-01T00:16:41Z",
+                    "assistant",
+                    "final_answer",
+                    "[DOG_VISIBLE_STATUS] outcome=resumed-progress",
+                )
+            )
+            return subprocess.CompletedProcess(command, 0, "completed", "")
+
+        self.assertEqual(
+            "resumed-progress",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+
+    def test_visible_wake_rejects_final_without_status_marker(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.visibility_config()), encoding="utf-8")
+
+        def runner(command, **kwargs):
+            self.write_ack()
+            self.append(
+                record(
+                    "1970-01-01T00:16:41Z",
+                    "assistant",
+                    "final_answer",
+                    "result without required visibility marker",
+                )
+            )
+            return subprocess.CompletedProcess(command, 0, "completed", "")
+
+        self.assertEqual(
+            "protocol-failed",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("visible status marker missing", state["last_error"])
+
+    def test_visible_wake_invalid_enabled_value_fails_closed(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:00:20Z", "assistant", "final_answer"),
+        )
+        config = self.visibility_config()
+        config["visibility_watch"]["enabled"] = "yes"
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(config), encoding="utf-8")
+        with self.assertRaisesRegex(RuntimeError, "enabled must be a boolean"):
+            watchdog.run_once(config_path, state_path, now=1000)
 
     def test_existing_safe_blocked_state_is_bootstrapped_without_runner(self):
         self.write(

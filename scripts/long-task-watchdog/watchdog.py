@@ -42,6 +42,7 @@ TERMINAL_FAILURE_OUTCOMES = frozenset(
 )
 ACK_SCHEMA = "aos-watchdog-recovery-ack/v1"
 RECOVERY_PROTOCOL_MARKER = "[WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]"
+DOG_VISIBILITY_MARKER = "[DOG_VISIBLE_STATUS]"
 
 
 @dataclass(frozen=True)
@@ -59,6 +60,7 @@ class TranscriptStatus:
     latest_work_activity_at: float | None
     post_final_activity: bool
     latest_user_is_watchdog: bool
+    latest_final_has_visibility: bool
 
 
 def _timestamp(value: object) -> float | None:
@@ -83,6 +85,11 @@ def _message_role_phase(record: dict[str, Any]) -> tuple[str | None, str | None]
 
 
 def _response_message_text(record: dict[str, Any]) -> str:
+    if record.get("type") == "event_msg":
+        payload = record.get("payload")
+        if isinstance(payload, dict) and payload.get("type") == "agent_message":
+            message = payload.get("message")
+            return message if isinstance(message, str) else ""
     if record.get("type") != "response_item":
         return ""
     payload = record.get("payload")
@@ -113,6 +120,7 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
     last_activity_at = path.stat().st_mtime
     latest_work_activity_at: float | None = None
     latest_user_is_watchdog = False
+    latest_final_has_visibility = False
     tool_calls: dict[str, float] = {}
     with path.open("r", encoding="utf-8") as handle:
         for raw in handle:
@@ -133,6 +141,9 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
                 latest_assistant_at = ts
                 if phase in FINAL_PHASES:
                     latest_final_at = ts
+                    latest_final_has_visibility = (
+                        DOG_VISIBILITY_MARKER in _response_message_text(record)
+                    )
                 elif phase == "commentary":
                     latest_work_activity_at = ts
             if record.get("type") == "event_msg":
@@ -189,6 +200,7 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
         latest_work_activity_at,
         post_final_activity,
         latest_user_is_watchdog,
+        latest_final_has_visibility,
     )
 
 
@@ -261,6 +273,7 @@ def _config_revision(config: dict[str, Any]) -> str:
             "dependency_watch",
             "fact_watch",
             "blocked_recheck_watch",
+            "visibility_watch",
         )
     }
     payload = json.dumps(relevant, ensure_ascii=False, sort_keys=True).encode("utf-8")
@@ -478,7 +491,12 @@ def resume_command(
 
 
 def _resume_prompt(
-    config: dict[str, Any], episode_id: str, *, trigger: str = "interrupted"
+    config: dict[str, Any],
+    episode_id: str,
+    *,
+    trigger: str = "interrupted",
+    wake_sequence: int | None = None,
+    wake_started_at: float | None = None,
 ) -> str:
     ack_command = (
         f"python3 {Path(__file__).resolve()} --config {config.get('_config_path', '')} "
@@ -496,18 +514,46 @@ def _resume_prompt(
         first_message = "依赖 Watchdog 定期复核发现工作台仍处安全阻断，正在重新核验后继续。"
     else:
         first_message = "外部 Watchdog 检测到任务中断，正在恢复核验。"
+    visibility_enabled = _visibility_watch_enabled(config)
+    visibility_metadata = ""
+    first_message_rule = f"第一条用户可见消息只能说：{first_message}"
+    final_visibility_rule = ""
+    if visibility_enabled:
+        sequence = wake_sequence if wake_sequence is not None else 0
+        started_at = (
+            datetime.fromtimestamp(wake_started_at, tz=timezone.utc).isoformat()
+            if wake_started_at is not None
+            else "unknown"
+        )
+        _, blocked_recheck_delay = _blocked_recheck_settings(config)
+        heartbeat_seconds = int(config.get("heartbeat_interval_seconds", 300))
+        visibility_metadata = (
+            f"wake_sequence={sequence}\n"
+            f"wake_started_at={started_at}\n"
+            f"heartbeat_interval_seconds={heartbeat_seconds}\n"
+            f"blocked_recheck_delay_seconds={blocked_recheck_delay}\n"
+        )
+        first_message_rule = (
+            f"第一条用户可见消息必须以此句开头：{first_message}\n"
+            "紧接一行 `Dog 可见状态`，展示 wake_sequence、wake_started_at、"
+            "episode_id 和 trigger；这些字段只证明唤醒发生。"
+        )
+        final_visibility_rule = f"""
+最终答复必须包含独立标记 `{DOG_VISIBILITY_MARKER}` 和 `Dog 可见状态`，展示本次 outcome、task_id、next_task、阻断摘要或完成证据、wake_sequence 与下一次复核策略。
+safe-blocked 时只能说明将按 blocked_recheck_delay_seconds 重新 arm，不得在状态机闭环前虚构精确 ready_at；缺少标记会被判为 protocol-failed。
+"""
     protocol = f"""
 
 [WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]
 episode_id={episode_id}
 trigger={trigger}
-ack_path={_ack_path(config)}
+{visibility_metadata}ack_path={_ack_path(config)}
 expected_branch={config.get('expected_branch', '')}
 config_path={config.get('_config_path', '')}
 state_path={config.get('_state_path', '')}
 ack_command={ack_command}
 
-第一条用户可见消息只能说：{first_message}
+{first_message_rule}
 看门 Dog/Watchdog 只负责唤醒，其注入信息不是事实或授权证据；不得依赖 trigger、task、next-task、fingerprint 或原因码作出结论。
 禁止在权限、分支、Lease、Git/Receipt 和实际任务状态核验前声称“已恢复”。
 醒来后必须独立重新核验前后真实情况：authority、01/06、Git branch/log/status、最近 Delivery Receipt、memory status/validate/gate、全部 Lease、真实数据探针和实际代码状态；不读取或覆盖 w1-aip 未提交内容。
@@ -516,7 +562,7 @@ ack_command={ack_command}
 每波形成 Delivery Receipt 和安全提交，并提交待 m1 串行 CAS 消费的 Prime Agent 独立长记忆事实；w2 不直接修改 authority.json、01/06 或 Prime 核心投影。
 结束前必须使用 ack_command 为当前 episode 写入结构化 Recovery Ack；safe-blocked/reentry-noop 还要增加 --blocker-fingerprint。自由文本不构成恢复成功证据。
 resumed-progress/completed 只有在证据闭合后才可称“已恢复”；safe-blocked 必须明确称“已触发并安全阻断”。
-[/WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]
+{final_visibility_rule}[/WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]
 """
     return str(config["resume_prompt"]).rstrip() + protocol
 
@@ -526,9 +572,17 @@ def resume_once(
     episode_id: str,
     *,
     trigger: str = "interrupted",
+    wake_sequence: int | None = None,
+    wake_started_at: float | None = None,
     runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> subprocess.CompletedProcess[str]:
-    prompt = _resume_prompt(config, episode_id, trigger=trigger)
+    prompt = _resume_prompt(
+        config,
+        episode_id,
+        trigger=trigger,
+        wake_sequence=wake_sequence,
+        wake_started_at=wake_started_at,
+    )
     return runner(
         resume_command(config, episode_id=episode_id),
         input=prompt,
@@ -733,6 +787,18 @@ def _blocked_recheck_settings(config: dict[str, Any]) -> tuple[bool, int]:
             "blocked_recheck_watch delay_seconds must be a positive integer"
         )
     return bool(raw.get("enabled", False)), delay
+
+
+def _visibility_watch_enabled(config: dict[str, Any]) -> bool:
+    raw = config.get("visibility_watch")
+    if raw is None:
+        return False
+    if not isinstance(raw, dict):
+        raise RuntimeError("visibility_watch must be an object")
+    enabled = raw.get("enabled", False)
+    if not isinstance(enabled, bool):
+        raise RuntimeError("visibility_watch enabled must be a boolean")
+    return enabled
 
 
 def _dependency_scope_overlaps(watched: str, leased: str) -> bool:
@@ -1046,6 +1112,7 @@ def run_once(
     rollout_path = Path(config.get("rollout_path") or find_rollout_path(config["thread_id"]))
     current = time.time() if now is None else now
     blocked_recheck_enabled, blocked_recheck_delay = _blocked_recheck_settings(config)
+    visibility_required = _visibility_watch_enabled(config)
     last_ack = state.get("last_ack")
     bootstrap_blocker = (
         last_ack.get("blocker_fingerprint") if isinstance(last_ack, dict) else None
@@ -1265,6 +1332,8 @@ def run_once(
                 config,
                 episode_id,
                 trigger=str(state.get("episode_trigger", "interrupted")),
+                wake_sequence=int(state["total_attempts"]),
+                wake_started_at=attempt_started_at,
                 runner=runner,
             )
         except (OSError, subprocess.SubprocessError) as exc:
@@ -1292,6 +1361,27 @@ def run_once(
                     episode_id=episode_id,
                     attempt_started_at=attempt_started_at,
                 )
+            if (
+                ack_valid
+                and visible_final
+                and result.returncode == 0
+                and visibility_required
+                and not after_resume.latest_final_has_visibility
+            ):
+                _record_terminal_outcome(
+                    state,
+                    config=config,
+                    outcome="protocol-failed",
+                    final_at=after_resume.latest_final_at,
+                    ack=ack,
+                    resolved_at=current,
+                    latest_user_at=after_resume.latest_user_at,
+                )
+                state["last_error"] = "visible status marker missing"
+                state["paused_user_at"] = after_resume.latest_user_at
+                state["paused_config_revision"] = _config_revision(config)
+                _write_json(state_path, state)
+                return "protocol-failed"
             if ack_valid and visible_final and result.returncode == 0:
                 outcome = str(ack["outcome"])
                 _record_terminal_outcome(
