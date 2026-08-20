@@ -364,8 +364,11 @@ export function CapacityPage() {
     }
   }
 
+  const todayBucket = usageBuckets.find((b) => b.period === "today");
+  const warnQuotaCount = quotaUsage.filter((q) => usageTone(usagePercent(q.used, q.quota)) !== "ok").length;
+
   return (
-    <PageChrome title="容量管理" lede="管理 LLM 使用限制、速率限制和预留容量">
+    <PageChrome title="容量管理" lede="用量仪表盘、项目/用户速率限制与预留容量；Live 接容量权威 API，失败时不回落本地 MOCK">
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
         {sourceMode === "error" && (
           <div className="w2-a6a7-demo-banner" role="alert">
@@ -378,9 +381,28 @@ export function CapacityPage() {
         {sourceMode === "live" && (
           <div className="w2-a6a7-live-banner" role="status">
             <span className="w2-a6a7-live-badge">Live</span>
-            <span className="w2-a6a7-demo-text">用量与限流已接 `/v1/aip/capacity/*`</span>
+            <span className="w2-a6a7-demo-text">用量与限流已接 `/v1/aip/capacity/*` · 密表仪表盘</span>
           </div>
         )}
+
+        <div
+          data-testid="capacity-ops-stats"
+          style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, margin: "0 0 16px" }}
+        >
+          {[
+            { label: "数据源", value: sourceMode === "live" ? "Live" : sourceMode === "error" ? "Error" : "…" },
+            { label: "今日请求", value: (todayBucket?.totalRequests ?? 0).toLocaleString() },
+            { label: "今日 Token", value: formatTokenCount(todayBucket?.totalTokens ?? 0) },
+            { label: "用户限额条", value: String(userLimits.length) },
+            { label: "配额告警", value: String(warnQuotaCount) },
+            { label: "当前 Tab", value: tab === "usage" ? "用量" : tab === "rate-limits" ? "限速" : "预留" },
+          ].map((s) => (
+            <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+              <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+            </div>
+          ))}
+        </div>
 
         {/* Tab 导航 */}
         <div style={{ borderBottom: "1px solid var(--aos-border)", background: "var(--aos-surface)", marginBottom: 16 }}>
@@ -699,13 +721,23 @@ export function CapacityPage() {
         {/* === Reserved Tab === */}
         {tab === "reserved" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 40, textAlign: "center" }}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--aos-faint)" strokeWidth="1.5" style={{ margin: "0 auto 12px" }}>
-                <rect x="3" y="4" width="18" height="6" rx="1" /><rect x="3" y="14" width="18" height="6" rx="1" />
-              </svg>
+            <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 28 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10, marginBottom: 16 }}>
+                {[
+                  { label: "交互保留比例", value: "20%" },
+                  { label: "预留池状态", value: "未开通" },
+                  { label: "项目 RPM", value: projectLimit ? String(projectLimit.rpmLimit) : "—" },
+                  { label: "项目 TPM", value: projectLimit ? formatTokenCount(projectLimit.tpmLimit) : "—" },
+                ].map((s) => (
+                  <div key={s.label} style={{ padding: "10px 12px", border: "1px solid var(--aos-border)", borderRadius: 2 }}>
+                    <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
               <p style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: 0 }}>预留容量</p>
               <p style={{ fontSize: 12, color: "var(--aos-faint)", marginTop: 8, margin: "8px 0 0" }}>
-                预留容量功能即将上线。如需提前使用，请联系 Palantir 支持。
+                预留池控制面尚未开通；当前仅展示保留比例与项目限额快照，不伪造可用预留额度。
               </p>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
