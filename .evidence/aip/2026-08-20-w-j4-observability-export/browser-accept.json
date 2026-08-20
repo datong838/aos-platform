@@ -1,0 +1,5 @@
+{
+  "disabledIdle": true,
+  "label": "导出（需先读取）",
+  "url": "http://127.0.0.1:5174/aip/observability"
+}

@@ -148,7 +148,20 @@ export function ObservabilityPage() {
         <button type="button" className="btn primary" onClick={() => void load()} disabled={loadState === "loading"}>
           {loadState === "loading" ? "读取中…" : "读取权威证据"}
         </button>
-        <button type="button" className="btn" onClick={exportAuthority} disabled={loadState !== "loaded"}>导出当前证据</button>
+        <button
+          type="button"
+          className="btn"
+          onClick={exportAuthority}
+          disabled={loadState !== "loaded"}
+          data-testid="observability-export"
+          title={
+            loadState === "loaded"
+              ? "导出当前已读取的 Span / Usage JSON"
+              : "请先读取权威证据后再导出；空闲/失败态不提供演示文件"
+          }
+        >
+          {loadState === "loaded" ? "导出当前证据" : "导出（需先读取）"}
+        </button>
       </div>
 
       <div style={{ display: "flex", gap: 8, margin: "16px 0" }}>
