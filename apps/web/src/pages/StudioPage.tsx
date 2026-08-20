@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { aipAgentControl } from "../api/aipAgentControl";
 import { apiGet, apiPost, apiPut } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
@@ -143,6 +143,7 @@ function statusBadge(status: AgentItem["status"]) {
 }
 
 export function StudioPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState("prompt");
   const [agents, setAgents] = useState<AgentItem[]>([]);
   const [activeId, setActiveId] = useState("");
@@ -183,11 +184,31 @@ export function StudioPage() {
     const response = await apiGet<{ items?: ApiAgent[] }>("/v1/aip/agents");
     const next = (response.items || []).map(mapApiAgentToStudio).filter((agent) => agent.id);
     setAgents(next);
-    setActiveId((current) => (next.some((agent) => agent.id === current) ? current : next[0]?.id || ""));
+    const fromUrl = String(searchParams.get("instance") || "").trim();
+    setActiveId((current) => {
+      if (fromUrl && next.some((agent) => agent.id === fromUrl)) return fromUrl;
+      if (current && next.some((agent) => agent.id === current)) return current;
+      return next[0]?.id || "";
+    });
     setLoadState("live");
     setResourceError(null);
     return next;
   }
+
+  useEffect(() => {
+    if (!activeId) return;
+    const current = String(searchParams.get("instance") || "").trim();
+    if (current === activeId) return;
+    const next = new URLSearchParams(searchParams);
+    next.set("instance", activeId);
+    setSearchParams(next, { replace: true });
+  }, [activeId, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    const fromUrl = String(searchParams.get("instance") || "").trim();
+    if (!fromUrl || !agents.some((agent) => agent.id === fromUrl)) return;
+    if (fromUrl !== activeId) setActiveId(fromUrl);
+  }, [searchParams, agents, activeId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -901,8 +922,12 @@ export function StudioPage() {
                   )}
                 </div>
                 <div style={{ paddingTop: 12, marginTop: 12, borderTop: "1px solid var(--aos-gray-100)" }}>
+                  <p data-testid="studio-overlay-authority" style={{ fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 8 }}>
+                    工具权威：AgentInstance Overlay（与 `/aip/tools` 同一真源 · W-T8）
+                  </p>
                   <Link
-                    to="/aip/tools"
+                    to={activeId ? `/aip/tools?instance=${encodeURIComponent(activeId)}` : "/aip/tools"}
+                    data-testid="studio-to-tools-link"
                     style={{
                       display: "inline-flex",
                       alignItems: "center",

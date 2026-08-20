@@ -538,7 +538,7 @@ export function ToolsPage() {
       </div>
       <div data-testid="tools-overlay-authority">
         <BpBanner tone="info">
-          配置权威：AgentInstance Overlay（CAS/revision）· 当前{" "}
+          配置权威：AgentInstance Overlay（与 Studio 工具箱同一真源 · W-T8）· 当前{" "}
           {activeInstanceId || "未选择实例"}
           {overlayLoading ? " · 加载中…" : ""}
         </BpBanner>
@@ -635,7 +635,11 @@ export function ToolsPage() {
         <Link to="/aip/logic" className="btn-nav-accent">
           Logic →
         </Link>
-        <Link to="/aip/studio" className="btn-nav">
+        <Link
+          to={activeInstanceId ? `/aip/studio?instance=${encodeURIComponent(activeInstanceId)}` : "/aip/studio"}
+          className="btn-nav"
+          data-testid="tools-to-studio-link"
+        >
           Chatbot Studio →
         </Link>
       </BpToolbar>
