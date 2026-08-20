@@ -3034,6 +3034,24 @@ export function EvalsPage() {
 
   return (
     <S2Chrome title="Evals 门控" lede="L4 自动化上线前须通过 Eval；未达标禁止发布为 Function / Automate。">
+      <div
+        data-testid="evals-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, margin: "0 0 12px" }}
+      >
+        {[
+          { label: "套件数", value: String(suites.length) },
+          { label: "图目标", value: String(graphs.length) },
+          { label: "门控", value: gate ? (gate.gate_passed ? "通过" : "未过") : "未跑" },
+          { label: "通过率", value: report ? `${Math.round((report.pass_rate || 0) * 100)}%` : "—" },
+          { label: "用例", value: report ? `${report.passed}/${report.total}` : "—" },
+          { label: "权威Run", value: authorityState === "loaded" ? "已读" : authorityState === "error" ? "失败" : authorityState === "loading" ? "读取中" : "空" },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
       <BpToolbar>
         <select
           aria-label="Eval 套件"
