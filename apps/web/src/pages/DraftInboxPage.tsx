@@ -712,8 +712,26 @@ export function LegacyDraftInboxPage() {
   return (
     <PageChrome
       title="Draft 审批台"
-      lede="Agent / Action 写入须经 HITL 批准后方可落生产 Ontology；含 Insight Backfill（知识回填）。"
+      lede="Agent / Action 写入须经 HITL 批准后方可落生产 Ontology；含 Insight Backfill。"
     >
+      <div
+        data-testid="drafts-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
+      >
+        {[
+          { label: "数据源", value: sourceMode === "live" ? "Live" : sourceMode === "error" ? "Error" : "…" },
+          { label: "合计", value: String(allDrafts.length) },
+          { label: "待审", value: String(tabCounts.pending) },
+          { label: "已批", value: String(tabCounts.approved) },
+          { label: "驳回", value: String(tabCounts.rejected) },
+          { label: "撤回", value: String(tabCounts.withdrawn) },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
       <div className="di-page">
       {/* 数据源角标 */}
       {sourceMode === "error" && (
