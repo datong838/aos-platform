@@ -7,10 +7,9 @@ from aos_api.oe_enhancements import (
     ExportEngine,
     ExportError,
     ExplorationEngine,
-    ExplorationError,
-    SavedExploration,
     SearchEngine,
     SearchError,
+    get_exploration_engine,
     parse_expression,
 )
 
@@ -140,88 +139,13 @@ def test_search_pagination():
     assert result["objects"][0]["id"] == "2"
 
 
-# ── #49 保存探索 ──
+# ── #49 保存探索（旧内存引擎已禁用 · W-L16）──
 
-def test_exploration_create_and_get():
-    eng = ExplorationEngine()
-    exp = eng.create(SavedExploration(
-        name="Active Employees",
-        object_type="Employee",
-        kind="dynamic",
-        owner="alice",
-        query={"expression": 'status = "active"', "limit": 50},
-    ))
-    fetched = eng.get(exp.id)
-    assert fetched.name == "Active Employees"
-    assert fetched.owner == "alice"
-
-
-def test_exploration_get_not_found():
-    eng = ExplorationEngine()
-    with pytest.raises(ExplorationError) as exc:
-        eng.get("nonexistent")
-    assert exc.value.code == "NOT_FOUND"
-
-
-def test_exploration_list_filter():
-    eng = ExplorationEngine()
-    eng.create(SavedExploration(name="a", object_type="Employee", owner="alice"))
-    eng.create(SavedExploration(name="b", object_type="Department", owner="bob", visibility="public"))
-    # alice 看自己的 + 公共
-    items = eng.list(owner="alice")
-    assert len(items) == 2
-    # 只看 Employee
-    emp_items = eng.list(object_type="Employee")
-    assert len(emp_items) == 1
-
-
-def test_exploration_update():
-    eng = ExplorationEngine()
-    exp = eng.create(SavedExploration(name="old", object_type="Employee", owner="alice"))
-    updated = eng.update(exp.id, {"name": "new", "visibility": "public"})
-    assert updated.name == "new"
-    assert updated.visibility == "public"
-
-
-def test_exploration_delete():
-    eng = ExplorationEngine()
-    exp = eng.create(SavedExploration(name="temp", object_type="Employee", owner="alice"))
-    assert eng.delete(exp.id) is True
-    with pytest.raises(ExplorationError):
-        eng.get(exp.id)
-
-
-def test_exploration_execute_dynamic():
-    exp_eng = ExplorationEngine()
-    search_eng = SearchEngine()
-    search_eng.index("Employee", [
-        {"id": "1", "name": "Alice", "status": "active"},
-        {"id": "2", "name": "Bob", "status": "inactive"},
-    ])
-    exp = exp_eng.create(SavedExploration(
-        name="Active",
-        object_type="Employee",
-        kind="dynamic",
-        owner="alice",
-        query={"expression": 'status = "active"'},
-    ))
-    result = exp_eng.execute(exp.id, search_eng)
-    assert result["total"] == 1
-    assert result["objects"][0]["name"] == "Alice"
-
-
-def test_exploration_execute_static_rejected():
-    eng = ExplorationEngine()
-    exp = eng.create(SavedExploration(
-        name="Static List",
-        object_type="Employee",
-        kind="static",
-        owner="alice",
-        object_ids=["1", "2", "3"],
-    ))
-    with pytest.raises(ExplorationError) as exc:
-        eng.execute(exp.id, SearchEngine())
-    assert exc.value.code == "NOT_DYNAMIC"
+def test_legacy_exploration_engine_disabled():
+    with pytest.raises(RuntimeError, match="LEGACY_EXPLORATION_ENGINE_DISABLED"):
+        ExplorationEngine()
+    with pytest.raises(RuntimeError, match="LEGACY_EXPLORATION_ENGINE_DISABLED"):
+        get_exploration_engine()
 
 
 # ── #50 批量导出 ──

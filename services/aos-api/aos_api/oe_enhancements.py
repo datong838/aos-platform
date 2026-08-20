@@ -410,75 +410,12 @@ class ExplorationError(Exception):
 
 
 class ExplorationEngine:
-    """保存探索管理引擎。"""
+    """Legacy in-memory SavedExploration engine — disabled (W-L16 / W4-06)."""
 
     def __init__(self) -> None:
-        self._lock = threading.Lock()
-        self._explorations: dict[str, SavedExploration] = {}
-
-    def create(self, exp: SavedExploration) -> SavedExploration:
-        with self._lock:
-            self._explorations[exp.id] = exp
-        return exp
-
-    def get(self, exp_id: str) -> SavedExploration:
-        exp = self._explorations.get(exp_id)
-        if not exp:
-            raise ExplorationError("NOT_FOUND", f"探索 {exp_id} 不存在")
-        return exp
-
-    def list(
-        self,
-        *,
-        owner: str | None = None,
-        object_type: str | None = None,
-        kind: str | None = None,
-        include_public: bool = True,
-    ) -> list[SavedExploration]:
-        with self._lock:
-            items = list(self._explorations.values())
-        result: list[SavedExploration] = []
-        for e in items:
-            if owner and e.owner != owner and not (include_public and e.visibility == "public"):
-                continue
-            if object_type and e.object_type != object_type:
-                continue
-            if kind and e.kind != kind:
-                continue
-            result.append(e)
-        return result
-
-    def update(self, exp_id: str, updates: dict[str, Any]) -> SavedExploration:
-        with self._lock:
-            exp = self._explorations.get(exp_id)
-            if not exp:
-                raise ExplorationError("NOT_FOUND", f"探索 {exp_id} 不存在")
-            for k, v in updates.items():
-                if k not in ("id", "created_at"):
-                    setattr(exp, k, v)
-            exp.updated_at = _now()
-            return exp
-
-    def delete(self, exp_id: str) -> bool:
-        with self._lock:
-            if exp_id not in self._explorations:
-                raise ExplorationError("NOT_FOUND", f"探索 {exp_id} 不存在")
-            del self._explorations[exp_id]
-            return True
-
-    def execute(self, exp_id: str, search_engine: SearchEngine) -> dict[str, Any]:
-        """执行动态探索。"""
-        exp = self.get(exp_id)
-        if exp.kind != "dynamic":
-            raise ExplorationError("NOT_DYNAMIC", f"探索 {exp_id} 不是动态探索")
-        expression = exp.query.get("expression", "")
-        limit = exp.query.get("limit", 100)
-        offset = exp.query.get("offset", 0)
-        return search_engine.search(exp.object_type, expression, limit=limit, offset=offset)
-
-    def reset(self) -> None:
-        with self._lock:
-            self._explorations.clear()
+        raise RuntimeError(
+            "LEGACY_EXPLORATION_ENGINE_DISABLED: use ontology_exploration_assets PostgreSQL authority"
+        )
 
 
 # ─────────────── #50 批量导出 ───────────────
@@ -620,12 +557,9 @@ def get_search_engine() -> SearchEngine:
 
 
 def get_exploration_engine() -> ExplorationEngine:
-    global _exploration_engine
-    if _exploration_engine is None:
-        with _lock:
-            if _exploration_engine is None:
-                _exploration_engine = ExplorationEngine()
-    return _exploration_engine
+    raise RuntimeError(
+        "LEGACY_EXPLORATION_ENGINE_DISABLED: use ontology_exploration_assets PostgreSQL authority"
+    )
 
 
 def get_export_engine() -> ExportEngine:
