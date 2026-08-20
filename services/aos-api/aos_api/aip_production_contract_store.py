@@ -17,7 +17,8 @@ from aos_api.aip_production_contracts import (
     CreateEvalContractRequest, CreateEvidenceBundleRequest,
     CreateResponsibilityPlanRequest, CreateReviewIssueRequest,
     CreateStageTemplateRequest, DisclosureLevel, DisclosureStatus,
-    EvalContractListResponse, EvalContractRevision, EvidenceBundleListResponse,
+    EvalContractListResponse, EvalContractRevision, EvalContractDiff,
+    EvalContractDiffChange, EvidenceBundleListResponse,
     EvidenceBundleRevision, EvidenceDisclosureDecision, ExactArtifactRef,
     ExactRevisionRef, FreezeProductionContextRequest, Freshness,
     ImpactPreviewListResponse, ImpactPreviewRevision,
@@ -2827,6 +2828,33 @@ class AipProductionContractStore:
                 blockers,
                 require_frozen=require_frozen,
             )
+        # W-L13: EvalContract dynamic Publication/ReleaseGate readiness enters snapshot + blockers
+        # Skip incomplete fixture rows that lack exact Publication binding (W2-D seeds).
+        eval_row = conn.execute(
+            """SELECT * FROM aip_eval_contract_revision
+               WHERE org_id=%s AND project_id=%s AND contract_id=%s AND revision=%s""",
+            (
+                *scope.key,
+                body.eval_contract_ref.resource_id,
+                body.eval_contract_ref.revision,
+            ),
+        ).fetchone()
+        if eval_row is not None and eval_row["content_hash"] == body.eval_contract_ref.content_hash:
+            publication = self._load(eval_row["publication_ref"])
+            if isinstance(publication, dict) and publication.get("contentHash"):
+                eval_blockers = self._eval_blockers(conn, scope, eval_row)
+                blockers.extend(eval_blockers)
+                snapshot.append(
+                    {
+                        "resourceType": "EvalContractDynamicReadiness",
+                        "resourceId": body.eval_contract_ref.resource_id,
+                        "revision": body.eval_contract_ref.revision,
+                        "blockerCodes": [item.code for item in eval_blockers],
+                        "publicationEffective": self._publication_effective_type(
+                            conn, scope, eval_row
+                        ),
+                    }
+                )
         revoked, reason = self._bundle_revoke(
             conn,
             scope,
@@ -3182,10 +3210,25 @@ class AipProductionContractStore:
                 (*scope.key, ref.resource_id)).fetchone()
             if not publication_row:
                 blockers.append(ContractBlocker(code="EVAL_PUBLICATION_MISSING", message="发布事件不存在", resource_ref=ref))
-            elif publication_row["event_type"] != "published":
-                blockers.append(ContractBlocker(code="EVAL_PUBLICATION_REVOKED", message="发布事件不是有效 published", resource_ref=ref))
-            elif canonical_hash(self._publication_snapshot(publication_row)) != ref.content_hash:
-                blockers.append(ContractBlocker(code="EVAL_PUBLICATION_DRIFTED", message="发布事件 exact hash 漂移", resource_ref=ref))
+            else:
+                if canonical_hash(self._publication_snapshot(publication_row)) != ref.content_hash:
+                    blockers.append(ContractBlocker(code="EVAL_PUBLICATION_DRIFTED", message="发布事件 exact hash 漂移", resource_ref=ref))
+                # W-L13: effective status aggregates by publication_id, not bound event_id alone
+                latest = conn.execute(
+                    """SELECT * FROM aip_publication_event
+                       WHERE org_id=%s AND project_id=%s AND publication_id=%s
+                       ORDER BY occurred_at DESC, event_id DESC LIMIT 1""",
+                    (*scope.key, publication_row["publication_id"]),
+                ).fetchone()
+                effective = None if latest is None else latest["event_type"]
+                if effective != "published":
+                    blockers.append(
+                        ContractBlocker(
+                            code="EVAL_PUBLICATION_REVOKED",
+                            message=f"发布已失效（当前有效事件={effective or 'missing'}）",
+                            resource_ref=ref,
+                        )
+                    )
         gate = self._load(row["release_gate_ref"])
         if not gate:
             blockers.append(ContractBlocker(code="EVAL_GATE_MISSING", message="尚未绑定发布门决定"))
@@ -3370,6 +3413,99 @@ class AipProductionContractStore:
         return {key: row[key] for key in (
             "event_id", "publication_id", "target_ref", "event_type",
             "release_gate_decision_id", "reason_hash", "actor", "occurred_at")}
+
+    def _publication_effective_type(
+        self, conn: Any, scope: TenantScope, eval_row: Any
+    ) -> str | None:
+        publication = self._load(eval_row["publication_ref"])
+        if not isinstance(publication, dict) or not publication.get("resourceId"):
+            return None
+        bound = conn.execute(
+            """SELECT publication_id FROM aip_publication_event
+               WHERE org_id=%s AND project_id=%s AND event_id=%s""",
+            (*scope.key, publication["resourceId"]),
+        ).fetchone()
+        if bound is None:
+            return None
+        latest = conn.execute(
+            """SELECT event_type FROM aip_publication_event
+               WHERE org_id=%s AND project_id=%s AND publication_id=%s
+               ORDER BY occurred_at DESC, event_id DESC LIMIT 1""",
+            (*scope.key, bound["publication_id"]),
+        ).fetchone()
+        return None if latest is None else latest["event_type"]
+
+    def diff_eval_contract(
+        self,
+        scope: TenantScope,
+        contract_id: str,
+        from_revision: int,
+        to_revision: int,
+    ) -> EvalContractDiff:
+        if from_revision == to_revision:
+            raise ProductionContractDependencyBlocked("EVAL_DIFF_SAME_REVISION")
+        with self._connect_factory(scope) as conn:
+            left = conn.execute(
+                """SELECT * FROM aip_eval_contract_revision
+                   WHERE org_id=%s AND project_id=%s AND contract_id=%s AND revision=%s""",
+                (*scope.key, contract_id, from_revision),
+            ).fetchone()
+            right = conn.execute(
+                """SELECT * FROM aip_eval_contract_revision
+                   WHERE org_id=%s AND project_id=%s AND contract_id=%s AND revision=%s""",
+                (*scope.key, contract_id, to_revision),
+            ).fetchone()
+            if left is None or right is None:
+                raise ProductionContractNotFound("eval contract revision not found")
+            changes: list[EvalContractDiffChange] = []
+            fields = (
+                ("suite_ref", "评测套件引用"),
+                ("publication_ref", "发布事件引用"),
+                ("release_gate_ref", "发布门决定引用"),
+                ("artifact_schema_ref", "产物 Schema"),
+                ("severity_thresholds", "严重级别阈值"),
+                ("gate_policy", "门禁策略"),
+                ("return_mapping", "退回映射"),
+                ("override_policy", "覆盖策略"),
+            )
+            for column, label in fields:
+                before = self._load(left[column])
+                after = self._load(right[column])
+                if before != after:
+                    changes.append(
+                        EvalContractDiffChange(
+                            field=column,
+                            label=label,
+                            before=before,
+                            after=after,
+                            impact="可能使已冻结 ImpactPreview/Approval 失效，需显式重编排",
+                        )
+                    )
+            if left["lifecycle"] != right["lifecycle"]:
+                changes.append(
+                    EvalContractDiffChange(
+                        field="lifecycle",
+                        label="生命周期",
+                        before=left["lifecycle"],
+                        after=right["lifecycle"],
+                        impact="生命周期变化会阻断未冻结依赖的启动门",
+                    )
+                )
+            return EvalContractDiff(
+                tenant=self._tenant(scope),
+                contract_id=contract_id,
+                from_revision=from_revision,
+                to_revision=to_revision,
+                from_content_hash=left["content_hash"],
+                to_content_hash=right["content_hash"],
+                changes=changes,
+                change_count=len(changes),
+                summary=(
+                    "无语义差异"
+                    if not changes
+                    else f"共 {len(changes)} 项语义变更，旧批准不可自动继承"
+                ),
+            )
 
     @staticmethod
     def _capability_identifier(ref: Any) -> str | None:

@@ -216,6 +216,26 @@ class EvalContractListResponse(AipContractModel):
     count: int = Field(ge=0)
 
 
+class EvalContractDiffChange(AipContractModel):
+    field: str
+    label: str
+    before: Any
+    after: Any
+    impact: str
+
+
+class EvalContractDiff(AipContractModel):
+    tenant: TenantContext
+    contract_id: str
+    from_revision: int = Field(ge=1)
+    to_revision: int = Field(ge=1)
+    from_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    to_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    changes: list[EvalContractDiffChange]
+    change_count: int = Field(ge=0)
+    summary: str
+
+
 class ReviseResponsibilityPlanRequest(CreateResponsibilityPlanRequest):
     expected_version: int = Field(ge=1)
 

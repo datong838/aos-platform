@@ -18,7 +18,7 @@ from aos_api.aip_production_contracts import (
     EvidenceBundleListResponse,
     EvidenceBundleRevision, ReviseBriefRequest, TaskBriefListResponse, TaskBriefRevision,
     CreateEvalContractRequest, ReviseEvalContractRequest, EvalContractRevision,
-    EvalContractListResponse, CreateResponsibilityPlanRequest,
+    EvalContractListResponse, EvalContractDiff, CreateResponsibilityPlanRequest,
     ReviseResponsibilityPlanRequest, ResponsibilityPlanRevision,
     ResponsibilityPlanListResponse,
     ArtifactRelation, ArtifactRelationListResponse, CompileStageTemplateRequest,
@@ -224,6 +224,22 @@ def list_eval_contracts(principal: Principal = Depends(require_principal), store
 def get_eval_contract(contract_id: str, revision: int | None = Query(default=None, ge=1), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
     try: return store.get_eval_contract(_scope(principal), contract_id, revision)
     except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/eval-contracts/{contract_id}/diff", response_model=EvalContractDiff)
+def diff_eval_contract(
+    contract_id: str,
+    from_revision: int = Query(alias="fromRevision", ge=1),
+    to_revision: int = Query(alias="toRevision", ge=1),
+    principal: Principal = Depends(require_principal),
+    store: AipProductionContractStore = Depends(get_store),
+):
+    try:
+        return store.diff_eval_contract(
+            _scope(principal), contract_id, from_revision, to_revision
+        )
+    except ProductionContractError as exc:
+        raise _map(exc) from exc
 
 
 @router.post("/eval-contracts/{contract_id}/revisions", response_model=EvalContractRevision, status_code=201)
