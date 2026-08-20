@@ -114,7 +114,7 @@ describe("AipAssistPage exact subject", () => {
     expect(collapse.tagName).toBe("BUTTON");
     expect(document.activeElement).toBe(collapse);
     expect(collapse.getAttribute("aria-expanded")).toBe("false");
-    const focus = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "Focus Mode")!;
+    const focus = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "专注模式")!;
     await act(async () => { focus.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true })); });
     expect(focus.getAttribute("aria-pressed")).toBe("true");
   });
