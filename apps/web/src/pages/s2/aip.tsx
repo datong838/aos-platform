@@ -626,7 +626,7 @@ export function ToolsPage() {
         }
         detail={
           <>
-            <div className="bp-quality-score">
+            <div className="bp-quality-score" data-testid="tools-quality-unscored">
               <div className="bp-quality-score-header">
                 <div className="bp-quality-score-title">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -635,41 +635,12 @@ export function ToolsPage() {
                   <span>质量评分</span>
                 </div>
                 <div className="bp-quality-score-value">
-                  <span className="bp-quality-score-num">82</span>
-                  <span className="bp-quality-score-max">/ 100</span>
-                </div>
-              </div>
-              <div className="bp-quality-score-grid">
-                <div className="bp-quality-score-item">
-                  <div className="bp-quality-score-item-label">结构分</div>
-                  <div className="bp-quality-score-item-val bp-quality-score-item-ok">88</div>
-                  <div className="bp-quality-score-bar"><div style={{ width: "88%", background: "#10B981" }} /></div>
-                  <div className="bp-quality-score-item-foot">Schema 完整性</div>
-                </div>
-                <div className="bp-quality-score-item">
-                  <div className="bp-quality-score-item-label">文档分</div>
-                  <div className="bp-quality-score-item-val bp-quality-score-item-warn">75</div>
-                  <div className="bp-quality-score-bar"><div style={{ width: "75%", background: "#F59E0B" }} /></div>
-                  <div className="bp-quality-score-item-foot">描述 + 示例</div>
-                </div>
-                <div className="bp-quality-score-item">
-                  <div className="bp-quality-score-item-label">测试分</div>
-                  <div className="bp-quality-score-item-val bp-quality-score-item-info">83</div>
-                  <div className="bp-quality-score-bar"><div style={{ width: "83%", background: "#3B82F6" }} /></div>
-                  <div className="bp-quality-score-item-foot">12/15 用例通过</div>
+                  <span className="bp-quality-score-num" style={{ fontSize: "1rem" }}>未评分</span>
                 </div>
               </div>
               <div className="bp-quality-score-tip">
-                <strong>改进建议：</strong>补充 2 个边界测试用例（空输入 + 超长文本），文档分可提升至 85+。
-              </div>
-              <div className="bp-quality-score-history">
-                <span>最近评分：</span>
-                <span>v3 → 78</span>
-                <span>→</span>
-                <span>v4 → 80</span>
-                <span>→</span>
-                <span className="bp-quality-score-current">v5 → 82</span>
-                <span className="bp-quality-score-date">2026-07-25</span>
+                无 EvalSuite / 用例权威前不显示结构·文档·测试假分。请到{" "}
+                <Link to="/aip/evals">Evals</Link> 绑定套件后再投影分数。
               </div>
             </div>
             {renderDetail()}
