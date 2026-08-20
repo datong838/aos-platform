@@ -52,10 +52,30 @@ export function ModelRuntimePage() {
     [data],
   );
 
-  return <PageChrome title="模型运行就绪" lede="AIP-7 exact 供应商、模型、路由、策略、评测、价格与容量权威；控制面就绪不等于外部供应商已可调用">
+  return <PageChrome title="模型运行就绪" lede="Exact 供应商、模型、路由、策略、评测、价格与容量权威快照；控制面就绪不等于外部供应商已可调用">
     {error ? <div role="alert" className="notice bad">模型运行权威读取失败：{error}</div> : null}
     {loading ? <div role="status" className="card">正在读取当前组织的 exact 模型运行权威…</div> : null}
     {!loading && data ? <>
+      <div
+        data-testid="model-runtime-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 14 }}
+      >
+        {[
+          { label: "控制面", value: modelRuntimeControlLabel(state) },
+          { label: "供应商", value: String(data.providers.length) },
+          { label: "模型", value: String(data.models.length) },
+          { label: "路由", value: String(data.routes.length) },
+          { label: "路由就绪", value: data.resolutions.length ? `${readyResolutionCount}/${data.resolutions.length}` : "0/0" },
+          { label: "未就绪", value: String(blockedResolutions.length) },
+          { label: "容量池", value: String(data.capacityPools.length) },
+          { label: "评测门", value: String(data.evalGates.length) },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
       <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
         <strong>控制面：{modelRuntimeControlLabel(state)}</strong>
         <span>组织 {data.tenant.orgId} · 工作区 {data.tenant.projectId}</span>
