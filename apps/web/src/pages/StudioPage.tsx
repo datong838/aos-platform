@@ -404,7 +404,25 @@ export function StudioPage() {
   }
 
   return (
-    <PageChrome title="对话机器人 Studio" lede="配置壳：提示词 · 工具 · 本体/Wiki 上下文 · L4 须 Evals 绿 + Draft 默认">
+    <PageChrome title="对话机器人 Studio" lede="配置壳：提示词 · 工具 · 本体/Wiki 上下文；L4 须 Evals 绿且 Draft 默认，不伪造发布通过。">
+      <div
+        data-testid="studio-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
+      >
+        {[
+          { label: "智能体数", value: String(agents.length) },
+          { label: "当前", value: activeAgent?.name ? activeAgent.name.slice(0, 10) : "未选" },
+          { label: "状态", value: activeAgent?.status || "—" },
+          { label: "工具开", value: String(enabledTools.length) },
+          { label: "页签", value: tab },
+          { label: "加载", value: loadState === "live" ? "Live" : loadState === "error" ? "Error" : "…" },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
       {resourceError && loadState === "live" && <p role="alert">{resourceError}</p>}
       <div
         style={{
