@@ -24,6 +24,7 @@ from aos_api.aip_production_contracts import (
     ArtifactRelation, ArtifactRelationListResponse, CompileStageTemplateRequest,
     CreateArtifactRelationRequest, CreateReviewIssueRequest,
     CreateStageTemplateRequest, ResolveReviewIssueRequest, ReturnDecision,
+    ReturnDecisionListResponse,
     ReturnReviewIssueRequest, ReviseStageTemplateRequest, ReviewIssue,
     ReviewIssueListResponse, StageCompilationResult, StageTemplateListResponse,
     StageTemplateRevision,
@@ -360,3 +361,27 @@ def resolve_review_issue(issue_id: str, body: ResolveReviewIssueRequest, idempot
 def return_review_issue(issue_id: str, body: ReturnReviewIssueRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
     try: return store.return_review_issue(_scope(principal), principal.subject, issue_id, _key(idempotency_key), body)
     except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/return-decisions", response_model=ReturnDecisionListResponse)
+def list_return_decisions(
+    issue_id: str | None = Query(default=None, alias="issueId"),
+    principal: Principal = Depends(require_principal),
+    store: AipProductionContractStore = Depends(get_store),
+):
+    try:
+        return store.list_return_decisions(_scope(principal), issue_id=issue_id)
+    except ProductionContractError as exc:
+        raise _map(exc) from exc
+
+
+@router.get("/return-decisions/{decision_id}", response_model=ReturnDecision)
+def get_return_decision(
+    decision_id: str,
+    principal: Principal = Depends(require_principal),
+    store: AipProductionContractStore = Depends(get_store),
+):
+    try:
+        return store.get_return_decision(_scope(principal), decision_id)
+    except ProductionContractError as exc:
+        raise _map(exc) from exc

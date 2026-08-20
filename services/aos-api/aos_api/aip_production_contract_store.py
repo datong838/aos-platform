@@ -26,7 +26,8 @@ from aos_api.aip_production_contracts import (
     ProductionContextRevision, ResolveEvidenceDisclosureRequest,
     RevokeEvidenceBundleRequest, ReviseImpactPreviewRequest,
     ResolveReviewIssueRequest, ResponsibilityPlanListResponse,
-    ResponsibilityPlanRevision, ReturnDecision, ReturnReviewIssueRequest,
+    ResponsibilityPlanRevision, ReturnDecision, ReturnDecisionListResponse,
+    ReturnReviewIssueRequest,
     ReviseBriefRequest, ReviseEvalContractRequest,
     ReviseResponsibilityPlanRequest, ReviseStageTemplateRequest, ReviewIssue,
     ReviewIssueListResponse, ReviewIssueStatus, StageCompilationResult,
@@ -1379,20 +1380,6 @@ class AipProductionContractStore:
                 raise ProductionContractDependencyBlocked("RETURN_SOURCE_ATTEMPT_NOT_TERMINAL")
             attempt = int(latest["attempt"]) + 1
             step_run_id = f"step-run-{uuid.uuid4().hex[:20]}"
-            conn.execute(
-                """INSERT INTO aip_step_run
-                (org_id,project_id,step_run_id,run_id,step_key,attempt,status,input_refs,
-                 created_at,updated_at)
-                VALUES(%s,%s,%s,%s,%s,%s,'queued',%s::jsonb,NOW(),NOW())""",
-                (
-                    *scope.key,
-                    step_run_id,
-                    body.run_id,
-                    body.target_stage,
-                    attempt,
-                    self._json(self._load(latest["input_refs"])),
-                ),
-            )
             decision_id = f"return-decision-{uuid.uuid4().hex[:20]}"
             decision_hash = canonical_hash(
                 {
@@ -1406,6 +1393,44 @@ class AipProductionContractStore:
                     "reason": body.reason,
                     "actor": actor,
                 }
+            )
+            # W-L14: repair attempt carries exact Issue/Decision/Artifact refs;
+            # never mutate historical Artifact rows or prior attempt input_refs.
+            prior_inputs = self._load(latest["input_refs"]) or []
+            if not isinstance(prior_inputs, list):
+                prior_inputs = []
+            repair_inputs = [
+                *prior_inputs,
+                {
+                    "resourceType": "ReviewIssue",
+                    "resourceId": issue_id,
+                    "version": body.expected_version,
+                },
+                {
+                    "resourceType": "ReturnDecision",
+                    "resourceId": decision_id,
+                    "revision": 1,
+                    "contentHash": decision_hash,
+                },
+                {
+                    "resourceType": "Artifact",
+                    "resourceId": issue.artifact_ref.artifact_id,
+                    "contentHash": issue.artifact_ref.content_hash,
+                },
+            ]
+            conn.execute(
+                """INSERT INTO aip_step_run
+                (org_id,project_id,step_run_id,run_id,step_key,attempt,status,input_refs,
+                 created_at,updated_at)
+                VALUES(%s,%s,%s,%s,%s,%s,'queued',%s::jsonb,NOW(),NOW())""",
+                (
+                    *scope.key,
+                    step_run_id,
+                    body.run_id,
+                    body.target_stage,
+                    attempt,
+                    self._json(repair_inputs),
+                ),
             )
             decision = conn.execute(
                 """INSERT INTO aip_return_decision
@@ -1480,6 +1505,32 @@ class AipProductionContractStore:
             return read(conn)
         with self._connect_factory(scope) as connection:
             return read(connection)
+
+    def get_return_decision(self, scope: TenantScope, decision_id: str) -> ReturnDecision:
+        return self._return_decision_by_id(scope, decision_id)
+
+    def list_return_decisions(
+        self, scope: TenantScope, *, issue_id: str | None = None
+    ) -> ReturnDecisionListResponse:
+        with self._connect_factory(scope) as conn:
+            if issue_id:
+                rows = conn.execute(
+                    """SELECT * FROM aip_return_decision
+                       WHERE org_id=%s AND project_id=%s AND issue_id=%s
+                       ORDER BY created_at DESC, decision_id DESC""",
+                    (*scope.key, issue_id),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    """SELECT * FROM aip_return_decision
+                       WHERE org_id=%s AND project_id=%s
+                       ORDER BY created_at DESC, decision_id DESC""",
+                    scope.key,
+                ).fetchall()
+            items = [self._return_decision(scope, row) for row in rows]
+            return ReturnDecisionListResponse(
+                tenant=self._tenant(scope), items=items, count=len(items)
+            )
 
     def create_brief(self, scope: TenantScope, actor: str, key: str, body: CreateBriefRequest) -> TaskBriefRevision:
         payload = body.model_dump(mode="json", by_alias=True)

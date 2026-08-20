@@ -473,6 +473,12 @@ class ReturnDecision(AipContractModel):
     created_at: datetime
 
 
+class ReturnDecisionListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[ReturnDecision]
+    count: int = Field(ge=0)
+
+
 class MutableAuthorityRef(AipContractModel):
     resource_type: str = Field(min_length=1, max_length=80)
     resource_id: str = Field(min_length=1, max_length=200)

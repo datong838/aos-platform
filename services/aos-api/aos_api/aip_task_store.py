@@ -971,10 +971,18 @@ class AipTaskStore:
                 (scope.org_id, scope.project_id, run["plan_revision_id"]),
             ).fetchone()
             required = {str(step["stepKey"]) for step in plan["steps"]}
+            # W-L14 / W4-04: only the latest attempt per stepKey counts as current.
+            # A historical succeeded attempt must not hide a newer queued/running rework.
             succeeded = {
                 str(row["step_key"])
                 for row in conn.execute(
-                    "SELECT step_key FROM aip_step_run WHERE org_id=%s AND project_id=%s AND run_id=%s AND status='succeeded'",
+                    """SELECT step_key FROM (
+                         SELECT DISTINCT ON (step_key) step_key, status
+                         FROM aip_step_run
+                         WHERE org_id=%s AND project_id=%s AND run_id=%s
+                         ORDER BY step_key, attempt DESC
+                       ) latest
+                       WHERE status='succeeded'""",
                     (scope.org_id, scope.project_id, run_id),
                 ).fetchall()
             }
