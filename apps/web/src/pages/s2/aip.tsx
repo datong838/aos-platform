@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { apiGet, apiPost, apiPut, apiDelete, S2Chrome, useJsonGet } from "./shared";
 import {
   BpBanner,
@@ -20,6 +20,11 @@ import {
   type LineageRootType,
   type EvalRunAuthority,
 } from "../../api/aipEvidence";
+import {
+  decodeToolsPanelOverlay,
+  encodeToolsPanelOverlay,
+  type ToolsPanelHitl,
+} from "./toolsPanelOverlay";
 
 const TOOL_CATS = [
   { id: "action", label: "写回动作", zh: "可 HITL 确认", defaultOn: true },
@@ -54,9 +59,10 @@ function toolSubtitle(kind: string): string {
   return "只读 / 可提案";
 }
 
-/** 80 / 81 · 对齐 aip-tools.html · 三栏 + 策略 radio + 边框导航钮 */
+/** 80 / 81 · 对齐 aip-tools.html · 三栏 + 策略 radio；W-T1 权威 = AgentInstance Overlay */
 export function ToolsPage() {
-  const { data, err, reload } = useJsonGet<{ items: { id: string; kind: string }[] }>(
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { data, err, reload } = useJsonGet<{ items: { id: string; kind: string; name?: string }[] }>(
     "/v1/aip/tools",
   );
   const agents = useJsonGet<{
@@ -68,16 +74,13 @@ export function ToolsPage() {
       overlay?: { displayName?: string };
     }>;
   }>("/v1/aip/agents");
-  const toolsCfg = useJsonGet<{
-    categories?: string[];
-    mode?: string;
-    hitl?: "auto" | "form" | "draft";
-  }>("/v1/aip/tools/config");
-  const [cats, setCats] = useState<Set<string>>(
-    () => new Set(TOOL_CATS.filter((c) => c.defaultOn).map((c) => c.id)),
+  const defaultCats = useMemo(
+    () => TOOL_CATS.filter((c) => c.defaultOn).map((c) => c.id),
+    [],
   );
+  const [cats, setCats] = useState<Set<string>>(() => new Set(defaultCats));
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [hitl, setHitl] = useState<"auto" | "form" | "draft">("form");
+  const [hitl, setHitl] = useState<ToolsPanelHitl>("form");
   const [invokeSummary, setInvokeSummary] = useState("");
   const [invokePayload, setInvokePayload] = useState<unknown>(null);
   const [localErr, setLocalErr] = useState<string | null>(null);
@@ -85,18 +88,71 @@ export function ToolsPage() {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
   const [saving, setSaving] = useState(false);
+  const [overlayLoading, setOverlayLoading] = useState(false);
+  const [activeInstanceId, setActiveInstanceId] = useState<string>("");
+
+  const agentItems = useMemo(() => {
+    return (agents.data?.items || [])
+      .map((item) => {
+        const id = String(item.instanceId || item.id || "").trim();
+        if (!id) return null;
+        return {
+          id,
+          label: item.overlay?.displayName || item.name || id,
+          status: item.status || "",
+        };
+      })
+      .filter((x): x is { id: string; label: string; status: string } => Boolean(x));
+  }, [agents.data]);
 
   useEffect(() => {
-    const cfg = toolsCfg.data;
-    if (!cfg) return;
-    if (Array.isArray(cfg.categories) && cfg.categories.length) {
-      setCats(new Set(cfg.categories));
+    if (!agentItems.length) {
+      setActiveInstanceId("");
+      return;
     }
-    if (cfg.mode) setMode(cfg.mode);
-    if (cfg.hitl === "auto" || cfg.hitl === "form" || cfg.hitl === "draft") {
-      setHitl(cfg.hitl);
-    }
-  }, [toolsCfg.data]);
+    const fromUrl = String(searchParams.get("instance") || "").trim();
+    const preferred =
+      (fromUrl && agentItems.find((a) => a.id === fromUrl)?.id) ||
+      agentItems.find((a) => a.id.includes("content_officer"))?.id ||
+      agentItems[0].id;
+    setActiveInstanceId((prev) => (prev && agentItems.some((a) => a.id === prev) ? prev : preferred));
+  }, [agentItems, searchParams]);
+
+  useEffect(() => {
+    if (!activeInstanceId) return;
+    let cancelled = false;
+    setOverlayLoading(true);
+    setLocalErr(null);
+    setSaveMsg("");
+    apiGet<{ agent_id?: string; items?: Array<{ id: string; name?: string; category?: string; enabled?: boolean }> }>(
+      `/v1/aip/agents/${encodeURIComponent(activeInstanceId)}/tools`,
+    )
+      .then((r) => {
+        if (cancelled) return;
+        if (r.agent_id && r.agent_id !== activeInstanceId) {
+          throw new Error("Overlay 响应实例错配");
+        }
+        const decoded = decodeToolsPanelOverlay(r.items as never, {
+          defaultCategories: defaultCats,
+        });
+        setCats(decoded.categories);
+        setMode(decoded.mode);
+        setHitl(decoded.hitl);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setLocalErr(`Overlay 加载失败：${String((e as Error).message || e)}`);
+        setCats(new Set(defaultCats));
+        setMode("native");
+        setHitl("form");
+      })
+      .finally(() => {
+        if (!cancelled) setOverlayLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeInstanceId, defaultCats]);
 
   const tools = useMemo(() => {
     return (data?.items || []).filter((t) => cats.has(toolCategory(t.kind)));
@@ -104,17 +160,15 @@ export function ToolsPage() {
 
   const selected = tools.find((t) => t.id === selectedId) || tools[0] || null;
   const selectedCat = selected ? toolCategory(selected.kind) : null;
-  const currentAgent = useMemo(() => {
-    const items = agents.data?.items || [];
-    if (!items.length) return null;
-    const preferred =
-      items.find((item) => {
-        const id = String(item.instanceId || item.id || "");
-        return id.includes("content_officer");
-      }) || items[0];
-    const label = preferred.overlay?.displayName || preferred.name || preferred.instanceId || preferred.id || "";
-    return label ? { label, status: preferred.status || "" } : null;
-  }, [agents.data]);
+  const currentAgent = agentItems.find((a) => a.id === activeInstanceId) || null;
+
+  function selectInstance(id: string) {
+    setActiveInstanceId(id);
+    const next = new URLSearchParams(searchParams);
+    if (id) next.set("instance", id);
+    else next.delete("instance");
+    setSearchParams(next, { replace: true });
+  }
 
   function toggleCat(id: string) {
     setCats((prev) => {
@@ -126,17 +180,36 @@ export function ToolsPage() {
   }
 
   async function saveToolsConfig() {
+    if (!activeInstanceId) {
+      setLocalErr("请先选择 AgentInstance；工具配置按 Overlay 分实例保存，不再写入全局 tools/config");
+      return;
+    }
     setSaving(true);
     setSaveMsg("");
     setLocalErr(null);
     try {
-      await apiPut("/v1/aip/tools/config", {
-        categories: Array.from(cats),
-        mode,
-        hitl,
-      });
-      setSaveMsg("工具配置已保存");
-      toolsCfg.reload();
+      const enabledTools = (data?.items || [])
+        .filter((t) => cats.has(toolCategory(t.kind)))
+        .map((t) => ({
+          id: t.id,
+          name: t.name || t.id,
+          category: toolCategory(t.kind),
+        }));
+      const items = encodeToolsPanelOverlay({ tools: enabledTools, mode, hitl });
+      const written = await apiPut<{ agent_id?: string; items?: unknown[] }>(
+        `/v1/aip/agents/${encodeURIComponent(activeInstanceId)}/tools`,
+        { items },
+      );
+      if (written.agent_id && written.agent_id !== activeInstanceId) {
+        throw new Error("Overlay 写回实例错配");
+      }
+      const reread = await apiGet<{ agent_id?: string; items?: unknown[] }>(
+        `/v1/aip/agents/${encodeURIComponent(activeInstanceId)}/tools`,
+      );
+      if (reread.agent_id && reread.agent_id !== activeInstanceId) {
+        throw new Error("Overlay 回读实例错配");
+      }
+      setSaveMsg(`已保存到 Overlay · ${activeInstanceId}`);
     } catch (e) {
       setLocalErr(String((e as Error).message || e));
     } finally {
@@ -327,7 +400,7 @@ export function ToolsPage() {
   return (
     <S2Chrome
       title="Agent 工具面板"
-      lede="配置当前智能体可用工具类型与细项；LLM 只请求，平台按用户权限代调。本页视觉密度不掩盖空工具债（功能见后续工具轨道）。"
+      lede="按 AgentInstance Overlay 配置本实例工具集（与 Studio 同一权威）；LLM 只请求，平台按权限代调。全局 tools/config 不再作为完成态。"
     >
       <div
         data-testid="tools-ops-stats"
@@ -347,7 +420,32 @@ export function ToolsPage() {
           </div>
         ))}
       </div>
+      <div data-testid="tools-overlay-authority">
+        <BpBanner tone="info">
+          配置权威：AgentInstance Overlay（CAS/revision）· 当前{" "}
+          {activeInstanceId || "未选择实例"}
+          {overlayLoading ? " · 加载中…" : ""}
+        </BpBanner>
+      </div>
       <BpToolbar>
+        <label className="muted" style={{ fontSize: "0.65rem", display: "inline-flex", alignItems: "center", gap: 8 }}>
+          AgentInstance
+          <select
+            className="bp-tool-select"
+            data-testid="tools-instance-select"
+            value={activeInstanceId}
+            onChange={(e) => selectInstance(e.target.value)}
+            aria-label="tools-instance"
+            disabled={!agentItems.length}
+          >
+            {!agentItems.length ? <option value="">无可用实例</option> : null}
+            {agentItems.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.label} · {a.id}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="muted" style={{ fontSize: "0.65rem", display: "inline-flex", alignItems: "center", gap: 8 }}>
           调用模式
           <select
@@ -376,7 +474,7 @@ export function ToolsPage() {
           Chatbot Studio →
         </Link>
       </BpToolbar>
-      {(err || localErr || toolsCfg.err) && <p className="error">{err || localErr || toolsCfg.err}</p>}
+      {(err || localErr || agents.err) && <p className="error">{err || localErr || agents.err}</p>}
 
       <div className="bp-agent-selector">
         <Link to="/aip/studio" className="bp-agent-selector-back">
@@ -572,14 +670,15 @@ export function ToolsPage() {
         <button
           type="button"
           className="btn-nav-accent"
-          disabled={saving}
+          data-testid="tools-save-overlay"
+          disabled={saving || !activeInstanceId || overlayLoading}
           onClick={() => void saveToolsConfig()}
         >
-          {saving ? "保存中…" : "保存智能体配置"}
+          {saving ? "保存中…" : "保存到本实例 Overlay"}
         </button>
       </div>
       {saveMsg && (
-        <p className="bp-prop-ok" style={{ fontSize: "0.7rem", marginTop: 6 }}>
+        <p className="bp-prop-ok" data-testid="tools-save-msg" style={{ fontSize: "0.7rem", marginTop: 6 }}>
           {saveMsg}
         </p>
       )}

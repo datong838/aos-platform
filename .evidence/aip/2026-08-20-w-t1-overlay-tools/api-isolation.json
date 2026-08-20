@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "a": "ecommerce.content_officer.default",
+  "b": "ecommerce.campaign_planner.default",
+  "ids_a": [
+    "panel.cfg.hitl",
+    "panel.cfg.mode",
+    "t1.a.only"
+  ],
+  "ids_b": [
+    "panel.cfg.hitl",
+    "panel.cfg.mode",
+    "t1.b.only"
+  ]
+}
