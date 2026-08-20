@@ -3233,9 +3233,27 @@ export function DecisionLineagePage() {
 
   return (
     <S2Chrome
-      title="Decision Lineage"
-      lede="从服务端权威事件还原 TaskRun / Action / Eval / Publication / ResearchJob 因果链。"
+      title="决策谱系"
+      lede="从服务端权威事件还原 TaskRun / Action / Eval / Publication / ResearchJob 因果链；无 ID 时保持空壳，不伪造链路。"
     >
+      <div
+        data-testid="lineage-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, margin: "0 0 12px" }}
+      >
+        {[
+          { label: "Root类型", value: rootType },
+          { label: "加载态", value: loadState === "loaded" ? "已载" : loadState === "loading" ? "读取中" : loadState === "error" ? "失败" : "空闲" },
+          { label: "事件数", value: String(events.length) },
+          { label: "谱系ID", value: lineageId ? lineageId.slice(0, 10) : "—" },
+          { label: "输入", value: rootId.trim() ? "已填" : "待填" },
+          { label: "错误", value: localErr ? "有" : "无" },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
       <BpToolbar>
         <label className="muted">
           Root 类型{" "}
