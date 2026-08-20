@@ -9,22 +9,29 @@ const labels = [
   ["routes", "模型路由"],
 ] as const;
 
-export function AipOperationalProjectionStrip() {
+export interface AipOperationalProjectionStripProps {
+  onProjection?: (projection: AipOperationalProjection | null) => void;
+}
+
+export function AipOperationalProjectionStrip({ onProjection }: AipOperationalProjectionStripProps = {}) {
   const [data, setData] = useState<AipOperationalProjection | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState("");
   const load = useCallback(async () => {
     setState("loading");
     try {
-      setData(await aipOperationalProjection.read());
+      const next = await aipOperationalProjection.read();
+      setData(next);
+      onProjection?.(next);
       setError("");
       setState("ready");
     } catch (cause) {
       setData(null);
+      onProjection?.(null);
       setError(String((cause as Error).message || cause));
       setState("error");
     }
-  }, []);
+  }, [onProjection]);
   useEffect(() => {
     void load();
     const refresh = () => void load();

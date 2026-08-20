@@ -1,0 +1,40 @@
+{
+  "receiptType": "AIP_WAVE_DELIVERY",
+  "waveId": "R03",
+  "status": "GREEN_WITH_M1_DATA_TAIL_AND_BASELINE_WARNINGS",
+  "branch": "w1-aip",
+  "baseCommit": "09d28c1909dba5058d8dfb55ec759acdeff8c0d7",
+  "tenant": { "orgId": "org-org", "projectId": "dev-project" },
+  "negativeCanary": { "orgId": "dev-org", "projectId": "dev-project" },
+  "sideEffects": {
+    "migration": false,
+    "providerCall": false,
+    "secretPayloadRead": false,
+    "endpointDatabaseWrite": false
+  },
+  "verification": {
+    "targeted": "4 files, 47 passed; final Agent Import 25 passed",
+    "webCumulative": "198 files, 1987 passed",
+    "browserPages": 2,
+    "browserConsistency": "GREEN",
+    "diffCheck": "GREEN",
+    "viteBuild": "BLOCKED_BY_PREEXISTING_TYPESCRIPT_BASELINE"
+  },
+  "postHashes": {
+    "apps/web/src/components/aip/AipOperationalProjectionStrip.tsx": "be4a0e41a112339d05300d72b226c19ba3e7c6f22095d77795d19365ea4dc6d8",
+    "apps/web/src/components/aip/AipOperationalProjectionStrip.test.tsx": "a80f0db54b831f354072f69142f0f3fc2a9c0705221f8fff960d7d951db47245",
+    "apps/web/src/pages/StudioPage.tsx": "718d2251a822d6f5aa1de8ae4e991cbde9ecd3332d63847b626d0d7f87278d97",
+    "apps/web/src/pages/StudioPage.test.ts": "6728d6966a21943bcf96b1da86de316b85e1ff62d3fb7c1e0563c6253e901000",
+    "apps/web/src/pages/s2/AgentImportPage.tsx": "50d7e3a554fb3fc5fbc312e2d64ffe636d9ec453022ce556995d8ed3c9247d78",
+    "apps/web/src/pages/s2/AgentImportPage.test.ts": "c6365836622b5e2024079dededaa2fd4e52b43799a11a93761cd6b34a6bdda7f",
+    "apps/web/src/pages/W3BPageInteraction.test.tsx": "87ca0203b8980df700f6fd50a9e9e75bf706c65c4415b0b981b4f55e7cccd3a2"
+  },
+  "deferred": [
+    "Relocate canonical W-J3 sample ActionProposal only during m1 serialized integration with the unique real-data lease"
+  ],
+  "baselineWarnings": [
+    "ProductionContractsPage.tsx is missing productionContextRef",
+    "W1InteractionHonesty.test.tsx contains a stale listObjectTypes mock shape"
+  ],
+  "evidencePath": ".evidence/aip/2026-08-21-r03-positive-tenant-sample-cleanup"
+}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { aipAgentControl } from "../api/aipAgentControl";
+import type { AipOperationalProjection } from "../api/aipOperationalProjection";
 import { apiGet, apiPost, apiPut } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
 import { AipOperationalProjectionStrip } from "../components/aip/AipOperationalProjectionStrip";
@@ -136,6 +137,31 @@ const STUDIO_TABS = [
   { id: "publish", label: "发布" },
 ];
 
+export const STUDIO_DEFAULT_QUERY = "";
+export const STUDIO_UNASSESSED_COPY =
+  "须 exact EvalRun 达到阈值且 Draft 审批通过后方可申请 L4 上线。当前 Agent 未在本页绑定 exact EvalRun，状态为“未评测”；本页不推测分数。";
+
+export type StudioModelRouteGate = { ready: boolean; label: string; reason: string };
+
+export function studioModelRouteGate(
+  defaultModel: string,
+  projection: AipOperationalProjection | null,
+): StudioModelRouteGate {
+  const modelId = defaultModel.trim();
+  const isMock = /(^|[-_])(mock|fallback)([-_]|$)/i.test(modelId) || /^mock/i.test(modelId);
+  if (!projection) {
+    return { ready: false, label: "未就绪（等待 canonical 运行投影）", reason: "真实模型路由状态尚未可用" };
+  }
+  if (!modelId || modelId === "—" || isMock || projection.routes.runnable < 1) {
+    return {
+      ready: false,
+      label: `未就绪（${projection.routes.runnable}/${projection.routes.definition} 可派发）`,
+      reason: "真实模型路由未就绪，禁止回落 Mock 冒充试运行",
+    };
+  }
+  return { ready: true, label: modelId, reason: "" };
+}
+
 
 function statusBadge(status: AgentItem["status"]) {
   if (status === "running") return { label: "运行中", bg: "var(--aos-green-bg)", color: "var(--aos-green-700)" };
@@ -154,8 +180,9 @@ export function StudioPage() {
   const [loadState, setLoadState] = useState<"loading" | "live" | "error">("loading");
   const [resourceError, setResourceError] = useState<string | null>(null);
   const [defaultModel, setDefaultModel] = useState("—");
+  const [operationalProjection, setOperationalProjection] = useState<AipOperationalProjection | null>(null);
   const [lastRoute, setLastRoute] = useState<string | null>(null);
-  const [query, setQuery] = useState("ORD-8821 超时了，怎么派？");
+  const [query, setQuery] = useState(STUDIO_DEFAULT_QUERY);
   const [answer, setAnswer] = useState("");
   const [toolCalls, setToolCalls] = useState<unknown[]>([]);
   const [err, setErr] = useState<string | null>(null);
@@ -180,6 +207,10 @@ export function StudioPage() {
   };
   const selectedTools = enabledTools;
   const selectedToolItems = useMemo(() => toolCatalog.filter((tool) => enabledTools.includes(tool.id)), [enabledTools, toolCatalog]);
+  const modelRouteGate = useMemo(
+    () => studioModelRouteGate(defaultModel, operationalProjection),
+    [defaultModel, operationalProjection],
+  );
 
   async function refreshAgents() {
     const response = await apiGet<{ items?: ApiAgent[] }>("/v1/aip/agents");
@@ -405,6 +436,14 @@ export function StudioPage() {
     setAnswer("");
     setToolCalls([]);
     setLastRoute(null);
+    if (!query.trim()) {
+      setErr("请输入真实测试问题");
+      return;
+    }
+    if (!modelRouteGate.ready) {
+      setErr(modelRouteGate.reason);
+      return;
+    }
     try {
       const res = await apiPost<{
         answer: string;
@@ -427,7 +466,7 @@ export function StudioPage() {
 
   return (
     <PageChrome title="对话机器人 Studio" lede="配置壳：提示词 · 工具 · 本体/Wiki 上下文；L4 须 Evals 绿且 Draft 默认，不伪造发布通过。">
-      <AipOperationalProjectionStrip />
+      <AipOperationalProjectionStrip onProjection={setOperationalProjection} />
       <div
         data-testid="studio-ops-stats"
         style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
@@ -789,7 +828,7 @@ export function StudioPage() {
                       fontSize: 10,
                     }}
                   >
-                    模型路由 → {defaultModel}
+                    模型路由 → {modelRouteGate.label}
                   </span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
@@ -1062,6 +1101,8 @@ export function StudioPage() {
                   />
                   <button
                     type="submit"
+                    disabled={!query.trim() || !modelRouteGate.ready}
+                    title={!modelRouteGate.ready ? modelRouteGate.reason : undefined}
                     style={{
                       padding: "8px 16px",
                       borderRadius: 2,
@@ -1070,7 +1111,8 @@ export function StudioPage() {
                       border: "none",
                       fontSize: 13,
                       fontWeight: 500,
-                      cursor: "pointer",
+                      cursor: !query.trim() || !modelRouteGate.ready ? "not-allowed" : "pointer",
+                      opacity: !query.trim() || !modelRouteGate.ready ? 0.55 : 1,
                     }}
                   >
                     发送
@@ -1147,7 +1189,7 @@ export function StudioPage() {
                   L4 门控状态
                 </h2>
                 <p style={{ fontSize: 12, color: "var(--aos-amber-700)", margin: "0 0 12px", lineHeight: 1.6 }}>
-                  须 Eval ≥ 92% 且 Draft 审批通过后方可申请 L4 上线。87% 为产品示意数据，本页只读，不代表当前 Agent 的真实评测结果。
+                  {STUDIO_UNASSESSED_COPY}
                 </p>
                 <label
                   style={{

@@ -19,16 +19,20 @@ describe("AipOperationalProjectionStrip", () => {
   });
   it("显示同一快照的五类四态数", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => payload }));
+    const onProjection = vi.fn();
     const host = document.createElement("div"); document.body.append(host); const root = createRoot(host);
-    await act(async () => root.render(<AipOperationalProjectionStrip />)); await act(async () => undefined);
+    await act(async () => root.render(<AipOperationalProjectionStrip onProjection={onProjection} />)); await act(async () => undefined);
     expect(host.textContent).toContain("数字同事"); expect(host.textContent).toContain("6/6 可派发"); expect(host.textContent).toContain("8/20 可派发");
+    expect(onProjection).toHaveBeenCalledWith(expect.objectContaining({ snapshotHash: H }));
     await act(async () => root.unmount());
   });
   it("读取失败显示不可用而非零数", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+    const onProjection = vi.fn();
     const host = document.createElement("div"); document.body.append(host); const root = createRoot(host);
-    await act(async () => root.render(<AipOperationalProjectionStrip />)); await act(async () => undefined);
+    await act(async () => root.render(<AipOperationalProjectionStrip onProjection={onProjection} />)); await act(async () => undefined);
     expect(host.textContent).toContain("不可用"); expect(host.textContent).not.toContain("0/0");
+    expect(onProjection).toHaveBeenCalledWith(null);
     await act(async () => root.unmount());
   });
 });
