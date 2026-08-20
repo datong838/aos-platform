@@ -327,8 +327,26 @@ export function ToolsPage() {
   return (
     <S2Chrome
       title="Agent 工具面板"
-      lede="配置当前智能体可用工具类型与细项。LLM 只「请求」工具；平台以调用用户权限代调。写路径默认可提案。"
+      lede="配置当前智能体可用工具类型与细项；LLM 只请求，平台按用户权限代调。本页视觉密度不掩盖空工具债（功能见后续工具轨道）。"
     >
+      <div
+        data-testid="tools-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, margin: "0 0 12px" }}
+      >
+        {[
+          { label: "工具总数", value: String((data?.items || []).length) },
+          { label: "筛选命中", value: String(tools.length) },
+          { label: "分类开", value: String(cats.size) },
+          { label: "模式", value: mode },
+          { label: "HITL", value: hitl },
+          { label: "同事", value: currentAgent ? "已绑" : "未绑" },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
       <BpToolbar>
         <label className="muted" style={{ fontSize: "0.65rem", display: "inline-flex", alignItems: "center", gap: 8 }}>
           调用模式
