@@ -14,7 +14,8 @@ from aos_api.aip_production_start_service import AipProductionStartService
 from aos_api.aip_responsibility_template_authority import resolve_responsibility_template
 from aos_api.aip_stage_template_authority import resolve_stage_template_source
 from aos_api.aip_production_contracts import (
-    CreateBriefRequest, CreateEvidenceBundleRequest, EvidenceBundleListResponse,
+    CreateBriefRequest, CreateEvidenceBundleRequest, BuildEvidenceBundleRequest,
+    EvidenceBundleListResponse,
     EvidenceBundleRevision, ReviseBriefRequest, TaskBriefListResponse, TaskBriefRevision,
     CreateEvalContractRequest, ReviseEvalContractRequest, EvalContractRevision,
     EvalContractListResponse, CreateResponsibilityPlanRequest,
@@ -157,6 +158,13 @@ def freeze_brief(brief_id:str,body:FreezeBriefRequest,idempotency_key:str=Header
 @router.post("/evidence-bundles",response_model=EvidenceBundleRevision,status_code=status.HTTP_201_CREATED)
 def create_bundle(body:CreateEvidenceBundleRequest,idempotency_key:str=Header(alias="Idempotency-Key"),principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
     try:return store.create_evidence_bundle(_scope(principal),principal.subject,_key(idempotency_key),body)
+    except ProductionContractError as exc:raise _map(exc) from exc
+
+
+@router.post("/evidence-bundles/build",response_model=EvidenceBundleRevision,status_code=status.HTTP_201_CREATED)
+def build_bundle(body:BuildEvidenceBundleRequest,idempotency_key:str=Header(alias="Idempotency-Key"),principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
+    """W-L9: server-owned required-facts coverage Build Job."""
+    try:return store.build_evidence_bundle(_scope(principal),principal.subject,_key(idempotency_key),body)
     except ProductionContractError as exc:raise _map(exc) from exc
 
 

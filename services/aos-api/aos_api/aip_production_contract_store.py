@@ -12,20 +12,21 @@ from typing import Any
 from aos_api.aip_contracts import PlanStep, ResourceRef, TenantContext
 from aos_api.aip_production_contracts import (
     ArtifactRelation, ArtifactRelationListResponse, BriefLifecycle,
-    CompileStageTemplateRequest, ContractBlocker, ContractReadiness, Coverage,
-    CreateArtifactRelationRequest, CreateBriefRequest, CreateEvalContractRequest,
-    CreateEvidenceBundleRequest, CreateResponsibilityPlanRequest,
-    CreateReviewIssueRequest, CreateStageTemplateRequest, EvalContractListResponse,
-    EvalContractRevision, EvidenceBundleRevision, ExactArtifactRef,
-    ExactRevisionRef, ImpactPreviewListResponse, ImpactPreviewRevision,
+    BuildEvidenceBundleRequest, CompileStageTemplateRequest, ContractBlocker,
+    ContractReadiness, Coverage, CreateArtifactRelationRequest, CreateBriefRequest,
+    CreateEvalContractRequest, CreateEvidenceBundleRequest,
+    CreateResponsibilityPlanRequest, CreateReviewIssueRequest,
+    CreateStageTemplateRequest, EvalContractListResponse, EvalContractRevision,
+    EvidenceBundleListResponse, EvidenceBundleRevision, ExactArtifactRef,
+    ExactRevisionRef, Freshness, ImpactPreviewListResponse, ImpactPreviewRevision,
     CreateImpactPreviewRequest, ReviseImpactPreviewRequest,
     ResolveReviewIssueRequest, ResponsibilityPlanListResponse,
     ResponsibilityPlanRevision, ReturnDecision, ReturnReviewIssueRequest,
     ReviseBriefRequest, ReviseEvalContractRequest,
     ReviseResponsibilityPlanRequest, ReviseStageTemplateRequest, ReviewIssue,
     ReviewIssueListResponse, ReviewIssueStatus, StageCompilationResult,
-    StageDefinition, StageTemplateListResponse, StageTemplateRevision, TaskBriefRevision,
-    EvidenceBundleListResponse, TaskBriefListResponse,
+    StageDefinition, StageTemplateListResponse, StageTemplateRevision,
+    TaskBriefListResponse, TaskBriefRevision,
 )
 from aos_api.aip_task_models import CreatePlanRevisionRequest
 from aos_api.aip_task_store import (
@@ -1563,23 +1564,170 @@ class AipProductionContractStore:
             )
 
     def create_evidence_bundle(self, scope: TenantScope, actor: str, key: str, body: CreateEvidenceBundleRequest) -> EvidenceBundleRevision:
-        payload=body.model_dump(mode="json",by_alias=True); request_hash=canonical_hash(payload)
+        """W-L9: create is an alias of build; coverage is always server-owned."""
+        return self.build_evidence_bundle(scope, actor, key, BuildEvidenceBundleRequest.model_validate(body.model_dump()))
+
+    def build_evidence_bundle(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        body: BuildEvidenceBundleRequest,
+    ) -> EvidenceBundleRevision:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(payload)
         with self._connect_factory(scope) as conn:
-            replay=self._replay(conn,scope,"evidence_bundle.create",key,request_hash)
-            if replay: return self.get_evidence_bundle(scope,replay["resourceId"],int(replay["revision"]),conn=conn)
-            brief=self.get_brief(scope,body.brief_ref.resource_id,body.brief_ref.revision,conn=conn)
-            if brief.lifecycle != BriefLifecycle.FROZEN or brief.content_hash != body.brief_ref.content_hash:
-                raise ProductionContractDependencyBlocked("brief exact ref is not frozen/current")
-            for item in body.item_refs:
-                if item.resource_type != "Evidence": raise ProductionContractDependencyBlocked("W2-A bundles only accept Evidence refs")
-                row=conn.execute("SELECT content_hash FROM aip_evidence WHERE org_id=%s AND project_id=%s AND evidence_id=%s",(*scope.key,item.resource_id)).fetchone()
-                if not row or row["content_hash"] != item.content_hash: raise ProductionContractDependencyBlocked("evidence exact ref missing or drifted")
-            bundle_id=f"evidence-bundle-{uuid.uuid4().hex[:20]}"; content_hash=canonical_hash(payload)
-            row=conn.execute("""INSERT INTO aip_evidence_bundle_revision(org_id,project_id,bundle_id,revision,brief_ref,subject_refs,cutoff_at,item_refs,coverage,missing,conflicts,uncertainties,freshness,marking,license_summary,content_hash,lifecycle,created_by)
-                VALUES(%s,%s,%s,1,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s,'frozen',%s) RETURNING *""",
-                (*scope.key,bundle_id,self._json(payload["briefRef"]),self._json(payload["subjectRefs"]),body.cutoff_at,self._json(payload["itemRefs"]),body.coverage.value,self._json(body.missing),self._json(body.conflicts),self._json(body.uncertainties),body.freshness.value,self._json(body.marking),self._json(body.license_summary),content_hash,actor)).fetchone()
-            self._receipt(conn,scope,"evidence_bundle.create",key,request_hash,{"resourceType":"EvidenceBundleRevision","resourceId":bundle_id,"revision":1,"contentHash":content_hash},actor)
-            conn.commit(); return self._bundle(scope,row)
+            replay = self._replay(conn, scope, "evidence_bundle.build", key, request_hash)
+            if replay:
+                return self.get_evidence_bundle(
+                    scope, replay["resourceId"], int(replay["revision"]), conn=conn
+                )
+            # Legacy create receipt key also replays for same payload.
+            legacy = self._replay(conn, scope, "evidence_bundle.create", key, request_hash)
+            if legacy:
+                return self.get_evidence_bundle(
+                    scope, legacy["resourceId"], int(legacy["revision"]), conn=conn
+                )
+            brief = self.get_brief(
+                scope, body.brief_ref.resource_id, body.brief_ref.revision, conn=conn
+            )
+            if (
+                brief.lifecycle != BriefLifecycle.FROZEN
+                or brief.content_hash != body.brief_ref.content_hash
+            ):
+                raise ProductionContractDependencyBlocked(
+                    "brief exact ref is not frozen/current"
+                )
+            coverage, missing, conflicts, uncertainties, freshness = (
+                self._compute_evidence_bundle_coverage(conn, scope, body)
+            )
+            authority_payload = {
+                **payload,
+                "coverage": coverage.value,
+                "missing": missing,
+                "conflicts": conflicts,
+                "uncertainties": uncertainties,
+                "freshness": freshness.value,
+            }
+            bundle_id = f"evidence-bundle-{uuid.uuid4().hex[:20]}"
+            content_hash = canonical_hash(authority_payload)
+            row = conn.execute(
+                """INSERT INTO aip_evidence_bundle_revision(
+                   org_id,project_id,bundle_id,revision,brief_ref,subject_refs,cutoff_at,
+                   item_refs,coverage,missing,conflicts,uncertainties,freshness,marking,
+                   license_summary,content_hash,lifecycle,created_by)
+                   VALUES(%s,%s,%s,1,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s,%s::jsonb,
+                          %s::jsonb,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s,'frozen',%s)
+                   RETURNING *""",
+                (
+                    *scope.key,
+                    bundle_id,
+                    self._json(payload["briefRef"]),
+                    self._json(payload["subjectRefs"]),
+                    body.cutoff_at,
+                    self._json(payload["itemRefs"]),
+                    coverage.value,
+                    self._json(missing),
+                    self._json(conflicts),
+                    self._json(uncertainties),
+                    freshness.value,
+                    self._json(body.marking),
+                    self._json(body.license_summary),
+                    content_hash,
+                    actor,
+                ),
+            ).fetchone()
+            result = {
+                "resourceType": "EvidenceBundleRevision",
+                "resourceId": bundle_id,
+                "revision": 1,
+                "contentHash": content_hash,
+            }
+            self._receipt(
+                conn, scope, "evidence_bundle.build", key, request_hash, result, actor
+            )
+            self._receipt(
+                conn, scope, "evidence_bundle.create", key, request_hash, result, actor
+            )
+            conn.commit()
+            return self._bundle(scope, row)
+
+    def _compute_evidence_bundle_coverage(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        body: BuildEvidenceBundleRequest | CreateEvidenceBundleRequest,
+    ) -> tuple[Coverage, list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], Freshness]:
+        required = list(body.required_fact_ids)
+        provided: set[str] = set()
+        providers: dict[str, list[str]] = {}
+        stale = False
+        cutoff = body.cutoff_at
+        if cutoff.tzinfo is None:
+            cutoff = cutoff.replace(tzinfo=timezone.utc)
+        for item in body.item_refs:
+            if item.resource_type != "Evidence":
+                raise ProductionContractDependencyBlocked(
+                    "W2-A bundles only accept Evidence refs"
+                )
+            row = conn.execute(
+                """SELECT evidence_id,content_hash,payload,freshness_at FROM aip_evidence
+                   WHERE org_id=%s AND project_id=%s AND evidence_id=%s""",
+                (*scope.key, item.resource_id),
+            ).fetchone()
+            if not row or row["content_hash"] != item.content_hash:
+                raise ProductionContractDependencyBlocked(
+                    "evidence exact ref missing or drifted"
+                )
+            for fact_id in self._evidence_fact_ids(row["payload"]):
+                provided.add(fact_id)
+                providers.setdefault(fact_id, []).append(row["evidence_id"])
+            freshness_at = row["freshness_at"]
+            if freshness_at is not None:
+                if freshness_at.tzinfo is None:
+                    freshness_at = freshness_at.replace(tzinfo=timezone.utc)
+                if freshness_at < cutoff:
+                    stale = True
+        missing = [
+            {"factId": fact_id}
+            for fact_id in required
+            if fact_id not in provided
+        ]
+        conflicts = [
+            {
+                "factId": fact_id,
+                "evidenceIds": evidence_ids,
+                "code": "FACT_MULTI_SOURCE",
+            }
+            for fact_id, evidence_ids in sorted(providers.items())
+            if len(evidence_ids) > 1 and fact_id in required
+        ]
+        uncertainties: list[dict[str, Any]] = []
+        covered = len(required) - len(missing)
+        if missing and covered == 0:
+            coverage = Coverage.BLOCKED
+        elif missing:
+            coverage = Coverage.PARTIAL
+        else:
+            coverage = Coverage.COMPLETE
+        freshness = Freshness.STALE if stale else Freshness.FRESH
+        if coverage is Coverage.BLOCKED:
+            freshness = Freshness.BLOCKED
+        return coverage, missing, conflicts, uncertainties, freshness
+
+    @staticmethod
+    def _evidence_fact_ids(payload: Any) -> list[str]:
+        value = json.loads(payload) if isinstance(payload, str) else payload
+        if not isinstance(value, dict):
+            return []
+        raw = value.get("factIds")
+        if raw is None:
+            raw = value.get("facts")
+        if isinstance(raw, dict):
+            return [str(key).strip() for key in raw.keys() if str(key).strip()]
+        if isinstance(raw, list):
+            return [str(item).strip() for item in raw if str(item).strip()]
+        return []
 
     def get_evidence_bundle(self, scope: TenantScope, bundle_id: str, revision: int=1, *, conn: Any|None=None) -> EvidenceBundleRevision:
         def read(c:Any):

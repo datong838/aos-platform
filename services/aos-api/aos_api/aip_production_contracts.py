@@ -676,24 +676,29 @@ class TaskBriefListResponse(AipContractModel):
 
 
 class CreateEvidenceBundleRequest(AipContractModel):
+    """Legacy create surface — W-L9: coverage fields forbidden; use BuildEvidenceBundleRequest."""
+
     brief_ref: ExactRevisionRef
     subject_refs: list[ResourceRef] = Field(default_factory=list)
     cutoff_at: datetime
     item_refs: list[ExactRevisionRef] = Field(min_length=1)
-    coverage: Coverage
-    missing: list[dict[str, Any]] = Field(default_factory=list)
-    conflicts: list[dict[str, Any]] = Field(default_factory=list)
-    uncertainties: list[dict[str, Any]] = Field(default_factory=list)
-    freshness: Freshness
+    required_fact_ids: list[str] = Field(min_length=1)
     marking: list[str] = Field(default_factory=list)
     license_summary: dict[str, Any] = Field(default_factory=dict)
 
-    @field_validator("marking")
+    @field_validator("required_fact_ids", "marking")
     @classmethod
-    def _marking_unique(cls, values: list[str]) -> list[str]:
-        if len(values) != len(set(values)) or any(not value.strip() for value in values):
-            raise ValueError("marking must be unique and non-blank")
-        return values
+    def _nonblank_unique(cls, values: list[str]) -> list[str]:
+        cleaned = [value.strip() for value in values]
+        if any(not value for value in cleaned):
+            raise ValueError("values must be non-blank")
+        if len(cleaned) != len(set(cleaned)):
+            raise ValueError("values must be unique")
+        return cleaned
+
+
+class BuildEvidenceBundleRequest(CreateEvidenceBundleRequest):
+    """W-L9 canonical EvidenceBundle Build Job input (server-owned coverage)."""
 
 
 class EvidenceBundleRevision(AipContractModel):
