@@ -1,0 +1,145 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "taskId": "workshop-w2-post-b5-next-task-gate-20260820",
+  "recordedAt": "2026-08-20T14:13:24+08:00",
+  "authorityRevision": "AOS-000146",
+  "branch": "w2-workshop",
+  "baseCommit": "603d95cdc3c91aa76c19aa47849a9b4d8cc257a4",
+  "scope": "post-B5 next-task dependency gate revalidation and safe-blocked closure",
+  "outcome": "SAFE_BLOCKED_M1_CAS_AND_W2_00_OPERATIONAL_GATES",
+  "codeChangeAuthorized": false,
+  "codeChanged": false,
+  "browserAcceptanceApplicable": false,
+  "browserAcceptanceReason": "No page, route, style, data binding, or interaction code changed in this wave.",
+  "rules": [
+    "Operate only w2-workshop and do not read or overwrite uncommitted w1-aip content",
+    "Treat authority and Delivery Receipts as facts; fingerprint or Lease change is not dependency GREEN",
+    "Do not hand-edit authority.json, 01/06, or Prime projections",
+    "Do not bypass tenant, security, external-side-effect, migration, review, or release gates",
+    "Use visual draft plus in-app Browser acceptance whenever a page implementation changes"
+  ],
+  "gateSnapshot": {
+    "memoryStatus": "GREEN_WITH_WARNINGS",
+    "memoryValidate": "GREEN",
+    "memoryGateCanChangeState": true,
+    "projectRevision": "AOS-000146",
+    "deliveryStatus": "W1_AIP_NEARFIELD_SEALED_AWAITING_W2_BROWSER",
+    "nextGate": "W2_BROWSER_ACCEPT_AND_EIGHT_MENU_GATES",
+    "authorityW2SourceCommit": "c827928fe3e2200e9991fbfa457191b73d3667cc",
+    "currentW2Commit": "603d95cdc3c91aa76c19aa47849a9b4d8cc257a4",
+    "worktreeBeforeEvidence": "CLEAN",
+    "dWavesProgress": "21/96",
+    "w2Progress": "0/11"
+  },
+  "previousDelivery": {
+    "taskId": "workshop-w2-browser-eight-menu-gates-20260820",
+    "receiptSha256": "ccab0d893d43f156dee1c78930569eacc73c67d6214f16e29be7a4f42ef78e12",
+    "result": "W2_B4_BROWSER_GREEN_B5_EIGHT_MENU_DIRECTORY_GREEN_W2_09_W2_10_BLOCKED",
+    "consumedByAuthority": false,
+    "reason": "Authority still projects W2 source c827928 and still routes to the W2 browser/eight-menu gate."
+  },
+  "activeLeaseAudit": [
+    {
+      "taskId": "workshop-w2-browser-eight-menu-gates-20260820",
+      "owner": "codex-w2-workshop",
+      "status": "ACTIVE_UNTIL_EXPIRY",
+      "effect": "Its code scope is not reused by this evidence-only task."
+    },
+    {
+      "taskId": "workshop-w2-post-b5-next-task-gate-20260820",
+      "owner": "codex-w2-workshop",
+      "status": "ACTIVE",
+      "leaseExpiresAt": "2026-08-20T08:09:52+00:00",
+      "scope": [
+        "ADR 111",
+        "this evidence file"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "id": "B5_RECEIPT_NOT_CAS_CONSUMED",
+      "blocks": ["global B4/B5 closure projection", "next authoritative W2 baseline"],
+      "detail": "m1 has not consumed the 603d95c B4/B5 Delivery Receipt through serialized CAS.",
+      "releaseCondition": "m1 verifies ADR 110, evidence, Delivery Receipt and commit 603d95c, advances authority with CAS, runs deterministic sync, and reads Prime back."
+    },
+    {
+      "id": "W2_00_SOURCE_READINESS_OWNER_MISSING",
+      "blocks": ["W2-00B", "W2-01 through W2-08"],
+      "detail": "No canonical SourceReadinessEnvelope owner/strict reader API has been delivered to Workshop.",
+      "releaseCondition": "Data/Adapter delivers the exact canonical owner, strict reader API, contract tests, and ownership handoff."
+    },
+    {
+      "id": "W2_00_SAME_CUTOFF_EVIDENCEPACK_MISSING",
+      "blocks": ["W2-00B", "runtime aggregation"],
+      "detail": "No same-version, same-cutoff 12-source freshness/quality/reconciliation/blocker EvidencePack is available.",
+      "releaseCondition": "P01-P12 are fresh succeeded at one cutoff with quality, conservation, reconciliation, and blocker evidence."
+    },
+    {
+      "id": "DEP_ADP_QUERY_OPERATIONAL_HANDOFF_MISSING",
+      "blocks": ["W2-00", "all dependent runtime waves"],
+      "detail": "Code/control presence does not establish Workshop operational query readiness.",
+      "releaseCondition": "A formal R2 real-start and DEP-ADP(query) Delivery Receipt proves real read, fail-closed behavior, and tenant isolation at the same cutoff."
+    },
+    {
+      "id": "W2_01_W2_08_UPSTREAMS_NOT_GREEN",
+      "blocks": ["eight business read models", "complete target visual pages"],
+      "detail": "Canonical authorities, APIs, Stores, SDKs and positive data paths are incomplete; W2-02 only has bounded subwaves.",
+      "releaseCondition": "After W2-00 closes, each module seals an authority-to-page read-only wave with tests and browser evidence."
+    },
+    {
+      "id": "W2_09_SHARED_CONTEXT_UPSTREAMS_NOT_GREEN",
+      "blocks": ["shared ref", "timeline", "cross-module restoration"],
+      "detail": "W2-01 through W2-08 are not runtime GREEN.",
+      "releaseCondition": "W2-01 through W2-08 are GREEN in one release, then W2-09 implements opaque tenant-scoped context, exact refs, canonical timeline, and resolved navigation."
+    },
+    {
+      "id": "W2_10_SIX_AXIS_GATE_NOT_GREEN",
+      "blocks": ["W2-10", "full eight-page completion claim"],
+      "detail": "The same-release data, runtime, responsive browser, state, accessibility, network/console, authority, and security evidence package is incomplete.",
+      "releaseCondition": "W2-09 is GREEN and the full eight-module, three-viewport, applicable-state and real-data reconciliation matrix passes."
+    },
+    {
+      "id": "PRIOR_TASK_LEASE_STILL_ACTIVE",
+      "blocks": ["concurrent reuse of the previous task code scope"],
+      "detail": "The immutable prior Task Receipt Lease remains active until its recorded expiry even though a Delivery Receipt exists.",
+      "releaseCondition": "The Lease expires or is formally released, followed by a fresh all-Lease and Git audit."
+    }
+  ],
+  "nextWavePlan": {
+    "entryGate": [
+      "B5 Delivery Receipt consumed by m1 CAS",
+      "canonical SourceReadinessEnvelope owner and strict reader API delivered",
+      "same-cutoff 12-source EvidencePack GREEN",
+      "DEP-ADP(query) operational handoff GREEN",
+      "no conflicting active Lease",
+      "fresh authority, 01/06, memory gate and Git audit GREEN"
+    ],
+    "candidateTask": "W2-00B strict read-only SourceReadiness aggregation",
+    "fileScopeMustBeRefrozenAfterExactOwnerDiscovery": true,
+    "expectedLayers": [
+      "backend read-only aggregation service",
+      "GET-only strict router",
+      "backend fail-closed and tenant-isolation tests",
+      "Web strict parser and SDK",
+      "honest readiness UI binding",
+      "targeted tests, cumulative regression, three-viewport in-app Browser acceptance, Evidence and Delivery Receipt"
+    ]
+  },
+  "sourceHashes": {
+    "adr111": "sha256:ecc20b4b8ec5ed1a73a483f7e36ff4123eadf5717b2369e03a9270c59324eb3e",
+    "authority": "sha256:120959732ae8a327f35ce84882d217f5d63fbdce0e6ea775be2ed0460aa636f1",
+    "dWaves": "sha256:365dc50d219034537151ef9917936edacbca3148b66d4055f49b3ea035d818c7",
+    "taskReceipt": "sha256:67332c66b9452ace243a9365b88f49bad97852db9dd893aad61f2435de891cfd"
+  },
+  "verificationPlan": [
+    "Parse evidence JSON",
+    "Verify ADR and Evidence SHA-256",
+    "Re-run memory-status, memory-validate and memory-gate",
+    "Verify Git branch, HEAD, changed-file scope and no business-code diff",
+    "Review ADR-to-Evidence consistency"
+  ],
+  "sideEffects": "NONE",
+  "realBusinessWrites": 0,
+  "authorityOrProjectionWrites": 0
+}
