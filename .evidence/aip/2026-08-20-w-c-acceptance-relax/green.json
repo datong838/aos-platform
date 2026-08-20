@@ -1,0 +1,28 @@
+{
+  "wave": "W-C-ACCEPTANCE-RELAX",
+  "status": "GREEN_ACCEPTANCE_POLICY",
+  "at": "2026-08-20T13:28:40+08:00",
+  "scheme": "81-W-C-图视Health验收放宽.md",
+  "text": {
+    "status": "PROVIDER_HEALTH_REFRESH_GREEN",
+    "note": "prior TTL renew; not re-probed this wave"
+  },
+  "image": {
+    "status": "blocked",
+    "blockerCode": "provider_http_error",
+    "log": "image.log",
+    "not_forged": true
+  },
+  "video": {
+    "status": "PROVIDER_VIDEO_HEALTH_REFRESH_GREEN",
+    "observationId": "health-agnes-video-qyh-r2-20260820052836930797",
+    "expiresAt": "2026-08-20T05:43:36.930797+00:00",
+    "log": "video.log",
+    "not_forged": true
+  },
+  "checklist": {
+    "W-C1": "验收放宽",
+    "W-C2": "已完成",
+    "W-C3": "验收放宽"
+  }
+}
