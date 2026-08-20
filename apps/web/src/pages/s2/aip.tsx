@@ -90,6 +90,10 @@ export function ToolsPage() {
   const [saving, setSaving] = useState(false);
   const [overlayLoading, setOverlayLoading] = useState(false);
   const [activeInstanceId, setActiveInstanceId] = useState<string>("");
+  const [overlayToolItems, setOverlayToolItems] = useState<
+    Array<{ id: string; name: string; category: string; enabled: boolean }>
+  >([]);
+  const [packVersion, setPackVersion] = useState<string | null>(null);
 
   const agentItems = useMemo(() => {
     return (agents.data?.items || [])
@@ -138,6 +142,9 @@ export function ToolsPage() {
         setCats(decoded.categories);
         setMode(decoded.mode);
         setHitl(decoded.hitl);
+        setOverlayToolItems(decoded.toolItems);
+        const pack = (r.items || []).find((i) => String(i.id) === "panel.cfg.pack");
+        setPackVersion(pack ? String(pack.name || "") : null);
       })
       .catch((e) => {
         if (cancelled) return;
@@ -145,6 +152,8 @@ export function ToolsPage() {
         setCats(new Set(defaultCats));
         setMode("native");
         setHitl("form");
+        setOverlayToolItems([]);
+        setPackVersion(null);
       })
       .finally(() => {
         if (!cancelled) setOverlayLoading(false);
@@ -155,8 +164,24 @@ export function ToolsPage() {
   }, [activeInstanceId, defaultCats]);
 
   const tools = useMemo(() => {
-    return (data?.items || []).filter((t) => cats.has(toolCategory(t.kind)));
-  }, [data, cats]);
+    const catalog = (data?.items || []).filter((t) => cats.has(toolCategory(t.kind)));
+    const byId = new Map(catalog.map((t) => [t.id, { id: t.id, kind: t.kind, name: t.name }]));
+    for (const item of overlayToolItems) {
+      if (!cats.has(item.category) && item.category !== "tool") {
+        // still show overlay-enabled tools even if category checkbox off? No — honor cats.
+        // If category from overlay not in cats, skip unless cats empty after load.
+      }
+      if (item.category && !cats.has(item.category)) continue;
+      if (!byId.has(item.id)) {
+        byId.set(item.id, {
+          id: item.id,
+          kind: item.category || "tool",
+          name: item.name,
+        });
+      }
+    }
+    return Array.from(byId.values());
+  }, [data, cats, overlayToolItems]);
 
   const selected = tools.find((t) => t.id === selectedId) || tools[0] || null;
   const selectedCat = selected ? toolCategory(selected.kind) : null;
@@ -188,14 +213,20 @@ export function ToolsPage() {
     setSaveMsg("");
     setLocalErr(null);
     try {
-      const enabledTools = (data?.items || [])
-        .filter((t) => cats.has(toolCategory(t.kind)))
-        .map((t) => ({
-          id: t.id,
-          name: t.name || t.id,
-          category: toolCategory(t.kind),
-        }));
+      const enabledTools = tools.map((t) => ({
+        id: t.id,
+        name: t.name || t.id,
+        category: toolCategory(t.kind),
+      }));
       const items = encodeToolsPanelOverlay({ tools: enabledTools, mode, hitl });
+      if (packVersion) {
+        items.push({
+          id: "panel.cfg.pack",
+          name: packVersion,
+          category: "panel",
+          enabled: true,
+        });
+      }
       const written = await apiPut<{ agent_id?: string; items?: unknown[] }>(
         `/v1/aip/agents/${encodeURIComponent(activeInstanceId)}/tools`,
         { items },
@@ -413,6 +444,7 @@ export function ToolsPage() {
           { label: "模式", value: mode },
           { label: "HITL", value: hitl },
           { label: "同事", value: currentAgent ? "已绑" : "未绑" },
+          { label: "默认包", value: packVersion || "—" },
         ].map((s) => (
           <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
             <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>

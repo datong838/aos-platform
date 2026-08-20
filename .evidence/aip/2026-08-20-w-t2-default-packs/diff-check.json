@@ -1,0 +1,21 @@
+{
+  "content_officer": [
+    "action.close",
+    "cap.content.review",
+    "cap.copy.generate",
+    "cap.material.collect",
+    "cap.script.compose",
+    "cap.video.compose",
+    "fn.echo",
+    "query.objects",
+    "wiki.read"
+  ],
+  "data_advisor": [
+    "cap.performance.review",
+    "cap.strategy.plan",
+    "fn.echo",
+    "query.objects",
+    "wiki.read"
+  ],
+  "differ": true
+}

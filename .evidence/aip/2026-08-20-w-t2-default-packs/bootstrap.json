@@ -1,0 +1,32 @@
+{
+  "ok": true,
+  "pack": "w-t2-v1",
+  "written": [
+    {
+      "instanceId": "ecommerce.content_officer.default",
+      "count": 9
+    },
+    {
+      "instanceId": "ecommerce.data_advisor.default",
+      "count": 5
+    },
+    {
+      "instanceId": "ecommerce.campaign_planner.default",
+      "count": 6
+    },
+    {
+      "instanceId": "ecommerce.shopping_advisor.default",
+      "count": 5
+    },
+    {
+      "instanceId": "ecommerce.customer_service.default",
+      "count": 5
+    },
+    {
+      "instanceId": "ecommerce.private_domain_manager.default",
+      "count": 5
+    }
+  ],
+  "skipped": [],
+  "missing": []
+}
