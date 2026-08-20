@@ -1,0 +1,26 @@
+{
+  "proposalId": "proposal-1d4d878cd36e45cfb8ee",
+  "suiteId": "ecommerce.logic.A02.contract.v1",
+  "drafts": {
+    "url": "http://127.0.0.1:5174/aip/drafts?proposal=proposal-1d4d878cd36e45cfb8ee",
+    "bannerOk": true,
+    "hasProposal": true,
+    "jumpLineage": "/aip/lineage?rootType=action&rootId=proposal-1d4d878cd36e45cfb8ee",
+    "jumpEvals": "/aip/evals?suite=ecommerce.logic.A02.contract.v1&proposal=proposal-1d4d878cd36e45cfb8ee"
+  },
+  "lineage": {
+    "url": "http://127.0.0.1:5174/aip/lineage?rootType=action&rootId=proposal-1d4d878cd36e45cfb8ee",
+    "bannerOk": true,
+    "eventsVisible": true,
+    "jumpDrafts": "/aip/drafts?proposal=proposal-1d4d878cd36e45cfb8ee"
+  },
+  "evals": {
+    "url": "http://127.0.0.1:5174/aip/evals?suite=ecommerce.logic.A02.contract.v1&proposal=proposal-1d4d878cd36e45cfb8ee",
+    "bannerOk": true,
+    "suiteSelected": "ecommerce.logic.A02.contract.v1",
+    "suiteOk": true,
+    "jumpDrafts": "/aip/drafts?proposal=proposal-1d4d878cd36e45cfb8ee",
+    "jumpLineage": "/aip/lineage?rootType=action&rootId=proposal-1d4d878cd36e45cfb8ee"
+  },
+  "ok": true
+}

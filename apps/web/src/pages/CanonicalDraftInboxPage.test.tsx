@@ -65,4 +65,28 @@ describe("CanonicalDraftInboxPage", () => {
     expect(host.textContent).toContain("当前筛选下暂无 Proposal");
     expect([...host.querySelectorAll("button")].some((candidate) => candidate.textContent?.includes("获取单次执行租约"))).toBe(false);
   });
+
+  it("proposal 深链选中真实 Proposal，并露出 Evals/Lineage 跳转", async () => {
+    const item = {
+      ...bundle("drafted"),
+      draft: {
+        ...bundle("drafted").draft,
+        evidenceRefs: [{ resourceType: "EvalSuite", resourceId: "ecommerce.logic.A02.contract.v1", revision: "1", authority: "aip-evals" }],
+      },
+    };
+    const sdk = {
+      list: vi.fn().mockResolvedValue({ items: [item], count: 1 }),
+      timeline: vi.fn().mockResolvedValue(timeline(item)),
+      execution: vi.fn().mockResolvedValue(execution(item)),
+    } as unknown as AipActionsSdk;
+    await act(async () => root.render(
+      <MemoryRouter initialEntries={["/aip/drafts?proposal=proposal-1"]}>
+        <CanonicalDraftInboxPage sdk={sdk} />
+      </MemoryRouter>,
+    ));
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); });
+    expect(host.querySelector('[data-testid="drafts-chain-banner"]')?.textContent).toContain("proposal-1");
+    expect(host.querySelector('[data-testid="drafts-jump-lineage"]')?.getAttribute("href")).toContain("rootType=action");
+    expect(host.querySelector('[data-testid="drafts-jump-evals"]')?.getAttribute("href")).toContain("suite=ecommerce.logic.A02.contract.v1");
+  });
 });

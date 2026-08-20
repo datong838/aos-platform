@@ -3144,9 +3144,12 @@ export function assertEvalResultConsistency(
 
 /** 81 · Evals 真实运行、报告与门控检查 */
 export function EvalsPage() {
+  const [searchParams] = useSearchParams();
+  const suiteFromUrl = String(searchParams.get("suite") || "").trim();
+  const proposalFromUrl = String(searchParams.get("proposal") || "").trim();
   const suitesApi = useJsonGet<{ items: EvalSuiteSummary[] }>("/v1/evals/suites");
   const graphsApi = useJsonGet<{ items: Array<{ id: string; name: string; revision: number; graph_hash: string; persisted: boolean }> }>("/v1/aip/logic/graphs");
-  const [suiteId, setSuiteId] = useState("");
+  const [suiteId, setSuiteId] = useState(suiteFromUrl);
   const [targetId, setTargetId] = useState("");
   const [report, setReport] = useState<EvalReport | null>(null);
   const [gate, setGate] = useState<EvalGateResult | null>(null);
@@ -3164,8 +3167,12 @@ export function EvalsPage() {
   const selectedGraph = graphs.find((graph) => graph.id === targetId) || null;
 
   useEffect(() => {
+    if (suiteFromUrl) {
+      setSuiteId(suiteFromUrl);
+      return;
+    }
     if (!suiteId && suites[0]?.id) setSuiteId(suites[0].id);
-  }, [suiteId, suites]);
+  }, [suiteFromUrl, suiteId, suites]);
   useEffect(() => {
     if (!targetId && graphs[0]?.id) setTargetId(graphs[0].id);
   }, [graphs, targetId]);
@@ -3409,14 +3416,35 @@ export function EvalsPage() {
       />
 
       <BpBanner tone="warn">
+        <span data-testid="evals-chain-banner">
         <strong>真实门控口径</strong> · 本页不提供手工绿灯。只有 gate-check 返回通过才显示 Eval 门控通过；L4 仍须 Draft 审批与其他发布护栏 ·{" "}
-        <Link to="/aip/drafts">查看 Draft →</Link>
+        <Link
+          to={proposalFromUrl ? `/aip/drafts?proposal=${encodeURIComponent(proposalFromUrl)}` : "/aip/drafts"}
+          data-testid="evals-jump-drafts"
+        >
+          查看 Draft →
+        </Link>
+        {proposalFromUrl && (
+          <>
+            {" · "}
+            <Link
+              to={`/aip/lineage?rootType=action&rootId=${encodeURIComponent(proposalFromUrl)}`}
+              data-testid="evals-jump-lineage"
+            >
+              决策谱系 →
+            </Link>
+          </>
+        )}
         {gate?.gate_passed && (
           <>
             {" · "}
             <Link to="/aip/studio">Chatbot Studio 测试 →</Link>
           </>
         )}
+        {suiteFromUrl && (
+          <span className="aos-text"> · 深链套件 <code>{suiteFromUrl}</code></span>
+        )}
+        </span>
       </BpBanner>
 
       <section style={{ border: "1px solid var(--aos-border)", padding: 16, marginTop: 16 }} data-testid="eval-authority-reader">
@@ -3454,6 +3482,16 @@ export function EvalsPage() {
         links={[
           { to: "/aip/maturity", label: "成熟度楼梯" },
           { to: "/aip/logic", label: "Logic 画布" },
+          {
+            to: proposalFromUrl ? `/aip/drafts?proposal=${encodeURIComponent(proposalFromUrl)}` : "/aip/drafts",
+            label: "Draft 审批台",
+          },
+          {
+            to: proposalFromUrl
+              ? `/aip/lineage?rootType=action&rootId=${encodeURIComponent(proposalFromUrl)}`
+              : "/aip/lineage",
+            label: "决策谱系",
+          },
         ]}
       />
     </S2Chrome>
@@ -3461,14 +3499,21 @@ export function EvalsPage() {
 }
 
 export function DecisionLineagePage() {
-  const [rootType, setRootType] = useState<LineageRootType>("task_run");
-  const [rootId, setRootId] = useState("");
+  const [searchParams] = useSearchParams();
+  const rootTypeFromUrl = String(searchParams.get("rootType") || "").trim();
+  const rootIdFromUrl = String(searchParams.get("rootId") || "").trim();
+  const proposalFromUrl = String(searchParams.get("proposal") || "").trim();
+  const initialRootType = (LINEAGE_ROOT_TYPES.includes(rootTypeFromUrl as LineageRootType)
+    ? rootTypeFromUrl
+    : "task_run") as LineageRootType;
+  const [rootType, setRootType] = useState<LineageRootType>(initialRootType);
+  const [rootId, setRootId] = useState(rootIdFromUrl);
   const [events, setEvents] = useState<LineageEvent[]>([]);
   const [loadState, setLoadState] = useState<"idle" | "loading" | "loaded" | "error">("idle");
   const [localErr, setLocalErr] = useState<string | null>(null);
 
-  async function load() {
-    const target = rootId.trim();
+  async function load(nextType: LineageRootType = rootType, nextId: string = rootId) {
+    const target = nextId.trim();
     if (!target) {
       setLocalErr("请输入真实 Root ID");
       setLoadState("idle");
@@ -3478,7 +3523,7 @@ export function DecisionLineagePage() {
     setEvents([]);
     setLoadState("loading");
     try {
-      setEvents(await aipEvidenceSdk.lineage(rootType, target));
+      setEvents(await aipEvidenceSdk.lineage(nextType, target));
       setLoadState("loaded");
     } catch (e) {
       setLocalErr(String((e as Error).message || e));
@@ -3486,7 +3531,28 @@ export function DecisionLineagePage() {
     }
   }
 
+  useEffect(() => {
+    if (rootTypeFromUrl && LINEAGE_ROOT_TYPES.includes(rootTypeFromUrl as LineageRootType)) {
+      setRootType(rootTypeFromUrl as LineageRootType);
+    }
+    if (rootIdFromUrl) setRootId(rootIdFromUrl);
+  }, [rootTypeFromUrl, rootIdFromUrl]);
+
+  useEffect(() => {
+    if (!rootIdFromUrl) return;
+    const type = (LINEAGE_ROOT_TYPES.includes(rootTypeFromUrl as LineageRootType)
+      ? rootTypeFromUrl
+      : rootType) as LineageRootType;
+    void load(type, rootIdFromUrl);
+    // deep-link auto query once per URL change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rootTypeFromUrl, rootIdFromUrl]);
+
   const lineageId = events[0]?.lineageId ?? null;
+  const chainProposalId =
+    rootType === "action" && rootId.trim()
+      ? rootId.trim()
+      : proposalFromUrl || "";
 
   return (
     <S2Chrome
@@ -3511,6 +3577,14 @@ export function DecisionLineagePage() {
           </div>
         ))}
       </div>
+      {(rootIdFromUrl || chainProposalId) && (
+        <BpBanner tone="info">
+          <span data-testid="lineage-chain-banner">
+          深链 Root <code>{rootType}/{rootId.trim() || rootIdFromUrl}</code>
+          {chainProposalId ? ` · 样例链 Proposal ${chainProposalId}` : ""}
+          </span>
+        </BpBanner>
+      )}
       <BpToolbar>
         <label className="muted">
           Root 类型{" "}
@@ -3593,7 +3667,7 @@ export function DecisionLineagePage() {
       </div>
       )}
 
-      <div style={{ display: "flex", gap: 8, marginTop: "1rem" }}>
+      <div style={{ display: "flex", gap: 8, marginTop: "1rem", flexWrap: "wrap" }} data-testid="lineage-chain-links">
         <Link
           to="/ontology/graph-health"
           style={{
@@ -3617,11 +3691,12 @@ export function DecisionLineagePage() {
             color: "var(--aos-text)",
             textDecoration: "none",
           }}
+          data-testid="lineage-jump-evals"
         >
           Evals 门控
         </Link>
         <Link
-          to="/aip/drafts"
+          to={chainProposalId ? `/aip/drafts?proposal=${encodeURIComponent(chainProposalId)}` : "/aip/drafts"}
           style={{
             padding: "6px 12px",
             fontSize: 12,
@@ -3630,6 +3705,7 @@ export function DecisionLineagePage() {
             color: "var(--aos-amber-700)",
             textDecoration: "none",
           }}
+          data-testid="lineage-jump-drafts"
         >
           Draft 审批台 →
         </Link>
