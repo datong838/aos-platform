@@ -36,6 +36,24 @@ const clientApi = vi.hoisted(() => ({ apiGet: vi.fn() }));
 
 vi.mock("../../api/client", () => clientApi);
 
+const productionContracts = vi.hoisted(() => ({
+  listStageTemplates: vi.fn(async () => ({ tenant: { orgId: "org-org", projectId: "dev-project" }, items: [], count: 0 })),
+  listResponsibilityPlans: vi.fn(async () => ({ tenant: { orgId: "org-org", projectId: "dev-project" }, items: [], count: 0 })),
+}));
+vi.mock("../../api/aipProductionContracts", () => ({ aipProductionContracts: productionContracts }));
+
+const agentControl = vi.hoisted(() => ({
+  runtimeReadiness: vi.fn(async () => ({
+    tenant: { orgId: "org-org", projectId: "dev-project" },
+    catalog: { tenant: { orgId: "org-org", projectId: "dev-project" }, stats: { definitionCount: 6, installedCount: 1, runnableCount: 0, skillDefinitionCount: 0, capabilityDefinitionCount: 0 }, items: [] },
+    capabilityBindings: [],
+    skillBindings: [],
+    bindingStats: { capabilityBindingCount: 0, skillBindingCount: 0, activeCapabilityBindingCount: 0, activeSkillBindingCount: 0 },
+    evaluatedAt: "2026-08-20T00:00:00Z",
+  })),
+}));
+vi.mock("../../api/aipAgentControl", () => ({ aipAgentControl: agentControl }));
+
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 function deferred<T>() {
@@ -205,9 +223,22 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     Object.values(runApi).forEach((mock) => mock.mockReset());
     Object.values(publicationApi).forEach((mock) => mock.mockReset());
     clientApi.apiGet.mockReset();
+    productionContracts.listStageTemplates.mockClear();
+    productionContracts.listResponsibilityPlans.mockClear();
+    agentControl.runtimeReadiness.mockClear();
     runApi.listLogicRuns.mockResolvedValue({ items: [], count: 0, next_cursor: null });
     publicationApi.listLogicPublications.mockResolvedValue({ items: [], count: 0 });
     clientApi.apiGet.mockResolvedValue({ items: [] });
+    productionContracts.listStageTemplates.mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, items: [], count: 0 });
+    productionContracts.listResponsibilityPlans.mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, items: [], count: 0 });
+    agentControl.runtimeReadiness.mockResolvedValue({
+      tenant: { orgId: "org-org", projectId: "dev-project" },
+      catalog: { tenant: { orgId: "org-org", projectId: "dev-project" }, stats: { definitionCount: 6, installedCount: 1, runnableCount: 0, skillDefinitionCount: 0, capabilityDefinitionCount: 0 }, items: [] },
+      capabilityBindings: [],
+      skillBindings: [],
+      bindingStats: { capabilityBindingCount: 0, skillBindingCount: 0, activeCapabilityBindingCount: 0, activeSkillBindingCount: 0 },
+      evaluatedAt: "2026-08-20T00:00:00Z",
+    });
   });
 
   afterEach(() => {
@@ -222,6 +253,11 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
         <LocationProbe />
       </MemoryRouter>,
     ));
+    await flush();
+  }
+
+  async function openHistoryTab() {
+    await act(async () => button("运行历史").click());
     await flush();
   }
 
@@ -503,6 +539,7 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
       expected_graph_hash: loaded.graph_hash,
       inputs: { objectId: "wo-7" },
     }, ["trusted-input", "trusted-llm"]);
+    await openHistoryTab();
     expect(host.textContent).toContain("服务端运行证据");
     expect(host.textContent).toContain("revision 7");
     expect(host.textContent).toContain(loaded.graph_hash);
@@ -521,19 +558,26 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     runApi.dryRunLogicGraph.mockRejectedValueOnce(Object.assign(new Error("revision 已变化"), { status: 409 }));
     await act(async () => button("安全试跑").click());
     await flush();
+    await openHistoryTab();
     expect(host.textContent).toContain("版本冲突：revision 已变化");
+    await act(async () => button("编辑").click());
+    await flush();
     expect(host.textContent).toContain("仍在画布");
     expect(host.textContent).not.toContain("未保存更改");
 
     runApi.dryRunLogicGraph.mockRejectedValueOnce(new Error("只读执行器不可用"));
     await act(async () => button("安全试跑").click());
     await flush();
+    await openHistoryTab();
     expect(host.textContent).toContain("只读执行器不可用");
+    await act(async () => button("编辑").click());
+    await flush();
     expect(host.textContent).toContain("仍在画布");
 
     runApi.dryRunLogicGraph.mockRejectedValueOnce(new Error("响应已收到，但历史持久化核验失败：detail 不一致"));
     await act(async () => button("安全试跑").click());
     await flush();
+    await openHistoryTab();
     expect(host.textContent).toContain("历史持久化核验失败");
     expect(host.textContent).not.toContain("服务端运行证据");
     expect(runApi.dryRunLogicGraph).toHaveBeenCalledTimes(3);
@@ -550,6 +594,7 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     graphApi.getLogicGraph.mockResolvedValue(loaded);
     runApi.getLogicRun.mockResolvedValue(failed);
     await renderPage("history");
+    await openHistoryTab();
 
     expect(host.textContent).toContain("历史暂时不可用");
     await act(async () => button("重试").click());
@@ -561,9 +606,12 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     expect(host.textContent).toContain("SAFE_TOOL_FAILED");
     expect(host.textContent).not.toContain("未保存更改");
     await act(async () => button("定位节点 history-llm").click());
+    await act(async () => button("编辑").click());
+    await flush();
     expect(host.textContent).toContain("Block 属性use_llm");
     expect(host.textContent).not.toContain("未保存更改");
 
+    await openHistoryTab();
     await act(async () => button("加载更多运行记录").click());
     await flush();
     expect(runApi.listLogicRuns).toHaveBeenLastCalledWith("history", { limit: 20, before: "cursor-1" });
@@ -597,8 +645,11 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
       .mockReturnValueOnce(secondDetail.promise);
     runApi.dryRunLogicGraph.mockReturnValueOnce(nextRun.promise);
     await renderPage("states");
+    await openHistoryTab();
 
     await act(async () => button("run-states-mixed").click());
+    await flush();
+    await act(async () => button("编辑").click());
     await flush();
     const expectedStates = new Map([
       ["states-input", "executed"],
@@ -613,7 +664,11 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     expect(host.querySelectorAll("[data-run-state]")).toHaveLength(4);
     expect(host.textContent).not.toContain("未保存更改");
 
+    await openHistoryTab();
     await act(async () => button("run-states-executed").click());
+    await flush();
+    await act(async () => button("编辑").click());
+    await flush();
     expect(host.querySelectorAll("[data-run-state]")).toHaveLength(0);
     secondDetail.resolve(allExecuted);
     await flush();
@@ -647,10 +702,11 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     }));
     runApi.getLogicRun.mockReturnValueOnce(oldDetail.promise);
 
-    await act(async () => root.render(<MemoryRouter><LogicCanvasPage flowId="old-run" /></MemoryRouter>));
+    await act(async () => root.render(<MemoryRouter><LogicCanvasPage key="old-run" flowId="old-run" /></MemoryRouter>));
     await flush();
+    await openHistoryTab();
     await act(async () => button("run-old-late").click());
-    await act(async () => root.render(<MemoryRouter><LogicCanvasPage flowId="new-run" /></MemoryRouter>));
+    await act(async () => root.render(<MemoryRouter><LogicCanvasPage key="new-run" flowId="new-run" /></MemoryRouter>));
     await flush();
     oldDetail.resolve(dryRunResult(oldGraph, "run-old-late"));
     await flush();

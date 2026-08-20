@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  agentReadinessLadderSummary,
   blockerDisplayName,
   capabilityDisplayName,
   definitionReadinessDisplayName,
+  deriveAgentReadinessLadder,
   dimensionDisplayName,
   formatBlockers,
   instanceStatusDisplayName,
@@ -33,5 +35,30 @@ describe("aipChineseLabels", () => {
     expect(definitionReadinessDisplayName("blocked")).toBe("定义未就绪");
     expect(dimensionDisplayName("providerRef")).toBe("供应商");
     expect(templateDisplayName("ecommerce.content_officer")).toBe("内容官");
+  });
+
+  it("W-L1 已安装不等于可派发", () => {
+    const installedOnly = deriveAgentReadinessLadder({
+      templatePublished: true,
+      installed: true,
+      hasActiveSkillBinding: false,
+      skillsPublished: false,
+      capabilityOperational: false,
+      runtimeReadiness: "blocked",
+    });
+    expect(installedOnly.dispatchable).toBe(false);
+    expect(installedOnly.stages.find((s) => s.id === "installed")?.done).toBe(true);
+    expect(installedOnly.stages.find((s) => s.id === "runnable")?.done).toBe(false);
+    expect(agentReadinessLadderSummary(installedOnly)).toContain("已安装未可派发");
+    const runnable = deriveAgentReadinessLadder({
+      templatePublished: true,
+      installed: true,
+      hasActiveSkillBinding: true,
+      skillsPublished: true,
+      capabilityOperational: true,
+      runtimeReadiness: "runnable",
+    });
+    expect(runnable.dispatchable).toBe(true);
+    expect(agentReadinessLadderSummary(runnable)).toContain("可派发");
   });
 });

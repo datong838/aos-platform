@@ -672,7 +672,7 @@ export function ToolsPage() {
           </div>
           {currentAgent ? (
             <>
-              <span className="bp-tag bp-tag-ok">{currentAgent.status === "active" || currentAgent.status === "running" ? "运行中" : currentAgent.status || "已安装"}</span>
+              <span className="bp-tag bp-tag-ok">{currentAgent.status === "active" || currentAgent.status === "running" ? "运行中" : currentAgent.status ? currentAgent.status : "状态未知（≠可派发）"}</span>
               <span className="bp-tag bp-tag-warn">L2 · HITL</span>
             </>
           ) : (

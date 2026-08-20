@@ -3,7 +3,9 @@ import { Link } from "react-router-dom";
 import { aipAgentControl, type AgentRuntimeReadinessResponse } from "../../api/aipAgentControl";
 import { PageChrome } from "../../components/PageChrome";
 import {
+  agentReadinessLadderSummary,
   bindingStatusDisplayName,
+  deriveAgentReadinessLadder,
   formatBlockers,
   logicDisplayName,
   responsibilityDisplayName,
@@ -11,6 +13,30 @@ import {
 
 function statusLabel(status: string | undefined) {
   return ({ provisioning: "待配置", active: "已启用", suspended: "已暂停", deleted: "已删除" } as Record<string, string>)[status || ""] || "未安装";
+}
+
+function ReadinessLadderStrip({ ladder }: { ladder: ReturnType<typeof deriveAgentReadinessLadder> }) {
+  return (
+    <div data-testid="agent-readiness-ladder" aria-label="分栏就绪阶梯" style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10, fontSize: 12 }}>
+      {ladder.stages.map((stage) => (
+        <span
+          key={stage.id}
+          data-stage={stage.id}
+          data-done={stage.done ? "1" : "0"}
+          style={{
+            padding: "2px 8px",
+            borderRadius: 4,
+            border: "1px solid var(--aos-border)",
+            background: stage.done ? (stage.id === "runnable" ? "var(--aos-green-bg, #ecfdf3)" : "var(--aos-surface-2, #f8fafc)") : "transparent",
+            color: stage.done ? (stage.id === "runnable" ? "var(--aos-green-700)" : "var(--aos-text)") : "var(--aos-text-secondary)",
+            opacity: stage.done ? 1 : 0.55,
+          }}
+        >
+          {stage.label}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 export function runtimeSnapshotStale(evaluatedAt: string, now = Date.now()): boolean {
@@ -60,16 +86,19 @@ export function CanonicalAgentRegistryPage() {
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:10,marginBottom:14}}>
           <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>角色定义</div><strong>{data.catalog.stats.definitionCount}</strong></div>
           <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>已安装</div><strong>{data.catalog.stats.installedCount}</strong></div>
-          <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>可运行</div><strong style={{color:data.catalog.stats.runnableCount === data.catalog.stats.definitionCount ? "var(--aos-green-700)" : "var(--aos-amber-700)"}}>{data.catalog.stats.runnableCount}</strong></div>
+          <div className="notice" style={{padding:10}} data-testid="catalog-dispatchable-count"><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>可派发</div><strong style={{color:data.catalog.stats.runnableCount === data.catalog.stats.definitionCount ? "var(--aos-green-700)" : "var(--aos-amber-700)"}}>{data.catalog.stats.runnableCount}</strong></div>
           <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>技能绑定</div><strong>{data.bindingStats.activeSkillBindingCount}/{data.bindingStats.skillBindingCount}</strong></div>
           <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>能力绑定</div><strong>{data.bindingStats.activeCapabilityBindingCount}/{data.bindingStats.capabilityBindingCount}</strong></div>
           <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>技能定义</div><strong>{data.catalog.stats.skillDefinitionCount}</strong></div>
           <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>专业能力类</div><strong>{data.catalog.stats.capabilityDefinitionCount}</strong></div>
         </div>
         <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
-          <button className="btn primary" disabled={busy || refreshing || data.catalog.stats.installedCount === data.catalog.stats.definitionCount} onClick={() => void install()}>{busy ? "安装中…" : data.catalog.stats.installedCount === data.catalog.stats.definitionCount ? "六数字同事已安装" : "安装电商六数字同事"}</button>
+          <button className="btn primary" disabled={busy || refreshing || data.catalog.stats.installedCount === data.catalog.stats.definitionCount} onClick={() => void install()}>{busy ? "安装中…" : data.catalog.stats.installedCount === data.catalog.stats.definitionCount ? "六数字同事已安装（≠可派发）" : "安装电商六数字同事"}</button>
           <button className="btn" disabled={refreshing || busy} onClick={() => void refresh()} title="刷新并重评绑定就绪">{refreshing ? "重评中…" : "刷新"}</button>
           <Link className="btn" to="/aip/agent-marketplace">市场发现（只读）</Link>
+        </div>
+        <div className="notice" role="note" data-testid="install-not-dispatchable" style={{marginTop:10,fontSize:13}}>
+          已安装 ≠ 可派发。可派发须完整通过 published → installed → binding → evaluated → operational → runnable。
         </div>
         <div style={{marginTop:10,fontSize:13,color:stale ? "var(--aos-amber-700)" : "var(--aos-text-secondary)"}}>
           快照 {new Date(data.evaluatedAt).toLocaleString()} · {stale ? "已过期，请点「刷新」重评绑定" : "15 分钟有效期内"}
@@ -89,6 +118,16 @@ export function CanonicalAgentRegistryPage() {
           const bindings = data.skillBindings.filter(binding => binding.instanceId === instanceId);
           const activeBindings = bindings.filter(binding => binding.status === "active");
           const requiredBindingCount = data.capabilityBindings.filter(binding => item.requiredCapabilityIds.includes(binding.capability.assetId)).length;
+          const opsReady = item.requiredCapabilityIds.length > 0
+            && item.requiredCapabilityIds.every((capId) => data.capabilityBindings.some((b) => b.capability.assetId === capId && b.status === "active" && b.operationalReadiness === "available"));
+          const ladder = deriveAgentReadinessLadder({
+            templatePublished: item.template.lifecycle === "published",
+            installed: Boolean(item.instance),
+            hasActiveSkillBinding: activeBindings.length > 0,
+            skillsPublished: item.skills.length > 0 && item.skills.every((skill) => skill.lifecycle === "published"),
+            capabilityOperational: opsReady,
+            runtimeReadiness: item.runtimeReadiness,
+          });
           const blockedTitle = precheckDisabledTitle(item.blockers);
           return <article key={item.template.templateId} className="card" style={{padding:18}}>
             <div style={{display:"flex",justifyContent:"space-between",gap:10,alignItems:"start"}}>
@@ -98,6 +137,8 @@ export function CanonicalAgentRegistryPage() {
               </div>
               <strong style={{color:item.instance?.status === "active" ? "var(--aos-green-700)" : "var(--aos-amber-700)"}}>{statusLabel(item.instance?.status)}</strong>
             </div>
+            <ReadinessLadderStrip ladder={ladder} />
+            <div style={{marginTop:8,fontSize:12,color:"var(--aos-text-secondary)"}} data-testid="agent-readiness-summary">{agentReadinessLadderSummary(ladder)}</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:8,fontSize:13,marginTop:10}}>
               <div className="notice">技能 {activeBindings.length}/{item.skills.length} 已绑定</div>
               <div className="notice">专业能力 {requiredBindingCount}/{item.requiredCapabilityIds.length} 已绑定</div>
@@ -114,10 +155,10 @@ export function CanonicalAgentRegistryPage() {
                 </li>;
               })}</ul>
             </details>
-            <div style={{marginTop:10,padding:10,background:item.runtimeReadiness === "runnable" ? "var(--aos-green-bg, #ecfdf3)" : "var(--aos-amber-bg)",color:item.runtimeReadiness === "runnable" ? "var(--aos-green-700)" : "var(--aos-amber-700)"}}>
-              {item.runtimeReadiness === "runnable" ? "可运行" : (item.blockers.length ? formatBlockers(item.blockers) : "缺少完整能力/技能绑定与依赖快照")}
+            <div style={{marginTop:10,padding:10,background:ladder.dispatchable ? "var(--aos-green-bg, #ecfdf3)" : "var(--aos-amber-bg)",color:ladder.dispatchable ? "var(--aos-green-700)" : "var(--aos-amber-700)"}}>
+              {ladder.dispatchable ? "可派发（runnable）" : (item.blockers.length ? formatBlockers(item.blockers) : "缺少完整能力/技能绑定与依赖快照")}
             </div>
-            <button className="btn" disabled={item.runtimeReadiness !== "runnable"} title={item.runtimeReadiness === "runnable" ? "目录已就绪；本页不直接外呼" : blockedTitle} style={{marginTop:12}}>{item.runtimeReadiness === "runnable" ? "预检运行（目录已就绪）" : "预检运行（依赖未齐）"}</button>
+            <button className="btn" disabled={!ladder.dispatchable} title={ladder.dispatchable ? "目录可派发；本页不直接外呼" : blockedTitle} style={{marginTop:12}}>{ladder.dispatchable ? "预检（可派发）" : "预检（不可派发）"}</button>
           </article>;
         })}
       </div>

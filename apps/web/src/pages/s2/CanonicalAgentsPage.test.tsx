@@ -79,7 +79,7 @@ describe("CanonicalAgentsPage", () => {
     await act(async () => root.unmount());
   });
 
-  it("目录 runnable 时显示可运行说明且试运行可点进工具面板", async () => {
+  it("目录 runnable 时显示可派发说明且试运行可点进工具面板", async () => {
     sdk.runtimeReadiness.mockResolvedValue({
       ...blockedRuntime,
       catalog: {
@@ -91,8 +91,8 @@ describe("CanonicalAgentsPage", () => {
     const root = createRoot(host);
     await act(async () => root.render(<MemoryRouter><CanonicalAgentsPage /></MemoryRouter>));
     await act(async () => undefined);
-    expect(host.textContent).toContain("可运行（目录已就绪");
-    expect(host.textContent).toContain("可运行 1/1");
+    expect(host.textContent).toContain("可派发（目录 runnable");
+    expect(host.textContent).toContain("可派发 1/1");
     const tryTab = Array.from(host.querySelectorAll("button")).find((b) => b.textContent === "试运行");
     expect(tryTab).toBeTruthy();
     await act(async () => { tryTab!.click(); });
@@ -117,7 +117,7 @@ describe("CanonicalAgentsPage", () => {
     await act(async () => undefined);
     const tryTab = Array.from(host.querySelectorAll("button")).find((b) => b.textContent === "试运行");
     await act(async () => { tryTab!.click(); });
-    const tryBtn = Array.from(host.querySelectorAll("button")).find((b) => b.textContent?.includes("试运行（依赖未齐）")) as HTMLButtonElement;
+    const tryBtn = Array.from(host.querySelectorAll("button")).find((b) => b.textContent?.includes("试运行（不可派发）")) as HTMLButtonElement;
     expect(tryBtn?.disabled).toBe(true);
     await act(async () => root.unmount());
   });

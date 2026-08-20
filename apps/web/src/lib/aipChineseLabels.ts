@@ -200,3 +200,58 @@ export function templateDisplayName(templateId: string): string {
 export function formatBlockers(codes: string[]): string {
   return codes.map(blockerDisplayName).join("；");
 }
+
+/** W-L1：分栏就绪阶梯（installed ≠ 可派发） */
+export const AGENT_READINESS_LADDER = [
+  { id: "published", label: "已发布" },
+  { id: "installed", label: "已安装" },
+  { id: "binding", label: "已绑定" },
+  { id: "evaluated", label: "已评测" },
+  { id: "operational", label: "可运营" },
+  { id: "runnable", label: "可派发" },
+] as const;
+
+export type AgentReadinessStageId = (typeof AGENT_READINESS_LADDER)[number]["id"];
+
+export type AgentReadinessLadder = {
+  stages: Array<{ id: AgentReadinessStageId; label: string; done: boolean }>;
+  current: AgentReadinessStageId | "none";
+  dispatchable: boolean;
+};
+
+export function deriveAgentReadinessLadder(input: {
+  templatePublished: boolean;
+  installed: boolean;
+  hasActiveSkillBinding: boolean;
+  skillsPublished: boolean;
+  capabilityOperational: boolean;
+  runtimeReadiness: "blocked" | "runnable";
+}): AgentReadinessLadder {
+  const dispatchable = input.runtimeReadiness === "runnable";
+  const flags: Record<AgentReadinessStageId, boolean> = {
+    published: input.templatePublished,
+    installed: input.installed,
+    binding: input.installed && input.hasActiveSkillBinding,
+    evaluated: input.installed && input.hasActiveSkillBinding && input.skillsPublished,
+    operational: input.installed && input.capabilityOperational,
+    runnable: dispatchable,
+  };
+  const stages = AGENT_READINESS_LADDER.map((stage) => ({
+    id: stage.id,
+    label: stage.label,
+    done: flags[stage.id],
+  }));
+  let current: AgentReadinessStageId | "none" = "none";
+  for (const stage of stages) {
+    if (stage.done) current = stage.id;
+    else break;
+  }
+  return { stages, current, dispatchable };
+}
+
+export function agentReadinessLadderSummary(ladder: AgentReadinessLadder): string {
+  if (ladder.dispatchable) return "可派发（runnable）";
+  if (!ladder.stages.find((s) => s.id === "installed")?.done) return "尚未安装（≠可派发）";
+  const next = ladder.stages.find((s) => !s.done);
+  return next ? `已安装未可派发 · 卡在「${next.label}」` : "已安装未可派发";
+}

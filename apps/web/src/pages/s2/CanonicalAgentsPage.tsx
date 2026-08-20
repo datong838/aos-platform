@@ -74,8 +74,8 @@ export function CanonicalAgentsPage() {
         {runtime ? (
           <>
             <span className="notice" style={{ padding: "6px 10px" }}>实例 {data?.count ?? 0}</span>
-            <span className="notice" style={{ padding: "6px 10px" }}>
-              可运行 {runtime.catalog.stats.runnableCount}/{runtime.catalog.stats.installedCount}
+            <span className="notice" style={{ padding: "6px 10px" }} data-testid="agents-dispatchable-ratio">
+              可派发 {runtime.catalog.stats.runnableCount}/{runtime.catalog.stats.installedCount}（已安装≠可派发）
             </span>
           </>
         ) : null}
@@ -134,7 +134,7 @@ export function CanonicalAgentsPage() {
                       <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
                         <span className="notice" style={{ padding: "2px 6px", fontSize: 11 }}>{instanceStatusDisplayName(item.status)}</span>
                         <span className="notice" style={{ padding: "2px 6px", fontSize: 11, color: isRun ? "var(--aos-green-700)" : "var(--aos-amber-700)" }}>
-                          {isRun ? "可运行" : "未就绪"}
+                          {isRun ? "可派发" : "不可派发"}
                         </span>
                       </div>
                     </button>
@@ -162,7 +162,7 @@ export function CanonicalAgentsPage() {
                       {instanceStatusDisplayName(selected.status)}
                     </strong>
                     <strong style={{ color: runnable ? "var(--aos-green-700)" : "var(--aos-amber-700)" }}>
-                      {runnable ? "目录可运行" : "目录未就绪"}
+                      {runnable ? "目录可派发" : "目录不可派发"}
                     </strong>
                   </div>
                 </div>
@@ -200,10 +200,10 @@ export function CanonicalAgentsPage() {
                         {!catalogItem
                           ? "运行就绪尚未对账；请打开智能体目录刷新"
                           : runnable
-                            ? "可运行（目录已就绪；本页不直接外呼）"
+                            ? "可派发（目录 runnable；本页不直接外呼）"
                             : catalogItem.blockers.length
-                              ? formatBlockers(catalogItem.blockers)
-                              : "缺少完整能力/技能绑定与依赖快照"}
+                              ? `已安装≠可派发：${formatBlockers(catalogItem.blockers)}`
+                              : "已安装≠可派发：缺少完整能力/技能绑定与依赖快照"}
                       </p>
                       <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
                         <Link className="btn" to="/aip/agent-registry">去目录重评就绪</Link>
@@ -219,9 +219,9 @@ export function CanonicalAgentsPage() {
                   )}
                   {tab === "try" && (
                     <div>
-                      <p>{runnable ? "目录已就绪。试跑须绑定真实 Task/AgentRun 上下文（见工具面板试跑轨），本页不发起外呼。" : "目录未就绪，试运行禁用。"}</p>
-                      <button className="btn" type="button" disabled={!runnable} title={runnable ? "请到工具面板绑定真实上下文后试跑" : "依赖未齐"}>
-                        {runnable ? "前往工具面板试跑" : "试运行（依赖未齐）"}
+                      <p>{runnable ? "目录可派发。试跑须绑定真实 Task/AgentRun 上下文（见工具面板试跑轨），本页不发起外呼。" : "目录不可派发（已安装≠可派发），试运行禁用。"}</p>
+                      <button className="btn" type="button" disabled={!runnable} title={runnable ? "请到工具面板绑定真实上下文后试跑" : "依赖未齐，不可派发"}>
+                        {runnable ? "前往工具面板试跑" : "试运行（不可派发）"}
                       </button>
                       {runnable ? <div style={{ marginTop: 10 }}><Link to="/aip/tools">打开工具面板 →</Link></div> : null}
                     </div>

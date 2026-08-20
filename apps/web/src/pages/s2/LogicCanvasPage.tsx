@@ -41,6 +41,7 @@ import type {
   LogicRunSummary,
 } from "./logicRunContracts";
 import { aipProductionContracts } from "../../api/aipProductionContracts";
+import { aipAgentControl } from "../../api/aipAgentControl";
 import {
   productionProjectionEmptyMessage,
   projectProductionProfiles,
@@ -219,6 +220,9 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
   const [projectionPlanCount, setProjectionPlanCount] = useState(0);
   const [projectionState, setProjectionState] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [projectionError, setProjectionError] = useState("");
+  const [agentReadySummary, setAgentReadySummary] = useState<{ installed: number; dispatchable: number; state: "idle" | "loading" | "ready" | "error"; error: string }>({
+    installed: 0, dispatchable: 0, state: "idle", error: "",
+  });
   const [inputsDraft, setInputsDraft] = useState("{}");
   const [appliedInputs, setAppliedInputs] = useState<JsonObject | null>(null);
   const [inputsError, setInputsError] = useState("");
@@ -294,6 +298,31 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
         setProjectionPlanCount(0);
         setProjectionError(cause instanceof Error ? cause.message : String(cause));
         setProjectionState("error");
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setAgentReadySummary((prev) => ({ ...prev, state: "loading", error: "" }));
+    void aipAgentControl.runtimeReadiness()
+      .then((ready) => {
+        if (cancelled) return;
+        setAgentReadySummary({
+          installed: ready.catalog.stats.installedCount,
+          dispatchable: ready.catalog.stats.runnableCount,
+          state: "ready",
+          error: "",
+        });
+      })
+      .catch((cause) => {
+        if (cancelled) return;
+        setAgentReadySummary({
+          installed: 0,
+          dispatchable: 0,
+          state: "error",
+          error: cause instanceof Error ? cause.message : String(cause),
+        });
       });
     return () => { cancelled = true; };
   }, []);
@@ -836,6 +865,28 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
         {" · "}
         <Link to="/aip/production-contracts">生产契约</Link>
         {" "}完成发布与启动；安全试跑不写生产。
+      </div>
+      <div
+        className="notice"
+        role="note"
+        data-testid="logic-agent-readiness-summary"
+        style={{ padding: 12, marginBottom: 12, borderLeft: "3px solid var(--aos-border)" }}
+      >
+        <strong>数字同事就绪（只读）：</strong>
+        {agentReadySummary.state === "loading" && "正在读取目录…"}
+        {agentReadySummary.state === "error" && `读取失败（未伪造可派发）：${agentReadySummary.error}`}
+        {agentReadySummary.state === "ready" && (
+          <>
+            已安装 {agentReadySummary.installed} · 可派发 {agentReadySummary.dispatchable}
+            {agentReadySummary.installed > agentReadySummary.dispatchable
+              ? " · 已安装≠可派发"
+              : agentReadySummary.dispatchable === 0
+                ? " · 尚无可派发同事"
+                : ""}
+            {" · "}
+            <Link to="/aip/agent-registry">打开智能体目录</Link>
+          </>
+        )}
       </div>
       <div
         className="notice"
