@@ -1,0 +1,318 @@
+{
+  "approvalRef": "91-W-D2-DATA-DEPS",
+  "canaryDatasetCount": 0,
+  "items": [
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.material.collect.r3",
+        "dataDeps": 1,
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "material.collect",
+      "contentHash": "4c040a5cb08e9eac81e8620bc69dce31817b766c5ccd2476028e5e18dfde2bcc",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "requiredDataRefs": [
+        {
+          "assetId": "ecommerce.shared.evalset.material.collect",
+          "assetType": "EvalDatasetRevision",
+          "contentHash": "276771dae817cbaf76d86febe3c3b67ed7d845f98ea710951e8cd8349d0a9c81",
+          "revision": 1
+        }
+      ],
+      "revision": 3
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.strategy.plan.r4",
+        "dataDeps": 1,
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "strategy.plan",
+      "contentHash": "17c84299693fbca0c6dfa691d1c633de4790fae7d67344486a508ee23da23297",
+      "readiness": "available",
+      "readinessReasons": [],
+      "requiredDataRefs": [
+        {
+          "assetId": "ecommerce.shared.evalset.strategy.plan",
+          "assetType": "EvalDatasetRevision",
+          "contentHash": "4bac4fc281bd5ca437ad13e931c7a4a3e6139da9fdde3e559f7b61f4bce7ec22",
+          "revision": 1
+        }
+      ],
+      "revision": 4
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.copy.generate.r3",
+        "dataDeps": 1,
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "copy.generate",
+      "contentHash": "7cb5295da3f5c277368ac859d035a3ee62d6d975583834ea0aa56bd8373461a9",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "requiredDataRefs": [
+        {
+          "assetId": "ecommerce.shared.evalset.copy.generate",
+          "assetType": "EvalDatasetRevision",
+          "contentHash": "ffbc584d1d4f437706d4eb28f12d3a89ec1b9e8f07c9b2c9c4076f2efdd6517c",
+          "revision": 1
+        }
+      ],
+      "revision": 3
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.script.compose.r3",
+        "dataDeps": 1,
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "script.compose",
+      "contentHash": "1fd96cd72bdbe5cbd6974cf67768fffafbad9e056d41ca4ac5a1b4be062cfd9a",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "requiredDataRefs": [
+        {
+          "assetId": "ecommerce.shared.evalset.script.compose",
+          "assetType": "EvalDatasetRevision",
+          "contentHash": "3fa36f8ee718036bb6f576ef78ca43482e6777cd58a3a10a1819e41ad3dc012d",
+          "revision": 1
+        }
+      ],
+      "revision": 3
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.speech.synthesize.r3",
+        "dataDeps": 1,
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "speech.synthesize",
+      "contentHash": "0aae682224a395a088c3e223a8d46913213721b650a82a27c1adae0e24167ba6",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "requiredDataRefs": [
+        {
+          "assetId": "ecommerce.shared.evalset.speech.synthesize",
+          "assetType": "EvalDatasetRevision",
+          "contentHash": "6b7d0f1f94e3e5df08f3d28f3ea72e68b0f3192acd57a3e07fae80460e58fb14",
+          "revision": 1
+        }
+      ],
+      "revision": 3
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.video.compose.r3",
+        "dataDeps": 1,
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "video.compose",
+      "contentHash": "68ad1c78e77a994276cdca76ee588f180c45730b47e0eac2f025a2bfe886e67c",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "requiredDataRefs": [
+        {
+          "assetId": "ecommerce.shared.evalset.video.compose",
+          "assetType": "EvalDatasetRevision",
+          "contentHash": "da750a8afdeced02b9b8d74d780174c82856cffe28a1de7eaf22da7651328f01",
+          "revision": 1
+        }
+      ],
+      "revision": 3
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.content.review.r3",
+        "dataDeps": 1,
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "content.review",
+      "contentHash": "df553320e4326f7c88cc7c496efbb360b01f47ba9248585c106fb6b371c92312",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "requiredDataRefs": [
+        {
+          "assetId": "ecommerce.shared.evalset.content.review",
+          "assetType": "EvalDatasetRevision",
+          "contentHash": "d5f5b6bab3ff4cb425bf33ccce35e4dc0996607fcc76e1d468e7b6d2288398ce",
+          "revision": 1
+        }
+      ],
+      "revision": 3
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.live.orchestrate.r3",
+        "dataDeps": 1,
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "live.orchestrate",
+      "contentHash": "853c3c6692c387a55a7e567ecd735fb4d20d788d96bf78c4f8e704e31d0291f2",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "requiredDataRefs": [
+        {
+          "assetId": "ecommerce.shared.evalset.live.orchestrate",
+          "assetType": "EvalDatasetRevision",
+          "contentHash": "f394c824e11166c0d8514822430ff32a2b8b03b165be9243a4092a2d16bc50d2",
+          "revision": 1
+        }
+      ],
+      "revision": 3
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.platform.adapt.r3",
+        "dataDeps": 1,
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "platform.adapt",
+      "contentHash": "feab38661e2fa5a1f7ae9db7c5e1d252d34ee0fda49df8de25c651c740bdb9e6",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "requiredDataRefs": [
+        {
+          "assetId": "ecommerce.shared.evalset.platform.adapt",
+          "assetType": "EvalDatasetRevision",
+          "contentHash": "ee87a448698c534cd09e5d3e0de0e777099b83aa0af4f48d6e8b3c482660ffda",
+          "revision": 1
+        }
+      ],
+      "revision": 3
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.performance.review.r3",
+        "dataDeps": 1,
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "performance.review",
+      "contentHash": "2151165387d01b1caf5ad3fc6c616fe14e51f9768af9895dea00ae19ddc95d5b",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "requiredDataRefs": [
+        {
+          "assetId": "ecommerce.shared.evalset.performance.review",
+          "assetType": "EvalDatasetRevision",
+          "contentHash": "8f359c186c512c0e214e3c08cf6d046cf9cb02123b7115717fe9ecd7b64efc2e",
+          "revision": 1
+        }
+      ],
+      "revision": 3
+    }
+  ],
+  "mode": "apply",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "wave": "W-D2"
+}
