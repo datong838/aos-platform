@@ -1,0 +1,78 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "taskId": "workshop-w2-browser-eight-menu-gates-20260820",
+  "recordedAt": "2026-08-20T14:00:24+08:00",
+  "authorityRevision": "AOS-000146",
+  "branch": "w2-workshop",
+  "baseCommit": "c827928fe3e2200e9991fbfa457191b73d3667cc",
+  "scope": "read-only browser acceptance for Catalog logicRevisionRef and eight-menu directory chain",
+  "outcome": "B4_GREEN_B5_DIRECTORY_CHAIN_GREEN_W2_09_W2_10_BLOCKED",
+  "codeChangeRequired": false,
+  "sourceHashes": {
+    "apps/web/src/api/aipAgentControl/contracts.ts": "sha256:814488d326a51db902411ca79fd2566b13b6f4b2ee9bc2e029fdd4c133ee39a4",
+    "apps/web/src/api/aipAgentControl/parser.ts": "sha256:8cd16dea3a7ce01c9b67505226ba384241362b773e06e20d638f5de8a1236f33",
+    "apps/web/src/api/aipAgentControl/parser.test.ts": "sha256:6182950a6003a52347aed8b065171c1a870cea3dbb82aaf8ca456ee3fbc34e8a",
+    "apps/web/src/components/workshop/EcommerceWorkshopCatalogContext.tsx": "sha256:e81e27319d446bd0fb393b95ba876e1d7d6bad15001e78a67d4faf6eba4c2019",
+    "apps/web/src/components/workshop/InstalledModuleNavigation.tsx": "sha256:64817e9cade88a7bcf3dfeec3b7dcd732e6979e8a6e91176ca35e16639cc9876",
+    "apps/web/src/pages/s2/ecommerce/routes.tsx": "sha256:c2548e69dcdec45a6c1905c2fdf76a283cad6cac0728ee3eb5ba460fffe3b279",
+    "services/aos-api/aos_api/ecommerce_workshop_catalog.py": "sha256:a859c78e161ab8fc78f53a2783292228f0aa8dc4ef845515416f0dd216e5a32e"
+  },
+  "designEvidence": {
+    "adr": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/110-W2-八菜单Catalog与logicRevisionRef浏览器验收ADR.md",
+    "sha256": "e1fb4249f1d0d250b829e1a58a7baf7e2ef99fefe02aeb0c88e68520cbafdf5d"
+  },
+  "browser": {
+    "runtime": "Codex in-app Browser",
+    "baseUrl": "http://127.0.0.1:5173",
+    "positiveTenant": "org-org/dev-project",
+    "catalogPage": {
+      "route": "/aip/agent-registry",
+      "rendered": true,
+      "parserErrorVisible": false,
+      "roleDefinitions": 6,
+      "installedAgents": 6,
+      "skillDefinitions": 37,
+      "capabilityFamilies": 10,
+      "runnableCount": 0,
+      "runnableBlocker": "binding readiness stale; not a logicRevisionRef parser failure"
+    },
+    "viewports": [
+      {"width": 1280, "height": 900, "menuCount": 8, "directoryFailed": false, "notInstalled": false},
+      {"width": 1440, "height": 900, "menuCount": 8, "directoryFailed": false, "notInstalled": false},
+      {"width": 1920, "height": 900, "menuCount": 8, "directoryFailed": false, "notInstalled": false}
+    ],
+    "routes": [
+      {"menu": "日常任务总控大屏", "route": "/workshop/cockpit", "reachable": true},
+      {"menu": "内容与活动工作台", "route": "/workshop/content-campaign", "reachable": true},
+      {"menu": "统一运营驾驶舱", "route": "/workshop/operations", "reachable": true},
+      {"menu": "达人邀约驾驶舱", "route": "/workshop/creator-growth", "reachable": true},
+      {"menu": "多媒体内容生产", "route": "/workshop/media-studio", "reachable": true},
+      {"menu": "经营参谋 · 增长指挥中心", "route": "/workshop/analyst", "reachable": true},
+      {"menu": "价格治理驾驶舱", "route": "/workshop/price-governance", "reachable": true},
+      {"menu": "客户关系工作台", "route": "/workshop/customer", "reachable": true}
+    ],
+    "negativeTenant": {
+      "tenant": "dev-org/dev-project",
+      "menuCount": 0,
+      "emptyState": "当前工作区未安装电商工作台",
+      "directoryFailed": false
+    },
+    "visualFinding": "Eight catalog menus and unified Module Host shell are present; full target visual workbench is not implemented and is not claimed."
+  },
+  "verification": [
+    "Web targeted: 6 files / 28 tests passed",
+    "Backend Catalog/API targeted: 11 tests passed",
+    "Web cumulative: 192 files / 1952 tests passed",
+    "TypeScript compile passed",
+    "Vite production build passed"
+  ],
+  "blockers": [
+    {"id": "MANAGED_PROJECTION_ROUTE_TEXT_DRIFT", "owner": "m1 CAS", "detail": "01/06 still says /s2/ecommerce/* while canonical routes are /workshop/*"},
+    {"id": "W2_TARGET_VISUAL_NOT_IMPLEMENTED", "owner": "W2 future authorized waves", "detail": "Current pages are fail-closed Module Host shells, not the complete visual draft"},
+    {"id": "W2_01_W2_08_READ_MODELS_NOT_GREEN", "owner": "dependency waves", "detail": "Canonical business view authorities/APIs/Stores are not all verifiably ready"},
+    {"id": "W2_09_SHARED_CONTEXT_BLOCKED", "owner": "W2-09", "detail": "Shared context token, canonical timeline and cross-module restoration are not closed"},
+    {"id": "W2_10_CUMULATIVE_GATE_BLOCKED", "owner": "W2-10", "detail": "Six-axis same-release data, runtime, browser and security evidence is incomplete"}
+  ],
+  "sideEffects": "NONE",
+  "realBusinessWrites": 0
+}
