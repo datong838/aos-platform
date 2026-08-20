@@ -90,33 +90,11 @@ class AipActionStore:
         expires_at = body.effective_expiry()
         if expires_at <= datetime.now(timezone.utc):
             raise AipActionTransitionBlocked("proposal expiry must be in the future")
-        stable = {
-            "tenantScope": {"orgId": scope.org_id, "projectId": scope.project_id},
-            "createdBy": actor_id,
-            "actionType": action_snapshot,
-            "taskId": body.task_id,
-            "runId": body.run_id,
-            "objectRef": body.object_ref.model_dump(mode="json", by_alias=True) if body.object_ref else None,
-            "purpose": body.purpose,
-            "riskLevel": risk.level.value,
-            "policy": {"floor": risk.floor.value, "reasons": list(risk.reasons), **risk.approval_policy},
-            "payload": body.payload,
-            "diff": body.diff,
-            "evidenceRefs": [item.model_dump(mode="json", by_alias=True) for item in body.evidence_refs],
-            "impactPreviewRef": (
-                body.impact_preview_ref.model_dump(mode="json", by_alias=True)
-                if body.impact_preview_ref
-                else None
-            ),
-            "expiresAt": expires_at.isoformat(),
-        }
-        policy = stable["policy"]
-        proposal_hash = canonical_hash(stable)
         request_hash = canonical_hash({
             "request": body.model_dump(mode="json", by_alias=True),
             "actionTypeRevisionHash": action_snapshot["revisionHash"],
             "classifiedRiskLevel": risk.level.value,
-            "policy": policy,
+            "policy": {"floor": risk.floor.value, "reasons": list(risk.reasons), **risk.approval_policy},
         })
         proposal_id = f"proposal-{uuid.uuid4().hex[:20]}"
         draft_id = f"action-draft-{uuid.uuid4().hex[:20]}"
@@ -132,10 +110,68 @@ class AipActionStore:
                     raise AipActionIdempotencyConflict("idempotency key reused for different proposal")
                 return self._bundle(conn, scope, replay["proposal_id"])
             self._validate_task_run(conn, scope, body.task_id, body.run_id)
+            action_binding_hash = None
             if body.impact_preview_ref is not None:
                 self.assert_bound_impact_preview_current(
                     conn, scope, body.impact_preview_ref
                 )
+                from aos_api.aip_production_contract_store import compute_action_binding_hash
+
+                preview_row = conn.execute(
+                    """SELECT * FROM aip_impact_preview_revision
+                       WHERE org_id=%s AND project_id=%s AND preview_id=%s AND revision=%s""",
+                    (
+                        *scope.key,
+                        body.impact_preview_ref.resource_id,
+                        body.impact_preview_ref.revision,
+                    ),
+                ).fetchone()
+                if preview_row is None:
+                    raise AipActionTransitionBlocked("impact preview revision not found")
+                binding_refs = preview_row["binding_refs"]
+                capability_ref = preview_row["capability_ref"]
+                account_ref = preview_row["account_ref"]
+                if isinstance(binding_refs, str):
+                    binding_refs = json.loads(binding_refs)
+                if isinstance(capability_ref, str):
+                    capability_ref = json.loads(capability_ref)
+                if isinstance(account_ref, str):
+                    account_ref = json.loads(account_ref)
+                action_binding_hash = compute_action_binding_hash(
+                    org_id=scope.org_id,
+                    project_id=scope.project_id,
+                    preview_id=preview_row["preview_id"],
+                    revision=int(preview_row["revision"]),
+                    content_hash=preview_row["content_hash"],
+                    dependency_snapshot_hash=preview_row["dependency_snapshot_hash"],
+                    binding_refs=binding_refs,
+                    capability_ref=capability_ref,
+                    account_ref=account_ref,
+                    expires_at=preview_row["expires_at"],
+                )
+            stable = {
+                "tenantScope": {"orgId": scope.org_id, "projectId": scope.project_id},
+                "createdBy": actor_id,
+                "actionType": action_snapshot,
+                "taskId": body.task_id,
+                "runId": body.run_id,
+                "objectRef": body.object_ref.model_dump(mode="json", by_alias=True) if body.object_ref else None,
+                "purpose": body.purpose,
+                "riskLevel": risk.level.value,
+                "policy": {"floor": risk.floor.value, "reasons": list(risk.reasons), **risk.approval_policy},
+                "payload": body.payload,
+                "diff": body.diff,
+                "evidenceRefs": [item.model_dump(mode="json", by_alias=True) for item in body.evidence_refs],
+                "impactPreviewRef": (
+                    body.impact_preview_ref.model_dump(mode="json", by_alias=True)
+                    if body.impact_preview_ref
+                    else None
+                ),
+                "actionBindingHash": action_binding_hash,
+                "expiresAt": expires_at.isoformat(),
+            }
+            policy = stable["policy"]
+            proposal_hash = canonical_hash(stable)
             conn.execute(
                 """INSERT INTO aip_action_proposal (
                    org_id,project_id,proposal_id,action_type_id,action_type_revision_hash,

@@ -14,6 +14,7 @@ from aos_api.aip_production_contract_store import (
     ProductionContractIdempotencyConflict,
     ProductionContractNotFound,
     canonical_hash,
+    compute_action_binding_hash,
 )
 from aos_api.aip_production_contracts import (
     ContractBlocker,
@@ -317,6 +318,60 @@ class AipProductionStartService:
             and row["impact_preview_hash"] == body.preview_ref.content_hash
         ):
             blockers.append(ContractBlocker(code="ACTION_PREVIEW_BINDING_MISMATCH", message="ActionProposal 未绑定本次 ImpactPreview exact ref"))
+        elif row["impact_preview_id"] is not None and preview is not None:
+            draft = conn.execute(
+                """SELECT snapshot FROM aip_action_draft
+                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s
+                   ORDER BY proposal_version DESC LIMIT 1""",
+                (*scope.key, row["proposal_id"]),
+            ).fetchone()
+            draft_snapshot = draft["snapshot"] if draft is not None else None
+            if isinstance(draft_snapshot, str):
+                draft_snapshot = json.loads(draft_snapshot)
+            pinned = (draft_snapshot or {}).get("actionBindingHash") if isinstance(draft_snapshot, dict) else None
+            if not isinstance(pinned, str) or len(pinned) != 64:
+                blockers.append(
+                    ContractBlocker(
+                        code="ACTION_BINDING_HASH_REQUIRED",
+                        message="绑 Preview 的 ActionProposal 缺少 actionBindingHash",
+                    )
+                )
+            else:
+                binding_refs = preview["binding_refs"]
+                capability_ref = preview["capability_ref"]
+                account_ref = preview["account_ref"]
+                if isinstance(binding_refs, str):
+                    binding_refs = json.loads(binding_refs)
+                if isinstance(capability_ref, str):
+                    capability_ref = json.loads(capability_ref)
+                if isinstance(account_ref, str):
+                    account_ref = json.loads(account_ref)
+                expected = compute_action_binding_hash(
+                    org_id=scope.org_id,
+                    project_id=scope.project_id,
+                    preview_id=preview["preview_id"],
+                    revision=int(preview["revision"]),
+                    content_hash=preview["content_hash"],
+                    dependency_snapshot_hash=preview["dependency_snapshot_hash"],
+                    binding_refs=binding_refs,
+                    capability_ref=capability_ref,
+                    account_ref=account_ref,
+                    expires_at=preview["expires_at"],
+                )
+                snapshot.append(
+                    {
+                        "resourceType": "ActionBindingHash",
+                        "pinned": pinned,
+                        "expected": expected,
+                    }
+                )
+                if pinned != expected:
+                    blockers.append(
+                        ContractBlocker(
+                            code="ACTION_BINDING_HASH_MISMATCH",
+                            message="ActionProposal actionBindingHash 与 ImpactPreview 不一致",
+                        )
+                    )
         approvals = conn.execute(
             """SELECT actor_id,expires_at FROM aip_action_approval_event
                WHERE org_id=%s AND project_id=%s AND proposal_id=%s

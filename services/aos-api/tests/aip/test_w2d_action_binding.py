@@ -102,11 +102,27 @@ def test_proposal_hash_and_snapshot_bind_exact_impact_preview() -> None:
                WHERE org_id=%s AND project_id=%s AND proposal_id=%s""",
             (*SCOPE.key, bundle.proposal.id),
         ).fetchone()
+        draft = conn.execute(
+            """SELECT snapshot FROM aip_action_draft
+               WHERE org_id=%s AND project_id=%s AND proposal_id=%s""",
+            (*SCOPE.key, bundle.proposal.id),
+        ).fetchone()
     assert dict(row) == {
         "impact_preview_id": preview_ref.resource_id,
         "impact_preview_revision": preview_ref.revision,
         "impact_preview_hash": preview_ref.content_hash,
     }
+    snapshot = draft["snapshot"]
+    if isinstance(snapshot, str):
+        import json
+
+        snapshot = json.loads(snapshot)
+    assert isinstance(snapshot.get("actionBindingHash"), str)
+    assert len(snapshot["actionBindingHash"]) == 64
+    preview = AipProductionContractStore().get_impact_preview(
+        SCOPE, preview_ref.resource_id, preview_ref.revision
+    )
+    assert snapshot["actionBindingHash"] == preview.action_binding_hash
 
 
 def test_preview_binding_drift_blocks_approval() -> None:

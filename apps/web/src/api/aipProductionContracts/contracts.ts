@@ -293,6 +293,7 @@ export type ImpactPreviewRevision = CreateImpactPreviewInput & {
   version: number;
   contentHash: string;
   dependencySnapshotHash: string;
+  actionBindingHash: string;
   lifecycle: ContractLifecycle;
   readiness: ContractReadiness;
   blockers: ContractBlocker[];

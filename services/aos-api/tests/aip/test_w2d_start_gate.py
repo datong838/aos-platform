@@ -233,3 +233,51 @@ def test_empty_or_mismatched_logic_blocks_start_without_runtime() -> None:
     assert mismatch.status is ProductionStartDecisionStatus.BLOCKED
     assert "LOGIC_GRAPH_HASH_MISMATCH" in {item.code for item in mismatch.blockers}
     assert _runtime_counts(request.task_id) == before
+
+
+def test_action_binding_hash_mismatch_blocks_start_without_runtime() -> None:
+    request, action_store = _seed_start_candidate()
+    proposal = action_store.decide(
+        SCOPE,
+        "checker:w2d-start",
+        request.action_proposal_ref.proposal_id,
+        f"approval-{uuid.uuid4().hex}",
+        DecideActionProposalRequest(
+            expected_proposal_version=request.action_proposal_ref.version,
+            expected_proposal_hash=request.action_proposal_ref.proposal_hash,
+            decision=ApprovalDecision.APPROVED,
+        ),
+    ).proposal
+    request = request.model_copy(
+        update={
+            "action_proposal_ref": ActionProposalExactRef(
+                proposal_id=proposal.id,
+                version=proposal.version,
+                proposal_hash=proposal.proposal_hash,
+            )
+        }
+    )
+    with connect(SCOPE) as conn:
+        draft = conn.execute(
+            """SELECT snapshot FROM aip_action_draft
+               WHERE org_id=%s AND project_id=%s AND proposal_id=%s""",
+            (*SCOPE.key, proposal.id),
+        ).fetchone()
+        snapshot = draft["snapshot"]
+        if isinstance(snapshot, str):
+            snapshot = json.loads(snapshot)
+        snapshot["actionBindingHash"] = "a" * 64
+        conn.execute(
+            """UPDATE aip_action_draft SET snapshot=%s::jsonb
+               WHERE org_id=%s AND project_id=%s AND proposal_id=%s""",
+            (json.dumps(snapshot), *SCOPE.key, proposal.id),
+        )
+        conn.commit()
+    before = _runtime_counts(request.task_id)
+    decision = AipProductionStartService().start(
+        SCOPE, "approver:w2d", f"bind-hash-{uuid.uuid4().hex}", request
+    )
+    assert decision.status is ProductionStartDecisionStatus.BLOCKED
+    assert "ACTION_BINDING_HASH_MISMATCH" in {item.code for item in decision.blockers}
+    assert decision.task_run_ref is None
+    assert _runtime_counts(request.task_id) == before

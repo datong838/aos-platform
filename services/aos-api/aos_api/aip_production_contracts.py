@@ -556,6 +556,7 @@ class ImpactPreviewRevision(CreateImpactPreviewRequest):
     version: int = Field(ge=1)
     content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     dependency_snapshot_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    action_binding_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     lifecycle: BriefLifecycle
     readiness: ContractReadiness
     blockers: list[ContractBlocker]

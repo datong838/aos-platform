@@ -69,6 +69,35 @@ def canonical_hash(value: Any) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
+def compute_action_binding_hash(
+    *,
+    org_id: str,
+    project_id: str,
+    preview_id: str,
+    revision: int,
+    content_hash: str,
+    dependency_snapshot_hash: str,
+    binding_refs: Any,
+    capability_ref: Any,
+    account_ref: Any,
+    expires_at: Any,
+) -> str:
+    """W-L18: server-owned Preview↔Action joint binding hash (ADR 42 §4 subset)."""
+    return canonical_hash(
+        {
+            "tenant": {"orgId": org_id, "projectId": project_id},
+            "previewId": preview_id,
+            "revision": int(revision),
+            "contentHash": content_hash,
+            "dependencySnapshotHash": dependency_snapshot_hash,
+            "bindingRefs": binding_refs,
+            "capabilityRef": capability_ref,
+            "accountRef": account_ref,
+            "expiresAt": expires_at,
+        }
+    )
+
+
 class AipProductionContractStore:
     def __init__(
         self,
@@ -2177,6 +2206,18 @@ class AipProductionContractStore:
         self, scope: TenantScope, row: Any, version: int
     ) -> ImpactPreviewRevision:
         body = self._impact_body(row)
+        action_binding_hash = compute_action_binding_hash(
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            preview_id=row["preview_id"],
+            revision=int(row["revision"]),
+            content_hash=row["content_hash"],
+            dependency_snapshot_hash=row["dependency_snapshot_hash"],
+            binding_refs=self._load(row["binding_refs"]),
+            capability_ref=self._load(row["capability_ref"]),
+            account_ref=self._load(row["account_ref"]),
+            expires_at=row["expires_at"],
+        )
         return ImpactPreviewRevision(
             **body.model_dump(),
             tenant=self._tenant(scope),
@@ -2185,6 +2226,7 @@ class AipProductionContractStore:
             version=version,
             content_hash=row["content_hash"],
             dependency_snapshot_hash=row["dependency_snapshot_hash"],
+            action_binding_hash=action_binding_hash,
             lifecycle=row["lifecycle"],
             readiness=row["readiness"],
             blockers=self._load(row["blockers"]),
