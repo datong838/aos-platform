@@ -31,6 +31,8 @@ from aos_api.aip_production_contracts import (
     ImpactPreviewRevision, ImpactPreviewListResponse,
     ProductionStartRequest, ProductionStartDecision,
     ProductionStartDecisionListResponse,
+    RevokeEvidenceBundleRequest, ResolveEvidenceDisclosureRequest,
+    EvidenceDisclosureDecision,
 )
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
@@ -170,13 +172,19 @@ def build_bundle(body:BuildEvidenceBundleRequest,idempotency_key:str=Header(alia
 
 @router.get("/evidence-bundles",response_model=EvidenceBundleListResponse)
 def list_bundles(principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
-    try:return store.list_evidence_bundles(_scope(principal))
+    try:return store.list_evidence_bundles(_scope(principal), markings=principal.markings)
     except ProductionContractError as exc:raise _map(exc) from exc
 
 
 @router.get("/evidence-bundles/{bundle_id}",response_model=EvidenceBundleRevision)
 def get_bundle(bundle_id:str,revision:int=Query(default=1,ge=1),principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
-    try:return store.get_evidence_bundle(_scope(principal),bundle_id,revision)
+    try:return store.get_evidence_bundle(_scope(principal),bundle_id,revision, markings=principal.markings)
+    except ProductionContractError as exc:raise _map(exc) from exc
+
+
+@router.post("/evidence-bundles/{bundle_id}/revoke",response_model=EvidenceBundleRevision)
+def revoke_bundle(bundle_id:str,body:RevokeEvidenceBundleRequest,idempotency_key:str=Header(alias="Idempotency-Key"),principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
+    try:return store.revoke_evidence_bundle(_scope(principal),principal.subject,bundle_id,_key(idempotency_key),body)
     except ProductionContractError as exc:raise _map(exc) from exc
 
 

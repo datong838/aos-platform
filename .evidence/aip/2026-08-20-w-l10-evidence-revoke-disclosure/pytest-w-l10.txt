@@ -1,0 +1,256 @@
+.....                                                                    [100%]
+=============================== warnings summary ===============================
+aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+aos_api/routers/phase5_datasets.py:31
+  /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase5_datasets.py:31: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'taskId' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'taskId' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'taskId' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'briefType' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'briefType' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'briefType' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'schemaRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'schemaRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'schemaRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'spec' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'spec' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'spec' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'expectedVersion' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'expectedVersion' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'expectedVersion' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'briefRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'briefRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'briefRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'subjectRefs' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'subjectRefs' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'subjectRefs' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'cutoffAt' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'cutoffAt' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'cutoffAt' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'itemRefs' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'itemRefs' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'itemRefs' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'requiredFactIds' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'requiredFactIds' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'requiredFactIds' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'marking' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'marking' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'marking' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'licenseSummary' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'licenseSummary' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'licenseSummary' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'expectedRevision' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'expectedRevision' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'expectedRevision' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'expectedContentHash' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'expectedContentHash' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'expectedContentHash' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'reason' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'reason' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'reason' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'evidenceRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'evidenceRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'evidenceRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'purpose' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'purpose' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'purpose' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'requestedLevel' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'requestedLevel' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'requestedLevel' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'alias' attribute with value 'subjectRef' was provided to the `Field()` function, which has no effect in the context it was used. 'alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value 'subjectRef' was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/test_w_l10_evidence_revoke_disclosure.py::test_revoke_marks_bundle_and_blocks_disclosure
+  /Users/ddt/tools/micromamba-root/envs/aos/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:2274: UnsupportedFieldAttributeWarning: The 'serialization_alias' attribute with value 'subjectRef' was provided to the `Field()` function, which has no effect in the context it was used. 'serialization_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+5 passed, 63 warnings in 21.75s

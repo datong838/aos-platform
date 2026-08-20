@@ -30,6 +30,19 @@ class Freshness(StrEnum):
     UNKNOWN = "unknown"
 
 
+class DisclosureLevel(StrEnum):
+    L1 = "l1"
+    L2 = "l2"
+    L3 = "l3"
+
+
+class DisclosureStatus(StrEnum):
+    ALLOWED = "allowed"
+    BLOCKED = "blocked"
+    STALE = "stale"
+    UNKNOWN = "unknown"
+
+
 class ContractReadiness(StrEnum):
     READY = "ready"
     BLOCKED = "blocked"
@@ -720,9 +733,49 @@ class EvidenceBundleRevision(AipContractModel):
     lifecycle: BriefLifecycle
     created_by: str
     created_at: datetime
+    revoked: bool = False
+    revoke_reason: str | None = None
 
 
 class EvidenceBundleListResponse(AipContractModel):
     tenant: TenantContext
     items: list[EvidenceBundleRevision]
     count: int = Field(ge=0)
+
+
+class RevokeEvidenceBundleRequest(AipContractModel):
+    expected_revision: int = Field(ge=1)
+    expected_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    reason: str = Field(min_length=1, max_length=500)
+
+
+class ResolveEvidenceDisclosureRequest(AipContractModel):
+    evidence_ref: ExactRevisionRef
+    purpose: str = Field(min_length=1, max_length=200)
+    requested_level: DisclosureLevel
+    task_id: str | None = Field(default=None, max_length=200)
+    subject_ref: ResourceRef | None = None
+
+    @model_validator(mode="after")
+    def _evidence_kind(self) -> ResolveEvidenceDisclosureRequest:
+        if self.evidence_ref.resource_type != "Evidence":
+            raise ValueError("evidenceRef must reference Evidence")
+        return self
+
+
+class EvidenceDisclosureDecision(AipContractModel):
+    tenant: TenantContext
+    decision_id: str
+    evidence_ref: ExactRevisionRef
+    purpose: str
+    requested_level: DisclosureLevel
+    granted_level: DisclosureLevel | None
+    status: DisclosureStatus
+    reasons: list[str]
+    citation: dict[str, Any]
+    display_payload: dict[str, Any]
+    redaction_receipt: dict[str, Any]
+    decision_hash: str
+    expires_at: datetime | None
+    created_by: str
+    created_at: datetime

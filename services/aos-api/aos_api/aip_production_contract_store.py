@@ -6,7 +6,7 @@ import json
 import uuid
 from collections.abc import Callable
 from contextlib import AbstractContextManager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from aos_api.aip_contracts import PlanStep, ResourceRef, TenantContext
@@ -16,10 +16,12 @@ from aos_api.aip_production_contracts import (
     ContractReadiness, Coverage, CreateArtifactRelationRequest, CreateBriefRequest,
     CreateEvalContractRequest, CreateEvidenceBundleRequest,
     CreateResponsibilityPlanRequest, CreateReviewIssueRequest,
-    CreateStageTemplateRequest, EvalContractListResponse, EvalContractRevision,
-    EvidenceBundleListResponse, EvidenceBundleRevision, ExactArtifactRef,
+    CreateStageTemplateRequest, DisclosureLevel, DisclosureStatus,
+    EvalContractListResponse, EvalContractRevision, EvidenceBundleListResponse,
+    EvidenceBundleRevision, EvidenceDisclosureDecision, ExactArtifactRef,
     ExactRevisionRef, Freshness, ImpactPreviewListResponse, ImpactPreviewRevision,
-    CreateImpactPreviewRequest, ReviseImpactPreviewRequest,
+    CreateImpactPreviewRequest, ResolveEvidenceDisclosureRequest,
+    RevokeEvidenceBundleRequest, ReviseImpactPreviewRequest,
     ResolveReviewIssueRequest, ResponsibilityPlanListResponse,
     ResponsibilityPlanRevision, ReturnDecision, ReturnReviewIssueRequest,
     ReviseBriefRequest, ReviseEvalContractRequest,
@@ -1729,15 +1731,43 @@ class AipProductionContractStore:
             return [str(item).strip() for item in raw if str(item).strip()]
         return []
 
-    def get_evidence_bundle(self, scope: TenantScope, bundle_id: str, revision: int=1, *, conn: Any|None=None) -> EvidenceBundleRevision:
-        def read(c:Any):
-            row=c.execute("SELECT * FROM aip_evidence_bundle_revision WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s",(*scope.key,bundle_id,revision)).fetchone()
-            if not row: raise ProductionContractNotFound("evidence bundle not found")
-            return self._bundle(scope,row)
-        if conn is not None:return read(conn)
-        with self._connect_factory(scope) as c:return read(c)
+    def get_evidence_bundle(
+        self,
+        scope: TenantScope,
+        bundle_id: str,
+        revision: int = 1,
+        *,
+        conn: Any | None = None,
+        markings: list[str] | None = None,
+    ) -> EvidenceBundleRevision:
+        def read(c: Any):
+            row = c.execute(
+                "SELECT * FROM aip_evidence_bundle_revision WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s",
+                (*scope.key, bundle_id, revision),
+            ).fetchone()
+            if not row:
+                raise ProductionContractNotFound("evidence bundle not found")
+            bundle = self._bundle(scope, row, conn=c)
+            try:
+                self._assert_bundle_marking_access(bundle, markings)
+            except ProductionContractDependencyBlocked:
+                # API 调用方不得因 422 推断 Bundle 存在
+                if markings is not None:
+                    raise ProductionContractNotFound("evidence bundle not found") from None
+                raise
+            return bundle
 
-    def list_evidence_bundles(self, scope: TenantScope) -> EvidenceBundleListResponse:
+        if conn is not None:
+            return read(conn)
+        with self._connect_factory(scope) as c:
+            return read(c)
+
+    def list_evidence_bundles(
+        self,
+        scope: TenantScope,
+        *,
+        markings: list[str] | None = None,
+    ) -> EvidenceBundleListResponse:
         with self._connect_factory(scope) as conn:
             rows = conn.execute(
                 """SELECT * FROM aip_evidence_bundle_revision
@@ -1745,12 +1775,367 @@ class AipProductionContractStore:
                 ORDER BY created_at DESC, bundle_id, revision DESC""",
                 scope.key,
             ).fetchall()
-            items = [self._bundle(scope, row) for row in rows]
+            items: list[EvidenceBundleRevision] = []
+            for row in rows:
+                bundle = self._bundle(scope, row, conn=conn)
+                try:
+                    self._assert_bundle_marking_access(bundle, markings)
+                except ProductionContractDependencyBlocked:
+                    continue
+                items.append(bundle)
             return EvidenceBundleListResponse(
                 tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
                 items=items,
                 count=len(items),
             )
+
+    def revoke_evidence_bundle(
+        self,
+        scope: TenantScope,
+        actor: str,
+        bundle_id: str,
+        key: str,
+        body: RevokeEvidenceBundleRequest,
+    ) -> EvidenceBundleRevision:
+        request_hash = canonical_hash(
+            {
+                "bundleId": bundle_id,
+                **body.model_dump(mode="json", by_alias=True),
+            }
+        )
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "evidence_bundle.revoke", key, request_hash)
+            if replay:
+                return self.get_evidence_bundle(
+                    scope, replay["resourceId"], int(replay["revision"]), conn=conn
+                )
+            row = conn.execute(
+                """SELECT * FROM aip_evidence_bundle_revision
+                   WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s""",
+                (*scope.key, bundle_id, body.expected_revision),
+            ).fetchone()
+            if row is None:
+                raise ProductionContractNotFound("evidence bundle not found")
+            if row["content_hash"] != body.expected_content_hash:
+                raise ProductionContractDependencyBlocked("EVIDENCE_BUNDLE_HASH_DRIFTED")
+            existing = conn.execute(
+                """SELECT event_id FROM aip_evidence_bundle_revoke_event
+                   WHERE org_id=%s AND project_id=%s AND bundle_id=%s
+                     AND revision=%s AND content_hash=%s""",
+                (*scope.key, bundle_id, body.expected_revision, body.expected_content_hash),
+            ).fetchone()
+            if existing is None:
+                conn.execute(
+                    """INSERT INTO aip_evidence_bundle_revoke_event
+                       (org_id,project_id,event_id,bundle_id,revision,content_hash,reason,actor)
+                       VALUES(%s,%s,%s,%s,%s,%s,%s,%s)""",
+                    (
+                        *scope.key,
+                        f"bundle-revoke-{uuid.uuid4().hex[:20]}",
+                        bundle_id,
+                        body.expected_revision,
+                        body.expected_content_hash,
+                        body.reason,
+                        actor,
+                    ),
+                )
+            self._receipt(
+                conn,
+                scope,
+                "evidence_bundle.revoke",
+                key,
+                request_hash,
+                {
+                    "resourceType": "EvidenceBundleRevision",
+                    "resourceId": bundle_id,
+                    "revision": body.expected_revision,
+                    "contentHash": body.expected_content_hash,
+                },
+                actor,
+            )
+            conn.commit()
+            return self.get_evidence_bundle(
+                scope, bundle_id, body.expected_revision, conn=conn
+            )
+
+    def resolve_evidence_disclosure(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        body: ResolveEvidenceDisclosureRequest,
+        *,
+        markings: list[str] | None = None,
+    ) -> EvidenceDisclosureDecision:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(payload)
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(
+                conn, scope, "evidence_disclosure.resolve", key, request_hash
+            )
+            if replay:
+                return self.get_evidence_disclosure(
+                    scope, replay["resourceId"], conn=conn
+                )
+            decision = self._evaluate_disclosure(
+                conn, scope, actor, body, markings=markings or []
+            )
+            conn.execute(
+                """INSERT INTO aip_evidence_disclosure_decision
+                   (org_id,project_id,decision_id,evidence_id,evidence_hash,purpose,
+                    requested_level,granted_level,status,reasons,citation,display_payload,
+                    redaction_receipt,decision_hash,expires_at,actor)
+                   VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,
+                          %s::jsonb,%s,%s,%s)""",
+                (
+                    *scope.key,
+                    decision.decision_id,
+                    body.evidence_ref.resource_id,
+                    body.evidence_ref.content_hash,
+                    body.purpose,
+                    body.requested_level.value,
+                    decision.granted_level.value if decision.granted_level else None,
+                    decision.status.value,
+                    self._json(decision.reasons),
+                    self._json(decision.citation),
+                    self._json(decision.display_payload),
+                    self._json(decision.redaction_receipt),
+                    decision.decision_hash,
+                    decision.expires_at,
+                    actor,
+                ),
+            )
+            self._receipt(
+                conn,
+                scope,
+                "evidence_disclosure.resolve",
+                key,
+                request_hash,
+                {
+                    "resourceType": "EvidenceDisclosureDecision",
+                    "resourceId": decision.decision_id,
+                    "revision": 1,
+                    "contentHash": decision.decision_hash,
+                },
+                actor,
+            )
+            conn.commit()
+            return decision
+
+    def get_evidence_disclosure(
+        self,
+        scope: TenantScope,
+        decision_id: str,
+        *,
+        conn: Any | None = None,
+    ) -> EvidenceDisclosureDecision:
+        def read(c: Any) -> EvidenceDisclosureDecision:
+            row = c.execute(
+                """SELECT * FROM aip_evidence_disclosure_decision
+                   WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
+                (*scope.key, decision_id),
+            ).fetchone()
+            if row is None:
+                raise ProductionContractNotFound("disclosure decision not found")
+            return EvidenceDisclosureDecision(
+                tenant=self._tenant(scope),
+                decision_id=row["decision_id"],
+                evidence_ref=ExactRevisionRef(
+                    resource_type="Evidence",
+                    resource_id=row["evidence_id"],
+                    revision=1,
+                    content_hash=row["evidence_hash"],
+                ),
+                purpose=row["purpose"],
+                requested_level=row["requested_level"],
+                granted_level=row["granted_level"],
+                status=row["status"],
+                reasons=self._load(row["reasons"]),
+                citation=self._load(row["citation"]),
+                display_payload=self._load(row["display_payload"]),
+                redaction_receipt=self._load(row["redaction_receipt"]),
+                decision_hash=row["decision_hash"],
+                expires_at=row["expires_at"],
+                created_by=row["actor"],
+                created_at=row["created_at"],
+            )
+
+        if conn is not None:
+            return read(conn)
+        with self._connect_factory(scope) as c:
+            return read(c)
+
+    def _evaluate_disclosure(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        actor: str,
+        body: ResolveEvidenceDisclosureRequest,
+        *,
+        markings: list[str],
+    ) -> EvidenceDisclosureDecision:
+        reasons: list[str] = []
+        row = conn.execute(
+            """SELECT * FROM aip_evidence
+               WHERE org_id=%s AND project_id=%s AND evidence_id=%s""",
+            (*scope.key, body.evidence_ref.resource_id),
+        ).fetchone()
+        if row is None or row["content_hash"] != body.evidence_ref.content_hash:
+            reasons.append("EVIDENCE_EXACT_REF_MISSING_OR_DRIFTED")
+        revoked_bundle = None
+        if row is not None:
+            bundle_rows = conn.execute(
+                """SELECT bundle_id,revision,content_hash,item_refs
+                   FROM aip_evidence_bundle_revision
+                   WHERE org_id=%s AND project_id=%s""",
+                scope.key,
+            ).fetchall()
+            for bundle_row in bundle_rows:
+                refs = self._load(bundle_row["item_refs"]) or []
+                matched = any(
+                    isinstance(item, dict)
+                    and item.get("resourceId") == body.evidence_ref.resource_id
+                    and item.get("contentHash") == body.evidence_ref.content_hash
+                    for item in refs
+                )
+                if not matched:
+                    continue
+                revoked, reason = self._bundle_revoke(
+                    conn,
+                    scope,
+                    bundle_row["bundle_id"],
+                    int(bundle_row["revision"]),
+                    bundle_row["content_hash"],
+                )
+                if revoked:
+                    revoked_bundle = {"reason": reason}
+                    break
+            if revoked_bundle is not None:
+                reasons.append("EVIDENCE_BUNDLE_REVOKED")
+        required_markings = ["public"]
+        if row is not None:
+            payload = self._load(row["payload"]) if row["payload"] is not None else {}
+            if isinstance(payload, dict) and isinstance(payload.get("marking"), list):
+                required_markings = [
+                    str(item).strip() for item in payload["marking"] if str(item).strip()
+                ] or ["public"]
+        if not set(required_markings).issubset(set(markings or [])):
+            reasons.append("MARKING_ACCESS_DENIED")
+        if body.requested_level is DisclosureLevel.L2 and "restricted" not in set(
+            markings or []
+        ):
+            reasons.append("L2_REQUIRES_RESTRICTED_MARKING")
+        if body.requested_level is DisclosureLevel.L3 and "secret" not in set(
+            markings or []
+        ):
+            reasons.append("L3_REQUIRES_SECRET_MARKING")
+        status = DisclosureStatus.BLOCKED if reasons else DisclosureStatus.ALLOWED
+        granted = None if reasons else body.requested_level
+        display: dict[str, Any] = {}
+        citation: dict[str, Any] = {
+            "evidenceId": body.evidence_ref.resource_id,
+            "contentHashPrefix": body.evidence_ref.content_hash[:12],
+            "purpose": body.purpose,
+        }
+        expires_at = None
+        if status is DisclosureStatus.ALLOWED and row is not None:
+            payload = self._load(row["payload"]) if row["payload"] is not None else {}
+            if body.requested_level is DisclosureLevel.L1:
+                display = {
+                    "layer": "l1",
+                    "evidenceType": row["evidence_type"],
+                    "sourceType": row["source_type"],
+                    "observedAt": row["observed_at"].isoformat()
+                    if row["observed_at"]
+                    else None,
+                    "freshnessAt": row["freshness_at"].isoformat()
+                    if row["freshness_at"]
+                    else None,
+                    "marking": required_markings,
+                    "contentHashPrefix": row["content_hash"][:12],
+                    "revoked": False,
+                }
+            elif body.requested_level is DisclosureLevel.L2:
+                raw = json.dumps(payload or {}, ensure_ascii=False)
+                display = {
+                    "layer": "l2",
+                    "excerpt": raw[:200],
+                    "locator": {"path": "$.payload", "offset": 0, "length": min(200, len(raw))},
+                }
+            else:
+                expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
+                display = {
+                    "layer": "l3",
+                    "scopedSourceRef": {
+                        "resourceType": "EvidenceDisclosureDecision",
+                        "resourceId": "pending",
+                        "authority": "aip-evidence-disclosure",
+                    },
+                }
+        decision_id = f"disclosure-{uuid.uuid4().hex[:20]}"
+        if (
+            status is DisclosureStatus.ALLOWED
+            and body.requested_level is DisclosureLevel.L3
+            and isinstance(display.get("scopedSourceRef"), dict)
+        ):
+            display["scopedSourceRef"]["resourceId"] = decision_id
+        redaction = {
+            "policy": "minimum-disclosure",
+            "requestedLevel": body.requested_level.value,
+            "grantedLevel": granted.value if granted else None,
+        }
+        decision_hash = canonical_hash(
+            {
+                "decisionId": decision_id,
+                "evidenceRef": body.evidence_ref.model_dump(mode="json", by_alias=True),
+                "purpose": body.purpose,
+                "status": status.value,
+                "grantedLevel": granted.value if granted else None,
+                "reasons": reasons,
+                "displayPayload": display,
+            }
+        )
+        return EvidenceDisclosureDecision(
+            tenant=self._tenant(scope),
+            decision_id=decision_id,
+            evidence_ref=body.evidence_ref,
+            purpose=body.purpose,
+            requested_level=body.requested_level,
+            granted_level=granted,
+            status=status,
+            reasons=reasons,
+            citation=citation,
+            display_payload=display,
+            redaction_receipt=redaction,
+            decision_hash=decision_hash,
+            expires_at=expires_at,
+            created_by=actor,
+            created_at=datetime.now(timezone.utc),
+        )
+
+    @staticmethod
+    def _assert_bundle_marking_access(
+        bundle: EvidenceBundleRevision, markings: list[str] | None
+    ) -> None:
+        if markings is None:
+            return
+        required = list(bundle.marking) or ["public"]
+        if not set(required).issubset(set(markings)):
+            raise ProductionContractDependencyBlocked("BUNDLE_MARKING_ACCESS_DENIED")
+
+    def _bundle_revoke(
+        self, conn: Any, scope: TenantScope, bundle_id: str, revision: int, content_hash: str
+    ) -> tuple[bool, str | None]:
+        row = conn.execute(
+            """SELECT reason FROM aip_evidence_bundle_revoke_event
+               WHERE org_id=%s AND project_id=%s AND bundle_id=%s
+                 AND revision=%s AND content_hash=%s
+               ORDER BY occurred_at DESC LIMIT 1""",
+            (*scope.key, bundle_id, revision, content_hash),
+        ).fetchone()
+        if row is None:
+            return False, None
+        return True, row["reason"]
 
     @staticmethod
     def _validate_stage_graph(stages: list[StageDefinition]) -> None:
@@ -2071,6 +2456,21 @@ class AipProductionContractStore:
                 snapshot,
                 blockers,
                 require_frozen=require_frozen,
+            )
+        revoked, reason = self._bundle_revoke(
+            conn,
+            scope,
+            body.evidence_bundle_ref.resource_id,
+            body.evidence_bundle_ref.revision,
+            body.evidence_bundle_ref.content_hash,
+        )
+        if revoked:
+            blockers.append(
+                ContractBlocker(
+                    code="EVIDENCE_BUNDLE_REVOKED",
+                    message=f"EvidenceBundle 已撤销: {reason or 'revoked'}",
+                    resource_ref=body.evidence_bundle_ref,
+                )
             )
         if body.model_route_ref:
             self._snapshot_exact(
@@ -2638,5 +3038,36 @@ class AipProductionContractStore:
         conn.execute("INSERT INTO aip_production_contract_receipt(org_id,project_id,receipt_id,operation,idempotency_key,request_hash,result_ref,created_by) VALUES(%s,%s,%s,%s,%s,%s,%s::jsonb,%s)",(*scope.key,f"w2r-{uuid.uuid4().hex[:20]}",operation,key,request_hash,self._json(result),actor))
     def _brief(self,scope:TenantScope,row:Any,version:int)->TaskBriefRevision:
         return TaskBriefRevision(tenant=TenantContext(org_id=scope.org_id,project_id=scope.project_id),brief_id=row["brief_id"],task_id=row["task_id"],revision=int(row["revision"]),version=version,brief_type=row["brief_type"],schema_ref=ResourceRef.model_validate(self._load(row["schema_ref"])),spec=self._load(row["spec"]),content_hash=row["content_hash"],lifecycle=BriefLifecycle(row["lifecycle"]),created_by=row["created_by"],created_at=row["created_at"])
-    def _bundle(self,scope:TenantScope,row:Any)->EvidenceBundleRevision:
-        return EvidenceBundleRevision(tenant=TenantContext(org_id=scope.org_id,project_id=scope.project_id),bundle_id=row["bundle_id"],revision=int(row["revision"]),brief_ref=ExactRevisionRef.model_validate(self._load(row["brief_ref"])),subject_refs=[ResourceRef.model_validate(x) for x in self._load(row["subject_refs"])],cutoff_at=row["cutoff_at"],item_refs=[ExactRevisionRef.model_validate(x) for x in self._load(row["item_refs"])],coverage=row["coverage"],missing=self._load(row["missing"]),conflicts=self._load(row["conflicts"]),uncertainties=self._load(row["uncertainties"]),freshness=row["freshness"],marking=self._load(row["marking"]),license_summary=self._load(row["license_summary"]),content_hash=row["content_hash"],lifecycle=BriefLifecycle(row["lifecycle"]),created_by=row["created_by"],created_at=row["created_at"])
+    def _bundle(self,scope:TenantScope,row:Any, *, conn: Any | None = None)->EvidenceBundleRevision:
+        revoked = False
+        revoke_reason = None
+        if conn is not None:
+            revoked, revoke_reason = self._bundle_revoke(
+                conn,
+                scope,
+                row["bundle_id"],
+                int(row["revision"]),
+                row["content_hash"],
+            )
+        return EvidenceBundleRevision(
+            tenant=TenantContext(org_id=scope.org_id,project_id=scope.project_id),
+            bundle_id=row["bundle_id"],
+            revision=int(row["revision"]),
+            brief_ref=ExactRevisionRef.model_validate(self._load(row["brief_ref"])),
+            subject_refs=[ResourceRef.model_validate(x) for x in self._load(row["subject_refs"])],
+            cutoff_at=row["cutoff_at"],
+            item_refs=[ExactRevisionRef.model_validate(x) for x in self._load(row["item_refs"])],
+            coverage=row["coverage"],
+            missing=self._load(row["missing"]),
+            conflicts=self._load(row["conflicts"]),
+            uncertainties=self._load(row["uncertainties"]),
+            freshness=row["freshness"],
+            marking=self._load(row["marking"]),
+            license_summary=self._load(row["license_summary"]),
+            content_hash=row["content_hash"],
+            lifecycle=BriefLifecycle(row["lifecycle"]),
+            created_by=row["created_by"],
+            created_at=row["created_at"],
+            revoked=revoked,
+            revoke_reason=revoke_reason,
+        )

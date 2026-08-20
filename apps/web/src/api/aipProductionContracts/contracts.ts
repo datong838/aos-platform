@@ -36,6 +36,8 @@ export type EvidenceBundleRevision = {
   lifecycle: "frozen";
   createdBy: string;
   createdAt: string;
+  revoked: boolean;
+  revokeReason: string | null;
 };
 
 export type TaskBriefListResponse = { tenant: Tenant; items: TaskBriefRevision[]; count: number };

@@ -113,7 +113,7 @@ def test_evidence_bundle_api_binds_exact_frozen_brief_and_evidence(client):
             "cutoffAt":(datetime.now(timezone.utc) - timedelta(hours=1)).isoformat(),
             "itemRefs":[{"resourceType":"Evidence","resourceId":evidence_id,"revision":1,"contentHash":evidence_hash}],
             "requiredFactIds":["order_snapshot","customer_profile"],
-            "marking":["internal"],
+            "marking":["public"],
             "licenseSummary":{"source":"authorized database"},
         }
         key=f"bundle-{uuid.uuid4().hex}"
