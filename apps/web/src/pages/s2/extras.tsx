@@ -49,8 +49,26 @@ export function MaturityPage() {
   return (
     <S2Chrome
       title="Agent 成熟度楼梯"
-      lede="别一上来做自动化。先 Threads，再固化 Agent，再嵌应用，最后才自动化。"
+      lede="先 Threads，再固化 Agent，再嵌应用，最后才自动化；楼梯预览不伪造 L4 真门控。"
     >
+      <div
+        data-testid="maturity-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
+      >
+        {[
+          { label: "当前层", value: `L${level}` },
+          { label: "层名", value: levelLabel },
+          { label: "Eval", value: green ? "绿" : "未跑" },
+          { label: "Draft", value: String(drafts.data?.count ?? drafts.data?.items?.length ?? 0) },
+          { label: "同事数", value: String(agents.data?.items?.length ?? 0) },
+          { label: "L4 门", value: evals.data?.l4Allowed === true ? "允许" : "未开" },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
       {/* 顶部状态条 · 对齐 aip-maturity.html 黄色背景卡片 */}
       <div
         style={{
