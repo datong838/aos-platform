@@ -188,9 +188,103 @@ def test_responsibility_plan_draft_reports_inactive_binding_blockers() -> None:
     assert created.uncovered_slots == ["content.review"]
     assert {item.code for item in created.blockers} == {
         "SKILL_BINDING_NOT_ACTIVE",
-        "CAPABILITY_BINDING_NOT_ACTIVE",
     }
     assert store.list_responsibility_plans(SCOPE).count == before_count + 1
+
+
+def test_responsibility_plan_ignores_tenant_global_capability_bindings() -> None:
+    """W-L4: unrelated tenant Binding must not light the assignee slot."""
+    _seed_dependencies()
+    with connect() as conn:
+        conn.execute(
+            """INSERT INTO aip_capability_binding
+               (org_id,project_id,binding_id,capability_ref,secret_ref,health,
+                network_policy_revision,quota_policy_revision,timeout_ms,max_concurrency,
+                status,version,operational_readiness,allow_degraded,dependency_snapshot_hash,
+                last_evaluated_at,readiness_expires_at,observed_at,created_at,updated_at)
+               VALUES(%s,%s,'cap-global-review',%s::jsonb,'secret://pytest/provider','healthy',
+                      'network-1','quota-1',30000,1,
+                      'active',1,'available',FALSE,%s,
+                      NOW(),NOW()+INTERVAL '1 hour',NOW(),NOW(),NOW())
+               ON CONFLICT DO NOTHING""",
+            (
+                *SCOPE.key,
+                '{"assetId":"capability.content.review","assetType":"CapabilityRevision","revision":1,"contentHash":"%s"}'
+                % HASH,
+                HASH,
+            ),
+        )
+        conn.commit()
+    store = AipProductionContractStore(
+        responsibility_template_resolver=lambda _scope, _ref: True
+    )
+    created = store.create_responsibility_plan(
+        SCOPE,
+        "test",
+        f"plan-global-{HASH[:8]}",
+        _responsibility_request(),
+    )
+    assert created.coverage.value == "blocked"
+    assert "content.review" in created.uncovered_slots
+    assert "SKILL_BINDING_NOT_ACTIVE" in {item.code for item in created.blockers}
+
+
+def test_responsibility_plan_requires_assignee_operational_binding() -> None:
+    """W-L4: SkillBinding→CapabilityBinding must be operational and fresh."""
+    _seed_dependencies()
+    with connect() as conn:
+        conn.execute(
+            """INSERT INTO aip_capability_binding
+               (org_id,project_id,binding_id,capability_ref,secret_ref,health,
+                network_policy_revision,quota_policy_revision,timeout_ms,max_concurrency,
+                status,version,operational_readiness,allow_degraded,dependency_snapshot_hash,
+                last_evaluated_at,readiness_expires_at,observed_at,created_at,updated_at)
+               VALUES(%s,%s,'cap-owned-review',%s::jsonb,'secret://pytest/provider','healthy',
+                      'network-1','quota-1',30000,1,
+                      'active',1,'blocked',FALSE,%s,
+                      NOW(),NOW()+INTERVAL '1 hour',NOW(),NOW(),NOW())
+               ON CONFLICT DO NOTHING""",
+            (
+                *SCOPE.key,
+                '{"assetId":"capability.content.review","assetType":"CapabilityRevision","revision":1,"contentHash":"%s"}'
+                % HASH,
+                HASH,
+            ),
+        )
+        conn.execute(
+            """INSERT INTO aip_skill_template_revision
+               (skill_id,revision,canonical_logic_id,lifecycle,input_schema,output_schema,
+                tool_allowlist,required_capabilities,risk_level,memory_policy_ref,
+                handoff_policy_ref,source_ref,source_license,content_hash,created_by)
+               VALUES('skill-w2b-review',1,'logic-w2b','draft','{}'::jsonb,'{}'::jsonb,
+                      '[]'::jsonb,'[]'::jsonb,'low','{}'::jsonb,'{}'::jsonb,'{}'::jsonb,
+                      'internal',%s,'test')
+               ON CONFLICT DO NOTHING""",
+            (HASH,),
+        )
+        conn.execute(
+            """INSERT INTO aip_skill_binding
+               (org_id,project_id,binding_id,instance_id,skill_id,skill_revision,
+                capability_refs,budget_policy_ref,status,version,created_at,updated_at)
+               VALUES(%s,%s,'skill-bind-w2b','agent-content-w2b','skill-w2b-review',1,
+                      %s::jsonb,'{}'::jsonb,'active',1,NOW(),NOW())
+               ON CONFLICT DO NOTHING""",
+            (*SCOPE.key, '["cap-owned-review"]'),
+        )
+        conn.commit()
+    store = AipProductionContractStore(
+        responsibility_template_resolver=lambda _scope, _ref: True
+    )
+    created = store.create_responsibility_plan(
+        SCOPE,
+        "test",
+        f"plan-ops-{HASH[:8]}",
+        _responsibility_request(),
+    )
+    assert created.coverage.value == "blocked"
+    assert "CAPABILITY_BINDING_NOT_OPERATIONAL" in {
+        item.code for item in created.blockers
+    }
 
 
 def test_eval_revise_uses_cas_and_blocked_freeze_does_not_advance_head() -> None:

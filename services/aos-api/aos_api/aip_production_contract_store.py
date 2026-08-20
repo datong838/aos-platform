@@ -2304,34 +2304,95 @@ class AipProductionContractStore:
                 raise ProductionContractDependencyBlocked(f"ASSIGNEE_DRIFTED:{slot.slot_id}")
 
     def _responsibility_blockers(self, conn: Any, scope: TenantScope, row: Any) -> tuple[list[ContractBlocker], list[str]]:
+        """W-L4: coverage via assignee SkillBinding → CapabilityBinding operational, not tenant-global."""
         blockers: list[ContractBlocker] = []
         uncovered: list[str] = []
+        now = datetime.now(timezone.utc)
         for slot in self._load(row["slots"]):
             slot_id = slot["slotId"]
             assignee = slot["assignee"]
             instance_id = assignee["resourceId"]
-            capabilities = set(slot["requiredCapabilityIds"])
-            skill_rows = conn.execute("""SELECT capability_refs FROM aip_skill_binding
-                WHERE org_id=%s AND project_id=%s AND instance_id=%s AND status='active'""",
-                (*scope.key, instance_id)).fetchall()
+            required = set(slot["requiredCapabilityIds"])
+            skill_rows = conn.execute(
+                """SELECT capability_refs FROM aip_skill_binding
+                   WHERE org_id=%s AND project_id=%s AND instance_id=%s AND status='active'""",
+                (*scope.key, instance_id),
+            ).fetchall()
             if not skill_rows:
-                blockers.append(ContractBlocker(code="SKILL_BINDING_NOT_ACTIVE", message=f"职责 {slot_id} 没有 active SkillBinding"))
-            bound_capabilities: set[str] = set()
+                blockers.append(
+                    ContractBlocker(
+                        code="SKILL_BINDING_NOT_ACTIVE",
+                        message=f"职责 {slot_id} 没有 active SkillBinding",
+                    )
+                )
+                uncovered.append(slot_id)
+                continue
+            binding_ids: list[str] = []
             for skill in skill_rows:
-                for ref in self._load(skill["capability_refs"]):
-                    identifier = self._capability_identifier(ref)
-                    if identifier:
-                        bound_capabilities.add(identifier)
-            active_capability_rows = conn.execute("""SELECT capability_ref FROM aip_capability_binding
-                WHERE org_id=%s AND project_id=%s AND status='active' AND health='healthy'""",
-                scope.key).fetchall()
-            active_capabilities = {
-                value for item in active_capability_rows
-                if (value := self._capability_identifier(self._load(item["capability_ref"])))
-            }
-            if not capabilities <= (bound_capabilities & active_capabilities):
-                blockers.append(ContractBlocker(code="CAPABILITY_BINDING_NOT_ACTIVE", message=f"职责 {slot_id} 的 required capabilities 未全部 active/healthy"))
-            if not skill_rows or not capabilities <= (bound_capabilities & active_capabilities):
+                for ref in self._load(skill["capability_refs"]) or []:
+                    if isinstance(ref, str) and ref.strip():
+                        binding_ids.append(ref.strip())
+                    elif isinstance(ref, dict):
+                        identifier = ref.get("bindingId") or ref.get("resourceId")
+                        if isinstance(identifier, str) and identifier.strip():
+                            binding_ids.append(identifier.strip())
+            binding_ids = sorted(set(binding_ids))
+            if not binding_ids:
+                blockers.append(
+                    ContractBlocker(
+                        code="CAPABILITY_BINDING_MISSING",
+                        message=f"职责 {slot_id} 的 SkillBinding 未挂 CapabilityBinding",
+                    )
+                )
+                uncovered.append(slot_id)
+                continue
+            cap_rows = conn.execute(
+                """SELECT * FROM aip_capability_binding
+                   WHERE org_id=%s AND project_id=%s AND binding_id=ANY(%s)""",
+                (*scope.key, binding_ids),
+            ).fetchall()
+            found = {item["binding_id"] for item in cap_rows}
+            slot_codes: set[str] = set()
+            if found != set(binding_ids):
+                slot_codes.add("CAPABILITY_BINDING_MISSING")
+            provided: set[str] = set()
+            for crow in cap_rows:
+                cap_id = self._capability_identifier(self._load(crow["capability_ref"]))
+                if not cap_id:
+                    slot_codes.add("CAPABILITY_BINDING_MISSING")
+                    continue
+                if crow["status"] != "active" or crow["health"] != "healthy":
+                    slot_codes.add("CAPABILITY_BINDING_NOT_ACTIVE")
+                    continue
+                usable = crow["operational_readiness"] == "available" or (
+                    crow["operational_readiness"] == "degraded"
+                    and bool(crow["allow_degraded"])
+                )
+                if not usable:
+                    slot_codes.add("CAPABILITY_BINDING_NOT_OPERATIONAL")
+                    continue
+                if (
+                    crow["dependency_snapshot_hash"] is None
+                    or crow["readiness_expires_at"] is None
+                    or crow["readiness_expires_at"] <= now
+                ):
+                    slot_codes.add("CAPABILITY_BINDING_STALE")
+                    continue
+                provided.add(cap_id)
+            if not required <= provided:
+                if "CAPABILITY_BINDING_NOT_OPERATIONAL" not in slot_codes and (
+                    "CAPABILITY_BINDING_STALE" not in slot_codes
+                ):
+                    slot_codes.add("CAPABILITY_BINDING_NOT_ACTIVE")
+            if slot_codes:
+                messages = {
+                    "CAPABILITY_BINDING_MISSING": f"职责 {slot_id} 缺少 assignee 归属的 CapabilityBinding",
+                    "CAPABILITY_BINDING_NOT_ACTIVE": f"职责 {slot_id} 的 required capabilities 未全部由 assignee 的 operational Binding 覆盖",
+                    "CAPABILITY_BINDING_NOT_OPERATIONAL": f"职责 {slot_id} 的 CapabilityBinding 未达 operational 可用",
+                    "CAPABILITY_BINDING_STALE": f"职责 {slot_id} 的 CapabilityBinding readiness 已过期或未求值",
+                }
+                for code in sorted(slot_codes):
+                    blockers.append(ContractBlocker(code=code, message=messages[code]))
                 uncovered.append(slot_id)
         return blockers, uncovered
 
