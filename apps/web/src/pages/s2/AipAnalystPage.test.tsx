@@ -3,12 +3,16 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AipAnalystPage, buildGovernedQuery } from "./AipAnalystPage";
+import { AipAnalystPage, buildGovernedQuery, matchLogicMount } from "./AipAnalystPage";
 import type { QueryResultRevision } from "../../api/aipWorkbench";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const exact = { resourceType: "Task", resourceId: "task-1", revision: "1", authority: "aip-task" };
+const logicGraph = { id: "ecommerce.logic.A02", name: "A02", revision: 1, graphHash: "a".repeat(64) };
+const listObjectTypes = () => Promise.resolve([{ id: "Order", name: "订单" }]);
+const listLogicGraphs = () => Promise.resolve([logicGraph]);
+const emptyLogic = () => Promise.resolve([]);
 
 describe("AipAnalystPage governed query", () => {
   let host: HTMLDivElement;
@@ -36,8 +40,8 @@ describe("AipAnalystPage governed query", () => {
   it("uses native buttons for keyboard activation and never double-runs while busy", async () => {
     let resolve!: (value: QueryResultRevision) => void;
     const runQuery = vi.fn(() => new Promise<QueryResultRevision>((done) => { resolve = done; }));
-    const listObjectTypes = vi.fn().mockResolvedValue([{ id: "Order", name: "订单" }]);
-    await act(async () => root.render(<MemoryRouter><AipAnalystPage runQuery={runQuery} listObjectTypes={listObjectTypes} /></MemoryRouter>));
+    const listObjectTypesFn = vi.fn().mockResolvedValue([{ id: "Order", name: "订单" }]);
+    await act(async () => root.render(<MemoryRouter><AipAnalystPage runQuery={runQuery} listObjectTypes={listObjectTypesFn} listLogicGraphs={listLogicGraphs} /></MemoryRouter>));
     await act(async () => { await Promise.resolve(); await Promise.resolve(); });
     const collapse = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "收起查询")!;
     expect(collapse.tagName).toBe("BUTTON");
@@ -77,8 +81,8 @@ describe("AipAnalystPage governed query", () => {
       lineageRefs: [], blockers: [], uncertainties: [], cutoffAt: "2026-08-16T00:00:00Z", contentHash: "b".repeat(64), createdAt: "2026-08-16T00:00:01Z",
     };
     const runQuery = vi.fn().mockResolvedValueOnce(result).mockRejectedValueOnce(new Error("authority unavailable"));
-    const listObjectTypes = vi.fn().mockResolvedValue([{ id: "Order", name: "订单" }]);
-    await act(async () => root.render(<MemoryRouter><AipAnalystPage runQuery={runQuery} listObjectTypes={listObjectTypes} /></MemoryRouter>));
+    const listObjectTypesFn = vi.fn().mockResolvedValue([{ id: "Order", name: "订单" }]);
+    await act(async () => root.render(<MemoryRouter><AipAnalystPage runQuery={runQuery} listObjectTypes={listObjectTypesFn} listLogicGraphs={listLogicGraphs} /></MemoryRouter>));
     await act(async () => { await Promise.resolve(); await Promise.resolve(); });
     const run = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "运行真实查询")!;
     await act(async () => run.click());
@@ -90,12 +94,23 @@ describe("AipAnalystPage governed query", () => {
   });
 
   it("loads Object Types from authority and refuses demo fallback when empty", async () => {
-    const listObjectTypes = vi.fn().mockResolvedValue([]);
-    await act(async () => root.render(<MemoryRouter><AipAnalystPage listObjectTypes={listObjectTypes} /></MemoryRouter>));
+    const listObjectTypesFn = vi.fn().mockResolvedValue([]);
+    await act(async () => root.render(<MemoryRouter><AipAnalystPage listObjectTypes={listObjectTypesFn} listLogicGraphs={emptyLogic} /></MemoryRouter>));
     await act(async () => { await Promise.resolve(); await Promise.resolve(); });
     expect(host.textContent).toContain("当前租户暂无已安装 Object Type；不生成演示类型");
     expect(host.textContent).not.toContain("Northampton");
     expect(host.querySelector('[data-testid="analyst-run-query"]')).toBeTruthy();
     expect((host.querySelector('[data-testid="analyst-run-query"]') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("mounts exact Logic revision and blocks when no saved graphs", async () => {
+    expect(matchLogicMount([logicGraph], { id: "ecommerce.logic.A02", revision: "1", hash: "a".repeat(64) })?.id).toBe("ecommerce.logic.A02");
+    await act(async () => root.render(<MemoryRouter><AipAnalystPage listObjectTypes={listObjectTypes} listLogicGraphs={listLogicGraphs} /></MemoryRouter>));
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    expect(host.querySelector('[data-testid="analyst-logic-mount-exact"]')?.textContent).toContain("ecommerce.logic.A02@r1");
+    expect(host.querySelector('[data-testid="analyst-jump-logic"]')?.getAttribute("href")).toContain("/aip/logic?graph=ecommerce.logic.A02");
+    await act(async () => root.render(<MemoryRouter><AipAnalystPage listObjectTypes={listObjectTypes} listLogicGraphs={emptyLogic} /></MemoryRouter>));
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    expect(host.textContent).toContain("当前租户暂无已保存 Logic；经营参谋挂载保持 blocked");
   });
 });

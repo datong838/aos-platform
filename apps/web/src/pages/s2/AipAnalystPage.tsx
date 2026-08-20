@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { Link } from "react-router-dom";
 import { apiGet } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
 import { queryAnalyst, type AnalystQuery, type QueryResultRevision, type ResourceRef } from "../../api/aipWorkbench";
@@ -6,12 +7,64 @@ import { queryAnalyst, type AnalystQuery, type QueryResultRevision, type Resourc
 type View = "table" | "chart" | "map" | "raw";
 type QueryKind = AnalystQuery["kind"];
 type ObjectTypeOption = { id: string; name: string };
+export type LogicGraphOption = { id: string; name: string; revision: number; graphHash: string };
 
 async function defaultListObjectTypes(): Promise<ObjectTypeOption[]> {
   const payload = await apiGet<{ items?: Array<{ id?: string; name?: string; published?: boolean }> }>("/v1/ontology/object-types");
   return (payload.items || [])
     .filter((item) => typeof item.id === "string" && item.id.trim() && item.published !== false)
     .map((item) => ({ id: String(item.id).trim(), name: String(item.name || item.id).trim() }));
+}
+
+export async function defaultListLogicGraphs(): Promise<LogicGraphOption[]> {
+  const payload = await apiGet<{
+    items?: Array<{ id?: string; name?: string; revision?: number; graph_hash?: string; persisted?: boolean }>;
+  }>("/v1/aip/logic/graphs");
+  return (payload.items || [])
+    .filter((item) => (
+      item.persisted !== false
+      && typeof item.id === "string"
+      && item.id.trim()
+      && typeof item.revision === "number"
+      && item.revision > 0
+      && typeof item.graph_hash === "string"
+      && item.graph_hash.trim()
+    ))
+    .map((item) => ({
+      id: String(item.id).trim(),
+      name: String(item.name || item.id).trim(),
+      revision: Number(item.revision),
+      graphHash: String(item.graph_hash).trim(),
+    }));
+}
+
+export function matchLogicMount(
+  graphs: LogicGraphOption[],
+  preferred: { id: string; revision: string; hash: string },
+): LogicGraphOption | null {
+  if (!graphs.length) return null;
+  const byExact = graphs.find((graph) => (
+    graph.id === preferred.id
+    && String(graph.revision) === preferred.revision
+    && (!preferred.hash || graph.graphHash === preferred.hash)
+  ));
+  if (byExact) return byExact;
+  const byId = preferred.id ? graphs.find((graph) => graph.id === preferred.id) : undefined;
+  return byId || graphs[0] || null;
+}
+
+function syncLogicMountUrl(graph: LogicGraphOption | null) {
+  const next = new URL(window.location.href);
+  if (!graph) {
+    next.searchParams.delete("logicId");
+    next.searchParams.delete("logicRevision");
+    next.searchParams.delete("logicHash");
+  } else {
+    next.searchParams.set("logicId", graph.id);
+    next.searchParams.set("logicRevision", String(graph.revision));
+    next.searchParams.set("logicHash", graph.graphHash);
+  }
+  window.history.replaceState({}, "", `${next.pathname}${next.search}${next.hash}`);
 }
 
 function activateToggle(event: KeyboardEvent<HTMLButtonElement>, action: () => void) {
@@ -69,9 +122,59 @@ function ResultBody({ result, view }: { result: QueryResultRevision; view: View 
   return <div style={{ overflow: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse" }}><thead><tr><th style={cell}>对象</th>{result.columns.map((column) => <th key={column.key} style={cell}>{column.label}</th>)}</tr></thead><tbody>{result.rows.map((row) => <tr key={row.rowId}><td style={cell}>{row.rowId}</td>{result.columns.map((column) => <td key={column.key} style={cell}>{String(row.values[column.key] ?? "—")}</td>)}</tr>)}</tbody></table></div>;
 }
 
-function Evidence({ result }: { result: QueryResultRevision | null }) {
-  if (!result) return <p style={muted}>运行受治理查询后显示来源、血缘、截点与不确定性。</p>;
-  return <div style={{ display: "grid", gap: 12, fontSize: 13 }}><Fact label="结果修订" value={`${result.queryId} · r${result.revision}`} /><Fact label="状态" value={result.status} /><Fact label="截点" value={new Date(result.cutoffAt).toLocaleString()} /><Fact label="内容哈希" value={result.contentHash.slice(0, 16)} /><section><strong>来源</strong>{result.sourceRefs.length ? result.sourceRefs.map((source) => <div key={`${source.ref.resourceId}:${source.ref.revision}`} style={smallCard}>{source.ref.resourceType}/{source.ref.resourceId}@{source.ref.revision}<br />{source.freshness} · {new Date(source.cutoffAt).toLocaleString()}</div>) : <p style={muted}>无来源（blocked 允许）</p>}</section>{result.uncertainties.length > 0 && <section><strong>不确定性</strong><ul>{result.uncertainties.map((item) => <li key={item}>{item}</li>)}</ul></section>}{result.blockers.map((item) => <div key={item.code} style={{ ...smallCard, borderColor: "#f59e0b" }}><strong>{item.code}</strong><br />{item.message}<br />{item.retryable ? "可重试" : "需先解决依赖"}</div>)}</div>;
+function Evidence({ result, logicMount }: { result: QueryResultRevision | null; logicMount: LogicGraphOption | null }) {
+  return (
+    <div style={{ display: "grid", gap: 12, fontSize: 13 }}>
+      <section data-testid="analyst-logic-mount-evidence">
+        <strong>Logic 挂载</strong>
+        {logicMount ? (
+          <div style={smallCard}>
+            LogicGraph/{logicMount.id}@{logicMount.revision}
+            <br />
+            hash {logicMount.graphHash.slice(0, 16)}…
+            <br />
+            挂载≠已执行；不冒充 TaskGraph materialize。
+          </div>
+        ) : (
+          <p style={muted}>未挂载已保存 Logic；经营参谋链保持 blocked，不注入演示图。</p>
+        )}
+      </section>
+      {!result && <p style={muted}>运行受治理查询后显示来源、血缘、截点与不确定性。</p>}
+      {result && (
+        <>
+          <Fact label="结果修订" value={`${result.queryId} · r${result.revision}`} />
+          <Fact label="状态" value={result.status} />
+          <Fact label="截点" value={new Date(result.cutoffAt).toLocaleString()} />
+          <Fact label="内容哈希" value={result.contentHash.slice(0, 16)} />
+          <section>
+            <strong>来源</strong>
+            {result.sourceRefs.length ? result.sourceRefs.map((source) => (
+              <div key={`${source.ref.resourceId}:${source.ref.revision}`} style={smallCard}>
+                {source.ref.resourceType}/{source.ref.resourceId}@{source.ref.revision}
+                <br />
+                {source.freshness} · {new Date(source.cutoffAt).toLocaleString()}
+              </div>
+            )) : <p style={muted}>无来源（blocked 允许）</p>}
+          </section>
+          {result.uncertainties.length > 0 && (
+            <section>
+              <strong>不确定性</strong>
+              <ul>{result.uncertainties.map((item) => <li key={item}>{item}</li>)}</ul>
+            </section>
+          )}
+          {result.blockers.map((item) => (
+            <div key={item.code} style={{ ...smallCard, borderColor: "#f59e0b" }}>
+              <strong>{item.code}</strong>
+              <br />
+              {item.message}
+              <br />
+              {item.retryable ? "可重试" : "需先解决依赖"}
+            </div>
+          ))}
+        </>
+      )}
+    </div>
+  );
 }
 function Empty({ title, text }: { title: string; text: string }) { return <div style={empty}><h3>{title}</h3><p>{text}</p></div>; }
 function Fact({ label, value }: { label: string; value: string }) { return <div><strong>{label}</strong><div style={muted}>{value}</div></div>; }
@@ -79,20 +182,31 @@ function Fact({ label, value }: { label: string; value: string }) { return <div>
 export function AipAnalystPage({
   runQuery = queryAnalyst,
   listObjectTypes = defaultListObjectTypes,
+  listLogicGraphs = defaultListLogicGraphs,
 }: {
   runQuery?: typeof queryAnalyst;
   listObjectTypes?: () => Promise<ObjectTypeOption[]>;
+  listLogicGraphs?: () => Promise<LogicGraphOption[]>;
 } = {}) {
   const search = useMemo(() => new URLSearchParams(window.location.search), []);
   const taskRef = refFromSearch(search, "task");
   const skillRef = refFromSearch(search, "skill");
   const metricRef = refFromSearch(search, "metric");
   const preferredType = search.get("objectType") || "";
+  const preferredLogic = {
+    id: search.get("logicId") || "",
+    revision: search.get("logicRevision") || "",
+    hash: search.get("logicHash") || "",
+  };
   const [kind, setKind] = useState<QueryKind>("semantic");
   const [objectType, setObjectType] = useState(preferredType);
   const [objectTypes, setObjectTypes] = useState<ObjectTypeOption[]>([]);
   const [objectTypesReady, setObjectTypesReady] = useState(false);
   const [objectTypesError, setObjectTypesError] = useState<string | null>(null);
+  const [logicGraphs, setLogicGraphs] = useState<LogicGraphOption[]>([]);
+  const [logicReady, setLogicReady] = useState(false);
+  const [logicError, setLogicError] = useState<string | null>(null);
+  const [logicMountId, setLogicMountId] = useState(preferredLogic.id);
   const [prompt, setPrompt] = useState("");
   const [result, setResult] = useState<QueryResultRevision | null>(null);
   const [view, setView] = useState<View>("table");
@@ -127,6 +241,37 @@ export function AipAnalystPage({
       });
     return () => { cancelled = true; };
   }, [listObjectTypes, preferredType]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLogicReady(false);
+    setLogicError(null);
+    void listLogicGraphs()
+      .then((items) => {
+        if (cancelled) return;
+        setLogicGraphs(items);
+        const matched = matchLogicMount(items, preferredLogic);
+        setLogicMountId(matched?.id || "");
+        syncLogicMountUrl(matched);
+        setLogicReady(true);
+      })
+      .catch((cause) => {
+        if (cancelled) return;
+        setLogicGraphs([]);
+        setLogicMountId("");
+        syncLogicMountUrl(null);
+        setLogicError(cause instanceof Error ? cause.message : String(cause));
+        setLogicReady(true);
+      });
+    return () => { cancelled = true; };
+    // preferredLogic fields are URL bootstrap only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listLogicGraphs]);
+
+  const logicMount = useMemo(
+    () => logicGraphs.find((graph) => graph.id === logicMountId) || null,
+    [logicGraphs, logicMountId],
+  );
 
   const disabled = disabledReason(
     kind,
@@ -164,6 +309,12 @@ export function AipAnalystPage({
     }
   }
 
+  function onLogicMountChange(nextId: string) {
+    const next = logicGraphs.find((graph) => graph.id === nextId) || null;
+    setLogicMountId(next?.id || "");
+    syncLogicMountUrl(next);
+  }
+
   return (
     <PageChrome title="AIP 分析师" lede="受治理语义 / 知识 / 指标查询；单一结果 revision，不生成演示数据">
       <div data-testid="analyst-ops-stats" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}>
@@ -173,7 +324,7 @@ export function AipAnalystPage({
           { label: "结果态", value: result ? result.status : "未跑" },
           { label: "行数", value: result ? String(result.rows.length) : "—" },
           { label: "对象类型", value: objectTypesReady ? String(objectTypes.length) : "…" },
-          { label: "视图", value: ({ table: "表格", chart: "图表", map: "地图", raw: "Raw" } as const)[view] },
+          { label: "Logic挂载", value: !logicReady ? "…" : logicMount ? "已挂" : "未挂" },
         ].map((s) => (
           <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
             <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
@@ -218,12 +369,58 @@ export function AipAnalystPage({
               <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} style={{ ...input, minHeight: 100 }} />
             </label>
           )}
+          <section data-testid="analyst-logic-mount" style={{ marginBottom: 16 }}>
+            <h4 style={{ margin: "0 0 8px", fontSize: 14 }}>Logic 挂载点</h4>
+            <label style={label}>已保存 Logic Graph
+              <select
+                value={logicMountId}
+                onChange={(e) => onLogicMountChange(e.target.value)}
+                style={input}
+                aria-label="analyst-logic-mount"
+                data-testid="analyst-logic-mount-select"
+                disabled={!logicReady || logicGraphs.length === 0}
+              >
+                {logicGraphs.length === 0 ? <option value="">暂无已保存 Logic</option> : null}
+                {logicGraphs.map((graph) => (
+                  <option key={graph.id} value={graph.id}>
+                    {graph.name} · r{graph.revision}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {logicReady && logicGraphs.length === 0 && (
+              <p style={warning} data-testid="analyst-logic-mount-blocked">
+                当前租户暂无已保存 Logic；经营参谋挂载保持 blocked，不注入演示图。
+              </p>
+            )}
+            {logicError && (
+              <p style={warning} role="alert" data-testid="analyst-logic-mount-error">
+                Logic 列表读取失败：{logicError}。未注入演示挂载。
+              </p>
+            )}
+            {logicMount && (
+              <div style={{ ...smallCard, fontSize: 12 }} data-testid="analyst-logic-mount-exact">
+                exact {logicMount.id}@r{logicMount.revision}
+                <br />
+                {logicMount.graphHash.slice(0, 24)}…
+                <div style={{ marginTop: 8 }}>
+                  <Link
+                    to={`/aip/logic?graph=${encodeURIComponent(logicMount.id)}`}
+                    data-testid="analyst-jump-logic"
+                    style={{ color: "#2563eb" }}
+                  >
+                    打开 Logic 画布 →
+                  </Link>
+                </div>
+              </div>
+            )}
+          </section>
           <button type="button" onClick={() => void run()} disabled={Boolean(disabled) || busy} title={disabled || undefined} style={{ ...primary, opacity: disabled || busy ? .5 : 1 }} data-testid="analyst-run-query">
             {busy ? "查询中…" : "运行真实查询"}
           </button>
           {disabled && <p style={warning} data-testid="analyst-run-blocked">{disabled}</p>}
           {objectTypesError && <p style={warning} role="alert" data-testid="analyst-object-types-error">Object Type 读取失败：{objectTypesError}。未注入演示类型。</p>}
-          <p style={muted}>不接受任意 SQL；Object Type 来自 ontology 权威；租户由登录 Principal 决定。</p>
+          <p style={muted}>不接受任意 SQL；Object Type / Logic 均来自权威 API；租户由登录 Principal 决定。</p>
         </aside>
         <main style={panel}>
           {error && <div role="alert" style={warning}>请求失败：{error}。未生成本地结果。</div>}
@@ -241,7 +438,7 @@ export function AipAnalystPage({
         </main>
         <aside style={{ ...panel, overflow: "auto", display: focus || !rightOpen ? "none" : "block" }}>
           <h3>证据详情</h3>
-          <Evidence result={result} />
+          <Evidence result={result} logicMount={logicMount} />
         </aside>
       </div>
     </PageChrome>
