@@ -311,6 +311,7 @@ export type ProductionStartInput = {
   actionProposalRef: ActionProposalExactRef;
   logicGraphId: string;
   logicRevision: number;
+  logicGraphHash: string;
 };
 export type ProductionStartStatus = "started" | "blocked" | "stale" | "unknown";
 export type ProductionStartDecision = {

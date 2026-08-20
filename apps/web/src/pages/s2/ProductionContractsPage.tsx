@@ -14,6 +14,7 @@ import {
   type StageTemplateListResponse,
   type TaskBriefListResponse,
 } from "../../api/aipProductionContracts";
+import { apiGet } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
 
 type AuthorityState = {
@@ -58,16 +59,20 @@ export function ProductionContractsPage() {
   const [proposalHash,setProposalHash]=useState("");
   const [logicGraphId,setLogicGraphId]=useState("");
   const [logicRevision,setLogicRevision]=useState("1");
+  const [logicGraphHash,setLogicGraphHash]=useState("");
+  const [publishedLogic,setPublishedLogic]=useState<Array<{id:string;name:string;revision:number;graph_hash:string;published_version?:number|null}>>([]);
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [briefs, bundles, evals, plans, stages, relations, reviews, previews, starts] = await Promise.all([
+      const [briefs, bundles, evals, plans, stages, relations, reviews, previews, starts, logicList] = await Promise.all([
         aipProductionContracts.listBriefs(), aipProductionContracts.listBundles(),
         aipProductionContracts.listEvalContracts(), aipProductionContracts.listResponsibilityPlans(),
         aipProductionContracts.listStageTemplates(), aipProductionContracts.listArtifactRelations(),
         aipProductionContracts.listReviewIssues(), aipProductionContracts.listImpactPreviews(),
         aipProductionContracts.listProductionStartDecisions(),
+        apiGet<{items?:Array<{id:string;name:string;revision:number;graph_hash:string;published_version?:number|null;persisted?:boolean}>}>("/v1/aip/logic/graphs").catch(()=>({items:[] as Array<{id:string;name:string;revision:number;graph_hash:string;published_version?:number|null;persisted?:boolean}>})),
       ]);
+      setPublishedLogic((logicList.items||[]).filter(item=>item.persisted!==false && Number(item.published_version||0)>0 && /^[0-9a-f]{64}$/.test(item.graph_hash)));
       setState({ briefs, bundles, evals, plans, stages, relations, reviews, previews, starts });
       setError("");
     } catch (e) {
@@ -105,9 +110,16 @@ export function ProductionContractsPage() {
   const returnReview = () => { if (selectedReview && canReviewCommand && reviewRunId.trim()) void run(`review:${selectedReview.issueId}`, () => aipProductionContracts.returnReviewIssue(selectedReview.issueId, { expectedVersion: selectedReview.version, runId: reviewRunId.trim(), targetStage: selectedReview.returnStage, reason: reviewReason.trim(), attemptIdempotencyKey: `w2-ui-attempt-${crypto.randomUUID()}` }, `w2-ui-review-return-${crypto.randomUUID()}`)); };
   const selectedPreview=state?.previews.items.find(item=>item.previewId===previewId);
   const positiveInteger=(value:string)=>Number.isInteger(Number(value))&&Number(value)>0;
-  const startDisabledReason=(()=>{if(!selectedPreview)return"请选择 ImpactPreview exact revision";if(selectedPreview.lifecycle!=="frozen")return"Preview 尚未冻结";if(selectedPreview.readiness!=="ready")return`Preview 当前为${label[selectedPreview.readiness]??selectedPreview.readiness}`;if(selectedPreview.blockers.length)return"Preview 仍有权威阻断";if(new Date(selectedPreview.expiresAt).getTime()<=Date.now())return"Preview 已过期，请刷新并重新评估";if(!positiveInteger(startTaskVersion))return"Task version 必须大于 0";if(!proposalId.trim()||!positiveInteger(proposalVersion)||!/^[0-9a-f]{64}$/.test(proposalHash))return"请填写 ActionProposal ID、version 与 64 位 exact hash";if(!logicGraphId.trim()||!positiveInteger(logicRevision))return"请填写 LogicGraph ID 与 revision";return"";})();
+  const startDisabledReason=(()=>{if(!selectedPreview)return"请选择 ImpactPreview exact revision";if(selectedPreview.lifecycle!=="frozen")return"Preview 尚未冻结";if(selectedPreview.readiness!=="ready")return`Preview 当前为${label[selectedPreview.readiness]??selectedPreview.readiness}`;if(selectedPreview.blockers.length)return"Preview 仍有权威阻断";if(new Date(selectedPreview.expiresAt).getTime()<=Date.now())return"Preview 已过期，请刷新并重新评估";if(!positiveInteger(startTaskVersion))return"Task version 必须大于 0";if(!proposalId.trim()||!positiveInteger(proposalVersion)||!/^[0-9a-f]{64}$/.test(proposalHash))return"请填写 ActionProposal ID、version 与 64 位 exact hash";if(!logicGraphId.trim()||!positiveInteger(logicRevision)||!/^[0-9a-f]{64}$/.test(logicGraphHash.trim()))return"请填写已发布 LogicGraph ID、revision 与 exact graph hash";if(publishedLogic.length===0)return"当前组织尚无已发布 Logic；空图/未发布 revision 不可 start";return"";})();
   const freezePreview=(item:ImpactPreviewRevision)=>run(`preview:${item.previewId}`,()=>aipProductionContracts.freezeImpactPreview(item.previewId,item.version,`w2-ui-preview-freeze-${crypto.randomUUID()}`));
-  const startProduction=()=>{if(!selectedPreview||startDisabledReason)return;void run("production:start",()=>aipProductionContracts.startProduction({taskId:selectedPreview.taskId,expectedTaskVersion:Number(startTaskVersion),planRef:selectedPreview.planRef,previewRef:{resourceType:"ImpactPreviewRevision",resourceId:selectedPreview.previewId,revision:selectedPreview.revision,contentHash:selectedPreview.contentHash},actionProposalRef:{proposalId:proposalId.trim(),version:Number(proposalVersion),proposalHash},logicGraphId:logicGraphId.trim(),logicRevision:Number(logicRevision)},`w2-ui-production-start-${crypto.randomUUID()}`));};
+  const applyPublishedLogic=(graphId:string)=>{
+    const hit=publishedLogic.find(item=>item.id===graphId);
+    if(!hit){setLogicGraphId("");return;}
+    setLogicGraphId(hit.id);
+    setLogicRevision(String(hit.revision));
+    setLogicGraphHash(hit.graph_hash);
+  };
+  const startProduction=()=>{if(!selectedPreview||startDisabledReason)return;void run("production:start",()=>aipProductionContracts.startProduction({taskId:selectedPreview.taskId,expectedTaskVersion:Number(startTaskVersion),planRef:selectedPreview.planRef,previewRef:{resourceType:"ImpactPreviewRevision",resourceId:selectedPreview.previewId,revision:selectedPreview.revision,contentHash:selectedPreview.contentHash},actionProposalRef:{proposalId:proposalId.trim(),version:Number(proposalVersion),proposalHash},logicGraphId:logicGraphId.trim(),logicRevision:Number(logicRevision),logicGraphHash:logicGraphHash.trim()},`w2-ui-production-start-${crypto.randomUUID()}`));};
 
   return <PageChrome title="生产契约" lede="任务简报、证据包、评测契约、职责计划、阶段模板、产物关系与评审的租户权威视图；冻结不等于启动运行">
     {error && <div role="alert" className="notice bad">生产契约读取或操作失败：{error}</div>}
@@ -177,9 +189,12 @@ export function ProductionContractsPage() {
           <label>ActionProposal ID<input value={proposalId} onChange={event=>setProposalId(event.target.value)} placeholder="proposal-…"/></label>
           <label>Proposal version<input type="number" min="1" value={proposalVersion} onChange={event=>setProposalVersion(event.target.value)}/></label>
           <label>Proposal exact hash<input value={proposalHash} onChange={event=>setProposalHash(event.target.value.trim())} placeholder="64 位 SHA-256"/></label>
-          <label>LogicGraph ID<input value={logicGraphId} onChange={event=>setLogicGraphId(event.target.value)} placeholder="logic-…"/></label>
-          <label>Logic revision<input type="number" min="1" value={logicRevision} onChange={event=>setLogicRevision(event.target.value)}/></label>
+          <label>LogicGraph ID<input value={logicGraphId} onChange={event=>setLogicGraphId(event.target.value)} placeholder="logic-…" data-testid="start-logic-graph-id"/></label>
+          <label>Logic revision<input type="number" min="1" value={logicRevision} onChange={event=>setLogicRevision(event.target.value)} data-testid="start-logic-revision"/></label>
+          <label>Logic exact hash<input value={logicGraphHash} onChange={event=>setLogicGraphHash(event.target.value.trim())} placeholder="64 位 graph_hash" data-testid="start-logic-hash"/></label>
+          <label>已发布 Logic<select value={logicGraphId} onChange={event=>applyPublishedLogic(event.target.value)} data-testid="start-logic-published-select"><option value="">从已发布列表选用</option>{publishedLogic.map(item=><option key={item.id} value={item.id}>{item.name} · {item.id}@r{item.revision}</option>)}</select></label>
         </div>
+        {publishedLogic.length===0?<div className="notice" role="status" style={{marginTop:12}} data-testid="start-logic-empty">尚无已发布 LogicGraph；空图或未发布 revision 不能进入 ProductionStart。</div>:null}
         {startDisabledReason?<div className="notice" role="status" style={{marginTop:12}}>启动门保持关闭：{startDisabledReason}。可先刷新权威状态；若依赖漂移，请回到对应 authority 修订后创建新 Preview。</div>:<div className="notice" style={{marginTop:12}}>组合门输入完整；服务端仍会重新核验 Preview、Proposal、Approval、Lease、Route、Binding 与容量。</div>}
         <button className="btn primary" disabled={Boolean(startDisabledReason)||busy==="production:start"} title={startDisabledReason||"只创建 canonical TaskRun；不启动 AgentRun/Provider"} onClick={startProduction} style={{marginTop:12}}>{busy==="production:start"?"组合门核验中…":"通过组合门并创建 TaskRun"}</button>
         <h3>Start Decision 审计记录</h3>

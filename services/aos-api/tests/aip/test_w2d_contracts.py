@@ -227,6 +227,7 @@ def test_start_request_requires_plan_and_preview_exact_kinds() -> None:
             action_proposal_ref=proposal_ref(),
             logic_graph_id="logic-1",
             logic_revision=1,
+            logic_graph_hash=HASH,
         )
 
 

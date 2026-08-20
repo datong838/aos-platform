@@ -595,6 +595,7 @@ class ProductionStartRequest(AipContractModel):
     action_proposal_ref: ActionProposalExactRef
     logic_graph_id: str = Field(min_length=1, max_length=200)
     logic_revision: int = Field(ge=1)
+    logic_graph_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
 
     @model_validator(mode="after")
     def _start_ref_kinds(self) -> ProductionStartRequest:

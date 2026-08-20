@@ -67,19 +67,23 @@ def _seed_start_candidate() -> tuple[ProductionStartRequest, AipActionStore]:
     ).proposal
     graph_id = f"logic-w2d-{uuid.uuid4().hex[:16]}"
     graph_hash = "7" * 64
+    graph_snapshot = {
+        "nodes": [{"id": "n1", "kind": "input"}],
+        "edges": [],
+    }
     with connect(SCOPE) as conn:
         conn.execute(
             """INSERT INTO aip_logic_graph
                (org_id,project_id,graph_id,name,status,revision,published_version,
                 graph_hash,payload)
                VALUES(%s,%s,%s,'W2-D start','published',1,1,%s,%s::jsonb)""",
-            (*SCOPE.key, graph_id, graph_hash, json.dumps({"nodes": [], "edges": []})),
+            (*SCOPE.key, graph_id, graph_hash, json.dumps(graph_snapshot)),
         )
         conn.execute(
             """INSERT INTO aip_logic_graph_revision
                (org_id,project_id,graph_id,revision,graph_hash,snapshot,actor)
                VALUES(%s,%s,%s,1,%s,%s::jsonb,'test:w2d')""",
-            (*SCOPE.key, graph_id, graph_hash, json.dumps({"nodes": [], "edges": []})),
+            (*SCOPE.key, graph_id, graph_hash, json.dumps(graph_snapshot)),
         )
         task = conn.execute(
             """SELECT version FROM aip_task
@@ -100,6 +104,7 @@ def _seed_start_candidate() -> tuple[ProductionStartRequest, AipActionStore]:
             ),
             logic_graph_id=graph_id,
             logic_revision=1,
+            logic_graph_hash=graph_hash,
         ),
         action_store,
     )
@@ -184,3 +189,47 @@ def test_ready_start_atomically_creates_one_canonical_task_run_and_replays() -> 
     )
     with pytest.raises(ProductionContractIdempotencyConflict):
         service.start(SCOPE, "approver:w2d", key, drifted)
+
+
+def test_empty_or_mismatched_logic_blocks_start_without_runtime() -> None:
+    request, _ = _seed_start_candidate()
+    empty_hash = "8" * 64
+    with connect(SCOPE) as conn:
+        conn.execute(
+            """UPDATE aip_logic_graph_revision
+               SET snapshot=%s::jsonb, graph_hash=%s
+               WHERE org_id=%s AND project_id=%s AND graph_id=%s AND revision=%s""",
+            (
+                json.dumps({"nodes": [], "edges": []}),
+                empty_hash,
+                *SCOPE.key,
+                request.logic_graph_id,
+                request.logic_revision,
+            ),
+        )
+        conn.execute(
+            """UPDATE aip_logic_graph
+               SET graph_hash=%s
+               WHERE org_id=%s AND project_id=%s AND graph_id=%s""",
+            (empty_hash, *SCOPE.key, request.logic_graph_id),
+        )
+        conn.commit()
+    before = _runtime_counts(request.task_id)
+    empty_decision = AipProductionStartService().start(
+        SCOPE,
+        "approver:w2d",
+        f"empty-{uuid.uuid4().hex}",
+        request.model_copy(update={"logic_graph_hash": empty_hash}),
+    )
+    assert empty_decision.status is ProductionStartDecisionStatus.BLOCKED
+    assert "LOGIC_GRAPH_EMPTY" in {item.code for item in empty_decision.blockers}
+    assert empty_decision.task_run_ref is None
+    mismatch = AipProductionStartService().start(
+        SCOPE,
+        "approver:w2d",
+        f"hash-{uuid.uuid4().hex}",
+        request.model_copy(update={"logic_graph_hash": "9" * 64}),
+    )
+    assert mismatch.status is ProductionStartDecisionStatus.BLOCKED
+    assert "LOGIC_GRAPH_HASH_MISMATCH" in {item.code for item in mismatch.blockers}
+    assert _runtime_counts(request.task_id) == before

@@ -346,7 +346,7 @@ class AipProductionStartService:
             (*scope.key, body.logic_graph_id),
         ).fetchone()
         revision = conn.execute(
-            """SELECT graph_hash FROM aip_logic_graph_revision
+            """SELECT graph_hash, snapshot FROM aip_logic_graph_revision
                WHERE org_id=%s AND project_id=%s AND graph_id=%s AND revision=%s
                FOR SHARE""",
             (*scope.key, body.logic_graph_id, body.logic_revision),
@@ -362,8 +362,26 @@ class AipProductionStartService:
         )
         if graph is None or revision is None:
             raise ProductionContractNotFound("logic graph revision not found in scope")
+        if revision["graph_hash"] != body.logic_graph_hash:
+            blockers.append(
+                ContractBlocker(
+                    code="LOGIC_GRAPH_HASH_MISMATCH",
+                    message="LogicGraph revision/hash 与权威不一致",
+                )
+            )
         if graph["status"] != "published":
             blockers.append(ContractBlocker(code="LOGIC_GRAPH_NOT_PUBLISHED", message="LogicGraph 尚未发布"))
+        payload = revision["snapshot"]
+        if isinstance(payload, str):
+            payload = json.loads(payload)
+        nodes = (payload or {}).get("nodes") if isinstance(payload, dict) else None
+        if not isinstance(nodes, list) or len(nodes) == 0:
+            blockers.append(
+                ContractBlocker(
+                    code="LOGIC_GRAPH_EMPTY",
+                    message="空 LogicGraph 不可进入 ProductionStart",
+                )
+            )
 
     @staticmethod
     def _lock_mutable_bindings(

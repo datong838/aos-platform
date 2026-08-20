@@ -1,0 +1,12 @@
+{
+  "hasHashField": 1,
+  "hasGraphIdField": 1,
+  "hasRevisionField": 1,
+  "hasPublishedSelect": 1,
+  "emptyNotice": null,
+  "startDisabled": true,
+  "gateMentionsHash": true,
+  "gateClosedReason": "请选择 ImpactPreview exact revision",
+  "publishedOptions": 9,
+  "ok": true
+}
